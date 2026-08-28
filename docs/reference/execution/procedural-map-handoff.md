@@ -25,59 +25,74 @@ pinned: false
 
 ---
 
-## 零、交接那一刻：两个子代理等着你重派
+## 零、交接那一刻：五个子代理正在跑
 
-上一轮派了五个子代理。**三个做完并已合并/提交，两个被 Codex 额度耗尽掐断。**
+**2026-08-29 03:00 重派完成。** 上一轮被 Codex 额度掐断的两个已经重派，
+另外三个是这一轮新开的。全部确认 CPU 时间在涨，不是卡在 stdin 上。
 
-| 任务 | 状态 |
-| --- | --- |
-| 植被（Kenney 方块树 → donor 画意叶丛） | ✅ 已合并 `bf6575a` |
-| 配置台（`#/studio/map`） | ✅ 已合并 `1c82c6f` |
-| 液体误用修复（kit story + XP 球） | ✅ 已提交，见第九节 |
-| **草的美术（第二版）** | ❌ **被掐断，零进度，要重派** |
-| **吸收 donor 的 Move 效果** | ❌ **被掐断，零进度，要重派** |
+| 任务 | worktree / 分支 | 状态 |
+| --- | --- | --- |
+| 草的美术（第二版） | `University-wt-grass2` · `work/grass2` | 🟡 在跑 |
+| 吸收 donor 的 Move 效果 | `SwimmerUIKit-wt-move` · `work/liquid-move` | 🟡 在跑（第二次派） |
+| **群岛层岛屿识别度** | `University-wt-arch` · `work/archipelago-identity` | 🟡 在跑（新） |
+| **配方台版式返工** | `University-wt-studio` · `work/studio-map-layout` | 🟡 在跑（新） |
+| **XP 球真 App 十帧验证** | `University-wt-liquid` · `work/liquid-in-app` | 🟡 在跑（新，npm 解封后） |
 
-**中断没有造成任何损坏**——那两个死在读取/测量阶段，一个字节都没写。
-`University-wt-grass2` 只有第一版那个过头的提交，工作区干净；
-`SwimmerUIKit-wt-move` 完全是空的。直接重派即可，不需要清理。
+五份任务书的完整原文在
+`/private/tmp/claude-501/-Users-yuanfei-PieAI-University/<session>/scratchpad/briefs/`，
+但那是临时目录；任务书的**形状**（不是字面）已经固化在第二节铁律 2 里，照那个写即可。
 
-### 重派之前必须知道的两个坑（不知道会原地卡两小时）
+三张给草用的参照图仍在 `/tmp`；新增两张：
+`/tmp/archipelago-before-1440x900.png`（群岛层改造前）、
+`/tmp/studio-map-before-1440x900.png`（配方台改造前）。
 
-**坑 1：后台派 codex 必须 `< /dev/null`。**
+### 派子代理必须知道的三个坑（不知道会原地卡两小时）
+
+**坑 1：后台派 codex 必须让 stdin 拿到 EOF。**
 后台启动的命令 stdin 是一个一直开着的管道，codex 卡在
 `Reading additional input from stdin...` 等一个永远不来的 EOF。
+无附图时用 `< /dev/null`，有任务书时用 `< 任务书.md`——两者都给了 EOF。
 上一轮三个代理这样挂了将近两小时，CPU 时间 0.05 秒——**它们不是在思考，是卡死了**。
 派完之后**一定要回头确认 CPU 时间在涨**：
 ```bash
 ps -o pid,etime,time -p $(pgrep -f "codex exec" | tr '\n' ',' | sed 's/,$//')
 ```
+注意看**第二行**那个进程（vendor 下的真 worker）。外层的 node 包装进程 CPU 时间
+永远停在 0:00.0x，那是正常的，不是卡死。
 
 **坑 2：用 `-i` 附图时，提示词必须走 stdin，不能当参数传。**
 `-i, --image <FILE>...` 是可变参数，最后一个 `-i` 会把**提示词本身也吃成图片路径**，
-然后报 `No prompt provided via stdin.` 3 秒就"成功"退出。正确写法见下面。
+然后报 `No prompt provided via stdin.` 3 秒就"成功"退出。
 
-### 重派命令（原样抄）
+**坑 3（2026-08-29 新增）：代理会正确地拒绝去读别的 worktree，
+所以它需要的未提交文件必须先复制进它的 worktree。**
+Move 那个代理第一次派出去 4 分钟就停了，理由是
+`donors-individual.md` 不在本 worktree 也不在 git 历史里，而它**不会**去读
+`/Users/yuanfei/PieAI/SwimmerUIKit` 主 checkout 绕过隔离。
+它是对的——那两个文件在主 checkout 里是**未跟踪**状态，属于老板另一个会话的在途工作。
+处理办法是把文件复制进 worktree、告诉它这是别人未提交的快照、
+并要求**改动必须外科手术式的小**，这样将来那个 add/add 冲突几秒钟就能解。
+**教训：派活之前先确认任务书里点名的每个文件在那个 worktree 里真的存在。**
 
-**草（带三张参照图，提示词走 stdin）：**
+### 派子代理的命令形状
+
 ```bash
-cd /Users/yuanfei/PieAI/University-wt-grass2
-codex exec -m gpt-5.6-luna -c 'model_reasoning_effort="max"' \
+# 无附图
+cd <worktree> && codex exec -m gpt-5.6-luna -c 'model_reasoning_effort="max"' \
+  --dangerously-bypass-approvals-and-sandbox < 任务书.md
+
+# 有附图：-i 全部排在前面，提示词走 stdin
+cd <worktree> && codex exec -m gpt-5.6-luna -c 'model_reasoning_effort="max"' \
   --dangerously-bypass-approvals-and-sandbox \
-  -i /Users/yuanfei/PieAI/_donors/elemental-serenity/elemental_serenity.jpg \
-  -i /tmp/grass2-before-course-near-1440x900.png \
-  -i /tmp/grass2-after-course-near-1440x900.png \
-  < <草的任务书>
+  -i 目标参照图.jpg -i 改造前.png -i 上一版失败的.png < 任务书.md
 ```
-（如果 `/tmp` 里那两张图没了，就先按第五节的机位重截一遍再派。）
 
-**Move（无附图，提示词可以当参数，但仍要 `< /dev/null`）：**
+新开 worktree 别忘了两件事，否则代理开局就卡：
 ```bash
-cd /Users/yuanfei/PieAI/SwimmerUIKit-wt-move
-codex exec -m gpt-5.6-luna -c 'model_reasoning_effort="max"' \
-  --dangerously-bypass-approvals-and-sandbox "<Move 的任务书>" < /dev/null
+pnpm install --prefer-offline                       # worktree 没有 node_modules
+ln -s ../../University/apps/university/content apps/university/content
 ```
-
-两份任务书的完整内容在第五节，照着写就行。
+**绝对不要**为了修 404 去跑 `pnpm content`——见第十一节「坑」。
 
 ## 一、你的角色
 
@@ -120,7 +135,7 @@ agy -p "<任务>" --model gemini-3.7-flash-high --effort high --dangerously-skip
   ```bash
   ln -s ../../University/apps/university/content apps/university/content
   ```
-  **绝对不要**为了修 404 去跑 `pnpm content`——见第十节「坑」。
+  **绝对不要**为了修 404 去跑 `pnpm content`——见第十一节「坑」。
 
 ### ⚠️ 派视觉任务时必须加 `-i`（2026-08-29 学到的，代价是一整轮返工）
 
@@ -130,8 +145,11 @@ codex exec -m gpt-5.6-luna -c 'model_reasoning_effort="max"' \
   -i /path/to/目标参照图.jpg \
   -i /path/to/改造前.png \
   -i /path/to/上一版失败的.png \
-  "<任务>"
+  < 任务书.md
 ```
+
+（提示词**必须走 stdin**。写成 `-i 图 "<任务>"` 会被最后一个 `-i` 吃掉，见第零节坑 2。
+上一版这份文档的这个例子本身就是错的。）
 
 **背景：** 8/29 派了一个草的美术任务，只给了数字指标。代理老老实实达标了
 每一条，画面却更难看。查它 2.6MB 的日志，`view_image` 调用次数是 **0**——
@@ -214,9 +232,8 @@ codex exec -m gpt-5.6-luna -c 'model_reasoning_effort="max"' \
 
 ## 四、已经落地的东西（不要推翻）
 
-main 在 `76070b3`，`pnpm verify` 全绿。**main 当前有未提交的改动
-（`package.json` / `pnpm-lock.yaml` / `pnpm-workspace.yaml`，PGS 升到 0.9.9），
-那是老板另一个 codex 会话的在途工作，不要替它提交，也不要 revert。**
+main 在 `e7ec944`，工作区干净。上一版这里写着「main 有未提交的 PGS 0.9.9 改动」，
+那批改动已经由老板那个会话提交了，不再是在途工作。
 
 - **一份场**。`island-field.ts` 把蓝图编译成 192×192 栅格，
   route / meadow / shore / rock 通道加烘焙 AO。
@@ -247,8 +264,15 @@ main 在 `76070b3`，`pnpm verify` 全绿。**main 当前有未提交的改动
   「要改技术锁必须先修订 ADR-0008」。`packages/world/src/inspector/`
   的 `descriptions.test.ts` 钉死了必须从真模块 import，禁止抄字面量。
   delivery 构建里这个页面解析成空壳，leva 和它的 CSS 不进学习者的包。
-  **已知不足：左侧画面被挤成竖条（规格是 60%，实际 35%），
-  出处路径在词中间断行。功能对了版式没对，留待收尾返工。**
+  **已知不足（🟡 2026-08-29 已派，`work/studio-map-layout`）：左侧画面被挤成竖条，
+  出处路径在词中间断行。功能对了版式没对。
+  病因已经查到，不用再查：`.map-studio` 的 `padding-right` 写的是
+  `var(--shell-aside-width) + gutter + 18px`，而 `app-shell.css` 在桌面端把
+  `--shell-aside-width` 设成 300px——这个页面根本没挂 aside，却给它留了 334px，
+  右边空出一整条 350px 的白带。栅格本身（`1.45fr : 0.85fr` = 63/37）是对的。
+  另外 `.map-studio__canvas-shell` 没有横向比例下限，剩下那点宽度被拉成竖的，
+  而学习者看到的场景永远是横的。断行那条是 `.map-studio__source code` 上的
+  `overflow-wrap: anywhere`。**
 - **行星页的学域身份**。五个学域各有确定性色相和轮廓 profile：
   general `#7C64B3`、Buzz `#7D9A62`、SupaLuv `#5C9B99`、
   TuringPact `#D49A62`、UniversityLocal `#A77768`；
@@ -380,7 +404,7 @@ Bend / dissolve / imageMelt 以后单独评估。
 
 ## 六、还开着的视觉问题
 
-### 群岛层：每座岛长得一模一样（**还没派人做，优先级最高的未开工项**）
+### 群岛层：每座岛长得一模一样（🟡 2026-08-29 已派，`work/archipelago-identity`）
 
 实机看过 `/turing-pact`。ADR-0009 那条「剪影 + 一次明暗断裂 + 一个亮点」
 是**做到了**的，DOM 标签也清晰可读。
@@ -391,10 +415,49 @@ Bend / dissolve / imageMelt 以后单独评估。
 **群岛层要做的就是复用 `planet-copy.ts` 那一份，不要发明第二套配色。**
 这正是 ADR-0009 存在的理由。
 
-### 群岛页首帧慢（还没量，不确定是不是缺陷）
+#### 派活之前实机看过一遍，问题不止一条（2026-08-29）
 
-dev 模式下约 30 秒才画出来，课程岛只要 6 秒。无头 Chromium 里 30 秒都出不来。
-**这是付费用户看到的第二块屏幕**，值得量一下生产构建下的真实首帧时间。
+参照图 `/tmp/archipelago-before-1440x900.png`。四条，按性价比排序：
+
+1. **黑色底盘环是全屏对比度最高的东西。** 每座岛下面挂着一圈近乎纯黑的边缘加一条
+   黑弧，像个铁箍。学习者的眼睛先看到箍，再看到岛。第四节那次「有颜色的暗部」
+   （2.08:1 光比 + 暖棕反弹，暗像素 23.88% → 11.83%）**只做在课程近景，
+   世界投影从来没享受过**。这条既不是识别问题也不是新功能，纯粹是补一次已经
+   做对过的事——**大概率是整个任务里最划算的一改**。
+2. **ADR-0009 说的「一个亮点」，实机是 0 座岛有。** 剪影有，明暗断裂被黑箍顶替了，
+   亮点根本没实现。
+3. **装饰预算花反了。** 每座岛约 90–130px，上面塞了树、桌子、画框、栅栏、水池，
+   在这个尺寸下糊成一团色斑，反而**吃掉剪影的辨识度**。ADR-0009 只给世界投影
+   剪影 + 断裂 + 亮点三样，实机是装饰给满、识别没有。拿装饰换识别是白赚的三角形。
+4. **颜色识别要从学域色相邻域里取，不能满色轮乱转。** 已定：课程色相 = 学域色相
+   ±18° 以内，配上同一套五个轮廓 profile。一页群岛变成彩虹就是超预算了。
+
+构图上还有第五条——岛链是一条等间距、等大小的对角线，没有主次节奏。
+**这一轮没让它动布局**，只让它在报告里表态，好排下一轮。
+
+### 群岛页首帧慢（2026-08-29 量了一轮，**数字不可信，方法可复用**）
+
+在**生产构建**（`vite build --mode delivery`，本地 static server，零网络延迟）下，
+用「按用户所见」的探针量了一次：定时 CDP 截图裁出地图区域，交给**第二个空闲页面**
+做像素统计（边缘能量），首次达到稳态 50% 的时刻算首帧。
+
+| 页面 | 内容出现 | FCP | 最后一个资源 |
+| --- | ---: | ---: | ---: |
+| 群岛 `/turing-pact` | 20.2 s | 228 ms | 31.6 s |
+| 课程 `/turing-pact/foundations-before-zero` | 32.5 s | 148 ms | 56.6 s |
+
+**⚠️ 这两个数不能拿去下结论。** 量的时候机器上跑着五个 max 推理的 codex，
+一次空 `page.evaluate(() => 1)` 往返要 0.5–2.6 秒。绝对值和相对值都被 CPU 争抢污染了
+（课程页反而比群岛页慢，就跟上一版记的「课程 6 秒」正好相反）。
+
+**但有一个观察不受负载影响，值得记下来：`800ms → 17.6s` 之间合成器一帧都没出。**
+不是「慢」，是**冻住了**——`Page.captureScreenshot` 在那段时间根本返回不了。
+这指向一段同步的主线程工作（着色器编译或几何构建），不是网络。
+交付包也确实是**单个 1.67 MB 的 JS chunk（gzip 526 KB）**，构建时就有 >500KB 警告。
+
+**下一步：等机器安静下来，用同一个探针重量一遍。** 探针脚本的形状在这一节里，
+`firstframe3.mjs` 那种：CDP 截图 + 独立分析页 + 边缘能量阈值。
+重量之前不要动代码——现在还不知道它是不是缺陷。
 
 ---
 
@@ -415,30 +478,29 @@ dev 模式下约 30 秒才画出来，课程岛只要 6 秒。无头 Chromium �
 
 ---
 
-## 八、当前的阻塞
+## 八、上一版的阻塞：**已经解除**（2026-08-29 核实）
 
-**doc-gov 的 symlink 在 CI 里悬空。** `docs/policy/shared-rules/*.md` 是指向
-仓库外 `../../../../ProjectGovernanceSystem/` 的 symlink。开发机上有兄弟目录
-所以本地全绿；CI 只 checkout 这一个仓库，symlink 全悬空，
-`doc-gov router-check` 判成「路径不存在」。
+上一版这里写着「doc-gov 的 symlink 在 CI 里悬空，导致 SwimmerUIKit v1.9.0 发不到
+npm，`work/liquid-in-app` 合不了」。**这条已经过期，不要照它行动。**
 
-后果：**SwimmerUIKit v1.9.0 没发到 npm**（npm 上还是 1.8.1），
-所以 `work/liquid-in-app` 合不了。
+实测：
 
-**不要把 symlink 改回真文件。** 老板已经定了 symlink 是最终投递方式，
-这是 doc-gov 的判定问题，修在 PGS 那边。**老板那边的 codex 会话正在修**
-（已经推到 0.9.9，SwimmerUIKit 也有 `ca6b67a chore: restore SSOT shared-rule
-symlink delivery`）。
-
-PGS 修好之后：
-```bash
-gh workflow run npm-publish.yml --ref main
 ```
-版本号和 CHANGELOG 都已就位。发出去之后把
-`apps/university/package.json` 的依赖确认成 `1.9.0`，`pnpm install`，
-再合 `work/liquid-in-app`。
+npm view @pieai/swimmer-ui-kit version   →  1.9.0
+gh run list                              →  npm-publish  success  2026-08-28T17:47Z
+                                            docs-check   success  2026-08-28T18:14Z
+```
 
----
+老板那个会话在 PGS 侧修好了（升到 0.9.9，SwimmerUIKit 侧是
+`ca6b67a chore: restore SSOT shared-rule symlink delivery`），CI 已经全绿，包已经发出去了。
+
+于是 `work/liquid-in-app` 也解封了，已经做掉的部分：
+main 合进分支（`f10bfac`）、依赖确认成 `1.9.0`、`pnpm install` 跑通
+（`apps/university/node_modules/@pieai/swimmer-ui-kit` 报 1.9.0）。
+欠的那次真 App 十帧验证已经派出去了（见第零节）。
+
+**仍然成立的那条：不要把 symlink 改回真文件。** 老板已经定了 symlink 是最终投递方式。
+一个说 symlink 悬空的检查器，是检查器的 bug。
 
 ## 九、SwimmerUIKit 的液体动效语言（并行主线）
 
@@ -450,8 +512,12 @@ gh workflow run npm-publish.yml --ref main
   融合体现在是一条连续轮廓准确绕过中间的颈部，内部无接缝，控制台无警告。
   版本仍是 1.9.0（未发布）。
 - University `bbc3986`（分支 `work/liquid-in-app`）：`XpOrbAnimator` 拿掉了
-  `background` 和 `borderRadius`。**但还欠一次真 App 里的 10 帧验证**——
-  1.9.0 没发到 npm，跑不起来。发包解封后补。
+  `background` 和 `borderRadius`。~~还欠一次真 App 里的 10 帧验证~~ —— **1.9.0
+  已经发到 npm（见第八节），分支已合 main 到 `f10bfac`、依赖已升、install 已通，
+  那次十帧验证正在跑**（第零节表格最后一行）。
+  验完要回答的是四件事：融合处有没有真正的颈部、剪影内部有没有硬边接缝、
+  外轮廓是不是一条连续的线、**以及这个球在真实尺寸下是不是小到根本看不见**——
+  看不见的效果比没有效果更糟，因为它白占滤镜预算。
 
 下面是当时的诊断，保留作为背景。
 
