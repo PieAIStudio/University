@@ -117,33 +117,34 @@ export const WORLD_POLAR = THREE.MathUtils.degToRad(54);
  * markers on it. At 74° that ground is seen almost edge-on and the far half of
  * it is a sliver.
  *
- * 56° is a level-select map looking down at its own layout, two degrees off
- * the world map's 54° — near enough that entering a course reads as flying
- * closer to the same world rather than as arriving somewhere else.
+ * 68° is a deliberate course-only change from the world map's 54°. It is a
+ * 22° depression from the horizon: low enough to put a strip of sky behind
+ * the island, while still showing the next lesson markers on the ground.
+ * Entering a course therefore reads as arriving on the island, not as looking
+ * at the same high map from a slightly different distance.
  *
  * The tilt is pinned at both ends by `Controls`, which makes it — not the
  * camera position — the thing that decides how high the shot sits: `Flight`
  * sets the distance to the target and `MapControls.update()` then forces the
  * angle, so any offset tuned into the eye position is overwritten next frame.
  */
-export const COURSE_POLAR = THREE.MathUtils.degToRad(56);
+export const COURSE_POLAR = THREE.MathUtils.degToRad(68);
 
 /**
  * How far the eye sits from the look target inside a course.
  *
- * These grew with the tilt. At 74° the eye was nearly level and 38 units put
- * five stones in frame; from 56° the same distance is mostly sky, because a
- * shallower angle spends its frame on the ground in front of the target rather
- * than on the road behind it. 54 keeps a marker reading as a button while the
- * island it sits on has visible shore on both sides.
+ * The contact sheet tested 30/36/42 units at several polar angles. 68°/36 was
+ * the first combination that kept the avatar-sized landmark, a readable run
+ * of nodes and a sky band in one frame. The tighter 30-unit end remains
+ * available for a learner who wants to inspect the nearby island edge.
  *
- * The span is 2.2×, inside the same ≤3× rule the world map is held to, and
+ * The span is 2.53×, inside the same ≤3× rule the world map is held to, and
  * the max stays under WORLD_DISTANCE_MIN so pulling all the way out of a
  * course is still closer than the sea it sits in. Height is not a lever —
  * polar is pinned.
  */
-export const COURSE_DISTANCE = 54;
-export const COURSE_DISTANCE_MIN = 34;
+export const COURSE_DISTANCE = 36;
+export const COURSE_DISTANCE_MIN = 30;
 export const COURSE_DISTANCE_MAX = 76;
 /**
  * World-map dolly range. The lever is distance, not camera height: polar is
@@ -165,10 +166,10 @@ export const WORLD_DISTANCE_MAX = 180;
 /**
  * App.tsx aims four markers ahead. Pulling the target forward along +Z toward
  * the viewer keeps the live marker in the upper half, with the next lessons
- * descending into the unobscured middle. Smaller than it was: from 56° the
- * frame already holds more ground in front of the target than 74° did, so the
- * old 12 pushed the live marker too far up and wasted the bottom third on
- * shore.
+ * descending into the unobscured middle. It is intentionally independent of
+ * the low course polar: the lower camera is a composition choice, while this
+ * pull keeps the live marker out of the chrome and leaves the following
+ * lessons in front of the learner.
  */
 export const COURSE_LOOK_PULL = 6;
 
@@ -315,9 +316,11 @@ export function Controls({
       return;
     }
     instance.enabled = true;
-    // Flight runs at priority 0 and snaps the eye to App.tsx's `from`, which
-    // is ~65–76 units from the look target. MapControls then rebuilds position
-    // from (target, distance, polar) — so the lever is distance, not height.
+    // Flight runs at priority 0 and snaps the eye to App.tsx's route-anchored
+    // `from`. MapControls then rebuilds position from (target, distance,
+    // polar) — so the lever is distance, not height. A world-to-course flight
+    // that arrives outside the course zoom range is eased to the 36-unit
+    // landing distance; a normal course URL starts inside the same range.
     if (Math.abs(polarRef.current - COURSE_POLAR) < 1e-6) {
       const dist = camera.position.distanceTo(instance.target);
       if (dist > COURSE_DISTANCE_MAX + 0.05) {

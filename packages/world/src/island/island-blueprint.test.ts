@@ -93,9 +93,11 @@ describe("IslandBlueprint", () => {
     const fullPathRatio =
       (blueprint.route.roadWidth + blueprint.route.shoulderWidth * 2) / nodeDiameter;
 
-    expect(roadRatio).toBeGreaterThanOrEqual(0.35);
-    expect(roadRatio).toBeLessThanOrEqual(0.5);
-    expect(fullPathRatio).toBeLessThanOrEqual(0.58);
+    // The near camera needs a band that survives the final pixels, but the
+    // route must remain subordinate to the lesson stones and dressing clearances.
+    expect(roadRatio).toBeGreaterThanOrEqual(0.4);
+    expect(roadRatio).toBeLessThanOrEqual(0.46);
+    expect(fullPathRatio).toBeLessThanOrEqual(0.64);
   });
 
   it("validates multiple stable seeds at every supported fixture size", () => {

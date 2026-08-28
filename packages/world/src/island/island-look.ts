@@ -40,10 +40,10 @@ export interface IslandLookViewport {
 }
 
 const COURSE_DESIGN_COVERAGE = 0.84;
-const COURSE_NEAR_DISTANCE = 34;
+const COURSE_NEAR_DISTANCE = 36;
 const COURSE_FAR_DISTANCE = 76;
 const WORLD_DESIGN_DISTANCE = 112;
-const COURSE_ELEVATION_DEGREES = 36;
+const COURSE_ELEVATION_DEGREES = 22;
 const COURSE_DESIGN_AZIMUTH_DEGREES = 65;
 const LOOK_POLAR = ((90 - COURSE_ELEVATION_DEGREES) * Math.PI) / 180;
 const LOOK_ELEVATION = (COURSE_ELEVATION_DEGREES * Math.PI) / 180;
@@ -53,9 +53,9 @@ function finitePositive(value: number, fallback: number): number {
 }
 
 function cameraOffset(distance: number, azimuth = 0): readonly [number, number, number] {
-  // Three's spherical polar angle is measured from +Y. A 54° polar angle is
-  // therefore a fixed 36° depression from the horizontal, not an eyeballed
-  // camera height copied from the learner view.
+  // Three's spherical polar angle is measured from +Y. A 68° polar angle is
+  // therefore a fixed 22° depression from the horizontal, matching the
+  // learner course camera instead of maintaining the old high overview.
   const horizontal = distance * Math.cos(LOOK_ELEVATION);
   return [
     horizontal * Math.sin(azimuth),

@@ -51,33 +51,31 @@ export function islandGeometryScale(
  * single tone near L* 71. A light cannot rescue that, because a flat surface
  * lit from any angle returns a flat image.
  *
- * The first four values come from the low-sun lighting work, which widened
- * them to give the grass field a reachable highlight; `grassLight` is exported
- * to the blade material as its tip colour, which is why it sits so far above
- * the others. The remaining six were added for the terrain rule below. Between
- * them the ladder now reaches from L* 40 to L* 89. The rock tones are the
- * important addition: they are selected by slope, so a hillside paints itself
+ * The palette is intentionally split by material before lighting: yellow-green
+ * meadow, cream soil, and warm brown rock. `grassLight` is exported to the
+ * blade material as its tip colour, which is why it sits above the terrain
+ * ladder. The slope rule selects the rock tones, so a hillside paints itself
  * darker than the meadow around it and relief becomes visible as shape rather
- * than as a subtle gradient.
+ * than as one dark-green smear.
  */
-const GRASS = new THREE.Color(0x7eb55c); // L* 67.9, the meadow's anchor tone
-const GRASS_LIGHT = new THREE.Color(0xd4ee88); // L* 89.4, the grass blade's tip
-const GRASS_DARK = new THREE.Color(0x4a6b42); // L* 41.9
-const GRASS_WARM = new THREE.Color(0xa6d064); // L* 79.1
-const MEADOW_LOW = new THREE.Color(0x8dba52); // L* 70.6, sunlit flats
-const MEADOW_DEEP = new THREE.Color(0x466c3d); // L* 41.6, hollows and north faces
-const HIGHLAND = new THREE.Color(0xa8b473); // L* 70.2, dry grass on the tops
-const SAND = new THREE.Color(0xd9c8a0); // L* 81.0, the shore ring
-const ROCK = new THREE.Color(0x9c8b6f); // L* 58.7, warm exposed slope
-const ROCK_DARK = new THREE.Color(0x6a5c4b); // L* 40.3, the steepest faces
-const CLIFF = new THREE.Color(0x9d9481); // L* 61.0, sunlit rock face
-const CLIFF_DARK = new THREE.Color(0x615c58); // L* 39.8, the root the sky cannot reach
-// Muted earth colours deliberately sit between the meadow's olive greens and
-// the cliff: they describe exposed soil without becoming a painted brown line.
-const DIRT = new THREE.Color(0x806d4e);
-const DIRT_LIGHT = new THREE.Color(0xa28b65);
-const DIRT_DARK = new THREE.Color(0x655741);
-const SOIL_HINT = new THREE.Color(0x8a765a);
+const GRASS = new THREE.Color(0x8fbe4b); // bright yellow-green meadow anchor
+const GRASS_LIGHT = new THREE.Color(0xd8ef8b); // grass blade tip
+const GRASS_DARK = new THREE.Color(0x456b38); // shaded meadow
+const GRASS_WARM = new THREE.Color(0xc1cf5d); // dry sunlit meadow
+const MEADOW_LOW = new THREE.Color(0x9dbc4c); // sunlit flats
+const MEADOW_DEEP = new THREE.Color(0x3d6138); // hollows and north faces
+const HIGHLAND = new THREE.Color(0xc0bf69); // dry grass on high ground
+const SAND = new THREE.Color(0xead4a6); // cream shore ring
+const ROCK = new THREE.Color(0xa87950); // warm exposed slope
+const ROCK_DARK = new THREE.Color(0x704934); // steep brown faces
+const CLIFF = new THREE.Color(0xa57854); // sunlit cliff face
+const CLIFF_DARK = new THREE.Color(0x5d3d32); // root the sky cannot reach
+// Creamy earth tones keep the route visibly separate from both the yellow-green
+// meadow and the warm brown cliff, without creating a second route mesh.
+const DIRT = new THREE.Color(0xb18a58);
+const DIRT_LIGHT = new THREE.Color(0xd5b878);
+const DIRT_DARK = new THREE.Color(0x83603f);
+const SOIL_HINT = new THREE.Color(0xd1b479);
 
 function sampleCount(detail: IslandGeometryDetail, outline: readonly IslandOutlinePoint[]) {
   return detail === "course" ? outline.length : Math.min(32, Math.max(16, outline.length));
@@ -280,10 +278,10 @@ function colorForTop(
   // Colour follows broad world-space patches instead of the triangulation.
   // Random colour per vertex produced radial spokes from the centre fan — a
   // topology debug view, not grass. The wavelengths are tied to the island's
-  // own size so a patch is a feature on the surface rather than, as before,
-  // a wave longer than the island and therefore invisible.
+  // own size so the two broad cycles are visible on the surface rather than,
+  // as before, one wave longer than the island and therefore nearly invisible.
   const phase = hash(`${seed}/terrain-colour`) * Math.PI * 2;
-  const drift = Math.max(6, maxHalf * 0.22);
+  const drift = Math.max(5, maxHalf * 0.12);
   const patch =
     (Math.sin(x / drift + phase) +
       Math.cos(z / (drift * 1.21) - phase * 0.7) +
@@ -390,12 +388,13 @@ function pathSoilColour(
   const tone =
     pathNoise(blueprint.seed, "colour-shared", index / 3.4) * 0.72 +
     pathNoise(blueprint.seed, `colour-${side}`, index / 4.8) * 0.28;
-  const colour = colorForTop(blueprint, x, z, radial, height).multiplyScalar(0.68 + tone * 0.16);
+  const colour = colorForTop(blueprint, x, z, radial, height).multiplyScalar(0.86 + tone * 0.12);
   // Keep a trace of the meadow at the verge, but let the worn centre read as
-  // earth. A 24% blend looked like a dark green stripe in the first pass.
-  colour.lerp(SOIL_HINT, 0.66);
-  if (tone < 0.5) colour.lerp(DIRT_DARK, 0.22);
-  if (tone > 0.72) colour.lerp(DIRT_LIGHT, 0.19);
+  // a light cream soil band. The old 66% blend still inherited too much green
+  // from the terrain and read as a dark stripe from the near camera.
+  colour.lerp(SOIL_HINT, 0.78);
+  if (tone < 0.5) colour.lerp(DIRT_DARK, 0.14);
+  if (tone > 0.72) colour.lerp(DIRT_LIGHT, 0.14);
   return colour;
 }
 
@@ -692,9 +691,16 @@ export const ISLAND_GEOMETRY_PALETTE = {
   grass: GRASS.getHex(),
   grassLight: GRASS_LIGHT.getHex(),
   grassDark: GRASS_DARK.getHex(),
+  meadowLow: MEADOW_LOW.getHex(),
+  meadowDeep: MEADOW_DEEP.getHex(),
+  highland: HIGHLAND.getHex(),
+  sand: SAND.getHex(),
+  rock: ROCK.getHex(),
+  rockDark: ROCK_DARK.getHex(),
   cliff: CLIFF.getHex(),
   cliffDark: CLIFF_DARK.getHex(),
   dirt: DIRT.getHex(),
   dirtLight: DIRT_LIGHT.getHex(),
   dirtDark: DIRT_DARK.getHex(),
+  soilHint: SOIL_HINT.getHex(),
 } as const;
