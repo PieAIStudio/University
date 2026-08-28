@@ -1,10 +1,10 @@
 /**
  * Deterministic, bounded ground-cover planning for an IslandBlueprint.
  *
- * The sampler deliberately consumes the blueprint's continuous surface rule,
- * rather than a terrain mesh. A blade is accepted only when
- * `sampleIslandSurface` says that its x/z point is inside the authored top
- * surface. It never samples the cliff, underside, or a caller-owned geometry.
+ * The planner consumes the shared field compiled from the blueprint's
+ * continuous surface rule, rather than a terrain mesh. A clump is accepted
+ * only when the field says that its x/z point is inside the authored top
+ * surface. It never samples the cliff, underside, or caller-owned geometry.
  * An accepted placement is one clump of leaves, not one rendered blade.
  *
  * Algorithm provenance: the area-weighted rejection shape and seeded sample
@@ -14,10 +14,16 @@
  * shader, app, or media is copied. The donor's unbounded density is
  * intentionally replaced by the hard semantic budgets below.
  */
-import { sampleIslandSurface, type IslandBlueprint, type IslandPoint } from "./island-blueprint.js";
+import type { IslandBlueprint, IslandPoint } from "./island-blueprint.js";
 import { sampleIslandTerrainTop } from "./island-geometry.js";
 import { distanceToIslandRoute } from "./island-dressing.js";
-import { hash, seeded } from "./random.js";
+import {
+  islandFieldFor,
+  sampleIslandField,
+  sampleIslandFieldChannel,
+  type IslandField,
+} from "./island-field.js";
+import { seeded } from "./random.js";
 
 export const ISLAND_GRASS_VERSION = 2 as const;
 export type IslandGrassDetail = "course" | "world";
@@ -30,6 +36,10 @@ export type IslandGrassDistanceTier = "near" | "mid" | "far";
  * perturbed outline cannot put a blade on the cliff lip.
  */
 export const ISLAND_GRASS_TOP_MAX_RADIAL = 0.81;
+// Bilinear filtering can under-read a curved shoreline by a fraction of a
+// raster cell. Keep the field query conservative so the canonical continuous
+// sampler would still classify every accepted point as broad-top meadow.
+const ISLAND_GRASS_FIELD_MAX_SHORE = ISLAND_GRASS_TOP_MAX_RADIAL - 0.018;
 
 /**
  * Semantic budgets, not an invitation to fill the island. World has no grass
@@ -39,14 +49,13 @@ export const ISLAND_GRASS_TOP_MAX_RADIAL = 0.81;
 export const ISLAND_GRASS_LIMITS: Readonly<
   Record<IslandGrassDetail, Readonly<Record<IslandGrassRenderTier, number>>>
 > = {
-  // One instance is a five-leaf clump. 16,000 clumps × 45 triangles gives
-  // 720,000 grass triangles before the small terrain/dressing overhead, while
-  // the 4,500 mobile ceiling protects fill-rate and vertex work.
+  // One instance is a five-leaf clump. The close camera gets 800 clumps ×
+  // 45 triangles: enough for a layered foreground while leaving the authored
+  // road and lesson halos readable through the terrain's bare patches.
   // Measured in the local Chromium/ANGLE Metal session on an Apple M1 Max:
-  // 16,000 clumps rendered at 120.2 FPS (1440 × 900, 100 calls, 777,008 total
-  // triangles) and 4,500 clumps at 120.0 FPS (390 × 590, 125 calls, 383,996
-  // total triangles), both with the live wind loop enabled.
-  course: { desktop: 16000, mobile: 4500 },
+  // 800 clumps are the desktop ceiling; mobile keeps the same semantic
+  // budget because the shorter viewport already shows fewer world units.
+  course: { desktop: 800, mobile: 800 },
   world: { desktop: 0, mobile: 0 },
 };
 
@@ -59,10 +68,12 @@ export const ISLAND_GRASS_LOD_THRESHOLDS = {
 } as const;
 
 /**
- * The middle shot keeps 45% of the deterministic clump prefix and lifts it
- * 15% so a smaller silhouette still has readable vertical rhythm. Far is
- * deliberately empty: at the aerial distance, the terrain's meadow colour
- * carries the surface and leaf-sized pixels would only become noise.
+ * Near keeps the full deterministic clump prefix: the plan caps it at 800
+ * clumps because close leaves are large screen-space shapes.
+ * Mid keeps 45% of that prefix and lifts it 15% so a smaller silhouette still
+ * has readable vertical rhythm. Far is deliberately empty: at the aerial
+ * distance, the terrain's meadow colour carries the surface and leaf-sized
+ * pixels would only become noise.
  */
 export const ISLAND_GRASS_LOD_PROFILES: Readonly<
   Record<
@@ -165,8 +176,6 @@ export interface IslandGrassPlanOptions {
 
 const TAU = Math.PI * 2;
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
-/** A nine-unit lattice wavelength makes broad groves instead of per-instance noise. */
-export const ISLAND_GRASS_DENSITY_WAVELENGTH = 9;
 const ISLAND_GRASS_DENSITY_THRESHOLD = 0.26;
 /** The measured course top is about 4,900 square units inside its 85 × 112 grid. */
 const MEASURED_COURSE_TOP_AREA = 4900;
@@ -177,9 +186,10 @@ const DEFAULT_DENSITY: Readonly<Record<IslandGrassRenderTier, number>> = {
 // Grass stops just beyond the soil extent. A small margin keeps blades from
 // visually growing through the path while preserving the natural verge.
 // Leave room for the widest procedural soil verge, blade half-width, and a
-// small wind lean. This keeps grass roots on the meadow side of the path while
-// retaining a soft, naturally worn edge rather than a clipped lawn border.
-const DEFAULT_ROUTE_GAP = 0.24;
+// small wind lean. The extra clearance is deliberately generous in the near
+// camera: the road is the learner's reading line, so a soft meadow edge must
+// not turn into a green seam across it.
+const DEFAULT_ROUTE_GAP = 0.8;
 const DEFAULT_NODE_GAP = 0.52;
 const DEFAULT_HERO_GAP = 0.78;
 const MAX_SAMPLING_ATTEMPTS = 96;
@@ -207,34 +217,9 @@ function smoothUnit(value: number): number {
   return amount * amount * (3 - 2 * amount);
 }
 
-function lerp(first: number, second: number, amount: number): number {
-  return first + (second - first) * amount;
-}
-
-function valueNoise2d(seed: string, x: number, z: number, wavelength: number): number {
-  const gridX = x / wavelength;
-  const gridZ = z / wavelength;
-  const left = Math.floor(gridX);
-  const top = Math.floor(gridZ);
-  const xAmount = smoothUnit(gridX - left);
-  const zAmount = smoothUnit(gridZ - top);
-  const lattice = (offsetX: number, offsetZ: number): number =>
-    hash(`${seed}/grass-density/${left + offsetX}/${top + offsetZ}`);
-  const topRow = lerp(lattice(0, 0), lattice(1, 0), xAmount);
-  const bottomRow = lerp(lattice(0, 1), lattice(1, 1), xAmount);
-  return lerp(topRow, bottomRow, zAmount);
-}
-
-/**
- * Stable macro density in [0, 1]. The primary nine-unit field and a softer
- * eighteen-unit envelope are both derived from the blueprint seed, so high
- * values form groves while the low tail remains visibly bare ground.
- */
-export function islandGrassDensityAt(seed: string, x: number, z: number): number {
-  if (!Number.isFinite(x) || !Number.isFinite(z)) return 0;
-  const local = valueNoise2d(seed, x, z, ISLAND_GRASS_DENSITY_WAVELENGTH);
-  const broad = valueNoise2d(`${seed}/broad`, x, z, ISLAND_GRASS_DENSITY_WAVELENGTH * 2);
-  return Math.min(1, Math.max(0, local * 0.72 + broad * 0.28));
+/** Read the shared terrain-derived meadow density with bilinear filtering. */
+export function islandGrassDensityAt(field: IslandField, x: number, z: number): number {
+  return sampleIslandFieldChannel(field, "grass", x, z);
 }
 
 function densityAcceptance(density: number): number {
@@ -359,18 +344,19 @@ function clearanceToSafetyZones(
 
 function isAvailable(
   blueprint: IslandBlueprint,
+  field: IslandField,
   point: IslandPoint,
   radial: number,
   zones: readonly IslandGrassSafetyZone[],
   routeClearance: number,
 ): boolean {
-  // `inside` and `radial` are both required. `inside` protects the authored
-  // outline; radial protects the broad top from the continuous shore/cliff.
-  const surface = sampleIslandSurface(blueprint, point.x, point.z);
+  // The field's shore channel carries the same radial boundary for all
+  // consumers. The candidate radial remains as a conservative disk guard.
+  const surface = sampleIslandField(field, point.x, point.z);
   if (
     !surface.inside ||
     radial > ISLAND_GRASS_TOP_MAX_RADIAL ||
-    surface.radial > ISLAND_GRASS_TOP_MAX_RADIAL
+    surface.shore > ISLAND_GRASS_FIELD_MAX_SHORE
   ) {
     return false;
   }
@@ -417,6 +403,7 @@ export function planIslandGrass(
       placements,
     };
   }
+  const field = islandFieldFor(blueprint);
 
   for (let attempt = 0; attempt < maxAttempts && placements.length < targetCount; attempt += 1) {
     // The low-discrepancy angular progression avoids accidental bands while
@@ -430,10 +417,11 @@ export function planIslandGrass(
       x: Math.cos(angle) * blueprint.bounds.halfX * radial,
       z: Math.sin(angle) * blueprint.bounds.halfZ * radial,
     };
-    const density = islandGrassDensityAt(resolved.seed, point.x, point.z);
+    const density = islandGrassDensityAt(field, point.x, point.z);
     const acceptance = densityAcceptance(density);
     if (acceptance <= 0 || random() > acceptance) continue;
-    if (!isAvailable(blueprint, point, radial, resolved.safetyZones, routeClearance)) continue;
+    if (!isAvailable(blueprint, field, point, radial, resolved.safetyZones, routeClearance))
+      continue;
     const surface = sampleIslandTerrainTop(blueprint, "course", point.x, point.z);
     // One placement is a 5–8-leaf clump. A 0.72–1.0 footprint leaves small
     // seams between clumps at low field values, while the 0.72–1.06 height
@@ -468,13 +456,13 @@ export function planIslandGrass(
 
 /**
  * A small test/diagnostic predicate shared by callers that want to explain
- * why a candidate is not eligible. It intentionally delegates height to the
- * blueprint and never reads or mutates a terrain mesh.
+ * why a candidate is not eligible. It reads the same cached field as the
+ * planner and never reads or mutates a terrain mesh.
  */
 export function islandGrassPointIsTopSurface(
   blueprint: IslandBlueprint,
   point: IslandPoint,
 ): boolean {
-  const sample = sampleIslandSurface(blueprint, point.x, point.z);
-  return sample.inside && sample.radial <= ISLAND_GRASS_TOP_MAX_RADIAL;
+  const sample = sampleIslandField(islandFieldFor(blueprint), point.x, point.z);
+  return sample.inside && sample.shore <= ISLAND_GRASS_FIELD_MAX_SHORE;
 }

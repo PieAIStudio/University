@@ -1354,7 +1354,7 @@ function corridorFieldFor(blueprint: IslandGeometryBlueprint): CorridorField {
   return field;
 }
 
-function routeDistanceAt(blueprint: IslandGeometryBlueprint, x: number, z: number): number {
+export function routeDistanceAt(blueprint: IslandGeometryBlueprint, x: number, z: number): number {
   const field = corridorFieldFor(blueprint);
   const gx = clamp((x - field.minX) / field.cell, 0, field.countX - 1.0001);
   const gz = clamp((z - field.minZ) / field.cell, 0, field.countZ - 1.0001);

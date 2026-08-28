@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { islandBlueprint, sampleIslandSurface } from "./island-blueprint.js";
 import { sampleIslandTerrainTop } from "./island-geometry.js";
 import { distanceToIslandRoute } from "./island-dressing.js";
+import { islandFieldFor } from "./island-field.js";
 import {
   ISLAND_GRASS_LIMITS,
   ISLAND_GRASS_LOD_PROFILES,
@@ -64,17 +65,18 @@ describe("Island grass plan", () => {
   });
 
   it("keeps the seeded density field broad enough to form groves and bare patches", () => {
+    const field = islandFieldFor(blueprint);
     const values = Array.from({ length: 13 * 15 }, (_, index) => {
       const x = (index % 13) * 8 - 48;
       const z = Math.floor(index / 13) * 8 - 56;
-      return islandGrassDensityAt(blueprint.seed, x, z);
+      return islandGrassDensityAt(field, x, z);
     });
 
     expect(values).toEqual(
       Array.from({ length: 13 * 15 }, (_, index) => {
         const x = (index % 13) * 8 - 48;
         const z = Math.floor(index / 13) * 8 - 56;
-        return islandGrassDensityAt(blueprint.seed, x, z);
+        return islandGrassDensityAt(field, x, z);
       }),
     );
     expect(Math.max(...values) - Math.min(...values)).toBeGreaterThan(0.2);

@@ -5,8 +5,14 @@
  * the composition. It builds one full course plan, then the world projection
  * removes low-importance detail; it never rolls a second island.
  */
-import { sampleIslandSurface, type IslandBlueprint, type IslandPoint } from "./island-blueprint.js";
+import { type IslandBlueprint, type IslandPoint } from "./island-blueprint.js";
 import { sampleIslandTerrainTop } from "./island-geometry.js";
+import {
+  islandFieldFor,
+  sampleIslandField,
+  type IslandField,
+  type IslandFieldSample,
+} from "./island-field.js";
 import {
   recipeById,
   validateIslandRecipe,
@@ -140,7 +146,8 @@ const ELEMENTAL_SERENITY_PACK = "elemental-serenity" as const;
  * Rather than raise every ceiling to the same number, each rule states the
  * slope it prefers, so trees settle on the shoulders and flats, rock gathers
  * where the ground is too steep to hold soil, and neither has to be placed by
- * hand.
+ * hand. The radial ranges form the tree ring: the route and its lesson nodes
+ * cut the readable opening through its middle.
  */
 const NATURAL_RULES: readonly CandidateRule[] = [
   {
@@ -148,11 +155,11 @@ const NATURAL_RULES: readonly CandidateRule[] = [
     kind: "tree",
     count: 74,
     minSpacing: 1.02,
-    radial: [0.24, 0.86],
+    radial: [0.68, 0.97],
     height: [2.35, 4.15],
     importance: [0.62, 0.92],
     maxSlope: 0.88,
-    clustered: true,
+    clustered: false,
     prefersSlope: -0.7,
   },
   {
@@ -165,7 +172,7 @@ const NATURAL_RULES: readonly CandidateRule[] = [
     // the gaps under the groves the way undergrowth does.
     count: 46,
     minSpacing: 0.58,
-    radial: [0.2, 0.88],
+    radial: [0.52, 0.92],
     height: [0.26, 0.46],
     importance: [0.3, 0.58],
     maxSlope: 1.05,
@@ -177,7 +184,7 @@ const NATURAL_RULES: readonly CandidateRule[] = [
     kind: "rock",
     count: 58,
     minSpacing: 0.68,
-    radial: [0.2, 0.9],
+    radial: [0.58, 0.97],
     height: [0.42, 1.35],
     importance: [0.42, 0.78],
     maxSlope: 1.9,
@@ -484,15 +491,6 @@ export function distanceToIslandRoute(blueprint: IslandBlueprint, point: IslandP
   return distance;
 }
 
-function slopeAt(blueprint: IslandBlueprint, point: IslandPoint): number {
-  const step = 0.42;
-  const left = sampleIslandSurface(blueprint, point.x - step, point.z).y;
-  const right = sampleIslandSurface(blueprint, point.x + step, point.z).y;
-  const before = sampleIslandSurface(blueprint, point.x, point.z - step).y;
-  const after = sampleIslandSurface(blueprint, point.x, point.z + step).y;
-  return Math.atan(Math.hypot((right - left) / (step * 2), (after - before) / (step * 2)));
-}
-
 function routeClearance(blueprint: IslandBlueprint): number {
   // Centreline distance already covers every lesson node because every node
   // lies on that line. Adding nodeRadius again left a sterile several-metre
@@ -504,12 +502,17 @@ function routeClearance(blueprint: IslandBlueprint): number {
 function available(
   blueprint: IslandBlueprint,
   point: IslandPoint,
+  surface: IslandFieldSample,
   placements: readonly IslandDressingPlacement[],
   minSpacing: number,
   maxSlope: number,
+  nodeClearance: number,
 ): boolean {
-  const surface = sampleIslandSurface(blueprint, point.x, point.z);
-  if (!surface.inside || surface.radial > 0.91) return false;
+  const slopeLimit = Math.min(1, Math.max(0, maxSlope / (Math.PI / 2)));
+  // B is the shared shoreline/radial mask and A is the height-grid slope.
+  // Keep the outermost shoreline out of the placement pool; the remaining
+  // radial rule supplies the broad tree ring without sampling the surface.
+  if (!surface.inside || surface.shore > 0.975 || surface.rock > slopeLimit) return false;
   if (distanceToIslandRoute(blueprint, point) < routeClearance(blueprint)) return false;
   if (
     Math.hypot(point.x - blueprint.hero.x, point.z - blueprint.hero.z) <
@@ -517,7 +520,11 @@ function available(
   ) {
     return false;
   }
-  if (slopeAt(blueprint, point) > maxSlope) return false;
+  if (
+    blueprint.nodes.some((node) => Math.hypot(point.x - node.x, point.z - node.z) < nodeClearance)
+  ) {
+    return false;
+  }
   return placements.every(
     (placement) => Math.hypot(point.x - placement.x, point.z - placement.z) >= minSpacing,
   );
@@ -538,6 +545,7 @@ function radialPoint(
 
 function routeClusterCandidate(
   blueprint: IslandBlueprint,
+  field: IslandField,
   fraction: number,
   preferredSide: number,
 ): IslandPoint | null {
@@ -558,8 +566,8 @@ function routeClusterCandidate(
         x: point.x + normal.x * offset * side,
         z: point.z + normal.z * offset * side,
       };
-      const surface = sampleIslandSurface(blueprint, candidate.x, candidate.z);
-      if (!surface.inside || surface.radial > 0.84) continue;
+      const surface = sampleIslandField(field, candidate.x, candidate.z);
+      if (!surface.inside || surface.shore > 0.84) continue;
       if (distanceToIslandRoute(blueprint, candidate) < routeClearance(blueprint) + 1.4) {
         continue;
       }
@@ -575,14 +583,14 @@ function routeClusterCandidate(
   return null;
 }
 
-function clusterCentres(blueprint: IslandBlueprint): readonly IslandPoint[] {
+function clusterCentres(blueprint: IslandBlueprint, field: IslandField): readonly IslandPoint[] {
   const side =
     seeded(`${blueprint.seed}/${blueprint.layoutRevision}/dressing-side`)() < 0.5 ? -1 : 1;
   const centres: IslandPoint[] = [];
   // Five route beats read like designed groves: arrival, early journey,
   // midpoint, late journey, summit.  Units never enter this calculation.
   for (const [index, fraction] of [0.035, 0.24, 0.48, 0.72, 0.955].entries()) {
-    const point = routeClusterCandidate(blueprint, fraction, index % 2 === 0 ? side : -side);
+    const point = routeClusterCandidate(blueprint, field, fraction, index % 2 === 0 ? side : -side);
     if (
       point &&
       centres.every((centre) => Math.hypot(point.x - centre.x, point.z - centre.z) >= 4.8)
@@ -603,6 +611,7 @@ interface RouteBeatAnchor {
 
 function routeBeatAnchor(
   blueprint: IslandBlueprint,
+  field: IslandField,
   segment: IslandDressingSegment,
 ): RouteBeatAnchor | null {
   const zone = blueprint.zones.find((candidate) => candidate.id === segment);
@@ -641,8 +650,8 @@ function routeBeatAnchor(
         x: routePoint.x + baseNormal.x * offset * side,
         z: routePoint.z + baseNormal.z * offset * side,
       };
-      const surface = sampleIslandTerrainTop(blueprint, "course", point.x, point.z);
-      if (!surface.inside || surface.radial > 0.84) continue;
+      const surface = sampleIslandField(field, point.x, point.z);
+      if (!surface.inside || surface.shore > 0.84) continue;
       if (distanceToIslandRoute(blueprint, point) < routeClearance(blueprint) + 1.4) continue;
       if (
         Math.hypot(point.x - blueprint.hero.x, point.z - blueprint.hero.z) <
@@ -656,10 +665,10 @@ function routeBeatAnchor(
           x: point.x + tangent.x * slot.along + normal.x * slot.away,
           z: point.z + tangent.z * slot.along + normal.z * slot.away,
         };
-        const at = sampleIslandSurface(blueprint, candidate.x, candidate.z);
+        const at = sampleIslandField(field, candidate.x, candidate.z);
         return (
           at.inside &&
-          at.radial <= 0.88 &&
+          at.shore <= 0.88 &&
           distanceToIslandRoute(blueprint, candidate) >= routeClearance(blueprint) &&
           Math.hypot(candidate.x - blueprint.hero.x, candidate.z - blueprint.hero.z) >=
             blueprint.hero.radius + 1.4
@@ -721,11 +730,12 @@ function placementFootprintRadius(
 
 function outpostPlacementIsSafe(
   blueprint: IslandBlueprint,
+  field: IslandField,
   placement: IslandDressingPlacement,
   occupied: readonly IslandDressingPlacement[],
 ): boolean {
-  const surface = sampleIslandTerrainTop(blueprint, "course", placement.x, placement.z);
-  if (!surface.inside || surface.radial > 0.84) return false;
+  const surface = sampleIslandField(field, placement.x, placement.z);
+  if (!surface.inside || surface.shore > 0.84) return false;
   const footprint = placementFootprintRadius(placement);
   if (distanceToIslandRoute(blueprint, placement) < routeClearance(blueprint) + footprint + 0.82) {
     return false;
@@ -756,7 +766,6 @@ function outpostPlacementIsSafe(
 }
 
 function makeOutpostPlacement(
-  blueprint: IslandBlueprint,
   layout: OutpostLayout,
   anchor: RouteBeatAnchor,
   part: OutpostPart,
@@ -766,7 +775,6 @@ function makeOutpostPlacement(
     x: anchor.point.x + anchor.tangent.x * part.along + anchor.normal.x * part.away,
     z: anchor.point.z + anchor.tangent.z * part.along + anchor.normal.z * part.away,
   };
-  const surface = sampleIslandTerrainTop(blueprint, "course", point.x, point.z);
   const routeHeading =
     part.headingAxis === "x"
       ? Math.atan2(anchor.tangent.z, anchor.tangent.x)
@@ -781,7 +789,10 @@ function makeOutpostPlacement(
     outpostId: layout.id,
     outpostKind: layout.kind,
     x: point.x,
-    y: surface.y + lift,
+    // Safety is decided from the shared field before this draft receives a
+    // terrain y. Rejected route/shore candidates therefore do not pay for a
+    // second continuous top-mesh interpolation.
+    y: 0,
     z: point.z,
     ...(part.lift === undefined ? {} : { lift }),
     turn: routeHeading + (part.turnOffset ?? 0),
@@ -794,6 +805,7 @@ function outpostPlacements(
   blueprint: IslandBlueprint,
   recipe: IslandRecipe,
   reserved: readonly IslandDressingPlacement[] = [],
+  field: IslandField = islandFieldFor(blueprint),
 ): IslandDressingPlacement[] {
   const result: IslandDressingPlacement[] = [];
   const occupied: IslandDressingPlacement[] = [...reserved];
@@ -827,10 +839,10 @@ function outpostPlacements(
             normal,
           };
           const draft = parts.map((part, partIndex) =>
-            makeOutpostPlacement(blueprint, layout, anchor, part, partIndex),
+            makeOutpostPlacement(layout, anchor, part, partIndex),
           );
           const safeParts = draft.map((placement, partIndex) =>
-            outpostPlacementIsSafe(blueprint, placement, [
+            outpostPlacementIsSafe(blueprint, field, placement, [
               ...occupied,
               ...draft.slice(0, partIndex),
             ]),
@@ -843,8 +855,12 @@ function outpostPlacements(
       }
     }
     if (!selected) continue;
-    result.push(...selected);
-    occupied.push(...selected);
+    const grounded = selected.map((placement) => {
+      const surface = sampleIslandTerrainTop(blueprint, "course", placement.x, placement.z);
+      return { ...placement, y: surface.y + (placement.lift ?? 0) };
+    });
+    result.push(...grounded);
+    occupied.push(...grounded);
   }
   return result;
 }
@@ -872,28 +888,36 @@ function candidatePoint(
  * where things gather, not whether they exist.
  */
 function slopePreferred(
-  blueprint: IslandBlueprint,
-  point: IslandPoint,
+  surface: IslandFieldSample,
   rule: CandidateRule,
   random: () => number,
 ): boolean {
   const preference = rule.prefersSlope ?? 0;
   if (preference === 0) return true;
-  const steepness = Math.min(1, slopeAt(blueprint, point) / 1.1);
+  const steepness = surface.rock;
   const wanted = preference > 0 ? steepness : 1 - steepness;
   return random() < 0.22 + wanted * Math.abs(preference) * 0.78;
+}
+
+function densityAcceptanceForRule(surface: IslandFieldSample, rule: CandidateRule): number {
+  // Vegetation follows meadow density; exposed rock follows the same field's
+  // A channel. A modest floor keeps a rule from disappearing on an unusual
+  // but valid seed while the dominant term still shapes where it settles.
+  const density = rule.kind === "rock" ? surface.rock : surface.grass;
+  return 0.34 + density * 0.66;
 }
 
 function naturalPlacements(
   blueprint: IslandBlueprint,
   recipe: IslandRecipe,
   reserved: readonly IslandDressingPlacement[] = [],
+  field: IslandField = islandFieldFor(blueprint),
 ): IslandDressingPlacement[] {
   const allowed = new Set(recipe.base.assetIds);
   const placements: IslandDressingPlacement[] = [];
   const occupied: IslandDressingPlacement[] = [...reserved];
   const bushOccupied: IslandDressingPlacement[] = [...reserved];
-  const centres = clusterCentres(blueprint);
+  const centres = clusterCentres(blueprint, field);
   const density = Math.min(1.78, Math.max(0.9, 0.72 + Math.sqrt(blueprint.lessonCount) / 6.8));
   for (const rule of NATURAL_RULES) {
     const assets = rule.assets.filter((asset) => allowed.has(asset));
@@ -905,8 +929,25 @@ function naturalPlacements(
       if (placements.length - start >= targetCount) break;
       const point = candidatePoint(blueprint, rule, centres, random);
       const spacingOccupied = rule.kind === "bush" ? bushOccupied : occupied;
-      if (!available(blueprint, point, spacingOccupied, rule.minSpacing, rule.maxSlope)) continue;
-      if (!slopePreferred(blueprint, point, rule, random)) continue;
+      const fieldSample = sampleIslandField(field, point.x, point.z);
+      if (random() > densityAcceptanceForRule(fieldSample, rule)) continue;
+      const nodeClearance =
+        blueprint.route.nodeRadius +
+        placementFootprintRadius({ kind: rule.kind, height: rule.height[1] });
+      if (
+        !available(
+          blueprint,
+          point,
+          fieldSample,
+          spacingOccupied,
+          rule.minSpacing,
+          rule.maxSlope,
+          nodeClearance,
+        )
+      ) {
+        continue;
+      }
+      if (!slopePreferred(fieldSample, rule, random)) continue;
       const surface = sampleIslandTerrainTop(blueprint, "course", point.x, point.z);
       const assetId = assets[Math.floor(random() * assets.length)]!;
       const amount = random();
@@ -922,16 +963,6 @@ function naturalPlacements(
         height: rule.height[0] + (rule.height[1] - rule.height[0]) * amount,
         importance: rule.importance[0] + (rule.importance[1] - rule.importance[0]) * amount,
       };
-      if (
-        rule.kind === "bush" &&
-        blueprint.nodes.some(
-          (node) =>
-            Math.hypot(point.x - node.x, point.z - node.z) <
-            blueprint.route.nodeRadius + placementFootprintRadius(placement) + 0.12,
-        )
-      ) {
-        continue;
-      }
       placements.push(placement);
       (rule.kind === "bush" ? bushOccupied : occupied).push(placement);
     }
@@ -942,6 +973,7 @@ function naturalPlacements(
 function accentPlacements(
   blueprint: IslandBlueprint,
   recipe: IslandRecipe,
+  field: IslandField = islandFieldFor(blueprint),
 ): IslandDressingPlacement[] {
   const accentPackByAsset = new Map<string, KenneyPackId>();
   recipe.accentRoles.forEach((role) =>
@@ -949,7 +981,7 @@ function accentPlacements(
   );
   const anchors = new Map<IslandDressingSegment, RouteBeatAnchor | null>();
   for (const segment of ["arrival", "journey", "summit"] as const) {
-    anchors.set(segment, routeBeatAnchor(blueprint, segment));
+    anchors.set(segment, routeBeatAnchor(blueprint, field, segment));
   }
   const result: IslandDressingPlacement[] = [];
   // Kenney Fantasy Town's modular walls and roads use local +Z as their long
@@ -968,8 +1000,8 @@ function accentPlacements(
         x: anchor.point.x + anchor.tangent.x * slot.along + anchor.normal.x * slot.away,
         z: anchor.point.z + anchor.tangent.z * slot.along + anchor.normal.z * slot.away,
       };
-      const surface = sampleIslandTerrainTop(blueprint, "course", point.x, point.z);
-      if (!surface.inside || surface.radial > 0.88) return;
+      const fieldSample = sampleIslandField(field, point.x, point.z);
+      if (!fieldSample.inside || fieldSample.shore > 0.88) return;
       if (distanceToIslandRoute(blueprint, point) < routeClearance(blueprint)) return;
       if (
         Math.hypot(point.x - blueprint.hero.x, point.z - blueprint.hero.z) <
@@ -977,6 +1009,7 @@ function accentPlacements(
       ) {
         return;
       }
+      const surface = sampleIslandTerrainTop(blueprint, "course", point.x, point.z);
       const lift = slot.lift ?? 0;
       result.push({
         id: `accent-${assetId}-${slotIndex + 1}`,
@@ -1079,13 +1112,14 @@ export function planIslandDressing(
   suppliedRecipe?: IslandRecipe,
 ): IslandDressingPlan {
   const recipe = resolveRecipe(blueprint, suppliedRecipe);
-  const accents = accentPlacements(blueprint, recipe);
-  const outposts = outpostPlacements(blueprint, recipe, accents);
+  const field = islandFieldFor(blueprint);
+  const accents = accentPlacements(blueprint, recipe, field);
+  const outposts = outpostPlacements(blueprint, recipe, accents, field);
   const full = [
     // Natural density is a course contract. Outposts get their own grouped
     // spacing, while foliage may fill the surrounding apron and keep the
     // seven-props-per-node floor stable.
-    ...naturalPlacements(blueprint, recipe, accents),
+    ...naturalPlacements(blueprint, recipe, accents, field),
     ...accents,
     ...outposts,
   ];

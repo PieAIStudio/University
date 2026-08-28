@@ -7,6 +7,7 @@ import {
   planIslandDressing,
 } from "./island-dressing.js";
 import { sampleIslandTerrainTop } from "./island-geometry.js";
+import { islandFieldFor, sampleIslandField } from "./island-field.js";
 import { islandThemeSelectionForCourse, recipeById, type IslandRecipe } from "./kenney-recipes.js";
 
 const selection = islandThemeSelectionForCourse("turing-pact", "foundations-before-zero");
@@ -103,6 +104,43 @@ describe("Island dressing", () => {
     expect(zones.length).toBeGreaterThan(0);
     expect(zones.every((zone) => zone.kind === "landmark" && zone.radius > 0)).toBe(true);
     expect(zones).toEqual(islandDressingSafetyZones(plan));
+  });
+
+  it("biases natural dressing through the shared meadow and rock channels", () => {
+    const blueprint = makeBlueprint();
+    const field = islandFieldFor(blueprint);
+    const natural = planIslandDressing(blueprint, "course").placements.filter(
+      (placement) => placement.packId === "nature-kit",
+    );
+    const foliage = natural.filter(
+      (placement) => placement.kind === "tree" || placement.kind === "bush",
+    );
+    const rocks = natural.filter((placement) => placement.kind === "rock");
+    const average = (placements: typeof natural, channel: "grass" | "rock") =>
+      placements.reduce(
+        (sum, placement) => sum + sampleIslandField(field, placement.x, placement.z)[channel],
+        0,
+      ) / Math.max(1, placements.length);
+
+    expect(natural.length).toBeGreaterThan(0);
+    expect(foliage.length).toBeGreaterThan(0);
+    expect(rocks.length).toBeGreaterThan(0);
+    expect(average(foliage, "grass")).toBeGreaterThan(average(rocks, "grass"));
+    expect(average(rocks, "rock")).toBeGreaterThan(average(foliage, "rock"));
+    for (const placement of natural) {
+      const sample = sampleIslandField(field, placement.x, placement.z);
+      expect(sample.inside, placement.id).toBe(true);
+      expect(sample.shore, placement.id).toBeLessThanOrEqual(0.975);
+      const footprint = Math.max(0.12, placement.height * 0.14);
+      expect(
+        blueprint.nodes.every(
+          (node) =>
+            Math.hypot(placement.x - node.x, placement.z - node.z) >=
+            blueprint.route.nodeRadius + footprint,
+        ),
+        placement.id,
+      ).toBe(true);
+    }
   });
 
   it("builds four to six grouped route outposts outside every lesson node", () => {
