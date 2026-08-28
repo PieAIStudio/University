@@ -38,7 +38,7 @@ const DEFAULT_GRASS_TOP = new THREE.Color(0xb0df83);
 const DEFAULT_GRASS_SHADOW = new THREE.Color(0x2d5c2f);
 const GRASS_BOTTOM_LSTAR = 43; // CIELAB L* at each blade root.
 const GRASS_TOP_LSTAR = 88; // CIELAB L* at the brightest blade tips.
-const GRASS_SHADOW_LSTAR = 30; // Non-linear root shadow endpoint.
+const GRASS_SHADOW_LSTAR = 36; // Keep the root readable; shadow is now local to the base.
 
 export interface IslandGrassStyle {
   readonly bottom?: THREE.ColorRepresentation;
@@ -300,9 +300,10 @@ varying float vBladeHeight;
 const GRASS_FRAGMENT_RAMP = `${GRASS_SHADER_MARKER}
 float grassBladeMask = clamp(vBladeHeight, 0.0, 1.0);
 vec3 grassColor = mix(uGrassBottom, uGrassTop, smoothstep(0.04, 0.96, grassBladeMask));
-// Donor-aligned nonlinear root shadow: roots stay dark while the card opens
-// into the full bright ramp toward its tip.
-float grassRootToTip = pow(smoothstep(0.2, 0.98, grassBladeMask), 0.5);
+// Keep the shadow in the lower root instead of letting it consume half of the
+// card. The lighter endpoint and earlier opening are important at meadow
+// density: overlapping cards should read as separate blades, not dark felt.
+float grassRootToTip = pow(smoothstep(0.08, 0.72, grassBladeMask), 0.72);
 grassColor = mix(uGrassShadow, grassColor, grassRootToTip);
 diffuseColor.rgb = grassColor;
 `;

@@ -7,6 +7,8 @@ import { distanceToIslandRoute } from "./island-dressing.js";
 import { islandFieldFor } from "./island-field.js";
 import {
   ISLAND_GRASS_LIMITS,
+  ISLAND_GRASS_BLADE_DENSITY_MULTIPLIER,
+  ISLAND_GRASS_DENSITY_THRESHOLD,
   ISLAND_GRASS_LOD_PROFILES,
   ISLAND_GRASS_LOD_THRESHOLDS,
   ISLAND_GRASS_TOP_MAX_RADIAL,
@@ -81,7 +83,7 @@ describe("Island grass plan", () => {
     expect(shader.vertexShader).toContain("grassBillboardAngle");
     expect(shader.vertexShader).toContain("grassRotateAxis");
     expect(shader.vertexShader).toContain("uGroundNormalStrength");
-    expect(shader.fragmentShader).toContain("pow(smoothstep(0.2, 0.98, grassBladeMask), 0.5)");
+    expect(shader.fragmentShader).toContain("pow(smoothstep(0.08, 0.72, grassBladeMask), 0.72)");
     expect(shader.fragmentShader).toContain("uGrassShadow");
 
     material.dispose();
@@ -234,9 +236,23 @@ describe("Island grass plan", () => {
     const desktopGrassTriangles = ISLAND_GRASS_LIMITS.course.desktop * ISLAND_GRASS_BLADE_TRIANGLES;
     const mobileGrassTriangles = ISLAND_GRASS_LIMITS.course.mobile * ISLAND_GRASS_BLADE_TRIANGLES;
 
-    expect(desktopGrassTriangles).toBe(80_000);
+    expect(ISLAND_GRASS_BLADE_DENSITY_MULTIPLIER).toBe(1);
+    expect(ISLAND_GRASS_DENSITY_THRESHOLD).toBe(0.68);
+    expect(desktopGrassTriangles).toBe(24_000);
     expect(desktopGrassTriangles).toBeLessThan(legacyGrassTriangles / 4);
     expect(mobileGrassTriangles).toBeLessThan(desktopGrassTriangles);
+
+    const liveDesktop = planIslandGrass(realCourseBlueprint, "course", {
+      tier: "desktop",
+      density: 3.6,
+    });
+    const liveMobile = planIslandGrass(realCourseBlueprint, "course", {
+      tier: "mobile",
+      density: 3.6,
+    });
+    expect(liveDesktop.placements.length).toBeGreaterThanOrEqual(16_000);
+    expect(liveDesktop.placements.length).toBeLessThanOrEqual(30_000);
+    expect(liveMobile.placements.length).toBe(ISLAND_GRASS_LIMITS.course.mobile);
   });
 
   it("resolves deterministic distance LOD with hysteresis", () => {

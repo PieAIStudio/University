@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-08-28
+last_reviewed: 2026-08-29
 domain: architecture
 tags:
   - 3d
@@ -142,3 +142,69 @@ The `island-field` merge landed in the same integration and is the reason the
 density number is now safe to tune: grass, dressing and ground colour read one
 compiled field, so raising or lowering grass no longer silently disagrees with
 where the terrain is painted green.
+
+## Amendment 2026-08-29: the card budget becomes a meadow mask
+
+The 80,000-card ceiling paid back the old five-leaf clump's triangle cost, but
+it preserved the wrong visual assumption: one card is concentrated at one
+sampled point, while five leaves spread the same clump over a small footprint.
+The fixed `course-near` capture used for this amendment is the 41-lesson
+`turing-pact/foundations-before-zero` course at 1440 × 900, with the same camera
+and seed used for the before/after evidence. Its baseline was:
+
+| measurement | before |
+| --- | ---: |
+| live grass instances | 80,000 |
+| grass triangles | 80,000 |
+| island-surface adjacent-pixel gradient energy | 2.8635 L* / pair |
+| scene triangles | 432,404 |
+
+The amendment keeps the one-triangle card and changes how much of the shared
+field it is allowed to occupy:
+
+- **The course cap is 24,000 desktop / 7,200 mobile**, replacing 80,000 / 24,000.
+  The cap is a ceiling rather than a target; at the shipped diorama density,
+  the corrected one-card multiplier produces 17,640 desktop candidates. The
+  mobile cap is the same 30% device ratio as the previous budget.
+- **The one-card density multiplier is 1.0**, replacing 6.4. A card is one
+  point sample, not five spatially distributed leaves, so multiplying the
+  point count by the old leaf count was an overcorrection.
+- **The shared-field cutoff is 0.68**, replacing 0.26, with the existing smooth
+  acceptance rising to full acceptance at 0.90. A 256 × 256 sample of the
+  compiled field found 87.63% of inside samples at or above 0.26 and 35.79% at
+  or above 0.68. This is a mask over `IslandField`'s grass channel, not a new
+  noise source; the route, shore, slope and safety checks remain in the same
+  planner.
+- **The root shadow endpoint is L* 36**, replacing L* 30. The ramp changes from
+  `pow(smoothstep(0.2, 0.98, h), 0.5)` to
+  `pow(smoothstep(0.08, 0.72, h), 0.72)`, so the shadow is concentrated near
+  the lower root instead of consuming roughly half of every card's height.
+- **The low-density ground endpoint uses a 1.0 field-to-soil mix**, implemented
+  as a smooth `IslandField` grass-channel mask over the existing `DIRT` and
+  `DIRT_LIGHT` vertex colours. This makes the same cutoff visible beneath the
+  blades; it adds no texture, material, draw or independent noise field.
+
+The geometry lock does not move: the generated card is still one indexed
+triangle in the shipped near/mid implementation, and the frame triangle count
+must not rise. The final measurement on the same capture is:
+
+| measurement | before | after |
+| --- | ---: | ---: |
+| live grass instances | 80,000 | 17,640 |
+| grass triangles | 80,000 | 17,640 |
+| island-surface adjacent-pixel gradient energy | 2.8635 L* / pair | 0.8021 L* / pair |
+| scene triangles | 432,404 | 370,044 |
+| canvas pixels with linear luminance < 0.08 | 6.248% | 0.271% |
+| non-grass island pixels | 22.678% | 36.259% |
+
+For the last row, an island pixel is first required to pass the existing land
+segmentation (`HSL hue 40–150° and saturation >= 0.10`, or warm hue <45° and
+saturation >=0.12). Within that mask, a grass-colour pixel is `HSL hue 45–165°,
+saturation >=0.18, CIELAB L* 36–88`; every other island pixel is non-grass.
+The before/after gradient and segmentation were computed from the 1440 × 900
+CDP PNGs, counting horizontal and vertical adjacent pairs only when both
+pixels were in the land mask. The measured gradient reduction is 71.99%.
+The before capture did not reproduce the earlier "near zero" bare-ground
+claim: it was already 22.678% under this reproducible criterion. The change
+still increases it to 36.259% and, more importantly, exposes the warm field-led
+soil regions in the image.

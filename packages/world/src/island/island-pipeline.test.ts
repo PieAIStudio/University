@@ -40,7 +40,7 @@ describe("ADR-0009: the procedural map is one pipeline", () => {
    * rather than from its own noise.
    */
   it("keeps every surface consumer reading the compiled field", () => {
-    for (const consumer of ["island-grass.ts", "island-dressing.ts"]) {
+    for (const consumer of ["island-grass.ts", "island-dressing.ts", "island-geometry.ts"]) {
       expect(sourceOf(consumer), `${consumer} must read the shared field`).toContain(
         "./island-field.js",
       );

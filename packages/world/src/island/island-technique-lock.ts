@@ -68,13 +68,16 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       "One generated three-vertex card, shipped 2026-08-28. Taper, wind bend, " +
       "camera-facing Y rotation and terrain-normal replacement all happen in the " +
       "vertex shader, so a single instance is one triangle. LOD varies instance " +
-      "count, not segment count. Root-to-tip lightness ramp is load-bearing.",
+      "count, not segment count. The course planner masks the shared field at " +
+      "density 0.68, and the root-to-tip lightness ramp is load-bearing.",
     source:
       "Our own geometry. Techniques adapted narrowly from elemental-serenity " +
       "(single-triangle billboard, non-linear root shadow, two-layer FBM wind) and " +
       "three-stylized (tapered strip, tip mask, shadow-depth sync). Both MIT; " +
       "neither donates media.",
-    budget: "1 tri/blade at every band; near <= 6 stays the ceiling, not the shape",
+    budget:
+      "1 tri/blade at every band; near <= 6 stays the ceiling, not the shape; " +
+      "course cap <=24,000 desktop / <=7,200 mobile",
     rejected: [
       {
         option:

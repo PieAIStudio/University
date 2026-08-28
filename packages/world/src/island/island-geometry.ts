@@ -14,6 +14,7 @@ import {
   type IslandOutlinePoint,
   type IslandPoint,
 } from "./island-blueprint.js";
+import { ISLAND_FIELD_GRASS_CUTOFF, islandFieldFor, sampleIslandField } from "./island-field.js";
 import { hash } from "./random.js";
 
 export type IslandGeometryDetail = "course" | "world";
@@ -301,6 +302,19 @@ function colorForTop(
   colour.lerp(HIGHLAND, smoothstep01(0.55, 1, relative) * 0.6);
   if (patch > 0.2) colour.lerp(GRASS_WARM, Math.min(0.6, patch));
   if (patch < -0.18) colour.lerp(GRASS_DARK, Math.min(0.5, -patch));
+
+  // The same compiled field that admits a blade also paints the exposed
+  // ground below it. Low meadow density is a soil opening, not an invitation
+  // to leave a second green opinion underneath the grass; using the field here
+  // makes the blade/ground boundary agree without adding another noise source.
+  const fieldSample = sampleIslandField(islandFieldFor(blueprint), x, z);
+  const exposedGround = fieldSample.inside
+    ? smoothstep01(ISLAND_FIELD_GRASS_CUTOFF, 0.36, fieldSample.grass)
+    : 0;
+  if (exposedGround > 0) {
+    const soilTone = DIRT.clone().lerp(DIRT_LIGHT, 0.35 + relative * 0.2);
+    colour.lerp(soilTone, exposedGround);
+  }
 
   // Slope shades the meadow before it exposes any stone. This is the term
   // that gives a hillside a dark side without asking the sun for it, and it

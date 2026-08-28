@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-28T14:50:31.122Z
+generated_at: 2026-08-28T17:20:45.916Z
 generator_version: doc-gov@0.9.6
 docs_count: 61
 docs:
@@ -58,7 +58,7 @@ docs:
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-08-28
+    last_reviewed: 2026-08-29
     pinned: false
   - id: ADR-0009
     path: docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md
@@ -142,7 +142,7 @@ docs:
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-28
+    last_reviewed: 2026-08-29
     pinned: true
   - id: POLICY-SHARED-WEB3D-CAPABILITY-ALIGNMENT
     path: docs/policy/shared-rules/web3d-capability-alignment.md

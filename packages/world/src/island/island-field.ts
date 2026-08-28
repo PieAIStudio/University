@@ -24,6 +24,9 @@ export const ISLAND_FIELD_MASK_CHANNELS = {
   rock: 3,
 } as const;
 
+/** Shared visual boundary between meadow blades and exposed ground. */
+export const ISLAND_FIELD_GRASS_CUTOFF = 0.68;
+
 export type IslandFieldMaskChannel = keyof typeof ISLAND_FIELD_MASK_CHANNELS;
 
 export interface IslandField {

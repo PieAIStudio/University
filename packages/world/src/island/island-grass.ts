@@ -20,6 +20,7 @@ import type { IslandBlueprint, IslandPoint } from "./island-blueprint.js";
 import { sampleIslandTerrainTop } from "./island-geometry.js";
 import { distanceToIslandRoute } from "./island-dressing.js";
 import {
+  ISLAND_FIELD_GRASS_CUTOFF,
   islandFieldFor,
   sampleIslandField,
   sampleIslandFieldChannel,
@@ -27,7 +28,7 @@ import {
 } from "./island-field.js";
 import { seeded } from "./random.js";
 
-export const ISLAND_GRASS_VERSION = 3 as const;
+export const ISLAND_GRASS_VERSION = 4 as const;
 export type IslandGrassDetail = "course" | "world";
 export type IslandGrassRenderTier = "desktop" | "mobile";
 export type IslandGrassDistanceTier = "near" | "mid" | "far";
@@ -52,21 +53,21 @@ export const ISLAND_GRASS_LIMITS: Readonly<
   Record<IslandGrassDetail, Readonly<Record<IslandGrassRenderTier, number>>>
 > = {
   // One instance is one three-vertex billboard blade, not a five-leaf clump.
-  // The donor's nine-tile upper bound is 112,500; the first visual pass spends
-  // 80,000 on desktop and 24,000 on mobile, roughly the old 16,000 clumps x
-  // five visible leaves, and under one quarter of the triangles those clumps
-  // cost. The saved budget is deliberately left unspent until the near-camera
-  // art pass decides where it goes.
-  course: { desktop: 80000, mobile: 24000 },
+  // The cap leaves room for a readable near meadow while keeping the field
+  // open: the corrected one-card multiplier produces about 17,640 desktop
+  // placements at the shipped diorama density, so this is a ceiling rather
+  // than an instruction to fill the island.
+  course: { desktop: 24000, mobile: 7200 },
   world: { desktop: 0, mobile: 0 },
 };
 
 /**
- * Existing look presets express density as five-leaf-clump density. One
- * triangle card replaces those five leaves, so expand that legacy semantic
- * density in the planner rather than changing the shared island renderer.
+ * Existing look presets still express density in the retired clump units, but
+ * one card is one concentrated point rather than five spatially distributed
+ * leaves. Keeping the multiplier at one preserves the field's point spacing
+ * instead of multiplying a point source by the old leaf count.
  */
-export const ISLAND_GRASS_BLADE_DENSITY_MULTIPLIER = 6.4;
+export const ISLAND_GRASS_BLADE_DENSITY_MULTIPLIER = 1;
 
 /** Camera-distance LOD bands, measured in the course island's world units. */
 export const ISLAND_GRASS_LOD_THRESHOLDS = {
@@ -185,7 +186,9 @@ export interface IslandGrassPlanOptions {
 
 const TAU = Math.PI * 2;
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
-const ISLAND_GRASS_DENSITY_THRESHOLD = 0.26;
+/** Only the strong meadow portion of the shared field receives blades. */
+export const ISLAND_GRASS_DENSITY_THRESHOLD = ISLAND_FIELD_GRASS_CUTOFF;
+const ISLAND_GRASS_DENSITY_FULL = 0.9;
 /** The measured course top is about 4,900 square units inside its 85 × 112 grid. */
 const MEASURED_COURSE_TOP_AREA = 4900;
 const DEFAULT_DENSITY: Readonly<Record<IslandGrassRenderTier, number>> = {
@@ -232,8 +235,10 @@ export function islandGrassDensityAt(field: IslandField, x: number, z: number): 
 }
 
 function densityAcceptance(density: number): number {
+  if (density < ISLAND_GRASS_DENSITY_THRESHOLD) return 0;
   return smoothUnit(
-    (density - ISLAND_GRASS_DENSITY_THRESHOLD) / (0.68 - ISLAND_GRASS_DENSITY_THRESHOLD),
+    (density - ISLAND_GRASS_DENSITY_THRESHOLD) /
+      (ISLAND_GRASS_DENSITY_FULL - ISLAND_GRASS_DENSITY_THRESHOLD),
   );
 }
 
