@@ -36,6 +36,7 @@ const views: View[] = [
   { kind: "catalog" },
   { kind: "avatar-lab" },
   { kind: "studio" },
+  { kind: "studio", section: "map" },
 ];
 
 describe("the address bar", () => {
@@ -123,6 +124,8 @@ describe("the address bar", () => {
     // 更多 entry to a course nobody has.
     expect(fromPath("/studio")).toEqual({ kind: "studio" });
     expect(toPath({ kind: "studio" })).toBe("/studio");
+    expect(fromPath("/studio/map")).toEqual({ kind: "studio", section: "map" });
+    expect(toPath({ kind: "studio", section: "map" })).toBe("/studio/map");
   });
 
   it("migrates legacy hashes through the canonical path parser", () => {

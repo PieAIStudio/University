@@ -53,6 +53,9 @@ export const ISLAND_GRASS_BLADE_TRIANGLE_CEILING = {
  */
 export const ISLAND_DECORATION_TRIANGLE_CEILING = 1200;
 
+/** The explicit tree ceiling written into the tree lock below. */
+export const ISLAND_TREE_TRIANGLE_CEILING = 900;
+
 /**
  * Landmarks are the other half of the scale hierarchy the art reference has and
  * this island does not: a handful of large, authored things that anchor the eye

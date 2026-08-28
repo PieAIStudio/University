@@ -11,7 +11,7 @@
  * - Performance: Deterministic (no Math.random), lightweight, fast first-screen and 60+ FPS.
  */
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 
 import { hash } from "../island/random.js";
@@ -28,12 +28,14 @@ import {
 } from "./placement.js";
 
 // Space background palette
-const SPACE_TOP = 0x070a14;
-const SPACE_MID = 0x121424;
-const SPACE_LOW = 0x221a28;
+export const PLANET_SPACE_PALETTE = {
+  top: 0x070a14,
+  mid: 0x121424,
+  low: 0x221a28,
+} as const;
 
 // Muted sRGB surface tones: the light/value ladder does the separating, not neon saturation.
-const PLANET_PALETTE = {
+export const PLANET_PALETTE = {
   deepOcean: 0x254b63,
   ocean: 0x3f7180,
   shallowOcean: 0x67999a,
@@ -44,6 +46,22 @@ const PLANET_PALETTE = {
   earth: 0xa58b6e,
   mountain: 0x82766a,
   polarIce: 0xd9ddd6,
+} as const;
+
+export const PLANET_ICOSAHEDRON_DETAIL = 4 as const;
+
+export const PLANET_LIGHTS = {
+  hemisphereColor: 0xd8f2fc,
+  hemisphereGround: 0x1d2e44,
+  hemisphereIntensity: 1.4,
+  ambientColor: 0xffefe0,
+  ambientIntensity: 0.95,
+  keyColor: 0xfff8ee,
+  keyIntensity: 1.6,
+  frontalFillColor: 0xe8f2fa,
+  frontalFillIntensity: 0.65,
+  nightRimColor: 0x529eb0,
+  nightRimIntensity: 0.45,
 } as const;
 
 /**
@@ -178,7 +196,7 @@ function evaluatePlanetTerrain(x: number, y: number, z: number): TerrainSample {
  * Procedural planet geometry with smooth normals and rich vertex colors.
  */
 export function buildPlanetGeometry(): THREE.BufferGeometry {
-  const geometry = new THREE.IcosahedronGeometry(1, 4);
+  const geometry = new THREE.IcosahedronGeometry(1, PLANET_ICOSAHEDRON_DETAIL);
   const position = geometry.attributes.position as THREE.BufferAttribute;
   const count = position.count;
   const colors = new Float32Array(count * 3);
@@ -361,9 +379,11 @@ function buildSkyGeometry(): THREE.BufferGeometry {
     const y = position.getY(i) / 40;
     const t = Math.min(1, Math.max(0, (y + 1) / 2));
     if (t > 0.5) {
-      color.setHex(SPACE_MID).lerp(new THREE.Color(SPACE_TOP), (t - 0.5) * 2);
+      color
+        .setHex(PLANET_SPACE_PALETTE.mid)
+        .lerp(new THREE.Color(PLANET_SPACE_PALETTE.top), (t - 0.5) * 2);
     } else {
-      color.setHex(SPACE_LOW).lerp(new THREE.Color(SPACE_MID), t * 2);
+      color.setHex(PLANET_SPACE_PALETTE.low).lerp(new THREE.Color(PLANET_SPACE_PALETTE.mid), t * 2);
     }
     colors[i * 3] = color.r;
     colors[i * 3 + 1] = color.g;
@@ -461,14 +481,32 @@ function Starfield() {
 function PlanetLights() {
   return (
     <>
-      <hemisphereLight args={[0xd8f2fc, 0x1d2e44, 1.4]} />
-      <ambientLight color={0xffefe0} intensity={0.95} />
+      <hemisphereLight
+        args={[
+          PLANET_LIGHTS.hemisphereColor,
+          PLANET_LIGHTS.hemisphereGround,
+          PLANET_LIGHTS.hemisphereIntensity,
+        ]}
+      />
+      <ambientLight color={PLANET_LIGHTS.ambientColor} intensity={PLANET_LIGHTS.ambientIntensity} />
       {/* Sun key light */}
-      <directionalLight position={[-4.0, 5.0, 4.5]} intensity={1.6} color={0xfff8ee} />
+      <directionalLight
+        position={[-4.0, 5.0, 4.5]}
+        intensity={PLANET_LIGHTS.keyIntensity}
+        color={PLANET_LIGHTS.keyColor}
+      />
       {/* Frontal camera fill to keep front faces crisp & readable */}
-      <directionalLight position={[0, 2.0, 6.0]} intensity={0.65} color={0xe8f2fa} />
+      <directionalLight
+        position={[0, 2.0, 6.0]}
+        intensity={PLANET_LIGHTS.frontalFillIntensity}
+        color={PLANET_LIGHTS.frontalFillColor}
+      />
       {/* Night-side rim fill */}
-      <directionalLight position={[3.5, -2.0, -4.0]} intensity={0.45} color={0x529eb0} />
+      <directionalLight
+        position={[3.5, -2.0, -4.0]}
+        intensity={PLANET_LIGHTS.nightRimIntensity}
+        color={PLANET_LIGHTS.nightRimColor}
+      />
     </>
   );
 }
@@ -560,6 +598,8 @@ const FLOATING_ISLAND_SHAPE_PARAMETERS: readonly FloatingIslandShapeParameters[]
     satelliteScale: 0.96,
   },
 ];
+
+export const PLANET_FLOATING_CLUSTER_PROFILE_COUNT = FLOATING_ISLAND_SHAPE_PARAMETERS.length;
 
 /**
  * Procedural low-poly floating island cluster geometry:
@@ -1085,11 +1125,15 @@ export function PlanetScene(props: PlanetSceneProps) {
   );
 }
 
-export function PlanetStage(props: PlanetSceneProps) {
+export function PlanetStage({
+  children,
+  ...props
+}: PlanetSceneProps & { readonly children?: ReactNode }) {
   return (
     <Stage cameraFrom={planetCamera()} lookAt={[0, 0, 0]} ambientOcclusion={false}>
       <CameraRig />
       <PlanetScene {...props} />
+      {children}
     </Stage>
   );
 }

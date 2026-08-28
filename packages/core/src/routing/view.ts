@@ -111,7 +111,7 @@ export type View =
     address space is one thing; whether a build answers this route is a separate
     question, decided where the routes are rendered.
   */
-  | { readonly kind: "studio" };
+  | { readonly kind: "studio"; readonly section?: "map" };
 
 /** Which library tab a legacy single-segment route lands on. */
 export const LIBRARY_VIEW_TAB: Partial<Record<View["kind"], LibraryTab>> = {
@@ -171,7 +171,7 @@ export function toPath(view: View): string {
     case "me":
       return "/me";
     case "studio":
-      return "/studio";
+      return view.section === "map" ? "/studio/map" : "/studio";
     case "course":
       return `/${enc(view.studyId)}/${enc(view.courseId)}`;
     case "lesson":
@@ -236,6 +236,9 @@ export function fromPath(pathname: string): View {
   if (parts.length === 1 && parts[0] === "plans") return { kind: "plans" };
   if (parts.length === 1 && parts[0] === "settings") return { kind: "settings" };
   if (parts.length === 1 && parts[0] === "me") return { kind: "me" };
+  if (parts.length === 2 && parts[0] === "studio" && parts[1] === "map") {
+    return { kind: "studio", section: "map" };
+  }
   if (parts.length === 1 && parts[0] === "studio") return { kind: "studio" };
   if (parts.length === 1 && parts[0] === "concepts") return { kind: "concepts" };
   if (parts.length === 2 && parts[0] === "concepts" && parts[1]) {

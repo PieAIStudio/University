@@ -21,6 +21,17 @@ export {
 export type { LessonPlacement, Marker } from "./Maps.js";
 export { Stage } from "./Stage.js";
 export { WorldMapCanvas, type WorldMap } from "./WorldMapCanvas.js";
+export {
+  describeIslandLayer,
+  describePlanetLayer,
+  describeWorldLayer,
+  PreviewOverrideBridge,
+} from "./inspector/index.js";
+export type {
+  InspectorLayerDescription,
+  InspectorParameter,
+  InspectorRuntimeMetrics,
+} from "./inspector/index.js";
 export { courseSprites } from "./labels/path-overlay.js";
 export {
   courseNodesOf,
@@ -30,6 +41,8 @@ export {
   studySub,
 } from "./course/course.js";
 export type { Course, CourseNode } from "./course/course.js";
+export { islandBlueprint } from "./island/island-blueprint.js";
+export { islandThemeSelectionForCourse } from "./island/kenney-recipes.js";
 export {
   Controls,
   COURSE_POLAR,

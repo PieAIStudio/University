@@ -399,12 +399,14 @@ function Island({
   dimmed = false,
   onClick,
   onOver,
+  assetRevision = 0,
 }: {
   entry: WorldPlacement;
   /** Authoring focus track: this island is one the learner is ignoring. */
   dimmed?: boolean;
   onClick: () => void;
   onOver: (over: boolean) => void;
+  assetRevision?: number;
 }) {
   const locked = entry.state === "idle";
   return (
@@ -431,7 +433,12 @@ function Island({
         dimmed={locked || dimmed}
       />
       <Suspense fallback={null}>
-        <IslandDressing blueprint={entry.blueprint} detail="world" targetRadius={entry.radius} />
+        <IslandDressing
+          key={assetRevision}
+          blueprint={entry.blueprint}
+          detail="world"
+          targetRadius={entry.radius}
+        />
       </Suspense>
       {/*
         Foam used to mark the waterline. The islands now sit above a cloud
@@ -656,6 +663,7 @@ export function WorldScene({
   onHover,
   focus,
   skyStudyId = null,
+  assetRevision = 0,
 }: {
   placements: readonly WorldPlacement[];
   /**
@@ -677,6 +685,7 @@ export function WorldScene({
   focus?: { readonly studyId: string; readonly courseIds: readonly string[] };
   /** `null` keeps the default dome — the four-seas overview. */
   skyStudyId?: string | null;
+  assetRevision?: number;
 }) {
   return (
     <>
@@ -698,6 +707,7 @@ export function WorldScene({
           dimmed={isFocusDimmed(entry.node, focus)}
           onClick={() => onPick(entry.node)}
           onOver={(over) => onHover(over ? entry.node : null)}
+          assetRevision={assetRevision}
         />
       ))}
       {learnerAt ? (
@@ -934,6 +944,7 @@ export function CourseScene({
   onPick,
   onHover,
   skyStudyId = null,
+  assetRevision = 0,
 }: {
   lessons: readonly LessonPlacement[];
   avatarRecipe?: AvatarRecipe | null;
@@ -941,6 +952,7 @@ export function CourseScene({
   onPick: (lesson: LessonPlacement) => void;
   onHover: (lesson: LessonPlacement | null) => void;
   skyStudyId?: string | null;
+  assetRevision?: number;
 }) {
   const live = lessons.find((lesson) => lesson.state === "live");
   const studyId = lessons[0]?.studyId ?? "course";
@@ -998,7 +1010,7 @@ export function CourseScene({
       />
       <IslandRender blueprint={blueprint} detail="course" />
       <Suspense fallback={null}>
-        <IslandDressing blueprint={blueprint} detail="course" />
+        <IslandDressing key={assetRevision} blueprint={blueprint} detail="course" />
       </Suspense>
       {markers.map(({ lesson, radius }) => (
         <LessonMarker

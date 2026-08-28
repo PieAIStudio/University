@@ -19,7 +19,8 @@
     "./labels.js": "./src/labels/labels.ts",
     "./overlay.css": "./src/overlay.css",
     "./path-overlay.js": "./src/labels/path-overlay.ts",
-    "./planet.js": "./src/planet/index.ts"
+    "./planet.js": "./src/planet/index.ts",
+    "./inspector.js": "./src/inspector/index.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",

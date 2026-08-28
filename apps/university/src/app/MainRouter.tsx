@@ -33,9 +33,11 @@ import type { ContentPort, ContentStudy, Shelf } from "@pieai/university-ui/cont
 import type { CourseView, UnitView } from "@pieai/university-ui/view/lesson-view.js";
 import { PlanetStage, type PlanetStudy } from "@pieai/university-world/planet.js";
 import type { AvatarRecipe } from "@pieai/university-world/avatar.js";
+import type { WorldMap } from "@pieai/university-world/WorldMapCanvas.js";
 
 import { AUTHORING } from "../mode";
 import { AuthoringMapNotes, StudioScreen } from "../authoring/index";
+import { MapStudioScreen } from "../authoring/map-studio";
 import { sourceAccessPort } from "../ports/index.js";
 import { WorldSourceControls } from "../learner/WorldSourceControls.js";
 import type { CourseNode } from "@pieai/university-world/course.js";
@@ -93,6 +95,10 @@ interface MainRouterProps {
   readonly setPathOverlay: Dispatch<SetStateAction<PathOverlay | null>>;
   readonly setView: (next: View) => void;
   readonly shelf: Shelf | null;
+  readonly studies: Shelf["studies"];
+  readonly nodes: readonly CourseNode[] | null;
+  readonly world: WorldMap | null;
+  readonly courseProgress: (node: CourseNode) => number;
   readonly showMap: boolean;
   readonly stage: ReactNode;
   readonly studyNames: readonly ContentStudy[];
@@ -133,6 +139,10 @@ export function MainRouter({
   setPathOverlay,
   setView,
   shelf,
+  studies,
+  nodes,
+  world,
+  courseProgress,
   showMap,
   stage,
   studyNames,
@@ -156,11 +166,12 @@ export function MainRouter({
         of a race against a fetch.
       */}
       {studyNames.length === 0 && !shelf ? <p className="loading-copy">正在打开校园档案…</p> : null}
-      <div className="learn-stage">
-        {stage}
-        {wide && showMap ? (
-          <div className="learn-hud">
-            {/*
+      {stage ? (
+        <div className="learn-stage">
+          {stage}
+          {wide && showMap ? (
+            <div className="learn-hud">
+              {/*
               No 「next lesson」 card here at this width. The right rail's
               「今天」 already carries the same title, the same metadata and the
               same button, so rendering both put two competing orange calls to
@@ -169,10 +180,11 @@ export function MainRouter({
               exists; below 1160 there is no rail and the floating card above
               takes over. One call to action at every width.
             */}
-            {courseIslandProps ? <CourseIsland {...courseIslandProps} /> : null}
-          </div>
-        ) : null}
-      </div>
+              {courseIslandProps ? <CourseIsland {...courseIslandProps} /> : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {/*
         Which version of the project this campus teaches, and the way into the
         UA graph. Under the stage rather than over it: an overlay child fills
@@ -367,7 +379,19 @@ export function MainRouter({
         which is also why `/studio` lands on the map there rather than on an
         empty column.
       */}
-      {AUTHORING && view.kind === "studio" ? (
+      {AUTHORING && view.kind === "studio" && view.section === "map" ? (
+        <MapStudioScreen
+          studies={studies}
+          nodes={nodes}
+          world={world}
+          courseProgress={courseProgress}
+          progressPort={progressPort}
+          focusedStudyId={focusedStudyId}
+          planetStudies={planetStudies}
+          onSelectStudy={focusStudy}
+        />
+      ) : null}
+      {AUTHORING && view.kind === "studio" && view.section !== "map" ? (
         <StudioScreen
           studyId={focusedStudyId}
           onSelectStudy={focusStudy}

@@ -10,6 +10,7 @@ interface RuntimeManifestAsset {
   readonly src: string;
   readonly pack: IslandAssetPackId;
   readonly bytes?: number;
+  readonly source?: string;
 }
 
 interface RuntimeFallback {
@@ -32,6 +33,8 @@ export interface IslandRuntimeAsset {
   readonly assetId: string;
   readonly src: string;
   readonly bytes?: number;
+  /** The donor-relative file recorded by the checked-in manifest. */
+  readonly source?: string;
 }
 
 export interface IslandRuntimeAssetResolution extends IslandRuntimeAsset {
@@ -52,7 +55,42 @@ for (const asset of [...kenneyManifest.assets, ...donorManifest.assets]) {
     assetId: asset.assetId,
     src: asset.src,
     bytes: asset.bytes,
+    source: asset.source,
   });
+}
+
+/**
+ * Authoring-only, in-memory model substitutions.
+ *
+ * The map is intentionally keyed by the requested placement rather than by a
+ * semantic role. `island-dressing` is the source of truth for whether a
+ * placement is a tree, bush, rock, landmark or prop; the inspector resolves
+ * those placements into exact keys before installing an override. This keeps
+ * the renderer's existing grouping and instancing path unchanged.
+ */
+const runtimeOverrides = new Map<string, IslandRuntimeAsset>();
+
+export function setIslandRuntimeAssetOverrides(
+  overrides: Readonly<Record<string, Pick<IslandRuntimeAsset, "pack" | "assetId">>>,
+): void {
+  runtimeOverrides.clear();
+  for (const [requestedKey, target] of Object.entries(overrides)) {
+    const resolved = runtimeAssets.get(`${target.pack}/${target.assetId}`);
+    if (resolved) runtimeOverrides.set(requestedKey, resolved);
+  }
+}
+
+export function clearIslandRuntimeAssetOverrides(): void {
+  runtimeOverrides.clear();
+}
+
+export function islandRuntimeAssetOverrideCount(): number {
+  return runtimeOverrides.size;
+}
+
+/** The complete runtime catalog, in manifest order, for authoring pickers. */
+export function islandRuntimeAssets(): readonly IslandRuntimeAsset[] {
+  return [...runtimeAssets.values()];
 }
 
 /**
@@ -63,7 +101,7 @@ for (const asset of [...kenneyManifest.assets, ...donorManifest.assets]) {
  */
 const runtimeFallbacks = kenneyManifest.runtimeFallbacks ?? {};
 
-export function resolveIslandRuntimeAsset(
+function resolveIslandRuntimeAssetFromCatalog(
   requestedPack: IslandAssetPackId,
   requestedAssetId: string,
 ): IslandRuntimeAssetResolution | null {
@@ -90,6 +128,30 @@ export function resolveIslandRuntimeAsset(
     requestedAssetId,
     usedFallback: true,
     fallbackReason: fallback.reason,
+  };
+}
+
+/** Resolve the checked-in recipe without applying an authoring preview swap. */
+export function resolveIslandRuntimeAssetFromRecipe(
+  requestedPack: IslandAssetPackId,
+  requestedAssetId: string,
+): IslandRuntimeAssetResolution | null {
+  return resolveIslandRuntimeAssetFromCatalog(requestedPack, requestedAssetId);
+}
+
+/** Resolve a placement for the live renderer, including authoring overrides. */
+export function resolveIslandRuntimeAsset(
+  requestedPack: IslandAssetPackId,
+  requestedAssetId: string,
+): IslandRuntimeAssetResolution | null {
+  const requestedKey = `${requestedPack}/${requestedAssetId}`;
+  const override = runtimeOverrides.get(requestedKey);
+  if (!override) return resolveIslandRuntimeAssetFromCatalog(requestedPack, requestedAssetId);
+  return {
+    ...override,
+    requestedPack,
+    requestedAssetId,
+    usedFallback: false,
   };
 }
 
