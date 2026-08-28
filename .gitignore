@@ -101,4 +101,9 @@ artifacts/
 # In-repository Codex worktrees. Parallel AI work must never appear as
 # nested untracked source, and must never be deleted by another agent.
 /.worktrees/
+
+# AI-generated texture sources are production intermediates. The checked-in
+# WebP outputs, processing metrics, and visual checks are the distributable
+# evidence; source renders stay out of the runtime asset budget.
+/tmp/island-textures-input/
 .env*

@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "size": 512,
+  "textures": {
+    "grass-albedo": {
+      "edgeMeanAbsDifference": 0.7562,
+      "edgeMaxAbsDifference": 6.0,
+      "fullResolutionLumaMean": 164.2614,
+      "fullResolutionLumaRange": 39.1416,
+      "fullResolutionLumaStd": 2.2795,
+      "downsample8x8LumaMin": 162.58,
+      "downsample8x8LumaMax": 166.866,
+      "downsample8x8LumaRange": 4.286,
+      "sourceInput": "grass-generated.png",
+      "path": "packages/world/public/island-textures/grass-albedo.webp",
+      "bytes": 6480,
+      "sha256": "ee8ed3a7efc54658e3f19c8c76af17edd85704122135c52e2687486e06fceef9"
+    },
+    "route-albedo": {
+      "edgeMeanAbsDifference": 0.3851,
+      "edgeMaxAbsDifference": 2.3333,
+      "fullResolutionLumaMean": 214.52,
+      "fullResolutionLumaRange": 12.9278,
+      "fullResolutionLumaStd": 1.1726,
+      "downsample8x8LumaMin": 213.4294,
+      "downsample8x8LumaMax": 215.4294,
+      "downsample8x8LumaRange": 2.0,
+      "sourceInput": "path-generated.png",
+      "path": "packages/world/public/island-textures/route-albedo.webp",
+      "bytes": 3078,
+      "sha256": "c8ad76327cbb5d2cdba44cfc8cee5f80e2e8bed94b5655e75e4fa5e70c880001"
+    },
+    "rock-albedo": {
+      "edgeMeanAbsDifference": 0.8656,
+      "edgeMaxAbsDifference": 6.3333,
+      "fullResolutionLumaMean": 113.4147,
+      "fullResolutionLumaRange": 31.7834,
+      "fullResolutionLumaStd": 2.3975,
+      "downsample8x8LumaMin": 112.3694,
+      "downsample8x8LumaMax": 114.7946,
+      "downsample8x8LumaRange": 2.4252,
+      "sourceInput": "rock-generated-v2.png",
+      "path": "packages/world/public/island-textures/rock-albedo.webp",
+      "bytes": 11006,
+      "sha256": "6964ca56980190a63f00a0fa7122850717f5a602ee354594f0b35cf843f5e996"
+    },
+    "surface-detail": {
+      "edgeMeanAbsDifference": 0.1328,
+      "edgeMaxAbsDifference": 1.0,
+      "fullResolutionLumaMean": 128.0152,
+      "fullResolutionLumaRange": 4.0,
+      "fullResolutionLumaStd": 0.6045,
+      "downsample8x8LumaMin": 128.0,
+      "downsample8x8LumaMax": 129.0,
+      "downsample8x8LumaRange": 1.0,
+      "sourceInput": "detail-generated.png",
+      "path": "packages/world/public/island-textures/surface-detail.webp",
+      "bytes": 1170,
+      "sha256": "68da2f99a6a97ba8423221b63ebe07403a1a497b0826e736bd5e89d44cce38a0"
+    }
+  },
+  "totalBytes": 21734,
+  "verificationImages": [
+    "island-texture-tiling-4x4.png",
+    "island-texture-flatness-8x8.png"
+  ],
+  "pipeline": {
+    "source": "codex-built-in-imagegen",
+    "postProcess": [
+      "512x512 resize",
+      "half-size offset",
+      "center and outer periodic seam feather",
+      "wrap-aware Gaussian blur luminance flatten",
+      "palette remap and contrast compression",
+      "WebP quality 88"
+    ]
+  }
+}

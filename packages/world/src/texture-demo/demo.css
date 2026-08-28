@@ -1,0 +1,216 @@
+:root {
+  color: #233329;
+  background: #d6e7e5;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#texture-demo {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-width: 320px;
+  background: linear-gradient(145deg, #d9eee9 0%, #a9d3dd 52%, #8bb9cc 100%);
+}
+
+.texture-demo {
+  display: grid;
+  min-height: 100vh;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+}
+
+.texture-demo__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 24px 14px;
+  color: #f8fff4;
+  background: linear-gradient(180deg, rgba(21, 55, 57, 0.94), rgba(21, 55, 57, 0.76));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.24);
+}
+
+.texture-demo__title {
+  margin: 0;
+  font-size: clamp(18px, 2.3vw, 28px);
+  letter-spacing: 0.02em;
+}
+
+.texture-demo__subtitle {
+  margin: 5px 0 0;
+  color: #c8e2d3;
+  font-size: 12px;
+}
+
+.texture-demo__badge {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  color: #173737;
+  background: #eff2bf;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.texture-demo__main {
+  position: relative;
+  min-height: 0;
+}
+
+.texture-demo__viewport {
+  position: absolute;
+  inset: 0;
+}
+
+.texture-demo__viewport canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.texture-demo__panel {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  width: min(330px, calc(100% - 36px));
+  padding: 15px;
+  color: #eef8df;
+  background: rgba(19, 43, 42, 0.88);
+  border: 1px solid rgba(235, 248, 209, 0.28);
+  border-radius: 16px;
+  box-shadow: 0 16px 42px rgba(19, 55, 60, 0.24);
+  backdrop-filter: blur(12px);
+}
+
+.texture-demo__panel h2 {
+  margin: 0 0 5px;
+  font-size: 14px;
+}
+
+.texture-demo__panel p {
+  margin: 0 0 13px;
+  color: #b7d3c3;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.texture-demo__control {
+  display: grid;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.texture-demo__control-label {
+  color: #d8ebd5;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.texture-demo__choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.texture-demo__button {
+  min-height: 34px;
+  padding: 7px 9px;
+  color: #d9efdd;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(212, 237, 215, 0.22);
+  border-radius: 9px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+}
+
+.texture-demo__button:hover,
+.texture-demo__button:focus-visible {
+  border-color: rgba(242, 246, 182, 0.88);
+  outline: none;
+}
+
+.texture-demo__button[data-active="true"] {
+  color: #203b2e;
+  background: #eaf0af;
+  border-color: #f4f8c4;
+}
+
+.texture-demo__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 15px;
+}
+
+.texture-demo__metric {
+  padding: 9px 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+}
+
+.texture-demo__metric-label {
+  display: block;
+  color: #a9c6b6;
+  font-size: 10px;
+}
+
+.texture-demo__metric-value {
+  display: block;
+  margin-top: 3px;
+  color: #f4f8d0;
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.texture-demo__footnote {
+  margin-top: 12px;
+  color: #99b8aa;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+@media (max-width: 700px) {
+  .texture-demo__header {
+    align-items: flex-start;
+    padding: 13px 16px 11px;
+  }
+
+  .texture-demo__badge {
+    font-size: 9px;
+  }
+
+  .texture-demo__panel {
+    top: auto;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    width: auto;
+    max-height: min(54vh, 420px);
+    overflow: auto;
+  }
+}
