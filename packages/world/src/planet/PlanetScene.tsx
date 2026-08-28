@@ -4,9 +4,10 @@
  * Atmospheric semantic correction & visual overhaul:
  * - Studies are floating island clusters hovering in the planetary atmosphere (R ≈ 1.22).
  * - Visual proof of floating: Vertical atmospheric light tether + ground surface projection ring.
- * - Planet body: Vibrant stylized oceans, shallow turquoise coastal shelves, emerald continents,
- *   warm mountain plateaus, polar ice, and organic procedural cloud swirls.
- * - Atmosphere: Luminous celestial cyan Fresnel rim that preserves crystal clarity of the planet.
+ * - Planet body: Low-poly oceans, muted meadow bands, warm stone plateaus, polar ice,
+ *   and organic procedural cloud swirls.
+ * - Atmosphere: A soft Fresnel rim and aerial perspective that let the edge recede without
+ *   hiding the planet's readable land shapes.
  * - Performance: Deterministic (no Math.random), lightweight, fast first-screen and 60+ FPS.
  */
 import { useFrame, useThree } from "@react-three/fiber";
@@ -16,7 +17,7 @@ import * as THREE from "three";
 import { hash } from "../island/random.js";
 import { Stage } from "../Stage.js";
 import { renderTier } from "../sky/tier.js";
-import { studyMarkerColor } from "./planet-copy.js";
+import { studyClusterStyle, studyMarkerColor, type StudyClusterStyle } from "./planet-copy.js";
 import {
   ATMOSPHERE_RADIUS,
   placeStudies,
@@ -31,18 +32,18 @@ const SPACE_TOP = 0x070a14;
 const SPACE_MID = 0x121424;
 const SPACE_LOW = 0x221a28;
 
-// High-clarity planet surface palette
+// Muted sRGB surface tones: the light/value ladder does the separating, not neon saturation.
 const PLANET_PALETTE = {
-  deepOcean: 0x184e78,
-  ocean: 0x24709e,
-  shallowOcean: 0x34b0c2,
-  lagoon: 0x54e6e4,
-  beach: 0xfae8bc,
-  grassLow: 0x72cc3c,
-  grassHigh: 0x94f044,
-  earth: 0xc49260,
-  mountain: 0x8e6e56,
-  polarIce: 0xf5fcff,
+  deepOcean: 0x254b63,
+  ocean: 0x3f7180,
+  shallowOcean: 0x67999a,
+  lagoon: 0x98bbae,
+  beach: 0xd8c8ad,
+  grassLow: 0x81945f,
+  grassHigh: 0xa8b178,
+  earth: 0xa58b6e,
+  mountain: 0x82766a,
+  polarIce: 0xd9ddd6,
 } as const;
 
 /**
@@ -207,8 +208,8 @@ export function buildPlanetGeometry(): THREE.BufferGeometry {
 
 /**
  * Atmospheric Fresnel glow shader:
- * Pure celestial cyan halo on the sun-facing limb, soft twilight sapphire on the night side.
- * Zero burnt red rings; 100% crystal clarity over the planet surface.
+ * A restrained blue-green rim on the sun-facing limb and a slate-blue night side.
+ * It keeps the planet readable while giving the outer edge a little distance.
  */
 const ATMOSPHERE_VERTEX_SHADER = /* glsl */ `
   varying vec3 vWorldNormal;
@@ -231,17 +232,17 @@ const ATMOSPHERE_FRAGMENT_SHADER = /* glsl */ `
     vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
     vec3 normal = normalize(vWorldNormal);
     float facing = max(dot(normal, viewDirection), 0.0);
-    // Sharp rim falloff so the center of the planet is 100% crystal clear
+    // Sharp rim falloff so the center of the planet stays clear.
     float rim = pow(1.0 - facing, 4.2);
 
     float sunDot = dot(normal, normalize(uSunDirection));
     float sunFacing = smoothstep(-0.3, 0.6, sunDot);
 
-    vec3 dayColor = vec3(0.32, 0.88, 1.0);     // Luminous sky-cyan
-    vec3 nightColor = vec3(0.10, 0.28, 0.44);   // Deep space sapphire
+    vec3 dayColor = vec3(0.28, 0.62, 0.68);    // Soft atmospheric sea-glass
+    vec3 nightColor = vec3(0.10, 0.24, 0.33);  // Slate-blue twilight
 
     vec3 atmColor = mix(nightColor, dayColor, sunFacing);
-    float alpha = rim * (0.22 + 0.68 * sunFacing);
+    float alpha = rim * (0.16 + 0.48 * sunFacing);
     gl_FragColor = vec4(atmColor, alpha);
   }
 `;
@@ -305,9 +306,12 @@ const CLOUD_FRAGMENT_SHADER = /* glsl */ `
     if (density <= 0.02) discard;
 
     float sunDot = max(dot(normal, normalize(uSunDirection)), 0.0);
-    vec3 cloudColor = mix(vec3(0.88, 0.94, 0.98), vec3(1.0, 1.0, 1.0), sunDot * 0.8);
+    // Warm grey-ivory clouds keep the bright sky-facing lobes from becoming white stickers.
+    vec3 cloudShadow = vec3(0.64, 0.65, 0.61);
+    vec3 cloudLight = vec3(0.86, 0.84, 0.77);
+    vec3 cloudColor = mix(cloudShadow, cloudLight, 0.32 + sunDot * 0.68);
 
-    gl_FragColor = vec4(cloudColor, density * 0.88);
+    gl_FragColor = vec4(cloudColor, density * (0.54 + sunDot * 0.14));
   }
 `;
 
@@ -469,18 +473,115 @@ function PlanetLights() {
   );
 }
 
+interface FloatingIslandShapeParameters {
+  readonly mainSides: number;
+  readonly scaleX: number;
+  readonly scaleZ: number;
+  readonly lobeCount: number;
+  readonly lobeAmount: number;
+  readonly lobePhase: number;
+  readonly heightScale: number;
+  readonly depthScale: number;
+  readonly satelliteAngle: number;
+  readonly satelliteOrbit: number;
+  readonly satelliteScale: number;
+}
+
+/**
+ * Five restrained silhouettes are enough for a learner to keep a study in
+ * mind without turning the picker into five unrelated art styles. The profile
+ * is selected by study identity in `planet-copy.ts`; these are generator
+ * parameters, not coordinates saved for an individual island.
+ */
+const FLOATING_ISLAND_SHAPE_PARAMETERS: readonly FloatingIslandShapeParameters[] = [
+  {
+    mainSides: 8,
+    scaleX: 1.1,
+    scaleZ: 0.9,
+    lobeCount: 3,
+    lobeAmount: 0.08,
+    lobePhase: 0.35,
+    heightScale: 0.98,
+    depthScale: 1.02,
+    satelliteAngle: 0.35,
+    satelliteOrbit: 0.14,
+    satelliteScale: 1.02,
+  },
+  {
+    mainSides: 6,
+    scaleX: 0.95,
+    scaleZ: 1.06,
+    lobeCount: 4,
+    lobeAmount: 0.07,
+    lobePhase: 0.8,
+    heightScale: 1.08,
+    depthScale: 0.92,
+    satelliteAngle: 1.05,
+    satelliteOrbit: 0.125,
+    satelliteScale: 0.9,
+  },
+  {
+    mainSides: 8,
+    scaleX: 1.16,
+    scaleZ: 0.82,
+    lobeCount: 5,
+    lobeAmount: 0.06,
+    lobePhase: 0.15,
+    heightScale: 1.0,
+    depthScale: 0.98,
+    satelliteAngle: 2.05,
+    satelliteOrbit: 0.145,
+    satelliteScale: 1.06,
+  },
+  {
+    mainSides: 7,
+    scaleX: 1.0,
+    scaleZ: 1.0,
+    lobeCount: 2,
+    lobeAmount: 0.11,
+    lobePhase: 0.55,
+    heightScale: 1.12,
+    depthScale: 1.06,
+    satelliteAngle: 2.8,
+    satelliteOrbit: 0.135,
+    satelliteScale: 1.0,
+  },
+  {
+    mainSides: 9,
+    scaleX: 0.88,
+    scaleZ: 1.12,
+    lobeCount: 3,
+    lobeAmount: 0.09,
+    lobePhase: 1.1,
+    heightScale: 1.02,
+    depthScale: 1.1,
+    satelliteAngle: 3.55,
+    satelliteOrbit: 0.15,
+    satelliteScale: 0.96,
+  },
+];
+
 /**
  * Procedural low-poly floating island cluster geometry:
- * Main island (Vibrant grass top, warm biscuit rock, tapered keel) + 2 Satellite Micro Islets.
+ * a study-coloured top, two tinted rock satellites, and one tapered keel.
  */
-export function buildFloatingIslandGeometry(): THREE.BufferGeometry {
+export function buildFloatingIslandGeometry(
+  style: StudyClusterStyle = studyClusterStyle("default"),
+): THREE.BufferGeometry {
   const positions: number[] = [];
   const colors: number[] = [];
   const normals: number[] = [];
 
-  const GRASS_COLOR = new THREE.Color(0xa4f84c);
-  const ROCK_MID = new THREE.Color(0xdfc29e);
-  const ROCK_BOTTOM = new THREE.Color(0x826048);
+  const shape =
+    FLOATING_ISLAND_SHAPE_PARAMETERS[style.profile % FLOATING_ISLAND_SHAPE_PARAMETERS.length]!;
+  const identityColor = new THREE.Color(style.accentHex);
+  const identityOutline = new THREE.Color(style.outlineHex);
+  // The old cluster used one saturated lime top and one biscuit wall for every
+  // study. Keep the existing study marker hue as the source, then soften it
+  // with the same warm stone family used by the low-poly map.
+  const GRASS_COLOR = identityColor.clone().lerp(new THREE.Color(0xd8d0b7), 0.14);
+  const ROCK_MID = new THREE.Color(0xb49d84).lerp(identityColor, 0.22);
+  const ROCK_BOTTOM = new THREE.Color(0x64594f).lerp(identityOutline, 0.28);
 
   function addFacet(
     p1: [number, number, number],
@@ -510,6 +611,11 @@ export function buildFloatingIslandGeometry(): THREE.BufferGeometry {
     height: number,
     depth: number,
     sides: number,
+    scaleX: number,
+    scaleZ: number,
+    lobeCount: number,
+    lobeAmount: number,
+    lobePhase: number,
   ) {
     const topVertices: [number, number, number][] = [];
     const midVertices: [number, number, number][] = [];
@@ -518,11 +624,14 @@ export function buildFloatingIslandGeometry(): THREE.BufferGeometry {
 
     for (let i = 0; i < sides; i += 1) {
       const angle = (i / sides) * Math.PI * 2;
-      const r = radius * (0.9 + Math.sin(angle * 3 + 1.2) * 0.1);
-      const x = cx + Math.cos(angle) * r;
-      const z = cz + Math.sin(angle) * r;
+      const r = radius * (0.9 + Math.sin(angle * lobeCount + lobePhase) * lobeAmount);
+      const x = cx + Math.cos(angle) * r * scaleX;
+      const z = cz + Math.sin(angle) * r * scaleZ;
       topVertices.push([x, cy + height, z]);
-      midVertices.push([x * 0.94, cy, z * 0.94]);
+      // Scale around each body's own centre. Scaling the absolute x/z values
+      // pulled the satellites toward the origin and made every cluster share
+      // the same accidental silhouette.
+      midVertices.push([cx + (x - cx) * 0.94, cy, cz + (z - cz) * 0.94]);
     }
 
     // Top grass fan
@@ -545,14 +654,63 @@ export function buildFloatingIslandGeometry(): THREE.BufferGeometry {
     }
   }
 
-  // 1. Main Island (Expanded top surface: radius 0.145, height 0.024, depth 0.065)
-  buildIslandBody(0, 0, 0, 0.145, 0.024, 0.065, 7);
+  // 1. Main island. The top remains at the established atmospheric scale;
+  // only its silhouette gets a small identity cue.
+  buildIslandBody(
+    0,
+    0,
+    0,
+    0.145,
+    0.024 * shape.heightScale,
+    0.065 * shape.depthScale,
+    shape.mainSides,
+    shape.scaleX,
+    shape.scaleZ,
+    shape.lobeCount,
+    shape.lobeAmount,
+    shape.lobePhase,
+  );
 
-  // 2. Satellite Micro Islet 1
-  buildIslandBody(0.135, 0.025, -0.07, 0.06, 0.014, 0.035, 5);
+  const firstSatelliteAngle = shape.satelliteAngle;
+  const secondSatelliteAngle = shape.satelliteAngle + 2.45;
+  const satelliteSides = Math.max(5, shape.mainSides - 2);
+  const firstX = Math.cos(firstSatelliteAngle) * shape.satelliteOrbit * shape.scaleX;
+  const firstZ = Math.sin(firstSatelliteAngle) * shape.satelliteOrbit * shape.scaleZ;
+  const secondX = Math.cos(secondSatelliteAngle) * shape.satelliteOrbit * 0.88 * shape.scaleX;
+  const secondZ = Math.sin(secondSatelliteAngle) * shape.satelliteOrbit * 0.88 * shape.scaleZ;
 
-  // 3. Satellite Micro Islet 2
-  buildIslandBody(-0.115, -0.018, 0.088, 0.048, 0.012, 0.028, 5);
+  // 2. Satellite micro-islets. They share the same identity colour but not
+  // the same placement, so the cluster has a silhouette instead of a stamp.
+  buildIslandBody(
+    firstX,
+    0.025,
+    firstZ,
+    0.06 * shape.satelliteScale,
+    0.014,
+    0.035,
+    satelliteSides,
+    shape.scaleX * 0.98,
+    shape.scaleZ * 0.98,
+    Math.max(3, shape.lobeCount - 1),
+    shape.lobeAmount * 0.8,
+    shape.lobePhase + 0.5,
+  );
+
+  // 3. Satellite micro-islet two.
+  buildIslandBody(
+    secondX,
+    -0.018,
+    secondZ,
+    0.048 * shape.satelliteScale,
+    0.012,
+    0.028,
+    satelliteSides,
+    shape.scaleX * 0.94,
+    shape.scaleZ * 0.94,
+    Math.max(3, shape.lobeCount - 1),
+    shape.lobeAmount * 0.72,
+    shape.lobePhase + 1.15,
+  );
 
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
@@ -759,6 +917,55 @@ function prefersReducedMotion(): boolean {
   return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/**
+ * A small material-level aerial perspective pass for the globe itself.
+ *
+ * The planet is not put into the app's world fog: at this scale that would
+ * fog the whole sphere uniformly. Instead, this patch only eases the grazing
+ * edge toward a desaturated sea-glass haze. It runs before Stage's sole grade
+ * and sRGB encode, so it remains part of the planet material rather than a
+ * second post-processing pipeline.
+ */
+const PLANET_AERIAL_PERSPECTIVE_MARKER = "/* university planet aerial perspective v1 */";
+
+function PlanetBodyMaterial() {
+  const materialRef = useRef<THREE.MeshStandardMaterial>(null);
+
+  useLayoutEffect(() => {
+    const material = materialRef.current;
+    if (!material) return;
+
+    material.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <opaque_fragment>",
+        `${PLANET_AERIAL_PERSPECTIVE_MARKER}
+        float planetFacing = clamp(
+          dot(normalize(normal), normalize(vViewPosition)),
+          0.0,
+          1.0
+        );
+        float planetEdge = pow(1.0 - planetFacing, 1.8);
+        vec3 planetAerialHaze = vec3(0.36, 0.45, 0.44);
+        outgoingLight = mix(outgoingLight, planetAerialHaze, planetEdge * 0.16);
+        #include <opaque_fragment>`,
+      );
+    };
+    material.customProgramCacheKey = () => PLANET_AERIAL_PERSPECTIVE_MARKER;
+    material.needsUpdate = true;
+  }, []);
+
+  return (
+    <meshStandardMaterial
+      ref={materialRef}
+      vertexColors
+      roughness={0.62}
+      metalness={0.02}
+      emissive={0x294447}
+      emissiveIntensity={0.12}
+    />
+  );
+}
+
 function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
   const yawGroup = useRef<THREE.Group>(null);
   const pitchGroup = useRef<THREE.Group>(null);
@@ -767,7 +974,13 @@ function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
   // Geometries memoized once and cleaned up properly
   const planet = useMemo(() => buildPlanetGeometry(), []);
   const sky = useMemo(() => buildSkyGeometry(), []);
-  const islandGeometry = useMemo(() => buildFloatingIslandGeometry(), []);
+  const islandGeometries = useMemo(() => {
+    const geometries = new Map<string, THREE.BufferGeometry>();
+    for (const study of studies) {
+      geometries.set(study.id, buildFloatingIslandGeometry(studyClusterStyle(study.id)));
+    }
+    return geometries;
+  }, [studies]);
   const beaconGemGeometry = useMemo(() => new THREE.OctahedronGeometry(0.046, 0), []);
   const tetherGeometry = useMemo(
     () => new THREE.CylinderGeometry(0.024, 0.058, 0.18, 12, 1, true),
@@ -781,14 +994,17 @@ function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
   useEffect(() => () => planet.dispose(), [planet]);
   useEffect(() => () => sky.dispose(), [sky]);
   useEffect(
+    () => () => islandGeometries.forEach((geometry) => geometry.dispose()),
+    [islandGeometries],
+  );
+  useEffect(
     () => () => {
-      islandGeometry.dispose();
       beaconGemGeometry.dispose();
       tetherGeometry.dispose();
       groundRingGeometry.dispose();
       hitGeometry.dispose();
     },
-    [islandGeometry, beaconGemGeometry, tetherGeometry, groundRingGeometry, hitGeometry],
+    [beaconGemGeometry, tetherGeometry, groundRingGeometry, hitGeometry],
   );
 
   useFrame((_, delta) => {
@@ -814,13 +1030,7 @@ function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
         <group ref={pitchGroup}>
           {/* Planet Body */}
           <mesh geometry={planet}>
-            <meshStandardMaterial
-              vertexColors
-              roughness={0.48}
-              metalness={0.04}
-              emissive={0x184d6b}
-              emissiveIntensity={0.22}
-            />
+            <PlanetBodyMaterial />
           </mesh>
 
           {/* Cloud Layer */}
@@ -831,6 +1041,8 @@ function Globe({ studies, selectedId, onSelect }: PlanetSceneProps) {
 
           {/* Floating Study Island Clusters in Atmosphere */}
           {[...placed.entries()].map(([id, point]) => {
+            const islandGeometry = islandGeometries.get(id);
+            if (!islandGeometry) return null;
             return (
               <FloatingStudyCluster
                 key={id}
