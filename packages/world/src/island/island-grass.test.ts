@@ -11,6 +11,7 @@ import {
   ISLAND_GRASS_LOD_THRESHOLDS,
   ISLAND_GRASS_TOP_MAX_RADIAL,
   islandGrassDensityAt,
+  islandGrassGroundNormalAt,
   islandGrassInstanceCountForLod,
   islandGrassLodForDistance,
   planIslandGrass,
@@ -19,8 +20,10 @@ import {
   ISLAND_GRASS_CLUMP_TRIANGLES,
   ISLAND_GRASS_LEAF_COUNT,
   ISLAND_GRASS_LEAF_SEGMENTS,
+  ISLAND_GRASS_BLADE_TRIANGLES,
   createIslandGrassClumpGeometry,
   createIslandGrassBladeGeometry,
+  createIslandGrassMaterial,
   disposeIslandGrassResources,
 } from "./island-grass-render.js";
 
@@ -41,27 +44,47 @@ describe("Island grass plan", () => {
   it("keeps the real generated TuringPact course eligible for ground cover", () => {
     const plan = planIslandGrass(realCourseBlueprint, "course", {
       tier: "desktop",
+      maxCount: 16,
     });
 
     expect(plan.placements.length).toBeGreaterThan(0);
   });
 
-  it("builds one complete five-leaf clump with curved tapered leaves", () => {
+  it("builds one indexed three-vertex blade card", () => {
     const geometry = createIslandGrassClumpGeometry();
     const position = geometry.getAttribute("position");
-    const occlusion = geometry.getAttribute("aClumpOcclusion");
-    const variation = geometry.getAttribute("aLeafVariation");
 
     expect(position.count).toBe(ISLAND_GRASS_LEAF_COUNT * (ISLAND_GRASS_LEAF_SEGMENTS * 2 + 1));
+    expect(ISLAND_GRASS_BLADE_TRIANGLES).toBe(1);
     expect(geometry.index?.count).toBe(ISLAND_GRASS_CLUMP_TRIANGLES * 3);
     expect(new Set(Array.from(geometry.index?.array ?? [])).size).toBe(position.count);
-    expect(occlusion.count).toBe(position.count);
-    expect(variation.count).toBe(position.count);
     expect(position.getY(0)).toBe(0);
-    expect(position.getY(position.count - 1)).toBeGreaterThan(0.8);
-    expect(position.getX(position.count - 1)).not.toBe(0);
+    expect(position.getY(position.count - 1)).toBe(1);
+    expect(position.getX(position.count - 1)).toBe(0);
+    expect(geometry.getAttribute("normal").getZ(0)).toBeCloseTo(1);
 
     geometry.dispose();
+  });
+
+  it("injects donor billboard, wind, normal, and nonlinear root-ramp shader code", () => {
+    const material = createIslandGrassMaterial();
+    const shader = {
+      uniforms: {},
+      vertexShader:
+        "#include <common>\n#include <beginnormal_vertex>\n#include <defaultnormal_vertex>\n#include <begin_vertex>\n#include <project_vertex>",
+      fragmentShader: "#include <common>\n#include <color_fragment>",
+    } as Parameters<THREE.MeshStandardMaterial["onBeforeCompile"]>[0];
+
+    material.onBeforeCompile(shader, {} as THREE.WebGLRenderer);
+
+    expect(shader.vertexShader).toContain("aGrassGroundNormal");
+    expect(shader.vertexShader).toContain("grassBillboardAngle");
+    expect(shader.vertexShader).toContain("grassRotateAxis");
+    expect(shader.vertexShader).toContain("uGroundNormalStrength");
+    expect(shader.fragmentShader).toContain("pow(smoothstep(0.2, 0.98, grassBladeMask), 0.5)");
+    expect(shader.fragmentShader).toContain("uGrassShadow");
+
+    material.dispose();
   });
 
   it("keeps the seeded density field broad enough to form groves and bare patches", () => {
@@ -129,7 +152,16 @@ describe("Island grass plan", () => {
       expect(surface.radial).toBeLessThanOrEqual(ISLAND_GRASS_TOP_MAX_RADIAL);
       expect(placement.radial).toBeLessThanOrEqual(ISLAND_GRASS_TOP_MAX_RADIAL);
       expect(placement.y).toBeCloseTo(renderedTop.y, 8);
+      expect(placement.groundNormal[1]).toBeGreaterThan(0);
+      expect(Math.hypot(...placement.groundNormal)).toBeCloseTo(1, 5);
     }
+  });
+
+  it("derives the same terrain normal for the same root", () => {
+    const point = { x: -12.5, z: 9.25 };
+    expect(islandGrassGroundNormalAt(blueprint, point)).toEqual(
+      islandGrassGroundNormalAt(blueprint, point),
+    );
   });
 
   it("keeps route, lesson nodes, and hero readable", () => {
@@ -170,8 +202,8 @@ describe("Island grass plan", () => {
   });
 
   it("hard-caps mobile and desktop detail and keeps world grass empty", () => {
-    const desktop = planIslandGrass(blueprint, "course", { tier: "desktop" });
-    const mobile = planIslandGrass(blueprint, "course", { tier: "mobile" });
+    const desktop = planIslandGrass(blueprint, "course", { tier: "desktop", maxCount: 100 });
+    const mobile = planIslandGrass(blueprint, "course", { tier: "mobile", maxCount: 100 });
     const world = planIslandGrass(blueprint, "world", { tier: "desktop" });
 
     expect(desktop.placements.length).toBeLessThanOrEqual(ISLAND_GRASS_LIMITS.course.desktop);
@@ -180,24 +212,31 @@ describe("Island grass plan", () => {
     expect(world.maxCount).toBe(0);
   });
 
-  it("uses the measured clump budgets and keeps the real course dense", () => {
+  it("uses the measured blade budgets and keeps the real course dense", () => {
     const plan = planIslandGrass(realCourseBlueprint, "course", {
       tier: "desktop",
-      density: 3.6,
+      density: 23,
       maxCount: ISLAND_GRASS_LIMITS.course.desktop,
     });
 
-    // The bounds moved once the near camera was actually looked through: a
-    // clump 0.72 to 1.06 tall stands about waist high beside a lesson marker
-    // on this island, so the view came back looking into undergrowth. What
-    // this test protects is that a placement is a clump rather than the single
-    // 0.15-wide blade the field used to scatter, and that check survives the
-    // smaller size unchanged.
+    // The one-triangle card is intentionally small; this test protects the
+    // higher instance budget and the deterministic placement range instead of
+    // allowing the old five-leaf geometry to return by accident.
     expect(plan.placements.length).toBe(ISLAND_GRASS_LIMITS.course.desktop);
     expect(plan.placements.every((placement) => placement.width >= 0.6)).toBe(true);
     expect(plan.placements.every((placement) => placement.width < 0.85)).toBe(true);
     expect(plan.placements.every((placement) => placement.height >= 0.42)).toBe(true);
     expect(plan.placements.every((placement) => placement.height < 0.65)).toBe(true);
+  }, 30000);
+
+  it("keeps the donor blade budget below one quarter of the old clump cost", () => {
+    const legacyGrassTriangles = 16_000 * 45;
+    const desktopGrassTriangles = ISLAND_GRASS_LIMITS.course.desktop * ISLAND_GRASS_BLADE_TRIANGLES;
+    const mobileGrassTriangles = ISLAND_GRASS_LIMITS.course.mobile * ISLAND_GRASS_BLADE_TRIANGLES;
+
+    expect(desktopGrassTriangles).toBe(80_000);
+    expect(desktopGrassTriangles).toBeLessThan(legacyGrassTriangles / 4);
+    expect(mobileGrassTriangles).toBeLessThan(desktopGrassTriangles);
   });
 
   it("resolves deterministic distance LOD with hysteresis", () => {
@@ -223,7 +262,7 @@ describe("Island grass plan", () => {
     expect(islandGrassLodForDistance(ISLAND_GRASS_LOD_THRESHOLDS.farToMid, "far")).toBe("mid");
   });
 
-  it("draws 45% of clumps in the middle LOD and none in the far LOD", () => {
+  it("draws 45% of blades in the middle LOD and none in the far LOD", () => {
     const plan = {
       placements: Array.from({ length: 16000 }, () => ({
         x: 0,
@@ -234,6 +273,7 @@ describe("Island grass plan", () => {
         rotation: 0,
         phase: 0,
         radial: 0,
+        groundNormal: [0, 1, 0] as const,
       })),
     };
 
@@ -246,7 +286,7 @@ describe("Island grass plan", () => {
 
   it("changes semantic detail without changing the blueprint or its seed", () => {
     const world = planIslandGrass(blueprint, "world", { tier: "mobile" });
-    const course = planIslandGrass(blueprint, "course", { tier: "mobile" });
+    const course = planIslandGrass(blueprint, "course", { tier: "mobile", maxCount: 32 });
 
     expect(world.seed).toBe(blueprint.seed);
     expect(course.seed).toBe(blueprint.seed);
