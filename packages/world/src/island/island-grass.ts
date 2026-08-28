@@ -403,6 +403,11 @@ function rawIslandGrassGroundNormalAt(
   return [-slopeX / length, 1 / length, -slopeZ / length];
 }
 
+/** Linear blend, used by the cached ground-normal raster below. */
+function lerp(first: number, second: number, amount: number): number {
+  return first + (second - first) * amount;
+}
+
 function islandGrassNormalGridFor(blueprint: IslandBlueprint): IslandGrassNormalGrid {
   const existing = islandGrassNormalGrids.get(blueprint);
   if (existing !== undefined) return existing;
