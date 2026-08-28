@@ -12,8 +12,8 @@
   "registryProvenance": {
     "schema": "agent-assets-registry",
     "version": 1,
-    "hash": "sha256:6afccaafa669b7c18aa164aecc9f53f593cf096a750cd9b13cee0ee3367b4e3a",
-    "assetCount": 78
+    "hash": "sha256:2e523f567604aac45713531dcea988978f9ab755b84394daa9f39e699b37149b",
+    "assetCount": 73
   },
   "assets": [
     {
@@ -29,20 +29,6 @@
       "delivery": "symlink",
       "contentHash": "sha256:80161e6836b3b40f4e83730a290deb40ac14d877d38c97ad5f6d71be37ce74c3",
       "targetPath": ".agents/skills/agent-browser"
-    },
-    {
-      "id": "npx-skills/eli5",
-      "sourcePath": "skills/npx-skills/.agents/skills/eli5",
-      "delivery": "symlink",
-      "contentHash": "sha256:9bda84c3a322554c8b93f2ccc681eff868a734a9bd35fa26c1c9ae096f795758",
-      "targetPath": ".agents/skills/eli5"
-    },
-    {
-      "id": "npx-skills/fireworks-open-eli5",
-      "sourcePath": "skills/npx-skills/.agents/skills/fireworks-open-eli5",
-      "delivery": "symlink",
-      "contentHash": "sha256:3a0d8b3a7d6a162adb1b868a06715de4d0bb6e688349a964783fe3626b3cd11d",
-      "targetPath": ".agents/skills/fireworks-open-eli5"
     },
     {
       "id": "npx-skills/frontend-design",
@@ -159,44 +145,37 @@
     {
       "id": "pie-rules/ai-in-the-loop",
       "sourcePath": "rules/pie-rules/ai-in-the-loop.md",
-      "delivery": "snapshot",
+      "delivery": "symlink",
       "contentHash": "sha256:344eba8c3b1f3130ed33e4b6a4511a332e2ca477e6a40ad7d4c73006197f5445",
       "targetPath": "docs/policy/shared-rules/ai-in-the-loop.md"
     },
     {
       "id": "pie-rules/brand-kit-first",
       "sourcePath": "rules/pie-rules/brand-kit-first.md",
-      "delivery": "snapshot",
-      "contentHash": "sha256:db55812e9d198c45e5fc9e934f7b783fe74c5cd53d91ab347ea2e939b435123f",
+      "delivery": "symlink",
+      "contentHash": "sha256:30bb78d836e5bc3ef478f132fd0363bad2bb88398892e46ce5c579e7701a2529",
       "targetPath": "docs/policy/shared-rules/brand-kit-first.md"
     },
     {
       "id": "pie-rules/clean-image-generation-rules",
       "sourcePath": "rules/pie-rules/clean-image-generation-rules.md",
-      "delivery": "snapshot",
+      "delivery": "symlink",
       "contentHash": "sha256:cd6a79b9971af50003812b498827837ca5c2c284d5b2c95ad3bbf3778483f74a",
       "targetPath": "docs/policy/shared-rules/clean-image-generation-rules.md"
     },
     {
       "id": "pie-rules/donors",
       "sourcePath": "rules/pie-rules/donors.md",
-      "delivery": "snapshot",
-      "contentHash": "sha256:dc0f7ed8044ecfb0f0056a57f99fcdee961c1007f106b37c23bc42c23efad4bc",
+      "delivery": "symlink",
+      "contentHash": "sha256:228e05dfe0bb4e1d151bc95909f63fb9ac4b850a94c08c8c0255fa7516d66b2e",
       "targetPath": "docs/policy/shared-rules/donors.md"
     },
     {
       "id": "pie-rules/web3d-capability-alignment",
       "sourcePath": "rules/pie-rules/web3d-capability-alignment.md",
-      "delivery": "snapshot",
-      "contentHash": "sha256:9834ff5cadf6b7a6a8479de7ba0c26c4e552224377327fba2b850bdab25d18c1",
-      "targetPath": "docs/policy/shared-rules/web3d-capability-alignment.md"
-    },
-    {
-      "id": "pie-skills/ai-human-friendly-refactor",
-      "sourcePath": "skills/pie-skills/ai-human-friendly-refactor",
       "delivery": "symlink",
-      "contentHash": "sha256:6099c06fef1a50d54492ce3c5b4ce75bb9655fcffbc7f5671290e6fc98269d00",
-      "targetPath": ".agents/manual-skills/ai-human-friendly-refactor"
+      "contentHash": "sha256:ed0a7a662a67f1bd9f01c1b24b22f215847e7ada5369157ce16d873bdad121bf",
+      "targetPath": "docs/policy/shared-rules/web3d-capability-alignment.md"
     },
     {
       "id": "pie-skills/experience-capture",
@@ -204,13 +183,6 @@
       "delivery": "symlink",
       "contentHash": "sha256:7e721266aa5bb311c9e66b887046270cd29cb6125a4fa3c103471d775aa40d65",
       "targetPath": ".agents/skills/experience-capture"
-    },
-    {
-      "id": "pie-skills/mermaid-diagrams",
-      "sourcePath": "skills/pie-skills/mermaid-diagrams",
-      "delivery": "symlink",
-      "contentHash": "sha256:290c599d15e221ebcd33f4d442188e1ef8077c36eecf4f4a542b2fa520410f14",
-      "targetPath": ".agents/skills/mermaid-diagrams"
     },
     {
       "id": "pie-skills/screenwalk",
@@ -239,13 +211,6 @@
       "delivery": "symlink",
       "contentHash": "sha256:8dbcb90df1b95f2c4af24575aa0dfeb55c8eb504d301e8bf09cb0444f6780333",
       "targetPath": ".agents/manual-skills/design-taste-frontend-v1"
-    },
-    {
-      "id": "third-party-skills/fireworks-tech-graph",
-      "sourcePath": "skills/third-party-without-npx-skills/fireworks-tech-graph",
-      "delivery": "symlink",
-      "contentHash": "sha256:5ff232c0cd705161a67ea0c29cc78addc826d6adbe7aaaadcda65129570f1e90",
-      "targetPath": ".agents/manual-skills/fireworks-tech-graph"
     },
     {
       "id": "third-party-skills/full-output-enforcement",
@@ -328,7 +293,7 @@
       "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-atmosphere-aerial-perspective",
       "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-atmosphere-aerial-perspective",
       "delivery": "symlink",
-      "contentHash": "sha256:ceb4a389b365dec9d2f4870ed9c47fecb8f9d0f4c463050a5f24c7d79cc9ee4b",
+      "contentHash": "sha256:54b5e354ec759a63e98c4178ee3ee13ed2dbf456f0679e70dda3293a4e065d9c",
       "targetPath": ".agents/manual-skills/threejs-atmosphere-aerial-perspective"
     },
     {
@@ -482,7 +447,7 @@
       "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-volumetric-clouds",
       "sourcePath": "skills/third-party-without-npx-skills/threejs-awesome-graphics-agent-skills/threejs-volumetric-clouds",
       "delivery": "symlink",
-      "contentHash": "sha256:25c03cef5672bd37572ead97dc09a6653409a86c3a396ea7ecba2cb56f575054",
+      "contentHash": "sha256:1561f061613b9444365d83e6a1935a8c56b29864ebed019eed00c0427584f9fc",
       "targetPath": ".agents/manual-skills/threejs-volumetric-clouds"
     },
     {

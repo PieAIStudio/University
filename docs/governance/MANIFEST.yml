@@ -1,7 +1,7 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-28T11:02:19.357Z
-generator_version: doc-gov@0.9.5
+generated_at: 2026-08-28T13:35:25.607Z
+generator_version: doc-gov@0.9.6
 docs_count: 59
 docs:
   - id: ADR-0001
@@ -121,7 +121,7 @@ docs:
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-22
+    last_reviewed: 2026-08-28
     pinned: true
   - id: POLICY-SHARED-CLEAN-IMAGE-GENERATION
     path: docs/policy/shared-rules/clean-image-generation-rules.md
@@ -142,7 +142,7 @@ docs:
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-17
+    last_reviewed: 2026-08-28
     pinned: true
   - id: REF-DOCUMENTATION-MAP
     path: docs/reference/documentation-map.md
