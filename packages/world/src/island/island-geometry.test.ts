@@ -6,6 +6,7 @@ import {
   islandGeometryKey,
   sampleIslandTerrainTop,
 } from "./island-geometry.js";
+import { ISLAND_UNDERSIDE_MOUNT_PROFILE } from "./island-underside.js";
 
 const blueprint = islandBlueprint({
   studyId: "turing-pact",
@@ -101,5 +102,38 @@ describe("Island geometry projections", () => {
     );
     dispose(course);
     dispose(world);
+  });
+
+  it("ends the cliff in a broad stepped mount instead of one cone tip", () => {
+    const shape = buildIslandGeometry(blueprint, "world", 3.2);
+    const position = shape.terrain.getAttribute("position");
+    const rootY = -shape.bounds.depth * ISLAND_UNDERSIDE_MOUNT_PROFILE.rootDepthRatio;
+    const stepY = -shape.bounds.depth * ISLAND_UNDERSIDE_MOUNT_PROFILE.stepDepthRatio;
+    const tolerance = shape.bounds.depth * 0.018;
+    const rootVertices: { readonly x: number; readonly z: number }[] = [];
+    const stepRadials: number[] = [];
+
+    for (let index = 0; index < position.count; index += 1) {
+      const x = position.getX(index);
+      const y = position.getY(index);
+      const z = position.getZ(index);
+      if (Math.abs(y - rootY) <= tolerance) rootVertices.push({ x, z });
+      if (Math.abs(y - stepY) <= tolerance) {
+        stepRadials.push(Math.hypot(x / shape.bounds.halfX, z / shape.bounds.halfZ));
+      }
+    }
+
+    // The former geometry had exactly one lowest vertex at x/z = 0. The new
+    // root has a full polygon ring plus a flat centre cap.
+    expect(rootVertices.length).toBeGreaterThan(16);
+    expect(
+      rootVertices.filter(
+        ({ x, z }) => Math.hypot(x, z) > Math.min(shape.bounds.halfX, shape.bounds.halfZ) * 0.2,
+      ).length,
+    ).toBeGreaterThan(12);
+    // Two outline rings share one y: that discontinuity is the visible inward
+    // step between the rock shoulder and the metal mounting root.
+    expect(Math.max(...stepRadials) - Math.min(...stepRadials)).toBeGreaterThan(0.1);
+    dispose(shape);
   });
 });

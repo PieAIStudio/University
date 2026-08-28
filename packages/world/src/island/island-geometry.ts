@@ -14,6 +14,7 @@ import {
   type IslandOutlinePoint,
   type IslandPoint,
 } from "./island-blueprint.js";
+import { ISLAND_UNDERSIDE_MOUNT_PROFILE } from "./island-underside.js";
 import { hash } from "./random.js";
 
 export type IslandGeometryDetail = "course" | "world";
@@ -583,9 +584,9 @@ function buildTerrain(
   }
   if (detail === "course") appendSoilPath(blueprint, scale, positions, colors, indices);
 
-  // A broad, faceted cliff and a tapered root are the silhouette cue that the
-  // island is flying.  The tech ring is a separate component so it can be LOD
-  // switched without rebuilding the terrain mesh.
+  // A broad, faceted cliff now terminates in an inset engineering mount. The
+  // equal-depth shoulder/root pair is the visible step; the final vertical
+  // pair is the short socket that the separate hull plate fits around.
   // Depth, not a fixed colour per ring.
   //
   // The old table painted the lip GRASS_DARK and everything below it two
@@ -598,10 +599,23 @@ function buildTerrain(
   // curvature term on the top surface.
   const rings = [
     { radial: 1, depth: 0, sky: 1 },
-    { radial: 0.99, depth: -depth * 0.18, sky: 0.82 },
-    { radial: 0.82, depth: -depth * 0.43, sky: 0.58 },
-    { radial: 0.55, depth: -depth * 0.75, sky: 0.34 },
-    { radial: 0.22, depth: -depth * 0.98, sky: 0.16 },
+    { radial: 0.985, depth: -depth * 0.17, sky: 0.82 },
+    { radial: 0.86, depth: -depth * 0.45, sky: 0.56 },
+    {
+      radial: ISLAND_UNDERSIDE_MOUNT_PROFILE.cliffShoulderRatio,
+      depth: -depth * ISLAND_UNDERSIDE_MOUNT_PROFILE.stepDepthRatio,
+      sky: 0.3,
+    },
+    {
+      radial: ISLAND_UNDERSIDE_MOUNT_PROFILE.rootRatio,
+      depth: -depth * ISLAND_UNDERSIDE_MOUNT_PROFILE.stepDepthRatio,
+      sky: 0.22,
+    },
+    {
+      radial: ISLAND_UNDERSIDE_MOUNT_PROFILE.rootRatio,
+      depth: -depth * ISLAND_UNDERSIDE_MOUNT_PROFILE.rootDepthRatio,
+      sky: 0.14,
+    },
   ] as const;
   const cliffStart = positions.length / 3;
   for (let ring = 0; ring < rings.length; ring += 1) {
@@ -633,7 +647,9 @@ function buildTerrain(
     }
   }
   const bottom = positions.length / 3;
-  positions.push(0, -depth * 1.08 * scale, 0);
+  // Close the socket with a flat cap. The old lone vertex at 1.08 × depth was
+  // the geometrical reason every island ended in a smooth cone.
+  positions.push(0, -depth * ISLAND_UNDERSIDE_MOUNT_PROFILE.rootDepthRatio * scale, 0);
   pushColor(colors, CLIFF_DARK);
   const last = cliffStart + (rings.length - 1) * segments;
   for (let index = 0; index < segments; index += 1) {
