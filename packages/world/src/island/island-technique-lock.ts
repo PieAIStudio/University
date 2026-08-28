@@ -47,8 +47,20 @@ export const ISLAND_GRASS_BLADE_TRIANGLE_CEILING = {
   far: 0,
 } as const;
 
-/** No single shipped decoration mesh may exceed this. Kenney's largest is 1,002. */
+/**
+ * Scattered decoration: the hundred-odd trees, bushes and rocks strewn by
+ * island-dressing. Kenney's largest shipped mesh is 1,002 triangles.
+ */
 export const ISLAND_DECORATION_TRIANGLE_CEILING = 1200;
+
+/**
+ * Landmarks are the other half of the scale hierarchy the art reference has and
+ * this island does not: a handful of large, authored things that anchor the eye
+ * while everything else stays small. They are allowed to be expensive precisely
+ * because there are so few, so the cap that matters is the count, not the mesh.
+ */
+export const ISLAND_LANDMARK_TRIANGLE_CEILING = 8000;
+export const ISLAND_LANDMARK_MAX_PER_ISLAND = 6;
 
 export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry>> = {
   grass: {
@@ -63,6 +75,14 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       "neither donates media.",
     budget: "near <= 6 tris/blade, mid = 1, far = 0",
     rejected: [
+      {
+        option: "Shipping elemental-serenity's grass_blade.glb directly, now that media is permitted",
+        why:
+          "Permitted since 2026-08-28 and still not chosen: the blade is three vertices. " +
+          "Generating it costs one function and no fetch, no decoder and no 1.2 KB, and " +
+          "it lets the LOD tier vary the segment count, which a fixed GLB cannot.",
+        on: "2026-08-28",
+      },
       {
         option: "Five-leaf volumetric rosette clump",
         why:
@@ -93,11 +113,44 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
     budget: `<= ${ISLAND_DECORATION_TRIANGLE_CEILING} tris per asset`,
     rejected: [
       {
-        option: "Replacing Kenney trees with donor trunk-plus-leaf-card trees",
+        option: "Rewriting trees before the grass, on the theory that they were the cost",
         why:
           "Measured: the whole shipped Kenney kit is 2,518 triangles across fourteen " +
-          "models — 0.3% of the frame. Trees were never the cost. Revisit only if the " +
-          "low camera shows their silhouette failing, and measure before starting.",
+          "models, against grass's 720,000. Trees were 0.3% of the frame and two rounds " +
+          "were spent on them. Order the work by what the measurement says is expensive.",
+        on: "2026-08-28",
+      },
+    ],
+  },
+  tree: {
+    technique:
+      "Trunk mesh plus billboarded leaf cards, the elemental-serenity construction. " +
+      "The switch from Kenney's solid cones lands with a measured before/after at the " +
+      "low camera; the grass rewrite is what pays for it.",
+    source:
+      "elemental-serenity treeTrunks.glb (2,032 tris across three trunks) and leaf.glb " +
+      "(16 tris per card). Author permission granted 2026-08-28.",
+    budget:
+      "<= 900 tris per tree. At ~128 trees that is ~115,000, affordable only against " +
+      "the ~640,000 the grass rewrite returns — so it does not land before the grass does.",
+    rejected: [],
+  },
+  landmark: {
+    technique:
+      "A handful of large authored props placed at composition anchors, so the island " +
+      "has a scale hierarchy instead of one uniform size of clutter.",
+    source:
+      "elemental-serenity bridge / camp / tent / rocks, author permission granted " +
+      "2026-08-28, plus Kenney fantasy-town for towers and walls.",
+    budget: `<= ${ISLAND_LANDMARK_TRIANGLE_CEILING} tris each, <= ${ISLAND_LANDMARK_MAX_PER_ISLAND} per island`,
+    rejected: [
+      {
+        option: "Scattering more small props to fill the island",
+        why:
+          "Ran three times. Density without scale hierarchy reads as noise: at the " +
+          "course camera every prop is the same handful of pixels, so more of them adds " +
+          "clutter rather than structure. The art reference fixes this with a few big " +
+          "things, not many small ones.",
         on: "2026-08-28",
       },
     ],

@@ -6,6 +6,8 @@ import { describe, expect, it } from "vitest";
 import {
   ISLAND_DECORATION_TRIANGLE_CEILING,
   ISLAND_GRASS_BLADE_TRIANGLE_CEILING,
+  ISLAND_LANDMARK_MAX_PER_ISLAND,
+  ISLAND_LANDMARK_TRIANGLE_CEILING,
   ISLAND_TECHNIQUE_LOCK,
 } from "./island-technique-lock.js";
 import { createIslandGrassClumpGeometry } from "./island-grass-render.js";
@@ -98,6 +100,27 @@ describe("Island technique lock", () => {
      * measurement rather than as a diff nobody reviewed.
      */
     expect(trianglesOf(createIslandGrassClumpGeometry())).toBe(45);
+  });
+
+  it("keeps every donor landmark under the landmark ceiling", () => {
+    /*
+     * The donor media became usable on 2026-08-28. These are the props that give
+     * the island a scale hierarchy, so they are allowed to be an order of
+     * magnitude heavier than scattered decoration — but only because there are
+     * at most six of them on an island, which is the number that actually bounds
+     * the frame.
+     */
+    const root = resolve(
+      import.meta.dirname,
+      "../../../../apps/university/public/models/elemental-serenity",
+    );
+    const models = walkGlb(root);
+    expect(models.length).toBeGreaterThan(0);
+    for (const model of models) {
+      expect(glbTriangles(model), model).toBeLessThanOrEqual(ISLAND_LANDMARK_TRIANGLE_CEILING);
+    }
+    const worst = Math.max(...models.map(glbTriangles));
+    expect(worst * ISLAND_LANDMARK_MAX_PER_ISLAND).toBeLessThan(60_000);
   });
 
   it("keeps every shipped decoration mesh under the ceiling", () => {
