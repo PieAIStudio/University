@@ -37,8 +37,11 @@ export const WORLD_ENVIRONMENT = {
    * Three passes this scene value to every Standard/Physical material as its
    * `envMapIntensity` when the material uses `scene.environment`. One global
    * number is the tuning point; material files do not grow scattered copies.
+   * 0.8 is the measured sky fill for the 2026-08-28 black-hole pass; together
+   * with the hemisphere and ambient lights it keeps the course look inside a
+   * 2–4:1 stylized key-to-fill range without changing the sky's visible stops.
    */
-  intensity: 0.1,
+  intensity: 0.8,
 } as const;
 
 /** A Stage without a visible map sky (the planet picker) still shares this IBL. */

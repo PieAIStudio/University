@@ -608,9 +608,9 @@ function Weather({
       <fogExp2 attach="fog" args={[sky.horizon, density]} />
       <SkyDome stops={sky} />
       {/*
-        Fill is the denominator of scene-linear range. The previous 1.35 + 0.22
-        pair sat under a 2.1 key and erased every shadow; a little cool bounce
-        is kept so p05 stays above zero.
+        Fill is the denominator of scene-linear range. The current warm lower
+        bounce plus blue ambient/PMREM fill is measured at 2.08:1 against the
+        5.2 key, so the shadow still reads as a shadow without dropping to black.
       */}
       <hemisphereLight
         args={[sky.mid, WORLD_SUN.hemisphereGround, WORLD_SUN.hemisphereIntensity]}

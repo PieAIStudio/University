@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { WORLD_ENVIRONMENT } from "./environment.js";
 import {
   WORLD_SUN,
   worldKeyToFillRatio,
@@ -18,10 +19,20 @@ describe("world sun", () => {
     expect(worldKeyToFillRatio()).toBeGreaterThanOrEqual(3);
   });
 
-  it("leaves exposure room for the environment map", () => {
-    expect(WORLD_SUN.hemisphereIntensity).toBeLessThan(0.95);
-    expect(WORLD_SUN.ambientIntensity).toBeLessThan(0.3);
-    expect(WORLD_SUN.hemisphereIntensity + WORLD_SUN.ambientIntensity).toBeCloseTo(0.4);
+  it("keeps total key-to-fill inside the measured stylized range", () => {
+    const fill =
+      WORLD_SUN.hemisphereIntensity + WORLD_SUN.ambientIntensity + WORLD_ENVIRONMENT.intensity;
+    const ratio = WORLD_SUN.keyIntensity / fill;
+    expect(ratio).toBeGreaterThanOrEqual(2);
+    expect(ratio).toBeLessThanOrEqual(4);
+  });
+
+  it("uses a chromatic warm lower bounce instead of neutral gray", () => {
+    const red = (WORLD_SUN.hemisphereGround >> 16) & 255;
+    const green = (WORLD_SUN.hemisphereGround >> 8) & 255;
+    const blue = WORLD_SUN.hemisphereGround & 255;
+    expect(red).toBeGreaterThan(green);
+    expect(green).toBeGreaterThan(blue);
   });
 
   it("places the light on a unit direction whose elevation matches the contract", () => {
