@@ -57,6 +57,38 @@ function hslToHex(hue: number, saturation: number, lightness: number): number {
   return (Math.round(red * 255) << 16) | (Math.round(green * 255) << 8) | Math.round(blue * 255);
 }
 
+interface HslColor {
+  readonly hue: number;
+  readonly saturation: number;
+  readonly lightness: number;
+}
+
+function hslFromHex(hex: number): HslColor {
+  const red = ((hex >> 16) & 0xff) / 255;
+  const green = ((hex >> 8) & 0xff) / 255;
+  const blue = (hex & 0xff) / 255;
+  const maximum = Math.max(red, green, blue);
+  const minimum = Math.min(red, green, blue);
+  const delta = maximum - minimum;
+  const lightness = (maximum + minimum) / 2;
+  if (delta === 0) return { hue: 0, saturation: 0, lightness };
+  const saturation = delta / (1 - Math.abs(2 * lightness - 1));
+  let hue: number;
+  if (maximum === red) hue = ((green - blue) / delta) % 6;
+  else if (maximum === green) hue = (blue - red) / delta + 2;
+  else hue = (red - green) / delta + 4;
+  hue /= 6;
+  return { hue: hue < 0 ? hue + 1 : hue, saturation, lightness };
+}
+
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+function wrapUnit(value: number): number {
+  return ((value % 1) + 1) % 1;
+}
+
 function cssHex(hex: number): string {
   return `#${hex.toString(16).padStart(6, "0")}`;
 }
@@ -120,6 +152,29 @@ const STUDY_CLUSTER_SHAPES: readonly StudyClusterShape[] = [
 ];
 
 /**
+ * The same five words also carry a small silhouette recipe at the course
+ * scale. Numbers live beside the vocabulary so a renderer never grows a
+ * second shape list or decides that `wide` means something else.
+ */
+export interface StudyClusterSilhouette {
+  readonly width: number;
+  readonly depth: number;
+  readonly rotation: number;
+}
+
+const STUDY_CLUSTER_SILHOUETTES: Readonly<Record<StudyClusterShape, StudyClusterSilhouette>> = {
+  wide: { width: 1.36, depth: 0.66, rotation: -0.12 },
+  compact: { width: 0.88, depth: 1.06, rotation: 0.02 },
+  elongated: { width: 0.66, depth: 1.34, rotation: 0.12 },
+  faceted: { width: 1.18, depth: 0.78, rotation: 0.3 },
+  tall: { width: 0.72, depth: 1.32, rotation: -0.16 },
+};
+
+export function studyClusterSilhouette(shape: StudyClusterShape): StudyClusterSilhouette {
+  return STUDY_CLUSTER_SILHOUETTES[shape];
+}
+
+/**
  * Shape is a named identity cue, not a hand-tuned island layout. The five
  * known studies get one stable profile each; an unlisted study hashes into
  * the same small vocabulary, so content order can never reshuffle a cluster.
@@ -143,6 +198,171 @@ export function studyClusterStyle(studyId: string): StudyClusterStyle {
     shape: STUDY_CLUSTER_SHAPES[profile]!,
     accentHex: marker.hex,
     outlineHex: marker.outlineHex,
+  };
+}
+
+/**
+ * Give a course a profile from the study's existing five-word vocabulary.
+ * Passing a namespaced id through `studyClusterStyle` deliberately reuses its
+ * hash assignment instead of introducing a course-only shape hash.
+ */
+export function courseClusterStyle(studyId: string, courseId: string): StudyClusterStyle {
+  const profileStyle = studyClusterStyle(`${studyId}/course/${courseId}`);
+  const marker = studyMarkerColor(studyId);
+  return {
+    studyId,
+    profile: profileStyle.profile,
+    shape: profileStyle.shape,
+    accentHex: marker.hex,
+    outlineHex: marker.outlineHex,
+  };
+}
+
+/** The single candidate knob: more hue means proportionally less silhouette. */
+export const COURSE_IDENTITY_HUE_SHARE = 0.46;
+export const COURSE_IDENTITY_HUE_MAX_DEGREES = 18;
+export const COURSE_IDENTITY_SATURATION_SPREAD = 0.055;
+export const COURSE_IDENTITY_LIGHTNESS_SPREAD = 0.05;
+export const COURSE_IDENTITY_SILHOUETTE_VARIATION = 0.6;
+export const COURSE_IDENTITY_ROTATION_VARIATION = 0.52;
+
+export interface CourseIslandStyle {
+  readonly studyId: string;
+  readonly courseId: string;
+  readonly profile: number;
+  readonly shape: StudyClusterShape;
+  readonly hueShiftDegrees: number;
+  readonly saturationShift: number;
+  readonly lightnessShift: number;
+  readonly hueShare: number;
+  readonly silhouetteShare: number;
+  /** Full course colour, before the candidate balance is applied to terrain. */
+  readonly courseHex: number;
+  /** Course colour moved partway from the study hue for the terrain uniform. */
+  readonly surfaceHex: number;
+  /** Warm, dark value break; deliberately not the study's near-black outline. */
+  readonly underbodyHex: number;
+  /** One saturated point, derived from the course hue. */
+  readonly accentHex: number;
+  readonly surfaceStrength: number;
+  readonly silhouette: StudyClusterSilhouette;
+  /** Normalised ellipse coordinates, resolved against a blueprint by IslandRender. */
+  readonly accentPosition: { readonly x: number; readonly z: number };
+}
+
+function signedHash(key: string, span: number): number {
+  return (hash(key) * 2 - 1) * span;
+}
+
+function blendHsl(from: HslColor, to: HslColor, amount: number): HslColor {
+  const hueDelta = ((to.hue - from.hue + 0.5) % 1) - 0.5;
+  return {
+    hue: wrapUnit(from.hue + hueDelta * amount),
+    saturation: from.saturation + (to.saturation - from.saturation) * amount,
+    lightness: from.lightness + (to.lightness - from.lightness) * amount,
+  };
+}
+
+function normaliseIdentityShare(value: number): number {
+  if (!Number.isFinite(value) || value < 0 || value > 1) {
+    throw new RangeError("course island identity hue share must be between 0 and 1");
+  }
+  return value;
+}
+
+/**
+ * Derive course identity from the study marker, without making the study a
+ * rainbow. The same bounded hue/saturation/lightness data drives both the
+ * terrain uniform and the single world accent; only the balance knob changes
+ * how much of it is visible versus the shared shape profile.
+ */
+export function courseIslandStyle(
+  studyId: string,
+  courseId: string,
+  hueShare = COURSE_IDENTITY_HUE_SHARE,
+): CourseIslandStyle {
+  const share = normaliseIdentityShare(hueShare);
+  const silhouetteShare = 1 - share;
+  const study = studyMarkerColor(studyId);
+  const studyHsl = hslFromHex(study.hex);
+  const hueShiftDegrees = signedHash(
+    `course-island-hue:${studyId}:${courseId}`,
+    COURSE_IDENTITY_HUE_MAX_DEGREES,
+  );
+  const saturationShift = signedHash(
+    `course-island-saturation:${studyId}:${courseId}`,
+    COURSE_IDENTITY_SATURATION_SPREAD,
+  );
+  const lightnessShift = signedHash(
+    `course-island-lightness:${studyId}:${courseId}`,
+    COURSE_IDENTITY_LIGHTNESS_SPREAD,
+  );
+  const courseHsl: HslColor = {
+    hue: wrapUnit(studyHsl.hue + hueShiftDegrees / 360),
+    saturation: clamp01(studyHsl.saturation + saturationShift),
+    lightness: clamp01(studyHsl.lightness + lightnessShift),
+  };
+  const surfaceHsl = blendHsl(studyHsl, courseHsl, share);
+  const accentHsl: HslColor = {
+    hue: courseHsl.hue,
+    saturation: Math.min(0.9, Math.max(0.62, courseHsl.saturation + 0.25)),
+    lightness: Math.min(0.68, Math.max(0.42, courseHsl.lightness + 0.02)),
+  };
+  const cluster = courseClusterStyle(studyId, courseId);
+  const profileSilhouette = studyClusterSilhouette(cluster.shape);
+  const courseSilhouette = {
+    width:
+      profileSilhouette.width *
+      (1 +
+        signedHash(
+          `course-island-silhouette-width:${studyId}:${courseId}`,
+          COURSE_IDENTITY_SILHOUETTE_VARIATION,
+        )),
+    depth:
+      profileSilhouette.depth *
+      (1 +
+        signedHash(
+          `course-island-silhouette-depth:${studyId}:${courseId}`,
+          COURSE_IDENTITY_SILHOUETTE_VARIATION,
+        )),
+    rotation:
+      profileSilhouette.rotation +
+      signedHash(
+        `course-island-silhouette-bearing:${studyId}:${courseId}`,
+        COURSE_IDENTITY_ROTATION_VARIATION,
+      ),
+  };
+  const silhouette = {
+    width: 1 + (courseSilhouette.width - 1) * silhouetteShare,
+    depth: 1 + (courseSilhouette.depth - 1) * silhouetteShare,
+    rotation: silhouetteShare === 0 ? 0 : courseSilhouette.rotation * silhouetteShare,
+  };
+  const accentAngle = hash(`course-island-accent-angle:${studyId}:${courseId}`) * Math.PI * 2;
+  const accentRadius = 0.18 + hash(`course-island-accent-radius:${studyId}:${courseId}`) * 0.18;
+  return {
+    studyId,
+    courseId,
+    profile: cluster.profile,
+    shape: cluster.shape,
+    hueShiftDegrees,
+    saturationShift,
+    lightnessShift,
+    hueShare: share,
+    silhouetteShare,
+    courseHex: hslToHex(courseHsl.hue, courseHsl.saturation, courseHsl.lightness),
+    surfaceHex: hslToHex(surfaceHsl.hue, surfaceHsl.saturation, surfaceHsl.lightness),
+    underbodyHex: hslToHex(
+      courseHsl.hue,
+      Math.min(0.62, courseHsl.saturation * 0.78),
+      Math.max(0.24, courseHsl.lightness * 0.55),
+    ),
+    accentHex: hslToHex(accentHsl.hue, accentHsl.saturation, accentHsl.lightness),
+    surfaceStrength: 0.72 + share * 0.28,
+    silhouette,
+    accentPosition: {
+      x: Math.cos(accentAngle) * accentRadius,
+      z: Math.sin(accentAngle) * accentRadius,
+    },
   };
 }
 

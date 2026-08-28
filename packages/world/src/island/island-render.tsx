@@ -3,7 +3,11 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-import { buildIslandGeometry, type IslandGeometryDetail } from "./island-geometry.js";
+import {
+  buildIslandGeometry,
+  sampleIslandTerrainTop,
+  type IslandGeometryDetail,
+} from "./island-geometry.js";
 import { IslandGrass, type IslandGrassStyle } from "./island-grass-render.js";
 import { islandDressingSafetyZones, planIslandDressing } from "./island-dressing.js";
 import {
@@ -16,11 +20,11 @@ import {
   type IslandSurfaceStyleId,
 } from "./island-surface-style.js";
 import type { IslandBlueprint, IslandUnitSigil } from "./island-blueprint.js";
+import { courseIslandStyle, type CourseIslandStyle } from "../planet/planet-copy.js";
 
 const TECH = 0x5a6572;
 const TECH_DARK = 0x303a46;
 const CYAN = 0x55d9ff;
-const HERO_GOLD = 0xffc75a;
 
 const GRASS_LOOKS: Readonly<
   Record<
@@ -70,6 +74,7 @@ function IslandSurfaceMaterial({
   polygonOffset = false,
   polygonOffsetFactor,
   timeUniform,
+  identity,
 }: {
   readonly role: IslandSurfaceRole;
   readonly style: IslandSurfaceStyleId;
@@ -79,10 +84,12 @@ function IslandSurfaceMaterial({
   readonly polygonOffset?: boolean;
   readonly polygonOffsetFactor?: number;
   readonly timeUniform: IslandSurfaceTimeUniform;
+  readonly identity: CourseIslandStyle;
 }) {
   const adapter = useMemo(
-    () => createIslandSurfaceMaterialAdapter(role, style, import.meta.env.DEV, timeUniform),
-    [role, timeUniform],
+    () =>
+      createIslandSurfaceMaterialAdapter(role, style, import.meta.env.DEV, timeUniform, identity),
+    [identity, role, timeUniform],
   );
   useLayoutEffect(() => {
     adapter.setStyle(style);
@@ -104,38 +111,32 @@ function colourWithDimmed(colour: number, dimmed: boolean): THREE.Color {
   return new THREE.Color(colour).multiplyScalar(dimmed ? 0.64 : 1);
 }
 
-/** Low-poly tech rim and thrusters; one instanced batch, not one mesh per pod. */
+/** Low-poly tech rim and thrusters for the readable course projection. */
 function TechUnderside({
   blueprint,
   scale,
   depth,
-  detail,
   dimmed,
 }: {
   readonly blueprint: IslandBlueprint;
   readonly scale: number;
   readonly depth: number;
-  readonly detail: IslandGeometryDetail;
   readonly dimmed: boolean;
 }) {
   const ringRef = useRef<THREE.Mesh>(null);
   const podsRef = useRef<THREE.InstancedMesh>(null);
   const glowsRef = useRef<THREE.InstancedMesh>(null);
-  const podCount =
-    detail === "world" ? 4 : Math.min(8, Math.max(4, blueprint.underside.ringCount * 2));
-  const ringRatio = detail === "world" ? 0.84 : 0.7;
+  const podCount = Math.min(8, Math.max(4, blueprint.underside.ringCount * 2));
+  const ringRatio = 0.7;
   const ringRadiusX = blueprint.bounds.halfX * scale * ringRatio;
   const ringRadiusZ = blueprint.bounds.halfZ * scale * ringRatio;
   const ringThickness = Math.max(0.05, Math.min(ringRadiusX, ringRadiusZ) * 0.035);
   const podTransforms = useMemo(() => {
     const bodies: THREE.Matrix4[] = [];
     const glows: THREE.Matrix4[] = [];
-    // The overview camera mainly sees the island's front lip. Put the world
-    // pods on the exposed lower collar instead of burying them halfway inside
-    // the rock taper; the course projection keeps the subtler inset version.
-    const y = -depth * (detail === "world" ? 0.68 : 0.52);
+    const y = -depth * 0.52;
     const podRadius = Math.max(0.1, Math.min(ringRadiusX, ringRadiusZ) * 0.075);
-    const podHeight = Math.max(0.32, depth * (detail === "world" ? 0.2 : 0.14));
+    const podHeight = Math.max(0.32, depth * 0.14);
     for (let index = 0; index < podCount; index += 1) {
       const angle = (index / podCount) * Math.PI * 2 + 0.2;
       const x = Math.cos(angle) * ringRadiusX;
@@ -177,7 +178,7 @@ function TechUnderside({
     material.opacity = 0.56 + Math.sin(clock.elapsedTime * 1.4) * 0.1;
   });
 
-  const y = -depth * (detail === "world" ? 0.6 : 0.33);
+  const y = -depth * 0.33;
   return (
     <group>
       <mesh
@@ -185,7 +186,7 @@ function TechUnderside({
         rotation={[Math.PI / 2, 0, 0]}
         scale={[ringRadiusX, ringRadiusZ, ringThickness / 0.06]}
       >
-        <torusGeometry args={[1, 0.06, 6, detail === "world" ? 20 : 32]} />
+        <torusGeometry args={[1, 0.06, 6, 32]} />
         <meshStandardMaterial
           color={colourWithDimmed(TECH, dimmed)}
           roughness={0.42}
@@ -198,7 +199,7 @@ function TechUnderside({
         rotation={[Math.PI / 2, 0, 0]}
         scale={[ringRadiusX, ringRadiusZ, (ringThickness * 0.45) / 0.018]}
       >
-        <torusGeometry args={[1, 0.018, 5, detail === "world" ? 20 : 32]} />
+        <torusGeometry args={[1, 0.018, 5, 32]} />
         <meshBasicMaterial
           color={dimmed ? TECH : CYAN}
           transparent
@@ -207,7 +208,7 @@ function TechUnderside({
         />
       </mesh>
       <instancedMesh ref={podsRef} args={[undefined, undefined, podCount]}>
-        <cylinderGeometry args={[0.72, 1, 1, detail === "world" ? 6 : 8]} />
+        <cylinderGeometry args={[0.72, 1, 1, 8]} />
         <meshStandardMaterial
           color={colourWithDimmed(TECH_DARK, dimmed)}
           roughness={0.38}
@@ -215,7 +216,7 @@ function TechUnderside({
         />
       </instancedMesh>
       <instancedMesh ref={glowsRef} args={[undefined, undefined, podCount]}>
-        <coneGeometry args={[1, 1, detail === "world" ? 5 : 7]} />
+        <coneGeometry args={[1, 1, 7]} />
         <meshBasicMaterial
           color={dimmed ? TECH : CYAN}
           transparent
@@ -223,26 +224,11 @@ function TechUnderside({
           depthWrite={false}
         />
       </instancedMesh>
-      {/*
-        What actually survives the archipelago's scale.
-
-        A whole tech chassis — hull plate, radial ribs, a core — was built for
-        this view and thrown away, because measuring the shot settled the
-        argument: on the world map an island is about 120 px across and its
-        underside about 20, and the `world-design` capture puts a whole island
-        inside 40 px. Structure does not exist at 8 px. Three things do:
-        silhouette, a value break, and one bright pixel.
-
-        So the far LOD gets a pale collar tucked under the lip — the value
-        break that says "this is not rock all the way down" — and one emissive
-        bead at the root, which is the bright pixel that says "machine". Two
-        draws, no instancing, no per-island geometry.
-      */}
       <mesh
         position={[0, -depth * 0.26, 0]}
         scale={[ringRadiusX / ringRatio, depth * 0.2, ringRadiusZ / ringRatio]}
       >
-        <cylinderGeometry args={[0.88, 0.7, 1, detail === "world" ? 16 : 26, 1, true]} />
+        <cylinderGeometry args={[0.88, 0.7, 1, 26, 1, true]} />
         <meshStandardMaterial
           color={colourWithDimmed(TECH, dimmed)}
           roughness={0.44}
@@ -263,88 +249,67 @@ function TechUnderside({
 }
 
 /**
- * A small repeatable navigation beacon for the world projection.
- *
- * The course projection gets its identity from the selected accent recipe. A
- * generic cyan gate beside a Fantasy Town academy read as a third surface
- * theme and competed with the real landmark, so this fallback belongs only to
- * the far LOD while the remaining recipe packs are still being imported.
+ * The world projection's single light/dark break. It is a warm course-derived
+ * collar, not a black technical hoop, so the underside supports the terrain's
+ * silhouette instead of becoming the first thing the eye sees.
  */
-function HeroLandmark({
+function WorldIslandValueBreak({
   blueprint,
   scale,
-  detail,
+  depth,
+  identity,
   dimmed,
 }: {
   readonly blueprint: IslandBlueprint;
   readonly scale: number;
-  readonly detail: IslandGeometryDetail;
+  readonly depth: number;
+  readonly identity: CourseIslandStyle;
   readonly dimmed: boolean;
 }) {
-  const crystal = useRef<THREE.Mesh>(null);
-  const position = useMemo(
-    () =>
-      new THREE.Vector3(
-        blueprint.hero.x * scale,
-        blueprint.hero.y * scale,
-        blueprint.hero.z * scale,
-      ),
-    [blueprint, scale],
-  );
-  useFrame(({ clock }) => {
-    if (import.meta.env.DEV && islandLookFrozen()) return;
-    const mesh = crystal.current;
-    if (!mesh) return;
-    mesh.rotation.y = clock.elapsedTime * 0.55;
-    const pulse = 1 + Math.sin(clock.elapsedTime * 1.7) * 0.06;
-    mesh.scale.setScalar(pulse);
-  });
-  const factor = scale * (detail === "world" ? 4.2 : 1);
+  const radiusX = blueprint.bounds.halfX * scale;
+  const radiusZ = blueprint.bounds.halfZ * scale;
   return (
-    <group position={position} rotation={[0, -blueprint.hero.heading, 0]} scale={factor}>
-      <mesh position={[-0.78, 1.05, 0]} castShadow>
-        <boxGeometry args={[0.28, 2.1, 0.36]} />
-        <meshStandardMaterial
-          color={colourWithDimmed(TECH_DARK, dimmed)}
-          roughness={0.5}
-          metalness={0.55}
-        />
-      </mesh>
-      <mesh position={[0.78, 1.05, 0]} castShadow>
-        <boxGeometry args={[0.28, 2.1, 0.36]} />
-        <meshStandardMaterial
-          color={colourWithDimmed(TECH_DARK, dimmed)}
-          roughness={0.5}
-          metalness={0.55}
-        />
-      </mesh>
-      <mesh position={[0, 2.02, 0]} castShadow>
-        <boxGeometry args={[1.84, 0.28, 0.36]} />
-        <meshStandardMaterial
-          color={colourWithDimmed(TECH, dimmed)}
-          roughness={0.4}
-          metalness={0.64}
-        />
-      </mesh>
-      <mesh ref={crystal} position={[0, 1.35, 0.02]}>
-        <octahedronGeometry args={[0.45, 0]} />
-        <meshStandardMaterial
-          color={dimmed ? TECH : CYAN}
-          emissive={dimmed ? 0x000000 : CYAN}
-          emissiveIntensity={dimmed ? 0 : 1.3}
-          roughness={0.18}
-          metalness={0.18}
-        />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.08, 0]}>
-        <cylinderGeometry args={[1.18, 1.35, 0.16, detail === "world" ? 12 : 20]} />
-        <meshStandardMaterial
-          color={colourWithDimmed(HERO_GOLD, dimmed)}
-          roughness={0.42}
-          metalness={0.38}
-        />
-      </mesh>
-    </group>
+    <mesh
+      name="island-world-value-break"
+      position={[0, -depth * 0.28, 0]}
+      scale={[radiusX * 0.82, Math.max(0.08, depth * 0.55), radiusZ * 0.82]}
+    >
+      <cylinderGeometry args={[0.88, 0.68, 1, 8]} />
+      <meshStandardMaterial
+        color={colourWithDimmed(identity.underbodyHex, dimmed)}
+        roughness={0.88}
+        metalness={0.04}
+      />
+    </mesh>
+  );
+}
+
+/** One small course-derived bright point; its location is stable per course. */
+function WorldIslandAccent({
+  blueprint,
+  scale,
+  identity,
+  dimmed,
+}: {
+  readonly blueprint: IslandBlueprint;
+  readonly scale: number;
+  readonly identity: CourseIslandStyle;
+  readonly dimmed: boolean;
+}) {
+  const accent = useMemo(() => {
+    const x = blueprint.bounds.halfX * identity.accentPosition.x;
+    const z = blueprint.bounds.halfZ * identity.accentPosition.z;
+    const surface = sampleIslandTerrainTop(blueprint, "world", x, z);
+    return {
+      position: [x * scale, (surface.y + 0.24) * scale, z * scale] as const,
+      size: Math.max(0.08, Math.min(blueprint.bounds.halfX, blueprint.bounds.halfZ) * scale * 0.12),
+    };
+  }, [blueprint, identity, scale]);
+  return (
+    <mesh name="island-world-accent" position={accent.position}>
+      <octahedronGeometry args={[accent.size, 0]} />
+      <meshBasicMaterial color={colourWithDimmed(identity.accentHex, dimmed)} />
+    </mesh>
   );
 }
 
@@ -358,6 +323,10 @@ export function IslandRender({
   onPointerOut,
   dimmed = false,
 }: IslandRenderProps) {
+  const identity = useMemo(
+    () => courseIslandStyle(blueprint.studyId, blueprint.courseId),
+    [blueprint.courseId, blueprint.studyId],
+  );
   const surfaceStyle = import.meta.env.DEV
     ? resolveIslandSurfaceStyle()
     : DEFAULT_ISLAND_SURFACE_STYLE;
@@ -396,6 +365,10 @@ export function IslandRender({
   );
   return (
     <group
+      rotation={detail === "world" ? [0, identity.silhouette.rotation, 0] : undefined}
+      scale={
+        detail === "world" ? [identity.silhouette.width, 1, identity.silhouette.depth] : undefined
+      }
       onClick={
         onClick
           ? (event) => {
@@ -429,6 +402,7 @@ export function IslandRender({
           roughness={0.68}
           metalness={0}
           timeUniform={surfaceTime.current}
+          identity={identity}
         />
       </mesh>
       {detail === "course" ? (
@@ -442,16 +416,30 @@ export function IslandRender({
           />
         </>
       ) : null}
-      <TechUnderside
-        blueprint={blueprint}
-        scale={shape.scale}
-        depth={shape.bounds.depth}
-        detail={detail}
-        dimmed={dimmed}
-      />
       {detail === "world" ? (
-        <HeroLandmark blueprint={blueprint} scale={shape.scale} detail={detail} dimmed={dimmed} />
-      ) : null}
+        <>
+          <WorldIslandValueBreak
+            blueprint={blueprint}
+            scale={shape.scale}
+            depth={shape.bounds.depth}
+            identity={identity}
+            dimmed={dimmed}
+          />
+          <WorldIslandAccent
+            blueprint={blueprint}
+            scale={shape.scale}
+            identity={identity}
+            dimmed={dimmed}
+          />
+        </>
+      ) : (
+        <TechUnderside
+          blueprint={blueprint}
+          scale={shape.scale}
+          depth={shape.bounds.depth}
+          dimmed={dimmed}
+        />
+      )}
     </group>
   );
 }

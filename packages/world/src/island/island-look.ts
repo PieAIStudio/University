@@ -182,6 +182,17 @@ export interface IslandLookSceneSource {
   readonly nodePositions: readonly IslandPoint[];
 }
 
+/** The far projection has no props; its judge source must describe that LOD. */
+function emptyWorldDressingPlan(blueprint: IslandBlueprint): IslandDressingPlan {
+  return {
+    version: 1,
+    detail: "world",
+    seed: blueprint.seed,
+    recipeId: null,
+    placements: [],
+  };
+}
+
 /** Build judge data from the same blueprint and dressing planner as the scene. */
 export function islandLookSceneSource(
   detail: "course" | "world",
@@ -191,7 +202,11 @@ export function islandLookSceneSource(
   return {
     detail,
     blueprints,
-    dressingPlans: blueprints.map((blueprint) => planIslandDressing(blueprint, detail)),
+    dressingPlans: blueprints.map((blueprint) =>
+      detail === "world"
+        ? emptyWorldDressingPlan(blueprint)
+        : planIslandDressing(blueprint, detail),
+    ),
     nodePositions,
   };
 }

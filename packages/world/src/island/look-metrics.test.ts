@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest";
 
 import { islandBlueprint } from "./island-blueprint.js";
 import { planIslandDressing } from "./island-dressing.js";
-import { islandLookCameraForShot, islandLookDebugFromSearch } from "./island-look.js";
+import {
+  islandLookCameraForShot,
+  islandLookDebugFromSearch,
+  islandLookSceneSource,
+} from "./island-look.js";
 import { ISLAND_LOOK_CONTRACT } from "./look-contract.js";
 import {
   measureIslandCodeMetrics,
@@ -86,6 +90,13 @@ describe("island look judge", () => {
       lessonNodes: 41,
     });
     expect(worldReport.worldPropsPerIsland).toBe(worldPlan.placements.length);
+  });
+
+  it("keeps world judge data at the same identity-only LOD as the renderer", () => {
+    const worldSource = islandLookSceneSource("world", [blueprint()]);
+    expect(worldSource.dressingPlans).toHaveLength(1);
+    expect(worldSource.dressingPlans[0]?.detail).toBe("world");
+    expect(worldSource.dressingPlans[0]?.placements).toHaveLength(0);
   });
 
   it("uses one key/fill calculation and exposes the threshold separately", () => {

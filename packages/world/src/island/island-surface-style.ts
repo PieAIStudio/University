@@ -8,6 +8,8 @@
  */
 import * as THREE from "three";
 
+import type { CourseIslandStyle } from "../planet/planet-copy.js";
+
 export const ISLAND_SURFACE_STYLE_IDS = ["diorama", "elemental", "mossy", "desert"] as const;
 export type IslandSurfaceStyleId = (typeof ISLAND_SURFACE_STYLE_IDS)[number];
 export type IslandSurfaceRole = "terrain";
@@ -105,6 +107,8 @@ uniform float uIslandStyleVariant;
 uniform float uIslandStyleMacroAmount;
 uniform float uIslandStyleShimmer;
 uniform float uIslandStyleTime;
+uniform vec3 uIslandIdentityColor;
+uniform float uIslandIdentityStrength;
 varying vec3 vIslandStyleWorldPosition;
 varying float vIslandStyleHeight;
 varying float vIslandStyleSlope;
@@ -223,7 +227,14 @@ islandStyleColour += vec3(
   sin(uIslandStyleTime * 1.7 + dot(vIslandStyleWorldPosition.xz, vec2(0.14, 0.09)))
   * uIslandStyleShimmer
 );
-diffuseColor.rgb = mix(diffuseColor.rgb, islandStyleColour, clamp(uIslandStyleStrength, 0.0, 1.0));`;
+// The shared look is applied first; identity follows it so the existing
+// debug-look strength cannot silently erase the study/course territory.
+diffuseColor.rgb = mix(diffuseColor.rgb, islandStyleColour, clamp(uIslandStyleStrength, 0.0, 1.0));
+diffuseColor.rgb = mix(
+  diffuseColor.rgb,
+  uIslandIdentityColor,
+  clamp(uIslandIdentityStrength, 0.0, 1.0)
+);`;
 
 const SURFACE_STYLE_VERTEX_PATCH = `${SURFACE_STYLE_UNIFORM_MARKER}
 varying vec3 vIslandStyleWorldPosition;
@@ -248,6 +259,8 @@ export interface IslandSurfaceStyleUniforms {
   readonly uIslandStyleMacroAmount: { value: number };
   readonly uIslandStyleShimmer: { value: number };
   readonly uIslandStyleTime: { value: number };
+  readonly uIslandIdentityColor: { value: THREE.Color };
+  readonly uIslandIdentityStrength: { value: number };
 }
 
 export interface IslandSurfaceMaterialAdapter {
@@ -403,6 +416,7 @@ export function createIslandSurfaceMaterialAdapter(
   initialStyle: IslandSurfaceStyleId = DEFAULT_ISLAND_SURFACE_STYLE,
   enabled = true,
   timeUniform: IslandSurfaceTimeUniform = { value: 0 },
+  identity: CourseIslandStyle | null = null,
 ): IslandSurfaceMaterialAdapter {
   const initial = stylePreset(initialStyle);
   const uniforms: IslandSurfaceStyleUniforms = {
@@ -415,6 +429,8 @@ export function createIslandSurfaceMaterialAdapter(
     uIslandStyleMacroAmount: { value: initial.macroAmount },
     uIslandStyleShimmer: { value: initial.shimmer },
     uIslandStyleTime: timeUniform,
+    uIslandIdentityColor: { value: new THREE.Color(identity?.surfaceHex ?? 0xffffff) },
+    uIslandIdentityStrength: { value: identity?.surfaceStrength ?? 0 },
   };
   let activeStyle = initialStyle;
 

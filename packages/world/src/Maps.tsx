@@ -399,14 +399,12 @@ function Island({
   dimmed = false,
   onClick,
   onOver,
-  assetRevision = 0,
 }: {
   entry: WorldPlacement;
   /** Authoring focus track: this island is one the learner is ignoring. */
   dimmed?: boolean;
   onClick: () => void;
   onOver: (over: boolean) => void;
-  assetRevision?: number;
 }) {
   const locked = entry.state === "idle";
   return (
@@ -432,17 +430,10 @@ function Island({
         targetRadius={entry.radius}
         dimmed={locked || dimmed}
       />
-      <Suspense fallback={null}>
-        <IslandDressing
-          key={assetRevision}
-          blueprint={entry.blueprint}
-          detail="world"
-          targetRadius={entry.radius}
-        />
-      </Suspense>
       {/*
-        Foam used to mark the waterline. The islands now sit above a cloud
-        sea, and a ring in the air would be the waterline of a missing ocean.
+        The world projection is deliberately only the course identity
+        silhouette, one value break, and one accent. Course dressing belongs
+        to the course projection, where the learner can actually read it.
       */}
     </group>
   );
@@ -663,7 +654,6 @@ export function WorldScene({
   onHover,
   focus,
   skyStudyId = null,
-  assetRevision = 0,
 }: {
   placements: readonly WorldPlacement[];
   /**
@@ -678,14 +668,10 @@ export function WorldScene({
   avatarSignedIn?: boolean;
   onPick: (node: CourseNode) => void;
   onHover: (node: CourseNode | null) => void;
-  /**
-   * Authoring-only. Islands not on this track dim; the delivery shell
-   * omits the prop and the world looks as it does today.
-   */
+  /** Authoring-only. Islands not on this track dim; delivery leaves them at full value. */
   focus?: { readonly studyId: string; readonly courseIds: readonly string[] };
   /** `null` keeps the default dome — the four-seas overview. */
   skyStudyId?: string | null;
-  assetRevision?: number;
 }) {
   return (
     <>
@@ -707,7 +693,6 @@ export function WorldScene({
           dimmed={isFocusDimmed(entry.node, focus)}
           onClick={() => onPick(entry.node)}
           onOver={(over) => onHover(over ? entry.node : null)}
-          assetRevision={assetRevision}
         />
       ))}
       {learnerAt ? (

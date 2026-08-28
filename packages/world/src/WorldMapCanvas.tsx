@@ -29,7 +29,6 @@ export function WorldMapCanvas({
   markers,
   followId,
   followNode,
-  assetRevision = 0,
   onPick,
   onHover,
   onSceneReady,
@@ -60,7 +59,6 @@ export function WorldMapCanvas({
   readonly markers: readonly Marker[];
   readonly followId?: string | null;
   readonly followNode?: { readonly current: HTMLElement | null };
-  readonly assetRevision?: number;
   readonly onPick: (node: CourseNode) => void;
   readonly onHover: (node: CourseNode | null) => void;
   readonly onSceneReady?: () => void;
@@ -160,7 +158,6 @@ export function WorldMapCanvas({
             avatarSignedIn={avatarSignedIn}
             skyStudyId={skyStudyId}
             focus={focus}
-            assetRevision={assetRevision}
             onPick={onPick}
             onHover={onHover}
           />

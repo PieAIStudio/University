@@ -1,13 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  COURSE_IDENTITY_HUE_MAX_DEGREES,
+  COURSE_IDENTITY_LIGHTNESS_SPREAD,
+  COURSE_IDENTITY_SATURATION_SPREAD,
   STUDY_STAGE_LABEL,
+  courseClusterStyle,
+  courseIslandStyle,
   studyCounts,
   studyCourseList,
   studyClusterStyle,
   studyMarkerColor,
   studyPercent,
   studyStage,
+  type StudyClusterShape,
   type PlanetStudy,
 } from "./planet-copy.js";
 
@@ -127,5 +133,54 @@ describe("studyClusterStyle", () => {
 
   it("does not let catalogue order decide an unlisted study's shape", () => {
     expect(studyClusterStyle("future-study")).toEqual(studyClusterStyle("future-study"));
+  });
+});
+
+describe("courseIslandStyle", () => {
+  it("keeps every course in its study territory and assigns stable shape/accent data", () => {
+    const styles = ["intro", "terrain", "camera", "lighting", "materials", "post"].map((id) =>
+      courseIslandStyle("turing-pact", id),
+    );
+    const shapes = new Set<StudyClusterShape>(styles.map((style) => style.shape));
+
+    expect(styles).toEqual([
+      courseIslandStyle("turing-pact", "intro"),
+      courseIslandStyle("turing-pact", "terrain"),
+      courseIslandStyle("turing-pact", "camera"),
+      courseIslandStyle("turing-pact", "lighting"),
+      courseIslandStyle("turing-pact", "materials"),
+      courseIslandStyle("turing-pact", "post"),
+    ]);
+    expect(shapes.size).toBeGreaterThan(1);
+    expect(
+      styles.every((style) => Math.abs(style.hueShiftDegrees) <= COURSE_IDENTITY_HUE_MAX_DEGREES),
+    ).toBe(true);
+    expect(
+      styles.every(
+        (style) =>
+          Math.abs(style.saturationShift) <= COURSE_IDENTITY_SATURATION_SPREAD &&
+          Math.abs(style.lightnessShift) <= COURSE_IDENTITY_LIGHTNESS_SPREAD,
+      ),
+    ).toBe(true);
+    expect(styles.every((style) => style.accentHex !== style.surfaceHex)).toBe(true);
+  });
+
+  it("balances the same identity data between silhouette and hue without changing the vocabulary", () => {
+    const silhouette = courseIslandStyle("supaluv", "first-course", 0);
+    const balanced = courseIslandStyle("supaluv", "first-course", 0.46);
+    const hue = courseIslandStyle("supaluv", "first-course", 1);
+
+    expect(silhouette.hueShare).toBe(0);
+    expect(silhouette.silhouetteShare).toBe(1);
+    expect(hue.hueShare).toBe(1);
+    expect(hue.silhouetteShare).toBe(0);
+    expect(silhouette.surfaceHex).toBe(studyMarkerColor("supaluv").hex);
+    expect(hue.silhouette).toEqual({ width: 1, depth: 1, rotation: 0 });
+    expect(balanced.shape).toBe(courseClusterStyle("supaluv", "first-course").shape);
+  });
+
+  it("rejects an identity balance outside its explicit candidate range", () => {
+    expect(() => courseIslandStyle("turing-pact", "course", -0.01)).toThrow(RangeError);
+    expect(() => courseIslandStyle("turing-pact", "course", 1.01)).toThrow(RangeError);
   });
 });

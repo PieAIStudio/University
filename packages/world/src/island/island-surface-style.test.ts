@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 
+import { courseIslandStyle } from "../planet/planet-copy.js";
 import {
   createIslandSurfaceMaterialAdapter,
   islandSurfaceMaterialCacheKey,
@@ -48,7 +49,14 @@ describe("Island surface style", () => {
 
   it("injects declarations outside main and colour work inside main", () => {
     const time = { value: 12 };
-    const adapter = createIslandSurfaceMaterialAdapter("terrain", "elemental", true, time);
+    const identity = courseIslandStyle("turing-pact", "terrain");
+    const adapter = createIslandSurfaceMaterialAdapter(
+      "terrain",
+      "elemental",
+      true,
+      time,
+      identity,
+    );
     const shader = stockShaderFixture();
 
     adapter.onBeforeCompile(shader, null as unknown as THREE.WebGLRenderer);
@@ -60,11 +68,15 @@ describe("Island surface style", () => {
       shader.vertexShader.indexOf("void main"),
     );
     expect(shader.fragmentShader).toContain("universityIslandStyleNoise");
+    expect(shader.fragmentShader).toContain("uIslandIdentityColor");
+    expect(shader.fragmentShader).toContain("uIslandIdentityStrength");
     expect(shader.fragmentShader).toContain("diffuseColor.rgb = mix");
     expect(shader.vertexShader).toContain("vIslandStyleWorldPosition");
     expect(shader.vertexShader).toContain("normalize(objectNormal).y");
     expect(shader.vertexShader).not.toContain("normalize(transformedNormal).y");
     expect(shader.uniforms.uIslandStyleTime).toBe(time);
+    expect(adapter.uniforms.uIslandIdentityColor.value).toBeInstanceOf(THREE.Color);
+    expect(adapter.uniforms.uIslandIdentityStrength.value).toBe(identity.surfaceStrength);
   });
 
   it("uses three value roles while keeping the existing vertex colour as base", () => {

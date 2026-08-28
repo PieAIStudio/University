@@ -860,7 +860,6 @@ export function MapStudioScreen({
                   markers={activeLayer === "island" ? courseMarkers(courseLessons) : []}
                   onPick={() => undefined}
                   onHover={() => undefined}
-                  assetRevision={assetRevision}
                   polar={activeLayer === "island" ? COURSE_POLAR : undefined}
                   stageChildren={
                     activeLayer === "island" ? (
