@@ -30,17 +30,26 @@ export interface YawPitch {
   readonly pitch: number;
 }
 
-function toPoint(x: number, y: number, z: number, theta: number): SpherePoint {
+export const ATMOSPHERE_ALTITUDE_RATIO = 0.22;
+export const ATMOSPHERE_RADIUS = 1 + ATMOSPHERE_ALTITUDE_RATIO;
+
+export function toPoint(
+  x: number,
+  y: number,
+  z: number,
+  theta: number,
+  radius = ATMOSPHERE_RADIUS,
+): SpherePoint {
   const length = Math.hypot(x, y, z) || 1;
-  const nx = x / length;
-  const ny = y / length;
-  const nz = z / length;
+  const nx = (x / length) * radius;
+  const ny = (y / length) * radius;
+  const nz = (z / length) * radius;
   return {
     x: nx,
     y: ny,
     z: nz,
     theta,
-    phi: Math.acos(Math.min(1, Math.max(-1, ny))),
+    phi: Math.acos(Math.min(1, Math.max(-1, ny / radius))),
   };
 }
 
@@ -75,7 +84,7 @@ function unitFrom(id: string, salt: string): number {
 export function planetPoints(count: number, seed = 0): readonly SpherePoint[] {
   if (count <= 0) return [];
   if (count === 1) {
-    return [toPoint(0, 1, 0, seed)];
+    return [toPoint(0, 1, 0, seed, 1)];
   }
   // Golden angle. `π(3 − √5)` is 2π/φ², the increment that never lines two
   // samples up on the same meridian.
@@ -84,7 +93,7 @@ export function planetPoints(count: number, seed = 0): readonly SpherePoint[] {
     const y = 1 - ((index + 0.5) / count) * 2;
     const radius = Math.sqrt(Math.max(0, 1 - y * y));
     const theta = golden * index + seed;
-    return toPoint(Math.cos(theta) * radius, y, Math.sin(theta) * radius, theta);
+    return toPoint(Math.cos(theta) * radius, y, Math.sin(theta) * radius, theta, 1);
   });
 }
 
