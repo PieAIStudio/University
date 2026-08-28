@@ -167,7 +167,7 @@
       "id": "pie-rules/donors",
       "sourcePath": "rules/pie-rules/donors.md",
       "delivery": "symlink",
-      "contentHash": "sha256:228e05dfe0bb4e1d151bc95909f63fb9ac4b850a94c08c8c0255fa7516d66b2e",
+      "contentHash": "sha256:3cf9de780b847f3c7f600bef3a562ae063cbcfb5b0c25c274f84484d5848ba90",
       "targetPath": "docs/policy/shared-rules/donors.md"
     },
     {
