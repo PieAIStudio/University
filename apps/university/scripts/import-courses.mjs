@@ -343,8 +343,52 @@ writeFileSync(join(contentRoot, "shelf.json"), `${JSON.stringify(shelf)}\n`);
 // hash each course came from, so a fresh clone can reproduce the import and a
 // review can be recorded against a version rather than a name.
 mkdirSync(join(projectRoot, "src", "content"), { recursive: true });
+/*
+ * Refuse to silently downgrade the tracked manifest.
+ *
+ * Running with no `studies/` checkout is a supported state — a fresh clone has
+ * none, bakes no evidence, and must still exit 0. What is not supported is
+ * that same run *overwriting* a manifest that was built with a checkout: every
+ * course's `servedBytes` shrinks by the evidence that could not be read, while
+ * `sha256` and `packageBytes` stay put, so nothing downstream notices and
+ * `pnpm verify` stays green. That has now happened three times, each time in a
+ * git worktree, because `apps/local/studies/*` is gitignored and a worktree
+ * therefore starts without it.
+ *
+ * So the rule is about the write, not about the checkout: a run may produce a
+ * smaller manifest, but it may not replace a larger tracked one by accident.
+ * `--allow-shrink` is the deliberate escape hatch for a real content removal.
+ */
+const trackedManifestPath = join(projectRoot, "src", "content", "imported.json");
+if (!process.argv.includes("--allow-shrink") && existsSync(trackedManifestPath)) {
+  const servedOf = (doc) =>
+    (doc.studies ?? []).reduce(
+      (sum, study) =>
+        sum + (study.courses ?? []).reduce((n, course) => n + (course.servedBytes ?? 0), 0),
+      0,
+    );
+  let trackedServed = 0;
+  try {
+    trackedServed = servedOf(JSON.parse(readFileSync(trackedManifestPath, "utf8")));
+  } catch {
+    trackedServed = 0;
+  }
+  const freshServed = servedOf(manifest);
+  if (trackedServed > freshServed) {
+    const lost = trackedServed - freshServed;
+    throw new Error(
+      `import-courses: refusing to shrink the tracked manifest by ${(lost / 1024).toFixed(0)} KB ` +
+        `(${trackedServed} -> ${freshServed} servedBytes).\n` +
+        `  Evidence could not be read, most likely because this checkout has no studies at\n` +
+        `  ${studiesRoot}\n` +
+        `  In a git worktree that is expected: apps/local/studies/* is gitignored. Either run\n` +
+        `  this from the main checkout, or symlink the studies you need, or pass --allow-shrink\n` +
+        `  if the content really did get smaller.`,
+    );
+  }
+}
 writeFileSync(
-  join(projectRoot, "src", "content", "imported.json"),
+  trackedManifestPath,
   `${JSON.stringify(manifest, null, 2)}\n`,
 );
 
