@@ -226,11 +226,12 @@ const MAX_ACCENT_PACKS = 2;
 // These are part of the route contract, not a renderer-specific style tune.
 const DEFAULT_ROUTE_WIDTHS = {
   // The route is a readable cream band under the lesson stones, not a second
-  // chain of geometry. Its centre is about 55% of a node diameter and the
-  // complete worn band is about 80%, enough to read in the low near camera
-  // while leaving meadow visible between adjacent stones.
-  roadWidth: 0.68,
-  shoulderWidth: 0.16,
+  // chain of geometry. Its centre is about 40% of a node diameter and the
+  // complete worn band is about 60%, enough to read in the low near camera
+  // while leaving meadow visible between adjacent stones and the authored
+  // outposts clear of the hero.
+  roadWidth: 0.5,
+  shoulderWidth: 0.12,
   nodeRadius: 0.62,
   clearance: 0.38,
 } as const;
