@@ -49,15 +49,13 @@ const ISLAND_GRASS_FIELD_MAX_SHORE = ISLAND_GRASS_TOP_MAX_RADIAL - 0.018;
 export const ISLAND_GRASS_LIMITS: Readonly<
   Record<IslandGrassDetail, Readonly<Record<IslandGrassRenderTier, number>>>
 > = {
-  // One instance is a five-leaf clump. The close camera gets 4,000 clumps ×
-  // 45 triangles, enough for a layered foreground without turning every
-  // visible pixel into a leaf. The 2,400 mobile ceiling protects fill-rate and
-  // vertex work on the same near shot.
+  // One instance is a five-leaf clump. The close camera gets 800 clumps ×
+  // 45 triangles: enough for a layered foreground while leaving the authored
+  // road and lesson halos readable through the terrain's bare patches.
   // Measured in the local Chromium/ANGLE Metal session on an Apple M1 Max:
-  // 4,000 clumps rendered at 120.2 FPS (1440 × 900, 100 calls, 237,008 total
-  // triangles) and 2,400 clumps at 120.0 FPS (390 × 590, 125 calls, 289,496
-  // total triangles), both with the live wind loop enabled.
-  course: { desktop: 4000, mobile: 2400 },
+  // 800 clumps are the desktop ceiling; mobile keeps the same semantic
+  // budget because the shorter viewport already shows fewer world units.
+  course: { desktop: 800, mobile: 800 },
   world: { desktop: 0, mobile: 0 },
 };
 
@@ -70,8 +68,8 @@ export const ISLAND_GRASS_LOD_THRESHOLDS = {
 } as const;
 
 /**
- * Near keeps the full deterministic clump prefix: the plan caps it at 4,000
- * desktop / 2,400 mobile because close leaves are large screen-space shapes.
+ * Near keeps the full deterministic clump prefix: the plan caps it at 800
+ * clumps because close leaves are large screen-space shapes.
  * Mid keeps 45% of that prefix and lifts it 15% so a smaller silhouette still
  * has readable vertical rhythm. Far is deliberately empty: at the aerial
  * distance, the terrain's meadow colour carries the surface and leaf-sized
@@ -188,9 +186,10 @@ const DEFAULT_DENSITY: Readonly<Record<IslandGrassRenderTier, number>> = {
 // Grass stops just beyond the soil extent. A small margin keeps blades from
 // visually growing through the path while preserving the natural verge.
 // Leave room for the widest procedural soil verge, blade half-width, and a
-// small wind lean. This keeps grass roots on the meadow side of the path while
-// retaining a soft, naturally worn edge rather than a clipped lawn border.
-const DEFAULT_ROUTE_GAP = 0.24;
+// small wind lean. The extra clearance is deliberately generous in the near
+// camera: the road is the learner's reading line, so a soft meadow edge must
+// not turn into a green seam across it.
+const DEFAULT_ROUTE_GAP = 0.8;
 const DEFAULT_NODE_GAP = 0.52;
 const DEFAULT_HERO_GAP = 0.78;
 const MAX_SAMPLING_ATTEMPTS = 96;

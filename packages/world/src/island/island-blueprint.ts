@@ -1304,7 +1304,7 @@ const ROUTE_CORRIDOR_OUTER = 7.4;
 const CORRIDOR_GRID_CELL = 1.2;
 const CORRIDOR_SAMPLE_STRIDE = 3;
 
-export interface IslandCorridorField {
+interface CorridorField {
   readonly cells: Float32Array;
   readonly countX: number;
   readonly countZ: number;
@@ -1313,9 +1313,9 @@ export interface IslandCorridorField {
   readonly cell: number;
 }
 
-const corridorFields = new WeakMap<IslandGeometryBlueprint, IslandCorridorField>();
+const corridorFields = new WeakMap<IslandGeometryBlueprint, CorridorField>();
 
-export function corridorFieldFor(blueprint: IslandGeometryBlueprint): IslandCorridorField {
+function corridorFieldFor(blueprint: IslandGeometryBlueprint): CorridorField {
   const existing = corridorFields.get(blueprint);
   if (existing !== undefined) return existing;
   const spanX = blueprint.bounds.halfX * 1.08;
@@ -1342,7 +1342,7 @@ export function corridorFieldFor(blueprint: IslandGeometryBlueprint): IslandCorr
       cells[iz * countX + ix] = Math.sqrt(nearest);
     }
   }
-  const field: IslandCorridorField = {
+  const field: CorridorField = {
     cells,
     countX,
     countZ,
