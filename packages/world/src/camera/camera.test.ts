@@ -1,6 +1,8 @@
+import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
 import {
+  COURSE_DISTANCE,
   COURSE_DISTANCE_MAX,
   COURSE_DISTANCE_MIN,
   COURSE_POLAR,
@@ -21,6 +23,18 @@ import { radiusForLessons } from "../course/layout";
 describe("dolly range", () => {
   it("stays within a 3× span at both levels", () => {
     expect(WORLD_DISTANCE_MAX / WORLD_DISTANCE_MIN).toBeLessThanOrEqual(3);
+    expect(COURSE_DISTANCE_MAX / COURSE_DISTANCE_MIN).toBeLessThanOrEqual(3);
+  });
+});
+
+describe("course composition", () => {
+  it("pins the selected low and near landing pose", () => {
+    expect(COURSE_POLAR).toBeCloseTo(THREE.MathUtils.degToRad(68));
+    expect(COURSE_DISTANCE).toBe(36);
+    expect(COURSE_DISTANCE_MIN).toBe(30);
+    // The far end is intentionally preserved so a learner can pull back to
+    // inspect the whole island after entering the close view.
+    expect(COURSE_DISTANCE_MAX).toBe(76);
     expect(COURSE_DISTANCE_MAX / COURSE_DISTANCE_MIN).toBeLessThanOrEqual(3);
   });
 });
@@ -59,14 +73,15 @@ describe("the eye stays above the ground", () => {
 });
 
 /*
-  Entering a course has to read as flying closer to the same world, not as
-  cutting to a different one. Two degrees of tilt apart is close enough that
-  the transition is a move; the 20° gap the two levels used to have read as a
-  cut, and was tuned for a road going away from the eye that no longer exists.
+  The course is intentionally a different composition from the world map:
+  entering it is the product's promised move onto an island. The lower course
+  tilt was selected from a fixed-seed contact sheet because it reveals a sky
+  band and keeps the next lesson markers in front of the learner.
 */
-describe("the two levels look like one world", () => {
-  it("keeps the tilts within a few degrees of each other", () => {
+describe("course entry composition", () => {
+  it("keeps the course materially lower than the world overview", () => {
     const degrees = Math.abs(COURSE_POLAR - WORLD_POLAR) * (180 / Math.PI);
-    expect(degrees).toBeLessThan(6);
+    expect(degrees).toBeGreaterThanOrEqual(10);
+    expect(degrees).toBeLessThanOrEqual(16);
   });
 });

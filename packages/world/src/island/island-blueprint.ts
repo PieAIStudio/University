@@ -225,12 +225,12 @@ const MAX_ACCENT_PACKS = 2;
 
 // These are part of the route contract, not a renderer-specific style tune.
 const DEFAULT_ROUTE_WIDTHS = {
-  // The road is connective tissue, not a second chain of white geometry.
-  // Its warm centre is ~35% of a node diameter; even after the darker natural
-  // shoulder is added the whole path stays near 55%.  That leaves visible
-  // meadow between forty-one lesson stones instead of drawing one pale tube.
-  roadWidth: 0.44,
-  shoulderWidth: 0.12,
+  // The route is a readable cream band under the lesson stones, not a second
+  // chain of geometry. Its centre is about 55% of a node diameter and the
+  // complete worn band is about 80%, enough to read in the low near camera
+  // while leaving meadow visible between adjacent stones.
+  roadWidth: 0.68,
+  shoulderWidth: 0.16,
   nodeRadius: 0.62,
   clearance: 0.38,
 } as const;
@@ -920,7 +920,10 @@ function makeGeometryBlueprint(input: ResolvedInput): IslandGeometryBlueprint {
   // occupying most of the first screen.  One lesson now buys one stable amount
   // of walking distance, while the archetype decides how that distance folds.
   const desiredLength =
-    Math.max(7, Math.max(0, lessonCount - 1) * desiredNodeSpacing(lessonCount)) *
+    // The wider readable route needs a little extra room on the smallest
+    // three-node islands; otherwise its valid clearance envelope would be a
+    // larger fraction than the blueprint's own route-scale guard permits.
+    Math.max(8.2, Math.max(0, lessonCount - 1) * desiredNodeSpacing(lessonCount)) *
     routeLengthFactor(archetype);
   const routeScale = desiredLength / Math.max(unitLength, Number.EPSILON);
   const scaleX = routeScale * (1 + (hash(`${seed}/${layoutRevision}/route-width`) - 0.5) * 0.08);

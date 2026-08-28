@@ -93,9 +93,9 @@ describe("IslandBlueprint", () => {
     const fullPathRatio =
       (blueprint.route.roadWidth + blueprint.route.shoulderWidth * 2) / nodeDiameter;
 
-    expect(roadRatio).toBeGreaterThanOrEqual(0.35);
-    expect(roadRatio).toBeLessThanOrEqual(0.5);
-    expect(fullPathRatio).toBeLessThanOrEqual(0.58);
+    expect(roadRatio).toBeGreaterThanOrEqual(0.52);
+    expect(roadRatio).toBeLessThanOrEqual(0.6);
+    expect(fullPathRatio).toBeLessThanOrEqual(0.84);
   });
 
   it("validates multiple stable seeds at every supported fixture size", () => {
