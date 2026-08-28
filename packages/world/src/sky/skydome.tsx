@@ -22,7 +22,11 @@ export type SkyDomeStops = {
   readonly horizon: number;
 };
 
-const SKY_VERTEX = /* glsl */ `
+/** Stable discovery keys used by Stage's environment owner. */
+export const SKY_DOME_NAME = "world-skydome";
+export const SKY_DOME_STOPS_KEY = "worldEnvironmentStops";
+
+export const SKY_DOME_VERTEX_SHADER = /* glsl */ `
 varying vec3 vDir;
 void main() {
   vDir = position;
@@ -30,7 +34,7 @@ void main() {
 }
 `;
 
-const SKY_FRAGMENT = /* glsl */ `
+export const SKY_DOME_FRAGMENT_SHADER = /* glsl */ `
 uniform vec3 uZenith;
 uniform vec3 uMid;
 uniform vec3 uHorizon;
@@ -76,21 +80,27 @@ void main() {
 }
 `;
 
+/** One shader/uniform implementation for both the visible dome and its IBL. */
+export function createSkyDomeUniforms(stops: SkyDomeStops) {
+  const sunDirection = worldSunDirection();
+  return {
+    uZenith: { value: new THREE.Color(stops.zenith) },
+    uMid: { value: new THREE.Color(stops.mid) },
+    uHorizon: { value: new THREE.Color(stops.horizon) },
+    uNadir: { value: new THREE.Color(0x3a7f92) },
+    uSunDirection: { value: new THREE.Vector3(...sunDirection) },
+    uSunColor: { value: new THREE.Color(WORLD_SUN.keyColor) },
+    uSunGlowColor: { value: new THREE.Color(0xffc56a) },
+    uSunSize: { value: 0.032 },
+    uSunGlowSize: { value: 0.11 },
+  };
+}
+
 export function SkyDome({ stops }: { stops: SkyDomeStops }) {
   const mesh = useRef<THREE.Mesh>(null);
   const sunDirection = worldSunDirection();
   const uniforms = useMemo(
-    () => ({
-      uZenith: { value: new THREE.Color(stops.zenith) },
-      uMid: { value: new THREE.Color(stops.mid) },
-      uHorizon: { value: new THREE.Color(stops.horizon) },
-      uNadir: { value: new THREE.Color(0x3a7f92) },
-      uSunDirection: { value: new THREE.Vector3(...sunDirection) },
-      uSunColor: { value: new THREE.Color(WORLD_SUN.keyColor) },
-      uSunGlowColor: { value: new THREE.Color(0xffc56a) },
-      uSunSize: { value: 0.032 },
-      uSunGlowSize: { value: 0.11 },
-    }),
+    () => createSkyDomeUniforms(stops),
     // Climate identity is the stops object; the sun is the shared world sun.
     [stops.horizon, stops.mid, stops.zenith, sunDirection],
   );
@@ -105,7 +115,13 @@ export function SkyDome({ stops }: { stops: SkyDomeStops }) {
   });
 
   return (
-    <mesh ref={mesh} frustumCulled={false} renderOrder={-1000}>
+    <mesh
+      ref={mesh}
+      name={SKY_DOME_NAME}
+      userData={{ [SKY_DOME_STOPS_KEY]: stops }}
+      frustumCulled={false}
+      renderOrder={-1000}
+    >
       <sphereGeometry args={[420, 32, 20]} />
       <shaderMaterial
         side={THREE.BackSide}
@@ -113,8 +129,8 @@ export function SkyDome({ stops }: { stops: SkyDomeStops }) {
         fog={false}
         toneMapped={false}
         uniforms={uniforms}
-        vertexShader={SKY_VERTEX}
-        fragmentShader={SKY_FRAGMENT}
+        vertexShader={SKY_DOME_VERTEX_SHADER}
+        fragmentShader={SKY_DOME_FRAGMENT_SHADER}
       />
     </mesh>
   );

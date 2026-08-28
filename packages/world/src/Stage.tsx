@@ -20,6 +20,8 @@
  *      priority 1 takes rendering away from R3F's automatic pass, so the world
  *      draw happens exactly once per frame, here.
  *   2. One tone map, one sRGB encode. The scene renders linear into a target;
+ *      `environment.ts` captures the procedural sky into a linear PMREM once
+ *      per sky configuration without becoming an output pass;
  *      `ao.ts` may darken that linear colour (desktop only); `grade.ts` then
  *      runs the kit's standalone blit (ACES, then grade, then one sRGB encode)
  *      and forces `toneMapping` to `NoToneMapping` while that blit runs, so
@@ -45,6 +47,7 @@ import { assertWorldGradePipeline, createGradePass } from "./island/grade";
 import { measureIslandLookInBrowser, type IslandLookBrowserReport } from "./island/look-metrics.js";
 import type { IslandLookCameraPose, IslandLookSceneSource } from "./island/island-look.js";
 import { islandLookFrozen } from "./island/island-surface-style.js";
+import { WorldEnvironment } from "./sky/environment.js";
 import { renderTier } from "./sky/tier";
 
 function Pipeline({
@@ -399,26 +402,28 @@ export function Stage({
       // that was ever burning frames for nobody.
       frameloop={paused ? "never" : frozenLook ? "demand" : "always"}
     >
-      <Pipeline
-        ambientOcclusion={ambientOcclusion}
-        lookSource={lookSource}
-        postProcessing={postProcessing}
-      />
-      {/*
-        Sky, sun, fog and sea belong to the scene rather than to this file. The
-        two map levels are the same world at two scales, and their fog has to
-        start where their own islands end — a single distance set here was
-        either a wall in front of the world map or nothing at all inside a
-        course. See `Weather` in Maps.tsx.
+      <WorldEnvironment>
+        <Pipeline
+          ambientOcclusion={ambientOcclusion}
+          lookSource={lookSource}
+          postProcessing={postProcessing}
+        />
+        {/*
+          Sky, sun, fog and sea belong to the scene rather than to this file. The
+          two map levels are the same world at two scales, and their fog has to
+          start where their own islands end — a single distance set here was
+          either a wall in front of the world map or nothing at all inside a
+          course. See `Weather` in Maps.tsx.
 
-        Suspense is load-bearing: the kit models stream in, and without a
-        boundary the first `useGLTF` would throw the whole canvas away. The
-        fallback is still `null` — a sentence drawn here would be geometry.
-      */}
-      <Suspense fallback={null}>
-        <ScenePresence onReady={onSceneReady} onBusy={onSceneBusy} />
-        {children}
-      </Suspense>
+          Suspense is load-bearing: the kit models stream in, and without a
+          boundary the first `useGLTF` would throw the whole canvas away. The
+          fallback is still `null` — a sentence drawn here would be geometry.
+        */}
+        <Suspense fallback={null}>
+          <ScenePresence onReady={onSceneReady} onBusy={onSceneBusy} />
+          {children}
+        </Suspense>
+      </WorldEnvironment>
     </Canvas>
   );
 }
