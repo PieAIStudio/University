@@ -121,3 +121,13 @@ its density from the field, and it spends its budget at the course projection".
 - Stage 4 is the least finished. `IslandStyle` exists but colour decisions still
   leak into renderer files. That is the next structural debt, and it is named
   here so it is not rediscovered as a surprise.
+- **`island-pipeline.test.ts` enforces the parts of this that can be
+  enforced.** It asserts that grass and dressing both read `island-field`, that
+  the field is compiled from the blueprint's sampler rather than from geometry,
+  that no new island module grows its own value-noise lattice, and that the
+  world projection spends zero grass budget. The exception list in that test is
+  the honest one: `island-blueprint` perturbs the outline, which is stage 1, and
+  `island-grass` caches a ground-normal raster derived from the same canonical
+  sampler. A document does not stop a second random field from appearing; a
+  failing test does. This is the same mechanism ADR-0008 uses, and it has
+  already caught a real change once.
