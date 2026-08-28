@@ -2,8 +2,9 @@
 id: PLAN-ISLAND-V2-VERTICAL-SLICE
 title: Island V2 Vertical Slice
 type: plan
-status: active
-canonical: true
+status: superseded
+superseded_by: ADR-0009
+canonical: false
 owner: ai-assisted
 created: 2026-08-27
 last_reviewed: 2026-08-27
@@ -23,6 +24,27 @@ related:
 ---
 
 # Island V2 Vertical Slice：`foundations-before-zero`
+
+
+> **本计划已被 [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)、
+> [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md) 和
+> [程序化地图交接](../../reference/execution/procedural-map-handoff.md) 取代（2026-08-28）。**
+>
+> 它写于岛屿第一版切片阶段，下面这几处**现在是错的**，读的时候直接跳过：
+>
+> - **主题槽预算**（「每座岛不超过两个强调主题」、「12–18 个原始 GLB」）不是
+>   现在的模型。预算按**屏幕像素**分配，规则在 ADR-0009；每个元素用什么技术画，
+>   规则在 ADR-0008 和 `island-technique-lock.ts`。
+> - **donor 授权状态**已经变了。2026-08-28 起**所有 donor 的代码和资产都已获授权**，
+>   包括 elemental-serenity 的媒体。下面那些「未逐项清权的模型、纹理不进入产品」
+>   的段落是旧事实。登记表在 `docs/policy/shared-rules/donors.md`。
+> - **donor 表**不在这里维护，也不在 University 维护。
+> - 未勾选的 checkbox **不代表没做**。第一座岛已经可玩，草、地形、装饰、机位、
+>   行星页都已经重写过至少一轮。真实状态看交接文档，不要看这里的勾。
+>
+> 还值得读的只有两节：`## Level / Composition Plan`（构图意图）和
+> `## Core Interaction Contract`（交互合同）。其余部分保留是为了留住当时的推理，
+> 不是为了当作待办清单执行。
 
 ## Goal
 
