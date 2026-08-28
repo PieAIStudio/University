@@ -14,112 +14,187 @@ tags:
 pinned: false
 ---
 
-# 程序化地图：交接给下一个 session
+# 程序化地图：交接
 
-给**全新 session** 读的。目标只有一个：把三层程序化地图做到**能商用**——
-作者写完课，岛内景观、飞岛群的小模型、行星页的变化全部自己生成，
-不需要逐座岛手工调，而且在核显笔记本上跑得动。
+给接手这条主线的 session 读。**先读完这一页再动任何代码。**
 
-## 你的工作方式（老板明确要求）
+目标只有一个：三层程序化地图做到**能商用**——作者写完课，课程岛、群岛节点、
+行星页的岛群全部自己生成，不需要逐座岛手工调，而且在核显笔记本上跑得动。
 
-- **从全局、从审美、从商业角度思考。** 不要陷进「改一个常数、截一张图、再改一个常数」的循环。
-  每次动手前先问：这个改动在最终画面上占多少像素？值这个预算吗？
-- **大量使用子代理，并行。** 两个 CLI：
-  - Codex：`codex exec -m gpt-5.6-luna -c 'model_reasoning_effort="max"' --dangerously-bypass-approvals-and-sandbox "<任务>"`
-  - Antigravity：`agy -p "<任务>" --model gemini-3.7-flash-high --effort high --dangerously-skip-permissions --print-timeout 180m`
-    （模型 id 以 `claude-` 开头时不要加 `--effort`。）
-  - **模型 id 照抄，不要自己"升级"。** 我今天擅自把 luna 换成 sol，被纠正了。
-  - **同时最多 4 个。** 今天 8 个并行把机器负载推到 100+，测试开始假失败。
-  - 额度不够就直接跟老板说，他会补。
-- **你自己看图，不要信指标。** 已经有两次 agent 因为「指标变好」宣称成功而图明显更丑。
-- **多沟通。** 老板说：跳出框架想到的东西、需要拍板的事，尽管问，他不懂的会教你怎么决策。
+## 一、你的角色（老板明确要求的）
 
-## 已经锁死的东西，不要再重新决定
+你是**总指导 / 审美裁判 / 产品经理**，不是执行者。
 
-`docs/adr/ADR-0008-one-locked-technique-per-island-element.md` +
-`packages/world/src/island/island-technique-lock.ts` + 它的测试。
+- **从全局、从审美、从商业角度思考。** 不要陷进「改一个常数、截一张图、
+  再改一个常数」的循环。老板反复说过这一点，因为这个循环烧掉过很多额度。
+- **大量并行使用子代理。** 你的时间花在写 brief、看图、下判断上，
+  不是花在敲代码上。最多同时 4 个，别把机器跑死。
+- **看图再下结论。** 指标绿了不等于画面对。这一轮里有一个 agent 的
+  FPS 数字很漂亮，画面是一堵黑绿色的墙。
+- **主动汇报。** 发现值得说的事就说，老板会做裁决。
 
-每个视觉元素只有一种技术、一个来源、一个预算，**外加一张「已否决」清单，每条都带杀死它的那个数字**。
-改锁只能通过修订 ADR，而且必须先有测量。测试里有一条绊线：草的三角形数被钉在 45，
-任何重写都会让它红——这是故意的。
+### 子代理命令（原样抄，不要「升级」模型名）
 
-**这个锁是今天最重要的产出。** 它存在的原因：草被重写了三次，两次方向相反，
-最后一次回退是因为我凭观感否决了一个 donor 移植，却从没量过它的成本。
-量完一行就结束了争论：我们一簇草 45 个三角形，donor 一片叶 1 个，
-而**草占整个场景 92.7% 的三角形**。
-
-## 已经证实的根因（不用重查）
-
-1. **三个互不相干的随机场。** 地面颜色用三条 sin 波，草密度用格子噪声，
-   道具哪个场都不读。两个场的相关系数只有 **r = 0.31**，岛面三分之一区域互相打架。
-   **这是「杂乱」的架构级原因**，调任何一个场的常数都修不了。
-2. **地面「色块」的波长比岛还长。** `drift = maxHalf*0.22 = 9.36`，正弦周期 58.8，
-   岛横跨 85 单位——整座岛只有 1.4 个周期，那是一道渐变不是色块。
-   这就是「一整片同一个绿」。
-3. **草密度场有肉眼可见的直角边**（格子噪声只做了 smoothstep）。
-4. **零环境贴图。** 全仓库 `envMap` 命中 0 次，所有材质的间接光为 0，
-   所以看起来像塑料原型。已经在修（`work/island-ibl`）。
-5. **没有尺度层级。** 只有「一堆一样大的小件」，缺参考图里那种「几个大地标」。
-   donor 媒体已获授权，bridge / camp / tent / rocks 现在可以用了。
-
-## 目标架构
-
-```
-写完课
-  ↓
-IslandBlueprint      纯数据：路线 / 轮廓 / 地形参数 / seed / 主题槽
-  ↓
-IslandField          唯一真相：高度 · 遮罩(路|草|水|岩) · 烘焙AO
-  ↓                  ← 草、道具、地表、地标全部只读它
-  ├─ 课程投影（低镜头）  地表网格 + 三向贴图 · 草LOD · 道具 · 地标 · 节点
-  ├─ 世界投影（飞岛群）  剪影 + 明暗断层 + 一个亮点，仅此而已
-  └─ 行星投影（大气层）  岛群浮在行星大气层里，不是长在地面上
-  ↑
-IslandStyle          唯一的美术旋钮：约12个颜色 + 贴图组 + 太阳/天空
+```bash
+codex exec -m gpt-5.6-luna -c 'model_reasoning_effort="max"' --dangerously-bypass-approvals-and-sandbox "<任务>"
 ```
 
-**组织原则：预算按屏幕像素分配，不按世界尺寸分配。**
-飞岛群里一座岛只有 40 像素、底盘 8 像素——那里放任何"构造"都是浪费
-（今天有 569 行几何因此被退回）。低镜头下学习者身边几十个单位才值得花钱。
+```bash
+agy -p "<任务>" --model gemini-3.7-flash-high --effort high --dangerously-skip-permissions
+```
 
-## 待判断的分支（都没合，都要你看图后决定）
+- Codex 用 **luna**，不要用 sol。CLI 把 sol 排在第一位并标成「最新旗舰」，
+  那是 CLI 的排序，不是老板的选择。换成 sol 导致过额度问题。
+- 模型名以 `claude-` 开头时，`agy` 不加 `--effort`。
+- **Grok CLI 目前 402，余额耗尽**（2026-08-28 实测），别派。
+- gpt 和 gemini 都能自己调自己的图片生成模型出图。Gemini 能听声音。
+- 每个 worktree 要先接内容再开工，否则 dev server 404：
+  ```bash
+  ln -s ../../University/apps/university/content apps/university/content
+  # 每个 apps/local/studies/<id> 也从主 checkout symlink 过来
+  ```
+  **绝对不要**为了修 404 去跑 `pnpm content`——见下面「坑」。
 
-| 分支 | 状态 | 我的判断 |
+## 二、架构写在哪里，以及为什么你跑不掉
+
+这是这一页最重要的一节。老板问过「handoff 会让下一个 session 按这个走吗？
+还是他自己会乱来？」答案是：**光靠这份文档拦不住，靠的是下面四样东西。**
+
+| 东西 | 管什么 | 怎么拦你 |
 | --- | --- | --- |
-| `work/course-camera` | 4 commits，我做的 | 节点改成干净圆盘+刻环、飞岛底盘改成2个draw、内容降级闸门、技术锁、文档精简。**建议直接合。** |
-| `work/island-ibl` | 2 commits，完成 | 环境贴图可用但强度只有 0.1，收益要等贴图落地才兑现。**可以合，之后重调强度。** |
-| `work/planet-atmosphere` | 1 commit，完成 | **还没看图。** 行星页重做 + 选取点改成漂在大气层。 |
-| `work/island-field` | 在跑 | `IslandField` 架构地基，最重要的一个。 |
-| `work/island-grass-donor` | 在跑 | 草换成 donor 单三角形架构，省下约 64 万三角形。 |
-| `work/near-view` | 在跑 | 镜头放低放近 + 加宽路面 + 暖化调色板。 |
-| `work/island-textures` | 在跑 | triplanar 贴图研究与生产。 |
-| `work/island-underside` | 已退回 | 569 行 8 像素看不见的几何，留作反例，不要合。 |
-| `work/island-meadow` | 未判 | Grok 的地表颗粒实验。 |
-| `work/island-card-vegetation` | 未判 | 卡片树实验，早于技术锁。 |
-| `work/liquid-in-app` | 1 commit | 液态 UI 用在 XP 光球上，用了临时本地链接，**发版前必须还原**。 |
+| [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md) | 数据从哪来、能花多少预算 | `island-pipeline.test.ts` 会红 |
+| [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md) | 每个元素用什么技术画 | `island-technique-lock.test.ts` 会红 |
+| `AGENTS.md` 路由表 | 强制你动渲染器之前先读上面两份 | 路由检查 |
+| commit message | 每个数字为什么是这个数字 | `git log` |
 
-**建议合并顺序**：course-camera → ibl → field → grass → near-view → textures → planet。
-field 是地基，grass 省出预算，near-view 花掉它，textures 和 planet 最后。
+**ADR-0008 的绊线今天真的响了一次。** 草的重写合进来时，
+`island-technique-lock.test.ts` 卡在钉死的 45 三角形上，直到 ADR 补了修订
+和新测量才放行。这不是理论，是当天发生的事。
 
-## 老板已经拍板的产品决定
+所以规则很简单：**锁只能带着测量改。** 你想改草的技术，先量，
+再改 ADR，再改代码。只改代码会红。
 
-- **课程岛镜头要放低、放近**，类似 MOBA：跟着学习者头像，头像在画面中心偏上，
-  小节节点向下排开。构图逻辑代码里已经有（`COURSE_LOOK_PULL`），
-  缺的只是 `COURSE_POLAR` / `COURSE_DISTANCE` 两个常数。**旋转保持锁定**——
-  `controls.tsx` 顶部注释里三条禁用旋转的理由依然成立，和"放低"无关。
-- **行星页要重做**，选取点是**漂在大气层里的岛群**，不是长在行星表面。
-- **参考图** `docs/reference/island-art-reference/target-island-*.png` 只学优点：
-  配色（明亮黄绿草 / 奶油色路 / 暖棕岩 / 青蓝科技光）、明度三段、尺度层级、
-  树密集在岛缘围一圈中间留空。**它们的 3D 预算是我们的十倍以上，禁止照抄。**
+### 四段管线，一句话一段（ADR-0009 的正文更详细）
 
-## 还没做的
+1. **蓝图** —— 世界是什么。纯数据，从课程内容推导。
+2. **场** —— 唯一真相。一张编译好的栅格，草 / 装饰 / 地表颜色**都读它**。
+3. **三个投影** —— 预算按**屏幕像素**分配，不按世界尺寸分配。
+   课程近景值得花三角形；世界地图上一座岛只有约 40px，只配拿到剪影、
+   一次明暗断裂、一个亮点；行星页读的是身份和位置。
+4. **风格表** —— 不懂代码的人唯一要碰的文件。**这一段最没做完**，
+   `IslandStyle` 存在，但颜色还在往渲染器文件里漏。
 
-- **`current-work.md` 里约 150 行是"已完成"清单**，git 历史已经有了，该删。
-- **`clean-image-generation-rules.md` 的宿主路由表已经过时**——它教 AI
-  「不要假装有生图能力，去用浏览器生图」，而 luna 能直接调 GPT Image 2，
-  gemini 也能调自己的。这一节会把 agent 推到更差的路上，要改或删。
-- **`SPEC-0002-vibehub-absorption.md`** 453 行、`status: active`，但 current-work
-  里一处都没提。要么补上在跑的证据，要么归档。
-- **PGS 上游的 `donors.md` 还是旧版**（University 这份已经从 208 行砍到 60 行，
-  并写明"所有 donor 都已授权"）。需要让 PGS 那边同步。
-- 岛的边缘仍然太规则，能看出"下面有块底板"。参考图是层理台地。
+第 2 段是有代价换来的：地表颜色场和草密度场的相关系数量出来是 **r = 0.31**，
+在 7,949 个岛内采样点上。三分之一的岛面积在自相矛盾。这就是「乱」的来源，
+不是审美问题。
+
+## 三、现在的真实状态（2026-08-28 深夜）
+
+main 干净，`pnpm verify` 全绿（1,585 个测试），已 push。
+六条分支已经合并，13 个 worktree 收到 3 个。
+
+已经落地的：
+
+- **一份场**。`island-field.ts` 把蓝图编译成 192x192 栅格，
+  route / meadow / shore / rock 通道加烘焙 AO，草和装饰都读它。
+- **一片草 = 一个三角形**。45 三角形的五叶簇换成三顶点卡片，
+  taper、风、朝向相机的 Y 旋转、地形法线替换全在顶点着色器里。
+  约 72 万三角降到约 8 万。密度 80,000 桌面 / 24,000 移动。
+- **低机位**。68 度 / 36 单位，锁旋转，76 单位缩放上限。
+- **行星页重做**。选课点升到 R=1.22 漂浮在大气层里，有光柱和地面投影环。
+  这是老板明确要的，不要推翻。
+- **IBL**。真正的环境探针。
+- **贴图 spike**。三平面贴图的独立 demo，**故意留在产品管线外面**，
+  等近景美术那一轮再决定接不接。
+
+### 三条**没有**合并的分支，已经打成 tag，不要去 merge
+
+```
+abandoned/island-underside      569 行机械底盘。测量否决：那东西在世界投影里只有 8px 高。
+abandoned/island-meadow         Grok 的地表颗粒实验。被 island-field 取代。
+raw/island-card-vegetation      donor 卡片树，612 行。不是被否，是排错了序——
+                                它的性能数字是在 45 三角草下量的，那个预算图景已经没了。
+                                ADR-0008 说树在草之后，草已经落地了，可以重新量。
+```
+
+## 四、我实机看过、确认没解决的两件事（有截图，不是猜的）
+
+**顺序不能反。** 第 1 件是全画面问题，第 2 件在第 1 件修完之前没法判断。
+
+### 1. 暗部压死成纯黑（正在做：`work/island-value`）
+
+`packages/world/src/sky/sun.ts` 里 `keyIntensity: 9.0`，
+补光是 `hemisphere 0.3 + ambient 0.1 + environment 0.1` = **0.5**。
+主光比补光 **18:1**。
+
+现实晴天大约 4:1 到 8:1（天空是巨大的补光源）；风格化游戏美术通常 2:1 到 4:1，
+因为要让阴影**有颜色**而不是变黑。子代理量出来：课程画布 1,296,000 像素里
+**309,460 个低于 0.08 亮度，占 23.88%**。参考图的明度关系是三段
+（亮黄绿顶 / 中调暖棕岩壁 / 偏深但有颜色的底），**没有纯黑**。
+
+硬约束：**不许为了消灭黑色而关阴影**。阴影是低多边形读作立体的原因，
+`Stage.tsx` 里写明了。要的是有颜色的阴影。
+
+### 2. 草在课程机位下读成噪点，不是草
+
+叶片在这个距离接近亚像素，亮顶读成白色椒盐。等第 1 件修完再调，
+因为现在的「噪点感」有多少是草、有多少是黑白对比过强，分不出来。
+
+调的方向是叶片的**宽高比、颜色 ramp、以及 LOD 的密度衰减曲线**，
+不是回头加密度——预算省下来是故意留着的，ADR-0008 写了。
+
+## 五、还在跑的 agent
+
+| worktree | 分支 | 干什么 |
+| --- | --- | --- |
+| `University-wt-value` | `work/island-value` | 上面第 1 件事，codex luna max |
+| `University-wt-planet2` | `work/planet-identity` | 行星页第二轮：五个学域要有各自的色相身份；星球本体降饱和 |
+| `University-wt-liquid` | `work/liquid-in-app` | XP 球液态合并动画，**等 UIKit 1.9.0 发出来才能改成正式依赖** |
+
+判它们的时候：**先看图，再看 diff**。截图不要提交到仓库根目录，
+根目录已经 `.gitignore` 掉 `/*.png` 了——上一轮有 47 张截图和 15MB 躺在根目录。
+
+## 六、当前的阻塞（不是你造成的，也不该你在下游修）
+
+**doc-gov 的 symlink 在 CI 里悬空，24 个受管项目的 `docs:check` 全红。**
+
+`docs/policy/shared-rules/*.md` 是指向仓库外 `../../../../ProjectGovernanceSystem/`
+的 symlink。开发机上有兄弟目录所以本地全绿；CI 只 checkout 这一个仓库，
+symlink 全悬空，`doc-gov router-check` 把它判成「路径不存在」。
+
+- University `docs-check` run 33181050210 红
+- SwimmerUIKit `npm-publish` run 33180853394 红，**所以 v1.9.0 没发出去**
+
+**不要把 symlink 改回真文件。** 老板已经定了 symlink 是最终投递方式，
+这是 doc-gov 的判定问题，修在 PGS 那边。完整报告在
+`scratchpad/BUG-doc-gov-symlink-ci.md`。PGS 修好之后重跑
+`gh workflow run npm-publish.yml --ref main`，版本号和 CHANGELOG 都已就位。
+
+## 七、已经拍板的产品决定，不要重开
+
+- **课程机位低、近**，MOBA 那个角度，头像在画面中心偏上、面朝下。「一切为了视觉效果」。
+- **行星页的选课点漂浮在大气层里**，不是贴在星球表面上。
+- **三张参考图**（`docs/reference/island-art-reference/target-island-*.png`）
+  只学**配色、明度层次、尺度层次**。它们的 3D 预算是我们的十倍以上，
+  构图也太全局——我们已经定了要更近更低。**不要照抄。**
+- **可读文字是 DOM，不是几何体。** 这是 web3d 基线第 7 条，portfolio 级规则。
+- **donor 全部已授权**（含 elemental-serenity 的媒体资源）。
+  但「有授权」不等于「该用」——草仍然是我们自己生成的，
+  理由写在 ADR-0008 里，别把它当矛盾去「修」。
+
+## 八、坑（都真的踩过）
+
+- **在没有 `apps/local/studies/*` 的 worktree 里跑 `pnpm content` 会静默污染
+  `imported.json`**，每门课的 `servedBytes` 缩水，退出码 0，`pnpm verify` 照样绿。
+  已经在 `apps/university/scripts/import-courses.mjs` 里加了防缩水断言，
+  但别去试探它。缺内容就 symlink，不要重建。
+- **playwright 的 `page.screenshot` 会卡在 "waiting for fonts to load"。**
+  用 CDP `Page.captureScreenshot`。而且 `goto` 之后要等 16 秒画布才挂上，
+  6 秒会拍到 loading 卡片。
+- **机器负载高的时候有几个测试会假红**，特别是
+  `island-blueprint.test.ts` 和 `kenney-r01-assets.test.ts`。
+  单独重跑一遍再下结论。
+- **worktree 和主 checkout 是两个目录。** 你在 worktree 里改的东西，
+  老板在 VS Code 里看不到，直到 merge。**汇报时永远说清楚在哪条分支、合了没有。**
+- **`island-look-contract.md` 的门槛是在旧草、旧机位、旧光照下定的。**
+  第一轮结构改造之后需要重新校准，别把它的红项直接当回归读。
