@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Island Texture Spike</title>
+  </head>
+  <body>
+    <div id="texture-demo">
+      <div class="texture-demo">
+        <header class="texture-demo__header">
+          <div>
+            <h1 class="texture-demo__title">Island texture spike</h1>
+            <p class="texture-demo__subtitle">world-space projection · fixed seed · no island pipeline changes</p>
+          </div>
+          <span class="texture-demo__badge">512² WebP · one mesh</span>
+        </header>
+        <main class="texture-demo__main">
+          <div id="texture-demo-viewport" class="texture-demo__viewport" aria-label="起伏地形材质演示"></div>
+          <aside class="texture-demo__panel" aria-label="材质演示控制">
+            <h2>材质对照</h2>
+            <p>先看近景判断细节，再切到远景观察 mip 是否变脏。</p>
+
+            <div class="texture-demo__control">
+              <span class="texture-demo__control-label">颜色贴图</span>
+              <div class="texture-demo__choices">
+                <button class="texture-demo__button" data-control="textures" data-value="off" type="button">无贴图</button>
+                <button class="texture-demo__button" data-control="textures" data-value="on" type="button">有贴图</button>
+              </div>
+            </div>
+
+            <div class="texture-demo__control">
+              <span class="texture-demo__control-label">材质区域</span>
+              <div class="texture-demo__choices">
+                <button class="texture-demo__button" data-control="materials" data-value="single" type="button">单材质</button>
+                <button class="texture-demo__button" data-control="materials" data-value="multi" type="button">多材质混合</button>
+              </div>
+            </div>
+
+            <div class="texture-demo__control">
+              <span class="texture-demo__control-label">投影实验</span>
+              <div class="texture-demo__choices">
+                <button class="texture-demo__button" data-control="projection" data-value="hybrid" type="button">Hybrid</button>
+                <button class="texture-demo__button" data-control="projection" data-value="full" type="button">Full triplanar</button>
+              </div>
+            </div>
+
+            <div class="texture-demo__control">
+              <span class="texture-demo__control-label">镜头距离</span>
+              <div class="texture-demo__choices">
+                <button class="texture-demo__button" data-control="view" data-value="near" type="button">近景</button>
+                <button class="texture-demo__button" data-control="view" data-value="far" type="button">远景</button>
+              </div>
+            </div>
+
+            <div class="texture-demo__metrics" aria-live="polite">
+              <div class="texture-demo__metric">
+                <span class="texture-demo__metric-label">Draw calls</span>
+                <strong id="metric-calls" class="texture-demo__metric-value">—</strong>
+              </div>
+              <div class="texture-demo__metric">
+                <span class="texture-demo__metric-label">Triangles</span>
+                <strong id="metric-triangles" class="texture-demo__metric-value">—</strong>
+              </div>
+              <div class="texture-demo__metric">
+                <span class="texture-demo__metric-label">Frame time</span>
+                <strong id="metric-frame" class="texture-demo__metric-value">—</strong>
+              </div>
+              <div class="texture-demo__metric">
+                <span class="texture-demo__metric-label">Anisotropy</span>
+                <strong id="metric-anisotropy" class="texture-demo__metric-value">—</strong>
+              </div>
+            </div>
+            <p class="texture-demo__footnote">
+              benchmark 优先使用 WebGL2 GPU elapsed query；实时显示在没有 query
+              结果前使用 CPU render call wall time。三角形和 draw call 来自
+              WebGLRenderer.info，所有模式共享同一张固定 seed 地形。
+            </p>
+          </aside>
+        </main>
+      </div>
+    </div>
+    <script type="module" src="/src/texture-demo/main.ts"></script>
+  </body>
+</html>

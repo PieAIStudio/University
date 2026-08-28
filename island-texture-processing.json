@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "size": 512,
+  "textures": {
+    "grass-albedo": {
+      "edgeMeanAbsDifference": 1.2917,
+      "edgeMaxAbsDifference": 7.0,
+      "downsample8x8LumaMin": 160.6522,
+      "downsample8x8LumaMax": 169.509,
+      "downsample8x8LumaRange": 8.8568,
+      "path": "packages/world/public/island-textures/grass-albedo.webp",
+      "bytes": 16566,
+      "sha256": "9044c29da9122957cc309f078ecdb347483b68e54837fc807f40abc2b6fb14b9"
+    },
+    "route-albedo": {
+      "edgeMeanAbsDifference": 0.6536,
+      "edgeMaxAbsDifference": 4.6667,
+      "downsample8x8LumaMin": 213.3572,
+      "downsample8x8LumaMax": 216.3572,
+      "downsample8x8LumaRange": 3.0,
+      "path": "packages/world/public/island-textures/route-albedo.webp",
+      "bytes": 8704,
+      "sha256": "796ff5071e8355a6d6087e5a96dc36e89f1946550639cb98f4b4481c6910044a"
+    },
+    "rock-albedo": {
+      "edgeMeanAbsDifference": 0.9368,
+      "edgeMaxAbsDifference": 4.3333,
+      "downsample8x8LumaMin": 111.4416,
+      "downsample8x8LumaMax": 117.1476,
+      "downsample8x8LumaRange": 5.706,
+      "path": "packages/world/public/island-textures/rock-albedo.webp",
+      "bytes": 9822,
+      "sha256": "4a03ce092a613694752e7a9faacbcb48a31dd4851e1366f9860bd7eead824ab6"
+    },
+    "surface-detail": {
+      "edgeMeanAbsDifference": 0.2676,
+      "edgeMaxAbsDifference": 2.0,
+      "downsample8x8LumaMin": 127.0,
+      "downsample8x8LumaMax": 129.0,
+      "downsample8x8LumaRange": 2.0,
+      "path": "packages/world/public/island-textures/surface-detail.webp",
+      "bytes": 1942,
+      "sha256": "d3ce196dc41f3979fdabfbc2e40a4d546d7c819c6aa65fb5f2807544c58f81ae"
+    }
+  },
+  "totalBytes": 37034,
+  "verificationImages": [
+    "island-texture-tiling-4x4.png",
+    "island-texture-flatness-8x8.png"
+  ],
+  "pipeline": {
+    "source": "codex-built-in-imagegen",
+    "postProcess": [
+      "512x512 resize",
+      "half-size offset",
+      "center and outer periodic seam feather",
+      "wrap-aware Gaussian blur luminance flatten",
+      "palette remap and contrast compression",
+      "WebP quality 88"
+    ]
+  }
+}
