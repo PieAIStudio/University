@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "assetSet": "elemental-serenity",
-  "status": "isolated media; author permission pending",
+  "status": "author permission granted 2026-08-28; usable as product media",
   "sourceRoot": "local-donor:Elemental-Serenity",
   "sourceRootHint": "local donor checkout; ELEMENTAL_SERENITY_DONOR_ROOT",
   "outputRoot": "public/models/elemental-serenity",
   "runtimeBasePath": "/models/elemental-serenity",
-  "licenseStatus": "author-permission-pending",
+  "licenseStatus": "author-permission-granted",
   "registeredOn": "2026-08-28",
   "whitelistPolicy": "explicit filenames only; no donor glob",
   "dependencies": [],
@@ -22,9 +22,12 @@
       "pack": "elemental-serenity",
       "dependencies": [],
       "embeddedImageCount": 0,
-      "provenance": "author-permission-pending",
+      "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": ["outpost", "bridge"]
+      "roles": [
+        "outpost",
+        "bridge"
+      ]
     },
     {
       "type": "model",
@@ -37,9 +40,12 @@
       "pack": "elemental-serenity",
       "dependencies": [],
       "embeddedImageCount": 0,
-      "provenance": "author-permission-pending",
+      "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": ["outpost", "bush"]
+      "roles": [
+        "outpost",
+        "bush"
+      ]
     },
     {
       "type": "model",
@@ -52,9 +58,12 @@
       "pack": "elemental-serenity",
       "dependencies": [],
       "embeddedImageCount": 0,
-      "provenance": "author-permission-pending",
+      "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": ["outpost", "camp"]
+      "roles": [
+        "outpost",
+        "camp"
+      ]
     },
     {
       "type": "model",
@@ -67,9 +76,12 @@
       "pack": "elemental-serenity",
       "dependencies": [],
       "embeddedImageCount": 0,
-      "provenance": "author-permission-pending",
+      "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": ["grass", "future-use"]
+      "roles": [
+        "grass",
+        "future-use"
+      ]
     },
     {
       "type": "model",
@@ -82,9 +94,12 @@
       "pack": "elemental-serenity",
       "dependencies": [],
       "embeddedImageCount": 0,
-      "provenance": "author-permission-pending",
+      "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": ["foliage", "future-use"]
+      "roles": [
+        "foliage",
+        "future-use"
+      ]
     },
     {
       "type": "model",
@@ -97,9 +112,12 @@
       "pack": "elemental-serenity",
       "dependencies": [],
       "embeddedImageCount": 0,
-      "provenance": "author-permission-pending",
+      "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": ["outpost", "stone-ring"]
+      "roles": [
+        "outpost",
+        "stone-ring"
+      ]
     },
     {
       "type": "model",
@@ -112,9 +130,12 @@
       "pack": "elemental-serenity",
       "dependencies": [],
       "embeddedImageCount": 0,
-      "provenance": "author-permission-pending",
+      "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": ["outpost", "camp"]
+      "roles": [
+        "outpost",
+        "camp"
+      ]
     },
     {
       "type": "model",
@@ -127,9 +148,12 @@
       "pack": "elemental-serenity",
       "dependencies": [],
       "embeddedImageCount": 1,
-      "provenance": "author-permission-pending",
+      "provenance": "author-permission-granted",
       "registeredOn": "2026-08-28",
-      "roles": ["outpost", "tree-trunks"]
+      "roles": [
+        "outpost",
+        "tree-trunks"
+      ]
     }
   ],
   "summary": {
@@ -138,5 +162,7 @@
     "totalBytes": 261000,
     "externalTextureCount": 0,
     "embeddedImageCount": 1
-  }
+  },
+  "licenseGrantedOn": "2026-08-28",
+  "licenseNote": "Author permission for the Elemental-Serenity media was granted by the product owner on 2026-08-28. The portfolio-shared row in docs/policy/shared-rules/donors.md still reads \"来源待确认\" and must be updated upstream in ProjectGovernanceSystem, not only here."
 }

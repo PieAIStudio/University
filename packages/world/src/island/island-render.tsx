@@ -223,6 +223,39 @@ function TechUnderside({
           depthWrite={false}
         />
       </instancedMesh>
+      {/*
+        What actually survives the archipelago's scale.
+
+        A whole tech chassis — hull plate, radial ribs, a core — was built for
+        this view and thrown away, because measuring the shot settled the
+        argument: on the world map an island is about 120 px across and its
+        underside about 20, and the `world-design` capture puts a whole island
+        inside 40 px. Structure does not exist at 8 px. Three things do:
+        silhouette, a value break, and one bright pixel.
+
+        So the far LOD gets a pale collar tucked under the lip — the value
+        break that says "this is not rock all the way down" — and one emissive
+        bead at the root, which is the bright pixel that says "machine". Two
+        draws, no instancing, no per-island geometry.
+      */}
+      <mesh
+        position={[0, -depth * 0.26, 0]}
+        scale={[ringRadiusX / ringRatio, depth * 0.2, ringRadiusZ / ringRatio]}
+      >
+        <cylinderGeometry args={[0.88, 0.7, 1, detail === "world" ? 16 : 26, 1, true]} />
+        <meshStandardMaterial
+          color={colourWithDimmed(TECH, dimmed)}
+          roughness={0.44}
+          metalness={0.72}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <mesh position={[0, -depth * 0.86, 0]}>
+        <sphereGeometry
+          args={[Math.max(0.18, Math.min(ringRadiusX, ringRadiusZ) * 0.1), 8, 6]}
+        />
+        <meshBasicMaterial color={dimmed ? TECH : CYAN} transparent opacity={dimmed ? 0.35 : 0.95} />
+      </mesh>
     </group>
   );
 }
@@ -423,6 +456,71 @@ export function IslandRender({
 
 const SIGIL_COLOURS = [0x80bd62, 0x5cc6c8, 0xf0b45c, 0xc18fe4, 0x8ea7d8, 0xff9b69] as const;
 
+/**
+ * How many arcs the unit ring is broken into, per sigil.
+ *
+ * The count is the cue, not the colour: three arcs and six arcs are different
+ * at a glance in greyscale, which is what v5 決定 D asks of a unit's visual
+ * family ("即使把颜色去掉…也能靠符号、环纹、状态和 DOM 标签认出").
+ */
+const SIGIL_ARCS: Readonly<Record<IslandUnitSigil, number>> = {
+  mountain: 2,
+  leaf: 3,
+  wave: 4,
+  star: 5,
+  shell: 6,
+  sun: 8,
+};
+
+const UNIT_RING_INNER = 0.66;
+const UNIT_RING_OUTER = 0.86;
+/** Fraction of each arc's slot left empty, so the arcs read as separate marks. */
+const UNIT_RING_GAP = 0.3;
+
+const unitRingCache = new Map<number, THREE.BufferGeometry>();
+
+/**
+ * A flat notched ring, lying in the XZ plane, built without a merge helper.
+ *
+ * The marker this replaces floated a solid octahedron/cone/sphere above the
+ * disc and drew a full ring under it. At the course camera that reads, in the
+ * product owner's words, as "一个圆圈中间一个莫名其妙的小东西" — and the art
+ * reference the product is aimed at (docs/reference/island-art-reference) has
+ * clean pale discs with nothing standing on them. Engraving the unit cue into
+ * the disc's own face keeps the reference's silhouette, keeps the non-colour
+ * cue v5 requires, and costs one mesh per marker instead of two.
+ */
+function unitRingGeometry(arcs: number): THREE.BufferGeometry {
+  const cached = unitRingCache.get(arcs);
+  if (cached) return cached;
+  const positions: number[] = [];
+  const indices: number[] = [];
+  const stepsPerArc = Math.max(3, Math.round(24 / arcs));
+  const slot = (Math.PI * 2) / arcs;
+  const span = slot * (1 - UNIT_RING_GAP);
+  for (let arc = 0; arc < arcs; arc += 1) {
+    const start = arc * slot + (slot - span) / 2;
+    const base = positions.length / 3;
+    for (let step = 0; step <= stepsPerArc; step += 1) {
+      const angle = start + (step / stepsPerArc) * span;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      positions.push(cos * UNIT_RING_INNER, 0, sin * UNIT_RING_INNER);
+      positions.push(cos * UNIT_RING_OUTER, 0, sin * UNIT_RING_OUTER);
+    }
+    for (let step = 0; step < stepsPerArc; step += 1) {
+      const a = base + step * 2;
+      indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  unitRingCache.set(arcs, geometry);
+  return geometry;
+}
+
 /** Non-colour unit cue; the geometry survives colour-blind / low-contrast views. */
 export function UnitSigil({
   sigil,
@@ -436,38 +534,23 @@ export function UnitSigil({
   readonly active?: boolean;
 }) {
   const colour = SIGIL_COLOURS[unitIndex % SIGIL_COLOURS.length]!;
-  const icon = (() => {
-    switch (sigil) {
-      case "star":
-      case "sun":
-        return <octahedronGeometry args={[radius * 0.34, 0]} />;
-      case "mountain":
-        return <coneGeometry args={[radius * 0.34, radius * 0.5, 3]} />;
-      case "wave":
-        return <torusGeometry args={[radius * 0.22, radius * 0.09, 5, 12, Math.PI * 1.25]} />;
-      case "shell":
-        return <sphereGeometry args={[radius * 0.28, 8, 5]} />;
-      case "leaf":
-      default:
-        return <sphereGeometry args={[radius * 0.26, 7, 5]} />;
-    }
-  })();
+  const geometry = unitRingGeometry(SIGIL_ARCS[sigil]);
+  // The disc is a cylinder of height radius*0.2 centred at radius*0.1, so its
+  // top face is at radius*0.2. Sit one thousandth of a radius above that: any
+  // less z-fights, any more and the ring floats off its own disc.
   return (
-    <group position={[0, radius * 0.18, 0]}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[radius * 0.75, radius * 0.88, 18]} />
-        <meshBasicMaterial color={colour} transparent opacity={active ? 0.95 : 0.68} />
-      </mesh>
-      <mesh>
-        {icon}
-        <meshStandardMaterial
-          color={colour}
-          emissive={active ? colour : 0x000000}
-          emissiveIntensity={active ? 0.4 : 0}
-          roughness={0.5}
-          metalness={0.05}
-        />
-      </mesh>
-    </group>
+    <mesh
+      geometry={geometry}
+      position={[0, radius * 0.202, 0]}
+      scale={[radius, 1, radius]}
+      renderOrder={1}
+    >
+      <meshBasicMaterial
+        color={colour}
+        transparent
+        opacity={active ? 0.98 : 0.72}
+        depthWrite={false}
+      />
+    </mesh>
   );
 }

@@ -97,10 +97,18 @@ describe("R01 Kenney runtime whitelist", () => {
   });
 
   it("keeps Elemental-Serenity isolated from the confirmed Kenney manifest", () => {
+    /*
+     * Isolation is the point of this assertion, not the licence state. The
+     * author cleared this media on 2026-08-28, so the provenance flipped to
+     * granted — but it stays in its own manifest rather than being folded into
+     * the CC0 Kenney one, because two different grants should never end up
+     * behind one label.
+     */
     expect(elementalManifest.assets).toHaveLength(8);
     expect(
-      elementalManifest.assets.every((asset) => asset.provenance === "author-permission-pending"),
+      elementalManifest.assets.every((asset) => asset.provenance === "author-permission-granted"),
     ).toBe(true);
+    expect(elementalManifest.licenseStatus).toBe("author-permission-granted");
     expect(elementalManifest.assets.every((asset) => asset.registeredOn === "2026-08-28")).toBe(
       true,
     );

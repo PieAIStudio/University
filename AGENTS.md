@@ -55,7 +55,7 @@ not a startup glob; load only the lane the task actually touches.
 | --- | --- |
 | Anything that changes what the learner sees or feels | `docs/reference/player-journey/` (current version) |
 | Course content, lesson shape, cards, exercises, or importing from UniversityLocal | `docs/specs/active/SPEC-0001-universitylocal-parity-contract.md` |
-| 3D scene, renderer, colour, performance, or shells | `docs/policy/shared-rules/web3d-capability-alignment.md` and `docs/policy/shared-rules/donors.md` |
+| 3D scene, renderer, colour, performance, or shells | `docs/adr/ADR-0008-one-locked-technique-per-island-element.md`, `docs/policy/shared-rules/web3d-capability-alignment.md` and `docs/policy/shared-rules/donors.md` |
 | UI, shared components, tokens, brand behaviour, account, payment | `docs/policy/shared-rules/brand-kit-first.md` |
 | Model calls, grading, tutoring, cost | `docs/policy/shared-rules/ai-in-the-loop.md` and SPEC-0001 §Cost |
 | Current priorities or in-flight work | `docs/reference/execution/current-work.md` |
