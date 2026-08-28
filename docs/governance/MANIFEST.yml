@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-28T03:01:17.337Z
+generated_at: 2026-08-28T12:32:59.120Z
 generator_version: doc-gov@0.9.5
-docs_count: 58
+docs_count: 59
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -318,6 +318,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-27
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-LOW-FREQUENCY-ALBEDO-FLATTENING-MUST-DIVIDE-TOWARD-THE-MEAN
+    path: docs/reference/learnings/workflow-issues/low-frequency-albedo-flattening-must-divide-toward-the-mean.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-28
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-ONE-COLUMN-RAIL-MUST-RESET-CHILD-GRID-PLACEMENT
     path: docs/reference/learnings/workflow-issues/one-column-rail-must-reset-child-grid-placement.md
