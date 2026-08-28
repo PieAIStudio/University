@@ -32,15 +32,25 @@ The short, current handoff. **What is true now, never how it got that way.**
 > `apps/local` 现在只剩那台读磁盘的 Node 服务（4317），没有被改动。
 > 经过、踩过的坑和验收数字在 git 历史里（2026-08-25 的合并提交）。
 
-> **课程岛观感，进行中（2026-08-28）**：两座并存的岛屿实现已合并成一份；
-> 判官（`pnpm e2e:island-look`）会在固定 seed / 固定机位下输出
-> `SHOTS/island-look/metrics.json`，逐项给出实测值与门槛。合同在
-> [Island Look Contract](./island-look-contract.md)，门槛全部量自 donor
-> `elemental-serenity` 的白天场景与三张参考图。
+> **课程岛观感，第一轮结构改造已合并（2026-08-28）**：六条分支一起进 main。
+> 关键结构变化：`IslandField` 把蓝图编译成一张栅格，草、装饰、地表颜色现在读同
+> 一份真相（之前三套独立随机场，地表颜色场与草密度场的相关系数只有 r=0.31）；
+> 草从 45 三角形的五叶簇换成一张三顶点卡片，形状全在顶点着色器里，约 72 万三角
+> 降到约 8 万；课程机位降到 68 度 / 36 单位；行星页的选课点升到大气层里漂浮。
+> 架构写在 [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md)，
+> 每个元素用什么技术画写在
+> [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)。
 >
-> **当前 23 项挂 15 项**，其中最上游的一条是 `sceneLinearRange` = 1.77（门槛 4.0）：
-> 那是 `window.measureScene()` 读到的**调色之前**的场景亮度比，不到一档光圈。
-> **在任何调色之前，场景本身就没有明暗。**
+> **仍然明确没解决的两件事**（都已实机看过截图，不是猜的）：
+> 1. **暗部压死成纯黑。** 主光比补光 = 9.0 / 0.5 = 18:1。风格化美术通常 2:1 到
+>    4:1，因为阴影要**有颜色**。现在背光坡面吃掉约 30% 画面。
+> 2. **草在课程机位下读成噪点，不是草。** 叶片在这个距离上接近亚像素，亮顶读成
+>    白色椒盐。这个要等 1 修完再调，顺序不能反。
+>
+> 判官（`pnpm e2e:island-look`）的合同在
+> [Island Look Contract](./island-look-contract.md)，门槛量自 donor
+> `elemental-serenity` 与三张参考图。**注意**：那份 metrics 的门槛是在旧草、旧
+> 机位、旧光照下定的，第一轮结构改造之后需要重新校准，别把它的红项直接当回归。
 >
 > 三条已经用运行时实验排除的死路，不要再走：加主光强度（2.1→6.0，指标纹丝不动）、
 > 只放大阴影相机（±15.8→±40，完全无效）、动 `gl.toneMappingExposure`
@@ -190,395 +200,30 @@ each slot is ours.
 
 ## Order Of Work
 
-Done, and verified in a browser rather than by a passing suite:
+This page is *what is true now*. The list of everything already shipped —
+navigation skeleton, node popup, spineOrder, capability sentences, path
+legibility, evidence code, the overlay layer, the reading screen,
+`packages/world`, the authoring overlay, the account, the review scheduler,
+pricing, dictation design — used to live here as twenty-one numbered entries
+and a completed refactor table. It was roughly half this document, and it
+answered a question nobody asks: how did we get here.
 
-- **Navigation skeleton.** Both shells wear one chrome from
-  `packages/ui/src/shell` and `packages/ui/src/navigation`: web three columns,
-  mobile six tabs, four counters, eight slots, real empty states. The context
-  column collapses when a page has nothing for it.
-- **Node popup and unit card**, including the anchored tail from frame C5.
-- **`spineOrder`** for all four studies.
-- **Capability sentences** — 146 unit objectives in the first person.
-- **Path legibility** — nodes from 6% of viewport width to 14.8%, three states,
-  one hue per course, unit boundaries, kind icons.
-- **Evidence code in the delivery shell** (ADR-0003). 1,597 anchors baked.
-- **One overlay layer.** Titles, kind icons and unit names share one avoidance
-  pass. The invisible-but-clickable labels that ate the unit-strip button are
-  gone with it.
-- **The reading screen.** A ✕ and a bar over sections within the lesson.
-- **`packages/world`.** SPEC-0003 step 1. The scene lives there; delivery
-  imports it.
-- **Authoring overlay.** SPEC-0003 step 2. The local shell renders the same
-  scene plus its authoring overlay. The standalone keyboard-complete 2D
-  `CatalogSurface` is now shared by both shells; SPEC-0003 step 3 (retiring
-  the authoring shelf from the landing) remains open because that is a product
-  placement decision, not a reason to keep two catalog implementations.
-- **One counter row.** Both shells call `universityCounters`; neither keeps its
-  own idea of what belongs in it.
-- **One remaining-count sentence.** The rail's `TodayCard` and the mobile
-  `.nextup` overlay both call `todayMeta`; neither quotes the catalogue size.
-- **Mermaid and external-link CSS.** The last `packages/ui` component styles
-  that lived only in `apps/local` now live next to the component.
-- **`courseShapeOf` in core.** The 2D catalog no longer imports "world" for a
-  pure fold of lesson ids.
-- **IdentityPort and ProgressPort.** Sign-in is optional and missing env is
-  silent. Both shells bind the same cloud learner document when configured;
-  browser/SQLite state is only cache/outbox. The adapter is wired and tested
-  against a replaceable remote, but the SwimmerBackend owner still has to
-  provision the real `university.progress` table and RLS.
-- **`pnpm start`** opens both shells and says which is which; `--lan` puts the
-  delivery shell on this machine's network address so a real phone can reach
-  the layouts it was drawn for.
-- **`pnpm e2e`** — four walks in a real browser, deliberately outside
-  `pnpm verify`. It has already caught two things no unit test could: a review
-  simulation that was a silent no-op, and new cards contradicting the screen
-  that promised them.
-- **A new card is tomorrow's work.** The settlement and the review empty state
-  used to make opposite promises about the same two cards.
-- **One empty-queue sentence.** Both shells call `reviewEmptyDescription`;
-  neither writes its own, and neither says FSRS at a learner again.
-- **Both shells have an icon.** `scripts/make-icons.mjs` writes favicon,
-  apple-touch-icon, maskable icons and a manifest for each from `IslandIcon`,
-  differing only in colour so two tabs can be told apart. `theme-color` too.
-- **A label that does not fit is not placed.** Containment, not intersection —
-  the four slots already offered a side that fits.
-- **One project, one scene.** `placeWorld` takes the project to show and puts it
-  on the origin. Nothing else is in the scene, so the pan needs no fence. The
-  vocabulary is 星球 / 课程系列 / 岛 / 单元 / 关 (V5 §00, inherited from V4 §05D).
-- **An overlay reserves nothing.** The enter-course card is placed but does not
-  push: opening it used to slide three neighbouring islands' names sideways.
-- **One app** (was 10). `apps/university`, built twice from one tree. Was two
-  apps whose difference set had shrunk to three port boundaries while the drift
-  rate had not moved. The delivery build's duplicate lesson reader is gone, one `View`
-  parses one address for both, and four review-port factories are two. The
-  count that made it the right time and the traps paid for are in
-  the 2026-08-25 merge commits.
-- **ContentPort, and the duplicate reader deleted** (was 6). `ContentPort` and
-  `ReaderPort` are where a lesson's text and its evidence come from; both live
-  in `apps/university/src/ports/` beside `GradingPort` and `SourceAccessPort`,
-  and the directory is the complete list of what the two builds are allowed to
-  disagree about.
-- **The two learner features are out of `#/studio`** (was 12). The existing
-  知识笔记 stack remains an authoring content pipeline; the learner-facing
-  feature is 「讲一遍」, a shared FSRS card described in V5. 分级测验 is on the
-  course island, asked only of a course with no progress, and `ROUTE_STARTS` is
-  keyed by course id so a second course is data rather than a branch.
-- **One course island, two slots.** The panel was written out twice in
-  `App.tsx` and the wide copy had grown a 分级测验 the narrow one never got, so
-  the question 「我该从哪一关开始」 did not exist on a phone. `CourseIsland` is
-  one component now; `wide` chooses the slot and nothing else.
-- **On a phone the way out was under the tab bar.** `.picked` capped itself at
-  `100dvh - 28px` — measured from the window, while the panel is positioned
-  from the top of `.stagewrap` — so the cap computed larger than the panel and
-  never bound. The exit is sticky and the bar publishes `--tab-bar-height`.
-  The e2e assertion is `humanClick`, because the first one measured a bounding
-  box and passed while the button was unreachable.
-- **错题本, out of a fold rather than a migration.** See 5 below: the data was
-  already there and already syncing.
-- **The delivery package still ships no answers.** Adding 错题本 put
-  `referenceAnswer` back into every course package and rewrote the comment
-  explaining why answers are stripped. A read model dropping a field does not
-  unsend the bytes. `correctAnswer` is nullable now and delivery says so;
-  `no-answers-shipped.test.ts` checks the bytes, and its own first draft used
-  `[^a-z]` as a word boundary and passed on `referenceAnswer`.
-- **24 design styles are visible, not described.** One fixed mockup, 24 CSS
-  skins, the CSS Zen Garden model — the constant is the product and the only
-  variable is the style, which is what a page-per-style cannot teach. The DOM
-  is identical for every skin; a skin that needs an extra element means the
-  contract is wrong.
-- **One `depthsFromPrerequisites`.** It existed byte-identically in
-  `packages/world` and `apps/university/src/content/library.ts`. It is a pure
-  fold, so it lives in `packages/core` for the same reason `courseShapeOf`
-  does, and the 2D catalogue no longer reaches for the scene to get it.
-- **A stone under the rail is a stone nobody can click.** `frameCourse` aimed
-  at a damped fraction of the absolute x four stones ahead; on a serpentine
-  road that yawed the camera 15° and put 「开始」 at x=1115 of 1440, under the
-  right-hand panel. The eye and the target share a lateral position now.
-- **Learner surface parity for repository access.** `SourceAccessPort` is the
-  third boundary: authoring performs checkout, UA-map and layer-coverage
-  actions; delivery keeps the same controls and explains the published-package
-  boundary plus future desktop/manual/mobile support. `G` and `G2` now compare
-  the world and lesson learner-control inventories, including a one-sided
-  injection proof.
+Where those answers actually live:
 
-Next — **the order is set by
-`docs/reference/player-journey/v5/index.html` §05, not by this list.** The
-ReaderPort and duplicate-reader work from the earlier journey is already done;
-the list below contains the remaining implementation and authority boundaries.
+- **Why a rule is the way it is** — the ADR that decided it, in `docs/adr/`.
+  Every reversal carries a `supersedes` link.
+- **What a change did and what it measured** — the commit message that made it.
+  This repository writes real ones; `git log` is the record.
+- **What the learner is supposed to experience** — `docs/reference/player-journey/v5/`.
+- **What is designed but not built** — the gap documents beside this file
+  (`payment-backend-gap.md`, `feedback-backend-gap.md`,
+  `review-reminders-backend-gap.md`) and `commercial-model.md`.
 
-1. **Provision the University learner row in SwimmerBackend** — *needs the
-   owner.* The executable SQL, env wiring, XP storage decision, four real-browser
-   acceptance paths, and rollback are the single handoff in
-   [SwimmerBackend learner progress migration](./swimmer-backend-migration.md);
-   its only SQL source is [the adjacent migration file](./swimmer-backend-migration.sql).
-   The browser adapter and fake-remote tests are ready; owner execution and the
-   staging rehearsal remain open.
-2. ~~**The 19 seconds after the canvas mounts.**~~ **Measured, and it is
-   gone.** The old entry said 28.4s to first frame on throttled 4G, of which
-   ~19s was `loadGraph()` fetching 52 course JSON files. `loadGraph` no longer
-   exists — the generated shelf replaced that walk — so the number was quoting
-   a function with no callers.
+What belongs on *this* page instead is the next few things and why they are
+next. Right now that is the two island faults named in the banner above, in
+that order, plus the third stage of ADR-0009 that has not been built:
+`IslandStyle` exists but colour still leaks into renderer files.
 
-   Re-measured against `dist/delivery` on a static server, headless Chrome,
-   time from navigation to the 「开始学习」 button being visible:
-
-   | | domcontentloaded | 「开始学习」 visible | requests | transferred |
-   | --- | ---: | ---: | ---: | ---: |
-   | unthrottled | 218ms | **328ms** | 15 | 1.33 MB |
-   | fast 4G, 9 Mbps / 60ms | 2,474ms | **2,966ms** | 18 | 2.59 MB |
-
-   Two honest caveats. The static server sends **no compression**, so those
-   bytes are the worst case a real host would serve. And this measures the DOM
-   call to action, not the scene fully populated — headless has no GPU and the
-   canvas never sizes, so a 3D first-frame number still needs a real display.
-   What it does establish is that **a learner can start learning in about three
-   seconds on 4G**, and that optimising this next would be optimising the wrong
-   thing. Re-measure before anyone reopens it.
-3. **SPEC-0003 step 3.** Decide whether to retire the authoring shelf from the
-   world landing after every row in the overlay table is visible there. The
-   separate course catalog is already shared; this remaining item is only
-   about landing placement and authoring context.
-4. **The light theme cannot work yet — but it needs far less than it looked
-   like.** Surveyed 2026-08-26 across the nine files R3 left: 359 raw colour
-   literals, of which **322 map onto tokens the kit already defines**, 8 need a
-   genuinely new role, and 29 are fixed material that should stay fixed. The
-   light palette is not missing: `swimmer-ui-kit`'s `:root` *is* the light
-   theme and `night` only overrides it, so 78 of its 143 `--game-ui-*` names
-   already carry a colour. What blocks the theme is the application layer
-   writing colours instead of reading them.
-
-   **117 of the 359 are fallbacks inside `var(--token, fallback)`** — and the
-   fallback values are a dead cool-blue palette (`#0d1019`, `#151b2b`,
-   `#9aa6bb`, `#5ec8c0`) from before the kit went warm. They never render,
-   because the kit stylesheet always loads first; only the contrast checker
-   sees them. Deleting them is a third of the problem removed with no visual
-   change, and it dissolves four of the ten colour-drift groups outright.
-
-   **Decided (2026-08-26): fixed material gets an explicit registry, not an
-   exemption by category.** The checker counts `var(--x, fallback)` fallbacks
-   as raw colours, so "leave the 29 alone" and "the checker only accepts
-   tokens" cannot both hold. Each fixed colour — brand marks, the GitHub-like
-   code reading surfaces — goes in a registry with one line saying why, the
-   checker reads the registry, and anything outside it is red. Same shape as
-   `scripts/check-canvas-registry.mjs`: a rule that is counted survives a
-   refactor.
-
-   The acceptance test is **not** "zero literals". It is "every colour that
-   must change with the theme is a token". Naming is by role
-   (`--surface-raised`), never by value (`--blue-500`) — a value name still
-   has to be blue in the light theme, which defeats the point. The survey is
-   `scratchpad/r5-report.md`; `packages/ui/src/entry/style-sample.css` is out
-   of scope, because each skin there is a closed world that deliberately does
-   not follow the theme.
-
-   **And the remaining 213 are not engineering work.** Attempted 2026-08-26 and
-   stopped as a verified no-op: of the 205 that the survey called class A —
-   "a purpose the existing vocabulary can express" — **not one is byte-equal to
-   the kit token that expresses it**, normalised on RGB and alpha. The
-   classification was semantic, not numeric. This repository's stylesheet was
-   written against its own warm palette and the kit later shipped a different
-   warm palette, so pointing a rule at the kit's token changes the colour that
-   renders. That is a design change wearing a refactor's clothes, and it is
-   the same trap in the small that the whole programme avoided in the large.
-
-   So what is left is a decision, not a migration: for each of the ten drift
-   groups in `r5-report.md §3.2`, either the application adopts the kit's
-   value (visible colour change, needs somebody to look at it) or the kit
-   publishes a paired token at the application's value (brand-kit-first, so it
-   goes upstream rather than forking a palette here). The eight class-B roles
-   the kit has no name for — scrollbar thumb/track, idle status surface, prose
-   code ink and surface — are already written up as upstream proposals in
-   `r5-report.md §4`, with dark values, suggested light values and a reason
-   each. **Nobody should touch the 213 until that choice is made**, and the
-   ratchet holds the line meanwhile.
-5. ~~**A persisted record of a wrong answer.**~~ **Done, and the premise was
-   already wrong.** Failed attempts had been persisted and cloud-merged all
-   along — `ExerciseAttemptRecord` carries the answer, the score and the
-   revision, and all four grading call sites wrote them. Nothing *read* the
-   failed ones, so the feature read as unbuilt when it was unsurfaced. 错题本
-   is `#/mistakes`, a pure fold over the document with no new storage.
-6. ~~**Separate 「读完了」 from 「答对了」.**~~ **Done.** The shared
-   `ProgressSource` now receives the current revision and exercise ids:
-   `exercisesPassed` comes from current-version passing attempts, while
-   `readConfirmed` comes from the explicit current-version reading action.
-   The lesson reader, settlement, map/catalog and 「今天」 all consume that
-   answer. A current row with aggregate `progress = 1` but no current exercise
-   passes remains in progress until both lights are on; pre-migration rows with
-   no `readConfirmed` field keep their compatibility finish.
-7. ~~**A publish lane that reproduces from a clean clone.**~~ **Done.**
-   `pnpm delivery:build` takes an explicit recovery root, lexicon, evidence mode
-   and version, then seals `release.json` plus `SHA256SUMS` under a versioned
-   artifact directory. Vercel calls the same package-only lane while its Git
-   deployment gate remains off. Details and clean-clone evidence live in
-   [Delivery Publish Lane](./publish-lane.md).
-8. ~~**Entitlement, and it starts by splitting one word in two.** 「published」
-   and 「paid for」 are different questions and the code currently answers them
-   with one. V5 keeps the prose open, so entitlement governs AI and sync only —
-   but a learner should still only ever read a *published* revision. ADR-0002
-   says course packages are served from the backend under entitlement; they
-   are in fact public static files on Vercel. One of those two has to change,
-   and which one is a decision, not an oversight.~~ **Entitlement skeleton
-   landed (2026-08-26).** ADR-0007 supersedes ADR-0002: publication remains the
-   content gate, the published delivery package is public static output, and
-   `readEntitlements` governs AI and sync only. The shared billing config has a
-   free baseline; paid tiers and prices remain unfilled.
-9. **Payment, browser side complete (2026-08-26).** Payment is not a fourth
-   mode boundary: it does not answer where AI, material, or repository access
-   comes from. The shared `PaymentPort` reads the wallet/entitlement, generates
-   and coalesces browser order ids, requests and queries channel-neutral orders,
-   and refreshes entitlement after success. `PlansScreen` keeps the purchase
-   control visible with a “待产品确认” placeholder and explains the missing
-   server channel when clicked. Actual money-in remains a SwimmerBackend gap —
-   shared order/webhook/atomic-settlement machinery, domestic and overseas
-   adapters, and server-side `wallet_grant`; see [Payment Backend Gap](./payment-backend-gap.md).
-   It is after 1 because taking money needs an account first.
-10. **Metered AI grading, after 9.** **Local path implemented (2026-08-26); the
-    launch gate remains.** `apps/university-grading` is the independent
-    server-only Vercel function: the same `GradingPort` keeps tier-1 free and
-    sends only `undecided` answers through JWT verification, wallet
-    reserve/commit/refund, and structured SwimmerAIKit grading. Deployment,
-    environment variables, wallet top-up/payment, and product pricing still
-    belong to the release step; no model call has been made from this branch.
-11. ~~**A quiet label under the rail.**~~ **Measured and fixed (2026-08-26).**
-   In the 41-lesson course, the baseline sweep counted projected quiet labels
-   under the rail at 768×900: 12; 1024×768: 6; 1280×720: 8; 1440×810: 4;
-   1440×900: 7; and 1920×1080: 2. Mobile widths hide the rail. A direct
-   boundary clamp would have caused five visible-label conflicts and seven
-   quiet-pair conflicts among the twelve narrow-viewport labels; the
-   collision-aware clamp resolved all twelve. The camera was rejected: at the
-   allowed maximum distance it still left 12 under the rail, while the target
-   shift that cleared the narrow rail put 27 under the right panel. `LabelProbe`
-   now measures the rail box and moves quiet focus reveals outside it through
-   `--placed`; `placeLabels` still intentionally excludes quiet markers.
-12. **「讲一遍」与语音边界。** 当前决定（读完 / 答对分开、学习者复述进
-    FSRS、TTS 四档）和仍开放的边界（ASR 必须单独选择加入）只写在
-    [V5 用户旅程](../player-journey/v5/index.html) §01–04；这里不再复制一份。
-
-13. ~~**The picker's globe is not beautiful yet.**~~ **Done, in four rounds.**
-    Framing, flat shading, a warm key with a rim, stars and a horizon glow,
-    and study markers that are landing beacons — a coloured pin standing on a
-    lit contact disc, matched to a swatch on its row in the list, so the point
-    on the globe and the row in the panel are visibly the same thing.
-
-    The terrain reads as a world rather than a beach ball because the colour is
-    quantised into **regions**, not per face. Randomness has a scale: per-face
-    random is noise, region-random is terrain. The final split is measured on
-    the sphere, not eyeballed — sea 40.05%, land 40.22%, sand 19.74%.
-
-    The process is the reusable part. Rounds 1–3 each fixed the named problem
-    and broke the colour balance, because the direction given was **relative**
-    (「暖一点」, 「成片一点」) and a relative direction overshoots by
-    construction. Round 4 gave absolute proportions and hex values and landed
-    first try. Give an absolute when you have one.
-14. ~~**A level and an XP curve.**~~ **Done, except the ring.**
-    `totalXpForLevel(n) = round(35 * (n - 1) ** 2.2)`, and the two constants
-    are anchored rather than chosen: one lesson is `XP_READ_LESSON +
-    XP_EXERCISE_FIRST_TRY`, which clears level 2 — **the first lesson levels
-    you up** — and reading the whole library once lands at level 20, leaving
-    the rest of the curve to spaced review, which is what `xp.ts` pays for.
-    Both anchors are tests computed from the constants and the real lesson
-    count, so changing a score or adding courses fails the suite.
-
-    No ring around the avatar: `@pieai/swimmer-avatar-kit` has no progress-ring
-    capability and ADR-0005 says a missing capability goes upstream rather than
-    into a fork here. It is a `Lv. N` badge and a linear bar, which is what
-    `docs/reference/生图重绘ui/` draws anyway. **The ring is the open upstream
-    request**, not an open item here.
-
-15. **Review reminders, browser side complete (2026-08-27).** The shared
-    settlement shows the real next-day card count only after a fresh lesson
-    completion; the plain-language in-app prompt precedes the browser permission
-    request, and only “好” reaches `Notification.requestPermission()`. Settings
-    keeps the current permission/capability state, never re-asks after denial,
-    and honestly says that an active subscription will not deliver until the
-    server sender exists. The worker has no fetch/cache handler and is registered
-    only after opt-in. Endpoint-keyed subscriptions, revoke tombstones and old
-    document parsing live in the existing progress document; the sender,
-    scheduler, VAPID secret and cleanup remain a SwimmerBackend gap — see
-    [Review Reminders Backend Gap](./review-reminders-backend-gap.md).
-
-16. **Feedback loop, browser framework complete (2026-08-27).** One learner
-   control, one allowlisted context — lesson locator, content revision,
-   current-lesson exercise-attempt count, login state, route and viewport — and
-   one ordered write path shared by both builds: the account backend first, the
-   clipboard when it is absent or fails, and an explicit failure that keeps the
-   learner's words in the box when neither works. The three outcomes read
-   differently on purpose; a copied note never wears a checkmark that claims it
-   was received. `#/studio` groups real feedback by course and content revision
-   and has a separate owner-only answer-aggregate interface beside it; missing
-   feedback or answer data has an explicit capability/empty state.
-   Deterministic grouping is complete; the destination table itself, the
-   backend answer aggregate, offline fixed categories and any course edit
-   remain future work. The SQL, owner RLS and hand-off sequence are in
-   [Feedback Backend Gap](./feedback-backend-gap.md).
-
-17. **The teach-back card is now measurable (2026-08-27).** `recap_saved` fires
-   from the progress port, not a call site, because `RecapPrompt` renders in
-   both the reader and the settlement; `review_graded` carries `cardKind`, so a
-   returning teach-back card is no longer the same number as a returning
-   vocabulary card. Until there is real data here, arguments about investing
-   further in teach-back — AI grading, voice input, authored prompts — are
-   arguments about a number nobody has.
-
-18. **The reminder pre-prompt waits for a sender (2026-08-27).** The settlement
-   only offers it when a public VAPID key is configured, because notification
-   permission is one-shot and a denial is effectively permanent. The settings
-   toggle is unaffected. `serverConnected` is now computed by comparing the key
-   a subscription was made against with the one in use, so a subscription
-   created during the keyless period is correctly reported as unreachable.
-   Reasoning and the rest of the v5 re-read are in
-   [V5 Journey Review](./v5-journey-review.md).
-
-19. **The daily free AI allowance now needs an email (2026-08-27).** The
-   grading service had `is_anonymous` on the verified identity and never read
-   it, so an anonymous session drew the same per-account daily allowance —
-   and an anonymous session's only credential is in localStorage, which every
-   browser has a button to erase. The allowance reset for free, and each reset
-   left an auth row nothing cleans up. Anonymous keeps every lesson, every
-   exercise, deterministic grading, saved progress and review cards; it loses
-   only the calls that spend real money. Binding an email keeps the same user
-   id, so the same day's allowance works immediately. Designed in
-   [v5 §10](../player-journey/v5/index.html); orphan cleanup is still a
-   SwimmerBackend gap in [Payment Backend Gap](./payment-backend-gap.md).
-
-20. **Price and payment channel are named (2026-08-27).** US$19/month,
-   US$149/year for the overseas launch, sold through Paddle as merchant of
-   record. The reasoning, the fee arithmetic that makes the annual plan worth
-   more than its discount, and the entity constraint that is still the owner's
-   to answer are in [Commercial Model](./commercial-model.md). The
-   learner-facing unit is 「次」; "power units" is an internal accounting unit
-   and must not reach a screen.
-
-21. **Dictation cleanup is designed, not built (2026-08-27).** University does
-   not do speech recognition — every phone keyboard already dictates, and
-   better. What it will do is repair what dictation broke: the model returns
-   replacements over spans of the learner's own text, never a rewritten
-   paragraph, so "do not rewrite" is a type constraint rather than a request
-   in a prompt. The glossary is the lesson, not the learner. Metered through
-   the existing tier-2 lane, deliberately not a separate SKU. Designed in
-   [v5 §11](../player-journey/v5/index.html).
-
-## Refactor Program
-
-Structural work is a program, not a change. The audit behind it, the evidence
-for each finding, and the order with its dependencies are in the artifact
-published 2026-08-26; the order is repeated here because the order *is* the
-argument:
-
-| | | 状态 |
-| --- | --- | --- |
-| R0 | Delete dead code | **done** |
-| R1 | Narrow the export surface | **done** |
-| R2 | `packages/world/src`, 47 direct children into directories | **done** — 47 → 10 |
-| R3 | Shared components' CSS back beside the components | **done** — 8 families, 830 lines |
-| R4 | Split `App.tsx` | **done** — 1,384 → 757, six files |
-| R5 | 359 colour literals into tokens | **done** — 8 left, and those are upstream kit proposals |
-
-R4 is last because the first four are its safety net, not because it matters
-least: it is the highest-churn file in the repository and the one where
-`pnpm verify` has been proven unable to catch a fault. **Every step of R4 runs
-`pnpm e2e`.** R5 depends on R3 — replacing literals while `styles.css` is
-still one 4,896-line file is paving a moving road.
 
 ## Traps, Found The Hard Way
 
