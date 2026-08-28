@@ -107,3 +107,38 @@ in this repository; only the product-local asset manifest is updated here.
   session touches the renderer.
 - A future element with no lock entry is not "free to choose": it is missing an
   entry, and the way to add one is to measure, then amend.
+
+## Amendment 2026-08-28: the grass rewrite shipped, and the tripwire caught it
+
+The blade landed. `createIslandGrassClumpGeometry()` is now three vertices and
+one indexed triangle; taper, wind bend, camera-facing Y rotation and
+terrain-normal replacement all moved into the vertex shader injected through
+`onBeforeCompile`, so the material stays `MeshStandardMaterial` and keeps the
+island's existing lighting.
+
+This amendment exists because the lock worked as designed. The rewrite was
+authored on a branch, merged, and the merge failed
+`island-technique-lock.test.ts` on the pinned `45`. Nobody had to remember that
+the ADR existed; the test refused the merge until a fresh measurement replaced
+the old one. The pin is now `1`, and it changes again only the same way.
+
+Two numbers moved with it, both chosen by looking at the shot rather than by
+argument:
+
+- **Segment count is no longer the LOD knob.** The original decision said "a
+  curved blade near the learner, a single triangle in the middle band". The
+  shipped blade is one triangle in every band and the LOD tier varies instance
+  count instead. The `near <= 6` entry stays as a ceiling, not as a shape: it is
+  the budget a future curved near-blade may spend, not a description of what
+  renders today.
+- **Density is 80,000 desktop / 24,000 mobile, not the donor's 112,500.** That
+  is roughly the old 16,000 clumps x five visible leaves, so the silhouette
+  density the learner already saw is preserved while the triangle count drops
+  from ~720,000 to ~80,000. The rest of the saving is deliberately unspent: the
+  near-camera art pass decides where it goes, and spending it on more grass is
+  the one thing this ADR exists to prevent.
+
+The `island-field` merge landed in the same integration and is the reason the
+density number is now safe to tune: grass, dressing and ground colour read one
+compiled field, so raising or lowering grass no longer silently disagrees with
+where the terrain is painted green.

@@ -65,15 +65,16 @@ export const ISLAND_LANDMARK_MAX_PER_ISLAND = 6;
 export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry>> = {
   grass: {
     technique:
-      "One generated tapered strip. Segment count comes from the existing LOD tier: " +
-      "curved near the learner, a single camera-facing triangle in the middle band, " +
-      "nothing at the aerial distance. Root-to-tip lightness ramp is load-bearing.",
+      "One generated three-vertex card, shipped 2026-08-28. Taper, wind bend, " +
+      "camera-facing Y rotation and terrain-normal replacement all happen in the " +
+      "vertex shader, so a single instance is one triangle. LOD varies instance " +
+      "count, not segment count. Root-to-tip lightness ramp is load-bearing.",
     source:
       "Our own geometry. Techniques adapted narrowly from elemental-serenity " +
       "(single-triangle billboard, non-linear root shadow, two-layer FBM wind) and " +
       "three-stylized (tapered strip, tip mask, shadow-depth sync). Both MIT; " +
       "neither donates media.",
-    budget: "near <= 6 tris/blade, mid = 1, far = 0",
+    budget: "1 tri/blade at every band; near <= 6 stays the ceiling, not the shape",
     rejected: [
       {
         option:
