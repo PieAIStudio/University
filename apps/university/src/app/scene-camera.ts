@@ -41,10 +41,11 @@ export function useSceneCamera({ learnerAt, lessons, viewKind, world }: SceneCam
    * height does not push the avatar into the phone's course panel or bottom
    * chrome.
    *
-   * The camera shares the live stone's lateral position rather than tracking
-   * the look-ahead stone. A full lateral swing in the target would turn the
-   * camera away from the live control; the road can curve in the frame while
-   * the avatar stays where the learner expects to find it.
+   * The camera follows only a short local tangent from the live stone. It
+   * gives the learner a hint of the road's current direction without tracking
+   * an absolute look-ahead stone around the serpentine island; the live
+   * control therefore stays near the centre on both the start and the middle
+   * screenshots.
    */
   // `frameCourse`, not a second copy: the authoring shell needs the same shot,
   // and a camera that exists in one app file is a camera the other cannot have.

@@ -32,8 +32,8 @@ describe("frameCourse", () => {
     for (const liveIndex of [0, 1, 5, 9, 20, 33, 40]) {
       const shot = frameCourse(road(sizes, liveIndex));
       expect(shot).not.toBeNull();
-      // Same x for eye and target is what "the live stone is centred" means:
-      // the stone, the eye and the point being aimed at are one line.
+      // Same x for eye and target keeps the small tangent look-ahead from
+      // turning the avatar out of the centre of the shot.
       expect(shot?.cameraFrom[0]).toBe(shot?.lookAt[0]);
     }
   });
@@ -42,12 +42,29 @@ describe("frameCourse", () => {
     const shot = frameCourse(road([7, 8, 7, 7, 6, 6], 5));
     const live = road([7, 8, 7, 7, 6, 6], 5)[5]!;
     // Teaching order runs towards +z. The eye remains on the +z/front side,
-    // while the target is just behind and above the live stone so the next
-    // stones rise into the upper half instead of pushing the avatar under
-    // phone chrome.
+    // while the target is just behind and above the live stone. Its bounded
+    // tangent step is still a forward offset, not a fixed world direction.
     expect(shot!.cameraFrom[2]).toBeGreaterThan(live.position.z);
     expect(shot!.lookAt[2]).toBeLessThan(live.position.z);
-    expect(shot!.lookAt[1] - live.position.y).toBe(4);
+    expect(shot!.lookAt[1] - live.position.y).toBe(3);
+    expect(shot!.lookAt[2]).toBeGreaterThan(live.position.z - 2);
+  });
+
+  it("takes the same bounded tangent step at the start and middle of the bend", () => {
+    for (const liveIndex of [0, 20]) {
+      const lessons = road([7, 8, 7, 7, 6, 6], liveIndex);
+      const shot = frameCourse(lessons);
+      const live = lessons[liveIndex]!;
+      const next = lessons[liveIndex + 1]!;
+      const offset = new THREE.Vector3(
+        shot!.cameraFrom[0] - live.position.x,
+        0,
+        shot!.cameraFrom[2] - live.position.z - 19,
+      );
+      const tangent = next.position.clone().sub(live.position).setY(0);
+      expect(offset.length()).toBeCloseTo(0.8, 5);
+      expect(offset.dot(tangent)).toBeGreaterThan(0);
+    }
   });
 
   it("has nothing to frame in a course with no stones", () => {

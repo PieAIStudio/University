@@ -117,9 +117,10 @@ export const WORLD_POLAR = THREE.MathUtils.degToRad(54);
  * markers on it. At 74° that ground is seen almost edge-on and the far half of
  * it is a sliver.
  *
- * 68° is a deliberate course-only change from the world map's 54°. It is a
- * 22° depression from the horizon: low enough to put a strip of sky behind
- * the island, while still showing the next lesson markers on the ground.
+ * 66° is a deliberate course-only change from the world map's 54°. It is a
+ * 24° depression from the horizon: enough to put the island and the road into
+ * the upper half of the frame, while the front-side eye still shows the
+ * avatar's face.
  * Entering a course therefore reads as arriving on the island, not as looking
  * at the same high map from a slightly different distance.
  *
@@ -128,7 +129,7 @@ export const WORLD_POLAR = THREE.MathUtils.degToRad(54);
  * sets the distance to the target and `MapControls.update()` then forces the
  * angle, so any offset tuned into the eye position is overwritten next frame.
  */
-export const COURSE_POLAR = THREE.MathUtils.degToRad(68);
+export const COURSE_POLAR = THREE.MathUtils.degToRad(66);
 
 /**
  * How far the eye sits from the look target inside a course.
@@ -291,9 +292,9 @@ export function Controls({
     const instance = controls.current;
     if (!instance) return;
     const fixed = fixedCameraRef.current;
-    // `frameCourse` already aims just behind the live marker. Keep that local
-    // target intact so the learner's face stays in the same place after a
-    // route change; there is no second, hidden look-ahead offset here.
+    // `frameCourse` already supplies the live marker plus a bounded local
+    // tangent. Keep that target intact so the learner's face and the road move
+    // together after a route change; there is no second hidden offset here.
     instance.target.set(...(fixed?.lookAt ?? target));
   }, [fixedCamera, target]);
 
