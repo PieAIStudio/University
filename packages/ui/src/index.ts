@@ -144,6 +144,7 @@ export {
   PRACTICE_RECENT_STORAGE_KEY,
   PRACTICE_UNLOCK_HINT,
   PracticeStream,
+  PracticeOverview,
   PracticeSurface,
   PracticeRewardPanel,
   createLocalPracticeRecentStore,
@@ -153,6 +154,8 @@ export {
   readLocalPracticeRecent,
   writeLocalPracticeRecent,
   type PracticeRecentStore,
+  type PracticeOverviewCategory,
+  type PracticeOverviewProps,
 } from "./practice/index.js";
 
 // Shared surface — the path cards. DOM over the 3D path, never geometry.

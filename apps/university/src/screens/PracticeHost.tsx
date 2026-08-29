@@ -28,9 +28,11 @@ export function PracticeHost({ onOpen }: { onOpen: (view: View) => void }) {
   return (
     <PracticeSurface
       store={PRACTICE_STORE}
+      progress={progressPort}
       lexicon={LEXICON}
       onOpenWorld={() => onOpen(WORLD)}
       onBrowse={() => onOpen({ kind: "concepts" })}
+      onOpenReview={() => onOpen({ kind: "review" })}
       renderReward={(question) => (
         <EntryPage
           breadcrumb={[{ label: "概念图解", href: "/concepts" }, { label: question.entry.head.zh }]}

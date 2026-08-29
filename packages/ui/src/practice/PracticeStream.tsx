@@ -25,7 +25,7 @@ export const PRACTICE_INTRO_TITLE = "今天练一道判断";
 export const PRACTICE_INTRO_DESCRIPTION =
   "概念自己带着判断题。答对一道，展开这一条。题流没有尽头，停下来就行。";
 
-export const PRACTICE_INTRO_ACTION = "开始";
+export const PRACTICE_INTRO_ACTION = "开始一道判断";
 
 /**
  * How many questions this sitting has already got right.

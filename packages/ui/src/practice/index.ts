@@ -10,6 +10,11 @@ export {
   sittingSolvedCount,
 } from "./PracticeStream.js";
 export { PracticeSurface } from "./PracticeSurface.js";
+export {
+  PracticeOverview,
+  type PracticeOverviewCategory,
+  type PracticeOverviewProps,
+} from "./PracticeOverview.js";
 export { PRACTICE_UNLOCK_HINT, PracticeRewardPanel } from "./PracticeRewardPanel.js";
 export {
   MistakeList,
