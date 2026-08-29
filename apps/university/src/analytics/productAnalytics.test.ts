@@ -137,6 +137,9 @@ describe("product analytics", () => {
     let saved = false;
     const review = withProductAnalyticsReview(
       {
+        preview() {
+          return null;
+        },
         async reveal() {
           return { back: null };
         },
@@ -174,6 +177,9 @@ describe("product analytics", () => {
     setAnalyticsClientForTesting({ capture: posthogCapture });
     const review = withProductAnalyticsReview(
       {
+        preview() {
+          return null;
+        },
         async reveal() {
           return { back: null };
         },

@@ -1,9 +1,17 @@
 import type { LexiconEntry } from "@pieai/university-core/domain/schemas.js";
+import type { RatingName } from "@pieai/university-core";
 
 import type { PriorAttempt, ReviewCardLocator } from "../view/lesson-view.js";
 
 /** The network/host-independent actions a shared review card needs. */
+export type ReviewRatingPreview = Readonly<Record<RatingName, number>>;
+
 export interface ReviewCardPort {
+  /**
+   * Returns the existing scheduler's read-only interval for each rating, in
+   * milliseconds from now. A missing card has no safe preview to show.
+   */
+  preview(card: ReviewCardLocator): ReviewRatingPreview | null;
   reveal(
     card: ReviewCardLocator,
     input: {

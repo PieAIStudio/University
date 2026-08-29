@@ -10,8 +10,12 @@ vi.mock("../sound/index.js", () => ({
   playSound,
 }));
 
-import type { PriorAttempt, RecapReviewCardLocator } from "../view/lesson-view.js";
-import type { ReviewCardPort } from "./ports.js";
+import type {
+  CourseReviewCardLocator,
+  PriorAttempt,
+  RecapReviewCardLocator,
+} from "../view/lesson-view.js";
+import type { ReviewCardPort, ReviewRatingPreview } from "./ports.js";
 import { ReviewCard } from "./ReviewCard.js";
 
 const CARD: RecapReviewCardLocator = {
@@ -25,10 +29,28 @@ const CARD: RecapReviewCardLocator = {
   contentRevision: 1,
 };
 
+const COURSE_CARD: CourseReviewCardLocator = {
+  kind: "course-card",
+  studyId: CARD.studyId,
+  courseId: CARD.courseId,
+  unitId: CARD.unitId,
+  lessonId: CARD.lessonId,
+  cardId: "app-is-a-program",
+  front: "App 是什么？",
+  contentRevision: 1,
+};
+
 const HISTORY: PriorAttempt = {
   answer: "第一次复述。",
   revealedAt: "2026-08-25T00:00:00.000Z",
   contentRevision: 1,
+};
+
+const PREVIEW: ReviewRatingPreview = {
+  again: 60_000,
+  hard: 6 * 60_000,
+  good: 10 * 60_000,
+  easy: 8 * 86_400_000,
 };
 
 let container: HTMLDivElement;
@@ -61,6 +83,17 @@ function setTextareaValue(value: string): void {
   textarea.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
+async function openRatingHelp(): Promise<HTMLElement> {
+  const help = [...container.querySelectorAll<HTMLElement>(".rating-row .tip-trigger")].find(
+    (element) => element.textContent?.includes("这四个按钮是什么意思？"),
+  );
+  if (!help) throw new Error("评分帮助没有渲染");
+  await act(async () => help.click());
+  const panel = document.body.querySelector<HTMLElement>(".tip-panel");
+  if (!panel) throw new Error("评分帮助没有打开");
+  return panel;
+}
+
 describe("ReviewCard recap path", () => {
   it("shows the same question, compares text history, and self-rates without a reference answer", async () => {
     const reveal = vi.fn<ReviewCardPort["reveal"]>(async () => ({
@@ -73,7 +106,13 @@ describe("ReviewCard recap path", () => {
     const onReviewed = vi.fn(async () => undefined);
 
     await act(async () => {
-      root.render(<ReviewCard card={CARD} review={{ reveal, rate }} onReviewed={onReviewed} />);
+      root.render(
+        <ReviewCard
+          card={CARD}
+          review={{ preview: () => PREVIEW, reveal, rate }}
+          onReviewed={onReviewed}
+        />,
+      );
     });
 
     expect(container.textContent).toContain("讲一遍");
@@ -100,6 +139,14 @@ describe("ReviewCard recap path", () => {
     expect(container.textContent).toContain("困难");
     expect(container.textContent).toContain("良好");
     expect(container.textContent).toContain("简单");
+    expect(buttonWith("重来 · 1 分钟")).toBeTruthy();
+    expect(buttonWith("困难 · 6 分钟")).toBeTruthy();
+    expect(buttonWith("良好 · 10 分钟")).toBeTruthy();
+    expect(buttonWith("简单 · 8 天")).toBeTruthy();
+
+    const help = await openRatingHelp();
+    expect(help.textContent).toContain("这不是判对错");
+    expect(help.textContent).not.toContain("参考答案");
 
     await act(async () => {
       buttonWith("简单")?.click();
@@ -109,5 +156,38 @@ describe("ReviewCard recap path", () => {
     expect(container.textContent).toContain("复习结果已保存");
     expect(onReviewed).toHaveBeenCalledTimes(1);
     expect(playSound).toHaveBeenCalledWith("review.graded");
+  });
+
+  it("keeps the reference-answer guidance on an ordinary course card", async () => {
+    const reveal = vi.fn<ReviewCardPort["reveal"]>(async () => ({
+      back: "一段参考答案。",
+    }));
+    const rate = vi.fn<ReviewCardPort["rate"]>(async () => ({
+      dueAt: "2026-08-27T00:00:00.000Z",
+    }));
+
+    await act(async () => {
+      root.render(
+        <ReviewCard
+          card={COURSE_CARD}
+          review={{ preview: () => PREVIEW, reveal, rate }}
+          onReviewed={async () => undefined}
+        />,
+      );
+    });
+
+    setTextareaValue("我的回答。");
+    await act(async () => {
+      buttonWith("揭示答案")?.click();
+    });
+
+    expect(buttonWith("重来 · 1 分钟")).toBeTruthy();
+    expect(buttonWith("困难 · 6 分钟")).toBeTruthy();
+    expect(buttonWith("良好 · 10 分钟")).toBeTruthy();
+    expect(buttonWith("简单 · 8 天")).toBeTruthy();
+
+    const help = await openRatingHelp();
+    expect(help.textContent).toContain("这不是判对错");
+    expect(help.textContent).toContain("参考答案");
   });
 });
