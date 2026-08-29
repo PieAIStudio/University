@@ -228,11 +228,24 @@ export function useWorldMarkers({
       is only one now — the capsule at the top already says its name, in a place
       that does not scroll away.
     */
+    const ranked = spineOf(world.placements[0]?.node.studyId ?? "").map((entry) => entry.courseId);
+    const rank = new Map(ranked.map((courseId, index) => [courseId, index]));
+    const live = world.placements.find((entry) => entry.state === "live");
+    const liveIndex = live ? (rank.get(live.node.courseId) ?? -1) : -1;
     return world.placements.map((entry) => ({
       id: entry.node.courseId,
       position: entry.position.clone().setY(entry.position.y + entry.radius * 0.4 + 1.4),
       text: entry.node.title,
       kind: "course" as const,
+      // The map has one answer to "what next". The remaining mobile budget
+      // follows the authored road, not projected depth, so a nearer-looking
+      // later island cannot displace the courses immediately around it.
+      weight:
+        entry.state === "live"
+          ? 4
+          : liveIndex >= 0 && rank.has(entry.node.courseId)
+            ? Math.max(0, 4 - Math.abs((rank.get(entry.node.courseId) ?? 0) - liveIndex))
+            : 0,
       // Same target as the island, so a label and the shape under it cannot
       // disagree about what selecting a course means.
       activate: () => {

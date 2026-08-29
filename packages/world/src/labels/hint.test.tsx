@@ -71,4 +71,17 @@ describe("overlay.css .hint", () => {
     expect(hint).toMatch(/border:\s*1px solid var\(--game-ui-border-subtle\)/);
     expect(hint).not.toMatch(/left:\s*calc\(var\(--shell/);
   });
+
+  it("tapers the shared map label budget at narrow breakpoints", () => {
+    expect(CSS).toMatch(/--map-label-limit:\s*9;/);
+    expect(CSS).toMatch(
+      /@media \(max-width: 1023px\)[\s\S]*?--map-label-limit:\s*6;[\s\S]*?--map-label-gap:\s*6px;/,
+    );
+    expect(CSS).toMatch(
+      /@media \(max-width: 767px\)[\s\S]*?--map-label-limit:\s*4;[\s\S]*?--map-label-gap:\s*8px;/,
+    );
+    expect(CSS).toMatch(
+      /@media \(max-width: 400px\)[\s\S]*?--map-label-limit:\s*3;[\s\S]*?--map-label-gap:\s*8px;/,
+    );
+  });
 });

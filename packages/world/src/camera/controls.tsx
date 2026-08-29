@@ -446,9 +446,18 @@ function readRailBox(stage: HTMLElement, rail: HTMLElement): LabelBox | null {
 }
 
 function readChromeBoxes(stage: HTMLElement, shell: HTMLElement): readonly LabelBox[] {
-  return [...shell.querySelectorAll<HTMLElement>(".nav-rail, .app-shell__aside, .nextup, .tab-bar")]
+  return [
+    ...shell.querySelectorAll<HTMLElement>(
+      ".nav-rail, .app-shell__aside, .nextup, .tab-bar, .hint",
+    ),
+  ]
     .map((element) => readRailBox(stage, element))
     .filter((box): box is LabelBox => box !== null);
+}
+
+function readCssNumber(element: HTMLElement, property: string, fallback: number): number {
+  const value = Number.parseFloat(getComputedStyle(element).getPropertyValue(property));
+  return Number.isFinite(value) ? value : fallback;
 }
 
 function writePlacement(
@@ -492,6 +501,8 @@ export function LabelProbe({
   const scratch = useRef(new THREE.Vector3());
   const chromeBoxesRef = useRef<readonly LabelBox[]>([]);
   const followViewportHeightRef = useRef<number | null>(null);
+  const labelLimitRef = useRef(limit);
+  const labelGapRef = useRef(4);
   useEffect(() => {
     const stage = gl.domElement.closest<HTMLElement>(".stagewrap");
     const shell = stage?.closest<HTMLElement>(".app-shell");
@@ -499,6 +510,11 @@ export function LabelProbe({
 
     const update = () => {
       chromeBoxesRef.current = readChromeBoxes(stage, shell);
+      labelLimitRef.current = Math.max(
+        1,
+        Math.floor(readCssNumber(stage, "--map-label-limit", limit)),
+      );
+      labelGapRef.current = Math.max(0, readCssNumber(stage, "--map-label-gap", 4));
       const tabBar = shell.querySelector<HTMLElement>(".tab-bar");
       const tabBarBox = tabBar ? readRailBox(stage, tabBar) : null;
       followViewportHeightRef.current = tabBarBox ? Math.max(0, tabBarBox.top) : null;
@@ -526,7 +542,7 @@ export function LabelProbe({
       resizeObserver?.disconnect();
       mutationObserver?.disconnect();
     };
-  }, [gl]);
+  }, [gl, limit]);
   // R3F's tree is a second React root. The follow node lives in the DOM
   // root, and this callback must not close over a stale `followId` from the
   // render that created the Canvas children the first time.
@@ -629,7 +645,8 @@ export function LabelProbe({
       const onScreen =
         item.x >= 0 && item.y >= 0 && item.x <= viewport.width && item.y <= viewport.height;
       const box = labelBox({ x: item.x, y: item.y }, item.width, item.height, item.anchor);
-      const free = onScreen && !reserved.some((other) => boxesOverlap(box, other, 4));
+      const free =
+        onScreen && !reserved.some((other) => boxesOverlap(box, other, labelGapRef.current));
       writePlacement(item.element, item.marker, item.x, item.y, free);
       if (free) reserved.push(box);
     }
@@ -710,7 +727,8 @@ export function LabelProbe({
     }
 
     const namePlaced = placeLabels(candidates, viewport, {
-      maxVisible: limit,
+      maxVisible: labelLimitRef.current,
+      gap: labelGapRef.current,
       reserved: [...chromeBoxesRef.current, ...reserved],
     });
     for (const placement of namePlaced) {
@@ -745,7 +763,7 @@ export function LabelProbe({
           { ...item, x: position.x, y: position.y },
           chrome,
           viewport,
-          { reserved },
+          { reserved, labelGap: labelGapRef.current },
         );
       }
       writePlacement(item.element, item.marker, position.x, position.y, false);

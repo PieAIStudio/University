@@ -11,6 +11,14 @@
   min-height: 0;
   overflow: hidden;
   max-height: 100dvh;
+  /*
+    The map is one DOM/Canvas assembly at every width. These are CSS-owned
+    layout inputs, read by the shared label projector, so a narrow screen can
+    show fewer course names without a second mobile component or a JS media
+    query that can drift from the stylesheet.
+  */
+  --map-label-limit: 9;
+  --map-label-gap: 4px;
 }
 
 .stagewrap[hidden] {
@@ -21,6 +29,33 @@
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/*
+  A course-selection map needs a readable next step, not every island name at
+  once. The budget tapers with the available width: tablet keeps a useful
+  route preview, a phone keeps the live course and its nearest neighbours, and
+  the smallest phone gets one more name fewer before the fixed tab bar.
+*/
+@media (max-width: 1023px) {
+  .stagewrap {
+    --map-label-limit: 6;
+    --map-label-gap: 6px;
+  }
+}
+
+@media (max-width: 767px) {
+  .stagewrap {
+    --map-label-limit: 4;
+    --map-label-gap: 8px;
+  }
+}
+
+@media (max-width: 400px) {
+  .stagewrap {
+    --map-label-limit: 3;
+    --map-label-gap: 8px;
+  }
 }
 
 .labels {
@@ -294,6 +329,25 @@ button.label:focus-visible {
 .hint--dismissed {
   opacity: 0;
   transform: translate(-50%, 6px);
+}
+
+@media (max-width: 400px) {
+  /*
+    At 390px the road's last island reaches a few pixels into the centred
+    hint. It is already outside the phone's readable label budget, so move the
+    cue into the clear water on the right while it is still visible; after the
+    first gesture the existing dismissed state removes it altogether.
+  */
+  .hint {
+    left: auto;
+    right: 14px;
+    width: max-content;
+    transform: none;
+  }
+
+  .hint--dismissed {
+    transform: translateY(6px);
+  }
 }
 
 .hint__row,
