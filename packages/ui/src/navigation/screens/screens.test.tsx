@@ -122,11 +122,26 @@ describe("LeagueScreen", () => {
 });
 
 describe("PlansScreen", () => {
-  it("states that content is open and only AI and sync are in scope", () => {
+  it("states in plain language what membership pays for and keeps local learning open", () => {
     const markup = renderToStaticMarkup(<PlansScreen />);
-    expect(markup).toContain("课文不设付费墙");
-    expect(markup).toContain("AI 和同步");
+    expect(markup).toContain("所有已发布课程都能免费学");
+    expect(markup).toContain("会员买的是两件事");
+    expect(markup).toContain("本地学习也不会被挡住");
     expect(markup).toContain("免费");
+    expect(markup).not.toContain("当前基线");
+    expect(markup).not.toContain("当前权益基线");
+    expect(markup).not.toContain("确定性判题");
+    expect(markup).not.toContain("远端");
+    expect(markup).not.toContain("服务端权益");
+  });
+
+  it("makes the AI result concrete", () => {
+    const markup = renderToStaticMarkup(<PlansScreen />);
+    expect(markup).toContain("答案不止一种写法");
+    expect(markup).toContain("中文评语");
+    expect(markup).toContain("最多三条补充建议");
+    expect(markup).toContain("换手机也不用从头来");
+    expect(markup).toContain("你现在就在用");
   });
 
   it("shows the configured member prices and keeps the purchase CTA visible", () => {
