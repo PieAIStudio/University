@@ -4150,3 +4150,16 @@ blockquote {
   --game-ui-liquid-gooey-waviness: 6px;
   --game-ui-liquid-gooey-waviness-freq: 0.018;
 }
+
+/*
+  On a phone the sticky lesson toolbar naturally becomes two rows. Keep
+  scrollIntoViewIfNeeded's landing area below that toolbar so the completion
+  action remains a real pointer target after the learner submits an exercise.
+  This belongs on the app's scroll container: changing the toolbar's stacking
+  order would only trade a covered action for covered toolbar controls.
+*/
+@media (max-width: 640px) {
+  .reader:has(.lesson-toolbar) {
+    scroll-padding-top: calc(12rem + env(safe-area-inset-top));
+  }
+}
