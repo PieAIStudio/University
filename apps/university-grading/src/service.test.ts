@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ChatCompletionRequest, ChatCompletionTransport } from "@pieai/swimmer-ai-kit/chat";
 import {
   createStructuredGrader,
+  createSupabaseFreeGradingQuota,
   handleGradeRequest,
   readProductionSupabaseConfig,
   type GradeDependencies,
@@ -36,6 +37,96 @@ describe("University server backend environment", () => {
           })[name],
       ),
     ).toThrow("Missing server environment variable: SWIMMER_BACKEND_SUPABASE_URL");
+  });
+});
+
+describe("University free quota Supabase adapter", () => {
+  it("calls the product RPCs through the exposed university schema", async () => {
+    const calls: Array<[string, Record<string, unknown>]> = [];
+    const rows: Record<string, Record<string, unknown>> = {
+      university_free_grading_quota_quote: {
+        remaining_power_units: "400",
+        resets_at: "2026-08-31T00:00:00.000Z",
+      },
+      university_free_grading_quota_reserve: {
+        allowed: true,
+        remaining_power_units: "300",
+        resets_at: "2026-08-31T00:00:00.000Z",
+        amount_power_units: "100",
+        idempotent: false,
+        insufficient: false,
+        reservation_id: "22222222-2222-4222-8222-222222222222",
+        status: "reserved",
+      },
+      university_free_grading_quota_commit: {
+        allowed: true,
+        remaining_power_units: "300",
+        resets_at: "2026-08-31T00:00:00.000Z",
+        amount_power_units: "100",
+        idempotent: false,
+        reservation_id: "22222222-2222-4222-8222-222222222222",
+        status: "committed",
+      },
+      university_free_grading_quota_refund: {
+        allowed: true,
+        remaining_power_units: "400",
+        resets_at: "2026-08-31T00:00:00.000Z",
+        amount_power_units: "100",
+        idempotent: false,
+        reservation_id: "22222222-2222-4222-8222-222222222222",
+        status: "refunded",
+      },
+    };
+    const rpc = vi.fn(async (functionName: string, args: Record<string, unknown>) => {
+      calls.push([functionName, args]);
+      return { data: [rows[functionName]], error: null };
+    });
+    const schema = vi.fn(() => ({ rpc }));
+    const quota = createSupabaseFreeGradingQuota({ schema } as never);
+
+    await expect(
+      quota.quote({
+        userId: USER_ID,
+        day: "2026-08-30",
+        quotaPowerUnits: "400",
+      }),
+    ).resolves.toMatchObject({ remainingPowerUnits: "400" });
+    await expect(
+      quota.reserve({
+        userId: USER_ID,
+        day: "2026-08-30",
+        amountPowerUnits: "100",
+        quotaPowerUnits: "400",
+        idempotencyKey: COMMAND_ID,
+        metadata: { test: true },
+      }),
+    ).resolves.toMatchObject({ reservationId: RESERVATION_ID });
+    await expect(
+      quota.commit({
+        reservationId: RESERVATION_ID,
+        idempotencyKey: COMMAND_ID,
+        metadata: { test: true },
+      }),
+    ).resolves.toMatchObject({ status: "committed" });
+    await expect(
+      quota.refund({
+        reservationId: RESERVATION_ID,
+        idempotencyKey: COMMAND_ID,
+        metadata: { test: true },
+      }),
+    ).resolves.toMatchObject({ status: "refunded" });
+
+    expect(schema).toHaveBeenCalledTimes(4);
+    expect(schema).toHaveBeenNthCalledWith(1, "university");
+    expect(schema).toHaveBeenNthCalledWith(2, "university");
+    expect(schema).toHaveBeenNthCalledWith(3, "university");
+    expect(schema).toHaveBeenNthCalledWith(4, "university");
+    expect(calls.map(([functionName]) => functionName)).toEqual([
+      "university_free_grading_quota_quote",
+      "university_free_grading_quota_reserve",
+      "university_free_grading_quota_commit",
+      "university_free_grading_quota_refund",
+    ]);
   });
 });
 
@@ -469,6 +560,40 @@ describe("University metered grading service", () => {
     expect(fixtureState.events).toEqual(["free-reserve", "model", "free-commit"]);
     expect(fixtureState.reserve).not.toHaveBeenCalled();
     expect(fixtureState.getBalance).not.toHaveBeenCalled();
+  });
+
+  it("moves the offer to the wallet after four free grades are actually committed", async () => {
+    const fixtureState = fixture();
+    const quotaState = freeQuotaFixture(fixtureState.events);
+    fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
+    const commandIds = [
+      "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+    ];
+
+    for (const commandId of commandIds) {
+      const response = await handleGradeRequest(
+        requestFor("valid-token", "free", commandId),
+        fixtureState.deps,
+      );
+      expect(response.status).toBe(200);
+    }
+
+    const offer = await handleGradeRequest(offerRequestFor("valid-token"), fixtureState.deps);
+    const body = (await offer.json()) as Record<string, unknown>;
+
+    expect(offer.status).toBe(200);
+    expect(body).toMatchObject({
+      kind: "available",
+      availablePowerUnits: "1000",
+      freeQuotaExhausted: true,
+      freeQuotaResetsAt: "2026-08-27T00:00:00.000Z",
+    });
+    expect(fixtureState.getBalance).toHaveBeenCalledTimes(1);
+    expect(fixtureState.reserve).toHaveBeenCalledTimes(0);
+    expect(quotaState.remainingPowerUnits).toBe("0");
   });
 
   it("returns an honest exhaustion signal without calling the model or wallet", async () => {

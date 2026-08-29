@@ -312,7 +312,7 @@ async function readGradingOffer(input: ReadGradingOfferInput): Promise<Response>
       });
     } catch {
       // A missing quota RPC must not prevent a paying learner from seeing a
-      // wallet quote. The free path fails closed until its backend is ready.
+      // wallet quote. The free path fails closed whenever its backend is unavailable.
     }
   }
 
@@ -920,7 +920,7 @@ async function quotaRpcRow(
   functionName: string,
   args: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
-  const { data, error } = await client.rpc(functionName, args);
+  const { data, error } = await client.schema("university").rpc(functionName, args);
   if (error) throw error;
   const row = Array.isArray(data) ? (data.length === 1 ? data[0] : null) : data;
   if (!isRecord(row)) throw new Error(`Free grading quota RPC ${functionName} returned no row.`);
