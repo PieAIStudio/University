@@ -30,14 +30,19 @@ export function useCourseProgress({
   source,
   view,
 }: CourseProgressOptions) {
-  /** Lessons finished in one course, or 0 for a course not on the shelf yet. */
-  const lessonsDone = useCallback(
+  const courseProgressForNode = useCallback(
     (node: CourseNode) => {
       const shape = courseOf(node.studyId, node.courseId);
-      if (!shape) return 0;
-      return readCourseProgress(courseShapeOf(shape, node.studyId), source).done;
+      if (!shape) return null;
+      return readCourseProgress(courseShapeOf(shape, node.studyId), source);
     },
     [courseOf, source, progress],
+  );
+
+  /** Lessons finished in one course, or 0 for a course not on the shelf yet. */
+  const lessonsDone = useCallback(
+    (node: CourseNode) => courseProgressForNode(node)?.done ?? 0,
+    [courseProgressForNode],
   );
 
   // A fraction, not a flag. The world map now shows how far a course got, not
@@ -45,12 +50,10 @@ export function useCourseProgress({
   // say so — that partly-built island is the whole reason to come back.
   const courseProgress = useCallback(
     (node: CourseNode) => {
-      const shape = courseOf(node.studyId, node.courseId);
-      if (!shape) return 0;
-      const { done, total } = readCourseProgress(courseShapeOf(shape, node.studyId), source);
-      return total > 0 ? Math.min(1, done / total) : 0;
+      const current = courseProgressForNode(node);
+      return current && current.total > 0 ? Math.min(1, current.done / current.total) : 0;
     },
-    [courseOf, source, progress],
+    [courseProgressForNode],
   );
 
   /**
@@ -80,11 +83,8 @@ export function useCourseProgress({
    * second source.
    */
   const nextUpProgress = useMemo(() => {
-    if (!todayNode) return null;
-    const shape = courseOf(todayNode.studyId, todayNode.courseId);
-    if (!shape) return null;
-    return readCourseProgress(courseShapeOf(shape, todayNode.studyId), source);
-  }, [todayNode, courseOf, source, progress]);
+    return todayNode ? courseProgressForNode(todayNode) : null;
+  }, [todayNode, courseProgressForNode]);
 
   const lessons: readonly LessonPlacement[] = useMemo(() => {
     if (!course || (view.kind !== "course" && view.kind !== "lesson")) return [];
@@ -101,6 +101,7 @@ export function useCourseProgress({
   return {
     lessonsDone,
     courseProgress,
+    courseProgressForNode,
     lessons,
     viewedProgress,
     nextUpProgress,

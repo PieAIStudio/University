@@ -248,21 +248,18 @@ function stateOf(
 }
 
 /**
- * The one course to open next, across every project.
+ * The one course to open next.
  *
- * Lifted out of `placeWorld` when the map stopped showing every project at
- * once. Two different questions were being answered by one number: "where am I
- * standing on this map" is local to the project you are looking at, and "what
- * should I do today" is not — a learner who wanders into Buzz to have a look
- * has not stopped being three lessons from finishing TuringPact. The 「今天」
- * card asks the second question, so it gets its own answer.
+ * With no `studyId`, this keeps the account-wide recommendation used to choose
+ * the first map on a fresh session. Once the learner has chosen a project, the
+ * same selector is scoped to that project so the DOM context and the scene
+ * cannot name different places.
  *
- * A project already underway wins first. Splitting this out of the map made the
- * old ordering visible for what it was: finish alpha's first course and the
- * card would send you to *beta*, because beta's opening course is shallower
- * than alpha's second one. Depth compares two courses inside one spine; across
- * projects it is not a comparison at all. Somebody halfway into a project is
- * telling you which project they are doing.
+ * When it is account-wide, a project already underway wins first. Splitting
+ * this out of the map made the old ordering visible for what it was: finish
+ * alpha's first course and the card would send you to *beta*, because beta's
+ * opening course is shallower than alpha's second one. Depth compares two
+ * courses inside one spine; across projects it is not a comparison at all.
  *
  * Within that, the shallowest course a learner can actually start wins, and
  * ties break on lesson count so a one-lesson preface does not outrank the spine
@@ -271,9 +268,11 @@ function stateOf(
 export function nextCourse(
   nodes: readonly CourseNode[],
   progressOf: (node: CourseNode) => number,
+  studyId?: string,
 ): CourseNode | null {
+  const candidates = studyId ? nodes.filter((node) => node.studyId === studyId) : nodes;
   const byStudy = new Map<string, CourseNode[]>();
-  for (const node of nodes) {
+  for (const node of candidates) {
     byStudy.set(node.studyId, (byStudy.get(node.studyId) ?? []).concat(node));
   }
   const started = new Set(
@@ -283,7 +282,7 @@ export function nextCourse(
   );
   const rank = (node: CourseNode) => (started.has(node.studyId) ? 0 : 1);
   return (
-    nodes
+    candidates
       .filter((node) => stateOf(node, byStudy.get(node.studyId) ?? [], progressOf) === "open")
       .sort((a, b) => rank(a) - rank(b) || a.depth - b.depth || b.lessons - a.lessons)[0] ?? null
   );
