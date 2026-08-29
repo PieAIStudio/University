@@ -64,7 +64,7 @@ describe("depthsFromPrerequisites", () => {
   });
 });
 
-describe("isFocusDimmed", () => {
+describe("isFocusDimmed for an authoring focus", () => {
   const node = { studyId: "turing-pact", courseId: "foundations-before-zero" };
 
   it("dims nothing when the delivery shell (or an unfocused author) passes no track", () => {
@@ -73,15 +73,15 @@ describe("isFocusDimmed", () => {
   });
 
   it("dims every island that is not on the pinned run", () => {
-    const focus = {
+    const authoringFocus = {
       studyId: "turing-pact",
       courseIds: ["foundations-before-zero", "founder-engineer"],
     };
-    expect(isFocusDimmed(node, focus)).toBe(false);
-    expect(isFocusDimmed({ studyId: "turing-pact", courseId: "later" }, focus)).toBe(true);
-    expect(isFocusDimmed({ studyId: "buzz", courseId: "foundations-before-zero" }, focus)).toBe(
-      true,
-    );
+    expect(isFocusDimmed(node, authoringFocus)).toBe(false);
+    expect(isFocusDimmed({ studyId: "turing-pact", courseId: "later" }, authoringFocus)).toBe(true);
+    expect(
+      isFocusDimmed({ studyId: "buzz", courseId: "foundations-before-zero" }, authoringFocus),
+    ).toBe(true);
   });
 });
 

@@ -47,7 +47,10 @@ import {
 import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
-import { StudySwitcher } from "@pieai/university-ui/navigation/StudySwitcher.js";
+import {
+  StudySwitcher,
+  type LearnerNavigationFocus,
+} from "@pieai/university-ui/navigation/StudySwitcher.js";
 import { SettingsSubnav } from "@pieai/university-ui/navigation/empty.js";
 import { LevelProgress } from "@pieai/university-ui/navigation/screens.js";
 import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
@@ -141,11 +144,11 @@ export function App() {
   const { lookSeedNode, view } = useIslandLookView({ lookDebug, nodes, routeView });
   const shellConfig = shellConfigForView(view);
   /**
-   * The study the camera is looking at. `undefined` means "not chosen yet" —
-   * fall back to the learner's next course so the name, the sky and the eye
-   * agree. `null` is the overview, all four seas.
+   * The learner's transient navigation choice. `undefined` means "not chosen
+   * yet" — fall back to the learner's next course so the name, the sky and the
+   * eye agree. It is never written to the authoring config or account data.
    */
-  const [mapFocus, setMapFocus] = useState<string | null | undefined>(undefined);
+  const [navigationFocus, setNavigationFocus] = useState<LearnerNavigationFocus>(undefined);
   const [hovered, setHovered] = useState<string | null>(null);
   const { mapInteracted, sceneReady, onSceneReady, onSceneBusy, onMapInteract } =
     useSceneInteraction();
@@ -256,10 +259,10 @@ export function App() {
     useWorldModel({
       courseProgress,
       lessonsDone,
-      mapFocus:
+      navigationFocus:
         import.meta.env.DEV && lookDebug?.shot === "world-design"
-          ? (lookSeedNode?.studyId ?? mapFocus)
-          : mapFocus,
+          ? (lookSeedNode?.studyId ?? navigationFocus)
+          : navigationFocus,
       nodes,
       studies,
       todayNode,
@@ -271,7 +274,7 @@ export function App() {
     courseProgressForNode,
     focusedStudyId,
     nodes,
-    setMapFocus,
+    setNavigationFocus,
     setView,
     studies,
     view,
@@ -282,7 +285,7 @@ export function App() {
   const markers = useWorldMarkers({
     labelNodes,
     lessons,
-    setMapFocus,
+    setNavigationFocus,
     setPathOverlay,
     setPicked,
     view,
@@ -528,7 +531,7 @@ export function App() {
         followNode={pickCardRef}
         onPick={(node) => {
           setPicked(node);
-          setMapFocus(node.studyId);
+          setNavigationFocus(node.studyId);
         }}
         onHover={(node) => setHovered(node ? node.title : null)}
         onInteract={onMapInteract}
@@ -702,9 +705,9 @@ export function App() {
         <PlanetRail
           studies={planetStudies}
           selectedId={focusedStudyId}
-          onSelect={setMapFocus}
+          onSelect={setNavigationFocus}
           onEnter={(studyId) => {
-            setMapFocus(studyId);
+            setNavigationFocus(studyId);
             setView({ kind: "world" });
           }}
           onClose={() => setView({ kind: "world" })}
@@ -741,7 +744,7 @@ export function App() {
       profileStats={profileStats}
       progress={progress}
       progressPort={progressPort}
-      setMapFocus={setMapFocus}
+      setNavigationFocus={setNavigationFocus}
       setPathOverlay={setPathOverlay}
       setView={setView}
       shelf={shelf}

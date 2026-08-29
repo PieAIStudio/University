@@ -113,7 +113,7 @@ export function StudioScreen({
         <StudyDetail
           view={view}
           summary={summary}
-          focus={data.today.focus}
+          authoringFocus={data.today.focus}
           onOpenLesson={onOpenLesson}
           showCourseEntry={false}
         />

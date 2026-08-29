@@ -1,4 +1,12 @@
 /**
+ * A learner's transient navigation choice. `undefined` means the learner has
+ * not chosen a series in this session; null is reserved for the empty
+ * catalogue after resolution. It is not the persisted authoring preference
+ * with the same old wire name.
+ */
+export type LearnerNavigationFocus = string | null | undefined;
+
+/**
  * Which series the learner is in, decided once for every screen that asks.
  *
  * Four things need this answer and they must agree: the map places one
@@ -21,7 +29,7 @@
  */
 export function focusedStudyId(
   studyIds: readonly string[],
-  chosen: string | null | undefined,
+  chosen: LearnerNavigationFocus,
   /** Today's lesson's series — the best guess when nobody has chosen. */
   today?: string | null | undefined,
 ): string | null {

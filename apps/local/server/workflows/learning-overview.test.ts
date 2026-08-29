@@ -30,7 +30,7 @@ function openSessionStore(
 }
 
 describe("learning overview", () => {
-  it("reports an archived focus and falls back to the active shelf", () => {
+  it("reports an archived authoring focus and falls back to the active shelf", () => {
     const { studiesRoot } = setup();
     createStudy(studiesRoot, { id: "archived", title: "Archived" });
     setStudyStatus(studiesRoot, "archived", "archived");
@@ -38,16 +38,16 @@ describe("learning overview", () => {
 
     const overview = buildLearningOverview({
       studiesRoot,
-      focus: { studyId: "archived", courseIds: [] },
+      authoringFocus: { studyId: "archived", courseIds: [] },
       getStore: () => null,
     });
 
     expect(overview.focus).toBeNull();
     expect(overview.teachingStudyId).toBe("active");
-    expect(overview.issues).toContain("Learning focus study is not active: archived is archived");
+    expect(overview.issues).toContain("Authoring focus study is not active: archived is archived");
   });
 
-  it("reports stale focus and malformed course manifests instead of hiding them", () => {
+  it("reports stale authoring focus and malformed course manifests instead of hiding them", () => {
     const { studiesRoot } = setup();
     createStudy(studiesRoot, { id: "sample", title: "Sample" });
     const staleCourse = {
@@ -74,13 +74,13 @@ describe("learning overview", () => {
 
     const staleFocus = buildLearningOverview({
       studiesRoot,
-      focus: { studyId: "sample", courseIds: ["stale-course"] },
+      authoringFocus: { studyId: "sample", courseIds: ["stale-course"] },
       getStore: () => null,
     });
     expect(staleFocus.focus).toBeNull();
     expect(staleFocus.teachingStudyId).toBe("sample");
     expect(staleFocus.issues).toContain(
-      "Learning focus course is not active: sample/stale-course is stale",
+      "Authoring focus course is not active: sample/stale-course is stale",
     );
     expect(staleFocus.issues.join(" ")).toContain("sample/broken-course: course manifest:");
 
@@ -114,7 +114,7 @@ describe("learning overview", () => {
     }
   });
 
-  it("lets an active focus win deterministically when several studies have open sessions", () => {
+  it("lets an active authoring focus win deterministically when several studies have open sessions", () => {
     const { studiesRoot } = setup();
     createStudy(studiesRoot, { id: "alpha-study", title: "Alpha" });
     createStudy(studiesRoot, { id: "beta-study", title: "Beta" });
@@ -126,7 +126,7 @@ describe("learning overview", () => {
     try {
       const overview = buildLearningOverview({
         studiesRoot,
-        focus: { studyId: "alpha-study", courseIds: [] },
+        authoringFocus: { studyId: "alpha-study", courseIds: [] },
         getStore: (studyId) => stores.get(studyId) ?? null,
       });
 

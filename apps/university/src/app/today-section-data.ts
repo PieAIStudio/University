@@ -69,9 +69,12 @@ export function useTodaySectionData({
   const todayData = useMemo<TodaySectionData>(
     () => ({
       card: todayCard,
+      // Today follows the learner's transient navigation context through
+      // `focusedNextUpProgress`. The persisted authoring preference stays in
+      // the local server/workbench boundary and is not smuggled into either
+      // learner shell.
       nextLesson: nextLessonOf(studies, focusedNextUpProgress?.next ?? null, progressPort),
       dueCount: due.length,
-      focus: null,
       issues: [],
     }),
     [studies, todayCard, due, focusedNextUpProgress],

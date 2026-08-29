@@ -111,7 +111,6 @@ const TODAY_DATA: TodaySectionData = {
     progress: null,
   },
   dueCount: 0,
-  focus: null,
   issues: [],
 };
 

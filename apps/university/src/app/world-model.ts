@@ -2,6 +2,7 @@ import { spineOf, type View } from "@pieai/university-core";
 import type { ShelfStudy } from "@pieai/university-ui/content/port.js";
 import {
   focusedStudyId as resolveFocusedStudy,
+  type LearnerNavigationFocus,
   type StudySwitchItem,
 } from "@pieai/university-ui/navigation/StudySwitcher.js";
 import { spacedName } from "@pieai/university-ui/text/spaced-name.js";
@@ -30,7 +31,7 @@ type World = ReturnType<typeof placeWorld>;
 interface WorldModelOptions {
   readonly courseProgress: (node: CourseNode) => number;
   readonly lessonsDone: (node: CourseNode) => number;
-  readonly mapFocus: string | null | undefined;
+  readonly navigationFocus: LearnerNavigationFocus;
   readonly nodes: readonly CourseNode[] | null;
   readonly studies: readonly ShelfStudy[];
   readonly todayNode: CourseNode | null;
@@ -40,7 +41,7 @@ interface WorldModelOptions {
 export function useWorldModel({
   courseProgress,
   lessonsDone,
-  mapFocus,
+  navigationFocus,
   nodes,
   studies,
   todayNode,
@@ -51,34 +52,32 @@ export function useWorldModel({
    *
    * These used to be independent, which is how the top bar said TuringPact
    * while the map showed Buzz. A course URL names the study; on the world
-   * map the next course is the default until the learner picks another sea
-   * or pulls back to all four.
+   * map the next course is the default until the learner picks another sea.
    */
   const focusedStudyId = useMemo(() => {
     /*
       Reading a lesson pins the map to that lesson's project until the learner
-      says otherwise — `mapFocus === undefined` is "has not said otherwise",
+      says otherwise — `navigationFocus === undefined` is "has not said otherwise",
       which is why it is distinct from null.
     */
     const chosen =
       view.kind === "course" || view.kind === "lesson" || view.kind === "settled"
-        ? mapFocus === undefined
+        ? navigationFocus === undefined
           ? view.studyId
-          : mapFocus
-        : mapFocus;
+          : navigationFocus
+        : navigationFocus;
     /*
-      The map shows one project and may never show none, so this can no longer
-      resolve to null the way it did when null meant 「看全部四片海」. Today's
-      course names the project; an account with nothing started falls back to
-      the first project in the catalogue. Null now means one thing only: the
-      catalogue is empty.
+      The map shows one project and may never show none. Today's course names
+      the project; an account with nothing started falls back to the first
+      project in the catalogue. Null now means one thing only: the catalogue
+      is empty.
     */
     return resolveFocusedStudy(
       studies.map((entry) => entry.id),
       chosen,
       todayNode?.studyId,
     );
-  }, [view, mapFocus, todayNode, studies]);
+  }, [view, navigationFocus, todayNode, studies]);
 
   /**
    * One project's islands, at the origin. Never every project at once.
@@ -188,7 +187,7 @@ export function useWorldModel({
 interface WorldMarkersOptions {
   readonly labelNodes: LabelNodes;
   readonly lessons: readonly LessonPlacement[];
-  readonly setMapFocus: Dispatch<SetStateAction<string | null | undefined>>;
+  readonly setNavigationFocus: Dispatch<SetStateAction<LearnerNavigationFocus>>;
   readonly setPathOverlay: Dispatch<SetStateAction<PathOverlay | null>>;
   readonly setPicked: Dispatch<SetStateAction<CourseNode | null>>;
   readonly view: View;
@@ -198,7 +197,7 @@ interface WorldMarkersOptions {
 export function useWorldMarkers({
   labelNodes,
   lessons,
-  setMapFocus,
+  setNavigationFocus,
   setPathOverlay,
   setPicked,
   view,
@@ -250,7 +249,7 @@ export function useWorldMarkers({
       // disagree about what selecting a course means.
       activate: () => {
         setPicked(entry.node);
-        setMapFocus(entry.node.studyId);
+        setNavigationFocus(entry.node.studyId);
       },
     }));
   }, [world, lessons, view]);

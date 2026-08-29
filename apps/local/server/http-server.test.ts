@@ -27,7 +27,7 @@ import { SqliteLearningStore } from "./learning/sqlite-learning-store.js";
 import { cardContentKey, knowledgeCardContentKey, lessonContentKey } from "./learning/types.js";
 import { getStudyPaths } from "./studies/paths.js";
 import { createStudy, registerLocalGitSource, setDefaultCourse } from "./studies/repository.js";
-import { setLearningFocus } from "./workflows/focus.js";
+import { setAuthoringFocus } from "./workflows/focus.js";
 import { createCleanSnapshot } from "./studies/snapshots.js";
 
 const servers: ReturnType<typeof createUniversityLocalHttpServer>[] = [];
@@ -1377,7 +1377,7 @@ describe("UniversityLocal loopback API", () => {
 
     // Written through the workflow rather than by hand, so the run the learner
     // would actually type is the one the server then walks.
-    setLearningFocus({
+    setAuthoringFocus({
       projectRoot: fixture.projectRoot,
       studiesRoot: fixture.studiesRoot,
       studyId: "sample",
@@ -1414,7 +1414,7 @@ describe("UniversityLocal loopback API", () => {
   it("gives AI hosts the same focused next lesson as the web home page", async () => {
     const fixture = makeLearningProject(false);
     addSecondCourse(fixture);
-    setLearningFocus({
+    setAuthoringFocus({
       projectRoot: fixture.projectRoot,
       studiesRoot: fixture.studiesRoot,
       studyId: "sample",

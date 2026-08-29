@@ -14,31 +14,40 @@ const GitTree = z.string().regex(/^[a-f0-9]{40}$/);
 export const IsoDateTime = z.string().datetime({ offset: true });
 
 /**
- * What the learner is working through right now. The shelf can hold more than
- * one study, and without this "今日学习" simply picks whichever incomplete
- * lesson it meets first — an order that has nothing to do with what the learner
- * has decided to focus on.
+ * An authoring machine's local learning preference. The shelf can hold more
+ * than one study, and without this the local read model simply picks whichever
+ * incomplete lesson it meets first — an order that has nothing to do with the
+ * author's chosen route.
  *
- * It only reorders which lesson is offered next. Due cards keep coming from
- * every study, because a card is something already learned and forgetting it
- * while focused elsewhere is exactly what spaced repetition exists to prevent.
+ * This is deliberately not the learner's in-browser navigation selection. It
+ * only reorders the lesson offered by the authoring server/CLI. Due cards keep
+ * coming from every study, because a card is something already learned and
+ * forgetting it while focused elsewhere is exactly what spaced repetition
+ * exists to prevent.
  */
-export const LearningFocusSchema = z
+export const AuthoringFocusSchema = z
   .object({
     studyId: StableId,
-    // An ordered run, not a single pin. What a learner focuses on is usually a
+    // An ordered run, not a single pin. An author's chosen route is usually a
     // sequence — finish the zero-basics tier, then the formal courses — and a
-    // single course would hand them back to alphabetical order the moment they
-    // finished it.
+    // single course would hand the read model back to alphabetical order the
+    // moment it was finished.
     courseIds: z.array(StableId).default([]),
   })
   .strict();
+
+/**
+ * The JSON key remains `focus` for the versioned local-config and bootstrap
+ * wire contracts. Keep this schema alias for callers compiled against the old
+ * name; new code should name the boundary it is actually crossing.
+ */
+export const LearningFocusSchema = AuthoringFocusSchema;
 
 export const UniversityLocalConfigSchema = z
   .object({
     schemaVersion: SchemaVersion,
     studiesRoot: z.string().min(1),
-    focus: LearningFocusSchema.optional(),
+    focus: AuthoringFocusSchema.optional(),
   })
   .strict();
 
@@ -778,7 +787,9 @@ export const KnowledgeNoteSchema = z
   });
 
 export type UniversityLocalConfig = z.infer<typeof UniversityLocalConfigSchema>;
-export type LearningFocus = z.infer<typeof LearningFocusSchema>;
+export type AuthoringFocus = z.infer<typeof AuthoringFocusSchema>;
+/** @deprecated Use AuthoringFocus; learner navigation has a different shape. */
+export type LearningFocus = AuthoringFocus;
 export type StudyManifest = z.infer<typeof StudyManifestSchema>;
 export type SourceRegistration = z.infer<typeof SourceRegistrationSchema>;
 export type SnapshotManifest = z.infer<typeof SnapshotManifestSchema>;

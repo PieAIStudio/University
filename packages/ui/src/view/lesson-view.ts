@@ -1,6 +1,7 @@
 import {
   isLessonComplete,
   RECAP_CARD_ID,
+  type AuthoringFocus,
   type LessonCompletion,
   type LessonRef,
 } from "@pieai/university-core";
@@ -116,14 +117,13 @@ export interface BootstrapData {
     readonly dueCount: number;
     readonly card: TodayCard | null;
     readonly nextLesson: NextLesson | null;
-    readonly focus: LearningFocus | null;
+    /** Wire key kept as `focus`; semantically this is the authoring preference. */
+    readonly focus: AuthoringFocusView | null;
     readonly issues: readonly string[];
   };
 }
 
-export interface LearningFocus {
-  readonly studyId: string;
-  readonly courseIds: readonly string[];
+export interface AuthoringFocusView extends AuthoringFocus {
   /**
    * The same courses with their titles, resolved by the server against the
    * shelf. Optional because the ids are the stored form and the source of
@@ -131,6 +131,9 @@ export interface LearningFocus {
    */
   readonly courses?: readonly { readonly id: string; readonly title: string }[];
 }
+
+/** @deprecated Use AuthoringFocusView; learner navigation is a different boundary. */
+export type LearningFocus = AuthoringFocusView;
 
 /**
  * Prefers human titles, but never hides a focus that points at nothing. A long
@@ -148,7 +151,7 @@ export interface LearningFocus {
  * detail set in the loudest colour on the page competes with the answer.
  */
 export function focusParts(
-  focus: LearningFocus,
+  focus: AuthoringFocusView,
   studies: readonly StudySummary[],
 ): { readonly study: string; readonly detail: string } {
   const study = studies.find((candidate) => candidate.id === focus.studyId);
