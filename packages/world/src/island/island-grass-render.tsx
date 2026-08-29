@@ -505,6 +505,7 @@ function CourseIslandGrassField({
     // meadow sat outside the lighting entirely — a tree's shadow crossed the
     // ground and stopped at the grass.
     <instancedMesh
+      name="island-grass"
       castShadow={false}
       receiveShadow
       ref={mesh}

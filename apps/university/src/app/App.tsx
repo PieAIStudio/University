@@ -377,6 +377,7 @@ export function App() {
     lessons,
     viewKind: view.kind,
     world,
+    wide,
   });
 
   const pathUnitId =

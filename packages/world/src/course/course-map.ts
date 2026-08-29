@@ -9,6 +9,7 @@
  * lived in an app file where the second shell could not reach it.
  */
 import { courseSprites } from "../labels/path-overlay.js";
+import { renderTier } from "../sky/tier.js";
 import type { Course } from "./course.js";
 import type { LessonPlacement, Marker } from "../Maps.js";
 
@@ -19,6 +20,14 @@ const COURSE_CAMERA_HEIGHT = 13;
 const COURSE_TARGET_BACK = 2;
 const COURSE_TARGET_HEIGHT = 3;
 const COURSE_PATH_LOOK_AHEAD = 0.8;
+const COURSE_EDGE_AZIMUTH = Math.PI / 4;
+const COURSE_EDGE_TARGET_HEIGHT_DESKTOP = 0.5;
+const COURSE_EDGE_PROBE_FRACTIONS = [0.55, 0.8, 1] as const;
+
+export interface CourseFrameOptions {
+  /** The stage tier that owns the DOM safe area around the canvas. */
+  readonly tier?: "desktop" | "mobile";
+}
 
 /**
  * A course the way a screen holds it, as the shape the scene places.
@@ -123,7 +132,94 @@ function pathLookAhead(
   };
 }
 
-export function frameCourse(lessons: readonly LessonPlacement[]): {
+function pointInsideOutline(
+  point: { readonly x: number; readonly z: number },
+  outline: readonly { readonly x: number; readonly z: number }[],
+): boolean {
+  if (outline.length < 3) return false;
+  let inside = false;
+  for (let index = 0, previous = outline.length - 1; index < outline.length; previous = index++) {
+    const current = outline[index]!;
+    const before = outline[previous]!;
+    const crosses =
+      current.z > point.z !== before.z > point.z &&
+      point.x <
+        ((before.x - current.x) * (point.z - current.z)) / (before.z - current.z) + current.x;
+    if (crosses) inside = !inside;
+  }
+  return inside;
+}
+
+function outlineCentroid(outline: readonly { readonly x: number; readonly z: number }[]) {
+  if (outline.length < 3) return { x: 0, z: 0 };
+  let twiceArea = 0;
+  let x = 0;
+  let z = 0;
+  for (let index = 0; index < outline.length; index += 1) {
+    const current = outline[index]!;
+    const next = outline[(index + 1) % outline.length]!;
+    const cross = current.x * next.z - next.x * current.z;
+    twiceArea += cross;
+    x += (current.x + next.x) * cross;
+    z += (current.z + next.z) * cross;
+  }
+  if (Math.abs(twiceArea) <= Number.EPSILON) return { x: 0, z: 0 };
+  return { x: x / (3 * twiceArea), z: z / (3 * twiceArea) };
+}
+
+/**
+ * The first stone can sit on a headland. If the local view vector leaves the
+ * authored coastline, its forward half is water no matter how carefully the
+ * tangent was sampled. Three probes make that a geometric decision rather
+ * than a first-index exception: a view is recovered only when most of its
+ * useful reach is outside the island.
+ */
+function looksOutToWater(live: LessonPlacement, lookAt: { x: number; z: number }): boolean {
+  const outline = live.blueprint?.outline;
+  if (!outline || outline.length < 3) return false;
+  const direction = { x: lookAt.x - live.position.x, z: lookAt.z - live.position.z };
+  const length = Math.hypot(direction.x, direction.z);
+  if (length <= Number.EPSILON) return false;
+  direction.x /= length;
+  direction.z /= length;
+  const reach = Math.min(12, Math.max(6, live.blueprint.bounds.maxHalf * 0.38));
+  const outside = COURSE_EDGE_PROBE_FRACTIONS.reduce((count, fraction) => {
+    const probe = {
+      x: live.position.x + direction.x * reach * fraction,
+      z: live.position.z + direction.z * reach * fraction,
+    };
+    return count + (pointInsideOutline(probe, outline) ? 0 : 1);
+  }, 0);
+  return outside >= 2;
+}
+
+/**
+ * Turn around the live avatar toward the side that contains more island.
+ * Both candidates stay on the avatar's +Z/front hemisphere; choosing the one
+ * whose eye is closer to the outline centroid makes the rule work for either
+ * lateral edge without baking a course-specific sign into the camera.
+ */
+function edgeAzimuth(
+  live: LessonPlacement,
+  lookAt: { readonly x: number; readonly z: number },
+): number {
+  const center = outlineCentroid(live.blueprint?.outline ?? []);
+  const horizontalOffset = COURSE_CAMERA_FRONT + COURSE_TARGET_BACK;
+  const candidates = [-COURSE_EDGE_AZIMUTH, COURSE_EDGE_AZIMUTH];
+  const score = (azimuth: number) => {
+    const eye = {
+      x: lookAt.x + Math.sin(azimuth) * horizontalOffset,
+      z: lookAt.z + Math.cos(azimuth) * horizontalOffset,
+    };
+    return Math.hypot(eye.x - center.x, eye.z - center.z);
+  };
+  return score(candidates[0]!) <= score(candidates[1]!) ? candidates[0]! : candidates[1]!;
+}
+
+export function frameCourse(
+  lessons: readonly LessonPlacement[],
+  options: CourseFrameOptions = {},
+): {
   readonly cameraFrom: readonly [number, number, number];
   readonly lookAt: readonly [number, number, number];
 } | null {
@@ -132,22 +228,28 @@ export function frameCourse(lessons: readonly LessonPlacement[]): {
   const live = lessons[liveIndex];
   if (!live) return null;
   const ahead = pathLookAhead(lessons, liveIndex);
+  const baseLookAt = {
+    x: live.position.x + ahead.x,
+    z: live.position.z - COURSE_TARGET_BACK + ahead.z,
+  };
+  const edgeRecovery = looksOutToWater(live, baseLookAt);
+  const tier = options.tier ?? renderTier();
+  const targetHeight =
+    edgeRecovery && tier === "desktop" ? COURSE_EDGE_TARGET_HEIGHT_DESKTOP : COURSE_TARGET_HEIGHT;
+  const azimuth = edgeRecovery ? edgeAzimuth(live, baseLookAt) : 0;
+  const horizontalOffset = COURSE_CAMERA_FRONT + COURSE_TARGET_BACK;
+  const targetY = live.position.y + targetHeight;
   return {
-    // The eye stays on the +Z side of the road. That is the kit avatar's front
-    // side, so the learner can read the face rather than the back of the head.
-    // It follows the same small tangent offset as the target so the first
-    // frame and the settled MapControls pose do not disagree about lateral
-    // placement.
+    // The ordinary shot stays on the +Z side of the road. When the local view
+    // is mostly outside the real coastline, the edge recovery turns only
+    // around the avatar: the chosen side is still in the +Z/front hemisphere,
+    // but the island body now occupies the forward half instead of the sea.
     cameraFrom: [
-      live.position.x + ahead.x,
-      live.position.y + COURSE_CAMERA_HEIGHT,
-      live.position.z + COURSE_CAMERA_FRONT + ahead.z,
+      baseLookAt.x + Math.sin(azimuth) * horizontalOffset,
+      targetY + COURSE_CAMERA_HEIGHT - COURSE_TARGET_HEIGHT,
+      baseLookAt.z + Math.cos(azimuth) * horizontalOffset,
     ],
-    lookAt: [
-      live.position.x + ahead.x,
-      live.position.y + COURSE_TARGET_HEIGHT,
-      live.position.z - COURSE_TARGET_BACK + ahead.z,
-    ],
+    lookAt: [baseLookAt.x, targetY, baseLookAt.z],
   };
 }
 

@@ -42,6 +42,7 @@ import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, type ReactNode }
 import * as THREE from "three";
 
 import { armSoundUnlock } from "@pieai/university-ui/sound/index.js";
+import { measureAvatarOcclusion, type AvatarOcclusionReport } from "./avatar/avatar-occlusion.js";
 import { createAoPass } from "./island/ao";
 import { assertWorldGradePipeline, createGradePass } from "./island/grade";
 import { measureIslandLookInBrowser, type IslandLookBrowserReport } from "./island/look-metrics.js";
@@ -106,6 +107,18 @@ function Pipeline({
 
   // Priority above zero: R3F stops rendering for us, and this is the loop.
   const measuring = useRef<((report: unknown) => void) | null>(null);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const bag = globalThis as unknown as {
+      __courseAvatarOcclusion?: () => AvatarOcclusionReport;
+    };
+    const measure = () => measureAvatarOcclusion(scene, camera);
+    bag.__courseAvatarOcclusion = measure;
+    return () => {
+      if (bag.__courseAvatarOcclusion === measure) delete bag.__courseAvatarOcclusion;
+    };
+  }, [camera, scene]);
 
   useEffect(() => {
     if (!import.meta.env.DEV || !lookSource) return;
