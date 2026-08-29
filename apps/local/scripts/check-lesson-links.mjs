@@ -15,9 +15,9 @@
  * - Section target: `[[lesson:target#sectionId]]` checks that the section exists.
  *
  * Exit codes:
- * - 0: PASS, or SKIP when this machine has no local studies shelf;
+ * - 0: PASS;
  * - 1: FAIL, content has broken links or ambiguous IDs;
- * - 2: ERROR, the check could not inspect its configured source.
+ * - 2: ERROR, the check has no source or could not inspect its configured source.
  *
  * Usage:
  *   node apps/local/scripts/check-lesson-links.mjs [study]
@@ -311,8 +311,8 @@ async function main() {
     ? resolveStudiesRoot(resolve(args.studiesRoot))
     : readConfiguredStudiesRoot();
   if (!existsSync(studiesRoot)) {
-    console.log(`SKIP: no local course source at ${studiesRoot}; nothing to scan.`);
-    return 0;
+    console.error(`ERROR: no course source at ${studiesRoot}; cannot scan.`);
+    return 2;
   }
 
   const studies = args.study
@@ -321,8 +321,8 @@ async function main() {
         existsSync(join(studiesRoot, studyId, "study.json")),
       );
   if (studies.length === 0) {
-    console.log(`SKIP: no study manifests under ${studiesRoot}; nothing to scan.`);
-    return 0;
+    console.error(`ERROR: no study manifests under ${studiesRoot}; cannot scan.`);
+    return 2;
   }
   if (args.study && !existsSync(join(studiesRoot, args.study, "study.json"))) {
     console.error(

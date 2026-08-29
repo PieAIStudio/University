@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "unit-two",
+  "title": "[fixture] Target unit",
+  "objective": "Hold the synthetic target lesson.",
+  "prerequisiteUnitIds": ["unit-one"],
+  "lessonIds": ["target-lesson"],
+  "status": "active"
+}

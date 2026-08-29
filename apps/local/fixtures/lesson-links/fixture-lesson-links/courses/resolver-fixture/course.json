@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "resolver-fixture",
+  "title": "[fixture] Resolver paths",
+  "description": "Synthetic structure for the lesson-link check.",
+  "audience": "Automated verification only",
+  "objectives": ["Resolve one synthetic cross-unit link."],
+  "unitIds": ["unit-one", "unit-two"],
+  "status": "active",
+  "currency": "follow-ref",
+  "prerequisiteCourseIds": [],
+  "trackId": null,
+  "createdAt": "2026-08-29T00:00:00.000Z",
+  "updatedAt": "2026-08-29T00:00:00.000Z"
+}
