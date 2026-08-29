@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-import { test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { contrastRatio } from "../scripts/check-contrast.mjs";
 import { ISLAND_LOOK_SHOT_IDS } from "../packages/world/src/island/island-look.js";
@@ -18,10 +18,10 @@ const SHOT_IDS = MATRIX_MODE
   : ISLAND_LOOK_SHOT_IDS;
 const VIEWPORTS = MATRIX_MODE
   ? [{ name: "desktop", width: 1440, height: 900 }]
-  : [
+  : ([
       { name: "desktop", width: 1440, height: 900 },
       { name: "mobile", width: 390, height: 844 },
-    ] as const;
+    ] as const);
 const OUTPUT_DIR = resolve(
   process.cwd(),
   process.env.ISLAND_LOOK_OUTPUT_DIR ?? "SHOTS/island-look",
@@ -135,6 +135,251 @@ function informational(metric: string, value: unknown): MetricEntry {
   return { metric, value, threshold: null, pass: true };
 }
 
+type RatchetMode = "min" | "max" | "range";
+type RatchetBaseline = Readonly<Record<string, number>>;
+
+/**
+ * Fixed-pressure baselines captured from the unchanged scene on 2026-08-29.
+ * These are observations, not replacement targets: `pass` below still reports
+ * the existing look contract, so a red metric remains red-today. The ratchet
+ * only prevents a later run from moving farther in the bad direction.
+ */
+const ISLAND_LOOK_RATCHET_MODES: Readonly<Record<string, RatchetMode>> = {
+  sceneLinearRange: "min",
+  landMedianLightness: "range",
+  landP95Lightness: "min",
+  landLightnessRise: "min",
+  backgroundLightnessSpread: "min",
+  grassLightnessSpread: "min",
+  grassLightnessP95: "min",
+  lightnessP2: "max",
+  lightnessP98: "min",
+  lightnessStdDev: "min",
+  grassHueCount: "min",
+  grassHueSpread: "min",
+  accentArea: "range",
+  keyToFillRatio: "min",
+  domLabelContrastMin: "min",
+  propsPerLessonNode: "min",
+  rimPropShare: "min",
+  landCoverage: "min",
+  nodeOcclusionShare: "max",
+  worldPropsPerIsland: "max",
+};
+
+const ISLAND_LOOK_RATCHET: Readonly<Record<string, RatchetBaseline>> = {
+  "course-design/desktop": {
+    sceneLinearRange: 6.211,
+    landMedianLightness: 57.8213,
+    landP95Lightness: 77.8887,
+    landLightnessRise: 20.0674,
+    backgroundLightnessSpread: 31.9561,
+    grassLightnessSpread: 39.8256,
+    grassLightnessP95: 76.2346,
+    lightnessP2: 35.9036,
+    lightnessP98: 80.3646,
+    lightnessStdDev: 13.1015,
+    grassHueCount: 9,
+    grassHueSpread: 120,
+    accentArea: 0.0206,
+    keyToFillRatio: 5.3608,
+    domLabelContrastMin: 1.3002,
+    propsPerLessonNode: 7.7073,
+    rimPropShare: 0.2753,
+    landCoverage: 0.4619,
+    nodeOcclusionShare: 0,
+  },
+  "course-near/desktop": {
+    sceneLinearRange: 16.447,
+    landMedianLightness: 46.5314,
+    landP95Lightness: 71.8745,
+    landLightnessRise: 25.3432,
+    backgroundLightnessSpread: 16.2235,
+    grassLightnessSpread: 49.0739,
+    grassLightnessP95: 71.8121,
+    lightnessP2: 22.2714,
+    lightnessP98: 76.8166,
+    lightnessStdDev: 14.7605,
+    grassHueCount: 9,
+    grassHueSpread: 119.6667,
+    accentArea: 0.0003,
+    keyToFillRatio: 5.3608,
+    domLabelContrastMin: 1.049,
+    propsPerLessonNode: 7.7073,
+    rimPropShare: 0.2753,
+    landCoverage: 0.9162,
+    nodeOcclusionShare: 0,
+  },
+  "course-far/desktop": {
+    sceneLinearRange: 9.632,
+    landMedianLightness: 50.7658,
+    landP95Lightness: 76.5469,
+    landLightnessRise: 25.7811,
+    backgroundLightnessSpread: 53.5292,
+    grassLightnessSpread: 49.5804,
+    grassLightnessP95: 77.9585,
+    lightnessP2: 26.6745,
+    lightnessP98: 92.067,
+    lightnessStdDev: 16.1706,
+    grassHueCount: 9,
+    grassHueSpread: 120,
+    accentArea: 0.0048,
+    keyToFillRatio: 5.3608,
+    domLabelContrastMin: 1.259,
+    propsPerLessonNode: 7.7073,
+    rimPropShare: 0.2753,
+    landCoverage: 0.6466,
+    nodeOcclusionShare: 0,
+  },
+  "world-design/desktop": {
+    sceneLinearRange: 2.907,
+    landMedianLightness: 48.7604,
+    landP95Lightness: 77.0935,
+    landLightnessRise: 28.3331,
+    backgroundLightnessSpread: 47.6364,
+    grassLightnessSpread: 56.0291,
+    grassLightnessP95: 91.5368,
+    lightnessP2: 34.6623,
+    lightnessP98: 92.0102,
+    lightnessStdDev: 14.315,
+    grassHueCount: 9,
+    grassHueSpread: 120,
+    accentArea: 0.0054,
+    keyToFillRatio: 5.3608,
+    domLabelContrastMin: 12.6155,
+    worldPropsPerIsland: 8,
+  },
+  "course-design/mobile": {
+    sceneLinearRange: 3.272,
+    landMedianLightness: 74.854,
+    landP95Lightness: 82.8195,
+    landLightnessRise: 7.9656,
+    backgroundLightnessSpread: 37.4549,
+    grassLightnessSpread: 32.5121,
+    grassLightnessP95: 78.4387,
+    lightnessP2: 37.5429,
+    lightnessP98: 82.9636,
+    lightnessStdDev: 14.5584,
+    grassHueCount: 9,
+    grassHueSpread: 120,
+    accentArea: 0.0896,
+    keyToFillRatio: 5.3608,
+    domLabelContrastMin: 1.2522,
+    propsPerLessonNode: 7.7073,
+    rimPropShare: 0.2753,
+    landCoverage: 0.4209,
+    nodeOcclusionShare: 0,
+  },
+  "course-near/mobile": {
+    sceneLinearRange: 21.529,
+    landMedianLightness: 47.825,
+    landP95Lightness: 77.0391,
+    landLightnessRise: 29.2141,
+    backgroundLightnessSpread: 27.5155,
+    grassLightnessSpread: 48.1151,
+    grassLightnessP95: 70.3865,
+    lightnessP2: 22.2254,
+    lightnessP98: 81.7453,
+    lightnessStdDev: 16.6698,
+    grassHueCount: 9,
+    grassHueSpread: 119.6341,
+    accentArea: 0.0274,
+    keyToFillRatio: 5.3608,
+    domLabelContrastMin: 1.1724,
+    propsPerLessonNode: 7.7073,
+    rimPropShare: 0.2753,
+    landCoverage: 0.9601,
+    nodeOcclusionShare: 0,
+  },
+  "course-far/mobile": {
+    sceneLinearRange: 11.099,
+    landMedianLightness: 48.4938,
+    landP95Lightness: 82.1279,
+    landLightnessRise: 33.6341,
+    backgroundLightnessSpread: 35.5042,
+    grassLightnessSpread: 45.6111,
+    grassLightnessP95: 73.2836,
+    lightnessP2: 25.4694,
+    lightnessP98: 84.346,
+    lightnessStdDev: 16.8114,
+    grassHueCount: 9,
+    grassHueSpread: 120,
+    accentArea: 0.0659,
+    keyToFillRatio: 5.3608,
+    domLabelContrastMin: 2.1876,
+    propsPerLessonNode: 7.7073,
+    rimPropShare: 0.2753,
+    landCoverage: 0.8273,
+    nodeOcclusionShare: 0,
+  },
+  "world-design/mobile": {
+    sceneLinearRange: 3.039,
+    landMedianLightness: 80.4531,
+    landP95Lightness: 85.7285,
+    landLightnessRise: 5.2754,
+    backgroundLightnessSpread: 34.5319,
+    grassLightnessSpread: 40.192,
+    grassLightnessP95: 74.8088,
+    lightnessP2: 34.4671,
+    lightnessP98: 83.5046,
+    lightnessStdDev: 12.9957,
+    grassHueCount: 9,
+    grassHueSpread: 120,
+    accentArea: 0.3923,
+    keyToFillRatio: 5.3608,
+    domLabelContrastMin: 13.4513,
+    worldPropsPerIsland: 8,
+  },
+};
+
+function ratchetPass(metric: MetricEntry, baseline: number): boolean {
+  if (typeof metric.value !== "number") return false;
+  const mode = ISLAND_LOOK_RATCHET_MODES[metric.metric];
+  if (!mode) throw new Error(`Missing island-look ratchet direction for ${metric.metric}`);
+  if (mode === "min") return metric.value >= baseline;
+  if (mode === "max") return metric.value <= baseline;
+
+  const threshold = metric.threshold as { min?: unknown; max?: unknown };
+  if (typeof threshold.min !== "number" || typeof threshold.max !== "number") {
+    throw new Error(`Range ratchet needs a bounded contract for ${metric.metric}`);
+  }
+  if (baseline < threshold.min) {
+    return metric.value >= baseline && metric.value <= threshold.max;
+  }
+  if (baseline > threshold.max) {
+    return metric.value >= threshold.min && metric.value <= baseline;
+  }
+  const baselineMargin = Math.min(baseline - threshold.min, threshold.max - baseline);
+  const currentMargin = Math.min(metric.value - threshold.min, threshold.max - metric.value);
+  return (
+    metric.value >= threshold.min &&
+    metric.value <= threshold.max &&
+    currentMargin >= baselineMargin
+  );
+}
+
+function assertIslandLookRatchet(
+  shot: string,
+  viewportName: string,
+  metrics: readonly MetricEntry[],
+): void {
+  const key = `${shot}/${viewportName}`;
+  const baseline = ISLAND_LOOK_RATCHET[key];
+  if (!baseline) throw new Error(`Missing island-look ratchet baseline for ${key}`);
+
+  for (const metric of metrics) {
+    if (metric.threshold === null) continue;
+    const pinned = baseline[metric.metric];
+    if (typeof pinned !== "number") {
+      throw new Error(`Missing island-look ratchet value for ${key}/${metric.metric}`);
+    }
+    expect(
+      ratchetPass(metric, pinned),
+      `${key}/${metric.metric} regressed: observed ${String(metric.value)}, pinned ${pinned}`,
+    ).toBe(true);
+  }
+}
+
 function metricsFor(
   report: IslandLookBrowserReport,
   sceneLinearRange: number | null,
@@ -205,7 +450,8 @@ function metricsFor(
     informational("coursePropCount", code.coursePropCount),
   ];
 
-  if (code.detail !== "course") common.push(informational("landCoverage", pixels?.landCoverage ?? null));
+  if (code.detail !== "course")
+    common.push(informational("landCoverage", pixels?.landCoverage ?? null));
 
   if (code.detail === "course") {
     common.push(
@@ -220,11 +466,7 @@ function metricsFor(
         to show many courses at once, so pushing its camera in to satisfy a
         coverage floor would trade information for a number.
       */
-      atLeast(
-        "landCoverage",
-        pixels?.landCoverage ?? null,
-        ISLAND_LOOK_CONTRACT.landCoverageMin,
-      ),
+      atLeast("landCoverage", pixels?.landCoverage ?? null, ISLAND_LOOK_CONTRACT.landCoverageMin),
       atMost("nodeOcclusionShare", code.nodeOcclusionShare, ISLAND_LOOK_CONTRACT.nodeOcclusionMax),
     );
   } else {
@@ -239,10 +481,7 @@ function metricsFor(
   return common;
 }
 
-function shotUrl(
-  shot: (typeof SHOT_IDS)[number],
-  sample?: CaptureSample,
-): string {
+function shotUrl(shot: (typeof SHOT_IDS)[number], sample?: CaptureSample): string {
   const params = new URLSearchParams({
     shot,
     post: "off",
@@ -396,7 +635,7 @@ async function screenshotCanvasOnly(page: Page, canvas: Locator, path: string): 
   }
 }
 
-test.describe("J island look judge · non-blocking measurement", () => {
+test.describe("J island look judge · fixed-pressure ratchet", () => {
   test("固定镜头 × 桌面/手机，输出画布 PNG 与逐项 metrics.json", async ({ page }) => {
     test.setTimeout(MATRIX_MODE ? 90 * 60_000 : 12 * 180_000);
     mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -475,6 +714,7 @@ test.describe("J island look judge · non-blocking measurement", () => {
               pass: pass ? "PASS" : "RED",
             })),
           );
+          assertIslandLookRatchet(shot, viewport.name, metrics);
           if (!deterministic) {
             console.warn(`island look freeze drift: ${shot}/${viewport.name}`);
           }
