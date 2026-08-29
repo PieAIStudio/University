@@ -11,12 +11,17 @@
  * different lexicon import — and the two lexicon files were the same 90 KB.
  */
 
-import { recapCardKeyOf } from "@pieai/university-core";
+import { loadCard, recapCardKeyOf, RATING, review } from "@pieai/university-core";
 import type { LexiconEntry, ProgressPort, RatingName } from "@pieai/university-core";
 
 import type { ContentPort } from "../content/port.js";
 import type { PriorAttempt, ReviewCardLocator } from "../view/lesson-view.js";
-import type { ReviewCardPort, VocabularyDueWord, VocabularyReviewPort } from "./ports.js";
+import type {
+  ReviewCardPort,
+  ReviewRatingPreview,
+  VocabularyDueWord,
+  VocabularyReviewPort,
+} from "./ports.js";
 
 const RATINGS: readonly RatingName[] = ["again", "hard", "good", "easy"];
 
@@ -55,6 +60,21 @@ function assertSupportedReviewCard(card: ReviewCardLocator): asserts card is Sup
 
 export function createReviewCardPort(content: ContentPort, progress: ProgressPort): ReviewCardPort {
   return {
+    preview(card) {
+      assertSupportedReviewCard(card);
+      const stored = progress.snapshot().cards[cardKeyOf(card)];
+      if (!stored) return null;
+      const at = new Date();
+      const intervalFor = (rating: RatingName): number =>
+        review(loadCard(stored.fsrs), RATING[rating], at).due.getTime() - at.getTime();
+      return {
+        again: intervalFor("again"),
+        hard: intervalFor("hard"),
+        good: intervalFor("good"),
+        easy: intervalFor("easy"),
+      } satisfies ReviewRatingPreview;
+    },
+
     async reveal(card: ReviewCardLocator, input) {
       assertSupportedReviewCard(card);
       const body = await content.card(card);

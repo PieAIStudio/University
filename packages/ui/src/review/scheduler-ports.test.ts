@@ -1,12 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   createMemoryPersistence,
   createProgressPort,
+  loadCard,
   recapCardKeyOf,
   RECAP_CARD_ID,
+  RATING,
+  review,
   type CardProgress,
   type LexiconEntry,
   type ProgressPort,
+  type RatingName,
 } from "@pieai/university-core";
 
 import type { CardBody, ContentPort } from "../content/port.js";
@@ -192,6 +196,31 @@ describe("one review card port for both campuses", () => {
     const before = progress.snapshot().cards[cardKeyOf(CARD)]?.dueAt ?? 0;
     const rated = await port.rate(CARD, 3);
     expect(Date.parse(rated.dueAt)).toBeGreaterThan(before);
+  });
+
+  it("previews every rating from the same FSRS state without writing it", () => {
+    const at = new Date("2026-08-29T12:00:00.000Z");
+    vi.useFakeTimers();
+    vi.setSystemTime(at);
+    try {
+      const progress = enrolled();
+      const port = createReviewCardPort(shelf(), progress);
+      const before = progress.snapshot();
+      const stored = before.cards[cardKeyOf(CARD)]!;
+      const preview = port.preview(CARD);
+      const expected = (rating: RatingName): number =>
+        review(loadCard(stored.fsrs), RATING[rating], at).due.getTime() - at.getTime();
+
+      expect(preview).toEqual({
+        again: expected("again"),
+        hard: expected("hard"),
+        good: expected("good"),
+        easy: expected("easy"),
+      });
+      expect(progress.snapshot()).toEqual(before);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("refuses to invent a due date for a card the document does not hold", async () => {

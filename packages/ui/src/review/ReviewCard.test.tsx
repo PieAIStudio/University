@@ -15,7 +15,7 @@ import type {
   PriorAttempt,
   RecapReviewCardLocator,
 } from "../view/lesson-view.js";
-import type { ReviewCardPort } from "./ports.js";
+import type { ReviewCardPort, ReviewRatingPreview } from "./ports.js";
 import { ReviewCard } from "./ReviewCard.js";
 
 const CARD: RecapReviewCardLocator = {
@@ -44,6 +44,13 @@ const HISTORY: PriorAttempt = {
   answer: "第一次复述。",
   revealedAt: "2026-08-25T00:00:00.000Z",
   contentRevision: 1,
+};
+
+const PREVIEW: ReviewRatingPreview = {
+  again: 60_000,
+  hard: 6 * 60_000,
+  good: 10 * 60_000,
+  easy: 8 * 86_400_000,
 };
 
 let container: HTMLDivElement;
@@ -99,7 +106,13 @@ describe("ReviewCard recap path", () => {
     const onReviewed = vi.fn(async () => undefined);
 
     await act(async () => {
-      root.render(<ReviewCard card={CARD} review={{ reveal, rate }} onReviewed={onReviewed} />);
+      root.render(
+        <ReviewCard
+          card={CARD}
+          review={{ preview: () => PREVIEW, reveal, rate }}
+          onReviewed={onReviewed}
+        />,
+      );
     });
 
     expect(container.textContent).toContain("讲一遍");
@@ -126,6 +139,10 @@ describe("ReviewCard recap path", () => {
     expect(container.textContent).toContain("困难");
     expect(container.textContent).toContain("良好");
     expect(container.textContent).toContain("简单");
+    expect(buttonWith("重来 · 1 分钟")).toBeTruthy();
+    expect(buttonWith("困难 · 6 分钟")).toBeTruthy();
+    expect(buttonWith("良好 · 10 分钟")).toBeTruthy();
+    expect(buttonWith("简单 · 8 天")).toBeTruthy();
 
     const help = await openRatingHelp();
     expect(help.textContent).toContain("这不是判对错");
@@ -153,7 +170,7 @@ describe("ReviewCard recap path", () => {
       root.render(
         <ReviewCard
           card={COURSE_CARD}
-          review={{ reveal, rate }}
+          review={{ preview: () => PREVIEW, reveal, rate }}
           onReviewed={async () => undefined}
         />,
       );
@@ -163,6 +180,11 @@ describe("ReviewCard recap path", () => {
     await act(async () => {
       buttonWith("揭示答案")?.click();
     });
+
+    expect(buttonWith("重来 · 1 分钟")).toBeTruthy();
+    expect(buttonWith("困难 · 6 分钟")).toBeTruthy();
+    expect(buttonWith("良好 · 10 分钟")).toBeTruthy();
+    expect(buttonWith("简单 · 8 天")).toBeTruthy();
 
     const help = await openRatingHelp();
     expect(help.textContent).toContain("这不是判对错");

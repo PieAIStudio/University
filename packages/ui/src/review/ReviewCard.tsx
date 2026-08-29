@@ -17,7 +17,8 @@ import {
   buildCardRevealPayload,
   createRetrievalAttemptDraft,
 } from "../view/lesson-view.js";
-import type { ReviewCardPort } from "./ports.js";
+import type { ReviewCardPort, ReviewRatingPreview } from "./ports.js";
+import { reviewIntervalLabel } from "./review-interval.js";
 
 export function ReviewCard({
   card,
@@ -171,6 +172,14 @@ export function ReviewCard({
   }
 
   const isRecap = card.kind === "recap-card";
+  const ratingPreview =
+    revealed && nextDue === null && review && card.kind !== "knowledge-card"
+      ? review.preview(card)
+      : null;
+  const ratingLabel = (rating: keyof ReviewRatingPreview, label: string): string => {
+    const interval = ratingPreview?.[rating];
+    return interval === undefined ? label : `${label} · ${reviewIntervalLabel(interval)}`;
+  };
 
   return (
     <GamePanel className="review-card" tone="strong">
@@ -327,16 +336,16 @@ export function ReviewCard({
                 </span>
               </Tip>
               <GameButton variant="danger" onClick={() => void rate(1)} disabled={pending}>
-                重来
+                {ratingLabel("again", "重来")}
               </GameButton>
               <GameButton variant="ghost" onClick={() => void rate(2)} disabled={pending}>
-                困难
+                {ratingLabel("hard", "困难")}
               </GameButton>
               <GameButton variant="secondary" onClick={() => void rate(3)} disabled={pending}>
-                良好
+                {ratingLabel("good", "良好")}
               </GameButton>
               <GameButton variant="success" onClick={() => void rate(4)} disabled={pending}>
-                简单
+                {ratingLabel("easy", "简单")}
               </GameButton>
             </div>
           )}

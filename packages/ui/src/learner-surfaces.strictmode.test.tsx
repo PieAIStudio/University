@@ -81,6 +81,7 @@ const REVIEW_CARD = {
 };
 
 const REVIEW_PORT: ReviewCardPort = {
+  preview: () => ({ again: 60_000, hard: 6 * 60_000, good: 10 * 60_000, easy: 8 * 86_400_000 }),
   reveal: async () => ({ back: "用户必须能看见并理解正文。" }),
   rate: async () => ({ dueAt: "2026-08-30T00:00:00.000Z" }),
 };
