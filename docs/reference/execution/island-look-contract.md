@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-08-28
+last_reviewed: 2026-08-29
 domain: web3d
 tags:
   - island
@@ -677,3 +677,44 @@ ADR-0009 早就写了世界尺度只画「剪影 + 一道明暗断裂 + 一个�
 行星页不要用「暗像素百分比」这把尺子。行星坐在黑色太空背景上，
 不管光照怎么改这个数都在 79% 左右——**它量的是天空，不是行星**。
 裁出球体、看明暗交界线（terminator）。
+
+## 九、DOM 标签对比度复核（2026-08-29）
+
+R2 的门槛是 DOM 标签实际投影到画面像素后的最低对比度 **4.5:1**。
+这次问题不是文字颜色本身太暗，而是 `.label--icon` 与 `.label--unit` 原先把背景清空，
+所以同一枚白字会在海、沙地、草和阴影上连续失去自己的可读地面。标签仍然是 DOM，
+没有把文字搬进 WebGL，也没有动场景光照、地形、相机或任何 ratchet 基线。
+
+固定种子 `foundations-before-zero` 的完整判官结果如下；before 是改动前的 main，after 是
+给透明图标/单元标签加紧凑 token surface 后的结果：
+
+| shot | viewport | before | after |
+| --- | --- | ---: | ---: |
+| course-design | 1440×900 | 1.3002 | **8.6739** |
+| course-near | 1440×900 | 1.0490 | **7.8200** |
+| course-far | 1440×900 | 1.2590 | **8.5492** |
+| world-design | 1440×900 | 12.6155 | **12.6155** |
+| course-design | 390×844 | 1.2522 | **8.5282** |
+| course-near | 390×844 | 1.1724 | **10.2261** |
+| course-far | 390×844 | 2.1876 | **10.5911** |
+| world-design | 390×844 | 13.4513 | **13.4513** |
+
+### 采用的标签 surface
+
+`apps/university/src/styles.css` 只对原本透明的 `.label--icon` / `.label--unit` 使用
+SwimmerUIKit 已有的 `--game-ui-overlay-glass-bg`、`--game-ui-overlay-glass-text`、
+`--game-ui-radius-control` 与 `--game-ui-scrim-strong` token：图标是带少量内边距的圆形
+标记，单元标题是紧凑圆角胶囊，阴影只做边缘分离，且关闭 live WebGL 上的 blur。这样
+surface 随标签移动，只占文字自身的面积；地图仍然是主视觉，原有 lesson/study surface
+没有改动。
+
+### 被拒绝的方案
+
+曾把所有透明标签临时换成 `--game-ui-overlay-glass-bg-strong` 的实心方块并加大内边距。
+它确实能提高读数，但移动端截图中图标变成醒目的黑色方块、单元名变成黑条，路径被盖成
+一串 UI 印章，违背地图的空间感，因此不合并。证据保留在
+`SHOTS/island-look/rejected-solid-plate-mobile.png`。只加 text halo 也没有采用：它对场景
+像素的最坏背景没有提供稳定的地面，不能单独满足这把实际像素尺子。
+
+详细的前后截图路径与验证记录见根目录的
+[LABEL-CONTRAST.md](../../../LABEL-CONTRAST.md)。

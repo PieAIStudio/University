@@ -968,12 +968,17 @@ button.label:focus-visible {
   opacity: 1 !important;
 }
 
-.label--icon {
-  padding: 0;
-  background: none;
+/* A compact token surface keeps markers readable without becoming a map plate. */
+.label--icon,
+.label--unit {
+  background: var(--game-ui-overlay-glass-bg);
   backdrop-filter: none;
-  box-shadow: none;
-  border-radius: 0;
+  box-shadow: 0 1px 6px color-mix(in srgb, var(--game-ui-scrim-strong) 36%, transparent);
+  border-radius: var(--game-ui-radius-control, 10px);
+}
+
+.label--icon {
+  padding: 0.12rem 0.26rem;
   max-width: none;
   overflow: visible;
   font-size: clamp(1.35rem, 3.4vw, 2.25rem);
@@ -987,14 +992,10 @@ button.label:focus-visible {
 }
 
 .label--unit {
-  padding: 0;
-  background: none;
-  backdrop-filter: none;
-  box-shadow: none;
-  border-radius: 0;
+  padding: 0.12rem 0.45rem;
   font-size: 0.78rem;
   letter-spacing: 0.08em;
-  color: color-mix(in srgb, var(--game-ui-overlay-glass-text) 78%, transparent);
+  color: var(--game-ui-overlay-glass-text);
   text-shadow: 0 1px 4px var(--game-ui-scrim-strong);
   max-width: 200px;
   overflow: hidden;
