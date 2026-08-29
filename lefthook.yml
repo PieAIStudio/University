@@ -16,3 +16,21 @@ commit-msg:
   commands:
     doc-gov-commit-msg:
       run: pnpm doc-gov verify-commit-msg "{1}"
+
+# The browser e2e suite is the only thing that has ever caught a learner-blocking
+# defect in this app, and nothing ran it: not verify, not CI, not a hook. It
+# cannot run in CI either:
+# apps/university/content is 15 MB of generated delivery content, gitignored,
+# and rebuilt from course source that only the author's machine has. A GitHub
+# runner has neither, so a CI job for it would be permanently red, which teaches
+# people to ignore CI.
+#
+# So the gate lives where the source lives. Push is the right boundary - it is
+# the moment the code stops being private - and the path filter keeps a docs-only
+# push free.
+pre-push:
+  parallel: false
+  commands:
+    browser-e2e:
+      glob: "{apps/local/**,apps/university/**,packages/**,e2e/**,package.json,pnpm-lock.yaml}"
+      run: pnpm e2e
