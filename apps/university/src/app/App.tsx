@@ -98,7 +98,7 @@ import { CourseIsland } from "./CourseIsland.js";
 import { PlanetRail } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { useCourseProgress } from "./course-progress";
-import { useMinWidth } from "./shell-route";
+import { shellConfigForView, useMinWidth } from "./shell-route";
 import { useProfileStats } from "./profile-stats";
 import { useRoute } from "./use-route";
 import { useShelf } from "./use-shelf";
@@ -188,6 +188,7 @@ export function App() {
       courseId: lookSeedNode.courseId,
     } as const;
   }, [lookDebug?.shot, lookSeedNode, routeView]);
+  const shellConfig = shellConfigForView(view);
   /**
    * The study the camera is looking at. `undefined` means "not chosen yet" —
    * fall back to the learner's next course so the name, the sky and the eye
@@ -1020,18 +1021,20 @@ export function App() {
           one place a real difference between them is allowed to show.
         */
           {...(AUTHORING ? { extraMoreItems: [STUDIO_MORE_ITEM] } : {})}
-          counters={counters}
+          counters={shellConfig.showLearnerChrome ? counters : undefined}
           identity={
-            <>
-              <RailIdentity
-                recipe={avatarRecipe}
-                signedIn={avatarSignedIn}
-                onOpen={() => setView({ kind: "me" })}
-              />
-              <LevelProgress totalXp={progress.totalXp} rail />
-            </>
+            shellConfig.showLearnerChrome ? (
+              <>
+                <RailIdentity
+                  recipe={avatarRecipe}
+                  signedIn={avatarSignedIn}
+                  onOpen={() => setView({ kind: "me" })}
+                />
+                <LevelProgress totalXp={progress.totalXp} rail />
+              </>
+            ) : null
           }
-          aside={aside}
+          aside={shellConfig.showContextAside ? aside : undefined}
           asideLabel={view.kind === "settings" ? "设置" : view.kind === "planet" ? "选课" : "今天"}
         >
           <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />

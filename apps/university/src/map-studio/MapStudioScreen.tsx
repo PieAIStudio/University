@@ -1,5 +1,5 @@
 import { useControls, useCreateStore } from "leva";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { progressSourceOf, type ProgressPort } from "@pieai/university-core";
 import {
   GameBadge,
@@ -87,8 +87,108 @@ function formatBytes(value: number | null): string {
   return `${value.toLocaleString("zh-CN")} B`;
 }
 
-function sourceText(source: { readonly file: string; readonly export: string }): string {
-  return `${source.file} · ${source.export}`;
+const ZERO_WIDTH_BREAK = "\u200B";
+
+interface SourcePathPart {
+  readonly separator: string;
+  readonly segment: string;
+  readonly extension?: string;
+}
+
+function sourcePathParts(path: string): readonly SourcePathPart[] {
+  const segments = path.split("/");
+  return segments.map((segment, index) => {
+    const extensionIndex = index === segments.length - 1 ? segment.lastIndexOf(".") : -1;
+    return {
+      separator: index > 0 ? "/" : "",
+      segment: extensionIndex > 0 ? segment.slice(0, extensionIndex) : segment,
+      ...(extensionIndex > 0 ? { extension: segment.slice(extensionIndex) } : {}),
+    };
+  });
+}
+
+function breakableSourcePath(path: string): string {
+  return sourcePathParts(path)
+    .map(
+      ({ separator, segment, extension }) =>
+        `${separator}${separator ? ZERO_WIDTH_BREAK : ""}${segment}${extension ? `${ZERO_WIDTH_BREAK}${extension}` : ""}`,
+    )
+    .join("");
+}
+
+function SourcePath({ path }: { readonly path: string }) {
+  return (
+    <>
+      {sourcePathParts(path).map(({ separator, segment, extension }, index) => {
+        return (
+          <Fragment key={`${index}-${separator}-${segment}-${extension ?? ""}`}>
+            {separator ? (
+              <>
+                {separator}
+                <wbr />
+              </>
+            ) : null}
+            <span className="map-studio__source-segment">{segment}</span>
+            {extension ? (
+              <>
+                <wbr />
+                <span className="map-studio__source-segment">{extension}</span>
+              </>
+            ) : null}
+          </Fragment>
+        );
+      })}
+    </>
+  );
+}
+
+function SourceCode({ path }: { readonly path: string }) {
+  return (
+    <code>
+      <SourcePath path={path} />
+    </code>
+  );
+}
+
+function SourceReference({
+  source,
+  label,
+  className,
+}: {
+  readonly source: InspectorParameter["source"];
+  readonly label?: ReactNode;
+  readonly className?: string;
+}) {
+  return (
+    <span className={className ? `map-studio__source ${className}` : "map-studio__source"}>
+      {label}
+      <SourceCode path={source.file} />
+      <span aria-hidden="true">·</span>
+      <code>{source.export}</code>
+    </span>
+  );
+}
+
+function sourceText(source: InspectorParameter["source"]): string {
+  return `${breakableSourcePath(source.file)} · ${source.export}`;
+}
+
+function ModificationPreview({ text }: { readonly text: string }) {
+  const lines = text.split("\n");
+  return (
+    <pre>
+      {lines.map((line, index) => (
+        <Fragment key={`${index}-${line}`}>
+          {line.includes("/") && line === line.trim() && /\.[^/]+$/.test(line) ? (
+            <SourcePath path={line} />
+          ) : (
+            line
+          )}
+          {index < lines.length - 1 ? "\n" : null}
+        </Fragment>
+      ))}
+    </pre>
+  );
 }
 
 function layerTitle(layer: StudioLayer): string {
@@ -163,14 +263,7 @@ function changeValue(
 }
 
 function sourceLine(source: InspectorParameter["source"]): ReactNode {
-  return (
-    <span className="map-studio__source">
-      <span>出处</span>
-      <code>{source.file}</code>
-      <span>·</span>
-      <code>{source.export}</code>
-    </span>
-  );
+  return <SourceReference label={<span>出处</span>} source={source} />;
 }
 
 function ParameterRow({
@@ -229,11 +322,7 @@ function ColorStrip({ colors }: { readonly colors: readonly InspectorColorStop[]
             <strong>{color.label}</strong>
             <code>{color.hex}</code>
           </div>
-          <span className="map-studio__source map-studio__source--compact">
-            <code>{color.source.file}</code>
-            <span>·</span>
-            <code>{color.source.export}</code>
-          </span>
+          <SourceReference className="map-studio__source--compact" source={color.source} />
         </div>
       ))}
     </div>
@@ -253,13 +342,7 @@ function Metric({
     <div className="map-studio__metric">
       <span>{label}</span>
       <strong>{value}</strong>
-      {source ? (
-        <span className="map-studio__source map-studio__source--compact">
-          <code>{source.file}</code>
-          <span>·</span>
-          <code>{source.export}</code>
-        </span>
-      ) : null}
+      {source ? <SourceReference className="map-studio__source--compact" source={source} /> : null}
     </div>
   );
 }
@@ -280,13 +363,15 @@ function AssetCard({ asset }: { readonly asset: InspectorAsset }) {
         <div>
           <dt>运行时文件</dt>
           <dd>
-            <code>{asset.runtimePath ?? "无：程序化生成"}</code>
+            <SourceCode path={asset.runtimePath ?? "无：程序化生成"} />
           </dd>
         </div>
         <div>
           <dt>资源来源</dt>
           <dd>
-            <code>{asset.sourcePath ?? "packages/world/src/island/island-grass-render.tsx"}</code>
+            <SourceCode
+              path={asset.sourcePath ?? "packages/world/src/island/island-grass-render.tsx"}
+            />
           </dd>
         </div>
       </dl>
@@ -311,12 +396,7 @@ function AssetCard({ asset }: { readonly asset: InspectorAsset }) {
         </div>
         <span className="map-studio__readonly">只读</span>
       </div>
-      <span className="map-studio__source">
-        <span>技术出处</span>
-        <code>{asset.techniqueSource.file}</code>
-        <span>·</span>
-        <code>{asset.techniqueSource.export}</code>
-      </span>
+      <SourceReference label={<span>技术出处</span>} source={asset.techniqueSource} />
       {asset.note ? <p className="map-studio__asset-note">{asset.note}</p> : null}
     </article>
   );
@@ -392,13 +472,15 @@ function RecipePanel({
           <GameBadge>来自真实 palette</GameBadge>
         </div>
         <ColorStrip colors={description.terrain.colors} />
-        <span className="map-studio__source">
-          <span>网格三角形</span>
-          <strong>{formatNumber(description.terrain.geometryTriangles)}</strong>
-          <code>{description.terrain.geometrySource.file}</code>
-          <span>·</span>
-          <code>{description.terrain.geometrySource.export}</code>
-        </span>
+        <SourceReference
+          label={
+            <>
+              <span>网格三角形</span>
+              <strong>{formatNumber(description.terrain.geometryTriangles)}</strong>
+            </>
+          }
+          source={description.terrain.geometrySource}
+        />
       </GamePanel>
 
       <GamePanel className="map-studio__recipe" title="植被 / 装饰配方">
@@ -800,7 +882,10 @@ export function MapStudioScreen({
         <div className="map-studio__preview-column">
           <div className="map-studio__preview-header">
             <div>
-              <span className="map-studio__kicker">LIVE PREVIEW / {description.projection}</span>
+              <span className="map-studio__kicker">
+                LIVE PREVIEW /{" "}
+                {activeLayer === "planet" ? "研究项目选择器" : description.projection}
+              </span>
               <h2>{layerTitle(activeLayer)}</h2>
             </div>
             <div className="map-studio__context-fields">
@@ -886,8 +971,7 @@ export function MapStudioScreen({
               )}
             </div>
             <div className="map-studio__canvas-caption">
-              <span>场景实现</span>
-              <code>{sourceText(description.liveSource)}</code>
+              <SourceReference label={<span>场景实现</span>} source={description.liveSource} />
             </div>
           </div>
         </div>
@@ -904,6 +988,7 @@ export function MapStudioScreen({
             <strong>预览覆盖层</strong>
             <span>数值改动和资源替换只存在于这个页面，不会写回磁盘。</span>
           </div>
+          <p className="map-studio__inspector-scroll-hint">向下滚动查看更多配方</p>
           <RecipePanel
             description={description}
             controlValues={displayControlValues}
@@ -924,7 +1009,7 @@ export function MapStudioScreen({
             className="map-studio__recipe map-studio__modification"
             title="可直接交给 AI 的修改说明"
           >
-            <pre>{modificationText}</pre>
+            <ModificationPreview text={modificationText} />
           </GamePanel>
         </aside>
       </section>
