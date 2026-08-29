@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-29T08:40:39.828Z
+generated_at: 2026-08-29T12:39:56.506Z
 generator_version: doc-gov@0.9.9
-docs_count: 62
+docs_count: 63
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -402,6 +402,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-26
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-STRICTMODE-LEARNER-SMOKE-TESTS-MUST-ASSERT-NON-EMPTY-DRAWN-OUTPUT
+    path: docs/reference/learnings/workflow-issues/strictmode-learner-smoke-tests-must-assert-non-empty-drawn-output.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-29
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-WIDENING-EXERCISESCHEMA-KIND-BREAKS-LOCAL-RECOVERY-AND-COACHING-PACKETS
     path: docs/reference/learnings/workflow-issues/widening-exerciseschema-kind-breaks-local-recovery-and-coaching-packets.md

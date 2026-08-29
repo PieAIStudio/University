@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act } from "react";
+import { StrictMode, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -52,17 +52,48 @@ beforeEach(() => {
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
+  /*
+    LiquidGroup owns a self-scheduling frame loop. Running the callback
+    synchronously is useful here because it makes the SVG path observable in
+    the same act(), but nested frames must be dropped or this becomes infinite
+    recursion.
+  */
+  let insideFrame = false;
+  vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+    if (insideFrame) return 1;
+    insideFrame = true;
+    try {
+      callback(0);
+    } finally {
+      insideFrame = false;
+    }
+    return 1;
+  });
+  vi.stubGlobal("cancelAnimationFrame", () => undefined);
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
   playSound.mockClear();
 });
 
 afterEach(async () => {
   await act(async () => root.unmount());
   container.remove();
+  vi.unstubAllGlobals();
 });
 
 async function renderBlock(onNext?: () => void, onSolved?: () => void) {
   await act(async () => {
-    root.render(<ChoiceBlock exercise={EXERCISE} onNext={onNext} onSolved={onSolved} />);
+    root.render(
+      <StrictMode>
+        <ChoiceBlock exercise={EXERCISE} onNext={onNext} onSolved={onSolved} />
+      </StrictMode>,
+    );
   });
 }
 
@@ -145,6 +176,11 @@ describe("ChoiceBlock", () => {
     expect(
       container.querySelector(".choice-block__correct-merge [data-liquid-gooey-silhouette]"),
     ).toBeTruthy();
+    const blob = container.querySelector<SVGPathElement>(
+      ".choice-block__correct-merge [data-liquid-gooey-blob]",
+    );
+    expect(blob).not.toBeNull();
+    expect(blob?.getAttribute("d")?.trim()).toBeTruthy();
     expect(onSolved).toHaveBeenCalledTimes(1);
     const next = buttonWith(CHOICE_NEXT_LABEL);
     expect(next).toBeTruthy();
