@@ -23,10 +23,7 @@ import {
   type MeteredGradingOffer,
   type MeteredGradingResponse,
 } from "@pieai/university-core";
-import {
-  FREE_TIER_STRUCTURED_GRADING_QUOTA_POWER_UNITS_PER_DAY,
-  METERED_GRADING,
-} from "./config.js";
+import { METERED_GRADING } from "./config.js";
 
 const MAX_PROMPT_BYTES = 8 * 1024;
 const MAX_ANSWER_BYTES = 8 * 1024;
@@ -126,16 +123,11 @@ export interface FreeGradingQuotaRefund extends FreeGradingQuotaQuote {
  * or a serverless process-local counter.
  */
 export interface FreeGradingQuota {
-  quote(input: {
-    readonly userId: string;
-    readonly day: string;
-    readonly quotaPowerUnits: string;
-  }): Promise<FreeGradingQuotaQuote>;
+  quote(input: { readonly userId: string; readonly day: string }): Promise<FreeGradingQuotaQuote>;
   reserve(input: {
     readonly userId: string;
     readonly day: string;
     readonly amountPowerUnits: string;
-    readonly quotaPowerUnits: string;
     readonly idempotencyKey: string;
     readonly metadata: Readonly<Record<string, unknown>>;
   }): Promise<FreeGradingQuotaReservation>;
@@ -308,7 +300,6 @@ async function readGradingOffer(input: ReadGradingOfferInput): Promise<Response>
       freeQuote = await input.freeGradingQuota.quote({
         userId: input.identity.userId,
         day: input.day,
-        quotaPowerUnits: FREE_TIER_STRUCTURED_GRADING_QUOTA_POWER_UNITS_PER_DAY,
       });
     } catch {
       // A missing quota RPC must not prevent a paying learner from seeing a
@@ -539,7 +530,6 @@ async function handleFreeGrading(input: HandleFreeGradingInput): Promise<Respons
       userId: input.identity.userId,
       day: input.day,
       amountPowerUnits: METERED_GRADING.reservationPowerUnits,
-      quotaPowerUnits: FREE_TIER_STRUCTURED_GRADING_QUOTA_POWER_UNITS_PER_DAY,
       idempotencyKey: input.input.commandId,
       metadata: input.metadata,
     });
@@ -880,7 +870,6 @@ export function createSupabaseFreeGradingQuota(client: SupabaseClient): FreeGrad
     async quote(input) {
       const row = await quotaRpcRow(client, FREE_GRADING_QUOTA_RPC.quote, {
         p_day: input.day,
-        p_quota_power_units: input.quotaPowerUnits,
         p_user_id: input.userId,
       });
       return parseFreeQuotaQuote(row);
@@ -891,7 +880,6 @@ export function createSupabaseFreeGradingQuota(client: SupabaseClient): FreeGrad
         p_day: input.day,
         p_idempotency_key: input.idempotencyKey,
         p_metadata: input.metadata,
-        p_quota_power_units: input.quotaPowerUnits,
         p_user_id: input.userId,
       });
       return parseFreeQuotaReservation(row);

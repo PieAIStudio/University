@@ -2,10 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { METERED_GRADING_COST_POWER_UNITS } from "@pieai/university-core";
 
-import {
-  FREE_TIER_STRUCTURED_GRADING_QUOTA_POWER_UNITS_PER_DAY,
-  METERED_GRADING,
-} from "./config.js";
+import { METERED_GRADING } from "./config.js";
 
 describe("metered grading configuration", () => {
   it("keeps the model route, provisional prices, and wallet charge in one place", () => {
@@ -18,6 +15,5 @@ describe("metered grading configuration", () => {
       outputUsdPerMillion: 2.5,
       status: "待产品确认",
     });
-    expect(FREE_TIER_STRUCTURED_GRADING_QUOTA_POWER_UNITS_PER_DAY).toBe("400");
   });
 });
