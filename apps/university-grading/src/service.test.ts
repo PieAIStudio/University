@@ -88,7 +88,6 @@ describe("University free quota Supabase adapter", () => {
       quota.quote({
         userId: USER_ID,
         day: "2026-08-30",
-        quotaPowerUnits: "400",
       }),
     ).resolves.toMatchObject({ remainingPowerUnits: "400" });
     await expect(
@@ -96,7 +95,6 @@ describe("University free quota Supabase adapter", () => {
         userId: USER_ID,
         day: "2026-08-30",
         amountPowerUnits: "100",
-        quotaPowerUnits: "400",
         idempotencyKey: COMMAND_ID,
         metadata: { test: true },
       }),
@@ -127,6 +125,8 @@ describe("University free quota Supabase adapter", () => {
       "university_free_grading_quota_commit",
       "university_free_grading_quota_refund",
     ]);
+    expect(calls[0][1]).not.toHaveProperty("p_quota_power_units");
+    expect(calls[1][1]).not.toHaveProperty("p_quota_power_units");
   });
 });
 
@@ -450,7 +450,6 @@ describe("University metered grading service", () => {
     expect(quotaState.quote).toHaveBeenCalledWith({
       userId: USER_ID,
       day: "2026-08-26",
-      quotaPowerUnits: "400",
     });
   });
 

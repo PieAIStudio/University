@@ -18,16 +18,3 @@ export const METERED_GRADING = {
     status: "待产品确认",
   },
 } as const;
-
-/**
- * Daily free allowance for structured tier-two grading.
- *
- * The product decision budgets a serious learner's day at four open
- * answers that need semantic help. One request is currently estimated at 100
- * internal accounting units, so 4 × 100 = 400 internal units per UTC day.
- * That is enough to complete a normal day's learning without a surprise wall,
- * while the daily hard cap keeps the free tier from becoming an unmetered API.
- * Product keeps this cap fixed at four learner-facing AI grading attempts per
- * day.
- */
-export const FREE_TIER_STRUCTURED_GRADING_QUOTA_POWER_UNITS_PER_DAY = "400";
