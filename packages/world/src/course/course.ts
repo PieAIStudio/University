@@ -15,7 +15,7 @@
   `apps/university/src/content/library.ts` had grown a byte-identical second
   copy, kept in step by nobody in particular.
 */
-import { depthsFromPrerequisites } from "@pieai/university-core";
+import { depthsFromPrerequisites, type AuthoringFocus } from "@pieai/university-core";
 
 export { depthsFromPrerequisites };
 
@@ -118,15 +118,17 @@ export function courseNodesOf(
 /**
  * Whether this island sits outside the authoring shell's focus track.
  *
- * Null or empty focus means nothing is dimmed: the delivery shell never
- * passes one, and an authoring session with no pin is the whole campus.
+ * Null or empty authoring focus means nothing is dimmed: the learner shells
+ * never pass one, and an authoring session with no pin is the whole campus.
  */
 export function isFocusDimmed(
   node: { readonly studyId: string; readonly courseId: string },
-  focus: { readonly studyId: string; readonly courseIds: readonly string[] } | null | undefined,
+  authoringFocus: AuthoringFocus | null | undefined,
 ): boolean {
-  if (!focus || focus.courseIds.length === 0) return false;
-  return node.studyId !== focus.studyId || !focus.courseIds.includes(node.courseId);
+  if (!authoringFocus || authoringFocus.courseIds.length === 0) return false;
+  return (
+    node.studyId !== authoringFocus.studyId || !authoringFocus.courseIds.includes(node.courseId)
+  );
 }
 
 /**

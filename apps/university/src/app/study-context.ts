@@ -1,5 +1,6 @@
 import { type CourseProgress, type View } from "@pieai/university-core";
 import type { ShelfStudy } from "@pieai/university-ui/content/port.js";
+import type { LearnerNavigationFocus } from "@pieai/university-ui/navigation/StudySwitcher.js";
 import { nextCourse } from "@pieai/university-world/Maps.js";
 import type { CourseNode } from "@pieai/university-world/course.js";
 import { useCallback, useMemo, type Dispatch, type SetStateAction } from "react";
@@ -9,7 +10,7 @@ interface StudyContextOptions {
   readonly courseProgressForNode: (node: CourseNode) => CourseProgress | null;
   readonly focusedStudyId: string | null;
   readonly nodes: readonly CourseNode[] | null;
-  readonly setMapFocus: Dispatch<SetStateAction<string | null | undefined>>;
+  readonly setNavigationFocus: Dispatch<SetStateAction<LearnerNavigationFocus>>;
   readonly setView: (next: View) => void;
   readonly studies: readonly ShelfStudy[];
   readonly view: View;
@@ -20,7 +21,7 @@ export function useStudyContext({
   courseProgressForNode,
   focusedStudyId,
   nodes,
-  setMapFocus,
+  setNavigationFocus,
   setView,
   studies,
   view,
@@ -47,7 +48,7 @@ export function useStudyContext({
 
   const focusStudy = useCallback(
     (studyId: string) => {
-      setMapFocus(studyId);
+      setNavigationFocus(studyId);
       if (view.kind === "course" || view.kind === "lesson" || view.kind === "settled") {
         setView({ kind: "world" });
       }

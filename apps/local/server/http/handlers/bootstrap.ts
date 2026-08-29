@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 
-import type { LearningFocus } from "@pieai/university-core/domain/schemas.js";
+import type { AuthoringFocus } from "@pieai/university-core/domain/schemas.js";
 import {
   countCourseManifests,
   countSnapshotManifests,
@@ -15,10 +15,11 @@ import { buildLearningOverview } from "../../workflows/learning-overview.js";
 import type { Handler } from "./types.js";
 
 /**
- * `/api/health` and `/api/bootstrap`. The bootstrap branch needs the learning
- * focus from config; that is not on ServerContext, so this is a factory.
+ * `/api/health` and `/api/bootstrap`. The bootstrap branch needs the local
+ * authoring focus from config; that is not on ServerContext, so this is a
+ * factory.
  */
-export function createBootstrapHandler(focus: LearningFocus | undefined): Handler {
+export function createBootstrapHandler(authoringFocus: AuthoringFocus | undefined): Handler {
   return (ctx, request, response, url) => {
     if (request.method === "GET" && url.pathname === "/api/health") {
       sendJson(response, 200, { status: "ok", service: "university-local" });
@@ -67,7 +68,7 @@ export function createBootstrapHandler(focus: LearningFocus | undefined): Handle
 
       const overview = buildLearningOverview({
         studiesRoot: ctx.studiesRoot,
-        ...(focus ? { focus } : {}),
+        ...(authoringFocus ? { authoringFocus } : {}),
         getStore: (studyId) => ctx.getStore(studyId),
       });
       // AI hosts benefit from exact evidence and artifact paths. The browser
@@ -86,6 +87,8 @@ export function createBootstrapHandler(focus: LearningFocus | undefined): Handle
           dueCount: overview.dueCount,
           card: overview.card,
           nextLesson: browserNextLesson,
+          // `focus` is the versioned response key; its value is an authoring
+          // preference and never the learner's in-browser navigation choice.
           focus: overview.focus,
           issues: overview.issues,
         },

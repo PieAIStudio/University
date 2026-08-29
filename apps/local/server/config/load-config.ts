@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync } from "
 import { basename, dirname, isAbsolute, join, parse, relative, resolve } from "node:path";
 
 import {
-  LearningFocusSchema,
+  AuthoringFocusSchema,
   UniversityLocalConfigSchema,
   type UniversityLocalConfig,
 } from "@pieai/university-core/domain/schemas.js";
@@ -26,13 +26,13 @@ interface ResolvedUniversityLocalConfig extends UniversityLocalConfig {
 function readConfig(path: string): Partial<UniversityLocalConfig> {
   if (!existsSync(path)) return {};
   const raw = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
-  const { focus, ...others } = raw;
+  const { focus: focusValue, ...others } = raw;
   const rest = PartialUniversityLocalConfigSchema.omit({ focus: true }).parse(others);
-  if (focus === undefined) return rest;
-  const parsed = LearningFocusSchema.safeParse(focus);
+  if (focusValue === undefined) return rest;
+  const parsed = AuthoringFocusSchema.safeParse(focusValue);
   if (parsed.success) return { ...rest, focus: parsed.data };
-  // The focus only reorders what "今日学习" reaches for first. Refusing to start
-  // over it would make a preference written by an older version brick the tool
+  // The authoring focus only reorders what "今日学习" reaches for first.
+  // Refusing to start over it would make a preference written by an older version brick the tool
   // — including the `focus set` command that would repair it. Say so and carry
   // on unfocused.
   process.stderr.write(
@@ -139,15 +139,15 @@ export function loadUniversityLocalConfig(
   const projectRoot = realpathSync.native(options.projectRoot);
   const base = readConfig(resolve(projectRoot, BASE_CONFIG));
   const local = readConfig(resolve(projectRoot, LOCAL_CONFIG));
-  const focus = local.focus ?? base.focus;
+  const authoringFocus = local.focus ?? base.focus;
   const merged = UniversityLocalConfigSchema.parse({
     schemaVersion: local.schemaVersion ?? base.schemaVersion ?? 1,
     studiesRoot:
       env["UNIVERSITY_LOCAL_STUDIES_ROOT"] ?? local.studiesRoot ?? base.studiesRoot ?? "./studies",
-    // Focus is a personal preference, so the local file wins outright rather
-    // than merging field by field: a local focus naming only a study should
-    // clear a course pinned in the base file, not silently inherit it.
-    ...(focus ? { focus } : {}),
+    // The authoring focus is a personal preference, so the local file wins
+    // outright rather than merging field by field: a local focus naming only a
+    // study should clear a course pinned in the base file, not silently inherit it.
+    ...(authoringFocus ? { focus: authoringFocus } : {}),
   });
   const studiesRoot = canonicalizePotentialPath(
     resolveFromProject(projectRoot, merged.studiesRoot),

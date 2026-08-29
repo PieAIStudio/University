@@ -1,4 +1,5 @@
 import { useRef, type CSSProperties, type ReactNode } from "react";
+import type { AuthoringFocus } from "@pieai/university-core";
 
 import { Controls, Flight, LabelProbe, WORLD_POLAR } from "./camera/controls.js";
 import { placeWorld, WorldScene, type Marker } from "./Maps.js";
@@ -25,7 +26,7 @@ export function WorldMapCanvas({
   avatarRecipe,
   avatarSignedIn,
   skyStudyId,
-  focus,
+  authoringFocus,
   markers,
   followId,
   followNode,
@@ -58,7 +59,7 @@ export function WorldMapCanvas({
   readonly avatarRecipe: AvatarRecipe | null;
   readonly avatarSignedIn: boolean;
   readonly skyStudyId: string | null;
-  readonly focus?: { readonly studyId: string; readonly courseIds: readonly string[] };
+  readonly authoringFocus?: AuthoringFocus;
   readonly markers: readonly Marker[];
   readonly followId?: string | null;
   readonly followNode?: { readonly current: HTMLElement | null };
@@ -165,7 +166,7 @@ export function WorldMapCanvas({
             avatarRecipe={avatarRecipe}
             avatarSignedIn={avatarSignedIn}
             skyStudyId={skyStudyId}
-            focus={focus}
+            authoringFocus={authoringFocus}
             assetRevision={assetRevision}
             onPick={onPick}
             onHover={onHover}

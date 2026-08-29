@@ -14,7 +14,6 @@ export interface TodaySectionData {
   readonly card: TodayCard | null;
   readonly nextLesson: NextLesson | null;
   readonly dueCount: number;
-  readonly focus: { readonly study: string; readonly detail: string } | null;
   readonly issues: readonly string[];
 }
 
@@ -71,7 +70,6 @@ export function TodaySection({
 }) {
   const card = data.card;
   const next = data.nextLesson;
-  const focus = data.focus;
   return (
     <div className="today-layout">
       <section className="today-hero">
@@ -100,13 +98,6 @@ export function TodaySection({
           <h2>课程这边暂时没有待办。</h2>
         )}
         <p className="today-hero__note">课程负责建立理解，卡片只负责把重要知识留在长期记忆里。</p>
-        {focus ? (
-          <p className="today-focus">
-            主攻 <strong>{focus.study}</strong>
-            {focus.detail ? <span className="today-focus__detail"> · {focus.detail}</span> : null}
-            <span> · 复习卡片仍来自全部 study</span>
-          </p>
-        ) : null}
       </section>
 
       {card ? (

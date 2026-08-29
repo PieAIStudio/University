@@ -14,7 +14,7 @@ import {
   prepareStudyRefresh,
 } from "../workflows/refresh-source.js";
 import { addCourseLessons } from "../workflows/add-lessons.js";
-import { clearLearningFocus, setLearningFocus, showLearningFocus } from "../workflows/focus.js";
+import { clearAuthoringFocus, setAuthoringFocus, showAuthoringFocus } from "../workflows/focus.js";
 import { createCourse } from "../workflows/create-course.js";
 import {
   openCourseForEdit,
@@ -282,22 +282,22 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         courseId: input.command.courseId,
       });
     case "focus-set":
-      return setLearningFocus({
+      return setAuthoringFocus({
         projectRoot: config.projectRoot,
         studiesRoot: config.studiesRoot,
         studyId: input.command.studyId!,
         courseIds: input.command.courseIds ?? [],
       });
     case "focus-show":
-      return showLearningFocus(config.projectRoot);
+      return showAuthoringFocus(config.projectRoot);
     case "focus-clear":
-      return clearLearningFocus(config.projectRoot);
+      return clearAuthoringFocus(config.projectRoot);
     case "teach-next": {
       const stores = new Map<string, SqliteLearningStore>();
       try {
         const overview = buildLearningOverview({
           studiesRoot: config.studiesRoot,
-          ...(config.focus ? { focus: config.focus } : {}),
+          ...(config.focus ? { authoringFocus: config.focus } : {}),
           getStore: (studyId) => {
             const existing = stores.get(studyId);
             if (existing) return existing;

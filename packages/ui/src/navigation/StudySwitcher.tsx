@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { IslandIcon } from "../shell/icons.js";
 
-export { focusedStudyId } from "./focused-study.js";
+export { focusedStudyId, type LearnerNavigationFocus } from "./focused-study.js";
 
 export interface StudySwitchItem {
   readonly id: string;

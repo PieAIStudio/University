@@ -2,41 +2,42 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 import {
-  LearningFocusSchema,
+  AuthoringFocusSchema,
   UniversityLocalConfigSchema,
-  type LearningFocus,
+  type AuthoringFocus,
 } from "@pieai/university-core/domain/schemas.js";
 import { readCourse } from "../content/repository.js";
 import { readStudy } from "../studies/repository.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";
 
 /**
- * Which study — and optionally which course — "今日学习" should reach into
- * first. It lives in the local config rather than the tracked one because it is
- * a statement about what this person is working on right now, not about the
- * project.
+ * Which study — and optionally which course — the authoring read model should
+ * reach into first. It lives in the local config rather than the tracked one
+ * because it is a statement about what this person is working on right now,
+ * not about the project.
  */
 const LOCAL_CONFIG = "university-local.config.local.json";
 
 /**
- * Everything in the local config except the focus itself. `focus set` and
+ * Everything in the local config except the authoring focus itself. `focus set` and
  * `focus clear` are on their way to replacing that key, so validating the value
  * they are about to discard would let a focus written by an older version wedge
  * the only two commands able to repair it.
  */
 const OtherLocalKeysSchema = UniversityLocalConfigSchema.omit({ focus: true }).partial().strict();
 
-interface SetFocusInput {
+interface SetAuthoringFocusInput {
   readonly projectRoot: string;
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly courseIds?: readonly string[];
 }
 
-interface FocusResult {
+interface AuthoringFocusResult {
   readonly schemaVersion: 1;
   readonly operation: "focus-set" | "focus-clear" | "focus-show";
-  readonly focus: LearningFocus | null;
+  /** The versioned result key; its value is an authoring preference. */
+  readonly focus: AuthoringFocus | null;
   readonly configPath: string;
 }
 
@@ -54,20 +55,26 @@ function listStudyIds(studiesRoot: string): readonly string[] {
   }
 }
 
-function readLocalConfig(path: string): { rest: Record<string, unknown>; focus: unknown } {
-  if (!existsSync(path)) return { rest: {}, focus: undefined };
+function readLocalConfig(path: string): {
+  rest: Record<string, unknown>;
+  authoringFocus: unknown;
+} {
+  if (!existsSync(path)) return { rest: {}, authoringFocus: undefined };
   const raw = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
-  const { focus, ...others } = raw;
-  return { rest: OtherLocalKeysSchema.parse(others) as Record<string, unknown>, focus };
+  const { focus: authoringFocus, ...others } = raw;
+  return {
+    rest: OtherLocalKeysSchema.parse(others) as Record<string, unknown>,
+    authoringFocus,
+  };
 }
 
 /**
- * The focus is validated against what is actually on the shelf, because a
+ * The authoring focus is validated against what is actually on the shelf, because a
  * silently ignored typo is worse than a refusal: the learner would keep being
  * handed lessons from the study they thought they had set aside, with nothing
  * to explain why.
  */
-export function setLearningFocus(input: SetFocusInput): FocusResult {
+export function setAuthoringFocus(input: SetAuthoringFocusInput): AuthoringFocusResult {
   let study;
   try {
     study = readStudy(input.studiesRoot, input.studyId);
@@ -98,27 +105,27 @@ export function setLearningFocus(input: SetFocusInput): FocusResult {
       throw new Error(`Only an active course can be focused: ${course.id} is ${course.status}`);
     }
   }
-  const focus = LearningFocusSchema.parse({ studyId: study.id, courseIds });
+  const authoringFocus = AuthoringFocusSchema.parse({ studyId: study.id, courseIds });
   const configPath = resolve(input.projectRoot, LOCAL_CONFIG);
   const { rest } = readLocalConfig(configPath);
-  writeJsonAtomically(configPath, { schemaVersion: 1, ...rest, focus });
-  return { schemaVersion: 1, operation: "focus-set", focus, configPath };
+  writeJsonAtomically(configPath, { schemaVersion: 1, ...rest, focus: authoringFocus });
+  return { schemaVersion: 1, operation: "focus-set", focus: authoringFocus, configPath };
 }
 
-export function clearLearningFocus(projectRoot: string): FocusResult {
+export function clearAuthoringFocus(projectRoot: string): AuthoringFocusResult {
   const configPath = resolve(projectRoot, LOCAL_CONFIG);
   const { rest } = readLocalConfig(configPath);
   writeJsonAtomically(configPath, { schemaVersion: 1, ...rest });
   return { schemaVersion: 1, operation: "focus-clear", focus: null, configPath };
 }
 
-export function showLearningFocus(projectRoot: string): FocusResult {
+export function showAuthoringFocus(projectRoot: string): AuthoringFocusResult {
   const configPath = resolve(projectRoot, LOCAL_CONFIG);
-  const { focus } = readLocalConfig(configPath);
+  const { authoringFocus } = readLocalConfig(configPath);
   return {
     schemaVersion: 1,
     operation: "focus-show",
-    focus: focus ? LearningFocusSchema.parse(focus) : null,
+    focus: authoringFocus ? AuthoringFocusSchema.parse(authoringFocus) : null,
     configPath,
   };
 }

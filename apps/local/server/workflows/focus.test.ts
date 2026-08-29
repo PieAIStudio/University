@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { writeCourse } from "../content/repository.js";
 import { createStudy, setStudyStatus } from "../studies/repository.js";
-import { clearLearningFocus, setLearningFocus, showLearningFocus } from "./focus.js";
+import { clearAuthoringFocus, setAuthoringFocus, showAuthoringFocus } from "./focus.js";
 
 const NOW = "2026-08-06T10:00:00.000Z";
 
@@ -42,20 +42,20 @@ function localConfig(projectRoot: string): Record<string, unknown> {
   ) as Record<string, unknown>;
 }
 
-describe("learning focus", () => {
+describe("authoring focus", () => {
   it("records a study-only focus and reads it back", () => {
     const { projectRoot, studiesRoot } = setup();
 
-    setLearningFocus({ projectRoot, studiesRoot, studyId: "sample" });
+    setAuthoringFocus({ projectRoot, studiesRoot, studyId: "sample" });
 
     expect(localConfig(projectRoot)["focus"]).toEqual({ studyId: "sample", courseIds: [] });
-    expect(showLearningFocus(projectRoot).focus).toEqual({ studyId: "sample", courseIds: [] });
+    expect(showAuthoringFocus(projectRoot).focus).toEqual({ studyId: "sample", courseIds: [] });
   });
 
   it("refuses a study that is not on the shelf, and lists what is", () => {
     const { projectRoot, studiesRoot } = setup();
 
-    expect(() => setLearningFocus({ projectRoot, studiesRoot, studyId: "nope" })).toThrow(
+    expect(() => setAuthoringFocus({ projectRoot, studiesRoot, studyId: "nope" })).toThrow(
       /No study named nope\. Available: sample/,
     );
   });
@@ -64,7 +64,7 @@ describe("learning focus", () => {
     const { projectRoot, studiesRoot } = setup();
     setStudyStatus(studiesRoot, "sample", "archived");
 
-    expect(() => setLearningFocus({ projectRoot, studiesRoot, studyId: "sample" })).toThrow(
+    expect(() => setAuthoringFocus({ projectRoot, studiesRoot, studyId: "sample" })).toThrow(
       /Only an active study can be focused: sample is archived/,
     );
   });
@@ -73,7 +73,7 @@ describe("learning focus", () => {
     const { projectRoot, studiesRoot } = setup();
 
     expect(() =>
-      setLearningFocus({ projectRoot, studiesRoot, studyId: "sample", courseIds: ["nope"] }),
+      setAuthoringFocus({ projectRoot, studiesRoot, studyId: "sample", courseIds: ["nope"] }),
     ).toThrow(/No course named nope/);
   });
 
@@ -81,7 +81,7 @@ describe("learning focus", () => {
     const { projectRoot, studiesRoot } = setup();
 
     expect(() =>
-      setLearningFocus({ projectRoot, studiesRoot, studyId: "sample", courseIds: ["unfinished"] }),
+      setAuthoringFocus({ projectRoot, studiesRoot, studyId: "sample", courseIds: ["unfinished"] }),
     ).toThrow(/is draft/);
   });
 
@@ -89,7 +89,7 @@ describe("learning focus", () => {
     const { projectRoot, studiesRoot } = setup();
 
     expect(() =>
-      setLearningFocus({
+      setAuthoringFocus({
         projectRoot,
         studiesRoot,
         studyId: "sample",
@@ -105,8 +105,8 @@ describe("learning focus", () => {
       JSON.stringify({ schemaVersion: 1, studiesRoot: "./elsewhere" }),
     );
 
-    setLearningFocus({ projectRoot, studiesRoot, studyId: "sample" });
-    clearLearningFocus(projectRoot);
+    setAuthoringFocus({ projectRoot, studiesRoot, studyId: "sample" });
+    clearAuthoringFocus(projectRoot);
 
     expect(localConfig(projectRoot)).toEqual({ schemaVersion: 1, studiesRoot: "./elsewhere" });
   });

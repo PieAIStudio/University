@@ -52,7 +52,6 @@ describe("TodaySection", () => {
         progress: null,
       },
       dueCount: 0,
-      focus: null,
       issues: [],
     };
     const markup = renderToStaticMarkup(

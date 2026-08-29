@@ -1,6 +1,6 @@
 import { join } from "node:path";
 
-import type { LearningFocus, StudyManifest } from "@pieai/university-core/domain/schemas.js";
+import type { AuthoringFocus, StudyManifest } from "@pieai/university-core/domain/schemas.js";
 import {
   listCourseIds,
   orderCoursesByPrerequisite,
@@ -60,7 +60,7 @@ interface CourseDueCard {
 
 type LearningOverviewDueCard = CourseDueCard;
 
-interface ResolvedLearningFocus extends LearningFocus {
+interface ResolvedAuthoringFocus extends AuthoringFocus {
   readonly courses: readonly { readonly id: string; readonly title: string }[];
 }
 
@@ -68,7 +68,8 @@ interface LearningOverview {
   readonly dueCount: number;
   readonly card: LearningOverviewDueCard | null;
   readonly nextLesson: LearningOverviewLesson | null;
-  readonly focus: ResolvedLearningFocus | null;
+  /** Versioned `focus` output key; this is persisted authoring state. */
+  readonly focus: ResolvedAuthoringFocus | null;
   readonly teachingStudyId: string | null;
   readonly openSession: {
     readonly studyId: string;
@@ -82,7 +83,7 @@ interface LearningOverview {
 
 interface BuildLearningOverviewInput {
   readonly studiesRoot: string;
-  readonly focus?: LearningFocus;
+  readonly authoringFocus?: AuthoringFocus;
   readonly now?: Date;
   /** Must return null instead of creating a learner database that does not exist. */
   readonly getStore: (studyId: string) => LearningStore | null;
@@ -123,41 +124,41 @@ function activeCourses(
   );
 }
 
-function resolveOverviewFocus(
+function resolveAuthoringFocus(
   studiesRoot: string,
   studies: readonly StudyManifest[],
-  focus: LearningFocus | undefined,
+  authoringFocus: AuthoringFocus | undefined,
   issues: string[],
-): LearningFocus | null {
-  if (!focus) return null;
-  const study = studies.find((candidate) => candidate.id === focus.studyId);
+): AuthoringFocus | null {
+  if (!authoringFocus) return null;
+  const study = studies.find((candidate) => candidate.id === authoringFocus.studyId);
   if (!study) {
-    issues.push(`Learning focus study is unavailable: ${focus.studyId}`);
+    issues.push(`Authoring focus study is unavailable: ${authoringFocus.studyId}`);
     return null;
   }
   if (study.status !== "active") {
-    issues.push(`Learning focus study is not active: ${study.id} is ${study.status}`);
+    issues.push(`Authoring focus study is not active: ${study.id} is ${study.status}`);
     return null;
   }
-  for (const courseId of focus.courseIds) {
+  for (const courseId of authoringFocus.courseIds) {
     try {
       const course = readCourse(studiesRoot, study.id, courseId);
       if (course.status !== "active") {
         issues.push(
-          `Learning focus course is not active: ${study.id}/${course.id} is ${course.status}`,
+          `Authoring focus course is not active: ${study.id}/${course.id} is ${course.status}`,
         );
         return null;
       }
     } catch (error) {
       issues.push(
-        `Learning focus course is unavailable: ${study.id}/${courseId}: ${
+        `Authoring focus course is unavailable: ${study.id}/${courseId}: ${
           error instanceof Error ? error.message : "invalid course manifest"
         }`,
       );
       return null;
     }
   }
-  return focus;
+  return authoringFocus;
 }
 
 function serializeProgress(
@@ -218,16 +219,21 @@ function requireCurrentCourseCard(
 export function buildLearningOverview(input: BuildLearningOverviewInput): LearningOverview {
   const shelf = inspectStudyShelf(input.studiesRoot);
   const now = input.now ?? new Date();
-  const focusCourseTitles = new Map<string, string>();
+  const authoringFocusCourseTitles = new Map<string, string>();
   const dueCards: LearningOverviewDueCard[] = [];
   const issues: string[] = [];
   let nextLesson: LearningOverviewLesson | null = null;
-  const focus = resolveOverviewFocus(input.studiesRoot, shelf.studies, input.focus, issues);
+  const authoringFocus = resolveAuthoringFocus(
+    input.studiesRoot,
+    shelf.studies,
+    input.authoringFocus,
+    issues,
+  );
 
   const focusedStudies = shelf.studies
     .filter((study) => study.status === "active")
     .sort((left, right) => {
-      const rank = (id: string): number => (id === focus?.studyId ? 0 : 1);
+      const rank = (id: string): number => (id === authoringFocus?.studyId ? 0 : 1);
       return rank(left.id) - rank(right.id) || left.id.localeCompare(right.id);
     });
 
@@ -246,7 +252,7 @@ export function buildLearningOverview(input: BuildLearningOverviewInput): Learni
     if (session) openSessionCandidates.push({ studyId: study.id, session });
   }
   openSessionCandidates.sort((left, right) => {
-    const focusRank = (studyId: string): number => (studyId === focus?.studyId ? 0 : 1);
+    const focusRank = (studyId: string): number => (studyId === authoringFocus?.studyId ? 0 : 1);
     return (
       focusRank(left.studyId) - focusRank(right.studyId) ||
       right.session.startedAt.getTime() - left.session.startedAt.getTime() ||
@@ -265,14 +271,14 @@ export function buildLearningOverview(input: BuildLearningOverviewInput): Learni
   for (const study of studyOrder) {
     const store = storesByStudy.get(study.id) ?? null;
     storesByStudy.set(study.id, store);
-    const focusedCourseIds = study.id === focus?.studyId ? focus.courseIds : [];
+    const focusedCourseIds = study.id === authoringFocus?.studyId ? authoringFocus.courseIds : [];
     const courses = activeCourses(input.studiesRoot, study, issues, focusedCourseIds);
     const coursesById = new Map(courses.map((course) => [course.id, course]));
 
-    if (study.id === focus?.studyId) {
-      for (const courseId of focus.courseIds) {
+    if (study.id === authoringFocus?.studyId) {
+      for (const courseId of authoringFocus.courseIds) {
         const title = coursesById.get(courseId)?.title;
-        if (title) focusCourseTitles.set(courseId, title);
+        if (title) authoringFocusCourseTitles.set(courseId, title);
       }
     }
 
@@ -386,7 +392,9 @@ export function buildLearningOverview(input: BuildLearningOverviewInput): Learni
     resumedSession?.studyId ??
     nextLesson?.studyId ??
     dueCards[0]?.studyId ??
-    (focus && activeStudyIds.has(focus.studyId) ? focus.studyId : null) ??
+    (authoringFocus && activeStudyIds.has(authoringFocus.studyId)
+      ? authoringFocus.studyId
+      : null) ??
     studyOrder[0]?.id ??
     null;
   const session =
@@ -397,12 +405,12 @@ export function buildLearningOverview(input: BuildLearningOverviewInput): Learni
     dueCount: dueCards.length,
     card: dueCards[0] ?? null,
     nextLesson,
-    focus: focus
+    focus: authoringFocus
       ? {
-          ...focus,
-          courses: focus.courseIds.map((id) => ({
+          ...authoringFocus,
+          courses: authoringFocus.courseIds.map((id) => ({
             id,
-            title: focusCourseTitles.get(id) ?? id,
+            title: authoringFocusCourseTitles.get(id) ?? id,
           })),
         }
       : null,

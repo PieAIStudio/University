@@ -6,7 +6,7 @@ import { readJson } from "@pieai/university-ui/api/client.js";
 import { isCurrentLessonCompleted } from "@pieai/university-ui/view/lesson-view.js";
 import type {
   CourseView,
-  LearningFocus,
+  AuthoringFocusView,
   LessonRef,
   StudySummary,
   StudyView,
@@ -172,27 +172,27 @@ export function StudyAnalysisPanel({
  *
  * A study that publishes 31 courses in one flat run gives a reader no way to
  * tell the nine they chose to walk from the twenty-two they have not decided
- * about — and the choice already exists: `focus.courseIds` is a route the
+ * about — and the choice already exists: `authoringFocus.courseIds` is a route the
  * learner set with `university focus`, and the front page already calls it
  * 主攻路线 9 门. The study page was the one place that threw it away.
  *
- * Route order is the focus's own order, not the manifest's, because the whole
+ * Route order is the authoring focus's own order, not the manifest's, because the whole
  * point of pinning a run is that it has an order. Anything the focus does not
  * name keeps the study's order behind it.
  *
- * Returns `null` when there is nothing to split on — no focus, a focus
+ * Returns `null` when there is nothing to split on — no authoring focus, one
  * belonging to another study, or one where the split would leave a side
  * empty — and the caller falls back to the flat list. A grouping that puts
  * everything in one group is a heading pretending to be information.
  */
 export function splitByFocus(
   courses: readonly CourseView[],
-  focus: LearningFocus | null,
+  authoringFocus: AuthoringFocusView | null,
   studyId: string,
 ): { readonly route: readonly CourseView[]; readonly rest: readonly CourseView[] } | null {
-  if (!focus || focus.studyId !== studyId) return null;
+  if (!authoringFocus || authoringFocus.studyId !== studyId) return null;
   const byId = new Map(courses.map((course) => [course.id, course]));
-  const route = focus.courseIds.flatMap((id) => {
+  const route = authoringFocus.courseIds.flatMap((id) => {
     const course = byId.get(id);
     return course ? [course] : [];
   });
@@ -205,15 +205,15 @@ export function splitByFocus(
 export function StudyDetail({
   view,
   summary: _summary,
-  focus = null,
+  authoringFocus = null,
   onOpenLesson,
   showCourseEntry = true,
 }: {
   readonly view: StudyView;
   /** Null only while the shelf is still loading; the study reads fine without it. */
   readonly summary: StudySummary | null;
-  /** The learner's pinned run, from `/api/bootstrap`; null when none is set. */
-  readonly focus?: LearningFocus | null;
+  /** The authoring machine's pinned run, from `/api/bootstrap`; null when none is set. */
+  readonly authoringFocus?: AuthoringFocusView | null;
   readonly onOpenLesson: (locator: LessonRef) => void;
   /**
    * False on the world landing: the rail (and the island you pick) own the
@@ -242,7 +242,7 @@ export function StudyDetail({
     ).length;
     return done > 0 && done < lessons.length;
   });
-  const grouped = splitByFocus(view.courses, focus, view.study.id);
+  const grouped = splitByFocus(view.courses, authoringFocus, view.study.id);
   const renderCourse = (course: CourseView, index: number) => (
     <CourseSection
       key={course.id}

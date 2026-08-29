@@ -19,6 +19,7 @@ import {
   ProfileScreen,
   SettingsScreen,
 } from "@pieai/university-ui/navigation/empty.js";
+import type { LearnerNavigationFocus } from "@pieai/university-ui/navigation/StudySwitcher.js";
 import {
   BadgeWall,
   LeagueScreen,
@@ -89,7 +90,7 @@ interface MainRouterProps {
   };
   readonly progress: ProgressDocument;
   readonly progressPort: ProgressPort;
-  readonly setMapFocus: Dispatch<SetStateAction<string | null | undefined>>;
+  readonly setNavigationFocus: Dispatch<SetStateAction<LearnerNavigationFocus>>;
   readonly setPathOverlay: Dispatch<SetStateAction<PathOverlay | null>>;
   readonly setView: (next: View) => void;
   readonly shelf: Shelf | null;
@@ -133,7 +134,7 @@ export function MainRouter({
   profileStats,
   progress,
   progressPort,
-  setMapFocus,
+  setNavigationFocus,
   setPathOverlay,
   setView,
   shelf,
@@ -359,7 +360,11 @@ export function MainRouter({
       */}
       {view.kind === "planet" ? (
         <div className="planet-page__globe" data-planet-globe="true">
-          <PlanetStage studies={planetStudies} selectedId={focusedStudyId} onSelect={setMapFocus} />
+          <PlanetStage
+            studies={planetStudies}
+            selectedId={focusedStudyId}
+            onSelect={setNavigationFocus}
+          />
         </div>
       ) : null}
       {/*

@@ -37,28 +37,8 @@
 
 .today-hero h2,
 .today-hero > p,
-.today-focus,
 .today-metric p {
   margin: 0;
-}
-
-.today-hero > p.today-focus {
-  margin-top: 10px;
-  color: rgb(255 245 232 / 62%);
-  font-size: 0.92rem;
-}
-
-.today-focus strong {
-  color: var(--game-ui-accent, #f5a623);
-  font-weight: 600;
-}
-
-.today-focus span {
-  color: rgb(255 245 232 / 38%);
-}
-
-.today-focus span.today-focus__detail {
-  color: rgb(255 245 232 / 55%);
 }
 
 .today-hero h2 {

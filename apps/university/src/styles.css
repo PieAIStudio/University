@@ -1773,38 +1773,6 @@ button.label:focus-visible {
 }
 
 /*
-   Specificity matched to the reset that would otherwise win.
-
-   `.today-hero > p` (0,1,1) zeroes the margins of everything in this block,
-   so a bare `.today-focus` (0,1,0) could never space itself and sat flush
-   against the lede. Same defect as the lede's own selector: a rule that reads
-   correctly and never applies.
-*/
-.today-hero > p.today-focus {
-  margin: 10px 0 0;
-  font-size: 0.92rem;
-  color: var(--game-ui-text-muted);
-}
-
-.today-focus strong {
-  color: var(--game-ui-accent);
-  font-weight: 600;
-}
-
-.today-focus span {
-  color: var(--game-ui-text-muted);
-}
-
-/*
-   The route sits one step above the trailing aside and one step below the
-   project name — three levels in one line, so it reads as an answer with
-   qualifications rather than as three competing announcements.
-*/
-.today-focus span.today-focus__detail {
-  color: var(--game-ui-text-muted);
-}
-
-/*
   The lesson's own title, at the size the standing slogan used to hold. Capped
   well below that slogan's 85px: a headline that is written fresh for every
   lesson has to survive titles of any length, and 「明明写了个空盒子，满屏界面从

@@ -23,6 +23,7 @@ import {
   isLessonComplete,
   readCourseProgress,
   spineOf,
+  type AuthoringFocus,
   type ProgressSource,
 } from "@pieai/university-core";
 import { playSound } from "@pieai/university-ui/sound/index.js";
@@ -664,7 +665,7 @@ export function WorldScene({
   extent,
   onPick,
   onHover,
-  focus,
+  authoringFocus,
   skyStudyId = null,
   assetRevision = 0,
 }: {
@@ -682,10 +683,10 @@ export function WorldScene({
   onPick: (node: CourseNode) => void;
   onHover: (node: CourseNode | null) => void;
   /**
-   * Authoring-only. Islands not on this track dim; the delivery shell
-   * omits the prop and the world looks as it does today.
+   * Authoring-only. Islands not on this track dim; the learner shells omit the
+   * prop because this persisted authoring preference is not navigation state.
    */
-  focus?: { readonly studyId: string; readonly courseIds: readonly string[] };
+  authoringFocus?: AuthoringFocus;
   /** `null` keeps the default dome — the four-seas overview. */
   skyStudyId?: string | null;
   assetRevision?: number;
@@ -707,7 +708,7 @@ export function WorldScene({
         <Island
           key={`${entry.node.studyId}/${entry.node.courseId}`}
           entry={entry}
-          dimmed={isFocusDimmed(entry.node, focus)}
+          dimmed={isFocusDimmed(entry.node, authoringFocus)}
           onClick={() => onPick(entry.node)}
           onOver={(over) => onHover(over ? entry.node : null)}
           assetRevision={assetRevision}
