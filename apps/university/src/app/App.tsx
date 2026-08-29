@@ -40,7 +40,6 @@ import {
   activeIdForView,
   isBareView,
   lessonRefKey,
-  mistakesOf,
   progressSourceOf,
   type FeedbackContext,
   type LessonRef,
@@ -53,20 +52,13 @@ import { SettingsSubnav } from "@pieai/university-ui/navigation/empty.js";
 import { LevelProgress } from "@pieai/university-ui/navigation/screens.js";
 import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
 import { coursePickStatsOf } from "@pieai/university-ui/path/course-pick-stats.js";
-import { CourseScene, nextCourse } from "@pieai/university-world/Maps.js";
-import { frameCourse } from "@pieai/university-world/course-map.js";
+import { CourseScene } from "@pieai/university-world/Maps.js";
 import { type CourseNode } from "@pieai/university-world/course.js";
-import {
-  avatarRecipeForAccount,
-  avatarRecipeFromAccount,
-  RailIdentity,
-  type AvatarRecipe,
-} from "@pieai/university-world/avatar.js";
+import { RailIdentity } from "@pieai/university-world/avatar.js";
 
 import { AUTHORING, CAMPUS_NAME, EMPTY_SHELF_HINT } from "../mode";
 import { contentPort, feedbackPort, reviewReminderPort, sourceAccessPort } from "../ports/index";
 import { identityPort } from "../account/identity";
-import { paymentPort } from "../account/payment";
 import { bindProgressToIdentity } from "../account/session";
 import { presencePort } from "../presence/store";
 import {
@@ -79,22 +71,9 @@ import {
 import { LessonScreen, RouteFallback } from "../screens/lazy";
 import { FeedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
 
-import {
-  todayCtaLabel,
-  TodaySection,
-  todayMeta,
-  type TodaySectionData,
-} from "@pieai/university-ui/today/TodaySection.js";
-import type { TodayCard } from "@pieai/university-ui/view/lesson-view.js";
-import { nextLessonOf, todayCardLocatorOf } from "./today-data";
-import {
-  createReviewCardPort,
-  createVocabularyReviewPort,
-} from "@pieai/university-ui/review/scheduler-ports.js";
+import { todayCtaLabel, TodaySection, todayMeta } from "@pieai/university-ui/today/TodaySection.js";
 import { LINK_RETURN_DEPTH } from "@pieai/university-ui/lesson/LessonReader.js";
-import { LEXICON } from "../lesson/language";
 import { COURSE_POLAR, MAP_CONTROLS_HINT, WORLD_POLAR } from "@pieai/university-world/controls.js";
-import { frameWorld, roadAhead } from "@pieai/university-world/frame.js";
 import { CourseIsland } from "./CourseIsland.js";
 import { PlanetRail } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
@@ -111,20 +90,22 @@ import { watchThemePreference } from "@pieai/university-ui/theme.js";
 import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
 import {
   islandLookCameraForShot,
-  islandLookSceneSource,
   resolveIslandLookDebug,
 } from "@pieai/university-world/island-look.js";
 import { WorldMapCanvas } from "@pieai/university-world/WorldMapCanvas.js";
 import { MainRouter } from "./MainRouter";
 import { usePageMetadata } from "./page-metadata";
 import { WorldSourceControls } from "../learner/WorldSourceControls";
-import {
-  trackEvent,
-  withProductAnalyticsIdentity,
-  withProductAnalyticsPayment,
-  withProductAnalyticsReview,
-  type AnalyticsEvent,
-} from "../analytics/productAnalytics";
+import { useAnalyticsPorts } from "./analytics-ports";
+import { useAvatarPreferences } from "./avatar-preferences";
+import { useCoursePathActions } from "./course-path-actions";
+import { useIslandLookSource, useIslandLookView } from "./island-look-view";
+import { useMistakeSummary } from "./mistake-summary";
+import { useSceneCamera } from "./scene-camera";
+import { useSceneInteraction } from "./scene-interaction";
+import { useStudyContext } from "./study-context";
+import { useTodaySectionData } from "./today-section-data";
+import { trackEvent, type AnalyticsEvent } from "../analytics/productAnalytics";
 
 type FeedbackContextSeed = Pick<
   FeedbackContext,
@@ -139,21 +120,10 @@ export function App() {
     identityPort.status,
   );
   const avatarSignedIn = identityStatus.kind === "anonymous" || identityStatus.kind === "signed_in";
-  const avatarRecipe = useMemo(
-    () => avatarRecipeFromAccount(progress.account.preferences.avatarRecipe),
-    [progress.account.preferences.avatarRecipe],
-  );
-  const saveAvatarRecipe = useCallback(
-    (recipe: AvatarRecipe) => {
-      if (!avatarSignedIn) return;
-      const preferences = progressPort.accountData().preferences;
-      progressPort.setAccountPreferences({
-        ...preferences,
-        avatarRecipe: avatarRecipeForAccount(recipe),
-      });
-    },
-    [avatarSignedIn],
-  );
+  const { avatarRecipe, saveAvatarRecipe } = useAvatarPreferences({
+    accountAvatarRecipe: progress.account.preferences.avatarRecipe,
+    signedIn: avatarSignedIn,
+  });
   useEffect(
     () =>
       progressPort.subscribe(() =>
@@ -168,28 +138,7 @@ export function App() {
   // existing blueprint should be measured; it never creates a second course or
   // a second layout source.
   const lookDebug = import.meta.env.DEV ? resolveIslandLookDebug() : null;
-  const lookSeedNode = useMemo(() => {
-    if (!import.meta.env.DEV || !lookDebug?.shot || !lookDebug.seed || !nodes) return null;
-    const routeMatch =
-      (routeView.kind === "course" ||
-        routeView.kind === "lesson" ||
-        routeView.kind === "settled") &&
-      routeView.courseId === lookDebug.seed
-        ? nodes.find(
-            (node) => node.studyId === routeView.studyId && node.courseId === routeView.courseId,
-          )
-        : undefined;
-    return routeMatch ?? nodes.find((node) => node.courseId === lookDebug.seed) ?? null;
-  }, [lookDebug?.seed, lookDebug?.shot, nodes, routeView]);
-  const view = useMemo(() => {
-    if (!import.meta.env.DEV || !lookSeedNode || !lookDebug?.shot) return routeView;
-    if (lookDebug.shot === "world-design") return { kind: "world" } as const;
-    return {
-      kind: "course",
-      studyId: lookSeedNode.studyId,
-      courseId: lookSeedNode.courseId,
-    } as const;
-  }, [lookDebug?.shot, lookSeedNode, routeView]);
+  const { lookSeedNode, view } = useIslandLookView({ lookDebug, nodes, routeView });
   const shellConfig = shellConfigForView(view);
   /**
    * The study the camera is looking at. `undefined` means "not chosen yet" —
@@ -198,7 +147,8 @@ export function App() {
    */
   const [mapFocus, setMapFocus] = useState<string | null | undefined>(undefined);
   const [hovered, setHovered] = useState<string | null>(null);
-  const [mapInteracted, setMapInteracted] = useState(false);
+  const { mapInteracted, sceneReady, onSceneReady, onSceneBusy, onMapInteract } =
+    useSceneInteraction();
   const [picked, setPicked] = useState<CourseNode | null>(null);
   const pickedCourse = picked ? courseOf(picked.studyId, picked.courseId) : null;
   const pickedStats = pickedCourse ? coursePickStatsOf(pickedCourse) : null;
@@ -218,24 +168,9 @@ export function App() {
   const [returnStack, setReturnStack] = useState<readonly LessonRef[]>([]);
   const lastRouteAnalyticsKey = useRef<string | null>(null);
   const reviewDueAnalyticsReported = useRef(false);
-  // Screen 09. False until the kit models inside Stage have committed. The
-  // overlay is DOM, so this flag is the only thing Stage has to say.
-  const [sceneReady, setSceneReady] = useState(false);
-  const onSceneReady = useCallback(() => setSceneReady(true), []);
-  const onSceneBusy = useCallback(() => setSceneReady(false), []);
-  const onMapInteract = useCallback(() => setMapInteracted(true), []);
-
   const source = useMemo(() => progressSourceOf(progressPort), []);
-  const analyticsIdentityPort = useMemo(() => withProductAnalyticsIdentity(identityPort), []);
-  const analyticsPaymentPort = useMemo(() => withProductAnalyticsPayment(paymentPort), []);
-  const onWorthwhileProgress = useCallback(() => {
-    void analyticsIdentityPort.signInAnonymously();
-  }, [analyticsIdentityPort]);
-  const mistakes = useMemo(() => mistakesOf(progress), [progress]);
-  const uncorrectedMistakeCount = useMemo(
-    () => mistakes.filter((mistake) => !mistake.corrected).length,
-    [mistakes],
-  );
+  const { analyticsIdentityPort, analyticsPaymentPort, onWorthwhileProgress } = useAnalyticsPorts();
+  const { mistakes, uncorrectedMistakeCount } = useMistakeSummary(progress);
 
   useEffect(() => bindProgressToIdentity(progressPort, identityPort, progressRemoteStore), []);
 
@@ -331,35 +266,16 @@ export function App() {
       view,
     });
 
-  const projectName = useMemo(
-    () => studies.find((entry) => entry.id === focusedStudyId)?.title ?? "University",
-    [focusedStudyId, studies],
-  );
-
-  /*
-    `todayNode` is the account-wide recommendation used to choose the first
-    project in a fresh session. Once the map has a focused project, the context
-    panel must ask the same question inside that project; otherwise the map and
-    the panel can truthfully answer two different places at once.
-  */
-  const focusedTodayNode = useMemo(
-    () => (nodes && focusedStudyId ? nextCourse(nodes, courseProgress, focusedStudyId) : null),
-    [nodes, courseProgress, focusedStudyId],
-  );
-  const focusedNextUpProgress = useMemo(
-    () => (focusedTodayNode ? courseProgressForNode(focusedTodayNode) : null),
-    [courseProgressForNode, focusedTodayNode],
-  );
-
-  const focusStudy = useCallback(
-    (studyId: string) => {
-      setMapFocus(studyId);
-      if (view.kind === "course" || view.kind === "lesson" || view.kind === "settled") {
-        setView({ kind: "world" });
-      }
-    },
-    [view.kind, setView],
-  );
+  const { projectName, focusedTodayNode, focusedNextUpProgress, focusStudy } = useStudyContext({
+    courseProgress,
+    courseProgressForNode,
+    focusedStudyId,
+    nodes,
+    setMapFocus,
+    setView,
+    studies,
+    view,
+  });
 
   const profileStats = useProfileStats({ progress, courseOf });
 
@@ -374,69 +290,11 @@ export function App() {
   });
 
   const due = dueCards();
-  /*
-    The card the panel offers, with its front.
-
-    The scheduler names a card; the shelf says which unit it is in; the text
-    itself is content and comes through the port — which is a fetch in the
-    authoring build and a memory read in the delivery one. Held as state rather
-    than derived, because a fetch cannot be a `useMemo`.
-  */
-  const dueLocator = useMemo(
-    () => (due[0] ? todayCardLocatorOf(studies, due[0]) : null),
-    [studies, due[0]?.cardKey],
-  );
-  const [todayCard, setTodayCard] = useState<TodayCard | null>(null);
-  useEffect(() => {
-    const card = due[0];
-    if (!dueLocator || !card) {
-      setTodayCard(null);
-      return;
-    }
-    let alive = true;
-    void contentPort
-      .card(dueLocator)
-      .then((body) => {
-        if (!alive) return;
-        setTodayCard({
-          ...dueLocator,
-          front: body.front,
-          contentRevision: body.contentRevision,
-          dueAt: new Date(card.dueAt).toISOString(),
-        });
-      })
-      .catch(() => {
-        // A card whose body cannot be read is not a card to offer. The panel
-        // falls back to the next lesson, which is the honest thing on screen.
-        if (alive) setTodayCard(null);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [dueLocator, due[0]?.dueAt]);
-
-  const todayData = useMemo<TodaySectionData>(
-    () => ({
-      card: todayCard,
-      nextLesson: nextLessonOf(studies, focusedNextUpProgress?.next ?? null, progressPort),
-      dueCount: due.length,
-      focus: null,
-      issues: [],
-    }),
-    [studies, todayCard, due, focusedNextUpProgress],
-  );
-  const todayReview = useMemo(
-    () =>
-      withProductAnalyticsReview(
-        createReviewCardPort(contentPort, progressPort),
-        () => progressPort.dueCards().length,
-      ),
-    [],
-  );
-  const todayVocabularyReview = useMemo(
-    () => createVocabularyReviewPort(progressPort, LEXICON),
-    [],
-  );
+  const { todayCard, todayData, todayReview, todayVocabularyReview } = useTodaySectionData({
+    due,
+    focusedNextUpProgress,
+    studies,
+  });
   const showMap = SHOWS_THE_MAP.has(view.kind);
   const studioMap = view.kind === "studio" && view.section === "map";
   const reviewVisible = showMap || view.kind === "review";
@@ -511,45 +369,12 @@ export function App() {
     ) : undefined,
   });
 
-  /*
-   * The default view stands beside the learner, not above the library.
-   *
-   * A world map is not meant to be read all at once. The first attempt put the
-   * camera at a fixed point over the origin while the learner stood in a study
-   * a hundred units away, and the result was a black frame with five specks in
-   * it. Framing from where the learner is standing — back along the direction
-   * they came, up, and off the axis so the road does not stack into a column of
-   * discs — is what makes the map answer "where am I" in one glance.
-   */
-  const framed = useMemo(
-    () => frameWorld(learnerAt, roadAhead(world?.placements ?? [], learnerAt)),
-    [learnerAt, world],
-  );
-
-  /**
-   * Inside a course the camera stands on the road instead of above it.
-   *
-   * The overview it replaces framed the whole folded course at once, which is
-   * the right shot for a map and the wrong one for a path: every stone sat at
-   * the same distance, so none of them was *next*. Standing behind the live
-   * stone and looking up the road puts the answer to "what now" in the middle
-   * of the frame, and lets the rest recede into the fog the scene already has.
-   *
-   * The camera tracks half the road's lateral swing rather than all of it. At
-   * full swing it moves with the curve, the curve cancels, and the road looks
-   * dead straight — the shot would be hiding the one thing it is framing.
-   */
-  // `frameCourse`, not a second copy: the authoring shell needs the same shot,
-  // and a camera that exists in one app file is a camera the other cannot have.
-  const roadCamera = useMemo(
-    () => (view.kind === "course" || view.kind === "lesson" ? frameCourse(lessons) : null),
-    [view.kind, lessons],
-  );
-
-  const cameraFrom: readonly [number, number, number] = roadCamera
-    ? roadCamera.cameraFrom
-    : framed.cameraFrom;
-  const lookAt: readonly [number, number, number] = roadCamera ? roadCamera.lookAt : framed.lookAt;
+  const { cameraFrom, lookAt } = useSceneCamera({
+    learnerAt,
+    lessons,
+    viewKind: view.kind,
+    world,
+  });
 
   const pathUnitId =
     pathOverlay?.unitId ??
@@ -561,14 +386,10 @@ export function App() {
       ? pathUnit?.lessons.find((lesson) => lesson.id === pathOverlay.lessonId)
       : undefined;
 
-  const openUnitOverlay = useCallback((unitId: string, returnFocusTo: HTMLElement) => {
-    setPathOverlay({ kind: "unit", unitId, returnFocusTo });
-  }, []);
-  const openCourseLesson = useCallback(
-    (locator: LessonRef) => setView({ kind: "lesson", ...locator }),
-    [setView],
-  );
-  const backToCourseMap = useCallback(() => setView({ kind: "world" }), [setView]);
+  const { openUnitOverlay, openCourseLesson, backToCourseMap } = useCoursePathActions({
+    setPathOverlay,
+    setView,
+  });
   const courseIslandProps =
     view.kind === "course" && course
       ? {
@@ -672,26 +493,14 @@ export function App() {
       : null;
   const stageCameraFrom = fixedCamera?.cameraFrom ?? cameraFrom;
   const stageLookAt = fixedCamera?.lookAt ?? lookAt;
-  const lookSource = useMemo(() => {
-    if (!import.meta.env.DEV || !lookDebug?.shot) return null;
-    if (lookShotIsCourse && inCourse) {
-      const blueprint = lessons[0]?.blueprint;
-      return blueprint
-        ? islandLookSceneSource(
-            "course",
-            [blueprint],
-            lessons.map((lesson) => ({ x: lesson.position.x, z: lesson.position.z })),
-          )
-        : null;
-    }
-    if (lookDebug.shot === "world-design" && view.kind === "world" && world) {
-      return islandLookSceneSource(
-        "world",
-        world.placements.map((entry) => entry.blueprint),
-      );
-    }
-    return null;
-  }, [inCourse, lessons, lookDebug?.shot, lookShotIsCourse, view.kind, world]);
+  const lookSource = useIslandLookSource({
+    inCourse,
+    lessons,
+    lookDebug,
+    lookShotIsCourse,
+    viewKind: view.kind,
+    world,
+  });
   const stage =
     view.kind === "avatar-lab" || studioMap ? null : (
       <WorldMapCanvas
