@@ -36,84 +36,77 @@ export const FIXED_MATERIAL = [
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 981,
+    "line": 986,
     "column": 33,
     "literal": "rgb(8 16 22 / 55%)",
     "reason": "这是 gloss-avatar lab 标签图标的固定阴影材料，随 donor studio 一起保持视觉一致。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 986,
+    "line": 991,
     "column": 63,
     "literal": "rgb(8 16 22 / 40%)",
     "reason": "这是 gloss-avatar lab 标签图标的固定阴影材料，随 donor studio 一起保持视觉一致。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 1459,
+    "line": 1460,
     "column": 15,
     "literal": "#d6cfc3",
     "reason": "这是 gloss-avatar lab donor 的 cream studio 固定底材，不属于产品 HUD 主题。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 1660,
+    "line": 1661,
     "column": 10,
     "literal": "#20130c",
     "reason": "这是产品 brand mark 的固定品牌图形与阴影，不随学习面主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 1661,
+    "line": 1662,
     "column": 39,
     "literal": "#f6c177",
     "reason": "这是产品 brand mark 的固定品牌图形与阴影，不随学习面主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 1661,
+    "line": 1662,
     "column": 48,
     "literal": "#df663d",
     "reason": "这是产品 brand mark 的固定品牌图形与阴影，不随学习面主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 1663,
+    "line": 1664,
     "column": 19,
     "literal": "rgb(255 255 255 / 45%)",
     "reason": "这是产品 brand mark 的固定品牌图形与阴影，不随学习面主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 1664,
+    "line": 1665,
     "column": 17,
     "literal": "rgb(0 0 0 / 28%)",
     "reason": "这是产品 brand mark 的固定品牌图形与阴影，不随学习面主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 2795,
+    "line": 2796,
     "column": 10,
     "literal": "#e5c49a",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 2804,
+    "line": 2805,
     "column": 15,
     "literal": "#0d1117",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 2805,
-    "column": 10,
-    "literal": "#e6edf3",
-    "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
-  },
-  {
-    "path": "apps/university/src/styles.css",
-    "line": 3141,
+    "line": 2806,
     "column": 10,
     "literal": "#e6edf3",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
@@ -121,41 +114,48 @@ export const FIXED_MATERIAL = [
   {
     "path": "apps/university/src/styles.css",
     "line": 3142,
+    "column": 10,
+    "literal": "#e6edf3",
+    "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
+  },
+  {
+    "path": "apps/university/src/styles.css",
+    "line": 3143,
     "column": 15,
     "literal": "#0d1117",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 3188,
+    "line": 3189,
     "column": 10,
     "literal": "rgb(230 237 243 / 64%)",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 3213,
+    "line": 3214,
     "column": 10,
     "literal": "#e5c49a",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 3794,
+    "line": 3795,
     "column": 15,
     "literal": "rgb(0 0 0 / 30%)",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 4044,
+    "line": 4045,
     "column": 15,
     "literal": "rgb(0 0 0 / 22%)",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 4049,
+    "line": 4050,
     "column": 10,
     "literal": "#e5c49a",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"

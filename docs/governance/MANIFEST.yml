@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-29T15:06:54.819Z
+generated_at: 2026-08-29T15:24:37.131Z
 generator_version: doc-gov@0.9.9
-docs_count: 64
+docs_count: 65
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -198,7 +198,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-28
+    last_reviewed: 2026-08-29
     pinned: false
   - id: REF-PAYMENT-BACKEND-GAP
     path: docs/reference/execution/payment-backend-gap.md
@@ -412,6 +412,13 @@ docs:
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-STRICTMODE-LEARNER-SMOKE-TESTS-MUST-ASSERT-NON-EMPTY-DRAWN-OUTPUT
     path: docs/reference/learnings/workflow-issues/strictmode-learner-smoke-tests-must-assert-non-empty-drawn-output.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-29
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-TRANSPARENT-DOM-MAP-LABELS-NEED-THEIR-OWN-COMPACT-TOKEN-SURFACE-FOR-MEASURED-CON
+    path: docs/reference/learnings/workflow-issues/transparent-dom-map-labels-need-their-own-compact-token-surface-for-measured-con.md
     type: reference
     status: stable
     canonical: true
