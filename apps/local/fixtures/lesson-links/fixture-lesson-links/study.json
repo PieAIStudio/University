@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "fixture-lesson-links",
+  "title": "[fixture] Lesson-link resolver",
+  "description": "Checked-in resolver fixture; not learner content.",
+  "goals": ["Exercise lesson-link resolution in verification."],
+  "defaultCourseId": "resolver-fixture",
+  "status": "active",
+  "createdAt": "2026-08-29T00:00:00.000Z",
+  "updatedAt": "2026-08-29T00:00:00.000Z"
+}

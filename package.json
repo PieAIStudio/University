@@ -12,7 +12,7 @@
     "check:generated-format": "pnpm --filter @pieai/university-app check:generated-format",
     "check:canvas": "node scripts/check-canvas-registry.mjs",
     "check:content-revisions": "node scripts/check-content-revisions.mjs",
-    "check:lesson-links": "node apps/local/scripts/check-lesson-links.mjs",
+    "check:lesson-links": "node apps/local/scripts/check-lesson-links.mjs --studies-root apps/local/fixtures/lesson-links",
     "check:review-cards": "node scripts/check-review-card-registry.mjs",
     "check:shelf": "node apps/university/scripts/check-shelf.mjs",
     "dev": "pnpm --filter @pieai/university-app dev",

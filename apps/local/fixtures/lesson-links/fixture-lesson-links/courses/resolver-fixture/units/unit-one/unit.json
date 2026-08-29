@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "unit-one",
+  "title": "[fixture] Source unit",
+  "objective": "Hold the synthetic source lesson.",
+  "prerequisiteUnitIds": [],
+  "lessonIds": ["source-lesson"],
+  "status": "active"
+}

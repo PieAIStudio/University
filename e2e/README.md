@@ -21,17 +21,20 @@ uses the system Chrome (`channel: "chrome"`), and is **not** part of
 
 ## Island look judge
 
-The non-blocking visual ruler runs separately from the default e2e project:
+The fixed-pressure visual ruler runs separately from the default e2e project:
 
 ```bash
 pnpm e2e:island-look
 ```
 
-It opens the four fixed DEV shots at desktop and 390×844, using a 41-lesson
-pressure course with `post=off` and `freeze=1`. It writes the canvas-only PNGs
-and the per-metric report to `SHOTS/island-look/metrics.json`; `SHOTS/` is
-ignored, so no image is committed. A red metric is expected measurement data
-and does not fail the test or `pnpm verify`.
+It opens the fixed DEV shots at desktop and 390×844, using a 41-lesson pressure
+course with `post=off` and `freeze=1`. It writes the canvas-only PNGs and the
+per-metric report to `SHOTS/island-look/metrics.json`; `SHOTS/` is ignored, so
+no image is committed. The existing contract still labels each metric
+`PASS`/`RED`, and a red metric captured on 2026-08-29 remains red-today rather
+than being silently blessed. The test fails only when a thresholded metric is
+worse than its per-shot/per-viewport captured value. This ratchet is not part
+of `pnpm verify` because it needs a browser.
 
 ## What it refuses to do
 
