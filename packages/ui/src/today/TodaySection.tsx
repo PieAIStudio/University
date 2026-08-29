@@ -1,4 +1,5 @@
 import { GameBadge, GameButton, GameCallout } from "@pieai/swimmer-ui-kit";
+import type { ReactNode } from "react";
 
 import { Tip } from "../Tip.js";
 import { ReviewCard } from "../review/ReviewCard.js";
@@ -52,6 +53,7 @@ export function TodaySection({
   data,
   onOpenLesson,
   onReviewed,
+  contextAction,
   requestToken,
   review,
   vocabularyReview,
@@ -59,6 +61,8 @@ export function TodaySection({
   readonly data: TodaySectionData;
   readonly onOpenLesson: (locator: LessonRef) => void;
   readonly onReviewed: () => Promise<void>;
+  /** A secondary action belonging to the study named by this panel. */
+  readonly contextAction?: ReactNode;
   /** Required only by the local HTTP grading/vocabulary fallback. */
   readonly requestToken?: string;
   /** Online's cloud scheduler implementation. */
@@ -75,9 +79,14 @@ export function TodaySection({
         {next ? (
           <>
             <h2>{next.lessonTitle}</h2>
-            <p className="today-hero__meta">
-              {next.studyTitle} · {next.courseTitle}
-            </p>
+            <div className="today-hero__context-row">
+              <p className="today-hero__meta">
+                {next.studyTitle} · {next.courseTitle}
+              </p>
+              {contextAction ? (
+                <div className="today-hero__context-action">{contextAction}</div>
+              ) : null}
+            </div>
             <div className="today-hero__action">
               <GameButton variant="primary" onClick={() => onOpenLesson(next)}>
                 {todayCtaLabel(next.progress)}

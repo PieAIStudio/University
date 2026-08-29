@@ -177,6 +177,7 @@ export function Controls({
   target,
   polar,
   fixedCamera,
+  onInteract,
 }: {
   target: readonly [number, number, number];
   /** The one tilt this view is allowed, in radians from straight down. */
@@ -186,14 +187,17 @@ export function Controls({
     readonly cameraFrom: readonly [number, number, number];
     readonly lookAt: readonly [number, number, number];
   } | null;
+  readonly onInteract?: () => void;
 }) {
   const { camera, gl } = useThree();
   const controls = useRef<MapControls | null>(null);
   const fixedCameraRef = useRef(fixedCamera ?? null);
+  const onInteractRef = useRef(onInteract);
 
   const polarRef = useRef(polar);
   polarRef.current = polar;
   fixedCameraRef.current = fixedCamera ?? null;
+  onInteractRef.current = onInteract;
 
   useEffect(() => {
     const instance = new MapControls(camera, gl.domElement);
@@ -268,10 +272,12 @@ export function Controls({
           wheelDeltaY,
         }) === "zoom"
       ) {
+        onInteractRef.current?.();
         return;
       }
       const instance = controls.current;
       if (!instance) return;
+      onInteractRef.current?.();
       event.preventDefault();
       event.stopPropagation();
       // Pan in the ground plane, scaled by how far away the camera is, so the

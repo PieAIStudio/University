@@ -34,7 +34,7 @@ export function UaDashboardButton({
     try {
       await access.run();
     } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : "UA 项目地图暂时打不开");
+      setError(reason instanceof Error ? reason.message : "项目地图暂时打不开");
     } finally {
       setPending(false);
     }
@@ -43,16 +43,14 @@ export function UaDashboardButton({
   return (
     <div className="ua-dashboard-entry">
       <GameButton
-        variant="secondary"
+        variant="ghost"
+        className="ua-dashboard-entry__button"
         data-parity-control="ua-dashboard"
         onClick={() => void openDashboard()}
         disabled={pending}
       >
-        {pending ? "正在启动 UA…" : "打开 UA 项目地图"}
+        {pending ? "正在打开项目地图…" : "打开项目地图"}
       </GameButton>
-      <p className="ua-dashboard-entry__hint">
-        这里会打开完整的 Understand Anything 图谱；当前环境不具备时会说明原因。
-      </p>
       {error ? (
         <p className="ua-dashboard-entry__error" role="alert">
           {error}
