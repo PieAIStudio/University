@@ -9,14 +9,41 @@ import { ISLAND_LOOK_CONTRACT } from "../packages/world/src/island/look-contract
 import type { IslandLookBrowserReport } from "../packages/world/src/island/look-metrics.js";
 import { ONLINE_ORIGIN } from "./ports.js";
 
-const SHOT_IDS = ISLAND_LOOK_SHOT_IDS;
 const PRESSURE_STUDY_ID = "turing-pact";
 const PRESSURE_COURSE_ID = "foundations-before-zero";
-const VIEWPORTS = [
-  { name: "desktop", width: 1440, height: 900 },
-  { name: "mobile", width: 390, height: 844 },
+const MATRIX_MODE = process.env.ISLAND_LOOK_MATRIX === "1";
+const VARIANT = process.env.ISLAND_LOOK_VARIANT ?? "main";
+const SHOT_IDS = MATRIX_MODE
+  ? (["course-near", "course-design", "world-design"] as const)
+  : ISLAND_LOOK_SHOT_IDS;
+const VIEWPORTS = MATRIX_MODE
+  ? [{ name: "desktop", width: 1440, height: 900 }]
+  : [
+      { name: "desktop", width: 1440, height: 900 },
+      { name: "mobile", width: 390, height: 844 },
+    ] as const;
+const OUTPUT_DIR = resolve(
+  process.cwd(),
+  process.env.ISLAND_LOOK_OUTPUT_DIR ?? "SHOTS/island-look",
+);
+const SAMPLE_COUNTS = [6, 12, 24, 41] as const;
+const SAMPLE_ARCHETYPES = [
+  "arc",
+  "horseshoe",
+  "loop-around-hill",
+  "switchback",
+  "serpentine",
 ] as const;
-const OUTPUT_DIR = resolve(process.cwd(), "SHOTS", "island-look");
+const ACTIVE_SAMPLE_COUNTS = process.env.ISLAND_LOOK_COUNTS
+  ? SAMPLE_COUNTS.filter((count) =>
+      process.env.ISLAND_LOOK_COUNTS!.split(",").some((value) => Number(value) === count),
+    )
+  : SAMPLE_COUNTS;
+const ACTIVE_SAMPLE_ARCHETYPES = process.env.ISLAND_LOOK_ARCHETYPES
+  ? SAMPLE_ARCHETYPES.filter((archetype) =>
+      process.env.ISLAND_LOOK_ARCHETYPES!.split(",").includes(archetype),
+    )
+  : SAMPLE_ARCHETYPES;
 
 type MetricEntry = {
   readonly metric: string;
@@ -36,6 +63,13 @@ type JudgeRun = {
   readonly canvas: IslandLookBrowserReport["canvas"];
   readonly colorSpace: NonNullable<IslandLookBrowserReport["pixels"]>["colorSpace"];
   readonly sampledPixels: number | null;
+  readonly sample?: {
+    readonly lessonCount: number;
+    readonly routeArchetype: (typeof SAMPLE_ARCHETYPES)[number];
+    readonly layoutSeed: string;
+  };
+  readonly displayDarkPixelShare: number | null;
+  readonly sceneLinearRange: number | null;
   readonly domLabelContrast: readonly {
     readonly label: string;
     readonly contrast: number | null;
@@ -45,6 +79,7 @@ type JudgeRun = {
 
 type JudgeOutput = {
   readonly version: 1;
+  readonly variant: string;
   readonly contract: typeof ISLAND_LOOK_CONTRACT;
   readonly pressureSeed: {
     readonly studyId: string;
@@ -204,8 +239,39 @@ function metricsFor(
   return common;
 }
 
-function shotUrl(shot: (typeof SHOT_IDS)[number]): string {
-  return `${ONLINE_ORIGIN}/${PRESSURE_STUDY_ID}/${PRESSURE_COURSE_ID}?shot=${shot}&post=off&seed=${PRESSURE_COURSE_ID}&freeze=1`;
+function shotUrl(
+  shot: (typeof SHOT_IDS)[number],
+  sample?: CaptureSample,
+): string {
+  const params = new URLSearchParams({
+    shot,
+    post: "off",
+    seed: PRESSURE_COURSE_ID,
+    freeze: "1",
+  });
+  if (sample) {
+    params.set("routeArchetype", sample.routeArchetype);
+    params.set("lessonCount", String(sample.lessonCount));
+    params.set("layoutSeed", sample.layoutSeed);
+  }
+  return `${ONLINE_ORIGIN}/${PRESSURE_STUDY_ID}/${PRESSURE_COURSE_ID}?${params}`;
+}
+
+type CaptureSample = {
+  readonly lessonCount: (typeof SAMPLE_COUNTS)[number];
+  readonly routeArchetype: (typeof SAMPLE_ARCHETYPES)[number];
+  readonly layoutSeed: string;
+};
+
+function captureSamples(): readonly (CaptureSample | undefined)[] {
+  if (!MATRIX_MODE) return [undefined];
+  return ACTIVE_SAMPLE_COUNTS.flatMap((lessonCount) =>
+    ACTIVE_SAMPLE_ARCHETYPES.map((routeArchetype) => ({
+      lessonCount,
+      routeArchetype,
+      layoutSeed: `lighting-review/${lessonCount}-${routeArchetype}`,
+    })),
+  );
 }
 
 async function readLookMetrics(page: Page): Promise<IslandLookBrowserReport | null> {
@@ -264,6 +330,33 @@ async function readCanvasPixelHash(page: Page): Promise<string> {
   });
 }
 
+async function readDisplayDarkPixelShare(page: Page): Promise<number | null> {
+  return page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>(".stagewrap canvas");
+    if (!canvas || canvas.width <= 0 || canvas.height <= 0) return null;
+    const raster = document.createElement("canvas");
+    raster.width = canvas.width;
+    raster.height = canvas.height;
+    const context = raster.getContext("2d", { willReadFrequently: true });
+    if (!context) return null;
+    context.drawImage(canvas, 0, 0);
+    const pixels = context.getImageData(0, 0, raster.width, raster.height).data;
+    const linear = (channel: number) => {
+      const value = channel / 255;
+      return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    };
+    let dark = 0;
+    for (let offset = 0; offset < pixels.length; offset += 4) {
+      const luminance =
+        0.2126 * linear(pixels[offset]!) +
+        0.7152 * linear(pixels[offset + 1]!) +
+        0.0722 * linear(pixels[offset + 2]!);
+      if (luminance < 0.08) dark += 1;
+    }
+    return Number((dark / (raster.width * raster.height)).toFixed(6));
+  });
+}
+
 async function waitForStableCanvas(page: Page): Promise<string> {
   let previous: string | null = null;
   let stableSamples = 0;
@@ -305,76 +398,93 @@ async function screenshotCanvasOnly(page: Page, canvas: Locator, path: string): 
 
 test.describe("J island look judge · non-blocking measurement", () => {
   test("固定镜头 × 桌面/手机，输出画布 PNG 与逐项 metrics.json", async ({ page }) => {
-    test.setTimeout(12 * 180_000);
+    test.setTimeout(MATRIX_MODE ? 90 * 60_000 : 12 * 180_000);
     mkdirSync(OUTPUT_DIR, { recursive: true });
     const runs: JudgeRun[] = [];
 
     for (const viewport of VIEWPORTS) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       for (const shot of SHOT_IDS) {
-        await page.goto(shotUrl(shot), { waitUntil: "domcontentloaded" });
-        await waitForLookReady(page);
-        // Asset uploads, first shader compilation, and the world focus state
-        // can finish after Suspense has committed. Require three consecutive
-        // equal hashes before reading pixels so the reload comparison measures
-        // the settled scene, not whichever async commit happened first.
-        await waitForStableCanvas(page);
+        for (const sample of captureSamples()) {
+          const url = shotUrl(shot, sample);
+          await page.goto(url, { waitUntil: "domcontentloaded" });
+          await waitForLookReady(page);
+          // Asset uploads, first shader compilation, and the world focus state
+          // can finish after Suspense has committed. Require three consecutive
+          // equal hashes before reading pixels so the reload comparison measures
+          // the settled scene, not whichever async commit happened first.
+          await waitForStableCanvas(page);
 
-        const canvas = page.locator(".stagewrap canvas");
-        await canvas.waitFor({ state: "visible", timeout: 30_000 });
-        const filename = `${shot}-${viewport.name}.png`;
-        const screenshotPath = join(OUTPUT_DIR, filename);
-        const report = await readLookMetrics(page);
-        if (!report?.ready || !report.pixels) {
-          throw new Error(`island look probe was not ready for ${shot}/${viewport.name}`);
-        }
-        await screenshotCanvasOnly(page, canvas, screenshotPath);
-        const firstPixelHash = await waitForStableCanvas(page);
-        // Reload the exact same URL for the second run. This checks the full
-        // DEV-only input/camera/scene bootstrap, not just two frames of one
-        // mounted React tree, without adding a second committed/output PNG.
-        await page.reload({ waitUntil: "domcontentloaded" });
-        await waitForLookReady(page);
-        const secondPixelHash = await waitForStableCanvas(page);
-        const deterministic = firstPixelHash === secondPixelHash;
-        const sceneLinearRange = await readSceneLinearRange(page);
-        const metrics = metricsFor(report, sceneLinearRange);
-        const run: JudgeRun = {
-          shot,
-          detail: report.code.detail,
-          viewport: { width: viewport.width, height: viewport.height },
-          screenshot: `SHOTS/island-look/${filename}`,
-          deterministic,
-          firstPixelHash,
-          secondPixelHash,
-          canvas: report.canvas,
-          colorSpace: report.pixels.colorSpace,
-          sampledPixels: report.pixels.sampledPixels,
-          domLabelContrast: report.domLabelContrastSamples.map((sample) => ({
-            label: sample.label,
-            contrast: numberValue(contrastRatio(sample.foreground, sample.background)),
-          })),
-          metrics,
-        };
-        runs.push(run);
+          const canvas = page.locator(".stagewrap canvas");
+          await canvas.waitFor({ state: "visible", timeout: 30_000 });
+          const samplePrefix = sample ? `${sample.lessonCount}-${sample.routeArchetype}-` : "";
+          const filename = `${samplePrefix}${shot}-${viewport.name}.png`;
+          const screenshotPath = join(OUTPUT_DIR, filename);
+          const report = await readLookMetrics(page);
+          if (!report?.ready || !report.pixels) {
+            throw new Error(`island look probe was not ready for ${shot}/${viewport.name}`);
+          }
+          await screenshotCanvasOnly(page, canvas, screenshotPath);
+          const firstPixelHash = await waitForStableCanvas(page);
+          // The normal pressure judge reloads the exact URL for a second run.
+          // A matrix run is visual sampling: keep the same ready/stable proof
+          // but avoid paying for a second shader/Suspense bootstrap per sample.
+          const verifyReload = !MATRIX_MODE || process.env.ISLAND_LOOK_RELOAD === "1";
+          let secondPixelHash = firstPixelHash;
+          if (verifyReload) {
+            await page.reload({ waitUntil: "domcontentloaded" });
+            await waitForLookReady(page);
+            await waitForStableCanvas(page);
+            secondPixelHash = await readCanvasPixelHash(page);
+          }
+          const deterministic = !verifyReload || firstPixelHash === secondPixelHash;
+          const sceneLinearRange = await readSceneLinearRange(page);
+          const displayDarkPixelShare = await readDisplayDarkPixelShare(page);
+          const metrics = metricsFor(report, sceneLinearRange);
+          const run: JudgeRun = {
+            shot,
+            detail: report.code.detail,
+            viewport: { width: viewport.width, height: viewport.height },
+            screenshot: `${OUTPUT_DIR.replace(`${process.cwd()}/`, "")}/${filename}`,
+            deterministic,
+            firstPixelHash,
+            secondPixelHash,
+            canvas: report.canvas,
+            colorSpace: report.pixels.colorSpace,
+            sampledPixels: report.pixels.sampledPixels,
+            sample,
+            displayDarkPixelShare,
+            sceneLinearRange,
+            domLabelContrast: report.domLabelContrastSamples.map((sample) => ({
+              label: sample.label,
+              contrast: numberValue(contrastRatio(sample.foreground, sample.background)),
+            })),
+            metrics,
+          };
+          runs.push(run);
 
-        console.log(`\n${shot} · ${viewport.name} · ${viewport.width}×${viewport.height}`);
-        console.table(
-          metrics.map(({ metric, value, threshold, pass }) => ({
-            metric,
-            value: typeof value === "object" ? JSON.stringify(value) : value,
-            threshold: typeof threshold === "object" ? JSON.stringify(threshold) : threshold,
-            pass: pass ? "PASS" : "RED",
-          })),
-        );
-        if (!deterministic) {
-          console.warn(`island look freeze drift: ${shot}/${viewport.name}`);
+          console.log(
+            `\n${VARIANT} · ${sample ? `${sample.lessonCount}/${sample.routeArchetype} · ` : ""}${shot} · ${viewport.name} · ${viewport.width}×${viewport.height}`,
+          );
+          console.log(`displayDarkPixelShare=${displayDarkPixelShare}`);
+          console.table(
+            metrics.map(({ metric, value, threshold, pass }) => ({
+              metric,
+              value: typeof value === "object" ? JSON.stringify(value) : value,
+              threshold: typeof threshold === "object" ? JSON.stringify(threshold) : threshold,
+              pass: pass ? "PASS" : "RED",
+            })),
+          );
+          if (!deterministic) {
+            console.warn(`island look freeze drift: ${shot}/${viewport.name}`);
+          }
         }
       }
     }
 
     const output: JudgeOutput = {
       version: 1,
+      variant: VARIANT,
       contract: ISLAND_LOOK_CONTRACT,
       pressureSeed: {
         studyId: PRESSURE_STUDY_ID,
