@@ -5,6 +5,7 @@ import {
   type LexiconEntry,
   type LibraryTab,
 } from "@pieai/university-core";
+import { GameSegmentedControl } from "@pieai/swimmer-ui-kit";
 
 import { FavouritesScreen } from "../favourites/FavouritesScreen.js";
 import type { FavouritesStore } from "../favourites/storage.js";
@@ -33,6 +34,15 @@ const TAB_LABEL: Record<ReferenceTab, string> = {
   favourites: "收藏",
   notes: "课堂笔记",
 };
+
+const REFERENCE_TAB_OPTIONS = REFERENCE_TABS.map((id) => ({
+  id,
+  label: TAB_LABEL[id],
+}));
+
+function isReferenceTab(id: string): id is ReferenceTab {
+  return (REFERENCE_TABS as readonly string[]).includes(id);
+}
 
 /**
  * The one entrance to the reference collections.
@@ -83,19 +93,14 @@ export function LibrarySurface({
         ← 关卡地图
       </button>
       <nav className="library-tabs" aria-label="图鉴">
-        {REFERENCE_TABS.map((candidate) => (
-          <button
-            key={candidate}
-            type="button"
-            className={
-              candidate === activeTab ? "library-tabs__tab is-current" : "library-tabs__tab"
-            }
-            aria-current={candidate === activeTab ? "page" : undefined}
-            onClick={() => onTabChange(candidate)}
-          >
-            {TAB_LABEL[candidate]}
-          </button>
-        ))}
+        <GameSegmentedControl
+          label="图鉴"
+          activeId={activeTab}
+          options={REFERENCE_TAB_OPTIONS}
+          onSelect={(id) => {
+            if (isReferenceTab(id)) onTabChange(id);
+          }}
+        />
       </nav>
       {activeTab === "concepts" ? <ConceptIndex entries={concepts} onOpen={onOpenConcept} /> : null}
       {activeTab === "terms" ? <TermIndex entries={terms} onOpenFull={onOpenTerm} /> : null}

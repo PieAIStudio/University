@@ -141,14 +141,14 @@ describe("readProgress", () => {
 });
 
 describe("LessonToolbar", () => {
-  it("is a close control and a bar, not a nav", async () => {
+  it("is a close control and a progress bar, not a nav", async () => {
     const onClose = vi.fn();
     await act(async () => {
       root.render(<LessonToolbar onClose={onClose} sections={SECTIONS} />);
     });
     expect(container.querySelector("nav")).toBeNull();
     expect(container.textContent).not.toContain("关卡地图");
-    expect(container.textContent).not.toMatch(/\d+\s*\/\s*\d+/);
+    expect(container.textContent).toContain("1/3");
     const close = container.querySelector<HTMLButtonElement>(".lesson-toolbar__close");
     expect(close?.getAttribute("aria-label")).toBe("离开课文");
     await act(async () => {
@@ -247,9 +247,13 @@ describe("LessonToolbar scroll target", () => {
     act(() => mount.render(<LessonToolbar onClose={() => {}} sections={SECTIONS} />));
 
     const scrollerEvents = onScroller.mock.calls.map(([type]) => type);
-    const windowEvents = onWindow.mock.calls.map(([type]) => type);
     expect(scrollerEvents).toContain("scroll");
-    expect(windowEvents).not.toContain("scroll");
+    /* GameProgress' liquid observer intentionally watches window scroll in
+       capture phase. The assertion is about LessonToolbar not adding a
+       second, bubble-phase document listener when a nearer scroller exists. */
+    const windowScrollCalls = onWindow.mock.calls.filter(([type]) => type === "scroll");
+    expect(windowScrollCalls).toHaveLength(1);
+    expect(windowScrollCalls[0]?.[2]).toMatchObject({ capture: true });
 
     act(() => mount.unmount());
   });

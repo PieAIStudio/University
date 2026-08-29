@@ -54,6 +54,9 @@ describe("the library's tabs", () => {
   });
 
   it("still opens on the concepts index", () => {
-    expect(surface("concepts")).toContain("课堂笔记");
+    const markup = surface("concepts");
+    expect(markup).toContain("课堂笔记");
+    expect(markup).toContain('class="game-ui-segmented"');
+    expect(markup).toContain('aria-pressed="true"');
   });
 });
