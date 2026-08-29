@@ -12,8 +12,8 @@
   "registryProvenance": {
     "schema": "agent-assets-registry",
     "version": 1,
-    "hash": "sha256:2e523f567604aac45713531dcea988978f9ab755b84394daa9f39e699b37149b",
-    "assetCount": 73
+    "hash": "sha256:e3f9a7be55c3bac6793e97c9876243fa40bdc172a15f8c5f68db4aff9c32e0d9",
+    "assetCount": 79
   },
   "assets": [
     {
@@ -29,6 +29,27 @@
       "delivery": "symlink",
       "contentHash": "sha256:80161e6836b3b40f4e83730a290deb40ac14d877d38c97ad5f6d71be37ce74c3",
       "targetPath": ".agents/skills/agent-browser"
+    },
+    {
+      "id": "npx-skills/archify",
+      "sourcePath": "skills/npx-skills/.agents/skills/archify",
+      "delivery": "symlink",
+      "contentHash": "sha256:43cf7a3891096b750896ec29633cbca98e369a92af11a60a78a70628f7057174",
+      "targetPath": ".agents/manual-skills/archify"
+    },
+    {
+      "id": "npx-skills/eli5",
+      "sourcePath": "skills/npx-skills/.agents/skills/eli5",
+      "delivery": "symlink",
+      "contentHash": "sha256:9bda84c3a322554c8b93f2ccc681eff868a734a9bd35fa26c1c9ae096f795758",
+      "targetPath": ".agents/skills/eli5"
+    },
+    {
+      "id": "npx-skills/fireworks-open-eli5",
+      "sourcePath": "skills/npx-skills/.agents/skills/fireworks-open-eli5",
+      "delivery": "symlink",
+      "contentHash": "sha256:3a0d8b3a7d6a162adb1b868a06715de4d0bb6e688349a964783fe3626b3cd11d",
+      "targetPath": ".agents/skills/fireworks-open-eli5"
     },
     {
       "id": "npx-skills/frontend-design",
@@ -178,11 +199,25 @@
       "targetPath": "docs/policy/shared-rules/web3d-capability-alignment.md"
     },
     {
+      "id": "pie-skills/ai-human-friendly-refactor",
+      "sourcePath": "skills/pie-skills/ai-human-friendly-refactor",
+      "delivery": "symlink",
+      "contentHash": "sha256:6099c06fef1a50d54492ce3c5b4ce75bb9655fcffbc7f5671290e6fc98269d00",
+      "targetPath": ".agents/manual-skills/ai-human-friendly-refactor"
+    },
+    {
       "id": "pie-skills/experience-capture",
       "sourcePath": "skills/pie-skills/experience-capture",
       "delivery": "symlink",
       "contentHash": "sha256:7e721266aa5bb311c9e66b887046270cd29cb6125a4fa3c103471d775aa40d65",
       "targetPath": ".agents/skills/experience-capture"
+    },
+    {
+      "id": "pie-skills/mermaid-diagrams",
+      "sourcePath": "skills/pie-skills/mermaid-diagrams",
+      "delivery": "symlink",
+      "contentHash": "sha256:290c599d15e221ebcd33f4d442188e1ef8077c36eecf4f4a542b2fa520410f14",
+      "targetPath": ".agents/skills/mermaid-diagrams"
     },
     {
       "id": "pie-skills/screenwalk",
@@ -211,6 +246,13 @@
       "delivery": "symlink",
       "contentHash": "sha256:8dbcb90df1b95f2c4af24575aa0dfeb55c8eb504d301e8bf09cb0444f6780333",
       "targetPath": ".agents/manual-skills/design-taste-frontend-v1"
+    },
+    {
+      "id": "third-party-skills/fireworks-tech-graph",
+      "sourcePath": "skills/third-party-without-npx-skills/fireworks-tech-graph",
+      "delivery": "symlink",
+      "contentHash": "sha256:5ff232c0cd705161a67ea0c29cc78addc826d6adbe7aaaadcda65129570f1e90",
+      "targetPath": ".agents/manual-skills/fireworks-tech-graph"
     },
     {
       "id": "third-party-skills/full-output-enforcement",
