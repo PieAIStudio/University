@@ -13,6 +13,8 @@ import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 
+import { crossUnitLessonIdentityErrors } from "./lesson-identity.mjs";
+
 const ROOT = resolve(import.meta.dirname, "..");
 const RECOVERY_ROOT = join(ROOT, "apps", "local", "course-proposals", "recovery");
 const DELIVERY_ROOT = join(ROOT, "apps", "university", "content");
@@ -44,6 +46,7 @@ function revisionsOf(course, key, errors) {
     errors.push(`${key}: course has no units`);
     return revisions;
   }
+  errors.push(...crossUnitLessonIdentityErrors(course, key));
 
   for (const unit of course.units) {
     if (!unit || typeof unit.id !== "string" || !Array.isArray(unit.lessons)) {
@@ -244,6 +247,22 @@ function runSelfTests() {
 
   assert.deepEqual(contentRevisionErrors(base), []);
   console.log("  restored source revision: green");
+
+  const duplicate = structuredClone(base);
+  for (const entry of [
+    ...duplicate.sourceCourses,
+    ...duplicate.deliveryCourses,
+    ...duplicate.shelfCourses,
+  ]) {
+    entry.course.units.push({ id: "second-unit", lessons: [{ id: "lesson", contentRevision: 3 }] });
+  }
+  const duplicateErrors = contentRevisionErrors(duplicate);
+  assert.ok(
+    duplicateErrors.some((error) => error.includes("the progress document key drops unitId")),
+    "cross-unit lesson reuse should fail loudly",
+  );
+  console.log("  injected cross-unit lesson id reuse: red");
+  console.log(`    ${duplicateErrors.find((error) => error.includes("drops unitId"))}`);
 }
 
 if (process.argv.includes("--self-test")) {

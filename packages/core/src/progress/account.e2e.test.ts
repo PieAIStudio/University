@@ -1,15 +1,48 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { LessonRef } from "./contract.js";
+import { lessonRefKey, type LessonRef } from "./contract.js";
 import { createIdentityPort, createMemoryIdentityPort } from "../ports/identity.js";
 import type { ReaderMark } from "../domain/reader-marks.js";
 import type { HostExerciseGrade } from "../ports/grading.js";
-import { emptyProgress, lessonKey, parseProgress } from "./document.js";
+import {
+  emptyProgress,
+  lessonKey,
+  lessonKeyOf,
+  parseProgress,
+  recapCardKeyOf,
+} from "./document.js";
 import { createMemoryPersistence, createMemoryRemoteStore } from "./memory.js";
 import { createProgressPort } from "./port.js";
+import { progressSourceOf } from "./source.js";
 
 const LESSON = lessonKey("turing-pact", "foundations-before-zero", "you-already-know-apps");
 const CARDS = ["what-is-an-app", "files-on-a-screen"] as const;
+const COLLISION_FIRST: LessonRef = {
+  studyId: "turing-pact",
+  courseId: "foundations-before-zero",
+  unitId: "unit-first",
+  lessonId: "shared-lesson",
+};
+const COLLISION_SECOND: LessonRef = { ...COLLISION_FIRST, unitId: "unit-second" };
+const EMPTY_LESSON = { contentRevision: 1, exerciseIds: [] } as const;
+
+function courseCardKeyOf(ref: LessonRef, cardId = "shared-card"): string {
+  return `${ref.studyId}/${ref.courseId}/${ref.lessonId}/${cardId}`;
+}
+
+function markFor(ref: LessonRef, markId: string): ReaderMark {
+  return {
+    markId,
+    lessonKey: lessonRefKey(ref),
+    contentRevision: 1,
+    kind: "question",
+    quote: { exact: `来自 ${ref.unitId}`, prefix: "", suffix: "" },
+    sectionTitle: null,
+    note: null,
+    createdAt: "2026-08-24T08:00:00.000Z",
+    resolvedAt: null,
+  };
+}
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -266,5 +299,123 @@ describe("one cloud progress document across devices", () => {
     await returningPhone.bindAccount(userId, remote);
     expect(returningPhone.readerMarks("turing-pact")).toEqual([]);
     expect(returningPhone.snapshot().readerMarks[mark.markId]?.deletedAt).not.toBeNull();
+  });
+
+  it("9. characterizes a cross-unit collision after a cloud row round-trip", async () => {
+    const remote = createMemoryRemoteStore();
+    const userId = "memory:lesson-identity-cloud";
+    const firstKey = lessonKeyOf(COLLISION_FIRST);
+    const secondKey = lessonKeyOf(COLLISION_SECOND);
+    const firstCardKey = courseCardKeyOf(COLLISION_FIRST);
+    const secondCardKey = courseCardKeyOf(COLLISION_SECOND);
+
+    expect(firstKey).toBe(secondKey);
+    expect(firstCardKey).toBe(secondCardKey);
+
+    const writer = createProgressPort({ persistence: createMemoryPersistence() });
+    writer.advanceLesson(firstKey, 1);
+    writer.confirmLessonRead(firstKey, EMPTY_LESSON.contentRevision);
+    writer.saveReaderMark(markFor(COLLISION_FIRST, "cloud-first-mark"));
+    writer.createRecapCard({
+      locator: COLLISION_FIRST,
+      contentRevision: EMPTY_LESSON.contentRevision,
+      commandId: "cloud-first-recap",
+      answer: "first unit answer",
+    });
+    writer.dropCards(COLLISION_FIRST.studyId, COLLISION_FIRST.courseId, COLLISION_FIRST.lessonId, [
+      "shared-card",
+    ]);
+    writer.gradeCard(firstCardKey, "good");
+    await writer.bindAccount(userId, remote);
+
+    const reader = createProgressPort({ persistence: createMemoryPersistence() });
+    await reader.bindAccount(userId, remote);
+    const row = remote.records.get(userId);
+
+    expect(Object.keys(row?.lessons ?? {})).toEqual([firstKey]);
+    expect(progressSourceOf(reader).completionOf(COLLISION_FIRST, EMPTY_LESSON)).toEqual({
+      exercisesPassed: true,
+      readConfirmed: true,
+    });
+    expect(progressSourceOf(reader).completionOf(COLLISION_SECOND, EMPTY_LESSON)).toEqual({
+      exercisesPassed: true,
+      readConfirmed: true,
+    });
+    expect(
+      reader
+        .readerMarks(COLLISION_FIRST.studyId)
+        .filter((mark) => mark.lessonKey === lessonRefKey(COLLISION_SECOND)),
+    ).toEqual([]);
+    expect(reader.recapCard(COLLISION_FIRST)).toMatchObject({ unitId: COLLISION_FIRST.unitId });
+    expect(reader.recapCard(COLLISION_SECOND)).toBeNull();
+    expect(row?.cards[firstCardKey]?.fsrs.reps).toBe(1);
+    expect(row?.cards[recapCardKeyOf(COLLISION_FIRST)]).toBeDefined();
+    expect(row?.cards[recapCardKeyOf(COLLISION_SECOND)]).toBeUndefined();
+  });
+
+  it("10. characterizes the same collision when two offline copies merge", async () => {
+    const remote = createMemoryRemoteStore();
+    const userId = "memory:lesson-identity-offline";
+    const firstKey = lessonKeyOf(COLLISION_FIRST);
+    const firstCardKey = courseCardKeyOf(COLLISION_FIRST);
+    const first = createProgressPort({ persistence: createMemoryPersistence() });
+    const second = createProgressPort({ persistence: createMemoryPersistence() });
+
+    await first.bindAccount(userId, remote);
+    await second.bindAccount(userId, remote);
+    remote.goOffline();
+
+    first.advanceLesson(firstKey, 1);
+    first.confirmLessonRead(firstKey, EMPTY_LESSON.contentRevision);
+    first.saveReaderMark(markFor(COLLISION_FIRST, "offline-first-mark"));
+    first.createRecapCard({
+      locator: COLLISION_FIRST,
+      contentRevision: EMPTY_LESSON.contentRevision,
+      commandId: "offline-first-recap",
+      answer: "first offline answer",
+    });
+    first.dropCards(COLLISION_FIRST.studyId, COLLISION_FIRST.courseId, COLLISION_FIRST.lessonId, [
+      "shared-card",
+    ]);
+    first.gradeCard(firstCardKey, "good");
+
+    second.advanceLesson(lessonKeyOf(COLLISION_SECOND), 0.4);
+    second.saveReaderMark(markFor(COLLISION_SECOND, "offline-second-mark"));
+    second.createRecapCard({
+      locator: COLLISION_SECOND,
+      contentRevision: EMPTY_LESSON.contentRevision,
+      commandId: "offline-second-recap",
+      answer: "second offline answer",
+    });
+    second.dropCards(
+      COLLISION_SECOND.studyId,
+      COLLISION_SECOND.courseId,
+      COLLISION_SECOND.lessonId,
+      ["shared-card"],
+    );
+
+    await first.flush();
+    await second.flush();
+    expect(first.syncState().status).toBe("offline");
+    expect(second.syncState().status).toBe("offline");
+
+    remote.goOnline();
+    await first.flush();
+    await second.flush();
+
+    const row = remote.records.get(userId);
+    expect(Object.keys(row?.lessons ?? {})).toEqual([firstKey]);
+    expect(Object.keys(row?.readerMarks ?? {}).sort()).toEqual([
+      "offline-first-mark",
+      "offline-second-mark",
+    ]);
+    expect(Object.keys(row?.cards ?? {}).sort()).toEqual(
+      [firstCardKey, recapCardKeyOf(COLLISION_FIRST), recapCardKeyOf(COLLISION_SECOND)].sort(),
+    );
+    expect(row?.cards[firstCardKey]?.fsrs.reps).toBe(1);
+    expect(progressSourceOf(second).completionOf(COLLISION_SECOND, EMPTY_LESSON)).toEqual({
+      exercisesPassed: true,
+      readConfirmed: true,
+    });
   });
 });

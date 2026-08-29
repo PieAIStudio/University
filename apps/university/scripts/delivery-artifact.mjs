@@ -18,6 +18,7 @@ import {
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 
 import { checkShelfData } from "./check-shelf.mjs";
+import { crossUnitLessonIdentityErrors } from "../../../scripts/lesson-identity.mjs";
 
 export const RELEASE_SCHEMA_VERSION = 1;
 export const RELEASE_ARTIFACT_KIND = "university-delivery";
@@ -243,6 +244,8 @@ export function validateRecoveryInput(root, { projectRoot = PROJECT_ROOT } = {})
       if (pkg?.packageKind !== RECOVERY_PACKAGE_KIND || pkg?.course?.id !== courseId) {
         fail(`${prefix} package does not match its index entry`);
       }
+      const identityErrors = crossUnitLessonIdentityErrors(pkg.course, `${prefix} package`);
+      if (identityErrors.length > 0) fail(identityErrors.join("; "));
       referenced.add(posixPath(relative(resolvedRoot, packagePath)));
       courses.push(courseId);
     }

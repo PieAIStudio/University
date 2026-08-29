@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { Rating } from "ts-fsrs";
 
 import { NOT_STARTED, type LessonRef } from "@pieai/university-core";
 
 import { progressSource, type LessonExerciseSnapshot } from "./progress-source.js";
 import { SqliteLearningStore } from "./sqlite-learning-store.js";
-import { exerciseContentKey, lessonContentKey } from "./types.js";
+import { cardContentKey, exerciseContentKey, lessonContentKey } from "./types.js";
 
 const ref: LessonRef = {
   studyId: "turing-pact",
@@ -126,11 +127,69 @@ describe("the local progress source", () => {
 
   it("keeps two lessons apart when only their unit differs", () => {
     const learningStore = openStore();
-    passExercises(learningStore);
-    confirmRead(learningStore);
-    expect(sourceOf(learningStore).completionOf({ ...ref, unitId: "a-different-unit" })).toEqual(
-      NOT_STARTED,
-    );
+    const first: LessonRef = ref;
+    const second: LessonRef = { ...ref, unitId: "a-different-unit" };
+    const firstLessonKey = lessonContentKey({
+      courseId: first.courseId,
+      unitId: first.unitId,
+      lessonId: first.lessonId,
+    });
+    const secondLessonKey = lessonContentKey({
+      courseId: second.courseId,
+      unitId: second.unitId,
+      lessonId: second.lessonId,
+    });
+    const firstCardKey = cardContentKey({
+      courseId: first.courseId,
+      unitId: first.unitId,
+      lessonId: first.lessonId,
+      cardId: "shared-card",
+    });
+    const secondCardKey = cardContentKey({
+      courseId: second.courseId,
+      unitId: second.unitId,
+      lessonId: second.lessonId,
+      cardId: "shared-card",
+    });
+
+    passExercises(learningStore, first);
+    confirmRead(learningStore, first);
+    learningStore.recordLessonProgress({
+      lessonKey: firstLessonKey,
+      contentRevision: snapshot.contentRevision,
+      status: "completed",
+      progress: 1,
+      occurredAt: new Date("2026-08-24T08:00:00.000Z"),
+    });
+    learningStore.recordReaderMark({
+      lessonKey: firstLessonKey,
+      contentRevision: snapshot.contentRevision,
+      kind: "question",
+      quote: { exact: "first unit", prefix: "", suffix: "" },
+      createdAt: new Date("2026-08-24T08:01:00.000Z"),
+    });
+    learningStore.reviewCard({
+      commandId: "review-first-unit",
+      cardKey: firstCardKey,
+      contentRevision: 1,
+      rating: Rating.Good,
+      reviewedAt: new Date("2026-08-24T08:02:00.000Z"),
+    });
+    learningStore.ensureCard(secondCardKey, 1, new Date("2026-08-24T08:02:00.000Z"));
+
+    expect(sourceOf(learningStore).completionOf(first)).toEqual({
+      exercisesPassed: true,
+      readConfirmed: true,
+    });
+    expect(sourceOf(learningStore).completionOf(second)).toEqual(NOT_STARTED);
+    expect(learningStore.getLessonProgress(firstLessonKey)?.status).toBe("completed");
+    expect(learningStore.getLessonProgress(secondLessonKey)).toBeNull();
+    expect(learningStore.hasLessonCompletion(firstLessonKey, 1)).toBe(true);
+    expect(learningStore.hasLessonCompletion(secondLessonKey, 1)).toBe(false);
+    expect(learningStore.listReaderMarks({ lessonKey: firstLessonKey })).toHaveLength(1);
+    expect(learningStore.listReaderMarks({ lessonKey: secondLessonKey })).toEqual([]);
+    expect(learningStore.getCard(firstCardKey)?.reps).toBe(1);
+    expect(learningStore.getCard(secondCardKey)?.reps).toBe(0);
   });
 
   it("uses studyId only to pick the store, never as part of the row key", () => {
