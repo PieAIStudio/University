@@ -254,6 +254,28 @@ describe("delivery artifact gate", () => {
     );
   });
 
+  it("rejects a recovery package that reuses a lesson id across units", () => {
+    const root = temporaryRoot();
+    const { recovery, packagePath } = writeRecoveryFixture(root);
+    const packageValue = JSON.parse(readFileSync(packagePath, "utf8"));
+    const lesson = { id: "shared-lesson" };
+    packageValue.course.units = [
+      { id: "unit-first", lessons: [lesson] },
+      { id: "unit-second", lessons: [{ ...lesson }] },
+    ];
+    const bytes = Buffer.from(JSON.stringify(packageValue));
+    writeFileSync(packagePath, bytes);
+
+    const indexPath = join(recovery, "study", "index.json");
+    const index = JSON.parse(readFileSync(indexPath, "utf8"));
+    index.courses[0].sha256 = sha256(bytes);
+    writeFileSync(indexPath, `${JSON.stringify(index)}\n`);
+
+    expect(() => validateRecoveryInput(recovery, { projectRoot: PROJECT_ROOT })).toThrow(
+      /lesson id shared-lesson is reused.*unitId/,
+    );
+  });
+
   it("refuses the private studies shelf as a release input", () => {
     expect(() => validateRecoveryInput(resolve(PROJECT_ROOT, "apps/local/studies"))).toThrow(
       /apps\/local\/studies/,

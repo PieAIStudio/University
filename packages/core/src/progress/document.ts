@@ -44,6 +44,12 @@ export const emptyProgress = (): ProgressDocument => ({
  * store may key its rows however it likes — and that is exactly why they have
  * to stop being interchangeable at the door of this module.
  *
+ * This three-part projection is safe only under the content contract that a
+ * course cannot contain the same lesson id in two units. The document cannot
+ * recover a dropped unitId later, so the recovery/delivery boundary rejects
+ * that shape before it can enter this store. Existing v2 documents remain on
+ * this key; changing it here would be a data migration, not a refactor.
+ *
  * They were not. `confirmLessonRead` was reached through a reader port that
  * built its argument with `lessonRefKey`, so the read confirmation landed on a
  * four-segment key while every reader of this document looked under the
