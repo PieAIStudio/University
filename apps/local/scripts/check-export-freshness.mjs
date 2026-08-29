@@ -86,6 +86,23 @@ if (!existsSync(studiesRoot)) {
   process.exit(0);
 }
 
+// The repository keeps a README and .gitignore at apps/local/studies so a
+// fresh worktree has the directory, but it does not have the owner's private
+// study checkouts. Treat that skeleton like a missing root; otherwise every
+// committed recovery export looks stale merely because there is no source to
+// compare with.
+const initializedStudies = directoriesIn(studiesRoot).filter((study) =>
+  existsSync(join(studiesRoot, study, "study.json")),
+);
+if (initializedStudies.length === 0) {
+  console.log(
+    "check-export-freshness: no initialized studies on this machine. " +
+      "SOURCE FRESHNESS IS NOT PROVEN HERE — this run cannot tell whether the " +
+      "committed recovery still matches the author's course source.",
+  );
+  process.exit(0);
+}
+
 const exported = directoriesIn(exportRoot).filter((study) =>
   existsSync(join(exportRoot, study, "index.json")),
 );
