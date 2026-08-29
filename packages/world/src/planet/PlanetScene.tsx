@@ -53,15 +53,18 @@ export const PLANET_ICOSAHEDRON_DETAIL = 4 as const;
 export const PLANET_LIGHTS = {
   hemisphereColor: 0xd8f2fc,
   hemisphereGround: 0x1d2e44,
-  hemisphereIntensity: 1.4,
+  // Keep the cold lower bounce, but make it a shadow-preserving fill rather
+  // than the planet's primary light source. The key stays at 1.6 so this
+  // change is a measured reduction of fill, not a brightness chase.
+  hemisphereIntensity: 0.24,
   ambientColor: 0xffefe0,
-  ambientIntensity: 0.95,
+  ambientIntensity: 0.16,
   keyColor: 0xfff8ee,
   keyIntensity: 1.6,
   frontalFillColor: 0xe8f2fa,
-  frontalFillIntensity: 0.65,
+  frontalFillIntensity: 0.08,
   nightRimColor: 0x529eb0,
-  nightRimIntensity: 0.45,
+  nightRimIntensity: 0.06,
 } as const;
 
 /**
@@ -220,7 +223,24 @@ export function buildPlanetGeometry(): THREE.BufferGeometry {
   }
 
   geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-  geometry.computeVertexNormals();
+  /*
+   * IcosahedronGeometry is intentionally non-indexed here because each
+   * terrain colour is written per face vertex. `computeVertexNormals()` would
+   * therefore preserve one flat normal per triangle and turn the lighting
+   * itself into a second low-poly pattern. The displaced surface is radial,
+   * so the original unit-sphere direction is the correct continuous normal
+   * for every duplicate vertex. This removes the visible facet ridge without
+   * paying for another subdivision level.
+   */
+  const normals = geometry.attributes.normal as THREE.BufferAttribute;
+  for (let i = 0; i < count; i += 1) {
+    const x = position.getX(i);
+    const y = position.getY(i);
+    const z = position.getZ(i);
+    const len = Math.hypot(x, y, z) || 1;
+    normals.setXYZ(i, x / len, y / len, z / len);
+  }
+  normals.needsUpdate = true;
   return geometry;
 }
 
@@ -250,8 +270,11 @@ const ATMOSPHERE_FRAGMENT_SHADER = /* glsl */ `
     vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
     vec3 normal = normalize(vWorldNormal);
     float facing = max(dot(normal, viewDirection), 0.0);
-    // Sharp rim falloff so the center of the planet stays clear.
-    float rim = pow(1.0 - facing, 4.2);
+    // Keep the glow near the limb, but fade it at the exact silhouette. A
+    // non-zero alpha right on the shell boundary reads as a cut-out ring;
+    // putting the soft transition just inside the limb keeps the atmosphere
+    // attached to the planet instead of outlining it with a hard edge.
+    float rim = pow(1.0 - facing, 2.4) * smoothstep(0.0, 0.22, facing);
 
     float sunDot = dot(normal, normalize(uSunDirection));
     float sunFacing = smoothstep(-0.3, 0.6, sunDot);
@@ -260,7 +283,7 @@ const ATMOSPHERE_FRAGMENT_SHADER = /* glsl */ `
     vec3 nightColor = vec3(0.10, 0.24, 0.33);  // Slate-blue twilight
 
     vec3 atmColor = mix(nightColor, dayColor, sunFacing);
-    float alpha = rim * (0.16 + 0.48 * sunFacing);
+    float alpha = rim * (0.12 + 0.36 * sunFacing);
     gl_FragColor = vec4(atmColor, alpha);
   }
 `;
