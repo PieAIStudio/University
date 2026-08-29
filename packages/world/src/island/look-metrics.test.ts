@@ -26,16 +26,20 @@ function blueprint(detailSeed = COURSE_ID) {
 }
 
 describe("island look judge", () => {
-  it("keeps the fixed URL controls DEV-testable without changing the production fallback", () => {
-    expect(
-      islandLookDebugFromSearch("?shot=course-near&post=off&seed=foundations-before-zero&freeze=1"),
-    ).toEqual({
+  it("keeps all sample controls DEV-only without changing the production fallback", () => {
+    const sampleSearch =
+      "?shot=course-near&post=off&seed=foundations-before-zero&freeze=1" +
+      "&routeArchetype=serpentine&lessonCount=24&layoutSeed=lighting-form%2Fseed-24-serpentine";
+    expect(islandLookDebugFromSearch(sampleSearch, true)).toEqual({
       shot: "course-near",
       post: false,
       seed: COURSE_ID,
+      routeArchetype: "serpentine",
+      lessonCount: 24,
+      layoutSeed: "lighting-form/seed-24-serpentine",
       freeze: true,
     });
-    expect(islandLookDebugFromSearch("?shot=course-near", false)).toEqual({
+    expect(islandLookDebugFromSearch(sampleSearch, false)).toEqual({
       shot: null,
       post: true,
       seed: null,

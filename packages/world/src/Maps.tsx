@@ -42,7 +42,11 @@ import {
 import { islandThemeSelectionForCourse } from "./island/kenney-recipes.js";
 import { IslandDressing } from "./island/island-dressing-render.js";
 import { IslandRender, UnitSigil } from "./island/island-render.js";
-import { islandLookFrozen, islandLookSeedForCourse } from "./island/island-surface-style.js";
+import {
+  islandLookFrozen,
+  islandLookSeedForCourse,
+  resolveIslandLookDebug,
+} from "./island/island-surface-style.js";
 import { hopPose, PlayerMarker, type AvatarRecipe } from "./avatar/index.js";
 import { layoutStudyRoad, radiusForLessons } from "./course/layout";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
@@ -750,23 +754,35 @@ export function placeCourse(
   const flat = course.units.flatMap((unit, unitIndex) =>
     unit.lessons.map((lesson, slot) => ({ unit, unitIndex, lesson, slot })),
   );
-  if (flat.length === 0) return [];
+  const lookDebug = resolveIslandLookDebug();
+  const lookSample = lookDebug.shot?.startsWith("course-") === true && lookDebug.seed === course.id;
+  const sampleFlat =
+    lookSample && lookDebug.lessonCount !== undefined
+      ? flat.slice(0, Math.min(flat.length, lookDebug.lessonCount))
+      : flat;
+  if (sampleFlat.length === 0) return [];
   const geometry = islandGeometryBlueprint({
     studyId,
     courseId: course.id,
-    lessonCount: flat.length,
-    seed: islandLookSeedForCourse(course.id),
+    lessonCount: sampleFlat.length,
+    seed:
+      lookSample && lookDebug.layoutSeed
+        ? lookDebug.layoutSeed
+        : islandLookSeedForCourse(course.id),
+    routeArchetype: lookSample ? (lookDebug.routeArchetype ?? undefined) : undefined,
     themeSelection: islandThemeSelectionForCourse(studyId, course.id),
   });
   const blueprint = projectIslandBlueprint(geometry, {
-    lessonIds: flat.map(({ lesson }) => lesson.id),
-    unitIds: flat.map(({ unit }) => unit.id),
+    lessonIds: sampleFlat.map(({ lesson }) => lesson.id),
+    unitIds: sampleFlat.map(({ unit }) => unit.id),
   });
   const hueShift = hueShiftForCourse(studyId, course.id);
   const firstOpen = next
-    ? flat.findIndex((entry) => entry.unit.id === next.unitId && entry.lesson.id === next.lessonId)
+    ? sampleFlat.findIndex(
+        (entry) => entry.unit.id === next.unitId && entry.lesson.id === next.lessonId,
+      )
     : -1;
-  return flat.map((entry, index) => {
+  return sampleFlat.map((entry, index) => {
     const lessonShape = shape.units[entry.unitIndex]!.lessons[entry.slot]!;
     const node = blueprint.nodes[index]!;
     const done = isLessonComplete(

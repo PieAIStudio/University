@@ -7,6 +7,7 @@
  * route, the dressing plan, or the SwimmerRenderKit grade pass.
  */
 import * as THREE from "three";
+import type { IslandRouteArchetype } from "./island-blueprint.js";
 
 export const ISLAND_SURFACE_STYLE_IDS = ["diorama", "elemental", "mossy", "desert"] as const;
 export type IslandSurfaceStyleId = (typeof ISLAND_SURFACE_STYLE_IDS)[number];
@@ -301,6 +302,10 @@ export type IslandLookShotId = (typeof ISLAND_LOOK_SHOT_IDS)[number];
 export interface IslandLookDebugOptions {
   readonly shot: IslandLookShotId | null;
   readonly seed: string | null;
+  /** Temporary DEV-only sample controls for exhaustive route review. */
+  readonly routeArchetype?: IslandRouteArchetype;
+  readonly lessonCount?: number;
+  readonly layoutSeed?: string;
   readonly freeze: boolean;
   readonly post: boolean;
 }
@@ -318,6 +323,25 @@ function parseIslandLookShot(value: string | null): IslandLookShotId | null {
     : null;
 }
 
+function parseIslandLookRouteArchetype(value: string | null): IslandRouteArchetype | null {
+  switch (value?.trim().toLowerCase()) {
+    case "arc":
+    case "horseshoe":
+    case "loop-around-hill":
+    case "switchback":
+    case "serpentine":
+      return value.trim().toLowerCase() as IslandRouteArchetype;
+    default:
+      return null;
+  }
+}
+
+function parseIslandLookLessonCount(value: string | null): number | null {
+  if (value === null || value.trim() === "") return null;
+  const count = Number(value);
+  return Number.isInteger(count) && count >= 1 && count <= 4096 ? count : null;
+}
+
 /**
  * Parse the DEV-only fixed-shot input. This shares `queryFromSearch` with the
  * existing surface-style debug switch so a URL is the one place that names a
@@ -332,9 +356,15 @@ export function islandLookDebugFromSearch(
   const params = queryFromSearch(search);
   const seed = params.get("seed")?.trim() ?? "";
   const shot = parseIslandLookShot(params.get("shot")?.trim().toLowerCase() ?? null);
+  const routeArchetype = parseIslandLookRouteArchetype(params.get("routeArchetype"));
+  const lessonCount = parseIslandLookLessonCount(params.get("lessonCount"));
+  const layoutSeed = params.get("layoutSeed")?.trim() || null;
   return {
     shot,
     seed: seed.length > 0 ? seed : null,
+    ...(routeArchetype ? { routeArchetype } : {}),
+    ...(lessonCount !== null ? { lessonCount } : {}),
+    ...(layoutSeed ? { layoutSeed } : {}),
     // `post`, `freeze`, and `seed` are properties of a named shot. A stray
     // query on a normal learner URL must not silently change that URL's scene.
     freeze: shot !== null && params.get("freeze") === "1",
