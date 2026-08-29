@@ -200,6 +200,30 @@ button.label:focus-visible {
   color: var(--game-ui-text-muted, #9aa6bb);
 }
 
+.nextup__context-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.nextup .nextup__context-row .nextup__meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+
+.nextup__context-row .world-source-controls,
+.nextup__context-row .ua-dashboard-entry {
+  flex: 0 0 auto;
+}
+
+.nextup__primary {
+  width: 100%;
+  margin-top: 10px;
+}
+
 .picked[hidden] {
   display: none;
 }
@@ -261,6 +285,15 @@ button.label:focus-visible {
   box-shadow: var(--game-ui-shadow-panel);
   pointer-events: none;
   white-space: nowrap;
+  opacity: 1;
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+
+.hint--dismissed {
+  opacity: 0;
+  transform: translate(-50%, 6px);
 }
 
 .hint__row,
@@ -359,5 +392,11 @@ button.label:focus-visible {
     left: 14px;
     right: 14px;
     width: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hint {
+    transition: none;
   }
 }

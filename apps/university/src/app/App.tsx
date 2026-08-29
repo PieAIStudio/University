@@ -35,6 +35,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { GameButton } from "@pieai/swimmer-ui-kit";
 import {
   activeIdForView,
   isBareView,
@@ -63,7 +64,7 @@ import {
 } from "@pieai/university-world/avatar.js";
 
 import { AUTHORING, CAMPUS_NAME, EMPTY_SHELF_HINT } from "../mode";
-import { contentPort, feedbackPort, reviewReminderPort } from "../ports/index";
+import { contentPort, feedbackPort, reviewReminderPort, sourceAccessPort } from "../ports/index";
 import { identityPort } from "../account/identity";
 import { paymentPort } from "../account/payment";
 import { bindProgressToIdentity } from "../account/session";
@@ -116,6 +117,7 @@ import {
 import { WorldMapCanvas } from "@pieai/university-world/WorldMapCanvas.js";
 import { MainRouter } from "./MainRouter";
 import { usePageMetadata } from "./page-metadata";
+import { WorldSourceControls } from "../learner/WorldSourceControls";
 import {
   trackEvent,
   withProductAnalyticsIdentity,
@@ -196,6 +198,7 @@ export function App() {
    */
   const [mapFocus, setMapFocus] = useState<string | null | undefined>(undefined);
   const [hovered, setHovered] = useState<string | null>(null);
+  const [mapInteracted, setMapInteracted] = useState(false);
   const [picked, setPicked] = useState<CourseNode | null>(null);
   const pickedCourse = picked ? courseOf(picked.studyId, picked.courseId) : null;
   const pickedStats = pickedCourse ? coursePickStatsOf(pickedCourse) : null;
@@ -220,6 +223,7 @@ export function App() {
   const [sceneReady, setSceneReady] = useState(false);
   const onSceneReady = useCallback(() => setSceneReady(true), []);
   const onSceneBusy = useCallback(() => setSceneReady(false), []);
+  const onMapInteract = useCallback(() => setMapInteracted(true), []);
 
   const source = useMemo(() => progressSourceOf(progressPort), []);
   const analyticsIdentityPort = useMemo(() => withProductAnalyticsIdentity(identityPort), []);
@@ -694,6 +698,7 @@ export function App() {
           setMapFocus(node.studyId);
         }}
         onHover={(node) => setHovered(node ? node.title : null)}
+        onInteract={onMapInteract}
         onSceneReady={onSceneReady}
         onSceneBusy={onSceneBusy}
         onPointerMissed={dismissPick}
@@ -755,9 +760,13 @@ export function App() {
                   {progress.streak.days > 0 ? "接着上次" : "从这里开始"}
                 </p>
                 <h2 className="nextup__title">{todayLesson.lessonTitle}</h2>
-                <p className="nextup__meta">{nextUpMeta}</p>
-                <button
-                  className="primary block"
+                <div className="nextup__context-row">
+                  <p className="nextup__meta">{nextUpMeta}</p>
+                  <WorldSourceControls studyId={focusedStudyId} sourceAccess={sourceAccessPort} />
+                </div>
+                <GameButton
+                  variant="primary"
+                  className="nextup__primary"
                   onClick={() =>
                     setView({
                       kind: "lesson",
@@ -776,7 +785,7 @@ export function App() {
                     two vocabularies, chosen by window width.
                   */}
                   {todayCtaLabel(todayData.nextLesson?.progress)} →
-                </button>
+                </GameButton>
               </aside>
             ) : null}
             {view.kind === "world" && picked && pickedCourse && pickedStats ? (
@@ -807,6 +816,7 @@ export function App() {
           learner to right-drag taught them the app was broken.
         */
         hint={hovered ?? MAP_CONTROLS_HINT}
+        hintVisible={Boolean(hovered) || !mapInteracted}
         loading={mapCover ? <LoadingTrivia /> : null}
       />
     );
@@ -844,6 +854,11 @@ export function App() {
       onReviewed={async () => {
         await progressPort.flush();
       }}
+      contextAction={
+        showMap && wide && focusedStudyId ? (
+          <WorldSourceControls studyId={focusedStudyId} sourceAccess={sourceAccessPort} />
+        ) : null
+      }
     />
   );
 

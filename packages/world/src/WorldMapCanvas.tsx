@@ -32,6 +32,7 @@ export function WorldMapCanvas({
   assetRevision = 0,
   onPick,
   onHover,
+  onInteract,
   onSceneReady,
   onSceneBusy,
   onPointerMissed,
@@ -47,6 +48,7 @@ export function WorldMapCanvas({
   fixedCamera = null,
   postProcessing = true,
   lookSource = null,
+  hintVisible = true,
 }: {
   readonly className?: string;
   readonly world: WorldMap | null;
@@ -63,6 +65,8 @@ export function WorldMapCanvas({
   readonly assetRevision?: number;
   readonly onPick: (node: CourseNode) => void;
   readonly onHover: (node: CourseNode | null) => void;
+  /** Called once a learner starts manipulating the map. */
+  readonly onInteract?: () => void;
   readonly onSceneReady?: () => void;
   readonly onSceneBusy?: () => void;
   readonly onPointerMissed?: () => void;
@@ -80,6 +84,7 @@ export function WorldMapCanvas({
   readonly underlay?: ReactNode;
   readonly overlay?: ReactNode;
   readonly hint?: ReactNode;
+  readonly hintVisible?: boolean;
   readonly loading?: ReactNode;
   readonly paused?: boolean;
   /**
@@ -110,6 +115,7 @@ export function WorldMapCanvas({
       className={className ? `stagewrap ${className}` : "stagewrap"}
       hidden={hidden}
       onPointerDownCapture={(event) => {
+        onInteract?.();
         pointerOrigin.current = { x: event.clientX, y: event.clientY };
         draggedRef.current = false;
       }}
@@ -142,7 +148,7 @@ export function WorldMapCanvas({
         lookSource={lookSource}
         postProcessing={postProcessing}
       >
-        <Controls target={lookAt} polar={polar} fixedCamera={fixedCamera} />
+        <Controls target={lookAt} polar={polar} fixedCamera={fixedCamera} onInteract={onInteract} />
         <Flight to={cameraFrom} look={lookAt} fixed={fixedCamera !== null} />
         <LabelProbe
           markers={markers}
@@ -232,7 +238,7 @@ export function WorldMapCanvas({
       </nav>
       {overlay}
       {hint ? (
-        <p className="hint" data-game-ui-tone="glass">
+        <p className={`hint${hintVisible ? "" : " hint--dismissed"}`} data-game-ui-tone="glass">
           {hint}
         </p>
       ) : null}

@@ -2178,7 +2178,7 @@ button.label:focus-visible {
   flex: 0 0 min(280px, 100%);
 }
 
-.ua-dashboard-entry__hint,
+/* The old permanent helper has no learner-facing markup now. */
 .ua-dashboard-entry__error {
   margin: 9px 0 0;
   color: var(--game-ui-text-muted);
@@ -2199,7 +2199,7 @@ button.label:focus-visible {
   line-height: 1.7;
 }
 
-.study-detail__header .ua-dashboard-entry__hint,
+/* The old permanent helper has no header slot now. */
 .study-detail__header .ua-dashboard-entry__error {
   max-width: 280px;
   margin-top: 9px;
@@ -4098,30 +4098,20 @@ blockquote {
   text-wrap: pretty;
 }
 
-@media (min-width: 768px) {
-  .app-shell__main:has(.stagewrap:not([hidden])) .world-source-controls {
-    position: absolute;
-    z-index: 4;
-    left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
-    /* Keep the learner entry visible above the authoring clocks when both are present. */
-    bottom: 220px;
-  }
-}
-
 .world-source-controls {
-  display: grid;
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid var(--game-ui-border-subtle);
-  border-radius: var(--game-ui-radius-panel);
-  background: var(--game-ui-panel);
-  box-shadow: var(--game-ui-shadow-panel);
+  display: inline-flex;
+  min-width: 0;
 }
 
-@media (max-width: 767px) {
-  .world-source-controls {
-    margin: 12px 16px 0;
-  }
+.world-source-controls .ua-dashboard-entry {
+  flex: 0 1 auto;
+}
+
+.world-source-controls .ua-dashboard-entry__button {
+  min-height: 40px;
+  padding-inline: 12px;
+  font-size: 0.78rem;
+  white-space: nowrap;
 }
 
 .study-map__status {
@@ -4139,4 +4129,47 @@ blockquote {
 .settle__tomorrow b {
   color: var(--game-ui-accent);
   font-variant-numeric: tabular-nums;
+}
+
+/* Study-level action placement. Keep this after the raw-colour registry's
+   source-order-sensitive region so layout-only additions do not move its
+   audited material occurrences. */
+.nextup__context-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.nextup .nextup__context-row .nextup__meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+
+.nextup__context-row .world-source-controls,
+.nextup__context-row .ua-dashboard-entry {
+  flex: 0 0 auto;
+}
+
+.nextup__primary {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.today-hero__context-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 14px;
+}
+
+.today-hero__context-row .today-hero__meta {
+  margin-top: 0 !important;
+}
+
+.today-hero__context-action {
+  min-width: 0;
 }

@@ -38,8 +38,6 @@ import type { WorldMap } from "@pieai/university-world/WorldMapCanvas.js";
 import { AUTHORING } from "../mode";
 import { AuthoringMapNotes, StudioScreen } from "../authoring/index";
 import { MapStudioScreen } from "../authoring/map-studio";
-import { sourceAccessPort } from "../ports/index.js";
-import { WorldSourceControls } from "../learner/WorldSourceControls.js";
 import type { CourseNode } from "@pieai/university-world/course.js";
 import { AvatarLab } from "../screens/AvatarLab";
 import {
@@ -184,15 +182,6 @@ export function MainRouter({
             </div>
           ) : null}
         </div>
-      ) : null}
-      {/*
-        Which version of the project this campus teaches, and the way into the
-        UA graph. Under the stage rather than over it: an overlay child fills
-        the canvas's box, and a grid with pointer events on it swallows every
-        click aimed at an island — measured, by G2 failing to reach a stone.
-      */}
-      {view.kind === "world" ? (
-        <WorldSourceControls studyId={focusedStudyId} sourceAccess={sourceAccessPort} />
       ) : null}
       {AUTHORING && view.kind === "world" ? <AuthoringMapNotes studyId={focusedStudyId} /> : null}
       {view.kind === "avatar-lab" ? (

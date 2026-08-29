@@ -2,7 +2,7 @@ import type { SourceAccessPort } from "@pieai/university-core";
 
 import { UaDashboardButton } from "./UaDashboardButton.js";
 
-/** Learner controls that sit beside the world, not inside WebGL geometry. */
+/** Learner controls for the current study, rendered inside its context card. */
 export function WorldSourceControls({
   studyId,
   sourceAccess,
@@ -12,7 +12,7 @@ export function WorldSourceControls({
 }) {
   if (!studyId) return null;
   return (
-    <div className="world-source-controls" data-game-ui-tone="glass">
+    <div className="world-source-controls">
       <UaDashboardButton studyId={studyId} sourceAccess={sourceAccess} />
     </div>
   );

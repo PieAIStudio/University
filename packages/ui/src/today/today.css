@@ -78,6 +78,22 @@
   font-size: 1rem;
 }
 
+.today-hero__context-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 14px;
+}
+
+.today-hero__context-row .today-hero__meta {
+  margin-top: 0 !important;
+}
+
+.today-hero__context-action {
+  min-width: 0;
+}
+
 .today-hero__action {
   display: flex;
   flex-wrap: wrap;
