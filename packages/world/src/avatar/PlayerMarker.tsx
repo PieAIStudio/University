@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { guestAvatarRecipe } from "./default-recipe.js";
+import { AVATAR_OCCLUSION_TARGET } from "./avatar-occlusion.js";
 
 /** The marker is large enough to read beside a lesson stone, across recipes. */
 export const PLAYER_MARKER_HEIGHT = 1.8;
@@ -35,7 +36,7 @@ export function PlayerMarker({
   }, []);
 
   return (
-    <group ref={marker} position={position}>
+    <group ref={marker} name={AVATAR_OCCLUSION_TARGET} position={position}>
       <Avatar recipe={shown} gaze onBuilt={onBuilt} />
     </group>
   );

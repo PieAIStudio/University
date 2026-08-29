@@ -200,6 +200,11 @@ const DEFAULT_DENSITY: Readonly<Record<IslandGrassRenderTier, number>> = {
 // not turn into a green seam across it.
 const DEFAULT_ROUTE_GAP = 0.8;
 const DEFAULT_NODE_GAP = 0.52;
+// The arrival avatar is the first reading target. Its edge-recovery camera
+// approaches from a diagonal, so the ordinary node halo leaves a small wedge
+// of blades 1–2m in front of the body. Reserve one wider arrival apron for the
+// shared first-frame composition; later nodes keep the normal route rhythm.
+export const ISLAND_GRASS_ARRIVAL_NODE_GAP = 1.35;
 const DEFAULT_HERO_GAP = 0.78;
 const MAX_SAMPLING_ATTEMPTS = 96;
 
@@ -242,10 +247,10 @@ function defaultSafetyZones(
   nodeGap: number,
   heroGap: number,
 ): readonly IslandGrassSafetyZone[] {
-  const nodeZones = blueprint.nodes.map((node) => ({
+  const nodeZones = blueprint.nodes.map((node, index) => ({
     x: node.x,
     z: node.z,
-    radius: nodeRadius(blueprint) + nodeGap,
+    radius: nodeRadius(blueprint) + nodeGap + (index === 0 ? ISLAND_GRASS_ARRIVAL_NODE_GAP : 0),
     kind: "node" as const,
   }));
   const heroZone = {

@@ -10,10 +10,11 @@ interface SceneCameraOptions {
   readonly lessons: readonly LessonPlacement[];
   readonly viewKind: View["kind"];
   readonly world: WorldMap | null;
+  readonly wide: boolean;
 }
 
 /** Keep the world and course first shots in one named camera projection. */
-export function useSceneCamera({ learnerAt, lessons, viewKind, world }: SceneCameraOptions) {
+export function useSceneCamera({ learnerAt, lessons, viewKind, world, wide }: SceneCameraOptions) {
   /*
    * The default view stands beside the learner, not above the library.
    *
@@ -45,13 +46,18 @@ export function useSceneCamera({ learnerAt, lessons, viewKind, world }: SceneCam
    * gives the learner a hint of the road's current direction without tracking
    * an absolute look-ahead stone around the serpentine island; the live
    * control therefore stays near the centre on both the start and the middle
-   * screenshots.
+   * screenshots. If that local vector leaves the course coastline at an edge,
+   * `frameCourse` turns within the avatar's front hemisphere toward the island
+   * and uses the current shell tier to keep the target clear of its card.
    */
   // `frameCourse`, not a second copy: the authoring shell needs the same shot,
   // and a camera that exists in one app file is a camera the other cannot have.
   const roadCamera = useMemo(
-    () => (viewKind === "course" || viewKind === "lesson" ? frameCourse(lessons) : null),
-    [viewKind, lessons],
+    () =>
+      viewKind === "course" || viewKind === "lesson"
+        ? frameCourse(lessons, { tier: wide ? "desktop" : "mobile" })
+        : null,
+    [viewKind, lessons, wide],
   );
 
   const cameraFrom: readonly [number, number, number] = roadCamera

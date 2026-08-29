@@ -7,6 +7,7 @@ import { distanceToIslandRoute } from "./island-dressing.js";
 import { islandFieldFor } from "./island-field.js";
 import {
   ISLAND_GRASS_LIMITS,
+  ISLAND_GRASS_ARRIVAL_NODE_GAP,
   ISLAND_GRASS_LOD_PROFILES,
   ISLAND_GRASS_LOD_THRESHOLDS,
   ISLAND_GRASS_TOP_MAX_RADIAL,
@@ -188,6 +189,23 @@ describe("Island grass plan", () => {
         ),
       ).toBeGreaterThanOrEqual(realCourseBlueprint.hero.radius + 0.78);
     }
+  });
+
+  it("reserves a wider arrival apron for the first-frame avatar sightline", () => {
+    const plan = planIslandGrass(realCourseBlueprint, "course", {
+      tier: "desktop",
+      maxCount: 180,
+    });
+    const firstNode = realCourseBlueprint.nodes[0]!;
+    const arrivalClearance =
+      realCourseBlueprint.route.nodeRadius + 0.52 + ISLAND_GRASS_ARRIVAL_NODE_GAP;
+
+    expect(
+      plan.placements.every(
+        (placement) =>
+          Math.hypot(placement.x - firstNode.x, placement.z - firstNode.z) >= arrivalClearance,
+      ),
+    ).toBe(true);
   });
 
   it("honours explicit accent/landmark keep-clear zones", () => {

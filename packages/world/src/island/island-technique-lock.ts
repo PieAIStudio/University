@@ -210,7 +210,8 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       "unit cue engraved into its top face as a notched ring; the arc count carries unit " +
       "identity so it survives greyscale (v5 decision D).",
     source: "Our own geometry.",
-    budget: "1 body mesh per marker from 4 shared geometries, plus one shared ring geometry per sigil",
+    budget:
+      "1 body mesh per marker from 4 shared geometries, plus one shared ring geometry per sigil",
     rejected: [
       {
         option: "A coloured ring with a solid octahedron/cone/sphere standing on the disc",

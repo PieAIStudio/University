@@ -67,6 +67,50 @@ describe("frameCourse", () => {
     }
   });
 
+  it("turns an edge shot toward the island and keeps the phone target below its card", () => {
+    const outline = [
+      { x: -30, z: -30 },
+      { x: 30, z: -30 },
+      { x: 30, z: 30 },
+      { x: -30, z: 30 },
+    ];
+    const blueprint = {
+      outline,
+      bounds: { halfX: 30, halfZ: 30, maxHalf: 30 },
+    };
+    const lessons = [
+      { position: new THREE.Vector3(6, 0, -24), state: "live", blueprint },
+      { position: new THREE.Vector3(10, 0, -23), state: "idle", blueprint },
+    ] as unknown as LessonPlacement[];
+
+    const desktop = frameCourse(lessons, { tier: "desktop" })!;
+    const mobile = frameCourse(lessons, { tier: "mobile" })!;
+    expect(desktop.cameraFrom[0]).toBeLessThan(desktop.lookAt[0]);
+    expect(desktop.lookAt[1]).toBe(0.5);
+    expect(mobile.lookAt[1]).toBe(3);
+    expect(mobile.cameraFrom[2]).toBeGreaterThan(lessons[0]!.position.z);
+  });
+
+  it("does not invoke edge recovery while the probes remain on the island", () => {
+    const outline = [
+      { x: -30, z: -30 },
+      { x: 30, z: -30 },
+      { x: 30, z: 30 },
+      { x: -30, z: 30 },
+    ];
+    const blueprint = {
+      outline,
+      bounds: { halfX: 30, halfZ: 30, maxHalf: 30 },
+    };
+    const lessons = [
+      { position: new THREE.Vector3(0, 0, 0), state: "live", blueprint },
+      { position: new THREE.Vector3(4, 0, 1), state: "idle", blueprint },
+    ] as unknown as LessonPlacement[];
+    const shot = frameCourse(lessons, { tier: "desktop" })!;
+    expect(shot.cameraFrom[0]).toBe(shot.lookAt[0]);
+    expect(shot.lookAt[1]).toBe(3);
+  });
+
   it("has nothing to frame in a course with no stones", () => {
     expect(frameCourse([])).toBeNull();
   });
