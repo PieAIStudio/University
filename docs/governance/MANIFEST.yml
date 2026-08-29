@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-29T15:24:37.131Z
+generated_at: 2026-08-29T17:21:52.315Z
 generator_version: doc-gov@0.9.9
-docs_count: 65
+docs_count: 66
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -258,6 +258,13 @@ docs:
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-CALIBRATE-TEACHING-GATES-FROM-BEGINNER-EVIDENCE-BEFORE-EXPANDING-HEURISTICS
     path: docs/reference/learnings/workflow-issues/calibrate-teaching-gates-from-beginner-evidence-before-expanding-heuristics.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-29
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-COURSE-CAMERA-MUST-TARGET-THE-LIVE-MARKER-TO-KEEP-THE-FACE-AND-CLICK-TARGET-STAB
+    path: docs/reference/learnings/workflow-issues/course-camera-must-target-the-live-marker-to-keep-the-face-and-click-target-stab.md
     type: reference
     status: stable
     canonical: true

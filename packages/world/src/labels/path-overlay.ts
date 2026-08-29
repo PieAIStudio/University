@@ -34,7 +34,9 @@ export interface PathSprite {
 
 /**
  * Stones either side of the live one. Wider than the five readable nodes so
- * an icon does not pop in at the edge of what you can already see.
+ * an icon does not pop in at the edge of what you can already see. The live
+ * stone is the avatar's ground, so its duplicate kind icon is intentionally
+ * omitted; the DOM "开始" label and the avatar already identify that node.
  */
 export const SPRITE_WINDOW = 8;
 
@@ -51,7 +53,7 @@ export function courseSprites(lessons: readonly PathLesson[]): PathSprite[] {
   const inWindow = (index: number) => Math.abs(index - currentIndex) <= SPRITE_WINDOW;
 
   const icons: PathSprite[] = lessons
-    .filter((_, index) => inWindow(index))
+    .filter((lesson, index) => inWindow(index) && lesson.state !== "live")
     .map((lesson) => {
       const radius = stoneRadius(lesson.chars);
       return {

@@ -30,11 +30,11 @@ describe("dolly range", () => {
 describe("course composition", () => {
   it("pins the selected low and near landing pose", () => {
     expect(COURSE_POLAR).toBeCloseTo(THREE.MathUtils.degToRad(68));
-    expect(COURSE_DISTANCE).toBe(36);
-    expect(COURSE_DISTANCE_MIN).toBe(30);
-    // The far end is intentionally preserved so a learner can pull back to
-    // inspect the whole island after entering the close view.
-    expect(COURSE_DISTANCE_MAX).toBe(76);
+    expect(COURSE_DISTANCE).toBe(23);
+    expect(COURSE_DISTANCE_MIN).toBe(18);
+    // The far end still lets a learner pull back and inspect more levels after
+    // entering the close view, without restoring the old island-wide shot.
+    expect(COURSE_DISTANCE_MAX).toBe(54);
     expect(COURSE_DISTANCE_MAX / COURSE_DISTANCE_MIN).toBeLessThanOrEqual(3);
   });
 });

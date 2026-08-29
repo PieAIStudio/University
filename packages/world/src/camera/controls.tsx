@@ -133,19 +133,20 @@ export const COURSE_POLAR = THREE.MathUtils.degToRad(68);
 /**
  * How far the eye sits from the look target inside a course.
  *
- * The contact sheet tested 30/36/42 units at several polar angles. 68°/36 was
- * the first combination that kept the avatar-sized landmark, a readable run
- * of nodes and a sky band in one frame. The tighter 30-unit end remains
- * available for a learner who wants to inspect the nearby island edge.
+ * The course contact sheet showed that the old 36-unit landing shot made the
+ * avatar a background landmark. The selected 23-unit shot is the first close
+ * composition where the face, the live node and a short readable run of the
+ * road share the frame on both desktop and phone. The 18-unit end remains
+ * available for inspecting the immediate ground; 54 keeps enough reach to
+ * look ahead without returning to an island overview.
  *
- * The span is 2.53×, inside the same ≤3× rule the world map is held to, and
- * the max stays under WORLD_DISTANCE_MIN so pulling all the way out of a
- * course is still closer than the sea it sits in. Height is not a lever —
- * polar is pinned.
+ * The span is exactly 3×, the same ceiling used by the world map. Height is
+ * not a lever — polar is pinned — so the route frame and this range are tuned
+ * together.
  */
-export const COURSE_DISTANCE = 36;
-export const COURSE_DISTANCE_MIN = 30;
-export const COURSE_DISTANCE_MAX = 76;
+export const COURSE_DISTANCE = 23;
+export const COURSE_DISTANCE_MIN = 18;
+export const COURSE_DISTANCE_MAX = 54;
 /**
  * World-map dolly range. The lever is distance, not camera height: polar is
  * pinned, and MapControls rebuilds position from (target, distance, azimuth).
@@ -163,16 +164,6 @@ export const COURSE_DISTANCE_MAX = 76;
  */
 export const WORLD_DISTANCE_MIN = 62;
 export const WORLD_DISTANCE_MAX = 180;
-/**
- * App.tsx aims four markers ahead. Pulling the target forward along +Z toward
- * the viewer keeps the live marker in the upper half, with the next lessons
- * descending into the unobscured middle. It is intentionally independent of
- * the low course polar: the lower camera is a composition choice, while this
- * pull keeps the live marker out of the chrome and leaves the following
- * lessons in front of the learner.
- */
-export const COURSE_LOOK_PULL = 6;
-
 export function Controls({
   target,
   polar,
@@ -300,14 +291,10 @@ export function Controls({
     const instance = controls.current;
     if (!instance) return;
     const fixed = fixedCameraRef.current;
+    // `frameCourse` already aims just behind the live marker. Keep that local
+    // target intact so the learner's face stays in the same place after a
+    // route change; there is no second, hidden look-ahead offset here.
     instance.target.set(...(fixed?.lookAt ?? target));
-    // The course road is laid out from −Z to +Z in teaching order. Pulling the
-    // target along +Z keeps the live marker in the upper half while the next
-    // lessons descend toward the viewer; it also keeps a world→course flight
-    // from aiming at the old archipelago between two scenes.
-    if (!fixed && Math.abs(polarRef.current - COURSE_POLAR) < 1e-6) {
-      instance.target.z += COURSE_LOOK_PULL;
-    }
   }, [fixedCamera, target]);
 
   useFrame((_, delta) => {
@@ -325,7 +312,7 @@ export function Controls({
     // Flight runs at priority 0 and snaps the eye to App.tsx's route-anchored
     // `from`. MapControls then rebuilds position from (target, distance,
     // polar) — so the lever is distance, not height. A world-to-course flight
-    // that arrives outside the course zoom range is eased to the 36-unit
+    // that arrives outside the course zoom range is eased to the 23-unit
     // landing distance; a normal course URL starts inside the same range.
     if (Math.abs(polarRef.current - COURSE_POLAR) < 1e-6) {
       const dist = camera.position.distanceTo(instance.target);
