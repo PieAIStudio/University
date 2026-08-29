@@ -228,6 +228,29 @@ describe("placeLabels", () => {
     expect(280 >= box.left && 280 <= box.right && 300 >= box.top && 300 <= box.bottom).toBe(false);
   });
 
+  it("keeps a tall aside card beside an island near the bottom edge", () => {
+    const desktop = { width: 1440, height: 810 } as const;
+    const island = candidate({
+      id: "card",
+      x: 480,
+      y: 647,
+      width: 320,
+      height: 607,
+      anchor: "aside",
+      clearance: 56,
+      overlay: true,
+    });
+    const card = byId(placeLabels([island], desktop), "card");
+    const box = labelBox({ x: card.x, y: card.y }, island.width, island.height);
+
+    expect(card.visible).toBe(true);
+    expect(card.x).toBeGreaterThan(island.x);
+    expect(box.left).toBeGreaterThanOrEqual(0);
+    expect(box.right).toBeLessThanOrEqual(desktop.width);
+    expect(box.top).toBeGreaterThanOrEqual(0);
+    expect(box.bottom).toBeLessThanOrEqual(desktop.height);
+  });
+
   it("flips an aside card around a reserved box on its preferred side", () => {
     // Island far enough from both edges that left and right both fit; a
     // reserved box occupies the preferred (right) slot, so the card must

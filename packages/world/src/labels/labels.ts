@@ -93,6 +93,16 @@ interface Slot {
   readonly y: number;
 }
 
+/** Keep a side card's vertical centre inside the viewport when possible. */
+function asideSideY(candidate: LabelCandidate, viewport: LabelViewport, gap: number): number {
+  const minY = candidate.height / 2 + gap;
+  const maxY = viewport.height - candidate.height / 2 - gap;
+  // An oversized card is allowed to intersect the viewport, but its side
+  // slot still needs a stable centre rather than an impossible clamp range.
+  if (maxY < minY) return viewport.height / 2;
+  return Math.min(Math.max(candidate.y, minY), maxY);
+}
+
 /**
  * Four centres around one anchor.
  *
@@ -106,7 +116,11 @@ interface Slot {
  * direction a line of Chinese or English continues toward; a name to the left
  * of its point reads as belonging to whatever is further left.
  */
-function slotsFor(candidate: LabelCandidate, gap: number): readonly Slot[] {
+function slotsFor(
+  candidate: LabelCandidate,
+  gap: number,
+  viewport?: LabelViewport,
+): readonly Slot[] {
   const { x, y, width, height } = candidate;
   const stepX = width + gap;
   const stepY = height + gap;
@@ -128,9 +142,10 @@ function slotsFor(candidate: LabelCandidate, gap: number): readonly Slot[] {
     const clearance = candidate.clearance ?? FOLLOW_CLEARANCE;
     const offsetX = width / 2 + gap + clearance;
     const nudgeY = height / 2 + gap;
+    const sideY = viewport ? asideSideY(candidate, viewport, gap) : y;
     return [
-      { x: x + offsetX, y },
-      { x: x - offsetX, y },
+      { x: x + offsetX, y: sideY },
+      { x: x - offsetX, y: sideY },
       { x: x + offsetX, y: y - nudgeY * 0.45 },
       { x: x - offsetX, y: y - nudgeY * 0.45 },
       { x: x + offsetX, y: y + nudgeY * 0.45 },
@@ -390,7 +405,10 @@ export function placeLabels(
     const { width, height } = candidate;
     const anchor = candidate.anchor ?? "center";
     let didPlace = false;
-    const slotGroups = [slotsFor(candidate, gap), additionalVerticalSlots(candidate, gap)];
+    const slotGroups = [
+      slotsFor(candidate, gap, viewport),
+      additionalVerticalSlots(candidate, gap),
+    ];
     for (const slots of slotGroups) {
       for (const slot of slots) {
         const rect = labelBox(slot, width, height, anchor);
