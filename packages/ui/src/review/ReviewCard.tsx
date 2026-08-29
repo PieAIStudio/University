@@ -321,7 +321,7 @@ export function ReviewCard({
             </GameCallout>
           ) : (
             <div className="rating-row" aria-label="根据回忆难度评分">
-              <Tip term="review-rating">
+              <Tip term={isRecap ? "review-rating-recap" : "review-rating"}>
                 <span className="rating-row__help" aria-hidden="true">
                   这四个按钮是什么意思？
                 </span>

@@ -10,7 +10,11 @@ vi.mock("../sound/index.js", () => ({
   playSound,
 }));
 
-import type { PriorAttempt, RecapReviewCardLocator } from "../view/lesson-view.js";
+import type {
+  CourseReviewCardLocator,
+  PriorAttempt,
+  RecapReviewCardLocator,
+} from "../view/lesson-view.js";
 import type { ReviewCardPort } from "./ports.js";
 import { ReviewCard } from "./ReviewCard.js";
 
@@ -22,6 +26,17 @@ const CARD: RecapReviewCardLocator = {
   lessonId: "you-already-know-apps",
   cardId: "__recap__",
   front: "我能说出使用 App 和开发 App 的差别。",
+  contentRevision: 1,
+};
+
+const COURSE_CARD: CourseReviewCardLocator = {
+  kind: "course-card",
+  studyId: CARD.studyId,
+  courseId: CARD.courseId,
+  unitId: CARD.unitId,
+  lessonId: CARD.lessonId,
+  cardId: "app-is-a-program",
+  front: "App 是什么？",
   contentRevision: 1,
 };
 
@@ -59,6 +74,17 @@ function setTextareaValue(value: string): void {
   const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
   setter?.call(textarea, value);
   textarea.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+async function openRatingHelp(): Promise<HTMLElement> {
+  const help = [...container.querySelectorAll<HTMLElement>(".rating-row .tip-trigger")].find(
+    (element) => element.textContent?.includes("这四个按钮是什么意思？"),
+  );
+  if (!help) throw new Error("评分帮助没有渲染");
+  await act(async () => help.click());
+  const panel = document.body.querySelector<HTMLElement>(".tip-panel");
+  if (!panel) throw new Error("评分帮助没有打开");
+  return panel;
 }
 
 describe("ReviewCard recap path", () => {
@@ -101,6 +127,10 @@ describe("ReviewCard recap path", () => {
     expect(container.textContent).toContain("良好");
     expect(container.textContent).toContain("简单");
 
+    const help = await openRatingHelp();
+    expect(help.textContent).toContain("这不是判对错");
+    expect(help.textContent).not.toContain("参考答案");
+
     await act(async () => {
       buttonWith("简单")?.click();
     });
@@ -109,5 +139,33 @@ describe("ReviewCard recap path", () => {
     expect(container.textContent).toContain("复习结果已保存");
     expect(onReviewed).toHaveBeenCalledTimes(1);
     expect(playSound).toHaveBeenCalledWith("review.graded");
+  });
+
+  it("keeps the reference-answer guidance on an ordinary course card", async () => {
+    const reveal = vi.fn<ReviewCardPort["reveal"]>(async () => ({
+      back: "一段参考答案。",
+    }));
+    const rate = vi.fn<ReviewCardPort["rate"]>(async () => ({
+      dueAt: "2026-08-27T00:00:00.000Z",
+    }));
+
+    await act(async () => {
+      root.render(
+        <ReviewCard
+          card={COURSE_CARD}
+          review={{ reveal, rate }}
+          onReviewed={async () => undefined}
+        />,
+      );
+    });
+
+    setTextareaValue("我的回答。");
+    await act(async () => {
+      buttonWith("揭示答案")?.click();
+    });
+
+    const help = await openRatingHelp();
+    expect(help.textContent).toContain("这不是判对错");
+    expect(help.textContent).toContain("参考答案");
   });
 });
