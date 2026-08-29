@@ -33,4 +33,7 @@ pre-push:
   commands:
     browser-e2e:
       glob: "{apps/local/**,apps/university/**,packages/**,e2e/**,package.json,pnpm-lock.yaml}"
-      run: pnpm e2e
+      # Its own ports. e2e/ports.ts made these overridable precisely so two runs
+      # can coexist, and a subagent verifying in a worktree holds the defaults.
+      # Without this the gate fails on a port clash and reads as a real failure.
+      run: E2E_ONLINE_PORT=18693 E2E_LOCAL_WEB_PORT=18694 E2E_LOCAL_API_PORT=18695 pnpm e2e
