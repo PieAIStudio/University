@@ -24,7 +24,7 @@
  * becoming a neutral black hole.
  */
 export const WORLD_SUN = {
-  elevationDeg: 23,
+  elevationDeg: 20,
   /**
    * From +Z, clockwise in XZ the same way three's spherical azimuth is. The
    * course-design camera sits at 65°, looking toward 245°. 210° is a side-back
