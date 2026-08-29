@@ -1,0 +1,39 @@
+{
+  "termOrder": {
+    "ignoreLabels": ["事实", "推论", "问", "答", "答案", "结论", "文字等价", "重点"]
+  },
+  "termDrift": {
+    "relationCues": [
+      "也叫",
+      "又称",
+      "也就是",
+      "指的是",
+      "同一个",
+      "同一份",
+      "这里把",
+      "本文把",
+      "简称",
+      "区别",
+      "不同",
+      "分别",
+      "不是",
+      "不等于",
+      "都是",
+      "就是",
+      "是",
+      "而是"
+    ],
+    "pairs": [
+      {
+        "id": "folder-repository",
+        "terms": ["文件夹", "仓库"],
+        "aliasPairs": [["folder", "repository"]]
+      },
+      {
+        "id": "directory-folder",
+        "terms": ["目录", "文件夹"],
+        "aliasPairs": [["directory", "folder"]]
+      }
+    ]
+  }
+}

@@ -14,6 +14,10 @@
  */
 import { readFileSync } from "node:fs";
 
+const SHAPE_DATA = JSON.parse(
+  readFileSync(new URL("./proposal-shape-data.json", import.meta.url), "utf8"),
+);
+
 const REQUIRED_SECTIONS = [
   "## 学习目标",
   "## 先给结论",
@@ -28,24 +32,57 @@ const BANNED_PHRASES = ["众所周知", "显而易见", "简单来说", "不言�
 const DANGLING_REFERENCES = ["见上文", "见前文", "如上所述", "参见上面"];
 const ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
+const TEACHING_CHECKS = {
+  "exact-answer": {
+    label: "正文逐字默写",
+    cost: "长代码或长标识符短答可能继续把抄写误当成理解",
+  },
+  "title-answer": {
+    label: "标题泄露答案",
+    cost: "标题直接给出答案的送分题可能继续消耗初学者的耐心",
+  },
+  "analogy-order": {
+    label: "类比先于术语",
+    cost: "术语可以先出现再补解释；保守检测漏掉的未标记术语也不会报警",
+  },
+  "term-drift": {
+    label: "同义词漂移",
+    cost: "同一节课中称呼改变造成的迷惑可能继续留给学习者",
+  },
+};
+
+/**
+ * Measured against the reviewed course's first six lessons:
+ * 「图灵密约」= 4 chars, 「<!doctype html>」= 15 chars,
+ * 「com.pieai.turingpact」= 20 chars, 「Web」= 3 chars, 「build」= 5 chars.
+ * 19 is deliberately one character below the 20-character appId: it catches
+ * that reviewed copy exercise, stays well above the 5-character `build` recall,
+ * and does not classify every ordinary 13–19-character identifier by length.
+ * Code punctuation still catches a short code answer independently.
+ */
+const EXACT_COPY_LENGTH_THRESHOLD = 19;
+const CODE_SHAPED_ANSWER = /[<>{};]/;
+const IGNORED_TERM_LABELS = new Set(SHAPE_DATA.termOrder?.ignoreLabels ?? []);
+
 const args = process.argv.slice(2);
-const flagIndex = args.indexOf("--min-lessons");
-const minLessons = flagIndex === -1 ? 1 : Number(args[flagIndex + 1]);
-// Guard the "flag absent" case explicitly. With flagIndex === -1 the value slot
-// is index 0, so a positional filter would silently eat the first file path and
-// the script would print usage for a perfectly valid invocation.
-const valueIndex = flagIndex === -1 ? -1 : flagIndex + 1;
-const paths = args.filter((value, index) => index !== flagIndex && index !== valueIndex);
-if (paths.length === 0 || !Number.isInteger(minLessons) || minLessons < 1) {
-  console.error(
-    "usage: node scripts/check-proposal-shape.mjs <proposal.json> [...] [--min-lessons <n>]",
-  );
+const parsedArgs = parseArgs(args);
+if (parsedArgs.help) {
+  console.log(usage());
+  process.exit(0);
+}
+if (parsedArgs.error || parsedArgs.paths.length === 0) {
+  console.error(parsedArgs.error ?? usage());
   process.exit(2);
 }
 
+for (const checkId of parsedArgs.skippedChecks) {
+  const check = TEACHING_CHECKS[checkId];
+  console.error(`note: skipped ${check.label} (${checkId}) — cost: ${check.cost}`);
+}
+
 let failed = false;
-for (const path of paths) {
-  const problems = check(JSON.parse(readFileSync(path, "utf8")));
+for (const path of parsedArgs.paths) {
+  const problems = check(JSON.parse(readFileSync(path, "utf8")), parsedArgs);
   if (problems.length === 0) {
     console.log(`ok  ${path}`);
     continue;
@@ -55,6 +92,66 @@ for (const path of paths) {
   for (const problem of problems) console.error(`  ${problem}`);
 }
 process.exit(failed ? 1 : 0);
+
+function parseArgs(values) {
+  const paths = [];
+  const skippedChecks = new Set();
+  let minLessons = 1;
+
+  for (let index = 0; index < values.length; index += 1) {
+    const value = values[index];
+    if (value === "--help" || value === "-h")
+      return { help: true, paths, skippedChecks, minLessons };
+    if (value === "--min-lessons") {
+      const raw = values[index + 1];
+      minLessons = Number(raw);
+      index += 1;
+      if (!Number.isInteger(minLessons) || minLessons < 1) {
+        return {
+          error: "--min-lessons must be a positive integer",
+          paths,
+          skippedChecks,
+          minLessons,
+        };
+      }
+      continue;
+    }
+    if (value === "--skip-check") {
+      const checkId = values[index + 1];
+      index += 1;
+      if (!TEACHING_CHECKS[checkId]) {
+        return {
+          error: `unknown teaching check ${JSON.stringify(checkId)}; choose one of ${Object.keys(TEACHING_CHECKS).join(", ")}`,
+          paths,
+          skippedChecks,
+          minLessons,
+        };
+      }
+      skippedChecks.add(checkId);
+      continue;
+    }
+    if (value.startsWith("--")) {
+      return { error: `unknown option ${JSON.stringify(value)}`, paths, skippedChecks, minLessons };
+    }
+    paths.push(value);
+  }
+
+  return { paths, skippedChecks, minLessons };
+}
+
+function usage() {
+  const checks = Object.entries(TEACHING_CHECKS)
+    .map(([id, check]) => `  ${id}: ${check.label}；关闭代价：${check.cost}`)
+    .join("\n");
+  return `usage: node scripts/check-proposal-shape.mjs <proposal.json> [...] [options]
+options:
+  --min-lessons <n>       require at least n lessons (default: 1)
+  --skip-check <id>       repeatable; disable one teaching check only
+  --help                  show this message
+
+teaching checks (each can be disabled independently with --skip-check <id>):
+${checks}`;
+}
 
 /**
  * Both proposal shapes carry the same lesson objects, so both get the same
@@ -68,9 +165,11 @@ function unitsOf(proposal) {
   return null;
 }
 
-function check(proposal) {
+function check(proposal, options = {}) {
   const problems = [];
   const units = unitsOf(proposal);
+  const minLessons = options.minLessons ?? 1;
+  const skippedChecks = options.skippedChecks ?? new Set();
   if (!units) {
     return ["neither a `course` nor a `unit` + `lessons` pair — not a course proposal"];
   }
@@ -103,6 +202,8 @@ function check(proposal) {
       claimId(lessonIds, lesson.id, "lesson", `unit ${unit.id}`);
       checkEvidence(lesson.evidence, where, problems);
       checkContent(lesson.content, where, problems);
+      if (!skippedChecks.has("analogy-order")) checkAnalogyOrder(lesson, where, problems);
+      if (!skippedChecks.has("term-drift")) checkTermDrift(lesson, where, problems);
 
       const cards = lesson.cards ?? [];
       const exercises = lesson.exercises ?? [];
@@ -133,7 +234,7 @@ function check(proposal) {
         const exerciseWhere = `${where} → exercise ${exercise.id}`;
         claimId(exerciseIds, exercise.id, "exercise", where);
         checkEvidence(exercise.evidence, exerciseWhere, problems);
-        checkExercise(exercise, exerciseWhere, problems);
+        checkExercise(exercise, exerciseWhere, problems, lesson, skippedChecks);
       }
     }
   }
@@ -200,7 +301,7 @@ function checkContent(content, where, problems) {
   }
 }
 
-function checkExercise(exercise, where, problems) {
+function checkExercise(exercise, where, problems, lesson, skippedChecks) {
   if (!exercise.prompt?.trim()) problems.push(`${where}: empty prompt`);
   if (exercise.kind === "short-answer") {
     const answer = exercise.expectedAnswer;
@@ -222,6 +323,8 @@ function checkExercise(exercise, where, problems) {
         `${where}: expectedAnswer reads as a sentence, not a term: ${JSON.stringify(answer)}`,
       );
     }
+    if (!skippedChecks.has("exact-answer")) checkExactAnswer(lesson, exercise, where, problems);
+    if (!skippedChecks.has("title-answer")) checkTitleAnswer(lesson, exercise, where, problems);
   } else if (exercise.kind === "explain") {
     const rubric = exercise.rubric ?? [];
     if (rubric.length < 3)
@@ -229,4 +332,214 @@ function checkExercise(exercise, where, problems) {
   } else {
     problems.push(`${where}: unknown kind ${JSON.stringify(exercise.kind)}`);
   }
+}
+
+function checkExactAnswer(lesson, exercise, where, problems) {
+  const answer = exercise.expectedAnswer;
+  const body = lesson.content ?? "";
+  const index = body.indexOf(answer);
+  if (index === -1) return;
+
+  const reasons = [];
+  if (answer.length > EXACT_COPY_LENGTH_THRESHOLD) {
+    reasons.push(`长度 ${answer.length} 超过 ${EXACT_COPY_LENGTH_THRESHOLD}`);
+  }
+  if (CODE_SHAPED_ANSWER.test(answer)) reasons.push("答案含代码符号");
+  if (reasons.length === 0) return;
+
+  const line = lineNumberAt(body, index);
+  const excerpt = excerptAt(body, index);
+  problems.push(
+    `${where}: expectedAnswer ${JSON.stringify(answer)} 在课文正文第 ${line} 行原样出现（${reasons.join("且")}）；这会把抄写代码/标识符当成理解。请改成解释概念的题，或用 --skip-check exact-answer（代价：${TEACHING_CHECKS["exact-answer"].cost}）。原文位置：${JSON.stringify(excerpt)}`,
+  );
+}
+
+function checkTitleAnswer(lesson, exercise, where, problems) {
+  const answer = exercise.expectedAnswer;
+  const title = lesson.title ?? "";
+  const directMatch = title.includes(answer);
+  const normalizedAnswer = stripPunctuation(answer);
+  const normalizedTitle = stripPunctuation(title);
+  const normalizedMatch = normalizedAnswer.length > 0 && normalizedTitle.includes(normalizedAnswer);
+  if (!directMatch && !normalizedMatch) return;
+
+  const matchKind = directMatch ? "原样" : "去掉标点后";
+  problems.push(
+    `${where}: expectedAnswer ${JSON.stringify(answer)} 已由本节标题${matchKind}直接给出（标题：${JSON.stringify(title)}）；题目测到的是抄标题，不是理解。请换一个需要回忆或解释的问法，或用 --skip-check title-answer（代价：${TEACHING_CHECKS["title-answer"].cost}）。`,
+  );
+}
+
+/** Remove fenced code while keeping offsets and line breaks useful for reports. */
+function withoutFencedCode(text) {
+  return text.replace(/```[\s\S]*?```/g, (block) => block.replace(/[^\n]/g, " "));
+}
+
+/**
+ * This check deliberately does not guess a Chinese technology vocabulary.
+ * It only considers a CJK phrase that the author themselves presented as a
+ * definition (for example `**运行时（runtime）**：...` or `运行时：...`).
+ * That catches "term first, explanation later" without flagging every ordinary
+ * noun in a lesson. An unmarked term is a known blind spot; a language model or
+ * explicit author annotation would be the next step, not a larger hard-coded
+ * word list.
+ */
+function checkAnalogyOrder(lesson, where, problems) {
+  const content = lesson.content ?? "";
+  const analogyIndex = content.indexOf("## 一个类比");
+  if (analogyIndex === -1) return;
+
+  const text = withoutFencedCode(content);
+  for (const term of definedTerms(text)) {
+    const firstIndex = text.indexOf(term);
+    if (firstIndex === -1 || firstIndex >= analogyIndex) continue;
+    const paragraph = paragraphAt(text, firstIndex);
+    if (hasInlineExplanation(paragraph.text, paragraph.relativeIndex, term)) continue;
+
+    const line = lineNumberAt(content, firstIndex);
+    problems.push(
+      `${where}: 术语“${term}”在类比段（第 ${lineOfHeading(content, "## 一个类比")} 行）之前首次出现于正文第 ${line} 行，但同一段没有先给解释；请先用一个类比/白话说明，再引入这个词，或用 --skip-check analogy-order（代价：${TEACHING_CHECKS["analogy-order"].cost}）。`,
+    );
+  }
+}
+
+function definedTerms(text) {
+  const terms = new Set();
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+
+    const withoutBullet = trimmed.replace(/^(?:[-*+]\s+|\d+[.)]\s+)/, "");
+    const withoutFormatting = withoutBullet.replace(/\*\*/g, "").trim();
+    const delimiter = withoutFormatting.match(/^(.+?)\s*[：:]\s*\S/);
+    if (delimiter) addDefinedTerm(terms, delimiter[1]);
+
+    const inlineDefinition = withoutBullet.match(
+      /(?:^|[，。；、\s])(?:\*\*)?([^*\n]{2,20})(?:\*\*)?\s*[（(][^）)\n]{1,80}[）)]\s*(?:[：:]|是|就是|指|指的是|用来|负责|表示|意味着)/u,
+    );
+    if (inlineDefinition) addDefinedTerm(terms, inlineDefinition[1]);
+
+    const markedDefinition = withoutBullet.match(
+      /\*\*([^*\n]{2,24})\*\*\s*(?:[：:]|——|—|–|是|就是|指|指的是|用来|负责|表示|意味着)/u,
+    );
+    if (markedDefinition) addDefinedTerm(terms, markedDefinition[1]);
+  }
+  return terms;
+}
+
+function addDefinedTerm(terms, raw) {
+  const term = raw
+    .replace(/[`*_]/g, "")
+    .split(/[（(]/, 1)[0]
+    .trim();
+  if (
+    term.length < 2 ||
+    term.length > 16 ||
+    !/\p{Script=Han}/u.test(term) ||
+    IGNORED_TERM_LABELS.has(term) ||
+    /[，。；、？！]/u.test(term) ||
+    /^\d/.test(term)
+  ) {
+    return;
+  }
+  terms.add(term);
+}
+
+function paragraphAt(text, index) {
+  const startMarker = text.lastIndexOf("\n\n", index);
+  const endMarker = text.indexOf("\n\n", index);
+  const start = startMarker === -1 ? 0 : startMarker + 2;
+  const end = endMarker === -1 ? text.length : endMarker;
+  return { text: text.slice(start, end), relativeIndex: index - start };
+}
+
+function hasInlineExplanation(paragraph, relativeIndex, term) {
+  const after = paragraph.slice(relativeIndex + term.length);
+  const before = paragraph.slice(Math.max(0, relativeIndex - 32), relativeIndex);
+  return (
+    /^\s*(?:[：:]|——|—|–|[-－]|[（(][^）)\n]{0,80}[）)])/.test(after) ||
+    /^\s*(?:是|就是|指|指的是|用来|负责|表示|意味着|叫作|也就是|可以理解为)/.test(after) ||
+    /(?:是|就是|指|指的是|叫作|也就是|可以理解为)\s*$/.test(before)
+  );
+}
+
+function checkTermDrift(lesson, where, problems) {
+  const content = withoutFencedCode(lesson.content ?? "");
+  const text = `${lesson.title ?? ""}\n${content}`;
+  for (const pair of SHAPE_DATA.termDrift?.pairs ?? []) {
+    if (!(pair.terms ?? []).every((term) => text.includes(term))) continue;
+    if (hasExplicitTermRelation(text, pair)) continue;
+
+    const locations = pair.terms.map((term) => {
+      const index = text.indexOf(term);
+      const titleLength = (lesson.title ?? "").length;
+      return index <= titleLength
+        ? "标题"
+        : `正文第 ${lineNumberAt(content, index - titleLength - 1)} 行`;
+    });
+    problems.push(
+      `${where}: 同一节课同时用了“${pair.terms[0]}”（${locations[0]}）和“${pair.terms[1]}”（${locations[1]}），但没有一句话说明它们是同一个东西或有何区别；请统一叫法或补一句关系说明，或用 --skip-check term-drift（代价：${TEACHING_CHECKS["term-drift"].cost}）。`,
+    );
+  }
+}
+
+function hasExplicitTermRelation(text, pair) {
+  const groups = [pair.terms, ...(pair.aliasPairs ?? [])];
+  for (const group of groups) {
+    for (const paragraph of paragraphsOf(text)) {
+      const indexes = group.map((term) => paragraph.indexOf(term));
+      if (indexes.some((index) => index === -1)) continue;
+      const left = Math.min(...indexes);
+      const right = Math.max(...indexes);
+      const longestTerm = Math.max(...group.map((term) => term.length));
+      const relationSpan = paragraph.slice(left, right + longestTerm + 36);
+      const hasParentheticalPair = group.some((term, index) => {
+        const other = group.find((_, otherIndex) => otherIndex !== index);
+        if (!other) return false;
+        const first = escapeRegExp(term);
+        const second = escapeRegExp(other);
+        return new RegExp(
+          `${first}\\s*[（(][^）)]{0,48}${second}[^）)]{0,48}[）)]|${second}\\s*[（(][^）)]{0,48}${first}[^）)]{0,48}[）)]`,
+        ).test(relationSpan);
+      });
+      if (
+        (SHAPE_DATA.termDrift?.relationCues ?? []).some((cue) => relationSpan.includes(cue)) ||
+        hasParentheticalPair ||
+        /[（(][^）)]{0,48}(?:\/|／)[^）)]{0,48}[）)]/.test(relationSpan) ||
+        /(?:\/|／)/.test(relationSpan)
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function paragraphsOf(text) {
+  return text.split(/\n\n+/).filter((paragraph) => paragraph.trim());
+}
+
+function escapeRegExp(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function stripPunctuation(text) {
+  return text.normalize("NFKC").replace(/[\s\p{P}\p{S}]/gu, "");
+}
+
+function lineNumberAt(text, index) {
+  return text.slice(0, Math.max(0, index)).split("\n").length;
+}
+
+function lineOfHeading(text, heading) {
+  const index = text.indexOf(heading);
+  return index === -1 ? "?" : lineNumberAt(text, index);
+}
+
+function excerptAt(text, index) {
+  const lineStart = text.lastIndexOf("\n", index) + 1;
+  const lineEnd = text.indexOf("\n", index);
+  return text
+    .slice(lineStart, lineEnd === -1 ? text.length : lineEnd)
+    .trim()
+    .slice(0, 160);
 }
