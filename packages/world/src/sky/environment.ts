@@ -41,7 +41,7 @@ export const WORLD_ENVIRONMENT = {
    * with the hemisphere and ambient lights it keeps the course look inside a
    * 2–4:1 stylized key-to-fill range without changing the sky's visible stops.
    */
-  intensity: 0.8,
+  intensity: 0.44,
 } as const;
 
 /** A Stage without a visible map sky (the planet picker) still shares this IBL. */
