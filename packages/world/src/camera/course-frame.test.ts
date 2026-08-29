@@ -38,12 +38,16 @@ describe("frameCourse", () => {
     }
   });
 
-  it("aims at later lessons below the stone it stands on", () => {
+  it("keeps the live stone low and the road ahead in the forward half", () => {
     const shot = frameCourse(road([7, 8, 7, 7, 6, 6], 5));
-    // Teaching order runs towards +z, and the eye stays further along +z so
-    // the kit avatar presents its face to the camera.
-    expect(shot!.lookAt[2]).toBeGreaterThan(road([7, 8, 7, 7, 6, 6], 5)[5]!.position.z);
-    expect(shot!.cameraFrom[2]).toBeGreaterThan(shot!.lookAt[2]);
+    const live = road([7, 8, 7, 7, 6, 6], 5)[5]!;
+    // Teaching order runs towards +z. The eye remains on the +z/front side,
+    // while the target is just behind and above the live stone so the next
+    // stones rise into the upper half instead of pushing the avatar under
+    // phone chrome.
+    expect(shot!.cameraFrom[2]).toBeGreaterThan(live.position.z);
+    expect(shot!.lookAt[2]).toBeLessThan(live.position.z);
+    expect(shot!.lookAt[1] - live.position.y).toBe(4);
   });
 
   it("has nothing to frame in a course with no stones", () => {

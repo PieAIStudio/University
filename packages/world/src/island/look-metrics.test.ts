@@ -59,7 +59,7 @@ describe("island look judge", () => {
     expect(first.distance).toBeGreaterThan(34);
 
     const near = islandLookCameraForShot("course-near", input, viewport);
-    expect(near.distance).toBe(36);
+    expect(near.distance).toBe(18);
     expect(near.polar).toBeCloseTo(THREE.MathUtils.degToRad(68));
   });
 

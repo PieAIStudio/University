@@ -12,8 +12,12 @@ import { courseSprites } from "../labels/path-overlay.js";
 import type { Course } from "./course.js";
 import type { LessonPlacement, Marker } from "../Maps.js";
 
-const COURSE_CAMERA_FRONT = 48;
-const COURSE_CAMERA_HEIGHT = 22;
+// The front-side eye is deliberately close: the avatar is the subject, while
+// the local target behind it keeps the road's next step in the same shot.
+const COURSE_CAMERA_FRONT = 19;
+const COURSE_CAMERA_HEIGHT = 14;
+const COURSE_TARGET_BACK = 2;
+const COURSE_TARGET_HEIGHT = 4;
 
 /**
  * A course the way a screen holds it, as the shape the scene places.
@@ -65,12 +69,12 @@ export function worldCourse(view: {
 /**
  * Where the eye stands on a course road.
  *
- * Both ends of the shot are anchored to real stones rather than to hand-tuned
- * offsets: stand in front of the live one, aim at the road four lessons ahead.
- * With the top-to-bottom road, the learner's marker recedes above the target
- * while the next stones descend toward the viewer. That makes "the live stone
- * is in frame with the road below it" a property of the geometry instead of a
- * number somebody guessed.
+ * Both ends of the shot are anchored to the live stone rather than to the
+ * height of a later stone: stand on its +Z/front side, aim just behind and
+ * above it. With the top-to-bottom road, the learner's marker sits low while
+ * the next stones rise into the forward half. That makes "the live stone is in
+ * frame with the road ahead" stable as the island surface changes instead of
+ * a number somebody guessed.
  *
  * The eye and the target share a lateral position, which is the whole reason
  * this is worth a comment. An earlier shot aimed at a damped fraction of the
@@ -100,7 +104,6 @@ export function frameCourse(lessons: readonly LessonPlacement[]): {
   const liveIndex = found < 0 ? 0 : found;
   const live = lessons[liveIndex];
   if (!live) return null;
-  const ahead = lessons[Math.min(liveIndex + 4, lessons.length - 1)] ?? live;
   return {
     // The eye stays on the +Z side of the road. That is the kit avatar's front
     // side, so the learner can read the face rather than the back of the head.
@@ -109,7 +112,11 @@ export function frameCourse(lessons: readonly LessonPlacement[]): {
       live.position.y + COURSE_CAMERA_HEIGHT,
       live.position.z + COURSE_CAMERA_FRONT,
     ],
-    lookAt: [live.position.x, ahead.position.y + 1.8, ahead.position.z],
+    lookAt: [
+      live.position.x,
+      live.position.y + COURSE_TARGET_HEIGHT,
+      live.position.z - COURSE_TARGET_BACK,
+    ],
   };
 }
 

@@ -16,10 +16,15 @@ function lessons(count: number, liveAt: number): PathLesson[] {
 }
 
 describe("courseSprites", () => {
+  it("leaves the live stone's face clear for the learner avatar", () => {
+    const sprites = courseSprites(lessons(41, 20));
+    expect(sprites.some((sprite) => sprite.id === "kind:lesson-20")).toBe(false);
+  });
+
   it("bounds icons to the window around the live stone, not the course length", () => {
     const long = courseSprites(lessons(200, 20)).filter((sprite) => sprite.role === "icon");
     const short = courseSprites(lessons(41, 20)).filter((sprite) => sprite.role === "icon");
-    expect(long).toHaveLength(SPRITE_WINDOW * 2 + 1);
+    expect(long).toHaveLength(SPRITE_WINDOW * 2);
     expect(short).toHaveLength(long.length);
   });
 

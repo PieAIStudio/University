@@ -34,13 +34,17 @@ export function useSceneCamera({ learnerAt, lessons, viewKind, world }: SceneCam
    *
    * The overview it replaces framed the whole folded course at once, which is
    * the right shot for a map and the wrong one for a path: every stone sat at
-   * the same distance, so none of them was *next*. Standing behind the live
-   * stone and looking up the road puts the answer to "what now" in the middle
-   * of the frame, and lets the rest recede into the fog the scene already has.
+   * the same distance, so none of them was *next*. Standing on the +Z/front
+   * side of the live stone and looking along the road puts the answer to "what
+   * now" in the upper half of the frame, and lets the rest recede into the fog
+   * the scene already has. The target is local to the live stone, so terrain
+   * height does not push the avatar into the phone's course panel or bottom
+   * chrome.
    *
-   * The camera tracks half the road's lateral swing rather than all of it. At
-   * full swing it moves with the curve, the curve cancels, and the road looks
-   * dead straight — the shot would be hiding the one thing it is framing.
+   * The camera shares the live stone's lateral position rather than tracking
+   * the look-ahead stone. A full lateral swing in the target would turn the
+   * camera away from the live control; the road can curve in the frame while
+   * the avatar stays where the learner expects to find it.
    */
   // `frameCourse`, not a second copy: the authoring shell needs the same shot,
   // and a camera that exists in one app file is a camera the other cannot have.
