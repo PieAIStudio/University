@@ -105,7 +105,7 @@ function PlanCard({
             {busyOfferId === plan.id ? "正在检查…" : planButtonLabel(plan.pricing)}
           </GameButton>
         ) : (
-          <p className="plan-card__note">当前基线</p>
+          <p className="plan-card__note">你现在就在用</p>
         )}
       </GamePanel>
     </li>
@@ -139,7 +139,7 @@ function PaymentSummary({
   return (
     <div className="payment-summary" aria-live="polite">
       <p>
-        当前权益：
+        当前方案：
         {entitlement?.kind === "value" ? planNameOf(entitlement.value) : "登录后读取"}
       </p>
       <p>
@@ -258,8 +258,9 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
       <header className="shell-screen__head">
         <h1>{PLANS_TITLE}</h1>
         <p className="shell-screen__lede">
-          课文不设付费墙，所有已发布课程都能学。这里的权益只描述 AI
-          和同步；会员按月或按年计价，购买入口接通之后才会真正扣款。
+          所有已发布课程都能免费学。会员买的是两件事：答案不止一种写法时，AI
+          用中文判断你有没有答到题目，并给出下一步建议；登录同一账号后，换手机或电脑也能接着学。
+          不买会员，本地学习也不会被挡住。
         </p>
       </header>
 
@@ -310,11 +311,6 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
           {error}
         </p>
       ) : null}
-
-      <GameCallout tone="info" heading="当前权益基线">
-        现在只配置了免费基线：确定性判题继续可用；登录并且有远端时同步进度；没有远端时继续本机学习。
-        会员权益已列在上方；购买是否成功以账号里的服务端权益为准。
-      </GameCallout>
 
       {explanation ? (
         <CapabilityExplanation explanation={explanation} onClose={() => setExplanation(null)} />
