@@ -22,6 +22,21 @@ export type PlanPricing =
       readonly yearlyCents: number | null;
     };
 
+/*
+  None of these three flags is read by any code today. That is not an oversight
+  to be fixed by wiring them up: grading funding is already decided somewhere
+  else, and decided differently.
+
+  `apps/university-grading/src/service.ts` quotes each metered grading against a
+  daily free quota first and the learner's wallet second. It never asks which
+  plan the learner holds. So a plan cannot grant or withhold AI grading, and a
+  plan line that says it does is selling something this file does not control.
+
+  They are kept, rather than deleted, because the metered path is unfinished:
+  the free-quota RPC fails closed until its backend lands, and the wallet has a
+  balance read but no way to add money. When that path is finished, the honest
+  move is to delete these flags, not to teach the grading service to read them.
+*/
 export interface AiEntitlementConfig {
   /** Tier-one answer checking that does not call a model. */
   readonly deterministicGrading: boolean;
@@ -70,6 +85,7 @@ export const BILLING_CONFIG = {
         "全部已发布课程、全部关卡，课文永远不收费",
         "答案对不对，能当场判的当场判",
         "登录后进度存进账号；没登录也能一直学下去",
+        "AI 批改按次计量，不看会员等级；计量入口还没开放，开放前谁都用不到",
       ],
     },
     /*
@@ -98,10 +114,19 @@ export const BILLING_CONFIG = {
         openTutoringTurnsPerDay: null,
       },
       sync: { included: true, seats: 3 },
+      /*
+        These lines used to promise AI grading and AI comments. They were
+        removed because no code grants either right by plan, so the page was
+        describing a difference that does not exist. What membership actually
+        changes today is the seat count, and that is what it now says.
+
+        The AI lines come back when metered grading is finished and membership
+        buys something inside it - a larger free quota, or included wallet
+        credit. Until then a line here has to be a right this file controls.
+      */
       lines: [
-        "不必照抄课文：你用中文写完答案，AI 会判断你有没有答到题目",
-        "选用 AI 批改后，题目下面会出现中文评语，必要时还有最多三条补充建议",
         "换手机也不用从头来：登录同一账号，进度和复习卡接着走",
+        "同时登录三台设备，手机、电脑、平板都算一台",
       ],
     },
   ],
