@@ -141,6 +141,10 @@ describe("ChoiceBlock", () => {
     expect(container.textContent).toContain("三个动作后果不同，各自用明确的按钮。");
     expect(container.textContent).toContain(CHOICE_CORRECT_VERDICT);
     expect(container.querySelector(".choice-block__mark")?.textContent).toBe("✓");
+    expect(container.querySelector(".choice-block__correct-merge")).toBeTruthy();
+    expect(
+      container.querySelector(".choice-block__correct-merge [data-liquid-gooey-silhouette]"),
+    ).toBeTruthy();
     expect(onSolved).toHaveBeenCalledTimes(1);
     const next = buttonWith(CHOICE_NEXT_LABEL);
     expect(next).toBeTruthy();

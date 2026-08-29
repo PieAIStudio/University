@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { GameBadge, GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
+import { GameBadge, GameButton, GameCallout, GamePanel, LiquidGroup } from "@pieai/swimmer-ui-kit";
 
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { playSound } from "../sound/index.js";
@@ -88,6 +88,18 @@ export function ChoiceBlock({
   }, [exercise.id]);
 
   const feedback = choiceBlockFeedback(state, exercise.options, exercise.correctOptionId);
+  const correctFeedback = feedback?.kind === "correct";
+  const [correctMergeSettled, setCorrectMergeSettled] = useState(false);
+
+  useEffect(() => {
+    if (!correctFeedback) {
+      setCorrectMergeSettled(false);
+      return;
+    }
+    const frame = requestAnimationFrame(() => setCorrectMergeSettled(true));
+    return () => cancelAnimationFrame(frame);
+  }, [correctFeedback]);
+
   const canAdvance = state.solved && Boolean(onNext);
   const canSubmit = !state.solved && selectedId !== null;
 
@@ -163,10 +175,35 @@ export function ChoiceBlock({
           {feedback.explanation}
         </GameCallout>
       ) : null}
-      {feedback?.kind === "correct" ? (
-        <GameCallout heading="答对了" tone="success" role="status">
-          {feedback.explanation}
-        </GameCallout>
+      {correctFeedback ? (
+        <>
+          <LiquidGroup
+            className="choice-block__correct-merge"
+            aria-hidden="true"
+            fill="var(--game-ui-success)"
+            stroke="1px solid color-mix(in srgb, var(--game-ui-success) 62%, transparent)"
+            shadow="var(--game-ui-shadow-button)"
+            motion="auto"
+          >
+            <LiquidGroup.Item
+              className="choice-block__correct-mark"
+              x={correctMergeSettled ? -3 : -16}
+              transition="bouncy"
+            >
+              <span>✓</span>
+            </LiquidGroup.Item>
+            <LiquidGroup.Item
+              className="choice-block__correct-label"
+              x={correctMergeSettled ? 3 : 16}
+              transition="bouncy"
+            >
+              <span>答对了</span>
+            </LiquidGroup.Item>
+          </LiquidGroup>
+          <GameCallout heading="答案解释" tone="success" role="status">
+            {feedback.explanation}
+          </GameCallout>
+        </>
       ) : null}
       <div className="choice-block__submit">
         <GameButton

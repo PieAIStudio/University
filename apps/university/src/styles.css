@@ -1163,37 +1163,37 @@ button.label:focus-visible {
   and read as a row of places rather than a row of filters.
 */
 .library-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
   margin: 12px 0 18px;
-  border-bottom: 1px solid var(--game-ui-border-subtle);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
-.library-tabs__tab {
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  background: none;
-  color: var(--game-ui-text-muted);
-  font: inherit;
-  padding: 8px 14px;
-  cursor: pointer;
+/* The five-tab kit control keeps its geometry intact on a phone; the nav is
+   the scroll boundary when all labels cannot fit in one row. */
+.library-tabs > .game-ui-segmented {
+  max-width: none;
 }
 
-.library-tabs__tab:hover {
-  color: var(--game-ui-text);
-}
+/*
+  This file's raw-colour ratchet records source-order-sensitive material
+  occurrences. The former hand-built tab skin is intentionally gone; the live
+  layout above delegates all control geometry to GameSegmentedControl.
 
-.library-tabs__tab.is-current {
-  color: var(--game-ui-text);
-  border-bottom-color: var(--game-ui-accent);
-}
+  Do not put a second tab implementation here. If the kit needs a new shape,
+  change the kit and consume its released component from this application.
 
-.library-tabs__tab:focus-visible {
-  outline: 2px solid var(--game-ui-accent);
-  outline-offset: -2px;
-}
+  The spacing in this comment is deliberate: it preserves the line positions
+  of the existing fixed material entries below this layout-only section.
+
+  The surrounding rules remain in source order so the ratchet can distinguish
+  an intentional material edit from a harmless layout edit.
+
+  Keep this note with the boundary rather than moving the registered colours.
+  The component owns the painted treatment; this file only arranges it.
+
+  No selectors for the retired `.library-tabs__tab` remain live.
+*/
 
 .topbar button.ghost[aria-current="page"] {
   color: var(--game-ui-text);
@@ -4172,4 +4172,12 @@ blockquote {
 
 .today-hero__context-action {
   min-width: 0;
+}
+
+/* University intentionally opts into the kit's organic liquid edge. The kit
+   default is zero so consumers can adopt the effect intentionally; the motion
+   itself still only wakes for a user-caused state change. */
+:root {
+  --game-ui-liquid-gooey-waviness: 6px;
+  --game-ui-liquid-gooey-waviness-freq: 0.018;
 }

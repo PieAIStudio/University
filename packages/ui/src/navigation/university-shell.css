@@ -29,36 +29,14 @@ a.linkish {
 }
 
 .library-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
   margin: 12px 0 18px;
-  border-bottom: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
-.library-tabs__tab {
-  padding: 8px 14px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  background: none;
-  color: var(--game-ui-text-muted, #9aa6bb);
-  font: inherit;
-  cursor: pointer;
-}
-
-.library-tabs__tab:hover,
-.library-tabs__tab.is-current {
-  color: var(--game-ui-text, #e9edf5);
-}
-
-.library-tabs__tab.is-current {
-  border-bottom-color: var(--game-ui-accent, #ffd479);
-}
-
-.library-tabs__tab:focus-visible {
-  outline: 2px solid var(--game-ui-accent, #ffd479);
-  outline-offset: -2px;
+.library-tabs > .game-ui-segmented {
+  max-width: none;
 }
 
 .shell-empty {
@@ -759,8 +737,7 @@ a.linkish {
 }
 
 .plan-toggle {
-  display: flex;
-  gap: 0.5rem;
+  min-width: 0;
 }
 
 .plan-grid {

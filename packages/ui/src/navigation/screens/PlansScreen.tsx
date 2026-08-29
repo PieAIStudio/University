@@ -1,4 +1,4 @@
-import { GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
+import { GameButton, GameCallout, GamePanel, GameSegmentedControl } from "@pieai/swimmer-ui-kit";
 import {
   createUnavailablePaymentPort,
   walletGradingBalanceText,
@@ -20,6 +20,11 @@ import { CapabilityExplanation } from "../../capability/CapabilityExplanation.js
 export const PLANS_TITLE = "会员";
 
 const FALLBACK_PAYMENT_PORT = createUnavailablePaymentPort();
+
+const BILLING_CYCLE_OPTIONS = [
+  { id: "yearly", label: "按年" },
+  { id: "monthly", label: "按月" },
+] as const;
 
 function formatCurrency(cents: number, currency: string): string {
   return new Intl.NumberFormat("en-US", {
@@ -267,23 +272,13 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
       <PaymentSummary balance={balance} entitlement={entitlement} />
 
       {hasConfiguredCycle ? (
-        <div className="plan-toggle" role="group" aria-label="计费周期">
-          <GameButton
-            variant={yearly ? "primary" : "secondary"}
-            type="button"
-            onClick={() => setYearly(true)}
-            aria-pressed={yearly}
-          >
-            按年
-          </GameButton>
-          <GameButton
-            variant={yearly ? "secondary" : "primary"}
-            type="button"
-            onClick={() => setYearly(false)}
-            aria-pressed={!yearly}
-          >
-            按月
-          </GameButton>
+        <div className="plan-toggle">
+          <GameSegmentedControl
+            label="计费周期"
+            activeId={yearly ? "yearly" : "monthly"}
+            options={BILLING_CYCLE_OPTIONS}
+            onSelect={(id) => setYearly(id === "yearly")}
+          />
         </div>
       ) : null}
 

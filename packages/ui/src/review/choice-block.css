@@ -75,6 +75,37 @@
   white-space: nowrap;
 }
 
+/* A correct submit is the learner-caused merge moment. The group owns every
+   painted treatment; both item contents stay crisp and deliberately carry no
+   border, outline, shadow, or background of their own. */
+.choice-block__correct-merge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 2.25rem;
+  margin: 0 0 8px;
+  padding: 4px 10px;
+  color: var(--game-ui-accent-contrast, #241609);
+  font-weight: 800;
+  justify-self: start;
+}
+
+.choice-block__correct-merge .game-ui-liquid-item {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+}
+
+.choice-block__correct-mark {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.choice-block__correct-label {
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .choice-block__option--wrong .choice-block__verdict {
   color: var(--game-ui-danger, #d85a45);
 }

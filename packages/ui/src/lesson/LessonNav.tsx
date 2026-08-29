@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { GameProgress } from "@pieai/swimmer-ui-kit";
 
 import type { CourseView, LessonRef, LessonSectionView } from "../view/lesson-view.js";
 
@@ -242,20 +243,14 @@ export function LessonToolbar({
       >
         ✕
       </button>
-      <div
+      <GameProgress
         className="lesson-toolbar__progress"
-        role="progressbar"
-        aria-label="课文进度"
-        aria-valuemin={0}
-        aria-valuemax={valueMax}
-        aria-valuenow={valueNow}
-        {...(valued ? { "aria-valuetext": `${current}/${total}` } : {})}
-      >
-        <div
-          className="lesson-toolbar__progress-fill"
-          style={{ width: `${(ratio * 100).toFixed(3)}%` }}
-        />
-      </div>
+        label="课文进度"
+        value={valueNow}
+        max={valueMax}
+        tone="accent"
+        valueLabel={valued ? `${current}/${total}` : undefined}
+      />
       {children ? <div className="lesson-toolbar__tools">{children}</div> : null}
     </div>
   );
