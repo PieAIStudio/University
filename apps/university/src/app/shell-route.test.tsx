@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
 
 import { activeIdForView, isBareView, type View } from "@pieai/university-core";
+import { shellConfigForView } from "./shell-route";
 
 const LESSON: View = {
   kind: "lesson",
@@ -42,6 +43,17 @@ afterEach(async () => {
 });
 
 describe("shell vs bare routes", () => {
+  it("gives the studio route an authoring workbench shell", () => {
+    expect(shellConfigForView({ kind: "studio", section: "map" })).toEqual({
+      showLearnerChrome: false,
+      showContextAside: false,
+    });
+    expect(shellConfigForView({ kind: "world" })).toEqual({
+      showLearnerChrome: true,
+      showContextAside: true,
+    });
+  });
+
   it("does not render UniversityShell navigation while a lesson is open", async () => {
     await act(async () => {
       root.render(

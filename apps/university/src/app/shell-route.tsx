@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import type { View } from "@pieai/university-core";
 
 /**
  * What a route decides about layout, once the route itself stopped being this
@@ -24,4 +25,22 @@ export function useMinWidth(px: number): boolean {
         : false,
     () => false,
   );
+}
+
+export interface ShellRouteConfig {
+  readonly showLearnerChrome: boolean;
+  readonly showContextAside: boolean;
+}
+
+/**
+ * The studio is an authoring workbench, not a learner destination. Its route
+ * owns that shell choice so the shared rail, counters and context aside do not
+ * need to learn about authoring or grow a conditional rendering branch.
+ */
+export function shellConfigForView(view: View): ShellRouteConfig {
+  const isStudio = view.kind === "studio";
+  return {
+    showLearnerChrome: !isStudio,
+    showContextAside: !isStudio,
+  };
 }
