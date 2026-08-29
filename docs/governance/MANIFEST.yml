@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-29T17:26:24.022Z
+generated_at: 2026-08-29T19:59:02.735Z
 generator_version: doc-gov@0.9.9
-docs_count: 67
+docs_count: 68
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -423,6 +423,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-26
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-STICKY-LESSON-TOOLBARS-NEED-SCROLL-PADDING-BEFORE-PHONE-COMPLETION-BUTTONS
+    path: docs/reference/learnings/workflow-issues/sticky-lesson-toolbars-need-scroll-padding-before-phone-completion-buttons.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-29
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-STRICTMODE-LEARNER-SMOKE-TESTS-MUST-ASSERT-NON-EMPTY-DRAWN-OUTPUT
     path: docs/reference/learnings/workflow-issues/strictmode-learner-smoke-tests-must-assert-non-empty-drawn-output.md
