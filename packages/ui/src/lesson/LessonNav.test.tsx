@@ -26,8 +26,23 @@ beforeEach(() => {
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
+  /*
+    One frame, not a chain. A stub that calls back synchronously turns any
+    self-scheduling rAF loop into unbounded recursion — the kit's liquid
+    measurement loop schedules its next frame from inside the current one, so
+    it used to die here with a stack overflow. Run the first frame inline, so
+    effects that need a frame still settle, and drop the frames scheduled from
+    inside it.
+  */
+  let insideFrame = false;
   vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
-    cb(0);
+    if (insideFrame) return 1;
+    insideFrame = true;
+    try {
+      cb(0);
+    } finally {
+      insideFrame = false;
+    }
     return 1;
   });
   vi.stubGlobal("cancelAnimationFrame", () => undefined);
