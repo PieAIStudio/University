@@ -139,10 +139,12 @@ type RatchetMode = "min" | "max" | "range";
 type RatchetBaseline = Readonly<Record<string, number>>;
 
 /**
- * Fixed-pressure baselines captured from the close course camera on 2026-08-30.
- * These are observations, not replacement targets: `pass` below still reports
- * the existing look contract, so a red metric remains red-today. The ratchet
- * only prevents a later run from moving farther in the bad direction.
+ * Fixed-pressure baselines captured from the selected course composition on
+ * 2026-08-30: 66° polar, a -1 target-height offset, and the course-design
+ * shot's own fit. These are observations, not replacement targets: `pass`
+ * below still reports the existing look contract, so a red metric remains
+ * red-today. The ratchet only prevents a later run from moving farther in the
+ * bad direction.
  */
 const ISLAND_LOOK_RATCHET_MODES: Readonly<Record<string, RatchetMode>> = {
   sceneLinearRange: "min",
@@ -169,24 +171,24 @@ const ISLAND_LOOK_RATCHET_MODES: Readonly<Record<string, RatchetMode>> = {
 
 const ISLAND_LOOK_RATCHET: Readonly<Record<string, RatchetBaseline>> = {
   "course-design/desktop": {
-    sceneLinearRange: 6.211,
-    landMedianLightness: 57.8213,
-    landP95Lightness: 77.8887,
-    landLightnessRise: 20.0674,
-    backgroundLightnessSpread: 31.9561,
-    grassLightnessSpread: 39.8256,
-    grassLightnessP95: 76.2346,
-    lightnessP2: 35.9036,
-    lightnessP98: 80.3646,
-    lightnessStdDev: 13.1015,
+    sceneLinearRange: 5.774,
+    landMedianLightness: 50.6403,
+    landP95Lightness: 75.3413,
+    landLightnessRise: 24.7011,
+    backgroundLightnessSpread: 32.1656,
+    grassLightnessSpread: 39.9292,
+    grassLightnessP95: 76.3821,
+    lightnessP2: 35.8535,
+    lightnessP98: 78.6655,
+    lightnessStdDev: 12.7092,
     grassHueCount: 9,
     grassHueSpread: 120,
-    accentArea: 0.0206,
+    accentArea: 0.0015,
     keyToFillRatio: 5.3608,
-    domLabelContrastMin: 1.3002,
+    domLabelContrastMin: 9.2021,
     propsPerLessonNode: 7.7073,
     rimPropShare: 0.2753,
-    landCoverage: 0.4619,
+    landCoverage: 0.4285,
     nodeOcclusionShare: 0,
   },
   "course-near/desktop": {
@@ -250,24 +252,24 @@ const ISLAND_LOOK_RATCHET: Readonly<Record<string, RatchetBaseline>> = {
     worldPropsPerIsland: 8,
   },
   "course-design/mobile": {
-    sceneLinearRange: 3.272,
-    landMedianLightness: 74.854,
-    landP95Lightness: 82.8195,
-    landLightnessRise: 7.9656,
-    backgroundLightnessSpread: 37.4549,
-    grassLightnessSpread: 32.5121,
-    grassLightnessP95: 78.4387,
-    lightnessP2: 37.5429,
+    sceneLinearRange: 3.286,
+    landMedianLightness: 73.9746,
+    landP95Lightness: 82.8142,
+    landLightnessRise: 8.8396,
+    backgroundLightnessSpread: 38.2898,
+    grassLightnessSpread: 32.4269,
+    grassLightnessP95: 78.4226,
+    lightnessP2: 37.8218,
     lightnessP98: 82.9636,
-    lightnessStdDev: 14.5584,
+    lightnessStdDev: 14.3495,
     grassHueCount: 9,
     grassHueSpread: 120,
-    accentArea: 0.0896,
+    accentArea: 0.0904,
     keyToFillRatio: 5.3608,
-    domLabelContrastMin: 10.2033,
+    domLabelContrastMin: 10.0051,
     propsPerLessonNode: 7.7073,
     rimPropShare: 0.2753,
-    landCoverage: 0.4209,
+    landCoverage: 0.4242,
     nodeOcclusionShare: 0,
   },
   "course-near/mobile": {

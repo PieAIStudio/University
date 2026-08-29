@@ -13,11 +13,12 @@ import type { Course } from "./course.js";
 import type { LessonPlacement, Marker } from "../Maps.js";
 
 // The front-side eye is deliberately close: the avatar is the subject, while
-// the local target behind it keeps the road's next step in the same shot.
+// a short local look-ahead lets the road occupy the upper half of the shot.
 const COURSE_CAMERA_FRONT = 19;
-const COURSE_CAMERA_HEIGHT = 14;
+const COURSE_CAMERA_HEIGHT = 13;
 const COURSE_TARGET_BACK = 2;
-const COURSE_TARGET_HEIGHT = 4;
+const COURSE_TARGET_HEIGHT = 3;
+const COURSE_PATH_LOOK_AHEAD = 0.8;
 
 /**
  * A course the way a screen holds it, as the shape the scene places.
@@ -71,10 +72,9 @@ export function worldCourse(view: {
  *
  * Both ends of the shot are anchored to the live stone rather than to the
  * height of a later stone: stand on its +Z/front side, aim just behind and
- * above it. With the top-to-bottom road, the learner's marker sits low while
- * the next stones rise into the forward half. That makes "the live stone is in
- * frame with the road ahead" stable as the island surface changes instead of
- * a number somebody guessed.
+ * above its ground plane, then take a bounded step along the local road
+ * tangent. The small step puts the road in the upper half without chasing the
+ * next stone around a bend or turning the live control out of view.
  *
  * The eye and the target share a lateral position, which is the whole reason
  * this is worth a comment. An earlier shot aimed at a damped fraction of the
@@ -87,15 +87,42 @@ export function worldCourse(view: {
  * click it because a paragraph of the today panel was on top. Measured, by G2
  * failing on the campus whose learner had got six lessons in.
  *
- * Sharing x costs nothing the shot wanted: the eye still slides sideways with
- * the road as the learner advances, so the walk still feels like a road, and
- * looking straight down the axis makes the curve ahead *more* visible rather
- * than less, because the frame no longer turns with it.
+ * The look-ahead is local, not a fixed world-facing bearing. That distinction
+ * matters on the serpentine course: at the start and at the middle the next
+ * lesson points in different lateral directions, and a fixed x/z offset would
+ * make one of those views throw the road out of frame.
  *
  * Only the distance and the bearing survive: `Controls` pins the tilt and
  * recomputes the eye from (target, distance, bearing) on the next frame, so
- * the height here is discarded.
+ * the height here is an arrival pose rather than a second camera rule.
  */
+function pathLookAhead(
+  lessons: readonly LessonPlacement[],
+  liveIndex: number,
+): { readonly x: number; readonly z: number } {
+  const live = lessons[liveIndex];
+  if (!live) return { x: 0, z: 0 };
+  const next = lessons[liveIndex + 1];
+  const previous = lessons[liveIndex - 1];
+  const neighbour = next ?? previous;
+  if (!neighbour) return { x: 0, z: 0 };
+  const direction = next
+    ? {
+        x: neighbour.position.x - live.position.x,
+        z: neighbour.position.z - live.position.z,
+      }
+    : {
+        x: live.position.x - neighbour.position.x,
+        z: live.position.z - neighbour.position.z,
+      };
+  const length = Math.hypot(direction.x, direction.z);
+  if (length <= Number.EPSILON) return { x: 0, z: 0 };
+  return {
+    x: (direction.x / length) * COURSE_PATH_LOOK_AHEAD,
+    z: (direction.z / length) * COURSE_PATH_LOOK_AHEAD,
+  };
+}
+
 export function frameCourse(lessons: readonly LessonPlacement[]): {
   readonly cameraFrom: readonly [number, number, number];
   readonly lookAt: readonly [number, number, number];
@@ -104,18 +131,22 @@ export function frameCourse(lessons: readonly LessonPlacement[]): {
   const liveIndex = found < 0 ? 0 : found;
   const live = lessons[liveIndex];
   if (!live) return null;
+  const ahead = pathLookAhead(lessons, liveIndex);
   return {
     // The eye stays on the +Z side of the road. That is the kit avatar's front
     // side, so the learner can read the face rather than the back of the head.
+    // It follows the same small tangent offset as the target so the first
+    // frame and the settled MapControls pose do not disagree about lateral
+    // placement.
     cameraFrom: [
-      live.position.x,
+      live.position.x + ahead.x,
       live.position.y + COURSE_CAMERA_HEIGHT,
-      live.position.z + COURSE_CAMERA_FRONT,
+      live.position.z + COURSE_CAMERA_FRONT + ahead.z,
     ],
     lookAt: [
-      live.position.x,
+      live.position.x + ahead.x,
       live.position.y + COURSE_TARGET_HEIGHT,
-      live.position.z - COURSE_TARGET_BACK,
+      live.position.z - COURSE_TARGET_BACK + ahead.z,
     ],
   };
 }

@@ -53,7 +53,8 @@ describe("island look judge", () => {
     const first = islandLookCameraForShot("course-design", input, viewport);
     const second = islandLookCameraForShot("course-design", input, viewport);
     expect(first).toEqual(second);
-    expect(first.polar).toBeCloseTo(THREE.MathUtils.degToRad(68));
+    expect(first.polar).toBeCloseTo(THREE.MathUtils.degToRad(66));
+    expect(first.lookAt[1]).toBe(-1);
     expect(first.azimuth).toBeCloseTo(THREE.MathUtils.degToRad(65));
     expect(first.fov).toBe(34);
     expect(first.distance).toBeGreaterThan(34);

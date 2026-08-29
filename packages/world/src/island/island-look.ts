@@ -43,23 +43,28 @@ const COURSE_DESIGN_COVERAGE = 0.84;
 const COURSE_NEAR_DISTANCE = 18;
 const COURSE_FAR_DISTANCE = 54;
 const WORLD_DESIGN_DISTANCE = 112;
-const COURSE_ELEVATION_DEGREES = 22;
+const COURSE_DESIGN_ELEVATION_DEGREES = 24;
+const COURSE_DESIGN_TARGET_Y = -1;
 const COURSE_DESIGN_AZIMUTH_DEGREES = 65;
-const LOOK_POLAR = ((90 - COURSE_ELEVATION_DEGREES) * Math.PI) / 180;
-const LOOK_ELEVATION = (COURSE_ELEVATION_DEGREES * Math.PI) / 180;
+const LOOK_POLAR = ((90 - 22) * Math.PI) / 180;
+const LOOK_ELEVATION = (22 * Math.PI) / 180;
+const COURSE_DESIGN_LOOK_POLAR = ((90 - COURSE_DESIGN_ELEVATION_DEGREES) * Math.PI) / 180;
+const COURSE_DESIGN_LOOK_ELEVATION = (COURSE_DESIGN_ELEVATION_DEGREES * Math.PI) / 180;
 
 function finitePositive(value: number, fallback: number): number {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
-function cameraOffset(distance: number, azimuth = 0): readonly [number, number, number] {
-  // Three's spherical polar angle is measured from +Y. A 68° polar angle is
-  // therefore a fixed 22° depression from the horizontal, matching the
-  // learner course camera instead of maintaining the old high overview.
-  const horizontal = distance * Math.cos(LOOK_ELEVATION);
+function cameraOffset(
+  distance: number,
+  azimuth = 0,
+  elevation = LOOK_ELEVATION,
+  targetY = 0,
+): readonly [number, number, number] {
+  const horizontal = distance * Math.cos(elevation);
   return [
     horizontal * Math.sin(azimuth),
-    distance * Math.sin(LOOK_ELEVATION),
+    targetY + distance * Math.sin(elevation),
     horizontal * Math.cos(azimuth),
   ];
 }
@@ -84,6 +89,8 @@ function projectedDesignExtent(
   fov: number,
   distance: number,
   azimuth: number,
+  elevation: number,
+  targetY: number,
 ): { readonly horizontal: number; readonly vertical: number } {
   const aspect = finitePositive(viewport.width / viewport.height, 1);
   const verticalFov = (fov * Math.PI) / 180;
@@ -98,12 +105,14 @@ function projectedDesignExtent(
   let vertical = 0;
   for (const point of designOutline(bounds)) {
     const along = point.x * viewX + point.z * viewZ;
-    const depth = distance - along * Math.cos(LOOK_ELEVATION);
+    const relativeY = -targetY;
+    const depth = distance - along * Math.cos(elevation) - relativeY * Math.sin(elevation);
     if (depth <= 0) {
       return { horizontal: Number.POSITIVE_INFINITY, vertical: Number.POSITIVE_INFINITY };
     }
     const screenX = (point.x * rightX + point.z * rightZ) / (depth * horizontalTangent);
-    const screenY = (-along * Math.sin(LOOK_ELEVATION)) / (depth * verticalTangent);
+    const screenY =
+      (relativeY * Math.cos(elevation) - along * Math.sin(elevation)) / (depth * verticalTangent);
     horizontal = Math.max(horizontal, Math.abs(screenX));
     vertical = Math.max(vertical, Math.abs(screenY));
   }
@@ -115,17 +124,27 @@ function courseDesignDistance(
   viewport: IslandLookViewport,
   fov: number,
   azimuth: number,
+  elevation: number,
+  targetY: number,
 ): number {
   let low = COURSE_NEAR_DISTANCE;
   let high = low;
   while (true) {
-    const extent = projectedDesignExtent(bounds, viewport, fov, high, azimuth);
+    const extent = projectedDesignExtent(bounds, viewport, fov, high, azimuth, elevation, targetY);
     if (Math.max(extent.horizontal, extent.vertical) <= COURSE_DESIGN_COVERAGE) break;
     high *= 2;
   }
   for (let iteration = 0; iteration < 40; iteration += 1) {
     const middle = (low + high) / 2;
-    const extent = projectedDesignExtent(bounds, viewport, fov, middle, azimuth);
+    const extent = projectedDesignExtent(
+      bounds,
+      viewport,
+      fov,
+      middle,
+      azimuth,
+      elevation,
+      targetY,
+    );
     if (Math.max(extent.horizontal, extent.vertical) <= COURSE_DESIGN_COVERAGE) high = middle;
     else low = middle;
   }
@@ -146,20 +165,22 @@ export function islandLookCameraForShot(
   viewport: IslandLookViewport,
 ): IslandLookCameraPose {
   const fov = viewport.width > 0 && viewport.width < 768 ? 42 : 34;
-  const azimuth = shot === "course-design" ? (COURSE_DESIGN_AZIMUTH_DEGREES * Math.PI) / 180 : 0;
-  const distance =
-    shot === "course-design"
-      ? courseDesignDistance(bounds, viewport, fov, azimuth)
-      : shot === "course-near"
-        ? COURSE_NEAR_DISTANCE
-        : shot === "course-far"
-          ? COURSE_FAR_DISTANCE
-          : WORLD_DESIGN_DISTANCE;
-  const offset = cameraOffset(distance, azimuth);
+  const courseDesign = shot === "course-design";
+  const azimuth = courseDesign ? (COURSE_DESIGN_AZIMUTH_DEGREES * Math.PI) / 180 : 0;
+  const elevation = courseDesign ? COURSE_DESIGN_LOOK_ELEVATION : LOOK_ELEVATION;
+  const targetY = courseDesign ? COURSE_DESIGN_TARGET_Y : 0;
+  const distance = courseDesign
+    ? courseDesignDistance(bounds, viewport, fov, azimuth, elevation, targetY)
+    : shot === "course-near"
+      ? COURSE_NEAR_DISTANCE
+      : shot === "course-far"
+        ? COURSE_FAR_DISTANCE
+        : WORLD_DESIGN_DISTANCE;
+  const offset = cameraOffset(distance, azimuth, elevation, targetY);
   return {
     cameraFrom: offset,
-    lookAt: [0, 0, 0],
-    polar: LOOK_POLAR,
+    lookAt: [0, targetY, 0],
+    polar: courseDesign ? COURSE_DESIGN_LOOK_POLAR : LOOK_POLAR,
     azimuth,
     fov,
     distance,

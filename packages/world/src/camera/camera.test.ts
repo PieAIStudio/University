@@ -29,7 +29,7 @@ describe("dolly range", () => {
 
 describe("course composition", () => {
   it("pins the selected low and near landing pose", () => {
-    expect(COURSE_POLAR).toBeCloseTo(THREE.MathUtils.degToRad(68));
+    expect(COURSE_POLAR).toBeCloseTo(THREE.MathUtils.degToRad(66));
     expect(COURSE_DISTANCE).toBe(23);
     expect(COURSE_DISTANCE_MIN).toBe(18);
     // The far end still lets a learner pull back and inspect more levels after
