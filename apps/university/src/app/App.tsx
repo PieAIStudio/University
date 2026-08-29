@@ -53,7 +53,7 @@ import { SettingsSubnav } from "@pieai/university-ui/navigation/empty.js";
 import { LevelProgress } from "@pieai/university-ui/navigation/screens.js";
 import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
 import { coursePickStatsOf } from "@pieai/university-ui/path/course-pick-stats.js";
-import { CourseScene } from "@pieai/university-world/Maps.js";
+import { CourseScene, nextCourse } from "@pieai/university-world/Maps.js";
 import { frameCourse } from "@pieai/university-world/course-map.js";
 import { type CourseNode } from "@pieai/university-world/course.js";
 import {
@@ -302,8 +302,15 @@ export function App() {
     };
   }, [avatarSignedIn, feedbackLesson, feedbackLocator, progress.exerciseAttempts]);
 
-  const { lessonsDone, courseProgress, lessons, viewedProgress, nextUpProgress, todayNode } =
-    useCourseProgress({ course, courseOf, nodes, progress, source, view });
+  const {
+    lessonsDone,
+    courseProgress,
+    courseProgressForNode,
+    lessons,
+    viewedProgress,
+    nextUpProgress,
+    todayNode,
+  } = useCourseProgress({ course, courseOf, nodes, progress, source, view });
 
   const labelNodes = useRef(new Map<string, HTMLElement>());
   const pickCardRef = useRef<HTMLElement | null>(null);
@@ -327,6 +334,21 @@ export function App() {
   const projectName = useMemo(
     () => studies.find((entry) => entry.id === focusedStudyId)?.title ?? "University",
     [focusedStudyId, studies],
+  );
+
+  /*
+    `todayNode` is the account-wide recommendation used to choose the first
+    project in a fresh session. Once the map has a focused project, the context
+    panel must ask the same question inside that project; otherwise the map and
+    the panel can truthfully answer two different places at once.
+  */
+  const focusedTodayNode = useMemo(
+    () => (nodes && focusedStudyId ? nextCourse(nodes, courseProgress, focusedStudyId) : null),
+    [nodes, courseProgress, focusedStudyId],
+  );
+  const focusedNextUpProgress = useMemo(
+    () => (focusedTodayNode ? courseProgressForNode(focusedTodayNode) : null),
+    [courseProgressForNode, focusedTodayNode],
   );
 
   const focusStudy = useCallback(
@@ -396,12 +418,12 @@ export function App() {
   const todayData = useMemo<TodaySectionData>(
     () => ({
       card: todayCard,
-      nextLesson: nextLessonOf(studies, nextUpProgress?.next ?? null, progressPort),
+      nextLesson: nextLessonOf(studies, focusedNextUpProgress?.next ?? null, progressPort),
       dueCount: due.length,
       focus: null,
       issues: [],
     }),
-    [studies, todayCard, due, nextUpProgress],
+    [studies, todayCard, due, focusedNextUpProgress],
   );
   const todayReview = useMemo(
     () =>
@@ -565,7 +587,9 @@ export function App() {
   // One sentence, both widths. The rail's TodayCard and the floating .nextup
   // overlay used to format this independently, and the overlay kept quoting
   // the catalogue size after the rail had stopped.
-  const nextUpMeta = todayNode ? todayMeta(todayNode.studyTitle, nextUpProgress) : null;
+  const nextUpMeta = focusedTodayNode
+    ? todayMeta(focusedTodayNode.studyTitle, focusedNextUpProgress)
+    : null;
   /** The very lesson the rail's panel offers, so the phone offers the same one. */
   const todayLesson = todayData.nextLesson;
 
@@ -582,15 +606,15 @@ export function App() {
         lessonId: live?.lessonId ?? null,
       };
     }
-    if (todayNode) {
+    if (focusedTodayNode) {
       return {
-        studyId: todayNode.studyId,
-        courseId: todayNode.courseId,
+        studyId: focusedTodayNode.studyId,
+        courseId: focusedTodayNode.courseId,
         lessonId: null,
       };
     }
     return null;
-  }, [view, lessons, todayNode]);
+  }, [view, lessons, focusedTodayNode]);
   const companionAnchors = useMemo(() => {
     if (view.kind === "course" || view.kind === "lesson") {
       return lessons.map((lesson) => ({

@@ -111,6 +111,11 @@ describe("nextCourse", () => {
     expect(nextCourse(NODES, done)?.courseId).toBe("b2");
   });
 
+  it("answers inside the project currently shown on the map", () => {
+    expect(nextCourse(NODES, nothingDone, "alpha")?.courseId).toBe("a1");
+    expect(nextCourse(NODES, nothingDone, "beta")?.courseId).toBe("b1");
+  });
+
   /*
     Splitting the map by project made this visible. Finish alpha's opening
     course and the old ordering sent 「今天」 to *beta*, because beta's first
