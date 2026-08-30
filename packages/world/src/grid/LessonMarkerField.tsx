@@ -21,13 +21,15 @@ interface LessonMarkerFieldProps {
 export function LessonMarkerField({ markers, onPick, onHover }: LessonMarkerFieldProps) {
   const plinth = useRef<THREE.InstancedMesh>(null);
   const rings = useRef<THREE.InstancedMesh>(null);
-  const plinthGeometry = useMemo(() => new THREE.CylinderGeometry(0.86, 1, 0.26, 6), []);
-  const ringGeometry = useMemo(() => new THREE.TorusGeometry(1.08, 0.045, 4, 12), []);
+  // The road is the continuous ivory layer. Each lesson gets one smaller
+  // coral stone set into it, which keeps the route readable without adding a
+  // separate mesh per lesson.
+  const plinthGeometry = useMemo(() => new THREE.CylinderGeometry(0.92, 1, 0.22, 6), []);
+  const ringGeometry = useMemo(() => new THREE.CylinderGeometry(0.62, 0.7, 0.12, 6), []);
   const plinthMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
         color: 0xffffff,
-        vertexColors: true,
         roughness: 0.72,
         metalness: 0.04,
         flatShading: true,
@@ -38,10 +40,6 @@ export function LessonMarkerField({ markers, onPick, onHover }: LessonMarkerFiel
     () =>
       new THREE.MeshBasicMaterial({
         color: 0xffffff,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.72,
-        depthWrite: false,
       }),
     [],
   );
@@ -53,15 +51,19 @@ export function LessonMarkerField({ markers, onPick, onHover }: LessonMarkerFiel
     if (!plinthTarget || !ringTarget) return;
     markers.forEach(({ lesson, radius, colour }, index) => {
       matrix.compose(
-        new THREE.Vector3(lesson.position.x, lesson.position.y + radius * 0.13, lesson.position.z),
+        new THREE.Vector3(lesson.position.x, lesson.position.y + radius * 0.11, lesson.position.z),
         new THREE.Quaternion(),
         new THREE.Vector3(radius, radius, radius),
       );
       plinthTarget.setMatrixAt(index, matrix);
-      plinthTarget.setColorAt(index, new THREE.Color(colour));
+      // `instanceColor` is a separate Three feature from geometry vertex
+      // colours. Leaving vertexColors enabled on CylinderGeometry (which has
+      // no color attribute) binds the missing attribute as black and turns
+      // every paver into a dark token.
+      plinthTarget.setColorAt(index, new THREE.Color(0xf0e5c7));
       matrix.compose(
-        new THREE.Vector3(lesson.position.x, lesson.position.y + radius * 0.16, lesson.position.z),
-        new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0)),
+        new THREE.Vector3(lesson.position.x, lesson.position.y + radius * 0.25, lesson.position.z),
+        new THREE.Quaternion(),
         new THREE.Vector3(radius, radius, radius),
       );
       ringTarget.setMatrixAt(index, matrix);
@@ -83,10 +85,10 @@ export function LessonMarkerField({ markers, onPick, onHover }: LessonMarkerFiel
     matrix.compose(
       new THREE.Vector3(
         live.lesson.position.x,
-        live.lesson.position.y + live.radius * 0.17,
+        live.lesson.position.y + live.radius * 0.25,
         live.lesson.position.z,
       ),
-      new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0)),
+      new THREE.Quaternion(),
       new THREE.Vector3(live.radius * pulse, live.radius * pulse, live.radius * pulse),
     );
     ringTarget.setMatrixAt(liveIndex, matrix);

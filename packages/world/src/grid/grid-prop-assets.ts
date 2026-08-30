@@ -19,6 +19,7 @@ export const GRID_KENNEY_NATURE_ASSETS = {
   mushroom_redGroup: "/kenney/r01/nature/mushroom_redGroup.glb",
   flower_yellowA: "/kenney/r01/nature/flower_yellowA.glb",
   rock_largeA: "/kenney/r01/nature/rock_largeA.glb",
+  rock_smallA: "/kenney/r01/nature/rock_smallA.glb",
   stump_round: "/kenney/r01/nature/stump_round.glb",
 } as const;
 

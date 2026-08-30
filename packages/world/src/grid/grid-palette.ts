@@ -10,53 +10,54 @@ export interface GridPalette {
 
 export const GRID_PALETTE_ROLES = ["top", "shadow", "cliff", "road", "accent"] as const;
 
-type Rgb = readonly [number, number, number];
+/**
+ * The lower half of the world has one material language. Course identity is
+ * carried by the meadow top only; changing it on the cliff or underside turns
+ * a place into a plastic token instead of another piece of the same world.
+ */
+export const GRID_SHARED_SOIL = {
+  shadow: 0x412a24,
+  cliff: 0x70452f,
+  road: 0xf0e5c7,
+  accent: 0xf37958,
+} as const;
 
-function hueToRgb(p: number, q: number, t: number): number {
-  let value = t;
-  if (value < 0) value += 1;
-  if (value > 1) value -= 1;
-  if (value < 1 / 6) return p + (q - p) * 6 * value;
-  if (value < 1 / 2) return q;
-  if (value < 2 / 3) return p + (q - p) * (2 / 3 - value) * 6;
-  return p;
-}
-
-function hslToRgb(hue: number, saturation: number, lightness: number): Rgb {
-  if (saturation === 0) {
-    const grey = Math.round(lightness * 255);
-    return [grey, grey, grey];
-  }
-  const q =
-    lightness < 0.5
-      ? lightness * (1 + saturation)
-      : lightness + saturation - lightness * saturation;
-  const p = 2 * lightness - q;
-  return [
-    Math.round(hueToRgb(p, q, hue + 1 / 3) * 255),
-    Math.round(hueToRgb(p, q, hue) * 255),
-    Math.round(hueToRgb(p, q, hue - 1 / 3) * 255),
-  ];
-}
-
-function rgbToHex([red, green, blue]: Rgb): number {
-  return (red << 16) | (green << 8) | blue;
+export interface GridPalettePreset extends GridPalette {
+  readonly id: string;
 }
 
 /**
- * Five deliberate swatches. Lighting may shade these colours, but it never
- * chooses the identity of the island. The large lightness steps are what
- * keep a grid readable with shadowMap disabled.
+ * Hand-picked meadow families. This table is intentionally finite: a course
+ * hashes to one complete, reviewed set instead of inventing a hue in HSL.
+ * Every preset shares the warm soil, ivory road and coral interaction colour.
  */
+export const GRID_PALETTE_PRESETS: readonly GridPalettePreset[] = [
+  { id: "lime-meadow", top: 0xb6c43a, ...GRID_SHARED_SOIL },
+  { id: "spring-meadow", top: 0x9bbd47, ...GRID_SHARED_SOIL },
+  { id: "fern-meadow", top: 0x7cad50, ...GRID_SHARED_SOIL },
+  { id: "clover-meadow", top: 0x5b9e64, ...GRID_SHARED_SOIL },
+  { id: "sage-meadow", top: 0x6eaa85, ...GRID_SHARED_SOIL },
+  { id: "mint-meadow", top: 0x82b769, ...GRID_SHARED_SOIL },
+  { id: "olive-meadow", top: 0xa8b648, ...GRID_SHARED_SOIL },
+  { id: "golden-meadow", top: 0xc6b24b, ...GRID_SHARED_SOIL },
+  { id: "moss-meadow", top: 0xa8c34a, ...GRID_SHARED_SOIL },
+  { id: "deep-meadow", top: 0x91a94a, ...GRID_SHARED_SOIL },
+] as const;
+
+export function gridPaletteIndexFor(studyId: string, courseId: string, seed: string): number {
+  return Math.floor(
+    hash(`${studyId}/${courseId}/${seed}/palette-slot`) * GRID_PALETTE_PRESETS.length,
+  );
+}
+
+/** Pick one deliberate five-colour set; do not synthesize a colour from a hash. */
 export function gridPaletteFor(studyId: string, courseId: string, seed: string): GridPalette {
-  const hue = (hash(`${studyId}/${courseId}/${seed}/palette`) * 360) / 360;
-  const top = rgbToHex(hslToRgb(hue, 0.7, 0.52));
-  // Course identity belongs on the top. Shared soil-coloured sides and a
-  // warm stone road keep a blue or purple course from becoming a plastic
-  // token when several islands share one world.
-  const shadow = 0x26343d;
-  const cliff = 0x704b3c;
-  const road = 0xd2a35e;
-  const accent = rgbToHex(hslToRgb((hue + 0.52) % 1, 0.78, 0.58));
-  return { top, shadow, cliff, road, accent };
+  const preset = GRID_PALETTE_PRESETS[gridPaletteIndexFor(studyId, courseId, seed)]!;
+  return {
+    top: preset.top,
+    shadow: preset.shadow,
+    cliff: preset.cliff,
+    road: preset.road,
+    accent: preset.accent,
+  };
 }

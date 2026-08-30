@@ -5,13 +5,44 @@ import type { HexMap } from "./course-grid.js";
 
 type CloudDepth = "back" | "side" | "front";
 
+function cloudGeometry(): THREE.BufferGeometry {
+  // The old cloud was three separated low-poly spheres, which read as a row
+  // of pale rocks at the course camera. A single shallow silhouette gives it
+  // the illustrated cloud language of the target: a calm flat base with
+  // three soft crowns. It is still one shared geometry for all three depth
+  // layers and costs fewer triangles than the sphere lobes.
+  const shape = new THREE.Shape();
+  shape.moveTo(-1.55, -0.36);
+  shape.lineTo(1.55, -0.36);
+  shape.lineTo(1.55, -0.05);
+  shape.quadraticCurveTo(1.42, 0.06, 1.25, 0.08);
+  shape.quadraticCurveTo(1.08, 0.62, 0.7, 0.64);
+  shape.quadraticCurveTo(0.4, 0.66, 0.2, 0.42);
+  shape.quadraticCurveTo(-0.02, 1.05, -0.5, 1.08);
+  shape.quadraticCurveTo(-0.98, 1.1, -1.12, 0.52);
+  shape.quadraticCurveTo(-1.42, 0.56, -1.55, 0.2);
+  shape.closePath();
+  // Keep the silhouette cheap, but give the quadratic crowns enough samples
+  // to read as soft cloud lobes instead of a second low-poly grid.
+  const flat = new THREE.ShapeGeometry(shape, 6);
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", flat.getAttribute("position"));
+  geometry.setAttribute("normal", flat.getAttribute("normal"));
+  geometry.setIndex(flat.getIndex()!);
+  geometry.computeBoundingSphere();
+  flat.dispose();
+  return geometry;
+}
+
 function cloudPositions(
   map: HexMap,
   depth: CloudDepth,
 ): readonly [number, number, number, number][] {
   const width = map.bounds.maxX - map.bounds.minX;
   const depthOffset = map.bounds.maxZ - map.bounds.minZ;
-  const count = depth === "front" ? 4 : 5;
+  // Clouds are framing punctuation, not a second patterned ground plane.
+  // Fewer larger silhouettes leave the route as the visual protagonist.
+  const count = depth === "front" ? 3 : depth === "back" ? 3 : 2;
   return Array.from({ length: count }, (_, index) => {
     const spread = index / Math.max(1, count - 1) - 0.5;
     if (depth === "back") {
@@ -42,7 +73,11 @@ function cloudPositions(
 function CloudLayer({ map, depth, dimmed }: { map: HexMap; depth: CloudDepth; dimmed: boolean }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
   const positions = useMemo(() => cloudPositions(map, depth), [depth, map]);
-  const geometry = useMemo(() => new THREE.SphereGeometry(1, 8, 5), []);
+  const geometry = useMemo(cloudGeometry, []);
+  const rotation = useMemo(
+    () => new THREE.Quaternion().setFromEuler(new THREE.Euler(0, (65 * Math.PI) / 180, 0)),
+    [],
+  );
   const material = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
@@ -60,13 +95,13 @@ function CloudLayer({ map, depth, dimmed }: { map: HexMap; depth: CloudDepth; di
     positions.forEach(([x, y, z, scale], index) => {
       matrix.compose(
         new THREE.Vector3(x, y, z),
-        new THREE.Quaternion(),
-        new THREE.Vector3(scale * 1.35, scale * 0.48, scale * 0.72),
+        rotation,
+        new THREE.Vector3(scale * 1.04, scale * 0.72, scale * 0.72),
       );
       target.setMatrixAt(index, matrix);
     });
     target.instanceMatrix.needsUpdate = true;
-  }, [positions]);
+  }, [positions, rotation]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material.dispose(), [material]);
   return (

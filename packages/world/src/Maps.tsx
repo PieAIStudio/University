@@ -82,7 +82,20 @@ export const SKY_STOPS = {
   horizon: 0xf2d4b0,
 } as const;
 
-export type SkyStops = { readonly zenith: number; readonly mid: number; readonly horizon: number };
+export type SkyStops = {
+  readonly zenith: number;
+  readonly mid: number;
+  readonly horizon: number;
+  readonly nadir?: number;
+};
+
+/** The course frame is a warm illustrated sky, with lavender negative space. */
+const COURSE_SKY_STOPS: SkyStops = {
+  zenith: 0xff8378,
+  mid: 0xffaa76,
+  horizon: 0xffdda2,
+  nadir: 0xa39acd,
+};
 
 /**
  * Skies a project can have. Written down, not computed.
@@ -596,6 +609,7 @@ function Weather({
   cloudLevel = -5.2,
   groundRadius,
   includeCloudSea = true,
+  includeSea = true,
 }: {
   extent: number;
   /**
@@ -620,6 +634,8 @@ function Weather({
   groundRadius?: number;
   /** The course grid supplies its own three depth-aware cloud batches. */
   includeCloudSea?: boolean;
+  /** Course shots use the painted sky as negative space around the island. */
+  includeSea?: boolean;
 }) {
   const [, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
   // FogExp2 has no near plane. Density is derived from the old far so the
@@ -667,10 +683,21 @@ function Weather({
         shadow-bias={-0.0002}
         shadow-normalBias={0.06}
       />
-      <Suspense fallback={<AerialWorldPlateFallback extent={extent} level={cloudLevel} />}>
-        <AerialWorldPlate extent={extent} level={cloudLevel} />
+      {/* A low cool rim separates the island silhouette from the warm sky. It
+          has no shadow map: this is a fill edge, not another expensive key. */}
+      <directionalLight
+        color={0x8cc9d4}
+        position={[-sunPosition[0] * 0.82, shadow.lightDistance * 0.44, -sunPosition[2] * 0.82]}
+        intensity={0.62}
+      />
+      <Suspense
+        fallback={
+          <AerialWorldPlateFallback extent={extent} level={cloudLevel} visible={includeSea} />
+        }
+      >
+        <AerialWorldPlate extent={extent} level={cloudLevel} visible={includeSea} />
       </Suspense>
-      <DeepSea extent={extent} level={cloudLevel} />
+      {includeSea ? <DeepSea extent={extent} level={cloudLevel} /> : null}
       {includeCloudSea ? (
         <CuteCloudSea extent={extent} level={cloudLevel} drift={!islandLookFrozen()} />
       ) : null}
@@ -926,10 +953,10 @@ export function courseSurfaceY(
  * "what do I do".
  */
 const MARKER_COLOUR = {
-  done: 0xcbb277,
-  live: PALETTE.accent,
-  idle: 0xe8e4d8,
-  locked: 0x8f959c,
+  done: 0xd96b50,
+  live: 0xff8563,
+  idle: 0xf08b69,
+  locked: 0xb87360,
 } as const;
 
 /* The renderer owns the single route ribbon; no second trail is drawn here. */
@@ -943,7 +970,7 @@ export function CourseScene({
   avatarSignedIn = false,
   onPick,
   onHover,
-  skyStudyId = null,
+  skyStudyId: _skyStudyId = null,
   assetRevision = 0,
 }: {
   lessons: readonly LessonPlacement[];
@@ -995,14 +1022,15 @@ export function CourseScene({
         lesson,
         // The blueprint reserves this radius when spacing the road. A previous
         // renderer ignored that contract and drew ~3× larger stones, so 41
-        // legitimate lesson nodes fused into one mechanical tube. Content
-        // length keeps only a restrained eight-percent cue.
+        // legitimate lesson nodes fused into one mechanical tube. The grid is
+        // now the visible unit, so convert that semantic cue to the actual hex
+        // radius before drawing the inset coral stone. Content length keeps
+        // only a restrained eight-percent cue.
         radius:
-          blueprint.route.nodeRadius *
-          (0.96 + Math.min(1, Math.max(0, lesson.chars) / 12_000) * 0.08),
+          grid.hexSize * 0.68 * (0.96 + Math.min(1, Math.max(0, lesson.chars) / 12_000) * 0.08),
         colour: MARKER_COLOUR[lesson.state],
       })),
-    [blueprint.route.nodeRadius, lessons],
+    [grid.hexSize, lessons],
   );
 
   return (
@@ -1024,9 +1052,10 @@ export function CourseScene({
         extent={extent * 1.6}
         groundRadius={extent}
         fog={[88, 280]}
-        sky={skyStopsForStudy(skyStudyId)}
+        sky={COURSE_SKY_STOPS}
         cloudLevel={-10.2}
         includeCloudSea={false}
+        includeSea={false}
       />
       <IslandRender blueprint={blueprint} detail="course" grid={grid} />
       <Suspense fallback={null}>

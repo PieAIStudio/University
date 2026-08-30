@@ -78,13 +78,24 @@ function growMainRegion(route: readonly HexCoord[], seed: string, target: number
       const secondNeighbours = hexNeighbors(second).filter((cell) =>
         cells.has(hexKey(cell)),
       ).length;
+      const firstRouteDistance = Math.min(
+        ...route.map((routeCell) => hexDistance(first, routeCell)),
+      );
+      const secondRouteDistance = Math.min(
+        ...route.map((routeCell) => hexDistance(second, routeCell)),
+      );
       const firstScore =
-        (6 - firstNeighbours) * 0.7 +
-        hexDistance(first, centre) * 0.045 +
+        // Grow a shoulder around the whole route before filling the centre.
+        // Without this term erosion leaves long lesson arms exposed as bare
+        // pavers, while the extra cells bunch into one inland island.
+        firstRouteDistance * 0.78 +
+        (6 - firstNeighbours) * 0.58 +
+        hexDistance(first, centre) * 0.19 +
         hash(`${seed}/shape/${hexKey(first)}`) * 0.34;
       const secondScore =
-        (6 - secondNeighbours) * 0.7 +
-        hexDistance(second, centre) * 0.045 +
+        secondRouteDistance * 0.78 +
+        (6 - secondNeighbours) * 0.58 +
+        hexDistance(second, centre) * 0.19 +
         hash(`${seed}/shape/${hexKey(second)}`) * 0.34;
       return firstScore - secondScore || hexKey(first).localeCompare(hexKey(second));
     });
@@ -159,7 +170,7 @@ export function growGridOutline(
   if (route.length === 0) throw new RangeError("A grid outline needs at least one route cell");
   const target = Math.min(
     GRID_CELL_BUDGET - 4,
-    Math.max(route.length + 7, requestedTarget ?? Math.round(route.length * 1.75)),
+    Math.max(route.length + 7, requestedTarget ?? Math.round(route.length * 2.9)),
   );
   const main = growMainRegion(route, seed, target);
   const mainKeys = new Set(main.map(hexKey));

@@ -9,6 +9,7 @@ export const GRID_PROP_ASSET_IDS = [
   "mushroom_redGroup",
   "flower_yellowA",
   "rock_largeA",
+  "rock_smallA",
   "stump_round",
 ] as const;
 
@@ -46,14 +47,19 @@ function courseAssetForUnit(unitId: string, seed: string): GridPropAssetId {
 }
 
 function territoryAssetForCell(cell: GridPropCellInput, seed: string): GridPropAssetId {
-  const assets: readonly GridPropAssetId[] = [
-    "plant_bushLarge",
-    "mushroom_redGroup",
-    "flower_yellowA",
-    "rock_largeA",
-    "stump_round",
-  ];
-  return assets[Math.floor(hash(`${seed}/territory-prop/${hexKey(cell.coord)}`) * assets.length)]!;
+  const roll = hash(`${seed}/territory-prop/${hexKey(cell.coord)}`);
+  // Trees and rocks carry the silhouette at this camera. The weighted table
+  // keeps flowers/mushrooms as punctuation rather than letting a random seed
+  // turn one arm into a repeated line of tiny red caps.
+  if (roll < 0.18) return "tree_pineRoundA";
+  if (roll < 0.34) return "tree_oak";
+  if (roll < 0.44) return "tree_simple";
+  if (roll < 0.59) return "plant_bushLarge";
+  if (roll < 0.69) return "rock_largeA";
+  if (roll < 0.77) return "rock_smallA";
+  if (roll < 0.85) return "flower_yellowA";
+  if (roll < 0.93) return "mushroom_redGroup";
+  return "stump_round";
 }
 
 export function gridPropsFor(
@@ -82,9 +88,12 @@ export function gridPropsFor(
       continue;
     }
     if (cell.kind !== "land") continue;
-    // Leave a clean shoulder beside the route. The farther a cell is from the
-    // road, the more likely it receives a small dressing prop.
-    const density = 0.16 + 0.31 * Math.min(1, cell.distanceToRoute / 4);
+    // Leave a visibly clean shoulder beside the route. The farther a cell is
+    // from the road, the more likely it receives a dressing prop; at the
+    // plateau the world is still half empty, which keeps the silhouettes from
+    // turning into a repeated hedge.
+    const distanceFactor = Math.min(1, cell.distanceToRoute / 4);
+    const density = 0.18 + 0.46 * distanceFactor ** 1.2;
     if (hash(`${seed}/territory-density/${cellKey}`) >= density) continue;
     placements.push({
       cellKey,
@@ -94,9 +103,36 @@ export function gridPropsFor(
       lessonIndex: null,
       unitId: null,
       rotation: hash(`${seed}/territory-rotation/${cellKey}`) * Math.PI * 2,
-      scale: 0.42 + hash(`${seed}/territory-scale/${cellKey}`) * 0.2,
+      scale: 0.48 + hash(`${seed}/territory-scale/${cellKey}`) * 0.24,
     });
     occupied.add(cellKey);
+  }
+  if (!placements.some((placement) => placement.kind === "territory")) {
+    // A tiny course can legitimately have only a handful of land cells. Keep
+    // that seed from becoming a sterile floating diagram without raising the
+    // density for normal courses: one far-from-road punctuation prop is the
+    // minimum visual vocabulary for a non-empty territory.
+    const fallback = [...cells]
+      .filter((cell) => cell.kind === "land" && !occupied.has(hexKey(cell.coord)))
+      .sort(
+        (first, second) =>
+          second.distanceToRoute - first.distanceToRoute ||
+          hash(`${seed}/territory-fallback/${hexKey(first.coord)}`) -
+            hash(`${seed}/territory-fallback/${hexKey(second.coord)}`),
+      )[0];
+    if (fallback) {
+      const cellKey = hexKey(fallback.coord);
+      placements.push({
+        cellKey,
+        coord: fallback.coord,
+        assetId: territoryAssetForCell(fallback, seed),
+        kind: "territory",
+        lessonIndex: null,
+        unitId: null,
+        rotation: hash(`${seed}/territory-fallback-rotation/${cellKey}`) * Math.PI * 2,
+        scale: 0.48 + hash(`${seed}/territory-fallback-scale/${cellKey}`) * 0.24,
+      });
+    }
   }
   return placements;
 }

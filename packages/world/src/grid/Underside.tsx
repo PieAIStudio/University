@@ -15,14 +15,34 @@ export function Underside({ map, dimmed = false }: UndersideProps) {
   const minimumHalf = Math.min(map.bounds.halfX, map.bounds.halfZ);
   const centreX = (map.bounds.minX + map.bounds.maxX) * 0.5;
   const centreZ = (map.bounds.minZ + map.bounds.maxZ) * 0.5;
-  const undersideDepth = Math.max(3.8, minimumHalf * 0.52);
+  const courseFactor = Math.min(1, map.route.length / 41);
+  const undersideDepth = Math.max(5.4, minimumHalf * (0.35 + courseFactor * 0.55));
   // The cone is an underside silhouette, not a second top surface. Keeping
   // its lip inside the cell cluster leaves gaps between cells reading as air.
-  const coneRadius = minimumHalf * 0.24;
-  const coneGeometry = useMemo(
-    () => new THREE.ConeGeometry(coneRadius, undersideDepth, 8, 1),
-    [coneRadius, undersideDepth],
-  );
+  const coneRadius = minimumHalf * (0.3 + courseFactor * 0.28);
+  const frontX = Math.sin((65 * Math.PI) / 180);
+  const frontZ = Math.cos((65 * Math.PI) / 180);
+  const coneGeometry = useMemo(() => {
+    // Leave the upper cap open. A closed cap becomes a floating brown plate
+    // when the aerial camera looks through the intentional gaps between
+    // cells; the sloped faces alone keep the underside reading as one
+    // tapered island. Per-vertex soil shades make the eight facets visible
+    // without introducing a second course-specific material family.
+    const geometry = new THREE.ConeGeometry(coneRadius, undersideDepth, 8, 1, true);
+    const position = geometry.getAttribute("position");
+    const colour = new Float32Array(position.count * 3);
+    const cliff = new THREE.Color(map.palette.cliff);
+    const shadow = new THREE.Color(map.palette.shadow);
+    const shade = new THREE.Color();
+    for (let index = 0; index < position.count; index += 1) {
+      const angle = Math.atan2(position.getZ(index), position.getX(index));
+      const facet = 0.08 + (Math.sin(angle * 2.5 + 0.7) + 1) * 0.08;
+      shade.copy(cliff).lerp(shadow, facet);
+      shade.toArray(colour, index * 3);
+    }
+    geometry.setAttribute("color", new THREE.BufferAttribute(colour, 3));
+    return geometry;
+  }, [coneRadius, map.palette.cliff, map.palette.shadow, undersideDepth]);
   const rockGeometry = useMemo(() => new THREE.ConeGeometry(0.34, 1.7, 5, 1), []);
   const rockMaterial = useMemo(
     () =>
@@ -39,9 +59,8 @@ export function Underside({ map, dimmed = false }: UndersideProps) {
         // The underside is shadowed soil, not a second blue world. Mixing the
         // shared shadow swatch towards the cliff swatch keeps the cone dark
         // enough to read while preserving the one-world earthy material rule.
-        color: dimmed
-          ? 0x121e24
-          : new THREE.Color(map.palette.shadow).lerp(new THREE.Color(map.palette.cliff), 0.42),
+        color: 0xffffff,
+        vertexColors: true,
         roughness: 1,
         flatShading: true,
       }),
@@ -50,15 +69,24 @@ export function Underside({ map, dimmed = false }: UndersideProps) {
   const waterMaterial = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
-        color: map.palette.accent,
+        // Coral belongs to lesson stones. Water keeps its own cool material
+        // so the underside still has the blue counterpoint from the reference.
+        color: 0x4fa8c4,
         transparent: true,
         opacity: dimmed ? 0.26 : 0.58,
         depthWrite: false,
+        depthTest: false,
         side: THREE.DoubleSide,
       }),
     [dimmed, map.palette.accent],
   );
-  const waterGeometry = useMemo(() => new THREE.PlaneGeometry(1.15, 3.5), []);
+  const waterfallHeight = 4 + courseFactor * 10;
+  const waterfallWidth = 1.2 + courseFactor * 1.4;
+  const waterfallScaleY = Math.min(1.2, minimumHalf / 18);
+  const waterGeometry = useMemo(
+    () => new THREE.PlaneGeometry(waterfallWidth, waterfallHeight),
+    [waterfallHeight, waterfallWidth],
+  );
 
   useLayoutEffect(() => {
     const target = rocks.current;
@@ -94,8 +122,13 @@ export function Underside({ map, dimmed = false }: UndersideProps) {
   return (
     <group name="hex-grid-underside">
       <mesh
-        position={[centreX, -0.24 - undersideDepth * 0.5, centreZ]}
+        position={[
+          centreX + frontX * minimumHalf * 0.18,
+          -undersideDepth * 0.5,
+          centreZ + frontZ * minimumHalf * 0.18,
+        ]}
         rotation={[Math.PI, 0, 0]}
+        scale={[1.08, 1, 1.02]}
         geometry={coneGeometry}
         material={shadowMaterial}
       />
@@ -108,10 +141,14 @@ export function Underside({ map, dimmed = false }: UndersideProps) {
         name="hex-grid-waterfall"
         geometry={waterGeometry}
         material={waterMaterial}
-        position={[map.bounds.minX * 0.42, -0.42, map.bounds.maxZ * 0.62]}
-        scale={[1, Math.min(1.2, minimumHalf / 18), 1]}
+        position={[
+          map.bounds.maxX * 0.67,
+          1.18 - waterfallHeight * waterfallScaleY * 0.5,
+          map.bounds.minZ * 0.71,
+        ]}
+        scale={[1, waterfallScaleY, 1]}
         rotation={[0, 0, 0]}
-        renderOrder={2}
+        renderOrder={3}
       />
     </group>
   );

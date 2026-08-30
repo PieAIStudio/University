@@ -20,6 +20,8 @@ export type SkyDomeStops = {
   readonly zenith: number;
   readonly mid: number;
   readonly horizon: number;
+  /** Optional course-only lower sky colour; world maps keep the blue nadir. */
+  readonly nadir?: number;
 };
 
 /** Stable discovery keys used by Stage's environment owner. */
@@ -87,7 +89,7 @@ export function createSkyDomeUniforms(stops: SkyDomeStops) {
     uZenith: { value: new THREE.Color(stops.zenith) },
     uMid: { value: new THREE.Color(stops.mid) },
     uHorizon: { value: new THREE.Color(stops.horizon) },
-    uNadir: { value: new THREE.Color(0x3a7f92) },
+    uNadir: { value: new THREE.Color(stops.nadir ?? 0x3a7f92) },
     uSunDirection: { value: new THREE.Vector3(...sunDirection) },
     uSunColor: { value: new THREE.Color(WORLD_SUN.keyColor) },
     uSunGlowColor: { value: new THREE.Color(0xffc56a) },
@@ -107,6 +109,7 @@ export function SkyDome({ stops }: { stops: SkyDomeStops }) {
   uniforms.uZenith.value.setHex(stops.zenith);
   uniforms.uMid.value.setHex(stops.mid);
   uniforms.uHorizon.value.setHex(stops.horizon);
+  uniforms.uNadir.value.setHex(stops.nadir ?? 0x3a7f92);
   uniforms.uSunDirection.value.set(...sunDirection);
 
   useFrame(({ camera }) => {

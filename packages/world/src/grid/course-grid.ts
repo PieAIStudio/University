@@ -38,6 +38,27 @@ export interface GridCell {
   readonly topY: number;
 }
 
+export interface GridSeamStrength {
+  /** Same-height meadow cells should read as one piece of land. */
+  readonly land: number;
+  /** Road stones need a deliberate, readable edge. */
+  readonly route: number;
+  /** Detached cells can keep a little more air around their silhouette. */
+  readonly detached: number;
+}
+
+/**
+ * Geometry receives these values instead of inheriting one gap for every
+ * cell. The three levels are the visual contract from LOOK-V2 §13: land is
+ * nearly seamless, route is explicit, and cliffs remain visible through
+ * height changes rather than an artificial outline.
+ */
+export const GRID_SEAM_STRENGTH: GridSeamStrength = {
+  land: 0.018,
+  route: 0.105,
+  detached: 0.055,
+};
+
 export interface GridLessonCell extends GridCell {
   readonly lessonIndex: number;
   readonly lessonId: string;
@@ -58,6 +79,7 @@ export interface HexMap {
   readonly lessons: readonly GridLessonCell[];
   readonly props: readonly GridPropPlacement[];
   readonly palette: GridPalette;
+  readonly seamStrength: GridSeamStrength;
   readonly bounds: {
     readonly minX: number;
     readonly maxX: number;
@@ -110,7 +132,19 @@ function estimateHexSize(anchors: readonly { readonly x: number; readonly z: num
     .filter((distance) => distance > 0.01)
     .sort((first, second) => first - second);
   const typical = distances[Math.floor(distances.length / 2)] ?? 2.3;
-  return Math.min(2.1, Math.max(0.88, (typical / SQRT_THREE) * 0.88));
+  // The blueprint reserves a generous course envelope for the old continuous
+  // island. The first hex pass stopped at 2.1, leaving this discrete island
+  // visually adrift inside that envelope. The reviewed cap is intentionally
+  // a map-scale decision: it lets the island own more of the fixed design shot
+  // without changing the camera, labels, or lesson positions relative to a
+  // cell. Smaller courses still use their anchor-derived scale.
+  // Interpolate the multiplier by course size so a three-lesson island does
+  // not become a close-up of three oversized stones while a forty-one-lesson
+  // island still sheds sea.
+  const courseScale = Math.min(1, Math.max(0, (anchors.length - 3) / 38));
+  const multiplier = 1.1 + courseScale * 0.3;
+  const sizeCap = 2 + courseScale * 2;
+  return Math.min(sizeCap, Math.max(0.88, (typical / SQRT_THREE) * multiplier));
 }
 
 function routeFromAnchors(
@@ -279,6 +313,7 @@ export function buildCourseGrid(input: CourseGridInput): HexMap {
     lessons: projected.lessons,
     props,
     palette,
+    seamStrength: GRID_SEAM_STRENGTH,
     bounds: { minX, maxX, minZ, maxZ, halfX, halfZ, maxHalf: Math.max(halfX, halfZ) },
   };
 }

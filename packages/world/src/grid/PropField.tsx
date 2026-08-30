@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-import { AssetField, type Placement } from "../kit.js";
+import { BatchedAssetField, type Placement } from "../kit.js";
 import { hexToWorld } from "./hex.js";
 import { GRID_KENNEY_NATURE_ASSETS } from "./grid-prop-assets.js";
 import type { GridPropAssetId } from "./grid-props.js";
@@ -20,16 +20,26 @@ interface RuntimePropField {
 function placementFor(map: HexMap, prop: HexMap["props"][number]): Placement {
   const cell = map.cells.find((entry) => entry.key === prop.cellKey)!;
   const point = hexToWorld(prop.coord, map.hexSize);
+  const heightFactor = prop.assetId.startsWith("tree_")
+    ? 6
+    : prop.assetId === "plant_bushLarge"
+      ? 1.62
+      : prop.assetId === "mushroom_redGroup" || prop.assetId === "stump_round"
+        ? 1.42
+        : 1.12;
   return {
     position: new THREE.Vector3(point.x, cell.topY + 0.03, point.z),
-    height: prop.kind === "course" ? prop.scale * 2.25 : prop.scale * 1.45,
+    height: prop.scale * heightFactor,
     turn: prop.rotation,
   };
 }
 
 function propsByAsset(map: HexMap): readonly RuntimePropField[] {
   const grouped = new Map<GridPropAssetId, Placement[]>();
-  for (const prop of map.props) {
+  // Course props are represented by the coral lesson stones. Keeping their
+  // logical placement in the map preserves the pure planner contract, while
+  // the 3D layer uses only the territory dressing so the road stays clean.
+  for (const prop of map.props.filter((entry) => entry.kind === "territory")) {
     const field = grouped.get(prop.assetId) ?? [];
     field.push(placementFor(map, prop));
     grouped.set(prop.assetId, field);
@@ -39,13 +49,32 @@ function propsByAsset(map: HexMap): readonly RuntimePropField[] {
 
 function ContactShadowField({ map, dimmed = false }: PropFieldProps) {
   const mesh = useRef<THREE.InstancedMesh>(null);
-  const geometry = useMemo(() => new THREE.CircleGeometry(0.34, 8), []);
+  const geometry = useMemo(() => new THREE.CircleGeometry(0.72, 16), []);
   const material = useMemo(
     () =>
-      new THREE.MeshBasicMaterial({
-        color: dimmed ? 0x071014 : 0x18251d,
+      new THREE.ShaderMaterial({
+        uniforms: {
+          shadowColour: { value: new THREE.Color(dimmed ? 0x19242a : 0x3b2b24) },
+          shadowOpacity: { value: dimmed ? 0.1 : 0.28 },
+        },
+        vertexShader: `
+          varying vec2 vShadowUv;
+          void main() {
+            vShadowUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 shadowColour;
+          uniform float shadowOpacity;
+          varying vec2 vShadowUv;
+          void main() {
+            float distanceFromCentre = distance(vShadowUv, vec2(0.5));
+            float softness = 1.0 - smoothstep(0.18, 0.5, distanceFromCentre);
+            gl_FragColor = vec4(shadowColour, shadowOpacity * softness * softness);
+          }
+        `,
         transparent: true,
-        opacity: dimmed ? 0.1 : 0.2,
         depthWrite: false,
         side: THREE.DoubleSide,
       }),
@@ -55,17 +84,14 @@ function ContactShadowField({ map, dimmed = false }: PropFieldProps) {
     const target = mesh.current;
     if (!target) return;
     const matrix = new THREE.Matrix4();
-    map.props.forEach((prop, index) => {
+    const decorativeProps = map.props.filter((prop) => prop.kind === "territory");
+    decorativeProps.forEach((prop, index) => {
       const cell = map.cells.find((entry) => entry.key === prop.cellKey)!;
       const point = hexToWorld(prop.coord, map.hexSize);
       matrix.compose(
         new THREE.Vector3(point.x, cell.topY + 0.018, point.z),
         new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)),
-        new THREE.Vector3(
-          prop.kind === "course" ? 0.9 : 0.58,
-          prop.kind === "course" ? 0.9 : 0.58,
-          1,
-        ),
+        new THREE.Vector3(0.72, 0.72, 1),
       );
       target.setMatrixAt(index, matrix);
     });
@@ -73,11 +99,12 @@ function ContactShadowField({ map, dimmed = false }: PropFieldProps) {
   }, [map]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material.dispose(), [material]);
-  if (map.props.length === 0) return null;
+  const decorativeCount = map.props.filter((prop) => prop.kind === "territory").length;
+  if (decorativeCount === 0) return null;
   return (
     <instancedMesh
       ref={mesh}
-      args={[geometry, material, map.props.length]}
+      args={[geometry, material, decorativeCount]}
       name="hex-grid-contact-shadows"
       renderOrder={1}
       frustumCulled={false}
@@ -87,15 +114,21 @@ function ContactShadowField({ map, dimmed = false }: PropFieldProps) {
 
 export function PropField({ map, dimmed = false }: PropFieldProps) {
   const fields = useMemo(() => propsByAsset(map), [map]);
+  const decorativeCount = useMemo(
+    () => map.props.filter((prop) => prop.kind === "territory").length,
+    [map.props],
+  );
   return (
-    <group name="hex-grid-prop-fields" userData={{ gridPropCount: map.props.length }}>
+    <group
+      name="hex-grid-prop-fields"
+      userData={{ gridPropCount: map.props.length, gridDecorPropCount: decorativeCount }}
+    >
       <ContactShadowField map={map} dimmed={dimmed} />
       {fields.map((field) => (
-        <AssetField
+        <BatchedAssetField
           key={field.assetId}
           src={GRID_KENNEY_NATURE_ASSETS[field.assetId]}
           at={field.at}
-          preserveMap
           castShadow={false}
         />
       ))}

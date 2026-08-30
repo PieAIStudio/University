@@ -11,14 +11,22 @@ interface HexFieldProps {
   readonly dimmed?: boolean;
 }
 
-function hexGeometry(): THREE.BufferGeometry {
+type HexLayer = "land" | "route" | "detached";
+
+function hexGeometry(seamStrength: number, cliffBottom = -0.5): THREE.BufferGeometry {
   const positions: number[] = [];
   const colours: number[] = [];
   const faces: number[] = [];
   const indices: number[] = [];
-  const radius = 0.96;
+  // A seam is a small reduction from the shared hex radius. It is deliberately
+  // a geometry rule, not an outline shader: route edges stay crisp on a phone
+  // and same-height meadow cells can still read as one continuous island.
+  const radius = 1 - seamStrength;
   const top = 0.5;
-  const bottom = -0.5;
+  // The top face keeps its established centre and height. Extending only the
+  // lower local edge gives the island a chunky exposed cliff without moving a
+  // lesson position, label, or pick target.
+  const bottom = cliffBottom;
   const centre = [0, top, 0] as const;
   for (let side = 0; side < 6; side += 1) {
     const firstAngle = Math.PI / 6 + side * (Math.PI / 3);
@@ -28,9 +36,7 @@ function hexGeometry(): THREE.BufferGeometry {
     const firstBottom = [first[0], bottom, first[2]] as const;
     const secondBottom = [second[0], bottom, second[2]] as const;
 
-    // Keep the top winding counter-clockwise when viewed from above. The
-    // first prototype used centre → first → second, which made every top
-    // normal point down and turned the grid into a set of black wedges.
+    // Keep the top winding counter-clockwise when viewed from above.
     const topBase = positions.length / 3;
     positions.push(...centre, ...second, ...first);
     colours.push(1.06, 1.06, 1.06, 0.9, 0.9, 0.9, 0.96, 0.96, 0.96);
@@ -39,7 +45,9 @@ function hexGeometry(): THREE.BufferGeometry {
 
     const sideBase = positions.length / 3;
     positions.push(...first, ...second, ...secondBottom, ...firstBottom);
-    colours.push(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+    // A subtle vertical value shift gives the soil side a chunky, painted
+    // read without making the lower half a second course-specific palette.
+    colours.push(0.98, 0.98, 0.98, 0.9, 0.9, 0.9, 0.74, 0.74, 0.74, 0.82, 0.82, 0.82);
     faces.push(1, 1, 1, 1);
     indices.push(sideBase, sideBase + 1, sideBase + 2, sideBase, sideBase + 2, sideBase + 3);
   }
@@ -54,11 +62,11 @@ function hexGeometry(): THREE.BufferGeometry {
   return geometry;
 }
 
-function mapMaterial(map: HexMap, dimmed: boolean): THREE.MeshStandardMaterial {
+function mapMaterial(map: HexMap, dimmed: boolean, layer: HexLayer): THREE.MeshStandardMaterial {
   const material = new THREE.MeshStandardMaterial({
     color: 0xffffff,
     vertexColors: true,
-    roughness: 0.88,
+    roughness: layer === "route" ? 0.72 : 0.88,
     metalness: 0,
     flatShading: true,
   });
@@ -82,13 +90,16 @@ function mapMaterial(map: HexMap, dimmed: boolean): THREE.MeshStandardMaterial {
       "#include <color_fragment>",
       "#include <color_fragment>\nif (vGridFace > 1.5) diffuseColor.rgb = gridShadow;\nelse if (vGridFace > 0.5) diffuseColor.rgb = gridCliff;\ndiffuseColor.rgb *= gridDim;",
     );
+    // The soil should remain legible at the low-poly camera even when the
+    // directional shadow falls between two cells. This is a floor, not an
+    // unlit material: the warm key and cool hemisphere still provide the form.
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <opaque_fragment>",
-      "if (vGridFace > 0.5) outgoingLight = max(outgoingLight, gridCliff * 0.32);\n#include <opaque_fragment>",
+      "if (vGridFace > 0.5) outgoingLight = mix(gridCliff * 0.72, outgoingLight, 0.34);\n#include <opaque_fragment>",
     );
   };
   material.customProgramCacheKey = () =>
-    `hex-field-${map.palette.cliff}-${dimmed ? "dim" : "full"}`;
+    `hex-field-${map.palette.cliff}-${layer}-${dimmed ? "dim" : "full"}`;
   return material;
 }
 
@@ -96,12 +107,12 @@ function cellTopColour(map: HexMap, cell: GridCell): THREE.Color {
   const colour = new THREE.Color(cell.kind === "route" ? map.palette.road : map.palette.top);
   if (cell.unitIndex !== null && cell.kind !== "route") {
     const unitTint = new THREE.Color(map.palette.accent);
-    colour.lerp(unitTint, 0.06 + (cell.unitIndex % 4) * 0.035);
+    colour.lerp(unitTint, 0.045 + (cell.unitIndex % 4) * 0.02);
   }
   const lesson = cell.lessonIndex === null ? undefined : map.lessons[cell.lessonIndex];
-  if (lesson?.state === "locked") colour.lerp(new THREE.Color(map.palette.shadow), 0.54);
-  if (lesson?.state === "done") colour.lerp(new THREE.Color(map.palette.accent), 0.08);
-  if (lesson?.state === "live") colour.lerp(new THREE.Color(map.palette.accent), 0.22);
+  if (lesson?.state === "locked") colour.lerp(new THREE.Color(map.palette.shadow), 0.42);
+  if (lesson?.state === "done") colour.lerp(new THREE.Color(map.palette.accent), 0.07);
+  if (lesson?.state === "live") colour.lerp(new THREE.Color(map.palette.accent), 0.18);
   return colour;
 }
 
@@ -116,61 +127,207 @@ function cellMatrix(cell: GridCell, map: HexMap, target: THREE.Matrix4, pulse = 
   return target;
 }
 
-export function HexField({ map, dimmed = false }: HexFieldProps) {
-  const mesh = useRef<THREE.InstancedMesh>(null);
-  const geometry = useMemo(hexGeometry, []);
-  const material = useMemo(() => mapMaterial(map, dimmed), [dimmed, map]);
-  const activeKey = useMemo(
-    () => map.lessons.find((lesson) => lesson.state === "live")?.key ?? null,
-    [map.lessons],
+function bedMatrix(cell: GridCell, map: HexMap, target: THREE.Matrix4): THREE.Matrix4 {
+  const point = hexToWorld(cell.coord, map.hexSize);
+  // A shallow shared bed closes only the hairline between neighbouring cells.
+  // It sits below every real prism, so route and terrain retain their own
+  // silhouette and the bed cannot become a second visible tile layer.
+  target.compose(
+    new THREE.Vector3(point.x, 0, point.z),
+    new THREE.Quaternion(),
+    new THREE.Vector3(map.hexSize, 0.16, map.hexSize),
   );
+  return target;
+}
+
+function HexBedField({
+  map,
+  dimmed,
+  cliffBottom,
+  cells,
+  mesh,
+}: {
+  readonly map: HexMap;
+  readonly dimmed: boolean;
+  readonly cliffBottom: number;
+  readonly cells: readonly GridCell[];
+  readonly mesh: React.MutableRefObject<THREE.InstancedMesh | null>;
+}) {
+  const geometry = useMemo(() => hexGeometry(0, cliffBottom), [cliffBottom]);
+  const material = useMemo(() => mapMaterial(map, dimmed, "land"), [dimmed, map]);
   const matrix = useMemo(() => new THREE.Matrix4(), []);
 
   useLayoutEffect(() => {
     const target = mesh.current;
     if (!target) return;
-    map.cells.forEach((cell, index) => {
+    cells.forEach((cell, index) => {
+      target.setMatrixAt(index, bedMatrix(cell, map, matrix));
+      target.setColorAt(
+        index,
+        new THREE.Color(cell.kind === "route" ? map.palette.road : map.palette.top),
+      );
+    });
+    target.instanceMatrix.needsUpdate = true;
+    if (target.instanceColor) target.instanceColor.needsUpdate = true;
+    target.computeBoundingSphere();
+  }, [cells, map, matrix, mesh]);
+
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(() => () => material.dispose(), [material]);
+
+  return (
+    <instancedMesh
+      ref={mesh}
+      args={[geometry, material, Math.max(1, cells.length)]}
+      name="hex-grid-bed"
+      receiveShadow
+      frustumCulled={false}
+    />
+  );
+}
+
+function HexLayerField({
+  map,
+  dimmed,
+  layer,
+  cliffBottom,
+  cells,
+  mesh,
+}: {
+  readonly map: HexMap;
+  readonly dimmed: boolean;
+  readonly layer: HexLayer;
+  readonly cliffBottom: number;
+  readonly cells: readonly GridCell[];
+  readonly mesh: React.MutableRefObject<THREE.InstancedMesh | null>;
+}) {
+  const geometry = useMemo(
+    () =>
+      hexGeometry(
+        layer === "route"
+          ? map.seamStrength.route
+          : layer === "detached"
+            ? map.seamStrength.detached
+            : map.seamStrength.land,
+        cliffBottom,
+      ),
+    [cliffBottom, layer, map.seamStrength.detached, map.seamStrength.land, map.seamStrength.route],
+  );
+  const material = useMemo(() => mapMaterial(map, dimmed, layer), [dimmed, layer, map]);
+  const matrix = useMemo(() => new THREE.Matrix4(), []);
+
+  useLayoutEffect(() => {
+    const target = mesh.current;
+    if (!target) return;
+    cells.forEach((cell, index) => {
       target.setMatrixAt(index, cellMatrix(cell, map, matrix));
       target.setColorAt(index, cellTopColour(map, cell));
     });
     target.instanceMatrix.needsUpdate = true;
     if (target.instanceColor) target.instanceColor.needsUpdate = true;
     target.computeBoundingSphere();
-  }, [map, matrix]);
+  }, [cells, map, matrix, mesh]);
 
-  useFrame(({ clock }) => {
-    const target = mesh.current;
-    if (!target || activeKey === null || (import.meta.env.DEV && islandLookFrozen())) return;
-    const activeIndex = map.cells.findIndex((cell) => cell.key === activeKey);
-    if (activeIndex < 0) return;
-    const pulse = Math.sin(clock.elapsedTime * 2.2) * 0.045;
-    cellMatrix(map.cells[activeIndex]!, map, matrix, pulse);
-    target.setMatrixAt(activeIndex, matrix);
-    target.instanceMatrix.needsUpdate = true;
-  });
-
-  useEffect(() => {
-    return () => geometry.dispose();
-  }, [geometry]);
-  useEffect(() => {
-    return () => material.dispose();
-  }, [material]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(() => () => material.dispose(), [material]);
 
   return (
     <instancedMesh
       ref={mesh}
-      args={[geometry, material, Math.max(1, map.cells.length)]}
+      args={[geometry, material, Math.max(1, cells.length)]}
+      name={`hex-grid-${layer}`}
+      receiveShadow
+      frustumCulled={false}
+    />
+  );
+}
+
+export function HexField({ map, dimmed = false }: HexFieldProps) {
+  const bedMesh = useRef<THREE.InstancedMesh>(null);
+  const landMesh = useRef<THREE.InstancedMesh>(null);
+  const routeMesh = useRef<THREE.InstancedMesh>(null);
+  const detachedMesh = useRef<THREE.InstancedMesh>(null);
+  const cliffBottom = useMemo(
+    () => -(0.5 + 2.5 * Math.min(1, map.route.length / 41)),
+    [map.route.length],
+  );
+  const bedCells = useMemo(() => map.cells.filter((cell) => cell.kind !== "detached"), [map.cells]);
+  const landCells = useMemo(() => map.cells.filter((cell) => cell.kind === "land"), [map.cells]);
+  const routeCells = useMemo(() => map.cells.filter((cell) => cell.kind === "route"), [map.cells]);
+  const detachedCells = useMemo(
+    () => map.cells.filter((cell) => cell.kind === "detached"),
+    [map.cells],
+  );
+  const activeKey = useMemo(
+    () => map.lessons.find((lesson) => lesson.state === "live")?.key ?? null,
+    [map.lessons],
+  );
+  const matrix = useMemo(() => new THREE.Matrix4(), []);
+
+  useFrame(({ clock }) => {
+    if (activeKey === null || (import.meta.env.DEV && islandLookFrozen())) return;
+    const activeCell = map.cells.find((cell) => cell.key === activeKey);
+    if (!activeCell) return;
+    const target = activeCell.kind === "route" ? routeMesh.current : landMesh.current;
+    const cells = activeCell.kind === "route" ? routeCells : landCells;
+    if (!target) return;
+    const activeIndex = cells.findIndex((cell) => cell.key === activeKey);
+    if (activeIndex < 0) return;
+    const pulse = Math.sin(clock.elapsedTime * 2.2) * 0.045;
+    cellMatrix(activeCell, map, matrix, pulse);
+    target.setMatrixAt(activeIndex, matrix);
+    target.instanceMatrix.needsUpdate = true;
+  });
+
+  // Keep the debug metric truthful on the first render too: refs are still null
+  // while JSX is being evaluated, even though every hex layer uses this geometry.
+  const triangleCount =
+    18 * (bedCells.length + landCells.length + routeCells.length + detachedCells.length);
+
+  return (
+    <group
       name="hex-grid-field"
       userData={{
         gridCellCount: map.cells.length,
-        gridTriangleCount: geometry.userData.gridTriangles * map.cells.length,
+        gridTriangleCount: triangleCount,
         gridBounds: map.bounds,
         gridPalette: map.palette,
         gridMainKeys: map.mainCells.map((cell) => `${cell.q},${cell.r}`),
         gridRouteKeys: map.route.map((cell) => `${cell.q},${cell.r}`),
+        gridSeamStrength: map.seamStrength,
       }}
-      receiveShadow
-      frustumCulled={false}
-    />
+    >
+      <HexBedField
+        map={map}
+        dimmed={dimmed}
+        cliffBottom={cliffBottom}
+        cells={bedCells}
+        mesh={bedMesh}
+      />
+      <HexLayerField
+        map={map}
+        dimmed={dimmed}
+        layer="land"
+        cliffBottom={cliffBottom}
+        cells={landCells}
+        mesh={landMesh}
+      />
+      <HexLayerField
+        map={map}
+        dimmed={dimmed}
+        layer="route"
+        cliffBottom={cliffBottom}
+        cells={routeCells}
+        mesh={routeMesh}
+      />
+      <HexLayerField
+        map={map}
+        dimmed={dimmed}
+        layer="detached"
+        cliffBottom={cliffBottom}
+        cells={detachedCells}
+        mesh={detachedMesh}
+      />
+    </group>
   );
 }
