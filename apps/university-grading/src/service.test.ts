@@ -1,16 +1,24 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ChatCompletionRequest, ChatCompletionTransport } from "@pieai/swimmer-ai-kit/chat";
+const { createClientMock } = vi.hoisted(() => ({ createClientMock: vi.fn() }));
+vi.mock("@supabase/supabase-js", () => ({ createClient: createClientMock }));
+
 import {
   createStructuredGrader,
   createSupabaseFreeGradingQuota,
   handleGradeRequest,
   readProductionSupabaseConfig,
+  createProductionGradeDependencies,
   type GradeDependencies,
   type GradeEntitlements,
   type FreeGradingQuota,
   type GradingWallet,
 } from "./service.js";
+
+afterEach(() => {
+  createClientMock.mockReset();
+});
 
 describe("University server backend environment", () => {
   it("requires canonical SwimmerBackend names", () => {
@@ -38,6 +46,51 @@ describe("University server backend environment", () => {
           })[name],
       ),
     ).toThrow("Missing server environment variable: SWIMMER_BACKEND_SUPABASE_URL");
+  });
+});
+
+describe("University production entitlement adapter", () => {
+  it("reads the authenticated user's current plan grant through the university schema", async () => {
+    const calls: Array<[string, Record<string, unknown>]> = [];
+    const rpc = vi.fn(async (functionName: string, args: Record<string, unknown>) => {
+      calls.push([functionName, args]);
+      return {
+        data: [
+          {
+            plan_id: "member",
+            valid_from: "2026-08-30T00:00:00.000Z",
+            valid_until: null,
+          },
+        ],
+        error: null,
+      };
+    });
+    const schema = vi.fn(() => ({ rpc }));
+    createClientMock.mockReturnValue({ schema });
+
+    const deps = createProductionGradeDependencies(
+      (name) =>
+        ({
+          SWIMMER_BACKEND_SUPABASE_URL: "https://backend.example.supabase.co",
+          SWIMMER_BACKEND_PUBLISHABLE_KEY: "sb_publishable_backend",
+        })[name],
+    );
+
+    await expect(
+      deps.readEntitlements?.({
+        accessToken: "learner-access-token",
+        identity: { userId: USER_ID, isAnonymous: false },
+      }),
+    ).resolves.toEqual(MEMBER_ENTITLEMENTS);
+    expect(createClientMock).toHaveBeenCalledWith(
+      "https://backend.example.supabase.co",
+      "sb_publishable_backend",
+      expect.objectContaining({
+        global: { headers: { Authorization: "Bearer learner-access-token" } },
+      }),
+    );
+    expect(schema).toHaveBeenCalledWith("university");
+    expect(calls).toEqual([["university_read_plan_grant", { p_user_id: USER_ID }]]);
   });
 });
 
@@ -472,6 +525,31 @@ describe("University metered grading service", () => {
     expect(createFreeGradingQuota).not.toHaveBeenCalled();
     expect(quotaState.quote).not.toHaveBeenCalled();
     expect(quotaState.reserve).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the free baseline when the entitlement backend cannot answer", async () => {
+    const fixtureState = fixture();
+    const quotaState = freeQuotaFixture(fixtureState.events);
+    fixtureState.readEntitlements.mockRejectedValue(new Error("plan grants migration is pending"));
+    fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
+
+    const offer = await handleGradeRequest(offerRequestFor("valid-token"), fixtureState.deps);
+    const offerBody = (await offer.json()) as Record<string, unknown>;
+    const submit = await handleGradeRequest(
+      requestFor("valid-token", "free", "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"),
+      fixtureState.deps,
+    );
+    const submitBody = (await submit.json()) as Record<string, unknown>;
+
+    expect(offer.status).toBe(200);
+    expect(offerBody).toMatchObject({ kind: "free", remainingPowerUnits: "400" });
+    expect(submit.status).toBe(200);
+    expect(submitBody).toMatchObject({
+      funding: "free",
+      freeQuota: { remainingPowerUnits: "300" },
+    });
+    expect(fixtureState.createWallet).not.toHaveBeenCalled();
+    expect(fixtureState.events).toEqual(["free-reserve", "model", "free-commit"]);
   });
 
   it("does not let a member's stale free choice consume the daily quota", async () => {

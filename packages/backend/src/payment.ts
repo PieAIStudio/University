@@ -1,9 +1,11 @@
+import { createEntitlementClient } from "@pieai/swimmer-backend-client/entitlements";
 import { createWalletClient } from "@pieai/swimmer-backend-client/wallet";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PaymentTransport } from "@pieai/university-core";
 
 /** The SwimmerBackend app id is stable; provider/channel names do not cross this boundary. */
 export const UNIVERSITY_PAYMENT_APP_ID = "university";
+export const UNIVERSITY_PLAN_GRANT_READ_RPC = "university_read_plan_grant";
 
 /** Browser-side order ids use the platform's cryptographic UUID generator. */
 export function createPaymentOrderId(): string {
@@ -23,7 +25,15 @@ export function createPaymentOrderId(): string {
  */
 export function createSupabasePaymentRemote(client: SupabaseClient): PaymentTransport {
   const wallet = createWalletClient(client, UNIVERSITY_PAYMENT_APP_ID);
+  const entitlements = createEntitlementClient(
+    client.schema("university"),
+    UNIVERSITY_PLAN_GRANT_READ_RPC,
+  );
   return {
     readBalance: (userId) => wallet.getBalance(userId),
+    readEntitlement: async (userId) => {
+      const grant = await entitlements.readGrant(userId);
+      return { planId: grant.planId };
+    },
   };
 }

@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@pieai/swimmer-ai-kit": "0.6.0",
-    "@pieai/swimmer-backend-client": "0.5.0",
+    "@pieai/swimmer-backend-client": "0.6.0",
     "@pieai/university-core": "workspace:*",
     "@supabase/supabase-js": "2.110.3",
     "zod": "4.4.3"

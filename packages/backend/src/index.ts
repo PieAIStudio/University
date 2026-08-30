@@ -12,6 +12,7 @@ export {
   createPaymentOrderId,
   createSupabasePaymentRemote,
   UNIVERSITY_PAYMENT_APP_ID,
+  UNIVERSITY_PLAN_GRANT_READ_RPC,
 } from "./payment.js";
 export {
   createSupabaseFeedbackPort,

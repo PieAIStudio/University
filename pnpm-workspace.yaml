@@ -25,7 +25,7 @@ minimumReleaseAgeExclude:
   - '@pieai/doc-gov@0.9.0 || 0.9.1 || 0.9.3 || 0.9.5 || 0.9.6 || 0.9.7 || 0.9.8 || 0.9.9'
   - '@pieai/pro-gov@0.9.0 || 0.9.1 || 0.9.3 || 0.9.5 || 0.9.6 || 0.9.7 || 0.9.8 || 0.9.9'
   - '@pieai/swimmer-avatar-kit@0.2.0 || 0.4.0'
-  - '@pieai/swimmer-backend-client@0.5.0'
+  - '@pieai/swimmer-backend-client@0.5.0 || 0.6.0'
 
 # Hoist type packages to the root `node_modules`.
 #

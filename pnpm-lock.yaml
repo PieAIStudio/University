@@ -155,8 +155,8 @@ importers:
         specifier: 0.6.0
         version: 0.6.0
       '@pieai/swimmer-backend-client':
-        specifier: 0.5.0
-        version: 0.5.0(@supabase/supabase-js@2.110.3)
+        specifier: 0.6.0
+        version: 0.6.0(@supabase/supabase-js@2.110.3)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -186,8 +186,8 @@ importers:
   packages/backend:
     dependencies:
       '@pieai/swimmer-backend-client':
-        specifier: 0.5.0
-        version: 0.5.0(@supabase/supabase-js@2.110.3)
+        specifier: 0.6.0
+        version: 0.6.0(@supabase/supabase-js@2.110.3)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../core
@@ -783,8 +783,8 @@ packages:
       react:
         optional: true
 
-  '@pieai/swimmer-backend-client@0.5.0':
-    resolution: {integrity: sha512-1YMalbBdd6XPGDAX1gdJqvUqMh4OAuZw0vNyOD79wo2cYwKJn8MirsnwwYr4r8EmO/DQ6rKx+xVXG7yjrCQbDg==}
+  '@pieai/swimmer-backend-client@0.6.0':
+    resolution: {integrity: sha512-8/vFRx8axo8uby/ll9Z/Btey84XKGaRaRmpqNkkepFKrWQJdBACLvcUtW8zsqaKBda+93lwiLwjMaLBNLPt+iA==}
     engines: {node: '>=24 <25'}
     peerDependencies:
       '@supabase/supabase-js': ^2.0.0
@@ -3132,7 +3132,7 @@ snapshots:
       '@react-three/fiber': 9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1)
       react: 19.2.7
 
-  '@pieai/swimmer-backend-client@0.5.0(@supabase/supabase-js@2.110.3)':
+  '@pieai/swimmer-backend-client@0.6.0(@supabase/supabase-js@2.110.3)':
     dependencies:
       '@supabase/supabase-js': 2.110.3
 

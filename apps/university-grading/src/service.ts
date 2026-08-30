@@ -1,4 +1,5 @@
 import { verifyAccessToken, type SwimmerAccessTokenProvider } from "@pieai/swimmer-backend-client";
+import { createEntitlementClient } from "@pieai/swimmer-backend-client/entitlements";
 import {
   createWalletClient,
   type WalletClient,
@@ -35,6 +36,7 @@ const MAX_ANSWER_BYTES = 8 * 1024;
 const MAX_EXERCISE_ID_BYTES = 256;
 const FREE_QUOTA_EXHAUSTED_MESSAGE = "今天的免费 AI 批改用完了，明天恢复。";
 const MEMBERSHIP_ACTION = { label: "查看会员方案", href: toPath({ kind: "plans" }) } as const;
+const UNIVERSITY_PLAN_GRANT_READ_RPC = "university_read_plan_grant";
 
 const ANONYMOUS_FREE_GRADING_EXPLANATION: MeteredGradingExplanation = {
   kind: "explanation",
@@ -180,7 +182,7 @@ async function readGradeEntitlements(
   deps: GradeDependencies,
   accessToken: string,
   identity: GradeIdentity,
-): Promise<GradeEntitlements | null> {
+): Promise<GradeEntitlements> {
   // Anonymous sessions can never receive a paid grant, even if an adapter is
   // accidentally handed one. They also cannot claim the daily allowance.
   if (identity.isAnonymous) return baselineEntitlements();
@@ -190,14 +192,17 @@ async function readGradeEntitlements(
   try {
     const model = await deps.readEntitlements({ accessToken, identity });
     const plan = planById(model.planId, BILLING_CONFIG);
-    if (!plan) return null;
+    if (!plan) return baselineEntitlements();
     // The server returns the selected id and the already-resolved AI policy.
     // Checking the id against the local plan table prevents unknown plans from
     // becoming paid by accident; using the returned policy lets a server-side
     // revocation or feature flag take effect without trusting the browser.
     return { planId: plan.id, ai: model.ai };
   } catch {
-    return null;
+    // A missing or unavailable grant is not evidence of membership. Keep the
+    // learner on the same free baseline as an unconfigured backend, so the
+    // tier-one path stays usable and no paid path is opened by uncertainty.
+    return baselineEntitlements();
   }
 }
 
@@ -211,16 +216,6 @@ function isFreePlan(entitlements: GradeEntitlements): boolean {
 
 function isWalletPlan(entitlements: GradeEntitlements): boolean {
   return planOf(entitlements)?.pricing.kind === "configured";
-}
-
-function planUnavailableOffer(): Extract<MeteredGradingOffer, { readonly kind: "unavailable" }> {
-  return unavailableOffer({
-    title: "AI 批改方案暂时读不到",
-    whyUnavailable:
-      "服务端没有返回这个账号当前的会员方案，所以不会猜测你能不能使用 AI，也不会读取或扣除额度和钱包。",
-    futureSupport: "方案读取恢复后，页面会按账号实际权益显示每日尝鲜额度或钱包计量入口。",
-    action: MEMBERSHIP_ACTION,
-  });
 }
 
 function structuredGradingUnavailableOffer(): Extract<
@@ -338,9 +333,6 @@ export async function handleGradeRequest(
   // This is the security boundary: `funding` below is only a learner choice,
   // never a way to turn a free plan into a wallet-funded member request.
   const entitlements = await readGradeEntitlements(deps, accessToken, identity);
-  if (!entitlements) {
-    return jsonResponse(planUnavailableOffer(), 503, deps.allowedOrigin);
-  }
 
   const policy = aiEntitlementPolicyOf(entitlements.ai);
   if (!policy.structuredGrading && !identity.isAnonymous) {
@@ -1277,6 +1269,17 @@ export function createProductionGradeDependencies(
     createFreeGradingQuota(accessToken) {
       const supabase = serverSupabase(supabaseUrl, publishableKey, accessToken);
       return createSupabaseFreeGradingQuota(supabase);
+    },
+    async readEntitlements({ accessToken, identity }) {
+      const supabase = serverSupabase(supabaseUrl, publishableKey, accessToken);
+      const entitlementClient = createEntitlementClient(
+        supabase.schema("university"),
+        UNIVERSITY_PLAN_GRANT_READ_RPC,
+      );
+      const grant = await entitlementClient.readGrant(identity.userId);
+      const plan = planById(grant.planId, BILLING_CONFIG);
+      if (!plan) throw new Error(`Unknown University plan grant: ${grant.planId}`);
+      return { planId: plan.id, ai: plan.ai };
     },
     grade: (input) => {
       model ??= createStructuredGrader(
