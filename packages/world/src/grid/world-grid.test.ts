@@ -7,6 +7,10 @@ import { islandLookCameraForShot } from "../island/island-look.js";
 import { placeWorld } from "../Maps.js";
 import { GRID_SHARED_SOIL } from "./grid-palette.js";
 import { worldGridFootprintForLessons, worldGridTargetForLessons } from "./course-grid.js";
+import {
+  worldUndersideSpikeCountForCells,
+  worldUndersideTriangleCountForIslands,
+} from "./world-underside.js";
 
 interface ImportedCourse {
   readonly courseId: string;
@@ -220,5 +224,20 @@ describe("world grid projection", () => {
           Math.max(2, Math.round(entry.grid.cells.length * 0.2)),
       ),
     ).toBe(true);
+  });
+
+  it("keeps the actual 53-island underside instanced and under its budget", () => {
+    const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
+    const cellCounts = world.placements.map((entry) => entry.grid.cells.length);
+    const triangles = worldUndersideTriangleCountForIslands(cellCounts);
+
+    expect(world.placements).toHaveLength(53);
+    expect(
+      cellCounts.every((cellCount) => {
+        const spikes = worldUndersideSpikeCountForCells(cellCount);
+        return spikes >= 3 && spikes <= 5;
+      }),
+    ).toBe(true);
+    expect(triangles).toBeLessThan(2_000);
   });
 });
