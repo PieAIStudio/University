@@ -57,6 +57,22 @@ describe("hand-picked grid palettes", () => {
     expect(Math.min(channelSpread(16), channelSpread(8), channelSpread(0))).toBeGreaterThan(60);
   });
 
+  it("keeps every ground readable against the cliff it sits on", () => {
+    // Identity lives in the top colour while the cliff, shadow and road are
+    // shared, so a top that sits at the cliff's own luminance loses the edge
+    // that makes an island read as ground on top of rock. `rust-down` sat at
+    // 1.86 here and a three-lesson island rendered as one brown lump; every
+    // other preset already cleared 2.5, so this is a floor the table was
+    // meeting by accident everywhere except one row.
+    //
+    // It pulls against the saturation floor and the separation range above:
+    // the cheapest way to pass this alone is to lighten every top toward
+    // white, which those two tests reject.
+    for (const preset of GRID_PALETTE_PRESETS) {
+      expect(contrast(preset.top, GRID_SHARED_SOIL.cliff)).toBeGreaterThan(2.2);
+    }
+  });
+
   it("keeps every ground saturated enough to look alive", () => {
     // The earth gamut is a hue constraint, not a licence to desaturate. A first
     // pass at it left four tops between 0.24 and 0.31 and the island rendered

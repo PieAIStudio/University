@@ -97,7 +97,7 @@ export const GRID_PALETTE_PRESETS: readonly GridPalettePreset[] = [
   { id: "sand-bar", top: 0xd8c87e, accent: GRID_ACCENT_RAMP.coral, ...GRID_SHARED_SOIL },
   { id: "clay-terrace", top: 0xcc7b5e, accent: GRID_ACCENT_RAMP.amberLight, ...GRID_SHARED_SOIL },
   { id: "tundra-flat", top: 0xa6c157, accent: GRID_ACCENT_RAMP.coralDeep, ...GRID_SHARED_SOIL },
-  { id: "rust-down", top: 0xa86a3c, accent: GRID_ACCENT_RAMP.coral, ...GRID_SHARED_SOIL },
+  { id: "spring-rise", top: 0x68bd4c, accent: GRID_ACCENT_RAMP.coralDeep, ...GRID_SHARED_SOIL },
 ] as const;
 
 export function gridPaletteIndexFor(studyId: string, courseId: string, seed: string): number {
