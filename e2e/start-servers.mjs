@@ -21,21 +21,42 @@ import { fileURLToPath } from "node:url";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const LOCAL = join(ROOT, "apps/local");
 const APP = join(ROOT, "apps/university");
+const GRADING = join(ROOT, "apps/university-grading");
 
 const ONLINE_PORT = Number(process.env.E2E_ONLINE_PORT ?? 18093);
 const LOCAL_WEB_PORT = Number(process.env.E2E_LOCAL_WEB_PORT ?? 18094);
 const LOCAL_API_PORT = Number(process.env.E2E_LOCAL_API_PORT ?? 18095);
+const GRADING_PORT = Number(process.env.E2E_GRADING_PORT ?? 18096);
 const LOCAL_API_ORIGIN = `http://127.0.0.1:${LOCAL_API_PORT}`;
+const GRADING_ORIGIN = `http://127.0.0.1:${GRADING_PORT}`;
+const SERVER_ONLY_ENV = [
+  "OPENROUTER_API_KEY",
+  "SWIMMER_BACKEND_SUPABASE_URL",
+  "SWIMMER_BACKEND_PUBLISHABLE_KEY",
+  "SUPABASE_URL",
+  "SUPABASE_PUBLISHABLE_KEY",
+  "SUPABASE_ANON_KEY",
+  "SUPABASE_DEFAULT_KEY",
+  "UNIVERSITY_WALLET_APP_ID",
+  "UNIVERSITY_WEB_ORIGIN",
+];
 
 const children = [];
 
 function run(command, args, cwd, extraEnv = {}) {
+  const childEnv = { ...process.env, ...extraEnv };
+  // Vite only embeds VITE_* values, but do not hand the browser-mode process
+  // server credentials at all. The grading child keeps them in its own
+  // process, where the Vercel function is the only consumer.
+  if (extraEnv.E2E_TAG === "online" || extraEnv.E2E_TAG === "local") {
+    for (const name of SERVER_ONLY_ENV) delete childEnv[name];
+  }
   const child = spawn(command, args, {
     cwd,
-    env: { ...process.env, ...extraEnv },
+    env: childEnv,
     stdio: ["ignore", "pipe", "pipe"],
   });
-  const tag = `[${extraEnv.E2E_TAG ?? (cwd === LOCAL ? "api" : "e2e")}]`;
+  const tag = `[${extraEnv.E2E_TAG ?? (cwd === LOCAL ? "api" : cwd === GRADING ? "grading" : "e2e")}]`;
   const pipe = (stream, sink) => {
     stream.setEncoding("utf8");
     let rest = "";
@@ -120,16 +141,31 @@ if (existsSync(nestedStudies)) {
   localApiEnv.UNIVERSITY_LOCAL_STUDIES_ROOT = nestedStudies;
 }
 
+run("node", [join(LOCAL, ".university-local-build/server/http-server.js")], LOCAL, localApiEnv);
+
 run(
-  "node",
-  [join(LOCAL, ".university-local-build/server/http-server.js")],
-  LOCAL,
-  localApiEnv,
+  "pnpm",
+  ["exec", "vercel", "dev", "--local", "--listen", `127.0.0.1:${GRADING_PORT}`, "--yes"],
+  GRADING,
+  {
+    E2E_TAG: "grading",
+    UNIVERSITY_WEB_ORIGIN: `http://127.0.0.1:${ONLINE_PORT}`,
+  },
 );
 
 run(
   "pnpm",
-  ["exec", "vite", "--mode", "authoring", "--host", "127.0.0.1", "--port", String(LOCAL_WEB_PORT), "--strictPort"],
+  [
+    "exec",
+    "vite",
+    "--mode",
+    "authoring",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    String(LOCAL_WEB_PORT),
+    "--strictPort",
+  ],
   APP,
   {
     E2E_TAG: "local",
@@ -143,6 +179,7 @@ run(
 try {
   await waitFor(`${LOCAL_API_ORIGIN}/api/health`, 60_000);
   await waitFor(`http://127.0.0.1:${LOCAL_WEB_PORT}/`, 60_000);
+  await waitFor(`${GRADING_ORIGIN}/`, 60_000);
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   stop("SIGTERM");
@@ -151,11 +188,25 @@ try {
 
 run(
   "pnpm",
-  ["exec", "vite", "--mode", "delivery", "--host", "127.0.0.1", "--port", String(ONLINE_PORT), "--strictPort"],
+  [
+    "exec",
+    "vite",
+    "--mode",
+    "delivery",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    String(ONLINE_PORT),
+    "--strictPort",
+  ],
   APP,
   // Keeps this run's pre-bundled dependencies out of the dev server's cache;
   // see the note in apps/university/vite.config.ts.
-  { E2E_TAG: "online", UNIVERSITY_E2E: "1" },
+  {
+    E2E_TAG: "online",
+    UNIVERSITY_E2E: "1",
+    VITE_UNIVERSITY_GRADING_URL: `${GRADING_ORIGIN}/api/grade`,
+  },
 );
 
 try {
@@ -168,3 +219,4 @@ try {
 
 console.log(`e2e: online  http://127.0.0.1:${ONLINE_PORT}`);
 console.log(`e2e: local   http://127.0.0.1:${LOCAL_WEB_PORT}  (API ${LOCAL_API_ORIGIN})`);
+console.log(`e2e: grading ${GRADING_ORIGIN}/api/grade`);

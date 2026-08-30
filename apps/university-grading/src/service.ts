@@ -33,7 +33,7 @@ import { METERED_GRADING } from "./config.js";
 const MAX_PROMPT_BYTES = 8 * 1024;
 const MAX_ANSWER_BYTES = 8 * 1024;
 const MAX_EXERCISE_ID_BYTES = 256;
-const FREE_QUOTA_EXHAUSTED_MESSAGE = "今天的免费 AI 批改用完了，会员可以继续；免费额度明天恢复。";
+const FREE_QUOTA_EXHAUSTED_MESSAGE = "今天的免费 AI 批改用完了，明天恢复。";
 const MEMBERSHIP_ACTION = { label: "查看会员方案", href: toPath({ kind: "plans" }) } as const;
 
 const ANONYMOUS_FREE_GRADING_EXPLANATION: MeteredGradingExplanation = {

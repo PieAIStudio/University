@@ -406,7 +406,7 @@ export function ExerciseBlock({
       ) : null}
 
       {result?.meteredExplanation ? (
-        <GameCallout heading={result.meteredExplanation.title} tone="warning" role="alert">
+        <GameCallout heading={result.meteredExplanation.title} tone="warning" role="status">
           <div className="metered-grading-choice__copy">
             <p>{result.meteredExplanation.whyUnavailable}</p>
             <p>{result.meteredExplanation.futureSupport}</p>
@@ -418,6 +418,26 @@ export function ExerciseBlock({
               </p>
             ) : null}
           </div>
+        </GameCallout>
+      ) : null}
+
+      {result?.meteredFreeQuota || result?.meteredBalance ? (
+        <GameCallout heading="AI 批改后的额度" tone="neutral" role="status">
+          {result.meteredFreeQuota ? (
+            <p>
+              本次使用今天的免费 AI 批改；
+              <strong>
+                {freeGradingRemainingText(result.meteredFreeQuota.remainingPowerUnits)}
+              </strong>
+              ，免费额度明天恢复。
+            </p>
+          ) : result.meteredBalance ? (
+            <p>
+              本次使用钱包完成 AI 批改；
+              <strong>{walletGradingBalanceText(result.meteredBalance.availablePowerUnits)}</strong>
+              。
+            </p>
+          ) : null}
         </GameCallout>
       ) : null}
 

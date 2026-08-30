@@ -732,7 +732,7 @@ describe("University metered grading service", () => {
     expect(response.status).toBe(429);
     expect(body).toMatchObject({
       code: "free_quota_exhausted",
-      error: "今天的免费 AI 批改用完了，会员可以继续；免费额度明天恢复。",
+      error: "今天的免费 AI 批改用完了，明天恢复。",
       remainingPowerUnits: "0",
       resetsAt: "2026-08-27T00:00:00.000Z",
       explanation: {

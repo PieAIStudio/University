@@ -59,7 +59,10 @@ export function createOnlineGradingPort(options: {
   const { progress } = options;
   const attempts = new Map<string, number>();
   const readAccessToken = options.readAccessToken ?? (async () => null);
-  const fetchImpl = options.fetchImpl ?? fetch;
+  // `Window.fetch` is a method in real browsers. Passing it around unbound
+  // works in some test doubles but throws `Illegal invocation` in Chromium,
+  // which used to make a healthy grading endpoint look unavailable.
+  const fetchImpl = options.fetchImpl ?? globalThis.fetch.bind(globalThis);
   const gradingUrl =
     options.gradingUrl?.trim() || import.meta.env.VITE_UNIVERSITY_GRADING_URL?.trim();
 
@@ -237,6 +240,9 @@ async function submitToMeteredService(options: {
       maxScore: 1,
       awaitingHostGrade: false,
       hostGrade: body.hostGrade,
+      meteredFunding: body.funding,
+      ...(body.balance ? { meteredBalance: body.balance } : {}),
+      ...(body.freeQuota ? { meteredFreeQuota: body.freeQuota } : {}),
     };
   } catch (error) {
     if (error instanceof MeteredRequestDeclinedError) throw error;
@@ -285,7 +291,7 @@ function quotaExhaustedExplanation(message: string): MeteredGradingExplanation {
     kind: "explanation",
     title: "今天的免费 AI 批改用完了",
     whatItDoes: "它会在确定性判题无法判断的开放题上提供结构化 AI 评估。",
-    whyUnavailable: message || "今天的免费 AI 批改用完了，会员可以继续；免费额度明天恢复。",
+    whyUnavailable: message || "今天的免费 AI 批改用完了，明天恢复。",
     futureSupport: "免费额度明天恢复；如果现在需要继续批改，可以查看会员方案。",
     action: { label: "查看会员方案", href: toPath({ kind: "plans" }) },
   };
