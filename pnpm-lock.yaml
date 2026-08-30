@@ -61,8 +61,8 @@ importers:
   apps/university:
     dependencies:
       '@pieai/swimmer-avatar-kit':
-        specifier: 0.2.0
-        version: 0.2.0(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(react@19.2.7)(three@0.185.1)
+        specifier: 0.4.0
+        version: 0.4.0(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(react@19.2.7)(three@0.185.1)
       '@pieai/swimmer-render-kit':
         specifier: 0.3.0
         version: 0.3.0(three@0.185.1)
@@ -300,8 +300,8 @@ importers:
   packages/world:
     dependencies:
       '@pieai/swimmer-avatar-kit':
-        specifier: 0.2.0
-        version: 0.2.0(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(react@19.2.7)(three@0.185.1)
+        specifier: 0.4.0
+        version: 0.4.0(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(react@19.2.7)(three@0.185.1)
       '@pieai/swimmer-render-kit':
         specifier: 0.3.0
         version: 0.3.0(three@0.185.1)
@@ -770,8 +770,8 @@ packages:
     resolution: {integrity: sha512-mc1t/w0BbcOtC8SrQt3AWy6XXrBJeVY35oAxAIAcDK1jeUvXDLQxw0VkNb6zfUdYNAcknKrZr7N/Qc8OwmvslA==}
     engines: {node: '>=24 <25'}
 
-  '@pieai/swimmer-avatar-kit@0.2.0':
-    resolution: {integrity: sha512-Qe3iZ+II1CYo6K9RIE26dK/Ne/ct2/dbi/NKz1DcvBKt4PlUcr6tJEGZaWMryML61AQPICGUr16EupqZgnGknw==}
+  '@pieai/swimmer-avatar-kit@0.4.0':
+    resolution: {integrity: sha512-NjEFZzmZmp6EPH0bn0l/loFpefScmn+5Rnq4UElzSk+rVS2PUFa81Ok7otXt+whRfvu/57AeKXo/ZEq/+TQ4nQ==}
     engines: {node: '>=24 <25'}
     peerDependencies:
       '@react-three/fiber': '>=9 <10'
@@ -3125,7 +3125,7 @@ snapshots:
 
   '@pieai/swimmer-ai-kit@0.6.0': {}
 
-  '@pieai/swimmer-avatar-kit@0.2.0(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(react@19.2.7)(three@0.185.1)':
+  '@pieai/swimmer-avatar-kit@0.4.0(@react-three/fiber@9.6.1(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.185.1))(react@19.2.7)(three@0.185.1)':
     dependencies:
       three: 0.185.1
     optionalDependencies:

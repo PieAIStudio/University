@@ -31,7 +31,7 @@
     "build": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@pieai/swimmer-avatar-kit": "0.2.0",
+    "@pieai/swimmer-avatar-kit": "0.4.0",
     "@pieai/swimmer-render-kit": "0.3.0",
     "@pieai/swimmer-ui-kit": "2.0.0",
     "@pieai/university-core": "workspace:*",

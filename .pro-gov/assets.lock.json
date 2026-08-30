@@ -12,8 +12,8 @@
   "registryProvenance": {
     "schema": "agent-assets-registry",
     "version": 1,
-    "hash": "sha256:e3f9a7be55c3bac6793e97c9876243fa40bdc172a15f8c5f68db4aff9c32e0d9",
-    "assetCount": 79
+    "hash": "sha256:15bb6e72f4df295d337b746f76341cb6b432989d041ee2f00cacdc38955457c3",
+    "assetCount": 80
   },
   "assets": [
     {
@@ -288,6 +288,13 @@
       "delivery": "symlink",
       "contentHash": "sha256:ce9e7282b05e6cf247352c0f68953b943755899eb14a2198d72c97c6e5ffa807",
       "targetPath": ".agents/manual-skills/image-to-code"
+    },
+    {
+      "id": "third-party-skills/imagegen",
+      "sourcePath": "skills/third-party-without-npx-skills/imagegen",
+      "delivery": "symlink",
+      "contentHash": "sha256:6a87a6788545d953bd75224d969f012ac415ddd9cab5d0ce4e3095090ffebad7",
+      "targetPath": ".agents/manual-skills/imagegen"
     },
     {
       "id": "third-party-skills/imagegen-frontend-mobile",

@@ -44,5 +44,5 @@ export function AvatarBust({
 
   // Both states use the kit's own life animation. The guest is a stable recipe;
   // signed-in learners replace it with the recipe saved in account data.
-  return <Avatar recipe={shown} gaze onBuilt={onBuilt} />;
+  return <Avatar recipe={shown} gaze quality="compact" onBuilt={onBuilt} />;
 }
