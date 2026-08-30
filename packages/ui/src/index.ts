@@ -63,6 +63,7 @@ export {
 export { EvidenceRail } from "./evidence/EvidenceRail.js";
 export { EvidenceCode } from "./evidence/EvidenceCode.js";
 export { Tip } from "./Tip.js";
+export { LiquidCtaButton, type LiquidCtaButtonProps } from "./cta/LiquidCtaButton.js";
 export {
   applyThemePreference,
   resolvedThemeOf,

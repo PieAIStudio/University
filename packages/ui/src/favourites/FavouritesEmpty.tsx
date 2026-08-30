@@ -1,4 +1,6 @@
-import { GameButton, GameEmptyState } from "@pieai/swimmer-ui-kit";
+import { GameEmptyState } from "@pieai/swimmer-ui-kit";
+
+import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 
 /**
  * VibeHub's empty title, kept because it is already the whole sentence.
@@ -33,9 +35,9 @@ export function FavouritesEmpty({
       description={FAVOURITES_EMPTY_DESCRIPTION}
       action={
         onBrowse ? (
-          <GameButton variant="primary" type="button" onClick={onBrowse}>
+          <LiquidCtaButton type="button" onClick={onBrowse}>
             {FAVOURITES_EMPTY_ACTION}
-          </GameButton>
+          </LiquidCtaButton>
         ) : undefined
       }
     />

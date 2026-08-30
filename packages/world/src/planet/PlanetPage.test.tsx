@@ -122,6 +122,14 @@ describe("PlanetPage contract", () => {
     expect(PAGE_CSS).not.toMatch(/^\s*backdrop-filter\s*:/m);
     expect(PAGE_CSS).toMatch(/min-width:\s*768px/);
   });
+
+  it("keeps the enter control as a rail sibling so a phone can put it above optional detail", () => {
+    expect(PAGE_SRC).toMatch(/className="planet-page__enter"/);
+    expect(PAGE_SRC).not.toMatch(/function StudyDetail[\s\S]*planet-page__enter/);
+    expect(PAGE_CSS).toMatch(/grid-area:\s*enter/);
+    expect(PAGE_CSS).toMatch(/max-width:\s*767px/);
+    expect(PAGE_CSS).toMatch(/"list"[\s\S]*"enter"[\s\S]*"detail"/);
+  });
 });
 
 describe("PlanetPage", () => {

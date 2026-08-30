@@ -35,7 +35,6 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { GameButton } from "@pieai/swimmer-ui-kit";
 import {
   activeIdForView,
   isBareView,
@@ -73,6 +72,7 @@ import {
 } from "../progress/store";
 import { LessonScreen, RouteFallback } from "../screens/lazy";
 import { FeedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
+import { LiquidCtaButton } from "@pieai/university-ui/cta/LiquidCtaButton.js";
 
 import { todayCtaLabel, TodaySection, todayMeta } from "@pieai/university-ui/today/TodaySection.js";
 import { LINK_RETURN_DEPTH } from "@pieai/university-ui/lesson/LessonReader.js";
@@ -299,7 +299,6 @@ export function App() {
   const markers = useWorldMarkers({
     labelNodes,
     lessons,
-    setNavigationFocus,
     setPathOverlay,
     setPicked,
     view,
@@ -546,7 +545,6 @@ export function App() {
         followNode={pickCardRef}
         onPick={(node) => {
           setPicked(node);
-          setNavigationFocus(node.studyId);
         }}
         onHover={(node) => setHovered(node ? node.title : null)}
         onInteract={onMapInteract}
@@ -615,9 +613,10 @@ export function App() {
                   <p className="nextup__meta">{nextUpMeta}</p>
                   <WorldSourceControls studyId={focusedStudyId} sourceAccess={sourceAccessPort} />
                 </div>
-                <GameButton
-                  variant="primary"
+                <LiquidCtaButton
+                  width="full"
                   className="nextup__primary"
+                  wrapperClassName="nextup__primary-wrap"
                   onClick={() =>
                     setView({
                       kind: "lesson",
@@ -636,7 +635,7 @@ export function App() {
                     two vocabularies, chosen by window width.
                   */}
                   {todayCtaLabel(todayData.nextLesson?.progress)} →
-                </GameButton>
+                </LiquidCtaButton>
               </aside>
             ) : null}
             {view.kind === "world" && picked && pickedCourse && pickedStats ? (
@@ -691,6 +690,7 @@ export function App() {
   const todaySection = (
     <TodaySection
       data={todayData}
+      liquidCta={showMap && wide && !picked && pathOverlay === null}
       review={todayReview}
       readEntitlements={readEntitlements}
       vocabularyReview={todayVocabularyReview}
@@ -905,6 +905,7 @@ export function App() {
           }
           aside={shellConfig.showContextAside ? aside : undefined}
           asideLabel={view.kind === "settings" ? "设置" : view.kind === "planet" ? "选课" : "今天"}
+          showAsideOnPhone={view.kind === "planet"}
         >
           <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
           {main}

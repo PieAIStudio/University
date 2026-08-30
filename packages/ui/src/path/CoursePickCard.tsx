@@ -14,8 +14,9 @@
  * the wrong shape; the ones that can, we use.
  */
 import { useEffect, useId, type RefObject } from "react";
-import { GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
+import { GamePanel } from "@pieai/swimmer-ui-kit";
 
+import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import type { CoursePickStats } from "./course-pick-stats.js";
 
 export function CoursePickCard({
@@ -128,9 +129,9 @@ export function CoursePickCard({
               <dd>{stats.maxXp}</dd>
             </dl>
           </section>
-          <GameButton variant="primary" className="picked__enter" onClick={onEnter}>
+          <LiquidCtaButton width="full" className="picked__enter" onClick={onEnter}>
             进入这门课
-          </GameButton>
+          </LiquidCtaButton>
         </div>
       </GamePanel>
     </aside>

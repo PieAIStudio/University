@@ -80,16 +80,15 @@ export function useWorldModel({
   }, [view, navigationFocus, todayNode, studies]);
 
   /**
-   * One project's islands, at the origin. Never every project at once.
-   *
-   * The boss worked out why the shared ocean was wrong before we did: drag a
-   * little too far and you are among another project's islands while the top
-   * bar still names the one you left, and one ground plate stretched over four
-   * projects runs out of resolution and starts to repeat. A project is a place
-   * now, and the way to another one is to say so.
+   * The learner opens in the focused study, but the world field includes the
+   * complete catalogue. Study order stays first so the existing camera, labels
+   * and "next" beacon still answer the current-context question immediately.
    */
   const world = useMemo(
-    () => (nodes && focusedStudyId ? placeWorld(nodes, courseProgress, focusedStudyId) : null),
+    () =>
+      nodes && focusedStudyId
+        ? placeWorld(nodes, courseProgress, focusedStudyId, "catalogue")
+        : null,
     [nodes, courseProgress, focusedStudyId],
   );
 
@@ -187,7 +186,6 @@ export function useWorldModel({
 interface WorldMarkersOptions {
   readonly labelNodes: LabelNodes;
   readonly lessons: readonly LessonPlacement[];
-  readonly setNavigationFocus: Dispatch<SetStateAction<LearnerNavigationFocus>>;
   readonly setPathOverlay: Dispatch<SetStateAction<PathOverlay | null>>;
   readonly setPicked: Dispatch<SetStateAction<CourseNode | null>>;
   readonly view: View;
@@ -197,7 +195,6 @@ interface WorldMarkersOptions {
 export function useWorldMarkers({
   labelNodes,
   lessons,
-  setNavigationFocus,
   setPathOverlay,
   setPicked,
   view,
@@ -222,12 +219,12 @@ export function useWorldMarkers({
     }
     if (!world) return [];
     /*
-      The study badge that used to float over each archipelago is gone with the
-      shared ocean. It answered "which one of these am I looking at", and there
-      is only one now — the capsule at the top already says its name, in a place
-      that does not scroll away.
+      The study badge stays in the top bar. The catalogue field uses one shared
+      world, so a second floating title would compete with course labels rather
+      than orient the learner.
     */
-    const ranked = spineOf(world.placements[0]?.node.studyId ?? "").map((entry) => entry.courseId);
+    const focusedStudyId = world.placements[0]?.node.studyId ?? "";
+    const ranked = spineOf(focusedStudyId).map((entry) => entry.courseId);
     const rank = new Map(ranked.map((courseId, index) => [courseId, index]));
     const live = world.placements.find((entry) => entry.state === "live");
     const liveIndex = live ? (rank.get(live.node.courseId) ?? -1) : -1;
@@ -248,11 +245,12 @@ export function useWorldMarkers({
       // Same target as the island, so a label and the shape under it cannot
       // disagree about what selecting a course means.
       activate: () => {
+        // Picking opens the course card. It must not retarget the catalogue
+        // origin — that rebuilds every island under the pointer.
         setPicked(entry.node);
-        setNavigationFocus(entry.node.studyId);
       },
     }));
-  }, [world, lessons, view]);
+  }, [world, lessons, view, setPicked, setPathOverlay, labelNodes]);
 
   return markers;
 }

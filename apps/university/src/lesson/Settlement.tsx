@@ -20,6 +20,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { GameButton, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import { NodeCard, type PathLesson, type PathUnit } from "@pieai/university-ui";
+import { LiquidCtaButton } from "@pieai/university-ui/cta/LiquidCtaButton.js";
 import { playSound } from "@pieai/university-ui/sound/index.js";
 
 /**
@@ -124,6 +125,7 @@ export function Settlement({
   const canShowProgress = lessons > 0;
   const reduceMotion = prefersReducedMotion();
   const [shownDone, setShownDone] = useState(reduceMotion ? doneAfter : doneBefore);
+  const hasNextStep = onNext !== null && nextLesson !== null && nextUnit !== null;
 
   useEffect(() => {
     if (!canShowProgress || reduceMotion || shownDone === doneAfter) return;
@@ -227,9 +229,13 @@ export function Settlement({
       ) : null}
 
       <div className="settle__actions">
-        <GameButton variant={onNext ? "ghost" : "primary"} onClick={onMap}>
-          回关卡地图
-        </GameButton>
+        {hasNextStep ? (
+          <GameButton variant="ghost" onClick={onMap}>
+            回关卡地图
+          </GameButton>
+        ) : (
+          <LiquidCtaButton onClick={onMap}>回关卡地图</LiquidCtaButton>
+        )}
       </div>
     </div>
   );

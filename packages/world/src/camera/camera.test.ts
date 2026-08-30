@@ -1,3 +1,7 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
@@ -20,6 +24,18 @@ import { radiusForLessons } from "../course/layout";
   as the sky spinning, which is what got reported. Three is the ceiling because
   past it the same drag gesture means wildly different things at the two ends.
 */
+describe("two-finger map gestures", () => {
+  it("keeps DOLLY_PAN and does not assign TWO to the one-finger PAN state", () => {
+    const source = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "controls.tsx"),
+      "utf8",
+    );
+    expect(source).toContain("THREE.TOUCH.DOLLY_PAN");
+    expect(source).toContain("installTouchDollyDeadzone");
+    expect(source).not.toMatch(/touches\.TWO\s*=\s*THREE\.TOUCH\.PAN/);
+  });
+});
+
 describe("dolly range", () => {
   it("stays within a 3× span at both levels", () => {
     expect(WORLD_DISTANCE_MAX / WORLD_DISTANCE_MIN).toBeLessThanOrEqual(3);

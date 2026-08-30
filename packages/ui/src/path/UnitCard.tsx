@@ -1,5 +1,6 @@
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
+import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import { PathDialog } from "./PathDialog.js";
 import {
   START_UNIT_LABEL,
@@ -43,9 +44,12 @@ export function UnitCard({
 export function UnitCardBody({
   unit,
   onStart,
+  liquid = true,
 }: {
   readonly unit: PathUnit;
   readonly onStart: () => void;
+  /** NodeCard already owns the one liquid action while its preview is open. */
+  readonly liquid?: boolean;
 }) {
   const locators = unitEvidenceLocators(unit.lessons);
 
@@ -68,9 +72,15 @@ export function UnitCardBody({
         </section>
       ) : null}
       <p className="unit-card__meta">{unitMetaLine(unit.lessons)}</p>
-      <GameButton variant="primary" className="path-card__start" onClick={onStart}>
-        {START_UNIT_LABEL}
-      </GameButton>
+      {liquid ? (
+        <LiquidCtaButton width="full" className="path-card__start" onClick={onStart}>
+          {START_UNIT_LABEL}
+        </LiquidCtaButton>
+      ) : (
+        <GameButton variant="primary" className="path-card__start" onClick={onStart}>
+          {START_UNIT_LABEL}
+        </GameButton>
+      )}
     </div>
   );
 }

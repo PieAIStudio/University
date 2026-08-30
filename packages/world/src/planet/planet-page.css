@@ -65,13 +65,18 @@
  */
 .planet-page__rail {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "list"
+    "detail"
+    "enter";
+  grid-template-rows: minmax(0, 1fr) auto auto;
   gap: 10px;
   min-width: 0;
   min-height: 0;
 }
 
 .planet-page__list {
+  grid-area: list;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -157,6 +162,7 @@
 }
 
 .planet-page__detail {
+  grid-area: detail;
   min-width: 0;
   padding-top: 10px;
   border-top: 1px solid var(--game-ui-border-subtle, rgb(255 255 255 / 12%));
@@ -183,6 +189,7 @@
 }
 
 .planet-page__enter {
+  grid-area: enter;
   justify-self: start;
 }
 
@@ -280,10 +287,46 @@
 
 @media (max-width: 767px) {
   .planet-page {
-    grid-template-rows: minmax(16rem, 45%) minmax(0, 1fr);
+    grid-template-rows: minmax(12rem, 34%) minmax(0, 1fr);
     grid-template-areas:
       "globe"
       "rail";
+  }
+
+  /*
+    In the shell, the globe is `position: absolute; inset: 0` so it fills
+    the main column on a desk. On a phone that column shares the screen
+    with the now-visible picker, so the globe needs a real height.
+  */
+  .planet-page__globe {
+    position: relative;
+    inset: auto;
+    height: min(34dvh, 22rem);
+    min-height: 12rem;
+  }
+
+  .planet-rail {
+    height: auto;
+  }
+
+  .planet-page__rail {
+    grid-template-areas:
+      "list"
+      "enter"
+      "detail";
+    grid-template-rows: minmax(7.5rem, auto) auto auto;
+    height: auto;
+  }
+
+  .planet-page__list {
+    min-height: 7.5rem;
+    max-height: 11rem;
+  }
+
+  .planet-page__enter {
+    /* Leave a lane for the fixed 提意见 chip at the bottom-left. */
+    justify-self: end;
+    width: calc(100% - 4.75rem);
   }
 }
 

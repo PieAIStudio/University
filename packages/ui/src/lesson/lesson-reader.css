@@ -424,7 +424,6 @@
   line-height: 1.55;
 }
 
-.lesson-completion__action,
 .text-button {
   border: 1px solid rgb(246 193 119 / 48%);
   padding: 9px 14px;
@@ -435,15 +434,12 @@
   cursor: pointer;
 }
 
-.lesson-completion__action:hover,
-.lesson-completion__action:focus-visible,
 .text-button:hover,
 .text-button:focus-visible {
   border-color: #f6c177;
   background: rgb(246 193 119 / 22%);
 }
 
-.lesson-completion__action:disabled,
 .text-button:disabled {
   opacity: 0.55;
   cursor: wait;
@@ -493,6 +489,14 @@
 
 .lesson-next :is(button, a) {
   margin-top: 20px;
+}
+
+.lesson-next > .liquid-cta {
+  margin-top: 20px;
+}
+
+.lesson-next > .liquid-cta .liquid-cta__button {
+  margin-top: 0;
 }
 
 /* Done: the only thing left to decide is whether to keep going, so the block
@@ -809,6 +813,10 @@
   }
 
   .lesson-completion__action {
+    width: 100%;
+  }
+
+  .lesson-completion > .liquid-cta {
     width: 100%;
   }
 

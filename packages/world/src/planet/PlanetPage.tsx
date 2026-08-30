@@ -161,11 +161,27 @@ export function PlanetRail({
 
         <div className="planet-page__detail">
           {selected ? (
-            <StudyDetail study={selected} onEnter={onEnter} />
+            <StudyDetail study={selected} />
           ) : (
             <p className="planet-page__hint">从列表里选一个项目</p>
           )}
         </div>
+        {selected ? (
+          <GameButton
+            variant="primary"
+            type="button"
+            className="planet-page__enter"
+            onClick={() => onEnter(selected.id)}
+          >
+            {/*
+              The button names where it goes, the same way the way back out of a
+              course does. 「进入这个项目」 was two problems in five characters: a
+              category word the reader has to resolve against the card they are
+              looking at, and the wrong category word — 通用课 is nobody's project.
+            */}
+            进入 {selected.title}
+          </GameButton>
+        ) : null}
       </div>
     </div>
   );
@@ -193,13 +209,7 @@ export function PlanetPage(props: PlanetPageProps) {
   );
 }
 
-function StudyDetail({
-  study,
-  onEnter,
-}: {
-  readonly study: PlanetStudy;
-  readonly onEnter: (studyId: string) => void;
-}) {
+function StudyDetail({ study }: { readonly study: PlanetStudy }) {
   const listed = studyCourseList(study);
   return (
     <GamePanel tone="strong" className="planet-page__card" title={study.title}>
@@ -235,20 +245,6 @@ function StudyDetail({
         </ul>
       ) : null}
       {listed.restLabel ? <p className="planet-page__rest">{listed.restLabel}</p> : null}
-      <GameButton
-        variant="primary"
-        type="button"
-        className="planet-page__enter"
-        onClick={() => onEnter(study.id)}
-      >
-        {/*
-          The button names where it goes, the same way the way back out of a
-          course does. 「进入这个项目」 was two problems in five characters: a
-          category word the reader has to resolve against the card they are
-          looking at, and the wrong category word — 通用课 is nobody's project.
-        */}
-        进入 {study.title}
-      </GameButton>
     </GamePanel>
   );
 }

@@ -155,6 +155,89 @@ export function layoutStudyRoad(orderedCourseIds: readonly string[]): Map<string
 }
 
 /**
+ * Scatter a catalogue into a loose field rather than a row of islands.
+ *
+ * The map still receives one deterministic order from the study spines; this
+ * projection uses that order for stable label priority while a golden-angle
+ * spiral supplies front/back depth and a seeded wobble breaks the accidental
+ * regularity of a grid. The first course remains at the origin so the existing
+ * world camera opens on a real course without changing its pose.
+ */
+export function layoutWorldCatalogue(orderedCourseKeys: readonly string[]): Map<string, Placed> {
+  const count = orderedCourseKeys.length;
+  const fieldRadius = 7.2 + Math.sqrt(Math.max(1, count)) * 4.4;
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  const placed = new Map<string, Placed>();
+  orderedCourseKeys.forEach((key, index) => {
+    if (index === 0) {
+      placed.set(key, { x: 0, y: 0, z: 0, depth: index });
+      return;
+    }
+    const fraction = (index - 1) / Math.max(1, count - 2);
+    const radial =
+      6.4 + Math.sqrt(fraction) * fieldRadius + (hash(`${key}:catalogue-radius`) * 2 - 1) * 1.8;
+    const angle = index * goldenAngle + (hash(`${key}:catalogue-angle`) * 2 - 1) * 0.38;
+    placed.set(key, {
+      x: Math.cos(angle) * radial * 1.12,
+      y: 0,
+      z: Math.sin(angle) * radial * 0.78,
+      depth: index,
+    });
+  });
+  return placed;
+}
+
+/**
+ * Keep the opening island where the camera already looks, and push later
+ * islands just far enough that their silhouettes do not fuse. The spiral
+ * supplies the scatter; this only repairs collisions the spiral cannot see
+ * because it does not know each course's generated radius.
+ */
+export function unstickWorldIslands(
+  points: readonly Placed[],
+  radii: readonly number[],
+  pinnedIndex = 0,
+): Placed[] {
+  if (points.length === 0) return [];
+  const next = points.map((point) => ({ ...point }));
+  const gap = 1.1;
+  for (let iteration = 0; iteration < 14; iteration += 1) {
+    let moved = false;
+    for (let i = 0; i < next.length; i += 1) {
+      for (let j = i + 1; j < next.length; j += 1) {
+        const minDistance = (radii[i]! + radii[j]!) * gap;
+        const dx = next[j]!.x - next[i]!.x;
+        const dz = next[j]!.z - next[i]!.z;
+        const distance = Math.hypot(dx, dz);
+        if (distance >= minDistance) continue;
+        const nx = distance < 1e-6 ? 1 : dx / distance;
+        const nz = distance < 1e-6 ? 0 : dz / distance;
+        const push = minDistance - Math.max(distance, 1e-6);
+        if (i === pinnedIndex) {
+          next[j] = { ...next[j]!, x: next[j]!.x + nx * push, z: next[j]!.z + nz * push };
+        } else if (j === pinnedIndex) {
+          next[i] = { ...next[i]!, x: next[i]!.x - nx * push, z: next[i]!.z - nz * push };
+        } else {
+          next[i] = {
+            ...next[i]!,
+            x: next[i]!.x - nx * push * 0.5,
+            z: next[i]!.z - nz * push * 0.5,
+          };
+          next[j] = {
+            ...next[j]!,
+            x: next[j]!.x + nx * push * 0.5,
+            z: next[j]!.z + nz * push * 0.5,
+          };
+        }
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+  return next;
+}
+
+/**
  * One course as a road of stones, flat, because it is lying on an island.
  *
  * The climb this function used to have was the best thing about it — looking
