@@ -1,3 +1,4 @@
+import { translate } from "./i18n/index.js";
 import type { ThemePreference } from "@pieai/university-core";
 
 export type ResolvedTheme = "light" | "dark";
@@ -5,9 +6,21 @@ export type ResolvedTheme = "light" | "dark";
 export const SYSTEM_THEME_QUERY = "(prefers-color-scheme: dark)";
 
 export const THEME_PREFERENCE_OPTIONS = [
-  { id: "light", label: "浅色", description: "暖色纸面，适合明亮环境。" },
-  { id: "dark", label: "深色", description: "深色纸面，适合昏暗环境。" },
-  { id: "system", label: "跟随系统", description: "按设备的浅色 / 深色设置。" },
+  {
+    id: "light",
+    label: translate("ui.theme.copy.浅色"),
+    description: translate("ui.theme.copy.暖色纸面-适合明亮环境"),
+  },
+  {
+    id: "dark",
+    label: translate("ui.theme.copy.深色"),
+    description: translate("ui.theme.copy.深色纸面-适合昏暗环境"),
+  },
+  {
+    id: "system",
+    label: translate("ui.theme.copy.跟随系统"),
+    description: translate("ui.theme.copy.按设备的浅色-深色设置"),
+  },
 ] as const satisfies readonly {
   id: ThemePreference;
   label: string;

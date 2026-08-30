@@ -7,6 +7,7 @@
  * profiles; it is not the cross-device source of truth. New marks are written
  * to the shared ProgressDocument first.
  */
+import { translate } from "@pieai/university-ui/i18n.js";
 import {
   lessonKeyOf,
   type EvidenceSnippet,
@@ -133,9 +134,14 @@ export function createOnlineReaderPort(options: { readonly progress: ProgressPor
       // A public-page citation has no baked snippet and never will; the reader
       // renders it as a link rather than asking for one.
       const url = anchor && isRepositoryAnchor(anchor) ? anchor.snippetUrl : undefined;
-      if (!url) throw new Error("这条证据没有烘焙源码");
+      if (!url) throw new Error(translate("app.ports.online.reader.copy.这条证据没有烘焙源码"));
       const response = await fetch(url);
-      if (!response.ok) throw new Error(`无法读取固定源码（${response.status}）`);
+      if (!response.ok)
+        throw new Error(
+          translate("app.ports.online.reader.copy.无法读取固定源码-value0", {
+            value0: response.status,
+          }),
+        );
       return (await response.json()) as EvidenceSnippet;
     },
   };

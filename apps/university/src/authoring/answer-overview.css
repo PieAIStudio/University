@@ -57,7 +57,7 @@
   border: 1px solid var(--campus-rule);
   border-radius: 12px;
   background: color-mix(in srgb, var(--game-ui-panel-deep) 55%, transparent);
-  text-align: right;
+  text-align: end;
 }
 
 .answer-overview__source strong,
@@ -193,7 +193,7 @@
 
   .answer-overview__source {
     width: 100%;
-    text-align: left;
+    text-align: start;
   }
 
   .answer-overview__lesson {

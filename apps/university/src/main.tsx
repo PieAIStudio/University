@@ -58,12 +58,15 @@ import "@pieai/university-ui/lesson/word-list.css";
 import "@pieai/university-ui/lesson/mark-list.css";
 import "@pieai/university-world/overlay.css";
 import "./styles.css";
+import { I18nProvider } from "@pieai/university-ui/i18n.js";
 import { applyThemePreference } from "@pieai/university-ui/theme.js";
+import { localeDemandPort, recordLocaleRequest } from "./analytics/locale-demand";
 import { initProductAnalytics, trackEvent } from "./analytics/productAnalytics";
 import { progressPort } from "./progress/store";
 
 // Resolve the cached account preference before React paints the learner surface.
 applyThemePreference(progressPort.accountData().preferences.theme);
+recordLocaleRequest(localeDemandPort, typeof navigator === "undefined" ? null : navigator.language);
 
 const container = document.getElementById("root");
 if (!container) throw new Error("Missing #root container in index.html");
@@ -72,7 +75,9 @@ void initProductAnalytics().then(() => trackEvent({ name: "app_open" }));
 
 createRoot(container).render(
   <StrictMode>
-    <App />
-    <LiquidCtaTransitionLayer />
+    <I18nProvider>
+      <App />
+      <LiquidCtaTransitionLayer />
+    </I18nProvider>
   </StrictMode>,
 );

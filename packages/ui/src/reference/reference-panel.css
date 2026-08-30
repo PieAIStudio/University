@@ -78,7 +78,7 @@
 .reference-panel {
   position: fixed;
   top: 0;
-  right: 0;
+  inset-inline-end: 0;
   z-index: 40;
   display: flex;
   flex-direction: column;
@@ -86,7 +86,7 @@
   width: min(24rem, 92vw);
   height: 100%;
   padding: 16px 16px 20px;
-  border-left: 1px solid rgb(247 211 160 / 28%);
+  border-inline-start: 1px solid rgb(247 211 160 / 28%);
   background: #1a1512;
   box-shadow: -16px 0 40px rgb(0 0 0 / 45%);
   color: #f7ead6;
@@ -100,7 +100,7 @@
 
 .reference-panel__header {
   position: relative;
-  padding-right: 36px;
+  padding-inline-end: 36px;
   margin-bottom: 14px;
 }
 
@@ -122,7 +122,7 @@
 .reference-panel__close {
   position: absolute;
   top: 0;
-  right: 0;
+  inset-inline-end: 0;
   width: 36px;
   height: 36px;
   padding: 0;
@@ -196,7 +196,7 @@
 
 .reference-panel__phonetic,
 .reference-panel__pos {
-  margin-left: 8px;
+  margin-inline-start: 8px;
   color: rgb(255 245 232 / 58%);
   font-size: 0.82rem;
 }

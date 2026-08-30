@@ -26,6 +26,7 @@
  * that is not in it. A rule that is counted survives a refactor; this comment
  * claimed there was exactly one until somebody counted.
  */
+import { translate } from "@pieai/university-ui/i18n.js";
 import {
   Suspense,
   useCallback,
@@ -605,7 +606,9 @@ export function App() {
             {view.kind === "world" && !wide && todayLesson && !picked ? (
               <aside className="nextup">
                 <p className="nextup__eyebrow">
-                  {progress.streak.days > 0 ? "接着上次" : "从这里开始"}
+                  {progress.streak.days > 0
+                    ? translate("app.app.app.copy.接着上次")
+                    : translate("app.app.app.copy.从这里开始")}
                 </p>
                 <h2 className="nextup__title">{todayLesson.lessonTitle}</h2>
                 <div className="nextup__context-row">
@@ -804,7 +807,11 @@ export function App() {
     return (
       <>
         <main className="empty">
-          <h1>{shelfError ? "课程读不出来" : "书架上还没有课"}</h1>
+          <h1>
+            {shelfError
+              ? translate("app.app.app.copy.课程读不出来")
+              : translate("app.app.app.copy.书架上还没有课")}
+          </h1>
           <p>{shelfError ?? EMPTY_SHELF_HINT}</p>
         </main>
         {feedbackSurface}
@@ -907,7 +914,13 @@ export function App() {
             ) : null
           }
           aside={shellConfig.showContextAside ? aside : undefined}
-          asideLabel={view.kind === "settings" ? "设置" : view.kind === "planet" ? "选课" : "今天"}
+          asideLabel={
+            view.kind === "settings"
+              ? translate("app.app.app.copy.设置")
+              : view.kind === "planet"
+                ? translate("app.app.app.copy.选课")
+                : translate("app.app.app.copy.今天")
+          }
           showAsideOnPhone={view.kind === "planet"}
         >
           <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />

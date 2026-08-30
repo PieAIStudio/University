@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import {
   LIBRARY_TABS,
   type AntiPatternEntry,
@@ -28,11 +29,11 @@ export const REFERENCE_TABS = LIBRARY_TABS;
 export type ReferenceTab = LibraryTab;
 
 const TAB_LABEL: Record<ReferenceTab, string> = {
-  concepts: "概念图解",
-  terms: "词义索引",
-  flavour: "防 AI 味儿",
-  favourites: "收藏",
-  notes: "课堂笔记",
+  concepts: translate("ui.reference.librarySurface.copy.概念图解"),
+  terms: translate("ui.reference.librarySurface.copy.词义索引"),
+  flavour: translate("ui.reference.librarySurface.copy.防-AI-味儿"),
+  favourites: translate("ui.reference.librarySurface.copy.收藏"),
+  notes: translate("ui.reference.librarySurface.copy.课堂笔记"),
 };
 
 const REFERENCE_TAB_OPTIONS = REFERENCE_TABS.map((id) => ({
@@ -90,11 +91,11 @@ export function LibrarySurface({
   return (
     <div className="terms">
       <button className="linkish" type="button" onClick={onBack}>
-        ← 关卡地图
+        {translate("ui.reference.librarySurface.copy.关卡地图")}
       </button>
-      <nav className="library-tabs" aria-label="图鉴">
+      <nav className="library-tabs" aria-label={translate("ui.reference.librarySurface.copy.图鉴")}>
         <GameSegmentedControl
-          label="图鉴"
+          label={translate("ui.reference.librarySurface.copy.图鉴")}
           activeId={activeTab}
           options={REFERENCE_TAB_OPTIONS}
           onSelect={(id) => {

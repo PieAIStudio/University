@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GameButton, GameModal } from "@pieai/swimmer-ui-kit";
 import type { SourceAccessPort } from "@pieai/university-core";
@@ -86,21 +87,28 @@ export function EvidenceSourceSheet({
 
   async function copy(value: string, state: "code" | "locator") {
     try {
-      if (!navigator.clipboard?.writeText) throw new Error("当前浏览器不提供复制功能");
+      if (!navigator.clipboard?.writeText)
+        throw new Error(translate("ui.evidence.evidenceSourceSheet.copy.当前浏览器不提供复制功能"));
       await navigator.clipboard.writeText(value);
       setCopyState(state);
       window.setTimeout(() => setCopyState("idle"), 2_500);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "复制失败");
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : translate("ui.evidence.evidenceSourceSheet.copy.复制失败"),
+      );
     }
   }
 
   return (
     <GameModal
       open
-      title={`源码证据 · ${reference.sourcePath}`}
+      title={translate("ui.evidence.evidenceSourceSheet.copy.源码证据-value0", {
+        value0: reference.sourcePath,
+      })}
       size="lg"
-      closeLabel="关闭源码证据"
+      closeLabel={translate("ui.evidence.evidenceSourceSheet.copy.关闭源码证据")}
       closeOnBackdrop
       onClose={onClose}
       footer={
@@ -111,7 +119,7 @@ export function EvidenceSourceSheet({
               onClick={() => onSelectIndex(index - 1)}
               disabled={index <= 0}
             >
-              ← 上一条证据
+              {translate("ui.evidence.evidenceSourceSheet.copy.上一条证据")}
             </GameButton>
             <span>
               {index + 1} / {evidence.length}
@@ -121,22 +129,26 @@ export function EvidenceSourceSheet({
               onClick={() => onSelectIndex(index + 1)}
               disabled={index >= evidence.length - 1}
             >
-              下一条证据 →
+              {translate("ui.evidence.evidenceSourceSheet.copy.下一条证据")}
             </GameButton>
           </div>
           <GameButton variant="secondary" onClick={onClose}>
-            关闭
+            {translate("ui.evidence.evidenceSourceSheet.copy.关闭")}
           </GameButton>
         </div>
       }
     >
       <div className="source-sheet">
-        <div className="source-sheet__meta" aria-label="源码证据定位">
+        <div
+          className="source-sheet__meta"
+          aria-label={translate("ui.evidence.evidenceSourceSheet.copy.源码证据定位")}
+        >
           <span>
-            <strong>固定提交</strong> <code>{reference.sourceCommit}</code>
+            <strong>{translate("ui.evidence.evidenceSourceSheet.copy.固定提交")}</strong>{" "}
+            <code>{reference.sourceCommit}</code>
           </span>
           <span>
-            <strong>引用范围</strong>{" "}
+            <strong>{translate("ui.evidence.evidenceSourceSheet.copy.引用范围")}</strong>{" "}
             <code>
               L{citedStart}–{citedEnd}
             </code>
@@ -156,17 +168,21 @@ export function EvidenceSourceSheet({
         />
         <div className="source-sheet__tools">
           <label>
-            <span>在这份源码中查找</span>
+            <span>{translate("ui.evidence.evidenceSourceSheet.copy.在这份源码中查找")}</span>
             <input
               ref={findRef}
               type="search"
               value={findText}
               onChange={(event) => setFindText(event.target.value)}
-              placeholder="例如 dist、outDir"
+              placeholder={translate("ui.evidence.evidenceSourceSheet.copy.例如-dist-outDir")}
             />
           </label>
           <span className="source-sheet__find-status" aria-live="polite">
-            {findText.trim() ? `命中 ${matchCount} 行` : "只显示已批准的本课证据"}
+            {findText.trim()
+              ? translate("ui.evidence.evidenceSourceSheet.copy.命中-value0-行", {
+                  value0: matchCount,
+                })
+              : translate("ui.evidence.evidenceSourceSheet.copy.只显示已批准的本课证据")}
           </span>
           <div className="source-sheet__copy-actions">
             <GameButton
@@ -174,7 +190,9 @@ export function EvidenceSourceSheet({
               onClick={() => void copy(snippet?.code ?? "", "code")}
               disabled={!snippet}
             >
-              {copyState === "code" ? "已复制源码" : "复制源码"}
+              {copyState === "code"
+                ? translate("ui.evidence.evidenceSourceSheet.copy.已复制源码")
+                : translate("ui.evidence.evidenceSourceSheet.copy.复制源码")}
             </GameButton>
             <GameButton
               variant="ghost"
@@ -185,11 +203,17 @@ export function EvidenceSourceSheet({
                 )
               }
             >
-              {copyState === "locator" ? "已复制定位" : "复制定位"}
+              {copyState === "locator"
+                ? translate("ui.evidence.evidenceSourceSheet.copy.已复制定位")
+                : translate("ui.evidence.evidenceSourceSheet.copy.复制定位")}
             </GameButton>
           </div>
         </div>
-        {loading ? <p className="loading-copy">正在从不可变提交读取完整源码…</p> : null}
+        {loading ? (
+          <p className="loading-copy">
+            {translate("ui.evidence.evidenceSourceSheet.copy.正在从不可变提交读取完整源码")}
+          </p>
+        ) : null}
         {error ? (
           <p className="inline-error" role="alert">
             {error}
@@ -199,7 +223,9 @@ export function EvidenceSourceSheet({
           <>
             {snippet.truncatedBefore || snippet.truncatedAfter ? (
               <p className="source-sheet__truncation" role="status">
-                文件超过阅读器上限，仅显示受控范围；引用行仍以真实行号标出。
+                {translate(
+                  "ui.evidence.evidenceSourceSheet.copy.文件超过阅读器上限-仅显示受控范围-引用行仍以真实行号标出",
+                )}
               </p>
             ) : null}
             <EvidenceCode snippet={snippet} lines={tokenLines} findText={findText} />

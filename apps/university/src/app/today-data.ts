@@ -8,6 +8,7 @@
  * are answerable from the shelf's shape plus the shared progress document, so
  * that is what this takes.
  */
+import { translate } from "@pieai/university-ui/i18n.js";
 import {
   lessonKeyOf,
   progressSourceOf,
@@ -34,7 +35,10 @@ import { lessonProgressOf } from "@pieai/university-ui/view/lesson-view.js";
  */
 function revisionOf(studies: readonly ShelfStudy[], ref: LessonRef): number {
   const lesson = lessonAt(studies, ref);
-  if (!lesson) throw new Error(`找不到这节课的版本：${ref.lessonId}`);
+  if (!lesson)
+    throw new Error(
+      translate("app.app.todaydata.copy.找不到这节课的版本-value0", { value0: ref.lessonId }),
+    );
   return lesson.contentRevision;
 }
 

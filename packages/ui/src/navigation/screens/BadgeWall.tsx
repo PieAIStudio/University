@@ -1,3 +1,4 @@
+import { translate } from "../../i18n/index.js";
 import { GameBadge, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import { badgesFor, type Badge, type ProgressDocument } from "@pieai/university-core";
 
@@ -9,7 +10,7 @@ import { badgesFor, type Badge, type ProgressDocument } from "@pieai/university-
  * makes the wall a list of things worth doing rather than a list of things you
  * have not done.
  */
-export const BADGE_WALL_TITLE = "徽章墙";
+export const BADGE_WALL_TITLE = translate("ui.navigation.screens.badgeWall.copy.徽章墙");
 
 function BadgeTile({ badge }: { badge: Badge }) {
   return (
@@ -20,7 +21,11 @@ function BadgeTile({ badge }: { badge: Badge }) {
       <div className="badge-tile__body">
         <div className="badge-tile__head">
           <span className="badge-tile__name">{badge.name}</span>
-          {badge.earned ? <GameBadge tone="success">已获得</GameBadge> : null}
+          {badge.earned ? (
+            <GameBadge tone="success">
+              {translate("ui.navigation.screens.badgeWall.copy.已获得")}
+            </GameBadge>
+          ) : null}
         </div>
         <p className="badge-tile__how">{badge.how}</p>
         {badge.earned ? null : (
@@ -46,14 +51,15 @@ export function BadgeWall({
       <header className="shell-screen__head">
         <h1>{BADGE_WALL_TITLE}</h1>
         <p className="shell-screen__lede">
-          十枚。其中四枚不是靠量能拿到的——三枚要真的过了那么多天，一枚要排程同意你确实记住了。
-          一下午就能刷完的墙，一周后就不能说明你什么了。
+          {translate(
+            "ui.navigation.screens.badgeWall.copy.十枚-其中四枚不是靠量能拿到的-三枚要真的过了那么多天-一枚要排程同意你确实记住了-一下午就能刷完的墙-一周后就",
+          )}
         </p>
       </header>
 
       <GamePanel tone="strong">
         <GameProgress
-          label="已获得"
+          label={translate("ui.navigation.screens.badgeWall.copy.已获得")}
           value={earned}
           max={badges.length}
           tone={earned > 0 ? "success" : "accent"}

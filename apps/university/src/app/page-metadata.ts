@@ -1,9 +1,12 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import { toPath, type View } from "@pieai/university-core";
 import type { CourseView } from "@pieai/university-ui/view/lesson-view.js";
 import { useEffect } from "react";
 
 export const DEFAULT_PAGE_TITLE = "University";
-export const DEFAULT_PAGE_DESCRIPTION = "University — 在群岛上把一件事学到会。";
+export const DEFAULT_PAGE_DESCRIPTION = translate(
+  "app.app.pagemetadata.copy.University-在群岛上把一件事学到会",
+);
 
 export interface PageMetadata {
   readonly title: string;
@@ -37,8 +40,14 @@ export function pageMetadataFor(
       : DEFAULT_PAGE_TITLE;
   const description = lesson
     ? course?.description
-      ? `${course.description} 本节：${lesson.title}。`
-      : `${course?.title ?? "University"}，本节：${lesson.title}。`
+      ? translate("app.app.pagemetadata.copy.value0-本节-value1", {
+          value0: course.description,
+          value1: lesson.title,
+        })
+      : translate("app.app.pagemetadata.copy.value0-本节-value1-m4ij3g", {
+          value0: course?.title ?? "University",
+          value1: lesson.title,
+        })
     : course && (view.kind === "course" || view.kind === "lesson" || view.kind === "settled")
       ? course.description || course.title
       : DEFAULT_PAGE_DESCRIPTION;

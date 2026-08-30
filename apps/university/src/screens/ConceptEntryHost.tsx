@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import { conceptHeadToMarkdown, conceptNeighbours, getConceptEntry } from "@pieai/university-core";
 import { EntryPage } from "@pieai/university-ui";
 
@@ -21,9 +22,11 @@ export function ConceptEntryHost({ id, onOpen }: { id: string; onOpen: (view: Vi
     return (
       <div className="terms">
         <button className="linkish" onClick={() => onOpen({ kind: "concepts" })}>
-          ← 概念图解
+          {translate("app.screens.conceptEntryHost.copy.概念图解")}
         </button>
-        <p className="reference-panel__note">没有这一条。</p>
+        <p className="reference-panel__note">
+          {translate("app.screens.conceptEntryHost.copy.没有这一条")}
+        </p>
       </div>
     );
   }
@@ -32,7 +35,10 @@ export function ConceptEntryHost({ id, onOpen }: { id: string; onOpen: (view: Vi
     <div className="terms">
       <EntryPage
         breadcrumb={[
-          { label: "概念图解", href: "/concepts" },
+          {
+            label: translate("app.screens.conceptEntryHost.copy.概念图解-o4yiqz"),
+            href: "/concepts",
+          },
           { label: entry.head.group },
           { label: entry.head.zh },
         ]}

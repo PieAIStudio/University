@@ -6,6 +6,7 @@
  * the source lesson's revision so shared progress can bind confirmation to the
  * content the learner opened.
  */
+import { translate } from "@pieai/university-ui/i18n.js";
 import { lessonKeyOf, progressSourceOf, type LessonRef } from "@pieai/university-core";
 import type {
   CardBody,
@@ -47,7 +48,8 @@ export function createOnlineContentPort(): ContentPort {
       const course = await loadCourse(locator.studyId, locator.courseId);
       const unit = course.units.find((entry) => entry.id === locator.unitId);
       const lesson = unit?.lessons.find((entry) => entry.id === locator.lessonId);
-      if (!unit || !lesson) throw new Error("这节课不在这门课里");
+      if (!unit || !lesson)
+        throw new Error(translate("app.ports.online.content.copy.这节课不在这门课里"));
       const contentRevision = lesson.contentRevision;
       return assembleLessonView({
         course,
@@ -69,11 +71,12 @@ export function createOnlineContentPort(): ContentPort {
       const unit = course.units.find((entry) => entry.id === locator.unitId);
       const lesson = unit?.lessons.find((entry) => entry.id === locator.lessonId);
       const exercise = lesson?.exercises.find((entry) => entry.id === exerciseId);
-      if (!unit || !lesson || !exercise) throw new Error("这道题不在这门课里");
+      if (!unit || !lesson || !exercise)
+        throw new Error(translate("app.ports.online.content.copy.这道题不在这门课里"));
       return {
         id: exercise.id,
         lessonTitle: lesson.title,
-        title: exercise.title ?? "自检",
+        title: exercise.title ?? translate("app.ports.online.content.copy.自检"),
         prompt: exercise.prompt,
         /*
           Not shipped, by design. `import-courses.mjs` strips the reference
@@ -91,7 +94,8 @@ export function createOnlineContentPort(): ContentPort {
       if (card.kind === "recap-card") {
         const unit = course.units.find((entry) => entry.id === card.unitId);
         const lesson = unit?.lessons.find((entry) => entry.id === card.lessonId);
-        if (!unit || !lesson) throw new Error("复述卡内容尚未加载");
+        if (!unit || !lesson)
+          throw new Error(translate("app.ports.online.content.copy.复述卡内容尚未加载"));
         return {
           front: unit.objective,
           back: null,
@@ -99,7 +103,7 @@ export function createOnlineContentPort(): ContentPort {
         } satisfies CardBody;
       }
       const found = findCard(course, card);
-      if (!found) throw new Error("复习卡内容尚未加载");
+      if (!found) throw new Error(translate("app.ports.online.content.copy.复习卡内容尚未加载"));
       return {
         front: found.card.front,
         back: found.card.back,

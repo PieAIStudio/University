@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useState, useSyncExternalStore } from "react";
 import { GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
 import type { ReviewReminderPort } from "@pieai/university-core";
@@ -57,9 +58,18 @@ export function ReviewReminderPrompt({
 
   return (
     <GamePanel className="review-reminder-prompt" tone="strong">
-      <p className="review-reminder-prompt__eyebrow">明天的复习</p>
-      <h2>明天有 {dueTomorrow} 张复习卡回来</h2>
-      <p>要我提醒你吗？每天最多一条，有卡才提醒，随时可以在设置里关掉。</p>
+      <p className="review-reminder-prompt__eyebrow">
+        {translate("ui.notifications.reviewReminderPrompt.copy.明天的复习")}
+      </p>
+      <h2>
+        {translate("ui.notifications.reviewReminderPrompt.copy.明天有")} {dueTomorrow}{" "}
+        {translate("ui.notifications.reviewReminderPrompt.copy.张复习卡回来")}
+      </h2>
+      <p>
+        {translate(
+          "ui.notifications.reviewReminderPrompt.copy.要我提醒你吗-每天最多一条-有卡才提醒-随时可以在设置里关掉",
+        )}
+      </p>
       <div className="review-reminder-prompt__actions">
         <GameButton
           variant="primary"
@@ -71,12 +81,20 @@ export function ReviewReminderPrompt({
             void reminders
               .enable()
               .catch((reason: unknown) => {
-                setError(reason instanceof Error ? reason.message : "提醒没有开启，请稍后重试。");
+                setError(
+                  reason instanceof Error
+                    ? reason.message
+                    : translate(
+                        "ui.notifications.reviewReminderPrompt.copy.提醒没有开启-请稍后重试",
+                      ),
+                );
               })
               .finally(() => setWorking(false));
           }}
         >
-          {pending ? "正在开启…" : "好"}
+          {pending
+            ? translate("ui.notifications.reviewReminderPrompt.copy.正在开启")
+            : translate("ui.notifications.reviewReminderPrompt.copy.好")}
         </GameButton>
         <GameButton
           variant="secondary"
@@ -87,7 +105,7 @@ export function ReviewReminderPrompt({
             onDismiss?.();
           }}
         >
-          以后再说
+          {translate("ui.notifications.reviewReminderPrompt.copy.以后再说")}
         </GameButton>
       </div>
       {(error ?? statusError) ? (

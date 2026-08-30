@@ -17,6 +17,7 @@
  * whole claim — the reading happens in the DOM and the reason to care happens
  * on the map, and this is the sentence that connects them.
  */
+import { translate } from "@pieai/university-ui/i18n.js";
 import { useEffect, useState, type ReactNode } from "react";
 import { GameButton, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import { NodeCard, type PathLesson, type PathUnit } from "@pieai/university-ui";
@@ -39,11 +40,17 @@ export interface SettledCard {
 /** How the settlement talks about a due date a learner has to plan around. */
 function whenDue(dueAt: number, now = Date.now()): string {
   const hours = (dueAt - now) / 3_600_000;
-  if (hours <= 0) return "现在就可以复习";
-  if (hours < 1) return `${Math.max(1, Math.round(hours * 60))} 分钟后回来`;
-  if (hours < 20) return `${Math.round(hours)} 小时后回来`;
+  if (hours <= 0) return translate("app.lesson.settlement.copy.现在就可以复习");
+  if (hours < 1)
+    return translate("app.lesson.settlement.copy.value0-分钟后回来", {
+      value0: Math.max(1, Math.round(hours * 60)),
+    });
+  if (hours < 20)
+    return translate("app.lesson.settlement.copy.value0-小时后回来", { value0: Math.round(hours) });
   const days = Math.round(hours / 24);
-  return days <= 1 ? "明天回来" : `${days} 天后回来`;
+  return days <= 1
+    ? translate("app.lesson.settlement.copy.明天回来")
+    : translate("app.lesson.settlement.copy.value0-天后回来", { value0: days });
 }
 
 /**
@@ -58,9 +65,11 @@ function whenDue(dueAt: number, now = Date.now()): string {
  * one that stays quiet, which is also why `null` is a normal answer here.
  */
 function whatGrew(builtBefore: number, builtAfter: number, complete: boolean): string | null {
-  if (complete) return "这座岛建成了 —— 村子中央立起了会堂。";
+  if (complete) return translate("app.lesson.settlement.copy.这座岛建成了-村子中央立起了会堂");
   if (builtAfter <= builtBefore) return null;
-  return builtBefore === 0 ? "岛上开出了第一块地，井挖好了。" : "岛上又立起了一间房子。";
+  return builtBefore === 0
+    ? translate("app.lesson.settlement.copy.岛上开出了第一块地-井挖好了")
+    : translate("app.lesson.settlement.copy.岛上又立起了一间房子");
 }
 
 function prefersReducedMotion(): boolean {
@@ -150,16 +159,19 @@ export function Settlement({
     <div className="settle">
       <p className="settle__eyebrow">{courseTitle}</p>
       <h1 className="settle__title">{lessonTitle}</h1>
-      <p className="settle__done">读完了。</p>
+      <p className="settle__done">{translate("app.lesson.settlement.copy.读完了")}</p>
 
       {canShowProgress ? (
         <GameProgress
           className="settle__progress"
-          label="课程进度"
+          label={translate("app.lesson.settlement.copy.课程进度")}
           value={shownDone}
           max={lessons}
           tone={finished ? "success" : "accent"}
-          valueLabel={`${shownDone} / ${lessons} 关`}
+          valueLabel={translate("app.lesson.settlement.copy.value0-value1-关", {
+            value0: shownDone,
+            value1: lessons,
+          })}
         />
       ) : null}
 
@@ -167,20 +179,24 @@ export function Settlement({
         {dropped.length > 0 ? (
           <li>
             <b>{dropped.length}</b>
-            <span>张卡片进了复习队列{soonest === null ? "" : ` · ${whenDue(soonest)}`}</span>
+            <span>
+              {translate("app.lesson.settlement.copy.张卡片进了复习队列")}
+              {soonest === null ? "" : ` · ${whenDue(soonest)}`}
+            </span>
           </li>
         ) : null}
         {streakDays > 0 ? (
           <li>
             <b>{streakDays}</b>
-            <span>天连击</span>
+            <span>{translate("app.lesson.settlement.copy.天连击")}</span>
           </li>
         ) : null}
       </ol>
 
       {tomorrowDueCount > 0 ? (
         <p className="settle__tomorrow">
-          明天有 <b>{tomorrowDueCount}</b> 张复习卡到期。
+          {translate("app.lesson.settlement.copy.明天有")} <b>{tomorrowDueCount}</b>{" "}
+          {translate("app.lesson.settlement.copy.张复习卡到期")}
         </p>
       ) : null}
 
@@ -190,7 +206,7 @@ export function Settlement({
 
       {unlocked.length > 0 ? (
         <section className="settle__unlocks">
-          <h2>这一节记下的概念</h2>
+          <h2>{translate("app.lesson.settlement.copy.这一节记下的概念")}</h2>
           {unlocked.map((entry) => (
             <GamePanel key={entry.id} title={entry.zh}>
               <p className="settle__unlock-tagline">{entry.tagline}</p>
@@ -201,14 +217,18 @@ export function Settlement({
 
       {dropped.length > 0 ? (
         <section className="settle__cards">
-          <h2>今天记下的是这些</h2>
+          <h2>{translate("app.lesson.settlement.copy.今天记下的是这些")}</h2>
           {dropped.map(({ card }) => (
             <div className="settle__card" key={card.id}>
               <b>{card.front}</b>
               <span>{card.back}</span>
             </div>
           ))}
-          <p className="settle__note">现在不用背。到期时它们会自己回来，这是间隔重复该做的事。</p>
+          <p className="settle__note">
+            {translate(
+              "app.lesson.settlement.copy.现在不用背-到期时它们会自己回来-这是间隔重复该做的事",
+            )}
+          </p>
         </section>
       ) : null}
 
@@ -216,7 +236,7 @@ export function Settlement({
 
       {onNext && nextLesson && nextUnit ? (
         <section className="settle__next">
-          <h2>下一关</h2>
+          <h2>{translate("app.lesson.settlement.copy.下一关")}</h2>
           <NodeCard
             open
             embedded
@@ -231,10 +251,12 @@ export function Settlement({
       <div className="settle__actions">
         {hasNextStep ? (
           <GameButton variant="ghost" onClick={onMap}>
-            回关卡地图
+            {translate("app.lesson.settlement.copy.回关卡地图")}
           </GameButton>
         ) : (
-          <LiquidCtaButton onClick={onMap}>回关卡地图</LiquidCtaButton>
+          <LiquidCtaButton onClick={onMap}>
+            {translate("app.lesson.settlement.copy.回关卡地图")}
+          </LiquidCtaButton>
         )}
       </div>
     </div>

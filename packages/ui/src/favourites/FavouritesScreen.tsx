@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useCallback, useEffect, useState } from "react";
 import {
   hasFavourite,
@@ -45,7 +46,7 @@ export function FavouritesScreen({
   if (total === 0) return <FavouritesEmpty onBrowse={onBrowse} />;
   return (
     <div>
-      <h1>收藏</h1>
+      <h1>{translate("ui.favourites.favouritesScreen.copy.收藏")}</h1>
       {groups.map((group) => (
         <section key={group.track}>
           <h2>

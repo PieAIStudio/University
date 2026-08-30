@@ -1,3 +1,4 @@
+import { formatNumber, translate } from "@pieai/university-ui/i18n.js";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import {
@@ -112,7 +113,10 @@ export function AvatarLab({
 
   return (
     <div className="avatar-lab">
-      <section className="avatar-lab__stage" aria-label="头像舞台">
+      <section
+        className="avatar-lab__stage"
+        aria-label={translate("app.avatarlab.avatarLab.copy.头像舞台")}
+      >
         <Canvas
           dpr={[1, 2]}
           gl={{ antialias: true, powerPreference: "high-performance", alpha: false }}
@@ -137,32 +141,46 @@ export function AvatarLab({
         </Canvas>
         <p className="avatar-lab__readout">
           {stats
-            ? `${stats.meshes} 件 · ${stats.verts.toLocaleString()} 顶点 · ${stats.buildMs}ms · 种子 ${recipe.seed}`
-            : `种子 ${recipe.seed}`}
+            ? translate("app.avatarlab.avatarLab.copy.value0-件-value1-顶点-value2ms-种子-value3", {
+                value0: stats.meshes,
+                value1: formatNumber(stats.verts),
+                value2: stats.buildMs,
+                value3: recipe.seed,
+              })
+            : translate("app.avatarlab.avatarLab.copy.种子-value0", { value0: recipe.seed })}
         </p>
       </section>
 
       <aside className="avatar-lab__dock">
-        <GamePanel title="头像工坊">
-          <p className="avatar-lab__lede">换物种、换色盘，或重掷一张脸。拖动画布绕着看。</p>
+        <GamePanel title={translate("app.avatarlab.avatarLab.copy.头像工坊")}>
+          <p className="avatar-lab__lede">
+            {translate("app.avatarlab.avatarLab.copy.换物种-换色盘-或重掷一张脸-拖动画布绕着看")}
+          </p>
           <div className="avatar-lab__actions">
             <GameButton type="button" variant="ghost" onClick={() => onOpen(WORLD)}>
-              回到地图
+              {translate("app.avatarlab.avatarLab.copy.回到地图")}
             </GameButton>
             <GameButton type="button" variant="primary" onClick={rollNew}>
-              随机一张
+              {translate("app.avatarlab.avatarLab.copy.随机一张")}
             </GameButton>
           </div>
           <GameToggle
             checked={gaze}
-            label={gaze ? "注视开" : "注视关"}
+            label={
+              gaze
+                ? translate("app.avatarlab.avatarLab.copy.注视开")
+                : translate("app.avatarlab.avatarLab.copy.注视关")
+            }
             onClick={() => setGaze((on) => !on)}
           />
         </GamePanel>
 
-        <GamePanel title="种子">
+        <GamePanel title={translate("app.avatarlab.avatarLab.copy.种子")}>
           <div className="avatar-lab__stack">
-            <GameField label="配方" hint="数字原样用；其它文字会哈希成种子。">
+            <GameField
+              label={translate("app.avatarlab.avatarLab.copy.配方")}
+              hint={translate("app.avatarlab.avatarLab.copy.数字原样用-其它文字会哈希成种子")}
+            >
               <GameInput
                 value={seedText}
                 onChange={(event) => setSeedText(event.target.value)}
@@ -174,13 +192,17 @@ export function AvatarLab({
               />
             </GameField>
             <GameButton type="button" variant="secondary" onClick={applySeed}>
-              应用种子
+              {translate("app.avatarlab.avatarLab.copy.应用种子")}
             </GameButton>
           </div>
         </GamePanel>
 
-        <GamePanel title="物种">
-          <div className="avatar-lab__chips" role="group" aria-label="物种">
+        <GamePanel title={translate("app.avatarlab.avatarLab.copy.物种")}>
+          <div
+            className="avatar-lab__chips"
+            role="group"
+            aria-label={translate("app.avatarlab.avatarLab.copy.物种")}
+          >
             {SPECIES.map((species) => (
               <GameButton
                 key={species.id}
@@ -194,17 +216,21 @@ export function AvatarLab({
           </div>
         </GamePanel>
 
-        <GamePanel title="色盘">
+        <GamePanel title={translate("app.avatarlab.avatarLab.copy.色盘")}>
           <GameMaterialSwatches
-            label="色盘"
+            label={translate("app.avatarlab.avatarLab.copy.色盘")}
             activeMaterialId={recipe.palette ?? undefined}
             materials={swatches}
             onMaterialChange={setPalette}
           />
         </GamePanel>
 
-        <GamePanel title="重掷部位">
-          <div className="avatar-lab__chips" role="group" aria-label="重掷部位">
+        <GamePanel title={translate("app.avatarlab.avatarLab.copy.重掷部位")}>
+          <div
+            className="avatar-lab__chips"
+            role="group"
+            aria-label={translate("app.avatarlab.avatarLab.copy.重掷部位")}
+          >
             {REROLLABLE_PARTS.map((part) => (
               <GameButton
                 key={part.id}
@@ -219,7 +245,8 @@ export function AvatarLab({
         </GamePanel>
 
         <p className="avatar-lab__meta">
-          {PALETTES.length} 套色盘 · {SPECIES.length} 个物种
+          {PALETTES.length} {translate("app.avatarlab.avatarLab.copy.套色盘")} {SPECIES.length}{" "}
+          {translate("app.avatarlab.avatarLab.copy.个物种")}
         </p>
       </aside>
     </div>

@@ -139,7 +139,7 @@
   color: #e9f5ed;
   font-size: 0.84rem;
   line-height: 1.4;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   transition:
     border-color 160ms ease,

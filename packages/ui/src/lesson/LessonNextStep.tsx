@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
 import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
@@ -38,17 +39,30 @@ export function LessonNextStep({
 
   if (!next) {
     return (
-      <section className="lesson-next" data-state="course-end" aria-label="学到这里">
-        <p className="lesson-next__eyebrow">第 {total} 节 · 这门课的最后一节</p>
-        <h2 className="lesson-next__title">这门课到这里就走完了。</h2>
+      <section
+        className="lesson-next"
+        data-state="course-end"
+        aria-label={translate("ui.lesson.lessonNextStep.copy.学到这里")}
+      >
+        <p className="lesson-next__eyebrow">
+          {translate("ui.lesson.lessonNextStep.copy.第")} {total}{" "}
+          {translate("ui.lesson.lessonNextStep.copy.节-这门课的最后一节")}
+        </p>
+        <h2 className="lesson-next__title">
+          {translate("ui.lesson.lessonNextStep.copy.这门课到这里就走完了")}
+        </h2>
         <p className="lesson-next__note">
-          回到课程页可以看到这门课覆盖了项目的哪些地方，以及接下来还有哪些课。
+          {translate(
+            "ui.lesson.lessonNextStep.copy.回到课程页可以看到这门课覆盖了项目的哪些地方-以及接下来还有哪些课",
+          )}
         </p>
         {completed ? (
-          <LiquidCtaButton onClick={onBackToCourse}>回到课程</LiquidCtaButton>
+          <LiquidCtaButton onClick={onBackToCourse}>
+            {translate("ui.lesson.lessonNextStep.copy.回到课程")}
+          </LiquidCtaButton>
         ) : (
           <GameButton variant="ghost" onClick={onBackToCourse}>
-            回到课程
+            {translate("ui.lesson.lessonNextStep.copy.回到课程")}
           </GameButton>
         )}
       </section>
@@ -59,22 +73,28 @@ export function LessonNextStep({
     <section
       className="lesson-next"
       data-state={completed ? "ready" : "unfinished"}
-      aria-label="下一节"
+      aria-label={translate("ui.lesson.lessonNextStep.copy.下一节")}
     >
       <p className="lesson-next__eyebrow">
-        下一节 · 第 {position + 1} 节 / 共 {total} 节
+        {translate("ui.lesson.lessonNextStep.copy.下一节-第")} {position + 1}{" "}
+        {translate("ui.lesson.lessonNextStep.copy.节-共")} {total}{" "}
+        {translate("ui.lesson.lessonNextStep.copy.节")}
       </p>
       <h2 className="lesson-next__title">{next.title}</h2>
       {completed ? null : (
         <p className="lesson-next__note">
-          这节还没标为完成。上面确认课文、答完练习之后，这节才会计入进度。
+          {translate(
+            "ui.lesson.lessonNextStep.copy.这节还没标为完成-上面确认课文-答完练习之后-这节才会计入进度",
+          )}
         </p>
       )}
       {completed ? (
-        <LiquidCtaButton onClick={() => onOpenLesson(next)}>继续下一节</LiquidCtaButton>
+        <LiquidCtaButton onClick={() => onOpenLesson(next)}>
+          {translate("ui.lesson.lessonNextStep.copy.继续下一节")}
+        </LiquidCtaButton>
       ) : (
         <GameButton variant="ghost" onClick={() => onOpenLesson(next)}>
-          先去下一节
+          {translate("ui.lesson.lessonNextStep.copy.先去下一节")}
         </GameButton>
       )}
     </section>

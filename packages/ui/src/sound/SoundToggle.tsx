@@ -5,6 +5,7 @@
  * way to stop it is a product people mute at the operating system, which loses
  * every other sound on their machine as well.
  */
+import { translate } from "../i18n/index.js";
 import { useEffect, useState } from "react";
 import type { ProgressPort } from "@pieai/university-core";
 
@@ -33,8 +34,16 @@ export function SoundToggle({
       type="button"
       className={`sound-toggle${on ? " sound-toggle--on" : ""}${className ? ` ${className}` : ""}`}
       aria-pressed={on}
-      title={on ? "关掉声音" : "打开声音"}
-      aria-label={on ? "关掉声音" : "打开声音"}
+      title={
+        on
+          ? translate("ui.sound.soundToggle.copy.关掉声音")
+          : translate("ui.sound.soundToggle.copy.打开声音")
+      }
+      aria-label={
+        on
+          ? translate("ui.sound.soundToggle.copy.关掉声音")
+          : translate("ui.sound.soundToggle.copy.打开声音")
+      }
       onClick={() => {
         const next = !on;
         setOn(next);

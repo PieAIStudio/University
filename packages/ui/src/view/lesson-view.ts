@@ -1,3 +1,4 @@
+import { formatDate, translate } from "../i18n/index.js";
 import {
   isLessonComplete,
   RECAP_CARD_ID,
@@ -155,7 +156,9 @@ export function focusParts(
   studies: readonly StudySummary[],
 ): { readonly study: string; readonly detail: string } {
   const study = studies.find((candidate) => candidate.id === focus.studyId);
-  const studyLabel = study?.title ?? `${focus.studyId}（不在书架上）`;
+  const studyLabel =
+    study?.title ??
+    translate("ui.view.lessonview.copy.value0-不在书架上", { value0: focus.studyId });
   const [head, ...rest] = focus.courseIds;
   if (!head) return { study: studyLabel, detail: "" };
   // The stored focus is a list of ids; a course id is not a thing to show
@@ -165,7 +168,12 @@ export function focusParts(
   return {
     study: studyLabel,
     detail:
-      rest.length === 0 ? headLabel : `从${headLabel}开始 · 主攻路线 ${focus.courseIds.length} 门`,
+      rest.length === 0
+        ? headLabel
+        : translate("ui.view.lessonview.copy.从value0开始-主攻路线-value1-门", {
+            value0: headLabel,
+            value1: focus.courseIds.length,
+          }),
   };
 }
 
@@ -254,12 +262,15 @@ export function sectionsFromMarkdown(content: string): readonly LessonSectionVie
  * "已完成" would hide the one action that puts the cards back in the queue.
  */
 export function progressLabel(progress: LessonProgress | null, contentRevision?: number): string {
-  if (!progress) return "尚未开始";
+  if (!progress) return translate("ui.view.lessonview.copy.尚未开始");
   const stale = contentRevision !== undefined && progress.contentRevision !== contentRevision;
-  if (stale) return "课文有新版 · 待阅读确认";
-  if (progress.status === "completed" && progress.readConfirmed) return "已完成";
-  if (progress.readConfirmed) return "课文已确认 · 练习待完成";
-  return `进行中 · ${Math.round(progress.progress * 100)}%`;
+  if (stale) return translate("ui.view.lessonview.copy.课文有新版-待阅读确认");
+  if (progress.status === "completed" && progress.readConfirmed)
+    return translate("ui.view.lessonview.copy.已完成");
+  if (progress.readConfirmed) return translate("ui.view.lessonview.copy.课文已确认-练习待完成");
+  return translate("ui.view.lessonview.copy.进行中-value0", {
+    value0: Math.round(progress.progress * 100),
+  });
 }
 
 export function isCurrentLessonCompleted(
@@ -540,25 +551,22 @@ export function buildCardCoachingPacket(input: {
   readonly priorAttempts: readonly PriorAttempt[];
 }): string {
   const history = input.priorAttempts
-    .map(
-      (attempt) =>
-        `- ${new Date(attempt.revealedAt).toLocaleDateString("zh-CN")}：${attempt.answer}`,
-    )
+    .map((attempt) => `- ${formatDate(attempt.revealedAt)}：${attempt.answer}`)
     .join("\n");
   return [
-    "我在用间隔重复复习一张卡片，想请你**讲解**，不要判分。",
+    translate("ui.view.lessonview.copy.我在用间隔重复复习一张卡片-想请你-讲解-不要判分"),
     "",
-    `## 卡片问题\n${input.front}`,
-    `## 参考答案\n${input.back}`,
-    `## 我这次的回答\n${input.answer}`,
-    history ? `## 我以前的回答\n${history}` : "",
+    translate("ui.view.lessonview.copy.卡片问题-value0", { value0: input.front }),
+    translate("ui.view.lessonview.copy.参考答案-value0", { value0: input.back }),
+    translate("ui.view.lessonview.copy.我这次的回答-value0", { value0: input.answer }),
+    history ? translate("ui.view.lessonview.copy.我以前的回答-value0", { value0: history }) : "",
     "",
-    "请：",
-    "1. 指出我的回答和参考答案之间**实质**的差距（措辞不同不算）。",
-    "2. 如果我以前答过，说说我的理解有没有变化。",
-    "3. 补一个能帮我记住它的具体例子或类比。",
+    translate("ui.view.lessonview.copy.请"),
+    translate("ui.view.lessonview.copy.1-指出我的回答和参考答案之间-实质-的差距-措辞不同不算"),
+    translate("ui.view.lessonview.copy.2-如果我以前答过-说说我的理解有没有变化"),
+    translate("ui.view.lessonview.copy.3-补一个能帮我记住它的具体例子或类比"),
     "",
-    "不要给我打分，也不要说我该选「困难」还是「良好」——那个我自己判断。",
+    translate("ui.view.lessonview.copy.不要给我打分-也不要说我该选-困难-还是-良好-那个我自己判断"),
   ]
     .filter(Boolean)
     .join("\n");

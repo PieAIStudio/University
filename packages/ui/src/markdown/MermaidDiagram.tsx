@@ -1,3 +1,4 @@
+import { formatNumber, translate } from "../i18n/index.js";
 import { useEffect, useId, useRef, useState } from "react";
 
 type MermaidRenderer = Pick<(typeof import("mermaid"))["default"], "initialize" | "render">;
@@ -73,14 +74,21 @@ function safeDiagramId(reactId: string): string {
 
 function validateSource(source: string): string | undefined {
   if (source.length > MAX_MERMAID_SOURCE_CHARS) {
-    return `关系图源码超过 ${MAX_MERMAID_SOURCE_CHARS.toLocaleString()} 个字符的本地上限。`;
+    return translate("ui.markdown.mermaidDiagram.copy.关系图源码超过-value0-个字符的本地上限", {
+      value0: formatNumber(MAX_MERMAID_SOURCE_CHARS),
+    });
   }
   const nonemptyLines = source.split(/\r?\n/).filter((line) => line.trim() !== "").length;
   if (nonemptyLines > MAX_MERMAID_NONEMPTY_LINES) {
-    return `关系图超过 ${MAX_MERMAID_NONEMPTY_LINES} 行的本地上限，请拆成几张小图。`;
+    return translate(
+      "ui.markdown.mermaidDiagram.copy.关系图超过-value0-行的本地上限-请拆成几张小图",
+      { value0: MAX_MERMAID_NONEMPTY_LINES },
+    );
   }
   if (UNSAFE_SOURCE_URI.test(source)) {
-    return "关系图包含外部或可执行地址；UniversityLocal 只渲染纯本地关系图。";
+    return translate(
+      "ui.markdown.mermaidDiagram.copy.关系图包含外部或可执行地址-UniversityLocal-只渲染纯本地关系图",
+    );
   }
   return undefined;
 }
@@ -172,7 +180,10 @@ export function MermaidDiagram({ source }: { readonly source: string }) {
         const detail = error instanceof Error ? error.message : "unknown error";
         setState({
           status: "error",
-          message: `这张关系图暂时无法渲染（${detail}）。原始 Mermaid 源码已保留，可以继续阅读或修复。`,
+          message: translate(
+            "ui.markdown.mermaidDiagram.copy.这张关系图暂时无法渲染-value0-原始-Mermaid-源码已保留-可以继续阅读或修复",
+            { value0: detail },
+          ),
         });
       }
     }
@@ -204,7 +215,7 @@ export function MermaidDiagram({ source }: { readonly source: string }) {
         className="mermaid-diagram mermaid-diagram--loading"
         id={diagramId}
       >
-        <figcaption>正在绘制关系图…</figcaption>
+        <figcaption>{translate("ui.markdown.mermaidDiagram.copy.正在绘制关系图")}</figcaption>
       </figure>
     );
   }

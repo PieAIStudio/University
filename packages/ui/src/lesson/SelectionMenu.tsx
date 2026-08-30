@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { autoUpdate, flip, FloatingPortal, offset, shift, useFloating } from "@floating-ui/react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -153,7 +154,7 @@ export function SelectionMenu({
         style={floatingStyles}
         className="selection-menu"
         role="toolbar"
-        aria-label="对选中的文字"
+        aria-label={translate("ui.lesson.selectionMenu.copy.对选中的文字")}
         // Keeps the selection alive: a click on a button would otherwise blur
         // the range before the handler could read it.
         onMouseDown={(event) => event.preventDefault()}
@@ -164,7 +165,7 @@ export function SelectionMenu({
           disabled={busy}
           onClick={act(() => onMark("question", target))}
         >
-          记录不懂
+          {translate("ui.lesson.selectionMenu.copy.记录不懂")}
         </button>
         <button
           type="button"
@@ -172,7 +173,7 @@ export function SelectionMenu({
           disabled={busy}
           onClick={act(() => onAsk(target))}
         >
-          问 AI
+          {translate("ui.lesson.selectionMenu.copy.问-AI")}
         </button>
         <button
           type="button"
@@ -182,7 +183,9 @@ export function SelectionMenu({
             setCopied(true);
           }}
         >
-          {copied ? "已复制" : "复制"}
+          {copied
+            ? translate("ui.lesson.selectionMenu.copy.已复制")
+            : translate("ui.lesson.selectionMenu.copy.复制")}
         </button>
         <button
           type="button"
@@ -190,7 +193,7 @@ export function SelectionMenu({
           disabled={busy}
           onClick={act(() => onMark("highlight", target))}
         >
-          高亮
+          {translate("ui.lesson.selectionMenu.copy.高亮")}
         </button>
       </div>
     </FloatingPortal>

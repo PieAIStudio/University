@@ -5,7 +5,7 @@
   "description": "University — one browser app in two modes, and the authoring server behind one of them.",
   "type": "module",
   "scripts": {
-    "boundaries": "node apps/local/scripts/check-module-boundaries.mjs && node scripts/check-kit-portability.mjs && node scripts/check-contrast.mjs && node scripts/check-raw-colours.mjs && node scripts/check-shared-styles.mjs",
+    "boundaries": "node apps/local/scripts/check-module-boundaries.mjs && node scripts/check-kit-portability.mjs && node scripts/check-contrast.mjs && node scripts/check-raw-colours.mjs && node scripts/check-shared-styles.mjs && node scripts/check-i18n.mjs",
     "build": "pnpm -r build",
     "bundle": "node scripts/check-authoring-excluded.mjs",
     "content": "pnpm --filter @pieai/university-app content",

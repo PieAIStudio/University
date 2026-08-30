@@ -52,7 +52,7 @@
 
 .evidence-inline-source__open {
   flex: none;
-  margin-left: auto;
+  margin-inline-start: auto;
   border: 0;
   padding: 2px 0;
   background: none;
@@ -125,7 +125,7 @@
 
 .evidence-inline-source__error-detail {
   display: inline;
-  margin-left: 0.25em;
+  margin-inline-start: 0.25em;
   color: color-mix(in srgb, var(--game-ui-text-muted) 52%, transparent);
   font-size: 0.92em;
 }

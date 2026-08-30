@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import { assembleTermEntry, hasFavourite, termHeadToMarkdown } from "@pieai/university-core";
 import { EntryPage, FavouriteStar } from "@pieai/university-ui";
 
@@ -28,9 +29,11 @@ export function TermEntryHost({
     return (
       <div className="terms">
         <button className="linkish" onClick={() => onOpen({ kind: "terms" })}>
-          ← 词义索引
+          {translate("app.screens.termEntryHost.copy.词义索引")}
         </button>
-        <p className="reference-panel__note">词库里没有这个词义。</p>
+        <p className="reference-panel__note">
+          {translate("app.screens.termEntryHost.copy.词库里没有这个词义")}
+        </p>
       </div>
     );
   }
@@ -38,7 +41,10 @@ export function TermEntryHost({
   return (
     <div className="terms">
       <EntryPage
-        breadcrumb={[{ label: "词义索引", href: "/terms" }, { label: entry.headword }]}
+        breadcrumb={[
+          { label: translate("app.screens.termEntryHost.copy.词义索引-tppvrm"), href: "/terms" },
+          { label: entry.headword },
+        ]}
         head={
           <>
             <h1 lang="en">

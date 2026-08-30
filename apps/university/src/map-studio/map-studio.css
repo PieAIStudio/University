@@ -207,7 +207,7 @@
 
 .map-studio__renderer .map-studio__canvas-caption {
   position: absolute;
-  right: 12px;
+  inset-inline-end: 12px;
   bottom: 10px;
   z-index: 5;
 }
@@ -247,7 +247,7 @@
   gap: 10px;
   min-width: 0;
   min-height: 0;
-  padding-right: 2px;
+  padding-inline-end: 2px;
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-color: var(--game-ui-border-ink) var(--game-ui-border-subtle);
@@ -265,7 +265,7 @@
   display: grid;
   gap: 2px;
   padding: 10px 12px;
-  border-left: 3px solid var(--game-ui-accent);
+  border-inline-start: 3px solid var(--game-ui-accent);
   background: color-mix(in srgb, var(--game-ui-accent) 9%, var(--game-ui-panel));
   color: var(--game-ui-text-muted);
   font-size: 0.76rem;
@@ -353,7 +353,7 @@
   color: var(--game-ui-text-muted);
   font-family: var(--game-ui-font-mono);
   font-size: 0.7rem;
-  text-align: right;
+  text-align: end;
 }
 
 .map-studio__parameter-value strong {
@@ -368,7 +368,7 @@
   color: var(--game-ui-accent-bright);
   font-family: var(--game-ui-font-mono);
   font-size: 0.72rem;
-  text-align: right;
+  text-align: end;
 }
 
 .map-studio__parameter-note,

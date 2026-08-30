@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { courseNodesOf } from "@pieai/university-world/course.js";
@@ -37,7 +38,12 @@ export function useShelf() {
         if (alive) setShelf(next);
       })
       .catch((reason: unknown) => {
-        if (alive) setShelfError(reason instanceof Error ? reason.message : "读不到课程");
+        if (alive)
+          setShelfError(
+            reason instanceof Error
+              ? reason.message
+              : translate("app.app.useshelf.copy.读不到课程"),
+          );
       });
     return () => {
       alive = false;

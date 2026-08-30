@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import { spineOf, type View } from "@pieai/university-core";
 import type { ShelfStudy } from "@pieai/university-ui/content/port.js";
 import {
@@ -176,7 +177,9 @@ export function useWorldModel({
         ? view.studyId
         : focusedStudyId;
     const title = studies.find((entry) => entry.id === studyId)?.title;
-    return title ? `← 回到${spacedName(title)}地图` : "← 回到课程地图";
+    return title
+      ? translate("app.app.worldmodel.copy.回到value0地图", { value0: spacedName(title) })
+      : translate("app.app.worldmodel.copy.回到课程地图");
   }, [view, focusedStudyId, studies]);
 
   return {

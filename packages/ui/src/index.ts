@@ -23,6 +23,33 @@
  *   from a shell.
  */
 
+export {
+  activeLocale,
+  applyDocumentLocale,
+  availableLocales,
+  createTranslator,
+  formatDate,
+  formatNumber,
+  formatPlural,
+  I18nProvider,
+  isLocaleComplete,
+  localeCompleteness,
+  LOCALE_REGISTRY,
+  resolveLocale,
+  setActiveLocale,
+  SOURCE_LOCALE,
+  translate,
+  useI18n,
+} from "./i18n/index.js";
+export type {
+  LocaleCompleteness,
+  LocaleDefinition,
+  LocaleDirection,
+  LocaleRegistry,
+  PluralCategory,
+  Translator,
+} from "./i18n/index.js";
+
 // Shared surface — the lesson itself. Both shells.
 export { LessonReader } from "./lesson/LessonReader.js";
 export type { LessonSourceVersionCheckout } from "./lesson/LessonSourceVersion.js";

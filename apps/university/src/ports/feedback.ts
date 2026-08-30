@@ -8,6 +8,7 @@
  * file under `local/` would say the opposite of what the code does, which is
  * the misreading that put a fourth port in the constitution once already.
  */
+import { translate } from "@pieai/university-ui/i18n.js";
 import type { FeedbackPort, FeedbackReceipt } from "@pieai/university-core";
 import { feedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
 
@@ -87,7 +88,7 @@ function createUnavailableClipboardPort(): FeedbackPort {
   return {
     transport: "unavailable",
     async submit() {
-      throw new Error("当前浏览器不提供复制功能。");
+      throw new Error(translate("app.ports.feedback.copy.当前浏览器不提供复制功能"));
     },
     async readMine() {
       return [];

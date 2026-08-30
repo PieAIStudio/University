@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { GameSegmentedControl, GameToggle } from "@pieai/swimmer-ui-kit";
 import {
@@ -57,8 +58,8 @@ import {
 export const LINK_RETURN_DEPTH = 5;
 
 const DETAIL_OPTIONS = [
-  { id: "standard", label: "标准讲解" },
-  { id: "all", label: "详细讲解" },
+  { id: "standard", label: translate("ui.lesson.lessonReader.copy.标准讲解") },
+  { id: "all", label: translate("ui.lesson.lessonReader.copy.详细讲解") },
 ] as const;
 
 type SourceTriggerKind = "inline" | "rail" | "unknown";
@@ -268,7 +269,11 @@ export function LessonReader({
       });
       setMarks((current) => [...current, mark]);
     } catch (reason) {
-      setMarkError(reason instanceof Error ? reason.message : "这条标记没有保存");
+      setMarkError(
+        reason instanceof Error
+          ? reason.message
+          : translate("ui.lesson.lessonReader.copy.这条标记没有保存"),
+      );
     } finally {
       setMarkBusy(false);
     }
@@ -290,7 +295,11 @@ export function LessonReader({
       else await reader.resolveMark(locator.studyId, markId);
     } catch (reason) {
       setMarks(previous);
-      setMarkError(reason instanceof Error ? reason.message : "标记没有更新");
+      setMarkError(
+        reason instanceof Error
+          ? reason.message
+          : translate("ui.lesson.lessonReader.copy.标记没有更新"),
+      );
     }
   }
 
@@ -303,7 +312,11 @@ export function LessonReader({
       setVocabularyStages((current) => new Map(current).set(body.senseId, body.stage));
     } catch (reason) {
       setVocabularyStages(previous);
-      setVocabularyError(reason instanceof Error ? reason.message : "词义状态没有保存");
+      setVocabularyError(
+        reason instanceof Error
+          ? reason.message
+          : translate("ui.lesson.lessonReader.copy.词义状态没有保存"),
+      );
     }
   }
 
@@ -387,7 +400,11 @@ export function LessonReader({
       });
       await onLearningChanged();
     } catch (reason) {
-      setConfirmationError(reason instanceof Error ? reason.message : "暂时无法记录阅读确认");
+      setConfirmationError(
+        reason instanceof Error
+          ? reason.message
+          : translate("ui.lesson.lessonReader.copy.暂时无法记录阅读确认"),
+      );
     } finally {
       setConfirming(false);
     }
@@ -476,16 +493,16 @@ export function LessonReader({
             <Tip term="english-mode">
               <GameToggle
                 checked={englishMode}
-                label="外语模式"
+                label={translate("ui.lesson.lessonReader.copy.外语模式")}
                 onClick={() => setEnglishModePersisted(!englishMode)}
               />
             </Tip>
           ) : null}
           <span className="lesson-toolbar__label" id="lesson-detail-label">
-            讲解层级
+            {translate("ui.lesson.lessonReader.copy.讲解层级")}
           </span>
           <GameSegmentedControl
-            label="讲解层级"
+            label={translate("ui.lesson.lessonReader.copy.讲解层级")}
             activeId={detailed ? "all" : "standard"}
             options={DETAIL_OPTIONS}
             onSelect={(id) => setDetailModePersisted(id === "all" ? "all" : "standard")}
@@ -506,11 +523,13 @@ export function LessonReader({
         <aside
           ref={marginRef}
           className="lesson-margin-column"
-          {...(showLeftContent ? { "aria-label": "页边批注" } : { "aria-hidden": true })}
+          {...(showLeftContent
+            ? { "aria-label": translate("ui.lesson.lessonReader.copy.页边批注") }
+            : { "aria-hidden": true })}
         >
           {onReturn ? (
             <button type="button" className="lesson-return" onClick={onReturn}>
-              ← 回到刚才那一课
+              {translate("ui.lesson.lessonReader.copy.回到刚才那一课")}
             </button>
           ) : null}
           <LessonMargin
@@ -526,7 +545,10 @@ export function LessonReader({
             <div className="lesson-reader__title">
               <p className="eyebrow">
                 <Tip term="content-revision">
-                  <span>第 {view.lesson.contentRevision} 版</span>
+                  <span>
+                    {translate("ui.lesson.lessonReader.copy.第")} {view.lesson.contentRevision}{" "}
+                    {translate("ui.lesson.lessonReader.copy.版")}
+                  </span>
                 </Tip>
               </p>
               <h2 ref={titleRef} tabIndex={-1}>
@@ -584,11 +606,17 @@ export function LessonReader({
           {!completed ? (
             <section className="lesson-completion" aria-labelledby="lesson-completion-title">
               <div>
-                <h3 id="lesson-completion-title">读到这里，确认你完成了这次课文更新</h3>
+                <h3 id="lesson-completion-title">
+                  {translate("ui.lesson.lessonReader.copy.读到这里-确认你完成了这次课文更新")}
+                </h3>
                 <p>
                   {readConfirmed
-                    ? "这版课文已经记录过阅读确认；练习通过后，系统才会把本课标为完成并安排卡片。"
-                    : "打开课文、滚动页面或答对练习都不会自动完成。这个确认只针对当前固定版本。"}
+                    ? translate(
+                        "ui.lesson.lessonReader.copy.这版课文已经记录过阅读确认-练习通过后-系统才会把本课标为完成并安排卡片",
+                      )
+                    : translate(
+                        "ui.lesson.lessonReader.copy.打开课文-滚动页面或答对练习都不会自动完成-这个确认只针对当前固定版本",
+                      )}
                 </p>
               </div>
               <LiquidCtaButton
@@ -597,7 +625,11 @@ export function LessonReader({
                 onClick={() => void confirmCurrentRevision()}
                 disabled={confirming}
               >
-                {confirming ? "正在记录…" : readConfirmed ? "再次确认本次更新" : "完成本次更新"}
+                {confirming
+                  ? translate("ui.lesson.lessonReader.copy.正在记录")
+                  : readConfirmed
+                    ? translate("ui.lesson.lessonReader.copy.再次确认本次更新")
+                    : translate("ui.lesson.lessonReader.copy.完成本次更新")}
               </LiquidCtaButton>
               {confirmationError ? (
                 <p className="inline-error" role="alert">
@@ -629,7 +661,7 @@ export function LessonReader({
           {completed && view.lesson.cards.length > 0 ? (
             <section className="lesson-practice">
               <div>
-                <h2>通过答题巩固刚学到的内容</h2>
+                <h2>{translate("ui.lesson.lessonReader.copy.通过答题巩固刚学到的内容")}</h2>
               </div>
               {view.lesson.cards.map((card) => (
                 <ReviewCard
@@ -662,7 +694,9 @@ export function LessonReader({
         </div>
         <aside
           className="lesson-rail lesson-rail--right"
-          {...(showRightContent ? { "aria-label": "阅读笔记" } : { "aria-hidden": true })}
+          {...(showRightContent
+            ? { "aria-label": translate("ui.lesson.lessonReader.copy.阅读笔记") }
+            : { "aria-hidden": true })}
         >
           {showRightContent ? (
             <>

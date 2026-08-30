@@ -1,11 +1,13 @@
+import { translate } from "../../i18n/index.js";
 import { GameEmptyState } from "@pieai/swimmer-ui-kit";
 
 import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
 
-export const QUESTS_EMPTY_TITLE = "任务还没开张";
-export const QUESTS_EMPTY_DESCRIPTION =
-  "日、周、月三层任务会长在这里。今天该做的那一件事，在学习页上等着。";
-export const QUESTS_EMPTY_ACTION = "回到学习";
+export const QUESTS_EMPTY_TITLE = translate("ui.navigation.empty.questsEmpty.copy.任务还没开张");
+export const QUESTS_EMPTY_DESCRIPTION = translate(
+  "ui.navigation.empty.questsEmpty.copy.日-周-月三层任务会长在这里-今天该做的那一件事-在学习页上等着",
+);
+export const QUESTS_EMPTY_ACTION = translate("ui.navigation.empty.questsEmpty.copy.回到学习");
 
 export function QuestsEmpty({ onNavigate }: { readonly onNavigate?: () => void }) {
   return (

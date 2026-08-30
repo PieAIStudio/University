@@ -12,8 +12,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
-    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  padding-block: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-bottom));
+  padding-inline: max(16px, var(--safe-area-inline-start)) max(16px, var(--safe-area-inline-end));
 }
 
 .path-card__scrim {
@@ -72,7 +72,8 @@
   flex: 0 0 auto;
   width: 32px;
   height: 32px;
-  margin: -4px -6px 0 0;
+  margin-block: -4px 0;
+  margin-inline: 0 -6px;
   padding: 0;
   border: 0;
   border-radius: var(--game-ui-radius-control, 10px);
@@ -203,8 +204,8 @@
   .path-card {
     width: 100%;
     max-height: min(42rem, calc(100vh - 12px));
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
   }
 }
 
@@ -312,7 +313,8 @@
   gap: 6px;
   min-width: 0;
   margin: 0;
-  padding: 0 0 0 1.1rem;
+  padding-block: 0 0;
+  padding-inline: 1.1rem 0;
   color: var(--game-ui-text, #e9edf5);
   font-size: 0.84rem;
   line-height: 1.5;

@@ -1,6 +1,12 @@
+import { useI18n } from "../i18n/index.js";
 import type { ReactNode } from "react";
 
-import { AppShell, type ShellCounter, type ShellNavItem } from "../shell/AppShell.js";
+import {
+  AppShell,
+  type ShellCollapseLabels,
+  type ShellCounter,
+  type ShellNavItem,
+} from "../shell/AppShell.js";
 import { railItemsWithExtra, TAB_ITEMS } from "./slots.js";
 
 export type { ShellCounter, ShellNavItem };
@@ -15,7 +21,7 @@ export function UniversityShell({
   activeId,
   counters,
   aside,
-  asideLabel = "上下文",
+  asideLabel,
   showAsideOnPhone = false,
   extraMoreItems,
   brand,
@@ -49,16 +55,23 @@ export function UniversityShell({
   readonly identity: ReactNode;
   readonly children: ReactNode;
 }) {
+  const { t } = useI18n();
+  const collapseLabels: ShellCollapseLabels = {
+    collapse: t("ui.shell.appShell.copy.收起"),
+    expandRail: t("ui.shell.appShell.copy.展开导航"),
+    expandAside: t("ui.shell.appShell.copy.展开上下文"),
+  };
   return (
     <AppShell
       nav={railItemsWithExtra(extraMoreItems)}
       tabs={TAB_ITEMS}
       activeId={activeId}
       counters={counters}
+      collapseLabels={collapseLabels}
       brand={brand ?? <span className="university-shell__brand">University</span>}
       identity={identity}
       aside={aside}
-      asideLabel={asideLabel}
+      asideLabel={asideLabel ?? t("ui.navigation.universityShell.copy.上下文")}
       showAsideOnPhone={showAsideOnPhone}
     >
       {children}

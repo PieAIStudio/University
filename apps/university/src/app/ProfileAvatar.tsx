@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { guestAvatarRecipe } from "@pieai/university-world/avatar.js";
@@ -44,7 +45,7 @@ export function ProfileAvatar({
       </Canvas>
       {/* Not `ghost`: that variant is transparent, and this sits on a canvas. */}
       <a className="profile-avatar__lab" href="/avatar-lab">
-        打开头像工坊
+        {translate("app.app.profileAvatar.copy.打开头像工坊")}
       </a>
     </div>
   );

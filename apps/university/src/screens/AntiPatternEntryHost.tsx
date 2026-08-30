@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import { antiPatternHeadToMarkdown, getAntiPatternEntry } from "@pieai/university-core";
 import { EntryPage } from "@pieai/university-ui";
 
@@ -17,16 +18,24 @@ export function AntiPatternEntryHost({ id, onOpen }: { id: string; onOpen: (view
     return (
       <div className="terms">
         <button className="linkish" onClick={() => onOpen({ kind: "anti-pattern" })}>
-          ← 防 AI 味儿
+          {translate("app.screens.antiPatternEntryHost.copy.防-AI-味儿")}
         </button>
-        <p className="reference-panel__note">没有这一条。</p>
+        <p className="reference-panel__note">
+          {translate("app.screens.antiPatternEntryHost.copy.没有这一条")}
+        </p>
       </div>
     );
   }
   return (
     <div className="terms">
       <EntryPage
-        breadcrumb={[{ label: "防 AI 味儿", href: "/flavour" }, { label: entry.head.name }]}
+        breadcrumb={[
+          {
+            label: translate("app.screens.antiPatternEntryHost.copy.防-AI-味儿-1ury31h"),
+            href: "/flavour",
+          },
+          { label: entry.head.name },
+        ]}
         head={
           <>
             <h1>{entry.head.name}</h1>

@@ -15,8 +15,8 @@
   gap: 10px 12px;
   padding: 10px 16px;
   padding-top: max(10px, env(safe-area-inset-top));
-  padding-left: max(16px, env(safe-area-inset-left));
-  padding-right: max(16px, env(safe-area-inset-right));
+  padding-inline-start: max(16px, var(--safe-area-inline-start));
+  padding-inline-end: max(16px, var(--safe-area-inline-end));
   background: color-mix(in srgb, var(--game-ui-panel, #151b2b) 94%, transparent);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--game-ui-border-subtle, rgba(255, 255, 255, 0.12));

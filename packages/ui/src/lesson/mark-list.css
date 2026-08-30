@@ -21,7 +21,7 @@
 }
 
 .mark-list__item[data-kind="question"] {
-  border-left: 2px solid color-mix(in srgb, var(--game-ui-warning) 70%, transparent);
+  border-inline-start: 2px solid color-mix(in srgb, var(--game-ui-warning) 70%, transparent);
 }
 
 .mark-list__quote {
@@ -32,7 +32,7 @@
   background: none;
   color: inherit;
   font: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 

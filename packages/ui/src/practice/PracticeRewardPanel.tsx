@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import type { ReactNode } from "react";
 
 /*
@@ -5,7 +6,9 @@ import type { ReactNode } from "react";
   questions — today the 281 concept entries, tomorrow the lexicon — and copy
   that says 「术语」 is wrong on every screen except one.
 */
-export const PRACTICE_UNLOCK_HINT = "答对后展开完整内容";
+export const PRACTICE_UNLOCK_HINT = translate(
+  "ui.practice.practiceRewardPanel.copy.答对后展开完整内容",
+);
 
 /**
  * The right-hand reward of a sitting.
@@ -27,7 +30,11 @@ export function PracticeRewardPanel({
   return (
     <aside
       className={unlocked ? "practice-reward-panel" : "practice-reward-panel is-locked"}
-      aria-label={unlocked ? "完整内容" : "答对后展开的完整内容"}
+      aria-label={
+        unlocked
+          ? translate("ui.practice.practiceRewardPanel.copy.完整内容")
+          : translate("ui.practice.practiceRewardPanel.copy.答对后展开的完整内容")
+      }
     >
       {unlocked ? (
         <div className="practice-reward-panel__entry">{children}</div>

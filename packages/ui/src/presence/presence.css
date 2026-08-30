@@ -17,12 +17,13 @@
 .companion {
   position: absolute;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   display: flex;
   align-items: center;
   gap: 0.35rem;
   max-width: 12rem;
-  padding: 0.12rem 0.45rem 0.12rem 0.18rem;
+  padding-block: 0.12rem 0.12rem;
+  padding-inline: 0.18rem 0.45rem;
   border-radius: 999px;
   color: #f4f7fb;
   background: rgba(14, 24, 32, 0.78);
@@ -80,7 +81,7 @@
 .companion-cursor {
   position: absolute;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   display: flex;
   align-items: flex-start;
   gap: 0.15rem;

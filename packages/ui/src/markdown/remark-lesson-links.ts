@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import type { PhrasingContent, Root, RootContent, Text } from "mdast";
 import { visit } from "unist-util-visit";
 
@@ -287,7 +288,10 @@ export function remarkLessonLinks(options: { readonly ranges: readonly LessonLin
         }
         // The label if the author wrote one, otherwise the target's real title
         // — never the raw id, which means nothing to a reader.
-        const text = hit.label ?? hit.target?.title ?? "这一课还不存在";
+        const text =
+          hit.label ??
+          hit.target?.title ??
+          translate("ui.markdown.remarklessonlinks.copy.这一课还不存在");
         replacement.push({
           type: "lessonLink",
           value: text,

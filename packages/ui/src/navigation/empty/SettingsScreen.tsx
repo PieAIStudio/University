@@ -1,3 +1,4 @@
+import { translate } from "../../i18n/index.js";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { GameButton, GameToggle } from "@pieai/swimmer-ui-kit";
 import type {
@@ -56,11 +57,13 @@ export function SettingsScreen({
   }, [progress]);
   return (
     <div className="settings-screen">
-      <h1 className="settings-screen__title">偏好设置</h1>
+      <h1 className="settings-screen__title">
+        {translate("ui.navigation.empty.settingsScreen.copy.偏好设置")}
+      </h1>
       <ThemePreferenceControl progress={progress} />
       <section className="settings-screen__block" aria-labelledby="settings-sound">
         <h2 id="settings-sound" className="settings-screen__heading">
-          声音
+          {translate("ui.navigation.empty.settingsScreen.copy.声音")}
         </h2>
         <SoundToggle progress={progress} />
         <SpeechQualityControl progress={progress} />
@@ -69,7 +72,7 @@ export function SettingsScreen({
       {reminders ? <ReviewReminderSettings reminders={reminders} /> : null}
       <section className="settings-screen__block" aria-labelledby="settings-language">
         <h2 id="settings-language" className="settings-screen__heading">
-          语言层
+          {translate("ui.navigation.empty.settingsScreen.copy.语言层")}
         </h2>
         <ForeignSettingsPanel
           embedded
@@ -116,15 +119,22 @@ function ThemePreferenceControl({ progress }: { readonly progress?: ProgressPort
     () => false,
   );
   const resolved = resolvedThemeOf(theme, systemDark);
-  const resolvedLabel = resolved === "dark" ? "深色" : "浅色";
+  const resolvedLabel =
+    resolved === "dark"
+      ? translate("ui.navigation.empty.settingsScreen.copy.深色")
+      : translate("ui.navigation.empty.settingsScreen.copy.浅色");
 
   return (
     <section className="settings-screen__block" aria-labelledby="settings-theme">
       <h2 id="settings-theme" className="settings-screen__heading">
-        外观
+        {translate("ui.navigation.empty.settingsScreen.copy.外观")}
       </h2>
       <div className="theme-preference-control">
-        <div className="theme-preference-control__options" role="group" aria-label="主题">
+        <div
+          className="theme-preference-control__options"
+          role="group"
+          aria-label={translate("ui.navigation.empty.settingsScreen.copy.主题")}
+        >
           {THEME_PREFERENCE_OPTIONS.map((option) => (
             <GameButton
               key={option.id}
@@ -140,9 +150,17 @@ function ThemePreferenceControl({ progress }: { readonly progress?: ProgressPort
           ))}
         </div>
         <p className="settings-screen__hint">
-          当前生效：{resolvedLabel}。选择“跟随系统”后，会按设备的深色模式设置自动切换。
+          {translate("ui.navigation.empty.settingsScreen.copy.当前生效")}
+          {resolvedLabel}
+          {translate(
+            "ui.navigation.empty.settingsScreen.copy.选择-跟随系统-后-会按设备的深色模式设置自动切换",
+          )}
         </p>
-        <p className="settings-screen__hint">偏好会随学习者账号保存，在其他设备继续使用。</p>
+        <p className="settings-screen__hint">
+          {translate(
+            "ui.navigation.empty.settingsScreen.copy.偏好会随学习者账号保存-在其他设备继续使用",
+          )}
+        </p>
       </div>
     </section>
   );
@@ -180,7 +198,11 @@ function SpeechQualityControl({ progress }: { readonly progress?: ProgressPort }
 
   return (
     <div className="speech-quality-control">
-      <div className="speech-quality-control__options" role="group" aria-label="朗读语音质量">
+      <div
+        className="speech-quality-control__options"
+        role="group"
+        aria-label={translate("ui.navigation.empty.settingsScreen.copy.朗读语音质量")}
+      >
         {SPEECH_QUALITY_OPTIONS.map((option) => {
           const premium = option.id === "premium";
           return (
@@ -191,7 +213,13 @@ function SpeechQualityControl({ progress }: { readonly progress?: ProgressPort }
               variant={speechQuality === option.id ? "primary" : "secondary"}
               aria-pressed={speechQuality === option.id}
               disabled={premium}
-              title={premium ? "高品质语音暂未开放，钱包和付费权益尚未接入。" : undefined}
+              title={
+                premium
+                  ? translate(
+                      "ui.navigation.empty.settingsScreen.copy.高品质语音暂未开放-钱包和付费权益尚未接入",
+                    )
+                  : undefined
+              }
               onClick={() => {
                 if (!premium) choose(option.id);
               }}
@@ -203,12 +231,14 @@ function SpeechQualityControl({ progress }: { readonly progress?: ProgressPort }
       </div>
       <p className="settings-screen__hint">{explainSpeechResolution(resolution, availability)}</p>
       <p className="settings-screen__hint">
-        自动每次按高品质、在线、本机顺序选择当前能拿到的一档，不会把“自动”存成具体档位。
-        高品质语音暂未开放；钱包和付费权益接入后才会启用。
+        {translate(
+          "ui.navigation.empty.settingsScreen.copy.自动每次按高品质-在线-本机顺序选择当前能拿到的一档-不会把-自动-存成具体档位-高品质语音暂未开放-钱包和付费",
+        )}
       </p>
       <p className="settings-screen__hint">
-        在线语音只发送产品挑选的一个英文单词；学习者自己写的字、说的话和私有仓库内容不会因为打开朗读而外发。
-        学习者口述自己的理解要另行明确选择加入。
+        {translate(
+          "ui.navigation.empty.settingsScreen.copy.在线语音只发送产品挑选的一个英文单词-学习者自己写的字-说的话和私有仓库内容不会因为打开朗读而外发-学习者口述自",
+        )}
       </p>
     </div>
   );
@@ -230,11 +260,11 @@ function PresenceSettings({
   return (
     <section className="settings-screen__block" aria-labelledby="settings-presence">
       <h2 id="settings-presence" className="settings-screen__heading">
-        一起学
+        {translate("ui.navigation.empty.settingsScreen.copy.一起学")}
       </h2>
       <GameToggle
         checked={snapshot.sharesPresence}
-        label="让小组看到我在学什么"
+        label={translate("ui.navigation.empty.settingsScreen.copy.让小组看到我在学什么")}
         onClick={() => {
           const next = !snapshot.sharesPresence;
           presence.setSharesPresence(next);
@@ -249,7 +279,9 @@ function PresenceSettings({
         }}
       />
       <p className="settings-screen__hint">
-        关掉以后别人看不见你停在哪一关，也不会再发出你的光标。默认开，因为这是学习小组套餐的价值；被人看着学必须能拒绝。
+        {translate(
+          "ui.navigation.empty.settingsScreen.copy.关掉以后别人看不见你停在哪一关-也不会再发出你的光标-默认开-因为这是学习小组套餐的价值-被人看着学必须能拒绝",
+        )}
       </p>
     </section>
   );
@@ -258,17 +290,24 @@ function PresenceSettings({
 /** Right-column subnav, matching W6's stacked groups of destinations we have. */
 export function SettingsSubnav() {
   return (
-    <nav className="settings-subnav" aria-label="设置">
+    <nav
+      className="settings-subnav"
+      aria-label={translate("ui.navigation.empty.settingsScreen.copy.设置")}
+    >
       <section className="settings-subnav__group">
-        <p className="settings-subnav__label">帐户</p>
+        <p className="settings-subnav__label">
+          {translate("ui.navigation.empty.settingsScreen.copy.帐户")}
+        </p>
         <a href="/settings" aria-current="page">
-          偏好设置
+          {translate("ui.navigation.empty.settingsScreen.copy.偏好设置")}
         </a>
-        <a href="/me">个人档案</a>
+        <a href="/me">{translate("ui.navigation.empty.settingsScreen.copy.个人档案")}</a>
       </section>
       <section className="settings-subnav__group">
-        <p className="settings-subnav__label">订阅</p>
-        <a href="/plans">会员</a>
+        <p className="settings-subnav__label">
+          {translate("ui.navigation.empty.settingsScreen.copy.订阅")}
+        </p>
+        <a href="/plans">{translate("ui.navigation.empty.settingsScreen.copy.会员")}</a>
       </section>
     </nav>
   );

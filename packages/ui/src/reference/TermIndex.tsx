@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useMemo, useState } from "react";
 import {
   createLexiconIndex,
@@ -17,11 +18,13 @@ import { ReferencePanel, TermReferenceBody } from "./ReferencePanel.js";
  * still has a way in. Do not replace them with frontend-widget queries; that
  * is someone else's dictionary.
  */
-export const LEXICON_SEARCH_PLACEHOLDER = "试试「应用」「接口」「点开图标就能用」";
+export const LEXICON_SEARCH_PLACEHOLDER = translate(
+  "ui.reference.termIndex.copy.试试-应用-接口-点开图标就能用",
+);
 
 const TRACK_LABELS: Readonly<Record<LexiconTrack, string>> = {
-  technical: "技术用语",
-  general: "通用英语",
+  technical: translate("ui.reference.termIndex.copy.技术用语"),
+  general: translate("ui.reference.termIndex.copy.通用英语"),
 };
 
 type TrackFilter = "all" | LexiconTrack;
@@ -29,7 +32,7 @@ type TrackFilter = "all" | LexiconTrack;
 const CHIP_ORDER: readonly TrackFilter[] = ["all", "technical", "general"];
 
 function chipLabel(id: TrackFilter): string {
-  return id === "all" ? "全部" : TRACK_LABELS[id];
+  return id === "all" ? translate("ui.reference.termIndex.copy.全部") : TRACK_LABELS[id];
 }
 
 /**
@@ -95,8 +98,8 @@ export function TermIndex({
 
   return (
     <CollectionIndex
-      title="词义索引"
-      searchLabel="搜索词义"
+      title={translate("ui.reference.termIndex.copy.词义索引")}
+      searchLabel={translate("ui.reference.termIndex.copy.搜索词义")}
       placeholder={LEXICON_SEARCH_PLACEHOLDER}
       query={value}
       onQueryChange={setQuery}
@@ -116,11 +119,17 @@ export function TermIndex({
       }))}
       searched={searched}
       emptyMiss={{
-        title: `没有找到「${result.query}」相关的词义`,
-        description:
-          "可以搜英文词、中文释义，或直接描述你想说的那句话。例如「应用」「接口」「点开图标就能用」。词库会按你的说法去找对应的术语，不必先知道它叫什么。",
+        title: translate("ui.reference.termIndex.copy.没有找到-value0-相关的词义", {
+          value0: result.query,
+        }),
+        description: translate(
+          "ui.reference.termIndex.copy.可以搜英文词-中文释义-或直接描述你想说的那句话-例如-应用-接口-点开图标就能用-词库会按你的说法去找对应的术",
+        ),
       }}
-      emptyIdle={{ title: "还没有词义", description: "词库载入后会出现在这里。" }}
+      emptyIdle={{
+        title: translate("ui.reference.termIndex.copy.还没有词义"),
+        description: translate("ui.reference.termIndex.copy.词库载入后会出现在这里"),
+      }}
       onOpenHit={(id, trigger) => {
         const entry = byId.get(id);
         if (entry) openEntry(entry, trigger);
@@ -128,7 +137,7 @@ export function TermIndex({
     >
       <ReferencePanel
         open={open !== null}
-        title={open?.entry.headword ?? "词义"}
+        title={open?.entry.headword ?? translate("ui.reference.termIndex.copy.词义")}
         kind="term"
         trigger={open?.trigger ?? null}
         onClose={() => setOpen(null)}

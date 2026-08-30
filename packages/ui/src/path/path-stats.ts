@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { parseLessonLinks, tokenKind } from "@pieai/university-core/marks/references.js";
 
 export {
@@ -43,10 +44,10 @@ export interface PathUnit {
 /** Chinese prose on this product sits around this pace. Never below 1. */
 export const READING_CHARS_PER_MINUTE = 400;
 
-export const UNIT_ABILITY_LABEL = "学完这一单元，你能——";
-export const PREVIEW_UNIT_LABEL = "先看这一单元讲什么";
-export const START_UNIT_LABEL = "从第 1 节开始";
-export const UNIT_EVIDENCE_HEADING = "这一单元会带你读的真实代码";
+export const UNIT_ABILITY_LABEL = translate("ui.path.pathstats.copy.学完这一单元-你能");
+export const PREVIEW_UNIT_LABEL = translate("ui.path.pathstats.copy.先看这一单元讲什么");
+export const START_UNIT_LABEL = translate("ui.path.pathstats.copy.从第-1-节开始");
+export const UNIT_EVIDENCE_HEADING = translate("ui.path.pathstats.copy.这一单元会带你读的真实代码");
 
 export function readingMinutes(contentChars: number): number {
   return Math.max(1, Math.round(contentChars / READING_CHARS_PER_MINUTE));
@@ -78,7 +79,9 @@ export function unlockedConceptIds(content: string): readonly string[] {
  * and neither is a count the shelf could not take.
  */
 export function startButtonLabel(unlockCount: number | null): string {
-  return unlockCount !== null && unlockCount > 0 ? `开始 · 学完解锁 ${unlockCount} 个词条` : "开始";
+  return unlockCount !== null && unlockCount > 0
+    ? translate("ui.path.pathstats.copy.开始-学完解锁-value0-个词条", { value0: unlockCount })
+    : translate("ui.path.pathstats.copy.开始");
 }
 
 /**
@@ -89,8 +92,16 @@ export function startButtonLabel(unlockCount: number | null): string {
  * than a shorter card.
  */
 export function lessonCostLine(lesson: PathLesson): string {
-  const parts = [`读 ${readingMinutes(lesson.contentChars)} 分钟`, `${lesson.exerciseCount} 道题`];
-  if (lesson.evidenceCount !== null) parts.push(`${lesson.evidenceCount} 条真实代码引用`);
+  const parts = [
+    translate("ui.path.pathstats.copy.读-value0-分钟", {
+      value0: readingMinutes(lesson.contentChars),
+    }),
+    translate("ui.path.pathstats.copy.value0-道题", { value0: lesson.exerciseCount }),
+  ];
+  if (lesson.evidenceCount !== null)
+    parts.push(
+      translate("ui.path.pathstats.copy.value0-条真实代码引用", { value0: lesson.evidenceCount }),
+    );
   return parts.join(" · ");
 }
 
@@ -114,5 +125,8 @@ export function unitMinutes(lessons: readonly PathLesson[]): number {
 }
 
 export function unitMetaLine(lessons: readonly PathLesson[]): string {
-  return `${lessons.length} 节 · 约 ${unitMinutes(lessons)} 分钟`;
+  return translate("ui.path.pathstats.copy.value0-节-约-value1-分钟", {
+    value0: lessons.length,
+    value1: unitMinutes(lessons),
+  });
 }

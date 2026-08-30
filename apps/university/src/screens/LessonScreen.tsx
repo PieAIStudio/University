@@ -9,6 +9,7 @@
  * fetched a view over HTTP and one that folded a package, which is how the two
  * campuses came to disagree about what happens when a lesson is finished.
  */
+import { translate } from "@pieai/university-ui/i18n.js";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   courseShapeOf,
@@ -159,7 +160,11 @@ export function LessonScreen({
       .then((loaded) => setView({ key: requested, view: loaded }))
       .catch((reason: unknown) => {
         if (reason instanceof DOMException && reason.name === "AbortError") return;
-        setError(reason instanceof Error ? reason.message : "无法读取课程");
+        setError(
+          reason instanceof Error
+            ? reason.message
+            : translate("app.screens.lessonScreen.copy.无法读取课程"),
+        );
       });
     return () => controller.abort();
   }, [requested, reloads]);
@@ -270,20 +275,27 @@ export function LessonScreen({
   if (error) {
     return (
       <main className="reader">
-        <GameCallout heading="这节课打不开" tone="warning" role="alert">
+        <GameCallout
+          heading={translate("app.screens.lessonScreen.copy.这节课打不开")}
+          tone="warning"
+          role="alert"
+        >
           <p>{error}</p>
           <button type="button" className="text-button" onClick={() => setReloads((n) => n + 1)}>
-            重试这节课
+            {translate("app.screens.lessonScreen.copy.重试这节课")}
           </button>
           <button type="button" className="text-button" onClick={onBack}>
-            回到课程岛
+            {translate("app.screens.lessonScreen.copy.回到课程岛")}
           </button>
         </GameCallout>
       </main>
     );
   }
 
-  if (!overlaid) return <p className="loading-copy">正在打开这节课…</p>;
+  if (!overlaid)
+    return (
+      <p className="loading-copy">{translate("app.screens.lessonScreen.copy.正在打开这节课")}</p>
+    );
 
   return (
     <main className="reader">

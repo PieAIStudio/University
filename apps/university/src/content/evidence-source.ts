@@ -6,6 +6,7 @@
  * instead, the same split the screenshots already use, so that prefix does
  * not fit. The honest change is the same prop accepting a resolver.
  */
+import { translate } from "@pieai/university-ui/i18n.js";
 import type { EvidenceSnippetView } from "@pieai/university-ui";
 
 export type EvidenceSnippetResolver = (index: number) => Promise<EvidenceSnippetView>;
@@ -18,9 +19,14 @@ export function evidenceSourceOf(
   }
   return async (index) => {
     const url = evidence[index]?.snippetUrl;
-    if (!url) throw new Error("这条证据没有烘焙源码");
+    if (!url) throw new Error(translate("app.content.evidencesource.copy.这条证据没有烘焙源码"));
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`无法读取固定源码（${response.status}）`);
+    if (!response.ok)
+      throw new Error(
+        translate("app.content.evidencesource.copy.无法读取固定源码-value0", {
+          value0: response.status,
+        }),
+      );
     return (await response.json()) as EvidenceSnippetView;
   };
 }
