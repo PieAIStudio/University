@@ -50,19 +50,11 @@ import {
   resolveIslandSurfaceStyle,
 } from "../island/island-surface-style.js";
 import { islandThemeSelectionForCourse } from "../island/kenney-recipes.js";
-import { skyStopsForStudy } from "../Maps.js";
+import { skyStopsForStudy, WORLD_SKY_CONTRACT } from "../Maps.js";
+import { worldGridTargetForLessons } from "../grid/course-grid.js";
 import { WORLD_SUN, worldKeyToFillRatio, worldShadowFrustum } from "../sky/sun.js";
-import { ATMOSPHERE_ALTITUDE_RATIO, ATMOSPHERE_RADIUS } from "../planet/placement.js";
-import {
-  buildFloatingIslandGeometry,
-  buildPlanetGeometry,
-  PLANET_ICOSAHEDRON_DETAIL,
-  PLANET_LIGHTS,
-  PLANET_PALETTE,
-  PLANET_SPACE_PALETTE,
-  PLANET_FLOATING_CLUSTER_PROFILE_COUNT,
-} from "../planet/PlanetScene.js";
-import { studyClusterStyle } from "../planet/planet-copy.js";
+import { PLANET_CAMERA_POLAR, PLANET_CLUSTER_LAYOUT_CONTRACT } from "../planet/placement.js";
+import { PLANET_ATMOSPHERE } from "../planet/PlanetScene.js";
 
 import type {
   InspectorAsset,
@@ -84,6 +76,7 @@ export interface WorldLayerIsland {
 
 export interface DescribePlanetLayerOptions {
   readonly studyIds: readonly string[];
+  readonly courseCount?: number;
 }
 
 export interface DescribeWorldLayerOptions {
@@ -779,57 +772,31 @@ function worldBudget(
   };
 }
 
-function planetGeometry(studyIds: readonly string[]): {
-  readonly bodyTriangles: number;
-  readonly clusterTriangles: number;
+function planetGeometry(
+  studyIds: readonly string[],
+  courseCount = 0,
+): {
+  readonly terrainTriangles: number;
+  readonly focusTriangles: number;
 } {
-  const body = buildPlanetGeometry();
-  const bodyTriangles = geometryTriangles(body);
-  disposeGeometry(body);
-  let clusterTriangles = 0;
-  for (const studyId of studyIds) {
-    const cluster = buildFloatingIslandGeometry(studyClusterStyle(studyId));
-    clusterTriangles += geometryTriangles(cluster);
-    disposeGeometry(cluster);
-  }
-  return { bodyTriangles, clusterTriangles };
+  // Inspector callers only have the study list. The count is therefore an
+  // explicitly labelled estimate; browser evidence records the real GL
+  // counter. One world cell uses the same shared 18-triangle prism as Maps.
+  const estimatedCourses = Math.max(courseCount, studyIds.length);
+  return {
+    terrainTriangles: estimatedCourses * worldGridTargetForLessons(12) * 18,
+    focusTriangles: 64,
+  };
 }
 
 function planetTerrain(
   studyCount: number,
-  bodyTriangles: number,
+  courseCount: number,
+  terrainTriangles: number,
 ): InspectorLayerDescription["terrain"] {
   return {
-    generator: "buildPlanetGeometry → sphericalFbm terrain bands",
+    generator: "buildWorldCourseGrid → WorldHexField (shared instanced hex prism)",
     parameters: [
-      parameter(
-        "icosahedron-detail",
-        "球体细分等级",
-        PLANET_ICOSAHEDRON_DETAIL,
-        worldSource("planet/PlanetScene.tsx", "PLANET_ICOSAHEDRON_DETAIL"),
-        { unit: "subdivisions" },
-      ),
-      parameter(
-        "atmosphere-radius",
-        "浮岛大气层半径",
-        ATMOSPHERE_RADIUS,
-        worldSource("planet/placement.ts", "ATMOSPHERE_RADIUS"),
-        { unit: "× planet radius" },
-      ),
-      parameter(
-        "atmosphere-altitude-ratio",
-        "大气层高度比例",
-        ATMOSPHERE_ALTITUDE_RATIO,
-        worldSource("planet/placement.ts", "ATMOSPHERE_ALTITUDE_RATIO"),
-        { unit: "ratio" },
-      ),
-      parameter(
-        "cluster-profile-count",
-        "浮岛轮廓档位",
-        PLANET_FLOATING_CLUSTER_PROFILE_COUNT,
-        worldSource("planet/PlanetScene.tsx", "PLANET_FLOATING_CLUSTER_PROFILE_COUNT"),
-        { unit: "profiles" },
-      ),
       parameter(
         "study-count",
         "当前项目数",
@@ -838,65 +805,82 @@ function planetTerrain(
         { unit: "studies" },
       ),
       parameter(
-        "body-triangles",
-        "星球网格三角形",
-        bodyTriangles,
-        worldSource("planet/PlanetScene.tsx", "buildPlanetGeometry()"),
-        { unit: "tris" },
+        "course-count",
+        "真实课程数",
+        courseCount,
+        worldSource("planet/PlanetScene.tsx", "buildPlanetProjection()"),
+        { unit: "courses" },
+      ),
+      parameter(
+        "course-scale",
+        "共享课程网格比例",
+        PLANET_CLUSTER_LAYOUT_CONTRACT.courseScale,
+        worldSource("planet/placement.ts", "PLANET_CLUSTER_LAYOUT_CONTRACT.courseScale"),
+      ),
+      parameter(
+        "intra-cluster-gap",
+        "簇内最小间距",
+        PLANET_CLUSTER_LAYOUT_CONTRACT.intraClusterGap,
+        worldSource("planet/placement.ts", "PLANET_CLUSTER_LAYOUT_CONTRACT.intraClusterGap"),
+        { unit: "world units" },
+      ),
+      parameter(
+        "inter-cluster-gap",
+        "簇间最小间距",
+        PLANET_CLUSTER_LAYOUT_CONTRACT.interClusterGap,
+        worldSource("planet/placement.ts", "PLANET_CLUSTER_LAYOUT_CONTRACT.interClusterGap"),
+        { unit: "world units" },
+      ),
+      parameter(
+        "selected-lift",
+        "选中簇抬升",
+        PLANET_ATMOSPHERE.selectedLift,
+        worldSource("planet/PlanetScene.tsx", "PLANET_ATMOSPHERE.selectedLift"),
+        { unit: "world units" },
+      ),
+      parameter(
+        "camera-polar",
+        "高位相机角",
+        PLANET_CAMERA_POLAR,
+        worldSource("planet/placement.ts", "PLANET_CAMERA_POLAR"),
+        { unit: "radians" },
+      ),
+      parameter(
+        "terrain-triangles",
+        "共享地形估算三角形",
+        terrainTriangles,
+        worldSource("grid/WorldHexField.tsx", "HEX_GEOMETRY_TRIANGLES"),
+        { unit: "tris", note: "按每课 12 节代表性 world footprint 估算；真实值以浏览器计数为准。" },
       ),
     ],
     colors: [
       colorStop(
-        "deep-ocean",
-        "深海",
-        PLANET_PALETTE.deepOcean,
-        worldSource("planet/PlanetScene.tsx", "PLANET_PALETTE.deepOcean"),
+        "sky-zenith",
+        "天空顶",
+        skyStopsForStudy(null).zenith,
+        worldSource("Maps.tsx", "SKY_STOPS.zenith"),
       ),
       colorStop(
-        "ocean",
-        "海洋",
-        PLANET_PALETTE.ocean,
-        worldSource("planet/PlanetScene.tsx", "PLANET_PALETTE.ocean"),
+        "sky-mid",
+        "天空中部",
+        skyStopsForStudy(null).mid,
+        worldSource("Maps.tsx", "SKY_STOPS.mid"),
       ),
       colorStop(
-        "lagoon",
-        "浅海",
-        PLANET_PALETTE.lagoon,
-        worldSource("planet/PlanetScene.tsx", "PLANET_PALETTE.lagoon"),
+        "sky-horizon",
+        "天空地平线",
+        WORLD_SKY_CONTRACT.horizon,
+        worldSource("Maps.tsx", "WORLD_SKY_CONTRACT.horizon"),
       ),
       colorStop(
-        "beach",
-        "海岸",
-        PLANET_PALETTE.beach,
-        worldSource("planet/PlanetScene.tsx", "PLANET_PALETTE.beach"),
-      ),
-      colorStop(
-        "grass-low",
-        "低地",
-        PLANET_PALETTE.grassLow,
-        worldSource("planet/PlanetScene.tsx", "PLANET_PALETTE.grassLow"),
-      ),
-      colorStop(
-        "grass-high",
-        "高地",
-        PLANET_PALETTE.grassHigh,
-        worldSource("planet/PlanetScene.tsx", "PLANET_PALETTE.grassHigh"),
-      ),
-      colorStop(
-        "earth",
-        "大地",
-        PLANET_PALETTE.earth,
-        worldSource("planet/PlanetScene.tsx", "PLANET_PALETTE.earth"),
-      ),
-      colorStop(
-        "polar-ice",
-        "极地冰",
-        PLANET_PALETTE.polarIce,
-        worldSource("planet/PlanetScene.tsx", "PLANET_PALETTE.polarIce"),
+        "soil-cliff",
+        "共享崖土",
+        0x64594f,
+        worldSource("grid/grid-palette.ts", "GRID_SHARED_SOIL.cliff"),
       ),
     ],
-    geometryTriangles: bodyTriangles,
-    geometrySource: worldSource("planet/PlanetScene.tsx", "buildPlanetGeometry()"),
+    geometryTriangles: terrainTriangles,
+    geometrySource: worldSource("grid/WorldHexField.tsx", "WorldHexTerrain"),
   };
 }
 
@@ -905,94 +889,70 @@ function planetLighting(): InspectorLayerDescription["lighting"] {
     parameters: [
       parameter(
         "key-intensity",
-        "太阳光强",
-        PLANET_LIGHTS.keyIntensity,
-        worldSource("planet/PlanetScene.tsx", "PLANET_LIGHTS.keyIntensity"),
-        {
-          mutable: true,
-          previewKey: "keyLightIntensity",
-          note: "只改当前星球预览的第一盏方向光。",
-        },
+        "共享太阳光强",
+        WORLD_SUN.keyIntensity,
+        worldSource("sky/sun.ts", "WORLD_SUN.keyIntensity"),
       ),
       parameter(
         "ambient-intensity",
-        "环境光强",
-        PLANET_LIGHTS.ambientIntensity,
-        worldSource("planet/PlanetScene.tsx", "PLANET_LIGHTS.ambientIntensity"),
-        { mutable: true, previewKey: "ambientLightIntensity", note: "只改当前星球预览的环境光。" },
+        "共享环境光强",
+        WORLD_SUN.ambientIntensity,
+        worldSource("sky/sun.ts", "WORLD_SUN.ambientIntensity"),
       ),
       parameter(
         "hemisphere-intensity",
-        "半球光强",
-        PLANET_LIGHTS.hemisphereIntensity,
-        worldSource("planet/PlanetScene.tsx", "PLANET_LIGHTS.hemisphereIntensity"),
+        "共享半球光强",
+        WORLD_SUN.hemisphereIntensity,
+        worldSource("sky/sun.ts", "WORLD_SUN.hemisphereIntensity"),
       ),
       parameter(
-        "frontal-fill-intensity",
-        "正面补光",
-        PLANET_LIGHTS.frontalFillIntensity,
-        worldSource("planet/PlanetScene.tsx", "PLANET_LIGHTS.frontalFillIntensity"),
-      ),
-      parameter(
-        "night-rim-intensity",
-        "夜侧轮廓光",
-        PLANET_LIGHTS.nightRimIntensity,
-        worldSource("planet/PlanetScene.tsx", "PLANET_LIGHTS.nightRimIntensity"),
+        "atmosphere-fog-far",
+        "星球大气远端",
+        PLANET_ATMOSPHERE.fogFarRatio,
+        worldSource("planet/PlanetScene.tsx", "PLANET_ATMOSPHERE.fogFarRatio"),
+        { unit: "× weather extent" },
       ),
     ],
     colors: [
       colorStop(
-        "space-top",
-        "深空上部",
-        PLANET_SPACE_PALETTE.top,
-        worldSource("planet/PlanetScene.tsx", "PLANET_SPACE_PALETTE.top"),
-      ),
-      colorStop(
-        "space-mid",
-        "深空中部",
-        PLANET_SPACE_PALETTE.mid,
-        worldSource("planet/PlanetScene.tsx", "PLANET_SPACE_PALETTE.mid"),
-      ),
-      colorStop(
-        "space-low",
-        "深空下部",
-        PLANET_SPACE_PALETTE.low,
-        worldSource("planet/PlanetScene.tsx", "PLANET_SPACE_PALETTE.low"),
-      ),
-      colorStop(
         "key",
-        "主光色",
-        PLANET_LIGHTS.keyColor,
-        worldSource("planet/PlanetScene.tsx", "PLANET_LIGHTS.keyColor"),
+        "太阳光色",
+        WORLD_SUN.keyColor,
+        worldSource("sky/sun.ts", "WORLD_SUN.keyColor"),
       ),
       colorStop(
-        "ambient",
-        "环境光色",
-        PLANET_LIGHTS.ambientColor,
-        worldSource("planet/PlanetScene.tsx", "PLANET_LIGHTS.ambientColor"),
+        "hemisphere-ground",
+        "半球下方反弹",
+        WORLD_SUN.hemisphereGround,
+        worldSource("sky/sun.ts", "WORLD_SUN.hemisphereGround"),
+      ),
+      colorStop(
+        "fog",
+        "大气雾色",
+        WORLD_SKY_CONTRACT.fogColor,
+        worldSource("Maps.tsx", "WORLD_SKY_CONTRACT.fogColor"),
       ),
     ],
   };
 }
 
 function planetBudget(
-  bodyTriangles: number,
-  clusterTriangles: number,
+  terrainTriangles: number,
+  focusTriangles: number,
 ): InspectorLayerDescription["budget"] {
-  const actualTriangles = bodyTriangles + clusterTriangles;
+  const estimatedTriangles = terrainTriangles + focusTriangles;
   return {
-    // Planet has no independent triangle ceiling in ADR-0009; the generated
-    // geometry is therefore the honest current baseline shown to the author.
-    triangleBudget: actualTriangles,
-    actualTriangles,
+    triangleBudget: estimatedTriangles,
+    actualTriangles: null,
     budgetSource: projectSource(
       "docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md",
       "第三阶段：按屏幕像素分配预算",
     ),
-    basis: "行星视角优先保留项目身份与位置；这里显示当前生成量，暂无独立 triangle ceiling。",
+    basis:
+      "星球页复用远景 instanced hex field；静态摘要是估算，真实调用与三角形以同口径浏览器证据为准。",
     breakdown: [
-      { label: "星球主体", triangles: bodyTriangles },
-      { label: "项目浮岛群", triangles: clusterTriangles },
+      { label: "共享 world 地形（估算）", triangles: terrainTriangles },
+      { label: "选中簇焦点环", triangles: focusTriangles },
     ],
   };
 }
@@ -1009,19 +969,20 @@ function emptyDressing(note: string): InspectorLayerDescription["dressing"] {
 
 export function describePlanetLayer({
   studyIds,
+  courseCount = 0,
 }: DescribePlanetLayerOptions): InspectorLayerDescription {
-  const geometry = planetGeometry(studyIds);
+  const geometry = planetGeometry(studyIds, courseCount);
   return {
     id: "planet",
     title: "行星",
     projection: "研究项目选择器的行星投影",
     liveSource: worldSource("planet/PlanetScene.tsx", "PlanetStage → PlanetScene"),
-    terrain: planetTerrain(studyIds.length, geometry.bodyTriangles),
+    terrain: planetTerrain(studyIds.length, courseCount, geometry.terrainTriangles),
     dressing: emptyDressing(
-      "这一层没有从 island-asset-registry.ts 加载植被模型；项目标记是 PlanetScene 内的程序化浮岛群。",
+      "项目组复用 WorldPropField 的远景装饰；星球页只改变簇组合、相机与选中态，不另造一套资产。",
     ),
     lighting: planetLighting(),
-    budget: planetBudget(geometry.bodyTriangles, geometry.clusterTriangles),
+    budget: planetBudget(geometry.terrainTriangles, geometry.focusTriangles),
   };
 }
 

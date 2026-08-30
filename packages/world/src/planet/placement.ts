@@ -1,236 +1,284 @@
-/**
- * Where a study sits on the planet, and how the globe turns to show it.
- *
- * A picker marker is a control, not a geographic claim. It therefore uses a
- * count-aware layout: the current series are evenly spaced in one front-facing
- * spherical cap, so a learner can see every entry without hunting around the
- * back of the globe. The ids are sorted before slots are assigned, which keeps
- * the result independent of filesystem order.
- *
- * `planetPoints` remains the generic full-sphere packing for geometry tests and
- * future map uses. `pointForStudy` remains a deterministic single-id helper;
- * the picker itself uses `placeStudies`, because only the collection knows how
- * wide its visible cap needs to be.
- */
-
 import { hash } from "../island/random.js";
 
-export interface SpherePoint {
+/**
+ * The planet is a higher camera over the same world field, not a second
+ * spherical map. This contract owns only the 2D composition around that
+ * shared field: courses pack inside one study cluster, then study clusters
+ * pack into the catalogue.
+ */
+export const PLANET_CLUSTER_LAYOUT_CONTRACT = {
+  /** Empty air between two course silhouettes in one study cluster. */
+  intraClusterGap: 0.72,
+  /** Empty air between the outer silhouettes of two study clusters. */
+  interClusterGap: 2.4,
+  /** A nearest-neighbour sanity limit: clusters must remain one field. */
+  maxNearestClusterGap: 18,
+  /** Shared world grids keep their native scale; no planet-only resize. */
+  courseScale: 1,
+  /** Extra breathing room for both the desktop and narrow mobile frame. */
+  cameraPadding: 1.14,
+} as const;
+
+/** A map's measured local envelope, obtained from the shared world grid. */
+export interface PlanetCourseLayoutInput {
+  readonly studyId: string;
+  readonly courseId: string;
+  readonly halfX: number;
+  readonly halfZ: number;
+  readonly centerX?: number;
+  readonly centerZ?: number;
+}
+
+export interface PlanetStudyLayoutInput {
+  readonly studyId: string;
+  readonly courses: readonly PlanetCourseLayoutInput[];
+}
+
+export interface PlanetCoursePlacement {
+  readonly studyId: string;
+  readonly courseId: string;
+  /** World-grid origin, passed directly to `WorldGridIsland.position`. */
   readonly x: number;
-  readonly y: number;
   readonly z: number;
-  /** Azimuth around Y, radians. */
-  readonly theta: number;
-  /** Polar angle from +Y, radians. */
-  readonly phi: number;
+  /** Center of the measured map envelope in the final planet field. */
+  readonly centerX: number;
+  readonly centerZ: number;
+  readonly halfX: number;
+  readonly halfZ: number;
+  readonly radius: number;
+  readonly clusterIndex: number;
 }
 
-export interface YawPitch {
-  readonly yaw: number;
-  readonly pitch: number;
+export interface PlanetClusterPlacement {
+  readonly studyId: string;
+  readonly centerX: number;
+  readonly centerZ: number;
+  readonly radius: number;
+  readonly courseCount: number;
 }
 
-export const ATMOSPHERE_ALTITUDE_RATIO = 0.22;
-export const ATMOSPHERE_RADIUS = 1 + ATMOSPHERE_ALTITUDE_RATIO;
+export interface PlanetFieldBounds {
+  readonly minX: number;
+  readonly maxX: number;
+  readonly minZ: number;
+  readonly maxZ: number;
+  readonly halfX: number;
+  readonly halfZ: number;
+  readonly maxHalf: number;
+}
 
-export function toPoint(
-  x: number,
-  y: number,
-  z: number,
-  theta: number,
-  radius = ATMOSPHERE_RADIUS,
-): SpherePoint {
-  const length = Math.hypot(x, y, z) || 1;
-  const nx = (x / length) * radius;
-  const ny = (y / length) * radius;
-  const nz = (z / length) * radius;
-  return {
-    x: nx,
-    y: ny,
-    z: nz,
-    theta,
-    phi: Math.acos(Math.min(1, Math.max(-1, ny / radius))),
-  };
+export interface PlanetClusterLayout {
+  readonly clusters: readonly PlanetClusterPlacement[];
+  readonly courses: readonly PlanetCoursePlacement[];
+  readonly bounds: PlanetFieldBounds;
+}
+
+interface CircleItem {
+  readonly id: string;
+  readonly radius: number;
+}
+
+interface CirclePlacement {
+  readonly id: string;
+  readonly radius: number;
+  readonly x: number;
+  readonly z: number;
+}
+
+function safeRadius(value: number): number {
+  return Math.max(0.35, Number.isFinite(value) ? Math.abs(value) : 0.35);
+}
+
+function circleGap(left: CirclePlacement, right: CirclePlacement): number {
+  return Math.hypot(right.x - left.x, right.z - left.z) - left.radius - right.radius;
 }
 
 /**
- * FNV on its own is not an avalanche. `study-00` / `study-01` share a long
- * prefix, so their hashes walk a stripe, and forty numbered projects would
- * sit in one belt — overlapping even though the ids are distinct. A murmur
- * finalizer on the FNV bits jumps the whole range from a one-character
- * tail flip. We still start from `hash()` so the stream stays the same
- * FNV the islands already trust.
- */
-function unitFrom(id: string, salt: string): number {
-  const unit = hash(`${salt}:${id}`);
-  let bits = (unit * 0x100000000) >>> 0;
-  bits ^= bits >>> 16;
-  bits = Math.imul(bits, 0x85ebca6b);
-  bits ^= bits >>> 13;
-  bits = Math.imul(bits, 0xc2b2ae35);
-  bits ^= bits >>> 16;
-  return (bits >>> 0) / 0x100000000;
-}
-
-/**
- * Even packing of `count` points on the unit sphere.
+ * Deterministically pack circles from large to small.
  *
- * Offset samples (`i + 0.5`) so nothing lands on a pole. A point on the pole
- * is a marker sitting on top of another marker in screen space once the
- * globe tilts even slightly, which is the overlap the N=4 / N=40 tests exist
- * to refuse. `seed` only yaws the constellation — spacing is a property of
- * count, not of phase.
+ * The candidate rings are a tiny constraint solver rather than a random
+ * scatter. Every accepted candidate is checked against all earlier circles,
+ * so the returned gap is a property of the measured silhouettes. Hashes only
+ * choose among equal-looking angles; they never decide whether overlap is
+ * allowed.
  */
-export function planetPoints(count: number, seed = 0): readonly SpherePoint[] {
-  if (count <= 0) return [];
-  if (count === 1) {
-    return [toPoint(0, 1, 0, seed, 1)];
-  }
-  // Golden angle. `π(3 − √5)` is 2π/φ², the increment that never lines two
-  // samples up on the same meridian.
-  const golden = Math.PI * (3 - Math.sqrt(5));
-  return Array.from({ length: count }, (_, index) => {
-    const y = 1 - ((index + 0.5) / count) * 2;
-    const radius = Math.sqrt(Math.max(0, 1 - y * y));
-    const theta = golden * index + seed;
-    return toPoint(Math.cos(theta) * radius, y, Math.sin(theta) * radius, theta, 1);
-  });
-}
-
-const VISIBLE_CAP_POLAR = 0.42;
-
-function visiblePointAt(index: number, count: number, phase: number): SpherePoint {
-  if (count <= 1) return toPoint(0, 0, 1, phase);
-
-  /*
-    Four real series fit comfortably on one latitude ring. Keeping the ring
-    narrow matters more than maximising the sphere: when a learner selects one
-    item, the other pins should remain in the same camera-facing hemisphere.
-    More than six entries graduate to a golden-angle cap while staying below
-    the horizon (`polar < π/2`).
-  */
-  if (count <= 6) {
-    const theta = phase + (Math.PI * 2 * index) / count;
-    return toPoint(
-      Math.sin(VISIBLE_CAP_POLAR) * Math.cos(theta),
-      Math.sin(VISIBLE_CAP_POLAR) * Math.sin(theta),
-      Math.cos(VISIBLE_CAP_POLAR),
-      theta,
-    );
-  }
-
-  const golden = Math.PI * (3 - Math.sqrt(5));
-  const polar = 0.34 + 0.76 * Math.sqrt((index + 0.5) / count);
-  const theta = phase + golden * index;
-  return toPoint(
-    Math.sin(polar) * Math.cos(theta),
-    Math.sin(polar) * Math.sin(theta),
-    Math.cos(polar),
-    theta,
+function packCircles(
+  items: readonly CircleItem[],
+  gap: number,
+  seed: string,
+): readonly CirclePlacement[] {
+  const ordered = [...items].sort(
+    (left, right) => right.radius - left.radius || left.id.localeCompare(right.id),
   );
-}
+  const placed: CirclePlacement[] = [];
+  for (const item of ordered) {
+    if (placed.length === 0) {
+      placed.push({ ...item, x: 0, z: 0 });
+      continue;
+    }
 
-/**
- * One study, one deterministic point in the camera-facing cap. This helper is
- * intentionally independent of the collection; `placeStudies` is the API for
- * a real picker, because it can distribute a known number of studies without
- * overlap.
- *
- * Two hashes, not one: a single `[0,1)` used for both polar angle and azimuth
- * would put ids on a stripe. FNV on the two salted keys is the same trick
- * `seeded()` uses to get a stream out of one string.
- */
-export function pointForStudy(studyId: string, seed = ""): SpherePoint {
-  const key = seed ? `${seed}:${studyId}` : studyId;
-  const polar = 0.28 + unitFrom(key, "polar") * 0.58;
-  const theta = 2 * Math.PI * unitFrom(key, "azimuth");
-  return toPoint(
-    Math.sin(polar) * Math.cos(theta),
-    Math.sin(polar) * Math.sin(theta),
-    Math.cos(polar),
-    theta,
-  );
-}
-
-export function placeStudies(ids: readonly string[], seed = ""): ReadonlyMap<string, SpherePoint> {
-  const placed = new Map<string, SpherePoint>();
-  const ordered = [...new Set(ids)].sort((left, right) => left.localeCompare(right));
-  const phase = seed ? 2 * Math.PI * unitFrom(seed, "phase") : 0;
-  for (const [index, id] of ordered.entries()) {
-    placed.set(id, visiblePointAt(index, ordered.length, phase));
+    let best: CirclePlacement | null = null;
+    const phase = hash(`${seed}/${item.id}/phase`) * Math.PI * 2;
+    // The first valid point wins by radial distance. The bound is generous
+    // enough for a future catalogue, but finite so malformed input cannot
+    // hang the authoring preview.
+    for (let radial = 0; radial <= 160 && best === null; radial += 0.35) {
+      const sampleCount = radial < 0.01 ? 1 : 72;
+      for (let sample = 0; sample < sampleCount; sample += 1) {
+        const angle =
+          radial < 0.01 ? 0 : phase + (sample / sampleCount) * Math.PI * 2 + (sample % 2) * 0.012;
+        const candidate = {
+          ...item,
+          x: Math.cos(angle) * radial,
+          z: Math.sin(angle) * radial,
+        };
+        if (placed.every((other) => circleGap(candidate, other) >= gap - 1e-8)) {
+          best = candidate;
+          break;
+        }
+      }
+    }
+    if (!best) {
+      throw new RangeError(`Planet circle layout exhausted while placing ${item.id}`);
+    }
+    placed.push(best);
   }
   return placed;
 }
 
-/**
- * Apply `rotationFor` the way a default three.js `Object3D` does: order
- * XYZ, so pitch (X) then yaw (Y), never roll. Kept here so the test and
- * the scene cannot drift onto different Euler orders — YXZ was the first
- * draft and it left a residual X on a point that should have faced +Z.
- */
-export function applyYawPitch(
-  point: Pick<SpherePoint, "x" | "y" | "z">,
-  yaw: number,
-  pitch: number,
-): { readonly x: number; readonly y: number; readonly z: number } {
-  const cosX = Math.cos(pitch);
-  const sinX = Math.sin(pitch);
-  const y1 = cosX * point.y - sinX * point.z;
-  const z1 = sinX * point.y + cosX * point.z;
-  const cosY = Math.cos(yaw);
-  const sinY = Math.sin(yaw);
-  return {
-    x: cosY * point.x + sinY * z1,
-    y: y1,
-    z: -sinY * point.x + cosY * z1,
-  };
+function recenterCircles(circles: readonly CirclePlacement[]): readonly CirclePlacement[] {
+  if (circles.length === 0) return [];
+  const minX = Math.min(...circles.map((circle) => circle.x - circle.radius));
+  const maxX = Math.max(...circles.map((circle) => circle.x + circle.radius));
+  const minZ = Math.min(...circles.map((circle) => circle.z - circle.radius));
+  const maxZ = Math.max(...circles.map((circle) => circle.z + circle.radius));
+  const shiftX = (minX + maxX) * 0.5;
+  const shiftZ = (minZ + maxZ) * 0.5;
+  return circles.map((circle) => ({ ...circle, x: circle.x - shiftX, z: circle.z - shiftZ }));
+}
+
+function inputRadius(course: PlanetCourseLayoutInput): number {
+  return Math.max(safeRadius(course.halfX), safeRadius(course.halfZ));
+}
+
+function fieldBounds(courses: readonly PlanetCoursePlacement[]): PlanetFieldBounds {
+  if (courses.length === 0) {
+    return { minX: 0, maxX: 0, minZ: 0, maxZ: 0, halfX: 0, halfZ: 0, maxHalf: 0 };
+  }
+  const minX = Math.min(...courses.map((course) => course.centerX - course.halfX));
+  const maxX = Math.max(...courses.map((course) => course.centerX + course.halfX));
+  const minZ = Math.min(...courses.map((course) => course.centerZ - course.halfZ));
+  const maxZ = Math.max(...courses.map((course) => course.centerZ + course.halfZ));
+  const halfX = Math.max(Math.abs(minX), Math.abs(maxX));
+  const halfZ = Math.max(Math.abs(minZ), Math.abs(maxZ));
+  return { minX, maxX, minZ, maxZ, halfX, halfZ, maxHalf: Math.max(halfX, halfZ) };
 }
 
 /**
- * Globe rotation that puts `point` on +Z.
+ * Place the measured course maps into stable study clusters.
  *
- * PlanetStage sits the camera near +Z looking at the origin, so +Z is "in
- * the learner's face". Pitch around X until the point is in the XZ plane,
- * then yaw around Y until it sits on +Z. No roll: a rolled globe dumps
- * the north pole into the side of the frame and the sea no longer reads
- * as a planet.
+ * Study and course ids are the only ordering inputs. The caller may hand in a
+ * filesystem order, a published-package order, or a selected study first;
+ * none of those changes the visual origin. Selection is therefore a render
+ * state (lift/brightness/focus), never a layout input.
  */
-export function rotationFor(point: Pick<SpherePoint, "x" | "y" | "z">): YawPitch {
-  const pitch = Math.atan2(point.y, point.z);
-  const cosX = Math.cos(pitch);
-  const sinX = Math.sin(pitch);
-  const z1 = sinX * point.y + cosX * point.z;
-  const yaw = -Math.atan2(point.x, z1);
-  return { yaw, pitch };
+export function placePlanetClusters(
+  studies: readonly PlanetStudyLayoutInput[],
+): PlanetClusterLayout {
+  const studyInputs = [...studies]
+    .map((study) => ({
+      studyId: study.studyId,
+      courses: [...study.courses].sort((left, right) =>
+        left.courseId.localeCompare(right.courseId),
+      ),
+    }))
+    .sort((left, right) => left.studyId.localeCompare(right.studyId));
+
+  const localByStudy = new Map<string, readonly CirclePlacement[]>();
+  const courseByStudy = new Map<string, readonly PlanetCourseLayoutInput[]>();
+  const clusterItems: CircleItem[] = [];
+
+  for (const study of studyInputs) {
+    const courses = study.courses;
+    courseByStudy.set(study.studyId, courses);
+    const packed = recenterCircles(
+      packCircles(
+        courses.map((course) => ({ id: course.courseId, radius: inputRadius(course) })),
+        PLANET_CLUSTER_LAYOUT_CONTRACT.intraClusterGap,
+        `planet/course/${study.studyId}`,
+      ),
+    );
+    localByStudy.set(study.studyId, packed);
+    const radius = packed.reduce(
+      (largest, circle) => Math.max(largest, Math.hypot(circle.x, circle.z) + circle.radius),
+      0,
+    );
+    clusterItems.push({ id: study.studyId, radius });
+  }
+
+  const packedClusters = recenterCircles(
+    packCircles(clusterItems, PLANET_CLUSTER_LAYOUT_CONTRACT.interClusterGap, "planet/study"),
+  );
+  const clusterIndexByStudy = new Map(
+    studyInputs.map((study, index) => [study.studyId, index] as const),
+  );
+  const clusterByStudy = new Map(packedClusters.map((cluster) => [cluster.id, cluster]));
+
+  const clusters = studyInputs.map((study) => {
+    const circle = clusterByStudy.get(study.studyId)!;
+    return {
+      studyId: study.studyId,
+      centerX: circle.x,
+      centerZ: circle.z,
+      radius: circle.radius,
+      courseCount: study.courses.length,
+    };
+  });
+
+  const courses: PlanetCoursePlacement[] = [];
+  for (const study of studyInputs) {
+    const cluster = clusterByStudy.get(study.studyId)!;
+    const local = new Map(localByStudy.get(study.studyId)!.map((circle) => [circle.id, circle]));
+    for (const course of courseByStudy.get(study.studyId)!) {
+      const circle = local.get(course.courseId)!;
+      const mapCenterX = course.centerX ?? 0;
+      const mapCenterZ = course.centerZ ?? 0;
+      const centerX = cluster.x + circle.x;
+      const centerZ = cluster.z + circle.z;
+      courses.push({
+        studyId: study.studyId,
+        courseId: course.courseId,
+        x: centerX - mapCenterX,
+        z: centerZ - mapCenterZ,
+        centerX,
+        centerZ,
+        halfX: safeRadius(course.halfX),
+        halfZ: safeRadius(course.halfZ),
+        radius: circle.radius,
+        clusterIndex: clusterIndexByStudy.get(study.studyId)!,
+      });
+    }
+  }
+
+  return { clusters, courses, bounds: fieldBounds(courses) };
 }
+
+export const PLANET_CAMERA_POLAR = 0.8377580409572781; // 48° from +Y, higher than the world shot.
 
 /**
- * Frame-rate independent approach. This is `THREE.MathUtils.damp` written
- * out so the stepper can live next to the packing and stay three-free:
- * `lerp(a, b, 1 - exp(-lambda * dt))`. A fixed-factor lerp is faster on a
- * 120 Hz screen than on a 60 Hz one; the globe would then take a different
- * number of turns to arrive, which is a lie about where the island is.
+ * Fit the whole field in both axes. A circular bound is conservative for the
+ * oblique camera, which is preferable to cropping a real course silhouette on
+ * a narrow phone viewport.
  */
-export function dampValue(current: number, target: number, lambda: number, dt: number): number {
-  return current + (target - current) * (1 - Math.exp(-lambda * dt));
-}
-
-export function stepRotation(
-  current: YawPitch,
-  target: YawPitch,
-  dt: number,
-  reducedMotion: boolean,
-  lambda = 5.5,
-): YawPitch {
-  if (reducedMotion || dt <= 0) return { yaw: target.yaw, pitch: target.pitch };
-  // Shortest-arc yaw. Without this, selecting a study just the other side of
-  // ±π sends the globe the long way around and the island the learner picked
-  // disappears behind the horizon for a full spin.
-  const yawTarget =
-    current.yaw +
-    Math.atan2(Math.sin(target.yaw - current.yaw), Math.cos(target.yaw - current.yaw));
-  return {
-    yaw: dampValue(current.yaw, yawTarget, lambda, dt),
-    pitch: dampValue(current.pitch, target.pitch, lambda, dt),
-  };
+export function planetCameraDistance(
+  bounds: Pick<PlanetFieldBounds, "halfX" | "halfZ">,
+  aspect: number,
+  fovDegrees: number,
+): number {
+  const safeAspect = Math.max(0.05, Number.isFinite(aspect) ? aspect : 1);
+  const halfVertical = (Math.max(1, fovDegrees) * Math.PI) / 360;
+  const halfHorizontal = Math.atan(Math.tan(halfVertical) * safeAspect);
+  const halfFov = Math.max(0.01, Math.min(halfVertical, halfHorizontal));
+  const radius = Math.max(1, Math.hypot(Math.abs(bounds.halfX), Math.abs(bounds.halfZ)));
+  return (radius * PLANET_CLUSTER_LAYOUT_CONTRACT.cameraPadding) / Math.tan(halfFov);
 }

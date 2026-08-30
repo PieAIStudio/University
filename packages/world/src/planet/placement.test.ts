@@ -1,154 +1,135 @@
+import imported from "../../../../apps/university/src/content/imported.json";
 import { describe, expect, it } from "vitest";
-import * as THREE from "three";
 
+import { buildWorldCourseGrid } from "../Maps.js";
 import {
-  ATMOSPHERE_RADIUS,
-  applyYawPitch,
-  placeStudies,
-  planetPoints,
-  pointForStudy,
-  rotationFor,
-  stepRotation,
-  type SpherePoint,
+  PLANET_CLUSTER_LAYOUT_CONTRACT,
+  placePlanetClusters,
+  planetCameraDistance,
+  type PlanetStudyLayoutInput,
 } from "./placement.js";
 
-function angularGap(left: SpherePoint, right: SpherePoint): number {
-  const lengthProduct = unitLength(left) * unitLength(right) || 1;
-  const dot = (left.x * right.x + left.y * right.y + left.z * right.z) / lengthProduct;
-  return Math.acos(Math.min(1, Math.max(-1, dot)));
+function realStudyInputs(): PlanetStudyLayoutInput[] {
+  return imported.studies.map((study) => ({
+    studyId: study.studyId,
+    courses: study.courses.map((course, index) => {
+      const map = buildWorldCourseGrid({
+        courseId: course.courseId,
+        title: course.title,
+        lessons: course.lessons,
+        studyId: study.studyId,
+        studyTitle: study.title,
+        depth: index,
+        prerequisiteCourseIds: [],
+        trackId: null,
+      });
+      return {
+        studyId: study.studyId,
+        courseId: course.courseId,
+        halfX: map.bounds.halfX,
+        halfZ: map.bounds.halfZ,
+        centerX: (map.bounds.minX + map.bounds.maxX) * 0.5,
+        centerZ: (map.bounds.minZ + map.bounds.maxZ) * 0.5,
+      };
+    }),
+  }));
 }
 
-function minGap(points: readonly SpherePoint[]): number {
-  let min = Infinity;
-  for (let i = 0; i < points.length; i += 1) {
-    for (let j = i + 1; j < points.length; j += 1) {
-      min = Math.min(min, angularGap(points[i]!, points[j]!));
-    }
-  }
-  return min;
+function courseGap(
+  left: { readonly centerX: number; readonly centerZ: number; readonly radius: number },
+  right: { readonly centerX: number; readonly centerZ: number; readonly radius: number },
+): number {
+  return (
+    Math.hypot(right.centerX - left.centerX, right.centerZ - left.centerZ) -
+    left.radius -
+    right.radius
+  );
 }
 
-function unitLength(point: SpherePoint): number {
-  return Math.hypot(point.x, point.y, point.z);
+function clusterGap(
+  left: { readonly centerX: number; readonly centerZ: number; readonly radius: number },
+  right: { readonly centerX: number; readonly centerZ: number; readonly radius: number },
+): number {
+  return (
+    Math.hypot(right.centerX - left.centerX, right.centerZ - left.centerZ) -
+    left.radius -
+    right.radius
+  );
 }
 
-const FOUR = ["turing-pact", "buzz", "supaluv", "university-local"] as const;
-const FORTY = Array.from(
-  { length: 40 },
-  (_, index) => `study-${index.toString().padStart(2, "0")}`,
-);
+describe("placePlanetClusters", () => {
+  it("uses the real imported catalogue: five study clusters and 53 course maps", () => {
+    const layout = placePlanetClusters(realStudyInputs());
 
-describe("planetPoints", () => {
-  it("puts N=4 and N=40 on the unit sphere without overlapping", () => {
-    for (const count of [4, 40]) {
-      const points = planetPoints(count);
-      expect(points).toHaveLength(count);
-      expect(points.every((point) => Math.abs(unitLength(point) - 1) < 1e-10)).toBe(true);
-      // A marker of radius 0.04 occupies ~0.08 rad; stay well above that so
-      // two islands never share a pixel even at N=40.
-      expect(minGap(points)).toBeGreaterThan(count === 4 ? 0.9 : 0.18);
+    expect(layout.clusters).toHaveLength(5);
+    expect(layout.courses).toHaveLength(53);
+    expect(layout.clusters.reduce((sum, cluster) => sum + cluster.courseCount, 0)).toBe(53);
+    expect(layout.bounds.maxHalf).toBeGreaterThan(0);
+  });
+
+  it("keeps every course silhouette separated inside its study cluster", () => {
+    const layout = placePlanetClusters(realStudyInputs());
+    for (const studyId of layout.clusters.map((cluster) => cluster.studyId)) {
+      const courses = layout.courses.filter((course) => course.studyId === studyId);
+      for (let left = 0; left < courses.length; left += 1) {
+        for (let right = left + 1; right < courses.length; right += 1) {
+          expect(courseGap(courses[left]!, courses[right]!)).toBeGreaterThanOrEqual(
+            PLANET_CLUSTER_LAYOUT_CONTRACT.intraClusterGap - 1e-6,
+          );
+        }
+      }
     }
   });
 
-  it("is deterministic for a given count and seed, and the seed only yaws the set", () => {
-    expect(planetPoints(8, 0.4)).toEqual(planetPoints(8, 0.4));
-    const a = planetPoints(8, 0);
-    const b = planetPoints(8, 0.7);
-    // Renormalisation after the yaw shifts y by an ulp; the latitude is the
-    // same packing, not a new one.
-    a.forEach((point, index) => expect(point.y).toBeCloseTo(b[index]!.y, 12));
-    expect(a[3]!.theta).not.toBe(b[3]!.theta);
+  it("keeps study clusters apart but close enough to read as one catalogue", () => {
+    const layout = placePlanetClusters(realStudyInputs());
+    const nearestGaps = layout.clusters.map((cluster, index) =>
+      Math.min(
+        ...layout.clusters
+          .filter((_, otherIndex) => otherIndex !== index)
+          .map((other) => clusterGap(cluster, other)),
+      ),
+    );
+
+    expect(Math.min(...nearestGaps)).toBeGreaterThanOrEqual(
+      PLANET_CLUSTER_LAYOUT_CONTRACT.interClusterGap - 1e-6,
+    );
+    expect(Math.max(...nearestGaps)).toBeLessThanOrEqual(
+      PLANET_CLUSTER_LAYOUT_CONTRACT.maxNearestClusterGap,
+    );
+  });
+
+  it("does not retarget the layout origin when catalogue order or selection changes", () => {
+    const input = realStudyInputs();
+    const shuffled = [...input].reverse().map((study) => ({
+      ...study,
+      courses: [...study.courses].reverse(),
+    }));
+    const forward = placePlanetClusters(input);
+    const reversed = placePlanetClusters(shuffled);
+
+    expect(reversed).toEqual(forward);
+    // Selection is intentionally absent from the pure layout API. This is the
+    // regression guard for the old pointer-to-origin retargeting bug.
+    expect(placePlanetClusters(input)).toEqual(forward);
   });
 });
 
-describe("pointForStudy / placeStudies", () => {
-  it("keeps the single-id helper deterministic and the picker points in front", () => {
-    expect(pointForStudy("buzz")).toEqual(pointForStudy("buzz"));
-    expect(pointForStudy("buzz").z).toBeGreaterThan(0.6);
-    expect(placeStudies(FOUR).get("buzz")?.z).toBeGreaterThan(0.9);
-  });
-
-  it("reflows a collection into a separated front-facing ring as it grows", () => {
-    const five = [...placeStudies([...FOUR, "aigc-studio"]).values()];
-    expect(five.every((point) => point.z > 0.9)).toBe(true);
-    expect(minGap(five)).toBeGreaterThan(0.35);
-  });
-
-  it("does not key placement to array index: shuffling the input keeps the map", () => {
-    const forward = placeStudies(FOUR);
-    const reversed = placeStudies([...FOUR].reverse());
-    for (const id of FOUR) {
-      expect(reversed.get(id)).toEqual(forward.get(id));
-    }
-  });
-
-  it("keeps N=4 real ids and N=40 generated ids from sitting on top of each other in the atmosphere", () => {
-    const four = [...placeStudies(FOUR).values()];
-    const forty = [...placeStudies(FORTY).values()];
-    expect(four.every((point) => Math.abs(unitLength(point) - ATMOSPHERE_RADIUS) < 1e-10)).toBe(
-      true,
-    );
-    expect(forty.every((point) => Math.abs(unitLength(point) - ATMOSPHERE_RADIUS) < 1e-10)).toBe(
-      true,
-    );
-    // Four real ids use a narrow front-facing ring; generated ids use the
-    // larger cap but stay above the horizon so every entry remains findable.
-    expect(four.every((point) => point.z > 0.9 * ATMOSPHERE_RADIUS)).toBe(true);
-    expect(forty.every((point) => point.z > 0.4 * ATMOSPHERE_RADIUS)).toBe(true);
-    expect(minGap(four)).toBeGreaterThan(0.35);
-    expect(minGap(forty)).toBeGreaterThan(0.02);
-  });
-});
-
-describe("rotationFor", () => {
-  it("turns a study point to face +Z, which is where PlanetStage sits the camera", () => {
-    for (const id of [...FOUR, ...FORTY.slice(0, 8)]) {
-      const point = pointForStudy(id);
-      const { yaw, pitch } = rotationFor(point);
-      const facing = applyYawPitch(point, yaw, pitch);
-      expect(facing.x).toBeCloseTo(0, 5);
-      expect(facing.y).toBeCloseTo(0, 5);
-      expect(facing.z).toBeCloseTo(ATMOSPHERE_RADIUS, 5);
-      // Nested groups, not a single Euler: inner pitch, outer yaw. A
-      // default XYZ Euler on one object was 2.5° off and would have left
-      // the island beside the camera rather than on it.
-      const inner = new THREE.Group();
-      inner.rotation.x = pitch;
-      const outer = new THREE.Group();
-      outer.rotation.y = yaw;
-      outer.add(inner);
-      outer.updateMatrixWorld(true);
-      const throughThree = new THREE.Vector3(point.x, point.y, point.z).applyMatrix4(
-        inner.matrixWorld,
+describe("planetCameraDistance", () => {
+  it("fits the measured bounds in both desktop and narrow mobile frames", () => {
+    const bounds = placePlanetClusters(realStudyInputs()).bounds;
+    for (const [aspect, fov] of [
+      [1440 / 810, 34],
+      [390 / 844, 42],
+    ] as const) {
+      const distance = planetCameraDistance(bounds, aspect, fov);
+      const halfVertical = (fov * Math.PI) / 360;
+      const halfHorizontal = Math.atan(Math.tan(halfVertical) * aspect);
+      const visibleRadius = distance * Math.tan(Math.min(halfVertical, halfHorizontal));
+      expect(visibleRadius).toBeGreaterThanOrEqual(
+        Math.hypot(bounds.halfX, bounds.halfZ) * PLANET_CLUSTER_LAYOUT_CONTRACT.cameraPadding -
+          1e-6,
       );
-      expect(throughThree.x).toBeCloseTo(0, 5);
-      expect(throughThree.y).toBeCloseTo(0, 5);
-      expect(throughThree.z).toBeCloseTo(ATMOSPHERE_RADIUS, 5);
     }
-  });
-});
-
-describe("stepRotation", () => {
-  it("snaps when the learner asked for reduced motion, and damps otherwise", () => {
-    const current = { yaw: 0, pitch: 0 };
-    const target = { yaw: 1, pitch: -0.4 };
-    expect(stepRotation(current, target, 1 / 60, true)).toEqual(target);
-    const stepped = stepRotation(current, target, 1 / 60, false, 5.5);
-    expect(stepped.yaw).toBeGreaterThan(0);
-    expect(stepped.yaw).toBeLessThan(target.yaw);
-    expect(stepped.pitch).toBeLessThan(0);
-    expect(stepped.pitch).toBeGreaterThan(target.pitch);
-  });
-
-  it("takes the short way around the yaw wrap, so the globe does not spin the long way", () => {
-    const stepped = stepRotation(
-      { yaw: 3.1, pitch: 0 },
-      { yaw: -3.1, pitch: 0 },
-      1 / 60,
-      false,
-      5.5,
-    );
-    // 3.1 → -3.1 is a tiny step across ±π, not a trip through 0.
-    expect(Math.abs(stepped.yaw - 3.1)).toBeLessThan(0.2);
   });
 });

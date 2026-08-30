@@ -349,6 +349,34 @@ export function nextCourse(
  */
 export type WorldPlacementScope = "study" | "catalogue";
 
+/**
+ * Build the one remote silhouette used by the catalogue and the planet.
+ *
+ * A planet course is still a world course: its cells, palette, height breaks
+ * and footprint come from the same projection as the catalogue. Keeping this
+ * helper beside `placeWorld` makes it impossible for the picker to quietly
+ * grow a second island generator.
+ */
+export function buildWorldCourseGrid(node: CourseNode, state: "done" | "idle" = "idle"): HexMap {
+  const lookSeed = islandLookSeedForCourse(node.courseId);
+  return buildCourseGrid({
+    studyId: node.studyId,
+    courseId: node.courseId,
+    seed: lookSeed ?? `${node.studyId}/${node.courseId}`,
+    activeLessonIndex: -1,
+    projection: "world",
+    footprintLessons: node.lessons,
+    lessons: [
+      {
+        lessonId: `${node.courseId}/world-anchor`,
+        unitId: `${node.courseId}/world-unit`,
+        unitIndex: 0,
+        state,
+      },
+    ],
+  });
+}
+
 function orderedStudyNodes(nodes: readonly CourseNode[], studyId: string): CourseNode[] {
   const own = nodes.filter((node) => node.studyId === studyId);
   const spine = spineOf(studyId).map((entry) => entry.courseId);
@@ -405,31 +433,34 @@ export function placeWorld(
             themeSelection: islandThemeSelectionForCourse(node.studyId, node.courseId),
           });
     const blueprint = geometry ? projectIslandBlueprint(geometry) : null;
-    const grid = buildCourseGrid({
-      studyId: node.studyId,
-      courseId: node.courseId,
-      seed: blueprint?.seed ?? lookSeed ?? `${node.studyId}/${node.courseId}`,
-      routeArchetype: blueprint?.route.archetype,
-      routeAnchors: blueprint?.geometryNodes,
-      activeLessonIndex: -1,
-      projection: "world",
-      footprintLessons: node.lessons,
-      lessons: blueprint
-        ? blueprint.nodes.map((routeNode) => ({
-            lessonId: routeNode.id,
-            unitId: routeNode.unitId,
-            unitIndex: routeNode.unitIndex,
-            state: baseState === "done" ? ("done" as const) : ("idle" as const),
-          }))
-        : [
-            {
-              lessonId: `${node.courseId}/world-anchor`,
-              unitId: `${node.courseId}/world-unit`,
-              unitIndex: 0,
-              state: baseState === "done" ? ("done" as const) : ("idle" as const),
-            },
-          ],
-    });
+    const grid =
+      scope === "catalogue"
+        ? buildWorldCourseGrid(node, baseState === "done" ? "done" : "idle")
+        : buildCourseGrid({
+            studyId: node.studyId,
+            courseId: node.courseId,
+            seed: blueprint?.seed ?? lookSeed ?? `${node.studyId}/${node.courseId}`,
+            routeArchetype: blueprint?.route.archetype,
+            routeAnchors: blueprint?.geometryNodes,
+            activeLessonIndex: -1,
+            projection: "world",
+            footprintLessons: node.lessons,
+            lessons: blueprint
+              ? blueprint.nodes.map((routeNode) => ({
+                  lessonId: routeNode.id,
+                  unitId: routeNode.unitId,
+                  unitIndex: routeNode.unitIndex,
+                  state: baseState === "done" ? ("done" as const) : ("idle" as const),
+                }))
+              : [
+                  {
+                    lessonId: `${node.courseId}/world-anchor`,
+                    unitId: `${node.courseId}/world-unit`,
+                    unitIndex: 0,
+                    state: baseState === "done" ? ("done" as const) : ("idle" as const),
+                  },
+                ],
+          });
     placements.push({
       node,
       position: new THREE.Vector3(local.x, 0, local.z),
@@ -648,7 +679,7 @@ function LearnerMarker({
 }
 
 /** Sky, sun and cloud deck. Shared by both map levels so they feel like one world. */
-function Weather({
+export function Weather({
   extent,
   fog,
   fogColor,
@@ -745,13 +776,13 @@ function Weather({
         position={[-sunPosition[0] * 0.82, shadow.lightDistance * 0.44, -sunPosition[2] * 0.82]}
         intensity={0.78}
       />
-      <Suspense
-        fallback={
-          <AerialWorldPlateFallback extent={extent} level={cloudLevel} visible={includeSea} />
-        }
-      >
-        <AerialWorldPlate extent={extent} level={cloudLevel} visible={includeSea} />
-      </Suspense>
+      {includeSea ? (
+        <Suspense
+          fallback={<AerialWorldPlateFallback extent={extent} level={cloudLevel} visible />}
+        >
+          <AerialWorldPlate extent={extent} level={cloudLevel} visible />
+        </Suspense>
+      ) : null}
       {includeSea ? <DeepSea extent={extent} level={cloudLevel} /> : null}
       {includeDistantGround ? <DistantGround extent={extent} level={cloudLevel} /> : null}
       {includeCloudSea ? (

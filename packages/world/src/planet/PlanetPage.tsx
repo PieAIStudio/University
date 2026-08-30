@@ -28,11 +28,12 @@ import {
   studyMarkerColor,
   studyPercent,
   studyStage,
+  type PlanetCourse,
   type PlanetStudy,
 } from "./planet-copy.js";
 import "./planet-page.css";
 
-export type { PlanetStudy };
+export type { PlanetCourse, PlanetStudy };
 
 export interface PlanetPageProps {
   readonly studies: readonly PlanetStudy[];

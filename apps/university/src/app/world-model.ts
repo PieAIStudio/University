@@ -149,6 +149,12 @@ export function useWorldModel({
           courseCount: own.length || study.courses.length,
           lessonCount: own.reduce((sum, node) => sum + node.lessons, 0),
           lessonsDone: own.reduce((sum, node) => sum + lessonsDone(node), 0),
+          courses: ordered.map((node) => ({
+            id: node.courseId,
+            title: node.title,
+            lessonCount: node.lessons,
+            depth: node.depth,
+          })),
           courseTitles: ordered.map((node) => node.title),
         };
       }),

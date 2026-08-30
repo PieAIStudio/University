@@ -22,6 +22,13 @@ const STUDIES: readonly PlanetStudy[] = [
     courseCount: 31,
     lessonCount: 41,
     lessonsDone: 1,
+    courses: [
+      { id: "turing-1", title: "开场", lessonCount: 8, depth: 0 },
+      { id: "turing-2", title: "地图", lessonCount: 8, depth: 1 },
+      { id: "turing-3", title: "镜头", lessonCount: 8, depth: 2 },
+      { id: "turing-4", title: "灯光", lessonCount: 8, depth: 3 },
+      { id: "turing-5", title: "材质", lessonCount: 9, depth: 4 },
+    ],
     courseTitles: ["开场", "地图", "镜头", "灯光", "材质"],
   },
   {
@@ -30,6 +37,10 @@ const STUDIES: readonly PlanetStudy[] = [
     courseCount: 5,
     lessonCount: 12,
     lessonsDone: 0,
+    courses: [
+      { id: "buzz-1", title: "入门", lessonCount: 6, depth: 0 },
+      { id: "buzz-2", title: "场景", lessonCount: 6, depth: 1 },
+    ],
     courseTitles: ["入门", "场景"],
   },
 ];
@@ -231,13 +242,16 @@ describe("PlanetPage", () => {
     expect(rows.map((node) => node.getAttribute("data-study-id"))).toEqual(["buzz", "turing-pact"]);
   });
 
-  it("keeps the floating atmospheric cluster contract in geometry and the project colour in the DOM", () => {
-    expect(SCENE_SRC).toContain("buildFloatingIslandGeometry");
-    expect(SCENE_SRC).toContain("FloatingStudyCluster");
-    expect(SCENE_SRC).toContain("AtmosphereFresnel");
-    expect(SCENE_SRC).toContain("PlanetClouds");
-    expect(SCENE_SRC).toContain("ATMOSPHERE_RADIUS");
-    expect(SCENE_SRC).toContain("buildPlanetGeometry");
+  it("keeps the higher shared-world cluster contract and the project colour in the DOM", () => {
+    expect(SCENE_SRC).toContain("buildWorldCourseGrid");
+    expect(SCENE_SRC).toContain("WorldHexField");
+    expect(SCENE_SRC).toContain("Weather");
+    expect(SCENE_SRC).toContain("placePlanetClusters");
+    expect(SCENE_SRC).toContain("PLANET_CAMERA_POLAR");
+    expect(SCENE_SRC).toContain("PLANET_ATMOSPHERE");
+    expect(SCENE_SRC).not.toMatch(
+      /Icosahedron|sphericalFbm|buildPlanetGeometry|FloatingStudyCluster/,
+    );
     expect(SCENE_SRC).not.toMatch(
       /PIN_PROFILE|PIN_SCREEN_LIFT|PIN_BEAM_HEIGHT|latheGeometry|MARKER_QUIET/,
     );

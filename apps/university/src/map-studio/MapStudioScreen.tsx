@@ -645,7 +645,10 @@ export function MapStudioScreen({
 
   const description = useMemo(() => {
     if (activeLayer === "planet") {
-      return describePlanetLayer({ studyIds: planetStudies.map((study) => study.id) });
+      return describePlanetLayer({
+        studyIds: planetStudies.map((study) => study.id),
+        courseCount: planetStudies.reduce((total, study) => total + study.courseCount, 0),
+      });
     }
     if (activeLayer === "world") {
       return describeWorldLayer({

@@ -108,6 +108,24 @@ function Pipeline({
   // Priority above zero: R3F stops rendering for us, and this is the loop.
   const measuring = useRef<((report: unknown) => void) | null>(null);
 
+  const recordSceneRender = () => {
+    if (!import.meta.env.DEV) return;
+    const bag = globalThis as unknown as {
+      __lastStageSceneRender?: {
+        readonly calls: number;
+        readonly triangles: number;
+        readonly lines: number;
+        readonly points: number;
+      };
+    };
+    bag.__lastStageSceneRender = {
+      calls: gl.info.render.calls,
+      triangles: gl.info.render.triangles,
+      lines: gl.info.render.lines,
+      points: gl.info.render.points,
+    };
+  };
+
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     const bag = globalThis as unknown as {
@@ -174,6 +192,7 @@ function Pipeline({
       gl.setRenderTarget(null);
       gl.clear();
       gl.render(scene, camera);
+      recordSceneRender();
       gl.outputColorSpace = previousColorSpace;
       gl.toneMapping = previousToneMapping;
       return;
@@ -181,6 +200,7 @@ function Pipeline({
     gl.setRenderTarget(pass.target);
     gl.clear();
     gl.render(scene, camera);
+    recordSceneRender();
     // Read while the target is still bound and freshly written. Sampling it
     // from outside the loop reads a multisample buffer nobody has resolved yet,
     // which returns plausible-looking numbers that are not the picture.

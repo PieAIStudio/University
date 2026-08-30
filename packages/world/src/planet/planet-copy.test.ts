@@ -17,6 +17,14 @@ const TURING: PlanetStudy = {
   courseCount: 31,
   lessonCount: 41,
   lessonsDone: 1,
+  courses: [
+    { id: "turing-1", title: "开场", lessonCount: 8, depth: 0 },
+    { id: "turing-2", title: "地图", lessonCount: 8, depth: 1 },
+    { id: "turing-3", title: "镜头", lessonCount: 8, depth: 2 },
+    { id: "turing-4", title: "灯光", lessonCount: 8, depth: 3 },
+    { id: "turing-5", title: "材质", lessonCount: 9, depth: 4 },
+    { id: "turing-6", title: "后期", lessonCount: 0, depth: 5 },
+  ],
   courseTitles: ["开场", "地图", "镜头", "灯光", "材质", "后期"],
 };
 
@@ -26,6 +34,10 @@ const BUZZ: PlanetStudy = {
   courseCount: 5,
   lessonCount: 12,
   lessonsDone: 0,
+  courses: [
+    { id: "buzz-1", title: "入门", lessonCount: 6, depth: 0 },
+    { id: "buzz-2", title: "场景", lessonCount: 6, depth: 1 },
+  ],
   courseTitles: ["入门", "场景"],
 };
 

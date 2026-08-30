@@ -20,8 +20,17 @@ export interface PlanetStudy {
   readonly courseCount: number;
   readonly lessonCount: number;
   readonly lessonsDone: number;
+  /** The real course metadata used by the shared world projection. */
+  readonly courses: readonly PlanetCourse[];
   /** Course names in teaching order. Used as the introduction, not decoration. */
   readonly courseTitles: readonly string[];
+}
+
+export interface PlanetCourse {
+  readonly id: string;
+  readonly title: string;
+  readonly lessonCount: number;
+  readonly depth: number;
 }
 
 export interface StudyMarkerColor {

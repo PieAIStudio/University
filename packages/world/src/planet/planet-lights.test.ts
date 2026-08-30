@@ -1,26 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import { PLANET_LIGHTS } from "./PlanetScene.js";
+import { WORLD_SUN } from "../sky/sun.js";
+import { PLANET_ATMOSPHERE } from "./PlanetScene.js";
 
-describe("planet lighting contract", () => {
-  it("keeps the key light between two and four times the total fill", () => {
-    const fill =
-      PLANET_LIGHTS.hemisphereIntensity +
-      PLANET_LIGHTS.ambientIntensity +
-      PLANET_LIGHTS.frontalFillIntensity +
-      PLANET_LIGHTS.nightRimIntensity;
-    const ratio = PLANET_LIGHTS.keyIntensity / fill;
+describe("planet shared-world atmosphere contract", () => {
+  it("uses the one shared world key and keeps it above the direct light fill", () => {
+    const fill = WORLD_SUN.hemisphereIntensity + WORLD_SUN.ambientIntensity;
+    const ratio = WORLD_SUN.keyIntensity / fill;
 
-    expect(ratio).toBeGreaterThanOrEqual(2);
-    expect(ratio).toBeLessThanOrEqual(4);
+    expect(ratio).toBeGreaterThan(1);
+    expect(WORLD_SUN.keyColor).toBe(0xffefd2);
   });
 
-  it("keeps the lower hemisphere bounce chromatic and blue-led", () => {
-    const red = (PLANET_LIGHTS.hemisphereGround >> 16) & 255;
-    const green = (PLANET_LIGHTS.hemisphereGround >> 8) & 255;
-    const blue = PLANET_LIGHTS.hemisphereGround & 255;
-
-    expect(blue).toBeGreaterThan(green);
-    expect(green).toBeGreaterThan(red);
+  it("makes distance the separator with a stronger falloff than the catalogue", () => {
+    expect(PLANET_ATMOSPHERE.fogFarRatio).toBeLessThan(3.5);
+    expect(PLANET_ATMOSPHERE.fogNearRatio).toBeLessThan(0.55);
+    expect(PLANET_ATMOSPHERE.selectedLift).toBeGreaterThan(0);
   });
 });

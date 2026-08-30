@@ -9,39 +9,53 @@ import { createRoot } from "react-dom/client";
 import "@pieai/swimmer-ui-kit/styles.css";
 import { PlanetPage, type PlanetStudy } from "./PlanetPage.js";
 
+function fixtureCourses(
+  studyId: string,
+  count: number,
+  lessonCount: number,
+  titles: readonly string[],
+) {
+  const base = Math.floor(lessonCount / count);
+  const remainder = lessonCount % count;
+  return Array.from({ length: count }, (_, index) => ({
+    id: `${studyId}-course-${index + 1}`,
+    title: titles[index] ?? `${studyId} · ${index + 1}`,
+    lessonCount: base + (index < remainder ? 1 : 0),
+    depth: index,
+  }));
+}
+
+function fixtureStudy(
+  id: string,
+  title: string,
+  courseCount: number,
+  lessonCount: number,
+  lessonsDone: number,
+  titles: readonly string[],
+): PlanetStudy {
+  const courses = fixtureCourses(id, courseCount, lessonCount, titles);
+  return {
+    id,
+    title,
+    courseCount,
+    lessonCount,
+    lessonsDone,
+    courses,
+    courseTitles: courses.map((course) => course.title),
+  };
+}
+
 const STUDIES: readonly PlanetStudy[] = [
-  {
-    id: "turing-pact",
-    title: "TuringPact",
-    courseCount: 31,
-    lessonCount: 41,
-    lessonsDone: 1,
-    courseTitles: ["开场", "地图", "镜头", "灯光", "材质", "后期"],
-  },
-  {
-    id: "buzz",
-    title: "Buzz",
-    courseCount: 5,
-    lessonCount: 12,
-    lessonsDone: 0,
-    courseTitles: ["入门", "场景", "音效"],
-  },
-  {
-    id: "supaluv",
-    title: "SupaLuv",
-    courseCount: 7,
-    lessonCount: 20,
-    lessonsDone: 0,
-    courseTitles: ["账号", "表", "权限"],
-  },
-  {
-    id: "university-local",
-    title: "UniversityLocal",
-    courseCount: 9,
-    lessonCount: 30,
-    lessonsDone: 4,
-    courseTitles: ["仓库", "课", "证据", "复习"],
-  },
+  fixtureStudy("buzz", "Buzz", 5, 60, 0, ["《你屏幕上这套东西背后是什么？》"]),
+  fixtureStudy("general", "通用课", 1, 19, 0, ["Web 基础"]),
+  fixtureStudy("supaluv", "SupaLuv", 7, 54, 0, ["账号", "表", "权限"]),
+  fixtureStudy("turing-pact", "TuringPact", 31, 362, 1, ["开场", "地图", "镜头", "灯光", "材质"]),
+  fixtureStudy("university-local", "UniversityLocal 自身", 9, 84, 4, [
+    "仓库",
+    "课",
+    "证据",
+    "复习",
+  ]),
 ];
 
 function Preview() {
