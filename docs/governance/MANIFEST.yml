@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-30T19:34:03.522Z
+generated_at: 2026-08-30T19:43:28.570Z
 generator_version: doc-gov@0.9.9
-docs_count: 82
+docs_count: 83
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -398,6 +398,13 @@ docs:
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-MEASURE-WORLD-ISLAND-DOMINANCE-AND-FIT-TOGETHER
     path: docs/reference/learnings/workflow-issues/measure-world-island-dominance-and-fit-together.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-30
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-MODEL-STAGE-WRAPPERS-NEED-CLOSE-EVENT-RECEIPTS-AND-FIRST-H1-OUTPUT-SEPARATION
+    path: docs/reference/learnings/workflow-issues/model-stage-wrappers-need-close-event-receipts-and-first-h1-output-separation.md
     type: reference
     status: stable
     canonical: true

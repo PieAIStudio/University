@@ -660,10 +660,10 @@ function lintLesson({ contentPath, manifestPath, content, manifest, id, previous
     const middleHeadings = sections
       .slice(answerAt + 1, selfCheckAt)
       .filter((heading) => heading !== "再想想");
-    if (openHeadings.length < shape.openCount) {
+    if (openHeadings.length !== shape.openCount) {
       fail(
         3,
-        `${variant} 变体至少需要 ${shape.openCount} 个开场章节，实际为 ${openHeadings.length}`,
+        `${variant} 变体需要恰好 ${shape.openCount} 个开场章节，实际为 ${openHeadings.length}`,
       );
     }
     if (middleHeadings.length !== shape.middleCount) {

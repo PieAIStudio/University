@@ -11,8 +11,10 @@ fixes that, and the rules that keep hundreds of lessons from all sounding
 identical.
 
 Why this shape (research, rejected alternatives):
-[docs/reference/lesson-pedagogy.md](../../../docs/reference/lesson-pedagogy.md).
-Read once; never restate it inside a lesson.
+[apps/local/docs/reference/lesson-pedagogy.md](../../../docs/reference/lesson-pedagogy.md).
+The link is relative to this `SKILL.md`, so it intentionally resolves to
+`apps/local/docs/reference/lesson-pedagogy.md`, not a repository-root
+`docs/reference/` path. Read once; never restate it inside a lesson.
 
 Dispatching the work — which model writes, which one checks, the preflight gate,
 and the CLI flags that silently fail: [references/pipeline.md](references/pipeline.md),
