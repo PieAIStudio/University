@@ -55,6 +55,21 @@
         "--strictPort"
       ],
       "port": 18198
+    },
+    {
+      "name": "ctamaterial-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "-C",
+        "/Users/yuanfei/PieAI/University-wt-ctamaterial",
+        "--filter",
+        "@pieai/university-app",
+        "dev",
+        "--port",
+        "18211",
+        "--strictPort"
+      ],
+      "port": 18211
     }
   ]
 }

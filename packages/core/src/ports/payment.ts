@@ -112,6 +112,12 @@ const ACCOUNT_REQUIRED_EXPLANATION: PaymentExplanation = {
   whatItDoes: "钱包余额、订单和购买后的权益都属于一个账号，登录后才能安全地查到同一份记录。",
   whyUnavailable: "当前没有登录账号，所以浏览器没有可以绑定的订单和钱包；本地学习不会因此被挡住。",
   futureSupport: "登录后，这个入口会使用同一个账号发起购买、查询订单，并在成功后刷新权益。",
+  /*
+    Without this the buyer is told to log in and handed no way to do it: the
+    anonymous case next door already carries its action, and this one is the
+    same dead end one step earlier.
+  */
+  action: { label: "去登录", href: "#/me" },
 };
 
 const ANONYMOUS_ACCOUNT_REQUIRED_EXPLANATION: PaymentExplanation = {

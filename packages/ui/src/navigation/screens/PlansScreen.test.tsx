@@ -99,3 +99,43 @@ describe("PlansScreen purchase entry", () => {
     expect(dialog?.textContent).toContain("浏览器不会直接连接支付服务");
   });
 });
+
+describe("PlansScreen pricing claims", () => {
+  it("derives the yearly saving from the configured prices", async () => {
+    const identity = createMemoryIdentityPort();
+    await identity.signInAnonymously();
+    const payment = createPaymentPort({ identity, transport: null });
+
+    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+
+    const saving = container.querySelector(".plan-card__saving")?.textContent ?? "";
+    // Twelve months at the configured monthly price against the configured
+    // yearly price. If someone changes a price and this test still passes with
+    // the old number, the claim on the page has become a lie.
+    expect(saving).toContain("$79.00");
+    expect(saving).toContain("35%");
+  });
+
+  it("ranks the paid plan for the reader instead of leaving two identical cards", async () => {
+    const identity = createMemoryIdentityPort();
+    await identity.signInAnonymously();
+    const payment = createPaymentPort({ identity, transport: null });
+
+    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+
+    const featured = container.querySelectorAll(".plan-card--featured");
+    expect(featured).toHaveLength(1);
+    expect(featured[0]?.textContent).toContain("会员");
+  });
+
+  it("keeps the lede free of the spaces that source line breaks used to insert", async () => {
+    const identity = createMemoryIdentityPort();
+    await identity.signInAnonymously();
+    const payment = createPaymentPort({ identity, transport: null });
+
+    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+
+    const lede = container.querySelector(".shell-screen__lede")?.textContent ?? "";
+    expect(lede).not.toMatch(/[，。：] /);
+  });
+});

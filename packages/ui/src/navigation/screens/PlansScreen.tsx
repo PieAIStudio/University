@@ -20,6 +20,14 @@ import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
 /** 会员 — this surface explains the entitlement boundary and launch offer. */
 export const PLANS_TITLE = "会员";
 
+/*
+  One string rather than prose broken across source lines: JSX collapses those
+  line breaks into spaces, and a space after a full-width comma reads as a typo
+  on the one page where a typo costs money.
+*/
+const PLANS_LEDE =
+  "所有已发布课程都能免费学，课文和关卡永远不收费。绑定邮箱后，每天有少量 AI 批改尝鲜额度，用完今天停止，明天恢复。会员买的是账号那一半：换手机或电脑也能接着学，最多三台设备同时在线。";
+
 const FALLBACK_PAYMENT_PORT = createUnavailablePaymentPort();
 
 const BILLING_CYCLE_OPTIONS = [
@@ -44,6 +52,27 @@ function configuredPrice(pricing: PlanPricing, yearly: boolean): string | null {
 function configuredYearlyMonthlyPrice(pricing: PlanPricing): string | null {
   if (pricing.kind !== "configured" || pricing.yearlyCents === null) return null;
   return formatCurrency(pricing.yearlyCents / 12, pricing.currency);
+}
+
+/**
+ * What the yearly offer saves against twelve monthly charges.
+ *
+ * Derived from the same pricing object the price itself comes from, so the two
+ * numbers can never disagree; a hard-coded percentage would keep claiming its
+ * discount after someone changed a price.
+ */
+function configuredYearlySaving(
+  pricing: PlanPricing,
+): { readonly amount: string; readonly percent: number } | null {
+  if (pricing.kind !== "configured") return null;
+  const { monthlyCents, yearlyCents } = pricing;
+  if (monthlyCents === null || yearlyCents === null) return null;
+  const twelveMonths = monthlyCents * 12;
+  if (yearlyCents >= twelveMonths) return null;
+  return {
+    amount: formatCurrency(twelveMonths - yearlyCents, pricing.currency),
+    percent: Math.round(((twelveMonths - yearlyCents) / twelveMonths) * 100),
+  };
 }
 
 function priceLabel(pricing: PlanPricing, yearly: boolean) {
@@ -85,15 +114,22 @@ function PlanCard({
   readonly onPurchase: (offerId: string) => void;
 }) {
   const purchasable = plan.pricing.kind !== "free";
+  const saving = yearly ? configuredYearlySaving(plan.pricing) : null;
 
   return (
-    <li className="plan-card">
+    <li className={purchasable ? "plan-card plan-card--featured" : "plan-card"}>
       <GamePanel>
         <div className="plan-card__head">
           <h2 className="plan-card__name">{plan.name}</h2>
         </div>
 
         <p className="plan-card__price">{priceLabel(plan.pricing, yearly)}</p>
+
+        {saving ? (
+          <p className="plan-card__saving">
+            比按月付省 {saving.amount}，也就是 {saving.percent}%
+          </p>
+        ) : null}
 
         <ul className="plan-card__lines">
           {plan.lines.map((line) => (
@@ -262,11 +298,7 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
     <section className="shell-screen">
       <header className="shell-screen__head">
         <h1>{PLANS_TITLE}</h1>
-        <p className="shell-screen__lede">
-          所有已发布课程都能免费学，课文和关卡永远不收费。绑定邮箱后， 每天有少量 AI
-          批改尝鲜额度，用完今天停止，明天恢复。
-          会员买的是账号那一半：换手机或电脑也能接着学，最多三台设备同时在线。
-        </p>
+        <p className="shell-screen__lede">{PLANS_LEDE}</p>
       </header>
 
       <PaymentSummary balance={balance} entitlement={entitlement} />

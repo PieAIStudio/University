@@ -789,6 +789,23 @@ a.linkish {
   margin: 0;
 }
 
+/*
+  The paid card carries the accent border; the free card does not. A pricing
+  page where both options look identical makes the reader do the ranking work,
+  and they mostly decline.
+*/
+.plan-card--featured > * {
+  border-color: var(--game-ui-accent);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--game-ui-accent-contrast) 22%, transparent);
+}
+
+.plan-card__saving {
+  margin: 0;
+  color: var(--game-ui-accent);
+  font-size: var(--game-ui-font-sm, 0.82rem);
+  font-weight: var(--game-ui-weight-strong, 800);
+}
+
 .plan-card__lines {
   display: flex;
   flex-direction: column;
