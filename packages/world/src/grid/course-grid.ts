@@ -154,12 +154,39 @@ function estimateHexSize(anchors: readonly { readonly x: number; readonly z: num
   // For a roughly circular hex field, halfWidth ~= 0.866 * cellSize * sqrt(n),
   // measured against the real generator rather than derived.
   const cells = Math.max(anchors.length + 7, Math.round(anchors.length * CELLS_PER_LESSON));
-  const targetHalfWidth = 14 + courseScale * 14;
+  const targetHalfWidth = 9 + courseScale * 9;
   const fromFootprint = targetHalfWidth / (0.866 * Math.sqrt(cells));
 
   // The anchor spacing still sets a floor, so lesson stones never overlap.
   const fromAnchors = (typical / SQRT_THREE) * 0.55;
   return Math.max(0.6, Math.min(fromFootprint, Math.max(fromAnchors, fromFootprint)));
+}
+
+/**
+ * The continuous blueprint owns the route's shape, but its physical envelope
+ * was sized for the old continuous island. The grid now reserves eight cells
+ * per lesson, so keeping that envelope would leave a long road marooned in the
+ * middle of a much larger field. Expand the authored intent around its centre
+ * as the course grows; the outline still grows from the resulting route, and
+ * every step remains snapped by the same adjacency-preserving walk below.
+ */
+function stretchRouteAnchors(
+  anchors: readonly { readonly x: number; readonly z: number }[],
+): readonly { readonly x: number; readonly z: number }[] {
+  if (anchors.length <= 1) return anchors;
+  const courseScale = Math.min(1, Math.max(0, (anchors.length - 3) / 38));
+  const stretch = 1 + courseScale * 0.5;
+  const centre = anchors.reduce(
+    (sum, anchor) => ({
+      x: sum.x + anchor.x / anchors.length,
+      z: sum.z + anchor.z / anchors.length,
+    }),
+    { x: 0, z: 0 },
+  );
+  return anchors.map((anchor) => ({
+    x: centre.x + (anchor.x - centre.x) * stretch,
+    z: centre.z + (anchor.z - centre.z) * stretch,
+  }));
 }
 
 function routeFromAnchors(
@@ -285,10 +312,11 @@ function withElevation(
 
 export function buildCourseGrid(input: CourseGridInput): HexMap {
   if (input.lessons.length === 0) throw new RangeError("A course grid needs at least one lesson");
-  const anchors =
+  const authoredAnchors =
     input.routeAnchors?.length === input.lessons.length
       ? input.routeAnchors
       : fallbackAnchors(input.lessons.length, input.seed, input.routeArchetype);
+  const anchors = stretchRouteAnchors(authoredAnchors);
   const hexSize = estimateHexSize(anchors);
   const route = routeFromAnchors(anchors, hexSize, input.seed);
   const outline = growGridOutline(route, `${input.studyId}/${input.courseId}/${input.seed}`);

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { buildCourseGrid, type CourseGridLesson } from "./course-grid.js";
-import { hexDistance, hexKey, hexNeighbors } from "./hex.js";
+import { hexDistance, hexKey, hexNeighbors, hexToWorld } from "./hex.js";
 import { GRID_CELL_BUDGET, hexRegionIsConnected } from "./grid-outline.js";
 import { propCellsAreUnique } from "./grid-props.js";
 import { islandGeometryBlueprint } from "../island/island-blueprint.js";
@@ -77,6 +77,45 @@ describe("hex grid course data", () => {
     expect(map.lessons.map((cell) => cell.key)).toHaveLength(LESSONS.length);
     for (let index = 1; index < map.route.length; index += 1) {
       expect(hexDistance(map.route[index - 1]!, map.route[index]!)).toBe(1);
+    }
+  });
+
+  it("stretches long authored routes across the larger field for every archetype", () => {
+    for (const routeArchetype of [
+      "arc",
+      "horseshoe",
+      "loop-around-hill",
+      "switchback",
+      "serpentine",
+    ] as const) {
+      const blueprint = islandGeometryBlueprint({
+        studyId: "turing-pact",
+        courseId: `route-spread-${routeArchetype}`,
+        lessonCount: LESSONS.length,
+        seed: `route-spread/${routeArchetype}`,
+        routeArchetype,
+      });
+      const map = buildCourseGrid({
+        studyId: blueprint.studyId,
+        courseId: blueprint.courseId,
+        seed: blueprint.seed,
+        lessons: LESSONS,
+        routeArchetype,
+        routeAnchors: blueprint.geometryNodes,
+      });
+      const routePoints = map.route.map((cell) => hexToWorld(cell, map.hexSize));
+      const mainPoints = map.mainCells.map((cell) => hexToWorld(cell, map.hexSize));
+      const span = (points: readonly { readonly x: number; readonly z: number }[]) => ({
+        x:
+          Math.max(...points.map((point) => point.x)) - Math.min(...points.map((point) => point.x)),
+        z:
+          Math.max(...points.map((point) => point.z)) - Math.min(...points.map((point) => point.z)),
+      });
+      const routeSpan = span(routePoints);
+      const mainSpan = span(mainPoints);
+      expect(Math.max(routeSpan.x / mainSpan.x, routeSpan.z / mainSpan.z)).toBeGreaterThanOrEqual(
+        0.72,
+      );
     }
   });
 
