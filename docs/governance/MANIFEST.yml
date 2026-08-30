@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-30T03:47:11.666Z
+generated_at: 2026-08-30T08:26:01.647Z
 generator_version: doc-gov@0.9.9
 docs_count: 70
 docs:
@@ -436,7 +436,7 @@ docs:
     type: reference
     status: stable
     canonical: true
-    last_reviewed: 2026-08-29
+    last_reviewed: 2026-08-30
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-STRICTMODE-LEARNER-SMOKE-TESTS-MUST-ASSERT-NON-EMPTY-DRAWN-OUTPUT
     path: docs/reference/learnings/workflow-issues/strictmode-learner-smoke-tests-must-assert-non-empty-drawn-output.md

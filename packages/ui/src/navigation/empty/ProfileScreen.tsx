@@ -6,9 +6,9 @@ import { LevelProgress } from "../screens/LevelProgress.js";
  * Personal archive. The 3D avatar is a slot: `packages/ui` stays at zero
  * `three`, so each app passes the canvas it actually has.
  *
- * Practice and review live under this tab on mobile, the way Duolingo buries
- * its practice hub in the profile tab. The links are here so a phone can
- * reach them without a rail.
+ * Practice and review remain linked here as secondary destinations. Practice
+ * also has a primary mobile tab, so the learning loop does not depend on
+ * scrolling through a personal archive to find it.
  *
  * A 0 on this page is not a number, it is an invitation. The archive is
  * where the product builds identity, not where it audits the newcomer.

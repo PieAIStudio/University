@@ -15,6 +15,7 @@ import {
   ACCOUNT_SIGNED_IN_TITLE,
   ACCOUNT_SIGN_IN,
   ACCOUNT_SIGN_OUT,
+  ACCOUNT_UNCONFIGURED_ACTION,
   ACCOUNT_UNCONFIGURED_DESCRIPTION,
   ACCOUNT_UNSIGNED_DESCRIPTION,
   ACCOUNT_UNSIGNED_TITLE,
@@ -142,10 +143,11 @@ describe("empty destinations", () => {
 });
 
 describe("AccountPanel", () => {
-  it("stays a quiet sentence when the backend is not configured, with no form", () => {
+  it("explains why login is unavailable when the backend is not configured", () => {
     const markup = renderToStaticMarkup(<AccountPanel identity={createIdentityPort(null)} />);
     expect(markup).toContain(ACCOUNT_UNSIGNED_TITLE);
     expect(markup).toContain(ACCOUNT_UNCONFIGURED_DESCRIPTION);
+    expect(markup).toContain(ACCOUNT_UNCONFIGURED_ACTION);
     expect(markup).not.toContain('type="password"');
     /*
       No sign-in *machinery* — which is not the same as never saying the word.

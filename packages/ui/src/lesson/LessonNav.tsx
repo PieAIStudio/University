@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { GameProgress } from "@pieai/swimmer-ui-kit";
 
 import type { CourseView, LessonRef, LessonSectionView } from "../view/lesson-view.js";
@@ -141,6 +141,42 @@ function nearestScroller(node: HTMLElement): HTMLElement | null {
   return null;
 }
 
+/**
+ * Keep the reader's scroll landing zone tied to the toolbar that is actually
+ * on screen. A fixed CSS guess is wrong as soon as the tool row wraps or a
+ * device contributes a safe-area inset; the toolbar already knows its real
+ * height, so publish that measurement to the scroll container instead.
+ */
+function useLessonToolbarScrollOffset(ref: RefObject<HTMLElement | null>): void {
+  useEffect(() => {
+    const toolbar = ref.current;
+    const scroller = toolbar ? nearestScroller(toolbar) : null;
+    if (!toolbar || !scroller) return;
+
+    let lastValue = "";
+    const update = () => {
+      const height = toolbar.getBoundingClientRect().height;
+      if (!(height > 0) || !Number.isFinite(height)) return;
+      lastValue = `${Math.ceil(height)}px`;
+      scroller.style.setProperty("--lesson-toolbar-scroll-offset", lastValue);
+    };
+
+    update();
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => update());
+    observer?.observe(toolbar);
+    window.addEventListener("resize", update, { passive: true });
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", update);
+      if (scroller.style.getPropertyValue("--lesson-toolbar-scroll-offset") === lastValue) {
+        scroller.style.removeProperty("--lesson-toolbar-scroll-offset");
+      }
+    };
+  }, [ref]);
+}
+
 function scrollMetrics(from: HTMLElement | null): {
   readonly scrollY: number;
   readonly scrollHeight: number;
@@ -229,6 +265,7 @@ export function LessonToolbar({
   readonly children?: ReactNode;
 }) {
   const { ref, current, total, ratio } = useLessonProgress(sections);
+  useLessonToolbarScrollOffset(ref);
   const valued = total > 0;
   const valueNow = valued ? current : Math.round(ratio * 100);
   const valueMax = valued ? total : 100;
