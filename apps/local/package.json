@@ -30,6 +30,7 @@
     "check:export-freshness": "node scripts/check-export-freshness.mjs",
     "check:lesson-drift": "node scripts/check-lesson-drift.mjs",
     "lesson:signals": "node scripts/lesson-signals.mjs",
+    "lesson:run": "node scripts/lesson-pipeline-runner.mjs",
     "lint:hedges": "node scripts/check-lesson-hedges.mjs"
   },
   "dependencies": {

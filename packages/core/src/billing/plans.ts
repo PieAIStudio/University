@@ -99,18 +99,23 @@ export const BILLING_CONFIG = {
       },
       sync: { included: true, seats: 3 },
       /*
-        The structured-grading right this plan is built around is deliberately
-        absent from this list. The funding path is implemented and tested here
-        — service.ts reads the plan before it reaches quota or wallet — but
-        SwimmerBackend exposes no University plan-grant read yet, so production
-        cannot recognise a paying member and falls back to the free baseline.
+        The structured-grading lines were held back while production could not
+        recognise a paying member. That condition was written down as "the day
+        the backend can answer 'is this account a member'", and it was met on
+        2026-08-31: `private.university_read_plan_grant` is live in production,
+        `createSupabasePaymentRemote` reads it, and the grading service that
+        consults the plan before quota or wallet is the code actually deployed.
+        All three had to be true — the second and third were still missing on
+        the day the first landed.
 
-        A plans page is a promise. This project has already shipped one that
-        the code could not keep, and removing those lines is what made the rest
-        of this page trustworthy. The line goes back the day the backend can
-        answer "is this account a member", and not before.
+        A plans page is a promise. What is still not promised here is that you
+        can buy this today: no payment provider is connected, and the purchase
+        button says so in its own words rather than leaving the reader to find
+        out by clicking.
       */
       lines: [
+        "结构化 AI 批改不受每日免费尝鲜额度封顶",
+        "开放式辅导按用量计费，额度和账单都在同一个账号里",
         "换手机也不用从头来：登录同一账号，进度和复习卡接着走",
         "同时登录三台设备，手机、电脑、平板都算一台",
       ],

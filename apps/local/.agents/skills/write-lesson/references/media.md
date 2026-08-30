@@ -51,9 +51,10 @@ Ordered by preference:
    provenance (commit, route, state, viewport, locale, recipe). That requirement
    exists so a picture of a program is never an unverifiable claim.
 2. **Draw it** — `kind: "diagram"`. For structure and relationships, prefer
-   **Mermaid**: the project already renders it (`src/markdown/MermaidDiagram.tsx`,
-   and the `mermaid-diagrams` skill). A Mermaid diagram is text, so it diffs,
-   reviews, and **never goes stale** — which a screenshot always eventually does.
+   **Mermaid**: the project already renders it
+   (`packages/ui/src/markdown/MermaidDiagram.tsx`, and the `mermaid-diagrams`
+   skill). A Mermaid diagram is text, so it diffs, reviews, and **never goes
+   stale** — which a screenshot always eventually does.
 3. **A screenshot of the author's own machine** (Finder, a terminal). Yours to
    use. Crop hard: OS chrome, sidebars, and desktop clutter are extraneous
    material, and extraneous material is what principle 1 above is about.

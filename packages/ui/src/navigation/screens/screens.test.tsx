@@ -138,23 +138,27 @@ describe("PlansScreen", () => {
     expect(markup).not.toContain("服务端权益");
   });
 
-  it("does not sell structured grading until production can recognise a member", () => {
-    // service.ts reads the plan before quota or wallet, and that path is
-    // tested. Production still cannot answer "is this account a member",
-    // because SwimmerBackend exposes no University plan-grant read, so every
-    // live request falls back to the free baseline.
+  it("sells structured grading now that all three layers can keep the promise", () => {
+    // This claim was held back while production could not answer "is this
+    // account a member". Three things had to be true at once, and on
+    // 2026-08-31 they were: the plan-grant read is live in production,
+    // `createSupabasePaymentRemote` calls it, and the grading service that
+    // consults the plan before quota or wallet is the code actually deployed.
+    // The first landed days before the other two, which is why the condition
+    // was written as all three rather than as "the migration shipped".
     //
-    // This page already shipped promises the code could not keep once, and
-    // deleting them is what made the rest of it trustworthy. Put these lines
-    // back on the day the backend can answer, and not before — this test is
-    // the reminder, not an opinion about the wording.
+    // The page still does not claim you can buy this today. No payment
+    // provider is connected, and the purchase control says so itself rather
+    // than letting the reader find out by clicking.
     const markup = renderToStaticMarkup(<PlansScreen />);
-    expect(markup).not.toContain("中文评语");
-    expect(markup).not.toContain("最多三条补充建议");
-    expect(markup).not.toContain("不受每日免费尝鲜额度封顶");
-    // What the member plan may claim today, because the account layer does it.
+    expect(markup).toContain("不受每日免费尝鲜额度封顶");
+    expect(markup).toContain("开放式辅导按用量计费");
     expect(markup).toContain("换手机也不用从头来");
     expect(markup).toContain("三台设备");
+    // Still not claimed: a wording that promises a shape of feedback the
+    // service does not guarantee.
+    expect(markup).not.toContain("中文评语");
+    expect(markup).not.toContain("最多三条补充建议");
   });
 
   it("shows the configured member prices and keeps the purchase CTA visible", () => {

@@ -34,6 +34,26 @@ independent readers whose scores agreed almost exactly:
 The winning pipeline's **floor** equals the other two's **ceiling**. That is the
 property worth having across hundreds of lessons — not a better average.
 
+## The local dispatcher
+
+`apps/local/scripts/lesson-pipeline-runner.mjs` is the process boundary for a
+single Writer, Detector, fixer, or Polisher stage. Invoke it with
+`pnpm lesson:run -- ...` from `apps/local` (or call its exported functions from
+another harness). It resolves a lesson's `sourcePath` against
+`studies/<study>/source/checkouts/<snapshot>/` before starting the model, so a
+short `source/checkouts/...` path cannot silently omit the study directory.
+
+The runner uses Node's `spawn` with `shell: false` and records the child's
+`exitCode` from its `close` event. Model stdout is split at the first Markdown
+H1: progress is forwarded to stderr, while the final Markdown is written to
+`--output` (or stdout when no output file is given). Each attempt keeps raw
+stdout, raw stderr, parsed progress, final text, timeout/signal data, and a
+`sessionResult` in the JSON receipt. Grok transport errors and timeouts get one
+bounded retry by default; an ordinary model/content failure does not.
+
+The runner is draft-only. It never creates a course revision or writes under a
+`studies` course root; landing a revision remains the course CLI's job.
+
 The cheap-model-drafts pipeline also produced a **fabricated claim about real
 code** (`install-git-hooks.mjs:3-10` described as "checks the working tree is
 clean"; it actually runs `git rev-parse --is-inside-work-tree`). Every citation

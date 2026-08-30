@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "corepack pnpm@11.22.0 install --frozen-lockfile",
+  "installCommand": "corepack pnpm@11.22.0 install --frozen-lockfile --ignore-scripts",
   "buildCommand": "corepack pnpm@11.22.0 --dir ../.. --filter @pieai/university-core build && corepack pnpm@11.22.0 run build",
   "outputDirectory": "public",
   "regions": ["iad1"],

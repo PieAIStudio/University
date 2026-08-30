@@ -11,6 +11,7 @@
 # needed there.
 node_modules
 .git
+SCRATCH
 .vercel/output
 dist
 build
@@ -21,3 +22,9 @@ test-results
 .scratch
 apps/university/dist
 apps/local/studies
+apps/university/public/generated
+*.png
+*.jpg
+*.jpeg
+*.mp4
+*.webm
