@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { GameButton, GameEmptyState, GamePanel } from "@pieai/swimmer-ui-kit";
+import { GameEmptyState, GamePanel } from "@pieai/swimmer-ui-kit";
 import {
   advancePracticeSession,
   idOfPracticeQuestion,
@@ -11,6 +11,7 @@ import {
 } from "@pieai/university-core";
 
 import { ChoiceBlock, type ChoiceBlockExercise } from "../review/ChoiceBlock.js";
+import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import { PracticeRewardPanel } from "./PracticeRewardPanel.js";
 import type { PracticeRecentStore } from "./storage.js";
 
@@ -125,9 +126,9 @@ export function PracticeStream<Head = unknown>({
         description={PRACTICE_EMPTY_DESCRIPTION}
         action={
           onBrowse ? (
-            <GameButton variant="primary" type="button" onClick={onBrowse}>
+            <LiquidCtaButton type="button" onClick={onBrowse}>
               {PRACTICE_EMPTY_ACTION}
-            </GameButton>
+            </LiquidCtaButton>
           ) : undefined
         }
       />
@@ -139,9 +140,9 @@ export function PracticeStream<Head = unknown>({
       <section className="practice-stream" aria-label="练习">
         <GamePanel className="practice-stream__intro" title={PRACTICE_INTRO_TITLE}>
           <p className="practice-stream__intro-copy">{PRACTICE_INTRO_DESCRIPTION}</p>
-          <GameButton variant="primary" type="button" onClick={() => setStarted(true)}>
+          <LiquidCtaButton type="button" onClick={() => setStarted(true)}>
             {PRACTICE_INTRO_ACTION}
-          </GameButton>
+          </LiquidCtaButton>
         </GamePanel>
       </section>
     );
@@ -157,6 +158,7 @@ export function PracticeStream<Head = unknown>({
           <ChoiceBlock
             key={`${sitting.ordinal}:${sitting.currentId}`}
             exercise={toChoiceBlockExercise(current)}
+            liquidPrimary
             onSolved={handleSolved}
             onNext={handleNext}
           />

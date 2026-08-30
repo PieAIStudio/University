@@ -2871,7 +2871,6 @@ button.label:focus-visible {
   line-height: 1.55;
 }
 
-.lesson-completion__action,
 .text-button {
   border: 1px solid color-mix(in srgb, var(--game-ui-warning) 48%, transparent);
   padding: 9px 14px;
@@ -2882,15 +2881,12 @@ button.label:focus-visible {
   cursor: pointer;
 }
 
-.lesson-completion__action:hover,
-.lesson-completion__action:focus-visible,
 .text-button:hover,
 .text-button:focus-visible {
   border-color: var(--game-ui-warning);
   background: color-mix(in srgb, var(--game-ui-warning) 22%, transparent);
 }
 
-.lesson-completion__action:disabled,
 .text-button:disabled {
   opacity: 0.55;
   cursor: wait;
@@ -3420,6 +3416,10 @@ button.label:focus-visible {
   }
 
   .lesson-completion__action {
+    width: 100%;
+  }
+
+  .lesson-completion > .liquid-cta {
     width: 100%;
   }
 
@@ -4122,9 +4122,13 @@ blockquote {
   flex: 0 0 auto;
 }
 
-.nextup__primary {
+.nextup__primary-wrap {
   width: 100%;
   margin-top: 10px;
+}
+
+.nextup__primary {
+  width: 100%;
 }
 
 .today-hero__context-row {
@@ -4141,14 +4145,6 @@ blockquote {
 
 .today-hero__context-action {
   min-width: 0;
-}
-
-/* University intentionally opts into the kit's organic liquid edge. The kit
-   default is zero so consumers can adopt the effect intentionally; the motion
-   itself still only wakes for a user-caused state change. */
-:root {
-  --game-ui-liquid-gooey-waviness: 6px;
-  --game-ui-liquid-gooey-waviness-freq: 0.018;
 }
 
 /*

@@ -1,4 +1,6 @@
-import { GameButton, GameEmptyState } from "@pieai/swimmer-ui-kit";
+import { GameEmptyState } from "@pieai/swimmer-ui-kit";
+
+import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
 
 /**
  * Shared next-step empty for slots one shell has and the other does not yet.
@@ -22,9 +24,9 @@ export function NextStepEmpty({
       description={description}
       action={
         onNavigate ? (
-          <GameButton variant="primary" type="button" onClick={onNavigate}>
+          <LiquidCtaButton type="button" onClick={onNavigate}>
             {action}
-          </GameButton>
+          </LiquidCtaButton>
         ) : undefined
       }
     />

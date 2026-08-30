@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { Tip } from "../Tip.js";
 import type { EntitlementReader } from "../capability/ai-entitlements.js";
+import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import { ReviewCard } from "../review/ReviewCard.js";
 import { REVIEW_EMPTY_TITLE, reviewEmptyDescription } from "../review/review-empty.js";
 import type { ReviewCardPort, VocabularyReviewPort } from "../review/ports.js";
@@ -54,6 +55,7 @@ export function TodaySection({
   onOpenLesson,
   onReviewed,
   contextAction,
+  liquidCta = false,
   requestToken,
   review,
   readEntitlements,
@@ -64,6 +66,8 @@ export function TodaySection({
   readonly onReviewed: () => Promise<void>;
   /** A secondary action belonging to the study named by this panel. */
   readonly contextAction?: ReactNode;
+  /** The map owns the focal action; review work surfaces hand it to the card. */
+  readonly liquidCta?: boolean;
   /** Required only by the local HTTP grading/vocabulary fallback. */
   readonly requestToken?: string;
   /** Online's cloud scheduler implementation. */
@@ -90,9 +94,15 @@ export function TodaySection({
               ) : null}
             </div>
             <div className="today-hero__action">
-              <GameButton variant="primary" onClick={() => onOpenLesson(next)}>
-                {todayCtaLabel(next.progress)}
-              </GameButton>
+              {liquidCta ? (
+                <LiquidCtaButton onClick={() => onOpenLesson(next)}>
+                  {todayCtaLabel(next.progress)}
+                </LiquidCtaButton>
+              ) : (
+                <GameButton variant="primary" onClick={() => onOpenLesson(next)}>
+                  {todayCtaLabel(next.progress)}
+                </GameButton>
+              )}
               <GameBadge tone="warning">
                 {progressLabel(next.progress, next.contentRevision)}
               </GameBadge>
@@ -111,6 +121,7 @@ export function TodaySection({
           review={review}
           readEntitlements={readEntitlements}
           onReviewed={onReviewed}
+          liquidPrimary={!liquidCta}
           remaining={data.dueCount}
         />
       ) : (

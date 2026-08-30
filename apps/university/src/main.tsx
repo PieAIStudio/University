@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import "@pieai/swimmer-ui-kit/styles.css";
 import "@pieai/university-ui/catalog/catalog.css";
 import "@pieai/university-ui/capability/capability.css";
+import "@pieai/university-ui/cta/liquid-cta.css";
 import { App } from "./app/App";
 /*
   Every stylesheet `packages/ui` ships, in both shells, always.

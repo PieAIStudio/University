@@ -1,4 +1,6 @@
-import { GameButton, GameEmptyState } from "@pieai/swimmer-ui-kit";
+import { GameEmptyState } from "@pieai/swimmer-ui-kit";
+
+import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
 
 export const QUESTS_EMPTY_TITLE = "任务还没开张";
 export const QUESTS_EMPTY_DESCRIPTION =
@@ -13,9 +15,9 @@ export function QuestsEmpty({ onNavigate }: { readonly onNavigate?: () => void }
       description={QUESTS_EMPTY_DESCRIPTION}
       action={
         onNavigate ? (
-          <GameButton variant="primary" type="button" onClick={onNavigate}>
+          <LiquidCtaButton type="button" onClick={onNavigate}>
             {QUESTS_EMPTY_ACTION}
-          </GameButton>
+          </LiquidCtaButton>
         ) : undefined
       }
     />

@@ -3,6 +3,7 @@ import { playSound } from "../sound/index.js";
 import { GameBadge, GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
 
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
+import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import { Tip } from "../Tip.js";
 import { CapabilityExplanation } from "../capability/CapabilityExplanation.js";
 import {
@@ -33,6 +34,7 @@ export function ReviewCard({
   review,
   readEntitlements,
   onReviewed,
+  liquidPrimary = false,
   remaining,
 }: {
   readonly card: ReviewCardLocator;
@@ -42,6 +44,8 @@ export function ReviewCard({
   /** Reads the server-selected AI plan when the learner asks for tutoring. */
   readonly readEntitlements?: EntitlementReader;
   readonly onReviewed: () => Promise<void>;
+  /** Review owns the focal action only on the dedicated review work surface. */
+  readonly liquidPrimary?: boolean;
   /**
    * How many cards are still due today, this one included.
    *
@@ -271,23 +275,39 @@ export function ReviewCard({
         />
       </label>
       {!revealed ? (
-        <GameButton
-          variant="primary"
-          onClick={() => void reveal()}
-          disabled={!answer.trim() || pending}
-        >
-          {pending
-            ? isRecap
-              ? "正在记录…"
-              : "正在核对…"
-            : isRecap
-              ? revealFailed
-                ? "重试查看"
-                : "查看以前的复述"
-              : revealFailed
-                ? "重试揭示"
-                : "揭示答案"}
-        </GameButton>
+        liquidPrimary ? (
+          <LiquidCtaButton onClick={() => void reveal()} disabled={!answer.trim() || pending}>
+            {pending
+              ? isRecap
+                ? "正在记录…"
+                : "正在核对…"
+              : isRecap
+                ? revealFailed
+                  ? "重试查看"
+                  : "查看以前的复述"
+                : revealFailed
+                  ? "重试揭示"
+                  : "揭示答案"}
+          </LiquidCtaButton>
+        ) : (
+          <GameButton
+            variant="primary"
+            onClick={() => void reveal()}
+            disabled={!answer.trim() || pending}
+          >
+            {pending
+              ? isRecap
+                ? "正在记录…"
+                : "正在核对…"
+              : isRecap
+                ? revealFailed
+                  ? "重试查看"
+                  : "查看以前的复述"
+                : revealFailed
+                  ? "重试揭示"
+                  : "揭示答案"}
+          </GameButton>
+        )
       ) : (
         <div
           className={`answer-reveal${isRecap ? " answer-reveal--recap" : ""}`}

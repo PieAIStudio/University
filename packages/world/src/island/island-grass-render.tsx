@@ -398,11 +398,7 @@ function CourseIslandGrass({ blueprint, detail, targetRadius, style, options }: 
   const heroGap = options?.heroGap;
   const safetyZones = options?.safetyZones;
   const planOptions = useMemo(
-    () =>
-      mergeOptions(
-        { density, maxCount, seed, routeGap, nodeGap, heroGap, safetyZones },
-        tier,
-      ),
+    () => mergeOptions({ density, maxCount, seed, routeGap, nodeGap, heroGap, safetyZones }, tier),
     [density, maxCount, seed, routeGap, nodeGap, heroGap, safetyZones, tier],
   );
   const plan = useMemo(
