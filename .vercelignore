@@ -1,0 +1,23 @@
+# What must never be uploaded to Vercel.
+#
+# Both Vercel projects in this repository deploy from the repository root: the
+# delivery app builds locally and ships `--prebuilt`, and the grading service
+# has `rootDirectory: apps/university-grading` set on the project, which makes
+# a `--prebuilt` deploy from that subdirectory resolve its path twice and ship
+# a build with no function in it. That deploy has to upload sources instead,
+# and without this file it uploads 1.4GB of installed dependencies.
+#
+# Vercel installs dependencies and builds on its own side, so none of this is
+# needed there.
+node_modules
+.git
+.vercel/output
+dist
+build
+.turbo
+coverage
+playwright-report
+test-results
+.scratch
+apps/university/dist
+apps/local/studies
