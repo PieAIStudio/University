@@ -42,7 +42,10 @@ export interface IslandLookViewport {
 const COURSE_DESIGN_COVERAGE = 0.84;
 const COURSE_NEAR_DISTANCE = 18;
 const COURSE_FAR_DISTANCE = 54;
-const WORLD_DESIGN_DISTANCE = 112;
+// The previous 112-unit envelope left the 53-island field in a narrow middle
+// band. Ninety keeps the fixed design shot inside the generated catalogue
+// bounds while giving the islands enough screen area to read as the subject.
+const WORLD_DESIGN_DISTANCE = 90;
 const COURSE_DESIGN_ELEVATION_DEGREES = 24;
 const COURSE_DESIGN_TARGET_Y = -1;
 const COURSE_DESIGN_AZIMUTH_DEGREES = 65;
