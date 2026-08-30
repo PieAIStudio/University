@@ -157,6 +157,15 @@ describe("AppShell", () => {
     expect(document.querySelector(".counter-row")?.children).toHaveLength(0);
   });
 
+  it("marks an aside that must stay a phone row instead of disappearing", async () => {
+    await renderShell({ aside: <p>选课</p>, showAsideOnPhone: true });
+    expect(document.querySelector(".app-shell")?.getAttribute("data-aside-phone")).toBe("true");
+    expect(document.querySelector("aside")?.textContent).toContain("选课");
+
+    await renderShell({ aside: <p>今天</p> });
+    expect(document.querySelector(".app-shell")?.getAttribute("data-aside-phone")).toBe("false");
+  });
+
   it("gives each floating column a collapse control and remembers the choice", async () => {
     localStorage.clear();
     await renderShell({ aside: <p>右栏</p>, asideLabel: "上下文" });

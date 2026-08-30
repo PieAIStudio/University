@@ -31,7 +31,52 @@ import {
   type LabelCandidate,
 } from "@pieai/university-world/labels.js";
 import type { Marker } from "../Maps";
+import { pinchDollyArmed } from "./pinch-dolly.js";
 import { wheelIntent } from "./wheel-intent.js";
+
+/**
+ * MapControls only handles `TWO` as `DOLLY_PAN` or `DOLLY_ROTATE`. Assigning
+ * `TOUCH.PAN` looks like "pan only" and is a silent no-op: two pointers fall
+ * through to `state = NONE`, so a two-finger map move does nothing. Keep
+ * `DOLLY_PAN` for the pan half, and arm dolly only after a real pinch.
+ */
+type TouchDollyControls = MapControls & {
+  _handleTouchStartDolly: (event: PointerEvent) => void;
+  _handleTouchMoveDolly: (event: PointerEvent) => void;
+  _getSecondPointerPosition: (event: PointerEvent) => { x: number; y: number };
+  _updateZoomParameters: (x: number, y: number) => void;
+  _dollyStart: THREE.Vector2;
+  _dollyEnd: THREE.Vector2;
+  _dollyDelta: THREE.Vector2;
+  _dollyOut: (scale: number) => void;
+};
+
+function installTouchDollyDeadzone(instance: MapControls) {
+  const controls = instance as TouchDollyControls;
+  const startDolly = controls._handleTouchStartDolly.bind(controls);
+  let originSpan = 0;
+  let armed = false;
+  controls._handleTouchStartDolly = (event) => {
+    startDolly(event);
+    originSpan = controls._dollyStart.y;
+    armed = false;
+  };
+  controls._handleTouchMoveDolly = (event) => {
+    const other = controls._getSecondPointerPosition(event);
+    const span = Math.hypot(event.pageX - other.x, event.pageY - other.y);
+    if (!pinchDollyArmed(originSpan, span, armed)) return;
+    if (!armed) {
+      armed = true;
+      controls._dollyStart.set(0, span);
+      return;
+    }
+    controls._dollyEnd.set(0, span);
+    controls._dollyDelta.set(0, Math.pow(span / controls._dollyStart.y, controls.zoomSpeed));
+    controls._dollyOut(controls._dollyDelta.y);
+    controls._dollyStart.copy(controls._dollyEnd);
+    controls._updateZoomParameters((event.pageX + other.x) * 0.5, (event.pageY + other.y) * 0.5);
+  };
+}
 
 /**
  * Camera rig. Still MapControls, but with the map idiom's two habits removed.
@@ -199,9 +244,8 @@ export function Controls({
     instance.enabled = fixedCameraRef.current === null;
     instance.minDistance = WORLD_DISTANCE_MIN;
     instance.maxDistance = WORLD_DISTANCE_MAX;
-    // Two fingers zoom. They do not also rotate, which is what DOLLY_ROTATE
-    // would do with any accidental twist.
     instance.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+    installTouchDollyDeadzone(instance);
     controls.current = instance;
     if (import.meta.env.DEV) {
       (globalThis as unknown as { mapControls?: MapControls }).mapControls = instance;
