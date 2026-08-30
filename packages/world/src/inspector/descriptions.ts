@@ -50,10 +50,14 @@ import {
   resolveIslandSurfaceStyle,
 } from "../island/island-surface-style.js";
 import { islandThemeSelectionForCourse } from "../island/kenney-recipes.js";
-import { skyStopsForStudy, WORLD_SKY_CONTRACT } from "../Maps.js";
-import { worldGridTargetForLessons } from "../grid/course-grid.js";
+import { COURSE_SKY_STOPS, skyStopsForStudy } from "../Maps.js";
+import { WORLD_STUDY_GRID_CONTRACT } from "../grid/course-grid.js";
 import { WORLD_SUN, worldKeyToFillRatio, worldShadowFrustum } from "../sky/sun.js";
-import { PLANET_CAMERA_POLAR, PLANET_CLUSTER_LAYOUT_CONTRACT } from "../planet/placement.js";
+import {
+  PLANET_CAMERA_POLAR,
+  PLANET_CLUSTER_LAYOUT_CONTRACT,
+  PLANET_STUDY_SIZE_CONTRACT,
+} from "../planet/placement.js";
 import { PLANET_ATMOSPHERE } from "../planet/PlanetScene.js";
 
 import type {
@@ -782,10 +786,18 @@ function planetGeometry(
   // Inspector callers only have the study list. The count is therefore an
   // explicitly labelled estimate; browser evidence records the real GL
   // counter. One world cell uses the same shared 18-triangle prism as Maps.
-  const estimatedCourses = Math.max(courseCount, studyIds.length);
+  const estimatedStudyCount = Math.max(1, studyIds.length);
+  const estimatedCourses = Math.max(courseCount, estimatedStudyCount);
+  const estimatedCellsPerStudy = Math.max(
+    WORLD_STUDY_GRID_CONTRACT.minCells,
+    Math.min(
+      WORLD_STUDY_GRID_CONTRACT.maxCells,
+      Math.round((estimatedCourses / estimatedStudyCount) * 12),
+    ),
+  );
   return {
-    terrainTriangles: estimatedCourses * worldGridTargetForLessons(12) * 18,
-    focusTriangles: 64,
+    terrainTriangles: estimatedStudyCount * estimatedCellsPerStudy * 18,
+    focusTriangles: 96,
   };
 }
 
@@ -795,7 +807,7 @@ function planetTerrain(
   terrainTriangles: number,
 ): InspectorLayerDescription["terrain"] {
   return {
-    generator: "buildWorldCourseGrid → WorldHexField (shared instanced hex prism)",
+    generator: "buildWorldStudyGrid → WorldHexField (shared instanced hex prism)",
     parameters: [
       parameter(
         "study-count",
@@ -812,17 +824,18 @@ function planetTerrain(
         { unit: "courses" },
       ),
       parameter(
-        "course-scale",
-        "共享课程网格比例",
-        PLANET_CLUSTER_LAYOUT_CONTRACT.courseScale,
-        worldSource("planet/placement.ts", "PLANET_CLUSTER_LAYOUT_CONTRACT.courseScale"),
+        "study-cell-floor",
+        "study 地块最小格数",
+        PLANET_STUDY_SIZE_CONTRACT.minCells,
+        worldSource("grid/course-grid.ts", "WORLD_STUDY_GRID_CONTRACT.minCells"),
+        { unit: "cells" },
       ),
       parameter(
-        "intra-cluster-gap",
-        "簇内最小间距",
-        PLANET_CLUSTER_LAYOUT_CONTRACT.intraClusterGap,
-        worldSource("planet/placement.ts", "PLANET_CLUSTER_LAYOUT_CONTRACT.intraClusterGap"),
-        { unit: "world units" },
+        "study-cell-ceiling",
+        "study 地块最大格数",
+        PLANET_STUDY_SIZE_CONTRACT.maxCells,
+        worldSource("grid/course-grid.ts", "WORLD_STUDY_GRID_CONTRACT.maxCells"),
+        { unit: "cells" },
       ),
       parameter(
         "inter-cluster-gap",
@@ -832,11 +845,24 @@ function planetTerrain(
         { unit: "world units" },
       ),
       parameter(
+        "max-neighbour-gap",
+        "最大邻居间距",
+        PLANET_CLUSTER_LAYOUT_CONTRACT.maxNearestClusterGap,
+        worldSource("planet/placement.ts", "PLANET_CLUSTER_LAYOUT_CONTRACT.maxNearestClusterGap"),
+        { unit: "world units" },
+      ),
+      parameter(
         "selected-lift",
         "选中簇抬升",
         PLANET_ATMOSPHERE.selectedLift,
         worldSource("planet/PlanetScene.tsx", "PLANET_ATMOSPHERE.selectedLift"),
         { unit: "world units" },
+      ),
+      parameter(
+        "selected-scale",
+        "选中簇缩放",
+        PLANET_ATMOSPHERE.selectedScale,
+        worldSource("planet/PlanetScene.tsx", "PLANET_ATMOSPHERE.selectedScale"),
       ),
       parameter(
         "camera-polar",
@@ -850,27 +876,27 @@ function planetTerrain(
         "共享地形估算三角形",
         terrainTriangles,
         worldSource("grid/WorldHexField.tsx", "HEX_GEOMETRY_TRIANGLES"),
-        { unit: "tris", note: "按每课 12 节代表性 world footprint 估算；真实值以浏览器计数为准。" },
+        { unit: "tris", note: "按每个 study 的平均课程数估算；真实值以浏览器计数为准。" },
       ),
     ],
     colors: [
       colorStop(
         "sky-zenith",
         "天空顶",
-        skyStopsForStudy(null).zenith,
-        worldSource("Maps.tsx", "SKY_STOPS.zenith"),
+        COURSE_SKY_STOPS.zenith,
+        worldSource("Maps.tsx", "COURSE_SKY_STOPS.zenith"),
       ),
       colorStop(
         "sky-mid",
         "天空中部",
-        skyStopsForStudy(null).mid,
-        worldSource("Maps.tsx", "SKY_STOPS.mid"),
+        COURSE_SKY_STOPS.mid,
+        worldSource("Maps.tsx", "COURSE_SKY_STOPS.mid"),
       ),
       colorStop(
         "sky-horizon",
         "天空地平线",
-        WORLD_SKY_CONTRACT.horizon,
-        worldSource("Maps.tsx", "WORLD_SKY_CONTRACT.horizon"),
+        COURSE_SKY_STOPS.horizon,
+        worldSource("Maps.tsx", "COURSE_SKY_STOPS.horizon"),
       ),
       colorStop(
         "soil-cliff",
@@ -929,8 +955,8 @@ function planetLighting(): InspectorLayerDescription["lighting"] {
       colorStop(
         "fog",
         "大气雾色",
-        WORLD_SKY_CONTRACT.fogColor,
-        worldSource("Maps.tsx", "WORLD_SKY_CONTRACT.fogColor"),
+        COURSE_SKY_STOPS.nadir ?? COURSE_SKY_STOPS.horizon,
+        worldSource("Maps.tsx", "COURSE_SKY_STOPS.nadir"),
       ),
     ],
   };

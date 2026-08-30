@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-30T19:43:28.570Z
+generated_at: 2026-08-30T21:29:50.382Z
 generator_version: doc-gov@0.9.9
-docs_count: 83
+docs_count: 84
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -241,6 +241,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-08-27
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-STUDY-PICKER-MUST-AGGREGATE-ONE-STUDY-INTO-ONE-SHARED-LANDMASS
+    path: docs/reference/learnings/workflow-issues/a-study-picker-must-aggregate-one-study-into-one-shared-landmass.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-30
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-BACKDROP-FILTER-OVER-A-LIVE-WEBGL-CANVAS-GREYS-OUT-WIDE-HUD-PANELS
     path: docs/reference/learnings/workflow-issues/backdrop-filter-over-a-live-webgl-canvas-greys-out-wide-hud-panels.md

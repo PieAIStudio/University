@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { WORLD_SKY_CONTRACT } from "../Maps.js";
 import { WORLD_SUN } from "../sky/sun.js";
 import { PLANET_ATMOSPHERE } from "./PlanetScene.js";
 
@@ -13,8 +14,9 @@ describe("planet shared-world atmosphere contract", () => {
   });
 
   it("makes distance the separator with a stronger falloff than the catalogue", () => {
-    expect(PLANET_ATMOSPHERE.fogFarRatio).toBeLessThan(3.5);
-    expect(PLANET_ATMOSPHERE.fogNearRatio).toBeLessThan(0.55);
+    expect(PLANET_ATMOSPHERE.fogFarRatio).toBeLessThan(WORLD_SKY_CONTRACT.fogFarRatio);
+    expect(PLANET_ATMOSPHERE.fogNearRatio).toBeLessThan(WORLD_SKY_CONTRACT.fogNearRatio);
     expect(PLANET_ATMOSPHERE.selectedLift).toBeGreaterThan(0);
+    expect(PLANET_ATMOSPHERE.selectedScale).toBeGreaterThan(1);
   });
 });

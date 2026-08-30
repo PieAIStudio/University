@@ -5,16 +5,16 @@
 export {
   PLANET_CAMERA_POLAR,
   PLANET_CLUSTER_LAYOUT_CONTRACT,
+  PLANET_STUDY_SIZE_CONTRACT,
   placePlanetClusters,
   planetCameraDistance,
 } from "./placement.js";
 export type {
   PlanetClusterLayout,
   PlanetClusterPlacement,
-  PlanetCourseLayoutInput,
-  PlanetCoursePlacement,
   PlanetFieldBounds,
   PlanetStudyLayoutInput,
+  PlanetStudyPlacement,
 } from "./placement.js";
 export { PlanetScene, PlanetStage, PLANET_ATMOSPHERE } from "./PlanetScene.js";
 export type { PlanetSceneProps } from "./PlanetScene.js";

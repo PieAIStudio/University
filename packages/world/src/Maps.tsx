@@ -67,7 +67,12 @@ import {
 import { SkyDome } from "./sky/skydome.js";
 import { WORLD_SUN, worldShadowFrustum, worldSunPosition } from "./sky/sun.js";
 import { renderTier } from "./sky/tier";
-import { buildCourseGrid, type HexMap } from "./grid/course-grid.js";
+import {
+  buildCourseGrid,
+  type HexMap,
+  worldGridFootprintLessonsForStudy,
+  WORLD_STUDY_GRID_CONTRACT,
+} from "./grid/course-grid.js";
 import { GRID_LESSON_MARKER_COLOURS } from "./grid/grid-palette.js";
 import { hexToWorld } from "./grid/hex.js";
 import { LessonMarkerField } from "./grid/LessonMarkerField.js";
@@ -116,7 +121,7 @@ export type SkyStops = {
 };
 
 /** The course frame is a warm illustrated sky, with lavender negative space. */
-const COURSE_SKY_STOPS: SkyStops = {
+export const COURSE_SKY_STOPS: SkyStops = {
   zenith: 0xff8f83,
   mid: 0xffe0a0,
   horizon: 0xffc4b8,
@@ -372,6 +377,40 @@ export function buildWorldCourseGrid(node: CourseNode, state: "done" | "idle" = 
         unitId: `${node.courseId}/world-unit`,
         unitIndex: 0,
         state,
+      },
+    ],
+  });
+}
+
+/**
+ * Build the one higher-level landmass for a study from the same world grid.
+ *
+ * The study picker does not need 31 course silhouettes: at this height one
+ * connected field is the identity cue. The study's real course/lesson volume
+ * only sizes that field; its single synthetic route anchor is deliberately not
+ * a second course or lesson surface.
+ */
+export function buildWorldStudyGrid(input: {
+  readonly studyId: string;
+  readonly studyTitle: string;
+  readonly courseCount: number;
+  readonly lessonCount: number;
+}): HexMap {
+  const footprintLessons = worldGridFootprintLessonsForStudy(input.courseCount, input.lessonCount);
+  return buildCourseGrid({
+    studyId: input.studyId,
+    courseId: `study/${input.studyId}`,
+    seed: `planet/study/${input.studyId}`,
+    activeLessonIndex: -1,
+    projection: "world",
+    footprintLessons,
+    worldCellFloor: WORLD_STUDY_GRID_CONTRACT.minCells,
+    lessons: [
+      {
+        lessonId: `study/${input.studyId}/landmass-anchor`,
+        unitId: `study/${input.studyId}/landmass`,
+        unitIndex: 0,
+        state: "idle",
       },
     ],
   });

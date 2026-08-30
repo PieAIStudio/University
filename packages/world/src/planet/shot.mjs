@@ -176,7 +176,7 @@ async function main() {
     const pointer = await clickStudyWithRealPointer(page, "buzz");
     const afterBeacon = await page.locator("[data-planet-page]").getAttribute("data-selected");
     log.push(
-      `real pointer on Buzz course island at canvas (${pointer.x},${pointer.y}) → selected=${afterBeacon}`,
+      `real pointer on Buzz study landmass at canvas (${pointer.x},${pointer.y}) → selected=${afterBeacon}`,
     );
 
     await page.keyboard.press("Tab");

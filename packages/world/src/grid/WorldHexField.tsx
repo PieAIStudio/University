@@ -119,10 +119,11 @@ export interface WorldHexFieldProps {
 /**
  * The world projection of the shared grid pipeline.
  *
- * Course maps keep their four readable layers. The remote map composes all
- * courses into one terrain instance, one soil underside, one spike instance
- * and a small number of cross-catalogue prop batches. Picking still resolves
- * the exact course through the terrain instance id.
+ * Course maps keep their four readable layers. The remote map composes either
+ * the catalogue's course field or the planet's one-study landmasses into one
+ * terrain instance, one soil underside, one spike instance and a small number
+ * of cross-catalogue prop batches. Picking resolves the owning island through
+ * the terrain instance id.
  */
 export function WorldHexField({ islands, onPick, onHover }: WorldHexFieldProps) {
   const instances = useMemo(() => cellInstances(islands), [islands]);

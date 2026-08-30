@@ -243,12 +243,14 @@ describe("PlanetPage", () => {
   });
 
   it("keeps the higher shared-world cluster contract and the project colour in the DOM", () => {
-    expect(SCENE_SRC).toContain("buildWorldCourseGrid");
+    expect(SCENE_SRC).toContain("buildWorldStudyGrid");
     expect(SCENE_SRC).toContain("WorldHexField");
     expect(SCENE_SRC).toContain("Weather");
+    expect(SCENE_SRC).toContain("COURSE_SKY_STOPS");
     expect(SCENE_SRC).toContain("placePlanetClusters");
     expect(SCENE_SRC).toContain("PLANET_CAMERA_POLAR");
     expect(SCENE_SRC).toContain("PLANET_ATMOSPHERE");
+    expect(SCENE_SRC).toContain("selectedScale");
     expect(SCENE_SRC).not.toMatch(
       /Icosahedron|sphericalFbm|buildPlanetGeometry|FloatingStudyCluster/,
     );

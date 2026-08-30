@@ -4,9 +4,14 @@ import { describe, expect, it } from "vitest";
 import type { CourseNode } from "../course/course.js";
 import { WORLD_ISLAND_SEPARATION_GAP } from "../course/layout.js";
 import { islandLookCameraForShot } from "../island/island-look.js";
-import { placeWorld } from "../Maps.js";
+import { buildWorldStudyGrid, placeWorld } from "../Maps.js";
 import { GRID_SHARED_SOIL } from "./grid-palette.js";
-import { worldGridFootprintForLessons, worldGridTargetForLessons } from "./course-grid.js";
+import {
+  worldGridFootprintForLessons,
+  worldGridTargetForLessons,
+  worldGridTargetForStudy,
+  WORLD_STUDY_GRID_CONTRACT,
+} from "./course-grid.js";
 import {
   worldUndersideSpikeCountForCells,
   worldUndersideTriangleCountForIslands,
@@ -99,6 +104,38 @@ describe("world grid projection", () => {
     expect(worldGridTargetForLessons(12)).toBe(19);
     expect(worldGridTargetForLessons(41)).toBeGreaterThan(worldGridTargetForLessons(12));
     expect(worldGridTargetForLessons(41)).toBeLessThan(80);
+  });
+
+  it("sizes one study landmass from volume with visible and bounded endpoints", () => {
+    const oneCourse = buildWorldStudyGrid({
+      studyId: "general",
+      studyTitle: "通用课",
+      courseCount: 1,
+      lessonCount: 1,
+    });
+    const realSmall = buildWorldStudyGrid({
+      studyId: "general",
+      studyTitle: "通用课",
+      courseCount: 1,
+      lessonCount: 19,
+    });
+    const realLarge = buildWorldStudyGrid({
+      studyId: "turing-pact",
+      studyTitle: "TuringPact",
+      courseCount: 31,
+      lessonCount: 362,
+    });
+
+    expect(worldGridTargetForStudy(1, 1)).toBeGreaterThanOrEqual(
+      WORLD_STUDY_GRID_CONTRACT.minCells,
+    );
+    expect(oneCourse.cells.length).toBeGreaterThanOrEqual(WORLD_STUDY_GRID_CONTRACT.minCells);
+    expect(realSmall.cells.length).toBeGreaterThan(oneCourse.cells.length);
+    expect(realLarge.cells.length).toBeGreaterThan(realSmall.cells.length);
+    expect(realLarge.cells.length).toBeLessThanOrEqual(WORLD_STUDY_GRID_CONTRACT.maxCells);
+    expect(worldGridTargetForStudy(31, 362)).toBeLessThanOrEqual(
+      WORLD_STUDY_GRID_CONTRACT.maxCells - 4,
+    );
   });
 
   it("projects all 53 real courses into one deterministic, earthy catalogue", () => {

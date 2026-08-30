@@ -1,52 +1,38 @@
 import imported from "../../../../apps/university/src/content/imported.json";
 import { describe, expect, it } from "vitest";
 
-import { buildWorldCourseGrid } from "../Maps.js";
+import { buildWorldStudyGrid } from "../Maps.js";
 import {
   PLANET_CLUSTER_LAYOUT_CONTRACT,
+  PLANET_STUDY_SIZE_CONTRACT,
   placePlanetClusters,
   planetCameraDistance,
   type PlanetStudyLayoutInput,
 } from "./placement.js";
 
 function realStudyInputs(): PlanetStudyLayoutInput[] {
-  return imported.studies.map((study) => ({
-    studyId: study.studyId,
-    courses: study.courses.map((course, index) => {
-      const map = buildWorldCourseGrid({
-        courseId: course.courseId,
-        title: course.title,
-        lessons: course.lessons,
-        studyId: study.studyId,
-        studyTitle: study.title,
-        depth: index,
-        prerequisiteCourseIds: [],
-        trackId: null,
-      });
-      return {
-        studyId: study.studyId,
-        courseId: course.courseId,
-        halfX: map.bounds.halfX,
-        halfZ: map.bounds.halfZ,
-        centerX: (map.bounds.minX + map.bounds.maxX) * 0.5,
-        centerZ: (map.bounds.minZ + map.bounds.maxZ) * 0.5,
-      };
-    }),
-  }));
+  return imported.studies.map((study) => {
+    const lessonCount = study.courses.reduce((sum, course) => sum + course.lessons, 0);
+    const map = buildWorldStudyGrid({
+      studyId: study.studyId,
+      studyTitle: study.title,
+      courseCount: study.courses.length,
+      lessonCount,
+    });
+    return {
+      studyId: study.studyId,
+      courseCount: study.courses.length,
+      lessonCount,
+      cellCount: map.cells.length,
+      halfX: map.bounds.halfX,
+      halfZ: map.bounds.halfZ,
+      centerX: (map.bounds.minX + map.bounds.maxX) * 0.5,
+      centerZ: (map.bounds.minZ + map.bounds.maxZ) * 0.5,
+    };
+  });
 }
 
-function courseGap(
-  left: { readonly centerX: number; readonly centerZ: number; readonly radius: number },
-  right: { readonly centerX: number; readonly centerZ: number; readonly radius: number },
-): number {
-  return (
-    Math.hypot(right.centerX - left.centerX, right.centerZ - left.centerZ) -
-    left.radius -
-    right.radius
-  );
-}
-
-function clusterGap(
+function circleGap(
   left: { readonly centerX: number; readonly centerZ: number; readonly radius: number },
   right: { readonly centerX: number; readonly centerZ: number; readonly radius: number },
 ): number {
@@ -58,36 +44,31 @@ function clusterGap(
 }
 
 describe("placePlanetClusters", () => {
-  it("uses the real imported catalogue: five study clusters and 53 course maps", () => {
-    const layout = placePlanetClusters(realStudyInputs());
+  it("uses one measured landmass per real study, not one map per course", () => {
+    const inputs = realStudyInputs();
+    const layout = placePlanetClusters(inputs);
 
     expect(layout.clusters).toHaveLength(5);
-    expect(layout.courses).toHaveLength(53);
-    expect(layout.clusters.reduce((sum, cluster) => sum + cluster.courseCount, 0)).toBe(53);
+    expect(layout.clusters.map((cluster) => cluster.courseCount).sort((a, b) => a - b)).toEqual([
+      1, 5, 7, 9, 31,
+    ]);
+    expect(layout.clusters.reduce((sum, cluster) => sum + cluster.cellCount, 0)).toBe(
+      inputs.reduce((sum, study) => sum + study.cellCount, 0),
+    );
+    expect(layout.clusters.reduce((sum, cluster) => sum + cluster.cellCount, 0)).toBeLessThan(
+      1_092,
+    );
+    expect(layout.clusters.every((cluster) => cluster.cellCount > 0)).toBe(true);
     expect(layout.bounds.maxHalf).toBeGreaterThan(0);
   });
 
-  it("keeps every course silhouette separated inside its study cluster", () => {
-    const layout = placePlanetClusters(realStudyInputs());
-    for (const studyId of layout.clusters.map((cluster) => cluster.studyId)) {
-      const courses = layout.courses.filter((course) => course.studyId === studyId);
-      for (let left = 0; left < courses.length; left += 1) {
-        for (let right = left + 1; right < courses.length; right += 1) {
-          expect(courseGap(courses[left]!, courses[right]!)).toBeGreaterThanOrEqual(
-            PLANET_CLUSTER_LAYOUT_CONTRACT.intraClusterGap - 1e-6,
-          );
-        }
-      }
-    }
-  });
-
-  it("keeps study clusters apart but close enough to read as one catalogue", () => {
+  it("keeps each study landmass separate while preserving one catalogue field", () => {
     const layout = placePlanetClusters(realStudyInputs());
     const nearestGaps = layout.clusters.map((cluster, index) =>
       Math.min(
         ...layout.clusters
           .filter((_, otherIndex) => otherIndex !== index)
-          .map((other) => clusterGap(cluster, other)),
+          .map((other) => circleGap(cluster, other)),
       ),
     );
 
@@ -99,12 +80,24 @@ describe("placePlanetClusters", () => {
     );
   });
 
+  it("keeps the one-course floor clickable and the 31-course study from owning the frame", () => {
+    const layout = placePlanetClusters(realStudyInputs());
+    const general = layout.clusters.find((cluster) => cluster.studyId === "general");
+    const turing = layout.clusters.find((cluster) => cluster.studyId === "turing-pact");
+    expect(general).toBeDefined();
+    expect(turing).toBeDefined();
+
+    expect(general!.cellCount).toBeGreaterThanOrEqual(PLANET_STUDY_SIZE_CONTRACT.minCells);
+    expect(general!.radius).toBeGreaterThanOrEqual(PLANET_STUDY_SIZE_CONTRACT.minRadius);
+    expect(turing!.cellCount).toBeLessThanOrEqual(PLANET_STUDY_SIZE_CONTRACT.maxCells);
+    expect(turing!.radius / layout.bounds.maxHalf).toBeLessThanOrEqual(
+      PLANET_STUDY_SIZE_CONTRACT.maxLargestFieldShare,
+    );
+  });
+
   it("does not retarget the layout origin when catalogue order or selection changes", () => {
     const input = realStudyInputs();
-    const shuffled = [...input].reverse().map((study) => ({
-      ...study,
-      courses: [...study.courses].reverse(),
-    }));
+    const shuffled = [...input].reverse();
     const forward = placePlanetClusters(input);
     const reversed = placePlanetClusters(shuffled);
 

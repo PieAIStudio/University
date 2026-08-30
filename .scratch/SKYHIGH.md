@@ -2,70 +2,88 @@
 
 ## 结论
 
-已在 `work/skyhigh` 完成第一层 planet 的替换：它现在是同一片天空里站得更高的共享 world island field，不再绘制独立球体、球面 Goldberg 网格或 planet-only 光照/色表。
+第二轮把第一层的视觉粒度改成了正确的单位：一个 study 是一块共享 world landmass，不再把 53 门课的 53 个小岛拉远后冒充星球页。真实目录仍是 5 个 study、53 门课、579 节课；第二轮首屏实际生成 746 个共享 world-grid cells，低于第一轮的 1,092 个 cells。
 
-真实目录数据为 5 个 study、53 门课、579 节课；首屏生成 1092 个共享 world grid cells。study 列表、进度、详情和「进入 X」DOM 侧保持原样。
+study 列表、进度、详情和「进入 X」仍是 DOM；第一层只负责用 canvas 呈现五块 landmass、空间关系和选中反馈。
 
 ## 共享实现与分叉边界
 
-- `packages/world/src/Maps.tsx` 新增 `buildWorldCourseGrid()`，catalogue 与 planet 都从同一份 `projection: "world"` 的 `buildCourseGrid()` 生成课程岛。
-- planet 直接复用 `WorldHexField` 的 instanced 六棱柱地形管线、grid palette 和世界 `Weather`；天空、底面、太阳和雾色来自同一套 `WORLD_SKY_CONTRACT` / `WORLD_SUN`。
-- `apps/university/src/app/world-model.ts` 只把真实 `CourseNode` 的 id、title、lessonCount、depth 投影为 planet 输入；没有在 planet 再造课程目录。
-- 唯一有意的 planet 分叉是相机距离、study/course 的二维分簇和道具数量。独立截图 host 不提供 app 的 public GLB 根目录，所以 `PlanetScene` 的 standalone evidence 将 shared map 的 `props` 置空；产品 catalogue 仍由原有 `WorldPropField` 装饰。这是 brief 允许的 prop-count 分叉，地形、天空、底面和颜色未分叉。
-- `packages/ui` 没有引入 `three`；纯布局 `placement.ts` 也没有 `three`。`Maps.tsx` 的 `LessonPlacement` 接口没有修改。
+- `packages/world/src/Maps.tsx` 保留原有 `buildWorldCourseGrid()` 供岛群图使用，并新增 `buildWorldStudyGrid()`：它仍调用同一份 `projection: "world"` 的 `buildCourseGrid()`，只是把 study 体量压成一个高层 landmass 的 field。
+- planet 直接复用 `WorldHexField` 的 instanced 六棱柱地形、`WorldUndersideField` 的 soil cone/spike、`grid-palette.ts` 的颜色和 `Weather` / `SkyDome` / `WORLD_SUN`。没有 globe、球面 Goldberg 网格或 planet-only shader/light rig。
+- `buildWorldStudyGrid()` 的单个 synthetic route anchor 只让共享 generator 具备合法 route；它不是课程、lesson marker 或第二份课程目录。
+- standalone shot host 没有 app 的 public GLB 根目录，因此 planet evidence 将这份 shared map 的 `props` 置空；产品里的 world catalogue 仍由原有 `WorldPropField` 处理。这是 prop-count 的证据边界，地形、底面、天空、颜色没有另造一份。
+- `packages/ui` 没有引入 `three`；纯布局 `packages/world/src/planet/placement.ts` 也没有引入 `three`；`Maps.tsx` 的 `LessonPlacement` 未修改。
 
-## 分簇判据和阈值
+## 一个 study 的格子公式与阈值
 
-1. 每门课先用 `buildWorldCourseGrid()` 取真实 footprint 的 `halfX/halfZ` 和 envelope center，圆半径取 `max(halfX, halfZ)`。
-2. study 内按 course id 排序，从大到小确定性 pack，任意两门课的圆间隙至少为 `0.72` world units，保证簇内不穿插。
-3. study 簇按簇半径再次确定性 pack，簇间外轮廓间隙至少为 `2.4` world units；每个簇到最近邻的间隙必须不超过 `18`，保证五摊东西分开但仍是一张 catalogue。
-4. 所有 study/course id 都先排序；输入数组顺序、课程数组顺序和 selected study 不参与布局，因此 selection 不会改变场景原点或其他簇的位置。
-5. 相机使用 `48°` 高位极角和 `1.14` breathing-room padding，并按 desktop/mobile 的最窄 FOV 拟合实际 field bounds；测试覆盖 `1440×810 / fov 34` 与 `390×844 / fov 42`。
-6. 大气透视是主要分隔手段：`fogNearRatio = 0.34`、`fogFarRatio = 2.8`，仍绑定到 fit 后的 camera distance，而不是另造一套 planet shader。
+第一层使用 study 的体量，不使用 course-level pack：
 
-真实数据回归测试位于 `packages/world/src/planet/placement.test.ts`，验证 5 簇、53 课程、簇内/簇间边界、输入乱序稳定性和两种 viewport fit。
+```text
+footprintLessons = max(12, lessonCount, courseCount × 4)
+mainTarget       = min(396, max(24, worldGridTargetForLessons(footprintLessons)))
+totalCells       = mainCells + detachedCells ≤ 400
+```
 
-## 选中态
+`24` 是最小可见/可点 landmass floor；`400` 是已有 shared world field 的单 study ceiling，`396 + 最多 4 个 detached cells` 留出结构余量。`courseCount × 4` 防止课程很多但 lesson export 不完整时地块塌缩；`lessonCount` 仍是更完整数据存在时的主增长项。
 
-选中的 study 同时得到三层反馈：
+第二轮真实数据的 study field：
 
-- 对应课程岛抬升 `0.48` world units；
-- 其他 study 的共享 field 变暗，selected cluster 保持清晰；
-- selected cluster 生成共享色表中的 focus halo/ring（render order 10），DOM rail 仍显示选中 row、详情和「进入 X」。
+| Study | 课程 / 节数 | Cells | 半径 |
+| --- | ---: | ---: | ---: |
+| 通用课 | 1 / 19 | 32 | 5.37 |
+| Buzz | 5 / 60 | 96 | 8.69 |
+| SupaLuv | 7 / 54 | 86 | 8.30 |
+| UniversityLocal 自身 | 9 / 84 | 133 | 10.08 |
+| TuringPact | 31 / 362 | 399 | 19.75 |
 
-真实浏览器中 pointer scan 命中 Buzz 课程岛的 canvas 坐标 `(675,565)` 后，`data-selected = "buzz"`；详情从 TuringPact 变为 Buzz，课程数从 31/362 变为 5/60，且布局投影保持不变。
+纯函数布局先按 study id 稳定排序，再按测得 landmass envelope 的 `max(halfX, halfZ)` 从大到小 pack。外轮廓最小间隙是 `2.8` world units；最大最近邻间隙是 `24`，保证五块地分开但仍读作同一张 catalogue。相机使用 `48°` 高位极角和 `1.06` breathing-room padding；输入顺序和 selected study 不参与布局，selection 不会重算场景原点。
 
-## 改前/改后证据
+真实目录回归在 `packages/world/src/planet/placement.test.ts` 和 `packages/world/src/grid/world-grid.test.ts`：覆盖最小 study、31-course 最大 study、五 study 数量、cell 总量、簇间边界、乱序稳定性和 desktop/mobile fit。
 
-截图均为同一 preview host、同一 viewport：
+## 选中态与天空
 
-| 状态 | Desktop | Mobile | 备注 |
+选中的 study 在同一份 `WorldHexField` 上获得三层反馈：
+
+- landmass 抬升 `1.08` world units；
+- landmass scale 为 `1.045`，其他 study 的 instance colour 乘 `0.62`；
+- 在 landmass 外沿绘制一个 render order `10` 的 focus ring（不再增加 halo draw），DOM rail 同步显示 active row、详情和「进入 X」。
+
+星球页调用的是与课程页相同的 `Weather`，天空 stops 直接复用 `Maps.tsx` 的 `COURSE_SKY_STOPS`，云仍来自共享 `CuteCloudSea`，太阳仍来自 `WORLD_SUN`。星球只改变高度、视距和组合，不换天空；fog 绑定 fit 后的 camera distance，planet 使用 `fogNearRatio = 0.22`、`fogFarRatio = 1.65`，比 catalogue 的远端衰减更强。`cloudLevel = -10.2` 与课程层保持同一垂向语言，另外保留共享 `DistantGround` 作为远端深度。
+
+`.scratch/hexgrid-capture.mjs` 在当前 worktree 中不存在；按同一证据要求实际使用已有的 `packages/world/src/planet/shot.mjs`，它通过真实 Chrome、canvas 坐标 pointer hit-test、Tab/Enter/Escape、`readPixels` 和 Stage scene GL counter 完成抓取。
+
+## 同口径 before / after 证据
+
+两轮都使用同一 preview host、同一真实 Chrome、同一 viewport；表中是 Stage 的 scene pass counter，避免把 post-process blit 当成场景预算。
+
+| 状态 | Desktop 1440×810 | Mobile 390×844 | 备注 |
 | --- | ---: | ---: | --- |
-| 改前旧球体 | 43 calls / 6,580 tris | 43 calls / 6,580 tris | `gl.info.render` 的 scene pass；黑色星空球体基线 |
-| 改后共享岛群 | 11 calls / 36,035 tris | 11 calls / 25,703 tris | 5 study、53 course 的真实共享 grid；低于当前 world `33 calls / 68,464 tris` |
+| round2 before | 11 calls / 36,035 tris | 11 calls / 25,703 tris | 53 个 course-level objects，第一轮基线 |
+| round2 after | 9 calls / 29,102 tris | 9 calls / 18,770 tris | 5 个 study landmass，746 cells；低于第一轮上限 |
 
-改前的 9 点 `readPixels` 采样保留了黑色星空背景；改后的 desktop/mobile 各 9 点全部 `nonBlack: true`，说明截图不是黑帧误判。改后证据还记录了 `selectedLift: 0.48`、Buzz focus object `visible: true` 和 render order 10。
+改后 desktop/mobile 的九点 `readPixels` 都是 `nonBlack: true`。真实 pointer 在 Buzz landmass 命中后得到 `data-selected = "buzz"`；Tab/Enter/Escape 也通过。默认 TuringPact 选中截图与 Buzz 选中截图证明至少两个不同 study 的 canvas 反馈可见，且两者 projection bounds/cell count 不变。
 
-截图与指标：
+截图与证据：
 
-- 改前 desktop：[`.scratch/skyhigh/before/planet-desktop-1440x810.png`](./skyhigh/before/planet-desktop-1440x810.png)
-- 改前 mobile：[`.scratch/skyhigh/before/planet-mobile-390x844.png`](./skyhigh/before/planet-mobile-390x844.png)
-- 改后 desktop：[`.scratch/skyhigh/after/planet-skyhigh-after-desktop-1440x810.png`](./skyhigh/after/planet-skyhigh-after-desktop-1440x810.png)
-- 改后 mobile：[`.scratch/skyhigh/after/planet-skyhigh-after-mobile-390x844.png`](./skyhigh/after/planet-skyhigh-after-mobile-390x844.png)
-- 选中 Buzz：[`.scratch/skyhigh/after/planet-skyhigh-after-desktop-selected-buzz-1440x810.png`](./skyhigh/after/planet-skyhigh-after-desktop-selected-buzz-1440x810.png)
-- 浏览器控制后的选中 Buzz：[`.scratch/skyhigh/after/planet-agent-browser-buzz-final.png`](./skyhigh/after/planet-agent-browser-buzz-final.png)
-- 完整 readPixels/GL/布局证据：[`.scratch/skyhigh/after/planet-skyhigh-after-evidence.json`](./skyhigh/after/planet-skyhigh-after-evidence.json)
+- 改前 desktop：[planet-round2-before-desktop-1440x810.png](./skyhigh/round2/before/planet-round2-before-desktop-1440x810.png)
+- 改前 mobile：[planet-round2-before-mobile-390x844.png](./skyhigh/round2/before/planet-round2-before-mobile-390x844.png)
+- 改前 Buzz 选择路径：[planet-round2-before-desktop-selected-buzz-1440x810.png](./skyhigh/round2/before/planet-round2-before-desktop-selected-buzz-1440x810.png)
+- 改后 desktop（默认选中 TuringPact）：[planet-round2-after-desktop-1440x810.png](./skyhigh/round2/after/planet-round2-after-desktop-1440x810.png)
+- 改后 mobile（默认选中 TuringPact）：[planet-round2-after-mobile-390x844.png](./skyhigh/round2/after/planet-round2-after-mobile-390x844.png)
+- 改后 desktop（选中 Buzz）：[planet-round2-after-desktop-selected-buzz-1440x810.png](./skyhigh/round2/after/planet-round2-after-desktop-selected-buzz-1440x810.png)
+- 完整布局、readPixels、GL 证据：[planet-round2-after-evidence.json](./skyhigh/round2/after/planet-round2-after-evidence.json)
+- 同世界参考：[clean-foundations-desktop.png](./prettyisle/final/clean-foundations-desktop.png)
 
 ## 验证
 
-- `pnpm --filter @pieai/university-world test`：49 files、317 tests passed。
-- world typecheck、lint、oxfmt check、app typecheck：passed。
-- `pnpm verify`：passed，包含 workspace 全量 typecheck/lint/format/test、module boundaries、canvas registry、两种 mode build、shelf/content/lesson-link checks、bundle 和全部 doc-gov checks。
-- Playwright real Chrome：desktop/mobile screenshot、real pointer、Tab/Enter、Escape、DOM selection 和 raw WebGL `readPixels` 均完成。
-- agent-browser real browser：点击 Buzz 后 snapshot 显示 Buzz heading、5 门课 · 60 节、`进入 Buzz`，eval 返回 `"buzz"`。
+- `pnpm --filter @pieai/university-world typecheck`：passed。
+- `pnpm --filter @pieai/university-world test`：49 files、318 tests passed；第二/第三层共享 world/course 回归包含在内。
+- `pnpm verify`：passed；workspace typecheck/lint/format/test、module boundaries、canvas registry、两种 mode build、shelf/content/link、bundle 和全部 doc-gov checks 均为 0 exit。
+- oxfmt check：passed；`git diff --check`：passed。
+- Playwright real Chrome：desktop/mobile screenshot、真实 canvas pointer、Tab/Enter、Escape、DOM selection、raw `readPixels` 和 scene GL counters 均完成。
 
 ## 未完成或不确定
 
-没有功能性未完成项。focus ring 有意保持克制，主选中信号是共享颜色、抬升、非选中衰减与 DOM 详情；证据已确认 ring object 可见，但它不是额外的大号 UI 标牌。
-
-独立截图运行仍会打印依赖侧 `THREE.Clock` 弃用 warning；没有 runtime error。`check-export-freshness` 也提示本机没有 initialized studies，因此 freshness 在此机器上是“未证明”而非失败；全量 `pnpm verify` 仍以 0 exit code 完成。
+- 功能上没有未完成项；第二/第三层共享 world/course 管线已随最终 `pnpm verify` 再跑一次并通过。
+- `shot.mjs` 运行时仍会打印依赖侧 `THREE.Clock` deprecation warning；本轮未改第三方依赖，因为没有 runtime error，也不影响截图或 GL 计数。
+- 参考图的课程层包含更近的大型装饰资产；第一层为了保持 study 粒度和预算只保留 shared grid / underside / cloud silhouette。这个减少是本层的刻度取舍，不是把课程文字或课程岛重新塞回 picker。

@@ -38,6 +38,14 @@ export interface CourseGridInput {
    * shot is the place that still spends one cell per lesson.
    */
   readonly footprintLessons?: number;
+  /**
+   * Optional floor for a higher-level remote projection. The study picker has
+   * one landmass per study, so a one-course study still needs a clickable
+   * silhouette even when its lesson count is tiny. This changes only the
+   * requested outline size; the shared outline, field and palette stay the
+   * same.
+   */
+  readonly worldCellFloor?: number;
 }
 
 export interface GridCell {
@@ -111,6 +119,22 @@ export interface HexMap {
   };
 }
 
+/**
+ * The planet's unit is a study, not a course. Keep its sizing rule beside the
+ * shared world-grid generator so the renderer cannot quietly grow a second
+ * notion of "large".
+ */
+export const WORLD_STUDY_GRID_CONTRACT = {
+  /** A short or empty study still owns a visible, pickable landmass. */
+  minCells: 24,
+  /** The existing 400-cell field budget also bounds one study projection. */
+  maxCells: GRID_CELL_BUDGET,
+  /** Course count contributes when lesson totals are sparse or incomplete. */
+  courseWeight: 4,
+  /** Avoid letting a malformed zero-total study collapse to a pebble. */
+  minFootprintLessons: 12,
+} as const;
+
 function fallbackAnchors(
   lessonCount: number,
   seed: string,
@@ -181,6 +205,35 @@ function estimateHexSize(lessonCount: number, cellCount: number, expansion = 0):
 export function worldGridTargetForLessons(lessons: number): number {
   const safeLessons = Math.max(1, Math.floor(lessons));
   return Math.min(GRID_CELL_BUDGET - 4, Math.max(safeLessons + 6, Math.round(safeLessons * 1.55)));
+}
+
+/** The lesson-equivalent volume used by one study's higher-level landmass. */
+export function worldGridFootprintLessonsForStudy(
+  courseCount: number,
+  lessonCount: number,
+): number {
+  const safeCourses = Math.max(1, Math.floor(Number.isFinite(courseCount) ? courseCount : 1));
+  const safeLessons = Math.max(0, Math.floor(Number.isFinite(lessonCount) ? lessonCount : 0));
+  return Math.max(
+    WORLD_STUDY_GRID_CONTRACT.minFootprintLessons,
+    safeLessons,
+    safeCourses * WORLD_STUDY_GRID_CONTRACT.courseWeight,
+  );
+}
+
+/**
+ * Return the requested main-outline target before detached underside cells are
+ * added. The renderer uses the same result through `worldCellFloor`, while
+ * tests and inspector surfaces can reason about the threshold without Three.
+ */
+export function worldGridTargetForStudy(courseCount: number, lessonCount: number): number {
+  return Math.min(
+    GRID_CELL_BUDGET - 4,
+    Math.max(
+      WORLD_STUDY_GRID_CONTRACT.minCells,
+      worldGridTargetForLessons(worldGridFootprintLessonsForStudy(courseCount, lessonCount)),
+    ),
+  );
 }
 
 /**
@@ -478,6 +531,10 @@ export function buildCourseGrid(input: CourseGridInput): HexMap {
           GRID_CELL_BUDGET - 4,
           Math.max(input.lessons.length + 7, Math.round(input.lessons.length * CELLS_PER_LESSON)),
         );
+  const worldCellFloor =
+    projection === "world" && input.worldCellFloor !== undefined
+      ? Math.max(1, Math.floor(input.worldCellFloor))
+      : 0;
   let outline: GridOutline | null = null;
   let route: HexCoord[] | null = null;
   let hexSize = 0;
@@ -487,7 +544,8 @@ export function buildCourseGrid(input: CourseGridInput): HexMap {
   for (let expansion = 0; expansion < 4 && route === null; expansion += 1) {
     const target = Math.min(
       GRID_CELL_BUDGET - 4,
-      requestedTarget + expansion * Math.max(4, Math.ceil(input.lessons.length * 0.12)),
+      Math.max(worldCellFloor, requestedTarget) +
+        expansion * Math.max(4, Math.ceil(input.lessons.length * 0.12)),
     );
     outline = growGridOutline(outlineSeed, target);
     hexSize =
