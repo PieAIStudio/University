@@ -58,8 +58,16 @@ void main() {
     skyColor = mix(uHorizon, uMid, midFactor);
     skyColor = mix(skyColor, uZenith, zenithFactor);
   } else {
-    float nadirFactor = pow(clamp(-altitude, 0.0, 1.0), 0.5);
-    skyColor = mix(uHorizon, uNadir, nadirFactor);
+    // The course camera is intentionally pitched down, so its whole frame
+    // lives below the geometric horizon. A two-stop horizon→nadir blend made
+    // that frame a single muddy ramp and threw away the authored golden middle
+    // of the sky. Reuse the same three stops in the visible lower arc: warm
+    // salmon at the top, a sunlit band below it, then the cool lavender air.
+    float lowerAltitude = clamp(-altitude, 0.0, 1.0);
+    float lowerMidFactor = smoothstep(0.02, 0.34, lowerAltitude);
+    skyColor = mix(uHorizon, uMid, lowerMidFactor);
+    float nadirFactor = smoothstep(0.28, 0.82, lowerAltitude);
+    skyColor = mix(skyColor, uNadir, nadirFactor);
   }
 
   vec3 sunDir = normalize(uSunDirection);

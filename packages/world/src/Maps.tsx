@@ -58,11 +58,17 @@ import {
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
 import { hash } from "./island/random.js";
 import { CuteCloudSea } from "./sky/cloud-sea.js";
-import { AerialWorldPlate, AerialWorldPlateFallback, DeepSea } from "./sky/horizon-sea.js";
+import {
+  AerialWorldPlate,
+  AerialWorldPlateFallback,
+  DeepSea,
+  DistantGround,
+} from "./sky/horizon-sea.js";
 import { SkyDome } from "./sky/skydome.js";
 import { WORLD_SUN, worldShadowFrustum, worldSunPosition } from "./sky/sun.js";
 import { renderTier } from "./sky/tier";
 import { buildCourseGrid, type HexMap } from "./grid/course-grid.js";
+import { GRID_LESSON_MARKER_COLOURS } from "./grid/grid-palette.js";
 import { hexToWorld } from "./grid/hex.js";
 import { LessonMarkerField } from "./grid/LessonMarkerField.js";
 import { WorldHexField, type WorldGridIsland } from "./grid/WorldHexField.js";
@@ -111,10 +117,10 @@ export type SkyStops = {
 
 /** The course frame is a warm illustrated sky, with lavender negative space. */
 const COURSE_SKY_STOPS: SkyStops = {
-  zenith: 0xff8378,
-  mid: 0xffaa76,
-  horizon: 0xffdda2,
-  nadir: 0xa39acd,
+  zenith: 0xff8f83,
+  mid: 0xffe0a0,
+  horizon: 0xffc4b8,
+  nadir: 0xc0b8e5,
 };
 
 /**
@@ -651,6 +657,7 @@ function Weather({
   groundRadius,
   includeCloudSea = true,
   includeSea = true,
+  includeDistantGround = false,
   shadows = true,
 }: {
   extent: number;
@@ -680,6 +687,8 @@ function Weather({
   includeCloudSea?: boolean;
   /** Course shots use the painted sky as negative space around the island. */
   includeSea?: boolean;
+  /** A faint far ground plane adds depth below the floating silhouette. */
+  includeDistantGround?: boolean;
   /** The remote field skips the shadow map; hex cliffs already carry their own dark. */
   shadows?: boolean;
 }) {
@@ -734,7 +743,7 @@ function Weather({
       <directionalLight
         color={0x8cc9d4}
         position={[-sunPosition[0] * 0.82, shadow.lightDistance * 0.44, -sunPosition[2] * 0.82]}
-        intensity={0.62}
+        intensity={0.78}
       />
       <Suspense
         fallback={
@@ -744,6 +753,7 @@ function Weather({
         <AerialWorldPlate extent={extent} level={cloudLevel} visible={includeSea} />
       </Suspense>
       {includeSea ? <DeepSea extent={extent} level={cloudLevel} /> : null}
+      {includeDistantGround ? <DistantGround extent={extent} level={cloudLevel} /> : null}
       {includeCloudSea ? (
         <CuteCloudSea extent={extent} level={cloudLevel} drift={!islandLookFrozen()} />
       ) : null}
@@ -814,6 +824,7 @@ export function WorldScene({
         fogColor={WORLD_SKY_CONTRACT.fogColor}
         sky={sky}
         includeSea={WORLD_SKY_CONTRACT.visibleSea}
+        includeDistantGround
         shadows={false}
       />
       {/*
@@ -1020,20 +1031,12 @@ export function courseSurfaceY(
 }
 
 /**
- * The colour of a lesson marker.
- *
- * Four states, and only one of them is warm and bright. The accent belongs to
- * exactly one marker on the island — the next lesson — for the same reason the
- * beacon burns on exactly one island in the sea: a map that highlights
- * everything available has answered "what could I do", and the question is
- * "what do I do".
+ * Lesson stones are the coral pavers on the ivory road. Their colour comes
+ * from the one reviewed accent ramp, never a second invented orange. Live is
+ * the lightest step so the next lesson still reads first; every other stone
+ * stays in the same hue so the path matches the reference instead of turning
+ * into a row of dark tokens.
  */
-const MARKER_COLOUR = {
-  done: 0xd96b50,
-  live: 0xff8563,
-  idle: 0xf08b69,
-  locked: 0xb87360,
-} as const;
 
 /* The renderer owns the single route ribbon; no second trail is drawn here. */
 
@@ -1103,8 +1106,8 @@ export function CourseScene({
         // radius before drawing the inset coral stone. Content length keeps
         // only a restrained eight-percent cue.
         radius:
-          grid.hexSize * 0.68 * (0.96 + Math.min(1, Math.max(0, lesson.chars) / 12_000) * 0.08),
-        colour: MARKER_COLOUR[lesson.state],
+          grid.hexSize * 0.52 * (0.96 + Math.min(1, Math.max(0, lesson.chars) / 12_000) * 0.08),
+        colour: GRID_LESSON_MARKER_COLOURS[lesson.state],
       })),
     [grid.hexSize, lessons],
   );
@@ -1132,6 +1135,7 @@ export function CourseScene({
         cloudLevel={-10.2}
         includeCloudSea={false}
         includeSea={false}
+        includeDistantGround
       />
       <IslandRender blueprint={blueprint} detail="course" grid={grid} />
       <Suspense fallback={null}>

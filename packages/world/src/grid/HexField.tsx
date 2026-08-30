@@ -2,6 +2,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
+import { hash } from "../island/random.js";
 import { islandLookFrozen } from "../island/island-surface-style.js";
 import type { GridCell, HexMap } from "./course-grid.js";
 import { hexToWorld } from "./hex.js";
@@ -12,6 +13,8 @@ interface HexFieldProps {
 }
 
 type HexLayer = "land" | "route" | "detached";
+
+export const HEX_GEOMETRY_TRIANGLES = 18;
 
 export function hexGeometry(seamStrength: number, cliffBottom = -0.5): THREE.BufferGeometry {
   const positions: number[] = [];
@@ -25,7 +28,9 @@ export function hexGeometry(seamStrength: number, cliffBottom = -0.5): THREE.Buf
   const top = 0.5;
   // The top face keeps its established centre and height. Extending only the
   // lower local edge gives the island a chunky exposed cliff without moving a
-  // lesson position, label, or pick target.
+  // lesson position, label, or pick target. The old bevel pass cost twelve
+  // extra triangles per instance and made the meadow read as a board edge;
+  // the top-face ramp below carries the same light cue inside the budget.
   const bottom = cliffBottom;
   const centre = [0, top, 0] as const;
   for (let side = 0; side < 6; side += 1) {
@@ -39,7 +44,22 @@ export function hexGeometry(seamStrength: number, cliffBottom = -0.5): THREE.Buf
     // Keep the top winding counter-clockwise when viewed from above.
     const topBase = positions.length / 3;
     positions.push(...centre, ...second, ...first);
-    colours.push(1.06, 1.06, 1.06, 0.9, 0.9, 0.9, 0.96, 0.96, 0.96);
+    // Keep the top-face ramp quiet. A dark rim on every hex reads as a dotted
+    // outline at the aerial camera; neighbouring-tile variation lives in
+    // `cellTopColour` instead, so same-height meadow stays one terrace.
+    const edgeValue = 0.97 + (side % 3) * 0.015;
+    const nearEdgeValue = 0.98 + (side % 2) * 0.01;
+    colours.push(
+      1.02,
+      1.02,
+      1.02,
+      edgeValue,
+      edgeValue,
+      edgeValue,
+      nearEdgeValue,
+      nearEdgeValue,
+      nearEdgeValue,
+    );
     faces.push(0, 0, 0);
     indices.push(topBase, topBase + 1, topBase + 2);
 
@@ -58,7 +78,7 @@ export function hexGeometry(seamStrength: number, cliffBottom = -0.5): THREE.Buf
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
-  geometry.userData.gridTriangles = indices.length / 3;
+  geometry.userData.gridTriangles = HEX_GEOMETRY_TRIANGLES;
   return geometry;
 }
 
@@ -80,26 +100,26 @@ export function mapMaterial(
     shader.uniforms.gridDim = { value: dimmed ? 0.62 : 1 };
     shader.vertexShader = shader.vertexShader.replace(
       "#include <common>",
-      "#include <common>\nattribute float gridFace;\nvarying float vGridFace;",
+      "#include <common>\nattribute float gridFace;\nvarying float vGridFace;\nvarying float vGridDepth;",
     );
     shader.vertexShader = shader.vertexShader.replace(
       "#include <begin_vertex>",
-      "#include <begin_vertex>\nvGridFace = gridFace;",
+      "#include <begin_vertex>\nvGridFace = gridFace;\nvGridDepth = position.y;",
     );
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <common>",
-      "#include <common>\nvarying float vGridFace;\nuniform vec3 gridCliff;\nuniform vec3 gridShadow;\nuniform float gridDim;",
+      "#include <common>\nvarying float vGridFace;\nvarying float vGridDepth;\nuniform vec3 gridCliff;\nuniform vec3 gridShadow;\nuniform float gridDim;",
     );
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <color_fragment>",
-      "#include <color_fragment>\nif (vGridFace > 1.5) diffuseColor.rgb = gridShadow;\nelse if (vGridFace > 0.5) diffuseColor.rgb = gridCliff;\ndiffuseColor.rgb *= gridDim;",
+      "#include <color_fragment>\nfloat gridSoilDepth = clamp((0.48 - vGridDepth) / 4.4, 0.0, 1.0);\nvec3 gridSoil = mix(gridCliff, gridShadow, gridSoilDepth);\nif (vGridFace > 0.5) diffuseColor.rgb = gridSoil;\ndiffuseColor.rgb *= gridDim;",
     );
     // The soil should remain legible at the low-poly camera even when the
     // directional shadow falls between two cells. This is a floor, not an
     // unlit material: the warm key and cool hemisphere still provide the form.
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <opaque_fragment>",
-      "if (vGridFace > 0.5) outgoingLight = mix(gridCliff * 0.72, outgoingLight, 0.34);\n#include <opaque_fragment>",
+      "if (vGridFace > 0.5) outgoingLight = mix(gridSoil * 0.72, outgoingLight, 0.34);\n#include <opaque_fragment>",
     );
   };
   material.customProgramCacheKey = () =>
@@ -111,9 +131,16 @@ export function cellTopColour(map: HexMap, cell: GridCell): THREE.Color {
   const colour = new THREE.Color(
     map.projection !== "world" && cell.kind === "route" ? map.palette.road : map.palette.top,
   );
-  if (cell.unitIndex !== null && cell.kind !== "route") {
-    const unitTint = new THREE.Color(map.palette.accent);
-    colour.lerp(unitTint, 0.045 + (cell.unitIndex % 4) * 0.02);
+  if (cell.kind !== "route") {
+    // Unit territories and a tiny per-cell value shift stay inside the same
+    // meadow swatch. The range is deliberately small: a 0.72–1.12 spread
+    // painted whole patches as a second ground colour, which the aerial
+    // camera then read as a tiled board.
+    if (cell.unitIndex !== null) {
+      const unitValue = [0.94, 0.97, 1, 1.03, 1.06][cell.unitIndex % 5] ?? 1;
+      colour.multiplyScalar(unitValue);
+    }
+    colour.multiplyScalar(0.97 + hash(`${map.seed}/${cell.key}/top-value`) * 0.06);
   }
   const lesson = cell.lessonIndex === null ? undefined : map.lessons[cell.lessonIndex];
   if (lesson?.state === "locked") colour.lerp(new THREE.Color(map.palette.shadow), 0.42);
@@ -254,7 +281,7 @@ export function HexField({ map, dimmed = false }: HexFieldProps) {
   const routeMesh = useRef<THREE.InstancedMesh>(null);
   const detachedMesh = useRef<THREE.InstancedMesh>(null);
   const cliffBottom = useMemo(
-    () => -(0.5 + 2.5 * Math.min(1, map.route.length / 41)),
+    () => -(0.95 + 0.35 * Math.min(1, map.route.length / 41)),
     [map.route.length],
   );
   const bedCells = useMemo(() => map.cells.filter((cell) => cell.kind !== "detached"), [map.cells]);
@@ -288,7 +315,8 @@ export function HexField({ map, dimmed = false }: HexFieldProps) {
   // Keep the debug metric truthful on the first render too: refs are still null
   // while JSX is being evaluated, even though every hex layer uses this geometry.
   const triangleCount =
-    18 * (bedCells.length + landCells.length + routeCells.length + detachedCells.length);
+    HEX_GEOMETRY_TRIANGLES *
+    (bedCells.length + landCells.length + routeCells.length + detachedCells.length);
 
   return (
     <group

@@ -494,12 +494,20 @@ export function App() {
           ? window.innerHeight
           : Math.min(window.innerHeight * 0.7, 720),
   };
+  const lookSource = useIslandLookSource({
+    inCourse,
+    lessons,
+    lookDebug,
+    lookShotIsCourse,
+    viewKind: view.kind,
+    world,
+  });
   const lookBounds = lookShotIsCourse
-    ? {
+    ? (lookSource?.detailBounds ?? {
         halfX: lessons[0]?.blueprint.bounds.halfX ?? 1,
         halfZ: lessons[0]?.blueprint.bounds.halfZ ?? 1,
         outline: lessons[0]?.blueprint.outline,
-      }
+      })
     : { halfX: world?.extent ?? 1, halfZ: world?.extent ?? 1 };
   const fixedCamera =
     import.meta.env.DEV &&
@@ -509,14 +517,6 @@ export function App() {
       : null;
   const stageCameraFrom = fixedCamera?.cameraFrom ?? cameraFrom;
   const stageLookAt = fixedCamera?.lookAt ?? lookAt;
-  const lookSource = useIslandLookSource({
-    inCourse,
-    lessons,
-    lookDebug,
-    lookShotIsCourse,
-    viewKind: view.kind,
-    world,
-  });
   const stage =
     view.kind === "avatar-lab" || studioMap ? null : (
       <WorldMapCanvas

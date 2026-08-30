@@ -286,6 +286,7 @@ function placementFootprintRadius(placement: IslandDressingPlacement): number {
 
 function dressingAssetsReady(scene: THREE.Scene, source: IslandLookSceneSource): boolean {
   const expected =
+    source.dressingAssetPlacementCount ??
     source.dressingPlacementCount ??
     source.dressingPlans.reduce((sum, plan) => sum + plan.placements.length, 0);
   if (expected === 0) return true;
@@ -346,16 +347,19 @@ export function measureIslandCodeMetrics(
   // report a rim share greater than 1. The radial metric is unavailable for
   // this projection, so zero is the honest neutral value until the judge is
   // taught to consume grid placement coordinates directly.
-  const rimPropCount = source.dressingPlacementCount
-    ? 0
-    : source.dressingPlans.reduce((sum, plan, index) => {
-        const blueprint = source.blueprints[index];
-        if (!blueprint) return sum;
-        return (
-          sum +
-          plan.placements.filter((placement) => normalizedRadial(blueprint, placement) > 0.8).length
-        );
-      }, 0);
+  const rimPropCount =
+    source.dressingRimPlacementCount ??
+    (source.dressingPlacementCount
+      ? 0
+      : source.dressingPlans.reduce((sum, plan, index) => {
+          const blueprint = source.blueprints[index];
+          if (!blueprint) return sum;
+          return (
+            sum +
+            plan.placements.filter((placement) => normalizedRadial(blueprint, placement) > 0.8)
+              .length
+          );
+        }, 0));
   const firstBlueprint = source.blueprints[0];
   const firstPlan = source.dressingPlans[0];
   const nodes =

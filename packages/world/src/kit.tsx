@@ -239,6 +239,8 @@ export interface Placement {
   /** Height in world units. The model is scaled to this, not to a factor. */
   readonly height: number;
   readonly turn: number;
+  /** Horizontal scale. Defaults to `height` so a skinny silhouette can be fattened. */
+  readonly width?: number;
 }
 
 /**
@@ -394,10 +396,11 @@ export function BatchedAssetField({
     const local = new THREE.Matrix4();
     const world = new THREE.Matrix4();
     at.forEach((placement) => {
+      const width = placement.width ?? placement.height;
       world.compose(
         placement.position,
         new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), placement.turn),
-        new THREE.Vector3(placement.height, placement.height, placement.height),
+        new THREE.Vector3(width, placement.height, width),
       );
       geometryIds.forEach((geometryId, partIndex) => {
         const instanceId = target.addInstance(geometryId);
@@ -464,10 +467,11 @@ function PartField({
     const local = new THREE.Matrix4();
     const world = new THREE.Matrix4();
     at.forEach((placement, index) => {
+      const width = placement.width ?? placement.height;
       world.compose(
         placement.position,
         new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), placement.turn),
-        new THREE.Vector3(placement.height, placement.height, placement.height),
+        new THREE.Vector3(width, placement.height, width),
       );
       target.setMatrixAt(index, local.multiplyMatrices(world, part.offset));
     });

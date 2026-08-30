@@ -8,7 +8,7 @@ interface UndersideProps {
   readonly dimmed?: boolean;
 }
 
-const ROCK_COUNT = 4;
+const ROCK_COUNT = 5;
 
 export function Underside({ map, dimmed = false }: UndersideProps) {
   const rocks = useRef<THREE.InstancedMesh>(null);
@@ -16,10 +16,10 @@ export function Underside({ map, dimmed = false }: UndersideProps) {
   const centreX = (map.bounds.minX + map.bounds.maxX) * 0.5;
   const centreZ = (map.bounds.minZ + map.bounds.maxZ) * 0.5;
   const courseFactor = Math.min(1, map.route.length / 41);
-  const undersideDepth = Math.max(5.4, minimumHalf * (0.35 + courseFactor * 0.55));
-  // The cone is an underside silhouette, not a second top surface. Keeping
-  // its lip inside the cell cluster leaves gaps between cells reading as air.
-  const coneRadius = minimumHalf * (0.3 + courseFactor * 0.28);
+  const undersideDepth = Math.max(5.4, minimumHalf * (0.22 + courseFactor * 0.28));
+  // The cone is only a dark core. The floating-island read comes from the
+  // rock spikes; a wide smooth pyramid was the thing the reference replaced.
+  const coneRadius = minimumHalf * (0.14 + courseFactor * 0.1);
   const frontX = Math.sin((65 * Math.PI) / 180);
   const frontZ = Math.cos((65 * Math.PI) / 180);
   const coneGeometry = useMemo(() => {
@@ -43,7 +43,7 @@ export function Underside({ map, dimmed = false }: UndersideProps) {
     geometry.setAttribute("color", new THREE.BufferAttribute(colour, 3));
     return geometry;
   }, [coneRadius, map.palette.cliff, map.palette.shadow, undersideDepth]);
-  const rockGeometry = useMemo(() => new THREE.ConeGeometry(0.34, 1.7, 5, 1), []);
+  const rockGeometry = useMemo(() => new THREE.ConeGeometry(1, 1, 5, 1), []);
   const rockMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
@@ -63,6 +63,7 @@ export function Underside({ map, dimmed = false }: UndersideProps) {
         vertexColors: true,
         roughness: 1,
         flatShading: true,
+        side: THREE.DoubleSide,
       }),
     [dimmed, map.palette.shadow],
   );
@@ -71,47 +72,74 @@ export function Underside({ map, dimmed = false }: UndersideProps) {
       new THREE.MeshBasicMaterial({
         // Coral belongs to lesson stones. Water keeps its own cool material
         // so the underside still has the blue counterpoint from the reference.
-        color: 0x4fa8c4,
+        color: 0xffffff,
+        vertexColors: true,
         transparent: true,
-        opacity: dimmed ? 0.26 : 0.58,
+        opacity: dimmed ? 0.3 : 0.68,
         depthWrite: false,
         depthTest: false,
         side: THREE.DoubleSide,
       }),
     [dimmed, map.palette.accent],
   );
-  const waterfallHeight = 4 + courseFactor * 10;
-  const waterfallWidth = 1.2 + courseFactor * 1.4;
-  const waterfallScaleY = Math.min(1.2, minimumHalf / 18);
-  const waterGeometry = useMemo(
-    () => new THREE.PlaneGeometry(waterfallWidth, waterfallHeight),
-    [waterfallHeight, waterfallWidth],
-  );
+  const waterfallHeight = 6 + courseFactor * 13;
+  const waterfallWidth = 1.7 + courseFactor * 1.75;
+  const waterfallScaleY = Math.min(1.15, minimumHalf / 18);
+  const waterGeometry = useMemo(() => {
+    // One ribbon, no extra draw. Vertical bands plus a taper and a bottom
+    // flare give the reference's cheap waterfall shape without a splash mesh.
+    const geometry = new THREE.PlaneGeometry(waterfallWidth, waterfallHeight, 6, 8);
+    const position = geometry.getAttribute("position");
+    const colours = new Float32Array(position.count * 3);
+    const bands = [0x4aa7c2, 0x8bd7df, 0x55b8d0, 0x9be0e0, 0x7fd0d8, 0x4aa7c2];
+    for (let index = 0; index < position.count; index += 1) {
+      const x = position.getX(index);
+      const y = position.getY(index);
+      const along = (y + waterfallHeight * 0.5) / waterfallHeight;
+      const taper = 0.52 + 0.48 * along;
+      const flare = along < 0.14 ? ((0.14 - along) / 0.14) * 0.85 : 0;
+      const wave = Math.sin(y * 0.42) * waterfallWidth * 0.045;
+      position.setX(index, x * (taper + flare) + wave);
+      position.setZ(index, (1 - along) * 0.18);
+      const band = Math.max(
+        0,
+        Math.min(bands.length - 1, Math.round((x / waterfallWidth + 0.5) * (bands.length - 1))),
+      );
+      const colour = new THREE.Color(bands[band]!);
+      if (along < 0.12) colour.lerp(new THREE.Color(0xd8f4f6), 0.35 * (1 - along / 0.12));
+      colour.toArray(colours, index * 3);
+    }
+    geometry.setAttribute("color", new THREE.BufferAttribute(colours, 3));
+    geometry.computeVertexNormals();
+    return geometry;
+  }, [waterfallHeight, waterfallWidth]);
 
   useLayoutEffect(() => {
     const target = rocks.current;
     if (!target) return;
-    const ringRadius = minimumHalf * 0.63;
     const matrix = new THREE.Matrix4();
     for (let index = 0; index < ROCK_COUNT; index += 1) {
-      const angle = (index / ROCK_COUNT) * Math.PI * 2 + 0.2;
-      const radius = ringRadius * (0.72 + (index % 2) * 0.14);
+      const angle = (index / ROCK_COUNT) * Math.PI * 2 + 0.28;
+      const radius = minimumHalf * (0.18 + (index % 3) * 0.11);
+      const spikeHeight = 4.2 + (index % 3) * 2.1 + courseFactor * 1.4;
+      const spikeRadius = 1.05 + (index % 2) * 0.55 + courseFactor * 0.35;
+      const topY = -0.15;
       const position = new THREE.Vector3(
         centreX + Math.cos(angle) * radius,
-        -0.35 - minimumHalf * (0.2 + (index % 2) * 0.05),
+        topY - spikeHeight * 0.5,
         centreZ + Math.sin(angle) * radius,
       );
       matrix.compose(
         position,
         new THREE.Quaternion().setFromEuler(
-          new THREE.Euler(0.16 * Math.sin(angle), angle, 0.12 * Math.cos(angle)),
+          new THREE.Euler(Math.PI + 0.12 * Math.sin(angle), angle, 0.08 * Math.cos(angle)),
         ),
-        new THREE.Vector3(0.76 + (index % 3) * 0.13, 1 + (index % 2) * 0.22, 0.76),
+        new THREE.Vector3(spikeRadius, spikeHeight, spikeRadius * 0.86),
       );
       target.setMatrixAt(index, matrix);
     }
     target.instanceMatrix.needsUpdate = true;
-  }, [map, minimumHalf]);
+  }, [centreX, centreZ, courseFactor, map, minimumHalf]);
   useEffect(() => () => coneGeometry.dispose(), [coneGeometry]);
   useEffect(() => () => rockGeometry.dispose(), [rockGeometry]);
   useEffect(() => () => waterGeometry.dispose(), [waterGeometry]);
@@ -128,7 +156,7 @@ export function Underside({ map, dimmed = false }: UndersideProps) {
           centreZ + frontZ * minimumHalf * 0.18,
         ]}
         rotation={[Math.PI, 0, 0]}
-        scale={[1.08, 1, 1.02]}
+        scale={[1, 1, 0.92]}
         geometry={coneGeometry}
         material={shadowMaterial}
       />
@@ -142,12 +170,14 @@ export function Underside({ map, dimmed = false }: UndersideProps) {
         geometry={waterGeometry}
         material={waterMaterial}
         position={[
-          map.bounds.maxX * 0.67,
+          map.bounds.maxX * 0.62,
           1.18 - waterfallHeight * waterfallScaleY * 0.5,
-          map.bounds.minZ * 0.71,
+          map.bounds.minZ * 0.58,
         ]}
         scale={[1, waterfallScaleY, 1]}
-        rotation={[0, 0, 0]}
+        // Face the fixed course-design camera so the water reads as a broad
+        // vertical ribbon instead of an edge-on blue sliver.
+        rotation={[0, (65 * Math.PI) / 180, 0]}
         renderOrder={3}
       />
     </group>

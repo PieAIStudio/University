@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { buildCourseGrid, type CourseGridLesson } from "./course-grid.js";
+import { buildCourseGrid, GRID_SEAM_STRENGTH, type CourseGridLesson } from "./course-grid.js";
 import { hexDistance, hexKey, hexNeighbors, hexToWorld } from "./hex.js";
 import { GRID_CELL_BUDGET, gridRegionShapeMetrics, hexRegionIsConnected } from "./grid-outline.js";
 import { propCellsAreUnique } from "./grid-props.js";
@@ -212,6 +212,41 @@ describe("hex grid course data", () => {
       routeArchetype: "horseshoe" as const,
     };
     expect(buildCourseGrid(input)).toEqual(buildCourseGrid(input));
+  });
+
+  it("builds three to four terrace levels instead of one plateau", () => {
+    const blueprint = islandGeometryBlueprint({
+      studyId: "turing-pact",
+      courseId: "foundations-before-zero",
+      lessonCount: LESSONS.length,
+    });
+    const map = buildCourseGrid({
+      studyId: blueprint.studyId,
+      courseId: blueprint.courseId,
+      seed: blueprint.seed,
+      lessons: LESSONS,
+      routeArchetype: blueprint.route.archetype,
+      routeAnchors: blueprint.geometryNodes,
+    });
+    const heights = new Set(
+      map.cells.filter((cell) => cell.kind !== "detached").map((cell) => cell.height),
+    );
+    expect(heights.size).toBeGreaterThanOrEqual(3);
+    expect(Math.max(...heights)).toBeGreaterThanOrEqual(3);
+    expect(GRID_SEAM_STRENGTH.land).toBeLessThan(0);
+    expect(GRID_SEAM_STRENGTH.route).toBeGreaterThan(0);
+  });
+
+  it("does not plant stumps on the visible course field", () => {
+    const map = buildCourseGrid({
+      studyId: "turing-pact",
+      courseId: "foundations-before-zero",
+      seed: "no-visible-stumps",
+      lessons: LESSONS,
+    });
+    expect(
+      map.props.some((prop) => prop.assetId === "stump_round" && prop.visibleInCourse !== false),
+    ).toBe(false);
   });
 
   it("keeps the first six grid modules renderer-free", () => {

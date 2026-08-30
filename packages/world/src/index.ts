@@ -20,6 +20,7 @@ export {
 } from "./Maps.js";
 export type { LessonPlacement, Marker } from "./Maps.js";
 export { buildCourseGrid } from "./grid/course-grid.js";
+export { hexToWorld } from "./grid/hex.js";
 export { Stage } from "./Stage.js";
 export { WorldMapCanvas, type WorldMap } from "./WorldMapCanvas.js";
 export {

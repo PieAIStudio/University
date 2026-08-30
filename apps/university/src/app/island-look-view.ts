@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 
 import type { View } from "@pieai/university-core";
-import { buildCourseGrid } from "@pieai/university-world";
+import { buildCourseGrid, hexToWorld } from "@pieai/university-world";
 import type { CourseNode } from "@pieai/university-world/course.js";
 import {
   islandLookSceneSource,
@@ -68,29 +68,42 @@ export function useIslandLookSource({
     if (!import.meta.env.DEV || !lookDebug?.shot) return null;
     if (lookShotIsCourse && inCourse) {
       const blueprint = lessons[0]?.blueprint;
-      return blueprint
-        ? islandLookSceneSource(
-            "course",
-            [blueprint],
-            lessons.map((lesson) => ({ x: lesson.position.x, z: lesson.position.z })),
-            {
-              dressingPlacementCount: buildCourseGrid({
-                studyId: blueprint.studyId,
-                courseId: blueprint.courseId,
-                seed: blueprint.seed,
-                routeArchetype: blueprint.route.archetype,
-                routeAnchors: blueprint.geometryNodes,
-                activeLessonIndex: lessons.findIndex((lesson) => lesson.state === "live"),
-                lessons: lessons.map((lesson) => ({
-                  lessonId: lesson.lessonId,
-                  unitId: lesson.unitId,
-                  unitIndex: lesson.unitIndex,
-                  state: lesson.state,
-                })),
-              }).props.length,
-            },
-          )
-        : null;
+      if (!blueprint) return null;
+      const grid = buildCourseGrid({
+        studyId: blueprint.studyId,
+        courseId: blueprint.courseId,
+        seed: blueprint.seed,
+        routeArchetype: blueprint.route.archetype,
+        routeAnchors: blueprint.geometryNodes,
+        activeLessonIndex: lessons.findIndex((lesson) => lesson.state === "live"),
+        lessons: lessons.map((lesson) => ({
+          lessonId: lesson.lessonId,
+          unitId: lesson.unitId,
+          unitIndex: lesson.unitIndex,
+          state: lesson.state,
+        })),
+      });
+      return islandLookSceneSource(
+        "course",
+        [blueprint],
+        lessons.map((lesson) => ({ x: lesson.position.x, z: lesson.position.z })),
+        {
+          dressingPlacementCount: grid.props.length,
+          dressingAssetPlacementCount: grid.props.filter(
+            (prop) => prop.kind === "territory" && prop.visibleInCourse !== false,
+          ).length,
+          detailBounds: { halfX: grid.bounds.halfX, halfZ: grid.bounds.halfZ },
+          dressingRimPlacementCount: grid.props.filter((prop) => {
+            const point = hexToWorld(prop.coord, grid.hexSize);
+            return (
+              Math.hypot(
+                point.x / Math.max(grid.bounds.halfX, Number.EPSILON),
+                point.z / Math.max(grid.bounds.halfZ, Number.EPSILON),
+              ) > 0.76
+            );
+          }).length,
+        },
+      );
     }
     if (lookDebug.shot === "world-design" && viewKind === "world" && world) {
       return islandLookSceneSource(
@@ -101,6 +114,10 @@ export function useIslandLookSource({
         world.placements.map((entry) => ({ x: entry.position.x, z: entry.position.z })),
         {
           dressingPlacementCount: world.placements.reduce(
+            (sum, entry) => sum + entry.grid.props.length,
+            0,
+          ),
+          dressingAssetPlacementCount: world.placements.reduce(
             (sum, entry) => sum + entry.grid.props.length,
             0,
           ),

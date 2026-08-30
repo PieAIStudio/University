@@ -212,3 +212,28 @@ export function DeepSea({ extent, level }: { extent: number; level: number }) {
     </mesh>
   );
 }
+
+/**
+ * A distant atmospheric ground plane keeps the lower frame from becoming a
+ * second flat sky colour. It is deliberately below the floating islands and
+ * broad enough that its edge dissolves in fog; it reads as a far forest/sea
+ * horizon, never as another playable island or a continuous world floor.
+ */
+export function DistantGround({ extent, level }: { extent: number; level: number }) {
+  return (
+    <mesh
+      name="island-look-distant-ground"
+      rotation={[-Math.PI / 2, 0, 0]}
+      // The course camera looks down by design. At -36 a large disc catches
+      // even the upper rays and turns the whole sky into one muddy fog colour;
+      // lowering it makes the disc enter only at the bottom of the frame,
+      // where it can suggest a far forest/sea without becoming a backdrop.
+      position={[0, level - 60, 0]}
+      scale={[1.26, 0.9, 1]}
+      renderOrder={-2}
+    >
+      <circleGeometry args={[Math.max(extent * 12, 420), 64]} />
+      <meshBasicMaterial color={0x7d8db9} transparent opacity={0.08} depthWrite={false} />
+    </mesh>
+  );
+}

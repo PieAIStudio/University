@@ -204,13 +204,25 @@ export interface IslandLookSceneSource {
   readonly blueprints: readonly IslandBlueprint[];
   readonly dressingPlans: readonly IslandDressingPlan[];
   readonly nodePositions: readonly IslandPoint[];
-  /** Runtime projection count when a detail renderer replaces the old plan. */
+  /** Runtime logical placement count when a detail renderer replaces the old plan. */
   readonly dressingPlacementCount?: number;
+  /** Runtime placement count that the detail renderer actually loads as GLB assets. */
+  readonly dressingAssetPlacementCount?: number;
+  /** Runtime count on the outer island ring, used by the composition metric. */
+  readonly dressingRimPlacementCount?: number;
+  /** Actual renderer bounds for a detail shot; blueprints may be narrower than a snapped grid. */
+  readonly detailBounds?: IslandLookBounds;
 }
 
 export interface IslandLookSceneSourceOptions {
-  /** Use the actual instanced projection count for readiness and code metrics. */
+  /** Use the actual logical projection count for code metrics. */
   readonly dressingPlacementCount?: number;
+  /** Use the actual instanced asset count for readiness. */
+  readonly dressingAssetPlacementCount?: number;
+  /** Use the actual outer-ring count for the composition metric. */
+  readonly dressingRimPlacementCount?: number;
+  /** Use the snapped renderer field when fitting a fixed detail camera. */
+  readonly detailBounds?: IslandLookBounds;
 }
 
 /** Build judge data from the same blueprint and dressing planner as the scene. */
@@ -228,5 +240,12 @@ export function islandLookSceneSource(
     ...(options.dressingPlacementCount === undefined
       ? {}
       : { dressingPlacementCount: options.dressingPlacementCount }),
+    ...(options.dressingAssetPlacementCount === undefined
+      ? {}
+      : { dressingAssetPlacementCount: options.dressingAssetPlacementCount }),
+    ...(options.dressingRimPlacementCount === undefined
+      ? {}
+      : { dressingRimPlacementCount: options.dressingRimPlacementCount }),
+    ...(options.detailBounds === undefined ? {} : { detailBounds: options.detailBounds }),
   };
 }

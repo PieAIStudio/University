@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-30T17:26:21.113Z
+generated_at: 2026-08-30T18:18:52.227Z
 generator_version: doc-gov@0.9.9
-docs_count: 79
+docs_count: 80
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -451,6 +451,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-29
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-SAME-HEIGHT-HEX-MEADOW-CELLS-NEED-A-SLIGHT-OVERLAP-NOT-A-ZERO-SEAM
+    path: docs/reference/learnings/workflow-issues/same-height-hex-meadow-cells-need-a-slight-overlap-not-a-zero-seam.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-30
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-SCREEN-SPACE-AVATAR-OCCLUSION-MUST-DRIVE-A-GENERATOR-LEVEL-ARRIVAL-CLEAR-ZONE
     path: docs/reference/learnings/workflow-issues/screen-space-avatar-occlusion-must-drive-a-generator-level-arrival-clear-zone.md
