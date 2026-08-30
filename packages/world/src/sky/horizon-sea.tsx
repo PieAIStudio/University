@@ -105,7 +105,15 @@ void main() {
 }
 `;
 
-export function AerialWorldPlate({ extent, level }: { extent: number; level: number }) {
+export function AerialWorldPlate({
+  extent,
+  level,
+  visible = true,
+}: {
+  extent: number;
+  level: number;
+  visible?: boolean;
+}) {
   const mobile = renderTier() === "mobile";
   const gl = useThree((state) => state.gl);
   const sourceTexture = useLoader(
@@ -152,6 +160,7 @@ export function AerialWorldPlate({ extent, level }: { extent: number; level: num
   return (
     <mesh
       name="island-look-aerial-plate"
+      visible={visible}
       rotation={[-Math.PI / 2, 0, 0]}
       position={[0, level - 4, 0]}
     >
@@ -172,10 +181,19 @@ export function AerialWorldPlate({ extent, level }: { extent: number; level: num
   );
 }
 
-export function AerialWorldPlateFallback({ extent, level }: { extent: number; level: number }) {
+export function AerialWorldPlateFallback({
+  extent,
+  level,
+  visible = true,
+}: {
+  extent: number;
+  level: number;
+  visible?: boolean;
+}) {
   return (
     <mesh
       name="island-look-aerial-plate-fallback"
+      visible={visible}
       rotation={[-Math.PI / 2, 0, 0]}
       position={[0, level - 4, 0]}
       receiveShadow

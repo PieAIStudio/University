@@ -650,10 +650,9 @@ export function MapStudioScreen({
     if (activeLayer === "world") {
       return describeWorldLayer({
         islands:
-          previewWorld?.placements.map((entry) => ({
-            blueprint: entry.blueprint,
-            targetRadius: entry.radius,
-          })) ?? [],
+          previewWorld?.placements.flatMap((entry) =>
+            entry.blueprint ? [{ blueprint: entry.blueprint, targetRadius: entry.radius }] : [],
+          ) ?? [],
         runtime,
         skyStudyId: selectedStudyId,
         triangleCounts,

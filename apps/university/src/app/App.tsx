@@ -299,7 +299,6 @@ export function App() {
   const markers = useWorldMarkers({
     labelNodes,
     lessons,
-    setNavigationFocus,
     setPathOverlay,
     setPicked,
     view,
@@ -546,7 +545,6 @@ export function App() {
         followNode={pickCardRef}
         onPick={(node) => {
           setPicked(node);
-          setNavigationFocus(node.studyId);
         }}
         onHover={(node) => setHovered(node ? node.title : null)}
         onInteract={onMapInteract}

@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-08-29
+last_reviewed: 2026-08-30
 domain: web3d
 tags:
   - island
@@ -718,3 +718,20 @@ surface 随标签移动，只占文字自身的面积；地图仍然是主视觉
 
 前后截图与逐项验证记录属于一次性的执行证据，不随本文件长期维护；本节记录的是结论
 与它的量度，而不是那次会话的产物清单。
+
+## 十、课程网格的形状反例（2026-08-30）
+
+本轮视觉复核确认：当离散主区域从 route cell 开始生长时，长课程的岛会退化为路线的
+胖版本。路线可以贯穿前后两端，但这不代表路线应该决定土地的轮廓；两者必须是先生成
+独立地点、再把路铺进去的两个阶段。
+
+形状尺子放在 `packages/world/src/grid/grid-outline.ts` 的纯函数
+`gridRegionShapeMetrics()`，使用 exposed hex edges 计算 `perimeter² / area`，并辅以
+axial hex 的 radius of gyration。当前 41 课门槛是 `<72` 与 `<9.5`。旧的路线驱动主区
+实测 `perimeter² / area = 105.4756`，专门的 41 格直条反例会让测试变红；当前独立紧凑
+区域通过同一门槛。
+
+最终规则：`growMainRegion(seed, target)` 只能依赖中心、邻居数和种子噪声，不能接收 route；
+`course-grid.ts` 随后将 blueprint anchors 拟合到 `mainCells`，在允许区域内寻找相邻路径。
+如果路径真的放不下，重试扩大区域及其物理 footprint；不得通过拉直路径或让路径决定岛形
+来伪装适配。这个反例也写入 `grid.test.ts`，避免以后只凭截图回归到路线形状。
