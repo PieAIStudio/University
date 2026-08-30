@@ -55,6 +55,24 @@ describe("hand-picked grid palettes", () => {
     expect(Math.min(channelSpread(16), channelSpread(8), channelSpread(0))).toBeGreaterThan(60);
   });
 
+  it("keeps every ground saturated enough to look alive", () => {
+    // The earth gamut is a hue constraint, not a licence to desaturate. A first
+    // pass at it left four tops between 0.24 and 0.31 and the island rendered
+    // as dry khaki. Hue and lightness carry identity; saturation carries
+    // whether the ground reads as a place rather than dust.
+    for (const preset of GRID_PALETTE_PRESETS) {
+      const r = ((preset.top >> 16) & 255) / 255;
+      const g = ((preset.top >> 8) & 255) / 255;
+      const b = (preset.top & 255) / 255;
+      const high = Math.max(r, g, b);
+      const low = Math.min(r, g, b);
+      const lightness = (high + low) / 2;
+      const saturation =
+        high === low ? 0 : (high - low) / (1 - Math.abs(2 * lightness - 1));
+      expect(saturation).toBeGreaterThanOrEqual(0.42);
+    }
+  });
+
   it("keeps every lesson marker legible on its own ground", () => {
     // `accent` marks the tile a learner has to click, so its contrast is a
     // usability property. The hue stays fixed and only lightness moves, which

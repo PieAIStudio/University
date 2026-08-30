@@ -57,12 +57,18 @@ export interface GridPalettePreset extends GridPalette {
  * that no one can tell apart. Identity has to survive the world map, where a
  * course is a few dozen pixels of ground colour and nothing else.
  *
- * Spread is bounded by a second requirement that is easy to lose: every top has
- * to read as *ground*. Solving for colour separation alone put a pale blue-grey
+ * Two bounds hold the table in place, and both were learned by breaking them.
+ *
+ * Every top has to read as *ground*. Solving for colour separation alone put a pale blue-grey
  * and a lavender in this table, and the 41-lesson island rendered as a concrete
  * car park. So the range is the natural earth gamut — leaf, moss, olive, dry
  * grass, sand, clay, rust — and identity is spread across that, not across the
  * whole wheel.
+ *
+ * And every top has to stay saturated. Correcting the first mistake pulled four
+ * of these below 0.24-0.31 HSL saturation, which rendered a 41-lesson island as
+ * dry khaki: technically earth, visibly dust. Hue and lightness carry identity;
+ * saturation carries whether the place looks alive.
  *
  * Every preset still shares the soil, cliff and road, so the islands read as 53
  * places in one world rather than 53 unrelated toys. Each accent is the ramp
@@ -70,14 +76,14 @@ export interface GridPalettePreset extends GridPalette {
  */
 export const GRID_PALETTE_PRESETS: readonly GridPalettePreset[] = [
   { id: "morning-meadow", top: 0xc0b430, accent: GRID_ACCENT_RAMP.coralDeep, ...GRID_SHARED_SOIL },
-  { id: "cool-highland", top: 0x7fb89a, accent: GRID_ACCENT_RAMP.coralDeep, ...GRID_SHARED_SOIL },
+  { id: "cool-highland", top: 0x6ec999, accent: GRID_ACCENT_RAMP.coralDeep, ...GRID_SHARED_SOIL },
   { id: "autumn-grove", top: 0xd89440, accent: GRID_ACCENT_RAMP.coralDeep, ...GRID_SHARED_SOIL },
   { id: "mint-shelf", top: 0x6ecfa8, accent: GRID_ACCENT_RAMP.coralDeep, ...GRID_SHARED_SOIL },
-  { id: "dusk-field", top: 0x8c9a52, accent: GRID_ACCENT_RAMP.amberLight, ...GRID_SHARED_SOIL },
-  { id: "deep-forest", top: 0x4e9250, accent: GRID_ACCENT_RAMP.coralLight, ...GRID_SHARED_SOIL },
+  { id: "dusk-field", top: 0x97ac40, accent: GRID_ACCENT_RAMP.amberLight, ...GRID_SHARED_SOIL },
+  { id: "deep-forest", top: 0x3ca440, accent: GRID_ACCENT_RAMP.amberLight, ...GRID_SHARED_SOIL },
   { id: "sand-bar", top: 0xd8c87e, accent: GRID_ACCENT_RAMP.coral, ...GRID_SHARED_SOIL },
   { id: "clay-terrace", top: 0xcc7b5e, accent: GRID_ACCENT_RAMP.amberLight, ...GRID_SHARED_SOIL },
-  { id: "tundra-flat", top: 0x9aa870, accent: GRID_ACCENT_RAMP.coralDeep, ...GRID_SHARED_SOIL },
+  { id: "tundra-flat", top: 0xa6c157, accent: GRID_ACCENT_RAMP.coralDeep, ...GRID_SHARED_SOIL },
   { id: "rust-down", top: 0xa86a3c, accent: GRID_ACCENT_RAMP.coral, ...GRID_SHARED_SOIL },
 ] as const;
 
