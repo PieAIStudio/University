@@ -62,6 +62,10 @@ function territoryAssetForCell(cell: GridPropCellInput, seed: string): GridPropA
   return "stump_round";
 }
 
+function isTallSilhouette(assetId: GridPropAssetId): boolean {
+  return assetId.startsWith("tree_") || assetId === "plant_bushLarge";
+}
+
 export function gridPropsFor(
   cells: readonly GridPropCellInput[],
   route: readonly HexCoord[],
@@ -93,12 +97,27 @@ export function gridPropsFor(
     // plateau the world is still half empty, which keeps the silhouettes from
     // turning into a repeated hedge.
     const distanceFactor = Math.min(1, cell.distanceToRoute / 4);
-    const density = 0.18 + 0.46 * distanceFactor ** 1.2;
+    const density = 0.08 + 0.34 * distanceFactor ** 1.2;
     if (hash(`${seed}/territory-density/${cellKey}`) >= density) continue;
+    const assetId = territoryAssetForCell(cell, seed);
+    // A tree is a landmark, not a fence post. Leave roughly one empty cell
+    // around tall silhouettes so a noisy edge cannot turn into a hedge; small
+    // rocks, flowers and mushrooms may still punctuate that clearance.
+    if (
+      isTallSilhouette(assetId) &&
+      placements.some(
+        (placement) =>
+          placement.kind === "territory" &&
+          isTallSilhouette(placement.assetId) &&
+          hexDistance(cell.coord, placement.coord) <= 2,
+      )
+    ) {
+      continue;
+    }
     placements.push({
       cellKey,
       coord: cell.coord,
-      assetId: territoryAssetForCell(cell, seed),
+      assetId,
       kind: "territory",
       lessonIndex: null,
       unitId: null,

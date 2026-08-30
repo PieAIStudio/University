@@ -1,10 +1,15 @@
 import { hash } from "../island/random.js";
 import type { IslandRouteArchetype } from "../island/island-blueprint.js";
 import { gridElevationsFor, type GridElevation } from "./grid-elevation.js";
-import { hexKey, hexNeighbors, hexToWorld, worldToHex, type HexCoord } from "./hex.js";
+import { hexDistance, hexKey, hexNeighbors, hexToWorld, type HexCoord } from "./hex.js";
 import { gridPaletteFor, type GridPalette } from "./grid-palette.js";
 import { distanceToRoute, gridPropsFor, type GridPropPlacement } from "./grid-props.js";
-import { CELLS_PER_LESSON, growGridOutline, type GridOutline } from "./grid-outline.js";
+import {
+  CELLS_PER_LESSON,
+  GRID_CELL_BUDGET,
+  growGridOutline,
+  type GridOutline,
+} from "./grid-outline.js";
 
 export type GridLessonState = "done" | "live" | "idle" | "locked";
 
@@ -91,8 +96,6 @@ export interface HexMap {
   };
 }
 
-const SQRT_THREE = Math.sqrt(3);
-
 function fallbackAnchors(
   lessonCount: number,
   seed: string,
@@ -125,13 +128,7 @@ function fallbackAnchors(
   });
 }
 
-function estimateHexSize(anchors: readonly { readonly x: number; readonly z: number }[]): number {
-  const distances = anchors
-    .slice(1)
-    .map((anchor, index) => Math.hypot(anchor.x - anchors[index]!.x, anchor.z - anchors[index]!.z))
-    .filter((distance) => distance > 0.01)
-    .sort((first, second) => first - second);
-  const typical = distances[Math.floor(distances.length / 2)] ?? 2.3;
+function estimateHexSize(lessonCount: number, cellCount: number, expansion = 0): number {
   // The blueprint reserves a generous course envelope for the old continuous
   // island. The first hex pass stopped at 2.1, leaving this discrete island
   // visually adrift inside that envelope. The reviewed cap is intentionally
@@ -141,7 +138,7 @@ function estimateHexSize(anchors: readonly { readonly x: number; readonly z: num
   // Interpolate the multiplier by course size so a three-lesson island does
   // not become a close-up of three oversized stones while a forty-one-lesson
   // island still sheds sea.
-  const courseScale = Math.min(1, Math.max(0, (anchors.length - 3) / 38));
+  const courseScale = Math.min(1, Math.max(0, (lessonCount - 3) / 38));
 
   // Cell size follows from how much of the fixed shot the island should own,
   // not from a cap. Cell *count* is now driven by lesson count
@@ -153,75 +150,177 @@ function estimateHexSize(anchors: readonly { readonly x: number; readonly z: num
   //
   // For a roughly circular hex field, halfWidth ~= 0.866 * cellSize * sqrt(n),
   // measured against the real generator rather than derived.
-  const cells = Math.max(anchors.length + 7, Math.round(anchors.length * CELLS_PER_LESSON));
-  const targetHalfWidth = 9 + courseScale * 9;
-  const fromFootprint = targetHalfWidth / (0.866 * Math.sqrt(cells));
-
-  // The anchor spacing still sets a floor, so lesson stones never overlap.
-  const fromAnchors = (typical / SQRT_THREE) * 0.55;
-  return Math.max(0.6, Math.min(fromFootprint, Math.max(fromAnchors, fromFootprint)));
-}
-
-/**
- * The continuous blueprint owns the route's shape, but its physical envelope
- * was sized for the old continuous island. The grid now reserves eight cells
- * per lesson, so keeping that envelope would leave a long road marooned in the
- * middle of a much larger field. Expand the authored intent around its centre
- * as the course grows; the outline still grows from the resulting route, and
- * every step remains snapped by the same adjacency-preserving walk below.
- */
-function stretchRouteAnchors(
-  anchors: readonly { readonly x: number; readonly z: number }[],
-): readonly { readonly x: number; readonly z: number }[] {
-  if (anchors.length <= 1) return anchors;
-  const courseScale = Math.min(1, Math.max(0, (anchors.length - 3) / 38));
-  const stretch = 1 + courseScale * 0.5;
-  const centre = anchors.reduce(
-    (sum, anchor) => ({
-      x: sum.x + anchor.x / anchors.length,
-      z: sum.z + anchor.z / anchors.length,
-    }),
-    { x: 0, z: 0 },
-  );
-  return anchors.map((anchor) => ({
-    x: centre.x + (anchor.x - centre.x) * stretch,
-    z: centre.z + (anchor.z - centre.z) * stretch,
-  }));
+  // The course camera still frames the shared continuous blueprint envelope;
+  // keep the new compact cell region at that established screen scale without
+  // changing the camera or any lesson position relative to its cell.
+  const targetHalfWidth = 14 + courseScale * 14 + expansion * 4;
+  return Math.max(0.6, targetHalfWidth / (0.866 * Math.sqrt(cellCount)));
 }
 
 function routeFromAnchors(
   anchors: readonly { readonly x: number; readonly z: number }[],
   hexSize: number,
   seed: string,
-): HexCoord[] {
-  const first = worldToHex(anchors[0] ?? { x: 0, z: 0 }, hexSize);
-  const route = [first];
-  const used = new Set([hexKey(first)]);
+  allowedCells: readonly HexCoord[],
+): HexCoord[] | null {
+  if (anchors.length === 0 || allowedCells.length === 0) return null;
+  const allowedKeys = new Set(allowedCells.map(hexKey));
+  const nearestAllowed = (target: { readonly x: number; readonly z: number }): HexCoord | null =>
+    [...allowedCells]
+      .map((cell) => {
+        const point = hexToWorld(cell, hexSize);
+        return {
+          cell,
+          score:
+            Math.hypot(point.x - target.x, point.z - target.z) * 1.1 +
+            hash(`${seed}/route-start/${hexKey(cell)}`) * 0.02,
+        };
+      })
+      .sort((first, second) => first.score - second.score)[0]?.cell ?? null;
+  const end = nearestAllowed(anchors.at(-1)!);
+  const start = nearestAllowed(anchors[0]!);
+  if (!start || !end) return null;
+
+  type RouteState = { readonly path: readonly HexCoord[]; readonly score: number };
+  let beam: RouteState[] = [{ path: [start], score: 0 }];
+  // Keep enough alternatives for a long switchback to preserve an endpoint
+  // path after its early choices. Small islands still cap the work by their
+  // own region size; the long-course region intentionally reaches 512.
+  const beamWidth = Math.min(512, Math.max(24, allowedCells.length * 2));
   for (let index = 1; index < anchors.length; index += 1) {
     const target = anchors[index]!;
     const lookAhead = anchors[Math.min(index + 1, anchors.length - 1)]!;
-    const candidates = hexNeighbors(route.at(-1)!).filter(
-      (candidate) => !used.has(hexKey(candidate)),
-    );
-    if (candidates.length === 0) throw new RangeError("Hex route ran out of adjacent cells");
-    candidates.sort((firstCandidate, secondCandidate) => {
-      const firstWorld = hexToWorld(firstCandidate, hexSize);
-      const secondWorld = hexToWorld(secondCandidate, hexSize);
-      const firstScore =
-        Math.hypot(firstWorld.x - target.x, firstWorld.z - target.z) * 1.1 +
-        Math.hypot(firstWorld.x - lookAhead.x, firstWorld.z - lookAhead.z) * 0.18 +
-        hash(`${seed}/route-tie/${index}/${hexKey(firstCandidate)}`) * 0.04;
-      const secondScore =
-        Math.hypot(secondWorld.x - target.x, secondWorld.z - target.z) * 1.1 +
-        Math.hypot(secondWorld.x - lookAhead.x, secondWorld.z - lookAhead.z) * 0.18 +
-        hash(`${seed}/route-tie/${index}/${hexKey(secondCandidate)}`) * 0.04;
-      return firstScore - secondScore;
-    });
-    const next = candidates[0]!;
-    route.push(next);
-    used.add(hexKey(next));
+    const remaining = anchors.length - 1 - index;
+    const nextStates: RouteState[] = [];
+    for (const state of beam) {
+      const current = state.path.at(-1)!;
+      const used = new Set(state.path.map(hexKey));
+      const candidates = hexNeighbors(current).filter(
+        (candidate) => allowedKeys.has(hexKey(candidate)) && !used.has(hexKey(candidate)),
+      );
+      for (const candidate of candidates) {
+        const point = hexToWorld(candidate, hexSize);
+        const distanceToEnd = hexDistance(candidate, end);
+        // A state that cannot physically reach the far endpoint in the
+        // remaining lesson steps cannot become a valid route. The small
+        // detour allowance absorbs a jagged island edge; the final step still
+        // has to land within a few cells of the far endpoint.
+        if (distanceToEnd > remaining + 8) continue;
+        if (index === anchors.length - 1 && distanceToEnd > 3) continue;
+        nextStates.push({
+          path: [...state.path, candidate],
+          score:
+            state.score +
+            Math.hypot(point.x - target.x, point.z - target.z) * 1.25 +
+            Math.hypot(point.x - lookAhead.x, point.z - lookAhead.z) * 0.16 +
+            distanceToEnd * 0.045 +
+            // Keep equal walks deterministic without making noise stronger
+            // than the authored S-shaped guide.
+            hash(`${seed}/route-tie/${index}/${hexKey(candidate)}`) * 0.01,
+        });
+      }
+    }
+    if (nextStates.length === 0) return null;
+    nextStates.sort((first, second) => first.score - second.score);
+    beam = nextStates.slice(0, beamWidth);
   }
-  return route;
+  return beam[0]?.path.length === anchors.length ? [...beam[0].path] : null;
+}
+
+function fitRouteAnchorsToRegion(
+  anchors: readonly { readonly x: number; readonly z: number }[],
+  mainCells: readonly HexCoord[],
+  hexSize: number,
+): readonly { readonly x: number; readonly z: number }[] {
+  if (anchors.length <= 1) return [{ x: 0, z: 0 }];
+  const sourceBounds = anchors.reduce(
+    (bounds, anchor) => ({
+      minX: Math.min(bounds.minX, anchor.x),
+      maxX: Math.max(bounds.maxX, anchor.x),
+      minZ: Math.min(bounds.minZ, anchor.z),
+      maxZ: Math.max(bounds.maxZ, anchor.z),
+    }),
+    { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity },
+  );
+  const regionBounds = mainCells.reduce(
+    (bounds, cell) => {
+      const point = hexToWorld(cell, hexSize);
+      return {
+        minX: Math.min(bounds.minX, point.x),
+        maxX: Math.max(bounds.maxX, point.x),
+        minZ: Math.min(bounds.minZ, point.z),
+        maxZ: Math.max(bounds.maxZ, point.z),
+      };
+    },
+    { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity },
+  );
+  const sourceCentre = {
+    x: (sourceBounds.minX + sourceBounds.maxX) / 2,
+    z: (sourceBounds.minZ + sourceBounds.maxZ) / 2,
+  };
+  const regionCentre = {
+    x: (regionBounds.minX + regionBounds.maxX) / 2,
+    z: (regionBounds.minZ + regionBounds.maxZ) / 2,
+  };
+  const sourceSpanX = Math.max(sourceBounds.maxX - sourceBounds.minX, 1e-6);
+  const sourceSpanZ = Math.max(sourceBounds.maxZ - sourceBounds.minZ, 1e-6);
+  const regionSpanX = Math.max(regionBounds.maxX - regionBounds.minX, hexSize);
+  const regionSpanZ = Math.max(regionBounds.maxZ - regionBounds.minZ, hexSize);
+  // Leave a real shoulder on both sides of the route. The long axis still
+  // spans most of the island, while the independent land remains visible as
+  // a place around the S-shaped walk.
+  const scaleX = (regionSpanX * 0.72) / sourceSpanX;
+  const scaleZ = (regionSpanZ * 0.78) / sourceSpanZ;
+  const nearestCell = (point: { readonly x: number; readonly z: number }): HexCoord =>
+    mainCells
+      .map((cell) => {
+        const cellPoint = hexToWorld(cell, hexSize);
+        return {
+          cell,
+          distance: Math.hypot(cellPoint.x - point.x, cellPoint.z - point.z),
+        };
+      })
+      .sort((first, second) => first.distance - second.distance)[0]!.cell;
+  const base = anchors.map((anchor) => ({
+    x: regionCentre.x + (anchor.x - sourceCentre.x) * scaleX,
+    z: regionCentre.z + (anchor.z - sourceCentre.z) * scaleZ,
+  }));
+  const start = base[0]!;
+  const end = base.at(-1)!;
+  const endpointLength = Math.hypot(end.x - start.x, end.z - start.z);
+  const lateral =
+    endpointLength > 1e-6
+      ? { x: -(end.z - start.z) / endpointLength, z: (end.x - start.x) / endpointLength }
+      : { x: 1, z: 0 };
+  const swayAmplitude = Math.min(regionSpanX, regionSpanZ) * 0.11;
+  const sGuide = base.map((anchor, index) => {
+    const t = index / (base.length - 1);
+    // One broad positive-to-negative lateral sweep makes the route read as a
+    // path through the place even when a small archetype happens to be nearly
+    // straight after hex snapping. Endpoints stay fixed at opposite ends.
+    const sway = Math.sin(Math.PI * 2 * t) * swayAmplitude;
+    return { x: anchor.x + lateral.x * sway, z: anchor.z + lateral.z * sway };
+  });
+  // A three-lesson route cannot span the same visual fraction as a
+  // forty-one-lesson route: two graph steps have a hard geometric ceiling.
+  // Shrink the guide toward the region centre until its endpoint pair can be
+  // joined in the available number of adjacent cells. This is a fit check,
+  // not a route-shaped island growth rule.
+  const maxSteps = anchors.length - 1;
+  let scale = 1;
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const candidate = sGuide.map((anchor) => ({
+      x: regionCentre.x + (anchor.x - regionCentre.x) * scale,
+      z: regionCentre.z + (anchor.z - regionCentre.z) * scale,
+    }));
+    if (hexDistance(nearestCell(candidate[0]!), nearestCell(candidate.at(-1)!)) <= maxSteps)
+      return candidate;
+    scale *= 0.82;
+  }
+  return sGuide.map((anchor) => ({
+    x: regionCentre.x + (anchor.x - regionCentre.x) * scale,
+    z: regionCentre.z + (anchor.z - regionCentre.z) * scale,
+  }));
 }
 
 function unitTerritories(
@@ -312,14 +411,34 @@ function withElevation(
 
 export function buildCourseGrid(input: CourseGridInput): HexMap {
   if (input.lessons.length === 0) throw new RangeError("A course grid needs at least one lesson");
-  const authoredAnchors =
+  const anchors =
     input.routeAnchors?.length === input.lessons.length
       ? input.routeAnchors
       : fallbackAnchors(input.lessons.length, input.seed, input.routeArchetype);
-  const anchors = stretchRouteAnchors(authoredAnchors);
-  const hexSize = estimateHexSize(anchors);
-  const route = routeFromAnchors(anchors, hexSize, input.seed);
-  const outline = growGridOutline(route, `${input.studyId}/${input.courseId}/${input.seed}`);
+  const outlineSeed = `${input.studyId}/${input.courseId}/${input.seed}`;
+  const requestedTarget = Math.min(
+    GRID_CELL_BUDGET - 4,
+    Math.max(input.lessons.length + 7, Math.round(input.lessons.length * CELLS_PER_LESSON)),
+  );
+  let outline: GridOutline | null = null;
+  let route: HexCoord[] | null = null;
+  let hexSize = 0;
+  // The first pass grows a place without seeing the route. If a future route
+  // shape cannot fit, the retry expands that place; it never compresses the
+  // route to make a too-small island look valid.
+  for (let expansion = 0; expansion < 4 && route === null; expansion += 1) {
+    const target = Math.min(
+      GRID_CELL_BUDGET - 4,
+      requestedTarget + expansion * Math.max(4, Math.ceil(input.lessons.length * 0.12)),
+    );
+    outline = growGridOutline(outlineSeed, target);
+    hexSize = estimateHexSize(input.lessons.length, outline.main.length, expansion);
+    const fittedAnchors = fitRouteAnchorsToRegion(anchors, outline.main, hexSize);
+    route = routeFromAnchors(fittedAnchors, hexSize, input.seed, outline.main);
+  }
+  if (outline === null || route === null) {
+    throw new RangeError("Hex route could not fit inside the generated island");
+  }
   const activeLessonIndex =
     input.activeLessonIndex ?? input.lessons.findIndex((lesson) => lesson.state === "live");
   const projected = withElevation(outline, route, input.lessons, input.seed, activeLessonIndex);

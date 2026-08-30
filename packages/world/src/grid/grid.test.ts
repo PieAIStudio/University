@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { buildCourseGrid, type CourseGridLesson } from "./course-grid.js";
 import { hexDistance, hexKey, hexNeighbors, hexToWorld } from "./hex.js";
-import { GRID_CELL_BUDGET, hexRegionIsConnected } from "./grid-outline.js";
+import { GRID_CELL_BUDGET, gridRegionShapeMetrics, hexRegionIsConnected } from "./grid-outline.js";
 import { propCellsAreUnique } from "./grid-props.js";
 import { islandGeometryBlueprint } from "../island/island-blueprint.js";
 
@@ -58,13 +58,11 @@ describe("hex grid course data", () => {
     }
   });
 
-  it("snaps real blueprint route intent without losing adjacency", () => {
+  it("snaps the production blueprint route intent without losing adjacency", () => {
     const blueprint = islandGeometryBlueprint({
       studyId: "turing-pact",
       courseId: "foundations-before-zero",
       lessonCount: LESSONS.length,
-      seed: "real-blueprint-route",
-      routeArchetype: "serpentine",
     });
     const map = buildCourseGrid({
       studyId: blueprint.studyId,
@@ -80,7 +78,7 @@ describe("hex grid course data", () => {
     }
   });
 
-  it("stretches long authored routes across the larger field for every archetype", () => {
+  it("fits long authored routes across the compact field for every archetype", () => {
     for (const routeArchetype of [
       "arc",
       "horseshoe",
@@ -117,6 +115,32 @@ describe("hex grid course data", () => {
         0.72,
       );
     }
+  });
+
+  it("keeps the long-course main region compact instead of making a route-shaped strip", () => {
+    const blueprint = islandGeometryBlueprint({
+      studyId: "turing-pact",
+      courseId: "foundations-before-zero",
+      lessonCount: LESSONS.length,
+    });
+    const map = buildCourseGrid({
+      studyId: blueprint.studyId,
+      courseId: blueprint.courseId,
+      seed: blueprint.seed,
+      lessons: LESSONS,
+      routeArchetype: blueprint.route.archetype,
+      routeAnchors: blueprint.geometryNodes,
+    });
+    const shape = gridRegionShapeMetrics(map.mainCells);
+    expect(shape.perimeterSquaredOverArea).toBeLessThan(72);
+    expect(shape.radiusOfGyration).toBeLessThan(9.5);
+  });
+
+  it("gives a deliberately stretched strip a failing compactness score", () => {
+    const strip = Array.from({ length: LESSONS.length }, (_, q) => ({ q, r: 0 }));
+    const shape = gridRegionShapeMetrics(strip);
+    expect(shape.perimeterSquaredOverArea).toBeGreaterThan(72);
+    expect(shape.radiusOfGyration).toBeGreaterThan(9.5);
   });
 
   it("never places two props in one cell", () => {

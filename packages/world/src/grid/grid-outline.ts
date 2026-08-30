@@ -57,6 +57,62 @@ export function hexRegionIsConnected(cells: readonly HexCoord[]): boolean {
   return seen.size === keys.size;
 }
 
+export interface GridRegionShapeMetrics {
+  readonly area: number;
+  /** Number of exposed hex edges around the region. */
+  readonly perimeter: number;
+  /** Lower is more compact; a long thin strip has a much larger value. */
+  readonly perimeterSquaredOverArea: number;
+  /** Radius of gyration in axial hex units, around the region centroid. */
+  readonly radiusOfGyration: number;
+  readonly maxDistanceFromCentroid: number;
+}
+
+/**
+ * Measure a region without making its shape a renderer concern.
+ *
+ * Counting exposed hex edges is deliberately more useful here than measuring
+ * a world-space bounding box: bays and jagged shore cells count, while the
+ * same region remains comparable when the renderer changes its hex size.
+ */
+export function gridRegionShapeMetrics(cells: readonly HexCoord[]): GridRegionShapeMetrics {
+  if (cells.length === 0) {
+    return {
+      area: 0,
+      perimeter: 0,
+      perimeterSquaredOverArea: Number.POSITIVE_INFINITY,
+      radiusOfGyration: 0,
+      maxDistanceFromCentroid: 0,
+    };
+  }
+  const keys = new Set(cells.map(hexKey));
+  const perimeter = cells.reduce(
+    (total, cell) =>
+      total + hexNeighbors(cell).filter((neighbor) => !keys.has(hexKey(neighbor))).length,
+    0,
+  );
+  const centroid = cells.reduce(
+    (sum, cell) => ({ q: sum.q + cell.q / cells.length, r: sum.r + cell.r / cells.length }),
+    { q: 0, r: 0 },
+  );
+  const distanceFromCentroid = (cell: HexCoord): number =>
+    Math.sqrt(
+      (cell.q - centroid.q) ** 2 +
+        (cell.q - centroid.q) * (cell.r - centroid.r) +
+        (cell.r - centroid.r) ** 2,
+    );
+  const distances = cells.map(distanceFromCentroid);
+  return {
+    area: cells.length,
+    perimeter,
+    perimeterSquaredOverArea: (perimeter * perimeter) / cells.length,
+    radiusOfGyration: Math.sqrt(
+      distances.reduce((sum, distance) => sum + distance * distance, 0) / cells.length,
+    ),
+    maxDistanceFromCentroid: Math.max(...distances),
+  };
+}
+
 function canRemoveWithoutBreaking(cell: HexCoord, cells: Set<string>): boolean {
   const key = hexKey(cell);
   cells.delete(key);
@@ -70,12 +126,12 @@ function canRemoveWithoutBreaking(cell: HexCoord, cells: Set<string>): boolean {
   return connected;
 }
 
-function growMainRegion(route: readonly HexCoord[], seed: string, target: number): HexCoord[] {
-  const cells = new Map(route.map((cell) => [hexKey(cell), cell]));
-  const centre = route.reduce(
-    (sum, cell) => ({ q: sum.q + cell.q / route.length, r: sum.r + cell.r / route.length }),
-    { q: 0, r: 0 },
-  );
+function growMainRegion(seed: string, target: number): HexCoord[] {
+  // Start from the place, not from the route. The route is fitted after this
+  // region exists; otherwise a long course can only ever produce a fattened
+  // version of its own centreline.
+  const centre: HexCoord = { q: 0, r: 0 };
+  const cells = new Map([[hexKey(centre), centre]]);
   const growthTarget = Math.min(
     GRID_CELL_BUDGET - 4,
     target + Math.max(3, Math.round(target * 0.16)),
@@ -93,42 +149,31 @@ function growMainRegion(route: readonly HexCoord[], seed: string, target: number
       const secondNeighbours = hexNeighbors(second).filter((cell) =>
         cells.has(hexKey(cell)),
       ).length;
-      const firstRouteDistance = Math.min(
-        ...route.map((routeCell) => hexDistance(first, routeCell)),
-      );
-      const secondRouteDistance = Math.min(
-        ...route.map((routeCell) => hexDistance(second, routeCell)),
-      );
       const firstScore =
-        // Grow a shoulder around the whole route before filling the centre.
-        // Without this term erosion leaves long lesson arms exposed as bare
-        // pavers, while the extra cells bunch into one inland island.
-        firstRouteDistance * 0.78 +
+        // Distance from the centre owns the silhouette. Neighbour count and
+        // seeded noise only roughen its edge; neither can pull the island
+        // toward a course route because no route is available at this stage.
+        hexDistance(first, centre) * 0.78 +
         (6 - firstNeighbours) * 0.58 +
-        hexDistance(first, centre) * 0.19 +
-        hash(`${seed}/shape/${hexKey(first)}`) * 0.34;
+        hash(`${seed}/shape/${hexKey(first)}`) * 0.42;
       const secondScore =
-        secondRouteDistance * 0.78 +
+        hexDistance(second, centre) * 0.78 +
         (6 - secondNeighbours) * 0.58 +
-        hexDistance(second, centre) * 0.19 +
-        hash(`${seed}/shape/${hexKey(second)}`) * 0.34;
+        hash(`${seed}/shape/${hexKey(second)}`) * 0.42;
       return firstScore - secondScore || hexKey(first).localeCompare(hexKey(second));
     });
     const candidate = candidates[0]!;
     cells.set(hexKey(candidate), candidate);
   }
 
-  const routeKeys = new Set(route.map(hexKey));
   const removable = sortedByNoise(
-    [...cells.values()].filter(
-      (cell) => !routeKeys.has(hexKey(cell)) && isBoundary(cell, new Set(cells.keys())),
-    ),
+    [...cells.values()].filter((cell) => isBoundary(cell, new Set(cells.keys()))),
     `${seed}/erosion`,
   );
   let removed = 0;
   const erosionBudget = Math.max(1, growthTarget - target);
   for (const cell of removable) {
-    if (removed >= erosionBudget || cells.size <= route.length) break;
+    if (removed >= erosionBudget || cells.size <= 1) break;
     const key = hexKey(cell);
     if (!cells.has(key) || !canRemoveWithoutBreaking(cell, new Set(cells.keys()))) continue;
     cells.delete(key);
@@ -138,9 +183,7 @@ function growMainRegion(route: readonly HexCoord[], seed: string, target: number
   // A second pass only removes cells when there is still a broad edge. This
   // gives the contour bays without making a small course collapse into a line.
   const secondPass = sortedByNoise(
-    [...cells.values()].filter(
-      (cell) => !routeKeys.has(hexKey(cell)) && isBoundary(cell, new Set(cells.keys())),
-    ),
+    [...cells.values()].filter((cell) => isBoundary(cell, new Set(cells.keys()))),
     `${seed}/erosion-pass-two`,
   );
   for (const cell of secondPass) {
@@ -184,21 +227,14 @@ function findDetachedCell(
  */
 export const CELLS_PER_LESSON = 8;
 
-export function growGridOutline(
-  route: readonly HexCoord[],
-  seed: string,
-  requestedTarget?: number,
-): GridOutline {
-  if (route.length === 0) throw new RangeError("A grid outline needs at least one route cell");
-  const target = Math.min(
-    GRID_CELL_BUDGET - 4,
-    Math.max(route.length + 7, requestedTarget ?? Math.round(route.length * CELLS_PER_LESSON)),
-  );
-  const main = growMainRegion(route, seed, target);
+export function growGridOutline(seed: string, requestedTarget: number): GridOutline {
+  if (requestedTarget <= 0) throw new RangeError("A grid outline needs a positive target");
+  const target = Math.min(GRID_CELL_BUDGET - 4, Math.max(1, requestedTarget));
+  const main = growMainRegion(seed, target);
   const mainKeys = new Set(main.map(hexKey));
   const groupCount = 2 + Math.floor(hash(`${seed}/detached-count`) * 3);
   const detachedKeys = new Set<string>();
-  const center = route[Math.floor(route.length / 2)]!;
+  const center = { q: 0, r: 0 };
   const detachedGroups: GridDetachedGroup[] = [];
   for (let index = 0; index < groupCount; index += 1) {
     const cell = findDetachedCell(center, mainKeys, detachedKeys, seed, index);
