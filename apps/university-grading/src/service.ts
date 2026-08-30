@@ -10,6 +10,7 @@ import {
   createStructuredOutputClient,
   type StructuredOutputSchema,
 } from "@pieai/swimmer-ai-kit/structured-output";
+import type { ChatCompletionResult, ChatCompletionTransport } from "@pieai/swimmer-ai-kit/chat";
 import { firstDefinedEnv } from "@pieai/swimmer-ai-kit/env";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
@@ -30,6 +31,20 @@ import {
   type MeteredGradingResponse,
 } from "@pieai/university-core";
 import { METERED_GRADING } from "./config.js";
+import {
+  createConsoleGradingUsageLedger,
+  type GradingUsageLedger,
+  type GradingUsageLedgerEntry,
+  type GradingUsageLedgerOutcome,
+  type GradingUsageLedgerSettlementStatus,
+} from "./usage-ledger.js";
+
+export type {
+  GradingUsageLedger,
+  GradingUsageLedgerEntry,
+  GradingUsageLedgerOutcome,
+  GradingUsageLedgerSettlementStatus,
+} from "./usage-ledger.js";
 
 const MAX_PROMPT_BYTES = 8 * 1024;
 const MAX_ANSWER_BYTES = 8 * 1024;
@@ -168,7 +183,8 @@ export interface GradeDependencies {
   readEntitlements?(input: GradeEntitlementReadInput): Promise<GradeEntitlements>;
   createWallet(accessToken: string): GradingWallet;
   createFreeGradingQuota?(accessToken: string): FreeGradingQuota;
-  grade(input: GradeRequest): Promise<GradeDecision>;
+  grade(input: GradeRequest): Promise<GradeDecision | StructuredGradingResult>;
+  usageLedger?: GradingUsageLedger;
   now?(): string;
   allowedOrigin?: string;
 }
@@ -251,6 +267,30 @@ function memberRequiredResponse(deps: GradeDependencies): Response {
 
 export interface StructuredGrader {
   grade(input: Pick<GradeRequest, "prompt" | "answer">): Promise<GradeDecision>;
+  gradeWithUsage(input: Pick<GradeRequest, "prompt" | "answer">): Promise<StructuredGradingResult>;
+}
+
+/** Safe model-call evidence passed from the provider seam to the service. */
+export interface StructuredGradingResult {
+  readonly decision: GradeDecision;
+  readonly provider: string;
+  readonly modelId: string;
+  readonly usage?: ChatCompletionResult["usage"];
+}
+
+/** A provider failure keeps only safe metadata; its original error is private. */
+class StructuredGradingProviderError extends Error {
+  readonly provider: string;
+  readonly modelId: string;
+  readonly usage: ChatCompletionResult["usage"] | undefined;
+
+  constructor(provider: string, modelId: string, usage: ChatCompletionResult["usage"] | undefined) {
+    super("Structured grading provider failed.");
+    this.name = "StructuredGradingProviderError";
+    this.provider = provider;
+    this.modelId = modelId;
+    this.usage = usage;
+  }
 }
 
 /**
@@ -258,14 +298,25 @@ export interface StructuredGrader {
  * ChatCompletionTransport; production injects the server-only OpenRouter
  * transport below. No Mastra runtime is needed for one bounded JSON call.
  */
-export function createStructuredGrader(
-  transport: Parameters<typeof createStructuredOutputClient>[0]["transport"],
-): StructuredGrader {
-  const client = createStructuredOutputClient({ transport });
+export function createStructuredGrader(transport: ChatCompletionTransport): StructuredGrader {
   const schema: StructuredOutputSchema<GradeDecision> = GradeDecisionSchema;
 
-  return {
-    async grade(input) {
+  const gradeWithUsage = async (
+    input: Pick<GradeRequest, "prompt" | "answer">,
+  ): Promise<StructuredGradingResult> => {
+    let providerResult: ChatCompletionResult | undefined;
+    const client = createStructuredOutputClient({
+      transport: {
+        provider: transport.provider,
+        async complete(request) {
+          const result = await transport.complete(request);
+          providerResult = result;
+          return result;
+        },
+      },
+    });
+
+    try {
       const result = await client.generate({
         model: METERED_GRADING.openRouterModel,
         maxTokens: METERED_GRADING.maxOutputTokens,
@@ -294,8 +345,26 @@ export function createStructuredGrader(
           },
         ],
       });
-      return result.object;
+      return {
+        decision: result.object,
+        modelId: METERED_GRADING.openRouterModel,
+        provider: transport.provider,
+        ...(result.usage === undefined ? {} : { usage: result.usage }),
+      };
+    } catch {
+      throw new StructuredGradingProviderError(
+        transport.provider,
+        METERED_GRADING.openRouterModel,
+        providerResult?.usage,
+      );
+    }
+  };
+
+  return {
+    async grade(input) {
+      return (await gradeWithUsage(input)).decision;
     },
+    gradeWithUsage,
   };
 }
 
@@ -413,6 +482,7 @@ export async function handleGradeRequest(
       input: effectiveInput,
       metadata,
       day,
+      planId: entitlements.planId,
       freeGradingQuota,
     });
   }
@@ -423,6 +493,7 @@ export async function handleGradeRequest(
     accessToken,
     input: effectiveInput,
     metadata,
+    planId: entitlements.planId,
   });
 }
 
@@ -546,6 +617,7 @@ interface HandleWalletGradingInput {
   readonly accessToken: string;
   readonly input: GradeRequest;
   readonly metadata: Readonly<Record<string, unknown>>;
+  readonly planId: string;
 }
 
 async function handleWalletGrading(input: HandleWalletGradingInput): Promise<Response> {
@@ -615,6 +687,8 @@ async function handleWalletGrading(input: HandleWalletGradingInput): Promise<Res
   return gradeReservedRequest({
     deps: input.deps,
     input: input.input,
+    planId: input.planId,
+    userId: input.identity.userId,
     funding: {
       kind: "wallet",
       reservationId: reservation.reservationId,
@@ -653,6 +727,7 @@ interface HandleFreeGradingInput {
   readonly input: GradeRequest;
   readonly metadata: Readonly<Record<string, unknown>>;
   readonly day: string;
+  readonly planId: string;
   readonly freeGradingQuota: FreeGradingQuota | undefined;
 }
 
@@ -743,6 +818,8 @@ async function handleFreeGrading(input: HandleFreeGradingInput): Promise<Respons
   return gradeReservedRequest({
     deps: input.deps,
     input: input.input,
+    planId: input.planId,
+    userId: input.identity.userId,
     funding: {
       kind: "free",
       reservationId: reservation.reservationId,
@@ -814,22 +891,47 @@ interface GradeFunding {
 async function gradeReservedRequest(input: {
   readonly deps: GradeDependencies;
   readonly input: GradeRequest;
+  readonly planId: string;
+  readonly userId: string;
   readonly metadata: Readonly<Record<string, unknown>>;
   readonly funding: GradeFunding;
 }): Promise<Response> {
-  let decision: GradeDecision;
+  const providerStartedAt = input.deps.now?.() ?? new Date().toISOString();
+  const providerStartedAtMs = monotonicMilliseconds();
+  let execution: StructuredGradingResult;
   try {
-    decision = await input.deps.grade(input.input);
-  } catch {
-    return refundAfterFailure({
+    execution = gradeExecutionOf(await input.deps.grade(input.input));
+  } catch (error) {
+    const providerFailure = providerFailureDetails(error);
+    const timing = finishProviderCall(input.deps, providerStartedAt, providerStartedAtMs);
+    const failure = await refundAfterFailure({
       deps: input.deps,
       input: input.input,
       metadata: input.metadata,
       funding: input.funding,
       kind: "model",
     });
+    await recordUsageSafely(
+      input.deps.usageLedger,
+      usageLedgerEntry({
+        commandId: input.input.commandId,
+        funding: input.funding.kind,
+        modelId: providerFailure.modelId,
+        outcome: "provider_failure",
+        planId: input.planId,
+        provider: providerFailure.provider,
+        reservationId: input.funding.reservationId,
+        settlementStatus: failure.settlementStatus,
+        timing,
+        usage: providerFailure.usage,
+        userId: input.userId,
+      }),
+    );
+    return failure.response;
   }
 
+  const timing = finishProviderCall(input.deps, providerStartedAt, providerStartedAtMs);
+  const decision = execution.decision;
   const occurredAt = input.deps.now?.() ?? new Date().toISOString();
   const hostGrade = {
     passed: decision.passed,
@@ -854,15 +956,48 @@ async function gradeReservedRequest(input: {
       ...(settled.balance ? { balance: settled.balance } : {}),
       ...(settled.freeQuota ? { freeQuota: settled.freeQuota } : {}),
     };
+    await recordUsageSafely(
+      input.deps.usageLedger,
+      usageLedgerEntry({
+        commandId: input.input.commandId,
+        funding: input.funding.kind,
+        modelId: execution.modelId,
+        outcome: usageOutcomeOf(execution.usage),
+        planId: input.planId,
+        provider: execution.provider,
+        reservationId: input.funding.reservationId,
+        settlementStatus: "committed",
+        timing,
+        usage: execution.usage,
+        userId: input.userId,
+      }),
+    );
     return jsonResponse(response, 200, input.deps.allowedOrigin);
   } catch {
-    return refundAfterFailure({
+    const failure = await refundAfterFailure({
       deps: input.deps,
       input: input.input,
       metadata: input.metadata,
       funding: input.funding,
       kind: "settlement",
     });
+    await recordUsageSafely(
+      input.deps.usageLedger,
+      usageLedgerEntry({
+        commandId: input.input.commandId,
+        funding: input.funding.kind,
+        modelId: execution.modelId,
+        outcome: "settlement_failure",
+        planId: input.planId,
+        provider: execution.provider,
+        reservationId: input.funding.reservationId,
+        settlementStatus: failure.settlementStatus,
+        timing,
+        usage: execution.usage,
+        userId: input.userId,
+      }),
+    );
+    return failure.response;
   }
 }
 
@@ -874,36 +1009,165 @@ interface FailureInput {
   readonly kind: "model" | "settlement";
 }
 
-async function refundAfterFailure(input: FailureInput): Promise<Response> {
+interface FailureResult {
+  readonly response: Response;
+  readonly settlementStatus: GradingUsageLedgerSettlementStatus;
+}
+
+async function refundAfterFailure(input: FailureInput): Promise<FailureResult> {
   try {
     const refunded = await input.funding.refund({
       idempotencyKey: `${input.input.commandId}:refund`,
       metadata: input.metadata,
     });
-    return jsonResponse(
-      {
-        error:
-          input.kind === "model"
-            ? "AI 批改没有完成，刚才使用的次数已退回，请重试。"
-            : "AI 批改的扣费没有完成，刚才使用的次数已退回，请稍后重试。",
-        code: input.kind === "model" ? "model_failed" : "settlement_failed",
-        refunded: true,
-        ...(refunded.balance ? { balance: refunded.balance } : {}),
-        ...(refunded.freeQuota ? { freeQuota: refunded.freeQuota } : {}),
-      },
-      input.kind === "model" ? 502 : 503,
-      input.deps.allowedOrigin,
-    );
+    return {
+      response: jsonResponse(
+        {
+          error:
+            input.kind === "model"
+              ? "AI 批改没有完成，刚才使用的次数已退回，请重试。"
+              : "AI 批改的扣费没有完成，刚才使用的次数已退回，请稍后重试。",
+          code: input.kind === "model" ? "model_failed" : "settlement_failed",
+          refunded: true,
+          ...(refunded.balance ? { balance: refunded.balance } : {}),
+          ...(refunded.freeQuota ? { freeQuota: refunded.freeQuota } : {}),
+        },
+        input.kind === "model" ? 502 : 503,
+        input.deps.allowedOrigin,
+      ),
+      settlementStatus: refunded.allowed && refunded.status === "refunded" ? "refunded" : "failed",
+    };
   } catch {
-    return jsonResponse(
-      {
-        error: "AI 批改失败，扣费也没有完成。请不要连续重试，先联系客服核对钱包。",
-        code: "settlement_failed",
-        refunded: false,
-      },
-      503,
-      input.deps.allowedOrigin,
-    );
+    return {
+      response: jsonResponse(
+        {
+          error: "AI 批改失败，扣费也没有完成。请不要连续重试，先联系客服核对钱包。",
+          code: "settlement_failed",
+          refunded: false,
+        },
+        503,
+        input.deps.allowedOrigin,
+      ),
+      settlementStatus: "failed",
+    };
+  }
+}
+
+interface ProviderCallTiming {
+  readonly startedAt: string;
+  readonly completedAt: string;
+  readonly elapsedMs: number;
+}
+
+function monotonicMilliseconds(): number {
+  const value = typeof performance === "undefined" ? Date.now() : performance.now();
+  return Number.isFinite(value) ? value : Date.now();
+}
+
+function finishProviderCall(
+  deps: GradeDependencies,
+  startedAt: string,
+  startedAtMs: number,
+): ProviderCallTiming {
+  const completedAt = deps.now?.() ?? new Date().toISOString();
+  return {
+    startedAt,
+    completedAt,
+    elapsedMs: Math.max(0, Math.round(monotonicMilliseconds() - startedAtMs)),
+  };
+}
+
+function gradeExecutionOf(
+  result: GradeDecision | StructuredGradingResult,
+): StructuredGradingResult {
+  if (isRecord(result)) {
+    const candidate = result as Record<string, unknown>;
+    if (
+      isRecord(candidate.decision) &&
+      typeof candidate.provider === "string" &&
+      typeof candidate.modelId === "string"
+    ) {
+      return candidate as unknown as StructuredGradingResult;
+    }
+  }
+  return {
+    decision: result as GradeDecision,
+    modelId: METERED_GRADING.openRouterModel,
+    provider: "unknown",
+  };
+}
+
+function providerFailureDetails(error: unknown): {
+  readonly modelId: string;
+  readonly provider: string;
+  readonly usage: ChatCompletionResult["usage"] | undefined;
+} {
+  if (error instanceof StructuredGradingProviderError) {
+    return {
+      modelId: error.modelId,
+      provider: error.provider,
+      usage: error.usage,
+    };
+  }
+  return {
+    modelId: METERED_GRADING.openRouterModel,
+    provider: "unknown",
+    usage: undefined,
+  };
+}
+
+function usageOutcomeOf(usage: ChatCompletionResult["usage"]): GradingUsageLedgerOutcome {
+  return usage === undefined ? "unknown_usage" : "success";
+}
+
+function usageLedgerEntry(input: {
+  readonly commandId: string;
+  readonly funding: "free" | "wallet";
+  readonly modelId: string;
+  readonly outcome: GradingUsageLedgerOutcome;
+  readonly planId: string;
+  readonly provider: string;
+  readonly reservationId: string;
+  readonly settlementStatus: GradingUsageLedgerSettlementStatus;
+  readonly timing: ProviderCallTiming;
+  readonly usage: ChatCompletionResult["usage"];
+  readonly userId: string;
+}): GradingUsageLedgerEntry {
+  const usage = input.usage;
+  return {
+    event: "university.grading.usage",
+    schemaVersion: 1,
+    commandId: input.commandId,
+    userId: input.userId,
+    planId: input.planId,
+    funding: input.funding,
+    reservationId: input.reservationId,
+    provider: input.provider,
+    modelId: input.modelId,
+    startedAt: input.timing.startedAt,
+    completedAt: input.timing.completedAt,
+    elapsedMs: input.timing.elapsedMs,
+    inputTokens: usage?.inputTokens ?? null,
+    outputTokens: usage?.outputTokens ?? null,
+    totalTokens: usage?.totalTokens ?? null,
+    providerCost: usage?.providerCost ?? null,
+    usageKnown: usage !== undefined,
+    costPowerUnits: METERED_GRADING.reservationPowerUnits,
+    outcome: input.outcome,
+    settlementStatus: input.settlementStatus,
+  };
+}
+
+async function recordUsageSafely(
+  ledger: GradingUsageLedger | undefined,
+  entry: GradingUsageLedgerEntry,
+): Promise<void> {
+  if (!ledger) return;
+  try {
+    await ledger.record(entry);
+  } catch {
+    // Usage accounting is a side channel. It must never change grading or
+    // settlement behavior when the log/table adapter is unavailable.
   }
 }
 
@@ -1250,6 +1514,7 @@ export function createProductionGradeDependencies(
 
   return {
     allowedOrigin,
+    usageLedger: createConsoleGradingUsageLedger(),
     async authenticate(accessToken) {
       const supabase = serverSupabase(supabaseUrl, publishableKey, accessToken);
       const user = await verifyAccessToken(
@@ -1289,7 +1554,7 @@ export function createProductionGradeDependencies(
           appUrl: allowedOrigin === "*" ? undefined : allowedOrigin,
         }),
       );
-      return model.grade(input);
+      return model.gradeWithUsage(input);
     },
   };
 }

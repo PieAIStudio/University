@@ -14,6 +14,7 @@ import {
   type GradeEntitlements,
   type FreeGradingQuota,
   type GradingWallet,
+  type GradingUsageLedgerEntry,
 } from "./service.js";
 
 afterEach(() => {
@@ -191,6 +192,7 @@ const REFUND_ENTRY_ID = "44444444-4444-4444-8444-444444444444";
 const COMMAND_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const ANONYMOUS_COMMAND_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const LINKED_COMMAND_ID = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+const PRIVACY_COMMAND_ID = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 
 const FREE_ENTITLEMENTS: GradeEntitlements = {
   planId: "free",
@@ -251,6 +253,8 @@ function requestFor(
   token?: string,
   funding: "free" | "wallet" = "wallet",
   commandId = COMMAND_ID,
+  answer = "我的解释",
+  prompt = "为什么？",
 ): Request {
   const headers = new Headers({ "Content-Type": "application/json" });
   if (token) headers.set("Authorization", `Bearer ${token}`);
@@ -258,11 +262,11 @@ function requestFor(
     method: "POST",
     headers,
     body: JSON.stringify({
-      answer: "我的解释",
+      answer,
       commandId,
       contentRevision: 1,
       exerciseId: "explain",
-      prompt: "为什么？",
+      prompt,
       funding,
     }),
   });
@@ -288,7 +292,7 @@ function fixture() {
         extensions: [],
       }),
       raw: { provider: "fake" },
-      usage: { inputTokens: 12, outputTokens: 8 },
+      usage: { inputTokens: 12, outputTokens: 8, totalTokens: 20, providerCost: "0.000023" },
     };
   });
   const transport: ChatCompletionTransport = { provider: "fake", complete };
@@ -321,7 +325,7 @@ function fixture() {
     authenticate,
     readEntitlements,
     createWallet,
-    grade: model.grade,
+    grade: model.gradeWithUsage,
     now: () => "2026-08-26T00:00:00.000Z",
   };
 
@@ -337,6 +341,14 @@ function fixture() {
     reserve,
     commit,
   };
+}
+
+function usageLedgerFixture() {
+  const entries: GradingUsageLedgerEntry[] = [];
+  const record = vi.fn(async (entry: GradingUsageLedgerEntry) => {
+    entries.push(entry);
+  });
+  return { entries, ledger: { record } };
 }
 
 function freeQuotaFixture(events: string[], initialRemaining = "400") {
@@ -410,8 +422,84 @@ function freeQuotaFixture(events: string[], initialRemaining = "400") {
 }
 
 describe("University metered grading service", () => {
+  it("records known provider usage without recording the prompt or answer", async () => {
+    const fixtureState = fixture();
+    const usage = usageLedgerFixture();
+    fixtureState.deps.usageLedger = usage.ledger;
+
+    const response = await handleGradeRequest(
+      requestFor(
+        "valid-token",
+        "wallet",
+        PRIVACY_COMMAND_ID,
+        "LEDGER_PRIVATE_ANSWER_7d6b",
+        "LEDGER_PRIVATE_PROMPT_4f2a",
+      ),
+      fixtureState.deps,
+    );
+
+    expect(response.status).toBe(200);
+    expect(usage.entries).toHaveLength(1);
+    expect(usage.entries[0]).toMatchObject({
+      event: "university.grading.usage",
+      commandId: PRIVACY_COMMAND_ID,
+      userId: USER_ID,
+      planId: "member",
+      funding: "wallet",
+      reservationId: RESERVATION_ID,
+      provider: "fake",
+      modelId: "google/gemini-2.5-flash",
+      inputTokens: 12,
+      outputTokens: 8,
+      totalTokens: 20,
+      providerCost: "0.000023",
+      usageKnown: true,
+      costPowerUnits: "100",
+      outcome: "success",
+      settlementStatus: "committed",
+    });
+    expect(usage.entries[0]?.elapsedMs).toEqual(expect.any(Number));
+    const serialized = JSON.stringify(usage.entries);
+    expect(serialized).not.toContain("LEDGER_PRIVATE_PROMPT_4f2a");
+    expect(serialized).not.toContain("LEDGER_PRIVATE_ANSWER_7d6b");
+  });
+
+  it("separates a successful provider call with missing usage as unknown_usage", async () => {
+    const fixtureState = fixture();
+    const usage = usageLedgerFixture();
+    fixtureState.deps.usageLedger = usage.ledger;
+    fixtureState.complete.mockImplementationOnce(async () => {
+      fixtureState.events.push("model");
+      return {
+        content: JSON.stringify({
+          passed: true,
+          evaluation: "你的解释抓住了关键关系。",
+          extensions: [],
+        }),
+        raw: { provider: "fake" },
+      };
+    });
+
+    const response = await handleGradeRequest(requestFor("valid-token"), fixtureState.deps);
+
+    expect(response.status).toBe(200);
+    expect(usage.entries).toHaveLength(1);
+    expect(usage.entries[0]).toMatchObject({
+      inputTokens: null,
+      outputTokens: null,
+      totalTokens: null,
+      providerCost: null,
+      usageKnown: false,
+      outcome: "unknown_usage",
+      settlementStatus: "committed",
+    });
+  });
+
   it("reserves before the fake transport and refunds when the model fails", async () => {
-    const { complete, deps, events, refundCall, commit } = fixture();
+    const fixtureState = fixture();
+    const { complete, deps, events, refundCall, commit } = fixtureState;
+    const usage = usageLedgerFixture();
+    deps.usageLedger = usage.ledger;
     complete.mockImplementationOnce(async () => {
       events.push("model");
       throw new Error("fake provider failure");
@@ -426,6 +514,56 @@ describe("University metered grading service", () => {
     expect(events).toEqual(["reserve", "model", "refund"]);
     expect(refundCall).toHaveBeenCalledTimes(1);
     expect(commit).not.toHaveBeenCalled();
+    expect(usage.entries).toHaveLength(1);
+    expect(usage.entries[0]).toMatchObject({
+      provider: "fake",
+      modelId: "google/gemini-2.5-flash",
+      inputTokens: null,
+      outputTokens: null,
+      totalTokens: null,
+      usageKnown: false,
+      outcome: "provider_failure",
+      settlementStatus: "refunded",
+    });
+  });
+
+  it("separates a successful model call from a settlement failure", async () => {
+    const fixtureState = fixture();
+    const usage = usageLedgerFixture();
+    fixtureState.deps.usageLedger = usage.ledger;
+    fixtureState.commit.mockImplementationOnce(async () => {
+      fixtureState.events.push("commit");
+      throw new Error("fake settlement failure");
+    });
+
+    const response = await handleGradeRequest(requestFor("valid-token"), fixtureState.deps);
+    const body = (await response.json()) as { code?: string; refunded?: boolean };
+
+    expect(response.status).toBe(503);
+    expect(body).toMatchObject({ code: "settlement_failed", refunded: true });
+    expect(usage.entries).toHaveLength(1);
+    expect(usage.entries[0]).toMatchObject({
+      inputTokens: 12,
+      outputTokens: 8,
+      totalTokens: 20,
+      usageKnown: true,
+      outcome: "settlement_failure",
+      settlementStatus: "refunded",
+    });
+  });
+
+  it("does not turn a successful grade into a failure when the ledger throws", async () => {
+    const fixtureState = fixture();
+    const record = vi.fn(async (_entry: GradingUsageLedgerEntry) => {
+      throw new Error("structured log unavailable");
+    });
+    fixtureState.deps.usageLedger = { record };
+
+    const response = await handleGradeRequest(requestFor("valid-token"), fixtureState.deps);
+
+    expect(response.status).toBe(200);
+    expect(fixtureState.commit).toHaveBeenCalledTimes(1);
+    expect(record).toHaveBeenCalledTimes(1);
   });
 
   it("does not call the model or charge twice when commandId is replayed", async () => {
