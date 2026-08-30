@@ -63,7 +63,7 @@ export function walletGradingBalanceText(powerUnits: string): string {
   return attempts === 0n ? "你的钱包还不够一次了" : `你的钱包还够 ${attempts} 次`;
 }
 
-/** An AI host's verdict, written back through the CLI or returned immediately. */
+/** A grader's verdict, written back through the CLI or returned immediately. */
 export interface HostExerciseGrade {
   readonly passed: boolean;
   readonly evaluation: string;
@@ -71,6 +71,22 @@ export interface HostExerciseGrade {
   readonly host: string | null;
   readonly learnerAnswer: string | null;
   readonly occurredAt: string;
+}
+
+/**
+ * The `host` a tier-one verdict carries.
+ *
+ * Tier one is string comparison against the answer key. No model runs, and the
+ * learner must not be told one did — the free tier's promise is that obvious
+ * answers are judged on the spot, and the paid tier's promise is that a model
+ * reads the ones that are not. Labelling deterministic matching as AI collapses
+ * the difference the product is sold on.
+ */
+export const DETERMINISTIC_GRADER_HOST = "tier-1";
+
+/** What to call whatever produced this verdict, in the learner's words. */
+export function graderLabel(host: string | null): string {
+  return host === DETERMINISTIC_GRADER_HOST ? "当场判定" : "AI 评估";
 }
 
 /**

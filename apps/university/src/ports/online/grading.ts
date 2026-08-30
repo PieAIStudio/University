@@ -6,6 +6,7 @@
  * learner already read, never the answer.
  */
 import {
+  DETERMINISTIC_GRADER_HOST,
   gradingAttemptText,
   METERED_GRADING_COST_POWER_UNITS,
   gradeDeterministically,
@@ -97,7 +98,7 @@ export function createOnlineGradingPort(options: {
             passed: true,
             evaluation: "答对了。",
             extensions: [],
-            host: "tier-1",
+            host: DETERMINISTIC_GRADER_HOST,
             learnerAnswer: input.answer,
             occurredAt,
           },
@@ -133,7 +134,7 @@ export function createOnlineGradingPort(options: {
                 passed: false,
                 evaluation,
                 extensions: [],
-                host: "tier-1",
+                host: DETERMINISTIC_GRADER_HOST,
                 learnerAnswer: input.answer,
                 occurredAt,
               },
@@ -168,7 +169,7 @@ export function createOnlineGradingPort(options: {
           passed: false,
           evaluation,
           extensions: [],
-          host: "tier-1",
+          host: DETERMINISTIC_GRADER_HOST,
           learnerAnswer: input.answer,
           occurredAt,
         },

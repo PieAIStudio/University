@@ -4,6 +4,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  DETERMINISTIC_GRADER_HOST,
+  graderLabel,
   createMemoryGradingPort,
   freeGradingRemainingText,
   gradingAttemptsFromPowerUnits,
@@ -89,5 +91,20 @@ describe("learner-facing attempt sentences", () => {
     expect(gradingAttemptText("oops")).toBe("暂时读不到");
     expect(freeGradingRemainingText("oops")).toBe("今天还剩多少次暂时读不到");
     expect(walletGradingBalanceText("oops")).toBe("你的钱包余额暂时读不到");
+  });
+});
+
+describe("what the learner is told graded them", () => {
+  it("does not call deterministic matching AI", () => {
+    // The free tier is sold on "obvious answers judged on the spot" and the
+    // paid tier on "a model reads the rest". Calling tier one AI erases the
+    // difference the product charges for.
+    expect(graderLabel(DETERMINISTIC_GRADER_HOST)).toBe("当场判定");
+    expect(graderLabel(DETERMINISTIC_GRADER_HOST)).not.toContain("AI");
+  });
+
+  it("calls a real model host AI", () => {
+    expect(graderLabel("claude")).toBe("AI 评估");
+    expect(graderLabel(null)).toBe("AI 评估");
   });
 });

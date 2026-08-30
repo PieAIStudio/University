@@ -70,7 +70,9 @@ export {
   type VocabularyStageResult,
 } from "./reader.js";
 export {
+  DETERMINISTIC_GRADER_HOST,
   METERED_GRADING_COST_POWER_UNITS,
+  graderLabel,
   gradingAttemptsFromPowerUnits,
   gradingAttemptText,
   freeGradingRemainingText,

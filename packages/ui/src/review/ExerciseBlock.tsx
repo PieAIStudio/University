@@ -4,6 +4,8 @@ import {
   freeGradingRemainingText,
   gradingAttemptText,
   METERED_GRADING_COST_POWER_UNITS,
+  DETERMINISTIC_GRADER_HOST,
+  graderLabel,
   walletGradingBalanceText,
 } from "@pieai/university-core";
 import type {
@@ -445,11 +447,16 @@ export function ExerciseBlock({
         <div
           className={`host-grade host-grade--${hostGrade.passed ? "pass" : "fail"}`}
           role="region"
-          aria-label="AI 宿主评估"
+          aria-label={`${graderLabel(hostGrade.host)}结果`}
         >
           <p className="host-grade__eyebrow">
-            AI 评估 · {hostGrade.passed ? "通过" : "未通过"}
-            {hostGrade.host ? ` · ${hostGrade.host}` : ""}
+            {graderLabel(hostGrade.host)} · {hostGrade.passed ? "通过" : "未通过"}
+            {/* Naming the model that read the answer is useful; repeating our
+                internal tier name after "当场判定" is just jargon on a page a
+                beginner is reading. */}
+            {hostGrade.host && hostGrade.host !== DETERMINISTIC_GRADER_HOST
+              ? ` · ${hostGrade.host}`
+              : ""}
           </p>
           <div className="host-grade__body markdown-body">
             <MarkdownContent>{hostGrade.evaluation}</MarkdownContent>
