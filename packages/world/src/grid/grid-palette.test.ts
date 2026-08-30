@@ -67,8 +67,7 @@ describe("hand-picked grid palettes", () => {
       const high = Math.max(r, g, b);
       const low = Math.min(r, g, b);
       const lightness = (high + low) / 2;
-      const saturation =
-        high === low ? 0 : (high - low) / (1 - Math.abs(2 * lightness - 1));
+      const saturation = high === low ? 0 : (high - low) / (1 - Math.abs(2 * lightness - 1));
       expect(saturation).toBeGreaterThanOrEqual(0.42);
     }
   });

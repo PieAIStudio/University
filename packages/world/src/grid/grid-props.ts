@@ -14,6 +14,7 @@ export const GRID_PROP_ASSET_IDS = [
 ] as const;
 
 export type GridPropAssetId = (typeof GRID_PROP_ASSET_IDS)[number];
+export type GridPropProjection = "course" | "world";
 
 export interface GridPropCellInput {
   readonly coord: HexCoord;
@@ -34,20 +35,40 @@ export interface GridPropPlacement {
   readonly scale: number;
 }
 
-function courseAssetForUnit(unitId: string, seed: string): GridPropAssetId {
-  const courseAssets: readonly GridPropAssetId[] = [
-    "tree_pineRoundA",
-    "tree_oak",
-    "tree_simple",
-    "plant_bushLarge",
-    "mushroom_redGroup",
-    "rock_largeA",
-  ];
+function courseAssetForUnit(
+  unitId: string,
+  seed: string,
+  projection: GridPropProjection,
+): GridPropAssetId {
+  const courseAssets: readonly GridPropAssetId[] =
+    projection === "world"
+      ? ["tree_pineRoundA", "tree_oak", "plant_bushLarge", "rock_largeA"]
+      : [
+          "tree_pineRoundA",
+          "tree_oak",
+          "tree_simple",
+          "plant_bushLarge",
+          "mushroom_redGroup",
+          "rock_largeA",
+        ];
   return courseAssets[Math.floor(hash(`${seed}/unit-prop/${unitId}`) * courseAssets.length)]!;
 }
 
-function territoryAssetForCell(cell: GridPropCellInput, seed: string): GridPropAssetId {
+function territoryAssetForCell(
+  cell: GridPropCellInput,
+  seed: string,
+  projection: GridPropProjection,
+): GridPropAssetId {
   const roll = hash(`${seed}/territory-prop/${hexKey(cell.coord)}`);
+  if (projection === "world") {
+    // At world scale only the large silhouettes survive the projection. The
+    // small punctuation assets remain a course-view privilege, not a source
+    // of fifty-three duplicated loader paths on the first screen.
+    if (roll < 0.34) return "tree_pineRoundA";
+    if (roll < 0.62) return "tree_oak";
+    if (roll < 0.84) return "plant_bushLarge";
+    return "rock_largeA";
+  }
   // Trees and rocks carry the silhouette at this camera. The weighted table
   // keeps flowers/mushrooms as punctuation rather than letting a random seed
   // turn one arm into a repeated line of tiny red caps.
@@ -70,36 +91,55 @@ export function gridPropsFor(
   cells: readonly GridPropCellInput[],
   route: readonly HexCoord[],
   seed: string,
+  projection: GridPropProjection = "course",
 ): readonly GridPropPlacement[] {
   const routeKeys = new Set(route.map(hexKey));
   const occupied = new Set<string>();
   const placements: GridPropPlacement[] = [];
+  const worldRouteIndexes = new Set<number>();
+  if (projection === "world" && route.length > 0) {
+    worldRouteIndexes.add(0);
+  }
+  const worldTerritoryLimit = cells.length >= 28 ? 2 : 1;
+  let worldTerritoryCount = 0;
   for (const cell of cells) {
     const cellKey = hexKey(cell.coord);
     if (occupied.has(cellKey) || cell.kind === "detached") continue;
-    if (routeKeys.has(cellKey) && cell.lessonIndex !== null && cell.unitId !== null) {
+    if (
+      routeKeys.has(cellKey) &&
+      cell.lessonIndex !== null &&
+      cell.unitId !== null &&
+      (projection === "course" || worldRouteIndexes.has(cell.lessonIndex))
+    ) {
       placements.push({
         cellKey,
         coord: cell.coord,
-        assetId: courseAssetForUnit(cell.unitId, seed),
+        assetId: courseAssetForUnit(cell.unitId, seed, projection),
         kind: "course",
         lessonIndex: cell.lessonIndex,
         unitId: cell.unitId,
         rotation: hash(`${seed}/course-rotation/${cell.lessonIndex}`) * Math.PI * 2,
-        scale: 0.78 + hash(`${seed}/course-scale/${cell.lessonIndex}`) * 0.16,
+        scale:
+          projection === "world"
+            ? 0.34 + hash(`${seed}/course-scale/${cell.lessonIndex}`) * 0.1
+            : 0.78 + hash(`${seed}/course-scale/${cell.lessonIndex}`) * 0.16,
       });
       occupied.add(cellKey);
       continue;
     }
     if (cell.kind !== "land") continue;
+    if (projection === "world" && worldTerritoryCount >= worldTerritoryLimit) continue;
     // Leave a visibly clean shoulder beside the route. The farther a cell is
     // from the road, the more likely it receives a dressing prop; at the
     // plateau the world is still half empty, which keeps the silhouettes from
     // turning into a repeated hedge.
     const distanceFactor = Math.min(1, cell.distanceToRoute / 4);
-    const density = 0.08 + 0.34 * distanceFactor ** 1.2;
+    const density =
+      projection === "world"
+        ? 0.04 + 0.15 * distanceFactor ** 1.2
+        : 0.08 + 0.34 * distanceFactor ** 1.2;
     if (hash(`${seed}/territory-density/${cellKey}`) >= density) continue;
-    const assetId = territoryAssetForCell(cell, seed);
+    const assetId = territoryAssetForCell(cell, seed, projection);
     // A tree is a landmark, not a fence post. Leave roughly one empty cell
     // around tall silhouettes so a noisy edge cannot turn into a hedge; small
     // rocks, flowers and mushrooms may still punctuate that clearance.
@@ -122,9 +162,13 @@ export function gridPropsFor(
       lessonIndex: null,
       unitId: null,
       rotation: hash(`${seed}/territory-rotation/${cellKey}`) * Math.PI * 2,
-      scale: 0.48 + hash(`${seed}/territory-scale/${cellKey}`) * 0.24,
+      scale:
+        projection === "world"
+          ? 0.28 + hash(`${seed}/territory-scale/${cellKey}`) * 0.1
+          : 0.48 + hash(`${seed}/territory-scale/${cellKey}`) * 0.24,
     });
     occupied.add(cellKey);
+    worldTerritoryCount += projection === "world" ? 1 : 0;
   }
   if (!placements.some((placement) => placement.kind === "territory")) {
     // A tiny course can legitimately have only a handful of land cells. Keep
@@ -144,12 +188,15 @@ export function gridPropsFor(
       placements.push({
         cellKey,
         coord: fallback.coord,
-        assetId: territoryAssetForCell(fallback, seed),
+        assetId: territoryAssetForCell(fallback, seed, projection),
         kind: "territory",
         lessonIndex: null,
         unitId: null,
         rotation: hash(`${seed}/territory-fallback-rotation/${cellKey}`) * Math.PI * 2,
-        scale: 0.48 + hash(`${seed}/territory-fallback-scale/${cellKey}`) * 0.24,
+        scale:
+          projection === "world"
+            ? 0.28 + hash(`${seed}/territory-fallback-scale/${cellKey}`) * 0.1
+            : 0.48 + hash(`${seed}/territory-fallback-scale/${cellKey}`) * 0.24,
       });
     }
   }

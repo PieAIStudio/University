@@ -13,7 +13,7 @@ interface HexFieldProps {
 
 type HexLayer = "land" | "route" | "detached";
 
-function hexGeometry(seamStrength: number, cliffBottom = -0.5): THREE.BufferGeometry {
+export function hexGeometry(seamStrength: number, cliffBottom = -0.5): THREE.BufferGeometry {
   const positions: number[] = [];
   const colours: number[] = [];
   const faces: number[] = [];
@@ -62,7 +62,11 @@ function hexGeometry(seamStrength: number, cliffBottom = -0.5): THREE.BufferGeom
   return geometry;
 }
 
-function mapMaterial(map: HexMap, dimmed: boolean, layer: HexLayer): THREE.MeshStandardMaterial {
+export function mapMaterial(
+  map: HexMap,
+  dimmed: boolean,
+  layer: HexLayer,
+): THREE.MeshStandardMaterial {
   const material = new THREE.MeshStandardMaterial({
     color: 0xffffff,
     vertexColors: true,
@@ -103,8 +107,10 @@ function mapMaterial(map: HexMap, dimmed: boolean, layer: HexLayer): THREE.MeshS
   return material;
 }
 
-function cellTopColour(map: HexMap, cell: GridCell): THREE.Color {
-  const colour = new THREE.Color(cell.kind === "route" ? map.palette.road : map.palette.top);
+export function cellTopColour(map: HexMap, cell: GridCell): THREE.Color {
+  const colour = new THREE.Color(
+    map.projection !== "world" && cell.kind === "route" ? map.palette.road : map.palette.top,
+  );
   if (cell.unitIndex !== null && cell.kind !== "route") {
     const unitTint = new THREE.Color(map.palette.accent);
     colour.lerp(unitTint, 0.045 + (cell.unitIndex % 4) * 0.02);

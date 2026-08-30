@@ -8,7 +8,9 @@ import {
   layoutCourseRoad,
   layoutPath,
   layoutStudyRoad,
+  layoutWorldCatalogue,
   STUDY_PATH,
+  unstickWorldIslands,
 } from "./layout";
 
 describe("layoutPath", () => {
@@ -90,6 +92,41 @@ describe("layoutStudyRoad", () => {
     const sway = [...placed.values()].map((point) => point.x);
     expect(new Set(sway).size).toBe(sway.length);
     expect(Math.max(...sway.map(Math.abs))).toBeLessThan(STUDY_PATH.amplitude * 1.2);
+  });
+});
+
+describe("layoutWorldCatalogue", () => {
+  it("pins the first course at the origin and scatters the rest", () => {
+    const keys = Array.from({ length: 53 }, (_, index) => `course-${index}`);
+    const placed = layoutWorldCatalogue(keys);
+    expect(placed.get("course-0")).toEqual({ x: 0, y: 0, z: 0, depth: 0 });
+    const points = keys.slice(1).map((key) => placed.get(key)!);
+    expect(points.every((point) => Math.hypot(point.x, point.z) > 3)).toBe(true);
+    const uniqueX = new Set(points.map((point) => Math.round(point.x * 2) / 2)).size;
+    const uniqueZ = new Set(points.map((point) => Math.round(point.z * 2) / 2)).size;
+    expect(uniqueX).toBeGreaterThan(keys.length * 0.4);
+    expect(uniqueZ).toBeGreaterThan(keys.length * 0.4);
+  });
+
+  it("puts a course in the same place every time", () => {
+    const keys = ["alpha", "beta", "gamma", "delta"];
+    expect([...layoutWorldCatalogue(keys).entries()]).toEqual([
+      ...layoutWorldCatalogue(keys).entries(),
+    ]);
+  });
+});
+
+describe("unstickWorldIslands", () => {
+  it("keeps the pinned island still and separates overlapping neighbours", () => {
+    const separated = unstickWorldIslands(
+      [
+        { x: 0, y: 0, z: 0, depth: 0 },
+        { x: 1, y: 0, z: 0, depth: 1 },
+      ],
+      [2, 2],
+    );
+    expect(separated[0]).toEqual({ x: 0, y: 0, z: 0, depth: 0 });
+    expect(Math.hypot(separated[1]!.x, separated[1]!.z)).toBeGreaterThan(4);
   });
 });
 

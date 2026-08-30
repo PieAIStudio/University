@@ -49,7 +49,12 @@ import {
   resolveIslandLookDebug,
 } from "./island/island-surface-style.js";
 import { hopPose, PlayerMarker, type AvatarRecipe } from "./avatar/index.js";
-import { layoutStudyRoad, radiusForLessons } from "./course/layout";
+import {
+  layoutStudyRoad,
+  layoutWorldCatalogue,
+  radiusForLessons,
+  unstickWorldIslands,
+} from "./course/layout";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
 import { hash } from "./island/random.js";
 import { CuteCloudSea } from "./sky/cloud-sea.js";
@@ -57,9 +62,10 @@ import { AerialWorldPlate, AerialWorldPlateFallback, DeepSea } from "./sky/horiz
 import { SkyDome } from "./sky/skydome.js";
 import { WORLD_SUN, worldShadowFrustum, worldSunPosition } from "./sky/sun.js";
 import { renderTier } from "./sky/tier";
-import { buildCourseGrid } from "./grid/course-grid.js";
+import { buildCourseGrid, type HexMap } from "./grid/course-grid.js";
 import { hexToWorld } from "./grid/hex.js";
 import { LessonMarkerField } from "./grid/LessonMarkerField.js";
+import { WorldHexField, type WorldGridIsland } from "./grid/WorldHexField.js";
 
 /**
  * The world's palette. Two greens for land, one warm accent for the only thing
@@ -216,11 +222,15 @@ interface WorldPlacement {
   readonly node: CourseNode;
   readonly position: THREE.Vector3;
   /**
-   * A renderer-facing projection of the stable island geometry. The world only
-   * has course summary data, so its node ids are synthetic; the course projects
-   * real lesson/unit ids onto the same geometry base.
+   * A renderer-facing projection of the stable island geometry. The catalogue
+   * field no longer builds this continuous island — it only needs the hex
+   * cluster — so the studio/study projection is the remaining caller.
    */
-  readonly blueprint: IslandBlueprint;
+  readonly blueprint: IslandBlueprint | null;
+  /** The same course grid, projected to the remote world scale. */
+  readonly grid: HexMap;
+  /** State hierarchy is a transform on the shared grid, not a new mesh. */
+  readonly gridScale: number;
   readonly radius: number;
   /** 0 to 1 — how much of the course is finished. */
   readonly progress: number;
@@ -310,71 +320,113 @@ export function nextCourse(
 }
 
 /**
- * One project's courses, laid out around the origin.
+ * Courses on the world map.
  *
- * This used to place all four projects at once, on a ring, in one sea — and it
- * was the boss who worked out why that was wrong. Two reasons, both real:
- * dragging the map a little too far lands you among another project's islands
- * with the top bar still naming the one you left, and a single ground plate
- * stretched over four projects has to cover roughly three times the distance,
- * at which point its resolution stops holding up and you can see it repeat.
- *
- * So a project is a place, not a region of a bigger place. The way to another
- * project is to say so — the switcher, or the planet — not to keep dragging and
- * hope. Nothing else is in this scene, which is also why the pan has no fence:
- * there is nothing on the other side of it to wander into.
+ * `study` keeps one project's road — the authoring studio still wants that
+ * close-up. `catalogue` is the learner's first screen: every published course
+ * in one instanced field, focused study first so the existing camera, labels
+ * and live beacon still open on the course in the top bar.
  */
+export type WorldPlacementScope = "study" | "catalogue";
+
+function orderedStudyNodes(nodes: readonly CourseNode[], studyId: string): CourseNode[] {
+  const own = nodes.filter((node) => node.studyId === studyId);
+  const spine = spineOf(studyId).map((entry) => entry.courseId);
+  const rank = new Map(spine.map((courseId, index) => [courseId, index]));
+  return [...own].sort(
+    (a, b) =>
+      (rank.get(a.courseId) ?? spine.length + a.depth) -
+        (rank.get(b.courseId) ?? spine.length + b.depth) || a.courseId.localeCompare(b.courseId),
+  );
+}
+
+function worldStudyOrder(nodes: readonly CourseNode[], focusedStudyId: string): readonly string[] {
+  const studyIds = [...new Set(nodes.map((node) => node.studyId))].sort((a, b) =>
+    a.localeCompare(b),
+  );
+  return [focusedStudyId, ...studyIds.filter((studyId) => studyId !== focusedStudyId)];
+}
+
 export function placeWorld(
   nodes: readonly CourseNode[],
   progressOf: (node: CourseNode) => number,
   studyId: string,
+  scope: WorldPlacementScope = "study",
 ): { readonly placements: readonly WorldPlacement[]; readonly extent: number } {
-  const own = nodes.filter((node) => node.studyId === studyId);
-
-  // Teaching order, not graph order. The spine is authored and validated as a
-  // legal linear extension of the prerequisites, so walking it is walking the
-  // graph. A course missing from the spine (a draft, an import that has not
-  // been slotted yet) falls in behind the spine by depth, so it is on the road
-  // rather than at the origin.
-  const spine = spineOf(studyId).map((entry) => entry.courseId);
-  const rank = new Map(spine.map((courseId, index) => [courseId, index]));
-  const ordered = [...own]
-    .sort(
-      (a, b) =>
-        (rank.get(a.courseId) ?? spine.length + a.depth) -
-          (rank.get(b.courseId) ?? spine.length + b.depth) || a.courseId.localeCompare(b.courseId),
-    )
-    .map((node) => node.courseId);
-  const laid = layoutStudyRoad(ordered);
-  const extent =
-    Math.max(...[...laid.values()].map((point) => Math.hypot(point.x, point.z)), 1) + 8;
+  const siblingsByStudy = new Map<string, CourseNode[]>();
+  for (const node of nodes) {
+    siblingsByStudy.set(node.studyId, [...(siblingsByStudy.get(node.studyId) ?? []), node]);
+  }
+  const orderedNodes =
+    scope === "catalogue"
+      ? worldStudyOrder(nodes, studyId).flatMap((entry) => orderedStudyNodes(nodes, entry))
+      : orderedStudyNodes(nodes, studyId);
+  const layoutKeys = orderedNodes.map((node) => `${node.studyId}/${node.courseId}`);
+  const laid =
+    scope === "catalogue"
+      ? layoutWorldCatalogue(layoutKeys)
+      : layoutStudyRoad(orderedNodes.map((node) => node.courseId));
 
   const placements: WorldPlacement[] = [];
-  for (const node of own) {
-    const local = laid.get(node.courseId);
+  for (const node of orderedNodes) {
+    const layoutKey = scope === "catalogue" ? `${node.studyId}/${node.courseId}` : node.courseId;
+    const local = laid.get(layoutKey);
     if (!local) continue;
-    const geometry = islandGeometryBlueprint({
+    const lookSeed = islandLookSeedForCourse(node.courseId);
+    const baseState = stateOf(node, siblingsByStudy.get(node.studyId) ?? [], progressOf);
+    const geometry =
+      scope === "catalogue"
+        ? null
+        : islandGeometryBlueprint({
+            studyId: node.studyId,
+            courseId: node.courseId,
+            lessonCount: node.lessons,
+            seed: lookSeed,
+            themeSelection: islandThemeSelectionForCourse(node.studyId, node.courseId),
+          });
+    const blueprint = geometry ? projectIslandBlueprint(geometry) : null;
+    const grid = buildCourseGrid({
       studyId: node.studyId,
       courseId: node.courseId,
-      lessonCount: node.lessons,
-      seed: islandLookSeedForCourse(node.courseId),
-      themeSelection: islandThemeSelectionForCourse(node.studyId, node.courseId),
+      seed: blueprint?.seed ?? lookSeed ?? `${node.studyId}/${node.courseId}`,
+      routeArchetype: blueprint?.route.archetype,
+      routeAnchors: blueprint?.geometryNodes,
+      activeLessonIndex: -1,
+      projection: "world",
+      footprintLessons: node.lessons,
+      lessons: blueprint
+        ? blueprint.nodes.map((routeNode) => ({
+            lessonId: routeNode.id,
+            unitId: routeNode.unitId,
+            unitIndex: routeNode.unitIndex,
+            state: baseState === "done" ? ("done" as const) : ("idle" as const),
+          }))
+        : [
+            {
+              lessonId: `${node.courseId}/world-anchor`,
+              unitId: `${node.courseId}/world-unit`,
+              unitIndex: 0,
+              state: baseState === "done" ? ("done" as const) : ("idle" as const),
+            },
+          ],
     });
-    const blueprint = projectIslandBlueprint(geometry);
     placements.push({
       node,
       position: new THREE.Vector3(local.x, 0, local.z),
       blueprint,
+      grid,
+      gridScale: 1,
       radius: radiusForLessons(node.lessons),
       progress: progressOf(node),
-      state: stateOf(node, own, progressOf),
+      state: baseState,
     });
   }
 
-  // The live course is this project's own next, not the whole catalogue's. On
-  // a map that only shows one project, an accent pointing at a course that is
-  // not in the frame would be a light with nothing under it.
+  // Only the focused study owns the live beacon. Other studies remain in the
+  // same field as readable satellites, but a learner should never see a
+  // recommendation that belongs to a different top-bar context.
   const next = placements
+    .filter((entry) => entry.node.studyId === studyId)
     .filter((entry) => entry.state === "open")
     .sort((a, b) => a.node.depth - b.node.depth || b.node.lessons - a.node.lessons)[0];
   const marked = placements.map((entry) => {
@@ -382,10 +434,38 @@ export function placeWorld(
     return {
       ...entry,
       state,
+      gridScale: WORLD_ISLAND_STATE_SCALE[state],
       radius: worldIslandRadiusForState(entry.node.lessons, state),
     };
   });
-  return { placements: marked, extent };
+  const separated =
+    scope === "catalogue"
+      ? unstickWorldIslands(
+          marked.map((entry) => ({
+            x: entry.position.x,
+            y: entry.position.y,
+            z: entry.position.z,
+            depth: entry.node.depth,
+          })),
+          marked.map((entry) => entry.grid.bounds.maxHalf * entry.gridScale),
+        )
+      : null;
+  const placed = separated
+    ? marked.map((entry, index) => ({
+        ...entry,
+        position: new THREE.Vector3(separated[index]!.x, separated[index]!.y, separated[index]!.z),
+      }))
+    : marked;
+  const extent =
+    Math.max(
+      ...placed.map(
+        (entry) =>
+          Math.hypot(entry.position.x, entry.position.z) +
+          entry.grid.bounds.maxHalf * entry.gridScale,
+      ),
+      1,
+    ) + 8;
+  return { placements: placed, extent };
 }
 
 /**
@@ -412,60 +492,6 @@ export function settlementSize(
   const capacity = Math.max(18, safeLessons * 3);
   const claim = Math.max(1, Math.round(capacity * 0.45));
   return { claim, built: Math.round(progress * claim) };
-}
-
-function Island({
-  entry,
-  dimmed = false,
-  onClick,
-  onOver,
-  assetRevision = 0,
-}: {
-  entry: WorldPlacement;
-  /** Authoring focus track: this island is one the learner is ignoring. */
-  dimmed?: boolean;
-  onClick: () => void;
-  onOver: (over: boolean) => void;
-  assetRevision?: number;
-}) {
-  const locked = entry.state === "idle";
-  return (
-    <group
-      position={entry.position}
-      onClick={(event) => {
-        // Stop at the island boundary so a click on a child mesh cannot also
-        // reach another island or the stage's pointer-miss handler.
-        event.stopPropagation();
-        playSound("map.select");
-        onClick();
-      }}
-      onPointerOver={(event) => {
-        event.stopPropagation();
-        playSound("map.hover");
-        onOver(true);
-      }}
-      onPointerOut={() => onOver(false)}
-    >
-      <IslandRender
-        blueprint={entry.blueprint}
-        detail="world"
-        targetRadius={entry.radius}
-        dimmed={locked || dimmed}
-      />
-      <Suspense fallback={null}>
-        <IslandDressing
-          key={assetRevision}
-          blueprint={entry.blueprint}
-          detail="world"
-          targetRadius={entry.radius}
-        />
-      </Suspense>
-      {/*
-        Foam used to mark the waterline. The islands now sit above a cloud
-        sea, and a ring in the air would be the waterline of a missing ocean.
-      */}
-    </group>
-  );
 }
 
 /*
@@ -610,6 +636,7 @@ function Weather({
   groundRadius,
   includeCloudSea = true,
   includeSea = true,
+  shadows = true,
 }: {
   extent: number;
   /**
@@ -636,6 +663,8 @@ function Weather({
   includeCloudSea?: boolean;
   /** Course shots use the painted sky as negative space around the island. */
   includeSea?: boolean;
+  /** The remote field skips the shadow map; hex cliffs already carry their own dark. */
+  shadows?: boolean;
 }) {
   const [, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
   // FogExp2 has no near plane. Density is derived from the old far so the
@@ -672,7 +701,7 @@ function Weather({
         color={WORLD_SUN.keyColor}
         position={sunPosition}
         intensity={WORLD_SUN.keyIntensity}
-        castShadow
+        castShadow={shadows}
         shadow-mapSize={[mapSize, mapSize]}
         shadow-camera-left={-shadow.half}
         shadow-camera-right={shadow.half}
@@ -719,10 +748,9 @@ export function WorldScene({
 }: {
   placements: readonly WorldPlacement[];
   /**
-   * How far this project's road reaches from the origin. It used to be the
-   * radius of a ring holding every project; one project per scene means the
-   * weather, the cloud sea and the ground plate can be sized to the thing
-   * actually in front of the camera instead of to the whole catalogue.
+   * How far the catalogue field reaches from the origin. The weather and
+   * shadow frustum still size from the actual projected field, not a hard-coded
+   * world radius.
    */
   extent: number;
   learnerAt: THREE.Vector3 | null;
@@ -739,29 +767,49 @@ export function WorldScene({
   skyStudyId?: string | null;
   assetRevision?: number;
 }) {
+  const islands = useMemo<readonly WorldGridIsland[]>(
+    () =>
+      placements.map((entry) => ({
+        id: `${entry.node.studyId}/${entry.node.courseId}`,
+        map: entry.grid,
+        position: entry.position,
+        scale: entry.gridScale,
+        dimmed: entry.state === "idle" || isFocusDimmed(entry.node, authoringFocus),
+      })),
+    [authoringFocus, placements],
+  );
+  const hoveredIsland = useRef<number | null>(null);
+
   return (
     <>
       <Weather
         extent={extent * 1.5}
         groundRadius={extent * 0.9}
         sky={skyStopsForStudy(skyStudyId)}
+        shadows={false}
       />
       {/*
-        No roads between islands. They used to be drawn from
-        `prerequisiteCourseIds`, one causeway per edge — furniture for a graph
-        the learner cannot walk anyway, and the thing that made the sea read as
-        a diagram. The order is the road now; the islands sit on it.
+        No roads between islands. The catalogue is an archipelago field, not a
+        prerequisite diagram: order survives in labels and state, while the
+        shared instance field supplies the 53 silhouettes.
       */}
-      {placements.map((entry) => (
-        <Island
-          key={`${entry.node.studyId}/${entry.node.courseId}`}
-          entry={entry}
-          dimmed={isFocusDimmed(entry.node, authoringFocus)}
-          onClick={() => onPick(entry.node)}
-          onOver={(over) => onHover(over ? entry.node : null)}
-          assetRevision={assetRevision}
-        />
-      ))}
+      <WorldHexField
+        key={assetRevision}
+        islands={islands}
+        onPick={(islandIndex) => {
+          const entry = placements[islandIndex];
+          if (!entry) return;
+          playSound("map.select");
+          onPick(entry.node);
+        }}
+        onHover={(islandIndex) => {
+          if (islandIndex === hoveredIsland.current) return;
+          hoveredIsland.current = islandIndex;
+          const entry = islandIndex === null ? undefined : placements[islandIndex];
+          if (entry) playSound("map.hover");
+          onHover(entry?.node ?? null);
+        }}
+      />
       {learnerAt ? (
         <LearnerMarker position={learnerAt} recipe={avatarRecipe} signedIn={avatarSignedIn} />
       ) : null}

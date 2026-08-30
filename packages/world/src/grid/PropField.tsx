@@ -17,16 +17,18 @@ interface RuntimePropField {
   readonly at: readonly Placement[];
 }
 
-function placementFor(map: HexMap, prop: HexMap["props"][number]): Placement {
+export function placementFor(map: HexMap, prop: HexMap["props"][number]): Placement {
   const cell = map.cells.find((entry) => entry.key === prop.cellKey)!;
   const point = hexToWorld(prop.coord, map.hexSize);
-  const heightFactor = prop.assetId.startsWith("tree_")
-    ? 6
-    : prop.assetId === "plant_bushLarge"
-      ? 1.62
-      : prop.assetId === "mushroom_redGroup" || prop.assetId === "stump_round"
-        ? 1.42
-        : 1.12;
+  const worldScale = map.projection === "world" ? 0.58 : 1;
+  const heightFactor =
+    (prop.assetId.startsWith("tree_")
+      ? 6
+      : prop.assetId === "plant_bushLarge"
+        ? 1.62
+        : prop.assetId === "mushroom_redGroup" || prop.assetId === "stump_round"
+          ? 1.42
+          : 1.12) * worldScale;
   return {
     position: new THREE.Vector3(point.x, cell.topY + 0.03, point.z),
     height: prop.scale * heightFactor,
@@ -47,7 +49,13 @@ function propsByAsset(map: HexMap): readonly RuntimePropField[] {
   return [...grouped.entries()].map(([assetId, at]) => ({ assetId, at }));
 }
 
-function ContactShadowField({ map, dimmed = false }: PropFieldProps) {
+export function ContactShadowField({
+  at,
+  dimmed = false,
+}: {
+  readonly at: readonly Placement[];
+  readonly dimmed?: boolean;
+}) {
   const mesh = useRef<THREE.InstancedMesh>(null);
   const geometry = useMemo(() => new THREE.CircleGeometry(0.72, 16), []);
   const material = useMemo(
@@ -84,22 +92,19 @@ function ContactShadowField({ map, dimmed = false }: PropFieldProps) {
     const target = mesh.current;
     if (!target) return;
     const matrix = new THREE.Matrix4();
-    const decorativeProps = map.props.filter((prop) => prop.kind === "territory");
-    decorativeProps.forEach((prop, index) => {
-      const cell = map.cells.find((entry) => entry.key === prop.cellKey)!;
-      const point = hexToWorld(prop.coord, map.hexSize);
+    at.forEach((placement, index) => {
       matrix.compose(
-        new THREE.Vector3(point.x, cell.topY + 0.018, point.z),
+        new THREE.Vector3(placement.position.x, placement.position.y + 0.018, placement.position.z),
         new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)),
         new THREE.Vector3(0.72, 0.72, 1),
       );
       target.setMatrixAt(index, matrix);
     });
     target.instanceMatrix.needsUpdate = true;
-  }, [map]);
+  }, [at]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material.dispose(), [material]);
-  const decorativeCount = map.props.filter((prop) => prop.kind === "territory").length;
+  const decorativeCount = at.length;
   if (decorativeCount === 0) return null;
   return (
     <instancedMesh
@@ -114,16 +119,17 @@ function ContactShadowField({ map, dimmed = false }: PropFieldProps) {
 
 export function PropField({ map, dimmed = false }: PropFieldProps) {
   const fields = useMemo(() => propsByAsset(map), [map]);
-  const decorativeCount = useMemo(
-    () => map.props.filter((prop) => prop.kind === "territory").length,
-    [map.props],
+  const decorative = useMemo(
+    () =>
+      map.props.filter((prop) => prop.kind === "territory").map((prop) => placementFor(map, prop)),
+    [map],
   );
   return (
     <group
       name="hex-grid-prop-fields"
-      userData={{ gridPropCount: map.props.length, gridDecorPropCount: decorativeCount }}
+      userData={{ gridPropCount: map.props.length, gridDecorPropCount: decorative.length }}
     >
-      <ContactShadowField map={map} dimmed={dimmed} />
+      <ContactShadowField at={decorative} dimmed={dimmed} />
       {fields.map((field) => (
         <BatchedAssetField
           key={field.assetId}

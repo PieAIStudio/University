@@ -95,7 +95,16 @@ export function useIslandLookSource({
     if (lookDebug.shot === "world-design" && viewKind === "world" && world) {
       return islandLookSceneSource(
         "world",
-        world.placements.map((entry) => entry.blueprint),
+        world.placements
+          .map((entry) => entry.blueprint)
+          .filter((blueprint): blueprint is NonNullable<typeof blueprint> => blueprint !== null),
+        world.placements.map((entry) => ({ x: entry.position.x, z: entry.position.z })),
+        {
+          dressingPlacementCount: world.placements.reduce(
+            (sum, entry) => sum + entry.grid.props.length,
+            0,
+          ),
+        },
       );
     }
     return null;

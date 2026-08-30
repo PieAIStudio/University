@@ -12,6 +12,7 @@ import {
 } from "./grid-outline.js";
 
 export type GridLessonState = "done" | "live" | "idle" | "locked";
+export type CourseGridProjection = "course" | "world";
 
 export interface CourseGridLesson {
   readonly lessonId: string;
@@ -29,6 +30,14 @@ export interface CourseGridInput {
   /** Existing continuous blueprint anchors are the source of route intent. */
   readonly routeAnchors?: readonly { readonly x: number; readonly z: number }[];
   readonly activeLessonIndex?: number;
+  /** The same grid planner, projected at course or remote world scale. */
+  readonly projection?: CourseGridProjection;
+  /**
+   * How big the remote silhouette should be. World maps size the cluster from
+   * the real lesson count, then walk a short route through it — the course
+   * shot is the place that still spends one cell per lesson.
+   */
+  readonly footprintLessons?: number;
 }
 
 export interface GridCell {
@@ -72,6 +81,7 @@ export interface GridLessonCell extends GridCell {
 
 export interface HexMap {
   readonly version: 1;
+  readonly projection: CourseGridProjection;
   readonly studyId: string;
   readonly courseId: string;
   readonly seed: string;
@@ -155,6 +165,27 @@ function estimateHexSize(lessonCount: number, cellCount: number, expansion = 0):
   // changing the camera or any lesson position relative to its cell.
   const targetHalfWidth = 14 + courseScale * 14 + expansion * 4;
   return Math.max(0.6, targetHalfWidth / (0.866 * Math.sqrt(cellCount)));
+}
+
+/**
+ * The remote map only needs enough surrounding land for a readable silhouette.
+ * Keeping this ratio near twenty cells for the catalogue's common twelve-lesson
+ * courses is what makes one shared instanced field cheap: route cells carry
+ * the course's progress, while the surrounding cells carry its shape.
+ */
+export function worldGridTargetForLessons(lessons: number): number {
+  const safeLessons = Math.max(1, Math.floor(lessons));
+  return Math.min(GRID_CELL_BUDGET - 4, Math.max(safeLessons + 6, Math.round(safeLessons * 1.55)));
+}
+
+/**
+ * A world island grows with lesson count instead of inheriting the course
+ * shot's large working footprint. The cell size stays in the same visual band
+ * and the outline owns the difference between a small plateau and a highland.
+ */
+function estimateWorldHexSize(lessonCount: number, cellCount: number, expansion = 0): number {
+  const targetHalfWidth = 0.7 + Math.sqrt(Math.max(1, lessonCount)) * 0.46 + expansion * 0.18;
+  return Math.max(0.55, targetHalfWidth / (0.866 * Math.sqrt(cellCount)));
 }
 
 function routeFromAnchors(
@@ -411,15 +442,20 @@ function withElevation(
 
 export function buildCourseGrid(input: CourseGridInput): HexMap {
   if (input.lessons.length === 0) throw new RangeError("A course grid needs at least one lesson");
+  const projection: CourseGridProjection = input.projection ?? "course";
+  const footprintLessons = Math.max(1, Math.floor(input.footprintLessons ?? input.lessons.length));
   const anchors =
     input.routeAnchors?.length === input.lessons.length
       ? input.routeAnchors
       : fallbackAnchors(input.lessons.length, input.seed, input.routeArchetype);
   const outlineSeed = `${input.studyId}/${input.courseId}/${input.seed}`;
-  const requestedTarget = Math.min(
-    GRID_CELL_BUDGET - 4,
-    Math.max(input.lessons.length + 7, Math.round(input.lessons.length * CELLS_PER_LESSON)),
-  );
+  const requestedTarget =
+    projection === "world"
+      ? worldGridTargetForLessons(footprintLessons)
+      : Math.min(
+          GRID_CELL_BUDGET - 4,
+          Math.max(input.lessons.length + 7, Math.round(input.lessons.length * CELLS_PER_LESSON)),
+        );
   let outline: GridOutline | null = null;
   let route: HexCoord[] | null = null;
   let hexSize = 0;
@@ -432,7 +468,10 @@ export function buildCourseGrid(input: CourseGridInput): HexMap {
       requestedTarget + expansion * Math.max(4, Math.ceil(input.lessons.length * 0.12)),
     );
     outline = growGridOutline(outlineSeed, target);
-    hexSize = estimateHexSize(input.lessons.length, outline.main.length, expansion);
+    hexSize =
+      projection === "world"
+        ? estimateWorldHexSize(footprintLessons, outline.main.length, expansion)
+        : estimateHexSize(input.lessons.length, outline.main.length, expansion);
     const fittedAnchors = fitRouteAnchorsToRegion(anchors, outline.main, hexSize);
     route = routeFromAnchors(fittedAnchors, hexSize, input.seed, outline.main);
   }
@@ -452,6 +491,7 @@ export function buildCourseGrid(input: CourseGridInput): HexMap {
     })),
     route,
     input.seed,
+    projection,
   );
   const palette = gridPaletteFor(input.studyId, input.courseId, input.seed);
   const points = projected.cells.map((cell) => hexToWorld(cell.coord, hexSize));
@@ -463,6 +503,7 @@ export function buildCourseGrid(input: CourseGridInput): HexMap {
   const halfZ = Math.max(Math.abs(minZ), Math.abs(maxZ));
   return {
     version: 1,
+    projection,
     studyId: input.studyId,
     courseId: input.courseId,
     seed: input.seed,
