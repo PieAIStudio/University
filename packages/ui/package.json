@@ -9,6 +9,7 @@
     "./Tip.js": "./src/Tip.tsx",
     "./api/client.js": "./src/api/client.ts",
     "./capability/CapabilityExplanation.js": "./src/capability/CapabilityExplanation.tsx",
+    "./capability/ai-entitlements.js": "./src/capability/ai-entitlements.ts",
     "./capability/capability.css": "./src/capability/capability.css",
     "./catalog/CatalogSurface.js": "./src/catalog/CatalogSurface.tsx",
     "./catalog/catalog.css": "./src/catalog/catalog.css",

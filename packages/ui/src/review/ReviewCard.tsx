@@ -4,6 +4,13 @@ import { GameBadge, GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui
 
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
+import { CapabilityExplanation } from "../capability/CapabilityExplanation.js";
+import {
+  DEFAULT_AI_ENTITLEMENTS,
+  openTutoringExplanation,
+  openTutoringReadFailureExplanation,
+  type EntitlementReader,
+} from "../capability/ai-entitlements.js";
 import {
   STALE_TOKEN_NOTICE,
   cardActionPath,
@@ -24,6 +31,7 @@ export function ReviewCard({
   card,
   requestToken,
   review,
+  readEntitlements,
   onReviewed,
   remaining,
 }: {
@@ -31,6 +39,8 @@ export function ReviewCard({
   /** Required only for the local HTTP fallback. Online injects a cloud port. */
   readonly requestToken?: string;
   readonly review?: ReviewCardPort;
+  /** Reads the server-selected AI plan when the learner asks for tutoring. */
+  readonly readEntitlements?: EntitlementReader;
   readonly onReviewed: () => Promise<void>;
   /**
    * How many cards are still due today, this one included.
@@ -62,6 +72,9 @@ export function ReviewCard({
    */
   const [priorAttempts, setPriorAttempts] = useState<readonly PriorAttempt[]>([]);
   const [coachCopied, setCoachCopied] = useState(false);
+  const [coachPending, setCoachPending] = useState(false);
+  const [coachExplanation, setCoachExplanation] =
+    useState<ReturnType<typeof openTutoringExplanation>>(null);
   const cardIdentity = reviewCardIdentity(card);
   const previousCardIdentity = useRef(cardIdentity);
 
@@ -76,6 +89,7 @@ export function ReviewCard({
     setRevealFailed(false);
     setPriorAttempts([]);
     setCoachCopied(false);
+    setCoachExplanation(null);
     setRetrievalDraft(createRetrievalAttemptDraft());
   }, [cardIdentity]);
 
@@ -168,6 +182,44 @@ export function ReviewCard({
       setError("评分已保存，但界面没能刷新，请重新加载页面。");
     } finally {
       setPending(false);
+    }
+  }
+
+  async function askAiToExplain(): Promise<void> {
+    setCoachPending(true);
+    setCoachExplanation(null);
+    setError(null);
+    try {
+      let ai = DEFAULT_AI_ENTITLEMENTS;
+      if (readEntitlements) {
+        const result = await readEntitlements();
+        if (result.kind === "explanation") {
+          setCoachExplanation(openTutoringReadFailureExplanation(result));
+          return;
+        }
+        ai = result.value.ai;
+      }
+
+      const unavailable = openTutoringExplanation(ai);
+      if (unavailable) {
+        setCoachExplanation(unavailable);
+        return;
+      }
+
+      if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
+      await navigator.clipboard.writeText(
+        buildCardCoachingPacket({
+          front: card.front,
+          back: back ?? "",
+          answer,
+          priorAttempts,
+        }),
+      );
+      setCoachCopied(true);
+    } catch {
+      setError("复制失败，剪贴板不可用");
+    } finally {
+      setCoachPending(false);
     }
   }
 
@@ -299,21 +351,14 @@ export function ReviewCard({
               <div className="answer-reveal__coach">
                 <GameButton
                   variant="ghost"
-                  onClick={() => {
-                    void navigator.clipboard
-                      ?.writeText(
-                        buildCardCoachingPacket({
-                          front: card.front,
-                          back: back ?? "",
-                          answer,
-                          priorAttempts,
-                        }),
-                      )
-                      .then(() => setCoachCopied(true))
-                      .catch(() => setError("复制失败，剪贴板不可用"));
-                  }}
+                  onClick={() => void askAiToExplain()}
+                  disabled={pending || coachPending}
                 >
-                  {coachCopied ? "已复制讲解包" : "让 AI 讲讲这张卡"}
+                  {coachPending
+                    ? "正在检查会员权益…"
+                    : coachCopied
+                      ? "已复制讲解包"
+                      : "让 AI 讲讲这张卡"}
                 </GameButton>
                 {coachCopied ? (
                   <span className="answer-reveal__coach-hint">
@@ -355,6 +400,12 @@ export function ReviewCard({
         <p className="inline-error" role="alert">
           {error}
         </p>
+      ) : null}
+      {coachExplanation ? (
+        <CapabilityExplanation
+          explanation={coachExplanation}
+          onClose={() => setCoachExplanation(null)}
+        />
       ) : null}
     </GamePanel>
   );

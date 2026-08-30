@@ -21,12 +21,13 @@ describe("billing configuration", () => {
     expect(PLANS.some((plan) => plan.pricing.kind === "configured")).toBe(true);
   });
 
-  it("sells the paid plan on what the free one cannot do", () => {
+  it("gives the free plan a capped grading trial and sells uncapped grading to members", () => {
     const free = planById("free");
     const member = planById("member");
-    expect(free?.ai.structuredGrading).toBe(false);
+    expect(free?.ai.structuredGrading).toBe(true);
     expect(member?.ai.structuredGrading).toBe(true);
     expect(member?.ai.openTutoring).toBe(true);
+    expect(free?.ai.openTutoring).toBe(false);
     expect(member!.sync.seats).toBeGreaterThan(free!.sync.seats);
   });
 
@@ -34,12 +35,15 @@ describe("billing configuration", () => {
     const free = planById("free");
     expect(free?.ai).toEqual({
       deterministicGrading: true,
-      structuredGrading: false,
+      structuredGrading: true,
       openTutoring: false,
       openTutoringTurnsPerDay: null,
     });
-    expect(free?.sync).toEqual({ included: true, seats: 1 });
+    expect(free?.sync).toEqual({ included: false, seats: 0 });
     expect(free?.lines).toContain("全部已发布课程、全部关卡，课文永远不收费");
+    expect(free?.lines).toContain(
+      "绑定邮箱后每天有少量结构化 AI 批改尝鲜额度，用完今天停止，明天恢复",
+    );
   });
 
   it("keeps the config as the only plan collection", () => {

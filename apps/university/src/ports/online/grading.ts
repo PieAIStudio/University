@@ -9,6 +9,7 @@ import {
   gradingAttemptText,
   METERED_GRADING_COST_POWER_UNITS,
   gradeDeterministically,
+  toPath,
   type AnswerKey,
   type ExerciseAttemptResult,
   type GradingPort,
@@ -23,6 +24,16 @@ import { readJson } from "@pieai/university-ui/api/client.js";
 import { isRepositoryAnchor, peekCourse } from "../../content/library";
 import type { Lesson } from "../../content/library";
 import { normalise } from "../../lesson/grading";
+
+class MeteredRequestDeclinedError extends Error {
+  readonly explanation: MeteredGradingExplanation;
+
+  constructor(explanation: MeteredGradingExplanation) {
+    super(explanation.whyUnavailable);
+    this.name = "MeteredRequestDeclinedError";
+    this.explanation = explanation;
+  }
+}
 
 /**
  * The lesson an answer is about, found from the address rather than handed in.
@@ -104,10 +115,35 @@ export function createOnlineGradingPort(options: {
           });
           recordAttempt(progress, input, result);
           return result;
-        } catch {
+        } catch (error) {
+          if (error instanceof MeteredRequestDeclinedError) {
+            const evaluation = lesson
+              ? failCopy(lesson, exercise?.prompt)
+              : "再想一下，答案就在上面这段里。";
+            const result: ExerciseAttemptResult = {
+              correct: false,
+              attemptCount: count,
+              score: 0,
+              maxScore: 1,
+              awaitingHostGrade: false,
+              hostGrade: {
+                passed: false,
+                evaluation,
+                extensions: [],
+                host: "tier-1",
+                learnerAnswer: input.answer,
+                occurredAt,
+              },
+              meteredEligible: false,
+              meteredExplanation: error.explanation,
+            };
+            recordAttempt(progress, input, result);
+            return result;
+          }
           // Tier two is an enhancement. A missing account, configuration,
           // balance or service must leave the learner with the free clue from
-          // tier one, not turn an open question into a wall.
+          // tier one, not turn an open question into a wall. Quota exhaustion is
+          // handled above because it is an actionable membership boundary.
         }
       }
 
@@ -190,7 +226,7 @@ async function submitToMeteredService(options: {
         funding: options.input.meteredFunding ?? "wallet",
       }),
     });
-    const body = await readJson<MeteredGradingResponse>(response);
+    const body = await readMeteredResponse(response);
     if (!body.hostGrade) {
       throw new Error("AI 语义批改服务返回了不完整的结果。");
     }
@@ -203,6 +239,7 @@ async function submitToMeteredService(options: {
       hostGrade: body.hostGrade,
     };
   } catch (error) {
+    if (error instanceof MeteredRequestDeclinedError) throw error;
     if (
       error instanceof Error &&
       /^(?:AI 批改|登录凭证|AI 批改钱包|这个 commandId|AI 语义批改)/.test(error.message)
@@ -211,6 +248,85 @@ async function submitToMeteredService(options: {
     }
     throw new Error("AI 语义批改服务暂时不可用，请稍后重试。");
   }
+}
+
+async function readMeteredResponse(response: Response): Promise<MeteredGradingResponse> {
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    throw new Error(`请求失败（${response.status}）`);
+  }
+
+  if (!response.ok) {
+    if (isRecord(body)) {
+      if (isMeteredGradingExplanation(body.explanation)) {
+        throw new MeteredRequestDeclinedError(body.explanation);
+      }
+      if (body.code === "free_quota_exhausted") {
+        throw new MeteredRequestDeclinedError(quotaExhaustedExplanation(stringField(body.error)));
+      }
+      if (body.code === "free_quota_unavailable") {
+        throw new MeteredRequestDeclinedError(quotaUnavailableExplanation(stringField(body.error)));
+      }
+    }
+    throw new Error(
+      isRecord(body) && typeof body.error === "string"
+        ? body.error
+        : `请求失败（${response.status}）`,
+    );
+  }
+
+  return body as MeteredGradingResponse;
+}
+
+function quotaExhaustedExplanation(message: string): MeteredGradingExplanation {
+  return {
+    kind: "explanation",
+    title: "今天的免费 AI 批改用完了",
+    whatItDoes: "它会在确定性判题无法判断的开放题上提供结构化 AI 评估。",
+    whyUnavailable: message || "今天的免费 AI 批改用完了，会员可以继续；免费额度明天恢复。",
+    futureSupport: "免费额度明天恢复；如果现在需要继续批改，可以查看会员方案。",
+    action: { label: "查看会员方案", href: toPath({ kind: "plans" }) },
+  };
+}
+
+function quotaUnavailableExplanation(message: string): MeteredGradingExplanation {
+  return {
+    kind: "explanation",
+    title: "今天的免费 AI 批改次数暂时读不到",
+    whatItDoes: "它会在确定性判题无法判断的开放题上提供结构化 AI 评估。",
+    whyUnavailable: message || "免费额度服务暂时没有返回结果，所以不会发起可能扣费的请求。",
+    futureSupport: "额度服务恢复后，重新提交这道题就会再次读取今天的免费 AI 批改次数。",
+    action: { label: "查看会员方案", href: toPath({ kind: "plans" }) },
+  };
+}
+
+function isMeteredGradingExplanation(value: unknown): value is MeteredGradingExplanation {
+  if (!isRecord(value)) return false;
+  if (
+    value.kind !== "explanation" ||
+    typeof value.title !== "string" ||
+    typeof value.whatItDoes !== "string" ||
+    typeof value.whyUnavailable !== "string" ||
+    typeof value.futureSupport !== "string"
+  ) {
+    return false;
+  }
+  return (
+    value.action === undefined ||
+    (isRecord(value.action) &&
+      typeof value.action.label === "string" &&
+      typeof value.action.href === "string")
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function stringField(value: unknown): string {
+  return typeof value === "string" ? value : "";
 }
 
 async function readMeteredGradingOffer(options: {

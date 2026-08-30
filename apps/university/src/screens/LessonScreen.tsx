@@ -28,6 +28,7 @@ import { playSound, SoundToggle } from "@pieai/university-ui/sound/index.js";
 import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
 import type { CourseView, LessonView } from "@pieai/university-ui/view/lesson-view.js";
 import { createReviewCardPort } from "@pieai/university-ui/review/scheduler-ports.js";
+import type { EntitlementReader } from "@pieai/university-ui/capability/ai-entitlements.js";
 
 import { trackEvent, withProductAnalyticsReview } from "../analytics/productAnalytics";
 import { contentPort, gradingPort, readerPort, sourceAccessPort } from "../ports/index.js";
@@ -60,6 +61,7 @@ export function LessonScreen({
   onReturn,
   onSettled,
   onWorthwhileProgress,
+  readEntitlements,
 }: {
   readonly locator: LessonRef;
   /** The course's shape, for prev/next. Null while the shelf is still arriving. */
@@ -72,6 +74,8 @@ export function LessonScreen({
   readonly onSettled: (doneBefore: number) => void;
   /** Starts the optional account session after a new learner value is saved. */
   readonly onWorthwhileProgress?: () => void;
+  /** Reads the server-selected AI plan for open tutoring controls. */
+  readonly readEntitlements?: EntitlementReader;
 }) {
   const progress = useSyncExternalStore(progressPort.subscribe, progressPort.snapshot);
   const [view, setView] = useState<{ readonly key: string; readonly view: LessonView } | null>(
@@ -289,6 +293,7 @@ export function LessonScreen({
         unitObjective={unitObjective}
         reader={trackedReader}
         grading={trackedGrading}
+        readEntitlements={readEntitlements}
         sourceAccess={sourceAccessPort}
         progress={progressPort}
         review={review}
