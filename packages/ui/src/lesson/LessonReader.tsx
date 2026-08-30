@@ -89,6 +89,7 @@ export function LessonReader({
   onFollowLink,
   onReturn,
   onWorthwhileProgress,
+  completionDestination,
   toolbarExtras,
 }: {
   readonly locator: LessonRef;
@@ -116,6 +117,8 @@ export function LessonReader({
   readonly onReturn?: (() => void) | undefined;
   /** Called after this reader creates a learner-owned value worth preserving. */
   readonly onWorthwhileProgress?: (() => void) | undefined;
+  /** Same-screen lesson-toolbar progress target for the completion cue. */
+  readonly completionDestination?: string;
   /** Shell-owned tools that sit with the reading controls, not a second toolbar. */
   readonly toolbarExtras?: ReactNode;
 }) {
@@ -462,7 +465,11 @@ export function LessonReader({
   return (
     <article className="lesson-reader">
       {onBackToCourse ? (
-        <LessonToolbar onClose={onBackToCourse} sections={sections}>
+        <LessonToolbar
+          onClose={onBackToCourse}
+          sections={sections}
+          progressDestinationId={completionDestination}
+        >
           {annotated ? (
             // Only offered where there is something to offer. A toggle that
             // does nothing on most lessons teaches the learner to ignore it.
@@ -586,6 +593,7 @@ export function LessonReader({
               </div>
               <LiquidCtaButton
                 className="lesson-completion__action"
+                destination={completionDestination}
                 onClick={() => void confirmCurrentRevision()}
                 disabled={confirming}
               >

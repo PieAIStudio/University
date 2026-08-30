@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { GameButton, LiquidGroup, type GameButtonProps } from "@pieai/swimmer-ui-kit";
+import { beginLiquidCtaTransition } from "./LiquidCtaTransition.js";
 
 export interface LiquidCtaButtonProps extends Omit<GameButtonProps, "variant"> {
   /** Classes for the real button; its accessible name and hit target stay native. */
@@ -9,6 +10,8 @@ export interface LiquidCtaButtonProps extends Omit<GameButtonProps, "variant"> {
   readonly wrapperClassName?: string;
   /** `full` keeps the same block-sized target used by mobile cards. */
   readonly width?: "auto" | "full";
+  /** Optional screen destination. Omitted keeps this a local press-only CTA. */
+  readonly destination?: string;
 }
 
 /**
@@ -46,10 +49,12 @@ export function LiquidCtaButton({
   className,
   wrapperClassName,
   width = "auto",
+  destination,
   disabled = false,
   ...buttonProps
 }: LiquidCtaButtonProps) {
   const [pressed, setPressed] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const reducedMotion = usePrefersReducedMotion();
   const visualPressed = pressed && !disabled && !reducedMotion;
   const buttonClassName = ["liquid-cta__button", className].filter(Boolean).join(" ");
@@ -64,6 +69,7 @@ export function LiquidCtaButton({
     onPointerLeave,
     onPointerUp,
     onLostPointerCapture,
+    onClick,
     ...restButtonProps
   } = buttonProps;
 
@@ -73,6 +79,7 @@ export function LiquidCtaButton({
 
   return (
     <div
+      ref={wrapperRef}
       className={groupClassName}
       data-liquid-cta="primary"
       data-liquid-cta-state={visualPressed ? "pressed" : "rest"}
@@ -142,6 +149,12 @@ export function LiquidCtaButton({
         onPointerUp={(event) => {
           setPressed(false);
           onPointerUp?.(event);
+        }}
+        onClick={(event) => {
+          if (!event.defaultPrevented && !disabled && destination) {
+            beginLiquidCtaTransition(wrapperRef.current, destination);
+          }
+          onClick?.(event);
         }}
         static
         variant="primary"

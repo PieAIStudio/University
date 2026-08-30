@@ -23,6 +23,7 @@ import {
 } from "@pieai/university-core";
 import { GameCallout } from "@pieai/swimmer-ui-kit";
 import { LessonReader } from "@pieai/university-ui/lesson/LessonReader.js";
+import { lessonProgressDestinationId } from "@pieai/university-ui/cta/LiquidCtaTransition.js";
 import { lessonNeighbours } from "@pieai/university-ui/lesson/LessonNav.js";
 import { playSound, SoundToggle } from "@pieai/university-ui/sound/index.js";
 import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
@@ -290,6 +291,11 @@ export function LessonScreen({
         locator={locator}
         view={overlaid}
         completion={completion ?? NOT_STARTED}
+        completionDestination={lessonProgressDestinationId(
+          locator.studyId,
+          locator.courseId,
+          locator.lessonId,
+        )}
         unitObjective={unitObjective}
         reader={trackedReader}
         grading={trackedGrading}

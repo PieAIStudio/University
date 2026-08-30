@@ -62,6 +62,8 @@ describe("TodaySection", () => {
       />,
     );
     expect(markup).toContain("TuringPact");
+    expect(markup).toContain("game-ui-button--static");
+    expect(markup).not.toContain("data-liquid-cta");
     expect(markup).not.toContain("41");
     expect(markup).not.toContain("0 张");
   });

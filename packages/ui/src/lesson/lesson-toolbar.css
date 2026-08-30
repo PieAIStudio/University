@@ -52,6 +52,11 @@
   min-width: 4rem;
 }
 
+/* The wrapper registers the measured track without becoming a new flex item. */
+.lesson-toolbar__progress-target {
+  display: contents;
+}
+
 .lesson-toolbar__tools {
   display: flex;
   flex: none;

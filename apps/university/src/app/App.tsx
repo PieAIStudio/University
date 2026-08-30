@@ -45,6 +45,7 @@ import {
 } from "@pieai/university-core";
 import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
+import { GameButton } from "@pieai/swimmer-ui-kit";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
 import {
   StudySwitcher,
@@ -72,7 +73,6 @@ import {
 } from "../progress/store";
 import { LessonScreen, RouteFallback } from "../screens/lazy";
 import { FeedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
-import { LiquidCtaButton } from "@pieai/university-ui/cta/LiquidCtaButton.js";
 
 import { todayCtaLabel, TodaySection, todayMeta } from "@pieai/university-ui/today/TodaySection.js";
 import { LINK_RETURN_DEPTH } from "@pieai/university-ui/lesson/LessonReader.js";
@@ -430,7 +430,6 @@ export function App() {
     : null;
   /** The very lesson the rail's panel offers, so the phone offers the same one. */
   const todayLesson = todayData.nextLesson;
-
   const presenceView = presenceViewKey(view);
   const presenceLocation = useMemo(() => {
     if (view.kind === "lesson" || view.kind === "settled") {
@@ -613,10 +612,15 @@ export function App() {
                   <p className="nextup__meta">{nextUpMeta}</p>
                   <WorldSourceControls studyId={focusedStudyId} sourceAccess={sourceAccessPort} />
                 </div>
-                <LiquidCtaButton
-                  width="full"
+                <GameButton
                   className="nextup__primary"
-                  wrapperClassName="nextup__primary-wrap"
+                  static
+                  variant="primary"
+                  /*
+                    Round 2 deliberately keeps this cross-screen CTA direct.
+                    Reopen its shared-element motion only with a View
+                    Transition design that owns both route layouts.
+                  */
                   onClick={() =>
                     setView({
                       kind: "lesson",
@@ -635,7 +639,7 @@ export function App() {
                     two vocabularies, chosen by window width.
                   */}
                   {todayCtaLabel(todayData.nextLesson?.progress)} →
-                </LiquidCtaButton>
+                </GameButton>
               </aside>
             ) : null}
             {view.kind === "world" && picked && pickedCourse && pickedStats ? (
@@ -690,7 +694,6 @@ export function App() {
   const todaySection = (
     <TodaySection
       data={todayData}
-      liquidCta={showMap && wide && !picked && pathOverlay === null}
       review={todayReview}
       readEntitlements={readEntitlements}
       vocabularyReview={todayVocabularyReview}
