@@ -2,6 +2,13 @@
 
 .liquid-cta {
   --liquid-cta-fill: var(--game-ui-accent);
+  --liquid-cta-fill-top: var(--game-ui-accent-bright);
+  --liquid-cta-fill-bottom: var(--liquid-cta-fill);
+  /* A short, dark contact shadow reads as placement. LiquidGroup turns this
+     into a compositor drop-shadow() in SwimmerUIKit 2.0.0, so it costs nothing
+     at rest. The light catch is not here: an inset shadow plus the ::before
+     highlight read as two stripes, and one light source is the whole point. */
+  --liquid-cta-shadow: 0 5px 10px color-mix(in srgb, var(--game-ui-accent-contrast) 32%, transparent);
   position: relative;
   display: inline-block;
   width: fit-content;
@@ -40,8 +47,39 @@
 }
 
 .liquid-cta__shape {
+  position: absolute;
+  inset: 1px;
   display: block;
-  border-radius: var(--game-ui-radius-control);
+  width: auto;
+  height: auto;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    var(--liquid-cta-fill-top),
+    var(--liquid-cta-fill-bottom) 62%,
+    color-mix(in srgb, var(--liquid-cta-fill-bottom) 88%, var(--game-ui-accent-contrast))
+  );
+}
+
+/* Keep the light catch inside the silhouette so it follows the press morph
+   without adding a second interactive element or an ambient animation.
+   It fades out along its length: a highlight with hard ends reads as a bar
+   stuck to the button, not as light landing on a curved edge. */
+.liquid-cta__shape::before {
+  position: absolute;
+  inset: 1px 9% auto;
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--game-ui-text-on-dark) 52%, transparent) 22%,
+    color-mix(in srgb, var(--game-ui-text-on-dark) 52%, transparent) 78%,
+    transparent
+  );
+  content: "";
+  pointer-events: none;
 }
 
 .liquid-cta__button {
@@ -54,6 +92,10 @@
   background-image: none;
   box-shadow: none;
   color: var(--game-ui-accent-contrast);
+  font-family: var(--game-ui-font-body);
+  font-size: 1rem;
+  font-weight: var(--game-ui-weight-strong, 800);
+  letter-spacing: -0.01em;
   transform: none;
 }
 
@@ -64,6 +106,8 @@
 
 .liquid-cta[data-liquid-cta-disabled="true"] {
   --liquid-cta-fill: var(--game-ui-text-muted);
+  --liquid-cta-fill-top: color-mix(in srgb, var(--game-ui-text-muted) 82%, var(--game-ui-text-on-dark));
+  --liquid-cta-shadow: none;
 }
 
 .liquid-cta[data-liquid-cta-disabled="false"]:hover {

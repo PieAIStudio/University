@@ -88,7 +88,7 @@ export function LiquidCtaButton({
             ? "1px solid color-mix(in srgb, var(--game-ui-text-muted) 72%, transparent)"
             : "1px solid var(--game-ui-accent-bright)"
         }
-        shadow={disabled ? "none" : "var(--game-ui-shadow-button)"}
+        shadow={disabled ? "none" : "var(--liquid-cta-shadow)"}
         blur={4}
         contrast={24}
         filterPadding={10}
