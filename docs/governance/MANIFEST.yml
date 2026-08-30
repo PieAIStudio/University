@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-30T10:10:49.712Z
+generated_at: 2026-08-30T11:47:11.483Z
 generator_version: doc-gov@0.9.9
-docs_count: 72
+docs_count: 73
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -367,6 +367,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-28
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-MAPCONTROLS-TWO-TOUCH-PAN-IS-A-SILENT-NO-OP
+    path: docs/reference/learnings/workflow-issues/mapcontrols-two-touch-pan-is-a-silent-no-op.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-30
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-ONE-COLUMN-RAIL-MUST-RESET-CHILD-GRID-PLACEMENT
     path: docs/reference/learnings/workflow-issues/one-column-rail-must-reset-child-grid-placement.md
