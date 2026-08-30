@@ -11,6 +11,7 @@ import {
 
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
+import type { EntitlementReader } from "../capability/ai-entitlements.js";
 import { LayerCoverage } from "../evidence/LayerCoverage.js";
 import { EvidenceSourceSheet } from "../evidence/EvidenceSourceSheet.js";
 import { LessonSources } from "../evidence/LessonSources.js";
@@ -75,6 +76,7 @@ export function LessonReader({
   unitObjective,
   reader,
   grading,
+  readEntitlements,
   sourceAccess,
   progress,
   review,
@@ -96,6 +98,8 @@ export function LessonReader({
   readonly unitObjective: string;
   readonly reader: ReaderPort;
   readonly grading: GradingPort;
+  /** Reads the server-selected AI plan for open tutoring controls. */
+  readonly readEntitlements?: EntitlementReader;
   /** Repository actions or explanations, selected once by the app shell. */
   readonly sourceAccess: SourceAccessPort;
   readonly progress?: ProgressPort;
@@ -600,6 +604,7 @@ export function LessonReader({
               locator={locator}
               exercise={exercise}
               grading={grading}
+              readEntitlements={readEntitlements}
               onRefresh={onLearningChanged}
             />
           ))}
@@ -630,6 +635,7 @@ export function LessonReader({
                   }}
                   requestToken={requestToken}
                   review={review}
+                  readEntitlements={readEntitlements}
                   onReviewed={onLearningChanged}
                 />
               ))}

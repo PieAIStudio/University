@@ -7,6 +7,7 @@ import {
   handleGradeRequest,
   readProductionSupabaseConfig,
   type GradeDependencies,
+  type GradeEntitlements,
   type FreeGradingQuota,
   type GradingWallet,
 } from "./service.js";
@@ -138,6 +139,26 @@ const COMMAND_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const ANONYMOUS_COMMAND_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const LINKED_COMMAND_ID = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 
+const FREE_ENTITLEMENTS: GradeEntitlements = {
+  planId: "free",
+  ai: {
+    deterministicGrading: true,
+    structuredGrading: true,
+    openTutoring: false,
+    openTutoringTurnsPerDay: null,
+  },
+};
+
+const MEMBER_ENTITLEMENTS: GradeEntitlements = {
+  planId: "member",
+  ai: {
+    deterministicGrading: true,
+    structuredGrading: true,
+    openTutoring: true,
+    openTutoringTurnsPerDay: null,
+  },
+};
+
 const reservation = {
   allowed: true,
   amountPowerUnits: "100",
@@ -241,9 +262,11 @@ function fixture() {
   const authenticate = vi.fn(async (token: string) =>
     token === "valid-token" ? { userId: USER_ID, isAnonymous: false } : null,
   );
+  const readEntitlements = vi.fn(async () => MEMBER_ENTITLEMENTS);
   const createWallet = vi.fn(() => wallet);
   const deps: GradeDependencies = {
     authenticate,
+    readEntitlements,
     createWallet,
     grade: model.grade,
     now: () => "2026-08-26T00:00:00.000Z",
@@ -256,6 +279,7 @@ function fixture() {
     deps,
     events,
     getBalance,
+    readEntitlements,
     refundCall,
     reserve,
     commit,
@@ -429,9 +453,104 @@ describe("University metered grading service", () => {
     expect(events).toEqual(["reserve"]);
   });
 
+  it("reads the member plan before the wallet and skips the daily free quota", async () => {
+    const fixtureState = fixture();
+    const quotaState = freeQuotaFixture(fixtureState.events);
+    const createFreeGradingQuota = vi.fn(() => quotaState.quota);
+    fixtureState.deps.createFreeGradingQuota = createFreeGradingQuota;
+    fixtureState.readEntitlements.mockImplementation(async () => {
+      fixtureState.events.push("entitlement");
+      return MEMBER_ENTITLEMENTS;
+    });
+
+    const response = await handleGradeRequest(requestFor("valid-token"), fixtureState.deps);
+    const body = (await response.json()) as Record<string, unknown>;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({ funding: "wallet" });
+    expect(fixtureState.events).toEqual(["entitlement", "reserve", "model", "commit"]);
+    expect(createFreeGradingQuota).not.toHaveBeenCalled();
+    expect(quotaState.quote).not.toHaveBeenCalled();
+    expect(quotaState.reserve).not.toHaveBeenCalled();
+  });
+
+  it("does not let a member's stale free choice consume the daily quota", async () => {
+    const fixtureState = fixture();
+    const quotaState = freeQuotaFixture(fixtureState.events);
+
+    const response = await handleGradeRequest(
+      requestFor("valid-token", "free", "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"),
+      fixtureState.deps,
+    );
+    const body = (await response.json()) as Record<string, unknown>;
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({ funding: "wallet" });
+    expect(quotaState.reserve).not.toHaveBeenCalled();
+    expect(fixtureState.reserve).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks a free plan's wallet bypass with a membership route", async () => {
+    const fixtureState = fixture();
+    const quotaState = freeQuotaFixture(fixtureState.events);
+    fixtureState.readEntitlements.mockResolvedValue(FREE_ENTITLEMENTS);
+    fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
+
+    const response = await handleGradeRequest(requestFor("valid-token"), fixtureState.deps);
+    const body = (await response.json()) as Record<string, unknown>;
+
+    expect(response.status).toBe(403);
+    expect(body).toMatchObject({
+      code: "member_plan_required",
+      explanation: { action: { href: "/plans", label: "查看会员方案" } },
+    });
+    expect(fixtureState.createWallet).not.toHaveBeenCalled();
+    expect(quotaState.reserve).not.toHaveBeenCalled();
+  });
+
+  it("blocks structured grading when the resolved AI switch is off before funding", async () => {
+    const fixtureState = fixture();
+    const quotaState = freeQuotaFixture(fixtureState.events);
+    const createFreeGradingQuota = vi.fn(() => quotaState.quota);
+    fixtureState.deps.createFreeGradingQuota = createFreeGradingQuota;
+    fixtureState.readEntitlements.mockResolvedValue({
+      planId: "member",
+      ai: {
+        deterministicGrading: true,
+        structuredGrading: false,
+        openTutoring: true,
+        openTutoringTurnsPerDay: null,
+      },
+    });
+
+    const offer = await handleGradeRequest(offerRequestFor("valid-token"), fixtureState.deps);
+    const submit = await handleGradeRequest(requestFor("valid-token"), fixtureState.deps);
+    const offerBody = (await offer.json()) as Record<string, unknown>;
+    const submitBody = (await submit.json()) as Record<string, unknown>;
+
+    expect(offer.status).toBe(200);
+    expect(offerBody).toMatchObject({
+      kind: "unavailable",
+      explanation: {
+        title: "结构化 AI 批改属于会员权益",
+        action: { href: "/plans", label: "查看会员方案" },
+      },
+    });
+    expect(submit.status).toBe(403);
+    expect(submitBody).toMatchObject({
+      code: "structured_grading_not_included",
+      explanation: { action: { href: "/plans" } },
+    });
+    expect(createFreeGradingQuota).not.toHaveBeenCalled();
+    expect(fixtureState.createWallet).not.toHaveBeenCalled();
+    expect(fixtureState.reserve).not.toHaveBeenCalled();
+    expect(fixtureState.complete).not.toHaveBeenCalled();
+  });
+
   it("quotes the daily free allowance without reading or reserving the wallet", async () => {
     const fixtureState = fixture();
     const quotaState = freeQuotaFixture(fixtureState.events);
+    fixtureState.readEntitlements.mockResolvedValue(FREE_ENTITLEMENTS);
     fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
 
     const response = await handleGradeRequest(offerRequestFor("valid-token"), fixtureState.deps);
@@ -510,6 +629,7 @@ describe("University metered grading service", () => {
   it("allows the same user to use the daily free allowance immediately after email binding", async () => {
     const fixtureState = fixture();
     const quotaState = freeQuotaFixture(fixtureState.events);
+    fixtureState.readEntitlements.mockResolvedValue(FREE_ENTITLEMENTS);
     fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
     fixtureState.authenticate
       .mockResolvedValueOnce({ userId: USER_ID, isAnonymous: true })
@@ -543,6 +663,7 @@ describe("University metered grading service", () => {
   it("uses the daily free allowance before the wallet for a structured grade", async () => {
     const fixtureState = fixture();
     const quotaState = freeQuotaFixture(fixtureState.events);
+    fixtureState.readEntitlements.mockResolvedValue(FREE_ENTITLEMENTS);
     fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
 
     const response = await handleGradeRequest(requestFor("valid-token", "free"), fixtureState.deps);
@@ -561,9 +682,10 @@ describe("University metered grading service", () => {
     expect(fixtureState.getBalance).not.toHaveBeenCalled();
   });
 
-  it("moves the offer to the wallet after four free grades are actually committed", async () => {
+  it("stops the free plan after four free grades instead of opening a wallet bypass", async () => {
     const fixtureState = fixture();
     const quotaState = freeQuotaFixture(fixtureState.events);
+    fixtureState.readEntitlements.mockResolvedValue(FREE_ENTITLEMENTS);
     fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
     const commandIds = [
       "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
@@ -585,12 +707,15 @@ describe("University metered grading service", () => {
 
     expect(offer.status).toBe(200);
     expect(body).toMatchObject({
-      kind: "available",
-      availablePowerUnits: "1000",
+      kind: "unavailable",
+      availablePowerUnits: null,
       freeQuotaExhausted: true,
       freeQuotaResetsAt: "2026-08-27T00:00:00.000Z",
+      explanation: {
+        action: { href: "/plans", label: "查看会员方案" },
+      },
     });
-    expect(fixtureState.getBalance).toHaveBeenCalledTimes(1);
+    expect(fixtureState.getBalance).not.toHaveBeenCalled();
     expect(fixtureState.reserve).toHaveBeenCalledTimes(0);
     expect(quotaState.remainingPowerUnits).toBe("0");
   });
@@ -598,6 +723,7 @@ describe("University metered grading service", () => {
   it("returns an honest exhaustion signal without calling the model or wallet", async () => {
     const fixtureState = fixture();
     const quotaState = freeQuotaFixture(fixtureState.events, "0");
+    fixtureState.readEntitlements.mockResolvedValue(FREE_ENTITLEMENTS);
     fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
 
     const response = await handleGradeRequest(requestFor("valid-token", "free"), fixtureState.deps);
@@ -606,9 +732,12 @@ describe("University metered grading service", () => {
     expect(response.status).toBe(429);
     expect(body).toMatchObject({
       code: "free_quota_exhausted",
-      error: "今天的免费 AI 批改用完了，明天恢复。",
+      error: "今天的免费 AI 批改用完了，会员可以继续；免费额度明天恢复。",
       remainingPowerUnits: "0",
       resetsAt: "2026-08-27T00:00:00.000Z",
+      explanation: {
+        action: { href: "/plans", label: "查看会员方案" },
+      },
     });
     expect(fixtureState.events).toEqual(["free-reserve"]);
     expect(fixtureState.complete).not.toHaveBeenCalled();
@@ -619,6 +748,7 @@ describe("University metered grading service", () => {
   it("says the free balance is not enough for one attempt when only a remainder is left", async () => {
     const fixtureState = fixture();
     const quotaState = freeQuotaFixture(fixtureState.events, "50");
+    fixtureState.readEntitlements.mockResolvedValue(FREE_ENTITLEMENTS);
     fixtureState.deps.createFreeGradingQuota = () => quotaState.quota;
 
     const response = await handleGradeRequest(requestFor("valid-token", "free"), fixtureState.deps);
@@ -627,7 +757,7 @@ describe("University metered grading service", () => {
     expect(response.status).toBe(429);
     expect(body).toMatchObject({
       code: "free_quota_exhausted",
-      error: "今天剩余的免费 AI 批改次数还不够一次了，明天恢复。",
+      error: "今天剩余的免费 AI 批改次数还不够一次了，会员可以继续；免费额度明天恢复。",
       remainingPowerUnits: "50",
     });
     expect(fixtureState.complete).not.toHaveBeenCalled();

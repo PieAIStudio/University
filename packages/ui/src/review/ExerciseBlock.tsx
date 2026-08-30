@@ -18,6 +18,12 @@ import type {
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { STALE_TOKEN_NOTICE, isStaleTokenFailure } from "../api/client.js";
 import { CapabilityExplanation } from "../capability/CapabilityExplanation.js";
+import {
+  DEFAULT_AI_ENTITLEMENTS,
+  openTutoringExplanation,
+  openTutoringReadFailureExplanation,
+  type EntitlementReader,
+} from "../capability/ai-entitlements.js";
 import type { LessonRef, LessonView } from "../view/lesson-view.js";
 
 /**
@@ -46,11 +52,14 @@ export function ExerciseBlock({
   locator,
   exercise,
   grading,
+  readEntitlements,
   onRefresh,
 }: {
   readonly locator: LessonRef;
   readonly exercise: LessonView["lesson"]["exercises"][number];
   readonly grading: GradingPort;
+  /** Reads the server-selected AI plan before an open tutoring request. */
+  readonly readEntitlements?: EntitlementReader;
   /**
    * Reloads campus data after a submission or a host write-back. Completion is
    * owned by the explicit lesson confirmation endpoint, never by rendering a
@@ -74,6 +83,9 @@ export function ExerciseBlock({
   const [packetCopyFailed, setPacketCopyFailed] = useState(false);
   const [packetInfo, setPacketInfo] = useState<CoachingPacket | null>(null);
   const [expressionCopied, setExpressionCopied] = useState(false);
+  const [expressionPending, setExpressionPending] = useState(false);
+  const [expressionExplanation, setExpressionExplanation] =
+    useState<ReturnType<typeof openTutoringExplanation>>(null);
   const [hostGrade, setHostGrade] = useState<HostExerciseGrade | null>(exercise.hostGrade ?? null);
   const [meteredOffer, setMeteredOffer] = useState<MeteredGradingOffer | null>(null);
   const [meteredOfferLoading, setMeteredOfferLoading] = useState(false);
@@ -111,6 +123,8 @@ export function ExerciseBlock({
     setResult(null);
     setMeteredOffer(null);
     setMeteredChoice(null);
+    setExpressionCopied(false);
+    setExpressionExplanation(null);
   }, [exercise.id, exercise.contentRevision, storedAnswer]);
 
   useEffect(() => {
@@ -195,8 +209,37 @@ export function ExerciseBlock({
   }, [awaitingGrade]);
 
   async function copyExpressionPacket() {
-    if (!grading.expressionPacket) return;
+    setExpressionPending(true);
+    setExpressionExplanation(null);
+    setError(null);
     try {
+      let ai = DEFAULT_AI_ENTITLEMENTS;
+      if (readEntitlements) {
+        const result = await readEntitlements();
+        if (result.kind === "explanation") {
+          setExpressionExplanation(openTutoringReadFailureExplanation(result));
+          return;
+        }
+        ai = result.value.ai;
+      }
+
+      const unavailable = openTutoringExplanation(ai);
+      if (unavailable) {
+        setExpressionExplanation(unavailable);
+        return;
+      }
+
+      if (!grading.expressionPacket) {
+        setExpressionExplanation({
+          kind: "explanation",
+          title: "表达点评暂未接通",
+          whatItDoes: "它会让 AI 只点评你这段话怎样说得更清楚，不改变这道题的对错。",
+          whyUnavailable: "当前学习端还没有可用的表达点评包服务，所以不会假装已经发给 AI。",
+          futureSupport: "服务接通后，仍然会先检查账号方案，再把点评材料交给 AI。",
+        });
+        return;
+      }
+
       const body = await grading.expressionPacket(locator.studyId);
       if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
       await navigator.clipboard.writeText(body.packet);
@@ -204,6 +247,8 @@ export function ExerciseBlock({
       setTimeout(() => setExpressionCopied(false), 8_000);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "暂时无法生成点评包");
+    } finally {
+      setExpressionPending(false);
     }
   }
 
@@ -360,6 +405,22 @@ export function ExerciseBlock({
         </GameCallout>
       ) : null}
 
+      {result?.meteredExplanation ? (
+        <GameCallout heading={result.meteredExplanation.title} tone="warning" role="alert">
+          <div className="metered-grading-choice__copy">
+            <p>{result.meteredExplanation.whyUnavailable}</p>
+            <p>{result.meteredExplanation.futureSupport}</p>
+            {result.meteredExplanation.action ? (
+              <p>
+                <a href={result.meteredExplanation.action.href}>
+                  {result.meteredExplanation.action.label}
+                </a>
+              </p>
+            ) : null}
+          </div>
+        </GameCallout>
+      ) : null}
+
       {hostGrade ? (
         <div
           className={`host-grade host-grade--${hostGrade.passed ? "pass" : "fail"}`}
@@ -389,7 +450,7 @@ export function ExerciseBlock({
               </ul>
             </div>
           ) : null}
-          {isExplain && grading.expressionPacket ? (
+          {isExplain ? (
             <div className="host-grade__coach">
               {/* Grading answered "was it right"; this offers "was it clear". The
                   page only prepares the material — the coaching itself happens in
@@ -399,9 +460,13 @@ export function ExerciseBlock({
               <GameButton
                 variant="ghost"
                 onClick={() => void copyExpressionPacket()}
-                disabled={pending}
+                disabled={pending || expressionPending}
               >
-                {expressionCopied ? "已复制表达点评包" : "让 AI 点评我这段表达"}
+                {expressionPending
+                  ? "正在检查会员权益…"
+                  : expressionCopied
+                    ? "已复制表达点评包"
+                    : "让 AI 点评我这段表达"}
               </GameButton>
               {expressionCopied ? (
                 <span className="host-grade__coach-hint">
@@ -512,6 +577,13 @@ export function ExerciseBlock({
                     : " 钱包余额暂时读不到。"}
                 </p>
                 <p>{meteredOffer.explanation.whyUnavailable}</p>
+                {meteredOffer.explanation.action ? (
+                  <p>
+                    <a href={meteredOffer.explanation.action.href}>
+                      {meteredOffer.explanation.action.label}
+                    </a>
+                  </p>
+                ) : null}
               </div>
               {meteredChoice === "tier-1" ? (
                 <p className="metered-grading-choice__selected" role="status">
@@ -589,6 +661,13 @@ export function ExerciseBlock({
         <p className="inline-error" role="alert">
           {error}
         </p>
+      ) : null}
+
+      {expressionExplanation ? (
+        <CapabilityExplanation
+          explanation={expressionExplanation}
+          onClose={() => setExpressionExplanation(null)}
+        />
       ) : null}
 
       {meteredExplanation ? (

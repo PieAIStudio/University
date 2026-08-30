@@ -122,36 +122,39 @@ describe("LeagueScreen", () => {
 });
 
 describe("PlansScreen", () => {
-  it("states in plain language what membership pays for and keeps local learning open", () => {
+  it("states in plain language that courses stay free while AI is gated by plan and quota", () => {
     const markup = renderToStaticMarkup(<PlansScreen />);
     expect(markup).toContain("所有已发布课程都能免费学");
+    expect(markup).toContain("每天有少量 AI 批改尝鲜额度");
+    expect(markup).toContain("用完今天停止，明天恢复");
+    // The lede describes what the account layer actually delivers today. The
+    // paid grading right is deliberately absent here as well as on the card;
+    // see the guard below for why.
     expect(markup).toContain("会员买的是账号那一半");
-    expect(markup).toContain("本地学习也不会被挡住");
     expect(markup).toContain("免费");
     expect(markup).not.toContain("当前基线");
     expect(markup).not.toContain("当前权益基线");
-    expect(markup).not.toContain("确定性判题");
     expect(markup).not.toContain("远端");
     expect(markup).not.toContain("服务端权益");
   });
 
-  /*
-    This used to assert the page promised AI grading in concrete words. It does
-    not promise it any more, because no plan grants it: grading is quoted
-    against a daily free quota and the wallet, never against a plan. The
-    concreteness the test was protecting still matters, so it moved onto the
-    right membership actually confers, and gained the negative that stops the
-    old promise from drifting back.
-  */
-  it("says concretely what membership buys, and does not sell AI grading", () => {
+  it("does not sell structured grading until production can recognise a member", () => {
+    // service.ts reads the plan before quota or wallet, and that path is
+    // tested. Production still cannot answer "is this account a member",
+    // because SwimmerBackend exposes no University plan-grant read, so every
+    // live request falls back to the free baseline.
+    //
+    // This page already shipped promises the code could not keep once, and
+    // deleting them is what made the rest of it trustworthy. Put these lines
+    // back on the day the backend can answer, and not before — this test is
+    // the reminder, not an opinion about the wording.
     const markup = renderToStaticMarkup(<PlansScreen />);
-    expect(markup).toContain("换手机也不用从头来");
-    expect(markup).toContain("三台设备");
-    expect(markup).toContain("你现在就在用");
-
     expect(markup).not.toContain("中文评语");
     expect(markup).not.toContain("最多三条补充建议");
-    expect(markup).not.toContain("会员买的是两件事");
+    expect(markup).not.toContain("不受每日免费尝鲜额度封顶");
+    // What the member plan may claim today, because the account layer does it.
+    expect(markup).toContain("换手机也不用从头来");
+    expect(markup).toContain("三台设备");
   });
 
   it("shows the configured member prices and keeps the purchase CTA visible", () => {

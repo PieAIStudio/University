@@ -263,9 +263,9 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
       <header className="shell-screen__head">
         <h1>{PLANS_TITLE}</h1>
         <p className="shell-screen__lede">
-          所有已发布课程都能免费学，课文和关卡永远不收费。会员买的是账号那一半：
-          登录同一账号后，换手机或电脑也能接着学，最多三台设备同时在线。 AI
-          批改按每次用量计费，跟会员等级无关。不买会员，本地学习也不会被挡住。
+          所有已发布课程都能免费学，课文和关卡永远不收费。绑定邮箱后， 每天有少量 AI
+          批改尝鲜额度，用完今天停止，明天恢复。
+          会员买的是账号那一半：换手机或电脑也能接着学，最多三台设备同时在线。
         </p>
       </header>
 

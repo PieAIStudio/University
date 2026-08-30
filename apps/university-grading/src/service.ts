@@ -14,10 +14,15 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import {
+  BILLING_CONFIG,
+  aiEntitlementPolicyOf,
+  defaultPlanOf,
   gradingAttemptText,
   gradingAttemptsFromPowerUnits,
+  planById,
   toPath,
   walletGradingBalanceText,
+  type EntitlementReadModel,
   type MeteredGradingBalance,
   type MeteredGradingExplanation,
   type MeteredGradingOffer,
@@ -28,7 +33,8 @@ import { METERED_GRADING } from "./config.js";
 const MAX_PROMPT_BYTES = 8 * 1024;
 const MAX_ANSWER_BYTES = 8 * 1024;
 const MAX_EXERCISE_ID_BYTES = 256;
-const FREE_QUOTA_EXHAUSTED_MESSAGE = "今天的免费 AI 批改用完了，明天恢复。";
+const FREE_QUOTA_EXHAUSTED_MESSAGE = "今天的免费 AI 批改用完了，会员可以继续；免费额度明天恢复。";
+const MEMBERSHIP_ACTION = { label: "查看会员方案", href: toPath({ kind: "plans" }) } as const;
 
 const ANONYMOUS_FREE_GRADING_EXPLANATION: MeteredGradingExplanation = {
   kind: "explanation",
@@ -82,6 +88,13 @@ export type GradeDecision = z.infer<typeof GradeDecisionSchema>;
 export interface GradeIdentity {
   readonly userId: string;
   readonly isAnonymous: boolean;
+}
+
+export type GradeEntitlements = Pick<EntitlementReadModel, "planId" | "ai">;
+
+export interface GradeEntitlementReadInput {
+  readonly accessToken: string;
+  readonly identity: GradeIdentity;
 }
 
 /** Only the server-side wallet actions needed by this endpoint. */
@@ -145,11 +158,100 @@ export interface FreeGradingQuota {
 
 export interface GradeDependencies {
   authenticate(accessToken: string): Promise<GradeIdentity | null>;
+  /**
+   * Reads the server-authoritative plan before any quota or wallet operation.
+   * The callback must be backed by an authenticated backend grant; the browser
+   * request is never allowed to choose a plan by sending a funding value.
+   */
+  readEntitlements?(input: GradeEntitlementReadInput): Promise<GradeEntitlements>;
   createWallet(accessToken: string): GradingWallet;
   createFreeGradingQuota?(accessToken: string): FreeGradingQuota;
   grade(input: GradeRequest): Promise<GradeDecision>;
   now?(): string;
   allowedOrigin?: string;
+}
+
+function baselineEntitlements(): GradeEntitlements {
+  const plan = defaultPlanOf(BILLING_CONFIG);
+  return { planId: plan.id, ai: plan.ai };
+}
+
+async function readGradeEntitlements(
+  deps: GradeDependencies,
+  accessToken: string,
+  identity: GradeIdentity,
+): Promise<GradeEntitlements | null> {
+  // Anonymous sessions can never receive a paid grant, even if an adapter is
+  // accidentally handed one. They also cannot claim the daily allowance.
+  if (identity.isAnonymous) return baselineEntitlements();
+
+  if (!deps.readEntitlements) return baselineEntitlements();
+
+  try {
+    const model = await deps.readEntitlements({ accessToken, identity });
+    const plan = planById(model.planId, BILLING_CONFIG);
+    if (!plan) return null;
+    // The server returns the selected id and the already-resolved AI policy.
+    // Checking the id against the local plan table prevents unknown plans from
+    // becoming paid by accident; using the returned policy lets a server-side
+    // revocation or feature flag take effect without trusting the browser.
+    return { planId: plan.id, ai: model.ai };
+  } catch {
+    return null;
+  }
+}
+
+function planOf(entitlements: GradeEntitlements) {
+  return planById(entitlements.planId, BILLING_CONFIG);
+}
+
+function isFreePlan(entitlements: GradeEntitlements): boolean {
+  return planOf(entitlements)?.pricing.kind === "free";
+}
+
+function isWalletPlan(entitlements: GradeEntitlements): boolean {
+  return planOf(entitlements)?.pricing.kind === "configured";
+}
+
+function planUnavailableOffer(): Extract<MeteredGradingOffer, { readonly kind: "unavailable" }> {
+  return unavailableOffer({
+    title: "AI 批改方案暂时读不到",
+    whyUnavailable:
+      "服务端没有返回这个账号当前的会员方案，所以不会猜测你能不能使用 AI，也不会读取或扣除额度和钱包。",
+    futureSupport: "方案读取恢复后，页面会按账号实际权益显示每日尝鲜额度或钱包计量入口。",
+    action: MEMBERSHIP_ACTION,
+  });
+}
+
+function structuredGradingUnavailableOffer(): Extract<
+  MeteredGradingOffer,
+  { readonly kind: "unavailable" }
+> {
+  return unavailableOffer({
+    title: "结构化 AI 批改属于会员权益",
+    whyUnavailable: "当前方案没有结构化 AI 批改权益；确定性判题仍然免费，课文和关卡也不会受影响。",
+    futureSupport: "开通会员后，这里会按量读取钱包余额，并在提交前展示本次费用。",
+    action: MEMBERSHIP_ACTION,
+  });
+}
+
+function memberRequiredResponse(deps: GradeDependencies): Response {
+  const explanation = unavailableOffer({
+    title: "钱包计量的 AI 批改属于会员权益",
+    whyUnavailable:
+      "免费方案的结构化 AI 批改只走今天的尝鲜额度，不能通过发送 funding: wallet 绕过每日额度直接扣钱包。",
+    futureSupport: "今天的免费额度用完后，可以查看会员方案继续按量批改。",
+    action: MEMBERSHIP_ACTION,
+  }).explanation;
+  return jsonResponse(
+    {
+      error: "免费方案只能使用每日 AI 批改尝鲜额度；会员可以继续使用按量 AI 批改。",
+      code: "member_plan_required",
+      explanation,
+    },
+    403,
+    deps.allowedOrigin,
+  );
 }
 
 export interface StructuredGrader {
@@ -232,9 +334,43 @@ export async function handleGradeRequest(
     return unauthorized(deps.allowedOrigin);
   }
 
-  const freeGradingQuota = identity.isAnonymous
-    ? undefined
-    : createFreeGradingQuota(deps, accessToken);
+  // Entitlements are resolved before the day, quota, wallet, or model path.
+  // This is the security boundary: `funding` below is only a learner choice,
+  // never a way to turn a free plan into a wallet-funded member request.
+  const entitlements = await readGradeEntitlements(deps, accessToken, identity);
+  if (!entitlements) {
+    return jsonResponse(planUnavailableOffer(), 503, deps.allowedOrigin);
+  }
+
+  const policy = aiEntitlementPolicyOf(entitlements.ai);
+  if (!policy.structuredGrading && !identity.isAnonymous) {
+    if (request.method === "GET") {
+      return jsonResponse(structuredGradingUnavailableOffer(), 200, deps.allowedOrigin);
+    }
+    return jsonResponse(
+      {
+        error: "当前方案没有结构化 AI 批改权益；确定性判题仍然免费。",
+        code: "structured_grading_not_included",
+        explanation: structuredGradingUnavailableOffer().explanation,
+      },
+      403,
+      deps.allowedOrigin,
+    );
+  }
+
+  const freePlan = isFreePlan(entitlements);
+  if (!freePlan && !isWalletPlan(entitlements)) {
+    return jsonResponse(
+      structuredGradingUnavailableOffer(),
+      request.method === "GET" ? 200 : 403,
+      deps.allowedOrigin,
+    );
+  }
+
+  const freeGradingQuota =
+    !identity.isAnonymous && isFreePlan(entitlements)
+      ? createFreeGradingQuota(deps, accessToken)
+      : undefined;
   const now = deps.now?.() ?? new Date().toISOString();
   const day = calendarDay(now);
 
@@ -245,6 +381,7 @@ export async function handleGradeRequest(
       accessToken,
       day,
       freeGradingQuota,
+      entitlements,
     });
   }
 
@@ -257,28 +394,44 @@ export async function handleGradeRequest(
     );
   }
 
+  if (identity.isAnonymous) {
+    return jsonResponse(anonymousFreeGradingOffer(), 200, deps.allowedOrigin);
+  }
+
+  if (freePlan && input.funding !== "free") {
+    return memberRequiredResponse(deps);
+  }
+
+  // The server chooses the actual funding path from the plan. A member always
+  // uses the wallet, even if a stale or malicious browser sends `funding: free`;
+  // that is what makes membership exempt from the daily free-grading cap.
+  const funding: "free" | "wallet" = freePlan ? "free" : "wallet";
+  const effectiveInput = input.funding === funding ? input : { ...input, funding };
   const metadata = {
     feature: "university-metered-grading",
     exerciseId: input.exerciseId,
     contentRevision: input.contentRevision,
-    funding: input.funding,
+    funding,
   } as const;
 
-  if (input.funding === "free") {
-    if (identity.isAnonymous) {
-      return jsonResponse(anonymousFreeGradingOffer(), 200, deps.allowedOrigin);
-    }
+  if (funding === "free") {
     return handleFreeGrading({
       deps,
       identity,
-      input,
+      input: effectiveInput,
       metadata,
       day,
       freeGradingQuota,
     });
   }
 
-  return handleWalletGrading({ deps, identity, accessToken, input, metadata });
+  return handleWalletGrading({
+    deps,
+    identity,
+    accessToken,
+    input: effectiveInput,
+    metadata,
+  });
 }
 
 interface ReadGradingOfferInput {
@@ -287,6 +440,7 @@ interface ReadGradingOfferInput {
   readonly accessToken: string;
   readonly day: string;
   readonly freeGradingQuota: FreeGradingQuota | undefined;
+  readonly entitlements: GradeEntitlements;
 }
 
 async function readGradingOffer(input: ReadGradingOfferInput): Promise<Response> {
@@ -294,16 +448,18 @@ async function readGradingOffer(input: ReadGradingOfferInput): Promise<Response>
     return jsonResponse(anonymousFreeGradingOffer(), 200, input.deps.allowedOrigin);
   }
 
+  const freePlan = isFreePlan(input.entitlements);
+
   let freeQuote: FreeGradingQuotaQuote | null = null;
-  if (input.freeGradingQuota) {
+  if (freePlan && input.freeGradingQuota) {
     try {
       freeQuote = await input.freeGradingQuota.quote({
         userId: input.identity.userId,
         day: input.day,
       });
     } catch {
-      // A missing quota RPC must not prevent a paying learner from seeing a
-      // wallet quote. The free path fails closed whenever its backend is unavailable.
+      // The free path fails closed whenever its backend is unavailable. A
+      // member never enters this branch because the plan was resolved first.
     }
   }
 
@@ -320,22 +476,35 @@ async function readGradingOffer(input: ReadGradingOfferInput): Promise<Response>
     return jsonResponse(offer, 200, input.deps.allowedOrigin);
   }
 
-  const freeQuotaExhausted = freeQuote !== null;
+  if (freePlan) {
+    return jsonResponse(
+      unavailableOffer({
+        title: freeQuote ? "今天的免费 AI 批改用完了" : "免费 AI 批改次数暂时读不到",
+        whyUnavailable: freeQuote
+          ? freeQuotaMessage(freeQuote)
+          : "今天的免费 AI 批改次数暂时读不到，所以不会发起可能扣费的请求。",
+        futureSupport: freeQuote
+          ? "免费额度明天恢复；如果现在需要继续批改，可以查看会员方案。"
+          : "额度服务恢复后，这里会重新读取今天的免费 AI 批改次数。",
+        freeQuotaExhausted: freeQuote !== null,
+        freeQuotaResetsAt: freeQuote?.resetsAt,
+        action: MEMBERSHIP_ACTION,
+      }),
+      200,
+      input.deps.allowedOrigin,
+    );
+  }
+
   let wallet: GradingWallet;
   try {
     wallet = input.deps.createWallet(input.accessToken);
   } catch {
     return jsonResponse(
       unavailableOffer({
-        title: freeQuotaExhausted ? "今天的免费 AI 批改用完了" : "AI 批改次数暂时读不到",
-        whyUnavailable: freeQuotaExhausted
-          ? freeQuotaMessage(freeQuote!)
-          : "当前没有可用的钱包读取通道，所以页面不会猜一个余额，也不会直接发起可能扣费的请求。",
-        futureSupport: freeQuotaExhausted
-          ? "明天的免费 AI 批改次数会恢复；如果你已有可用余额，钱包服务恢复后也可以选择付费批改。"
-          : "连接钱包服务后，这里会先显示本次费用和你的可用余额。",
-        freeQuotaExhausted,
-        freeQuotaResetsAt: freeQuote?.resetsAt,
+        title: "AI 批改钱包暂时读不到",
+        whyUnavailable:
+          "当前没有可用的钱包读取通道，所以页面不会猜一个余额，也不会直接发起可能扣费的请求。",
+        futureSupport: "连接钱包服务后，这里会先显示本次费用和你的可用余额。",
       }),
       200,
       input.deps.allowedOrigin,
@@ -348,15 +517,10 @@ async function readGradingOffer(input: ReadGradingOfferInput): Promise<Response>
   } catch {
     return jsonResponse(
       unavailableOffer({
-        title: freeQuotaExhausted ? "今天的免费 AI 批改用完了" : "AI 批改次数暂时读不到",
-        whyUnavailable: freeQuotaExhausted
-          ? `${freeQuotaMessage(freeQuote!)} 钱包余额目前也读不到。`
-          : "当前没有读到服务端钱包余额，所以页面不会把未知余额当成可用，也不会直接发起可能扣费的请求。",
-        futureSupport: freeQuotaExhausted
-          ? "明天的免费 AI 批改次数会恢复；钱包服务恢复后再显示付费批改选项。"
-          : "钱包服务恢复后，这里会先显示本次费用和你的可用余额。",
-        freeQuotaExhausted,
-        freeQuotaResetsAt: freeQuote?.resetsAt,
+        title: "AI 批改钱包余额暂时读不到",
+        whyUnavailable:
+          "当前没有读到服务端钱包余额，所以页面不会把未知余额当成可用，也不会直接发起可能扣费的请求。",
+        futureSupport: "钱包服务恢复后，这里会先显示本次费用和你的可用余额。",
       }),
       200,
       input.deps.allowedOrigin,
@@ -368,28 +532,16 @@ async function readGradingOffer(input: ReadGradingOfferInput): Promise<Response>
       kind: "available",
       costPowerUnits: METERED_GRADING.reservationPowerUnits,
       availablePowerUnits: balance.availablePowerUnits,
-      ...(freeQuotaExhausted
-        ? {
-            freeQuotaExhausted: true,
-            freeQuotaResetsAt: freeQuote?.resetsAt,
-          }
-        : {}),
     };
     return jsonResponse(offer, 200, input.deps.allowedOrigin);
   }
 
   return jsonResponse(
     unavailableOffer({
-      title: freeQuotaExhausted ? "今天的免费 AI 批改用完了" : "这次 AI 批改的次数不够",
+      title: "这次 AI 批改的钱包余额不够",
       availablePowerUnits: balance.availablePowerUnits,
-      whyUnavailable: freeQuotaExhausted
-        ? `${freeQuotaMessage(freeQuote!)} ${walletGradingBalanceText(balance.availablePowerUnits)}，这次付费批改需要 ${gradingAttemptText(METERED_GRADING.reservationPowerUnits)}。`
-        : `${walletGradingBalanceText(balance.availablePowerUnits)}；这次 AI 批改需要 ${gradingAttemptText(METERED_GRADING.reservationPowerUnits)}；不充值也不影响你查看下面的免费提示。`,
-      futureSupport: freeQuotaExhausted
-        ? "明天的免费 AI 批改次数会恢复；充值后也可以随时重新选择付费批改。"
-        : "充值后重新打开这道题，页面会再次读取余额；免费提示始终可用。",
-      freeQuotaExhausted,
-      freeQuotaResetsAt: freeQuote?.resetsAt,
+      whyUnavailable: `${walletGradingBalanceText(balance.availablePowerUnits)}；这次 AI 批改需要 ${gradingAttemptText(METERED_GRADING.reservationPowerUnits)}；不充值也不影响你查看下面的免费提示。`,
+      futureSupport: "充值后重新打开这道题，页面会再次读取余额；免费提示始终可用。",
     }),
     200,
     input.deps.allowedOrigin,
@@ -514,10 +666,12 @@ interface HandleFreeGradingInput {
 
 async function handleFreeGrading(input: HandleFreeGradingInput): Promise<Response> {
   if (!input.freeGradingQuota) {
+    const explanation = freeQuotaUnavailableExplanation();
     return jsonResponse(
       {
         error: "今天的免费 AI 批改暂时不可用，下面的 tier-1 免费提示仍然可用。",
         code: "free_quota_unavailable",
+        explanation,
       },
       503,
       input.deps.allowedOrigin,
@@ -534,10 +688,12 @@ async function handleFreeGrading(input: HandleFreeGradingInput): Promise<Respons
       metadata: input.metadata,
     });
   } catch {
+    const explanation = freeQuotaUnavailableExplanation();
     return jsonResponse(
       {
         error: "今天的免费 AI 批改暂时不可用，下面的 tier-1 免费提示仍然可用。",
         code: "free_quota_unavailable",
+        explanation,
       },
       503,
       input.deps.allowedOrigin,
@@ -545,12 +701,21 @@ async function handleFreeGrading(input: HandleFreeGradingInput): Promise<Respons
   }
 
   if (reservation.insufficient || reservation.status === "insufficient") {
+    const explanation = unavailableOffer({
+      title: "今天的免费 AI 批改用完了",
+      whyUnavailable: freeQuotaMessage(reservation),
+      futureSupport: "免费额度明天恢复；如果现在需要继续批改，可以查看会员方案。",
+      freeQuotaExhausted: true,
+      freeQuotaResetsAt: reservation.resetsAt,
+      action: MEMBERSHIP_ACTION,
+    }).explanation;
     return jsonResponse(
       {
         error: freeQuotaMessage(reservation),
         code: "free_quota_exhausted",
         remainingPowerUnits: reservation.remainingPowerUnits,
         resetsAt: reservation.resetsAt,
+        explanation,
       },
       429,
       input.deps.allowedOrigin,
@@ -622,6 +787,16 @@ async function handleFreeGrading(input: HandleFreeGradingInput): Promise<Respons
     },
     metadata: input.metadata,
   });
+}
+
+function freeQuotaUnavailableExplanation(): MeteredGradingExplanation {
+  return unavailableOffer({
+    title: "今天的免费 AI 批改次数暂时读不到",
+    whyUnavailable:
+      "免费额度服务暂时没有返回结果，所以不会发起可能扣费的请求；确定性判题仍然免费。",
+    futureSupport: "额度服务恢复后，这里会重新读取今天的免费 AI 批改次数。",
+    action: MEMBERSHIP_ACTION,
+  }).explanation;
 }
 
 interface FundingMutation {
@@ -759,7 +934,8 @@ function unavailableOffer(options: {
   readonly availablePowerUnits?: string;
   readonly freeQuotaExhausted?: boolean;
   readonly freeQuotaResetsAt?: string;
-}): MeteredGradingOffer {
+  readonly action?: { readonly label: string; readonly href: string };
+}): Extract<MeteredGradingOffer, { readonly kind: "unavailable" }> {
   return {
     kind: "unavailable",
     costPowerUnits: METERED_GRADING.reservationPowerUnits,
@@ -770,6 +946,7 @@ function unavailableOffer(options: {
       whatItDoes: `它会在确定性判题无法判断的开放题上提供一次结构化 AI 评估，本次会使用 ${gradingAttemptText(METERED_GRADING.reservationPowerUnits)}。`,
       whyUnavailable: options.whyUnavailable,
       futureSupport: options.futureSupport,
+      ...(options.action ? { action: options.action } : {}),
     },
     ...(options.freeQuotaExhausted
       ? {
@@ -794,8 +971,8 @@ function freeQuotaMessage(quote: FreeGradingQuotaQuote): string {
   const attempts = gradingAttemptsFromPowerUnits(quote.remainingPowerUnits);
   if (attempts === null) return FREE_QUOTA_EXHAUSTED_MESSAGE;
   return attempts === 0n
-    ? "今天剩余的免费 AI 批改次数还不够一次了，明天恢复。"
-    : `今天还剩 ${attempts} 次免费 AI 批改，明天恢复。`;
+    ? "今天剩余的免费 AI 批改次数还不够一次了，会员可以继续；免费额度明天恢复。"
+    : `今天还剩 ${attempts} 次免费 AI 批改，会员可以继续；免费额度明天恢复。`;
 }
 
 function calendarDay(iso: string): string {

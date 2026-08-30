@@ -3,7 +3,7 @@
  *
  * Course access is deliberately absent here. A learner may read every
  * published course; this file only describes the AI and sync rights that a
- * future commercial plan may grant.
+ * plan may grant.
  *
  * Keep prices as configuration in this module. A paid plan is added by filling
  * its rights and `pricing` object here; the reader and the entitlement model do
@@ -22,21 +22,6 @@ export type PlanPricing =
       readonly yearlyCents: number | null;
     };
 
-/*
-  None of these three flags is read by any code today. That is not an oversight
-  to be fixed by wiring them up: grading funding is already decided somewhere
-  else, and decided differently.
-
-  `apps/university-grading/src/service.ts` quotes each metered grading against a
-  daily free quota first and the learner's wallet second. It never asks which
-  plan the learner holds. So a plan cannot grant or withhold AI grading, and a
-  plan line that says it does is selling something this file does not control.
-
-  They are kept, rather than deleted, because the metered path is unfinished:
-  the free-quota RPC fails closed until its backend lands, and the wallet has a
-  balance read but no way to add money. When that path is finished, the honest
-  move is to delete these flags, not to teach the grading service to read them.
-*/
 export interface AiEntitlementConfig {
   /** Tier-one answer checking that does not call a model. */
   readonly deterministicGrading: boolean;
@@ -74,17 +59,17 @@ export const BILLING_CONFIG = {
       pricing: { kind: "free" },
       ai: {
         deterministicGrading: true,
-        structuredGrading: false,
+        // A signed-in free learner gets the server-authoritative daily trial;
+        // the quota, not this boolean, is what caps the trial.
+        structuredGrading: true,
         openTutoring: false,
         openTutoringTurnsPerDay: null,
       },
-      // This preserves the existing account contract: a signed-in learner
-      // can sync without waiting for a future price decision.
-      sync: { included: true, seats: 1 },
+      sync: { included: false, seats: 0 },
       lines: [
         "全部已发布课程、全部关卡，课文永远不收费",
         "答案对不对，能当场判的当场判",
-        "登录后进度存进账号；没登录也能一直学下去",
+        "绑定邮箱后每天有少量结构化 AI 批改尝鲜额度，用完今天停止，明天恢复",
       ],
     },
     /*
@@ -114,14 +99,16 @@ export const BILLING_CONFIG = {
       },
       sync: { included: true, seats: 3 },
       /*
-        These lines used to promise AI grading and AI comments. They were
-        removed because no code grants either right by plan, so the page was
-        describing a difference that does not exist. What membership actually
-        changes today is the seat count, and that is what it now says.
+        The structured-grading right this plan is built around is deliberately
+        absent from this list. The funding path is implemented and tested here
+        — service.ts reads the plan before it reaches quota or wallet — but
+        SwimmerBackend exposes no University plan-grant read yet, so production
+        cannot recognise a paying member and falls back to the free baseline.
 
-        The AI lines come back when metered grading is finished and membership
-        buys something inside it - a larger free quota, or included wallet
-        credit. Until then a line here has to be a right this file controls.
+        A plans page is a promise. This project has already shipped one that
+        the code could not keep, and removing those lines is what made the rest
+        of this page trustworthy. The line goes back the day the backend can
+        answer "is this account a member", and not before.
       */
       lines: [
         "换手机也不用从头来：登录同一账号，进度和复习卡接着走",
