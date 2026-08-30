@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "doctype-first-line",
+  "title": "HTML 第一行",
+  "courseId": "foundations-before-zero",
+  "unitId": "what-is-an-app",
+  "lessonId": "app-is-a-pile-of-files",
+  "prompt": "`index.html` 的第 1 行完整写的是什么？（区分大小写，按文件原样）",
+  "contentRevision": 7,
+  "contentHash": "sha256:eee016db490f7152f24fa1137a3cfec34018a0a8bba086048d04fcd9566e1a15",
+  "status": "active",
+  "evidence": [
+    {
+      "kind": "fact",
+      "snapshotId": "git-658b36ef0f55",
+      "sourceCommit": "658b36ef0f559fe11f712c5c9ae2b026b6eb87c2",
+      "sourcePath": "index.html",
+      "lineStart": 1,
+      "lineEnd": 1,
+      "analysisId": "ua-658b36ef-v2-9-4-zh-full-e98206c7358f1ff1-a77081e2ef2c",
+      "graphHash": "sha256:f3cc4beca795e9a6bbd69003e8c91bb49f9cb6a029e23b44f3c6eae36e9db516",
+      "nodeIds": [
+        "file:index.html"
+      ],
+      "note": "doctype 声明。"
+    }
+  ],
+  "kind": "short-answer",
+  "expectedAnswer": "<!doctype html>"
+}

@@ -1,0 +1,554 @@
+Scope: 7 of 8 workspace projects
+packages/core typecheck$ tsc -p tsconfig.json --noEmit
+packages/core typecheck: Done
+packages/ui typecheck$ tsc -b --pretty false
+packages/backend typecheck$ tsc -b --pretty false
+apps/local typecheck$ tsc -b --pretty false
+apps/university-grading typecheck$ tsc -p tsconfig.json --noEmit
+packages/backend typecheck: Done
+apps/university-grading typecheck: Done
+apps/local typecheck: Done
+packages/ui typecheck: Done
+packages/world typecheck$ tsc -p tsconfig.json --noEmit
+packages/world typecheck: Done
+apps/university typecheck$ tsc -b --pretty false
+apps/university typecheck: Done
+Scope: 7 of 8 workspace projects
+packages/core lint$ oxlint --deny-warnings src
+packages/core lint: Done
+apps/local lint$ oxlint --deny-warnings server vitest.config.ts
+apps/university-grading lint$ oxlint --deny-warnings src api
+packages/backend lint$ oxlint --deny-warnings src
+packages/ui lint$ oxlint --deny-warnings src vitest.config.ts
+apps/local lint: Done
+apps/university-grading lint: Done
+packages/backend lint: Done
+packages/ui lint: Done
+packages/world lint$ oxlint --deny-warnings src vitest.config.ts
+packages/world lint: Done
+apps/university lint$ oxlint --deny-warnings src vite.config.ts vitest.config.ts
+apps/university lint: Done
+Scope: 7 of 8 workspace projects
+packages/core format:check$ oxfmt --check package.json tsconfig.json src
+packages/core format:check: Checking formatting...
+packages/core format:check: All matched files use the correct format.
+packages/core format:check: Finished in 56ms on 124 files using 10 threads.
+packages/core format:check: No config found, using defaults. Please add a config file or try `oxfmt --init` if needed.
+packages/core format:check: Done
+apps/local format:check$ oxfmt --check package.json university-local.config.json university-local.config.local.example.json tsconfig.json tsconfig.server.json tsconfig.server.build.json vitest.config.ts server scripts
+apps/university-grading format:check$ oxfmt --check package.json tsconfig.json vercel.json src api
+packages/backend format:check$ oxfmt --check package.json tsconfig.json src
+packages/ui format:check$ oxfmt --check package.json tsconfig.json vitest.config.ts src
+apps/local format:check: Checking formatting...
+apps/local format:check: All matched files use the correct format.
+apps/local format:check: Finished in 42ms on 153 files using 10 threads.
+apps/local format:check: No config found, using defaults. Please add a config file or try `oxfmt --init` if needed.
+apps/local format:check: Done
+apps/university-grading format:check: Checking formatting...
+apps/university-grading format:check: All matched files use the correct format.
+apps/university-grading format:check: Finished in 29ms on 10 files using 10 threads.
+apps/university-grading format:check: No config found, using defaults. Please add a config file or try `oxfmt --init` if needed.
+apps/university-grading format:check: Done
+packages/backend format:check: Checking formatting...
+packages/backend format:check: All matched files use the correct format.
+packages/backend format:check: Finished in 25ms on 9 files using 10 threads.
+packages/backend format:check: No config found, using defaults. Please add a config file or try `oxfmt --init` if needed.
+packages/backend format:check: Done
+packages/ui format:check: Checking formatting...
+packages/ui format:check: All matched files use the correct format.
+packages/ui format:check: Finished in 42ms on 236 files using 10 threads.
+packages/ui format:check: No config found, using defaults. Please add a config file or try `oxfmt --init` if needed.
+packages/ui format:check: Done
+packages/world format:check$ oxfmt --check package.json tsconfig.json vitest.config.ts src
+packages/world format:check: Checking formatting...
+packages/world format:check: All matched files use the correct format.
+packages/world format:check: Finished in 101ms on 148 files using 10 threads.
+packages/world format:check: No config found, using defaults. Please add a config file or try `oxfmt --init` if needed.
+packages/world format:check: Done
+apps/university format:check$ oxfmt --check package.json tsconfig.app.json vite.config.ts vitest.config.ts index.html src
+apps/university format:check: Checking formatting...
+apps/university format:check: All matched files use the correct format.
+apps/university format:check: Finished in 109ms on 136 files using 10 threads.
+apps/university format:check: No config found, using defaults. Please add a config file or try `oxfmt --init` if needed.
+apps/university format:check: Done
+Checking formatting...
+
+All matched files use the correct format.
+Finished in 15ms on 2 files using 10 threads.
+Scope: 7 of 8 workspace projects
+packages/core test$ vitest run --passWithNoTests
+packages/core test:  RUN  v4.1.10 /Users/yuanfei/PieAI/University-wt-lessonloop/packages/core
+packages/core test:  Test Files  49 passed (49)
+packages/core test:       Tests  416 passed (416)
+packages/core test:    Start at  02:58:52
+packages/core test:    Duration  1.27s (transform 2.29s, setup 0ms, import 4.39s, tests 421ms, environment 3ms)
+packages/core test: Done
+apps/university-grading test$ vitest run --passWithNoTests
+packages/backend test$ vitest run --passWithNoTests
+apps/local test$ vitest run --passWithNoTests
+packages/ui test$ vitest run --passWithNoTests
+apps/university-grading test:  RUN  v4.1.10 /Users/yuanfei/PieAI/University-wt-lessonloop/apps/university-grading
+packages/backend test:  RUN  v4.1.10 /Users/yuanfei/PieAI/University-wt-lessonloop/packages/backend
+packages/backend test:  Test Files  2 passed (2)
+packages/backend test:       Tests  6 passed (6)
+packages/backend test:    Start at  02:58:54
+packages/backend test:    Duration  137ms (transform 46ms, setup 0ms, import 67ms, tests 8ms, environment 0ms)
+packages/backend test: Done
+apps/university-grading test:  Test Files  3 passed (3)
+apps/university-grading test:       Tests  22 passed (22)
+apps/university-grading test:    Start at  02:58:54
+apps/university-grading test:    Duration  889ms (transform 1.71s, setup 0ms, import 2.28s, tests 35ms, environment 0ms)
+apps/university-grading test: Done
+apps/local test:  RUN  v4.1.10 /Users/yuanfei/PieAI/University-wt-lessonloop/apps/local
+packages/ui test:  RUN  v4.1.10 /Users/yuanfei/PieAI/University-wt-lessonloop/packages/ui
+packages/ui test:  Test Files  59 passed (59)
+packages/ui test:       Tests  345 passed (345)
+packages/ui test:    Start at  02:58:56
+packages/ui test:    Duration  11.35s (transform 23.74s, setup 0ms, import 44.77s, tests 12.88s, environment 31.20s)
+packages/ui test: Done
+apps/local test: From /var/folders/_r/v7pbn8153jb0g_0gl_4gnhqw0000gn/T/ul-airlock-upstream-WQv4EZ
+apps/local test:  * branch            8002a9cd5677d0a39d5faf2b3ad7da50532513f5 -> FETCH_HEAD
+apps/local test: Warning: you are leaving 1 commit behind, not connected to
+apps/local test: any of your branches:
+apps/local test:   0049d63 first
+apps/local test: If you want to keep it by creating a new branch, this may be a good time
+apps/local test: to do so with:
+apps/local test:  git branch <new-branch-name> 0049d63
+apps/local test: HEAD is now at 8002a9c second
+apps/local test:  Test Files  43 passed (43)
+apps/local test:       Tests  419 passed (419)
+apps/local test:    Start at  02:58:55
+apps/local test:    Duration  37.08s (transform 9.37s, setup 0ms, import 14.05s, tests 294.77s, environment 3ms)
+apps/local test: Done
+packages/world test$ vitest run --passWithNoTests
+packages/world test:  RUN  v4.1.10 /Users/yuanfei/PieAI/University-wt-lessonloop/packages/world
+packages/world test:  Test Files  49 passed (49)
+packages/world test:       Tests  317 passed (317)
+packages/world test:    Start at  02:59:34
+packages/world test:    Duration  5.69s (transform 6.49s, setup 0ms, import 15.62s, tests 23.65s, environment 1.32s)
+packages/world test: Done
+apps/university test$ vitest run --passWithNoTests
+apps/university test:  RUN  v4.1.10 /Users/yuanfei/PieAI/University-wt-lessonloop/apps/university
+apps/university test:  Test Files  45 passed (45)
+apps/university test:       Tests  197 passed (197)
+apps/university test:    Start at  02:59:40
+apps/university test:    Duration  9.03s (transform 14.47s, setup 296ms, import 26.68s, tests 7.04s, environment 4.36s)
+apps/university test: Done
+check-raw-colours self-test:
+  1. injected raw colour outside both registries: red
+      fixture.css:3:20: "#abcdef"
+  2. fixed registry source missing: red
+    fixed material registry entry does not exist in source: fixture.css:1:17: "#999999"
+  3. declared pending count below actual debt: red
+    pending migration count 1 is less than actual debt 2
+  4. all raw colours withdrawn: green
+review card registry self-test:
+  supported due kind: green
+  unsupported due kind: red
+check-content-revisions self-test:
+  matching source, package, and shelf: green
+  injected delivery revision mismatch: red
+    delivery package: study/course/unit/lesson revision 1 != source 3
+  restored source revision: green
+  injected cross-unit lesson id reuse: red
+    study/course: lesson id lesson is reused in units unit and second-unit; the progress document key drops unitId
+module boundaries: ok
+kit portability: ok
+check-contrast: ok (2 trees)
+check-raw-colours: ok (fixed material: 29; pending migrations: 0; raw colours: 29; files: 9)
+shared styles: ok (35 sheets)
+canvas registry: ok (4 registered mounts)
+  - packages/world/src/Stage.tsx — world, map and planet renderer
+  - packages/world/src/avatar/AvatarChip.tsx — persistent navigation avatar
+  - apps/university/src/app/ProfileAvatar.tsx — profile-page avatar
+  - apps/university/src/avatar-lab/AvatarLab.tsx — avatar-workshop preview
+review card registry: ok
+Scope: 7 of 8 workspace projects
+packages/core build$ tsc -p tsconfig.json && cp src/domain/url-evidence-hosts.json dist/domain/url-evidence-hosts.json
+packages/core build: Done
+apps/university-grading build$ tsc -p tsconfig.json --noEmit
+packages/ui build$ tsc -b --pretty false
+packages/backend build$ tsc -b --pretty false
+apps/local build$ tsc -b && tsc -p tsconfig.server.build.json
+packages/backend build: Done
+apps/university-grading build: Done
+packages/ui build: Done
+apps/local build: Done
+packages/world build$ tsc -p tsconfig.json --noEmit
+packages/world build: Done
+apps/university build$ tsc -b && vite build --mode delivery && vite build --mode authoring
+apps/university build: vite v8.1.4 building client environment for delivery...
+apps/university build: [2K
+apps/university build: transforming...✓ 3544 modules transformed.
+apps/university build: rendering chunks...
+apps/university build: site-index: 579 lesson URLs emitted
+apps/university build: computing gzip size...
+apps/university build: dist/delivery/robots.txt                                           0.11 kB │ gzip:   0.10 kB
+apps/university build: dist/delivery/index.html                                           2.69 kB │ gzip:   0.93 kB
+apps/university build: dist/delivery/sitemap.xml                                         75.41 kB │ gzip:   9.29 kB
+apps/university build: dist/delivery/assets/aerial-world-plate-2k-C-6SXdB_.webp         114.80 kB
+apps/university build: dist/delivery/assets/aerial-world-plate-4k-Cfy1lyRf.webp         356.20 kB
+apps/university build: dist/delivery/assets/index-BImppaQY.css                          334.92 kB │ gzip:  56.33 kB
+apps/university build: dist/delivery/assets/css-CdtkT07m.js                               0.05 kB │ gzip:   0.07 kB
+apps/university build: dist/delivery/assets/javascript-Yelw-5ZN.js                        0.06 kB │ gzip:   0.08 kB
+apps/university build: dist/delivery/assets/lexicon-by-sense-DFTJ1iti.js                  0.09 kB │ gzip:   0.11 kB
+apps/university build: dist/delivery/assets/array-BifhSqXX.js                             0.10 kB │ gzip:   0.11 kB
+apps/university build: dist/delivery/assets/channel-WDH9Wx6x.js                           0.11 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/pie-RZYD4A2V-CynqTUkZ.js                      0.11 kB │ gzip:   0.11 kB
+apps/university build: dist/delivery/assets/info-DKCQHKI2-DIc7uC4I.js                     0.11 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/radar-I7S5WNFK-fIKE12aT.js                    0.11 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/packet-7NZHBO7P-D2duWGIK.js                   0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/cynefin-VYW2F7L2-4m18BxUG.js                  0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/treemap-6X3UGDF4-BbCXbaXr.js                  0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/wardley-OPB4EBWU-BjXxCRf_.js                  0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/gitGraph-TEB2WS4Q-Do0SQOtM.js                 0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/railroad-3IZDKUUU-Bgx8HJTj.js                 0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/treeView-QDETBFTQ-CygwzEgj.js                 0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/railroad-peg-LSFZ7HO6-0hT-lN-u.js             0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/architecture-TIHT7OUA-BWqzHezU.js             0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/railroad-abnf-AHOZXSZD-Nh6k60mH.js            0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/railroad-ebnf-EBAXGLYW-C74h3s_I.js            0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/eventmodeling-45OFAUF4-Dp0gpjhg.js            0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/init-D6jRqBbL.js                              0.14 kB │ gzip:   0.12 kB
+apps/university build: dist/delivery/assets/chunk-Y2CYZVJY-DsF7k-Jl.js                    0.15 kB │ gzip:   0.14 kB
+apps/university build: dist/delivery/assets/chunk-2Q5K7J3B-C1jixKkw.js                    0.19 kB │ gzip:   0.16 kB
+apps/university build: dist/delivery/assets/chunk-JWPE2WC7-DVXcaiue.js                    0.22 kB │ gzip:   0.17 kB
+apps/university build: dist/delivery/assets/concept-pointers-C-Kkp83d.js                  0.22 kB │ gzip:   0.19 kB
+apps/university build: dist/delivery/assets/chunk-XXDRQBXY-BuE3VzE_.js                    0.26 kB │ gzip:   0.22 kB
+apps/university build: dist/delivery/assets/chunk-VAUOI2AC-C49XSSAI.js                    0.32 kB │ gzip:   0.25 kB
+apps/university build: dist/delivery/assets/depth-DCX9Gf5L.js                             0.32 kB │ gzip:   0.23 kB
+apps/university build: dist/delivery/assets/chunk-5VM5RSS4-ZNzvKenW.js                    0.36 kB │ gzip:   0.27 kB
+apps/university build: dist/delivery/assets/chunk-EMLP6XTP-BoneA0Uo.js                    0.45 kB │ gzip:   0.31 kB
+apps/university build: dist/delivery/assets/chunk-QBLGF6JB-C9zGMqvP.js                    0.45 kB │ gzip:   0.31 kB
+apps/university build: dist/delivery/assets/chunk-BIQX33UG-CuPbkyWp.js                    0.46 kB │ gzip:   0.31 kB
+apps/university build: dist/delivery/assets/chunk-CYSBUYHQ-CbOq7Rc1.js                    0.46 kB │ gzip:   0.31 kB
+apps/university build: dist/delivery/assets/chunk-OSBZ3O6U-CX9EQ5t2.js                    0.46 kB │ gzip:   0.32 kB
+apps/university build: dist/delivery/assets/chunk-5FCAYU7R-DNtJmW0j.js                    0.50 kB │ gzip:   0.35 kB
+apps/university build: dist/delivery/assets/chunk-VR4S4FIN-D4iOc6FH.js                    0.57 kB │ gzip:   0.40 kB
+apps/university build: dist/delivery/assets/chunk-YOTPTUD7-CjHV8V6f.js                    0.60 kB │ gzip:   0.39 kB
+apps/university build: dist/delivery/assets/flowDiagram-23GEKE2U-HQEIl4LM.js              0.61 kB │ gzip:   0.32 kB
+apps/university build: dist/delivery/assets/infoDiagram-FWYZ7A6U-DwDVUE1B.js              0.65 kB │ gzip:   0.42 kB
+apps/university build: dist/delivery/assets/rolldown-runtime-QTnfLwEv.js                  0.69 kB │ gzip:   0.42 kB
+apps/university build: dist/delivery/assets/classDiagram-OUVF2IWQ-DtfjUPDx.js             0.78 kB │ gzip:   0.45 kB
+apps/university build: dist/delivery/assets/classDiagram-v2-EOCWNBFH-DtfjUPDx.js          0.78 kB │ gzip:   0.45 kB
+apps/university build: dist/delivery/assets/stateDiagram-v2-6OUMAXLB-3RCytHvC.js          0.78 kB │ gzip:   0.45 kB
+apps/university build: dist/delivery/assets/chunk-5HE753X5-o8-OCfIL.js                    0.83 kB │ gzip:   0.47 kB
+apps/university build: dist/delivery/assets/PracticeHost-BKTN8vW2.js                      0.85 kB │ gzip:   0.51 kB
+apps/university build: dist/delivery/assets/swimlanesDiagram-G3AALYLV-ikmpEDwQ.js         0.87 kB │ gzip:   0.49 kB
+apps/university build: dist/delivery/assets/sizeCapture-X5ZJPWSS-B0uUizjq.js              0.87 kB │ gzip:   0.51 kB
+apps/university build: dist/delivery/assets/ProfileAvatar-rTgJhDH-.js                     0.88 kB │ gzip:   0.58 kB
+apps/university build: dist/delivery/assets/AntiPatternEntryHost-CMx5QtE0.js              0.90 kB │ gzip:   0.52 kB
+apps/university build: dist/delivery/assets/chunk-MOZMSUNE-BgA8jCvb.js                    0.90 kB │ gzip:   0.49 kB
+apps/university build: dist/delivery/assets/chunk-CQNSW5MT-BbEh_krl.js                    0.92 kB │ gzip:   0.49 kB
+apps/university build: dist/delivery/assets/line-Crlo4cb0.js                              0.94 kB │ gzip:   0.47 kB
+apps/university build: dist/delivery/assets/LibraryHost-CzrhKEt2.js                       0.94 kB │ gzip:   0.55 kB
+apps/university build: dist/delivery/assets/chunk-OGEWGWER-90qeUZJt.js                    0.96 kB │ gzip:   0.59 kB
+apps/university build: dist/delivery/assets/chunk-5TONJI2A-DOX2waSJ.js                    1.04 kB │ gzip:   0.58 kB
+apps/university build: dist/delivery/assets/chunk-JG7HCLWE-Dk4_aECj.js                    1.06 kB │ gzip:   0.59 kB
+apps/university build: dist/delivery/assets/chunk-U6XO7XAA-CR0BSRFR.js                    1.13 kB │ gzip:   0.62 kB
+apps/university build: dist/delivery/assets/ordinal-hYBb2elL.js                           1.17 kB │ gzip:   0.56 kB
+apps/university build: dist/delivery/assets/preload-helper-Czpn1I53.js                    1.19 kB │ gzip:   0.67 kB
+apps/university build: dist/delivery/assets/ConceptEntryHost-YW1LlKol.js                  1.19 kB │ gzip:   0.61 kB
+apps/university build: dist/delivery/assets/chunk-R7FJI6CG-BpBhcF6R.js                    1.46 kB │ gzip:   0.78 kB
+apps/university build: dist/delivery/assets/chunk-5JV3BV7I-DKfYBAeY.js                    1.67 kB │ gzip:   0.74 kB
+apps/university build: dist/delivery/assets/railroadDiagram-RFXS5EU6-TQTapiPU.js          1.71 kB │ gzip:   0.78 kB
+apps/university build: dist/delivery/assets/TermEntryHost-BJAKXQOS.js                     1.71 kB │ gzip:   0.85 kB
+apps/university build: dist/delivery/assets/scheduler-ports-UlugrK5B.js                   1.79 kB │ gzip:   1.00 kB
+apps/university build: dist/delivery/assets/chunk-C7G6YPKG-DHwjlkv9.js                    1.84 kB │ gzip:   0.90 kB
+apps/university build: dist/delivery/assets/abnfDiagram-VRR7QNED-D7EHSeMG.js              1.90 kB │ gzip:   0.92 kB
+apps/university build: dist/delivery/assets/chunk-32BRIVSS-B0hwsRGf.js                    1.97 kB │ gzip:   0.88 kB
+apps/university build: dist/delivery/assets/pegDiagram-2B236MQR-DbI49GAG.js               2.06 kB │ gzip:   0.96 kB
+apps/university build: dist/delivery/assets/chunk-7BUUIJ7U-Bb538aSH.js                    2.10 kB │ gzip:   0.82 kB
+apps/university build: dist/delivery/assets/ebnfDiagram-CCIWWBDH-ChAEjAGP.js              2.11 kB │ gzip:   0.91 kB
+apps/university build: dist/delivery/assets/dist-D9sYb5Oa.js                              2.17 kB │ gzip:   0.97 kB
+apps/university build: dist/delivery/assets/path-BWPyau1x.js                              2.31 kB │ gzip:   0.99 kB
+apps/university build: dist/delivery/assets/avatar-Cg9GaXOG.js                            2.48 kB │ gzip:   1.28 kB
+apps/university build: dist/delivery/assets/json-qhed-kSA.js                              2.81 kB │ gzip:   0.77 kB
+apps/university build: dist/delivery/assets/arc-BjSQqbzd.js                               3.47 kB │ gzip:   1.46 kB
+apps/university build: dist/delivery/assets/AvatarLab-BvK5_pp_.js                         3.66 kB │ gzip:   1.72 kB
+apps/university build: dist/delivery/assets/chunk-FWX5IMBZ-CrByukOA.js                    3.69 kB │ gzip:   1.55 kB
+apps/university build: dist/delivery/assets/CourseCatalog-D4SzegNx.js                     3.73 kB │ gzip:   1.59 kB
+apps/university build: dist/delivery/assets/diagram-NH7WQ7WH-DQnJsKJR.js                  4.28 kB │ gzip:   1.85 kB
+apps/university build: dist/delivery/assets/defaultLocale-C8Fc0cco.js                     4.64 kB │ gzip:   2.12 kB
+apps/university build: dist/delivery/assets/LessonScreen-Di6was3F.js                      4.67 kB │ gzip:   2.05 kB
+apps/university build: dist/delivery/assets/map-BaFkSB1l.js                               5.03 kB │ gzip:   2.05 kB
+apps/university build: dist/delivery/assets/linear-B7l8qgEw.js                            5.52 kB │ gzip:   2.25 kB
+apps/university build: dist/delivery/assets/chunk-HOUHSVGY-B60CBXtY.js                    5.83 kB │ gzip:   2.68 kB
+apps/university build: dist/delivery/assets/SettlementHost-CCo6XD8a.js                    5.87 kB │ gzip:   2.74 kB
+apps/university build: dist/delivery/assets/diagram-WEI45ONY-uzy7aiEG.js                  5.91 kB │ gzip:   2.49 kB
+apps/university build: dist/delivery/assets/pieDiagram-ENE6RG2P-CWhJJ7D0.js               6.23 kB │ gzip:   2.60 kB
+apps/university build: dist/delivery/assets/mermaid-parser.core-CMbO70Iy.js               6.71 kB │ gzip:   1.86 kB
+apps/university build: dist/delivery/assets/chunk-RYQCIY6F-D_L2RdcQ.js                    7.02 kB │ gzip:   2.68 kB
+apps/university build: dist/delivery/assets/jsx-runtime-CIxEorsV.js                       7.89 kB │ gzip:   2.98 kB
+apps/university build: dist/delivery/assets/diagram-OA4YK3LP-D17jh9Cw.js                  8.31 kB │ gzip:   3.71 kB
+apps/university build: dist/delivery/assets/dagre-VKFMJZFB-DW1b_qHY.js                    8.81 kB │ gzip:   3.41 kB
+apps/university build: dist/delivery/assets/cynefinDiagram-TSTJHNR4-D_tWSeaH.js           9.90 kB │ gzip:   3.51 kB
+apps/university build: dist/delivery/assets/stateDiagram-2N3HPSRC-D-khg0oR.js            10.64 kB │ gzip:   3.74 kB
+apps/university build: dist/delivery/assets/diagram-FQU43EPY-CToHXjMh.js                 10.66 kB │ gzip:   4.13 kB
+apps/university build: dist/delivery/assets/github-dark-default-DXG-b-1a.js              14.43 kB │ gzip:   3.12 kB
+apps/university build: dist/delivery/assets/OrbitControls-qzPJ48m9.js                    15.64 kB │ gzip:   4.82 kB
+apps/university build: dist/delivery/assets/chunk-MOJQB5TN-B6_2dfkp.js                   15.64 kB │ gzip:   4.35 kB
+apps/university build: dist/delivery/assets/diagram-G47NLZAW-DP-_s6v7.js                 15.74 kB │ gzip:   5.51 kB
+apps/university build: dist/delivery/assets/ishikawaDiagram-FXEZZL3T-bZiLdYSe.js         17.34 kB │ gzip:   6.53 kB
+apps/university build: dist/delivery/assets/kanban-definition-HUTT4EX6-F3nP-fGX.js       20.30 kB │ gzip:   7.16 kB
+apps/university build: dist/delivery/assets/sankeyDiagram-HTMAVEWB-Bxy6Jbyt.js           22.82 kB │ gzip:   8.26 kB
+apps/university build: dist/delivery/assets/journeyDiagram-5HDEW3XC-CHt4OJHZ.js          23.20 kB │ gzip:   8.17 kB
+apps/university build: dist/delivery/assets/mindmap-definition-LN4V7U3C-uinMy4zT.js      23.49 kB │ gzip:   8.03 kB
+apps/university build: dist/delivery/assets/lib-Ch2NqeKu.js                              23.50 kB │ gzip:   9.13 kB
+apps/university build: dist/delivery/assets/graphlib-DS17s2tU.js                         23.90 kB │ gzip:   8.31 kB
+apps/university build: dist/delivery/assets/wardleyDiagram-EHGQE667-C00Iznho.js          25.22 kB │ gzip:   6.55 kB
+apps/university build: dist/delivery/assets/rough.esm-CSKSodPl.js                        27.10 kB │ gzip:   8.85 kB
+apps/university build: dist/delivery/assets/erDiagram-Q63AITRT-0Q4eqgjS.js               27.13 kB │ gzip:   9.44 kB
+apps/university build: dist/delivery/assets/gitGraphDiagram-IHSO6WYX-BqYgMb8c.js         29.02 kB │ gzip:   8.57 kB
+apps/university build: dist/delivery/assets/catalog-Bomk7Av3.js                          30.35 kB │ gzip:  12.91 kB
+apps/university build: dist/delivery/assets/timeline-definition-FHXFAJF6-BYLCI_CE.js     30.41 kB │ gzip:   9.98 kB
+apps/university build: dist/delivery/assets/chunk-ICXQ74PX-CHL25Z6a.js                   30.87 kB │ gzip:   8.51 kB
+apps/university build: dist/delivery/assets/requirementDiagram-TGXJPOKE-sltaCRfD.js      31.03 kB │ gzip:   9.78 kB
+apps/university build: dist/delivery/assets/dagre-dpRSp0QF.js                            32.05 kB │ gzip:  11.58 kB
+apps/university build: dist/delivery/assets/quadrantDiagram-ABIIQ3AL-D5kBgbwr.js         33.54 kB │ gzip:   9.74 kB
+apps/university build: dist/delivery/assets/chunk-52WLFC77-CriXfwuL.js                   33.95 kB │ gzip:   7.31 kB
+apps/university build: dist/delivery/assets/mermaid.core-Dsa8xtbo.js                     36.32 kB │ gzip:  12.09 kB
+apps/university build: dist/delivery/assets/chunk-EX3LRPZG-Cz84IgkS.js                   37.76 kB │ gzip:  12.31 kB
+apps/university build: dist/delivery/assets/vennDiagram-L72KCM5P-BhhGhr9q.js             41.19 kB │ gzip:  15.11 kB
+apps/university build: dist/delivery/assets/shellscript-CLZ0U2zV.js                      41.47 kB │ gzip:   6.07 kB
+apps/university build: dist/delivery/assets/xychartDiagram-FW5EYKEG-CQi_C3Tt.js          41.63 kB │ gzip:  11.69 kB
+apps/university build: dist/delivery/assets/chunk-ZIRB5QZD-C6fEPe3t.js                   41.86 kB │ gzip:  14.23 kB
+apps/university build: dist/delivery/assets/ports-DmLSsS-v.js                            43.46 kB │ gzip:  17.74 kB
+apps/university build: dist/delivery/assets/src-_wZywoZs.js                              45.73 kB │ gzip:  16.03 kB
+apps/university build: dist/delivery/assets/chunk-Q4XR5HBZ-N6KhZJDC.js                   46.29 kB │ gzip:  14.58 kB
+apps/university build: dist/delivery/assets/chunk-V7JOEXUC-mOUL73qo.js                   48.84 kB │ gzip:  15.76 kB
+apps/university build: dist/delivery/assets/css-LbU1hoFO.js                              49.02 kB │ gzip:  11.90 kB
+apps/university build: dist/delivery/assets/html-CVO8wu9Q.js                             57.24 kB │ gzip:  11.74 kB
+apps/university build: dist/delivery/assets/engine-javascript-FQvzRocB.js                57.63 kB │ gzip:  20.18 kB
+apps/university build: dist/delivery/assets/markdown-BYOwaDjH.js                         59.32 kB │ gzip:   5.66 kB
+apps/university build: dist/delivery/assets/chunk-PUDLZKDR-BIHgftgM.js                   60.20 kB │ gzip:  19.55 kB
+apps/university build: dist/delivery/assets/MistakeList-eCwZENFd.js                      66.58 kB │ gzip:  23.64 kB
+apps/university build: dist/delivery/assets/c4Diagram-LMCZKHZV-Dg86kX0L.js               69.20 kB │ gzip:  19.34 kB
+apps/university build: dist/delivery/assets/ganttDiagram-NO4QXBWP-6RhaUCyI.js            69.43 kB │ gzip:  22.76 kB
+apps/university build: dist/delivery/assets/blockDiagram-677ZJIJ3-CJKvdq_A.js            72.77 kB │ gzip:  20.71 kB
+apps/university build: dist/delivery/assets/cose-bilkent-JH36ORCC-BzQvy5TC.js            81.44 kB │ gzip:  21.58 kB
+apps/university build: dist/delivery/assets/core-C7FbilI1.js                             88.39 kB │ gzip:  26.37 kB
+apps/university build: dist/delivery/assets/chunk-ZGVPDNZ5-BdPh-Urn.js                  101.88 kB │ gzip:  24.82 kB
+apps/university build: dist/delivery/assets/swimlanes-5IMT3BWC-KgpSc5em.js              114.12 kB │ gzip:  39.16 kB
+apps/university build: dist/delivery/assets/sequenceDiagram-DBY2YBRQ-CCj_gGFH.js        115.86 kB │ gzip:  30.62 kB
+apps/university build: dist/delivery/assets/dist-Dg0rI5ng.js                            120.44 kB │ gzip:  39.42 kB
+apps/university build: dist/delivery/assets/architectureDiagram-ZJ3FMSHR-CcAebZN4.js    148.90 kB │ gzip:  41.09 kB
+apps/university build: dist/delivery/assets/javascript-BzbQS41l.js                      174.81 kB │ gzip:  16.62 kB
+apps/university build: dist/delivery/assets/tsx-udAQXfEw.js                             175.52 kB │ gzip:  16.62 kB
+apps/university build: dist/delivery/assets/jsx-Bz0zcwM4.js                             177.78 kB │ gzip:  16.71 kB
+apps/university build: dist/delivery/assets/typescript-bsJCZSQ-.js                      181.07 kB │ gzip:  16.23 kB
+apps/university build: dist/delivery/assets/chunk-WYO6CB5R-DOcW3sIA.js                  234.89 kB │ gzip:  37.84 kB
+apps/university build: dist/delivery/assets/katex-B7rAX3Vi.js                           258.87 kB │ gzip:  77.46 kB
+apps/university build: dist/delivery/assets/from-course-view-CLOiKsEt.js                305.09 kB │ gzip:  99.17 kB
+apps/university build: dist/delivery/assets/index-dOFumPau.js                           332.56 kB │ gzip: 105.87 kB
+apps/university build: dist/delivery/assets/cytoscape.esm-DnGd5Fuo.js                   435.43 kB │ gzip: 137.93 kB
+apps/university build: dist/delivery/assets/chunk-KEIR6QF5-Dj-OpFgW.js                  662.68 kB │ gzip: 143.23 kB
+apps/university build: dist/delivery/assets/LessonReader-5HHWKQmw.js                    723.73 kB │ gzip: 219.45 kB
+apps/university build: dist/delivery/assets/react-three-fiber-B6skF7RC.js               957.10 kB │ gzip: 263.03 kB
+apps/university build: dist/delivery/assets/src-C7EERcra.js                           1,673.06 kB │ gzip: 527.64 kB
+apps/university build: ✓ built in 1.40s
+apps/university build: [plugin builtin:vite-reporter] 
+apps/university build: (!) Some chunks are larger than 500 kB after minification. Consider:
+apps/university build: - Using dynamic import() to code-split the application
+apps/university build: - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+apps/university build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+apps/university build: vite v8.1.4 building client environment for authoring...
+apps/university build: [2K
+apps/university build: transforming...✓ 3600 modules transformed.
+apps/university build: rendering chunks...
+apps/university build: computing gzip size...
+apps/university build: dist/authoring/index.html                                           2.69 kB │ gzip:   0.94 kB
+apps/university build: dist/authoring/assets/aerial-world-plate-2k-C-6SXdB_.webp         114.80 kB
+apps/university build: dist/authoring/assets/aerial-world-plate-4k-Cfy1lyRf.webp         356.20 kB
+apps/university build: dist/authoring/assets/index-D2vAVrMI.css                          347.65 kB │ gzip:  58.49 kB
+apps/university build: dist/authoring/assets/css-CdtkT07m.js                               0.05 kB │ gzip:   0.07 kB
+apps/university build: dist/authoring/assets/javascript-Yelw-5ZN.js                        0.06 kB │ gzip:   0.08 kB
+apps/university build: dist/authoring/assets/lexicon-by-sense-DCIVDXs3.js                  0.09 kB │ gzip:   0.11 kB
+apps/university build: dist/authoring/assets/array-BifhSqXX.js                             0.10 kB │ gzip:   0.11 kB
+apps/university build: dist/authoring/assets/channel-WDH9Wx6x.js                           0.11 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/pie-RZYD4A2V-CynqTUkZ.js                      0.11 kB │ gzip:   0.11 kB
+apps/university build: dist/authoring/assets/info-DKCQHKI2-DIc7uC4I.js                     0.11 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/radar-I7S5WNFK-fIKE12aT.js                    0.11 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/packet-7NZHBO7P-D2duWGIK.js                   0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/cynefin-VYW2F7L2-4m18BxUG.js                  0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/treemap-6X3UGDF4-BbCXbaXr.js                  0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/wardley-OPB4EBWU-BjXxCRf_.js                  0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/gitGraph-TEB2WS4Q-Do0SQOtM.js                 0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/railroad-3IZDKUUU-Bgx8HJTj.js                 0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/treeView-QDETBFTQ-CygwzEgj.js                 0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/railroad-peg-LSFZ7HO6-0hT-lN-u.js             0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/architecture-TIHT7OUA-BWqzHezU.js             0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/railroad-abnf-AHOZXSZD-Nh6k60mH.js            0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/railroad-ebnf-EBAXGLYW-C74h3s_I.js            0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/eventmodeling-45OFAUF4-Dp0gpjhg.js            0.12 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/init-D6jRqBbL.js                              0.14 kB │ gzip:   0.12 kB
+apps/university build: dist/authoring/assets/chunk-Y2CYZVJY-DsF7k-Jl.js                    0.15 kB │ gzip:   0.14 kB
+apps/university build: dist/authoring/assets/chunk-2Q5K7J3B-C1jixKkw.js                    0.19 kB │ gzip:   0.16 kB
+apps/university build: dist/authoring/assets/chunk-JWPE2WC7-DVXcaiue.js                    0.22 kB │ gzip:   0.17 kB
+apps/university build: dist/authoring/assets/concept-pointers-Cg0R8i5S.js                  0.22 kB │ gzip:   0.19 kB
+apps/university build: dist/authoring/assets/chunk-XXDRQBXY-BuE3VzE_.js                    0.26 kB │ gzip:   0.22 kB
+apps/university build: dist/authoring/assets/chunk-VAUOI2AC-C49XSSAI.js                    0.32 kB │ gzip:   0.25 kB
+apps/university build: dist/authoring/assets/depth-DCX9Gf5L.js                             0.32 kB │ gzip:   0.23 kB
+apps/university build: dist/authoring/assets/chunk-5VM5RSS4-ZNzvKenW.js                    0.36 kB │ gzip:   0.27 kB
+apps/university build: dist/authoring/assets/chunk-EMLP6XTP-BoneA0Uo.js                    0.45 kB │ gzip:   0.31 kB
+apps/university build: dist/authoring/assets/chunk-QBLGF6JB-C9zGMqvP.js                    0.45 kB │ gzip:   0.31 kB
+apps/university build: dist/authoring/assets/chunk-BIQX33UG-CuPbkyWp.js                    0.46 kB │ gzip:   0.31 kB
+apps/university build: dist/authoring/assets/chunk-CYSBUYHQ-CbOq7Rc1.js                    0.46 kB │ gzip:   0.31 kB
+apps/university build: dist/authoring/assets/chunk-OSBZ3O6U-CX9EQ5t2.js                    0.46 kB │ gzip:   0.32 kB
+apps/university build: dist/authoring/assets/chunk-5FCAYU7R-DNtJmW0j.js                    0.50 kB │ gzip:   0.35 kB
+apps/university build: dist/authoring/assets/chunk-VR4S4FIN-D4iOc6FH.js                    0.57 kB │ gzip:   0.40 kB
+apps/university build: dist/authoring/assets/chunk-YOTPTUD7-CjHV8V6f.js                    0.60 kB │ gzip:   0.39 kB
+apps/university build: dist/authoring/assets/flowDiagram-23GEKE2U-HQEIl4LM.js              0.61 kB │ gzip:   0.32 kB
+apps/university build: dist/authoring/assets/infoDiagram-FWYZ7A6U-DwDVUE1B.js              0.65 kB │ gzip:   0.42 kB
+apps/university build: dist/authoring/assets/rolldown-runtime-QTnfLwEv.js                  0.69 kB │ gzip:   0.42 kB
+apps/university build: dist/authoring/assets/classDiagram-OUVF2IWQ-DtfjUPDx.js             0.78 kB │ gzip:   0.45 kB
+apps/university build: dist/authoring/assets/classDiagram-v2-EOCWNBFH-DtfjUPDx.js          0.78 kB │ gzip:   0.45 kB
+apps/university build: dist/authoring/assets/stateDiagram-v2-6OUMAXLB-3RCytHvC.js          0.78 kB │ gzip:   0.45 kB
+apps/university build: dist/authoring/assets/chunk-5HE753X5-o8-OCfIL.js                    0.83 kB │ gzip:   0.47 kB
+apps/university build: dist/authoring/assets/PracticeHost-BuiCvhVh.js                      0.85 kB │ gzip:   0.51 kB
+apps/university build: dist/authoring/assets/swimlanesDiagram-G3AALYLV-ikmpEDwQ.js         0.87 kB │ gzip:   0.49 kB
+apps/university build: dist/authoring/assets/sizeCapture-X5ZJPWSS-B0uUizjq.js              0.87 kB │ gzip:   0.51 kB
+apps/university build: dist/authoring/assets/ProfileAvatar-rTgJhDH-.js                     0.88 kB │ gzip:   0.58 kB
+apps/university build: dist/authoring/assets/AntiPatternEntryHost-BoUiGZs6.js              0.90 kB │ gzip:   0.52 kB
+apps/university build: dist/authoring/assets/chunk-MOZMSUNE-BgA8jCvb.js                    0.90 kB │ gzip:   0.49 kB
+apps/university build: dist/authoring/assets/chunk-CQNSW5MT-BbEh_krl.js                    0.92 kB │ gzip:   0.49 kB
+apps/university build: dist/authoring/assets/line-Crlo4cb0.js                              0.94 kB │ gzip:   0.47 kB
+apps/university build: dist/authoring/assets/LibraryHost-GcI3jBVn.js                       0.94 kB │ gzip:   0.56 kB
+apps/university build: dist/authoring/assets/chunk-OGEWGWER-90qeUZJt.js                    0.96 kB │ gzip:   0.59 kB
+apps/university build: dist/authoring/assets/chunk-5TONJI2A-DOX2waSJ.js                    1.04 kB │ gzip:   0.58 kB
+apps/university build: dist/authoring/assets/chunk-JG7HCLWE-Dk4_aECj.js                    1.06 kB │ gzip:   0.59 kB
+apps/university build: dist/authoring/assets/chunk-U6XO7XAA-CR0BSRFR.js                    1.13 kB │ gzip:   0.62 kB
+apps/university build: dist/authoring/assets/ordinal-hYBb2elL.js                           1.17 kB │ gzip:   0.56 kB
+apps/university build: dist/authoring/assets/preload-helper-Czpn1I53.js                    1.19 kB │ gzip:   0.67 kB
+apps/university build: dist/authoring/assets/ConceptEntryHost-Bz7UDKw9.js                  1.19 kB │ gzip:   0.61 kB
+apps/university build: dist/authoring/assets/chunk-R7FJI6CG-BpBhcF6R.js                    1.46 kB │ gzip:   0.78 kB
+apps/university build: dist/authoring/assets/chunk-5JV3BV7I-DKfYBAeY.js                    1.67 kB │ gzip:   0.74 kB
+apps/university build: dist/authoring/assets/railroadDiagram-RFXS5EU6-TQTapiPU.js          1.71 kB │ gzip:   0.78 kB
+apps/university build: dist/authoring/assets/TermEntryHost-CoFZWlvB.js                     1.71 kB │ gzip:   0.85 kB
+apps/university build: dist/authoring/assets/scheduler-ports-MB7o62_k.js                   1.79 kB │ gzip:   1.01 kB
+apps/university build: dist/authoring/assets/chunk-C7G6YPKG-DHwjlkv9.js                    1.84 kB │ gzip:   0.90 kB
+apps/university build: dist/authoring/assets/abnfDiagram-VRR7QNED-D7EHSeMG.js              1.90 kB │ gzip:   0.92 kB
+apps/university build: dist/authoring/assets/chunk-32BRIVSS-B0hwsRGf.js                    1.97 kB │ gzip:   0.88 kB
+apps/university build: dist/authoring/assets/pegDiagram-2B236MQR-DbI49GAG.js               2.06 kB │ gzip:   0.96 kB
+apps/university build: dist/authoring/assets/chunk-7BUUIJ7U-Bb538aSH.js                    2.10 kB │ gzip:   0.82 kB
+apps/university build: dist/authoring/assets/ebnfDiagram-CCIWWBDH-ChAEjAGP.js              2.11 kB │ gzip:   0.91 kB
+apps/university build: dist/authoring/assets/dist-D9sYb5Oa.js                              2.17 kB │ gzip:   0.97 kB
+apps/university build: dist/authoring/assets/path-BWPyau1x.js                              2.31 kB │ gzip:   0.99 kB
+apps/university build: dist/authoring/assets/avatar-Cg9GaXOG.js                            2.48 kB │ gzip:   1.28 kB
+apps/university build: dist/authoring/assets/json-qhed-kSA.js                              2.81 kB │ gzip:   0.77 kB
+apps/university build: dist/authoring/assets/arc-BjSQqbzd.js                               3.47 kB │ gzip:   1.46 kB
+apps/university build: dist/authoring/assets/AvatarLab-BvK5_pp_.js                         3.66 kB │ gzip:   1.72 kB
+apps/university build: dist/authoring/assets/chunk-FWX5IMBZ-CrByukOA.js                    3.69 kB │ gzip:   1.55 kB
+apps/university build: dist/authoring/assets/CourseCatalog-DOppCbwa.js                     3.73 kB │ gzip:   1.60 kB
+apps/university build: dist/authoring/assets/diagram-NH7WQ7WH-DQnJsKJR.js                  4.28 kB │ gzip:   1.85 kB
+apps/university build: dist/authoring/assets/defaultLocale-C8Fc0cco.js                     4.64 kB │ gzip:   2.12 kB
+apps/university build: dist/authoring/assets/LessonScreen-B5stp14V.js                      4.67 kB │ gzip:   2.05 kB
+apps/university build: dist/authoring/assets/map-BaFkSB1l.js                               5.03 kB │ gzip:   2.05 kB
+apps/university build: dist/authoring/assets/linear-B7l8qgEw.js                            5.52 kB │ gzip:   2.25 kB
+apps/university build: dist/authoring/assets/chunk-HOUHSVGY-B60CBXtY.js                    5.83 kB │ gzip:   2.68 kB
+apps/university build: dist/authoring/assets/SettlementHost-D3GFXGca.js                    5.87 kB │ gzip:   2.74 kB
+apps/university build: dist/authoring/assets/diagram-WEI45ONY-uzy7aiEG.js                  5.91 kB │ gzip:   2.49 kB
+apps/university build: dist/authoring/assets/pieDiagram-ENE6RG2P-CWhJJ7D0.js               6.23 kB │ gzip:   2.60 kB
+apps/university build: dist/authoring/assets/mermaid-parser.core-CMbO70Iy.js               6.71 kB │ gzip:   1.86 kB
+apps/university build: dist/authoring/assets/chunk-RYQCIY6F-D_L2RdcQ.js                    7.02 kB │ gzip:   2.68 kB
+apps/university build: dist/authoring/assets/jsx-runtime-CIxEorsV.js                       7.89 kB │ gzip:   2.98 kB
+apps/university build: dist/authoring/assets/diagram-OA4YK3LP-D17jh9Cw.js                  8.31 kB │ gzip:   3.71 kB
+apps/university build: dist/authoring/assets/dagre-VKFMJZFB-DW1b_qHY.js                    8.81 kB │ gzip:   3.41 kB
+apps/university build: dist/authoring/assets/cynefinDiagram-TSTJHNR4-D_tWSeaH.js           9.90 kB │ gzip:   3.51 kB
+apps/university build: dist/authoring/assets/stateDiagram-2N3HPSRC-D-khg0oR.js            10.64 kB │ gzip:   3.74 kB
+apps/university build: dist/authoring/assets/diagram-FQU43EPY-CToHXjMh.js                 10.66 kB │ gzip:   4.13 kB
+apps/university build: dist/authoring/assets/github-dark-default-DXG-b-1a.js              14.43 kB │ gzip:   3.12 kB
+apps/university build: dist/authoring/assets/OrbitControls-qzPJ48m9.js                    15.64 kB │ gzip:   4.82 kB
+apps/university build: dist/authoring/assets/chunk-MOJQB5TN-B6_2dfkp.js                   15.64 kB │ gzip:   4.35 kB
+apps/university build: dist/authoring/assets/diagram-G47NLZAW-DP-_s6v7.js                 15.74 kB │ gzip:   5.51 kB
+apps/university build: dist/authoring/assets/ishikawaDiagram-FXEZZL3T-bZiLdYSe.js         17.34 kB │ gzip:   6.53 kB
+apps/university build: dist/authoring/assets/kanban-definition-HUTT4EX6-F3nP-fGX.js       20.30 kB │ gzip:   7.16 kB
+apps/university build: dist/authoring/assets/sankeyDiagram-HTMAVEWB-Bxy6Jbyt.js           22.82 kB │ gzip:   8.26 kB
+apps/university build: dist/authoring/assets/journeyDiagram-5HDEW3XC-CHt4OJHZ.js          23.20 kB │ gzip:   8.17 kB
+apps/university build: dist/authoring/assets/mindmap-definition-LN4V7U3C-uinMy4zT.js      23.49 kB │ gzip:   8.03 kB
+apps/university build: dist/authoring/assets/lib-Ch2NqeKu.js                              23.50 kB │ gzip:   9.13 kB
+apps/university build: dist/authoring/assets/graphlib-DS17s2tU.js                         23.90 kB │ gzip:   8.31 kB
+apps/university build: dist/authoring/assets/ports-za9LAT15.js                            24.98 kB │ gzip:   9.42 kB
+apps/university build: dist/authoring/assets/wardleyDiagram-EHGQE667-C00Iznho.js          25.22 kB │ gzip:   6.55 kB
+apps/university build: dist/authoring/assets/rough.esm-CSKSodPl.js                        27.10 kB │ gzip:   8.85 kB
+apps/university build: dist/authoring/assets/erDiagram-Q63AITRT-0Q4eqgjS.js               27.13 kB │ gzip:   9.44 kB
+apps/university build: dist/authoring/assets/gitGraphDiagram-IHSO6WYX-BqYgMb8c.js         29.02 kB │ gzip:   8.57 kB
+apps/university build: dist/authoring/assets/catalog-BDc6bJFh.js                          30.35 kB │ gzip:  12.91 kB
+apps/university build: dist/authoring/assets/timeline-definition-FHXFAJF6-BYLCI_CE.js     30.41 kB │ gzip:   9.98 kB
+apps/university build: dist/authoring/assets/chunk-ICXQ74PX-CHL25Z6a.js                   30.87 kB │ gzip:   8.51 kB
+apps/university build: dist/authoring/assets/requirementDiagram-TGXJPOKE-sltaCRfD.js      31.03 kB │ gzip:   9.78 kB
+apps/university build: dist/authoring/assets/dagre-dpRSp0QF.js                            32.05 kB │ gzip:  11.58 kB
+apps/university build: dist/authoring/assets/quadrantDiagram-ABIIQ3AL-D5kBgbwr.js         33.54 kB │ gzip:   9.74 kB
+apps/university build: dist/authoring/assets/chunk-52WLFC77-CriXfwuL.js                   33.95 kB │ gzip:   7.31 kB
+apps/university build: dist/authoring/assets/mermaid.core-Dsa8xtbo.js                     36.32 kB │ gzip:  12.09 kB
+apps/university build: dist/authoring/assets/chunk-EX3LRPZG-Cz84IgkS.js                   37.76 kB │ gzip:  12.31 kB
+apps/university build: dist/authoring/assets/vennDiagram-L72KCM5P-BhhGhr9q.js             41.19 kB │ gzip:  15.11 kB
+apps/university build: dist/authoring/assets/shellscript-CLZ0U2zV.js                      41.47 kB │ gzip:   6.07 kB
+apps/university build: dist/authoring/assets/xychartDiagram-FW5EYKEG-CQi_C3Tt.js          41.63 kB │ gzip:  11.69 kB
+apps/university build: dist/authoring/assets/chunk-ZIRB5QZD-C6fEPe3t.js                   41.86 kB │ gzip:  14.23 kB
+apps/university build: dist/authoring/assets/src-_wZywoZs.js                              45.73 kB │ gzip:  16.03 kB
+apps/university build: dist/authoring/assets/chunk-Q4XR5HBZ-N6KhZJDC.js                   46.29 kB │ gzip:  14.58 kB
+apps/university build: dist/authoring/assets/chunk-V7JOEXUC-mOUL73qo.js                   48.84 kB │ gzip:  15.76 kB
+apps/university build: dist/authoring/assets/css-LbU1hoFO.js                              49.02 kB │ gzip:  11.90 kB
+apps/university build: dist/authoring/assets/html-CVO8wu9Q.js                             57.24 kB │ gzip:  11.74 kB
+apps/university build: dist/authoring/assets/engine-javascript-FQvzRocB.js                57.63 kB │ gzip:  20.18 kB
+apps/university build: dist/authoring/assets/markdown-BYOwaDjH.js                         59.32 kB │ gzip:   5.66 kB
+apps/university build: dist/authoring/assets/chunk-PUDLZKDR-BIHgftgM.js                   60.20 kB │ gzip:  19.55 kB
+apps/university build: dist/authoring/assets/MistakeList-gQgHa14K.js                      66.58 kB │ gzip:  23.64 kB
+apps/university build: dist/authoring/assets/c4Diagram-LMCZKHZV-Dg86kX0L.js               69.20 kB │ gzip:  19.34 kB
+apps/university build: dist/authoring/assets/ganttDiagram-NO4QXBWP-6RhaUCyI.js            69.43 kB │ gzip:  22.76 kB
+apps/university build: dist/authoring/assets/blockDiagram-677ZJIJ3-CJKvdq_A.js            72.77 kB │ gzip:  20.71 kB
+apps/university build: dist/authoring/assets/cose-bilkent-JH36ORCC-BzQvy5TC.js            81.44 kB │ gzip:  21.58 kB
+apps/university build: dist/authoring/assets/core-C7FbilI1.js                             88.39 kB │ gzip:  26.37 kB
+apps/university build: dist/authoring/assets/chunk-ZGVPDNZ5-BdPh-Urn.js                  101.88 kB │ gzip:  24.82 kB
+apps/university build: dist/authoring/assets/swimlanes-5IMT3BWC-KgpSc5em.js              114.12 kB │ gzip:  39.16 kB
+apps/university build: dist/authoring/assets/sequenceDiagram-DBY2YBRQ-CCj_gGFH.js        115.86 kB │ gzip:  30.62 kB
+apps/university build: dist/authoring/assets/dist-Dg0rI5ng.js                            120.44 kB │ gzip:  39.42 kB
+apps/university build: dist/authoring/assets/architectureDiagram-ZJ3FMSHR-CcAebZN4.js    148.90 kB │ gzip:  41.09 kB
+apps/university build: dist/authoring/assets/javascript-BzbQS41l.js                      174.81 kB │ gzip:  16.62 kB
+apps/university build: dist/authoring/assets/tsx-udAQXfEw.js                             175.52 kB │ gzip:  16.62 kB
+apps/university build: dist/authoring/assets/jsx-Bz0zcwM4.js                             177.78 kB │ gzip:  16.71 kB
+apps/university build: dist/authoring/assets/typescript-bsJCZSQ-.js                      181.07 kB │ gzip:  16.23 kB
+apps/university build: dist/authoring/assets/chunk-WYO6CB5R-DOcW3sIA.js                  234.89 kB │ gzip:  37.84 kB
+apps/university build: dist/authoring/assets/katex-B7rAX3Vi.js                           258.87 kB │ gzip:  77.46 kB
+apps/university build: dist/authoring/assets/from-course-view-Cx8W6Y5o.js                306.16 kB │ gzip:  99.61 kB
+apps/university build: dist/authoring/assets/cytoscape.esm-DnGd5Fuo.js                   435.43 kB │ gzip: 137.93 kB
+apps/university build: dist/authoring/assets/index-C1Iu6BfE.js                           590.08 kB │ gzip: 190.00 kB
+apps/university build: dist/authoring/assets/chunk-KEIR6QF5-Dj-OpFgW.js                  662.68 kB │ gzip: 143.23 kB
+apps/university build: dist/authoring/assets/LessonReader-Rfb5jzUT.js                    727.64 kB │ gzip: 220.79 kB
+apps/university build: dist/authoring/assets/react-three-fiber-B6skF7RC.js               957.10 kB │ gzip: 263.03 kB
+apps/university build: dist/authoring/assets/src-DwcRlwNw.js                           1,673.06 kB │ gzip: 527.63 kB
+apps/university build: ✓ built in 551ms
+apps/university build: [plugin builtin:vite-reporter] 
+apps/university build: (!) Some chunks are larger than 500 kB after minification. Consider:
+apps/university build: - Using dynamic import() to code-split the application
+apps/university build: - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+apps/university build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+apps/university build: Done
+check-shelf: 5 studies, 53 courses, 579 lessons match the manifest.
+check-content-revisions: ok (579 lessons, 53 courses)
+check-export-freshness: no initialized studies on this machine. SOURCE FRESHNESS IS NOT PROVEN HERE — this run cannot tell whether the committed recovery still matches the author's course source.
+=== Lesson Link Resolution Report ===
+Source studies root: /Users/yuanfei/PieAI/University-wt-lessonloop/apps/local/fixtures/lesson-links
+Studies scanned: fixture-lesson-links
+Total lessons: 2
+Total [[lesson:]] links parsed: 2
+
+No dangling / broken [[lesson:]] links.
+
+No ambiguous duplicate lesson ids within a study/course.
+
+PASS: lesson links and resolver-scoped lesson ids are valid.
+browser AI boundary: ok (server-only kit and key fingerprints absent)
+authoring exclusion: ok (22 names checked)
+authoring css: ok (35 legacy selector names, 111 references; ceiling 112)
+pro-gov package-doctor
+assets: 38
+assets: required project-governance assets found
+doc-gov: available via package dependency
+doc-gov router-check passed.
+doc-gov check passed (79 docs).
+doc-gov scan --check passed.
+doc-gov links passed (81 current files, 14 local links).
+doc-gov audit completed with 0 warning(s).
+doc-gov doctor passed with 0 warning(s).
