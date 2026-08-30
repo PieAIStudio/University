@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
 import type { View } from "@pieai/university-core";
+import { buildCourseGrid } from "@pieai/university-world";
 import type { CourseNode } from "@pieai/university-world/course.js";
 import {
   islandLookSceneSource,
@@ -72,6 +73,22 @@ export function useIslandLookSource({
             "course",
             [blueprint],
             lessons.map((lesson) => ({ x: lesson.position.x, z: lesson.position.z })),
+            {
+              dressingPlacementCount: buildCourseGrid({
+                studyId: blueprint.studyId,
+                courseId: blueprint.courseId,
+                seed: blueprint.seed,
+                routeArchetype: blueprint.route.archetype,
+                routeAnchors: blueprint.geometryNodes,
+                activeLessonIndex: lessons.findIndex((lesson) => lesson.state === "live"),
+                lessons: lessons.map((lesson) => ({
+                  lessonId: lesson.lessonId,
+                  unitId: lesson.unitId,
+                  unitIndex: lesson.unitIndex,
+                  state: lesson.state,
+                })),
+              }).props.length,
+            },
           )
         : null;
     }

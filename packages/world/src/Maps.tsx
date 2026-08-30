@@ -42,7 +42,7 @@ import {
 } from "./island/island-blueprint.js";
 import { islandThemeSelectionForCourse } from "./island/kenney-recipes.js";
 import { IslandDressing } from "./island/island-dressing-render.js";
-import { IslandRender, UnitSigil } from "./island/island-render.js";
+import { IslandRender } from "./island/island-render.js";
 import {
   islandLookFrozen,
   islandLookSeedForCourse,
@@ -57,6 +57,9 @@ import { AerialWorldPlate, AerialWorldPlateFallback, DeepSea } from "./sky/horiz
 import { SkyDome } from "./sky/skydome.js";
 import { WORLD_SUN, worldShadowFrustum, worldSunPosition } from "./sky/sun.js";
 import { renderTier } from "./sky/tier";
+import { buildCourseGrid } from "./grid/course-grid.js";
+import { hexToWorld } from "./grid/hex.js";
+import { LessonMarkerField } from "./grid/LessonMarkerField.js";
 
 /**
  * The world's palette. Two greens for land, one warm accent for the only thing
@@ -464,10 +467,8 @@ function Island({
 /**
  * The pulse around the one live thing.
  *
- * `lift` exists because a lesson marker is deliberately sunk into the ground
- * (see MARKER_SINK), so its group origin is below the surface. A ring drawn at
- * a fixed height off that origin comes out half-buried, which on screen is not
- * a ring at all — it is two gold slivers either side of the marker.
+ * `lift` exists because a lesson marker's group origin is the cell top. A ring
+ * drawn at a fixed height off that origin stays readable above the stone.
  */
 function LiveRing({ radius, lift = 0.08 }: { radius: number; lift?: number }) {
   const mesh = useRef<THREE.Mesh>(null);
@@ -516,10 +517,12 @@ function LearnerMarker({
   position,
   recipe,
   signedIn,
+  compact = false,
 }: {
   readonly position: THREE.Vector3;
   readonly recipe: AvatarRecipe | null;
   readonly signedIn: boolean;
+  readonly compact?: boolean;
 }) {
   const travel = useRef<THREE.Group>(null);
   const lift = useRef<THREE.Group>(null);
@@ -564,7 +567,20 @@ function LearnerMarker({
   return (
     <group ref={travel} position={position}>
       <group ref={lift}>
-        <PlayerMarker position={MARKER_ORIGIN} recipe={recipe} signedIn={signedIn} />
+        {compact ? (
+          <mesh name="course-learner-beacon" position={[0, 0.62, 0]}>
+            <octahedronGeometry args={[0.44, 0]} />
+            <meshStandardMaterial
+              color={PALETTE.accent}
+              emissive={PALETTE.accent}
+              emissiveIntensity={0.28}
+              roughness={0.34}
+              metalness={0.12}
+            />
+          </mesh>
+        ) : (
+          <PlayerMarker position={MARKER_ORIGIN} recipe={recipe} signedIn={signedIn} />
+        )}
       </group>
       {/* The ring is a navigation cue on the ground; only the avatar leaves it. */}
       <LiveRing radius={0.72} />
@@ -579,6 +595,7 @@ function Weather({
   sky = SKY_STOPS,
   cloudLevel = -5.2,
   groundRadius,
+  includeCloudSea = true,
 }: {
   extent: number;
   /**
@@ -601,6 +618,8 @@ function Weather({
    * larger sphere or every tree collapses into a handful of texels.
    */
   groundRadius?: number;
+  /** The course grid supplies its own three depth-aware cloud batches. */
+  includeCloudSea?: boolean;
 }) {
   const [, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
   // FogExp2 has no near plane. Density is derived from the old far so the
@@ -652,7 +671,9 @@ function Weather({
         <AerialWorldPlate extent={extent} level={cloudLevel} />
       </Suspense>
       <DeepSea extent={extent} level={cloudLevel} />
-      <CuteCloudSea extent={extent} level={cloudLevel} drift={!islandLookFrozen()} />
+      {includeCloudSea ? (
+        <CuteCloudSea extent={extent} level={cloudLevel} drift={!islandLookFrozen()} />
+      ) : null}
     </>
   );
 }
@@ -783,9 +804,8 @@ export function placeCourse(
         (entry) => entry.unit.id === next.unitId && entry.lesson.id === next.lessonId,
       )
     : -1;
-  return sampleFlat.map((entry, index) => {
+  const states = sampleFlat.map((entry, index) => {
     const lessonShape = shape.units[entry.unitIndex]!.lessons[entry.slot]!;
-    const node = blueprint.nodes[index]!;
     const done = isLessonComplete(
       source.completionOf(
         {
@@ -797,6 +817,32 @@ export function placeCourse(
         lessonShape,
       ),
     );
+    return done
+      ? ("done" as const)
+      : index === firstOpen
+        ? ("live" as const)
+        : index > firstOpen + 3
+          ? ("locked" as const)
+          : ("idle" as const);
+  });
+  const grid = buildCourseGrid({
+    studyId,
+    courseId: course.id,
+    seed: blueprint.seed,
+    routeArchetype: blueprint.route.archetype,
+    routeAnchors: blueprint.geometryNodes,
+    activeLessonIndex: firstOpen,
+    lessons: sampleFlat.map((entry, index) => ({
+      lessonId: entry.lesson.id,
+      unitId: entry.unit.id,
+      unitIndex: entry.unitIndex,
+      state: states[index],
+    })),
+  });
+  return sampleFlat.map((entry, index) => {
+    const node = blueprint.nodes[index]!;
+    const cell = grid.lessons[index]!;
+    const point = hexToWorld(cell.coord, grid.hexSize);
     return {
       studyId,
       courseId: course.id,
@@ -806,15 +852,9 @@ export function placeCourse(
       lessonId: entry.lesson.id,
       lessonTitle: entry.lesson.title,
       chars: entry.lesson.content.length,
-      // The mesh, props and markers all query this one continuous surface.
-      position: new THREE.Vector3(node.x, node.y - MARKER_SINK, node.z),
-      state: done
-        ? "done"
-        : index === firstOpen
-          ? "live"
-          : index > firstOpen + 3
-            ? "locked"
-            : "idle",
+      // The mesh, props and markers all query this one hex cell top centre.
+      position: new THREE.Vector3(point.x, cell.topY, point.z),
+      state: states[index]!,
       kind: pathNodeKind({
         variant: entry.lesson.variant,
         exercises: entry.lesson.exercises.length,
@@ -876,9 +916,6 @@ export function courseSurfaceY(
   ).y;
 }
 
-/** A shallow seat in the turf; enough to belong to the ground, not disappear in it. */
-const MARKER_SINK = 0.025;
-
 /**
  * The colour of a lesson marker.
  *
@@ -894,222 +931,6 @@ const MARKER_COLOUR = {
   idle: 0xe8e4d8,
   locked: 0x8f959c,
 } as const;
-
-/**
- * The course camera now gives a lesson marker a few dozen pixels, so its
- * silhouette is doing the work a texture could not. These are four authored
- * profiles of the same own-geometry technique: a low, faceted plinth with a
- * narrow waist and a slightly off-centre carved top. The lesson id selects one
- * deterministically; there is no new noise field and no per-lesson asset.
- *
- * The profile is normalised to one marker radius. Keeping four geometries in a
- * cache means the 41 marker meshes share GPU buffers even though each marker
- * keeps its own material for state colour/emissive treatment and its own hit
- * target. Ten sides and five rings cost 100 triangles per plinth, which is a
- * small, measured increase over the old 72-triangle cylinder and still leaves
- * the existing one-mesh-per-marker lock intact.
- */
-type LessonPlinthVariant = {
-  readonly id: string;
-  readonly height: number;
-  readonly phase: number;
-  readonly twist: number;
-  readonly topOffset: readonly [number, number];
-  readonly topRise: number;
-  readonly profile: readonly {
-    readonly y: number;
-    readonly radius: number;
-  }[];
-};
-
-const LESSON_PLINTH_VARIANTS: readonly LessonPlinthVariant[] = [
-  {
-    id: "slate",
-    height: 0.52,
-    phase: 0.08,
-    twist: 0.018,
-    topOffset: [-0.05, 0.03],
-    topRise: 0.018,
-    profile: [
-      { y: 0, radius: 1.06 },
-      { y: 0.08, radius: 1.02 },
-      { y: 0.2, radius: 0.91 },
-      { y: 0.42, radius: 0.88 },
-      { y: 0.52, radius: 0.8 },
-    ],
-  },
-  {
-    id: "waisted",
-    height: 0.58,
-    phase: 0.31,
-    twist: -0.022,
-    topOffset: [0.06, -0.04],
-    topRise: 0.024,
-    profile: [
-      { y: 0, radius: 1.04 },
-      { y: 0.09, radius: 0.99 },
-      { y: 0.24, radius: 0.78 },
-      { y: 0.43, radius: 0.91 },
-      { y: 0.58, radius: 0.84 },
-    ],
-  },
-  {
-    id: "stacked",
-    height: 0.64,
-    phase: 0.56,
-    twist: 0.025,
-    topOffset: [-0.03, -0.07],
-    topRise: 0.014,
-    profile: [
-      { y: 0, radius: 1.07 },
-      { y: 0.1, radius: 1.01 },
-      { y: 0.28, radius: 0.86 },
-      { y: 0.42, radius: 0.95 },
-      { y: 0.64, radius: 0.82 },
-    ],
-  },
-  {
-    id: "weathered",
-    height: 0.55,
-    phase: 0.83,
-    twist: -0.028,
-    topOffset: [0.07, 0.04],
-    topRise: 0.028,
-    profile: [
-      { y: 0, radius: 1.08 },
-      { y: 0.1, radius: 1.03 },
-      { y: 0.25, radius: 0.84 },
-      { y: 0.43, radius: 0.92 },
-      { y: 0.55, radius: 0.79 },
-    ],
-  },
-] as const;
-
-const LESSON_PLINTH_RADIAL_SEGMENTS = 10;
-const lessonPlinthGeometryCache = new Map<string, THREE.BufferGeometry>();
-
-function lessonPlinthVariant(lesson: LessonPlacement): LessonPlinthVariant {
-  const index = Math.floor(
-    hash(`${lesson.studyId}/${lesson.courseId}/${lesson.unitId}/${lesson.lessonId}/plinth`) *
-      LESSON_PLINTH_VARIANTS.length,
-  );
-  return LESSON_PLINTH_VARIANTS[index]!;
-}
-
-function lessonPlinthGeometry(variant: LessonPlinthVariant): THREE.BufferGeometry {
-  const cached = lessonPlinthGeometryCache.get(variant.id);
-  if (cached) return cached;
-
-  const segments = LESSON_PLINTH_RADIAL_SEGMENTS;
-  const rings = variant.profile;
-  const positions: number[] = [];
-  const indices: number[] = [];
-  const vertexAt = (ring: number, segment: number) => ring * segments + segment;
-
-  for (let ring = 0; ring < rings.length; ring += 1) {
-    const profile = rings[ring]!;
-    for (let segment = 0; segment < segments; segment += 1) {
-      const angle = (segment / segments) * Math.PI * 2 + variant.phase + ring * variant.twist;
-      const facet =
-        1 +
-        Math.sin(segment * 2.1 + variant.phase) * 0.028 +
-        Math.cos(segment * 3.7 - variant.phase) * 0.014;
-      positions.push(
-        Math.cos(angle) * profile.radius * facet,
-        profile.y,
-        Math.sin(angle) * profile.radius * facet,
-      );
-    }
-  }
-
-  const bottomCenter = rings.length * segments;
-  positions.push(0, 0, 0);
-  const topCenter = bottomCenter + 1;
-  positions.push(variant.topOffset[0], variant.height + variant.topRise, variant.topOffset[1]);
-
-  for (let segment = 0; segment < segments; segment += 1) {
-    const next = (segment + 1) % segments;
-    // The bottom cap faces down; the top cap faces up.
-    indices.push(bottomCenter, vertexAt(0, segment), vertexAt(0, next));
-    indices.push(topCenter, vertexAt(rings.length - 1, next), vertexAt(rings.length - 1, segment));
-  }
-  for (let ring = 0; ring < rings.length - 1; ring += 1) {
-    for (let segment = 0; segment < segments; segment += 1) {
-      const next = (segment + 1) % segments;
-      const lower = vertexAt(ring, segment);
-      const lowerNext = vertexAt(ring, next);
-      const upper = vertexAt(ring + 1, segment);
-      const upperNext = vertexAt(ring + 1, next);
-      // Winding points out from the side of the stone.
-      indices.push(lower, upper, lowerNext, lowerNext, upper, upperNext);
-    }
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-  geometry.computeBoundingSphere();
-  lessonPlinthGeometryCache.set(variant.id, geometry);
-  return geometry;
-}
-
-function LessonMarker({
-  lesson,
-  radius,
-  onPick,
-  onHover,
-}: {
-  lesson: LessonPlacement;
-  radius: number;
-  onPick: (lesson: LessonPlacement) => void;
-  onHover: (lesson: LessonPlacement | null) => void;
-}) {
-  const variant = lessonPlinthVariant(lesson);
-  return (
-    <group
-      position={lesson.position}
-      onClick={(event) => {
-        event.stopPropagation();
-        playSound("map.select");
-        onPick(lesson);
-      }}
-      onPointerOver={(event) => {
-        event.stopPropagation();
-        playSound("map.hover");
-        onHover(lesson);
-      }}
-      onPointerOut={() => onHover(null)}
-    >
-      <mesh
-        name="lesson-plinth"
-        geometry={lessonPlinthGeometry(variant)}
-        scale={[radius, radius, radius]}
-        castShadow
-        receiveShadow
-      >
-        <meshStandardMaterial
-          color={MARKER_COLOUR[lesson.state]}
-          roughness={lesson.state === "live" ? 0.5 : 0.85}
-          emissive={lesson.state === "live" ? PALETTE.accent : 0x000000}
-          emissiveIntensity={lesson.state === "live" ? 0.32 : 0}
-          flatShading
-        />
-      </mesh>
-      <group position={[0, radius * (variant.height - 0.202 + 0.018), 0]}>
-        <UnitSigil
-          sigil={lesson.visualToken.sigil}
-          unitIndex={lesson.unitIndex}
-          radius={radius}
-          active={lesson.state === "live"}
-        />
-      </group>
-      {lesson.state === "live" ? (
-        <LiveRing radius={radius * 1.5} lift={radius * (variant.height + 0.05)} />
-      ) : null}
-    </group>
-  );
-}
 
 /* The renderer owns the single route ribbon; no second trail is drawn here. */
 
@@ -1149,6 +970,24 @@ export function CourseScene({
       }),
     [courseId, lessons, studyId],
   );
+  const grid = useMemo(
+    () =>
+      buildCourseGrid({
+        studyId,
+        courseId,
+        seed: blueprint.seed,
+        routeArchetype: blueprint.route.archetype,
+        routeAnchors: blueprint.geometryNodes,
+        activeLessonIndex: lessons.findIndex((lesson) => lesson.state === "live"),
+        lessons: lessons.map((lesson) => ({
+          lessonId: lesson.lessonId,
+          unitId: lesson.unitId,
+          unitIndex: lesson.unitIndex,
+          state: lesson.state,
+        })),
+      }),
+    [blueprint, courseId, lessons, studyId],
+  );
   const extent = blueprint.bounds.maxHalf;
   const markers = useMemo(
     () =>
@@ -1161,6 +1000,7 @@ export function CourseScene({
         radius:
           blueprint.route.nodeRadius *
           (0.96 + Math.min(1, Math.max(0, lesson.chars) / 12_000) * 0.08),
+        colour: MARKER_COLOUR[lesson.state],
       })),
     [blueprint.route.nodeRadius, lessons],
   );
@@ -1186,22 +1026,20 @@ export function CourseScene({
         fog={[88, 280]}
         sky={skyStopsForStudy(skyStudyId)}
         cloudLevel={-10.2}
+        includeCloudSea={false}
       />
-      <IslandRender blueprint={blueprint} detail="course" />
+      <IslandRender blueprint={blueprint} detail="course" grid={grid} />
       <Suspense fallback={null}>
-        <IslandDressing key={assetRevision} blueprint={blueprint} detail="course" />
+        <IslandDressing key={assetRevision} blueprint={blueprint} detail="course" grid={grid} />
       </Suspense>
-      {markers.map(({ lesson, radius }) => (
-        <LessonMarker
-          key={lesson.lessonId}
-          lesson={lesson}
-          radius={radius}
-          onPick={onPick}
-          onHover={onHover}
-        />
-      ))}
+      <LessonMarkerField markers={markers} onPick={onPick} onHover={onHover} />
       {live ? (
-        <LearnerMarker position={live.position} recipe={avatarRecipe} signedIn={avatarSignedIn} />
+        <LearnerMarker
+          position={live.position}
+          recipe={avatarRecipe}
+          signedIn={avatarSignedIn}
+          compact
+        />
       ) : null}
     </>
   );

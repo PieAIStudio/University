@@ -201,6 +201,13 @@ export interface IslandLookSceneSource {
   readonly blueprints: readonly IslandBlueprint[];
   readonly dressingPlans: readonly IslandDressingPlan[];
   readonly nodePositions: readonly IslandPoint[];
+  /** Runtime projection count when a detail renderer replaces the old plan. */
+  readonly dressingPlacementCount?: number;
+}
+
+export interface IslandLookSceneSourceOptions {
+  /** Use the actual instanced projection count for readiness and code metrics. */
+  readonly dressingPlacementCount?: number;
 }
 
 /** Build judge data from the same blueprint and dressing planner as the scene. */
@@ -208,11 +215,15 @@ export function islandLookSceneSource(
   detail: "course" | "world",
   blueprints: readonly IslandBlueprint[],
   nodePositions: readonly IslandPoint[] = [],
+  options: IslandLookSceneSourceOptions = {},
 ): IslandLookSceneSource {
   return {
     detail,
     blueprints,
     dressingPlans: blueprints.map((blueprint) => planIslandDressing(blueprint, detail)),
     nodePositions,
+    ...(options.dressingPlacementCount === undefined
+      ? {}
+      : { dressingPlacementCount: options.dressingPlacementCount }),
   };
 }

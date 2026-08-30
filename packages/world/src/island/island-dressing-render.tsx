@@ -1,8 +1,10 @@
 /** Render a semantic dressing plan through the shared instanced GLB adapter. */
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
 
 import { AssetField, type Placement } from "../kit.js";
+import { buildCourseGrid, type HexMap } from "../grid/course-grid.js";
+import { PropField } from "../grid/PropField.js";
 import { resolveIslandRuntimeAsset, type IslandAssetPackId } from "./island-asset-registry.js";
 import { IslandFoliage, isIslandFoliagePlacement } from "./island-foliage-render.js";
 import {
@@ -54,12 +56,50 @@ export function IslandDressing({
   blueprint,
   detail,
   targetRadius,
+  grid,
 }: {
   readonly blueprint: IslandBlueprint;
   readonly detail: IslandDressingDetail;
   readonly targetRadius?: number;
+  readonly grid?: HexMap;
 }) {
-  const plan = useMemo(() => planIslandDressing(blueprint, detail), [blueprint, detail]);
+  const courseMap = useMemo(() => {
+    if (detail !== "course") return null;
+    if (grid) return grid;
+    return buildCourseGrid({
+      studyId: blueprint.studyId,
+      courseId: blueprint.courseId,
+      seed: blueprint.seed,
+      routeArchetype: blueprint.route.archetype,
+      routeAnchors: blueprint.geometryNodes,
+      lessons: blueprint.nodes.map((node) => ({
+        lessonId: node.id,
+        unitId: node.unitId,
+        unitIndex: node.unitIndex,
+        state: "idle" as const,
+      })),
+    });
+  }, [blueprint, detail, grid]);
+  const [visibleCourseMap, setVisibleCourseMap] = useState<HexMap | null>(null);
+  useEffect(() => {
+    if (detail !== "course" || courseMap === null) return;
+    setVisibleCourseMap(null);
+    // Let the grid, markers and camera commit one frame before GLB parsing and
+    // GPU resource cloning begin. The props still arrive immediately after
+    // entry, but they cannot hide the first useful map frame behind Suspense.
+    let secondFrame: number | undefined;
+    const firstFrame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(() => setVisibleCourseMap(courseMap));
+    });
+    return () => {
+      cancelAnimationFrame(firstFrame);
+      if (secondFrame !== undefined) cancelAnimationFrame(secondFrame);
+    };
+  }, [courseMap, detail]);
+  const plan = useMemo(
+    () => (detail === "course" ? null : planIslandDressing(blueprint, detail)),
+    [blueprint, detail],
+  );
   const scale = islandGeometryScale(blueprint, detail, targetRadius);
   // A mathematically faithful world projection turns a tree into a dark
   // three-pixel pin. Slight silhouette exaggeration is the same convention a
@@ -67,9 +107,17 @@ export function IslandDressing({
   // survives the LOD.
   const heightMultiplier = detail === "world" ? 3.2 : 1;
   const fields = useMemo(
-    () => islandDressingFields(plan, scale, heightMultiplier),
+    () => (plan ? islandDressingFields(plan, scale, heightMultiplier) : []),
     [heightMultiplier, plan, scale],
   );
+  if (detail === "course" && courseMap) {
+    return (
+      <group name="hex-grid-dressing">
+        {visibleCourseMap === courseMap ? <PropField map={courseMap} /> : null}
+      </group>
+    );
+  }
+  if (!plan) return null;
   return (
     <>
       {fields.map((field) => (

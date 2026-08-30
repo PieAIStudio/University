@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-29T22:36:54.780Z
+generated_at: 2026-08-30T05:21:48.360Z
 generator_version: doc-gov@0.9.9
-docs_count: 69
+docs_count: 70
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -276,6 +276,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-26
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-CUSTOM-INSTANCED-TERRAIN-BLACK-WEDGES-USUALLY-SIGNAL-TOPOLOGY-BEFORE-COLOUR
+    path: docs/reference/learnings/workflow-issues/custom-instanced-terrain-black-wedges-usually-signal-topology-before-colour.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-30
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-DAILY-FREE-AI-QUOTA-MUST-RESERVE-SERVER-SIDE-BEFORE-STRUCTURED-GRADING
     path: docs/reference/learnings/workflow-issues/daily-free-ai-quota-must-reserve-server-side-before-structured-grading.md
