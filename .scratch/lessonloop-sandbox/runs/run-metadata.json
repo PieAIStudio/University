@@ -1,0 +1,98 @@
+{
+  "date": "2026-08-31",
+  "branch": "work/lessonloop",
+  "writerArm": "grok",
+  "writerArmReason": "grok models exited 0, listed grok-4.6, and did not contain the exact authentication failure sentence",
+  "detectorAndPolisherFamily": "gemini",
+  "familiesDistinct": true,
+  "preflight": {
+    "grok": {
+      "command": "grok models",
+      "exitCode": 0,
+      "stdout": "runs/preflight-grok.stdout",
+      "stderr": "runs/preflight-grok.stderr",
+      "selectedModel": "grok-4.6"
+    },
+    "agy": {
+      "command": "agy models",
+      "exitCode": 0,
+      "stdout": "runs/preflight-agy.stdout",
+      "stderr": "runs/preflight-agy.stderr",
+      "selectedModels": ["gemini-3.7-flash-high", "claude-sonnet-4-6"]
+    },
+    "codexFallback": "not run; Grok preflight passed"
+  },
+  "pipeline": [
+    {
+      "role": "writer",
+      "model": "grok-4.6",
+      "effort": "high",
+      "realSeconds": 635.26,
+      "modelCall": "success",
+      "stdout": "runs/writer.stdout",
+      "stderr": "runs/writer.stderr",
+      "output": "runs/writer-draft.md",
+      "note": "Grok session completed ok; one transport decoding error was retried successfully. The first local wrapper also used zsh's read-only status variable after the child completed."
+    },
+    {
+      "role": "detector",
+      "model": "gemini-3.7-flash-high",
+      "effort": "high",
+      "realSeconds": 121.0,
+      "exitCode": 0,
+      "stdout": "runs/detector.stdout",
+      "stderr": "runs/detector.stderr"
+    },
+    {
+      "role": "fixer",
+      "model": "grok-4.6",
+      "effort": "high",
+      "realSeconds": 596.75,
+      "exitCode": 0,
+      "stdout": "runs/fixer.stdout",
+      "stderr": "runs/fixer.stderr",
+      "output": "runs/fixer-draft.md"
+    },
+    {
+      "role": "bounded-polisher",
+      "model": "gemini-3.7-flash-high",
+      "effort": "high",
+      "realSeconds": 43.33,
+      "exitCode": 0,
+      "stdout": "runs/polisher.stdout",
+      "stderr": "runs/polisher.stderr",
+      "output": "runs/polished-draft.md",
+      "hedgeGate": "pass"
+    }
+  ],
+  "trapChecks": {
+    "claudeEffort": {
+      "model": "claude-sonnet-4-6",
+      "effort": "high",
+      "realSeconds": 8.52,
+      "exitCode": 1,
+      "stderr": "runs/trap-claude-effort.stderr"
+    },
+    "codexPromptFile": {
+      "realSeconds": 0.06,
+      "exitCode": 2,
+      "stderr": "runs/trap-codex-prompt-file.stderr"
+    },
+    "unboundedPolisher": {
+      "model": "gemini-3.7-flash-high",
+      "effort": "high",
+      "realSeconds": 31.07,
+      "exitCode": 0,
+      "hedgeGate": "fail",
+      "stdout": "runs/unbounded-polisher.stdout"
+    }
+  },
+  "checks": {
+    "validationLessonLintExitCode": 1,
+    "validationAnchorExitCode": 0,
+    "baselineCopiedCourseLintExitCode": 1,
+    "boundedHedgeGateExitCode": 0,
+    "unboundedHedgeGateExitCode": 1,
+    "rootPnpmVerifyExitCode": 0
+  }
+}
