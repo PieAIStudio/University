@@ -24,6 +24,7 @@ function worldPlacementFor(
     position: local.position.multiplyScalar(island.scale).add(island.position),
     height: local.height * island.scale,
     turn: local.turn,
+    ...(local.width === undefined ? {} : { width: local.width * island.scale }),
   };
 }
 

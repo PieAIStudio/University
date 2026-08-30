@@ -1,6 +1,8 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   GRID_ACCENT_RAMP,
+  GRID_LESSON_MARKER_COLOURS,
   GRID_PALETTE_PRESETS,
   GRID_SHARED_SOIL,
   gridPaletteFor,
@@ -70,6 +72,18 @@ describe("hand-picked grid palettes", () => {
       const saturation = high === low ? 0 : (high - low) / (1 - Math.abs(2 * lightness - 1));
       expect(saturation).toBeGreaterThanOrEqual(0.42);
     }
+  });
+
+  it("paints every lesson stone from the one warm ramp", () => {
+    const ramp = new Set<number>(Object.values(GRID_ACCENT_RAMP));
+    for (const colour of Object.values(GRID_LESSON_MARKER_COLOURS)) {
+      expect(ramp.has(colour)).toBe(true);
+    }
+    expect(GRID_LESSON_MARKER_COLOURS.live).toBe(GRID_ACCENT_RAMP.coralLight);
+    expect(GRID_LESSON_MARKER_COLOURS.idle).toBe(GRID_ACCENT_RAMP.coralLight);
+    const maps = readFileSync(new URL("../Maps.tsx", import.meta.url), "utf8");
+    expect(maps).toMatch(/GRID_LESSON_MARKER_COLOURS/);
+    expect(maps).not.toMatch(/MARKER_COLOUR\s*=/);
   });
 
   it("keeps every lesson marker legible on its own ground", () => {

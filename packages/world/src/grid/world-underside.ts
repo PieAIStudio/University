@@ -12,10 +12,10 @@ export const WORLD_UNDERSIDE_CONTRACT = {
   spikeTriangles: 3,
   minSpikeCount: 3,
   maxSpikeCount: 5,
-  minDepth: 2.4,
-  maxDepth: 4.8,
-  depthBase: 2,
-  depthPerSqrtCell: 0.14,
+  minDepth: 2.8,
+  maxDepth: 6.2,
+  depthBase: 2.4,
+  depthPerSqrtCell: 0.18,
   drawBatches: 2,
 } as const;
 

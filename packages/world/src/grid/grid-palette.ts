@@ -43,6 +43,19 @@ export const GRID_ACCENT_RAMP = {
   brick: 0xc02818,
 } as const;
 
+/**
+ * Lesson stones sit on the shared ivory road, not on the meadow. The ramp
+ * step is therefore chosen for brightness on `GRID_SHARED_SOIL.road`, not for
+ * contrast against a particular ground. Live/idle use the light coral the
+ * reference paints; done and locked stay on the same hue, one step deeper.
+ */
+export const GRID_LESSON_MARKER_COLOURS = {
+  done: GRID_ACCENT_RAMP.coral,
+  live: GRID_ACCENT_RAMP.coralLight,
+  idle: GRID_ACCENT_RAMP.coralLight,
+  locked: GRID_ACCENT_RAMP.coral,
+} as const;
+
 export interface GridPalettePreset extends GridPalette {
   readonly id: string;
 }

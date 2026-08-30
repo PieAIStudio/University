@@ -40,31 +40,51 @@ function cloudPositions(
 ): readonly [number, number, number, number][] {
   const width = map.bounds.maxX - map.bounds.minX;
   const depthOffset = map.bounds.maxZ - map.bounds.minZ;
+  // Course-design is a fixed 65° aerial shot. Position the cloud frame in
+  // that camera's horizontal basis instead of using world X/Z directly: a
+  // world-axis spread can project both front clouds into the same lower ray
+  // and cover the floating cone on one route archetype.
+  const azimuth = (65 * Math.PI) / 180;
+  const viewX = Math.sin(azimuth);
+  const viewZ = Math.cos(azimuth);
+  const rightX = Math.cos(azimuth);
+  const rightZ = -Math.sin(azimuth);
+  const framePoint = (horizontal: number, forward: number): readonly [number, number] => [
+    rightX * horizontal + viewX * forward,
+    rightZ * horizontal + viewZ * forward,
+  ];
   // Clouds are framing punctuation, not a second patterned ground plane.
   // Fewer larger silhouettes leave the route as the visual protagonist.
-  const count = depth === "front" ? 3 : depth === "back" ? 3 : 2;
+  const count = depth === "front" ? 2 : depth === "back" ? 3 : 2;
   return Array.from({ length: count }, (_, index) => {
     const spread = index / Math.max(1, count - 1) - 0.5;
     if (depth === "back") {
+      // Leave the central lower ray open for the island's pointed underside.
+      // The middle cloud still frames the island, but sits on the right side
+      // like the target's distant cloud bank instead of covering the cone.
+      const frameSpread = index === 1 ? 0.2 : spread < 0 ? -0.78 : 0.88;
+      const [x, z] = framePoint(frameSpread * width, -depthOffset * 0.72);
       return [
-        spread * width * 0.82,
+        x,
         map.bounds.maxHalf * 0.26 + (index % 2) * 0.55,
-        map.bounds.minZ - depthOffset * 0.24,
+        z,
         map.hexSize * (1.15 + (index % 3) * 0.2),
       ];
     }
     if (depth === "side") {
+      const [x, z] = framePoint(width * 0.55, spread * depthOffset * 0.25);
       return [
-        map.bounds.maxX + width * 0.18,
+        x,
         map.bounds.maxHalf * 0.16 + (index % 2) * 0.42,
-        spread * depthOffset * 0.8,
+        z,
         map.hexSize * (1.05 + (index % 2) * 0.22),
       ];
     }
+    const [x, z] = framePoint(spread * width * 0.44, depthOffset * 0.45);
     return [
-      spread * width * 0.66,
-      map.bounds.maxHalf * 0.11 + (index % 2) * 0.34,
-      map.bounds.maxZ + depthOffset * 0.18,
+      x,
+      -map.bounds.maxHalf * 0.18 + (index % 2) * 0.34,
+      z,
       map.hexSize * (0.94 + (index % 2) * 0.16),
     ];
   });
@@ -81,10 +101,11 @@ function CloudLayer({ map, depth, dimmed }: { map: HexMap; depth: CloudDepth; di
   const material = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
-        color: dimmed ? 0x9aa8a8 : 0xf2f4dc,
+        color: dimmed ? 0x9aa8a8 : depth === "back" ? 0xfff0d4 : 0xfff9e9,
         transparent: true,
-        opacity: depth === "front" ? 0.22 : depth === "side" ? 0.3 : 0.34,
+        opacity: depth === "front" ? 0.55 : depth === "side" ? 0.68 : 0.76,
         depthWrite: false,
+        depthTest: false,
       }),
     [depth, dimmed],
   );
@@ -96,7 +117,7 @@ function CloudLayer({ map, depth, dimmed }: { map: HexMap; depth: CloudDepth; di
       matrix.compose(
         new THREE.Vector3(x, y, z),
         rotation,
-        new THREE.Vector3(scale * 1.04, scale * 0.72, scale * 0.72),
+        new THREE.Vector3(scale * 1.72, scale * 1.14, scale * 1.14),
       );
       target.setMatrixAt(index, matrix);
     });

@@ -2,7 +2,7 @@ import { type ThreeEvent } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-import { cellTopColour, hexGeometry, mapMaterial } from "./HexField.js";
+import { cellTopColour, HEX_GEOMETRY_TRIANGLES, hexGeometry, mapMaterial } from "./HexField.js";
 import { GRID_SEAM_STRENGTH, type GridCell } from "./course-grid.js";
 import { hexToWorld } from "./hex.js";
 import { WorldPropField } from "./WorldPropField.js";
@@ -32,7 +32,7 @@ function worldCellMatrix(instance: WorldCellInstance, target: THREE.Matrix4): TH
   const point = hexToWorld(cell.coord, island.map.hexSize);
   // The remote camera sees more cliff than meadow if the prism is taller than
   // it is wide. Keep a real terrace, but let the top colour own the silhouette.
-  const height = Math.max(0.18, cell.topY * 0.42) * island.scale;
+  const height = Math.max(0.22, cell.topY * 0.58) * island.scale;
   target.compose(
     new THREE.Vector3(
       island.position.x + point.x * island.scale,
@@ -127,7 +127,7 @@ export interface WorldHexFieldProps {
 export function WorldHexField({ islands, onPick, onHover }: WorldHexFieldProps) {
   const instances = useMemo(() => cellInstances(islands), [islands]);
   const cellCount = instances.length;
-  const triangleCount = cellCount * 18;
+  const triangleCount = cellCount * HEX_GEOMETRY_TRIANGLES;
   return (
     <group
       name="world-grid-field"

@@ -24,18 +24,18 @@
  * becoming a neutral black hole.
  */
 export const WORLD_SUN = {
-  elevationDeg: 20,
+  elevationDeg: 24,
   /**
    * From +Z, clockwise in XZ the same way three's spherical azimuth is. The
    * course-design camera sits at 65°, looking toward 245°. 210° is a side-back
    * sun: long shadows stay, but more of the visible dome faces the key.
    */
   azimuthDeg: 210,
-  keyIntensity: 5.2,
+  keyIntensity: 5.4,
   keyColor: 0xffefd2,
-  hemisphereIntensity: 0.74,
+  hemisphereIntensity: 0.72,
   hemisphereGround: 0x8a5b45,
-  ambientIntensity: 0.23,
+  ambientIntensity: 0.21,
   ambientColor: 0x9bb8d0,
   /** Light distance as a multiple of the shadowed ground radius. */
   distanceFactor: 2.65,

@@ -68,9 +68,14 @@ export interface GridSeamStrength {
  * height changes rather than an artificial outline.
  */
 export const GRID_SEAM_STRENGTH: GridSeamStrength = {
-  land: 0.018,
-  route: 0.105,
-  detached: 0.055,
+  // Same-height meadow cells must overlap slightly. A zero or positive seam
+  // leaves a hairline the 65° camera reads as a dotted cliff outline — either
+  // a true gap or z-fighting sparkle on a shared edge. Negative seam is the
+  // overlap that turns those cells into one terrace. Route and detached cells
+  // keep a deliberate air line so those two semantic layers still separate.
+  land: -0.02,
+  route: 0.072,
+  detached: 0.04,
 };
 
 export interface GridLessonCell extends GridCell {
@@ -255,7 +260,6 @@ function routeFromAnchors(
         // detour allowance absorbs a jagged island edge; the final step still
         // has to land within a few cells of the far endpoint.
         if (distanceToEnd > remaining + 8) continue;
-        if (index === anchors.length - 1 && distanceToEnd > 3) continue;
         nextStates.push({
           path: [...state.path, candidate],
           score:

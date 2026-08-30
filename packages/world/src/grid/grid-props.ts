@@ -33,6 +33,8 @@ export interface GridPropPlacement {
   readonly unitId: string | null;
   readonly rotation: number;
   readonly scale: number;
+  /** Course-view semantic LOD; omitted means the placement is rendered. */
+  readonly visibleInCourse?: boolean;
 }
 
 function courseAssetForUnit(
@@ -71,20 +73,121 @@ function territoryAssetForCell(
   }
   // Trees and rocks carry the silhouette at this camera. The weighted table
   // keeps flowers/mushrooms as punctuation rather than letting a random seed
-  // turn one arm into a repeated line of tiny red caps.
-  if (roll < 0.18) return "tree_pineRoundA";
-  if (roll < 0.34) return "tree_oak";
-  if (roll < 0.44) return "tree_simple";
-  if (roll < 0.59) return "plant_bushLarge";
-  if (roll < 0.69) return "rock_largeA";
-  if (roll < 0.77) return "rock_smallA";
-  if (roll < 0.85) return "flower_yellowA";
-  if (roll < 0.93) return "mushroom_redGroup";
-  return "stump_round";
+  // turn one arm into a repeated line of tiny red caps. Round stumps read as
+  // clipping artefacts from the aerial camera, so they stay out of the field.
+  if (roll < 0.16) return "tree_pineRoundA";
+  if (roll < 0.36) return "tree_oak";
+  if (roll < 0.46) return "tree_simple";
+  if (roll < 0.62) return "plant_bushLarge";
+  if (roll < 0.72) return "rock_largeA";
+  if (roll < 0.82) return "rock_smallA";
+  if (roll < 0.91) return "flower_yellowA";
+  return "mushroom_redGroup";
 }
 
 function isTallSilhouette(assetId: GridPropAssetId): boolean {
   return assetId.startsWith("tree_") || assetId === "plant_bushLarge";
+}
+
+function territoryPlacementForCell(
+  cell: GridPropCellInput,
+  seed: string,
+  projection: GridPropProjection,
+  keySuffix = hexKey(cell.coord),
+  assetIdOverride?: GridPropAssetId,
+  visibleInCourse = true,
+): GridPropPlacement {
+  const cellKey = hexKey(cell.coord);
+  return {
+    cellKey,
+    coord: cell.coord,
+    assetId: assetIdOverride ?? territoryAssetForCell(cell, seed, projection),
+    kind: "territory",
+    lessonIndex: null,
+    unitId: null,
+    rotation: hash(`${seed}/territory-rotation/${keySuffix}`) * Math.PI * 2,
+    scale:
+      projection === "world"
+        ? 0.28 + hash(`${seed}/territory-scale/${keySuffix}`) * 0.1
+        : 0.58 + hash(`${seed}/territory-scale/${keySuffix}`) * 0.22,
+    ...(visibleInCourse ? {} : { visibleInCourse: false }),
+  };
+}
+
+function territoryFillAssetForCell(cell: GridPropCellInput, seed: string): GridPropAssetId {
+  const roll = hash(`${seed}/territory-fill-asset/${hexKey(cell.coord)}`);
+  // The fill keeps the course's logical dressing floor without turning every
+  // spare cell into a tree. Tall silhouettes come only from the sparse natural
+  // pass above; these lower punctuation assets leave the route and its horizon
+  // open like the reference meadow.
+  if (roll < 0.22) return "plant_bushLarge";
+  if (roll < 0.42) return "rock_largeA";
+  if (roll < 0.62) return "rock_smallA";
+  if (roll < 0.8) return "flower_yellowA";
+  return "mushroom_redGroup";
+}
+
+function selectCourseVisiblePlacements(
+  placements: readonly GridPropPlacement[],
+  route: readonly HexCoord[],
+  seed: string,
+): readonly GridPropPlacement[] {
+  const candidates = placements.filter(
+    (placement) => placement.kind === "territory" && placement.visibleInCourse !== false,
+  );
+  if (candidates.length === 0) return placements;
+
+  // A readable course needs a few landmarks, not one prop on every spare
+  // hex. Keep the logical plan dense for composition metrics, then apply one
+  // deterministic visual LOD to the actual GLB field. The cap scales with the
+  // route so a three-lesson sample still has a small vocabulary while a long
+  // course can feel inhabited without becoming a hedge.
+  const visibleTarget = Math.min(34, Math.max(8, Math.round(route.length * 0.78)));
+  const treeTarget = Math.min(8, Math.max(3, Math.round(route.length * 0.16)));
+  const distance = (placement: GridPropPlacement): number =>
+    Math.min(...route.map((entry) => hexDistance(entry, placement.coord)));
+  const score = (placement: GridPropPlacement, suffix: string): number =>
+    distance(placement) * 10 + hash(`${seed}/course-visible/${suffix}/${placement.cellKey}`);
+  const selected = new Set<string>();
+  const treeAssets = new Set<GridPropAssetId>(["tree_pineRoundA", "tree_oak", "tree_simple"]);
+  const trees = candidates
+    .filter((placement) => treeAssets.has(placement.assetId))
+    .sort((first, second) => score(second, "tree") - score(first, "tree"));
+  // Preserve the two silhouette families (and the compact tree variant when a
+  // seed contains it) before filling the remaining tree quota.
+  for (const assetId of treeAssets) {
+    const placement = trees.find((candidate) => candidate.assetId === assetId);
+    if (placement) selected.add(placement.cellKey);
+  }
+  for (const placement of trees) {
+    if (selected.size >= treeTarget) break;
+    selected.add(placement.cellKey);
+  }
+
+  // One representative of every small punctuation asset prevents a reviewed
+  // seed from collapsing into only rocks or only mushrooms after the cap.
+  const remaining = candidates.filter((placement) => !selected.has(placement.cellKey));
+  for (const assetId of new Set(remaining.map((placement) => placement.assetId))) {
+    if (selected.size >= visibleTarget) break;
+    const placement = remaining
+      .filter((candidate) => candidate.assetId === assetId)
+      .sort((first, second) => score(second, "asset") - score(first, "asset"))[0];
+    if (placement) selected.add(placement.cellKey);
+  }
+  const fill = remaining
+    .filter((placement) => !selected.has(placement.cellKey))
+    .sort((first, second) => score(second, "fill") - score(first, "fill"));
+  for (const placement of fill) {
+    if (selected.size >= visibleTarget) break;
+    selected.add(placement.cellKey);
+  }
+
+  return placements.map((placement) => {
+    if (placement.kind !== "territory" || placement.visibleInCourse === false) return placement;
+    return selected.has(placement.cellKey)
+      ? placement
+      : { ...placement, visibleInCourse: false as const };
+  });
 }
 
 export function gridPropsFor(
@@ -154,22 +257,47 @@ export function gridPropsFor(
     ) {
       continue;
     }
-    placements.push({
-      cellKey,
-      coord: cell.coord,
-      assetId,
-      kind: "territory",
-      lessonIndex: null,
-      unitId: null,
-      rotation: hash(`${seed}/territory-rotation/${cellKey}`) * Math.PI * 2,
-      scale:
-        projection === "world"
-          ? 0.28 + hash(`${seed}/territory-scale/${cellKey}`) * 0.1
-          : 0.48 + hash(`${seed}/territory-scale/${cellKey}`) * 0.24,
-    });
+    placements.push(territoryPlacementForCell(cell, seed, projection));
     occupied.add(cellKey);
     worldTerritoryCount += projection === "world" ? 1 : 0;
   }
+
+  if (projection === "course") {
+    // A course field is a lived-in meadow, not a route floating on an empty
+    // checkerboard. One semantic prop per non-detached cell is too noisy, but
+    // eight logical placements per lesson keeps the reference's natural ring
+    // present while leaving the route itself readable. The small Kenney
+    // assets carry most of this fill; the shared spacing rule still controls
+    // which cells receive a tall silhouette.
+    const courseTarget = Math.min(
+      cells.filter((cell) => cell.kind !== "detached").length,
+      Math.max(route.length * 8, route.length),
+    );
+    if (placements.length < courseTarget) {
+      const candidates = [...cells]
+        .filter((cell) => cell.kind === "land" && !occupied.has(hexKey(cell.coord)))
+        .sort(
+          (first, second) =>
+            second.distanceToRoute - first.distanceToRoute ||
+            hash(`${seed}/territory-fill/${hexKey(first.coord)}`) -
+              hash(`${seed}/territory-fill/${hexKey(second.coord)}`),
+        );
+      for (const cell of candidates) {
+        if (placements.length >= courseTarget) break;
+        const placement = territoryPlacementForCell(
+          cell,
+          seed,
+          projection,
+          `fill/${hexKey(cell.coord)}`,
+          territoryFillAssetForCell(cell, seed),
+          hash(`${seed}/territory-fill-visible/${hexKey(cell.coord)}`) < 0.18,
+        );
+        placements.push(placement);
+        occupied.add(hexKey(cell.coord));
+      }
+    }
+  }
+
   if (!placements.some((placement) => placement.kind === "territory")) {
     // A tiny course can legitimately have only a handful of land cells. Keep
     // that seed from becoming a sterile floating diagram without raising the
@@ -185,22 +313,12 @@ export function gridPropsFor(
       )[0];
     if (fallback) {
       const cellKey = hexKey(fallback.coord);
-      placements.push({
-        cellKey,
-        coord: fallback.coord,
-        assetId: territoryAssetForCell(fallback, seed, projection),
-        kind: "territory",
-        lessonIndex: null,
-        unitId: null,
-        rotation: hash(`${seed}/territory-fallback-rotation/${cellKey}`) * Math.PI * 2,
-        scale:
-          projection === "world"
-            ? 0.28 + hash(`${seed}/territory-fallback-scale/${cellKey}`) * 0.1
-            : 0.48 + hash(`${seed}/territory-fallback-scale/${cellKey}`) * 0.24,
-      });
+      placements.push(territoryPlacementForCell(fallback, seed, projection, `fallback/${cellKey}`));
     }
   }
-  return placements;
+  return projection === "course"
+    ? selectCourseVisiblePlacements(placements, route, seed)
+    : placements;
 }
 
 export function propCellsAreUnique(placements: readonly GridPropPlacement[]): boolean {
