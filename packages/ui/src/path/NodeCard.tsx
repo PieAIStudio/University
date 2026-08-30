@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from "react";
-import { GameButton } from "@pieai/swimmer-ui-kit";
 
+import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import { PathDialog } from "./PathDialog.js";
 import { UnitCardBody } from "./UnitCard.js";
 import {
@@ -56,9 +56,9 @@ export function NodeCard({
   const body = (
     <>
       <p className="node-card__cost">{cost}</p>
-      <GameButton variant="primary" className="path-card__start" onClick={onStart}>
+      <LiquidCtaButton width="full" className="path-card__start" onClick={onStart}>
         {startLabel}
-      </GameButton>
+      </LiquidCtaButton>
       <button
         type="button"
         className="node-card__preview"
@@ -67,7 +67,7 @@ export function NodeCard({
       >
         {PREVIEW_UNIT_LABEL} {previewUnit ? "▴" : "▾"}
       </button>
-      {previewUnit ? <UnitCardBody unit={unit} onStart={onStartUnit} /> : null}
+      {previewUnit ? <UnitCardBody unit={unit} onStart={onStartUnit} liquid={false} /> : null}
     </>
   );
 

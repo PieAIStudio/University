@@ -15,6 +15,7 @@ import {
 import { useEffect, useState } from "react";
 
 import { CapabilityExplanation } from "../../capability/CapabilityExplanation.js";
+import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
 
 /** 会员 — this surface explains the entitlement boundary and launch offer. */
 export const PLANS_TITLE = "会员";
@@ -101,14 +102,13 @@ function PlanCard({
         </ul>
 
         {purchasable ? (
-          <GameButton
-            variant="ghost"
+          <LiquidCtaButton
             type="button"
             onClick={() => onPurchase(plan.id)}
             disabled={busyOfferId === plan.id}
           >
             {busyOfferId === plan.id ? "正在检查…" : planButtonLabel(plan.pricing)}
-          </GameButton>
+          </LiquidCtaButton>
         ) : (
           <p className="plan-card__note">你现在就在用</p>
         )}

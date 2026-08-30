@@ -113,28 +113,28 @@ export const FIXED_MATERIAL = [
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 3110,
+    "line": 3106,
     "column": 10,
     "literal": "#e6edf3",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 3111,
+    "line": 3107,
     "column": 15,
     "literal": "#0d1117",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 3157,
+    "line": 3153,
     "column": 10,
     "literal": "rgb(230 237 243 / 64%)",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
   },
   {
     "path": "apps/university/src/styles.css",
-    "line": 3182,
+    "line": 3178,
     "column": 10,
     "literal": "#e5c49a",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"

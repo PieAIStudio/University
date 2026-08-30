@@ -1,0 +1,92 @@
+/* One primary action surface: clean at rest, liquid only during the press. */
+
+.liquid-cta {
+  --liquid-cta-fill: var(--game-ui-accent);
+  position: relative;
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  align-self: flex-start;
+  isolation: isolate;
+  vertical-align: top;
+}
+
+.liquid-cta[data-liquid-cta-width="full"] {
+  display: block;
+  width: 100%;
+}
+
+.liquid-cta__surface {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.liquid-cta__surface .game-ui-liquid-content,
+.liquid-cta__surface-item,
+.liquid-cta__shape {
+  width: 100%;
+  height: 100%;
+}
+
+.liquid-cta__surface .game-ui-liquid-content,
+.liquid-cta__surface-item {
+  position: absolute;
+  inset: 0;
+}
+
+.liquid-cta__shape {
+  display: block;
+  border-radius: var(--game-ui-radius-control);
+}
+
+.liquid-cta__button {
+  position: relative;
+  z-index: 1;
+  /* The 1px border is painted by the silhouette; 17px preserves old width. */
+  border: 0;
+  padding-inline: 17px;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: var(--game-ui-accent-contrast);
+  transform: none;
+}
+
+.liquid-cta[data-liquid-cta-width="full"] .liquid-cta__surface-item,
+.liquid-cta[data-liquid-cta-width="full"] .liquid-cta__button {
+  width: 100%;
+}
+
+.liquid-cta[data-liquid-cta-disabled="true"] {
+  --liquid-cta-fill: var(--game-ui-text-muted);
+}
+
+.liquid-cta[data-liquid-cta-disabled="false"]:hover {
+  --liquid-cta-fill: var(--game-ui-accent-bright);
+}
+
+.liquid-cta__button:disabled,
+.liquid-cta__button:disabled:hover {
+  background: transparent;
+  color: var(--game-ui-disabled);
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-cta__button,
+  .liquid-cta__button:hover,
+  .liquid-cta__button:active {
+    transform: none;
+    transition: none;
+    scale: 1;
+  }
+
+  .liquid-cta__surface .game-ui-liquid-silhouette {
+    will-change: auto;
+  }
+}

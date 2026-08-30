@@ -13,6 +13,8 @@
     "./capability/capability.css": "./src/capability/capability.css",
     "./catalog/CatalogSurface.js": "./src/catalog/CatalogSurface.tsx",
     "./catalog/catalog.css": "./src/catalog/catalog.css",
+    "./cta/LiquidCtaButton.js": "./src/cta/LiquidCtaButton.tsx",
+    "./cta/liquid-cta.css": "./src/cta/liquid-cta.css",
     "./content/port.js": "./src/content/port.ts",
     "./entry/entry-page.css": "./src/entry/entry-page.css",
     "./entry/style-sample.css": "./src/entry/style-sample.css",

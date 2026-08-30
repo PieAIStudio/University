@@ -52,12 +52,8 @@ beforeEach(() => {
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
-  /*
-    LiquidGroup owns a self-scheduling frame loop. Running the callback
-    synchronously is useful here because it makes the SVG path observable in
-    the same act(), but nested frames must be dropped or this becomes infinite
-    recursion.
-  */
+  /* Keep the shared browser-like timing environment for the kit-backed
+     controls rendered by this block. */
   let insideFrame = false;
   vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
     if (insideFrame) return 1;
@@ -158,7 +154,7 @@ describe("ChoiceBlock", () => {
     expect(playSound).toHaveBeenCalledWith("answer.wrong");
   });
 
-  it("submitting the correct option shows the principle, the triple mark, and next", async () => {
+  it("submitting the correct option shows static feedback and next", async () => {
     const onNext = vi.fn();
     const onSolved = vi.fn();
     await renderBlock(onNext, onSolved);
@@ -174,13 +170,11 @@ describe("ChoiceBlock", () => {
     expect(container.querySelector(".choice-block__mark")?.textContent).toBe("✓");
     expect(container.querySelector(".choice-block__correct-merge")).toBeTruthy();
     expect(
-      container.querySelector(".choice-block__correct-merge [data-liquid-gooey-silhouette]"),
+      container.querySelector(".choice-block__correct-merge[data-badge-tone='success']"),
     ).toBeTruthy();
-    const blob = container.querySelector<SVGPathElement>(
-      ".choice-block__correct-merge [data-liquid-gooey-blob]",
-    );
-    expect(blob).not.toBeNull();
-    expect(blob?.getAttribute("d")?.trim()).toBeTruthy();
+    expect(
+      container.querySelector(".choice-block__correct-merge [data-liquid-gooey-silhouette]"),
+    ).toBeNull();
     expect(onSolved).toHaveBeenCalledTimes(1);
     const next = buttonWith(CHOICE_NEXT_LABEL);
     expect(next).toBeTruthy();

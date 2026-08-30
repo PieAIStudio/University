@@ -1,5 +1,6 @@
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
+import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import type { LessonRef } from "../view/lesson-view.js";
 import type { LessonNeighbours } from "./LessonNav.js";
 
@@ -43,9 +44,13 @@ export function LessonNextStep({
         <p className="lesson-next__note">
           回到课程页可以看到这门课覆盖了项目的哪些地方，以及接下来还有哪些课。
         </p>
-        <GameButton variant="primary" onClick={onBackToCourse}>
-          回到课程
-        </GameButton>
+        {completed ? (
+          <LiquidCtaButton onClick={onBackToCourse}>回到课程</LiquidCtaButton>
+        ) : (
+          <GameButton variant="ghost" onClick={onBackToCourse}>
+            回到课程
+          </GameButton>
+        )}
       </section>
     );
   }
@@ -65,9 +70,13 @@ export function LessonNextStep({
           这节还没标为完成。上面确认课文、答完练习之后，这节才会计入进度。
         </p>
       )}
-      <GameButton variant={completed ? "primary" : "ghost"} onClick={() => onOpenLesson(next)}>
-        {completed ? "继续下一节" : "先去下一节"}
-      </GameButton>
+      {completed ? (
+        <LiquidCtaButton onClick={() => onOpenLesson(next)}>继续下一节</LiquidCtaButton>
+      ) : (
+        <GameButton variant="ghost" onClick={() => onOpenLesson(next)}>
+          先去下一节
+        </GameButton>
+      )}
     </section>
   );
 }

@@ -12,6 +12,7 @@ import {
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
 import type { EntitlementReader } from "../capability/ai-entitlements.js";
+import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import { LayerCoverage } from "../evidence/LayerCoverage.js";
 import { EvidenceSourceSheet } from "../evidence/EvidenceSourceSheet.js";
 import { LessonSources } from "../evidence/LessonSources.js";
@@ -583,14 +584,13 @@ export function LessonReader({
                     : "打开课文、滚动页面或答对练习都不会自动完成。这个确认只针对当前固定版本。"}
                 </p>
               </div>
-              <button
-                type="button"
+              <LiquidCtaButton
                 className="lesson-completion__action"
                 onClick={() => void confirmCurrentRevision()}
                 disabled={confirming}
               >
                 {confirming ? "正在记录…" : readConfirmed ? "再次确认本次更新" : "完成本次更新"}
-              </button>
+              </LiquidCtaButton>
               {confirmationError ? (
                 <p className="inline-error" role="alert">
                   {confirmationError}
