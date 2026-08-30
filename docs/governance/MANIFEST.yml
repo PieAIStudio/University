@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-30T05:21:48.360Z
+generated_at: 2026-08-30T08:33:08.162Z
 generator_version: doc-gov@0.9.9
-docs_count: 70
+docs_count: 71
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -443,7 +443,7 @@ docs:
     type: reference
     status: stable
     canonical: true
-    last_reviewed: 2026-08-29
+    last_reviewed: 2026-08-30
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-STRICTMODE-LEARNER-SMOKE-TESTS-MUST-ASSERT-NON-EMPTY-DRAWN-OUTPUT
     path: docs/reference/learnings/workflow-issues/strictmode-learner-smoke-tests-must-assert-non-empty-drawn-output.md
@@ -458,6 +458,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-29
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-WEBGL-RECON-SCREENSHOTS-NEED-FRAME-SYNCHRONOUS-READPIXELS-VALIDATION
+    path: docs/reference/learnings/workflow-issues/webgl-recon-screenshots-need-frame-synchronous-readpixels-validation.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-30
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-WIDENING-EXERCISESCHEMA-KIND-BREAKS-LOCAL-RECOVERY-AND-COACHING-PACKETS
     path: docs/reference/learnings/workflow-issues/widening-exerciseschema-kind-breaks-local-recovery-and-coaching-packets.md

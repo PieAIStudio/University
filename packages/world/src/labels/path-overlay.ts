@@ -25,6 +25,8 @@ export interface PathLesson {
 
 export interface PathSprite {
   readonly id: string;
+  /** The lesson represented by an interactive kind icon, when there is one. */
+  readonly lessonId?: string;
   readonly position: THREE.Vector3;
   readonly text: string;
   readonly label?: string;
@@ -58,6 +60,7 @@ export function courseSprites(lessons: readonly PathLesson[]): PathSprite[] {
       const radius = stoneRadius(lesson.chars);
       return {
         id: `kind:${lesson.lessonId}`,
+        lessonId: lesson.lessonId,
         role: "icon" as const,
         text: PATH_KIND_ICON[lesson.kind],
         label: PATH_KIND_LABEL[lesson.kind],

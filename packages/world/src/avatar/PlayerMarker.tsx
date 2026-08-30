@@ -37,7 +37,7 @@ export function PlayerMarker({
 
   return (
     <group ref={marker} name={AVATAR_OCCLUSION_TARGET} position={position}>
-      <Avatar recipe={shown} gaze onBuilt={onBuilt} />
+      <Avatar recipe={shown} gaze quality="compact" onBuilt={onBuilt} />
     </group>
   );
 }

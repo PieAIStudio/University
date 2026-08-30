@@ -33,7 +33,7 @@ export function ProfileAvatar({
           camera.lookAt(0, 0.9, 0);
         }}
       >
-        <Avatar recipe={recipe} gaze />
+        <Avatar recipe={recipe} gaze quality="compact" />
         <OrbitControls
           enablePan={false}
           enableDamping

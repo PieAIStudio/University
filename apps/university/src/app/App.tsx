@@ -169,6 +169,12 @@ export function App() {
   const [reviewReminderDismissedFor, setReviewReminderDismissedFor] = useState<string | null>(null);
   /** Lessons a cross-lesson link led away from, innermost last. */
   const [returnStack, setReturnStack] = useState<readonly LessonRef[]>([]);
+  /** Counts avatar clicks so the account door also responds while already on `/me`. */
+  const [accountFocusRequest, setAccountFocusRequest] = useState(0);
+  const openAccount = useCallback(() => {
+    setAccountFocusRequest((current) => current + 1);
+    setView({ kind: "me" });
+  }, [setView]);
   const lastRouteAnalyticsKey = useRef<string | null>(null);
   const reviewDueAnalyticsReported = useRef(false);
   const source = useMemo(() => progressSourceOf(progressPort), []);
@@ -733,6 +739,7 @@ export function App() {
       reviewReminderDismissedFor={reviewReminderDismissedFor}
       onDismissReviewReminder={setReviewReminderDismissedFor}
       identityPort={analyticsIdentityPort}
+      accountFocusRequest={accountFocusRequest}
       paymentPort={analyticsPaymentPort}
       mistakes={mistakes}
       nextUpProgress={nextUpProgress}
@@ -880,7 +887,7 @@ export function App() {
                 <RailIdentity
                   recipe={avatarRecipe}
                   signedIn={avatarSignedIn}
-                  onOpen={() => setView({ kind: "me" })}
+                  onOpen={openAccount}
                 />
                 <LevelProgress totalXp={progress.totalXp} rail />
               </>

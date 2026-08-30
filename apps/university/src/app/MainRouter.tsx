@@ -74,6 +74,7 @@ interface MainRouterProps {
   readonly onAvatarRecipeChange: (recipe: AvatarRecipe) => void;
   readonly onWorthwhileProgress?: () => void;
   readonly identityPort: IdentityPort;
+  readonly accountFocusRequest: number;
   readonly paymentPort: PaymentPort;
   readonly mistakes: readonly Mistake[];
   readonly nextUpProgress: CourseProgress | null;
@@ -122,6 +123,7 @@ export function MainRouter({
   onAvatarRecipeChange,
   onWorthwhileProgress,
   identityPort,
+  accountFocusRequest,
   paymentPort,
   mistakes,
   nextUpProgress,
@@ -417,7 +419,7 @@ export function MainRouter({
               <ProfileAvatar avatarRecipe={avatarRecipe} signedIn={avatarSignedIn} />
             </Suspense>
           }
-          account={<AccountPanel identity={identityPort} />}
+          account={<AccountPanel identity={identityPort} focusRequest={accountFocusRequest} />}
           totalXp={progress.totalXp}
           badges={<BadgeWall document={progress} coursesFinished={profileStats.coursesFinished} />}
           passagesRead={profileStats.passagesRead}

@@ -4,15 +4,27 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createMemoryIdentityPort } from "@pieai/university-core";
+import { createIdentityPort, createMemoryIdentityPort } from "@pieai/university-core";
 
-import { AccountPanel } from "./AccountPanel.js";
+import {
+  ACCOUNT_UNCONFIGURED_ACTION,
+  ACCOUNT_UNCONFIGURED_REASON,
+  AccountPanel,
+} from "./AccountPanel.js";
 
 let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+  if (typeof HTMLDialogElement !== "undefined") {
+    HTMLDialogElement.prototype.showModal ??= function showModal() {
+      this.setAttribute("open", "");
+    };
+    HTMLDialogElement.prototype.close ??= function close() {
+      this.removeAttribute("open");
+    };
+  }
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -32,6 +44,20 @@ function setInputValue(selector: string, value: string): void {
 }
 
 describe("AccountPanel anonymous binding", () => {
+  it("turns an unconfigured login click into an explicit explanation", async () => {
+    const identity = createIdentityPort(null);
+
+    await act(async () => root.render(<AccountPanel identity={identity} />));
+    const action = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
+      button.textContent?.includes(ACCOUNT_UNCONFIGURED_ACTION),
+    );
+    if (!action) throw new Error("missing unavailable account action");
+
+    await act(async () => action.click());
+
+    expect(container.textContent).toContain(ACCOUNT_UNCONFIGURED_REASON);
+  });
+
   it("uses linkEmail for the register action so the anonymous identity is retained", async () => {
     const identity = createMemoryIdentityPort();
     await identity.signInAnonymously();
