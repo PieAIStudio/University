@@ -45,6 +45,7 @@ import {
 } from "@pieai/university-core";
 import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
+import { GameButton } from "@pieai/swimmer-ui-kit";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
 import {
   StudySwitcher,
@@ -72,20 +73,10 @@ import {
 } from "../progress/store";
 import { LessonScreen, RouteFallback } from "../screens/lazy";
 import { FeedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
-import { LiquidCtaButton } from "@pieai/university-ui/cta/LiquidCtaButton.js";
-import {
-  courseMapDestinationId,
-  setLiquidDestination,
-} from "@pieai/university-ui/cta/LiquidCtaTransition.js";
 
 import { todayCtaLabel, TodaySection, todayMeta } from "@pieai/university-ui/today/TodaySection.js";
 import { LINK_RETURN_DEPTH } from "@pieai/university-ui/lesson/LessonReader.js";
-import {
-  COURSE_POLAR,
-  MAP_CONTROLS_HINT,
-  WORLD_POLAR,
-  type MarkerScreenProjection,
-} from "@pieai/university-world/controls.js";
+import { COURSE_POLAR, MAP_CONTROLS_HINT, WORLD_POLAR } from "@pieai/university-world/controls.js";
 import { CourseIsland } from "./CourseIsland.js";
 import { PlanetRail } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
@@ -439,34 +430,6 @@ export function App() {
     : null;
   /** The very lesson the rail's panel offers, so the phone offers the same one. */
   const todayLesson = todayData.nextLesson;
-  const todayMapDestinationId =
-    view.kind === "world" && todayLesson
-      ? courseMapDestinationId(todayLesson.studyId, todayLesson.courseId)
-      : null;
-  const onMarkerProjection = useCallback(
-    (projections: ReadonlyMap<string, MarkerScreenProjection>) => {
-      if (!todayMapDestinationId || !todayLesson) return;
-      const projection = projections.get(todayLesson.courseId);
-      setLiquidDestination(
-        todayMapDestinationId,
-        projection
-          ? {
-              x: projection.x - projection.width / 2,
-              y: projection.y - projection.height / 2,
-              width: projection.width,
-              height: projection.height,
-            }
-          : null,
-      );
-    },
-    [todayLesson, todayMapDestinationId],
-  );
-
-  useEffect(() => {
-    if (!todayMapDestinationId) return;
-    return () => setLiquidDestination(todayMapDestinationId, null);
-  }, [todayMapDestinationId]);
-
   const presenceView = presenceViewKey(view);
   const presenceLocation = useMemo(() => {
     if (view.kind === "lesson" || view.kind === "settled") {
@@ -579,7 +542,6 @@ export function App() {
         */
         followId={view.kind === "world" && picked ? picked.courseId : null}
         followNode={pickCardRef}
-        onMarkerProjection={onMarkerProjection}
         onPick={(node) => {
           setPicked(node);
         }}
@@ -650,11 +612,15 @@ export function App() {
                   <p className="nextup__meta">{nextUpMeta}</p>
                   <WorldSourceControls studyId={focusedStudyId} sourceAccess={sourceAccessPort} />
                 </div>
-                <LiquidCtaButton
-                  width="full"
+                <GameButton
                   className="nextup__primary"
-                  wrapperClassName="nextup__primary-wrap"
-                  destination={todayMapDestinationId ?? undefined}
+                  static
+                  variant="primary"
+                  /*
+                    Round 2 deliberately keeps this cross-screen CTA direct.
+                    Reopen its shared-element motion only with a View
+                    Transition design that owns both route layouts.
+                  */
                   onClick={() =>
                     setView({
                       kind: "lesson",
@@ -673,7 +639,7 @@ export function App() {
                     two vocabularies, chosen by window width.
                   */}
                   {todayCtaLabel(todayData.nextLesson?.progress)} →
-                </LiquidCtaButton>
+                </GameButton>
               </aside>
             ) : null}
             {view.kind === "world" && picked && pickedCourse && pickedStats ? (
@@ -728,8 +694,6 @@ export function App() {
   const todaySection = (
     <TodaySection
       data={todayData}
-      liquidCta={showMap && wide && !picked && pathOverlay === null}
-      liquidDestination={todayMapDestinationId ?? undefined}
       review={todayReview}
       readEntitlements={readEntitlements}
       vocabularyReview={todayVocabularyReview}

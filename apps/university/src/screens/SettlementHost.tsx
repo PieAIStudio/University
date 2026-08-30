@@ -8,7 +8,6 @@ import {
   type LessonRef,
 } from "@pieai/university-core";
 import { ReviewReminderPrompt, unlockedConceptIds } from "@pieai/university-ui";
-import { lessonProgressDestinationId } from "@pieai/university-ui/cta/LiquidCtaTransition.js";
 import { pathLessonOf, pathUnitOf } from "@pieai/university-ui/path/from-course-view.js";
 import { RecapPrompt } from "@pieai/university-ui/review/RecapPrompt.js";
 import type { CourseView, LessonView } from "@pieai/university-ui/view/lesson-view.js";
@@ -202,11 +201,6 @@ export function SettlementHost({
           : null
       }
       onMap={onMap}
-      progressDestinationId={lessonProgressDestinationId(
-        locator.studyId,
-        locator.courseId,
-        locator.lessonId,
-      )}
     />
   );
 }

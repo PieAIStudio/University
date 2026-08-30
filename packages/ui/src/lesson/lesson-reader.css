@@ -79,6 +79,18 @@
   margin-top: 0;
 }
 
+/*
+  The transient CTA flight is an underlay. Reader text and the source button
+  therefore paint above it at every sample point; the sticky toolbar remains
+  above both. The liquid can be visible in page air without ever becoming a
+  second ink layer over something the learner is reading.
+*/
+.lesson-reader__header,
+.lesson-layout {
+  position: relative;
+  z-index: 2;
+}
+
 /* Shared `.lesson-toolbar` lives in packages/ui. The campus reading surface
    is inset, so the band keeps a little space under itself before the prose. */
 .campus[data-reading] .lesson-toolbar {

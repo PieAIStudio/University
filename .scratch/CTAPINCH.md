@@ -1,76 +1,60 @@
-# CTAPINCH 交付报告
+# CTAPINCH 第二轮交付报告
 
 日期：2026-08-31
 分支：`work/ctapinch`
+基线：`930a83c` 保留，所有本轮改动都在其之上。
 
-## 机制
+## 本轮结论
 
-实现位于 `packages/ui/src/cta/LiquidCtaTransition.tsx`，按钮仍是原生可聚焦、可点击的 SwimmerUIKit `GameButton`。点击时先读取按钮 wrapper 的 viewport `DOMRect`，再读取目标的 viewport 矩形；动画层是挂在 `App` 外、不会随路由卸载的单个 DOM overlay。
+保留第一轮的 352ms 动画、72ms settle、静止零成本、reduced-motion 跳过、原生按钮和 `setProgress(0..1)` 取帧接口；重做落点和跨屏接入。
 
-动画只有一个 `LiquidGroup motion="follow"`，静止态 `waviness={0}`。它把两个屏幕矩形放在同一组里：源形状沿目标方向移动，SwimmerUIKit 的短生命周期 follow tail 负责中段拉丝；目标形状从近乎不可见长成落点。形状阶段是：
+本轮唯一启用的转场是同屏的：`完成本次更新` → 课内顶部进度条。
 
-`press → stretch → thread → break → land`
+- `packages/ui/src/lesson/LessonNav.tsx:276-307` 把课内 `GameProgress` 注册为目标。
+- `liquidProgressDestinationRect()` 只测量进度条已填充边缘的一颗 16–22px 液滴，不测量整块组件或 `7/8` 文本。
+- 桌面路线先向右进入空气区，再沿右侧下行，最后在工具栏高度横向回收；手机让大源形状留在按钮上融化成小圆滴，再从右边缘离开。这样中段不会把正文当成跑道。
+- 断开阶段源液滴收缩并回退，目标处长出小液滴；`p=1` 时源形状归零，目标液滴落在已填充轨道边缘，由工具栏层吸收。
+- 液体覆盖层为 `z-index:1`，课文内容为 `z-index:2`，工具栏为 `z-index:41`；覆盖层仍 `pointer-events:none`、`aria-hidden`，真实按钮文字、焦点环和命中区没有 transform。
+- 未重新加入静止态 waviness，外阴影仍由 SwimmerUIKit 2.0.0 的 compositor 路径提供。
 
-断开阶段会让正在缩小的源形状沿已经走过的路径略微回拉，同时让落点形状在目标处长出来，确保断开读作分离而不是两个胶囊重叠。源按钮本身的文字、焦点环、点击区域从未被 transform；overlay `pointer-events: none` 且 `aria-hidden`。
+## `开始学习` 的关闭位置
 
-## 目标坐标
+这一轮没有给跨屏共享元素手写 overlay：
 
-目标没有重新计算一套 3D 逻辑。`packages/world/src/camera/controls.tsx` 的 `LabelProbe` 已经是课程标记的投影源：它使用现有 `Vector3.project(camera)`，再结合 canvas 的 `getBoundingClientRect()` 把结果转为浏览器 viewport 像素。`WorldMapCanvas` 将这条投影流交给 App；当前课程标记投影不到屏幕、没有 label 节点或坐标不可用时，注册表为空，点击仍直接导航，不显示 overlay。
+- 桌面 Today 面板在 `packages/ui/src/today/TodaySection.tsx:92-95` 使用 `GameButton static`，直接调用 `onOpenLesson`。
+- 手机地图 next-up 卡在 `apps/university/src/app/App.tsx:615-642` 使用 `GameButton static`，直接 `setView({ kind: "lesson", ... })`。
+- 同时删除了 `courseMapDestinationId`、地图 marker screen projection 和 `setLiquidDestination` 这条只服务跨屏 CTA 的链路；没有留下 pending、投影回调或死目标。
 
-课程地图目标使用 `courseMapDestinationId(studyId, courseId)`；结算进度目标使用 `lessonProgressDestinationId(studyId, courseId, lessonId)`。后一个目标由结算页挂载的 `LiquidDestination` 注册，因此课文按钮即使先导航，目标在新路由挂载后也能接续；目标等待有界，不会阻塞导航。
+将来重新打开时，应在两页布局都由同一个 View Transitions 方案拥有之后再接入；本轮不引入 View Transitions。
 
-## 两个 CTA 共用一套
+## 文字不被遮挡的程序化证明
 
-| CTA | 源 | 目标 | 接入点 |
-| --- | --- | --- | --- |
-| 首页「开始学习 / 继续学习」 | TodaySection 桌面课程卡、手机 next-up 卡 | 世界地图上同一 `courseId` 的课程标记矩形 | `App.tsx` + `TodaySection.tsx` |
-| 课文底部「完成本次更新」 | LessonReader 底部按钮 | 结算页课程进度条 | `LessonScreen.tsx` + `SettlementHost.tsx` + `Settlement.tsx` |
+测试在 `packages/ui/src/cta/LiquidCtaTransition.test.tsx:159-211`：
 
-按钮只增加了可选 `destination`，导航回调仍然照常执行；两个 CTA 没有复制动画实现。
+1. `liquidFlightCoverageRects()` 计算每个样本的源液滴、目标液滴和 follow-tail 覆盖走廊。
+2. 对目标填充宽度 `0 / 84 / 334 / 668`、进度 `0 / .05 / .2 / .5 / .85 / .93 / .98 / 1`，分别在 `1280px` 和 `390px` 下取帧。
+3. 把覆盖矩形与模拟的可读 DOM 节点（关闭按钮、进度值、正文、手机内容列）逐一做相交检测。
+4. 桌面路线几何上把走廊放入右侧空气区；若窄屏几何路径进入内容区，则测试断言液体层 `z-index:1` 严格低于内容层 `z-index:2`，因此不会可见地遮挡文字。
 
-## 时长与手感
+同一测试文件还覆盖了目标缺失时点击仍执行但没有 overlay、目标晚挂载时开始、目标卸载时取消 ghost flight，以及 352ms 阶段顺序和小液滴落点。`LiquidCtaButton.test.tsx` 覆盖原生按钮、零 waviness、键盘焦点和 reduced-motion；`apps/university/src/app/TodayCard.test.tsx` 断言首页按钮为静态 GameButton 且没有 `data-liquid-cta`。
 
-最终时长为 **352 ms**，落点保留 **72 ms** 的短暂 settle hold。352 ms 足够让按下、拉长、拉丝和断开各自占据可见帧，同时不会把原本立即发生的路由变成等待；72 ms 让最后一帧落点稳定后再清理 transient overlay。测试/取帧时可通过 `window.__universityLiquidCta.setProgress(0..1)` 确定性取样；生产路径只在 active transition 中使用 `requestAnimationFrame`。
+真实浏览器还检查了桌面/手机的 `getComputedStyle`：每个取帧点的 `flightZ=1`、`contentZ=2`；首页点击从根路径直接进入 lesson，且没有 `[data-liquid-cta-flight]`。
 
-## 浏览器帧证据
+## 取帧证据
 
-帧由真实浏览器 session 在 Vite delivery 页面中抓取，并按进度顺序亲自目检。桌面为 `1280×720`，手机为 `390×844`。关键进度点为 `0.20 / 0.50 / 0.70 / 0.82 / 0.90 / 0.98`；其中 `0.82–0.90` 是断开区间。
+真实 Vite delivery 页面通过 `window.__universityLiquidCta.setProgress()` 取帧，桌面 `1280×720`、手机 `390×844`；每帧等待 SwimmerUIKit follow 合成稳定后保存。文件全部在：
 
-首页 CTA：
+`.scratch/ctapinch/round2/`
 
-- 桌面：`.scratch/ctapinch/home-desktop-p020.png`、`home-desktop-p050.png`、`home-desktop-p070.png`、`home-desktop-p082.png`、`home-desktop-p090.png`、`home-desktop-p098.png`
-- 手机：`.scratch/ctapinch/home-phone-p020.png`、`home-phone-p050.png`、`home-phone-p070.png`、`home-phone-p082.png`、`home-phone-p090.png`、`home-phone-p098.png`
+- 桌面：`completion-desktop-p020.png`、`p050.png`、`p070.png`、`p082.png`、`p090.png`、`p098.png`、`p100.png`
+- 手机：`completion-mobile-p020.png`、`p050.png`、`p070.png`、`p082.png`、`p090.png`、`p098.png`、`p100.png`
 
-课文完成 CTA 到进度条：
+目检重点：p070 不再把橙色团块放在标题上；p082–p090 断开后是小液滴/右侧空气区残留；p098–p100 的目标液滴与进度条填充边缘重合，而不是另起一根横条。
 
-- 桌面：`.scratch/ctapinch/completion-desktop-p020.png`、`completion-desktop-p050.png`、`completion-desktop-p070.png`、`completion-desktop-p082.png`、`completion-desktop-p090.png`、`completion-desktop-p098.png`
+## 未完成或不确定
 
-静止态参考：`.scratch/ctapinch/rest-desktop.png`、`.scratch/ctapinch/rest-phone.png`。
-
-目检结论：源按钮先保持规则胶囊，随后向目标移动；中段是带尾部的拉丝；断开区间能看到源形状缩小并与目标落点分离；末帧是目标矩形，而不是一个方块平移。手机源按钮较宽，仍走同一机制，目标可见时没有 off-screen 落点。
-
-## 静止态、导航和无障碍证据
-
-- `LiquidCtaTransitionLayer` 在没有 transition 时返回 `null`，active 之前不启动自己的 rAF；单测 `does not schedule a driver while the CTA is resting` 覆盖这一点。
-- 静止按钮的 SwimmerUIKit surface 仍是 `data-liquid-motion="static"`、`data-liquid-waviness="0"`；没有重新加入 ambient waviness。
-- 首页真实点击立即进入 lesson；真实完成课文后立即进入 `/done`，随后在结算目标挂载后继续动画。
-- `prefers-reduced-motion: reduce` 下真实点击仍导航，snapshot 为 `null` 且页面不存在 `[data-liquid-cta-flight]`。
-- 缺少目标时，单测确认点击回调仍执行、无 overlay；注册目标晚到时单测确认 transition 立即从 pending 进入 active。
-- 原有 `LiquidCtaButton` 测试仍覆盖 native button、键盘 press、焦点与 reduced-motion；overlay 不参与 hit testing。
-
-## 验证结果
-
-已通过：
-
-- `pnpm --filter @pieai/university-ui exec vitest run src/cta/LiquidCtaButton.test.tsx src/cta/LiquidCtaTransition.test.tsx`（12 tests）
-- UI / world / app 的 typecheck、lint、format check
-- Settlement、LessonScreen、SettlementHost 相关测试（19 tests）
-- `node .../impeccable/scripts/detect.mjs --json ...`（无反模式结果）
-- `pnpm verify`（全量通过：类型、lint、格式、全包测试、边界、构建、shelf/revision/link 检查和 docs check）
-
-## 未完成或不确定的部分
-
-- 本轮没有可调用的独立 AfterCritic；帧检查是我在真实浏览器中的逐帧目检，不把它表述为独立审稿结论。
-- 课文完成 CTA 的确定性帧集本轮保存了桌面版；共享机制和首页 CTA 已保存桌面/手机两种宽度，手机结算页专属帧没有单独再录一套。
-- follow tail 由 SwimmerUIKit 的短时物理跟随渲染，确定性 progress 控制的是本项目的 authored phase/geometry；截图在每个 progress 点等待了 follow tail 稳定，因此不是逐像素关闭 kit 内部弹簧的纯静态快照。
-- `pnpm verify` 中 `check-export-freshness` 明确报告本机没有 initialized studies，因此它只能通过检查，不能在这台机器上证明作者源与 recovery export 的新鲜度；这与本次 CTA 代码变更无关。
+- 跨屏 `开始学习` 动效是有意未做，不是遗漏；等待后续 View Transitions 方案。
+- 手机中段液体为保护文字而大部分走出右侧可视区，视觉存在感低于桌面；这是本轮“文字不可遮挡”红线下的明确取舍，后续若要加强手机表现，应先设计安全的共享元素路径，不能把液体放回正文上。
+- SwimmerUIKit 内部 follow 弹簧仍由 kit 渲染；`setProgress` 只确定本项目的 authored phase/geometry，截图通过等待合成稳定取样，并非关闭 kit 内部物理的逐像素静态快照。
+- 没有独立 AfterCritic；本轮使用真实浏览器截图、DOM 矩形相交记录和单测复核。
+- `pnpm verify` 的 `check-export-freshness` 提示本机没有 initialized studies，因此不能在此环境证明作者源与 recovery export 的新鲜度；这与本轮 UI/CTA 代码无关。

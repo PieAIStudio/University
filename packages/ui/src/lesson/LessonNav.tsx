@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { GameProgress } from "@pieai/swimmer-ui-kit";
 
+import { LiquidDestination, liquidProgressDestinationRect } from "../cta/LiquidCtaTransition.js";
 import type { CourseView, LessonRef, LessonSectionView } from "../view/lesson-view.js";
 
 export interface LessonNeighbour extends LessonRef {
@@ -258,10 +259,13 @@ function useLessonProgress(sections: readonly LessonSectionView[]) {
 export function LessonToolbar({
   onClose,
   sections,
+  progressDestinationId,
   children,
 }: {
   readonly onClose: () => void;
   readonly sections: readonly LessonSectionView[];
+  /** Same-screen landing point for the completion CTA. */
+  readonly progressDestinationId?: string;
   readonly children?: ReactNode;
 }) {
   const { ref, current, total, ratio } = useLessonProgress(sections);
@@ -269,6 +273,16 @@ export function LessonToolbar({
   const valued = total > 0;
   const valueNow = valued ? current : Math.round(ratio * 100);
   const valueMax = valued ? total : 100;
+  const progress = (
+    <GameProgress
+      className="lesson-toolbar__progress"
+      label="课文进度"
+      value={valueNow}
+      max={valueMax}
+      tone="accent"
+      valueLabel={valued ? `${current}/${total}` : undefined}
+    />
+  );
 
   return (
     <div className="lesson-toolbar" ref={ref}>
@@ -280,14 +294,17 @@ export function LessonToolbar({
       >
         ✕
       </button>
-      <GameProgress
-        className="lesson-toolbar__progress"
-        label="课文进度"
-        value={valueNow}
-        max={valueMax}
-        tone="accent"
-        valueLabel={valued ? `${current}/${total}` : undefined}
-      />
+      {progressDestinationId ? (
+        <LiquidDestination
+          id={progressDestinationId}
+          className="lesson-toolbar__progress-target"
+          measure={liquidProgressDestinationRect}
+        >
+          {progress}
+        </LiquidDestination>
+      ) : (
+        progress
+      )}
       {children ? <div className="lesson-toolbar__tools">{children}</div> : null}
     </div>
   );

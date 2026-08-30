@@ -21,7 +21,6 @@ import { useEffect, useState, type ReactNode } from "react";
 import { GameButton, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import { NodeCard, type PathLesson, type PathUnit } from "@pieai/university-ui";
 import { LiquidCtaButton } from "@pieai/university-ui/cta/LiquidCtaButton.js";
-import { LiquidDestination } from "@pieai/university-ui/cta/LiquidCtaTransition.js";
 import { playSound } from "@pieai/university-ui/sound/index.js";
 
 /**
@@ -91,7 +90,6 @@ export function Settlement({
   onNext,
   onMap,
   onStartUnit,
-  progressDestinationId,
 }: {
   lessonTitle: string;
   courseTitle: string;
@@ -117,8 +115,6 @@ export function Settlement({
   onNext: (() => void) | null;
   onMap: () => void;
   onStartUnit: (() => void) | null;
-  /** The completion CTA lands on this screen's own progress bar. */
-  progressDestinationId?: string;
 }) {
   const soonest = dropped.reduce(
     (best, entry) => (best === null || entry.dueAt < best ? entry.dueAt : best),
@@ -157,27 +153,14 @@ export function Settlement({
       <p className="settle__done">读完了。</p>
 
       {canShowProgress ? (
-        progressDestinationId ? (
-          <LiquidDestination id={progressDestinationId} className="settle__progress-target">
-            <GameProgress
-              className="settle__progress"
-              label="课程进度"
-              value={shownDone}
-              max={lessons}
-              tone={finished ? "success" : "accent"}
-              valueLabel={`${shownDone} / ${lessons} 关`}
-            />
-          </LiquidDestination>
-        ) : (
-          <GameProgress
-            className="settle__progress"
-            label="课程进度"
-            value={shownDone}
-            max={lessons}
-            tone={finished ? "success" : "accent"}
-            valueLabel={`${shownDone} / ${lessons} 关`}
-          />
-        )
+        <GameProgress
+          className="settle__progress"
+          label="课程进度"
+          value={shownDone}
+          max={lessons}
+          tone={finished ? "success" : "accent"}
+          valueLabel={`${shownDone} / ${lessons} 关`}
+        />
       ) : null}
 
       <ol className="settle__gains">
