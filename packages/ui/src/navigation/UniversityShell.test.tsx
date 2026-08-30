@@ -36,7 +36,7 @@ async function renderShell(
 }
 
 describe("UniversityShell", () => {
-  it("mounts the eight rail slots and six tabs in product order", async () => {
+  it("mounts the eight rail slots and seven tabs in product order", async () => {
     await renderShell();
     const rail = document.querySelector("nav.nav-rail");
     const tabs = document.querySelector("nav.tab-bar");
@@ -52,6 +52,7 @@ describe("UniversityShell", () => {
     ]);
     expect(TAB_ITEMS.map((item) => item.id)).toEqual([
       "learn",
+      "practice",
       "quests",
       "league",
       "library",

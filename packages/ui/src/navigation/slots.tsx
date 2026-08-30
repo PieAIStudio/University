@@ -121,6 +121,7 @@ export const RAIL_ITEMS: readonly ShellNavItem[] = [
 
 export const TAB_ITEMS: readonly ShellNavItem[] = [
   { id: "learn", label: "学习", icon: <HomeIcon />, href: toPath({ kind: "world" }) },
+  { id: "practice", label: "练习", icon: <PracticeIcon />, href: toPath({ kind: "practice" }) },
   { id: "quests", label: "任务", icon: <QuestsIcon />, href: toPath({ kind: "quests" }) },
   { id: "league", label: "排行榜", icon: <LeagueIcon />, href: toPath({ kind: "league" }) },
   {

@@ -6,6 +6,7 @@ import {
   GameField,
   GameInput,
   GameLoadingState,
+  GameModal,
   GameTabs,
 } from "@pieai/swimmer-ui-kit";
 import type { IdentityPort } from "@pieai/university-core";
@@ -30,6 +31,9 @@ export const ACCOUNT_UNSIGNED_DESCRIPTION =
  */
 export const ACCOUNT_UNCONFIGURED_DESCRIPTION =
   "云端账号还未配置；当前仅保留本机离线缓存，配置完成后登录即可跨设备同步。";
+export const ACCOUNT_UNCONFIGURED_ACTION = "暂未开放 · 了解原因";
+export const ACCOUNT_UNCONFIGURED_REASON =
+  "当前环境没有配置云端账号服务，所以现在不能登录，也不会假装已经同步。你仍可以在本机继续学习；配置账号服务后，这里会接入登录并支持跨设备同步。";
 export const ACCOUNT_SIGNED_IN_TITLE = "已经登录";
 const ACCOUNT_SIGNED_IN_DESCRIPTION =
   "进度、批注、答案、复习、收藏和设置已绑定账号。断网也能继续学，连上再同步。";
@@ -56,20 +60,58 @@ const PASSWORD_AUTH_TABS = AUTH_TABS.slice(0, 2);
 export function AccountPanel({
   identity,
   authRedirectTo,
+  focusRequest = 0,
 }: {
   readonly identity: IdentityPort;
   /** The current shell's allow-listed Supabase Auth redirect URL. */
   readonly authRedirectTo?: string;
+  /** A rail-avatar click, including a click while `/me` is already open. */
+  readonly focusRequest?: number;
 }) {
   const status = useSyncExternalStore(identity.subscribe, identity.status, identity.status);
+  const [showUnavailableReason, setShowUnavailableReason] = useState(focusRequest > 0);
+
+  useEffect(() => {
+    if (focusRequest > 0) setShowUnavailableReason(true);
+  }, [focusRequest]);
 
   if (status.kind === "unconfigured") {
     return (
-      <GameEmptyState
-        className="account-panel"
-        title={ACCOUNT_UNSIGNED_TITLE}
-        description={ACCOUNT_UNCONFIGURED_DESCRIPTION}
-      />
+      <section className="account-panel" aria-label="账号">
+        <GameEmptyState
+          title={ACCOUNT_UNSIGNED_TITLE}
+          description={ACCOUNT_UNCONFIGURED_DESCRIPTION}
+          action={
+            <GameButton
+              variant="secondary"
+              type="button"
+              onClick={() => setShowUnavailableReason(true)}
+            >
+              {ACCOUNT_UNCONFIGURED_ACTION}
+            </GameButton>
+          }
+        />
+        {showUnavailableReason ? (
+          <GameModal
+            open
+            title="登录暂未开放"
+            closeLabel="关闭登录说明"
+            closeOnBackdrop
+            onClose={() => setShowUnavailableReason(false)}
+            footer={
+              <GameButton
+                variant="secondary"
+                type="button"
+                onClick={() => setShowUnavailableReason(false)}
+              >
+                知道了
+              </GameButton>
+            }
+          >
+            <p>{ACCOUNT_UNCONFIGURED_REASON}</p>
+          </GameModal>
+        ) : null}
+      </section>
     );
   }
 
@@ -107,6 +149,7 @@ export function AccountPanel({
       error={status.kind === "error" ? status.message : null}
       anonymous={status.kind === "anonymous"}
       authRedirectTo={authRedirectTo ?? currentPageOrigin()}
+      focusRequest={focusRequest}
     />
   );
 }
@@ -116,11 +159,13 @@ function UnsignedAccountForm({
   error,
   anonymous,
   authRedirectTo,
+  focusRequest,
 }: {
   readonly identity: IdentityPort;
   readonly error: string | null;
   readonly anonymous: boolean;
   readonly authRedirectTo: string;
+  readonly focusRequest: number;
 }) {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
@@ -133,6 +178,12 @@ function UnsignedAccountForm({
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const tabs = anonymous ? PASSWORD_AUTH_TABS : AUTH_TABS;
+
+  useEffect(() => {
+    if (focusRequest <= 0) return;
+    emailRef.current?.scrollIntoView({ block: "nearest" });
+    emailRef.current?.focus();
+  }, [focusRequest]);
 
   useEffect(() => {
     if (!anonymous || mode !== "magic") return;
