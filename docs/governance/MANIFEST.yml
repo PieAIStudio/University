@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-30T08:26:01.647Z
+generated_at: 2026-08-30T09:39:07.696Z
 generator_version: doc-gov@0.9.9
-docs_count: 70
+docs_count: 71
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -318,6 +318,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-29
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-INLINE-OPTIONS-OBJECTS-RETRIGGER-EXPENSIVE-ISLAND-GRASS-PLANNING-ON-FIRST-PAN
+    path: docs/reference/learnings/workflow-issues/inline-options-objects-retrigger-expensive-island-grass-planning-on-first-pan.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-30
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-INVISIBLE-DOM-OVERLAY-BUTTONS-STILL-STEAL-CLICKS-ELEMENT-CLICK-WILL-NOT-CATCH-IT
     path: docs/reference/learnings/workflow-issues/invisible-dom-overlay-buttons-still-steal-clicks-element-click-will-not-catch-it.md
