@@ -182,6 +182,12 @@ describe("createOnlineGradingPort", () => {
     });
     expect(result.hostGrade?.passed).toBe(true);
     expect(result.hostGrade?.host).toBe("tier-2");
+    expect(result.meteredFunding).toBe("wallet");
+    expect(result.meteredBalance).toEqual({
+      availablePowerUnits: "900",
+      balancePowerUnits: "1000",
+      reservedPowerUnits: "100",
+    });
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     expect(readAccessToken).toHaveBeenCalledTimes(1);
   });
@@ -235,6 +241,34 @@ describe("createOnlineGradingPort", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it("binds the browser fetch when no transport is injected", async () => {
+    const fetchImpl = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            kind: "free",
+            costPowerUnits: "100",
+            remainingPowerUnits: "400",
+            resetsAt: "2026-08-31T00:00:00.000Z",
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+    );
+    vi.stubGlobal("fetch", fetchImpl);
+
+    const port = createOnlineGradingPort({
+      gradingUrl: "https://grading.example.test/api/grade",
+      readAccessToken: async () => "learner-access-token",
+    });
+
+    await expect(port.meteredGradingOffer()).resolves.toMatchObject({
+      kind: "free",
+      remainingPowerUnits: "400",
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    vi.unstubAllGlobals();
+  });
+
   it("keeps the tier-one clue but surfaces the free-quota exhaustion and member route", async () => {
     const fetchImpl = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       expect(init?.method).toBe("POST");
@@ -243,7 +277,7 @@ describe("createOnlineGradingPort", () => {
       return new Response(
         JSON.stringify({
           code: "free_quota_exhausted",
-          error: "今天的免费 AI 批改用完了，会员可以继续；免费额度明天恢复。",
+          error: "今天的免费 AI 批改用完了，明天恢复。",
         }),
         { status: 429, headers: { "Content-Type": "application/json" } },
       );
@@ -269,7 +303,7 @@ describe("createOnlineGradingPort", () => {
       meteredEligible: false,
       meteredExplanation: {
         title: "今天的免费 AI 批改用完了",
-        whyUnavailable: "今天的免费 AI 批改用完了，会员可以继续；免费额度明天恢复。",
+        whyUnavailable: "今天的免费 AI 批改用完了，明天恢复。",
         action: { label: "查看会员方案", href: "/plans" },
       },
     });

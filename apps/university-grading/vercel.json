@@ -1,9 +1,14 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "corepack pnpm@11.22.0 install --frozen-lockfile",
-  "buildCommand": "corepack pnpm@11.22.0 run build",
+  "buildCommand": "corepack pnpm@11.22.0 --dir ../.. --filter @pieai/university-core build && corepack pnpm@11.22.0 run build",
   "outputDirectory": "public",
   "regions": ["iad1"],
+  "git": {
+    "//": "Pushing to GitHub must not deploy this service.",
+    "//2": "Build and deploy are a deliberate manual gate, matching the University's static delivery project; the server-only environment stays in Vercel and is never committed.",
+    "deploymentEnabled": false
+  },
   "functions": {
     "api/grade.ts": {
       "maxDuration": 60
