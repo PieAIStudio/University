@@ -198,6 +198,25 @@ export function WorldMapCanvas({
             .filter(Boolean)
             .join(" ");
           if (marker.kind === "icon") {
+            if (marker.activate) {
+              return (
+                <button
+                  key={marker.id}
+                  ref={attach}
+                  type="button"
+                  className={className}
+                  style={{ "--placed": 0 } as CSSProperties}
+                  aria-label={marker.label ?? marker.text}
+                  aria-haspopup="dialog"
+                  onClick={() => {
+                    if (draggedRef.current) return;
+                    marker.activate?.();
+                  }}
+                >
+                  {content}
+                </button>
+              );
+            }
             return (
               <span
                 key={marker.id}
