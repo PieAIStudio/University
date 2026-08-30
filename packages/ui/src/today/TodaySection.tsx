@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { GameBadge, GameButton, GameCallout } from "@pieai/swimmer-ui-kit";
 import type { ReactNode } from "react";
 
@@ -32,7 +33,9 @@ export interface TodaySectionData {
  * you have already begun, which is the only thing 「继续」 can honestly mean.
  */
 export function todayCtaLabel(progress: LessonProgress | null | undefined): string {
-  return progress ? "继续学习" : "开始学习";
+  return progress
+    ? translate("ui.today.todaySection.copy.继续学习")
+    : translate("ui.today.todaySection.copy.开始学习");
 }
 
 export function todayMeta(
@@ -40,12 +43,17 @@ export function todayMeta(
   progress: { readonly done: number; readonly total: number } | null,
 ): string {
   if (progress == null || progress.done === 0) return studyTitle;
-  return `${studyTitle} · 还剩 ${Math.max(0, progress.total - progress.done)} 关`;
+  return translate("ui.today.todaySection.copy.value0-还剩-value1-关", {
+    value0: studyTitle,
+    value1: Math.max(0, progress.total - progress.done),
+  });
 }
 
 export function reviewLine(dueCount: number, dueTomorrow: number): string | null {
-  if (dueCount > 0) return `复习 · ${dueCount} 张到期`;
-  if (dueTomorrow > 0) return `复习 · 明天 ${dueTomorrow} 张`;
+  if (dueCount > 0)
+    return translate("ui.today.todaySection.copy.复习-value0-张到期", { value0: dueCount });
+  if (dueTomorrow > 0)
+    return translate("ui.today.todaySection.copy.复习-明天-value0-张", { value0: dueTomorrow });
   return null;
 }
 
@@ -77,7 +85,11 @@ export function TodaySection({
   return (
     <div className="today-layout">
       <section className="today-hero">
-        <p className="eyebrow">{next ? "今天的第一件事" : "今天，从回忆开始"}</p>
+        <p className="eyebrow">
+          {next
+            ? translate("ui.today.todaySection.copy.今天的第一件事")
+            : translate("ui.today.todaySection.copy.今天-从回忆开始")}
+        </p>
         {next ? (
           <>
             <h2>{next.lessonTitle}</h2>
@@ -99,9 +111,13 @@ export function TodaySection({
             </div>
           </>
         ) : (
-          <h2>课程这边暂时没有待办。</h2>
+          <h2>{translate("ui.today.todaySection.copy.课程这边暂时没有待办")}</h2>
         )}
-        <p className="today-hero__note">课程负责建立理解，卡片只负责把重要知识留在长期记忆里。</p>
+        <p className="today-hero__note">
+          {translate(
+            "ui.today.todaySection.copy.课程负责建立理解-卡片只负责把重要知识留在长期记忆里",
+          )}
+        </p>
       </section>
 
       {card ? (
@@ -126,12 +142,15 @@ export function TodaySection({
         <div className="today-metric">
           <span>{data.dueCount}</span>
           <Tip term="due-cards" as="div">
-            <p>今天到期的复习卡片</p>
+            <p>{translate("ui.today.todaySection.copy.今天到期的复习卡片")}</p>
           </Tip>
         </div>
       ) : null}
       {data.issues.length > 0 ? (
-        <GameCallout heading="有学习数据暂时无法使用" tone="warning">
+        <GameCallout
+          heading={translate("ui.today.todaySection.copy.有学习数据暂时无法使用")}
+          tone="warning"
+        >
           {data.issues.join("；")}
         </GameCallout>
       ) : null}

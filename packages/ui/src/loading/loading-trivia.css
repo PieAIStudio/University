@@ -10,8 +10,9 @@
   display: grid;
   place-items: center;
   box-sizing: border-box;
-  padding: max(1.25rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right))
-    max(1.25rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
+  padding-block: max(1.25rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-bottom));
+  padding-inline: max(1.25rem, var(--safe-area-inline-start))
+    max(1.25rem, var(--safe-area-inline-end));
   background: var(--game-ui-bg);
   color: var(--game-ui-text);
   pointer-events: auto;

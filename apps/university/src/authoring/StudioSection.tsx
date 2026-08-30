@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import type {
   BootstrapData,
   StudySummary,
@@ -45,11 +46,12 @@ export function StudioSection({
   return (
     <div className="studio-section">
       <header className="studio-section__header">
-        <p className="eyebrow">作者工作台</p>
-        <h1>本机上的课从这里长出来</h1>
+        <p className="eyebrow">{translate("app.authoring.studioSection.copy.作者工作台")}</p>
+        <h1>{translate("app.authoring.studioSection.copy.本机上的课从这里长出来")}</h1>
         <p>
-          学习资料默认保存在 <code>{studiesRootLabel}</code>
-          。源码不会被学习资料污染。
+          {translate("app.authoring.studioSection.copy.学习资料默认保存在")}{" "}
+          <code>{studiesRootLabel}</code>
+          {translate("app.authoring.studioSection.copy.源码不会被学习资料污染")}
         </p>
       </header>
       {data.studies.length === 0 ? <EmptyCampus /> : null}

@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
 import {
@@ -35,10 +36,12 @@ export function PronunciationButton({ word }: { readonly word: string }) {
         type="button"
         variant="ghost"
         static
-        aria-label={`听 ${word} 的英文发音`}
+        aria-label={translate("ui.entry.pronunciationButton.copy.听-value0-的英文发音", {
+          value0: word,
+        })}
         onClick={() => speakWord(word, voice)}
       >
-        听发音
+        {translate("ui.entry.pronunciationButton.copy.听发音")}
       </GameButton>
     </span>
   );

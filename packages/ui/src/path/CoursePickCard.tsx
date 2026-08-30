@@ -13,6 +13,7 @@
  * LabelProbe translates. Kit components that cannot be placed at a point are
  * the wrong shape; the ones that can, we use.
  */
+import { translate } from "../i18n/index.js";
 import { useEffect, useId, type RefObject } from "react";
 import { GamePanel } from "@pieai/swimmer-ui-kit";
 
@@ -95,7 +96,7 @@ export function CoursePickCard({
         <h3 id={headingId}>{title}</h3>
         <p className="picked__study">{studyTitle}</p>
         <section className="picked__outcomes" aria-labelledby={outcomesHeadingId}>
-          <h4 id={outcomesHeadingId}>学完这门课，你能：</h4>
+          <h4 id={outcomesHeadingId}>{translate("ui.path.coursePickCard.copy.学完这门课-你能")}</h4>
           <ul className="picked__objectives">
             {objectives.map((objective, index) => (
               <li key={`${index}-${objective}`}>{objective}</li>
@@ -109,28 +110,31 @@ export function CoursePickCard({
           prints it twice reads as padding rather than as a promise.
         */}
         {stats.evidenceCount !== undefined ? (
-          <p className="picked__evidence">这些本事来自 {stats.evidenceCount} 段真实项目代码</p>
+          <p className="picked__evidence">
+            {translate("ui.path.coursePickCard.copy.这些本事来自")} {stats.evidenceCount}{" "}
+            {translate("ui.path.coursePickCard.copy.段真实项目代码")}
+          </p>
         ) : null}
         <dl className="picked__meta">
-          <dt>层</dt>
+          <dt>{translate("ui.path.coursePickCard.copy.层")}</dt>
           <dd>{depth + 1}</dd>
-          <dt>先修</dt>
-          <dd>{prerequisiteCount || "无"}</dd>
+          <dt>{translate("ui.path.coursePickCard.copy.先修")}</dt>
+          <dd>{prerequisiteCount || translate("ui.path.coursePickCard.copy.无")}</dd>
         </dl>
         <div className="picked__action">
           <section className="picked__inventory" aria-labelledby={inventoryHeadingId}>
-            <h4 id={inventoryHeadingId}>这门课有：</h4>
+            <h4 id={inventoryHeadingId}>{translate("ui.path.coursePickCard.copy.这门课有")}</h4>
             <dl className="picked__inventory-list">
-              <dt>课时数</dt>
+              <dt>{translate("ui.path.coursePickCard.copy.课时数")}</dt>
               <dd>{stats.lessons}</dd>
-              <dt>练习数</dt>
+              <dt>{translate("ui.path.coursePickCard.copy.练习数")}</dt>
               <dd>{stats.exercises}</dd>
-              <dt>最多可得 XP</dt>
+              <dt>{translate("ui.path.coursePickCard.copy.最多可得-XP")}</dt>
               <dd>{stats.maxXp}</dd>
             </dl>
           </section>
           <LiquidCtaButton width="full" className="picked__enter" onClick={onEnter}>
-            进入这门课
+            {translate("ui.path.coursePickCard.copy.进入这门课")}
           </LiquidCtaButton>
         </div>
       </GamePanel>

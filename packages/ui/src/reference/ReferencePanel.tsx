@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import {
   FloatingFocusManager,
   FloatingPortal,
@@ -107,8 +108,8 @@ export function ReferencePanel({
               type="button"
               className="reference-panel__close"
               onClick={onClose}
-              aria-label="关闭引用"
-              title="关闭（也可按 Esc）"
+              aria-label={translate("ui.reference.referencePanel.copy.关闭引用")}
+              title={translate("ui.reference.referencePanel.copy.关闭-也可按-Esc")}
             >
               ×
             </button>
@@ -117,7 +118,7 @@ export function ReferencePanel({
           {onOpenFull ? (
             <footer className="reference-panel__footer">
               <button type="button" className="reference-panel__full" onClick={onOpenFull}>
-                查看完整页 ↗
+                {translate("ui.reference.referencePanel.copy.查看完整页")}
               </button>
             </footer>
           ) : null}
@@ -128,9 +129,9 @@ export function ReferencePanel({
 }
 
 function kindLabel(kind: ReferenceKind): string {
-  if (kind === "lesson") return "课文";
-  if (kind === "term") return "词义";
-  return "证据";
+  if (kind === "lesson") return translate("ui.reference.referencePanel.copy.课文");
+  if (kind === "term") return translate("ui.reference.referencePanel.copy.词义");
+  return translate("ui.reference.referencePanel.copy.证据");
 }
 
 /**
@@ -143,7 +144,11 @@ function kindLabel(kind: ReferenceKind): string {
  */
 export function TermReferenceBody({ entry }: { readonly entry: LexiconEntry | null }) {
   if (!entry) {
-    return <p className="reference-panel__note">词库里没有这个词义。</p>;
+    return (
+      <p className="reference-panel__note">
+        {translate("ui.reference.referencePanel.copy.词库里没有这个词义")}
+      </p>
+    );
   }
   return (
     <>

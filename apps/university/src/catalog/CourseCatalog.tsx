@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { CatalogSurface } from "@pieai/university-ui";
 import type { Shelf } from "@pieai/university-ui/content/port.js";
@@ -37,10 +38,10 @@ export function CourseCatalog({ onOpen }: { onOpen: (view: View) => void }) {
     return (
       <div className="catalog">
         <div className="catalog__inner">
-          <h1>目录</h1>
-          <p>课程目录读不出来。刷新这一页再试。</p>
+          <h1>{translate("app.catalog.courseCatalog.copy.目录")}</h1>
+          <p>{translate("app.catalog.courseCatalog.copy.课程目录读不出来-刷新这一页再试")}</p>
           <button type="button" className="linkish" onClick={() => onOpen(WORLD)}>
-            在地图上看
+            {translate("app.catalog.courseCatalog.copy.在地图上看")}
           </button>
         </div>
       </div>
@@ -51,8 +52,8 @@ export function CourseCatalog({ onOpen }: { onOpen: (view: View) => void }) {
     return (
       <div className="catalog" aria-busy="true">
         <div className="catalog__inner">
-          <h1>目录</h1>
-          <p>正在读入课程目录。</p>
+          <h1>{translate("app.catalog.courseCatalog.copy.目录")}</h1>
+          <p>{translate("app.catalog.courseCatalog.copy.正在读入课程目录")}</p>
         </div>
       </div>
     );

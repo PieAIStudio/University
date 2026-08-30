@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import { useEffect, useState } from "react";
 import { GamePanel } from "@pieai/swimmer-ui-kit";
 import type { SourceAccessPort } from "@pieai/university-core";
@@ -36,19 +37,24 @@ export function StudyEvidenceStatus({
     the counter. To a reader it is a word from inside the machine.
   */
   return (
-    <section className="study-evidence-status" aria-label="课程使用的项目资料">
+    <section
+      className="study-evidence-status"
+      aria-label={translate("app.authoring.studyDetail.copy.课程使用的项目资料")}
+    >
       <div className="study-evidence-status__metrics">
         <div className="study-evidence-status__metric">
           <strong>{snapshotCount}</strong>
-          <span>个源码版本</span>
+          <span>{translate("app.authoring.studyDetail.copy.个源码版本")}</span>
         </div>
         <div className="study-evidence-status__metric">
           <strong>{readyUaAnalysisCount}</strong>
-          <span>份项目分析</span>
+          <span>{translate("app.authoring.studyDetail.copy.份项目分析")}</span>
         </div>
       </div>
       <p className="study-evidence-status__boundary">
-        这些资料只说明课程引用了哪些源码，不代表课程学习进度。
+        {translate(
+          "app.authoring.studyDetail.copy.这些资料只说明课程引用了哪些源码-不代表课程学习进度",
+        )}
       </p>
     </section>
   );
@@ -94,27 +100,38 @@ export function AirlockClocks({ studyId }: { readonly studyId: string }) {
   const ahead = view.upstream?.commitsAhead ?? null;
   return (
     <section className="airlock-clocks">
-      <p className="eyebrow">教材版本</p>
+      <p className="eyebrow">{translate("app.authoring.studyDetail.copy.教材版本")}</p>
       <dl>
         <div>
-          <dt>课程使用版本</dt>
+          <dt>{translate("app.authoring.studyDetail.copy.课程使用版本")}</dt>
           <dd>
             <code>{view.promotedCommit?.slice(0, 8)}</code>
           </dd>
         </div>
         <div>
-          <dt>项目最新版本</dt>
+          <dt>{translate("app.authoring.studyDetail.copy.项目最新版本")}</dt>
           <dd>
-            <code>{view.upstream?.headCommit.slice(0, 8) ?? "读不到"}</code>
+            <code>
+              {view.upstream?.headCommit.slice(0, 8) ??
+                translate("app.authoring.studyDetail.copy.读不到")}
+            </code>
           </dd>
         </div>
         <div>
-          <dt>相差</dt>
-          <dd>{ahead === null ? "算不出（上游历史被改写过）" : `${ahead} 个提交`}</dd>
+          <dt>{translate("app.authoring.studyDetail.copy.相差")}</dt>
+          <dd>
+            {ahead === null
+              ? translate("app.authoring.studyDetail.copy.算不出-上游历史被改写过")
+              : translate("app.authoring.studyDetail.copy.value0-个提交", { value0: ahead })}
+          </dd>
         </div>
         <div>
-          <dt>课程快照</dt>
-          <dd>{view.course?.matchesAirlock === false ? "资料版本较旧" : "与课程资料一致"}</dd>
+          <dt>{translate("app.authoring.studyDetail.copy.课程快照")}</dt>
+          <dd>
+            {view.course?.matchesAirlock === false
+              ? translate("app.authoring.studyDetail.copy.资料版本较旧")
+              : translate("app.authoring.studyDetail.copy.与课程资料一致")}
+          </dd>
         </div>
       </dl>
       {view.verdict === "blocked" ? (
@@ -125,7 +142,9 @@ export function AirlockClocks({ studyId }: { readonly studyId: string }) {
         </ul>
       ) : (
         <p className="airlock-clocks__note">
-          落后是正常的：这里教的永远是上一次提升的那个提交，不是你编辑器里那份。
+          {translate(
+            "app.authoring.studyDetail.copy.落后是正常的-这里教的永远是上一次提升的那个提交-不是你编辑器里那份",
+          )}
         </p>
       )}
     </section>
@@ -145,13 +164,17 @@ export function StudyAnalysisPanel({
     <details className="study-analysis-panel">
       <summary className="study-analysis-panel__summary">
         <span className="study-analysis-panel__summary-copy">
-          <span className="eyebrow">项目分析</span>
-          <strong>课程引用了项目的哪些文件？</strong>
+          <span className="eyebrow">{translate("app.authoring.studyDetail.copy.项目分析")}</span>
+          <strong>{translate("app.authoring.studyDetail.copy.课程引用了项目的哪些文件")}</strong>
           <span>
-            这里的数字只统计课程引用过的源码，不是“你学了多少”。点开后可以按分层查看，逐层打开文件名。
+            {translate(
+              "app.authoring.studyDetail.copy.这里的数字只统计课程引用过的源码-不是-你学了多少-点开后可以按分层查看-逐层打开文件名",
+            )}
           </span>
         </span>
-        <span className="study-analysis-panel__summary-action">打开分析</span>
+        <span className="study-analysis-panel__summary-action">
+          {translate("app.authoring.studyDetail.copy.打开分析")}
+        </span>
       </summary>
       <div className="study-analysis-panel__body">
         {summary ? (
@@ -258,14 +281,19 @@ export function StudyDetail({
     <section className="study-detail">
       <header className="study-detail__header">
         <div>
-          <p className="eyebrow">项目 · {view.study.id}</p>
+          <p className="eyebrow">
+            {translate("app.authoring.studyDetail.copy.项目")} {view.study.id}
+          </p>
           <h2>{view.study.title}</h2>
           <p>{view.study.description}</p>
         </div>
       </header>
       {view.courses.length === 0 ? null : grouped ? (
         <>
-          <p className="course-group__eyebrow">主攻路线 · {grouped.route.length} 门</p>
+          <p className="course-group__eyebrow">
+            {translate("app.authoring.studyDetail.copy.主攻路线")} {grouped.route.length}{" "}
+            {translate("app.authoring.studyDetail.copy.门")}
+          </p>
           {grouped.route.map(renderCourse)}
           {/*
             Closed. Pinning a run is a decision to walk these nine and leave the
@@ -276,7 +304,10 @@ export function StudyDetail({
           */}
           <details className="course-group">
             <summary>
-              <span>其他课程 · {grouped.rest.length} 门</span>
+              <span>
+                {translate("app.authoring.studyDetail.copy.其他课程")} {grouped.rest.length}{" "}
+                {translate("app.authoring.studyDetail.copy.门")}
+              </span>
             </summary>
             {grouped.rest.map((course) => renderCourse(course, -1))}
           </details>
@@ -286,8 +317,12 @@ export function StudyDetail({
       )}
       {view.courses.length > 0 ? null : (
         <GamePanel className="formal-course-empty" tone="strong">
-          <h2>正式课程尚未发布</h2>
-          <p>源码、UA 地图与课堂笔记可以先存在，但它们不会冒充经过编排的正式课程。</p>
+          <h2>{translate("app.authoring.studyDetail.copy.正式课程尚未发布")}</h2>
+          <p>
+            {translate(
+              "app.authoring.studyDetail.copy.源码-UA-地图与课堂笔记可以先存在-但它们不会冒充经过编排的正式课程",
+            )}
+          </p>
         </GamePanel>
       )}
     </section>

@@ -1,3 +1,4 @@
+import { formatNumber as formatLocaleNumber, translate } from "@pieai/university-ui/i18n.js";
 import { useControls, useCreateStore } from "leva";
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { progressSourceOf, type ProgressPort } from "@pieai/university-core";
@@ -62,9 +63,21 @@ interface MapStudioScreenProps {
 }
 
 const TABS = [
-  { id: "planet", label: "行星", panelId: "map-studio-panel" },
-  { id: "world", label: "群岛", panelId: "map-studio-panel" },
-  { id: "island", label: "课程岛", panelId: "map-studio-panel" },
+  {
+    id: "planet",
+    label: translate("app.mapstudio.mapStudioScreen.copy.行星"),
+    panelId: "map-studio-panel",
+  },
+  {
+    id: "world",
+    label: translate("app.mapstudio.mapStudioScreen.copy.群岛"),
+    panelId: "map-studio-panel",
+  },
+  {
+    id: "island",
+    label: translate("app.mapstudio.mapStudioScreen.copy.课程岛"),
+    panelId: "map-studio-panel",
+  },
 ] as const;
 
 function parameterByPreviewKey(
@@ -79,12 +92,14 @@ function parameterByPreviewKey(
 }
 
 function formatNumber(value: number | null): string {
-  return value === null ? "加载中" : value.toLocaleString("zh-CN");
+  return value === null
+    ? translate("app.mapstudio.mapStudioScreen.copy.加载中")
+    : formatLocaleNumber(value);
 }
 
 function formatBytes(value: number | null): string {
-  if (value === null) return "程序化 / 未使用 GLB";
-  return `${value.toLocaleString("zh-CN")} B`;
+  if (value === null) return translate("app.mapstudio.mapStudioScreen.copy.程序化-未使用-GLB");
+  return `${formatLocaleNumber(value)} B`;
 }
 
 const ZERO_WIDTH_BREAK = "\u200B";
@@ -192,11 +207,15 @@ function ModificationPreview({ text }: { readonly text: string }) {
 }
 
 function layerTitle(layer: StudioLayer): string {
-  return layer === "planet" ? "行星" : layer === "world" ? "群岛" : "课程岛";
+  return layer === "planet"
+    ? translate("app.mapstudio.mapStudioScreen.copy.行星")
+    : layer === "world"
+      ? translate("app.mapstudio.mapStudioScreen.copy.群岛")
+      : translate("app.mapstudio.mapStudioScreen.copy.课程岛");
 }
 
 function valueText(value: number | string, unit?: string): string {
-  return `${typeof value === "number" ? value.toLocaleString("zh-CN") : value}${unit ? ` ${unit}` : ""}`;
+  return `${typeof value === "number" ? formatLocaleNumber(value) : value}${unit ? ` ${unit}` : ""}`;
 }
 
 function mutableParameterIds(
@@ -209,7 +228,7 @@ function mutableParameterIds(
 
 function roleCurrentLabel(role: InspectorRoleChoice, assets: readonly InspectorAsset[]): string {
   const current = assets.find((asset) => role.currentKeys.includes(asset.key));
-  if (!current) return "沿用配方";
+  if (!current) return translate("app.mapstudio.mapStudioScreen.copy.沿用配方");
   return `${current.pack} / ${current.assetId}`;
 }
 
@@ -263,7 +282,12 @@ function changeValue(
 }
 
 function sourceLine(source: InspectorParameter["source"]): ReactNode {
-  return <SourceReference label={<span>出处</span>} source={source} />;
+  return (
+    <SourceReference
+      label={<span>{translate("app.mapstudio.mapStudioScreen.copy.出处")}</span>}
+      source={source}
+    />
+  );
 }
 
 function ParameterRow({
@@ -288,7 +312,13 @@ function ParameterRow({
     <div className={`map-studio__parameter${editable ? " is-editable" : ""}`}>
       <div className="map-studio__parameter-head">
         <span>{parameter.label}</span>
-        {editable ? <GameBadge tone="success">实时预览</GameBadge> : <GameBadge>只读</GameBadge>}
+        {editable ? (
+          <GameBadge tone="success">
+            {translate("app.mapstudio.mapStudioScreen.copy.实时预览")}
+          </GameBadge>
+        ) : (
+          <GameBadge>{translate("app.mapstudio.mapStudioScreen.copy.只读")}</GameBadge>
+        )}
       </div>
       <div className="map-studio__parameter-value">
         {editable ? (
@@ -314,7 +344,10 @@ function ParameterRow({
 
 function ColorStrip({ colors }: { readonly colors: readonly InspectorColorStop[] }) {
   return (
-    <div className="map-studio__colors" aria-label="颜色分带">
+    <div
+      className="map-studio__colors"
+      aria-label={translate("app.mapstudio.mapStudioScreen.copy.颜色分带")}
+    >
       {colors.map((color) => (
         <div className="map-studio__color" key={color.id}>
           <span className="map-studio__swatch" style={{ backgroundColor: color.hex }} />
@@ -361,13 +394,17 @@ function AssetCard({ asset }: { readonly asset: InspectorAsset }) {
       </div>
       <dl className="map-studio__asset-paths">
         <div>
-          <dt>运行时文件</dt>
+          <dt>{translate("app.mapstudio.mapStudioScreen.copy.运行时文件")}</dt>
           <dd>
-            <SourceCode path={asset.runtimePath ?? "无：程序化生成"} />
+            <SourceCode
+              path={
+                asset.runtimePath ?? translate("app.mapstudio.mapStudioScreen.copy.无-程序化生成")
+              }
+            />
           </dd>
         </div>
         <div>
-          <dt>资源来源</dt>
+          <dt>{translate("app.mapstudio.mapStudioScreen.copy.资源来源")}</dt>
           <dd>
             <SourceCode
               path={asset.sourcePath ?? "packages/world/src/island/island-grass-render.tsx"}
@@ -376,27 +413,40 @@ function AssetCard({ asset }: { readonly asset: InspectorAsset }) {
         </div>
       </dl>
       <div className="map-studio__metrics">
-        <Metric label="文件字节" value={formatBytes(asset.bytes)} source={asset.bytesSource} />
         <Metric
-          label="单模型三角形"
+          label={translate("app.mapstudio.mapStudioScreen.copy.文件字节")}
+          value={formatBytes(asset.bytes)}
+          source={asset.bytesSource}
+        />
+        <Metric
+          label={translate("app.mapstudio.mapStudioScreen.copy.单模型三角形")}
           value={formatNumber(asset.triangles)}
           source={asset.trianglesSource}
         />
         <Metric
-          label="当前实例"
+          label={translate("app.mapstudio.mapStudioScreen.copy.当前实例")}
           value={formatNumber(asset.instances)}
           source={asset.instancesSource}
         />
       </div>
       <div className="map-studio__lock">
         <div>
-          <GameBadge>🔒 技术锁 · {asset.techniqueLock}</GameBadge>
+          <GameBadge>
+            {translate("app.mapstudio.mapStudioScreen.copy.技术锁")} {asset.techniqueLock}
+          </GameBadge>
           <p>{asset.technique}</p>
-          <p className="map-studio__lock-note">要改这条技术锁，必须先修订 ADR-0008。</p>
+          <p className="map-studio__lock-note">
+            {translate("app.mapstudio.mapStudioScreen.copy.要改这条技术锁-必须先修订-ADR-0008")}
+          </p>
         </div>
-        <span className="map-studio__readonly">只读</span>
+        <span className="map-studio__readonly">
+          {translate("app.mapstudio.mapStudioScreen.copy.只读")}
+        </span>
       </div>
-      <SourceReference label={<span>技术出处</span>} source={asset.techniqueSource} />
+      <SourceReference
+        label={<span>{translate("app.mapstudio.mapStudioScreen.copy.技术出处")}</span>}
+        source={asset.techniqueSource}
+      />
       {asset.note ? <p className="map-studio__asset-note">{asset.note}</p> : null}
     </article>
   );
@@ -404,17 +454,20 @@ function AssetCard({ asset }: { readonly asset: InspectorAsset }) {
 
 function BudgetPanel({ budget }: { readonly budget: InspectorLayerDescription["budget"] }) {
   return (
-    <GamePanel className="map-studio__recipe" title="预算 · 按屏幕像素分配">
+    <GamePanel
+      className="map-studio__recipe"
+      title={translate("app.mapstudio.mapStudioScreen.copy.预算-按屏幕像素分配")}
+    >
       <div className="map-studio__budget-hero">
         <div>
-          <span>预算基线</span>
+          <span>{translate("app.mapstudio.mapStudioScreen.copy.预算基线")}</span>
           <strong>{formatNumber(budget.triangleBudget)} tris</strong>
         </div>
         <div>
-          <span>当前实际用量</span>
+          <span>{translate("app.mapstudio.mapStudioScreen.copy.当前实际用量")}</span>
           <strong>
             {budget.actualTriangles === null
-              ? "加载中"
+              ? translate("app.mapstudio.mapStudioScreen.copy.加载中")
               : `${formatNumber(budget.actualTriangles)} tris`}
           </strong>
         </div>
@@ -455,7 +508,10 @@ function RecipePanel({
   const parameters = mutableParameterIds(description);
   return (
     <>
-      <GamePanel className="map-studio__recipe" title="地形配方">
+      <GamePanel
+        className="map-studio__recipe"
+        title={translate("app.mapstudio.mapStudioScreen.copy.地形配方")}
+      >
         <p className="map-studio__generator">{description.terrain.generator}</p>
         <div className="map-studio__parameter-list">
           {description.terrain.parameters.map((parameter) => (
@@ -468,14 +524,14 @@ function RecipePanel({
           ))}
         </div>
         <div className="map-studio__subheading">
-          <span>颜色分带</span>
-          <GameBadge>来自真实 palette</GameBadge>
+          <span>{translate("app.mapstudio.mapStudioScreen.copy.颜色分带")}</span>
+          <GameBadge>{translate("app.mapstudio.mapStudioScreen.copy.来自真实-palette")}</GameBadge>
         </div>
         <ColorStrip colors={description.terrain.colors} />
         <SourceReference
           label={
             <>
-              <span>网格三角形</span>
+              <span>{translate("app.mapstudio.mapStudioScreen.copy.网格三角形")}</span>
               <strong>{formatNumber(description.terrain.geometryTriangles)}</strong>
             </>
           }
@@ -483,7 +539,10 @@ function RecipePanel({
         />
       </GamePanel>
 
-      <GamePanel className="map-studio__recipe" title="植被 / 装饰配方">
+      <GamePanel
+        className="map-studio__recipe"
+        title={translate("app.mapstudio.mapStudioScreen.copy.植被-装饰配方")}
+      >
         {parameters.length > 0 ? (
           <div className="map-studio__parameter-list">
             {description.dressing.parameters.map((parameter) => (
@@ -511,13 +570,18 @@ function RecipePanel({
           {description.dressing.assets.length > 0 ? (
             description.dressing.assets.map((asset) => <AssetCard asset={asset} key={asset.key} />)
           ) : (
-            <p className="map-studio__empty">这一层没有外部植被 / 装饰模型。</p>
+            <p className="map-studio__empty">
+              {translate("app.mapstudio.mapStudioScreen.copy.这一层没有外部植被-装饰模型")}
+            </p>
           )}
         </div>
         <p className="map-studio__recipe-note">{description.dressing.note}</p>
       </GamePanel>
 
-      <GamePanel className="map-studio__recipe" title="光照与颜色">
+      <GamePanel
+        className="map-studio__recipe"
+        title={translate("app.mapstudio.mapStudioScreen.copy.光照与颜色")}
+      >
         <div className="map-studio__parameter-list">
           {description.lighting.parameters.map((parameter) => (
             <ParameterRow
@@ -550,17 +614,19 @@ function RolePicker({
   const hasInstances = role.currentKeys.length > 0;
   return (
     <GameField
-      label={`${role.label}模型`}
-      hint={`${sourceText(role.source)}；${hasInstances ? roleCurrentLabel(role, description.dressing.assets) : "这一层当前没有实例"}`}
+      label={translate("app.mapstudio.mapStudioScreen.copy.value0模型", { value0: role.label })}
+      hint={`${sourceText(role.source)}；${hasInstances ? roleCurrentLabel(role, description.dressing.assets) : translate("app.mapstudio.mapStudioScreen.copy.这一层当前没有实例")}`}
     >
       <select
-        aria-label={`${role.label}模型`}
+        aria-label={translate("app.mapstudio.mapStudioScreen.copy.value0模型", {
+          value0: role.label,
+        })}
         className="map-studio__select"
         disabled={!hasInstances}
         onChange={(event) => onChange(role.id, event.currentTarget.value)}
         value={value}
       >
-        <option value="">沿用配方原资源</option>
+        <option value="">{translate("app.mapstudio.mapStudioScreen.copy.沿用配方原资源")}</option>
         {description.dressing.catalog.map((asset) => (
           <option key={asset.key} value={asset.key}>
             {catalogLabel(asset)}
@@ -848,19 +914,25 @@ export function MapStudioScreen({
     <main className="map-studio" data-map-studio>
       <header className="map-studio__header">
         <div>
-          <p className="map-studio__eyebrow">作者工作台 / PROCEDURAL MAP</p>
-          <h1>地图配方台</h1>
+          <p className="map-studio__eyebrow">
+            {translate("app.mapstudio.mapStudioScreen.copy.作者工作台-PROCEDURAL-MAP")}
+          </p>
+          <h1>{translate("app.mapstudio.mapStudioScreen.copy.地图配方台")}</h1>
           <p className="map-studio__lede">
-            一眼看清三层地图从哪里来。左边是正在运行的场景，右边是可追溯、可预览的配方。
+            {translate(
+              "app.mapstudio.mapStudioScreen.copy.一眼看清三层地图从哪里来-左边是正在运行的场景-右边是可追溯-可预览的配方",
+            )}
           </p>
         </div>
         <div className="map-studio__actions">
           <GameBadge tone="success">AUTHORING ONLY</GameBadge>
           <GameButton variant="secondary" onClick={exportConfig}>
-            导出配置 JSON
+            {translate("app.mapstudio.mapStudioScreen.copy.导出配置-JSON")}
           </GameButton>
           <GameButton variant="primary" onClick={() => void copyModification()}>
-            {copyState === "copied" ? "已复制修改说明" : "复制修改说明"}
+            {copyState === "copied"
+              ? translate("app.mapstudio.mapStudioScreen.copy.已复制修改说明")
+              : translate("app.mapstudio.mapStudioScreen.copy.复制修改说明")}
           </GameButton>
         </div>
       </header>
@@ -883,14 +955,16 @@ export function MapStudioScreen({
             <div>
               <span className="map-studio__kicker">
                 LIVE PREVIEW /{" "}
-                {activeLayer === "planet" ? "研究项目选择器" : description.projection}
+                {activeLayer === "planet"
+                  ? translate("app.mapstudio.mapStudioScreen.copy.研究项目选择器")
+                  : description.projection}
               </span>
               <h2>{layerTitle(activeLayer)}</h2>
             </div>
             <div className="map-studio__context-fields">
-              <GameField label="预览项目">
+              <GameField label={translate("app.mapstudio.mapStudioScreen.copy.预览项目")}>
                 <select
-                  aria-label="预览项目"
+                  aria-label={translate("app.mapstudio.mapStudioScreen.copy.预览项目")}
                   className="map-studio__select"
                   disabled={projectOptions.length === 0}
                   onChange={(event) => onSelectStudy(event.currentTarget.value)}
@@ -904,9 +978,9 @@ export function MapStudioScreen({
                 </select>
               </GameField>
               {activeLayer === "island" ? (
-                <GameField label="预览课程">
+                <GameField label={translate("app.mapstudio.mapStudioScreen.copy.预览课程")}>
                   <select
-                    aria-label="预览课程"
+                    aria-label={translate("app.mapstudio.mapStudioScreen.copy.预览课程")}
                     className="map-studio__select"
                     disabled={!selectedStudy || selectedStudy.courses.length === 0}
                     onChange={(event) => setSelectedCourseId(event.currentTarget.value)}
@@ -970,24 +1044,38 @@ export function MapStudioScreen({
               )}
             </div>
             <div className="map-studio__canvas-caption">
-              <SourceReference label={<span>场景实现</span>} source={description.liveSource} />
+              <SourceReference
+                label={<span>{translate("app.mapstudio.mapStudioScreen.copy.场景实现")}</span>}
+                source={description.liveSource}
+              />
             </div>
           </div>
         </div>
 
-        <aside className="map-studio__inspector" aria-label="地图配方检视面板">
+        <aside
+          className="map-studio__inspector"
+          aria-label={translate("app.mapstudio.mapStudioScreen.copy.地图配方检视面板")}
+        >
           <div className="map-studio__inspector-intro">
             <div>
               <span className="map-studio__kicker">RECIPE INSPECTOR</span>
-              <h2>检视面板</h2>
+              <h2>{translate("app.mapstudio.mapStudioScreen.copy.检视面板")}</h2>
             </div>
-            <GameBadge tone="ai">来源可追溯</GameBadge>
+            <GameBadge tone="ai">
+              {translate("app.mapstudio.mapStudioScreen.copy.来源可追溯")}
+            </GameBadge>
           </div>
           <div className="map-studio__runtime-callout">
-            <strong>预览覆盖层</strong>
-            <span>数值改动和资源替换只存在于这个页面，不会写回磁盘。</span>
+            <strong>{translate("app.mapstudio.mapStudioScreen.copy.预览覆盖层")}</strong>
+            <span>
+              {translate(
+                "app.mapstudio.mapStudioScreen.copy.数值改动和资源替换只存在于这个页面-不会写回磁盘",
+              )}
+            </span>
           </div>
-          <p className="map-studio__inspector-scroll-hint">向下滚动查看更多配方</p>
+          <p className="map-studio__inspector-scroll-hint">
+            {translate("app.mapstudio.mapStudioScreen.copy.向下滚动查看更多配方")}
+          </p>
           <RecipePanel
             description={description}
             controlValues={displayControlValues}
@@ -1006,7 +1094,7 @@ export function MapStudioScreen({
           />
           <GamePanel
             className="map-studio__recipe map-studio__modification"
-            title="可直接交给 AI 的修改说明"
+            title={translate("app.mapstudio.mapStudioScreen.copy.可直接交给-AI-的修改说明")}
           >
             <ModificationPreview text={modificationText} />
           </GamePanel>
@@ -1046,10 +1134,19 @@ function buildModificationText(
     );
     lines.push("packages/world/src/island/island-dressing.ts");
     lines.push(
-      `  ${role.label}的资源: ${current ? `${current.pack}/${current.assetId}` : "配方原资源"} -> ${target.pack}/${target.assetId}`,
+      translate("app.mapstudio.mapStudioScreen.copy.value0的资源-value1-value2-value3", {
+        value0: role.label,
+        value1: current
+          ? `${current.pack}/${current.assetId}`
+          : translate("app.mapstudio.mapStudioScreen.copy.配方原资源"),
+        value2: target.pack,
+        value3: target.assetId,
+      }),
     );
   }
   return lines.length > 0
     ? lines.join("\n")
-    : "当前预览没有未写回的修改。\n\n所有显示数值都来自真实 renderer 模块。";
+    : translate(
+        "app.mapstudio.mapStudioScreen.copy.当前预览没有未写回的修改-所有显示数值都来自真实-renderer-模块",
+      );
 }

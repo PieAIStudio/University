@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import { useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import type { SourceAccessExplanation, SourceAccessPort } from "@pieai/university-core";
@@ -34,7 +35,11 @@ export function UaDashboardButton({
     try {
       await access.run();
     } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : "项目地图暂时打不开");
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : translate("app.learner.uaDashboardButton.copy.项目地图暂时打不开"),
+      );
     } finally {
       setPending(false);
     }
@@ -49,7 +54,9 @@ export function UaDashboardButton({
         onClick={() => void openDashboard()}
         disabled={pending}
       >
-        {pending ? "正在打开项目地图…" : "打开项目地图"}
+        {pending
+          ? translate("app.learner.uaDashboardButton.copy.正在打开项目地图")
+          : translate("app.learner.uaDashboardButton.copy.打开项目地图")}
       </GameButton>
       {error ? (
         <p className="ua-dashboard-entry__error" role="alert">

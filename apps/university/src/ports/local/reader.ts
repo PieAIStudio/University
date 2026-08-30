@@ -11,6 +11,7 @@
  * reloaded to get a new one. Reading it per call means a fresh bootstrap
  * repairs the tab instead.
  */
+import { translate } from "@pieai/university-ui/i18n.js";
 import {
   lessonKeyOf,
   type EvidenceSnippet,
@@ -170,5 +171,5 @@ async function mutateMark(
       headers,
     },
   );
-  if (!response.ok) throw new Error("标记没有更新");
+  if (!response.ok) throw new Error(translate("app.ports.local.reader.copy.标记没有更新"));
 }

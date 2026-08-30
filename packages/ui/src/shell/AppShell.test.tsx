@@ -6,6 +6,12 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { AppShell, type ShellCounter, type ShellNavItem } from "./AppShell.js";
 
+const COLLAPSE_LABELS = {
+  collapse: "收起",
+  expandRail: "展开导航",
+  expandAside: "展开上下文",
+};
+
 const NAV: readonly ShellNavItem[] = [
   { id: "home", label: "学习", icon: "H", href: "#/home" },
   {
@@ -58,7 +64,14 @@ afterEach(async () => {
 async function renderShell(props: Partial<Parameters<typeof AppShell>[0]> = {}): Promise<void> {
   await act(async () => {
     root.render(
-      <AppShell nav={NAV} tabs={TABS} activeId="home" counters={COUNTERS} {...props}>
+      <AppShell
+        nav={NAV}
+        tabs={TABS}
+        activeId="home"
+        counters={COUNTERS}
+        collapseLabels={COLLAPSE_LABELS}
+        {...props}
+      >
         <p>主体</p>
       </AppShell>,
     );

@@ -1,3 +1,4 @@
+import { translate } from "../../i18n/index.js";
 import { GameEmptyState } from "@pieai/swimmer-ui-kit";
 
 import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
@@ -9,7 +10,7 @@ import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
 export function NextStepEmpty({
   title,
   description,
-  action = "回到学习",
+  action = translate("ui.navigation.empty.nextStepEmpty.copy.回到学习"),
   onNavigate,
 }: {
   readonly title: string;

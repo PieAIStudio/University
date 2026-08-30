@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useEffect, useRef, useState } from "react";
 import {
   GameBadge,
@@ -168,7 +169,7 @@ export function DemoMiniature({
     <figure className="demo">
       {states.length > 1 ? (
         <GameSegmentedControl
-          label="切换状态"
+          label={translate("ui.entry.demoMiniature.copy.切换状态")}
           activeId={active.id}
           options={states.map((state) => ({ id: state.id, label: state.label }))}
           onSelect={setActiveId}

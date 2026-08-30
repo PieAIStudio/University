@@ -102,7 +102,7 @@
   background: var(--game-ui-panel-deep, #0c1018);
   color: inherit;
   font: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 

@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import type { ReactNode } from "react";
 import { GameBadge, GameEmptyState, GameField, GameInput, GamePanel } from "@pieai/swimmer-ui-kit";
 
@@ -125,7 +126,11 @@ export function CollectionIndex({
           />
         </GameField>
       </div>
-      <div className="term-index__chips" role="radiogroup" aria-label="按类别筛选">
+      <div
+        className="term-index__chips"
+        role="radiogroup"
+        aria-label={translate("ui.reference.collectionIndex.copy.按类别筛选")}
+      >
         {chips.map((chip) => (
           <button
             key={chip.id}

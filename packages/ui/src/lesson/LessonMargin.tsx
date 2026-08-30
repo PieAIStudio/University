@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useCallback, useEffect, useState } from "react";
 
 import type { ReaderMark } from "@pieai/university-core/domain/reader-marks.js";
@@ -126,7 +127,7 @@ export function LessonMargin({
   if (marks.length === 0) return null;
 
   return (
-    <div className="lesson-margin" aria-label="页边批注">
+    <div className="lesson-margin" aria-label={translate("ui.lesson.lessonMargin.copy.页边批注")}>
       {placed.map((note) => (
         <article
           key={note.mark.markId}
@@ -151,7 +152,9 @@ export function LessonMargin({
             }}
           >
             {note.orphaned ? (
-              <small className="margin-note__orphan">这段已不在本版课文里</small>
+              <small className="margin-note__orphan">
+                {translate("ui.lesson.lessonMargin.copy.这段已不在本版课文里")}
+              </small>
             ) : note.mark.sectionTitle ? (
               <small>{note.mark.sectionTitle}</small>
             ) : null}
@@ -160,12 +163,12 @@ export function LessonMargin({
           <div className="margin-note__actions">
             {note.mark.kind === "question" && onResolve ? (
               <button type="button" onClick={() => onResolve(note.mark.markId)}>
-                已弄懂
+                {translate("ui.lesson.lessonMargin.copy.已弄懂")}
               </button>
             ) : null}
             {onDelete ? (
               <button type="button" onClick={() => onDelete(note.mark.markId)}>
-                删除
+                {translate("ui.lesson.lessonMargin.copy.删除")}
               </button>
             ) : null}
           </div>

@@ -11,6 +11,7 @@
  * that: which projects are on the shelf, which files a course has cited, how
  * far behind the airlock is, and the way into the UA graph.
  */
+import { translate } from "@pieai/university-ui/i18n.js";
 import { useEffect, useState } from "react";
 import type { LessonRef } from "@pieai/university-core";
 import { readJson } from "@pieai/university-ui/api/client.js";
@@ -91,7 +92,8 @@ export function StudioScreen({
   readonly onOpenLesson: (locator: LessonRef) => void;
 }) {
   const { data, view, summary } = useShelfRecord(studyId);
-  if (!data) return <p className="loading-copy">正在打开校园档案…</p>;
+  if (!data)
+    return <p className="loading-copy">{translate("app.authoring.index.copy.正在打开校园档案")}</p>;
   return (
     <>
       <StudioSection

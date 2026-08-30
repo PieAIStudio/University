@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useEffect, useId, useState } from "react";
 
 import type { EvidenceSnippetView, EvidenceToken, EvidenceUaView } from "../view/lesson-view.js";
@@ -76,7 +77,8 @@ export function EvidenceInlineSource({
   const displayStart = snippet?.highlightStartLine ?? snippet?.startLine ?? cited.start;
   const displayEnd = snippet?.highlightEndLine ?? snippet?.endLine ?? cited.end;
   const lineLabel = formatLineRange(displayStart, displayEnd);
-  const pathLabel = sourcePath || snippet?.sourcePath || "源码";
+  const pathLabel =
+    sourcePath || snippet?.sourcePath || translate("ui.evidence.evidenceInlineSource.copy.源码");
   const commit = sourceCommit ?? snippet?.sourceCommit;
   const estimatedLines = Math.max(1, cited.end - cited.start + 1);
   // Reserve roughly cited-line height plus a little context so arrival does not
@@ -88,7 +90,10 @@ export function EvidenceInlineSource({
     <div
       className="evidence-inline-source"
       role="group"
-      aria-label={`固定源码 ${pathLabel} ${lineLabel}`}
+      aria-label={translate("ui.evidence.evidenceInlineSource.copy.固定源码-value0-value1", {
+        value0: pathLabel,
+        value1: lineLabel,
+      })}
       aria-busy={status === "loading"}
     >
       <div className="evidence-inline-source__header">
@@ -103,10 +108,13 @@ export function EvidenceInlineSource({
           {commit ? (
             <span
               className="evidence-inline-source__commit"
-              title={`固定提交 ${commit}`}
+              title={translate("ui.evidence.evidenceInlineSource.copy.固定提交-value0", {
+                value0: commit,
+              })}
               data-source-commit={commit}
             >
-              · 固定提交 <code>{commit.slice(0, 8)}</code>
+              {translate("ui.evidence.evidenceInlineSource.copy.固定提交")}{" "}
+              <code>{commit.slice(0, 8)}</code>
             </span>
           ) : null}
         </span>
@@ -119,7 +127,7 @@ export function EvidenceInlineSource({
             data-evidence-trigger-id={triggerId}
             onClick={(event) => onOpenEvidence(index, event.currentTarget)}
           >
-            看完整文件
+            {translate("ui.evidence.evidenceInlineSource.copy.看完整文件")}
           </button>
         ) : null}
       </div>
@@ -139,7 +147,8 @@ export function EvidenceInlineSource({
 
       {status === "error" ? (
         <p className="evidence-inline-source__error" role="status">
-          无法读取固定源码 · <code>{pathLabel}</code> · {lineLabel}
+          {translate("ui.evidence.evidenceInlineSource.copy.无法读取固定源码")}{" "}
+          <code>{pathLabel}</code> · {lineLabel}
           {errorMessage ? (
             <span className="evidence-inline-source__error-detail">（{errorMessage}）</span>
           ) : null}

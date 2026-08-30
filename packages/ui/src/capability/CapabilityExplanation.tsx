@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { GameButton, GameModal } from "@pieai/swimmer-ui-kit";
 import type {
   MeteredGradingExplanation,
@@ -34,26 +35,26 @@ export function CapabilityExplanation({
       open
       className="capability-explanation"
       title={explanation.title}
-      closeLabel="关闭说明"
+      closeLabel={translate("ui.capability.capabilityExplanation.copy.关闭说明")}
       closeOnBackdrop
       onClose={onClose}
       footer={
         <GameButton variant="secondary" onClick={onClose}>
-          知道了
+          {translate("ui.capability.capabilityExplanation.copy.知道了")}
         </GameButton>
       }
     >
       <div className="capability-explanation__body">
         <section>
-          <h3>它是什么</h3>
+          <h3>{translate("ui.capability.capabilityExplanation.copy.它是什么")}</h3>
           <p>{explanation.whatItDoes}</p>
         </section>
         <section>
-          <h3>为什么这一端现在做不到</h3>
+          <h3>{translate("ui.capability.capabilityExplanation.copy.为什么这一端现在做不到")}</h3>
           <p>{explanation.whyUnavailable}</p>
         </section>
         <section>
-          <h3>以后怎么支持</h3>
+          <h3>{translate("ui.capability.capabilityExplanation.copy.以后怎么支持")}</h3>
           <p>{explanation.futureSupport}</p>
         </section>
         {action ? (

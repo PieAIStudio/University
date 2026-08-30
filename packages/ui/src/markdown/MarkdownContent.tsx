@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { Children, isValidElement, useEffect, useMemo, useState, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkDirective from "remark-directive";
@@ -65,7 +66,7 @@ function LessonDetailBlock({
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary>
-        <span>{title || "补充说明"}</span>
+        <span>{title || translate("ui.markdown.markdownContent.copy.补充说明")}</span>
         <small>{kind}</small>
       </summary>
       <div className="lesson-detail__body">{children}</div>
@@ -87,8 +88,15 @@ function formatCaptureDate(iso: string | undefined): string {
   if (Number.isNaN(date.getTime())) return "";
   const sameYear = date.getFullYear() === new Date().getFullYear();
   return sameYear
-    ? `${date.getMonth() + 1}月${date.getDate()}日`
-    : `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+    ? translate("ui.markdown.markdownContent.copy.value0月value1日", {
+        value0: date.getMonth() + 1,
+        value1: date.getDate(),
+      })
+    : translate("ui.markdown.markdownContent.copy.value0年value1月value2日", {
+        value0: date.getFullYear(),
+        value1: date.getMonth() + 1,
+        value2: date.getDate(),
+      });
 }
 
 function LessonMediaBlock({
@@ -103,18 +111,18 @@ function LessonMediaBlock({
   if (!asset) {
     return (
       <div className="lesson-media lesson-media--missing" role="alert">
-        这段媒体没有通过当前课文版本的本地资产清单。
+        {translate("ui.markdown.markdownContent.copy.这段媒体没有通过当前课文版本的本地资产清单")}
       </div>
     );
   }
   const label =
     asset.kind === "real-screenshot"
-      ? "真实截图"
+      ? translate("ui.markdown.markdownContent.copy.真实截图")
       : asset.kind === "ai-illustration"
-        ? "示意图 · AI 插图"
+        ? translate("ui.markdown.markdownContent.copy.示意图-AI-插图")
         : asset.kind === "diagram"
-          ? "结构图"
-          : "本地媒体";
+          ? translate("ui.markdown.markdownContent.copy.结构图")
+          : translate("ui.markdown.markdownContent.copy.本地媒体");
   /*
     The directive body wins over the manifest caption, and `children` is kept as
     nodes rather than collapsed to a string.
@@ -139,7 +147,8 @@ function LessonMediaBlock({
       {video ? (
         <video controls preload="metadata" poster={asset.posterUrl} aria-label={asset.alt}>
           <source src={asset.url} type={asset.mime} />
-          你的浏览器无法播放这段本地录屏。
+
+          {translate("ui.markdown.markdownContent.copy.你的浏览器无法播放这段本地录屏")}
         </video>
       ) : (
         <img src={asset.url} alt={asset.alt} loading="lazy" />
@@ -162,7 +171,8 @@ function LessonMediaBlock({
               invisible until it is spelled out. The hash stays because it is
               what anyone checking has to type.
             */}
-            来源 {formatCaptureDate(asset.sourceCommitDate)}
+            {translate("ui.markdown.markdownContent.copy.来源")}{" "}
+            {formatCaptureDate(asset.sourceCommitDate)}
             {asset.sourceCommit ? `（${asset.sourceCommit.slice(0, 8)}）` : null} ·{" "}
             {asset.capture.route} · {asset.capture.locale} · {asset.capture.viewport.width}×
             {asset.capture.viewport.height}
@@ -171,7 +181,7 @@ function LessonMediaBlock({
         {asset.aiNote ? <small>{asset.aiNote}</small> : null}
         {asset.transcript ? (
           <details>
-            <summary>文字稿</summary>
+            <summary>{translate("ui.markdown.markdownContent.copy.文字稿")}</summary>
             <p>{asset.transcript}</p>
           </details>
         ) : null}
@@ -295,7 +305,10 @@ const markdownComponents: Components = {
         {...props}
       >
         {children}
-        <span className="markdown-external-link__mark" aria-label="外部链接">
+        <span
+          className="markdown-external-link__mark"
+          aria-label={translate("ui.markdown.markdownContent.copy.外部链接")}
+        >
           ↗
         </span>
       </a>
@@ -308,7 +321,7 @@ const markdownComponents: Components = {
     // instead, so the lesson still reads and nothing is hidden.
     return (
       <span className="markdown-blocked-image">
-        <strong>外部图片已拦截</strong>
+        <strong>{translate("ui.markdown.markdownContent.copy.外部图片已拦截")}</strong>
         {alt ? <span>{alt}</span> : null}
         <code>{source}</code>
       </span>
@@ -490,7 +503,7 @@ export function MarkdownContent({
           return (
             <span
               className="evidence-anchor evidence-anchor--broken"
-              title="这个位置不在本课引用的证据范围内"
+              title={translate("ui.markdown.markdownContent.copy.这个位置不在本课引用的证据范围内")}
             >
               {children}
             </span>
@@ -563,7 +576,7 @@ export function MarkdownContent({
           return (
             <span
               className="evidence-anchor evidence-anchor--broken"
-              title="这个位置不在本课引用的证据范围内"
+              title={translate("ui.markdown.markdownContent.copy.这个位置不在本课引用的证据范围内")}
             >
               {_children}
             </span>
@@ -610,7 +623,10 @@ export function MarkdownContent({
           // a bad link ship, since the only person who could notice is reading
           // a page that looks fine.
           return (
-            <span className="lesson-link lesson-link--broken" title="链接指向的课程不存在">
+            <span
+              className="lesson-link lesson-link--broken"
+              title={translate("ui.markdown.markdownContent.copy.链接指向的课程不存在")}
+            >
               {children}
             </span>
           );
@@ -658,7 +674,10 @@ export function MarkdownContent({
         const entry = termEntries.get(senseId) ?? null;
         if (node?.properties?.broken !== undefined || !entry) {
           return (
-            <span className="term-link term-link--broken" title="词库里没有这个词义">
+            <span
+              className="term-link term-link--broken"
+              title={translate("ui.markdown.markdownContent.copy.词库里没有这个词义")}
+            >
               {children}
             </span>
           );
@@ -731,7 +750,8 @@ export function MarkdownContent({
       }) {
         return (
           <p className="lesson-directive-unsupported" role="note">
-            未启用的课程扩展：<code>{directiveProperty(node, "name")}</code>
+            {translate("ui.markdown.markdownContent.copy.未启用的课程扩展")}
+            <code>{directiveProperty(node, "name")}</code>
           </p>
         );
       },
@@ -827,7 +847,7 @@ export function MarkdownContent({
       </ReactMarkdown>
       <ReferencePanel
         open={openReference !== null}
-        title={openReference?.title ?? "引用"}
+        title={openReference?.title ?? translate("ui.markdown.markdownContent.copy.引用")}
         kind={(openReference?.kind ?? "lesson") as ReferenceKind}
         trigger={openReference?.trigger ?? null}
         onClose={() => setOpenReference(null)}
@@ -859,7 +879,11 @@ function ReferenceBody({
 }) {
   if (reference.kind === "lesson") {
     if (!reference.target) {
-      return <p className="reference-panel__note">这一课还不存在。</p>;
+      return (
+        <p className="reference-panel__note">
+          {translate("ui.markdown.markdownContent.copy.这一课还不存在")}
+        </p>
+      );
     }
     return (
       <>
@@ -867,7 +891,9 @@ function ReferenceBody({
           {reference.target.courseId}/{reference.target.unitId}/{reference.target.lessonId}
           {reference.target.targetSectionId ? `#${reference.target.targetSectionId}` : ""}
         </p>
-        <p className="reference-panel__note">在侧栏打开，课文的阅读位置留在这里。</p>
+        <p className="reference-panel__note">
+          {translate("ui.markdown.markdownContent.copy.在侧栏打开-课文的阅读位置留在这里")}
+        </p>
       </>
     );
   }

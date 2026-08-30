@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import type { CourseProgress, LessonRef } from "@pieai/university-core";
 import { CourseRouteQuiz, hasRouteQuiz } from "@pieai/university-ui/path/CourseRouteQuiz.js";
 import type { CourseView, UnitView } from "@pieai/university-ui/view/lesson-view.js";
@@ -38,8 +39,10 @@ export function CourseIsland({
     <aside className="picked picked--left">
       <h3>{course.title}</h3>
       <p className="picked__study">
-        {course.units.length} 单元 · {viewedProgress?.total ?? 0} 关 · 还剩{" "}
-        {viewedProgress ? viewedProgress.total - viewedProgress.done : 0} 关
+        {course.units.length} {translate("app.app.courseIsland.copy.单元")}{" "}
+        {viewedProgress?.total ?? 0} {translate("app.app.courseIsland.copy.关-还剩")}{" "}
+        {viewedProgress ? viewedProgress.total - viewedProgress.done : 0}{" "}
+        {translate("app.app.courseIsland.copy.关")}
       </p>
       {pathUnit ? (
         <div className="unit-strip">
@@ -47,7 +50,7 @@ export function CourseIsland({
           <button
             type="button"
             className="unit-strip__list"
-            aria-label="先看这一单元讲什么"
+            aria-label={translate("app.app.courseIsland.copy.先看这一单元讲什么")}
             aria-haspopup="dialog"
             aria-expanded={unitOverlayOpen ? true : undefined}
             onClick={(event) => onOpenUnitOverlay(pathUnit.id, event.currentTarget)}

@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useMemo, useState } from "react";
 import {
   CONCEPT_CATEGORY_IDS,
@@ -19,14 +20,18 @@ import { CollectionIndex } from "./CollectionIndex.js";
  * `SEARCH_PLACEHOLDER_MAX_CHARS`. A third example clipped mid-character taught
  * nothing and made the field look broken.
  */
-export const CONCEPT_SEARCH_PLACEHOLDER = "试试「点了没反应」「怎么退回上一版」";
+export const CONCEPT_SEARCH_PLACEHOLDER = translate(
+  "ui.reference.conceptIndex.copy.试试-点了没反应-怎么退回上一版",
+);
 
 type CategoryFilter = "all" | ConceptCategory;
 
 const CHIP_ORDER: readonly CategoryFilter[] = ["all", ...CONCEPT_CATEGORY_IDS];
 
 function chipLabel(id: CategoryFilter): string {
-  return id === "all" ? "全部" : CONCEPT_CATEGORY_LABEL[id];
+  return id === "all"
+    ? translate("ui.reference.conceptIndex.copy.全部")
+    : CONCEPT_CATEGORY_LABEL[id];
 }
 
 /**
@@ -80,7 +85,7 @@ export function ConceptIndex({
   return (
     <CollectionIndex
       title={COLLECTION_LABEL.concepts}
-      searchLabel="搜索概念"
+      searchLabel={translate("ui.reference.conceptIndex.copy.搜索概念")}
       placeholder={CONCEPT_SEARCH_PLACEHOLDER}
       query={value}
       onQueryChange={setQuery}
@@ -105,11 +110,17 @@ export function ConceptIndex({
       }))}
       searched={searched}
       emptyMiss={{
-        title: `没有找到「${result.query}」相关的条目`,
-        description:
-          "可以搜中文名、英文名，或者直接把你看见的现象写出来。例如「点了没反应」「刷新就没了」「怎么退回上一版」。不必先知道它叫什么。",
+        title: translate("ui.reference.conceptIndex.copy.没有找到-value0-相关的条目", {
+          value0: result.query,
+        }),
+        description: translate(
+          "ui.reference.conceptIndex.copy.可以搜中文名-英文名-或者直接把你看见的现象写出来-例如-点了没反应-刷新就没了-怎么退回上一版-不必先知道它叫",
+        ),
       }}
-      emptyIdle={{ title: "还没有条目", description: "目录载入后会出现在这里。" }}
+      emptyIdle={{
+        title: translate("ui.reference.conceptIndex.copy.还没有条目"),
+        description: translate("ui.reference.conceptIndex.copy.目录载入后会出现在这里"),
+      }}
       onOpenHit={(id) => {
         const entry = byId.get(id);
         if (entry) onOpen?.(entry);

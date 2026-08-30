@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { readJson } from "../api/client.js";
 import type { EvidenceSnippetView, EvidenceToken } from "../view/lesson-view.js";
 import { highlightEvidenceCode } from "../view/lesson-view.js";
@@ -62,7 +63,10 @@ export function loadEvidenceSnippet(
       } catch (reason) {
         return {
           ok: false,
-          message: reason instanceof Error ? reason.message : "无法读取固定源码",
+          message:
+            reason instanceof Error
+              ? reason.message
+              : translate("ui.evidence.loadevidencesnippet.copy.无法读取固定源码"),
         };
       }
     })();

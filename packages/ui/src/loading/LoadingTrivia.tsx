@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useState } from "react";
 import { GamePanel } from "@pieai/swimmer-ui-kit";
 import type { ConceptHead } from "@pieai/university-core";
@@ -28,15 +29,19 @@ export function LoadingTrivia({
   return (
     <div className="loading-trivia" role="status" aria-live="polite" aria-busy="true">
       <div className="loading-trivia__card">
-        <p className="loading-trivia__kicker">地图铺开时，看一条概念</p>
+        <p className="loading-trivia__kicker">
+          {translate("ui.loading.loadingTrivia.copy.地图铺开时-看一条概念")}
+        </p>
         {head ? (
           <GamePanel title={head.zh}>
             <p className="loading-trivia__tagline">{head.tagline}</p>
             {head.en ? <p className="loading-trivia__en">{head.en}</p> : null}
           </GamePanel>
         ) : (
-          <GamePanel title="地图正在打开">
-            <p className="loading-trivia__tagline">岛屿马上就到。</p>
+          <GamePanel title={translate("ui.loading.loadingTrivia.copy.地图正在打开")}>
+            <p className="loading-trivia__tagline">
+              {translate("ui.loading.loadingTrivia.copy.岛屿马上就到")}
+            </p>
           </GamePanel>
         )}
       </div>

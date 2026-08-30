@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useRef, type ReactNode } from "react";
 import type { LessonRef } from "@pieai/university-core";
 
@@ -58,18 +59,21 @@ export function CatalogSurface({
 }) {
   const here = listing.nextLesson;
   return (
-    <div className="catalog" aria-label="课程目录">
+    <div className="catalog" aria-label={translate("ui.catalog.catalogSurface.copy.课程目录")}>
       <div className="catalog__inner">
         <button type="button" className="linkish" onClick={onBack}>
-          在地图上看
+          {translate("ui.catalog.catalogSurface.copy.在地图上看")}
         </button>
-        <h1>目录</h1>
+        <h1>{translate("ui.catalog.catalogSurface.copy.目录")}</h1>
         <p className="catalog__lede">
-          {listing.totals.studies} 个世界里的课，按先修关系排。没有先后的就平铺。
+          {listing.totals.studies}{" "}
+          {translate("ui.catalog.catalogSurface.copy.个世界里的课-按先修关系排-没有先后的就平铺")}
         </p>
         <p className="catalog__totals">
-          {listing.totals.studies} 个世界 · {listing.totals.courses} 门课 · {listing.totals.units}{" "}
-          单元 · {listing.totals.lessons} 节
+          {listing.totals.studies} {translate("ui.catalog.catalogSurface.copy.个世界")}{" "}
+          {listing.totals.courses} {translate("ui.catalog.catalogSurface.copy.门课")}{" "}
+          {listing.totals.units} {translate("ui.catalog.catalogSurface.copy.单元")}{" "}
+          {listing.totals.lessons} {translate("ui.catalog.catalogSurface.copy.节")}
         </p>
         {listing.studies.map((study) => (
           <StudyBlock
@@ -109,10 +113,17 @@ function StudyBlock({
     <CatalogDetails className="catalog__study" startOpen={defaultOpen}>
       <summary>
         <h2>
-          {study.title} <span className="catalog__count">{study.courses.length} 门课</span>
+          {study.title}{" "}
+          <span className="catalog__count">
+            {study.courses.length} {translate("ui.catalog.catalogSurface.copy.门课-qlwl1n")}
+          </span>
         </h2>
       </summary>
-      {study.flat ? <p className="catalog__flat">这几门课没有先后，所以平铺列出。</p> : null}
+      {study.flat ? (
+        <p className="catalog__flat">
+          {translate("ui.catalog.catalogSurface.copy.这几门课没有先后-所以平铺列出")}
+        </p>
+      ) : null}
       {study.courses.map((course) => (
         <CourseBlock
           key={course.id}
@@ -151,7 +162,12 @@ function CourseBlock({
       <summary>
         <span className="catalog__course-head">
           <span className="catalog__title-row">
-            <span className="catalog__depth" aria-label={`第 ${course.depth + 1} 层`}>
+            <span
+              className="catalog__depth"
+              aria-label={translate("ui.catalog.catalogSurface.copy.第-value0-层", {
+                value0: course.depth + 1,
+              })}
+            >
               L{course.depth + 1}
             </span>
             <h3>{course.title}</h3>
@@ -160,10 +176,13 @@ function CourseBlock({
             </span>
           </span>
           <span className="catalog__progress">
-            {course.done}/{course.total} 节
+            {course.done}/{course.total} {translate("ui.catalog.catalogSurface.copy.节")}
           </span>
           {course.prerequisiteTitles.length > 0 ? (
-            <span className="catalog__prereq">先修：{course.prerequisiteTitles.join("、")}</span>
+            <span className="catalog__prereq">
+              {translate("ui.catalog.catalogSurface.copy.先修")}
+              {course.prerequisiteTitles.join("、")}
+            </span>
           ) : null}
         </span>
       </summary>
@@ -204,7 +223,10 @@ function UnitBlock({
     <CatalogDetails className="catalog__unit" startOpen={defaultOpen}>
       <summary>
         <h4>
-          {unit.title} <span className="catalog__count">{unit.lessons.length} 节</span>
+          {unit.title}{" "}
+          <span className="catalog__count">
+            {unit.lessons.length} {translate("ui.catalog.catalogSurface.copy.节")}
+          </span>
         </h4>
       </summary>
       <ul className="catalog__lessons">
@@ -285,10 +307,14 @@ function LessonLink({
       <span className="catalog__lesson-title">{lesson.title}</span>
       {lesson.variant ? <span className="catalog__variant">{lesson.variant}</span> : null}
       {lesson.state === "done" ? (
-        <span className="catalog__gate catalog__gate--done">已完成</span>
+        <span className="catalog__gate catalog__gate--done">
+          {translate("ui.catalog.catalogSurface.copy.已完成")}
+        </span>
       ) : null}
       {lesson.state === "live" ? (
-        <span className="catalog__gate catalog__gate--live">正在学</span>
+        <span className="catalog__gate catalog__gate--live">
+          {translate("ui.catalog.catalogSurface.copy.正在学")}
+        </span>
       ) : null}
     </a>
   );
@@ -297,12 +323,12 @@ function LessonLink({
 function gateLabel(state: CatalogCourse["state"]): string {
   switch (state) {
     case "done":
-      return "已完成";
+      return translate("ui.catalog.catalogSurface.copy.已完成");
     case "live":
-      return "正在学";
+      return translate("ui.catalog.catalogSurface.copy.正在学");
     case "open":
-      return "可以学";
+      return translate("ui.catalog.catalogSurface.copy.可以学");
     case "idle":
-      return "未解锁";
+      return translate("ui.catalog.catalogSurface.copy.未解锁");
   }
 }

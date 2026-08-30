@@ -51,6 +51,12 @@ export interface ShellCounter {
   readonly control?: ReactNode;
 }
 
+export interface ShellCollapseLabels {
+  readonly collapse: string;
+  readonly expandRail: string;
+  readonly expandAside: string;
+}
+
 export interface AppShellProps {
   /** Who you are — rendered at the foot of the nav rail. See NavRail. */
   readonly identity?: ReactNode;
@@ -58,6 +64,7 @@ export interface AppShellProps {
   readonly tabs: readonly ShellNavItem[];
   readonly activeId: string;
   readonly counters?: readonly ShellCounter[];
+  readonly collapseLabels: ShellCollapseLabels;
   readonly brand?: ReactNode;
   readonly aside?: ReactNode;
   readonly asideLabel?: string;
@@ -97,6 +104,7 @@ export function AppShell({
   tabs,
   activeId,
   counters,
+  collapseLabels,
   brand,
   aside,
   asideLabel,
@@ -136,7 +144,7 @@ export function AppShell({
                 {collapsed.rail ? "▶" : "◀"}
               </span>
               <span className="app-shell__collapse-label">
-                {collapsed.rail ? "展开导航" : "收起"}
+                {collapsed.rail ? collapseLabels.expandRail : collapseLabels.collapse}
               </span>
             </button>
           }
@@ -162,7 +170,7 @@ export function AppShell({
                     {collapsed.aside ? "◀" : "▶"}
                   </span>
                   <span className="app-shell__collapse-label">
-                    {collapsed.aside ? "展开上下文" : "收起"}
+                    {collapsed.aside ? collapseLabels.expandAside : collapseLabels.collapse}
                   </span>
                 </button>
               ) : null

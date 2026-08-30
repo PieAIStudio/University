@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GameEmptyState, GamePanel } from "@pieai/swimmer-ui-kit";
 import {
@@ -15,18 +16,21 @@ import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import { PracticeRewardPanel } from "./PracticeRewardPanel.js";
 import type { PracticeRecentStore } from "./storage.js";
 
-export const PRACTICE_EMPTY_TITLE = "还没有可以练的题";
+export const PRACTICE_EMPTY_TITLE = translate("ui.practice.practiceStream.copy.还没有可以练的题");
 
-export const PRACTICE_EMPTY_DESCRIPTION = "每一条词条自己带着一道判断题。带题的那些会出现在这里。";
+export const PRACTICE_EMPTY_DESCRIPTION = translate(
+  "ui.practice.practiceStream.copy.每一条词条自己带着一道判断题-带题的那些会出现在这里",
+);
 
-export const PRACTICE_EMPTY_ACTION = "去翻翻词条";
+export const PRACTICE_EMPTY_ACTION = translate("ui.practice.practiceStream.copy.去翻翻词条");
 
-export const PRACTICE_INTRO_TITLE = "今天练一道判断";
+export const PRACTICE_INTRO_TITLE = translate("ui.practice.practiceStream.copy.今天练一道判断");
 
-export const PRACTICE_INTRO_DESCRIPTION =
-  "概念自己带着判断题。答对一道，展开这一条。题流没有尽头，停下来就行。";
+export const PRACTICE_INTRO_DESCRIPTION = translate(
+  "ui.practice.practiceStream.copy.概念自己带着判断题-答对一道-展开这一条-题流没有尽头-停下来就行",
+);
 
-export const PRACTICE_INTRO_ACTION = "开始一道判断";
+export const PRACTICE_INTRO_ACTION = translate("ui.practice.practiceStream.copy.开始一道判断");
 
 /**
  * How many questions this sitting has already got right.
@@ -36,7 +40,7 @@ export const PRACTICE_INTRO_ACTION = "开始一道判断";
  * how many it has unlocked; that number is honest.
  */
 export function practiceSolvedLabel(solved: number): string {
-  return `本次已答对 ${solved}`;
+  return translate("ui.practice.practiceStream.copy.本次已答对-value0", { value0: solved });
 }
 
 export function sittingSolvedCount(session: PracticeSession): number {
@@ -137,7 +141,10 @@ export function PracticeStream<Head = unknown>({
 
   if (!intro) {
     return (
-      <section className="practice-stream" aria-label="练习">
+      <section
+        className="practice-stream"
+        aria-label={translate("ui.practice.practiceStream.copy.练习")}
+      >
         <GamePanel className="practice-stream__intro" title={PRACTICE_INTRO_TITLE}>
           <p className="practice-stream__intro-copy">{PRACTICE_INTRO_DESCRIPTION}</p>
           <LiquidCtaButton type="button" onClick={() => setStarted(true)}>
@@ -149,7 +156,10 @@ export function PracticeStream<Head = unknown>({
   }
 
   return (
-    <section className="practice-stream" aria-label="练习">
+    <section
+      className="practice-stream"
+      aria-label={translate("ui.practice.practiceStream.copy.练习")}
+    >
       <p className="practice-stream__ordinal" aria-live="polite">
         {practiceSolvedLabel(sittingSolvedCount(sitting))}
       </p>

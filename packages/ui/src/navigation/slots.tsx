@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import type { ReactNode } from "react";
 
 import { toPath } from "@pieai/university-core";
@@ -78,41 +79,86 @@ function SettingsIcon() {
 }
 
 export const MORE_CHILDREN: readonly ShellNavItem[] = [
-  { id: "catalog", label: "目录", icon: <CatalogIcon />, href: toPath({ kind: "catalog" }) },
-  { id: "review", label: "复习", icon: <ReviewIcon />, href: toPath({ kind: "review" }) },
+  {
+    id: "catalog",
+    label: translate("ui.navigation.slots.copy.目录"),
+    icon: <CatalogIcon />,
+    href: toPath({ kind: "catalog" }),
+  },
+  {
+    id: "review",
+    label: translate("ui.navigation.slots.copy.复习"),
+    icon: <ReviewIcon />,
+    href: toPath({ kind: "review" }),
+  },
   {
     id: "favourites",
-    label: "收藏",
+    label: translate("ui.navigation.slots.copy.收藏"),
     icon: <FavouritesIcon />,
     href: toPath({ kind: "favourites" }),
   },
-  { id: "settings", label: "设置", icon: <SettingsIcon />, href: toPath({ kind: "settings" }) },
+  {
+    id: "settings",
+    label: translate("ui.navigation.slots.copy.设置"),
+    icon: <SettingsIcon />,
+    href: toPath({ kind: "settings" }),
+  },
 ];
 
 /** Local-only flyout entry. Passed in through `extraMoreItems`, never forked in. */
 export const STUDIO_MORE_ITEM: ShellNavItem = {
   id: "studio",
-  label: "作者工作台",
+  label: translate("ui.navigation.slots.copy.作者工作台"),
   icon: <IslandIcon />,
   href: toPath({ kind: "studio" }),
 };
 
 export const RAIL_ITEMS: readonly ShellNavItem[] = [
-  { id: "learn", label: "学习", icon: <HomeIcon />, href: toPath({ kind: "world" }) },
+  {
+    id: "learn",
+    label: translate("ui.navigation.slots.copy.学习"),
+    icon: <HomeIcon />,
+    href: toPath({ kind: "world" }),
+  },
   {
     id: "library",
-    label: "图鉴",
+    label: translate("ui.navigation.slots.copy.图鉴"),
     icon: <CodexIcon />,
     href: toPath({ kind: "library", tab: "concepts" }),
   },
-  { id: "practice", label: "练习", icon: <PracticeIcon />, href: toPath({ kind: "practice" }) },
-  { id: "league", label: "排行榜", icon: <LeagueIcon />, href: toPath({ kind: "league" }) },
-  { id: "quests", label: "任务", icon: <QuestsIcon />, href: toPath({ kind: "quests" }) },
-  { id: "plan", label: "会员", icon: <PlanIcon />, href: toPath({ kind: "plans" }) },
-  { id: "profile", label: "个人档案", icon: <ProfileIcon />, href: toPath({ kind: "me" }) },
+  {
+    id: "practice",
+    label: translate("ui.navigation.slots.copy.练习"),
+    icon: <PracticeIcon />,
+    href: toPath({ kind: "practice" }),
+  },
+  {
+    id: "league",
+    label: translate("ui.navigation.slots.copy.排行榜"),
+    icon: <LeagueIcon />,
+    href: toPath({ kind: "league" }),
+  },
+  {
+    id: "quests",
+    label: translate("ui.navigation.slots.copy.任务"),
+    icon: <QuestsIcon />,
+    href: toPath({ kind: "quests" }),
+  },
+  {
+    id: "plan",
+    label: translate("ui.navigation.slots.copy.会员"),
+    icon: <PlanIcon />,
+    href: toPath({ kind: "plans" }),
+  },
+  {
+    id: "profile",
+    label: translate("ui.navigation.slots.copy.个人档案"),
+    icon: <ProfileIcon />,
+    href: toPath({ kind: "me" }),
+  },
   {
     id: "more",
-    label: "更多",
+    label: translate("ui.navigation.slots.copy.更多"),
     icon: <MoreIcon />,
     href: "/more",
     children: MORE_CHILDREN,
@@ -120,18 +166,48 @@ export const RAIL_ITEMS: readonly ShellNavItem[] = [
 ];
 
 export const TAB_ITEMS: readonly ShellNavItem[] = [
-  { id: "learn", label: "学习", icon: <HomeIcon />, href: toPath({ kind: "world" }) },
-  { id: "practice", label: "练习", icon: <PracticeIcon />, href: toPath({ kind: "practice" }) },
-  { id: "quests", label: "任务", icon: <QuestsIcon />, href: toPath({ kind: "quests" }) },
-  { id: "league", label: "排行榜", icon: <LeagueIcon />, href: toPath({ kind: "league" }) },
+  {
+    id: "learn",
+    label: translate("ui.navigation.slots.copy.学习"),
+    icon: <HomeIcon />,
+    href: toPath({ kind: "world" }),
+  },
+  {
+    id: "practice",
+    label: translate("ui.navigation.slots.copy.练习"),
+    icon: <PracticeIcon />,
+    href: toPath({ kind: "practice" }),
+  },
+  {
+    id: "quests",
+    label: translate("ui.navigation.slots.copy.任务"),
+    icon: <QuestsIcon />,
+    href: toPath({ kind: "quests" }),
+  },
+  {
+    id: "league",
+    label: translate("ui.navigation.slots.copy.排行榜"),
+    icon: <LeagueIcon />,
+    href: toPath({ kind: "league" }),
+  },
   {
     id: "library",
-    label: "图鉴",
+    label: translate("ui.navigation.slots.copy.图鉴"),
     icon: <CodexIcon />,
     href: toPath({ kind: "library", tab: "concepts" }),
   },
-  { id: "plan", label: "会员", icon: <PlanIcon />, href: toPath({ kind: "plans" }) },
-  { id: "profile", label: "我", icon: <ProfileIcon />, href: toPath({ kind: "me" }) },
+  {
+    id: "plan",
+    label: translate("ui.navigation.slots.copy.会员"),
+    icon: <PlanIcon />,
+    href: toPath({ kind: "plans" }),
+  },
+  {
+    id: "profile",
+    label: translate("ui.navigation.slots.copy.我"),
+    icon: <ProfileIcon />,
+    href: toPath({ kind: "me" }),
+  },
 ];
 
 export function railItemsWithExtra(

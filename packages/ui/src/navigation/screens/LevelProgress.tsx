@@ -1,3 +1,4 @@
+import { translate } from "../../i18n/index.js";
 import { GameBadge, GameProgress } from "@pieai/swimmer-ui-kit";
 import { levelOf } from "@pieai/university-core";
 
@@ -18,7 +19,10 @@ export function LevelProgress({
   const level = levelOf(totalXp);
 
   return (
-    <section className={`learner-level${rail ? " learner-level--rail" : ""}`} aria-label="等级进度">
+    <section
+      className={`learner-level${rail ? " learner-level--rail" : ""}`}
+      aria-label={translate("ui.navigation.screens.levelProgress.copy.等级进度")}
+    >
       <div className="learner-level__head">
         <GameBadge>Lv. {level.level}</GameBadge>
       </div>

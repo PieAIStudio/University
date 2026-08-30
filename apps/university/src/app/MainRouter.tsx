@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import { lazy, Suspense, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import {
   LIBRARY_VIEW_TAB,
@@ -166,7 +167,9 @@ export function MainRouter({
         makes 「the chrome is the same」 a claim about the settled screen instead
         of a race against a fetch.
       */}
-      {studyNames.length === 0 && !shelf ? <p className="loading-copy">正在打开校园档案…</p> : null}
+      {studyNames.length === 0 && !shelf ? (
+        <p className="loading-copy">{translate("app.app.mainRouter.copy.正在打开校园档案")}</p>
+      ) : null}
       {stage ? (
         <div className="learn-stage">
           {stage}

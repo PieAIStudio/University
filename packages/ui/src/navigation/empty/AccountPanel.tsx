@@ -1,3 +1,4 @@
+import { translate } from "../../i18n/index.js";
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import {
   GameButton,
@@ -22,29 +23,39 @@ import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
  * `GameInput` — so this file does not invent a password box.
  */
 
-export const ACCOUNT_UNSIGNED_TITLE = "登录后跨设备同步";
-export const ACCOUNT_UNSIGNED_DESCRIPTION =
-  "登录后进度、批注、答案、复习和收藏会跟账号走；断网时本机继续，联网后同步。";
+export const ACCOUNT_UNSIGNED_TITLE = translate(
+  "ui.navigation.empty.accountPanel.copy.登录后跨设备同步",
+);
+export const ACCOUNT_UNSIGNED_DESCRIPTION = translate(
+  "ui.navigation.empty.accountPanel.copy.登录后进度-批注-答案-复习和收藏会跟账号走-断网时本机继续-联网后同步",
+);
 /**
  * Said from the learner's side of the screen, not ours.
  *
  * If the backend is not configured, say that plainly. The local cache still
  * works, but it is not a cross-device guarantee until an account is connected.
  */
-export const ACCOUNT_UNCONFIGURED_DESCRIPTION =
-  "云端账号还未配置；当前仅保留本机离线缓存，配置完成后登录即可跨设备同步。";
-export const ACCOUNT_UNCONFIGURED_ACTION = "暂未开放 · 了解原因";
-export const ACCOUNT_UNCONFIGURED_REASON =
-  "当前环境没有配置云端账号服务，所以现在不能登录，也不会假装已经同步。你仍可以在本机继续学习；配置账号服务后，这里会接入登录并支持跨设备同步。";
-export const ACCOUNT_SIGNED_IN_TITLE = "已经登录";
-const ACCOUNT_SIGNED_IN_DESCRIPTION =
-  "进度、批注、答案、复习、收藏和设置已绑定账号。断网也能继续学，连上再同步。";
-export const ACCOUNT_PENDING_LABEL = "正在登录…";
-export const ACCOUNT_SIGN_IN = "登录";
-const ACCOUNT_SIGN_UP = "创建账号";
-export const ACCOUNT_MAGIC_LINK = "免密码登录";
-export const ACCOUNT_SEND_MAGIC_LINK = "发送登录链接";
-export const ACCOUNT_SIGN_OUT = "退出登录";
+export const ACCOUNT_UNCONFIGURED_DESCRIPTION = translate(
+  "ui.navigation.empty.accountPanel.copy.云端账号还未配置-当前仅保留本机离线缓存-配置完成后登录即可跨设备同步",
+);
+export const ACCOUNT_UNCONFIGURED_ACTION = translate(
+  "ui.navigation.empty.accountPanel.copy.暂未开放-了解原因",
+);
+export const ACCOUNT_UNCONFIGURED_REASON = translate(
+  "ui.navigation.empty.accountPanel.copy.当前环境没有配置云端账号服务-所以现在不能登录-也不会假装已经同步-你仍可以在本机继续学习-配置账号服务后-这里",
+);
+export const ACCOUNT_SIGNED_IN_TITLE = translate("ui.navigation.empty.accountPanel.copy.已经登录");
+const ACCOUNT_SIGNED_IN_DESCRIPTION = translate(
+  "ui.navigation.empty.accountPanel.copy.进度-批注-答案-复习-收藏和设置已绑定账号-断网也能继续学-连上再同步",
+);
+export const ACCOUNT_PENDING_LABEL = translate("ui.navigation.empty.accountPanel.copy.正在登录");
+export const ACCOUNT_SIGN_IN = translate("ui.navigation.empty.accountPanel.copy.登录");
+const ACCOUNT_SIGN_UP = translate("ui.navigation.empty.accountPanel.copy.创建账号");
+export const ACCOUNT_MAGIC_LINK = translate("ui.navigation.empty.accountPanel.copy.免密码登录");
+export const ACCOUNT_SEND_MAGIC_LINK = translate(
+  "ui.navigation.empty.accountPanel.copy.发送登录链接",
+);
+export const ACCOUNT_SIGN_OUT = translate("ui.navigation.empty.accountPanel.copy.退出登录");
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 const MIN_PASSWORD_LENGTH = 8;
@@ -79,7 +90,10 @@ export function AccountPanel({
 
   if (status.kind === "unconfigured") {
     return (
-      <section className="account-panel" aria-label="账号">
+      <section
+        className="account-panel"
+        aria-label={translate("ui.navigation.empty.accountPanel.copy.账号")}
+      >
         <GameEmptyState
           title={ACCOUNT_UNSIGNED_TITLE}
           description={ACCOUNT_UNCONFIGURED_DESCRIPTION}
@@ -96,8 +110,8 @@ export function AccountPanel({
         {showUnavailableReason ? (
           <GameModal
             open
-            title="登录暂未开放"
-            closeLabel="关闭登录说明"
+            title={translate("ui.navigation.empty.accountPanel.copy.登录暂未开放")}
+            closeLabel={translate("ui.navigation.empty.accountPanel.copy.关闭登录说明")}
             closeOnBackdrop
             onClose={() => setShowUnavailableReason(false)}
             footer={
@@ -106,7 +120,7 @@ export function AccountPanel({
                 type="button"
                 onClick={() => setShowUnavailableReason(false)}
               >
-                知道了
+                {translate("ui.navigation.empty.accountPanel.copy.知道了")}
               </GameButton>
             }
           >
@@ -127,12 +141,18 @@ export function AccountPanel({
 
   if (status.kind === "signed_in") {
     return (
-      <section className="account-panel" aria-label="账号">
+      <section
+        className="account-panel"
+        aria-label={translate("ui.navigation.empty.accountPanel.copy.账号")}
+      >
         <GameEmptyState
           title={ACCOUNT_SIGNED_IN_TITLE}
           description={
             status.user.email
-              ? `${ACCOUNT_SIGNED_IN_DESCRIPTION} 现在是 ${status.user.email}。`
+              ? translate("ui.navigation.empty.accountPanel.copy.value0-现在是-value1", {
+                  value0: ACCOUNT_SIGNED_IN_DESCRIPTION,
+                  value1: status.user.email,
+                })
               : ACCOUNT_SIGNED_IN_DESCRIPTION
           }
           action={
@@ -198,12 +218,12 @@ function UnsignedAccountForm({
     event.preventDefault();
     const trimmed = email.trim();
     if (!trimmed || !EMAIL_PATTERN.test(trimmed)) {
-      setFieldError("请输入有效的邮箱地址。");
+      setFieldError(translate("ui.navigation.empty.accountPanel.copy.请输入有效的邮箱地址"));
       emailRef.current?.focus();
       return;
     }
     if (mode !== "magic" && password.length < MIN_PASSWORD_LENGTH) {
-      setFieldError("密码至少需要 8 个字符。");
+      setFieldError(translate("ui.navigation.empty.accountPanel.copy.密码至少需要-8-个字符"));
       passwordRef.current?.focus();
       return;
     }
@@ -213,11 +233,17 @@ function UnsignedAccountForm({
     try {
       if (mode === "magic") {
         if (!authRedirectTo) {
-          setFieldError("当前页面还没有可用的登录回跳地址。");
+          setFieldError(
+            translate("ui.navigation.empty.accountPanel.copy.当前页面还没有可用的登录回跳地址"),
+          );
           return;
         }
         await identity.requestMagicLink(trimmed, authRedirectTo);
-        setNotice("登录链接已经发到邮箱，请在这个浏览器里打开邮件中的链接；链接短时间有效。");
+        setNotice(
+          translate(
+            "ui.navigation.empty.accountPanel.copy.登录链接已经发到邮箱-请在这个浏览器里打开邮件中的链接-链接短时间有效",
+          ),
+        );
         return;
       }
       if (mode === "login") {
@@ -230,10 +256,16 @@ function UnsignedAccountForm({
       }
       const result = await identity.signUpWithEmail(trimmed, password);
       if (result.confirmationRequired) {
-        setNotice("请去邮箱点开确认信，然后再回来登录。");
+        setNotice(
+          translate("ui.navigation.empty.accountPanel.copy.请去邮箱点开确认信-然后再回来登录"),
+        );
       }
     } catch (reason: unknown) {
-      setFieldError(reason instanceof Error ? reason.message : "这次操作没有完成，请稍后再试。");
+      setFieldError(
+        reason instanceof Error
+          ? reason.message
+          : translate("ui.navigation.empty.accountPanel.copy.这次操作没有完成-请稍后再试"),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -255,17 +287,23 @@ function UnsignedAccountForm({
         />
         <div id="account-form-panel" role="tabpanel" aria-labelledby={`account-mode-${mode}`}>
           {error || fieldError ? (
-            <GameCallout tone="danger" heading="没登上">
+            <GameCallout
+              tone="danger"
+              heading={translate("ui.navigation.empty.accountPanel.copy.没登上")}
+            >
               {fieldError ?? error}
             </GameCallout>
           ) : null}
           {notice ? (
-            <GameCallout tone="info" heading="还差一步">
+            <GameCallout
+              tone="info"
+              heading={translate("ui.navigation.empty.accountPanel.copy.还差一步")}
+            >
               {notice}
             </GameCallout>
           ) : null}
           <form onSubmit={(event) => void handleSubmit(event)}>
-            <GameField label="邮箱" required>
+            <GameField label={translate("ui.navigation.empty.accountPanel.copy.邮箱")} required>
               <GameInput
                 ref={emailRef}
                 id={emailId}
@@ -279,7 +317,7 @@ function UnsignedAccountForm({
               />
             </GameField>
             {mode === "magic" ? null : (
-              <GameField label="密码" required>
+              <GameField label={translate("ui.navigation.empty.accountPanel.copy.密码")} required>
                 <GameInput
                   ref={passwordRef}
                   id={passwordId}

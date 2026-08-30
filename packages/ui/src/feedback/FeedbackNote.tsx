@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -38,17 +39,32 @@ export function feedbackNote(args: {
 }): string {
   const [width, height] = args.viewport;
   return [
-    `## ${args.said.trim() || "(没写内容)"}`,
+    `## ${args.said.trim() || translate("ui.feedback.feedbackNote.copy.没写内容")}`,
     "",
-    `- 壳：${args.shell}`,
-    `- 路由：${args.route}`,
-    `- 课程定位：${args.locator ? lessonRefKey(args.locator) : "未定位到具体课程"}`,
-    `- 内容版本：${args.contentRevision ?? "未定位到具体课程"}`,
-    `- 练习尝试次数：${args.exerciseAttemptCount ?? 0}`,
-    `- 登录状态：${args.signedIn ? "已登录" : "未登录"}`,
-    `- 视口：${width}×${height}`,
-    `- 主题：${args.theme}`,
-    `- 时间：${args.at.toISOString()}`,
+    translate("ui.feedback.feedbackNote.copy.壳-value0", { value0: args.shell }),
+    translate("ui.feedback.feedbackNote.copy.路由-value0", { value0: args.route }),
+    translate("ui.feedback.feedbackNote.copy.课程定位-value0", {
+      value0: args.locator
+        ? lessonRefKey(args.locator)
+        : translate("ui.feedback.feedbackNote.copy.未定位到具体课程"),
+    }),
+    translate("ui.feedback.feedbackNote.copy.内容版本-value0", {
+      value0: args.contentRevision ?? translate("ui.feedback.feedbackNote.copy.未定位到具体课程"),
+    }),
+    translate("ui.feedback.feedbackNote.copy.练习尝试次数-value0", {
+      value0: args.exerciseAttemptCount ?? 0,
+    }),
+    translate("ui.feedback.feedbackNote.copy.登录状态-value0", {
+      value0: args.signedIn
+        ? translate("ui.feedback.feedbackNote.copy.已登录")
+        : translate("ui.feedback.feedbackNote.copy.未登录"),
+    }),
+    translate("ui.feedback.feedbackNote.copy.视口-value0-value1", {
+      value0: width,
+      value1: height,
+    }),
+    translate("ui.feedback.feedbackNote.copy.主题-value0", { value0: args.theme }),
+    translate("ui.feedback.feedbackNote.copy.时间-value0", { value0: args.at.toISOString() }),
   ].join("\n");
 }
 
@@ -141,7 +157,7 @@ function FeedbackTrigger({
       <span className="nav-rail__icon">
         <FeedbackIcon />
       </span>
-      <span className="nav-rail__label">提意见</span>
+      <span className="nav-rail__label">{translate("ui.feedback.feedbackNote.copy.提意见")}</span>
     </button>
   );
 }
@@ -149,10 +165,10 @@ function FeedbackTrigger({
 const unavailableFeedbackPort: FeedbackPort = {
   transport: "unavailable",
   async submit() {
-    throw new Error("反馈通道还没有接好。");
+    throw new Error(translate("ui.feedback.feedbackNote.copy.反馈通道还没有接好"));
   },
   async readMine() {
-    throw new Error("反馈通道还没有接好。");
+    throw new Error(translate("ui.feedback.feedbackNote.copy.反馈通道还没有接好"));
   },
 };
 
@@ -205,23 +221,34 @@ export function FeedbackNote({
       setState("success");
     } catch {
       setState("error");
-      setErrorMessage("反馈没有送出。原话还在输入框里，你可以稍后重试或手动复制。");
+      setErrorMessage(
+        translate(
+          "ui.feedback.feedbackNote.copy.反馈没有送出-原话还在输入框里-你可以稍后重试或手动复制",
+        ),
+      );
     }
   }, [context, port, said, shell]);
 
   const isBusy = state === "busy";
   const successMessage =
     receiptTransport === "clipboard"
-      ? "这次没有送到系统，但已经复制到剪贴板。你可以把整条贴给课程作者。"
+      ? translate(
+          "ui.feedback.feedbackNote.copy.这次没有送到系统-但已经复制到剪贴板-你可以把整条贴给课程作者",
+        )
       : lessonTitle && context.contentRevision !== null
-        ? `收到。这条记在《${lessonTitle}》第 ${context.contentRevision} 版上了。`
-        : "收到。这条意见已经记下了。";
+        ? translate("ui.feedback.feedbackNote.copy.收到-这条记在-value0-第-value1-版上了", {
+            value0: lessonTitle,
+            value1: context.contentRevision,
+          })
+        : translate("ui.feedback.feedbackNote.copy.收到-这条意见已经记下了");
   const statusMessage =
     state === "error"
       ? errorMessage
       : state === "success"
         ? successMessage
-        : "路由、课定位、版本、练习尝试次数、登录状态、视口和时间会自动带上。";
+        : translate(
+            "ui.feedback.feedbackNote.copy.路由-课定位-版本-练习尝试次数-登录状态-视口和时间会自动带上",
+          );
   const statusClass =
     state === "error"
       ? "is-error"
@@ -232,23 +259,27 @@ export function FeedbackNote({
           : "";
   const actionLabel =
     state === "busy"
-      ? "正在发送…"
+      ? translate("ui.feedback.feedbackNote.copy.正在发送")
       : state === "success"
         ? receiptTransport === "clipboard"
-          ? "已复制"
-          : "已收到 ✓"
+          ? translate("ui.feedback.feedbackNote.copy.已复制")
+          : translate("ui.feedback.feedbackNote.copy.已收到")
         : state === "error"
-          ? "再试一次"
-          : "发送意见";
+          ? translate("ui.feedback.feedbackNote.copy.再试一次")
+          : translate("ui.feedback.feedbackNote.copy.发送意见");
 
   const panel = open ? (
-    <div className="feedback-note" role="dialog" aria-label="提意见">
+    <div
+      className="feedback-note"
+      role="dialog"
+      aria-label={translate("ui.feedback.feedbackNote.copy.提意见")}
+    >
       <textarea
         className="feedback-note__text"
         value={said}
         autoFocus
         rows={3}
-        placeholder="这一屏哪里不对？"
+        placeholder={translate("ui.feedback.feedbackNote.copy.这一屏哪里不对")}
         onChange={(event) => {
           setSaid(event.target.value);
           setState("idle");
@@ -278,7 +309,7 @@ export function FeedbackNote({
             setErrorMessage(null);
           }}
         >
-          收起
+          {translate("ui.feedback.feedbackNote.copy.收起")}
         </button>
       </div>
     </div>

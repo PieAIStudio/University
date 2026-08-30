@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { GameProgress } from "@pieai/swimmer-ui-kit";
 
@@ -276,7 +277,7 @@ export function LessonToolbar({
   const progress = (
     <GameProgress
       className="lesson-toolbar__progress"
-      label="课文进度"
+      label={translate("ui.lesson.lessonNav.copy.课文进度")}
       value={valueNow}
       max={valueMax}
       tone="accent"
@@ -289,7 +290,7 @@ export function LessonToolbar({
       <button
         type="button"
         className="lesson-toolbar__close"
-        aria-label="离开课文"
+        aria-label={translate("ui.lesson.lessonNav.copy.离开课文")}
         onClick={onClose}
       >
         ✕

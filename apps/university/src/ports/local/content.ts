@@ -5,6 +5,7 @@
  * mode exists. Behaviour is the contract: changing a path or a field here is
  * changing what 4317 has always answered, and that is a product change.
  */
+import { translate } from "@pieai/university-ui/i18n.js";
 import {
   isSafeId,
   lessonKey,
@@ -48,7 +49,10 @@ function guard(locator: LessonRef): void {
   const unsafe = [locator.studyId, locator.courseId, locator.unitId, locator.lessonId].find(
     (id) => !isSafeId(id),
   );
-  if (unsafe !== undefined) throw new Error(`这节课的地址不对：${unsafe}`);
+  if (unsafe !== undefined)
+    throw new Error(
+      translate("app.ports.local.content.copy.这节课的地址不对-value0", { value0: unsafe }),
+    );
 }
 
 /**
@@ -193,7 +197,10 @@ export function createLocalContentPort(options: {
 
     async exercise(locator, exerciseId): Promise<MistakeExercise> {
       guard(locator);
-      if (!isSafeId(exerciseId)) throw new Error(`这道题的地址不对：${exerciseId}`);
+      if (!isSafeId(exerciseId))
+        throw new Error(
+          translate("app.ports.local.content.copy.这道题的地址不对-value0", { value0: exerciseId }),
+        );
       return readJson<MistakeExercise>(await fetch(exerciseContentPath(locator, exerciseId)));
     },
 
@@ -210,7 +217,10 @@ export function createLocalContentPort(options: {
     },
 
     async notes(studyId: string) {
-      if (!isSafeId(studyId)) throw new Error(`这个项目的地址不对：${studyId}`);
+      if (!isSafeId(studyId))
+        throw new Error(
+          translate("app.ports.local.content.copy.这个项目的地址不对-value0", { value0: studyId }),
+        );
       const view = await readJson<StudyView>(
         await fetch(`/api/studies/${encodeURIComponent(studyId)}`),
       );

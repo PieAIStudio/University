@@ -116,7 +116,7 @@
 .markdown-body td {
   padding: 10px;
   border: 1px solid var(--campus-rule);
-  text-align: left;
+  text-align: start;
 }
 
 .markdown-body > h1:first-child {

@@ -7,6 +7,7 @@
  * The shared reader and progress document must see that number so a read
  * confirmation is bound to the version the learner actually opened.
  */
+import { translate } from "@pieai/university-ui/i18n.js";
 import {
   assembleLessonIndex,
   backlinksOf,
@@ -132,7 +133,7 @@ export function assembleLessonView(input: {
       exercises: lesson.exercises.map((exercise) => ({
         id: exercise.id,
         kind: exercise.kind,
-        title: exercise.title ?? "自检",
+        title: exercise.title ?? translate("app.lesson.assembleview.copy.自检"),
         prompt: exercise.prompt,
         contentRevision,
       })),

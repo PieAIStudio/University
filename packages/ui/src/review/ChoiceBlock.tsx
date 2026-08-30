@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useEffect, useRef, useState } from "react";
 import { GameBadge, GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
 
@@ -15,12 +16,12 @@ import {
  * names that `kind: "choice"`, and a quiz payload has no other type. The
  * chip is that constant — not a per-question field we invented.
  */
-export const CHOICE_BLOCK_KIND_LABEL = "判断";
-export const CHOICE_SUBMIT_LABEL = "提交";
-export const CHOICE_SOLVED_LABEL = "已答对";
-export const CHOICE_NEXT_LABEL = "继续下一题 →";
-export const CHOICE_WRONG_VERDICT = "答错";
-export const CHOICE_CORRECT_VERDICT = "答对";
+export const CHOICE_BLOCK_KIND_LABEL = translate("ui.review.choiceBlock.copy.判断");
+export const CHOICE_SUBMIT_LABEL = translate("ui.review.choiceBlock.copy.提交");
+export const CHOICE_SOLVED_LABEL = translate("ui.review.choiceBlock.copy.已答对");
+export const CHOICE_NEXT_LABEL = translate("ui.review.choiceBlock.copy.继续下一题");
+export const CHOICE_WRONG_VERDICT = translate("ui.review.choiceBlock.copy.答错");
+export const CHOICE_CORRECT_VERDICT = translate("ui.review.choiceBlock.copy.答对");
 
 export interface ChoiceBlockOption {
   readonly id: string;
@@ -121,7 +122,11 @@ export function ChoiceBlock({
       <div className="choice-block__prompt exercise-prompt">
         <MarkdownContent>{exercise.prompt}</MarkdownContent>
       </div>
-      <div className="choice-block__options" role="group" aria-label="选项">
+      <div
+        className="choice-block__options"
+        role="group"
+        aria-label={translate("ui.review.choiceBlock.copy.选项")}
+      >
         {exercise.options.map((option) => {
           const wrong = state.wrongOptionIds.includes(option.id);
           const correct = state.solved && option.id === exercise.correctOptionId;
@@ -165,16 +170,24 @@ export function ChoiceBlock({
         })}
       </div>
       {feedback?.kind === "wrong" ? (
-        <GameCallout heading="还不对" tone="danger" role="status">
+        <GameCallout
+          heading={translate("ui.review.choiceBlock.copy.还不对")}
+          tone="danger"
+          role="status"
+        >
           {feedback.explanation}
         </GameCallout>
       ) : null}
       {correctFeedback ? (
         <>
           <GameBadge className="choice-block__correct-merge" tone="success">
-            ✓ 答对了
+            {translate("ui.review.choiceBlock.copy.答对了")}
           </GameBadge>
-          <GameCallout heading="答案解释" tone="success" role="status">
+          <GameCallout
+            heading={translate("ui.review.choiceBlock.copy.答案解释")}
+            tone="success"
+            role="status"
+          >
             {feedback.explanation}
           </GameCallout>
         </>

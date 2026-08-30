@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import type { EvidenceSnippetView, EvidenceToken } from "../view/lesson-view.js";
 
 function trustedThemeColor(color: string | undefined): string | undefined {
@@ -17,7 +18,11 @@ export function EvidenceCode({
     <pre
       className="evidence-code"
       tabIndex={0}
-      aria-label={`${snippet.sourcePath} 第 ${snippet.startLine} 到 ${snippet.endLine} 行`}
+      aria-label={translate("ui.evidence.evidenceCode.copy.value0-第-value1-到-value2-行", {
+        value0: snippet.sourcePath,
+        value1: snippet.startLine,
+        value2: snippet.endLine,
+      })}
     >
       <code>
         {lines.map((tokens, index) => {

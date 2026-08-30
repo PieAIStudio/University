@@ -27,6 +27,7 @@ import { extname, join, relative } from "node:path";
 const ROOT = new URL("..", import.meta.url).pathname;
 const DELIVERY_DIST = join(ROOT, "apps/university/dist/delivery");
 const AUTHORING = join(ROOT, "apps/university/src/authoring");
+const SOURCE_CATALOG = join(ROOT, "packages/ui/src/i18n/catalogs/zh-CN.ts");
 const CSS_SOURCE_ROOTS = [
   join(ROOT, "apps/university/src"),
   join(ROOT, "packages/ui/src"),
@@ -207,8 +208,14 @@ function checkCssFreshness(cssFiles) {
   ];
 }
 
-/** A phrase only the workbench says. Minification cannot touch a string. */
+/**
+ * Phrases that used to be sufficient to fingerprint the workbench. The source
+ * catalog is intentionally shared by both modes now, so these are only useful
+ * when a phrase is emitted outside that shared data. Function fingerprints
+ * remain the primary code-leak check above.
+ */
 const AUTHORING_COPY = ["本机上的课从这里长出来", "作者工作台"];
+const SHARED_CATALOG_COPY = readFileSync(SOURCE_CATALOG, "utf8");
 
 /**
  * SwimmerAIKit is server-only. The delivery app may call the grading service,
@@ -279,7 +286,9 @@ for (const file of bundleFiles(DELIVERY_DIST)) {
     if (new RegExp(`\\b${name}\\b`).test(code)) found.push(`${where}: ${name}`);
   }
   for (const phrase of AUTHORING_COPY) {
-    if (code.includes(phrase)) found.push(`${where}: ${JSON.stringify(phrase)}`);
+    if (code.includes(phrase) && !SHARED_CATALOG_COPY.includes(phrase)) {
+      found.push(`${where}: ${JSON.stringify(phrase)}`);
+    }
   }
 }
 

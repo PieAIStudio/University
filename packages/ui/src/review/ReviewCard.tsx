@@ -1,3 +1,4 @@
+import { formatDate, translate } from "../i18n/index.js";
 import { useEffect, useRef, useState } from "react";
 import { playSound } from "../sound/index.js";
 import { GameBadge, GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
@@ -98,7 +99,7 @@ export function ReviewCard({
   }, [cardIdentity]);
 
   async function post(path: string, body: unknown) {
-    if (!requestToken) throw new Error("复习服务尚未接通");
+    if (!requestToken) throw new Error(translate("ui.review.reviewCard.copy.复习服务尚未接通"));
     return fetch(path, {
       method: "POST",
       headers: {
@@ -138,7 +139,10 @@ export function ReviewCard({
       // The answer field stays editable on failure. Locking it on *attempt*
       // used to strand the learner: a 409 revision conflict disabled the
       // field and every retry replayed the same stale contentRevision.
-      const message = reason instanceof Error ? reason.message : "暂时无法揭示答案";
+      const message =
+        reason instanceof Error
+          ? reason.message
+          : translate("ui.review.reviewCard.copy.暂时无法揭示答案");
       setRevealFailed(true);
       setError(isStaleTokenFailure(message) ? STALE_TOKEN_NOTICE : message);
       if (isStaleTokenFailure(message)) {
@@ -172,7 +176,10 @@ export function ReviewCard({
       // click and then the save fails has told the learner something untrue.
       playSound("review.graded");
     } catch (reason) {
-      const message = reason instanceof Error ? reason.message : "暂时无法保存复习结果";
+      const message =
+        reason instanceof Error
+          ? reason.message
+          : translate("ui.review.reviewCard.copy.暂时无法保存复习结果");
       setError(isStaleTokenFailure(message) ? STALE_TOKEN_NOTICE : message);
       if (isStaleTokenFailure(message)) await onReviewed().catch(() => undefined);
       setPending(false);
@@ -183,7 +190,7 @@ export function ReviewCard({
     try {
       await onReviewed();
     } catch {
-      setError("评分已保存，但界面没能刷新，请重新加载页面。");
+      setError(translate("ui.review.reviewCard.copy.评分已保存-但界面没能刷新-请重新加载页面"));
     } finally {
       setPending(false);
     }
@@ -221,7 +228,7 @@ export function ReviewCard({
       );
       setCoachCopied(true);
     } catch {
-      setError("复制失败，剪贴板不可用");
+      setError(translate("ui.review.reviewCard.copy.复制失败-剪贴板不可用"));
     } finally {
       setCoachPending(false);
     }
@@ -242,15 +249,16 @@ export function ReviewCard({
       <div className="panel-heading">
         <div>
           {isRecap ? (
-            <h2>讲一遍</h2>
+            <h2>{translate("ui.review.reviewCard.copy.讲一遍")}</h2>
           ) : (
             <Tip term="retrieval-practice">
-              <h2>通过答题复习</h2>
+              <h2>{translate("ui.review.reviewCard.copy.通过答题复习")}</h2>
             </Tip>
           )}
           {remaining !== undefined && remaining > 1 ? (
             <p className="review-card__queue">
-              今天还剩 <strong>{remaining}</strong> 张 · 评分后自动换下一张
+              {translate("ui.review.reviewCard.copy.今天还剩")} <strong>{remaining}</strong>{" "}
+              {translate("ui.review.reviewCard.copy.张-评分后自动换下一张")}
             </p>
           ) : null}
         </div>
@@ -262,15 +270,25 @@ export function ReviewCard({
         <MarkdownContent inline>{card.front}</MarkdownContent>
       </p>
       {isRecap ? (
-        <p className="review-card__instruction">请用自己的话，讲给一个完全不知道这件事的人听。</p>
+        <p className="review-card__instruction">
+          {translate("ui.review.reviewCard.copy.请用自己的话-讲给一个完全不知道这件事的人听")}
+        </p>
       ) : null}
       <label className="answer-field">
-        <span>{isRecap ? "这次复述" : "你的回答"}</span>
+        <span>
+          {isRecap
+            ? translate("ui.review.reviewCard.copy.这次复述")
+            : translate("ui.review.reviewCard.copy.你的回答")}
+        </span>
         <textarea
           value={answer}
           onChange={(event) => setAnswer(event.target.value)}
           disabled={pending || revealed || nextDue !== null}
-          placeholder={isRecap ? "在这里写你的复述……" : "先写下自己的答案；非空后才能揭示。"}
+          placeholder={
+            isRecap
+              ? translate("ui.review.reviewCard.copy.在这里写你的复述")
+              : translate("ui.review.reviewCard.copy.先写下自己的答案-非空后才能揭示")
+          }
           rows={4}
         />
       </label>
@@ -279,15 +297,15 @@ export function ReviewCard({
           <LiquidCtaButton onClick={() => void reveal()} disabled={!answer.trim() || pending}>
             {pending
               ? isRecap
-                ? "正在记录…"
-                : "正在核对…"
+                ? translate("ui.review.reviewCard.copy.正在记录")
+                : translate("ui.review.reviewCard.copy.正在核对")
               : isRecap
                 ? revealFailed
-                  ? "重试查看"
-                  : "查看以前的复述"
+                  ? translate("ui.review.reviewCard.copy.重试查看")
+                  : translate("ui.review.reviewCard.copy.查看以前的复述")
                 : revealFailed
-                  ? "重试揭示"
-                  : "揭示答案"}
+                  ? translate("ui.review.reviewCard.copy.重试揭示")
+                  : translate("ui.review.reviewCard.copy.揭示答案")}
           </LiquidCtaButton>
         ) : (
           <GameButton
@@ -297,15 +315,15 @@ export function ReviewCard({
           >
             {pending
               ? isRecap
-                ? "正在记录…"
-                : "正在核对…"
+                ? translate("ui.review.reviewCard.copy.正在记录")
+                : translate("ui.review.reviewCard.copy.正在核对")
               : isRecap
                 ? revealFailed
-                  ? "重试查看"
-                  : "查看以前的复述"
+                  ? translate("ui.review.reviewCard.copy.重试查看")
+                  : translate("ui.review.reviewCard.copy.查看以前的复述")
                 : revealFailed
-                  ? "重试揭示"
-                  : "揭示答案"}
+                  ? translate("ui.review.reviewCard.copy.重试揭示")
+                  : translate("ui.review.reviewCard.copy.揭示答案")}
           </GameButton>
         )
       ) : (
@@ -314,54 +332,59 @@ export function ReviewCard({
           aria-live="polite"
         >
           {isRecap ? (
-            <div className="recap-review__comparison" aria-label="本次与以前的复述">
+            <div
+              className="recap-review__comparison"
+              aria-label={translate("ui.review.reviewCard.copy.本次与以前的复述")}
+            >
               <div className="recap-review__answer">
-                <p className="eyebrow">这次复述</p>
+                <p className="eyebrow">{translate("ui.review.reviewCard.copy.这次复述")}</p>
                 <p>{answer}</p>
               </div>
               <div className="recap-review__answer">
-                <p className="eyebrow">以前的复述（{priorAttempts.length} 次）</p>
+                <p className="eyebrow">
+                  {translate("ui.review.reviewCard.copy.以前的复述")}
+                  {priorAttempts.length} {translate("ui.review.reviewCard.copy.次")}
+                </p>
                 {priorAttempts.length > 0 ? (
                   <ul className="recap-review__history">
                     {priorAttempts.map((attempt) => (
                       <li key={`${attempt.revealedAt}:${attempt.answer}`}>
-                        <time dateTime={attempt.revealedAt}>
-                          {new Date(attempt.revealedAt).toLocaleDateString("zh-CN")}
-                        </time>
+                        <time dateTime={attempt.revealedAt}>{formatDate(attempt.revealedAt)}</time>
                         <span>{attempt.answer}</span>
                         {attempt.contentRevision !== card.contentRevision ? (
                           // The card has been rewritten since. The old answer is
                           // still real history, but it answered a different card.
-                          <small>答的是旧版</small>
+                          <small>{translate("ui.review.reviewCard.copy.答的是旧版")}</small>
                         ) : null}
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p>还没有更早的复述。</p>
+                  <p>{translate("ui.review.reviewCard.copy.还没有更早的复述")}</p>
                 )}
               </div>
             </div>
           ) : (
             <>
-              <p className="eyebrow">参考答案</p>
+              <p className="eyebrow">{translate("ui.review.reviewCard.copy.参考答案")}</p>
               <div className="answer-reveal__body">
                 <MarkdownContent>{back ?? ""}</MarkdownContent>
               </div>
               {priorAttempts.length > 0 ? (
                 <div className="answer-history">
-                  <p className="eyebrow">你以前答过 {priorAttempts.length} 次</p>
+                  <p className="eyebrow">
+                    {translate("ui.review.reviewCard.copy.你以前答过")} {priorAttempts.length}{" "}
+                    {translate("ui.review.reviewCard.copy.次-a5jtgs")}
+                  </p>
                   <ul>
                     {priorAttempts.map((attempt) => (
                       <li key={`${attempt.revealedAt}:${attempt.answer}`}>
-                        <time dateTime={attempt.revealedAt}>
-                          {new Date(attempt.revealedAt).toLocaleDateString("zh-CN")}
-                        </time>
+                        <time dateTime={attempt.revealedAt}>{formatDate(attempt.revealedAt)}</time>
                         <span>{attempt.answer}</span>
                         {attempt.contentRevision !== card.contentRevision ? (
                           // The card has been rewritten since. The old answer is
                           // still real history, but it answered a different card.
-                          <small>答的是旧版</small>
+                          <small>{translate("ui.review.reviewCard.copy.答的是旧版")}</small>
                         ) : null}
                       </li>
                     ))}
@@ -375,42 +398,50 @@ export function ReviewCard({
                   disabled={pending || coachPending}
                 >
                   {coachPending
-                    ? "正在检查会员权益…"
+                    ? translate("ui.review.reviewCard.copy.正在检查会员权益")
                     : coachCopied
-                      ? "已复制讲解包"
-                      : "让 AI 讲讲这张卡"}
+                      ? translate("ui.review.reviewCard.copy.已复制讲解包")
+                      : translate("ui.review.reviewCard.copy.让-AI-讲讲这张卡")}
                 </GameButton>
                 {coachCopied ? (
                   <span className="answer-reveal__coach-hint">
-                    贴到任意 AI 宿主。它只负责讲解 —— 下面这四个按钮问的是「你回忆得费不费劲」，
-                    只有你答得了。
+                    {translate(
+                      "ui.review.reviewCard.copy.贴到任意-AI-宿主-它只负责讲解-下面这四个按钮问的是-你回忆得费不费劲-只有你答得了",
+                    )}
                   </span>
                 ) : null}
               </div>
             </>
           )}
           {nextDue ? (
-            <GameCallout heading="复习结果已保存" tone="success">
-              下一次安排：{new Date(nextDue).toLocaleString("zh-CN")}
+            <GameCallout
+              heading={translate("ui.review.reviewCard.copy.复习结果已保存")}
+              tone="success"
+            >
+              {translate("ui.review.reviewCard.copy.下一次安排")}
+              {formatDate(nextDue)}
             </GameCallout>
           ) : (
-            <div className="rating-row" aria-label="根据回忆难度评分">
+            <div
+              className="rating-row"
+              aria-label={translate("ui.review.reviewCard.copy.根据回忆难度评分")}
+            >
               <Tip term={isRecap ? "review-rating-recap" : "review-rating"}>
                 <span className="rating-row__help" aria-hidden="true">
-                  这四个按钮是什么意思？
+                  {translate("ui.review.reviewCard.copy.这四个按钮是什么意思")}
                 </span>
               </Tip>
               <GameButton variant="danger" onClick={() => void rate(1)} disabled={pending}>
-                {ratingLabel("again", "重来")}
+                {ratingLabel("again", translate("ui.review.reviewCard.copy.重来"))}
               </GameButton>
               <GameButton variant="ghost" onClick={() => void rate(2)} disabled={pending}>
-                {ratingLabel("hard", "困难")}
+                {ratingLabel("hard", translate("ui.review.reviewCard.copy.困难"))}
               </GameButton>
               <GameButton variant="secondary" onClick={() => void rate(3)} disabled={pending}>
-                {ratingLabel("good", "良好")}
+                {ratingLabel("good", translate("ui.review.reviewCard.copy.良好"))}
               </GameButton>
               <GameButton variant="success" onClick={() => void rate(4)} disabled={pending}>
-                {ratingLabel("easy", "简单")}
+                {ratingLabel("easy", translate("ui.review.reviewCard.copy.简单"))}
               </GameButton>
             </div>
           )}

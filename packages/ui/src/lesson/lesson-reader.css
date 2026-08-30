@@ -222,7 +222,7 @@
   width: 100%;
   padding: 14px 16px;
   border: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));
-  border-left: 3px solid #f6c177;
+  border-inline-start: 3px solid #f6c177;
   background: rgb(246 193 119 / 6%);
 }
 
@@ -419,7 +419,7 @@
   margin-top: 34px;
   padding: 20px 22px;
   border: 1px solid rgb(246 193 119 / 30%);
-  border-left: 3px solid #f6c177;
+  border-inline-start: 3px solid #f6c177;
   background: rgb(246 193 119 / 7%);
 }
 
@@ -517,7 +517,7 @@
 .lesson-next[data-state="course-end"] {
   padding: 26px 24px;
   border: 1px solid rgb(246 193 119 / 26%);
-  border-left: 3px solid #f6c177;
+  border-inline-start: 3px solid #f6c177;
   background: rgb(246 193 119 / 6%);
 }
 
@@ -555,7 +555,7 @@
 
 .coaching-packet__steps {
   margin: 0 0 10px;
-  padding-left: 1.25rem;
+  padding-inline-start: 1.25rem;
   color: rgba(255, 245, 232, 0.88);
   font-size: 0.88rem;
   line-height: 1.55;
@@ -617,7 +617,7 @@
 
 .host-grade__extensions ul {
   margin: 6px 0 0;
-  padding-left: 1.2rem;
+  padding-inline-start: 1.2rem;
   color: rgba(255, 245, 232, 0.82);
   font-size: 0.88rem;
   line-height: 1.5;
@@ -940,7 +940,7 @@
   font: inherit;
   font-size: 0.82rem;
   line-height: 1.45;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -975,27 +975,30 @@
    vertically when two passages sit too close to share a line. */
 .margin-note {
   position: absolute;
-  right: 0;
-  left: 0;
+  inset-inline-end: 0;
+  inset-inline-start: 0;
   display: grid;
   gap: 4px;
   padding: 8px 10px;
-  border-left: 2px solid rgb(246 193 119 / 55%);
-  border-radius: 0 9px 9px 0;
+  border-inline-start: 2px solid rgb(246 193 119 / 55%);
+  border-start-start-radius: 0;
+  border-start-end-radius: 9px;
+  border-end-end-radius: 9px;
+  border-end-start-radius: 0;
   background: rgb(255 245 232 / 4%);
   transition: background 140ms ease;
 }
 
 /* A highlight is a note to self, not unfinished business, so it recedes. */
 .margin-note[data-kind="highlight"] {
-  border-left-color: rgb(255 245 232 / 22%);
+  border-inline-start-color: rgb(255 245 232 / 22%);
 }
 
 /* The passage is gone from this revision — the note is kept, but it can no
    longer claim to point at anything. */
 .margin-note[data-orphaned] {
-  border-left-style: dashed;
-  border-left-color: rgb(240 168 104 / 50%);
+  border-inline-start-style: dashed;
+  border-inline-start-color: rgb(240 168 104 / 50%);
   opacity: 0.72;
 }
 
@@ -1012,7 +1015,7 @@
   background: none;
   color: inherit;
   font: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -1151,7 +1154,7 @@
   border-radius: 8px;
   background: none;
   color: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -1282,7 +1285,7 @@
   color: #f0a868;
   cursor: pointer;
   font-size: 0.84rem;
-  text-align: left;
+  text-align: start;
   line-height: 1.4;
 }
 
@@ -1313,7 +1316,7 @@
   color: var(--game-ui-text-muted, #cbb49c);
   cursor: pointer;
   font: inherit;
-  text-align: left;
+  text-align: start;
 }
 
 .lesson-backlinks button:hover,
@@ -1400,7 +1403,7 @@
 /* An open question is unfinished business and says so; a highlight is a note to
    self and should not compete with it for attention. */
 .mark-list__item[data-kind="question"] {
-  border-left: 2px solid rgb(246 193 119 / 70%);
+  border-inline-start: 2px solid rgb(246 193 119 / 70%);
 }
 
 .mark-list__quote {
@@ -1411,7 +1414,7 @@
   background: none;
   color: inherit;
   font: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -1509,7 +1512,7 @@
   display: grid;
   gap: 0.35rem;
   margin: 0;
-  padding-left: 1.15em;
+  padding-inline-start: 1.15em;
   font-size: 0.9rem;
 }
 

@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useState } from "react";
 
 import type { SourceAccessExplanation, SourceAccessPort } from "@pieai/university-core";
@@ -50,7 +51,11 @@ export function EvidenceUaPlace(props: EvidenceUaPlaceProps) {
     try {
       await access.run();
     } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : "项目地图暂时打不开");
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : translate("ui.evidence.evidenceUaPlace.copy.项目地图暂时打不开"),
+      );
     } finally {
       setPending(false);
     }
@@ -59,9 +64,13 @@ export function EvidenceUaPlace(props: EvidenceUaPlaceProps) {
   return (
     <div className="evidence-ua-place">
       {!compact ? (
-        <p className="evidence-ua-place__layer">项目里的位置 · 这份课程引用的源码</p>
+        <p className="evidence-ua-place__layer">
+          {translate("ui.evidence.evidenceUaPlace.copy.项目里的位置-这份课程引用的源码")}
+        </p>
       ) : ua.layerName ? (
-        <p className="evidence-ua-place__layer">项目里的位置 · {ua.layerName}</p>
+        <p className="evidence-ua-place__layer">
+          {translate("ui.evidence.evidenceUaPlace.copy.项目里的位置")} {ua.layerName}
+        </p>
       ) : null}
       {!compact && ua.summary ? <p className="evidence-ua-place__summary">{ua.summary}</p> : null}
       {!compact && studyId ? (
@@ -72,7 +81,9 @@ export function EvidenceUaPlace(props: EvidenceUaPlaceProps) {
           onClick={() => void openMap()}
           disabled={pending}
         >
-          {pending ? "正在打开项目地图…" : "在完整项目地图里看"}
+          {pending
+            ? translate("ui.evidence.evidenceUaPlace.copy.正在打开项目地图")
+            : translate("ui.evidence.evidenceUaPlace.copy.在完整项目地图里看")}
         </button>
       ) : null}
       {error ? (

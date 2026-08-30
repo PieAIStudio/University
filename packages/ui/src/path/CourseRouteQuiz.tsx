@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useEffect, useMemo, useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
@@ -12,27 +13,31 @@ interface RouteQuestion {
 
 const COURSE_ROUTE_QUESTIONS: readonly RouteQuestion[] = [
   {
-    prompt: "如果 App 里的按钮文字不对，你第一反应更接近哪一种？",
+    prompt: translate(
+      "ui.path.courseRouteQuiz.copy.如果-App-里的按钮文字不对-你第一反应更接近哪一种",
+    ),
     options: [
-      { label: "我会在界面里继续找", score: 0 },
-      { label: "我会猜某个文件可能负责它", score: 1 },
-      { label: "我会打开项目找代码并运行检查", score: 2 },
+      { label: translate("ui.path.courseRouteQuiz.copy.我会在界面里继续找"), score: 0 },
+      { label: translate("ui.path.courseRouteQuiz.copy.我会猜某个文件可能负责它"), score: 1 },
+      { label: translate("ui.path.courseRouteQuiz.copy.我会打开项目找代码并运行检查"), score: 2 },
     ],
   },
   {
-    prompt: "看到 `.tsx`、`package.json` 这些名字时，你大概处在什么状态？",
+    prompt: translate(
+      "ui.path.courseRouteQuiz.copy.看到-tsx-package-json-这些名字时-你大概处在什么状态",
+    ),
     options: [
-      { label: "看起来都很陌生", score: 0 },
-      { label: "见过，但需要有人带着看", score: 1 },
-      { label: "我能大致说出它们分别做什么", score: 2 },
+      { label: translate("ui.path.courseRouteQuiz.copy.看起来都很陌生"), score: 0 },
+      { label: translate("ui.path.courseRouteQuiz.copy.见过-但需要有人带着看"), score: 1 },
+      { label: translate("ui.path.courseRouteQuiz.copy.我能大致说出它们分别做什么"), score: 2 },
     ],
   },
   {
-    prompt: "你以前把一个项目改过，并重新跑起来吗？",
+    prompt: translate("ui.path.courseRouteQuiz.copy.你以前把一个项目改过-并重新跑起来吗"),
     options: [
-      { label: "还没有", score: 0 },
-      { label: "改过小地方，但过程不太稳定", score: 1 },
-      { label: "改过，也能自己排查问题", score: 2 },
+      { label: translate("ui.path.courseRouteQuiz.copy.还没有"), score: 0 },
+      { label: translate("ui.path.courseRouteQuiz.copy.改过小地方-但过程不太稳定"), score: 1 },
+      { label: translate("ui.path.courseRouteQuiz.copy.改过-也能自己排查问题"), score: 2 },
     ],
   },
 ];
@@ -70,19 +75,29 @@ const ROUTE_COPY: Record<
   { readonly label: string; readonly description: string; readonly reason: string }
 > = {
   beginner: {
-    label: "从零开始",
-    description: "从 App、文件和代码的最小概念开始，把这门课完整走一遍。",
-    reason: "你会先建立“屏幕上的东西和文件里的代码有关”这条最重要的连接。",
+    label: translate("ui.path.courseRouteQuiz.copy.从零开始"),
+    description: translate(
+      "ui.path.courseRouteQuiz.copy.从-App-文件和代码的最小概念开始-把这门课完整走一遍",
+    ),
+    reason: translate(
+      "ui.path.courseRouteQuiz.copy.你会先建立-屏幕上的东西和文件里的代码有关-这条最重要的连接",
+    ),
   },
   familiar: {
-    label: "有一点基础",
-    description: "跳过最前面的使用者视角，从代码和文件的关系开始。",
-    reason: "你已经见过项目文件，先把代码怎样组成界面这条线接起来更省力。",
+    label: translate("ui.path.courseRouteQuiz.copy.有一点基础"),
+    description: translate(
+      "ui.path.courseRouteQuiz.copy.跳过最前面的使用者视角-从代码和文件的关系开始",
+    ),
+    reason: translate(
+      "ui.path.courseRouteQuiz.copy.你已经见过项目文件-先把代码怎样组成界面这条线接起来更省力",
+    ),
   },
   builder: {
-    label: "有开发经验",
-    description: "跳过入门解释，从文件、配置和运行关系开始。",
-    reason: "你已经改过并运行过项目，直接整理文件职责和运行链路更合适。",
+    label: translate("ui.path.courseRouteQuiz.copy.有开发经验"),
+    description: translate("ui.path.courseRouteQuiz.copy.跳过入门解释-从文件-配置和运行关系开始"),
+    reason: translate(
+      "ui.path.courseRouteQuiz.copy.你已经改过并运行过项目-直接整理文件职责和运行链路更合适",
+    ),
   },
 };
 
@@ -215,21 +230,27 @@ export function CourseRouteQuiz({
     <details className="course-route-quiz">
       <summary>
         <span>
-          <span className="eyebrow">学习路线</span>
-          <strong>先测测你的学习起点</strong>
+          <span className="eyebrow">{translate("ui.path.courseRouteQuiz.copy.学习路线")}</span>
+          <strong>{translate("ui.path.courseRouteQuiz.copy.先测测你的学习起点")}</strong>
         </span>
         <span className="course-route-quiz__summary-meta">
-          {result ? ROUTE_COPY[result.level].label : "3 个小问题"}
+          {result
+            ? ROUTE_COPY[result.level].label
+            : translate("ui.path.courseRouteQuiz.copy.3-个小问题")}
         </span>
       </summary>
       <div className="course-route-quiz__body">
         {result && plan ? (
           <div className="course-route-quiz__result">
-            <p className="course-route-quiz__result-label">根据你的回答，推荐起点是</p>
+            <p className="course-route-quiz__result-label">
+              {translate("ui.path.courseRouteQuiz.copy.根据你的回答-推荐起点是")}
+            </p>
             <h4>{plan.label}</h4>
             <p>{plan.description}</p>
             <p className="course-route-quiz__count">
-              建议先学 {plan.recommendedCount} 节（这门课共 {plan.totalCount} 节）。
+              {translate("ui.path.courseRouteQuiz.copy.建议先学")} {plan.recommendedCount}{" "}
+              {translate("ui.path.courseRouteQuiz.copy.节-这门课共")} {plan.totalCount}{" "}
+              {translate("ui.path.courseRouteQuiz.copy.节")}
             </p>
             <p className="course-route-quiz__reason">{plan.reason}</p>
             <div className="course-route-quiz__actions">
@@ -245,24 +266,32 @@ export function CourseRouteQuiz({
                     })
                   }
                 >
-                  从推荐起点开始
+                  {translate("ui.path.courseRouteQuiz.copy.从推荐起点开始")}
                 </GameButton>
               ) : null}
               <button type="button" className="text-button" onClick={retake}>
-                重新回答
+                {translate("ui.path.courseRouteQuiz.copy.重新回答")}
               </button>
             </div>
             <p className="course-route-quiz__note">
-              这是推荐起点，不会锁住前面的课；你仍然可以展开全部 {plan.totalCount} 节课。
+              {translate(
+                "ui.path.courseRouteQuiz.copy.这是推荐起点-不会锁住前面的课-你仍然可以展开全部",
+              )}{" "}
+              {plan.totalCount} {translate("ui.path.courseRouteQuiz.copy.节课")}
             </p>
           </div>
         ) : currentQuestion ? (
           <div className="course-route-quiz__question" aria-live="polite">
             <div className="course-route-quiz__progress">
               <span>
-                第 {answers.length + 1} / {COURSE_ROUTE_QUESTIONS.length} 题
+                {translate("ui.path.courseRouteQuiz.copy.第")} {answers.length + 1} /{" "}
+                {COURSE_ROUTE_QUESTIONS.length} {translate("ui.path.courseRouteQuiz.copy.题")}
               </span>
-              <span>{answers.length === 0 ? "凭直觉回答就好" : "继续回答，系统会自动判断"}</span>
+              <span>
+                {answers.length === 0
+                  ? translate("ui.path.courseRouteQuiz.copy.凭直觉回答就好")
+                  : translate("ui.path.courseRouteQuiz.copy.继续回答-系统会自动判断")}
+              </span>
             </div>
             <h4>{currentQuestion.prompt}</h4>
             <div className="course-route-quiz__options">

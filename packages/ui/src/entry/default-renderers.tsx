@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import type { ReactNode } from "react";
 import { GameCallout } from "@pieai/swimmer-ui-kit";
 import {
@@ -108,7 +109,12 @@ const DEFAULT_BY_TYPE = {
               ·{" "}
             </span>
           ) : null}
-          {section.payload.not ? <span>它不是：{section.payload.not}</span> : null}
+          {section.payload.not ? (
+            <span>
+              {translate("ui.entry.defaultrenderers.copy.它不是")}
+              {section.payload.not}
+            </span>
+          ) : null}
         </p>
       </SectionFrame>
     ),
@@ -183,7 +189,11 @@ const DEFAULT_BY_TYPE = {
               </span>
               <span className="entry-section__flow-head">
                 <strong>{step.label}</strong>
-                {step.current ? <em className="entry-section__flow-mark">本页重点</em> : null}
+                {step.current ? (
+                  <em className="entry-section__flow-mark">
+                    {translate("ui.entry.defaultrenderers.copy.本页重点")}
+                  </em>
+                ) : null}
               </span>
               <span>{step.description}</span>
             </li>
@@ -202,7 +212,9 @@ const DEFAULT_BY_TYPE = {
             <li key={item.name}>
               <strong>{item.name}</strong>
               <p>
-                <span className="entry-section__when-label">什么时候用它</span>
+                <span className="entry-section__when-label">
+                  {translate("ui.entry.defaultrenderers.copy.什么时候用它")}
+                </span>
                 {item.when}
               </p>
             </li>
@@ -217,14 +229,14 @@ const DEFAULT_BY_TYPE = {
     render: (section) => (
       <SectionFrame section={section}>
         <div className="entry-section__split">
-          <GameCallout heading="该用" tone="success">
+          <GameCallout heading={translate("ui.entry.defaultrenderers.copy.该用")} tone="success">
             <ul>
               {section.payload.use.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
           </GameCallout>
-          <GameCallout heading="不该用" tone="danger">
+          <GameCallout heading={translate("ui.entry.defaultrenderers.copy.不该用")} tone="danger">
             <ul>
               {section.payload.dont.map((item) => (
                 <li key={item}>{item}</li>
@@ -275,8 +287,8 @@ const DEFAULT_BY_TYPE = {
           <blockquote>{section.payload.text}</blockquote>
           <CopyTextButton
             text={section.payload.text}
-            idleLabel="复制提示词"
-            copiedLabel="已复制"
+            idleLabel={translate("ui.entry.defaultrenderers.copy.复制提示词")}
+            copiedLabel={translate("ui.entry.defaultrenderers.copy.已复制")}
             variant="ghost"
           />
         </div>
@@ -299,11 +311,11 @@ const DEFAULT_BY_TYPE = {
       <SectionFrame section={section}>
         <div className="entry-section__split">
           <figure className="entry-section__rewrite">
-            <figcaption>改前</figcaption>
+            <figcaption>{translate("ui.entry.defaultrenderers.copy.改前")}</figcaption>
             <p>{section.payload.before}</p>
           </figure>
           <figure className="entry-section__rewrite entry-section__rewrite--after">
-            <figcaption>改后</figcaption>
+            <figcaption>{translate("ui.entry.defaultrenderers.copy.改后")}</figcaption>
             <p>{section.payload.after}</p>
           </figure>
         </div>

@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import { useMemo } from "react";
 
 import type { BootstrapData, StudySummary } from "@pieai/university-ui/view/lesson-view.js";
@@ -43,7 +44,7 @@ export function relativeTimeLabel(iso: string, now = Date.now()): string {
     const value = Math.trunc(elapsedMs / ms);
     if (value >= 1) return format.format(-value, unit);
   }
-  return "刚刚";
+  return translate("app.authoring.studyShelf.copy.刚刚");
 }
 
 export function StudyShelf({
@@ -75,8 +76,11 @@ export function StudyShelf({
     [data.studies],
   );
   return (
-    <aside className="study-shelf" aria-label="学习项目列表">
-      <p className="eyebrow">你的学习项目</p>
+    <aside
+      className="study-shelf"
+      aria-label={translate("app.authoring.studyShelf.copy.学习项目列表")}
+    >
+      <p className="eyebrow">{translate("app.authoring.studyShelf.copy.你的学习项目")}</p>
       {data.studies.map((study) => (
         <button
           key={study.id}
@@ -91,7 +95,11 @@ export function StudyShelf({
         >
           <span>{study.title}</span>
           <small>
-            {study.activeCourseCount > 0 ? `${study.activeCourseCount} 门课可学习` : "准备中"}
+            {study.activeCourseCount > 0
+              ? translate("app.authoring.studyShelf.copy.value0-门课可学习", {
+                  value0: study.activeCourseCount,
+                })
+              : translate("app.authoring.studyShelf.copy.准备中")}
             {study.lastActivityAt ? ` · ${relativeTimeLabel(study.lastActivityAt)}` : null}
           </small>
         </button>

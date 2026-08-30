@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import type { ReactNode } from "react";
 import type {
   AntiPatternEntry,
@@ -31,9 +32,9 @@ export type { EntryNeighbour, EntryNeighbourPair } from "./EntryFloatNav.js";
  * for anti-patterns would be SPEC-0004 failing.
  */
 export const COLLECTION_LABEL: { readonly [C in CollectionId]: string } = {
-  terms: "术语图鉴",
-  "anti-patterns": "防止 AI 味儿",
-  concepts: "概念图解",
+  terms: translate("ui.entry.entryPage.copy.术语图鉴"),
+  "anti-patterns": translate("ui.entry.entryPage.copy.防止-AI-味儿"),
+  concepts: translate("ui.entry.entryPage.copy.概念图解"),
 };
 
 export interface EntryBreadcrumbItem {
@@ -93,7 +94,10 @@ export function EntryPage({
     <article className="entry-page">
       {neighbours ? <EntryFloatNav neighbours={neighbours} /> : null}
       <header className="entry-page__topbar">
-        <nav className="entry-page__breadcrumb" aria-label="面包屑">
+        <nav
+          className="entry-page__breadcrumb"
+          aria-label={translate("ui.entry.entryPage.copy.面包屑")}
+        >
           <ol>
             {breadcrumb.map((item, index) => {
               const current = index === breadcrumb.length - 1;
@@ -109,7 +113,11 @@ export function EntryPage({
             })}
           </ol>
         </nav>
-        <CopyTextButton text={markdown} idleLabel="复制为 Markdown" copiedLabel="已复制" />
+        <CopyTextButton
+          text={markdown}
+          idleLabel={translate("ui.entry.entryPage.copy.复制为-Markdown")}
+          copiedLabel={translate("ui.entry.entryPage.copy.已复制")}
+        />
       </header>
       <div className="entry-page__head">{head}</div>
       {sections.length > 0 ? (
@@ -150,7 +158,9 @@ export function TermEntryHead({ entry }: { readonly entry: LexiconEntry }) {
       */}
       {entry.colloquial && entry.colloquial.length > 0 ? (
         <p className="entry-head__colloquial">
-          <span className="entry-head__colloquial-label">你可能会说</span>
+          <span className="entry-head__colloquial-label">
+            {translate("ui.entry.entryPage.copy.你可能会说")}
+          </span>
           {entry.colloquial[0]}
         </p>
       ) : null}
@@ -207,7 +217,9 @@ export function AntiPatternEntryHead({ head }: { readonly head: AntiPatternHead 
         <span className="entry-head__pos">{ANTI_PATTERN_CATEGORY_LABEL[head.category]}</span>
       </p>
       <p className="entry-head__colloquial">
-        <span className="entry-head__colloquial-label">你正常说就行</span>
+        <span className="entry-head__colloquial-label">
+          {translate("ui.entry.entryPage.copy.你正常说就行")}
+        </span>
         {head.complaint}
       </p>
     </header>

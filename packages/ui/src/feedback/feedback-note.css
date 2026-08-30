@@ -15,7 +15,7 @@
 
 .feedback-note__open {
   position: fixed;
-  left: 12px;
+  inset-inline-start: 12px;
   bottom: calc(12px + var(--game-ui-safe-bottom, 0px));
   z-index: 40;
   display: inline-flex;
@@ -73,7 +73,7 @@
 
 .feedback-note {
   position: fixed;
-  left: 12px;
+  inset-inline-start: 12px;
   bottom: calc(12px + var(--game-ui-safe-bottom, 0px));
   z-index: 40;
   display: grid;
@@ -167,7 +167,7 @@
 
 @media (min-width: 768px) {
   .feedback-note {
-    left: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 4.75rem) + 12px);
+    inset-inline-start: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 4.75rem) + 12px);
     bottom: var(--shell-gutter, 16px);
   }
 }

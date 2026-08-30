@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 /**
  * Which campus this build is.
  *
@@ -25,7 +26,9 @@
 export const AUTHORING = import.meta.env.MODE === "authoring";
 
 /** The word a person uses for this build, for the feedback note and the title. */
-export const CAMPUS_NAME = AUTHORING ? "本地端" : "在线端";
+export const CAMPUS_NAME = AUTHORING
+  ? translate("app.mode.copy.本地端")
+  : translate("app.mode.copy.在线端");
 
 /**
  * What to do about an empty shelf, which is genuinely two different answers.
@@ -36,5 +39,7 @@ export const CAMPUS_NAME = AUTHORING ? "本地端" : "在线端";
  * two screens.
  */
 export const EMPTY_SHELF_HINT = AUTHORING
-  ? "用 AI 宿主注册一个真实项目后，它会出现在这里；源码不会被学习资料污染。"
-  : "先跑 pnpm content，它会从 UniversityLocal 的导出包里取课程。没有 UniversityLocal 的检出时它会干净退出——这个产品不生产内容，只投放内容。";
+  ? translate("app.mode.copy.用-AI-宿主注册一个真实项目后-它会出现在这里-源码不会被学习资料污染")
+  : translate(
+      "app.mode.copy.先跑-pnpm-content-它会从-UniversityLocal-的导出包里取课程-没有-Universi",
+    );

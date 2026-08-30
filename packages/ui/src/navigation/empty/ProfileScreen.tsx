@@ -1,3 +1,4 @@
+import { translate } from "../../i18n/index.js";
 import type { ReactNode } from "react";
 
 import { LevelProgress } from "../screens/LevelProgress.js";
@@ -43,17 +44,17 @@ export function ProfileScreen({
       {account}
       <dl className="profile-screen__stats">
         <Stat
-          label="读过真实代码"
+          label={translate("ui.navigation.empty.profileScreen.copy.读过真实代码")}
           value={passagesRead}
-          unit="段"
-          invite="还没读过真实代码 —— 第一节里就有"
+          unit={translate("ui.navigation.empty.profileScreen.copy.段")}
+          invite={translate("ui.navigation.empty.profileScreen.copy.还没读过真实代码-第一节里就有")}
           href={nextHref}
         />
         <Stat
-          label="学完"
+          label={translate("ui.navigation.empty.profileScreen.copy.学完")}
           value={lessonsCompleted}
-          unit="节"
-          invite="还没学完一节 —— 从这里开始"
+          unit={translate("ui.navigation.empty.profileScreen.copy.节")}
+          invite={translate("ui.navigation.empty.profileScreen.copy.还没学完一节-从这里开始")}
           href={nextHref}
         />
       </dl>
@@ -65,15 +66,20 @@ export function ProfileScreen({
         worse than pointing at the door.
       */}
       {badges ?? (
-        <section className="profile-screen__badges" aria-label="徽章墙">
-          <h2>徽章墙</h2>
-          <p>徽章长在投放端。学完的课会记在上面。</p>
+        <section
+          className="profile-screen__badges"
+          aria-label={translate("ui.navigation.empty.profileScreen.copy.徽章墙")}
+        >
+          <h2>{translate("ui.navigation.empty.profileScreen.copy.徽章墙")}</h2>
+          <p>
+            {translate("ui.navigation.empty.profileScreen.copy.徽章长在投放端-学完的课会记在上面")}
+          </p>
         </section>
       )}
       <div className="profile-screen__links">
-        <a href="/practice">练习</a>
-        <a href="/review">复习</a>
-        <a href="/settings">设置</a>
+        <a href="/practice">{translate("ui.navigation.empty.profileScreen.copy.练习")}</a>
+        <a href="/review">{translate("ui.navigation.empty.profileScreen.copy.复习")}</a>
+        <a href="/settings">{translate("ui.navigation.empty.profileScreen.copy.设置")}</a>
       </div>
     </div>
   );

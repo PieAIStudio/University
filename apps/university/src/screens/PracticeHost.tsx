@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import {
   EntryPage,
   PracticeSurface,
@@ -35,7 +36,10 @@ export function PracticeHost({ onOpen }: { onOpen: (view: View) => void }) {
       onOpenReview={() => onOpen({ kind: "review" })}
       renderReward={(question) => (
         <EntryPage
-          breadcrumb={[{ label: "概念图解", href: "/concepts" }, { label: question.entry.head.zh }]}
+          breadcrumb={[
+            { label: translate("app.screens.practiceHost.copy.概念图解"), href: "/concepts" },
+            { label: question.entry.head.zh },
+          ]}
           head={
             <>
               <h1>{question.entry.head.zh}</h1>

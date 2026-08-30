@@ -1,3 +1,4 @@
+import { translate } from "../../i18n/index.js";
 import { GameButton, GameCallout, GamePanel, GameSegmentedControl } from "@pieai/swimmer-ui-kit";
 import {
   createUnavailablePaymentPort,
@@ -18,21 +19,22 @@ import { CapabilityExplanation } from "../../capability/CapabilityExplanation.js
 import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
 
 /** 会员 — this surface explains the entitlement boundary and launch offer. */
-export const PLANS_TITLE = "会员";
+export const PLANS_TITLE = translate("ui.navigation.screens.plansScreen.copy.会员");
 
 /*
   One string rather than prose broken across source lines: JSX collapses those
   line breaks into spaces, and a space after a full-width comma reads as a typo
   on the one page where a typo costs money.
 */
-const PLANS_LEDE =
-  "所有已发布课程都能免费学，课文和关卡永远不收费。绑定邮箱后，每天有少量 AI 批改尝鲜额度，用完今天停止，明天恢复。会员买的是账号那一半：换手机或电脑也能接着学，最多三台设备同时在线。";
+const PLANS_LEDE = translate(
+  "ui.navigation.screens.plansScreen.copy.所有已发布课程都能免费学-课文和关卡永远不收费-绑定邮箱后-每天有少量-AI-批改尝鲜额度-用完今天停止-明天恢",
+);
 
 const FALLBACK_PAYMENT_PORT = createUnavailablePaymentPort();
 
 const BILLING_CYCLE_OPTIONS = [
-  { id: "yearly", label: "按年" },
-  { id: "monthly", label: "按月" },
+  { id: "yearly", label: translate("ui.navigation.screens.plansScreen.copy.按年") },
+  { id: "monthly", label: translate("ui.navigation.screens.plansScreen.copy.按月") },
 ] as const;
 
 function formatCurrency(cents: number, currency: string): string {
@@ -77,29 +79,45 @@ function configuredYearlySaving(
 
 function priceLabel(pricing: PlanPricing, yearly: boolean) {
   if (pricing.kind === "free") {
-    return <span className="plan-card__amount">免费</span>;
+    return (
+      <span className="plan-card__amount">
+        {translate("ui.navigation.screens.plansScreen.copy.免费")}
+      </span>
+    );
   }
 
   const price = configuredPrice(pricing, yearly);
   if (price === null) {
-    return <span className="plan-card__amount">价格暂时无法显示</span>;
+    return (
+      <span className="plan-card__amount">
+        {translate("ui.navigation.screens.plansScreen.copy.价格暂时无法显示")}
+      </span>
+    );
   }
 
   const yearlyMonthlyPrice = yearly ? configuredYearlyMonthlyPrice(pricing) : null;
   return (
     <>
       <span className="plan-card__amount">{price}</span>
-      <span className="plan-card__period">{yearly ? " / 年" : " / 月"}</span>
+      <span className="plan-card__period">
+        {yearly
+          ? translate("ui.navigation.screens.plansScreen.copy.年")
+          : translate("ui.navigation.screens.plansScreen.copy.月")}
+      </span>
       {yearlyMonthlyPrice ? (
-        <span className="plan-card__period">（折合 {yearlyMonthlyPrice} / 月）</span>
+        <span className="plan-card__period">
+          {translate("ui.navigation.screens.plansScreen.copy.折合")} {yearlyMonthlyPrice}{" "}
+          {translate("ui.navigation.screens.plansScreen.copy.月-1bqki4t")}
+        </span>
       ) : null}
     </>
   );
 }
 
 function planButtonLabel(pricing: PlanPricing): string {
-  if (pricing.kind === "pending") return "购买入口";
-  return "购买";
+  if (pricing.kind === "pending")
+    return translate("ui.navigation.screens.plansScreen.copy.购买入口");
+  return translate("ui.navigation.screens.plansScreen.copy.购买");
 }
 
 function PlanCard({
@@ -127,7 +145,8 @@ function PlanCard({
 
         {saving ? (
           <p className="plan-card__saving">
-            比按月付省 {saving.amount}，也就是 {saving.percent}%
+            {translate("ui.navigation.screens.plansScreen.copy.比按月付省")} {saving.amount}
+            {translate("ui.navigation.screens.plansScreen.copy.也就是")} {saving.percent}%
           </p>
         ) : null}
 
@@ -143,10 +162,14 @@ function PlanCard({
             onClick={() => onPurchase(plan.id)}
             disabled={busyOfferId === plan.id}
           >
-            {busyOfferId === plan.id ? "正在检查…" : planButtonLabel(plan.pricing)}
+            {busyOfferId === plan.id
+              ? translate("ui.navigation.screens.plansScreen.copy.正在检查")
+              : planButtonLabel(plan.pricing)}
           </LiquidCtaButton>
         ) : (
-          <p className="plan-card__note">你现在就在用</p>
+          <p className="plan-card__note">
+            {translate("ui.navigation.screens.plansScreen.copy.你现在就在用")}
+          </p>
         )}
       </GamePanel>
     </li>
@@ -156,13 +179,13 @@ function PlanCard({
 function statusLabel(status: PaymentOrder["status"]): string {
   switch (status) {
     case "pending":
-      return "等待支付";
+      return translate("ui.navigation.screens.plansScreen.copy.等待支付");
     case "paid":
-      return "已支付，正在刷新权益";
+      return translate("ui.navigation.screens.plansScreen.copy.已支付-正在刷新权益");
     case "failed":
-      return "支付失败";
+      return translate("ui.navigation.screens.plansScreen.copy.支付失败");
     case "cancelled":
-      return "已取消";
+      return translate("ui.navigation.screens.plansScreen.copy.已取消");
   }
 }
 
@@ -180,13 +203,15 @@ function PaymentSummary({
   return (
     <div className="payment-summary" aria-live="polite">
       <p>
-        当前方案：
-        {entitlement?.kind === "value" ? planNameOf(entitlement.value) : "登录后读取"}
+        {translate("ui.navigation.screens.plansScreen.copy.当前方案")}
+        {entitlement?.kind === "value"
+          ? planNameOf(entitlement.value)
+          : translate("ui.navigation.screens.plansScreen.copy.登录后读取")}
       </p>
       <p>
         {balance?.kind === "value"
           ? walletGradingBalanceText(balance.value.availablePowerUnits)
-          : "钱包余额：登录后读取"}
+          : translate("ui.navigation.screens.plansScreen.copy.钱包余额-登录后读取")}
       </p>
     </div>
   );
@@ -202,20 +227,26 @@ function PaymentOrderNotice({
   readonly onRefresh: () => void;
 }) {
   return (
-    <GameCallout tone={order.status === "paid" ? "success" : "info"} heading="订单状态">
+    <GameCallout
+      tone={order.status === "paid" ? "success" : "info"}
+      heading={translate("ui.navigation.screens.plansScreen.copy.订单状态")}
+    >
       <p className="payment-order__line">
-        {statusLabel(order.status)} · 订单号 {order.orderId}
+        {statusLabel(order.status)} {translate("ui.navigation.screens.plansScreen.copy.订单号")}{" "}
+        {order.orderId}
       </p>
       {order.checkoutUrl ? (
         <p className="payment-order__line">
           <a href={order.checkoutUrl} target="_blank" rel="noreferrer">
-            继续付款
+            {translate("ui.navigation.screens.plansScreen.copy.继续付款")}
           </a>
         </p>
       ) : null}
       {order.status === "pending" ? (
         <GameButton variant="secondary" type="button" onClick={onRefresh} disabled={refreshing}>
-          {refreshing ? "正在查询…" : "刷新订单状态"}
+          {refreshing
+            ? translate("ui.navigation.screens.plansScreen.copy.正在查询")
+            : translate("ui.navigation.screens.plansScreen.copy.刷新订单状态")}
         </GameButton>
       ) : null}
     </GameCallout>
@@ -269,7 +300,11 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
       setOrder(result.value);
       if (result.value.status === "paid") await refreshAfterPayment();
     } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : "购买请求暂时失败，请稍后再试。");
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : translate("ui.navigation.screens.plansScreen.copy.购买请求暂时失败-请稍后再试"),
+      );
     } finally {
       setBusyOfferId(null);
     }
@@ -288,7 +323,11 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
       setOrder(result.value);
       if (result.value.status === "paid") await refreshAfterPayment();
     } catch (reason: unknown) {
-      setError(reason instanceof Error ? reason.message : "订单状态暂时读不到，请稍后再试。");
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : translate("ui.navigation.screens.plansScreen.copy.订单状态暂时读不到-请稍后再试"),
+      );
     } finally {
       setRefreshingOrder(false);
     }
@@ -306,7 +345,7 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
       {hasConfiguredCycle ? (
         <div className="plan-toggle">
           <GameSegmentedControl
-            label="计费周期"
+            label={translate("ui.navigation.screens.plansScreen.copy.计费周期")}
             activeId={yearly ? "yearly" : "monthly"}
             options={BILLING_CYCLE_OPTIONS}
             onSelect={(id) => setYearly(id === "yearly")}

@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { evidenceHost, isUrlEvidenceView, type EvidenceView } from "../view/lesson-view.js";
 
 /**
@@ -30,8 +31,11 @@ export function LessonSources({ evidence }: { readonly evidence: readonly Eviden
   if (sources.length === 0) return null;
 
   return (
-    <section className="lesson-sources" aria-label="出处">
-      <h2 className="lesson-sources__label">出处</h2>
+    <section
+      className="lesson-sources"
+      aria-label={translate("ui.evidence.lessonSources.copy.出处")}
+    >
+      <h2 className="lesson-sources__label">{translate("ui.evidence.lessonSources.copy.出处")}</h2>
       <ul className="lesson-sources__list">
         {sources.map((reference) => {
           if (!isUrlEvidenceView(reference)) return null;

@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import { useCallback, useSyncExternalStore } from "react";
 import {
   answerStatsOf,
@@ -98,14 +99,19 @@ export function buildAnswerOverview(
 }
 
 function rateLabel(stats: LessonAnswerStats): string {
-  if (stats.firstAttemptCount === 0) return "暂无答题数据";
-  if (stats.pendingFirstAttemptCount > 0) return "首答待判定";
+  if (stats.firstAttemptCount === 0)
+    return translate("app.authoring.answerOverview.copy.暂无答题数据");
+  if (stats.pendingFirstAttemptCount > 0)
+    return translate("app.authoring.answerOverview.copy.首答待判定");
   return `${Math.round((stats.firstPassRate ?? 0) * 100)}%`;
 }
 
 function pendingLabel(stats: LessonAnswerStats): string | null {
   return stats.pendingFirstAttemptCount > 0
-    ? `${stats.pendingFirstAttemptCount} 道题的首答还在等待宿主判定，暂不计算通过率`
+    ? translate(
+        "app.authoring.answerOverview.copy.value0-道题的首答还在等待宿主判定-暂不计算通过率",
+        { value0: stats.pendingFirstAttemptCount },
+      )
     : null;
 }
 
@@ -125,10 +131,17 @@ export function AnswerOverview({
     return (
       <>
         {styles}
-        <section className="answer-overview" aria-label="作者自己的答题汇总">
-          <p className="eyebrow">作者答题</p>
-          <h2>先选择一个项目</h2>
-          <p>选中项目后，这里会从本机进度文档逐节列出答题事实。</p>
+        <section
+          className="answer-overview"
+          aria-label={translate("app.authoring.answerOverview.copy.作者自己的答题汇总")}
+        >
+          <p className="eyebrow">{translate("app.authoring.answerOverview.copy.作者答题")}</p>
+          <h2>{translate("app.authoring.answerOverview.copy.先选择一个项目")}</h2>
+          <p>
+            {translate(
+              "app.authoring.answerOverview.copy.选中项目后-这里会从本机进度文档逐节列出答题事实",
+            )}
+          </p>
         </section>
       </>
     );
@@ -139,10 +152,15 @@ export function AnswerOverview({
     return (
       <>
         {styles}
-        <section className="answer-overview" aria-label="作者自己的答题汇总">
-          <p className="eyebrow">作者答题</p>
-          <h2>还没有可统计的课</h2>
-          <p>课程结构读到后，答题总览会在这里出现。</p>
+        <section
+          className="answer-overview"
+          aria-label={translate("app.authoring.answerOverview.copy.作者自己的答题汇总")}
+        >
+          <p className="eyebrow">{translate("app.authoring.answerOverview.copy.作者答题")}</p>
+          <h2>{translate("app.authoring.answerOverview.copy.还没有可统计的课")}</h2>
+          <p>
+            {translate("app.authoring.answerOverview.copy.课程结构读到后-答题总览会在这里出现")}
+          </p>
         </section>
       </>
     );
@@ -153,12 +171,18 @@ export function AnswerOverview({
     return (
       <>
         {styles}
-        <section className="answer-overview" aria-label="作者自己的答题汇总">
-          <p className="eyebrow">作者答题</p>
-          <h2>这个项目你还没答过题</h2>
+        <section
+          className="answer-overview"
+          aria-label={translate("app.authoring.answerOverview.copy.作者自己的答题汇总")}
+        >
+          <p className="eyebrow">{translate("app.authoring.answerOverview.copy.作者答题")}</p>
+          <h2>{translate("app.authoring.answerOverview.copy.这个项目你还没答过题")}</h2>
           <p>
-            这个浏览器的进度文档里，{lessonTotal} 节课都还没有首答记录。
-            自己走一遍课、答几道题之后，卡住的那几节会排在这里最前面。
+            {translate("app.authoring.answerOverview.copy.这个浏览器的进度文档里")}
+            {lessonTotal}{" "}
+            {translate(
+              "app.authoring.answerOverview.copy.节课都还没有首答记录-自己走一遍课-答几道题之后-卡住的那几节会排在这里最前面",
+            )}
           </p>
         </section>
       </>
@@ -168,20 +192,27 @@ export function AnswerOverview({
   return (
     <>
       {styles}
-      <section className="answer-overview" aria-label="作者自己的答题汇总">
+      <section
+        className="answer-overview"
+        aria-label={translate("app.authoring.answerOverview.copy.作者自己的答题汇总")}
+      >
         <header className="answer-overview__header">
           <div>
-            <p className="eyebrow">作者答题</p>
-            <h2>再看一眼，哪一节卡住了</h2>
+            <p className="eyebrow">{translate("app.authoring.answerOverview.copy.作者答题")}</p>
+            <h2>{translate("app.authoring.answerOverview.copy.再看一眼-哪一节卡住了")}</h2>
             <p>
-              只读当前浏览器的
-              ProgressDocument。它代表作者本人，不代表其他学习者；全体学习者的答题汇总还没接好，
-              所以这里不填全体数字。未来接好 owner-only 聚合接口后再替换这一列。
+              {translate(
+                "app.authoring.answerOverview.copy.只读当前浏览器的-ProgressDocument-它代表作者本人-不代表其他学习者-全体学习者的答题汇总还没接",
+              )}
             </p>
           </div>
-          <div className="answer-overview__source" role="group" aria-label="答题数据来源">
-            <strong>本机</strong>
-            <span>作者自己的进度</span>
+          <div
+            className="answer-overview__source"
+            role="group"
+            aria-label={translate("app.authoring.answerOverview.copy.答题数据来源")}
+          >
+            <strong>{translate("app.authoring.answerOverview.copy.本机")}</strong>
+            <span>{translate("app.authoring.answerOverview.copy.作者自己的进度")}</span>
           </div>
         </header>
 
@@ -193,8 +224,13 @@ export function AnswerOverview({
                 <header className="answer-overview__course-header">
                   <h3>{course.title}</h3>
                   <span>
-                    {course.lessons.length}/{course.lessonCount} 节答过
-                    {course.unansweredCount > 0 ? ` · 还有 ${course.unansweredCount} 节没答过` : ""}
+                    {course.lessons.length}/{course.lessonCount}{" "}
+                    {translate("app.authoring.answerOverview.copy.节答过")}
+                    {course.unansweredCount > 0
+                      ? translate("app.authoring.answerOverview.copy.还有-value0-节没答过", {
+                          value0: course.unansweredCount,
+                        })
+                      : ""}
                   </span>
                 </header>
                 <div className="answer-overview__rows">
@@ -208,26 +244,37 @@ export function AnswerOverview({
                         <div className="answer-overview__identity">
                           <p className="eyebrow">{lesson.unitTitle}</p>
                           <h4>{lesson.title}</h4>
-                          <span>第 {lesson.contentRevision} 版</span>
+                          <span>
+                            {translate("app.authoring.answerOverview.copy.第")}{" "}
+                            {lesson.contentRevision}{" "}
+                            {translate("app.authoring.answerOverview.copy.版")}
+                          </span>
                         </div>
                         <div
                           className="answer-overview__metrics"
                           role="group"
-                          aria-label={`${lesson.title}答题指标`}
+                          aria-label={translate(
+                            "app.authoring.answerOverview.copy.value0答题指标",
+                            { value0: lesson.title },
+                          )}
                         >
                           <div className="answer-overview__metric">
                             <strong>{rateLabel(lesson.stats)}</strong>
-                            <span>第一次通过率</span>
+                            <span>
+                              {translate("app.authoring.answerOverview.copy.第一次通过率")}
+                            </span>
                           </div>
                           <div className="answer-overview__metric">
                             <strong>{lesson.stats.totalAttempts}</strong>
-                            <span>次尝试</span>
+                            <span>{translate("app.authoring.answerOverview.copy.次尝试")}</span>
                           </div>
                           <div className="answer-overview__metric">
                             <strong>
                               {lesson.stats.firstAttemptCount}/{lesson.stats.exerciseCount}
                             </strong>
-                            <span>道题有首答记录</span>
+                            <span>
+                              {translate("app.authoring.answerOverview.copy.道题有首答记录")}
+                            </span>
                           </div>
                         </div>
                         {pending ? <p className="answer-overview__pending">{pending}</p> : null}

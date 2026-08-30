@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./i18n.js": "./src/i18n/index.ts",
     "./Tip.js": "./src/Tip.tsx",
     "./api/client.js": "./src/api/client.ts",
     "./capability/CapabilityExplanation.js": "./src/capability/CapabilityExplanation.tsx",

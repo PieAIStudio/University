@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { useMemo, useSyncExternalStore, type ReactNode } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import {
@@ -89,7 +90,10 @@ export function PracticeSurface({
     renderReward ??
     ((question: ConceptPracticeQuestion) => (
       <EntryPage
-        breadcrumb={[{ label: "概念图解" }, { label: question.entry.head.zh }]}
+        breadcrumb={[
+          { label: translate("ui.practice.practiceSurface.copy.概念图解") },
+          { label: question.entry.head.zh },
+        ]}
         head={
           <>
             <h1>{question.entry.head.zh}</h1>
@@ -112,7 +116,7 @@ export function PracticeSurface({
           className="practice-stream__leave"
           onClick={onOpenWorld}
         >
-          ← 关卡地图
+          {translate("ui.practice.practiceSurface.copy.关卡地图")}
         </GameButton>
       ) : null}
       <PracticeOverview {...overview} onOpenReview={onOpenReview} />

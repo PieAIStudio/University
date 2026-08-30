@@ -161,7 +161,7 @@
 .liquid-cta__flight-item {
   display: block;
   max-width: none;
-  right: auto;
+  inset-inline-end: auto;
   bottom: auto;
 }
 

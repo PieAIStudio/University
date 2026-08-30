@@ -1,3 +1,4 @@
+import { translate } from "../i18n/index.js";
 import { Tip } from "../Tip.js";
 import type { LessonLinkTarget } from "../markdown/remark-lesson-links.js";
 
@@ -29,11 +30,16 @@ export function LessonBacklinks({
   if (backlinks.length === 0) return null;
 
   return (
-    <section className="lesson-backlinks" aria-label="哪些课用到这节">
+    <section
+      className="lesson-backlinks"
+      aria-label={translate("ui.lesson.lessonRelated.copy.哪些课用到这节")}
+    >
       <div className="rail-panel__header">
-        <h3 className="rail-panel__label">哪些课用到这节</h3>
+        <h3 className="rail-panel__label">
+          {translate("ui.lesson.lessonRelated.copy.哪些课用到这节")}
+        </h3>
         <Tip term="lesson-related" className="rail-panel__help">
-          <span aria-label="关于反向链接">?</span>
+          <span aria-label={translate("ui.lesson.lessonRelated.copy.关于反向链接")}>?</span>
         </Tip>
       </div>
       <ul className="lesson-backlinks__list">
