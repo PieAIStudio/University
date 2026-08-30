@@ -270,17 +270,24 @@ export function courseMarkers(
   lessons: readonly LessonPlacement[],
   options: CourseMarkerOptions = {},
 ): readonly Marker[] {
-  const fromPath: Marker[] = courseSprites(lessons).map((sprite) => ({
-    id: sprite.id,
-    position: sprite.position,
-    text: sprite.text,
-    kind: sprite.role === "icon" ? ("icon" as const) : ("unit" as const),
-    pinned: sprite.role === "icon",
-    origin: sprite.role === "unit" ? ("start" as const) : ("center" as const),
-    locked: sprite.locked,
-    label: sprite.label,
-    weight: sprite.role === "unit" ? 2 : undefined,
-  }));
+  const fromPath: Marker[] = courseSprites(lessons).map((sprite) => {
+    const lesson = sprite.lessonId
+      ? lessons.find((candidate) => candidate.lessonId === sprite.lessonId)
+      : undefined;
+    const activate = options.onPick && lesson ? () => options.onPick?.(lesson) : undefined;
+    return {
+      id: sprite.id,
+      position: sprite.position,
+      text: sprite.text,
+      kind: sprite.role === "icon" ? ("icon" as const) : ("unit" as const),
+      pinned: sprite.role === "icon",
+      origin: sprite.role === "unit" ? ("start" as const) : ("center" as const),
+      locked: sprite.locked,
+      label: sprite.label,
+      weight: sprite.role === "unit" ? 2 : undefined,
+      ...(activate ? { activate } : {}),
+    };
+  });
 
   return [
     ...fromPath,
