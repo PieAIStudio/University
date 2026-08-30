@@ -91,6 +91,12 @@ export interface ExerciseAttemptResult {
   readonly meteredEligible?: boolean;
   /** A metered request was declined after submission and needs visible guidance. */
   readonly meteredExplanation?: MeteredGradingExplanation;
+  /** The funding path confirmed by the server after a tier-two response. */
+  readonly meteredFunding?: "free" | "wallet";
+  /** The post-settlement wallet balance returned by the server. */
+  readonly meteredBalance?: MeteredGradingBalance;
+  /** The post-settlement daily free quota returned by the server. */
+  readonly meteredFreeQuota?: MeteredGradingFreeQuota;
 }
 
 /**
@@ -134,15 +140,17 @@ export interface MeteredGradingBalance {
   readonly reservedPowerUnits: string;
 }
 
+export interface MeteredGradingFreeQuota {
+  readonly remainingPowerUnits: string;
+  readonly resetsAt: string;
+}
+
 export interface MeteredGradingResponse {
   readonly hostGrade: HostExerciseGrade;
   /** Present for wallet-funded grading; free-quota grading does not touch it. */
   readonly balance?: MeteredGradingBalance;
   readonly funding: "free" | "wallet";
-  readonly freeQuota?: {
-    readonly remainingPowerUnits: string;
-    readonly resetsAt: string;
-  };
+  readonly freeQuota?: MeteredGradingFreeQuota;
 }
 
 /** The explanation shown when a metered grading capability is not available. */

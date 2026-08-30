@@ -56,6 +56,25 @@ const TIER_TWO_RESULT: ExerciseAttemptResult = {
   },
 };
 
+const TIER_TWO_FREE_RESULT: ExerciseAttemptResult = {
+  ...TIER_TWO_RESULT,
+  meteredFunding: "free",
+  meteredFreeQuota: {
+    remainingPowerUnits: "200",
+    resetsAt: "2026-08-28T00:00:00.000Z",
+  },
+};
+
+const TIER_TWO_WALLET_RESULT: ExerciseAttemptResult = {
+  ...TIER_TWO_RESULT,
+  meteredFunding: "wallet",
+  meteredBalance: {
+    availablePowerUnits: "900",
+    balancePowerUnits: "1000",
+    reservedPowerUnits: "100",
+  },
+};
+
 let container: HTMLDivElement;
 let root: Root;
 
@@ -124,7 +143,7 @@ describe("ExerciseBlock metered grading choice", () => {
     const submitExercise = vi
       .fn<GradingPort["submitExercise"]>()
       .mockResolvedValueOnce(TIER_ONE_RESULT)
-      .mockResolvedValueOnce(TIER_TWO_RESULT);
+      .mockResolvedValueOnce(TIER_TWO_WALLET_RESULT);
     const meteredGradingOffer = vi.fn(async () => ({
       kind: "available" as const,
       costPowerUnits: "100",
@@ -155,13 +174,15 @@ describe("ExerciseBlock metered grading choice", () => {
     expect(submitExercise.mock.calls[1]?.[0].allowMetered).toBe(true);
     expect(submitExercise.mock.calls[1]?.[0].meteredFunding).toBe("wallet");
     expect(container.textContent).toContain("AI 评估 · 通过 · tier-2");
+    expect(container.textContent).toContain("AI 批改后的额度");
+    expect(container.textContent).toContain("你的钱包还够 9 次");
   });
 
   it("explains that an available daily free offer does not spend the wallet", async () => {
     const submitExercise = vi
       .fn<GradingPort["submitExercise"]>()
       .mockResolvedValueOnce(TIER_ONE_RESULT)
-      .mockResolvedValueOnce(TIER_TWO_RESULT);
+      .mockResolvedValueOnce(TIER_TWO_FREE_RESULT);
     const meteredGradingOffer = vi.fn(async () => ({
       kind: "free" as const,
       costPowerUnits: "100",
@@ -189,6 +210,8 @@ describe("ExerciseBlock metered grading choice", () => {
     expect(submitExercise.mock.calls[1]?.[0].allowMetered).toBe(true);
     expect(submitExercise.mock.calls[1]?.[0].meteredFunding).toBe("free");
     expect(container.textContent).toContain("AI 评估 · 通过 · tier-2");
+    expect(container.textContent).toContain("AI 批改后的额度");
+    expect(container.textContent).toContain("今天还剩 2 次");
   });
 
   it("keeps the explanation and free choice visible when the quote is unavailable", async () => {
@@ -255,7 +278,7 @@ describe("ExerciseBlock metered grading choice", () => {
   });
 
   it("keeps the tier-one control and tells the learner when the daily free quota is exhausted", async () => {
-    const freeQuotaMessage = "今天的免费 AI 批改用完了，会员可以继续；免费额度明天恢复。";
+    const freeQuotaMessage = "今天的免费 AI 批改用完了，明天恢复。";
     const grading: GradingPort = {
       submitExercise: vi.fn(async () => TIER_ONE_RESULT),
       meteredGradingOffer: vi.fn(async () => ({
@@ -294,7 +317,7 @@ describe("ExerciseBlock metered grading choice", () => {
         kind: "explanation",
         title: "今天的免费 AI 批改用完了",
         whatItDoes: "它会给开放题提供额外的结构化评估。",
-        whyUnavailable: "今天的免费 AI 批改用完了，会员可以继续；免费额度明天恢复。",
+        whyUnavailable: "今天的免费 AI 批改用完了，明天恢复。",
         futureSupport: "免费额度明天恢复；如果现在需要继续批改，可以查看会员方案。",
         action: { label: "查看会员方案", href: "/plans" },
       },
@@ -315,7 +338,7 @@ describe("ExerciseBlock metered grading choice", () => {
     await renderBlock(grading);
     await answerAndSubmit();
 
-    expect(container.textContent).toContain("今天的免费 AI 批改用完了，会员可以继续");
+    expect(container.textContent).toContain("今天的免费 AI 批改用完了，明天恢复");
     expect(container.querySelector('a[href="/plans"]')?.textContent).toBe("查看会员方案");
   });
 });
