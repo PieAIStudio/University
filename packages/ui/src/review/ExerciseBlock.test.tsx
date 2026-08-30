@@ -255,7 +255,7 @@ describe("ExerciseBlock metered grading choice", () => {
   });
 
   it("keeps the tier-one control and tells the learner when the daily free quota is exhausted", async () => {
-    const freeQuotaMessage = "今天的免费 AI 批改用完了，明天恢复。";
+    const freeQuotaMessage = "今天的免费 AI 批改用完了，会员可以继续；免费额度明天恢复。";
     const grading: GradingPort = {
       submitExercise: vi.fn(async () => TIER_ONE_RESULT),
       meteredGradingOffer: vi.fn(async () => ({
@@ -270,6 +270,7 @@ describe("ExerciseBlock metered grading choice", () => {
           whatItDoes: "它会给开放题提供额外的结构化评估。",
           whyUnavailable: freeQuotaMessage,
           futureSupport: "明天的免费 AI 批改次数恢复。",
+          action: { label: "查看会员方案", href: "/plans" },
         },
       })),
     };
@@ -282,5 +283,39 @@ describe("ExerciseBlock metered grading choice", () => {
     expect(tierOneButton).toBeTruthy();
     expect(tierOneButton?.disabled).toBe(false);
     expect(buttonWith("查看 AI 批改说明")).toBeTruthy();
+    expect(container.querySelector('a[href="/plans"]')?.textContent).toBe("查看会员方案");
+  });
+
+  it("does not silently hide a quota race after the learner chose free AI", async () => {
+    const exhaustedResult: ExerciseAttemptResult = {
+      ...TIER_ONE_RESULT,
+      meteredEligible: false,
+      meteredExplanation: {
+        kind: "explanation",
+        title: "今天的免费 AI 批改用完了",
+        whatItDoes: "它会给开放题提供额外的结构化评估。",
+        whyUnavailable: "今天的免费 AI 批改用完了，会员可以继续；免费额度明天恢复。",
+        futureSupport: "免费额度明天恢复；如果现在需要继续批改，可以查看会员方案。",
+        action: { label: "查看会员方案", href: "/plans" },
+      },
+    };
+    const submitExercise = vi
+      .fn<GradingPort["submitExercise"]>()
+      .mockResolvedValue(exhaustedResult);
+    const grading: GradingPort = {
+      submitExercise,
+      meteredGradingOffer: vi.fn(async () => ({
+        kind: "unavailable" as const,
+        costPowerUnits: "100",
+        availablePowerUnits: null,
+        explanation: exhaustedResult.meteredExplanation!,
+      })),
+    };
+
+    await renderBlock(grading);
+    await answerAndSubmit();
+
+    expect(container.textContent).toContain("今天的免费 AI 批改用完了，会员可以继续");
+    expect(container.querySelector('a[href="/plans"]')?.textContent).toBe("查看会员方案");
   });
 });

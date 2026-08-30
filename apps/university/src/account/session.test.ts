@@ -6,6 +6,7 @@ import {
   createMemoryRemoteStore,
   createProgressPort,
   lessonKey,
+  readEntitlements,
   type HostExerciseGrade,
 } from "@pieai/university-core";
 import type { ReaderMark } from "@pieai/university-core/domain/reader-marks.js";
@@ -29,6 +30,17 @@ const GRADE: HostExerciseGrade = {
   occurredAt: "2026-08-27T00:00:00.000Z",
 };
 
+const MEMBER_ENTITLEMENTS = readEntitlements({
+  identity: {
+    kind: "signed_in",
+    user: { id: "member", email: "member@example.com" },
+  },
+  remoteAvailable: true,
+  grant: { planId: "member" },
+});
+
+const memberEntitlements = async () => MEMBER_ENTITLEMENTS;
+
 function mark(markId: string, exact: string): ReaderMark {
   return {
     markId,
@@ -44,7 +56,7 @@ function mark(markId: string, exact: string): ReaderMark {
 }
 
 describe("bindProgressToIdentity", () => {
-  it("binds the anonymous session to the remote document", async () => {
+  it("keeps the anonymous free session local", async () => {
     const progress = createProgressPort({ persistence: createMemoryPersistence() });
     const identity = createMemoryIdentityPort();
     const remote = createMemoryRemoteStore();
@@ -55,7 +67,7 @@ describe("bindProgressToIdentity", () => {
     progress.advanceLesson(LESSON, 1);
     await progress.flush();
 
-    expect(remote.records.get("memory:anonymous")?.lessons[LESSON]?.progress).toBe(1);
+    expect(remote.records.get("memory:anonymous")).toBeUndefined();
     stop();
   });
 
@@ -63,7 +75,7 @@ describe("bindProgressToIdentity", () => {
     const progress = createProgressPort({ persistence: createMemoryPersistence() });
     const identity = createMemoryIdentityPort();
     const remote = createMemoryRemoteStore();
-    const stop = bindProgressToIdentity(progress, identity, remote);
+    const stop = bindProgressToIdentity(progress, identity, remote, memberEntitlements);
 
     await identity.signInAnonymously();
     await vi.waitFor(() => expect(progress.syncState().userId).toBe("memory:anonymous"));
@@ -132,7 +144,7 @@ describe("bindProgressToIdentity", () => {
     const remote = createMemoryRemoteStore();
     progress.advanceLesson(LESSON, 1);
 
-    const stop = bindProgressToIdentity(progress, identity, remote);
+    const stop = bindProgressToIdentity(progress, identity, remote, memberEntitlements);
     await identity.signInWithEmail("ada@example.com", "password12");
     await vi.waitFor(() => {
       const status = identity.status();
@@ -153,7 +165,7 @@ describe("bindProgressToIdentity", () => {
     const progress = createProgressPort({ persistence: createMemoryPersistence() });
     const identity = createMemoryIdentityPort();
     const remote = createMemoryRemoteStore();
-    const stop = bindProgressToIdentity(progress, identity, remote);
+    const stop = bindProgressToIdentity(progress, identity, remote, memberEntitlements);
 
     await identity.signInWithEmail("ada@example.com", "password12");
     await vi.waitFor(() => expect(progress.syncState().userId).toBe("memory:ada@example.com"));

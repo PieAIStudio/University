@@ -2,6 +2,7 @@ import { GameBadge, GameButton, GameCallout } from "@pieai/swimmer-ui-kit";
 import type { ReactNode } from "react";
 
 import { Tip } from "../Tip.js";
+import type { EntitlementReader } from "../capability/ai-entitlements.js";
 import { ReviewCard } from "../review/ReviewCard.js";
 import { REVIEW_EMPTY_TITLE, reviewEmptyDescription } from "../review/review-empty.js";
 import type { ReviewCardPort, VocabularyReviewPort } from "../review/ports.js";
@@ -55,6 +56,7 @@ export function TodaySection({
   contextAction,
   requestToken,
   review,
+  readEntitlements,
   vocabularyReview,
 }: {
   readonly data: TodaySectionData;
@@ -66,6 +68,8 @@ export function TodaySection({
   readonly requestToken?: string;
   /** Online's cloud scheduler implementation. */
   readonly review?: ReviewCardPort;
+  /** Reads the server-selected AI plan for open tutoring controls. */
+  readonly readEntitlements?: EntitlementReader;
   readonly vocabularyReview?: VocabularyReviewPort;
 }) {
   const card = data.card;
@@ -105,6 +109,7 @@ export function TodaySection({
           card={card}
           requestToken={requestToken}
           review={review}
+          readEntitlements={readEntitlements}
           onReviewed={onReviewed}
           remaining={data.dueCount}
         />

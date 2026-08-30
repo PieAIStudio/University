@@ -15,6 +15,7 @@ import type {
   PriorAttempt,
   RecapReviewCardLocator,
 } from "../view/lesson-view.js";
+import { readEntitlements } from "@pieai/university-core";
 import type { ReviewCardPort, ReviewRatingPreview } from "./ports.js";
 import { ReviewCard } from "./ReviewCard.js";
 
@@ -58,6 +59,16 @@ let root: Root;
 
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+  if (!HTMLDialogElement.prototype.showModal) {
+    HTMLDialogElement.prototype.showModal = function showModal() {
+      this.setAttribute("open", "");
+    };
+  }
+  if (!HTMLDialogElement.prototype.close) {
+    HTMLDialogElement.prototype.close = function close() {
+      this.removeAttribute("open");
+    };
+  }
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -190,4 +201,100 @@ describe("ReviewCard recap path", () => {
     expect(help.textContent).toContain("这不是判对错");
     expect(help.textContent).toContain("参考答案");
   });
+
+  it("keeps the tutoring control visible but explains that free learners need membership", async () => {
+    const readEntitlements = vi.fn(async () => ({
+      kind: "value" as const,
+      value: readEntitlementsFor("free"),
+    }));
+    const reveal = vi.fn<ReviewCardPort["reveal"]>(async () => ({
+      back: "一段参考答案。",
+    }));
+    const rate = vi.fn<ReviewCardPort["rate"]>(async () => ({
+      dueAt: "2026-08-27T00:00:00.000Z",
+    }));
+
+    await act(async () => {
+      root.render(
+        <ReviewCard
+          card={COURSE_CARD}
+          review={{ preview: () => PREVIEW, reveal, rate }}
+          readEntitlements={readEntitlements}
+          onReviewed={async () => undefined}
+        />,
+      );
+    });
+
+    setTextareaValue("我的回答。");
+    await act(async () => {
+      buttonWith("揭示答案")?.click();
+    });
+
+    expect(buttonWith("让 AI 讲讲这张卡")).toBeTruthy();
+    await act(async () => {
+      buttonWith("让 AI 讲讲这张卡")?.click();
+      await Promise.resolve();
+    });
+
+    expect(readEntitlements).toHaveBeenCalledTimes(1);
+    expect(document.querySelector(".capability-explanation")?.textContent).toContain(
+      "开放式辅导属于会员权益",
+    );
+    expect(document.querySelector('.capability-explanation a[href="/plans"]')?.textContent).toBe(
+      "查看会员方案",
+    );
+  });
+
+  it("lets a member use the same visible tutoring control", async () => {
+    const writeText = vi.fn(async () => undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+    const readEntitlements = vi.fn(async () => ({
+      kind: "value" as const,
+      value: readEntitlementsFor("member"),
+    }));
+    const reveal = vi.fn<ReviewCardPort["reveal"]>(async () => ({
+      back: "一段参考答案。",
+    }));
+    const rate = vi.fn<ReviewCardPort["rate"]>(async () => ({
+      dueAt: "2026-08-27T00:00:00.000Z",
+    }));
+
+    await act(async () => {
+      root.render(
+        <ReviewCard
+          card={COURSE_CARD}
+          review={{ preview: () => PREVIEW, reveal, rate }}
+          readEntitlements={readEntitlements}
+          onReviewed={async () => undefined}
+        />,
+      );
+    });
+
+    setTextareaValue("我的回答。");
+    await act(async () => {
+      buttonWith("揭示答案")?.click();
+    });
+    await act(async () => {
+      buttonWith("让 AI 讲讲这张卡")?.click();
+      await Promise.resolve();
+    });
+
+    expect(readEntitlements).toHaveBeenCalledTimes(1);
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining("一段参考答案"));
+    expect(document.querySelector(".capability-explanation")).toBeNull();
+  });
 });
+
+function readEntitlementsFor(planId: "free" | "member") {
+  return readEntitlements({
+    identity: {
+      kind: "signed_in",
+      user: { id: "review-card-user", email: "review@example.com" },
+    },
+    remoteAvailable: true,
+    grant: { planId },
+  });
+}

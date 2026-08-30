@@ -16,6 +16,7 @@ export function UniversityShell({
   counters,
   aside,
   asideLabel = "上下文",
+  showAsideOnPhone = false,
   extraMoreItems,
   brand,
   identity,
@@ -25,6 +26,8 @@ export function UniversityShell({
   readonly counters?: readonly ShellCounter[];
   readonly aside?: ReactNode;
   readonly asideLabel?: string;
+  /** See AppShell: the aside stays a phone row instead of disappearing. */
+  readonly showAsideOnPhone?: boolean;
   readonly extraMoreItems?: readonly ShellNavItem[];
   readonly brand?: ReactNode;
   /**
@@ -56,6 +59,7 @@ export function UniversityShell({
       identity={identity}
       aside={aside}
       asideLabel={asideLabel}
+      showAsideOnPhone={showAsideOnPhone}
     >
       {children}
     </AppShell>

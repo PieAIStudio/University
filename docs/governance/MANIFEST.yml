@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-30T11:53:58.353Z
+generated_at: 2026-08-30T11:59:55.918Z
 generator_version: doc-gov@0.9.9
-docs_count: 72
+docs_count: 75
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -326,6 +326,13 @@ docs:
     canonical: true
     last_reviewed: 2026-08-29
     pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-INLINE-OPTIONS-OBJECTS-RETRIGGER-EXPENSIVE-ISLAND-GRASS-PLANNING-ON-FIRST-PAN
+    path: docs/reference/learnings/workflow-issues/inline-options-objects-retrigger-expensive-island-grass-planning-on-first-pan.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-30
+    pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-INVISIBLE-DOM-OVERLAY-BUTTONS-STILL-STEAL-CLICKS-ELEMENT-CLICK-WILL-NOT-CATCH-IT
     path: docs/reference/learnings/workflow-issues/invisible-dom-overlay-buttons-still-steal-clicks-element-click-will-not-catch-it.md
     type: reference
@@ -368,6 +375,13 @@ docs:
     canonical: true
     last_reviewed: 2026-08-28
     pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-MAPCONTROLS-TWO-TOUCH-PAN-IS-A-SILENT-NO-OP
+    path: docs/reference/learnings/workflow-issues/mapcontrols-two-touch-pan-is-a-silent-no-op.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-30
+    pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-ONE-COLUMN-RAIL-MUST-RESET-CHILD-GRID-PLACEMENT
     path: docs/reference/learnings/workflow-issues/one-column-rail-must-reset-child-grid-placement.md
     type: reference
@@ -384,6 +398,13 @@ docs:
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-PICKING-A-CATALOGUE-ISLAND-MUST-NOT-RETARGET-THE-LAYOUT-ORIGIN
     path: docs/reference/learnings/workflow-issues/picking-a-catalogue-island-must-not-retarget-the-layout-origin.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-30
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-PLAN-ENTITLEMENT-MUST-PRECEDE-FREE-QUOTA-AND-WALLET-FUNDING
+    path: docs/reference/learnings/workflow-issues/plan-entitlement-must-precede-free-quota-and-wallet-funding.md
     type: reference
     status: stable
     canonical: true

@@ -1,5 +1,6 @@
 import {
-  readEntitlements,
+  readEntitlements as readLocalEntitlements,
+  type EntitlementReadModel,
   type IdentityPort,
   type ProgressPort,
   type ProgressRemoteStore,
@@ -16,22 +17,31 @@ export function bindProgressToIdentity(
   progress: ProgressPort,
   identity: IdentityPort,
   remote: ProgressRemoteStore | null,
+  readRemoteEntitlements?: () => Promise<EntitlementReadModel | null>,
 ): () => void {
   let tail = Promise.resolve();
   const sync = () => {
     const status = identity.status();
-    const entitlements = readEntitlements({
-      identity: status,
-      remoteAvailable: remote !== null,
-    });
-    const syncRemote = entitlements.sync.available ? remote : null;
     tail = tail
       .catch(() => undefined)
-      .then(() =>
-        status.kind === "anonymous" || status.kind === "signed_in"
+      .then(async () => {
+        let entitlements = readLocalEntitlements({
+          identity: status,
+          remoteAvailable: remote !== null,
+        });
+        if (status.kind === "signed_in" && readRemoteEntitlements) {
+          try {
+            entitlements = (await readRemoteEntitlements()) ?? entitlements;
+          } catch {
+            // A missing entitlement read fails closed to the free, local-only
+            // baseline; it must never accidentally turn on cloud sync.
+          }
+        }
+        const syncRemote = entitlements.sync.available ? remote : null;
+        return status.kind === "anonymous" || status.kind === "signed_in"
           ? progress.bindAccount(status.user.id, syncRemote)
-          : progress.bindAccount(null, null),
-      );
+          : progress.bindAccount(null, null);
+      });
   };
 
   const unsubscribe = identity.subscribe(sync);

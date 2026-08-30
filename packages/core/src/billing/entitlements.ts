@@ -54,8 +54,9 @@ export interface EntitlementReadModel {
  * Missing env, signed-out sessions, missing grants, and unknown grants all
  * have deterministic behavior: use the configured baseline, keep local
  * learning available, and never pretend that sync is active without both an
- * authenticated identity and a remote adapter. Anonymous identities may sync
- * the baseline document; only formal identities can receive a remote grant.
+ * authenticated identity, an included plan right, and a remote adapter.
+ * Anonymous identities stay on the local baseline and cannot receive a remote
+ * grant.
  */
 export function readEntitlements(
   input: EntitlementReadInput,

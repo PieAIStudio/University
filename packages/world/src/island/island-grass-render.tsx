@@ -388,7 +388,19 @@ export function IslandGrass(props: IslandGrassProps) {
 /** One bounded, instanced course field inside the Stage-owned render loop. */
 function CourseIslandGrass({ blueprint, detail, targetRadius, style, options }: IslandGrassProps) {
   const tier = renderTier();
-  const planOptions = useMemo(() => mergeOptions(options, tier), [options, tier]);
+  // IslandRender allocates a new `options` object each render; the fields
+  // are the plan. Object identity here re-ran planIslandGrass on first pan.
+  const density = options?.density;
+  const maxCount = options?.maxCount;
+  const seed = options?.seed;
+  const routeGap = options?.routeGap;
+  const nodeGap = options?.nodeGap;
+  const heroGap = options?.heroGap;
+  const safetyZones = options?.safetyZones;
+  const planOptions = useMemo(
+    () => mergeOptions({ density, maxCount, seed, routeGap, nodeGap, heroGap, safetyZones }, tier),
+    [density, maxCount, seed, routeGap, nodeGap, heroGap, safetyZones, tier],
+  );
   const plan = useMemo(
     () => planIslandGrass(blueprint, detail, planOptions),
     [blueprint, detail, planOptions],

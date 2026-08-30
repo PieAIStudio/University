@@ -89,6 +89,8 @@ export interface ExerciseAttemptResult {
   readonly hostGrade?: HostExerciseGrade | null;
   /** True when the free verdict was undecidable and an optional tier two exists. */
   readonly meteredEligible?: boolean;
+  /** A metered request was declined after submission and needs visible guidance. */
+  readonly meteredExplanation?: MeteredGradingExplanation;
 }
 
 /**

@@ -44,12 +44,12 @@ describe("readEntitlements", () => {
       source: "baseline",
       ai: {
         deterministicGrading: true,
-        structuredGrading: false,
+        structuredGrading: true,
         openTutoring: false,
         openTutoringTurnsPerDay: null,
       },
       sync: {
-        entitled: true,
+        entitled: false,
         available: false,
         reason: "not-signed-in",
       },
@@ -69,10 +69,10 @@ describe("readEntitlements", () => {
 
     expect(model.planId).toBe("free");
     expect(model.source).toBe("baseline");
-    expect(model.sync).toEqual({ entitled: true, available: false, reason: "not-signed-in" });
+    expect(model.sync).toEqual({ entitled: false, available: false, reason: "not-signed-in" });
   });
 
-  it("allows an anonymous session to sync baseline progress but never accepts paid rights", () => {
+  it("keeps anonymous learning local and never accepts paid rights", () => {
     const model = readEntitlements(
       {
         identity: ANONYMOUS,
@@ -84,7 +84,7 @@ describe("readEntitlements", () => {
 
     expect(model.planId).toBe("free");
     expect(model.source).toBe("baseline");
-    expect(model.sync).toEqual({ entitled: true, available: true, reason: "available" });
+    expect(model.sync).toEqual({ entitled: false, available: false, reason: "not-included" });
   });
 
   it("ignores a grant when the remote adapter is unavailable", () => {
@@ -101,7 +101,7 @@ describe("readEntitlements", () => {
     expect(model.source).toBe("baseline");
     expect(model.ai.openTutoring).toBe(false);
     expect(model.sync).toEqual({
-      entitled: true,
+      entitled: false,
       available: false,
       reason: "remote-unavailable",
     });

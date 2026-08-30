@@ -61,7 +61,7 @@ import { RailIdentity } from "@pieai/university-world/avatar.js";
 
 import { AUTHORING, CAMPUS_NAME, EMPTY_SHELF_HINT } from "../mode";
 import { contentPort, feedbackPort, reviewReminderPort, sourceAccessPort } from "../ports/index";
-import { identityPort } from "../account/identity";
+import { identityPort, paymentPort } from "../account/identity";
 import { bindProgressToIdentity } from "../account/session";
 import { presencePort } from "../presence/store";
 import {
@@ -175,13 +175,21 @@ export function App() {
     setAccountFocusRequest((current) => current + 1);
     setView({ kind: "me" });
   }, [setView]);
+  const readEntitlements = useCallback(() => paymentPort.readEntitlements(), []);
   const lastRouteAnalyticsKey = useRef<string | null>(null);
   const reviewDueAnalyticsReported = useRef(false);
   const source = useMemo(() => progressSourceOf(progressPort), []);
   const { analyticsIdentityPort, analyticsPaymentPort, onWorthwhileProgress } = useAnalyticsPorts();
   const { mistakes, uncorrectedMistakeCount } = useMistakeSummary(progress);
 
-  useEffect(() => bindProgressToIdentity(progressPort, identityPort, progressRemoteStore), []);
+  useEffect(
+    () =>
+      bindProgressToIdentity(progressPort, identityPort, progressRemoteStore, async () => {
+        const result = await paymentPort.readEntitlements();
+        return result.kind === "value" ? result.value : null;
+      }),
+    [],
+  );
 
   useEffect(
     () => watchThemePreference(progress.account.preferences.theme),
@@ -682,6 +690,7 @@ export function App() {
     <TodaySection
       data={todayData}
       review={todayReview}
+      readEntitlements={readEntitlements}
       vocabularyReview={todayVocabularyReview}
       onOpenLesson={(locator) =>
         setView({
@@ -846,6 +855,7 @@ export function App() {
                 setView({ kind: "course", studyId: view.studyId, courseId: view.courseId });
               }}
               onWorthwhileProgress={onWorthwhileProgress}
+              readEntitlements={readEntitlements}
               onSettled={(doneBefore) => {
                 const key = `${view.studyId}/${view.courseId}/${view.lessonId}`;
                 setGrewFrom({ key, doneBefore });
@@ -893,6 +903,7 @@ export function App() {
           }
           aside={shellConfig.showContextAside ? aside : undefined}
           asideLabel={view.kind === "settings" ? "设置" : view.kind === "planet" ? "选课" : "今天"}
+          showAsideOnPhone={view.kind === "planet"}
         >
           <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
           {main}

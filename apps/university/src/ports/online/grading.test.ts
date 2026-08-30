@@ -235,7 +235,7 @@ describe("createOnlineGradingPort", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
-  it("silently falls back to tier one when the free daily quota is exhausted", async () => {
+  it("keeps the tier-one clue but surfaces the free-quota exhaustion and member route", async () => {
     const fetchImpl = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       expect(init?.method).toBe("POST");
       const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
@@ -243,7 +243,7 @@ describe("createOnlineGradingPort", () => {
       return new Response(
         JSON.stringify({
           code: "free_quota_exhausted",
-          error: "今天的免费 AI 批改用完了，明天恢复。",
+          error: "今天的免费 AI 批改用完了，会员可以继续；免费额度明天恢复。",
         }),
         { status: 429, headers: { "Content-Type": "application/json" } },
       );
@@ -265,6 +265,12 @@ describe("createOnlineGradingPort", () => {
         host: "tier-1",
         passed: false,
         evaluation: expect.stringContaining("再看一眼你刚才读过的这句"),
+      },
+      meteredEligible: false,
+      meteredExplanation: {
+        title: "今天的免费 AI 批改用完了",
+        whyUnavailable: "今天的免费 AI 批改用完了，会员可以继续；免费额度明天恢复。",
+        action: { label: "查看会员方案", href: "/plans" },
       },
     });
     expect(fetchImpl).toHaveBeenCalledTimes(1);
