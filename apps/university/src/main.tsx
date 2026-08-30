@@ -8,6 +8,7 @@ import "@pieai/university-ui/catalog/catalog.css";
 import "@pieai/university-ui/capability/capability.css";
 import "@pieai/university-ui/cta/liquid-cta.css";
 import { App } from "./app/App";
+import { LiquidCtaTransitionLayer } from "@pieai/university-ui/cta/LiquidCtaTransition.js";
 /*
   Every stylesheet `packages/ui` ships, in both shells, always.
 
@@ -72,5 +73,6 @@ void initProductAnalytics().then(() => trackEvent({ name: "app_open" }));
 createRoot(container).render(
   <StrictMode>
     <App />
+    <LiquidCtaTransitionLayer />
   </StrictMode>,
 );

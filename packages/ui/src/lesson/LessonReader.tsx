@@ -89,6 +89,7 @@ export function LessonReader({
   onFollowLink,
   onReturn,
   onWorthwhileProgress,
+  completionDestination,
   toolbarExtras,
 }: {
   readonly locator: LessonRef;
@@ -116,6 +117,8 @@ export function LessonReader({
   readonly onReturn?: (() => void) | undefined;
   /** Called after this reader creates a learner-owned value worth preserving. */
   readonly onWorthwhileProgress?: (() => void) | undefined;
+  /** Settlement progress target for the completion hand-off, when available. */
+  readonly completionDestination?: string;
   /** Shell-owned tools that sit with the reading controls, not a second toolbar. */
   readonly toolbarExtras?: ReactNode;
 }) {
@@ -586,6 +589,7 @@ export function LessonReader({
               </div>
               <LiquidCtaButton
                 className="lesson-completion__action"
+                destination={completionDestination}
                 onClick={() => void confirmCurrentRevision()}
                 disabled={confirming}
               >

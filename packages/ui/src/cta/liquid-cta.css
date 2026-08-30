@@ -126,6 +126,57 @@
   transform: none;
 }
 
+/*
+  The flight is a single, transient overlay. Its box is the union of the two
+  screen rectangles, not the viewport, so the kit's gooey filter never has to
+  process a permanent full-screen surface. The real button remains in the
+  document underneath; this layer cannot receive a pointer or a focus.
+*/
+.liquid-cta__flight {
+  --liquid-cta-fill: var(--game-ui-accent);
+  --liquid-cta-fill-top: var(--game-ui-accent-bright);
+  --liquid-cta-fill-bottom: var(--liquid-cta-fill);
+  --liquid-cta-shadow: 0 5px 10px
+    color-mix(in srgb, var(--game-ui-accent-contrast) 32%, transparent);
+  position: fixed;
+  z-index: var(--game-ui-z-overlay, 60);
+  pointer-events: none;
+  overflow: visible;
+  isolation: isolate;
+}
+
+.liquid-cta__flight-liquid {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.liquid-cta__flight-liquid .game-ui-liquid-content,
+.liquid-cta__flight-item {
+  position: absolute;
+  inset: 0;
+}
+
+.liquid-cta__flight-item {
+  display: block;
+  max-width: none;
+  right: auto;
+  bottom: auto;
+}
+
+.liquid-cta__flight-shape {
+  position: absolute;
+  inset: 1px;
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    var(--liquid-cta-fill-top),
+    var(--liquid-cta-fill-bottom) 62%,
+    color-mix(in srgb, var(--liquid-cta-fill-bottom) 88%, var(--game-ui-accent-contrast))
+  );
+}
+
 @media (prefers-reduced-motion: reduce) {
   .liquid-cta__button,
   .liquid-cta__button:hover,
@@ -137,5 +188,9 @@
 
   .liquid-cta__surface .game-ui-liquid-silhouette {
     will-change: auto;
+  }
+
+  .liquid-cta__flight {
+    display: none;
   }
 }

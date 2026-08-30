@@ -65,6 +65,33 @@ export { EvidenceCode } from "./evidence/EvidenceCode.js";
 export { Tip } from "./Tip.js";
 export { LiquidCtaButton, type LiquidCtaButtonProps } from "./cta/LiquidCtaButton.js";
 export {
+  LiquidCtaTransitionLayer,
+  LiquidDestination,
+  beginLiquidCtaTransition,
+  cancelLiquidCtaTransition,
+  clearLiquidCtaDebugProgress,
+  completeLiquidCtaTransition,
+  computeLiquidFlightFrame,
+  courseMapDestinationId,
+  holdLiquidCtaTransition,
+  lessonProgressDestinationId,
+  liquidCtaTransitionSnapshot,
+  liquidDestinationId,
+  prefersReducedLiquidMotion,
+  readLiquidDestination,
+  registerLiquidDestination,
+  setLiquidCtaDebugProgress,
+  setLiquidDestination,
+  subscribeLiquidCtaTransition,
+  type LiquidCtaDebugApi,
+  type LiquidCtaFlightPhase,
+  type LiquidCtaTransitionPhase,
+  type LiquidCtaTransitionSnapshot,
+  type LiquidFlightFrame,
+  type LiquidFlightShape,
+  type LiquidScreenRect,
+} from "./cta/LiquidCtaTransition.js";
+export {
   applyThemePreference,
   resolvedThemeOf,
   subscribeSystemTheme,

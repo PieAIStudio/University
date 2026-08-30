@@ -1,7 +1,13 @@
 import { useRef, type CSSProperties, type ReactNode } from "react";
 import type { AuthoringFocus } from "@pieai/university-core";
 
-import { Controls, Flight, LabelProbe, WORLD_POLAR } from "./camera/controls.js";
+import {
+  Controls,
+  Flight,
+  LabelProbe,
+  WORLD_POLAR,
+  type MarkerScreenProjection,
+} from "./camera/controls.js";
 import { placeWorld, WorldScene, type Marker } from "./Maps.js";
 import type { AvatarRecipe } from "./avatar/index.js";
 import type { CourseNode } from "./course/course.js";
@@ -30,6 +36,7 @@ export function WorldMapCanvas({
   markers,
   followId,
   followNode,
+  onMarkerProjection,
   assetRevision = 0,
   onPick,
   onHover,
@@ -63,6 +70,8 @@ export function WorldMapCanvas({
   readonly markers: readonly Marker[];
   readonly followId?: string | null;
   readonly followNode?: { readonly current: HTMLElement | null };
+  /** A single screen-space projection stream for DOM destinations. */
+  readonly onMarkerProjection?: (projections: ReadonlyMap<string, MarkerScreenProjection>) => void;
   readonly assetRevision?: number;
   readonly onPick: (node: CourseNode) => void;
   readonly onHover: (node: CourseNode | null) => void;
@@ -157,6 +166,7 @@ export function WorldMapCanvas({
           nodes={labelNodes.current}
           followId={followId}
           followNode={followNode}
+          onMarkerProjection={onMarkerProjection}
         />
         {world ? (
           <WorldScene

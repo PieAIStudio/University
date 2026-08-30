@@ -73,10 +73,19 @@ import {
 import { LessonScreen, RouteFallback } from "../screens/lazy";
 import { FeedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
 import { LiquidCtaButton } from "@pieai/university-ui/cta/LiquidCtaButton.js";
+import {
+  courseMapDestinationId,
+  setLiquidDestination,
+} from "@pieai/university-ui/cta/LiquidCtaTransition.js";
 
 import { todayCtaLabel, TodaySection, todayMeta } from "@pieai/university-ui/today/TodaySection.js";
 import { LINK_RETURN_DEPTH } from "@pieai/university-ui/lesson/LessonReader.js";
-import { COURSE_POLAR, MAP_CONTROLS_HINT, WORLD_POLAR } from "@pieai/university-world/controls.js";
+import {
+  COURSE_POLAR,
+  MAP_CONTROLS_HINT,
+  WORLD_POLAR,
+  type MarkerScreenProjection,
+} from "@pieai/university-world/controls.js";
 import { CourseIsland } from "./CourseIsland.js";
 import { PlanetRail } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
@@ -430,6 +439,33 @@ export function App() {
     : null;
   /** The very lesson the rail's panel offers, so the phone offers the same one. */
   const todayLesson = todayData.nextLesson;
+  const todayMapDestinationId =
+    view.kind === "world" && todayLesson
+      ? courseMapDestinationId(todayLesson.studyId, todayLesson.courseId)
+      : null;
+  const onMarkerProjection = useCallback(
+    (projections: ReadonlyMap<string, MarkerScreenProjection>) => {
+      if (!todayMapDestinationId || !todayLesson) return;
+      const projection = projections.get(todayLesson.courseId);
+      setLiquidDestination(
+        todayMapDestinationId,
+        projection
+          ? {
+              x: projection.x - projection.width / 2,
+              y: projection.y - projection.height / 2,
+              width: projection.width,
+              height: projection.height,
+            }
+          : null,
+      );
+    },
+    [todayLesson, todayMapDestinationId],
+  );
+
+  useEffect(() => {
+    if (!todayMapDestinationId) return;
+    return () => setLiquidDestination(todayMapDestinationId, null);
+  }, [todayMapDestinationId]);
 
   const presenceView = presenceViewKey(view);
   const presenceLocation = useMemo(() => {
@@ -543,6 +579,7 @@ export function App() {
         */
         followId={view.kind === "world" && picked ? picked.courseId : null}
         followNode={pickCardRef}
+        onMarkerProjection={onMarkerProjection}
         onPick={(node) => {
           setPicked(node);
         }}
@@ -617,6 +654,7 @@ export function App() {
                   width="full"
                   className="nextup__primary"
                   wrapperClassName="nextup__primary-wrap"
+                  destination={todayMapDestinationId ?? undefined}
                   onClick={() =>
                     setView({
                       kind: "lesson",
@@ -691,6 +729,7 @@ export function App() {
     <TodaySection
       data={todayData}
       liquidCta={showMap && wide && !picked && pathOverlay === null}
+      liquidDestination={todayMapDestinationId ?? undefined}
       review={todayReview}
       readEntitlements={readEntitlements}
       vocabularyReview={todayVocabularyReview}

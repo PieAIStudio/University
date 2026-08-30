@@ -176,6 +176,15 @@ export const WORLD_POLAR = THREE.MathUtils.degToRad(54);
  */
 export const COURSE_POLAR = THREE.MathUtils.degToRad(66);
 
+/** A marker projection in browser viewport coordinates for DOM transitions. */
+export interface MarkerScreenProjection {
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+  readonly width: number;
+  readonly height: number;
+}
+
 /**
  * How far the eye sits from the look target inside a course.
  *
@@ -513,6 +522,7 @@ export function LabelProbe({
   nodes,
   followId = null,
   followNode,
+  onMarkerProjection,
 }: {
   markers: readonly Marker[];
   limit: number;
@@ -528,6 +538,12 @@ export function LabelProbe({
    */
   followId?: string | null;
   followNode?: { readonly current: HTMLElement | null };
+  /**
+   * The single projection source for a screen-space CTA destination. Values
+   * are viewport pixels, unlike label placement which stays local to the
+   * stage. An absent marker means it is behind the camera or off-screen.
+   */
+  onMarkerProjection?: (projections: ReadonlyMap<string, MarkerScreenProjection>) => void;
 }) {
   const { camera, gl, size } = useThree();
   const scratch = useRef(new THREE.Vector3());
@@ -580,8 +596,10 @@ export function LabelProbe({
   // render that created the Canvas children the first time.
   const followIdRef = useRef(followId);
   const followNodeRef = useRef(followNode);
+  const projectionCallbackRef = useRef(onMarkerProjection);
   followIdRef.current = followId;
   followNodeRef.current = followNode;
+  projectionCallbackRef.current = onMarkerProjection;
 
   useFrame(() => {
     // Project first, then let `placeLabels` decide who survives.
@@ -628,7 +646,12 @@ export function LabelProbe({
     // quiet branch just wrote, and nothing on the road can ever be focused.
     const projectedIds = new Set<string>();
     const projectedById = new Map<string, { x: number; y: number; z: number }>();
+    const markerProjections = new Map<string, MarkerScreenProjection>();
     const viewport = { width: size.width, height: size.height };
+    const canvasRect = gl.domElement.getBoundingClientRect();
+    const canvasScaleX = size.width > 0 && canvasRect.width > 0 ? canvasRect.width / size.width : 1;
+    const canvasScaleY =
+      size.height > 0 && canvasRect.height > 0 ? canvasRect.height / size.height : 1;
     for (const marker of markers) {
       const projected = scratch.current.copy(marker.position).project(camera);
       if (projected.z >= 1 || Math.abs(projected.x) > 1 || Math.abs(projected.y) > 1) continue;
@@ -638,6 +661,13 @@ export function LabelProbe({
       const y = ((1 - projected.y) / 2) * size.height;
       projectedIds.add(marker.id);
       projectedById.set(marker.id, { x, y, z: projected.z });
+      markerProjections.set(marker.id, {
+        x: canvasRect.left + x * canvasScaleX,
+        y: canvasRect.top + y * canvasScaleY,
+        z: projected.z,
+        width: Math.max(48, element.offsetWidth),
+        height: Math.max(32, element.offsetHeight),
+      });
       if (marker.quiet) {
         quietLabels.push({
           marker,
@@ -671,6 +701,8 @@ export function LabelProbe({
         anchor,
       });
     }
+
+    projectionCallbackRef.current?.(markerProjections);
 
     pinned.sort((left, right) => left.z - right.z);
     for (const item of pinned) {

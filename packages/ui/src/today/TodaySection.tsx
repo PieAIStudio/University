@@ -56,6 +56,7 @@ export function TodaySection({
   onReviewed,
   contextAction,
   liquidCta = false,
+  liquidDestination,
   requestToken,
   review,
   readEntitlements,
@@ -68,6 +69,8 @@ export function TodaySection({
   readonly contextAction?: ReactNode;
   /** The map owns the focal action; review work surfaces hand it to the card. */
   readonly liquidCta?: boolean;
+  /** Screen target for the map-owned action, when this panel is on the world. */
+  readonly liquidDestination?: string;
   /** Required only by the local HTTP grading/vocabulary fallback. */
   readonly requestToken?: string;
   /** Online's cloud scheduler implementation. */
@@ -95,7 +98,7 @@ export function TodaySection({
             </div>
             <div className="today-hero__action">
               {liquidCta ? (
-                <LiquidCtaButton onClick={() => onOpenLesson(next)}>
+                <LiquidCtaButton destination={liquidDestination} onClick={() => onOpenLesson(next)}>
                   {todayCtaLabel(next.progress)}
                 </LiquidCtaButton>
               ) : (
