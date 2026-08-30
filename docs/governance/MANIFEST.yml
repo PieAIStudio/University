@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-30T12:46:58.520Z
+generated_at: 2026-08-30T12:53:17.398Z
 generator_version: doc-gov@0.9.9
-docs_count: 73
+docs_count: 76
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -198,7 +198,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-29
+    last_reviewed: 2026-08-30
     pinned: false
   - id: REF-PAYMENT-BACKEND-GAP
     path: docs/reference/execution/payment-backend-gap.md
@@ -276,6 +276,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-26
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-CUSTOM-INSTANCED-TERRAIN-BLACK-WEDGES-USUALLY-SIGNAL-TOPOLOGY-BEFORE-COLOUR
+    path: docs/reference/learnings/workflow-issues/custom-instanced-terrain-black-wedges-usually-signal-topology-before-colour.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-30
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-DAILY-FREE-AI-QUOTA-MUST-RESERVE-SERVER-SIDE-BEFORE-STRUCTURED-GRADING
     path: docs/reference/learnings/workflow-issues/daily-free-ai-quota-must-reserve-server-side-before-structured-grading.md
@@ -368,6 +375,13 @@ docs:
     canonical: true
     last_reviewed: 2026-08-28
     pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-MAPCONTROLS-TWO-TOUCH-PAN-IS-A-SILENT-NO-OP
+    path: docs/reference/learnings/workflow-issues/mapcontrols-two-touch-pan-is-a-silent-no-op.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-30
+    pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-ONE-COLUMN-RAIL-MUST-RESET-CHILD-GRID-PLACEMENT
     path: docs/reference/learnings/workflow-issues/one-column-rail-must-reset-child-grid-placement.md
     type: reference
@@ -381,6 +395,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-26
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-PICKING-A-CATALOGUE-ISLAND-MUST-NOT-RETARGET-THE-LAYOUT-ORIGIN
+    path: docs/reference/learnings/workflow-issues/picking-a-catalogue-island-must-not-retarget-the-layout-origin.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-30
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-PLAN-ENTITLEMENT-MUST-PRECEDE-FREE-QUOTA-AND-WALLET-FUNDING
     path: docs/reference/learnings/workflow-issues/plan-entitlement-must-precede-free-quota-and-wallet-funding.md

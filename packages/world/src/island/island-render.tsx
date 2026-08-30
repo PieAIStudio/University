@@ -4,8 +4,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { buildIslandGeometry, type IslandGeometryDetail } from "./island-geometry.js";
-import { IslandGrass, type IslandGrassStyle } from "./island-grass-render.js";
-import { islandDressingSafetyZones, planIslandDressing } from "./island-dressing.js";
 import {
   createIslandSurfaceMaterialAdapter,
   DEFAULT_ISLAND_SURFACE_STYLE,
@@ -16,45 +14,21 @@ import {
   type IslandSurfaceStyleId,
 } from "./island-surface-style.js";
 import type { IslandBlueprint, IslandUnitSigil } from "./island-blueprint.js";
+import { buildCourseGrid, type HexMap } from "../grid/course-grid.js";
+import { HexField } from "../grid/HexField.js";
+import { GridCloudLayers } from "../grid/GridCloudLayers.js";
+import { Underside } from "../grid/Underside.js";
 
 const TECH = 0x5a6572;
 const TECH_DARK = 0x303a46;
 const CYAN = 0x55d9ff;
 const HERO_GOLD = 0xffc75a;
 
-const GRASS_LOOKS: Readonly<
-  Record<
-    IslandSurfaceStyleId,
-    { readonly style: IslandGrassStyle; readonly options: { readonly density: number } }
-  >
-> = {
-  diorama: {
-    style: { bottom: 0x4e8038, top: 0xeef9b8 },
-    options: { density: 3.6 },
-  },
-  elemental: {
-    style: {
-      bottom: 0x5b9163,
-      top: 0xb9df91,
-      windStrength: 0.085,
-      windSpeed: 1.3,
-    },
-    options: { density: 3.8 },
-  },
-  mossy: {
-    style: { bottom: 0x527e46, top: 0x8fb65c, windSpeed: 0.92 },
-    options: { density: 4.2 },
-  },
-  desert: {
-    style: { bottom: 0x8a754b, top: 0xc6ad6c, windStrength: 0.05 },
-    options: { density: 0.9 },
-  },
-};
-
 export interface IslandRenderProps {
   readonly blueprint: IslandBlueprint;
   readonly detail: IslandGeometryDetail;
   readonly targetRadius?: number;
+  readonly grid?: HexMap;
   readonly onClick?: () => void;
   readonly onPointerOver?: () => void;
   readonly onPointerOut?: () => void;
@@ -353,6 +327,7 @@ export function IslandRender({
   blueprint,
   detail,
   targetRadius,
+  grid,
   onClick,
   onPointerOver,
   onPointerOut,
@@ -361,39 +336,77 @@ export function IslandRender({
   const surfaceStyle = import.meta.env.DEV
     ? resolveIslandSurfaceStyle()
     : DEFAULT_ISLAND_SURFACE_STYLE;
-  const grassLook = GRASS_LOOKS[surfaceStyle];
   const surfaceTime = useRef<IslandSurfaceTimeUniform>({ value: 0 });
-  // Grass and dressing are rendered by sibling components in Maps.tsx. Build
-  // the pure dressing plan once here as well so the grass planner can reserve
-  // the exact authored landmark/prop aprons instead of guessing positions.
-  const dressingPlan = useMemo(
-    () =>
-      detail === "course" && blueprint.themeSelection.recipeId
-        ? planIslandDressing(blueprint, "course")
-        : null,
-    [blueprint, detail],
-  );
-  const grassSafetyZones = useMemo(
-    () => (dressingPlan ? islandDressingSafetyZones(dressingPlan) : undefined),
-    [dressingPlan],
-  );
+  const courseMap = useMemo(() => {
+    if (detail !== "course") return null;
+    if (grid) return grid;
+    return buildCourseGrid({
+      studyId: blueprint.studyId,
+      courseId: blueprint.courseId,
+      seed: blueprint.seed,
+      routeArchetype: blueprint.route.archetype,
+      routeAnchors: blueprint.geometryNodes,
+      lessons: blueprint.nodes.map((node) => ({
+        lessonId: node.id,
+        unitId: node.unitId,
+        unitIndex: node.unitIndex,
+        state: "idle" as const,
+      })),
+    });
+  }, [blueprint, detail, grid]);
   useFrame(({ clock }) => {
     // The optional Elemental look is DEV-only. One shared uniform per island
     // keeps the terrain's procedural colour in phase without another loop.
-    if (import.meta.env.DEV && !islandLookFrozen() && surfaceStyle === "elemental") {
+    if (
+      detail === "world" &&
+      import.meta.env.DEV &&
+      !islandLookFrozen() &&
+      surfaceStyle === "elemental"
+    ) {
       surfaceTime.current.value = clock.elapsedTime;
     }
   });
   const shape = useMemo(
-    () => buildIslandGeometry(blueprint, detail, targetRadius),
+    () => (detail === "world" ? buildIslandGeometry(blueprint, detail, targetRadius) : null),
     [blueprint, detail, targetRadius],
   );
-  useEffect(
-    () => () => {
-      shape.terrain.dispose();
-    },
-    [shape],
-  );
+  useEffect(() => () => shape?.terrain.dispose(), [shape]);
+  if (detail === "course" && courseMap) {
+    return (
+      <group
+        name="hex-grid-course"
+        onClick={
+          onClick
+            ? (event) => {
+                event.stopPropagation();
+                onClick();
+              }
+            : undefined
+        }
+        onPointerOver={
+          onPointerOver
+            ? (event) => {
+                event.stopPropagation();
+                onPointerOver();
+              }
+            : undefined
+        }
+        onPointerOut={
+          onPointerOut
+            ? (event) => {
+                event.stopPropagation();
+                onPointerOut();
+              }
+            : undefined
+        }
+      >
+        <HexField map={courseMap} dimmed={dimmed} />
+        <Underside map={courseMap} dimmed={dimmed} />
+        <GridCloudLayers map={courseMap} dimmed={dimmed} />
+      </group>
+    );
+  }
+  if (!shape) return null;
   return (
     <group
       onClick={
@@ -431,17 +444,6 @@ export function IslandRender({
           timeUniform={surfaceTime.current}
         />
       </mesh>
-      {detail === "course" ? (
-        <>
-          <IslandGrass
-            blueprint={blueprint}
-            detail="course"
-            targetRadius={targetRadius}
-            style={grassLook.style}
-            options={{ ...grassLook.options, safetyZones: grassSafetyZones }}
-          />
-        </>
-      ) : null}
       <TechUnderside
         blueprint={blueprint}
         scale={shape.scale}

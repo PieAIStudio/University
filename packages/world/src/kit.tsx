@@ -283,6 +283,143 @@ export function AssetField({
   );
 }
 
+function batchedPropColour(source: THREE.Material): THREE.Color {
+  const name = source.name.toLowerCase();
+  const colour =
+    name.includes("red") || name.includes("mushroom")
+      ? 0xe86f50
+      : name.includes("yellow") || name.includes("flower")
+        ? 0xf0bd4f
+        : name.includes("grass") || name.includes("leaf") || name.includes("plant")
+          ? 0x6f9e3c
+          : name.includes("bark") || name.includes("wood") || name.includes("trunk")
+            ? 0x70452f
+            : name.includes("dirt") || name.includes("rock") || name.includes("stone")
+              ? 0x927052
+              : ((source as THREE.MeshStandardMaterial).color?.getHex?.() ?? 0xd2bf97);
+  return new THREE.Color(colour);
+}
+
+function normaliseBatchedGeometry(part: Part): THREE.BufferGeometry {
+  const geometry = cloneOwnedPartGeometry(part.sourceGeometry);
+  // BatchedMesh requires one attribute signature for the whole batch. The
+  // Kenney nature parts all carry position/normal/uv, but making the contract
+  // explicit keeps a future low-detail part from splitting the draw again.
+  for (const name of Object.keys(geometry.attributes)) {
+    if (name !== "position" && name !== "normal" && name !== "uv" && name !== "color") {
+      geometry.deleteAttribute(name);
+    }
+  }
+  const position = geometry.getAttribute("position");
+  if (!position) throw new Error("A batched prop part needs a position attribute");
+  if (!geometry.getAttribute("normal")) {
+    geometry.computeVertexNormals();
+  }
+  if (!geometry.getAttribute("uv")) {
+    geometry.setAttribute(
+      "uv",
+      new THREE.Float32BufferAttribute(new Float32Array(position.count * 2), 2),
+    );
+  }
+  const colour = batchedPropColour(part.sourceMaterial);
+  const colours = new Float32Array(position.count * 3);
+  for (let index = 0; index < position.count; index += 1) colour.toArray(colours, index * 3);
+  geometry.setAttribute("color", new THREE.BufferAttribute(colours, 3));
+  return geometry;
+}
+
+/**
+ * One multi-draw batch for all parts of one nature asset. A GLB may contain a
+ * leaf part and a bark part with different geometry, so ordinary InstancedMesh
+ * still needs one call per primitive. BatchedMesh keeps those parts together
+ * under one material and one renderer submission while retaining each model's
+ * silhouette and per-copy transform.
+ */
+export function BatchedAssetField({
+  src,
+  at,
+  castShadow = false,
+}: {
+  readonly src: string;
+  readonly at: readonly Placement[];
+  readonly castShadow?: boolean;
+}) {
+  const parts = usePartsFromSource(src, false);
+  const [batch, setBatch] = useState<THREE.BatchedMesh | null>(null);
+
+  useLayoutEffect(() => {
+    if (parts.length === 0 || at.length === 0) return;
+    const geometries = parts.map(normaliseBatchedGeometry);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      vertexColors: true,
+      roughness: 0.86,
+      metalness: 0,
+      flatShading: true,
+      side: THREE.DoubleSide,
+    });
+    // A restrained reverse-fresnel darkens the silhouette edge just enough to
+    // keep a small tree separate from a similarly coloured meadow tile.
+    material.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <opaque_fragment>",
+        "float propEdge = smoothstep(0.02, 0.72, abs(normal.y));\noutgoingLight *= mix(0.88, 1.0, propEdge);\n#include <opaque_fragment>",
+      );
+    };
+    material.customProgramCacheKey = () => "hex-grid-batched-prop-v1";
+    const maxVertexCount = geometries.reduce(
+      (total, geometry) => total + geometry.getAttribute("position").count,
+      0,
+    );
+    const maxIndexCount = geometries.reduce(
+      (total, geometry) => total + (geometry.index?.count ?? 0),
+      0,
+    );
+    const target = new THREE.BatchedMesh(
+      Math.max(1, at.length * geometries.length),
+      Math.max(1, maxVertexCount),
+      Math.max(1, maxIndexCount),
+      material,
+    );
+    target.perObjectFrustumCulled = false;
+    target.sortObjects = false;
+    target.castShadow = castShadow;
+    target.frustumCulled = false;
+    target.name = "hex-grid-batched-prop";
+    target.userData = {
+      islandLookPlacementCount: at.length,
+      islandLookBatch: true,
+    };
+    const geometryIds = geometries.map((geometry) => target.addGeometry(geometry));
+    const local = new THREE.Matrix4();
+    const world = new THREE.Matrix4();
+    at.forEach((placement) => {
+      world.compose(
+        placement.position,
+        new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), placement.turn),
+        new THREE.Vector3(placement.height, placement.height, placement.height),
+      );
+      geometryIds.forEach((geometryId, partIndex) => {
+        const instanceId = target.addInstance(geometryId);
+        target.setMatrixAt(instanceId, local.multiplyMatrices(world, parts[partIndex]!.offset));
+      });
+    });
+    target.computeBoundingBox();
+    target.computeBoundingSphere();
+    geometries.forEach((geometry) => geometry.dispose());
+    setBatch(target);
+
+    return () => {
+      setBatch((current) => (current === target ? null : current));
+      target.dispose();
+      material.dispose();
+    };
+  }, [at, castShadow, parts]);
+
+  if (!batch) return null;
+  return <primitive object={batch} dispose={null} />;
+}
+
 function PartField({
   part,
   at,

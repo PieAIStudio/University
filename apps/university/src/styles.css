@@ -4176,3 +4176,18 @@ blockquote {
     padding-bottom: calc(var(--tab-bar-height, 3.5rem) + 1rem);
   }
 }
+
+/*
+  Let one-finger scrolling keep working, but do not let a two-finger
+  gesture zoom the app's page. `pinch-zoom` is intentionally absent. This
+  is gesture policy, not a zoom restriction: browser menu/keyboard zoom and
+  OS/browser text-size enlargement still apply to the DOM reader.
+
+  After the raw-colour registry's source-order-sensitive region, same as
+  the settlement padding above.
+*/
+html,
+body,
+#root {
+  touch-action: pan-x pan-y;
+}

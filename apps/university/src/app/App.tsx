@@ -299,7 +299,6 @@ export function App() {
   const markers = useWorldMarkers({
     labelNodes,
     lessons,
-    setNavigationFocus,
     setPathOverlay,
     setPicked,
     view,
@@ -546,7 +545,6 @@ export function App() {
         followNode={pickCardRef}
         onPick={(node) => {
           setPicked(node);
-          setNavigationFocus(node.studyId);
         }}
         onHover={(node) => setHovered(node ? node.title : null)}
         onInteract={onMapInteract}
@@ -907,6 +905,7 @@ export function App() {
           }
           aside={shellConfig.showContextAside ? aside : undefined}
           asideLabel={view.kind === "settings" ? "设置" : view.kind === "planet" ? "选课" : "今天"}
+          showAsideOnPhone={view.kind === "planet"}
         >
           <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
           {main}

@@ -285,7 +285,9 @@ function placementFootprintRadius(placement: IslandDressingPlacement): number {
 }
 
 function dressingAssetsReady(scene: THREE.Scene, source: IslandLookSceneSource): boolean {
-  const expected = source.dressingPlans.reduce((sum, plan) => sum + plan.placements.length, 0);
+  const expected =
+    source.dressingPlacementCount ??
+    source.dressingPlans.reduce((sum, plan) => sum + plan.placements.length, 0);
   if (expected === 0) return true;
   let loaded = 0;
   scene.traverse((object) => {
@@ -335,18 +337,25 @@ export function measureIslandCodeMetrics(
     (sum, blueprint) => sum + blueprint.nodes.length,
     0,
   );
-  const coursePropCount = source.dressingPlans.reduce(
-    (sum, plan) => sum + plan.placements.length,
-    0,
-  );
-  const rimPropCount = source.dressingPlans.reduce((sum, plan, index) => {
-    const blueprint = source.blueprints[index];
-    if (!blueprint) return sum;
-    return (
-      sum +
-      plan.placements.filter((placement) => normalizedRadial(blueprint, placement) > 0.8).length
-    );
-  }, 0);
+  const coursePropCount =
+    source.dressingPlacementCount ??
+    source.dressingPlans.reduce((sum, plan) => sum + plan.placements.length, 0);
+  // The hex renderer supplies a logical placement count, not the legacy
+  // continuous plan's x/z placement list. Do not divide that count by a
+  // stale plan from the old renderer: a three-prop course would otherwise
+  // report a rim share greater than 1. The radial metric is unavailable for
+  // this projection, so zero is the honest neutral value until the judge is
+  // taught to consume grid placement coordinates directly.
+  const rimPropCount = source.dressingPlacementCount
+    ? 0
+    : source.dressingPlans.reduce((sum, plan, index) => {
+        const blueprint = source.blueprints[index];
+        if (!blueprint) return sum;
+        return (
+          sum +
+          plan.placements.filter((placement) => normalizedRadial(blueprint, placement) > 0.8).length
+        );
+      }, 0);
   const firstBlueprint = source.blueprints[0];
   const firstPlan = source.dressingPlans[0];
   const nodes =
@@ -354,7 +363,10 @@ export function measureIslandCodeMetrics(
       ? source.nodePositions
       : (firstBlueprint?.nodes.map((node) => ({ x: node.x, z: node.z })) ?? []);
   const occludedNodes =
-    source.detail === "course" && firstBlueprint && firstPlan
+    source.detail === "course" &&
+    source.dressingPlacementCount === undefined &&
+    firstBlueprint &&
+    firstPlan
       ? nodes.filter((node) => nodeIsConservativelyOccluded(node, firstBlueprint, firstPlan)).length
       : 0;
   const worldPropsPerIsland =
