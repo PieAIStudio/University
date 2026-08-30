@@ -4,7 +4,7 @@ import { gridElevationsFor, type GridElevation } from "./grid-elevation.js";
 import { hexKey, hexNeighbors, hexToWorld, worldToHex, type HexCoord } from "./hex.js";
 import { gridPaletteFor, type GridPalette } from "./grid-palette.js";
 import { distanceToRoute, gridPropsFor, type GridPropPlacement } from "./grid-props.js";
-import { growGridOutline, type GridOutline } from "./grid-outline.js";
+import { CELLS_PER_LESSON, growGridOutline, type GridOutline } from "./grid-outline.js";
 
 export type GridLessonState = "done" | "live" | "idle" | "locked";
 
@@ -142,9 +142,24 @@ function estimateHexSize(anchors: readonly { readonly x: number; readonly z: num
   // not become a close-up of three oversized stones while a forty-one-lesson
   // island still sheds sea.
   const courseScale = Math.min(1, Math.max(0, (anchors.length - 3) / 38));
-  const multiplier = 1.1 + courseScale * 0.3;
-  const sizeCap = 2 + courseScale * 2;
-  return Math.min(sizeCap, Math.max(0.88, (typical / SQRT_THREE) * multiplier));
+
+  // Cell size follows from how much of the fixed shot the island should own,
+  // not from a cap. Cell *count* is now driven by lesson count
+  // (CELLS_PER_LESSON), so a cap made a long course inflate off the edge of the
+  // frame: 41 lessons grew to 330 cells and a 126-unit island viewed from 23
+  // units away, which is a close-up of six tiles. Solving for the footprint
+  // instead keeps every course the same size on screen and lets the cell count
+  // change freely.
+  //
+  // For a roughly circular hex field, halfWidth ~= 0.866 * cellSize * sqrt(n),
+  // measured against the real generator rather than derived.
+  const cells = Math.max(anchors.length + 7, Math.round(anchors.length * CELLS_PER_LESSON));
+  const targetHalfWidth = 14 + courseScale * 14;
+  const fromFootprint = targetHalfWidth / (0.866 * Math.sqrt(cells));
+
+  // The anchor spacing still sets a floor, so lesson stones never overlap.
+  const fromAnchors = (typical / SQRT_THREE) * 0.55;
+  return Math.max(0.6, Math.min(fromFootprint, Math.max(fromAnchors, fromFootprint)));
 }
 
 function routeFromAnchors(

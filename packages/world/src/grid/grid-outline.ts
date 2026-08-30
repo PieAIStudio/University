@@ -1,7 +1,22 @@
 import { hash } from "../island/random.js";
 import { hexDistance, hexKey, hexNeighbors, hexRing, type HexCoord } from "./hex.js";
 
-export const GRID_CELL_BUDGET = 128;
+/**
+ * The most cells one island may hold.
+ *
+ * The largest course in the catalogue has 41 lessons, and a lesson only reads
+ * as a step along a route when the land around it outnumbers it. At the old
+ * budget of 128 a 41-lesson island was one third lesson tiles, so the route
+ * stopped being a path through a place and became the place — two independent
+ * renderer rewrites hit that wall from different directions before anyone
+ * checked the ratio against the reference art, which runs about one lesson per
+ * eight cells.
+ *
+ * 41 lessons at that ratio needs ~330 cells; 400 leaves headroom. A hex prism
+ * is ~20 triangles and every cell is one instance, so the whole terrain costs
+ * ~8,000 triangles and a single draw call. The land was always affordable.
+ */
+export const GRID_CELL_BUDGET = 400;
 
 export interface GridDetachedGroup {
   readonly id: string;
@@ -162,6 +177,13 @@ function findDetachedCell(
   return { q: center.q + 20 + groupIndex * 2, r: center.r - 20 };
 }
 
+/**
+ * Land cells per lesson. Sampled from the art-direction reference, where ~10
+ * lesson tiles sit in ~120 cells. Below about 5 the route reads as the island
+ * rather than a path across it.
+ */
+export const CELLS_PER_LESSON = 8;
+
 export function growGridOutline(
   route: readonly HexCoord[],
   seed: string,
@@ -170,7 +192,7 @@ export function growGridOutline(
   if (route.length === 0) throw new RangeError("A grid outline needs at least one route cell");
   const target = Math.min(
     GRID_CELL_BUDGET - 4,
-    Math.max(route.length + 7, requestedTarget ?? Math.round(route.length * 2.9)),
+    Math.max(route.length + 7, requestedTarget ?? Math.round(route.length * CELLS_PER_LESSON)),
   );
   const main = growMainRegion(route, seed, target);
   const mainKeys = new Set(main.map(hexKey));

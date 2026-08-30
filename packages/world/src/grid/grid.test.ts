@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { buildCourseGrid, type CourseGridLesson } from "./course-grid.js";
 import { hexDistance, hexKey, hexNeighbors } from "./hex.js";
-import { hexRegionIsConnected } from "./grid-outline.js";
+import { GRID_CELL_BUDGET, hexRegionIsConnected } from "./grid-outline.js";
 import { propCellsAreUnique } from "./grid-props.js";
 import { islandGeometryBlueprint } from "../island/island-blueprint.js";
 
@@ -136,7 +136,7 @@ describe("hex grid course data", () => {
           unitId: `unit-${Math.floor(index / 4)}`,
         })),
       });
-      expect(map.cells.length).toBeLessThanOrEqual(128);
+      expect(map.cells.length).toBeLessThanOrEqual(GRID_CELL_BUDGET);
     }
   });
 

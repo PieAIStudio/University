@@ -19,7 +19,28 @@ export const GRID_SHARED_SOIL = {
   shadow: 0x412a24,
   cliff: 0x70452f,
   road: 0xf0e5c7,
-  accent: 0xf37958,
+} as const;
+
+/**
+ * The one warm ramp every lesson marker is drawn from.
+ *
+ * `accent` is not shared, because it is the only colour a learner has to find:
+ * it marks the tile they are meant to click. A single coral held up while every
+ * meadow was a shade of green, but against sand, frost or violet it drops to
+ * 1.0-1.3 contrast and the marker disappears. So the hue stays fixed and only
+ * the lightness moves, which keeps the control recognisable as one product
+ * element across all 53 courses while staying legible on each ground.
+ *
+ * Solving for maximum contrast alone is wrong here and was tried: it collapses
+ * most presets onto the same deep magenta, which reads as a different control
+ * on every island.
+ */
+export const GRID_ACCENT_RAMP = {
+  amberLight: 0xffdc8c,
+  coralLight: 0xff9a62,
+  coral: 0xf37958,
+  coralDeep: 0xdc4a2c,
+  brick: 0xc02818,
 } as const;
 
 export interface GridPalettePreset extends GridPalette {
@@ -27,21 +48,37 @@ export interface GridPalettePreset extends GridPalette {
 }
 
 /**
- * Hand-picked meadow families. This table is intentionally finite: a course
- * hashes to one complete, reviewed set instead of inventing a hue in HSL.
- * Every preset shares the warm soil, ivory road and coral interaction colour.
+ * Hand-picked grounds. This table is intentionally finite: a course hashes to
+ * one complete, reviewed set instead of inventing a hue in HSL.
+ *
+ * The ten grounds span green, teal, olive, amber, sand, clay and rust rather
+ * than ten shades of one green. An earlier table was all meadow greens, which
+ * is the failure `work/archipelago-identity` already died of once: 53 islands
+ * that no one can tell apart. Identity has to survive the world map, where a
+ * course is a few dozen pixels of ground colour and nothing else.
+ *
+ * Spread is bounded by a second requirement that is easy to lose: every top has
+ * to read as *ground*. Solving for colour separation alone put a pale blue-grey
+ * and a lavender in this table, and the 41-lesson island rendered as a concrete
+ * car park. So the range is the natural earth gamut — leaf, moss, olive, dry
+ * grass, sand, clay, rust — and identity is spread across that, not across the
+ * whole wheel.
+ *
+ * Every preset still shares the soil, cliff and road, so the islands read as 53
+ * places in one world rather than 53 unrelated toys. Each accent is the ramp
+ * step that clears 1.6:1 against its own ground.
  */
 export const GRID_PALETTE_PRESETS: readonly GridPalettePreset[] = [
-  { id: "lime-meadow", top: 0xb6c43a, ...GRID_SHARED_SOIL },
-  { id: "spring-meadow", top: 0x9bbd47, ...GRID_SHARED_SOIL },
-  { id: "fern-meadow", top: 0x7cad50, ...GRID_SHARED_SOIL },
-  { id: "clover-meadow", top: 0x5b9e64, ...GRID_SHARED_SOIL },
-  { id: "sage-meadow", top: 0x6eaa85, ...GRID_SHARED_SOIL },
-  { id: "mint-meadow", top: 0x82b769, ...GRID_SHARED_SOIL },
-  { id: "olive-meadow", top: 0xa8b648, ...GRID_SHARED_SOIL },
-  { id: "golden-meadow", top: 0xc6b24b, ...GRID_SHARED_SOIL },
-  { id: "moss-meadow", top: 0xa8c34a, ...GRID_SHARED_SOIL },
-  { id: "deep-meadow", top: 0x91a94a, ...GRID_SHARED_SOIL },
+  { id: "morning-meadow", top: 0xc0b430, accent: GRID_ACCENT_RAMP.coralDeep, ...GRID_SHARED_SOIL },
+  { id: "cool-highland", top: 0x7fb89a, accent: GRID_ACCENT_RAMP.coralDeep, ...GRID_SHARED_SOIL },
+  { id: "autumn-grove", top: 0xd89440, accent: GRID_ACCENT_RAMP.coralDeep, ...GRID_SHARED_SOIL },
+  { id: "mint-shelf", top: 0x6ecfa8, accent: GRID_ACCENT_RAMP.coralDeep, ...GRID_SHARED_SOIL },
+  { id: "dusk-field", top: 0x8c9a52, accent: GRID_ACCENT_RAMP.amberLight, ...GRID_SHARED_SOIL },
+  { id: "deep-forest", top: 0x4e9250, accent: GRID_ACCENT_RAMP.coralLight, ...GRID_SHARED_SOIL },
+  { id: "sand-bar", top: 0xd8c87e, accent: GRID_ACCENT_RAMP.coral, ...GRID_SHARED_SOIL },
+  { id: "clay-terrace", top: 0xcc7b5e, accent: GRID_ACCENT_RAMP.amberLight, ...GRID_SHARED_SOIL },
+  { id: "tundra-flat", top: 0x9aa870, accent: GRID_ACCENT_RAMP.coralDeep, ...GRID_SHARED_SOIL },
+  { id: "rust-down", top: 0xa86a3c, accent: GRID_ACCENT_RAMP.coral, ...GRID_SHARED_SOIL },
 ] as const;
 
 export function gridPaletteIndexFor(studyId: string, courseId: string, seed: string): number {
