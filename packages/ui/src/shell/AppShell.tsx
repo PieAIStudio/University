@@ -61,6 +61,12 @@ export interface AppShellProps {
   readonly brand?: ReactNode;
   readonly aside?: ReactNode;
   readonly asideLabel?: string;
+  /**
+   * Phone layout hides the aside. Pass true when that aside *is* the way
+   * forward — the planet picker — so CSS can give it a real row instead of
+   * `display: none`.
+   */
+  readonly showAsideOnPhone?: boolean;
   readonly children: ReactNode;
 }
 
@@ -94,6 +100,7 @@ export function AppShell({
   brand,
   aside,
   asideLabel,
+  showAsideOnPhone = false,
   children,
   identity,
 }: AppShellProps) {
@@ -107,6 +114,7 @@ export function AppShell({
   return (
     <div
       className="app-shell"
+      data-aside-phone={showAsideOnPhone ? "true" : "false"}
       data-rail-collapsed={collapsed.rail ? "true" : "false"}
       data-aside-collapsed={collapsed.aside ? "true" : "false"}
     >

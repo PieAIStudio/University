@@ -104,6 +104,38 @@
   min-width: 0;
 }
 
+/*
+  The generic phone shell hides the aside. When that aside *is* the way
+  into the product — the planet picker — give it a real row instead of
+  cloning the control into the main column. Desktop already shows the
+  aside as a floating card, so this stays inside the phone breakpoint.
+*/
+@media (max-width: 767px) {
+  .app-shell[data-aside-phone="true"] {
+    grid-template-rows: auto minmax(12rem, 34dvh) minmax(0, 1fr);
+    grid-template-areas:
+      "counters"
+      "main"
+      "aside";
+    row-gap: 10px;
+  }
+
+  .app-shell[data-aside-phone="true"] .app-shell__main,
+  .app-shell[data-aside-phone="true"] .app-shell__content {
+    min-height: min(34dvh, 22rem);
+  }
+
+  .app-shell[data-aside-phone="true"] .app-shell__aside {
+    display: block;
+    min-height: 0;
+    overflow: auto;
+    padding: 12px 16px calc(12px + var(--tab-bar-height));
+    border: 1px solid var(--game-ui-border-strong, rgb(255 255 255 / 22%));
+    border-radius: var(--game-ui-radius-panel, 14px);
+    background: var(--game-ui-panel-strong, #151b2b);
+  }
+}
+
 .tab-bar {
   position: fixed;
   z-index: 40;
