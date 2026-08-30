@@ -8,7 +8,8 @@
      into a compositor drop-shadow() in SwimmerUIKit 2.0.0, so it costs nothing
      at rest. The light catch is not here: an inset shadow plus the ::before
      highlight read as two stripes, and one light source is the whole point. */
-  --liquid-cta-shadow: 0 5px 10px color-mix(in srgb, var(--game-ui-accent-contrast) 32%, transparent);
+  --liquid-cta-shadow: 0 5px 10px
+    color-mix(in srgb, var(--game-ui-accent-contrast) 32%, transparent);
   position: relative;
   display: inline-block;
   width: fit-content;
@@ -106,7 +107,11 @@
 
 .liquid-cta[data-liquid-cta-disabled="true"] {
   --liquid-cta-fill: var(--game-ui-text-muted);
-  --liquid-cta-fill-top: color-mix(in srgb, var(--game-ui-text-muted) 82%, var(--game-ui-text-on-dark));
+  --liquid-cta-fill-top: color-mix(
+    in srgb,
+    var(--game-ui-text-muted) 82%,
+    var(--game-ui-text-on-dark)
+  );
   --liquid-cta-shadow: none;
 }
 
