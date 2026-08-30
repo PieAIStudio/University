@@ -65,6 +65,34 @@ const firstLesson: LessonRef = {
   lessonId: "first",
 };
 
+/** A study of one course whose lessons all sit at revision 3 with one exercise. */
+function viewOf(lessons: readonly { readonly id: string; readonly title: string }[]): StudyView {
+  return {
+    ...studyView,
+    courses: [
+      {
+        ...studyView.courses[0]!,
+        units: [
+          {
+            ...studyView.courses[0]!.units[0]!,
+            lessons: lessons.map((lesson) => ({
+              id: lesson.id,
+              title: lesson.title,
+              status: "active" as const,
+              contentRevision: 3,
+              cardCount: 0,
+              exerciseCount: 1,
+              exerciseIds: ["one"],
+              contentChars: 10,
+              progress: null,
+            })),
+          },
+        ],
+      },
+    ],
+  } satisfies StudyView;
+}
+
 function attempt(
   commandId: string,
   locator: LessonRef,
@@ -96,7 +124,7 @@ function attempt(
 }
 
 describe("answer overview", () => {
-  it("renders every lesson and only counts attempts for its current revision", () => {
+  it("lists the answered lessons and only counts attempts for its current revision", () => {
     const secondLesson = { ...firstLesson, lessonId: "second" };
     const model = buildAnswerOverview(studyView, {
       exerciseAttempts: Object.fromEntries([
@@ -131,18 +159,97 @@ describe("answer overview", () => {
     });
 
     expect(model.courses).toHaveLength(1);
-    expect(model.courses[0]?.lessons.map((lesson) => lesson.title)).toEqual(["第一节", "第二节"]);
+    // 第二节's only attempt belongs to an older revision, so this revision has
+    // no first answer for it. A lesson with nothing recorded is counted, not
+    // ranked: giving it a row would be giving it a verdict it did not earn.
+    expect(model.courses[0]?.lessons.map((lesson) => lesson.title)).toEqual(["第一节"]);
+    expect(model.courses[0]?.lessonCount).toBe(2);
+    expect(model.courses[0]?.unansweredCount).toBe(1);
+    expect(model.empty).toBe(false);
     expect(model.courses[0]?.lessons[0]?.stats).toMatchObject({
       firstAttemptCount: 1,
       firstPassCount: 0,
       firstPassRate: 0,
       totalAttempts: 2,
     });
-    expect(model.courses[0]?.lessons[1]?.stats).toMatchObject({
-      exerciseCount: 1,
-      firstAttemptCount: 0,
-      firstPassRate: null,
-      totalAttempts: 0,
+  });
+
+  it("puts the most stuck lesson first, because that is what the heading asks", () => {
+    const studyView = viewOf([
+      { id: "easy", title: "轻松那节" },
+      { id: "hard", title: "卡住那节" },
+      { id: "medium", title: "中间那节" },
+    ]);
+    const at = (lessonId: string) => ({ ...firstLesson, lessonId });
+    const model = buildAnswerOverview(studyView, {
+      exerciseAttempts: Object.fromEntries([
+        // Passed on the first try.
+        [
+          "e1",
+          attempt("e1", at("easy"), {
+            exerciseId: "one",
+            occurredAt: "2026-08-30T09:00:00.000Z",
+            passed: true,
+            contentRevision: 3,
+          }),
+        ],
+        // Failed first, and kept costing attempts after that.
+        [
+          "h1",
+          attempt("h1", at("hard"), {
+            exerciseId: "one",
+            occurredAt: "2026-08-30T09:00:00.000Z",
+            passed: false,
+            contentRevision: 3,
+          }),
+        ],
+        [
+          "h2",
+          attempt("h2", at("hard"), {
+            exerciseId: "one",
+            occurredAt: "2026-08-30T09:01:00.000Z",
+            passed: false,
+            contentRevision: 3,
+          }),
+        ],
+        [
+          "h3",
+          attempt("h3", at("hard"), {
+            exerciseId: "one",
+            occurredAt: "2026-08-30T09:02:00.000Z",
+            passed: true,
+            contentRevision: 3,
+          }),
+        ],
+        // Failed first, but was not fought over.
+        [
+          "m1",
+          attempt("m1", at("medium"), {
+            exerciseId: "one",
+            occurredAt: "2026-08-30T09:00:00.000Z",
+            passed: false,
+            contentRevision: 3,
+          }),
+        ],
+      ]),
     });
+
+    expect(model.courses[0]?.lessons.map((lesson) => lesson.title)).toEqual([
+      "卡住那节",
+      "中间那节",
+      "轻松那节",
+    ]);
+  });
+
+  it("reports an untouched study once rather than once per lesson", () => {
+    const studyView = viewOf([
+      { id: "first", title: "第一节" },
+      { id: "second", title: "第二节" },
+    ]);
+    const model = buildAnswerOverview(studyView, { exerciseAttempts: {} });
+
+    expect(model.empty).toBe(true);
+    expect(model.courses[0]?.lessons).toEqual([]);
+    expect(model.courses[0]?.unansweredCount).toBe(2);
   });
 });
