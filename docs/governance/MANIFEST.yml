@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-30T14:05:28.371Z
+generated_at: 2026-08-30T14:21:11.395Z
 generator_version: doc-gov@0.9.9
-docs_count: 77
+docs_count: 78
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -500,6 +500,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-29
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-VIEWPORT-BREAKPOINTS-CAN-MISS-THE-APP-SHELL-CONTENT-WIDTH
+    path: docs/reference/learnings/workflow-issues/viewport-breakpoints-can-miss-the-app-shell-content-width.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-30
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-WEBGL-RECON-SCREENSHOTS-NEED-FRAME-SYNCHRONOUS-READPIXELS-VALIDATION
     path: docs/reference/learnings/workflow-issues/webgl-recon-screenshots-need-frame-synchronous-readpixels-validation.md

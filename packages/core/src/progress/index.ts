@@ -33,3 +33,4 @@ export { createMemoryPersistence, createMemoryRemoteStore } from "./memory.js";
 export { createProgressPort } from "./port.js";
 export { progressSourceOf } from "./source.js";
 export { mistakesOf, type Mistake } from "./mistakes.js";
+export { answerStatsForAttempts, answerStatsOf, type LessonAnswerStats } from "./answer-stats.js";

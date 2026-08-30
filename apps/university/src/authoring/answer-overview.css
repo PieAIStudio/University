@@ -1,0 +1,213 @@
+.studio-section {
+  container: studio-section / inline-size;
+}
+
+.studio-section__signals {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.answer-overview {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--game-ui-panel-deep) 76%, transparent),
+    color-mix(in srgb, var(--game-ui-secondary-pale) 42%, transparent)
+  );
+}
+
+.answer-overview h2 {
+  margin: 7px 0 0;
+  color: var(--game-ui-text-on-dark);
+  font-family: var(--game-ui-font-display);
+  font-size: 1.6rem;
+  line-height: 1.1;
+}
+
+.answer-overview p {
+  color: var(--game-ui-text-muted);
+  line-height: 1.6;
+}
+
+.answer-overview__header,
+.answer-overview__course-header {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.answer-overview__header > div:first-child {
+  min-width: 0;
+}
+
+.answer-overview__source {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 4px;
+  min-width: 122px;
+  padding: 12px 14px;
+  border: 1px solid var(--campus-rule);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--game-ui-panel-deep) 55%, transparent);
+  text-align: right;
+}
+
+.answer-overview__source strong,
+.answer-overview__metric strong {
+  color: var(--game-ui-text-on-dark);
+  font-family: var(--game-ui-font-display);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.answer-overview__source strong {
+  font-size: 1.25rem;
+}
+
+.answer-overview__source span,
+.answer-overview__course-header span,
+.answer-overview__identity > span,
+.answer-overview__metric span {
+  color: var(--game-ui-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.answer-overview__courses {
+  display: grid;
+  gap: 22px;
+}
+
+.answer-overview__course {
+  min-width: 0;
+}
+
+.answer-overview__course + .answer-overview__course {
+  padding-top: 20px;
+  border-top: 1px solid var(--campus-rule);
+}
+
+.answer-overview__course-header {
+  align-items: baseline;
+  padding-bottom: 10px;
+}
+
+.answer-overview__course-header h3,
+.answer-overview__identity h4 {
+  margin: 0;
+  color: var(--game-ui-text-on-dark);
+}
+
+.answer-overview__course-header h3 {
+  font-size: 1.05rem;
+}
+
+.answer-overview__rows {
+  border-top: 1px solid color-mix(in srgb, var(--campus-rule) 78%, transparent);
+}
+
+.answer-overview__lesson {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1.6fr);
+  gap: 16px;
+  min-width: 0;
+  padding: 14px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--campus-rule) 65%, transparent);
+}
+
+.answer-overview__lesson:last-child {
+  border-bottom: 0;
+}
+
+.answer-overview__identity {
+  min-width: 0;
+}
+
+.answer-overview__identity .eyebrow {
+  overflow-wrap: anywhere;
+}
+
+.answer-overview__identity h4 {
+  margin-top: 5px;
+  font-size: 0.98rem;
+  overflow-wrap: anywhere;
+}
+
+.answer-overview__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  min-width: 0;
+}
+
+.answer-overview__metric {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 11px;
+  border: 1px solid color-mix(in srgb, var(--campus-rule) 82%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--game-ui-panel-deep) 42%, transparent);
+}
+
+.answer-overview__metric strong {
+  font-size: 1.35rem;
+  overflow-wrap: anywhere;
+}
+
+.answer-overview__metric span {
+  overflow-wrap: anywhere;
+}
+
+.answer-overview__pending {
+  grid-column: 2;
+  margin: -7px 0 0;
+  color: var(--game-ui-warning) !important;
+  font-size: 0.76rem;
+}
+
+@container studio-section (min-width: 980px) {
+  .studio-section__signals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .answer-overview {
+    padding: 16px;
+  }
+
+  .answer-overview__header,
+  .answer-overview__course-header {
+    display: grid;
+  }
+
+  .answer-overview__source {
+    width: 100%;
+    text-align: left;
+  }
+
+  .answer-overview__lesson {
+    grid-template-columns: 1fr;
+  }
+
+  .answer-overview__pending {
+    grid-column: auto;
+    margin-top: -4px;
+  }
+}
+
+@media (max-width: 380px) {
+  .answer-overview__metrics {
+    grid-template-columns: 1fr;
+  }
+}

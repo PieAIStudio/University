@@ -21,6 +21,7 @@ import type {
 } from "@pieai/university-ui/view/lesson-view.js";
 
 import { localBootstrap } from "../ports/local/content.js";
+import { progressPort } from "../progress/store.js";
 import { feedbackReviewSource } from "./feedback-source.js";
 import { StudioSection } from "./StudioSection.js";
 import { AirlockClocks, StudyDetail } from "./StudyDetail.js";
@@ -101,6 +102,7 @@ export function StudioScreen({
         studiesRootLabel={shortenHomePath(data.studiesRoot)}
         onSelectStudy={onSelectStudy}
         feedbackSource={feedbackReviewSource}
+        progress={progressPort}
       />
       {/*
         The course list with the pinned run first. It used to sit under the map

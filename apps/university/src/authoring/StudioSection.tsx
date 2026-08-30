@@ -3,14 +3,15 @@ import type {
   StudySummary,
   StudyView,
 } from "@pieai/university-ui/view/lesson-view.js";
+import type { FeedbackReviewSource, ProgressPort } from "@pieai/university-core";
 
+import { AnswerOverview } from "./AnswerOverview.js";
 import { EmptyCampus } from "./EmptyCampus.js";
 import { FeedbackOverview } from "./FeedbackOverview.js";
 import { StudyAnalysisPanel } from "./StudyDetail.js";
 import { StudyShelf } from "./StudyShelf.js";
 import { UaDashboardButton } from "../learner/UaDashboardButton.js";
 import { sourceAccessPort } from "../ports/index.js";
-import type { FeedbackReviewSource } from "@pieai/university-core";
 
 /**
  * Local-only authoring surfaces, reached from 更多 → 作者工作台.
@@ -30,6 +31,7 @@ export function StudioSection({
   studiesRootLabel,
   onSelectStudy,
   feedbackSource,
+  progress,
 }: {
   readonly data: BootstrapData;
   readonly selectedStudyId: string | null;
@@ -38,6 +40,7 @@ export function StudioSection({
   readonly studiesRootLabel: string;
   readonly onSelectStudy: (studyId: string) => void;
   readonly feedbackSource: FeedbackReviewSource;
+  readonly progress: ProgressPort;
 }) {
   return (
     <div className="studio-section">
@@ -53,7 +56,10 @@ export function StudioSection({
       {data.studies.length > 0 ? (
         <StudyShelf data={data} selectedStudyId={selectedStudyId} onSelect={onSelectStudy} />
       ) : null}
-      <FeedbackOverview source={feedbackSource} studyView={studyView} />
+      <div className="studio-section__signals">
+        <FeedbackOverview source={feedbackSource} studyView={studyView} />
+        <AnswerOverview progress={progress} studyView={studyView} />
+      </div>
       {studyView ? (
         <>
           <UaDashboardButton studyId={studyView.study.id} sourceAccess={sourceAccessPort} />

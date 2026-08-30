@@ -57,7 +57,6 @@
 }
 
 .feedback-overview__principle strong,
-.feedback-overview__answers strong,
 .feedback-overview__course-card > strong {
   color: var(--game-ui-text-on-dark);
   font-family: var(--game-ui-font-display);
@@ -66,8 +65,7 @@
 }
 
 .feedback-overview__principle span,
-.feedback-overview__course-card span,
-.feedback-overview__answers span {
+.feedback-overview__course-card span {
   color: var(--game-ui-text-muted);
   font-size: 0.76rem;
   line-height: 1.45;
@@ -95,8 +93,7 @@
 }
 
 .feedback-overview__course-card p,
-.feedback-overview__course-card span,
-.feedback-overview__answers p {
+.feedback-overview__course-card span {
   margin: 0;
 }
 
@@ -137,9 +134,7 @@
 }
 
 .feedback-overview__lesson {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(170px, 0.42fr);
-  gap: 18px;
+  display: block;
   padding: 14px 0;
   border-bottom: 1px solid color-mix(in srgb, var(--campus-rule) 65%, transparent);
 }
@@ -167,21 +162,6 @@
   overflow-wrap: anywhere;
 }
 
-.feedback-overview__answers {
-  display: grid;
-  align-content: start;
-  gap: 6px;
-  padding: 12px 14px;
-  border-left: 2px solid var(--game-ui-accent);
-  background: color-mix(in srgb, var(--game-ui-panel-deep) 36%, transparent);
-}
-
-.feedback-overview__answers p {
-  color: var(--game-ui-text-muted);
-  font-size: 0.78rem;
-  line-height: 1.5;
-}
-
 .feedback-overview__unlocated-note {
   margin: 0;
   color: var(--game-ui-text-muted);
@@ -205,14 +185,5 @@
 
   .feedback-overview__revision > summary span:last-child {
     text-align: left;
-  }
-
-  .feedback-overview__lesson {
-    grid-template-columns: 1fr;
-  }
-
-  .feedback-overview__answers {
-    border-top: 2px solid var(--game-ui-accent);
-    border-left: 0;
   }
 }
