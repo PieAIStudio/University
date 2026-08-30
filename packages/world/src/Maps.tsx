@@ -88,6 +88,20 @@ export const SKY_STOPS = {
   horizon: 0xf2d4b0,
 } as const;
 
+/**
+ * World-only atmosphere contract. The catalogue has cloud and sky negative
+ * space, not a continuous painted floor; its lower dome stays blue and its
+ * far islands dissolve into the same air with no extra geometry.
+ */
+export const WORLD_SKY_CONTRACT = {
+  visibleSea: false,
+  horizon: 0xb7d4de,
+  nadir: 0x8fbfd4,
+  fogColor: 0x8fbfd4,
+  fogNearRatio: 0.55,
+  fogFarRatio: 3.5,
+} as const;
+
 export type SkyStops = {
   readonly zenith: number;
   readonly mid: number;
@@ -627,10 +641,11 @@ function LearnerMarker({
   );
 }
 
-/** Sky, sun and sea. Shared by both map levels so they feel like one world. */
+/** Sky, sun and cloud deck. Shared by both map levels so they feel like one world. */
 function Weather({
   extent,
   fog,
+  fogColor,
   sky = SKY_STOPS,
   cloudLevel = -5.2,
   groundRadius,
@@ -650,6 +665,8 @@ function Weather({
    * is a fog that costs a uniform and does nothing.
    */
   fog?: readonly [number, number];
+  /** Atmosphere colour; world maps use the lower blue air instead of a sea tint. */
+  fogColor?: number;
   sky?: SkyStops;
   /** Vertical centre of the cloud layer; course islands have deeper roots. */
   cloudLevel?: number;
@@ -680,7 +697,7 @@ function Weather({
   return (
     <>
       <color attach="background" args={[sky.zenith]} />
-      <fogExp2 attach="fog" args={[sky.horizon, density]} />
+      <fogExp2 attach="fog" args={[fogColor ?? sky.horizon, density]} />
       <SkyDome stops={sky} />
       {/*
         Fill is the denominator of scene-linear range. The current warm lower
@@ -779,13 +796,24 @@ export function WorldScene({
     [authoringFocus, placements],
   );
   const hoveredIsland = useRef<number | null>(null);
+  const sky = useMemo(
+    () => ({
+      ...skyStopsForStudy(skyStudyId),
+      horizon: WORLD_SKY_CONTRACT.horizon,
+      nadir: WORLD_SKY_CONTRACT.nadir,
+    }),
+    [skyStudyId],
+  );
 
   return (
     <>
       <Weather
         extent={extent * 1.5}
         groundRadius={extent * 0.9}
-        sky={skyStopsForStudy(skyStudyId)}
+        fog={[extent * WORLD_SKY_CONTRACT.fogNearRatio, extent * WORLD_SKY_CONTRACT.fogFarRatio]}
+        fogColor={WORLD_SKY_CONTRACT.fogColor}
+        sky={sky}
+        includeSea={WORLD_SKY_CONTRACT.visibleSea}
         shadows={false}
       />
       {/*

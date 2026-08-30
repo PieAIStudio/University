@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { SKY_STOPS, skyStopsForStudy } from "../Maps";
+import { SKY_STOPS, skyStopsForStudy, WORLD_SKY_CONTRACT } from "../Maps";
 import { WORLD_SUN } from "./sun.js";
 
 function luma(hex: number) {
@@ -45,6 +45,15 @@ describe("sky stops", () => {
     expect(turing.zenith).not.toBe(SKY_STOPS.zenith);
     expect(turing.zenith).not.toBe(buzz.zenith);
     expect(luma(turing.mid) - luma(turing.zenith)).toBeGreaterThan(0.05);
+  });
+
+  it("uses blue lower air and no continuous sea for the world projection", () => {
+    expect(WORLD_SKY_CONTRACT.visibleSea).toBe(false);
+    expect(WORLD_SKY_CONTRACT.horizon).toBeGreaterThan(0x9fbfcc);
+    expect(WORLD_SKY_CONTRACT.nadir).not.toBe(0x3a7f92);
+    expect(WORLD_SKY_CONTRACT.fogFarRatio).toBeGreaterThan(WORLD_SKY_CONTRACT.fogNearRatio);
+    const source = readFileSync(new URL("../Maps.tsx", import.meta.url), "utf8");
+    expect(source).toMatch(/includeSea=\{WORLD_SKY_CONTRACT\.visibleSea\}/);
   });
 
   it("draws a sun disc on the one skydome, keyed to the shared world sun", () => {

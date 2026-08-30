@@ -22,7 +22,7 @@ tags:
 | 叫法 | 代码 | 看到什么 | 在这一层选什么 |
 | --- | --- | --- | --- |
 | **星球页** | `packages/world/src/planet/PlanetPage` | 一个星球 + 一列「学习」 | 选哪个学习 |
-| **岛群图** | `Maps.tsx` 的 `WorldScene`，`detail="world"` | 一片海上好几座岛，每座挂一个课程标题 | 选哪门课（一座岛 = 一门课） |
+| **岛群图** | `Maps.tsx` 的 `WorldScene`，`detail="world"` | 一片天空中好几座浮岛，每座挂一个课程标题 | 选哪门课（一座岛 = 一门课） |
 | **课程岛** | `Maps.tsx` 的 `CourseScene`，`detail="course"` | 一座岛的近景，一串圆盘排成蛇形 | 选哪一节（一个圆盘 = 一小节） |
 
 代码里管岛群图叫 `WorldScene` / "world map"，是历史叫法。**文档里一律用上表这三个词。**
@@ -735,3 +735,47 @@ axial hex 的 radius of gyration。当前 41 课门槛是 `<72` 与 `<9.5`。旧
 `course-grid.ts` 随后将 blueprint anchors 拟合到 `mainCells`，在允许区域内寻找相邻路径。
 如果路径真的放不下，重试扩大区域及其物理 footprint；不得通过拉直路径或让路径决定岛形
 来伪装适配。这个反例也写入 `grid.test.ts`，避免以后只凭截图回归到路线形状。
+
+## 十一、岛群图从海面改成浮空（2026-08-30）
+
+这次复核把简报里的三个视觉问题放回同一张固定镜头看：连续的青绿色底板让所有课程
+像停在一张海图上；旧的窄灰米色带像第二个渲染平面；远景底面太浅，课程岛没有「浮」的
+垂直证据。先看图后的结论是：问题不在再画一张更复杂的海，而在于把海这一层撤掉，让
+天空成为负空间，再让底面承担浮岛的剪影。
+
+### 被推翻的结论
+
+上一轮的结论是「岛群图需要一张受光的航拍海面」。它在课程近景有局部收益，在岛群图
+却把大部分画面压成连续青绿色，并且把暖色 horizon 变成像贴图边界的窄带。这个结论被
+本轮真实页面截图推翻：**岛群图不需要可见的海面；需要的是天空、云和随距离收敛的空气。**
+
+### 采用的规则
+
+- `WorldScene` 继续复用唯一的 `SkyDome`，但 world 投影使用浅蓝的 horizon / nadir；
+  `CuteCloudSea` 继续作为现有的两批实例化云层。没有新建第二份 sky 或 cloud 实现。
+- world 的 `includeSea` 由 `WORLD_SKY_CONTRACT.visibleSea = false` 控制，`DeepSea` 和
+  可见的 `AerialWorldPlate` 不再提交到画面；隐藏的 aerial plate 仍保留加载信号，供
+  `island-look` 判官识别资源是否 ready。
+- `FogExp2` 只加在 world 的 weather 上，远端系数写在同一个 contract 中。它是空气透视
+  的廉价实现，不加网格、不加 draw batch；远岛仍保留色块，但会向 lower air 收敛。
+- `WorldUndersideField` 仍然是两批实例：一个共享六边倒锥底座、一个共享三角低模岩刺。
+  每座远景岛按 cell footprint 生成 3–5 根岩刺，倒锥深度随 footprint 增长并封顶；纯规则
+  与 triangle budget 在 `world-underside.ts`，没有每门课一份装饰表。
+- 瀑布没有加入 world 远景：固定镜头下远景岛的底面只有约几十像素，透明瀑布不会形成稳定
+  的可读形状，反而会增加排序与预算风险。课程岛原有的 waterfall 实现没有改动。
+
+### 固定镜头的实测（`post=off`，1440×900）
+
+下表的数值来自同一 capture 脚本写出的 JSON；`gl.info.render` 统计包含完整渲染帧，
+不是代码里的估算值。远景底座和岩刺虽然更深，移除可见海面后总 draw / triangle 仍下降。
+
+| seed | before calls / triangles | after calls / triangles |
+| --- | ---: | ---: |
+| `foundations-before-zero` | 34 / 69,022 | **32 / 68,828** |
+| `product-website` | 34 / 69,090 | **32 / 68,896** |
+| `generated-assets` | 34 / 68,858 | **32 / 68,664** |
+
+移动端同一组截图也保持下降：foundations 为 34 / 58,690 → **32 / 58,496**，
+product 为 34 / 58,758 → **32 / 58,564**，generated-assets 为 34 / 58,526 →
+**32 / 58,332**。截图和原始 JSON 由本次 `.scratch/SKYWORLD.md` 报告列出；这份契约只
+保留结论和可复核的数值，不把一次性截图目录变成长期索引。
