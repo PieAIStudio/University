@@ -179,13 +179,31 @@ export function worldGridTargetForLessons(lessons: number): number {
 }
 
 /**
+ * Target half-width for the remote silhouette, in world units before the
+ * state emphasis scale is applied. The square-root curve makes area grow with
+ * lesson count while its floor keeps the shortest real courses clickable.
+ */
+export function worldGridFootprintForLessons(lessons: number): number {
+  return 1.1 + Math.sqrt(Math.max(1, Math.floor(lessons))) * 0.98;
+}
+
+function unitHalfExtent(cells: readonly HexCoord[]): number {
+  const points = cells.map((cell) => hexToWorld(cell, 1));
+  return Math.max(...points.map((point) => Math.max(Math.abs(point.x), Math.abs(point.z)) + 1), 1);
+}
+
+/**
  * A world island grows with lesson count instead of inheriting the course
  * shot's large working footprint. The cell size stays in the same visual band
  * and the outline owns the difference between a small plateau and a highland.
  */
-function estimateWorldHexSize(lessonCount: number, cellCount: number, expansion = 0): number {
-  const targetHalfWidth = 0.7 + Math.sqrt(Math.max(1, lessonCount)) * 0.46 + expansion * 0.18;
-  return Math.max(0.55, targetHalfWidth / (0.866 * Math.sqrt(cellCount)));
+function estimateWorldHexSize(
+  lessonCount: number,
+  cells: readonly HexCoord[],
+  expansion = 0,
+): number {
+  const targetHalfWidth = worldGridFootprintForLessons(lessonCount) + expansion * 0.16;
+  return Math.max(0.42, targetHalfWidth / unitHalfExtent(cells));
 }
 
 function routeFromAnchors(
@@ -470,7 +488,7 @@ export function buildCourseGrid(input: CourseGridInput): HexMap {
     outline = growGridOutline(outlineSeed, target);
     hexSize =
       projection === "world"
-        ? estimateWorldHexSize(footprintLessons, outline.main.length, expansion)
+        ? estimateWorldHexSize(footprintLessons, [...outline.main, ...outline.detached], expansion)
         : estimateHexSize(input.lessons.length, outline.main.length, expansion);
     const fittedAnchors = fitRouteAnchorsToRegion(anchors, outline.main, hexSize);
     route = routeFromAnchors(fittedAnchors, hexSize, input.seed, outline.main);

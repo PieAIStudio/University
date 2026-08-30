@@ -75,6 +75,9 @@ export interface PathShape {
  */
 export const STUDY_PATH: PathShape = { step: 7.4, amplitude: 5.5, period: 7 };
 
+/** A small breathing gap keeps silhouettes separate without wasting the frame. */
+export const WORLD_ISLAND_SEPARATION_GAP = 1.05;
+
 /**
  * Stones on the course road, which now lie on one island's surface rather than
  * on 41 islands of their own.
@@ -165,7 +168,11 @@ export function layoutStudyRoad(orderedCourseIds: readonly string[]): Map<string
  */
 export function layoutWorldCatalogue(orderedCourseKeys: readonly string[]): Map<string, Placed> {
   const count = orderedCourseKeys.length;
-  const fieldRadius = 7.2 + Math.sqrt(Math.max(1, count)) * 4.4;
+  // The old radius was tuned for the first pass's tiny, similarly sized tiles.
+  // It made the catalogue a wide specimen sheet. This field is deliberately
+  // tighter in X and a little deeper in Z, so the aerial shot gets a readable
+  // island band without turning the positions into rows or columns.
+  const fieldRadius = 5.8 + Math.sqrt(Math.max(1, count)) * 3.35;
   const goldenAngle = Math.PI * (3 - Math.sqrt(5));
   const placed = new Map<string, Placed>();
   orderedCourseKeys.forEach((key, index) => {
@@ -175,12 +182,12 @@ export function layoutWorldCatalogue(orderedCourseKeys: readonly string[]): Map<
     }
     const fraction = (index - 1) / Math.max(1, count - 2);
     const radial =
-      6.4 + Math.sqrt(fraction) * fieldRadius + (hash(`${key}:catalogue-radius`) * 2 - 1) * 1.8;
+      5.2 + Math.sqrt(fraction) * fieldRadius + (hash(`${key}:catalogue-radius`) * 2 - 1) * 1.2;
     const angle = index * goldenAngle + (hash(`${key}:catalogue-angle`) * 2 - 1) * 0.38;
     placed.set(key, {
-      x: Math.cos(angle) * radial * 1.12,
+      x: Math.cos(angle) * radial * 0.98,
       y: 0,
-      z: Math.sin(angle) * radial * 0.78,
+      z: Math.sin(angle) * radial * 1.08,
       depth: index,
     });
   });
@@ -200,12 +207,11 @@ export function unstickWorldIslands(
 ): Placed[] {
   if (points.length === 0) return [];
   const next = points.map((point) => ({ ...point }));
-  const gap = 1.1;
-  for (let iteration = 0; iteration < 14; iteration += 1) {
+  for (let iteration = 0; iteration < 128; iteration += 1) {
     let moved = false;
     for (let i = 0; i < next.length; i += 1) {
       for (let j = i + 1; j < next.length; j += 1) {
-        const minDistance = (radii[i]! + radii[j]!) * gap;
+        const minDistance = (radii[i]! + radii[j]!) * WORLD_ISLAND_SEPARATION_GAP;
         const dx = next[j]!.x - next[i]!.x;
         const dz = next[j]!.z - next[i]!.z;
         const distance = Math.hypot(dx, dz);
