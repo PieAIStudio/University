@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   lessonRefKey,
-  type FeedbackAnswerAggregate,
   type FeedbackRecord,
   type FeedbackReviewSource,
   type LessonRef,
@@ -10,26 +9,16 @@ import type { CourseView, StudyView } from "@pieai/university-ui/view/lesson-vie
 
 import feedbackOverviewStyles from "./feedback-overview.css?inline";
 
-export interface FeedbackAnswerStats {
-  readonly exerciseCount: number;
-  readonly firstAttemptCount: number;
-  readonly firstPassCount: number;
-  readonly firstPassRate: number | null;
-  readonly totalAttempts: number;
-}
-
 export interface FeedbackLessonGroup {
   readonly locator: LessonRef;
   readonly title: string;
   readonly contentRevision: number;
   readonly feedback: readonly FeedbackRecord[];
-  readonly answer: FeedbackAnswerStats;
 }
 
 export interface FeedbackRevisionGroup {
   readonly contentRevision: number;
   readonly feedbackCount: number;
-  readonly answer: FeedbackAnswerStats;
   readonly lessons: readonly FeedbackLessonGroup[];
 }
 
@@ -37,7 +26,6 @@ export interface FeedbackCourseGroup {
   readonly courseId: string;
   readonly title: string;
   readonly feedbackCount: number;
-  readonly answer: FeedbackAnswerStats;
   readonly revisions: readonly FeedbackRevisionGroup[];
 }
 
@@ -46,106 +34,18 @@ export interface FeedbackOverviewModel {
   readonly unlocated: readonly FeedbackRecord[];
 }
 
-const EMPTY_ANSWER_STATS: FeedbackAnswerStats = {
-  exerciseCount: 0,
-  firstAttemptCount: 0,
-  firstPassCount: 0,
-  firstPassRate: null,
-  totalAttempts: 0,
-};
-
-export function answerStatsForAggregates(
-  aggregates: readonly FeedbackAnswerAggregate[],
-): FeedbackAnswerStats {
-  const firstAttemptCount = aggregates.reduce(
-    (total, aggregate) => total + aggregate.firstAttemptCount,
-    0,
-  );
-  const firstPassCount = aggregates.reduce(
-    (total, aggregate) => total + aggregate.firstPassCount,
-    0,
-  );
-  return {
-    exerciseCount: aggregates.reduce((total, aggregate) => total + aggregate.exerciseCount, 0),
-    firstAttemptCount,
-    firstPassCount,
-    firstPassRate: firstAttemptCount > 0 ? firstPassCount / firstAttemptCount : null,
-    totalAttempts: aggregates.reduce((total, aggregate) => total + aggregate.totalAttempts, 0),
-  };
-}
-
-function combineAnswerStats(stats: readonly FeedbackAnswerStats[]): FeedbackAnswerStats {
-  const combined = stats.reduce<{
-    readonly exerciseCount: number;
-    readonly firstAttemptCount: number;
-    readonly firstPassCount: number;
-    readonly totalAttempts: number;
-  }>(
-    (total, current) => ({
-      exerciseCount: total.exerciseCount + current.exerciseCount,
-      firstAttemptCount: total.firstAttemptCount + current.firstAttemptCount,
-      firstPassCount: total.firstPassCount + current.firstPassCount,
-      totalAttempts: total.totalAttempts + current.totalAttempts,
-    }),
-    { ...EMPTY_ANSWER_STATS },
-  );
-  return {
-    ...combined,
-    firstPassRate:
-      combined.firstAttemptCount > 0 ? combined.firstPassCount / combined.firstAttemptCount : null,
-  };
-}
-
 function courseLesson(course: CourseView, locator: LessonRef) {
   return course.units
     .find((unit) => unit.id === locator.unitId)
     ?.lessons.find((lesson) => lesson.id === locator.lessonId);
 }
 
-function courseLessonsAtRevision(course: CourseView, studyId: string, contentRevision: number) {
-  return course.units.flatMap((unit) =>
-    unit.lessons
-      .filter((lesson) => lesson.contentRevision === contentRevision)
-      .map((lesson) => ({
-        locator: {
-          studyId,
-          courseId: course.id,
-          unitId: unit.id,
-          lessonId: lesson.id,
-        },
-      })),
-  );
-}
-
-function answerStatsForCourseRevision(
-  course: CourseView,
-  studyId: string,
-  contentRevision: number,
-  answerByKey: ReadonlyMap<string, FeedbackAnswerAggregate>,
-): FeedbackAnswerStats {
-  return answerStatsForAggregates(
-    courseLessonsAtRevision(course, studyId, contentRevision).flatMap((lesson) => {
-      const aggregate = answerByKey.get(`${lessonRefKey(lesson.locator)}\u0000${contentRevision}`);
-      return aggregate ? [aggregate] : [];
-    }),
-  );
-}
-
 /** Pure, deterministic grouping: lesson locator first, authored revision second. */
 export function buildFeedbackOverview(
   records: readonly FeedbackRecord[],
-  answerAggregates: readonly FeedbackAnswerAggregate[],
   studyView: StudyView,
 ): FeedbackOverviewModel {
   const coursesById = new Map(studyView.courses.map((course) => [course.id, course]));
-  const answerByKey = new Map(
-    answerAggregates
-      .filter((aggregate) => aggregate.locator.studyId === studyView.study.id)
-      .map((aggregate) => [
-        `${lessonRefKey(aggregate.locator)}\u0000${aggregate.contentRevision}`,
-        aggregate,
-      ]),
-  );
   const unlocated: FeedbackRecord[] = [];
   const byCourse = new Map<string, Map<number, Map<string, FeedbackRecord[]>>>();
 
@@ -185,8 +85,6 @@ export function buildFeedbackOverview(
             .map(([lessonId, feedback]) => {
               const locator = feedback[0]!.context.locator!;
               const lesson = course ? courseLesson(course, locator) : undefined;
-              const aggregate = answerByKey.get(`${lessonRefKey(locator)}\u0000${contentRevision}`);
-              const answer = aggregate ? answerStatsForAggregates([aggregate]) : EMPTY_ANSWER_STATS;
               return {
                 locator,
                 title: lesson?.title ?? lessonId,
@@ -194,16 +92,11 @@ export function buildFeedbackOverview(
                 feedback: [...feedback].sort((left, right) =>
                   right.createdAt.localeCompare(left.createdAt),
                 ),
-                answer,
               } satisfies FeedbackLessonGroup;
             });
-          const answer = course
-            ? answerStatsForCourseRevision(course, studyView.study.id, contentRevision, answerByKey)
-            : EMPTY_ANSWER_STATS;
           return {
             contentRevision,
             feedbackCount: lessons.reduce((total, lesson) => total + lesson.feedback.length, 0),
-            answer,
             lessons,
           } satisfies FeedbackRevisionGroup;
         });
@@ -211,7 +104,6 @@ export function buildFeedbackOverview(
         courseId,
         title: course?.title ?? courseId,
         feedbackCount: revisions.reduce((total, revision) => total + revision.feedbackCount, 0),
-        answer: combineAnswerStats(revisions.map((revision) => revision.answer)),
         revisions,
       } satisfies FeedbackCourseGroup;
     });
@@ -220,19 +112,6 @@ export function buildFeedbackOverview(
     courses,
     unlocated: unlocated.sort((left, right) => right.createdAt.localeCompare(left.createdAt)),
   };
-}
-
-function rateLabel(stats: FeedbackAnswerStats, answerAvailable: boolean): string {
-  if (!answerAvailable) return "答题汇总还没接好";
-  return stats.firstPassRate === null
-    ? "暂无答题数据"
-    : `${Math.round(stats.firstPassRate * 100)}%`;
-}
-
-function answerDetail(stats: FeedbackAnswerStats, answerAvailable: boolean): string {
-  if (!answerAvailable) return "答题汇总还没接好，不填数字";
-  if (stats.totalAttempts === 0) return "还没有答题记录";
-  return `${stats.totalAttempts} 次尝试 · ${stats.firstAttemptCount}/${stats.exerciseCount} 道题有首答记录`;
 }
 
 function feedbackMessages(records: readonly FeedbackRecord[]) {
@@ -255,11 +134,7 @@ export function FeedbackOverview({
   const [state, setState] = useState<
     | { readonly kind: "idle" }
     | { readonly kind: "loading" }
-    | {
-        readonly kind: "ready";
-        readonly model: FeedbackOverviewModel;
-        readonly answerAvailable: boolean;
-      }
+    | { readonly kind: "ready"; readonly model: FeedbackOverviewModel }
     | { readonly kind: "unavailable" }
   >({ kind: "idle" });
 
@@ -270,26 +145,15 @@ export function FeedbackOverview({
     }
     let cancelled = false;
     setState({ kind: "loading" });
-    void Promise.allSettled([
-      source.listAll(),
-      source.listAnswerAggregates(studyView.study.id),
-    ]).then(([feedbackResult, answerResult]) => {
-      if (cancelled) return;
-      if (feedbackResult.status === "rejected") {
-        setState({ kind: "unavailable" });
-        return;
-      }
-      const answerAvailable = answerResult.status === "fulfilled";
-      setState({
-        kind: "ready",
-        model: buildFeedbackOverview(
-          feedbackResult.value,
-          answerAvailable ? answerResult.value : [],
-          studyView,
-        ),
-        answerAvailable,
+    void source
+      .listAll()
+      .then((records) => {
+        if (!cancelled)
+          setState({ kind: "ready", model: buildFeedbackOverview(records, studyView) });
+      })
+      .catch(() => {
+        if (!cancelled) setState({ kind: "unavailable" });
       });
-    });
     return () => {
       cancelled = true;
     };
@@ -301,10 +165,10 @@ export function FeedbackOverview({
     return (
       <>
         {styles}
-        <section className="feedback-overview" aria-label="意见与答题数据">
-          <p className="eyebrow">意见与答题</p>
+        <section className="feedback-overview" aria-label="学习者意见">
+          <p className="eyebrow">学习者意见</p>
           <h2>先选择一个项目</h2>
-          <p>选中项目后，这里会按课程和内容版本把意见与已有答题数据并排列出来。</p>
+          <p>选中项目后，这里会按课程和内容版本把意见排出来。</p>
         </section>
       </>
     );
@@ -314,10 +178,10 @@ export function FeedbackOverview({
     return (
       <>
         {styles}
-        <section className="feedback-overview" aria-label="意见与答题数据">
-          <p className="eyebrow">意见与答题</p>
-          <h2>正在读取反馈</h2>
-          <p>只读 SwimmerBackend 的反馈数据；还没有读到时不会先填一个数字。</p>
+        <section className="feedback-overview" aria-label="学习者意见">
+          <p className="eyebrow">学习者意见</p>
+          <h2>正在读取意见</h2>
+          <p>只读 SwimmerBackend 的意见；还没有读到时不会先填一个数字。</p>
         </section>
       </>
     );
@@ -329,9 +193,9 @@ export function FeedbackOverview({
         {styles}
         <section
           className="feedback-overview feedback-overview--unavailable"
-          aria-label="意见与答题数据"
+          aria-label="学习者意见"
         >
-          <p className="eyebrow">意见与答题</p>
+          <p className="eyebrow">学习者意见</p>
           <h2>反馈数据还没接好</h2>
           <p>SwimmerBackend 的反馈表或权限还没有就绪。这里不会拿假的意见数填上。</p>
         </section>
@@ -339,15 +203,15 @@ export function FeedbackOverview({
     );
   }
 
-  const { model, answerAvailable } = state;
+  const { model } = state;
   if (model.courses.length === 0 && model.unlocated.length === 0) {
     return (
       <>
         {styles}
-        <section className="feedback-overview" aria-label="意见与答题数据">
-          <p className="eyebrow">意见与答题</p>
+        <section className="feedback-overview" aria-label="学习者意见">
+          <p className="eyebrow">学习者意见</p>
           <h2>还没有收到反馈</h2>
-          <p>意见会按课程和内容版本确定性分组；有真实记录后，答题数据会在旁边一起出现。</p>
+          <p>意见会按课程和内容版本确定性分组；有真实记录后，原话会出现在这里。</p>
         </section>
       </>
     );
@@ -356,16 +220,12 @@ export function FeedbackOverview({
   return (
     <>
       {styles}
-      <section className="feedback-overview" aria-label="意见与答题数据">
+      <section className="feedback-overview" aria-label="学习者意见">
         <header className="feedback-overview__header">
           <div>
-            <p className="eyebrow">意见与答题</p>
-            <h2>先看两种信号，再决定改什么</h2>
-            <p>
-              意见按课程和内容版本分组；答题侧只接受 owner-only
-              的聚合接口，不读取学习者原始答案。意见不会单独决定课程变简单。
-              {!answerAvailable ? " 答题汇总还没接好，右侧不填数字。" : ""}
-            </p>
+            <p className="eyebrow">学习者意见</p>
+            <h2>先看大家写下了什么</h2>
+            <p>意见按课程和内容版本分组。它是线索，不是自动改课的指令。</p>
           </div>
           <div className="feedback-overview__principle">
             <strong>
@@ -383,8 +243,6 @@ export function FeedbackOverview({
               <p>
                 {course.feedbackCount} 条意见 · {course.revisions.length} 个内容版本
               </p>
-              <strong>{rateLabel(course.answer, answerAvailable)}</strong>
-              <span>第一次通过率 · {answerDetail(course.answer, answerAvailable)}</span>
             </article>
           ))}
         </div>
@@ -401,10 +259,7 @@ export function FeedbackOverview({
                   <span>
                     《{course.title}》· 第 {revision.contentRevision} 版
                   </span>
-                  <span>
-                    {revision.feedbackCount} 条意见 · 第一次通过率{" "}
-                    {rateLabel(revision.answer, answerAvailable)}
-                  </span>
+                  <span>{revision.feedbackCount} 条意见</span>
                 </summary>
                 <div className="feedback-overview__revision-body">
                   {revision.lessons.map((lesson) => (
@@ -416,11 +271,6 @@ export function FeedbackOverview({
                         <p className="eyebrow">{lesson.title}</p>
                         <h3>{lesson.feedback.length} 条意见</h3>
                         {feedbackMessages(lesson.feedback)}
-                      </div>
-                      <div className="feedback-overview__answers">
-                        <strong>{rateLabel(lesson.answer, answerAvailable)}</strong>
-                        <span>第一次通过率</span>
-                        <p>{answerDetail(lesson.answer, answerAvailable)}</p>
                       </div>
                     </article>
                   ))}
@@ -437,7 +287,7 @@ export function FeedbackOverview({
               <div className="feedback-overview__revision-body">
                 {feedbackMessages(model.unlocated)}
                 <p className="feedback-overview__unlocated-note">
-                  这组没有课程版本，所以不虚构答题对照。
+                  这组没有课程版本，所以不虚构课程对照。
                 </p>
               </div>
             </details>

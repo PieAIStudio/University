@@ -304,6 +304,11 @@ export {
   parseProgress,
 } from "./progress/index.js";
 export { mistakesOf, type Mistake } from "./progress/mistakes.js";
+export {
+  answerStatsForAttempts,
+  answerStatsOf,
+  type LessonAnswerStats,
+} from "./progress/answer-stats.js";
 
 // Favourites are a versioned document of sense ids. Pure: storage is an
 // adapter, so the account-backed store is a different reader/writer rather
