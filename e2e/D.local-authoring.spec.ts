@@ -53,13 +53,13 @@ test.describe("D 本地端", () => {
     });
 
     await namedStep(page, "滚到末尾：完成本次更新和练习", async () => {
-      const confirm = page.getByRole("button", { name: /完成本次更新|再次确认本次更新/ });
+      const confirm = page.getByRole("button", { name: /我读完了|完成本次更新|再次确认本次更新/ });
       await confirm.scrollIntoViewIfNeeded();
       await expect(confirm).toBeVisible({ timeout: 20_000 });
       const exercise = page.locator("section.lesson-completion, .exercise-panel, .choice-block");
       await exercise.first().scrollIntoViewIfNeeded();
       await expect(exercise.first()).toBeVisible();
-      await assertVisibleText(page, /完成本次更新|再次确认本次更新/);
+      await assertVisibleText(page, /我读完了|完成本次更新|再次确认本次更新/);
     });
 
     consoleErrors.assertClean();

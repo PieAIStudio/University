@@ -478,8 +478,12 @@ export const messages = {
   "ui.evidence.layerCoverage.copy.当前没有可直接读取的项目分层": "当前没有可直接读取的项目分层。",
   "ui.evidence.layerCoverage.copy.按代码分层查看文件覆盖": "按代码分层查看文件覆盖",
   "ui.evidence.layerCoverage.copy.有": "有",
+  "ui.evidence.layerCoverage.copy.为什么这一端没有完整项目分层": "为什么这一端没有完整项目分层",
   "ui.evidence.layerCoverage.copy.查看项目分层": "查看项目分层",
   "ui.evidence.layerCoverage.copy.正在读取项目分层": "正在读取项目分层…",
+  "ui.evidence.layerCoverage.copy.完整项目分层需要仓库分析-课文已经引用的文件可以直接看":
+    "完整项目分层需要仓库分析。课文已经引用的文件可以直接看。",
+  "ui.evidence.layerCoverage.copy.这节课已经引用了这些文件": "这节课已经引用了这些文件",
   "ui.evidence.layerCoverage.copy.这节课的文件落在项目仓库里": "这节课的文件落在项目仓库里",
   "ui.evidence.layerCoverage.copy.项目文件覆盖分析": "项目文件覆盖分析",
   "ui.evidence.lessonSources.copy.出处": "出处",
@@ -626,6 +630,8 @@ export const messages = {
   "ui.lesson.lessonNextStep.copy.节": "节",
   "ui.lesson.lessonNextStep.copy.节-共": "节 / 共",
   "ui.lesson.lessonNextStep.copy.节-这门课的最后一节": "节 · 这门课的最后一节",
+  "ui.lesson.lessonNextStep.copy.题目过了-还差确认你读过这一版-这节才会计入进度":
+    "题目过了。还差确认你读过这一版，这节才会计入进度。",
   "ui.lesson.lessonNextStep.copy.这节还没标为完成-上面确认课文-答完练习之后-这节才会计入进度":
     "这节还没标为完成。上面确认课文、答完练习之后，这节才会计入进度。",
   "ui.lesson.lessonNextStep.copy.这门课到这里就走完了": "这门课到这里就走完了。",
@@ -633,8 +639,12 @@ export const messages = {
   "ui.lesson.lessonReader.copy.回到刚才那一课": "← 回到刚才那一课",
   "ui.lesson.lessonReader.copy.外语模式": "外语模式",
   "ui.lesson.lessonReader.copy.完成本次更新": "完成本次更新",
+  "ui.lesson.lessonReader.copy.已确认读过这一版-还差练习": "已确认读过这一版。还差练习。",
   "ui.lesson.lessonReader.copy.打开课文-滚动页面或答对练习都不会自动完成-这个确认只针对当前固定版本":
-    "打开课文、滚动页面或答对练习都不会自动完成。这个确认只针对当前固定版本。",
+    "答对题目不等于读过课文。点一下，这节才算读完。",
+  "ui.lesson.lessonReader.copy.我读完了": "我读完了",
+  "ui.lesson.lessonReader.copy.答对不会自动完课-确认你读过这一版-进度才会记上":
+    "答对不会自动完课。确认你读过这一版，进度才会记上，复习卡也是这时才安排。",
   "ui.lesson.lessonReader.copy.暂时无法记录阅读确认": "暂时无法记录阅读确认",
   "ui.lesson.lessonReader.copy.标准讲解": "标准",
   "ui.lesson.lessonReader.copy.标记没有更新": "标记没有更新",
@@ -644,8 +654,8 @@ export const messages = {
   "ui.lesson.lessonReader.copy.讲解层级": "讲解层级",
   "ui.lesson.lessonReader.copy.词义状态没有保存": "词义状态没有保存",
   "ui.lesson.lessonReader.copy.详细讲解": "详细",
-  "ui.lesson.lessonReader.copy.读到这里-确认你完成了这次课文更新":
-    "读到这里，确认你完成了这次课文更新",
+  "ui.lesson.lessonReader.copy.读到这里-确认你完成了这次课文更新": "读到这里，确认你读完了这一版",
+  "ui.lesson.lessonReader.copy.题目过了-还差确认你读过这一版": "题目过了。还差确认你读过这一版",
   "ui.lesson.lessonReader.copy.这条标记没有保存": "这条标记没有保存",
   "ui.lesson.lessonReader.copy.这版课文已经记录过阅读确认-练习通过后-系统才会把本课标为完成并安排卡片":
     "这版课文已经记录过阅读确认；练习通过后，系统才会把本课标为完成并安排卡片。",
@@ -663,6 +673,9 @@ export const messages = {
   "ui.lesson.lessonSourceVersion.copy.已复制": "已复制",
   "ui.lesson.lessonSourceVersion.copy.打不开正在学习的-App": "打不开正在学习的 App",
   "ui.lesson.lessonSourceVersion.copy.打开正在学习的-App": "打开正在学习的 App",
+  "ui.lesson.lessonSourceVersion.copy.为什么浏览器打不开这个-App": "为什么浏览器打不开这个 App",
+  "ui.lesson.lessonSourceVersion.copy.浏览器端读的是课程包-不能在这里启动这个-App":
+    "浏览器端读的是课程包，不能在这里启动这个 App。",
   "ui.lesson.lessonSourceVersion.copy.正在删除": "正在删除…",
   "ui.lesson.lessonSourceVersion.copy.正在打开": "正在打开…",
   "ui.lesson.lessonSourceVersion.copy.用完了-删掉": "用完了，删掉",

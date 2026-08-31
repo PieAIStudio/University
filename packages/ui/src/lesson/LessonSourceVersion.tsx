@@ -49,7 +49,6 @@ export function LessonSourceVersion({
   const [explanation, setExplanation] = useState<SourceAccessExplanation | null>(null);
 
   async function call(method: "open" | "close") {
-    setPending(true);
     setError(null);
     setExplanation(null);
     try {
@@ -59,6 +58,7 @@ export function LessonSourceVersion({
           setExplanation(access);
           return;
         }
+        setPending(true);
         setCheckout(await access.run());
       } else {
         const access = sourceAccess.closeLessonVersion({ studyId, sourceCommit });
@@ -66,6 +66,7 @@ export function LessonSourceVersion({
           setExplanation(access);
           return;
         }
+        setPending(true);
         await access.run();
         setCheckout(null);
       }
@@ -82,9 +83,11 @@ export function LessonSourceVersion({
   }
 
   const dated = sourceCommitDate ? formatDate(sourceCommitDate) : "";
+  const versionAccess = sourceAccess.lessonVersion({ studyId, sourceCommit });
+  const unavailable = checkout === null && versionAccess.kind === "explanation";
 
   return (
-    <div className="lesson-version">
+    <div className="lesson-version" {...(unavailable ? { "data-unavailable": "" } : {})}>
       {checkout === null ? (
         <>
           <span className="lesson-version__label">
@@ -93,6 +96,13 @@ export function LessonSourceVersion({
             {translate("ui.lesson.lessonSourceVersion.copy.的版本")}
             {sourceCommit.slice(0, 8)}）
           </span>
+          {unavailable ? (
+            <p className="lesson-version__status">
+              {translate(
+                "ui.lesson.lessonSourceVersion.copy.浏览器端读的是课程包-不能在这里启动这个-App",
+              )}
+            </p>
+          ) : null}
           <button
             type="button"
             className="text-button"
@@ -102,7 +112,9 @@ export function LessonSourceVersion({
           >
             {pending
               ? translate("ui.lesson.lessonSourceVersion.copy.正在打开")
-              : translate("ui.lesson.lessonSourceVersion.copy.打开正在学习的-App")}
+              : unavailable
+                ? translate("ui.lesson.lessonSourceVersion.copy.为什么浏览器打不开这个-App")
+                : translate("ui.lesson.lessonSourceVersion.copy.打开正在学习的-App")}
           </button>
         </>
       ) : (

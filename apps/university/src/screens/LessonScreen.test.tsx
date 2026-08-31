@@ -252,7 +252,7 @@ describe("the shared lesson reader", () => {
     expect(container.textContent).toContain("标准");
     expect(container.textContent).toContain("详细");
     expect(container.textContent).toContain("外语模式");
-    expect(container.textContent).toContain("完成本次更新");
+    expect(container.textContent).toContain("我读完了");
     expect(container.textContent).toContain("产品中文名");
     expect(container.textContent).toContain("3b402e06");
     expect(container.querySelector(".lesson-reader")).not.toBeNull();
@@ -267,8 +267,8 @@ describe("the shared lesson reader", () => {
 
     await renderHost();
 
-    expect(container.textContent).toContain("练习通过后");
-    expect(container.textContent).toContain("再次确认本次更新");
+    expect(container.textContent).toContain("已确认读过这一版。还差练习。");
+    expect(container.textContent).not.toContain("再次确认本次更新");
     expect(container.querySelector(".lesson-practice")).toBeNull();
   });
 
@@ -340,8 +340,44 @@ describe("the shared lesson reader", () => {
   it("keeps the source checkout entry visible and explains the delivery boundary", async () => {
     await renderHost();
     expect(container.textContent).toContain("这节课钉在");
-    expect(container.textContent).toContain("打开正在学习的 App");
+    expect(container.textContent).toContain("为什么浏览器打不开这个 App");
+    expect(container.textContent).toContain("浏览器端读的是课程包");
+    expect(
+      [...container.querySelectorAll("button")].some(
+        (button) => button.textContent === "打开正在学习的 App",
+      ),
+    ).toBe(false);
     expect(container.querySelector("[data-parity-control='lesson-source-version']")).not.toBeNull();
+  });
+
+  it("lists cited files before the learner has to click for a missing layer map", async () => {
+    await renderHost();
+    expect(container.textContent).toContain("README.md");
+    await vi.waitFor(() => {
+      expect(container.textContent).toContain("为什么这一端没有完整项目分层");
+    });
+    expect(container.querySelector("[data-parity-control='lesson-layer-coverage']")).not.toBeNull();
+  });
+
+  it("names the remaining read confirmation after the exercise has passed", async () => {
+    progressPort.recordExerciseAttempt({
+      commandId: "passed-before-read",
+      locator: LOCATOR,
+      exerciseId: LESSON.exercises[0]!.id,
+      contentRevision: LESSON.contentRevision,
+      answer: "答案",
+      score: 1,
+      maxScore: 1,
+      hostGrade: PASSING_GRADE,
+      occurredAt: PASSING_GRADE.occurredAt,
+    });
+
+    await renderHost();
+
+    expect(container.querySelector("[data-remaining='read']")).not.toBeNull();
+    expect(container.textContent).toContain("题目过了。还差确认你读过这一版");
+    expect(container.textContent).toContain("我读完了");
+    expect(container.querySelector(".lesson-practice")).toBeNull();
   });
 
   it("moves the bar as a later section crosses the read line", async () => {

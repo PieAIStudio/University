@@ -175,6 +175,17 @@ function StudyLayerCoverage({
   );
 }
 
+function citedSourcePaths(evidence: readonly EvidenceView[]): readonly string[] {
+  const paths: string[] = [];
+  const seen = new Set<string>();
+  for (const item of evidence) {
+    if (isUrlEvidenceView(item) || seen.has(item.sourcePath)) continue;
+    seen.add(item.sourcePath);
+    paths.push(item.sourcePath);
+  }
+  return paths;
+}
+
 function LessonLayerCoverage({
   studyId,
   evidence,
@@ -184,60 +195,89 @@ function LessonLayerCoverage({
   readonly evidence: readonly EvidenceView[];
   readonly sourceAccess: SourceAccessPort;
 }) {
-  const repositoryEvidence = evidence.filter(
-    (item): item is Extract<EvidenceView, { readonly sourcePath: string }> =>
-      !isUrlEvidenceView(item),
-  );
-  const [pending, setPending] = useState(false);
-  const [explanation, setExplanation] = useState<SourceAccessExplanation | null>(null);
+  const citedPaths = citedSourcePaths(evidence);
+  const [pending, setPending] = useState(true);
+  const [unavailable, setUnavailable] = useState<SourceAccessExplanation | null>(null);
+  const [explanationOpen, setExplanationOpen] = useState(false);
   const [map, setMap] = useState<SourceLayerCoverage | null>(null);
+  const [run, setRun] = useState<(() => Promise<SourceLayerCoverage>) | null>(null);
 
-  if (repositoryEvidence.length === 0) return null;
+  useEffect(() => {
+    let cancelled = false;
+    setPending(true);
+    setUnavailable(null);
+    setRun(null);
+    setMap(null);
+    setExplanationOpen(false);
+    void sourceAccess
+      .layerCoverage({ studyId })
+      .then((access) => {
+        if (cancelled) return;
+        if (access.kind === "explanation") {
+          setUnavailable(access);
+          setRun(null);
+        } else {
+          setUnavailable(null);
+          setRun(() => access.run);
+        }
+        setPending(false);
+      })
+      .catch((reason: unknown) => {
+        if (cancelled) return;
+        setUnavailable(
+          noLayerCoverageExplanation(reason instanceof Error ? reason.message : String(reason)),
+        );
+        setRun(null);
+        setPending(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sourceAccess, studyId]);
 
-  // UA's private layer names are available only to the authoring adapter. The
-  // learner-facing line must still be the same in both builds; the local map
-  // opened below is where its richer layer names belong.
-  const label = translate("ui.evidence.layerCoverage.copy.这节课的文件落在项目仓库里");
+  if (citedPaths.length === 0) return null;
 
   async function openCoverage() {
+    if (unavailable) {
+      setExplanationOpen(true);
+      return;
+    }
+    if (!run) return;
     setPending(true);
-    setExplanation(null);
     try {
-      const access = await sourceAccess.layerCoverage({ studyId });
-      if (access.kind === "explanation") {
-        setExplanation(access);
-        setMap(null);
-        return;
-      }
-      setMap(await access.run());
+      setMap(await run());
     } catch (reason: unknown) {
-      setExplanation({
-        kind: "explanation",
-        title: translate("ui.evidence.layerCoverage.copy.查看项目分层"),
-        whatItDoes: translate(
-          "ui.evidence.layerCoverage.copy.它会按-Understand-Anything-的项目分层-列出这门课已经引用和还没有走到的文件",
-        ),
-        whyUnavailable:
-          reason instanceof Error
-            ? reason.message
-            : translate("ui.evidence.layerCoverage.copy.当前无法读取项目分析"),
-        futureSupport: translate(
-          "ui.evidence.layerCoverage.copy.以后会在桌面端提供已授权的分析快照-浏览器端和移动端会提供同一份分层说明",
-        ),
-      });
+      setUnavailable(
+        noLayerCoverageExplanation(reason instanceof Error ? reason.message : undefined),
+      );
+      setExplanationOpen(true);
       setMap(null);
     } finally {
       setPending(false);
     }
   }
 
-  const sourcePaths = new Set(repositoryEvidence.map((item) => item.sourcePath));
+  const sourcePaths = new Set(citedPaths);
   return (
-    <div className="lesson-ua-layers">
-      <span>{label}</span>
+    <div className="lesson-ua-layers" {...(unavailable ? { "data-unavailable": "" } : {})}>
+      <span>{translate("ui.evidence.layerCoverage.copy.这节课已经引用了这些文件")}</span>
       <Tip term="ua-place" className="rail-panel__help">
         <span aria-label={translate("ui.evidence.layerCoverage.copy.关于项目位置")}>?</span>
       </Tip>
+      <ul className="lesson-ua-layers__files">
+        {citedPaths.map((filePath) => (
+          <li key={filePath}>
+            <code>{filePath}</code>
+          </li>
+        ))}
+      </ul>
+      {unavailable ? (
+        <p className="lesson-ua-layers__status">
+          {translate(
+            "ui.evidence.layerCoverage.copy.完整项目分层需要仓库分析-课文已经引用的文件可以直接看",
+          )}
+        </p>
+      ) : null}
       <GameButton
         variant="ghost"
         className="lesson-ua-layers__open"
@@ -247,10 +287,15 @@ function LessonLayerCoverage({
       >
         {pending
           ? translate("ui.evidence.layerCoverage.copy.正在读取项目分层")
-          : translate("ui.evidence.layerCoverage.copy.查看项目分层")}
+          : unavailable
+            ? translate("ui.evidence.layerCoverage.copy.为什么这一端没有完整项目分层")
+            : translate("ui.evidence.layerCoverage.copy.查看项目分层")}
       </GameButton>
-      {explanation ? (
-        <CapabilityExplanation explanation={explanation} onClose={() => setExplanation(null)} />
+      {unavailable && explanationOpen ? (
+        <CapabilityExplanation
+          explanation={unavailable}
+          onClose={() => setExplanationOpen(false)}
+        />
       ) : null}
       {map ? (
         <GameModal

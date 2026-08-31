@@ -188,6 +188,27 @@
   margin-inline-start: 2px;
 }
 
+.lesson-ua-layers__files {
+  flex-basis: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lesson-ua-layers__files li {
+  word-break: break-all;
+}
+
+.lesson-ua-layers__files code {
+  font-size: 0.82em;
+}
+
+.lesson-ua-layers__status {
+  flex-basis: 100%;
+  margin: 0;
+  line-height: 1.5;
+}
+
 .lesson-reader__title h2 {
   margin: 6px 0 0;
 }
@@ -210,6 +231,18 @@
   color: var(--game-ui-text-muted);
   font-size: 0.82rem;
   line-height: 1.6;
+}
+
+.lesson-version[data-unavailable] {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.lesson-version__status {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
 }
 
 .lesson-version__label {
@@ -414,6 +447,18 @@
   border: 1px solid rgb(246 193 119 / 30%);
   border-inline-start: 3px solid #f6c177;
   background: rgb(246 193 119 / 7%);
+}
+
+.lesson-completion[data-remaining="read"] {
+  border-color: rgb(246 193 119 / 55%);
+  background: rgb(246 193 119 / 12%);
+}
+
+.lesson-completion--confirmed {
+  grid-template-columns: minmax(0, 1fr);
+  border-color: rgb(246 231 211 / 16%);
+  border-inline-start-color: rgb(246 231 211 / 40%);
+  background: transparent;
 }
 
 .lesson-completion h3 {

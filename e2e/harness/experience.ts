@@ -101,8 +101,13 @@ const REVIEW_PRIMARY: ExperienceTarget = {
 
 const LESSON_COMPLETION: ExperienceTarget = {
   id: "lesson-completion",
-  label: "完成本次更新",
-  locate: (page) => page.getByRole("button", { name: "完成本次更新" }),
+  label: "课文阅读确认",
+  /*
+   * Structure, not wording. The control used to be named 完成本次更新 and is
+   * now 我读完了 — same action, clearer promise. Pinning the label trained
+   * the probe to treat a copy fix as a regression.
+   */
+  locate: (page) => page.locator("section.lesson-completion .liquid-cta__button").first(),
   scrollToLessonBottom: true,
 };
 
@@ -491,9 +496,10 @@ export async function openLessonLayerDialog(
 ): Promise<Locator> {
   const route = EXPERIENCE_ROUTES.find((candidate) => candidate.id === "lesson")!;
   await openExperienceRoute(page, route, viewport);
-  const trigger = page.getByRole("button", { name: "查看项目分层" });
+  const trigger = page.locator("[data-parity-control='lesson-layer-coverage']");
   await expect(trigger).toBeVisible({ timeout: 15_000 });
-  await humanClick(page, trigger, "查看项目分层");
+  await expect(trigger).toBeEnabled({ timeout: 15_000 });
+  await humanClick(page, trigger, "项目分层入口");
   const dialog = page.locator(VISIBLE_DIALOGS).last();
   await expect(dialog).toBeVisible({ timeout: 15_000 });
   return dialog;
