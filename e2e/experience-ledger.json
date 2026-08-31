@@ -111,7 +111,8 @@
       "severity": "friction",
       "state": "open",
       "foundBy": "grok-4.6",
-      "foundOn": "2026-08-31"
+      "foundOn": "2026-08-31",
+      "note": "右栏是浮在画布上的面板，不是独立分栏，所以 follow card 会滑到它下面被切掉。正解是把右栏占的区域告诉 labels.ts 的摆放器（controls.tsx:631 现在传的是整块 canvas），让 aside 卡片提前翻边。试过「有卡片时直接隐藏 todaySection」——不行：右栏被清空后收起胶囊也跟着消失，F.island-pick 里既有的「卡片不和收起胶囊重叠」那一步直接失去意义。别再走这条路。"
     },
     {
       "id": "481ba66a489a",
@@ -123,7 +124,8 @@
       "severity": "friction",
       "state": "open",
       "foundBy": "grok-4.6",
-      "foundOn": "2026-08-31"
+      "foundOn": "2026-08-31",
+      "note": "同一个根因的另一半：右栏推的是全局 next lesson，不认当前上下文。把 nextLesson 置 null 不行，TodaySection 会渲染成「课程这边暂时没有待办」，而那是假的。正解是让右栏在课程岛上说这门课自己的下一节（useCourseProgress 已经有数据）。"
     },
     {
       "id": "89f758cee51f",
