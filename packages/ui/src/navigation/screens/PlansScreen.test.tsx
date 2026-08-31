@@ -145,7 +145,17 @@ describe("free plan price line", () => {
     // 「免费」 as the heading and 「免费」 again at headline size made the tier
     // nobody needs persuading into the loudest thing on the pricing page.
     const identity = createMemoryIdentityPort();
-    const payment = createPaymentPort({ identity });
+    const payment = createPaymentPort({
+      identity,
+      transport: {
+        readBalance: async () => ({
+          availablePowerUnits: "0",
+          balancePowerUnits: "0",
+          reservedPowerUnits: "0",
+        }),
+        createOrder: vi.fn(),
+      },
+    });
     await act(async () => root.render(<PlansScreen paymentPort={payment} />));
 
     const cards = container.querySelectorAll(".plan-card");
