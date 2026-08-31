@@ -9,6 +9,11 @@ export const MAP_COVER_REOPEN_MS = 200;
  */
 export const MAP_COVER_GIVE_UP_MS = 20_000;
 
+export interface MapCoverState {
+  readonly cover: boolean;
+  readonly timedOut: boolean;
+}
+
 /**
  * Whether the DOM loading overlay should be in the tree.
  *
@@ -18,30 +23,52 @@ export const MAP_COVER_GIVE_UP_MS = 20_000;
  * flash the overlay for one frame. Hide the instant busy ends. Unmount, do
  * not opacity-0 — an invisible overlay still steals clicks.
  */
-export function useMapCover(busy: boolean): boolean {
-  const [cover, setCover] = useState(busy);
+export function useMapCoverState(busy: boolean, attempt = 0): MapCoverState {
+  const [state, setState] = useState<MapCoverState>({ cover: busy, timedOut: false });
   const seenReady = useRef(false);
+  const previousAttempt = useRef(attempt);
 
   useEffect(() => {
+    const restarted = previousAttempt.current !== attempt;
+    previousAttempt.current = attempt;
+
     if (!busy) {
       seenReady.current = true;
-      setCover(false);
+      setState({ cover: false, timedOut: false });
       return;
     }
 
-    if (!seenReady.current) {
-      setCover(true);
-      const giveUp = window.setTimeout(() => setCover(false), MAP_COVER_GIVE_UP_MS);
+    const coverImmediately = !seenReady.current || restarted;
+    setState({ cover: coverImmediately, timedOut: false });
+
+    if (coverImmediately) {
+      // The cover gives way to RecoveryState at this boundary, not to a blank
+      // canvas. That preserves the first-frame protection without trapping a
+      // learner behind an overlay that can no longer explain itself.
+      const giveUp = window.setTimeout(
+        () => setState({ cover: false, timedOut: true }),
+        MAP_COVER_GIVE_UP_MS,
+      );
       return () => window.clearTimeout(giveUp);
     }
 
-    const showLater = window.setTimeout(() => setCover(true), MAP_COVER_REOPEN_MS);
-    const giveUp = window.setTimeout(() => setCover(false), MAP_COVER_GIVE_UP_MS);
+    const showLater = window.setTimeout(
+      () => setState((current) => ({ ...current, cover: true })),
+      MAP_COVER_REOPEN_MS,
+    );
+    const giveUp = window.setTimeout(
+      () => setState({ cover: false, timedOut: true }),
+      MAP_COVER_GIVE_UP_MS,
+    );
     return () => {
       window.clearTimeout(showLater);
       window.clearTimeout(giveUp);
     };
-  }, [busy]);
+  }, [attempt, busy]);
 
-  return cover;
+  return state;
+}
+
+export function useMapCover(busy: boolean): boolean {
+  return useMapCoverState(busy).cover;
 }

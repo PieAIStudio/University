@@ -66,14 +66,24 @@ function guard(locator: LessonRef): void {
 let opening: Promise<BootstrapData> | null = null;
 
 export function localBootstrap(): Promise<BootstrapData> {
-  opening ??= fetchBootstrap();
+  if (!opening) opening = openingRequest();
   return opening;
 }
 
 /** Re-read after an authoring action changed what is on disk. */
 export function refreshLocalBootstrap(): Promise<BootstrapData> {
-  opening = fetchBootstrap();
+  opening = openingRequest();
   return opening;
+}
+
+function openingRequest(): Promise<BootstrapData> {
+  const request = fetchBootstrap();
+  let retryable: Promise<BootstrapData>;
+  retryable = request.catch((reason: unknown) => {
+    if (opening === retryable) opening = null;
+    throw reason;
+  });
+  return retryable;
 }
 
 async function fetchBootstrap(): Promise<BootstrapData> {

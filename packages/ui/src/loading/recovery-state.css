@@ -1,0 +1,53 @@
+/*
+  A recovery state is still a learner surface: readable DOM, a short reason,
+  and a real button. The map variant is positioned by the shared stage; the
+  reader and shelf variants use the same component in normal document flow.
+*/
+
+.recovery-state {
+  display: grid;
+  min-height: min(48dvh, 30rem);
+  box-sizing: border-box;
+  place-items: center;
+  padding-block: max(1.25rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-bottom));
+  padding-inline: max(1.25rem, var(--safe-area-inline-start))
+    max(1.25rem, var(--safe-area-inline-end));
+  background: var(--game-ui-bg);
+  color: var(--game-ui-text);
+}
+
+.recovery-state--overlay {
+  position: absolute;
+  inset: 0;
+  z-index: var(--game-ui-z-overlay, 60);
+  min-height: 0;
+  overflow: auto;
+  pointer-events: auto;
+}
+
+.recovery-state__card {
+  width: min(32rem, 100%);
+}
+
+.recovery-state__body {
+  margin: 0;
+  color: var(--game-ui-text);
+  line-height: var(--game-ui-line-body, 1.52);
+}
+
+.recovery-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.recovery-state__actions > * {
+  flex: 1 1 10rem;
+}
+
+@media (max-width: 30rem) {
+  .recovery-state__actions > * {
+    flex-basis: 100%;
+  }
+}

@@ -44,8 +44,9 @@ import {
   type FeedbackContext,
   type LessonRef,
 } from "@pieai/university-core";
-import { LoadingTrivia, useMapCover } from "@pieai/university-ui/loading/LoadingTrivia.js";
+import { LoadingTrivia, useMapCoverState } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
+import { RecoveryState, type RecoveryReason } from "@pieai/university-ui/loading/RecoveryState.js";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
 import {
@@ -97,6 +98,7 @@ import {
   resolveIslandLookDebug,
 } from "@pieai/university-world/island-look.js";
 import { WorldMapCanvas } from "@pieai/university-world/WorldMapCanvas.js";
+import { resetWebGLContextProbe } from "@pieai/university-world/webgl-capability.js";
 import { MainRouter } from "./MainRouter";
 import { usePageMetadata } from "./page-metadata";
 import { WorldSourceControls } from "../learner/WorldSourceControls";
@@ -135,7 +137,7 @@ export function App() {
       ),
     [],
   );
-  const { shelf, studyNames, shelfError, studies, nodes, courseOf } = useShelf();
+  const { shelf, studyNames, shelfError, retryShelf, studies, nodes, courseOf } = useShelf();
   const { view: routeView, setView } = useRoute();
   const wide = useMinWidth(768);
   // The look judge is a DEV-only URL input. A seed identifies the course whose
@@ -151,8 +153,23 @@ export function App() {
    */
   const [navigationFocus, setNavigationFocus] = useState<LearnerNavigationFocus>(undefined);
   const [hovered, setHovered] = useState<string | null>(null);
-  const { mapInteracted, sceneReady, onSceneReady, onSceneBusy, onMapInteract } =
-    useSceneInteraction();
+  const {
+    mapInteracted,
+    sceneReady,
+    sceneFailure,
+    sceneAttempt,
+    onSceneReady,
+    onSceneBusy,
+    onContextLost,
+    onContextRestored,
+    onRendererUnavailable,
+    retryScene: retrySceneState,
+    onMapInteract,
+  } = useSceneInteraction();
+  const retryScene = useCallback(() => {
+    resetWebGLContextProbe();
+    retrySceneState();
+  }, [retrySceneState]);
   const [picked, setPicked] = useState<CourseNode | null>(null);
   const pickedCourse = picked ? courseOf(picked.studyId, picked.courseId) : null;
   const pickedStats = pickedCourse ? coursePickStatsOf(pickedCourse) : null;
@@ -312,6 +329,18 @@ export function App() {
     focusedNextUpProgress,
     studies,
   });
+  /** The same lesson the Today panel offers, used by map recovery's exit. */
+  const todayLesson = todayData.nextLesson;
+  const continueToTodayLesson = useCallback(() => {
+    if (!todayLesson) return;
+    setView({
+      kind: "lesson",
+      studyId: todayLesson.studyId,
+      courseId: todayLesson.courseId,
+      unitId: todayLesson.unitId,
+      lessonId: todayLesson.lessonId,
+    });
+  }, [setView, todayLesson]);
   const showMap = SHOWS_THE_MAP.has(view.kind);
   const studioMap = view.kind === "studio" && view.section === "map";
   const reviewVisible = showMap || view.kind === "review";
@@ -370,7 +399,13 @@ export function App() {
   const waitingForData =
     (view.kind === "world" && !world) ||
     ((view.kind === "course" || view.kind === "lesson") && lessons.length === 0);
-  const mapCover = useMapCover(showMap && (!sceneReady || waitingForData));
+  const { cover: mapCover, timedOut: mapTimedOut } = useMapCoverState(
+    showMap && (!sceneReady || waitingForData),
+    sceneAttempt,
+  );
+  const mapRecoveryReason: RecoveryReason | null = showMap
+    ? (sceneFailure ?? (mapTimedOut ? "scene-timeout" : null))
+    : null;
   const counters = universityCounters({
     projectName,
     streakDays: progress.streak.days,
@@ -429,8 +464,6 @@ export function App() {
   const nextUpMeta = focusedTodayNode
     ? todayMeta(focusedTodayNode.studyTitle, focusedNextUpProgress)
     : null;
-  /** The very lesson the rail's panel offers, so the phone offers the same one. */
-  const todayLesson = todayData.nextLesson;
   const presenceView = presenceViewKey(view);
   const presenceLocation = useMemo(() => {
     if (view.kind === "lesson" || view.kind === "settled") {
@@ -521,6 +554,7 @@ export function App() {
   const stage =
     view.kind === "avatar-lab" || studioMap ? null : (
       <WorldMapCanvas
+        key={sceneAttempt}
         hidden={!SHOWS_THE_MAP.has(view.kind)}
         paused={!showMap}
         // A course path is read at a shallower pitch than a world of islands.
@@ -550,6 +584,9 @@ export function App() {
         onInteract={onMapInteract}
         onSceneReady={onSceneReady}
         onSceneBusy={onSceneBusy}
+        onContextLost={onContextLost}
+        onContextRestored={onContextRestored}
+        onRendererUnavailable={onRendererUnavailable}
         onPointerMissed={dismissPick}
         fixedCamera={fixedCamera}
         postProcessing={import.meta.env.DEV && lookDebug?.shot ? lookDebug.post : true}
@@ -674,7 +711,18 @@ export function App() {
         */
         hint={hovered ?? MAP_CONTROLS_HINT}
         hintVisible={Boolean(hovered) || !mapInteracted}
-        loading={mapCover ? <LoadingTrivia /> : null}
+        loading={
+          mapRecoveryReason ? (
+            <RecoveryState
+              reason={mapRecoveryReason}
+              onRetry={retryScene}
+              onContinue={todayLesson ? continueToTodayLesson : undefined}
+              overlay
+            />
+          ) : mapCover ? (
+            <LoadingTrivia />
+          ) : null
+        }
       />
     );
 
@@ -803,16 +851,25 @@ export function App() {
     which React reports as "rendered fewer hooks than expected" rather than as
     the routing mistake it is.
   */
-  if (shelfError || (shelf && shelf.studies.length === 0)) {
+  const canReadLessonWithoutShelf = isBareView(view) && view.kind === "lesson";
+  if ((shelfError || (shelf && shelf.studies.length === 0)) && !canReadLessonWithoutShelf) {
     return (
       <>
         <main className="empty">
-          <h1>
-            {shelfError
-              ? translate("app.app.app.copy.课程读不出来")
-              : translate("app.app.app.copy.书架上还没有课")}
-          </h1>
-          <p>{shelfError ?? EMPTY_SHELF_HINT}</p>
+          {shelfError ? (
+            <RecoveryState
+              reason="content"
+              onRetry={retryShelf}
+              retryLabel={translate("ui.recovery.recoveryState.copy.重试课程资料")}
+              onContinue={() => setView({ kind: "catalog" })}
+              continueLabel={translate("ui.recovery.recoveryState.copy.先看课程列表")}
+            />
+          ) : (
+            <>
+              <h1>{translate("app.app.app.copy.书架上还没有课")}</h1>
+              <p>{EMPTY_SHELF_HINT}</p>
+            </>
+          )}
         </main>
         {feedbackSurface}
       </>

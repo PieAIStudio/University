@@ -689,6 +689,22 @@ export const messages = {
   "ui.loading.loadingTrivia.copy.地图正在打开": "地图正在打开",
   "ui.loading.loadingTrivia.copy.地图铺开时-看一条概念": "地图铺开时，看一条概念",
   "ui.loading.loadingTrivia.copy.岛屿马上就到": "岛屿马上就到。",
+  "ui.recovery.recoveryState.copy.3D-地图还没有准备好-可以再试一次-也可以先直接开始今天的课":
+    "3D 地图还没有准备好。可以再试一次，也可以先直接开始今天的课。",
+  "ui.recovery.recoveryState.copy.地图刚刚失去连接-再试一次可以重新打开它-课程文字和练习不受影响":
+    "地图刚刚失去连接。再试一次可以重新打开它；课程文字和练习不受影响。",
+  "ui.recovery.recoveryState.copy.地图加载得有点久": "地图加载得有点久",
+  "ui.recovery.recoveryState.copy.地图暂时停了一下": "地图暂时停了一下",
+  "ui.recovery.recoveryState.copy.课程资料没有打开": "课程资料没有打开",
+  "ui.recovery.recoveryState.copy.浏览器没有提供可用的-3D-画面-课程文字和练习仍然可以继续-不必等地图":
+    "浏览器没有提供可用的 3D 画面。课程文字和练习仍然可以继续，不必等地图。",
+  "ui.recovery.recoveryState.copy.这台设备打不开-3D-地图": "这台设备打不开 3D 地图",
+  "ui.recovery.recoveryState.copy.这次没有拿到课程资料-可能是网络刚刚断了一下-再试一次-或先回到课程列表":
+    "这次没有拿到课程资料，可能是网络刚刚断了一下。再试一次，或先回到课程列表。",
+  "ui.recovery.recoveryState.copy.先看课程列表": "先看课程列表",
+  "ui.recovery.recoveryState.copy.再试一次": "再试一次",
+  "ui.recovery.recoveryState.copy.直接开始今天的课": "直接开始今天的课",
+  "ui.recovery.recoveryState.copy.重试课程资料": "重试课程资料",
   "ui.markdown.markdownContent.copy.value0年value1月value2日":
     "{{value0}}年{{value1}}月{{value2}}日",
   "ui.markdown.markdownContent.copy.value0月value1日": "{{value0}}月{{value1}}日",

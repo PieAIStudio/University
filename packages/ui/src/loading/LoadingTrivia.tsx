@@ -6,7 +6,13 @@ import type { ConceptHead } from "@pieai/university-core";
 import { pickLoadingConcept } from "./pick-loading-concept.js";
 
 export { pickLoadingConcept } from "./pick-loading-concept.js";
-export { useMapCover, MAP_COVER_GIVE_UP_MS, MAP_COVER_REOPEN_MS } from "./use-map-cover.js";
+export {
+  useMapCover,
+  useMapCoverState,
+  MAP_COVER_GIVE_UP_MS,
+  MAP_COVER_REOPEN_MS,
+  type MapCoverState,
+} from "./use-map-cover.js";
 
 /**
  * Screen 09: a real concept while the canvas is still empty.

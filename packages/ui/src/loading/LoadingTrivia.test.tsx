@@ -8,7 +8,12 @@ import { CONCEPT_HEADS, type ConceptHead } from "@pieai/university-core";
 
 import { LoadingTrivia } from "./LoadingTrivia.js";
 import { pickLoadingConcept } from "./pick-loading-concept.js";
-import { MAP_COVER_GIVE_UP_MS, MAP_COVER_REOPEN_MS, useMapCover } from "./use-map-cover.js";
+import {
+  MAP_COVER_GIVE_UP_MS,
+  MAP_COVER_REOPEN_MS,
+  useMapCover,
+  useMapCoverState,
+} from "./use-map-cover.js";
 
 const SAMPLE: ConceptHead = {
   id: "frontend",
@@ -39,6 +44,19 @@ afterEach(async () => {
 function CoverProbe({ busy }: { readonly busy: boolean }) {
   const cover = useMapCover(busy);
   return <span data-cover={cover ? "yes" : "no"} />;
+}
+
+function RecoveryCoverProbe({
+  busy,
+  attempt = 0,
+}: {
+  readonly busy: boolean;
+  readonly attempt?: number;
+}) {
+  const state = useMapCoverState(busy, attempt);
+  return (
+    <span data-cover={state.cover ? "yes" : "no"} data-timeout={state.timedOut ? "yes" : "no"} />
+  );
 }
 
 describe("pickLoadingConcept", () => {
@@ -121,5 +139,30 @@ describe("useMapCover", () => {
       vi.advanceTimersByTime(MAP_COVER_GIVE_UP_MS);
     });
     expect(container.querySelector("[data-cover]")?.getAttribute("data-cover")).toBe("no");
+  });
+
+  it("reports a timeout separately so the caller can explain the next action", async () => {
+    await act(async () => {
+      root.render(<RecoveryCoverProbe busy />);
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(MAP_COVER_GIVE_UP_MS);
+    });
+    const probe = container.querySelector("[data-timeout]");
+    expect(probe?.getAttribute("data-cover")).toBe("no");
+    expect(probe?.getAttribute("data-timeout")).toBe("yes");
+  });
+
+  it("restarts the cover immediately for a new scene attempt", async () => {
+    await act(async () => {
+      root.render(<RecoveryCoverProbe busy />);
+    });
+    await act(async () => {
+      root.render(<RecoveryCoverProbe busy={false} />);
+    });
+    await act(async () => {
+      root.render(<RecoveryCoverProbe busy attempt={1} />);
+    });
+    expect(container.querySelector("[data-cover]")?.getAttribute("data-cover")).toBe("yes");
   });
 });

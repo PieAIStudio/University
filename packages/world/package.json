@@ -9,6 +9,7 @@
     "./course-map.js": "./src/course/course-map.ts",
     "./Maps.js": "./src/Maps.tsx",
     "./Stage.js": "./src/Stage.tsx",
+    "./webgl-capability.js": "./src/webgl-capability.ts",
     "./WorldMapCanvas.js": "./src/WorldMapCanvas.tsx",
     "./avatar.js": "./src/avatar/index.ts",
     "./companion-probe.js": "./src/companion/companion-probe.tsx",
