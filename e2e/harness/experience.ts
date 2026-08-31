@@ -70,13 +70,27 @@ const PRACTICE_PRIMARY: ExperienceTarget = {
 const PLANS_PRIMARY: ExperienceTarget = {
   id: "plans-purchase",
   label: "会员购买",
-  locate: (page) => page.getByRole("button", { name: "购买", exact: true }).first(),
+  /*
+   * Structure, not wording. This probe used to look for a button named 购买
+   * and went red the day the label became 先绑定邮箱 / 记录购买意向 / 先登录 —
+   * a deliberate change, correctly made, that the probe reported as a defect.
+   * A cross-screen invariant must survive copy edits or it trains you to
+   * ignore it. What must hold is that the paid card carries a call to action.
+   */
+  locate: (page) => page.locator(".plan-card button.liquid-cta__button").first(),
 };
 
 const PROFILE_PRIMARY: ExperienceTarget = {
-  id: "profile-account-explanation",
-  label: "账号说明",
-  locate: (page) => page.getByRole("button", { name: /暂未开放/ }),
+  id: "profile-sign-in",
+  label: "账号登录",
+  /*
+   * /me has two legitimate shapes: with a backend configured it draws a real
+   * sign-in form, and without one it draws a control explaining why. This
+   * pins the configured shape on purpose. The site shipped for four days in
+   * the other one — 云端账号还未配置, no way in, and therefore no way to pay —
+   * and a probe that accepted both would have stayed green through all of it.
+   */
+  locate: (page) => page.locator('.account-panel form button[type="submit"]').first(),
 };
 
 const REVIEW_PRIMARY: ExperienceTarget = {
@@ -132,7 +146,7 @@ async function readyPlans(page: Page): Promise<void> {
 }
 
 async function readyProfile(page: Page): Promise<void> {
-  await expect(page.getByRole("region", { name: "账号" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator(".account-panel")).toBeVisible({ timeout: 30_000 });
   await expect(PROFILE_PRIMARY.locate(page)).toBeVisible({ timeout: 30_000 });
 }
 

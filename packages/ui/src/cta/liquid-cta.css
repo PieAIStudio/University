@@ -86,6 +86,14 @@
 .liquid-cta__button {
   position: relative;
   z-index: 1;
+  /*
+    The floor every touch guideline agrees on, and the one X4 enforces. At 40px
+    the membership page's purchase control was both under the minimum and 37px
+    from the centre of the floating 提意见 pill — the two together are the
+    definition of a mis-tap zone, on the one button in the product that takes
+    money. Four pixels.
+  */
+  min-height: 44px;
   /* The 1px border is painted by the silhouette; 17px preserves old width. */
   border: 0;
   padding-inline: 17px;

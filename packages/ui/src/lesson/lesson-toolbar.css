@@ -127,6 +127,13 @@
   }
 
   .lesson-toolbar__tools .game-ui-segmented-option {
+    /*
+      Two Chinese characters at 0.82rem plus 8px of padding came to 42.3px, and
+      the neighbouring option's centre sat exactly that far away — under the
+      44px floor on both counts, which is the shape of a mis-tap. The sound
+      toggle below already carries the same minimum for the same reason.
+    */
+    min-width: 44px;
     padding-inline: 8px;
     font-size: 0.82rem;
     white-space: nowrap;

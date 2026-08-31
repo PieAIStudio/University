@@ -146,8 +146,16 @@
   border-radius: 0;
 }
 
+/*
+  Body ink, not accent. `--game-ui-accent-bright` is a light orange tuned for
+  the dark theme; on the light theme's cream panel it measured 1.50:1 against
+  its own background — WCAG AA wants 4.5 for text this size, and axe called it
+  serious on every lesson carrying a locator-only citation. Bold weight and the
+  callout's border already say "this is a heading"; the colour was only ever
+  decoration, and it was costing the sentence its legibility.
+*/
 .evidence-locator-only__title {
-  color: var(--game-ui-accent-bright);
+  color: var(--game-ui-text);
   font-size: 0.88rem;
   line-height: 1.35;
 }

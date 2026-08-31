@@ -5,7 +5,6 @@ import {
   auditAxeBaseline,
   EXPERIENCE_ROUTES,
   EXPERIENCE_VIEWPORTS,
-  openAccountDialog,
   openCourseNodeDialog,
   openCoursePickDialog,
   openCourseUnitDialog,
@@ -61,7 +60,12 @@ const DIALOG_SCENARIOS: readonly DialogScenario[] = [
   { id: "course-node", label: "课程关卡卡", open: openCourseNodeDialog },
   { id: "course-unit", label: "课程单元说明", open: openCourseUnitDialog },
   { id: "library-reference", label: "图鉴概念说明", open: openLibraryDialog },
-  { id: "account", label: "账号能力说明", open: openAccountDialog },
+  /*
+   * 账号能力说明 is not listed. That dialog exists only in a build with no
+   * backend configured, which is the shape the site must never ship in;
+   * the configured shape draws a sign-in form and no dialog at all. X2/X3
+   * still walk /me, and readyProfile now fails if the way in disappears.
+   */
   { id: "plans", label: "会员能力说明", open: openPlansDialog },
   { id: "feedback", label: "提意见", open: openFeedbackDialog },
   { id: "lesson-source", label: "课文源码证据", open: openLessonSourceDialog },

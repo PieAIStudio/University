@@ -10,6 +10,31 @@
   table marks "not rendered" leaves the accessibility tree.
 */
 
+/*
+  The bar is fixed, so the browser does not know it is there when it scrolls
+  something into view: `scrollIntoView` parks the element against the bottom
+  of the scrollport and the bar lands on top of it. That is how the membership
+  page's purchase button became untappable on a phone — `element.click()` still
+  reached it, so unit tests and the e2e helper that clicks by handle both said
+  the page was fine, while a real thumb hit `a.tab-bar__link` instead.
+
+  `scroll-padding-bottom` on the scrolling element is the whole fix: it tells
+  every scroll — anchor, focus, `scrollIntoView` — to stop short by the height
+  of the bar. The variable lives here rather than on `.app-shell` because the
+  scroller is the document, and it cannot read a custom property declared on
+  its own descendant.
+*/
+:root {
+  --tab-bar-height: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Only the phone has the bar, and only the phone lets the document scroll. */
+@media (max-width: 767px) {
+  :root {
+    scroll-padding-bottom: var(--tab-bar-height);
+  }
+}
+
 .app-shell,
 .nav-rail,
 .tab-bar,
@@ -47,7 +72,6 @@
     thumb. Read this variable instead of writing 3.5rem again, so the bar
     cannot grow without the things above it noticing.
   */
-  --tab-bar-height: calc(3.5rem + env(safe-area-inset-bottom, 0px));
   --shell-gutter: 16px;
   --shell-rail-width: 0px;
   --shell-aside-width: 0px;

@@ -236,6 +236,62 @@
       "foundBy": "grok-4.6",
       "foundOn": "2026-08-31",
       "guardedBy": "packages/ui/src/navigation/screens/PlansScreen.test.tsx::does not print the plan's own name a second time as its price"
+    },
+    {
+      "id": "aec39924ba43",
+      "screen": "/plans",
+      "element": "会员购买 CTA",
+      "category": "occlusion",
+      "viewport": "phone",
+      "summary": "手机上会员卡片的购买 CTA 被固定底栏盖住，真人手指点不到",
+      "severity": "blocking",
+      "state": "fixed",
+      "foundBy": "M.experience X3 探针",
+      "foundOn": "2026-08-31",
+      "note": "根因不是浮钮而是固定底栏：scrollIntoView 把控件停在滚动视口底边，56px 高的 tab bar 就压在上面。element.click() 仍然点得到，所以单元测试和按句柄点击的辅助函数都说页面没问题。修法是给滚动元素加 scroll-padding-bottom: var(--tab-bar-height)，只在手机宽度生效。",
+      "guardedBy": "e2e/M.experience.spec.ts X3 phone · 会员（五点命中）"
+    },
+    {
+      "id": "b8fc271168aa",
+      "screen": "lesson",
+      "element": "源码定位说明标题",
+      "category": "contrast",
+      "viewport": "both",
+      "summary": ".evidence-locator-only__title 用暖色强调色，在浅色主题的奶油面板上只有 1.50:1",
+      "severity": "friction",
+      "state": "fixed",
+      "foundBy": "M.experience X6 axe 基线",
+      "foundOn": "2026-08-31",
+      "guardedBy": "e2e/M.experience.spec.ts X6 axe 基线（lesson/desktop、lesson/phone）",
+      "note": "改用 --game-ui-text 后实测 8.22:1。WCAG AA 对 14px/700 要求 4.5:1，它不算大字号。"
+    },
+    {
+      "id": "7b34122e5403",
+      "screen": "/plans",
+      "element": "会员购买 CTA",
+      "category": "touch-target",
+      "viewport": "phone",
+      "summary": "购买按钮高 40px，且与「提意见」浮钮中心距 37.4px，同时低于 44px 触控下限",
+      "severity": "blocking",
+      "state": "fixed",
+      "foundBy": "M.experience X4 探针",
+      "foundOn": "2026-08-31",
+      "guardedBy": "e2e/M.experience.spec.ts X4 phone · 会员",
+      "note": "给 .liquid-cta__button 加 min-height: 44px。同一处改动也让 /practice 的两条已知豁免减为一条。"
+    },
+    {
+      "id": "8f490d5180c3",
+      "screen": "lesson",
+      "element": "正文密度分段控件",
+      "category": "touch-target",
+      "viewport": "phone",
+      "summary": "「标准 / 详细」两个选项宽 42.3px，相邻中心距也是 42.3px，双双低于 44px",
+      "severity": "friction",
+      "state": "fixed",
+      "foundBy": "M.experience X4 探针",
+      "foundOn": "2026-08-31",
+      "guardedBy": "e2e/M.experience.spec.ts X4 phone · 课文",
+      "note": "这条一直存在，只是之前 X4 在会员页就抛错了，从来没走到课文。给 .lesson-toolbar__tools .game-ui-segmented-option 加 min-width: 44px，和旁边 .sound-toggle 用的是同一条下限。"
     }
   ]
 }
