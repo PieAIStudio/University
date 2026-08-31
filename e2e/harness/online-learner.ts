@@ -73,10 +73,10 @@ export async function readAndAnswerFirstLesson(page: Page): Promise<void> {
     the only way through. Clicking it is what a learner does.
   */
   await namedStep(page, "确认读完了这一版", async () => {
-    const confirm = page.getByRole("button", { name: /^完成本次更新$/ });
+    const confirm = page.getByRole("button", { name: /^我读完了$/ });
     await expect(confirm).toBeVisible({ timeout: 20_000 });
     await confirm.scrollIntoViewIfNeeded();
-    await humanClick(page, confirm, "完成本次更新");
+    await humanClick(page, confirm, "我读完了");
   });
 }
 

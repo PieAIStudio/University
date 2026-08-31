@@ -125,6 +125,7 @@ export function LessonReader({
 }) {
   const completed = isLessonComplete(completion);
   const readConfirmed = completion.readConfirmed;
+  const exercisesPassed = completion.exercisesPassed;
   const explainPassed = view.lesson.exercises.some(
     (exercise) => exercise.kind === "explain" && exercise.hostGrade?.passed === true,
   );
@@ -603,39 +604,18 @@ export function LessonReader({
               {view.lesson.content}
             </MarkdownContent>
           </div>
-          {!completed ? (
-            <section className="lesson-completion" aria-labelledby="lesson-completion-title">
-              <div>
-                <h3 id="lesson-completion-title">
-                  {translate("ui.lesson.lessonReader.copy.读到这里-确认你完成了这次课文更新")}
-                </h3>
-                <p>
-                  {readConfirmed
-                    ? translate(
-                        "ui.lesson.lessonReader.copy.这版课文已经记录过阅读确认-练习通过后-系统才会把本课标为完成并安排卡片",
-                      )
-                    : translate(
-                        "ui.lesson.lessonReader.copy.打开课文-滚动页面或答对练习都不会自动完成-这个确认只针对当前固定版本",
-                      )}
-                </p>
-              </div>
-              <LiquidCtaButton
-                className="lesson-completion__action"
-                destination={completionDestination}
-                onClick={() => void confirmCurrentRevision()}
-                disabled={confirming}
-              >
-                {confirming
-                  ? translate("ui.lesson.lessonReader.copy.正在记录")
-                  : readConfirmed
-                    ? translate("ui.lesson.lessonReader.copy.再次确认本次更新")
-                    : translate("ui.lesson.lessonReader.copy.完成本次更新")}
-              </LiquidCtaButton>
-              {confirmationError ? (
-                <p className="inline-error" role="alert">
-                  {confirmationError}
-                </p>
-              ) : null}
+          {!readConfirmed && !exercisesPassed ? (
+            <LessonReadConfirm
+              remaining={false}
+              confirming={confirming}
+              error={confirmationError}
+              destination={completionDestination}
+              onConfirm={() => void confirmCurrentRevision()}
+            />
+          ) : null}
+          {readConfirmed && !completed ? (
+            <section className="lesson-completion lesson-completion--confirmed">
+              <p>{translate("ui.lesson.lessonReader.copy.已确认读过这一版-还差练习")}</p>
             </section>
           ) : null}
           {view.lesson.exercises.map((exercise) => (
@@ -648,6 +628,15 @@ export function LessonReader({
               onRefresh={onLearningChanged}
             />
           ))}
+          {!readConfirmed && exercisesPassed ? (
+            <LessonReadConfirm
+              remaining
+              confirming={confirming}
+              error={confirmationError}
+              destination={completionDestination}
+              onConfirm={() => void confirmCurrentRevision()}
+            />
+          ) : null}
           {recapReady && progress ? (
             <RecapPrompt
               locator={locator}
@@ -687,6 +676,7 @@ export function LessonReader({
             <LessonNextStep
               neighbours={neighbours}
               completed={completed}
+              remainingRead={!readConfirmed && exercisesPassed}
               onOpenLesson={onOpenLesson}
               onBackToCourse={onBackToCourse}
             />
@@ -775,5 +765,63 @@ export function LessonReader({
         onSelectIndex={setSourceIndex}
       />
     </article>
+  );
+}
+
+/**
+ * The explicit read confirmation. Answering does not write this; V5 keeps the
+ * two facts independent so "完成" does not mean "guessed the quiz".
+ */
+function LessonReadConfirm({
+  remaining,
+  confirming,
+  error,
+  destination,
+  onConfirm,
+}: {
+  readonly remaining: boolean;
+  readonly confirming: boolean;
+  readonly error: string | null;
+  readonly destination?: string;
+  readonly onConfirm: () => void;
+}) {
+  return (
+    <section
+      className="lesson-completion"
+      data-remaining={remaining ? "read" : undefined}
+      aria-labelledby="lesson-completion-title"
+    >
+      <div>
+        <h3 id="lesson-completion-title">
+          {remaining
+            ? translate("ui.lesson.lessonReader.copy.题目过了-还差确认你读过这一版")
+            : translate("ui.lesson.lessonReader.copy.读到这里-确认你完成了这次课文更新")}
+        </h3>
+        <p>
+          {remaining
+            ? translate(
+                "ui.lesson.lessonReader.copy.答对不会自动完课-确认你读过这一版-进度才会记上",
+              )
+            : translate(
+                "ui.lesson.lessonReader.copy.打开课文-滚动页面或答对练习都不会自动完成-这个确认只针对当前固定版本",
+              )}
+        </p>
+      </div>
+      <LiquidCtaButton
+        className="lesson-completion__action"
+        destination={destination}
+        onClick={onConfirm}
+        disabled={confirming}
+      >
+        {confirming
+          ? translate("ui.lesson.lessonReader.copy.正在记录")
+          : translate("ui.lesson.lessonReader.copy.我读完了")}
+      </LiquidCtaButton>
+      {error ? (
+        <p className="inline-error" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </section>
   );
 }

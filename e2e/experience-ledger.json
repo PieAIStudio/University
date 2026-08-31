@@ -145,9 +145,10 @@
       "viewport": "both",
       "summary": "两个入口点开都是「这一端现在做不到」",
       "severity": "friction",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "grok-4.6",
-      "foundOn": "2026-08-31"
+      "foundOn": "2026-08-31",
+      "guardedBy": "packages/ui/src/lesson/LessonSourceVersion.test.tsx::says this shell cannot open the app before the learner clicks / packages/ui/src/evidence/LayerCoverage.lesson.test.tsx::shows cited files and an honest label before anyone clicks"
     },
     {
       "id": "c91e17c9b3e6",
@@ -157,9 +158,10 @@
       "viewport": "both",
       "summary": "题已答对仍要再按一次才算完成，学习者不知道还差一步",
       "severity": "friction",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "grok-4.6",
-      "foundOn": "2026-08-31"
+      "foundOn": "2026-08-31",
+      "guardedBy": "packages/ui/src/lesson/LessonReader.completion.test.tsx::does not auto-complete a lesson whose exercises just passed / puts the remaining confirm after the exercise, as the unique next step / records the read only when the learner presses the remaining confirm"
     },
     {
       "id": "38a08e50cbf1",

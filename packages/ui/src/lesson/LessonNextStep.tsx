@@ -27,11 +27,14 @@ import type { LessonNeighbours } from "./LessonNav.js";
 export function LessonNextStep({
   neighbours,
   completed,
+  remainingRead = false,
   onOpenLesson,
   onBackToCourse,
 }: {
   readonly neighbours: LessonNeighbours;
   readonly completed: boolean;
+  /** Exercises passed, read not yet confirmed — name that remaining light. */
+  readonly remainingRead?: boolean;
   readonly onOpenLesson: (locator: LessonRef) => void;
   readonly onBackToCourse: () => void;
 }) {
@@ -83,9 +86,13 @@ export function LessonNextStep({
       <h2 className="lesson-next__title">{next.title}</h2>
       {completed ? null : (
         <p className="lesson-next__note">
-          {translate(
-            "ui.lesson.lessonNextStep.copy.这节还没标为完成-上面确认课文-答完练习之后-这节才会计入进度",
-          )}
+          {remainingRead
+            ? translate(
+                "ui.lesson.lessonNextStep.copy.题目过了-还差确认你读过这一版-这节才会计入进度",
+              )
+            : translate(
+                "ui.lesson.lessonNextStep.copy.这节还没标为完成-上面确认课文-答完练习之后-这节才会计入进度",
+              )}
         </p>
       )}
       {completed ? (
