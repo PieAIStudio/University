@@ -107,7 +107,13 @@ export function LessonSourceVersion({
           */}
           <span
             className="lesson-version__label"
-            {...(dated ? { title: translate("ui.lesson.lessonSourceVersion.copy.完整提交号-value0", { value0: sourceCommit }) } : {})}
+            {...(dated
+              ? {
+                  title: translate("ui.lesson.lessonSourceVersion.copy.完整提交号-value0", {
+                    value0: sourceCommit,
+                  }),
+                }
+              : {})}
           >
             {dated
               ? translate("ui.lesson.lessonSourceVersion.copy.这节课钉在-value0-的版本", {
