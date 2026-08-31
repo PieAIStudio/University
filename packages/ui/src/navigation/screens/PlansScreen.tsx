@@ -6,6 +6,7 @@ import {
   PLANS,
   type EntitlementReadModel,
   type PaymentExplanation,
+  type PaymentAvailability,
   type PaymentOrder,
   type PaymentPort,
   type PaymentResult,
@@ -116,9 +117,15 @@ function priceLabel(pricing: PlanPricing, yearly: boolean) {
   );
 }
 
-function planButtonLabel(pricing: PlanPricing): string {
+function planButtonLabel(pricing: PlanPricing, availability: PaymentAvailability): string {
   if (pricing.kind === "pending")
-    return translate("ui.navigation.screens.plansScreen.copy.购买入口");
+    return translate("ui.navigation.screens.plansScreen.copy.了解购买状态");
+  if (availability === "anonymous")
+    return translate("ui.navigation.screens.plansScreen.copy.先绑定邮箱");
+  if (availability === "account-required")
+    return translate("ui.navigation.screens.plansScreen.copy.先登录");
+  if (availability === "unavailable")
+    return translate("ui.navigation.screens.plansScreen.copy.记录购买意向");
   return translate("ui.navigation.screens.plansScreen.copy.购买");
 }
 
@@ -126,11 +133,13 @@ function PlanCard({
   plan,
   yearly,
   busyOfferId,
+  purchaseAvailability,
   onPurchase,
 }: {
   readonly plan: Plan;
   readonly yearly: boolean;
   readonly busyOfferId: string | null;
+  readonly purchaseAvailability: PaymentAvailability;
   readonly onPurchase: (offerId: string) => void;
 }) {
   const purchasable = plan.pricing.kind !== "free";
@@ -169,7 +178,7 @@ function PlanCard({
           >
             {busyOfferId === plan.id
               ? translate("ui.navigation.screens.plansScreen.copy.正在检查")
-              : planButtonLabel(plan.pricing)}
+              : planButtonLabel(plan.pricing, purchaseAvailability)}
           </LiquidCtaButton>
         ) : (
           <p className="plan-card__note">
@@ -269,6 +278,7 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
   const [explanation, setExplanation] = useState<PaymentExplanation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const hasConfiguredCycle = PLANS.some((plan) => plan.pricing.kind === "configured");
+  const purchaseAvailability = payment.purchaseAvailability();
 
   useEffect(() => {
     let active = true;
@@ -365,6 +375,7 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
             plan={plan}
             yearly={yearly}
             busyOfferId={busyOfferId}
+            purchaseAvailability={purchaseAvailability}
             onPurchase={(offerId) => void startPurchase(offerId)}
           />
         ))}

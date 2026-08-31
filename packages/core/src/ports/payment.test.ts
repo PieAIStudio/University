@@ -41,25 +41,27 @@ describe("createPaymentPort", () => {
       orderIdFactory: () => ORDER_ID,
     });
 
+    expect(payment.purchaseAvailability()).toBe("anonymous");
+
     await expect(payment.readBalance()).resolves.toMatchObject({
       kind: "explanation",
-      title: "购买前先绑定邮箱",
+      title: "先绑定邮箱再购买",
     });
     await expect(payment.readEntitlements()).resolves.toMatchObject({
       kind: "explanation",
-      title: "购买前先绑定邮箱",
+      title: "先绑定邮箱再购买",
     });
     await expect(payment.refreshEntitlements()).resolves.toMatchObject({
       kind: "explanation",
-      title: "购买前先绑定邮箱",
+      title: "先绑定邮箱再购买",
     });
     await expect(payment.initiatePurchase({ offerId: "paid-entitlement" })).resolves.toMatchObject({
       kind: "explanation",
-      title: "购买前先绑定邮箱",
+      title: "先绑定邮箱再购买",
     });
     await expect(payment.getOrderStatus(ORDER_ID)).resolves.toMatchObject({
       kind: "explanation",
-      title: "购买前先绑定邮箱",
+      title: "先绑定邮箱再购买",
     });
 
     expect(readBalance).not.toHaveBeenCalled();
@@ -80,6 +82,8 @@ describe("createPaymentPort", () => {
       transport: { createOrder },
       orderIdFactory,
     });
+
+    expect(payment.purchaseAvailability()).toBe("available");
 
     const first = await payment.initiatePurchase({ offerId: "paid-entitlement" });
     const second = await payment.initiatePurchase({
@@ -104,9 +108,11 @@ describe("createPaymentPort", () => {
       transport: { readBalance: async () => BALANCE },
     });
 
+    expect(payment.purchaseAvailability()).toBe("unavailable");
+
     await expect(payment.initiatePurchase({ offerId: "paid-entitlement" })).resolves.toMatchObject({
       kind: "explanation",
-      title: "购买入口还没接好",
+      title: "支付入口尚未开放",
     });
   });
 

@@ -940,7 +940,10 @@ export const messages = {
   "ui.navigation.screens.plansScreen.copy.订单状态暂时读不到-请稍后再试":
     "订单状态暂时读不到，请稍后再试。",
   "ui.navigation.screens.plansScreen.copy.购买": "购买",
-  "ui.navigation.screens.plansScreen.copy.购买入口": "购买入口",
+  "ui.navigation.screens.plansScreen.copy.了解购买状态": "了解购买状态",
+  "ui.navigation.screens.plansScreen.copy.先绑定邮箱": "先绑定邮箱",
+  "ui.navigation.screens.plansScreen.copy.先登录": "先登录",
+  "ui.navigation.screens.plansScreen.copy.记录购买意向": "记录购买意向",
   "ui.navigation.screens.plansScreen.copy.购买请求暂时失败-请稍后再试":
     "购买请求暂时失败，请稍后再试。",
   "ui.navigation.screens.plansScreen.copy.钱包余额-登录后读取": "钱包余额：登录后读取",
