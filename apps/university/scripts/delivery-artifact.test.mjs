@@ -139,7 +139,7 @@ function writeArtifactFixture() {
   return { root, coursePath: target };
 }
 
-function reseal(root) {
+function reseal(root, { evidenceMode = "none" } = {}) {
   const coursePath = join(root, "content", "study", "course.json");
   const body = readFileSync(coursePath);
   const manifestPath = join(root, "content", "manifest.json");
@@ -169,7 +169,7 @@ function reseal(root) {
         senses: 1,
       },
     },
-    evidence: { mode: "none" },
+    evidence: { mode: evidenceMode },
   });
 }
 
@@ -215,6 +215,17 @@ describe("delivery artifact gate", () => {
       courses: 1,
       lessons: 1,
     });
+  });
+
+  it("rejects a baked release that contains no baked evidence snippets", () => {
+    const { root } = writeArtifactFixture();
+    rmSync(join(root, "release.json"), { force: true });
+    rmSync(join(root, "SHA256SUMS"), { force: true });
+    reseal(root, { evidenceMode: "baked" });
+
+    expect(() => validateDeliveryArtifact(root)).toThrow(
+      /release evidence mode baked but artifact contains 0 baked evidence snippets/,
+    );
   });
 
   it("rejects a changed payload even when release metadata was not changed", () => {

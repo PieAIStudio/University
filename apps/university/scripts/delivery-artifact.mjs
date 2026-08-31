@@ -29,6 +29,7 @@ const DIGEST = /^sha256:([a-f0-9]{64})$/i;
 const VERSION = /^v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const COMMIT = /^[a-f0-9]{40}$/i;
+const EVIDENCE_MODES = new Set(["none", "baked"]);
 
 /** These keys are authoring transport, never learner DTO, fields. */
 export const AUTHOR_ONLY_KEYS = Object.freeze([
@@ -364,6 +365,11 @@ function compareNames(actual, expected, label) {
   }
 }
 
+function validateEvidenceMode(mode, label) {
+  if (!EVIDENCE_MODES.has(mode)) fail(`${label} must be none or baked`);
+  return mode;
+}
+
 function validateChecksumFile(root, records) {
   const checksumPath = join(root, "SHA256SUMS");
   const body = readFileSync(checksumPath, "utf8");
@@ -390,7 +396,7 @@ function validateChecksumFile(root, records) {
   }
 }
 
-function contentFiles(root, manifest) {
+function contentFiles(root, manifest, records, { validatePublicDto = true } = {}) {
   const contentRoot = join(root, "content");
   directory(contentRoot, "content directory");
   const expectedStudies = new Set();
@@ -425,22 +431,53 @@ function contentFiles(root, manifest) {
   for (const study of manifest.studies) {
     const studyId = study.studyId;
     const studyDir = join(contentRoot, studyId);
-    const actualCourses = readdirSync(studyDir)
-      .map((name) => {
-        const path = join(studyDir, name);
-        const info = lstatSync(path);
-        if (info.isSymbolicLink()) fail(`content course is a symlink: content/${studyId}/${name}`);
-        if (!info.isFile()) fail(`unexpected nested content entry: content/${studyId}/${name}`);
-        return `${studyId}/${name}`;
-      })
-      .sort();
     const expectedForStudy = [...expectedCourses]
       .filter((name) => name.startsWith(`${studyId}/`))
       .sort();
+    const expectedCourseDirectories = new Set(
+      expectedForStudy.map((name) => name.slice(`${studyId}/`.length, -".json".length)),
+    );
+    const actualCourses = [];
+    for (const name of readdirSync(studyDir).sort()) {
+      const path = join(studyDir, name);
+      const info = lstatSync(path);
+      if (info.isSymbolicLink()) fail(`content course is a symlink: content/${studyId}/${name}`);
+      if (info.isFile()) {
+        actualCourses.push(`${studyId}/${name}`);
+        continue;
+      }
+      if (!info.isDirectory() || !expectedCourseDirectories.has(name)) {
+        fail(`unexpected nested content entry: content/${studyId}/${name}`);
+      }
+      const evidenceDir = join(path, "evidence");
+      directory(evidenceDir, `evidence directory for content/${studyId}/${name}`);
+      const snippets = listFiles(evidenceDir);
+      if (snippets.length === 0) {
+        fail(`evidence directory for content/${studyId}/${name} is empty`);
+      }
+      for (const snippet of snippets) {
+        const snippetName = posixPath(relative(evidenceDir, snippet));
+        if (!/^[a-f0-9]{64}\.json$/u.test(snippetName)) {
+          fail(
+            `evidence snippet has an invalid name: content/${studyId}/${name}/evidence/${snippetName}`,
+          );
+        }
+      }
+    }
     compareNames(actualCourses, expectedForStudy, `content courses for ${studyId}`);
   }
 
   const packages = [];
+  const snippetPaths = new Set(
+    records
+      .filter((record) => /(?:^|\/)evidence\/[^/]+\.json$/u.test(record.path))
+      .map((record) => record.path.slice("content/".length)),
+  );
+  const snippetBytes = records
+    .filter((record) => snippetPaths.has(record.path.slice("content/".length)))
+    .reduce((sum, record) => sum + record.bytes, 0);
+  let evidenceAnchors = 0;
+  let snippets = 0;
   for (const course of expectedCourses) {
     const path = join(contentRoot, ...course.split("/"));
     const info = regularFile(path, `course package ${course}`);
@@ -460,13 +497,47 @@ function contentFiles(root, manifest) {
         `servedBytes mismatch for ${course}: manifest ${manifestCourse.servedBytes}, file ${info.size}`,
       );
     }
-    const violations = publicDtoViolations(pkg, course);
-    if (violations.length > 0) {
-      fail(`public DTO violation in ${course}: ${violations.slice(0, 12).join(", ")}`);
+    if (validatePublicDto) {
+      const violations = publicDtoViolations(pkg, course);
+      if (violations.length > 0) {
+        fail(`public DTO violation in ${course}: ${violations.slice(0, 12).join(", ")}`);
+      }
+    }
+    const evidenceRecords = [];
+    for (const unit of pkg.course.units ?? []) {
+      for (const lesson of unit.lessons ?? []) {
+        evidenceRecords.push(...(lesson.evidence ?? []));
+        for (const card of lesson.cards ?? []) evidenceRecords.push(...(card.evidence ?? []));
+        for (const exercise of lesson.exercises ?? [])
+          evidenceRecords.push(...(exercise.evidence ?? []));
+      }
+    }
+    for (const evidence of evidenceRecords) {
+      if (typeof evidence?.sourcePath === "string") evidenceAnchors += 1;
+      if (evidence?.snippetUrl === undefined) continue;
+      if (typeof evidence.snippetUrl !== "string" || !evidence.snippetUrl.startsWith("/content/")) {
+        fail(`evidence snippet URL is invalid in ${course}`);
+      }
+      const snippetPath = safeRelativePath(
+        evidence.snippetUrl.slice("/content/".length),
+        `${course} evidence snippet path`,
+      );
+      if (!snippetPaths.has(snippetPath)) {
+        fail(`evidence snippet is missing from artifact: ${snippetPath}`);
+      }
+      snippets += 1;
     }
     packages.push({ path: course, bytes: info.size });
   }
-  return packages;
+  return {
+    packages,
+    evidence: {
+      anchors: evidenceAnchors,
+      snippets,
+      snippetFiles: snippetPaths.size,
+      snippetBytes,
+    },
+  };
 }
 
 function validateReleaseInputs(release) {
@@ -475,7 +546,7 @@ function validateReleaseInputs(release) {
   validateReleaseVersion(release.version);
   validateSourceCommit(release.sourceCommit);
   validateImportDate(release.importDate);
-  if (release?.evidence?.mode !== "none") fail("release evidence mode must be none");
+  validateEvidenceMode(release?.evidence?.mode, "release evidence mode");
   const recovery = release?.inputs?.recovery;
   const lexicon = release?.inputs?.lexicon;
   if (!recovery || !lexicon) fail("release is missing recovery or lexicon input metadata");
@@ -491,6 +562,14 @@ function validateReleaseInputs(release) {
     fail("release lexicon byte count is invalid");
   if (!Number.isInteger(lexicon.senses) || lexicon.senses <= 0)
     fail("release lexicon sense count is invalid");
+  for (const key of ["anchors", "snippets", "snippetFiles", "snippetBytes"]) {
+    if (
+      release.evidence?.[key] !== undefined &&
+      (!Number.isInteger(release.evidence[key]) || release.evidence[key] < 0)
+    ) {
+      fail(`release evidence ${key} total is invalid`);
+    }
+  }
 }
 
 function compareInputMetadata(expected, actual, label) {
@@ -503,6 +582,35 @@ function compareInputMetadata(expected, actual, label) {
   for (const key of ["files", "bytes", "studies", "courses", "senses"]) {
     if (expected[key] !== undefined && expected[key] !== actual[key]) {
       fail(`${label} ${key} changed after build`);
+    }
+  }
+}
+
+function validateEvidencePayload(release, manifest, evidence) {
+  const releaseMode = validateEvidenceMode(release?.evidence?.mode, "release evidence mode");
+  const manifestMode = manifest?.evidenceMode;
+  if (manifestMode !== undefined) {
+    const actualMode = manifestMode === "auto" ? "baked" : manifestMode;
+    validateEvidenceMode(actualMode, "content manifest evidence mode");
+    if (actualMode !== releaseMode) {
+      fail(
+        `release evidence mode ${releaseMode} does not match content manifest mode ${actualMode}`,
+      );
+    }
+  }
+  if (releaseMode === "none" && (evidence.snippets > 0 || evidence.snippetFiles > 0)) {
+    fail(
+      `release evidence mode none but artifact contains ${evidence.snippets} snippet URLs and ${evidence.snippetFiles} snippet files`,
+    );
+  }
+  if (releaseMode === "baked" && evidence.snippets === 0) {
+    fail(
+      `release evidence mode baked but artifact contains 0 baked evidence snippets (${evidence.anchors} anchors)`,
+    );
+  }
+  for (const key of ["anchors", "snippets", "snippetFiles", "snippetBytes"]) {
+    if (release.evidence?.[key] !== undefined && release.evidence[key] !== evidence[key]) {
+      fail(`release evidence ${key} total does not match the artifact`);
     }
   }
 }
@@ -582,7 +690,9 @@ export function validateDeliveryArtifact(
   const shelfStats = checkShelfData(manifest, shelf);
   if (shelfStats.courses === 0 || shelfStats.lessons === 0)
     fail("content shelf has no courses or lessons");
-  const packages = contentFiles(resolvedRoot, manifest);
+  const content = contentFiles(resolvedRoot, manifest, records);
+  validateEvidencePayload(release, manifest, content.evidence);
+  const packages = content.packages;
   if (
     release.content?.studies !== shelfStats.studies ||
     release.content.courses !== shelfStats.courses ||
@@ -612,6 +722,7 @@ export function validateDeliveryArtifact(
     files: records.length,
     bytes: records.reduce((sum, record) => sum + record.bytes, 0),
     payloadBytes: payload.reduce((sum, record) => sum + record.bytes, 0),
+    evidence: content.evidence,
   };
 }
 
@@ -628,6 +739,7 @@ export function writeReleaseMetadata(root, release) {
   const manifest = readArtifactJson(resolvedRoot, "content/manifest.json");
   const shelf = readArtifactJson(resolvedRoot, "content/shelf.json");
   const shelfStats = checkShelfData(manifest, shelf);
+  const content = contentFiles(resolvedRoot, manifest, payload, { validatePublicDto: false });
   const courseBytes = (manifest.studies ?? [])
     .flatMap((study) => study.courses ?? [])
     .reduce((sum, course) => sum + course.servedBytes, 0);
@@ -635,6 +747,10 @@ export function writeReleaseMetadata(root, release) {
     schemaVersion: RELEASE_SCHEMA_VERSION,
     artifact: RELEASE_ARTIFACT_KIND,
     ...release,
+    evidence: {
+      ...release.evidence,
+      ...content.evidence,
+    },
     content: {
       studies: shelfStats.studies,
       courses: shelfStats.courses,

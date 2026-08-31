@@ -47,6 +47,8 @@ const VALUE_FLAGS = new Set([
   "artifact-root",
 ]);
 
+const EVIDENCE_MODES = new Set(["none", "baked"]);
+
 function parseArgs(argv) {
   const args = {};
   const options = argv[0] === "--" ? argv.slice(1) : argv;
@@ -55,7 +57,8 @@ function parseArgs(argv) {
     if (flag === "--help" || flag === "-h") {
       console.log(
         "Usage: pnpm delivery:build -- --version <version> " +
-          "--recovery-root <path> --lexicon <path> --evidence none " +
+          "--recovery-root <path> --lexicon <path> " +
+          "[--evidence none|baked] " +
           "[--import-date YYYY-MM-DD] [--artifact-root <path>]",
       );
       process.exit(0);
@@ -69,9 +72,10 @@ function parseArgs(argv) {
     args[name] = value;
     index += 1;
   }
-  for (const name of ["version", "recovery-root", "lexicon", "evidence"]) {
+  for (const name of ["version", "recovery-root", "lexicon"]) {
     if (args[name] === undefined) throw new Error(`missing --${name}`);
   }
+  args.evidence ??= "none";
   return args;
 }
 
@@ -154,9 +158,10 @@ function releaseInputMetadata(recoveryPath, recovery, lexiconPath, lexicon) {
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const version = validateReleaseVersion(args.version);
-  if (args.evidence !== "none") {
-    throw new Error("the clean-clone delivery lane currently supports only --evidence none");
+  if (!EVIDENCE_MODES.has(args.evidence)) {
+    throw new Error(`--evidence must be none or baked, got ${args.evidence}`);
   }
+  const evidenceMode = args.evidence;
 
   const recoveryPath = workspacePath(args["recovery-root"], "recovery input");
   const lexiconPath = workspacePath(args.lexicon, "lexicon input");
@@ -190,7 +195,8 @@ function main() {
     ...process.env,
     UNIVERSITY_UPSTREAM_RECOVERY: recoveryPath.absolute,
     UNIVERSITY_UPSTREAM_LEXICON: lexiconPath.absolute,
-    UNIVERSITY_EVIDENCE_MODE: "none",
+    UNIVERSITY_EVIDENCE_MODE: evidenceMode === "baked" ? "auto" : "none",
+    UNIVERSITY_REQUIRE_BAKED_EVIDENCE: evidenceMode === "baked" ? "1" : "0",
     UNIVERSITY_IMPORT_DATE: importDate,
   };
   let artifactCreated = false;
@@ -205,7 +211,7 @@ function main() {
       sourceCommit,
       importDate,
       inputs: inputMetadata,
-      evidence: { mode: "none" },
+      evidence: { mode: evidenceMode },
     });
     const built = validateDeliveryArtifact(DELIVERY_DIST, {
       version,

@@ -14,8 +14,10 @@
  * lesson that needs it is open. Cited source ranges get the same treatment:
  * read from `studies/<id>/source/repository.git` and written beside the course
  * as content-addressed JSON. A machine with no checkout bakes none of them
- * and still exits 0 — being unable to see a sibling repository is a normal
- * state, not a broken build.
+ * and still exits 0 in the normal authoring/dev lane — being unable to see a
+ * sibling repository is a normal state there. The delivery lane can turn that
+ * into a fail-closed requirement so a release never silently becomes
+ * locator-only.
  *
  * What lands in `content/` is ignored by git — it quotes private repositories
  * verbatim. What is tracked is `content/manifest.json`: study and course ids,
@@ -99,6 +101,23 @@ if (requestedImportDate !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(requestedIm
   );
 }
 
+const requireBakedEvidence = process.env["UNIVERSITY_REQUIRE_BAKED_EVIDENCE"] === "1";
+if (requireBakedEvidence && evidenceMode !== "auto") {
+  throw new Error(
+    `import-courses: baked evidence requirement needs UNIVERSITY_EVIDENCE_MODE=auto, got ${evidenceMode}`,
+  );
+}
+
+const studiesRoot =
+  evidenceMode === "none"
+    ? null
+    : resolve(projectRoot, process.env["UNIVERSITY_STUDIES_ROOT"] ?? "../local/studies");
+if (requireBakedEvidence && !hasAnyStudyRepository(studiesRoot)) {
+  throw new Error(
+    `import-courses: baked evidence requested but no readable study repository was found at ${studiesRoot}; refusing locator-only output`,
+  );
+}
+
 /** `data:image/png;base64,...` or a bare base64 blob, either way to bytes. */
 function decodeAsset(dataBase64) {
   const comma = dataBase64.indexOf(",");
@@ -133,10 +152,6 @@ const shelf = { studies: [] };
 let assetCount = 0;
 let assetBytes = 0;
 let inlineBytes = 0;
-const studiesRoot =
-  evidenceMode === "none"
-    ? null
-    : resolve(projectRoot, process.env["UNIVERSITY_STUDIES_ROOT"] ?? "../local/studies");
 let snippetBaked = 0;
 let snippetSkipped = 0;
 let snippetDisabled = 0;
@@ -410,10 +425,7 @@ if (!process.argv.includes("--allow-shrink") && comparable && existsSync(tracked
     );
   }
 }
-writeFileSync(
-  trackedManifestPath,
-  `${JSON.stringify(manifest, null, 2)}\n`,
-);
+writeFileSync(trackedManifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 
 // The lexicon is bundled rather than fetched, unlike lesson prose.
 //
@@ -476,6 +488,12 @@ if (evidenceMode === "none") {
       `into ${snippetFiles} files (${(snippetBytes / 1048576).toFixed(2)} MB` +
       (snippetSkipped > 0 ? `; ${snippetSkipped} skipped` : "") +
       `).`,
+  );
+}
+
+if (requireBakedEvidence && snippetBaked === 0) {
+  throw new Error(
+    `import-courses: baked evidence requested but baked 0 evidence snippets from ${snippetEvidence} cited ranges; refusing locator-only output`,
   );
 }
 
