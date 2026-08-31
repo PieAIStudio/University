@@ -693,13 +693,11 @@ export function LabelProbe({
         follow.style.setProperty("--follow-viewport-height", `${followViewport.height}px`);
         const width = Math.max(follow.offsetWidth, 260);
         const height = Math.max(follow.offsetHeight, 120);
-        // The card is an overlay: it lands beside the island it is about and
-        // covers whatever happens to be there. It used to reserve its box
-        // before the names were placed, so opening it slid the titles of
-        // neighbouring islands out of the way — a click on one island moved
-        // three other islands' names, which reads as the map rearranging
-        // itself. The card is opaque and on top; being covered costs a name
-        // nothing.
+        // The card is an overlay relative to labels: it lands beside the
+        // island it is about and does not reserve space from neighbouring
+        // names. Opaque shell chrome is a real obstruction, though, so the
+        // card must flip around it when a readable side exists. A click on one
+        // island must not either hide its card or make three other titles jump.
         const [card] = placeLabels(
           [
             {
@@ -716,7 +714,7 @@ export function LabelProbe({
             },
           ],
           followViewport,
-          { maxVisible: 1, gap: 8 },
+          { maxVisible: 1, gap: 8, obstacles: [...chromeBoxesRef.current] },
         );
         if (card?.visible) {
           follow.style.transform = `translate(${card.x}px, ${card.y}px) translate(-50%, -50%)`;

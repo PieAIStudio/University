@@ -114,10 +114,11 @@
       "viewport": "desktop",
       "summary": "点岛弹出的课程卡被右栏切掉一半",
       "severity": "friction",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "grok-4.6",
       "foundOn": "2026-08-31",
-      "note": "右栏是浮在画布上的面板，不是独立分栏，所以 follow card 会滑到它下面被切掉。正解是把右栏占的区域告诉 labels.ts 的摆放器（controls.tsx:631 现在传的是整块 canvas），让 aside 卡片提前翻边。试过「有卡片时直接隐藏 todaySection」——不行：右栏被清空后收起胶囊也跟着消失，F.island-pick 里既有的「卡片不和收起胶囊重叠」那一步直接失去意义。别再走这条路。"
+      "guardedBy": "e2e/N.nocollide.spec.ts::N1 desktop · follow card 绕开展开的右栏",
+      "note": "根因是右栏浮在画布上，follow card 原先会落到它下面。labels.ts 新增独立的 obstacles，占位由 controls.tsx 传入实测 chromeBoxes；overlay 仍不占用名称标签的位置，但会避开不透明右栏。保留 todaySection 和收起胶囊：试过隐藏 todaySection 会让既有 F.island-pick 的收起胶囊检查失去意义，因此没有再走这条死路。"
     },
     {
       "id": "481ba66a489a",
@@ -127,10 +128,11 @@
       "viewport": "desktop",
       "summary": "人已经进了 A 课的岛，右栏还在推销 B 课",
       "severity": "friction",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "grok-4.6",
       "foundOn": "2026-08-31",
-      "note": "同一个根因的另一半：右栏推的是全局 next lesson，不认当前上下文。把 nextLesson 置 null 不行，TodaySection 会渲染成「课程这边暂时没有待办」，而那是假的。正解是让右栏在课程岛上说这门课自己的下一节（useCourseProgress 已经有数据）。"
+      "guardedBy": "e2e/N.nocollide.spec.ts::N2 desktop · course-island 右栏只说当前课程的下一节",
+      "note": "world-model.ts 现在把 course/lesson/settled URL 的 studyId 作为权威，覆盖过期的地图导航焦点；study-context.ts 在课程岛上从已有 nodes 和 courseProgressForNode 选当前 courseId 的下一节。没有把 nextLesson 置 null，因此不会伪造「课程这边暂时没有待办」的空状态。"
     },
     {
       "id": "89f758cee51f",
@@ -188,9 +190,11 @@
       "viewport": "phone",
       "summary": "浮动按钮挡住密码框、会员权益和课文",
       "severity": "friction",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "grok-4.6",
-      "foundOn": "2026-08-31"
+      "foundOn": "2026-08-31",
+      "guardedBy": "e2e/N.nocollide.spec.ts::N3 phone · 提意见不盖账号目标或课文正文",
+      "note": "真实 Chrome 在 375×812、已配置账号形态下复现了密码框重叠，在长课正文底部也复现了文字重叠。手机账号/课文使用 44px 紧凑浮钮，并给对应内容预留同宽右侧安全区；原本会员页的浮钮位置与入口保留。攻击测试把安全区改为 0 后 N3 明确报密码框重叠，恢复 56px 后通过。"
     },
     {
       "id": "32e56e57ec05",
@@ -200,9 +204,11 @@
       "viewport": "phone",
       "summary": "顶栏挤成两排，讲解层级四个字悬空",
       "severity": "polish",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "grok-4.6",
-      "foundOn": "2026-08-31"
+      "foundOn": "2026-08-31",
+      "guardedBy": "e2e/N.nocollide.spec.ts::N4 phone · lesson toolbar 工具单行且没有悬空标签",
+      "note": "保留既有 phone 修复：隐藏冗余讲解层级标签、tools 使用 nowrap、标准/详细各保留 min-width: 44px，工具控件在 375px 仍同一行且五点可命中。攻击测试把标签恢复为 display:block 后 N4 明确报宽度 48.640625，恢复 display:none 后通过。"
     },
     {
       "id": "d9f8cd2466ee",

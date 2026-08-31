@@ -839,6 +839,7 @@ export function App() {
       port={feedbackPort}
       context={feedbackContext}
       lessonTitle={feedbackLesson?.title ?? null}
+      surface={view.kind === "me" ? "account" : feedbackLocator ? "lesson" : "default"}
     />
   );
   /*
@@ -885,7 +886,7 @@ export function App() {
     };
     return (
       <>
-        <div className="app">
+        <div className="app app--lesson">
           <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
           <Suspense fallback={<RouteFallback />}>
             <LessonScreen
@@ -947,7 +948,15 @@ export function App() {
 
   return (
     <>
-      <div className="app">
+      <div
+        className={
+          view.kind === "me"
+            ? "app app--account"
+            : view.kind === "settled"
+              ? "app app--lesson"
+              : "app"
+        }
+      >
         <UniversityShell
           activeId={activeIdForView(view)}
           /*

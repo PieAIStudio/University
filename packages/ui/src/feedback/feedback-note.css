@@ -49,6 +49,31 @@
     inset-inline-start: auto;
     inset-inline-end: 12px;
   }
+
+  /*
+    Account forms and lesson prose have no empty phone gutter. Give the
+    always-available review affordance a compact, icon-only footprint and let
+    those two surfaces reserve the matching lane for their own content.
+  */
+  .feedback-note__open--float.feedback-note__open--account,
+  .feedback-note__open--float.feedback-note__open--lesson {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .feedback-note__open--float.feedback-note__open--account .nav-rail__label,
+  .feedback-note__open--float.feedback-note__open--lesson .nav-rail__label {
+    display: none;
+  }
+
+  .app--account .account-panel__form form,
+  .app--lesson .lesson-main > :not(.lesson-reader__header) {
+    padding-inline-end: 56px;
+  }
 }
 
 /*

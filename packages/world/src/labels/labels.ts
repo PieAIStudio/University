@@ -374,10 +374,13 @@ export function placeLabels(
     readonly gap?: number;
     /** Already-claimed boxes (pinned icons). Names must go around them. */
     readonly reserved?: readonly LabelBox[];
+    /** Opaque chrome that an overlay card must go around when a slot allows it. */
+    readonly obstacles?: readonly LabelBox[];
   },
 ): readonly LabelPlacement[] {
   const maxVisible = options?.maxVisible ?? DEFAULT_MAX_VISIBLE;
   const gap = options?.gap ?? DEFAULT_GAP;
+  const obstacles = options?.obstacles ?? [];
 
   const placed: LabelPlacement[] = candidates.map((candidate) => {
     const home = slotsFor(candidate, gap)[0]!;
@@ -415,6 +418,10 @@ export function placeLabels(
         // An offset that leaves the frame is not a placement: it would spend a
         // maxVisible slot on a name nobody can read.
         if (!fitsInViewport(rect, viewport)) continue;
+        // Opaque chrome is different from a reserved label: an overlay card
+        // must not disappear because it covers a name, but it should still
+        // flip around a rail when another readable slot exists.
+        if (obstacles.some((other) => boxesOverlap(rect, other, gap))) continue;
         if (!candidate.overlay) {
           if (occupied.some((other) => boxesOverlap(rect, other, gap))) continue;
           occupied.push(rect);

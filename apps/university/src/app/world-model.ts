@@ -39,6 +39,13 @@ interface WorldModelOptions {
   readonly view: View;
 }
 
+export function studyIdForView(view: View, navigationFocus: LearnerNavigationFocus) {
+  if (view.kind === "course" || view.kind === "lesson" || view.kind === "settled") {
+    return view.studyId;
+  }
+  return navigationFocus;
+}
+
 export function useWorldModel({
   courseProgress,
   lessonsDone,
@@ -56,17 +63,9 @@ export function useWorldModel({
    * map the next course is the default until the learner picks another sea.
    */
   const focusedStudyId = useMemo(() => {
-    /*
-      Reading a lesson pins the map to that lesson's project until the learner
-      says otherwise — `navigationFocus === undefined` is "has not said otherwise",
-      which is why it is distinct from null.
-    */
-    const chosen =
-      view.kind === "course" || view.kind === "lesson" || view.kind === "settled"
-        ? navigationFocus === undefined
-          ? view.studyId
-          : navigationFocus
-        : navigationFocus;
+    /* A course, lesson, or settlement URL is the learner's current project;
+       only the world map gets a transient selection from the switcher. */
+    const chosen = studyIdForView(view, navigationFocus);
     /*
       The map shows one project and may never show none. Today's course names
       the project; an account with nothing started falls back to the first

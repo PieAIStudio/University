@@ -152,6 +152,7 @@ function FeedbackTrigger({
       className={className}
       aria-haspopup="dialog"
       aria-expanded={open}
+      aria-label={translate("ui.feedback.feedbackNote.copy.提意见")}
       onClick={onOpen}
     >
       <span className="nav-rail__icon">
@@ -187,12 +188,15 @@ export function FeedbackNote({
     signedIn: false,
   },
   lessonTitle = null,
+  surface = "default",
 }: {
   readonly shell: string;
   readonly port?: FeedbackPort;
   readonly context?: FeedbackNoteContext;
   /** Display-only title; the submitted payload uses the canonical locator. */
   readonly lessonTitle?: string | null;
+  /** Phone-only safe-area treatment for dense account and lesson surfaces. */
+  readonly surface?: "default" | "account" | "lesson";
 }) {
   const [open, setOpen] = useState(false);
   const [said, setSaid] = useState("");
@@ -326,6 +330,8 @@ export function FeedbackNote({
   const floatClass = [
     "feedback-note__open",
     "feedback-note__open--float",
+    surface === "account" ? "feedback-note__open--account" : "",
+    surface === "lesson" ? "feedback-note__open--lesson" : "",
     host ? "" : "is-fallback",
     scrolling ? "is-away" : "",
   ]

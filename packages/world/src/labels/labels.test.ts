@@ -276,6 +276,32 @@ describe("placeLabels", () => {
     expect(card.x).toBeLessThan(400);
   });
 
+  it("flips an overlay aside card around an opaque chrome obstacle", () => {
+    const rail = { left: 460, top: 220, right: 720, bottom: 380 };
+    const placed = placeLabels(
+      [
+        candidate({
+          id: "card",
+          x: 400,
+          y: 300,
+          width: 260,
+          height: 160,
+          anchor: "aside",
+          clearance: 56,
+          overlay: true,
+        }),
+      ],
+      VIEW,
+      { obstacles: [rail] },
+    );
+    const card = byId(placed, "card");
+    const box = labelBox({ x: card.x, y: card.y }, 260, 160);
+
+    expect(card.visible).toBe(true);
+    expect(card.x).toBeLessThan(400);
+    expect(boxesOverlap(box, rail, 4)).toBe(false);
+  });
+
   it("does not move a name because an overlay card opened on top of it", () => {
     // Item the boss caught: click one island and the titles of neighbouring
     // islands slid away to make room for the card. The card is opaque and on

@@ -16,6 +16,20 @@ interface StudyContextOptions {
   readonly view: View;
 }
 
+export function todayNodeForContext(
+  nodes: readonly CourseNode[],
+  view: View,
+  focusedStudyId: string | null,
+  courseProgress: (node: CourseNode) => number,
+): CourseNode | null {
+  if (view.kind === "course" || view.kind === "lesson" || view.kind === "settled") {
+    return (
+      nodes.find((node) => node.studyId === view.studyId && node.courseId === view.courseId) ?? null
+    );
+  }
+  return focusedStudyId ? nextCourse(nodes, courseProgress, focusedStudyId) : null;
+}
+
 export function useStudyContext({
   courseProgress,
   courseProgressForNode,
@@ -31,15 +45,11 @@ export function useStudyContext({
     [focusedStudyId, studies],
   );
 
-  /*
-    `todayNode` is the account-wide recommendation used to choose the first
-    project in a fresh session. Once the map has a focused project, the context
-    panel must ask the same question inside that project; otherwise the map and
-    the panel can truthfully answer two different places at once.
-  */
+  /* The world asks for a study's next course; a course island asks for its
+     own next lesson. Both answers come from the same progress projection. */
   const focusedTodayNode = useMemo(
-    () => (nodes && focusedStudyId ? nextCourse(nodes, courseProgress, focusedStudyId) : null),
-    [nodes, courseProgress, focusedStudyId],
+    () => (nodes ? todayNodeForContext(nodes, view, focusedStudyId, courseProgress) : null),
+    [nodes, view, courseProgress, focusedStudyId],
   );
   const focusedNextUpProgress = useMemo(
     () => (focusedTodayNode ? courseProgressForNode(focusedTodayNode) : null),
