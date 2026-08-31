@@ -16,7 +16,7 @@
   it.
 */
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { MapControls } from "three/addons/controls/MapControls.js";
 
@@ -115,40 +115,12 @@ function installTouchDollyDeadzone(instance: MapControls) {
  * Stated as "who uses the map", a forgotten route hides the canvas, which is
  * the safe direction to be wrong in.
  */
-/**
- * The idle sentence under the map. A React node, not a string, so each
- * clause can carry a monochrome glyph. Both shells render
- * `{hovered ? hovered : MAP_CONTROLS_HINT}` — a node is a valid child, so
- * they do not have to change, and a hovered island name stays plain text.
- *
- * Glyphs are CSS masks with `currentColor`, not emoji. The path-language
- * swap exists because colour emoji on this canvas shouted louder than the
- * next-step beacon. Repeating that here would undo it. SwimmerUIKit's clay
- * icons are PNG and cannot tint; Lucide's `move` / `mouse` /
- * `mouse-pointer-click` (ISC) are the silhouettes the stylesheet masks.
- */
-export const MAP_CONTROLS_HINT: ReactNode = (
-  <span className="hint__row">
-    <span className="hint__item hint__item--pan">
-      <span className="hint__icon" aria-hidden="true" />
-      拖动平移
-    </span>
-    <span className="hint__sep" aria-hidden="true">
-      ·
-    </span>
-    <span className="hint__item hint__item--zoom">
-      <span className="hint__icon" aria-hidden="true" />
-      滚轮缩放
-    </span>
-    <span className="hint__sep" aria-hidden="true">
-      ·
-    </span>
-    <span className="hint__item hint__item--enter">
-      <span className="hint__icon" aria-hidden="true" />
-      点岛进入
-    </span>
-  </span>
-);
+export {
+  MAP_CONTROLS_HINT,
+  MapControlsHint,
+  mapControlsHint,
+} from "../labels/map-controls-hint.js";
+export type { MapPointer } from "../labels/map-controls-hint.js";
 
 export const WORLD_POLAR = THREE.MathUtils.degToRad(54);
 /**

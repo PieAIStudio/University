@@ -51,10 +51,13 @@ export {
   Flight,
   LabelProbe,
   MAP_CONTROLS_HINT,
+  MapControlsHint,
+  mapControlsHint,
   WORLD_DISTANCE_MAX,
   WORLD_DISTANCE_MIN,
   WORLD_POLAR,
 } from "./camera/controls.js";
+export type { MapPointer } from "./camera/controls.js";
 export { frameWorld } from "./camera/frame.js";
 export { wheelIntent } from "./camera/wheel-intent.js";
 export { CompanionProbe, screenFromProjected } from "./companion/companion-probe.js";
