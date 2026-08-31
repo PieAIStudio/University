@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "why-so-many-files-preview",
+  "title": "打开项目文件夹，为什么找不到一份「整个产品」？",
+  "courseId": "foundations-before-zero",
+  "unitId": "what-is-an-app",
+  "exerciseIds": [
+    "pkg-name-value"
+  ],
+  "cardIds": [
+    "index-css-imports",
+    "src-means-source"
+  ],
+  "contentRevision": 8,
+  "contentHash": "sha256:1c549b4b7fcda3e0bc21715395564c5d7749d2d36d5439d673b2b70c3cc236e5",
+  "status": "active",
+  "evidence": [
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "index.html",
+      "lineStart": 31,
+      "lineEnd": 31,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "file:index.html"
+      ],
+      "note": "module script 指向 src/main.tsx。"
+    },
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "src/main.tsx",
+      "lineStart": 1,
+      "lineEnd": 2,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "file:src/main.tsx"
+      ],
+      "note": "import ReactDOM 与 App。"
+    },
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "src/index.css",
+      "lineStart": 1,
+      "lineEnd": 6,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "file:src/index.css"
+      ],
+      "note": "样式通过 @import 组合。"
+    },
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "package.json",
+      "lineStart": 2,
+      "lineEnd": 2,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "config:package.json"
+      ],
+      "note": "name 为 turing-pact。"
+    }
+  ],
+  "sections": [],
+  "assets": [],
+  "variant": "现象",
+  "createdAt": "2026-08-06T07:56:52.793Z",
+  "updatedAt": "2026-08-31T11:19:32.929Z"
+}

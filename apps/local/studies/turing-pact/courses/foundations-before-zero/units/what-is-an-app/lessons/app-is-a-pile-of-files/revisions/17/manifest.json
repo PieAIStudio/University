@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "id": "app-is-a-pile-of-files",
+  "title": "屏幕上的按钮，代码里能找到对应的哪几行？",
+  "courseId": "foundations-before-zero",
+  "unitId": "what-is-an-app",
+  "exerciseIds": [
+    "doctype-first-line"
+  ],
+  "cardIds": [
+    "entry-file-name",
+    "title-tag-meaning"
+  ],
+  "contentRevision": 17,
+  "contentHash": "sha256:199fe385a50d6df5366689304e02d237b2b070816e68e5f2d246b461890dca45",
+  "status": "active",
+  "evidence": [
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "index.html",
+      "lineStart": 1,
+      "lineEnd": 2,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "file:index.html"
+      ],
+      "note": "HTML 文档声明与 html 根标签。"
+    },
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "index.html",
+      "lineStart": 18,
+      "lineEnd": 18,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "file:index.html"
+      ],
+      "note": "页面 title 为 Turing Pact。"
+    },
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "index.html",
+      "lineStart": 29,
+      "lineEnd": 31,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "file:index.html"
+      ],
+      "note": "body 内 root 容器与 main.tsx 脚本入口。"
+    },
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "src/pages/DailyPuzzlePage.tsx",
+      "lineStart": 322,
+      "lineEnd": 379,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "file:src/pages/DailyPuzzlePage.tsx",
+        "function:src/pages/DailyPuzzlePage.tsx:DailyPuzzlePage"
+      ],
+      "note": "Daily 页面外壳、顶栏与任务提示区。"
+    },
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "src/pages/DailyPuzzlePage.tsx",
+      "lineStart": 396,
+      "lineEnd": 499,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "file:src/pages/DailyPuzzlePage.tsx",
+        "function:src/pages/DailyPuzzlePage.tsx:DailyPuzzlePage"
+      ],
+      "note": "对话 transcript、候选人按钮与选择网格。"
+    },
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "src/pages/DailyPuzzlePage.tsx",
+      "lineStart": 544,
+      "lineEnd": 581,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "file:src/pages/DailyPuzzlePage.tsx",
+        "function:src/pages/DailyPuzzlePage.tsx:DailyPuzzlePage"
+      ],
+      "note": "结果状态面板由同一页面数据渲染。"
+    }
+  ],
+  "sections": [
+    {
+      "id": "result-view",
+      "title": "先看屏幕上那一个按钮，再看文件里那一大段"
+    },
+    {
+      "id": "phenomenon",
+      "title": "接下来，我们从一个更小的例子开始"
+    },
+    {
+      "id": "guess",
+      "title": "先猜一下"
+    },
+    {
+      "id": "answer",
+      "title": "答案"
+    },
+    {
+      "id": "why",
+      "title": "为什么那一个按钮不是整段代码？"
+    },
+    {
+      "id": "revisit",
+      "title": "再想想"
+    },
+    {
+      "id": "self-check",
+      "title": "自检"
+    },
+    {
+      "id": "one-line",
+      "title": "一句话"
+    }
+  ],
+  "assets": [
+    {
+      "id": "turing-pact-daily-result",
+      "kind": "real-screenshot",
+      "path": "assets/turing-pact-daily-result.png",
+      "sha256": "sha256:a98a3fd17d13b33c59bb5365c662237a560f1cbf4ee2ce3ac983f9ea08cdbed4",
+      "mime": "image/png",
+      "bytes": 1880168,
+      "width": 2880,
+      "height": 1800,
+      "alt": "Turing Pact Daily result screen showing the transcript, the selected suspect, and the revealed answer.",
+      "caption": "真实截图：每天一题的结果页——对话、你选的人和答案留在同一屏。",
+      "source": {
+        "license": "Project-local captured evidence; no remote asset",
+        "attribution": "Turing Pact fixed local Git snapshot"
+      },
+      "capture": {
+        "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+        "route": "/daily",
+        "state": "English locale; first suspect selected; result panel revealed; forensic readout visible; case scroll reset to top.",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "locale": "en-US",
+        "captureRecipe": "Copy of the detached git-3b43f0a645e4 checkout served by Vite on loopback; agent-browser viewport 1440x900 with deviceScaleFactor 2 (PNG is 2880x1800), English locale; open /daily, click the first .tp-daily-choice, scroll .tp-daily-case to top, then screenshot. The daily puzzle rotates by date, so no caption names a specific alias.",
+        "capturedAt": "2026-08-31T11:44:06.963Z"
+      }
+    },
+    {
+      "id": "turing-pact-daily-result-annotated-crop",
+      "kind": "real-screenshot",
+      "path": "assets/turing-pact-daily-result-annotated-crop.png",
+      "sha256": "sha256:b23aceed249025ab75031160b650122864ba8b0959967468c4a2145df2742672",
+      "mime": "image/png",
+      "bytes": 1898309,
+      "width": 2880,
+      "height": 1800,
+      "alt": "Turing Pact Daily result screen with three measured callouts: the transcript, the verdict panel, and the suspect buttons.",
+      "caption": "同一张截图加上标注：对话区、结果状态和候选人按钮分别落在哪。",
+      "source": {
+        "license": "Project-local captured evidence; no remote asset",
+        "attribution": "Derived locally from turing-pact-daily-result using measured getBoundingClientRect boxes"
+      },
+      "capture": {
+        "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+        "route": "/daily",
+        "state": "English locale; first suspect selected; result panel revealed; forensic readout visible; case scroll reset to top.",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "locale": "en-US",
+        "captureRecipe": "Copy of the detached git-3b43f0a645e4 checkout served by Vite on loopback; agent-browser viewport 1440x900 with deviceScaleFactor 2 (PNG is 2880x1800), English locale; open /daily, click the first .tp-daily-choice, scroll .tp-daily-case to top, then screenshot. The daily puzzle rotates by date, so no caption names a specific alias. The three red callouts are DOM overlays positioned from getBoundingClientRect of .tp-daily-transcript, .tp-daily-suspects, and .tp-daily-choice-grid; they were generated locally rather than drawn by eye.",
+        "capturedAt": "2026-08-31T11:44:06.963Z"
+      }
+    },
+    {
+      "id": "turing-pact-daily-button-focus",
+      "kind": "real-screenshot",
+      "path": "assets/turing-pact-daily-button-focus.png",
+      "sha256": "sha256:1130db92e323432a34ce446f53b1218456ab5e408ed4b3cc34cbe56240e1c19d",
+      "mime": "image/png",
+      "bytes": 10458,
+      "width": 786,
+      "height": 166,
+      "alt": "Turing Pact 每日题结果页中被选中的一个候选人按钮放大图。",
+      "caption": "放大看一个候选人按钮：屏幕上的按钮对应代码生成的界面元素。",
+      "source": {
+        "license": "Project-local derived evidence; no remote asset",
+        "attribution": "Derived locally from the fixed Turing Pact screenshot"
+      },
+      "capture": {
+        "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+        "route": "/daily",
+        "state": "English locale; first suspect selected; selected candidate button captured as an element crop.",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "locale": "en-US",
+        "captureRecipe": "Copy of the detached git-3b43f0a645e4 checkout served by Vite on loopback; agent-browser viewport 1440x900 with deviceScaleFactor 2 (PNG is 2880x1800), English locale; open /daily, click the first .tp-daily-choice, scroll .tp-daily-case to top, then screenshot. The daily puzzle rotates by date, so no caption names a specific alias. After the page capture, use agent-browser's selector screenshot for .tp-daily-choice[data-selected='true']; no pixels were synthesized.",
+        "capturedAt": "2026-08-31T11:44:06.963Z"
+      }
+    }
+  ],
+  "variant": "现象",
+  "createdAt": "2026-08-06T07:56:52.793Z",
+  "updatedAt": "2026-08-31T11:45:01.221Z"
+}

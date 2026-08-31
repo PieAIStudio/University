@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "cap-webdir",
+  "kind": "basic",
+  "courseId": "foundations-before-zero",
+  "unitId": "what-is-an-app",
+  "lessonId": "same-product-many-shells",
+  "front": "手机壳去哪个目录取打包好的网页？",
+  "back": "`dist`（webDir）。",
+  "contentRevision": 6,
+  "contentHash": "sha256:4f56ba359d08c853d7440905a75f7a315fc726938798b22cbedb4816af7fefeb",
+  "status": "active",
+  "tags": [],
+  "evidence": [
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "capacitor.config.ts",
+      "lineStart": 8,
+      "lineEnd": 11,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "file:capacitor.config.ts"
+      ],
+      "note": "appId、appName、webDir 配置。"
+    }
+  ]
+}
