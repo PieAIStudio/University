@@ -82,16 +82,54 @@
   every control in the DOM and on screen.
 */
 @media (max-width: 640px) {
+  .lesson-toolbar {
+    gap: 8px 10px;
+    padding: 8px 12px;
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-inline-start: max(12px, var(--safe-area-inline-start));
+    padding-inline-end: max(12px, var(--safe-area-inline-end));
+  }
+
+  /*
+    The group label is already the segmented control's aria-label. On a
+    375px row it is four characters hanging in the gap between the
+    language toggle and the options, which reads as a broken desktop
+    toolbar rather than a phone one.
+  */
+  .lesson-toolbar__label {
+    display: none;
+  }
+
   .lesson-toolbar__tools {
     flex: 1 1 100%;
     width: 100%;
+    flex-wrap: nowrap;
     justify-content: flex-start;
-    row-gap: 8px;
+    gap: 6px 8px;
+    min-width: 0;
+  }
+
+  .lesson-toolbar__tools .game-ui-toggle {
+    flex: none;
+    gap: 8px;
+    padding-inline: 10px 8px;
+    font-size: 0.82rem;
+  }
+
+  .lesson-toolbar__tools .game-ui-segmented {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .lesson-toolbar__tools .game-ui-segmented-option {
+    padding-inline: 8px;
+    font-size: 0.82rem;
   }
 
   .lesson-toolbar__tools .sound-toggle {
     min-width: 44px;
     min-height: 44px;
     padding: 0;
+    flex: none;
   }
 }
