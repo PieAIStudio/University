@@ -48,10 +48,13 @@ describe("placePlanetClusters", () => {
     const inputs = realStudyInputs();
     const layout = placePlanetClusters(inputs);
 
-    expect(layout.clusters).toHaveLength(5);
-    expect(layout.clusters.map((cluster) => cluster.courseCount).sort((a, b) => a - b)).toEqual([
-      1, 5, 7, 9, 31,
-    ]);
+    // One landmass per study, carrying that study's own course count. Written
+    // against the inputs rather than a literal, so publishing or retiring a
+    // study changes the fixture, not this assertion.
+    expect(layout.clusters).toHaveLength(inputs.length);
+    expect(layout.clusters.map((cluster) => cluster.courseCount).sort((a, b) => a - b)).toEqual(
+      inputs.map((study) => study.courseCount).sort((a, b) => a - b),
+    );
     expect(layout.clusters.reduce((sum, cluster) => sum + cluster.cellCount, 0)).toBe(
       inputs.reduce((sum, study) => sum + study.cellCount, 0),
     );

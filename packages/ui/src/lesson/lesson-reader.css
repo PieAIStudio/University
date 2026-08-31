@@ -404,13 +404,6 @@
   line-height: 1.65;
 }
 
-.recap-prompt__voice-note {
-  margin: 18px 0 0;
-  color: var(--game-ui-text-muted, #9aa6bb);
-  font-size: 0.82rem;
-  line-height: 1.55;
-}
-
 .lesson-completion {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

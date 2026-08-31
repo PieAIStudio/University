@@ -8,6 +8,7 @@ import { CONCEPT_HEADS, type ConceptHead } from "@pieai/university-core";
 
 import { LoadingTrivia } from "./LoadingTrivia.js";
 import { pickLoadingConcept } from "./pick-loading-concept.js";
+import { resetLoadingVisitForTests } from "./loading-visit.js";
 import { MAP_COVER_GIVE_UP_MS, MAP_COVER_REOPEN_MS, useMapCover } from "./use-map-cover.js";
 
 const SAMPLE: ConceptHead = {
@@ -24,6 +25,8 @@ let root: Root;
 
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+  resetLoadingVisitForTests();
+  window.localStorage.clear();
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -33,6 +36,7 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount());
   container.remove();
+  resetLoadingVisitForTests();
   vi.useRealTimers();
 });
 
@@ -73,6 +77,35 @@ describe("LoadingTrivia", () => {
       root.render(<LoadingTrivia concept={null} />);
     });
     expect(container.textContent).toContain("地图正在打开");
+    expect(container.textContent).not.toContain("前端");
+  });
+
+  it("on a first visit, says what this is instead of a random concept", async () => {
+    await act(async () => {
+      root.render(<LoadingTrivia visit="first" />);
+    });
+    expect(container.textContent).toContain("地图马上铺开");
+    expect(container.textContent).toContain("对着真实项目学");
+    expect(container.textContent).toContain("每座岛是一门课。点岛进入，读完再练。");
+    expect(container.textContent).not.toContain("地图铺开时，看一条概念");
+    expect(container.textContent).not.toContain(SAMPLE.zh);
+    expect(container.textContent).not.toContain(SAMPLE.en);
+  });
+
+  it("on a returning visit, shows a catalogue concept", async () => {
+    await act(async () => {
+      root.render(<LoadingTrivia visit="returning" concept={SAMPLE} />);
+    });
+    expect(container.textContent).toContain("地图铺开时，看一条概念");
+    expect(container.textContent).toContain("前端");
+    expect(container.textContent).not.toContain("对着真实项目学");
+  });
+
+  it("treats an unreadable store as a first visit", async () => {
+    await act(async () => {
+      root.render(<LoadingTrivia storage={null} />);
+    });
+    expect(container.textContent).toContain("对着真实项目学");
     expect(container.textContent).not.toContain("前端");
   });
 });

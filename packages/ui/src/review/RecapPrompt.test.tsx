@@ -65,8 +65,11 @@ describe("RecapPrompt", () => {
       "在这里写你的复述……",
     );
     expect(container.textContent).toContain("保存为复习卡");
-    expect(container.textContent).toContain("语音输入：还在设计");
+    expect(container.textContent).not.toContain("还在设计");
+    expect(container.textContent).not.toContain("即将推出");
+    expect(container.textContent).not.toContain("敬请期待");
     expect(container.querySelector("button[aria-label*='语音']")).toBeNull();
+    expect(container.querySelector(".recap-prompt__voice-note")).toBeNull();
     expect(progress.recapCard(LOCATOR)).toBeNull();
   });
 

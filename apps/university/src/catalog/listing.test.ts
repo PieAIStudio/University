@@ -45,11 +45,12 @@ describe("the 2D directory against the library the map uses", () => {
     /*
       The literal is the point of this line: the two sides above could agree
       with each other while both silently dropping a study, and this is what
-      would catch that. It moves when the shelf really moves — 53 is 52
+      would catch that. It moves when the shelf really moves — 44 is 43
       repository courses plus 通用课's first, which cites MDN rather than a
-      commit and is the first course here that studies no codebase.
+      commit and is the first course here that studies no codebase. It was 53
+      until the UniversityLocal study was retired on 2026-08-31.
     */
-    expect(fromLibrary).toBe(53);
+    expect(fromLibrary).toBe(44);
   });
 
   it("keeps each course's units and lessons identical to the package the map loads", () => {
@@ -79,9 +80,9 @@ describe("the 2D directory against the library the map uses", () => {
       }
     }
 
-    // 146 + 4 units and 560 + 19 lessons: 通用课's first course.
-    expect(listing.totals.units).toBe(150);
-    expect(listing.totals.lessons).toBe(579);
+    // 124 + 4 units and 476 + 19 lessons: 通用课's first course.
+    expect(listing.totals.units).toBe(128);
+    expect(listing.totals.lessons).toBe(495);
   });
 
   it("folds the generated shelf into the same directory read model", () => {

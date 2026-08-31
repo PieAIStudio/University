@@ -139,3 +139,32 @@ describe("PlansScreen pricing claims", () => {
     expect(lede).not.toMatch(/[，。：] /);
   });
 });
+
+describe("free plan price line", () => {
+  it("does not print the plan's own name a second time as its price", async () => {
+    // 「免费」 as the heading and 「免费」 again at headline size made the tier
+    // nobody needs persuading into the loudest thing on the pricing page.
+    const identity = createMemoryIdentityPort();
+    const payment = createPaymentPort({
+      identity,
+      transport: {
+        readBalance: async () => ({
+          availablePowerUnits: "0",
+          balancePowerUnits: "0",
+          reservedPowerUnits: "0",
+        }),
+        createOrder: vi.fn(),
+      },
+    });
+    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+
+    const cards = container.querySelectorAll(".plan-card");
+    expect(cards.length).toBeGreaterThan(1);
+    const free = cards[0];
+    expect(free?.querySelector(".plan-card__name")?.textContent).toBe("免费");
+    expect(free?.querySelector(".plan-card__price")).toBeNull();
+
+    // and the paid card still shows a number, so this did not delete both
+    expect(cards[1]?.querySelector(".plan-card__price")?.textContent ?? "").toMatch(/\d/u);
+  });
+});

@@ -1,48 +1,82 @@
 import { translate } from "../i18n/index.js";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GamePanel } from "@pieai/swimmer-ui-kit";
 import type { ConceptHead } from "@pieai/university-core";
 
 import { pickLoadingConcept } from "./pick-loading-concept.js";
+import {
+  markLoadingIntroSeen,
+  readLoadingVisit,
+  type LoadingStorage,
+  type LoadingVisit,
+} from "./loading-visit.js";
 
 export { pickLoadingConcept } from "./pick-loading-concept.js";
 export { useMapCover, MAP_COVER_GIVE_UP_MS, MAP_COVER_REOPEN_MS } from "./use-map-cover.js";
 
 /**
- * Screen 09: a real concept while the canvas is still empty.
+ * Screen 09: something worth reading while the canvas is still empty.
  *
- * Readable text is DOM, never geometry. This overlay sits over the canvas,
- * not inside it; the kit models streaming in are what take the time, and a
- * skeleton of grey bars would spend that time saying nothing. One of the 281
- * taglines is already a sentence a person can read.
+ * This is a loading overlay, not a splash screen. Callers mount it only while
+ * the scene is busy and unmount the instant it is ready — there is no minimum
+ * display time, and this component does not delay that unmount. Waiting can
+ * be part of the product; forcing anyone to watch two extra seconds cannot.
  *
- * Callers mount this only while it should be visible, and unmount it when
- * the scene is ready. Hiding with opacity leaves it in the hit-test tree.
+ * First visit: say what this is and what happens next. Later visits: one
+ * catalogue tagline. Readable text is DOM, never geometry.
  */
 export function LoadingTrivia({
   concept,
+  visit,
+  storage,
 }: {
   readonly concept?: ConceptHead | null;
+  readonly visit?: LoadingVisit;
+  readonly storage?: LoadingStorage | null;
 } = {}) {
-  const [head] = useState(() => (concept === undefined ? pickLoadingConcept() : concept));
+  const [resolvedVisit] = useState(() => visit ?? readLoadingVisit(storage));
+  const showIntro = resolvedVisit === "first" && concept === undefined;
+  const [head] = useState(() =>
+    showIntro ? null : concept === undefined ? pickLoadingConcept() : concept,
+  );
+
+  useEffect(() => {
+    if (!showIntro || visit !== undefined) return;
+    markLoadingIntroSeen(storage);
+  }, [showIntro, visit, storage]);
 
   return (
     <div className="loading-trivia" role="status" aria-live="polite" aria-busy="true">
       <div className="loading-trivia__card">
-        <p className="loading-trivia__kicker">
-          {translate("ui.loading.loadingTrivia.copy.地图铺开时-看一条概念")}
-        </p>
-        {head ? (
-          <GamePanel title={head.zh}>
-            <p className="loading-trivia__tagline">{head.tagline}</p>
-            {head.en ? <p className="loading-trivia__en">{head.en}</p> : null}
-          </GamePanel>
-        ) : (
-          <GamePanel title={translate("ui.loading.loadingTrivia.copy.地图正在打开")}>
-            <p className="loading-trivia__tagline">
-              {translate("ui.loading.loadingTrivia.copy.岛屿马上就到")}
+        {showIntro ? (
+          <>
+            <p className="loading-trivia__kicker">
+              {translate("ui.loading.loadingTrivia.copy.地图马上铺开")}
             </p>
-          </GamePanel>
+            <GamePanel title={translate("ui.loading.loadingTrivia.copy.对着真实项目学")}>
+              <p className="loading-trivia__tagline">
+                {translate("ui.loading.loadingTrivia.copy.每座岛是一门课-点岛进入-读完再练")}
+              </p>
+            </GamePanel>
+          </>
+        ) : (
+          <>
+            <p className="loading-trivia__kicker">
+              {translate("ui.loading.loadingTrivia.copy.地图铺开时-看一条概念")}
+            </p>
+            {head ? (
+              <GamePanel title={head.zh}>
+                <p className="loading-trivia__tagline">{head.tagline}</p>
+                {head.en ? <p className="loading-trivia__en">{head.en}</p> : null}
+              </GamePanel>
+            ) : (
+              <GamePanel title={translate("ui.loading.loadingTrivia.copy.地图正在打开")}>
+                <p className="loading-trivia__tagline">
+                  {translate("ui.loading.loadingTrivia.copy.岛屿马上就到")}
+                </p>
+              </GamePanel>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -115,12 +115,6 @@ export function RecapPrompt({
           </GameButton>
         </>
       )}
-      <p className="recap-prompt__voice-note">
-        {translate("ui.review.recapPrompt.copy.语音输入-还在设计")}
-        <br />
-
-        {translate("ui.review.recapPrompt.copy.不会因为你打开了-听发音-就自动启用")}
-      </p>
       {error ? (
         <p className="inline-error" role="alert">
           {error}

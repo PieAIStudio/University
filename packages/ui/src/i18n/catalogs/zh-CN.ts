@@ -636,14 +636,14 @@ export const messages = {
   "ui.lesson.lessonReader.copy.打开课文-滚动页面或答对练习都不会自动完成-这个确认只针对当前固定版本":
     "打开课文、滚动页面或答对练习都不会自动完成。这个确认只针对当前固定版本。",
   "ui.lesson.lessonReader.copy.暂时无法记录阅读确认": "暂时无法记录阅读确认",
-  "ui.lesson.lessonReader.copy.标准讲解": "标准讲解",
+  "ui.lesson.lessonReader.copy.标准讲解": "标准",
   "ui.lesson.lessonReader.copy.标记没有更新": "标记没有更新",
   "ui.lesson.lessonReader.copy.正在记录": "正在记录…",
   "ui.lesson.lessonReader.copy.版": "版",
   "ui.lesson.lessonReader.copy.第": "第",
   "ui.lesson.lessonReader.copy.讲解层级": "讲解层级",
   "ui.lesson.lessonReader.copy.词义状态没有保存": "词义状态没有保存",
-  "ui.lesson.lessonReader.copy.详细讲解": "详细讲解",
+  "ui.lesson.lessonReader.copy.详细讲解": "详细",
   "ui.lesson.lessonReader.copy.读到这里-确认你完成了这次课文更新":
     "读到这里，确认你完成了这次课文更新",
   "ui.lesson.lessonReader.copy.这条标记没有保存": "这条标记没有保存",
@@ -690,7 +690,11 @@ export const messages = {
   "ui.lesson.selectionMenu.copy.高亮": "高亮",
   "ui.loading.loadingTrivia.copy.地图正在打开": "地图正在打开",
   "ui.loading.loadingTrivia.copy.地图铺开时-看一条概念": "地图铺开时，看一条概念",
+  "ui.loading.loadingTrivia.copy.地图马上铺开": "地图马上铺开",
+  "ui.loading.loadingTrivia.copy.对着真实项目学": "对着真实项目学",
   "ui.loading.loadingTrivia.copy.岛屿马上就到": "岛屿马上就到。",
+  "ui.loading.loadingTrivia.copy.每座岛是一门课-点岛进入-读完再练":
+    "每座岛是一门课。点岛进入，读完再练。",
   "ui.markdown.markdownContent.copy.value0年value1月value2日":
     "{{value0}}年{{value1}}月{{value2}}日",
   "ui.markdown.markdownContent.copy.value0月value1日": "{{value0}}月{{value1}}日",
@@ -1199,8 +1203,6 @@ export const messages = {
   "ui.review.choiceBlock.copy.继续下一题": "继续下一题 →",
   "ui.review.choiceBlock.copy.还不对": "还不对",
   "ui.review.choiceBlock.copy.选项": "选项",
-  "ui.review.recapPrompt.copy.不会因为你打开了-听发音-就自动启用":
-    "（不会因为你打开了「听发音」就自动启用。）",
   "ui.review.recapPrompt.copy.你的复述": "你的复述",
   "ui.review.recapPrompt.copy.保存为复习卡": "保存为复习卡",
   "ui.review.recapPrompt.copy.到期时它会回来-请再讲一遍": "到期时它会回来，请再讲一遍。",
@@ -1213,7 +1215,6 @@ export const messages = {
   "ui.review.recapPrompt.copy.本单元能力句": "本单元能力句",
   "ui.review.recapPrompt.copy.正在保存": "正在保存…",
   "ui.review.recapPrompt.copy.讲一遍": "讲一遍",
-  "ui.review.recapPrompt.copy.语音输入-还在设计": "语音输入：还在设计",
   "ui.review.recapPrompt.copy.请用自己的话-讲给一个完全不知道这件事的人听":
     "请用自己的话，讲给一个完全不知道这件事的人听。",
   "ui.review.recapPrompt.copy.课后复习": "课后复习",
