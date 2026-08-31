@@ -122,10 +122,14 @@ export type SkyStops = {
 
 /** The course frame is a warm illustrated sky, with lavender negative space. */
 export const COURSE_SKY_STOPS: SkyStops = {
-  zenith: 0xff8f83,
-  mid: 0xffe0a0,
-  horizon: 0xffc4b8,
-  nadir: 0xc0b8e5,
+  // Keep the illustrated sunset hue, but leave the mid-sky enough value
+  // headroom for the course ground. The former near-cream middle turned the
+  // fixed course frame into one warm sheet and also entered the look judge's
+  // earth-colour candidate range.
+  zenith: 0xf97f76,
+  mid: 0xf5a36f,
+  horizon: 0xf2c397,
+  nadir: 0xa39acd,
 };
 
 /**

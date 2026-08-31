@@ -21,6 +21,15 @@ export const GRID_SHARED_SOIL = {
   road: 0xf0e5c7,
 } as const;
 
+/**
+ * Course terrain is read at close range, where the raw top swatch receives
+ * both the warm key and the cool rim. Keep the finite palette's hue and
+ * saturation identity, but give the course projection a little more painted
+ * value headroom. The remote projection keeps the authored swatch so a small
+ * catalogue island does not inherit the close-up exposure.
+ */
+export const GRID_COURSE_TOP_LINEAR_SCALE = 0.82;
+
 function hueToRgb(p: number, q: number, t: number): number {
   let value = t;
   if (value < 0) value += 1;

@@ -6,6 +6,7 @@ import { hash } from "../island/random.js";
 import { islandLookFrozen } from "../island/island-surface-style.js";
 import type { GridCell, HexMap } from "./course-grid.js";
 import { hexToWorld } from "./hex.js";
+import { GRID_COURSE_TOP_LINEAR_SCALE } from "./grid-palette.js";
 
 interface HexFieldProps {
   readonly map: HexMap;
@@ -131,6 +132,9 @@ export function cellTopColour(map: HexMap, cell: GridCell): THREE.Color {
   const colour = new THREE.Color(
     map.projection !== "world" && cell.kind === "route" ? map.palette.road : map.palette.top,
   );
+  if (map.projection !== "world" && cell.kind !== "route") {
+    colour.multiplyScalar(GRID_COURSE_TOP_LINEAR_SCALE);
+  }
   if (cell.kind !== "route") {
     // Unit territories and a tiny per-cell value shift stay inside the same
     // meadow swatch. The range is deliberately small: a 0.72–1.12 spread
@@ -195,10 +199,11 @@ function HexBedField({
     if (!target) return;
     cells.forEach((cell, index) => {
       target.setMatrixAt(index, bedMatrix(cell, map, matrix));
-      target.setColorAt(
-        index,
-        new THREE.Color(cell.kind === "route" ? map.palette.road : map.palette.top),
-      );
+      const colour = new THREE.Color(cell.kind === "route" ? map.palette.road : map.palette.top);
+      if (map.projection !== "world" && cell.kind !== "route") {
+        colour.multiplyScalar(GRID_COURSE_TOP_LINEAR_SCALE);
+      }
+      target.setColorAt(index, colour);
     });
     target.instanceMatrix.needsUpdate = true;
     if (target.instanceColor) target.instanceColor.needsUpdate = true;
