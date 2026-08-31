@@ -292,6 +292,20 @@
       "foundOn": "2026-08-31",
       "guardedBy": "e2e/M.experience.spec.ts X4 phone · 课文",
       "note": "这条一直存在，只是之前 X4 在会员页就抛错了，从来没走到课文。给 .lesson-toolbar__tools .game-ui-segmented-option 加 min-width: 44px，和旁边 .sound-toggle 用的是同一条下限。"
+    },
+    {
+      "id": "5e7ce69ff8a9",
+      "screen": "/plans",
+      "element": "提意见浮钮",
+      "category": "overlap",
+      "viewport": "phone",
+      "summary": "固定在左下角的「提意见」浮钮压在购买按钮上，「先登录」四个字被盖掉一半",
+      "severity": "friction",
+      "state": "fixed",
+      "foundBy": "线上 0.2.2 截图复核",
+      "foundOn": "2026-08-31",
+      "guardedBy": "e2e/M.experience.spec.ts X4 phone（TOUCH_TARGET_EXEMPTIONS 现已清空，任何重新贴近都会变红）",
+      "note": "五点命中测试是通过的——浮钮只盖住按钮左端，中心仍然是按钮。探针说没问题，人一眼就看出两个控件叠在一起：命中测试量的是可达性，不是可读性。手机上把浮钮移到右下角，那是唯一没有主控件的角落。同一处改动也让 /practice 的两条已知豁免全部退休。"
     }
   ]
 }

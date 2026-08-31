@@ -344,26 +344,23 @@ export async function auditAxeBaseline(
   return { current, stale };
 }
 
+/*
+  Empty, and it should stay that way as long as it can. It held two entries on
+  2026-08-31 — /practice's primary CTA at 40px tall, and the floating 提意见
+  pill 38.5px from its centre. Both were retired by fixes rather than by
+  argument: `min-height: 44px` on `.liquid-cta__button`, and moving the pill to
+  the bottom-right on phones, away from the corner every primary action uses.
+
+  An exemption that outlives its defect is a hole in the probe, so a row here
+  has to be removed the moment its fix lands, not left as documentation.
+*/
 export const TOUCH_TARGET_EXEMPTIONS: readonly {
   readonly id: string;
   readonly routeId: string;
   readonly selector: string;
   readonly reason: string;
-}[] = [
-  {
-    id: "practice-primary-near-feedback",
-    routeId: "practice",
-    selector:
-      "button.game-ui-button.game-ui-button--primary.game-ui-button--static.liquid-cta__button",
-    reason: "当前 /practice 手机主 CTA 高 40px，且被固定提意见浮钮拉到 38.5px 中心距。",
-  },
-  {
-    id: "practice-feedback-near-primary",
-    routeId: "practice",
-    selector: "button.feedback-note__open.feedback-note__open--float",
-    reason: "当前 /practice 的提意见浮钮高 34px，并与主 CTA 保持 38.5px 中心距。",
-  },
-];
+}[] = [];
+
 
 export async function openExperienceRoute(
   page: Page,

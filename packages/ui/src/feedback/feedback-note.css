@@ -35,6 +35,23 @@
 }
 
 /*
+  Phone: the other corner. The pill is `position: fixed` at the bottom-left,
+  and every primary action in this product is left-aligned inside its card —
+  so on 375px it landed on top of the membership page's purchase button, its
+  label showing through 「先登录」. Hit-testing said the button was reachable,
+  because the pill only covers its left end; a person just saw two controls
+  stacked. The tab bar owns the strip below, and nothing else claims the
+  bottom-right, so that is where a control which must always be available but
+  never wanted goes.
+*/
+@media (max-width: 767px) {
+  .feedback-note__open--float {
+    inset-inline-start: auto;
+    inset-inline-end: 12px;
+  }
+}
+
+/*
   Wide layout: the rail has the control. The float would be a second
   「提意见」 in the accessibility tree, and it is the thing the owner called
   too special. `is-fallback` is the lesson route with no rail — there the
