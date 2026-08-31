@@ -138,9 +138,12 @@ describe("world grid projection", () => {
     );
   });
 
-  it("projects all 53 real courses into one deterministic, earthy catalogue", () => {
+  it("projects every real course into one deterministic, earthy catalogue", () => {
     const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
-    expect(world.placements).toHaveLength(53);
+    // Against the catalogue's own size, not a number written down once: the
+    // thing worth catching is a course that gets dropped, and a literal only
+    // catches that until someone publishes or retires one.
+    expect(world.placements).toHaveLength(catalogueNodes.length);
 
     const topColours = new Set(world.placements.map((entry) => entry.grid.palette.top));
     expect(topColours.size).toBeGreaterThan(1);
@@ -215,7 +218,7 @@ describe("world grid projection", () => {
     );
   });
 
-  it("keeps the 53 silhouettes from fusing and from lining up as a grid", () => {
+  it("keeps the silhouettes from fusing and from lining up as a grid", () => {
     const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
     const origin = world.placements[0]!;
     expect(Math.hypot(origin.position.x, origin.position.z)).toBeLessThan(0.001);
@@ -252,7 +255,7 @@ describe("world grid projection", () => {
       ),
     ).toBe(true);
     const totalProps = world.placements.reduce((sum, entry) => sum + entry.grid.props.length, 0);
-    expect(totalProps).toBeGreaterThanOrEqual(53);
+    expect(totalProps).toBeGreaterThanOrEqual(catalogueNodes.length);
     expect(totalProps).toBeLessThan(160);
     expect(
       world.placements.every(
@@ -263,12 +266,12 @@ describe("world grid projection", () => {
     ).toBe(true);
   });
 
-  it("keeps the actual 53-island underside instanced and under its budget", () => {
+  it("keeps the actual island underside instanced and under its budget", () => {
     const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
     const cellCounts = world.placements.map((entry) => entry.grid.cells.length);
     const triangles = worldUndersideTriangleCountForIslands(cellCounts);
 
-    expect(world.placements).toHaveLength(53);
+    expect(world.placements).toHaveLength(catalogueNodes.length);
     expect(
       cellCounts.every((cellCount) => {
         const spikes = worldUndersideSpikeCountForCells(cellCount);

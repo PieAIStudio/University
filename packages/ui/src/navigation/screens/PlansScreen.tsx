@@ -77,14 +77,16 @@ function configuredYearlySaving(
   };
 }
 
+/**
+ * The price line, or nothing when the name already said it.
+ *
+ * The free plan is called 「免费」 and its price was also 「免费」, printed at
+ * the size of a headline. Two identical words stacked, and the loudest number
+ * on a pricing page belonging to the tier nobody has to be persuaded into.
+ * The free card does not need selling; the paid one does.
+ */
 function priceLabel(pricing: PlanPricing, yearly: boolean) {
-  if (pricing.kind === "free") {
-    return (
-      <span className="plan-card__amount">
-        {translate("ui.navigation.screens.plansScreen.copy.免费")}
-      </span>
-    );
-  }
+  if (pricing.kind === "free") return null;
 
   const price = configuredPrice(pricing, yearly);
   if (price === null) {
@@ -141,7 +143,10 @@ function PlanCard({
           <h2 className="plan-card__name">{plan.name}</h2>
         </div>
 
-        <p className="plan-card__price">{priceLabel(plan.pricing, yearly)}</p>
+        {(() => {
+          const price = priceLabel(plan.pricing, yearly);
+          return price ? <p className="plan-card__price">{price}</p> : null;
+        })()}
 
         {saving ? (
           <p className="plan-card__saving">

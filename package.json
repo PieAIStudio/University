@@ -34,7 +34,8 @@
     "start": "node scripts/start.mjs",
     "test": "pnpm -r test && node scripts/check-raw-colours.mjs --self-test && node scripts/check-review-card-registry.mjs --self-test && node scripts/check-content-revisions.mjs --self-test",
     "typecheck": "pnpm -r typecheck",
-    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:generated-format && pnpm test && pnpm boundaries && pnpm check:canvas && pnpm check:review-cards && pnpm build && pnpm check:shelf && pnpm check:content-revisions && pnpm check:export-freshness && pnpm check:lesson-links && pnpm bundle && pnpm docs:check"
+    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:generated-format && pnpm test && pnpm boundaries && pnpm check:canvas && pnpm check:review-cards && pnpm check:experience && pnpm build && pnpm check:shelf && pnpm check:content-revisions && pnpm check:export-freshness && pnpm check:lesson-links && pnpm bundle && pnpm docs:check",
+    "check:experience": "node scripts/experience-ledger.mjs check"
   },
   "devDependencies": {
     "@pieai/doc-gov": "0.9.9",
