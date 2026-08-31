@@ -37,6 +37,7 @@
     "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:generated-format && pnpm test && pnpm boundaries && pnpm check:canvas && pnpm check:review-cards && pnpm build && pnpm check:shelf && pnpm check:content-revisions && pnpm check:export-freshness && pnpm check:lesson-links && pnpm bundle && pnpm docs:check"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@pieai/doc-gov": "0.9.9",
     "@pieai/pro-gov": "0.9.9",
     "@playwright/test": "^1.62.1",
