@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-31T06:35:08.343Z
+generated_at: 2026-08-31T12:13:06.331Z
 generator_version: doc-gov@0.9.9
-docs_count: 86
+docs_count: 88
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -151,6 +151,13 @@ docs:
     canonical: true
     last_reviewed: 2026-08-28
     pinned: true
+  - id: REF-ISLAND-ART-V1-RETIRED
+    path: docs/reference/_archive/island-art-reference-v1-natural/why-this-reference-is-retired.md
+    type: reference
+    status: superseded
+    canonical: false
+    last_reviewed: 2026-08-31
+    pinned: false
   - id: REF-DOCUMENTATION-MAP
     path: docs/reference/documentation-map.md
     type: reference
@@ -241,6 +248,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-08-27
+    pinned: false
+  - id: REF-ISLAND-ART-V2
+    path: docs/reference/island-art-reference-v2/island-art-reference.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-08-31
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-STUDY-PICKER-MUST-AGGREGATE-ONE-STUDY-INTO-ONE-SHARED-LANDMASS
     path: docs/reference/learnings/workflow-issues/a-study-picker-must-aggregate-one-study-into-one-shared-landmass.md
