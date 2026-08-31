@@ -65,6 +65,33 @@ function gitBuffer(gitDir, args) {
   });
 }
 
+/**
+ * The commit date a lesson is pinned to, read from the same mirror the snippets
+ * come from.
+ *
+ * The lesson header wants to say "pinned to the version of 22 July" rather than
+ * print forty hex characters at a reader who has never opened a terminal. That
+ * sentence needs a date, and the only honest source for it is the commit
+ * itself.
+ *
+ * Resolving it does a second job for free: a commit that has no date is a
+ * commit the mirror does not have. `--evidence baked` treats that as a failed
+ * build, because a lesson that names a version nothing can resolve is making a
+ * claim it cannot keep. Returning null is the signal; the caller decides
+ * whether that is fatal.
+ */
+export function commitDate(gitDir, sha) {
+  if (!gitDir || typeof sha !== "string" || !/^[0-9a-f]{7,40}$/u.test(sha)) return null;
+  try {
+    const iso = gitBuffer(gitDir, ["show", "-s", "--format=%cI", `${sha}^{commit}`])
+      .toString("utf8")
+      .trim();
+    return /^\d{4}-\d{2}-\d{2}/u.test(iso) ? iso.slice(0, 10) : null;
+  } catch {
+    return null;
+  }
+}
+
 function sourceLines(text) {
   if (text.length === 0) return [];
   const lines = text.split(/\r\n|\n|\r/);
@@ -110,7 +137,12 @@ export function inferSnippetLanguage(sourcePath) {
   );
 }
 
-export function windowCitedRange(lineCount, lineStart, lineEnd, context = SNIPPET_LIMITS.defaultContextLines) {
+export function windowCitedRange(
+  lineCount,
+  lineStart,
+  lineEnd,
+  context = SNIPPET_LIMITS.defaultContextLines,
+) {
   const hasRange = lineStart !== undefined && lineStart !== null;
   const highlightStartLine = hasRange ? lineStart : null;
   const highlightEndLine = hasRange ? (lineEnd ?? lineStart) : null;
@@ -184,14 +216,7 @@ function readCitedSnippet(gitDir, evidence) {
  * evidence item that baked. Items that cannot be read are left untouched so
  * the reader can still show the locator.
  */
-export function bakeLessonEvidence({
-  studiesRoot,
-  studyId,
-  courseId,
-  evidence,
-  contentRoot,
-  sha,
-}) {
+export function bakeLessonEvidence({ studiesRoot, studyId, courseId, evidence, contentRoot, sha }) {
   const stats = { baked: 0, skipped: 0, bytes: 0, files: 0 };
   const items = Array.isArray(evidence) ? evidence : [];
   if (items.length === 0) return stats;

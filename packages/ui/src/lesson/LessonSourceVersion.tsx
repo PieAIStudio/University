@@ -90,11 +90,32 @@ export function LessonSourceVersion({
     <div className="lesson-version" {...(unavailable ? { "data-unavailable": "" } : {})}>
       {checkout === null ? (
         <>
-          <span className="lesson-version__label">
-            {translate("ui.lesson.lessonSourceVersion.copy.这节课钉在")}
-            {dated ? ` ${dated} ` : ""}
-            {translate("ui.lesson.lessonSourceVersion.copy.的版本")}
-            {sourceCommit.slice(0, 8)}）
+          {/*
+            The date is the claim; the hash is the receipt behind it.
+
+            This line used to print eight hex characters at a reader whose
+            course description says "an adult with no programming experience who
+            has only ever used apps". It also read as broken Chinese whenever the
+            date was missing — 「这节课钉在的版本（3b402e06）」, pinned to the
+            version of nothing — and the date was missing every single time,
+            because no build had ever supplied one. Import resolves it now, and
+            refuses to ship a lesson pinned to a commit it cannot find.
+
+            The full hash stays reachable on hover and to a screen reader, and
+            the evidence dialog still prints it in full, so nobody who wants it
+            has lost it.
+          */}
+          <span
+            className="lesson-version__label"
+            {...(dated ? { title: translate("ui.lesson.lessonSourceVersion.copy.完整提交号-value0", { value0: sourceCommit }) } : {})}
+          >
+            {dated
+              ? translate("ui.lesson.lessonSourceVersion.copy.这节课钉在-value0-的版本", {
+                  value0: dated,
+                })
+              : translate("ui.lesson.lessonSourceVersion.copy.这节课钉在提交-value0", {
+                  value0: sourceCommit.slice(0, 8),
+                })}
           </span>
           {unavailable ? (
             <p className="lesson-version__status">
