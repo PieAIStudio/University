@@ -183,14 +183,7 @@ export const FIXED_MATERIAL = [
   },
   {
     "path": "packages/ui/src/evidence/evidence-inline-source.css",
-    "line": 84,
-    "column": 15,
-    "literal": "#0d1117",
-    "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
-  },
-  {
-    "path": "packages/ui/src/evidence/evidence-inline-source.css",
-    "line": 92,
+    "line": 93,
     "column": 15,
     "literal": "#0d1117",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
@@ -198,27 +191,34 @@ export const FIXED_MATERIAL = [
   {
     "path": "packages/ui/src/evidence/evidence-inline-source.css",
     "line": 101,
+    "column": 15,
+    "literal": "#0d1117",
+    "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
+  },
+  {
+    "path": "packages/ui/src/evidence/evidence-inline-source.css",
+    "line": 110,
     "column": 5,
     "literal": "rgb(225 228 232 / 8%)",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
   },
   {
     "path": "packages/ui/src/evidence/evidence-inline-source.css",
-    "line": 102,
+    "line": 111,
     "column": 5,
     "literal": "rgb(225 228 232 / 16%)",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
   },
   {
     "path": "packages/ui/src/evidence/evidence-inline-source.css",
-    "line": 103,
+    "line": 112,
     "column": 5,
     "literal": "rgb(225 228 232 / 8%)",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
   },
   {
     "path": "packages/ui/src/evidence/evidence-inline-source.css",
-    "line": 122,
+    "line": 131,
     "column": 10,
     "literal": "#f0d2a8",
     "reason": "这是 GitHub 风格的代码阅读面材料，必须保留固定代码对比度，不随 HUD 主题重映射。"
