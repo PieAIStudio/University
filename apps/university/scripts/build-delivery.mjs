@@ -198,6 +198,7 @@ function main() {
     run("pnpm", ["content"], environment);
     run("pnpm", ["--filter", "@pieai/university-app...", "build"], environment);
     run(process.execPath, ["scripts/check-authoring-excluded.mjs"], environment);
+    run(process.execPath, ["scripts/check-delivery-public-config.mjs"], environment);
 
     writeReleaseMetadata(DELIVERY_DIST, {
       version,
