@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-30T21:29:50.382Z
+generated_at: 2026-08-31T05:13:13.707Z
 generator_version: doc-gov@0.9.9
-docs_count: 84
+docs_count: 85
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -395,6 +395,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-28
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-MAP-CONTROL-HINTS-MUST-NAME-THE-POINTER-THAT-EXISTS
+    path: docs/reference/learnings/workflow-issues/map-control-hints-must-name-the-pointer-that-exists.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-31
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-MAPCONTROLS-TWO-TOUCH-PAN-IS-A-SILENT-NO-OP
     path: docs/reference/learnings/workflow-issues/mapcontrols-two-touch-pan-is-a-silent-no-op.md
