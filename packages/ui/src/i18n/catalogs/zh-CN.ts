@@ -315,6 +315,7 @@ export const messages = {
   "app.screens.conceptEntryHost.copy.概念图解": "← 概念图解",
   "app.screens.conceptEntryHost.copy.概念图解-o4yiqz": "概念图解",
   "app.screens.conceptEntryHost.copy.没有这一条": "没有这一条。",
+  "app.screens.lazy.copy.正在打开": "正在打开…",
   "app.screens.lessonScreen.copy.回到课程岛": "回到课程岛",
   "app.screens.lessonScreen.copy.无法读取课程": "无法读取课程",
   "app.screens.lessonScreen.copy.正在打开这节课": "正在打开这节课…",
@@ -691,10 +692,9 @@ export const messages = {
   "ui.loading.loadingTrivia.copy.地图正在打开": "地图正在打开",
   "ui.loading.loadingTrivia.copy.地图铺开时-看一条概念": "地图铺开时，看一条概念",
   "ui.loading.loadingTrivia.copy.地图马上铺开": "地图马上铺开",
-  "ui.loading.loadingTrivia.copy.对着真实项目学": "对着真实项目学",
   "ui.loading.loadingTrivia.copy.岛屿马上就到": "岛屿马上就到。",
-  "ui.loading.loadingTrivia.copy.每座岛是一门课-点岛进入-读完再练":
-    "每座岛是一门课。点岛进入，读完再练。",
+  "ui.loading.loadingTrivia.copy.每座岛是一门课-读完再练": "每座岛是一门课。读完再练。",
+  "ui.loading.loadingTrivia.copy.点一座岛-开始学": "点一座岛，开始学",
   "ui.recovery.recoveryState.copy.3D-地图还没有准备好-可以再试一次-也可以先直接开始今天的课":
     "3D 地图还没有准备好。可以再试一次，也可以先直接开始今天的课。",
   "ui.recovery.recoveryState.copy.地图刚刚失去连接-再试一次可以重新打开它-课程文字和练习不受影响":
@@ -931,7 +931,6 @@ export const messages = {
   "ui.navigation.screens.plansScreen.copy.正在查询": "正在查询…",
   "ui.navigation.screens.plansScreen.copy.正在检查": "正在检查…",
   "ui.navigation.screens.plansScreen.copy.比按月付省": "比按月付省",
-  "ui.navigation.screens.plansScreen.copy.登录后读取": "登录后读取",
   "ui.navigation.screens.plansScreen.copy.等待支付": "等待支付",
   "ui.navigation.screens.plansScreen.copy.继续付款": "继续付款",
   "ui.navigation.screens.plansScreen.copy.计费周期": "计费周期",
@@ -946,7 +945,6 @@ export const messages = {
   "ui.navigation.screens.plansScreen.copy.记录购买意向": "记录购买意向",
   "ui.navigation.screens.plansScreen.copy.购买请求暂时失败-请稍后再试":
     "购买请求暂时失败，请稍后再试。",
-  "ui.navigation.screens.plansScreen.copy.钱包余额-登录后读取": "钱包余额：登录后读取",
   "ui.navigation.screens.questsScreen.copy.不计分": "不计分",
   "ui.navigation.screens.questsScreen.copy.今天": "今天",
   "ui.navigation.screens.questsScreen.copy.今天到这儿就够了": "今天到这儿就够了",
@@ -1351,4 +1349,8 @@ export const messages = {
   "ui.view.lessonview.copy.课文已确认-练习待完成": "课文已确认 · 练习待完成",
   "ui.view.lessonview.copy.课文有新版-待阅读确认": "课文有新版 · 待阅读确认",
   "ui.view.lessonview.copy.进行中-value0": "进行中 · {{value0}}%",
+  "ui.world.mapControlsHint.copy.双指缩放": "双指缩放",
+  "ui.world.mapControlsHint.copy.拖动平移": "拖动平移",
+  "ui.world.mapControlsHint.copy.滚轮缩放": "滚轮缩放",
+  "ui.world.mapControlsHint.copy.点岛进入": "点岛进入",
 } as const;

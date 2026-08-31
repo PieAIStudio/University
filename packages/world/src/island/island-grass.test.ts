@@ -245,7 +245,7 @@ describe("Island grass plan", () => {
     expect(plan.placements.every((placement) => placement.width < 0.85)).toBe(true);
     expect(plan.placements.every((placement) => placement.height >= 0.42)).toBe(true);
     expect(plan.placements.every((placement) => placement.height < 0.65)).toBe(true);
-  }, 30000);
+  });
 
   it("keeps the donor blade budget below one quarter of the old clump cost", () => {
     const legacyGrassTriangles = 16_000 * 45;

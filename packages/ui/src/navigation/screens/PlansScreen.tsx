@@ -207,6 +207,7 @@ function planNameOf(entitlement: EntitlementReadModel): string {
   return PLANS.find((plan) => plan.id === entitlement.planId)?.name ?? entitlement.planId;
 }
 
+/** Only print a number the port actually returned. A missing wallet is absent, not "登录后读取". */
 function PaymentSummary({
   balance,
   entitlement,
@@ -214,19 +215,22 @@ function PaymentSummary({
   readonly balance: PaymentResult<WalletBalance> | null;
   readonly entitlement: PaymentResult<EntitlementReadModel> | null;
 }) {
-  return (
-    <div className="payment-summary" aria-live="polite">
+  const plan =
+    entitlement?.kind === "value" ? (
       <p>
         {translate("ui.navigation.screens.plansScreen.copy.当前方案")}
-        {entitlement?.kind === "value"
-          ? planNameOf(entitlement.value)
-          : translate("ui.navigation.screens.plansScreen.copy.登录后读取")}
+        {planNameOf(entitlement.value)}
       </p>
-      <p>
-        {balance?.kind === "value"
-          ? walletGradingBalanceText(balance.value.availablePowerUnits)
-          : translate("ui.navigation.screens.plansScreen.copy.钱包余额-登录后读取")}
-      </p>
+    ) : null;
+  const wallet =
+    balance?.kind === "value" ? (
+      <p>{walletGradingBalanceText(balance.value.availablePowerUnits)}</p>
+    ) : null;
+  if (!plan && !wallet) return null;
+  return (
+    <div className="payment-summary" aria-live="polite">
+      {plan}
+      {wallet}
     </div>
   );
 }

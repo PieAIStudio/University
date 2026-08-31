@@ -1,3 +1,4 @@
+import { translate } from "@pieai/university-ui/i18n.js";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   courseShapeOf,
@@ -95,7 +96,14 @@ export function SettlementHost({
     };
   }, [locator.studyId, locator.courseId, locator.unitId, locator.lessonId]);
 
-  if (!completed || !unit || !summary || !lesson) return null;
+  if (!completed || !unit || !summary) return null;
+  if (!lesson) {
+    return (
+      <p className="loading-copy" role="status" aria-live="polite" aria-busy="true">
+        {translate("app.lesson.settlement.copy.读完了")}
+      </p>
+    );
+  }
 
   const flat = course.units.flatMap((entry) =>
     entry.lessons.map((item) => ({ unit: entry, lesson: item })),

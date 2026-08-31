@@ -52,7 +52,7 @@
       "state": "open",
       "foundBy": "claude+grok-4.6",
       "foundOn": "2026-08-31",
-      "note": "耦合警告：work/firstlook 把冷启动第一屏改成了「对着真实项目学 / 每座岛是一门课。点岛进入，读完再练。」——比原来的随机词条好得多，但它把这条断言放到了陌生人看到的第一行。如果 evidence 最终不发，这句标题就不能这么写。两件事必须一起决定，不能一个上线一个不上。"
+      "note": "耦合警告：work/firstlook 曾把冷启动标题写成「对着真实项目学」，把这条断言放到陌生人第一眼。work/firstwords 已把第一屏改成「点一座岛，开始学 / 每座岛是一门课。读完再练。」——不再用源码卖点当开场。evidence 仍未发，这条本身还是 open。"
     },
     {
       "id": "1621f2236db1",
@@ -88,9 +88,11 @@
       "viewport": "both",
       "summary": "冷启动正中随机抽一条内部概念词条，陌生人读作走错环境",
       "severity": "blocking",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "grok-4.6",
-      "foundOn": "2026-08-31"
+      "foundOn": "2026-08-31",
+      "guardedBy": "packages/ui/src/loading/LoadingTrivia.test.tsx::on a first visit, says what this is instead of a random concept",
+      "note": "firstlook 已去掉随机词条。firstwords 把标题从口号「对着真实项目学」改成动作「点一座岛，开始学」，副行「每座岛是一门课。读完再练。」"
     },
     {
       "id": "77adf71b1038",
@@ -164,9 +166,11 @@
       "viewport": "both",
       "summary": "把内部路线图印在学习者屏幕上",
       "severity": "friction",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "grok-4.6",
-      "foundOn": "2026-08-31"
+      "foundOn": "2026-08-31",
+      "guardedBy": "packages/ui/src/review/RecapPrompt.test.tsx::renders the final text-first prompt and keeps voice input out / apps/university/src/screens/SettlementHost.test.tsx::renders the settlement once the document actually holds a finish",
+      "note": "语音输入不是结算屏上的可按入口。V5 已定「先文字，ASR 不顺手打开」。PaymentExplanation 只用于学习者按了但这一端做不到的能力。这一屏只留文字复述。不假装麦克风存在。"
     },
     {
       "id": "f9731fd327b1",
@@ -176,9 +180,10 @@
       "viewport": "phone",
       "summary": "手机上提示「滚轮缩放」，手机没有滚轮",
       "severity": "friction",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "grok-4.6",
-      "foundOn": "2026-08-31"
+      "foundOn": "2026-08-31",
+      "guardedBy": "packages/world/src/labels/hint.test.tsx::names zoom by pointer, so a phone is never told to use a wheel / e2e/A.mobile-learner.spec.ts::地图提示说双指缩放，不说滚轮"
     },
     {
       "id": "4b00935a7f69",
@@ -212,9 +217,11 @@
       "viewport": "both",
       "summary": "读完一节、结算还没出来时先闪一张词条",
       "severity": "polish",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "grok-4.6",
-      "foundOn": "2026-08-31"
+      "foundOn": "2026-08-31",
+      "guardedBy": "apps/university/src/screens/lazy.test.tsx::does not park a catalogue card on a DOM route / e2e/harness/online-learner.ts::waitForSettlementProgress",
+      "note": "根因是 RouteFallback 复用了地图封面 LoadingTrivia。DOM 路由的过场改成一句 loading-copy。进课文时预载 SettlementHost。"
     },
     {
       "id": "cbbeb14f2ad1",
@@ -224,9 +231,10 @@
       "viewport": "both",
       "summary": "把一次取数操作说给人听",
       "severity": "polish",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "claude",
-      "foundOn": "2026-08-31"
+      "foundOn": "2026-08-31",
+      "guardedBy": "packages/ui/src/navigation/screens/PlansScreen.test.tsx::does not tell a stranger that a wallet will be read after login"
     },
     {
       "id": "2df9f5392a49",

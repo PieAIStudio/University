@@ -82,6 +82,19 @@ export async function readAndAnswerFirstLesson(page: Page): Promise<void> {
 
 export async function waitForSettlementProgress(page: Page): Promise<void> {
   await namedStep(page, "结算页进度不是 0", async () => {
+    const outcome = await page.waitForFunction(
+      () => {
+        if (document.querySelector(".loading-trivia")) return "trivia";
+        if ((document.body.innerText ?? "").includes("读完了")) return "done";
+        return false;
+      },
+      undefined,
+      { timeout: 20_000 },
+    );
+    const value = await outcome.jsonValue();
+    if (value !== "done") {
+      throw new Error("读完一节后先闪了一张加载词条。结算不该再出现概念卡。");
+    }
     await expect(page.getByText("读完了。")).toBeVisible({ timeout: 20_000 });
     // The bar animates from the old value. Reading too early catches "0 / 41 关".
     await expect(page.getByText(SETTLEMENT_PROGRESS)).toBeVisible({ timeout: 15_000 });
@@ -98,6 +111,12 @@ export async function waitForSettlementProgress(page: Page): Promise<void> {
  */
 export async function walkFirstOnlineLesson(page: Page): Promise<void> {
   await openOnline(page);
+  const trivia = page.locator(".loading-trivia");
+  if (await trivia.isVisible().catch(() => false)) {
+    await expect(trivia).toContainText("点一座岛，开始学");
+    await expect(trivia).not.toContainText("对着真实项目学");
+    await expect(trivia).not.toContainText("地图铺开时，看一条概念");
+  }
   await waitForMapReady(page);
   await assertImagesStayInViewport(page);
 

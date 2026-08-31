@@ -86,8 +86,8 @@ describe("MAP_CONTROLS_HINT", () => {
     const fn = src.slice(fnStart, fnEnd);
     expect(fnStart).toBeGreaterThan(-1);
     expect(fn).toMatch(/pointer === "touch"/);
-    expect(fn).toMatch(/双指缩放/);
-    expect(fn).toMatch(/滚轮缩放/);
+    expect(fn).toMatch(/translate\("ui.world.mapControlsHint.copy.双指缩放"\)/);
+    expect(fn).toMatch(/translate\("ui.world.mapControlsHint.copy.滚轮缩放"\)/);
     expect(fn).not.toMatch(/右键/);
     expect(src).not.toMatch(/export const MAP_CONTROLS_HINT: ReactNode = \(/);
     expect(src).not.toMatch(/export const MAP_CONTROLS_HINT[\s\S]{0,400}滚轮缩放/);

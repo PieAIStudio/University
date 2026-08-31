@@ -263,7 +263,9 @@ export function MainRouter({
       ) : null}
 
       {view.kind === "settled" && course ? (
-        <Suspense fallback={<RouteFallback />}>
+        <Suspense
+          fallback={<RouteFallback copy={translate("app.lesson.settlement.copy.读完了")} />}
+        >
           <SettlementHost
             course={course}
             grewFrom={grewFrom}

@@ -196,3 +196,38 @@ describe("free plan price line", () => {
     expect(cards[1]?.querySelector(".plan-card__price")?.textContent ?? "").toMatch(/\d/u);
   });
 });
+
+describe("PlansScreen wallet line", () => {
+  it("does not tell a stranger that a wallet will be read after login", async () => {
+    const payment = createPaymentPort({
+      identity: createMemoryIdentityPort(),
+      transport: null,
+    });
+    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).not.toContain("登录后读取");
+    expect(container.textContent).not.toContain("钱包余额");
+    expect(container.querySelector(".payment-summary")?.textContent ?? "").not.toContain("钱包");
+  });
+
+  it("prints a wallet only when the port returned a number", async () => {
+    const payment = createPaymentPort({
+      identity: createMemoryIdentityPort({ id: "user-1", email: "learner@example.com" }),
+      transport: {
+        readBalance: async () => ({
+          availablePowerUnits: "300",
+          balancePowerUnits: "300",
+          reservedPowerUnits: "0",
+        }),
+      },
+    });
+    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    await vi.waitFor(() => {
+      expect(container.textContent).toContain("你的钱包还够 3 次");
+    });
+    expect(container.textContent).not.toContain("登录后读取");
+  });
+});
