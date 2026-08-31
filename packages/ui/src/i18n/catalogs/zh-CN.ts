@@ -688,7 +688,11 @@ export const messages = {
   "ui.lesson.selectionMenu.copy.高亮": "高亮",
   "ui.loading.loadingTrivia.copy.地图正在打开": "地图正在打开",
   "ui.loading.loadingTrivia.copy.地图铺开时-看一条概念": "地图铺开时，看一条概念",
+  "ui.loading.loadingTrivia.copy.地图马上铺开": "地图马上铺开",
+  "ui.loading.loadingTrivia.copy.对着真实项目学": "对着真实项目学",
   "ui.loading.loadingTrivia.copy.岛屿马上就到": "岛屿马上就到。",
+  "ui.loading.loadingTrivia.copy.每座岛是一门课-点岛进入-读完再练":
+    "每座岛是一门课。点岛进入，读完再练。",
   "ui.markdown.markdownContent.copy.value0年value1月value2日":
     "{{value0}}年{{value1}}月{{value2}}日",
   "ui.markdown.markdownContent.copy.value0月value1日": "{{value0}}月{{value1}}日",
