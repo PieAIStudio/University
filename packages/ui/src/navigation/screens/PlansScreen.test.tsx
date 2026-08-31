@@ -53,8 +53,8 @@ describe("PlansScreen purchase entry", () => {
     });
 
     await act(async () => root.render(<PlansScreen paymentPort={payment} />));
-    const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
-      button.textContent?.includes("购买"),
+    const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
+      (button) => button.textContent === "先绑定邮箱",
     );
     if (!cta) throw new Error("missing purchase CTA");
     expect(cta.disabled).toBe(false);
@@ -64,8 +64,9 @@ describe("PlansScreen purchase entry", () => {
     });
 
     const dialog = document.querySelector<HTMLDialogElement>("dialog");
-    expect(dialog?.textContent).toContain("购买前先绑定邮箱");
-    expect(dialog?.textContent).toContain("换设备和退款");
+    expect(dialog?.textContent).toContain("先绑定邮箱再购买");
+    expect(dialog?.textContent).toContain("不会创建订单");
+    expect(dialog?.textContent).not.toContain("退款");
     expect(dialog?.querySelector('a[href="#/me"]')?.textContent).toContain("去绑定邮箱");
     expect(createOrder).not.toHaveBeenCalled();
   });
@@ -84,8 +85,8 @@ describe("PlansScreen purchase entry", () => {
     });
 
     await act(async () => root.render(<PlansScreen paymentPort={payment} />));
-    const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
-      button.textContent?.includes("购买"),
+    const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
+      (button) => button.textContent === "记录购买意向",
     );
     if (!cta) throw new Error("missing purchase CTA");
     expect(cta.disabled).toBe(false);
@@ -95,8 +96,45 @@ describe("PlansScreen purchase entry", () => {
     });
 
     const dialog = document.querySelector<HTMLDialogElement>("dialog");
-    expect(dialog?.textContent).toContain("购买入口还没接好");
-    expect(dialog?.textContent).toContain("浏览器不会直接连接支付服务");
+    expect(dialog?.textContent).toContain("支付入口尚未开放");
+    expect(dialog?.textContent).toContain("不会扣款、不会创建订单");
+    expect(dialog?.querySelector('a[href="#/"]')?.textContent).toContain("继续学习");
+  });
+
+  it("uses payment language only when the adapter reports a live order channel", async () => {
+    const createOrder = vi.fn(
+      async (input: {
+        readonly orderId: string;
+        readonly offerId: string;
+        readonly userId: string;
+      }) => ({
+        orderId: input.orderId,
+        offerId: input.offerId,
+        status: "pending" as const,
+        checkoutUrl: null,
+      }),
+    );
+    const payment = createPaymentPort({
+      identity: createMemoryIdentityPort({ id: "user-1", email: "learner@example.com" }),
+      transport: { createOrder },
+      orderIdFactory: () => "00000000-0000-4000-8000-000000000099",
+    });
+
+    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
+      (button) => button.textContent === "购买",
+    );
+    if (!cta) throw new Error("missing live purchase CTA");
+
+    await act(async () => {
+      cta.click();
+    });
+
+    expect(createOrder).toHaveBeenCalledWith({
+      userId: "user-1",
+      orderId: "00000000-0000-4000-8000-000000000099",
+      offerId: "member",
+    });
   });
 });
 
@@ -145,7 +183,7 @@ describe("free plan price line", () => {
     // 「免费」 as the heading and 「免费」 again at headline size made the tier
     // nobody needs persuading into the loudest thing on the pricing page.
     const identity = createMemoryIdentityPort();
-    const payment = createPaymentPort({ identity });
+    const payment = createPaymentPort({ identity, transport: null });
     await act(async () => root.render(<PlansScreen paymentPort={payment} />));
 
     const cards = container.querySelectorAll(".plan-card");

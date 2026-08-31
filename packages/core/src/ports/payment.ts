@@ -37,6 +37,9 @@ export interface PaymentOrder {
   readonly checkoutUrl: string | null;
 }
 
+/** The state a purchase CTA can explain before a learner presses it. */
+export type PaymentAvailability = "available" | "anonymous" | "account-required" | "unavailable";
+
 /** A learner-facing explanation for an unavailable payment capability. */
 export interface PaymentExplanation {
   readonly kind: "explanation";
@@ -77,6 +80,11 @@ export interface PaymentTransport {
 }
 
 export interface PaymentPort {
+  /**
+   * A presentational hint only. `initiatePurchase` remains the authority and
+   * returns a PaymentExplanation when the state changed or is unavailable.
+   */
+  purchaseAvailability(): PaymentAvailability;
   readBalance(): Promise<PaymentResult<WalletBalance>>;
   readEntitlements(): Promise<PaymentResult<EntitlementReadModel>>;
   initiatePurchase(input: {
@@ -97,21 +105,21 @@ export interface CreatePaymentPortOptions {
 
 const DEFAULT_NO_CHANNEL_EXPLANATION: PaymentExplanation = {
   kind: "explanation",
-  title: "购买入口还没接好",
-  whatItDoes:
-    "接通后，这里会为你的账号生成一个订单号，并把你交给服务端选择可用的支付渠道；付款成功后，服务端才会更新钱包和权益。",
+  title: "支付入口尚未开放",
+  whatItDoes: "购买成功后，会员权益会绑定到你现在登录的账号；账号是订单、钱包和权益的归属。",
   whyUnavailable:
-    "当前还没有发布给 University 使用的服务端订单入口。浏览器不会直接连接支付服务，也不会自己给钱包加余额。",
+    "当前还没有可用的 University 订单服务。现在点击不会扣款、不会创建订单，也不会改变你的权益。",
   futureSupport:
-    "价格已经确定；服务端订单入口接通海外支付渠道后，会验证付款回调，按订单幂等结算，再让这里刷新权益。",
+    "如果以后开放，仍会先由服务端确认订单，再更新权益；在此之前你可以继续学习所有已发布课程，进度和复习记录照常留在当前账号里。",
+  action: { label: "继续学习", href: "#/" },
 };
 
 const ACCOUNT_REQUIRED_EXPLANATION: PaymentExplanation = {
   kind: "explanation",
-  title: "请先登录再购买",
-  whatItDoes: "钱包余额、订单和购买后的权益都属于一个账号，登录后才能安全地查到同一份记录。",
-  whyUnavailable: "当前没有登录账号，所以浏览器没有可以绑定的订单和钱包；本地学习不会因此被挡住。",
-  futureSupport: "登录后，这个入口会使用同一个账号发起购买、查询订单，并在成功后刷新权益。",
+  title: "先登录再继续",
+  whatItDoes: "订单、钱包和购买后的权益都属于账号；登录后才能把这次操作和同一份记录对应起来。",
+  whyUnavailable: "当前没有登录账号，所以不会创建订单或读取钱包；本地学习不会因此被挡住。",
+  futureSupport: "登录后，这个入口仍会先明确告诉你支付服务是否可用；浏览器不会直接扣款。",
   /*
     Without this the buyer is told to log in and handed no way to do it: the
     anonymous case next door already carries its action, and this one is the
@@ -122,12 +130,11 @@ const ACCOUNT_REQUIRED_EXPLANATION: PaymentExplanation = {
 
 const ANONYMOUS_ACCOUNT_REQUIRED_EXPLANATION: PaymentExplanation = {
   kind: "explanation",
-  title: "购买前先绑定邮箱",
-  whatItDoes:
-    "钱包、订单和购买后的权益都属于正式账号；绑定邮箱后，服务端才能安全地查到同一份记录。",
+  title: "先绑定邮箱再购买",
+  whatItDoes: "绑定邮箱会把当前匿名会话变成可重新登录的账号；以后订单和权益才能归到同一身份。",
   whyUnavailable:
-    "当前是匿名账号。先加一个邮箱，这样换设备和退款才有依据；本地学习不会因此被挡住。",
-  futureSupport: "去个人档案绑定邮箱；绑定会保留当前身份和进度，再从这里购买。",
+    "当前是匿名会话，没有可重新登录的邮箱。现在不会创建订单；学习进度仍可继续保存在当前会话里。",
+  futureSupport: "去个人档案绑定邮箱，保留当前身份和进度；付费页不会再收集一遍邮箱。",
   action: { label: "去绑定邮箱", href: "#/me" },
 };
 
@@ -217,6 +224,13 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
   };
 
   return {
+    purchaseAvailability() {
+      const status = options.identity.status();
+      if (status.kind === "anonymous") return "anonymous";
+      if (status.kind !== "signed_in") return "account-required";
+      return options.transport?.createOrder ? "available" : "unavailable";
+    },
+
     async readBalance() {
       const status = options.identity.status();
       const userId = userIdOf();

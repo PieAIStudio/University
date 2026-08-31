@@ -165,7 +165,9 @@ describe("PlansScreen", () => {
     const markup = renderToStaticMarkup(<PlansScreen />);
     expect(markup).toContain("$149.00");
     expect(markup).toContain("$12.42");
-    expect(markup).toContain("购买");
+    // The static fallback has no account, so it states the first required step
+    // instead of making a payment-shaped promise.
+    expect(markup).toContain("先登录");
     expect(markup).not.toContain("待产品确认");
     expect(markup).not.toContain('disabled=""');
   });

@@ -104,6 +104,7 @@ export {
   createUnavailablePaymentPort,
   type CreatePaymentPortOptions,
   type PaymentExplanation,
+  type PaymentAvailability,
   type PaymentOrder,
   type PaymentOrderStatus,
   type PaymentPort,
