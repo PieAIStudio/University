@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-08-30
+last_reviewed: 2026-08-31
 domain: web3d
 tags:
   - island
@@ -779,3 +779,57 @@ axial hex 的 radius of gyration。当前 41 课门槛是 `<72` 与 `<9.5`。旧
 product 为 34 / 58,758 → **32 / 58,564**，generated-assets 为 34 / 58,526 →
 **32 / 58,332**。截图和原始 JSON 由本次 `.scratch/SKYWORLD.md` 报告列出；这份契约只
 保留结论和可复核的数值，不把一次性截图目录变成长期索引。
+
+## 十二、整个场景的体积感复核（2026-08-31）
+
+本轮把简报的范围从「飞岛底面」还原成真正的问题：固定机位下，天空、云、岛体和水都
+必须有前后关系。先在同一机位拍了 `post=off` 与 `post=on` 的基线，再改共享规则；参考
+图只借它的暖色天空、粉/蓝/黄的关系、三瓣云冠和深色同色系底面，不把天空、云或水做成
+贴片。云仍是三维闭合体，水仍是三维闭合体；另一个分支的兔子骑云不会撞到一张贴图。
+
+### 被推翻的结论
+
+- 「课程岛原有 waterfall 实现没有改动」只对本节之前的版本成立，现已被推翻：瀑布原来
+  是带色带的 `PlaneGeometry`，轮廓有颜色却没有侧面和背面；现在它是同一批次、同一预算
+  的浅盒体，并保留下缘外扩。
+- 「云和水的平感主要靠继续调灯」也被推翻。`post=off` 已经证明平感来自课程云的
+  `ShapeGeometry` 和瀑布平面；它们没有可被光照解释的法向体积。`post=on` 再把共享褐色
+  底面、AO 上限和暖色 grade 一起放大成黑红块，所以根因是**几何/值域管线与后处理的
+  组合**，不是单独把太阳再调亮。
+
+### 采用的规则
+
+- `cloud-volume.ts` 是云的唯一体积几何帮助器。课程云用三瓣闭合低模 bank，岛群云继续
+  用原有的球形 lobe 语言；两者都只在 `useMemo` 建一次，值域渐变烘在顶点色里。
+- 课程云保留三层、7 个实例和原有的三批结构；水保留一个 mesh。透明闭合体使用
+  `FrontSide`，避免 `DoubleSide` 的隐性双 draw；`MeshBasicMaterial + vertexColors`
+  不引入新的环境纹理采样。
+- `gridUndersideColorForTop()` 是跨课程/跨投影的纯函数：底面 78% 继承当前岛面色相、
+  22% 回到共享土色，远景 `WorldUndersideField` 仍然只有两批实例。旧的褐色常量只保留
+  为 inspector 的回退色，不能再无差别涂所有岛。
+- AO 从整面压暗改为接触折痕；grade 降低对比度和暖高光、把 pivot 放到低暗部。这样
+  `post=on` 仍有戏剧性，但不会把草土的绿/蓝通道裁成红黑。
+
+### 固定机位的实测（`post=off`，1440×900）
+
+`gl.info.render` 统计来自完整真实浏览器帧，不是代码估算。改动没有新增 pass、draw
+  batch、纹理采样或每帧 CPU 工作；课程云单体为 37 → **36 triangles**，瀑布为
+  96 → **96 triangles**，总场景预算如下：
+
+| 镜头 | 改前 calls / triangles | 改后 calls / triangles |
+| --- | ---: | ---: |
+| course-design | 26 / 19,913 | **25 / 19,810** |
+| course-near | 25 / 19,905 | **24 / 19,802** |
+| world-design | 33 / 62,261 | **33 / 62,261** |
+
+可见 Chrome、1440×900、`freeze=0` 下各测 3 轮、每轮 180 个 `requestAnimationFrame` 间隔：
+改后 `post=off` 平均 16.671 ms、p95 最大 18.5 ms；`post=on` 平均 16.665 ms、p95 最大
+18.4 ms。`document.visibilityState` 为 `visible`；这里报告的是显示帧间隔，不把隐藏页的
+节流时间冒充渲染耗时。
+
+课程矩阵按 `foundations-before-zero`、`foundations-terrain`、`identity-and-accounts` 三个
+seed，再乘 6/12/24/41 节、arc/horseshoe/loop-around-hill/switchback/serpentine 五种
+形状和三个机位，共 **180** 个固定截图复核。长短课程的云冠、瀑布和底面没有退化成绿色
+平板；岛群图继续没有可见海面，远景底面继续保持两批实例。这个结论由
+`packages/world/src/sky/cloud-sea.test.ts`、`packages/world/src/grid/world-underside.test.ts`
+及底面色相测试守住，而不是只靠一次截图。

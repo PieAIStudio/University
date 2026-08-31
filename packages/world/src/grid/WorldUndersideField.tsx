@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { hash } from "../island/random.js";
-import { GRID_SHARED_SOIL } from "./grid-palette.js";
+import { gridUndersideColorForTop } from "./grid-palette.js";
 import {
   WORLD_UNDERSIDE_CONTRACT,
   worldUndersideDepthForCells,
@@ -61,7 +61,10 @@ function spikePlacements(islands: readonly WorldGridIsland[]): readonly SpikePla
  *
  * The top field owns the actual silhouette. One deeper tapered soil cone and
  * a single instanced spike field are enough to make that silhouette float
- * while keeping the underside shared across every course and every palette.
+ * while keeping one material and two batches across every course and palette.
+ * The instance colour is a deterministic dark derivative of each top swatch,
+ * so the silhouette stays in the shared soil family without becoming one
+ * brown block on the world map.
  */
 export function WorldUndersideField({ islands }: WorldUndersideFieldProps) {
   const baseMesh = useRef<THREE.InstancedMesh>(null);
@@ -77,7 +80,10 @@ export function WorldUndersideField({ islands }: WorldUndersideFieldProps) {
   const material = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: GRID_SHARED_SOIL.cliff,
+        // Instance colour keeps one material and two batches while allowing
+        // each island to carry a dark version of its own top hue.
+        color: 0xffffff,
+        vertexColors: true,
         roughness: 0.96,
         metalness: 0,
         flatShading: true,
@@ -109,8 +115,13 @@ export function WorldUndersideField({ islands }: WorldUndersideFieldProps) {
         ),
       );
       target.setMatrixAt(index, matrix);
+      target.setColorAt(
+        index,
+        new THREE.Color(gridUndersideColorForTop(island.map.palette.top, island.dimmed)),
+      );
     });
     target.instanceMatrix.needsUpdate = true;
+    if (target.instanceColor) target.instanceColor.needsUpdate = true;
     target.computeBoundingSphere();
   }, [islands]);
 
@@ -131,8 +142,15 @@ export function WorldUndersideField({ islands }: WorldUndersideFieldProps) {
         new THREE.Vector3(spike.radius * scale, spike.depth * scale, spike.radius * scale),
       );
       target.setMatrixAt(index, matrix);
+      target.setColorAt(
+        index,
+        new THREE.Color(
+          gridUndersideColorForTop(spike.island.map.palette.top, spike.island.dimmed),
+        ),
+      );
     });
     target.instanceMatrix.needsUpdate = true;
+    if (target.instanceColor) target.instanceColor.needsUpdate = true;
     target.computeBoundingSphere();
   }, [spikes]);
 

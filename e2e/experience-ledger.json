@@ -375,10 +375,11 @@
       "viewport": "desktop",
       "summary": "所有飞岛共用一个褐色底面常量，与各自岛面色脱节，整体糊成一团暗块",
       "severity": "polish",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "菲哥",
       "foundOn": "2026-08-31",
-      "note": "island-geometry.ts:72 const CLIFF_DARK = 0x5d3d32 经 pushColor 无差别套给每座岛（:636）；叠加 28° 太阳角使近垂直面几乎无主光（:591 自带注释）。参考图 island-art-reference-v2 的做法是每座岛的底面取自己岛面色的暗调，不是共用褐色。菲哥评分：现状 60，参考图 80，要求先不加运行时开销地追平参考图。走 island-look-review 闭环，不是本台账的探针能判的。注意 island-art-reference-v1 是六边形改版前的自然岛参考，已作废，须归档。"
+      "note": "island-geometry.ts:72 const CLIFF_DARK = 0x5d3d32 经 pushColor 无差别套给每座岛（:636）；叠加 28° 太阳角使近垂直面几乎无主光（:591 自带注释）。参考图 island-art-reference-v2 的做法是每座岛的底面取自己岛面色的暗调，不是共用褐色。菲哥评分：现状 60，参考图 80，要求先不加运行时开销地追平参考图。走 island-look-review 闭环，不是本台账的探针能判的。注意 island-art-reference-v1 是六边形改版前的自然岛参考，已作废，须归档。已由共享色相函数接管：课程投影由 packages/world/src/island/island-geometry.test.ts::keeps each projection's underside in its own palette family 守护，远景两批实例由 packages/world/src/grid/world-underside.test.ts::keeps the remote world underside in two instanced batches 守护。",
+      "guardedBy": "packages/world/src/island/island-geometry.test.ts::keeps each projection's underside in its own palette family / packages/world/src/grid/world-underside.test.ts::keeps the remote world underside in two instanced batches"
     },
     {
       "id": "4dff6b1c1f6e",

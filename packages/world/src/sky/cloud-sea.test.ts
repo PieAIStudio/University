@@ -11,6 +11,7 @@ import {
   cloudSafeCorridorRadius,
   cuteCloudLayout,
 } from "./cloud-sea.js";
+import { CLOUD_VOLUME_CONTRACT, createCloudVolumeGeometry } from "./cloud-volume.js";
 
 describe("cute cloud sea", () => {
   it("keeps a deterministic sculpted layout for each quality tier", () => {
@@ -125,6 +126,7 @@ describe("cute cloud sea", () => {
     expect(CUTE_CLOUD_CONTRACT.drawBatches).toBe(2);
     expect(CUTE_CLOUD_CONTRACT.batchNames).toEqual(CUTE_CLOUD_BATCH_NAMES);
     expect(source.match(/<instancedMesh\b/g)).toHaveLength(CUTE_CLOUD_CONTRACT.drawBatches);
+    expect(source.match(/vertexColors:\s*true/g)).toHaveLength(CUTE_CLOUD_CONTRACT.drawBatches);
     expect(source).not.toMatch(/RayMarchMaterial|raymarchShader|volumeCloud/i);
   });
 
@@ -133,7 +135,26 @@ describe("cute cloud sea", () => {
     expect(CUTE_CLOUD_CONTRACT.renderOrder).toEqual({ underbelly: 3, upper: 4 });
     expect(source.match(/depthTest:\s*true/g)).toHaveLength(CUTE_CLOUD_CONTRACT.drawBatches);
     expect(source.match(/depthWrite:\s*false/g)).toHaveLength(CUTE_CLOUD_CONTRACT.drawBatches);
-    expect(source).not.toMatch(/vertexColors:\s*true/);
     expect(source).not.toMatch(/renderOrder=\{-[^}]+\}/);
+  });
+
+  it("uses one closed low-poly volume with a baked value ramp", () => {
+    const geometry = createCloudVolumeGeometry(
+      CLOUD_VOLUME_CONTRACT.courseSegments.width,
+      CLOUD_VOLUME_CONTRACT.courseSegments.height,
+      CLOUD_VOLUME_CONTRACT.courseForm,
+    );
+    const position = geometry.getAttribute("position");
+    const colour = geometry.getAttribute("color");
+    expect(CLOUD_VOLUME_CONTRACT.closedSurface).toBe(true);
+    expect(CLOUD_VOLUME_CONTRACT.usesVertexValueRamp).toBe(true);
+    expect(position.count).toBeGreaterThan(0);
+    expect(colour.count).toBe(position.count);
+    expect((geometry.index?.count ?? 0) / 3).toBeLessThanOrEqual(37);
+    expect(geometry.groups).toHaveLength(0);
+    expect(geometry.userData.cloudVolume).toEqual(CLOUD_VOLUME_CONTRACT);
+    expect(Math.min(...Array.from(position.array as ArrayLike<number>))).toBeLessThan(-0.5);
+    expect(Math.max(...Array.from(position.array as ArrayLike<number>))).toBeGreaterThan(0.5);
+    geometry.dispose();
   });
 });

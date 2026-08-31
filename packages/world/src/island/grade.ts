@@ -54,13 +54,15 @@ import { createSceneDepthTexture } from "./ao";
  * `measureScene()` reads linear luminance before this blit. Convert that
  * midtone with the kit helper — never pass the 0–1 fraction, which is the
  * documented way to set this value wrong. Course-design, 1440×900, post=off:
- * linear median 0.316, which is 152/255 sRGB.
+ * linear median 0.316, which is 152/255 sRGB. The grade pivot is deliberately
+ * below that median so the dark soil's green/blue channels stay positive when
+ * contrast expands the frame.
  *
  * The judge scores `post=off`, so these numbers do not move S1. They are
  * the product look once the grade is on: contrast opens the new range,
  * vignette must not crush the sun disc that A4 and p98 now live in.
  */
-export const WORLD_GRADE_PIVOT_SRGB8 = 152;
+export const WORLD_GRADE_PIVOT_SRGB8 = 80;
 
 /**
  * Diorama plus the numbers this map actually measured.
@@ -78,7 +80,7 @@ export const WORLD_GRADE = defineGrade("diorama", {
   tiltShift: false,
   grain: 0,
   saturation: 1.06,
-  contrast: 1.24,
+  contrast: 1.17,
   contrastPivot: srgbToDisplayLinear(WORLD_GRADE_PIVOT_SRGB8),
   coolShadow: {
     amount: 0.26,
@@ -87,7 +89,9 @@ export const WORLD_GRADE = defineGrade("diorama", {
     tint: [0.88, 0.95, 1.14],
   },
   warmHighlight: {
-    amount: 0.22,
+    // The old amount pushed the warm cliff into a red block after ACES. The
+    // scene already has value separation from its real key/rim lights.
+    amount: 0.14,
     rangeStart: 0.4,
     rangeEnd: 1,
     tint: [1.14, 1.03, 0.88],

@@ -21,6 +21,7 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { seeded } from "../island/random.js";
+import { createCloudVolumeGeometry } from "./cloud-volume.js";
 import { renderTier } from "./tier.js";
 
 export type CloudPuffRole = "background" | "frame" | "near-edge";
@@ -559,16 +560,15 @@ export function CuteCloudSea({ extent, level, quality, drift = true }: CuteCloud
       layout.quality === "mobile"
         ? CUTE_CLOUD_CONTRACT.mobileSegments
         : CUTE_CLOUD_CONTRACT.desktopSegments;
-    return new THREE.SphereGeometry(1, segments.width, segments.height);
+    return createCloudVolumeGeometry(segments.width, segments.height);
   }, [layout.quality]);
   const upperMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        // Instance colours are already the art-directed absolute tones.
-        // The instance colour path is enabled by InstancedMesh itself; asking
-        // for vertex colours as well would make SphereGeometry look for a
-        // missing `color` attribute and collapse the cloud to black.
+        // Instance colours carry near/far role identity. The shared geometry
+        // adds a subtle value ramp so the closed body also reads in profile.
         color: 0xffffff,
+        vertexColors: true,
         roughness: 0.82,
         metalness: 0,
         emissive: 0x3a4048,
@@ -589,6 +589,7 @@ export function CuteCloudSea({ extent, level, quality, drift = true }: CuteCloud
     () =>
       new THREE.MeshStandardMaterial({
         color: 0xffffff,
+        vertexColors: true,
         roughness: 0.94,
         metalness: 0,
         emissive: 0x241c18,

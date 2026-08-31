@@ -7,6 +7,7 @@ import {
   GRID_SHARED_SOIL,
   gridPaletteFor,
   gridPaletteIndexFor,
+  gridUndersideColorForTop,
 } from "./grid-palette.js";
 
 /** Relative luminance, so contrast can be asserted rather than eyeballed. */
@@ -88,6 +89,14 @@ describe("hand-picked grid palettes", () => {
       const saturation = high === low ? 0 : (high - low) / (1 - Math.abs(2 * lightness - 1));
       expect(saturation).toBeGreaterThanOrEqual(0.42);
     }
+  });
+
+  it("derives a dark underside from the island top without adding a material", () => {
+    const warm = gridUndersideColorForTop(0xd89440);
+    const green = gridUndersideColorForTop(0x3ca440);
+    expect(warm).not.toBe(green);
+    expect(gridUndersideColorForTop(0xd89440, true)).not.toBe(warm);
+    expect(contrast(warm, GRID_SHARED_SOIL.road)).toBeGreaterThan(3);
   });
 
   it("paints every lesson stone from the one warm ramp", () => {

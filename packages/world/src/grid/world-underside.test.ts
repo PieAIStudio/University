@@ -30,6 +30,8 @@ describe("remote world underside", () => {
     expect(source.match(/<instancedMesh\b/g)).toHaveLength(WORLD_UNDERSIDE_CONTRACT.drawBatches);
     expect(source).toMatch(/name="world-grid-soil-cones"/);
     expect(source).toMatch(/name="world-grid-soil-spikes"/);
+    expect(source).toMatch(/vertexColors:\s*true/);
+    expect(source.match(/setColorAt\(/g)).toHaveLength(2);
     expect(source).not.toMatch(/<mesh\b/);
   });
 
@@ -43,5 +45,17 @@ describe("remote world underside", () => {
       ),
     );
     expect(triangles).toBeLessThan(2_000);
+  });
+
+  it("keeps the course waterfall closed without a new texture sample or triangles", () => {
+    const source = readFileSync(new URL("./Underside.tsx", import.meta.url), "utf8");
+    expect(source).toMatch(
+      /const waterMaterial[\s\S]*?new THREE\.MeshBasicMaterial\(\{[\s\S]*?vertexColors: true/,
+    );
+    expect(source).toMatch(
+      /new THREE\.BoxGeometry\(waterfallWidth, waterfallHeight, 0\.26, 4, 4, 1\)/,
+    );
+    expect(source).not.toMatch(/new THREE\.PlaneGeometry/);
+    expect(source).toMatch(/geometry\.clearGroups\(\)/);
   });
 });

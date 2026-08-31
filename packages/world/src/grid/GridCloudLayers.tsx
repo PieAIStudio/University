@@ -1,37 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
+import { createCloudVolumeGeometry } from "../sky/cloud-volume.js";
 import type { HexMap } from "./course-grid.js";
 
 type CloudDepth = "back" | "side" | "front";
 
 function cloudGeometry(): THREE.BufferGeometry {
-  // The old cloud was three separated low-poly spheres, which read as a row
-  // of pale rocks at the course camera. A single shallow silhouette gives it
-  // the illustrated cloud language of the target: a calm flat base with
-  // three soft crowns. It is still one shared geometry for all three depth
-  // layers and costs fewer triangles than the sphere lobes.
-  const shape = new THREE.Shape();
-  shape.moveTo(-1.55, -0.36);
-  shape.lineTo(1.55, -0.36);
-  shape.lineTo(1.55, -0.05);
-  shape.quadraticCurveTo(1.42, 0.06, 1.25, 0.08);
-  shape.quadraticCurveTo(1.08, 0.62, 0.7, 0.64);
-  shape.quadraticCurveTo(0.4, 0.66, 0.2, 0.42);
-  shape.quadraticCurveTo(-0.02, 1.05, -0.5, 1.08);
-  shape.quadraticCurveTo(-0.98, 1.1, -1.12, 0.52);
-  shape.quadraticCurveTo(-1.42, 0.56, -1.55, 0.2);
-  shape.closePath();
-  // Keep the silhouette cheap, but give the quadratic crowns enough samples
-  // to read as soft cloud lobes instead of a second low-poly grid.
-  const flat = new THREE.ShapeGeometry(shape, 6);
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", flat.getAttribute("position"));
-  geometry.setAttribute("normal", flat.getAttribute("normal"));
-  geometry.setIndex(flat.getIndex()!);
-  geometry.computeBoundingSphere();
-  flat.dispose();
-  return geometry;
+  return createCloudVolumeGeometry(8, 5, "bank");
 }
 
 function cloudPositions(
@@ -100,12 +76,21 @@ function CloudLayer({ map, depth, dimmed }: { map: HexMap; depth: CloudDepth; di
   );
   const material = useMemo(
     () =>
+      // Clouds are deliberately outside the AO volume. BasicMaterial keeps
+      // this protected decorative layer free of a new environment-texture
+      // sample; the closed body and baked vertex value ramp provide its light
+      // cue instead.
       new THREE.MeshBasicMaterial({
-        color: dimmed ? 0x9aa8a8 : depth === "back" ? 0xfff0d4 : 0xfff9e9,
+        color: dimmed ? 0x879795 : depth === "back" ? 0xffead0 : 0xfff8ea,
+        vertexColors: true,
         transparent: true,
-        opacity: depth === "front" ? 0.55 : depth === "side" ? 0.68 : 0.76,
+        opacity: depth === "front" ? 0.62 : depth === "side" ? 0.74 : 0.82,
         depthWrite: false,
-        depthTest: false,
+        depthTest: true,
+        // The body is closed; FrontSide keeps the transparent material on the
+        // one-draw path instead of invoking Three's DoubleSide two-pass sort.
+        side: THREE.FrontSide,
+        fog: false,
       }),
     [depth, dimmed],
   );
