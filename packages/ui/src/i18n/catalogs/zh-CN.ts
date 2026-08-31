@@ -411,6 +411,7 @@ export const messages = {
   "ui.evidence.evidenceInlineSource.copy.固定提交": "· 固定提交",
   "ui.evidence.evidenceInlineSource.copy.固定提交-value0": "固定提交 {{value0}}",
   "ui.evidence.evidenceInlineSource.copy.固定源码-value0-value1": "固定源码 {{value0}} {{value1}}",
+  "ui.evidence.evidenceInlineSource.copy.点击查看固定源码": "点击「看完整文件」加载这段固定源码",
   "ui.evidence.evidenceInlineSource.copy.无法读取固定源码": "无法读取固定源码 ·",
   "ui.evidence.evidenceInlineSource.copy.源码": "源码",
   "ui.evidence.evidenceInlineSource.copy.看完整文件": "看完整文件",

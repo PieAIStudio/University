@@ -563,7 +563,6 @@ export function MarkdownContent({
           return (
             <EvidenceInlineSource
               index={evidenceIndex}
-              basePath={evidenceBasePath}
               sourcePath={sourcePath}
               lines={lines}
               sourceCommit={cited.sourceCommit}
@@ -859,6 +858,7 @@ export function MarkdownContent({
             evidence={evidence}
             evidenceBasePath={evidenceBasePath}
             placeTellsThemApart={placeTellsThemApart}
+            onOpenEvidence={onOpenEvidence}
           />
         ) : null}
       </ReferencePanel>
@@ -871,11 +871,13 @@ function ReferenceBody({
   evidence,
   evidenceBasePath,
   placeTellsThemApart,
+  onOpenEvidence,
 }: {
   readonly reference: OpenReference;
   readonly evidence: readonly EvidenceView[] | undefined;
   readonly evidenceBasePath: EvidenceSource | undefined;
   readonly placeTellsThemApart: boolean;
+  readonly onOpenEvidence?: (index: number, trigger: HTMLElement) => void;
 }) {
   if (reference.kind === "lesson") {
     if (!reference.target) {
@@ -930,6 +932,8 @@ function ReferenceBody({
         lines={reference.lines}
         sourceCommit={cited && !isUrlEvidenceView(cited) ? cited.sourceCommit : undefined}
         ua={placeTellsThemApart ? (cited?.ua ?? null) : null}
+        loadOnMount
+        onOpenEvidence={onOpenEvidence}
       />
     );
   }

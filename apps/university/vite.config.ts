@@ -114,7 +114,10 @@ function analyzeChunks(): Plugin {
  * two ways of reaching it, and the second one is the one customers use.
  */
 function serveImportedContent(mode: string): Plugin {
-  const contentDir = resolve(import.meta.dirname, "content");
+  const contentDir = resolve(
+    import.meta.dirname,
+    process.env["UNIVERSITY_CONTENT_ROOT"] ?? "content",
+  );
   function mimeFor(file: string): string {
     if (file.endsWith(".json")) return "application/json; charset=utf-8";
     if (file.endsWith(".png")) return "image/png";
@@ -178,12 +181,16 @@ function serveImportedContent(mode: string): Plugin {
 
 /** Emit crawler files from the importer’s already-generated shelf. */
 function emitSiteIndex(mode: string): Plugin {
+  const contentDir = resolve(
+    import.meta.dirname,
+    process.env["UNIVERSITY_CONTENT_ROOT"] ?? "content",
+  );
   return {
     name: "university-site-index",
     generateBundle() {
       if (mode !== "delivery") return;
-      const shelfPath = resolve(import.meta.dirname, "content", "shelf.json");
-      const manifestPath = resolve(import.meta.dirname, "content", "manifest.json");
+      const shelfPath = resolve(contentDir, "shelf.json");
+      const manifestPath = resolve(contentDir, "manifest.json");
       if (!existsSync(shelfPath)) {
         throw new Error(
           "apps/university/content/shelf.json is missing — run `pnpm content` before building.",

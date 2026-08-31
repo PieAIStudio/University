@@ -36,9 +36,11 @@
  */
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -58,7 +60,17 @@ import { validateRecoveryInput } from "./delivery-artifact.mjs";
 import { requireContentRevision, toPublicPackage } from "./public-course.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
-const contentRoot = join(projectRoot, "content");
+const configuredContentRoot = resolve(
+  projectRoot,
+  process.env["UNIVERSITY_CONTENT_ROOT"] ?? "content",
+);
+// Worktrees keep this generated directory as a symlink to a shared content
+// cache. Clear the target, never the link itself, so an import cannot turn the
+// next run into a broken checkout. Release builds normally use a real folder.
+const contentRoot =
+  existsSync(configuredContentRoot) && lstatSync(configuredContentRoot).isSymbolicLink()
+    ? realpathSync(configuredContentRoot)
+    : configuredContentRoot;
 // The authoring shell is a sibling package now, not a repository somewhere
 // else on the machine. That is worth more than a shorter path: the exports
 // this reads and the courses they came from move together in one commit, so
@@ -158,6 +170,7 @@ let snippetDisabled = 0;
 let snippetBytes = 0;
 let snippetFiles = 0;
 let snippetEvidence = 0;
+let snippetRepoEvidence = 0;
 
 for (const studyId of readdirSync(upstream).sort()) {
   if (onlyStudy && studyId !== onlyStudy) continue;
@@ -222,11 +235,24 @@ for (const studyId of readdirSync(upstream).sort()) {
           }
           deliveryExercises.push({
             ...exercise,
+            evidence: (exercise.evidence ?? []).map((item) => ({ ...item })),
             ...(answerKey ? { answerKey } : {}),
           });
         }
-        const evidence = lesson.evidence ?? [];
+        const deliveryEvidence = (lesson.evidence ?? []).map((item) => ({ ...item }));
+        const deliveryCards = (lesson.cards ?? []).map((card) => ({
+          ...card,
+          evidence: (card.evidence ?? []).map((item) => ({ ...item })),
+        }));
+        const evidence = [
+          ...deliveryEvidence,
+          ...deliveryCards.flatMap((card) => card.evidence ?? []),
+          ...deliveryExercises.flatMap((exercise) => exercise.evidence ?? []),
+        ];
         snippetEvidence += evidence.length;
+        snippetRepoEvidence += evidence.filter(
+          (item) => typeof item.sourcePath === "string",
+        ).length;
         if (evidenceMode === "none") {
           snippetDisabled += evidence.length;
         } else {
@@ -285,7 +311,9 @@ for (const studyId of readdirSync(upstream).sort()) {
         deliveryLessons.push({
           ...lesson,
           contentRevision,
+          evidence: deliveryEvidence,
           assets: deliveryAssets,
+          cards: deliveryCards,
           exercises: deliveryExercises,
         });
       }
@@ -377,16 +405,18 @@ mkdirSync(join(projectRoot, "src", "content"), { recursive: true });
  * smaller manifest, but it may not replace a larger tracked one by accident.
  * `--allow-shrink` is the deliberate escape hatch for a real content removal.
  */
-const trackedManifestPath = join(projectRoot, "src", "content", "imported.json");
+const trackedManifestPath = resolve(
+  projectRoot,
+  process.env["UNIVERSITY_IMPORTED_MANIFEST_PATH"] ?? "src/content/imported.json",
+);
 /*
  * ...and only against a manifest built at the same evidence boundary.
  *
- * The delivery lane builds with `--evidence none` on purpose: cited source
- * ranges are not baked into a public bundle. Its manifest is therefore
- * *supposed* to be smaller than an evidence-baked local one. Comparing the two
- * made the guard fire on every single release build — a guard meant to catch a
- * checkout shipping less than it should, blocking the one build that ships
- * less by design. Same mode, or no comparison.
+ * The delivery lane builds with `--evidence baked`: cited source ranges belong
+ * in the sealed static release. Authoring/dev may still use `none`, so a
+ * manifest comparison only makes sense when both runs used the same boundary;
+ * comparing different modes would turn a legitimate mode change into a false
+ * shrink alarm.
  */
 const trackedMode = existsSync(trackedManifestPath)
   ? (() => {
@@ -484,16 +514,16 @@ if (evidenceMode === "none") {
   );
 } else {
   console.log(
-    `import-courses: baked ${snippetBaked}/${snippetEvidence} evidence snippets ` +
+    `import-courses: baked ${snippetBaked}/${snippetRepoEvidence} repository evidence snippets ` +
       `into ${snippetFiles} files (${(snippetBytes / 1048576).toFixed(2)} MB` +
       (snippetSkipped > 0 ? `; ${snippetSkipped} skipped` : "") +
       `).`,
   );
 }
 
-if (requireBakedEvidence && snippetBaked === 0) {
+if (requireBakedEvidence && snippetBaked !== snippetRepoEvidence) {
   throw new Error(
-    `import-courses: baked evidence requested but baked 0 evidence snippets from ${snippetEvidence} cited ranges; refusing locator-only output`,
+    `import-courses: baked evidence requested but baked ${snippetBaked}/${snippetRepoEvidence} repository evidence snippets from ${snippetEvidence} total evidence records; refusing locator-only output`,
   );
 }
 

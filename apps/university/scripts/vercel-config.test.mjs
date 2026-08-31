@@ -3,6 +3,10 @@ import { describe, expect, it } from "vitest";
 import vercel from "../../../vercel.json" with { type: "json" };
 
 describe("the delivery fallback boundary", () => {
+  it("requires the static delivery build to bake repository evidence", () => {
+    expect(vercel.buildCommand).toContain("--evidence baked");
+  });
+
   it("does not rewrite API or crawler files to the app shell", () => {
     const source = vercel.rewrites[0].source;
     const fallback = new RegExp(`^${source}$`);

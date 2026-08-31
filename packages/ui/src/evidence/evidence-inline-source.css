@@ -77,6 +77,15 @@
   border-radius: 4px;
 }
 
+.evidence-inline-source__deferred {
+  margin: 0;
+  border-top: 1px solid var(--game-ui-border-subtle);
+  padding: 8px 12px 10px;
+  color: color-mix(in srgb, var(--game-ui-text-on-dark) 66%, transparent);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 .evidence-inline-source > .evidence-code {
   max-height: min(360px, 50vh);
   border: 0;
