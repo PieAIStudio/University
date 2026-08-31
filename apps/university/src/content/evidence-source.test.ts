@@ -7,8 +7,13 @@ afterEach(() => {
 });
 
 describe("evidenceSourceOf", () => {
-  it("returns nothing when import baked no snippets", () => {
-    expect(evidenceSourceOf([{ snippetUrl: undefined }])).toBeUndefined();
+  it("returns an explicit locator-only result when an anchor was not baked", async () => {
+    const resolve = evidenceSourceOf([{ snippetUrl: undefined }]);
+    expect(resolve).toBeDefined();
+    await expect(resolve!(0)).resolves.toEqual({ kind: "locator-only" });
+  });
+
+  it("returns nothing for an empty evidence list", () => {
     expect(evidenceSourceOf([])).toBeUndefined();
   });
 
@@ -30,8 +35,8 @@ describe("evidenceSourceOf", () => {
     expect(fetch).toHaveBeenCalledWith("/content/buzz/demo/evidence/bbb.json");
   });
 
-  it("rejects an index that was not baked", async () => {
+  it("returns locator-only for an index that was not baked", async () => {
     const resolve = evidenceSourceOf([{ snippetUrl: "/content/x.json" }, {}]);
-    await expect(resolve!(1)).rejects.toThrow("这条证据没有烘焙源码");
+    await expect(resolve!(1)).resolves.toEqual({ kind: "locator-only" });
   });
 });

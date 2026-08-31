@@ -62,8 +62,10 @@ export {
 export {
   createMemoryReaderPort,
   type EvidenceSnippet,
+  type EvidenceSnippetResult,
   type EvidenceSnippetViewKind,
   type LessonCompleteInput,
+  type LocatorOnlyEvidence,
   type MemoryReaderPort,
   type ReaderMarkDraft,
   type ReaderPort,

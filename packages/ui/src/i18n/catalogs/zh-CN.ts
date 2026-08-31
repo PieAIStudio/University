@@ -171,7 +171,6 @@ export const messages = {
   "app.catalog.courseCatalog.copy.课程目录读不出来-刷新这一页再试":
     "课程目录读不出来。刷新这一页再试。",
   "app.content.evidencesource.copy.无法读取固定源码-value0": "无法读取固定源码（{{value0}}）",
-  "app.content.evidencesource.copy.这条证据没有烘焙源码": "这条证据没有烘焙源码",
   "app.learner.uaDashboardButton.copy.打开项目地图": "打开项目地图",
   "app.learner.uaDashboardButton.copy.正在打开项目地图": "正在打开项目地图…",
   "app.learner.uaDashboardButton.copy.项目地图暂时打不开": "项目地图暂时打不开",
@@ -290,7 +289,6 @@ export const messages = {
   "app.ports.online.content.copy.这节课不在这门课里": "这节课不在这门课里",
   "app.ports.online.content.copy.这道题不在这门课里": "这道题不在这门课里",
   "app.ports.online.reader.copy.无法读取固定源码-value0": "无法读取固定源码（{{value0}}）",
-  "app.ports.online.reader.copy.这条证据没有烘焙源码": "这条证据没有烘焙源码",
   "app.ports.online.sourceaccess.copy.交付端拿到的是已发布的课程包-不携带被学习项目的本地仓库-也不能替项目启动本地进程-这样才能在浏览器里安全地阅读":
     "交付端拿到的是已发布的课程包，不携带被学习项目的本地仓库，也不能替项目启动本地进程；这样才能在浏览器里安全地阅读课程。",
   "app.ports.online.sourceaccess.copy.以后会在桌面端启动已授权的项目图谱-浏览器端会提供图谱地址或手动打开步骤-移动端会提供同一份说明":
@@ -416,6 +414,10 @@ export const messages = {
   "ui.evidence.evidenceInlineSource.copy.无法读取固定源码": "无法读取固定源码 ·",
   "ui.evidence.evidenceInlineSource.copy.源码": "源码",
   "ui.evidence.evidenceInlineSource.copy.看完整文件": "看完整文件",
+  "ui.evidence.evidenceLocatorOnly.copy.仍保留固定提交文件和行号-复制定位可跳到本地项目-打开完整文件可查看项目地图":
+    "这条引用仍保留固定提交、文件和行号。复制定位可跳到本地项目；打开完整文件可查看项目地图。",
+  "ui.evidence.evidenceLocatorOnly.copy.未提供行号": "未提供行号",
+  "ui.evidence.evidenceLocatorOnly.copy.源码没有随这份课程发布": "源码没有随这份课程发布",
   "ui.evidence.evidenceRail.copy.关于证据": "关于证据",
   "ui.evidence.evidenceRail.copy.在源码查看器中打开完整固定提交": "在源码查看器中打开完整固定提交",
   "ui.evidence.evidenceRail.copy.完整文件": "完整文件",

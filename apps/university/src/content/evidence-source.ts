@@ -8,18 +8,19 @@
  */
 import { translate } from "@pieai/university-ui/i18n.js";
 import type { EvidenceSnippetView } from "@pieai/university-ui";
+import type { LocatorOnlyEvidence } from "@pieai/university-core";
 
-export type EvidenceSnippetResolver = (index: number) => Promise<EvidenceSnippetView>;
+export type EvidenceSnippetResolver = (
+  index: number,
+) => Promise<EvidenceSnippetView | LocatorOnlyEvidence>;
 
 export function evidenceSourceOf(
   evidence: readonly { readonly snippetUrl?: string }[],
 ): EvidenceSnippetResolver | undefined {
-  if (!evidence.some((item) => typeof item.snippetUrl === "string" && item.snippetUrl.length > 0)) {
-    return undefined;
-  }
+  if (evidence.length === 0) return undefined;
   return async (index) => {
     const url = evidence[index]?.snippetUrl;
-    if (!url) throw new Error(translate("app.content.evidencesource.copy.这条证据没有烘焙源码"));
+    if (!url) return { kind: "locator-only" };
     const response = await fetch(url);
     if (!response.ok)
       throw new Error(

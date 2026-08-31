@@ -3,6 +3,7 @@ import { useEffect, useId, useState } from "react";
 
 import type { EvidenceSnippetView, EvidenceToken, EvidenceUaView } from "../view/lesson-view.js";
 import { EvidenceCode } from "./EvidenceCode.js";
+import { EvidenceLocatorOnly } from "./EvidenceLocatorOnly.js";
 import { EvidenceUaPlace } from "./EvidenceUaPlace.js";
 import { loadEvidenceSnippet, type EvidenceSource } from "./load-evidence-snippet.js";
 
@@ -47,7 +48,7 @@ export function EvidenceInlineSource({
 }) {
   const triggerId = useId();
   const cited = parseLineRange(lines);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "ready" | "locator-only" | "error">("loading");
   const [snippet, setSnippet] = useState<EvidenceSnippetView | null>(null);
   const [tokens, setTokens] = useState<readonly (readonly EvidenceToken[])[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -61,6 +62,10 @@ export function EvidenceInlineSource({
     void loadEvidenceSnippet(basePath, index).then((result) => {
       if (cancelled) return;
       if (result.ok) {
+        if (result.kind === "locator-only") {
+          setStatus("locator-only");
+          return;
+        }
         setSnippet(result.snippet);
         setTokens(result.tokens);
         setStatus("ready");
@@ -153,6 +158,10 @@ export function EvidenceInlineSource({
             <span className="evidence-inline-source__error-detail">（{errorMessage}）</span>
           ) : null}
         </p>
+      ) : null}
+
+      {status === "locator-only" ? (
+        <EvidenceLocatorOnly sourcePath={pathLabel} lineStart={cited.start} lineEnd={cited.end} />
       ) : null}
 
       {status === "ready" && snippet ? (

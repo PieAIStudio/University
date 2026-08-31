@@ -39,6 +39,13 @@ export interface EvidenceSnippet {
   readonly attribution?: string;
 }
 
+/** The citation is valid, but this shell does not carry the source bytes. */
+export interface LocatorOnlyEvidence {
+  readonly kind: "locator-only";
+}
+
+export type EvidenceSnippetResult = EvidenceSnippet | LocatorOnlyEvidence;
+
 export interface ReaderMarkDraft {
   readonly contentRevision: number;
   readonly kind: ReaderMarkKind;
@@ -83,7 +90,7 @@ export interface ReaderPort {
     locator: LessonRef,
     index: number,
     view?: EvidenceSnippetViewKind,
-  ): Promise<EvidenceSnippet>;
+  ): Promise<EvidenceSnippetResult>;
 }
 
 export interface MemoryReaderPort extends ReaderPort {
@@ -156,8 +163,7 @@ export function createMemoryReaderPort(options?: {
     },
     async loadEvidenceSnippet(_locator, index) {
       const snippet = snippets.get(index);
-      if (!snippet) throw new Error("这条证据没有烘焙源码");
-      return snippet;
+      return snippet ?? { kind: "locator-only" };
     },
   };
   return port;

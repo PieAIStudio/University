@@ -6,6 +6,7 @@ import type { SourceAccessPort } from "@pieai/university-core";
 import type { EvidenceSnippetView, EvidenceToken, EvidenceView } from "../view/lesson-view.js";
 import { isUrlEvidenceView } from "../view/lesson-view.js";
 import { EvidenceCode } from "./EvidenceCode.js";
+import { EvidenceLocatorOnly } from "./EvidenceLocatorOnly.js";
 import { EvidenceUaPlace } from "./EvidenceUaPlace.js";
 import { loadEvidenceSnippet, type EvidenceSource } from "./load-evidence-snippet.js";
 
@@ -29,6 +30,7 @@ export function EvidenceSourceSheet({
   const [snippet, setSnippet] = useState<EvidenceSnippetView | null>(null);
   const [tokenLines, setTokenLines] = useState<readonly (readonly EvidenceToken[])[]>([]);
   const [loading, setLoading] = useState(false);
+  const [locatorOnly, setLocatorOnly] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [findText, setFindText] = useState("");
   const [copyState, setCopyState] = useState<"idle" | "code" | "locator">("idle");
@@ -42,6 +44,7 @@ export function EvidenceSourceSheet({
     const sequence = ++requestSequence.current;
     setSnippet(null);
     setTokenLines([]);
+    setLocatorOnly(false);
     setFindText("");
     setCopyState("idle");
     setLoading(true);
@@ -52,6 +55,12 @@ export function EvidenceSourceSheet({
       if (!loaded.ok) {
         setError(loaded.message);
         setLoading(false);
+        return;
+      }
+      if (loaded.kind === "locator-only") {
+        setLocatorOnly(true);
+        setLoading(false);
+        window.setTimeout(() => findRef.current?.focus(), 0);
         return;
       }
       setSnippet(loaded.snippet);
@@ -185,15 +194,13 @@ export function EvidenceSourceSheet({
               : translate("ui.evidence.evidenceSourceSheet.copy.只显示已批准的本课证据")}
           </span>
           <div className="source-sheet__copy-actions">
-            <GameButton
-              variant="ghost"
-              onClick={() => void copy(snippet?.code ?? "", "code")}
-              disabled={!snippet}
-            >
-              {copyState === "code"
-                ? translate("ui.evidence.evidenceSourceSheet.copy.已复制源码")
-                : translate("ui.evidence.evidenceSourceSheet.copy.复制源码")}
-            </GameButton>
+            {snippet ? (
+              <GameButton variant="ghost" onClick={() => void copy(snippet.code, "code")}>
+                {copyState === "code"
+                  ? translate("ui.evidence.evidenceSourceSheet.copy.已复制源码")
+                  : translate("ui.evidence.evidenceSourceSheet.copy.复制源码")}
+              </GameButton>
+            ) : null}
             <GameButton
               variant="ghost"
               onClick={() =>
@@ -218,6 +225,13 @@ export function EvidenceSourceSheet({
           <p className="inline-error" role="alert">
             {error}
           </p>
+        ) : null}
+        {locatorOnly ? (
+          <EvidenceLocatorOnly
+            sourcePath={reference.sourcePath}
+            lineStart={citedStart}
+            lineEnd={citedEnd}
+          />
         ) : null}
         {snippet ? (
           <>

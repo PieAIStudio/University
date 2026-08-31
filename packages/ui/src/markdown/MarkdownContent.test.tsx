@@ -671,6 +671,34 @@ describe("local-only link and image policy", () => {
     );
   });
 
+  it("shows a locator-only state when the citation has no shipped source bytes", async () => {
+    const markdown = "证据：[[evidence:src/missing.ts:10-12]]";
+    const resolver = vi.fn().mockResolvedValue({ kind: "locator-only" as const });
+    await renderMarkdown(markdown, {
+      evidence: [repositoryEvidence(10, 12)],
+      evidenceBasePath: resolver,
+      evidenceAnchors: [
+        {
+          start: markdown.indexOf("[["),
+          end: markdown.length,
+          sourcePath: "src/missing.ts",
+          lineStart: 10,
+          lineEnd: 12,
+          resolved: true,
+          evidenceIndex: 0,
+        },
+      ],
+    });
+
+    await waitFor(() => expect(document.querySelector(".evidence-locator-only")).not.toBeNull());
+    expect(document.querySelector(".evidence-inline-source__error")).toBeNull();
+    expect(document.querySelector(".evidence-code")).toBeNull();
+    expect(document.querySelector(".evidence-locator-only")?.textContent).toContain(
+      "源码没有随这份课程发布",
+    );
+    expect(resolver).toHaveBeenCalledWith(0);
+  });
+
   it("loads the same evidence index only once when opened twice", async () => {
     const first = "[[evidence:src/app.ts:1-2]]";
     const second = "[[evidence:src/app.ts:1-2]]";

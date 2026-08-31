@@ -46,6 +46,32 @@ const COURSE: Course = {
   units: [{ id: "what-is-an-app", title: "u", objective: "", lessons: [lesson] }],
 };
 
+const LOCATOR_ONLY_COURSE: Course = {
+  ...COURSE,
+  id: "without-baked-evidence",
+  units: [
+    {
+      id: "what-is-an-app",
+      title: "u",
+      objective: "",
+      lessons: [
+        {
+          ...lesson,
+          evidence: [
+            {
+              kind: "fact",
+              sourceCommit: "abc",
+              sourcePath: "README.md",
+              lineStart: 1,
+              lineEnd: 2,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
 /*
   The port finds the lesson from the address rather than being handed one, so
   the package has to be in the session's cache — which is the state the reader
@@ -107,5 +133,22 @@ describe("createOnlineReaderPort", () => {
     expect(fetch).toHaveBeenCalledWith(
       anchor && isRepositoryAnchor(anchor) ? anchor.snippetUrl : undefined,
     );
+  });
+
+  it("returns locator-only when the published anchor has no snippet", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ course: LOCATOR_ONLY_COURSE }),
+      }),
+    );
+    await loadCourse("turing-pact", LOCATOR_ONLY_COURSE.id);
+    const progress = createProgressPort({ persistence: createMemoryPersistence() });
+    const port = createOnlineReaderPort({ progress });
+
+    await expect(
+      port.loadEvidenceSnippet({ ...locator, courseId: LOCATOR_ONLY_COURSE.id }, 0),
+    ).resolves.toEqual({ kind: "locator-only" });
   });
 });

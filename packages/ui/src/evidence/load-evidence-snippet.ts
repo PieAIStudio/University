@@ -1,13 +1,21 @@
 import { translate } from "../i18n/index.js";
 import { readJson } from "../api/client.js";
+import type { LocatorOnlyEvidence } from "@pieai/university-core";
 import type { EvidenceSnippetView, EvidenceToken } from "../view/lesson-view.js";
 import { highlightEvidenceCode } from "../view/lesson-view.js";
 
-type LoadedEvidenceSnippet =
+export type EvidenceSnippetSourceResult = EvidenceSnippetView | LocatorOnlyEvidence;
+
+export type LoadedEvidenceSnippet =
   | {
       readonly ok: true;
+      readonly kind: "snippet";
       readonly snippet: EvidenceSnippetView;
       readonly tokens: readonly (readonly EvidenceToken[])[];
+    }
+  | {
+      readonly ok: true;
+      readonly kind: "locator-only";
     }
   | {
       readonly ok: false;
@@ -20,7 +28,7 @@ type LoadedEvidenceSnippet =
  * such API: import bakes content-addressed JSON, so it passes a resolver that
  * loads the file for that index. The component does not care which.
  */
-type EvidenceSnippetResolver = (index: number) => Promise<EvidenceSnippetView>;
+type EvidenceSnippetResolver = (index: number) => Promise<EvidenceSnippetSourceResult>;
 export type EvidenceSource = string | EvidenceSnippetResolver;
 
 const cache = new Map<string, Promise<LoadedEvidenceSnippet>>();
@@ -38,9 +46,16 @@ function evidenceSnippetCacheKey(source: EvidenceSource, index: number): string 
   return `${id}\0${index}`;
 }
 
-async function readSnippet(source: EvidenceSource, index: number): Promise<EvidenceSnippetView> {
+async function readSnippet(
+  source: EvidenceSource,
+  index: number,
+): Promise<EvidenceSnippetSourceResult> {
   if (typeof source === "function") return source(index);
-  return readJson<EvidenceSnippetView>(await fetch(`${source}/evidence/${index}`));
+  return readJson<EvidenceSnippetSourceResult>(await fetch(`${source}/evidence/${index}`));
+}
+
+function isLocatorOnly(value: EvidenceSnippetSourceResult): value is LocatorOnlyEvidence {
+  return "kind" in value && value.kind === "locator-only";
 }
 
 /**
@@ -58,8 +73,9 @@ export function loadEvidenceSnippet(
     pending = (async (): Promise<LoadedEvidenceSnippet> => {
       try {
         const snippet = await readSnippet(source, index);
+        if (isLocatorOnly(snippet)) return { ok: true, kind: "locator-only" };
         const tokens = await highlightEvidenceCode(snippet.code, snippet.language);
-        return { ok: true, snippet, tokens };
+        return { ok: true, kind: "snippet", snippet, tokens };
       } catch (reason) {
         return {
           ok: false,

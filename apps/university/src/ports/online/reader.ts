@@ -11,6 +11,7 @@ import { translate } from "@pieai/university-ui/i18n.js";
 import {
   lessonKeyOf,
   type EvidenceSnippet,
+  type LocatorOnlyEvidence,
   type ProgressPort,
   type ReaderPort,
 } from "@pieai/university-core";
@@ -121,7 +122,7 @@ export function createOnlineReaderPort(options: { readonly progress: ProgressPor
       progress.confirmLessonRead(lessonKeyOf(locator), input.contentRevision);
     },
 
-    async loadEvidenceSnippet(locator, index): Promise<EvidenceSnippet> {
+    async loadEvidenceSnippet(locator, index): Promise<EvidenceSnippet | LocatorOnlyEvidence> {
       /*
         Found from the address rather than closed over. The port used to be
         built per lesson, which is why it could hold one; one port per document
@@ -134,7 +135,7 @@ export function createOnlineReaderPort(options: { readonly progress: ProgressPor
       // A public-page citation has no baked snippet and never will; the reader
       // renders it as a link rather than asking for one.
       const url = anchor && isRepositoryAnchor(anchor) ? anchor.snippetUrl : undefined;
-      if (!url) throw new Error(translate("app.ports.online.reader.copy.这条证据没有烘焙源码"));
+      if (!url) return { kind: "locator-only" };
       const response = await fetch(url);
       if (!response.ok)
         throw new Error(

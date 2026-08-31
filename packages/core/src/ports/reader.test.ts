@@ -35,4 +35,19 @@ describe("ReaderPort", () => {
     const listed = await port.listMarks(locator.studyId);
     expect(listed).toEqual([mark]);
   });
+
+  it("returns an explicit locator-only result when source bytes are absent", async () => {
+    const port = createMemoryReaderPort();
+    await expect(
+      port.loadEvidenceSnippet(
+        {
+          studyId: "study",
+          courseId: "course",
+          unitId: "unit",
+          lessonId: "lesson",
+        },
+        0,
+      ),
+    ).resolves.toEqual({ kind: "locator-only" });
+  });
 });
