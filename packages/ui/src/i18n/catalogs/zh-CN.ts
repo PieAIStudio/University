@@ -1201,8 +1201,6 @@ export const messages = {
   "ui.review.choiceBlock.copy.继续下一题": "继续下一题 →",
   "ui.review.choiceBlock.copy.还不对": "还不对",
   "ui.review.choiceBlock.copy.选项": "选项",
-  "ui.review.recapPrompt.copy.不会因为你打开了-听发音-就自动启用":
-    "（不会因为你打开了「听发音」就自动启用。）",
   "ui.review.recapPrompt.copy.你的复述": "你的复述",
   "ui.review.recapPrompt.copy.保存为复习卡": "保存为复习卡",
   "ui.review.recapPrompt.copy.到期时它会回来-请再讲一遍": "到期时它会回来，请再讲一遍。",
@@ -1215,7 +1213,6 @@ export const messages = {
   "ui.review.recapPrompt.copy.本单元能力句": "本单元能力句",
   "ui.review.recapPrompt.copy.正在保存": "正在保存…",
   "ui.review.recapPrompt.copy.讲一遍": "讲一遍",
-  "ui.review.recapPrompt.copy.语音输入-还在设计": "语音输入：还在设计",
   "ui.review.recapPrompt.copy.请用自己的话-讲给一个完全不知道这件事的人听":
     "请用自己的话，讲给一个完全不知道这件事的人听。",
   "ui.review.recapPrompt.copy.课后复习": "课后复习",
