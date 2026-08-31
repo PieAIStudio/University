@@ -235,6 +235,7 @@ export {
   resolveAnchors,
   findProtectedRegions,
   segmentContent,
+  proseQuote,
 } from "./language/resolve-anchors.js";
 
 // Wiki tokens (`[[kind:target]]`). Parsing and resolution are pure; the

@@ -10,6 +10,7 @@ import {
   gradingAttemptText,
   METERED_GRADING_COST_POWER_UNITS,
   gradeDeterministically,
+  proseQuote,
   toPath,
   type AnswerKey,
   type ExerciseAttemptResult,
@@ -417,7 +418,11 @@ function failCopy(lesson: Lesson, prompt: string | undefined): string {
     .split(/\n+/)
     .find((row) => row.includes(needle) && !row.startsWith("```") && row.length > 12);
   if (!line) return "再想一下，答案就在上面这段里。";
-  const quoted = line.replace(/[*`]/g, "").trim();
+  // Lesson source, not prose: the line can carry `[[evidence:…]]` and other
+  // markup, and printing it raw at the moment a learner missed reads as a
+  // broken product rather than a broken answer.
+  const quoted = proseQuote(line);
+  if (quoted.length === 0) return "再想一下，答案就在上面这段里。";
   /*
     「出自真实项目」 is a claim about a repository, so it is only offered when
     one of this lesson's citations actually is one. A 通用课 cites MDN; naming

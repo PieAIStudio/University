@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveAnchors, segmentContent } from "./resolve-anchors.js";
+import { proseQuote, resolveAnchors, segmentContent } from "./resolve-anchors.js";
 
 const anchor = (quote: string, occurrence = 1, senseId = "snapshot.git") => ({
   quote,
@@ -100,5 +100,28 @@ describe("segmentContent", () => {
     const content = "快照";
     const { resolved } = resolveAnchors(content, [anchor("快照")]);
     expect(segmentContent(content, resolved)).toEqual([{ text: "快照", senseId: "snapshot.git" }]);
+  });
+});
+
+describe("proseQuote", () => {
+  it("drops a bare wiki token but keeps the sentence around it", () => {
+    expect(
+      proseQuote("这一段说明为什么。[[evidence:/assets/game/ui/clay/asset-manifest.json:1-20]]"),
+    ).toBe("这一段说明为什么。");
+  });
+
+  it("keeps the half of a labelled token that was written to be read", () => {
+    expect(proseQuote("先看 [[lesson:foo|这一节]] 再回来。")).toBe("先看 这一节 再回来。");
+  });
+
+  it("returns nothing when the line was only an address", () => {
+    // The caller has to notice this: quoting an empty string at the moment a
+    // learner missed is worse than saying nothing specific.
+    expect(proseQuote("[[evidence:/assets/game/ui/clay/asset-manifest.json:1-20]]")).toBe("");
+  });
+
+  it("drops emphasis, code ticks and a directive marker", () => {
+    expect(proseQuote("**加粗** 和 `代码`")).toBe("加粗 和 代码");
+    expect(proseQuote("::: detail 标题")).toBe("");
   });
 });

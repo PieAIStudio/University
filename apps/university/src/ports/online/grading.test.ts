@@ -46,6 +46,25 @@ const long: Lesson = {
   ],
 };
 
+/*
+  The quotable line carries an evidence token, which is what a real lesson
+  looks like: the grader picks a line out of lesson *source*, not out of prose.
+*/
+const marked: Lesson = {
+  ...lesson,
+  id: "why-marked",
+  content:
+    "## 先猜一下\n\n这一段会说明为什么产品要先把问题说清楚。[[evidence:/assets/game/ui/clay/asset-manifest.json:1-20]]\n",
+  exercises: [
+    {
+      id: "explain",
+      kind: "explain",
+      prompt: "为什么？",
+      answerKey: compileAnswerKey("这是一句超过十二个字的参考答案所以第一层判不了"),
+    },
+  ],
+};
+
 const COURSE: Course = {
   id: "foundations-before-zero",
   title: "在开始之前",
@@ -54,7 +73,7 @@ const COURSE: Course = {
   objectives: [],
   prerequisiteCourseIds: [],
   trackId: null,
-  units: [{ id: "what-is-an-app", title: "u", objective: "", lessons: [lesson, long] }],
+  units: [{ id: "what-is-an-app", title: "u", objective: "", lessons: [lesson, long, marked] }],
 };
 
 const locator = {
@@ -210,6 +229,32 @@ describe("createOnlineGradingPort", () => {
     expect(result.meteredEligible).toBe(true);
     expect(fetchImpl).not.toHaveBeenCalled();
     expect(readAccessToken).not.toHaveBeenCalled();
+  });
+
+  it("never quotes lesson markup back at a learner who just missed", async () => {
+    // A learner who got it wrong opened the one panel that is meant to help
+    // and was shown `[[evidence:/assets/…json:1-20]]` verbatim. Raw markup at
+    // the moment of failure reads as a broken product, not a broken answer.
+    const port = createOnlineGradingPort({
+      fetchImpl: vi.fn(async () => {
+        throw new Error("tier one must not call the service");
+      }),
+      gradingUrl: "https://grading.example.test/api/grade",
+      readAccessToken: vi.fn(async () => "should-not-be-read"),
+    });
+
+    const result = await port.submitExercise({
+      locator: { ...locator, lessonId: marked.id },
+      exerciseId: "explain",
+      contentRevision: 1,
+      answer: "我的理解是另一回事。",
+      commandId: "markup-quote",
+    });
+
+    const evaluation = result.hostGrade?.evaluation ?? "";
+    expect(evaluation).toContain("再看一眼你刚才读过的这句");
+    expect(evaluation).toContain("这一段会说明为什么产品要先把问题说清楚。");
+    expect(evaluation, "原始 markup 泄漏到了学习者面前").not.toContain("[[");
   });
 
   it("reads a free daily offer from the server without submitting an answer", async () => {

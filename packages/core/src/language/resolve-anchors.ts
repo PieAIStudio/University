@@ -50,6 +50,9 @@ export interface Region {
  * the detector and resolver must leave intact — the same reason code is
  * protected — so they live here rather than only in the detector.
  */
+/** Same shape as `parseLessonLinks`: optional `|label`, no newlines or `]`. */
+const WIKI_TOKEN = /\[\[([^\]\n|]*)(?:\|([^\]\n]*))?\]\]/g;
+
 const PROTECTED_PATTERNS: readonly RegExp[] = [
   /^[ \t]*(`{3,}|~{3,})[\s\S]*?^[ \t]*\1[ \t]*$/gm,
   /`[^`\n]+`/g,
@@ -57,7 +60,7 @@ const PROTECTED_PATTERNS: readonly RegExp[] = [
   /<[^>\n]+>/g,
   /^[ \t]*\|.*\|[ \t]*$/gm,
   // Same shape as `parseLessonLinks`: optional `|label`, no newlines or `]`.
-  /\[\[[^\]\n|]*(?:\|[^\]\n]*)?\]\]/g,
+  WIKI_TOKEN,
 ];
 
 /**
@@ -161,4 +164,26 @@ export function segmentContent(
     segments.push({ text: content.slice(cursor), senseId: null });
   }
   return segments;
+}
+
+/**
+ * A lesson line, said back to the learner as prose.
+ *
+ * The deterministic grader quotes the sentence a missed question came from.
+ * That sentence is lesson source, so it can carry markup — and a learner who
+ * has just got something wrong was shown `[[evidence:/assets/…/…json:1-20]]`
+ * verbatim, inside the one panel that is supposed to help. Raw markup at the
+ * moment of failure reads as a broken product, not a broken answer.
+ *
+ * A token with a label keeps the label, because that half was written to be
+ * read. A bare token is an address and goes. If nothing readable survives,
+ * the caller has nothing worth quoting and should say something else.
+ */
+export function proseQuote(line: string): string {
+  return line
+    .replace(WIKI_TOKEN, (_match, target: string, label?: string) => label ?? "")
+    .replace(/^[ \t]*:::.*$/gm, "")
+    .replace(/[*`]/g, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
 }
