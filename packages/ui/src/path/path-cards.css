@@ -268,6 +268,45 @@
   backdrop-filter: none;
 }
 
+/*
+  The title row carries the way out. It sticks for the same reason
+  .picked__action does: this card scrolls, and a close control that scrolls
+  off the top is a close control the learner cannot reach from the bottom of
+  a long objectives list.
+*/
+.picked__head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  padding-bottom: 4px;
+  background: var(--game-ui-panel-strong, #151b2b);
+}
+
+.picked__head h3 {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+
+/*
+  44px is the touch target this has to clear; the glyph is smaller than the
+  box on purpose, so a thumb has room the eye does not have to see.
+*/
+.picked__close {
+  flex: 0 0 auto;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  margin: -10px -10px 0 0;
+  padding: 0;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
 .picked__study {
   margin: 0;
   font-size: 0.8rem;

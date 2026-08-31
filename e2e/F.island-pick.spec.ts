@@ -60,18 +60,27 @@ async function clickEmptySky(page: Page): Promise<void> {
   const canvas = page.locator(".stagewrap canvas").first();
   const box = await canvas.boundingBox();
   if (!box) throw new Error("画布没有屏幕矩形");
-  // Collapse capsules sit on the left and right edges; islands sit lower.
-  // A document click listener is forbidden here — this is a pointer on
-  // the canvas, which is the 3D miss the product has to see. Probe a few
-  // sky candidates: a study name can sit near the top-centre.
-  const candidates = [
-    { x: box.x + box.width * 0.5, y: box.y + 28 },
-    { x: box.x + box.width * 0.42, y: box.y + 40 },
-    { x: box.x + box.width * 0.58, y: box.y + 40 },
-    { x: box.x + box.width * 0.5, y: box.y + box.height - 36 },
-  ];
+  // Sky and island are the same <canvas> node, so `elementsFromPoint` can
+  // rule out DOM overlays but can never tell the two apart — the ray did
+  // that, not the DOM. Ask the product instead: the hint reads
+  // MAP_CONTROLS_HINT (which carries .hint__row) while nothing is hovered,
+  // and swaps to a course title the moment the ray hits an island. A point
+  // that leaves .hint__row standing is a point the raycaster missed.
+  //
+  // The four fixed guesses this replaces were written when the map held a
+  // handful of islands. Fifty-three of them leave almost no sky at a fixed
+  // coordinate, so scan instead of guess.
+  const columns = [0.5, 0.42, 0.58, 0.34, 0.66, 0.28, 0.72];
+  const rows = [18, 34, 52, 74, box.height - 24, box.height - 44];
+  const candidates: { x: number; y: number }[] = [];
+  for (const row of rows) {
+    for (const column of columns) {
+      candidates.push({ x: box.x + box.width * column, y: box.y + row });
+    }
+  }
+
   for (const point of candidates) {
-    const empty = await page.evaluate(({ x, y }) => {
+    const domClear = await page.evaluate(({ x, y }) => {
       const stack = document.elementsFromPoint(x, y);
       const blocked = stack.some((entry) => {
         const el = entry as HTMLElement;
@@ -85,7 +94,14 @@ async function clickEmptySky(page: Page): Promise<void> {
       });
       return stack.some((entry) => entry.tagName === "CANVAS") && !blocked;
     }, point);
-    if (!empty) continue;
+    if (!domClear) continue;
+
+    await page.mouse.move(point.x, point.y);
+    // One frame for the raycast, one for React to render the swapped hint.
+    await page.waitForTimeout(120);
+    const rayMissed = await page.locator(".hint .hint__row").count();
+    if (rayMissed === 0) continue;
+
     await page.mouse.click(point.x, point.y);
     return;
   }
@@ -200,6 +216,25 @@ async function walkIslandPick(page: Page, prefix: "online" | "local"): Promise<v
     const cardBox = await assertCardFollowsIsland(page, island);
     expect(center(cardBox).x, "偏左的岛：卡片默认在右侧").toBeGreaterThan(center(island).x);
     await page.screenshot({ path: `${SHOTS}/${prefix}-picked-left.png` });
+  });
+
+  await namedStep(page, "卡片自带关闭按钮，够手指点，点了就走", async () => {
+    // The sky-click below is the gesture; this is the affordance. A dense
+    // map can leave a learner with no sky to click and no Escape key on a
+    // phone, so the way out has to be a control they can see.
+    const close = page.locator(".picked--follow.is-visible .picked__close");
+    await expect(close).toBeVisible();
+    const closeBox = await close.boundingBox();
+    if (!closeBox) throw new Error("关闭按钮没有屏幕矩形");
+    expect(closeBox.width, "关闭按钮宽度够不上手指").toBeGreaterThanOrEqual(44);
+    expect(closeBox.height, "关闭按钮高度够不上手指").toBeGreaterThanOrEqual(44);
+    await humanClick(page, close, "关闭课程卡");
+    await expect(page.locator(".picked--follow.is-visible")).toHaveCount(0);
+  });
+
+  await namedStep(page, "再点回那座岛，好接着验海面", async () => {
+    const island = await pickLeftishIsland(page);
+    await assertCardFollowsIsland(page, island);
   });
 
   await namedStep(page, "点海面（天空）后卡片消失", async () => {

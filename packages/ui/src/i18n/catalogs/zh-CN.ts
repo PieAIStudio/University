@@ -964,6 +964,7 @@ export const messages = {
   "ui.notifications.reviewReminderPrompt.copy.要我提醒你吗-每天最多一条-有卡才提醒-随时可以在设置里关掉":
     "要我提醒你吗？每天最多一条，有卡才提醒，随时可以在设置里关掉。",
   "ui.path.coursePickCard.copy.先修": "先修",
+  "ui.path.coursePickCard.copy.关闭": "关闭",
   "ui.path.coursePickCard.copy.最多可得-XP": "最多可得 XP",
   "ui.path.coursePickCard.copy.学完这门课-你能": "学完这门课，你能：",
   "ui.path.coursePickCard.copy.层": "层",

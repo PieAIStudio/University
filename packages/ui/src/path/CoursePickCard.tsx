@@ -15,7 +15,7 @@
  */
 import { translate } from "../i18n/index.js";
 import { useEffect, useId, type RefObject } from "react";
-import { GamePanel } from "@pieai/swimmer-ui-kit";
+import { GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
 
 import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import type { CoursePickStats } from "./course-pick-stats.js";
@@ -93,7 +93,24 @@ export function CoursePickCard({
       aria-labelledby={headingId}
     >
       <GamePanel tone="strong">
-        <h3 id={headingId}>{title}</h3>
+        {/*
+          A dialog needs a way out that a finger can find. Escape is a
+          keyboard, and the sky-click is a raycast miss — on a 53-island map
+          there is barely any sky left to miss, and on a phone there is no
+          Escape at all. So the way out is a control, not a gap.
+        */}
+        <div className="picked__head">
+          <h3 id={headingId}>{title}</h3>
+          <GameButton
+            variant="ghost"
+            type="button"
+            className="picked__close"
+            onClick={onDismiss}
+            aria-label={translate("ui.path.coursePickCard.copy.关闭")}
+          >
+            ×
+          </GameButton>
+        </div>
         <p className="picked__study">{studyTitle}</p>
         <section className="picked__outcomes" aria-labelledby={outcomesHeadingId}>
           <h4 id={outcomesHeadingId}>{translate("ui.path.coursePickCard.copy.学完这门课-你能")}</h4>
