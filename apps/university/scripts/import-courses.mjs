@@ -124,6 +124,9 @@ let keysCompiled = 0;
 const unusableKeys = [];
 const manifest = {
   importedAt: requestedImportDate ?? new Date().toISOString().slice(0, 10),
+  // Which boundary produced these numbers. The shrink guard below compares
+  // like with like, and cannot without this.
+  evidenceMode,
   studies: [],
 };
 const shelf = { studies: [] };
@@ -360,7 +363,27 @@ mkdirSync(join(projectRoot, "src", "content"), { recursive: true });
  * `--allow-shrink` is the deliberate escape hatch for a real content removal.
  */
 const trackedManifestPath = join(projectRoot, "src", "content", "imported.json");
-if (!process.argv.includes("--allow-shrink") && existsSync(trackedManifestPath)) {
+/*
+ * ...and only against a manifest built at the same evidence boundary.
+ *
+ * The delivery lane builds with `--evidence none` on purpose: cited source
+ * ranges are not baked into a public bundle. Its manifest is therefore
+ * *supposed* to be smaller than an evidence-baked local one. Comparing the two
+ * made the guard fire on every single release build — a guard meant to catch a
+ * checkout shipping less than it should, blocking the one build that ships
+ * less by design. Same mode, or no comparison.
+ */
+const trackedMode = existsSync(trackedManifestPath)
+  ? (() => {
+      try {
+        return JSON.parse(readFileSync(trackedManifestPath, "utf8")).evidenceMode ?? null;
+      } catch {
+        return null;
+      }
+    })()
+  : null;
+const comparable = trackedMode === null || trackedMode === evidenceMode;
+if (!process.argv.includes("--allow-shrink") && comparable && existsSync(trackedManifestPath)) {
   const servedOf = (doc) =>
     (doc.studies ?? []).reduce(
       (sum, study) =>
