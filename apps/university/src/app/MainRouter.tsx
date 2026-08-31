@@ -371,6 +371,8 @@ export function MainRouter({
             studies={planetStudies}
             selectedId={focusedStudyId}
             onSelect={setNavigationFocus}
+            avatarRecipe={avatarRecipe}
+            avatarSignedIn={avatarSignedIn}
           />
         </div>
       ) : null}

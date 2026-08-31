@@ -3,7 +3,7 @@ import type { Locator, Page } from "@playwright/test";
 type Hit = { readonly hittable: boolean; readonly describe: string };
 
 export interface HumanClickOptions {
-  readonly beforePress?: () => void;
+  readonly beforePress?: () => void | Promise<void>;
 }
 
 /**
@@ -60,7 +60,7 @@ export async function humanClick(
 
     await page.mouse.move(chosen.x, chosen.y);
     await page.waitForTimeout(40);
-    options?.beforePress?.();
+    await options?.beforePress?.();
     await page.mouse.down({ button: "left" });
     await page.waitForTimeout(40);
     await page.mouse.up({ button: "left" });

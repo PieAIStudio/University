@@ -57,7 +57,7 @@ import { SettingsSubnav } from "@pieai/university-ui/navigation/empty.js";
 import { LevelProgress } from "@pieai/university-ui/navigation/screens.js";
 import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
 import { coursePickStatsOf } from "@pieai/university-ui/path/course-pick-stats.js";
-import { CourseScene } from "@pieai/university-world/Maps.js";
+import { CourseScene, type LessonPlacement } from "@pieai/university-world/Maps.js";
 import { type CourseNode } from "@pieai/university-world/course.js";
 import { RailIdentity } from "@pieai/university-world/avatar.js";
 
@@ -173,6 +173,19 @@ export function App() {
   const [picked, setPicked] = useState<CourseNode | null>(null);
   const pickedCourse = picked ? courseOf(picked.studyId, picked.courseId) : null;
   const pickedStats = pickedCourse ? coursePickStatsOf(pickedCourse) : null;
+  /** The course cell the learner last chose, retained through its settlement. */
+  const [courseAvatarTarget, setCourseAvatarTarget] = useState<{
+    readonly studyId: string;
+    readonly courseId: string;
+    readonly lessonId: string;
+  } | null>(null);
+  const rememberCourseAvatarTarget = useCallback((lesson: LessonPlacement) => {
+    setCourseAvatarTarget({
+      studyId: lesson.studyId,
+      courseId: lesson.courseId,
+      lessonId: lesson.lessonId,
+    });
+  }, []);
   // Screen 02/03: a path card sits on the course map. It is not a route —
   // confirming is what changes the URL, not pointing at a stone.
   const [pathOverlay, setPathOverlay] = useState<PathOverlay | null>(null);
@@ -321,6 +334,7 @@ export function App() {
   const markers = useWorldMarkers({
     labelNodes,
     lessons,
+    setCourseAvatarTarget: rememberCourseAvatarTarget,
     setPathOverlay,
     setPicked,
     view,
@@ -571,6 +585,9 @@ export function App() {
         learnerAt={learnerAt}
         avatarRecipe={avatarRecipe}
         avatarSignedIn={avatarSignedIn}
+        selectedCourseKey={
+          view.kind === "world" && picked ? `${picked.studyId}/${picked.courseId}` : null
+        }
         skyStudyId={focusedStudyId}
         markers={markers}
         /*
@@ -608,9 +625,17 @@ export function App() {
                 lessons={lessons}
                 avatarRecipe={avatarRecipe}
                 avatarSignedIn={avatarSignedIn}
+                avatarLessonId={
+                  (view.kind === "course" || view.kind === "lesson") &&
+                  courseAvatarTarget?.studyId === view.studyId &&
+                  courseAvatarTarget.courseId === view.courseId
+                    ? courseAvatarTarget.lessonId
+                    : null
+                }
                 skyStudyId={inCourse ? view.studyId : null}
                 onPick={(lesson) => {
-                  if (view.kind === "lesson") return;
+                  if (view.kind !== "course") return;
+                  rememberCourseAvatarTarget(lesson);
                   setPathOverlay({
                     kind: "node",
                     unitId: lesson.unitId,

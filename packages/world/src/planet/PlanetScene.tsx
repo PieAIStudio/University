@@ -10,9 +10,15 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 
-import { buildWorldStudyGrid, COURSE_SKY_STOPS, Weather } from "../Maps.js";
+import { buildWorldStudyGrid, COURSE_SKY_STOPS, LearnerMarker, Weather } from "../Maps.js";
 import { Stage } from "../Stage.js";
+import type { AvatarRecipe } from "../avatar/index.js";
 import { renderTier } from "../sky/tier.js";
+import {
+  CLOUD_CARRIER_FOOT_OFFSET,
+  cloudCarrierHome,
+  type CloudCarrierTarget,
+} from "../sky/cloud-sea.js";
 import { WorldHexField, type WorldGridIsland } from "../grid/WorldHexField.js";
 import { studyMarkerColor, type PlanetStudy } from "./planet-copy.js";
 import {
@@ -199,9 +205,17 @@ export interface PlanetSceneProps {
   readonly studies: readonly PlanetStudy[];
   readonly selectedId: string | null;
   readonly onSelect?: (studyId: string) => void;
+  readonly avatarRecipe?: AvatarRecipe | null;
+  readonly avatarSignedIn?: boolean;
 }
 
-export function PlanetScene({ studies, selectedId, onSelect }: PlanetSceneProps) {
+export function PlanetScene({
+  studies,
+  selectedId,
+  onSelect,
+  avatarRecipe = null,
+  avatarSignedIn = false,
+}: PlanetSceneProps) {
   const projection = useMemo(() => buildPlanetProjection(studies), [studies]);
   const { camera, size } = useThree();
   const aspect = size.height > 0 ? size.width / size.height : 1;
@@ -211,6 +225,28 @@ export function PlanetScene({ studies, selectedId, onSelect }: PlanetSceneProps)
   // the fitted field so their existing sculpted silhouettes remain readable
   // from this higher camera instead of shrinking into a row of specks.
   const weatherExtent = Math.max(projection.layout.bounds.maxHalf + 18, cameraDistance * 0.52);
+  const selectedCluster =
+    selectedId === null
+      ? null
+      : (projection.layout.clusters.find((cluster) => cluster.studyId === selectedId) ?? null);
+  const cloudLevel = PLANET_ATMOSPHERE.cloudLevel;
+  const cloudOrigin = useMemo(
+    () => cloudCarrierHome(weatherExtent, cloudLevel),
+    [cloudLevel, weatherExtent],
+  );
+  const carrierTarget = useMemo<CloudCarrierTarget>(
+    () =>
+      selectedCluster
+        ? [
+            selectedCluster.centerX,
+            PLANET_ATMOSPHERE.selectedLift + CLOUD_CARRIER_FOOT_OFFSET,
+            selectedCluster.centerZ,
+          ]
+        : cloudOrigin,
+    [cloudOrigin, selectedCluster],
+  );
+  const carrierPosition = useMemo(() => new THREE.Vector3(...carrierTarget), [carrierTarget]);
+  const carrierInitialPosition = useMemo(() => new THREE.Vector3(...cloudOrigin), [cloudOrigin]);
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -247,12 +283,22 @@ export function PlanetScene({ studies, selectedId, onSelect }: PlanetSceneProps)
         ]}
         fogColor={COURSE_SKY_STOPS.nadir}
         sky={COURSE_SKY_STOPS}
-        cloudLevel={PLANET_ATMOSPHERE.cloudLevel}
+        cloudLevel={cloudLevel}
         includeSea={false}
         includeDistantGround
         shadows={false}
+        carrierTarget={carrierTarget}
+        carrierSurface="planet"
       />
       <PlanetField projection={projection} selectedId={selectedId} onSelect={onSelect} />
+      <LearnerMarker
+        position={carrierPosition}
+        initialPosition={carrierInitialPosition}
+        recipe={avatarRecipe}
+        signedIn={avatarSignedIn}
+        showRing={false}
+        surface="planet"
+      />
     </>
   );
 }

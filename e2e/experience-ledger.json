@@ -388,10 +388,11 @@
       "viewport": "both",
       "summary": "兔子头像固定在左栏，世界里没有「我在哪」，进课后也不指向当前小节",
       "severity": "friction",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "菲哥",
       "foundOn": "2026-08-31",
-      "note": "设计已出：头像即玩家位置，三个高度（星球=乘云漂移、岛群=云飞向选中岛、岛内=兔子站在当前小节格子上，位置本身就是进度）。复用已建成的 avatar/hop.ts、PlayerMarker.tsx 与 Maps.tsx 的飞行中改向逻辑，不新建动画系统。设计稿 artifact a1621950。按「先设计后实现」，等菲哥确认再派工。"
+      "note": "设计已出：头像即玩家位置，三个高度（星球=乘云漂移、岛群=云飞向选中岛、岛内=兔子站在当前小节格子上，位置本身就是进度）。复用已建成的 avatar/hop.ts、PlayerMarker.tsx 与 Maps.tsx 的飞行中改向逻辑，不新建动画系统。设计稿 artifact a1621950。按「先设计后实现」，等菲哥确认再派工。",
+      "guardedBy": "e2e/G.avatar.spec.ts::星球、岛群、岛内都跟随真实点击，并在快速上限内落地 / e2e/G.avatar.spec.ts::完成第一节后回到岛内，头像仍停在刚点击的 lesson 格子"
     },
     {
       "id": "5af5df4513e8",
