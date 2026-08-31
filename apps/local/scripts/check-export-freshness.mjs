@@ -195,13 +195,13 @@ for (const study of unexported) {
 
 if (stale.length === 0) {
   console.log(
-  `check-export-freshness: ${studies.length} export(s) match their courses` +
-    (skipped.length > 0
-      ? `; ${skipped.length} NOT CHECKED (no local source for ${skipped.join(", ")}) — ` +
-        "freshness is unproven for those"
-      : "") +
-    ".",
-);
+    `check-export-freshness: ${studies.length} export(s) match their courses` +
+      (skipped.length > 0
+        ? `; ${skipped.length} NOT CHECKED (no local source for ${skipped.join(", ")}) — ` +
+          "freshness is unproven for those"
+        : "") +
+      ".",
+  );
   process.exit(0);
 }
 
