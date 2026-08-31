@@ -116,9 +116,10 @@ function installTouchDollyDeadzone(instance: MapControls) {
  * the safe direction to be wrong in.
  */
 export {
-  MAP_CONTROLS_HINT,
   MapControlsHint,
+  MapEntryHint,
   mapControlsHint,
+  mapEntryHint,
 } from "../labels/map-controls-hint.js";
 export type { MapPointer } from "../labels/map-controls-hint.js";
 

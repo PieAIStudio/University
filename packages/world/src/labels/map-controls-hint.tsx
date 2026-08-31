@@ -2,16 +2,13 @@ import { translate } from "@pieai/university-ui/i18n.js";
 import { useSyncExternalStore, type ReactNode } from "react";
 
 /**
- * The idle sentence under the map. A React node, not a string, so each
- * clause can carry a monochrome glyph. Both shells render
- * `{hovered ? hovered : MAP_CONTROLS_HINT}` — a node is a valid child, so
- * they do not have to change, and a hovered island name stays plain text.
+ * The map captions are three different promises, not one sentence.
  *
- * The hint has to describe the controls that exist. It said 「右键旋转」
- * for as long as rotation had been disabled — telling a learner to
- * right-drag taught them the app was broken. The same lie, on a phone,
- * is 「滚轮缩放」: there is no wheel. Zoom is a pinch there, a wheel on
- * a mouse. Name the pointer that is actually in the learner's hand.
+ * Controls are a self-teaching cue: after a learner drags, the map has shown
+ * them what pan means and that cue may retire. The entry action is different:
+ * a learner can drag a map forever without discovering that an island opens a
+ * course, so that cue stays alive until the first island pick. Hover is a
+ * transient name and gets its own slot in the renderer too.
  *
  * Glyphs are CSS masks with `currentColor`, not emoji. SwimmerUIKit's clay
  * icons are PNG and cannot tint; Lucide's `move` / `mouse` /
@@ -55,7 +52,13 @@ export function mapControlsHint(pointer: MapPointer): ReactNode {
       {hintItem("pan", translate("ui.world.mapControlsHint.copy.拖动平移"))}
       {hintSep()}
       {zoom}
-      {hintSep()}
+    </span>
+  );
+}
+
+export function mapEntryHint(): ReactNode {
+  return (
+    <span className="hint__row">
       {hintItem("enter", translate("ui.world.mapControlsHint.copy.点岛进入"))}
     </span>
   );
@@ -82,4 +85,6 @@ export function MapControlsHint(): ReactNode {
   return mapControlsHint(touch ? "touch" : "mouse");
 }
 
-export const MAP_CONTROLS_HINT: ReactNode = <MapControlsHint />;
+export function MapEntryHint(): ReactNode {
+  return mapEntryHint();
+}

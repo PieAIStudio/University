@@ -78,7 +78,12 @@ import { FeedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
 
 import { todayCtaLabel, TodaySection, todayMeta } from "@pieai/university-ui/today/TodaySection.js";
 import { LINK_RETURN_DEPTH } from "@pieai/university-ui/lesson/LessonReader.js";
-import { COURSE_POLAR, MAP_CONTROLS_HINT, WORLD_POLAR } from "@pieai/university-world/controls.js";
+import {
+  COURSE_POLAR,
+  MapControlsHint,
+  MapEntryHint,
+  WORLD_POLAR,
+} from "@pieai/university-world/controls.js";
 import { CourseIsland } from "./CourseIsland.js";
 import { PlanetRail } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
@@ -153,6 +158,8 @@ export function App() {
    */
   const [navigationFocus, setNavigationFocus] = useState<LearnerNavigationFocus>(undefined);
   const [hovered, setHovered] = useState<string | null>(null);
+  /** The island-entry action stays discoverable until the learner picks once. */
+  const [mapEntryLearned, setMapEntryLearned] = useState(false);
   const {
     mapInteracted,
     sceneReady,
@@ -335,6 +342,7 @@ export function App() {
     labelNodes,
     lessons,
     setCourseAvatarTarget: rememberCourseAvatarTarget,
+    onCoursePick: () => setMapEntryLearned(true),
     setPathOverlay,
     setPicked,
     view,
@@ -599,6 +607,7 @@ export function App() {
         followId={view.kind === "world" && picked ? picked.courseId : null}
         followNode={pickCardRef}
         onPick={(node) => {
+          setMapEntryLearned(true);
           setPicked(node);
         }}
         onHover={(node) => setHovered(node ? node.title : null)}
@@ -733,13 +742,15 @@ export function App() {
           </>
         }
         /*
-          The hint has to describe the controls that exist. It said 「右键旋转」
-          for as long as rotation had been disabled — the camera is locked to a
-          fixed pitch on purpose, the way a map app locks it, and telling a
-          learner to right-drag taught them the app was broken.
+          These are separate promises with separate retirement rules. Pan and
+          zoom can self-teach on the first gesture; the island-entry action
+          cannot, so it remains until an actual island pick teaches it.
         */
-        hint={hovered ?? MAP_CONTROLS_HINT}
-        hintVisible={Boolean(hovered) || !mapInteracted}
+        hoverHint={hovered}
+        controlsHint={<MapControlsHint />}
+        controlsHintVisible={!mapInteracted && !hovered}
+        entryHint={view.kind === "world" ? <MapEntryHint /> : null}
+        entryHintVisible={!mapEntryLearned && !hovered}
         loading={
           mapRecoveryReason ? (
             <RecoveryState
@@ -921,6 +932,7 @@ export function App() {
             <LessonScreen
               locator={reading}
               course={course}
+              studyTitle={studies.find((study) => study.id === view.studyId)?.title ?? view.studyId}
               returnDepth={returnStack.length}
               onFollowLink={(target) => {
                 /*

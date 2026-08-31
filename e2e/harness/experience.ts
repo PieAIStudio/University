@@ -544,7 +544,7 @@ export async function closeVisibleDialog(
       return (
         style.display !== "none" &&
         style.visibility !== "hidden" &&
-        style.opacity !== "0" &&
+        Number.parseFloat(style.opacity) > 0 &&
         box.width >= 44 &&
         box.height >= 44
       );
@@ -555,6 +555,7 @@ export async function closeVisibleDialog(
   if (exitIndex >= 0) {
     const control = controls.nth(exitIndex);
     try {
+      await assertVisibleAndHittableAtFivePoints(page, control, `${label}关闭控件`);
       await humanClick(page, control, `${label}关闭控件`);
       await expect.poll(() => dialogs.count(), { timeout: 1_000 }).toBeLessThan(beforeCount);
       return "control";
@@ -589,7 +590,7 @@ export async function prepareCoverageTarget(
   if (target.prepare) await target.prepare(page);
   if (target.scrollToLessonBottom) await scrollLessonToBottom(page);
   const locator = target.locate(page);
-  await expect(locator, `${target.label} 不可见`).toBeVisible();
+  await expect(locator, `${target.label} 不在 DOM 中`).toHaveCount(1);
   await locator.scrollIntoViewIfNeeded();
   return locator;
 }
@@ -611,12 +612,17 @@ export function elementSelector(element: Element | null): string {
   return `${tag}${id}${classes}`;
 }
 
-export async function assertHittableAtFivePoints(
+export type HitTestExpectation = "target" | "pass-through";
+
+export async function assertVisibleAndHittableAtFivePoints(
   page: Page,
   target: Locator,
   label: string,
+  options: { readonly hitTest?: HitTestExpectation } = {},
 ): Promise<void> {
-  const handle = await target.elementHandle();
+  const count = await target.count();
+  if (count === 0) throw new Error(`${label}: DOM 中找不到元素`);
+  const handle = await target.first().elementHandle();
   if (!handle) throw new Error(`${label}: 找不到元素句柄`);
   const box = await target.boundingBox();
   if (!box) {
@@ -636,8 +642,9 @@ export async function assertHittableAtFivePoints(
     { name: "右下", x: box.x + box.width - inset, y: box.y + box.height - inset },
   ];
 
+  const hitTest = options.hitTest ?? "target";
   const inspection = await page.evaluate(
-    ({ node, points }) => {
+    ({ node, points, hitTest }) => {
       const selector = (element: Element | null) => {
         if (!element) return "<空>";
         const tag = element.tagName.toLowerCase();
@@ -656,25 +663,61 @@ export async function assertHittableAtFivePoints(
         return `${tag}${id}${classes}`;
       };
 
+      const style = getComputedStyle(node);
+      const rect = node.getBoundingClientRect();
+      const opacity = Number.parseFloat(style.opacity);
+      const painted =
+        style.display !== "none" &&
+        style.visibility !== "hidden" &&
+        style.visibility !== "collapse" &&
+        opacity > 0 &&
+        rect.width > 0 &&
+        rect.height > 0 &&
+        rect.right > 0 &&
+        rect.bottom > 0 &&
+        rect.left < innerWidth &&
+        rect.top < innerHeight;
+
       return {
         target: selector(node),
+        painted,
+        display: style.display,
+        visibility: style.visibility,
+        opacity,
+        pointerEvents: style.pointerEvents,
         hits: points.map((point) => {
           const hit = document.elementFromPoint(point.x, point.y);
           const isTarget = Boolean(hit && (hit === node || node.contains(hit)));
           return { point: point.name, isTarget, hit: selector(hit) };
         }),
+        hitTest,
       };
     },
-    { node: handle, points },
+    { node: handle, points, hitTest },
   );
   await handle.dispose();
 
-  const blocked = inspection.hits.filter((hit) => !hit.isTarget);
-  if (blocked.length > 0) {
+  if (!inspection.painted) {
     throw new Error(
-      `${label}: 被遮挡（target=${inspection.target}）\n` +
+      `${label}: 在 DOM 中但不可见（display=${inspection.display}, ` +
+        `visibility=${inspection.visibility}, opacity=${inspection.opacity}, ` +
+        `pointer-events=${inspection.pointerEvents}）`,
+    );
+  }
+
+  const blocked = inspection.hits.filter((hit) =>
+    hitTest === "target" ? !hit.isTarget : hit.isTarget,
+  );
+  if (blocked.length > 0) {
+    const expectation = hitTest === "target" ? "被遮挡" : "没有透传点击";
+    throw new Error(
+      `${label}: ${expectation}（target=${inspection.target}）\n` +
         blocked.map((hit) => `  · ${hit.point}: ${hit.hit}`).join("\n"),
     );
+  }
+
+  if (hitTest === "pass-through" && inspection.pointerEvents !== "none") {
+    throw new Error(`${label}: 可见提示必须 pointer-events:none，不能抢走地图点击`);
   }
 }
 
@@ -699,7 +742,7 @@ export async function touchTargetViolations(
       return (
         style.display !== "none" &&
         style.visibility !== "hidden" &&
-        style.opacity !== "0" &&
+        Number.parseFloat(style.opacity) > 0 &&
         rect.width > 0 &&
         rect.height > 0
       );
@@ -761,8 +804,9 @@ export async function clickAndMeasureResponse(
 }> {
   if (target.prepare) await target.prepare(page);
   const locator = target.locate(page);
-  await expect(locator).toBeVisible();
+  await expect(locator, `${target.label} 不在 DOM 中`).toHaveCount(1);
   await locator.scrollIntoViewIfNeeded();
+  await assertVisibleAndHittableAtFivePoints(page, locator, target.label);
   const beforeUrl = page.url();
   let navigationAt: number | null = null;
   const onNavigate = () => {

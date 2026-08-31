@@ -64,8 +64,11 @@ const configuredContentRoot = resolve(
   projectRoot,
   process.env["UNIVERSITY_CONTENT_ROOT"] ?? "content",
 );
-// Worktrees keep this generated directory as a symlink to a shared content
-// cache. Clear the target, never the link itself, so an import cannot turn the
+// Worktrees keep this generated directory as a symlink to the main checkout's
+// shared content cache: that is the one solution for both Vite and this
+// importer. Do not materialise a second `cp -R` entity copy here; it makes
+// content look local while silently drifting from the source checkout. Clear
+// the resolved target, never the link itself, so an import cannot turn the
 // next run into a broken checkout. Release builds normally use a real folder.
 const contentRoot =
   existsSync(configuredContentRoot) && lstatSync(configuredContentRoot).isSymbolicLink()

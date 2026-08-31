@@ -166,6 +166,83 @@
   padding: 0;
 }
 
+.lesson-breadcrumb {
+  min-width: 0;
+  max-width: 100%;
+  margin: 0 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.lesson-breadcrumb::-webkit-scrollbar {
+  display: none;
+}
+
+.lesson-breadcrumb__list {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+
+.lesson-breadcrumb__item {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.lesson-breadcrumb__item:not(:last-child)::after {
+  content: "/";
+  margin: 0 7px;
+  color: var(--game-ui-text-muted);
+  opacity: 0.58;
+}
+
+.lesson-breadcrumb__link,
+.lesson-breadcrumb__current {
+  display: inline-flex;
+  min-width: 0;
+  max-width: clamp(7rem, 20vw, 15rem);
+  min-height: 32px;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: var(--game-ui-radius-control, 10px);
+  overflow: hidden;
+  font-size: 0.82rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lesson-breadcrumb__link {
+  color: var(--game-ui-text-muted);
+  text-decoration: none;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
+}
+
+.lesson-breadcrumb__link:hover {
+  color: var(--game-ui-text);
+  background: color-mix(in srgb, var(--game-ui-accent, #5ec8c0) 12%, transparent);
+}
+
+.lesson-breadcrumb__link:focus-visible {
+  outline: 2px solid var(--game-ui-accent-bright);
+  outline-offset: 2px;
+}
+
+.lesson-breadcrumb__current {
+  max-width: min(34rem, 42vw);
+  color: var(--game-ui-text);
+  font-weight: 700;
+}
+
 .lesson-reader__title {
   min-width: 0;
   max-width: 100%;
@@ -858,6 +935,15 @@
 }
 
 @media (max-width: 820px) {
+  .lesson-breadcrumb {
+    margin-bottom: 12px;
+  }
+
+  .lesson-breadcrumb__link,
+  .lesson-breadcrumb__current {
+    max-width: 12rem;
+  }
+
   .lesson-completion {
     grid-template-columns: minmax(0, 1fr);
   }

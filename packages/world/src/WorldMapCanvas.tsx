@@ -44,7 +44,11 @@ export function WorldMapCanvas({
   stageChildren,
   underlay,
   overlay,
-  hint,
+  hoverHint,
+  controlsHint,
+  controlsHintVisible = true,
+  entryHint,
+  entryHintVisible = true,
   loading,
   className,
   paused = false,
@@ -53,7 +57,6 @@ export function WorldMapCanvas({
   fixedCamera = null,
   postProcessing = true,
   lookSource = null,
-  hintVisible = true,
 }: {
   readonly className?: string;
   readonly world: WorldMap | null;
@@ -92,8 +95,14 @@ export function WorldMapCanvas({
    */
   readonly underlay?: ReactNode;
   readonly overlay?: ReactNode;
-  readonly hint?: ReactNode;
-  readonly hintVisible?: boolean;
+  /** A transient island/course name shown while the pointer is over a node. */
+  readonly hoverHint?: ReactNode;
+  /** Pan and zoom instructions, retired after the first map manipulation. */
+  readonly controlsHint?: ReactNode;
+  readonly controlsHintVisible?: boolean;
+  /** The conversion cue, kept until the learner picks an island once. */
+  readonly entryHint?: ReactNode;
+  readonly entryHintVisible?: boolean;
   readonly loading?: ReactNode;
   readonly paused?: boolean;
   /**
@@ -269,9 +278,25 @@ export function WorldMapCanvas({
         })}
       </nav>
       {overlay}
-      {hint ? (
-        <p className={`hint${hintVisible ? "" : " hint--dismissed"}`} data-game-ui-tone="glass">
-          {hint}
+      {hoverHint !== null && hoverHint !== undefined ? (
+        <p className="hint hint--hover" data-game-ui-tone="glass">
+          {hoverHint}
+        </p>
+      ) : null}
+      {controlsHint !== null && controlsHint !== undefined ? (
+        <p
+          className={`hint hint--controls${controlsHintVisible ? "" : " hint--dismissed"}`}
+          data-game-ui-tone="glass"
+        >
+          {controlsHint}
+        </p>
+      ) : null}
+      {entryHint !== null && entryHint !== undefined ? (
+        <p
+          className={`hint hint--entry${entryHintVisible ? "" : " hint--dismissed"}`}
+          data-game-ui-tone="glass"
+        >
+          {entryHint}
         </p>
       ) : null}
       {loading}

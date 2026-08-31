@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import {
-  assertHittableAtFivePoints,
+  assertVisibleAndHittableAtFivePoints,
   EXPERIENCE_ROUTES,
   openCoursePickDialog,
   openExperienceRoute,
@@ -49,7 +49,7 @@ test.describe("N nocollide · 四条体验回归", () => {
     const railBox = await boxOf(rail, "今天右栏");
 
     expect(overlaps(cardBox, railBox), "课程卡落在展开的今天右栏下面").toBe(false);
-    await assertHittableAtFivePoints(
+    await assertVisibleAndHittableAtFivePoints(
       page,
       card.getByRole("button", { name: /进入这门课/ }),
       "follow card / 进入这门课",
@@ -91,7 +91,7 @@ test.describe("N nocollide · 四条体验回归", () => {
     await page.waitForTimeout(500);
 
     const accountFeedback = page.locator(".feedback-note__open--float:visible");
-    await assertHittableAtFivePoints(page, accountFeedback, "个人档案 / 提意见浮钮");
+    await assertVisibleAndHittableAtFivePoints(page, accountFeedback, "个人档案 / 提意见浮钮");
     const accountFeedbackBox = await boxOf(accountFeedback, "个人档案 / 提意见浮钮");
     const password = page.locator('input[name="password"]:visible').first();
     await expect(password, "在线账号回归必须渲染密码框").toBeVisible();
@@ -106,7 +106,7 @@ test.describe("N nocollide · 四条体验回归", () => {
     await page.waitForTimeout(500);
 
     const lessonFeedback = page.locator(".feedback-note__open--float:visible");
-    await assertHittableAtFivePoints(page, lessonFeedback, "课文 / 提意见浮钮");
+    await assertVisibleAndHittableAtFivePoints(page, lessonFeedback, "课文 / 提意见浮钮");
     const lessonFeedbackBox = await boxOf(lessonFeedback, "课文 / 提意见浮钮");
     const coveredBlocks = await page.evaluate((feedback) => {
       const selectors = [
@@ -200,7 +200,11 @@ test.describe("N nocollide · 四条体验回归", () => {
 
     const controls = page.locator(".lesson-toolbar__tools button:visible");
     for (let index = 0; index < (await controls.count()); index += 1) {
-      await assertHittableAtFivePoints(page, controls.nth(index), `课文工具 ${index + 1}`);
+      await assertVisibleAndHittableAtFivePoints(
+        page,
+        controls.nth(index),
+        `课文工具 ${index + 1}`,
+      );
     }
   });
 });

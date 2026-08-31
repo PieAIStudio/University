@@ -223,6 +223,7 @@ function renderHost(onBack = vi.fn(), onWorthwhileProgress?: () => void) {
       <LessonScreen
         locator={LOCATOR}
         course={SHELF_COURSE}
+        studyTitle="Turing Pact"
         returnDepth={0}
         onBack={onBack}
         onWorthwhileProgress={onWorthwhileProgress}
@@ -236,9 +237,17 @@ function renderHost(onBack = vi.fn(), onWorthwhileProgress?: () => void) {
 }
 
 describe("the shared lesson reader", () => {
-  it("has no nav, no breadcrumb, and a section bar instead of a course index", async () => {
+  it("shows the route hierarchy as one usable DOM breadcrumb", async () => {
     await renderHost();
-    expect(container.querySelectorAll("nav")).toHaveLength(0);
+    const breadcrumb = container.querySelector("nav.lesson-breadcrumb");
+    expect(breadcrumb).not.toBeNull();
+    expect(breadcrumb?.getAttribute("aria-label")).toBe("当前位置");
+    expect(breadcrumb?.querySelectorAll("li")).toHaveLength(4);
+    expect(breadcrumb?.querySelectorAll("a")).toHaveLength(3);
+    expect(breadcrumb?.querySelector("[aria-current='page']")?.textContent).toBe(LESSON.title);
+    expect(breadcrumb?.textContent).toContain("Turing Pact");
+    expect(breadcrumb?.textContent).toContain(COURSE.title);
+    expect(breadcrumb?.textContent).toContain("你每天用的 App，拆开是什么");
     expect(container.textContent).not.toContain("关卡地图");
     expect(container.textContent).not.toContain("1/1");
     const bar = container.querySelector("[role='progressbar']");
@@ -413,7 +422,7 @@ describe("LessonScreen close", () => {
     expect(coursePath).toBe("/turing-pact/foundations-before-zero");
 
     await renderHost(onBack);
-    expect(container.querySelector("nav")).toBeNull();
+    expect(container.querySelector("nav.lesson-breadcrumb")).not.toBeNull();
     const close = container.querySelector<HTMLButtonElement>(".lesson-toolbar__close");
     expect(close).not.toBeNull();
     await act(async () => {

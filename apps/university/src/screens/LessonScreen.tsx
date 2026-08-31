@@ -56,6 +56,7 @@ function exerciseTierOf(result: ExerciseAttemptResult): "tier-1" | "tier-2" {
 export function LessonScreen({
   locator,
   course,
+  studyTitle,
   returnDepth,
   onBack,
   onFollowLink,
@@ -68,6 +69,8 @@ export function LessonScreen({
   readonly locator: LessonRef;
   /** The course's shape, for prev/next. Null while the shelf is still arriving. */
   readonly course: CourseView | null;
+  /** Display-only title looked up from the same shelf as the current route. */
+  readonly studyTitle?: string;
   readonly returnDepth: number;
   readonly onBack: () => void;
   readonly onFollowLink: (target: LessonLinkTarget) => void;
@@ -267,6 +270,9 @@ export function LessonScreen({
     [course, locator],
   );
   const unitObjective = course?.units.find((unit) => unit.id === locator.unitId)?.objective ?? "";
+  const unitTitle =
+    course?.units.find((unit) => unit.id === locator.unitId)?.title ?? locator.unitId;
+  const courseTitle = course?.title ?? locator.courseId;
   const back = useCallback(() => {
     playSound("nav.back");
     onBack();
@@ -319,6 +325,13 @@ export function LessonScreen({
         neighbours={neighbours}
         onOpenLesson={onOpenLesson}
         onBackToCourse={back}
+        breadcrumb={{
+          locator,
+          studyTitle: studyTitle ?? locator.studyId,
+          courseTitle,
+          unitTitle,
+          onNavigateToCourse: back,
+        }}
         onFollowLink={onFollowLink}
         {...(returnDepth > 0 ? { onReturn } : {})}
         toolbarExtras={<SoundToggle progress={progressPort} />}

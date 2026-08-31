@@ -9,7 +9,7 @@ import { act, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it } from "vitest";
 
-import { MAP_CONTROLS_HINT, mapControlsHint } from "../camera/controls.js";
+import { MapControlsHint, MapEntryHint, mapControlsHint } from "../camera/controls.js";
 
 const CSS = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../overlay.css"), "utf8");
 
@@ -49,14 +49,22 @@ async function renderHint(node: ReactNode): Promise<{
   };
 }
 
-describe("MAP_CONTROLS_HINT", () => {
-  it("keeps the three clauses and gives each a monochrome glyph, not an emoji", async () => {
-    const { host, unmount } = await renderHint(MAP_CONTROLS_HINT);
+describe("separate map hints", () => {
+  it("keeps pan and zoom in the controls slot, with one monochrome glyph per clause", async () => {
+    const { host, unmount } = await renderHint(<MapControlsHint />);
     expect(host.textContent).toContain("拖动平移");
     expect(host.textContent).toContain("滚轮缩放");
-    expect(host.textContent).toContain("点岛进入");
-    expect(host.querySelectorAll(".hint__icon, .hint svg")).toHaveLength(3);
+    expect(host.textContent).not.toContain("点岛进入");
+    expect(host.querySelectorAll(".hint__icon, .hint svg")).toHaveLength(2);
     expect(host.innerHTML).not.toMatch(/[\u{1F300}-\u{1FAFF}]/u);
+    await unmount();
+  });
+
+  it("keeps island entry in its own slot so it can outlive map gestures", async () => {
+    const { host, unmount } = await renderHint(<MapEntryHint />);
+    expect(host.textContent).toContain("点岛进入");
+    expect(host.textContent).not.toContain("拖动平移");
+    expect(host.querySelectorAll(".hint__icon, .hint svg")).toHaveLength(1);
     await unmount();
   });
 
@@ -64,7 +72,7 @@ describe("MAP_CONTROLS_HINT", () => {
     const touch = await renderHint(mapControlsHint("touch"));
     expect(touch.host.textContent).toContain("拖动平移");
     expect(touch.host.textContent).toContain("双指缩放");
-    expect(touch.host.textContent).toContain("点岛进入");
+    expect(touch.host.textContent).not.toContain("点岛进入");
     expect(touch.host.textContent).not.toMatch(/滚轮|右键|鼠标/);
     expect(touch.host.querySelector(".hint__item--zoom-touch")).not.toBeNull();
     await touch.unmount();
@@ -82,15 +90,18 @@ describe("MAP_CONTROLS_HINT", () => {
       "utf8",
     );
     const fnStart = src.indexOf("export function mapControlsHint");
-    const fnEnd = src.indexOf("function subscribeCoarsePointer");
+    const fnEnd = src.indexOf("export function mapEntryHint");
     const fn = src.slice(fnStart, fnEnd);
     expect(fnStart).toBeGreaterThan(-1);
     expect(fn).toMatch(/pointer === "touch"/);
     expect(fn).toMatch(/translate\("ui.world.mapControlsHint.copy.双指缩放"\)/);
     expect(fn).toMatch(/translate\("ui.world.mapControlsHint.copy.滚轮缩放"\)/);
     expect(fn).not.toMatch(/右键/);
-    expect(src).not.toMatch(/export const MAP_CONTROLS_HINT: ReactNode = \(/);
-    expect(src).not.toMatch(/export const MAP_CONTROLS_HINT[\s\S]{0,400}滚轮缩放/);
+    expect(fn).not.toMatch(/hintItem\("enter"/);
+    const entryStart = src.indexOf("export function mapEntryHint");
+    const entryEnd = src.indexOf("function subscribeCoarsePointer");
+    expect(src.slice(entryStart, entryEnd)).toMatch(/hintItem\("enter"/);
+    expect(src).not.toMatch(/MAP_CONTROLS_HINT/);
   });
 });
 
@@ -116,6 +127,19 @@ describe("overlay.css .hint", () => {
     expect(hint).toMatch(/color:\s*var\(--game-ui-text\)/);
     expect(hint).toMatch(/border:\s*1px solid var\(--game-ui-border-subtle\)/);
     expect(hint).not.toMatch(/left:\s*calc\(var\(--shell/);
+  });
+
+  it("gives hover, entry, and controls their own readable vertical slots", () => {
+    expect(ruleBlock(CSS, ".hint--hover")).toMatch(/bottom:\s*116px/);
+    expect(ruleBlock(CSS, ".hint--entry")).toMatch(/bottom:\s*68px/);
+    expect(ruleBlock(CSS, ".hint--entry")).toMatch(/font-weight:\s*700/);
+    expect(ruleBlock(CSS, ".hint--controls")).toMatch(/bottom:\s*20px/);
+    expect(CSS).toMatch(/\.hint--dismissed\s*\{[\s\S]*?opacity:\s*0/);
+  });
+
+  it("keeps a phone hint on one horizontal line while allowing a narrow viewport to scroll it", () => {
+    expect(CSS).toMatch(/\.hint\s*\{[\s\S]*?white-space:\s*nowrap/);
+    expect(CSS).toMatch(/@media \(max-width: 400px\)[\s\S]*?\.hint\s*\{[\s\S]*?overflow-x:\s*auto/);
   });
 
   it("tapers the shared map label budget at narrow breakpoints", () => {

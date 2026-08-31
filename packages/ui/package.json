@@ -35,6 +35,7 @@
     "./language/reading-mode.js": "./src/language/reading-mode.ts",
     "./language/word-layer.css": "./src/language/word-layer.css",
     "./lesson/LessonNav.js": "./src/lesson/LessonNav.tsx",
+    "./lesson/LessonBreadcrumbs.js": "./src/lesson/LessonBreadcrumbs.tsx",
     "./lesson/LessonReader.js": "./src/lesson/LessonReader.tsx",
     "./lesson/lesson-reader.css": "./src/lesson/lesson-reader.css",
     "./lesson/lesson-toolbar.css": "./src/lesson/lesson-toolbar.css",
