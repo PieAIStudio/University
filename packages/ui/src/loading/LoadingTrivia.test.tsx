@@ -9,7 +9,6 @@ import { CONCEPT_HEADS, type ConceptHead } from "@pieai/university-core";
 import { LoadingTrivia } from "./LoadingTrivia.js";
 import { pickLoadingConcept } from "./pick-loading-concept.js";
 import { resetLoadingVisitForTests } from "./loading-visit.js";
-import { MAP_COVER_GIVE_UP_MS, MAP_COVER_REOPEN_MS, useMapCover } from "./use-map-cover.js";
 import {
   MAP_COVER_GIVE_UP_MS,
   MAP_COVER_REOPEN_MS,
