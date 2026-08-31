@@ -392,6 +392,19 @@
       "foundBy": "菲哥",
       "foundOn": "2026-08-31",
       "note": "设计已出：头像即玩家位置，三个高度（星球=乘云漂移、岛群=云飞向选中岛、岛内=兔子站在当前小节格子上，位置本身就是进度）。复用已建成的 avatar/hop.ts、PlayerMarker.tsx 与 Maps.tsx 的飞行中改向逻辑，不新建动画系统。设计稿 artifact a1621950。按「先设计后实现」，等菲哥确认再派工。"
+    },
+    {
+      "id": "5af5df4513e8",
+      "screen": "/",
+      "element": "场景打光",
+      "category": "visual-quality",
+      "viewport": "both",
+      "summary": "云是三维球体却渲染成硬边贴片，天空与水同样发平，整个场景的立体感被压掉",
+      "severity": "polish",
+      "state": "open",
+      "foundBy": "菲哥",
+      "foundOn": "2026-08-31",
+      "note": "cloud-sea.tsx 用 SphereGeometry 实例 + MeshStandardMaterial（roughness 0.82/0.94，带 emissive），几何和材质都是三维的，但画面上是硬边、均匀填色的剪影——球体在有方向光的场景里本该有明暗渐变。飞岛底面暗成一团、瀑布发平，很可能与此同因：场景打光接近均匀。这条与 f7bf257435aa 应当一起诊断，不要分开修。\n\n菲哥的反问是这条的判据：「你做成二维的，那后面小兔子骑云，那个云难道是三维的吗？」——有分支正在做兔子骑云飞向选中岛，云必须是能被骑的三维体。\n\n我的指挥失误记在这里：第一版 island 任务书让代理「追平参考图」，没说清参考图 island-art-reference-v2 是 AIGC 二维插画、是三维世界的一张照片，要学配色造型意图而不是维度。范围也框窄成了「底面颜色常量」。任务书已重写并重派。"
     }
   ]
 }
