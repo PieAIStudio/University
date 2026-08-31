@@ -222,6 +222,19 @@
       "state": "open",
       "foundBy": "claude",
       "foundOn": "2026-08-31"
+    },
+    {
+      "id": "2df9f5392a49",
+      "screen": "/plans",
+      "element": "免费方案卡的价格行",
+      "category": "copy",
+      "viewport": "both",
+      "summary": "方案名和价格都写「免费」，而且价格用的是标题字号——最不需要说服的那一档最响",
+      "severity": "polish",
+      "state": "fixed",
+      "foundBy": "grok-4.6",
+      "foundOn": "2026-08-31",
+      "guardedBy": "packages/ui/src/navigation/screens/PlansScreen.test.tsx::does not print the plan's own name a second time as its price"
     }
   ]
 }
