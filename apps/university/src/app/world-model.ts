@@ -194,6 +194,7 @@ export function useWorldModel({
 interface WorldMarkersOptions {
   readonly labelNodes: LabelNodes;
   readonly lessons: readonly LessonPlacement[];
+  readonly setCourseAvatarTarget?: (lesson: LessonPlacement) => void;
   readonly setPathOverlay: Dispatch<SetStateAction<PathOverlay | null>>;
   readonly setPicked: Dispatch<SetStateAction<CourseNode | null>>;
   readonly view: View;
@@ -203,6 +204,7 @@ interface WorldMarkersOptions {
 export function useWorldMarkers({
   labelNodes,
   lessons,
+  setCourseAvatarTarget,
   setPathOverlay,
   setPicked,
   view,
@@ -216,13 +218,15 @@ export function useWorldMarkers({
         onPick:
           view.kind === "lesson"
             ? undefined
-            : (lesson) =>
+            : (lesson) => {
+                setCourseAvatarTarget?.(lesson);
                 setPathOverlay({
                   kind: "node",
                   unitId: lesson.unitId,
                   lessonId: lesson.lessonId,
                   returnFocusTo: labelNodes.current.get(lesson.lessonId) ?? null,
-                }),
+                });
+              },
       });
     }
     if (!world) return [];
@@ -258,7 +262,7 @@ export function useWorldMarkers({
         setPicked(entry.node);
       },
     }));
-  }, [world, lessons, view, setPicked, setPathOverlay, labelNodes]);
+  }, [world, lessons, view, setPicked, setPathOverlay, setCourseAvatarTarget, labelNodes]);
 
   return markers;
 }

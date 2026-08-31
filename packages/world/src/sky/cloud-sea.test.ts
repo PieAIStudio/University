@@ -4,9 +4,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   CLOUD_LAYOUT_CONTRACT,
+  CLOUD_CARRIER_FOOT_OFFSET,
   CUTE_CLOUD_BATCH_NAMES,
   CUTE_CLOUD_CONTRACT,
   cloudHorizontalFootprint,
+  cloudCarrierHome,
   cloudPuffs,
   cloudSafeCorridorRadius,
   cuteCloudLayout,
@@ -25,6 +27,19 @@ describe("cute cloud sea", () => {
     expect(new Set(desktop.puffs.map((puff) => puff.clusterIndex))).toHaveLength(
       CUTE_CLOUD_CONTRACT.compositionClusterCount,
     );
+  });
+
+  it("uses the last existing puff as the carrier home, without adding a puff", () => {
+    const layout = cuteCloudLayout(40, -5.2, "desktop");
+    const carrier = layout.puffs.at(-1)!;
+    const home = cloudCarrierHome(40, -5.2, "desktop");
+
+    expect(layout.puffs).toHaveLength(CUTE_CLOUD_CONTRACT.desktopPuffCount);
+    expect(home).toEqual([
+      carrier.position[0],
+      carrier.position[1] + CLOUD_CARRIER_FOOT_OFFSET,
+      carrier.position[2],
+    ]);
   });
 
   it("uses six upper lobes and one opaque warm under-belly per puff", () => {

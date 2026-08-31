@@ -1,11 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { arcHeightFor, hopPose, HOP_DURATION_MS } from "./hop.js";
+import { arcHeightFor, FAST_TRAVEL_UPPER_BOUND_MS, hopPose, HOP_DURATION_MS } from "./hop.js";
 
 const FROM = { x: 0, y: 0, z: 0 };
 const TO = { x: 4, y: 1, z: 3 };
 
 describe("avatar hop", () => {
+  it("publishes a measurable fast-travel budget above the shared hop duration", () => {
+    expect(HOP_DURATION_MS).toBe(420);
+    expect(FAST_TRAVEL_UPPER_BOUND_MS).toBe(540);
+    expect(FAST_TRAVEL_UPPER_BOUND_MS).toBeGreaterThan(HOP_DURATION_MS);
+  });
+
   it("starts on the node it left and finishes on the node it was sent to", () => {
     const start = hopPose({ from: FROM, to: TO, elapsedMs: 0 });
     expect(start.position).toEqual(FROM);

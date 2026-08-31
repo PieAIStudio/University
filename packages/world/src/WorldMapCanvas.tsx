@@ -25,6 +25,7 @@ export function WorldMapCanvas({
   learnerAt,
   avatarRecipe,
   avatarSignedIn,
+  selectedCourseKey,
   skyStudyId,
   authoringFocus,
   markers,
@@ -61,6 +62,7 @@ export function WorldMapCanvas({
   readonly learnerAt: Parameters<typeof WorldScene>[0]["learnerAt"];
   readonly avatarRecipe: AvatarRecipe | null;
   readonly avatarSignedIn: boolean;
+  readonly selectedCourseKey?: string | null;
   readonly skyStudyId: string | null;
   readonly authoringFocus?: AuthoringFocus;
   readonly markers: readonly Marker[];
@@ -174,6 +176,7 @@ export function WorldMapCanvas({
             learnerAt={learnerAt}
             avatarRecipe={avatarRecipe}
             avatarSignedIn={avatarSignedIn}
+            selectedCourseKey={selectedCourseKey}
             skyStudyId={skyStudyId}
             authoringFocus={authoringFocus}
             assetRevision={assetRevision}

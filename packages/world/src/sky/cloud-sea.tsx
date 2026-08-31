@@ -20,8 +20,13 @@ import { useFrame } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
+import { hopPose } from "../avatar/hop.js";
 import { seeded } from "../island/random.js";
+import { CLOUD_CARRIER_FOOT_OFFSET, type CloudCarrierTarget } from "./cloud-carrier-contract.js";
 import { renderTier } from "./tier.js";
+
+export { CLOUD_CARRIER_FOOT_OFFSET } from "./cloud-carrier-contract.js";
+export type { CloudCarrierTarget } from "./cloud-carrier-contract.js";
 
 export type CloudPuffRole = "background" | "frame" | "near-edge";
 
@@ -444,6 +449,27 @@ function qualityFrom(quality?: CuteCloudQuality): CuteCloudQuality {
 }
 
 /**
+ * The last authored puff is the carrier slot. It is not a ninth/tenth cloud:
+ * the existing instance is moved, so the cloud sea keeps its two batches and
+ * its desktop/mobile instance counts. The returned point is where the bunny's
+ * feet begin; the cloud centre is `CLOUD_CARRIER_FOOT_OFFSET` below it.
+ */
+export function cloudCarrierHome(
+  extent: number,
+  level: number,
+  quality?: CuteCloudQuality,
+): CloudCarrierTarget {
+  const layout = cuteCloudLayout(extent, level, qualityFrom(quality));
+  const carrier = layout.puffs.at(-1);
+  if (!carrier) return [0, safeLevel(level) + CLOUD_CARRIER_FOOT_OFFSET, 0];
+  return [
+    carrier.position[0],
+    carrier.position[1] + CLOUD_CARRIER_FOOT_OFFSET,
+    carrier.position[2],
+  ];
+}
+
+/**
  * Make the complete instance data without allocating any Three.js objects.
  * This is the seam for future workers or baked manifests: layout generation
  * stays deterministic and the React component only uploads the result.
@@ -527,6 +553,27 @@ function setInstanceTransform(
   target.setColorAt(index, new THREE.Color(color));
 }
 
+/** Rewrite a carrier matrix without touching its already-uploaded instance colour. */
+function setCarrierInstanceTransform(
+  target: THREE.InstancedMesh,
+  index: number,
+  base: CuteCloudLobe | CuteCloudUnderbelly,
+  offsetX: number,
+  offsetY: number,
+  offsetZ: number,
+  scratch: THREE.Object3D,
+) {
+  scratch.position.set(
+    base.position[0] + offsetX,
+    base.position[1] + offsetY,
+    base.position[2] + offsetZ,
+  );
+  scratch.rotation.set(0, base.rotationY, 0);
+  scratch.scale.set(base.scale[0], base.scale[1], base.scale[2]);
+  scratch.updateMatrix();
+  target.setMatrixAt(index, scratch.matrix);
+}
+
 export interface CuteCloudSeaProps {
   readonly extent: number;
   readonly level: number;
@@ -534,6 +581,14 @@ export interface CuteCloudSeaProps {
   readonly quality?: CuteCloudQuality;
   /** Keep false for a still capture or deterministic visual regression shot. */
   readonly drift?: boolean;
+  /**
+   * Bunny-foot target for the existing carrier puff. `undefined` keeps this
+   * component as the ordinary cloud sea; `null` returns the carrier to its
+   * authored home position.
+   */
+  readonly carrierTarget?: CloudCarrierTarget | null;
+  /** Development evidence key; it is omitted from production callers. */
+  readonly carrierSurface?: "world" | "planet";
 }
 
 /**
@@ -544,7 +599,14 @@ export interface CuteCloudSeaProps {
  * the original CloudSea, so the parent can swap the component without a scene
  * or data-model change.
  */
-export function CuteCloudSea({ extent, level, quality, drift = true }: CuteCloudSeaProps) {
+export function CuteCloudSea({
+  extent,
+  level,
+  quality,
+  drift = true,
+  carrierTarget,
+  carrierSurface,
+}: CuteCloudSeaProps) {
   const resolvedQuality = qualityFrom(quality);
   const layout = useMemo(
     () => cuteCloudLayout(extent, level, resolvedQuality),
@@ -553,6 +615,19 @@ export function CuteCloudSea({ extent, level, quality, drift = true }: CuteCloud
   const group = useRef<THREE.Group>(null);
   const upper = useRef<THREE.InstancedMesh>(null);
   const lower = useRef<THREE.InstancedMesh>(null);
+  const carrierPuffIndex = layout.puffs.length - 1;
+  const carrierOrigin = useMemo(() => {
+    const puff = layout.puffs[carrierPuffIndex];
+    return new THREE.Vector3(...(puff?.position ?? [0, safeLevel(level), 0]));
+  }, [carrierPuffIndex, layout.puffs, level]);
+  const carrierFrom = useRef(new THREE.Vector3());
+  const carrierGoal = useRef(new THREE.Vector3());
+  const carrierPosition = useRef(new THREE.Vector3());
+  const carrierTargetScratch = useMemo(() => new THREE.Vector3(), []);
+  const carrierScratch = useMemo(() => new THREE.Object3D(), []);
+  const carrierStartedAt = useRef<number | null>(null);
+  const carrierArcLift = useRef(0);
+  const carrierSequence = useRef(0);
 
   const geometry = useMemo(() => {
     const segments =
@@ -634,6 +709,12 @@ export function CuteCloudSea({ extent, level, quality, drift = true }: CuteCloud
     lowerMesh.instanceColor!.needsUpdate = true;
     upperMesh.computeBoundingSphere();
     lowerMesh.computeBoundingSphere();
+    carrierFrom.current.copy(carrierOrigin);
+    carrierGoal.current.copy(carrierOrigin);
+    carrierPosition.current.copy(carrierOrigin);
+    carrierStartedAt.current = null;
+    carrierArcLift.current = 0;
+    carrierSequence.current += 1;
   }, [layout]);
 
   useLayoutEffect(
@@ -650,8 +731,101 @@ export function CuteCloudSea({ extent, level, quality, drift = true }: CuteCloud
     const time = clock.elapsedTime;
     // The field moves as one composition.  Tiny horizontal movement gives the
     // eye life without turning six lobes into six independent animations.
-    group.current.position.x = Math.sin(time * 0.018) * safeExtent(extent) * 0.004;
-    group.current.position.z = Math.cos(time * 0.014) * safeExtent(extent) * 0.003;
+    const driftX = Math.sin(time * 0.018) * safeExtent(extent) * 0.004;
+    const driftZ = Math.cos(time * 0.014) * safeExtent(extent) * 0.003;
+    group.current.position.x = driftX;
+    group.current.position.z = driftZ;
+
+    if (carrierTarget === undefined || carrierPuffIndex < 0) return;
+
+    const target = carrierTarget;
+    if (target) {
+      carrierTargetScratch.set(target[0], target[1] - CLOUD_CARRIER_FOOT_OFFSET, target[2]);
+    } else {
+      carrierTargetScratch.copy(carrierOrigin);
+    }
+
+    if (!carrierGoal.current.equals(carrierTargetScratch)) {
+      // This is the same in-flight retargeting used by LearnerMarker: start
+      // from the carrier's current position, never from its old destination.
+      carrierFrom.current.copy(carrierPosition.current);
+      carrierGoal.current.copy(carrierTargetScratch);
+      carrierStartedAt.current = time;
+      carrierSequence.current += 1;
+    }
+
+    let lift = 0;
+    if (carrierStartedAt.current === null) {
+      carrierPosition.current.copy(carrierGoal.current);
+    } else {
+      const pose = hopPose({
+        from: carrierFrom.current,
+        to: carrierGoal.current,
+        elapsedMs: (time - carrierStartedAt.current) * 1000,
+        reducedMotion:
+          typeof window !== "undefined" &&
+          typeof window.matchMedia === "function" &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+      });
+      carrierPosition.current.set(pose.position.x, pose.position.y, pose.position.z);
+      lift = pose.lift;
+      carrierArcLift.current = lift;
+      if (pose.done) {
+        carrierStartedAt.current = null;
+        carrierArcLift.current = 0;
+      }
+    }
+
+    // The carrier remains fixed while the rest of the cloud composition drifts
+    // by cancelling only the parent group's tiny offset. The seven existing
+    // instances are rewritten in place; no geometry, material, batch or pass
+    // is created for the bunny's cloud.
+    const offsetX = carrierPosition.current.x - carrierOrigin.x - driftX;
+    const offsetY = carrierPosition.current.y - carrierOrigin.y + lift;
+    const offsetZ = carrierPosition.current.z - carrierOrigin.z - driftZ;
+    const firstLobe = carrierPuffIndex * CUTE_CLOUD_CONTRACT.upperLobesPerPuff;
+    for (let lobeIndex = 0; lobeIndex < CUTE_CLOUD_CONTRACT.upperLobesPerPuff; lobeIndex += 1) {
+      const lobe = layout.lobes[firstLobe + lobeIndex];
+      if (!lobe || !upper.current) continue;
+      setCarrierInstanceTransform(
+        upper.current,
+        firstLobe + lobeIndex,
+        lobe,
+        offsetX,
+        offsetY,
+        offsetZ,
+        carrierScratch,
+      );
+    }
+    const belly = layout.underbellies[carrierPuffIndex];
+    if (belly && lower.current) {
+      setCarrierInstanceTransform(
+        lower.current,
+        carrierPuffIndex,
+        belly,
+        offsetX,
+        offsetY,
+        offsetZ,
+        carrierScratch,
+      );
+    }
+    if (upper.current) upper.current.instanceMatrix.needsUpdate = true;
+    if (lower.current) lower.current.instanceMatrix.needsUpdate = true;
+
+    if (import.meta.env.DEV && carrierSurface) {
+      const bag = globalThis as unknown as {
+        __cloudCarrierMotion?: Record<string, unknown>;
+      };
+      bag.__cloudCarrierMotion ??= {};
+      bag.__cloudCarrierMotion[carrierSurface] = {
+        sequence: carrierSequence.current,
+        inFlight: carrierStartedAt.current !== null,
+        startedAtClock: carrierStartedAt.current,
+        position: carrierPosition.current.toArray(),
+        target: carrierGoal.current.toArray(),
+        arcLift: carrierArcLift.current,
+      };
+    }
   });
 
   return (

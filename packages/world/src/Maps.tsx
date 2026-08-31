@@ -28,7 +28,7 @@ import {
 } from "@pieai/university-core";
 import { playSound } from "@pieai/university-ui/sound/index.js";
 import { useFrame } from "@react-three/fiber";
-import { Suspense, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { courseShapeOf, isFocusDimmed, type Course, type CourseNode } from "./course/course";
@@ -57,7 +57,7 @@ import {
 } from "./course/layout";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
 import { hash } from "./island/random.js";
-import { CuteCloudSea } from "./sky/cloud-sea.js";
+import { cloudCarrierHome, CuteCloudSea, type CloudCarrierTarget } from "./sky/cloud-sea.js";
 import {
   AerialWorldPlate,
   AerialWorldPlateFallback,
@@ -642,22 +642,44 @@ function prefersReducedMotion(): boolean {
  * so this plays over a step the learner was taking anyway and never sits
  * between a click and its answer.
  */
-function LearnerMarker({
+export function LearnerMarker({
   position,
+  initialPosition,
   recipe,
   signedIn,
-  compact = false,
+  showRing = true,
+  surface,
 }: {
   readonly position: THREE.Vector3;
+  /** The first visible point, used when a cloud starts away from its target. */
+  readonly initialPosition?: THREE.Vector3;
   readonly recipe: AvatarRecipe | null;
   readonly signedIn: boolean;
-  readonly compact?: boolean;
+  readonly showRing?: boolean;
+  /** Development-only evidence key; omitted by callers outside the map. */
+  readonly surface?: "world" | "planet" | "course";
 }) {
   const travel = useRef<THREE.Group>(null);
   const lift = useRef<THREE.Group>(null);
-  const from = useRef(position.clone());
-  const target = useRef(position.clone());
+  const initialPoint = useRef((initialPosition ?? position).clone());
+  const from = useRef(initialPoint.current.clone());
+  const target = useRef(initialPoint.current.clone());
   const startedAt = useRef<number | null>(null);
+  const finishedAt = useRef<number | null>(null);
+  const sequence = useRef(0);
+  const reportOwner = useRef({});
+
+  useEffect(() => {
+    if (!import.meta.env.DEV || !surface) return;
+    return () => {
+      const bag = globalThis as unknown as {
+        __avatarMotion?: Record<string, { readonly owner?: object }>;
+      };
+      if (bag.__avatarMotion?.[surface]?.owner === reportOwner.current) {
+        delete bag.__avatarMotion[surface];
+      }
+    };
+  }, [surface]);
 
   useFrame(({ clock }) => {
     if (islandLookFrozen()) return;
@@ -674,9 +696,26 @@ function LearnerMarker({
       from.current.copy(ground.position);
       target.current.copy(position);
       startedAt.current = clock.elapsedTime;
+      finishedAt.current = null;
+      sequence.current += 1;
     }
     if (startedAt.current === null) {
       ground.position.copy(position);
+      if (import.meta.env.DEV && surface) {
+        const bag = globalThis as unknown as {
+          __avatarMotion?: Record<string, unknown>;
+        };
+        bag.__avatarMotion ??= {};
+        bag.__avatarMotion[surface] = {
+          owner: reportOwner.current,
+          sequence: sequence.current,
+          inFlight: false,
+          startedAtClock: null,
+          finishedAt: finishedAt.current,
+          position: ground.position.toArray(),
+          target: target.current.toArray(),
+        };
+      }
       return;
     }
 
@@ -690,29 +729,38 @@ function LearnerMarker({
     ground.position.set(pose.position.x, pose.position.y, pose.position.z);
     body.position.y = pose.lift;
     body.scale.set(1, pose.stretch, 1);
-    if (pose.done) startedAt.current = null;
+    if (pose.done) {
+      startedAt.current = null;
+      finishedAt.current = typeof performance === "undefined" ? null : performance.now();
+    }
+    if (import.meta.env.DEV && surface) {
+      const bag = globalThis as unknown as {
+        __avatarMotion?: Record<string, unknown>;
+      };
+      bag.__avatarMotion ??= {};
+      bag.__avatarMotion[surface] = {
+        owner: reportOwner.current,
+        sequence: sequence.current,
+        inFlight: startedAt.current !== null,
+        startedAtClock: startedAt.current,
+        finishedAt: finishedAt.current,
+        position: ground.position.toArray(),
+        target: target.current.toArray(),
+      };
+    }
   });
 
   return (
-    <group ref={travel} position={position}>
+    <group
+      ref={travel}
+      name={surface ? `learner-marker-${surface}` : "learner-marker"}
+      position={initialPoint.current}
+    >
       <group ref={lift}>
-        {compact ? (
-          <mesh name="course-learner-beacon" position={[0, 0.62, 0]}>
-            <octahedronGeometry args={[0.44, 0]} />
-            <meshStandardMaterial
-              color={PALETTE.accent}
-              emissive={PALETTE.accent}
-              emissiveIntensity={0.28}
-              roughness={0.34}
-              metalness={0.12}
-            />
-          </mesh>
-        ) : (
-          <PlayerMarker position={MARKER_ORIGIN} recipe={recipe} signedIn={signedIn} />
-        )}
+        <PlayerMarker position={MARKER_ORIGIN} recipe={recipe} signedIn={signedIn} />
       </group>
       {/* The ring is a navigation cue on the ground; only the avatar leaves it. */}
-      <LiveRing radius={0.72} />
+      {showRing ? <LiveRing radius={0.72} /> : null}
     </group>
   );
 }
@@ -729,6 +777,8 @@ export function Weather({
   includeSea = true,
   includeDistantGround = false,
   shadows = true,
+  carrierTarget,
+  carrierSurface,
 }: {
   extent: number;
   /**
@@ -761,6 +811,10 @@ export function Weather({
   includeDistantGround?: boolean;
   /** The remote field skips the shadow map; hex cliffs already carry their own dark. */
   shadows?: boolean;
+  /** Optional target for the last existing cloud puff, measured at bunny feet. */
+  carrierTarget?: CloudCarrierTarget | null;
+  /** Development-only evidence key for the carrier motion. */
+  carrierSurface?: "world" | "planet";
 }) {
   const [, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
   // FogExp2 has no near plane. Density is derived from the old far so the
@@ -825,7 +879,13 @@ export function Weather({
       {includeSea ? <DeepSea extent={extent} level={cloudLevel} /> : null}
       {includeDistantGround ? <DistantGround extent={extent} level={cloudLevel} /> : null}
       {includeCloudSea ? (
-        <CuteCloudSea extent={extent} level={cloudLevel} drift={!islandLookFrozen()} />
+        <CuteCloudSea
+          extent={extent}
+          level={cloudLevel}
+          drift={!islandLookFrozen()}
+          carrierTarget={carrierTarget}
+          carrierSurface={carrierSurface}
+        />
       ) : null}
     </>
   );
@@ -837,6 +897,7 @@ export function WorldScene({
   avatarRecipe = null,
   avatarSignedIn = false,
   extent,
+  selectedCourseKey = null,
   onPick,
   onHover,
   authoringFocus,
@@ -853,6 +914,8 @@ export function WorldScene({
   learnerAt: THREE.Vector3 | null;
   avatarRecipe?: AvatarRecipe | null;
   avatarSignedIn?: boolean;
+  /** `studyId/courseId` while the course card is open; null means the cloud home. */
+  selectedCourseKey?: string | null;
   onPick: (node: CourseNode) => void;
   onHover: (node: CourseNode | null) => void;
   /**
@@ -876,6 +939,31 @@ export function WorldScene({
     [authoringFocus, placements],
   );
   const hoveredIsland = useRef<number | null>(null);
+  const cloudLevel = -5.2;
+  const weatherExtent = extent * 1.5;
+  const cloudOrigin = useMemo(() => cloudCarrierHome(weatherExtent, cloudLevel), [weatherExtent]);
+  const cloudHomeTarget = useMemo<CloudCarrierTarget>(
+    () => [learnerAt?.x ?? cloudOrigin[0], cloudOrigin[1], learnerAt?.z ?? cloudOrigin[2]],
+    [cloudOrigin, learnerAt],
+  );
+  const selectedPlacement = useMemo(
+    () =>
+      selectedCourseKey
+        ? (placements.find(
+            (entry) => `${entry.node.studyId}/${entry.node.courseId}` === selectedCourseKey,
+          ) ?? null)
+        : null,
+    [placements, selectedCourseKey],
+  );
+  const carrierTarget = useMemo<CloudCarrierTarget>(
+    () =>
+      selectedPlacement
+        ? [selectedPlacement.position.x, selectedPlacement.position.y, selectedPlacement.position.z]
+        : cloudHomeTarget,
+    [cloudHomeTarget, selectedPlacement],
+  );
+  const carrierPosition = useMemo(() => new THREE.Vector3(...carrierTarget), [carrierTarget]);
+  const carrierInitialPosition = useMemo(() => new THREE.Vector3(...cloudOrigin), [cloudOrigin]);
   const sky = useMemo(
     () => ({
       ...skyStopsForStudy(skyStudyId),
@@ -888,14 +976,17 @@ export function WorldScene({
   return (
     <>
       <Weather
-        extent={extent * 1.5}
+        extent={weatherExtent}
         groundRadius={extent * 0.9}
         fog={[extent * WORLD_SKY_CONTRACT.fogNearRatio, extent * WORLD_SKY_CONTRACT.fogFarRatio]}
         fogColor={WORLD_SKY_CONTRACT.fogColor}
         sky={sky}
+        cloudLevel={cloudLevel}
         includeSea={WORLD_SKY_CONTRACT.visibleSea}
         includeDistantGround
         shadows={false}
+        carrierTarget={carrierTarget}
+        carrierSurface="world"
       />
       {/*
         No roads between islands. The catalogue is an archipelago field, not a
@@ -919,8 +1010,15 @@ export function WorldScene({
           onHover(entry?.node ?? null);
         }}
       />
-      {learnerAt ? (
-        <LearnerMarker position={learnerAt} recipe={avatarRecipe} signedIn={avatarSignedIn} />
+      {placements.length > 0 ? (
+        <LearnerMarker
+          position={carrierPosition}
+          initialPosition={carrierInitialPosition}
+          recipe={avatarRecipe}
+          signedIn={avatarSignedIn}
+          showRing={selectedPlacement !== null}
+          surface="world"
+        />
       ) : null}
     </>
   );
@@ -1117,6 +1215,7 @@ export function CourseScene({
   lessons,
   avatarRecipe = null,
   avatarSignedIn = false,
+  avatarLessonId = null,
   onPick,
   onHover,
   skyStudyId: _skyStudyId = null,
@@ -1125,12 +1224,18 @@ export function CourseScene({
   lessons: readonly LessonPlacement[];
   avatarRecipe?: AvatarRecipe | null;
   avatarSignedIn?: boolean;
+  /** The cell selected before opening a lesson, retained through settlement. */
+  avatarLessonId?: string | null;
   onPick: (lesson: LessonPlacement) => void;
   onHover: (lesson: LessonPlacement | null) => void;
   skyStudyId?: string | null;
   assetRevision?: number;
 }) {
   const live = lessons.find((lesson) => lesson.state === "live");
+  const avatarLesson = avatarLessonId
+    ? (lessons.find((lesson) => lesson.lessonId === avatarLessonId) ?? null)
+    : null;
+  const avatarAt = avatarLesson ?? live ?? lessons.at(-1) ?? lessons[0] ?? null;
   const studyId = lessons[0]?.studyId ?? "course";
   const courseId = lessons[0]?.courseId ?? "course";
   const blueprint = useMemo(
@@ -1212,12 +1317,13 @@ export function CourseScene({
         <IslandDressing key={assetRevision} blueprint={blueprint} detail="course" grid={grid} />
       </Suspense>
       <LessonMarkerField markers={markers} onPick={onPick} onHover={onHover} />
-      {live ? (
+      {avatarAt ? (
         <LearnerMarker
-          position={live.position}
+          position={avatarAt.position}
           recipe={avatarRecipe}
           signedIn={avatarSignedIn}
-          compact
+          showRing
+          surface="course"
         />
       ) : null}
     </>

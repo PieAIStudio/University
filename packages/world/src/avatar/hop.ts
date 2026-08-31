@@ -16,6 +16,13 @@
 /** Short enough to read as a reaction rather than a cutscene. */
 export const HOP_DURATION_MS = 420;
 
+/**
+ * The measurable product promise for map travel: the existing hop plus eight
+ * visible frames of scheduling tolerance. It is still shorter than reading
+ * the course card that appears on the same click.
+ */
+export const FAST_TRAVEL_UPPER_BOUND_MS = HOP_DURATION_MS + 120;
+
 /** Relative to the distance travelled, so a short move is a small hop. */
 const ARC_RATIO = 0.28;
 const MIN_ARC = 0.35;
