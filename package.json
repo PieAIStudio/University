@@ -38,6 +38,7 @@
     "check:experience": "node scripts/experience-ledger.mjs check"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@pieai/doc-gov": "0.9.9",
     "@pieai/pro-gov": "0.9.9",
     "@playwright/test": "^1.62.1",

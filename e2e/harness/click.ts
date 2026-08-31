@@ -2,6 +2,10 @@ import type { Locator, Page } from "@playwright/test";
 
 type Hit = { readonly hittable: boolean; readonly describe: string };
 
+export interface HumanClickOptions {
+  readonly beforePress?: () => void;
+}
+
 /**
  * A real pointer, not `element.click()`.
  *
@@ -11,7 +15,12 @@ type Hit = { readonly hittable: boolean; readonly describe: string };
  * element's screen position and then dispatch the mouse sequence a hand
  * would. See docs/reference/learnings/workflow-issues/.
  */
-export async function humanClick(page: Page, target: Locator, label: string): Promise<void> {
+export async function humanClick(
+  page: Page,
+  target: Locator,
+  label: string,
+  options?: HumanClickOptions,
+): Promise<void> {
   await target.waitFor({ state: "visible" });
   let lastStack = "空";
 
@@ -51,6 +60,7 @@ export async function humanClick(page: Page, target: Locator, label: string): Pr
 
     await page.mouse.move(chosen.x, chosen.y);
     await page.waitForTimeout(40);
+    options?.beforePress?.();
     await page.mouse.down({ button: "left" });
     await page.waitForTimeout(40);
     await page.mouse.up({ button: "left" });
@@ -75,7 +85,9 @@ async function hitTest(
       const describe = stack.slice(0, 6).map((entry) => {
         const el = entry as HTMLElement;
         const cls =
-          typeof el.className === "string" ? el.className.trim().split(/\s+/).slice(0, 3).join(".") : "";
+          typeof el.className === "string"
+            ? el.className.trim().split(/\s+/).slice(0, 3).join(".")
+            : "";
         return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}${cls ? `.${cls}` : ""}`;
       });
       return { hittable, describe: describe.join(" → ") || "空" };

@@ -1,0 +1,834 @@
+import { AxeBuilder } from "@axe-core/playwright";
+import { expect, type Locator, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+import { ONLINE_ORIGIN } from "../ports.js";
+import { humanClick } from "./click.js";
+import { TODAY_CTA, waitForMapReady } from "./online-learner.js";
+
+export const COURSE_PATH = "/turing-pact/foundations-terrain";
+export const LONG_LESSON_PATH =
+  "/turing-pact/foundations-terrain/what-a-project-is/scripts-are-the-doors";
+
+export const EXPERIENCE_VIEWPORTS = [
+  { id: "desktop", width: 1280, height: 640 },
+  { id: "phone", width: 375, height: 812 },
+] as const;
+
+export const AXE_TAGS = [
+  "wcag2a",
+  "wcag2aa",
+  "wcag21a",
+  "wcag21aa",
+  "wcag22a",
+  "wcag22aa",
+] as const;
+
+const AXE_BASELINE_PATH = fileURLToPath(new URL("../axe-baseline.json", import.meta.url));
+const VISIBLE_DIALOGS = 'dialog:visible, [role="dialog"]:visible, [role="alertdialog"]:visible';
+
+export type ExperienceViewport = (typeof EXPERIENCE_VIEWPORTS)[number];
+
+export interface ExperienceTarget {
+  readonly id: string;
+  readonly label: string;
+  readonly locate: (page: Page) => Locator;
+  readonly scrollToLessonBottom?: boolean;
+  readonly prepare?: (page: Page) => Promise<void>;
+}
+
+export interface ExperienceRoute {
+  readonly id: string;
+  readonly label: string;
+  readonly path: string;
+  readonly ready: (page: Page) => Promise<void>;
+  readonly primary: ExperienceTarget | null;
+  readonly coverage: readonly ExperienceTarget[];
+  readonly returnToWorld: (page: Page) => Promise<void>;
+  readonly noPrimaryReason?: string;
+}
+
+const WORLD_PRIMARY: ExperienceTarget = {
+  id: "today-lesson",
+  label: "今天这一课",
+  locate: (page) => page.getByRole("button", { name: TODAY_CTA }).first(),
+};
+
+const LIBRARY_PRIMARY: ExperienceTarget = {
+  id: "library-first-entry",
+  label: "图鉴第一条概念",
+  locate: (page) => page.locator(".term-index__hit:visible").first(),
+};
+
+const PRACTICE_PRIMARY: ExperienceTarget = {
+  id: "practice-start",
+  label: "开始一道判断",
+  locate: (page) => page.getByRole("button", { name: "开始一道判断" }),
+};
+
+const PLANS_PRIMARY: ExperienceTarget = {
+  id: "plans-purchase",
+  label: "会员购买",
+  locate: (page) => page.getByRole("button", { name: "购买", exact: true }).first(),
+};
+
+const PROFILE_PRIMARY: ExperienceTarget = {
+  id: "profile-account-explanation",
+  label: "账号说明",
+  locate: (page) => page.getByRole("button", { name: /暂未开放/ }),
+};
+
+const REVIEW_PRIMARY: ExperienceTarget = {
+  id: "review-today-lesson",
+  label: "复习页今天这一课",
+  locate: (page) => page.getByRole("button", { name: TODAY_CTA }).first(),
+};
+
+const LESSON_COMPLETION: ExperienceTarget = {
+  id: "lesson-completion",
+  label: "完成本次更新",
+  locate: (page) => page.getByRole("button", { name: "完成本次更新" }),
+  scrollToLessonBottom: true,
+};
+
+const LESSON_ANSWER: ExperienceTarget = {
+  id: "lesson-bottom-answer",
+  label: "长课底部输入框",
+  locate: (page) => page.getByRole("textbox", { name: "你的答案" }).first(),
+  scrollToLessonBottom: true,
+};
+
+const LESSON_SUBMIT: ExperienceTarget = {
+  id: "lesson-bottom-submit",
+  label: "长课底部提交按钮",
+  locate: (page) => page.getByRole("button", { name: "提交" }).first(),
+  scrollToLessonBottom: true,
+};
+
+async function readyWorld(page: Page): Promise<void> {
+  await waitForMapReady(page);
+}
+
+async function readyShellHeading(page: Page, name: string | RegExp): Promise<void> {
+  await expect(page.getByRole("heading", { name })).toBeVisible({ timeout: 30_000 });
+}
+
+async function readyLibrary(page: Page): Promise<void> {
+  await readyShellHeading(page, "概念图解");
+  await expect(LIBRARY_PRIMARY.locate(page)).toBeVisible({ timeout: 30_000 });
+}
+
+async function readyPractice(page: Page): Promise<void> {
+  await readyShellHeading(page, "今天适合练吗？");
+  await expect(PRACTICE_PRIMARY.locate(page)).toBeVisible({ timeout: 30_000 });
+}
+
+async function readyPlans(page: Page): Promise<void> {
+  await expect(page.getByRole("heading", { name: "会员", level: 1 })).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(PLANS_PRIMARY.locate(page)).toBeVisible({ timeout: 30_000 });
+}
+
+async function readyProfile(page: Page): Promise<void> {
+  await expect(page.getByRole("region", { name: "账号" })).toBeVisible({ timeout: 30_000 });
+  await expect(PROFILE_PRIMARY.locate(page)).toBeVisible({ timeout: 30_000 });
+}
+
+async function readyReview(page: Page): Promise<void> {
+  await expect(page.locator(".review-page")).toBeVisible({ timeout: 30_000 });
+  await expect(REVIEW_PRIMARY.locate(page)).toBeVisible({ timeout: 30_000 });
+}
+
+async function readyLesson(page: Page): Promise<void> {
+  await expect(page.locator(".lesson-reader__header")).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator(".lesson-next")).toBeVisible({ timeout: 30_000 });
+}
+
+async function returnFromShellRoute(page: Page, label: string): Promise<void> {
+  const map = page.getByRole("link", { name: "学习" }).first();
+  await expect(map, `${label} 没有可见的学习地图入口`).toBeVisible();
+  await humanClick(page, map, `${label} 回到学习地图`);
+  await expect(page).toHaveURL(`${ONLINE_ORIGIN}/`);
+  await waitForMapReady(page);
+}
+
+async function returnFromLesson(page: Page): Promise<void> {
+  await humanClick(page, page.getByRole("button", { name: "离开课文" }), "课文离开");
+  await expect(page).toHaveURL(new RegExp(`${COURSE_PATH.replaceAll("/", "\\/")}$`));
+  const map = page.getByRole("button", { name: /回到 .*地图/ });
+  await expect(map).toBeVisible({ timeout: 30_000 });
+  await humanClick(page, map, "课程地图返回世界");
+  await expect(page).toHaveURL(`${ONLINE_ORIGIN}/`);
+  await waitForMapReady(page);
+}
+
+const SHELL_RETURN = (label: string) => (page: Page) => returnFromShellRoute(page, label);
+
+export const EXPERIENCE_ROUTES: readonly ExperienceRoute[] = [
+  {
+    id: "world",
+    label: "世界地图",
+    path: "/",
+    ready: readyWorld,
+    primary: WORLD_PRIMARY,
+    coverage: [WORLD_PRIMARY],
+    returnToWorld: async (page) => {
+      await expect(page).toHaveURL(`${ONLINE_ORIGIN}/`);
+    },
+  },
+  {
+    id: "library",
+    label: "图鉴",
+    path: "/library",
+    ready: readyLibrary,
+    primary: LIBRARY_PRIMARY,
+    coverage: [LIBRARY_PRIMARY],
+    returnToWorld: SHELL_RETURN("图鉴"),
+  },
+  {
+    id: "practice",
+    label: "练习",
+    path: "/practice",
+    ready: readyPractice,
+    primary: PRACTICE_PRIMARY,
+    coverage: [PRACTICE_PRIMARY],
+    returnToWorld: SHELL_RETURN("练习"),
+  },
+  {
+    id: "league",
+    label: "排行榜",
+    path: "/league",
+    ready: (page) => readyShellHeading(page, "排行榜"),
+    primary: null,
+    coverage: [],
+    returnToWorld: SHELL_RETURN("排行榜"),
+    noPrimaryReason: "当前排行榜只有个人段位和说明，没有需要学习者立即执行的主 CTA。",
+  },
+  {
+    id: "quests",
+    label: "任务",
+    path: "/quests",
+    ready: (page) => readyShellHeading(page, "今天"),
+    primary: null,
+    coverage: [],
+    returnToWorld: SHELL_RETURN("任务"),
+    noPrimaryReason: "当前任务页只有每日状态列表，没有需要学习者立即执行的主 CTA。",
+  },
+  {
+    id: "plans",
+    label: "会员",
+    path: "/plans",
+    ready: readyPlans,
+    primary: PLANS_PRIMARY,
+    coverage: [PLANS_PRIMARY],
+    returnToWorld: SHELL_RETURN("会员"),
+  },
+  {
+    id: "me",
+    label: "个人档案",
+    path: "/me",
+    ready: readyProfile,
+    primary: PROFILE_PRIMARY,
+    coverage: [PROFILE_PRIMARY],
+    returnToWorld: SHELL_RETURN("个人档案"),
+  },
+  {
+    id: "review",
+    label: "复习",
+    path: "/review",
+    ready: readyReview,
+    primary: REVIEW_PRIMARY,
+    coverage: [REVIEW_PRIMARY],
+    returnToWorld: SHELL_RETURN("复习"),
+  },
+  {
+    id: "lesson",
+    label: "课文",
+    path: LONG_LESSON_PATH,
+    ready: readyLesson,
+    primary: LESSON_COMPLETION,
+    coverage: [LESSON_COMPLETION, LESSON_ANSWER, LESSON_SUBMIT],
+    returnToWorld: returnFromLesson,
+  },
+] as const;
+
+type AxeBaselineEntry = {
+  readonly key: string;
+  readonly route: string;
+  readonly viewport: string;
+  readonly id: string;
+  readonly impact: string | null;
+  readonly target: string;
+  readonly description: string;
+};
+
+type AxeBaseline = {
+  readonly version: 1;
+  readonly tags: readonly string[];
+  readonly violations: readonly AxeBaselineEntry[];
+};
+
+export type AxeFinding = AxeBaselineEntry;
+
+function readAxeBaseline(): AxeBaseline {
+  return JSON.parse(readFileSync(AXE_BASELINE_PATH, "utf8")) as AxeBaseline;
+}
+
+function axeTargetText(target: string | readonly string[]): string {
+  return typeof target === "string" ? target : target.join(" ");
+}
+
+function axeFindingKey(route: string, viewport: string, id: string, target: string): string {
+  return `${route}|${viewport}|${id}|${target}`;
+}
+
+export async function auditAxeBaseline(
+  page: Page,
+  route: ExperienceRoute,
+  viewport: ExperienceViewport,
+): Promise<{ readonly current: readonly AxeFinding[]; readonly stale: readonly AxeFinding[] }> {
+  const result = await new AxeBuilder({ page }).withTags([...AXE_TAGS]).analyze();
+  const current = result.violations.flatMap((violation) =>
+    violation.nodes.map((node) => {
+      const target = axeTargetText(node.target[0] ?? "<unknown>");
+      return {
+        key: axeFindingKey(route.id, viewport.id, violation.id, target),
+        route: route.id,
+        viewport: viewport.id,
+        id: violation.id,
+        impact: violation.impact ?? null,
+        target,
+        description: `${violation.help}: ${violation.description}`.replace(/\s+/gu, " ").trim(),
+      };
+    }),
+  );
+  const baseline = readAxeBaseline();
+  expect(baseline.tags).toEqual(expect.arrayContaining([...AXE_TAGS]));
+  const scopedBaseline = baseline.violations.filter(
+    (entry) => entry.route === route.id && entry.viewport === viewport.id,
+  );
+  const known = new Set(scopedBaseline.map((entry) => entry.key));
+  const fresh = current.filter((entry) => !known.has(entry.key));
+  const stale = scopedBaseline.filter((entry) => !current.some((item) => item.key === entry.key));
+
+  expect(
+    current.length,
+    `axe baseline 只能缩小：${route.id}/${viewport.id} 当前 ${current.length} 项，baseline 有 ${scopedBaseline.length} 项。`,
+  ).toBeLessThanOrEqual(scopedBaseline.length);
+  expect(
+    fresh,
+    `发现新的 axe 违规（${route.id}/${viewport.id}）：\n${fresh
+      .map(
+        (entry) =>
+          `${entry.id} [${entry.impact ?? "unknown"}] ${entry.target} — ${entry.description}`,
+      )
+      .join("\n")}`,
+  ).toEqual([]);
+
+  return { current, stale };
+}
+
+export const TOUCH_TARGET_EXEMPTIONS: readonly {
+  readonly id: string;
+  readonly routeId: string;
+  readonly selector: string;
+  readonly reason: string;
+}[] = [
+  {
+    id: "practice-primary-near-feedback",
+    routeId: "practice",
+    selector:
+      "button.game-ui-button.game-ui-button--primary.game-ui-button--static.liquid-cta__button",
+    reason: "当前 /practice 手机主 CTA 高 40px，且被固定提意见浮钮拉到 38.5px 中心距。",
+  },
+  {
+    id: "practice-feedback-near-primary",
+    routeId: "practice",
+    selector: "button.feedback-note__open.feedback-note__open--float",
+    reason: "当前 /practice 的提意见浮钮高 34px，并与主 CTA 保持 38.5px 中心距。",
+  },
+];
+
+export async function openExperienceRoute(
+  page: Page,
+  route: ExperienceRoute,
+  viewport: ExperienceViewport,
+): Promise<void> {
+  await page.setViewportSize({ width: viewport.width, height: viewport.height });
+  await page.goto(`${ONLINE_ORIGIN}${route.path}`, { waitUntil: "domcontentloaded" });
+  await route.ready(page);
+}
+
+export async function openCoursePage(page: Page, viewport: ExperienceViewport): Promise<void> {
+  await page.setViewportSize({ width: viewport.width, height: viewport.height });
+  await page.goto(`${ONLINE_ORIGIN}${COURSE_PATH}`, { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".picked--left")).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator("button.label").first()).toBeVisible({ timeout: 60_000 });
+}
+
+export async function openCoursePickDialog(
+  page: Page,
+  viewport: ExperienceViewport,
+): Promise<Locator> {
+  await openExperienceRoute(page, EXPERIENCE_ROUTES[0]!, viewport);
+  const label = page.locator("button.label.label--course.is-visible").first();
+  await expect(label).toBeVisible({ timeout: 30_000 });
+  await humanClick(page, label, "地图课程岛");
+  const dialog = page.locator('.picked--follow[role="dialog"]');
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  return dialog;
+}
+
+export async function openCourseNodeDialog(
+  page: Page,
+  viewport: ExperienceViewport,
+): Promise<Locator> {
+  await openCoursePage(page, viewport);
+  const start = page.locator("button.label", { hasText: /^开始$/ }).first();
+  await expect(start).toBeVisible({ timeout: 60_000 });
+  await humanClick(page, start, "课程路径第一关");
+  const dialog = page.locator('.path-card[role="dialog"]');
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  return dialog;
+}
+
+export async function openCourseUnitDialog(
+  page: Page,
+  viewport: ExperienceViewport,
+): Promise<Locator> {
+  await openCoursePage(page, viewport);
+  const trigger = page.getByRole("button", { name: "先看这一单元讲什么" });
+  await expect(trigger).toBeVisible({ timeout: 30_000 });
+  await humanClick(page, trigger, "课程单元说明");
+  const dialog = page.locator('.path-card[role="dialog"]');
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  return dialog;
+}
+
+export async function openAccountDialog(
+  page: Page,
+  viewport: ExperienceViewport,
+): Promise<Locator> {
+  const route = EXPERIENCE_ROUTES.find((candidate) => candidate.id === "me")!;
+  await openExperienceRoute(page, route, viewport);
+  const trigger = PROFILE_PRIMARY.locate(page);
+  await trigger.scrollIntoViewIfNeeded();
+  await humanClick(page, trigger, "账号说明");
+  const dialog = page.locator(VISIBLE_DIALOGS).last();
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  return dialog;
+}
+
+export async function openPlansDialog(page: Page, viewport: ExperienceViewport): Promise<Locator> {
+  const route = EXPERIENCE_ROUTES.find((candidate) => candidate.id === "plans")!;
+  await openExperienceRoute(page, route, viewport);
+  const trigger = PLANS_PRIMARY.locate(page);
+  await trigger.scrollIntoViewIfNeeded();
+  await humanClick(page, trigger, "会员购买");
+  const dialog = page.locator(VISIBLE_DIALOGS).last();
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  return dialog;
+}
+
+export async function openLibraryDialog(
+  page: Page,
+  viewport: ExperienceViewport,
+): Promise<Locator> {
+  await page.setViewportSize({ width: viewport.width, height: viewport.height });
+  await page.goto(`${ONLINE_ORIGIN}/library/terms`, { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "词义索引" })).toBeVisible({ timeout: 30_000 });
+  const term = page.locator(".term-index__hit:visible").first();
+  await expect(term).toBeVisible({ timeout: 30_000 });
+  await humanClick(page, term, "图鉴第一条词义");
+  const dialog = page.locator(VISIBLE_DIALOGS).last();
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  return dialog;
+}
+
+export async function openFeedbackDialog(
+  page: Page,
+  viewport: ExperienceViewport,
+): Promise<Locator> {
+  await openExperienceRoute(page, EXPERIENCE_ROUTES[0]!, viewport);
+  const trigger = page.locator('button[aria-haspopup="dialog"]:visible', { hasText: "提意见" });
+  await expect(trigger).toBeVisible({ timeout: 15_000 });
+  await humanClick(page, trigger, "提意见");
+  const dialog = page.locator(VISIBLE_DIALOGS).last();
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  return dialog;
+}
+
+export async function openLessonSourceDialog(
+  page: Page,
+  viewport: ExperienceViewport,
+): Promise<Locator> {
+  const route = EXPERIENCE_ROUTES.find((candidate) => candidate.id === "lesson")!;
+  await openExperienceRoute(page, route, viewport);
+  const trigger = page.locator(".evidence-inline-source__open:visible").first();
+  await expect(trigger).toBeVisible({ timeout: 15_000 });
+  await humanClick(page, trigger, "看完整文件");
+  const dialog = page.locator(VISIBLE_DIALOGS).last();
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  return dialog;
+}
+
+export async function openLessonLayerDialog(
+  page: Page,
+  viewport: ExperienceViewport,
+): Promise<Locator> {
+  const route = EXPERIENCE_ROUTES.find((candidate) => candidate.id === "lesson")!;
+  await openExperienceRoute(page, route, viewport);
+  const trigger = page.getByRole("button", { name: "查看项目分层" });
+  await expect(trigger).toBeVisible({ timeout: 15_000 });
+  await humanClick(page, trigger, "查看项目分层");
+  const dialog = page.locator(VISIBLE_DIALOGS).last();
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  return dialog;
+}
+
+export async function openWordDialog(page: Page, viewport: ExperienceViewport): Promise<Locator> {
+  const route = EXPERIENCE_ROUTES.find((candidate) => candidate.id === "lesson")!;
+  await openExperienceRoute(page, route, viewport);
+  const trigger = page.locator(".word-anchor__trigger:visible").first();
+  await expect(trigger).toBeVisible({ timeout: 15_000 });
+  await humanClick(page, trigger, "正文词义");
+  const dialog = page.locator(VISIBLE_DIALOGS).last();
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  return dialog;
+}
+
+export async function closeVisibleDialog(
+  page: Page,
+  dialog: Locator,
+  label: string,
+): Promise<"control" | "escape"> {
+  const dialogs = page.locator(VISIBLE_DIALOGS);
+  const beforeCount = await dialogs.count();
+  if (beforeCount === 0) throw new Error(`${label}: 没有可见 dialog`);
+
+  const controls = dialog.locator('button, [role="button"], a[href]');
+  const exitIndex = await controls.evaluateAll((elements) => {
+    const controlName = (element: Element) =>
+      (
+        element.getAttribute("aria-label") ??
+        element.getAttribute("title") ??
+        element.textContent ??
+        ""
+      )
+        .replace(/\s+/gu, " ")
+        .trim();
+    const looksLikeExit = (element: Element) =>
+      /(关闭|收起|返回|回到|离开|取消|知道了|退出)/u.test(controlName(element));
+    const visible = (element: Element) => {
+      const style = getComputedStyle(element);
+      const box = element.getBoundingClientRect();
+      return (
+        style.display !== "none" &&
+        style.visibility !== "hidden" &&
+        style.opacity !== "0" &&
+        box.width >= 44 &&
+        box.height >= 44
+      );
+    };
+    return elements.findIndex((element) => looksLikeExit(element) && visible(element));
+  });
+
+  if (exitIndex >= 0) {
+    const control = controls.nth(exitIndex);
+    try {
+      await humanClick(page, control, `${label}关闭控件`);
+      await expect.poll(() => dialogs.count(), { timeout: 1_000 }).toBeLessThan(beforeCount);
+      return "control";
+    } catch {
+      // Esc is an equally valid exit path. Keep checking it when a visible
+      // control exists but does not complete the dismissal.
+    }
+  }
+
+  await page.keyboard.press("Escape");
+  await expect.poll(() => dialogs.count(), { timeout: 1_000 }).toBeLessThan(beforeCount);
+  return "escape";
+}
+
+export async function scrollLessonToBottom(page: Page): Promise<void> {
+  const reader = page.locator("main.reader").first();
+  await expect(reader).toBeVisible();
+  await reader.evaluate((node) => {
+    node.scrollTop = node.scrollHeight;
+  });
+  await expect
+    .poll(() =>
+      reader.evaluate((node) => node.scrollTop >= node.scrollHeight - node.clientHeight - 1),
+    )
+    .toBe(true);
+}
+
+export async function prepareCoverageTarget(
+  page: Page,
+  target: ExperienceTarget,
+): Promise<Locator> {
+  if (target.prepare) await target.prepare(page);
+  if (target.scrollToLessonBottom) await scrollLessonToBottom(page);
+  const locator = target.locate(page);
+  await expect(locator, `${target.label} 不可见`).toBeVisible();
+  await locator.scrollIntoViewIfNeeded();
+  return locator;
+}
+
+export function elementSelector(element: Element | null): string {
+  if (!element) return "<空>";
+  const tag = element.tagName.toLowerCase();
+  const id = element.id ? `#${element.id}` : "";
+  const classes =
+    typeof (element as HTMLElement).className === "string"
+      ? (element as HTMLElement).className
+          .trim()
+          .split(/\s+/u)
+          .filter(Boolean)
+          .slice(0, 4)
+          .map((name) => `.${name}`)
+          .join("")
+      : "";
+  return `${tag}${id}${classes}`;
+}
+
+export async function assertHittableAtFivePoints(
+  page: Page,
+  target: Locator,
+  label: string,
+): Promise<void> {
+  const handle = await target.elementHandle();
+  if (!handle) throw new Error(`${label}: 找不到元素句柄`);
+  const box = await target.boundingBox();
+  if (!box) {
+    await handle.dispose();
+    throw new Error(`${label}: 没有屏幕矩形`);
+  }
+
+  // Twelve pixels keeps the sample inside the visible corner of the product's
+  // pill-shaped controls. Eight pixels was still outside a 70px-high pill and
+  // reported its parent <li> as a false overlay.
+  const inset = Math.max(2, Math.min(12, box.width / 4, box.height / 4));
+  const points = [
+    { name: "中心", x: box.x + box.width / 2, y: box.y + box.height / 2 },
+    { name: "左上", x: box.x + inset, y: box.y + inset },
+    { name: "右上", x: box.x + box.width - inset, y: box.y + inset },
+    { name: "左下", x: box.x + inset, y: box.y + box.height - inset },
+    { name: "右下", x: box.x + box.width - inset, y: box.y + box.height - inset },
+  ];
+
+  const inspection = await page.evaluate(
+    ({ node, points }) => {
+      const selector = (element: Element | null) => {
+        if (!element) return "<空>";
+        const tag = element.tagName.toLowerCase();
+        const id = element.id ? `#${element.id}` : "";
+        const className = (element as HTMLElement).className;
+        const classes =
+          typeof className === "string"
+            ? className
+                .trim()
+                .split(/\s+/u)
+                .filter(Boolean)
+                .slice(0, 4)
+                .map((name) => `.${name}`)
+                .join("")
+            : "";
+        return `${tag}${id}${classes}`;
+      };
+
+      return {
+        target: selector(node),
+        hits: points.map((point) => {
+          const hit = document.elementFromPoint(point.x, point.y);
+          const isTarget = Boolean(hit && (hit === node || node.contains(hit)));
+          return { point: point.name, isTarget, hit: selector(hit) };
+        }),
+      };
+    },
+    { node: handle, points },
+  );
+  await handle.dispose();
+
+  const blocked = inspection.hits.filter((hit) => !hit.isTarget);
+  if (blocked.length > 0) {
+    throw new Error(
+      `${label}: 被遮挡（target=${inspection.target}）\n` +
+        blocked.map((hit) => `  · ${hit.point}: ${hit.hit}`).join("\n"),
+    );
+  }
+}
+
+export async function touchTargetViolations(
+  page: Page,
+  routeId: string,
+): Promise<
+  readonly {
+    readonly routeId: string;
+    readonly target: string;
+    readonly label: string;
+    readonly width: number;
+    readonly height: number;
+    readonly nearestCenterDistance: number;
+  }[]
+> {
+  return page.evaluate((currentRouteId) => {
+    const selector = 'button, a, input, textarea, select, [role="button"], [tabindex]';
+    const visible = (node: Element) => {
+      const style = getComputedStyle(node);
+      const rect = node.getBoundingClientRect();
+      return (
+        style.display !== "none" &&
+        style.visibility !== "hidden" &&
+        style.opacity !== "0" &&
+        rect.width > 0 &&
+        rect.height > 0
+      );
+    };
+    const label = (node: Element) =>
+      (node.getAttribute("aria-label") ?? node.getAttribute("title") ?? node.textContent ?? "")
+        .replace(/\s+/gu, " ")
+        .trim()
+        .slice(0, 100);
+    const nodes = [...document.querySelectorAll(selector)].filter(visible);
+    const rects = nodes.map((node) => node.getBoundingClientRect());
+    return nodes.flatMap((node, index) => {
+      const rect = rects[index]!;
+      const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+      const nearestCenterDistance = Math.min(
+        ...rects
+          .map((other, otherIndex) =>
+            otherIndex === index
+              ? Number.POSITIVE_INFINITY
+              : Math.hypot(
+                  center.x - (other.left + other.width / 2),
+                  center.y - (other.top + other.height / 2),
+                ),
+          )
+          .filter(Number.isFinite),
+      );
+      if ((rect.width >= 44 && rect.height >= 44) || nearestCenterDistance >= 44) return [];
+      return [
+        {
+          routeId: currentRouteId,
+          target: `${node.tagName.toLowerCase()}${node.id ? `#${node.id}` : ""}${
+            typeof (node as HTMLElement).className === "string"
+              ? (node as HTMLElement).className
+                  .trim()
+                  .split(/\s+/u)
+                  .filter(Boolean)
+                  .slice(0, 4)
+                  .map((name) => `.${name}`)
+                  .join("")
+              : ""
+          }`,
+          label: label(node),
+          width: Math.round(rect.width * 10) / 10,
+          height: Math.round(rect.height * 10) / 10,
+          nearestCenterDistance: Math.round(nearestCenterDistance * 10) / 10,
+        },
+      ];
+    });
+  }, routeId);
+}
+
+export async function clickAndMeasureResponse(
+  page: Page,
+  target: ExperienceTarget,
+): Promise<{
+  readonly urlChanged: boolean;
+  readonly domChanged: boolean;
+  readonly elapsedMs: number;
+}> {
+  if (target.prepare) await target.prepare(page);
+  const locator = target.locate(page);
+  await expect(locator).toBeVisible();
+  await locator.scrollIntoViewIfNeeded();
+  const beforeUrl = page.url();
+  let navigationAt: number | null = null;
+  const onNavigate = () => {
+    navigationAt ??= Date.now();
+  };
+  page.on("framenavigated", onNavigate);
+  await page.evaluate(() => {
+    const key = "__experienceCtaMutation";
+    const state: {
+      clickedAt: number | null;
+      respondedAt: number | null;
+      urlChangedAt: number | null;
+    } = {
+      clickedAt: null,
+      respondedAt: null,
+      urlChangedAt: null,
+    };
+    const markResponse = () => {
+      if (state.clickedAt !== null) state.respondedAt ??= performance.now();
+    };
+    const observer = new MutationObserver(() => {
+      markResponse();
+    });
+    observer.observe(document.documentElement, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+    });
+    document.addEventListener(
+      "click",
+      () => {
+        state.clickedAt ??= performance.now();
+      },
+      { capture: true, once: true },
+    );
+    for (const method of ["pushState", "replaceState"] as const) {
+      const original = history[method];
+      history[method] = function (...args) {
+        if (state.clickedAt !== null) {
+          state.urlChangedAt ??= performance.now();
+          markResponse();
+        }
+        return original.apply(this, args);
+      };
+    }
+    Object.assign(window, { [key]: { state, observer } });
+  });
+  let clickStarted = Date.now();
+  try {
+    await humanClick(page, locator, target.label, {
+      beforePress: () => {
+        clickStarted = Date.now();
+      },
+    });
+  } finally {
+    page.off("framenavigated", onNavigate);
+  }
+  const remaining = Math.max(0, 300 - (Date.now() - clickStarted));
+  if (remaining > 0) await page.waitForTimeout(remaining);
+  const state = await page
+    .evaluate(() => {
+      const entry = (
+        window as unknown as {
+          __experienceCtaMutation?: {
+            state: {
+              clickedAt: number | null;
+              respondedAt: number | null;
+              urlChangedAt: number | null;
+            };
+            observer: MutationObserver;
+          };
+        }
+      ).__experienceCtaMutation;
+      entry?.observer.disconnect();
+      return entry?.state ?? { clickedAt: null, respondedAt: null, urlChangedAt: null };
+    })
+    .catch(() => ({ clickedAt: null, respondedAt: null }));
+  const urlChanged = page.url() !== beforeUrl;
+  const responseElapsed = navigationAt
+    ? navigationAt - clickStarted
+    : state.clickedAt !== null && state.respondedAt !== null
+      ? state.respondedAt - state.clickedAt
+      : null;
+  const elapsedMs = responseElapsed === null ? 301 : Math.max(0, Math.round(responseElapsed));
+  return { urlChanged, domChanged: state.respondedAt !== null, elapsedMs };
+}
