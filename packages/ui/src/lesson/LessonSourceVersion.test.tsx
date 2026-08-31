@@ -129,3 +129,53 @@ describe("LessonSourceVersion honest entry", () => {
     expect(container.querySelector("[data-unavailable]")).toBeNull();
   });
 });
+
+describe("LessonSourceVersion pinned version line", () => {
+  /*
+    This lesson's audience, in the course's own words, is an adult with no
+    programming experience who has only ever used apps. Production showed them
+    forty hex characters and, because no build had ever supplied a date, a
+    sentence with its object missing: 「这节课钉在的版本（3b402e06）」.
+  */
+  const commit = "3b402e069a5db5fe9eb82dbc03aa05152b3d298b";
+
+  it("leads with the date and keeps the hash off the line", async () => {
+    await act(async () => {
+      root.render(
+        <LessonSourceVersion
+          studyId="turing-pact"
+          sourceCommit={commit}
+          sourceCommitDate="2026-07-22"
+          sourceAccess={explanationPort()}
+        />,
+      );
+    });
+
+    const label = container.querySelector(".lesson-version__label");
+    // The year is omitted only while it is the current year, which is the one
+    // case where omitting it cannot be ambiguous, so assert the day not the year.
+    expect(label?.textContent).toContain("7月22日");
+    expect(label?.textContent).not.toContain("3b402e06");
+    // and the receipt is still reachable for anyone who wants it
+    expect(label?.getAttribute("title")).toContain(commit);
+  });
+
+  it("falls back to a short hash rather than pinning to nothing", async () => {
+    // Only authoring and dev reach this branch: a baked release refuses to ship
+    // a lesson whose commit the study mirror cannot resolve, so a missing date
+    // means there is no mirror, not that the pin is unknown.
+    await act(async () => {
+      root.render(
+        <LessonSourceVersion
+          studyId="turing-pact"
+          sourceCommit={commit}
+          sourceAccess={explanationPort()}
+        />,
+      );
+    });
+
+    const text = container.querySelector(".lesson-version__label")?.textContent ?? "";
+    expect(text).toContain("3b402e06");
+    expect(text).not.toContain("钉在的版本");
+  });
+});

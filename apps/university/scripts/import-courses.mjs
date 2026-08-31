@@ -55,7 +55,12 @@ import {
 } from "@pieai/university-core/marks/path-stats.js";
 import { join, resolve } from "node:path";
 
-import { bakeLessonEvidence, hasAnyStudyRepository } from "./bake-evidence.mjs";
+import {
+  bakeLessonEvidence,
+  commitDate,
+  hasAnyStudyRepository,
+  studyRepository,
+} from "./bake-evidence.mjs";
 import { validateRecoveryInput } from "./delivery-artifact.mjs";
 import { requireContentRevision, toPublicPackage } from "./public-course.mjs";
 
@@ -174,6 +179,8 @@ let snippetBytes = 0;
 let snippetFiles = 0;
 let snippetEvidence = 0;
 let snippetRepoEvidence = 0;
+let pinnedDated = 0;
+const pinnedUnresolved = new Map();
 
 for (const studyId of readdirSync(upstream).sort()) {
   if (onlyStudy && studyId !== onlyStudy) continue;
@@ -311,9 +318,28 @@ for (const studyId of readdirSync(upstream).sort()) {
             bytes: bytes.length,
           };
         });
+        /*
+          The header says which version this lesson is pinned to. Until now it
+          could only say it in hex, because nothing ever supplied a date — the
+          component has had a dated branch since it was written and that branch
+          has never once run in production. A reader who has never opened a
+          terminal cannot do anything with forty hex characters, so the date is
+          the claim and the hash is the receipt behind it.
+
+          Resolving the date also asks the mirror whether the commit is there at
+          all, which is the only question that matters for a pin. Under
+          `--evidence baked` an unresolvable commit fails the build below.
+        */
+        const pinnedDate = commitDate(studyRepository(studiesRoot, studyId), lesson.sourceCommit);
+        if (pinnedDate) pinnedDated += 1;
+        else if (lesson.sourceCommit) {
+          const seen = pinnedUnresolved.get(lesson.sourceCommit) ?? 0;
+          pinnedUnresolved.set(lesson.sourceCommit, seen + 1);
+        }
         deliveryLessons.push({
           ...lesson,
           contentRevision,
+          ...(pinnedDate ? { sourceCommitDate: pinnedDate } : {}),
           evidence: deliveryEvidence,
           assets: deliveryAssets,
           cards: deliveryCards,
@@ -517,10 +543,31 @@ if (evidenceMode === "none") {
   );
 } else {
   console.log(
+    `import-courses: dated ${pinnedDated} pinned lesson(s)` +
+      (pinnedUnresolved.size > 0 ? `; ${pinnedUnresolved.size} commit(s) unresolved` : "") +
+      `.`,
+  );
+  console.log(
     `import-courses: baked ${snippetBaked}/${snippetRepoEvidence} repository evidence snippets ` +
       `into ${snippetFiles} files (${(snippetBytes / 1048576).toFixed(2)} MB` +
       (snippetSkipped > 0 ? `; ${snippetSkipped} skipped` : "") +
       `).`,
+  );
+}
+
+/*
+  A pin nobody can resolve is not a pin. These commits are cited by lessons and
+  absent from the mirror the citations are read from, so every claim resting on
+  them is unverifiable — including the one the header makes out loud.
+*/
+if (requireBakedEvidence && pinnedUnresolved.size > 0) {
+  const named = [...pinnedUnresolved.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([sha, lessons]) => `    ${sha} — ${lessons} lesson(s)`)
+    .join("\n");
+  throw new Error(
+    `import-courses: ${pinnedUnresolved.size} pinned commit(s) do not resolve in the study mirrors, ` +
+      `so the version those lessons name cannot be confirmed:\n${named}`,
   );
 }
 
