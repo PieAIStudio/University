@@ -62,9 +62,11 @@
       "viewport": "both",
       "summary": "点购买（意图最强的一刻）弹出的是「这一端现在做不到」的三段解释，而不是登录",
       "severity": "blocking",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "claude+grok-4.6",
-      "foundOn": "2026-08-31"
+      "foundOn": "2026-08-31",
+      "guardedBy": "packages/ui/src/navigation/screens/PlansScreen.test.tsx::keeps the anonymous purchase CTA visible and points to email binding / keeps the CTA usable and explains when the account has no channel / uses payment language only when the adapter reports a live order channel",
+      "note": "不再让按钮先假装能结账再解释：匿名说「先绑定邮箱」，已登录说「记录购买意向」，没有身份说「先登录」。真的接通 createOrder 之后按钮才恢复「购买」，所以这不是把未来的结账路径改成装饰。"
     },
     {
       "id": "a006cf7bebd8",
@@ -98,9 +100,11 @@
       "viewport": "phone",
       "summary": "手机首次进课文出现空白页，控制台 WebGLRenderer Context Lost，没有重试出口",
       "severity": "blocking",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "grok-4.6",
-      "foundOn": "2026-08-31"
+      "foundOn": "2026-08-31",
+      "guardedBy": "e2e/M.recovery.spec.ts::WebGL context lost 后可重试，也能在 restored 后重新挂载场景 / WebGL 不可用时在短时间内说明原因，并可直接进入今天的课 / 场景 20 秒没有 ready 时出现超时恢复态，而不是黑屏",
+      "note": "四种故障各有一条可解释、可操作的恢复态，注入式 e2e 在桌面和手机都稳定复现。自然发生的那一次没有稳定复现路径，所以守的是合成注入，不是那一次现象。"
     },
     {
       "id": "fb5cf55b5d72",
