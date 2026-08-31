@@ -299,7 +299,19 @@ function dressingAssetsReady(scene: THREE.Scene, source: IslandLookSceneSource):
   return loaded >= expected;
 }
 
-function aerialPlateReady(scene: THREE.Scene): boolean {
+/*
+  A course island is drawn without the sea, so it never mounts the aerial plate
+  that lives inside `horizon-sea`. Waiting for one anyway made the judge time
+  out on every course shot, which meant the only machine check this repository
+  has for island look was blind on the exact scene 菲哥 was complaining about —
+  a shared brown underside that reads as a dark smear got all the way to
+  production with a gate nominally watching it.
+
+  The scene source already knows which kind of shot this is. Ask it, rather
+  than waiting 150 seconds for an object that is not coming.
+*/
+function aerialPlateReady(scene: THREE.Scene, source: IslandLookSceneSource): boolean {
+  if (source.detail !== "world") return true;
   const plate = scene.getObjectByName("island-look-aerial-plate");
   if (!plate || !(plate as THREE.Mesh).isMesh) return false;
   const material = (plate as THREE.Mesh).material;
@@ -315,7 +327,7 @@ function islandLookSceneReady(scene: THREE.Scene, source: IslandLookSceneSource)
   // The V2 course/world scenes keep their dressing and aerial plate inside
   // nested Suspense boundaries. `ScenePresence` cannot see those boundaries,
   // so the judge waits on the actual render objects instead of timing a guess.
-  return dressingAssetsReady(scene, source) && aerialPlateReady(scene);
+  return dressingAssetsReady(scene, source) && aerialPlateReady(scene, source);
 }
 
 function nodeIsConservativelyOccluded(
