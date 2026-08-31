@@ -106,14 +106,27 @@ if (initializedStudies.length === 0) {
 const exported = directoriesIn(exportRoot).filter((study) =>
   existsSync(join(exportRoot, study, "index.json")),
 );
-const studies = onlyStudy ? exported.filter((study) => study === onlyStudy) : exported;
+const initializedStudyIds = new Set(initializedStudies);
+const studies = (onlyStudy ? exported.filter((study) => study === onlyStudy) : exported).filter(
+  (study) => initializedStudyIds.has(study),
+);
 
-if (onlyStudy && studies.length === 0) {
+if (onlyStudy && !exported.includes(onlyStudy)) {
   console.error(`check-export-freshness: no export directory for study ${onlyStudy}`);
   process.exit(2);
 }
 if (studies.length === 0) {
-  console.log("check-export-freshness: no exports to check.");
+  const missingSources = (
+    onlyStudy ? exported.filter((study) => study === onlyStudy) : exported
+  ).filter((study) => !initializedStudyIds.has(study));
+  if (missingSources.length > 0) {
+    console.log(
+      "check-export-freshness: no initialized local source for " +
+        `${missingSources.join(", ")}; nothing to compare.`,
+    );
+  } else {
+    console.log("check-export-freshness: no exports to check.");
+  }
   process.exit(0);
 }
 

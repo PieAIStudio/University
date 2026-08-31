@@ -52,6 +52,8 @@ export type {
 
 // Shared surface — the lesson itself. Both shells.
 export { LessonReader } from "./lesson/LessonReader.js";
+export { LessonBreadcrumbs } from "./lesson/LessonBreadcrumbs.js";
+export type { LessonBreadcrumbsProps } from "./lesson/LessonBreadcrumbs.js";
 export type { LessonSourceVersionCheckout } from "./lesson/LessonSourceVersion.js";
 export { CapabilityExplanation } from "./capability/CapabilityExplanation.js";
 export { ReviewReminderPrompt } from "./notifications/ReviewReminderPrompt.js";

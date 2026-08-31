@@ -15,7 +15,7 @@ import {
   openPlansDialog,
   openExperienceRoute,
   prepareCoverageTarget,
-  assertHittableAtFivePoints,
+  assertVisibleAndHittableAtFivePoints,
   clickAndMeasureResponse,
   touchTargetViolations,
   TOUCH_TARGET_EXEMPTIONS,
@@ -138,7 +138,11 @@ test.describe("M 跨屏体验不变量", () => {
               `X3 ${viewport.id} · ${route.label} · ${target.label}`,
               async () => {
                 const locator = await prepareCoverageTarget(page, target);
-                await assertHittableAtFivePoints(page, locator, `${route.label} / ${target.label}`);
+                await assertVisibleAndHittableAtFivePoints(
+                  page,
+                  locator,
+                  `${route.label} / ${target.label}`,
+                );
               },
             );
           }

@@ -194,6 +194,7 @@ export function useWorldModel({
 interface WorldMarkersOptions {
   readonly labelNodes: LabelNodes;
   readonly lessons: readonly LessonPlacement[];
+  readonly onCoursePick: () => void;
   readonly setPathOverlay: Dispatch<SetStateAction<PathOverlay | null>>;
   readonly setPicked: Dispatch<SetStateAction<CourseNode | null>>;
   readonly view: View;
@@ -203,6 +204,7 @@ interface WorldMarkersOptions {
 export function useWorldMarkers({
   labelNodes,
   lessons,
+  onCoursePick,
   setPathOverlay,
   setPicked,
   view,
@@ -255,10 +257,11 @@ export function useWorldMarkers({
       activate: () => {
         // Picking opens the course card. It must not retarget the catalogue
         // origin — that rebuilds every island under the pointer.
+        onCoursePick();
         setPicked(entry.node);
       },
     }));
-  }, [world, lessons, view, setPicked, setPathOverlay, labelNodes]);
+  }, [world, lessons, view, onCoursePick, setPicked, setPathOverlay, labelNodes]);
 
   return markers;
 }

@@ -618,6 +618,8 @@ export const messages = {
   "ui.lesson.lessonMarkList.copy.我的标记": "我的标记",
   "ui.lesson.lessonMarkList.copy.拷贝全部去问-AI-value0-条": "拷贝全部去问 AI（{{value0}} 条）",
   "ui.lesson.lessonMarkList.copy.没有待解决的疑问": "没有待解决的疑问",
+  "ui.lesson.lessonBreadcrumbs.copy.当前位置": "当前位置",
+  "ui.lesson.lessonBreadcrumbs.copy.回到课程地图-value0": "回到课程地图：{{value0}}",
   "ui.lesson.lessonNav.copy.离开课文": "离开课文",
   "ui.lesson.lessonNav.copy.课文进度": "课文进度",
   "ui.lesson.lessonNextStep.copy.下一节": "下一节",

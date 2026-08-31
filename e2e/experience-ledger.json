@@ -336,10 +336,11 @@
       "viewport": "both",
       "summary": "操作提示在第一次拖动地图后 opacity 归零，「点岛进入」这条唯一学不会的操作也一起消失",
       "severity": "friction",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "菲哥",
       "foundOn": "2026-08-31",
-      "note": "App.tsx:713 hintVisible={Boolean(hovered) || !mapInteracted}，mapInteracted 是 useState(false)。生产站实测：刚加载 opacity=1，拖一下后 opacity=0，而 visibility 仍是 visible、textContent 一字不少——toBeVisible() 和 getByText(\"点岛进入\") 全都会过。三条提示的可发现性完全不同：拖动会自我教学（一拖就动），滚轮半自我教学，而「点岛进入」不会——它恰好是转化动作。首次交互就把三条一起收走，收走的是唯一有价值的那条。我先前两次判为窗口尺寸问题，都是错的。"
+      "guardedBy": "e2e/O.nav.spec.ts::O1 desktop/phone：拖动后统一三层断言守住点岛进入，首次选岛后才退场",
+      "note": "App.tsx:713 hintVisible={Boolean(hovered) || !mapInteracted}，mapInteracted 是 useState(false)。生产站实测：刚加载 opacity=1，拖一下后 opacity=0，而 visibility 仍是 visible、textContent 一字不少——toBeVisible() 和 getByText(\"点岛进入\") 全都会过。三条提示的可发现性完全不同：拖动会自我教学（一拖就动），滚轮半自我教学，而「点岛进入」不会——它恰好是转化动作。首次交互就把三条一起收走，收走的是唯一有价值的那条。我先前两次判为窗口尺寸问题，都是错的。修复后 controls/entry/hover 分槽，O1 以 DOM、计算样式含 opacity、五点 hit-test（提示要求 pass-through）守住；攻击测试临时设 opacity:0 已红灯，恢复后桌面/手机均绿灯。"
     },
     {
       "id": "9c96c93cdcd6",
@@ -349,10 +350,11 @@
       "viewport": "both",
       "summary": "URL 已含 study/course/unit/lesson 四层，屏幕上一层都不显示，也没有回到本课程的入口",
       "severity": "friction",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "菲哥",
       "foundOn": "2026-08-31",
-      "note": "生产站 /turing-pact/foundations-before-zero/what-is-an-app/you-already-know-apps，页内 breadcrumb 元素数=0。顶栏只有 1/8 与两个模式开关，不说这是哪门课哪一单元。唯一出口是 X（回地图），没有「回到本课程」。数据齐备，纯粹是没渲染。面包屑必须是 DOM，不能画进 canvas（Web3D 基线规则 7）。"
+      "guardedBy": "e2e/O.nav.spec.ts::O2 desktop/phone：四层 DOM 面包屑单行且课程层真实点击回课程地图",
+      "note": "生产站 /turing-pact/foundations-before-zero/what-is-an-app/you-already-know-apps，页内 breadcrumb 元素数=0。顶栏只有 1/8 与两个模式开关，不说这是哪门课哪一单元。唯一出口是 X（回地图），没有「回到本课程」。数据齐备，纯粹是没渲染。面包屑必须是 DOM，不能画进 canvas（Web3D 基线规则 7）。修复后 LessonBreadcrumbs 从 canonical locator 生成系列/课程/单元/课文四层，父级链接可操作；O2 在桌面/手机检查四个 li、单行布局、canonical href，并用真实鼠标点击课程层回到课程地图。"
     },
     {
       "id": "7eb9e5c567f6",

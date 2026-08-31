@@ -69,7 +69,7 @@ test.describe("A 在线端 · 手机指针", () => {
     const consoleErrors = watchConsole(page);
     await page.goto(`${ONLINE_ORIGIN}/`, { waitUntil: "domcontentloaded" });
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
-    const hint = page.locator(".hint");
+    const hint = page.locator(".hint--controls");
     await expect(hint).toBeVisible({ timeout: 30_000 });
     await expect(hint).toContainText("双指缩放");
     await expect(hint).not.toContainText("滚轮");

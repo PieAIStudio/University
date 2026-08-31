@@ -63,9 +63,9 @@ async function clickEmptySky(page: Page): Promise<void> {
   // Sky and island are the same <canvas> node, so `elementsFromPoint` can
   // rule out DOM overlays but can never tell the two apart — the ray did
   // that, not the DOM. Ask the product instead: the hint reads
-  // MAP_CONTROLS_HINT (which carries .hint__row) while nothing is hovered,
-  // and swaps to a course title the moment the ray hits an island. A point
-  // that leaves .hint__row standing is a point the raycaster missed.
+  // the control hint while nothing is hovered, and swaps to a course title
+  // the moment the ray hits an island. A point that leaves the hover hint
+  // absent is a point the raycaster missed.
   //
   // The four fixed guesses this replaces were written when the map held a
   // handful of islands. Fifty-three of them leave almost no sky at a fixed
@@ -99,8 +99,8 @@ async function clickEmptySky(page: Page): Promise<void> {
     await page.mouse.move(point.x, point.y);
     // One frame for the raycast, one for React to render the swapped hint.
     await page.waitForTimeout(120);
-    const rayMissed = await page.locator(".hint .hint__row").count();
-    if (rayMissed === 0) continue;
+    const rayHitIsland = await page.locator(".hint--hover").count();
+    if (rayHitIsland > 0) continue;
 
     await page.mouse.click(point.x, point.y);
     return;

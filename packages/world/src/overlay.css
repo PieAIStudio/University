@@ -320,10 +320,25 @@ button.label:focus-visible {
   box-shadow: var(--game-ui-shadow-panel);
   pointer-events: none;
   white-space: nowrap;
+  max-width: calc(100% - 28px);
+  box-sizing: border-box;
   opacity: 1;
   transition:
     opacity 220ms ease,
     transform 220ms ease;
+}
+
+.hint--hover {
+  bottom: 116px;
+}
+
+.hint--entry {
+  bottom: 68px;
+  font-weight: 700;
+}
+
+.hint--controls {
+  bottom: 20px;
 }
 
 .hint--dismissed {
@@ -342,7 +357,14 @@ button.label:focus-visible {
     left: auto;
     right: 14px;
     width: max-content;
+    max-width: calc(100vw - 28px);
+    overflow-x: auto;
+    scrollbar-width: none;
     transform: none;
+  }
+
+  .hint::-webkit-scrollbar {
+    display: none;
   }
 
   .hint--dismissed {

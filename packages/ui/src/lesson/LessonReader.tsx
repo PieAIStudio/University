@@ -36,6 +36,7 @@ import { ReviewCard } from "../review/ReviewCard.js";
 import type { ReviewCardPort } from "../review/ports.js";
 import { readingSections, type LessonRef, type LessonView } from "../view/lesson-view.js";
 import { LessonToolbar, type LessonNeighbours } from "./LessonNav.js";
+import { LessonBreadcrumbs, type LessonBreadcrumbsProps } from "./LessonBreadcrumbs.js";
 import { LessonMarkList } from "./LessonMarkList.js";
 import { LessonMargin } from "./LessonMargin.js";
 import { LessonBacklinks } from "./LessonRelated.js";
@@ -92,6 +93,7 @@ export function LessonReader({
   onWorthwhileProgress,
   completionDestination,
   toolbarExtras,
+  breadcrumb,
 }: {
   readonly locator: LessonRef;
   readonly view: LessonView;
@@ -122,6 +124,8 @@ export function LessonReader({
   readonly completionDestination?: string;
   /** Shell-owned tools that sit with the reading controls, not a second toolbar. */
   readonly toolbarExtras?: ReactNode;
+  /** Route-derived orientation, kept outside the WebGL stage. */
+  readonly breadcrumb?: Omit<LessonBreadcrumbsProps, "lessonTitle">;
 }) {
   const completed = isLessonComplete(completion);
   const readConfirmed = completion.readConfirmed;
@@ -511,6 +515,7 @@ export function LessonReader({
           {toolbarExtras}
         </LessonToolbar>
       ) : null}
+      {breadcrumb ? <LessonBreadcrumbs {...breadcrumb} lessonTitle={view.lesson.title} /> : null}
       {/*
         Three columns always: empty rails still reserve width so the prose
         column stays page-centred. Empty rails render no box, border, or heading.
