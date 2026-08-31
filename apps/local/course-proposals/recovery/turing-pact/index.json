@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "packageKind": "university-local-course-recovery",
   "evidenceMode": "source-only",
-  "droppedUaBindingCount": 1209,
+  "droppedUaBindingCount": 218,
   "study": {
     "id": "turing-pact",
     "title": "TuringPact",
@@ -21,98 +21,8 @@
   "courses": [
     {
       "courseId": "foundations-before-zero",
-      "file": "foundations-before-zero.63b8411d1625588d2cd3c416ab90e469710610c3cd25974f00065ed3a8525e7b.recovery.json",
-      "sha256": "sha256:63b8411d1625588d2cd3c416ab90e469710610c3cd25974f00065ed3a8525e7b"
-    },
-    {
-      "courseId": "foundations-terrain",
-      "file": "foundations-terrain.599e692524c95d661ad4c9ecfce04224c755cea009b780ed69a3d26cf341082a.recovery.json",
-      "sha256": "sha256:599e692524c95d661ad4c9ecfce04224c755cea009b780ed69a3d26cf341082a"
-    },
-    {
-      "courseId": "foundations-reading-code",
-      "file": "foundations-reading-code.ce471bbd0d33a75cf8c0369d9f798b83952615b474cccb5bfcebc4c3185e9e9e.recovery.json",
-      "sha256": "sha256:ce471bbd0d33a75cf8c0369d9f798b83952615b474cccb5bfcebc4c3185e9e9e"
-    },
-    {
-      "courseId": "foundations-logic",
-      "file": "foundations-logic.2a94e51f72fce29484018a6c6caeeb3813b8e6d2a230f157cbfa8519aa33edfc.recovery.json",
-      "sha256": "sha256:2a94e51f72fce29484018a6c6caeeb3813b8e6d2a230f157cbfa8519aa33edfc"
-    },
-    {
-      "courseId": "foundations-data",
-      "file": "foundations-data.edea104ba71d257b15671be1686e90c4b316c06c9a042188b70a1794339d041b.recovery.json",
-      "sha256": "sha256:edea104ba71d257b15671be1686e90c4b316c06c9a042188b70a1794339d041b"
-    },
-    {
-      "courseId": "foundations-async",
-      "file": "foundations-async.1081aecfbb402b26daa15169145fa0306be030c9715bbecac04707d1449cec65.recovery.json",
-      "sha256": "sha256:1081aecfbb402b26daa15169145fa0306be030c9715bbecac04707d1449cec65"
-    },
-    {
-      "courseId": "foundations-ui",
-      "file": "foundations-ui.994c822b3da53a295357f3a7c091091221d2bc61d924f0eb6f99e1f8e542dfd0.recovery.json",
-      "sha256": "sha256:994c822b3da53a295357f3a7c091091221d2bc61d924f0eb6f99e1f8e542dfd0"
-    },
-    {
-      "courseId": "foundations-quality",
-      "file": "foundations-quality.ddacc928ea0ac63c15684ed11cc071e2eecab3113a85c26e75ba1599d355df37.recovery.json",
-      "sha256": "sha256:ddacc928ea0ac63c15684ed11cc071e2eecab3113a85c26e75ba1599d355df37"
-    },
-    {
-      "courseId": "foundations-product",
-      "file": "foundations-product.06a3a86bb46ec4aa15d0847d498b8d10ccf579ad295f50e6c335fd3579f0e3e8.recovery.json",
-      "sha256": "sha256:06a3a86bb46ec4aa15d0847d498b8d10ccf579ad295f50e6c335fd3579f0e3e8"
-    },
-    {
-      "courseId": "contracts-and-drift",
-      "file": "contracts-and-drift.ffebb99663ecef753151503616d04c3e33798d792c0dafafb4bf86734472db06.recovery.json",
-      "sha256": "sha256:ffebb99663ecef753151503616d04c3e33798d792c0dafafb4bf86734472db06"
-    },
-    {
-      "courseId": "testing-strategy",
-      "file": "testing-strategy.376a0b3a3c8d7fd2d91cf45d4ad316c374eb31380598092c0df3f58f52f5969a.recovery.json",
-      "sha256": "sha256:376a0b3a3c8d7fd2d91cf45d4ad316c374eb31380598092c0df3f58f52f5969a"
-    },
-    {
-      "courseId": "state-and-process",
-      "file": "state-and-process.266c5b042b8ef99afd878a1abf80cc16b0ae8688110db01889d754ee38d608e1.recovery.json",
-      "sha256": "sha256:266c5b042b8ef99afd878a1abf80cc16b0ae8688110db01889d754ee38d608e1"
-    },
-    {
-      "courseId": "one-codebase-many-hosts",
-      "file": "one-codebase-many-hosts.77ae05f9d71839e0030604708bb8df25dcc3cb6342a4d8a5e4f4c17ce75e3d95.recovery.json",
-      "sha256": "sha256:77ae05f9d71839e0030604708bb8df25dcc3cb6342a4d8a5e4f4c17ce75e3d95"
-    },
-    {
-      "courseId": "identity-and-accounts",
-      "file": "identity-and-accounts.7baa09afbd7fa230ed86d7948bb4ff387b53634a0c3a65bf43218bd8a2249028.recovery.json",
-      "sha256": "sha256:7baa09afbd7fa230ed86d7948bb4ff387b53634a0c3a65bf43218bd8a2249028"
-    },
-    {
-      "courseId": "bilingual-by-design",
-      "file": "bilingual-by-design.39e58565cfd10eede65405a47b678b135bcc9c38add9b51cfb44c994e54e0a4d.recovery.json",
-      "sha256": "sha256:39e58565cfd10eede65405a47b678b135bcc9c38add9b51cfb44c994e54e0a4d"
-    },
-    {
-      "courseId": "realtime-presence",
-      "file": "realtime-presence.19002a473686349584f6773ebff677953af1b310cea56870630da16df99e9aee.recovery.json",
-      "sha256": "sha256:19002a473686349584f6773ebff677953af1b310cea56870630da16df99e9aee"
-    },
-    {
-      "courseId": "platform-capabilities",
-      "file": "platform-capabilities.e0fb9ee85e4134eba70d8e338bed4d435908a4a7384fbac9401b97dd81ee32fd.recovery.json",
-      "sha256": "sha256:e0fb9ee85e4134eba70d8e338bed4d435908a4a7384fbac9401b97dd81ee32fd"
-    },
-    {
-      "courseId": "ai-contracts-first",
-      "file": "ai-contracts-first.70216cfab140feffcf4dcc74816a77ae9c043bce11dad936cf5a4695d56a6c40.recovery.json",
-      "sha256": "sha256:70216cfab140feffcf4dcc74816a77ae9c043bce11dad936cf5a4695d56a6c40"
-    },
-    {
-      "courseId": "ai-budget-and-cost",
-      "file": "ai-budget-and-cost.094b82fad8cc4f40a9e1ab9ad5262d3aa1b31ed8f46807bcdc43a4a1e3d4a66e.recovery.json",
-      "sha256": "sha256:094b82fad8cc4f40a9e1ab9ad5262d3aa1b31ed8f46807bcdc43a4a1e3d4a66e"
+      "file": "foundations-before-zero.5ad853c0d7699fc49340967fb4561dd3508e79ebb2258f11935aaf38d3a727f8.recovery.json",
+      "sha256": "sha256:5ad853c0d7699fc49340967fb4561dd3508e79ebb2258f11935aaf38d3a727f8"
     },
     {
       "courseId": "structured-output-repair",
@@ -120,59 +30,9 @@
       "sha256": "sha256:c938a83f8fbb72c2dbec5156fef73832e50f63979eead41dc55a72d09b321857"
     },
     {
-      "courseId": "ai-evaluation",
-      "file": "ai-evaluation.0525e5b4b5194a535f58b48ab5f20f0eb6f2cc1a6a3548d184d0dd7821762301.recovery.json",
-      "sha256": "sha256:0525e5b4b5194a535f58b48ab5f20f0eb6f2cc1a6a3548d184d0dd7821762301"
-    },
-    {
-      "courseId": "agent-identity-continuity",
-      "file": "agent-identity-continuity.50db6ce201acc83cf4f8beaa81127fe13d6094c15a79a0b945d3261db787bffc.recovery.json",
-      "sha256": "sha256:50db6ce201acc83cf4f8beaa81127fe13d6094c15a79a0b945d3261db787bffc"
-    },
-    {
-      "courseId": "failure-recovery",
-      "file": "failure-recovery.0397756479c8e470c753525560f9fd6c405d6ebef1c3b6b9ca14abe816777966.recovery.json",
-      "sha256": "sha256:0397756479c8e470c753525560f9fd6c405d6ebef1c3b6b9ca14abe816777966"
-    },
-    {
-      "courseId": "experiments-and-rollout",
-      "file": "experiments-and-rollout.f76b1fc1e88dfc2640bfbddc1e631f5e11f64c165d53fe14c97d392758c0a106.recovery.json",
-      "sha256": "sha256:f76b1fc1e88dfc2640bfbddc1e631f5e11f64c165d53fe14c97d392758c0a106"
-    },
-    {
-      "courseId": "retention-engineering",
-      "file": "retention-engineering.97c3cc4d611d92f44611deebe9242e9e1ea9a76bc6088943006dc4aee836b4bc.recovery.json",
-      "sha256": "sha256:97c3cc4d611d92f44611deebe9242e9e1ea9a76bc6088943006dc4aee836b4bc"
-    },
-    {
-      "courseId": "moment-design",
-      "file": "moment-design.5b0d27d48fdcfb7d53dceabf47128554361037794fff410baaafcd992e78b3eb.recovery.json",
-      "sha256": "sha256:5b0d27d48fdcfb7d53dceabf47128554361037794fff410baaafcd992e78b3eb"
-    },
-    {
-      "courseId": "world-navigation",
-      "file": "world-navigation.4bf5996f41d895ca98586c590b4268e3eaf6d7158e4efc72163b1eb517fe1068.recovery.json",
-      "sha256": "sha256:4bf5996f41d895ca98586c590b4268e3eaf6d7158e4efc72163b1eb517fe1068"
-    },
-    {
-      "courseId": "e2e-and-qa-scripts",
-      "file": "e2e-and-qa-scripts.075f3a539f4f6d3ea783e2cd83f2cd3879bd2bfceae564a49309313d837d388f.recovery.json",
-      "sha256": "sha256:075f3a539f4f6d3ea783e2cd83f2cd3879bd2bfceae564a49309313d837d388f"
-    },
-    {
-      "courseId": "asset-pipeline",
-      "file": "asset-pipeline.6babb75ebd4fca2e5a36e5aba916e785cb42d68c2f274c1b514de757fcd55175.recovery.json",
-      "sha256": "sha256:6babb75ebd4fca2e5a36e5aba916e785cb42d68c2f274c1b514de757fcd55175"
-    },
-    {
-      "courseId": "solo-operations",
-      "file": "solo-operations.5e434058afb1667c294048ad862243ccc528cf9780f4690863a573649f98496d.recovery.json",
-      "sha256": "sha256:5e434058afb1667c294048ad862243ccc528cf9780f4690863a573649f98496d"
-    },
-    {
-      "courseId": "directing-ai-agents",
-      "file": "directing-ai-agents.4254bbb334461c1fec57d73dae029aadf2431debe7fb1c656538fe74bd882969.recovery.json",
-      "sha256": "sha256:4254bbb334461c1fec57d73dae029aadf2431debe7fb1c656538fe74bd882969"
+      "courseId": "platform-capabilities",
+      "file": "platform-capabilities.e0fb9ee85e4134eba70d8e338bed4d435908a4a7384fbac9401b97dd81ee32fd.recovery.json",
+      "sha256": "sha256:e0fb9ee85e4134eba70d8e338bed4d435908a4a7384fbac9401b97dd81ee32fd"
     }
   ]
 }

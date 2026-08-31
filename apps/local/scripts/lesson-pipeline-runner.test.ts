@@ -60,6 +60,37 @@ describe("lesson pipeline runner", () => {
 
     expect(output.progress).toBe("host progress\nchecking files\n");
     expect(output.finalText).toBe("# 这是一节课？\n\n正文。");
+    expect(output.finalTextSource).toBe("line-start-h1");
+  });
+
+  it("recovers a progress sentence glued to a question-shaped H1", async () => {
+    const progress: string[] = [];
+    const receipt = await runModelWithReceipt({
+      role: "writer",
+      model: "grok-current",
+      effort: "high",
+      command: process.execPath,
+      args: ["-e", 'process.stdout.write("模型已经读完源码。# 结果标题？\\n\\n正文。\\n")'],
+      timeoutMs: 1_000,
+      onProgress: ({ stream, chunk }: { stream: string; chunk: string }) => {
+        if (stream === "stdout") progress.push(chunk);
+      },
+    });
+
+    expect(receipt.status).toBe("success");
+    expect(receipt.finalText).toBe("# 结果标题？\n\n正文。");
+    expect(receipt.finalTextSource).toBe("inline-h1-fallback");
+    expect(receipt.attempts[0].finalTextSource).toBe("inline-h1-fallback");
+    expect(progress.join("")).toBe("模型已经读完源码。");
+    expect(progress.join("")).not.toContain("# 结果标题？");
+  });
+
+  it("does not mistake an inline body hash for a final H1", () => {
+    const output = splitModelOutput("进度已完成。C# 是一门语言，正文仍在继续。\n");
+
+    expect(output.finalText).toBeNull();
+    expect(output.finalTextSource).toBeNull();
+    expect(output.progress).toContain("C# 是一门语言");
   });
 
   it("retries Grok transport failures and preserves every raw stream", async () => {

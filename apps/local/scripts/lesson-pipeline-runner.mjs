@@ -160,18 +160,61 @@ export function appendSourcePaths(prompt, sourcePaths) {
   ].join("\n");
 }
 
+function isInsideMarkdownFence(text, index) {
+  let fenced = false;
+  for (const line of text.slice(0, index).split(/\r?\n/)) {
+    if (/^\s*```/.test(line)) fenced = !fenced;
+  }
+  return fenced;
+}
+
+/**
+ * Find a glued lesson H1 without treating an inline hash as a heading.
+ *
+ * The normal path remains the strict Markdown rule: H1 must start a line. A
+ * model can nevertheless append its final Markdown to the last progress
+ * sentence. The fallback accepts only a question-shaped H1 after punctuation,
+ * followed by a blank line; `C# 是一门语言` therefore remains ordinary prose.
+ */
+function findInlineLessonHeading(text) {
+  const candidates = /#[ \t]+\S[^\r\n]*/g;
+  let candidate;
+  while ((candidate = candidates.exec(text)) !== null) {
+    const index = candidate.index;
+    const preceding = text[index - 1];
+    if (!preceding || /[A-Za-z0-9_$]/.test(preceding) || !/[\p{P}\p{S}]/u.test(preceding)) {
+      continue;
+    }
+    if (isInsideMarkdownFence(text, index)) continue;
+    const title = candidate[0].trimEnd();
+    if (!/[?？]$/.test(title)) continue;
+    const afterTitle = text.slice(index + candidate[0].length);
+    if (!/^(?:\r?\n){2}/.test(afterTitle)) continue;
+    return { index, length: candidate[0].length };
+  }
+  return null;
+}
+
 /**
  * Split a model's mixed stdout. Progress before the first H1 is diagnostic
  * output; the first H1 onward is the candidate Markdown. No final Markdown is
- * ever forwarded through the progress callback.
+ * ever forwarded through the progress callback. `finalTextSource` is retained
+ * so a fallback recovery is visible in the stage receipt.
  */
 export function splitModelOutput(rawStdout) {
   const text = String(rawStdout ?? "");
-  const heading = /^#[ \t]+\S.*$/m.exec(text);
-  if (!heading) return { progress: text, finalText: null };
+  const strictHeading = /^#[ \t]+\S.*$/m.exec(text);
+  const heading = strictHeading
+    ? { index: strictHeading.index, length: strictHeading[0].length, source: "line-start-h1" }
+    : (() => {
+        const fallback = findInlineLessonHeading(text);
+        return fallback ? { ...fallback, source: "inline-h1-fallback" } : null;
+      })();
+  if (!heading) return { progress: text, finalText: null, finalTextSource: null };
   return {
     progress: text.slice(0, heading.index),
     finalText: text.slice(heading.index).trim(),
+    finalTextSource: heading.source,
   };
 }
 
@@ -233,8 +276,6 @@ export function runChildProcess({
 
     let stdout = "";
     let stderr = "";
-    let stdoutRemainder = "";
-    let finalStarted = false;
     let timedOut = false;
     let spawnError = null;
     let settled = false;
@@ -246,10 +287,8 @@ export function runChildProcess({
       settled = true;
       clearTimeout(timeoutHandle);
       clearTimeout(killHandle);
-      if (!finalStarted && stdoutRemainder) {
-        if (/^#[ \t]+\S.*$/.test(stdoutRemainder)) finalStarted = true;
-        else emitProgress(onProgress, "stdout", stdoutRemainder);
-      }
+      const parsed = splitModelOutput(stdout);
+      emitProgress(onProgress, "stdout", parsed.progress);
       const finishedAtMs = Date.now();
       resolveResult({
         startedAt: new Date(startedAtMs).toISOString(),
@@ -267,18 +306,6 @@ export function runChildProcess({
     child.stdout.on("data", (chunk) => {
       const text = chunk.toString();
       stdout += text;
-      if (finalStarted) return;
-      stdoutRemainder += text;
-      const lines = stdoutRemainder.split("\n");
-      stdoutRemainder = lines.pop() ?? "";
-      for (const line of lines) {
-        if (/^#[ \t]+\S.*$/.test(line)) {
-          finalStarted = true;
-          stdoutRemainder = "";
-          break;
-        }
-        emitProgress(onProgress, "stdout", `${line}\n`);
-      }
     });
     child.stderr.on("data", (chunk) => {
       const text = chunk.toString();
@@ -383,6 +410,7 @@ export async function runModelWithReceipt({
       rawStderr: processResult.stderr,
       progressStdout: parsed.progress,
       finalText: parsed.finalText,
+      finalTextSource: parsed.finalTextSource,
       sessionResult: {
         outcome: status,
         exitCode: processResult.exitCode,
@@ -431,6 +459,7 @@ export async function runModelWithReceipt({
     rawStderr: finalAttempt?.rawStderr ?? "",
     progressStdout: finalAttempt?.progressStdout ?? "",
     finalText: finalAttempt?.finalText ?? null,
+    finalTextSource: finalAttempt?.finalTextSource ?? null,
     sessionResult: finalAttempt?.sessionResult ?? null,
     attempts,
   };
