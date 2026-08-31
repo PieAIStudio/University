@@ -50,6 +50,9 @@ import type { IslandLookCameraPose, IslandLookSceneSource } from "./island/islan
 import { islandLookFrozen } from "./island/island-surface-style.js";
 import { WorldEnvironment } from "./sky/environment.js";
 import { renderTier } from "./sky/tier";
+import { hasWebGLContext } from "./webgl-capability.js";
+
+export { hasWebGLContext, resetWebGLContextProbe } from "./webgl-capability.js";
 
 function Pipeline({
   ambientOcclusion,
@@ -238,6 +241,41 @@ function Pipeline({
   return null;
 }
 
+function RendererLifecycle({
+  onContextLost,
+  onContextRestored,
+}: {
+  readonly onContextLost?: () => void;
+  readonly onContextRestored?: () => void;
+}) {
+  const { gl } = useThree();
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+    let lost = false;
+    const handleLost = (event: Event) => {
+      // Preventing the default is what tells the browser to attempt a real
+      // `webglcontextrestored` event instead of disposing the context forever.
+      event.preventDefault();
+      lost = true;
+      onContextLost?.();
+    };
+    const handleRestored = () => {
+      if (!lost) return;
+      lost = false;
+      onContextRestored?.();
+    };
+    canvas.addEventListener("webglcontextlost", handleLost, { passive: false });
+    canvas.addEventListener("webglcontextrestored", handleRestored);
+    return () => {
+      canvas.removeEventListener("webglcontextlost", handleLost);
+      canvas.removeEventListener("webglcontextrestored", handleRestored);
+    };
+  }, [gl, onContextLost, onContextRestored]);
+
+  return null;
+}
+
 /** Luminance percentiles of the linear scene, before the grade sees it. */
 function sample(gl: THREE.WebGLRenderer, target: THREE.WebGLRenderTarget) {
   const { width, height } = target;
@@ -305,6 +343,12 @@ interface StageProps {
   readonly onSceneReady?: () => void;
   /** The DOM overlay's cue that kit models have gone back into flight. */
   readonly onSceneBusy?: () => void;
+  /** The live canvas lost its context and needs a human-readable fallback. */
+  readonly onContextLost?: () => void;
+  /** The browser restored the context; the caller remounts the scene. */
+  readonly onContextRestored?: () => void;
+  /** The browser cannot create WebGL at all. */
+  readonly onRendererUnavailable?: () => void;
   /**
    * A click that hit no island. Island `onClick` already stopPropagates, so
    * this is "the ray hit nothing the scene cares about".
@@ -361,6 +405,9 @@ export function Stage({
   lookAt = [0, 0, 0],
   onSceneReady,
   onSceneBusy,
+  onContextLost,
+  onContextRestored,
+  onRendererUnavailable,
   onPointerMissed,
   paused = false,
   ambientOcclusion = true,
@@ -370,8 +417,18 @@ export function Stage({
 }: StageProps) {
   const tier = renderTier();
   const frozenLook = import.meta.env.DEV && lookSource !== null && islandLookFrozen();
+  const rendererAvailable = useMemo(() => hasWebGLContext(), []);
 
   useEffect(() => armSoundUnlock(), []);
+  useEffect(() => {
+    if (!rendererAvailable) onRendererUnavailable?.();
+  }, [onRendererUnavailable, rendererAvailable]);
+
+  if (!rendererAvailable) {
+    return (
+      <div aria-hidden="true" data-webgl-available="false" className="stage-renderer-fallback" />
+    );
+  }
 
   return (
     <Canvas
@@ -436,6 +493,7 @@ export function Stage({
       frameloop={paused ? "never" : frozenLook ? "demand" : "always"}
     >
       <WorldEnvironment>
+        <RendererLifecycle onContextLost={onContextLost} onContextRestored={onContextRestored} />
         <Pipeline
           ambientOcclusion={ambientOcclusion}
           lookSource={lookSource}

@@ -17,6 +17,7 @@ import type { PerspectiveCamera } from "three";
 
 import { AvatarBust } from "./AvatarBust.js";
 import { frameBust } from "./frame-bust.js";
+import { hasWebGLContext } from "../webgl-capability.js";
 
 export function AvatarChip({
   recipe,
@@ -34,6 +35,7 @@ export function AvatarChip({
   const host = useRef<HTMLDivElement>(null);
   const cameraRef = useRef<PerspectiveCamera | null>(null);
   const [live, setLive] = useState(true);
+  const webglAvailable = hasWebGLContext();
 
   /*
     An animation nobody can see still costs a frame every 16ms. IntersectionObserver
@@ -64,7 +66,7 @@ export function AvatarChip({
     camera.updateProjectionMatrix();
   }, []);
 
-  const body = (
+  const body = webglAvailable ? (
     <div className="avatar-chip__stage" ref={host} style={{ width: size, height: size }}>
       <Canvas
         frameloop={live ? "always" : "never"}
@@ -86,6 +88,12 @@ export function AvatarChip({
         />
       </Canvas>
     </div>
+  ) : (
+    <span
+      className="avatar-chip__stage avatar-chip--placeholder"
+      style={{ width: size, height: size }}
+      aria-hidden="true"
+    />
   );
 
   if (!onClick) return <div className="avatar-chip">{body}</div>;

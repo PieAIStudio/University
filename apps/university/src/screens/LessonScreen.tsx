@@ -22,10 +22,10 @@ import {
   type ExerciseAttemptResult,
   type LessonRef,
 } from "@pieai/university-core";
-import { GameCallout } from "@pieai/swimmer-ui-kit";
 import { LessonReader } from "@pieai/university-ui/lesson/LessonReader.js";
 import { lessonProgressDestinationId } from "@pieai/university-ui/cta/LiquidCtaTransition.js";
 import { lessonNeighbours } from "@pieai/university-ui/lesson/LessonNav.js";
+import { RecoveryState } from "@pieai/university-ui/loading/RecoveryState.js";
 import { playSound, SoundToggle } from "@pieai/university-ui/sound/index.js";
 import type { LessonLinkTarget } from "@pieai/university-ui/markdown/remark-lesson-links.js";
 import type { CourseView, LessonView } from "@pieai/university-ui/view/lesson-view.js";
@@ -275,19 +275,13 @@ export function LessonScreen({
   if (error) {
     return (
       <main className="reader">
-        <GameCallout
-          heading={translate("app.screens.lessonScreen.copy.这节课打不开")}
-          tone="warning"
-          role="alert"
-        >
-          <p>{error}</p>
-          <button type="button" className="text-button" onClick={() => setReloads((n) => n + 1)}>
-            {translate("app.screens.lessonScreen.copy.重试这节课")}
-          </button>
-          <button type="button" className="text-button" onClick={onBack}>
-            {translate("app.screens.lessonScreen.copy.回到课程岛")}
-          </button>
-        </GameCallout>
+        <RecoveryState
+          reason="content"
+          onRetry={() => setReloads((n) => n + 1)}
+          retryLabel={translate("app.screens.lessonScreen.copy.重试这节课")}
+          onContinue={onBack}
+          continueLabel={translate("app.screens.lessonScreen.copy.回到课程岛")}
+        />
       </main>
     );
   }

@@ -26,28 +26,37 @@ export function useShelf() {
     () => contentPort.knownStudies ?? [],
   );
   const [shelfError, setShelfError] = useState<string | null>(null);
+  const [reloads, setReloads] = useState(0);
 
   useEffect(() => {
     let alive = true;
-    void contentPort.studies().then((names) => {
-      if (alive) setStudyNames(names);
-    });
+    const reportError = (reason: unknown) => {
+      if (!alive) return;
+      setShelfError(
+        reason instanceof Error ? reason.message : translate("app.app.useshelf.copy.读不到课程"),
+      );
+    };
+    void contentPort
+      .studies()
+      .then((names) => {
+        if (alive) setStudyNames(names);
+      })
+      .catch(reportError);
     void contentPort
       .shelf()
       .then((next) => {
         if (alive) setShelf(next);
       })
-      .catch((reason: unknown) => {
-        if (alive)
-          setShelfError(
-            reason instanceof Error
-              ? reason.message
-              : translate("app.app.useshelf.copy.读不到课程"),
-          );
-      });
+      .catch(reportError);
     return () => {
       alive = false;
     };
+  }, [reloads]);
+
+  const retryShelf = useCallback(() => {
+    setShelf(null);
+    setShelfError(null);
+    setReloads((current) => current + 1);
   }, []);
 
   const studies = useMemo(
@@ -68,6 +77,7 @@ export function useShelf() {
     shelf,
     studyNames,
     shelfError,
+    retryShelf,
     studies,
     nodes,
     courseOf,

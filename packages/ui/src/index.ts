@@ -230,9 +230,12 @@ export {
   LoadingTrivia,
   pickLoadingConcept,
   useMapCover,
+  useMapCoverState,
   MAP_COVER_GIVE_UP_MS,
   MAP_COVER_REOPEN_MS,
+  type MapCoverState,
 } from "./loading/LoadingTrivia.js";
+export { RecoveryState, type RecoveryReason } from "./loading/RecoveryState.js";
 
 // Authoring-shell read model: the shapes `/api/*` returns, and the pure
 // functions that turn them into what the campus shows. Exporting the module

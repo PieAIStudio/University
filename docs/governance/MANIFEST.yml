@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-31T05:13:13.707Z
+generated_at: 2026-08-31T06:35:08.343Z
 generator_version: doc-gov@0.9.9
-docs_count: 85
+docs_count: 86
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -465,6 +465,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-26
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-RECOVERY-RETRIES-MUST-EVICT-REJECTED-IN-FLIGHT-CONTENT-PROMISES
+    path: docs/reference/learnings/workflow-issues/recovery-retries-must-evict-rejected-in-flight-content-promises.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-31
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-RELEASE-BUILDS-MUST-PIN-EVIDENCE-INPUTS-AND-RESTORE-TRACKED-GENERATED-MANIFESTS
     path: docs/reference/learnings/workflow-issues/release-builds-must-pin-evidence-inputs-and-restore-tracked-generated-manifests.md

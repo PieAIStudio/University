@@ -142,6 +142,12 @@ export function loadCourse(studyId: string, courseId: string): Promise<Course> {
     .then((pkg: { course: Course }) => {
       resolved.set(key, pkg.course);
       return pkg.course;
+    })
+    .catch((reason: unknown) => {
+      // A failed package is recoverable. Holding the rejected Promise here
+      // would make the reader's visible retry press the same failure forever.
+      cache.delete(key);
+      throw reason;
     });
   cache.set(key, pending);
   return pending;

@@ -85,6 +85,25 @@ describe("createOnlineContentPort", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it("lets a lesson retry after a published package returns an error", async () => {
+    const retryCourse = { ...course, id: "recovery-course" };
+    const retryLocator = { ...locator, courseId: retryCourse.id };
+    const fetchMock = vi
+      .fn<() => Promise<Response>>()
+      .mockResolvedValueOnce({ ok: false, status: 503 } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ course: retryCourse }),
+      } as Response);
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createOnlineContentPort().lesson(retryLocator)).rejects.toThrow("503");
+    await expect(createOnlineContentPort().lesson(retryLocator)).resolves.toMatchObject({
+      lesson: { id: retryLocator.lessonId },
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("folds a published lesson into the read model the shared reader speaks", async () => {
     servePackage();
     const view = await createOnlineContentPort().lesson(locator);

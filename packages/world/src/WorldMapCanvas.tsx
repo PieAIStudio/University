@@ -36,6 +36,9 @@ export function WorldMapCanvas({
   onInteract,
   onSceneReady,
   onSceneBusy,
+  onContextLost,
+  onContextRestored,
+  onRendererUnavailable,
   onPointerMissed,
   stageChildren,
   underlay,
@@ -70,6 +73,9 @@ export function WorldMapCanvas({
   readonly onInteract?: () => void;
   readonly onSceneReady?: () => void;
   readonly onSceneBusy?: () => void;
+  readonly onContextLost?: () => void;
+  readonly onContextRestored?: () => void;
+  readonly onRendererUnavailable?: () => void;
   readonly onPointerMissed?: () => void;
   readonly stageChildren?: ReactNode;
   /**
@@ -143,6 +149,9 @@ export function WorldMapCanvas({
         lookAt={lookAt}
         onSceneReady={onSceneReady}
         onSceneBusy={onSceneBusy}
+        onContextLost={onContextLost}
+        onContextRestored={onContextRestored}
+        onRendererUnavailable={onRendererUnavailable}
         onPointerMissed={onPointerMissed}
         fixedCamera={fixedCamera}
         paused={paused}

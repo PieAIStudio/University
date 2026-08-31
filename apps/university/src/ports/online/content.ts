@@ -37,10 +37,16 @@ export function createOnlineContentPort(): ContentPort {
     },
 
     async shelf(): Promise<Shelf> {
-      shelfPromise ??= fetch("/content/shelf.json").then((response) => {
-        if (!response.ok) throw new Error(`shelf: ${response.status}`);
-        return response.json() as Promise<Shelf>;
-      });
+      shelfPromise ??= fetch("/content/shelf.json")
+        .then((response) => {
+          if (!response.ok) throw new Error(`shelf: ${response.status}`);
+          return response.json() as Promise<Shelf>;
+        })
+        .catch((reason: unknown) => {
+          // The caller owns the retry button; do not cache this failed read.
+          shelfPromise = null;
+          throw reason;
+        });
       return shelfPromise;
     },
 

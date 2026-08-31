@@ -43,6 +43,8 @@
     "./lesson/mark-list.css": "./src/lesson/mark-list.css",
     "./loading/LoadingTrivia.js": "./src/loading/LoadingTrivia.tsx",
     "./loading/loading-trivia.css": "./src/loading/loading-trivia.css",
+    "./loading/RecoveryState.js": "./src/loading/RecoveryState.tsx",
+    "./loading/recovery-state.css": "./src/loading/recovery-state.css",
     "./markdown/MarkdownContent.js": "./src/markdown/MarkdownContent.tsx",
     "./markdown/markdown-body.css": "./src/markdown/markdown-body.css",
     "./markdown/markdown-content.css": "./src/markdown/markdown-content.css",
