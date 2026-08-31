@@ -20,6 +20,9 @@ describe("lesson toolbar phone layout", () => {
     expect(phoneRule).toMatch(/justify-content:\s*flex-start/);
     expect(phoneRule).toMatch(/flex-wrap:\s*nowrap/);
     expect(phoneRule).toMatch(/\.lesson-toolbar__label[\s\S]*display:\s*none/);
+    expect(phoneRule).toMatch(
+      /\.lesson-toolbar__tools \.game-ui-segmented-option[\s\S]*white-space:\s*nowrap/,
+    );
     expect(phoneRule).toMatch(/\.lesson-toolbar__tools \.sound-toggle[\s\S]*min-width:\s*44px/);
     expect(phoneRule).toMatch(/\.lesson-toolbar__tools \.sound-toggle[\s\S]*min-height:\s*44px/);
   });

@@ -634,14 +634,14 @@ export const messages = {
   "ui.lesson.lessonReader.copy.打开课文-滚动页面或答对练习都不会自动完成-这个确认只针对当前固定版本":
     "打开课文、滚动页面或答对练习都不会自动完成。这个确认只针对当前固定版本。",
   "ui.lesson.lessonReader.copy.暂时无法记录阅读确认": "暂时无法记录阅读确认",
-  "ui.lesson.lessonReader.copy.标准讲解": "标准讲解",
+  "ui.lesson.lessonReader.copy.标准讲解": "标准",
   "ui.lesson.lessonReader.copy.标记没有更新": "标记没有更新",
   "ui.lesson.lessonReader.copy.正在记录": "正在记录…",
   "ui.lesson.lessonReader.copy.版": "版",
   "ui.lesson.lessonReader.copy.第": "第",
   "ui.lesson.lessonReader.copy.讲解层级": "讲解层级",
   "ui.lesson.lessonReader.copy.词义状态没有保存": "词义状态没有保存",
-  "ui.lesson.lessonReader.copy.详细讲解": "详细讲解",
+  "ui.lesson.lessonReader.copy.详细讲解": "详细",
   "ui.lesson.lessonReader.copy.读到这里-确认你完成了这次课文更新":
     "读到这里，确认你完成了这次课文更新",
   "ui.lesson.lessonReader.copy.这条标记没有保存": "这条标记没有保存",

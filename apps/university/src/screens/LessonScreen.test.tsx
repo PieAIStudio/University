@@ -249,7 +249,8 @@ describe("the shared lesson reader", () => {
   it("offers the twelve reading tools the delivery-only screen was missing", async () => {
     await renderHost();
     expect(container.textContent).toContain("讲解层级");
-    expect(container.textContent).toContain("标准讲解");
+    expect(container.textContent).toContain("标准");
+    expect(container.textContent).toContain("详细");
     expect(container.textContent).toContain("外语模式");
     expect(container.textContent).toContain("完成本次更新");
     expect(container.textContent).toContain("产品中文名");

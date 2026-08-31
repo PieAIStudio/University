@@ -114,16 +114,22 @@
     gap: 8px;
     padding-inline: 10px 8px;
     font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  .lesson-toolbar__tools .game-ui-toggle > span {
+    white-space: nowrap;
   }
 
   .lesson-toolbar__tools .game-ui-segmented {
-    flex: 1 1 auto;
-    min-width: 0;
+    flex: none;
+    width: max-content;
   }
 
   .lesson-toolbar__tools .game-ui-segmented-option {
     padding-inline: 8px;
     font-size: 0.82rem;
+    white-space: nowrap;
   }
 
   .lesson-toolbar__tools .sound-toggle {
