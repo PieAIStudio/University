@@ -103,8 +103,9 @@ describe("LoadingTrivia", () => {
       root.render(<LoadingTrivia visit="first" />);
     });
     expect(container.textContent).toContain("地图马上铺开");
-    expect(container.textContent).toContain("对着真实项目学");
-    expect(container.textContent).toContain("每座岛是一门课。点岛进入，读完再练。");
+    expect(container.textContent).toContain("点一座岛，开始学");
+    expect(container.textContent).toContain("每座岛是一门课。读完再练。");
+    expect(container.textContent).not.toContain("对着真实项目学");
     expect(container.textContent).not.toContain("地图铺开时，看一条概念");
     expect(container.textContent).not.toContain(SAMPLE.zh);
     expect(container.textContent).not.toContain(SAMPLE.en);
@@ -116,15 +117,16 @@ describe("LoadingTrivia", () => {
     });
     expect(container.textContent).toContain("地图铺开时，看一条概念");
     expect(container.textContent).toContain("前端");
-    expect(container.textContent).not.toContain("对着真实项目学");
+    expect(container.textContent).not.toContain("点一座岛，开始学");
   });
 
   it("treats an unreadable store as a first visit", async () => {
     await act(async () => {
       root.render(<LoadingTrivia storage={null} />);
     });
-    expect(container.textContent).toContain("对着真实项目学");
+    expect(container.textContent).toContain("点一座岛，开始学");
     expect(container.textContent).not.toContain("前端");
+    expect(container.textContent).not.toContain("对着真实项目学");
   });
 });
 

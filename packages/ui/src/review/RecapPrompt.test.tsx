@@ -68,6 +68,7 @@ describe("RecapPrompt", () => {
     expect(container.textContent).not.toContain("还在设计");
     expect(container.textContent).not.toContain("即将推出");
     expect(container.textContent).not.toContain("敬请期待");
+    expect(container.textContent).not.toContain("语音输入");
     expect(container.querySelector("button[aria-label*='语音']")).toBeNull();
     expect(container.querySelector(".recap-prompt__voice-note")).toBeNull();
     expect(progress.recapCard(LOCATOR)).toBeNull();

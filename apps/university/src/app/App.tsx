@@ -229,6 +229,10 @@ export function App() {
     if (view.kind !== "world") setPicked(null);
   }, [view.kind]);
 
+  useEffect(() => {
+    if (view.kind === "lesson") void import("../screens/SettlementHost.js");
+  }, [view.kind]);
+
   /*
     The course on screen. It used to be state filled by a fetch, with a guard
     against a slow first answer overwriting a later one; the shelf arrives once

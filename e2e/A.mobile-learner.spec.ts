@@ -57,3 +57,22 @@ test.describe("A 新学习者 · 在线端 · 手机宽度", () => {
     consoleErrors.assertClean();
   });
 });
+
+test.describe("A 在线端 · 手机指针", () => {
+  test.use({
+    viewport: { width: 375, height: 812 },
+    hasTouch: true,
+    isMobile: true,
+  });
+
+  test("地图提示说双指缩放，不说滚轮", async ({ page }) => {
+    const consoleErrors = watchConsole(page);
+    await page.goto(`${ONLINE_ORIGIN}/`, { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
+    const hint = page.locator(".hint");
+    await expect(hint).toBeVisible({ timeout: 30_000 });
+    await expect(hint).toContainText("双指缩放");
+    await expect(hint).not.toContainText("滚轮");
+    consoleErrors.assertClean();
+  });
+});

@@ -5,6 +5,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CourseView } from "@pieai/university-ui/view/lesson-view.js";
+import { contentPort } from "../ports/index";
 import { lessonKey, progressPort, resetAll } from "../progress/store";
 import { SettlementHost } from "./SettlementHost";
 
@@ -224,5 +225,40 @@ describe("SettlementHost", () => {
     expect(container.textContent).toContain("读完了");
     expect(container.textContent).toContain("1 / 2 关");
     expect(container.textContent).not.toContain("还剩");
+    expect(container.textContent).not.toContain("还在设计");
+    expect(container.textContent).not.toContain("即将推出");
+    expect(container.textContent).not.toContain("语音输入");
+    expect(container.querySelector("button[aria-label*='语音']")).toBeNull();
+  });
+
+  it("while the reward is assembling, says 读完了 instead of flashing a catalogue card", async () => {
+    const studyId = "turing-pact-pending-reward";
+    progressPort.confirmLessonRead(lessonKey(studyId, COURSE.id, LESSON_ID), 1);
+    passExercise(studyId);
+
+    const original = contentPort.lesson.bind(contentPort);
+    contentPort.lesson = () => new Promise(() => undefined);
+
+    try {
+      await act(async () => {
+        root.render(
+          <SettlementHost
+            course={COURSE}
+            grewFrom={{ key: `${studyId}/${COURSE.id}/${LESSON_ID}`, doneBefore: 0 }}
+            locator={locator(studyId)}
+            onMap={vi.fn()}
+            onNext={vi.fn()}
+            onIncomplete={vi.fn()}
+          />,
+        );
+      });
+      expect(container.textContent).toContain("读完了");
+      expect(container.querySelector(".loading-trivia")).toBeNull();
+      expect(container.textContent).not.toContain("地图铺开时");
+      expect(container.textContent).not.toContain("对着真实项目学");
+      expect(container.textContent).not.toContain("点一座岛");
+    } finally {
+      contentPort.lesson = original;
+    }
   });
 });

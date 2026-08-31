@@ -28,7 +28,7 @@ export {
  * display time, and this component does not delay that unmount. Waiting can
  * be part of the product; forcing anyone to watch two extra seconds cannot.
  *
- * First visit: say what this is and what happens next. Later visits: one
+ * First visit: say what this is and where to click. Later visits: one
  * catalogue tagline. Readable text is DOM, never geometry.
  */
 export function LoadingTrivia({
@@ -59,9 +59,9 @@ export function LoadingTrivia({
             <p className="loading-trivia__kicker">
               {translate("ui.loading.loadingTrivia.copy.地图马上铺开")}
             </p>
-            <GamePanel title={translate("ui.loading.loadingTrivia.copy.对着真实项目学")}>
+            <GamePanel title={translate("ui.loading.loadingTrivia.copy.点一座岛-开始学")}>
               <p className="loading-trivia__tagline">
-                {translate("ui.loading.loadingTrivia.copy.每座岛是一门课-点岛进入-读完再练")}
+                {translate("ui.loading.loadingTrivia.copy.每座岛是一门课-读完再练")}
               </p>
             </GamePanel>
           </>
