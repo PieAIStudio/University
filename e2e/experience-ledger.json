@@ -327,6 +327,71 @@
       "foundOn": "2026-08-31",
       "guardedBy": "e2e/M.experience.spec.ts X4 phone（TOUCH_TARGET_EXEMPTIONS 现已清空，任何重新贴近都会变红）",
       "note": "五点命中测试是通过的——浮钮只盖住按钮左端，中心仍然是按钮。探针说没问题，人一眼就看出两个控件叠在一起：命中测试量的是可达性，不是可读性。手机上把浮钮移到右下角，那是唯一没有主控件的角落。同一处改动也让 /practice 的两条已知豁免全部退休。"
+    },
+    {
+      "id": "a826c75e3868",
+      "screen": "/",
+      "element": "地图操作提示",
+      "category": "discoverability",
+      "viewport": "both",
+      "summary": "操作提示在第一次拖动地图后 opacity 归零，「点岛进入」这条唯一学不会的操作也一起消失",
+      "severity": "friction",
+      "state": "open",
+      "foundBy": "菲哥",
+      "foundOn": "2026-08-31",
+      "note": "App.tsx:713 hintVisible={Boolean(hovered) || !mapInteracted}，mapInteracted 是 useState(false)。生产站实测：刚加载 opacity=1，拖一下后 opacity=0，而 visibility 仍是 visible、textContent 一字不少——toBeVisible() 和 getByText(\"点岛进入\") 全都会过。三条提示的可发现性完全不同：拖动会自我教学（一拖就动），滚轮半自我教学，而「点岛进入」不会——它恰好是转化动作。首次交互就把三条一起收走，收走的是唯一有价值的那条。我先前两次判为窗口尺寸问题，都是错的。"
+    },
+    {
+      "id": "9c96c93cdcd6",
+      "screen": "lesson",
+      "element": "页面顶部",
+      "category": "orientation",
+      "viewport": "both",
+      "summary": "URL 已含 study/course/unit/lesson 四层，屏幕上一层都不显示，也没有回到本课程的入口",
+      "severity": "friction",
+      "state": "open",
+      "foundBy": "菲哥",
+      "foundOn": "2026-08-31",
+      "note": "生产站 /turing-pact/foundations-before-zero/what-is-an-app/you-already-know-apps，页内 breadcrumb 元素数=0。顶栏只有 1/8 与两个模式开关，不说这是哪门课哪一单元。唯一出口是 X（回地图），没有「回到本课程」。数据齐备，纯粹是没渲染。面包屑必须是 DOM，不能画进 canvas（Web3D 基线规则 7）。"
+    },
+    {
+      "id": "7eb9e5c567f6",
+      "screen": "lesson",
+      "element": "这节课钉在的版本",
+      "category": "broken-promise",
+      "viewport": "both",
+      "summary": "课文展示的 commit 号在学习者能打开的公开仓库里查不到，且构建时不校验",
+      "severity": "blocking",
+      "state": "open",
+      "foundBy": "claude",
+      "foundOn": "2026-08-31",
+      "note": "studies 共引用 7 个 commit。其中 5 个（17884 处引用，含出现 10993 次的 3b402e06）在 2026-08-31 历史重写后只存在于私有归档 TuringPact-private-archive，公开的 PieAIStudio/TuringPact 里返回 422；另 2 个（0f0a4c53、415f67a5，411 处引用）在公开库、私有归档、本地检出里全都不存在。片段来自 refresh 时抓取的快照（import-courses.mjs 读 studies 的导出索引），所以 fail-closed 闸门照样通过——闸门管的是「有没有片段」，不管「这个版本号是否真的存在」。「钉在某个不可变版本上」是核心信任信号，而这个字符串现在无法被任何人核对。修法两段：一是拿 _retired/TuringPact-commit-map-2026-08-31.txt 做 5 行查表迁移；二是加构建期闸门，要求每个 sourceCommit 在产品指给学习者的那个仓库里可解析——没有第二段，这件事会再烂一次而没人发现。必须在更多课程按旧 SHA 产出前做。"
+    },
+    {
+      "id": "f7bf257435aa",
+      "screen": "/",
+      "element": "飞岛底面",
+      "category": "visual-quality",
+      "viewport": "desktop",
+      "summary": "所有飞岛共用一个褐色底面常量，与各自岛面色脱节，整体糊成一团暗块",
+      "severity": "polish",
+      "state": "open",
+      "foundBy": "菲哥",
+      "foundOn": "2026-08-31",
+      "note": "island-geometry.ts:72 const CLIFF_DARK = 0x5d3d32 经 pushColor 无差别套给每座岛（:636）；叠加 28° 太阳角使近垂直面几乎无主光（:591 自带注释）。参考图 island-art-reference-v2 的做法是每座岛的底面取自己岛面色的暗调，不是共用褐色。菲哥评分：现状 60，参考图 80，要求先不加运行时开销地追平参考图。走 island-look-review 闭环，不是本台账的探针能判的。注意 island-art-reference-v1 是六边形改版前的自然岛参考，已作废，须归档。"
+    },
+    {
+      "id": "4dff6b1c1f6e",
+      "screen": "/",
+      "element": "玩家头像",
+      "category": "orientation",
+      "viewport": "both",
+      "summary": "兔子头像固定在左栏，世界里没有「我在哪」，进课后也不指向当前小节",
+      "severity": "friction",
+      "state": "open",
+      "foundBy": "菲哥",
+      "foundOn": "2026-08-31",
+      "note": "设计已出：头像即玩家位置，三个高度（星球=乘云漂移、岛群=云飞向选中岛、岛内=兔子站在当前小节格子上，位置本身就是进度）。复用已建成的 avatar/hop.ts、PlayerMarker.tsx 与 Maps.tsx 的飞行中改向逻辑，不新建动画系统。设计稿 artifact a1621950。按「先设计后实现」，等菲哥确认再派工。"
     }
   ]
 }

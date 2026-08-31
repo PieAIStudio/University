@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "product-sentence-and-gate",
+  "title": "项目文件这么多，第一段时间该压在哪条路上？",
+  "courseId": "foundations-before-zero",
+  "unitId": "what-is-an-app",
+  "exerciseIds": [
+    "validation-path-word"
+  ],
+  "cardIds": [
+    "current-path-web",
+    "shells-not-in-gate"
+  ],
+  "contentRevision": 5,
+  "contentHash": "sha256:d71450c3ca32e50b843b2f5f4d8ebac8ac63f83cf400a64ca2dbf4a096b1b6d5",
+  "status": "active",
+  "evidence": [
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "README.md",
+      "lineStart": 3,
+      "lineEnd": 8,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "document:README.md"
+      ],
+      "note": "产品描述与 Web pilot / release Gate 说明。"
+    }
+  ],
+  "sections": [],
+  "assets": [],
+  "variant": "决策",
+  "createdAt": "2026-08-06T07:56:52.793Z",
+  "updatedAt": "2026-08-31T11:19:23.550Z"
+}

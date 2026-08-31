@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "build-script-name",
+  "title": "打包脚本名",
+  "courseId": "foundations-before-zero",
+  "unitId": "what-is-an-app",
+  "lessonId": "from-icon-to-files-journey",
+  "prompt": "要把项目正式打包，`package.json` 里对应的 script 名称是什么？",
+  "contentRevision": 9,
+  "contentHash": "sha256:e263716683439de1948f139db442d950d1c6d57a948ac6b82553d0585e6e91fe",
+  "status": "active",
+  "evidence": [
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "package.json",
+      "lineStart": 8,
+      "lineEnd": 9,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "config:package.json"
+      ],
+      "note": "dev 与 build 脚本。"
+    }
+  ],
+  "kind": "short-answer",
+  "expectedAnswer": "build"
+}

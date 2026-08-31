@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "src-means-source",
+  "kind": "basic",
+  "courseId": "foundations-before-zero",
+  "unitId": "what-is-an-app",
+  "lessonId": "why-so-many-files-preview",
+  "front": "文件夹名 `src` 通常代表什么英文词？",
+  "back": "source（源码）。",
+  "contentRevision": 6,
+  "contentHash": "sha256:ecbc1a5cf65e33c216bafd5eaec895194420e92e646d6df5d9ed09246dae1cbd",
+  "status": "active",
+  "tags": [],
+  "evidence": [
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "src/main.tsx",
+      "lineStart": 1,
+      "lineEnd": 2,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "file:src/main.tsx"
+      ],
+      "note": "import ReactDOM 与 App。"
+    }
+  ]
+}

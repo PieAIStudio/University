@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "id": "from-icon-to-files-journey",
+  "title": "用户看到的 App，和开发者改的文件怎么连起来？",
+  "courseId": "foundations-before-zero",
+  "unitId": "what-is-an-app",
+  "exerciseIds": [
+    "build-script-name"
+  ],
+  "cardIds": [
+    "outdir-name",
+    "dev-script-value"
+  ],
+  "contentRevision": 10,
+  "contentHash": "sha256:9560608a1d763aa89093749210bdedd029c1ff0232e8081db15d0523e097b3d9",
+  "status": "active",
+  "evidence": [
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "package.json",
+      "lineStart": 8,
+      "lineEnd": 9,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "config:package.json"
+      ],
+      "note": "dev 与 build 脚本。"
+    },
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "vite.config.ts",
+      "lineStart": 42,
+      "lineEnd": 44,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "file:vite.config.ts"
+      ],
+      "note": "build.outDir 为 dist。"
+    },
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "capacitor.config.ts",
+      "lineStart": 11,
+      "lineEnd": 11,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "file:capacitor.config.ts"
+      ],
+      "note": "webDir 指向 dist。"
+    }
+  ],
+  "sections": [],
+  "assets": [],
+  "variant": "溯源",
+  "createdAt": "2026-08-06T07:56:52.793Z",
+  "updatedAt": "2026-08-31T11:24:16.415Z"
+}

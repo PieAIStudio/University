@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "id": "empty-box-called-root",
+  "title": "空的 root 盒子，为什么最后会出现整页界面？",
+  "courseId": "foundations-before-zero",
+  "unitId": "what-is-an-app",
+  "exerciseIds": [
+    "root-div-line"
+  ],
+  "cardIds": [
+    "main-finds-root",
+    "root-id-value"
+  ],
+  "contentRevision": 6,
+  "contentHash": "sha256:708c5f71562c549cf26b238a84d53d567cd48dfeda18fa628a57900eb13fffbf",
+  "status": "active",
+  "evidence": [
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "index.html",
+      "lineStart": 29,
+      "lineEnd": 31,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "file:index.html"
+      ],
+      "note": "body 中 root 与 module script。"
+    },
+    {
+      "kind": "fact",
+      "snapshotId": "git-3b43f0a645e4",
+      "sourceCommit": "3b43f0a645e4b24067b20a9bd7cee4715b8611b1",
+      "sourcePath": "src/main.tsx",
+      "lineStart": 32,
+      "lineEnd": 32,
+      "analysisId": "ua-3b43f0a6-v2-9-4-zh-full-e98206c7358f1ff1-bb00529cf6d5",
+      "graphHash": "sha256:5bcf21520e7a5b70337dbcb5fc64e362a716dc1ad85292b5e3fd7d2575473cc1",
+      "nodeIds": [
+        "function:src/main.tsx:bootstrap"
+      ],
+      "note": "createRoot 挂载到 root 并 render App。"
+    }
+  ],
+  "sections": [],
+  "assets": [],
+  "variant": "溯源",
+  "createdAt": "2026-08-06T07:56:52.793Z",
+  "updatedAt": "2026-08-31T11:19:08.566Z"
+}
