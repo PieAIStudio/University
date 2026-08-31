@@ -1,7 +1,15 @@
+import { mkdirSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { expect, test, type Page } from "@playwright/test";
 
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
+import {
+  EXPERIENCE_ROUTES,
+  EXPERIENCE_VIEWPORTS,
+  openExperienceRoute,
+} from "./harness/experience.js";
 import { ONLINE_ORIGIN } from "./ports.js";
 
 const LONG_LESSON = "/turing-pact/foundations-terrain/what-a-project-is/scripts-are-the-doors";
@@ -48,6 +56,48 @@ async function runBottomExerciseJourney(page: Page, label: string): Promise<void
   consoleErrors.assertClean();
 }
 
+async function runSourceEvidenceJourney(page: Page): Promise<void> {
+  const viewport = EXPERIENCE_VIEWPORTS[0]!;
+  const route = EXPERIENCE_ROUTES.find((candidate) => candidate.id === "lesson")!;
+  const evidenceRequests: string[] = [];
+  page.on("request", (request) => {
+    if (/\/content\/.*\/evidence\/[a-f0-9]{64}\.json$/u.test(new URL(request.url()).pathname)) {
+      evidenceRequests.push(request.url());
+    }
+  });
+
+  await openExperienceRoute(page, route, viewport);
+  await expect(
+    page.getByRole("heading", { name: "package.json 里的 scripts，到底是什么意思？" }),
+  ).toBeVisible({ timeout: 30_000 });
+
+  // A source range is not part of the first render. It is a learner-initiated
+  // resource, so the request must begin only after the real pointer opens it.
+  const captureMode = process.env.EVIDENCE2_CAPTURE;
+  await expect.poll(() => evidenceRequests.length).toBe(0);
+
+  const trigger = page.locator(".evidence-inline-source__open:visible").first();
+  await expect(trigger).toBeVisible({ timeout: 15_000 });
+  await humanClick(page, trigger, "看完整文件");
+  const dialog = page
+    .locator('dialog:visible, [role="dialog"]:visible, [role="alertdialog"]:visible')
+    .last();
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  await expect(dialog.locator(".evidence-code")).toBeVisible();
+  await expect(dialog.locator(".evidence-code")).toContainText('"scripts"');
+  await expect(dialog.locator('[data-evidence-state="locator-only"]')).toHaveCount(0);
+  expect(evidenceRequests, "源码请求必须在真实点击后发生").not.toHaveLength(0);
+
+  if (captureMode) {
+    const captureDir = resolve(".scratch/evidence2");
+    mkdirSync(captureDir, { recursive: true });
+    await page.screenshot({
+      path: resolve(captureDir, `source-${captureMode}-desktop.png`),
+      fullPage: false,
+    });
+  }
+}
+
 test.describe("L 长课底部的练习动作", () => {
   test.describe("桌面宽度", () => {
     test.use({ viewport: { width: 1280, height: 640 }, hasTouch: false });
@@ -63,5 +113,13 @@ test.describe("L 长课底部的练习动作", () => {
     test("首道题的输入框和提交按钮都能点到", async ({ page }) => {
       await runBottomExerciseJourney(page, "手机端长课");
     });
+  });
+});
+
+test.describe("L 源码证据发布闸门", () => {
+  test.use({ viewport: { width: 1280, height: 640 }, hasTouch: false });
+
+  test("真实打开一条引用后看到固定源码，且源码只在点击后加载", async ({ page }) => {
+    await runSourceEvidenceJourney(page);
   });
 });

@@ -49,10 +49,11 @@
       "viewport": "both",
       "summary": "3618 条 evidence anchor 全部没有源码；产品核心卖点在线上是报错",
       "severity": "blocking",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "claude+grok-4.6",
       "foundOn": "2026-08-31",
-      "note": "耦合警告：work/firstlook 把冷启动第一屏改成了「对着真实项目学 / 每座岛是一门课。点岛进入，读完再练。」——比原来的随机词条好得多，但它把这条断言放到了陌生人看到的第一行。如果 evidence 最终不发，这句标题就不能这么写。两件事必须一起决定，不能一个上线一个不上。"
+      "guardedBy": "e2e/L.reader-interaction.spec.ts::真实打开一条引用后看到固定源码，且源码只在点击后加载",
+      "note": "evidence2 已把 delivery build 改为 baked 且 fail-closed：当前 recovery 测量为 3306 条 evidence 记录，其中 3149 条仓库 anchor、157 条 URL/general 引用；隔离 E2E 包把 3149/3149 仓库 anchor 写成 2146 个去重源码文件。浏览器第一屏在点击前请求数为 0，真实点击后源码弹窗展示 package.json 固定行号。Vercel Git 构建没有私有 studies 镜像时会失败而不发布 locator-only 包；只有带源码镜像完成 delivery:build 并通过 sealed artifact 闸门后，work/firstlook 的「对着真实项目学 / 每座岛是一门课。点岛进入，读完再练。」才是可成立的冷启动承诺。这次没有部署。"
     },
     {
       "id": "1621f2236db1",

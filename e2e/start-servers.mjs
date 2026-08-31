@@ -22,6 +22,8 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const LOCAL = join(ROOT, "apps/local");
 const APP = join(ROOT, "apps/university");
 const GRADING = join(ROOT, "apps/university-grading");
+const E2E_CONTENT_ROOT = join(ROOT, ".scratch/evidence2/e2e-content");
+const E2E_IMPORTED_MANIFEST = join(ROOT, ".scratch/evidence2/e2e-imported.json");
 
 const ONLINE_PORT = Number(process.env.E2E_ONLINE_PORT ?? 18093);
 const LOCAL_WEB_PORT = Number(process.env.E2E_LOCAL_WEB_PORT ?? 18094);
@@ -79,8 +81,12 @@ function run(command, args, cwd, extraEnv = {}) {
   return child;
 }
 
-function must(command, args, cwd) {
-  const result = spawnSync(command, args, { cwd, stdio: "inherit", env: process.env });
+function must(command, args, cwd, extraEnv = {}) {
+  const result = spawnSync(command, args, {
+    cwd,
+    stdio: "inherit",
+    env: { ...process.env, ...extraEnv },
+  });
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
   }
@@ -119,10 +125,17 @@ process.on("SIGINT", () => stop("SIGINT"));
 process.on("SIGTERM", () => stop("SIGTERM"));
 process.on("exit", () => stop("SIGTERM"));
 
-if (!existsSync(join(APP, "content", "manifest.json"))) {
-  console.log("e2e: importing course content for the delivery mode");
-  must("pnpm", ["content"], ROOT);
-}
+// The delivery gate needs source bytes, but this worktree deliberately keeps
+// its content directory as a symlink and the generated packages out of git.
+// Build a fresh, isolated baked fixture for every run so the browser never
+// passes by reading a stale none-mode package left by another task.
+console.log("e2e: importing baked course content for the delivery mode");
+must("pnpm", ["content"], ROOT, {
+  UNIVERSITY_CONTENT_ROOT: E2E_CONTENT_ROOT,
+  UNIVERSITY_IMPORTED_MANIFEST_PATH: E2E_IMPORTED_MANIFEST,
+  UNIVERSITY_EVIDENCE_MODE: "auto",
+  UNIVERSITY_REQUIRE_BAKED_EVIDENCE: "1",
+});
 
 console.log("e2e: building @pieai/university-core (the local API cannot import .ts)");
 must("pnpm", ["--filter", "@pieai/university-core", "build"], ROOT);
@@ -205,6 +218,7 @@ run(
   {
     E2E_TAG: "online",
     UNIVERSITY_E2E: "1",
+    UNIVERSITY_CONTENT_ROOT: E2E_CONTENT_ROOT,
     VITE_UNIVERSITY_GRADING_URL: `${GRADING_ORIGIN}/api/grade`,
   },
 );

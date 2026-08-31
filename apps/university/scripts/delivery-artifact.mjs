@@ -608,6 +608,11 @@ function validateEvidencePayload(release, manifest, evidence) {
       `release evidence mode baked but artifact contains 0 baked evidence snippets (${evidence.anchors} anchors)`,
     );
   }
+  if (releaseMode === "baked" && evidence.snippets !== evidence.anchors) {
+    fail(
+      `release evidence mode baked but only ${evidence.snippets}/${evidence.anchors} repository evidence anchors have baked snippets`,
+    );
+  }
   for (const key of ["anchors", "snippets", "snippetFiles", "snippetBytes"]) {
     if (release.evidence?.[key] !== undefined && release.evidence[key] !== evidence[key]) {
       fail(`release evidence ${key} total does not match the artifact`);

@@ -428,17 +428,11 @@ describe("local-only link and image policy", () => {
       ],
     });
 
-    await waitFor(() =>
-      expect(container.querySelector(".evidence-inline-source .evidence-code")).not.toBeNull(),
-    );
     const source = container.querySelector<HTMLElement>(".evidence-inline-source");
     expect(source).not.toBeNull();
-    expect(fetchMock).toHaveBeenCalledWith("/api/lesson/evidence/0");
+    expect(fetchMock).not.toHaveBeenCalled();
     expect(source?.querySelector(".evidence-inline-source__path")?.textContent).toBe("src/app.ts");
     expect(source?.querySelector(".evidence-inline-source__lines")?.textContent).toContain("L4–5");
-    expect(source?.querySelector(".evidence-inline-source__language")?.textContent).toContain(
-      "typescript",
-    );
     expect(source?.querySelector(".evidence-inline-source__commit")?.textContent).toContain(
       "aaaaaaaa",
     );
@@ -446,9 +440,10 @@ describe("local-only link and image policy", () => {
       source?.querySelector<HTMLSpanElement>(".evidence-inline-source__commit")?.dataset
         .sourceCommit,
     ).toBe("a".repeat(40));
-    expect(source?.querySelector(".evidence-code__line-number")?.textContent).toBe("4");
-    expect(source?.querySelector(".evidence-code__line--highlighted")).not.toBeNull();
-    expect(source?.querySelector("pre")?.getAttribute("tabindex")).toBe("0");
+    expect(source?.querySelector(".evidence-inline-source__deferred")?.textContent).toContain(
+      "点击「看完整文件」加载这段固定源码",
+    );
+    expect(source?.querySelector(".evidence-code")).toBeNull();
     expect(container.querySelector("p .evidence-inline-source")).toBeNull();
     expect(container.querySelector("p pre")).toBeNull();
     expect([...container.querySelectorAll("p")].map((node) => node.textContent)).toEqual([
@@ -672,10 +667,10 @@ describe("local-only link and image policy", () => {
   });
 
   it("shows a locator-only state when the citation has no shipped source bytes", async () => {
-    const markdown = "证据：[[evidence:src/missing.ts:10-12]]";
+    const markdown = "证据：[[evidence:src/missing.ts:10-30]]";
     const resolver = vi.fn().mockResolvedValue({ kind: "locator-only" as const });
     await renderMarkdown(markdown, {
-      evidence: [repositoryEvidence(10, 12)],
+      evidence: [repositoryEvidence(10, 30)],
       evidenceBasePath: resolver,
       evidenceAnchors: [
         {
@@ -683,13 +678,18 @@ describe("local-only link and image policy", () => {
           end: markdown.length,
           sourcePath: "src/missing.ts",
           lineStart: 10,
-          lineEnd: 12,
+          lineEnd: 30,
           resolved: true,
           evidenceIndex: 0,
         },
       ],
     });
 
+    const mark = container.querySelector<HTMLButtonElement>(".evidence-anchor");
+    expect(mark).not.toBeNull();
+    await act(async () => {
+      mark!.click();
+    });
     await waitFor(() => expect(document.querySelector(".evidence-locator-only")).not.toBeNull());
     expect(document.querySelector(".evidence-inline-source__error")).toBeNull();
     expect(document.querySelector(".evidence-code")).toBeNull();

@@ -1,12 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm delivery:build -- --version \"${DELIVERY_VERSION:-0.0.0+${VERCEL_GIT_COMMIT_SHA}}\" --recovery-root apps/local/course-proposals/recovery --lexicon apps/local/data/vocabulary/en.json --evidence none",
+  "buildCommand": "pnpm delivery:build -- --version \"${DELIVERY_VERSION:-0.0.0+${VERCEL_GIT_COMMIT_SHA}}\" --recovery-root apps/local/course-proposals/recovery --lexicon apps/local/data/vocabulary/en.json --evidence baked",
   "outputDirectory": "apps/university/dist/delivery",
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": null,
   "git": {
     "//": "Pushing to GitHub must not deploy this site.",
-    "//2": "The delivery lane consumes the tracked recovery packages under apps/local/course-proposals/recovery and never reads apps/local/studies. Evidence mode none keeps this build reproducible from a clean clone and the release artifact records the input and payload hashes.",
+    "//2": "The delivery lane consumes the tracked recovery packages under apps/local/course-proposals/recovery. Evidence mode baked is fail-closed: a release must be built where the private study source mirrors are materialized, then the sealed artifact can be uploaded without shipping locator-only citations.",
     "//3": "Git deployment stays disabled: this build prepares a versioned artifact, while the deliberate `vercel deploy --prebuilt` remains the manual deployment gate until ADR-0002's backend/static target is resolved.",
     "deploymentEnabled": false
   },

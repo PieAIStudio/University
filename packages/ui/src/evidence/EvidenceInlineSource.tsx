@@ -2,9 +2,9 @@ import { translate } from "../i18n/index.js";
 import { useEffect, useId, useState } from "react";
 
 import type { EvidenceSnippetView, EvidenceToken, EvidenceUaView } from "../view/lesson-view.js";
+import { EvidenceUaPlace } from "./EvidenceUaPlace.js";
 import { EvidenceCode } from "./EvidenceCode.js";
 import { EvidenceLocatorOnly } from "./EvidenceLocatorOnly.js";
-import { EvidenceUaPlace } from "./EvidenceUaPlace.js";
 import { loadEvidenceSnippet, type EvidenceSource } from "./load-evidence-snippet.js";
 
 function formatLineRange(start: number, end: number): string {
@@ -23,10 +23,10 @@ function parseLineRange(lines: string): { readonly start: number; readonly end: 
 }
 
 /**
- * Renders a resolved `[[evidence:…]]` token as the real pinned source. The
- * lesson body uses it for short citations; the reference panel also reuses it
- * after a reader opens a longer citation. The rail keeps its own chip/expand
- * behaviour.
+ * Renders a resolved `[[evidence:…]]` token as a source affordance. The
+ * lesson body keeps the source bytes out of the first screen; the shared
+ * source sheet loads the real pinned file only after the reader asks for it.
+ * The rail keeps its own chip/expand behaviour.
  */
 export function EvidenceInlineSource({
   index,
@@ -35,25 +35,31 @@ export function EvidenceInlineSource({
   lines,
   ua,
   sourceCommit,
+  loadOnMount = false,
   onOpenEvidence,
 }: {
   readonly index: number;
-  readonly basePath: EvidenceSource;
+  readonly basePath?: EvidenceSource;
   readonly sourcePath: string;
   readonly lines: string;
   readonly ua?: EvidenceUaView | null;
-  /** The manifest pin is visible before the snippet request resolves. */
+  /** The manifest pin is visible before the reader requests the snippet. */
   readonly sourceCommit?: string;
+  /** Long citations load after the reader has opened their reference panel. */
+  readonly loadOnMount?: boolean;
   readonly onOpenEvidence?: (index: number, trigger: HTMLElement) => void;
 }) {
   const triggerId = useId();
   const cited = parseLineRange(lines);
-  const [status, setStatus] = useState<"loading" | "ready" | "locator-only" | "error">("loading");
+  const [status, setStatus] = useState<"deferred" | "loading" | "ready" | "locator-only" | "error">(
+    loadOnMount ? "loading" : "deferred",
+  );
   const [snippet, setSnippet] = useState<EvidenceSnippetView | null>(null);
   const [tokens, setTokens] = useState<readonly (readonly EvidenceToken[])[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!loadOnMount || !basePath) return;
     let cancelled = false;
     setStatus("loading");
     setSnippet(null);
@@ -77,7 +83,7 @@ export function EvidenceInlineSource({
     return () => {
       cancelled = true;
     };
-  }, [basePath, index]);
+  }, [basePath, index, loadOnMount]);
 
   const displayStart = snippet?.highlightStartLine ?? snippet?.startLine ?? cited.start;
   const displayEnd = snippet?.highlightEndLine ?? snippet?.endLine ?? cited.end;
@@ -86,9 +92,6 @@ export function EvidenceInlineSource({
     sourcePath || snippet?.sourcePath || translate("ui.evidence.evidenceInlineSource.copy.源码");
   const commit = sourceCommit ?? snippet?.sourceCommit;
   const estimatedLines = Math.max(1, cited.end - cited.start + 1);
-  // Reserve roughly cited-line height plus a little context so arrival does not
-  // shove the rest of the lesson. Context is approximate; the real snippet may
-  // be a few lines taller or shorter.
   const loadingMinHeight = `calc(2.4rem + ${estimatedLines + 4} * 1.55em)`;
 
   return (
@@ -137,7 +140,6 @@ export function EvidenceInlineSource({
         ) : null}
       </div>
       {ua ? <EvidenceUaPlace ua={ua} compact /> : null}
-
       {status === "loading" ? (
         <div
           className="evidence-inline-source__loading"
@@ -147,6 +149,12 @@ export function EvidenceInlineSource({
           <span className="evidence-inline-source__loading-bar" />
           <span className="evidence-inline-source__loading-bar" />
           <span className="evidence-inline-source__loading-bar evidence-inline-source__loading-bar--short" />
+        </div>
+      ) : null}
+
+      {status === "deferred" && onOpenEvidence ? (
+        <div className="evidence-inline-source__deferred" role="status">
+          {translate("ui.evidence.evidenceInlineSource.copy.点击查看固定源码")}
         </div>
       ) : null}
 

@@ -228,6 +228,24 @@ describe("delivery artifact gate", () => {
     );
   });
 
+  it("rejects a baked release with only partial repository evidence coverage", () => {
+    const { root, coursePath } = writeArtifactFixture();
+    const pkg = JSON.parse(readFileSync(coursePath, "utf8"));
+    const snippetUrl = `/content/study/course/evidence/${"a".repeat(64)}.json`;
+    pkg.course.units[0].lessons[0].evidence = [
+      { sourcePath: "src/first.ts", lineStart: 1, lineEnd: 1, snippetUrl },
+      { sourcePath: "src/second.ts", lineStart: 2, lineEnd: 2 },
+    ];
+    writeFileSync(coursePath, `${JSON.stringify(pkg)}\n`);
+    mkdirSync(join(root, "content", "study", "course", "evidence"), { recursive: true });
+    writeFileSync(join(root, "content", snippetUrl.slice("/content/".length)), "{}\n");
+    reseal(root, { evidenceMode: "baked" });
+
+    expect(() => validateDeliveryArtifact(root)).toThrow(
+      /release evidence mode baked but only 1\/2 repository evidence anchors have baked snippets/,
+    );
+  });
+
   it("rejects a changed payload even when release metadata was not changed", () => {
     const { root, coursePath } = writeArtifactFixture();
     writeFileSync(coursePath, `${readFileSync(coursePath, "utf8")} `);
