@@ -130,6 +130,20 @@ if (studies.length === 0) {
   process.exit(0);
 }
 
+/*
+  Skipping a study whose source is not on this machine is right — you cannot
+  compare an export against a checkout you do not have. Saying so quietly is
+  not. The all-skipped path above shouts SOURCE FRESHNESS IS NOT PROVEN HERE;
+  the partial-skip path printed a confident "N export(s) match their courses"
+  and said nothing about the one it did not look at.
+
+  That difference is not cosmetic. On 2026-08-31 a broken worktree symlink hid
+  turing-pact from this checker, the run went green, and the branch reported a
+  passing verify while main was failing on that exact study. A gate that gets
+  quieter as its coverage shrinks trains you to stop reading it.
+*/
+const skipped = exported.filter((study) => !initializedStudyIds.has(study));
+
 const stale = [];
 const scratch = mkdtempSync(join(tmpdir(), "university-local-export-check-"));
 try {
@@ -180,7 +194,14 @@ for (const study of unexported) {
 }
 
 if (stale.length === 0) {
-  console.log(`check-export-freshness: ${studies.length} export(s) match their courses.`);
+  console.log(
+  `check-export-freshness: ${studies.length} export(s) match their courses` +
+    (skipped.length > 0
+      ? `; ${skipped.length} NOT CHECKED (no local source for ${skipped.join(", ")}) — ` +
+        "freshness is unproven for those"
+      : "") +
+    ".",
+);
   process.exit(0);
 }
 
