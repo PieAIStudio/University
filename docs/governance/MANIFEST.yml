@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-01T15:36:26.204Z
+generated_at: 2026-09-01T15:40:08.488Z
 generator_version: doc-gov@0.9.9
 docs_count: 92
 docs:
@@ -205,7 +205,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-31
+    last_reviewed: 2026-09-01
     pinned: false
   - id: REF-PAYMENT-BACKEND-GAP
     path: docs/reference/execution/payment-backend-gap.md
