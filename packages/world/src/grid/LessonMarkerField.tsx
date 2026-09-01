@@ -25,12 +25,31 @@ export function LessonMarkerField({ markers, onPick, onHover }: LessonMarkerFiel
   // The road is the continuous ivory layer. Each lesson gets one smaller
   // coral stone set into it, which keeps the route readable without adding a
   // separate mesh per lesson.
-  const plinthGeometry = useMemo(() => new THREE.CylinderGeometry(0.92, 1, 0.22, 6), []);
-  const ringGeometry = useMemo(() => new THREE.CylinderGeometry(0.62, 0.7, 0.12, 6), []);
+  const plinthGeometry = useMemo(() => {
+    const geometry = new THREE.CylinderGeometry(0.92, 1, 0.22, 6);
+    const normal = geometry.getAttribute("normal");
+    const colours = new Float32Array(normal.count * 3);
+    for (let index = 0; index < normal.count; index += 1) {
+      // The inset top receives less reflected fill than its bevel. This is a
+      // face relationship, not a global marker grade, and preserves the
+      // bright side rim that keeps the paver legible on the road.
+      const value = normal.getY(index) > 0.9 ? 0.5 : 1;
+      colours[index * 3] = value;
+      colours[index * 3 + 1] = value;
+      colours[index * 3 + 2] = value;
+    }
+    geometry.setAttribute("color", new THREE.BufferAttribute(colours, 3));
+    return geometry;
+  }, []);
+  // The ring is the learner-facing click cue. It gets a little more visible
+  // area in the fixed phone frame while keeping the same six-sided geometry
+  // and one instanced draw.
+  const ringGeometry = useMemo(() => new THREE.CylinderGeometry(0.72, 0.82, 0.12, 6), []);
   const plinthMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
         color: 0xffffff,
+        vertexColors: true,
         roughness: 0.72,
         metalness: 0.04,
         flatShading: true,

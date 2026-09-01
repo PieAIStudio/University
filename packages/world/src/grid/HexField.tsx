@@ -6,7 +6,7 @@ import { hash } from "../island/random.js";
 import { islandLookFrozen } from "../island/island-surface-style.js";
 import type { GridCell, HexMap } from "./course-grid.js";
 import { hexToWorld } from "./hex.js";
-import { GRID_COURSE_TOP_LINEAR_SCALE } from "./grid-palette.js";
+import { gridTerrainValueScale } from "./grid-palette.js";
 
 interface HexFieldProps {
   readonly map: HexMap;
@@ -99,6 +99,13 @@ export function mapMaterial(
     shader.uniforms.gridCliff = { value: new THREE.Color(map.palette.cliff) };
     shader.uniforms.gridShadow = { value: new THREE.Color(map.palette.shadow) };
     shader.uniforms.gridDim = { value: dimmed ? 0.62 : 1 };
+    // World cells are read as small floating landforms, so their same soil
+    // family catches more of the shared key than a close course cliff. These
+    // three values form a vertical wall response; they are not a second brown
+    // palette or a post-process exposure lift.
+    shader.uniforms.gridSoilTopValue = { value: map.projection === "world" ? 5.4 : 1 };
+    shader.uniforms.gridSoilBottomValue = { value: map.projection === "world" ? 3.8 : 1 };
+    shader.uniforms.gridSoilShadowValue = { value: map.projection === "world" ? 0.72 : 0.58 };
     shader.vertexShader = shader.vertexShader.replace(
       "#include <common>",
       "#include <common>\nattribute float gridFace;\nvarying float vGridFace;\nvarying float vGridDepth;",
@@ -109,22 +116,22 @@ export function mapMaterial(
     );
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <common>",
-      "#include <common>\nvarying float vGridFace;\nvarying float vGridDepth;\nuniform vec3 gridCliff;\nuniform vec3 gridShadow;\nuniform float gridDim;",
+      "#include <common>\nvarying float vGridFace;\nvarying float vGridDepth;\nuniform vec3 gridCliff;\nuniform vec3 gridShadow;\nuniform float gridDim;\nuniform float gridSoilTopValue;\nuniform float gridSoilBottomValue;\nuniform float gridSoilShadowValue;",
     );
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <color_fragment>",
-      "#include <color_fragment>\nfloat gridSoilDepth = clamp((0.48 - vGridDepth) / 4.4, 0.0, 1.0);\nvec3 gridSoil = mix(gridCliff, gridShadow, gridSoilDepth);\nif (vGridFace > 0.5) diffuseColor.rgb = gridSoil;\ndiffuseColor.rgb *= gridDim;",
+      "#include <color_fragment>\nfloat gridSoilDepth = clamp((0.48 - vGridDepth) / 4.4, 0.0, 1.0);\nfloat gridSoilValue = mix(gridSoilTopValue, gridSoilBottomValue, gridSoilDepth);\nvec3 gridSoil = min(mix(gridCliff, gridShadow, gridSoilDepth) * gridSoilValue, vec3(1.0));\nif (vGridFace > 0.5) diffuseColor.rgb = gridSoil;\ndiffuseColor.rgb *= gridDim;",
     );
     // The soil should remain legible at the low-poly camera even when the
     // directional shadow falls between two cells. This is a floor, not an
     // unlit material: the warm key and cool hemisphere still provide the form.
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <opaque_fragment>",
-      "if (vGridFace > 0.5) outgoingLight = mix(gridSoil * 0.72, outgoingLight, 0.34);\n#include <opaque_fragment>",
+      "if (vGridFace > 0.5) outgoingLight = mix(gridSoil * gridSoilShadowValue, outgoingLight, 0.34);\n#include <opaque_fragment>",
     );
   };
   material.customProgramCacheKey = () =>
-    `hex-field-${map.palette.cliff}-${layer}-${dimmed ? "dim" : "full"}`;
+    `hex-field-${map.palette.cliff}-${map.projection}-${layer}-${dimmed ? "dim" : "full"}`;
   return material;
 }
 
@@ -132,17 +139,21 @@ export function cellTopColour(map: HexMap, cell: GridCell): THREE.Color {
   const colour = new THREE.Color(
     map.projection !== "world" && cell.kind === "route" ? map.palette.road : map.palette.top,
   );
-  if (map.projection !== "world" && cell.kind !== "route") {
-    colour.multiplyScalar(GRID_COURSE_TOP_LINEAR_SCALE);
+  if (cell.kind !== "route") {
+    colour.multiplyScalar(gridTerrainValueScale(map.projection, cell.height));
   }
   if (cell.kind !== "route") {
-    // Unit territories and a tiny per-cell value shift stay inside the same
-    // meadow swatch. The range is deliberately small: a 0.72–1.12 spread
-    // painted whole patches as a second ground colour, which the aerial
-    // camera then read as a tiled board.
+    // Unit territories carry a restrained hue cue as well as the elevation
+    // value. It is keyed to the authored unit, so neighbouring cells in one
+    // territory still read as one patch; the small amount keeps the field from
+    // becoming an accent-colour checkerboard.
     if (cell.unitIndex !== null) {
       const unitValue = [0.94, 0.97, 1, 1.03, 1.06][cell.unitIndex % 5] ?? 1;
       colour.multiplyScalar(unitValue);
+      colour.lerp(
+        new THREE.Color(map.palette.accent),
+        0.045 + (cell.unitIndex % 4) * 0.02,
+      );
     }
     colour.multiplyScalar(0.97 + hash(`${map.seed}/${cell.key}/top-value`) * 0.06);
   }
@@ -200,8 +211,8 @@ function HexBedField({
     cells.forEach((cell, index) => {
       target.setMatrixAt(index, bedMatrix(cell, map, matrix));
       const colour = new THREE.Color(cell.kind === "route" ? map.palette.road : map.palette.top);
-      if (map.projection !== "world" && cell.kind !== "route") {
-        colour.multiplyScalar(GRID_COURSE_TOP_LINEAR_SCALE);
+      if (cell.kind !== "route") {
+        colour.multiplyScalar(gridTerrainValueScale(map.projection, cell.height));
       }
       target.setColorAt(index, colour);
     });

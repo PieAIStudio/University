@@ -22,13 +22,45 @@ export const GRID_SHARED_SOIL = {
 } as const;
 
 /**
- * Course terrain is read at close range, where the raw top swatch receives
- * both the warm key and the cool rim. Keep the finite palette's hue and
- * saturation identity, but give the course projection a little more painted
- * value headroom. The remote projection keeps the authored swatch so a small
- * catalogue island does not inherit the close-up exposure.
+ * Elevation is also a value layer. These are albedo multipliers keyed to the
+ * four authored terrace levels, not a post-process exposure shift: the lower
+ * shoulder receives less light, while the upper terrace has enough value
+ * headroom for the same sun to read as a lit plane in the fixed camera.
+ *
+ * Course and world use different ranges because they are two projections of
+ * the same grid at different physical scales. The relation stays shared and
+ * deterministic; only the camera's readable size changes the range.
  */
-export const GRID_COURSE_TOP_LINEAR_SCALE = 0.82;
+export const GRID_TERRAIN_VALUE_RAMP = {
+  course: [0.21, 0.5, 2.87, 4.4],
+  world: [0.8, 1.2, 3.2, 4.8],
+} as const;
+
+/**
+ * Leaf colour is a real dressing layer, not a noise texture. The finite ramp
+ * moves from dry yellow grass through moss to wet meadow, and its placement
+ * selection is deterministic in the shared BatchedMesh adapter. Keeping the
+ * endpoints inside the grass hue band gives a small course enough visible
+ * plant identity without turning the top surface into a tiled colour field.
+ */
+export const GRID_PROP_FOLIAGE_COLOURS = [
+  0xb99a40,
+  0xa4a13c,
+  0x8da643,
+  0x74a64a,
+  0x213c28,
+  0x315f36,
+  0x3d6a36,
+  0x4fa68b,
+  0x35a58b,
+] as const;
+
+export function gridTerrainValueScale(
+  projection: "course" | "world",
+  height: 1 | 2 | 3 | 4,
+): number {
+  return GRID_TERRAIN_VALUE_RAMP[projection][height - 1] ?? 1;
+}
 
 function hueToRgb(p: number, q: number, t: number): number {
   let value = t;

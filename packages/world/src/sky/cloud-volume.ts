@@ -90,7 +90,10 @@ export function addCloudVertexValueRamp(geometry: THREE.BufferGeometry): THREE.B
     const z = position.getZ(index);
     const lift = clamp((y + 0.9) / 1.8, 0, 1);
     const facing = clamp((z + 1) * 0.5, 0, 1);
-    const value = 0.78 + lift * 0.16 + facing * 0.06;
+    // The closed body now has a readable underside and a sun-facing crown.
+    // This is a geometric light relationship carried by vertex value, not a
+    // global grade applied to the cloud batch.
+    const value = 0.5 + lift * 0.38 + facing * 0.12;
     colours[index * 3] = value * (0.99 + lift * 0.01);
     colours[index * 3 + 1] = value * (0.97 + lift * 0.03);
     colours[index * 3 + 2] = value * (0.98 + (1 - lift) * 0.02);

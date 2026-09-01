@@ -313,7 +313,11 @@ function dressingAssetsReady(scene: THREE.Scene, source: IslandLookSceneSource):
 function aerialPlateReady(scene: THREE.Scene, source: IslandLookSceneSource): boolean {
   if (source.detail !== "world") return true;
   const plate = scene.getObjectByName("island-look-aerial-plate");
-  if (!plate || !(plate as THREE.Mesh).isMesh) return false;
+  // The world projection deliberately has no continuous sea/plate: its
+  // negative space is the blue lower dome and distant air. Absence is the
+  // resolved state for that contract, not a pending texture load.
+  if (!plate) return true;
+  if (!(plate as THREE.Mesh).isMesh) return false;
   const material = (plate as THREE.Mesh).material;
   const materials = Array.isArray(material) ? material : [material];
   return materials.some((entry) => {

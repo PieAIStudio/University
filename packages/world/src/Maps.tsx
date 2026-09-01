@@ -106,9 +106,14 @@ export const SKY_STOPS = {
  */
 export const WORLD_SKY_CONTRACT = {
   visibleSea: false,
-  horizon: 0xb7d4de,
-  nadir: 0x8fbfd4,
-  fogColor: 0x8fbfd4,
+  // The catalogue is a blue-violet air volume, not a second course sunset.
+  // Keeping all four stops here makes the world projection's value relation
+  // explicit instead of inheriting a study climate and moving one grade.
+  zenith: 0x152d76,
+  mid: 0x9ccfec,
+  horizon: 0xf3f0ff,
+  nadir: 0x4d3e86,
+  fogColor: 0x6a79ad,
   fogNearRatio: 0.55,
   fogFarRatio: 3.5,
 } as const;
@@ -126,10 +131,10 @@ export const COURSE_SKY_STOPS: SkyStops = {
   // headroom for the course ground. The former near-cream middle turned the
   // fixed course frame into one warm sheet and also entered the look judge's
   // earth-colour candidate range.
-  zenith: 0xf97f76,
-  mid: 0xf5a36f,
-  horizon: 0xf2c397,
-  nadir: 0xa39acd,
+  zenith: 0xc98780,
+  mid: 0xe4ebf2,
+  horizon: 0xbc957d,
+  nadir: 0x4e3b7e,
 };
 
 /**
@@ -883,6 +888,8 @@ export function WorldScene({
   const sky = useMemo(
     () => ({
       ...skyStopsForStudy(skyStudyId),
+      zenith: WORLD_SKY_CONTRACT.zenith,
+      mid: WORLD_SKY_CONTRACT.mid,
       horizon: WORLD_SKY_CONTRACT.horizon,
       nadir: WORLD_SKY_CONTRACT.nadir,
     }),

@@ -81,7 +81,10 @@ function CloudLayer({ map, depth, dimmed }: { map: HexMap; depth: CloudDepth; di
       // sample; the closed body and baked vertex value ramp provide its light
       // cue instead.
       new THREE.MeshBasicMaterial({
-        color: dimmed ? 0x879795 : depth === "back" ? 0xffead0 : 0xfff8ea,
+        // Cool cloud light lets the warm horizon remain a sky cue. The
+        // sculpted vertex ramp supplies the darker underside and keeps depth
+        // legible without adding another cloud batch.
+        color: dimmed ? 0x879795 : 0xffffff,
         vertexColors: true,
         transparent: true,
         opacity: depth === "front" ? 0.62 : depth === "side" ? 0.74 : 0.82,
