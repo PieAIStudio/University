@@ -11,6 +11,7 @@
     "content": "pnpm --filter @pieai/university-app content",
     "check:generated-format": "pnpm --filter @pieai/university-app check:generated-format",
     "check:canvas": "node scripts/check-canvas-registry.mjs",
+    "check:catalog": "node apps/university/scripts/check-published-catalog.mjs",
     "check:content-revisions": "node scripts/check-content-revisions.mjs",
     "check:export-freshness": "node apps/local/scripts/check-export-freshness.mjs",
     "check:lesson-links": "node apps/local/scripts/check-lesson-links.mjs --studies-root apps/local/fixtures/lesson-links",

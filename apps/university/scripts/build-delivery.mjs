@@ -201,6 +201,14 @@ function main() {
   };
   let artifactCreated = false;
   try {
+    // Before anything expensive: refuse a build that would take a published
+    // course away from customers. This reads the export, so it must run after
+    // the export exists and before the import consumes it.
+    run(
+      process.execPath,
+      ["scripts/check-published-catalog.mjs", "--recovery-root", recoveryPath.absolute],
+      environment,
+    );
     run("pnpm", ["content"], environment);
     run("pnpm", ["--filter", "@pieai/university-app...", "build"], environment);
     run(process.execPath, ["scripts/check-authoring-excluded.mjs"], environment);

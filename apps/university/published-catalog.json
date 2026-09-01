@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "note": "Courses this product has already published to customers, as of the release named below. An export may add to this list freely — publishing is gated elsewhere. Removing a course is unpublishing: it takes a course away from people who can already see it, so it must be a deliberate edit of this file, not a side effect of a re-export. Marking a course stale on disk is an authoring state, not a decision to unpublish it. Run check-published-catalog.mjs --accept-removals to record a removal you actually mean.",
+  "publishedAt": "0.2.4",
+  "studies": {
+    "buzz": [
+      "buzz-agents-as-members",
+      "buzz-design-tokens",
+      "buzz-one-message",
+      "buzz-orientation",
+      "buzz-reading-rust"
+    ],
+    "general": [
+      "product-website"
+    ],
+    "supaluv": [
+      "ai-branching-narrative",
+      "ai-cost-and-boundaries",
+      "automated-playtesting",
+      "content-as-package",
+      "founder-engineer",
+      "generated-assets",
+      "media-tooling"
+    ],
+    "turing-pact": [
+      "agent-identity-continuity",
+      "ai-budget-and-cost",
+      "ai-contracts-first",
+      "ai-evaluation",
+      "asset-pipeline",
+      "bilingual-by-design",
+      "contracts-and-drift",
+      "directing-ai-agents",
+      "e2e-and-qa-scripts",
+      "experiments-and-rollout",
+      "failure-recovery",
+      "foundations-async",
+      "foundations-before-zero",
+      "foundations-data",
+      "foundations-logic",
+      "foundations-product",
+      "foundations-quality",
+      "foundations-reading-code",
+      "foundations-terrain",
+      "foundations-ui",
+      "identity-and-accounts",
+      "moment-design",
+      "one-codebase-many-hosts",
+      "platform-capabilities",
+      "realtime-presence",
+      "retention-engineering",
+      "solo-operations",
+      "state-and-process",
+      "structured-output-repair",
+      "testing-strategy",
+      "world-navigation"
+    ]
+  }
+}
