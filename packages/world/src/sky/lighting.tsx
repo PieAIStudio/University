@@ -24,9 +24,19 @@ export function MapLighting({ groundRadius, skyMid, shadows = true }: MapLightin
 
   return (
     <>
-      {/* Fill is the denominator of scene-linear range; ambient stays below the key. */}
+      {/*
+        Fill is the denominator of scene-linear range. The current warm lower
+        bounce plus blue ambient/PMREM fill is measured at 2.08:1 against the
+        5.2 key, so the shadow still reads as a shadow without dropping to black.
+      */}
       <hemisphereLight args={[skyMid, WORLD_SUN.hemisphereGround, WORLD_SUN.hemisphereIntensity]} />
       <ambientLight color={WORLD_SUN.ambientColor} intensity={WORLD_SUN.ambientIntensity} />
+      {/*
+        `normalBias` is still the acne fix that matters on small curved
+        geometry. The frustum itself is fitted to `groundRadius` so the 2048
+        map covers the design shot without stretching across the weather
+        sphere.
+      */}
       <directionalLight
         color={WORLD_SUN.keyColor}
         position={sunPosition}
@@ -42,7 +52,8 @@ export function MapLighting({ groundRadius, skyMid, shadows = true }: MapLightin
         shadow-bias={-0.0002}
         shadow-normalBias={0.06}
       />
-      {/* A cool, shadowless rim separates the island from the warm sky. */}
+      {/* A low cool rim separates the island silhouette from the warm sky. It
+          has no shadow map: this is a fill edge, not another expensive key. */}
       <directionalLight
         color={0x8cc9d4}
         position={[-sunPosition[0] * 0.82, shadow.lightDistance * 0.44, -sunPosition[2] * 0.82]}

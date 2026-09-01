@@ -83,16 +83,6 @@ export function hexGeometry(seamStrength: number, cliffBottom = -0.5): THREE.Buf
   return geometry;
 }
 
-// Preserve the existing internal entry point while the material gets its own
-// change boundary. New callers should use the intention-revealing factory.
-export function mapMaterial(
-  map: HexMap,
-  dimmed: boolean,
-  layer: HexLayer,
-): THREE.MeshStandardMaterial {
-  return createHexFieldMaterial(map, dimmed, layer);
-}
-
 function setSurfaceSlopeAttribute(
   geometry: THREE.BufferGeometry,
   map: HexMap,
