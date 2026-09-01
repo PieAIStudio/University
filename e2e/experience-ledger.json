@@ -450,6 +450,19 @@
       "state": "open",
       "foundBy": "claude",
       "foundOn": "2026-09-01"
+    },
+    {
+      "id": "cd7e78792e32",
+      "screen": "/",
+      "element": "货架课程 DTO",
+      "category": "leaky-abstraction",
+      "viewport": "both",
+      "summary": "货架给全部 44 门课硬编码 status:active，与同一对象里的 isBeingRewritten:true 直接矛盾",
+      "severity": "friction",
+      "state": "open",
+      "foundBy": "claude",
+      "foundOn": "2026-09-01",
+      "note": "import-courses.mjs 在 course/unit/lesson 三层硬编码 status:\"active\" 字面量，不是算出来的。今天之前 shelf 里没有 stale 课，所以这个常量既不可能对也不可能错；恢复 28 门课之后它变成明确的错——foundations-terrain 在 shelf 里是 status:\"active\" 且 isBeingRewritten:true。学习者看不见，全仓没有任何代码读 CourseView.status。根在 packages/ui/src/view/lesson-view.ts:36，把作者的四值状态机 draft/active/stale/retired 直接放进了学习者视图类型，违反已写下的规则「作者的词不许穿过发布边界」。拆掉要动 51 处（多为测试夹具），我在部署前一刻放弃了这次手术，改为立项。线上 0.2.4 此刻也是同样 667 处，所以这不是新增回归。"
     }
   ]
 }
