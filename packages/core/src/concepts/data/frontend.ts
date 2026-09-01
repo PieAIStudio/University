@@ -61,7 +61,7 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
       },
       definition: {
         statement:
-          "前端是跑在访问者这台手机或电脑上、让人看见并动手的那一层：字、按钮、表单，以及 University 学生端那张 3D 世界地图。",
+          "前端是跑在访问者这台手机或电脑上、让人看见并动手的那一层：字、按钮、表单，以及 University delivery 模式里的那张 3D 世界地图。",
         not: "它不是把数据真正存下来、也不是判定谁有权限的那一头。页面上弹出「已保存」，不等于名单里已经有这个人。",
       },
       aliases: ["页面这一层", "看得见的那一层", "客户端界面"],
@@ -81,12 +81,12 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
       ],
       variants: [
         {
-          name: "老师写课这一版",
-          when: "University 的 apps/local。完全离线，不联网也能改课文、排课程。",
+          name: "老师写课的 authoring 模式",
+          when: "University 的 apps/university 用 authoring 模式构建，老师在本机写课。",
         },
         {
-          name: "学生上课这一版",
-          when: "apps/online。打开是一张 3D 世界地图，每座岛一门课，相机锁死俯角，禁止旋转。",
+          name: "学生上课的 delivery 模式",
+          when: "University 的 apps/university 用 delivery 模式构建。打开是一张 3D 世界地图，每座岛一门课，相机锁死俯角，禁止旋转。",
         },
       ],
       useDont: {
@@ -112,7 +112,7 @@ export const FRONTEND_CONCEPTS: readonly RawConcept[] = [
         },
       ],
       plain: [
-        "University 其实有两层给人看的界面。老师写课用的那一版在 apps/local，完全离线，不联网也能改课文；学生上课用的那一版在 apps/online，打开是一张 3D 世界地图，每座岛一门课。你看见的字、按钮、地图、点击时的声音，都属于前端。声音还不是下载来的音频文件，是用 npm（一种安装别人写好的小包的工具）上的 uisfx，按一份声音配方在这台设备上当场做出来的。",
+        "University 其实只有一个浏览器应用 apps/university，但它有两个模式：authoring 给老师在本机写课，delivery 给学生上课，打开是一张 3D 世界地图，每座岛一门课。你看见的字、按钮、地图、点击时的声音，都属于前端。声音还不是下载来的音频文件，是用 npm（一种安装别人写好的小包的工具）上的 uisfx，按一份声音配方在这台设备上当场做出来的。",
         "前端跑在打开网页的那台手机或电脑上，所以它很擅长马上给人反应：按钮变灰、星星点亮、提示「已保存」。它不擅长当唯一的真相来源。访问者可以打开网页看这些代码。密钥、谁有权限看课、报名有没有真的写进名单，都不能只写在前端。",
         "一个大多数人第一次都会踩的坑：点了保存，页面立刻说成功，一刷新又没了。那是前端先报喜，后面那一层根本没把数据留下。先对一下三件事——点下去有没有真的发出去、成功提示是不是等结果回来才出现、再打开时有没有把已存的内容读回来。",
       ],

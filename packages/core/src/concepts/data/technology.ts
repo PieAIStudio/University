@@ -313,7 +313,7 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
         },
         {
           name: "同一座商店、别的安装工具",
-          when: "University 这种「一个大项目里放老师端和学生端」的结构，装包用的是 pnpm。包仍然来自 npm 这座商店，只是安装工具换了一种，更擅长这种多应用的项目。",
+          when: "University 这种「一个项目里有一个浏览器应用、多个共用包」的结构，装包用的是 pnpm。包仍然来自 npm 这座商店，只是安装工具换了一种，更擅长把同一个项目里的包放在一起管理。",
         },
         {
           name: "只在项目里声明、不手拷代码",
@@ -349,7 +349,7 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
       ],
       plain: [
         "做网页很少从零写完所有能力。日期怎么算、按钮点下去的轻响从哪来，都有人写好了，一捆一捆放在 npm 这座商店里。你要做的是在清单上写下名字，让安装工具取回来。这跟在应用商店下 App 像，但装到的是当前这个项目，不是整台电脑的「开始菜单」。通常也不用为安装本身付钱。",
-        "University 是一个用 pnpm 管起来的大项目：apps/local 给老师离线写课，apps/online 给学生用、带 3D 世界地图，共用 packages/core 里不管长什么样的规则，和 packages/ui 里的界面零件（用 React 搭，React 是一套把界面拆成可复用零件来写的方法）。音效来自 npm 上的 uisfx，不往项目里塞 mp3。界面、颜色、问 AI 分别走 SwimmerUIKit、SwimmerRenderKit、SwimmerAIKit 三个共用包，不在这个项目里重写——这和「能用现成的就不要手拷一份」是同一条原则。",
+        "University 是一个用 pnpm 管起来的大项目：浏览器应用 apps/university 有 authoring 和 delivery 两种模式，前者给老师在本机写课，后者给学生用、带 3D 世界地图；两种模式共用 packages/core 里不管长什么样的规则，和 packages/ui 里的界面零件（用 React 搭，React 是一套把界面拆成可复用零件来写的方法）。音效来自 npm 上的 uisfx，不往项目里塞 mp3。界面、颜色、问 AI 分别走 SwimmerUIKit、SwimmerRenderKit、SwimmerAIKit 三个共用包，不在这个项目里重写——这和「能用现成的就不要手拷一份」是同一条原则。",
         "跟 AI 协作时，它常甩一行 npm install。先确认当前文件夹是项目根，再跑。University 这种项目实际该跑的往往是 pnpm，两种都跑容易把包装乱。装完不要把那只巨大的文件夹当成果提交；Git 只该记下清单。同事拿着清单自己装，才能装出同一套。",
       ],
       whenNot: [
@@ -509,7 +509,7 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
       ],
       plain: [
         "你开发时写的常常不是浏览器能直接吞的最终形态。带检查的 TypeScript 要先变成 JavaScript；许多小文件要收成几份；别人写好的包也要合进去。构建就是这趟自动整理。它像把一堆食材和半成品做成能上桌的菜，还没端到店里。",
-        "University 有两个要打开的界面：apps/local 给老师离线写课，apps/online 给学生用。两边都得变成浏览器能打开的东西，才能在自己电脑上预览。他们具体用哪一种构建程序，公开事实没写，这里不编。你自己的报名页也一样：不要假设「文件夹在，双击就能当网站」。",
+        "University 的 apps/university 是一个浏览器应用，分别用 authoring 和 delivery 两种模式构建；authoring 给老师在本机写课，delivery 给学生用。apps/local 只是读磁盘的 Node 服务，不是要构建成页面的第二个应用。你自己的报名页也一样：不要假设「文件夹在，双击就能当网站」。",
         "跟 AI 做完功能，它有时会说「可以直接上线了」。先问构建过了没有。失败了，原因在终端的红字里。成功了，仍然要用手机打开走一遍提交——构建不管手机号填错该不该被拦住。",
       ],
       whenNot: [
@@ -1855,7 +1855,7 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
       ],
       plain: [
         "装修厨房，完工后还得拧一下卫生间的水龙头。不是把房子拆回没装修——那叫退回去，是回滚。回归测试是往前查：新的工程有没有砸坏旧的管子。中文里「回归」容易听成「退回」，这是这个词最坑的地方。",
-        "跟 AI 做东西，这是高频事故。它为了导出名单，改了八个文件，提交报名的那一段被顺手写坏。University 已交付 52 门课、560 节课文，论断还挂着 1815 处出处；改 packages/core 里的规则时，老师端 apps/local 和学生端 apps/online 两边都会吃到。公开事实没写他们的回归测试长什么样，这里不编。但「改一处、两边都可能坏」是真的。",
+        "跟 AI 做东西，这是高频事故。它为了导出名单，改了八个文件，提交报名的那一段被顺手写坏。University 已交付 52 门课、560 节课文，论断还挂着 1815 处出处；改 packages/core 里的规则时，apps/university 的 authoring 和 delivery 两种模式都会吃到。公开事实没写他们的回归测试长什么样，这里不编。但「改一处、两种模式都可能坏」是真的。",
         "大多数人第一次只兴奋地测新按钮。清单上要写死：新的测完，旧的、没有它产品就不成立的那几步再跑一遍。失败了修产品或退回上一档，不要修测试去迁就坏掉的提交。",
       ],
       whenNot: [
@@ -2538,7 +2538,7 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
       ],
       plain: [
         "别人问「你这个网站用什么做的」，问的就是技术栈。它听起来像在报菜名，其实是一组会互相卡住的选择：页面若用 React（一套把界面拆成零件来搭的写法），同事丢来的 Vue（另一套类似的写法）按钮就贴不进去；数据若只存在你电脑上的表格里，就不必先上一个你没有的数据库（专门存大量数据的系统）。",
-        "University 自己的组合很具体，可以当一份真清单看。同一个项目里放两个要打开的界面：apps/local 给老师离线写课、完全不联网；apps/online 给学生用，主界面是一张 3D 世界地图，每座岛一门课。两边共用 packages/core 里只负责规则、不管长什么样的代码，和 packages/ui 里的 React 零件。问 AI 走 SwimmerAIKit，音效用 npm 上的 uisfx。你从这张清单里能读出一条原则：能共用的不写两遍，能用现成包的不在这个项目里重写。",
+        "University 自己的组合很具体，可以当一份真清单看。同一个项目里放一个浏览器应用 apps/university，按两种模式工作：authoring 给老师在本机写课，delivery 给学生用，delivery 的主界面是一张 3D 世界地图，每座岛一门课。两种模式共用 packages/core 里只负责规则、不管长什么样的代码，和 packages/ui 里的 React 零件。问 AI 走 SwimmerAIKit，音效用 npm 上的 uisfx。你从这张清单里能读出一条原则：能共用的不写两遍，能用现成包的不在这个项目里重写。",
         "跟 AI 做东西，技术栈要先说边界。只丢一句「用最流行的」，它可能给你同时装两套页面写法，再加一个你用不来的数据库。先写清「页面用 JavaScript，只要一套界面写法，报名先存成我能导出的表格」，后面才不会越加越多。",
       ],
       whenNot: [
@@ -3040,12 +3040,12 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
       ],
       variants: [
         {
-          name: "两个应用共用一份零件",
-          when: "University 的做法：apps/local 和 apps/online 都从 packages/ui 引用 React 组件。",
+          name: "一个应用的两种模式共用一份零件",
+          when: "University 的做法：apps/university 的 authoring 和 delivery 两种模式都从 packages/ui 引用 React 组件。",
         },
         {
           name: "和 3D 画在一起",
-          when: "学生端地图用 React Three Fiber：用写 React 的方式去画 3D。能读的字仍用普通网页元素，不进画布。",
+          when: "delivery 模式的地图用 React Three Fiber：用写 React 的方式去画 3D。能读的字仍用普通网页元素，不进画布。",
         },
         {
           name: "外面再包一层网站架子",
@@ -3054,7 +3054,7 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
       ],
       useDont: {
         use: [
-          "搜索框、词条卡片、复制按钮要一起跟着输入变，而且老师端学生端要同一份。",
+          "搜索框、词条卡片、复制按钮要一起跟着输入变，而且 authoring 和 delivery 两种模式要用同一份。",
           "3D 课岛用 React 的方式去画，正文留在普通网页元素上，保证能选中复制、能用中文输入法。",
         ],
         dont: [
@@ -3071,7 +3071,7 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
         {
           left: "React",
           right: "Vue",
-          how: "要解决的麻烦很像，写法不是一家。University 两个界面都走 React，Vue 零件贴不进 packages/ui。",
+          how: "要解决的麻烦很像，写法不是一家。University 的 authoring 和 delivery 两种模式都走 React，Vue 零件贴不进 packages/ui。",
         },
         {
           left: "React",
@@ -3081,7 +3081,7 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
       ],
       plain: [
         "直接写 HTML 的麻烦是：同样的按钮出现三次，你就要改三处。React 的办法是把按钮做成组件。词条卡片、搜索框、「复制为 Markdown」都可以是组件。搜索词变了，用到这份数据的列表自己更新，不用你去「找到那个列表再改字」。",
-        "University 把这套用满了。packages/ui 里是 React 组件，离线的老师工具 apps/local、带 3D 课岛的 apps/online 共用这一份。学生端那张世界地图用 React Three Fiber 画——用写 React 的方式去画 3D。相机从斜上方往下看，角度锁死：世界地图 54°、课程地图 50°，能看到的范围 34°，禁止旋转，双指是平移不是缩放，照的是地图软件的习惯，不是游戏的习惯。",
+        "University 把这套用满了。packages/ui 里是 React 组件，apps/university 的 authoring 和 delivery 两种模式共用这一份。delivery 模式的世界地图用 React Three Fiber 画——用写 React 的方式去画 3D。相机从斜上方往下看，角度锁死：世界地图 54°、课程地图 50°，能看到的范围 34°，禁止旋转，双指是平移不是缩放，照的是地图软件的习惯，不是游戏的习惯。",
         "能读的字全部是普通网页元素，不进 3D 画布。原因很具体：中文输入法、把屏幕念出来的读屏软件、选中复制、手机键盘，在画布里会失效。React 在这里做的不是把一切画进立体世界，而是让「会动的界面」和「能读的字」各呆在该呆的地方。",
       ],
       whenNot: [
@@ -3089,29 +3089,29 @@ export const TECHNOLOGY_CONCEPTS: readonly RawConcept[] = [
         "团队已经全是 Vue，并且这是一个新项目——跟着团队走，而不是因为「网上都在说 React」。",
       ],
       prompt:
-        "University 有两个界面：apps/local（老师离线写课）和 apps/online（学生用，有 3D 课岛）。请把「复制为 Markdown」做成一个 React 组件，放进 packages/ui，两个应用都引用这一份。词义索引的搜索框把当前输入放在组件自己记住的值里，输入变化时列表同时匹配英文、中文、使用场景、初学者说法，不要整页刷新。3D 地图继续用 React Three Fiber；所有能读的字用普通网页元素，不要画进 3D。不要引入 Vue。",
+        "University 的 apps/university 有 authoring 和 delivery 两种模式。请把「复制为 Markdown」做成一个 React 组件，放进 packages/ui，两个模式都用这一份。词义索引的搜索框把当前输入放在组件自己记住的值里，输入变化时列表同时匹配英文、中文、使用场景、初学者说法，不要整页刷新。3D 地图继续用 React Three Fiber；所有能读的字用普通网页元素，不要画进 3D。不要引入 Vue。",
       related: ["component", "state", "javascript", "vue", "nextjs", "html"],
       quiz: {
         question:
-          "老师离线写课的工具、学生用的 3D 课岛，两边都要有「复制为 Markdown」。怎么组织代码？",
+          "University 的 authoring 和 delivery 两种模式都要有「复制为 Markdown」。怎么组织代码？",
         options: [
           {
             id: "a",
-            text: "两边各写一份按钮，反正现在长得一样。",
+            text: "两个模式各写一份按钮，反正现在长得一样。",
             explanation:
-              "今天省事，下周改文案就要改两处。漏一处就是两个产品两个样子，正是没抽成组件时最常见的结局。",
+              "今天省事，下周改文案就要改两处。漏一处就是两种模式两个样子，正是没抽成组件时最常见的结局。",
           },
           {
             id: "b",
-            text: "做成一个 React 组件，放进两边共用的 packages/ui，两处都引用这一份。",
+            text: "做成一个 React 组件，放进两种模式共用的 packages/ui，两处都引用这一份。",
             explanation:
               "对。University 已经这样拆：共用界面在 packages/ui。React 的组件就是为「改一处、两处跟着变」准备的。",
           },
           {
             id: "c",
-            text: "学生端改用 Vue，老师端留 React，两套都写一遍也好维护。",
+            text: "delivery 模式改用 Vue，authoring 模式留 React，两套都写一遍也好维护。",
             explanation:
-              "两套写法不能共用组件，维护成本直接翻倍。University 两边都走 React，就是为了避免这件事。",
+              "两套写法不能共用组件，维护成本直接翻倍。University 两种模式都走 React，就是为了避免这件事。",
           },
         ],
         correctOptionId: "b",
