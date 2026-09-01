@@ -559,6 +559,14 @@ if (evidenceMode === "none") {
   A pin nobody can resolve is not a pin. These commits are cited by lessons and
   absent from the mirror the citations are read from, so every claim resting on
   them is unverifiable — including the one the header makes out loud.
+
+  Read what this proves narrowly: it resolves against the study's own mirror at
+  studies/<id>/source/repository.git, which is not the repository a learner can
+  open. On 2026-09-01 the most-cited pin resolved here to 2026-07-22 and came
+  back 422 from the public repo, so a green run here does not mean a reader
+  could look the hash up. That gap is ledger finding 7eb9e5c567f6 and it is
+  still open; closing it needs the published history to carry these commits, not
+  a stricter check on this side.
 */
 if (requireBakedEvidence && pinnedUnresolved.size > 0) {
   const named = [...pinnedUnresolved.entries()]

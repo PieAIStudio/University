@@ -104,6 +104,12 @@ export function LessonSourceVersion({
             The full hash stays reachable on hover and to a screen reader, and
             the evidence dialog still prints it in full, so nobody who wants it
             has lost it.
+
+            One caveat the import gate cannot cover: it resolves a pin against
+            the study's own mirror, and the public repository a reader can open
+            does not currently carry these commits. So the date is the claim a
+            reader can rely on; the hash is a receipt, not something they can
+            look up today. Ledger 7eb9e5c567f6.
           */}
           <span
             className="lesson-version__label"

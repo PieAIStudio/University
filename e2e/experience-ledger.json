@@ -367,7 +367,7 @@
       "state": "open",
       "foundBy": "claude",
       "foundOn": "2026-08-31",
-      "note": "studies 共引用 7 个 commit。其中 5 个（17884 处引用，含出现 10993 次的 3b402e06）在 2026-08-31 历史重写后只存在于私有归档 TuringPact-private-archive，公开的 PieAIStudio/TuringPact 里返回 422；另 2 个（0f0a4c53、415f67a5，411 处引用）在公开库、私有归档、本地检出里全都不存在。片段来自 refresh 时抓取的快照（import-courses.mjs 读 studies 的导出索引），所以 fail-closed 闸门照样通过——闸门管的是「有没有片段」，不管「这个版本号是否真的存在」。「钉在某个不可变版本上」是核心信任信号，而这个字符串现在无法被任何人核对。修法两段：一是拿 _retired/TuringPact-commit-map-2026-08-31.txt 做 5 行查表迁移；二是加构建期闸门，要求每个 sourceCommit 在产品指给学习者的那个仓库里可解析——没有第二段，这件事会再烂一次而没人发现。必须在更多课程按旧 SHA 产出前做。"
+      "note": "studies 共引用 7 个 commit。其中 5 个（17884 处引用，含出现 10993 次的 3b402e06）在 2026-08-31 历史重写后只存在于私有归档 TuringPact-private-archive，公开的 PieAIStudio/TuringPact 里返回 422；另 2 个（0f0a4c53、415f67a5，411 处引用）在公开库、私有归档、本地检出里全都不存在。片段来自 refresh 时抓取的快照（import-courses.mjs 读 studies 的导出索引），所以 fail-closed 闸门照样通过——闸门管的是「有没有片段」，不管「这个版本号是否真的存在」。「钉在某个不可变版本上」是核心信任信号，而这个字符串现在无法被任何人核对。修法两段：一是拿 _retired/TuringPact-commit-map-2026-08-31.txt 做 5 行查表迁移；二是加构建期闸门，要求每个 sourceCommit 在产品指给学习者的那个仓库里可解析——没有第二段，这件事会再烂一次而没人发现。必须在更多课程按旧 SHA 产出前做。 2026-09-01 复核（实测，不是转述）：3b402e069a5d 在本地镜像解析为 2026-07-22，公开仓库 gh api 返回 422。已落地的只有第二段闸门，而且它问的是 studies/<id>/source/repository.git 这个镜像，不是学习者能打开的仓库——所以它绿不代表读者查得到。第一段（用 commit map 把旧 SHA 迁到新历史）做不了了：_retired/TuringPact-commit-map-2026-08-31.txt 在仓库里已经找不到。学习者屏幕上的主张已经改成日期（可读、可信），SHA 降级为 hover 收据。要真正关掉这条，需要公开历史重新带上这些 commit，那是菲哥的决定，不是这一侧能收紧的检查。"
     },
     {
       "id": "f7bf257435aa",
