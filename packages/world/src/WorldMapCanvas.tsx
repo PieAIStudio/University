@@ -200,10 +200,15 @@ export function WorldMapCanvas({
 
       <nav className="labels" aria-label="地图上的去处">
         {markers.map((marker) => {
+          const isCourseRewriteMarker = marker.kind === "course" && marker.sub !== undefined;
           const content = (
             <>
               {marker.text}
-              {marker.sub ? <small>{marker.sub}</small> : null}
+              {marker.sub ? (
+                <small className={isCourseRewriteMarker ? "label__course-status" : undefined}>
+                  {marker.sub}
+                </small>
+              ) : null}
             </>
           );
           const attach = (element: HTMLElement | null) => {
@@ -227,6 +232,7 @@ export function WorldMapCanvas({
                   type="button"
                   className={className}
                   style={{ "--placed": 0 } as CSSProperties}
+                  data-course-rewrite-marker={isCourseRewriteMarker ? "true" : undefined}
                   aria-label={marker.label ?? marker.text}
                   aria-haspopup="dialog"
                   onClick={() => {
@@ -258,6 +264,7 @@ export function WorldMapCanvas({
               type="button"
               className={className}
               style={{ "--placed": 0 } as CSSProperties}
+              data-course-rewrite-marker={isCourseRewriteMarker ? "true" : undefined}
               onClick={() => {
                 if (draggedRef.current) return;
                 marker.activate?.();
@@ -271,6 +278,7 @@ export function WorldMapCanvas({
               ref={attach}
               className={className}
               style={{ "--placed": 0 } as CSSProperties}
+              data-course-rewrite-marker={isCourseRewriteMarker ? "true" : undefined}
             >
               {content}
             </div>

@@ -132,11 +132,16 @@ export interface CourseLessonShape extends LessonProgressSnapshot {
 export interface CourseShape {
   readonly studyId: string;
   readonly courseId: string;
+  /** A learner-facing delivery fact; authoring shelves may omit it. */
+  readonly isBeingRewritten?: boolean;
   readonly units: readonly {
     readonly unitId: string;
     readonly lessons: readonly CourseLessonShape[];
   }[];
 }
+
+/** The course-level learner fact shared by richer shelf and scene views. */
+export type CourseLearnerFact = Pick<CourseShape, "isBeingRewritten">;
 
 /**
  * Fold a loaded course into the progress contract. Pure.
@@ -150,6 +155,7 @@ export interface CourseShape {
 export function courseShapeOf(
   course: {
     readonly id: string;
+    readonly isBeingRewritten?: boolean;
     readonly units: readonly {
       readonly id: string;
       readonly lessons: readonly {
@@ -167,6 +173,7 @@ export function courseShapeOf(
   return {
     studyId,
     courseId: course.id,
+    ...(course.isBeingRewritten === undefined ? {} : { isBeingRewritten: course.isBeingRewritten }),
     units: course.units.map((unit) => ({
       unitId: unit.id,
       lessons: unit.lessons.map((lesson) => ({

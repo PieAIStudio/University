@@ -91,6 +91,7 @@ const SHELF_COURSE: CourseView = {
   objectives: [],
   status: "active",
   isDefault: true,
+  isBeingRewritten: true,
   prerequisiteCourseIds: [],
   trackId: null,
   units: [
@@ -237,6 +238,12 @@ function renderHost(onBack = vi.fn(), onWorthwhileProgress?: () => void) {
 }
 
 describe("the shared lesson reader", () => {
+  it("does not repeat the course rewrite notice in the lesson reader", async () => {
+    await renderHost();
+
+    expect(container.querySelector("[data-course-rewrite-notice]")).toBeNull();
+  });
+
   it("shows the route hierarchy as one usable DOM breadcrumb", async () => {
     await renderHost();
     const breadcrumb = container.querySelector("nav.lesson-breadcrumb");

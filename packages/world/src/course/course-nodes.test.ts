@@ -10,6 +10,7 @@ const SHELF = [
       {
         id: "foundations-before-zero",
         title: "在开始之前",
+        isBeingRewritten: true,
         units: [{ lessons: [{}, {}] }, { lessons: [{}] }],
         prerequisiteCourseIds: [],
         trackId: "spine",
@@ -65,6 +66,9 @@ describe("the shelf, folded into the map's nodes", () => {
     const nodes = courseNodesOf(SHELF);
     expect(nodes.filter((node) => node.studyId === "buzz")).toHaveLength(2);
     expect(nodes.every((node) => node.studyTitle.length > 0)).toBe(true);
+    expect(
+      nodes.find((node) => node.courseId === "foundations-before-zero")?.isBeingRewritten,
+    ).toBe(true);
   });
 
   it("reads a missing prerequisite list as a root and a missing track as none", () => {

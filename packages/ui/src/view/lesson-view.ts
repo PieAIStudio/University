@@ -3,6 +3,7 @@ import {
   isLessonComplete,
   RECAP_CARD_ID,
   type AuthoringFocus,
+  type CourseLearnerFact,
   type LessonCompletion,
   type LessonRef,
 } from "@pieai/university-core";
@@ -329,7 +330,7 @@ export interface UnitView {
   readonly lessons: readonly LessonSummary[];
 }
 
-export interface CourseView {
+export interface CourseView extends CourseLearnerFact {
   readonly id: string;
   readonly title: string;
   readonly description: string;

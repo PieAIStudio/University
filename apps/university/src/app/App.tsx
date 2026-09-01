@@ -728,6 +728,7 @@ export function App() {
                 prerequisiteCount={picked.prerequisiteCourseIds.length}
                 objectives={pickedCourse.objectives}
                 stats={pickedStats}
+                isBeingRewritten={picked.isBeingRewritten === true}
                 onEnter={() =>
                   setView({
                     kind: "course",
