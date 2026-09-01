@@ -17,6 +17,7 @@
     "check:lesson-links": "node apps/local/scripts/check-lesson-links.mjs --studies-root apps/local/fixtures/lesson-links && node apps/local/scripts/check-lesson-links.mjs --optional",
     "check:review-cards": "node scripts/check-review-card-registry.mjs",
     "check:shelf": "node apps/university/scripts/check-shelf.mjs",
+    "check:public-boundary": "node apps/university/scripts/check-public-boundary.mjs",
     "dev": "pnpm --filter @pieai/university-app dev",
     "delivery:build": "pnpm --filter @pieai/university-app delivery:build",
     "delivery:check": "pnpm --filter @pieai/university-app delivery:check",
@@ -33,9 +34,9 @@
     "secrets:check:university": "node scripts/materialize-swimmer-backend-public-env.mjs --check",
     "secrets:materialize:university": "node scripts/materialize-swimmer-backend-public-env.mjs",
     "start": "node scripts/start.mjs",
-    "test": "pnpm -r test && node --test scripts/check-contrast.test.mjs && node scripts/check-raw-colours.mjs --self-test && node scripts/check-review-card-registry.mjs --self-test && node scripts/check-content-revisions.mjs --self-test",
+    "test": "pnpm -r test && node --test scripts/check-contrast.test.mjs && node scripts/check-raw-colours.mjs --self-test && node scripts/check-review-card-registry.mjs --self-test && node scripts/check-content-revisions.mjs --self-test && node apps/university/scripts/check-public-boundary.mjs --self-test",
     "typecheck": "pnpm -r typecheck",
-    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:generated-format && pnpm test && pnpm boundaries && pnpm check:canvas && pnpm check:review-cards && pnpm check:experience && pnpm build && pnpm check:shelf && pnpm check:catalog && pnpm check:content-revisions && pnpm check:export-freshness && pnpm check:lesson-links && pnpm bundle && pnpm docs:check",
+    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:generated-format && pnpm test && pnpm boundaries && pnpm check:canvas && pnpm check:review-cards && pnpm check:experience && pnpm build && pnpm check:shelf && pnpm check:public-boundary && pnpm check:catalog && pnpm check:content-revisions && pnpm check:export-freshness && pnpm check:lesson-links && pnpm bundle && pnpm docs:check",
     "check:experience": "node scripts/experience-ledger.mjs check"
   },
   "devDependencies": {
