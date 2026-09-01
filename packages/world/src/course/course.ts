@@ -15,7 +15,11 @@
   `apps/university/src/content/library.ts` had grown a byte-identical second
   copy, kept in step by nobody in particular.
 */
-import { depthsFromPrerequisites, type AuthoringFocus } from "@pieai/university-core";
+import {
+  depthsFromPrerequisites,
+  type AuthoringFocus,
+  type CourseLearnerFact,
+} from "@pieai/university-core";
 
 export { depthsFromPrerequisites };
 
@@ -26,7 +30,7 @@ export { depthsFromPrerequisites };
  * depth and track travel with the node so the overlay does not keep a
  * second graph.
  */
-export interface CourseNode {
+export interface CourseNode extends CourseLearnerFact {
   readonly courseId: string;
   readonly title: string;
   readonly lessons: number;
@@ -43,7 +47,7 @@ export interface CourseNode {
  * Units, lesson titles, body length and the counts that pick a kind icon.
  * Prose, evidence and assets are not this package's to own.
  */
-export interface Course {
+export interface Course extends CourseLearnerFact {
   readonly id: string;
   readonly units: readonly CourseUnit[];
 }
@@ -86,6 +90,7 @@ export function courseNodesOf(
       readonly id: string;
       readonly title: string;
       readonly units: readonly { readonly lessons: readonly unknown[] }[];
+      readonly isBeingRewritten?: boolean;
       readonly prerequisiteCourseIds?: readonly string[];
       readonly trackId?: string | null;
     }[];
@@ -109,6 +114,9 @@ export function courseNodesOf(
         depth: depths.get(course.id) ?? 0,
         prerequisiteCourseIds: course.prerequisiteCourseIds ?? [],
         trackId: course.trackId ?? null,
+        ...(course.isBeingRewritten === undefined
+          ? {}
+          : { isBeingRewritten: course.isBeingRewritten }),
       });
     }
   }

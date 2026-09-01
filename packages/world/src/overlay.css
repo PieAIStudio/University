@@ -136,6 +136,21 @@ button.label:focus-visible {
   opacity: 0.78;
 }
 
+.label--course .label__course-status {
+  display: inline-block;
+  margin-inline-start: 0.4rem;
+  padding: 0.1rem 0.36rem;
+  border: 1px solid color-mix(in srgb, var(--game-ui-accent-bright) 48%, transparent);
+  border-radius: var(--game-ui-radius-pill, 999px);
+  color: var(--game-ui-accent-bright);
+  background: color-mix(in srgb, var(--game-ui-accent) 12%, transparent);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  vertical-align: 0.05em;
+}
+
 .picked,
 .nextup {
   position: absolute;

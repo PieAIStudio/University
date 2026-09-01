@@ -28,6 +28,7 @@ export const messages = {
   "app.app.useshelf.copy.读不到课程": "读不到课程",
   "app.app.worldmodel.copy.回到value0地图": "← 回到{{value0}}地图",
   "app.app.worldmodel.copy.回到课程地图": "← 回到课程地图",
+  "app.app.worldmodel.copy.改写中": "改写中",
   "app.authoring.answerOverview.copy.value0-道题的首答还在等待宿主判定-暂不计算通过率":
     "{{value0}} 道题的首答还在等待宿主判定，暂不计算通过率",
   "app.authoring.answerOverview.copy.value0答题指标": "{{value0}}答题指标",
@@ -1015,6 +1016,8 @@ export const messages = {
   "ui.path.coursePickCard.copy.练习数": "练习数",
   "ui.path.coursePickCard.copy.课时数": "课时数",
   "ui.path.coursePickCard.copy.这些本事来自": "这些本事来自",
+  "ui.path.coursePickCard.copy.早期版本提示":
+    "这门课是早期版本，正在重写。内容可以读，但用词和讲解顺序还没到现在的标准。",
   "ui.path.coursePickCard.copy.这门课有": "这门课有：",
   "ui.path.coursePickCard.copy.进入这门课": "进入这门课",
   "ui.path.courseRouteQuiz.copy.3-个小问题": "3 个小问题",

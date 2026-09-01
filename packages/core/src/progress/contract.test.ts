@@ -145,4 +145,17 @@ describe("courseShapeOf", () => {
       ],
     });
   });
+
+  it("preserves the learner rewrite fact without importing authoring status", () => {
+    expect(
+      courseShapeOf(
+        {
+          id: "foundations-before-zero",
+          isBeingRewritten: true,
+          units: [],
+        },
+        "turing-pact",
+      ).isBeingRewritten,
+    ).toBe(true);
+  });
 });

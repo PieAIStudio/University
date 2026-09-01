@@ -27,6 +27,7 @@ export function CoursePickCard({
   prerequisiteCount,
   objectives,
   stats,
+  isBeingRewritten,
   onEnter,
   onDismiss,
   cardRef,
@@ -37,6 +38,7 @@ export function CoursePickCard({
   readonly prerequisiteCount: number;
   readonly objectives: readonly string[];
   readonly stats: CoursePickStats;
+  readonly isBeingRewritten: boolean;
   readonly onEnter: () => void;
   readonly onDismiss: () => void;
   readonly cardRef: RefObject<HTMLElement | null>;
@@ -150,6 +152,11 @@ export function CoursePickCard({
               <dd>{stats.maxXp}</dd>
             </dl>
           </section>
+          {isBeingRewritten ? (
+            <p className="picked__rewrite-notice" data-course-rewrite-notice="true">
+              {translate("ui.path.coursePickCard.copy.早期版本提示")}
+            </p>
+          ) : null}
           <LiquidCtaButton width="full" className="picked__enter" onClick={onEnter}>
             {translate("ui.path.coursePickCard.copy.进入这门课")}
           </LiquidCtaButton>

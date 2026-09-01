@@ -26,6 +26,7 @@ const COMPLETE_STATS: CoursePickStats = {
   maxXp: 235,
   evidenceCount: 7,
 };
+const REWRITE_NOTICE = "这门课是早期版本，正在重写。内容可以读，但用词和讲解顺序还没到现在的标准。";
 
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -44,11 +45,13 @@ async function renderCard({
   onEnter = vi.fn(),
   objectives = OBJECTIVES,
   stats = COMPLETE_STATS,
+  isBeingRewritten = false,
 }: {
   readonly onDismiss?: ReturnType<typeof vi.fn<() => void>>;
   readonly onEnter?: ReturnType<typeof vi.fn<() => void>>;
   readonly objectives?: readonly string[];
   readonly stats?: CoursePickStats;
+  readonly isBeingRewritten?: boolean;
 } = {}) {
   const cardRef: RefObject<HTMLElement | null> = createRef();
   await act(async () => {
@@ -71,6 +74,7 @@ async function renderCard({
           prerequisiteCount={0}
           objectives={objectives}
           stats={stats}
+          isBeingRewritten={isBeingRewritten}
           onEnter={onEnter}
           onDismiss={onDismiss}
           cardRef={cardRef}
@@ -149,5 +153,23 @@ describe("CoursePickCard", () => {
     expect(buttons).toContain("进入这门课");
     expect(container.textContent).toContain("认识地形");
     expect(container.textContent).toContain("图灵密约");
+  });
+
+  it("shows the rewrite notice without taking away the enter action", async () => {
+    const { onEnter } = await renderCard({ isBeingRewritten: true });
+    const notice = container.querySelector<HTMLElement>("[data-course-rewrite-notice]");
+    const enter = container.querySelector<HTMLButtonElement>(".picked__enter");
+
+    expect(notice).not.toBeNull();
+    expect(notice?.textContent).toBe(REWRITE_NOTICE);
+    expect(enter).not.toBeNull();
+    await act(async () => enter?.click());
+    expect(onEnter).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not show the rewrite notice for a current course", async () => {
+    await renderCard({ isBeingRewritten: false });
+
+    expect(container.querySelector("[data-course-rewrite-notice]")).toBeNull();
   });
 });

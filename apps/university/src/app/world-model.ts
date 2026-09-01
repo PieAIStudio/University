@@ -247,6 +247,10 @@ export function useWorldMarkers({
       position: entry.position.clone().setY(entry.position.y + entry.radius * 0.4 + 1.4),
       text: entry.node.title,
       kind: "course" as const,
+      sub:
+        entry.node.isBeingRewritten === true
+          ? translate("app.app.worldmodel.copy.改写中")
+          : undefined,
       // The map has one answer to "what next". The remaining mobile budget
       // follows the authored road, not projected depth, so a nearer-looking
       // later island cannot displace the courses immediately around it.

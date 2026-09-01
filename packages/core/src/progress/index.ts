@@ -7,6 +7,7 @@ export {
   courseShapeOf,
   type CourseProgress,
   type CourseLessonShape,
+  type CourseLearnerFact,
   type CourseShape,
   type LessonCompletion,
   type LessonProgressSnapshot,
