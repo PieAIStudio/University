@@ -7,7 +7,7 @@ import {
   assertVisibleAndHittableAtFivePoints,
   EXPERIENCE_ROUTES,
   EXPERIENCE_VIEWPORTS,
-  LONG_LESSON_PATH,
+  getExperienceFixture,
   openExperienceRoute,
 } from "./harness/experience.js";
 import { waitForMapReady } from "./harness/online-learner.js";
@@ -102,8 +102,9 @@ test.describe("O 导航 · 提示槽位与课程位置", () => {
 
   for (const viewport of EXPERIENCE_VIEWPORTS) {
     test(`O2 ${viewport.id}：课程面包屑四层同一行，课程层可回到课程地图`, async ({ page }) => {
+      const fixture = await getExperienceFixture(page);
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
-      await page.goto(`${ONLINE_ORIGIN}${LONG_LESSON_PATH}`, { waitUntil: "domcontentloaded" });
+      await page.goto(`${ONLINE_ORIGIN}${fixture.lessonPath}`, { waitUntil: "domcontentloaded" });
 
       const breadcrumb = page.locator("nav.lesson-breadcrumb");
       await expect(breadcrumb).toBeVisible({ timeout: 30_000 });
@@ -111,14 +112,8 @@ test.describe("O 导航 · 提示槽位与课程位置", () => {
       await expect(breadcrumb.locator("a")).toHaveCount(3);
       await expect(breadcrumb.locator("[aria-current='page']")).toHaveText(/\S/);
       await expect(breadcrumb.locator("a").nth(0)).toHaveAttribute("href", "/");
-      await expect(breadcrumb.locator("a").nth(1)).toHaveAttribute(
-        "href",
-        "/turing-pact/foundations-terrain",
-      );
-      await expect(breadcrumb.locator("a").nth(2)).toHaveAttribute(
-        "href",
-        "/turing-pact/foundations-terrain",
-      );
+      await expect(breadcrumb.locator("a").nth(1)).toHaveAttribute("href", fixture.coursePath);
+      await expect(breadcrumb.locator("a").nth(2)).toHaveAttribute("href", fixture.coursePath);
 
       const rowTops = await breadcrumb.locator("li").evaluateAll((items) =>
         items.map((item) => Math.round(item.getBoundingClientRect().top)),
@@ -130,7 +125,7 @@ test.describe("O 导航 · 提示槽位与课程位置", () => {
       await courseLink.scrollIntoViewIfNeeded();
       await assertVisibleAndHittableAtFivePoints(page, courseLink, `${viewport.id} / 回到课程地图`);
       await humanClick(page, courseLink, `${viewport.id} / 课程面包屑`);
-      await expect(page).toHaveURL(`${ONLINE_ORIGIN}/turing-pact/foundations-terrain`);
+      await expect(page).toHaveURL(`${ONLINE_ORIGIN}${fixture.coursePath}`);
       await expect(page.locator(".picked--left")).toBeVisible({ timeout: 30_000 });
     });
   }

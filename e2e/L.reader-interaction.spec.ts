@@ -8,11 +8,10 @@ import { watchConsole } from "./harness/console.js";
 import {
   EXPERIENCE_ROUTES,
   EXPERIENCE_VIEWPORTS,
+  getExperienceFixture,
   openExperienceRoute,
 } from "./harness/experience.js";
 import { ONLINE_ORIGIN } from "./ports.js";
-
-const LONG_LESSON = "/turing-pact/foundations-terrain/what-a-project-is/scripts-are-the-doors";
 
 async function assertBottomExerciseIsReachable(page: Page, label: string): Promise<void> {
   const reader = page.locator("main.reader");
@@ -45,11 +44,10 @@ async function assertBottomExerciseIsReachable(page: Page, label: string): Promi
 }
 
 async function runBottomExerciseJourney(page: Page, label: string): Promise<void> {
+  const fixture = await getExperienceFixture(page);
   const consoleErrors = watchConsole(page);
-  await page.goto(`${ONLINE_ORIGIN}${LONG_LESSON}`, { waitUntil: "domcontentloaded" });
-  await expect(
-    page.getByRole("heading", { name: "package.json 里的 scripts，到底是什么意思？" }),
-  ).toBeVisible({
+  await page.goto(`${ONLINE_ORIGIN}${fixture.lessonPath}`, { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: fixture.lessonTitle })).toBeVisible({
     timeout: 30_000,
   });
   await assertBottomExerciseIsReachable(page, label);
@@ -57,6 +55,7 @@ async function runBottomExerciseJourney(page: Page, label: string): Promise<void
 }
 
 async function runSourceEvidenceJourney(page: Page): Promise<void> {
+  const fixture = await getExperienceFixture(page);
   const viewport = EXPERIENCE_VIEWPORTS[0]!;
   const route = EXPERIENCE_ROUTES.find((candidate) => candidate.id === "lesson")!;
   const evidenceRequests: string[] = [];
@@ -67,9 +66,9 @@ async function runSourceEvidenceJourney(page: Page): Promise<void> {
   });
 
   await openExperienceRoute(page, route, viewport);
-  await expect(
-    page.getByRole("heading", { name: "package.json 里的 scripts，到底是什么意思？" }),
-  ).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: fixture.lessonTitle })).toBeVisible({
+    timeout: 30_000,
+  });
 
   // A source range is not part of the first render. It is a learner-initiated
   // resource, so the request must begin only after the real pointer opens it.
@@ -84,7 +83,6 @@ async function runSourceEvidenceJourney(page: Page): Promise<void> {
     .last();
   await expect(dialog).toBeVisible({ timeout: 15_000 });
   await expect(dialog.locator(".evidence-code")).toBeVisible();
-  await expect(dialog.locator(".evidence-code")).toContainText('"scripts"');
   await expect(dialog.locator('[data-evidence-state="locator-only"]')).toHaveCount(0);
   expect(evidenceRequests, "源码请求必须在真实点击后发生").not.toHaveLength(0);
 

@@ -118,13 +118,14 @@ describe("lesson layer coverage when this shell cannot open the map", () => {
 
     expect(container.textContent).toContain("README.md");
     expect(container.textContent).toContain("src/app.ts");
-    expect(container.textContent).toContain("为什么这一端没有完整项目分层");
     expect(container.textContent).toContain("课文已经引用的文件可以直接看");
+    expect(container.textContent).toContain("完整项目分层需要仓库分析");
     expect(
       [...container.querySelectorAll("button")].some(
         (button) => button.textContent === "查看项目分层",
       ),
-    ).toBe(false);
+    ).toBe(true);
+    expect(container.querySelector("[data-unavailable]")).not.toBeNull();
     expect(container.querySelector("[data-parity-control='lesson-layer-coverage']")).not.toBeNull();
     expect(document.querySelector("dialog")).toBeNull();
   });

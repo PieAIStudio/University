@@ -14,8 +14,8 @@
  * ago answers 504 Outdated Optimize Dep with a white page.
  */
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readdirSync, realpathSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -141,7 +141,8 @@ console.log("e2e: building @pieai/university-core (the local API cannot import .
 must("pnpm", ["--filter", "@pieai/university-core", "build"], ROOT);
 must("pnpm", ["exec", "tsc", "-p", "tsconfig.server.build.json"], LOCAL);
 
-const nestedStudies = join(LOCAL, "studies", "studies");
+const localStudiesRoot = join(LOCAL, "studies");
+const nestedStudies = join(localStudiesRoot, "studies");
 const localApiEnv = {
   UNIVERSITY_LOCAL_PORT: String(LOCAL_API_PORT),
   UNIVERSITY_LOCAL_PROJECT_ROOT: LOCAL,
@@ -152,6 +153,33 @@ const localApiEnv = {
 // walk never finds 「开始学习」.
 if (existsSync(nestedStudies)) {
   localApiEnv.UNIVERSITY_LOCAL_STUDIES_ROOT = nestedStudies;
+} else if (existsSync(localStudiesRoot)) {
+  /*
+   * A worktree may link each study directory directly into studies/ instead
+   * of linking one nested root. Node's Dirent reports those entries as
+   * symlinks, so UniversityLocal quite correctly skips them as directories.
+   * Resolve one linked study back to its real shared root for this disposable
+   * E2E server; the test never writes through that path.
+   */
+  const linkedStudy = readdirSync(localStudiesRoot, { withFileTypes: true })
+    .filter((entry) => entry.isSymbolicLink())
+    .map((entry) => join(localStudiesRoot, entry.name))
+    .find((candidate) => {
+      try {
+        return existsSync(join(candidate, "study.json"));
+      } catch {
+        return false;
+      }
+    });
+  if (linkedStudy) {
+    const resolvedRoot = dirname(realpathSync(linkedStudy));
+    if (
+      resolvedRoot !== localStudiesRoot &&
+      existsSync(join(resolvedRoot, ".university-local-root"))
+    ) {
+      localApiEnv.UNIVERSITY_LOCAL_STUDIES_ROOT = resolvedRoot;
+    }
+  }
 }
 
 run("node", [join(LOCAL, ".university-local-build/server/http-server.js")], LOCAL, localApiEnv);

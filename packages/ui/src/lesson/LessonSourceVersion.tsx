@@ -139,9 +139,7 @@ export function LessonSourceVersion({
           >
             {pending
               ? translate("ui.lesson.lessonSourceVersion.copy.正在打开")
-              : unavailable
-                ? translate("ui.lesson.lessonSourceVersion.copy.为什么浏览器打不开这个-App")
-                : translate("ui.lesson.lessonSourceVersion.copy.打开正在学习的-App")}
+              : translate("ui.lesson.lessonSourceVersion.copy.打开正在学习的-App")}
           </button>
         </>
       ) : (

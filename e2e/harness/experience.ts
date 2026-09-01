@@ -7,9 +7,148 @@ import { ONLINE_ORIGIN } from "../ports.js";
 import { humanClick } from "./click.js";
 import { TODAY_CTA, waitForMapReady } from "./online-learner.js";
 
-export const COURSE_PATH = "/turing-pact/foundations-terrain";
-export const LONG_LESSON_PATH =
-  "/turing-pact/foundations-terrain/what-a-project-is/scripts-are-the-doors";
+type ShelfLesson = {
+  readonly id: string;
+  readonly title: string;
+  readonly exerciseCount?: number;
+  readonly evidenceLocators?: readonly string[];
+};
+
+type ShelfCourse = {
+  readonly id: string;
+  readonly title: string;
+  readonly units: readonly {
+    readonly id: string;
+    readonly lessons: readonly ShelfLesson[];
+  }[];
+};
+
+type ExperienceShelf = {
+  readonly studies: readonly {
+    readonly id: string;
+    readonly title: string;
+    readonly courses: readonly ShelfCourse[];
+  }[];
+};
+
+type ShelfEntry = {
+  readonly study: ExperienceShelf["studies"][number];
+  readonly course: ShelfCourse;
+  readonly unit: ShelfCourse["units"][number];
+  readonly lesson: ShelfLesson;
+};
+
+export interface ExperienceFixture {
+  readonly studyId: string;
+  readonly studyTitle: string;
+  readonly courseId: string;
+  readonly courseTitle: string;
+  readonly courseNextLessonTitle: string;
+  readonly unitId: string;
+  readonly lessonId: string;
+  readonly lessonTitle: string;
+  readonly coursePath: string;
+  readonly lessonPath: string;
+}
+
+const EXPERIENCE_FIXTURES = new WeakMap<Page, Promise<ExperienceFixture>>();
+
+function hasShortEvidence(lesson: ShelfLesson): boolean {
+  return (lesson.evidenceLocators ?? []).some((locator) => {
+    const match = /:(\d+)(?:-(\d+))?$/u.exec(locator.trim());
+    if (!match) return false;
+    const start = Number(match[1]);
+    const end = Number(match[2] ?? match[1]);
+    return (
+      Number.isInteger(start) && Number.isInteger(end) && end >= start && end - start + 1 <= 16
+    );
+  });
+}
+
+function hasSingleEvidence(lesson: ShelfLesson): boolean {
+  const locators = lesson.evidenceLocators ?? [];
+  return locators.length === 1;
+}
+
+function isCourseStart(entry: ShelfEntry): boolean {
+  const firstUnit = entry.course.units[0];
+  return firstUnit?.id === entry.unit.id && firstUnit.lessons[0]?.id === entry.lesson.id;
+}
+
+function nonEmptyShelfId(value: string, label: string): string {
+  expect(value.trim().length, `${label} 不能为空`).toBeGreaterThan(0);
+  return value;
+}
+
+async function readExperienceFixture(page: Page): Promise<ExperienceFixture> {
+  const response = await page.request.get(`${ONLINE_ORIGIN}/content/shelf.json`);
+  expect(response.ok(), `实际发布货架读取失败：HTTP ${response.status()}`).toBe(true);
+  const shelf = (await response.json()) as ExperienceShelf;
+
+  const entries: ShelfEntry[] = (shelf.studies ?? []).flatMap((study) =>
+    (study.courses ?? []).flatMap((course) =>
+      course.units.flatMap((unit) =>
+        unit.lessons.map((lesson) => ({ study, course, unit, lesson })),
+      ),
+    ),
+  );
+  const eligible = (entry: (typeof entries)[number]) =>
+    (entry.lesson.exerciseCount ?? 0) > 0 && hasShortEvidence(entry.lesson);
+  // Prefer a released one-snippet lesson so the journey has one source entry
+  // to exercise without making the fixture depend on a course or lesson id.
+  // If that lesson is retired, the fallback still follows a complete lesson
+  // from the shelf, and the course-start pass keeps the course page's own
+  // "next lesson" contract available to N2.
+  const selected =
+    entries.find((entry) => eligible(entry) && hasSingleEvidence(entry.lesson)) ??
+    entries.find((entry) => eligible(entry) && isCourseStart(entry)) ??
+    entries.find(eligible);
+  if (selected) {
+    const studyId = nonEmptyShelfId(selected.study.id, "货架 study id");
+    const courseId = nonEmptyShelfId(selected.course.id, "货架课程 id");
+    const unitId = nonEmptyShelfId(selected.unit.id, "货架 unit id");
+    const lessonId = nonEmptyShelfId(selected.lesson.id, "货架 lesson id");
+    const courseNextLesson = selected.course.units.flatMap((unit) => unit.lessons)[0];
+    expect(courseNextLesson?.title.trim().length, "货架课程下一节标题不能为空").toBeGreaterThan(0);
+    expect(selected.course.title.trim().length, "货架课程标题不能为空").toBeGreaterThan(0);
+    expect(selected.lesson.title.trim().length, "货架课文标题不能为空").toBeGreaterThan(0);
+
+    const coursePath = `/${encodeURIComponent(studyId)}/${encodeURIComponent(courseId)}`;
+    return {
+      studyId,
+      studyTitle: selected.study.title,
+      courseId,
+      courseTitle: selected.course.title,
+      courseNextLessonTitle: courseNextLesson!.title,
+      unitId,
+      lessonId,
+      lessonTitle: selected.lesson.title,
+      coursePath,
+      lessonPath: `${coursePath}/${encodeURIComponent(unitId)}/${encodeURIComponent(lessonId)}`,
+    };
+  }
+
+  throw new Error("实际发布货架没有找到同时带练习和短源码证据的课文");
+}
+
+/**
+ * Select one complete lesson journey from the delivery shelf, not from a
+ * course id kept in the test source. The shelf is the release boundary: a
+ * stale course is absent here by design, and the probe follows what is
+ * actually available to a learner.
+ */
+export function getExperienceFixture(page: Page): Promise<ExperienceFixture> {
+  const existing = EXPERIENCE_FIXTURES.get(page);
+  if (existing) return existing;
+
+  let pending: Promise<ExperienceFixture>;
+  pending = readExperienceFixture(page).catch((reason: unknown) => {
+    if (EXPERIENCE_FIXTURES.get(page) === pending) EXPERIENCE_FIXTURES.delete(page);
+    throw reason;
+  });
+  EXPERIENCE_FIXTURES.set(page, pending);
+  return pending;
+}
 
 export const EXPERIENCE_VIEWPORTS = [
   { id: "desktop", width: 1280, height: 640 },
@@ -41,7 +180,7 @@ export interface ExperienceTarget {
 export interface ExperienceRoute {
   readonly id: string;
   readonly label: string;
-  readonly path: string;
+  readonly path: string | ((page: Page) => Promise<string>);
   readonly ready: (page: Page) => Promise<void>;
   readonly primary: ExperienceTarget | null;
   readonly coverage: readonly ExperienceTarget[];
@@ -174,8 +313,9 @@ async function returnFromShellRoute(page: Page, label: string): Promise<void> {
 }
 
 async function returnFromLesson(page: Page): Promise<void> {
+  const fixture = await getExperienceFixture(page);
   await humanClick(page, page.getByRole("button", { name: "离开课文" }), "课文离开");
-  await expect(page).toHaveURL(new RegExp(`${COURSE_PATH.replaceAll("/", "\\/")}$`));
+  await expect(page).toHaveURL(new RegExp(`${fixture.coursePath.replaceAll("/", "\\/")}$`));
   const map = page.getByRole("button", { name: /回到 .*地图/ });
   await expect(map).toBeVisible({ timeout: 30_000 });
   await humanClick(page, map, "课程地图返回世界");
@@ -265,7 +405,7 @@ export const EXPERIENCE_ROUTES: readonly ExperienceRoute[] = [
   {
     id: "lesson",
     label: "课文",
-    path: LONG_LESSON_PATH,
+    path: (page) => getExperienceFixture(page).then((fixture) => fixture.lessonPath),
     ready: readyLesson,
     primary: LESSON_COMPLETION,
     coverage: [LESSON_COMPLETION, LESSON_ANSWER, LESSON_SUBMIT],
@@ -299,8 +439,33 @@ function axeTargetText(target: string | readonly string[]): string {
   return typeof target === "string" ? target : target.join(" ");
 }
 
+function stableAxeTarget(target: string): string {
+  // Evidence selectors contain lesson-owned paths, line ranges, occurrence
+  // numbers, and React's generated ids. Those identify the cited source, not
+  // a different UI control. Keep the semantic element and its failing role so
+  // a lesson revision cannot turn the same known contrast issue into a false
+  // "new" violation merely by changing its evidence list.
+  if (target.includes(".evidence-inline-source__path")) {
+    return "<evidence-source> > .evidence-inline-source__path";
+  }
+  if (target.includes(".evidence-inline-source__commit > code")) {
+    return "<evidence-source> > .evidence-inline-source__commit > code";
+  }
+  if (target.includes(".evidence-inline-source__error")) {
+    return `<evidence-source> > ${target.slice(target.indexOf(".evidence-inline-source__error"))}`;
+  }
+  if (
+    target.includes("button[data-evidence-trigger-id") ||
+    target.includes("button[data-evidence-index") ||
+    target.endsWith(".evidence-inline-source__open")
+  ) {
+    return "<evidence-source-trigger>";
+  }
+  return target;
+}
+
 function axeFindingKey(route: string, viewport: string, id: string, target: string): string {
-  return `${route}|${viewport}|${id}|${target}`;
+  return `${route}|${viewport}|${id}|${stableAxeTarget(target)}`;
 }
 
 export async function auditAxeBaseline(
@@ -328,9 +493,16 @@ export async function auditAxeBaseline(
   const scopedBaseline = baseline.violations.filter(
     (entry) => entry.route === route.id && entry.viewport === viewport.id,
   );
-  const known = new Set(scopedBaseline.map((entry) => entry.key));
+  const known = new Set(
+    scopedBaseline.map((entry) => axeFindingKey(route.id, viewport.id, entry.id, entry.target)),
+  );
   const fresh = current.filter((entry) => !known.has(entry.key));
-  const stale = scopedBaseline.filter((entry) => !current.some((item) => item.key === entry.key));
+  const stale = scopedBaseline.filter(
+    (entry) =>
+      !current.some(
+        (item) => item.key === axeFindingKey(route.id, viewport.id, entry.id, entry.target),
+      ),
+  );
 
   expect(
     current.length,
@@ -366,20 +538,21 @@ export const TOUCH_TARGET_EXEMPTIONS: readonly {
   readonly reason: string;
 }[] = [];
 
-
 export async function openExperienceRoute(
   page: Page,
   route: ExperienceRoute,
   viewport: ExperienceViewport,
 ): Promise<void> {
   await page.setViewportSize({ width: viewport.width, height: viewport.height });
-  await page.goto(`${ONLINE_ORIGIN}${route.path}`, { waitUntil: "domcontentloaded" });
+  const path = typeof route.path === "function" ? await route.path(page) : route.path;
+  await page.goto(`${ONLINE_ORIGIN}${path}`, { waitUntil: "domcontentloaded" });
   await route.ready(page);
 }
 
 export async function openCoursePage(page: Page, viewport: ExperienceViewport): Promise<void> {
+  const fixture = await getExperienceFixture(page);
   await page.setViewportSize({ width: viewport.width, height: viewport.height });
-  await page.goto(`${ONLINE_ORIGIN}${COURSE_PATH}`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${ONLINE_ORIGIN}${fixture.coursePath}`, { waitUntil: "domcontentloaded" });
   await expect(page.locator(".picked--left")).toBeVisible({ timeout: 30_000 });
   await expect(page.locator("button.label").first()).toBeVisible({ timeout: 60_000 });
 }

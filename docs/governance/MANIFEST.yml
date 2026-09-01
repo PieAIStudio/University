@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-08-31T15:33:41.492Z
+generated_at: 2026-09-01T06:53:04.610Z
 generator_version: doc-gov@0.9.9
-docs_count: 89
+docs_count: 90
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -339,6 +339,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-23
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-E2E-FIXTURES-MUST-FOLLOW-THE-RELEASED-COURSE-SHELF
+    path: docs/reference/learnings/workflow-issues/e2e-fixtures-must-follow-the-released-course-shelf.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-01
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-EVIDENCE-WIKI-TOKENS-CANNOT-RENDER-AS-BLOCK-SOURCE-INSIDE-A-PARAGRAPH
     path: docs/reference/learnings/workflow-issues/evidence-wiki-tokens-cannot-render-as-block-source-inside-a-paragraph.md

@@ -81,13 +81,13 @@ describe("LessonSourceVersion honest entry", () => {
 
     expect(container.querySelector("[data-parity-control='lesson-source-version']")).not.toBeNull();
     expect(container.querySelector("[data-unavailable]")).not.toBeNull();
-    expect(container.textContent).toContain("为什么浏览器打不开这个 App");
     expect(container.textContent).toContain("浏览器端读的是课程包");
+    expect(container.textContent).toContain("打开正在学习的 App");
     expect(
       [...container.querySelectorAll("button")].some(
         (button) => button.textContent === "打开正在学习的 App",
       ),
-    ).toBe(false);
+    ).toBe(true);
     expect(document.querySelector("dialog")).toBeNull();
   });
 

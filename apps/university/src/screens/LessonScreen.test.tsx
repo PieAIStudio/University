@@ -349,13 +349,13 @@ describe("the shared lesson reader", () => {
   it("keeps the source checkout entry visible and explains the delivery boundary", async () => {
     await renderHost();
     expect(container.textContent).toContain("这节课钉在");
-    expect(container.textContent).toContain("为什么浏览器打不开这个 App");
     expect(container.textContent).toContain("浏览器端读的是课程包");
+    expect(container.querySelector(".lesson-version[data-unavailable]")).not.toBeNull();
     expect(
       [...container.querySelectorAll("button")].some(
         (button) => button.textContent === "打开正在学习的 App",
       ),
-    ).toBe(false);
+    ).toBe(true);
     expect(container.querySelector("[data-parity-control='lesson-source-version']")).not.toBeNull();
   });
 
@@ -363,8 +363,10 @@ describe("the shared lesson reader", () => {
     await renderHost();
     expect(container.textContent).toContain("README.md");
     await vi.waitFor(() => {
-      expect(container.textContent).toContain("为什么这一端没有完整项目分层");
+      expect(container.textContent).toContain("完整项目分层需要仓库分析");
     });
+    expect(container.querySelector(".lesson-ua-layers[data-unavailable]")).not.toBeNull();
+    expect(container.textContent).toContain("查看项目分层");
     expect(container.querySelector("[data-parity-control='lesson-layer-coverage']")).not.toBeNull();
   });
 

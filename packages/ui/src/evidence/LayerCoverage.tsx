@@ -287,9 +287,7 @@ function LessonLayerCoverage({
       >
         {pending
           ? translate("ui.evidence.layerCoverage.copy.正在读取项目分层")
-          : unavailable
-            ? translate("ui.evidence.layerCoverage.copy.为什么这一端没有完整项目分层")
-            : translate("ui.evidence.layerCoverage.copy.查看项目分层")}
+          : translate("ui.evidence.layerCoverage.copy.查看项目分层")}
       </GameButton>
       {unavailable && explanationOpen ? (
         <CapabilityExplanation
