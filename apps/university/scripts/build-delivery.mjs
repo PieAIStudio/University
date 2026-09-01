@@ -214,6 +214,12 @@ function main() {
       environment,
     );
     run("pnpm", ["content"], environment);
+    // `pnpm verify` also checks the publish boundary, but it checks the
+    // projections built from a developer's own inputs. The import above just
+    // rebuilt them from the release inputs — a different recovery root, a
+    // different lexicon, baked evidence — so the projections verify approved
+    // are not the projections that ship. Check the ones that ship.
+    run(process.execPath, [resolve(import.meta.dirname, "check-public-boundary.mjs")], environment);
     run("pnpm", ["--filter", "@pieai/university-app...", "build"], environment);
     run(process.execPath, ["scripts/check-authoring-excluded.mjs"], environment);
     run(process.execPath, ["scripts/check-delivery-public-config.mjs"], environment);
