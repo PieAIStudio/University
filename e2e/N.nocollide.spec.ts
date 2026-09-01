@@ -3,6 +3,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
   assertVisibleAndHittableAtFivePoints,
   EXPERIENCE_ROUTES,
+  getExperienceFixture,
   openCoursePickDialog,
   openExperienceRoute,
   type ExperienceViewport,
@@ -57,6 +58,7 @@ test.describe("N nocollide · 四条体验回归", () => {
   });
 
   test("N2 desktop · course-island 右栏只说当前课程的下一节", async ({ page }) => {
+    const fixture = await getExperienceFixture(page);
     const world = EXPERIENCE_ROUTES.find((route) => route.id === "world");
     if (!world) throw new Error("缺少世界地图路由");
     await openExperienceRoute(page, world, DESKTOP);
@@ -64,27 +66,28 @@ test.describe("N nocollide · 四条体验回归", () => {
 
     await realClick(page.locator("button.study-switcher__trigger").first(), "打开系列选择");
     await realClick(
-      page.locator("button.study-switcher__option", { hasText: "Buzz" }).first(),
-      "切到 Buzz",
+      page.locator("button.study-switcher__option", { hasText: fixture.studyTitle }).first(),
+      `切到 ${fixture.studyTitle}`,
     );
     await realClick(
-      page.getByRole("button", { name: "双语不是翻译表" }).first(),
-      "选 TuringPact 课程岛",
+      page.getByRole("button", { name: fixture.courseTitle, exact: true }).first(),
+      "选发布货架课程岛",
     );
     await expect(page.getByRole("button", { name: /进入这门课/ }).first()).toBeVisible({
       timeout: 15_000,
     });
     await realClick(page.getByRole("button", { name: /进入这门课/ }).first(), "进入当前课程");
 
-    await expect(page).toHaveURL(/\/turing-pact\/bilingual-by-design$/);
-    await expect(page.locator("button.study-switcher__trigger").first()).toHaveText(/TuringPact/);
-    await expect(page.locator(".app-shell__aside h2")).toHaveText(
-      "为什么文案要拆成四个命名空间，而不是一张大表？",
+    await expect(page).toHaveURL(`${ONLINE_ORIGIN}${fixture.coursePath}`);
+    await expect(page.locator("button.study-switcher__trigger").first()).toHaveText(
+      new RegExp(fixture.studyTitle),
     );
-    await expect(page.locator(".app-shell__aside")).toContainText("双语不是翻译表");
+    await expect(page.locator(".app-shell__aside h2")).toHaveText(fixture.courseNextLessonTitle);
+    await expect(page.locator(".app-shell__aside")).toContainText(fixture.courseTitle);
   });
 
   test("N3 phone · 提意见不盖账号目标或课文正文", async ({ page }) => {
+    const fixture = await getExperienceFixture(page);
     await page.setViewportSize({ width: PHONE.width, height: PHONE.height });
     await page.goto(`${ONLINE_ORIGIN}/me`, { waitUntil: "domcontentloaded" });
     await expect(page.locator(".account-panel")).toBeVisible({ timeout: 30_000 });
@@ -98,10 +101,7 @@ test.describe("N nocollide · 四条体验回归", () => {
     const accountTargetBox = await boxOf(password, "密码框");
     expect(overlaps(accountFeedbackBox, accountTargetBox), "提意见浮钮盖住密码框").toBe(false);
 
-    await page.goto(
-      `${ONLINE_ORIGIN}/turing-pact/foundations-terrain/what-a-project-is/scripts-are-the-doors`,
-      { waitUntil: "domcontentloaded" },
-    );
+    await page.goto(`${ONLINE_ORIGIN}${fixture.lessonPath}`, { waitUntil: "domcontentloaded" });
     await expect(page.locator(".lesson-reader__header")).toBeVisible({ timeout: 30_000 });
     await page.waitForTimeout(500);
 
@@ -155,11 +155,9 @@ test.describe("N nocollide · 四条体验回归", () => {
   });
 
   test("N4 phone · lesson toolbar 工具单行且没有悬空标签", async ({ page }) => {
+    const fixture = await getExperienceFixture(page);
     await page.setViewportSize({ width: PHONE.width, height: PHONE.height });
-    await page.goto(
-      `${ONLINE_ORIGIN}/turing-pact/foundations-terrain/what-a-project-is/scripts-are-the-doors`,
-      { waitUntil: "domcontentloaded" },
-    );
+    await page.goto(`${ONLINE_ORIGIN}${fixture.lessonPath}`, { waitUntil: "domcontentloaded" });
     await expect(page.locator(".lesson-toolbar")).toBeVisible({ timeout: 30_000 });
     await page.waitForTimeout(500);
 

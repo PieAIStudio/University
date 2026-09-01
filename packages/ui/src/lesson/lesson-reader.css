@@ -939,6 +939,17 @@
     margin-bottom: 12px;
   }
 
+  /*
+     The revision hint is keyboard-focusable, so on a phone it needs a real
+     touch target rather than only the height of its text. The larger inline
+     box also keeps it far enough from the breadcrumb below it.
+  */
+  .lesson-reader__title .eyebrow .tip-trigger {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+  }
+
   .lesson-breadcrumb__link,
   .lesson-breadcrumb__current {
     max-width: 12rem;

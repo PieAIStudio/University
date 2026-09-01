@@ -50,9 +50,16 @@ async function visibleCourseLabels(page: Page): Promise<Locator> {
  * name is the target a person actually aims at.
  */
 async function clickCourseLabel(page: Page, label: Locator): Promise<Box> {
-  await humanClick(page, label, "课名");
-  const box = await label.boundingBox();
+  // The visible-label list is allowed to reflow when the entry hint retires
+  // after a pick. Resolve the chosen course by its accessible name before the
+  // click, and retain the pre-click box: it is the screen point the pointer
+  // actually aimed at, not a different nth label after the list reflowed.
+  const name = (await label.innerText()).trim();
+  const target = page.getByRole("button", { name, exact: true });
+  await waitForStableBox(target);
+  const box = await target.boundingBox();
   if (!box) throw new Error("课名标签没有屏幕矩形");
+  await humanClick(page, target, "课名");
   return box;
 }
 

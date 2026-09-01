@@ -22,6 +22,7 @@ export async function humanClick(
   options?: HumanClickOptions,
 ): Promise<void> {
   await target.waitFor({ state: "visible" });
+  await target.scrollIntoViewIfNeeded();
   let lastStack = "空";
 
   for (let attempt = 0; attempt < 8; attempt += 1) {
