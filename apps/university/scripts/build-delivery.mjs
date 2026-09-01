@@ -206,7 +206,11 @@ function main() {
     // the export exists and before the import consumes it.
     run(
       process.execPath,
-      ["scripts/check-published-catalog.mjs", "--recovery-root", recoveryPath.absolute],
+      [
+        resolve(import.meta.dirname, "check-published-catalog.mjs"),
+        "--recovery-root",
+        recoveryPath.absolute,
+      ],
       environment,
     );
     run("pnpm", ["content"], environment);
