@@ -21,7 +21,9 @@ function readJson(path) {
  * Additions need no permission — publishing is gated elsewhere (ADR-0002).
  * Removals do, because a removal reaches someone who can already see the
  * course. Marking a course `stale` on disk is an authoring state, not a
- * decision to unpublish it; this is where that decision gets made.
+ * decision to unpublish it: a stale course still ships, carrying the fact that
+ * it is being rewritten. `retired` is the status that means take it down, and
+ * recording that here is what makes it a decision rather than a side effect.
  */
 export function checkPublishedCatalogData(record, exported) {
   const removed = [];
