@@ -44,15 +44,7 @@ export const GRID_TERRAIN_VALUE_RAMP = {
  * plant identity without turning the top surface into a tiled colour field.
  */
 export const GRID_PROP_FOLIAGE_COLOURS = [
-  0xb99a40,
-  0xa4a13c,
-  0x8da643,
-  0x74a64a,
-  0x213c28,
-  0x315f36,
-  0x3d6a36,
-  0x4fa68b,
-  0x35a58b,
+  0xb99a40, 0xa4a13c, 0x8da643, 0x74a64a, 0x213c28, 0x315f36, 0x3d6a36, 0x4fa68b, 0x35a58b,
 ] as const;
 
 export function gridTerrainValueScale(

@@ -150,10 +150,7 @@ export function cellTopColour(map: HexMap, cell: GridCell): THREE.Color {
     if (cell.unitIndex !== null) {
       const unitValue = [0.94, 0.97, 1, 1.03, 1.06][cell.unitIndex % 5] ?? 1;
       colour.multiplyScalar(unitValue);
-      colour.lerp(
-        new THREE.Color(map.palette.accent),
-        0.045 + (cell.unitIndex % 4) * 0.02,
-      );
+      colour.lerp(new THREE.Color(map.palette.accent), 0.045 + (cell.unitIndex % 4) * 0.02);
     }
     colour.multiplyScalar(0.97 + hash(`${map.seed}/${cell.key}/top-value`) * 0.06);
   }
