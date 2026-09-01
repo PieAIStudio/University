@@ -23,6 +23,7 @@ import * as THREE from "three";
 import { hopPose } from "../avatar/hop.js";
 import { seeded } from "../island/random.js";
 import { CLOUD_CARRIER_FOOT_OFFSET, type CloudCarrierTarget } from "./cloud-carrier-contract.js";
+import { createCloudVolumeGeometry } from "./cloud-volume.js";
 import { renderTier } from "./tier.js";
 
 export { CLOUD_CARRIER_FOOT_OFFSET } from "./cloud-carrier-contract.js";
@@ -634,16 +635,15 @@ export function CuteCloudSea({
       layout.quality === "mobile"
         ? CUTE_CLOUD_CONTRACT.mobileSegments
         : CUTE_CLOUD_CONTRACT.desktopSegments;
-    return new THREE.SphereGeometry(1, segments.width, segments.height);
+    return createCloudVolumeGeometry(segments.width, segments.height);
   }, [layout.quality]);
   const upperMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        // Instance colours are already the art-directed absolute tones.
-        // The instance colour path is enabled by InstancedMesh itself; asking
-        // for vertex colours as well would make SphereGeometry look for a
-        // missing `color` attribute and collapse the cloud to black.
+        // Instance colours carry near/far role identity. The shared geometry
+        // adds a subtle value ramp so the closed body also reads in profile.
         color: 0xffffff,
+        vertexColors: true,
         roughness: 0.82,
         metalness: 0,
         emissive: 0x3a4048,
@@ -664,6 +664,7 @@ export function CuteCloudSea({
     () =>
       new THREE.MeshStandardMaterial({
         color: 0xffffff,
+        vertexColors: true,
         roughness: 0.94,
         metalness: 0,
         emissive: 0x241c18,

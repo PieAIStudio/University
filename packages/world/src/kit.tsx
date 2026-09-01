@@ -34,6 +34,8 @@ import {
   disposeOwnedPartResources,
   type OwnedPartResources,
 } from "./kit-resources.js";
+import { GRID_PROP_FOLIAGE_COLOURS } from "./grid/grid-palette.js";
+import { hash } from "./island/random.js";
 
 export type Role = keyof typeof manifest.assets;
 
@@ -302,6 +304,31 @@ function batchedPropColour(source: THREE.Material): THREE.Color {
   return new THREE.Color(colour);
 }
 
+function isFoliageMaterial(source: THREE.Material): boolean {
+  const name = source.name.toLowerCase();
+  return name.includes("grass") || name.includes("leaf") || name.includes("plant");
+}
+
+function batchedFoliageInstanceMultiplier(
+  source: THREE.Material,
+  placement: Placement,
+  placementIndex: number,
+): THREE.Color | null {
+  if (!isFoliageMaterial(source)) return null;
+  const base = batchedPropColour(source);
+  const variantIndex = Math.floor(
+    hash(
+      `grid-foliage/${source.name}/${placementIndex}/${Math.round(placement.position.x * 10)},${Math.round(placement.position.z * 10)}`,
+    ) * GRID_PROP_FOLIAGE_COLOURS.length,
+  );
+  const variant = new THREE.Color(GRID_PROP_FOLIAGE_COLOURS[variantIndex] ?? base.getHex());
+  return new THREE.Color(
+    variant.r / Math.max(base.r, Number.EPSILON),
+    variant.g / Math.max(base.g, Number.EPSILON),
+    variant.b / Math.max(base.b, Number.EPSILON),
+  );
+}
+
 function normaliseBatchedGeometry(part: Part): THREE.BufferGeometry {
   const geometry = cloneOwnedPartGeometry(part.sourceGeometry);
   // BatchedMesh requires one attribute signature for the whole batch. The
@@ -395,7 +422,7 @@ export function BatchedAssetField({
     const geometryIds = geometries.map((geometry) => target.addGeometry(geometry));
     const local = new THREE.Matrix4();
     const world = new THREE.Matrix4();
-    at.forEach((placement) => {
+    at.forEach((placement, placementIndex) => {
       const width = placement.width ?? placement.height;
       world.compose(
         placement.position,
@@ -405,6 +432,12 @@ export function BatchedAssetField({
       geometryIds.forEach((geometryId, partIndex) => {
         const instanceId = target.addInstance(geometryId);
         target.setMatrixAt(instanceId, local.multiplyMatrices(world, parts[partIndex]!.offset));
+        const foliageMultiplier = batchedFoliageInstanceMultiplier(
+          parts[partIndex]!.sourceMaterial,
+          placement,
+          placementIndex,
+        );
+        if (foliageMultiplier) target.setColorAt(instanceId, foliageMultiplier);
       });
     });
     target.computeBoundingBox();

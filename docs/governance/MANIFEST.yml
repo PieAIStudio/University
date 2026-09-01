@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-01T06:53:04.610Z
+generated_at: 2026-09-01T08:33:05.139Z
 generator_version: doc-gov@0.9.9
-docs_count: 90
+docs_count: 91
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -205,7 +205,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-30
+    last_reviewed: 2026-08-31
     pinned: false
   - id: REF-PAYMENT-BACKEND-GAP
     path: docs/reference/execution/payment-backend-gap.md
@@ -297,6 +297,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-30
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-CLOSED-LOW-POLY-VOLUMES-RESTORE-DEPTH-WITHOUT-A-RUNTIME-BUDGET-INCREASE
+    path: docs/reference/learnings/workflow-issues/closed-low-poly-volumes-restore-depth-without-a-runtime-budget-increase.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-08-31
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-COURSE-CAMERA-MUST-TARGET-THE-LIVE-MARKER-TO-KEEP-THE-FACE-AND-CLICK-TARGET-STAB
     path: docs/reference/learnings/workflow-issues/course-camera-must-target-the-live-marker-to-keep-the-face-and-click-target-stab.md
@@ -394,7 +401,7 @@ docs:
     type: reference
     status: stable
     canonical: true
-    last_reviewed: 2026-08-27
+    last_reviewed: 2026-09-01
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-KEEP-CANONICAL-HASHING-SEPARATE-FROM-OPTIONAL-VALUE-COMPARISON
     path: docs/reference/learnings/workflow-issues/keep-canonical-hashing-separate-from-optional-value-comparison.md

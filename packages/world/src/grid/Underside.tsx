@@ -69,26 +69,31 @@ export function Underside({ map, dimmed = false }: UndersideProps) {
   );
   const waterMaterial = useMemo(
     () =>
+      // Vertex bands carry the water's cool light cue. BasicMaterial avoids
+      // turning this one closed body into a new environment-texture sample.
       new THREE.MeshBasicMaterial({
         // Coral belongs to lesson stones. Water keeps its own cool material
         // so the underside still has the blue counterpoint from the reference.
         color: 0xffffff,
         vertexColors: true,
         transparent: true,
-        opacity: dimmed ? 0.3 : 0.68,
+        opacity: dimmed ? 0.38 : 0.84,
         depthWrite: false,
-        depthTest: false,
-        side: THREE.DoubleSide,
+        depthTest: true,
+        // This is a closed body now; FrontSide keeps the transparent water on
+        // one draw instead of invoking Three's DoubleSide two-pass path.
+        side: THREE.FrontSide,
       }),
-    [dimmed, map.palette.accent],
+    [dimmed],
   );
   const waterfallHeight = 6 + courseFactor * 13;
   const waterfallWidth = 1.7 + courseFactor * 1.75;
   const waterfallScaleY = Math.min(1.15, minimumHalf / 18);
   const waterGeometry = useMemo(() => {
-    // One ribbon, no extra draw. Vertical bands plus a taper and a bottom
-    // flare give the reference's cheap waterfall shape without a splash mesh.
-    const geometry = new THREE.PlaneGeometry(waterfallWidth, waterfallHeight, 6, 8);
+    // One closed low-poly body, no extra draw. Vertical bands plus a taper and
+    // a bottom flare give the reference's waterfall shape while the shallow
+    // back and side faces let the key light describe actual volume.
+    const geometry = new THREE.BoxGeometry(waterfallWidth, waterfallHeight, 0.26, 4, 4, 1);
     const position = geometry.getAttribute("position");
     const colours = new Float32Array(position.count * 3);
     const bands = [0x4aa7c2, 0x8bd7df, 0x55b8d0, 0x9be0e0, 0x7fd0d8, 0x4aa7c2];
@@ -100,17 +105,21 @@ export function Underside({ map, dimmed = false }: UndersideProps) {
       const flare = along < 0.14 ? ((0.14 - along) / 0.14) * 0.85 : 0;
       const wave = Math.sin(y * 0.42) * waterfallWidth * 0.045;
       position.setX(index, x * (taper + flare) + wave);
-      position.setZ(index, (1 - along) * 0.18);
+      position.setZ(index, position.getZ(index) * 0.82 + (1 - along) * 0.18);
       const band = Math.max(
         0,
         Math.min(bands.length - 1, Math.round((x / waterfallWidth + 0.5) * (bands.length - 1))),
       );
       const colour = new THREE.Color(bands[band]!);
+      colour.multiplyScalar(position.getZ(index) > 0 ? 1.08 : 0.9);
       if (along < 0.12) colour.lerp(new THREE.Color(0xd8f4f6), 0.35 * (1 - along / 0.12));
       colour.toArray(colours, index * 3);
     }
     geometry.setAttribute("color", new THREE.BufferAttribute(colours, 3));
     geometry.computeVertexNormals();
+    // BoxGeometry declares one group per face for material arrays. This water
+    // body has one vertex-colour material, so keep it one draw.
+    geometry.clearGroups();
     return geometry;
   }, [waterfallHeight, waterfallWidth]);
 

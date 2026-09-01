@@ -100,7 +100,11 @@ void main() {
     taken += 1.0;
   }
 
-  float ao = 1.0 - clamp((occlusion / max(taken, 1.0)) * uIntensity, 0.0, 0.72);
+  // The contact cue should preserve a crease, not turn a whole vertical
+  // hex-side into a black/red block once the diorama grade lifts warm soil.
+  // Keep the same sixteen taps and one blit, but cap the linear darkening at
+  // a measured contact cue instead of the old 72% ceiling.
+  float ao = 1.0 - clamp((occlusion / max(taken, 1.0)) * uIntensity, 0.0, 0.2);
   gl_FragColor = vec4(colour.rgb * ao, colour.a);
 }
 `;
@@ -166,7 +170,7 @@ export function createAoPass(): AoPass {
     uRes: { value: new THREE.Vector2(1, 1) },
     // Modest on purpose. Townscaper's contact is a crease, not a cave, and
     // this canvas sits under DOM labels that have to stay readable.
-    uIntensity: { value: 1.8 },
+    uIntensity: { value: 0.2 },
     // World units. A tree is ~1.5 tall; this catches the trunk-to-ground
     // junction without halo-ing the whole island.
     uRadius: { value: 0.7 },

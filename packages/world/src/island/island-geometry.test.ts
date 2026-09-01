@@ -5,6 +5,7 @@ import { islandBlueprint } from "./island-blueprint.js";
 import {
   buildIslandGeometry,
   ISLAND_GEOMETRY_PALETTE,
+  islandCliffDarkFor,
   islandGeometryKey,
   sampleIslandTerrainTop,
 } from "./island-geometry.js";
@@ -78,6 +79,22 @@ describe("Island geometry projections", () => {
     );
     dispose(first);
     dispose(second);
+  });
+
+  it("keeps each projection's underside in its own palette family", () => {
+    const first = islandBlueprint({
+      studyId: "turing-pact",
+      courseId: "underside-green",
+      lessonCount: 12,
+      seed: "underside-green",
+    });
+    const second = islandBlueprint({
+      studyId: "turing-pact",
+      courseId: "underside-warm",
+      lessonCount: 12,
+      seed: "underside-warm",
+    });
+    expect(islandCliffDarkFor(first)).not.toBe(islandCliffDarkFor(second));
   });
 
   it("samples the same top-mesh height used by overlay roots", () => {

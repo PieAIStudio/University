@@ -106,9 +106,14 @@ export const SKY_STOPS = {
  */
 export const WORLD_SKY_CONTRACT = {
   visibleSea: false,
-  horizon: 0xb7d4de,
-  nadir: 0x8fbfd4,
-  fogColor: 0x8fbfd4,
+  // The catalogue is a blue-violet air volume, not a second course sunset.
+  // Keeping all four stops here makes the world projection's value relation
+  // explicit instead of inheriting a study climate and moving one grade.
+  zenith: 0x152d76,
+  mid: 0x9ccfec,
+  horizon: 0xf3f0ff,
+  nadir: 0x4d3e86,
+  fogColor: 0x6a79ad,
   fogNearRatio: 0.55,
   fogFarRatio: 3.5,
 } as const;
@@ -122,9 +127,15 @@ export type SkyStops = {
 
 /** The course frame is a warm illustrated sky, with lavender negative space. */
 export const COURSE_SKY_STOPS: SkyStops = {
-  zenith: 0xff8f83,
-  mid: 0xffe0a0,
-  horizon: 0xffc4b8,
+  // Keep the illustrated sunset hue, but leave the mid-sky enough value
+  // headroom for the course ground. The former near-cream middle turned the
+  // fixed course frame into one warm sheet and also entered the look judge's
+  // earth-colour candidate range.
+  zenith: 0xc98780,
+  mid: 0xe4ebf2,
+  horizon: 0xbc957d,
+  // Keep the lower arc airy and warm-lavender. The previous deep violet made
+  // the island look like it was floating over a dirty band of haze.
   nadir: 0xc0b8e5,
 };
 
@@ -967,6 +978,8 @@ export function WorldScene({
   const sky = useMemo(
     () => ({
       ...skyStopsForStudy(skyStudyId),
+      zenith: WORLD_SKY_CONTRACT.zenith,
+      mid: WORLD_SKY_CONTRACT.mid,
       horizon: WORLD_SKY_CONTRACT.horizon,
       nadir: WORLD_SKY_CONTRACT.nadir,
     }),

@@ -22,6 +22,99 @@ export const GRID_SHARED_SOIL = {
 } as const;
 
 /**
+ * Elevation is also a value layer. These are albedo multipliers keyed to the
+ * four authored terrace levels, not a post-process exposure shift: the lower
+ * shoulder receives less light, while the upper terrace has enough value
+ * headroom for the same sun to read as a lit plane in the fixed camera.
+ *
+ * Course and world use different ranges because they are two projections of
+ * the same grid at different physical scales. The relation stays shared and
+ * deterministic; only the camera's readable size changes the range. The course
+ * range is deliberately neutral in the course projection: the shared top
+ * swatch stays one green family, while the terrain slope and the real key/fill
+ * lights carry the value cue. A wide ramp turns one meadow into unrelated
+ * yellow and brown slabs.
+ */
+export const GRID_TERRAIN_VALUE_RAMP = {
+  course: [1, 1, 1, 1],
+  world: [0.8, 1.2, 3.2, 4.8],
+} as const;
+
+/**
+ * Leaf colour is a real dressing layer, not a noise texture. The finite ramp
+ * moves from dry yellow grass through moss to wet meadow, and its placement
+ * selection is deterministic in the shared BatchedMesh adapter. Keeping the
+ * endpoints inside the grass hue band gives a small course enough visible
+ * plant identity without turning the top surface into a tiled colour field.
+ */
+export const GRID_PROP_FOLIAGE_COLOURS = [
+  0xb99a40, 0xa4a13c, 0x8da643, 0x74a64a, 0x213c28, 0x315f36, 0x3d6a36, 0x5d9147, 0x3c713d,
+] as const;
+
+export function gridTerrainValueScale(
+  projection: "course" | "world",
+  height: 1 | 2 | 3 | 4,
+): number {
+  return GRID_TERRAIN_VALUE_RAMP[projection][height - 1] ?? 1;
+}
+
+function hueToRgb(p: number, q: number, t: number): number {
+  let value = t;
+  if (value < 0) value += 1;
+  if (value > 1) value -= 1;
+  if (value < 1 / 6) return p + (q - p) * 6 * value;
+  if (value < 1 / 2) return q;
+  if (value < 2 / 3) return p + (q - p) * (2 / 3 - value) * 6;
+  return p;
+}
+
+/** Convert the reviewed top swatch into its dark, same-hue floating underside. */
+export function gridUndersideColorForTop(top: number, dimmed = false): number {
+  const red = ((top >> 16) & 255) / 255;
+  const green = ((top >> 8) & 255) / 255;
+  const blue = (top & 255) / 255;
+  const maximum = Math.max(red, green, blue);
+  const minimum = Math.min(red, green, blue);
+  const lightness = (maximum + minimum) * 0.5;
+  const delta = maximum - minimum;
+  let hue = 0;
+  let saturation = 0;
+  if (delta > 0) {
+    saturation = delta / (1 - Math.abs(2 * lightness - 1));
+    if (maximum === red) hue = ((green - blue) / delta) % 6;
+    else if (maximum === green) hue = (blue - red) / delta + 2;
+    else hue = (red - green) / delta + 4;
+    hue /= 6;
+    if (hue < 0) hue += 1;
+  }
+  const darkLightness = Math.max(0.12, Math.min(0.36, lightness * 0.38));
+  const darkSaturation = Math.max(0.28, Math.min(0.76, saturation * 0.78));
+  const q =
+    darkLightness < 0.5
+      ? darkLightness * (1 + darkSaturation)
+      : darkLightness + darkSaturation - darkLightness * darkSaturation;
+  const p = 2 * darkLightness - q;
+  const own =
+    delta === 0
+      ? [darkLightness, darkLightness, darkLightness]
+      : [hueToRgb(p, q, hue + 1 / 3), hueToRgb(p, q, hue), hueToRgb(p, q, hue - 1 / 3)];
+  // The shared soil remains the material family; the own-hue component is the
+  // identity cue visible in the reference's pink/blue/yellow island bottoms.
+  const shared = [
+    ((GRID_SHARED_SOIL.cliff >> 16) & 255) / 255,
+    ((GRID_SHARED_SOIL.cliff >> 8) & 255) / 255,
+    (GRID_SHARED_SOIL.cliff & 255) / 255,
+  ];
+  const dim = dimmed ? 0.62 : 1;
+  const mixed = own.map((value, index) => (value * 0.78 + shared[index]! * 0.22) * dim);
+  return (
+    (Math.round(Math.min(1, mixed[0]!) * 255) << 16) |
+    (Math.round(Math.min(1, mixed[1]!) * 255) << 8) |
+    Math.round(Math.min(1, mixed[2]!) * 255)
+  );
+}
+
+/**
  * The one warm ramp every lesson marker is drawn from.
  *
  * `accent` is not shared, because it is the only colour a learner has to find:

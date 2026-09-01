@@ -19,6 +19,10 @@ describe("AO pass", () => {
     expect(AO_FRAGMENT).toMatch(/depth > 0\.999/);
   });
 
+  it("keeps contact darkening as a crease instead of a black block", () => {
+    expect(AO_FRAGMENT).toMatch(/clamp\([\s\S]*0\.2\)/);
+  });
+
   it("shares the grade blit language so WebGL2 does not have to speak GLSL 3", () => {
     expect(AO_FRAGMENT).toMatch(/texture2D/);
     expect(AO_FRAGMENT).toMatch(/gl_FragColor/);

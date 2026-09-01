@@ -299,23 +299,35 @@ function dressingAssetsReady(scene: THREE.Scene, source: IslandLookSceneSource):
   return loaded >= expected;
 }
 
-function aerialPlateReady(scene: THREE.Scene): boolean {
-  const plate = scene.getObjectByName("island-look-aerial-plate");
-  if (!plate || !(plate as THREE.Mesh).isMesh) return false;
-  const material = (plate as THREE.Mesh).material;
-  const materials = Array.isArray(material) ? material : [material];
-  return materials.some((entry) => {
-    const map = (entry as THREE.MeshBasicMaterial).map;
-    const image = map?.image as { readonly width?: number; readonly height?: number } | undefined;
-    return Boolean(image && image.width && image.height);
-  });
+/*
+  A course island is drawn without the sea, so it never mounts the aerial plate
+  that lives inside `horizon-sea`. The world projection makes the same choice:
+  its negative space is the blue lower dome and distant air, while the actual
+  subject is the shared hex field. Waiting for an absent plate made the judge
+  blind on the exact scene it was meant to review.
+
+  The world check therefore follows the object that `WorldHexField` actually
+  mounts. An empty group or a pre-commit mesh is not enough: the terrain must
+  have instances and the shared prism geometry before pixels are read.
+*/
+function worldGridReady(scene: THREE.Scene): boolean {
+  const field = scene.getObjectByName("world-grid-hex-field");
+  if (!field || !(field as THREE.Mesh).isMesh || !(field as THREE.InstancedMesh).isInstancedMesh) {
+    return false;
+  }
+  const terrain = field as THREE.InstancedMesh;
+  return terrain.count > 0 && terrain.geometry.getAttribute("position")?.count > 0;
+}
+
+function detailSurfaceReady(scene: THREE.Scene, source: IslandLookSceneSource): boolean {
+  return source.detail === "world" ? worldGridReady(scene) : true;
 }
 
 function islandLookSceneReady(scene: THREE.Scene, source: IslandLookSceneSource): boolean {
-  // The V2 course/world scenes keep their dressing and aerial plate inside
+  // The V2 course/world scenes keep their dressing and detail surface inside
   // nested Suspense boundaries. `ScenePresence` cannot see those boundaries,
   // so the judge waits on the actual render objects instead of timing a guess.
-  return dressingAssetsReady(scene, source) && aerialPlateReady(scene);
+  return dressingAssetsReady(scene, source) && detailSurfaceReady(scene, source);
 }
 
 function nodeIsConservativelyOccluded(

@@ -15,6 +15,7 @@ import {
   type IslandPoint,
 } from "./island-blueprint.js";
 import { hash } from "./random.js";
+import { gridPaletteFor, gridUndersideColorForTop } from "../grid/grid-palette.js";
 
 export type IslandGeometryDetail = "course" | "world";
 
@@ -69,13 +70,24 @@ const SAND = new THREE.Color(0xead4a6); // cream shore ring
 const ROCK = new THREE.Color(0xa87950); // warm exposed slope
 const ROCK_DARK = new THREE.Color(0x704934); // steep brown faces
 const CLIFF = new THREE.Color(0xa57854); // sunlit cliff face
-const CLIFF_DARK = new THREE.Color(0x5d3d32); // root the sky cannot reach
+const CLIFF_BASE_DARK = new THREE.Color(0x5d3d32); // inspector fallback only
 // Creamy earth tones keep the route visibly separate from both the yellow-green
 // meadow and the warm brown cliff, without creating a second route mesh.
 const DIRT = new THREE.Color(0xb18a58);
 const DIRT_LIGHT = new THREE.Color(0xd5b878);
 const DIRT_DARK = new THREE.Color(0x83603f);
 const SOIL_HINT = new THREE.Color(0xd1b479);
+
+/**
+ * The bottom follows the same palette slot as the rendered grid. Keeping the
+ * hue derivative here means the legacy/inspector projection cannot quietly
+ * regress to one global brown while the production world uses instances.
+ */
+export function islandCliffDarkFor(blueprint: IslandBlueprint): number {
+  return gridUndersideColorForTop(
+    gridPaletteFor(blueprint.studyId, blueprint.courseId, blueprint.seed).top,
+  );
+}
 
 function sampleCount(detail: IslandGeometryDetail, outline: readonly IslandOutlinePoint[]) {
   return detail === "course" ? outline.length : Math.min(32, Math.max(16, outline.length));
@@ -602,6 +614,7 @@ function buildTerrain(
     { radial: 0.55, depth: -depth * 0.75, sky: 0.34 },
     { radial: 0.22, depth: -depth * 0.98, sky: 0.16 },
   ] as const;
+  const cliffDark = new THREE.Color(islandCliffDarkFor(blueprint));
   const cliffStart = positions.length / 3;
   for (let ring = 0; ring < rings.length; ring += 1) {
     const profile = rings[ring]!;
@@ -614,7 +627,7 @@ function buildTerrain(
         point.z * profile.radial * scale,
       );
       const ground = colorForTop(blueprint, point.x, point.z, sample.radial, sample.y);
-      const stone = CLIFF.clone().lerp(CLIFF_DARK, 1 - profile.sky);
+      const stone = CLIFF.clone().lerp(cliffDark, 1 - profile.sky);
       // The very lip keeps most of the meadow; one ring down is already rock.
       const rockAmount = profile.sky >= 1 ? 0.18 : 0.86;
       const colour = ground.lerp(stone, rockAmount);
@@ -633,7 +646,7 @@ function buildTerrain(
   }
   const bottom = positions.length / 3;
   positions.push(0, -depth * 1.08 * scale, 0);
-  pushColor(colors, CLIFF_DARK);
+  pushColor(colors, cliffDark);
   const last = cliffStart + (rings.length - 1) * segments;
   for (let index = 0; index < segments; index += 1) {
     const next = (index + 1) % segments;
@@ -698,7 +711,7 @@ export const ISLAND_GEOMETRY_PALETTE = {
   rock: ROCK.getHex(),
   rockDark: ROCK_DARK.getHex(),
   cliff: CLIFF.getHex(),
-  cliffDark: CLIFF_DARK.getHex(),
+  cliffDark: CLIFF_BASE_DARK.getHex(),
   dirt: DIRT.getHex(),
   dirtLight: DIRT_LIGHT.getHex(),
   dirtDark: DIRT_DARK.getHex(),

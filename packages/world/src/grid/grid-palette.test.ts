@@ -4,9 +4,12 @@ import {
   GRID_ACCENT_RAMP,
   GRID_LESSON_MARKER_COLOURS,
   GRID_PALETTE_PRESETS,
+  GRID_PROP_FOLIAGE_COLOURS,
   GRID_SHARED_SOIL,
+  GRID_TERRAIN_VALUE_RAMP,
   gridPaletteFor,
   gridPaletteIndexFor,
+  gridUndersideColorForTop,
 } from "./grid-palette.js";
 
 /** Relative luminance, so contrast can be asserted rather than eyeballed. */
@@ -88,6 +91,41 @@ describe("hand-picked grid palettes", () => {
       const saturation = high === low ? 0 : (high - low) / (1 - Math.abs(2 * lightness - 1));
       expect(saturation).toBeGreaterThanOrEqual(0.42);
     }
+  });
+
+  it("keeps course terrace emphasis continuous instead of splitting the meadow", () => {
+    const ramp = GRID_TERRAIN_VALUE_RAMP.course;
+    expect(new Set(ramp).size).toBe(1);
+    expect(ramp[0]).toBe(1);
+  });
+
+  it("keeps grid foliage inside the green family", () => {
+    const hueOf = (colour: number): number => {
+      const red = ((colour >> 16) & 255) / 255;
+      const green = ((colour >> 8) & 255) / 255;
+      const blue = (colour & 255) / 255;
+      const maximum = Math.max(red, green, blue);
+      const minimum = Math.min(red, green, blue);
+      const delta = maximum - minimum;
+      if (delta === 0) return 0;
+      let hue =
+        maximum === red
+          ? ((green - blue) / delta) % 6
+          : maximum === green
+            ? (blue - red) / delta + 2
+            : (red - green) / delta + 4;
+      hue *= 60;
+      return hue < 0 ? hue + 360 : hue;
+    };
+    expect(Math.max(...GRID_PROP_FOLIAGE_COLOURS.map(hueOf))).toBeLessThan(150);
+  });
+
+  it("derives a dark underside from the island top without adding a material", () => {
+    const warm = gridUndersideColorForTop(0xd89440);
+    const green = gridUndersideColorForTop(0x3ca440);
+    expect(warm).not.toBe(green);
+    expect(gridUndersideColorForTop(0xd89440, true)).not.toBe(warm);
+    expect(contrast(warm, GRID_SHARED_SOIL.road)).toBeGreaterThan(3);
   });
 
   it("paints every lesson stone from the one warm ramp", () => {
