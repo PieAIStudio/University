@@ -468,6 +468,19 @@
       "foundOn": "2026-09-01",
       "note": "import-courses.mjs 在 course/unit/lesson 三层硬编码 status:\"active\" 字面量，不是算出来的。今天之前 shelf 里没有 stale 课，所以这个常量既不可能对也不可能错；恢复 28 门课之后它变成明确的错——foundations-terrain 在 shelf 里是 status:\"active\" 且 isBeingRewritten:true。学习者看不见，全仓没有任何代码读 CourseView.status。根在 packages/ui/src/view/lesson-view.ts:36，把作者的四值状态机 draft/active/stale/retired 直接放进了学习者视图类型，违反已写下的规则「作者的词不许穿过发布边界」。拆掉要动 51 处（多为测试夹具），我在部署前一刻放弃了这次手术，改为立项。线上 0.2.4 此刻也是同样 667 处，所以这不是新增回归。 【2026-09-02 结案】packages/ui/src/view/lesson-view.ts 的 CourseView.status 已拆除（51 处 / 14 文件，其中只有 2 处是产品代码）。但拆除本身不构成结案：拆完之后没有任何东西守着，明天有人加回来全仓不会红。新增 apps/university/scripts/check-public-boundary.mjs，递归扫描两份交付投影（content/manifest.json 与 content/shelf.json，后者与 src/content/imported.json 同源），任何名为 status 的字段一律判红，读不到文件也判红（fail-closed）。已接进 pnpm test（--self-test，四个注入点）与 pnpm verify（排在 check:shelf 之后）。除自测夹具外，另在真实 shelf.json 上做过一次注入攻击测试：注入 studies[0].courses[0].units[0].lessons[0].status 后退出码 1 并逐条点名，还原后退出码 0。附一条值得记的观察：本次闸门上线时一上来就红（667 个 status），查明是重构之前生成的陈旧本地产物，重新生成后归零——而 shelf.json 与 manifest.json 一起陈旧的时候 check:shelf 照样绿，因为它拿这两个互相比，又是同源自证，和 28 门课消失时是同一个形状。",
       "guardedBy": "apps/university/scripts/check-public-boundary.mjs::injected author status at course, unit, and lesson turns red, then restoration turns green / injected lesson status"
+    },
+    {
+      "id": "6a7233dd70ba",
+      "screen": "/plans",
+      "element": "[data-plan-cancellation] 取消保证",
+      "category": "broken-promise",
+      "viewport": "both",
+      "summary": "付款按钮正上方承诺「随时可以取消」，但产品里没有任何地方能取消——PaymentPort 只有买，没有退",
+      "severity": "blocking",
+      "state": "open",
+      "foundBy": "claude",
+      "foundOn": "2026-09-02",
+      "note": "这句文案是 2026-09-01 为了补信任缺口加的，动机对，但它是一个产品当前兑现不了的承诺。packages/core/src/ports/payment.ts 的 PaymentPort 方法全集是 purchaseAvailability / readBalance / readEntitlements / initiatePurchase / getOrderStatus / refreshEntitlements——能买，不能取消。PaymentOrderStatus 里那个 cancelled 指的是一笔没付成的订单，不是订阅取消。全仓（packages/**、apps/university/src/**）搜不到任何退订入口、账单页、或指向 SwimmerBackend 账户门户的外链；唯一命中 cancel 的就是这句文案自己和它的单元测试。而计划页有按月/按年切换，所以这确实是周期扣费而不是一次性买断，「不再扣费」有实际所指。结论：现在这个状态下，一个想取消的学习者无处可去，那句话就从补信任变成伤信任，而且它出现的位置恰恰是付款页。三条修法，都是决策不是实现细节：①做一个真的取消入口（要 SwimmerBackend 出能力；按「品牌套件优先」的规矩得改套件并发版本，不许在这里 fork）；②把文案退成产品此刻能兑现的说法，并写清怎么联系；③保留文案，同时给出一条学习者点得到的取消路径，哪怕只是邮件。在三选一之前不建议为这句话单发 0.2.7——线上 0.2.6 没有这句话，也就没有这个缺口。守卫要求：修完之后守的必须是「承诺与可执行路径同时存在」，只钉那句文案的探针会在承诺仍然空头时照样绿。"
     }
   ]
 }
