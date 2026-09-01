@@ -450,10 +450,19 @@ function readRailBox(stage: HTMLElement, rail: HTMLElement): LabelBox | null {
   };
 }
 
+/**
+ * Read only surfaces that can paint over the follow card.
+ *
+ * The rail, counter capsule, context aside and tab bar live in shell stacking
+ * contexts above the stage. The next-up panel shares the stage overlay layer.
+ * Transient hints are below the follow card, so treating them as obstacles can
+ * exhaust both side slots for a tall card and trigger a fallback at the island
+ * itself.
+ */
 function readChromeBoxes(stage: HTMLElement, shell: HTMLElement): readonly LabelBox[] {
   return [
     ...shell.querySelectorAll<HTMLElement>(
-      ".nav-rail, .app-shell__aside, .nextup, .tab-bar, .hint",
+      ".nav-rail, .counter-row, .app-shell__aside, .nextup, .tab-bar",
     ),
   ]
     .map((element) => readRailBox(stage, element))
@@ -536,7 +545,7 @@ export function LabelProbe({
       mutationObserver = new MutationObserver(update);
       mutationObserver.observe(shell, {
         attributes: true,
-        attributeFilter: ["data-rail-collapsed"],
+        attributeFilter: ["data-rail-collapsed", "data-aside-collapsed"],
         childList: true,
         subtree: true,
       });

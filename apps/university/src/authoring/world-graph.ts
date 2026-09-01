@@ -66,6 +66,7 @@ export function courseNodesFromCatalog(
         depth: depths.get(course.id) ?? 0,
         prerequisiteCourseIds: graph.prerequisiteCourseIds,
         trackId: graph.trackId,
+        isBeingRewritten: course.isBeingRewritten,
       });
     }
   }

@@ -25,6 +25,7 @@ import {
   readLatestLesson,
   readUnit,
 } from "../content/repository.js";
+import { isPublishableStatus } from "../content/course-status.js";
 import { readActiveKnowledgeCard } from "../knowledge/repository.js";
 import { SqliteLearningStore } from "../learning/sqlite-learning-store.js";
 import {
@@ -101,7 +102,7 @@ function countCourseManifests(directory: string): number {
  * single-course container: a second course was written, validated and stored,
  * and then answered 404 on every read. Membership is already established by the
  * path — `StableId` rejects traversal in both `parseRoute` and `getCoursePaths`
- * — so the only questions left are whether the course exists and is active.
+ * — so the only questions left are whether the course exists and is publishable.
  */
 function requireActiveCourse(
   studiesRoot: string,
@@ -113,12 +114,14 @@ function requireActiveCourse(
     throw new HttpError(404, "Course does not exist in this study");
   }
   const course = readCourse(studiesRoot, studyId, courseId);
-  if (course.status !== "active") throw new HttpError(409, "Course is not active");
+  if (!isPublishableStatus(course.status)) {
+    throw new HttpError(409, "Course is not publishable");
+  }
   return course;
 }
 
 /**
- * The study's active courses, in prerequisite order. Ordering is what makes
+ * The study's publishable courses, in prerequisite order. Ordering is what makes
  * "next lesson" meaningful across a shelf: without it the learner's next step
  * would hop between courses by whatever order the filesystem happened to
  * return. `study.defaultCourseId` picks which course the study opens on, not
@@ -129,7 +132,7 @@ function listActiveCourses(studiesRoot: string, study: StudyManifest): readonly 
   for (const courseId of listCourseIds(studiesRoot, study.id)) {
     try {
       const course = readCourse(studiesRoot, study.id, courseId);
-      if (course.status === "active") courses.push(course);
+      if (isPublishableStatus(course.status)) courses.push(course);
     } catch {
       // A course that cannot be parsed is reported by the route that reads it,
       // not by every shelf listing that walks past it.

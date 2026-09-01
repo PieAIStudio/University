@@ -9,6 +9,7 @@ import {
   readLatestLesson,
   readUnit,
 } from "../content/repository.js";
+import { isPublishableStatus } from "../content/course-status.js";
 import { readActiveKnowledgeCard } from "../knowledge/repository.js";
 import {
   lessonContentKey,
@@ -104,7 +105,7 @@ function activeCourses(
   for (const courseId of listCourseIds(studiesRoot, study.id)) {
     try {
       const course = readCourse(studiesRoot, study.id, courseId);
-      if (course.status === "active") courses.push(course);
+      if (isPublishableStatus(course.status)) courses.push(course);
     } catch (error) {
       // Keep healthy courses usable, but never turn a malformed manifest into
       // a silent omission: the host needs a repairable reason for the gap.
