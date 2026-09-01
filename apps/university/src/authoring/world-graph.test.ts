@@ -11,7 +11,6 @@ function lesson(
   return {
     id,
     title: id,
-    status: "active",
     contentRevision: 1,
     cardCount: 0,
     exerciseCount: 0,
@@ -28,14 +27,12 @@ function course(id: string, extra: Partial<CourseView> = {}): CourseView {
     description: "",
     audience: "",
     objectives: [],
-    status: "active",
     isDefault: false,
     units: [
       {
         id: "u",
         title: "U",
         objective: "",
-        status: "active",
         lessons: [
           lesson("a", {
             contentRevision: 1,

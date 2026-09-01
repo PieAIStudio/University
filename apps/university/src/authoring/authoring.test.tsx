@@ -21,19 +21,16 @@ describe("CourseSection entry", () => {
     description: "简介",
     audience: "",
     objectives: ["说出 App 是什么"],
-    status: "active",
     isDefault: true,
     units: [
       {
         id: "u",
         title: "U",
         objective: "",
-        status: "active",
         lessons: [
           {
             id: "a",
             title: "第一节",
-            status: "active",
             contentRevision: 1,
             cardCount: 0,
             exerciseCount: 0,
@@ -274,19 +271,16 @@ describe("lesson navigation", () => {
       description: "",
       audience: "",
       objectives: [],
-      status: "active",
       isDefault: true,
       units: [
         {
           id: "what-is-an-app",
           title: "App 是什么",
           objective: "",
-          status: "active",
           lessons: [
             {
               id: "a",
               title: "第一节",
-              status: "active",
               contentRevision: 1,
               cardCount: 0,
               exerciseCount: 0,
@@ -297,7 +291,6 @@ describe("lesson navigation", () => {
             {
               id: "b",
               title: "第二节",
-              status: "active",
               contentRevision: 1,
               cardCount: 0,
               exerciseCount: 0,
@@ -311,12 +304,10 @@ describe("lesson navigation", () => {
           id: "what-is-code",
           title: "代码是什么",
           objective: "",
-          status: "active",
           lessons: [
             {
               id: "c",
               title: "第三节",
-              status: "active",
               contentRevision: 1,
               cardCount: 0,
               exerciseCount: 0,
@@ -334,19 +325,16 @@ describe("lesson navigation", () => {
       description: "",
       audience: "",
       objectives: [],
-      status: "active",
       isDefault: false,
       units: [
         {
           id: "u",
           title: "单元",
           objective: "",
-          status: "active",
           lessons: [
             {
               id: "z",
               title: "别的课的第一节",
-              status: "active",
               contentRevision: 1,
               cardCount: 0,
               exerciseCount: 0,

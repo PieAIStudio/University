@@ -19,19 +19,16 @@ const studyView = {
       description: "",
       audience: "",
       objectives: [],
-      status: "active",
       isDefault: true,
       units: [
         {
           id: "unit",
           title: "第一单元",
           objective: "",
-          status: "active",
           lessons: [
             {
               id: "first",
               title: "第一节",
-              status: "active",
               contentRevision: 3,
               cardCount: 0,
               exerciseCount: 2,
@@ -42,7 +39,6 @@ const studyView = {
             {
               id: "second",
               title: "第二节",
-              status: "active",
               contentRevision: 4,
               cardCount: 0,
               exerciseCount: 1,
@@ -78,7 +74,6 @@ function viewOf(lessons: readonly { readonly id: string; readonly title: string 
             lessons: lessons.map((lesson) => ({
               id: lesson.id,
               title: lesson.title,
-              status: "active" as const,
               contentRevision: 3,
               cardCount: 0,
               exerciseCount: 1,

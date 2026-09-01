@@ -10,19 +10,16 @@ const COURSE: CourseView = {
   description: "从每天使用的 App 出发，读懂代码和产品之间的关系。",
   audience: "零基础学习者",
   objectives: [],
-  status: "active",
   isDefault: true,
   units: [
     {
       id: "what-is-an-app",
       title: "你每天用的 App，拆开是什么",
       objective: "",
-      status: "active",
       lessons: [
         {
           id: "you-already-know-apps",
           title: "会使用 App 和会开发 App，差在哪儿？",
-          status: "active",
           contentRevision: 1,
           cardCount: 0,
           exerciseCount: 0,
@@ -33,7 +30,6 @@ const COURSE: CourseView = {
         {
           id: "another-lesson",
           title: "另一节课",
-          status: "active",
           contentRevision: 1,
           cardCount: 0,
           exerciseCount: 0,

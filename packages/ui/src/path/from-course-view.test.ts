@@ -10,7 +10,6 @@ function summary(
   return {
     id: "you-already-know-apps",
     title: "你已经会用 App 了",
-    status: "active",
     contentRevision: 1,
     cardCount: 1,
     exerciseCount: 2,
@@ -45,7 +44,6 @@ describe("a shelf's lesson, as the path cards read it", () => {
       id: "what-is-an-app",
       title: "你每天用的 App，拆开是什么",
       objective: "能说出使用和开发的差别。",
-      status: "active",
       lessons: [summary(), summary({ id: "second", contentChars: 1200 })],
     });
     expect(unit.title).toBe("你每天用的 App，拆开是什么");

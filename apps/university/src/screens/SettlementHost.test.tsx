@@ -47,7 +47,6 @@ function lesson(id: string, title: string, exerciseCount = 0) {
   return {
     id,
     title,
-    status: "active",
     contentRevision: 1,
     cardCount: 0,
     exerciseCount,
@@ -65,7 +64,6 @@ const COURSE: CourseView = {
   description: "",
   audience: "",
   objectives: [],
-  status: "active",
   isDefault: true,
   prerequisiteCourseIds: [],
   trackId: null,
@@ -74,7 +72,6 @@ const COURSE: CourseView = {
       id: UNIT_ID,
       title: "你每天用的 App，拆开是什么",
       objective: "能说出使用和开发的差别。",
-      status: "active",
       lessons: [
         lesson(LESSON_ID, "会使用 App 和会开发 App，差在哪儿？", 1),
         lesson("app-is-a-pile-of-files", "屏幕上的按钮，代码里能找到对应的哪几行？", 1),
