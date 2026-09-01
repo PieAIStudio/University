@@ -219,13 +219,22 @@ const PLANS_PRIMARY: ExperienceTarget = {
   locate: (page) => page.locator(".plan-card button.liquid-cta__button").first(),
 };
 
-const PLANS_CANCELLATION: ExperienceTarget = {
-  id: "plans-cancellation",
-  label: "会员取消说明",
-  // Pin the semantic hook, not the reassurance wording. Copy can be refined
-  // without turning an intentional copy change into a false e2e failure.
-  locate: (page) => page.locator('[data-plan-cancellation="true"]'),
-};
+/*
+ * The cancellation reassurance is deliberately not a coverage target.
+ *
+ * It was one, pinned to the semantic hook rather than the wording, and it
+ * passed — because the sentence used to render on every paid card. This suite
+ * runs without an order channel, so the state it kept proving visible is
+ * exactly the state the sentence must not appear in: nothing can be charged,
+ * the CTA reads 记录购买意向, and a promise to stop billing has no referent.
+ * The probe was holding the defect in place.
+ *
+ * Both directions now live in PlansScreen.test.tsx, which asserts the sentence
+ * is present when the transport can create an order and absent when it cannot.
+ * That is a stronger claim than a visibility check that only ever ran on one
+ * side. See ledger 6a7233dd70ba; the remaining guard to write is the one that
+ * makes purchaseAvailability itself require a cancellation path.
+ */
 
 const PROFILE_PRIMARY: ExperienceTarget = {
   id: "profile-sign-in",
@@ -389,7 +398,7 @@ export const EXPERIENCE_ROUTES: readonly ExperienceRoute[] = [
     path: "/plans",
     ready: readyPlans,
     primary: PLANS_PRIMARY,
-    coverage: [PLANS_PRIMARY, PLANS_CANCELLATION],
+    coverage: [PLANS_PRIMARY],
     returnToWorld: SHELL_RETURN("会员"),
   },
   {

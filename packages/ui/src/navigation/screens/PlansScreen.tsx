@@ -172,9 +172,28 @@ function PlanCard({
 
         {purchasable ? (
           <>
-            <p className="plan-card__cancellation" data-plan-cancellation="true">
-              {translate("ui.navigation.screens.plansScreen.copy.随时可以取消-取消之后不再扣费")}
-            </p>
+            {/*
+              The reassurance appears only where billing can actually begin.
+
+              "Cancel any time, and billing stops" is a claim about a capability
+              this product does not have yet: PaymentPort can buy and cannot
+              cancel, and no screen links anywhere that can. While the transport
+              has no createOrder the button reads 记录购买意向 and nothing is
+              charged, so the sentence above it would promise an escape from a
+              charge that cannot happen — accurate about nothing and wrong in
+              shape. Binding it to `available` keeps the promise off the page
+              until the moment it has a referent.
+
+              This is the small half of ledger 6a7233dd70ba. The other half is
+              the real guard: `available` must itself require a cancellation
+              path, so "can charge, cannot cancel" is unrepresentable rather
+              than something the next person has to remember.
+            */}
+            {purchaseAvailability === "available" ? (
+              <p className="plan-card__cancellation" data-plan-cancellation="true">
+                {translate("ui.navigation.screens.plansScreen.copy.随时可以取消-取消之后不再扣费")}
+              </p>
+            ) : null}
             <LiquidCtaButton
               type="button"
               onClick={() => onPurchase(plan.id)}

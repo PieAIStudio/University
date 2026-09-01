@@ -139,10 +139,39 @@ describe("PlansScreen purchase entry", () => {
 });
 
 describe("PlansScreen pricing claims", () => {
+  it("withholds the cancellation reassurance while no order channel can charge", async () => {
+    const payment = createPaymentPort({
+      identity: createMemoryIdentityPort({ id: "user-1", email: "learner@example.com" }),
+      transport: null,
+    });
+
+    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+
+    // A promise to stop billing needs billing to exist. Until the transport can
+    // create an order, the CTA only records intent, and the sentence would be
+    // an escape route from a charge that cannot happen.
+    expect(container.querySelector("[data-plan-cancellation='true']")).toBeNull();
+    const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
+      (button) => button.textContent === "记录购买意向",
+    );
+    expect(cta).not.toBeUndefined();
+  });
+
   it("keeps the cancellation reassurance on the paid card before its CTA", async () => {
     const payment = createPaymentPort({
-      identity: createMemoryIdentityPort(),
-      transport: null,
+      identity: createMemoryIdentityPort({ id: "user-1", email: "learner@example.com" }),
+      transport: {
+        createOrder: async (input: {
+          readonly orderId: string;
+          readonly offerId: string;
+          readonly userId: string;
+        }) => ({
+          orderId: input.orderId,
+          offerId: input.offerId,
+          status: "pending" as const,
+          checkoutUrl: null,
+        }),
+      },
     });
 
     await act(async () => root.render(<PlansScreen paymentPort={payment} />));
