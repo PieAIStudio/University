@@ -417,9 +417,11 @@
       "viewport": "both",
       "summary": "一次重写导出把 28 门已经发给顾客的课从目录里拿掉，线上 31 门、main 只剩 3 门，全程没有任何闸门变红",
       "severity": "blocking",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "claude",
-      "foundOn": "2026-09-01"
+      "foundOn": "2026-09-01",
+      "guardedBy": "apps/university/scripts/check-published-catalog.test.mjs::refuses an export that drops a published course, and names it / refuses an export that drops a whole study rather than reporting it as unchanged",
+      "note": "根因不是导出有 bug——它忠实地导了被标成 active 的那 3 门。缺的是「下架」这个动作本身：ContentStatus 有四个值而只有一个在用，于是一门课离开目录的唯一方式就是从导出里意外掉出去。现在 draft 不出货、active 出货、stale 出货并带 isBeingRewritten、retired 才是真下架；check:catalog 拿导出和 published-catalog.json（不会跟着导出一起缩的那一侧）比对，少一门就红并逐门点名，已进 pnpm verify。作者词 active/stale 不穿过发布边界。31 门已全部回到目录。"
     }
   ]
 }
