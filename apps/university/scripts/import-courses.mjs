@@ -198,6 +198,7 @@ for (const studyId of readdirSync(upstream).sort()) {
     const raw = readFileSync(join(studyDir, entry.file));
     const pkg = JSON.parse(raw.toString("utf8"));
     const course = pkg.course;
+    const isBeingRewritten = entry.isBeingRewritten;
     const deliveryUnits = [];
 
     // Assets leave the JSON here. Each becomes its own file named by its hash,
@@ -349,7 +350,9 @@ for (const studyId of readdirSync(upstream).sort()) {
       deliveryUnits.push({ ...unit, lessons: deliveryLessons });
     }
 
-    const publicPackage = toPublicPackage({ course: { ...course, units: deliveryUnits } });
+    const publicPackage = toPublicPackage({
+      course: { ...course, isBeingRewritten, units: deliveryUnits },
+    });
     const body = Buffer.from(`${JSON.stringify(publicPackage)}\n`, "utf8");
     writeFileSync(join(contentRoot, studyId, `${course.id}.json`), body);
     shelfCourses.push({
@@ -359,6 +362,7 @@ for (const studyId of readdirSync(upstream).sort()) {
       audience: course.audience,
       objectives: course.objectives,
       status: "active",
+      isBeingRewritten,
       isDefault: course.id === index.study.defaultCourseId,
       prerequisiteCourseIds: course.prerequisiteCourseIds,
       trackId: course.trackId,
@@ -390,6 +394,7 @@ for (const studyId of readdirSync(upstream).sort()) {
     courses.push({
       courseId: course.id,
       title: course.title,
+      isBeingRewritten,
       sha256: entry.sha256,
       packageBytes: raw.length,
       servedBytes: body.length,

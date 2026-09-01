@@ -166,9 +166,12 @@ try {
       const previous = committedByCourse.get(courseId);
       if (!previous) courses.push(`${courseId}: not in the export`);
       else if (previous.sha256 !== entry.sha256) courses.push(`${courseId}: content changed`);
+      else if (previous.isBeingRewritten !== entry.isBeingRewritten) {
+        courses.push(`${courseId}: learner rewrite fact changed`);
+      }
     }
     for (const courseId of committedByCourse.keys()) {
-      if (!rebuiltByCourse.has(courseId)) courses.push(`${courseId}: no longer active`);
+      if (!rebuiltByCourse.has(courseId)) courses.push(`${courseId}: no longer publishable`);
     }
 
     // Study title, goals and default course live in the index too, so compare

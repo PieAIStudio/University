@@ -293,7 +293,11 @@ export function listCourseIds(studiesRoot: string, studyId: string): readonly st
   const root = getStudyPaths(studiesRoot, studyId).courses;
   if (!existsSync(root)) return [];
   return readdirSync(root, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && existsSync(join(root, entry.name, "course.json")))
+    .filter(
+      (entry) =>
+        (entry.isDirectory() || entry.isSymbolicLink()) &&
+        existsSync(join(root, entry.name, "course.json")),
+    )
     .map((entry) => entry.name)
     .sort();
 }

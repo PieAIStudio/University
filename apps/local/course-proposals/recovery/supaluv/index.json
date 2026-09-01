@@ -22,37 +22,44 @@
     {
       "courseId": "founder-engineer",
       "file": "founder-engineer.ea3c4d1307873b706a681a75eb9da19d25f548a5cb756f2341f1752c2266bec4.recovery.json",
-      "sha256": "sha256:ea3c4d1307873b706a681a75eb9da19d25f548a5cb756f2341f1752c2266bec4"
+      "sha256": "sha256:ea3c4d1307873b706a681a75eb9da19d25f548a5cb756f2341f1752c2266bec4",
+      "isBeingRewritten": false
     },
     {
       "courseId": "ai-cost-and-boundaries",
       "file": "ai-cost-and-boundaries.cf7f8add2d2a8e42dcba02b2a91da40a5453d2a88f909a213848f76203e22a62.recovery.json",
-      "sha256": "sha256:cf7f8add2d2a8e42dcba02b2a91da40a5453d2a88f909a213848f76203e22a62"
+      "sha256": "sha256:cf7f8add2d2a8e42dcba02b2a91da40a5453d2a88f909a213848f76203e22a62",
+      "isBeingRewritten": false
     },
     {
       "courseId": "ai-branching-narrative",
       "file": "ai-branching-narrative.d1632dd4b606dea89123108954c8333b54db3a52dd305d7c1965c9ea55d96df9.recovery.json",
-      "sha256": "sha256:d1632dd4b606dea89123108954c8333b54db3a52dd305d7c1965c9ea55d96df9"
+      "sha256": "sha256:d1632dd4b606dea89123108954c8333b54db3a52dd305d7c1965c9ea55d96df9",
+      "isBeingRewritten": false
     },
     {
       "courseId": "generated-assets",
       "file": "generated-assets.566373afe564a1fabbd7b4831e061486818d500ea3551adade0a422a2bf6381c.recovery.json",
-      "sha256": "sha256:566373afe564a1fabbd7b4831e061486818d500ea3551adade0a422a2bf6381c"
+      "sha256": "sha256:566373afe564a1fabbd7b4831e061486818d500ea3551adade0a422a2bf6381c",
+      "isBeingRewritten": false
     },
     {
       "courseId": "media-tooling",
       "file": "media-tooling.d74705dee80b7c278a2b74c52d8c6d0f35bd9991275bacdce1f493173f0a2302.recovery.json",
-      "sha256": "sha256:d74705dee80b7c278a2b74c52d8c6d0f35bd9991275bacdce1f493173f0a2302"
+      "sha256": "sha256:d74705dee80b7c278a2b74c52d8c6d0f35bd9991275bacdce1f493173f0a2302",
+      "isBeingRewritten": false
     },
     {
       "courseId": "content-as-package",
       "file": "content-as-package.afedbcb002cf8f4614823d732ae85ef398b7496cccd99d7e1fa0050a716bb2b4.recovery.json",
-      "sha256": "sha256:afedbcb002cf8f4614823d732ae85ef398b7496cccd99d7e1fa0050a716bb2b4"
+      "sha256": "sha256:afedbcb002cf8f4614823d732ae85ef398b7496cccd99d7e1fa0050a716bb2b4",
+      "isBeingRewritten": false
     },
     {
       "courseId": "automated-playtesting",
       "file": "automated-playtesting.db9332fb48e901c32ebfdb2cadc93039257d92a7101681e4b80d2dc95ab7cb28.recovery.json",
-      "sha256": "sha256:db9332fb48e901c32ebfdb2cadc93039257d92a7101681e4b80d2dc95ab7cb28"
+      "sha256": "sha256:db9332fb48e901c32ebfdb2cadc93039257d92a7101681e4b80d2dc95ab7cb28",
+      "isBeingRewritten": false
     }
   ]
 }

@@ -23,6 +23,7 @@ export const PUBLIC_DTO_FIELDS = Object.freeze({
       "objectives",
       "prerequisiteCourseIds",
       "trackId",
+      "isBeingRewritten",
       "units",
     ],
     "The catalogue and course path use these fields to name a course and place it in a route.",
@@ -190,7 +191,10 @@ function publicUnit(unit) {
 }
 
 function publicCourse(course) {
-  const result = pick(course, PUBLIC_DTO_FIELDS.course);
+  const result = pick(
+    { ...(course ?? {}), isBeingRewritten: course?.isBeingRewritten === true },
+    PUBLIC_DTO_FIELDS.course,
+  );
   result.units = (course?.units ?? []).map(publicUnit);
   return result;
 }

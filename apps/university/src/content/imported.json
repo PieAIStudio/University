@@ -1,5 +1,5 @@
 {
-  "importedAt": "2026-08-31",
+  "importedAt": "2026-09-01",
   "evidenceMode": "none",
   "studies": [
     {
@@ -10,41 +10,46 @@
         {
           "courseId": "buzz-orientation",
           "title": "《你屏幕上这套东西背后是什么？》",
+          "isBeingRewritten": false,
           "sha256": "sha256:1dc01e8b943da07bd32a8c010bfb75461771b1ec06e1a858f269c549ee062115",
           "packageBytes": 76710,
-          "servedBytes": 48449,
+          "servedBytes": 48474,
           "lessons": 12
         },
         {
           "courseId": "buzz-reading-rust",
           "title": "《如何读懂 Buzz 里的 Rust 结构？》",
+          "isBeingRewritten": false,
           "sha256": "sha256:78a06f7376e8dae6e0bacbcbd9df2597676d8c9043a6e5badeb6ac0553b85574",
           "packageBytes": 82093,
-          "servedBytes": 52710,
+          "servedBytes": 52735,
           "lessons": 12
         },
         {
           "courseId": "buzz-one-message",
           "title": "《一条消息怎样走完 Buzz？》",
+          "isBeingRewritten": false,
           "sha256": "sha256:a52282c8926d6523007d6de96790708ddb17c63e04d0a7a2a951ad6612e4fa7c",
           "packageBytes": 89005,
-          "servedBytes": 56887,
+          "servedBytes": 56912,
           "lessons": 12
         },
         {
           "courseId": "buzz-agents-as-members",
           "title": "《Agent 为什么可以像成员一样工作？》",
+          "isBeingRewritten": false,
           "sha256": "sha256:384dc8db10ce5ffb60a54d76a63d70c5d6e04588128f3addb8118a7591d079dc",
           "packageBytes": 84120,
-          "servedBytes": 53878,
+          "servedBytes": 53903,
           "lessons": 12
         },
         {
           "courseId": "buzz-design-tokens",
           "title": "《Buzz 如何把视觉设计变成可维护的令牌？》",
+          "isBeingRewritten": false,
           "sha256": "sha256:6a92c8042a67bf1d15785e2294b2a72f8cd0e9725112457a4c44cb3c0a73ac8f",
           "packageBytes": 79214,
-          "servedBytes": 51676,
+          "servedBytes": 51701,
           "lessons": 12
         }
       ]
@@ -57,9 +62,10 @@
         {
           "courseId": "product-website",
           "title": "从零做一个产品官网",
+          "isBeingRewritten": false,
           "sha256": "sha256:8dc022626760652dd1c50ea5b272f58b29b8ae770964b0645d77223579cc00de",
           "packageBytes": 162970,
-          "servedBytes": 129670,
+          "servedBytes": 129695,
           "lessons": 19
         }
       ]
@@ -72,57 +78,64 @@
         {
           "courseId": "founder-engineer",
           "title": "创始人工程师：SupaLuv",
+          "isBeingRewritten": false,
           "sha256": "sha256:ea3c4d1307873b706a681a75eb9da19d25f548a5cb756f2341f1752c2266bec4",
           "packageBytes": 18068,
-          "servedBytes": 11883,
+          "servedBytes": 11908,
           "lessons": 1
         },
         {
           "courseId": "ai-cost-and-boundaries",
           "title": "AI 产品的成本与边界",
+          "isBeingRewritten": false,
           "sha256": "sha256:cf7f8add2d2a8e42dcba02b2a91da40a5453d2a88f909a213848f76203e22a62",
           "packageBytes": 36838,
-          "servedBytes": 27163,
+          "servedBytes": 27188,
           "lessons": 4
         },
         {
           "courseId": "ai-branching-narrative",
           "title": "分支叙事：作者意图与 AI 的分工",
+          "isBeingRewritten": false,
           "sha256": "sha256:d1632dd4b606dea89123108954c8333b54db3a52dd305d7c1965c9ea55d96df9",
           "packageBytes": 111975,
-          "servedBytes": 82388,
+          "servedBytes": 82413,
           "lessons": 12
         },
         {
           "courseId": "generated-assets",
           "title": "一个人如何量产内容",
+          "isBeingRewritten": false,
           "sha256": "sha256:566373afe564a1fabbd7b4831e061486818d500ea3551adade0a422a2bf6381c",
           "packageBytes": 36129,
-          "servedBytes": 26257,
+          "servedBytes": 26282,
           "lessons": 3
         },
         {
           "courseId": "media-tooling",
           "title": "一个人的媒体流水线",
+          "isBeingRewritten": false,
           "sha256": "sha256:d74705dee80b7c278a2b74c52d8c6d0f35bd9991275bacdce1f493173f0a2302",
           "packageBytes": 98865,
-          "servedBytes": 73124,
+          "servedBytes": 73149,
           "lessons": 12
         },
         {
           "courseId": "content-as-package",
           "title": "把内容当依赖包管理",
+          "isBeingRewritten": false,
           "sha256": "sha256:afedbcb002cf8f4614823d732ae85ef398b7496cccd99d7e1fa0050a716bb2b4",
           "packageBytes": 99205,
-          "servedBytes": 74908,
+          "servedBytes": 74933,
           "lessons": 11
         },
         {
           "courseId": "automated-playtesting",
           "title": "让机器替你玩一千遍",
+          "isBeingRewritten": false,
           "sha256": "sha256:db9332fb48e901c32ebfdb2cadc93039257d92a7101681e4b80d2dc95ab7cb28",
           "packageBytes": 92032,
-          "servedBytes": 67766,
+          "servedBytes": 67791,
           "lessons": 11
         }
       ]
@@ -135,249 +148,280 @@
         {
           "courseId": "foundations-before-zero",
           "title": "《在开始之前：App、代码、和你》",
-          "sha256": "sha256:63b8411d1625588d2cd3c416ab90e469710610c3cd25974f00065ed3a8525e7b",
-          "packageBytes": 6884519,
-          "servedBytes": 341292,
+          "isBeingRewritten": false,
+          "sha256": "sha256:5ad853c0d7699fc49340967fb4561dd3508e79ebb2258f11935aaf38d3a727f8",
+          "packageBytes": 5672170,
+          "servedBytes": 365001,
           "lessons": 41
         },
         {
           "courseId": "foundations-terrain",
           "title": "《认识地形》",
+          "isBeingRewritten": true,
           "sha256": "sha256:599e692524c95d661ad4c9ecfce04224c755cea009b780ed69a3d26cf341082a",
           "packageBytes": 129299,
-          "servedBytes": 88307,
+          "servedBytes": 88331,
           "lessons": 12
         },
         {
           "courseId": "foundations-reading-code",
           "title": "《读懂一行代码》",
+          "isBeingRewritten": true,
           "sha256": "sha256:ce471bbd0d33a75cf8c0369d9f798b83952615b474cccb5bfcebc4c3185e9e9e",
           "packageBytes": 133952,
-          "servedBytes": 102768,
+          "servedBytes": 102792,
           "lessons": 11
         },
         {
           "courseId": "foundations-logic",
           "title": "《读懂一段逻辑》",
+          "isBeingRewritten": true,
           "sha256": "sha256:2a94e51f72fce29484018a6c6caeeb3813b8e6d2a230f157cbfa8519aa33edfc",
           "packageBytes": 149061,
-          "servedBytes": 117306,
+          "servedBytes": 117330,
           "lessons": 13
         },
         {
           "courseId": "foundations-data",
           "title": "《数据从哪来》",
+          "isBeingRewritten": true,
           "sha256": "sha256:edea104ba71d257b15671be1686e90c4b316c06c9a042188b70a1794339d041b",
           "packageBytes": 152857,
-          "servedBytes": 117847,
+          "servedBytes": 117871,
           "lessons": 13
         },
         {
           "courseId": "foundations-async",
           "title": "《等待与失败》",
+          "isBeingRewritten": true,
           "sha256": "sha256:1081aecfbb402b26daa15169145fa0306be030c9715bbecac04707d1449cec65",
           "packageBytes": 129505,
-          "servedBytes": 96727,
+          "servedBytes": 96751,
           "lessons": 12
         },
         {
           "courseId": "foundations-ui",
           "title": "《界面是怎么长出来的》",
+          "isBeingRewritten": true,
           "sha256": "sha256:994c822b3da53a295357f3a7c091091221d2bc61d924f0eb6f99e1f8e542dfd0",
           "packageBytes": 145768,
-          "servedBytes": 112248,
+          "servedBytes": 112272,
           "lessons": 12
         },
         {
           "courseId": "foundations-quality",
           "title": "《怎么知道没写错》",
+          "isBeingRewritten": true,
           "sha256": "sha256:ddacc928ea0ac63c15684ed11cc071e2eecab3113a85c26e75ba1599d355df37",
           "packageBytes": 132851,
-          "servedBytes": 97859,
+          "servedBytes": 97883,
           "lessons": 13
         },
         {
           "courseId": "foundations-product",
           "title": "《代码之外》",
+          "isBeingRewritten": true,
           "sha256": "sha256:06a3a86bb46ec4aa15d0847d498b8d10ccf579ad295f50e6c335fd3579f0e3e8",
           "packageBytes": 135407,
-          "servedBytes": 100904,
+          "servedBytes": 100928,
           "lessons": 12
         },
         {
           "courseId": "contracts-and-drift",
           "title": "契约与防漂移",
+          "isBeingRewritten": true,
           "sha256": "sha256:ffebb99663ecef753151503616d04c3e33798d792c0dafafb4bf86734472db06",
           "packageBytes": 29953,
-          "servedBytes": 22908,
+          "servedBytes": 22932,
           "lessons": 3
         },
         {
           "courseId": "testing-strategy",
           "title": "测试策略：把钱花在刀刃上",
+          "isBeingRewritten": true,
           "sha256": "sha256:376a0b3a3c8d7fd2d91cf45d4ad316c374eb31380598092c0df3f58f52f5969a",
           "packageBytes": 42413,
-          "servedBytes": 30398,
+          "servedBytes": 30422,
           "lessons": 3
         },
         {
           "courseId": "state-and-process",
           "title": "状态与过程：半年后还改得动",
+          "isBeingRewritten": true,
           "sha256": "sha256:266c5b042b8ef99afd878a1abf80cc16b0ae8688110db01889d754ee38d608e1",
           "packageBytes": 46239,
-          "servedBytes": 35475,
+          "servedBytes": 35499,
           "lessons": 4
         },
         {
           "courseId": "one-codebase-many-hosts",
           "title": "一套代码，多端交付",
+          "isBeingRewritten": true,
           "sha256": "sha256:77ae05f9d71839e0030604708bb8df25dcc3cb6342a4d8a5e4f4c17ce75e3d95",
           "packageBytes": 58459,
-          "servedBytes": 44827,
+          "servedBytes": 44851,
           "lessons": 4
         },
         {
           "courseId": "identity-and-accounts",
           "title": "身份、账号、和「你是谁」",
+          "isBeingRewritten": true,
           "sha256": "sha256:7baa09afbd7fa230ed86d7948bb4ff387b53634a0c3a65bf43218bd8a2249028",
           "packageBytes": 119741,
-          "servedBytes": 90539,
+          "servedBytes": 90563,
           "lessons": 12
         },
         {
           "courseId": "bilingual-by-design",
           "title": "双语不是翻译表",
+          "isBeingRewritten": true,
           "sha256": "sha256:39e58565cfd10eede65405a47b678b135bcc9c38add9b51cfb44c994e54e0a4d",
           "packageBytes": 122484,
-          "servedBytes": 93614,
+          "servedBytes": 93638,
           "lessons": 12
         },
         {
           "courseId": "realtime-presence",
           "title": "谁在线，谁在打字",
+          "isBeingRewritten": true,
           "sha256": "sha256:19002a473686349584f6773ebff677953af1b310cea56870630da16df99e9aee",
           "packageBytes": 101706,
-          "servedBytes": 75807,
+          "servedBytes": 75831,
           "lessons": 11
         },
         {
           "courseId": "platform-capabilities",
           "title": "同一个能力，三种实现",
+          "isBeingRewritten": false,
           "sha256": "sha256:e0fb9ee85e4134eba70d8e338bed4d435908a4a7384fbac9401b97dd81ee32fd",
           "packageBytes": 103316,
-          "servedBytes": 77474,
+          "servedBytes": 77499,
           "lessons": 12
         },
         {
           "courseId": "ai-contracts-first",
           "title": "先定契约，再接模型",
+          "isBeingRewritten": true,
           "sha256": "sha256:70216cfab140feffcf4dcc74816a77ae9c043bce11dad936cf5a4695d56a6c40",
           "packageBytes": 98897,
-          "servedBytes": 70435,
+          "servedBytes": 70459,
           "lessons": 12
         },
         {
           "courseId": "ai-budget-and-cost",
           "title": "一次对话到底花多少钱",
+          "isBeingRewritten": true,
           "sha256": "sha256:094b82fad8cc4f40a9e1ab9ad5262d3aa1b31ed8f46807bcdc43a4a1e3d4a66e",
           "packageBytes": 100377,
-          "servedBytes": 71349,
+          "servedBytes": 71373,
           "lessons": 12
         },
         {
           "courseId": "structured-output-repair",
           "title": "从不可靠的模型里拿到可靠结构",
+          "isBeingRewritten": false,
           "sha256": "sha256:c938a83f8fbb72c2dbec5156fef73832e50f63979eead41dc55a72d09b321857",
           "packageBytes": 88110,
-          "servedBytes": 64533,
+          "servedBytes": 64558,
           "lessons": 11
         },
         {
           "courseId": "ai-evaluation",
           "title": "怎么知道我的 AI 够好",
+          "isBeingRewritten": true,
           "sha256": "sha256:0525e5b4b5194a535f58b48ab5f20f0eb6f2cc1a6a3548d184d0dd7821762301",
           "packageBytes": 84576,
-          "servedBytes": 59182,
+          "servedBytes": 59206,
           "lessons": 11
         },
         {
           "courseId": "agent-identity-continuity",
           "title": "让 AI 角色像同一个人",
+          "isBeingRewritten": true,
           "sha256": "sha256:50db6ce201acc83cf4f8beaa81127fe13d6094c15a79a0b945d3261db787bffc",
           "packageBytes": 84761,
-          "servedBytes": 60658,
+          "servedBytes": 60682,
           "lessons": 11
         },
         {
           "courseId": "failure-recovery",
           "title": "用户那边出错时，产品怎么自己爬起来",
+          "isBeingRewritten": true,
           "sha256": "sha256:0397756479c8e470c753525560f9fd6c405d6ebef1c3b6b9ca14abe816777966",
           "packageBytes": 105319,
-          "servedBytes": 77218,
+          "servedBytes": 77242,
           "lessons": 12
         },
         {
           "courseId": "experiments-and-rollout",
           "title": "先登记，再上线",
+          "isBeingRewritten": true,
           "sha256": "sha256:f76b1fc1e88dfc2640bfbddc1e631f5e11f64c165d53fe14c97d392758c0a106",
           "packageBytes": 106906,
-          "servedBytes": 78644,
+          "servedBytes": 78668,
           "lessons": 12
         },
         {
           "courseId": "retention-engineering",
           "title": "给人一个回来的理由",
+          "isBeingRewritten": true,
           "sha256": "sha256:97c3cc4d611d92f44611deebe9242e9e1ea9a76bc6088943006dc4aee836b4bc",
           "packageBytes": 110028,
-          "servedBytes": 85026,
+          "servedBytes": 85050,
           "lessons": 11
         },
         {
           "courseId": "moment-design",
           "title": "产品的「时刻」是怎么搭出来的",
+          "isBeingRewritten": true,
           "sha256": "sha256:5b0d27d48fdcfb7d53dceabf47128554361037794fff410baaafcd992e78b3eb",
           "packageBytes": 113445,
-          "servedBytes": 85615,
+          "servedBytes": 85639,
           "lessons": 12
         },
         {
           "courseId": "world-navigation",
           "title": "导航是产品结构的外化",
+          "isBeingRewritten": true,
           "sha256": "sha256:4bf5996f41d895ca98586c590b4268e3eaf6d7158e4efc72163b1eb517fe1068",
           "packageBytes": 116760,
-          "servedBytes": 87374,
+          "servedBytes": 87398,
           "lessons": 12
         },
         {
           "courseId": "e2e-and-qa-scripts",
           "title": "一个人怎么替代一个 QA 团队",
+          "isBeingRewritten": true,
           "sha256": "sha256:075f3a539f4f6d3ea783e2cd83f2cd3879bd2bfceae564a49309313d837d388f",
           "packageBytes": 109236,
-          "servedBytes": 82970,
+          "servedBytes": 82994,
           "lessons": 12
         },
         {
           "courseId": "asset-pipeline",
           "title": "351 个素材怎么进产品而不失控",
+          "isBeingRewritten": true,
           "sha256": "sha256:6babb75ebd4fca2e5a36e5aba916e785cb42d68c2f274c1b514de757fcd55175",
           "packageBytes": 110565,
-          "servedBytes": 83674,
+          "servedBytes": 83698,
           "lessons": 12
         },
         {
           "courseId": "solo-operations",
           "title": "出事的时候只有你",
+          "isBeingRewritten": true,
           "sha256": "sha256:5e434058afb1667c294048ad862243ccc528cf9780f4690863a573649f98496d",
           "packageBytes": 117736,
-          "servedBytes": 81703,
+          "servedBytes": 81727,
           "lessons": 12
         },
         {
           "courseId": "directing-ai-agents",
           "title": "指挥 AI 干活",
+          "isBeingRewritten": true,
           "sha256": "sha256:4254bbb334461c1fec57d73dae029aadf2431debe7fb1c656538fe74bd882969",
           "packageBytes": 89193,
-          "servedBytes": 62148,
+          "servedBytes": 62172,
           "lessons": 10
         }
       ]

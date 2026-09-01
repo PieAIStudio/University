@@ -55,6 +55,12 @@ export function checkShelfData(manifest, shelf) {
         errors.push(`missing course ${manifestStudy.studyId}/${manifestCourse.courseId}`);
         continue;
       }
+      if (shelfCourse.isBeingRewritten !== manifestCourse.isBeingRewritten) {
+        errors.push(
+          `rewrite fact ${manifestStudy.studyId}/${manifestCourse.courseId}: ` +
+            `${String(shelfCourse.isBeingRewritten)} != manifest ${String(manifestCourse.isBeingRewritten)}`,
+        );
+      }
       const actualLessons = (shelfCourse.units ?? []).reduce(
         (sum, unit) => sum + (unit.lessons ?? []).length,
         0,

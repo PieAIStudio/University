@@ -188,6 +188,8 @@ const RecoveryIndexEntrySchema = z
     courseId: StableId,
     file: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*\.[a-f0-9]{64}\.recovery\.json$/),
     sha256: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+    /** Learner fact; authoring statuses never cross this index boundary. */
+    isBeingRewritten: z.boolean(),
   })
   .strict();
 
@@ -429,7 +431,9 @@ function serializeCourse(
   studyId: string,
   course: CourseManifest,
 ): CourseRecoveryPackage {
-  if (course.status !== "active") throw new Error(`Course is not active: ${course.id}`);
+  if (!isPublishableStatus(course.status)) {
+    throw new Error(`Course is not publishable: ${course.id} is ${course.status}`);
+  }
   const registrationPath = getStudyPaths(studiesRoot, studyId).source.registration;
   // General studies have no git source. Assets that record a capture route
   // still need one, so a lesson with screenshots on a sourceless study is
@@ -440,7 +444,9 @@ function serializeCourse(
   let droppedUaBindingCount = 0;
   const units = course.unitIds.map((unitId) => {
     const unit = readUnit(studiesRoot, studyId, course.id, unitId);
-    if (unit.status !== "active") throw new Error(`Unit is not active: ${unit.id}`);
+    if (!isPublishableStatus(unit.status)) {
+      throw new Error(`Unit is not publishable: ${unit.id} is ${unit.status}`);
+    }
     return {
       id: unit.id,
       title: unit.title,
@@ -612,6 +618,10 @@ function validatePackageStructure(coursePackage: CourseRecoveryPackage): void {
     }
   }
   assertUnique(lessonIds, `Course ${course.id} lessons`);
+}
+
+function isPublishableStatus(status: CourseManifest["status"]): status is "active" | "stale" {
+  return status === "active" || status === "stale";
 }
 
 function validateBase64Assets(coursePackage: CourseRecoveryPackage): void {
@@ -986,20 +996,22 @@ export function exportCourseRecovery(input: ExportCourseRecoveryInput) {
       `Only an active study can be exported for recovery: ${study.id} is ${study.status}`,
     );
   }
-  const activeCourses = orderCoursesByPrerequisite(
+  const publishableCourses = orderCoursesByPrerequisite(
     listCourseIds(input.studiesRoot, input.studyId)
       .map((courseId) => readCourse(input.studiesRoot, input.studyId, courseId))
-      .filter((course) => course.status === "active"),
+      .filter((course) => isPublishableStatus(course.status)),
   );
-  if (activeCourses.length === 0) throw new Error(`Study has no active courses: ${study.id}`);
-  if (activeCourses.length > COURSE_RECOVERY_LIMITS.maxCourses) {
-    throw new Error(`Study has more than ${COURSE_RECOVERY_LIMITS.maxCourses} active courses`);
+  if (publishableCourses.length === 0) {
+    throw new Error(`Study has no publishable courses: ${study.id}`);
+  }
+  if (publishableCourses.length > COURSE_RECOVERY_LIMITS.maxCourses) {
+    throw new Error(`Study has more than ${COURSE_RECOVERY_LIMITS.maxCourses} publishable courses`);
   }
   if (
     study.defaultCourseId !== null &&
-    !activeCourses.some((course) => course.id === study.defaultCourseId)
+    !publishableCourses.some((course) => course.id === study.defaultCourseId)
   ) {
-    throw new Error(`Study default course is not active: ${study.defaultCourseId}`);
+    throw new Error(`Study default course is not publishable: ${study.defaultCourseId}`);
   }
   const registrationPath = getStudyPaths(input.studiesRoot, study.id).source.registration;
   const sourceRegistration = existsSync(registrationPath)
@@ -1011,7 +1023,7 @@ export function exportCourseRecovery(input: ExportCourseRecoveryInput) {
   const serializedPackages: CourseRecoveryPackage[] = [];
   let droppedUaBindingCount = 0;
   let totalBytes = 0;
-  for (const course of activeCourses) {
+  for (const course of publishableCourses) {
     const coursePackage = serializeCourse(input.studiesRoot, study.id, course);
     validatePackageStructure(coursePackage);
     validateBase64Assets(coursePackage);
@@ -1029,7 +1041,12 @@ export function exportCourseRecovery(input: ExportCourseRecoveryInput) {
     }
     const artifact = { courseId: course.id, file, sha256: contentHash, bytes };
     artifacts.push(artifact);
-    entries.push({ courseId: course.id, file, sha256: contentHash });
+    entries.push({
+      courseId: course.id,
+      file,
+      sha256: contentHash,
+      isBeingRewritten: course.status === "stale",
+    });
     droppedUaBindingCount += coursePackage.droppedUaBindingCount;
   }
   assertCoursePrerequisites(serializedPackages);
