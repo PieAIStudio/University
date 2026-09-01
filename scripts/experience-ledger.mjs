@@ -24,10 +24,11 @@
  */
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
-import { basename } from "node:path";
+import { basename, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const LEDGER = fileURLToPath(new URL("../e2e/experience-ledger.json", import.meta.url));
+const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
 const STATES = new Set(["open", "fixed", "accepted", "wontfix"]);
 const SEVERITIES = new Set(["blocking", "friction", "polish"]);
@@ -52,6 +53,62 @@ function load() {
     process.exit(1);
   }
   return JSON.parse(readFileSync(LEDGER, "utf8"));
+}
+
+const GUARD_FILE = /(?:[\w.-]+\/)+[\w.-]+\.(?:tsx|ts|mjs|js)/gu;
+
+/**
+ * A guard nobody can follow is not a guard.
+ *
+ * Checking only that `guardedBy` is non-empty made this gate the same shape as
+ * the three blind ones found on 2026-09-01: it watched the field, not the
+ * thing. Fourteen of twenty-six guards turned out to name a file that was
+ * never given, or a test name that no longer existed in the file it named.
+ *
+ * Format stays loose on purpose — `path::name`, `path name` and several names
+ * separated by ` / ` are all in use and all readable. What is strict is
+ * resolution: every path must exist, and any name left over must appear in the
+ * file beside it.
+ *
+ * Name the test by its stable id (`O1`, `X3/X5`), not by its prose title. The
+ * seven guards this first caught were paraphrases of Chinese titles that had
+ * since been reworded, and a reference keyed on wording breaks every time
+ * someone improves a sentence — the same reason probes key on structure.
+ */
+function unresolvedGuards(guardedBy) {
+  const problems = [];
+  // Several tests in the same file are written as "path::first / second", so a
+  // reference with no path of its own inherits the last one named.
+  let inherited;
+  for (const reference of String(guardedBy).split(" / ")) {
+    const trimmed = reference.trim();
+    if (trimmed === "") continue;
+    const paths = trimmed.match(GUARD_FILE) ?? [];
+    if (paths.length === 0) {
+      if (inherited === undefined) {
+        problems.push(`guard "${trimmed}" names no file — say which file holds this test`);
+        continue;
+      }
+      const source = readFileSync(resolve(repoRoot, inherited), "utf8");
+      if (!source.includes(trimmed)) {
+        problems.push(`guard "${trimmed}" is not in ${inherited} — renamed or deleted`);
+      }
+      continue;
+    }
+    inherited = paths[0];
+    const missing = paths.filter((path) => !existsSync(resolve(repoRoot, path)));
+    if (missing.length > 0) {
+      problems.push(`guard names a file that does not exist: ${missing.join(", ")}`);
+      continue;
+    }
+    const name = trimmed.replaceAll(GUARD_FILE, "").replaceAll("::", " ").trim();
+    if (name === "" || paths.length > 1) continue;
+    const source = readFileSync(resolve(repoRoot, paths[0]), "utf8");
+    if (!source.includes(name)) {
+      problems.push(`guard "${name}" is not in ${paths[0]} — renamed or deleted`);
+    }
+  }
+  return problems;
 }
 
 function check() {
@@ -80,6 +137,10 @@ function check() {
      */
     if (finding.state === "fixed" && !finding.guardedBy) {
       problems.push(`${where}: marked fixed but names no test that keeps it fixed`);
+    } else if (finding.state === "fixed") {
+      for (const problem of unresolvedGuards(finding.guardedBy)) {
+        problems.push(`${where}: ${problem}`);
+      }
     }
     if (finding.state === "accepted" && !finding.why) {
       problems.push(`${where}: accepted as debt but does not say why`);

@@ -34,12 +34,15 @@ const APP_ROOT = join(ROOT, "apps", "local");
 function parseArguments(argv) {
   let study;
   let studiesRoot;
+  let optional = false;
   for (let index = 0; index < argv.length; index += 1) {
     const value = argv[index];
     if (value === "--studies-root") {
       studiesRoot = argv[index + 1];
       if (!studiesRoot) throw new Error("--studies-root needs a path");
       index += 1;
+    } else if (value === "--optional") {
+      optional = true;
     } else if (value.startsWith("--")) {
       throw new Error(`Unknown option: ${value}`);
     } else if (study === undefined) {
@@ -48,7 +51,7 @@ function parseArguments(argv) {
       throw new Error("Only one study may be selected");
     }
   }
-  return { study, studiesRoot };
+  return { study, studiesRoot, optional };
 }
 
 function readConfiguredStudiesRoot() {
@@ -310,7 +313,17 @@ async function main() {
   const studiesRoot = args.studiesRoot
     ? resolveStudiesRoot(resolve(args.studiesRoot))
     : readConfiguredStudiesRoot();
+  // `--optional` is for the real learner content, which a fresh clone may not
+  // have. Absent source is not a pass: say out loud that nothing was checked,
+  // because a silent skip is how a gate goes green while blind.
   if (!existsSync(studiesRoot)) {
+    if (args.optional) {
+      console.warn(
+        `check-lesson-links: NOT CHECKED — no course source at ${studiesRoot}. ` +
+          `Lesson links in real learner content are unproven here.`,
+      );
+      return 0;
+    }
     console.error(`ERROR: no course source at ${studiesRoot}; cannot scan.`);
     return 2;
   }
@@ -321,6 +334,13 @@ async function main() {
         existsSync(join(studiesRoot, studyId, "study.json")),
       );
   if (studies.length === 0) {
+    if (args.optional) {
+      console.warn(
+        `check-lesson-links: NOT CHECKED — no study manifests under ${studiesRoot}. ` +
+          `Lesson links in real learner content are unproven here.`,
+      );
+      return 0;
+    }
     console.error(`ERROR: no study manifests under ${studiesRoot}; cannot scan.`);
     return 2;
   }
