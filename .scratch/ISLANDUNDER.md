@@ -874,3 +874,76 @@ switchback、serpentine）× course-design/course-near/world-design，共 **180/
 ### 收尾
 
 提交前保护路径审计无 diff；最终 commit hash 见 git log。
+
+## Island 7：历史 pin 重新校准审计（2026-09-01）
+
+### 结论
+
+本轮按 `.scratch/BRIEF-island7.md` 执行到硬带判定即停止。**没有重钉任何
+`ISLAND_LOOK_RATCHET` pin**：第一条 ratchet 失败本身虽然通过硬带，但同一轮完整
+metrics 已发现真实硬带越界，不能继续把历史 pin 当成过期记忆来改写。
+
+已应用重钉：`0 / 146` 个可比较 pin；因此没有进入“超过一半”的刹车条件。实际停止
+原因是更优先的硬带缺陷。
+
+### 判官与视觉证据
+
+执行命令：
+
+```bash
+E2E_ONLINE_PORT=18293 E2E_LOCAL_WEB_PORT=18294 E2E_LOCAL_API_PORT=18295 E2E_GRADING_PORT=18296 pnpm e2e:island-look
+```
+
+官方判官在 `course-design/desktop/landLightnessRise` 停止：实测 `19.2908`，旧 pin
+`24.7634`，而硬带 `≥15` 通过。这一条本来属于“硬带通过、历史 pin 落后”的候选
+重钉项，但在看到同一批 metrics 的硬带红项后，不再执行重钉。
+
+先于数字检查的 canvas-only 截图：
+
+- [course-design / desktop](/Users/yuanfei/PieAI/University-wt-islandunder/SHOTS/island-look/course-design-desktop.png)
+
+肉眼复核：课程岛仍是一整片有真实高度明暗的绿色地表，路线、节点、树、土壁与瀑布
+均可读；本轮没有因为数字去改画面。
+
+### 触发停止的硬带
+
+| 机位 | 指标 | 实测值 | `look-contract.ts` 硬带 | 结果 |
+| --- | --- | ---: | ---: | --- |
+| course-design / desktop | landP95Lightness | 80.1963 | ≥85 | FAIL |
+| course-design / desktop | backgroundLightnessSpread | 22.4622 | ≥40 | FAIL |
+| course-design / desktop | grassLightnessSpread | 26.3171 | ≥45 | FAIL |
+| course-design / desktop | grassLightnessP95 | 81.0979 | ≥85 | FAIL |
+| course-design / desktop | lightnessP98 | 84.0965 | ≥90 | FAIL |
+| course-design / desktop | lightnessStdDev | 16.3650 | ≥18 | FAIL |
+
+### 重钉表
+
+空：本轮没有任何 pin 被重新钉，因此没有“机位 / 指标 / 旧 pin / 新值 / 硬带 / 理由”
+需要列出。硬带失败项均未重钉。
+
+### 冻结面核对
+
+- `packages/world/src/island/look-contract.ts`：未修改，阈值未动。
+- `e2e/J.island-look.spec.ts`：未修改，`ISLAND_LOOK_RATCHET`、
+  `ISLAND_LOOK_RATCHET_MODES` 与 `ratchetPass` 未动。
+- `packages/world/src/Maps.tsx`、`packages/world/src/grid/HexField.tsx` 及其余渲染代码：
+  未修改。
+- 末次 sha256：`look-contract.ts` 为
+  `7d6ff66a9e3f7262784a64fac03069e998720972c3ac2167cf0b1d11a71ab105`；
+  `J.island-look.spec.ts` 为
+  `580ac19b62d61e1e373a259a9104a9151516f1e1c78621fd7982f8fe3b753bf4`。
+
+### 验证
+
+- `pnpm --filter @pieai/university-world test`：**50 files / 332 tests PASS**。
+- world typecheck：**PASS**。
+- world lint：**PASS**。
+- world format check：**PASS**。
+- `pnpm e2e:island-look`：**按硬带缺陷规则停止，FAIL**；没有继续重钉或伪造完整通过。
+- `pnpm verify`：typecheck、lint、format、全量测试、边界、registry、experience 检查及
+  各包构建前置均通过；在 `@pieai/university-app` delivery build 清理已有
+  `apps/university/dist/delivery/content` 时因 `ENOTEMPTY` 退出。本轮未为此触碰
+  `apps/`，该失败保留为环境/构建目录问题。
+
+按任务书，后续应由人工决定这些硬带缺陷是否需要修复；在作出该决定前，历史 pin 不应
+被重钉。
