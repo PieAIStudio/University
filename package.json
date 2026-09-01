@@ -33,7 +33,7 @@
     "secrets:check:university": "node scripts/materialize-swimmer-backend-public-env.mjs --check",
     "secrets:materialize:university": "node scripts/materialize-swimmer-backend-public-env.mjs",
     "start": "node scripts/start.mjs",
-    "test": "pnpm -r test && node scripts/check-raw-colours.mjs --self-test && node scripts/check-review-card-registry.mjs --self-test && node scripts/check-content-revisions.mjs --self-test",
+    "test": "pnpm -r test && node --test scripts/check-contrast.test.mjs && node scripts/check-raw-colours.mjs --self-test && node scripts/check-review-card-registry.mjs --self-test && node scripts/check-content-revisions.mjs --self-test",
     "typecheck": "pnpm -r typecheck",
     "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm check:generated-format && pnpm test && pnpm boundaries && pnpm check:canvas && pnpm check:review-cards && pnpm check:experience && pnpm build && pnpm check:shelf && pnpm check:catalog && pnpm check:content-revisions && pnpm check:export-freshness && pnpm check:lesson-links && pnpm bundle && pnpm docs:check",
     "check:experience": "node scripts/experience-ledger.mjs check"
