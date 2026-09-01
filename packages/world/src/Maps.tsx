@@ -64,9 +64,8 @@ import {
   DeepSea,
   DistantGround,
 } from "./sky/horizon-sea.js";
+import { MapLighting } from "./sky/lighting.js";
 import { SkyDome } from "./sky/skydome.js";
-import { WORLD_SUN, worldShadowFrustum, worldSunPosition } from "./sky/sun.js";
-import { renderTier } from "./sky/tier";
 import {
   buildCourseGrid,
   type HexMap,
@@ -178,10 +177,8 @@ const CLIMATES: readonly SkyStops[] = [
 ];
 
 /**
- * One project, one climate. `null` is the undecided dome — nothing picked yet,
- * or a caller that has no project to name. It used to mean the four-seas
- * overview, which no longer exists; the fallback stayed because a sky still
- * has to be some colour while the catalogue loads.
+ * One project, one climate. `null` is the shared default dome while the
+ * catalogue has no study context; a named study gets a stable authored climate.
  */
 export function skyStopsForStudy(studyId: string | null): SkyStops {
   if (!studyId) return CLIMATES[0]!;
@@ -776,7 +773,7 @@ export function LearnerMarker({
   );
 }
 
-/** Sky, sun and cloud deck. Shared by both map levels so they feel like one world. */
+/** Sky, fog, and cloud deck. The shared light rig lives in `sky/lighting.tsx`. */
 export function Weather({
   extent,
   fog,
@@ -834,52 +831,12 @@ export function Weather({
   // factor so the new sky/cloud range is not washed back into one colour.
   const density = 0.82 / fogTo;
   const shadowedGround = groundRadius ?? extent * 0.55;
-  const shadow = worldShadowFrustum(shadowedGround);
-  const sunPosition = worldSunPosition(shadow.lightDistance);
-  const mobile = renderTier() === "mobile";
-  const mapSize = mobile ? 1024 : shadow.mapSize;
   return (
     <>
       <color attach="background" args={[sky.zenith]} />
       <fogExp2 attach="fog" args={[fogColor ?? sky.horizon, density]} />
       <SkyDome stops={sky} />
-      {/*
-        Fill is the denominator of scene-linear range. The current warm lower
-        bounce plus blue ambient/PMREM fill is measured at 2.08:1 against the
-        5.2 key, so the shadow still reads as a shadow without dropping to black.
-      */}
-      <hemisphereLight
-        args={[sky.mid, WORLD_SUN.hemisphereGround, WORLD_SUN.hemisphereIntensity]}
-      />
-      <ambientLight color={WORLD_SUN.ambientColor} intensity={WORLD_SUN.ambientIntensity} />
-      {/*
-        `normalBias` is still the acne fix that matters on small curved
-        geometry. The frustum itself is now fitted to `groundRadius` so the
-        2048 map covers the design shot without stretching across the weather
-        sphere.
-      */}
-      <directionalLight
-        color={WORLD_SUN.keyColor}
-        position={sunPosition}
-        intensity={WORLD_SUN.keyIntensity}
-        castShadow={shadows}
-        shadow-mapSize={[mapSize, mapSize]}
-        shadow-camera-left={-shadow.half}
-        shadow-camera-right={shadow.half}
-        shadow-camera-top={shadow.half}
-        shadow-camera-bottom={-shadow.half}
-        shadow-camera-near={shadow.near}
-        shadow-camera-far={shadow.far}
-        shadow-bias={-0.0002}
-        shadow-normalBias={0.06}
-      />
-      {/* A low cool rim separates the island silhouette from the warm sky. It
-          has no shadow map: this is a fill edge, not another expensive key. */}
-      <directionalLight
-        color={0x8cc9d4}
-        position={[-sunPosition[0] * 0.82, shadow.lightDistance * 0.44, -sunPosition[2] * 0.82]}
-        intensity={0.78}
-      />
+      <MapLighting groundRadius={shadowedGround} skyMid={sky.mid} shadows={shadows} />
       {includeSea ? (
         <Suspense
           fallback={<AerialWorldPlateFallback extent={extent} level={cloudLevel} visible />}
@@ -934,7 +891,7 @@ export function WorldScene({
    * prop because this persisted authoring preference is not navigation state.
    */
   authoringFocus?: AuthoringFocus;
-  /** `null` keeps the default dome — the four-seas overview. */
+  /** `null` keeps the shared default dome while no study is selected. */
   skyStudyId?: string | null;
   assetRevision?: number;
 }) {

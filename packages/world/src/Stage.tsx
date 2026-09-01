@@ -504,7 +504,8 @@ export function Stage({
           two map levels are the same world at two scales, and their fog has to
           start where their own islands end — a single distance set here was
           either a wall in front of the world map or nothing at all inside a
-          course. See `Weather` in Maps.tsx.
+          course. See `MapLighting` in `sky/lighting.tsx`; `Weather` composes
+          that rig with the projection's sky, fog and cloud deck.
 
           Suspense is load-bearing: the kit models stream in, and without a
           boundary the first `useGLTF` would throw the whole canvas away. The

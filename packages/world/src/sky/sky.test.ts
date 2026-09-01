@@ -37,7 +37,7 @@ describe("sky stops", () => {
     expect(horizon.r).toBeGreaterThan(horizon.g);
   });
 
-  it("keeps the default dome for the four-seas overview and shifts a named study", () => {
+  it("keeps the shared default dome without a study and shifts a named study", () => {
     const unset = skyStopsForStudy(null);
     expect(unset.zenith).toBe(SKY_STOPS.zenith);
     const turing = skyStopsForStudy("turing-pact");
