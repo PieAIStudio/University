@@ -171,15 +171,20 @@ function PlanCard({
         </ul>
 
         {purchasable ? (
-          <LiquidCtaButton
-            type="button"
-            onClick={() => onPurchase(plan.id)}
-            disabled={busyOfferId === plan.id}
-          >
-            {busyOfferId === plan.id
-              ? translate("ui.navigation.screens.plansScreen.copy.正在检查")
-              : planButtonLabel(plan.pricing, purchaseAvailability)}
-          </LiquidCtaButton>
+          <>
+            <p className="plan-card__cancellation" data-plan-cancellation="true">
+              {translate("ui.navigation.screens.plansScreen.copy.随时可以取消-取消之后不再扣费")}
+            </p>
+            <LiquidCtaButton
+              type="button"
+              onClick={() => onPurchase(plan.id)}
+              disabled={busyOfferId === plan.id}
+            >
+              {busyOfferId === plan.id
+                ? translate("ui.navigation.screens.plansScreen.copy.正在检查")
+                : planButtonLabel(plan.pricing, purchaseAvailability)}
+            </LiquidCtaButton>
+          </>
         ) : (
           <p className="plan-card__note">
             {translate("ui.navigation.screens.plansScreen.copy.你现在就在用")}

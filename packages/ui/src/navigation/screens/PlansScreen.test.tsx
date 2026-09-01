@@ -139,6 +139,27 @@ describe("PlansScreen purchase entry", () => {
 });
 
 describe("PlansScreen pricing claims", () => {
+  it("keeps the cancellation reassurance on the paid card before its CTA", async () => {
+    const payment = createPaymentPort({
+      identity: createMemoryIdentityPort(),
+      transport: null,
+    });
+
+    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+
+    const reassurance = container.querySelector<HTMLElement>("[data-plan-cancellation='true']");
+    expect(reassurance).not.toBeNull();
+    expect(reassurance?.closest(".plan-card--featured")).not.toBeNull();
+    expect(reassurance?.textContent).toBe("随时可以取消，取消之后不再扣费。");
+
+    const cta = reassurance?.parentElement?.querySelector("button.liquid-cta__button");
+    expect(cta).not.toBeNull();
+    if (!reassurance || !cta) throw new Error("missing paid-plan reassurance or CTA");
+    expect(reassurance.compareDocumentPosition(cta) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
   it("derives the yearly saving from the configured prices", async () => {
     const identity = createMemoryIdentityPort();
     await identity.signInAnonymously();
