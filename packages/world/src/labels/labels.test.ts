@@ -302,6 +302,28 @@ describe("placeLabels", () => {
     expect(boxesOverlap(box, rail, 4)).toBe(false);
   });
 
+  it("moves a far-left overlay card beyond the fixed navigation rail", () => {
+    const desktop = { width: 1440, height: 810 } as const;
+    const rail = { left: 16, top: 16, right: 273, bottom: 794 };
+    const island = candidate({
+      id: "card",
+      x: 120,
+      y: 405,
+      width: 320,
+      height: 607,
+      anchor: "aside",
+      clearance: 56,
+      overlay: true,
+    });
+    const card = byId(placeLabels([island], desktop, { gap: 8, obstacles: [rail] }), "card");
+    const box = labelBox({ x: card.x, y: card.y }, island.width, island.height);
+
+    expect(card.visible).toBe(true);
+    expect(card.x).toBeGreaterThan(island.x);
+    expect(box.left).toBeGreaterThanOrEqual(rail.right + 8);
+    expect(boxesOverlap(box, rail, 8)).toBe(false);
+  });
+
   it("does not move a name because an overlay card opened on top of it", () => {
     // Item the boss caught: click one island and the titles of neighbouring
     // islands slid away to make room for the card. The card is opaque and on

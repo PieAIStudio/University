@@ -176,6 +176,49 @@ function additionalVerticalSlots(candidate: LabelCandidate, gap: number): readon
   return offsets.map((offset) => ({ x: candidate.x, y: baseY + offset * step }));
 }
 
+/**
+ * Side-card centres just beyond an opaque obstacle.
+ *
+ * A fixed side offset is enough until the island is close to a rail. At that
+ * point the preferred side can still be the correct side of the island while
+ * its box intersects the rail, and the old overlay fallback put the card back
+ * on the island without consulting the obstacle. These boundary candidates
+ * keep the card beside its island while moving it past the obstacle's edge.
+ */
+function asideObstacleSlots(
+  candidate: LabelCandidate,
+  viewport: LabelViewport,
+  gap: number,
+  obstacles: readonly LabelBox[],
+): readonly Slot[] {
+  if (candidate.anchor !== "aside" || obstacles.length === 0) return [];
+
+  const halfWidth = candidate.width / 2;
+  const clearance = candidate.clearance ?? FOLLOW_CLEARANCE;
+  const nearestRight = candidate.x + halfWidth + clearance;
+  const nearestLeft = candidate.x - halfWidth - clearance;
+  const horizontal = new Set<number>();
+  for (const obstacle of obstacles) {
+    const right = Math.max(nearestRight, obstacle.right + gap + halfWidth);
+    const left = Math.min(nearestLeft, obstacle.left - gap - halfWidth);
+    if (right > candidate.x) horizontal.add(right);
+    if (left < candidate.x) horizontal.add(left);
+  }
+
+  const sideY = asideSideY(candidate, viewport, gap);
+  const verticalStep = candidate.height / 2 + gap;
+  const vertical = [
+    sideY,
+    candidate.y - verticalStep * 0.45,
+    candidate.y + verticalStep * 0.45,
+    candidate.y - verticalStep,
+    candidate.y + verticalStep,
+  ];
+  return [...horizontal]
+    .sort((left, right) => Math.abs(left - candidate.x) - Math.abs(right - candidate.x))
+    .flatMap((x) => vertical.map((y) => ({ x, y })));
+}
+
 export function labelBox(
   slot: Slot,
   width: number,
@@ -357,6 +400,43 @@ function clampedOverlaySlot(candidate: LabelCandidate, viewport: LabelViewport, 
   return { x, y };
 }
 
+function safeOverlaySlot(
+  candidate: LabelCandidate,
+  viewport: LabelViewport,
+  gap: number,
+  obstacles: readonly LabelBox[],
+): Slot {
+  const home = clampedOverlaySlot(candidate, viewport, gap);
+  if (obstacles.length === 0) return home;
+
+  const halfWidth = candidate.width / 2;
+  const halfHeight = candidate.height / 2;
+  const horizontal = new Set([home.x]);
+  const vertical = new Set([home.y]);
+  for (const obstacle of obstacles) {
+    horizontal.add(obstacle.right + gap + halfWidth);
+    horizontal.add(obstacle.left - gap - halfWidth);
+    vertical.add(obstacle.bottom + gap + halfHeight);
+    vertical.add(obstacle.top - gap - halfHeight);
+  }
+
+  const candidates = [...horizontal].flatMap((x) =>
+    [...vertical].map((y) => ({
+      x,
+      y,
+      distance: Math.abs(x - candidate.x) + Math.abs(y - candidate.y),
+    })),
+  );
+  candidates.sort((left, right) => left.distance - right.distance);
+  const safe = candidates.find(({ x, y }) => {
+    const box = labelBox({ x, y }, candidate.width, candidate.height, candidate.anchor);
+    return (
+      fitsInViewport(box, viewport) && !obstacles.some((other) => boxesOverlap(box, other, gap))
+    );
+  });
+  return safe ? { x: safe.x, y: safe.y } : home;
+}
+
 function anchorOnScreen(candidate: LabelCandidate, viewport: LabelViewport): boolean {
   return (
     candidate.x >= 0 &&
@@ -410,6 +490,7 @@ export function placeLabels(
     let didPlace = false;
     const slotGroups = [
       slotsFor(candidate, gap, viewport),
+      asideObstacleSlots(candidate, viewport, gap, obstacles),
       additionalVerticalSlots(candidate, gap),
     ];
     for (const slots of slotGroups) {
@@ -441,7 +522,7 @@ export function placeLabels(
         present and readable instead of turning a real selection into nothing.
         Overlay cards are allowed to cover the map; they do not reserve space.
       */
-      const slot = clampedOverlaySlot(candidate, viewport, gap);
+      const slot = safeOverlaySlot(candidate, viewport, gap, obstacles);
       placed[index] = { id: candidate.id, x: slot.x, y: slot.y, visible: true };
       visibleCount += 1;
     }

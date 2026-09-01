@@ -33,6 +33,7 @@ import {
 } from "@pieai/university-core/domain/schemas.js";
 import { inspectImportPathRisk } from "../airlock/import-gate.js";
 import { canonicalizePotentialPath, isPathInside } from "../config/load-config.js";
+import { isPublishableStatus } from "../content/course-status.js";
 import {
   listCourseIds,
   orderCoursesByPrerequisite,
@@ -618,10 +619,6 @@ function validatePackageStructure(coursePackage: CourseRecoveryPackage): void {
     }
   }
   assertUnique(lessonIds, `Course ${course.id} lessons`);
-}
-
-function isPublishableStatus(status: CourseManifest["status"]): status is "active" | "stale" {
-  return status === "active" || status === "stale";
 }
 
 function validateBase64Assets(coursePackage: CourseRecoveryPackage): void {

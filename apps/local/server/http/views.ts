@@ -131,7 +131,12 @@ function buildStudyView(
         }),
       };
     });
-    return { ...course, units, isDefault: course.id === study.defaultCourseId };
+    return {
+      ...course,
+      units,
+      isBeingRewritten: course.status === "stale",
+      isDefault: course.id === study.defaultCourseId,
+    };
   });
   const notes = listKnowledgeNotes(studiesRoot, study.id).map((note) => {
     const stored = readLatestKnowledgeNote(studiesRoot, study.id, note.id);

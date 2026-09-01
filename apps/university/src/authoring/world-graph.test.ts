@@ -84,7 +84,7 @@ describe("world-graph", () => {
   });
 
   it("reads prerequisites off the study payload and computes depth", () => {
-    const first = course("first");
+    const first = course("first", { isBeingRewritten: true });
     const second = course("second");
     (second as CourseView & { prerequisiteCourseIds: readonly string[] }).prerequisiteCourseIds = [
       "first",
@@ -101,5 +101,6 @@ describe("world-graph", () => {
     expect(nodes.find((node) => node.courseId === "second")?.prerequisiteCourseIds).toEqual([
       "first",
     ]);
+    expect(nodes.find((node) => node.courseId === "first")?.isBeingRewritten).toBe(true);
   });
 });

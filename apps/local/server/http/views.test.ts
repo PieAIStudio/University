@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { buildLessonView } from "./views.js";
+import { buildLessonView, buildStudyView } from "./views.js";
 import { getCoursePaths, getLessonPaths, getUnitPaths } from "../studies/paths.js";
 import { createStudy } from "../studies/repository.js";
 
@@ -18,6 +18,30 @@ function contentHash(content: string): string {
 
 function writeJson(path: string, value: unknown): void {
   writeFileSync(path, JSON.stringify(value));
+}
+
+function writeShelfCourse(
+  studiesRoot: string,
+  id: string,
+  status: "draft" | "active" | "stale" | "retired",
+): void {
+  const course = getCoursePaths(studiesRoot, "sample", id);
+  mkdirSync(course.root, { recursive: true });
+  writeJson(course.manifest, {
+    schemaVersion: 1,
+    id,
+    title: id,
+    description: "",
+    audience: "Beginner",
+    objectives: ["Read the shelf"],
+    unitIds: [],
+    status,
+    currency: "follow-ref",
+    prerequisiteCourseIds: [],
+    trackId: null,
+    createdAt: NOW,
+    updatedAt: NOW,
+  });
 }
 
 function makeStudy(): string {
@@ -120,5 +144,47 @@ describe("lesson view links", () => {
     writeLesson(studiesRoot, "target", 2, "新目标", "New target.");
 
     expect(readView().lesson.links[0]?.target?.title).toBe("新目标");
+  });
+});
+
+describe("study view shelf", () => {
+  it("includes publishable courses and carries the rewrite fact", () => {
+    const studiesRoot = mkdtempSync(join(tmpdir(), "university-local-study-view-shelf-"));
+    createStudy(studiesRoot, { id: "sample", title: "Sample", now: new Date(NOW) });
+    writeShelfCourse(studiesRoot, "active-course", "active");
+    writeShelfCourse(studiesRoot, "stale-course", "stale");
+    writeShelfCourse(studiesRoot, "draft-course", "draft");
+    writeShelfCourse(studiesRoot, "retired-course", "retired");
+
+    const view = buildStudyView(
+      studiesRoot,
+      {
+        schemaVersion: 1,
+        id: "sample",
+        title: "Sample",
+        description: "",
+        goals: [],
+        defaultCourseId: null,
+        status: "active",
+        createdAt: NOW,
+        updatedAt: NOW,
+      },
+      null,
+    ) as {
+      readonly courses: readonly {
+        readonly id: string;
+        readonly isBeingRewritten: boolean;
+      }[];
+    };
+
+    expect(new Set(view.courses.map((course) => course.id))).toEqual(
+      new Set(["active-course", "stale-course"]),
+    );
+    expect(new Map(view.courses.map((course) => [course.id, course.isBeingRewritten]))).toEqual(
+      new Map([
+        ["active-course", false],
+        ["stale-course", true],
+      ]),
+    );
   });
 });
