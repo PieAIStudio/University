@@ -481,6 +481,19 @@
       "foundBy": "claude",
       "foundOn": "2026-09-02",
       "note": "这句文案是 2026-09-01 为了补信任缺口加的，动机对，但它是一个产品当前兑现不了的承诺。packages/core/src/ports/payment.ts 的 PaymentPort 方法全集是 purchaseAvailability / readBalance / readEntitlements / initiatePurchase / getOrderStatus / refreshEntitlements——能买，不能取消。PaymentOrderStatus 里那个 cancelled 指的是一笔没付成的订单，不是订阅取消。全仓（packages/**、apps/university/src/**）搜不到任何退订入口、账单页、或指向 SwimmerBackend 账户门户的外链；唯一命中 cancel 的就是这句文案自己和它的单元测试。而计划页有按月/按年切换，所以这确实是周期扣费而不是一次性买断，「不再扣费」有实际所指。结论：现在这个状态下，一个想取消的学习者无处可去，那句话就从补信任变成伤信任，而且它出现的位置恰恰是付款页。三条修法，都是决策不是实现细节：①做一个真的取消入口（要 SwimmerBackend 出能力；按「品牌套件优先」的规矩得改套件并发版本，不许在这里 fork）；②把文案退成产品此刻能兑现的说法，并写清怎么联系；③保留文案，同时给出一条学习者点得到的取消路径，哪怕只是邮件。在三选一之前不建议为这句话单发 0.2.7——线上 0.2.6 没有这句话，也就没有这个缺口。守卫要求：修完之后守的必须是「承诺与可执行路径同时存在」，只钉那句文案的探针会在承诺仍然空头时照样绿。"
+    },
+    {
+      "id": "5ab1fc8b0b50",
+      "screen": "/",
+      "element": "手机课程岛 · 课程落点标记",
+      "category": "affordance",
+      "viewport": "mobile",
+      "summary": "手机上课程落点淡成一条虚线，accentArea 0.0079 低于硬带下界 0.015，桌面同一场景是 0.0161",
+      "severity": "friction",
+      "state": "open",
+      "foundBy": "claude",
+      "foundOn": "2026-09-02",
+      "note": "我自己看了两张图才写这条，不是只信数字。桌面 course-design：课程落点是奶油色六边石墩、中心一枚橙红，成串读出来就是一条路，一眼知道要点哪里。手机同一场景：岛整体缩得很小、上下大片空天空与海，落点淡成一条浅色虚线，橙红几乎看不出来——它从「可点的目的地」退化成了「地表纹理」。accentArea 桌面 0.0161（过），手机 0.0079（硬带 {min:0.015,max:0.15}，不过），刚好量到了我眼睛看到的那件事。\n\n为什么以前没人看见：判官 assertIslandLookRatchet 把 expect 写在循环里，撞到第一条越界就中断整个 run，而第一条从 2026-08-30 起一直是 course-design/desktop/landLightnessRise。八个机位里只有第一个被检过，metrics.json 在红的时候根本不生成。2026-09-02 改成跨机位累积后一次报完，才露出这一条。经过与全量数字记在 docs/reference/execution/island-look-contract.md 第十五节。\n\n根因假设（是假设，要人验）：更像是手机机位取景太远，不像是 accent 颜色本身变淡——手机那张图里岛只占画面很小一块，落点被整体缩小了。所以先该问的是「手机上课程岛该占多少画面」，而不是「把 accent 调亮」。把 accent 调亮能让数字过线，但那是照着数字改而不是照着问题改，这个仓库在观感上已经栽过一次（记忆 optimising-one-metric-degenerates）。\n\n没有在本轮修：这需要人眼定手机取景，属于观感决定不是实现细节；而且观感改动会动判官数字，必须和正在跑的行为保持型重构分开举证。守卫要求：修完之后守的应当是「手机上课程落点仍然读得出是落点」，钉 accentArea 硬带即可，但不要把硬带调低来迁就实现。"
     }
   ]
 }

@@ -360,26 +360,45 @@ function ratchetPass(metric: MetricEntry, baseline: number): boolean {
   );
 }
 
-function assertIslandLookRatchet(
+/*
+ * Collect rather than assert, because this ratchet has a permanently failing
+ * first metric and eight shots behind it.
+ *
+ * `course-design/desktop/landLightnessRise` has been under its 2026-08-30 pin
+ * since the scene was rebuilt, which is recorded and accepted in
+ * docs/reference/execution/island-look-contract.md. While the assertion lived
+ * inside this loop, that one known metric ended the whole run: the nineteen
+ * metrics behind it and all seven remaining shots were never compared, and
+ * metrics.json — written after the loop — was never produced at all. A
+ * regression in course-near, world-design or any mobile shot would have
+ * printed the identical error and looked like the same known red.
+ *
+ * A missing baseline or a missing pin is still thrown on the spot. That is a
+ * broken ratchet rather than a moved scene, and it should stop everything.
+ */
+function islandLookRatchetViolations(
   shot: string,
   viewportName: string,
   metrics: readonly MetricEntry[],
-): void {
+): string[] {
   const key = `${shot}/${viewportName}`;
   const baseline = ISLAND_LOOK_RATCHET[key];
   if (!baseline) throw new Error(`Missing island-look ratchet baseline for ${key}`);
 
+  const violations: string[] = [];
   for (const metric of metrics) {
     if (metric.threshold === null) continue;
     const pinned = baseline[metric.metric];
     if (typeof pinned !== "number") {
       throw new Error(`Missing island-look ratchet value for ${key}/${metric.metric}`);
     }
-    expect(
-      ratchetPass(metric, pinned),
-      `${key}/${metric.metric} regressed: observed ${String(metric.value)}, pinned ${pinned}`,
-    ).toBe(true);
+    if (!ratchetPass(metric, pinned)) {
+      violations.push(
+        `${key}/${metric.metric} regressed: observed ${String(metric.value)}, pinned ${pinned}`,
+      );
+    }
   }
+  return violations;
 }
 
 function metricsFor(
@@ -642,6 +661,7 @@ test.describe("J island look judge · fixed-pressure ratchet", () => {
     test.setTimeout(MATRIX_MODE ? 90 * 60_000 : 12 * 180_000);
     mkdirSync(OUTPUT_DIR, { recursive: true });
     const runs: JudgeRun[] = [];
+    const ratchetViolations: string[] = [];
 
     for (const viewport of VIEWPORTS) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
@@ -716,7 +736,7 @@ test.describe("J island look judge · fixed-pressure ratchet", () => {
               pass: pass ? "PASS" : "RED",
             })),
           );
-          assertIslandLookRatchet(shot, viewport.name, metrics);
+          ratchetViolations.push(...islandLookRatchetViolations(shot, viewport.name, metrics));
           if (!deterministic) {
             console.warn(`island look freeze drift: ${shot}/${viewport.name}`);
           }
@@ -736,5 +756,14 @@ test.describe("J island look judge · fixed-pressure ratchet", () => {
       runs,
     };
     writeFileSync(join(OUTPUT_DIR, "metrics.json"), `${JSON.stringify(output, null, 2)}\n`);
+
+    // After the report is on disk, not before: the numbers are the reason to
+    // run this, and they are most wanted on the runs that go red.
+    expect(
+      ratchetViolations,
+      `island-look ratchet moved on ${ratchetViolations.length} metric(s):\n${ratchetViolations
+        .map((violation) => `  - ${violation}`)
+        .join("\n")}`,
+    ).toEqual([]);
   });
 });
