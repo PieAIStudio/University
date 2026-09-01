@@ -95,9 +95,8 @@ describe("hand-picked grid palettes", () => {
 
   it("keeps course terrace emphasis continuous instead of splitting the meadow", () => {
     const ramp = GRID_TERRAIN_VALUE_RAMP.course;
-    expect(ramp[0]).toBeGreaterThan(0.7);
-    expect(ramp[3] / ramp[0]).toBeLessThan(1.5);
-    expect(ramp.every((value, index) => index === 0 || value > ramp[index - 1]!)).toBe(true);
+    expect(new Set(ramp).size).toBe(1);
+    expect(ramp[0]).toBe(1);
   });
 
   it("keeps grid foliage inside the green family", () => {

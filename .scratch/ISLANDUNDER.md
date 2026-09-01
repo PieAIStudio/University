@@ -768,3 +768,109 @@ baseline 与 final 都是 `course-design`、同一 fixed camera、同一 1440×9
 - `pnpm verify`：前置全仓 test（core 49/421、backend 2/6、grading 4/27、ui 65/382、local 45/428、world 49/330、university 49/217）、build、generated-format、shelf、content revisions、contrast/raw-colours 均通过；最后在既有 export freshness 红项退出：`turing-pact — re-export failed: Study has no active courses: turing-pact`。本轮不触碰 brief 禁止的 `apps/local`。
 
 本次 surface 强调课程地表，是因为三处颜色都由课程/共享 foliage 的同一 surface 规则驱动，用户实际看到的是一整片可读的学习岛；不拆另一套是为了让两种 mode、不同机位和 world/课程继续共享同一个生成管线，避免用分支掩盖颜色规则的问题。
+
+## Island 6 第六轮：同一族绿色的受光面与背光面（2026-09-01）
+
+### 结论先说
+
+第六轮把明暗杠杆移回了真实光照和地形坡度：课程地表四级 albedo ramp 固定为
+`[1, 1, 1, 1]`，同一族绿不再靠换色阶制造块面；`gridSurfaceSlopeFor()` 用实际相邻
+`topY` 梯度，加沿共享太阳方向的低频 relief，给课程 land 的六边棱柱整体倾斜并更新顶面法线。
+路线、bed、detached 和 world 都继续拿平面，不会偷偷改变另一种投影。
+
+我先试过两条不合并的分支：把共享 key 推到 9.0，数字会好看但画面会出现死亮的黄绿色面；
+只抬顶不抬底，棱柱上沿会被拉斜并制造连续土壁条带。两条都舍弃。当前截图里受光/背光
+是连续的绿地明暗面，棕色仍只来自既有土壁和阴影，没有新增黄/褐地表色块，也没有新增
+按 cell 造 hue 的表。
+
+### 交付截图
+
+同一 course / fixed camera 重拍了 4 个 shot × 桌面/手机 × `post=off/on`，共 16 张，
+都等画布像素 hash 稳定后再保存：
+
+- [course-design desktop · post-off](./islandunder/final6/post-off/course-design-desktop.png)
+- [course-design desktop · post-on](./islandunder/final6/post-on/course-design-desktop.png)
+- [course-near desktop · post-off](./islandunder/final6/post-off/course-near-desktop.png)
+- [course-near desktop · post-on](./islandunder/final6/post-on/course-near-desktop.png)
+- [course-far desktop · post-off](./islandunder/final6/post-off/course-far-desktop.png)
+- [course-far desktop · post-on](./islandunder/final6/post-on/course-far-desktop.png)
+- [world-design desktop · post-off](./islandunder/final6/post-off/world-design-desktop.png)
+- [world-design desktop · post-on](./islandunder/final6/post-on/world-design-desktop.png)
+- [16 组原始 metrics](./islandunder/final6/metrics.json)
+
+### 8 个固定机位对 contract 硬带逐条结果（`post=off`）
+
+单元格格式为「当前值 + 结果」；`🔴` 是当前 contract 未过，不能把它解释成测试通过。
+
+#### 明度与色相
+
+| 指标 | 带 | CD-D | CN-D | CF-D | WD-D | CD-M | CN-M | CF-M | WD-M |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| sceneLinearRange | ≥4 | 13.4138 ✅ | 10.8980 ✅ | 12.8269 ✅ | 4.8122 ✅ | 5.0000 ✅ | 11.3725 ✅ | 12.0577 ✅ | 7.1594 ✅ |
+| landMedianLightness | 50–70 | 60.9055 ✅ | 61.7192 ✅ | 63.3261 ✅ | 55.6739 ✅ | 51.3374 ✅ | 61.7192 ✅ | 62.2892 ✅ | 55.5412 ✅ |
+| landP95Lightness | ≥85 | 80.1963 🔴 | 78.9399 🔴 | 80.8968 🔴 | 94.8376 ✅ | 77.4898 🔴 | 78.4466 🔴 | 80.5593 🔴 | 95.1943 ✅ |
+| landLightnessRise | ≥15 | 19.2908 ✅ | 17.2206 ✅ | 17.5707 ✅ | 39.1637 ✅ | 26.1524 ✅ | 16.7274 ✅ | 18.2700 ✅ | 39.6531 ✅ |
+| backgroundLightnessSpread | ≥40 | 22.4622 🔴 | 33.1112 🔴 | 17.2032 🔴 | 69.8701 ✅ | 27.0118 🔴 | 47.6743 ✅ | 17.1953 🔴 | 81.0077 ✅ |
+| grassLightnessSpread | ≥45 | 26.3171 🔴 | 42.7705 🔴 | 38.7361 🔴 | 57.1266 ✅ | 19.2870 🔴 | 9.9159 🔴 | 36.6701 🔴 | 56.0917 ✅ |
+| grassLightnessP95 | ≥85 | 81.0979 🔴 | 70.8789 🔴 | 80.9064 🔴 | 96.3271 ✅ | 79.6635 🔴 | 70.6367 🔴 | 80.5593 🔴 | 96.0750 ✅ |
+| lightnessP2 | ≤25 | 24.8019 ✅ | 18.1635 ✅ | 24.9203 ✅ | 16.1373 ✅ | 30.8761 🔴 | 25.1815 🔴 | 25.4757 🔴 | 15.5081 ✅ |
+| lightnessP98 | ≥90 | 84.0965 🔴 | 83.4506 🔴 | 83.3423 🔴 | 97.7895 ✅ | 83.8095 🔴 | 84.4141 🔴 | 82.3534 🔴 | 98.7695 ✅ |
+| lightnessStdDev | ≥18 | 16.3650 🔴 | 15.8306 🔴 | 17.5051 🔴 | 22.0416 ✅ | 12.6685 🔴 | 13.2554 🔴 | 17.5174 🔴 | 26.9893 ✅ |
+| grassHueCount | ≥3 | 7 ✅ | 7 ✅ | 8 ✅ | 9 ✅ | 6 ✅ | 5 ✅ | 7 ✅ | 9 ✅ |
+| grassHueSpread | ≥35° | 119.4828 ✅ | 95.7000 ✅ | 119.7458 ✅ | 120.0000 ✅ | 119.1368 ✅ | 78.7500 ✅ | 93.7500 ✅ | 120.0000 ✅ |
+
+缩写：`CD` course-design，`CN` course-near，`CF` course-far，`WD` world-design；`D` desktop，
+`M` mobile。最重要的五条已经全部从第五轮的平坦状态向真实坡度方向恢复，8 组中的
+`landLightnessRise` 已全过；但 P95/P98/stddev/grass spread 仍有红项。强行让它们全过
+需要回到黄/褐 albedo ramp、过强 key 或局部死白，这与 brief 的视觉目标冲突，所以保留红项
+并写清原因，不用数字牺牲画面。
+
+#### 其它 contract 字段
+
+| 指标 | 带 | CD-D | CN-D | CF-D | WD-D | CD-M | CN-M | CF-M | WD-M |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| accentArea | 0.015–0.15 | 0.0160 ✅ | 0.0211 ✅ | 0.0239 ✅ | 0.0249 ✅ | 0.0078 🔴 | 0.0261 ✅ | 0.0226 ✅ | 0.0309 ✅ |
+| keyToFillRatio | ≥3 | 6.6452 ✅ | 6.6452 ✅ | 6.6452 ✅ | 6.6452 ✅ | 6.6452 ✅ | 6.6452 ✅ | 6.6452 ✅ | 6.6452 ✅ |
+| domLabelContrastMin | ≥4.5 | 9.2578 ✅ | 13.0236 ✅ | 9.2899 ✅ | 10.5701 ✅ | 9.0700 ✅ | 10.5044 ✅ | 10.2372 ✅ | 11.9260 ✅ |
+| propsPerLessonNode | ≥7（course） | 8 ✅ | 8 ✅ | 8 ✅ | — | 8 ✅ | 8 ✅ | 8 ✅ | — |
+| rimPropShare | ≥0.2（course） | 0.314 ✅ | 0.314 ✅ | 0.314 ✅ | — | 0.314 ✅ | 0.314 ✅ | 0.314 ✅ | — |
+| landCoverage | ≥0.34（course） | 0.5465 ✅ | 0.9865 ✅ | 0.9109 ✅ | 已知 0.1217，非本轮 | 0.4220 ✅ | 0.9957 ✅ | 0.9496 ✅ | 已知 0.1386，非本轮 |
+| nodeOcclusionShare | ≤0.05（course） | 0 ✅ | 0 ✅ | 0 ✅ | — | 0 ✅ | 0 ✅ | 0 ✅ | — |
+| worldPropsPerIsland | ≤8（world） | — | — | — | 0 ✅ | — | — | — | 0 ✅ |
+
+### 矩阵复核
+
+用真实浏览器重新跑了 3 个 seed（`foundations-before-zero`、`foundations-terrain`、
+`identity-and-accounts`）× 6/12/24/41 课 × 5 种路线（arc、horseshoe、loop-around-hill、
+switchback、serpentine）× course-design/course-near/world-design，共 **180/180** 张，
+0 个 page error；原始结果在 [matrix-final6/metrics.json](./islandunder/matrix-final6/metrics.json)。
+矩阵范围如下，证明坡度规则没有只对一个 41 课压力样本生效：
+
+| shot | landLightnessRise | grassLightnessSpread | landP95Lightness | lightnessP98 | lightnessStdDev | hue count | hue spread |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| course-design（60） | 16.3169–32.8379 | 18.0439–80.7680 | 71.4791–91.1537 | 83.8679–91.4032 | 15.4536–20.0505 | 4–9 | 60.6744–120 |
+| course-near（60） | 6.7582–34.2156 | 1.5291–82.0054 | 68.9683–93.0042 | 74.6290–99.0984 | 9.5760–27.8678 | 3–8 | 32.7170–119.0287 |
+| world-design（60） | 36.7522–39.1637 | 57.1266–62.5884 | 92.5070–94.8376 | 97.7895–98.0341 | 22.0367–22.0478 | 9 | 120 |
+
+矩阵中的近景低值是相机只看见同一坡面/同一高度带的结果，不用加一层人工色斑去掩盖；
+它是下一轮是否调整尺子或近景构图的证据。
+
+### 代码与验证
+
+- 改动：`packages/world/src/grid/grid-elevation.ts`、`packages/world/src/grid/HexField.tsx`、
+  `packages/world/src/grid/grid-palette.ts`；新增/更新 `grid-elevation.test.ts`、
+  `grid-palette.test.ts`。没有改 `look-contract.ts`、`ISLAND_LOOK_RATCHET`、
+  `e2e/J.island-look.spec.ts`、`packages/ui/`、`e2e/harness/` 或 `apps/`。
+- `pnpm --filter @pieai/university-world test`：**50 files / 332 tests PASS**。
+- world lint、typecheck、format check：**PASS**。
+- `pnpm e2e:island-look`：保留原 ratchet 后真实在第一机位停止，错误为
+  `course-design/desktop/landLightnessRise: observed 19.2908, pinned 24.7634`；没有改测试让它绿。
+- 手工正式截图：16/16 ready，reload 前后 hash 稳定，0 个 page error。
+- `pnpm verify`：typecheck、lint、format、全量测试、边界、构建、shelf、content revisions、
+  module checks、canvas/review-card/experience checks 均通过；最后在
+  `check-export-freshness` 失败：`turing-pact — re-export failed: Study has no active courses: turing-pact`。
+  修复提示会改 `apps/local`，本任务明确禁止碰 `apps/`，所以保留真实失败，不伪报通过。
+
+### 收尾
+
+提交前保护路径审计无 diff；最终 commit hash 见 git log。

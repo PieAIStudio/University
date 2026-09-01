@@ -30,12 +30,13 @@ export const GRID_SHARED_SOIL = {
  * Course and world use different ranges because they are two projections of
  * the same grid at different physical scales. The relation stays shared and
  * deterministic; only the camera's readable size changes the range. The course
- * range is deliberately narrow: the real height steps and their shadows carry
- * the volume, while albedo only supplies a quiet value cue. A wide ramp turns
- * one meadow into unrelated yellow and brown slabs.
+ * range is deliberately neutral in the course projection: the shared top
+ * swatch stays one green family, while the terrain slope and the real key/fill
+ * lights carry the value cue. A wide ramp turns one meadow into unrelated
+ * yellow and brown slabs.
  */
 export const GRID_TERRAIN_VALUE_RAMP = {
-  course: [0.78, 0.88, 1.0, 1.12],
+  course: [1, 1, 1, 1],
   world: [0.8, 1.2, 3.2, 4.8],
 } as const;
 

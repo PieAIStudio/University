@@ -1,8 +1,27 @@
 import { hash } from "../island/random.js";
-import { hexKey, hexNeighbors, type HexCoord } from "./hex.js";
+import { worldSunDirection } from "../sky/sun.js";
+import { hexKey, hexNeighbors, hexToWorld, type HexCoord } from "./hex.js";
 
 export const GRID_ELEVATION_STEP = 0.78;
 export const GRID_ELEVATION_LEVELS = 4;
+
+/**
+ * Course tops are still hexes, but their shared top plane can carry a gentle
+ * terrain slope. This is a world-space gradient (dy / horizontal unit); the
+ * renderer converts it to the local scale of each prism before applying it to
+ * the top vertices and their normals.
+ */
+export interface GridSurfaceSlope {
+  readonly x: number;
+  readonly z: number;
+}
+
+export const GRID_SURFACE_SLOPE_MAX = 0.52;
+const GRID_SURFACE_SLOPE_FROM_HEIGHT = 0.38;
+const GRID_SURFACE_SLOPE_FROM_RELIEF = 0.62;
+const GRID_SURFACE_LIGHT_SLOPE = 0.46;
+const GRID_SURFACE_CROSS_SLOPE = 0.14;
+const GRID_SURFACE_EDGE_SLOPE = 0.12;
 
 export interface ElevationCellInput {
   readonly coord: HexCoord;
@@ -17,6 +36,111 @@ export interface GridElevation {
 
 function clampHeight(value: number): number {
   return Math.max(1, Math.min(GRID_ELEVATION_LEVELS, Math.round(value)));
+}
+
+interface SurfaceCell {
+  readonly coord: HexCoord;
+  readonly topY: number;
+}
+
+function clampSlope(x: number, z: number): GridSurfaceSlope {
+  const length = Math.hypot(x, z);
+  if (length <= GRID_SURFACE_SLOPE_MAX || length <= Number.EPSILON) return { x, z };
+  const scale = GRID_SURFACE_SLOPE_MAX / length;
+  return { x: x * scale, z: z * scale };
+}
+
+/**
+ * Derive one coherent, low-frequency slope field from the same cells that own
+ * elevation. The neighbour term follows real terrace changes; the relief term
+ * keeps the interiors from becoming a collection of perfectly horizontal
+ * plates. It is deliberately smooth and value-only: no colour or hue is
+ * synthesised here, and no per-cell random field is introduced.
+ */
+export function gridSurfaceSlopeFor(
+  cell: SurfaceCell,
+  cells: readonly SurfaceCell[],
+  seed: string,
+): GridSurfaceSlope {
+  const origin = hexToWorld(cell.coord, 1);
+  const heights = new Map(cells.map((candidate) => [hexKey(candidate.coord), candidate.topY]));
+  let heightGradientX = 0;
+  let heightGradientZ = 0;
+  let heightGradientWeight = 0;
+  for (const neighbour of hexNeighbors(cell.coord)) {
+    const neighbourY = heights.get(hexKey(neighbour));
+    if (neighbourY === undefined) continue;
+    const point = hexToWorld(neighbour, 1);
+    const dx = point.x - origin.x;
+    const dz = point.z - origin.z;
+    const distanceSquared = dx * dx + dz * dz;
+    if (distanceSquared <= Number.EPSILON) continue;
+    const heightDelta = neighbourY - cell.topY;
+    heightGradientX += (heightDelta * dx) / distanceSquared;
+    heightGradientZ += (heightDelta * dz) / distanceSquared;
+    heightGradientWeight += 1;
+  }
+  if (heightGradientWeight > 0) {
+    heightGradientX /= heightGradientWeight;
+    heightGradientZ /= heightGradientWeight;
+  }
+
+  const bounds = cells.reduce(
+    (result, candidate) => {
+      const point = hexToWorld(candidate.coord, 1);
+      return {
+        minX: Math.min(result.minX, point.x),
+        maxX: Math.max(result.maxX, point.x),
+        minZ: Math.min(result.minZ, point.z),
+        maxZ: Math.max(result.maxZ, point.z),
+      };
+    },
+    { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity },
+  );
+  const halfX = Math.max((bounds.maxX - bounds.minX) * 0.5, 1);
+  const halfZ = Math.max((bounds.maxZ - bounds.minZ) * 0.5, 1);
+  const centreX = (bounds.minX + bounds.maxX) * 0.5;
+  const centreZ = (bounds.minZ + bounds.maxZ) * 0.5;
+  const radialX = (origin.x - centreX) / halfX;
+  const radialZ = (origin.z - centreZ) / halfZ;
+  const radialLength = Math.hypot(radialX, radialZ);
+  const normalizedRadialX = radialLength > Number.EPSILON ? radialX / radialLength : 0;
+  const normalizedRadialZ = radialLength > Number.EPSILON ? radialZ / radialLength : 0;
+  const edgeWeight = Math.min(1, Math.max(0, (radialLength - 0.08) / 0.82));
+
+  const [sunX, , sunZ] = worldSunDirection();
+  const sunHorizontalLength = Math.hypot(sunX, sunZ);
+  const lightAxisX = sunX / Math.max(sunHorizontalLength, Number.EPSILON);
+  const lightAxisZ = sunZ / Math.max(sunHorizontalLength, Number.EPSILON);
+  const crossAxisX = -lightAxisZ;
+  const crossAxisZ = lightAxisX;
+
+  // A broad, sun-facing wave gives the field a real lit shoulder and a real
+  // back shoulder. It changes normals, not albedo: the same green swatch is
+  // still sent to every course land cell. The cross wave and edge shoulder
+  // keep the land from reading as one mathematically perfect tilted board.
+  // Both waves are low-frequency and phase-only seeded, so neighbouring cells
+  // stay coherent and no per-cell colour/noise field can return.
+  const phase = hash(`${seed}/surface-relief-phase`) * Math.PI * 2;
+  const span = Math.max(halfX, halfZ, 1);
+  const fromCentreX = origin.x - centreX;
+  const fromCentreZ = origin.z - centreZ;
+  const lightCoordinate = (fromCentreX * lightAxisX + fromCentreZ * lightAxisZ) / span;
+  const crossCoordinate = (fromCentreX * crossAxisX + fromCentreZ * crossAxisZ) / span;
+  const lightWave = Math.cos(lightCoordinate * Math.PI * 1.35 + phase);
+  const crossWave = Math.sin(crossCoordinate * Math.PI * 1.1 + phase * 0.63);
+  const reliefX =
+    -lightAxisX * GRID_SURFACE_LIGHT_SLOPE * lightWave +
+    crossAxisX * GRID_SURFACE_CROSS_SLOPE * crossWave -
+    normalizedRadialX * GRID_SURFACE_EDGE_SLOPE * edgeWeight;
+  const reliefZ =
+    -lightAxisZ * GRID_SURFACE_LIGHT_SLOPE * lightWave +
+    crossAxisZ * GRID_SURFACE_CROSS_SLOPE * crossWave -
+    normalizedRadialZ * GRID_SURFACE_EDGE_SLOPE * edgeWeight;
+  return clampSlope(
+    heightGradientX * GRID_SURFACE_SLOPE_FROM_HEIGHT + reliefX * GRID_SURFACE_SLOPE_FROM_RELIEF,
+    heightGradientZ * GRID_SURFACE_SLOPE_FROM_HEIGHT + reliefZ * GRID_SURFACE_SLOPE_FROM_RELIEF,
+  );
 }
 
 export function gridElevationsFor(

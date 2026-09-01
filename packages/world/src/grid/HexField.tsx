@@ -6,6 +6,7 @@ import { hash } from "../island/random.js";
 import { islandLookFrozen } from "../island/island-surface-style.js";
 import type { GridCell, HexMap } from "./course-grid.js";
 import { hexToWorld } from "./hex.js";
+import { gridSurfaceSlopeFor } from "./grid-elevation.js";
 import { gridTerrainValueScale } from "./grid-palette.js";
 
 interface HexFieldProps {
@@ -88,6 +89,7 @@ export function mapMaterial(
   dimmed: boolean,
   layer: HexLayer,
 ): THREE.MeshStandardMaterial {
+  const usesCourseSurfaceSlope = map.projection === "course" && layer === "land";
   const material = new THREE.MeshStandardMaterial({
     color: 0xffffff,
     vertexColors: true,
@@ -112,8 +114,21 @@ export function mapMaterial(
     );
     shader.vertexShader = shader.vertexShader.replace(
       "#include <begin_vertex>",
-      "#include <begin_vertex>\nvGridFace = gridFace;\nvGridDepth = position.y;",
+      `#include <begin_vertex>
+vGridFace = gridFace;
+vGridDepth = position.y;
+${usesCourseSurfaceSlope ? "transformed.y += dot(transformed.xz, gridSlope);" : ""}`,
     );
+    if (usesCourseSurfaceSlope) {
+      shader.vertexShader = shader.vertexShader.replace(
+        "#include <common>",
+        "#include <common>\nattribute vec2 gridSlope;",
+      );
+      shader.vertexShader = shader.vertexShader.replace(
+        "#include <beginnormal_vertex>",
+        "#include <beginnormal_vertex>\nif (gridFace < 0.5) objectNormal = normalize(vec3(-gridSlope.x, 1.0, -gridSlope.y));",
+      );
+    }
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <common>",
       "#include <common>\nvarying float vGridFace;\nvarying float vGridDepth;\nuniform vec3 gridCliff;\nuniform vec3 gridShadow;\nuniform float gridDim;\nuniform float gridSoilTopValue;\nuniform float gridSoilBottomValue;\nuniform float gridSoilShadowValue;",
@@ -131,8 +146,26 @@ export function mapMaterial(
     );
   };
   material.customProgramCacheKey = () =>
-    `hex-field-${map.palette.cliff}-${map.projection}-${layer}-${dimmed ? "dim" : "full"}`;
+    `hex-field-${map.palette.cliff}-${map.projection}-${layer}-${usesCourseSurfaceSlope ? "slope" : "flat"}-${dimmed ? "dim" : "full"}`;
   return material;
+}
+
+function setSurfaceSlopeAttribute(
+  geometry: THREE.BufferGeometry,
+  map: HexMap,
+  cells: readonly GridCell[],
+  enabled: boolean,
+): void {
+  const values = new Float32Array(Math.max(1, cells.length) * 2);
+  if (enabled) {
+    cells.forEach((cell, index) => {
+      const slope = gridSurfaceSlopeFor(cell, map.cells, map.seed);
+      const height = Math.max(cell.topY, 0.01);
+      values[index * 2] = (slope.x * map.hexSize) / height;
+      values[index * 2 + 1] = (slope.z * map.hexSize) / height;
+    });
+  }
+  geometry.setAttribute("gridSlope", new THREE.InstancedBufferAttribute(values, 2));
 }
 
 export function cellTopColour(map: HexMap, cell: GridCell): THREE.Color {
@@ -205,6 +238,7 @@ function HexBedField({
   useLayoutEffect(() => {
     const target = mesh.current;
     if (!target) return;
+    setSurfaceSlopeAttribute(geometry, map, cells, false);
     cells.forEach((cell, index) => {
       target.setMatrixAt(index, bedMatrix(cell, map, matrix));
       const colour = new THREE.Color(cell.kind === "route" ? map.palette.road : map.palette.top);
@@ -216,7 +250,7 @@ function HexBedField({
     target.instanceMatrix.needsUpdate = true;
     if (target.instanceColor) target.instanceColor.needsUpdate = true;
     target.computeBoundingSphere();
-  }, [cells, map, matrix, mesh]);
+  }, [cells, geometry, map, matrix, mesh]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material.dispose(), [material]);
@@ -265,6 +299,7 @@ function HexLayerField({
   useLayoutEffect(() => {
     const target = mesh.current;
     if (!target) return;
+    setSurfaceSlopeAttribute(geometry, map, cells, layer === "land" && map.projection === "course");
     cells.forEach((cell, index) => {
       target.setMatrixAt(index, cellMatrix(cell, map, matrix));
       target.setColorAt(index, cellTopColour(map, cell));
@@ -272,7 +307,7 @@ function HexLayerField({
     target.instanceMatrix.needsUpdate = true;
     if (target.instanceColor) target.instanceColor.needsUpdate = true;
     target.computeBoundingSphere();
-  }, [cells, map, matrix, mesh]);
+  }, [cells, geometry, layer, map, matrix, mesh]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material.dispose(), [material]);
