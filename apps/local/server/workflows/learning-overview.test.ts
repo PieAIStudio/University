@@ -4,7 +4,15 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { writeCourse } from "../content/repository.js";
+import {
+  updateCourseStatus,
+  updateUnitStatus,
+  writeCourse,
+  writeLessonRevision,
+  writeUnit,
+} from "../content/repository.js";
+import { isPublishableStatus } from "../content/course-status.js";
+import { lessonContentKey } from "../learning/types.js";
 import { SqliteLearningStore } from "../learning/sqlite-learning-store.js";
 import { getCoursePaths, getStudyPaths } from "../studies/paths.js";
 import { createStudy, setStudyStatus } from "../studies/repository.js";
@@ -30,6 +38,107 @@ function openSessionStore(
 }
 
 describe("learning overview", () => {
+  it("maps every course status to the publishable boundary", () => {
+    expect(isPublishableStatus("draft")).toBe(false);
+    expect(isPublishableStatus("active")).toBe(true);
+    expect(isPublishableStatus("stale")).toBe(true);
+    expect(isPublishableStatus("retired")).toBe(false);
+  });
+
+  it("includes a stale course in the authoring shelf with learner facts", () => {
+    const { studiesRoot } = setup();
+    const courseId = "stale-course";
+    const unitId = "stale-unit";
+    const lessonId = "stale-lesson";
+    const createdAt = "2026-08-17T00:00:00.000Z";
+    const progressAt = "2026-08-17T01:00:00.000Z";
+    createStudy(studiesRoot, { id: "sample", title: "Sample" });
+
+    writeCourse(studiesRoot, "sample", {
+      schemaVersion: 1,
+      id: courseId,
+      title: "Stale course",
+      description: "A course being rewritten without disappearing from the shelf.",
+      audience: "Learner",
+      objectives: ["Keep learning facts while content is rewritten"],
+      unitIds: [unitId],
+      status: "draft",
+      createdAt,
+      updatedAt: createdAt,
+    });
+    writeUnit(studiesRoot, "sample", courseId, {
+      schemaVersion: 1,
+      id: unitId,
+      title: "Stale unit",
+      objective: "Continue a course while its source is being rewritten.",
+      prerequisiteUnitIds: [],
+      lessonIds: [lessonId],
+      status: "draft",
+    });
+    writeLessonRevision(studiesRoot, "sample", {
+      manifest: {
+        schemaVersion: 1,
+        id: lessonId,
+        title: "Stale lesson",
+        courseId,
+        unitId,
+        exerciseIds: [],
+        cardIds: [],
+        contentRevision: 1,
+        status: "active",
+        evidence: [
+          {
+            kind: "fact",
+            sourceUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+            sourceTitle: "JavaScript | MDN",
+            sourceAuthority: "mdn",
+          },
+        ],
+        createdAt,
+        updatedAt: createdAt,
+      },
+      content: "# Stale lesson\n\nThe lesson remains available while its course is rewritten.\n",
+    });
+    updateUnitStatus(studiesRoot, "sample", courseId, unitId, "active");
+    updateCourseStatus(studiesRoot, "sample", courseId, "active");
+    updateCourseStatus(studiesRoot, "sample", courseId, "stale");
+
+    const store = new SqliteLearningStore(getStudyPaths(studiesRoot, "sample").learner.database);
+    const lessonKey = lessonContentKey({ courseId, unitId, lessonId });
+    store.recordLessonProgress({
+      lessonKey,
+      contentRevision: 1,
+      status: "in-progress",
+      progress: 0.5,
+      occurredAt: new Date(progressAt),
+    });
+
+    try {
+      const overview = buildLearningOverview({
+        studiesRoot,
+        getStore: (studyId) => (studyId === "sample" ? store : null),
+      });
+
+      expect(overview.issues).toEqual([]);
+      expect(overview.nextLesson).toMatchObject({
+        studyId: "sample",
+        courseId,
+        courseTitle: "Stale course",
+        unitId,
+        lessonId,
+        progress: {
+          contentRevision: 1,
+          status: "in-progress",
+          progress: 0.5,
+          updatedAt: progressAt,
+          readConfirmed: false,
+        },
+      });
+    } finally {
+      store.close();
+    }
+  });
+
   it("reports an archived authoring focus and falls back to the active shelf", () => {
     const { studiesRoot } = setup();
     createStudy(studiesRoot, { id: "archived", title: "Archived" });

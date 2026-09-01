@@ -434,9 +434,10 @@
       "summary": "选中靠左的岛时选课卡滑进左侧导航栏底下，课名和正文开头被切掉",
       "severity": "blocking",
       "note": "目录恢复 31 门课之前，岛都挤在中间，卡片从没往左走那么远，所以这个边界一直没露出来。截图证据：课名开头缺失、SupaLuv 显示成 upaLuv、「学完这门课，你能：」显示成「完这门课，你能：」。由 e2e F「靠右翻边」抓到——翻边机制本来就有，是边界算错了。",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "claude",
-      "foundOn": "2026-09-01"
+      "foundOn": "2026-09-01",
+      "guardedBy": "packages/world/src/labels/labels.test.ts::moves a far-left overlay card beyond the fixed navigation rail"
     },
     {
       "id": "65423e400493",
@@ -447,9 +448,10 @@
       "summary": "作者端学习者货架只收 active，28 门改写中的课在作者端整个消失，两端不一致",
       "severity": "blocking",
       "note": "learning-overview.ts 只 push status===active。交付端已改成 active+stale 并带 isBeingRewritten，作者端没跟上。违反 AGENTS.md「学习者表面在两个模式里是同一个」——课程状态不属于允许分歧的三个端口边界。由 e2e G 逐项比对抓到，交付端多出 112 项。",
-      "state": "open",
+      "state": "fixed",
       "foundBy": "claude",
-      "foundOn": "2026-09-01"
+      "foundOn": "2026-09-01",
+      "guardedBy": "apps/local/server/workflows/learning-overview.test.ts::maps every course status to the publishable boundary / apps/local/server/workflows/learning-overview.test.ts::includes a stale course in the authoring shelf with learner facts"
     },
     {
       "id": "cd7e78792e32",
