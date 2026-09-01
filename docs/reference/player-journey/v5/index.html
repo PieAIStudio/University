@@ -1259,6 +1259,12 @@ pre b{color:var(--go);font-weight:600}
     顾客数据里出现 <code>stale</code> 或 <code>active</code>，就是发布边界漏了，按 DTO 闸门处理。
   </p>
   <p>
+    四个状态各司其职，不用再发明新词：<code>draft</code> 从未发布过，不出货；
+    <code>active</code> 是当前标准，出货且不带标记；<code>stale</code> 是旧标准，
+    出货并带「改写中」标记；<code>retired</code> 是<b>真的下架</b>——
+    想让一门课从顾客眼前消失，就把它标成 retired，而不是让它悄悄从导出里掉出去。
+  </p>
+  <p>
     目录本身也有闸门：一次导出如果拿走了顾客已经能看到的课，构建直接失败并逐门点名，
     见 <code>apps/university/scripts/check-published-catalog.mjs</code>。
     下架是一个决定，必须写下来，不能是重新导出的副作用。
