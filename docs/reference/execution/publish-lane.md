@@ -239,3 +239,29 @@ cards、exercise fingerprint、evidence locator 和静态资源可复现；来�
 5 studies、53 courses、579 lessons、`evidence:none`；对两个版本目录执行
 `diff -rq` 没有差异，主工作树的 `git status` 也保持 clean。独立的
 `sha256sum -c SHA256SUMS` 全部通过。
+
+## 一个必须每次亲手确认的分歧：evidence mode（2026-09-02）
+
+仓库里的 `vercel.json` 和 Vercel 项目设置里存的 buildCommand **不是同一条**：
+
+| 来源 | evidence |
+| --- | --- |
+| 仓库 `vercel.json` | `--evidence baked` |
+| `.vercel/project.json` 里的项目设置快照 | `--evidence none` |
+
+其余参数逐字相同，只差这一个开关。而这个开关决定的是**学习者能不能看到课文
+引用的那段真实代码**：`baked` 把源码片段烤进交付包（0.2.6 是 3145 段、1.98 MB），
+`none` 只发定位符——引用还在，代码没有了。
+
+**这正是这个仓库反复栽的那个形状**：两条路都能构建成功、都退出 0，产物却不是
+同一个产品，而且没有任何闸门会因此变红。谁要是哪天走了项目设置那条路，线上就会
+悄悄变成「有出处、没证据」的版本。
+
+**所以发布时不要依赖任何一侧的默认值**，按 §4.2b 显式跑本地封存命令，
+并且**发布后验产物而不是退出码**：
+
+```bash
+node -e "const r=require('./.artifacts/delivery/<版本>/release.json'); console.log(r.evidence)"
+```
+
+`mode` 必须是 `baked`，`snippets` 必须和 `anchors` 相等。对不上就别 promote。
