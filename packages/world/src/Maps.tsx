@@ -134,7 +134,9 @@ export const COURSE_SKY_STOPS: SkyStops = {
   zenith: 0xc98780,
   mid: 0xe4ebf2,
   horizon: 0xbc957d,
-  nadir: 0x4e3b7e,
+  // Keep the lower arc airy and warm-lavender. The previous deep violet made
+  // the island look like it was floating over a dirty band of haze.
+  nadir: 0xc0b8e5,
 };
 
 /**

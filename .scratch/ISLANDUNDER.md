@@ -649,3 +649,122 @@ baseline 与 final 都是 `course-design`、同一 fixed camera、同一 1440×9
 修复提示是让 `apps/local` 对 `turing-pact` 做 recovery export；本任务明确禁止改 `apps/local/studies/`，所以没有越界修它，也没有把失败写成通过。
 
 这轮的交付判断：视觉生成规则不再继续调；已有成果已保住并提交，world 判官已能真正看到实际地形，8 个固定镜头的完整数值、每一个合约 / ratchet 红项、pre-merge 证据和四张同镜头截图均已留档。
+
+## Island 5 第五轮：只收拾三处颜色（2026-09-01）
+
+本轮严格按 brief 只动三类颜色：课程地表的固有色坡度、课程天空 nadir、共享自然道具 foliage 端点。云体、底面/土层、瀑布、判官 readiness 与两处既有修复均未回退；没有修改 `look-contract.ts`、`ISLAND_LOOK_RATCHET`、`e2e/J.island-look.spec.ts`、harness、`packages/ui` 或 `apps/local`。
+
+### 三处颜色具体改动
+
+- `packages/world/src/grid/grid-palette.ts:38`：`GRID_TERRAIN_VALUE_RAMP.course` 从 `[0.21, 0.5, 2.87, 4.4]` 收窄为 `[0.78, 0.88, 1.0, 1.12]`。地表不再由固有色制造两块黄/褐硬边；四级真实 terrace、高度、阴影和底面仍负责体积。
+- `packages/world/src/Maps.tsx:139`：`COURSE_SKY_STOPS.nadir` 从 `0x4e3b7e` 恢复为 `0xc0b8e5`，去掉天空底部的深紫灰压带；其余 sky stops 不动。
+- `packages/world/src/grid/grid-palette.ts:49`：`GRID_PROP_FOLIAGE_COLOURS` 的青蓝端点从 `0x4fa68b, 0x35a58b` 换为 `0x5d9147, 0x3c713d`；`BatchedAssetField` 仍走同一共享 palette，课程树/草/叶回到绿域，world 也没有另拆一份。
+- 回归断言：`packages/world/src/grid/grid-palette.test.ts` 锁住课程坡度单调且总倍率 `<1.5`，并锁住 foliage 色相不进入青蓝区；`packages/world/src/sky/sky.test.ts` 锁住课程 nadir。
+
+### 视觉结论
+
+四张 final5 对照图亲眼复核：final 的地表是连续黄绿草地，只剩轻微值变化，台阶/路牌/底面/瀑布仍有体积；天空底部是轻薄的暖紫灰渐变；树木不再青蓝。设计机位中 3D 云体、瀑布和两处判官修复均保留。near / far / world 机位也没有看到青蓝 foliage 或新的硬边色块。
+
+### 8 组完整指标
+
+正式 runner 的指标 contract 与旧 ratchet 分开看：下表是同一 URL、同一 viewport、同一 `metricsFor` 口径的无断点补采；`C` 是当前 contract，`R` 是未修改的历史 ratchet pin。INFO 字段保留。每组都 `ready=true`，二次 reload 的像素 hash 一致。
+
+| 镜头 | ready | canvas | sampledPixels | displayDarkPixelShare | first = second pixel hash |
+| --- | --- | --- | ---: | ---: | --- |
+| course-design/desktop | true | 1440×900 | 324000 | 0.081941 | dc57e4b8 = dc57e4b8 |
+| course-near/desktop | true | 1440×900 | 324000 | 0.133194 | 108ab831 = 108ab831 |
+| course-far/desktop | true | 1440×900 | 324000 | 0.100944 | 9850af5d = 9850af5d |
+| world-design/desktop | true | 1440×900 | 324000 | 0.146194 | 51a0732b = 51a0732b |
+| course-design/mobile | true | 390×590 | 230100 | 0.030413 | e80b5d62 = e80b5d62 |
+| course-near/mobile | true | 390×590 | 230100 | 0.088279 | 8bc1d490 = 8bc1d490 |
+| course-far/mobile | true | 390×590 | 230100 | 0.087849 | 43f5677a = 43f5677a |
+| world-design/mobile | true | 390×590 | 230100 | 0.255259 | 6fb69ac3 = 6fb69ac3 |
+
+| 判官字段 | threshold | CD-D | CN-D | CF-D | WD-D | CD-M | CN-M | CF-M | WD-M |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| sceneLinearRange | 4 | 13.397<br><sub>C PASS · R PASS</sub> | 11.592<br><sub>C PASS · R PASS</sub> | 12.731<br><sub>C PASS · R RED</sub> | 4.812<br><sub>C PASS · R PASS</sub> | 2.039<br><sub>C RED · R RED</sub> | 11.294<br><sub>C PASS · R PASS</sub> | 11.537<br><sub>C PASS · R RED</sub> | 7.159<br><sub>C PASS · R PASS</sub> |
+| landMedianLightness | {"min":50,"max":70} | 65.6111<br><sub>C PASS · R PASS</sub> | 71.8339<br><sub>C RED · R RED</sub> | 71.1551<br><sub>C RED · R RED</sub> | 55.6739<br><sub>C PASS · R PASS</sub> | 52.2196<br><sub>C PASS · R PASS</sub> | 71.8442<br><sub>C RED · R RED</sub> | 71.2782<br><sub>C RED · R RED</sub> | 55.5412<br><sub>C PASS · R PASS</sub> |
+| landP95Lightness | 85 | 74.8929<br><sub>C RED · R RED</sub> | 80.8304<br><sub>C RED · R PASS</sub> | 78.6646<br><sub>C RED · R PASS</sub> | 94.8376<br><sub>C PASS · R PASS</sub> | 72.0715<br><sub>C RED · R RED</sub> | 77.8195<br><sub>C RED · R PASS</sub> | 77.5202<br><sub>C RED · R RED</sub> | 95.1943<br><sub>C PASS · R PASS</sub> |
+| landLightnessRise | 15 | 9.2818<br><sub>C RED · R RED</sub> | 8.9965<br><sub>C RED · R RED</sub> | 7.5095<br><sub>C RED · R RED</sub> | 39.1637<br><sub>C PASS · R PASS</sub> | 19.852<br><sub>C PASS · R PASS</sub> | 5.9753<br><sub>C RED · R RED</sub> | 6.242<br><sub>C RED · R RED</sub> | 39.6531<br><sub>C PASS · R PASS</sub> |
+| backgroundLightnessSpread | 40 | 22.4622<br><sub>C RED · R RED</sub> | 32.9819<br><sub>C RED · R PASS</sub> | 17.3459<br><sub>C RED · R RED</sub> | 69.8701<br><sub>C PASS · R PASS</sub> | 27.0118<br><sub>C RED · R RED</sub> | 47.2728<br><sub>C PASS · R PASS</sub> | 17.5295<br><sub>C RED · R RED</sub> | 81.0077<br><sub>C PASS · R PASS</sub> |
+| grassLightnessSpread | 45 | 8.9598<br><sub>C RED · R RED</sub> | 51.3231<br><sub>C PASS · R PASS</sub> | 33.4107<br><sub>C RED · R RED</sub> | 57.1266<br><sub>C PASS · R PASS</sub> | 6.1996<br><sub>C RED · R RED</sub> | 5.4564<br><sub>C RED · R RED</sub> | 28.56<br><sub>C RED · R RED</sub> | 56.0917<br><sub>C PASS · R PASS</sub> |
+| grassLightnessP95 | 85 | 73.902<br><sub>C RED · R RED</sub> | 79.4913<br><sub>C RED · R PASS</sub> | 77.2999<br><sub>C RED · R PASS</sub> | 96.3271<br><sub>C PASS · R PASS</sub> | 72.8683<br><sub>C RED · R RED</sub> | 76.0363<br><sub>C RED · R PASS</sub> | 76.0977<br><sub>C RED · R PASS</sub> | 96.075<br><sub>C PASS · R PASS</sub> |
+| lightnessP2 | 25 | 24.8019<br><sub>C PASS · R PASS</sub> | 18.1635<br><sub>C PASS · R PASS</sub> | 25.0404<br><sub>C RED · R RED</sub> | 16.1373<br><sub>C PASS · R PASS</sub> | 31.0391<br><sub>C RED · R PASS</sub> | 25.1815<br><sub>C RED · R RED</sub> | 25.343<br><sub>C RED · R RED</sub> | 15.5081<br><sub>C PASS · R PASS</sub> |
+| lightnessP98 | 90 | 83.8095<br><sub>C RED · R PASS</sub> | 83.3423<br><sub>C RED · R PASS</sub> | 82.2677<br><sub>C RED · R RED</sub> | 97.7895<br><sub>C PASS · R PASS</sub> | 83.8095<br><sub>C RED · R PASS</sub> | 84.4141<br><sub>C RED · R PASS</sub> | 81.9088<br><sub>C RED · R RED</sub> | 98.7695<br><sub>C PASS · R PASS</sub> |
+| lightnessStdDev | 18 | 14.7198<br><sub>C RED · R PASS</sub> | 17.9233<br><sub>C RED · R PASS</sub> | 15.8281<br><sub>C RED · R RED</sub> | 22.0416<br><sub>C PASS · R PASS</sub> | 12.092<br><sub>C RED · R RED</sub> | 15.5674<br><sub>C RED · R PASS</sub> | 15.6993<br><sub>C RED · R RED</sub> | 26.9893<br><sub>C PASS · R PASS</sub> |
+| grassHueCount | 3 | 7<br><sub>C PASS · R RED</sub> | 7<br><sub>C PASS · R PASS</sub> | 9<br><sub>C PASS · R PASS</sub> | 9<br><sub>C PASS · R PASS</sub> | 6<br><sub>C PASS · R RED</sub> | 6<br><sub>C PASS · R PASS</sub> | 7<br><sub>C PASS · R RED</sub> | 9<br><sub>C PASS · R PASS</sub> |
+| grassHueSpread | 35 | 120<br><sub>C PASS · R PASS</sub> | 95.7<br><sub>C PASS · R PASS</sub> | 120<br><sub>C PASS · R PASS</sub> | 120<br><sub>C PASS · R PASS</sub> | 119.4177<br><sub>C PASS · R RED</sub> | 79.4643<br><sub>C PASS · R PASS</sub> | 93.75<br><sub>C PASS · R RED</sub> | 120<br><sub>C PASS · R PASS</sub> |
+| accentArea | {"min":0.015,"max":0.15} | 0.0159<br><sub>C PASS · R PASS</sub> | 0.0211<br><sub>C PASS · R PASS</sub> | 0.0238<br><sub>C PASS · R PASS</sub> | 0.0249<br><sub>C PASS · R PASS</sub> | 0.0078<br><sub>C RED · R RED</sub> | 0.0261<br><sub>C PASS · R PASS</sub> | 0.0225<br><sub>C PASS · R RED</sub> | 0.0309<br><sub>C PASS · R PASS</sub> |
+| keyToFillRatio | 3 | 6.6452<br><sub>C PASS · R PASS</sub> | 6.6452<br><sub>C PASS · R PASS</sub> | 6.6452<br><sub>C PASS · R PASS</sub> | 6.6452<br><sub>C PASS · R PASS</sub> | 6.6452<br><sub>C PASS · R PASS</sub> | 6.6452<br><sub>C PASS · R PASS</sub> | 6.6452<br><sub>C PASS · R PASS</sub> | 6.6452<br><sub>C PASS · R PASS</sub> |
+| domLabelContrastMin | 4.5 | 9.2578<br><sub>C PASS · R PASS</sub> | 13.0236<br><sub>C PASS · R PASS</sub> | 10.0827<br><sub>C PASS · R RED</sub> | 10.5701<br><sub>C PASS · R RED</sub> | 9.07<br><sub>C PASS · R RED</sub> | 10.5044<br><sub>C PASS · R RED</sub> | 10.0827<br><sub>C PASS · R RED</sub> | 11.926<br><sub>C PASS · R RED</sub> |
+| domLabelCount | — | 6<br><sub>C INFO · R —</sub> | 4<br><sub>C INFO · R —</sub> | 10<br><sub>C INFO · R —</sub> | 9<br><sub>C INFO · R —</sub> | 3<br><sub>C INFO · R —</sub> | 4<br><sub>C INFO · R —</sub> | 7<br><sub>C INFO · R —</sub> | 3<br><sub>C INFO · R —</sub> |
+| layerDistribution | — | {"terrainPatches":4,"routeSamples":329,"dressingProps":328,"lessonNodes":41}<br><sub>C INFO · R —</sub> | {"terrainPatches":4,"routeSamples":329,"dressingProps":328,"lessonNodes":41}<br><sub>C INFO · R —</sub> | {"terrainPatches":4,"routeSamples":329,"dressingProps":328,"lessonNodes":41}<br><sub>C INFO · R —</sub> | {"terrainPatches":0,"routeSamples":0,"dressingProps":89,"lessonNodes":0}<br><sub>C INFO · R —</sub> | {"terrainPatches":4,"routeSamples":329,"dressingProps":328,"lessonNodes":41}<br><sub>C INFO · R —</sub> | {"terrainPatches":4,"routeSamples":329,"dressingProps":328,"lessonNodes":41}<br><sub>C INFO · R —</sub> | {"terrainPatches":4,"routeSamples":329,"dressingProps":328,"lessonNodes":41}<br><sub>C INFO · R —</sub> | {"terrainPatches":0,"routeSamples":0,"dressingProps":89,"lessonNodes":0}<br><sub>C INFO · R —</sub> |
+| lessonNodeCount | — | 41<br><sub>C INFO · R —</sub> | 41<br><sub>C INFO · R —</sub> | 41<br><sub>C INFO · R —</sub> | 0<br><sub>C INFO · R —</sub> | 41<br><sub>C INFO · R —</sub> | 41<br><sub>C INFO · R —</sub> | 41<br><sub>C INFO · R —</sub> | 0<br><sub>C INFO · R —</sub> |
+| coursePropCount | — | 328<br><sub>C INFO · R —</sub> | 328<br><sub>C INFO · R —</sub> | 328<br><sub>C INFO · R —</sub> | 89<br><sub>C INFO · R —</sub> | 328<br><sub>C INFO · R —</sub> | 328<br><sub>C INFO · R —</sub> | 328<br><sub>C INFO · R —</sub> | 89<br><sub>C INFO · R —</sub> |
+| propsPerLessonNode | 7 | 8<br><sub>C PASS · R PASS</sub> | 8<br><sub>C PASS · R PASS</sub> | 8<br><sub>C PASS · R PASS</sub> | — | 8<br><sub>C PASS · R PASS</sub> | 8<br><sub>C PASS · R PASS</sub> | 8<br><sub>C PASS · R PASS</sub> | — |
+| rimPropShare | 0.2 | 0.314<br><sub>C PASS · R PASS</sub> | 0.314<br><sub>C PASS · R PASS</sub> | 0.314<br><sub>C PASS · R PASS</sub> | — | 0.314<br><sub>C PASS · R PASS</sub> | 0.314<br><sub>C PASS · R PASS</sub> | 0.314<br><sub>C PASS · R PASS</sub> | — |
+| landCoverage | 0.34 | 0.5487<br><sub>C PASS · R PASS</sub> | 0.9851<br><sub>C PASS · R RED</sub> | 0.9142<br><sub>C PASS · R PASS</sub> | 0.1217<br><sub>C INFO · R —</sub> | 0.4231<br><sub>C PASS · R RED</sub> | 0.9951<br><sub>C PASS · R RED</sub> | 0.9517<br><sub>C PASS · R PASS</sub> | 0.1386<br><sub>C INFO · R —</sub> |
+| nodeOcclusionShare | 0.05 | 0<br><sub>C PASS · R PASS</sub> | 0<br><sub>C PASS · R PASS</sub> | 0<br><sub>C PASS · R PASS</sub> | — | 0<br><sub>C PASS · R PASS</sub> | 0<br><sub>C PASS · R PASS</sub> | 0<br><sub>C PASS · R PASS</sub> | — |
+| worldPropsPerIsland | 8 | — | — | — | 0<br><sub>C PASS · R PASS</sub> | — | — | — | 0<br><sub>C PASS · R PASS</sub> |
+
+标记解释：`C PASS/RED` 是当前合约结果，`R PASS/RED` 是按原文件 pin 与方向重算的结果；这轮不因 R RED 改画面。`course-design/desktop` 第一项旧 ratchet 红为 `landP95Lightness=74.8929 < 75.2878`，所以 `pnpm e2e:island-look` 真实退出码为 1；测试文件没有被放宽。
+
+### 相对第四轮的变化
+
+下表是当前值减去本文件上一节（第四轮）同镜头 current 的 delta；正数表示上升，负数表示下降。它把这轮主动收掉的“指标型对比度”明确列出来，而不把画面改善包装成判官全绿。
+
+| 指标 delta | CD-D | CN-D | CF-D | WD-D | CD-M | CN-M | CF-M | WD-M |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| sceneLinearRange | -4.0070 | -13.2380 | -9.7000 | +0.0000 | -5.2000 | -11.0530 | -10.5210 | +0.0000 |
+| landMedianLightness | +8.3637 | +9.0171 | +8.4772 | -0.0046 | +0.0071 | +7.3334 | +8.7534 | -0.0212 |
+| landP95Lightness | -22.7650 | -16.9378 | -19.1036 | +0.0000 | -24.4657 | -19.8771 | -20.1863 | +0.0000 |
+| landLightnessRise | -31.1287 | -25.9549 | -27.5808 | +0.0046 | -24.4726 | -27.2105 | -28.9397 | +0.0213 |
+| backgroundLightnessSpread | -34.3721 | -0.8342 | -19.2017 | +0.0000 | -43.1552 | +1.3331 | -17.6919 | +0.0000 |
+| grassLightnessSpread | -36.9015 | -1.2734 | -15.7920 | +4.9710 | -39.2871 | -32.2187 | -21.7417 | +4.0945 |
+| grassLightnessP95 | -23.7751 | -18.2983 | -20.5115 | -0.0321 | -24.7991 | -21.6702 | -21.6392 | -0.0150 |
+| lightnessP2 | +1.0168 | +0.0276 | +0.4361 | +0.0000 | +18.6400 | +0.4352 | +0.3026 | +0.0000 |
+| lightnessP98 | -13.8579 | -14.5026 | -15.5547 | +0.0000 | -12.8220 | -13.3025 | -15.8385 | +0.0000 |
+| lightnessStdDev | -5.0693 | -6.3574 | -7.2190 | +0.0134 | -9.6113 | -7.9628 | -8.0333 | +0.0084 |
+| grassHueCount | -2.0000 | -1.0000 | +1.0000 | +0.0000 | -3.0000 | +1.0000 | -1.0000 | +0.0000 |
+| grassHueSpread | +0.0000 | -22.7234 | +0.5172 | +0.0000 | -0.5823 | -35.8518 | -25.7328 | +0.0000 |
+| accentArea | -0.0002 | -0.0002 | -0.0003 | -0.0002 | +0.0000 | +0.0000 | -0.0002 | -0.0003 |
+| keyToFillRatio | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 |
+| domLabelContrastMin | +0.0000 | +0.0000 | -0.2549 | +0.0000 | -0.0366 | -0.1327 | -0.2104 | +0.0000 |
+| domLabelCount | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 |
+| lessonNodeCount | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 |
+| coursePropCount | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 | +0.0000 |
+| propsPerLessonNode | +0.0000 | +0.0000 | +0.0000 | — | +0.0000 | +0.0000 | +0.0000 | — |
+| rimPropShare | +0.0000 | +0.0000 | +0.0000 | — | +0.0000 | +0.0000 | +0.0000 | — |
+| landCoverage | +0.0069 | +0.0135 | +0.0173 | +0.0010 | +0.0028 | +0.0068 | +0.0091 | +0.0011 |
+| nodeOcclusionShare | +0.0000 | +0.0000 | +0.0000 | — | +0.0000 | +0.0000 | +0.0000 | — |
+| worldPropsPerIsland | — | — | — | +0.0000 | — | — | — | +0.0000 |
+
+主要解读：课程 design desktop 的 `landP95Lightness` 97.6579→74.8929（−22.7650）、`landLightnessRise` 40.4105→9.2818（−31.1287）、`backgroundLightnessSpread` 56.8343→22.4622（−34.3721）、`grassLightnessSpread` 45.8613→8.9598（−36.9015）；这是为了消除视觉上的黄/褐硬切主动放弃的亮度跨度，不是忘记了体积。课程 near/far 也相应收窄；world 地表 ramp 没有改，world 的地形/天空/几何指标保持原生成规则。
+
+### 为画面主动放弃的指标
+
+- 放弃用 `landP95Lightness` / `landLightnessRise`、`grassLightnessSpread` / `grassLightnessP95` 继续追高：它们正是把一片草地推成黄/褐两块的数值杠杆；现在多个课程机位因此落在 contract RED，但画面恢复连续。
+- 放弃用 `backgroundLightnessSpread` 追天空底部跨度：`nadir` 变浅后课程 desktop design 为 22.4622、near 为 32.9819、far 为 17.3459，避免重新压回深紫灰带。
+- 连带放弃部分 `lightnessP98` / `lightnessStdDev` / `sceneLinearRange` 的旧 pin 方向；没有修改 contract 或 pin，因为它们是观测尺，不应为本轮颜色收拾临时改尺。
+- 没有为这些红项增设课程专用指标、另拆 foliage palette 或另写一套渲染分支；本轮目标是共享生成规则的颜色卫生。
+
+### final5 截图与完整取数文件
+
+- [baseline course-design post-off](./islandunder/final5/baseline-course-design-post-off.png)
+- [final course-design post-off](./islandunder/final5/final-course-design-post-off.png)
+- [baseline course-design post-on](./islandunder/final5/baseline-course-design-post-on.png)
+- [final course-design post-on](./islandunder/final5/final-course-design-post-on.png)
+- [8 组完整 metrics.json](./islandunder/final5/metrics.json)
+
+四张图均为同一 `course-design` fixed camera、1440×900、同一截图方式；baseline 保留原文件，final 为本轮重拍，post off/on 各一张。
+
+### 验证
+
+- `pnpm --filter @pieai/university-world test`：49 files / 330 tests PASS。
+- `pnpm --filter @pieai/university-world typecheck`：PASS。
+- `pnpm --filter @pieai/university-world lint`：PASS。
+- `pnpm --filter @pieai/university-world format:check`：PASS。
+- `pnpm e2e:island-look`：真实 FAIL，首个失败是未修改的 `course-design/desktop/landP95Lightness` ratchet（74.8929 vs pin 75.2878）；无断点补采 8/8 ready、8/8 reload hash 一致。
+- `pnpm verify`：前置全仓 test（core 49/421、backend 2/6、grading 4/27、ui 65/382、local 45/428、world 49/330、university 49/217）、build、generated-format、shelf、content revisions、contrast/raw-colours 均通过；最后在既有 export freshness 红项退出：`turing-pact — re-export failed: Study has no active courses: turing-pact`。本轮不触碰 brief 禁止的 `apps/local`。
+
+本次 surface 强调课程地表，是因为三处颜色都由课程/共享 foliage 的同一 surface 规则驱动，用户实际看到的是一整片可读的学习岛；不拆另一套是为了让两种 mode、不同机位和 world/课程继续共享同一个生成管线，避免用分支掩盖颜色规则的问题。

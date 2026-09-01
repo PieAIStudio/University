@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { SKY_STOPS, skyStopsForStudy, WORLD_SKY_CONTRACT } from "../Maps";
+import { COURSE_SKY_STOPS, SKY_STOPS, skyStopsForStudy, WORLD_SKY_CONTRACT } from "../Maps";
 import { WORLD_SUN } from "./sun.js";
 
 function luma(hex: number) {
@@ -54,6 +54,10 @@ describe("sky stops", () => {
     expect(WORLD_SKY_CONTRACT.fogFarRatio).toBeGreaterThan(WORLD_SKY_CONTRACT.fogNearRatio);
     const source = readFileSync(new URL("../Maps.tsx", import.meta.url), "utf8");
     expect(source).toMatch(/includeSea=\{WORLD_SKY_CONTRACT\.visibleSea\}/);
+  });
+
+  it("keeps the course lower arc airy instead of deep violet", () => {
+    expect(COURSE_SKY_STOPS.nadir).toBe(0xc0b8e5);
   });
 
   it("draws a sun disc on the one skydome, keyed to the shared world sun", () => {

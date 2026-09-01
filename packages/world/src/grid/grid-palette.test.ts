@@ -4,7 +4,9 @@ import {
   GRID_ACCENT_RAMP,
   GRID_LESSON_MARKER_COLOURS,
   GRID_PALETTE_PRESETS,
+  GRID_PROP_FOLIAGE_COLOURS,
   GRID_SHARED_SOIL,
+  GRID_TERRAIN_VALUE_RAMP,
   gridPaletteFor,
   gridPaletteIndexFor,
   gridUndersideColorForTop,
@@ -89,6 +91,34 @@ describe("hand-picked grid palettes", () => {
       const saturation = high === low ? 0 : (high - low) / (1 - Math.abs(2 * lightness - 1));
       expect(saturation).toBeGreaterThanOrEqual(0.42);
     }
+  });
+
+  it("keeps course terrace emphasis continuous instead of splitting the meadow", () => {
+    const ramp = GRID_TERRAIN_VALUE_RAMP.course;
+    expect(ramp[0]).toBeGreaterThan(0.7);
+    expect(ramp[3] / ramp[0]).toBeLessThan(1.5);
+    expect(ramp.every((value, index) => index === 0 || value > ramp[index - 1]!)).toBe(true);
+  });
+
+  it("keeps grid foliage inside the green family", () => {
+    const hueOf = (colour: number): number => {
+      const red = ((colour >> 16) & 255) / 255;
+      const green = ((colour >> 8) & 255) / 255;
+      const blue = (colour & 255) / 255;
+      const maximum = Math.max(red, green, blue);
+      const minimum = Math.min(red, green, blue);
+      const delta = maximum - minimum;
+      if (delta === 0) return 0;
+      let hue =
+        maximum === red
+          ? ((green - blue) / delta) % 6
+          : maximum === green
+            ? (blue - red) / delta + 2
+            : (red - green) / delta + 4;
+      hue *= 60;
+      return hue < 0 ? hue + 360 : hue;
+    };
+    expect(Math.max(...GRID_PROP_FOLIAGE_COLOURS.map(hueOf))).toBeLessThan(150);
   });
 
   it("derives a dark underside from the island top without adding a material", () => {
