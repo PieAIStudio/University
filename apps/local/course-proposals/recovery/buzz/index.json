@@ -18,27 +18,32 @@
     {
       "courseId": "buzz-orientation",
       "file": "buzz-orientation.1dc01e8b943da07bd32a8c010bfb75461771b1ec06e1a858f269c549ee062115.recovery.json",
-      "sha256": "sha256:1dc01e8b943da07bd32a8c010bfb75461771b1ec06e1a858f269c549ee062115"
+      "sha256": "sha256:1dc01e8b943da07bd32a8c010bfb75461771b1ec06e1a858f269c549ee062115",
+      "isBeingRewritten": false
     },
     {
       "courseId": "buzz-reading-rust",
       "file": "buzz-reading-rust.78a06f7376e8dae6e0bacbcbd9df2597676d8c9043a6e5badeb6ac0553b85574.recovery.json",
-      "sha256": "sha256:78a06f7376e8dae6e0bacbcbd9df2597676d8c9043a6e5badeb6ac0553b85574"
+      "sha256": "sha256:78a06f7376e8dae6e0bacbcbd9df2597676d8c9043a6e5badeb6ac0553b85574",
+      "isBeingRewritten": false
     },
     {
       "courseId": "buzz-one-message",
       "file": "buzz-one-message.a52282c8926d6523007d6de96790708ddb17c63e04d0a7a2a951ad6612e4fa7c.recovery.json",
-      "sha256": "sha256:a52282c8926d6523007d6de96790708ddb17c63e04d0a7a2a951ad6612e4fa7c"
+      "sha256": "sha256:a52282c8926d6523007d6de96790708ddb17c63e04d0a7a2a951ad6612e4fa7c",
+      "isBeingRewritten": false
     },
     {
       "courseId": "buzz-agents-as-members",
       "file": "buzz-agents-as-members.384dc8db10ce5ffb60a54d76a63d70c5d6e04588128f3addb8118a7591d079dc.recovery.json",
-      "sha256": "sha256:384dc8db10ce5ffb60a54d76a63d70c5d6e04588128f3addb8118a7591d079dc"
+      "sha256": "sha256:384dc8db10ce5ffb60a54d76a63d70c5d6e04588128f3addb8118a7591d079dc",
+      "isBeingRewritten": false
     },
     {
       "courseId": "buzz-design-tokens",
       "file": "buzz-design-tokens.6a92c8042a67bf1d15785e2294b2a72f8cd0e9725112457a4c44cb3c0a73ac8f.recovery.json",
-      "sha256": "sha256:6a92c8042a67bf1d15785e2294b2a72f8cd0e9725112457a4c44cb3c0a73ac8f"
+      "sha256": "sha256:6a92c8042a67bf1d15785e2294b2a72f8cd0e9725112457a4c44cb3c0a73ac8f",
+      "isBeingRewritten": false
     }
   ]
 }

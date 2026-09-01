@@ -25,6 +25,7 @@ function writePublicCourse(root, course = {}) {
     course: {
       id: "course",
       title: "Course",
+      isBeingRewritten: false,
       units: [
         {
           id: "unit",
@@ -81,6 +82,7 @@ function writeArtifactFixture() {
             {
               courseId: "course",
               title: "Course",
+              isBeingRewritten: false,
               sha256: sha256(bytes),
               packageBytes: bytes.length,
               servedBytes: bytes.length,
@@ -102,6 +104,7 @@ function writeArtifactFixture() {
             {
               id: "course",
               title: "Course",
+              isBeingRewritten: false,
               units: [
                 {
                   id: "unit",
@@ -192,7 +195,7 @@ function writeRecoveryFixture(root) {
       schemaVersion: 1,
       packageKind: "university-local-course-recovery",
       study: { id: "study", title: "Study" },
-      courses: [{ courseId: "course", file, sha256: sha256(pkg) }],
+      courses: [{ courseId: "course", file, sha256: sha256(pkg), isBeingRewritten: false }],
     })}\n`,
   );
   return { recovery, packagePath: join(study, file) };
@@ -258,12 +261,14 @@ describe("delivery artifact gate", () => {
     const lesson = pkg.course.units[0].lessons[0];
     lesson.exercises[0].referenceAnswer = "secret";
     lesson.evidence = [{ note: "file-manager:/private/source" }];
+    pkg.course.status = "stale";
     writeFileSync(coursePath, `${JSON.stringify(pkg)}\n`);
     reseal(root);
     expect(() => validateDeliveryArtifact(root)).toThrow(/public DTO violation/);
 
     delete lesson.exercises[0].referenceAnswer;
     lesson.evidence = [];
+    delete pkg.course.status;
     writeFileSync(coursePath, `${JSON.stringify(pkg)}\n`);
     reseal(root);
     expect(validateDeliveryArtifact(root).courses).toBe(1);
@@ -277,6 +282,16 @@ describe("delivery artifact gate", () => {
       courses: 1,
       files: 2,
     });
+    const indexPath = join(recovery, "study", "index.json");
+    const index = JSON.parse(readFileSync(indexPath, "utf8"));
+    delete index.courses[0].isBeingRewritten;
+    writeFileSync(indexPath, `${JSON.stringify(index)}\n`);
+    expect(() => validateRecoveryInput(recovery, { projectRoot: PROJECT_ROOT })).toThrow(
+      /isBeingRewritten must be a boolean learner fact/,
+    );
+    index.courses[0].isBeingRewritten = false;
+    writeFileSync(indexPath, `${JSON.stringify(index)}\n`);
+    expect(validateRecoveryInput(recovery, { projectRoot: PROJECT_ROOT }).courses).toBe(1);
     writeFileSync(packagePath, `${readFileSync(packagePath, "utf8")} `);
     expect(() => validateRecoveryInput(recovery, { projectRoot: PROJECT_ROOT })).toThrow(
       /hash mismatch/,

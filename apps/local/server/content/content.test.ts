@@ -1,5 +1,13 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
@@ -13,6 +21,7 @@ import { evaluateEvidenceFreshness, validateEvidence } from "./evidence.js";
 import type { CourseManifest } from "@pieai/university-core/domain/schemas.js";
 import {
   orderCoursesByPrerequisite,
+  listCourseIds,
   readCourse,
   readLatestCard,
   readLatestExercise,
@@ -162,6 +171,16 @@ function writeActiveLearningContent(studiesRoot: string, evidence: EvidenceRefer
 }
 
 describe("course content repository", () => {
+  it("lists course manifests behind directory symlinks", () => {
+    const { studiesRoot, container } = setup();
+    const externalCourse = join(container, "external-course");
+    mkdirSync(externalCourse, { recursive: true });
+    writeFileSync(join(externalCourse, "course.json"), "{}\n");
+    symlinkSync(externalCourse, join(studiesRoot, "sample", "courses", "linked-course"), "dir");
+
+    expect(listCourseIds(studiesRoot, "sample")).toContain("linked-course");
+  });
+
   it("ignores crash-left staging directories when creating course and unit roots", () => {
     const { studiesRoot } = setup();
     const coursePaths = getCoursePaths(studiesRoot, "sample", COURSE_ID);

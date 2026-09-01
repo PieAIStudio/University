@@ -47,6 +47,7 @@ export const AUTHOR_ONLY_KEYS = Object.freeze([
   "bytes",
   "source",
   "sourceRoot",
+  "status",
 ]);
 
 const AUTHOR_ONLY_KEY_SET = new Set(AUTHOR_ONLY_KEYS);
@@ -229,6 +230,9 @@ export function validateRecoveryInput(root, { projectRoot = PROJECT_ROOT } = {})
     for (const [indexPosition, entry] of index.courses.entries()) {
       const prefix = `study ${studyId} course ${indexPosition}`;
       const courseId = safeSegment(entry?.courseId, `${prefix} id`);
+      if (typeof entry?.isBeingRewritten !== "boolean") {
+        fail(`${prefix} isBeingRewritten must be a boolean learner fact`);
+      }
       const fileName = safeRelativePath(entry?.file, `${prefix} file`);
       const packagePath = resolve(studyDir, fileName);
       if (!isInside(packagePath, studyDir)) fail(`${prefix} escapes the study directory`);
@@ -492,6 +496,9 @@ function contentFiles(root, manifest, records, { validatePublicDto = true } = {}
         (candidate) => `${candidate.courseId}.json` === course.slice(course.indexOf("/") + 1),
       );
     if (!manifestCourse) fail(`course package ${course} is not in the manifest`);
+    if (pkg?.course?.isBeingRewritten !== manifestCourse.isBeingRewritten) {
+      fail(`course package ${course} rewrite fact does not match the manifest`);
+    }
     if (manifestCourse.servedBytes !== info.size || body.length !== info.size) {
       fail(
         `servedBytes mismatch for ${course}: manifest ${manifestCourse.servedBytes}, file ${info.size}`,

@@ -301,12 +301,66 @@ function appendCourseClone(directory: string, courseId: string): void {
     courseId,
     file,
     sha256: contentHash,
+    isBeingRewritten: false,
   });
   index["droppedUaBindingCount"] = Number(index["droppedUaBindingCount"]) * 2;
   writeFileSync(indexPath, `${JSON.stringify(index, null, 2)}\n`);
 }
 
 describe("canonical course recovery", () => {
+  it("ships active and stale courses, while draft and retired courses stay out", () => {
+    const fixture = setupActiveCourse();
+    const draftCourseId = "draft-course";
+    writeCourse(fixture.studiesRoot, STUDY_ID, {
+      schemaVersion: 1,
+      id: draftCourseId,
+      title: "Draft course",
+      description: "Not published yet.",
+      audience: "A beginning product builder",
+      objectives: ["Stay out of the delivery catalogue"],
+      unitIds: [],
+      status: "draft",
+      currency: "pinned-history",
+      prerequisiteCourseIds: [],
+      createdAt: CREATED_AT,
+      updatedAt: CREATED_AT,
+    });
+
+    const activeOutput = exportFixture(fixture.studiesRoot, fixture.container, "active-status");
+    expect(loadCourseRecovery(activeOutput).index.courses).toEqual([
+      expect.objectContaining({ courseId: COURSE_ID, isBeingRewritten: false }),
+    ]);
+
+    updateCourseStatus(
+      fixture.studiesRoot,
+      STUDY_ID,
+      COURSE_ID,
+      "stale",
+      new Date("2026-08-17T02:00:00.000Z"),
+    );
+    updateUnitStatus(fixture.studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, "stale");
+    const staleOutput = exportFixture(fixture.studiesRoot, fixture.container, "stale-status");
+    expect(loadCourseRecovery(staleOutput).index.courses).toEqual([
+      expect.objectContaining({ courseId: COURSE_ID, isBeingRewritten: true }),
+    ]);
+
+    const retiredFixture = setupActiveCourse();
+    updateCourseStatus(
+      retiredFixture.studiesRoot,
+      STUDY_ID,
+      COURSE_ID,
+      "retired",
+      new Date("2026-08-17T02:00:00.000Z"),
+    );
+    expect(() =>
+      exportCourseRecovery({
+        studiesRoot: retiredFixture.studiesRoot,
+        studyId: STUDY_ID,
+        outDirectory: join(retiredFixture.container, "retired-status"),
+      }),
+    ).toThrow(/no publishable courses/);
+  });
+
   it("parses, documents, and executes both recovery CLI lanes", async () => {
     const fixture = setupActiveCourse();
     expect(

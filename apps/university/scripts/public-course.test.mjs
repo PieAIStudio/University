@@ -22,6 +22,9 @@ describe("the public course DTO", () => {
         description: "给学习者看的说明",
         audience: "初学者",
         objectives: ["读懂边界"],
+        status: "stale",
+        authorStatus: "active",
+        isBeingRewritten: true,
         currency: "follow-ref",
         prerequisiteCourseIds: [],
         trackId: null,
@@ -105,6 +108,7 @@ describe("the public course DTO", () => {
     expect(Object.keys(published)).toEqual(["course"]);
     expect(Object.keys(published.course)).toEqual(PUBLIC_DTO_FIELDS.course.fields);
     expect(published.course.currency).toBeUndefined();
+    expect(published.course.isBeingRewritten).toBe(true);
     expect(published.course.units[0].authorNote).toBeUndefined();
 
     const lesson = published.course.units[0].lessons[0];
@@ -115,6 +119,8 @@ describe("the public course DTO", () => {
     expect(JSON.stringify(published)).not.toContain("rubric");
     expect(JSON.stringify(published)).not.toContain("snapshotId");
     expect(JSON.stringify(published)).not.toContain("nodeIds");
+    expect(JSON.stringify(published)).not.toContain('"stale"');
+    expect(JSON.stringify(published)).not.toContain('"active"');
     expect(lesson.exercises[0].answerKey).toEqual({ len: 2 });
     expect(lesson.evidence[0]).toEqual({
       kind: "fact",
