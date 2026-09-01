@@ -9,6 +9,10 @@ const options = {
   targets: ["packages/ui/src"],
 };
 
+const COMPLETE_SUMMARY =
+  'swimmer-ui-check: 1 raw color literal(s) in 1 file(s) under "/fixture/repository/packages/ui/src". ' +
+  "Raw colors are expected inside token blocks.";
+
 function runWith(childResult) {
   const messages = [];
   const result = runContrastCheck({
@@ -48,7 +52,7 @@ test("adopted contrast and token findings are red and printed", () => {
     "packages/ui/src/bad.css:4: --game-ui-accent-ink on --game-ui-accent is 1.48:1 — below AA (4.5:1)";
   const missingToken =
     "packages/ui/src/bad.css:8: --game-ui-border is not a token this kit defines — the var() fallback is doing all the work";
-  const { result, messages } = runWith(`${belowAa}\n${missingToken}\n`);
+  const { result, messages } = runWith(`${belowAa}\n${missingToken}\n${COMPLETE_SUMMARY}\n`);
 
   assert.equal(result.ok, false);
   assert.deepEqual(result.findings, [belowAa, missingToken]);
@@ -64,7 +68,9 @@ test("adopted contrast and token findings are red and printed", () => {
 test("a status 1 that carries adopted findings is reported as a finding, not a crash", () => {
   const belowAa =
     "packages/ui/src/bad.css:4: --game-ui-accent-ink on --game-ui-accent is 1.48:1 — below AA (4.5:1)";
-  const { result, messages } = runWith(childFailure({ status: 1, stderr: `${belowAa}\n` }));
+  const { result, messages } = runWith(
+    childFailure({ status: 1, stderr: `${belowAa}\n${COMPLETE_SUMMARY}\n` }),
+  );
   const report = messages.join("\n");
 
   assert.equal(result.ok, false);
@@ -107,7 +113,8 @@ test("a child that says contrast was not checked is red even with exit 0", () =>
 
 test("raw-colour output is not adopted as a contrast finding", () => {
   const { result, messages } = runWith(
-    'packages/ui/src/legacy.css:2: raw color literal "#123456" — use var(--game-ui-*) instead\n',
+    'packages/ui/src/legacy.css:2: raw color literal "#123456" — use var(--game-ui-*) instead\n' +
+      `${COMPLETE_SUMMARY}\n`,
   );
 
   assert.equal(result.ok, true);
@@ -120,8 +127,7 @@ test("a raw-colour-only child failure still fails closed without importing that 
     childFailure({
       status: 1,
       stderr:
-        'packages/ui/src/legacy.css:2: raw color literal "#123456" — use var(--game-ui-*) instead\n' +
-        "swimmer-ui-check: 1 raw color literal(s) in 1 file(s).\n",
+        'packages/ui/src/legacy.css:2: raw color literal "#123456" — use var(--game-ui-*) instead\n',
     }),
   );
   const report = messages.join("\n");
@@ -131,6 +137,41 @@ test("a raw-colour-only child failure still fails closed without importing that 
   assert.equal(result.contrastProblems, 0);
   assert.equal(result.undefinedTokens, 0);
   assert.match(report, /status 1/);
-  assert.match(report, /separate raw-colour rule/);
+  assert.match(report, /scan completion signal/);
+  assert.doesNotMatch(report, /raw color literal "#123456"/);
+});
+
+test("a status 1 with the scan completion signal and only raw-colour output is green", () => {
+  const { result, messages } = runWith(
+    childFailure({
+      status: 1,
+      stderr:
+        'packages/ui/src/legacy.css:2: raw color literal "#123456" — use var(--game-ui-*) instead\n' +
+        `${COMPLETE_SUMMARY}\n`,
+    }),
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.findings.length, 0);
+  assert.equal(result.incompleteTrees.length, 0);
+  assert.equal(result.trees[0].completed, true);
+  assert.deepEqual(messages, []);
+});
+
+test("removing the completion signal from that status 1 raw-colour output is red", () => {
+  const rawColour =
+    'packages/ui/src/legacy.css:2: raw color literal "#123456" — use var(--game-ui-*) instead';
+  const completedOutput = `${rawColour}\n${COMPLETE_SUMMARY}\n`;
+  const outputWithoutCompletion = completedOutput.replace(`${COMPLETE_SUMMARY}\n`, "");
+  const { result, messages } = runWith(
+    childFailure({ status: 1, stderr: outputWithoutCompletion }),
+  );
+  const report = messages.join("\n");
+
+  assert.equal(result.ok, false);
+  assert.equal(result.findings.length, 0);
+  assert.equal(result.incompleteTrees.length, 1);
+  assert.equal(result.trees[0].completed, false);
+  assert.match(report, /scan completion signal/);
   assert.doesNotMatch(report, /raw color literal "#123456"/);
 });

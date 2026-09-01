@@ -23,6 +23,10 @@ import { fileURLToPath } from "node:url";
 const TARGETS = ["packages/ui/src", "apps/university/src"];
 const CONTRAST_FINDING = /below AA|is not a token/;
 const NOT_CHECKED = /contrast was NOT checked/i;
+// The numeric fields are deliberately wildcards: this is evidence that the
+// kit reached its final summary, not an adoption of its raw-colour count.
+const SCAN_COMPLETE_SIGNAL =
+  /^swimmer-ui-check:\s+(?:\d+\s+raw color literal(?:\(s\)|s?)\s+in\s+\d+\s+file\(s\)|0\s+raw color literals?\s+in\s+component rules)(?=[\s.]|$)/i;
 const RAW_COLOUR_DIAGNOSTIC =
   /raw color literal|raw colors are expected inside|use var\(--game-ui-\*\)/i;
 
@@ -64,10 +68,6 @@ function childFailureDescription(error) {
   return "failed without an exit status";
 }
 
-function isKnownFindingExit(error, findings) {
-  return Number.isInteger(error?.status) && error.status === 1 && findings.length > 0;
-}
-
 function displayLine(line, root) {
   return line.replace(`${root}/`, "");
 }
@@ -75,7 +75,10 @@ function displayLine(line, root) {
 function diagnosticsFor(error, lines, findings, unchecked) {
   const diagnostics = lines.filter(
     (line) =>
-      !findings.includes(line) && !unchecked.includes(line) && !RAW_COLOUR_DIAGNOSTIC.test(line),
+      !findings.includes(line) &&
+      !unchecked.includes(line) &&
+      !SCAN_COMPLETE_SIGNAL.test(line) &&
+      !RAW_COLOUR_DIAGNOSTIC.test(line),
   );
 
   if (error?.message && diagnostics.length === 0 && !RAW_COLOUR_DIAGNOSTIC.test(error.message)) {
@@ -130,10 +133,16 @@ export function runContrastCheck({
     const lines = outputLines(output);
     const findings = lines.filter((line) => CONTRAST_FINDING.test(line));
     const unchecked = lines.filter((line) => NOT_CHECKED.test(line));
-    const rawColourOnly =
-      lines.length > 0 && lines.every((line) => RAW_COLOUR_DIAGNOSTIC.test(line));
+    const completed = lines.some((line) => SCAN_COMPLETE_SIGNAL.test(line));
+    // The kit exits 1 after reporting its separate raw-colour rule. Once the
+    // completion signal exists, that is the only non-zero exit we trust.
+    const expectedChildFailure =
+      childError !== null &&
+      completed &&
+      Number.isInteger(childError.status) &&
+      childError.status === 1;
     const incomplete =
-      unchecked.length > 0 || (childError !== null && !isKnownFindingExit(childError, findings));
+      !completed || unchecked.length > 0 || (childError !== null && !expectedChildFailure);
 
     for (const line of findings) logError(displayLine(line, root));
     for (const line of unchecked) {
@@ -142,11 +151,11 @@ export function runContrastCheck({
 
     if (incomplete) {
       const reasons = [];
-      if (childError) reasons.push(`the child checker ${childFailureDescription(childError)}`);
-      if (unchecked.length > 0) reasons.push("reported that contrast was NOT checked");
-      if (childError && rawColourOnly && findings.length === 0 && unchecked.length === 0) {
-        reasons.push("reported only the separate raw-colour rule");
+      if (!completed) reasons.push("did not emit the scan completion signal");
+      if (childError && !expectedChildFailure) {
+        reasons.push(`the child checker ${childFailureDescription(childError)}`);
       }
+      if (unchecked.length > 0) reasons.push("reported that contrast was NOT checked");
       logError(
         `check-contrast: ${target}: contrast check did not complete (${reasons.join("; ")}). ` +
           "The result is not trusted.",
@@ -157,7 +166,7 @@ export function runContrastCheck({
       }
     }
 
-    trees.push({ target, findings, unchecked, rawColourOnly, childError, incomplete });
+    trees.push({ target, findings, unchecked, completed, childError, incomplete });
   }
 
   const findings = trees.flatMap((tree) => tree.findings);
