@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-01T08:33:05.139Z
+generated_at: 2026-09-01T15:36:26.204Z
 generator_version: doc-gov@0.9.9
-docs_count: 91
+docs_count: 92
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -577,6 +577,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-29
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-THIRD-PARTY-CONTRAST-GATES-NEED-A-COMPLETION-RECEIPT-SEPARATE-FROM-ADOPTED-FINDI
+    path: docs/reference/learnings/workflow-issues/third-party-contrast-gates-need-a-completion-receipt-separate-from-adopted-findi.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-01
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-TRANSPARENT-DOM-MAP-LABELS-NEED-THEIR-OWN-COMPACT-TOKEN-SURFACE-FOR-MEASURED-CON
     path: docs/reference/learnings/workflow-issues/transparent-dom-map-labels-need-their-own-compact-token-surface-for-measured-con.md
