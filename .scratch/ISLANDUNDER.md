@@ -314,3 +314,338 @@ course-design 的 land p95 由 baseline 81.7809 变为 76.5947，grass P95 由 7
 作弊；扣分来自官方 ratchet 尚有历史 rise pin、world readiness 债务，以及本轮为 median
 付出的 grass/p95 值域收窄。下一轮若要继续，应先由契约拥有者决定这些历史红项和 world
 plate 边界的归属，不应在本分支偷偷调阈值。
+
+## Island 4 收尾与可判定证据（2026-09-01）
+
+这一节是本轮追加的最新记录；此前正文保留不动。此前正文里关于 world `ready=false` 的描述属于修复前状态，以下结果取代它。
+
+### 先提交遗留成果
+
+第一步已完成：先读懂并提交原有 8 个未提交文件，提交为 `bd57d50 world: preserve island look pass`。该提交只包含以下 8 个文件（144 insertions / 32 deletions）：
+
+- `packages/world/src/Maps.tsx`
+- `packages/world/src/grid/GridCloudLayers.tsx`
+- `packages/world/src/grid/HexField.tsx`
+- `packages/world/src/grid/LessonMarkerField.tsx`
+- `packages/world/src/grid/grid-palette.ts`
+- `packages/world/src/island/look-metrics.ts`
+- `packages/world/src/kit.tsx`
+- `packages/world/src/sky/cloud-volume.ts`
+
+之后的唯一修复提交为 `ef694c3 fix(look): wait for world terrain readiness`：把 world 判定绑定到实际地形对象，并保留了前一提交的视觉成果。`git status` 的 tracked 部分干净；`look-contract.ts`、`e2e/J.island-look.spec.ts`、harness、阈值和 ratchet pin 均没有 diff。
+
+### 判官运行口径
+
+官方命令 `pnpm e2e:island-look` 使用仓库原有固定镜头、`seed=foundations-before-zero`、`freeze=1`、`post=off`，真实退出码为 1；它打印了 `course-design/desktop` 和 `course-near/desktop` 后，在 `course-near/desktop/landCoverage` 停止：`observed 0.9716, pinned 1`。这不是把失败藏掉。因为官方 runner 在第一个 ratchet 红项就退出，后面 6 组用相同 URL、viewport、可见 headed browser、稳定画布等待和同一 `metricsFor` 逻辑补读；表中明确保留这一证据边界。
+
+每组的二次 reload 哈希均相同，`document.visibilityState=visible`，`ready=true`；desktop 画布为 1440×900，mobile 画布为 390×590。`displayDarkPixelShare` 是判官单独打印的显示域指标，也一并列出。
+
+| 镜头 / viewport | ready | displayDarkPixelShare | canvas | first = second pixel hash | calls / triangles |
+| --- | --- | ---: | --- | --- | ---: |
+| course-design/desktop | true | 0.154175 | 1440×900 | a265b553 = a265b553 | 25 / 19,810 |
+| course-near/desktop | true | 0.127926 | 1440×900 | 5b547bc8 = 5b547bc8 | 24 / 19,802 |
+| course-far/desktop | true | 0.09655 | 1440×900 | 4fa2816a = 4fa2816a | 25 / 19,810 |
+| world-design/desktop | true | 0.145417 | 1440×900 | fe48399c = fe48399c | 33 / 62,261 |
+| course-design/mobile | true | 0.264746 | 390×590 | 213a3579 = 213a3579 | 25 / 19,810 |
+| course-near/mobile | true | 0.088336 | 390×590 | 85bdb8e4 = 85bdb8e4 | 23 / 19,746 |
+| course-far/mobile | true | 0.085528 | 390×590 | a3e5c541 = a3e5c541 | 25 / 19,810 |
+| world-design/mobile | true | 0.254594 | 390×590 | db7e11df = db7e11df | 33 / 51,929 |
+
+字段含义：`current` 是本轮读到的数；`pin` 是 `ISLAND_LOOK_RATCHET` 原值；`contract band` 是 look contract 的合约区间；`direction` 是 ratchet 方向；`contract` 与 `ratchet` 分开判定。`INFO` 字段仍列出，因为它们属于判官输出，不能省略。
+
+#### course-design/desktop
+
+| 判官字段 | current | pin | contract band | direction | contract | ratchet |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+| sceneLinearRange | 17.404 | 5.825 | ≥4 | min | PASS | PASS |
+| landMedianLightness | 57.2474 | 50.5244 | 50–70 | range | PASS | PASS |
+| landP95Lightness | 97.6579 | 75.2878 | ≥85 | min | PASS | PASS |
+| landLightnessRise | 40.4105 | 24.7634 | ≥15 | min | PASS | PASS |
+| backgroundLightnessSpread | 56.8343 | 32.293 | ≥40 | min | PASS | PASS |
+| grassLightnessSpread | 45.8613 | 39.8258 | ≥45 | min | PASS | PASS |
+| grassLightnessP95 | 97.6771 | 76.2718 | ≥85 | min | PASS | PASS |
+| lightnessP2 | 23.7851 | 35.8535 | ≤25 | max | PASS | PASS |
+| lightnessP98 | 97.6674 | 78.5922 | ≥90 | min | PASS | PASS |
+| lightnessStdDev | 19.7891 | 12.71 | ≥18 | min | PASS | PASS |
+| grassHueCount | 9 | 9 | ≥3 | min | PASS | PASS |
+| grassHueSpread | 120 | 120 | ≥35 | min | PASS | PASS |
+| accentArea | 0.0161 | 0.0015 | 0.015–0.15 | range | PASS | PASS |
+| keyToFillRatio | 6.6452 | 5.3608 | ≥3 | min | PASS | PASS |
+| domLabelContrastMin | 9.2578 | 8.8868 | ≥4.5 | min | PASS | PASS |
+| domLabelCount | 6 | — | — | info | INFO | — |
+| layerDistribution | {"terrainPatches":4,"routeSamples":329,"dressingProps":328,"lessonNodes":41} | — | — | info | INFO | — |
+| lessonNodeCount | 41 | — | — | info | INFO | — |
+| coursePropCount | 328 | — | — | info | INFO | — |
+| propsPerLessonNode | 8 | 7.7073 | ≥7 | min | PASS | PASS |
+| rimPropShare | 0.314 | 0.2753 | ≥0.2 | min | PASS | PASS |
+| landCoverage | 0.5418 | 0.4277 | ≥0.34 | min | PASS | PASS |
+| nodeOcclusionShare | 0 | 0 | ≤0.05 | max | PASS | PASS |
+
+#### course-near/desktop
+
+| 判官字段 | current | pin | contract band | direction | contract | ratchet |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+| sceneLinearRange | 24.83 | 5.686 | ≥4 | min | PASS | PASS |
+| landMedianLightness | 62.8168 | 39.2856 | 50–70 | range | PASS | PASS |
+| landP95Lightness | 97.7682 | 53.4286 | ≥85 | min | PASS | PASS |
+| landLightnessRise | 34.9514 | 14.1431 | ≥15 | min | PASS | PASS |
+| backgroundLightnessSpread | 33.8161 | 0 | ≥40 | min | RED | PASS |
+| grassLightnessSpread | 52.5965 | 25.6484 | ≥45 | min | PASS | PASS |
+| grassLightnessP95 | 97.7896 | 48.8736 | ≥85 | min | PASS | PASS |
+| lightnessP2 | 18.1359 | 22.2487 | ≤25 | max | PASS | PASS |
+| lightnessP98 | 97.8449 | 56.191 | ≥90 | min | PASS | PASS |
+| lightnessStdDev | 24.2807 | 6.7783 | ≥18 | min | PASS | PASS |
+| grassHueCount | 8 | 5 | ≥3 | min | PASS | PASS |
+| grassHueSpread | 118.4234 | 70.677 | ≥35 | min | PASS | PASS |
+| accentArea | 0.0213 | 0 | 0.015–0.15 | range | PASS | PASS |
+| keyToFillRatio | 6.6452 | 5.3608 | ≥3 | min | PASS | PASS |
+| domLabelContrastMin | 13.0236 | 12.5226 | ≥4.5 | min | PASS | PASS |
+| domLabelCount | 4 | — | — | info | INFO | — |
+| layerDistribution | {"terrainPatches":4,"routeSamples":329,"dressingProps":328,"lessonNodes":41} | — | — | info | INFO | — |
+| lessonNodeCount | 41 | — | — | info | INFO | — |
+| coursePropCount | 328 | — | — | info | INFO | — |
+| propsPerLessonNode | 8 | 7.7073 | ≥7 | min | PASS | PASS |
+| rimPropShare | 0.314 | 0.2753 | ≥0.2 | min | PASS | PASS |
+| landCoverage | 0.9716 | 1 | ≥0.34 | min | PASS | RED |
+| nodeOcclusionShare | 0 | 0 | ≤0.05 | max | PASS | PASS |
+
+#### course-far/desktop
+
+| 判官字段 | current | pin | contract band | direction | contract | ratchet |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+| sceneLinearRange | 22.431 | 13.796 | ≥4 | min | PASS | PASS |
+| landMedianLightness | 62.6779 | 50.4215 | 50–70 | range | PASS | PASS |
+| landP95Lightness | 97.7682 | 75.5239 | ≥85 | min | PASS | PASS |
+| landLightnessRise | 35.0903 | 25.1024 | ≥15 | min | PASS | PASS |
+| backgroundLightnessSpread | 36.5476 | 43.4949 | ≥40 | min | RED | RED |
+| grassLightnessSpread | 49.2027 | 53.654 | ≥45 | min | PASS | RED |
+| grassLightnessP95 | 97.8114 | 77.2241 | ≥85 | min | PASS | PASS |
+| lightnessP2 | 24.6043 | 23.0834 | ≤25 | max | PASS | RED |
+| lightnessP98 | 97.8224 | 85.773 | ≥90 | min | PASS | PASS |
+| lightnessStdDev | 23.0471 | 16.2052 | ≥18 | min | PASS | PASS |
+| grassHueCount | 8 | 9 | ≥3 | min | PASS | RED |
+| grassHueSpread | 119.4828 | 119.717 | ≥35 | min | PASS | RED |
+| accentArea | 0.0241 | 0.0015 | 0.015–0.15 | range | PASS | PASS |
+| keyToFillRatio | 6.6452 | 5.3608 | ≥3 | min | PASS | PASS |
+| domLabelContrastMin | 10.3376 | 10.64 | ≥4.5 | min | PASS | RED |
+| domLabelCount | 10 | — | — | info | INFO | — |
+| layerDistribution | {"terrainPatches":4,"routeSamples":329,"dressingProps":328,"lessonNodes":41} | — | — | info | INFO | — |
+| lessonNodeCount | 41 | — | — | info | INFO | — |
+| coursePropCount | 328 | — | — | info | INFO | — |
+| propsPerLessonNode | 8 | 7.7073 | ≥7 | min | PASS | PASS |
+| rimPropShare | 0.314 | 0.2753 | ≥0.2 | min | PASS | PASS |
+| landCoverage | 0.8969 | 0.7704 | ≥0.34 | min | PASS | PASS |
+| nodeOcclusionShare | 0 | 0 | ≤0.05 | max | PASS | PASS |
+
+#### world-design/desktop
+
+| 判官字段 | current | pin | contract band | direction | contract | ratchet |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+| sceneLinearRange | 4.812 | 2.907 | ≥4 | min | PASS | PASS |
+| landMedianLightness | 55.6785 | 48.7604 | 50–70 | range | PASS | PASS |
+| landP95Lightness | 94.8376 | 77.0935 | ≥85 | min | PASS | PASS |
+| landLightnessRise | 39.1591 | 28.3331 | ≥15 | min | PASS | PASS |
+| backgroundLightnessSpread | 69.8701 | 47.6364 | ≥40 | min | PASS | PASS |
+| grassLightnessSpread | 52.1556 | 56.0291 | ≥45 | min | PASS | RED |
+| grassLightnessP95 | 96.3592 | 91.5368 | ≥85 | min | PASS | PASS |
+| lightnessP2 | 16.1373 | 34.6623 | ≤25 | max | PASS | PASS |
+| lightnessP98 | 97.7895 | 92.0102 | ≥90 | min | PASS | PASS |
+| lightnessStdDev | 22.0282 | 14.315 | ≥18 | min | PASS | PASS |
+| grassHueCount | 9 | 9 | ≥3 | min | PASS | PASS |
+| grassHueSpread | 120 | 120 | ≥35 | min | PASS | PASS |
+| accentArea | 0.0251 | 0.0054 | 0.015–0.15 | range | PASS | PASS |
+| keyToFillRatio | 6.6452 | 5.3608 | ≥3 | min | PASS | PASS |
+| domLabelContrastMin | 10.5701 | 12.6155 | ≥4.5 | min | PASS | RED |
+| domLabelCount | 9 | — | — | info | INFO | — |
+| layerDistribution | {"dressingProps":89,"lessonNodes":0,"routeSamples":0,"terrainPatches":0} | — | — | info | INFO | — |
+| lessonNodeCount | 0 | — | — | info | INFO | — |
+| coursePropCount | 89 | — | — | info | INFO | — |
+| landCoverage | 0.1207 | — | 信息 | info | INFO | — |
+| worldPropsPerIsland | 0 | 8 | ≤8 | max | PASS | PASS |
+
+#### course-design/mobile
+
+| 判官字段 | current | pin | contract band | direction | contract | ratchet |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+| sceneLinearRange | 7.239 | 3.286 | ≥4 | min | PASS | PASS |
+| landMedianLightness | 52.2125 | 73.9746 | 50–70 | range | PASS | PASS |
+| landP95Lightness | 96.5372 | 82.8142 | ≥85 | min | PASS | PASS |
+| landLightnessRise | 44.3246 | 8.8396 | ≥15 | min | PASS | PASS |
+| backgroundLightnessSpread | 70.167 | 38.2893 | ≥40 | min | PASS | PASS |
+| grassLightnessSpread | 45.4867 | 32.4114 | ≥45 | min | PASS | PASS |
+| grassLightnessP95 | 97.6674 | 78.4072 | ≥85 | min | PASS | PASS |
+| lightnessP2 | 12.3991 | 37.8218 | ≤25 | max | PASS | PASS |
+| lightnessP98 | 96.6315 | 82.9636 | ≥90 | min | PASS | PASS |
+| lightnessStdDev | 21.7033 | 14.3485 | ≥18 | min | PASS | PASS |
+| grassHueCount | 9 | 9 | ≥3 | min | PASS | PASS |
+| grassHueSpread | 120 | 120 | ≥35 | min | PASS | PASS |
+| accentArea | 0.0078 | 0.0905 | 0.015–0.15 | range | RED | RED |
+| keyToFillRatio | 6.6452 | 5.3608 | ≥3 | min | PASS | PASS |
+| domLabelContrastMin | 9.1066 | 10.0051 | ≥4.5 | min | PASS | RED |
+| domLabelCount | 3 | — | — | info | INFO | — |
+| layerDistribution | {"terrainPatches":4,"routeSamples":329,"dressingProps":328,"lessonNodes":41} | — | — | info | INFO | — |
+| lessonNodeCount | 41 | — | — | info | INFO | — |
+| coursePropCount | 328 | — | — | info | INFO | — |
+| propsPerLessonNode | 8 | 7.7073 | ≥7 | min | PASS | PASS |
+| rimPropShare | 0.314 | 0.2753 | ≥0.2 | min | PASS | PASS |
+| landCoverage | 0.4203 | 0.4239 | ≥0.34 | min | PASS | RED |
+| nodeOcclusionShare | 0 | 0 | ≤0.05 | max | PASS | PASS |
+
+#### course-near/mobile
+
+| 判官字段 | current | pin | contract band | direction | contract | ratchet |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+| sceneLinearRange | 22.347 | 4.361 | ≥4 | min | PASS | PASS |
+| landMedianLightness | 64.5108 | 39.6919 | 50–70 | range | PASS | PASS |
+| landP95Lightness | 97.6966 | 48.0839 | ≥85 | min | PASS | PASS |
+| landLightnessRise | 33.1858 | 8.392 | ≥15 | min | PASS | PASS |
+| backgroundLightnessSpread | 45.9397 | 0 | ≥40 | min | PASS | PASS |
+| grassLightnessSpread | 37.6751 | 22.1062 | ≥45 | min | RED | PASS |
+| grassLightnessP95 | 97.7065 | 45.7713 | ≥85 | min | PASS | PASS |
+| lightnessP2 | 24.7463 | 22.2487 | ≤25 | max | PASS | RED |
+| lightnessP98 | 97.7166 | 54.9768 | ≥90 | min | PASS | PASS |
+| lightnessStdDev | 23.5302 | 6.4264 | ≥18 | min | PASS | PASS |
+| grassHueCount | 5 | 6 | ≥3 | min | PASS | RED |
+| grassHueSpread | 115.3161 | 73.6407 | ≥35 | min | PASS | PASS |
+| accentArea | 0.0261 | 0 | 0.015–0.15 | range | PASS | PASS |
+| keyToFillRatio | 6.6452 | 5.3608 | ≥3 | min | PASS | PASS |
+| domLabelContrastMin | 10.6371 | 12.5524 | ≥4.5 | min | PASS | RED |
+| domLabelCount | 4 | — | — | info | INFO | — |
+| layerDistribution | {"terrainPatches":4,"routeSamples":329,"dressingProps":328,"lessonNodes":41} | — | — | info | INFO | — |
+| lessonNodeCount | 41 | — | — | info | INFO | — |
+| coursePropCount | 328 | — | — | info | INFO | — |
+| propsPerLessonNode | 8 | 7.7073 | ≥7 | min | PASS | PASS |
+| rimPropShare | 0.314 | 0.2753 | ≥0.2 | min | PASS | PASS |
+| landCoverage | 0.9883 | 1 | ≥0.34 | min | PASS | RED |
+| nodeOcclusionShare | 0 | 0 | ≤0.05 | max | PASS | PASS |
+
+#### course-far/mobile
+
+| 判官字段 | current | pin | contract band | direction | contract | ratchet |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+| sceneLinearRange | 22.058 | 15.735 | ≥4 | min | PASS | PASS |
+| landMedianLightness | 62.5248 | 52.6041 | 50–70 | range | PASS | PASS |
+| landP95Lightness | 97.7065 | 80.8839 | ≥85 | min | PASS | PASS |
+| landLightnessRise | 35.1817 | 28.2798 | ≥15 | min | PASS | PASS |
+| backgroundLightnessSpread | 35.2214 | 31.9002 | ≥40 | min | RED | PASS |
+| grassLightnessSpread | 50.3017 | 49.4044 | ≥45 | min | PASS | PASS |
+| grassLightnessP95 | 97.7369 | 72.9974 | ≥85 | min | PASS | PASS |
+| lightnessP2 | 25.0404 | 22.7128 | ≤25 | max | RED | RED |
+| lightnessP98 | 97.7473 | 83.7498 | ≥90 | min | PASS | PASS |
+| lightnessStdDev | 23.7326 | 16.4703 | ≥18 | min | PASS | PASS |
+| grassHueCount | 8 | 9 | ≥3 | min | PASS | RED |
+| grassHueSpread | 119.4828 | 120 | ≥35 | min | PASS | RED |
+| accentArea | 0.0227 | 0.0511 | 0.015–0.15 | range | PASS | RED |
+| keyToFillRatio | 6.6452 | 5.3608 | ≥3 | min | PASS | PASS |
+| domLabelContrastMin | 10.2931 | 10.576 | ≥4.5 | min | PASS | RED |
+| domLabelCount | 7 | — | — | info | INFO | — |
+| layerDistribution | {"terrainPatches":4,"routeSamples":329,"dressingProps":328,"lessonNodes":41} | — | — | info | INFO | — |
+| lessonNodeCount | 41 | — | — | info | INFO | — |
+| coursePropCount | 328 | — | — | info | INFO | — |
+| propsPerLessonNode | 8 | 7.7073 | ≥7 | min | PASS | PASS |
+| rimPropShare | 0.314 | 0.2753 | ≥0.2 | min | PASS | PASS |
+| landCoverage | 0.9426 | 0.8671 | ≥0.34 | min | PASS | PASS |
+| nodeOcclusionShare | 0 | 0 | ≤0.05 | max | PASS | PASS |
+
+#### world-design/mobile
+
+| 判官字段 | current | pin | contract band | direction | contract | ratchet |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+| sceneLinearRange | 7.159 | 3.039 | ≥4 | min | PASS | PASS |
+| landMedianLightness | 55.5624 | 80.4531 | 50–70 | range | PASS | PASS |
+| landP95Lightness | 95.1943 | 85.7285 | ≥85 | min | PASS | PASS |
+| landLightnessRise | 39.6318 | 5.2754 | ≥15 | min | PASS | PASS |
+| backgroundLightnessSpread | 81.0077 | 34.5319 | ≥40 | min | PASS | PASS |
+| grassLightnessSpread | 51.9972 | 40.192 | ≥45 | min | PASS | PASS |
+| grassLightnessP95 | 96.09 | 74.8088 | ≥85 | min | PASS | PASS |
+| lightnessP2 | 15.5081 | 34.4671 | ≤25 | max | PASS | PASS |
+| lightnessP98 | 98.7695 | 83.5046 | ≥90 | min | PASS | PASS |
+| lightnessStdDev | 26.9809 | 12.9957 | ≥18 | min | PASS | PASS |
+| grassHueCount | 9 | 9 | ≥3 | min | PASS | PASS |
+| grassHueSpread | 120 | 120 | ≥35 | min | PASS | PASS |
+| accentArea | 0.0312 | 0.3923 | 0.015–0.15 | range | PASS | PASS |
+| keyToFillRatio | 6.6452 | 5.3608 | ≥3 | min | PASS | PASS |
+| domLabelContrastMin | 11.926 | 13.4513 | ≥4.5 | min | PASS | RED |
+| domLabelCount | 3 | — | — | info | INFO | — |
+| layerDistribution | {"dressingProps":89,"lessonNodes":0,"routeSamples":0,"terrainPatches":0} | — | — | info | INFO | — |
+| lessonNodeCount | 0 | — | — | info | INFO | — |
+| coursePropCount | 89 | — | — | info | INFO | — |
+| landCoverage | 0.1375 | — | 信息 | info | INFO | — |
+| worldPropsPerIsland | 0 | 8 | ≤8 | max | PASS | PASS |
+
+### RED 的逐项归类
+
+分类按检查维度拆开：1 = 相对这次实测的 pre-merge baseline 变差；2 = 合约在合并前就已经红；3 = 只有旧 ratchet pin 红、而当前合约通过，且 pin 绑定了旧的几何 / 材质 / 光照构图。一个字段可以同时是 2 和 3；这比把合约红与历史 pin 红混成一个结论更准确。
+
+| 镜头 / 字段 | 当前 | pre-merge baseline | pin | contract band | 红的检查 | 归类与证据 |
+| --- | ---: | ---: | ---: | ---: | --- | --- |
+| course-near/desktop · backgroundLightnessSpread | 33.8161 | 4.3895 | 0 | ≥40 | contract | 2：合并前已红；本轮由 4.3895 提到 33.8161，仍未过合约 |
+| course-near/desktop · landCoverage | 0.9716 | 0.9995 | 1 | ≥0.34 | ratchet | 1：相对实测 baseline 下降；合约仍 PASS。pin=1 是旧精确截图值，见下方 pin 证据 |
+| course-far/desktop · backgroundLightnessSpread | 36.5476 | 22.3962 | 43.4949 | ≥40 | contract + ratchet | 2 + 3：合约合并前已红；相对 baseline 改善但达不到旧 pin |
+| course-far/desktop · grassLightnessSpread | 49.2027 | 29.44 | 53.654 | ≥45 | ratchet | 3：合约已 PASS，旧 pin 仍要求旧构图的 53.654 |
+| course-far/desktop · lightnessP2 | 24.6043 | 26.8513 | 23.0834 | ≤25 | ratchet | 3：相对 baseline 朝 max 方向改善且合约 PASS，旧 pin 不再是合理目标 |
+| course-far/desktop · grassHueCount | 8 | 5 | 9 | ≥3 | ratchet | 3：合约 PASS；旧 pin 记录的是旧 foliage 色相构成 |
+| course-far/desktop · grassHueSpread | 119.4828 | 120 | 119.717 | ≥35 | ratchet | 3：合约 PASS；仅丢失旧构图的 0.5172 |
+| course-far/desktop · domLabelContrastMin | 10.3376 | — | 10.64 | ≥4.5 | ratchet | 3：合约 PASS；旧 DOM label 构图 pin 不应支配当前画面 |
+| world-design/desktop · grassLightnessSpread | 52.1556 | —（旧 world 未 ready） | 56.0291 | ≥45 | ratchet | 3：合约 PASS；旧 world pin 来自另一套可见构图 |
+| world-design/desktop · domLabelContrastMin | 10.5701 | —（旧 world 未 ready） | 12.6155 | ≥4.5 | ratchet | 3：合约 PASS；旧 world label 构图 pin |
+| course-design/mobile · accentArea | 0.0078 | 0.7152 | 0.0905 | 0.015–0.15 | contract + ratchet | 2 + 3：合并前已红（当时是上界红），现在变成下界红；不能称为本轮修绿 |
+| course-design/mobile · domLabelContrastMin | 9.1066 | — | 10.0051 | ≥4.5 | ratchet | 3：合约 PASS，旧 label 构图 pin |
+| course-design/mobile · landCoverage | 0.4203 | 0.6305 | 0.4239 | ≥0.34 | ratchet | 1 + 3：相对 baseline 下降 0.2102；仍过合约，pin 只比当前高 0.0036，受当前像素分割 / 构图影响 |
+| course-near/mobile · grassLightnessSpread | 37.6751 | 7.3464 | 22.1062 | ≥45 | contract | 2：合并前已红；本轮显著改善，仍低于合约 |
+| course-near/mobile · lightnessP2 | 24.7463 | 26.9977 | 22.2487 | ≤25 | ratchet | 3：相对 baseline 已朝 max 方向改善，合约 PASS，旧 pin 过严 |
+| course-near/mobile · grassHueCount | 5 | 2 | 6 | ≥3 | ratchet | 3：相对 baseline 改善，合约 PASS，旧 pin 绑定旧色相构成 |
+| course-near/mobile · domLabelContrastMin | 10.6371 | — | 12.5524 | ≥4.5 | ratchet | 3：合约 PASS，旧 label 构图 pin |
+| course-near/mobile · landCoverage | 0.9883 | 0.9997 | 1 | ≥0.34 | ratchet | 1 + 3：相对 baseline 下降 0.0114；合约 PASS，pin=1 是旧精确值 |
+| course-far/mobile · backgroundLightnessSpread | 35.2214 | 21.1426 | 31.9002 | ≥40 | contract | 2：合并前已红；本轮改善但仍未过合约 |
+| course-far/mobile · lightnessP2 | 25.0404 | 27.4234 | 22.7128 | ≤25 | contract + ratchet | 2 + 3：合并前已红；本轮接近合约但仍超过 25，且未达到旧 pin |
+| course-far/mobile · grassHueCount | 8 | 3 | 9 | ≥3 | ratchet | 3：合约 PASS；相对 baseline 改善，旧 pin 绑定旧色相构成 |
+| course-far/mobile · grassHueSpread | 119.4828 | 30 | 120 | ≥35 | ratchet | 3：合约 PASS；相对 baseline 大幅改善，旧 pin 的 120 是旧构图精确值 |
+| course-far/mobile · accentArea | 0.0227 | 0.3566 | 0.0511 | 0.015–0.15 | ratchet | 3：合约 PASS；合并前反而是上界红，当前进入 band，旧 range pin 不应否决 |
+| course-far/mobile · domLabelContrastMin | 10.2931 | — | 10.576 | ≥4.5 | ratchet | 3：合约 PASS，旧 label 构图 pin |
+| world-design/mobile · domLabelContrastMin | 11.926 | —（旧 world 未 ready） | 13.4513 | ≥4.5 | ratchet | 3：合约 PASS；当前 median 从旧 pin 外的 80.4531 回到合约 band 内 |
+
+### 为什么这些 pin 已失去判定意义
+
+pin 文件的注释写明它们是在 2026-08-30、66° polar、-1 target-height offset、course-design own fit 下采集的历史观察；本轮没有改 camera、light、contract 或 pin。`bd57d50` 改的是共享的 sky / terrain value ramp / cloud / marker / foliage / material composition，并保留同一生成管线，所以旧 pin 会随着像素分布和遮挡边界一起移动。
+
+两个可复核的反例：
+
+- `course-design/desktop` 的 current `landMedian=57.2474`、`landP95=97.6579`、`landLightnessRise=40.4105`、`backgroundSpread=56.8343` 全部满足合约，但相对旧 pin 的 50.5244 / 75.2878 / 24.7634 / 32.293 大幅变化；这不是失去体积，而是旧材质构图的数值已不再是当前尺子。
+- `world-design/mobile` 的旧 median pin 是 80.4531，本身就在当前合约上界 70 之外；current 是 55.5624，实际进入 50–70，同时 scene range=7.159、triangles=51,929、hash 二次一致。继续追旧 pin 会把已经合约通过的 world 往错误方向推。
+
+world 的 `worldPropsPerIsland` current=0 需要单独注明：当前 source 没有 blueprint plans，因此 judge 的这个字段取 0；同一 report 的 `coursePropCount=89`、`layerDistribution.dressingProps=89` 和画布预算证明实际 world dressing 并非 0。这里没有趁收尾再改 metric 语义，避免把证据轮变成新的画面轮。
+
+### world ready 修复
+
+修复位置是 `packages/world/src/island/look-metrics.ts:313` 附近。旧判定等待不存在的 `island-look-aerial-plate`，而 world scene 明确 `visibleSea=false`，所以永远不能进入 judge。现在 `worldGridReady(scene)` 必须找到名为 `world-grid-hex-field` 的实际 `InstancedMesh`，并同时满足 `count > 0` 与 geometry 的 position attribute 有顶点；`detailSurfaceReady` 只对 world 使用这条检查。没有 direct `true`，没有新增 aerial plate。
+
+修复后的真实 headed-browser 结果是 `world-design/desktop ready=true`（33 calls / 62,261 triangles / hash `fe48399c`）和 `world-design/mobile ready=true`（33 calls / 51,929 triangles / hash `db7e11df`），两组均二次 reload 不漂移。
+
+### 同镜头截图证据
+
+baseline 与 final 都是 `course-design`、同一 fixed camera、同一 1440×900 canvas；final 只切换 `post=off/on`，并在 DOM 隐藏后截 raw canvas，没有把 UI 当画面。四个绝对路径如下：
+
+- `/Users/yuanfei/PieAI/University-wt-islandunder/.scratch/islandunder/baseline/course-design-post-off.png` — 1440×900，SHA-256 `45279df94385434293db613cd57ed10176bd96f1649d1a514a62a57175ef916c`
+- `/Users/yuanfei/PieAI/University-wt-islandunder/.scratch/islandunder/baseline/course-design-post-on.png` — 1440×900，SHA-256 `93df484fad3ba3f9b7a8cfcf477f979d5c7168a3d08650d887b893081fd750e5`
+- `/Users/yuanfei/PieAI/University-wt-islandunder/.scratch/islandunder/final/course-design-post-off.png` — 1440×900，SHA-256 `c13962437380b45a55cbf60770eb35e5267ed540c64892ee739a1620b5ecf990`
+- `/Users/yuanfei/PieAI/University-wt-islandunder/.scratch/islandunder/final/course-design-post-on.png` — 1440×900，SHA-256 `a49e94476cb5d918310f7f78a585e0e9c7553c44dab49b436292552188c02b32`
+
+### 验证收尾
+
+通过：
+
+- `pnpm typecheck`、全仓 lint、format check、generated-format
+- 全仓测试：core 49 files / 421 tests，backend 2 / 6，grading 4 / 27，ui 65 / 382，local 45 / 428，world 49 / 327，university 49 / 217
+- module boundaries、kit portability、contrast、raw colours、shared styles、i18n、canvas registry、review-card registry、experience ledger
+- 两个 mode 的 build、shelf、content revisions
+- 单独补跑的 `pnpm check:lesson-links`、`pnpm bundle`、`pnpm docs:check`；后者 89 docs、0 warning
+- `git diff --check`，以及受保护的 contract / e2e / harness 路径无 diff
+
+`pnpm verify` 唯一失败仍是最后阶段的既有 export freshness：
+
+`turing-pact — re-export failed: Study has no active courses: turing-pact`
+
+修复提示是让 `apps/local` 对 `turing-pact` 做 recovery export；本任务明确禁止改 `apps/local/studies/`，所以没有越界修它，也没有把失败写成通过。
+
+这轮的交付判断：视觉生成规则不再继续调；已有成果已保住并提交，world 判官已能真正看到实际地形，8 个固定镜头的完整数值、每一个合约 / ratchet 红项、pre-merge 证据和四张同镜头截图均已留档。
