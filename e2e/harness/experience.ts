@@ -219,6 +219,14 @@ const PLANS_PRIMARY: ExperienceTarget = {
   locate: (page) => page.locator(".plan-card button.liquid-cta__button").first(),
 };
 
+const PLANS_CANCELLATION: ExperienceTarget = {
+  id: "plans-cancellation",
+  label: "会员取消说明",
+  // Pin the semantic hook, not the reassurance wording. Copy can be refined
+  // without turning an intentional copy change into a false e2e failure.
+  locate: (page) => page.locator('[data-plan-cancellation="true"]'),
+};
+
 const PROFILE_PRIMARY: ExperienceTarget = {
   id: "profile-sign-in",
   label: "账号登录",
@@ -381,7 +389,7 @@ export const EXPERIENCE_ROUTES: readonly ExperienceRoute[] = [
     path: "/plans",
     ready: readyPlans,
     primary: PLANS_PRIMARY,
-    coverage: [PLANS_PRIMARY],
+    coverage: [PLANS_PRIMARY, PLANS_CANCELLATION],
     returnToWorld: SHELL_RETURN("会员"),
   },
   {

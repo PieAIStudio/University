@@ -942,6 +942,8 @@ export const messages = {
   "ui.navigation.screens.plansScreen.copy.当前方案": "当前方案：",
   "ui.navigation.screens.plansScreen.copy.所有已发布课程都能免费学-课文和关卡永远不收费-绑定邮箱后-每天有少量-AI-批改尝鲜额度-用完今天停止-明天恢":
     "所有已发布课程都能免费学，课文和关卡永远不收费。绑定邮箱后，每天有少量 AI 批改尝鲜额度，用完今天停止，明天恢复。会员买的是账号那一半：换手机或电脑也能接着学，最多三台设备同时在线。",
+  "ui.navigation.screens.plansScreen.copy.随时可以取消-取消之后不再扣费":
+    "随时可以取消，取消之后不再扣费。",
   "ui.navigation.screens.plansScreen.copy.折合": "（折合",
   "ui.navigation.screens.plansScreen.copy.按年": "按年",
   "ui.navigation.screens.plansScreen.copy.按月": "按月",

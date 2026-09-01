@@ -787,12 +787,14 @@ a.linkish {
 }
 
 .plan-card__period,
-.plan-card__note {
+.plan-card__note,
+.plan-card__cancellation {
   color: var(--game-ui-text-muted, #9aa6bb);
   font-size: var(--game-ui-font-sm, 0.82rem);
 }
 
-.plan-card__note {
+.plan-card__note,
+.plan-card__cancellation {
   margin: 0;
 }
 
