@@ -89,7 +89,6 @@ const SHELF_COURSE: CourseView = {
   description: "",
   audience: "",
   objectives: [],
-  status: "active",
   isDefault: true,
   isBeingRewritten: true,
   prerequisiteCourseIds: [],
@@ -99,12 +98,10 @@ const SHELF_COURSE: CourseView = {
       id: "what-is-an-app",
       title: "你每天用的 App，拆开是什么",
       objective: "我能说出使用 App 和开发 App 的差别。",
-      status: "active",
       lessons: [
         {
           id: LESSON.id,
           title: LESSON.title,
-          status: "active",
           contentRevision: 1,
           cardCount: LESSON.cards.length,
           exerciseCount: LESSON.exercises.length,

@@ -29,7 +29,6 @@ const STUDIES: readonly ShelfStudy[] = [
         description: "",
         audience: "",
         objectives: [],
-        status: "active",
         isDefault: true,
         prerequisiteCourseIds: [],
         trackId: null,
@@ -38,12 +37,10 @@ const STUDIES: readonly ShelfStudy[] = [
             id: REF.unitId,
             title: "Unit",
             objective: "我能说出使用 App 和开发 App 的差别。",
-            status: "active",
             lessons: [
               {
                 id: REF.lessonId,
                 title: "Lesson",
-                status: "active",
                 contentRevision: 2,
                 cardCount: 0,
                 exerciseCount: 1,

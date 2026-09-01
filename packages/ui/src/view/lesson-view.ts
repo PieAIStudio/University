@@ -290,7 +290,6 @@ interface LessonSummary {
   readonly title: string;
   /** The catalogue badge, when the content source carries the lesson shape. */
   readonly variant?: string | null;
-  readonly status: string;
   readonly contentRevision: number;
   readonly cardCount: number;
   readonly exerciseCount: number;
@@ -326,7 +325,6 @@ export interface UnitView {
   readonly id: string;
   readonly title: string;
   readonly objective: string;
-  readonly status: string;
   readonly lessons: readonly LessonSummary[];
 }
 
@@ -336,7 +334,6 @@ export interface CourseView extends CourseLearnerFact {
   readonly description: string;
   readonly audience: string;
   readonly objectives: readonly string[];
-  readonly status: string;
   readonly isDefault: boolean;
   readonly units: readonly UnitView[];
   /**

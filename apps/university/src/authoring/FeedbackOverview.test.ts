@@ -26,19 +26,16 @@ const studyView = {
       description: "",
       audience: "",
       objectives: [],
-      status: "active",
       isDefault: true,
       units: [
         {
           id: "unit",
           title: "第一单元",
           objective: "",
-          status: "active",
           lessons: [
             {
               id: "lesson",
               title: "第一节",
-              status: "active",
               contentRevision: 3,
               cardCount: 0,
               exerciseCount: 2,

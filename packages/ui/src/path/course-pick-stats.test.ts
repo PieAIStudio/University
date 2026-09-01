@@ -9,7 +9,6 @@ function lesson(overrides: Partial<LessonSummary> = {}): LessonSummary {
   return {
     id: "lesson",
     title: "lesson",
-    status: "active",
     contentRevision: 1,
     cardCount: 0,
     exerciseCount: 0,
@@ -27,7 +26,6 @@ function course(lessons: readonly LessonSummary[]): Pick<CourseView, "units"> {
         id: "unit",
         title: "unit",
         objective: "objective",
-        status: "active",
         lessons,
       },
     ],

@@ -15,7 +15,6 @@ vi.mock("../ports/index", () => {
   const lesson = (id: string, title: string) => ({
     id,
     title,
-    status: "active",
     contentRevision: 1,
     cardCount: 0,
     exerciseCount: 0,
@@ -29,7 +28,6 @@ vi.mock("../ports/index", () => {
     description: "",
     audience: "",
     objectives: [],
-    status: "active",
     isDefault: true,
     prerequisiteCourseIds: [],
     trackId: null,
@@ -38,7 +36,6 @@ vi.mock("../ports/index", () => {
         id: `${id}-unit`,
         title: "Unit",
         objective: "Objective",
-        status: "active",
         lessons: [lesson(`${id}-lesson`, lessonTitle)],
       },
     ],

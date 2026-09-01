@@ -12,14 +12,12 @@ const COURSE = {
   description: "",
   audience: "",
   objectives: [],
-  status: "active",
   isDefault: true,
   units: [
     {
       id: "what-is-an-app",
       title: "App 是什么",
       objective: "",
-      status: "active",
       lessons: [{ id: "you-already-know-apps", title: "你已经会用 App" }],
     },
   ],
