@@ -2,8 +2,9 @@ import { type ThreeEvent } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-import { cellTopColour, HEX_GEOMETRY_TRIANGLES, hexGeometry, mapMaterial } from "./HexField.js";
+import { cellTopColour, HEX_GEOMETRY_TRIANGLES, hexGeometry } from "./HexField.js";
 import { GRID_SEAM_STRENGTH, type GridCell } from "./course-grid.js";
+import { createHexFieldMaterial } from "./hex-field-material.js";
 import { hexToWorld } from "./hex.js";
 import { WorldPropField } from "./WorldPropField.js";
 import { WorldUndersideField } from "./WorldUndersideField.js";
@@ -59,7 +60,7 @@ function WorldHexTerrain({ instances, onPick, onHover }: WorldHexTerrainProps) {
   const firstMap = instances[0]?.island.map;
   const geometry = useMemo(() => hexGeometry(GRID_SEAM_STRENGTH.land, -0.62), []);
   const material = useMemo(
-    () => (firstMap ? mapMaterial(firstMap, false, "land") : null),
+    () => (firstMap ? createHexFieldMaterial(firstMap, false, "land") : null),
     [firstMap],
   );
   const matrix = useMemo(() => new THREE.Matrix4(), []);
