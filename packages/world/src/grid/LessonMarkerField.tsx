@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { playSound } from "@pieai/university-ui/sound/index.js";
 import { islandLookFrozen } from "../island/island-surface-style.js";
 import type { LessonPlacement } from "../Maps.js";
-import { GRID_SHARED_SOIL } from "./grid-palette.js";
+import { GRID_LESSON_PLINTH_ALBEDO } from "./grid-palette.js";
 
 export interface GridLessonMarker {
   readonly lesson: LessonPlacement;
@@ -81,7 +81,7 @@ export function LessonMarkerField({ markers, onPick, onHover }: LessonMarkerFiel
       // colours. Leaving vertexColors enabled on CylinderGeometry (which has
       // no color attribute) binds the missing attribute as black and turns
       // every paver into a dark token.
-      plinthTarget.setColorAt(index, new THREE.Color(GRID_SHARED_SOIL.road));
+      plinthTarget.setColorAt(index, new THREE.Color(GRID_LESSON_PLINTH_ALBEDO));
       matrix.compose(
         new THREE.Vector3(lesson.position.x, lesson.position.y + radius * 0.25, lesson.position.z),
         new THREE.Quaternion(),

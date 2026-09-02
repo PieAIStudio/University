@@ -24,6 +24,21 @@ export const GRID_SHARED_SOIL = {
 } as const;
 
 /**
+ * The lesson paver is a separate authored object, not another road swatch.
+ * A near-white paver under the scene's cool fill turns its shaded wall navy;
+ * this warm sandstone keeps the same readable light top while the shadow stays
+ * a warm neutral. The route still uses `GRID_SHARED_SOIL.road`.
+ */
+export const GRID_LESSON_PLINTH_ALBEDO = 0xd6ad7d;
+
+/**
+ * The route top stays the shared ivory road; only its steep bevel needs a
+ * warmer authored response. Without this edge swatch, the cool fill paints
+ * the near-white bevel slate blue while the road top remains correct.
+ */
+export const GRID_ROUTE_BEVEL_ALBEDO = 0xe7b878;
+
+/**
  * Elevation is also a value layer. These are albedo multipliers keyed to the
  * four authored terrace levels, not a post-process exposure shift: the lower
  * shoulder receives less light, while the upper terrace has enough value

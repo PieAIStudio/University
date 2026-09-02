@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   GRID_ACCENT_RAMP,
   GRID_LESSON_MARKER_COLOURS,
+  GRID_LESSON_PLINTH_ALBEDO,
   GRID_PALETTE_PRESETS,
   GRID_PROP_FOLIAGE_COLOURS,
+  GRID_ROUTE_BEVEL_ALBEDO,
   GRID_SHARED_SOIL,
   GRID_TERRAIN_VALUE_RAMP,
   gridPaletteFor,
@@ -141,6 +143,17 @@ describe("hand-picked grid palettes", () => {
     const maps = readFileSync(new URL("../Maps.tsx", import.meta.url), "utf8");
     expect(maps).toMatch(/GRID_LESSON_MARKER_COLOURS/);
     expect(maps).not.toMatch(/MARKER_COLOUR\s*=/);
+  });
+
+  it("keeps cool fill from turning the lesson stone edges blue", () => {
+    const red = (colour: number) => (colour >> 16) & 255;
+    const blue = (colour: number) => colour & 255;
+    expect(red(GRID_LESSON_PLINTH_ALBEDO)).toBeGreaterThan(blue(GRID_LESSON_PLINTH_ALBEDO));
+    expect(red(GRID_ROUTE_BEVEL_ALBEDO)).toBeGreaterThan(blue(GRID_ROUTE_BEVEL_ALBEDO));
+    expect(GRID_LESSON_PLINTH_ALBEDO).not.toBe(GRID_SHARED_SOIL.road);
+    expect(GRID_ROUTE_BEVEL_ALBEDO).not.toBe(GRID_SHARED_SOIL.road);
+    const markerField = readFileSync(new URL("./LessonMarkerField.tsx", import.meta.url), "utf8");
+    expect(markerField).toMatch(/GRID_LESSON_PLINTH_ALBEDO/);
   });
 
   it("keeps every lesson marker legible on its own ground", () => {

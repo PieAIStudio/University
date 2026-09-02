@@ -18,6 +18,38 @@ interface HexFieldProps {
 export const HEX_GEOMETRY_TRIANGLES = 18;
 export const HEX_BEVEL_GEOMETRY_TRIANGLES = 30;
 
+export interface HexBevelOptions {
+  readonly width?: number;
+  readonly depth?: number;
+  /** The outer edge can be brought back to the ideal shared-hex radius. */
+  readonly outerRadius?: number;
+  /** Small albedo lift for the chamfer's light-catching strip. */
+  readonly value?: number;
+}
+
+/**
+ * A course meadow needs a seam-safe bevel, not the chunky semantic bevel used
+ * by route stones. Its outer edge meets the ideal hex radius exactly, so the
+ * existing `land = -0.02` overlap does not put two chamfers in the same depth
+ * slice. The strip is deliberately narrow enough to read as a manufactured
+ * edge at the learner camera, not as a second yellow tile.
+ */
+export const HEX_COURSE_LAND_BEVEL: Required<HexBevelOptions> = {
+  width: 0.045,
+  depth: 0.055,
+  outerRadius: 1,
+  value: 1.035,
+};
+
+/** The centre-to-edge value ramp painted into every top face. */
+export const HEX_TOP_CENTRE_VALUE = 1.055;
+export const HEX_TOP_EDGE_VALUE = 0.95;
+export const HEX_TOP_NEAR_EDGE_VALUE = 0.972;
+export const HEX_TOP_DIRECTIONAL_VALUE = 0.012;
+
+const CELL_ROTATION_AXIS = new THREE.Vector3(0, 1, 0);
+const CELL_ROTATION_QUATERNION = new THREE.Quaternion();
+
 export function hexGeometryTriangleCount(beveled: boolean): number {
   return beveled ? HEX_BEVEL_GEOMETRY_TRIANGLES : HEX_GEOMETRY_TRIANGLES;
 }
@@ -26,6 +58,7 @@ export function hexGeometry(
   seamStrength: number,
   cliffBottom = -0.5,
   beveled = false,
+  bevelOptions: HexBevelOptions = {},
 ): THREE.BufferGeometry {
   const positions: number[] = [];
   const colours: number[] = [];
@@ -36,15 +69,15 @@ export function hexGeometry(
   // and same-height meadow cells can still read as one continuous island.
   const radius = 1 - seamStrength;
   const top = 0.5;
-  // The top face keeps its established centre and height. The optional bevel
-  // is reserved for route and detached cells: those are semantic stepping
-  // stones, while a bevel on every meadow cell turns one terrace into a tiled
-  // board. The shared prism path keeps the same instance scale and pick target
-  // in both cases.
+  // The top face keeps its established centre and height. The bevel profile is
+  // caller-owned because route stones are semantic stepping stones while the
+  // meadow needs a much quieter manufactured edge.
   const bottom = cliffBottom;
-  const bevelWidth = beveled ? 0.085 : 0;
-  const bevelDepth = beveled ? 0.12 : 0;
-  const innerRadius = Math.max(0.01, radius - bevelWidth);
+  const bevelWidth = beveled ? (bevelOptions.width ?? 0.085) : 0;
+  const bevelDepth = beveled ? (bevelOptions.depth ?? 0.12) : 0;
+  const bevelOuterRadius = beveled ? (bevelOptions.outerRadius ?? radius) : radius;
+  const bevelValue = beveled ? (bevelOptions.value ?? 1.12) : 1;
+  const innerRadius = Math.max(0.01, bevelOuterRadius - bevelWidth);
   const bevelTop = top - bevelDepth;
   const centre = [0, top, 0] as const;
   for (let side = 0; side < 6; side += 1) {
@@ -61,14 +94,14 @@ export function hexGeometry(
       Math.sin(secondAngle) * innerRadius,
     ] as const;
     const firstOuter = [
-      Math.cos(firstAngle) * radius,
+      Math.cos(firstAngle) * bevelOuterRadius,
       bevelTop,
-      Math.sin(firstAngle) * radius,
+      Math.sin(firstAngle) * bevelOuterRadius,
     ] as const;
     const secondOuter = [
-      Math.cos(secondAngle) * radius,
+      Math.cos(secondAngle) * bevelOuterRadius,
       bevelTop,
-      Math.sin(secondAngle) * radius,
+      Math.sin(secondAngle) * bevelOuterRadius,
     ] as const;
     const wallFirst = beveled ? firstOuter : first;
     const wallSecond = beveled ? secondOuter : second;
@@ -78,15 +111,17 @@ export function hexGeometry(
     // Keep the top winding counter-clockwise when viewed from above.
     const topBase = positions.length / 3;
     positions.push(...centre, ...second, ...first);
-    // Keep the top-face ramp quiet. A dark rim on every hex reads as a dotted
-    // outline at the aerial camera; neighbouring-tile variation lives in
-    // `cellTopColour` instead, so same-height meadow stays one terrace.
-    const edgeValue = 0.97 + (side % 3) * 0.015;
-    const nearEdgeValue = 0.98 + (side % 2) * 0.01;
+    // A quiet centre-to-edge ramp gives the painted top a value step before
+    // lighting arrives. The directional term is intentionally tiny: it makes
+    // the six free rotations useful without outlining every cell.
+    const sideDirection = Math.cos((side + 0.5) * (Math.PI / 3));
+    const edgeValue = HEX_TOP_EDGE_VALUE + sideDirection * HEX_TOP_DIRECTIONAL_VALUE;
+    const nearEdgeValue =
+      HEX_TOP_NEAR_EDGE_VALUE + sideDirection * (HEX_TOP_DIRECTIONAL_VALUE * 0.5);
     colours.push(
-      1.02,
-      1.02,
-      1.02,
+      HEX_TOP_CENTRE_VALUE,
+      HEX_TOP_CENTRE_VALUE,
+      HEX_TOP_CENTRE_VALUE,
       edgeValue,
       edgeValue,
       edgeValue,
@@ -100,9 +135,22 @@ export function hexGeometry(
     if (beveled) {
       const bevelBase = positions.length / 3;
       positions.push(...first, ...second, ...secondOuter, ...firstOuter);
-      // The physical chamfer gets a little albedo headroom; its direction is
+      // The physical chamfer gets only a small albedo lift; its direction is
       // still supplied by the generated normal and the scene's existing key.
-      colours.push(1.12, 1.12, 1.12, 1.12, 1.12, 1.12, 1.12, 1.12, 1.12, 1.12, 1.12, 1.12);
+      colours.push(
+        bevelValue,
+        bevelValue,
+        bevelValue,
+        bevelValue,
+        bevelValue,
+        bevelValue,
+        bevelValue,
+        bevelValue,
+        bevelValue,
+        bevelValue,
+        bevelValue,
+        bevelValue,
+      );
       faces.push(2, 2, 2, 2);
       indices.push(
         bevelBase,
@@ -164,12 +212,25 @@ function setSurfaceSlopeAttribute(
   if (enabled) {
     cells.forEach((cell, index) => {
       const slope = gridSurfaceSlopeFor(cell, map.cells, map.seed);
+      const angle = cellRotationAngle(map, cell);
+      const cosine = Math.cos(angle);
+      const sine = Math.sin(angle);
+      // The shader applies the slope before the instance's Y rotation. Rotate
+      // the world slope into that local frame so physical relief stays aligned
+      // with the shared field while top-face direction is varied.
+      const localSlopeX = slope.x * cosine - slope.z * sine;
+      const localSlopeZ = slope.x * sine + slope.z * cosine;
       const height = Math.max(cell.topY, 0.01);
-      values[index * 2] = (slope.x * map.hexSize) / height;
-      values[index * 2 + 1] = (slope.z * map.hexSize) / height;
+      values[index * 2] = (localSlopeX * map.hexSize) / height;
+      values[index * 2 + 1] = (localSlopeZ * map.hexSize) / height;
     });
   }
   geometry.setAttribute("gridSlope", new THREE.InstancedBufferAttribute(values, 2));
+}
+
+function cellRotationAngle(map: HexMap, cell: GridCell): number {
+  const step = Math.floor(hash(`${map.seed}/${cell.key}/hex-face-rotation`) * 6);
+  return step * (Math.PI / 3);
 }
 
 export function cellTopColour(map: HexMap, cell: GridCell): THREE.Color {
@@ -189,10 +250,15 @@ export function cellTopColour(map: HexMap, cell: GridCell): THREE.Color {
       colour.multiplyScalar(unitValue);
       colour.lerp(new THREE.Color(map.palette.accent), 0.045 + (cell.unitIndex % 4) * 0.02);
     }
-    // Keep the last variation small: the territory and terrace are the broad
-    // colour fields, while a per-cell hash should only stop a large region from
-    // looking stamped. A wider hash range turns the meadow into a checkerboard.
-    colour.multiplyScalar(0.985 + hash(`${map.seed}/${cell.key}/top-value`) * 0.03);
+    // Keep this variation low-frequency: adjacent cells share a value band and
+    // the broad field changes over several cells. Per-cell white noise was the
+    // earlier checkerboard failure, so the seed only chooses the phase.
+    const phase = hash(`${map.seed}/top-value-field-phase`) * Math.PI * 2;
+    const fieldX = cell.coord.q * 0.34 + cell.coord.r * 0.17;
+    const fieldZ = cell.coord.r * 0.29 - cell.coord.q * 0.11;
+    const lowFrequencyValue =
+      Math.sin(fieldX + phase) * 0.55 + Math.cos(fieldZ - phase * 0.7) * 0.45;
+    colour.multiplyScalar(1 + lowFrequencyValue * 0.02);
   }
   const lesson = cell.lessonIndex === null ? undefined : map.lessons[cell.lessonIndex];
   if (lesson?.state === "locked") colour.lerp(new THREE.Color(map.palette.shadow), 0.42);
@@ -204,9 +270,13 @@ export function cellTopColour(map: HexMap, cell: GridCell): THREE.Color {
 function cellMatrix(cell: GridCell, map: HexMap, target: THREE.Matrix4, pulse = 0): THREE.Matrix4 {
   const point = hexToWorld(cell.coord, map.hexSize);
   const height = Math.max(cell.topY, 0.01);
+  const rotation = CELL_ROTATION_QUATERNION.setFromAxisAngle(
+    CELL_ROTATION_AXIS,
+    cellRotationAngle(map, cell),
+  );
   target.compose(
     new THREE.Vector3(point.x, height * 0.5 + pulse, point.z),
-    new THREE.Quaternion(),
+    rotation,
     new THREE.Vector3(map.hexSize, height, map.hexSize),
   );
   return target;
@@ -281,6 +351,7 @@ function HexLayerField({
   cliffBottom,
   cells,
   beveled,
+  bevelOptions,
   mesh,
 }: {
   readonly map: HexMap;
@@ -289,6 +360,7 @@ function HexLayerField({
   readonly cliffBottom: number;
   readonly cells: readonly GridCell[];
   readonly beveled: boolean;
+  readonly bevelOptions?: HexBevelOptions;
   readonly mesh: React.MutableRefObject<THREE.InstancedMesh | null>;
 }) {
   const geometry = useMemo(
@@ -301,8 +373,10 @@ function HexLayerField({
             : map.seamStrength.land,
         cliffBottom,
         beveled,
+        bevelOptions,
       ),
     [
+      bevelOptions,
       beveled,
       cliffBottom,
       layer,
@@ -428,7 +502,8 @@ export function HexField({ map, dimmed = false }: HexFieldProps) {
         layer="land"
         cliffBottom={cliffBottom}
         cells={landCells}
-        beveled={false}
+        beveled
+        bevelOptions={HEX_COURSE_LAND_BEVEL}
         mesh={landMesh}
       />
       <HexLayerField
