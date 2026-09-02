@@ -26,14 +26,29 @@ export function LessonMarkerField({ markers, onPick, onHover }: LessonMarkerFiel
   // coral stone set into it, which keeps the route readable without adding a
   // separate mesh per lesson.
   const plinthGeometry = useMemo(() => {
-    const geometry = new THREE.CylinderGeometry(0.92, 1, 0.22, 6);
+    // A wide chamfer, not a wall.
+    //
+    // This was 0.92 -> 1.0 over 0.22, which is a near-vertical band about
+    // twenty degrees off plumb. Under a 24-degree key those faces catch no sun
+    // at all and are lit only by the (deliberately cool) fill, so the one
+    // object a learner clicks wore a dark ring — navy before the palette pass,
+    // near-black after it. Isolating the meshes settled it: hide the plinth and
+    // the dark ring goes with it, hide the coral inset and the ring stays.
+    //
+    // Colour could not fix that, because the darkness was geometry: a vertical
+    // face has nowhere to get light from. 0.66 -> 1.0 over 0.14 is roughly a
+    // 58-degree slope, which points at the sky, takes the key, and becomes the
+    // lit chamfer the reference art puts on every edge.
+    const geometry = new THREE.CylinderGeometry(0.66, 1, 0.14, 6);
     const normal = geometry.getAttribute("normal");
     const colours = new Float32Array(normal.count * 3);
     for (let index = 0; index < normal.count; index += 1) {
-      // The inset top receives less reflected fill than its bevel. This is a
-      // face relationship, not a global marker grade, and preserves the
-      // bright side rim that keeps the paver legible on the road.
-      const value = normal.getY(index) > 0.9 ? 0.5 : 1;
+      // The chamfer is now the lit face, so it keeps full albedo and the flat
+      // top is stepped down slightly instead. The old inversion (top 0.5, side
+      // 1.0) existed to keep a bright rim against the ivory road; the sand
+      // albedo already separates them, so this only has to stop the top from
+      // competing with the coral inset sitting on it.
+      const value = normal.getY(index) > 0.9 ? 0.94 : 1;
       colours[index * 3] = value;
       colours[index * 3 + 1] = value;
       colours[index * 3 + 2] = value;
