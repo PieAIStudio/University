@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildCourseGrid, GRID_SEAM_STRENGTH, type CourseGridLesson } from "./course-grid.js";
 import { hexDistance, hexKey, hexNeighbors, hexToWorld } from "./hex.js";
 import { GRID_CELL_BUDGET, gridRegionShapeMetrics, hexRegionIsConnected } from "./grid-outline.js";
-import { propCellsAreUnique } from "./grid-props.js";
+import { propCellsAreUnique, propsAvoidRoute } from "./grid-props.js";
 import { islandGeometryBlueprint } from "../island/island-blueprint.js";
 
 const LESSONS: readonly CourseGridLesson[] = Array.from({ length: 41 }, (_, index) => ({
@@ -151,9 +151,20 @@ describe("hex grid course data", () => {
       lessons: LESSONS,
     });
     expect(propCellsAreUnique(map.props)).toBe(true);
-    expect(
-      map.lessons.every((lesson) => map.props.some((prop) => prop.cellKey === lesson.key)),
-    ).toBe(true);
+    /*
+     * 2026-09-02: this used to assert the opposite — that every lesson cell
+     * carried a prop. That placement was logical only: `PropField` has always
+     * filtered it out, because the thing standing on a lesson cell is the
+     * lesson marker, which is authored geometry with a state ring. So the
+     * assertion pinned a value nothing rendered, while the property that
+     * actually matters went unguarded.
+     *
+     * The real rule is the inverse, and it is a rule about the learner: nothing
+     * decorative may stand on the road or on the tile they are meant to click.
+     */
+    expect(propsAvoidRoute(map.props, map.route)).toBe(true);
+    const lessonKeys = new Set(map.lessons.map((lesson) => lesson.key));
+    expect(map.props.some((prop) => lessonKeys.has(prop.cellKey))).toBe(false);
   });
 
   it("keeps the main outline one connected region and detached cells separate", () => {

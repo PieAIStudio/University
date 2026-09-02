@@ -34,7 +34,6 @@ import {
   disposeOwnedPartResources,
   type OwnedPartResources,
 } from "./kit-resources.js";
-import { GRID_PROP_FOLIAGE_COLOURS } from "./grid/grid-palette.js";
 import { hash } from "./island/random.js";
 
 export type Role = keyof typeof manifest.assets;
@@ -193,43 +192,130 @@ export function useIslandGLTF(src: string) {
 }
 
 /**
- * Flatten a model to a list of instanceable parts, normalised to unit height.
+ * `useGLTF` must be called unconditionally, so an empty library still needs a
+ * stable list to suspend on. This is the one model already shipped for every
+ * course, so it is never an extra fetch.
  */
+const EMPTY_LIBRARY: readonly string[] = [];
+
+/**
+ * The one material every batched prop shares.
+ *
+ * Both batched fields use this rather than each building its own, because two
+ * definitions of the prop material is two ways for the silhouette treatment to
+ * drift — and because a single shared `customProgramCacheKey` is what keeps
+ * three from compiling a second program for the same look.
+ */
+function createBatchedPropMaterial(): THREE.MeshStandardMaterial {
+  const material = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    vertexColors: true,
+    roughness: 0.86,
+    metalness: 0,
+    flatShading: true,
+    side: THREE.DoubleSide,
+  });
+  material.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <opaque_fragment>",
+      [
+        // A restrained reverse-fresnel darkens the silhouette edge just enough
+        // to keep a small tree separate from a similarly coloured meadow tile.
+        "float propEdge = smoothstep(0.02, 0.72, abs(normal.y));",
+        "outgoingLight *= mix(0.88, 1.0, propEdge);",
+        /*
+         * A prop's shaded side keeps its own hue instead of becoming the fill's.
+         *
+         * The scene runs key:fill at 5.57:1 with a cool fill, which is right for
+         * terrain: a hex top is a broad plane facing the sun, so the ratio reads
+         * as warm light and cool shadow. A palm trunk is the opposite case —
+         * from a 65° camera almost every pixel of a thin vertical prop is the
+         * face turned *away* from a 24° sun. At one fifth intensity and a blue
+         * tint, a warm brown lands on near-black, and the whole tree read as a
+         * black stick against the meadow. That was not a colour bug; the swatch
+         * was a perfectly good 0x8f6a45, and rendering the same mesh with a
+         * white material proved it by coming back blue rather than black.
+         *
+         * The floor is a value step inside the object's own family rather than
+         * a light: shadow stops at 32% of the prop's albedo, so the dark side of
+         * a trunk stays brown and the dark side of a leaf stays green. Raising
+         * the scene fill instead would have paid for one prop by flattening
+         * every terrace on the island.
+         */
+        "outgoingLight = max(outgoingLight, diffuseColor.rgb * 0.32);",
+        "#include <opaque_fragment>",
+      ].join("\n"),
+    );
+  };
+  material.customProgramCacheKey = () => "hex-grid-batched-prop-v2";
+  return material;
+}
+
+/**
+ * Flatten a loaded scene to a list of instanceable parts, normalised to unit
+ * height. Shared by the single-source and library loaders below so there is
+ * exactly one definition of what "normalised" means.
+ */
+function partsFromScene(root: THREE.Object3D, preserveMap: boolean): Part[] {
+  root.updateMatrixWorld(true);
+
+  const box = new THREE.Box3().setFromObject(root);
+  const size = box.getSize(new THREE.Vector3());
+  const centre = box.getCenter(new THREE.Vector3());
+  const height = size.y || 1;
+  // Centre on X and Z, sit the base on y=0, then scale height to 1.
+  const normalise = new THREE.Matrix4()
+    .makeScale(1 / height, 1 / height, 1 / height)
+    .multiply(new THREE.Matrix4().makeTranslation(-centre.x, -box.min.y, -centre.z));
+
+  const parts: Part[] = [];
+  root.traverse((object) => {
+    const mesh = object as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+    if (!material) return;
+    parts.push({
+      // Keep the loader's source geometry/material immutable. PartField
+      // clones both only after the component commits, so a StrictMode render
+      // that React abandons cannot strand GPU resources created in render.
+      sourceGeometry: mesh.geometry,
+      sourceMaterial: material,
+      preserveMap,
+      offset: new THREE.Matrix4().multiplyMatrices(normalise, mesh.matrixWorld),
+    });
+  });
+  return parts;
+}
+
 function usePartsFromSource(src: string, preserveMap = false): readonly Part[] {
   const gltf = useIslandGLTF(src);
-  const parts = useMemo(() => {
-    const root = gltf.scene;
-    root.updateMatrixWorld(true);
+  return useMemo(() => partsFromScene(gltf.scene, preserveMap), [gltf, preserveMap]);
+}
 
-    const box = new THREE.Box3().setFromObject(root);
-    const size = box.getSize(new THREE.Vector3());
-    const centre = box.getCenter(new THREE.Vector3());
-    const height = size.y || 1;
-    // Centre on X and Z, sit the base on y=0, then scale height to 1.
-    const normalise = new THREE.Matrix4()
-      .makeScale(1 / height, 1 / height, 1 / height)
-      .multiply(new THREE.Matrix4().makeTranslation(-centre.x, -box.min.y, -centre.z));
-
-    const parts: Part[] = [];
-    root.traverse((object) => {
-      const mesh = object as THREE.Mesh;
-      if (!mesh.isMesh) return;
-      const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-      if (!material) return;
-      parts.push({
-        // Keep the loader's source geometry/material immutable. PartField
-        // clones both only after the component commits, so a StrictMode render
-        // that React abandons cannot strand GPU resources created in render.
-        sourceGeometry: mesh.geometry,
-        sourceMaterial: material,
-        preserveMap,
-        offset: new THREE.Matrix4().multiplyMatrices(normalise, mesh.matrixWorld),
-      });
+/**
+ * Load a whole library of GLBs through the one loader stack.
+ *
+ * `useGLTF` accepts an array and suspends until all of them resolve, so this
+ * stays a single hook call whatever the library's size — the hook order cannot
+ * depend on how many biomes a course happens to use.
+ */
+function usePartsFromSources(sources: readonly string[]): ReadonlyMap<string, readonly Part[]> {
+  const ktx2 = useKtx2();
+  const list = sources.length > 0 ? sources : EMPTY_LIBRARY;
+  const loaded = useGLTF(list as string[], false, true, (loader) => {
+    loader.setDRACOLoader(dracoLoader);
+    loader.setKTX2Loader(ktx2);
+  });
+  return useMemo(() => {
+    const parts = new Map<string, readonly Part[]>();
+    if (sources.length === 0) return parts;
+    const scenes = Array.isArray(loaded) ? loaded : [loaded];
+    sources.forEach((src, index) => {
+      const scene = scenes[index]?.scene;
+      if (scene) parts.set(src, partsFromScene(scene, false));
     });
     return parts;
-  }, [gltf, preserveMap]);
-
-  return parts;
+  }, [loaded, sources]);
 }
 
 function useParts(role: Role): readonly Part[] {
@@ -287,46 +373,83 @@ export function AssetField({
   );
 }
 
+/**
+ * The prop palette, keyed by the material names Kenney's artists already wrote.
+ *
+ * Two things this table has to get right, and the first one is why it exists at
+ * all rather than just reusing the terrain swatches:
+ *
+ * **Bark is not cliff.** Bark used to be painted `0x70452f`, which is
+ * `GRID_SHARED_SOIL.cliff`. On a cliff face — a large mass filling a lot of
+ * screen — that reads as warm earth. On a palm trunk 0.1 world units wide it
+ * reads as a black stick, because almost every pixel of a thin cylinder is a
+ * grazing-angle pixel and the silhouette darkening lands on all of them at
+ * once. The same number is correct for one and wrong for the other; the fix is
+ * a lighter swatch for props, not a change to the terrain.
+ *
+ * **Autumn is not green.** `leafsFall` used to fall through to the leaf entry
+ * and come out the same green as summer, which would have quietly deleted the
+ * entire point of the fall-grove biome.
+ */
+const PROP_FAMILY: readonly (readonly [RegExp, number])[] = [
+  [/fall|autumn/, 0xd98836],
+  [/birch/, 0xd9cdb4],
+  [/mushroom|colorred|red/, 0xe0664a],
+  [/corn|wheat/, 0xe0b552],
+  [/flower|yellow/, 0xf0bd4f],
+  [/purple|violet/, 0xa06ec0],
+  [/grass|leaf|plant|foliage/, 0x6f9e3c],
+  [/bark|wood|trunk|log/, 0x8f6a45],
+  [/stone|rock|dirt|sand/, 0x9c8467],
+];
+
+/**
+ * LOOK-V2 §11 rule 3: one object carries two or three values, not one flat
+ * colour. Kenney already authored that distinction into the material names —
+ * `stone`/`stoneDark`, `leafsGreen`/`leafsDark`, `woodBark`/`woodInner` — and
+ * the previous table collapsed each pair onto a single swatch, throwing the
+ * internal value step away and flattening every prop into a sticker.
+ */
 function batchedPropColour(source: THREE.Material): THREE.Color {
-  const name = source.name.toLowerCase();
-  const colour =
-    name.includes("red") || name.includes("mushroom")
-      ? 0xe86f50
-      : name.includes("yellow") || name.includes("flower")
-        ? 0xf0bd4f
-        : name.includes("grass") || name.includes("leaf") || name.includes("plant")
-          ? 0x6f9e3c
-          : name.includes("bark") || name.includes("wood") || name.includes("trunk")
-            ? 0x70452f
-            : name.includes("dirt") || name.includes("rock") || name.includes("stone")
-              ? 0x927052
-              : ((source as THREE.MeshStandardMaterial).color?.getHex?.() ?? 0xd2bf97);
-  return new THREE.Color(colour);
+  const name = (source.name ?? "").toLowerCase();
+  const match = PROP_FAMILY.find(([pattern]) => pattern.test(name));
+  const colour = new THREE.Color(
+    match ? match[1] : ((source as THREE.MeshStandardMaterial).color?.getHex?.() ?? 0xd2bf97),
+  );
+  if (/dark/.test(name)) colour.multiplyScalar(0.74);
+  else if (/inner|light/.test(name)) colour.multiplyScalar(1.15);
+  return colour;
 }
 
 function isFoliageMaterial(source: THREE.Material): boolean {
-  const name = source.name.toLowerCase();
-  return name.includes("grass") || name.includes("leaf") || name.includes("plant");
+  const name = (source.name ?? "").toLowerCase();
+  return /grass|leaf|plant|foliage/.test(name);
 }
 
+/**
+ * Per-copy foliage variation.
+ *
+ * This used to *replace* a leaf's colour with one of nine fixed swatches. Two
+ * things were wrong with that. The ramp reached `0x213c28`, which on an island
+ * tree is depth and on a 1.5-unit shrub is a black hole in the meadow; and
+ * replacing the colour meant an autumn canopy came back green, because the
+ * ramp only knows about grass.
+ *
+ * So the variation is now relative: a small deterministic swing in value and a
+ * slight warm/cool tilt, applied to whatever family colour the material
+ * already resolved to. Every copy still differs from its neighbour — LOOK-V2
+ * §11 rule 2, variation beats detail — but a family stays itself.
+ */
 function batchedFoliageInstanceMultiplier(
   source: THREE.Material,
   placement: Placement,
   placementIndex: number,
 ): THREE.Color | null {
   if (!isFoliageMaterial(source)) return null;
-  const base = batchedPropColour(source);
-  const variantIndex = Math.floor(
-    hash(
-      `grid-foliage/${source.name}/${placementIndex}/${Math.round(placement.position.x * 10)},${Math.round(placement.position.z * 10)}`,
-    ) * GRID_PROP_FOLIAGE_COLOURS.length,
-  );
-  const variant = new THREE.Color(GRID_PROP_FOLIAGE_COLOURS[variantIndex] ?? base.getHex());
-  return new THREE.Color(
-    variant.r / Math.max(base.r, Number.EPSILON),
-    variant.g / Math.max(base.g, Number.EPSILON),
-    variant.b / Math.max(base.b, Number.EPSILON),
-  );
+  const key = `grid-foliage/${source.name}/${placementIndex}/${Math.round(placement.position.x * 10)},${Math.round(placement.position.z * 10)}`;
+  const value = 0.84 + hash(key) * 0.32;
+  const tilt = (hash(`${key}/tilt`) - 0.5) * 0.16;
+  return new THREE.Color(value * (1 + tilt), value, value * (1 - tilt * 0.6));
 }
 
 function normaliseBatchedGeometry(part: Part): THREE.BufferGeometry {
@@ -358,6 +481,137 @@ function normaliseBatchedGeometry(part: Part): THREE.BufferGeometry {
 }
 
 /**
+ * One multi-draw batch for an entire library of assets.
+ *
+ * `BatchedAssetField` below draws one *model* per submission, which was fine
+ * while the grid shipped nine of them and fatal the moment it shipped sixty:
+ * draw calls would have grown linearly with how varied the island looked,
+ * so "make the map richer" and "keep the frame cheap" would have been in
+ * direct opposition. They are not, and this is why.
+ *
+ * It works because every model in the grid nature library comes from one
+ * Kenney pack whose material mode is `unlit-color`. There is no texture to
+ * bind, and each mesh's colour is baked into a vertex attribute by
+ * `normaliseBatchedGeometry`, so one material describes all of them. The whole
+ * prop field — every biome, every role, every instance — is one submission and
+ * one shadow submission, whether the course uses six models or sixty.
+ *
+ * The sources are sorted before loading so the hook order cannot change when a
+ * course's biome mix changes.
+ */
+export function BatchedAssetLibraryField({
+  fields,
+  castShadow = false,
+  name = "hex-grid-batched-library",
+}: {
+  readonly fields: readonly { readonly src: string; readonly at: readonly Placement[] }[];
+  readonly castShadow?: boolean;
+  readonly name?: string;
+}) {
+  const sources = useMemo(
+    () => [...new Set(fields.map((field) => field.src))].sort(),
+    [fields],
+  );
+  const partsBySource = usePartsFromSources(sources);
+  const [batch, setBatch] = useState<THREE.BatchedMesh | null>(null);
+
+  useLayoutEffect(() => {
+    const drawn = fields.filter((field) => field.at.length > 0);
+    if (drawn.length === 0 || partsBySource.size === 0) return;
+
+    const geometryBySource = new Map<string, THREE.BufferGeometry[]>();
+    let maxVertexCount = 0;
+    let maxIndexCount = 0;
+    let maxInstanceCount = 0;
+    for (const field of drawn) {
+      const parts = partsBySource.get(field.src);
+      if (!parts || parts.length === 0) continue;
+      if (!geometryBySource.has(field.src)) {
+        const geometries = parts.map(normaliseBatchedGeometry);
+        geometryBySource.set(field.src, geometries);
+        for (const geometry of geometries) {
+          maxVertexCount += geometry.getAttribute("position").count;
+          maxIndexCount += geometry.index?.count ?? 0;
+        }
+      }
+      maxInstanceCount += field.at.length * parts.length;
+    }
+    if (maxInstanceCount === 0) return;
+
+    const material = createBatchedPropMaterial();
+    const target = new THREE.BatchedMesh(
+      maxInstanceCount,
+      Math.max(1, maxVertexCount),
+      Math.max(1, maxIndexCount),
+      material,
+    );
+    target.perObjectFrustumCulled = false;
+    target.sortObjects = false;
+    target.castShadow = castShadow;
+    target.frustumCulled = false;
+    target.name = name;
+
+    const geometryIdsBySource = new Map<string, number[]>();
+    for (const [src, geometries] of geometryBySource) {
+      geometryIdsBySource.set(
+        src,
+        geometries.map((geometry) => target.addGeometry(geometry)),
+      );
+    }
+
+    const local = new THREE.Matrix4();
+    const world = new THREE.Matrix4();
+    let placed = 0;
+    for (const field of drawn) {
+      const parts = partsBySource.get(field.src);
+      const geometryIds = geometryIdsBySource.get(field.src);
+      if (!parts || !geometryIds) continue;
+      field.at.forEach((placement, placementIndex) => {
+        const width = placement.width ?? placement.height;
+        world.compose(
+          placement.position,
+          new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), placement.turn),
+          new THREE.Vector3(width, placement.height, width),
+        );
+        geometryIds.forEach((geometryId, partIndex) => {
+          const instanceId = target.addInstance(geometryId);
+          target.setMatrixAt(instanceId, local.multiplyMatrices(world, parts[partIndex]!.offset));
+          const foliageMultiplier = batchedFoliageInstanceMultiplier(
+            parts[partIndex]!.sourceMaterial,
+            placement,
+            placementIndex,
+          );
+          if (foliageMultiplier) target.setColorAt(instanceId, foliageMultiplier);
+        });
+        placed += 1;
+      });
+    }
+    target.userData = {
+      islandLookPlacementCount: placed,
+      islandLookBatch: true,
+      islandLookMaterials: [...partsBySource.entries()].flatMap(([src, parts]) =>
+        parts.map((part) => `${src.split("/").pop()}::${part.sourceMaterial.name}::${batchedPropColour(part.sourceMaterial).getHexString()}`),
+      ),
+    };
+    target.computeBoundingBox();
+    target.computeBoundingSphere();
+    for (const geometries of geometryBySource.values()) {
+      geometries.forEach((geometry) => geometry.dispose());
+    }
+    setBatch(target);
+
+    return () => {
+      setBatch((current) => (current === target ? null : current));
+      target.dispose();
+      material.dispose();
+    };
+  }, [castShadow, fields, name, partsBySource]);
+
+  if (!batch) return null;
+  return <primitive object={batch} dispose={null} />;
+}
+
+/**
  * One multi-draw batch for all parts of one nature asset. A GLB may contain a
  * leaf part and a bark part with different geometry, so ordinary InstancedMesh
  * still needs one call per primitive. BatchedMesh keeps those parts together
@@ -379,23 +633,7 @@ export function BatchedAssetField({
   useLayoutEffect(() => {
     if (parts.length === 0 || at.length === 0) return;
     const geometries = parts.map(normaliseBatchedGeometry);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      vertexColors: true,
-      roughness: 0.86,
-      metalness: 0,
-      flatShading: true,
-      side: THREE.DoubleSide,
-    });
-    // A restrained reverse-fresnel darkens the silhouette edge just enough to
-    // keep a small tree separate from a similarly coloured meadow tile.
-    material.onBeforeCompile = (shader) => {
-      shader.fragmentShader = shader.fragmentShader.replace(
-        "#include <opaque_fragment>",
-        "float propEdge = smoothstep(0.02, 0.72, abs(normal.y));\noutgoingLight *= mix(0.88, 1.0, propEdge);\n#include <opaque_fragment>",
-      );
-    };
-    material.customProgramCacheKey = () => "hex-grid-batched-prop-v1";
+    const material = createBatchedPropMaterial();
     const maxVertexCount = geometries.reduce(
       (total, geometry) => total + geometry.getAttribute("position").count,
       0,

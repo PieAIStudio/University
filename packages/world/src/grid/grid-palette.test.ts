@@ -5,7 +5,6 @@ import {
   GRID_LESSON_MARKER_COLOURS,
   GRID_LESSON_PLINTH_ALBEDO,
   GRID_PALETTE_PRESETS,
-  GRID_PROP_FOLIAGE_COLOURS,
   GRID_ROUTE_BEVEL_ALBEDO,
   GRID_SHARED_SOIL,
   GRID_TERRAIN_VALUE_RAMP,
@@ -104,26 +103,15 @@ describe("hand-picked grid palettes", () => {
     expect(ramp[0]).toBeLessThan(ramp.at(-1)!);
   });
 
-  it("keeps grid foliage inside the green family", () => {
-    const hueOf = (colour: number): number => {
-      const red = ((colour >> 16) & 255) / 255;
-      const green = ((colour >> 8) & 255) / 255;
-      const blue = (colour & 255) / 255;
-      const maximum = Math.max(red, green, blue);
-      const minimum = Math.min(red, green, blue);
-      const delta = maximum - minimum;
-      if (delta === 0) return 0;
-      let hue =
-        maximum === red
-          ? ((green - blue) / delta) % 6
-          : maximum === green
-            ? (blue - red) / delta + 2
-            : (red - green) / delta + 4;
-      hue *= 60;
-      return hue < 0 ? hue + 360 : hue;
-    };
-    expect(Math.max(...GRID_PROP_FOLIAGE_COLOURS.map(hueOf))).toBeLessThan(150);
-  });
+  /*
+   * 2026-09-02: the fixed nine-swatch leaf ramp and its hue assertion were both
+   * removed. The ramp *replaced* a leaf's colour, so it could only ever
+   * describe grass — an autumn canopy came back green — and its darkest entry
+   * (0x213c28) read as a hole punched in the meadow once props were small and
+   * numerous. Foliage variation is now a relative swing in value applied to
+   * whatever family colour the material resolved to, so there is no palette
+   * left here to bound; `kit.tsx` owns it and keeps every family itself.
+   */
 
   it("derives a dark underside from the island top without adding a material", () => {
     const warm = gridUndersideColorForTop(0xd89440);

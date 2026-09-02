@@ -1,0 +1,2343 @@
+{
+  "schemaVersion": 1,
+  "assetSet": "grid-biome-library",
+  "status": "prototype/local donor; PGS donor registered",
+  "sourceRoot": "local-donor:Kenney",
+  "sourceRootHint": "../../../_donors/Kenney or KENNEY_DONOR_ROOT",
+  "outputRoot": "public/kenney/grid",
+  "runtimeBasePath": "/kenney/grid",
+  "selection": {
+    "packIds": [
+      "nature-kit"
+    ],
+    "whitelistPolicy": "explicit filenames only; no donor glob",
+    "materialMode": "unlit-color",
+    "rationale": "One pack, one material language, one BatchedMesh for the whole prop field."
+  },
+  "license": {
+    "spdx": "CC0-1.0",
+    "file": "kenney_nature-kit/License.txt",
+    "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+    "textCheck": "Creative Commons Zero, CC0 + commercial use",
+    "commercialUse": true
+  },
+  "assets": [
+    {
+      "type": "model",
+      "id": "grid-nature-cactus_short",
+      "assetId": "cactus_short",
+      "role": "understory",
+      "src": "/kenney/grid/nature/cactus_short.glb",
+      "bytes": 8844,
+      "sha256": "81ac9fc4c66eacceaf4aebcb6df3468ea450a2f5081151bb11400282efbc51bd",
+      "triangles": 116,
+      "aspect": {
+        "width": 0.641,
+        "depth": 0.5576
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/cactus_short.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/cactus_short.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-cactus_tall",
+      "assetId": "cactus_tall",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/cactus_tall.glb",
+      "bytes": 9668,
+      "sha256": "d43a1aca5952e1f8a104d64a0edfec09c39f15102ca6bdc531460dd5a2c53d25",
+      "triangles": 122,
+      "aspect": {
+        "width": 0.5283,
+        "depth": 0.4521
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/cactus_tall.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/cactus_tall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-campfire_logs",
+      "assetId": "campfire_logs",
+      "role": "ground",
+      "src": "/kenney/grid/nature/campfire_logs.glb",
+      "bytes": 9284,
+      "sha256": "98d87cdcf9095b94fd348d0946e911dd4ca6c0956bac3318cfd2b0030b86055a",
+      "triangles": 112,
+      "aspect": {
+        "width": 4.6622,
+        "depth": 4.6622
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/campfire_logs.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/campfire_logs.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-crop_carrot",
+      "assetId": "crop_carrot",
+      "role": "ground",
+      "src": "/kenney/grid/nature/crop_carrot.glb",
+      "bytes": 12664,
+      "sha256": "2a3641c609dd837a4feebb4f5c95d4cd43c3046e800acd416f4f6a3b923ba9d8",
+      "triangles": 148,
+      "aspect": {
+        "width": 0.554,
+        "depth": 0.554
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/crop_carrot.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/crop_carrot.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-crop_pumpkin",
+      "assetId": "crop_pumpkin",
+      "role": "understory",
+      "src": "/kenney/grid/nature/crop_pumpkin.glb",
+      "bytes": 10840,
+      "sha256": "5b4878c5996033629419c26ac32153ce8ac06bbbdac98e4fa8a5cbab98f78077",
+      "triangles": 120,
+      "aspect": {
+        "width": 1.3218,
+        "depth": 1.3538
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/crop_pumpkin.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/crop_pumpkin.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-crop_turnip",
+      "assetId": "crop_turnip",
+      "role": "ground",
+      "src": "/kenney/grid/nature/crop_turnip.glb",
+      "bytes": 14308,
+      "sha256": "5e121c6042742497ed02081a7c62fc80aec2191f04e22a57d81d02130689f71d",
+      "triangles": 168,
+      "aspect": {
+        "width": 0.5194,
+        "depth": 0.5194
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/crop_turnip.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/crop_turnip.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-crops_bambooStageA",
+      "assetId": "crops_bambooStageA",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/crops_bambooStageA.glb",
+      "bytes": 22092,
+      "sha256": "7bafbd69c78b1f6b92fe72e8fd6d1b6ea4b25d6af141c0baa85c27b60aa34e41",
+      "triangles": 276,
+      "aspect": {
+        "width": 0.6195,
+        "depth": 0.561
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/crops_bambooStageA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/crops_bambooStageA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-crops_bambooStageB",
+      "assetId": "crops_bambooStageB",
+      "role": "landmark",
+      "src": "/kenney/grid/nature/crops_bambooStageB.glb",
+      "bytes": 40144,
+      "sha256": "238c4cbeedf747dea96d579cf63301d35bb8709310f0405596c8f988dcc366e6",
+      "triangles": 564,
+      "aspect": {
+        "width": 0.3821,
+        "depth": 0.3461
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/crops_bambooStageB.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/crops_bambooStageB.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-crops_cornStageD",
+      "assetId": "crops_cornStageD",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/crops_cornStageD.glb",
+      "bytes": 29316,
+      "sha256": "d90d9cbba85e99526b254adee638495f914480831ab41d00807378c004c112c3",
+      "triangles": 300,
+      "aspect": {
+        "width": 0.3533,
+        "depth": 0.3533
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/crops_cornStageD.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/crops_cornStageD.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-crops_wheatStageB",
+      "assetId": "crops_wheatStageB",
+      "role": "understory",
+      "src": "/kenney/grid/nature/crops_wheatStageB.glb",
+      "bytes": 30040,
+      "sha256": "589db4d6fe0bd7616c1f1c2f10a335704b2dad5d24638dc08a5b2e5334c68852",
+      "triangles": 360,
+      "aspect": {
+        "width": 1.0087,
+        "depth": 0.8351
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/crops_wheatStageB.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/crops_wheatStageB.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-fence_simple",
+      "assetId": "fence_simple",
+      "role": "ground",
+      "src": "/kenney/grid/nature/fence_simple.glb",
+      "bytes": 5712,
+      "sha256": "ecaf6c29532aa9fd305a8ef71df769d60748bd797f2eb1c63bdefc4edb8062a7",
+      "triangles": 64,
+      "aspect": {
+        "width": 2.8983,
+        "depth": 0.2029
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/fence_simple.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/fence_simple.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-flower_purpleA",
+      "assetId": "flower_purpleA",
+      "role": "ground",
+      "src": "/kenney/grid/nature/flower_purpleA.glb",
+      "bytes": 7112,
+      "sha256": "f6fc34c96a03420a74fe36d4c2d0ec88f15204fcad99cd1416c3c4ecb22e48c4",
+      "triangles": 76,
+      "aspect": {
+        "width": 0.6561,
+        "depth": 0.7466
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/flower_purpleA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/flower_purpleA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-flower_purpleB",
+      "assetId": "flower_purpleB",
+      "role": "ground",
+      "src": "/kenney/grid/nature/flower_purpleB.glb",
+      "bytes": 8084,
+      "sha256": "2afb10cd68a9a7b185fc46110be0da550ea2aef86ef9ac6b7339f217eb4b636a",
+      "triangles": 98,
+      "aspect": {
+        "width": 0.9944,
+        "depth": 1.1471
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/flower_purpleB.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/flower_purpleB.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-flower_redA",
+      "assetId": "flower_redA",
+      "role": "ground",
+      "src": "/kenney/grid/nature/flower_redA.glb",
+      "bytes": 7104,
+      "sha256": "171930b7789ddbf735af3745576b5393750beb9133b9ff4a444bb6bb2986c020",
+      "triangles": 76,
+      "aspect": {
+        "width": 0.5439,
+        "depth": 0.619
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/flower_redA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/flower_redA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-flower_yellowA",
+      "assetId": "flower_yellowA",
+      "role": "ground",
+      "src": "/kenney/grid/nature/flower_yellowA.glb",
+      "bytes": 7120,
+      "sha256": "8a3b08cd2ca411c21f9c581d5bda651d78b13c50cba45ad8fa0389398ead6d1d",
+      "triangles": 76,
+      "aspect": {
+        "width": 0.8265,
+        "depth": 0.9406
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/flower_yellowA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/flower_yellowA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-grass_large",
+      "assetId": "grass_large",
+      "role": "understory",
+      "src": "/kenney/grid/nature/grass_large.glb",
+      "bytes": 18504,
+      "sha256": "af49a595624abca7249824eeefb944d4baf974abeeb5b16110d175da3563d6cd",
+      "triangles": 224,
+      "aspect": {
+        "width": 1.6102,
+        "depth": 1.6059
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/grass_large.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/grass_large.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-grass_leafs",
+      "assetId": "grass_leafs",
+      "role": "ground",
+      "src": "/kenney/grid/nature/grass_leafs.glb",
+      "bytes": 4608,
+      "sha256": "8bc4c0b17c2e64c34e1acbf7c4a2fd8c04cfcd7155328e61767887b2ced112c7",
+      "triangles": 36,
+      "aspect": {
+        "width": 1.6455,
+        "depth": 1.8057
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/grass_leafs.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/grass_leafs.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-grass_leafsLarge",
+      "assetId": "grass_leafsLarge",
+      "role": "ground",
+      "src": "/kenney/grid/nature/grass_leafsLarge.glb",
+      "bytes": 13988,
+      "sha256": "a68b9b3d9639afaeb4ace840d5a8e3f21ffc4e8afc1eab15566500fbb2bee3e3",
+      "triangles": 144,
+      "aspect": {
+        "width": 3.3396,
+        "depth": 3.4197
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/grass_leafsLarge.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/grass_leafsLarge.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-hanging_moss",
+      "assetId": "hanging_moss",
+      "role": "ground",
+      "src": "/kenney/grid/nature/hanging_moss.glb",
+      "bytes": 4776,
+      "sha256": "2124c2d038054f1ea89d470a6095d35c2fbdb2674916db93400ea6ed5f499cb0",
+      "triangles": 52,
+      "aspect": {
+        "width": 0.334,
+        "depth": 0.0731
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/hanging_moss.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/hanging_moss.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-lily_large",
+      "assetId": "lily_large",
+      "role": "ground",
+      "src": "/kenney/grid/nature/lily_large.glb",
+      "bytes": 8044,
+      "sha256": "c8f7080df0ae3166e9d33f523b66360c2ac7556dff36cc9c8ee78b6a676c7db2",
+      "triangles": 86,
+      "aspect": {
+        "width": 2.7741,
+        "depth": 3.2033
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/lily_large.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/lily_large.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-log",
+      "assetId": "log",
+      "role": "ground",
+      "src": "/kenney/grid/nature/log.glb",
+      "bytes": 14288,
+      "sha256": "8c8fe8f6adfc03a3c0cd6cb24961ff74be96c2da284d70322f05797d049972d6",
+      "triangles": 200,
+      "aspect": {
+        "width": 1.3508,
+        "depth": 4.0992
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/log.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/log.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-log_stack",
+      "assetId": "log_stack",
+      "role": "understory",
+      "src": "/kenney/grid/nature/log_stack.glb",
+      "bytes": 10896,
+      "sha256": "90eaae4a01ba1f25c2f0c6d83087e4a7a8fac684f2452615245333968d118d68",
+      "triangles": 184,
+      "aspect": {
+        "width": 1.2261,
+        "depth": 2.0496
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/log_stack.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/log_stack.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-mushroom_red",
+      "assetId": "mushroom_red",
+      "role": "ground",
+      "src": "/kenney/grid/nature/mushroom_red.glb",
+      "bytes": 6364,
+      "sha256": "843e2de43dce78920a5675a67bac4b72f500e6220315e713fe08381642cfc571",
+      "triangles": 48,
+      "aspect": {
+        "width": 0.8578,
+        "depth": 0.9905
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/mushroom_red.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/mushroom_red.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-mushroom_redGroup",
+      "assetId": "mushroom_redGroup",
+      "role": "ground",
+      "src": "/kenney/grid/nature/mushroom_redGroup.glb",
+      "bytes": 14960,
+      "sha256": "29f02df0589dd2b09e8d2aff6a4662394dac5cfcf1fec701640dcbd6127e0802",
+      "triangles": 144,
+      "aspect": {
+        "width": 1.0764,
+        "depth": 1.0148
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/mushroom_redGroup.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/mushroom_redGroup.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-mushroom_redTall",
+      "assetId": "mushroom_redTall",
+      "role": "understory",
+      "src": "/kenney/grid/nature/mushroom_redTall.glb",
+      "bytes": 6504,
+      "sha256": "d982f6c5dce9ca870132448034eced9e84573aeed87e9158e18a3a033124f810",
+      "triangles": 48,
+      "aspect": {
+        "width": 0.4931,
+        "depth": 0.5694
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/mushroom_redTall.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/mushroom_redTall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-mushroom_tanGroup",
+      "assetId": "mushroom_tanGroup",
+      "role": "ground",
+      "src": "/kenney/grid/nature/mushroom_tanGroup.glb",
+      "bytes": 14956,
+      "sha256": "2dc979485f164d7dce34329096271f44e0c9ea329c104251d94bcfbc8f8fe05e",
+      "triangles": 144,
+      "aspect": {
+        "width": 1.0764,
+        "depth": 1.0148
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/mushroom_tanGroup.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/mushroom_tanGroup.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-mushroom_tanTall",
+      "assetId": "mushroom_tanTall",
+      "role": "understory",
+      "src": "/kenney/grid/nature/mushroom_tanTall.glb",
+      "bytes": 6500,
+      "sha256": "58d0078e531d6118c0cb39110c77fe3d564398379bb7f2e3f5f572321c0fc4ff",
+      "triangles": 48,
+      "aspect": {
+        "width": 0.4931,
+        "depth": 0.5694
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/mushroom_tanTall.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/mushroom_tanTall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-plant_bushLarge",
+      "assetId": "plant_bushLarge",
+      "role": "understory",
+      "src": "/kenney/grid/nature/plant_bushLarge.glb",
+      "bytes": 6436,
+      "sha256": "10e1d9fbf29d96d1d1a56fb2ce25ae66537505101759229afe01ae22c6c45e02",
+      "triangles": 60,
+      "aspect": {
+        "width": 1.5408,
+        "depth": 1.3818
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/plant_bushLarge.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/plant_bushLarge.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-plant_bushLargeTriangle",
+      "assetId": "plant_bushLargeTriangle",
+      "role": "understory",
+      "src": "/kenney/grid/nature/plant_bushLargeTriangle.glb",
+      "bytes": 4564,
+      "sha256": "098af3618e20e5a2cb5f6e24a7c67c0a80663f989137d86430bc9e2b1b2d52e4",
+      "triangles": 39,
+      "aspect": {
+        "width": 2.4077,
+        "depth": 2.7802
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/plant_bushLargeTriangle.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/plant_bushLargeTriangle.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-plant_bushSmall",
+      "assetId": "plant_bushSmall",
+      "role": "ground",
+      "src": "/kenney/grid/nature/plant_bushSmall.glb",
+      "bytes": 3212,
+      "sha256": "a9620a7d1fb165ae68d323676f80dbb2a9e3aafb21110d18d18d90b07026b91d",
+      "triangles": 16,
+      "aspect": {
+        "width": 1.8475,
+        "depth": 1.6225
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/plant_bushSmall.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/plant_bushSmall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-plant_flatShort",
+      "assetId": "plant_flatShort",
+      "role": "ground",
+      "src": "/kenney/grid/nature/plant_flatShort.glb",
+      "bytes": 3936,
+      "sha256": "5885f6bb6ce004eb7ccc887fd30b7671492a94be76ffeb1e64c07c47d6b7bae1",
+      "triangles": 44,
+      "aspect": {
+        "width": 1.181,
+        "depth": 1.181
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/plant_flatShort.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/plant_flatShort.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-rock_largeB",
+      "assetId": "rock_largeB",
+      "role": "understory",
+      "src": "/kenney/grid/nature/rock_largeB.glb",
+      "bytes": 8560,
+      "sha256": "caa8b025833d4dabf6d98fe2e96cf2fbd886693ac990df0db75f9d827194374b",
+      "triangles": 85,
+      "aspect": {
+        "width": 1.782,
+        "depth": 2.3601
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/rock_largeB.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/rock_largeB.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-rock_smallA",
+      "assetId": "rock_smallA",
+      "role": "ground",
+      "src": "/kenney/grid/nature/rock_smallA.glb",
+      "bytes": 3044,
+      "sha256": "df9fff9d711e61370e8df0caa2514c89b8f8a8dc6c6fafaf4eb2ec79c5ae07c1",
+      "triangles": 16,
+      "aspect": {
+        "width": 1.8868,
+        "depth": 1.8868
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/rock_smallA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/rock_smallA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-rock_smallFlatA",
+      "assetId": "rock_smallFlatA",
+      "role": "ground",
+      "src": "/kenney/grid/nature/rock_smallFlatA.glb",
+      "bytes": 3300,
+      "sha256": "40ceafacfaabb0f04f93688fd8696c1464c65512bef219e1459c1f238cbbbe21",
+      "triangles": 20,
+      "aspect": {
+        "width": 7.6341,
+        "depth": 6.6146
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/rock_smallFlatA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/rock_smallFlatA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-rock_smallFlatC",
+      "assetId": "rock_smallFlatC",
+      "role": "ground",
+      "src": "/kenney/grid/nature/rock_smallFlatC.glb",
+      "bytes": 4508,
+      "sha256": "dc889263e79ab77a147d6b413e1d099de00c4dab10eb8fbe284e3c95ce715120",
+      "triangles": 40,
+      "aspect": {
+        "width": 7.2428,
+        "depth": 5.5486
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/rock_smallFlatC.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/rock_smallFlatC.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-rock_tallB",
+      "assetId": "rock_tallB",
+      "role": "landmark",
+      "src": "/kenney/grid/nature/rock_tallB.glb",
+      "bytes": 14060,
+      "sha256": "b3fb7899c317a3b026fa6ced0e1eaaa596d9dd0d95efeacfb5e05d25322f19b9",
+      "triangles": 172,
+      "aspect": {
+        "width": 0.8654,
+        "depth": 0.8713
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/rock_tallB.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/rock_tallB.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-statue_block",
+      "assetId": "statue_block",
+      "role": "understory",
+      "src": "/kenney/grid/nature/statue_block.glb",
+      "bytes": 11252,
+      "sha256": "5caa9f4d0ede962d36f78355b73e59c88e4c978ba4ef44e6df6e52d484c60bac",
+      "triangles": 140,
+      "aspect": {
+        "width": 1,
+        "depth": 1
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/statue_block.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/statue_block.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-statue_column",
+      "assetId": "statue_column",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/statue_column.glb",
+      "bytes": 10472,
+      "sha256": "5d7f6c8bce8d1dc7ee62b1841376cda331c4359acfa2b9a11dd7e78c14ea9dbb",
+      "triangles": 122,
+      "aspect": {
+        "width": 0.3,
+        "depth": 0.3
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/statue_column.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/statue_column.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-statue_columnDamaged",
+      "assetId": "statue_columnDamaged",
+      "role": "landmark",
+      "src": "/kenney/grid/nature/statue_columnDamaged.glb",
+      "bytes": 8824,
+      "sha256": "ce8f21c31ec16ad67759dd171860bd85fd57fc3857963610c4ed8a39c8d91b95",
+      "triangles": 108,
+      "aspect": {
+        "width": 0.4286,
+        "depth": 0.4286
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/statue_columnDamaged.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/statue_columnDamaged.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-statue_head",
+      "assetId": "statue_head",
+      "role": "landmark",
+      "src": "/kenney/grid/nature/statue_head.glb",
+      "bytes": 14704,
+      "sha256": "02a0c58e713176004f9054f6a6181b965e2cc25ff7c77f5d17458b00c270b60e",
+      "triangles": 196,
+      "aspect": {
+        "width": 0.726,
+        "depth": 0.5544
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/statue_head.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/statue_head.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-statue_obelisk",
+      "assetId": "statue_obelisk",
+      "role": "landmark",
+      "src": "/kenney/grid/nature/statue_obelisk.glb",
+      "bytes": 4416,
+      "sha256": "e18013044ad6453a1850226be29f63c37d67e0002141f5f6a4d14a46bde69e00",
+      "triangles": 38,
+      "aspect": {
+        "width": 0.3507,
+        "depth": 0.3507
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/statue_obelisk.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/statue_obelisk.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-statue_ring",
+      "assetId": "statue_ring",
+      "role": "landmark",
+      "src": "/kenney/grid/nature/statue_ring.glb",
+      "bytes": 6568,
+      "sha256": "5c62e4165f7a76436faa0b20e98b47d0a9e5021dcbf2a0eef0cdf0912180f02c",
+      "triangles": 76,
+      "aspect": {
+        "width": 0.7534,
+        "depth": 0.5023
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/statue_ring.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/statue_ring.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-stone_largeA",
+      "assetId": "stone_largeA",
+      "role": "understory",
+      "src": "/kenney/grid/nature/stone_largeA.glb",
+      "bytes": 7124,
+      "sha256": "fe486a13775e833b1aca99413a89e013f300841de80f42ecd44ceaf43720f17b",
+      "triangles": 80,
+      "aspect": {
+        "width": 3.0215,
+        "depth": 3.909
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/stone_largeA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/stone_largeA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-stone_largeC",
+      "assetId": "stone_largeC",
+      "role": "understory",
+      "src": "/kenney/grid/nature/stone_largeC.glb",
+      "bytes": 6580,
+      "sha256": "f78e984f04f2c9d3a242d42b1c8f65b8a095b9ccf9f74ac55a97b7cdd1c4668c",
+      "triangles": 72,
+      "aspect": {
+        "width": 3.3148,
+        "depth": 3.163
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/stone_largeC.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/stone_largeC.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-stone_largeD",
+      "assetId": "stone_largeD",
+      "role": "understory",
+      "src": "/kenney/grid/nature/stone_largeD.glb",
+      "bytes": 7564,
+      "sha256": "db945df5cc1fb3113777dc208bac3f46d3fb970aaf39f2c517612f99fbf3532b",
+      "triangles": 80,
+      "aspect": {
+        "width": 1.8808,
+        "depth": 1.813
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/stone_largeD.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/stone_largeD.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-stone_smallA",
+      "assetId": "stone_smallA",
+      "role": "ground",
+      "src": "/kenney/grid/nature/stone_smallA.glb",
+      "bytes": 2620,
+      "sha256": "b48e731e6c4b453e8e5e8caace6edc18da40bc09874d831b7914e840fc853ae4",
+      "triangles": 16,
+      "aspect": {
+        "width": 1.8868,
+        "depth": 1.8868
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/stone_smallA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/stone_smallA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-stone_smallFlatA",
+      "assetId": "stone_smallFlatA",
+      "role": "ground",
+      "src": "/kenney/grid/nature/stone_smallFlatA.glb",
+      "bytes": 2872,
+      "sha256": "04f2d1bf9dba77426a5fa076a07d7b1319fb78021b7fe619a6ca3599d96d762a",
+      "triangles": 20,
+      "aspect": {
+        "width": 7.6341,
+        "depth": 6.6146
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/stone_smallFlatA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/stone_smallFlatA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-stone_smallFlatB",
+      "assetId": "stone_smallFlatB",
+      "role": "ground",
+      "src": "/kenney/grid/nature/stone_smallFlatB.glb",
+      "bytes": 2632,
+      "sha256": "1a0b6363f66a31372656e40f83c9d604325a8bb91a7de3697400b92b1cdf6fae",
+      "triangles": 16,
+      "aspect": {
+        "width": 6.6135,
+        "depth": 6.1954
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/stone_smallFlatB.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/stone_smallFlatB.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-stone_smallTopA",
+      "assetId": "stone_smallTopA",
+      "role": "understory",
+      "src": "/kenney/grid/nature/stone_smallTopA.glb",
+      "bytes": 4792,
+      "sha256": "544faf6690361eaa291b20be0c31787440dabc35548d130b9fb56d086c9ca0dc",
+      "triangles": 52,
+      "aspect": {
+        "width": 2.217,
+        "depth": 2.2234
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/stone_smallTopA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/stone_smallTopA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-stone_tallA",
+      "assetId": "stone_tallA",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/stone_tallA.glb",
+      "bytes": 11644,
+      "sha256": "3070bd574104abce19f5e3c82c917cb7f52801720377beba7aad76058408d5db",
+      "triangles": 136,
+      "aspect": {
+        "width": 0.9871,
+        "depth": 0.686
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/stone_tallA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/stone_tallA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-stone_tallB",
+      "assetId": "stone_tallB",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/stone_tallB.glb",
+      "bytes": 13596,
+      "sha256": "4dc2798870b56fe4028f47418994c8b7c336baf7045bf034fe8117cb7e635ba1",
+      "triangles": 172,
+      "aspect": {
+        "width": 0.8654,
+        "depth": 0.8713
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/stone_tallB.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/stone_tallB.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-stone_tallH",
+      "assetId": "stone_tallH",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/stone_tallH.glb",
+      "bytes": 7364,
+      "sha256": "e00d9e5219f8caed495eb1594fa6eb39c9c9df7d4950e5b1945a89e0375cda00",
+      "triangles": 78,
+      "aspect": {
+        "width": 0.8089,
+        "depth": 0.934
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/stone_tallH.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/stone_tallH.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-stump_oldTall",
+      "assetId": "stump_oldTall",
+      "role": "understory",
+      "src": "/kenney/grid/nature/stump_oldTall.glb",
+      "bytes": 9564,
+      "sha256": "8606cbd41c2a11143f083e796668cc413d58ab90cf5e53450fd93e6fcfde48e0",
+      "triangles": 120,
+      "aspect": {
+        "width": 0.5349,
+        "depth": 0.5566
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/stump_oldTall.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/stump_oldTall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tent_detailedOpen",
+      "assetId": "tent_detailedOpen",
+      "role": "landmark",
+      "src": "/kenney/grid/nature/tent_detailedOpen.glb",
+      "bytes": 15324,
+      "sha256": "d54d9665d07e0ff9680e56731c9f5338fc25d93788504d63b8375f54e6444193",
+      "triangles": 232,
+      "aspect": {
+        "width": 1.5592,
+        "depth": 1.1876
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tent_detailedOpen.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tent_detailedOpen.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tent_smallOpen",
+      "assetId": "tent_smallOpen",
+      "role": "understory",
+      "src": "/kenney/grid/nature/tent_smallOpen.glb",
+      "bytes": 13604,
+      "sha256": "d32c3f7a5926de03521a012774316d38e09c27bd6dbae7cefdb01debe003ecdd",
+      "triangles": 224,
+      "aspect": {
+        "width": 0.9759,
+        "depth": 1.1876
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tent_smallOpen.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tent_smallOpen.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_detailed_fall",
+      "assetId": "tree_detailed_fall",
+      "role": "landmark",
+      "src": "/kenney/grid/nature/tree_detailed_fall.glb",
+      "bytes": 31404,
+      "sha256": "eafa885b824c1ffcf7782e9d4084403130135b6b4ed82c90881b354ae9c987a8",
+      "triangles": 402,
+      "aspect": {
+        "width": 0.6358,
+        "depth": 0.5716
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_detailed_fall.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_detailed_fall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_fat",
+      "assetId": "tree_fat",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_fat.glb",
+      "bytes": 5576,
+      "sha256": "84b262c5dda3a91ac6c95f9d8b23a0ebbb1951d678c0e1375d3e32623cc43ee2",
+      "triangles": 50,
+      "aspect": {
+        "width": 0.6563,
+        "depth": 0.5684
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_fat.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_fat.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_fat_fall",
+      "assetId": "tree_fat_fall",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_fat_fall.glb",
+      "bytes": 5572,
+      "sha256": "02fffc9b631a5f5834ac39b600d42ace0c9352fdcd3ed31912b0f6e8e685b660",
+      "triangles": 50,
+      "aspect": {
+        "width": 0.6563,
+        "depth": 0.5684
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_fat_fall.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_fat_fall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_oak_fall",
+      "assetId": "tree_oak_fall",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_oak_fall.glb",
+      "bytes": 14640,
+      "sha256": "43a258d17b5428d8ef525a19e30e667caeeb330b6f3cb367a07da12093ff97a1",
+      "triangles": 196,
+      "aspect": {
+        "width": 0.5224,
+        "depth": 0.6032
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_oak_fall.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_oak_fall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_palmBend",
+      "assetId": "tree_palmBend",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_palmBend.glb",
+      "bytes": 14820,
+      "sha256": "8af9dae16ce3c03183f9457996ebdd135167199514e8f4f944ee2bd82828d5c9",
+      "triangles": 200,
+      "aspect": {
+        "width": 0.6779,
+        "depth": 0.7339
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_palmBend.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_palmBend.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_palmDetailedTall",
+      "assetId": "tree_palmDetailedTall",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_palmDetailedTall.glb",
+      "bytes": 28204,
+      "sha256": "2cbea0f9621cde884c63a7b4ad787bda1d051fa27ef3c66b9f2b65328dc53683",
+      "triangles": 336,
+      "aspect": {
+        "width": 1.0276,
+        "depth": 1.0276
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_palmDetailedTall.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_palmDetailedTall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_palmShort",
+      "assetId": "tree_palmShort",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_palmShort.glb",
+      "bytes": 15596,
+      "sha256": "d2526ca31c144a238820aa5c0f6183c5b9cf37fd3cc037932e637cf7c473ba27",
+      "triangles": 190,
+      "aspect": {
+        "width": 0.9793,
+        "depth": 0.9793
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_palmShort.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_palmShort.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_palmTall",
+      "assetId": "tree_palmTall",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_palmTall.glb",
+      "bytes": 15592,
+      "sha256": "cbd2c2ea7d0316be7514d44699527c566ce91e0542e8b6c6bf431a155e5655f6",
+      "triangles": 190,
+      "aspect": {
+        "width": 0.763,
+        "depth": 0.763
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_palmTall.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_palmTall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_pineDefaultA",
+      "assetId": "tree_pineDefaultA",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_pineDefaultA.glb",
+      "bytes": 17220,
+      "sha256": "60d8f352fa3659ed275e06cbddfecf8f92c8effe2977c2f2d7b29b6c9b582e46",
+      "triangles": 230,
+      "aspect": {
+        "width": 0.3441,
+        "depth": 0.3441
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_pineDefaultA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_pineDefaultA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_pineRoundA",
+      "assetId": "tree_pineRoundA",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_pineRoundA.glb",
+      "bytes": 14488,
+      "sha256": "7dc9711f31585eafdcb965d0649c30af5e19f2def1955f7a915081d30759ef8e",
+      "triangles": 204,
+      "aspect": {
+        "width": 0.4516,
+        "depth": 0.5214
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_pineRoundA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_pineRoundA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_pineRoundC",
+      "assetId": "tree_pineRoundC",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_pineRoundC.glb",
+      "bytes": 15332,
+      "sha256": "29080a4935bae6b4ab29066f22c99c58f88b23ce4e2f79b4dcbb5e76de73f69d",
+      "triangles": 206,
+      "aspect": {
+        "width": 0.3834,
+        "depth": 0.4427
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_pineRoundC.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_pineRoundC.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_pineRoundE",
+      "assetId": "tree_pineRoundE",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_pineRoundE.glb",
+      "bytes": 15308,
+      "sha256": "39178f614e1b4b2340a5db89cde410e897027a67e28f39ba95359c522d114f23",
+      "triangles": 198,
+      "aspect": {
+        "width": 0.424,
+        "depth": 0.424
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_pineRoundE.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_pineRoundE.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_pineSmallA",
+      "assetId": "tree_pineSmallA",
+      "role": "understory",
+      "src": "/kenney/grid/nature/tree_pineSmallA.glb",
+      "bytes": 12820,
+      "sha256": "be1a438bbb2e157266c1fb093b775bff8ce3e29a4c8f04aaf9d44c7a4e1f1ff0",
+      "triangles": 164,
+      "aspect": {
+        "width": 0.517,
+        "depth": 0.517
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_pineSmallA.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_pineSmallA.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_pineSmallC",
+      "assetId": "tree_pineSmallC",
+      "role": "understory",
+      "src": "/kenney/grid/nature/tree_pineSmallC.glb",
+      "bytes": 5376,
+      "sha256": "c334c78379b2968b0c198a92b4e429e433c89e1685792b5c6ed730216c8512e3",
+      "triangles": 54,
+      "aspect": {
+        "width": 0.3439,
+        "depth": 0.349
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_pineSmallC.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_pineSmallC.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_pineTallA_detailed",
+      "assetId": "tree_pineTallA_detailed",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_pineTallA_detailed.glb",
+      "bytes": 10708,
+      "sha256": "9ba6337460e718b8baf165b23c02f39455e3d5757b1911505410c46bc88a86b5",
+      "triangles": 134,
+      "aspect": {
+        "width": 0.2525,
+        "depth": 0.2562
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_pineTallA_detailed.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_pineTallA_detailed.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_pineTallC_detailed",
+      "assetId": "tree_pineTallC_detailed",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_pineTallC_detailed.glb",
+      "bytes": 11588,
+      "sha256": "b538e229a9fb8cbbb579fa2a0df784d5354c8a70faa115fa80f8190f2e6bef47",
+      "triangles": 154,
+      "aspect": {
+        "width": 0.2876,
+        "depth": 0.3321
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_pineTallC_detailed.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_pineTallC_detailed.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_plateau_dark",
+      "assetId": "tree_plateau_dark",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_plateau_dark.glb",
+      "bytes": 16308,
+      "sha256": "c598155374b71d2edd2cb8b1b63a0ba446b6bac1d2ed430dc3741087ba42d4c3",
+      "triangles": 215,
+      "aspect": {
+        "width": 0.4897,
+        "depth": 0.5242
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_plateau_dark.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_plateau_dark.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_plateau_fall",
+      "assetId": "tree_plateau_fall",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_plateau_fall.glb",
+      "bytes": 16296,
+      "sha256": "11b2a1b09c2f90c58b1572a2245e4861d6c0d674147a17d10ccdc12abe1f13ff",
+      "triangles": 215,
+      "aspect": {
+        "width": 0.4897,
+        "depth": 0.5242
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_plateau_fall.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_plateau_fall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_small",
+      "assetId": "tree_small",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_small.glb",
+      "bytes": 6500,
+      "sha256": "d26c0eeed65cc681667f50042ef23ec72ce47ae3b39837bfeec170b05ba6ab6a",
+      "triangles": 62,
+      "aspect": {
+        "width": 0.3195,
+        "depth": 0.3689
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_small.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_small.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_small_fall",
+      "assetId": "tree_small_fall",
+      "role": "understory",
+      "src": "/kenney/grid/nature/tree_small_fall.glb",
+      "bytes": 6492,
+      "sha256": "2203da5cdb52ed442760f96916a171628a70575a0a038531bfcaa12173241cb1",
+      "triangles": 62,
+      "aspect": {
+        "width": 0.3195,
+        "depth": 0.3689
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_small_fall.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_small_fall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_thin_dark",
+      "assetId": "tree_thin_dark",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_thin_dark.glb",
+      "bytes": 32488,
+      "sha256": "8f12bf461e38c43866ddfeaa56f77fadaa56425642bcb2e71dcf3c5c74abab47",
+      "triangles": 456,
+      "aspect": {
+        "width": 0.4566,
+        "depth": 0.4137
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_thin_dark.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_thin_dark.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    },
+    {
+      "type": "model",
+      "id": "grid-nature-tree_thin_fall",
+      "assetId": "tree_thin_fall",
+      "role": "canopy",
+      "src": "/kenney/grid/nature/tree_thin_fall.glb",
+      "bytes": 17192,
+      "sha256": "0820f6823774030e1ea646e974ab63d532643d3cc24f70a0cfbf898f1ec3b574",
+      "triangles": 228,
+      "aspect": {
+        "width": 0.4566,
+        "depth": 0.4137
+      },
+      "source": "kenney_nature-kit/Models/GLTF format/tree_thin_fall.glb",
+      "pack": "nature-kit",
+      "version": "2.1",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_nature-kit/License.txt",
+        "sha256": "cb96b75e3560ac78d7a53ce6f083f4cdb5c53faea6141b62d63458dcfe1e4b9d",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_nature-kit/Models/GLTF format/tree_thin_fall.glb",
+        "importedBy": "apps/university/scripts/import-kenney-grid.mjs",
+        "status": "prototype/local donor; PGS donor registered"
+      }
+    }
+  ],
+  "summary": {
+    "modelCount": 77,
+    "externalTextureCount": 0,
+    "totalBytes": 889376,
+    "maxTriangles": 564,
+    "totalTriangles": 10700
+  }
+}

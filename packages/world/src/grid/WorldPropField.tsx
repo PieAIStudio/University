@@ -1,18 +1,12 @@
 import { useMemo } from "react";
 
-import { BatchedAssetField, type Placement } from "../kit.js";
-import { GRID_KENNEY_NATURE_ASSETS } from "./grid-prop-assets.js";
+import { BatchedAssetLibraryField, type Placement } from "../kit.js";
+import { gridNatureAssetSrc } from "./grid-theme.js";
 import { ContactShadowField, placementFor } from "./PropField.js";
-import type { GridPropAssetId } from "./grid-props.js";
 import type { WorldGridIsland } from "./world-grid-types.js";
 
 interface WorldPropFieldProps {
   readonly islands: readonly WorldGridIsland[];
-}
-
-interface WorldPropBatch {
-  readonly assetId: GridPropAssetId;
-  readonly at: readonly Placement[];
 }
 
 function worldPlacementFor(
@@ -28,47 +22,56 @@ function worldPlacementFor(
   };
 }
 
-function propsByAsset(islands: readonly WorldGridIsland[]): readonly WorldPropBatch[] {
-  const grouped = new Map<GridPropAssetId, Placement[]>();
-  for (const island of islands) {
-    for (const prop of island.map.props) {
-      const field = grouped.get(prop.assetId) ?? [];
-      field.push(worldPlacementFor(island, prop));
-      grouped.set(prop.assetId, field);
-    }
-  }
-  return [...grouped.entries()].map(([assetId, at]) => ({ assetId, at }));
-}
-
-function allProps(islands: readonly WorldGridIsland[]): readonly Placement[] {
+/**
+ * The archipelago keeps only what survives the projection: each island's unit
+ * landmark and a thin scatter of canopy, chosen by the shared planner rather
+ * than by a second rule here. `visibleInCourse` is the planner's own LOD flag
+ * and it is honoured in both projections — drawing everything here was the
+ * quiet reason fifty-three islands each paid for a full dressing field.
+ */
+function visibleWorldProps(
+  islands: readonly WorldGridIsland[],
+): readonly { readonly island: WorldGridIsland; readonly prop: WorldGridIsland["map"]["props"][number] }[] {
   return islands.flatMap((island) =>
-    island.map.props.map((prop) => worldPlacementFor(island, prop)),
+    island.map.props
+      .filter((prop) => prop.visibleInCourse !== false)
+      .map((prop) => ({ island, prop })),
   );
 }
 
-/** One batch per surviving large nature asset across the whole catalogue. */
+/** One batch for every surviving nature asset across the whole catalogue. */
 export function WorldPropField({ islands }: WorldPropFieldProps) {
-  const fields = useMemo(() => propsByAsset(islands), [islands]);
-  const shadows = useMemo(() => allProps(islands), [islands]);
-  const propCount = useMemo(
-    () => islands.reduce((total, island) => total + island.map.props.length, 0),
-    [islands],
+  const drawn = useMemo(() => visibleWorldProps(islands), [islands]);
+  const fields = useMemo(() => {
+    const grouped = new Map<string, Placement[]>();
+    for (const { island, prop } of drawn) {
+      const src = gridNatureAssetSrc(prop.assetId);
+      const field = grouped.get(src) ?? [];
+      field.push(worldPlacementFor(island, prop));
+      grouped.set(src, field);
+    }
+    return [...grouped.entries()].map(([src, at]) => ({ src, at }));
+  }, [drawn]);
+  const shadows = useMemo(
+    () =>
+      drawn.map(({ island, prop }) => ({
+        placement: worldPlacementFor(island, prop),
+        footprint: prop.footprint * island.scale,
+      })),
+    [drawn],
   );
 
   return (
     <group
       name="world-grid-prop-fields"
-      userData={{ worldGridPropCount: propCount, worldGridPropBatches: fields.length }}
+      userData={{ worldGridPropCount: drawn.length, worldGridPropBatches: fields.length }}
     >
       <ContactShadowField at={shadows} />
-      {fields.map((field) => (
-        <BatchedAssetField
-          key={field.assetId}
-          src={GRID_KENNEY_NATURE_ASSETS[field.assetId]}
-          at={field.at}
-          castShadow={false}
-        />
-      ))}
+      <BatchedAssetLibraryField
+        fields={fields}
+        name="world-grid-prop-library"
+        castShadow={false}
+      />
     </group>
   );
 }

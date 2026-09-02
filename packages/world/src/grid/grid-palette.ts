@@ -57,17 +57,6 @@ export const GRID_TERRAIN_VALUE_RAMP = {
   world: [0.8, 1.2, 3.2, 4.8],
 } as const;
 
-/**
- * Leaf colour is a real dressing layer, not a noise texture. The finite ramp
- * moves from dry yellow grass through moss to wet meadow, and its placement
- * selection is deterministic in the shared BatchedMesh adapter. Keeping the
- * endpoints inside the grass hue band gives a small course enough visible
- * plant identity without turning the top surface into a tiled colour field.
- */
-export const GRID_PROP_FOLIAGE_COLOURS = [
-  0xb99a40, 0xa4a13c, 0x8da643, 0x74a64a, 0x213c28, 0x315f36, 0x3d6a36, 0x5d9147, 0x3c713d,
-] as const;
-
 export function gridTerrainValueScale(
   projection: "course" | "world",
   height: 1 | 2 | 3 | 4,

@@ -4,6 +4,7 @@ import { gridElevationsFor, type GridElevation } from "./grid-elevation.js";
 import { hexDistance, hexKey, hexNeighbors, hexToWorld, type HexCoord } from "./hex.js";
 import { gridPaletteFor, type GridPalette } from "./grid-palette.js";
 import { distanceToRoute, gridPropsFor, type GridPropPlacement } from "./grid-props.js";
+import { gridBiomesForUnits, type GridBiome } from "./grid-theme.js";
 import {
   CELLS_PER_LESSON,
   GRID_CELL_BUDGET,
@@ -106,6 +107,13 @@ export interface HexMap {
   readonly cells: readonly GridCell[];
   readonly lessons: readonly GridLessonCell[];
   readonly props: readonly GridPropPlacement[];
+  /**
+   * One biome per authored unit. The renderer, the dressing planner and the
+   * inspector all read this same assignment, so the ground a learner walks on
+   * and the things standing in it can never disagree about which chapter they
+   * are in.
+   */
+  readonly unitBiomes: ReadonlyMap<string, GridBiome>;
   readonly palette: GridPalette;
   readonly seamStrength: GridSeamStrength;
   readonly bounds: {
@@ -561,6 +569,11 @@ export function buildCourseGrid(input: CourseGridInput): HexMap {
   const activeLessonIndex =
     input.activeLessonIndex ?? input.lessons.findIndex((lesson) => lesson.state === "live");
   const projected = withElevation(outline, route, input.lessons, input.seed, activeLessonIndex);
+  const unitIds: string[] = [];
+  for (const cell of projected.cells) {
+    if (cell.unitId && !unitIds.includes(cell.unitId)) unitIds.push(cell.unitId);
+  }
+  const unitBiomes = gridBiomesForUnits(unitIds, input.seed);
   const props = gridPropsFor(
     projected.cells.map((cell) => ({
       coord: cell.coord,
@@ -595,6 +608,7 @@ export function buildCourseGrid(input: CourseGridInput): HexMap {
     cells: projected.cells,
     lessons: projected.lessons,
     props,
+    unitBiomes,
     palette,
     seamStrength: GRID_SEAM_STRENGTH,
     bounds: { minX, maxX, minZ, maxZ, halfX, halfZ, maxHalf: Math.max(halfX, halfZ) },

@@ -241,14 +241,31 @@ export function cellTopColour(map: HexMap, cell: GridCell): THREE.Color {
     colour.multiplyScalar(gridTerrainValueScale(map.projection, cell.height));
   }
   if (cell.kind !== "route") {
-    // Unit territories carry a restrained hue cue as well as the elevation
-    // value. It is keyed to the authored unit, so neighbouring cells in one
-    // territory still read as one patch; the small amount keeps the field from
-    // becoming an accent-colour checkerboard.
-    if (cell.unitIndex !== null) {
-      const unitValue = [0.92, 0.96, 1, 1.04, 1.08][cell.unitIndex % 5] ?? 1;
-      colour.multiplyScalar(unitValue);
-      colour.lerp(new THREE.Color(map.palette.accent), 0.045 + (cell.unitIndex % 4) * 0.02);
+    /*
+     * The ground a unit stands on is that unit's biome, softly.
+     *
+     * LOOK-V2 §12 decided this and it had never been built: "顶面按 unit 分色,
+     * 崖面全岛统一". What was here instead was a five-step value ramp plus a lerp
+     * toward the coral accent, which had two faults. It cycled — unit 1 and
+     * unit 6 were painted identically, so the one course long enough to need
+     * the cue was the one that did not get it — and it tinted *toward the
+     * accent*, competing with the lesson markers, the only colour on the island
+     * a learner has to find.
+     *
+     * The shift is deliberately small, and in HSL so it stays inside the earth
+     * gamut the palette table already fought for. A biome is weather on this
+     * course's ground, not a second palette: the island's own identity has to
+     * survive, because on the world map a course *is* its ground colour.
+     */
+    const biome = cell.unitId === null ? undefined : map.unitBiomes.get(cell.unitId);
+    if (biome) {
+      const hsl = { h: 0, s: 0, l: 0 };
+      colour.getHSL(hsl);
+      colour.setHSL(
+        (hsl.h + biome.groundTint.hue + 1) % 1,
+        Math.min(0.95, hsl.s * biome.groundTint.saturation),
+        Math.min(0.92, hsl.l * biome.groundTint.value),
+      );
     }
     // Keep this variation low-frequency: adjacent cells share a value band and
     // the broad field changes over several cells. Per-cell white noise was the

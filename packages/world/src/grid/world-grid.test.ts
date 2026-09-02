@@ -249,13 +249,23 @@ describe("world grid projection", () => {
 
   it("only keeps the large world-scale landmarks on the remote field", () => {
     const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
-    const worldAssets = new Set(["tree_pineRoundA", "tree_oak", "plant_bushLarge", "rock_largeA"]);
-    expect(
-      world.placements.every((entry) =>
-        entry.grid.props.every((prop) => worldAssets.has(prop.assetId)),
-      ),
-    ).toBe(true);
-    const totalProps = world.placements.reduce((sum, entry) => sum + entry.grid.props.length, 0);
+    /*
+     * 2026-09-02: this used to pin four literal asset ids, because the grid had
+     * one hard-coded nine-model list and the world projection kept the four
+     * largest of them. The library is now generated per biome, so an island's
+     * silhouette asset depends on which biome its first unit drew — pinning
+     * names here would only pin one seed's luck.
+     *
+     * What actually has to hold at archipelago scale is the *role*: a course is
+     * a few dozen pixels of ground, so only the unit landmark and a thin
+     * scatter of canopy survive the projection. Ground punctuation at that size
+     * is a wasted instance, and asserting the role is what keeps it out.
+     */
+    const drawn = world.placements.flatMap((entry) =>
+      entry.grid.props.filter((prop) => prop.visibleInCourse !== false),
+    );
+    expect(drawn.every((prop) => prop.role === "landmark" || prop.role === "canopy")).toBe(true);
+    const totalProps = drawn.length;
     expect(totalProps).toBeGreaterThanOrEqual(catalogueNodes.length);
     expect(totalProps).toBeLessThan(160);
     expect(
