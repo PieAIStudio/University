@@ -146,6 +146,16 @@ export function LessonMarkerField({ markers, onPick, onHover }: LessonMarkerFiel
         ref={plinth}
         args={[plinthGeometry, plinthMaterial, markers.length]}
         name="hex-grid-lesson-plinths"
+        /*
+          The 41 things a learner actually clicks were the only objects on the
+          island that neither cast a shadow, received one, nor had a contact
+          blob under them, so they read as stickers printed on the grass. The
+          decorative props already had `ContactShadowField`; the plinths were
+          simply missed. They are one instanced mesh, so this is one shadow draw
+          for all of them.
+        */
+        castShadow
+        receiveShadow
         onClick={pickMarker}
         onPointerOver={hoverMarker}
         onPointerOut={() => onHover(null)}

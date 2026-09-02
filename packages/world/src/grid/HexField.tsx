@@ -251,6 +251,23 @@ function HexLayerField({
       args={[geometry, material, Math.max(1, cells.length)]}
       name={`hex-grid-${layer}`}
       receiveShadow
+      /*
+        2026-09-02: the terrain now writes to the shadow map as well as reading
+        from it. Before this, a 2048² map was being allocated and rendered every
+        frame with nothing but the rabbit avatar's body in it — every value
+        difference on this island was N·L on a prism face, and none of it was a
+        cast shadow. That is what "no cast shadows" looks like from above: the
+        terraces stop being terraces, because the edge of an upper terrace threw
+        nothing onto the one below it.
+
+        LOOK-V2 §5 left open the question of whether the shadow map should be on
+        at all, reasoning that the reference game's 18 draw calls mean it almost
+        certainly has none. That question is answered here the other way, and by
+        pictures rather than by principle: the map was already being paid for,
+        and one instanced mesh is one shadow draw regardless of instance count,
+        so the whole terrain costs a handful of draws rather than 287.
+      */
+      castShadow
       frustumCulled={false}
     />
   );

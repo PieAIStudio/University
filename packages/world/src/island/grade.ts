@@ -53,16 +53,36 @@ import { createSceneDepthTexture } from "./ao";
  *
  * `measureScene()` reads linear luminance before this blit. Convert that
  * midtone with the kit helper — never pass the 0–1 fraction, which is the
- * documented way to set this value wrong. Course-design, 1440×900, post=off:
- * linear median 0.316, which is 152/255 sRGB. The grade pivot is deliberately
+ * documented way to set this value wrong. The grade pivot is deliberately
  * below that median so the dark soil's green/blue channels stay positive when
  * contrast expands the frame.
+ *
+ * Re-measured 2026-09-02 after the cold-sky / steeper-key pass, same conditions
+ * (course-design, 1440×900, post=off, `turing-pact/foundations-before-zero`,
+ * 41 lessons): linear median **0.252**, which is 137/255 sRGB.
+ *
+ * Two readings were taken, because the first one did not match this comment.
+ * Measuring the branch *before* any of this pass's changes gave median 0.561,
+ * not the 0.316 recorded above — so the number this file documented had already
+ * stopped describing the code, most likely across the scene rebuild that
+ * predates this pass. It is recorded here rather than quietly overwritten: a
+ * stale measurement in a comment is worse than none, because the next reader
+ * budgets against it.
+ *
+ * The pivot keeps its documented *relationship* to the median rather than
+ * either remembered constant: it was specified as sitting below the median, at
+ * 80/152 = 0.53 of it, so 0.53 × 137 ≈ 72.
+ *
+ * Also read then, and worth keeping next to it: scene-linear p05 0.047,
+ * p95 0.498. p05 is comfortably above zero, which is the check `sun.ts` asks
+ * for — the fill was cut hard, and the shadows still have colour in them
+ * rather than clipping to a black that low-poly faces would merge into.
  *
  * The judge scores `post=off`, so these numbers do not move S1. They are
  * the product look once the grade is on: contrast opens the new range,
  * vignette must not crush the sun disc that A4 and p98 now live in.
  */
-export const WORLD_GRADE_PIVOT_SRGB8 = 80;
+export const WORLD_GRADE_PIVOT_SRGB8 = 72;
 
 /**
  * Diorama plus the numbers this map actually measured.
@@ -83,7 +103,16 @@ export const WORLD_GRADE = defineGrade("diorama", {
   contrast: 1.17,
   contrastPivot: srgbToDisplayLinear(WORLD_GRADE_PIVOT_SRGB8),
   coolShadow: {
-    amount: 0.26,
+    // 2026-09-02: 0.26 → 0.15. Not because cool shadows stopped being wanted —
+    // they are the point of this pass — but because they are now produced by
+    // the lights (blue hemisphere, blue PMREM, cool rim) instead of by the
+    // grade, and running both was counting the same decision twice. The
+    // visible symptom was the lesson plinths' bevel, a white-albedo face the
+    // low key never reaches: light-side cool plus grade-side cool took it past
+    // "shadow with hue" into a saturated blue band across the one control a
+    // learner clicks. A grade should bias a relationship the render already
+    // has, not manufacture one.
+    amount: 0.15,
     rangeStart: 0,
     rangeEnd: 0.36,
     tint: [0.88, 0.95, 1.14],
@@ -91,7 +120,16 @@ export const WORLD_GRADE = defineGrade("diorama", {
   warmHighlight: {
     // The old amount pushed the warm cliff into a red block after ACES. The
     // scene already has value separation from its real key/rim lights.
-    amount: 0.14,
+    //
+    // 2026-09-02: 0.14 → 0.05. This ramp covers 0.4–1.0, which is where the
+    // sky lives, so it was tinting the brightest and largest region of the
+    // frame warm. Against the old sunset stops that was invisible; against a
+    // blue sky it is the grade arguing with the art direction, and the grade
+    // loses. Warmth is the key light's job here — `keyColor` is 0xffefd2 and
+    // it lands on the ground, which is the half of the frame that should be
+    // warm. Not zero: a trace of it still keeps the lit grass from reading
+    // acid-green next to so much blue.
+    amount: 0.05,
     rangeStart: 0.4,
     rangeEnd: 1,
     tint: [1.14, 1.03, 0.88],

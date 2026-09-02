@@ -40,8 +40,25 @@ export const WORLD_ENVIRONMENT = {
    * 0.8 is the measured sky fill for the 2026-08-28 black-hole pass; together
    * with the hemisphere and ambient lights it keeps the course look inside a
    * 2–4:1 stylized key-to-fill range without changing the sky's visible stops.
+   *
+   * 2026-09-02: 0.44 → 0.24, as the third of the three fill terms cut together
+   * (see `sun.ts`). This is the largest of the three in practice — it reaches
+   * every Standard material from every direction — so leaving it at 0.44 while
+   * halving the other two would have kept the frame at the overcast ratio it
+   * was being cut out of. It is a cool term now rather than a neutral one,
+   * because the sky it bakes from is blue since the same date.
+   *
+   * Then 0.24 → 0.16, traded against `hemisphereIntensity` 0.30 → 0.38. Same
+   * total fill, different distribution, for one measured reason: the PMREM is
+   * blue from every direction, while the hemisphere is blue only from above and
+   * warm (`hemisphereGround`) from below. On a near-horizontal normal that the
+   * low key never reaches — the lesson plinth's bevel is the case that showed
+   * it — an env-dominated fill renders white albedo as saturated blue, and a
+   * hemisphere-dominated fill renders it as a neutral shadow that still leans
+   * cool. Cool shadows are the goal; blue paint on the one thing a learner
+   * clicks is not.
    */
-  intensity: 0.44,
+  intensity: 0.16,
 } as const;
 
 /** A Stage without a visible map sky (the planet picker) still shares this IBL. */

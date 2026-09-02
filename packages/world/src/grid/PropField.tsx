@@ -167,7 +167,15 @@ export function PropField({ map, dimmed = false }: PropFieldProps) {
           key={field.assetId}
           src={GRID_KENNEY_NATURE_ASSETS[field.assetId]}
           at={field.at}
-          castShadow={false}
+          /*
+            2026-09-02: was hard-coded false with no comment saying why. The
+            blob under each prop anchors it to the ground, but a blob is
+            directionless, so a field of trees under a 24° sun had no shared
+            light direction — the single clearest signal that a scene is lit
+            rather than shaded. These are batched per asset, so this is one
+            shadow draw per asset kind, not one per tree.
+          */
+          castShadow
         />
       ))}
     </group>

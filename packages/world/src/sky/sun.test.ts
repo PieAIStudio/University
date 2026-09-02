@@ -7,6 +7,7 @@ import {
   worldShadowFrustum,
   worldSunDirection,
   worldSunPosition,
+  worldTotalFill,
 } from "./sun.js";
 
 describe("world sun", () => {
@@ -20,11 +21,37 @@ describe("world sun", () => {
   });
 
   it("keeps total key-to-fill inside the measured stylized range", () => {
-    const fill =
-      WORLD_SUN.hemisphereIntensity + WORLD_SUN.ambientIntensity + WORLD_ENVIRONMENT.intensity;
-    const ratio = WORLD_SUN.keyIntensity / fill;
-    expect(ratio).toBeGreaterThanOrEqual(2);
-    expect(ratio).toBeLessThanOrEqual(4);
+    // Was 2–4 over hemisphere + ambient + environment. Two things were wrong
+    // with that, and only one of them is that the band moved.
+    //
+    // 1. The denominator was not the scene's fill. The back rim is a fourth
+    //    fill light, and it lived as a literal in `lighting.tsx` where this
+    //    test could not see it — at 0.78 it was the largest single fill term
+    //    in the rig while this assertion reported the scene as 2.08:1. It is
+    //    in `WORLD_SUN` now, and `worldTotalFill` is the whole denominator.
+    // 2. 2–4 is the overcast band, and it was left deliberately on 2026-09-02.
+    //    The reference look is direct sun: a warm key against a cool, much
+    //    smaller fill. On the complete accounting the scene moved from
+    //    5.4/2.15 = 2.5:1 to 5.4/0.97 = 5.6:1.
+    //
+    // The ceiling is the part that still guards something. Fill is what keeps
+    // colour in the shadows, and cutting it far enough turns low-poly faces
+    // into one black shape — the failure `sun.ts` records. 7 is the measured
+    // stop: at the chosen values `measureScene()` on course-design reads
+    // scene-linear p05 0.047, comfortably unclipped, and the margin to 7 is
+    // roughly the room that reading leaves.
+    const ratio = WORLD_SUN.keyIntensity / worldTotalFill(WORLD_ENVIRONMENT.intensity);
+    expect(ratio).toBeGreaterThanOrEqual(4);
+    expect(ratio).toBeLessThanOrEqual(7);
+  });
+
+  it("counts the rim as fill and keeps it small next to the key", () => {
+    // The rim's job is silhouette separation. When the other fills were halved
+    // and the rim was not, it silently became the scene's ambient and painted
+    // the ivory lesson plinths teal. Its share of total fill is the guard.
+    const share = WORLD_SUN.rimIntensity / worldTotalFill(WORLD_ENVIRONMENT.intensity);
+    expect(share).toBeLessThan(0.45);
+    expect(WORLD_SUN.rimIntensity).toBeLessThan(WORLD_SUN.keyIntensity * 0.2);
   });
 
   it("uses a chromatic warm lower bounce instead of neutral gray", () => {

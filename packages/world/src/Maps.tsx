@@ -124,18 +124,36 @@ export type SkyStops = {
   readonly nadir?: number;
 };
 
-/** The course frame is a warm illustrated sky, with lavender negative space. */
+/**
+ * The course frame is a cold sky so the warm island can sit in front of it.
+ *
+ * The previous stops were an illustrated sunset (rose zenith, near-cream mid,
+ * tan horizon). Measured 2026-09-02 on course-design 1440×900: the sky read
+ * brighter than the ground and in the same hue family, so the island had no
+ * silhouette and the frame had no warm/cool relation at all — post=on
+ * `backgroundLightnessSpread` was 6.6 against a 40 rail, and the whole capture
+ * graded to one sheet of beige.
+ *
+ * Read these stops against `skydome.tsx`, not against a photograph. The course
+ * camera is pitched down, so its whole frame is *below* the geometric horizon
+ * and the lower branch of the dome shader is what fills it: `horizon` is the
+ * top of the visible sky, then `mid`, then `nadir` at the bottom of frame.
+ * `zenith` is barely on screen here. That is why the value order is horizon
+ * (lightest) → mid → nadir/zenith (deepest): it makes the rim bright and the
+ * air under the island deep in the shot that actually ships, and it is still a
+ * correct top-to-bottom sky in the upper branch the planet page uses.
+ *
+ * No warm stop anywhere. Real atmosphere does warm at the rim, but a warm rim
+ * is exactly what collapsed the contrast here, and the reference is an
+ * illustration, not a photograph.
+ */
 export const COURSE_SKY_STOPS: SkyStops = {
-  // Keep the illustrated sunset hue, but leave the mid-sky enough value
-  // headroom for the course ground. The former near-cream middle turned the
-  // fixed course frame into one warm sheet and also entered the look judge's
-  // earth-colour candidate range.
-  zenith: 0xc98780,
-  mid: 0xe4ebf2,
-  horizon: 0xbc957d,
-  // Keep the lower arc airy and warm-lavender. The previous deep violet made
-  // the island look like it was floating over a dirty band of haze.
-  nadir: 0xc0b8e5,
+  zenith: 0x1c5aa8,
+  mid: 0x3d86c9,
+  horizon: 0x7fb8e0,
+  // The air below the island. Deep enough to darken toward the bottom of the
+  // frame, still blue so it reads as distance rather than as a dirty band.
+  nadir: 0x2f5f9c,
 };
 
 /**

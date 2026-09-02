@@ -56,8 +56,29 @@ describe("sky stops", () => {
     expect(source).toMatch(/includeSea=\{WORLD_SKY_CONTRACT\.visibleSea\}/);
   });
 
-  it("keeps the course lower arc airy instead of deep violet", () => {
-    expect(COURSE_SKY_STOPS.nadir).toBe(0xc0b8e5);
+  it("keeps the course sky cold, with the rim lighter than the air below it", () => {
+    // Was: `nadir === 0xc0b8e5`, pinning the warm-lavender lower arc of the
+    // illustrated sunset. That sky was replaced on 2026-09-02 because it read
+    // brighter than the ground and in the same hue family, so the island had
+    // no silhouette; pinning one hex of it would only pin the failure.
+    //
+    // What is actually load-bearing is the relation, so that is what is
+    // asserted. The course camera is pitched down and renders the dome's lower
+    // branch (see `skydome.tsx`), where `horizon` is the top of the visible sky
+    // and `nadir` the bottom. Both must stay blue — no warm rim — and the rim
+    // must stay lighter than the air beneath the island, which is the gradient
+    // the frame is built on.
+    const rim = rgb(COURSE_SKY_STOPS.horizon);
+    const below = rgb(COURSE_SKY_STOPS.nadir ?? COURSE_SKY_STOPS.horizon);
+    expect(rim.b).toBeGreaterThan(rim.r + 40);
+    expect(below.b).toBeGreaterThan(below.r + 40);
+    expect(luma(COURSE_SKY_STOPS.horizon)).toBeGreaterThan(
+      luma(COURSE_SKY_STOPS.nadir ?? COURSE_SKY_STOPS.horizon),
+    );
+    // And the mid stop sits between them, so the same four stops are still a
+    // correct top-to-bottom sky in the upper branch the planet page draws.
+    expect(luma(COURSE_SKY_STOPS.horizon)).toBeGreaterThan(luma(COURSE_SKY_STOPS.mid));
+    expect(luma(COURSE_SKY_STOPS.mid)).toBeGreaterThan(luma(COURSE_SKY_STOPS.zenith));
   });
 
   it("draws a sun disc on the one skydome, keyed to the shared world sun", () => {
