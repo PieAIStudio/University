@@ -241,6 +241,23 @@ export interface GridBiomeGroundTint {
   readonly value: number;
 }
 
+export type GridSurface = "grass" | "stone" | "sand" | "water";
+
+export const GRID_SURFACES: readonly GridSurface[] = ["grass", "stone", "sand", "water"];
+
+/**
+ * The share of eligible, non-route cells that a biome asks the surface
+ * planner to express. This is deliberately a mix rather than a colour: the
+ * same biome can therefore keep its ground identity in both projections while
+ * the renderer still submits one instanced hex field.
+ */
+export interface GridBiomeSurfaceMix {
+  readonly grass: number;
+  readonly stone: number;
+  readonly sand: number;
+  readonly water: number;
+}
+
 export type GridBiomeId =
   | "pine-ridge"
   | "fall-grove"
@@ -263,6 +280,7 @@ export interface GridBiome {
   /** The one large thing that opens the unit. */
   readonly landmark: string;
   readonly groundTint: GridBiomeGroundTint;
+  readonly surfaceMix: GridBiomeSurfaceMix;
   /**
    * Share of eligible cells that receive a canopy prop, before the spacing
    * rule thins them. A quarry is sparse and open; a pine ridge is dense.
@@ -300,6 +318,7 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["grass_leafsLarge", "mushroom_red", "rock_smallA"],
     landmark: "rock_tallB",
     groundTint: { hue: -0.052, saturation: 1.02, value: 0.94 },
+    surfaceMix: { grass: 0.92, stone: 0.03, sand: 0.05, water: 0 },
     canopyDensity: 0.48,
     understoryDensity: 0.3,
     groundDensity: 0.165,
@@ -313,6 +332,7 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["mushroom_tanGroup", "grass_leafsLarge", "flower_yellowA"],
     landmark: "tree_detailed_fall",
     groundTint: { hue: 0.086, saturation: 1.24, value: 1.04 },
+    surfaceMix: { grass: 0.78, stone: 0.04, sand: 0.18, water: 0 },
     canopyDensity: 0.416,
     understoryDensity: 0.25,
     groundDensity: 0.154,
@@ -326,6 +346,7 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["stone_smallA", "stone_smallFlatA", "stone_largeA", "stone_smallTopA"],
     landmark: "statue_obelisk",
     groundTint: { hue: -0.014, saturation: 0.58, value: 0.97 },
+    surfaceMix: { grass: 0.24, stone: 0.62, sand: 0.14, water: 0 },
     canopyDensity: 0.256,
     understoryDensity: 0.25,
     groundDensity: 0.187,
@@ -339,6 +360,7 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["flower_purpleA", "flower_purpleB", "flower_redA", "flower_yellowA"],
     landmark: "statue_ring",
     groundTint: { hue: 0.03, saturation: 1.3, value: 1.06 },
+    surfaceMix: { grass: 0.82, stone: 0.03, sand: 0.15, water: 0 },
     canopyDensity: 0.192,
     understoryDensity: 0.325,
     groundDensity: 0.231,
@@ -352,6 +374,7 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["mushroom_redGroup", "hanging_moss", "plant_bushLargeTriangle"],
     landmark: "tree_thin_dark",
     groundTint: { hue: -0.082, saturation: 1.0, value: 0.88 },
+    surfaceMix: { grass: 0.66, stone: 0.16, sand: 0.18, water: 0 },
     canopyDensity: 0.384,
     understoryDensity: 0.375,
     groundDensity: 0.187,
@@ -365,6 +388,7 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["log", "campfire_logs", "log_stack"],
     landmark: "tent_detailedOpen",
     groundTint: { hue: 0.05, saturation: 0.86, value: 1.0 },
+    surfaceMix: { grass: 0.68, stone: 0.1, sand: 0.22, water: 0 },
     canopyDensity: 0.288,
     understoryDensity: 0.325,
     groundDensity: 0.165,
@@ -378,6 +402,7 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["crop_carrot", "crop_turnip", "fence_simple"],
     landmark: "crops_bambooStageB",
     groundTint: { hue: 0.07, saturation: 1.2, value: 1.03 },
+    surfaceMix: { grass: 0.58, stone: 0.04, sand: 0.38, water: 0 },
     canopyDensity: 0.32,
     understoryDensity: 0.4,
     groundDensity: 0.198,
@@ -391,6 +416,7 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["rock_smallFlatA", "rock_smallA", "plant_flatShort", "rock_largeB"],
     landmark: "statue_columnDamaged",
     groundTint: { hue: 0.092, saturation: 0.94, value: 1.1 },
+    surfaceMix: { grass: 0.42, stone: 0.36, sand: 0.22, water: 0 },
     canopyDensity: 0.224,
     understoryDensity: 0.225,
     groundDensity: 0.165,
@@ -404,6 +430,7 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["stone_smallFlatB", "stone_largeC", "plant_bushSmall"],
     landmark: "statue_head",
     groundTint: { hue: -0.066, saturation: 0.6, value: 0.93 },
+    surfaceMix: { grass: 0.34, stone: 0.54, sand: 0.12, water: 0 },
     canopyDensity: 0.256,
     understoryDensity: 0.275,
     groundDensity: 0.176,
@@ -417,6 +444,7 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["lily_large", "grass_leafs", "rock_smallFlatC"],
     landmark: "tree_palmDetailedTall",
     groundTint: { hue: 0.014, saturation: 1.28, value: 1.08 },
+    surfaceMix: { grass: 0.5, stone: 0.04, sand: 0.28, water: 0.18 },
     canopyDensity: 0.32,
     understoryDensity: 0.25,
     groundDensity: 0.165,

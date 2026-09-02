@@ -268,6 +268,7 @@ describe("hex grid course data", () => {
       "grid-elevation.ts",
       "grid-props.ts",
       "grid-palette.ts",
+      "grid-surface.ts",
     ];
     for (const file of files) {
       const source = readFileSync(new URL(`./${file}`, import.meta.url), "utf8");

@@ -4,7 +4,8 @@ import { gridElevationsFor, type GridElevation } from "./grid-elevation.js";
 import { hexDistance, hexKey, hexNeighbors, hexToWorld, type HexCoord } from "./hex.js";
 import { gridPaletteFor, type GridPalette } from "./grid-palette.js";
 import { distanceToRoute, gridPropsFor, type GridPropPlacement } from "./grid-props.js";
-import { gridBiomesForUnits, type GridBiome } from "./grid-theme.js";
+import { assertGridSurfaceContract, gridSurfacesForCells } from "./grid-surface.js";
+import { gridBiomesForUnits, type GridBiome, type GridSurface } from "./grid-theme.js";
 import {
   CELLS_PER_LESSON,
   GRID_CELL_BUDGET,
@@ -57,6 +58,7 @@ export interface GridCell {
   readonly unitId: string | null;
   readonly unitIndex: number | null;
   readonly territoryId: string | null;
+  readonly surface: GridSurface;
   readonly height: GridElevation["height"];
   readonly topY: number;
 }
@@ -477,6 +479,7 @@ function withElevation(
   lessons: readonly CourseGridLesson[],
   seed: string,
   activeLessonIndex: number,
+  unitBiomes: ReadonlyMap<string, GridBiome>,
 ): { readonly cells: readonly GridCell[]; readonly lessons: readonly GridLessonCell[] } {
   const routeIndexes = new Map(route.map((cell, index) => [hexKey(cell), index]));
   const detachedKeys = new Set(outline.detached.map(hexKey));
@@ -492,7 +495,7 @@ function withElevation(
   const elevations = new Map(
     gridElevationsFor(elevationInputs, route, seed, activeKey).map((entry) => [entry.key, entry]),
   );
-  const cells: GridCell[] = elevationInputs.map(({ coord, kind }) => {
+  const plannedCells = elevationInputs.map(({ coord, kind }) => {
     const key = hexKey(coord);
     const lessonIndex = routeIndexes.get(key) ?? null;
     const unitId =
@@ -510,6 +513,11 @@ function withElevation(
       topY: elevation.topY,
     };
   });
+  const surfaceByKey = gridSurfacesForCells(plannedCells, unitBiomes, seed);
+  const cells: GridCell[] = plannedCells.map((cell) => ({
+    ...cell,
+    surface: surfaceByKey.get(cell.key)!,
+  }));
   const lessonCells = route.map((coord, lessonIndex) => {
     const cell = cells.find((entry) => entry.key === hexKey(coord))!;
     const lesson = lessons[lessonIndex]!;
@@ -568,12 +576,17 @@ export function buildCourseGrid(input: CourseGridInput): HexMap {
   }
   const activeLessonIndex =
     input.activeLessonIndex ?? input.lessons.findIndex((lesson) => lesson.state === "live");
-  const projected = withElevation(outline, route, input.lessons, input.seed, activeLessonIndex);
-  const unitIds: string[] = [];
-  for (const cell of projected.cells) {
-    if (cell.unitId && !unitIds.includes(cell.unitId)) unitIds.push(cell.unitId);
-  }
+  const unitIds = [...new Set(input.lessons.map((lesson) => lesson.unitId))];
   const unitBiomes = gridBiomesForUnits(unitIds, input.seed);
+  const projected = withElevation(
+    outline,
+    route,
+    input.lessons,
+    input.seed,
+    activeLessonIndex,
+    unitBiomes,
+  );
+  assertGridSurfaceContract(projected.cells);
   const props = gridPropsFor(
     projected.cells.map((cell) => ({
       coord: cell.coord,

@@ -9,6 +9,11 @@ import { createHexFieldMaterial, type HexLayer } from "./hex-field-material.js";
 import { hexKey, hexNeighbors, hexToWorld } from "./hex.js";
 import { gridSurfaceSlopeFor } from "./grid-elevation.js";
 import { gridTerrainValueScale } from "./grid-palette.js";
+import {
+  GRID_SURFACE_COLOUR_BLEND,
+  GRID_SURFACE_COLOURS,
+  gridSurfaceCounts,
+} from "./grid-surface.js";
 
 interface HexFieldProps {
   readonly map: HexMap;
@@ -267,6 +272,16 @@ export function cellTopColour(map: HexMap, cell: GridCell): THREE.Color {
         Math.min(0.92, hsl.l * biome.groundTint.value),
       );
     }
+    // Surface is an instance albedo role. The shared geometry's vertex colour
+    // still supplies the centre/edge ramp and side bands, so this changes the
+    // ground type without creating another mesh or draw batch.
+    const surface = cell.surface;
+    if (surface !== "grass") {
+      colour.lerp(
+        new THREE.Color(GRID_SURFACE_COLOURS[surface]),
+        GRID_SURFACE_COLOUR_BLEND[surface],
+      );
+    }
     // Keep this variation low-frequency: adjacent cells share a value band and
     // the broad field changes over several cells. Per-cell white noise was the
     // earlier checkerboard failure, so the seed only chooses the phase.
@@ -336,11 +351,7 @@ function HexBedField({
     setGridRimAttribute(geometry, new Float32Array(Math.max(1, cells.length)));
     cells.forEach((cell, index) => {
       target.setMatrixAt(index, bedMatrix(cell, map, matrix));
-      const colour = new THREE.Color(cell.kind === "route" ? map.palette.road : map.palette.top);
-      if (cell.kind !== "route") {
-        colour.multiplyScalar(gridTerrainValueScale(map.projection, cell.height));
-      }
-      target.setColorAt(index, colour);
+      target.setColorAt(index, cellTopColour(map, cell));
     });
     target.instanceMatrix.needsUpdate = true;
     if (target.instanceColor) target.instanceColor.needsUpdate = true;
@@ -504,6 +515,7 @@ export function HexField({ map, dimmed = false }: HexFieldProps) {
         gridMainKeys: map.mainCells.map((cell) => `${cell.q},${cell.r}`),
         gridRouteKeys: map.route.map((cell) => `${cell.q},${cell.r}`),
         gridSeamStrength: map.seamStrength,
+        gridSurfaceCounts: gridSurfaceCounts(map.cells),
       }}
     >
       <HexBedField

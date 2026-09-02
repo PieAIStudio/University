@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-01
+last_reviewed: 2026-09-03
 domain: web3d
 tags:
   - island
@@ -981,3 +981,42 @@ seed，再乘 6/12/24/41 节、arc/horseshoe/loop-around-hill/switchback/serpent
 
 固定截图、逐轮否决证据和完整指标 JSON 留在对应 worktree 的 `.scratch/surface/shots/`
 与 `REPORT.md`；本节只保留可以约束后续实现的结论。
+
+## 十七、正交地表类型复核（2026-09-03，`work/surface2`）
+
+本轮处理的是上一节没有解决的结构缺口：一座岛的地面仍只有草，所有差异都来自颜色微调和
+道具。`GridCell.kind` 继续只回答 route / land / detached 的语义；新增的 `surface` 是
+独立轴，回答这一格地面是 grass / stone / sand / water。课程与岛群仍从同一份 `GridCell`
+和同一个 `cellTopColour()` 投影，未创建第二份地图或第二个 renderer。
+
+### 采用的规则
+
+- `GRID_BIOMES[*].surfaceMix` 与 `groundTint` 并列，且每行都由纯函数验证为有限、非负、和为
+  1。`pine-ridge` 为 0.92 grass，`stone-quarry` 为 0.62 stone，`palm-shore` 为
+  0.18 water；其余 biome 用 sand / stone 的低到中比例表达农田、旱原和遗迹的地面差异。
+- water 只从外缘一圈（`boundaryDistance <= 1`）的普通 land 候选开始，且候选不能挨着
+  route 或 lesson。flood-fill 先找连通候选，再从一个 seed 生长；这不是独立 hash 的散点
+  阈值。
+- `GRID_SURFACE_MIN_WATER_COMPONENT = 5`。选择 5 的尺子是：1–4 格在这个六边网格的
+  课程机位只读成零散色块，5 格是能形成连续岸线的最小 patch；在 41 课、330 格样本里它
+  只占 1.52%，不会把短课硬填成湖。压力矩阵 20 个样本中的 10 个含水，实际连通块范围
+  **5–17 格**。
+- water 写入后，所有相邻的非保护 in-island cell 先被写成 sand，再执行普通 sand / stone
+  quota。因此生成结果不允许 water 直接贴 grass；水贴岛外空域不算“水草硬边”。
+- 课程 land / bed 继续使用既有 instanced mesh。surface 只写 `instanceColor`，现有
+  `vertexColors` 继续负责中心、边缘和侧面色带；没有新 mesh、material batch 或纹理。
+  `WorldHexField` 仍是一批 `world-grid-hex-field`。
+
+### 被拒绝的方案
+
+这两条不是推测，而是本轮真实跑过并留了证据：
+
+1. 每格独立 hash 选 water：41 课外缘 109 个候选中选出 9 格，flood-fill 后得到
+   **9 个面积为 1 的连通块**，违反最小 patch；因此保留为 reverse tripwire，不合并。
+2. 把 surface field 的频率从 `0.43 / 0.27 / 0.37 / 0.19` 提高到
+   `1.43 / 1.07 / 1.37 / 0.91`：统计色差仍能通过，但截图读成逐格棋盘，stone / sand
+   的地面形状消失。拒收图保留在
+   `.scratch/surface2/rejected-high-frequency/course-design-desktop-post-on.png`。
+
+完整执行证据（压力矩阵、三组截图、色带数值、预算）在
+`.scratch/surface2/REPORT.md`；本节只保留会约束下一次生成器修改的结论。

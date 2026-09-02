@@ -14,6 +14,7 @@ import { createHexFieldMaterial } from "./hex-field-material.js";
 import { hexToWorld } from "./hex.js";
 import { WorldPropField } from "./WorldPropField.js";
 import { WorldUndersideField } from "./WorldUndersideField.js";
+import { gridSurfaceCounts } from "./grid-surface.js";
 import type { WorldGridIsland } from "./world-grid-types.js";
 
 interface WorldCellInstance {
@@ -114,6 +115,7 @@ function WorldHexTerrain({ instances, rimWeights, onPick, onHover }: WorldHexTer
         worldGridCellCount: instances.length,
         worldGridTriangleCount: instances.length * Number(geometry.userData.gridTriangles ?? 18),
         worldGridDrawModel: "one-instanced-hex-prism",
+        worldGridSurfaceCounts: gridSurfaceCounts(instances.map((instance) => instance.cell)),
       }}
     />
   );
@@ -155,6 +157,7 @@ export function WorldHexField({ islands, onPick, onHover }: WorldHexFieldProps) 
         worldGridCellCount: cellCount,
         worldGridTriangleCount: triangleCount,
         worldGridSharedGeometry: true,
+        worldGridSurfaceCounts: gridSurfaceCounts(instances.map((instance) => instance.cell)),
       }}
     >
       <WorldHexTerrain
