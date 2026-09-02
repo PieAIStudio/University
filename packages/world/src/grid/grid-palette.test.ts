@@ -40,6 +40,7 @@ describe("hand-picked grid palettes", () => {
     for (const preset of GRID_PALETTE_PRESETS) {
       expect(preset.shadow).toBe(GRID_SHARED_SOIL.shadow);
       expect(preset.cliff).toBe(GRID_SHARED_SOIL.cliff);
+      expect(preset.rim).toBe(GRID_SHARED_SOIL.rim);
       expect(preset.road).toBe(GRID_SHARED_SOIL.road);
     }
   });
@@ -93,10 +94,12 @@ describe("hand-picked grid palettes", () => {
     }
   });
 
-  it("keeps course terrace emphasis continuous instead of splitting the meadow", () => {
+  it("keeps course terrace emphasis narrow instead of splitting the meadow", () => {
     const ramp = GRID_TERRAIN_VALUE_RAMP.course;
-    expect(new Set(ramp).size).toBe(1);
-    expect(ramp[0]).toBe(1);
+    // Four broad terrace values add relief in the close shot without making
+    // adjacent same-height cells into a checkerboard.
+    expect(Math.max(...ramp) - Math.min(...ramp)).toBeLessThanOrEqual(0.18);
+    expect(ramp[0]).toBeLessThan(ramp.at(-1)!);
   });
 
   it("keeps grid foliage inside the green family", () => {
@@ -160,6 +163,7 @@ describe("hand-picked grid palettes", () => {
       top: preset.top,
       shadow: preset.shadow,
       cliff: preset.cliff,
+      rim: preset.rim,
       road: preset.road,
       accent: preset.accent,
     });

@@ -153,6 +153,7 @@ describe("world grid projection", () => {
         (entry) =>
           entry.grid.palette.cliff === GRID_SHARED_SOIL.cliff &&
           entry.grid.palette.shadow === GRID_SHARED_SOIL.shadow &&
+          entry.grid.palette.rim === GRID_SHARED_SOIL.rim &&
           entry.grid.palette.road === GRID_SHARED_SOIL.road,
       ),
     ).toBe(true);

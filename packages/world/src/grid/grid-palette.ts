@@ -4,11 +4,12 @@ export interface GridPalette {
   readonly top: number;
   readonly shadow: number;
   readonly cliff: number;
+  readonly rim: number;
   readonly road: number;
   readonly accent: number;
 }
 
-export const GRID_PALETTE_ROLES = ["top", "shadow", "cliff", "road", "accent"] as const;
+export const GRID_PALETTE_ROLES = ["top", "shadow", "cliff", "rim", "road", "accent"] as const;
 
 /**
  * The lower half of the world has one material language. Course identity is
@@ -18,6 +19,7 @@ export const GRID_PALETTE_ROLES = ["top", "shadow", "cliff", "road", "accent"] a
 export const GRID_SHARED_SOIL = {
   shadow: 0x412a24,
   cliff: 0x70452f,
+  rim: 0xa8875c,
   road: 0xf0e5c7,
 } as const;
 
@@ -30,13 +32,13 @@ export const GRID_SHARED_SOIL = {
  * Course and world use different ranges because they are two projections of
  * the same grid at different physical scales. The relation stays shared and
  * deterministic; only the camera's readable size changes the range. The course
- * range is deliberately neutral in the course projection: the shared top
- * swatch stays one green family, while the terrain slope and the real key/fill
- * lights carry the value cue. A wide ramp turns one meadow into unrelated
- * yellow and brown slabs.
+ * range is deliberately narrow in the course projection: the shared top
+ * swatch stays one ground family, while the terrain slope and the real key/fill
+ * lights carry most of the value cue. A wide ramp turns one meadow into
+ * unrelated yellow and brown slabs.
  */
 export const GRID_TERRAIN_VALUE_RAMP = {
-  course: [1, 1, 1, 1],
+  course: [0.92, 0.97, 1.03, 1.08],
   world: [0.8, 1.2, 3.2, 4.8],
 } as const;
 
@@ -176,7 +178,7 @@ export interface GridPalettePreset extends GridPalette {
  * dry khaki: technically earth, visibly dust. Hue and lightness carry identity;
  * saturation carries whether the place looks alive.
  *
- * Every preset still shares the soil, cliff and road, so the islands read as 53
+ * Every preset still shares the soil, cliff, rim and road, so the islands read as 53
  * places in one world rather than 53 unrelated toys. Each accent is the ramp
  * step that clears 1.6:1 against its own ground.
  */
@@ -206,6 +208,7 @@ export function gridPaletteFor(studyId: string, courseId: string, seed: string):
     top: preset.top,
     shadow: preset.shadow,
     cliff: preset.cliff,
+    rim: preset.rim,
     road: preset.road,
     accent: preset.accent,
   };

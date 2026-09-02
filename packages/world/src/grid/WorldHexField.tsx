@@ -2,7 +2,13 @@ import { type ThreeEvent } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-import { cellTopColour, HEX_GEOMETRY_TRIANGLES, hexGeometry } from "./HexField.js";
+import {
+  cellTopColour,
+  gridRimWeightsForCells,
+  HEX_GEOMETRY_TRIANGLES,
+  hexGeometry,
+  setGridRimAttribute,
+} from "./HexField.js";
 import { GRID_SEAM_STRENGTH, type GridCell } from "./course-grid.js";
 import { createHexFieldMaterial } from "./hex-field-material.js";
 import { hexToWorld } from "./hex.js";
@@ -18,6 +24,7 @@ interface WorldCellInstance {
 
 interface WorldHexTerrainProps {
   readonly instances: readonly WorldCellInstance[];
+  readonly rimWeights: Float32Array;
   readonly onPick: (islandIndex: number) => void;
   readonly onHover: (islandIndex: number | null) => void;
 }
@@ -55,7 +62,7 @@ function instanceIslandIndex(
 }
 
 /** All remote cells share one prism geometry, material and instanced draw. */
-function WorldHexTerrain({ instances, onPick, onHover }: WorldHexTerrainProps) {
+function WorldHexTerrain({ instances, rimWeights, onPick, onHover }: WorldHexTerrainProps) {
   const mesh = useRef<THREE.InstancedMesh>(null);
   const firstMap = instances[0]?.island.map;
   const geometry = useMemo(() => hexGeometry(GRID_SEAM_STRENGTH.land, -0.62), []);
@@ -68,6 +75,7 @@ function WorldHexTerrain({ instances, onPick, onHover }: WorldHexTerrainProps) {
   useLayoutEffect(() => {
     const target = mesh.current;
     if (!target) return;
+    setGridRimAttribute(geometry, rimWeights);
     instances.forEach((instance, index) => {
       target.setMatrixAt(index, worldCellMatrix(instance, matrix));
       const colour = cellTopColour(instance.island.map, instance.cell);
@@ -77,7 +85,7 @@ function WorldHexTerrain({ instances, onPick, onHover }: WorldHexTerrainProps) {
     target.instanceMatrix.needsUpdate = true;
     if (target.instanceColor) target.instanceColor.needsUpdate = true;
     target.computeBoundingSphere();
-  }, [instances, matrix]);
+  }, [geometry, instances, matrix, rimWeights]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
   useEffect(() => () => material?.dispose(), [material]);
@@ -128,6 +136,15 @@ export interface WorldHexFieldProps {
  */
 export function WorldHexField({ islands, onPick, onHover }: WorldHexFieldProps) {
   const instances = useMemo(() => cellInstances(islands), [islands]);
+  const rimWeights = useMemo(
+    () =>
+      new Float32Array(
+        islands.flatMap((island) =>
+          Array.from(gridRimWeightsForCells(island.map, island.map.cells)),
+        ),
+      ),
+    [islands],
+  );
   const cellCount = instances.length;
   const triangleCount = cellCount * HEX_GEOMETRY_TRIANGLES;
   return (
@@ -140,7 +157,12 @@ export function WorldHexField({ islands, onPick, onHover }: WorldHexFieldProps) 
         worldGridSharedGeometry: true,
       }}
     >
-      <WorldHexTerrain instances={instances} onPick={onPick} onHover={onHover} />
+      <WorldHexTerrain
+        instances={instances}
+        rimWeights={rimWeights}
+        onPick={onPick}
+        onHover={onHover}
+      />
       <WorldUndersideField islands={islands} />
       <WorldPropField islands={islands} />
     </group>
