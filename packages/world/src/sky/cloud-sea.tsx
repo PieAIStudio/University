@@ -23,6 +23,7 @@ import * as THREE from "three";
 import { hopPose } from "../avatar/hop.js";
 import { seeded } from "../island/random.js";
 import { CLOUD_CARRIER_FOOT_OFFSET, type CloudCarrierTarget } from "./cloud-carrier-contract.js";
+import { CLOUD_RENDER_ORDER, CLOUD_TONES, createCloudMaterials } from "./cloud-material.js";
 import { createCloudVolumeGeometry } from "./cloud-volume.js";
 import { renderTier } from "./tier.js";
 
@@ -292,12 +293,7 @@ export const CUTE_CLOUD_BATCH_NAMES = ["cute-cloud-upper", "cute-cloud-underbell
  * The upper lobes come last so they keep their light silhouette over the warm
  * contact belly when the two batches overlap.
  */
-const CUTE_CLOUD_RENDER_ORDER = {
-  // Weather's sky, sea floor and islands use the default opaque order (zero).
-  // Keep a little room above them for any future background decoration.
-  underbelly: 3,
-  upper: 4,
-} as const;
+const CUTE_CLOUD_RENDER_ORDER = CLOUD_RENDER_ORDER;
 
 export const CUTE_CLOUD_CONTRACT = {
   upperLobesPerPuff: 6,
@@ -316,13 +312,6 @@ export const CUTE_CLOUD_CONTRACT = {
   renderOrder: CUTE_CLOUD_RENDER_ORDER,
   opaque: true,
   wholeFieldDrift: true,
-} as const;
-
-const CLOUD_TONES = {
-  pearl: 0xfff7ee,
-  ivory: 0xe9eef6,
-  warm: 0xdccbb8,
-  underbelly: 0x8a7464,
 } as const;
 
 const CLOUD_ROLE_TONES: Readonly<
@@ -637,43 +626,10 @@ export function CuteCloudSea({
         : CUTE_CLOUD_CONTRACT.desktopSegments;
     return createCloudVolumeGeometry(segments.width, segments.height);
   }, [layout.quality]);
-  const upperMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        // Instance colours carry near/far role identity. The shared geometry
-        // adds a subtle value ramp so the closed body also reads in profile.
-        color: 0xffffff,
-        vertexColors: true,
-        roughness: 0.82,
-        metalness: 0,
-        emissive: 0x3a4048,
-        emissiveIntensity: 0.1,
-        transparent: false,
-        fog: false,
-        // Decorative cloud lobes overlap by design. Feeding those internal
-        // intersections to the screen-space AO pass turns a white sculpture
-        // into a solid black cut-out, so clouds paint colour but do not become
-        // occluders. The batches render after the opaque scene, so depthTest
-        // still rejects cloud pixels behind islands and the sea floor.
-        depthTest: true,
-        depthWrite: false,
-      }),
-    [],
-  );
-  const lowerMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        vertexColors: true,
-        roughness: 0.94,
-        metalness: 0,
-        emissive: 0x241c18,
-        emissiveIntensity: 0.04,
-        transparent: false,
-        fog: false,
-        depthTest: true,
-        depthWrite: false,
-      }),
+  // Both cloud fields take the same pair; `cloud-material.ts` says why a
+  // second answer to "how is a cloud lit" is no longer a caller's to give.
+  const { crown: upperMaterial, underbelly: lowerMaterial } = useMemo(
+    () => createCloudMaterials(),
     [],
   );
 
