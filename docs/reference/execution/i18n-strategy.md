@@ -1,6 +1,47 @@
+---
+id: REF-I18N-STRATEGY
+title: Internationalization Strategy
+type: reference
+status: active
+canonical: true
+owner: human
+created: 2026-08-31
+last_reviewed: 2026-09-03
+domain: product
+tags:
+  - i18n
+  - localization
+  - rtl
+related:
+  - REF-CURRENT-WORK
+  - SPEC-0001
+---
+
 # 多语言：策略与架构决定
 
-主控（产品 / 架构）。2026-08-31。
+这是从本轮 scratch 策略记录提升的唯一策略住处。它拥有产品边界、
+课程译文的版本语义、locale 发布闸门和分期决定；执行收据也合并在本文末尾。
+具体的 catalog 实现与测试仍以代码为准。
+
+主控（产品 / 架构）。初始决定于 2026-08-31。
+
+## 当前实现核对（2026-09-03）
+
+在当前 HEAD `9cb6f79` 运行 `node scripts/check-i18n.mjs`，输出为：
+
+```json
+{
+  "sourceCatalogKeys": 1145,
+  "englishCatalogKeys": 0,
+  "unextractedChinese": 0,
+  "physicalCssDeclarations": 0
+}
+```
+
+因此本文第 9 节里的 **1,105** 是 Phase 1 收尾时的快照，不是当前 key 总数；
+当前目录仍是英文 scaffold，尚未成为可选 locale。第 9 节和第 1.5 期的范围
+判断仍然有效：`packages/core` 的界面文案尚待纳入，而 `concepts/data/` 的
+281 条概念散文仍属于课程内容，不能混进 UI catalog。
 产品负责人的命题：**在线学习支持的语种越多，长尾越大**；小语种用户缺好应用，
 那是机会。他自己钉中英文，其余交给 AI，出问题靠小语种用户提意见再改。
 问了两条路线：**先搭框架占位后填** vs **即时翻译（像 Google 那样）**。
@@ -12,7 +53,7 @@
 
 | 面 | 量 | 机制 | 边际成本 |
 | --- | --- | --- | --- |
-| **App 界面文案** | 实测 **1,213 条**中文字面量，散在 **146 个文件** | 预翻译的消息目录，随构建发布 | 每条每语言一次 |
+| **App 界面文案** | 初始盘点 **1,213 条**中文字面量，散在 **146 个文件** | 预翻译的消息目录，随构建发布 | 每条每语言一次 |
 | **课程内容** | 巨大且带版本（单是 turing-pact 就 3,705 个 md） | 预翻译成**已发布的产物**，走同一条唯一生产者管线 | 每个 revision 每语言一次 |
 | **AI 批改与辅导** | 运行时按人生成 | **告诉模型用学习者的语言回答** | ≈ 0 |
 
@@ -81,7 +122,7 @@
 阿拉伯语、波斯语、乌尔都语、希伯来语是从右向左书写的，
 而**阿拉伯语恰恰是"人多 + 优质开发教育稀缺"这个长尾论点最强的一格**。
 
-实测：`packages/ui` 的 CSS 里物理属性 **143 处**，逻辑属性只有 **18 处**。
+初始审计：`packages/ui` 的 CSS 里物理属性 **143 处**，逻辑属性只有 **18 处**。
 **现在不做，以后要回头改 143 处。** 抽取文案的时候顺手把它们改成
 `padding-inline` / `margin-inline` / `inset-inline` / `text-align: start`，
 成本几乎为零；等到有阿拉伯语用户再改，就是一次专门的返工。
@@ -150,3 +191,12 @@ locale 需求测量（只记语言子标签）。三屏浏览器 before/after �
 并把 `check-i18n.mjs` 的扫描范围扩到 `packages/core/src`，
 **但要显式排除 `concepts/data/`**，并在脚本里写清为什么排除——
 否则下一个人会以为那是遗漏。
+
+## 10. Phase 1 完成收据（2026-08-31）
+
+Phase 1 建立了 catalog 与 locale 注册机制、正反向完整度闸门、匿名
+`navigator.language` 需求测量和 RTL 逻辑属性改造；没有翻译课程正文，
+也没有改 `packages/ui/src/language/`、`apps/local/studies/` 或 AI grading
+语言切换。收尾快照为 1,105 个 source key、218 处 RTL 转换、三屏浏览器
+before/after 复核，且当时的 `pnpm verify` 通过。当前计数见上面的核对节，
+不要把这份历史收据中的数字当作现行目录大小。

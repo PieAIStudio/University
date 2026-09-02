@@ -78,7 +78,7 @@ node scripts/experience-ledger.mjs list open
 | 看不懂的人 | 我在哪里停下来超过三秒；哪一刻我怀疑「是不是坏了」 | 口语化的模型 |
 | 用不了的人 | 键盘、读屏、慢网、弱设备、reduced motion | axe + 手动 |
 
-每个评审必须交出可复现的证据。格式见 `.scratch/uxrace/SCHEMA.md`，
+每个评审必须交出可复现的证据。格式见 `references/evidence-schema.md`，
 三条硬规则：**没有截图的视觉判断不算数；不许写泛泛的建议；不许猜代码。**
 
 ### 第 3 层：合并进台账

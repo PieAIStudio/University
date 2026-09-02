@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-01
+last_reviewed: 2026-09-03
 domain: web3d
 tags:
   - island
@@ -777,8 +777,9 @@ axial hex 的 radius of gyration。当前 41 课门槛是 `<72` 与 `<9.5`。旧
 
 移动端同一组截图也保持下降：foundations 为 34 / 58,690 → **32 / 58,496**，
 product 为 34 / 58,758 → **32 / 58,564**，generated-assets 为 34 / 58,526 →
-**32 / 58,332**。截图和原始 JSON 由本次 `.scratch/SKYWORLD.md` 报告列出；这份契约只
-保留结论和可复核的数值，不把一次性截图目录变成长期索引。
+**32 / 58,332**。截图和原始 JSON 由 commit `0276612` 的历史报告列出；当前证据由
+`pnpm e2e:island-look` 重新生成。这份契约只保留结论和可复核的数值，不把一次性截图
+目录变成长期索引。
 
 ## 十二、整个场景的体积感复核（2026-08-31）
 
@@ -981,3 +982,24 @@ seed，再乘 6/12/24/41 节、arc/horseshoe/loop-around-hill/switchback/serpent
 
 固定截图、逐轮否决证据和完整指标 JSON 留在对应 worktree 的 `.scratch/surface/shots/`
 与 `REPORT.md`；本节只保留可以约束后续实现的结论。
+
+## 十七、当前渲染计数审计（2026-09-03）
+
+这是对当前实现的测量，不是一次渲染改动。对象为 HEAD `9cb6f79` 的 delivery
+Vite 页面，固定判官 URL：
+
+```text
+/turing-pact/foundations-before-zero?shot=course-design&seed=foundations-before-zero&freeze=1
+```
+
+视口为 1440×900、DPR 2，post-processing 开启；等待 `__lastStageSceneRender`
+稳定后，课程 scene pass 为 **41 draw calls / 81,278 triangles**。
+
+为测完整桌面帧，先将 `gl.info.autoReset` 设为 `false`，调用 `info.reset()`，再
+触发一次 `invalidate()`。结果为 **43 draw calls / 81,280 triangles**。多出的
+两次调用和两个三角形分别来自 AO 与 grade 的 fullscreen triangle pass；它们
+不是课程 scene 的几何。于是「43 / 81,278」是把完整帧的 calls 与 scene 的
+triangles 混在一起的表述，精确引用时必须注明统计范围。
+
+§十六和更早章节保留的数字是当时版本的历史收据；本节不抹掉它们，也不把这次
+卫生轮的测量伪装成预算变更。当前实现、锁测试和本次截图均未因文档维护而改变。

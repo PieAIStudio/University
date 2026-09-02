@@ -1,8 +1,0 @@
-error: unexpected argument '--prompt-file' found
-
-  tip: a similar argument exists: '--profile'
-
-Usage: codex exec [OPTIONS] [PROMPT]
-       codex exec [OPTIONS] <COMMAND> [ARGS]
-
-For more information, try '--help'.

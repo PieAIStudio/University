@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-02T14:18:07.979Z
+generated_at: 2026-09-02T16:57:17.561Z
 generator_version: doc-gov@0.9.9
-docs_count: 97
+docs_count: 99
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -58,7 +58,7 @@ docs:
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-08-29
+    last_reviewed: 2026-09-03
     pinned: false
   - id: ADR-0009
     path: docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md
@@ -191,7 +191,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-27
+    last_reviewed: 2026-09-03
     pinned: true
   - id: REF-FEEDBACK-BACKEND-GAP
     path: docs/reference/execution/feedback-backend-gap.md
@@ -200,12 +200,26 @@ docs:
     canonical: true
     last_reviewed: 2026-08-27
     pinned: false
+  - id: REF-I18N-STRATEGY
+    path: docs/reference/execution/i18n-strategy.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-03
+    pinned: false
+  - id: REF-ISLAND-ART-DIRECTION-V2
+    path: docs/reference/execution/island-art-direction-v2.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-03
+    pinned: false
   - id: REF-ISLAND-LOOK-CONTRACT
     path: docs/reference/execution/island-look-contract.md
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-01
+    last_reviewed: 2026-09-03
     pinned: false
   - id: REF-PAYMENT-BACKEND-GAP
     path: docs/reference/execution/payment-backend-gap.md
@@ -226,7 +240,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-26
+    last_reviewed: 2026-09-03
     pinned: false
   - id: REF-REVIEW-REMINDERS-BACKEND-GAP
     path: docs/reference/execution/review-reminders-backend-gap.md

@@ -1,1 +1,0 @@
-Error: invalid model selection (--model "claude-sonnet-4-6" --effort "high"): --effort is not supported for model "claude-sonnet-4-6"

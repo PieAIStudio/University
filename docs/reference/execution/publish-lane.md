@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-26
-last_reviewed: 2026-08-26
+last_reviewed: 2026-09-03
 domain: execution
 tags:
   - delivery
@@ -33,7 +33,26 @@ related:
 本报告不实现课程生成、后端课程发布 API、支付或权益。ADR-0002 的实际
 发布目标仍需产品决定，见文末。
 
-## 现状：从干净 clone 实测
+## 当前状态核对（2026-09-03）
+
+本工作树当前能直接核实的事实是：
+
+- `apps/local/course-proposals/recovery/` 有 **4 个 study index，引用 44 个
+  recovery course package**；这是当前 tracked recovery 输入的规模。
+- tracked `apps/university/src/content/imported.json` 的生成快照日期为
+  2026-09-01，标记为 `evidenceMode: none`；对应 shelf 为 4 studies、44
+  courses、128 units、495 lessons、1,106 cards、640 exercises 和 1,584 个
+  evidence locator entries。它是生成清单，不是发布时的最终 evidence receipt。
+- 当前仓库 `vercel.json` 明确调用 `pnpm delivery:build`，传入 tracked
+  recovery root、词典和 `--evidence baked`；安装仍是 frozen lockfile，输出仍是
+  `apps/university/dist/delivery`，Git 自动部署仍关闭。`.vercel/project.json`
+  不在本工作树中，因此外部 Vercel 项目设置本轮没有被冒充为已核实。
+
+下面的“干净 clone 实测”、旧 Vercel 行为、选择边界和复测数字，都是此前
+`work/publish-lane` 的历史收据；它们保留用于解释为什么要有显式 delivery
+入口，但不代表当前仓库的输入规模或 Vercel 命令。
+
+## 历史实测：从干净 clone（2026-08-26）
 
 测量对象是 `work/publish-lane` 的干净 clone，不携带原工作树的
 `node_modules`、忽略文件或外部符号链接。
@@ -110,9 +129,9 @@ pnpm --filter @pieai/university-core build \
   仍退出 0 并打印 `nothing to import`；随后构建才以缺失 `shelf.json`
   退出 1。这个早期步骤是 fail-open 的。
 
-### `vercel.json` 当前行为
+### 历史 `vercel.json` 行为快照（2026-08-26）
 
-当前配置是：
+当时配置是：
 
 - `installCommand`: `pnpm install --frozen-lockfile`；
 - `buildCommand`：先构建 core，再 `pnpm content`，再执行
@@ -124,8 +143,9 @@ pnpm --filter @pieai/university-core build \
 - `git.deploymentEnabled: false`：GitHub push 不触发部署。配置注释要求
   持有本地状态的机器执行 `vercel build && vercel deploy --prebuilt`。
 
-所以 Vercel 现在既没有显式传入课程输入，也没有固定 evidence mode；它
-实际上依赖运行它的那台机器是否有 `apps/local/studies`。
+所以在那个快照中，Vercel 既没有显式传入课程输入，也没有固定 evidence mode；
+它实际上依赖运行它的那台机器是否有 `apps/local/studies`。当前仓库配置已由
+上面的 2026-09-03 核对节记录。
 
 ### ADR-0002 的闸门在哪里
 
@@ -232,7 +252,7 @@ cards、exercise fingerprint、evidence locator 和静态资源可复现；来�
 在这两项未决定前，本 lane 可以完成并校验 package-only artifact，但不声称
 已经完成后端意义上的“published course”或 source-snippet parity。
 
-## 实现后复测
+## 历史实现后复测记录
 
 在实现提交后，用同一条命令分别在主工作树和一个没有 `node_modules/`、
 `content/`、`dist/` 或忽略状态的独立 clone 执行 `0.1.0` 构建。两边都得到
@@ -240,7 +260,7 @@ cards、exercise fingerprint、evidence locator 和静态资源可复现；来�
 `diff -rq` 没有差异，主工作树的 `git status` 也保持 clean。独立的
 `sha256sum -c SHA256SUMS` 全部通过。
 
-## 一个必须每次亲手确认的分歧：evidence mode（2026-09-02）
+## 历史分歧收据：evidence mode（2026-09-02）
 
 仓库里的 `vercel.json` 和 Vercel 项目设置里存的 buildCommand **不是同一条**：
 

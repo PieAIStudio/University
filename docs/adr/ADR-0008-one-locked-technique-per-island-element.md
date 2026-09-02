@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-08-29
+last_reviewed: 2026-09-03
 domain: architecture
 tags:
   - 3d
@@ -16,6 +16,8 @@ pinned: false
 related:
   - ADR-0004
   - SPEC-0001
+  - REF-ISLAND-LOOK-CONTRACT
+  - REF-ISLAND-ART-DIRECTION-V2
 supersedes: []
 superseded_by: null
 ---
@@ -197,3 +199,28 @@ pale assembled clusters across the meadow, which read as noise next to the new
 foliage, while Kenney's 80/16-triangle rocks stayed quiet. Kenney is therefore
 retained; `rocks.glb` remains registered for landmark use but is not promoted
 to the scattered natural-rock projection.
+
+## Amendment 2026-09-03: separate scene geometry from post-processing counts
+
+This is an audit amendment, not a renderer change. At HEAD `9cb6f79`, the real
+delivery Vite page was measured at 1440×900, DPR 2, with the fixed course-design
+shot:
+
+```text
+/turing-pact/foundations-before-zero?shot=course-design&seed=foundations-before-zero&freeze=1
+```
+
+With `post-processing` enabled, the settled `__lastStageSceneRender` receipt is
+**41 draw calls / 81,278 triangles** for the course scene. A complete desktop
+frame was measured by setting `gl.info.autoReset = false`, calling
+`info.reset()`, and triggering `invalidate()`: **43 draw calls / 81,280
+triangles**. The extra two calls and two triangles are the AO and grade
+fullscreen triangle passes, not course geometry.
+
+This resolves two stale scopes without rewriting their history: the older ADR
+receipt of **340,880 triangles / 288 calls**, and the later contract snapshot of
+**36,090 triangles / 45 calls**, belong to earlier renderer states. The current
+lock remains unchanged because this hygiene round does not alter a technique,
+material, scene, or budget test. Future reports must label whether they count
+the scene pass or the complete post-processing frame; **43 / 81,278** is a
+mixed-scope shorthand and should not be used as a precise receipt.
