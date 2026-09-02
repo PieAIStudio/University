@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-02T14:14:01.475Z
+generated_at: 2026-09-02T14:18:07.979Z
 generator_version: doc-gov@0.9.9
-docs_count: 95
+docs_count: 97
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -319,6 +319,13 @@ docs:
     canonical: true
     last_reviewed: 2026-08-29
     pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-COURSE-VISUAL-LOD-MUST-RANK-ROUTE-PROXIMITY-AS-A-COST
+    path: docs/reference/learnings/workflow-issues/course-visual-lod-must-rank-route-proximity-as-a-cost.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-02
+    pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-CROSS-RENDERER-LIQUID-CTA-TRANSITIONS-NEED-A-PROJECTED-DOM-TARGET
     path: docs/reference/learnings/workflow-issues/cross-renderer-liquid-cta-transitions-need-a-projected-dom-target.md
     type: reference
@@ -391,6 +398,13 @@ docs:
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-GRID-PROP-DENSITY-NEEDS-CLUSTER-GEOMETRY-AND-ROUTE-VISIBLE-FLOORS
     path: docs/reference/learnings/workflow-issues/grid-prop-density-needs-cluster-geometry-and-route-visible-floors.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-02
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-GRID-PROPS-NEED-A-ONE-CELL-AABB-AND-EXACT-TERRAIN-HEIGHT-GATE
+    path: docs/reference/learnings/workflow-issues/grid-props-need-a-one-cell-aabb-and-exact-terrain-height-gate.md
     type: reference
     status: stable
     canonical: true
