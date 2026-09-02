@@ -118,15 +118,24 @@ export function gridPropFatten(role: GridPropRole, aspect: number): number {
  * knee height, something you only notice up close, and one large thing per
  * unit that says a chapter started.
  *
- * The lower ground bound is 0.10 and not zero on purpose. Below that a donor
- * mesh has stopped being a prop and become a decal lying in the terrain — that
- * is how `crops_dirtRow` (aspect 20:1) was caught and dropped from the library
- * rather than shipped as a z-fighting smear.
+ * The lower ground bound is not zero on purpose. Below it a donor mesh has
+ * stopped being a prop and become a decal lying in the terrain — that is how
+ * `crops_dirtRow` (aspect 20:1) was caught and dropped from the library rather
+ * than shipped as a z-fighting smear.
+ *
+ * The ceiling moved, and the floor did not. The band ran to 0.54 against a hex
+ * 2.0 units across — at most twenty-seven percent of one tile — while ground
+ * was 74 of the island's 137 props. Rings 2-3 therefore carried 66 props over
+ * 90 cells, which is dense, and still photographed as an empty lawn, because
+ * most of the budget was spent below the height the road camera can resolve.
+ * Raising the floor as well was tried and reverted: a wide flat mesh clamped
+ * into one cell cannot also clear a taller floor, so it turns the pebble this
+ * bound exists to protect back into a slab.
  */
 export const GRID_PROP_ROLE_SIZING: Readonly<Record<GridPropRole, GridPropRoleSizing>> = {
   canopy: { height: [1.3, 2.3], footprint: [0.4, 1.45], fatten: 1.45 },
   understory: { height: [0.6, 1.18], footprint: [0.28, 1.15], fatten: 1.3 },
-  ground: { height: [0.1, 0.54], footprint: [0.16, 0.98], fatten: 1.15 },
+  ground: { height: [0.1, 0.66], footprint: [0.16, 0.98], fatten: 1.15 },
   landmark: { height: [1.35, 3.1], footprint: [0.7, 2.4], fatten: 1.35 },
 };
 
@@ -296,9 +305,9 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["grass_leafsLarge", "mushroom_red", "rock_smallA"],
     landmark: "rock_tallB",
     groundTint: { hue: -0.022, saturation: 1.02, value: 0.94 },
-    canopyDensity: 0.3,
-    understoryDensity: 0.24,
-    groundDensity: 0.3,
+    canopyDensity: 0.48,
+    understoryDensity: 0.3,
+    groundDensity: 0.165,
     opening: true,
   },
   {
@@ -309,9 +318,9 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["mushroom_tanGroup", "grass_leafsLarge", "flower_yellowA"],
     landmark: "tree_detailed_fall",
     groundTint: { hue: 0.042, saturation: 1.2, value: 1.04 },
-    canopyDensity: 0.26,
-    understoryDensity: 0.2,
-    groundDensity: 0.28,
+    canopyDensity: 0.416,
+    understoryDensity: 0.25,
+    groundDensity: 0.154,
     opening: true,
   },
   {
@@ -322,9 +331,9 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["stone_smallA", "stone_smallFlatA", "stone_largeA", "stone_smallTopA"],
     landmark: "statue_obelisk",
     groundTint: { hue: -0.008, saturation: 0.66, value: 0.97 },
-    canopyDensity: 0.16,
-    understoryDensity: 0.2,
-    groundDensity: 0.34,
+    canopyDensity: 0.256,
+    understoryDensity: 0.25,
+    groundDensity: 0.187,
     opening: false,
   },
   {
@@ -335,9 +344,9 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["flower_purpleA", "flower_purpleB", "flower_redA", "flower_yellowA"],
     landmark: "statue_ring",
     groundTint: { hue: 0.01, saturation: 1.22, value: 1.06 },
-    canopyDensity: 0.12,
-    understoryDensity: 0.26,
-    groundDensity: 0.42,
+    canopyDensity: 0.192,
+    understoryDensity: 0.325,
+    groundDensity: 0.231,
     opening: true,
   },
   {
@@ -348,9 +357,9 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["mushroom_redGroup", "hanging_moss", "plant_bushLargeTriangle"],
     landmark: "tree_thin_dark",
     groundTint: { hue: -0.04, saturation: 0.98, value: 0.88 },
-    canopyDensity: 0.24,
-    understoryDensity: 0.3,
-    groundDensity: 0.34,
+    canopyDensity: 0.384,
+    understoryDensity: 0.375,
+    groundDensity: 0.187,
     opening: false,
   },
   {
@@ -361,9 +370,9 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["log", "campfire_logs", "log_stack"],
     landmark: "tent_detailedOpen",
     groundTint: { hue: 0.024, saturation: 0.84, value: 1.0 },
-    canopyDensity: 0.18,
-    understoryDensity: 0.26,
-    groundDensity: 0.3,
+    canopyDensity: 0.288,
+    understoryDensity: 0.325,
+    groundDensity: 0.165,
     opening: false,
   },
   {
@@ -374,9 +383,9 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["crop_carrot", "crop_turnip", "fence_simple"],
     landmark: "crops_bambooStageB",
     groundTint: { hue: 0.034, saturation: 1.16, value: 1.03 },
-    canopyDensity: 0.2,
-    understoryDensity: 0.32,
-    groundDensity: 0.36,
+    canopyDensity: 0.32,
+    understoryDensity: 0.4,
+    groundDensity: 0.198,
     opening: true,
   },
   {
@@ -387,9 +396,9 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["rock_smallFlatA", "rock_smallA", "plant_flatShort", "rock_largeB"],
     landmark: "statue_columnDamaged",
     groundTint: { hue: 0.044, saturation: 0.9, value: 1.1 },
-    canopyDensity: 0.14,
-    understoryDensity: 0.18,
-    groundDensity: 0.3,
+    canopyDensity: 0.224,
+    understoryDensity: 0.225,
+    groundDensity: 0.165,
     opening: false,
   },
   {
@@ -400,9 +409,9 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["stone_smallFlatB", "stone_largeC", "plant_bushSmall"],
     landmark: "statue_head",
     groundTint: { hue: -0.03, saturation: 0.7, value: 0.93 },
-    canopyDensity: 0.16,
-    understoryDensity: 0.22,
-    groundDensity: 0.32,
+    canopyDensity: 0.256,
+    understoryDensity: 0.275,
+    groundDensity: 0.176,
     opening: false,
   },
   {
@@ -413,9 +422,9 @@ export const GRID_BIOMES: readonly GridBiome[] = [
     ground: ["lily_large", "grass_leafs", "rock_smallFlatC"],
     landmark: "tree_palmDetailedTall",
     groundTint: { hue: 0.028, saturation: 1.16, value: 1.08 },
-    canopyDensity: 0.2,
-    understoryDensity: 0.2,
-    groundDensity: 0.3,
+    canopyDensity: 0.32,
+    understoryDensity: 0.25,
+    groundDensity: 0.165,
     opening: true,
   },
 ];
