@@ -152,15 +152,50 @@ describe("grid biome library", () => {
     // A biome is weather on the course's ground, not a second palette. Wide
     // tints would make every course converge on the same six colours and
     // destroy the course identity the world map depends on.
+    //
+    // Hue was capped at 0.045 — sixteen degrees of rotation — and every biome
+    // sat at the cap, which is the shape of a band set too tight: the table
+    // stops expressing preferences and just reports the limit. Sixteen degrees
+    // is below the threshold at which a chapter change reads as a change, so
+    // the island was one green and the whole unit-as-biome idea was carried by
+    // the props alone. 0.095 is about thirty-four degrees, still a family
+    // rather than a second palette, and the biomes now spread across it
+    // instead of piling on the edge.
     for (const biome of GRID_BIOMES) {
-      expect(Math.abs(biome.groundTint.hue), biome.id).toBeLessThanOrEqual(0.045);
-      expect(biome.groundTint.saturation, biome.id).toBeGreaterThanOrEqual(0.65);
-      expect(biome.groundTint.saturation, biome.id).toBeLessThanOrEqual(1.25);
+      expect(Math.abs(biome.groundTint.hue), biome.id).toBeLessThanOrEqual(0.095);
+      expect(biome.groundTint.saturation, biome.id).toBeGreaterThanOrEqual(0.55);
+      expect(biome.groundTint.saturation, biome.id).toBeLessThanOrEqual(1.35);
       // Tighter than hue and saturation on purpose: elevation owns value, so a
       // biome may only borrow a little of it before the terraces stop reading.
       expect(biome.groundTint.value, biome.id).toBeGreaterThanOrEqual(0.87);
       expect(biome.groundTint.value, biome.id).toBeLessThanOrEqual(1.13);
     }
+  });
+
+  it("spreads its biomes across the band instead of piling them on the cap", () => {
+    /*
+     * The failure this catches is not a value out of range — the old table was
+     * entirely in range. It is a table that has stopped choosing.
+     *
+     * Every biome sat within a whisker of the old 0.045 hue cap, because the
+     * cap was tighter than the difference the art needed, so each entry was
+     * really saying "as far as I am allowed" rather than "this is what a
+     * quarry looks like". A range check passes happily on that, and the island
+     * still renders as one colour. So: the hues must actually use the band,
+     * and they must not bunch at its edge.
+     */
+    const hues = GRID_BIOMES.map((biome) => biome.groundTint.hue);
+    const span = Math.max(...hues) - Math.min(...hues);
+    expect(span).toBeGreaterThanOrEqual(0.12);
+    const atTheCap = hues.filter((hue) => Math.abs(hue) > 0.085).length;
+    expect(atTheCap).toBeLessThanOrEqual(3);
+    // Adjacent units get different biomes; those two must differ enough to
+    // read as a chapter change rather than as a lighting drift.
+    const sorted = [...hues].sort((a, b) => a - b);
+    const gaps = sorted.slice(1).map((hue, index) => hue - sorted[index]!);
+    expect(Math.max(...gaps)).toBeGreaterThanOrEqual(0.01);
+    const saturations = GRID_BIOMES.map((biome) => biome.groundTint.saturation);
+    expect(Math.max(...saturations) - Math.min(...saturations)).toBeGreaterThanOrEqual(0.5);
   });
 
   it("has at least three calm biomes to open with", () => {

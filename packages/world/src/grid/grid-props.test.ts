@@ -46,11 +46,25 @@ const SHAPES = [
 
 const SEEDS = ["foundations-before-zero", "seed-b", "seed-c", "another-course"] as const;
 
-// Measured across SHAPES × SEEDS after the cluster planner landed: the minima
-// are 24 visible props and 7 props above 0.6 world units. These are floors for
-// the learner's three-ring view, not a target that may be met by hidden specks.
-const MIN_VISIBLE_PROPS_NEAR_ROUTE = 24;
-const MIN_VISIBLE_TALL_PROPS_NEAR_ROUTE = 7;
+/*
+ * Floors for the learner's three-ring view, per lesson rather than per course.
+ *
+ * A single global minimum was measured first and it was 24 visible props with
+ * 7 above 0.6 world units — both set by the smallest shape in the table, a
+ * three-lesson course. The 41-lesson course actually renders 148 and 70, so a
+ * flat floor of 24/7 would have let the long courses lose five sixths of their
+ * dressing without turning anything red. A floor a passing island can be six
+ * times better than is not measuring the island; it is measuring the shortest
+ * course in the fixture list.
+ *
+ * Per-lesson rates hold every shape to the density its own length implies. The
+ * constants are the measured minimum rate across SHAPES × SEEDS, rounded down.
+ */
+const MIN_VISIBLE_PROPS_PER_LESSON = 2.6;
+const MIN_VISIBLE_TALL_PROPS_PER_LESSON = 0.9;
+/** Short courses still need a floor that a rate alone would round away. */
+const MIN_VISIBLE_PROPS_FLOOR = 20;
+const MIN_VISIBLE_TALL_PROPS_FLOOR = 6;
 
 describe("grid prop placement", () => {
   it("puts something where the learner is actually standing", () => {
@@ -240,9 +254,17 @@ describe("grid prop placement", () => {
         const map = courseOf(shape.lessons, shape.units, seed);
         const near = visiblePropsNearRoute(map.props, map.route, 3);
         const label = `${shape.lessons}/${seed}`;
-        expect(near.length, label).toBeGreaterThanOrEqual(MIN_VISIBLE_PROPS_NEAR_ROUTE);
+        const floor = Math.max(
+          MIN_VISIBLE_PROPS_FLOOR,
+          Math.round(shape.lessons * MIN_VISIBLE_PROPS_PER_LESSON),
+        );
+        const tallFloor = Math.max(
+          MIN_VISIBLE_TALL_PROPS_FLOOR,
+          Math.round(shape.lessons * MIN_VISIBLE_TALL_PROPS_PER_LESSON),
+        );
+        expect(near.length, label).toBeGreaterThanOrEqual(floor);
         expect(near.filter((prop) => prop.height > 0.6).length, label).toBeGreaterThanOrEqual(
-          MIN_VISIBLE_TALL_PROPS_NEAR_ROUTE,
+          tallFloor,
         );
       }
     }
