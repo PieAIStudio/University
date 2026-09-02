@@ -267,6 +267,7 @@ describe("hex grid course data", () => {
       "grid-outline.ts",
       "grid-elevation.ts",
       "grid-props.ts",
+      "grid-props-contract.ts",
       "grid-palette.ts",
       "grid-surface.ts",
     ];
