@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-08-27
+last_reviewed: 2026-09-03
 domain: execution
 tags:
   - current-work
@@ -90,15 +90,20 @@ something reads the output.
 
 ## Numbers, Counted Not Remembered
 
-**53 courses · 150 units · 579 lessons** (577 unique ids — two ids are claimed
-twice) · 1,815 `[[evidence:]]` markers resolving to **1,597 anchors** · 281
-concepts (**138 carry a shared flow map**, 24 carry a style sample) · 267 terms
-· 25 anti-patterns.
+**当前 delivery shelf：4 studies · 44 courses · 128 units · 495 lessons**
+(495 unique ids) · 1,106 cards · 640 exercises · 1,584 evidence locator entries。
+Core catalogue remains 281 concepts (**138 carry a shared flow map**, 24 carry a
+style sample) · 267 terms · 25 anti-patterns. The shelf snapshot was generated
+2026-09-01 with `evidenceMode: none`; it contains locators, not baked source
+snippets.
 
-427 lesson-to-lesson links, 414 inside their own course and **13** crossing
-courses: the mesh does not exist yet. `[[term:]]` links: zero.
+The previously measured source-wide graph had 427 lesson-to-lesson links, 414
+inside its course and **13** crossing courses; that count belonged to the former
+53-course source shelf and is not asserted for the current 44-course delivery
+shelf. `[[term:]]` links: zero in the current tracked shelf.
 
-Tests: core 378 · backend 1 · ui 274 · world 133 · university 143 · local 409 = **1,338**.
+The following test totals are a dated snapshot, not a current gate receipt:
+core 378 · backend 1 · ui 274 · world 133 · university 143 · local 409 = **1,338**.
 Plus 16 browser walks (`pnpm e2e`), two of which (`G`, `G2`) exist only to
 compare the two builds against each other rather than to check either alone.
 
@@ -350,7 +355,9 @@ that order, plus the third stage of ADR-0009 that has not been built:
   goes the other way too: a worktree with no generated content at all makes
   the same check pass while counting nothing. Run `pnpm content` before
   trusting either colour, and read the counts it prints
-  (currently 5 studies, 53 courses, 4.0 MB, 1,597 evidence snippets).
+  (the current tracked shelf is 4 studies, 44 courses, 495 lessons and 1,584
+  evidence locators; whether source snippets are baked is controlled separately
+  by the delivery lane's explicit evidence mode).
 - **This file is pinned.** A commit touching it needs
   `Pinned-Override: REF-CURRENT-WORK` in the message. SPEC-0001 needs its own.
 

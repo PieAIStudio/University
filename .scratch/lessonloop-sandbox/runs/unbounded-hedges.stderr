@@ -1,4 +1,0 @@
-$ node scripts/check-lesson-hedges.mjs --before /Users/yuanfei/PieAI/University-wt-lessonloop/.scratch/lessonloop-sandbox/runs/fixer-draft.md --after /Users/yuanfei/PieAI/University-wt-lessonloop/.scratch/lessonloop-sandbox/runs/unbounded-polisher.stdout
-✗ 丢了 2 个让步词。作者每一个都是故意放的。
-✗ 新增 7 处绝对化：绝不 绝对 随时能 根本不
-✗ 正文长了 11.9%，超过 3%。润色是换说法，不是加内容——多出来的通常是模型自己想讲的。

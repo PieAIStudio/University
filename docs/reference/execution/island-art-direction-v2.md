@@ -1,7 +1,32 @@
+---
+id: REF-ISLAND-ART-DIRECTION-V2
+title: Island Art Direction v2
+type: reference
+status: active
+canonical: true
+owner: human
+created: 2026-08-30
+last_reviewed: 2026-09-03
+domain: web3d
+tags:
+  - island
+  - art-direction
+  - procedural-map
+related:
+  - REF-ISLAND-LOOK-CONTRACT
+  - ADR-0008
+  - ADR-0009
+---
+
 # 浮空棋盘 — University 程序化地图 v2 美术与架构规格
 
-作者：主控（架构 / 美术总监）。日期 2026-08-30。
-这份文件是 v2 的唯一美术依据。它取代 island-look-contract.md 的数值门槛。
+这是从本轮 scratch 美术记录提升的唯一美术决策住处。它拥有视觉意图、语义、
+被拒方案和历史收据；[Island Look Contract](./island-look-contract.md) 拥有当前
+可测门槛、捕获方式和实测数；[ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)
+拥有单元素技术锁。不得把本文的历史测量当作现行预算，也不得把合同的数值门槛
+反写成美术意图。
+
+作者：主控（架构 / 美术总监）。初始日期 2026-08-30。
 
 ## 0. 为什么换
 
@@ -38,7 +63,7 @@
 
 ## 2. 不可协商的接缝
 
-`packages/world/src/Maps.tsx:724` 的 `LessonPlacement` **形状不变**：
+`packages/world/src/Maps.tsx` 中的 `LessonPlacement` **形状不变**：
 
     { studyId, courseId, unitId, unitTitle, unitIndex, lessonId, lessonTitle,
       chars, position: THREE.Vector3, state, kind, hueShift, blueprint, visualToken }
@@ -116,8 +141,9 @@ position = 该课格子顶面中心的世界坐标。**上面那一层一行都�
 
 ## 8. 资产
 
-- Kenney nature-kit：`/Users/yuanfei/PieAI/_donors/Kenney/kenney_nature-kit/Models/GLTF format/`
-  329 个 GLB，CC0，已授权。树、石、桥、栅栏、蘑菇、作物、崖块、瀑布块。
+- Kenney nature-kit：项目登记的 nature-kit donor 资产，329 个 GLB，CC0，已授权。
+  树、石、桥、栅栏、蘑菇、作物、崖块、瀑布块。具体 donor 位置由项目的资产
+  注册与 kit 依赖决定，不把某台机器的绝对路径写进规范。
 - Kenney tower-defense-kit：160 个 GLB，有可堆叠的塔（bottom/middle/top），
   适合做 unit 地标。
 - 发版时在第三方声明里保留 Kenney 的版权行即可。
@@ -178,8 +204,9 @@ position = 该课格子顶面中心的世界坐标。**上面那一层一行都�
 
 ## 12. 世界视图的一条修正（2026-08-30，主控看图后）
 
-参考图 `.scratch/artdir/world-view-archipelago-day.png` 证明了**每课一色确实能解决
-身份问题**——十几座岛一眼可分，这正是 `work/archipelago-identity` 当年没做到的。
+2026-08-30 的 art-direction capture 证明了**每课一色确实能解决身份问题**——
+十几座岛一眼可分，这正是 `work/archipelago-identity` 当年没做到的。该 capture
+是历史判断证据，不再作为当前仓库输入；当前规则由本文、代码和测试共同承接。
 
 **但那张图的两个做法是错的，不要照抄：**
 
@@ -460,7 +487,7 @@ Goldberg 那套是对的工程，做完了、有测试、指标漂亮。
 
 第二轮（`a071327`）达标并合并：
 
-- **红线守住了**：`.scratch/ctapinch/round2/` 全部取样点都没有覆盖任何可读文字，
+- **红线守住了**：Round 2 的全部取样点都没有覆盖任何可读文字，
   而且这一条是用**覆盖层矩形与文字节点矩形相交检测**证的，不是目检——
   第一轮就是目检漏掉的。
 - 读作 **鼓包 → 分离 → 飞行 → 化进进度条已填充那一段**，落点成为目的地的一部分。
@@ -581,7 +608,7 @@ Goldberg 那套是对的工程，做完了、有测试、指标漂亮。
 预算 `9 calls / 29,102 tris`，比第一轮更省。天空复用了 `COURSE_SKY_STOPS`。
 
 **留着的欠账：那五块地是平板。** 没有高度起伏、没有道具、没有道路，
-表面还有几道读作瑕疵的斜向划痕。和 `.scratch/prettyisle/final/` 并排看，
+表面还有几道读作瑕疵的斜向划痕。和 2026-08-31 的 Prettyisle final capture 并排看，
 它读作**毛毡剪纸**，而第二层读作**土地**。
 
 **没有再开第三轮，这是产品判断不是妥协**：第一层已经花了四轮
@@ -601,3 +628,25 @@ SHA 记在这里，`git reflog` 九十天内仍可取回：
 | `work/hexlook-gemini` | `7e18430` | hex 外观赛马的落选方；胜出方已在 main |
 | `work/hexlook-grok` | `ca0492d` | 同上 |
 | `work/planethex` | `bdf8deb` | Goldberg 六边形球体；§18 已推翻整条球体路线，星球层改用「同一片天空，看得更高」 |
+
+## 22. 当前渲染计数审计（2026-09-03）
+
+这是对当前实现的测量，不是一次渲染改动。对象为 HEAD `9cb6f79` 的 delivery
+Vite 页面，固定判官 URL：
+
+```text
+/turing-pact/foundations-before-zero?shot=course-design&seed=foundations-before-zero&freeze=1
+```
+
+视口为 1440×900、DPR 2，post-processing 开启；等待 `__lastStageSceneRender`
+稳定后，课程 scene pass 为 **41 draw calls / 81,278 triangles**。
+
+为测完整桌面帧，先将 `gl.info.autoReset` 设为 `false`，调用 `info.reset()`，再
+触发一次 `invalidate()`。结果为 **43 draw calls / 81,280 triangles**。多出的
+两次调用和两个三角形分别来自 AO 与 grade 的 fullscreen triangle pass；它们
+不是课程 scene 的几何。于是「43 / 81,278」是把完整帧的 calls 与 scene 的
+triangles 混在一起的表述，精确引用时必须注明统计范围。
+
+ADR-0008 和 Island Look Contract 前面各节保留的旧数字仍是当时版本的历史收据；
+本文不抹掉它们，也不把这次卫生轮的测量伪装成预算变更。当前实现、锁测试和本次
+截图均未因文档维护而改变。

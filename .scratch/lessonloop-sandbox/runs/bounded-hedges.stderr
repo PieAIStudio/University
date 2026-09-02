@@ -1,1 +1,0 @@
-$ node scripts/check-lesson-hedges.mjs --before /Users/yuanfei/PieAI/University-wt-lessonloop/.scratch/lessonloop-sandbox/runs/fixer-draft.md --after /Users/yuanfei/PieAI/University-wt-lessonloop/.scratch/lessonloop-sandbox/runs/polished-draft.md
