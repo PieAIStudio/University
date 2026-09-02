@@ -93,10 +93,24 @@ export function addCloudVertexValueRamp(geometry: THREE.BufferGeometry): THREE.B
     // The closed body now has a readable underside and a sun-facing crown.
     // This is a geometric light relationship carried by vertex value, not a
     // global grade applied to the cloud batch.
-    const value = 0.5 + lift * 0.38 + facing * 0.12;
-    colours[index * 3] = value * (0.99 + lift * 0.01);
+    // A cloud's shaded side is not a dark side. It scatters so much light
+    // internally that its underside stays bright — which is why a floor of
+    // 0.5 read as a navy wedge whenever the camera looked up at one, and why
+    // lifting the floor fixes every cloud in both views at once instead of
+    // per placement. The spread is what still separates crown from belly.
+    const value = 0.72 + lift * 0.22 + facing * 0.08;
+    // The underside runs *warm*, not cool.
+    //
+    // It used to gain blue as it dropped, which is backwards: a cloud's belly
+    // is lit by bounce off the ground, so it goes warm, and only its crown
+    // sees the sky. With the old ramp the underside carried a cool tint into a
+    // scene whose fill is also deliberately cool, and the two multiplied — any
+    // cloud the camera looked *up* at rendered as a navy wedge. The same
+    // compounding turned the lesson marker's near-vertical bevel navy, and the
+    // fix there was the same: give the dark face somewhere warm to come from.
+    colours[index * 3] = value * (1.03 - lift * 0.03);
     colours[index * 3 + 1] = value * (0.97 + lift * 0.03);
-    colours[index * 3 + 2] = value * (0.98 + (1 - lift) * 0.02);
+    colours[index * 3 + 2] = value * (0.9 + lift * 0.1);
   }
   geometry.setAttribute("color", new THREE.BufferAttribute(colours, 3));
   return geometry;

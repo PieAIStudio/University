@@ -15,6 +15,23 @@ import {
 } from "./cloud-sea.js";
 import { CLOUD_VOLUME_CONTRACT, createCloudVolumeGeometry } from "./cloud-volume.js";
 
+/**
+ * Source with comments removed.
+ *
+ * These assertions count material declarations, and the modules they read
+ * explain themselves at length — including by naming the very material class
+ * the rule forbids. Matching raw text counts the prose too, which is how the
+ * first version of this gate failed on a file that was entirely correct.
+ */
+function code(file: string): string {
+  return readFileSync(new URL(file, import.meta.url), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
+}
+
+/** Every module that draws a cloud. Both must take the shared material. */
+const CLOUD_CALLERS = ["./cloud-sea.tsx", "../grid/GridCloudLayers.tsx"] as const;
+
 describe("cute cloud sea", () => {
   it("keeps a deterministic sculpted layout for each quality tier", () => {
     const desktop = cuteCloudLayout(40, -5.2, "desktop");
@@ -141,16 +158,45 @@ describe("cute cloud sea", () => {
     expect(CUTE_CLOUD_CONTRACT.drawBatches).toBe(2);
     expect(CUTE_CLOUD_CONTRACT.batchNames).toEqual(CUTE_CLOUD_BATCH_NAMES);
     expect(source.match(/<instancedMesh\b/g)).toHaveLength(CUTE_CLOUD_CONTRACT.drawBatches);
-    expect(source.match(/vertexColors:\s*true/g)).toHaveLength(CUTE_CLOUD_CONTRACT.drawBatches);
     expect(source).not.toMatch(/RayMarchMaterial|raymarchShader|volumeCloud/i);
   });
 
+  /*
+   * These three used to read `cloud-sea.tsx` and count its two inline
+   * materials. They now read the module that owns the answer, and they check
+   * the far more useful thing: that it is the *only* module that does.
+   *
+   * The defect that prompted it shipped for months. Both cloud fields built
+   * the same 3D body, and the course island's field then drew it with an
+   * unlit, semi-transparent, single-tone `MeshBasicMaterial` — so a modelled
+   * cloud rendered as a paper cut-out, and none of the island's lighting work
+   * reached it. Nothing failed, because no test asked whether the two agreed.
+   */
+  it("keeps one lit material pair for every cloud in the product", () => {
+    const shared = code("./cloud-material.ts");
+    // Constructions, not the two type annotations on the returned pair.
+    expect(shared.match(/new THREE\.MeshStandardMaterial/g)).toHaveLength(2);
+    expect(shared.match(/vertexColors:\s*true/g)).toHaveLength(2);
+    expect(shared.match(/transparent:\s*false/g)).toHaveLength(2);
+    for (const file of CLOUD_CALLERS) {
+      const source = code(file);
+      expect(source, file).toMatch(/createCloudMaterials\(/);
+      // An unlit or bespoke cloud material anywhere is the defect returning.
+      expect(source, file).not.toMatch(/MeshBasicMaterial|MeshStandardMaterial/);
+    }
+  });
+
   it("depth-tests after the opaque scene without contributing cloud depth to AO", () => {
-    const source = readFileSync(new URL("./cloud-sea.tsx", import.meta.url), "utf8");
+    const shared = code("./cloud-material.ts");
     expect(CUTE_CLOUD_CONTRACT.renderOrder).toEqual({ underbelly: 3, upper: 4 });
-    expect(source.match(/depthTest:\s*true/g)).toHaveLength(CUTE_CLOUD_CONTRACT.drawBatches);
-    expect(source.match(/depthWrite:\s*false/g)).toHaveLength(CUTE_CLOUD_CONTRACT.drawBatches);
-    expect(source).not.toMatch(/renderOrder=\{-[^}]+\}/);
+    expect(shared.match(/depthTest:\s*true/g)).toHaveLength(CUTE_CLOUD_CONTRACT.drawBatches);
+    expect(shared.match(/depthWrite:\s*false/g)).toHaveLength(CUTE_CLOUD_CONTRACT.drawBatches);
+    for (const file of CLOUD_CALLERS) {
+      const source = code(file);
+      // A negative renderOrder draws before the opaque pass, which is only
+      // survivable while a cloud is transparent. Solid clouds must sort after.
+      expect(source, file).not.toMatch(/renderOrder=\{-[^}]+\}/);
+    }
   });
 
   it("uses one closed low-poly volume with a baked value ramp", () => {
