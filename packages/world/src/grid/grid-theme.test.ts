@@ -4,9 +4,10 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import manifest from "./grid-nature-assets.json";
+import manifest from "./grid-assets.json";
 import {
   GRID_BIOMES,
+  GRID_NATURE_ASSET_IDS,
   GRID_PROP_ROLE_SIZING,
   gridBiomeAssetIds,
   gridBiomeRoleFor,
@@ -25,15 +26,29 @@ const publicRoot = resolve(
 
 const unitIds = (count: number): readonly string[] =>
   Array.from({ length: count }, (_, index) => `unit-${index + 1}`);
+const natureAssetIds = new Set(
+  manifest.assets.filter((asset) => asset.pack === "nature-kit").map((asset) => asset.assetId),
+);
 
 describe("grid biome library", () => {
-  it("ships one pack, no textures, and nothing over the decoration ceiling", () => {
-    // ADR-0008 locks `decoration` to Kenney CC0 at <= 1200 triangles each. One
-    // pack is not a stylistic preference: it is what lets the whole prop field
-    // be a single BatchedMesh, because every mesh shares one material.
-    expect(manifest.selection.packIds).toEqual(["nature-kit"]);
-    expect(manifest.selection.materialMode).toBe("unlit-color");
+  it("ships the reviewed packs through one texture-free material contract", () => {
+    // ADR-0008 locks `decoration` to Kenney CC0 at <= 1200 triangles each.
+    // The three accent kits are admitted only after colormap baking, so the
+    // expanded library still has no runtime texture and one BatchedMesh path.
+    expect(manifest.selection.packIds).toEqual([
+      "nature-kit",
+      "castle-kit",
+      "survival-kit",
+      "pirate-kit",
+    ]);
+    expect(manifest.selection.materialMode).toBe("shared-batched-COLOR_0");
+    expect(manifest.summary.modelCount).toBe(279);
+    expect(manifest.summary.bakedModelCount).toBe(202);
+    expect(GRID_NATURE_ASSET_IDS).toHaveLength(77);
+    expect(GRID_NATURE_ASSET_IDS.every((assetId) => natureAssetIds.has(assetId))).toBe(true);
     expect(manifest.summary.externalTextureCount).toBe(0);
+    expect(manifest.summary.bakedUvCount).toBe(0);
+    expect(manifest.summary.sourceCrossColourTriangles).toBe(0);
     expect(manifest.summary.maxTriangles).toBeLessThanOrEqual(1200);
     expect(manifest.license.spdx).toBe("CC0-1.0");
     expect(JSON.stringify(manifest)).not.toContain("/Users/");
@@ -41,7 +56,15 @@ describe("grid biome library", () => {
       expect(existsSync(resolve(publicRoot, asset.src.replace(/^\/+/, ""))), asset.assetId).toBe(
         true,
       );
+      if (asset.bake) {
+        expect(asset.bake.method, asset.assetId).toBe("colormap-rgb-nearest-to-COLOR_0");
+        expect(asset.bake.sourceCrossColourTriangles, asset.assetId).toBe(0);
+        expect(asset.losslessCheck.status, asset.assetId).toBe("passed");
+        expect(asset.biomes.length, asset.assetId).toBeGreaterThan(0);
+      }
     }
+    expect(manifest.tripwire.status).toContain("passed");
+    expect(manifest.tripwire.crossColourTriangles).toBeGreaterThan(0);
   });
 
   it("resolves every asset named by every biome", () => {
@@ -209,8 +232,10 @@ describe("grid biome library", () => {
     const assetIds = new Set([...assignment.values()].flatMap((biome) => gridBiomeAssetIds(biome)));
     const byId = new Map(manifest.assets.map((asset) => [asset.assetId, asset]));
     const bytes = [...assetIds].reduce((total, id) => total + (byId.get(id)?.bytes ?? 0), 0);
-    expect(assetIds.size).toBeLessThanOrEqual(72);
-    expect(bytes).toBeLessThan(900_000);
+    // Six units now draw from a larger catalogue, but this is still bounded by
+    // the explicit biome assignment rather than by the full 286-model cache.
+    expect(assetIds.size).toBeLessThanOrEqual(180);
+    expect(bytes).toBeLessThan(4_100_000);
   });
 });
 

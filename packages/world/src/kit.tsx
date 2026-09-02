@@ -455,10 +455,11 @@ function batchedFoliageInstanceMultiplier(
 function normaliseBatchedGeometry(part: Part): THREE.BufferGeometry {
   const geometry = cloneOwnedPartGeometry(part.sourceGeometry);
   // BatchedMesh requires one attribute signature for the whole batch. The
-  // Kenney nature parts all carry position/normal/uv, but making the contract
-  // explicit keeps a future low-detail part from splitting the draw again.
+  // grid parts carry position/normal/color. UVs are deliberately not part of
+  // that signature: nature has no map, and the admitted textured kits have
+  // already baked their colormap into COLOR_0 at import time.
   for (const name of Object.keys(geometry.attributes)) {
-    if (name !== "position" && name !== "normal" && name !== "uv" && name !== "color") {
+    if (name !== "position" && name !== "normal" && name !== "color") {
       geometry.deleteAttribute(name);
     }
   }
@@ -467,15 +468,21 @@ function normaliseBatchedGeometry(part: Part): THREE.BufferGeometry {
   if (!geometry.getAttribute("normal")) {
     geometry.computeVertexNormals();
   }
-  if (!geometry.getAttribute("uv")) {
-    geometry.setAttribute(
-      "uv",
-      new THREE.Float32BufferAttribute(new Float32Array(position.count * 2), 2),
-    );
-  }
-  const colour = batchedPropColour(part.sourceMaterial);
+  const sourceColour = geometry.getAttribute("color");
   const colours = new Float32Array(position.count * 3);
-  for (let index = 0; index < position.count; index += 1) colour.toArray(colours, index * 3);
+  if (sourceColour) {
+    if (sourceColour.count !== position.count || sourceColour.itemSize < 3) {
+      throw new Error("A batched prop color attribute must have one RGB value per position");
+    }
+    for (let index = 0; index < position.count; index += 1) {
+      colours[index * 3] = sourceColour.getX(index);
+      colours[index * 3 + 1] = sourceColour.getY(index);
+      colours[index * 3 + 2] = sourceColour.getZ(index);
+    }
+  } else {
+    const colour = batchedPropColour(part.sourceMaterial);
+    for (let index = 0; index < position.count; index += 1) colour.toArray(colours, index * 3);
+  }
   geometry.setAttribute("color", new THREE.BufferAttribute(colours, 3));
   return geometry;
 }
@@ -489,12 +496,13 @@ function normaliseBatchedGeometry(part: Part): THREE.BufferGeometry {
  * so "make the map richer" and "keep the frame cheap" would have been in
  * direct opposition. They are not, and this is why.
  *
- * It works because every model in the grid nature library comes from one
- * Kenney pack whose material mode is `unlit-color`. There is no texture to
- * bind, and each mesh's colour is baked into a vertex attribute by
- * `normaliseBatchedGeometry`, so one material describes all of them. The whole
- * prop field — every biome, every role, every instance — is one submission and
- * one shadow submission, whether the course uses six models or sixty.
+ * It works because every model in the grid library reaches this component as
+ * position/normal/color geometry with no texture to bind. Nature provides its
+ * fallback family colour at runtime; Castle, Survival and Pirate arrive with
+ * their source colormap already baked into COLOR_0. One material describes all
+ * of them. The whole prop field — every biome, every role, every instance — is
+ * one submission and one shadow submission, whether the course uses six models
+ * or sixty.
  *
  * The sources are sorted before loading so the hook order cannot change when a
  * course's biome mix changes.

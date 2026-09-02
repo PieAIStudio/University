@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-02T17:13:17.786Z
+generated_at: 2026-09-02T17:33:56.507Z
 generator_version: doc-gov@0.9.9
-docs_count: 100
+docs_count: 101
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -458,6 +458,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-27
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-KENNEY-COLORMAP-BAKES-NEED-GLTF-UV-ORIENTATION-AND-AN-ATLAS-BLOCK-TRIPWIRE
+    path: docs/reference/learnings/workflow-issues/kenney-colormap-bakes-need-gltf-uv-orientation-and-an-atlas-block-tripwire.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-02
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-LONG-DOM-OVERLAY-CARDS-NEED-A-VIEWPORT-SAFE-FALLBACK-ON-NARROW-SCREENS
     path: docs/reference/learnings/workflow-issues/long-dom-overlay-cards-need-a-viewport-safe-fallback-on-narrow-screens.md

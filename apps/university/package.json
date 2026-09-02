@@ -10,6 +10,8 @@
     "journey": "node scripts/pull-taxonomy.mjs",
     "kit": "node scripts/import-kit.mjs",
     "kenney:r01": "node scripts/import-kenney-r01.mjs",
+    "kenney:grid": "node scripts/import-kenney-grid.mjs",
+    "kenney:grid:test": "node --test scripts/kenney-grid-bake.test.mjs",
     "build": "tsc -b && vite build --mode delivery && vite build --mode authoring",
     "delivery:build": "node scripts/build-delivery.mjs",
     "delivery:check": "node scripts/check-delivery.mjs",
