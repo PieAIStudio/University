@@ -16,11 +16,12 @@
  *
  * Two rules keep this from becoming a collage, and both are load-bearing:
  *
- * 1. **Every biome is drawn from kenney nature-kit and nothing else.** Six
- *    units built from six different Kenney packs would be six art styles
- *    fighting on one island. Nature-kit is `unlit-color` with no texture, so
- *    the whole library shares one material and the entire prop field is one
- *    BatchedMesh submission — variety costs bytes, not draw calls.
+ * 1. **Every biome starts from kenney nature-kit and adds at most one accent
+ *    family.** Six units built from six different Kenney packs would be six
+ *    art styles fighting on one island. The admitted accent kits are baked
+ *    into the same vertex-colour contract, so the whole library shares one
+ *    material and the entire prop field is one BatchedMesh submission —
+ *    variety costs bytes, not draw calls.
  * 2. **A biome shifts the ground, it does not replace it.** The course palette
  *    still owns the island's identity (LOOK-V2 §12); a biome only nudges hue,
  *    saturation and value inside the earth gamut. Otherwise every course would
@@ -33,36 +34,52 @@
  */
 
 import { hash } from "../island/random.js";
-import manifest from "./grid-nature-assets.json";
+import manifest from "./grid-assets.json";
 
 export type GridPropRole = "canopy" | "understory" | "ground" | "landmark";
 
 export interface GridNatureAsset {
   readonly assetId: string;
+  readonly sourceAssetId?: string;
+  readonly pack?: string;
   readonly role: string;
+  readonly biomes?: readonly string[];
   readonly src: string;
   readonly triangles: number;
   readonly aspect: { readonly width: number; readonly depth: number };
 }
 
-const NATURE_ASSETS = manifest.assets as readonly GridNatureAsset[];
+const GRID_ASSETS = manifest.assets as readonly GridNatureAsset[];
+const NATURE_ASSETS = GRID_ASSETS.filter((asset) => asset.pack === "nature-kit");
 
-const ASSET_BY_ID = new Map(NATURE_ASSETS.map((asset) => [asset.assetId, asset]));
+const ASSET_BY_ID = new Map(GRID_ASSETS.map((asset) => [asset.assetId, asset]));
 
 export const GRID_NATURE_LICENSE = manifest.license.spdx;
 export const GRID_NATURE_SOURCE = "Kenney nature-kit (local authorised donor)";
 export const GRID_NATURE_ASSET_IDS: readonly string[] = NATURE_ASSETS.map((asset) => asset.assetId);
 
+/** Assets from a baked accent kit that are judged appropriate for one biome. */
+export function gridPackAssetIds(
+  packId: string,
+  role: GridPropRole,
+  biomeId: GridBiomeId,
+): readonly string[] {
+  return GRID_ASSETS.filter(
+    (asset) =>
+      asset.pack === packId && asset.role === role && (asset.biomes ?? []).includes(biomeId),
+  ).map((asset) => asset.assetId);
+}
+
 /** Runtime URL for one library asset. Throws rather than rendering nothing. */
 export function gridNatureAssetSrc(assetId: string): string {
   const asset = ASSET_BY_ID.get(assetId);
-  if (!asset) throw new Error(`Unknown grid nature asset: ${assetId}`);
+  if (!asset) throw new Error(`Unknown grid asset: ${assetId}`);
   return asset.src;
 }
 
 export function gridNatureAsset(assetId: string): GridNatureAsset {
   const asset = ASSET_BY_ID.get(assetId);
-  if (!asset) throw new Error(`Unknown grid nature asset: ${assetId}`);
+  if (!asset) throw new Error(`Unknown grid asset: ${assetId}`);
   return asset;
 }
 
@@ -278,7 +295,8 @@ export interface GridBiome {
 }
 
 /**
- * Ten biomes out of one pack.
+ * Ten biomes share the nature-kit base; four also receive one compatible
+ * accent family from the baked grid library.
  *
  * Nature-kit ships 61 trees, 30 stones, 30 rocks, 17 crops, 12 fences, 9
  * flowers, 7 stumps, 6 statues, 6 mushrooms and 4 tents. That is enough
@@ -360,10 +378,23 @@ export const GRID_BIOMES: readonly GridBiome[] = [
   {
     id: "logging-camp",
     label: "伐木营",
-    canopy: ["tree_pineDefaultA", "tree_pineRoundE"],
-    understory: ["stump_oldTall", "tent_smallOpen"],
-    ground: ["log", "campfire_logs", "log_stack"],
-    landmark: "tent_detailedOpen",
+    canopy: [
+      "tree_pineDefaultA",
+      "tree_pineRoundE",
+      ...gridPackAssetIds("survival-kit", "canopy", "logging-camp"),
+    ],
+    understory: [
+      "stump_oldTall",
+      "tent_smallOpen",
+      ...gridPackAssetIds("survival-kit", "understory", "logging-camp"),
+    ],
+    ground: [
+      "log",
+      "campfire_logs",
+      "log_stack",
+      ...gridPackAssetIds("survival-kit", "ground", "logging-camp"),
+    ],
+    landmark: "survival_tent",
     groundTint: { hue: 0.05, saturation: 0.86, value: 1.0 },
     canopyDensity: 0.288,
     understoryDensity: 0.325,
@@ -373,10 +404,23 @@ export const GRID_BIOMES: readonly GridBiome[] = [
   {
     id: "farmstead",
     label: "田垄",
-    canopy: ["crops_cornStageD", "crops_bambooStageA"],
-    understory: ["crops_wheatStageB", "crop_pumpkin"],
-    ground: ["crop_carrot", "crop_turnip", "fence_simple"],
-    landmark: "crops_bambooStageB",
+    canopy: [
+      "crops_cornStageD",
+      "crops_bambooStageA",
+      ...gridPackAssetIds("survival-kit", "canopy", "farmstead"),
+    ],
+    understory: [
+      "crops_wheatStageB",
+      "crop_pumpkin",
+      ...gridPackAssetIds("survival-kit", "understory", "farmstead"),
+    ],
+    ground: [
+      "crop_carrot",
+      "crop_turnip",
+      "fence_simple",
+      ...gridPackAssetIds("survival-kit", "ground", "farmstead"),
+    ],
+    landmark: "survival_tent",
     groundTint: { hue: 0.07, saturation: 1.2, value: 1.03 },
     canopyDensity: 0.32,
     understoryDensity: 0.4,
@@ -399,10 +443,23 @@ export const GRID_BIOMES: readonly GridBiome[] = [
   {
     id: "old-ruins",
     label: "遗迹",
-    canopy: ["statue_column", "tree_thin_dark"],
-    understory: ["statue_block", "plant_bushLarge"],
-    ground: ["stone_smallFlatB", "stone_largeC", "plant_bushSmall"],
-    landmark: "statue_head",
+    canopy: [
+      "statue_column",
+      "tree_thin_dark",
+      ...gridPackAssetIds("castle-kit", "canopy", "old-ruins"),
+    ],
+    understory: [
+      "statue_block",
+      "plant_bushLarge",
+      ...gridPackAssetIds("castle-kit", "understory", "old-ruins"),
+    ],
+    ground: [
+      "stone_smallFlatB",
+      "stone_largeC",
+      "plant_bushSmall",
+      ...gridPackAssetIds("castle-kit", "ground", "old-ruins"),
+    ],
+    landmark: "castle_tower-square",
     groundTint: { hue: -0.066, saturation: 0.6, value: 0.93 },
     canopyDensity: 0.256,
     understoryDensity: 0.275,
@@ -412,10 +469,24 @@ export const GRID_BIOMES: readonly GridBiome[] = [
   {
     id: "palm-shore",
     label: "棕榈岸",
-    canopy: ["tree_palmDetailedTall", "tree_palmTall", "tree_palmBend"],
-    understory: ["tree_palmShort", "plant_bushLarge"],
-    ground: ["lily_large", "grass_leafs", "rock_smallFlatC"],
-    landmark: "tree_palmDetailedTall",
+    canopy: [
+      "tree_palmDetailedTall",
+      "tree_palmTall",
+      "tree_palmBend",
+      ...gridPackAssetIds("pirate-kit", "canopy", "palm-shore"),
+    ],
+    understory: [
+      "tree_palmShort",
+      "plant_bushLarge",
+      ...gridPackAssetIds("pirate-kit", "understory", "palm-shore"),
+    ],
+    ground: [
+      "lily_large",
+      "grass_leafs",
+      "rock_smallFlatC",
+      ...gridPackAssetIds("pirate-kit", "ground", "palm-shore"),
+    ],
+    landmark: "pirate_tower-complete-small",
     groundTint: { hue: 0.014, saturation: 1.28, value: 1.08 },
     canopyDensity: 0.32,
     understoryDensity: 0.25,
