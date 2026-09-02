@@ -144,9 +144,7 @@ describe("grid biome library", () => {
       [...again.values()].map((biome) => biome.id),
     );
     const other = gridBiomesForUnits(units, "seed-two");
-    const sameEverywhere = units.every(
-      (unitId) => first.get(unitId)!.id === other.get(unitId)!.id,
-    );
+    const sameEverywhere = units.every((unitId) => first.get(unitId)!.id === other.get(unitId)!.id);
     expect(sameEverywhere).toBe(false);
   });
 
@@ -173,9 +171,7 @@ describe("grid biome library", () => {
     // The budget claim in the ADR amendment is this number, not a guess.
     const units = unitIds(6);
     const assignment = gridBiomesForUnits(units, "foundations-before-zero");
-    const assetIds = new Set(
-      [...assignment.values()].flatMap((biome) => gridBiomeAssetIds(biome)),
-    );
+    const assetIds = new Set([...assignment.values()].flatMap((biome) => gridBiomeAssetIds(biome)));
     const byId = new Map(manifest.assets.map((asset) => [asset.assetId, asset]));
     const bytes = [...assetIds].reduce((total, id) => total + (byId.get(id)?.bytes ?? 0), 0);
     expect(assetIds.size).toBeLessThanOrEqual(72);
@@ -220,8 +216,7 @@ const ROLES: readonly GridPropRole[] = ["canopy", "understory", "ground", "landm
 describe("grid role sizing bands", () => {
   it("keeps the four bands ordered and non-overlapping at their centres", () => {
     const centres = ROLES.map(
-      (role) =>
-        (GRID_PROP_ROLE_SIZING[role].height[0] + GRID_PROP_ROLE_SIZING[role].height[1]) / 2,
+      (role) => (GRID_PROP_ROLE_SIZING[role].height[0] + GRID_PROP_ROLE_SIZING[role].height[1]) / 2,
     );
     // ground < understory < canopy < landmark: the scale hierarchy is the
     // thing that makes a frame readable, so it is asserted, not assumed.

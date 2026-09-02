@@ -51,9 +51,7 @@ const ASSET_BY_ID = new Map(NATURE_ASSETS.map((asset) => [asset.assetId, asset])
 
 export const GRID_NATURE_LICENSE = manifest.license.spdx;
 export const GRID_NATURE_SOURCE = "Kenney nature-kit (local authorised donor)";
-export const GRID_NATURE_ASSET_IDS: readonly string[] = NATURE_ASSETS.map(
-  (asset) => asset.assetId,
-);
+export const GRID_NATURE_ASSET_IDS: readonly string[] = NATURE_ASSETS.map((asset) => asset.assetId);
 
 /** Runtime URL for one library asset. Throws rather than rendering nothing. */
 export function gridNatureAssetSrc(assetId: string): string {
@@ -105,10 +103,7 @@ export const GRID_PROP_FATTEN_REFERENCE_ASPECT = 1;
 
 /** The thickening actually applied to one mesh, given how slender it is. */
 export function gridPropFatten(role: GridPropRole, aspect: number): number {
-  const slenderness = Math.min(
-    1,
-    Math.max(0, 1 - aspect / GRID_PROP_FATTEN_REFERENCE_ASPECT),
-  );
+  const slenderness = Math.min(1, Math.max(0, 1 - aspect / GRID_PROP_FATTEN_REFERENCE_ASPECT));
   return 1 + (GRID_PROP_ROLE_SIZING[role].fatten - 1) * slenderness;
 }
 

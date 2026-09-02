@@ -12,7 +12,7 @@ interface PropFieldProps {
 }
 
 /**
- * Put one planned prop on the ground.
+ * Put every planned prop on the ground.
  *
  * The height comes from the cell the prop was planned for and from nowhere
  * else. That sounds obvious and is the second-most expensive bug this field
@@ -30,7 +30,7 @@ export function placementFor(map: HexMap, prop: HexMap["props"][number]): Placem
   const cell = map.cells.find((entry) => entry.key === prop.cellKey)!;
   const point = hexToWorld(prop.coord, map.hexSize);
   return {
-    position: new THREE.Vector3(point.x, cell.topY + 0.03, point.z),
+    position: new THREE.Vector3(point.x + prop.offsetX, cell.topY + 0.03, point.z + prop.offsetZ),
     height: prop.height,
     turn: prop.rotation,
     width: prop.width,

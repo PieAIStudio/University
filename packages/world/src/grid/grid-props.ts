@@ -4,9 +4,21 @@ import {
   gridBiomesForUnits,
   gridNatureAspect,
   gridPropSize,
+  GRID_PROP_ROLE_SIZING,
   type GridBiome,
   type GridPropRole,
 } from "./grid-theme.js";
+
+/**
+ * A cell is now a small authored vignette, not a boolean occupancy slot:
+ * one canopy/understory/landmark subject owns the cell and two to four compact
+ * ground or small-understory accents orbit it. Offsets are planned in this
+ * renderer-free module so
+ * the renderer cannot make a second scatter decision for desktop or mobile.
+ * The cluster is validated as discs (footprint / 2) plus a merged AABB before
+ * it is returned. Landmark singletons retain the earlier chapter-scale
+ * exception because that existing band may overhang one logical hex.
+ */
 
 /**
  * An id from the grid nature library. It is a plain string rather than a
@@ -17,6 +29,12 @@ import {
  */
 export type GridPropAssetId = string;
 export type GridPropProjection = "course" | "world";
+export type GridPropClusterMember = "primary" | "attachment";
+
+/** The measured logical diameter used by the course grid's prop planner. */
+export const GRID_PROP_CELL_DIAMETER = 2;
+/** A small air gap keeps a cluster from reading as one fused mesh. */
+export const GRID_PROP_CLUSTER_GAP = 0.035;
 
 export interface GridPropCellInput {
   readonly coord: HexCoord;
@@ -41,6 +59,13 @@ export interface GridPropPlacement {
   readonly width: number;
   /** World-unit ground footprint. */
   readonly footprint: number;
+  /** Horizontal position inside the owning cell, in planner world units. */
+  readonly offsetX: number;
+  readonly offsetZ: number;
+  /** The cell diameter used to validate this cluster. */
+  readonly cellDiameter: number;
+  /** Whether this placement is the cluster's subject or its punctuation. */
+  readonly clusterMember: GridPropClusterMember;
   /** Course-view semantic LOD; omitted means the placement is rendered. */
   readonly visibleInCourse?: boolean;
 }
@@ -111,6 +136,10 @@ function roleChoicesFor(biome: GridBiome): readonly RoleChoice[] {
   ];
 }
 
+function primaryRoleChoicesFor(biome: GridBiome): readonly RoleChoice[] {
+  return roleChoicesFor(biome).filter((choice) => choice.role !== "ground");
+}
+
 function biomeRoleDensity(biome: GridBiome, role: GridPropRole): number {
   if (role === "canopy") return biome.canopyDensity;
   if (role === "understory") return biome.understoryDensity;
@@ -126,12 +155,12 @@ function placementFor(
   kind: GridPropPlacement["kind"],
   keySuffix: string,
   projection: GridPropProjection,
+  clusterMember: GridPropClusterMember,
+  offset: readonly [number, number],
+  cellDiameter: number,
+  roll = hash(`${seed}/prop-size/${keySuffix}`),
 ): GridPropPlacement {
-  const size = gridPropSize(
-    role,
-    gridNatureAspect(assetId),
-    hash(`${seed}/prop-size/${keySuffix}`),
-  );
+  const size = gridPropSize(role, gridNatureAspect(assetId), roll);
   // The world projection draws the same plan at archipelago scale, where a
   // course island is a few dozen pixels. One shared shrink keeps it the same
   // placement rather than a second layout with its own rules.
@@ -148,11 +177,296 @@ function placementFor(
     height: size.height * worldScale,
     width: size.width * worldScale,
     footprint: size.footprint * worldScale,
+    offsetX: offset[0] * worldScale,
+    offsetZ: offset[1] * worldScale,
+    cellDiameter: cellDiameter * worldScale,
+    clusterMember,
   };
 }
 
 function pick<T>(items: readonly T[], roll: number): T {
   return items[Math.min(items.length - 1, Math.floor(roll * items.length))]!;
+}
+
+interface ClusterSizeSpec {
+  readonly role: GridPropRole;
+  readonly assetId: string;
+  readonly roll: number;
+  readonly footprint: number;
+}
+
+interface ClusterOffsetSpec {
+  readonly offsetX: number;
+  readonly offsetZ: number;
+  readonly footprint: number;
+  readonly cellDiameter: number;
+}
+
+function clusterGeometryHolds(placements: readonly ClusterOffsetSpec[], epsilon = 1e-6): boolean {
+  if (placements.length === 0) return true;
+  const diameter = placements[0]!.cellDiameter;
+  if (diameter <= 0 || placements.some((placement) => placement.cellDiameter !== diameter)) {
+    return false;
+  }
+
+  for (let first = 0; first < placements.length; first += 1) {
+    const left = placements[first]!;
+    if (left.footprint <= 0 || !Number.isFinite(left.footprint)) return false;
+    for (let second = first + 1; second < placements.length; second += 1) {
+      const right = placements[second]!;
+      const dx = left.offsetX - right.offsetX;
+      const dz = left.offsetZ - right.offsetZ;
+      const horizontalDistance = Math.hypot(dx, dz);
+      const radiusSum = (left.footprint + right.footprint) / 2;
+      if (horizontalDistance + epsilon < radiusSum) return false;
+    }
+  }
+
+  const minX = Math.min(
+    ...placements.map((placement) => placement.offsetX - placement.footprint / 2),
+  );
+  const maxX = Math.max(
+    ...placements.map((placement) => placement.offsetX + placement.footprint / 2),
+  );
+  const minZ = Math.min(
+    ...placements.map((placement) => placement.offsetZ - placement.footprint / 2),
+  );
+  const maxZ = Math.max(
+    ...placements.map((placement) => placement.offsetZ + placement.footprint / 2),
+  );
+  return (
+    maxX - minX <= diameter + epsilon &&
+    maxZ - minZ <= diameter + epsilon &&
+    minX >= -diameter / 2 - epsilon &&
+    maxX <= diameter / 2 + epsilon &&
+    minZ >= -diameter / 2 - epsilon &&
+    maxZ <= diameter / 2 + epsilon
+  );
+}
+
+function clusterOffsetSpecs(
+  primaryFootprint: number,
+  attachments: readonly ClusterSizeSpec[],
+  cellDiameter: number,
+  seed: string,
+): readonly [readonly [number, number], readonly (readonly [number, number])[]] | null {
+  const baseAngle = hash(`${seed}/cluster-angle`) * (Math.PI / 6);
+  const anglePatterns: readonly number[][] =
+    attachments.length === 2
+      ? [
+          [Math.PI / 4, -Math.PI / 4],
+          [0, Math.PI],
+          [Math.PI / 2, -Math.PI / 2],
+        ]
+      : attachments.length === 3
+        ? [
+            [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3],
+            [Math.PI / 2, (Math.PI * 7) / 6, (Math.PI * 11) / 6],
+          ]
+        : [
+            [Math.PI / 4, (Math.PI * 3) / 4, (Math.PI * 5) / 4, (Math.PI * 7) / 4],
+            [0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2],
+          ];
+
+  for (const pattern of anglePatterns) {
+    const offsets = pattern.map((angle, index) => {
+      const attachmentRadius = attachments[index]!.footprint / 2;
+      const distance = primaryFootprint / 2 + attachmentRadius + GRID_PROP_CLUSTER_GAP;
+      const rotated = angle + baseAngle;
+      return [Math.cos(rotated) * distance, Math.sin(rotated) * distance] as const;
+    });
+    const geometry = [
+      { offsetX: 0, offsetZ: 0, footprint: primaryFootprint, cellDiameter },
+      ...offsets.map(([offsetX, offsetZ], index) => ({
+        offsetX,
+        offsetZ,
+        footprint: attachments[index]!.footprint,
+        cellDiameter,
+      })),
+    ];
+    const minX = Math.min(
+      ...geometry.map((placement) => placement.offsetX - placement.footprint / 2),
+    );
+    const maxX = Math.max(
+      ...geometry.map((placement) => placement.offsetX + placement.footprint / 2),
+    );
+    const minZ = Math.min(
+      ...geometry.map((placement) => placement.offsetZ - placement.footprint / 2),
+    );
+    const maxZ = Math.max(
+      ...geometry.map((placement) => placement.offsetZ + placement.footprint / 2),
+    );
+    const shiftX = (minX + maxX) / 2;
+    const shiftZ = (minZ + maxZ) / 2;
+    const centredGeometry = geometry.map((placement) => ({
+      ...placement,
+      offsetX: placement.offsetX - shiftX,
+      offsetZ: placement.offsetZ - shiftZ,
+    }));
+    if (clusterGeometryHolds(centredGeometry)) {
+      return [
+        [-shiftX, -shiftZ],
+        offsets.map(([offsetX, offsetZ]) => [offsetX - shiftX, offsetZ - shiftZ] as const),
+      ];
+    }
+  }
+  return null;
+}
+
+function compactAttachmentChoices(biome: GridBiome): readonly RoleChoice[] {
+  const understory = biome.understory.filter((assetId) => gridNatureAspect(assetId) <= 1.2);
+  const ground = biome.ground.filter((assetId) => gridNatureAspect(assetId) <= 2.4);
+  return [
+    { role: "understory" as const, assets: understory },
+    { role: "ground" as const, assets: ground },
+  ].filter((choice) => choice.assets.length > 0);
+}
+
+function attachmentSpecsFor(
+  biome: GridBiome,
+  count: number,
+  seed: string,
+  cellKey: string,
+  sizeTier: number,
+  allowSmallUnderstory: boolean,
+): readonly ClusterSizeSpec[] {
+  const choices = compactAttachmentChoices(biome);
+  if (choices.length === 0) return [];
+  return Array.from({ length: count }, (_, index) => {
+    const ground = choices.find((candidate) => candidate.role === "ground");
+    const understory = choices.find((candidate) => candidate.role === "understory");
+    const useSmallUnderstory =
+      allowSmallUnderstory &&
+      understory &&
+      hash(`${seed}/cluster-attachment-role/${cellKey}/${index}`) < 0.45;
+    const choice = (useSmallUnderstory ? understory : ground) ?? choices[0]!;
+    const assetId = pick(
+      choice.assets,
+      hash(`${seed}/cluster-attachment-asset/${cellKey}/${index}`),
+    );
+    const roll = Math.min(
+      1,
+      Math.max(0, sizeTier + hash(`${seed}/cluster-attachment-size/${cellKey}/${index}`) * 0.08),
+    );
+    return {
+      role: choice.role,
+      assetId,
+      roll,
+      footprint: gridPropSize(choice.role, gridNatureAspect(assetId), roll).footprint,
+    };
+  });
+}
+
+function clusterPlacementsFor(
+  cell: GridPropCellInput,
+  biome: GridBiome,
+  primaryRole: GridPropRole,
+  primaryAssetId: string,
+  seed: string,
+  kind: GridPropPlacement["kind"],
+  keySuffix: string,
+  projection: GridPropProjection,
+  cellDiameter: number,
+): readonly GridPropPlacement[] {
+  const primary = placementFor(
+    cell,
+    primaryRole,
+    primaryAssetId,
+    seed,
+    kind,
+    keySuffix,
+    projection,
+    "primary",
+    [0, 0],
+    cellDiameter,
+  );
+  // Layout is authored in course/world units before the archipelago projection
+  // applies its shared 0.42 scale. Otherwise a world projection would mix a
+  // scaled subject with unscaled attachment footprints while choosing offsets.
+  const planningPrimary = placementFor(
+    cell,
+    primaryRole,
+    primaryAssetId,
+    seed,
+    kind,
+    keySuffix,
+    "course",
+    "primary",
+    [0, 0],
+    cellDiameter,
+  );
+
+  // A chapter landmark may already be wider than the regular dressing cell.
+  // Keep the existing landmark silhouette intact; only add punctuation when
+  // the complete subject-plus-attachments cluster fits the same cell rule.
+  const maxAttachments = primaryRole === "landmark" ? 3 : 4;
+  const preferredCount =
+    primaryRole === "landmark"
+      ? 2
+      : planningPrimary.footprint / cellDiameter > 0.7
+        ? 2
+        : 2 + Math.floor(hash(`${seed}/cluster-count/${keySuffix}`) * 3);
+  const tierSteps = [0.32, 0.22, 0.12, 0.04] as const;
+  for (const sizeTier of tierSteps) {
+    for (let count = Math.min(maxAttachments, preferredCount); count >= 2; count -= 1) {
+      // Try mixed clusters first for visual height. If a particular biome's
+      // understory mesh is too broad, retry the same geometry with ground
+      // accents before reducing the cluster or abandoning it.
+      for (const allowSmallUnderstory of [true, false]) {
+        const specs = attachmentSpecsFor(
+          biome,
+          count,
+          seed,
+          hexKey(cell.coord),
+          sizeTier,
+          allowSmallUnderstory,
+        );
+        if (specs.length !== count) continue;
+        const offsets = clusterOffsetSpecs(
+          planningPrimary.footprint,
+          specs,
+          cellDiameter,
+          `${seed}/${keySuffix}/${sizeTier}/${count}/${allowSmallUnderstory}`,
+        );
+        if (!offsets) continue;
+        const [primaryOffset, attachmentOffsets] = offsets;
+        const positionedPrimary = placementFor(
+          cell,
+          primaryRole,
+          primaryAssetId,
+          seed,
+          kind,
+          keySuffix,
+          projection,
+          "primary",
+          primaryOffset,
+          cellDiameter,
+        );
+        return [
+          positionedPrimary,
+          ...specs.map((spec, index) =>
+            placementFor(
+              cell,
+              spec.role,
+              spec.assetId,
+              seed,
+              kind,
+              `${keySuffix}/attachment/${index}`,
+              projection,
+              "attachment",
+              attachmentOffsets[index]!,
+              cellDiameter,
+              spec.roll,
+            ),
+          ),
+        ];
+      }
+    }
+  }
+  // A regular territory subject must have punctuation. The shape test below
+  // is the guard that keeps a future asset or band change from silently
+  // returning to one naked dot per cell.
+  return [primary];
 }
 
 /**
@@ -198,6 +512,7 @@ export function gridPropsFor(
   route: readonly HexCoord[],
   seed: string,
   projection: GridPropProjection = "course",
+  cellDiameter = GRID_PROP_CELL_DIAMETER,
 ): readonly GridPropPlacement[] {
   const unitIds: string[] = [];
   for (const cell of cells) {
@@ -209,9 +524,7 @@ export function gridPropsFor(
   const biomeFor = (cell: GridPropCellInput): GridBiome =>
     (cell.unitId ? biomes.get(cell.unitId) : undefined) ?? fallbackBiome;
 
-  const lessonCoords = cells
-    .filter((cell) => cell.lessonIndex !== null)
-    .map((cell) => cell.coord);
+  const lessonCoords = cells.filter((cell) => cell.lessonIndex !== null).map((cell) => cell.coord);
   const occupied = new Set<string>();
   const placements: GridPropPlacement[] = [];
   const landmarkCoords: HexCoord[] = [];
@@ -222,18 +535,19 @@ export function gridPropsFor(
     const cell = landmarkCellFor(unitId, cells, lessonCoords, seed);
     if (!cell) continue;
     const biome = biomes.get(unitId) ?? fallbackBiome;
-    placements.push({
-      ...placementFor(
+    placements.push(
+      ...clusterPlacementsFor(
         cell,
+        biome,
         "landmark",
         biome.landmark,
         seed,
         "landmark",
         `landmark/${unitId}`,
         projection,
+        cellDiameter,
       ),
-      unitId,
-    });
+    );
     occupied.add(hexKey(cell.coord));
     landmarkCoords.push(cell.coord);
   }
@@ -248,23 +562,28 @@ export function gridPropsFor(
      * against things of its own size. Blanking the ring entirely cost 42 of
      * 287 land cells on the pressure course, and because landmarks sit two to
      * three rings off the road, every one of those cells was in the band the
-     * course camera fills. Small punctuation at the base of a monument is what
-     * gives it scale, so `ground` is still allowed inside the clearing.
+     * course camera fills. The landmark cluster itself supplies the base
+     * punctuation, so the surrounding clearing stays calm.
      */
     const insideClearing = landmarkCoords.some(
       (coord) => hexDistance(cell.coord, coord) <= GRID_LANDMARK_CLEARANCE,
     );
+    // Landmark clusters already provide their own base punctuation. Keeping
+    // the rest of the clearing empty preserves the chapter opener's silhouette.
+    if (insideClearing) continue;
 
     const biome = biomeFor(cell);
-    // One roll picks the role, weighted by the biome's own character and by
-    // the shoulder profile. A quarry is open and rocky; a pine ridge is dense
-    // and tall. The same arithmetic produces both.
-    const choices = roleChoicesFor(biome)
-      .filter((choice) => !insideClearing || choice.role === "ground")
+    // One roll picks the cluster's subject, weighted by the biome's own
+    // character and by the shoulder profile. Ground density is folded into
+    // understory rather than emitted as a naked dot: every territory cell that
+    // wins this roll gets one readable subject and its own punctuation.
+    const choices = primaryRoleChoicesFor(biome)
       .map((choice) => ({
         ...choice,
         weight:
-          biomeRoleDensity(biome, choice.role) *
+          (choice.role === "understory"
+            ? biomeRoleDensity(biome, "understory") + biome.groundDensity * 0.6
+            : biomeRoleDensity(biome, choice.role)) *
           gridShoulderWeight(choice.role, cell.distanceToRoute),
       }))
       .filter((choice) => choice.weight > 0 && choice.assets.length > 0);
@@ -298,18 +617,24 @@ export function gridPropsFor(
       canopyCoords.some((coord) => hexDistance(cell.coord, coord) <= GRID_CANOPY_SPACING)
     ) {
       const understory = choices.find((choice) => choice.role === "understory");
-      const ground = choices.find((choice) => choice.role === "ground");
-      const fallback =
-        hash(`${seed}/prop-canopy-fallback/${cellKey}`) < 0.45
-          ? (understory ?? ground)
-          : (ground ?? understory);
+      const fallback = understory;
       if (!fallback) continue;
       chosen = fallback;
     }
 
     const assetId = pick(chosen.assets, hash(`${seed}/prop-asset/${cellKey}`));
     placements.push(
-      placementFor(cell, chosen.role, assetId, seed, "territory", cellKey, projection),
+      ...clusterPlacementsFor(
+        cell,
+        biome,
+        chosen.role,
+        assetId,
+        seed,
+        "territory",
+        cellKey,
+        projection,
+        cellDiameter,
+      ),
     );
     occupied.add(cellKey);
     if (chosen.role === "canopy") canopyCoords.push(cell.coord);
@@ -340,30 +665,40 @@ function selectCourseVisiblePlacements(
   const distance = (placement: GridPropPlacement): number =>
     Math.min(...route.map((entry) => hexDistance(entry, placement.coord)));
 
-  const selected = new Set<string>();
+  const clusters = new Map<string, GridPropPlacement[]>();
   for (const placement of placements) {
-    if (placement.kind === "landmark") selected.add(placement.cellKey);
+    const cluster = clusters.get(placement.cellKey) ?? [];
+    cluster.push(placement);
+    clusters.set(placement.cellKey, cluster);
+  }
+  const selected = new Set<string>();
+  let selectedCount = 0;
+  for (const [cellKey, cluster] of clusters) {
+    if (cluster[0]!.kind === "landmark") {
+      selected.add(cellKey);
+      selectedCount += cluster.length;
+    }
   }
 
-  const candidates = placements
-    .filter((placement) => placement.kind === "territory")
-    .map((placement) => ({
-      placement,
+  const candidates = [...clusters.entries()]
+    .filter(([, cluster]) => cluster[0]!.kind === "territory")
+    .map(([cellKey, cluster]) => ({
+      cellKey,
+      cluster,
       // The jitter keeps one ring from being taken in a solid block, which
       // would read as a band of dressing rather than as a meadow.
-      score: distance(placement) + hash(`${seed}/course-visible/${placement.cellKey}`) * 0.9,
+      score: distance(cluster[0]!) + hash(`${seed}/course-visible/${cellKey}`) * 0.9,
     }))
     .sort((first, second) => first.score - second.score);
 
   for (const candidate of candidates) {
-    if (selected.size >= target) break;
-    selected.add(candidate.placement.cellKey);
+    if (selectedCount >= target) break;
+    selected.add(candidate.cellKey);
+    selectedCount += candidate.cluster.length;
   }
 
   return placements.map((placement) =>
-    selected.has(placement.cellKey)
-      ? placement
-      : { ...placement, visibleInCourse: false as const },
+    selected.has(placement.cellKey) ? placement : { ...placement, visibleInCourse: false as const },
   );
 }
 
@@ -375,31 +710,123 @@ function selectWorldVisiblePlacements(
   placements: readonly GridPropPlacement[],
   seed: string,
 ): readonly GridPropPlacement[] {
+  const clusters = new Map<string, GridPropPlacement[]>();
+  for (const placement of placements) {
+    const cluster = clusters.get(placement.cellKey) ?? [];
+    cluster.push(placement);
+    clusters.set(placement.cellKey, cluster);
+  }
   const selected = new Set<string>();
   let canopyBudget = 2;
-  for (const placement of placements) {
-    if (placement.kind === "landmark" && selected.size < 1) {
-      selected.add(placement.cellKey);
+  for (const [cellKey, cluster] of clusters) {
+    if (cluster[0]!.kind === "landmark" && selected.size < 1) {
+      selected.add(cellKey);
       continue;
     }
     if (
-      placement.role === "canopy" &&
+      cluster.some((placement) => placement.role === "canopy") &&
       canopyBudget > 0 &&
-      hash(`${seed}/world-visible/${placement.cellKey}`) < 0.5
+      hash(`${seed}/world-visible/${cellKey}`) < 0.5
     ) {
-      selected.add(placement.cellKey);
+      selected.add(cellKey);
       canopyBudget -= 1;
     }
   }
   return placements.map((placement) =>
-    selected.has(placement.cellKey)
+    selected.has(placement.cellKey) &&
+    (placement.role === "landmark" || placement.role === "canopy")
       ? placement
       : { ...placement, visibleInCourse: false as const },
   );
 }
 
+/**
+ * The old name is kept for callers that used the one-prop-per-cell guard.
+ * Its meaning is now stronger: a cell may contain a cluster, but every member
+ * must be a non-overlapping, cell-sized placement in that cluster.
+ */
 export function propCellsAreUnique(placements: readonly GridPropPlacement[]): boolean {
-  return new Set(placements.map((placement) => placement.cellKey)).size === placements.length;
+  return propClustersFitCells(placements);
+}
+
+/** Check pairwise disc separation and the merged AABB for every cell cluster. */
+export function propClustersFitCells(placements: readonly GridPropPlacement[]): boolean {
+  const clusters = new Map<string, GridPropPlacement[]>();
+  for (const placement of placements) {
+    const cluster = clusters.get(placement.cellKey) ?? [];
+    cluster.push(placement);
+    clusters.set(placement.cellKey, cluster);
+  }
+  return [...clusters.values()].every(propClusterFitsCell);
+}
+
+/** The same geometry gate for one cell, useful for focused diagnostics/tests. */
+export function propClusterFitsCell(placements: readonly GridPropPlacement[]): boolean {
+  if (placements.length === 0) return true;
+  // The existing landmark band deliberately permits a chapter-scale singleton
+  // to overhang its source hex. It is not a multi-prop cluster, so the cluster
+  // AABB rule starts when a second member is added.
+  if (placements.length === 1 && placements[0]!.kind === "landmark") return true;
+  return clusterGeometryHolds(
+    placements.map((placement) => ({
+      offsetX: placement.offsetX,
+      offsetZ: placement.offsetZ,
+      footprint: placement.footprint,
+      cellDiameter: placement.cellDiameter,
+    })),
+  );
+}
+
+/** Keep the lower and upper size-band tripwires attached to actual placements. */
+export function propPlacementSizeBandsHold(placements: readonly GridPropPlacement[]): boolean {
+  return placements.every((placement) => {
+    const sizing = GRID_PROP_ROLE_SIZING[placement.role];
+    return (
+      placement.height >= sizing.height[0] - 1e-6 &&
+      placement.height <= sizing.height[1] + 1e-6 &&
+      placement.footprint >= sizing.footprint[0] - 1e-6 &&
+      placement.footprint <= sizing.footprint[1] + 1e-6
+    );
+  });
+}
+
+/** The complete geometry gate used by the course tests. */
+export function propClustersAreValid(placements: readonly GridPropPlacement[]): boolean {
+  return (
+    propClustersFitCells(placements) &&
+    propPlacementSizeBandsHold(placements) &&
+    propClusterShapesHold(placements)
+  );
+}
+
+/** Every regular dressing cluster has one subject and two to four accents. */
+export function propClusterShapesHold(placements: readonly GridPropPlacement[]): boolean {
+  const clusters = new Map<string, GridPropPlacement[]>();
+  for (const placement of placements) {
+    const cluster = clusters.get(placement.cellKey) ?? [];
+    cluster.push(placement);
+    clusters.set(placement.cellKey, cluster);
+  }
+  return [...clusters.values()].every((cluster) => {
+    const primary = cluster.filter((placement) => placement.clusterMember === "primary");
+    const attachments = cluster.filter((placement) => placement.clusterMember === "attachment");
+    const primaryRoleIsValid = primary.every((placement) => placement.role !== "ground");
+    const attachmentRolesAreValid = attachments.every(
+      (placement) => placement.role === "ground" || placement.role === "understory",
+    );
+    // A landmark may be wider than the regular cell and remains a deliberate
+    // singleton when no complete subject-plus-punctuation layout fits it.
+    if (cluster[0]!.kind === "landmark" && cluster.length === 1) {
+      return primary.length === 1 && primary[0]!.role === "landmark";
+    }
+    return (
+      primary.length === 1 &&
+      primaryRoleIsValid &&
+      attachments.length >= 2 &&
+      attachments.length <= 4 &&
+      attachmentRolesAreValid
+    );
+  });
 }
 
 export function distanceToRoute(cell: HexCoord, route: readonly HexCoord[]): number {
@@ -451,9 +878,7 @@ export function canopySpacingHolds(placements: readonly GridPropPlacement[]): bo
   );
   for (let first = 0; first < canopies.length; first += 1) {
     for (let second = first + 1; second < canopies.length; second += 1) {
-      if (
-        hexDistance(canopies[first]!.coord, canopies[second]!.coord) <= GRID_CANOPY_SPACING - 1
-      ) {
+      if (hexDistance(canopies[first]!.coord, canopies[second]!.coord) <= GRID_CANOPY_SPACING - 1) {
         return false;
       }
     }

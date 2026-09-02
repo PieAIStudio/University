@@ -7,9 +7,7 @@
   "outputRoot": "public/kenney/grid",
   "runtimeBasePath": "/kenney/grid",
   "selection": {
-    "packIds": [
-      "nature-kit"
-    ],
+    "packIds": ["nature-kit"],
     "whitelistPolicy": "explicit filenames only; no donor glob",
     "materialMode": "unlit-color",
     "rationale": "One pack, one material language, one BatchedMesh for the whole prop field."

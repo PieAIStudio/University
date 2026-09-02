@@ -143,7 +143,7 @@ describe("hex grid course data", () => {
     expect(shape.radiusOfGyration).toBeGreaterThan(9.5);
   });
 
-  it("never places two props in one cell", () => {
+  it("keeps each prop cluster inside its owning cell", () => {
     const map = buildCourseGrid({
       studyId: "turing-pact",
       courseId: "foundations-before-zero",

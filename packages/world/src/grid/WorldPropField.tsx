@@ -29,9 +29,10 @@ function worldPlacementFor(
  * and it is honoured in both projections — drawing everything here was the
  * quiet reason fifty-three islands each paid for a full dressing field.
  */
-function visibleWorldProps(
-  islands: readonly WorldGridIsland[],
-): readonly { readonly island: WorldGridIsland; readonly prop: WorldGridIsland["map"]["props"][number] }[] {
+function visibleWorldProps(islands: readonly WorldGridIsland[]): readonly {
+  readonly island: WorldGridIsland;
+  readonly prop: WorldGridIsland["map"]["props"][number];
+}[] {
   return islands.flatMap((island) =>
     island.map.props
       .filter((prop) => prop.visibleInCourse !== false)
@@ -67,11 +68,7 @@ export function WorldPropField({ islands }: WorldPropFieldProps) {
       userData={{ worldGridPropCount: drawn.length, worldGridPropBatches: fields.length }}
     >
       <ContactShadowField at={shadows} />
-      <BatchedAssetLibraryField
-        fields={fields}
-        name="world-grid-prop-library"
-        castShadow={false}
-      />
+      <BatchedAssetLibraryField fields={fields} name="world-grid-prop-library" castShadow={false} />
     </group>
   );
 }

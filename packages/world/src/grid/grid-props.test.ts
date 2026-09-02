@@ -5,7 +5,11 @@ import {
   GRID_CANOPY_SPACING,
   canopySpacingHolds,
   gridVisiblePropTarget,
+  propClusterFitsCell,
+  propClustersAreValid,
+  propClusterShapesHold,
   propCellsAreUnique,
+  propPlacementSizeBandsHold,
   propsAvoidRoute,
   visiblePropsNearRoute,
 } from "./grid-props.js";
@@ -41,6 +45,12 @@ const SHAPES = [
 ] as const;
 
 const SEEDS = ["foundations-before-zero", "seed-b", "seed-c", "another-course"] as const;
+
+// Measured across SHAPES × SEEDS after the cluster planner landed: the minima
+// are 24 visible props and 7 props above 0.6 world units. These are floors for
+// the learner's three-ring view, not a target that may be met by hidden specks.
+const MIN_VISIBLE_PROPS_NEAR_ROUTE = 24;
+const MIN_VISIBLE_TALL_PROPS_NEAR_ROUTE = 7;
 
 describe("grid prop placement", () => {
   it("puts something where the learner is actually standing", () => {
@@ -96,16 +106,39 @@ describe("grid prop placement", () => {
             (prop.role === "canopy" || prop.role === "landmark") &&
             lessons.some((lesson) => hexDistance(lesson, prop.coord) <= 1),
         );
-        expect(offenders.map((prop) => prop.cellKey), `${shape.lessons}/${seed}`).toEqual([]);
+        expect(
+          offenders.map((prop) => prop.cellKey),
+          `${shape.lessons}/${seed}`,
+        ).toEqual([]);
       }
     }
   });
 
-  it("never puts two props in one cell, at any size", () => {
+  it("keeps every cluster separated and inside its cell, at any size", () => {
     for (const shape of SHAPES) {
       for (const seed of SEEDS) {
         const map = courseOf(shape.lessons, shape.units, seed);
+        const byCell = new Map<string, (typeof map.props)[number][]>();
+        for (const prop of map.props) {
+          const cluster = byCell.get(prop.cellKey) ?? [];
+          cluster.push(prop);
+          byCell.set(prop.cellKey, cluster);
+        }
+        const offenders = [...byCell.entries()]
+          .filter(([, cluster]) => !propClusterFitsCell(cluster))
+          .map(([cellKey]) => cellKey);
+        expect(offenders, `${shape.lessons}/${seed}`).toEqual([]);
         expect(propCellsAreUnique(map.props), `${shape.lessons}/${seed}`).toBe(true);
+        expect(propClustersAreValid(map.props), `${shape.lessons}/${seed}`).toBe(true);
+      }
+    }
+  });
+
+  it("gives each dressed cell one subject and two to four attachments", () => {
+    for (const shape of SHAPES) {
+      for (const seed of SEEDS) {
+        const map = courseOf(shape.lessons, shape.units, seed);
+        expect(propClusterShapesHold(map.props), `${shape.lessons}/${seed}`).toBe(true);
       }
     }
   });
@@ -124,13 +157,18 @@ describe("grid prop placement", () => {
     for (const shape of SHAPES) {
       for (const seed of SEEDS) {
         const map = courseOf(shape.lessons, shape.units, seed);
-        const landmarks = map.props.filter((prop) => prop.kind === "landmark");
+        const landmarks = map.props.filter(
+          (prop) => prop.kind === "landmark" && prop.clusterMember === "primary",
+        );
         const label = `${shape.lessons}/${shape.units}/${seed}`;
         // ADR-0008 caps landmarks per island at 6; a longer course has more
         // units than that, so the cap is what bounds it, not the unit count.
         expect(landmarks.length, label).toBeLessThanOrEqual(shape.units);
         expect(new Set(landmarks.map((prop) => prop.unitId)).size, label).toBe(landmarks.length);
-        expect(landmarks.every((prop) => prop.visibleInCourse !== false), label).toBe(true);
+        expect(
+          landmarks.every((prop) => prop.visibleInCourse !== false),
+          label,
+        ).toBe(true);
       }
     }
   });
@@ -142,7 +180,7 @@ describe("grid prop placement", () => {
         const drawn = map.props.filter((prop) => prop.visibleInCourse !== false);
         const label = `${shape.lessons}/${shape.units}/${seed}`;
         expect(drawn.length, label).toBeLessThanOrEqual(
-          gridVisiblePropTarget(map.route.length) + shape.units,
+          gridVisiblePropTarget(map.route.length) + shape.units * 5,
         );
       }
     }
@@ -194,5 +232,57 @@ describe("grid prop placement", () => {
         expect(cell!.kind, `${shape.lessons}/${prop.cellKey}`).not.toBe("detached");
       }
     }
+  });
+
+  it("keeps the route-three-ring visibility floor", () => {
+    for (const shape of SHAPES) {
+      for (const seed of SEEDS) {
+        const map = courseOf(shape.lessons, shape.units, seed);
+        const near = visiblePropsNearRoute(map.props, map.route, 3);
+        const label = `${shape.lessons}/${seed}`;
+        expect(near.length, label).toBeGreaterThanOrEqual(MIN_VISIBLE_PROPS_NEAR_ROUTE);
+        expect(near.filter((prop) => prop.height > 0.6).length, label).toBeGreaterThanOrEqual(
+          MIN_VISIBLE_TALL_PROPS_NEAR_ROUTE,
+        );
+      }
+    }
+  });
+
+  it("rejects attachments that are shrunk into invisible pinpricks", () => {
+    const map = courseOf(41, 6, "reverse-small");
+    const tiny = map.props.map((prop) =>
+      prop.clusterMember === "attachment"
+        ? { ...prop, height: 0.01, width: 0.01, footprint: 0.01 }
+        : prop,
+    );
+    expect(propPlacementSizeBandsHold(tiny)).toBe(false);
+    expect(propClustersAreValid(tiny)).toBe(false);
+  });
+
+  it("rejects attachments that overlap their subject", () => {
+    const map = courseOf(41, 6, "reverse-overlap");
+    const source = map.props.find((prop) => prop.clusterMember === "attachment");
+    expect(source).toBeDefined();
+    const primary = map.props.find(
+      (prop) => prop.cellKey === source?.cellKey && prop.clusterMember === "primary",
+    );
+    expect(primary).toBeDefined();
+    const cluster = map.props
+      .filter((prop) => prop.cellKey === source?.cellKey)
+      .map((prop) =>
+        prop === source ? { ...prop, offsetX: primary!.offsetX, offsetZ: primary!.offsetZ } : prop,
+      );
+    expect(propClusterFitsCell(cluster)).toBe(false);
+    expect(propClustersAreValid(cluster)).toBe(false);
+  });
+
+  it("rejects a cluster that crosses its cell boundary", () => {
+    const map = courseOf(41, 6, "reverse-cross-cell");
+    const source = map.props.find((prop) => prop.clusterMember === "attachment");
+    expect(source).toBeDefined();
+    const crossing = map.props.map((prop) =>
+      prop === source ? { ...prop, offsetX: prop.offsetX + prop.cellDiameter } : prop,
+    );
+    expect(propClustersAreValid(crossing)).toBe(false);
   });
 });

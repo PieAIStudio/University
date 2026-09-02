@@ -508,10 +508,7 @@ export function BatchedAssetLibraryField({
   readonly castShadow?: boolean;
   readonly name?: string;
 }) {
-  const sources = useMemo(
-    () => [...new Set(fields.map((field) => field.src))].sort(),
-    [fields],
-  );
+  const sources = useMemo(() => [...new Set(fields.map((field) => field.src))].sort(), [fields]);
   const partsBySource = usePartsFromSources(sources);
   const [batch, setBatch] = useState<THREE.BatchedMesh | null>(null);
 
@@ -590,7 +587,10 @@ export function BatchedAssetLibraryField({
       islandLookPlacementCount: placed,
       islandLookBatch: true,
       islandLookMaterials: [...partsBySource.entries()].flatMap(([src, parts]) =>
-        parts.map((part) => `${src.split("/").pop()}::${part.sourceMaterial.name}::${batchedPropColour(part.sourceMaterial).getHexString()}`),
+        parts.map(
+          (part) =>
+            `${src.split("/").pop()}::${part.sourceMaterial.name}::${batchedPropColour(part.sourceMaterial).getHexString()}`,
+        ),
       ),
     };
     target.computeBoundingBox();
