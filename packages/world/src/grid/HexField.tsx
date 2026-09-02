@@ -6,7 +6,7 @@ import { hash } from "../island/random.js";
 import { islandLookFrozen } from "../island/island-surface-style.js";
 import type { GridCell, HexMap } from "./course-grid.js";
 import { createHexFieldMaterial, type HexLayer } from "./hex-field-material.js";
-import { hexToWorld } from "./hex.js";
+import { hexKey, hexNeighbors, hexToWorld } from "./hex.js";
 import { gridSurfaceSlopeFor } from "./grid-elevation.js";
 import { gridTerrainValueScale } from "./grid-palette.js";
 
@@ -16,8 +16,17 @@ interface HexFieldProps {
 }
 
 export const HEX_GEOMETRY_TRIANGLES = 18;
+export const HEX_BEVEL_GEOMETRY_TRIANGLES = 30;
 
-export function hexGeometry(seamStrength: number, cliffBottom = -0.5): THREE.BufferGeometry {
+export function hexGeometryTriangleCount(beveled: boolean): number {
+  return beveled ? HEX_BEVEL_GEOMETRY_TRIANGLES : HEX_GEOMETRY_TRIANGLES;
+}
+
+export function hexGeometry(
+  seamStrength: number,
+  cliffBottom = -0.5,
+  beveled = false,
+): THREE.BufferGeometry {
   const positions: number[] = [];
   const colours: number[] = [];
   const faces: number[] = [];
@@ -27,20 +36,44 @@ export function hexGeometry(seamStrength: number, cliffBottom = -0.5): THREE.Buf
   // and same-height meadow cells can still read as one continuous island.
   const radius = 1 - seamStrength;
   const top = 0.5;
-  // The top face keeps its established centre and height. Extending only the
-  // lower local edge gives the island a chunky exposed cliff without moving a
-  // lesson position, label, or pick target. The old bevel pass cost twelve
-  // extra triangles per instance and made the meadow read as a board edge;
-  // the top-face ramp below carries the same light cue inside the budget.
+  // The top face keeps its established centre and height. The optional bevel
+  // is reserved for route and detached cells: those are semantic stepping
+  // stones, while a bevel on every meadow cell turns one terrace into a tiled
+  // board. The shared prism path keeps the same instance scale and pick target
+  // in both cases.
   const bottom = cliffBottom;
+  const bevelWidth = beveled ? 0.085 : 0;
+  const bevelDepth = beveled ? 0.12 : 0;
+  const innerRadius = Math.max(0.01, radius - bevelWidth);
+  const bevelTop = top - bevelDepth;
   const centre = [0, top, 0] as const;
   for (let side = 0; side < 6; side += 1) {
     const firstAngle = Math.PI / 6 + side * (Math.PI / 3);
     const secondAngle = Math.PI / 6 + ((side + 1) % 6) * (Math.PI / 3);
-    const first = [Math.cos(firstAngle) * radius, top, Math.sin(firstAngle) * radius] as const;
-    const second = [Math.cos(secondAngle) * radius, top, Math.sin(secondAngle) * radius] as const;
-    const firstBottom = [first[0], bottom, first[2]] as const;
-    const secondBottom = [second[0], bottom, second[2]] as const;
+    const first = [
+      Math.cos(firstAngle) * innerRadius,
+      top,
+      Math.sin(firstAngle) * innerRadius,
+    ] as const;
+    const second = [
+      Math.cos(secondAngle) * innerRadius,
+      top,
+      Math.sin(secondAngle) * innerRadius,
+    ] as const;
+    const firstOuter = [
+      Math.cos(firstAngle) * radius,
+      bevelTop,
+      Math.sin(firstAngle) * radius,
+    ] as const;
+    const secondOuter = [
+      Math.cos(secondAngle) * radius,
+      bevelTop,
+      Math.sin(secondAngle) * radius,
+    ] as const;
+    const wallFirst = beveled ? firstOuter : first;
+    const wallSecond = beveled ? secondOuter : second;
+    const firstBottom = [wallFirst[0], bottom, wallFirst[2]] as const;
+    const secondBottom = [wallSecond[0], bottom, wallSecond[2]] as const;
 
     // Keep the top winding counter-clockwise when viewed from above.
     const topBase = positions.length / 3;
@@ -64,8 +97,25 @@ export function hexGeometry(seamStrength: number, cliffBottom = -0.5): THREE.Buf
     faces.push(0, 0, 0);
     indices.push(topBase, topBase + 1, topBase + 2);
 
+    if (beveled) {
+      const bevelBase = positions.length / 3;
+      positions.push(...first, ...second, ...secondOuter, ...firstOuter);
+      // The physical chamfer gets a little albedo headroom; its direction is
+      // still supplied by the generated normal and the scene's existing key.
+      colours.push(1.12, 1.12, 1.12, 1.12, 1.12, 1.12, 1.12, 1.12, 1.12, 1.12, 1.12, 1.12);
+      faces.push(2, 2, 2, 2);
+      indices.push(
+        bevelBase,
+        bevelBase + 1,
+        bevelBase + 2,
+        bevelBase,
+        bevelBase + 2,
+        bevelBase + 3,
+      );
+    }
+
     const sideBase = positions.length / 3;
-    positions.push(...first, ...second, ...secondBottom, ...firstBottom);
+    positions.push(...wallFirst, ...wallSecond, ...secondBottom, ...firstBottom);
     // A subtle vertical value shift gives the soil side a chunky, painted
     // read without making the lower half a second course-specific palette.
     colours.push(0.98, 0.98, 0.98, 0.9, 0.9, 0.9, 0.74, 0.74, 0.74, 0.82, 0.82, 0.82);
@@ -79,8 +129,29 @@ export function hexGeometry(seamStrength: number, cliffBottom = -0.5): THREE.Buf
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
-  geometry.userData.gridTriangles = HEX_GEOMETRY_TRIANGLES;
+  geometry.userData.gridTriangles = hexGeometryTriangleCount(beveled);
   return geometry;
+}
+
+export function gridRimWeightsForCells(map: HexMap, cells: readonly GridCell[]): Float32Array {
+  const mainKeys = new Set(map.mainCells.map(hexKey));
+  const values = new Float32Array(Math.max(1, cells.length));
+  cells.forEach((cell, index) => {
+    if (cell.kind === "detached") {
+      values[index] = 1;
+      return;
+    }
+    values[index] =
+      mainKeys.has(cell.key) &&
+      hexNeighbors(cell.coord).some((neighbor) => !mainKeys.has(hexKey(neighbor)))
+        ? 1
+        : 0;
+  });
+  return values;
+}
+
+export function setGridRimAttribute(geometry: THREE.BufferGeometry, values: Float32Array): void {
+  geometry.setAttribute("gridRim", new THREE.InstancedBufferAttribute(values, 1));
 }
 
 function setSurfaceSlopeAttribute(
@@ -114,11 +185,14 @@ export function cellTopColour(map: HexMap, cell: GridCell): THREE.Color {
     // territory still read as one patch; the small amount keeps the field from
     // becoming an accent-colour checkerboard.
     if (cell.unitIndex !== null) {
-      const unitValue = [0.94, 0.97, 1, 1.03, 1.06][cell.unitIndex % 5] ?? 1;
+      const unitValue = [0.92, 0.96, 1, 1.04, 1.08][cell.unitIndex % 5] ?? 1;
       colour.multiplyScalar(unitValue);
       colour.lerp(new THREE.Color(map.palette.accent), 0.045 + (cell.unitIndex % 4) * 0.02);
     }
-    colour.multiplyScalar(0.97 + hash(`${map.seed}/${cell.key}/top-value`) * 0.06);
+    // Keep the last variation small: the territory and terrace are the broad
+    // colour fields, while a per-cell hash should only stop a large region from
+    // looking stamped. A wider hash range turns the meadow into a checkerboard.
+    colour.multiplyScalar(0.985 + hash(`${map.seed}/${cell.key}/top-value`) * 0.03);
   }
   const lesson = cell.lessonIndex === null ? undefined : map.lessons[cell.lessonIndex];
   if (lesson?.state === "locked") colour.lerp(new THREE.Color(map.palette.shadow), 0.42);
@@ -164,7 +238,7 @@ function HexBedField({
   readonly cells: readonly GridCell[];
   readonly mesh: React.MutableRefObject<THREE.InstancedMesh | null>;
 }) {
-  const geometry = useMemo(() => hexGeometry(0, cliffBottom), [cliffBottom]);
+  const geometry = useMemo(() => hexGeometry(0, cliffBottom, false), [cliffBottom]);
   const material = useMemo(() => createHexFieldMaterial(map, dimmed, "land"), [dimmed, map]);
   const matrix = useMemo(() => new THREE.Matrix4(), []);
 
@@ -172,6 +246,7 @@ function HexBedField({
     const target = mesh.current;
     if (!target) return;
     setSurfaceSlopeAttribute(geometry, map, cells, false);
+    setGridRimAttribute(geometry, new Float32Array(Math.max(1, cells.length)));
     cells.forEach((cell, index) => {
       target.setMatrixAt(index, bedMatrix(cell, map, matrix));
       const colour = new THREE.Color(cell.kind === "route" ? map.palette.road : map.palette.top);
@@ -205,6 +280,7 @@ function HexLayerField({
   layer,
   cliffBottom,
   cells,
+  beveled,
   mesh,
 }: {
   readonly map: HexMap;
@@ -212,6 +288,7 @@ function HexLayerField({
   readonly layer: HexLayer;
   readonly cliffBottom: number;
   readonly cells: readonly GridCell[];
+  readonly beveled: boolean;
   readonly mesh: React.MutableRefObject<THREE.InstancedMesh | null>;
 }) {
   const geometry = useMemo(
@@ -223,8 +300,16 @@ function HexLayerField({
             ? map.seamStrength.detached
             : map.seamStrength.land,
         cliffBottom,
+        beveled,
       ),
-    [cliffBottom, layer, map.seamStrength.detached, map.seamStrength.land, map.seamStrength.route],
+    [
+      beveled,
+      cliffBottom,
+      layer,
+      map.seamStrength.detached,
+      map.seamStrength.land,
+      map.seamStrength.route,
+    ],
   );
   const material = useMemo(() => createHexFieldMaterial(map, dimmed, layer), [dimmed, layer, map]);
   const matrix = useMemo(() => new THREE.Matrix4(), []);
@@ -233,6 +318,7 @@ function HexLayerField({
     const target = mesh.current;
     if (!target) return;
     setSurfaceSlopeAttribute(geometry, map, cells, layer === "land" && map.projection === "course");
+    setGridRimAttribute(geometry, gridRimWeightsForCells(map, cells));
     cells.forEach((cell, index) => {
       target.setMatrixAt(index, cellMatrix(cell, map, matrix));
       target.setColorAt(index, cellTopColour(map, cell));
@@ -313,8 +399,8 @@ export function HexField({ map, dimmed = false }: HexFieldProps) {
   // Keep the debug metric truthful on the first render too: refs are still null
   // while JSX is being evaluated, even though every hex layer uses this geometry.
   const triangleCount =
-    HEX_GEOMETRY_TRIANGLES *
-    (bedCells.length + landCells.length + routeCells.length + detachedCells.length);
+    HEX_GEOMETRY_TRIANGLES * (bedCells.length + landCells.length) +
+    HEX_BEVEL_GEOMETRY_TRIANGLES * (routeCells.length + detachedCells.length);
 
   return (
     <group
@@ -342,6 +428,7 @@ export function HexField({ map, dimmed = false }: HexFieldProps) {
         layer="land"
         cliffBottom={cliffBottom}
         cells={landCells}
+        beveled={false}
         mesh={landMesh}
       />
       <HexLayerField
@@ -350,6 +437,7 @@ export function HexField({ map, dimmed = false }: HexFieldProps) {
         layer="route"
         cliffBottom={cliffBottom}
         cells={routeCells}
+        beveled
         mesh={routeMesh}
       />
       <HexLayerField
@@ -358,6 +446,7 @@ export function HexField({ map, dimmed = false }: HexFieldProps) {
         layer="detached"
         cliffBottom={cliffBottom}
         cells={detachedCells}
+        beveled
         mesh={detachedMesh}
       />
     </group>
