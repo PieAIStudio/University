@@ -39,8 +39,8 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@pieai/doc-gov": "0.9.1",
-    "@pieai/pro-gov": "0.9.1",
+    "@pieai/doc-gov": "0.9.10",
+    "@pieai/pro-gov": "0.9.10",
     "@types/node": "24.13.2",
     "lefthook": "^2.1.10",
     "oxfmt": "0.58.0",

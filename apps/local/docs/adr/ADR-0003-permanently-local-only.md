@@ -3,7 +3,7 @@ id: ADR-0003
 title: Superseded: Keep UniversityLocal Permanently Local-Only
 type: decision
 status: superseded
-canonical: true
+canonical: false
 owner: human
 created: 2026-07-20
 last_reviewed: 2026-08-24
@@ -19,14 +19,18 @@ related:
   - ADR-0002
   - SPEC-0002
 supersedes: []
-superseded_by: ADR-0001-both-shells-hold-an-account
+superseded_by: CANON-UNIVERSITY-LOCAL-MISSION
 ---
 
 # ADR-0003: Keep UniversityLocal Permanently Local-Only (Superseded)
 
 > Superseded on 2026-08-24 by the repository-level account decision in
-> `docs/adr/ADR-0001-both-shells-hold-an-account.md`. The historical local-only
+> [`docs/adr/ADR-0001-both-shells-hold-an-account.md`](../../../../docs/adr/ADR-0001-both-shells-hold-an-account.md). The historical local-only
 > decision is retained for traceability; it is no longer product authority.
+> The current [mission brief](../canon/mission-brief.md#product-role) carries
+> that shared-account contract in this documentation scope and is the local
+> successor recorded above; local ADR-0001 describes the earlier study-container
+> design, not the repository-level account decision.
 
 ## Context
 

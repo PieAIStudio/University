@@ -112,3 +112,5 @@ artifacts/
 # Every branch that captured before/after shots kept them in its own worktree;
 # the decisions they justified are written into the commit messages instead.
 /*.png
+
+.agents/manual-skills/
