@@ -55,7 +55,7 @@
       "id": "npx-skills/img2threejs",
       "sourcePath": "skills/npx-skills/.agents/skills/img2threejs",
       "delivery": "symlink",
-      "contentHash": "sha256:96c59837a37e0ea3119eb2f8b8cccc294d482808f22555b3609e533e5e8d7267",
+      "contentHash": "sha256:483cf5d0e40bc19bc0d16b8de0516a66c4f8f7e78812a6489f16ba663cc87e07",
       "targetPath": ".agents/manual-skills/img2threejs"
     },
     {
