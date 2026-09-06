@@ -144,6 +144,12 @@ Break one → rewrite.
    by this revision's manifest evidence. Never hand-type the source into a
    fence. See 源码从快照来 below. Banned substitutes:
    [references/evidence-and-failures.md](references/evidence-and-failures.md).
+5b. **Cards and exercises have their own contract**, and this skill owns it:
+   [references/cards-and-exercises.md](references/cards-and-exercises.md).
+   A lesson ships either both or neither — the creation schema refuses cards
+   without an exercise, because cards enter the review queue when the lesson is
+   completed and a lesson is completed by answering its exercises.
+
 6. **`## 自检` questions only** — no `答案：`, `**答：**`, or parenthetical
    solutions. Graded exercises render below the prose.
 7. **Last section is `## 一句话`**: exactly one bold sentence.
