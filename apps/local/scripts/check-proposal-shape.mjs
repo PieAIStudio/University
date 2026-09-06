@@ -55,7 +55,54 @@ const TEACHING_CHECKS = {
     label: "同义词漂移",
     cost: "同一节课中称呼改变造成的迷惑可能继续留给学习者",
   },
+  "inline-evidence": {
+    label: "证据太长，渲染不成代码",
+    cost: "课文里指向源码的那一句会落空，读者看到的是一个小标记而不是代码",
+  },
 };
+
+/**
+ * How many cited lines still render as source inside the prose.
+ *
+ * Read out of the UI's own policy rather than copied, because a second copy of
+ * this number is a copy that drifts, and the drift is invisible: a lesson whose
+ * range grew past the cap keeps passing every check and quietly stops showing
+ * the reader any code. Throwing here is deliberate — a shape checker that
+ * cannot find the rule it is enforcing must say so, not skip the rule.
+ */
+function inlineEvidenceMaxLines() {
+  const policy = new URL("../../../packages/ui/src/evidence/display-policy.ts", import.meta.url);
+  const found = /INLINE_EVIDENCE_MAX_LINES\s*=\s*(\d+)/.exec(readFileSync(policy, "utf8"));
+  if (!found) {
+    throw new Error(
+      "could not read INLINE_EVIDENCE_MAX_LINES from packages/ui/src/evidence/display-policy.ts",
+    );
+  }
+  return Number(found[1]);
+}
+
+const EVIDENCE_TOKEN = /\[\[evidence:([^\]:]+):(\d+)(?:-(\d+))?\]\]/g;
+
+/**
+ * A lesson points at source with `[[evidence:path:lines]]`, and the reader sees
+ * the real code only when the cited range is short enough to sit inside the
+ * prose. Past that, the same token renders as a reference chip — so a sentence
+ * like 「就是这些：」 followed by the token lands on nothing, and every other
+ * gate stays green because the token itself is perfectly valid.
+ */
+function checkInlineEvidence(lesson, where, problems, maxLines) {
+  const content = lesson.content ?? "";
+  for (const match of content.matchAll(EVIDENCE_TOKEN)) {
+    const [token, path, start, end] = match;
+    const lines = Number(end ?? start) - Number(start) + 1;
+    if (lines <= maxLines) continue;
+    problems.push(
+      `${where}: ${token} 引了 ${lines} 行，超过 ${maxLines}，读者看到的会是一个引用标记而不是源码；` +
+        `请把范围收紧到真正要读的那几行（${path} 里通常有整段可以不看的部分），` +
+        `或用 --skip-check inline-evidence（代价：${TEACHING_CHECKS["inline-evidence"].cost}）。`,
+    );
+  }
+}
 
 /**
  * Measured against the reviewed course's first six lessons:
@@ -209,6 +256,9 @@ function check(proposal, options = {}) {
       checkEvidence(lesson.evidence, where, problems);
       checkContent(lesson.content, where, problems);
       if (!skippedChecks.has("analogy-order")) checkAnalogyOrder(lesson, where, problems);
+      if (!skippedChecks.has("inline-evidence")) {
+        checkInlineEvidence(lesson, where, problems, inlineEvidenceMaxLines());
+      }
       if (!skippedChecks.has("term-drift")) checkTermDrift(lesson, where, problems);
 
       const cards = lesson.cards ?? [];
