@@ -1294,8 +1294,59 @@ pre b{color:var(--go);font-weight:600}
   <p>本稿最后再提醒：<b>产品挑的词可以，学习者说的话不行；匿名会话可以先保存学习价值，但不能被说成跨设备安全，也不能领每天要花钱的那几次 AI；意见只有在学习者主动提交后才进入写路径，而且答题数据必须和意见一起看；听写整理只修听错的字，不替学习者说话。</b></p>
 </div>
 
+<h2 class="alt" id="course-island-compact-card"><span class="n">09</span>课程信息卡默认收起，地图先被看见 · 2026-09-05</h2>
+<p class="lede">
+  进入一门正常课程时，左上角信息卡不再把半张岛盖住。
+  默认只留下课名、进度、一个明确的展开入口，以及随时可点的回到地图。
+  单元信息和原有三题小测仍在同一张卡、同一份组件里，只是要学习者主动展开后才完整出现。
+</p>
+
+<div class="dec">
+  <h4>决定 A · 默认折叠的是占位，不是能力</h4>
+  <p>
+    390 宽的手机上，这张卡曾经从课程顶栏下面一直落到画面中部（约 300 高），课名、进度、当前单元条、学习路线小测和返回按钮一次铺开。
+    桌面左侧同一张卡同样偏高。地图是这屏的主表面；卡片是说明，不能变成一堵墙。
+  </p>
+  <p>
+    收起态可见：课程名、进度（单元数 / 关数 / 还剩）、展开入口、回到地图。
+    展开后可见：当前单元条（含「先看这一单元讲什么」）、原有三题路线小测（其内部仍是自己的 <code>details</code>，题目要再点一次才铺开）。
+    两层都不是删除。缺失的能力仍然渲染控件；不许用 <code>AUTHORING ? … : null</code> 把手机或交付端藏掉。
+  </p>
+</div>
+
+<div class="dec sky">
+  <h4>决定 B · 一份卡片，两种模式、两个宽度</h4>
+  <p>
+    窄屏 underlay 和宽屏 HUD 继续渲染同一个 <code>CourseIsland</code>。布局只决定这张卡落在哪一个槽，不决定它里面有什么。
+    展开用原生 <code>details</code>，不新造通用折叠组件，不复制第二份面板。
+    文案走现有 i18n 目录：展开入口用已有的「学习路线」，打开后同一控件改称已有的「收起」；不新增句子。
+  </p>
+  <p>
+    换课或换系列时，这张卡回到收起。同一门课里点开单元层或回答小测，展开态保持，不把人踢回去。
+    回到地图的出口在折叠和展开时都在卡片里，不藏进需要先滚动才发现的底部。
+  </p>
+</div>
+
+<div class="dec no">
+  <h4>决定 C · 这次只动信息卡</h4>
+  <p>
+    不改全局导航、不改「今天」面板、不改 3D 相机、不改 renderer、不改关卡节点或标签投影。
+    手机默认高度目标为 150px；本次手机实测 170px，硬上限 180px。以课名完整可读和 44px 操作完整可用优先；字号被系统放大时优先换行，不许用固定高度把课名或进度裁掉。
+    展开后卡片仍是自己的滚动区域，返回出口保持可点。触控目标 44px；键盘能聚焦展开入口、单元按钮、小测和返回；<code>details</code> 自己宣布展开 / 收起。
+  </p>
+</div>
+
+<h3>怎么验</h3>
+<ul class="chk">
+  <li><b>默认看见地图：</b>390×844 进入一门未学过的课，信息卡初始目标高度为 150，高于目标时硬上限为 180（本次手机实测 170；系统放大字体时允许长高，但文字仍完整）；单元条和小测题目都不在第一眼。</li>
+  <li><b>展开入口明确：</b>不读文档也能找到「学习路线」；点一下（或键盘激活 summary）后，单元条和三题小测的摘要都在。小测题目仍要再展开它自己的 <code>details</code>。</li>
+  <li><b>回得去：</b>折叠和展开都能点到回到地图，不必先把卡片滚到底。</li>
+  <li><b>换课复位：</b>在 A 课展开后进入 B 课，B 课的卡是收起的。</li>
+  <li><b>同一份：</b>作者端 / 交付端、手机 / 桌面都是这一张卡；桌面的「今天」面板形状不变。</li>
+</ul>
+
 <div class="foot">
-  V5 · 2026-08-27 · 承接 V4 · 新增读完 / 答对、讲一遍、TTS / ASR 载荷边界、每日免费 AI 批改额度、源码证据呈现边界、复习提醒边界、匿名保存 / 邮箱绑定 / 合并 / 付费边界、意见传输与答题对照、世界头像与路径方向、匿名与计量 AI 的边界、听写整理、课程岛语义主线与双投影、unit 视觉家族与可替换云模块、改写中的课如实标注<br>
+  V5 · 2026-08-27 · 承接 V4 · 新增读完 / 答对、讲一遍、TTS / ASR 载荷边界、每日免费 AI 批改额度、源码证据呈现边界、复习提醒边界、匿名保存 / 邮箱绑定 / 合并 / 付费边界、意见传输与答题对照、世界头像与路径方向、匿名与计量 AI 的边界、听写整理、课程岛语义主线与双投影、unit 视觉家族与可替换云模块、改写中的课如实标注、课程信息卡默认收起<br>
   事实依据：<code>packages/core/src/progress/contract.ts</code> ·
   <code>packages/ui/src/language/speech.ts</code> ·
   <code>packages/core/src/ports/account-data.ts</code> ·
@@ -1308,7 +1359,8 @@ pre b{color:var(--go);font-weight:600}
   <code>packages/backend/src/feedback.ts</code> ·
   <code>apps/university/src/authoring/FeedbackOverview.tsx</code> ·
   <code>apps/university-grading/src/config.ts</code> ·
-  <code>docs/specs/active/SPEC-0001-universitylocal-parity-contract.md</code>
+  <code>docs/specs/active/SPEC-0001-universitylocal-parity-contract.md</code> ·
+  <code>apps/university/src/app/CourseIsland.tsx</code>
 </div>
 
 </div>

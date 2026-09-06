@@ -35,6 +35,9 @@ export function CourseIsland({
   onBackToMap,
   onOpenLesson,
 }: CourseIslandProps) {
+  const showRouteQuiz = hasRouteQuiz(course.id) && viewedProgress?.done === 0;
+  const showRouteDetails = pathUnit != null || showRouteQuiz;
+
   return (
     <aside className="picked picked--left">
       <h3>{course.title}</h3>
@@ -44,50 +47,64 @@ export function CourseIsland({
         {viewedProgress ? viewedProgress.total - viewedProgress.done : 0}{" "}
         {translate("app.app.courseIsland.copy.关")}
       </p>
-      {pathUnit ? (
-        <div className="unit-strip">
-          <p className="unit-strip__name">{pathUnit.title}</p>
-          <button
-            type="button"
-            className="unit-strip__list"
-            aria-label={translate("app.app.courseIsland.copy.先看这一单元讲什么")}
-            aria-haspopup="dialog"
-            aria-expanded={unitOverlayOpen ? true : undefined}
-            onClick={(event) => onOpenUnitOverlay(pathUnit.id, event.currentTarget)}
-          >
-            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-              <path
-                d="M3 4.5h10M3 8h10M3 11.5h7"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeWidth="1.5"
-              />
-            </svg>
-          </button>
-        </div>
-      ) : null}
-      {/*
-        「我该从哪一关开始」, asked once and only where it is live.
+      {showRouteDetails ? (
+        <details key={`${studyId}:${course.id}`} className="picked__route">
+          {/* key remounts this closed when the series or course changes. */}
+          <summary className="picked__route-summary">
+            <span className="picked__route-summary-closed">
+              {translate("ui.path.courseRouteQuiz.copy.学习路线")}
+            </span>
+            <span className="picked__route-summary-open">
+              {translate("ui.shell.appShell.copy.收起")}
+            </span>
+          </summary>
+          {pathUnit ? (
+            <div className="unit-strip">
+              <p className="unit-strip__name">{pathUnit.title}</p>
+              <button
+                type="button"
+                className="unit-strip__list"
+                aria-label={translate("app.app.courseIsland.copy.先看这一单元讲什么")}
+                aria-haspopup="dialog"
+                aria-expanded={unitOverlayOpen ? true : undefined}
+                onClick={(event) => onOpenUnitOverlay(pathUnit.id, event.currentTarget)}
+              >
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                  <path
+                    d="M3 4.5h10M3 8h10M3 11.5h7"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+              </button>
+            </div>
+          ) : null}
+          {/*
+            「我该从哪一关开始」, asked once and only where it is live.
 
-        It was in the authoring workbench, three screens from any course and
-        compiled out of the delivery build entirely. A learner deciding where
-        to start is standing on the island — and only before the first stone is
-        done, because a quiz still offering to choose your starting point when
-        you are twenty lessons in is asking about a decision you already made.
-      */}
-      {hasRouteQuiz(course.id) && viewedProgress?.done === 0 ? (
-        <CourseRouteQuiz studyId={studyId} course={course} onOpenLesson={onOpenLesson} />
+            It was in the authoring workbench, three screens from any course and
+            compiled out of the delivery build entirely. A learner deciding where
+            to start is standing on the island — and only before the first stone is
+            done, because a quiz still offering to choose your starting point when
+            you are twenty lessons in is asking about a decision you already made.
+          */}
+          {showRouteQuiz ? (
+            <CourseRouteQuiz studyId={studyId} course={course} onOpenLesson={onOpenLesson} />
+          ) : null}
+        </details>
       ) : null}
       {/*
         The way out is pinned, not last.
 
-        On a phone the panel is bounded by the stage and scrolls, and a
-        三题分级测验 is tall enough to push this below the panel's own fold. An
-        exit you have to discover a scroll to reach is an exit a beginner does
-        not have.
+        On a phone the panel is bounded by the stage and scrolls. The route
+        details and the 三题分级测验 used to live in the first paint and push
+        this below the fold; they now sit behind a disclosure, and this exit
+        stays a sibling so a beginner does not have to discover a scroll — or
+        an extra expand — to leave.
       */}
-      <button className="ghost block picked__exit" onClick={onBackToMap}>
+      <button type="button" className="ghost block picked__exit" onClick={onBackToMap}>
         {backToMapLabel}
       </button>
     </aside>

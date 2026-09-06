@@ -456,14 +456,14 @@ button.label:focus-visible {
  * out of the product, which is Web3D baseline rule 7 with the DOM still there
  * and unreachable.
  *
- * Under the labels, then. A label crossing this panel stays legible because a
- * label carries its own dark ground — that is exactly why it was built that
- * way, for a name that has to cross bright sea and black shadow in one pan.
+ * At the labels' layer. Labels are rendered after the underlay and only a
+ * visible label takes pointer events, so a label crossing this panel still
+ * wins at its own hit box while the panel's controls remain real targets.
  */
 /* Two classes on purpose: `> .picked` above has the same specificity, and
    which stylesheet loads last is not a thing a layering rule should depend on. */
 .app-shell__main .stagewrap > .picked.picked--left {
-  z-index: 0;
+  z-index: 1;
 }
 
 .app-shell__main .stagewrap > .picked.picked--follow {

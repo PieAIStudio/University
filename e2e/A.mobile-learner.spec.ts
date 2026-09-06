@@ -24,22 +24,27 @@ test.describe("A 新学习者 · 在线端 · 手机宽度", () => {
     the narrow copy. A width is not allowed to decide what a panel contains;
     only which slot it lands in.
   */
-  test("课程岛在手机宽度上带着分级测验，不是宽屏专属", async ({ page }) => {
+  test("课程岛收起时仍能直接回到地图", async ({ page }) => {
     const consoleErrors = watchConsole(page);
-    /*
-      Straight to the course address. 「今天」 opens the *lesson* at both
-      widths now, so the landing walk never passes through the island; a
-      returning learner reaches it by bookmark or by tapping the island on the
-      map, and the address is the cheaper of the two to hold steady.
-    */
-    await page.goto(`${ONLINE_ORIGIN}/turing-pact/foundations-before-zero`, {
-      waitUntil: "domcontentloaded",
-    });
+    await page.goto(
+      `${ONLINE_ORIGIN}/turing-pact/foundations-before-zero?seed=foundations-before-zero&freeze=1`,
+      {
+        waitUntil: "domcontentloaded",
+      },
+    );
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
 
     const island = page.locator(".picked--left");
     await expect(island).toBeVisible({ timeout: 30_000 });
-    await expect(island.locator(".course-route-quiz")).toBeVisible({ timeout: 30_000 });
+    const route = island.locator("details.picked__route");
+    await expect(route).toBeVisible({ timeout: 30_000 });
+    await expect(route).not.toHaveAttribute("open");
+    await expect(route.locator(":scope > .unit-strip")).toBeHidden();
+    await expect(route.locator(":scope > .course-route-quiz")).toBeHidden();
+
+    const collapsedBox = await island.boundingBox();
+    expect(collapsedBox).not.toBeNull();
+    expect(collapsedBox!.height).toBeLessThanOrEqual(180);
 
     /*
       The way out has to be clickable, not merely present.
@@ -52,6 +57,62 @@ test.describe("A 新学习者 · 在线端 · 手机宽度", () => {
     */
     const back = island.getByRole("button", { name: /回到.*地图/ });
     await humanClick(page, back, "手机课程岛的「回到地图」");
+    await expect(island).toHaveCount(0, { timeout: 15_000 });
+
+    consoleErrors.assertClean();
+  });
+
+  test("点开学习路线后手机也能到达分级测验并回地图", async ({ page }) => {
+    const consoleErrors = watchConsole(page);
+    await page.goto(
+      `${ONLINE_ORIGIN}/turing-pact/foundations-before-zero?seed=foundations-before-zero&freeze=1`,
+      {
+        waitUntil: "domcontentloaded",
+      },
+    );
+    await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
+
+    const island = page.locator(".picked--left");
+    await expect(island).toBeVisible({ timeout: 30_000 });
+    const route = island.locator("details.picked__route");
+    const routeSummary = route.locator(":scope > summary");
+    await expect(routeSummary).toContainText("学习路线");
+
+    await humanClick(page, routeSummary, "手机课程岛的「学习路线」");
+    await expect(route).toHaveAttribute("open", "");
+    await expect(island.getByRole("button", { name: /先看这一单元讲什么/ })).toBeVisible();
+
+    /* Native summary remains a keyboard disclosure after the pointer path. */
+    await routeSummary.focus();
+    await expect(routeSummary).toBeFocused();
+    await routeSummary.press("Enter");
+    await expect(route).not.toHaveAttribute("open");
+    await routeSummary.press("Enter");
+    await expect(route).toHaveAttribute("open", "");
+
+    const routeQuiz = route.locator(":scope > details.course-route-quiz");
+    await expect(routeQuiz).toBeVisible({ timeout: 30_000 });
+    const quizSummary = routeQuiz.locator(":scope > summary");
+    await expect(quizSummary).toContainText("先测测你的学习起点");
+    const quizBody = routeQuiz.locator(":scope > .course-route-quiz__body");
+    await expect(quizBody).toBeHidden();
+
+    await quizSummary.focus();
+    await expect(quizSummary).toBeFocused();
+    await quizSummary.press("Enter");
+    await expect(quizBody).toBeVisible();
+    await expect(routeQuiz).toContainText(/第\s*1\s*\/\s*3\s*题/);
+    await expect(routeQuiz.locator(".course-route-quiz__option")).toHaveCount(3);
+
+    await humanClick(
+      page,
+      routeQuiz.locator(".course-route-quiz__option").first(),
+      "手机课程岛小测第 1 题选项",
+    );
+    await expect(routeQuiz).toContainText(/第\s*2\s*\/\s*3\s*题/);
+
+    const back = island.getByRole("button", { name: /回到.*地图/ });
+    await humanClick(page, back, "展开后的手机课程岛的「回到地图」");
     await expect(island).toHaveCount(0, { timeout: 15_000 });
 
     consoleErrors.assertClean();
