@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: project
 created: 2026-05-08
-last_reviewed: 2026-08-28
+last_reviewed: 2026-09-06
 domain: project-policy
 tags:
   - project-policy
@@ -32,13 +32,24 @@ A fresh worktree cannot run the app until three things are done, because the
 generated content and the personal campus data are both gitignored:
 
 ```
-pnpm install --prefer-offline
+pnpm install --frozen-lockfile --prefer-offline
 pnpm --filter @pieai/university-core build          # vite cannot resolve the core package without it
-ln -sfn <main-checkout>/apps/university/content apps/university/content
-for d in buzz general sample supaluv turing-pact university-local; do
-  ln -sfn <main-checkout>/apps/local/studies/$d apps/local/studies/$d
-done
+ln -s <main-checkout>/apps/university/content apps/university/content
+ln -s <main-checkout>/apps/local/studies apps/local/studies/studies
+UNIVERSITY_LOCAL_STUDIES_ROOT="$PWD/apps/local/studies/studies" pnpm start
 ```
+
+These commands are for a fresh worktree with absent link targets. Inspect an
+existing path rather than replacing it. Keep the tracked `apps/local/studies`
+skeleton; the nested link makes its children resolve to real directories.
+Per-study links are skipped by the shelf's `Dirent.isDirectory()` filter.
+The explicit `UNIVERSITY_LOCAL_STUDIES_ROOT` selects the nested root for the
+authoring server; the e2e launcher already detects that same layout. See the
+verified [worktree findings](../reference/execution/current-work.md#traps-found-the-hard-way).
+
+Prefer a sibling worktree when the project's tracked skill links point to the
+sibling ProjectGovernanceSystem checkout: preserving the directory depth keeps
+those relative links valid without editing governed asset links.
 
 Without them the dev server serves `课程读不出来 shelf: 404`.
 

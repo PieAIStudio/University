@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-09-03
+last_reviewed: 2026-09-06
 domain: execution
 tags:
   - current-work
@@ -32,30 +32,24 @@ The short, current handoff. **What is true now, never how it got that way.**
 > `apps/local` 现在只剩那台读磁盘的 Node 服务（4317），没有被改动。
 > 经过、踩过的坑和验收数字在 git 历史里（2026-08-25 的合并提交）。
 
-> **课程岛观感，第一轮结构改造已合并（2026-08-28）**：六条分支一起进 main。
-> 关键结构变化：`IslandField` 把蓝图编译成一张栅格，草、装饰、地表颜色现在读同
-> 一份真相（之前三套独立随机场，地表颜色场与草密度场的相关系数只有 r=0.31）；
-> 草从 45 三角形的五叶簇换成一张三顶点卡片，形状全在顶点着色器里，约 72 万三角
-> 降到约 8 万；课程机位降到 68 度 / 36 单位；行星页的选课点升到大气层里漂浮。
-> 架构写在 [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md)，
-> 每个元素用什么技术画写在
+> **当前收敛方向（2026-09-06）**：先整理并验证主线，再从同一个已推送提交分出
+> 3D 与课程两条工作线。旧 `codex/launch-first-slice` 工作区保留；其中课程信息面板
+> 的折叠改进单独接收，六边形装饰和诊断实验不作为新地形方案的前提。
+>
+> **3D 目标是连续整块地形。** 当前默认世界、岛群和课程场景仍使用 grid/hex 渲染；
+> `IslandBlueprint`、`IslandField` 与连续几何生成器已经存在，但不能把它们存在于
+> 仓库里等同于默认画面已经使用。后续复用这套源数据，协调地表、路线、落点、点击
+> 和 DOM 标签，避免替换地面后它们各自读不同的高度。架构与技术选择继续遵循
+> [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md) 和
 > [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)。
 >
-> **仍然明确没解决的两件事**（都已实机看过截图，不是猜的）：
-> 1. **暗部压死成纯黑。** 主光比补光 = 9.0 / 0.5 = 18:1。风格化美术通常 2:1 到
->    4:1，因为阴影要**有颜色**。现在背光坡面吃掉约 30% 画面。
-> 2. **草在课程机位下读成噪点，不是草。** 叶片在这个距离上接近亚像素，亮顶读成
->    白色椒盐。这个要等 1 修完再调，顺序不能反。
+> **先让资产说明与画面一致。** 现有作者工作台 `#/studio/map` 的资产 inspector
+> 主要读取 r01/elemental registry，默认地图主要使用 `grid-assets.json`。先复用
+> 现有 placements 修正说明来源；库存中的资产总数不等于当前画面实际使用的数量。
+> 三层地图的美术方向与当前设计见 [V5](../player-journey/v5/index.html)。
 >
-> 判官（`pnpm e2e:island-look`）的合同在
-> [Island Look Contract](./island-look-contract.md)，门槛量自 donor
-> `elemental-serenity` 与三张参考图。**注意**：那份 metrics 的门槛是在旧草、旧
-> 机位、旧光照下定的，第一轮结构改造之后需要重新校准，别把它的红项直接当回归。
->
-> 三条已经用运行时实验排除的死路，不要再走：加主光强度（2.1→6.0，指标纹丝不动）、
-> 只放大阴影相机（±15.8→±40，完全无效）、动 `gl.toneMappingExposure`
-> （那个旋钮是死的，颜色管线在 `grade.ts` 的 blit 里）。唯一有效的是**降低太阳仰角**
-> （55.9°→17°，落差 5.2→18.8）。
+> 本轮不处理 `island-look` 浏览器门禁，也不以旧机位、旧草或旧灯光的数字宣称
+> 当前性能与观感已通过。已有实验和截图保留在原工作区及本机证据目录。
 
 Reversals live in `docs/adr/` as decision records with `supersedes` links.
 Nothing on this page explains what a rule used to be — if you need that, an ADR
@@ -224,10 +218,22 @@ Where those answers actually live:
   (`payment-backend-gap.md`, `feedback-backend-gap.md`,
   `review-reminders-backend-gap.md`) and `commercial-model.md`.
 
-What belongs on *this* page instead is the next few things and why they are
-next. Right now that is the two island faults named in the banner above, in
-that order, plus the third stage of ADR-0009 that has not been built:
-`IslandStyle` exists but colour still leaks into renderer files.
+The next work has two owners, starting from the same verified, pushed baseline:
+
+1. **3D and asset inspection:** make Map Studio describe the assets the current
+   projection really uses, then build the continuous-terrain slice in a new
+   `codex/` branch and worktree. Keep one blueprint/field pipeline and measure
+   the actual result before expanding it across all three map levels.
+2. **Course quality:** Claude Code works in its own branch and worktree, using
+   the existing `apps/local` authoring workflows. Lesson source changes and
+   published packages remain separate acts; the 3D branch does not regenerate
+   course content to make its environment run.
+
+Course IDs, unit/lesson ordering, the blueprint input contract and shared
+learner UI are integration boundaries. Coordinate changes to them before both
+branches depend on different answers. Keep unrelated old experiments out of
+the baseline; preserving their worktree does not make them accepted product
+behaviour. Payment integration remains tracked in its existing gap document.
 
 
 ## Traps, Found The Hard Way
