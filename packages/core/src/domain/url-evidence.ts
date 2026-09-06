@@ -11,6 +11,32 @@
  * The host lists live in `url-evidence-hosts.json` so the adoption skill's
  * gate and this persist-time schema cannot drift: one file, added-to rather
  * than forked.
+ *
+ * ## What may join `authorityHosts`, and why it is a list rather than a filter
+ *
+ * The admission rule is one sentence: **a host qualifies when it publishes the
+ * first-hand documentation for the thing being taught** — the vendor's or
+ * standards body's own pages. Commentary, tutorials, aggregators, Q&A sites
+ * and course platforms never qualify, however good they are, because a lesson
+ * cites an authority so the reader can go read the source of the claim.
+ *
+ * The list grows. It was originally sized for teaching the web platform, and
+ * when the curriculum moved to AI tooling nothing on it could be cited — which
+ * is a reason to add hosts, not a reason to stop checking. Add the host, keep
+ * the gate.
+ *
+ * ## Why not a deny-list instead
+ *
+ * Because the lessons are written by models. The failure this catches is not a
+ * low-quality site slipping in; it is a **fabricated URL** — a plausible-looking
+ * page on a real-sounding host that does not exist, or does exist and never
+ * said the thing cited. A deny-list cannot catch that by construction: an
+ * invented host is, definitionally, not on any list of known-bad ones. An
+ * allow-list rejects it on the first try.
+ *
+ * `forbiddenHosts` is a different instrument and is not a quality filter. It
+ * names the specific course sites this project adopts material *from*, so that
+ * citing them back would be laundering rather than sourcing.
  */
 import hosts from "./url-evidence-hosts.json" with { type: "json" };
 

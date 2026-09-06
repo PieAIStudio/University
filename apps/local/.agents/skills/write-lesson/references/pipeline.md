@@ -156,6 +156,61 @@ loop and is already in the skill.
 So the detector's yield **falls over time by design**. Re-evaluate after about 40
 lessons: if a run reports only defects the skill already names, stop running it.
 
+## Dispatching to a submodel: inline the rules, do not make it read them
+
+Measured 2026-09-06, on the first run of this pipeline against a brand-new
+study. The obvious way to brief a Writer submodel is to point it at `SKILL.md`
+and `references/variants.md` and let it read them. **Do not.**
+
+Three runs briefed that way were still going at ten minutes and produced
+nothing; the model spent the whole budget exploring the repository before it
+began writing. The same lesson, with the invariants and the variant table
+pasted into the prompt and an explicit "do not use any tools, do not read any
+files", finished in **287 seconds** and passed every invariant on the first
+attempt.
+
+So a dispatch prompt carries the rules; it does not carry a path to them. That
+is a duplication, and it is the right one: the rules move slowly, and the cost
+of the alternative is the whole run.
+
+The same brief must also pin the facts. Give the submodel the exact claims it
+may use and the exact evidence ranges — for a repository lesson, the file paths
+and line numbers, chosen by whoever dispatches. A writer asked to find its own
+citations will find plausible ones. `check-proposal-evidence.mjs` now fetches
+URL citations for exactly this reason, but a fabricated *line range* inside a
+real file still resolves, and only the person who picked the range would know.
+
+## Every role must be told to emit an H1
+
+`lesson-pipeline-runner.mjs` splits model stdout at the first Markdown H1:
+everything before it is progress, everything after is the answer. Only the
+Writer produces one unprompted. A Detector prompt that asks for a report, and a
+Polisher prompt that does not restate the requirement, both come back with
+`model stdout had no Markdown H1` after the model did perfectly good work.
+
+Put the instruction in the prompt for **every** role, not just the writing ones.
+
+## First run of this pipeline on a new study — 2026-09-06
+
+Seven lessons existed before this batch; these are the next ones. Recording the
+numbers because both of this file's scheduled re-evaluations are counted in
+lessons, and an unrecorded run does not count.
+
+- **Writer, first attempt, no retries:** 6 of 6 lessons passed every structural
+  invariant — spine, variant section counts, the prediction line, questions-only
+  self-check, single bold takeaway, detail blocks, 「你」 density. Lesson length
+  1,015–2,139 characters; 「你」 density 23–47 per 1,000 against a floor of 2.
+- **Detector:** on the first lesson it reported five findings, two of them in
+  the "too late" class this file calls its most valuable — including one where
+  the term appeared **in the H1 title** and its plain-language gloss did not
+  arrive until the third-to-last paragraph. It proposed no wording. A human
+  reader independently flagged the same redundant detail block it flagged.
+- **Fixer:** moved the explanations rather than adding paragraphs, and deleted
+  the redundant block rather than rewriting it. Length **+1.2%**.
+- **Polisher, bounded:** hedges 3 → 3, absolutes 0 → 0, body **−1.7%**.
+  `check-lesson-hedges.mjs` passed. This is the first data point of the
+  re-evaluation this file asks for after about ten lessons.
+
 ## Commands
 
 **Which models, how to preflight them, and how to invoke them:

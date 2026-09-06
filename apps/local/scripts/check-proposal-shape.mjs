@@ -18,14 +18,20 @@ const SHAPE_DATA = JSON.parse(
   readFileSync(new URL("./proposal-shape-data.json", import.meta.url), "utf8"),
 );
 
-const REQUIRED_SECTIONS = [
-  "## 学习目标",
-  "## 先给结论",
-  "## 一个类比",
-  "## 工作示例",
-  "## 自检",
-  "## 重点",
-];
+/*
+  The house spine, and the only headings that stay exact — the middle sections
+  are variant-controlled and are written in the reader's own words, so they
+  cannot be a fixed list.
+
+  This used to name the retired six-section skeleton (学习目标 / 先给结论 /
+  一个类比 / 工作示例 / 自检 / 重点). `lint-lessons.mjs` — which runs inside
+  `pnpm verify` — requires the spine below and the write-lesson skill bans five
+  of those six outright, so the two gates pointed in opposite directions: a
+  lesson could not satisfy both, and a proposal written to pass this file landed
+  a course the shape checker then refused or, with no `variant` declared,
+  silently skipped. The gate that ships inside `verify` is the real one.
+*/
+const REQUIRED_SECTIONS = ["## 先猜一下", "## 答案", "## 自检", "## 一句话"];
 /** Phrases that assume the reader already knows the thing the lesson teaches. */
 const BANNED_PHRASES = ["众所周知", "显而易见", "简单来说", "不言而喻"];
 /** A card back has to stand on its own — it is read without the lesson around it. */
@@ -385,7 +391,15 @@ function withoutFencedCode(text) {
  */
 function checkAnalogyOrder(lesson, where, problems) {
   const content = lesson.content ?? "";
-  const analogyIndex = content.indexOf("## 一个类比");
+  /*
+    Re-keyed from the retired `## 一个类比` to `## 答案`. The defect is the same
+    one — a term used before the reader has been given it — but the boundary
+    moved with the shape: 「答案」 is now the point by which the reader must
+    already hold the vocabulary, because that is where the lesson's claim lands.
+    A probe keyed to a heading that no longer exists returns early on every
+    lesson and reports a clean run it never performed.
+  */
+  const analogyIndex = content.indexOf("## 答案");
   if (analogyIndex === -1) return;
 
   const text = withoutFencedCode(content);
@@ -397,7 +411,7 @@ function checkAnalogyOrder(lesson, where, problems) {
 
     const line = lineNumberAt(content, firstIndex);
     problems.push(
-      `${where}: 术语“${term}”在类比段（第 ${lineOfHeading(content, "## 一个类比")} 行）之前首次出现于正文第 ${line} 行，但同一段没有先给解释；请先用一个类比/白话说明，再引入这个词，或用 --skip-check analogy-order（代价：${TEACHING_CHECKS["analogy-order"].cost}）。`,
+      `${where}: 术语“${term}”在「答案」段（第 ${lineOfHeading(content, "## 答案")} 行）之前首次出现于正文第 ${line} 行，但同一段没有先给解释；请先用白话或类比说明，再引入这个词，或用 --skip-check analogy-order（代价：${TEACHING_CHECKS["analogy-order"].cost}）。`,
     );
   }
 }
