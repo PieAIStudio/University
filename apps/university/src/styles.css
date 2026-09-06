@@ -4215,15 +4215,18 @@ body,
   flex-direction: column;
   gap: 6px;
   padding: 10px 12px;
+  overflow: hidden;
 }
 
 .picked.picked--left h3 {
+  flex: 0 0 auto;
   margin: 0;
   text-wrap: balance;
   overflow-wrap: anywhere;
 }
 
 .picked.picked--left .picked__study {
+  flex: 0 0 auto;
   margin: 0;
   overflow-wrap: anywhere;
   font-variant-numeric: tabular-nums;
@@ -4231,6 +4234,14 @@ body,
 
 .picked__route {
   min-width: 0;
+  flex: 0 0 auto;
+}
+
+.picked.picked--left .picked__route[open] {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .picked__route-summary {
@@ -4322,6 +4333,8 @@ body,
 }
 
 .picked.picked--left button.picked__exit {
+  flex: 0 0 auto;
+  position: static;
   min-height: 44px;
   margin-top: 2px;
 }
