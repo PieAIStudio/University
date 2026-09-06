@@ -59,8 +59,26 @@ function scan(text) {
     absolutes: text.match(ABSOLUTE) ?? [],
     mispaired: text.match(MISPAIRED) ?? [],
     prose: proseLength(text),
+    address: (text.match(/你/g) ?? []).length,
   };
 }
+
+/**
+ * How much of the lesson's second person a polish may spend.
+ *
+ * The shape invariant is a floor — two 「你」 per thousand characters — and a
+ * floor cannot see this failure. Measured 2026-09-06 across seven polished
+ * lessons: six lost between 2.5% and 16.6% of their reader address, roughly in
+ * proportion to the 2-5% they shortened by, which is ordinary attrition. One
+ * lost **48.9%** while shortening by only 2.6% — it was not trimming, it was
+ * converting 「你要的是」 into 「需要的是」 wherever it appeared. That lesson
+ * still sat far above the floor and passed every other check here.
+ *
+ * Twenty-five percent sits above the observed normal maximum with room to
+ * spare and well under the outlier, so it rejects a lesson that was quietly
+ * turned back into documentation without arguing with an honest polish.
+ */
+const ADDRESS_LOSS_ALLOWANCE = 0.25;
 
 /**
  * How much longer a polished lesson may be than its source.
@@ -105,7 +123,18 @@ if (args[0] === "--before" && args[2] === "--after") {
     );
     failed = true;
   }
-  if (!failed) console.log("✓ 让步强度未被削弱，正文没有变长");
+  const addressLoss = before.address > 0 ? (before.address - after.address) / before.address : 0;
+  console.log(
+    `第二人称「你」 ${before.address} → ${after.address}（${(addressLoss * -100).toFixed(1)}%）`,
+  );
+  if (addressLoss > ADDRESS_LOSS_ALLOWANCE) {
+    console.error(
+      `✗ 少了 ${(addressLoss * 100).toFixed(1)}% 的「你」，超过 ${ADDRESS_LOSS_ALLOWANCE * 100}%。` +
+        `这不是变短带走的——是把对着一个人说的话改回了文档腔。`,
+    );
+    failed = true;
+  }
+  if (!failed) console.log("✓ 让步强度未被削弱，正文没有变长，仍然对着读者说话");
 } else {
   for (const path of args) {
     const found = scan(readFileSync(path, "utf8"));

@@ -120,6 +120,29 @@ node scripts/check-lesson-hedges.mjs --before <original.md> --after <polished.md
 
 It fails on a lost hedge, a new absolute, or a new 「只要…才」.
 
+**The hedge check is not the whole gate.** Measured 2026-09-06: a bounded
+polish deleted the line 「先写下你的判断，再往下看答案。」 outright — the
+low-stakes prompt that invariant 3 requires — and
+`check-lesson-hedges.mjs` passed it without a murmur. Hedges 0 → 0, absolutes
+0 → 0, body 779 → 734 characters, which reads as a well-behaved polish right
+up until you notice a required line is gone.
+
+That is not a bug in the checker. It measures hedges, absolutes and growth,
+and it measured all three correctly. It is a gap in what "the polish failed"
+was taken to mean. A polish that quietly removes a spine element is exactly as
+unshippable as one that manufactures an absolute, so the rule below —
+**non-zero → throw it away and ship your own draft** — has to be triggered by
+the structural check as well:
+
+```bash
+node scripts/check-lesson-hedges.mjs --before <fixed.md> --after <polished.md>
+node scripts/lint-lessons.mjs --study <id> --course <id>   # or an equivalent shape check
+```
+
+Both must pass before the polished version replaces the draft. Discarding it
+costs one model call; shipping it costs a lesson whose prediction has no
+answer prompt, and the reader is the one who finds out.
+
 **Polish once, not twice.** The first instinct is to add a second Flash pass at
 the end to apply the fixes Grok finds. Do not: every pass is another chance to
 absolutise, and running two doubles a risk that has been measured rather than
