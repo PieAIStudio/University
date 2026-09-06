@@ -203,6 +203,25 @@ citations will find plausible ones. `check-proposal-evidence.mjs` now fetches
 URL citations for exactly this reason, but a fabricated *line range* inside a
 real file still resolves, and only the person who picked the range would know.
 
+## The brief must say what the reader already knows
+
+A dispatch brief that describes only *this* lesson produces a lesson written
+for someone arriving from nowhere. Measured 2026-09-06: a lesson positioned in
+the third course of a curriculum — seventy-five lessons in — opened by defining
+「代码」, because nothing in its brief said the reader had met the word in
+lesson two. The model was not wrong; it was told the lesson's subject and not
+its place.
+
+Across a hundred-lesson line that compounds into a course that re-teaches its
+own vocabulary, and re-teaching is worse than it sounds: it tells a reader who
+did the work that their progress did not count.
+
+So a brief carries two things beyond the subject: **what the reader is assumed
+to already hold**, and **what this lesson must not re-explain**. Both are short
+lists. Writing them is the dispatcher's job, not the model's — the model cannot
+see the other lessons, and a model asked to guess what came before will guess
+generously and define everything.
+
 ## Every role must be told to emit an H1
 
 `lesson-pipeline-runner.mjs` splits model stdout at the first Markdown H1:
