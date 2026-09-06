@@ -269,3 +269,32 @@ whole-frame performance result. Final acceptance still requires paired normal
 course screenshots and a labelled live scene receipt. The rounded-card trial
 stays recorded as rejected because its flat overlapping discs remain visible
 in the ordinary close and overview views, even after the light correction.
+
+## Amendment 2026-09-06: clipped soil and learning medallion measurements
+
+The later road implementation clips the authored soil ribbon against actual
+terrain triangles. The earlier 11,130–12,720 mesh receipt above belongs to the
+pre-clipping implementation and is retained as history. The same
+`turing-pact` / `terrain-{count}`, seed `terrain/{count}` fixtures now measure:
+
+| lessons | top | clipped soil | cliff | total indexed triangles |
+| --- | ---: | ---: | ---: | ---: |
+| 6 | 9,888 | 4,482 | 864 | 15,234 |
+| 12 | 9,888 | 4,053 | 864 | 14,805 |
+| 24 | 9,888 | 6,068 | 864 | 16,820 |
+| 41 | 9,888 | 5,877 | 864 | 16,629 |
+
+These are geometry counts, not full-frame measurements. The clipping introduces
+no second terrain draw. Forty-seven CPU road regressions cover five route
+archetypes at 6/24/41 lessons: emitted soil sits 0.002 above the terrain,
+authored interior and near-edge samples have no holes, overlapping area stays
+below 1%, and interpolated normals differ by less than 0.5 degrees.
+
+V5 decision L replaces the solid coral hex lesson marker with a pale bevelled
+medallion. The measured shared 14-segment lathe has **168 indexed triangles**;
+the existing notched unit rings, extracted into `unit-sigil.ts`, have **48–50**
+each. Rings are instanced by arc count, at most six groups; readable text stays
+DOM. This records the upper marker candidate, not completed contact acceptance:
+four terrain fixtures still fail rigid-body contact. A discreet continuous
+footing is being measured to close those gaps; its cost and final contact
+result must be recorded before the marker is accepted as complete.
