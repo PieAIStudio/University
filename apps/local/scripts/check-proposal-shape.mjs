@@ -442,15 +442,21 @@ function withoutFencedCode(text) {
 function checkAnalogyOrder(lesson, where, problems) {
   const content = lesson.content ?? "";
   /*
-    Re-keyed from the retired `## 一个类比` to `## 答案`. The defect is the same
-    one — a term used before the reader has been given it — but the boundary
-    moved with the shape: 「答案」 is now the point by which the reader must
-    already hold the vocabulary, because that is where the lesson's claim lands.
-    A probe keyed to a heading that no longer exists returns early on every
-    lesson and reports a clean run it never performed.
+    The defect is "a term used before the reader has been given it", and the
+    boundary is wherever the lesson's claim lands — 「答案」 in the current
+    shape, 「一个类比」 in the retired one.
+
+    Both are accepted on purpose. Keying only to the current heading looked
+    right and silently dropped every archival proposal: with no 「答案」 to find,
+    the check returned early and reported a clean run it never performed. The
+    repository still holds real proposals in the old shape as the record of how
+    a landed course was created, and losing coverage on them is not a trade
+    anyone chose — it is a probe going quiet because the page it watched moved.
   */
-  const analogyIndex = content.indexOf("## 答案");
-  if (analogyIndex === -1) return;
+  const analogyIndex = ["## 答案", "## 一个类比"]
+    .map((heading) => content.indexOf(heading))
+    .find((index) => index !== -1);
+  if (analogyIndex === undefined) return;
 
   const text = withoutFencedCode(content);
   for (const term of definedTerms(text)) {
@@ -461,7 +467,7 @@ function checkAnalogyOrder(lesson, where, problems) {
 
     const line = lineNumberAt(content, firstIndex);
     problems.push(
-      `${where}: 术语“${term}”在「答案」段（第 ${lineOfHeading(content, "## 答案")} 行）之前首次出现于正文第 ${line} 行，但同一段没有先给解释；请先用白话或类比说明，再引入这个词，或用 --skip-check analogy-order（代价：${TEACHING_CHECKS["analogy-order"].cost}）。`,
+      `${where}: 术语“${term}”在第 ${lineOfHeading(content, content.includes("## 答案") ? "## 答案" : "## 一个类比")} 行之前首次出现于正文第 ${line} 行，但同一段没有先给解释；请先用白话或类比说明，再引入这个词，或用 --skip-check analogy-order（代价：${TEACHING_CHECKS["analogy-order"].cost}）。`,
     );
   }
 }
