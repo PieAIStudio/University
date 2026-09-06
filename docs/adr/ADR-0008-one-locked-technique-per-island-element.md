@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-03
+last_reviewed: 2026-09-06
 domain: architecture
 tags:
   - 3d
@@ -224,3 +224,48 @@ lock remains unchanged because this hygiene round does not alter a technique,
 material, scene, or budget test. Future reports must label whether they count
 the scene pass or the complete post-processing frame; **43 / 81,278** is a
 mixed-scope shorthand and should not be used as a precise receipt.
+
+## Amendment 2026-09-06: course terrain mesh triangles
+
+Course islands now submit `buildIslandGeometry(..., "course")` instead of hex
+tiles. That mesh is the existing continuous generator; it is now recorded in
+the technique table. The indexed
+triangle counts below were measured 2026-09-06 from the generated
+`BufferGeometry` (not a live scene receipt, not a post-processing frame):
+
+| lessonCount | seed | course mesh triangles |
+| --- | --- | ---: |
+| 6 | `terrain/6` | **11,130** |
+| 12 | `terrain/12` | **11,328** |
+| 24 | `terrain/24` | **11,904** |
+| 41 | `terrain/41` | **12,720** |
+
+Study/course ids for the fixture were `turing-pact` / `terrain-{count}`. The
+count grows with the in-mesh soil path as the centreline lengthens; it is not
+a second route draw. `island-technique-lock.ts` now has a `terrain` entry and
+pins these four numbers. A later live-frame receipt (dressing + foliage) is a
+different scope and must not overwrite this mesh measurement.
+
+## Amendment 2026-09-06: measured solid foliage candidate
+
+The ordinary 1440×900 course view after road and light corrections still shows
+intersecting flat crown cards and fragmented shrubs. V5 decision K therefore
+changes the course projection to compact rounded volumes while retaining the
+registered donor trunks and the existing placement plan. The world projection
+keeps its current silhouette and pays none of this additional crown geometry.
+
+Measured directly with installed Three.js 0.185.1 before implementation:
+`IcosahedronGeometry(1, 1)` emits **80 triangles**; detail 0 emits **20**.
+Three shared detail-1 crown lobes plus the largest 384-triangle donor trunk
+therefore bound a course tree at **624 triangles**, below the existing 900
+ceiling. Three detail-0 lobes bound a shrub at **60 triangles**. Lobes share
+one instanced field per vegetation kind, with standard scene lighting; the
+world projection does not instantiate them. This replaces course alpha cards,
+not the donor trunks or the source of placement coordinates.
+
+For 74 trees the crown-only colour-and-shadow geometry rises from 3,552 to
+35,520 triangles. This is a primitive budget measurement, not a live GPU or
+whole-frame performance result. Final acceptance still requires paired normal
+course screenshots and a labelled live scene receipt. The rounded-card trial
+stays recorded as rejected because its flat overlapping discs remain visible
+in the ordinary close and overview views, even after the light correction.

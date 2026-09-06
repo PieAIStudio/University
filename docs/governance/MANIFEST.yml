@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-06T02:47:55.888Z
+generated_at: 2026-09-06T08:11:21.590Z
 generator_version: doc-gov@0.9.10
-docs_count: 101
+docs_count: 102
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -58,7 +58,7 @@ docs:
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-09-03
+    last_reviewed: 2026-09-06
     pinned: false
   - id: ADR-0009
     path: docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md
@@ -102,6 +102,13 @@ docs:
     canonical: true
     last_reviewed: 2026-07-13
     pinned: true
+  - id: PLAN-CONTINUOUS-WORLD-DELIVERY
+    path: docs/plans/active/continuous-world-delivery.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-06
+    pinned: false
   - id: PLAN-ISLAND-V2-VERTICAL-SLICE
     path: docs/plans/completed/island-v2-vertical-slice.md
     type: plan

@@ -21,6 +21,7 @@ related:
   - ADR-0007
   - REF-FEEDBACK-BACKEND-GAP
   - REF-V5-JOURNEY-REVIEW
+  - PLAN-CONTINUOUS-WORLD-DELIVERY
 ---
 
 # Current Work
@@ -33,23 +34,26 @@ The short, current handoff. **What is true now, never how it got that way.**
 > 经过、踩过的坑和验收数字在 git 历史里（2026-08-25 的合并提交）。
 
 > **当前收敛方向（2026-09-06）**：先整理并验证主线，再从同一个已推送提交分出
-> 3D 与课程两条工作线。旧 `codex/launch-first-slice` 工作区保留；其中课程信息面板
-> 的折叠改进单独接收，六边形装饰和诊断实验不作为新地形方案的前提。
+> 3D 与课程两条工作线。main 干净且已推到 `b1a22a2`。当前 3D 工作在 sibling
+> worktree 的 `codex/continuous-island`。旧 `codex/launch-first-slice` 工作区保留；
+> 其中课程信息面板的折叠改进单独接收，六边形装饰和诊断实验不作为新地形方案的前提。
 >
-> **3D 目标是连续整块地形。** 当前默认世界、岛群和课程场景仍使用 grid/hex 渲染；
-> `IslandBlueprint`、`IslandField` 与连续几何生成器已经存在，但不能把它们存在于
-> 仓库里等同于默认画面已经使用。后续复用这套源数据，协调地表、路线、落点、点击
-> 和 DOM 标签，避免替换地面后它们各自读不同的高度。架构与技术选择继续遵循
+> **课程岛已接到连续网格。** 课程场景用 `buildIslandGeometry`、连续 field
+> dressing，以及渲染三角面高度上的课时落点。世界和星球仍是 grid 渲染器。短课
+> `loop-around-hill` 的 canonical blueprint 修正会同时改对应的课程 / 世界剪影
+> （同一份蓝图，ADR-0009）。Map Studio 的课程 inspector 再次跟随同一套连续
+> plan；世界 grid inspector 的画面说明仍待对齐。架构与技术选择继续遵循
 > [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md) 和
 > [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)。
->
-> **先让资产说明与画面一致。** 现有作者工作台 `#/studio/map` 的资产 inspector
-> 主要读取 r01/elemental registry，默认地图主要使用 `grid-assets.json`。先复用
-> 现有 placements 修正说明来源；库存中的资产总数不等于当前画面实际使用的数量。
 > 三层地图的美术方向与当前设计见 [V5](../player-journey/v5/index.html)。
 >
-> 本轮不处理 `island-look` 浏览器门禁，也不以旧机位、旧草或旧灯光的数字宣称
-> 当前性能与观感已通过。已有实验和截图保留在原工作区及本机证据目录。
+> 本轮不处理 `island-look` 浏览器门禁。在 `ART_READY` 之前，不以当前机位、草或
+> 灯光数字宣称观感或性能已通过。已有实验和截图保留在原工作区及本机证据目录。
+
+**3D 的可接续任务清单：**[连续 3D 世界交付](../../plans/active/continuous-world-delivery.md)。
+这里保留当前工作入口；细项状态、执行器分工、验收回执和中断后的下一步只在该计划维护。
+当前优先小节路标、地形贴合、景物成组与尺度、实体植被和营火状态；随后检查、提交并推送独立分支。
+课程内容留给另一条工作线。实时开发预览位于本机 19998 端口，画面仍在修改，尚未完成视觉验收。
 
 Reversals live in `docs/adr/` as decision records with `supersedes` links.
 Nothing on this page explains what a rule used to be — if you need that, an ADR
@@ -220,10 +224,10 @@ Where those answers actually live:
 
 The next work has two owners, starting from the same verified, pushed baseline:
 
-1. **3D and asset inspection:** make Map Studio describe the assets the current
-   projection really uses, then build the continuous-terrain slice in a new
-   `codex/` branch and worktree. Keep one blueprint/field pipeline and measure
-   the actual result before expanding it across all three map levels.
+1. **3D and asset inspection:** finish and verify the existing continuous course
+   slice in `codex/continuous-island`; use the linked delivery plan for current
+   tasks. Keep Map Studio truthful and one blueprint/field pipeline before
+   expanding the accepted result to the other map projections.
 2. **Course quality:** Claude Code works in its own branch and worktree, using
    the existing `apps/local` authoring workflows. Lesson source changes and
    published packages remain separate acts; the 3D branch does not regenerate
