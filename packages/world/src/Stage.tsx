@@ -51,6 +51,7 @@ import { islandLookFrozen } from "./island/island-surface-style.js";
 import { WorldEnvironment } from "./sky/environment.js";
 import { renderTier } from "./sky/tier";
 import { hasWebGLContext } from "./webgl-capability.js";
+import { usePageVisibility } from "./page-visibility.js";
 
 export { hasWebGLContext, resetWebGLContextProbe } from "./webgl-capability.js";
 
@@ -110,6 +111,47 @@ function Pipeline({
 
   // Priority above zero: R3F stops rendering for us, and this is the loop.
   const measuring = useRef<((report: unknown) => void) | null>(null);
+  const frameNumber = useRef(0);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const previous = gl.info.autoReset;
+    // Otherwise each AO / grade render clears the previous pass's counters.
+    gl.info.autoReset = false;
+    return () => {
+      gl.info.autoReset = previous;
+    };
+  }, [gl]);
+
+  const recordFrame = (startedAt: number, sampled: boolean) => {
+    if (!import.meta.env.DEV) return;
+    const bag = globalThis as unknown as {
+      __lastStageSceneRender?: { calls: number; triangles: number };
+      __stageFrameMetrics?: unknown;
+    };
+    const full = {
+      calls: gl.info.render.calls,
+      triangles: gl.info.render.triangles,
+      lines: gl.info.render.lines,
+      points: gl.info.render.points,
+    };
+    bag.__stageFrameMetrics = {
+      frame: ++frameNumber.current,
+      scene: bag.__lastStageSceneRender,
+      full,
+      postCalls: full.calls - (bag.__lastStageSceneRender?.calls ?? 0),
+      submissionMs: performance.now() - startedAt,
+      measurementReadback: sampled,
+      geometries: gl.info.memory.geometries,
+      textures: gl.info.memory.textures,
+      programs: gl.info.programs?.length ?? 0,
+      dpr: gl.getPixelRatio(),
+      buffer: { width: gl.domElement.width, height: gl.domElement.height },
+      camera: { position: camera.position.toArray(), quaternion: camera.quaternion.toArray() },
+      scope:
+        "one complete Stage frame including shadows and post passes; submissionMs is CPU submission, not GPU time or FPS",
+    };
+  };
 
   const recordSceneRender = () => {
     if (!import.meta.env.DEV) return;
@@ -175,6 +217,9 @@ function Pipeline({
   }, [clock, lookSource]);
 
   useFrame(() => {
+    const startedAt = import.meta.env.DEV ? performance.now() : 0;
+    const sampled = measuring.current !== null;
+    if (import.meta.env.DEV) gl.info.reset();
     if (!pass) {
       const previousColorSpace = gl.outputColorSpace;
       const previousToneMapping = gl.toneMapping;
@@ -198,6 +243,7 @@ function Pipeline({
       recordSceneRender();
       gl.outputColorSpace = previousColorSpace;
       gl.toneMapping = previousToneMapping;
+      recordFrame(startedAt, sampled);
       return;
     }
     gl.setRenderTarget(pass.target);
@@ -219,6 +265,7 @@ function Pipeline({
     } else {
       pass.render(gl);
     }
+    recordFrame(startedAt, sampled);
   }, 1);
 
   // Baseline rule 3 says a grade must have recorded provenance, and the shared
@@ -418,6 +465,7 @@ export function Stage({
   const tier = renderTier();
   const frozenLook = import.meta.env.DEV && lookSource !== null && islandLookFrozen();
   const rendererAvailable = useMemo(() => hasWebGLContext(), []);
+  const pageVisible = usePageVisibility();
 
   useEffect(() => armSoundUnlock(), []);
   useEffect(() => {
@@ -490,7 +538,7 @@ export function Stage({
       // damp, and the clouds drift, so there is no settled state to stop at.
       // `never` the moment the canvas is hidden — that is the only thing here
       // that was ever burning frames for nobody.
-      frameloop={paused ? "never" : frozenLook ? "demand" : "always"}
+      frameloop={paused || !pageVisible ? "never" : frozenLook ? "demand" : "always"}
     >
       <WorldEnvironment>
         <RendererLifecycle onContextLost={onContextLost} onContextRestored={onContextRestored} />

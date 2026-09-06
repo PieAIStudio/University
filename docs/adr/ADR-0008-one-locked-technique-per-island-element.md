@@ -298,3 +298,70 @@ DOM. This records the upper marker candidate, not completed contact acceptance:
 four terrain fixtures still fail rigid-body contact. A discreet continuous
 footing is being measured to close those gaps; its cost and final contact
 result must be recorded before the marker is accepted as complete.
+
+## Amendment 2026-09-06: bounded marker contact and complete landscape assemblies
+
+The medallion is now one **168-triangle** shared lathe, not the former four
+carved-stone variants. Its 48–50-triangle unit engraving is a separate instanced
+batch per arc count (at most six); the winding is tested to face +Y. A nonzero
+absolute area had previously accepted a downward, invisible engraving.
+
+The footing is one merged mesh per course. It splits its lower edge at the
+actual drawn terrain's triangle boundaries and embeds it by 0.01 units. The
+exposed-height ceiling remains **0.25**. For a failed initial stance, a bounded
+25-plane search with at most three raises per candidate tries a better fit;
+an unresolved stance becomes a shallow terrain-clipped inlay at the same
+lesson position, radius and ID. The inlay retains the unit engraving and an
+explicit face-to-lesson picking range. It does not remove the lesson, raise the
+pedestal ceiling, add unit terraces, or catch and ignore an exception.
+
+The expanded 120-case seed envelope caught two real 0.260/0.253-unit failures
+before recovery was added. The envelope plus the existing contact/body tests
+then passed 140/140; separate adversarial tests force and verify the inlay.
+The later world package run passed 639 tests in 71 files. Those are geometric
+and behavioral checks, not a claim about physical-phone frame rate.
+
+The `delivery-budget.test.ts` fixtures use `turing-pact / foundations-before-zero`,
+the default seed and explicit switchback, at the three counts below. They are
+**different fixtures** from the `terrain/{count}` table above:
+
+| lessons | terrain | merged footing | inlay | marker body + unit rings |
+| --- | ---: | ---: | ---: | --- |
+| 6 | 15,101 | 814 | 0 | 168 + 48–50 per lesson |
+| 24 | 18,078 | 3,292 | 0 | 168 + 48–50 per lesson |
+| 41 | 20,906 | 5,594 | 0 | 168 + 48–50 per lesson |
+
+One Node 24/M1 Max measurement on these fixtures took 172/147/179 ms for terrain,
+259/358/389 ms for the cold dressing plan, and 162/242/321 ms for marker layout.
+The cached plan returned in 0.31/0.12/0.12 ms. These are single-run CPU generation
+measurements, not a frame budget or browser load-time promise.
+
+The registered Kenney rock alternatives are 16 and 80 triangles. Neither has
+the circular, consistently bevelled top needed for the existing unit engraving;
+the 168-triangle generated body is retained instead of disguising a rock as a
+lesson or loading a GLB for every node. The old solid orange hex top is retired.
+
+The academy is a complete four-wall room plus one roof at a shared source scale,
+not a line of walls with unsupported roofs. The camp is a tent facing a lit pit.
+The registered bridge's decoded support pads and arched plank lower envelope
+govern placement; its normalized model origin is not its walking-deck height.
+Only real supported depressions admit it. The ordinary pressure island instead
+uses its existing stone rest clearing, with the rejected bridge's reason retained.
+The six-landmark-place budget counts semantic assemblies/outposts, not individual
+walls in the same building; the 8,000-triangle ceiling still applies to each asset.
+
+Course tree trunks are 0.68 of complete tree height so the donor branches stay
+inside the three rounded crowns. Their geometry and 624-triangle tree ceiling
+are unchanged. Trees now form separated groves with whole-crown clearance, and
+lights belong to facilities. The rejected uniform coastal tree ring looked like
+a fence in the ordinary view; adding more instances would reinforce that defect.
+
+Ordinary desktop and narrow viewport captures were made at 1440×900 / 375×812,
+light theme, DPR 1, with real mouse pan/zoom. They show the camp, complete academy,
+route middle, endpoint and coast. A paired camera-side correction keeps following
+lessons in the open viewport; the avatar marker faces the camera while the kit
+retains ownership of gaze/blink/breath. On the pre-final composition snapshot the
+scene receipt was 121 calls / 145,582 triangles; full Stage frames were 123 / 145,584
+on desktop and 122 / 145,583 on narrow desktop simulation (the latter omits AO).
+Both used Chrome/ANGLE Metal on an Apple M1 Max, not a physical phone. Final
+release receipts belong in the delivery plan, rather than overwriting these scopes.

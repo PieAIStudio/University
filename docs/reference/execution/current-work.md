@@ -34,7 +34,7 @@ The short, current handoff. **What is true now, never how it got that way.**
 > 经过、踩过的坑和验收数字在 git 历史里（2026-08-25 的合并提交）。
 
 > **当前收敛方向（2026-09-06）**：先整理并验证主线，再从同一个已推送提交分出
-> 3D 与课程两条工作线。main 干净且已推到 `b1a22a2`。当前 3D 工作在 sibling
+> 3D 与课程两条工作线，起点为已推送的 `b1a22a2`；主线后续 PGS 更新独立保留。当前 3D 工作在 sibling
 > worktree 的 `codex/continuous-island`。旧 `codex/launch-first-slice` 工作区保留；
 > 其中课程信息面板的折叠改进单独接收，六边形装饰和诊断实验不作为新地形方案的前提。
 >
@@ -52,8 +52,10 @@ The short, current handoff. **What is true now, never how it got that way.**
 
 **3D 的可接续任务清单：**[连续 3D 世界交付](../../plans/active/continuous-world-delivery.md)。
 这里保留当前工作入口；细项状态、执行器分工、验收回执和中断后的下一步只在该计划维护。
-当前优先小节路标、地形贴合、景物成组与尺度、实体植被和营火状态；随后检查、提交并推送独立分支。
-课程内容留给另一条工作线。实时开发预览位于本机 19998 端口，画面仍在修改，尚未完成视觉验收。
+Web Astra 已接手并修复小节徽座接地、单元刻纹绕序、原子组合与实体植被；普通桌面/窄屏
+K 浏览器检查通过，检查器能读取真实投影和组合成员。首个稳定检查点之后继续岸边模型接触、
+三层远景投影与全量验收，尚不宣称整份清单完成。课程内容仍由另一条工作线负责；本机 19998
+为交付预览，19999 为同一源码的作者模式检查器。详细回执只维护在链接计划。
 
 Reversals live in `docs/adr/` as decision records with `supersedes` links.
 Nothing on this page explains what a rule used to be — if you need that, an ADR

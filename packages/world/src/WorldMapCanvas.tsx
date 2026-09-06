@@ -147,6 +147,13 @@ export function WorldMapCanvas({
       onPointerUpCapture={() => {
         pointerOrigin.current = null;
       }}
+      onPointerCancelCapture={() => {
+        pointerOrigin.current = null;
+        draggedRef.current = true;
+      }}
+      onLostPointerCapture={() => {
+        pointerOrigin.current = null;
+      }}
     >
       {/*
         One Stage, mounted for as long as the shell is. `world` decides whether
@@ -231,6 +238,8 @@ export function WorldMapCanvas({
                   ref={attach}
                   type="button"
                   className={className}
+                  data-map-marker={marker.id}
+                  data-lesson-state={marker.lessonState}
                   style={{ "--placed": 0 } as CSSProperties}
                   data-course-rewrite-marker={isCourseRewriteMarker ? "true" : undefined}
                   aria-label={marker.label ?? marker.text}
@@ -249,6 +258,8 @@ export function WorldMapCanvas({
                 key={marker.id}
                 ref={attach}
                 className={className}
+                data-map-marker={marker.id}
+                data-lesson-state={marker.lessonState}
                 style={{ "--placed": 0 } as CSSProperties}
                 role="img"
                 aria-label={marker.label ?? marker.text}
@@ -263,6 +274,9 @@ export function WorldMapCanvas({
               ref={attach}
               type="button"
               className={className}
+              data-map-marker={marker.id}
+              data-lesson-state={marker.lessonState}
+              aria-description={marker.label}
               style={{ "--placed": 0 } as CSSProperties}
               data-course-rewrite-marker={isCourseRewriteMarker ? "true" : undefined}
               onClick={() => {
@@ -277,6 +291,8 @@ export function WorldMapCanvas({
               key={marker.id}
               ref={attach}
               className={className}
+              data-map-marker={marker.id}
+              data-lesson-state={marker.lessonState}
               style={{ "--placed": 0 } as CSSProperties}
               data-course-rewrite-marker={isCourseRewriteMarker ? "true" : undefined}
             >

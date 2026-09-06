@@ -51,6 +51,29 @@ function geometryProjection(blueprint: ReturnType<typeof islandBlueprint>) {
   return islandGeometryProjection(blueprint);
 }
 
+function firstLastCorridorGap(blueprint: ReturnType<typeof islandBlueprint>): number {
+  const points = blueprint.centerline;
+  const firstStart = points[0]!;
+  const firstEnd = points[1]!;
+  const lastStart = points.at(-2)!;
+  const lastEnd = points.at(-1)!;
+  return Math.min(
+    distanceToSegment(firstStart, lastStart, lastEnd),
+    distanceToSegment(firstEnd, lastStart, lastEnd),
+    distanceToSegment(lastStart, firstStart, firstEnd),
+    distanceToSegment(lastEnd, firstStart, firstEnd),
+  );
+}
+
+function requiredCorridorGap(blueprint: ReturnType<typeof islandBlueprint>): number {
+  return (
+    blueprint.route.roadWidth +
+    blueprint.route.shoulderWidth * 2 +
+    blueprint.route.nodeRadius * 2 +
+    blueprint.route.clearance
+  );
+}
+
 function sampledRelief(blueprint: ReturnType<typeof islandBlueprint>): number {
   const values: number[] = [];
   for (let x = -blueprint.bounds.halfX * 0.92; x <= blueprint.bounds.halfX * 0.92; x += 1.5) {
@@ -63,28 +86,31 @@ function sampledRelief(blueprint: ReturnType<typeof islandBlueprint>): number {
 }
 
 describe("IslandBlueprint", () => {
-  it.each([3, 12, 24, 41])("builds a valid linear blueprint for %i lessons", (lessonCount) => {
-    const blueprint = islandBlueprint({ ...INPUT, lessonCount });
-    expect(blueprint.version).toBe(2);
-    expect(blueprint.layoutRevision).toBe(ISLAND_BLUEPRINT_LAYOUT_REVISION);
-    expect(blueprint.lessonCount).toBe(lessonCount);
-    expect(blueprint.nodes).toHaveLength(lessonCount);
-    expect(blueprint.centerline.length).toBeGreaterThan(lessonCount);
-    expect(blueprint.route.semantic).toBe("linear");
-    expect(ISLAND_ROUTE_ARCHETYPES).toContain(blueprint.route.archetype);
-    expect(blueprint.route.centerlineSamples).toBe(blueprint.centerline.length);
-    expect(blueprint.route.roadWidth).toBeGreaterThan(0);
-    expect(blueprint.route.shoulderWidth).toBeGreaterThanOrEqual(0);
-    expect(blueprint.route.nodeRadius).toBeGreaterThan(0);
-    expect(blueprint.route.clearance).toBeGreaterThan(0);
-    expect(blueprint.terrainPatches.length).toBeGreaterThanOrEqual(2);
-    expect(blueprint.terrainPatches.length).toBeLessThanOrEqual(4);
-    expect(blueprint.themeSelection).toEqual({
-      naturalBasePackId: DEFAULT_NATURAL_BASE_PACK_ID,
-      accentPackIds: [],
-    });
-    expect(validateIslandBlueprint(blueprint)).toEqual([]);
-  });
+  it.each([3, 6, 7, 12, 24, 41])(
+    "builds a valid linear blueprint for %i lessons",
+    (lessonCount) => {
+      const blueprint = islandBlueprint({ ...INPUT, lessonCount });
+      expect(blueprint.version).toBe(2);
+      expect(blueprint.layoutRevision).toBe(ISLAND_BLUEPRINT_LAYOUT_REVISION);
+      expect(blueprint.lessonCount).toBe(lessonCount);
+      expect(blueprint.nodes).toHaveLength(lessonCount);
+      expect(blueprint.centerline.length).toBeGreaterThan(lessonCount);
+      expect(blueprint.route.semantic).toBe("linear");
+      expect(ISLAND_ROUTE_ARCHETYPES).toContain(blueprint.route.archetype);
+      expect(blueprint.route.centerlineSamples).toBe(blueprint.centerline.length);
+      expect(blueprint.route.roadWidth).toBeGreaterThan(0);
+      expect(blueprint.route.shoulderWidth).toBeGreaterThanOrEqual(0);
+      expect(blueprint.route.nodeRadius).toBeGreaterThan(0);
+      expect(blueprint.route.clearance).toBeGreaterThan(0);
+      expect(blueprint.terrainPatches.length).toBeGreaterThanOrEqual(2);
+      expect(blueprint.terrainPatches.length).toBeLessThanOrEqual(4);
+      expect(blueprint.themeSelection).toEqual({
+        naturalBasePackId: DEFAULT_NATURAL_BASE_PACK_ID,
+        accentPackIds: [],
+      });
+      expect(validateIslandBlueprint(blueprint)).toEqual([]);
+    },
+  );
 
   it("keeps the authored road subordinate to the lesson stones", () => {
     const blueprint = islandBlueprint({ ...INPUT, lessonCount: 41 });
@@ -102,7 +128,7 @@ describe("IslandBlueprint", () => {
 
   it("validates multiple stable seeds at every supported fixture size", () => {
     for (const seedIndex of Array.from({ length: 8 }, (_, index) => index)) {
-      for (const lessonCount of [3, 12, 24, 41]) {
+      for (const lessonCount of [3, 6, 7, 12, 24, 41]) {
         const blueprint = islandBlueprint({
           ...INPUT,
           lessonCount,
@@ -243,7 +269,7 @@ describe("IslandBlueprint", () => {
   it("keeps every explicit route archetype valid across fixture sizes and seeds", () => {
     for (const archetype of ISLAND_ROUTE_ARCHETYPES) {
       for (const seedIndex of Array.from({ length: 8 }, (_, index) => index)) {
-        for (const lessonCount of [3, 12, 24, 41]) {
+        for (const lessonCount of [3, 6, 7, 12, 24, 41]) {
           const blueprint = islandBlueprint({
             ...INPUT,
             lessonCount,
@@ -366,5 +392,58 @@ describe("IslandBlueprint", () => {
         tokenA.motionVariant !== tokenB.motionVariant ||
         tokenA.variant !== tokenB.variant,
     ).toBe(true);
+  });
+
+  it("keeps the first-to-last route corridor open on short courses", () => {
+    for (const lessonCount of [3, 6, 7]) {
+      for (const archetype of ISLAND_ROUTE_ARCHETYPES) {
+        for (const seedIndex of [0, 1, 2]) {
+          const blueprint = islandBlueprint({
+            ...INPUT,
+            lessonCount,
+            seed: `explicit-${archetype}-${seedIndex}`,
+            routeArchetype: archetype,
+          });
+          const label = `${archetype}/${lessonCount}/${seedIndex}`;
+          expect(validateIslandBlueprint(blueprint), label).toEqual([]);
+          expect(firstLastCorridorGap(blueprint), label).toBeGreaterThanOrEqual(
+            requiredCorridorGap(blueprint) - 1e-6,
+          );
+          expect(blueprint.nodes.map((node) => node.index)).toEqual(
+            Array.from({ length: lessonCount }, (_, index) => index),
+          );
+          expect(blueprint.nodes.at(-1)?.next).toBeNull();
+          expect(
+            blueprint.nodes
+              .slice(0, -1)
+              .every((node, index) => node.next === blueprint.nodes[index + 1]!.id),
+          ).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("still reports a pinched three-lesson loop mouth", () => {
+    const blueprint = islandBlueprint({
+      ...INPUT,
+      lessonCount: 3,
+      seed: "explicit-loop-around-hill-0",
+      routeArchetype: "loop-around-hill",
+    });
+    const start = blueprint.centerline[0]!;
+    const last = blueprint.centerline.length - 1;
+    const centerline = blueprint.centerline.map((point, index) => {
+      if (index === last) {
+        return { ...start, x: start.x + 0.4, z: start.z + 0.4, t: point.t };
+      }
+      if (index === last - 1) {
+        return { ...start, x: start.x + 0.5, z: start.z + 0.3, t: point.t };
+      }
+      return { ...point };
+    });
+    const pinched = { ...blueprint, centerline };
+    expect(validateIslandBlueprint(pinched).some((issue) => issue.includes("non-adjacent"))).toBe(
+      true,
+    );
   });
 });

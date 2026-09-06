@@ -4,13 +4,21 @@ import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  ISLAND_COURSE_TERRAIN_TRIANGLES,
   ISLAND_DECORATION_TRIANGLE_CEILING,
   ISLAND_GRASS_BLADE_TRIANGLE_CEILING,
   ISLAND_LANDMARK_MAX_PER_ISLAND,
   ISLAND_LANDMARK_TRIANGLE_CEILING,
   ISLAND_TECHNIQUE_LOCK,
 } from "./island-technique-lock.js";
+import { islandBlueprint } from "./island-blueprint.js";
+import { buildIslandGeometry } from "./island-geometry.js";
 import { createIslandGrassClumpGeometry } from "./island-grass-render.js";
+import {
+  COURSE_BUSH_CROWN_DETAIL,
+  COURSE_TREE_CROWN_DETAIL,
+  createSmoothIcosahedron,
+} from "./foliage-geometry.js";
 
 /**
  * The gate ADR-0008 asks for.
@@ -91,6 +99,23 @@ describe("Island technique lock", () => {
     expect(ISLAND_GRASS_BLADE_TRIANGLE_CEILING.far).toBe(0);
   });
 
+  it("holds course terrain mesh triangles still until the ADR is amended", () => {
+    expect(ISLAND_TECHNIQUE_LOCK.terrain.budget).toContain("15234");
+    for (const lessonCount of [6, 12, 24, 41] as const) {
+      const blueprint = islandBlueprint({
+        studyId: "turing-pact",
+        courseId: `terrain-${lessonCount}`,
+        lessonCount,
+        seed: `terrain/${lessonCount}`,
+      });
+      const shape = buildIslandGeometry(blueprint, "course");
+      const index = shape.terrain.getIndex();
+      if (!index) throw new Error("expected an indexed course terrain mesh");
+      expect(index.count / 3, `${lessonCount}`).toBe(ISLAND_COURSE_TERRAIN_TRIANGLES[lessonCount]);
+      shape.terrain.dispose();
+    }
+  });
+
   it("holds the grass geometry's triangle count still until the ADR is amended", () => {
     /*
      * 1, since the 2026-08-28 rewrite: the five-leaf clump was 45 and the
@@ -132,11 +157,25 @@ describe("Island technique lock", () => {
     }
   });
 
-  it("pins the donor foliage split and the measured rock decision", () => {
+  it("pins the solid foliage technique and helper geometry triangle counts", () => {
     expect(ISLAND_TECHNIQUE_LOCK.tree.technique).toContain("treeTrunks.glb");
-    expect(ISLAND_TECHNIQUE_LOCK.tree.technique).toContain("never leaf instances");
-    expect(ISLAND_TECHNIQUE_LOCK.bush.technique).toContain("MeshSurfaceSampler");
-    expect(ISLAND_TECHNIQUE_LOCK.bush.technique).toContain("customDepthMaterial");
+    expect(ISLAND_TECHNIQUE_LOCK.tree.technique).toContain("IcosahedronGeometry(1,1)");
+    expect(ISLAND_TECHNIQUE_LOCK.tree.technique).toContain("never course crown lobes");
+    expect(ISLAND_TECHNIQUE_LOCK.tree.budget).toContain("624 tris/tree");
+    expect(ISLAND_TECHNIQUE_LOCK.tree.budget).toContain("396");
+
+    expect(ISLAND_TECHNIQUE_LOCK.bush.technique).toContain("IcosahedronGeometry(1,0)");
+    expect(ISLAND_TECHNIQUE_LOCK.bush.technique).toContain("no bushEmitter sampling");
+    expect(ISLAND_TECHNIQUE_LOCK.bush.budget).toContain("60 tris/bush");
+
+    const treeLobe = createSmoothIcosahedron(COURSE_TREE_CROWN_DETAIL);
+    expect(trianglesOf(treeLobe)).toBe(80);
+    treeLobe.dispose();
+
+    const bushLobe = createSmoothIcosahedron(COURSE_BUSH_CROWN_DETAIL);
+    expect(trianglesOf(bushLobe)).toBe(20);
+    bushLobe.dispose();
+
     expect(
       ISLAND_TECHNIQUE_LOCK.decoration.rejected.some((rejection) =>
         rejection.option.includes("elemental-serenity rocks.glb"),

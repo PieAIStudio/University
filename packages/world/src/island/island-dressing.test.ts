@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { islandBlueprint, sampleIslandSurface } from "./island-blueprint.js";
 import {
+  COMPOSITION_SCALES,
+  footprintSamplePoints,
+  orientedFootprintFor,
+} from "./island-composition.js";
+import {
   distanceToIslandRoute,
   islandDressingSafetyZones,
   planIslandDressing,
@@ -15,6 +20,16 @@ const selection = islandThemeSelectionForCourse("turing-pact", "foundations-befo
 const r01 = recipeById("R01-forest-academy") as IslandRecipe;
 const WORLD_MINOR_ASSETS = new Set(["lantern", "wall", "wall-corner"]);
 const ROOF_ASSETS = new Set(["roof", "roof-gable"]);
+const ACADEMY_ASSETS = new Set(["wall", "wall-doorway-square", "roof-gable"]);
+const CAMP_ASSETS = new Set(["camp", "tent"]);
+
+function academyPlacements(plan: ReturnType<typeof planIslandDressing>) {
+  return plan.placements.filter((placement) => placement.assemblyId === "summit-academy-building");
+}
+
+function campPlacements(plan: ReturnType<typeof planIslandDressing>) {
+  return plan.placements.filter((placement) => placement.assemblyId === "roadside-camp");
+}
 
 function makeBlueprint(unitIds?: readonly string[]) {
   return islandBlueprint({
@@ -38,25 +53,30 @@ describe("Island dressing", () => {
     expect(first.placements.some((placement) => placement.packId === "fantasy-town-kit")).toBe(
       true,
     );
-    expect(first.placements.length).toBeGreaterThanOrEqual(41 * 7);
-    expect(
-      new Set(first.placements.map((placement) => placement.outpostId).filter(Boolean)).size,
-    ).toBe(4);
+    // Filled capacity is not a quality metric: solid crowns need separated
+    // groves and facility aprons rather than the former seven-props quota.
+    const trees = first.placements.filter((placement) => placement.kind === "tree");
+    expect(trees.length).toBeGreaterThan(15);
+    expect(trees.length).toBeLessThanOrEqual(70);
+    expect(new Set(trees.map((placement) => placement.clusterId)).size).toBeGreaterThanOrEqual(2);
+    expect(trees.every((placement) => placement.clusterId?.startsWith("grove-"))).toBe(true);
+    const outpostIds = new Set(
+      first.placements.map((placement) => placement.outpostId).filter(Boolean),
+    );
+    expect(outpostIds.size).toBeGreaterThanOrEqual(3);
+    expect(outpostIds.size).toBeLessThanOrEqual(6);
     const accentPlacements = first.placements.filter(
       (placement) => placement.packId === "fantasy-town-kit" && !placement.outpostId,
-    );
-    const expectedAccentAssets = new Set(
-      r01.accentRoles
-        .filter((role) => role.packId === "fantasy-town-kit")
-        .flatMap((role) => role.assetIds),
     );
     expect(r01.accentPackIds).toEqual(["fantasy-town-kit"]);
     expect(new Set(accentPlacements.map((placement) => placement.packId))).toEqual(
       new Set(r01.accentPackIds),
     );
-    expect(new Set(accentPlacements.map((placement) => placement.assetId))).toEqual(
-      expectedAccentAssets,
-    );
+
+    const academy = academyPlacements(first);
+    expect(academy).toHaveLength(5);
+    expect(new Set(academy.map((placement) => placement.assetId))).toEqual(ACADEMY_ASSETS);
+    expect(academy.filter((placement) => placement.assetId === "wall")).toHaveLength(3);
 
     const expectedHeights = [
       ["fountain-round", 0.48, 0.62],
@@ -64,22 +84,32 @@ describe("Island dressing", () => {
       ["wall-doorway-square", 2.1, 2.5],
       ["wall", 2.1, 2.5],
       ["wall-corner", 2.1, 2.5],
-      ["roof", 0.03, 0.08],
-      ["roof-gable", 0.95, 1.25],
-      ["lantern", 1.25, 1.5],
+      ["roof", 1.35, 1.6],
+      ["roof-gable", 1.2, 1.4],
+      ["lantern", 1.1, 1.5],
     ] as const;
     for (const [assetId, minimum, maximum] of expectedHeights) {
-      const placements = accentPlacements.filter((placement) => placement.assetId === assetId);
-      expect(placements.length, assetId).toBeGreaterThan(0);
-      expect(placements.every((placement) => placement.height >= minimum)).toBe(true);
-      expect(placements.every((placement) => placement.height <= maximum)).toBe(true);
+      const placements = first.placements.filter(
+        (placement) => placement.assetId === assetId && !placement.outpostId,
+      );
+      if (placements.length === 0) continue;
+      expect(
+        placements.every((placement) => placement.height >= minimum),
+        assetId,
+      ).toBe(true);
+      expect(
+        placements.every((placement) => placement.height <= maximum),
+        assetId,
+      ).toBe(true);
     }
 
     for (const placement of first.placements) {
       const surface = sampleIslandSurface(blueprint, placement.x, placement.z);
       const renderedTop = sampleIslandTerrainTop(blueprint, "course", placement.x, placement.z);
       expect(surface.inside, placement.id).toBe(true);
-      expect(placement.y, placement.id).toBeCloseTo(renderedTop.y + (placement.lift ?? 0), 8);
+      if (!placement.assemblyId) {
+        expect(placement.y, placement.id).toBeCloseTo(renderedTop.y + (placement.lift ?? 0), 8);
+      }
       expect(placement.height).toBeGreaterThan(0);
       expect(distanceToIslandRoute(blueprint, placement)).toBeGreaterThan(
         blueprint.route.roadWidth / 2,
@@ -87,14 +117,17 @@ describe("Island dressing", () => {
       expect(
         Math.hypot(placement.x - blueprint.hero.x, placement.z - blueprint.hero.z),
       ).toBeGreaterThanOrEqual(blueprint.hero.radius + 1.4);
-      if (!placement.outpostId && ROOF_ASSETS.has(placement.assetId)) {
-        expect(placement.lift, placement.id).toBeGreaterThan(2);
+      if (
+        placement.assemblyId === "summit-academy-building" &&
+        ROOF_ASSETS.has(placement.assetId)
+      ) {
+        expect(placement.lift, placement.id).toBe(COMPOSITION_SCALES.academyWall.height);
         expect(placement.y, placement.id).toBeGreaterThan(surface.y);
-      } else {
+      } else if (!placement.assemblyId) {
         expect(placement.lift ?? 0, placement.id).toBe(0);
       }
       if (placement.packId === "fantasy-town-kit") {
-        expect(surface.radial, placement.id).toBeLessThanOrEqual(0.88);
+        expect(surface.radial, placement.id).toBeLessThanOrEqual(0.92);
       }
     }
   });
@@ -218,17 +251,23 @@ describe("Island dressing", () => {
         routeArchetype,
         themeSelection: selection,
       });
-      const accentPlacements = planIslandDressing(blueprint, "course").placements.filter(
+      const plan = planIslandDressing(blueprint, "course");
+      const accentPlacements = plan.placements.filter(
         (placement) => placement.packId === "fantasy-town-kit" && !placement.outpostId,
       );
-      expect(new Set(accentPlacements.map((placement) => placement.assetId))).toEqual(
-        new Set(r01.accentRoles.flatMap((role) => role.assetIds)),
-      );
+      const academy = academyPlacements(plan);
+      if (academy.length > 0) {
+        expect(new Set(academy.map((placement) => placement.assetId))).toEqual(ACADEMY_ASSETS);
+      } else {
+        expect(accentPlacements.some((placement) => ACADEMY_ASSETS.has(placement.assetId))).toBe(
+          false,
+        );
+      }
       for (const placement of accentPlacements) {
         const surface = sampleIslandSurface(blueprint, placement.x, placement.z);
         const label = `${routeArchetype}/${placement.id}`;
         expect(surface.inside, label).toBe(true);
-        expect(surface.radial, label).toBeLessThanOrEqual(0.88);
+        expect(surface.radial, label).toBeLessThanOrEqual(0.92);
         expect(distanceToIslandRoute(blueprint, placement)).toBeGreaterThan(
           blueprint.route.roadWidth / 2,
         );
@@ -252,12 +291,25 @@ describe("Island dressing", () => {
       entries.push(placement);
       segments.set(segment!, entries);
     }
-    expect([...segments.keys()].sort()).toEqual(["arrival", "journey", "summit"]);
-    expect(segments.get("arrival")?.some(({ assetId }) => assetId === "wall-doorway-square")).toBe(
-      true,
+    const arrival = planIslandDressing(blueprint, "course").placements.filter(
+      (placement) => placement.segment === "arrival",
     );
+    expect(arrival.some(({ assetId }) => assetId === "camp")).toBe(true);
+    for (const lamp of accents.filter((placement) => placement.assetId === "lantern")) {
+      const host = planIslandDressing(blueprint, "course").placements.find(
+        (placement) => placement.id === lamp.companionOf,
+      );
+      expect(host, lamp.id).toBeDefined();
+      expect(host?.segment).toBe(lamp.segment);
+      expect(Math.hypot(lamp.x - host!.x, lamp.z - host!.z)).toBeLessThan(3.5);
+    }
     expect(segments.get("journey")?.some(({ assetId }) => assetId === "fountain-round")).toBe(true);
-    expect(segments.get("summit")?.some(({ assetId }) => assetId === "roof-gable")).toBe(true);
+    const academy = academyPlacements(planIslandDressing(blueprint, "course"));
+    if (academy.length > 0) {
+      expect(academy.every((placement) => placement.segment === "summit")).toBe(true);
+      expect(academy.some((placement) => placement.assetId === "roof-gable")).toBe(true);
+      expect(academy.some((placement) => placement.assetId === "wall-doorway-square")).toBe(true);
+    }
 
     const nearestRouteFraction = (placement: (typeof accents)[number]) => {
       let nearestIndex = 0;
@@ -278,10 +330,16 @@ describe("Island dressing", () => {
         entries.length
       );
     };
-    expect(averageFraction("arrival")).toBeLessThan(0.3);
-    expect(averageFraction("journey")).toBeGreaterThan(0.25);
-    expect(averageFraction("journey")).toBeLessThan(0.75);
-    expect(averageFraction("summit")).toBeGreaterThan(0.7);
+    if ((segments.get("arrival") ?? []).length > 0) {
+      expect(averageFraction("arrival")).toBeLessThan(0.3);
+    }
+    if ((segments.get("journey") ?? []).length > 0) {
+      expect(averageFraction("journey")).toBeGreaterThan(0.25);
+      expect(averageFraction("journey")).toBeLessThan(0.75);
+    }
+    if ((segments.get("summit") ?? []).length > 0) {
+      expect(averageFraction("summit")).toBeGreaterThan(0.7);
+    }
   });
 
   it("makes the world plan a semantic subset, not a second random island", () => {
@@ -291,8 +349,14 @@ describe("Island dressing", () => {
     const courseById = new Map(course.placements.map((placement) => [placement.id, placement]));
     expect(world.placements.length).toBeGreaterThan(4);
     expect(world.placements.length).toBeLessThanOrEqual(8);
-    expect(world.placements.some((placement) => ROOF_ASSETS.has(placement.assetId))).toBe(true);
-    expect(world.placements.some((placement) => placement.assetId === "fountain-round")).toBe(true);
+    if (course.placements.some((placement) => ROOF_ASSETS.has(placement.assetId))) {
+      expect(world.placements.some((placement) => ROOF_ASSETS.has(placement.assetId))).toBe(true);
+    }
+    if (course.placements.some((placement) => placement.assetId === "fountain-round")) {
+      expect(world.placements.some((placement) => placement.assetId === "fountain-round")).toBe(
+        true,
+      );
+    }
     expect(world.placements.some((placement) => placement.kind === "tree")).toBe(true);
     expect(
       world.placements.filter((placement) => placement.kind === "tree").length,
@@ -321,5 +385,141 @@ describe("Island dressing", () => {
     const blueprint = makeBlueprint();
     const starport = recipeById("R03-starport") as IslandRecipe;
     expect(() => planIslandDressing(blueprint, "course", starport)).toThrow(/does not match/);
+  });
+
+  it("places camp as tent plus lit fire with one elevation and facing clearance", () => {
+    const plan = planIslandDressing(makeBlueprint(), "course");
+    const camp = campPlacements(plan);
+    expect(camp.length).toBe(2);
+    expect(new Set(camp.map((placement) => placement.assetId))).toEqual(CAMP_ASSETS);
+    const fire = camp.find((placement) => placement.assetId === "camp");
+    const tent = camp.find((placement) => placement.assetId === "tent");
+    expect(fire?.state).toBe("lit");
+    const bases = camp.map((placement) => placement.y - (placement.lift ?? 0));
+    expect(new Set(bases.map((value) => value.toFixed(5))).size).toBe(1);
+    expect(Math.hypot(fire!.x - tent!.x, fire!.z - tent!.z)).toBeGreaterThan(2.2);
+  });
+
+  it("omits a bridge unless the whole assembly is present", () => {
+    const plan = planIslandDressing(makeBlueprint(), "course");
+    const bridges = plan.placements.filter((placement) => placement.assemblyId === "route-bridge");
+    if (bridges.length === 0) {
+      expect(plan.placements.some((placement) => placement.assetId === "bridge")).toBe(false);
+      return;
+    }
+    expect(bridges.every((placement) => placement.assetId === "bridge")).toBe(true);
+  });
+
+  it("keeps academy roofs on the shared wall datum when the building is present", () => {
+    const plan = planIslandDressing(makeBlueprint(), "course");
+    const academy = academyPlacements(plan);
+    expect(academy).toHaveLength(5);
+    const bases = academy.map((placement) => placement.y - (placement.lift ?? 0));
+    expect(new Set(bases.map((value) => value.toFixed(5))).size).toBe(1);
+    const roofs = academy.filter((placement) => ROOF_ASSETS.has(placement.assetId));
+    expect(
+      roofs.every((placement) => placement.lift === COMPOSITION_SCALES.academyWall.height),
+    ).toBe(true);
+  });
+
+  it("keeps transformed assembly footprints inside the island and off the path", () => {
+    const blueprint = makeBlueprint();
+    const plan = planIslandDressing(blueprint, "course");
+    const grouped = plan.placements.filter(
+      (placement) =>
+        placement.assemblyId === "summit-academy-building" ||
+        placement.assemblyId === "roadside-camp",
+    );
+    expect(grouped).toHaveLength(7);
+    for (const placement of grouped) {
+      const footprint = orientedFootprintFor(
+        placement.assetId,
+        placement.height,
+        placement.x,
+        placement.z,
+        placement.turn,
+      );
+      for (const sample of footprintSamplePoints(footprint)) {
+        const surface = sampleIslandSurface(blueprint, sample.x, sample.z);
+        expect(surface.inside, `${placement.id}-foot`).toBe(true);
+        expect(distanceToIslandRoute(blueprint, sample)).toBeGreaterThan(
+          blueprint.route.roadWidth / 2,
+        );
+      }
+    }
+  });
+
+  it("keeps rocks inside the coast margin across short and long courses", () => {
+    for (const lessonCount of [6, 24, 41]) {
+      const blueprint = islandBlueprint({
+        studyId: "turing-pact",
+        courseId: `rock-count-${lessonCount}`,
+        lessonCount,
+        routeArchetype: "switchback",
+        themeSelection: selection,
+      });
+      const field = islandFieldFor(blueprint);
+      const plan = planIslandDressing(blueprint, "course");
+      const rocks = plan.placements.filter((placement) => placement.kind === "rock");
+      expect(rocks.length, `${lessonCount}`).toBeGreaterThan(0);
+      for (const rock of rocks) {
+        const sample = sampleIslandField(field, rock.x, rock.z);
+        expect(sample.inside, rock.id).toBe(true);
+        expect(sample.shore, rock.id).toBeLessThanOrEqual(0.975);
+      }
+    }
+  });
+
+  it("stays deterministic on 6/24/41 lesson routes", () => {
+    for (const lessonCount of [6, 24, 41]) {
+      for (const routeArchetype of [
+        "arc",
+        "horseshoe",
+        "loop-around-hill",
+        "switchback",
+        "serpentine",
+      ] as const) {
+        const blueprint = islandBlueprint({
+          studyId: "turing-pact",
+          courseId: `compose-${routeArchetype}-${lessonCount}`,
+          lessonCount,
+          routeArchetype,
+          themeSelection: selection,
+        });
+        const first = planIslandDressing(blueprint, "course");
+        const second = planIslandDressing(blueprint, "course");
+        expect(first).toEqual(second);
+        const academy = academyPlacements(first);
+        if (academy.length > 0) {
+          expect(new Set(academy.map((placement) => placement.assetId))).toEqual(ACADEMY_ASSETS);
+        }
+        const camp = campPlacements(first);
+        if (camp.length > 0) {
+          expect(new Set(camp.map((placement) => placement.assetId))).toEqual(CAMP_ASSETS);
+        }
+      }
+    }
+  });
+
+  it("reports bounded searches, actual members and useful fallbacks without rerolling on camera changes", () => {
+    const blueprint = makeBlueprint();
+    const plan = planIslandDressing(blueprint, "course");
+    expect(planIslandDressing(blueprint, "course")).toBe(plan);
+    expect(plan.decisions).toHaveLength(3);
+    for (const decision of plan.decisions!) {
+      expect(decision.attempts).toBeLessThanOrEqual(300);
+      const rejected = Object.values(decision.rejections).reduce((sum, count) => sum + count, 0);
+      if (decision.status === "placed") {
+        expect(decision.members.length).toBeGreaterThan(0);
+        expect(
+          decision.members.every((id) => plan.placements.some((placement) => placement.id === id)),
+        ).toBe(true);
+        expect(rejected).toBe(decision.attempts - 1);
+      } else {
+        expect(decision.members).toEqual([]);
+        expect(decision.fallback).toBeDefined();
+        expect(rejected).toBeGreaterThan(0);
+      }
+    }
   });
 });

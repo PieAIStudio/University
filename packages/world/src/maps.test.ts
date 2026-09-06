@@ -4,7 +4,8 @@ import type { ProgressSource } from "@pieai/university-core";
 
 import { placeCourse, placeWorld } from "./Maps.js";
 import type { Course, CourseNode } from "./course/course.js";
-import { islandGeometryProjection } from "./island/island-blueprint.js";
+import { islandGeometryProjection, sampleIslandSurface } from "./island/island-blueprint.js";
+import { sampleIslandTerrainTop } from "./island/island-geometry.js";
 
 const source: ProgressSource = {
   completionOf: () => ({ exercisesPassed: false, readConfirmed: false }),
@@ -55,6 +56,31 @@ const course: Course = {
   ],
 };
 
+function makeCourse(id: string, lessonCount: number, unitCount = 2): Course {
+  const perUnit = Math.ceil(lessonCount / Math.max(1, unitCount));
+  const units: Course["units"][number][] = [];
+  let remaining = lessonCount;
+  for (let unitIndex = 0; unitIndex < unitCount && remaining > 0; unitIndex += 1) {
+    const count = Math.min(perUnit, remaining);
+    remaining -= count;
+    const start = lessonCount - remaining - count;
+    units.push({
+      id: `${id}-unit-${unitIndex + 1}`,
+      title: `Unit ${unitIndex + 1}`,
+      lessons: Array.from({ length: count }, (_, slot) => ({
+        id: `${id}-lesson-${start + slot + 1}`,
+        title: `Lesson ${start + slot + 1}`,
+        content: "x",
+        contentRevision: 1,
+        exerciseIds: [],
+        exercises: [],
+        cards: [],
+      })),
+    });
+  }
+  return { id, units };
+}
+
 function summaryNode(): CourseNode {
   return {
     courseId: course.id,
@@ -87,6 +113,47 @@ describe("Maps  projection contract", () => {
     ]);
     expect(lessons[0]?.visualToken).toEqual(lessons[1]?.visualToken);
     expect(lessons[0]?.visualToken).not.toEqual(lessons[2]?.visualToken);
+    for (const [index, lesson] of lessons.entries()) {
+      const node = blueprint!.nodes[index]!;
+      const mesh = sampleIslandTerrainTop(blueprint!, "course", node.x, node.z);
+      expect(lesson.lessonId).toBe(node.id);
+      expect(lesson.position.x).toBe(node.x);
+      expect(lesson.position.z).toBe(node.z);
+      expect(lesson.position.y).toBeCloseTo(mesh.y, 8);
+      expect(mesh.inside).toBe(true);
+    }
+  });
+
+  it("places every lesson on the rendered terrain top across counts and seeds", () => {
+    // Placement covers rendered height; route clearance is covered by blueprint tests.
+    for (const lessonCount of [6, 12, 24, 41]) {
+      for (const seed of ["alpha", "beta", "gamma"]) {
+        const course = makeCourse(`continuous-${seed}`, lessonCount);
+        const lessons = placeCourse("turing-pact", course, source);
+        const blueprint = lessons[0]?.blueprint;
+        const label = `${lessonCount}/${seed}`;
+        expect(lessons, label).toHaveLength(lessonCount);
+        expect(blueprint, label).toBeDefined();
+        expect(
+          lessons.every((lesson) => lesson.blueprint === blueprint),
+          label,
+        ).toBe(true);
+        expect(
+          lessons.map((lesson) => lesson.lessonId),
+          label,
+        ).toEqual(blueprint!.nodes.map((node) => node.id));
+        for (const [index, lesson] of lessons.entries()) {
+          const node = blueprint!.nodes[index]!;
+          const mesh = sampleIslandTerrainTop(blueprint!, "course", node.x, node.z);
+          const analytic = sampleIslandSurface(blueprint!, node.x, node.z);
+          expect(lesson.position.x, `${label}/${lesson.lessonId}`).toBe(node.x);
+          expect(lesson.position.z, `${label}/${lesson.lessonId}`).toBe(node.z);
+          expect(lesson.position.y, `${label}/${lesson.lessonId}`).toBeCloseTo(mesh.y, 8);
+          expect(mesh.inside, `${label}/${lesson.lessonId}`).toBe(true);
+          expect(analytic.inside, `${label}/${lesson.lessonId}`).toBe(true);
+        }
+      }
+    }
   });
 
   it("uses one complete geometry base and projects world/course semantics separately", () => {

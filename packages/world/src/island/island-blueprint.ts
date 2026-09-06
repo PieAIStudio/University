@@ -501,7 +501,7 @@ function routeShapePoint(
       z = 1.15 * u;
       break;
     case "loop-around-hill": {
-      const angle = -Math.PI * 0.55 + Math.PI * 1.72 * t;
+      const angle = -Math.PI * 0.55 + loopAroundHillSweep(lessonCount) * t;
       x = 0.9 * Math.cos(angle);
       z = 0.9 * Math.sin(angle);
       break;
@@ -835,6 +835,18 @@ function routeLengthFactor(archetype: IslandRouteArchetype): number {
   if (archetype === "switchback") return 1.65;
   if (archetype === "serpentine") return 1.28;
   return 1;
+}
+
+/**
+ * How far the loop walks around the hill, in radians.
+ *
+ * 1.72π is a 310° mouth. On a 3–7 lesson island that opening is narrower than
+ * the road-plus-node corridor (2.36), so the first and last segments fail
+ * non-adjacent clearance while the line still does not self-intersect. Eight
+ * lessons already clear it; leave those loops on the established sweep.
+ */
+function loopAroundHillSweep(lessonCount: number): number {
+  return lessonCount <= 7 ? Math.PI * 1.38 : Math.PI * 1.72;
 }
 
 /**
@@ -1218,7 +1230,7 @@ export function sampleIslandSurface(
   // continuous relief and fades before the shoreline, so it creates broad
   // hill shelves in arbitrary places rather than six chapter-shaped zones or
   // a bullseye of concentric rings.
-  const terraceInfluence = smoothstep(0.9, 0.73, radial) * 0.72;
+  const terraceInfluence = smoothstep(0.9, 0.73, radial) * 0.15;
   y = lerp(y, softTerrace(y, maxHalf * TERRACE_STEP_RATIO), terraceInfluence);
   return { y: clamp(y, 0, maxHalf * MAX_HEIGHT_RATIO), radial, inside: true };
 }
@@ -1251,25 +1263,22 @@ export function sampleIslandSurface(
 export const BASE_PLATEAU_HEIGHT = 2.35;
 export const PATCH_GAIN = 3.4;
 export const MAX_HEIGHT_RATIO = 0.235;
-export const TERRACE_STEP_RATIO = 0.0125;
-export const RELIEF_AMPLITUDE_RATIO = 0.165;
+export const TERRACE_STEP_RATIO = 0.05;
+export const RELIEF_AMPLITUDE_RATIO = 0.12;
 const RELIEF_OCTAVES = [
-  { wavelength: 0.3, amplitude: 1, corridor: 0.34, ridge: 0.55, turn: 0 },
-  { wavelength: 0.13, amplitude: 0.38, corridor: 0.6, ridge: 0.35, turn: 0.9 },
-  { wavelength: 0.055, amplitude: 0.1, corridor: 0.92, ridge: 0, turn: 1.9 },
+  { wavelength: 0.42, amplitude: 1, corridor: 0.34, ridge: 0.22, turn: 0 },
+  { wavelength: 0.2, amplitude: 0.18, corridor: 0.6, ridge: 0.12, turn: 0.9 },
+  { wavelength: 0.09, amplitude: 0.025, corridor: 0.92, ridge: 0, turn: 1.9 },
 ] as const;
 
 /**
  * Smooth value noise makes blobs; land makes ridges.
  *
- * Folding the noise about zero turns each octave's zero crossing into a crest,
- * so the surface gets saddles and spurs where plain noise gives domes. The
- * exponent softens the crease: a raw fold reads as a knife edge, which is
- * wrong for a stylised island, while 1.6 keeps the ridge line and rounds its
- * top.
+ * A rounded quadratic fold about zero turns each octave's zero crossing into a
+ * smooth crest without sharp derivative spikes or pinched normal seams.
  */
 function ridgeFold(value: number): number {
-  return Math.pow(1 - Math.abs(value), 1.6) * 2 - 1;
+  return Math.pow(Math.max(0, 1 - value * value), 1.2) * 2 - 1;
 }
 const RELIEF_AMPLITUDE_SUM = RELIEF_OCTAVES.reduce((total, o) => total + o.amplitude, 0);
 
@@ -1878,9 +1887,13 @@ export function validateIslandBlueprint(input: unknown): IslandBlueprintValidati
         errors.push("route: required clearance is too large for the route scale");
       }
       const lessonSectionCount = Math.max(1, Number(lessonCount) - 1);
-      const minimumSegmentIndexGap = Math.max(
-        6,
-        Math.ceil((centerlinePoints.length - 1) / lessonSectionCount) * 2,
+      const lastSegmentIndex = centerlinePoints.length - 2;
+      // Cap at the first-to-last segment span. Without that, a 3-lesson
+      // centerline (64 samples, two lesson sections) computes a skip of 64
+      // and never compares the mouth of a short loop.
+      const minimumSegmentIndexGap = Math.min(
+        lastSegmentIndex,
+        Math.max(6, Math.ceil((centerlinePoints.length - 1) / lessonSectionCount) * 2),
       );
       for (let first = 0; first + 1 < centerlinePoints.length; first += 1) {
         for (let second = first + 2; second + 1 < centerlinePoints.length; second += 1) {

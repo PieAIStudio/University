@@ -5,6 +5,18 @@
  * is selectable only when its key set exactly matches this one.
  */
 export const messages = {
+  "app.mapstudio.mapStudioScreen.copy.按当前投影计量": "按当前投影计量",
+  "ui.world.lessonState.current": "当前关卡",
+  "ui.world.lessonState.available": "可学习",
+  "ui.world.lessonState.later": "后续关卡",
+  "app.mapstudio.mapStudioScreen.copy.实际投影三角形": "实际投影三角形",
+  "app.mapstudio.mapStudioScreen.copy.原始模型尺寸": "原始模型尺寸（宽 × 高 × 深）",
+  "app.mapstudio.mapStudioScreen.copy.场景尺寸范围": "场景尺寸范围（物件局部轴）",
+  "app.mapstudio.mapStudioScreen.copy.实际使用与语义组": "实际使用与语义组",
+  "app.mapstudio.mapStudioScreen.copy.尺寸来自原始节点变换-场景统一归一化高度-树干是多变体骨架不能按整包宽度相乘":
+    "尺寸包含原始节点变换；场景按统一高度归一化。树干是多变体骨架，不能按整包宽度相乘。使用记录显示本岛局部坐标和真实组合身份。",
+  "app.mapstudio.mapStudioScreen.copy.组合与降级": "组合与降级",
+  "app.mapstudio.mapStudioScreen.copy.占地-高差-坡度": "整组占地 / 地面高差 / 坡度",
   "app.app.app.copy.书架上还没有课": "书架上还没有课",
   "app.app.app.copy.今天": "今天",
   "app.app.app.copy.从这里开始": "从这里开始",

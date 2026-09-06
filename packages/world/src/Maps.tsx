@@ -40,6 +40,11 @@ import {
   type IslandBlueprint,
   type IslandUnitVisualToken,
 } from "./island/island-blueprint.js";
+import {
+  createIslandHeightSampler,
+  islandSurfacePose,
+  sampleIslandTerrainTop,
+} from "./island/island-geometry.js";
 import { islandThemeSelectionForCourse } from "./island/kenney-recipes.js";
 import { IslandDressing } from "./island/island-dressing-render.js";
 import { IslandRender } from "./island/island-render.js";
@@ -73,8 +78,25 @@ import {
   WORLD_STUDY_GRID_CONTRACT,
 } from "./grid/course-grid.js";
 import { GRID_LESSON_MARKER_COLOURS } from "./grid/grid-palette.js";
-import { hexToWorld } from "./grid/hex.js";
-import { LessonMarkerField } from "./grid/LessonMarkerField.js";
+import {
+  composeMarkerMatrix,
+  createMarkerMatrixScratch,
+  LessonMarkerField,
+  type GridLessonMarker,
+} from "./grid/LessonMarkerField.js";
+import {
+  buildMedallionFooting,
+  MARKER_PLINTH_OFFSET,
+  medallionBottomRing,
+  medallionPoseLocals,
+  type MedallionFooting,
+} from "./grid/lesson-medallion.js";
+import {
+  buildMedallionInlays,
+  groundMedallion,
+  type MedallionGrounding,
+  type MedallionInlays,
+} from "./grid/medallion-grounding.js";
 import { WorldHexField, type WorldGridIsland } from "./grid/WorldHexField.js";
 
 /**
@@ -267,6 +289,8 @@ export interface Marker {
   /** Accessible name for a decorative icon. */
   readonly label?: string;
   readonly locked?: boolean;
+  /** Learning state remains DOM-readable as well as a scene tint. */
+  readonly lessonState?: "done" | "live" | "idle" | "locked";
 }
 
 interface WorldPlacement {
@@ -628,7 +652,7 @@ export function settlementSize(
 function LiveRing({ radius, lift = 0.08 }: { radius: number; lift?: number }) {
   const mesh = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
-    if (islandLookFrozen()) return;
+    if (islandLookFrozen() || prefersReducedMotion()) return;
     const ring = mesh.current;
     if (!ring) return;
     const t = (Math.sin(clock.elapsedTime * 2.2) + 1) / 2;
@@ -1095,24 +1119,9 @@ export function placeCourse(
           ? ("locked" as const)
           : ("idle" as const);
   });
-  const grid = buildCourseGrid({
-    studyId,
-    courseId: course.id,
-    seed: blueprint.seed,
-    routeArchetype: blueprint.route.archetype,
-    routeAnchors: blueprint.geometryNodes,
-    activeLessonIndex: firstOpen,
-    lessons: sampleFlat.map((entry, index) => ({
-      lessonId: entry.lesson.id,
-      unitId: entry.unit.id,
-      unitIndex: entry.unitIndex,
-      state: states[index],
-    })),
-  });
   return sampleFlat.map((entry, index) => {
     const node = blueprint.nodes[index]!;
-    const cell = grid.lessons[index]!;
-    const point = hexToWorld(cell.coord, grid.hexSize);
+    const surface = sampleIslandTerrainTop(blueprint, "course", node.x, node.z);
     return {
       studyId,
       courseId: course.id,
@@ -1122,8 +1131,9 @@ export function placeCourse(
       lessonId: entry.lesson.id,
       lessonTitle: entry.lesson.title,
       chars: entry.lesson.content.length,
-      // The mesh, props and markers all query this one hex cell top centre.
-      position: new THREE.Vector3(point.x, cell.topY, point.z),
+      // Markers sit on the same rendered triangle-top dressing samples, not
+      // the analytic height field the mesh approximates.
+      position: new THREE.Vector3(node.x, surface.y, node.z),
       state: states[index]!,
       kind: pathNodeKind({
         variant: entry.lesson.variant,
@@ -1197,6 +1207,114 @@ export function courseSurfaceY(
 /* The renderer owns the single route ribbon; no second trail is drawn here. */
 
 /**
+ * How far the rigid medallion may be raised so its chamfer stays in the air.
+ * Ground contact is the footing, not this number.
+ */
+const MARKER_MAX_RAISE = 0.12;
+
+export interface CourseLessonLayout {
+  readonly markers: readonly GridLessonMarker[];
+  readonly footing: MedallionFooting;
+  readonly inlays: MedallionInlays;
+  readonly recoveries: readonly {
+    readonly lessonId: string;
+    readonly grounding: MedallionGrounding;
+  }[];
+}
+
+/**
+ * Lesson medallions plus the one footing mesh that meets the drawn ground.
+ *
+ * Radius, ids, positions and ordering stay as authored. The rigid disc is
+ * posed so the chamfer is visible; the footing closes the seam underneath.
+ */
+export function layoutCourseLessons(
+  blueprint: IslandBlueprint,
+  lessons: readonly LessonPlacement[],
+): CourseLessonLayout {
+  const ground = createIslandHeightSampler(blueprint);
+  try {
+    const locals = medallionPoseLocals();
+    const recoveries: { lessonId: string; grounding: MedallionGrounding }[] = [];
+    const markers: GridLessonMarker[] = lessons.map((lesson) => {
+      const radius =
+        blueprint.route.nodeRadius *
+        (0.96 + Math.min(1, Math.max(0, lesson.chars) / 12_000) * 0.08);
+      const pose = islandSurfacePose(blueprint, "course", lesson.position.x, lesson.position.z, {
+        radius,
+        originOffset: radius * MARKER_PLINTH_OFFSET,
+        maxEmbed: radius * MARKER_MAX_RAISE,
+        locals,
+        heightAt: ground.heightAt,
+        originY: lesson.position.y,
+      });
+      const grounding = groundMedallion({
+        position: lesson.position,
+        radius,
+        normal: new THREE.Vector3(...pose.normal),
+        lift: pose.lift,
+        heightAt: ground.heightAt,
+        surface: ground.index,
+      });
+      if (grounding.mode !== "plane") recoveries.push({ lessonId: lesson.lessonId, grounding });
+      return {
+        lesson,
+        radius,
+        colour: GRID_LESSON_MARKER_COLOURS[lesson.state],
+        sigil: lesson.visualToken.sigil,
+        unitIndex: lesson.unitIndex,
+        ...(grounding.mode === "inlay" ? { grounding: "inlay" as const } : {}),
+        surface: {
+          normal: grounding.normal,
+          lift: grounding.lift,
+        },
+      };
+    });
+    const matrix = new THREE.Matrix4();
+    const scratch = createMarkerMatrixScratch();
+    const ring = medallionBottomRing();
+    const rings = markers
+      .filter((marker) => marker.grounding !== "inlay")
+      .map((marker) => {
+        composeMarkerMatrix(marker, MARKER_PLINTH_OFFSET, marker.radius, matrix, scratch);
+        return ring.map((point) =>
+          new THREE.Vector3(point.x, point.y, point.z).applyMatrix4(matrix),
+        );
+      });
+    const footing = buildMedallionFooting(rings, ground.heightAt, ground.index);
+    const inlays = buildMedallionInlays(
+      markers.flatMap((marker, markerIndex) =>
+        marker.grounding === "inlay"
+          ? [
+              {
+                markerIndex,
+                position: marker.lesson.position,
+                radius: marker.radius,
+                sigil: marker.sigil,
+                state: marker.lesson.state,
+              },
+            ]
+          : [],
+      ),
+      ground.index,
+    );
+    return { markers, footing, inlays, recoveries };
+  } finally {
+    ground.dispose();
+  }
+}
+
+export function courseLessonMarkers(
+  blueprint: IslandBlueprint,
+  lessons: readonly LessonPlacement[],
+): readonly GridLessonMarker[] {
+  const layout = layoutCourseLessons(blueprint, lessons);
+  layout.footing.geometry?.dispose();
+  layout.inlays.geometry?.dispose();
+  return layout.markers;
+}
+
+/**
  * Inside a course: one island, and the lessons lying on it in order.
  */
 export function CourseScene({
@@ -1239,41 +1357,15 @@ export function CourseScene({
       }),
     [courseId, lessons, studyId],
   );
-  const grid = useMemo(
-    () =>
-      buildCourseGrid({
-        studyId,
-        courseId,
-        seed: blueprint.seed,
-        routeArchetype: blueprint.route.archetype,
-        routeAnchors: blueprint.geometryNodes,
-        activeLessonIndex: lessons.findIndex((lesson) => lesson.state === "live"),
-        lessons: lessons.map((lesson) => ({
-          lessonId: lesson.lessonId,
-          unitId: lesson.unitId,
-          unitIndex: lesson.unitIndex,
-          state: lesson.state,
-        })),
-      }),
-    [blueprint, courseId, lessons, studyId],
-  );
   const extent = blueprint.bounds.maxHalf;
-  const markers = useMemo(
-    () =>
-      lessons.map((lesson) => ({
-        lesson,
-        // The blueprint reserves this radius when spacing the road. A previous
-        // renderer ignored that contract and drew ~3× larger stones, so 41
-        // legitimate lesson nodes fused into one mechanical tube. The grid is
-        // now the visible unit, so convert that semantic cue to the actual hex
-        // radius before drawing the inset coral stone. Content length keeps
-        // only a restrained eight-percent cue.
-        radius:
-          grid.hexSize * 0.52 * (0.96 + Math.min(1, Math.max(0, lesson.chars) / 12_000) * 0.08),
-        colour: GRID_LESSON_MARKER_COLOURS[lesson.state],
-      })),
-    [grid.hexSize, lessons],
-  );
+  const layout = useMemo(() => layoutCourseLessons(blueprint, lessons), [blueprint, lessons]);
+  const markers = layout.markers;
+  useEffect(() => {
+    return () => {
+      layout.footing.geometry?.dispose();
+      layout.inlays.geometry?.dispose();
+    };
+  }, [layout]);
 
   return (
     <>
@@ -1300,11 +1392,17 @@ export function CourseScene({
         includeSea={false}
         includeDistantGround
       />
-      <IslandRender blueprint={blueprint} detail="course" grid={grid} />
+      <IslandRender blueprint={blueprint} detail="course" />
       <Suspense fallback={null}>
-        <IslandDressing key={assetRevision} blueprint={blueprint} detail="course" grid={grid} />
+        <IslandDressing key={assetRevision} blueprint={blueprint} detail="course" />
       </Suspense>
-      <LessonMarkerField markers={markers} onPick={onPick} onHover={onHover} />
+      <LessonMarkerField
+        markers={markers}
+        footing={layout.footing.geometry}
+        inlays={layout.inlays}
+        onPick={onPick}
+        onHover={onHover}
+      />
       {avatarAt ? (
         <LearnerMarker
           position={avatarAt.position}

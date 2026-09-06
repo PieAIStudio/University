@@ -31,7 +31,8 @@ import {
   describeIslandLayer,
   describePlanetLayer,
   describeWorldLayer,
-  loadIslandAssetTriangleCounts,
+  loadIslandAssetModelInfo,
+  type InspectorModelInfo,
   PreviewOverrideBridge,
   type InspectorAsset,
   type InspectorColorStop,
@@ -227,7 +228,11 @@ function mutableParameterIds(
 }
 
 function roleCurrentLabel(role: InspectorRoleChoice, assets: readonly InspectorAsset[]): string {
-  const current = assets.find((asset) => role.currentKeys.includes(asset.key));
+  const current = assets.find(
+    (asset) =>
+      role.currentKeys.includes(asset.key) ||
+      asset.requestedKeys?.some((key) => role.currentKeys.includes(key)),
+  );
   if (!current) return translate("app.mapstudio.mapStudioScreen.copy.沿用配方");
   return `${current.pack} / ${current.assetId}`;
 }
@@ -380,7 +385,24 @@ function Metric({
   );
 }
 
-function AssetCard({ asset }: { readonly asset: InspectorAsset }) {
+function dimensions(values: readonly number[]): string {
+  return values.map((value) => Number(value.toFixed(3))).join(" × ");
+}
+
+function AssetCard({
+  asset,
+  onInspectCourse,
+}: {
+  readonly asset: InspectorAsset;
+  readonly onInspectCourse: (studyId: string, courseId: string) => void;
+}) {
+  const uses = asset.uses ?? [];
+  const courses = [...new Map(uses.map((use) => [`${use.studyId}/${use.courseId}`, use])).values()];
+  const size = asset.model?.size;
+  const regularSize = size && size[1] > 0 && asset.assetId !== "treeTrunks";
+  const heights = uses.map((use) => use.height);
+  const minHeight = Math.min(...heights);
+  const maxHeight = Math.max(...heights);
   return (
     <article className="map-studio__asset" data-asset-key={asset.key}>
       <div className="map-studio__asset-title">
@@ -420,7 +442,11 @@ function AssetCard({ asset }: { readonly asset: InspectorAsset }) {
         />
         <Metric
           label={translate("app.mapstudio.mapStudioScreen.copy.单模型三角形")}
-          value={formatNumber(asset.triangles)}
+          value={
+            asset.triangles === null && asset.totalTriangles != null
+              ? translate("app.mapstudio.mapStudioScreen.copy.按当前投影计量")
+              : formatNumber(asset.triangles)
+          }
           source={asset.trianglesSource}
         />
         <Metric
@@ -428,7 +454,70 @@ function AssetCard({ asset }: { readonly asset: InspectorAsset }) {
           value={formatNumber(asset.instances)}
           source={asset.instancesSource}
         />
+        <Metric
+          label={translate("app.mapstudio.mapStudioScreen.copy.实际投影三角形")}
+          value={formatNumber(
+            asset.totalTriangles !== undefined
+              ? asset.totalTriangles
+              : asset.triangles !== null && asset.instances !== null
+                ? asset.triangles * asset.instances
+                : null,
+          )}
+          source={asset.instancesSource}
+        />
       </div>
+      {asset.runtimePath ? (
+        <dl className="map-studio__asset-paths">
+          <div>
+            <dt>{translate("app.mapstudio.mapStudioScreen.copy.原始模型尺寸")}</dt>
+            <dd>
+              {size ? dimensions(size) : translate("app.mapstudio.mapStudioScreen.copy.加载中")}
+            </dd>
+          </div>
+          <div>
+            <dt>{translate("app.mapstudio.mapStudioScreen.copy.场景尺寸范围")}</dt>
+            <dd>
+              {uses.length && regularSize
+                ? `${dimensions(size.map((axis) => (axis / size[1]) * minHeight))} — ${dimensions(size.map((axis) => (axis / size[1]) * maxHeight))}`
+                : uses.length
+                  ? `height ${minHeight.toFixed(3)} — ${maxHeight.toFixed(3)}`
+                  : "—"}
+            </dd>
+          </div>
+        </dl>
+      ) : null}
+      {uses.length ? (
+        <details data-asset-uses>
+          <summary>
+            {translate("app.mapstudio.mapStudioScreen.copy.实际使用与语义组")} · {uses.length}
+          </summary>
+          <p className="map-studio__asset-note">
+            {translate(
+              "app.mapstudio.mapStudioScreen.copy.尺寸来自原始节点变换-场景统一归一化高度-树干是多变体骨架不能按整包宽度相乘",
+            )}
+          </p>
+          {courses.map((course) => (
+            <GameButton
+              key={`${course.studyId}/${course.courseId}`}
+              variant="secondary"
+              onClick={() => onInspectCourse(course.studyId, course.courseId)}
+            >
+              {course.courseId}
+            </GameButton>
+          ))}
+          {uses.map((use) => (
+            <details key={`${use.courseId}/${use.id}`}>
+              <summary>
+                {use.id} · {use.group}
+              </summary>
+              <code>
+                xyz {dimensions(use.position)} · height {use.height.toFixed(3)} · yaw{" "}
+                {use.turn.toFixed(3)} · {use.state}
+              </code>
+            </details>
+          ))}
+        </details>
+      ) : null}
       <div className="map-studio__lock">
         <div>
           <GameBadge>
@@ -492,6 +581,7 @@ function RecipePanel({
   assetChoices,
   onAssetChoice,
   onParameterChange,
+  onInspectCourse,
 }: {
   readonly description: InspectorLayerDescription;
   readonly controlValues: {
@@ -504,6 +594,7 @@ function RecipePanel({
   readonly assetChoices: Readonly<Record<string, string>>;
   readonly onAssetChoice: (roleId: string, targetKey: string) => void;
   readonly onParameterChange: (parameter: InspectorParameter, value: number) => void;
+  readonly onInspectCourse: (studyId: string, courseId: string) => void;
 }) {
   const parameters = mutableParameterIds(description);
   return (
@@ -568,7 +659,9 @@ function RecipePanel({
         </div>
         <div className="map-studio__asset-list">
           {description.dressing.assets.length > 0 ? (
-            description.dressing.assets.map((asset) => <AssetCard asset={asset} key={asset.key} />)
+            description.dressing.assets.map((asset) => (
+              <AssetCard asset={asset} key={asset.key} onInspectCourse={onInspectCourse} />
+            ))
           ) : (
             <p className="map-studio__empty">
               {translate("app.mapstudio.mapStudioScreen.copy.这一层没有外部植被-装饰模型")}
@@ -576,6 +669,62 @@ function RecipePanel({
           )}
         </div>
         <p className="map-studio__recipe-note">{description.dressing.note}</p>
+      </GamePanel>
+
+      <GamePanel
+        className="map-studio__recipe"
+        title={translate("app.mapstudio.mapStudioScreen.copy.组合与降级")}
+      >
+        {(description.dressing.compositions ?? []).map((composition) => (
+          <details
+            key={`${composition.courseId}/${composition.id}`}
+            data-assembly-id={composition.id}
+          >
+            <summary>
+              {composition.id} · {composition.status} · {composition.members.length}
+            </summary>
+            <p>
+              {composition.courseId} · attempts {composition.attempts} ·{" "}
+              {composition.fallback ?? "—"}
+            </p>
+            <p>
+              {translate("app.mapstudio.mapStudioScreen.copy.占地-高差-坡度")} ·{" "}
+              {composition.footprint ? dimensions(composition.footprint) : "—"} /{" "}
+              {composition.span?.toFixed(3) ?? "—"} / {composition.slope?.toFixed(3) ?? "—"}
+            </p>
+            <p>
+              {Object.entries(composition.rejections)
+                .map(([reason, count]) => `${reason}: ${count}`)
+                .join(" · ")}
+            </p>
+            {composition.members.map((member) => (
+              <p key={member.id}>
+                <code>
+                  {member.assetKey} · {member.id} · xyz {dimensions(member.position)} · height{" "}
+                  {member.height.toFixed(3)} · yaw {member.turn.toFixed(3)} · {member.state}
+                </code>
+              </p>
+            ))}
+          </details>
+        ))}
+        <SourceReference
+          source={{
+            file: "packages/world/src/island/island-composition.ts",
+            export: "searchAssemblyPlacement → evaluateAssembly",
+          }}
+        />
+        <SourceReference
+          source={{
+            file: "packages/world/src/island/island-dressing.ts",
+            export: "planIslandDressing → decisions / placements",
+          }}
+        />
+        <SourceReference
+          source={{
+            file: "packages/world/src/inspector/projected-metrics.ts",
+            export: "measureProjectedGeometry",
+          }}
+        />
       </GamePanel>
 
       <GamePanel
@@ -615,23 +764,25 @@ function RolePicker({
   return (
     <GameField
       label={translate("app.mapstudio.mapStudioScreen.copy.value0模型", { value0: role.label })}
-      hint={`${sourceText(role.source)}；${hasInstances ? roleCurrentLabel(role, description.dressing.assets) : translate("app.mapstudio.mapStudioScreen.copy.这一层当前没有实例")}`}
+      hint={`${sourceText(role.source)}；${hasInstances ? roleCurrentLabel(role, description.dressing.assets) : translate("app.mapstudio.mapStudioScreen.copy.这一层当前没有实例")} ${role.note ?? ""}`}
     >
       <select
         aria-label={translate("app.mapstudio.mapStudioScreen.copy.value0模型", {
           value0: role.label,
         })}
         className="map-studio__select"
-        disabled={!hasInstances}
+        disabled={!role.mutable || !hasInstances}
         onChange={(event) => onChange(role.id, event.currentTarget.value)}
         value={value}
       >
         <option value="">{translate("app.mapstudio.mapStudioScreen.copy.沿用配方原资源")}</option>
-        {description.dressing.catalog.map((asset) => (
-          <option key={asset.key} value={asset.key}>
-            {catalogLabel(asset)}
-          </option>
-        ))}
+        {description.dressing.catalog
+          .filter((asset) => role.compatibleKeys?.includes(asset.key))
+          .map((asset) => (
+            <option key={asset.key} value={asset.key}>
+              {catalogLabel(asset)}
+            </option>
+          ))}
       </select>
     </GameField>
   );
@@ -650,6 +801,7 @@ export function MapStudioScreen({
   const [activeLayer, setActiveLayer] = useState<StudioLayer>("planet");
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [runtime, setRuntime] = useState<InspectorRuntimeMetrics>({});
+  const [models, setModels] = useState<ReadonlyMap<string, InspectorModelInfo>>(() => new Map());
   const [triangleCounts, setTriangleCounts] = useState<ReadonlyMap<string, number>>(
     () => new Map(),
   );
@@ -673,8 +825,11 @@ export function MapStudioScreen({
 
   useEffect(() => {
     let alive = true;
-    void loadIslandAssetTriangleCounts().then((counts) => {
-      if (alive) setTriangleCounts(counts);
+    void loadIslandAssetModelInfo().then((measured) => {
+      if (alive) {
+        setModels(measured);
+        setTriangleCounts(new Map([...measured].map(([key, model]) => [key, model.triangles])));
+      }
     });
     return () => {
       alive = false;
@@ -725,6 +880,7 @@ export function MapStudioScreen({
         runtime,
         skyStudyId: selectedStudyId,
         triangleCounts,
+        models,
       });
     }
     return describeIslandLayer({
@@ -732,6 +888,7 @@ export function MapStudioScreen({
       runtime,
       skyStudyId: selectedStudyId,
       triangleCounts,
+      models,
     });
   }, [
     activeLayer,
@@ -741,6 +898,8 @@ export function MapStudioScreen({
     runtime,
     selectedStudyId,
     triangleCounts,
+    models,
+    assetRevision,
   ]);
 
   const controlDefaults = useMemo(
@@ -792,7 +951,14 @@ export function MapStudioScreen({
       },
     }),
     { store: controlStore },
-    [activeLayer, controlDefaults],
+    [
+      activeLayer,
+      controlDefaults.keyLightIntensity,
+      controlDefaults.ambientLightIntensity,
+      controlDefaults.grassDensityLimit,
+      controlDefaults.grassHeightMultiplier,
+      controlDefaults.terrainBrightness,
+    ],
   );
 
   const tuning = useMemo(
@@ -831,11 +997,11 @@ export function MapStudioScreen({
     }
   };
 
-  useEffect(() => {
-    const overrides = description.dressing.roles.flatMap((role) => {
+  const previewOverrides = JSON.stringify(
+    description.dressing.roles.flatMap((role) => {
       const targetKey = assetChoices[role.id];
       const target = description.dressing.catalog.find((asset) => asset.key === targetKey);
-      if (!target || role.currentKeys.length === 0) return [];
+      if (!role.mutable || !target || role.currentKeys.length === 0) return [];
       return [
         {
           role: role.id as PreviewRole,
@@ -843,11 +1009,17 @@ export function MapStudioScreen({
           target: { pack: target.packId, assetId: target.assetId },
         },
       ];
-    });
-    applyPreviewAssetOverrides(overrides);
+    }),
+  );
+  useEffect(() => {
+    applyPreviewAssetOverrides(JSON.parse(previewOverrides), models);
     setAssetRevision((revision) => revision + 1);
     return () => clearPreviewAssetOverrides();
-  }, [assetChoices, description]);
+  }, [previewOverrides, models]);
+
+  useEffect(() => {
+    setRuntime({});
+  }, [activeLayer, selectedCourseId, selectedStudyId]);
 
   const activeWorldLearner =
     previewWorld?.placements.find((entry) => entry.state === "live")?.position ??
@@ -882,6 +1054,14 @@ export function MapStudioScreen({
         targetKey: assetChoices[role.id] ?? null,
       })),
       budget: description.budget,
+      compositions: description.dressing.compositions,
+      projections: runtime.projected,
+      usage: description.dressing.assets.map((asset) => ({
+        key: asset.key,
+        model: asset.model,
+        uses: asset.uses,
+        totalTriangles: asset.totalTriangles,
+      })),
     });
   };
 
@@ -1094,6 +1274,11 @@ export function MapStudioScreen({
               })
             }
             onParameterChange={onParameterChange}
+            onInspectCourse={(studyId, courseId) => {
+              onSelectStudy(studyId);
+              setSelectedCourseId(courseId);
+              setActiveLayer("island");
+            }}
           />
           <GamePanel
             className="map-studio__recipe map-studio__modification"

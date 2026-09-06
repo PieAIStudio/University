@@ -31,6 +31,7 @@ export type InspectorTechniqueLockId =
   | "grass"
   | "decoration"
   | "tree"
+  | "bush"
   | "landmark"
   | "environmentLight"
   | "lessonNode"
@@ -38,6 +39,7 @@ export type InspectorTechniqueLockId =
 
 export interface InspectorAsset {
   readonly key: string;
+  readonly requestedKeys?: readonly string[];
   readonly role: string;
   readonly assetId: string;
   readonly name: string;
@@ -47,7 +49,11 @@ export interface InspectorAsset {
   readonly sourcePath: string;
   readonly bytes: number | null;
   readonly triangles: number | null;
+  /** Projected geometry total, not raw GLB triangles times logical placements. */
+  readonly totalTriangles?: number | null;
   readonly instances: number | null;
+  readonly placementCount?: number | null;
+  readonly projectionKind?: "procedural" | "glb";
   readonly bytesSource: InspectorSourceRef | null;
   readonly trianglesSource: InspectorSourceRef | null;
   readonly instancesSource: InspectorSourceRef | null;
@@ -56,6 +62,29 @@ export interface InspectorAsset {
   readonly techniqueSource: InspectorSourceRef;
   readonly mutable: boolean;
   readonly note?: string;
+  readonly model?: InspectorModelInfo;
+  readonly uses?: readonly InspectorAssetUse[];
+}
+
+export interface InspectorModelInfo {
+  readonly triangles: number;
+  readonly size: readonly [number, number, number] | null;
+  readonly primitives: number;
+  readonly hasTexture: boolean;
+  readonly transparent: boolean;
+  readonly metallic: boolean;
+}
+
+export interface InspectorAssetUse {
+  readonly studyId: string;
+  readonly courseId: string;
+  readonly id: string;
+  readonly assetKey: string;
+  readonly position: readonly [number, number, number];
+  readonly height: number;
+  readonly turn: number;
+  readonly group: string;
+  readonly state: string;
 }
 
 export interface InspectorCatalogAsset {
@@ -68,6 +97,7 @@ export interface InspectorCatalogAsset {
   readonly sourcePath: string | null;
   readonly bytes: number | null;
   readonly triangles: number | null;
+  readonly model?: InspectorModelInfo;
 }
 
 export interface InspectorRoleChoice {
@@ -77,6 +107,7 @@ export interface InspectorRoleChoice {
   readonly source: InspectorSourceRef;
   readonly mutable: boolean;
   readonly note?: string;
+  readonly compatibleKeys?: readonly string[];
 }
 
 export interface InspectorBudget {
@@ -108,6 +139,7 @@ export interface InspectorLayerDescription {
     readonly roles: readonly InspectorRoleChoice[];
     readonly parameters: readonly InspectorParameter[];
     readonly note: string;
+    readonly compositions?: readonly InspectorComposition[];
   };
   readonly lighting: {
     readonly parameters: readonly InspectorParameter[];
@@ -116,8 +148,43 @@ export interface InspectorLayerDescription {
   readonly budget: InspectorBudget;
 }
 
+export interface InspectorComposition {
+  readonly studyId: string;
+  readonly courseId: string;
+  readonly id: string;
+  readonly kind: string;
+  readonly status: string;
+  readonly attempts: number;
+  readonly rejections: Readonly<Record<string, number>>;
+  readonly fallback?: string;
+  readonly members: readonly InspectorAssetUse[];
+  readonly footprint: readonly [number, number] | null;
+  readonly span?: number;
+  readonly slope?: number;
+}
+
 export interface InspectorRuntimeMetrics {
   readonly grassInstances?: number;
+  readonly projected?: Partial<Readonly<Record<InspectorProjectionId, InspectorProjectionMetric>>>;
+}
+
+export type InspectorProjectionId =
+  | "terrain"
+  | "grass"
+  | "treeTrunk"
+  | "treeCrown"
+  | "bushCrown"
+  | "worldTreeCrown"
+  | "campfire"
+  | "medallion"
+  | "sigil"
+  | "footing"
+  | "inlay";
+
+export interface InspectorProjectionMetric {
+  readonly instances: number;
+  readonly triangles: number;
+  readonly meshes: number;
 }
 
 export interface TriangleCountMapLike {

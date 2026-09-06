@@ -8,17 +8,21 @@
  * one shell and not the other, and the only reason was that the composition
  * lived in an app file where the second shell could not reach it.
  */
+import { COURSE_DISTANCE, COURSE_POLAR } from "../camera/controls.js";
+import { translate } from "@pieai/university-ui/i18n.js";
 import { courseSprites } from "../labels/path-overlay.js";
 import { renderTier } from "../sky/tier.js";
 import type { Course } from "./course.js";
 import type { LessonPlacement, Marker } from "../Maps.js";
 
-// The front-side eye is deliberately close: the avatar is the subject, while
-// a short local look-ahead lets the road occupy the upper half of the shot.
-const COURSE_CAMERA_FRONT = 19;
-const COURSE_CAMERA_HEIGHT = 13;
+// Look-at sits slightly behind the live stone so the path reads forward.
 const COURSE_TARGET_BACK = 2;
 const COURSE_TARGET_HEIGHT = 3;
+// Horizontal/vertical offsets are the spherical decomposition of the pinned
+// course polar and landing distance. Controls rebuilds position from those
+// two levers; a third hand-tuned offset would be overwritten next frame.
+export const COURSE_CAMERA_FRONT = COURSE_DISTANCE * Math.sin(COURSE_POLAR) - COURSE_TARGET_BACK;
+const COURSE_CAMERA_HEIGHT = COURSE_DISTANCE * Math.cos(COURSE_POLAR) + COURSE_TARGET_HEIGHT;
 const COURSE_PATH_LOOK_AHEAD = 0.8;
 const COURSE_EDGE_AZIMUTH = Math.PI / 4;
 const COURSE_EDGE_TARGET_HEIGHT_DESKTOP = 0.5;
@@ -202,10 +206,28 @@ function looksOutToWater(live: LessonPlacement, lookAt: { x: number; z: number }
 function edgeAzimuth(
   live: LessonPlacement,
   lookAt: { readonly x: number; readonly z: number },
+  successors: readonly LessonPlacement[],
 ): number {
   const center = outlineCentroid(live.blueprint?.outline ?? []);
   const horizontalOffset = COURSE_CAMERA_FRONT + COURSE_TARGET_BACK;
   const candidates = [-COURSE_EDGE_AZIMUTH, COURSE_EDGE_AZIMUTH];
+  // Keep the next few targets in the readable centre rather than under the
+  // side rails. The live target never moves: only the choice of front-side
+  // bearing changes. A silhouette-centroid-only choice can send the road
+  // sideways out of the narrow viewport even while it shows plenty of grass.
+  const spread = (azimuth: number) =>
+    Math.max(
+      0,
+      ...successors.map((lesson) =>
+        Math.abs(
+          Math.cos(azimuth) * (lesson.position.x - live.position.x) -
+            Math.sin(azimuth) * (lesson.position.z - live.position.z),
+        ),
+      ),
+    );
+  if (Math.abs(spread(candidates[0]!) - spread(candidates[1]!)) > 0.25) {
+    return spread(candidates[0]!) < spread(candidates[1]!) ? candidates[0]! : candidates[1]!;
+  }
   const score = (azimuth: number) => {
     const eye = {
       x: lookAt.x + Math.sin(azimuth) * horizontalOffset,
@@ -236,7 +258,9 @@ export function frameCourse(
   const tier = options.tier ?? renderTier();
   const targetHeight =
     edgeRecovery && tier === "desktop" ? COURSE_EDGE_TARGET_HEIGHT_DESKTOP : COURSE_TARGET_HEIGHT;
-  const azimuth = edgeRecovery ? edgeAzimuth(live, baseLookAt) : 0;
+  const azimuth = edgeRecovery
+    ? edgeAzimuth(live, baseLookAt, lessons.slice(liveIndex + 1, liveIndex + 5))
+    : 0;
   const horizontalOffset = COURSE_CAMERA_FRONT + COURSE_TARGET_BACK;
   const targetY = live.position.y + targetHeight;
   return {
@@ -270,6 +294,13 @@ export function courseMarkers(
   lessons: readonly LessonPlacement[],
   options: CourseMarkerOptions = {},
 ): readonly Marker[] {
+  const stateLabel = (state: LessonPlacement["state"]) =>
+    ({
+      live: translate("ui.world.lessonState.current"),
+      idle: translate("ui.world.lessonState.available"),
+      done: translate("ui.view.lessonview.copy.已完成"),
+      locked: translate("ui.world.lessonState.later"),
+    })[state];
   const fromPath: Marker[] = courseSprites(lessons).map((sprite) => {
     const lesson = sprite.lessonId
       ? lessons.find((candidate) => candidate.lessonId === sprite.lessonId)
@@ -278,12 +309,15 @@ export function courseMarkers(
     return {
       id: sprite.id,
       position: sprite.position,
-      text: sprite.text,
+      text: lesson?.state === "done" ? "✓" : sprite.text,
       kind: sprite.role === "icon" ? ("icon" as const) : ("unit" as const),
       pinned: sprite.role === "icon",
       origin: sprite.role === "unit" ? ("start" as const) : ("center" as const),
       locked: sprite.locked,
-      label: sprite.label,
+      label: lesson
+        ? `${lesson.lessonTitle} · ${sprite.label ?? ""} · ${stateLabel(lesson.state)}`
+        : sprite.label,
+      lessonState: lesson?.state,
       weight: sprite.role === "unit" ? 2 : undefined,
       ...(activate ? { activate } : {}),
     };
@@ -308,6 +342,8 @@ export function courseMarkers(
       */
       text: lesson.state === "live" ? "开始" : lesson.lessonTitle,
       kind: "lesson" as const,
+      label: `${lesson.lessonTitle} · ${stateLabel(lesson.state)}`,
+      lessonState: lesson.state,
       quiet: lesson.state !== "live",
       weight: lesson.state === "live" ? 3 : 0,
       ...(options.onPick ? { activate: () => options.onPick?.(lesson) } : {}),

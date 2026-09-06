@@ -15,6 +15,7 @@ import {
 } from "../island/island-blueprint.js";
 import {
   buildIslandGeometry,
+  islandGeometryScale,
   ISLAND_GEOMETRY_PALETTE,
   type IslandGeometryDetail,
 } from "../island/island-geometry.js";
@@ -25,6 +26,7 @@ import {
   ISLAND_TECHNIQUE_LOCK,
   type IslandTechniqueEntry,
 } from "../island/island-technique-lock.js";
+import { COURSE_TREE_TRUNK_TRIANGLE_CEILING } from "../island/foliage-geometry.js";
 import {
   ISLAND_GRASS_BLADE_DENSITY_MULTIPLIER,
   ISLAND_GRASS_LIMITS,
@@ -35,14 +37,18 @@ import {
 import { ISLAND_GRASS_BLADE_TRIANGLES } from "../island/island-grass-render.js";
 import {
   islandRuntimeAssets,
-  resolveIslandRuntimeAssetFromRecipe,
+  resolveIslandRuntimeAsset,
   type IslandRuntimeAsset,
 } from "../island/island-asset-registry.js";
 import { assetKey } from "./triangle-count.js";
+import { proceduralAssetRows } from "./procedural-assets.js";
+import { previewReplacementReason } from "./preview-runtime.js";
+import { footprintSamplePoints, orientedFootprintFor } from "../island/island-composition.js";
 import {
   planIslandDressing,
   type IslandDressingKind,
   type IslandDressingPlan,
+  type IslandDressingPlacement,
 } from "../island/island-dressing.js";
 import {
   DEFAULT_ISLAND_SURFACE_STYLE,
@@ -62,6 +68,8 @@ import { PLANET_ATMOSPHERE } from "../planet/PlanetScene.js";
 
 import type {
   InspectorAsset,
+  InspectorAssetUse,
+  InspectorModelInfo,
   InspectorCatalogAsset,
   InspectorColorStop,
   InspectorLayerDescription,
@@ -88,6 +96,7 @@ export interface DescribeWorldLayerOptions {
   readonly skyStudyId?: string | null;
   readonly runtime?: InspectorRuntimeMetrics;
   readonly triangleCounts?: TriangleCountMapLike;
+  readonly models?: ReadonlyMap<string, InspectorModelInfo>;
 }
 
 export interface DescribeIslandLayerOptions {
@@ -95,6 +104,7 @@ export interface DescribeIslandLayerOptions {
   readonly skyStudyId?: string | null;
   readonly runtime?: InspectorRuntimeMetrics;
   readonly triangleCounts?: TriangleCountMapLike;
+  readonly models?: ReadonlyMap<string, InspectorModelInfo>;
 }
 
 const ROLE_LABELS: Readonly<Record<IslandDressingKind, string>> = {
@@ -113,7 +123,7 @@ const PACK_LABELS: Readonly<Record<string, string>> = {
 
 const LOCK_FOR_KIND: Readonly<Record<IslandDressingKind, InspectorTechniqueLockId>> = {
   tree: "tree",
-  bush: "decoration",
+  bush: "bush",
   rock: "decoration",
   landmark: "landmark",
   prop: "decoration",
@@ -190,7 +200,10 @@ function techniqueFor(lockId: InspectorTechniqueLockId): IslandTechniqueEntry {
   return ISLAND_TECHNIQUE_LOCK[lockId]!;
 }
 
-function catalogAssets(triangleCounts: TriangleCountMapLike): InspectorCatalogAsset[] {
+function catalogAssets(
+  triangleCounts: TriangleCountMapLike,
+  models: ReadonlyMap<string, InspectorModelInfo>,
+): InspectorCatalogAsset[] {
   return islandRuntimeAssets().map((asset) => ({
     key: assetKey(asset),
     assetId: asset.assetId,
@@ -201,6 +214,7 @@ function catalogAssets(triangleCounts: TriangleCountMapLike): InspectorCatalogAs
     sourcePath: asset.source ?? null,
     bytes: asset.bytes ?? null,
     triangles: triangleCounts.get(assetKey(asset)) ?? null,
+    model: models.get(assetKey(asset)),
   }));
 }
 
@@ -210,6 +224,37 @@ interface PlacementAssetGroup {
   instances: number;
   requestedKeys: Set<string>;
   fallbackReason?: string;
+  readonly uses: InspectorAssetUse[];
+}
+
+function placementUse(
+  input: WorldLayerIsland,
+  placement: IslandDressingPlacement,
+): InspectorAssetUse {
+  const scale =
+    input.targetRadius === undefined
+      ? 1
+      : islandGeometryScale(input.blueprint, "world", input.targetRadius);
+  return {
+    studyId: input.blueprint.studyId,
+    courseId: input.blueprint.courseId,
+    id: placement.id,
+    assetKey: `${placement.packId}/${placement.assetId}`,
+    position: [placement.x * scale, placement.y * scale, placement.z * scale],
+    height:
+      placement.height *
+      scale *
+      (input.targetRadius === undefined ? 1 : 3.2) *
+      (resolveIslandRuntimeAsset(placement.packId, placement.assetId)?.heightScale ?? 1),
+    turn: placement.turn,
+    group:
+      placement.assemblyId ??
+      placement.outpostId ??
+      placement.clusterId ??
+      placement.companionOf ??
+      "natural",
+    state: placement.state ?? "static",
+  };
 }
 
 interface DressingRows {
@@ -221,6 +266,8 @@ interface DressingRows {
 function dressingRows(
   inputs: readonly WorldLayerIsland[],
   triangleCounts: TriangleCountMapLike,
+  runtime?: InspectorRuntimeMetrics,
+  models: ReadonlyMap<string, InspectorModelInfo> = new Map(),
 ): DressingRows {
   const groups = new Map<string, PlacementAssetGroup>();
   const roleKeys = new Map<IslandDressingKind, Set<string>>();
@@ -231,12 +278,18 @@ function dressingRows(
     const plan = planIslandDressing(input.blueprint, detail);
     plans.push(plan);
     for (const placement of plan.placements) {
+      // Course and world foliage renderers use procedural solid crown lobes;
+      // bushEmitter.glb is never fetched or drawn. Do not treat as rendered geometry.
+      if (placement.assetId === "bushEmitter") {
+        continue;
+      }
+
       const requestedKey = `${placement.packId}/${placement.assetId}`;
       const roleSet = roleKeys.get(placement.kind) ?? new Set<string>();
       roleSet.add(requestedKey);
       roleKeys.set(placement.kind, roleSet);
 
-      const resolution = resolveIslandRuntimeAssetFromRecipe(placement.packId, placement.assetId);
+      const resolution = resolveIslandRuntimeAsset(placement.packId, placement.assetId);
       if (!resolution) continue;
       const key = assetKey(resolution);
       const group = groups.get(key) ?? {
@@ -244,9 +297,11 @@ function dressingRows(
         roles: new Set<IslandDressingKind>(),
         instances: 0,
         requestedKeys: new Set<string>(),
+        uses: [],
       };
       group.roles.add(placement.kind);
       group.instances += 1;
+      group.uses.push(placementUse(input, placement));
       group.requestedKeys.add(requestedKey);
       if (resolution.usedFallback) group.fallbackReason = resolution.fallbackReason;
       groups.set(key, group);
@@ -262,8 +317,10 @@ function dressingRows(
         .sort((left, right) => (left === "landmark" ? -1 : right === "landmark" ? 1 : 0))[0]!;
       const lock = techniqueFor(lockId);
       const roles = [...group.roles].sort();
+      const isTreeTrunks = asset.assetId === "treeTrunks";
       return {
         key: assetKey(asset),
+        requestedKeys: [...group.requestedKeys],
         role: roles.map((kind) => ROLE_LABELS[kind]).join(" / "),
         assetId: asset.assetId,
         name: assetName(asset.assetId),
@@ -271,11 +328,27 @@ function dressingRows(
         packId: asset.pack,
         runtimePath: asset.src,
         sourcePath: asset.source ?? asset.src,
+        model: models.get(assetKey(asset)),
+        uses: group.uses,
         bytes: asset.bytes ?? null,
-        triangles: triangleCounts.get(assetKey(asset)) ?? null,
+        triangles: isTreeTrunks ? null : (triangleCounts.get(assetKey(asset)) ?? null),
+        ...(isTreeTrunks
+          ? {
+              totalTriangles: runtime?.projected
+                ? (runtime.projected.treeTrunk?.triangles ?? 0)
+                : null,
+            }
+          : {}),
         instances: group.instances,
+        placementCount: group.instances,
+        projectionKind: "glb",
         bytesSource: sourceForAssetManifest(asset),
-        trianglesSource: trianglesSourceForAsset(asset),
+        trianglesSource: isTreeTrunks
+          ? worldSource(
+              "island/island-foliage-render.tsx",
+              "normalizedTrunkVariants (dynamic single-variant selection, max 384 tris)",
+            )
+          : trianglesSourceForAsset(asset),
         instancesSource: dressingInstancesSource(),
         techniqueLock: lockId,
         technique: lock.technique,
@@ -283,64 +356,59 @@ function dressingRows(
           "island/island-technique-lock.ts",
           `ISLAND_TECHNIQUE_LOCK.${lockId}`,
         ),
-        mutable: true,
-        note: group.fallbackReason
-          ? `运行时使用登记的 fallback：${group.fallbackReason}`
-          : "下拉替换只作用于当前预览，不写回配方。",
+        mutable: roles.every((role) => role === "rock"),
+        note: isTreeTrunks
+          ? "近景每棵选取 6 种树干之一（288–384 三角），远景只用首个变体。原始文件合计 2,032 三角不是单树成本；总量读取当前场景投影。骨架高度为完整树高的 0.68，冠团另计。"
+          : group.fallbackReason
+            ? `运行时使用登记的 fallback：${group.fallbackReason}`
+            : "下拉替换只作用于当前预览，不写回配方。",
       } satisfies InspectorAsset;
     });
 
-  const roles = (Object.keys(ROLE_LABELS) as IslandDressingKind[]).map(
-    (kind) =>
-      ({
-        id: kind,
-        label: ROLE_LABELS[kind],
-        currentKeys: [...(roleKeys.get(kind) ?? new Set<string>())],
-        source: dressingInstancesSource(),
-        mutable: true,
-        note: "替换只作用于这个配置台的预览；正式变更仍需修改配方。",
-      }) satisfies InspectorRoleChoice,
-  );
+  const roles = (Object.keys(ROLE_LABELS) as IslandDressingKind[]).map((kind) => {
+    const isBush = kind === "bush";
+    const isTree = kind === "tree";
+    const currentKeys = isBush ? [] : [...(roleKeys.get(kind) ?? new Set<string>())];
+    const compatibleKeys = islandRuntimeAssets()
+      .filter(
+        (asset) =>
+          previewReplacementReason({ role: kind, fromKeys: currentKeys, target: asset }, models) ===
+          null,
+      )
+      .map(assetKey);
+    return {
+      id: kind,
+      label: ROLE_LABELS[kind],
+      currentKeys,
+      compatibleKeys,
+      source: dressingInstancesSource(),
+      mutable: kind === "rock" && compatibleKeys.length > 0,
+      note: isBush
+        ? "灌木使用自有程序化实体团块（20 三角 icosahedron），渲染器不拉取外部 GLB；此处不可替换。"
+        : isTree
+          ? "树干与冠团有共同接点合同；任意 GLB 替换不安全，此处只读。"
+          : kind !== "rock"
+            ? "组合/效果资产不能逐件替换；需要从 composition 整组重新验证接地、尺度和锚点。"
+            : "只提供材质相容、原点接地且归一化占地不扩大的已登记石头；仅影响预览。",
+    } satisfies InspectorRoleChoice;
+  });
 
   return { assets, roles, plans };
 }
 
-function grassAsset(
-  detail: "course" | "world",
-  runtime: InspectorRuntimeMetrics | undefined,
-): InspectorAsset {
-  const lock = techniqueFor("grass");
-  const limit = ISLAND_GRASS_LIMITS[detail].desktop;
-  return {
-    key: "procedural/grass-blade",
-    role: "草",
-    assetId: "generated-three-vertex-blade",
-    name: "generated three-vertex blade",
-    pack: "自有程序化",
-    runtimePath: null,
-    sourcePath: "packages/world/src/island/island-grass-render.tsx",
-    bytes: null,
-    triangles: ISLAND_GRASS_BLADE_TRIANGLES,
-    instances: detail === "world" ? 0 : (runtime?.grassInstances ?? null),
-    bytesSource: null,
-    trianglesSource: worldSource("island/island-grass-render.tsx", "ISLAND_GRASS_BLADE_TRIANGLES"),
-    instancesSource: worldSource("island/island-grass.ts", `ISLAND_GRASS_LIMITS.${detail}.desktop`),
-    techniqueLock: "grass",
-    technique: lock.technique,
-    techniqueSource: worldSource("island/island-technique-lock.ts", "ISLAND_TECHNIQUE_LOCK.grass"),
-    mutable: true,
-    note:
-      detail === "world"
-        ? "世界投影按 ADR-0009 不画草；地形色承担远景信息。"
-        : `当前相机画面加载后显示实际实例数；上限来自 ${limit.toLocaleString()}。`,
-  };
-}
+const terrainDescriptionCache = new WeakMap<
+  IslandBlueprint,
+  Map<string, InspectorLayerDescription["terrain"]>
+>();
 
 function islandTerrain(
   blueprint: IslandBlueprint,
   detail: IslandGeometryDetail,
   targetRadius?: number,
 ): InspectorLayerDescription["terrain"] {
+  const cacheKey = `${detail}/${targetRadius ?? "full"}`;
+  const cached = terrainDescriptionCache.get(blueprint)?.get(cacheKey);
+  if (cached) return cached;
   const shape = buildIslandGeometry(blueprint, detail, targetRadius);
   const maxPatchAmplitude = Math.max(
     ...blueprint.terrainPatches.map((patch) => patch.amplitude),
@@ -502,6 +570,9 @@ function islandTerrain(
     geometrySource: worldSource("island/island-geometry.ts", "buildIslandGeometry().terrain"),
   } satisfies InspectorLayerDescription["terrain"];
   disposeGeometry(shape.terrain);
+  const cache = terrainDescriptionCache.get(blueprint) ?? new Map();
+  cache.set(cacheKey, terrain);
+  terrainDescriptionCache.set(blueprint, cache);
   return terrain;
 }
 
@@ -688,25 +759,77 @@ function dressingDescription(
   runtime: InspectorRuntimeMetrics | undefined,
   triangleCounts: TriangleCountMapLike,
   note: string,
+  models: ReadonlyMap<string, InspectorModelInfo> = new Map(),
 ): InspectorLayerDescription["dressing"] {
-  const rows = dressingRows(inputs, triangleCounts);
+  const rows = dressingRows(inputs, triangleCounts, runtime, models);
   const styleId = resolveIslandSurfaceStyle();
   const style =
     ISLAND_SURFACE_STYLE_PRESETS[styleId] ??
     ISLAND_SURFACE_STYLE_PRESETS[DEFAULT_ISLAND_SURFACE_STYLE];
-  const grass = grassAsset(detail, runtime);
+  const procedural = proceduralAssetRows({
+    detail,
+    blueprints: inputs.map((i) => i.blueprint),
+    plans: rows.plans,
+    runtime,
+  });
   return {
-    assets: [grass, ...rows.assets],
-    catalog: catalogAssets(triangleCounts),
+    assets: [...procedural, ...rows.assets],
+    catalog: catalogAssets(triangleCounts, models),
     roles: rows.roles,
     parameters: dressingParameters(detail, style.brightness),
     note,
+    compositions: rows.plans.flatMap((plan, index) =>
+      (plan.decisions ?? []).map((decision) => {
+        const input = inputs[index]!;
+        const members = plan.placements.filter((placement) =>
+          decision.members.includes(placement.id),
+        );
+        const points = members.flatMap((placement) =>
+          footprintSamplePoints(
+            orientedFootprintFor(
+              placement.assetId,
+              placement.height,
+              placement.x,
+              placement.z,
+              placement.turn,
+            ),
+          ),
+        );
+        return {
+          studyId: input.blueprint.studyId,
+          courseId: input.blueprint.courseId,
+          id: decision.assemblyId,
+          kind: decision.kind,
+          status: decision.status,
+          attempts: decision.attempts,
+          rejections: decision.rejections,
+          fallback: decision.fallback,
+          members: members.map((placement) => placementUse(input, placement)),
+          footprint: points.length
+            ? ([
+                Math.max(...points.map((point) => point.x)) -
+                  Math.min(...points.map((point) => point.x)),
+                Math.max(...points.map((point) => point.z)) -
+                  Math.min(...points.map((point) => point.z)),
+              ] as const)
+            : null,
+          span: decision.span,
+          slope: decision.slope,
+        };
+      }),
+    ),
   };
 }
 
 function resourceTriangles(assets: readonly InspectorAsset[]): number | null {
   let total = 0;
   for (const asset of assets) {
+    if (asset.totalTriangles !== undefined) {
+      if (asset.totalTriangles === null) return null;
+      total += asset.totalTriangles;
+      continue;
+    }
+    if (asset.instances === 0) continue;
     if (asset.instances === null || asset.triangles === null) return null;
     total += asset.instances * asset.triangles;
   }
@@ -716,13 +839,20 @@ function resourceTriangles(assets: readonly InspectorAsset[]): number | null {
 function resourceBudget(assets: readonly InspectorAsset[]): number {
   return assets.reduce((total, asset) => {
     if (asset.instances === null) return total;
+    if (asset.projectionKind === "procedural") {
+      return total + (asset.totalTriangles ?? asset.instances * (asset.triangles ?? 0));
+    }
     const ceiling =
-      asset.techniqueLock === "landmark"
-        ? ISLAND_LANDMARK_TRIANGLE_CEILING
-        : asset.techniqueLock === "tree"
-          ? ISLAND_TREE_TRIANGLE_CEILING
-          : ISLAND_DECORATION_TRIANGLE_CEILING;
-    return total + asset.instances * ceiling;
+      asset.assetId === "treeTrunks"
+        ? COURSE_TREE_TRUNK_TRIANGLE_CEILING
+        : asset.techniqueLock === "landmark"
+          ? ISLAND_LANDMARK_TRIANGLE_CEILING
+          : asset.assetId === "treeTrunks"
+            ? 384
+            : asset.techniqueLock === "tree"
+              ? ISLAND_TREE_TRIANGLE_CEILING
+              : ISLAND_DECORATION_TRIANGLE_CEILING;
+    return total + (asset.placementCount ?? asset.instances) * ceiling;
   }, 0);
 }
 
@@ -747,7 +877,10 @@ function islandBudget(
       "docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md",
       "第三阶段：按屏幕像素分配预算",
     ),
-    basis,
+    basis:
+      actualTriangles === null
+        ? `${basis}（等待当前投影：动态树干、刻纹、贴地底沿和浅嵌盘逐项测量；未知值不记作零）`
+        : basis,
     breakdown: [
       { label: "地形网格", triangles: terrainTriangles },
       { label: "草：桌面上限 × 单片草", triangles: grassBudget },
@@ -1026,6 +1159,7 @@ export function describeWorldLayer({
   skyStudyId = null,
   runtime,
   triangleCounts = new Map(),
+  models = new Map(),
 }: DescribeWorldLayerOptions): InspectorLayerDescription {
   const activeIslands =
     islands.length > 0
@@ -1063,6 +1197,7 @@ export function describeWorldLayer({
     runtime,
     triangleCounts,
     "群岛是世界投影：草的真实上限来自 ISLAND_GRASS_LIMITS.world.desktop = 0；保留岛的轮廓、地标和少量装饰。",
+    models,
   );
   return {
     id: "world",
@@ -1081,6 +1216,7 @@ export function describeIslandLayer({
   skyStudyId = null,
   runtime,
   triangleCounts = new Map(),
+  models = new Map(),
 }: DescribeIslandLayerOptions): InspectorLayerDescription {
   const terrain = islandTerrain(blueprint, "course");
   const dressing = dressingDescription(
@@ -1089,6 +1225,7 @@ export function describeIslandLayer({
     runtime,
     triangleCounts,
     "课程岛是近景投影：草、树、灌木、石头和地标全部来自同一个 blueprint + dressing plan；替换只留在当前预览。",
+    models,
   );
   return {
     id: "island",

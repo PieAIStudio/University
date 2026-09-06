@@ -3,144 +3,243 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { playSound } from "@pieai/university-ui/sound/index.js";
+import type { IslandUnitSigil } from "../island/island-blueprint.js";
 import { islandLookFrozen } from "../island/island-surface-style.js";
+import { unitRingGeometry, unitSigilArcCount } from "../island/unit-sigil.js";
 import type { LessonPlacement } from "../Maps.js";
 import { GRID_LESSON_PLINTH_ALBEDO } from "./grid-palette.js";
+import type { MedallionInlays } from "./medallion-grounding.js";
+import {
+  createMedallionGeometry,
+  MARKER_ENGRAVING_OFFSET,
+  MARKER_PLINTH_OFFSET,
+  MEDALLION_ENGRAVING_COLOURS,
+  MEDALLION_TOP_RADIUS,
+} from "./lesson-medallion.js";
+
+export {
+  MARKER_ENGRAVING_OFFSET,
+  MARKER_PLINTH_OFFSET,
+  medallionPoseLocals as markerPoseLocals,
+} from "./lesson-medallion.js";
+
+/**
+ * How one stone sits on the ground under it.
+ *
+ * Optional on purpose: a caller that has no height field — the studio preview
+ * and any flat-ground surface — passes nothing and gets exactly the upright
+ * placement this field has always drawn. `packages/world/src/island` computes
+ * it once per blueprint for the course map.
+ */
+export interface GridLessonMarkerSurface {
+  /** Unit normal of the ground plane under the footprint. */
+  readonly normal: THREE.Vector3;
+  /** Offset along that normal; negative sinks the stone in to close a gap. */
+  readonly lift: number;
+}
 
 export interface GridLessonMarker {
   readonly lesson: LessonPlacement;
   readonly radius: number;
   readonly colour: number;
+  readonly surface?: GridLessonMarkerSurface;
+  readonly sigil?: IslandUnitSigil;
+  readonly unitIndex?: number;
+  /** A rare, diagnosed grounding fallback; the lesson and its footprint stay. */
+  readonly grounding?: "inlay";
+}
+
+const MARKER_UP = new THREE.Vector3(0, 1, 0);
+
+/** Reusable temporaries so neither the layout pass nor the pulse allocates. */
+export interface MarkerMatrixScratch {
+  readonly position: THREE.Vector3;
+  readonly rotation: THREE.Quaternion;
+  readonly scale: THREE.Vector3;
+}
+
+export function createMarkerMatrixScratch(): MarkerMatrixScratch {
+  return {
+    position: new THREE.Vector3(),
+    rotation: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+  };
+}
+
+/**
+ * Compose one instance transform.
+ *
+ * Split out of the effect so the placement rule is testable without a WebGL
+ * context: this is the only place that decides how a pose becomes a matrix, and
+ * both the layout pass and the live pulse call it. With no `surface` the normal
+ * is +Y, the rotation is identity, and the result is the upright placement this
+ * field drew before poses existed.
+ */
+export function composeMarkerMatrix(
+  marker: GridLessonMarker,
+  offsetFactor: number,
+  scale: number,
+  target: THREE.Matrix4,
+  scratch: MarkerMatrixScratch,
+): THREE.Matrix4 {
+  const normal = marker.surface?.normal ?? MARKER_UP;
+  const lift = marker.surface?.lift ?? 0;
+  scratch.position
+    .copy(normal)
+    .multiplyScalar(marker.radius * offsetFactor + lift)
+    .add(marker.lesson.position);
+  scratch.rotation.setFromUnitVectors(MARKER_UP, normal);
+  scratch.scale.set(scale, scale, scale);
+  return target.compose(scratch.position, scratch.rotation, scratch.scale);
 }
 
 interface LessonMarkerFieldProps {
   readonly markers: readonly GridLessonMarker[];
+  readonly footing?: THREE.BufferGeometry | null;
+  readonly inlays?: MedallionInlays;
   readonly onPick: (lesson: LessonPlacement) => void;
   readonly onHover: (lesson: LessonPlacement | null) => void;
 }
 
-export function LessonMarkerField({ markers, onPick, onHover }: LessonMarkerFieldProps) {
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+/** Live engraving may pulse only when the shot is not frozen and motion is allowed. */
+export function markerPulseAllowed(): boolean {
+  return !islandLookFrozen() && !prefersReducedMotion();
+}
+
+interface SigilBatch {
+  readonly arcs: number;
+  readonly indices: readonly number[];
+}
+
+function sigilBatches(markers: readonly GridLessonMarker[]): readonly SigilBatch[] {
+  const grouped = new Map<number, number[]>();
+  markers.forEach((marker, index) => {
+    if (!marker.sigil) return;
+    const arcs = unitSigilArcCount(marker.sigil);
+    const list = grouped.get(arcs);
+    if (list) list.push(index);
+    else grouped.set(arcs, [index]);
+  });
+  return [...grouped.entries()].map(([arcs, indices]) => ({ arcs, indices }));
+}
+
+export function LessonMarkerField({
+  markers: allMarkers,
+  footing = null,
+  inlays,
+  onPick,
+  onHover,
+}: LessonMarkerFieldProps) {
+  const markers = useMemo(
+    () => allMarkers.filter((marker) => marker.grounding !== "inlay"),
+    [allMarkers],
+  );
   const plinth = useRef<THREE.InstancedMesh>(null);
-  const rings = useRef<THREE.InstancedMesh>(null);
-  // The road is the continuous ivory layer. Each lesson gets one smaller
-  // coral stone set into it, which keeps the route readable without adding a
-  // separate mesh per lesson.
-  const plinthGeometry = useMemo(() => {
-    // A wide chamfer, not a wall.
-    //
-    // This was 0.92 -> 1.0 over 0.22, which is a near-vertical band about
-    // twenty degrees off plumb. Under a 24-degree key those faces catch no sun
-    // at all and are lit only by the (deliberately cool) fill, so the one
-    // object a learner clicks wore a dark ring — navy before the palette pass,
-    // near-black after it. Isolating the meshes settled it: hide the plinth and
-    // the dark ring goes with it, hide the coral inset and the ring stays.
-    //
-    // Colour could not fix that, because the darkness was geometry: a vertical
-    // face has nowhere to get light from. 0.66 -> 1.0 over 0.14 is roughly a
-    // 58-degree slope, which points at the sky, takes the key, and becomes the
-    // lit chamfer the reference art puts on every edge.
-    const geometry = new THREE.CylinderGeometry(0.66, 1, 0.14, 6);
-    const normal = geometry.getAttribute("normal");
-    const colours = new Float32Array(normal.count * 3);
-    for (let index = 0; index < normal.count; index += 1) {
-      // The chamfer is now the lit face, so it keeps full albedo and the flat
-      // top is stepped down slightly instead. The old inversion (top 0.5, side
-      // 1.0) existed to keep a bright rim against the ivory road; the sand
-      // albedo already separates them, so this only has to stop the top from
-      // competing with the coral inset sitting on it.
-      const value = normal.getY(index) > 0.9 ? 0.94 : 1;
-      colours[index * 3] = value;
-      colours[index * 3 + 1] = value;
-      colours[index * 3 + 2] = value;
-    }
-    geometry.setAttribute("color", new THREE.BufferAttribute(colours, 3));
-    return geometry;
-  }, []);
-  // The ring is the learner-facing click cue. It gets a little more visible
-  // area in the fixed phone frame while keeping the same six-sided geometry
-  // and one instanced draw.
-  const ringGeometry = useMemo(() => new THREE.CylinderGeometry(0.72, 0.82, 0.12, 6), []);
-  const plinthMaterial = useMemo(
+  const engravingRefs = useRef<Array<THREE.InstancedMesh | null>>([]);
+  const batches = useMemo(() => sigilBatches(markers), [markers]);
+  const bodyGeometry = useMemo(() => createMedallionGeometry(), []);
+  const engravingGeometries = useMemo(
+    () => batches.map((batch) => unitRingGeometry(batch.arcs)),
+    [batches],
+  );
+  const bodyMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
         color: 0xffffff,
         vertexColors: true,
-        roughness: 0.72,
+        roughness: 0.7,
         metalness: 0.04,
-        flatShading: true,
       }),
     [],
   );
-  const ringMaterial = useMemo(
+  const engravingMaterial = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
         color: 0xffffff,
         toneMapped: false,
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false,
       }),
     [],
   );
   const matrix = useMemo(() => new THREE.Matrix4(), []);
+  const scratch = useMemo(() => createMarkerMatrixScratch(), []);
+  const bodyTint = useMemo(() => new THREE.Color(GRID_LESSON_PLINTH_ALBEDO), []);
+  const engravingTint = useMemo(() => new THREE.Color(), []);
 
   useLayoutEffect(() => {
-    const plinthTarget = plinth.current;
-    const ringTarget = rings.current;
-    if (!plinthTarget || !ringTarget) return;
-    markers.forEach(({ lesson, radius, colour }, index) => {
-      matrix.compose(
-        new THREE.Vector3(lesson.position.x, lesson.position.y + radius * 0.11, lesson.position.z),
-        new THREE.Quaternion(),
-        new THREE.Vector3(radius, radius, radius),
+    const body = plinth.current;
+    if (!body) return;
+    markers.forEach((marker, index) => {
+      body.setMatrixAt(
+        index,
+        composeMarkerMatrix(marker, MARKER_PLINTH_OFFSET, marker.radius, matrix, scratch),
       );
-      plinthTarget.setMatrixAt(index, matrix);
-      // `instanceColor` is a separate Three feature from geometry vertex
-      // colours. Leaving vertexColors enabled on CylinderGeometry (which has
-      // no color attribute) binds the missing attribute as black and turns
-      // every paver into a dark token.
-      plinthTarget.setColorAt(index, new THREE.Color(GRID_LESSON_PLINTH_ALBEDO));
-      matrix.compose(
-        new THREE.Vector3(lesson.position.x, lesson.position.y + radius * 0.25, lesson.position.z),
-        new THREE.Quaternion(),
-        new THREE.Vector3(radius, radius, radius),
-      );
-      ringTarget.setMatrixAt(index, matrix);
-      ringTarget.setColorAt(index, new THREE.Color(colour));
+      const tint = bodyTint.clone();
+      if (marker.lesson.state === "locked") tint.multiplyScalar(0.78);
+      else if (marker.lesson.state === "done") tint.multiplyScalar(0.9);
+      body.setColorAt(index, tint);
     });
-    plinthTarget.instanceMatrix.needsUpdate = true;
-    ringTarget.instanceMatrix.needsUpdate = true;
-    if (plinthTarget.instanceColor) plinthTarget.instanceColor.needsUpdate = true;
-    if (ringTarget.instanceColor) ringTarget.instanceColor.needsUpdate = true;
-  }, [markers, matrix]);
+    body.instanceMatrix.needsUpdate = true;
+    if (body.instanceColor) body.instanceColor.needsUpdate = true;
+
+    batches.forEach((batch, batchIndex) => {
+      const mesh = engravingRefs.current[batchIndex];
+      if (!mesh) return;
+      batch.indices.forEach((markerIndex, slot) => {
+        const marker = markers[markerIndex]!;
+        const scale = marker.radius * MEDALLION_TOP_RADIUS;
+        composeMarkerMatrix(marker, MARKER_ENGRAVING_OFFSET, scale, matrix, scratch);
+        mesh.setMatrixAt(slot, matrix);
+        engravingTint.set(MEDALLION_ENGRAVING_COLOURS[marker.lesson.state]);
+        mesh.setColorAt(slot, engravingTint);
+      });
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    });
+  }, [batches, bodyTint, engravingTint, markers, matrix, scratch]);
 
   useFrame(({ clock }) => {
-    const ringTarget = rings.current;
-    if (!ringTarget || islandLookFrozen()) return;
+    if (!markerPulseAllowed()) return;
     const liveIndex = markers.findIndex((entry) => entry.lesson.state === "live");
     if (liveIndex < 0) return;
     const live = markers[liveIndex]!;
-    const pulse = 1 + Math.sin(clock.elapsedTime * 2.2) * 0.08;
-    matrix.compose(
-      new THREE.Vector3(
-        live.lesson.position.x,
-        live.lesson.position.y + live.radius * 0.25,
-        live.lesson.position.z,
-      ),
-      new THREE.Quaternion(),
-      new THREE.Vector3(live.radius * pulse, live.radius * pulse, live.radius * pulse),
-    );
-    ringTarget.setMatrixAt(liveIndex, matrix);
-    ringTarget.instanceMatrix.needsUpdate = true;
+    const pulse = 1 + Math.sin(clock.elapsedTime * 2.2) * 0.05;
+    batches.forEach((batch, batchIndex) => {
+      const slot = batch.indices.indexOf(liveIndex);
+      if (slot < 0) return;
+      const mesh = engravingRefs.current[batchIndex];
+      if (!mesh) return;
+      composeMarkerMatrix(
+        live,
+        MARKER_ENGRAVING_OFFSET,
+        live.radius * MEDALLION_TOP_RADIUS * pulse,
+        matrix,
+        scratch,
+      );
+      mesh.setMatrixAt(slot, matrix);
+      mesh.instanceMatrix.needsUpdate = true;
+    });
   });
 
   useEffect(() => {
     return () => {
-      plinthGeometry.dispose();
-      ringGeometry.dispose();
-      plinthMaterial.dispose();
-      ringMaterial.dispose();
+      bodyGeometry.dispose();
+      bodyMaterial.dispose();
+      engravingMaterial.dispose();
     };
-  }, [plinthGeometry, plinthMaterial, ringGeometry, ringMaterial]);
+  }, [bodyGeometry, bodyMaterial, engravingMaterial]);
 
-  if (markers.length === 0) return null;
+  if (allMarkers.length === 0) return null;
   const pickMarker = (event: { readonly instanceId?: number; stopPropagation: () => void }) => {
     const marker = event.instanceId === undefined ? undefined : markers[event.instanceId];
     if (!marker) return;
@@ -159,16 +258,8 @@ export function LessonMarkerField({ markers, onPick, onHover }: LessonMarkerFiel
     <group name="hex-grid-lesson-markers">
       <instancedMesh
         ref={plinth}
-        args={[plinthGeometry, plinthMaterial, markers.length]}
+        args={[bodyGeometry, bodyMaterial, markers.length]}
         name="hex-grid-lesson-plinths"
-        /*
-          The 41 things a learner actually clicks were the only objects on the
-          island that neither cast a shadow, received one, nor had a contact
-          blob under them, so they read as stickers printed on the grass. The
-          decorative props already had `ContactShadowField`; the plinths were
-          simply missed. They are one instanced mesh, so this is one shadow draw
-          for all of them.
-        */
         castShadow
         receiveShadow
         onClick={pickMarker}
@@ -176,13 +267,62 @@ export function LessonMarkerField({ markers, onPick, onHover }: LessonMarkerFiel
         onPointerOut={() => onHover(null)}
         frustumCulled={false}
       />
-      <instancedMesh
-        ref={rings}
-        args={[ringGeometry, ringMaterial, markers.length]}
-        name="hex-grid-lesson-rings"
-        renderOrder={2}
-        frustumCulled={false}
-      />
+      {footing ? (
+        <mesh
+          geometry={footing}
+          material={bodyMaterial}
+          name="lesson-medallion-footing"
+          castShadow
+          receiveShadow
+        />
+      ) : null}
+      {inlays?.geometry ? (
+        <mesh
+          name="lesson-medallion-ground-inlays"
+          geometry={inlays.geometry}
+          material={bodyMaterial}
+          receiveShadow
+          onClick={(event) => {
+            const range = inlays.ranges.find(
+              (entry) =>
+                event.faceIndex != null &&
+                event.faceIndex >= entry.start &&
+                event.faceIndex < entry.end,
+            );
+            const marker = range ? allMarkers[range.markerIndex] : undefined;
+            if (!marker) return;
+            event.stopPropagation();
+            playSound("map.select");
+            onPick(marker.lesson);
+          }}
+          onPointerOver={(event) => {
+            const range = inlays.ranges.find(
+              (entry) =>
+                event.faceIndex != null &&
+                event.faceIndex >= entry.start &&
+                event.faceIndex < entry.end,
+            );
+            const marker = range ? allMarkers[range.markerIndex] : undefined;
+            if (!marker) return;
+            event.stopPropagation();
+            onHover(marker.lesson);
+          }}
+          onPointerOut={() => onHover(null)}
+        />
+      ) : null}
+      {batches.map((batch, batchIndex) => (
+        <instancedMesh
+          key={batch.arcs}
+          ref={(node) => {
+            engravingRefs.current[batchIndex] = node;
+          }}
+          args={[engravingGeometries[batchIndex], engravingMaterial, batch.indices.length]}
+          name={`lesson-medallion-engraving-${batch.arcs}`}
+          renderOrder={2}
+          frustumCulled={false}
+          raycast={() => {}}
+        />
+      ))}
     </group>
   );
 }

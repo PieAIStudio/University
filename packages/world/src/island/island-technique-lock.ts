@@ -65,7 +65,40 @@ export const ISLAND_TREE_TRIANGLE_CEILING = 900;
 export const ISLAND_LANDMARK_TRIANGLE_CEILING = 8000;
 export const ISLAND_LANDMARK_MAX_PER_ISLAND = 6;
 
+/**
+ * Course `buildIslandGeometry` mesh triangles, measured 2026-09-06 on the
+ * `terrain/{count}` fixtures. The count grows with the in-mesh soil path, not
+ * with a second route draw.
+ */
+export const ISLAND_COURSE_TERRAIN_TRIANGLES = {
+  6: 15_234,
+  12: 14_805,
+  24: 16_820,
+  41: 16_629,
+} as const;
+
 export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry>> = {
+  terrain: {
+    technique:
+      "One lathe-style BufferGeometry from IslandBlueprint: fifty-two course " +
+      "rings, outline samples, an in-mesh soil path, a faceted cliff and a " +
+      "tapered root. Vertex colour carries meadow, shore, rock and route tint; " +
+      "there is no second route mesh.",
+    source: "Our own geometry in island-geometry.ts buildTerrain.",
+    budget:
+      "course mesh triangles measured 2026-09-06 after soil clipping: " +
+      "15234 / 14805 / 16820 / 16629 at 6 / 12 / 24 / 41 lessons (seed terrain/{count})",
+    rejected: [
+      {
+        option: "Hex tiles as the course terrain draw",
+        why:
+          "HexField rebuilt a second height and route from a grid projection, so " +
+          "markers, dressing and the ground disagreed. V5 already specified one " +
+          "continuous field; reconnecting this mesh is the locked course draw.",
+        on: "2026-09-06",
+      },
+    ],
+  },
   grass: {
     technique:
       "One generated three-vertex card, shipped 2026-08-28. Taper, wind bend, " +
@@ -126,8 +159,8 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
         why:
           "The 114/402/246-triangle cones and 104-triangle bush are cheaper, but their " +
           "hard stacked geometry visibly conflicts with the already painterly terrain and " +
-          "grass. The donor construction stays below 408 triangles per tree and 24 per " +
-          "bush, so the visual mismatch—not raw triangles—decides this switch.",
+          "grass. The solid foliage construction stays at 624 triangles per tree (384 trunk + " +
+          "240 canopy) and 60 per bush, so the visual mismatch—not raw triangles—decides this switch.",
         on: "2026-08-29",
       },
       {
@@ -142,30 +175,45 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
   },
   tree: {
     technique:
-      "One selected mesh from elemental-serenity treeTrunks.glb plus 12 instanced " +
-      "procedural PlaneGeometry leaf cards around its crown in course view; world view " +
-      "keeps the trunk silhouette and a single low-poly canopy, never leaf instances.",
+      "Six registered meshes from elemental-serenity treeTrunks.glb plus 3 instanced " +
+      "IcosahedronGeometry(1,1) crown lobes (80 tris each) overlapping as one rounded " +
+      "mass in course view; world view keeps one selected trunk silhouette and a single " +
+      "low-poly canopy, never course crown lobes.",
     source:
       "elemental-serenity treeTrunks.glb (six variants: 288/304/384/288/384/384 tris) " +
-      "plus the donor BushManager PlaneGeometry(1,1) card (2 tris per card); author " +
+      "plus our own welded icosahedron crown volumes (detail 1, 80 tris per lobe); author " +
       "permission granted 2026-08-28.",
     budget:
-      "course <= 408 tris/tree (384-tri trunk max + 12 x 2-tri cards); world <= 396 " +
+      "course <= 624 tris/tree (384-tri trunk max + 3 x 80-tri lobes); world <= 396 " +
       "tris/tree (384-tri trunk + 12-tri canopy silhouette); trunk shadow pass omitted " +
       "in course to keep the measured frame budget",
-    rejected: [],
+    rejected: [
+      {
+        option: "Rounded UV-mask PlaneGeometry cards around crown",
+        why:
+          "Intersecting flat discs still visible in combined-v4 camera shots; solid " +
+          "icosahedron lobes (3 x 80 + 384 = 624) fit within the 900-triangle ceiling.",
+        on: "2026-09-06",
+      },
+    ],
   },
   bush: {
     technique:
-      "MeshSurfaceSampler points from bushEmitter.glb become 12 oriented PlaneGeometry " +
-      "leaf cards with a procedural UV alpha mask; shadow/mid/highlight colours are a " +
-      "normal ramp and customDepthMaterial repeats the mask for correct shadows.",
+      "Three flattened IcosahedronGeometry(1,0) lobes (20 tris each) in one instanced " +
+      "field, slightly buried; no bushEmitter sampling and no alpha cards.",
     source:
-      "elemental-serenity BushManager.class.js and bush vertex/fragment GLSL, using " +
-      "bushEmitter.glb (192-tri emitter only) and the shared 2-triangle leaf-card technique; " +
-      "author permission granted 2026-08-28.",
-    budget: "course <= 24 tris/bush (12 x 2-tri cards); world = 0 leaf cards",
-    rejected: [],
+      "Our own welded icosahedron crown volumes (detail 0, 20 tris per lobe). " +
+      "bushEmitter.glb stays the dressing asset id but is not fetched for course draw.",
+    budget: "course <= 60 tris/bush (3 x 20-tri lobes); world = 0 bush lobes",
+    rejected: [
+      {
+        option: "MeshSurfaceSampler + 12 cards with UV alpha mask from bushEmitter.glb",
+        why:
+          "Bristly fragments in combined-v4 and unnecessary GLB fetch; 3 welded " +
+          "icosahedron lobes cost 60 tris and draw in a single shared instanced mesh.",
+        on: "2026-09-06",
+      },
+    ],
   },
   landmark: {
     technique:
@@ -174,7 +222,7 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
     source:
       "elemental-serenity bridge / camp / tent / rocks, author permission granted " +
       "2026-08-28, plus Kenney fantasy-town for towers and walls.",
-    budget: `<= ${ISLAND_LANDMARK_TRIANGLE_CEILING} tris each, <= ${ISLAND_LANDMARK_MAX_PER_ISLAND} per island`,
+    budget: `<= ${ISLAND_LANDMARK_TRIANGLE_CEILING} tris per asset; <= ${ISLAND_LANDMARK_MAX_PER_ISLAND} semantic landmark places per island (complete assemblies/outposts count once, not once per wall)`,
     rejected: [
       {
         option: "Scattering more small props to fill the island",
@@ -206,13 +254,20 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
   },
   lessonNode: {
     technique:
-      "A small carved stone in one of four deterministic procedural variants, with the " +
-      "unit cue engraved into its top face as a notched ring; the arc count carries unit " +
-      "identity so it survives greyscale (v5 decision D).",
-    source: "Our own geometry.",
+      "One pale 14-segment bevelled medallion lathe, instanced at the original lesson " +
+      "footprint; upward notched unit rings in at most six shared batches. A merged " +
+      "terrain-split footing closes contact. Unsafe rigid fits use bounded refitting " +
+      "then a terrain-clipped shallow inlay with the same ID, engraving and pick target.",
+    source: "Our own lesson-medallion.ts, medallion-grounding.ts and unit-sigil.ts.",
     budget:
-      "1 body mesh per marker from 4 shared geometries, plus one shared ring geometry per sigil",
+      "168 tris/body + 48-50 tris/unit ring; one merged footing draw (exposure <= 0.25); " +
+      "at most one merged inlay draw. Measured 6/24/41 switchback footings: 814/3292/5594 tris.",
     rejected: [
+      {
+        option: "Throw on a rigid marker's first oversized footing",
+        why: "Two of 120 seed fixtures exceeded 0.25 (0.260/0.253), which could blank a valid course. Bounded refit/inlay preserves all targets and passed the expanded contact envelope without raising the ceiling.",
+        on: "2026-09-06",
+      },
       {
         option: "A coloured ring with a solid octahedron/cone/sphere standing on the disc",
         why:

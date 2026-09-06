@@ -32,6 +32,7 @@ import {
 } from "@pieai/university-world/labels.js";
 import type { Marker } from "../Maps";
 import { pinchDollyArmed } from "./pinch-dolly.js";
+import { mapOverlayObstacles, stageRelativeBox } from "../labels/chrome-obstacles.js";
 import { wheelIntent } from "./wheel-intent.js";
 
 /**
@@ -127,45 +128,31 @@ export const WORLD_POLAR = THREE.MathUtils.degToRad(54);
 /**
  * Inside a course the eye is above the island, not down a road.
  *
- * This was 74° — a road going away from you — and every reason given for it
- * has since stopped being true. There is no climb to read as a climb, because
- * the lessons lie on one island's surface instead of on 41 islands stepping up
- * through the air; and stones overlapping into a line is what you want when
- * the line *is* the subject, not when the subject is a piece of ground with
- * markers on it. At 74° that ground is seen almost edge-on and the far half of
- * it is a sliver.
- *
- * 66° is a deliberate course-only change from the world map's 54°. It is a
- * 24° depression from the horizon: enough to put the island and the road into
- * the upper half of the frame, while the front-side eye still shows the
- * avatar's face.
- * Entering a course therefore reads as arriving on the island, not as looking
- * at the same high map from a slightly different distance.
+ * Hex-era 66° / 23 put the eye at ridge height on continuous terrain: a
+ * foreground hill hid the route and the frame read as horizon instead of an
+ * island. 52° is a diorama depression — still enough to show the avatar's
+ * face from the +Z side — while 36 units of distance keep the live node, a
+ * short run of the path, and some coastline in one ordinary shot.
  *
  * The tilt is pinned at both ends by `Controls`, which makes it — not the
  * camera position — the thing that decides how high the shot sits: `Flight`
  * sets the distance to the target and `MapControls.update()` then forces the
- * angle, so any offset tuned into the eye position is overwritten next frame.
+ * angle, so `frameCourse` must use the same polar and distance rather than a
+ * second offset that would be overwritten next frame.
  */
-export const COURSE_POLAR = THREE.MathUtils.degToRad(66);
+export const COURSE_POLAR = THREE.MathUtils.degToRad(52);
 
 /**
  * How far the eye sits from the look target inside a course.
  *
- * The course contact sheet showed that the old 36-unit landing shot made the
- * avatar a background landmark. The selected 23-unit shot is the first close
- * composition where the face, the live node and a short readable run of the
- * road share the frame on both desktop and phone. The 18-unit end remains
- * available for inspecting the immediate ground; 54 keeps enough reach to
- * look ahead without returning to an island overview.
- *
- * The span is exactly 3×, the same ceiling used by the world map. Height is
- * not a lever — polar is pinned — so the route frame and this range are tuned
- * together.
+ * 36 is the ordinary landing (allowed band 34–38). 24 is still above the
+ * terrain peak at this polar; 72 is exactly 3×, the same dolly ceiling as
+ * the world map, so a learner can pull back to read landform without a
+ * second overview camera.
  */
-export const COURSE_DISTANCE = 23;
-export const COURSE_DISTANCE_MIN = 18;
-export const COURSE_DISTANCE_MAX = 54;
+export const COURSE_DISTANCE = 36;
+export const COURSE_DISTANCE_MIN = 24;
+export const COURSE_DISTANCE_MAX = 72;
 /**
  * World-map dolly range. The lever is distance, not camera height: polar is
  * pinned, and MapControls rebuilds position from (target, distance, azimuth).
@@ -438,37 +425,6 @@ function defaultWeight(marker: Marker): number {
   return 1;
 }
 
-function readRailBox(stage: HTMLElement, rail: HTMLElement): LabelBox | null {
-  const stageRect = stage.getBoundingClientRect();
-  const railRect = rail.getBoundingClientRect();
-  if (railRect.width <= 0 || railRect.height <= 0) return null;
-  return {
-    left: railRect.left - stageRect.left,
-    top: railRect.top - stageRect.top,
-    right: railRect.right - stageRect.left,
-    bottom: railRect.bottom - stageRect.top,
-  };
-}
-
-/**
- * Read only surfaces that can paint over the follow card.
- *
- * The rail, counter capsule, context aside and tab bar live in shell stacking
- * contexts above the stage. The next-up panel shares the stage overlay layer.
- * Transient hints are below the follow card, so treating them as obstacles can
- * exhaust both side slots for a tall card and trigger a fallback at the island
- * itself.
- */
-function readChromeBoxes(stage: HTMLElement, shell: HTMLElement): readonly LabelBox[] {
-  return [
-    ...shell.querySelectorAll<HTMLElement>(
-      ".nav-rail, .counter-row, .app-shell__aside, .nextup, .tab-bar",
-    ),
-  ]
-    .map((element) => readRailBox(stage, element))
-    .filter((box): box is LabelBox => box !== null);
-}
-
 function readCssNumber(element: HTMLElement, property: string, fallback: number): number {
   const value = Number.parseFloat(getComputedStyle(element).getPropertyValue(property));
   return Number.isFinite(value) ? value : fallback;
@@ -514,6 +470,7 @@ export function LabelProbe({
   const { camera, gl, size } = useThree();
   const scratch = useRef(new THREE.Vector3());
   const chromeBoxesRef = useRef<readonly LabelBox[]>([]);
+  const labelBoxesRef = useRef<readonly LabelBox[]>([]);
   const followViewportHeightRef = useRef<number | null>(null);
   const labelLimitRef = useRef(limit);
   const labelGapRef = useRef(4);
@@ -522,30 +479,52 @@ export function LabelProbe({
     const shell = stage?.closest<HTMLElement>(".app-shell");
     if (!stage || !shell) return;
 
+    let resizeObserver: ResizeObserver | null = null;
+    const observed = new WeakSet<HTMLElement>();
     const update = () => {
-      chromeBoxesRef.current = readChromeBoxes(stage, shell);
+      const obstacles = mapOverlayObstacles(stage, shell);
+      chromeBoxesRef.current = obstacles.chrome;
+      labelBoxesRef.current = obstacles.labels;
+      for (const element of obstacles.elements) {
+        if (!observed.has(element) && resizeObserver) {
+          resizeObserver.observe(element);
+          observed.add(element);
+        }
+      }
       labelLimitRef.current = Math.max(
         1,
         Math.floor(readCssNumber(stage, "--map-label-limit", limit)),
       );
       labelGapRef.current = Math.max(0, readCssNumber(stage, "--map-label-gap", 4));
       const tabBar = shell.querySelector<HTMLElement>(".tab-bar");
-      const tabBarBox = tabBar ? readRailBox(stage, tabBar) : null;
+      const tabBarBox = tabBar ? stageRelativeBox(stage, tabBar) : null;
       followViewportHeightRef.current = tabBarBox ? Math.max(0, tabBarBox.top) : null;
     };
     update();
     window.addEventListener("resize", update);
 
-    const resizeObserver =
-      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
+    resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
     resizeObserver?.observe(shell);
+    update();
 
     let mutationObserver: MutationObserver | null = null;
     if (typeof MutationObserver !== "undefined" && shell) {
-      mutationObserver = new MutationObserver(update);
+      mutationObserver = new MutationObserver((mutations) => {
+        // Ignore the projector's own per-frame label classes. Course-card
+        // expansion and hint retirement change actual reserved space.
+        if (
+          mutations.some(
+            (entry) =>
+              entry.type === "childList" ||
+              entry.attributeName !== "class" ||
+              (entry.target instanceof Element && entry.target.matches(".hint, .picked--left")),
+          )
+        )
+          update();
+      });
       mutationObserver.observe(shell, {
         attributes: true,
-        attributeFilter: ["data-rail-collapsed", "data-aside-collapsed"],
+        attributeFilter: ["data-rail-collapsed", "data-aside-collapsed", "open", "class"],
         childList: true,
         subtree: true,
       });
@@ -660,7 +639,9 @@ export function LabelProbe({
         item.x >= 0 && item.y >= 0 && item.x <= viewport.width && item.y <= viewport.height;
       const box = labelBox({ x: item.x, y: item.y }, item.width, item.height, item.anchor);
       const free =
-        onScreen && !reserved.some((other) => boxesOverlap(box, other, labelGapRef.current));
+        onScreen &&
+        !labelBoxesRef.current.some((other) => boxesOverlap(box, other, labelGapRef.current)) &&
+        !reserved.some((other) => boxesOverlap(box, other, labelGapRef.current));
       writePlacement(item.element, item.marker, item.x, item.y, free);
       if (free) reserved.push(box);
     }
@@ -741,7 +722,7 @@ export function LabelProbe({
     const namePlaced = placeLabels(candidates, viewport, {
       maxVisible: labelLimitRef.current,
       gap: labelGapRef.current,
-      reserved: [...chromeBoxesRef.current, ...reserved],
+      reserved: [...labelBoxesRef.current, ...reserved],
     });
     for (const placement of namePlaced) {
       const element = nodes.get(placement.id);
@@ -770,7 +751,7 @@ export function LabelProbe({
     // so the boundary fix does not cover a visible icon or unit name.
     for (const item of quietLabels) {
       let position = { x: item.x, y: item.y };
-      for (const chrome of chromeBoxesRef.current) {
+      for (const chrome of labelBoxesRef.current) {
         position = clampLabelOutOfChrome(
           { ...item, x: position.x, y: position.y },
           chrome,
