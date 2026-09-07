@@ -1,0 +1,73 @@
+# AI 玩法设计者复核
+
+2026-09-08 · `/Users/yuanfei/PieAI/University-play` · `codex/learning-play-lab`
+
+本轮五关都有实质机制改善，已经能从代码追到玩家动作、产品后果及再试路径。独立审查列出的 **GD-001、GD-002 两条 P2，修后实现判定均为 resolved；本次浏览器运行证据待主代理补入**。复核仅检查这两项，没有开启新审查。本轮未确认新机制使错误实现真正通关，不能据此声称不存在任何绕过。
+
+这是一次独立、只读的设计者审查。先读了 [首次用户报告](/Users/yuanfei/PieAI/University-play/SCRATCH/ai-play-lab/gameplay-user-review.md) 和 [机制迭代记录](/Users/yuanfei/PieAI/University-play/SCRATCH/ai-play-lab/gameplay-design-iterations.md)，再读五关 UI、core、新增辅助组件、十个情境配置及共享宿主。原用户报告提供改动动机，不充当这版已经好玩的证据。沿用项目路由、baseline、品牌复用边界，以及 threejs-game-director / threejs-gameplay-systems 的动作与后果闭环规则。
+
+## 已改善
+
+| 玩法 | 这版实际成立的机制 | 验收与恢复是否跟上 |
+| --- | --- | --- |
+| Brief | 同一个提交/看名单动作同时送入两份原型；首次约定通过后，客户真的改变一项边界，要求保留另外两项。玩家需要再操作成品。 | 首次验收保存 choices 与 observations；新要求清掉当前试用证据，最终 `evaluateBriefRounds` 分别检查两份目标。旧目标的成功观察不能直接替代新目标，交付单保留上一版约定。 |
+| Context | 初始包已有冲突与不适用材料；顾客问具体业务问题，回答和线索来自真实打包段落。玩家能沿错误字段找材料、替换或摘录，再招呼同一顾客。 | 顾客回执绑定段落集合、状态和值，交付重新计算当前包；材料改过而页面未重建时禁止服务，旧包顾客成功不计入不同的新包。整份材料与摘录仍允许多解，没有靠缩容量强迫删字。 |
+| Agent | 混合步骤展开为逐文件目标，可以放行清单写入、拦住原表修改；连续执行会在外来指令或保护文件将被修改时停下。单步执行仍允许看见扩权后的真实损坏。 | 行动卡更新实际 capabilities，投影和执行共享 `advanceAgent`；回退恢复文件、cursor 与完成动作集合，保留审计和当前权限，要求玩家修范围。进度取当前状态，没有把已撤回的日志当作仍然完成的动作。 |
+| Eval | 匿名候选接收一条冻结请求，每次只展示玩家要求的一份响应；同题再次试跑可以出现先通过、后失败。结果单并排显示新增预约单/商品状态。 | 新增独立用例保留其他用例发现；修改/删除清除对应回执，整组发布记录失效。未揭示的试跑不会产生个人观察回执；发布仍真实运行全部当前用例，并重算记录以排除伪造数据。GD-002 的跨候选反馈已有对应实现修正，见下表。 |
+| Repair | 两个版本由同一个状态机接受同一个动作；可以逐步观察原故障、回退到共同前缀、加新动作并保存原带，副作用有可检查的产品结果。 | 失败证据要求 authentic trace；偏好必须重开才能封存。回放来源与手工来源分别记录，旧自动步骤不能伪装成手工回归；切版本、检查点恢复和载入操作带会清验收。GD-001 的手工分支核对入口已有对应实现修正，见下表。 |
+
+上述改善超出了给旧选项换名字：输入确实改变后续状态，玩家可以看到差异并重新决定。但它们只证明所选机制可表达，不能证明之前五个体验弱点已被真人体验完全消除。
+
+## 已列 P2 的修后实现判定
+
+| 发现 | 实现判定 | 本次核对到的修法与守卫 | 运行判定 |
+| --- | --- | --- | --- |
+| GD-001 | **resolved（实现）** | [RepairGame.tsx:178](/Users/yuanfei/PieAI/University-play/packages/ui/src/learning-play/RepairGame.tsx:178) 的 forkHere 仅在原本处于手工回归且保留前缀的 origins 全为 manual 时延续 regressionActive，并清空旧 regressionReceipt。所列纯手工回退路径仍有核对入口；回放前缀不会借分支被改记为手工，旧收据也不能替新分支省去核对。[Q helper:499](/Users/yuanfei/PieAI/University-play/e2e/Q.ai-product-play.spec.ts:499) 新增完成改约后回退两步、显式分支、核对入口仍可见、重走末两步并核对；[调用处:567](/Users/yuanfei/PieAI/University-play/e2e/Q.ai-product-play.spec.ts:567) 随后要求最终完成。 | **待补**。仅阅读代码与断言；未运行或等待该测试。 |
+| GD-002 | **resolved（实现）** | [EvalGame.tsx:295](/Users/yuanfei/PieAI/University-play/packages/ui/src/learning-play/EvalGame.tsx:295) 切候选时，以当前 cases、receipts 和目标候选自己的 releaseRuns[candidate.id] 调用 assessEvalRelease，重新生成发布反馈；保留各候选缓存。因此未测、失败与已通过状态来自当前候选，不再借用上一条字符串。[Q:451](/Users/yuanfei/PieAI/University-play/e2e/Q.ai-product-play.spec.ts:451) 覆盖甲通过 → 换未测乙不出现 ready → 回甲恢复自己的 ready 和记录 → 最终完成。 | **待补**。该断言直接覆盖未测候选；已有失败缓存的分支由同一实现路径处理，本次没有独立浏览器结果。 |
+
+主代理将把本次 [gameplay-confirm.log](/Users/yuanfei/PieAI/University-play/SCRATCH/ai-play-lab/gameplay-confirm.log) 的完成结果补入。本复核没有主动等候或以运行中的日志推断通过。以下保留原发现的路径与原因，便于理解修复，不代表当前实现仍有这两处缺陷。
+
+### 原发现 GD-001 · P2 · 纯手工回归分支完成后，没有入口核对
+
+### GD-001 · P2 · 纯手工回归分支完成后，没有入口核对
+
+**具体路径。** 在预约情境应用版本 B、完成原问题重放后，点“清空现场，亲手检查旧功能”。亲手预约上午、取消、选下午、预约；回到第 2 步，点“从这一步试新操作”，再亲手选下午并预约。这个分支仍是完整的手工“预约 → 取消 → 改时段 → 再预约”，但“核对这次旧功能操作”消失，最终验收没有回归收据。用户只能清空这段已经有效的实验，重新走一遍。
+
+**代码证据。** [RepairGame.tsx:178](/Users/yuanfei/PieAI/University-play/packages/ui/src/learning-play/RepairGame.tsx:178) 的 `forkHere` 无条件把 `regressionActive` 设为 false；[同文件:434](/Users/yuanfei/PieAI/University-play/packages/ui/src/learning-play/RepairGame.tsx:434) 只在该值为 true 时显示核对按钮。实际上 [appendRepairComparisonEvent:419](/Users/yuanfei/PieAI/University-play/packages/core/src/learning-play/ai-repair.ts:419) 保留前缀 origins 并追加 manual，所述全手工分支仍满足 [checkRepairComparisonRegression:474](/Users/yuanfei/PieAI/University-play/packages/core/src/learning-play/ai-repair.ts:474) 的资格条件。core 允许的有效再试被 UI 状态挡住了。
+
+**影响。** 这是新加入的回退、分支玩法自身打断学习进度，并非可选装饰或玩家没按固定答案点击。尚未发现它可以绕过验收；它产生的是本可认可的手工证据无法提交。
+
+**建议修法与守卫。** 对全手工分支保留回归上下文，或根据 comparison.mode / origins 推导核对入口，避免另一个 boolean 与操作带真相分离。回放前缀仍须保持不可冒充手工。补一条真实 UI 回归：手工开始 → 回退 → 显式分支 → 完成取消改约 → 核对按钮可用且验收通过；同时保留现有“回放前缀分支不能代替手工回归”的负例。
+
+### 原发现 GD-002 · P2 · 切换候选后，发布反馈属于上一份方案
+
+**具体路径。** 用四类有效用例揭示盲区并为方案甲加边界；整组重跑通过，发布区显示“本组测试的全部检查符合约定。可以保存你的回归清单”。然后切换到尚未重跑的方案丙：发布区的“当前方案”已经变成丙，记录为空，却仍显示甲的通过提示。若丙之前跑过且失败，还会出现丙的失败记录与甲的通过提示并存。
+
+**代码证据。** [EvalGame.tsx:91](/Users/yuanfei/PieAI/University-play/packages/ui/src/learning-play/EvalGame.tsx:91) 将 `releaseRuns` 按 candidateId 保存，但 `releaseMessage` 只有一份。[候选切换:295](/Users/yuanfei/PieAI/University-play/packages/ui/src/learning-play/EvalGame.tsx:295) 只清试验台 message；[发布区:538](/Users/yuanfei/PieAI/University-play/packages/ui/src/learning-play/EvalGame.tsx:538) 的当前方案和 [563 行](/Users/yuanfei/PieAI/University-play/packages/ui/src/learning-play/EvalGame.tsx:563) 的记录随 candidateId 更新，560 行反馈仍是旧值。
+
+**影响。** 评测玩法把 A 的证据呈现成 B 的验收结论，直接误导比较与收货判断。`finish` 最终仍调用 `assessEvalRelease` 拒绝未测/失败方案，所以这是确认的错误成功提示，不能写成通关漏洞。
+
+**建议修法与守卫。** 让发布反馈与当前 candidateId、当前用例及 policy 下的 release run 一起派生，或缓存各候选的反馈；换方案时不得沿用另一候选的总结。补 UI 路径：甲通过 → 换未测丙，要求运行；丙失败 → 甲通过 → 切回丙，显示丙自身失败状态。保留同候选回看不清验收的既有修复。
+
+## 补充静态证据：旧反馈与 Next 项
+
+本次亲眼查看主代理另存的两张稳定视口图，补上了早前“本评审未见对应 after 状态”的缺口，只记录图内能看到的事实：
+
+- [brief-feedback-visible.png](/Users/yuanfei/PieAI/University-play/SCRATCH/ai-play-lab/gameplay-after-evidence/brief-feedback-visible.png)，1440×1100。缺少亲自试用的具体反馈完整出现在约 x=358、y=804、w=789、h=53 的区域，与上方“验收这份任务单”按钮同处视口，无遮挡。
+- [mobile-next-context-visible.png](/Users/yuanfei/PieAI/University-play/SCRATCH/ai-play-lab/gameplay-after-evidence/mobile-next-context-visible.png)，390×844。Context 标题与目标在视口上方，约 x=25、y=16、w=340、h=194；顾客操作区也可见，未落在活动底部空结果处。
+
+没有创建新裁图或改旧报告。这两张是可独立查看的 after 区域证据；没有声称进行了相同尺寸、主题的像素前后对比，也不由稳定截图推断滚动发生的全过程、键盘焦点或触屏手感。
+
+## 不能从代码推断的好玩程度
+
+- 能确认这版提供了有后果的动作、试错与恢复，且大部分验收读取实际状态；不能确认首次反馈真的能在 5–30 秒内被找到，或反馈节奏是否让人想再点一次。
+- 匿名方案、顾客和分支提供探索理由，但玩家是否仍把它当长表单、是否主动比较第二方案、是否愿意复验下一情境，需要实际首玩观察。通关率、测试条数与尝试次数都不能替代这类证据。
+- 本轮没有浏览器、CUA、录像试玩、build、verify 或测试执行。修后只阅读两项改动、对应新增测试代码和上述两张稳定 after 图，未以测试成绩背书。Mac 锁屏未绕行启动任何 UI。
+- 未修改产品、依赖、测试、配置或 governed docs，未提交、未委派或扩展发现范围。初审写了约定 SCRATCH 报告与任务板；此次修后只更新本报告。主代理负责补入运行证据，不能把实现 resolved 直接写成整个玩法已完成真人验证。
+
+任务记录：[gameplay-designer-tasks.md](/Users/yuanfei/PieAI/University-play/SCRATCH/ai-play-lab/gameplay-designer-tasks.md)。
+
+
+## Root completion receipt · 2026-09-08
+
+This paragraph is the root integrator's runtime evidence, not a claim that the independent reviewer ran the tests. `gameplay-confirm.log` completed 12 passed / 1 failed (the failed case was the Agent test's omitted final grant cleanup). Its Eval test passed the cross-candidate message guard, and its Repair test passed manual rewind/branch/verification. `gameplay-repair-evidence.log` subsequently passed the same Repair path with the pre-selection claims and failed regression captures. GD-001 and GD-002 are therefore resolved in both implementation review and the specific exercised browser paths. The Agent case passed after the test explicitly checked and closed remaining broad grants (`gameplay-agent-confirm.log`, 1 passed); the product's grant gate was retained.

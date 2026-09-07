@@ -1,3 +1,9 @@
+import type { BriefActivity } from "./ai-brief.js";
+import type { ContextActivity } from "./ai-context.js";
+import type { AgentActivity } from "./ai-agent.js";
+import type { EvalActivity } from "./ai-eval.js";
+import type { RepairActivity } from "./ai-repair.js";
+
 /** Experimental activity payloads. These are not a second lesson/export schema. */
 export interface ActivityBase {
   readonly id: string;
@@ -126,7 +132,12 @@ export type LearningActivitySpec =
   | TuneActivity
   | HuntActivity
   | DispatchActivity
-  | ProgramActivity;
+  | ProgramActivity
+  | BriefActivity
+  | ContextActivity
+  | AgentActivity
+  | EvalActivity
+  | RepairActivity;
 export type ActivityKind = LearningActivitySpec["kind"];
 export interface ActivityResult {
   readonly activityId: string;

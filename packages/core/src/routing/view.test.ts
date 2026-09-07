@@ -36,6 +36,7 @@ const views: View[] = [
   { kind: "catalog" },
   { kind: "avatar-lab" },
   { kind: "play-lab" },
+  { kind: "play-lab", collection: "ai" },
   { kind: "studio" },
   { kind: "studio", section: "map" },
 ];

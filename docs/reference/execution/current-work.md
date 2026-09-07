@@ -52,12 +52,18 @@ The short, current handoff. **What is true now, never how it got that way.**
 > 当前性能与观感已通过。已有实验和截图保留在原工作区及本机证据目录。
 
 > **学习玩法待整合（2026-09-08）**：`codex/learning-play-lab` 位于相邻
-> `University-play` worktree，五种共享组件、十个情境与 `/play-lab` 试玩已完成。
-> 完整 `pnpm verify`、十一条浏览器回归与独立试玩修正复核通过；
-> [设计与验收回执](../../plans/completed/learning-play-lab.md) 带原始截图和手机录像，
-> [组件 README](../../../packages/ui/src/learning-play/README.md) 说明内嵌 API 与配课边界。
-> 合并时协调共享路由、Practice 入口、CSS 导入、翻译注册和 journey；之后经既有课程 CLI 配课。
-> 组件验收已经完成，真人试学与学习效果验证仍属后续上线工作。
+> `University-play` worktree。基础五种保留于 `/play-lab`；新增五种 AI 产品玩法位于
+> `/play-lab/ai`，合计十种共享组件、二十个情境。AI 组包含客户变更、顾客试营业、
+> 文件权限驾驶、匿名逐次评测与双版本时间线，采用明确标注的预设教学沙盒。
+> 完整 `pnpm verify`（2032 个 Vitest 用例）、24 条唯一浏览器回归及真实课程源的
+> 四份导出核对通过。研究、迭代、独立审查与精选截图录像见
+> [AI 玩法完成回执](../../plans/completed/ai-product-play.md)；首轮记录仍在
+> [基础玩法计划](../../plans/completed/learning-play-lab.md)，接入 API 见
+> [组件 README](../../../packages/ui/src/learning-play/README.md)。
+> 固定预览：`http://127.0.0.1:21996/play-lab/ai`。合并时协调共享路由、CSS、
+> 翻译与导出注册、journey、current-work 和 manifest；配课经既有课程 CLI 进行。
+> 组件及沙盒行为已验收，真人乐趣、学习迁移与正式课程发布仍属上线阶段验证。
+
 
 Reversals live in `docs/adr/` as decision records with `supersedes` links.
 Nothing on this page explains what a rule used to be — if you need that, an ADR

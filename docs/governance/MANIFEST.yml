@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-07T17:07:49.999Z
+generated_at: 2026-09-07T19:42:29.594Z
 generator_version: doc-gov@0.9.11
-docs_count: 103
+docs_count: 104
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -102,6 +102,13 @@ docs:
     canonical: true
     last_reviewed: 2026-07-13
     pinned: true
+  - id: PLAN-AI-PRODUCT-PLAY
+    path: docs/plans/completed/ai-product-play.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-09-08
+    pinned: false
   - id: PLAN-ISLAND-V2-VERTICAL-SLICE
     path: docs/plans/completed/island-v2-vertical-slice.md
     type: plan
@@ -128,35 +135,35 @@ docs:
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-17
+    last_reviewed: 2026-09-08
     pinned: false
   - id: POLICY-SHARED-BRAND-KIT-FIRST
     path: docs/policy/shared-rules/brand-kit-first.md
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-28
+    last_reviewed: 2026-09-08
     pinned: true
   - id: POLICY-SHARED-CLEAN-IMAGE-GENERATION
     path: docs/policy/shared-rules/clean-image-generation-rules.md
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-17
+    last_reviewed: 2026-09-08
     pinned: false
   - id: POLICY-SHARED-DONORS
     path: docs/policy/shared-rules/donors.md
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-29
+    last_reviewed: 2026-09-08
     pinned: true
   - id: POLICY-SHARED-WEB3D-CAPABILITY-ALIGNMENT
     path: docs/policy/shared-rules/web3d-capability-alignment.md
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-28
+    last_reviewed: 2026-09-08
     pinned: true
   - id: REF-ISLAND-ART-V1-RETIRED
     path: docs/reference/_archive/island-art-reference-v1-natural/why-this-reference-is-retired.md
@@ -415,7 +422,7 @@ docs:
     type: reference
     status: stable
     canonical: true
-    last_reviewed: 2026-08-29
+    last_reviewed: 2026-09-08
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-GRID-PROP-DENSITY-NEEDS-CLUSTER-GEOMETRY-AND-ROUTE-VISIBLE-FLOORS
     path: docs/reference/learnings/workflow-issues/grid-prop-density-needs-cluster-geometry-and-route-visible-floors.md

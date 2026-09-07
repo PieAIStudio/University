@@ -8,8 +8,11 @@ import { getBaseExamples } from "./base-examples.js";
 import { extraExamples } from "./extra-examples.js";
 import { getProgramExamples } from "./program-examples.js";
 import { PlayIcon } from "./PlayIcon.js";
+import { getAIBriefExamples } from "./ai-brief-examples.js";
+import { getAIWorkflowExamples } from "./ai-workflow-examples.js";
+import { getAIQualityExamples } from "./ai-quality-examples.js";
 
-const MODES = [
+const FOUNDATION_MODES = [
   "connect",
   "tune",
   "hunt",
@@ -17,14 +20,30 @@ const MODES = [
   "program",
 ] as const satisfies readonly ActivityKind[];
 
+const AI_MODES = [
+  "ai-brief",
+  "ai-context",
+  "ai-agent",
+  "ai-eval",
+  "ai-repair",
+] as const satisfies readonly ActivityKind[];
+
 /** Demo fixtures live here; the activity renderer has no dependency on this page. */
-export function LearningPlayLab() {
+export function LearningPlayLab({
+  collection = "foundations",
+}: {
+  readonly collection?: "foundations" | "ai";
+}) {
+  const modes: readonly ActivityKind[] = collection === "ai" ? AI_MODES : FOUNDATION_MODES;
   const { locale } = useI18n();
   const examples = useMemo(
-    () => [...getBaseExamples(), ...extraExamples(), ...getProgramExamples()],
-    [locale],
+    () =>
+      collection === "ai"
+        ? [...getAIBriefExamples(), ...getAIWorkflowExamples(), ...getAIQualityExamples()]
+        : [...getBaseExamples(), ...extraExamples(), ...getProgramExamples()],
+    [locale, collection],
   );
-  const [mode, setMode] = useState<ActivityKind>("connect");
+  const [mode, setMode] = useState<ActivityKind>(modes[0]!);
   const [variant, setVariant] = useState(0);
   const [round, setRound] = useState(0);
   const [completed, setCompleted] = useState<ReadonlySet<ActivityKind>>(() => new Set());
@@ -34,7 +53,10 @@ export function LearningPlayLab() {
   const variants = examples.filter((example) => example.kind === mode);
   const activity = variants[variant] ?? variants[0]!;
   const advanceFocus = () =>
-    requestAnimationFrame(() => activityTop.current?.focus({ preventScroll: false }));
+    requestAnimationFrame(() => {
+      activityTop.current?.scrollIntoView({ block: "start", behavior: "instant" });
+      activityTop.current?.focus({ preventScroll: true });
+    });
   const choose = (next: ActivityKind) => {
     setMode(next);
     setVariant(0);
@@ -43,12 +65,12 @@ export function LearningPlayLab() {
     setRound((value) => value + 1);
   };
   const next = () => {
-    const index = MODES.indexOf(mode);
-    if (playlist !== null && index === MODES.length - 1) {
+    const index = modes.indexOf(mode);
+    if (playlist !== null && index === modes.length - 1) {
       setPlaylistDone(true);
       return;
     }
-    setMode(MODES[(index + 1) % MODES.length]!);
+    setMode(modes[(index + 1) % modes.length]!);
     setVariant(0);
     setRound((value) => value + 1);
     advanceFocus();
@@ -56,7 +78,7 @@ export function LearningPlayLab() {
   const startPlaylist = () => {
     setPlaylist([]);
     setPlaylistDone(false);
-    setMode(MODES[0]);
+    setMode(modes[0]!);
     setVariant(0);
     setRound((value) => value + 1);
     advanceFocus();
@@ -76,10 +98,18 @@ export function LearningPlayLab() {
         <a href="/practice">{t("play.lab.back")}</a>
         <SoundToggle />
       </div>
+      <nav className="learning-play-lab__collections" aria-label={t("play.ai.collection")}>
+        <a href="/play-lab/ai" aria-current={collection === "ai" ? "page" : undefined}>
+          {t("play.ai.collection.ai")}
+        </a>
+        <a href="/play-lab" aria-current={collection === "foundations" ? "page" : undefined}>
+          {t("play.ai.collection.foundations")}
+        </a>
+      </nav>
       <header className="learning-play-lab__intro">
         <div>
-          <h1>{t("play.lab.title")}</h1>
-          <p>{t("play.lab.intro")}</p>
+          <h1>{t(collection === "ai" ? "play.ai.title" : "play.lab.title")}</h1>
+          <p>{t(collection === "ai" ? "play.ai.intro" : "play.lab.intro")}</p>
         </div>
         <div className="learning-play-lab__session">
           <span>{t("play.lab.session", { count: completed.size })}</span>
@@ -101,7 +131,7 @@ export function LearningPlayLab() {
         </div>
       </header>
       <nav className="learning-play-lab__modes" aria-label={t("play.lab.select")}>
-        {MODES.map((kind) => (
+        {modes.map((kind) => (
           <GameButton
             sound={false}
             static
@@ -142,7 +172,7 @@ export function LearningPlayLab() {
           <div className="learning-play-lab__variant">
             <span>
               {playlist !== null
-                ? `${t("play.lab.mixing")} · ${MODES.indexOf(mode) + 1} / 5`
+                ? `${t("play.lab.mixing")} · ${modes.indexOf(mode) + 1} / 5`
                 : t("play.lab.variant", { count: variant + 1 })}
             </span>
             {playlist === null ? (
@@ -168,7 +198,9 @@ export function LearningPlayLab() {
               onResult={record}
               onNext={next}
               nextLabel={
-                playlist !== null && mode === "program" ? t("play.lab.mixDone") : undefined
+                playlist !== null && mode === modes[modes.length - 1]
+                  ? t("play.lab.mixDone")
+                  : undefined
               }
             />
           </div>
@@ -177,14 +209,46 @@ export function LearningPlayLab() {
       <p className="learning-play-lab__note">{t("play.lab.note")}</p>
       <details className="play-model-note learning-play-lab__research">
         <summary>{t("play.lab.research")}</summary>
-        <p>{t("play.lab.researchCopy")}</p>
+        <p>{t(collection === "ai" ? "play.ai.researchCopy" : "play.lab.researchCopy")}</p>
         <div>
-          <a href="https://ies.ed.gov/ncee/wwc/PracticeGuide/1" target="_blank" rel="noreferrer">
-            IES · Learning & instruction
-          </a>
-          <a href="https://arxiv.org/abs/1306.6544" target="_blank" rel="noreferrer">
-            PhET · Implicit scaffolding
-          </a>
+          {collection === "ai" ? (
+            <>
+              <a
+                href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Anthropic · Context engineering
+              </a>
+              <a
+                href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Anthropic · Agent evaluations
+              </a>
+              <a
+                href="https://www.microsoft.com/en-us/research/publication/guidelines-for-human-ai-interaction/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Microsoft · Human–AI interaction
+              </a>
+            </>
+          ) : (
+            <>
+              <a
+                href="https://ies.ed.gov/ncee/wwc/PracticeGuide/1"
+                target="_blank"
+                rel="noreferrer"
+              >
+                IES · Learning & instruction
+              </a>
+              <a href="https://arxiv.org/abs/1306.6544" target="_blank" rel="noreferrer">
+                PhET · Implicit scaffolding
+              </a>
+            </>
+          )}
         </div>
       </details>
     </div>

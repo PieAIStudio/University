@@ -1,0 +1,206 @@
+.play-ai-agent__cockpit {
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.95fr);
+}
+
+.play-ai-agent__action-files {
+  display: grid;
+  gap: 12px;
+  min-inline-size: 0;
+}
+.play-ai-agent__action-files > header {
+  display: grid;
+  gap: 4px;
+}
+.play-ai-agent__action-files > header > p {
+  font-size: 0.8125rem;
+  color: var(--game-ui-text-muted);
+}
+.play-ai-agent__target-card {
+  min-inline-size: 0;
+  border: 1px solid var(--game-ui-border-strong);
+  border-radius: 12px;
+  background: var(--game-ui-panel);
+  overflow: hidden;
+}
+.play-ai-agent__target-card[data-risk="true"] {
+  border-color: var(--game-ui-warning);
+}
+.play-ai-agent__target-card > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-block-end: 1px solid var(--game-ui-border-subtle);
+}
+.play-ai-agent__target-card > header > div {
+  display: grid;
+  gap: 3px;
+  min-inline-size: 0;
+}
+.play-ai-agent__target-card > header > span {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--game-ui-text-muted);
+}
+.play-ai-agent__target-card code,
+.play-ai-agent__last-result code {
+  font-size: 0.75rem;
+  color: var(--game-ui-text-muted);
+  overflow-wrap: anywhere;
+}
+.play-ai-agent__target-scope {
+  display: grid;
+  gap: 5px;
+  padding: 8px 14px 12px;
+}
+.play-ai-agent__target-scope > button {
+  justify-self: start;
+  max-inline-size: 100%;
+  min-block-size: 44px;
+  text-align: start;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.play-ai-agent__target-scope > p,
+.play-ai-agent__target-outcome,
+.play-ai-agent__target-check {
+  font-size: 0.8125rem;
+  color: var(--game-ui-text-muted);
+}
+.play-ai-agent__target-contents {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  border-block-start: 1px solid var(--game-ui-border-subtle);
+}
+.play-ai-agent__target-contents[data-writes="true"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.play-ai-agent__target-contents > section {
+  min-inline-size: 0;
+}
+.play-ai-agent__target-contents > section + section {
+  border-inline-start: 1px solid var(--game-ui-border-subtle);
+  background: color-mix(in srgb, var(--game-ui-accent) 5%, var(--game-ui-panel));
+}
+.play-ai-agent__target-contents > section[data-blocked="true"] {
+  background: color-mix(in srgb, var(--game-ui-text-muted) 5%, var(--game-ui-panel));
+}
+.play-ai-agent__target-contents h5 {
+  padding: 10px 12px 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--game-ui-text-muted);
+}
+.play-ai-agent__target-contents pre,
+.play-ai-agent__last-result pre {
+  max-block-size: 220px;
+  overflow: auto;
+  padding: 10px 12px 14px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--game-ui-font-body);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.play-ai-agent__target-contents pre {
+  min-block-size: 78px;
+}
+.play-ai-agent__target-outcome {
+  padding: 10px 14px;
+  border-block-start: 1px solid var(--game-ui-border-subtle);
+}
+.play-ai-agent__target-outcome[data-risk="true"] {
+  color: var(--game-ui-text);
+  background: color-mix(in srgb, var(--game-ui-warning) 10%, var(--game-ui-panel));
+}
+.play-ai-agent__target-check {
+  padding-inline-start: 10px;
+  border-inline-start: 2px solid var(--game-ui-border-strong);
+}
+.play-ai-agent__target-check[data-ready="true"] {
+  border-color: var(--game-ui-secondary);
+}
+.play-ai-agent__last-result {
+  min-inline-size: 0;
+  scroll-margin-block: 16px;
+  border: 1px solid var(--game-ui-secondary);
+  border-radius: 12px;
+  background: var(--game-ui-panel);
+  overflow: hidden;
+}
+.play-ai-agent__last-result[data-damaged="true"] {
+  border-color: var(--game-ui-danger);
+}
+.play-ai-agent__last-result > header {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-block-end: 1px solid var(--game-ui-border-subtle);
+  background: color-mix(in srgb, var(--game-ui-secondary) 8%, var(--game-ui-panel));
+}
+.play-ai-agent__last-result[data-damaged="true"] > header {
+  background: color-mix(in srgb, var(--game-ui-danger) 8%, var(--game-ui-panel));
+}
+.play-ai-agent__last-result > p {
+  padding: 0 12px 10px;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+.play-ai-agent__drive {
+  display: grid;
+  gap: 10px;
+  scroll-margin-block: 16px;
+  padding-block-start: 12px;
+  border-block-start: 1px solid var(--game-ui-border-strong);
+}
+.play-ai-agent__run-note {
+  color: var(--game-ui-text-muted);
+  font-size: 0.8125rem;
+}
+.play-ai-agent__action-buttons {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.play-ai-agent__action-buttons > button:first-child {
+  grid-column: 1 / -1;
+}
+.play-ai-agent__drive > button {
+  white-space: normal;
+}
+.play-ai-agent pre:focus-visible {
+  outline: 3px solid var(--game-ui-focus-ring);
+  outline-offset: -3px;
+}
+
+@container (max-width: 900px) {
+  .play-ai-agent__cockpit {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container (max-width: 520px) {
+  .play-ai-agent__target-contents[data-writes="true"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .play-ai-agent__target-contents > section + section {
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--game-ui-border-subtle);
+  }
+  .play-ai-agent__target-card > header {
+    padding-inline: 12px;
+  }
+  .play-ai-agent__target-scope {
+    padding-inline: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-ai-agent__action-files *,
+  .play-ai-agent__drive *,
+  .play-ai-agent__last-result * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

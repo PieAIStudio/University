@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
 import type { ActivityResult, LearningActivitySpec } from "@pieai/university-core";
 import { translate as t } from "../i18n/index.js";
@@ -8,6 +8,11 @@ import { TuneGame } from "./TuneGame.js";
 import { HuntGame } from "./HuntGame.js";
 import { DispatchGame } from "./DispatchGame.js";
 import { ProgramGame } from "./ProgramGame.js";
+import { BriefGame } from "./BriefGame.js";
+import { ContextGame } from "./ContextGame.js";
+import { AgentGame } from "./AgentGame.js";
+import { EvalGame } from "./EvalGame.js";
+import { RepairGame } from "./RepairGame.js";
 import { PlayIcon } from "./PlayIcon.js";
 
 export interface LearningActivityProps {
@@ -38,8 +43,14 @@ function ActivityRound({
   onRestart,
 }: LearningActivityProps & { readonly onRestart: () => void }) {
   const [hintOpen, setHintOpen] = useState(false);
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [feedback, setFeedback] = useState<{ passed: boolean; message: string } | null>(null);
   const [outcome, setOutcome] = useState<ActivityResult | null>(null);
+  const feedbackElement = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if ((activity.kind === "ai-brief" || activity.kind === "ai-context") && feedback)
+      feedbackElement.current?.scrollIntoView?.({ block: "nearest", behavior: "instant" });
+  }, [activity.kind, feedback]);
   const count = useRef(0);
   const hintsUsed = useRef(0);
   const reported = useRef(false);
@@ -108,6 +119,9 @@ function ActivityRound({
           {activity.goal}
         </span>
       </p>
+      {activity.kind.startsWith("ai-") ? (
+        <p className="learning-activity__sandbox">{t("play.ai.sandbox")}</p>
+      ) : null}
       {outcome?.status !== "skipped" ? (
         <div className="learning-activity__game">
           {activity.kind === "connect" ? <ConnectGame activity={activity} {...controls} /> : null}
@@ -115,10 +129,22 @@ function ActivityRound({
           {activity.kind === "hunt" ? <HuntGame activity={activity} {...controls} /> : null}
           {activity.kind === "dispatch" ? <DispatchGame activity={activity} {...controls} /> : null}
           {activity.kind === "program" ? <ProgramGame activity={activity} {...controls} /> : null}
+          {activity.kind === "ai-brief" ? <BriefGame activity={activity} {...controls} /> : null}
+          {activity.kind === "ai-context" ? (
+            <ContextGame activity={activity} {...controls} />
+          ) : null}
+          {activity.kind === "ai-agent" ? <AgentGame activity={activity} {...controls} /> : null}
+          {activity.kind === "ai-eval" ? <EvalGame activity={activity} {...controls} /> : null}
+          {activity.kind === "ai-repair" ? <RepairGame activity={activity} {...controls} /> : null}
         </div>
       ) : null}
       {feedback ? (
-        <div className="learning-activity__feedback" data-passed={feedback.passed} role="status">
+        <div
+          ref={feedbackElement}
+          className="learning-activity__feedback"
+          data-passed={feedback.passed}
+          role="status"
+        >
           <PlayIcon name={feedback.passed ? "check" : "spark"} />
           <p>{feedback.message}</p>
         </div>
@@ -146,6 +172,28 @@ function ActivityRound({
                 </a>
               </div>
             </>
+          ) : null}
+          {outcome.status === "completed" && typeof outcome.submission.handoff === "string" ? (
+            <details className="learning-activity__handoff">
+              <summary>{t("play.ai.handoff")}</summary>
+              <p>{t("play.ai.handoffNote")}</p>
+              <GameButton
+                type="button"
+                variant="secondary"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(outcome.submission.handoff as string);
+                    setCopyState("copied");
+                  } catch {
+                    setCopyState("failed");
+                  }
+                }}
+              >
+                {t(copyState === "copied" ? "play.ai.copied" : "play.ai.copy")}
+              </GameButton>
+              {copyState === "failed" ? <p role="status">{t("play.ai.copyFailed")}</p> : null}
+              <pre>{outcome.submission.handoff}</pre>
+            </details>
           ) : null}
           <div className="play-action-row">
             {onNext ? (

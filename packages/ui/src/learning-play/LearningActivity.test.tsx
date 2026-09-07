@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ConnectActivity, TuneActivity } from "@pieai/university-core";
 import { LearningActivity } from "./LearningActivity.js";
 import { getBaseExamples } from "./base-examples.js";
+import { getAIBriefExamples } from "./ai-brief-examples.js";
 
 let container: HTMLDivElement;
 let root: Root;
@@ -93,5 +94,56 @@ describe("activity host evidence boundary", () => {
     await act(async () => vi.runAllTimers());
     expect(onResult).toHaveBeenCalledTimes(1);
     expect(onResult.mock.calls[0]![0].status).toBe("skipped");
+  });
+  it("exposes a useful AI handoff only after real product acceptance, with a copy fallback", async () => {
+    const onResult = vi.fn();
+    const writeText = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("Clipboard unavailable"))
+      .mockResolvedValue(undefined);
+    const clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+    try {
+      await act(async () =>
+        root.render(<LearningActivity activity={getAIBriefExamples()[0]!} onResult={onResult} />),
+      );
+      expect(container.textContent).toContain("预设 AI 案例");
+      await click("访客可提交");
+      await click("先等审核");
+      await click("仅组织者可见");
+      await click("验收这份任务单");
+      expect(onResult).not.toHaveBeenCalled();
+      expect(container.querySelector(".learning-activity__handoff")).toBeNull();
+      await click("申请参加");
+      await click("看看名单");
+      await click("验收这份任务单");
+      expect(onResult).not.toHaveBeenCalled();
+      expect(container.textContent).toContain("客户的临时变更");
+      await click("立即确认名额");
+      await click("同样提交一次");
+      await click("同样查看名单");
+      await click("验收这份任务单");
+      expect(onResult).toHaveBeenCalledTimes(1);
+      expect(onResult.mock.calls[0]![0]).toMatchObject({
+        status: "completed",
+        attempts: 2,
+        submission: { handoff: expect.stringContaining("审核前不占名额") },
+      });
+      const artifact = container.querySelector(".learning-activity__handoff pre")!.textContent;
+      expect(artifact).toContain("实际操作验证");
+      await click("复制这份工作单");
+      expect(container.textContent).toContain("可以直接选中下面的文字");
+      expect(writeText).toHaveBeenCalledWith(artifact);
+      await click("复制这份工作单");
+      expect(container.textContent).toContain("已复制");
+      expect(container.textContent).not.toContain("复制未完成");
+      await click("重新开始");
+      expect(container.querySelector(".learning-activity__handoff")).toBeNull();
+      await click("先跳过");
+      expect(container.querySelector(".learning-activity__handoff")).toBeNull();
+    } finally {
+      if (clipboardDescriptor) Object.defineProperty(navigator, "clipboard", clipboardDescriptor);
+      else Reflect.deleteProperty(navigator, "clipboard");
+    }
   });
 });

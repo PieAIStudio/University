@@ -1,0 +1,50 @@
+# Gameplay design iterations
+
+2026-09-08 · codex/learning-play-lab · Extension of the established DOM learning games.
+
+## Iteration 1: functional teaching loops
+
+Five new deterministic activities, two situations each. Forty core tests and four host tests passed. All 23 unique P/Q browser regressions passed after correcting a nested-summary test selector. This establishes functioning behavior, not enjoyment.
+
+## Iteration 2: player and designer challenge
+
+The user explicitly asks for gameplay and repeated iteration. A fresh AI player used the real browser without solution code, approximately ninety seconds per activity. This is an AI simulation, not a human study.
+
+Observed weaknesses:
+- Brief starts with a good surprise (A confirms; B blocks on login) but then collapses into matching three explicit answers to controls.
+- Context can be solved by obeying the opening recipe and packing two whole documents, with no encounter with conflict or revision.
+- Agent's mixed required step can be refused only as a whole; the refusal message does not give the player a direct way to reshape its dangerous part.
+- Eval's cases, outcome logs and guards are separated. Names reveal candidate behavior; adding a case erases earlier discoveries.
+- Repair's patch names reveal which answer is good, so the player has little reason to compare or restore versions.
+
+## Iteration 3: selected mechanism changes
+
+| Activity | Player promise and primary action | Pressure and information gained | Recovery and meaningful reward |
+| --- | --- | --- | --- |
+| Brief | Direct the same visitor action at two products, align behavior, then handle a client changing one boundary | A working product can stop matching a revised request; only the affected rule should change | Reuse the agreement, retest real behavior, retain both accepted versions in the handoff |
+| Context | Take over a flawed material pack; let customers question its output, trace failures to source paragraphs and repair the pack | A newer idea conflicts with an applicable agreement; capacity and provenance constrain the repair | Replace or excerpt materials and re-serve the customers with the current pack; complete and concise packs remain equally valid |
+| Agent | Inspect a proposed action as file targets and reshape the tool's actual reach before executing | One required action mixes useful output with a destructive side effect; refusing everything cannot deliver | Keep the useful write, prevent the protected write, run toward the next judgment point, preserve files and audit after checkpoint restore |
+| Eval | Build a test customer, probe an unknown preset candidate one response at a time, and collect failures into regression cases | One successful response may be followed by a different response to the same conditions; labels cannot spoil the result | Old probes remain when adding independent cases; changed conditions invalidate matching evidence; release re-runs the whole current suite |
+| Repair | Test plausible claimed fixes in a live old/new comparison, rewind to a shared step and append a new action | Both fixes can appear to repair the original bug; cancellation, rebooking or resaving reveals a regression | Preserve the failed branch as evidence, restore a checkpoint, and accept only a repair that keeps old behavior |
+
+Every 5–30 seconds: act, see an actual state consequence, decide what to try or change. First visible consequence must be reachable without completing a configuration form. No forced reaction timing, cosmetic score, fake model success percentage, or implication that a sandbox rollback undoes real-world sends/payments.
+
+The initial slice teaches one rule, the next action combines it with an existing rule, and the second scenario changes the facts. A fuller attempt count is not a learning score. The reward is a working product behavior or retained reusable evidence and access to the next problem.
+
+## Ownership and validation
+
+- Root owns Brief, Context, shared interfaces/integration, localized root/workflow catalog changes, journey and final tests.
+- Agent-focused worker owns Agent game/core and a separate AI agent-play style/catalog extension to avoid Context collisions.
+- Quality worker owns Eval/Repair game/core, existing quality styles/catalogs and examples.
+- Fresh player owns a bounded before/after experience report only.
+
+Final tests must prove the new mechanic is actually required or usable through real input: current-pack customer receipts, actual tool/file intersections, one-trial reveal/history validity, and old/new state divergence using the same state machine. Browser captures cover first move, discovery, recovery and outcome on desktop/phone. The after-pass compares the listed weaknesses and does not claim human enjoyment or transfer.
+
+
+## Confirmation: faults found after the mechanism change
+
+Independent designer GD-001 found that explicitly branching a purely manual Repair regression hid its verification control. The UI now preserves the manual-regression context for a manual prefix and clears the old receipt; the Q browser case rewinds and branches a completed manual rebooking path, checks that verification remains available, and passes. Replay prefixes still cannot impersonate manual evidence.
+
+GD-002 found that Eval cached runs belonged to each candidate but the success sentence was shared. Selecting a candidate now reassesses that candidate's own run; Q checks that an untested alternative does not inherit the passed message and returning to the prior candidate retains its own valid result.
+
+Both core interfaces survived the review; these were UI state ownership mistakes. All 24 unique old/new browser cases passed across the final P/Q batch and scoped reruns. The failed interim runs are retained: changed DOM selectors, exact wording, and an Agent test that neglected remaining broad grants were corrected without weakening the product gate. One final pair of Repair captures documents candidate claims before selection and the failed rebooking consequence; the changes there only add evidence.

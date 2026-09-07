@@ -1,0 +1,291 @@
+.learning-play-lab__collections {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-block-end: 22px;
+}
+.learning-play-lab__collections a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  padding: 8px 18px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-card);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+}
+.learning-play-lab__collections a[aria-current="page"] {
+  color: var(--game-ui-accent-ink);
+  border-color: var(--game-ui-accent-ink);
+  background: color-mix(in srgb, var(--game-ui-accent) 12%, var(--game-ui-panel));
+}
+.learning-activity__sandbox {
+  margin-block: -10px 24px;
+  color: var(--game-ui-text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.learning-activity__handoff {
+  margin-block: 20px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: 16px;
+  padding: 12px 16px;
+  background: var(--game-ui-panel);
+}
+.learning-activity__handoff summary {
+  min-block-size: 44px;
+  align-content: center;
+  cursor: pointer;
+  font-weight: 700;
+}
+.learning-activity__handoff p {
+  color: var(--game-ui-text-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.learning-activity__handoff pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 14px/1.9 var(--game-ui-font-body);
+  margin-block: 16px 0;
+}
+.ai-brief {
+  display: grid;
+  gap: 24px;
+}
+.ai-brief h3 {
+  margin: 0;
+  font: 750 18px/1.5 var(--game-ui-font-display);
+  scroll-margin-block-start: 24px;
+}
+.ai-brief__request {
+  margin: 0;
+  padding: 0;
+}
+.ai-brief__request > span {
+  font-size: 12px;
+  color: var(--game-ui-text-muted);
+}
+.ai-brief__request p {
+  margin-block: 6px 0;
+  font-size: 16px;
+  line-height: 1.8;
+}
+.ai-brief__preview-title p {
+  margin-block: 6px 0;
+  color: var(--game-ui-text-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.ai-brief__prototypes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.ai-brief__prototype {
+  min-inline-size: 0;
+  overflow: hidden;
+  border: 1px solid var(--game-ui-border-strong);
+  border-radius: 16px;
+  background: var(--game-ui-panel);
+}
+.ai-brief__prototype-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  background: var(--game-ui-panel-deep);
+  font-size: 12px;
+}
+.ai-brief__prototype-top svg {
+  color: var(--game-ui-accent-ink);
+}
+.ai-brief__prototypes[data-converged="true"] .ai-brief__prototype-top {
+  background: color-mix(in srgb, var(--game-ui-secondary) 14%, var(--game-ui-panel));
+}
+.ai-brief__product {
+  padding: 20px;
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+.ai-brief__product h4 {
+  font: 800 22px/1.4 var(--game-ui-font-display);
+  margin: 0;
+}
+.ai-brief__product > p {
+  color: var(--game-ui-text-muted);
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 0;
+}
+.ai-brief__identity {
+  font-size: 12px;
+  color: var(--game-ui-text-muted);
+  padding-block: 4px;
+}
+.ai-brief__product button {
+  max-inline-size: 100%;
+  font-size: 13px;
+  min-block-size: 44px;
+}
+.ai-brief__product-response {
+  inline-size: 100%;
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--game-ui-panel-strong);
+}
+.ai-brief__product-response p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.ai-brief__product-response[data-result="joined"],
+.ai-brief__product-response[data-result="queued"] {
+  background: color-mix(in srgb, var(--game-ui-secondary) 12%, var(--game-ui-panel-strong));
+}
+.ai-brief__product-response[data-result="login"] {
+  background: color-mix(in srgb, var(--game-ui-warning) 12%, var(--game-ui-panel-strong));
+}
+.ai-brief__product-response button {
+  margin-block-start: 12px;
+}
+.ai-brief__roster {
+  padding-block: 10px;
+  border-block-start: 1px solid var(--game-ui-border-subtle);
+}
+.ai-brief__contract {
+  padding-block-start: 8px;
+}
+.ai-brief__convergence {
+  margin-block: 6px 20px;
+  font-size: 13px;
+  color: var(--game-ui-text-muted);
+}
+.ai-brief__questions {
+  display: grid;
+  gap: 20px;
+  margin-block-end: 20px;
+}
+.ai-brief fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: 16px;
+}
+.ai-brief legend {
+  padding-inline: 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.ai-brief summary {
+  min-block-size: 44px;
+  cursor: pointer;
+  align-content: center;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.ai-brief details p {
+  padding: 12px;
+  margin-block: 4px 14px;
+  border-radius: 12px;
+  background: var(--game-ui-panel-deep);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.ai-brief__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ai-brief__options button {
+  flex: 1;
+  min-inline-size: 120px;
+  min-block-size: 46px;
+  font-size: 13px;
+}
+.ai-brief__clear {
+  margin-block-start: 8px;
+  min-block-size: 44px;
+  font-size: 12px;
+}
+.ai-brief__empty-clause {
+  display: inline-block;
+  padding-block: 16px 10px;
+  font-size: 12px;
+  color: var(--game-ui-text-muted);
+}
+.ai-brief .play-action-row {
+  flex-wrap: wrap;
+}
+.ai-brief .play-model-note {
+  min-inline-size: 0;
+}
+.ai-brief .play-model-note li {
+  margin-block: 8px;
+  line-height: 1.7;
+}
+.ai-brief :is(button, summary, h3):focus-visible,
+.learning-activity__handoff :is(summary, button):focus-visible,
+.learning-play-lab__collections a:focus-visible {
+  outline: 3px solid var(--game-ui-focus-ring);
+  outline-offset: 3px;
+}
+@container (max-width: 570px) {
+  .ai-brief__prototypes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ai-brief__product {
+    padding: 16px;
+  }
+  .ai-brief fieldset {
+    padding: 12px;
+  }
+  .ai-brief .play-action-row > button {
+    flex: 1;
+    min-inline-size: 120px;
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-brief * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+.ai-brief__request[data-revised="true"] {
+  border-color: var(--game-ui-secondary);
+}
+.ai-brief__request > strong {
+  display: block;
+  margin-block: 10px;
+}
+.ai-brief__request:focus-visible {
+  outline: 3px solid var(--game-ui-focus-ring);
+  outline-offset: 4px;
+}
+.ai-brief__compare-controls {
+  margin-block: 16px;
+}
+.ai-brief__comparison {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  margin-block: 14px;
+  background: var(--game-ui-panel-strong);
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: 12px;
+}
+.ai-brief__comparison p {
+  display: flex;
+  align-items: start;
+  gap: 12px;
+  margin: 0;
+}
+.ai-brief__comparison b {
+  font-family: var(--game-ui-font-mono);
+  color: var(--game-ui-text-muted);
+}

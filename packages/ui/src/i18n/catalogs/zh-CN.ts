@@ -1,3 +1,7 @@
+import { messages as aiPlay } from "./learning-play-ai.zh-CN.js";
+import { messages as aiWorkflow } from "./learning-play-ai-workflow.zh-CN.js";
+import { messages as aiQuality } from "./learning-play-ai-quality.zh-CN.js";
+import { messages as aiAgentPlay } from "./learning-play-ai-agent-play.zh-CN.js";
 import { messages as learningPlayProgram } from "./learning-play-program.zh-CN.js";
 import { messages as learningPlayExtra } from "./learning-play-extra.zh-CN.js";
 import { messages as learningPlayMessages } from "./learning-play.zh-CN.js";
@@ -8,6 +12,10 @@ import { messages as learningPlayMessages } from "./learning-play.zh-CN.js";
  * is selectable only when its key set exactly matches this one.
  */
 export const messages = {
+  ...aiPlay,
+  ...aiWorkflow,
+  ...aiQuality,
+  ...aiAgentPlay,
   ...learningPlayMessages,
   ...learningPlayProgram,
   ...learningPlayExtra,

@@ -43,6 +43,12 @@ import "@pieai/university-ui/learning-play/learning-play.css";
 import "@pieai/university-ui/learning-play/hunt.css";
 import "@pieai/university-ui/learning-play/dispatch.css";
 import "@pieai/university-ui/learning-play/program.css";
+import "@pieai/university-ui/learning-play/ai-play.css";
+import "@pieai/university-ui/learning-play/ai-workflow.css";
+import "@pieai/university-ui/learning-play/ai-quality.css";
+import "@pieai/university-ui/learning-play/ai-context-play.css";
+import "@pieai/university-ui/learning-play/ai-agent-play.css";
+
 import "@pieai/university-ui/practice/mistakes.css";
 import "@pieai/university-ui/presence/presence.css";
 import "@pieai/university-ui/reference/knowledge-notes.css";

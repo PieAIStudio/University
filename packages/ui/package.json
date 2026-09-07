@@ -104,7 +104,12 @@
     "./learning-play/learning-play.css": "./src/learning-play/learning-play.css",
     "./learning-play/hunt.css": "./src/learning-play/hunt.css",
     "./learning-play/dispatch.css": "./src/learning-play/dispatch.css",
-    "./learning-play/program.css": "./src/learning-play/program.css"
+    "./learning-play/program.css": "./src/learning-play/program.css",
+    "./learning-play/ai-play.css": "./src/learning-play/ai-play.css",
+    "./learning-play/ai-workflow.css": "./src/learning-play/ai-workflow.css",
+    "./learning-play/ai-quality.css": "./src/learning-play/ai-quality.css",
+    "./learning-play/ai-context-play.css": "./src/learning-play/ai-context-play.css",
+    "./learning-play/ai-agent-play.css": "./src/learning-play/ai-agent-play.css"
   },
   "scripts": {
     "typecheck": "tsc -b --pretty false",

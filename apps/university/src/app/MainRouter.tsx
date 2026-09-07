@@ -198,7 +198,10 @@ export function MainRouter({
       {AUTHORING && view.kind === "world" ? <AuthoringMapNotes studyId={focusedStudyId} /> : null}
       {view.kind === "play-lab" ? (
         <Suspense fallback={<RouteFallback />}>
-          <LearningPlayLab />
+          <LearningPlayLab
+            key={view.collection ?? "foundations"}
+            collection={view.collection ?? "foundations"}
+          />
         </Suspense>
       ) : null}
       {view.kind === "avatar-lab" ? (
