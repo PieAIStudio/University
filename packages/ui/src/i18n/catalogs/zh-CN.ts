@@ -1,3 +1,6 @@
+import { messages as learningPlayProgram } from "./learning-play-program.zh-CN.js";
+import { messages as learningPlayExtra } from "./learning-play-extra.zh-CN.js";
+import { messages as learningPlayMessages } from "./learning-play.zh-CN.js";
 /**
  * Chinese source messages for the University learner surface.
  *
@@ -5,6 +8,9 @@
  * is selectable only when its key set exactly matches this one.
  */
 export const messages = {
+  ...learningPlayMessages,
+  ...learningPlayProgram,
+  ...learningPlayExtra,
   "app.app.app.copy.书架上还没有课": "书架上还没有课",
   "app.app.app.copy.今天": "今天",
   "app.app.app.copy.从这里开始": "从这里开始",

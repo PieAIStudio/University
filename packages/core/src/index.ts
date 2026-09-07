@@ -363,3 +363,10 @@ export {
   type LibraryTab,
   type View,
 } from "./routing/view.js";
+
+export type * from "./learning-play/types.js";
+export * from "./learning-play/connect.js";
+export * from "./learning-play/tune.js";
+export * from "./learning-play/hunt.js";
+export * from "./learning-play/dispatch.js";
+export * from "./learning-play/program.js";

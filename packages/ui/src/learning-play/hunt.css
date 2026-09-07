@@ -1,0 +1,357 @@
+.play-hunt {
+  display: grid;
+  gap: 14px;
+  min-inline-size: 0;
+  container-type: inline-size;
+  color: var(--game-ui-text);
+}
+
+.play-hunt h4,
+.play-hunt p {
+  margin: 0;
+}
+
+.play-hunt h4 {
+  font-size: var(--game-ui-font-sm);
+  font-weight: var(--game-ui-weight-strong);
+}
+
+.play-hunt__contract {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 14px 18px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-card);
+  background: var(--game-ui-panel);
+  line-height: 1.65;
+}
+
+.play-hunt__contract h4 {
+  color: var(--game-ui-text-muted);
+}
+
+.play-hunt__implementation code {
+  display: block;
+  margin-block-start: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--game-ui-panel-deep);
+  color: var(--game-ui-text);
+  font-family: var(--game-ui-font-mono);
+  font-size: var(--game-ui-font-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.play-hunt__form {
+  display: grid;
+  gap: 8px;
+}
+
+.play-hunt__bench {
+  --game-ui-text-muted: var(--game-ui-text);
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--game-ui-border-strong);
+  border-radius: var(--game-ui-radius-panel);
+  background: var(--game-ui-panel-deep);
+}
+
+.play-hunt__bench-heading {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.play-hunt__bench-heading p {
+  margin-block-start: 4px;
+  color: var(--game-ui-text);
+  font-size: var(--game-ui-font-xs);
+  line-height: 1.55;
+}
+
+.play-hunt__blackbox {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  block-size: 42px;
+  border: 1px solid var(--game-ui-border-strong);
+  border-radius: 10px;
+  background: var(--game-ui-panel);
+  color: var(--game-ui-accent-ink);
+  font-size: 1.7rem;
+  font-weight: var(--game-ui-weight-strong);
+  box-shadow: var(--game-ui-shadow-inset);
+}
+
+.play-hunt__probe {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.play-hunt__probe .game-ui-slider {
+  font-size: var(--game-ui-font-xs);
+}
+
+.play-hunt__probe:disabled {
+  opacity: 0.7;
+}
+
+.play-hunt__input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.play-hunt__precision-note {
+  color: var(--game-ui-text);
+  font-size: var(--game-ui-font-xs);
+  line-height: 1.55;
+}
+
+.play-hunt__field {
+  min-inline-size: 0;
+}
+
+.play-hunt__field input {
+  font-family: var(--game-ui-font-mono);
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.play-hunt__input-row > button {
+  min-block-size: 48px;
+  margin-block-end: 1px;
+}
+
+.play-hunt__result-caption {
+  margin-block-end: 8px !important;
+  font-size: var(--game-ui-font-xs);
+  color: var(--game-ui-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.play-hunt__result-caption[data-pending="true"] {
+  color: var(--game-ui-accent-ink);
+}
+
+.play-hunt__comparison {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.play-hunt__reading {
+  display: grid;
+  align-content: center;
+  gap: 9px;
+  min-block-size: 120px;
+  padding: 16px 14px;
+  text-align: center;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-card);
+  background: var(--game-ui-panel);
+  transition:
+    border-color 160ms ease-out,
+    background-color 160ms ease-out;
+}
+
+.play-hunt__reading > span {
+  font-size: var(--game-ui-font-sm);
+  color: var(--game-ui-text-muted);
+}
+
+.play-hunt__reading strong {
+  font-family: var(--game-ui-font-display);
+  font-size: clamp(1.1rem, 4cqi, 2rem);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.play-hunt__reading-label {
+  font-size: var(--game-ui-font-xs);
+}
+
+.play-hunt__verdict {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+  max-inline-size: 5rem;
+  font-size: var(--game-ui-font-xs);
+  text-align: center;
+  color: var(--game-ui-text-muted);
+}
+
+.play-hunt__verdict-symbol {
+  font-size: 2.3rem;
+  font-weight: var(--game-ui-weight-strong);
+  line-height: 1;
+}
+
+.play-hunt__comparison[data-result="different"] .play-hunt__reading {
+  border-color: var(--game-ui-success);
+  background: color-mix(in srgb, var(--game-ui-success) 10%, var(--game-ui-panel));
+}
+
+.play-hunt__comparison[data-result="different"] .play-hunt__reading--actual {
+  border-color: var(--game-ui-danger);
+  background: color-mix(in srgb, var(--game-ui-danger) 10%, var(--game-ui-panel));
+}
+
+.play-hunt__comparison[data-result="different"] .play-hunt__verdict {
+  color: var(--game-ui-accent-ink);
+}
+
+.play-hunt__implementation {
+  padding-block: 2px;
+  color: var(--game-ui-text-muted);
+  font-size: var(--game-ui-font-sm);
+}
+
+.play-hunt__implementation > summary {
+  min-block-size: 44px;
+  padding-block: 12px;
+  cursor: pointer;
+}
+
+.play-hunt__implementation > summary:focus-visible {
+  outline: 3px solid var(--game-ui-focus-ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.play-hunt__implementation > p {
+  line-height: 1.6;
+}
+
+.play-hunt__axis {
+  position: relative;
+  block-size: 8px;
+  margin-block: 0 5px;
+  margin-inline: 12px;
+}
+
+.play-hunt__test-point {
+  position: absolute;
+  inset-block-start: 0;
+  inline-size: 8px;
+  block-size: 8px;
+  margin-inline-start: -4px;
+  border: 2px solid var(--game-ui-panel-deep);
+  border-radius: 50%;
+  background: var(--game-ui-text-muted);
+}
+
+.play-hunt__test-point[data-latest="true"] {
+  outline: 2px solid var(--game-ui-accent);
+  outline-offset: 2px;
+}
+
+.play-hunt__test-point[data-counterexample="true"] {
+  background: var(--game-ui-success);
+}
+
+.play-hunt__axis-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--game-ui-text-muted);
+  font-size: var(--game-ui-font-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.play-hunt__axis-caption {
+  text-align: center;
+}
+
+.play-hunt__history ol {
+  display: grid;
+  gap: 8px;
+  max-block-size: 260px;
+  margin-block: 12px 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.play-hunt__history li {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  padding-block: 10px;
+  padding-inline: 12px;
+  border-block-end: 1px solid var(--game-ui-border-subtle);
+  background: var(--game-ui-panel);
+  font-size: var(--game-ui-font-sm);
+  line-height: 1.65;
+  font-variant-numeric: tabular-nums;
+}
+
+.play-hunt__history li[data-counterexample="true"] {
+  background: color-mix(in srgb, var(--game-ui-success) 9%, var(--game-ui-panel));
+}
+
+.play-hunt__history-number {
+  color: var(--game-ui-text-muted);
+}
+
+.play-hunt__history li > span:nth-child(2) {
+  flex: 1 1 220px;
+  overflow-wrap: anywhere;
+}
+
+@container (max-width: 460px) {
+  .play-hunt__contract {
+    padding: 12px 14px;
+    font-size: var(--game-ui-font-sm);
+  }
+
+  .play-hunt__bench {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .play-hunt__input-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: 10px;
+  }
+
+  .play-hunt__input-row > button {
+    padding-inline: 10px;
+    font-size: var(--game-ui-font-sm);
+    white-space: normal;
+  }
+
+  .play-hunt__comparison {
+    gap: 6px;
+  }
+
+  .play-hunt__reading {
+    padding-block: 16px;
+    padding-inline: 8px;
+    min-block-size: 108px;
+  }
+
+  .play-hunt__verdict {
+    max-inline-size: 3.4rem;
+  }
+
+  .play-hunt__axis-caption {
+    max-inline-size: 9rem;
+    font-size: 0.68rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-hunt__reading {
+    transition: none;
+  }
+}

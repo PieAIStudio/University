@@ -28,6 +28,7 @@ export function PracticeSurface({
   onOpenWorld,
   onBrowse,
   onOpenReview,
+  onOpenPlayLab,
   renderReward,
 }: {
   readonly store: PracticeRecentStore;
@@ -36,6 +37,7 @@ export function PracticeSurface({
   readonly onOpenWorld?: () => void;
   readonly onBrowse?: () => void;
   readonly onOpenReview?: () => void;
+  readonly onOpenPlayLab?: () => void;
   readonly renderReward?: (question: ConceptPracticeQuestion) => ReactNode;
 }) {
   const questions = useMemo(() => {
@@ -120,6 +122,11 @@ export function PracticeSurface({
         </GameButton>
       ) : null}
       <PracticeOverview {...overview} onOpenReview={onOpenReview} />
+      {onOpenPlayLab ? (
+        <GameButton type="button" variant="secondary" onClick={onOpenPlayLab}>
+          {translate("play.lab.entry")}
+        </GameButton>
+      ) : null}
       <PracticeStream
         questions={questions}
         store={store}

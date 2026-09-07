@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-09-06
+last_reviewed: 2026-09-08
 domain: execution
 tags:
   - current-work
@@ -50,6 +50,14 @@ The short, current handoff. **What is true now, never how it got that way.**
 >
 > 本轮不处理 `island-look` 浏览器门禁，也不以旧机位、旧草或旧灯光的数字宣称
 > 当前性能与观感已通过。已有实验和截图保留在原工作区及本机证据目录。
+
+> **学习玩法待整合（2026-09-08）**：`codex/learning-play-lab` 位于相邻
+> `University-play` worktree，五种共享组件、十个情境与 `/play-lab` 试玩已完成。
+> 完整 `pnpm verify`、十一条浏览器回归与独立试玩修正复核通过；
+> [设计与验收回执](../../plans/completed/learning-play-lab.md) 带原始截图和手机录像，
+> [组件 README](../../../packages/ui/src/learning-play/README.md) 说明内嵌 API 与配课边界。
+> 合并时协调共享路由、Practice 入口、CSS 导入、翻译注册和 journey；之后经既有课程 CLI 配课。
+> 组件验收已经完成，真人试学与学习效果验证仍属后续上线工作。
 
 Reversals live in `docs/adr/` as decision records with `supersedes` links.
 Nothing on this page explains what a rule used to be — if you need that, an ADR

@@ -578,7 +578,7 @@ export function App() {
   const stageCameraFrom = fixedCamera?.cameraFrom ?? cameraFrom;
   const stageLookAt = fixedCamera?.lookAt ?? lookAt;
   const stage =
-    view.kind === "avatar-lab" || studioMap ? null : (
+    view.kind === "avatar-lab" || view.kind === "play-lab" || studioMap ? null : (
       <WorldMapCanvas
         key={sceneAttempt}
         hidden={!SHOWS_THE_MAP.has(view.kind)}
