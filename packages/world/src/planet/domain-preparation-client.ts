@@ -1,6 +1,16 @@
 import { atmosphericGeometryKey, type PlanetRepresentativeLimit } from "./atmospheric-regions.js";
 import { preparedDomainBuffers, type PreparedDomain } from "./domain-preparation.js";
 import type { PlanetStudy } from "./planet-copy.js";
+import type { DomainSurfaceStyle } from "./globe-style.js";
+
+export function domainPreparationKey(
+  domainId: string,
+  studies: readonly PlanetStudy[],
+  limit: PlanetRepresentativeLimit,
+  surfaceStyle: DomainSurfaceStyle = "meadow",
+) {
+  return JSON.stringify([domainId, surfaceStyle, atmosphericGeometryKey(studies, limit)]);
+}
 
 export const DOMAIN_PREPARATION_CACHE_BYTES = 32 * 1024 * 1024;
 type Pending = {
@@ -37,8 +47,9 @@ export class DomainPreparationClient {
     domainId: string,
     studies: readonly PlanetStudy[],
     limit: PlanetRepresentativeLimit = 5,
+    surfaceStyle: DomainSurfaceStyle = "meadow",
   ): Promise<PreparedDomain> {
-    const key = `${domainId}\n${atmosphericGeometryKey(studies, limit)}`;
+    const key = domainPreparationKey(domainId, studies, limit, surfaceStyle);
     const cached = this.cache.get(key);
     if (cached) {
       this.cache.delete(key);
@@ -79,7 +90,7 @@ export class DomainPreparationClient {
       }, 30_000);
       this.pending.set(id, { key, promise, resolve, reject, timeout });
       try {
-        this.worker.postMessage({ id, domainId, studies, limit });
+        this.worker.postMessage({ id, domainId, studies, limit, surfaceStyle });
       } catch {
         this.stop(new Error("领域资源准备无法启动，请重试。"));
       }

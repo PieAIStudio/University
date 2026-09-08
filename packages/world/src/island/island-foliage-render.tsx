@@ -45,6 +45,11 @@ function donorSource(assetId: string): string {
 const TREE_SRC = donorSource(TREE_ASSET_ID);
 const UP = new THREE.Vector3(0, 1, 0);
 const DUMMY = new THREE.Object3D();
+type FoliageRenderPlacement = Placement & {
+  readonly foliageTint?: number;
+  readonly shapeSeed?: string;
+  readonly groundOffsets?: readonly number[];
+};
 
 interface TrunkVariant {
   readonly geometry: THREE.BufferGeometry;
@@ -267,7 +272,11 @@ function TreeTrunks({
   );
 }
 
-function CourseTreeFoliage({ placements }: { readonly placements: readonly Placement[] }) {
+function CourseTreeFoliage({
+  placements,
+}: {
+  readonly placements: readonly FoliageRenderPlacement[];
+}) {
   const tree = useIslandGLTF(TREE_SRC);
   const variants = useMemo(() => normalizedTrunkVariants(tree.scene), [tree]);
   const lobes = useMemo(
@@ -300,7 +309,11 @@ function CourseTreeFoliage({ placements }: { readonly placements: readonly Place
   );
 }
 
-function CourseBushFoliage({ placements }: { readonly placements: readonly Placement[] }) {
+function CourseBushFoliage({
+  placements,
+}: {
+  readonly placements: readonly FoliageRenderPlacement[];
+}) {
   const lobes = useMemo(
     () => placements.flatMap((placement) => bushCrownLobes(placement)),
     [placements],
@@ -324,11 +337,17 @@ export function isIslandFoliagePlacement(placement: IslandDressingPlacement): bo
   );
 }
 
-function toPlacement(placement: IslandDressingPlacement, scale: number): Placement {
+export function toFoliageRenderPlacement(
+  placement: IslandDressingPlacement,
+  scale: number,
+): FoliageRenderPlacement {
   return {
     position: new THREE.Vector3(placement.x * scale, placement.y * scale, placement.z * scale),
     height: placement.height * scale,
     turn: placement.turn,
+    foliageTint: placement.foliageTint,
+    shapeSeed: placement.foliageShapeSeed,
+    groundOffsets: placement.foliageGroundOffsets?.map((offset) => offset * scale),
   };
 }
 
@@ -343,14 +362,14 @@ export function IslandFoliage({
     () =>
       plan.placements
         .filter((placement) => placement.assetId === TREE_ASSET_ID)
-        .map((placement) => toPlacement(placement, scale)),
+        .map((placement) => toFoliageRenderPlacement(placement, scale)),
     [plan, scale],
   );
   const bushPlacements = useMemo(
     () =>
       plan.placements
         .filter((placement) => placement.assetId === BUSH_ASSET_ID)
-        .map((placement) => toPlacement(placement, scale)),
+        .map((placement) => toFoliageRenderPlacement(placement, scale)),
     [plan, scale],
   );
   return (

@@ -1201,12 +1201,22 @@ export function sampleIslandSurface(
   if (!inside) return { y: 0, radial, inside: false };
 
   const edge = clamp(1 - radial, 0, 1);
-  // Most of the island is a broad playable plateau; only the outer ~17% rolls
-  // into the cliff. Applying smoothstep across the whole radius made a dome,
-  // which the aerial camera reads as a concave green bowl.
+  // A coast is a continuation of the land, not a forced sea-level contour.
+  // The previous zero-at-edge masks erased every hill at exactly the same
+  // height, leaving a horizontal plate even on a strongly undulating island.
+  // Only the outer shoulder rolls down: broad headlands retain more of the
+  // SAME relief, bays less. Interior route/assembly heights remain unchanged.
   const shore = clamp(edge / 0.17, 0, 1);
-  const plateau = shore * shore * (3 - 2 * shore);
   const basePhase = blueprint.terrainPatches[0]?.phase ?? 0;
+  const coastRetention =
+    0.22 +
+    0.7 *
+      smoothstep(
+        -0.8,
+        0.85,
+        Math.sin(angle * 2 + basePhase) * 0.72 + Math.cos(angle * 3 - basePhase * 0.7) * 0.28,
+      );
+  const plateau = coastRetention + (1 - coastRetention) * Math.sin(shore * Math.PI * 0.5);
   const maxHalf = blueprint.bounds.maxHalf;
   let y = plateau * (BASE_PLATEAU_HEIGHT + Math.sin(normalX * 1.7 + basePhase) * 0.1);
   for (const patch of blueprint.terrainPatches) {
@@ -1219,14 +1229,10 @@ export function sampleIslandSurface(
         Math.cos((z - patch.z) * patch.frequency * 0.83 - patch.phase);
     y += plateau * patch.amplitude * PATCH_GAIN * influence * lowFrequency;
   }
-  // Relief uses its own, later shore fade. The plateau mask reaches zero at
-  // 17% from the rim, which guaranteed a perfectly smooth elliptical
-  // silhouette no matter how much relief the generator produced: every hill
-  // was flattened before it could reach an edge the camera can see against
-  // the sea. Holding relief to within 7% of the shoreline lets headlands and
-  // saddles break that outline, which is most of what makes an island read as
-  // a landform rather than a coin.
-  const reliefShore = smoothstep(0, 0.07, clamp(1 - radial, 0, 1));
+  // Keep the later relief fade, but never reset it to zero at the lip. Both
+  // projections and every contact sampler consume this exact boundary.
+  const reliefShore =
+    coastRetention + (1 - coastRetention) * Math.sin(clamp(edge / 0.07, 0, 1) * Math.PI * 0.5);
   y += reliefShore * reliefAt(blueprint, x, z, maxHalf);
   // A very low-amplitude shelf pass belongs to the natural base, never to
   // units. It follows the continuous relief and fades well before the

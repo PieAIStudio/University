@@ -144,6 +144,74 @@ describe("PlanetPage contract", () => {
 });
 
 describe("PlanetPage", () => {
+  it("labels empty planets honestly, gives a return route, and never overwrites a restored study with the first row", async () => {
+    const domainCatalog = [
+      { id: "programming", title: "AI 与编程" },
+      { id: "ai-foundations", title: "AI 基础", description: "理解 AI 是什么。" },
+      { id: "ai-media", title: "AI 媒体创作", description: "图像、视频和音乐。" },
+    ];
+    const studies = STUDIES.map((study) => ({ ...study, domain: domainCatalog[0]! }));
+    const selected = vi.fn();
+    const selectedDomain = vi.fn();
+    const entered = vi.fn();
+    for (const empty of domainCatalog.slice(1)) {
+      await act(async () =>
+        root.render(
+          <PlanetPage
+            studies={studies}
+            domainCatalog={domainCatalog}
+            selectedId="turing-pact"
+            selectedDomainId={empty.id}
+            onSelectDomain={selectedDomain}
+            onSelect={selected}
+            onEnter={entered}
+            onClose={() => undefined}
+          />,
+        ),
+      );
+      expect(container.querySelectorAll("[data-study-id]")).toHaveLength(0);
+      expect(container.querySelector(".planet-rail")?.getAttribute("data-domain-empty")).toBe(
+        "true",
+      );
+      expect(container.querySelector(".planet-page__enter")).toBeNull();
+      expect(container.querySelector("[role=status]")?.textContent).toContain(empty.description);
+      expect(container.querySelector("[role=status]")?.textContent).toContain("暂未发布");
+      const back = [...container.querySelectorAll("button")].find(
+        (button) => button.textContent === "返回 AI 与编程",
+      )!;
+      expect(back).toBeDefined();
+      await act(async () => dispatchPointerSequence(back));
+      expect(selectedDomain).toHaveBeenLastCalledWith("programming");
+      expect(selected).not.toHaveBeenCalled();
+      expect(entered).not.toHaveBeenCalled();
+    }
+    await act(async () =>
+      root.render(
+        <PlanetPage
+          studies={studies}
+          domainCatalog={domainCatalog}
+          selectedId="turing-pact"
+          selectedDomainId="programming"
+          onSelectDomain={selectedDomain}
+          onSelect={selected}
+          onEnter={entered}
+          onClose={() => undefined}
+        />,
+      ),
+    );
+    expect(container.querySelector(".planet-page__enter")?.textContent).toContain("TuringPact");
+    expect(container.querySelector("[data-domain-empty]")).toBeNull();
+    expect(PAGE_CSS).toMatch(
+      /\.planet-rail\[data-domain-empty="true"\] \.planet-page__rail\s*\{[^}]*grid-template-rows:\s*auto auto auto;[^}]*align-content:\s*start/s,
+    );
+    expect(PAGE_CSS).toMatch(
+      /\.planet-rail\[data-domain-empty="true"\] \.planet-page__list\s*\{[^}]*min-height:\s*0/s,
+    );
+    expect(container.querySelector('[data-domain-id="programming"]')?.textContent).not.toContain(
+      "暂未发布",
+    );
+  });
+
   it("shows only the selected domain's real series and preserves an explicit empty domain", async () => {
     const domainCatalog = [
       { id: "a", title: "有课程" },

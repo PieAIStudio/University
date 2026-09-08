@@ -32,7 +32,7 @@ describe("Kenney island recipe catalog", () => {
     expect(first.accentPackIds).toEqual(["fantasy-town-kit"]);
     expect(
       new Set([...first.base.assetIds, ...first.accentRoles.flatMap((role) => role.assetIds)]).size,
-    ).toBe(10);
+    ).toBe(12);
     expect(first.base.naturalAssets.tree).toEqual({
       packId: "elemental-serenity",
       assetId: "treeTrunks",

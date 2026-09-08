@@ -10,15 +10,10 @@
     "naturalBasePackId": "nature-kit",
     "accentPackIds": ["fantasy-town-kit"],
     "physicalAccentCount": 1,
-    "rawGlbBudget": 10,
+    "rawGlbBudget": 12,
     "whitelistPolicy": "explicit filenames only; no donor glob"
   },
   "runtimeFallbacks": {
-    "fantasy-town-kit/cart": {
-      "pack": "fantasy-town-kit",
-      "assetId": "stall",
-      "reason": "The recipe catalog entry is not present in the checked-in Fantasy Town runtime whitelist."
-    },
     "fantasy-town-kit/watermill": {
       "pack": "fantasy-town-kit",
       "assetId": "fountain-round",
@@ -617,6 +612,62 @@
         "status": "prototype/local donor; PGS donor registered",
         "notes": null
       }
+    },
+    {
+      "type": "model",
+      "id": "fantasy-town-stall-bench",
+      "assetId": "stall-bench",
+      "src": "/kenney/r01/fantasy-town/stall-bench.glb",
+      "bytes": 14168,
+      "sha256": "5a4b379488241394916991c4b482ec4863c05bb548ca8751f5c3935f1f6e5b9c",
+      "source": "kenney_fantasy-town-kit_2.0/Models/GLB format/stall-bench.glb",
+      "pack": "fantasy-town-kit",
+      "version": "2.0",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_fantasy-town-kit_2.0/License.txt",
+        "sha256": "fb8e4817197ef9f62215e95b4451a0f09c769c8e03e416e3a2ce108dfa6117e4",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["prop", "facility-seating"],
+      "dependencies": ["/kenney/r01/fantasy-town/Textures/colormap.png"],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_fantasy-town-kit_2.0/Models/GLB format/stall-bench.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
+    },
+    {
+      "type": "model",
+      "id": "fantasy-town-cart",
+      "assetId": "cart",
+      "src": "/kenney/r01/fantasy-town/cart.glb",
+      "bytes": 52920,
+      "sha256": "63503cd0a7398310e01aabc8e3663f711a7517394d23d179d0695157fee99d40",
+      "source": "kenney_fantasy-town-kit_2.0/Models/GLB format/cart.glb",
+      "pack": "fantasy-town-kit",
+      "version": "2.0",
+      "license": {
+        "spdx": "CC0-1.0",
+        "file": "kenney_fantasy-town-kit_2.0/License.txt",
+        "sha256": "fb8e4817197ef9f62215e95b4451a0f09c769c8e03e416e3a2ce108dfa6117e4",
+        "textCheck": "Creative Commons Zero, CC0 + commercial use",
+        "commercialUse": true
+      },
+      "roles": ["prop", "market-companion"],
+      "dependencies": ["/kenney/r01/fantasy-town/Textures/colormap.png"],
+      "provenance": {
+        "sourceRoot": "local-donor:Kenney",
+        "sourceRelative": "kenney_fantasy-town-kit_2.0/Models/GLB format/cart.glb",
+        "importedBy": "apps/university/scripts/import-kenney-r01.mjs",
+        "recipe": "R01-forest-academy",
+        "status": "prototype/local donor; PGS donor registered",
+        "notes": null
+      }
     }
   ],
   "dependencies": [
@@ -645,8 +696,8 @@
     }
   ],
   "summary": {
-    "modelCount": 10,
+    "modelCount": 12,
     "dependencyCount": 1,
-    "totalBytes": 169451
+    "totalBytes": 236539
   }
 }

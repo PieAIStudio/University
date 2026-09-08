@@ -130,6 +130,19 @@ describe("domain worker uses the canonical generators", () => {
 });
 
 describe("bounded preparation transport and cache", () => {
+  it("does not reuse another material family after a domain style change", async () => {
+    const worker = new WorkerDouble();
+    const client = clientFor(worker);
+    const meadow = client.request("same-domain", [], 3, "meadow");
+    const iris = client.request("same-domain", [], 3, "iris");
+    expect(iris).not.toBe(meadow);
+    expect(worker.requests).toHaveLength(2);
+    worker.reply(tinyPacket(), 0);
+    worker.reply(tinyPacket(), 1);
+    const [first, second] = await Promise.all([meadow, iris]);
+    expect(await client.request("same-domain", [], 3, "meadow")).toBe(first);
+    expect(await client.request("same-domain", [], 3, "iris")).toBe(second);
+  });
   it("coalesces cold requests, ignores progress/title, and invalidates changed shape", async () => {
     const worker = new WorkerDouble();
     const client = clientFor(worker);

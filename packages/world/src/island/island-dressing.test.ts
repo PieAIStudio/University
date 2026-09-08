@@ -144,7 +144,7 @@ describe("Island dressing", () => {
       const surface = sampleIslandSurface(blueprint, placement.x, placement.z);
       const renderedTop = sampleIslandTerrainTop(blueprint, "course", placement.x, placement.z);
       expect(surface.inside, placement.id).toBe(true);
-      if (placement.outpostId && !placement.assemblyId) {
+      if ((placement.outpostId || placement.companionOf) && !placement.assemblyId) {
         const footprint = outpostFootprint(placement)!;
         const range = islandTerrainFootprintRange(
           blueprint,

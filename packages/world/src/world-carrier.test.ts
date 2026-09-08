@@ -8,9 +8,36 @@ import {
   cuteCloudLayout,
   CLOUD_CARRIER_FOOT_OFFSET,
 } from "./sky/cloud-sea.js";
-import { worldCarrierHomeTarget, worldIslandCarrierTarget } from "./world-carrier.js";
+import {
+  worldCarrierHomeTarget,
+  worldIslandCarrierTarget,
+  worldIslandCaptionTarget,
+} from "./world-carrier.js";
 
 describe("carrier contact on the real distant island", () => {
+  it.each([6, 24, 41])(
+    "anchors a %i-lesson caption below the actual cached rock root at every state scale",
+    (lessonCount) => {
+      const blueprint = islandBlueprint({
+        studyId: "caption",
+        courseId: `island-${lessonCount}`,
+        lessonCount,
+      });
+      for (const scale of [0.84, 0.92, 0.98, 1.2]) {
+        const island = { blueprint, radius: 3 * scale, position: new THREE.Vector3(4, 2, -3) };
+        const base = getOrCreateRemoteBaseGeometry(blueprint, island.radius);
+        const before = island.position.clone();
+        const caption = worldIslandCaptionTarget(island);
+        expect(caption.x).toBe(island.position.x);
+        expect(caption.z).toBe(island.position.z);
+        expect(caption.y).toBeCloseTo(island.position.y + base.bounds.min.y - 0.3, 8);
+        expect(caption.y).toBeLessThan(island.position.y);
+        expect(island.position).toEqual(before);
+        expect(getOrCreateRemoteBaseGeometry(blueprint, island.radius)).toBe(base);
+      }
+    },
+  );
+
   it.each([6, 24, 41])(
     "keeps the entire cloud above the %i-lesson terrain without moving the island",
     (lessonCount) => {

@@ -303,7 +303,8 @@ describe("Island technique lock", () => {
     expect(clouds).toMatch(/DOMAIN_GLOBE_TRIANGLES_MAX = 5000/);
     expect(clouds).toMatch(/DOMAIN_CLOUD_TRIANGLES_MAX = 7000/);
     expect(clouds).toMatch(/const clusterCount = 7/);
-    expect(clouds).toMatch(/makeScale\(1\.4, 0\.55, 0\.9\)/);
+    expect(clouds).toContain("createCloudVolumeGeometry");
+    expect(clouds).toMatch(/makeScale\(scale \* 1\.4, scale \* 0\.55, scale \* 0\.9\)/);
 
     const regions = readFileSync(
       resolve(import.meta.dirname, "../planet/atmospheric-regions.ts"),

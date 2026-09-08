@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { atmosphericGeometryKey, type PlanetRepresentativeLimit } from "./atmospheric-regions.js";
-import { domainPreparation } from "./domain-preparation-client.js";
+import { type PlanetRepresentativeLimit } from "./atmospheric-regions.js";
+import { domainPreparation, domainPreparationKey } from "./domain-preparation-client.js";
 import { mountPreparedDomain, type PreparedDomain } from "./domain-preparation.js";
 import type { PlanetStudy } from "./planet-copy.js";
+import type { DomainSurfaceStyle } from "./globe-style.js";
 
 export interface DomainResourceStatus {
   readonly domainId: string;
@@ -15,14 +16,15 @@ export function useDomainResources(
   retry: number,
   onStatus?: (status: DomainResourceStatus) => void,
   limit: PlanetRepresentativeLimit = 5,
+  surfaceStyle: DomainSurfaceStyle = "meadow",
 ) {
-  const key = `${domainId}\n${atmosphericGeometryKey(studies, limit)}`;
+  const key = domainPreparationKey(domainId, studies, limit, surfaceStyle);
   const [result, setResult] = useState<{ key: string; packet: PreparedDomain } | null>(null);
   useEffect(() => {
     let current = true;
     onStatus?.({ domainId, state: "loading" });
     void domainPreparation
-      .request(domainId, studies, limit)
+      .request(domainId, studies, limit, surfaceStyle)
       .then((packet) => {
         if (!current) return;
         setResult({ key, packet });

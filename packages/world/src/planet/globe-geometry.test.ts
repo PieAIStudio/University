@@ -8,7 +8,9 @@ import {
   DOMAIN_CLOUD_RADIUS,
   DOMAIN_GLOBE_TRIANGLES_MAX,
   DOMAIN_CLOUD_TRIANGLES_MAX,
+  DOMAIN_CLOUD_SEGMENTS,
 } from "./globe-geometry.js";
+import { CLOUD_VOLUME_CONTRACT, createCloudVolumeGeometry } from "../sky/cloud-volume.js";
 
 function getTriangleCount(geometry: THREE.BufferGeometry): number {
   if (geometry.index) {
@@ -120,6 +122,31 @@ describe("Domain Globe Geometry", () => {
 });
 
 describe("Domain Cloud Geometry", () => {
+  it("leaves real region directions clear and can omit all decoration without inventing a layer", () => {
+    const original = createDomainCloudGeometry("region-clearance");
+    const positions = original.getAttribute("position");
+    const perBank = positions.count / 7;
+    const protectedDirections = Array.from({ length: 7 }, (_, i) =>
+      new THREE.Vector3().fromBufferAttribute(positions, i * perBank).normalize(),
+    );
+    const partial = createDomainCloudGeometry("region-clearance", protectedDirections.slice(0, 1));
+    const empty = createDomainCloudGeometry("region-clearance", protectedDirections);
+    try {
+      expect(partial.userData.cloudBankCount).toBeLessThan(7);
+      expect(partial.index!.count).toBeLessThan(original.index!.count);
+      const vertices = partial.getAttribute("position");
+      for (let i = 0; i < vertices.count; i += perBank) {
+        const centre = new THREE.Vector3().fromBufferAttribute(vertices, i).normalize();
+        expect(centre.dot(protectedDirections[0]!)).toBeLessThanOrEqual(Math.cos(0.48) + 1e-6);
+      }
+      expect(empty.userData.cloudBankCount).toBe(0);
+      expect(empty.index?.count ?? 0).toBe(0);
+    } finally {
+      original.dispose();
+      partial.dispose();
+      empty.dispose();
+    }
+  });
   const TEST_SEED = "weather-system-01";
 
   it("produces finite values and valid position and normal attributes", () => {
@@ -134,6 +161,11 @@ describe("Domain Cloud Geometry", () => {
     const triangles = getTriangleCount(cloud);
     expect(triangles).toBeGreaterThan(0);
     expect(triangles).toBeLessThanOrEqual(DOMAIN_CLOUD_TRIANGLES_MAX);
+    expect(triangles).toBe(1680);
+    expect(cloud.groups).toHaveLength(0);
+    expect(cloud.userData.cloudBankCount).toBe(7);
+    expect(cloud.userData.cloudVolume).toEqual(CLOUD_VOLUME_CONTRACT);
+    cloud.dispose();
   });
 
   it("places all vertices strictly outside the globe (r > 1.0)", () => {
@@ -184,23 +216,28 @@ describe("Domain Cloud Geometry", () => {
   });
 });
 
-it("keeps cloud lobes outward wound after their tangent-space transform", () => {
+it("keeps every cloud bank outward wound after its tangent-space transform", () => {
   const geometry = createDomainCloudGeometry("programming");
   const p = geometry.getAttribute("position");
-  let signedVolume = 0;
-  for (let i = 0; i < p.count; i += 3) {
-    const ax = p.getX(i),
-      ay = p.getY(i),
-      az = p.getZ(i);
-    const bx = p.getX(i + 1),
-      by = p.getY(i + 1),
-      bz = p.getZ(i + 1);
-    const cx = p.getX(i + 2),
-      cy = p.getY(i + 2),
-      cz = p.getZ(i + 2);
-    signedVolume += ax * (by * cz - bz * cy) + ay * (bz * cx - bx * cz) + az * (bx * cy - by * cx);
+  const indices = geometry.index!;
+  const source = createCloudVolumeGeometry(
+    DOMAIN_CLOUD_SEGMENTS.width,
+    DOMAIN_CLOUD_SEGMENTS.height,
+  );
+  const bankIndexCount = source.index!.count;
+  const bankVertexCount = source.getAttribute("position").count;
+  expect(p.count).toBe(bankVertexCount * 7);
+  for (let bank = 0; bank < 7; bank += 1) {
+    let signedVolume = 0;
+    for (let i = bank * bankIndexCount; i < (bank + 1) * bankIndexCount; i += 3) {
+      const a = new THREE.Vector3().fromBufferAttribute(p, indices.getX(i));
+      const b = new THREE.Vector3().fromBufferAttribute(p, indices.getX(i + 1));
+      const c = new THREE.Vector3().fromBufferAttribute(p, indices.getX(i + 2));
+      signedVolume += a.dot(b.cross(c));
+    }
+    expect(signedVolume).toBeGreaterThan(0);
   }
-  expect(signedVolume).toBeGreaterThan(0);
+  source.dispose();
   geometry.dispose();
 });
 

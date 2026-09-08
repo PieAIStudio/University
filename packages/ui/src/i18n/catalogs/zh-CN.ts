@@ -5,7 +5,15 @@
  * is selectable only when its key set exactly matches this one.
  */
 export const messages = {
-  "ui.world.domain.programming": "编程",
+  "ui.world.domain.programming": "AI 与编程",
+  "ui.world.domain.programming.description": "用 AI 理解软件、学习编程与开发应用。",
+  "ui.world.domain.aiFoundations": "AI 基础",
+  "ui.world.domain.aiFoundations.description": "理解 AI 是什么，以及模型、训练和推理等基础概念。",
+  "ui.world.domain.aiMedia": "AI 媒体创作",
+  "ui.world.domain.aiMedia.description": "认识图像、视频、音乐等生成式媒体的创作方法。",
+  "ui.world.domain.unpublished": "暂未发布",
+  "ui.world.domain.empty": "这个领域还没有课程系列。",
+  "ui.world.domain.return": "返回 {{title}}",
   "ui.world.domain.unclassified": "未分类",
   "app.mapstudio.mapStudioScreen.copy.按当前投影计量": "按当前投影计量",
   "ui.world.lessonState.current": "当前关卡",

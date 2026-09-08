@@ -194,96 +194,71 @@ export function WorldMapCanvas({
         context. Mounting per scene is what made stepping from the map into a
         course cost a context teardown.
       */}
-      <Stage
-        cameraFrom={framedFrom}
-        cameraFar={activeOverview?.far}
-        lookAt={framedLook}
-        onSceneReady={onSceneReady}
-        onSceneBusy={onSceneBusy}
-        onContextLost={onContextLost}
-        onContextRestored={onContextRestored}
-        onRendererUnavailable={onRendererUnavailable}
-        onPointerMissed={onPointerMissed}
-        fixedCamera={fixedCamera}
-        paused={paused}
-        lookSource={lookSource}
-        postProcessing={postProcessing}
-      >
-        <CourseOverviewContext.Provider value={activeOverview}>
-          <Controls
-            target={framedLook}
-            polar={polar}
-            fixedCamera={fixedCamera}
-            onInteract={onInteract}
-            distanceRange={activeOverview?.distanceRange}
-          />
-          <Flight to={framedFrom} look={framedLook} fixed={fixedCamera !== null} />
-          {overviewEnabled ? (
-            <CourseOverviewProbe
-              key={courseViewKey}
-              onFrame={acceptOverview}
-              onError={rejectOverview}
-              eyeDirection={[
-                cameraFrom[0] - lookAt[0],
-                cameraFrom[1] - lookAt[1],
-                cameraFrom[2] - lookAt[2],
-              ]}
+      <div className="map-viewport">
+        <Stage
+          cameraFrom={framedFrom}
+          cameraFar={activeOverview?.far}
+          lookAt={framedLook}
+          onSceneReady={onSceneReady}
+          onSceneBusy={onSceneBusy}
+          onContextLost={onContextLost}
+          onContextRestored={onContextRestored}
+          onRendererUnavailable={onRendererUnavailable}
+          onPointerMissed={onPointerMissed}
+          fixedCamera={fixedCamera}
+          paused={paused}
+          lookSource={lookSource}
+          postProcessing={postProcessing}
+        >
+          <CourseOverviewContext.Provider value={activeOverview}>
+            <Controls
+              target={framedLook}
+              polar={polar}
+              fixedCamera={fixedCamera}
+              onInteract={onInteract}
+              distanceRange={activeOverview?.distanceRange}
             />
-          ) : null}
-          <LabelProbe
-            markers={markers}
-            limit={9}
-            nodes={labelNodes.current}
-            followId={followId}
-            followNode={followNode}
-          />
-          {world ? (
-            <WorldScene
-              placements={world.placements}
-              extent={world.extent}
-              learnerAt={learnerAt}
-              avatarRecipe={avatarRecipe}
-              avatarSignedIn={avatarSignedIn}
-              selectedCourseKey={selectedCourseKey}
-              skyStudyId={skyStudyId}
-              authoringFocus={authoringFocus}
-              assetRevision={assetRevision}
-              onPick={onPick}
-              onHover={onHover}
+            <Flight to={framedFrom} look={framedLook} fixed={fixedCamera !== null} />
+            {overviewEnabled ? (
+              <CourseOverviewProbe
+                key={courseViewKey}
+                onFrame={acceptOverview}
+                onError={rejectOverview}
+                eyeDirection={[
+                  cameraFrom[0] - lookAt[0],
+                  cameraFrom[1] - lookAt[1],
+                  cameraFrom[2] - lookAt[2],
+                ]}
+              />
+            ) : null}
+            <LabelProbe
+              markers={markers}
+              limit={9}
+              nodes={labelNodes.current}
+              followId={followId}
+              followNode={followNode}
             />
-          ) : null}
-          {stageChildren}
-        </CourseOverviewContext.Provider>
-      </Stage>
+            {world ? (
+              <WorldScene
+                placements={world.placements}
+                extent={world.extent}
+                learnerAt={learnerAt}
+                avatarRecipe={avatarRecipe}
+                avatarSignedIn={avatarSignedIn}
+                selectedCourseKey={selectedCourseKey}
+                skyStudyId={skyStudyId}
+                authoringFocus={authoringFocus}
+                assetRevision={assetRevision}
+                onPick={onPick}
+                onHover={onHover}
+              />
+            ) : null}
+            {stageChildren}
+          </CourseOverviewContext.Provider>
+        </Stage>
+      </div>
 
       {underlay}
-
-      {courseViewKey && fixedCamera === null ? (
-        <div
-          className="map-framing-tools"
-          data-has-map-hint={
-            (controlsHintVisible && controlsHint != null) ||
-            (entryHintVisible && entryHint != null) ||
-            hoverHint != null
-              ? "true"
-              : undefined
-          }
-        >
-          <GameButton
-            type="button"
-            variant="secondary"
-            aria-pressed={overviewEnabled}
-            onClick={() => {
-              setOverviewError(false);
-              setOverview(null);
-              setOverviewKey(overviewEnabled ? null : courseViewKey);
-            }}
-          >
-            {translate(overviewEnabled ? "ui.world.overview.return" : "ui.world.overview.show")}
-          </GameButton>
-          {overviewError ? <p role="status">{translate("ui.world.overview.unavailable")}</p> : null}
-        </div>
-      ) : null}
 
       <nav className="labels" aria-label="地图上的去处">
         {markers.map((marker) => {
@@ -396,27 +371,57 @@ export function WorldMapCanvas({
         })}
       </nav>
       {overlay}
-      {hoverHint !== null && hoverHint !== undefined ? (
-        <p className="hint hint--hover" data-game-ui-tone="glass">
-          {hoverHint}
-        </p>
-      ) : null}
-      {controlsHint !== null && controlsHint !== undefined ? (
-        <p
-          className={`hint hint--controls${controlsHintVisible ? "" : " hint--dismissed"}`}
-          data-game-ui-tone="glass"
-        >
-          {controlsHint}
-        </p>
-      ) : null}
-      {entryHint !== null && entryHint !== undefined ? (
-        <p
-          className={`hint hint--entry${entryHintVisible ? "" : " hint--dismissed"}`}
-          data-game-ui-tone="glass"
-        >
-          {entryHint}
-        </p>
-      ) : null}
+      <div className="map-tools">
+        {courseViewKey && fixedCamera === null ? (
+          <div
+            className="map-framing-tools"
+            data-has-map-hint={
+              (controlsHintVisible && controlsHint != null) ||
+              (entryHintVisible && entryHint != null) ||
+              hoverHint != null
+                ? "true"
+                : undefined
+            }
+          >
+            <GameButton
+              type="button"
+              variant="secondary"
+              aria-pressed={overviewEnabled}
+              onClick={() => {
+                setOverviewError(false);
+                setOverview(null);
+                setOverviewKey(overviewEnabled ? null : courseViewKey);
+              }}
+            >
+              {translate(overviewEnabled ? "ui.world.overview.return" : "ui.world.overview.show")}
+            </GameButton>
+            {overviewError ? (
+              <p role="status">{translate("ui.world.overview.unavailable")}</p>
+            ) : null}
+          </div>
+        ) : null}
+        {hoverHint !== null && hoverHint !== undefined ? (
+          <p className="hint hint--hover" data-game-ui-tone="glass">
+            {hoverHint}
+          </p>
+        ) : null}
+        {controlsHint !== null && controlsHint !== undefined ? (
+          <p
+            className={`hint hint--controls${controlsHintVisible ? "" : " hint--dismissed"}`}
+            data-game-ui-tone="glass"
+          >
+            {controlsHint}
+          </p>
+        ) : null}
+        {entryHint !== null && entryHint !== undefined ? (
+          <p
+            className={`hint hint--entry${entryHintVisible ? "" : " hint--dismissed"}`}
+            data-game-ui-tone="glass"
+          >
+            {entryHint}
+          </p>
+        ) : null}
+      </div>
       {loading}
     </div>
   );

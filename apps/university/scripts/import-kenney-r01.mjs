@@ -154,6 +154,22 @@ const ASSETS = Object.freeze([
     outputDirectory: "fantasy-town",
     roles: ["prop", "wayfinding"],
   },
+  {
+    id: "fantasy-town-stall-bench",
+    assetId: "stall-bench",
+    packId: "fantasy-town-kit",
+    file: "stall-bench.glb",
+    outputDirectory: "fantasy-town",
+    roles: ["prop", "facility-seating"],
+  },
+  {
+    id: "fantasy-town-cart",
+    assetId: "cart",
+    packId: "fantasy-town-kit",
+    file: "cart.glb",
+    outputDirectory: "fantasy-town",
+    roles: ["prop", "market-companion"],
+  },
 ]);
 
 const LICENSE_SPDX = "CC0-1.0";
@@ -428,7 +444,7 @@ export function runImport({ donorRoot = process.env.KENNEY_DONOR_ROOT } = {}) {
       naturalBasePackId: "nature-kit",
       accentPackIds: ["fantasy-town-kit"],
       physicalAccentCount: 1,
-      rawGlbBudget: 10,
+      rawGlbBudget: 12,
       whitelistPolicy: "explicit filenames only; no donor glob",
     },
     runtimeFallbacks,

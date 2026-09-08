@@ -7,6 +7,7 @@ import {
 } from "./atmospheric-regions.js";
 import { createDomainSurfaceTexture } from "./globe-geometry.js";
 import type { PlanetStudy } from "./planet-copy.js";
+import type { DomainSurfaceStyle } from "./globe-style.js";
 
 export interface PreparedDomain {
   readonly pixels: Uint8Array;
@@ -26,9 +27,10 @@ export function prepareDomain(
   domainId: string,
   studies: readonly PlanetStudy[],
   limit: PlanetRepresentativeLimit = 5,
+  surfaceStyle: DomainSurfaceStyle = "meadow",
 ): PreparedDomain {
   const start = performance.now();
-  const texture = createDomainSurfaceTexture(domainId);
+  const texture = createDomainSurfaceTexture(domainId, surfaceStyle);
   const textureDone = performance.now();
   const mesh = buildAtmosphericIslands(studies, planAtmosphericRegions(studies, limit));
   try {

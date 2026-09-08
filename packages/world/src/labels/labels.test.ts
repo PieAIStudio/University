@@ -9,6 +9,24 @@ import {
   type LabelPlacement,
 } from "./labels";
 
+it("keeps an island name when a landscape rail and hint require two bounded moves", () => {
+  const [name] = placeLabels(
+    [{ id: "current", x: 440, y: 155, z: 0, width: 240, height: 32, anchor: "island", weight: 4 }],
+    { width: 872, height: 286 },
+    {
+      maxVisible: 1,
+      gap: 8,
+      reserved: [
+        { left: 550, top: 0, right: 872, bottom: 286 },
+        { left: 380, top: 160, right: 520, bottom: 210 },
+      ],
+    },
+  );
+  expect(name!.visible).toBe(true);
+  expect(Math.abs(name!.x - 440)).toBeLessThanOrEqual(32);
+  expect(Math.abs(name!.y - 179)).toBeLessThanOrEqual(80);
+});
+
 const VIEW = { width: 800, height: 600 } as const;
 
 function candidate(partial: Partial<LabelCandidate> & Pick<LabelCandidate, "id">): LabelCandidate {
@@ -56,6 +74,61 @@ function boxesClash(
 }
 
 describe("placeLabels", () => {
+  it("keeps an island caption near its rock root when an avatar or neighbour blocks its first slots", () => {
+    const island = candidate({
+      id: "island",
+      x: 380,
+      y: 310,
+      width: 220,
+      height: 24,
+      anchor: "island",
+    });
+    const blocker = { left: 350, right: 410, top: 280, bottom: 350 };
+    const [name] = placeLabels([island], VIEW, { reserved: [blocker] });
+    expect(name?.visible).toBe(true);
+    expect(name?.x).toBe(island.x);
+    expect(name!.y).toBeGreaterThan(island.y);
+    expect(name!.y - island.y).toBeLessThan(100);
+    expect(boxesOverlap(labelBox(name!, island.width, island.height), blocker, 4)).toBe(false);
+  });
+
+  it.each([95, 705])(
+    "uses a bounded lateral correction at x=%i without detaching the caption from its side card",
+    (x) => {
+      const island = candidate({
+        id: "island",
+        x,
+        y: 310,
+        width: 220,
+        height: 24,
+        anchor: "island",
+      });
+      const [name] = placeLabels([island], VIEW);
+      expect(name?.visible).toBe(true);
+      expect(Math.abs(name!.x - x)).toBeLessThanOrEqual(32);
+      const [card] = placeLabels(
+        [
+          candidate({
+            id: "card",
+            x,
+            y: 310,
+            width: 260,
+            height: 240,
+            anchor: "aside",
+            overlay: true,
+          }),
+        ],
+        VIEW,
+        { gap: 8 },
+      );
+      expect(card?.visible).toBe(true);
+      // Same opposing bounds as the existing browser F contract; no exception
+      // for a course name that was moved away from the island one clicked.
+      expect(Math.abs(card!.x - name!.x)).toBeGreaterThan(20);
+      expect(Math.hypot(card!.x - name!.x, card!.y - name!.y)).toBeLessThan(420);
+    },
+  );
+
   it("moves a quiet label across chrome and around a visible label", () => {
     const chrome = { left: 16, top: 16, right: 92, bottom: 584 };
     const reserved = [{ left: 100, top: 260, right: 320, bottom: 284 }];

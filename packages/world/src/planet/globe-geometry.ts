@@ -5,11 +5,14 @@
  * - Domain globe with strict radius 1.0, SphereGeometry 64x32 (<5000 tris),
  *   continuous 3D low-frequency procedural vertex coloring (deep/soft ocean blue,
  *   grey-green continents, creamy shorelines, zero seam between hemispheres).
- * - Meteorological arc cloud bands at radius ~1.045, low-poly smooth rounded cloud clusters,
+ * - Arc cloud banks at radius ~1.045, one continuous shallow source per cluster,
  *   single merged draw call (<=7000 tris), strictly outside the globe (r > 1.0).
  */
 import * as THREE from "three";
 import { mergeBufferGeometries } from "three-stdlib";
+import { CLOUD_TONES } from "../sky/cloud-material.js";
+import { CLOUD_VOLUME_CONTRACT, createCloudVolumeGeometry } from "../sky/cloud-volume.js";
+import { domainSurfacePalette, type DomainSurfaceStyle } from "./globe-style.js";
 
 export const DOMAIN_GLOBE_RADIUS = 1.0;
 export const DOMAIN_CLOUD_RADIUS = 1.045;
@@ -120,27 +123,24 @@ class PerlinNoise3D {
   }
 }
 
-// Muted, painterly color stops
-const COLOR_DEEP_OCEAN = new THREE.Color(0.18, 0.35, 0.54);
-const COLOR_SHALLOW_OCEAN = new THREE.Color(0.28, 0.48, 0.62);
-const COLOR_CREAM_SHORE = new THREE.Color(0.88, 0.84, 0.72);
-const COLOR_CONTINENT = new THREE.Color(0.38, 0.5, 0.38);
-const COLOR_HIGHLAND = new THREE.Color(0.29, 0.4, 0.3);
-
 function smoothstep(edge0: number, edge1: number, x: number): number {
   const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
   return t * t * (3 - 2 * t);
 }
 
-function sampleGlobeColor(v: number, target: THREE.Color): void {
+function sampleGlobeColor(
+  v: number,
+  target: THREE.Color,
+  palette: ReturnType<typeof domainSurfacePalette>,
+): void {
   if (v < -0.02) {
-    target.copy(COLOR_DEEP_OCEAN).lerp(COLOR_SHALLOW_OCEAN, smoothstep(-0.45, -0.02, v));
+    target.copy(palette.deep).lerp(palette.shallow, smoothstep(-0.45, -0.02, v));
   } else if (v < 0.015) {
-    target.copy(COLOR_SHALLOW_OCEAN).lerp(COLOR_CREAM_SHORE, smoothstep(-0.02, 0.015, v));
+    target.copy(palette.shallow).lerp(palette.shore, smoothstep(-0.02, 0.015, v));
   } else if (v < 0.045) {
-    target.copy(COLOR_CREAM_SHORE).lerp(COLOR_CONTINENT, smoothstep(0.015, 0.045, v));
+    target.copy(palette.shore).lerp(palette.land, smoothstep(0.015, 0.045, v));
   } else {
-    target.copy(COLOR_CONTINENT).lerp(COLOR_HIGHLAND, smoothstep(0.045, 0.38, v));
+    target.copy(palette.land).lerp(palette.highland, smoothstep(0.045, 0.38, v));
   }
 }
 
@@ -152,7 +152,9 @@ function sampleGlobeColor(v: number, target: THREE.Color): void {
  */
 function domainColorSampler(
   seed: string,
+  style: DomainSurfaceStyle = "meadow",
 ): (x: number, y: number, z: number, target: THREE.Color) => void {
+  const palette = domainSurfacePalette(style);
   const rng = createRng(`globe:${seed}`);
   const perlin = new PerlinNoise3D(rng);
   const ox = rng() * 100,
@@ -163,16 +165,19 @@ function domainColorSampler(
       perlin.noise(x * 1.35 + ox, y * 1.35 + oy, z * 1.35 + oz) * 0.72 +
       perlin.noise(x * 2.8 + ox + 31.7, y * 2.8 + oy + 47.3, z * 2.8 + oz + 19.1) * 0.22 +
       perlin.noise(x * 5.6 + ox + 67.2, y * 5.6 + oy + 89.4, z * 5.6 + oz + 41.5) * 0.06;
-    sampleGlobeColor(n, target);
+    sampleGlobeColor(n, target, palette);
   };
 }
 
 /** One CPU bake per mounted domain: 2 MiB, no per-frame noise or remote textures. */
-export function createDomainSurfaceTexture(seed: string): THREE.DataTexture {
+export function createDomainSurfaceTexture(
+  seed: string,
+  style: DomainSurfaceStyle = "meadow",
+): THREE.DataTexture {
   const width = 1024,
     height = 512;
   const pixels = new Uint8Array(width * height * 4);
-  const sample = domainColorSampler(seed);
+  const sample = domainColorSampler(seed, style);
   const color = new THREE.Color();
   for (let y = 0; y < height; y++) {
     const theta = (1 - (y + 0.5) / height) * Math.PI;
@@ -201,8 +206,11 @@ export function createDomainSurfaceTexture(seed: string): THREE.DataTexture {
   return texture;
 }
 
-export function createDomainGlobeGeometry(seed: string): THREE.BufferGeometry {
-  const sample = domainColorSampler(seed);
+export function createDomainGlobeGeometry(
+  seed: string,
+  style: DomainSurfaceStyle = "meadow",
+): THREE.BufferGeometry {
+  const sample = domainColorSampler(seed, style);
   const globe = new THREE.SphereGeometry(DOMAIN_GLOBE_RADIUS, 64, 32);
   const pos = globe.attributes.position;
   if (!pos) throw new Error("Globe missing position attribute");
@@ -225,112 +233,81 @@ export function createDomainGlobeGeometry(seed: string): THREE.BufferGeometry {
   return globe;
 }
 
-/**
- * Creates the domain cloud geometry:
- * - Single merged geometry from low-poly rounded puffs (Icosahedron detail 1).
- * - Organized in meteorological arc bands around radius ~1.045.
- * - Triangles guaranteed <= 7000.
- * - Every vertex is strictly outside the globe (r > 1.0).
- * - Returns position and normal attributes.
+/** One shallow cloud bank per cluster, from the same source as the carrier.
+ * A positive-determinant tangent basis places each bank outside the globe.
+ * No sphere chain, per-frame rebuild, external texture or extra cloud draw.
  */
-export function createDomainCloudGeometry(seed: string): THREE.BufferGeometry {
+export const DOMAIN_CLOUD_SEGMENTS = { width: 24, height: 6 } as const;
+
+export function createDomainCloudGeometry(
+  seed: string,
+  protectedDirections: readonly {
+    readonly x: number;
+    readonly y: number;
+    readonly z: number;
+  }[] = [],
+): THREE.BufferGeometry {
   const rng = createRng(`cloud:${seed}`);
-  const puffs: THREE.BufferGeometry[] = [];
+  const banks: THREE.BufferGeometry[] = [];
+  const source = createCloudVolumeGeometry(
+    DOMAIN_CLOUD_SEGMENTS.width,
+    DOMAIN_CLOUD_SEGMENTS.height,
+  );
+  const sourceColors = source.getAttribute("color");
+  const tone = new THREE.Color(CLOUD_TONES.pearl);
+  for (let index = 0; index < sourceColors.count; index += 1) {
+    sourceColors.setXYZ(
+      index,
+      sourceColors.getX(index) * tone.r,
+      sourceColors.getY(index) * tone.g,
+      sourceColors.getZ(index) * tone.b,
+    );
+  }
 
-  const bandCount = 3;
+  const clusterCount = 7;
   const longitudeOrigin = rng() * Math.PI * 2;
-  for (let b = 0; b < bandCount; b++) {
-    const latitude = -0.46 + b * 0.46;
-    const arcLength = 1.6 + rng() * 0.8;
-    // Stagger longitudes so one accidental seed cannot hide every band behind the sphere.
-    const arcStart = longitudeOrigin + (b * Math.PI * 2) / bandCount;
-    // Seven overlapping clusters read as an arc at orbital scale, rather
-    // than five isolated flat dashes. Even 4 lobes each stay below 7,000 tris.
-    const clusterCount = 7;
-
-    for (let c = 0; c < clusterCount; c++) {
-      const t = c / (clusterCount - 1);
-      const angle = arcStart + t * arcLength;
-      const wobble = Math.sin(t * Math.PI) * 0.12 * (rng() - 0.5);
-
-      const lat = latitude + Math.sin(t * Math.PI) * 0.14 + wobble;
-      const clusterDir = new THREE.Vector3(
-        Math.cos(angle) * Math.cos(lat),
-        Math.sin(lat),
-        Math.sin(angle) * Math.cos(lat),
-      );
-
-      // 3 to 4 rounded puffs per cluster (80 tris each)
-      const puffCount = 3 + Math.floor(rng() * 2);
-      for (let p = 0; p < puffCount; p++) {
-        const baseRadius = 0.038 + rng() * 0.022;
-        const puffGeom = new THREE.IcosahedronGeometry(baseRadius, 1);
-        puffGeom.deleteAttribute("uv");
-
-        const radial = clusterDir.clone();
-        const t1Ref =
-          Math.abs(radial.y) > 0.9 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
-        const t1 = new THREE.Vector3().crossVectors(radial, t1Ref).normalize();
-        const t2 = new THREE.Vector3().crossVectors(radial, t1).normalize();
-
-        const offsetT1 = (p - (puffCount - 1) / 2) * 0.055 + (rng() - 0.5) * 0.012;
-        const offsetT2 = (rng() - 0.5) * 0.026;
-        const offsetR = (rng() - 0.5) * 0.006;
-
-        const puffPos = radial
-          .clone()
-          .multiplyScalar(DOMAIN_CLOUD_RADIUS + offsetR)
-          .addScaledVector(t1, offsetT1)
-          .addScaledVector(t2, offsetT2);
-
-        // Flatten slightly along radial direction, spread along tangent plane
-        const puffRadial = puffPos.clone().normalize();
-        const puffT1Ref =
-          Math.abs(puffRadial.y) > 0.9 ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 1, 0);
-        const puffT1 = new THREE.Vector3().crossVectors(puffRadial, puffT1Ref).normalize();
-        const puffT2 = new THREE.Vector3().crossVectors(puffT1, puffRadial).normalize();
-
-        const rotMatrix = new THREE.Matrix4().makeBasis(puffT1, puffRadial, puffT2);
-        const scaleMatrix = new THREE.Matrix4().makeScale(1.4, 0.55, 0.9);
-        const transMatrix = new THREE.Matrix4().makeTranslation(puffPos.x, puffPos.y, puffPos.z);
-
-        const transform = transMatrix.multiply(rotMatrix).multiply(scaleMatrix);
-        puffGeom.applyMatrix4(transform);
-
-        // Guard: ensure every vertex is strictly outside the globe (r >= 1.018 > 1.0)
-        const pAttr = puffGeom.attributes.position;
-        if (pAttr) {
-          for (let vi = 0; vi < pAttr.count; vi++) {
-            const vx = pAttr.getX(vi);
-            const vy = pAttr.getY(vi);
-            const vz = pAttr.getZ(vi);
-            const r = Math.hypot(vx, vy, vz);
-            if (r < 1.018) {
-              const scale = 1.018 / r;
-              pAttr.setXYZ(vi, vx * scale, vy * scale, vz * scale);
-            }
-          }
-          pAttr.needsUpdate = true;
-        }
-
-        puffs.push(puffGeom);
-      }
-    }
+  // Seven separated banks, not seven beads on each of three latitude rows.
+  // The first R38 screenshot still read as a necklace despite welded clouds.
+  // Low-discrepancy positions keep broad quiet sky between whole silhouettes.
+  for (let cluster = 0; cluster < clusterCount; cluster += 1) {
+    const angle = longitudeOrigin + cluster * Math.PI * (3 - Math.sqrt(5));
+    const lat = Math.asin(0.76 * (1 - (2 * (cluster + 0.5)) / clusterCount));
+    const radial = new THREE.Vector3(
+      Math.cos(angle) * Math.cos(lat),
+      Math.sin(lat),
+      Math.sin(angle) * Math.cos(lat),
+    );
+    // The region plan is canonical. Leave a cone wider than a whole bank plus
+    // the representative islands; never conceal a learning destination with
+    // decorative clouds. Selection does not regenerate this layout.
+    if (
+      protectedDirections.some((direction) => {
+        const length = Math.hypot(direction.x, direction.y, direction.z);
+        return length > 1e-8 && radial.dot(direction) / length > Math.cos(0.48);
+      })
+    )
+      continue;
+    const tangent = new THREE.Vector3(-Math.sin(angle), 0, Math.cos(angle));
+    const across = new THREE.Vector3().crossVectors(tangent, radial).normalize();
+    const basis = new THREE.Matrix4().makeBasis(tangent, radial, across);
+    const scale = 0.13 + rng() * 0.055;
+    // The source is already shallow. This radial flatten preserves the
+    // established atmospheric layer; it does not flatten a chain of balls.
+    const transform = new THREE.Matrix4()
+      .makeTranslation(radial.clone().multiplyScalar(DOMAIN_CLOUD_RADIUS))
+      .multiply(basis)
+      .multiply(new THREE.Matrix4().makeRotationY((rng() - 0.5) * 0.34))
+      .multiply(new THREE.Matrix4().makeScale(scale * 1.4, scale * 0.55, scale * 0.9));
+    banks.push(source.clone().applyMatrix4(transform));
   }
 
-  const merged = mergeBufferGeometries(puffs, false);
-  for (const g of puffs) {
-    g.dispose();
-  }
-
-  if (!merged) {
-    throw new Error("Failed to merge cloud band geometries");
-  }
-
-  if (merged.getAttribute("uv")) {
-    merged.deleteAttribute("uv");
-  }
-  // Preserve the transformed smooth puff normals; recomputing this non-indexed
-  // mesh would turn the thin cloudlets into faceted rocks.
+  const merged = banks.length ? mergeBufferGeometries(banks, false) : new THREE.BufferGeometry();
+  source.dispose();
+  for (const bank of banks) bank.dispose();
+  if (!merged) throw new Error("Failed to merge cloud bank geometries");
+  merged.computeBoundingBox();
+  merged.computeBoundingSphere();
+  merged.userData.cloudVolume = CLOUD_VOLUME_CONTRACT;
+  merged.userData.cloudBankCount = banks.length;
   return merged;
 }

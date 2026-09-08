@@ -16,6 +16,7 @@ import { HOP_DURATION_MS } from "../avatar/hop.js";
 import { MapLighting } from "../sky/lighting.js";
 import { SkyDome } from "../sky/skydome.js";
 import { renderTier } from "../sky/tier.js";
+import { CLOUD_RENDER_ORDER, createCloudMaterial } from "../sky/cloud-material.js";
 import { islandLookFrozen } from "../island/island-surface-style.js";
 import { usePrefersReducedMotion } from "../reduced-motion.js";
 import { studyMarkerColor, type PlanetStudy, type PlanetStudyDomain } from "./planet-copy.js";
@@ -70,7 +71,6 @@ function DomainPlanet({
 }) {
   const root = useRef<THREE.Group>(null);
   const body = useRef<THREE.Group>(null);
-  const clouds = useRef<THREE.Mesh>(null);
   const hits = useRef<THREE.InstancedMesh>(null);
   const turn = useRef({ from: new THREE.Quaternion(), startedAt: 0 });
   const initialized = useRef(false);
@@ -92,19 +92,32 @@ function DomainPlanet({
     () => planAtmosphericRegions(domain.studies, representativeLimit),
     [geometryKey],
   );
-  const globe = useMemo(() => createDomainGlobeGeometry(domain.id), [domain.id]);
-  const cloud = useMemo(() => createDomainCloudGeometry(domain.id), [domain.id]);
+  const globe = useMemo(
+    () => createDomainGlobeGeometry(domain.id, domain.surfaceStyle),
+    [domain.id, domain.surfaceStyle],
+  );
+  const cloud = useMemo(
+    () =>
+      createDomainCloudGeometry(
+        domain.id,
+        regions.map((region) => region.normal),
+      ),
+    [domain.id, geometryKey],
+  );
+  const cloudMaterial = useMemo(() => createCloudMaterial(), []);
   const { resources, preparationMs } = useDomainResources(
     domain.id,
     domain.studies,
     retry,
     onResourceStatus,
     representativeLimit,
+    domain.surfaceStyle,
   );
   // Catalog refreshes rebuild only the islands. Each resource owns its cleanup
   // so that change cannot dispose a globe/texture still used by this planet.
   useEffect(() => () => globe.dispose(), [globe]);
   useEffect(() => () => cloud.dispose(), [cloud]);
+  useEffect(() => () => cloudMaterial.dispose(), [cloudMaterial]);
   const selected = regions.find((region) => region.studyId === selectedId);
   const oriented =
     selected ?? regions.find((region) => region.studyId === lastSelected.current) ?? regions[0];
@@ -123,7 +136,7 @@ function DomainPlanet({
     hits.current.instanceMatrix.needsUpdate = true;
     hits.current.computeBoundingSphere();
   }, [regions, resources]);
-  useFrame(({ camera, size }, delta) => {
+  useFrame(({ camera, size }) => {
     if (!root.current || !body.current) return;
     // Each peer faces the actual camera from its own centre. A fixed global
     // normal is wrong for off-centre planets and fails after a narrow resize.
@@ -145,7 +158,6 @@ function DomainPlanet({
       target.current,
       1 - (1 - progress) ** 3,
     );
-    if (clouds.current && !frozen) clouds.current.rotation.y += Math.min(delta, 0.05) * 0.008;
     const label = labelNodes?.get(domain.id);
     if (label) {
       labelPoint.current.copy(DOMAIN_VIEW_UP).multiplyScalar(DOMAIN_RADIUS * 1.24);
@@ -213,7 +225,7 @@ function DomainPlanet({
           onClick={(event) => {
             event.stopPropagation();
             onSelectDomain?.(domain.id);
-            if (!active && domain.studies[0]) onSelect?.(domain.studies[0].id);
+            if (!onSelectDomain && !active && domain.studies[0]) onSelect?.(domain.studies[0].id);
           }}
         >
           <meshStandardMaterial
@@ -237,14 +249,15 @@ function DomainPlanet({
             depthWrite={false}
           />
         </mesh>
-        <mesh
-          ref={clouds}
-          geometry={cloud}
-          scale={DOMAIN_RADIUS}
-          name={`domain-clouds-${domain.id}`}
-        >
-          <meshStandardMaterial color={0xf3f1e7} roughness={1} />
-        </mesh>
+        {cloud.index?.count ? (
+          <mesh
+            geometry={cloud}
+            material={cloudMaterial}
+            scale={DOMAIN_RADIUS}
+            name={`domain-clouds-${domain.id}`}
+            renderOrder={CLOUD_RENDER_ORDER.upper}
+          />
+        ) : null}
         {resources?.islands.getAttribute("position") ? (
           <mesh
             geometry={resources.islands}

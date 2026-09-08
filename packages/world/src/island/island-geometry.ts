@@ -15,6 +15,7 @@ import {
   type IslandPoint,
 } from "./island-blueprint.js";
 import { hash } from "./random.js";
+import { cliffLobeAtAngle, coastalRockMask } from "./coast-profile.js";
 import {
   barycentricXZ,
   buildSurfaceTriangleIndex,
@@ -92,7 +93,8 @@ const HIGHLAND = new THREE.Color(0xc0bf69); // dry grass on high ground
 const SAND = new THREE.Color(0xead4a6); // cream for local eroding faces
 const ROCK = new THREE.Color(0xa87950); // warm exposed slope
 const ROCK_DARK = new THREE.Color(0x704934); // steep brown faces
-const CLIFF = new THREE.Color(0xa57854); // sunlit cliff face
+const CLIFF = new THREE.Color(0xb0a58f); // exposed warm stone, not the path's brown soil
+const CLIFF_STONE_SHADE = new THREE.Color(0x746f73);
 const CLIFF_BASE_DARK = new THREE.Color(0x5d3d32); // inspector fallback only
 // Creamy earth tones keep the route visibly separate from both the yellow-green
 // meadow and the warm brown cliff, without creating a second route mesh.
@@ -556,6 +558,9 @@ function colorForTop(
   const hollow = smoothstep01(0, -0.55, curvature);
   const crest = smoothstep01(0.05, 0.6, curvature);
   colour.multiplyScalar(1 - hollow * 0.26 + crest * 0.1);
+  // The exposed root reaches the upper surface in geological patches. Without
+  // this shared field mask, every cliff had an uninterrupted green cover rim.
+  colour.lerp(CLIFF, coastalRockMask(blueprint, x, z, radial, height) * 0.97);
   return colour;
 }
 
@@ -1110,19 +1115,19 @@ function cliffRingProfiles(depth: number, taper: number): readonly CliffRingProf
   return [
     { gather: 0, yOffset: 0, sky: 1, gatherVary: 0, depthVary: 0, cant: 0 },
     {
-      gather: 0.034,
-      yOffset: -depth * 0.16,
+      gather: 0.08,
+      yOffset: -depth * 0.1,
       sky: 0.86,
-      gatherVary: 0.01,
-      depthVary: 0.012,
+      gatherVary: 0.065,
+      depthVary: 0.042,
       cant: 0,
     },
     {
       gather: 0.15,
       yOffset: -depth * 0.4,
       sky: 0.64,
-      gatherVary: 0.028,
-      depthVary: 0.02,
+      gatherVary: 0.13,
+      depthVary: 0.068,
       cant: 0.0015,
     },
     {
@@ -1130,7 +1135,7 @@ function cliffRingProfiles(depth: number, taper: number): readonly CliffRingProf
       yOffset: -depth * 0.73,
       sky: 0.4,
       gatherVary: 0.105,
-      depthVary: 0.035,
+      depthVary: 0.058,
       cant: 0.006,
     },
     {
@@ -1150,11 +1155,7 @@ function cliffRootLobe(phase: number, index: number, segments: number): number {
   // low-frequency function at course/world resolutions keeps the silhouette
   // related while the extra third harmonic stops one offset tip from reading
   // as a revolved cone.
-  return (
-    0.78 * Math.sin(angle + phase) +
-    0.2 * Math.sin(angle * 2 + phase * 1.67) +
-    0.12 * Math.sin(angle * 3 - phase * 0.61)
-  );
+  return cliffLobeAtAngle(phase, angle);
 }
 
 function cliffRootTip(
@@ -1209,21 +1210,25 @@ function cliffStratumColour(
   cliffDark: THREE.Color,
   profile: CliffRingProfile,
   lobe: number,
+  exposure: number,
 ): THREE.Color {
   const depth = clamp01(1 - profile.sky);
   const stratum = CLIFF.clone()
     // A light upper band catches the same edge that is broad enough to read
     // near the camera; lower bands move through warm rock into dark earth.
-    .lerp(DIRT_LIGHT, smoothstep01(0.34, 0, depth) * 0.42)
-    .lerp(ROCK, smoothstep01(0.08, 0.72, depth) * 0.72)
-    .lerp(DIRT_DARK, smoothstep01(0.48, 1, depth) * 0.42)
+    .lerp(SAND, smoothstep01(0.34, 0, depth) * 0.32)
+    .lerp(CLIFF_STONE_SHADE, smoothstep01(0.08, 0.92, depth) * 0.55)
+    .lerp(DIRT_DARK, smoothstep01(0.48, 1, depth) * 0.16)
     // Preserve a little course identity without letting the underside swatch
     // flatten every lower face into the same dark value.
     .lerp(cliffDark, 0.04 + depth * 0.14);
   const buttressWarmth = clamp01(0.5 + lobe * 0.45);
   stratum.lerp(DIRT, buttressWarmth * 0.14);
   stratum.multiplyScalar(clamp01(0.93 + profile.sky * 0.07 + lobe * 0.08));
-  return ground.clone().lerp(stratum, profile.sky >= 0.999 ? 0.1 : 0.92);
+  // Exactly the same colour at the shared lip. Below it, turf rolls into
+  // sheltered bays while exposed buttresses turn to stone sooner; never one
+  // fixed colour jump at the same ring around the entire island.
+  return ground.clone().lerp(stratum, smoothstep01(0, 0.24 - exposure * 0.18, depth));
 }
 
 function appendCliffVertex(
@@ -1257,20 +1262,10 @@ function cliffTriangleNormal(
   return ab.cross(ac);
 }
 
-function outwardCliffFaceNormal(
-  position: THREE.BufferAttribute,
-  first: number,
-  second: number,
-  third: number,
-): THREE.Vector3 {
-  const face = cliffTriangleNormal(position, first, second, third);
-  if (face.lengthSq() < 1e-12) return face;
-  return face.normalize();
-}
-
 /**
- * Keep the top and route normals smooth while giving each continuous geological
- * band its own local normal boundary. Side quads use coincident shading
+ * Rock faces run vertically. Average only along a buttress, never around the
+ * whole ring: the previous per-band flat normals drew horizontal strata all
+ * the way around the island, like the sides of a tiered cake. Side quads use coincident shading
  * vertices rather than one shared vertex across two steep planes; the boundary
  * tests compare their coordinates so this remains a closed physical surface.
  * The bottom centre and cap vertices are explicitly downward-facing.
@@ -1278,34 +1273,109 @@ function outwardCliffFaceNormal(
 function resolveCliffNormals(
   geometry: THREE.BufferGeometry,
   faces: readonly CliffNormalFace[],
+  segments: number,
 ): void {
   if (faces.length === 0) return;
   const position = geometry.getAttribute("position") as THREE.BufferAttribute;
   const normal = geometry.getAttribute("normal") as THREE.BufferAttribute;
 
-  for (const face of faces) {
+  const faceNormals = faces.map((face) => {
+    if (face.kind === "bottom") return new THREE.Vector3(0, -1, 0);
+    const [a, b, c, d, e, f] = face.vertices;
+    return cliffTriangleNormal(position, a, b, c)
+      .add(cliffTriangleNormal(position, d, e, f))
+      .normalize();
+  });
+  for (const [faceIndex, face] of faces.entries()) {
     if (face.kind === "bottom") {
       for (const vertex of face.vertices) normal.setXYZ(vertex, 0, -1, 0);
       continue;
     }
 
     const [first, second, third, fourth, fifth, sixth] = face.vertices;
-    const geologicalA = outwardCliffFaceNormal(position, first, second, third);
-    const geologicalB = outwardCliffFaceNormal(position, fourth, fifth, sixth);
-    if (geologicalA.lengthSq() > 1e-12) {
-      geologicalA.normalize();
-      for (const vertex of [first, second, third]) {
-        normal.setXYZ(vertex, geologicalA.x, geologicalA.y, geologicalA.z);
-      }
-    }
-    if (geologicalB.lengthSq() > 1e-12) {
-      geologicalB.normalize();
-      for (const vertex of [fourth, fifth, sixth]) {
-        normal.setXYZ(vertex, geologicalB.x, geologicalB.y, geologicalB.z);
+    const current = faceNormals[faceIndex]!;
+    const previous = faceIndex >= segments ? faceNormals[faceIndex - segments]! : current;
+    const next =
+      faces[faceIndex + segments]?.kind === "side" ? faceNormals[faceIndex + segments]! : current;
+    const upper = current.clone().add(previous).normalize();
+    const lower = current.clone().add(next).normalize();
+    // A deeply cut bay can turn sharply between rings. Keep each triangle's
+    // real plane dominant there; indiscriminate averaging can point a normal
+    // away from its own face (the arc/24/coast regression caught this).
+    for (const triangle of [
+      [first, second, third],
+      [fourth, fifth, sixth],
+    ] as const) {
+      const geometric = cliffTriangleNormal(position, ...triangle).normalize();
+      for (const vertex of triangle) {
+        const smooth = [first, second, fourth].includes(vertex) ? upper : lower;
+        const resolved = geometric
+          .clone()
+          .multiplyScalar(0.65)
+          .addScaledVector(smooth, 0.35)
+          .normalize();
+        normal.setXYZ(vertex, resolved.x, resolved.y, resolved.z);
       }
     }
   }
   normal.needsUpdate = true;
+}
+
+/** Grassy shoulders turn smoothly into the first slope. Exposed rock keeps
+ * its real crease. Top/cliff still use duplicate vertices only for shading,
+ * never duplicate positions or a floating cap mesh.
+ */
+function resolveCoastNormals(
+  geometry: THREE.BufferGeometry,
+  faces: readonly CliffNormalFace[],
+  segments: number,
+  topOuterStart: number,
+  exposures: readonly number[],
+): void {
+  const normals = geometry.getAttribute("normal");
+  for (let i = 0; i < segments; i++) {
+    const face = faces[i]!;
+    const previous = faces[(i + segments - 1) % segments]!;
+    if (face.kind !== "side" || previous.kind !== "side") continue;
+    const topIndex = topOuterStart + i;
+    const top = new THREE.Vector3().fromBufferAttribute(normals, topIndex);
+    const sideIds = [face.vertices[0], previous.vertices[1], previous.vertices[3]];
+    const side = sideIds
+      .reduce(
+        (sum, id) => sum.add(new THREE.Vector3().fromBufferAttribute(normals, id)),
+        new THREE.Vector3(),
+      )
+      .normalize();
+    const shared = top.clone().add(side).normalize();
+    // A genuinely sharp cliff is not a rounded shoulder. Averaging across
+    // incompatible planes can point a shaded normal away from its own face.
+    const strength = (1 - exposures[i]!) * smoothstep01(0.3, 0.85, top.dot(side));
+    const changedTop = top.lerp(shared, strength).normalize();
+    normals.setXYZ(topIndex, changedTop.x, changedTop.y, changedTop.z);
+    for (const id of sideIds) {
+      const changed = new THREE.Vector3()
+        .fromBufferAttribute(normals, id)
+        .lerp(shared, strength)
+        .normalize();
+      normals.setXYZ(id, changed.x, changed.y, changed.z);
+    }
+  }
+  // Keep genuine creases sharper than 60 degrees. A non-planar coastal quad
+  // can have compatible averaged planes but one steep triangle; smoothing
+  // that triangle across the lip falsely lights its back. Retain its own
+  // normal at that corner instead of altering any triangle winding.
+  const position = geometry.getAttribute("position") as THREE.BufferAttribute;
+  for (const face of faces.slice(0, segments)) {
+    if (face.kind !== "side") continue;
+    for (const ids of [face.vertices.slice(0, 3), face.vertices.slice(3, 6)]) {
+      const plane = cliffTriangleNormal(position, ids[0]!, ids[1]!, ids[2]!).normalize();
+      for (const id of ids) {
+        const normal = new THREE.Vector3().fromBufferAttribute(normals, id);
+        if (normal.dot(plane) < Math.cos(Math.PI / 3))
+          normals.setXYZ(id, plane.x, plane.y, plane.z);
+      }
+    }
+  }
 }
 
 function buildTerrain(
@@ -1393,6 +1463,7 @@ function buildTerrain(
   const rings = cliffRingProfiles(depth, blueprint.underside.taper);
   const topOuterStart = 1 + (radials.length - 1) * segments;
   const cliffRings: CliffVertex[][] = [];
+  const edgeExposures: number[] = [];
   for (let ring = 0; ring < rings.length; ring += 1) {
     const profile = rings[ring]!;
     const cliffRing: CliffVertex[] = [];
@@ -1400,6 +1471,8 @@ function buildTerrain(
       const point = outlineAt(blueprint.outline, index, segments);
       const sample = sampleIslandSurface(blueprint, point.x, point.z);
       const lobe = cliffRootLobe(rootPhase, index, segments);
+      if (ring === 0)
+        edgeExposures.push(coastalRockMask(blueprint, point.x, point.z, sample.radial, sample.y));
       let x = point.x;
       let y = sample.y;
       let z = point.z;
@@ -1436,7 +1509,7 @@ function buildTerrain(
         x,
         y,
         z,
-        colour: cliffStratumColour(ground, cliffDark, profile, lobe),
+        colour: cliffStratumColour(ground, cliffDark, profile, lobe, edgeExposures[index]!),
       });
     }
     cliffRings.push(cliffRing);
@@ -1472,7 +1545,7 @@ function buildTerrain(
     }
   }
   const bottomColour = CLIFF.clone()
-    .lerp(ROCK, 0.72)
+    .lerp(CLIFF_STONE_SHADE, 0.72)
     .lerp(DIRT_DARK, 0.24)
     .lerp(cliffDark, 0.23)
     .multiplyScalar(0.9);
@@ -1499,7 +1572,8 @@ function buildTerrain(
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
-  resolveCliffNormals(geometry, cliffFaces);
+  resolveCliffNormals(geometry, cliffFaces, segments);
+  resolveCoastNormals(geometry, cliffFaces, segments, topOuterStart, edgeExposures);
   resolveRouteNormals(geometry, routeShading);
   geometry.computeBoundingBox();
   geometry.computeBoundingSphere();

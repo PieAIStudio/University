@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-08T13:34:10.012Z
+generated_at: 2026-09-08T17:11:09.451Z
 generator_version: doc-gov@0.9.10
 docs_count: 108
 docs:
@@ -58,7 +58,7 @@ docs:
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-09-08
+    last_reviewed: 2026-09-09
     pinned: false
   - id: ADR-0009
     path: docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md
@@ -149,7 +149,7 @@ docs:
     type: plan
     status: active
     canonical: true
-    last_reviewed: 2026-09-08
+    last_reviewed: 2026-09-09
     pinned: false
   - id: PLAN-ISLAND-V2-VERTICAL-SLICE
     path: docs/plans/completed/island-v2-vertical-slice.md
@@ -275,7 +275,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-08
+    last_reviewed: 2026-09-09
     pinned: false
   - id: REF-PAYMENT-BACKEND-GAP
     path: docs/reference/execution/payment-backend-gap.md

@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: ai-assisted
 created: 2026-09-07
-last_reviewed: 2026-09-08
+last_reviewed: 2026-09-09
 domain: execution
 tags:
   - local-preview
@@ -24,6 +24,18 @@ related:
 权限授权书或验收台账。动态地址和权限每次重查；产品通过项只记活动计划。
 
 ## 当前连接说明（2026-09-08 R38接续）
+
+2026-09-09更新：Android继续使用原TLS/LAN20000；本机能够读页面、注入可信触摸并
+取得实体横竖屏收据，复跑失败仍在活动计划保留。iPhone打开Remote Automation后已经
+成功建立真实Safari会话（非模拟器）；后来会话失效，新的请求返回`could not connect to device`。
+CoreDevice列出已配对的iPhone 12 Pro Max（iPhone13,4），但打开本项目Safari页面需要的
+开发镜像挂载返回`kAMDMobileImageMounterNetworkUnauthorizedError`及HTTP Unauthorized。
+已停止这一操作，不更换通道绕过；没有重配、重装或更改安全设置。原错误见
+`.devspace-visual/astra-r38/iphone-open-project.json`，不把这项工具链错误称作手机未准备好。
+未做重启恢复实验。临时LAN开发端口20004已由本轮关闭；原19998/19999/20000保留。
+
+作者端当前独立问题：`/api/studies/general`的既有课程源返回400，原因是NIST网址尚不在
+本支路的来源准入表中。HTTP入口200不表示作者端地图可用；交付端仍读取既有已导出内容。
 
 用户已在Android Chrome inspect中看到University LAN页面，iPhone Web Inspector也已能读取
 该项目DOM/CSS；这些证明网页可访问及Mac检查链已建立，不是产品验收。本机会话额外实查：

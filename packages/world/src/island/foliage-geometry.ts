@@ -32,6 +32,10 @@ export interface FoliagePlacement {
   readonly position: { readonly x: number; readonly y: number; readonly z: number };
   readonly height: number;
   readonly turn: number;
+  /** Shared-field patch colour supplied by the cached dressing plan. */
+  readonly foliageTint?: number;
+  readonly shapeSeed?: string;
+  readonly groundOffsets?: readonly number[];
 }
 
 export interface CrownLobeTransform {
@@ -131,12 +135,6 @@ export function icosahedronTriangleCount(detail: number): number {
   return triangles;
 }
 
-function familyColour(random: () => number): THREE.Color {
-  const t = random();
-  const toward = t < 0.5 ? CROWN_FAMILY.shadow : CROWN_FAMILY.highlight;
-  return CROWN_FAMILY.mid.clone().lerp(toward, Math.abs(t - 0.5) * 0.3);
-}
-
 function lobesFromRecipes(
   placement: FoliagePlacement,
   recipes: readonly LobeRecipe[],
@@ -144,18 +142,20 @@ function lobesFromRecipes(
   bury = 0,
 ): CrownLobeTransform[] {
   const random = seeded(
-    `${seedKey}/${placement.position.x}/${placement.position.z}/${placement.turn}`,
+    `${seedKey}/${placement.shapeSeed ?? `${placement.position.x}/${placement.position.z}`}/${placement.turn}`,
   );
   const height = placement.height;
+  const colour =
+    placement.foliageTint === undefined ? CROWN_FAMILY.mid : new THREE.Color(placement.foliageTint);
   const swing = (random() - 0.5) * 0.4;
   const lobes: CrownLobeTransform[] = [];
-  for (const recipe of recipes) {
+  for (const [index, recipe] of recipes.entries()) {
     const scaleJitter = CROWN_SCALE_JITTER.min + random() * CROWN_SCALE_JITTER.span;
     const yaw = placement.turn + recipe.yaw + swing + (random() - 0.5) * 0.18;
     const pitch = (random() - 0.5) * 0.16;
     const local = new THREE.Vector3(
       recipe.along * height,
-      recipe.up * height - bury,
+      recipe.up * height - bury + (placement.groundOffsets?.[index] ?? 0),
       recipe.side * height,
     );
     local.applyAxisAngle(UP, placement.turn);
@@ -171,7 +171,8 @@ function lobesFromRecipes(
         recipe.radiusY * height * scaleJitter,
         recipe.radiusZ * height * scaleJitter,
       ),
-      color: familyColour(random),
+      // Lobe value hierarchy is stable; hue belongs to the entire patch.
+      color: colour.clone().multiplyScalar(index === 0 ? 1 : index === 1 ? 0.96 : 0.93),
     });
   }
   return lobes;
@@ -183,6 +184,51 @@ export function treeCrownLobes(placement: FoliagePlacement): readonly CrownLobeT
 
 export function bushCrownLobes(placement: FoliagePlacement): readonly CrownLobeTransform[] {
   return lobesFromRecipes(placement, BUSH_LOBE_RECIPES, "bush-crown", placement.height * 0.06);
+}
+
+// CPU-only vertices from the ACTUAL emitted shrub mesh; not a guessed sphere
+// or a second terrain sampler. Its temporary geometry never reaches the GPU.
+let bushContactVertices: readonly THREE.Vector3[] | undefined;
+function shrubVertices(): readonly THREE.Vector3[] {
+  if (!bushContactVertices) {
+    const geometry = createSmoothIcosahedron(COURSE_BUSH_CROWN_DETAIL);
+    const positions = geometry.getAttribute("position");
+    bushContactVertices = Array.from({ length: positions.count }, (_, index) =>
+      new THREE.Vector3().fromBufferAttribute(positions, index),
+    );
+    geometry.dispose();
+  }
+  return bushContactVertices;
+}
+
+/** Solve contact once in the plan. Every lobe keeps its shape/footprint and
+ * moves only down when its real low vertex floats over the rendered terrain.
+ * Renderer scale multiplies these offsets; it never re-samples the world.
+ */
+export function bushGroundOffsets(
+  placement: FoliagePlacement,
+  groundAt: (x: number, z: number) => number,
+): readonly number[] {
+  const vertices = shrubVertices();
+  const scratch = new THREE.Vector3();
+  return bushCrownLobes({ ...placement, groundOffsets: undefined }).map((lobe) => {
+    let bottomY = Infinity;
+    for (const vertex of vertices) {
+      scratch.copy(vertex).multiply(lobe.scale).applyQuaternion(lobe.quaternion).add(lobe.position);
+      bottomY = Math.min(bottomY, scratch.y);
+    }
+    // An icosahedron can have two equally low vertices on opposite sides.
+    // Choosing just the first ties contact to floating-point iteration order
+    // and lets the downhill foot float after a uniform preview scale.
+    let largestGap = -Infinity;
+    for (const vertex of vertices) {
+      scratch.copy(vertex).multiply(lobe.scale).applyQuaternion(lobe.quaternion).add(lobe.position);
+      if (scratch.y <= bottomY + placement.height * 1e-6) {
+        largestGap = Math.max(largestGap, scratch.y - groundAt(scratch.x, scratch.z));
+      }
+    }
+    return -Math.max(0, largestGap + 0.01);
+  });
 }
 
 export function crownLobeCorners(lobe: CrownLobeTransform): THREE.Vector3[] {

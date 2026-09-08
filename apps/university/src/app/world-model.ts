@@ -10,6 +10,7 @@ import { spacedName } from "@pieai/university-ui/text/spaced-name.js";
 import {
   type LessonPlacement,
   placeStudyArchipelago,
+  worldIslandCaptionTarget,
   type Marker,
 } from "@pieai/university-world/Maps.js";
 import { courseMarkers } from "@pieai/university-world/course-map.js";
@@ -255,7 +256,7 @@ export function useWorldMarkers({
     const liveIndex = live ? (rank.get(live.node.courseId) ?? -1) : -1;
     return world.placements.map((entry) => ({
       id: entry.node.courseId,
-      position: entry.position.clone().setY(entry.position.y + entry.radius * 0.4 + 1.4),
+      position: worldIslandCaptionTarget(entry),
       text: entry.node.title,
       kind: "course" as const,
       courseState: entry.state,

@@ -19,6 +19,7 @@ import {
   GameStatList,
 } from "@pieai/swimmer-ui-kit";
 import { useEffect, useId, useMemo } from "react";
+import { translate } from "@pieai/university-ui/i18n.js";
 
 import { PlanetStage } from "./PlanetScene.js";
 import { buildDomainPlan, type DomainPlanGroup } from "./domain-plan.js";
@@ -109,6 +110,20 @@ export function PlanetRail({
     return domainPlan[0] ?? null;
   }, [domainPlan, selected, selectedDomainId]);
 
+  const returnDomain =
+    domainPlan.find((domain) => domain.studies.some((study) => study.id === selectedId)) ??
+    domainPlan.find((domain) => domain.studies.length > 0);
+  const selectDomain = (domain: DomainPlanGroup) => {
+    if (onSelectDomain) {
+      // The shell owns remembered selections, including a visit to an empty
+      // planet. An unconditional first-row callback would overwrite its restore.
+      onSelectDomain(domain.id);
+    } else {
+      const restored = domain.studies.find((study) => study.id === selectedId) ?? domain.studies[0];
+      if (restored && restored.id !== selectedId) onSelect(restored.id);
+    }
+  };
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
@@ -124,6 +139,7 @@ export function PlanetRail({
       className="planet-rail"
       data-planet-page="true"
       data-selected={selectedId ?? ""}
+      data-domain-empty={activeDomain?.studies.length ? undefined : "true"}
       aria-labelledby={titleId}
     >
       <header className="planet-rail__head">
@@ -146,15 +162,15 @@ export function PlanetRail({
                 className={`planet-rail__domain-button${isActive ? " is-active" : ""}`}
                 aria-pressed={isActive}
                 data-domain-id={domain.id}
-                onClick={() => {
-                  onSelectDomain?.(domain.id);
-                  const first = domain.studies[0];
-                  if (first) {
-                    onSelect(first.id);
-                  }
-                }}
+                data-domain-state={domain.studies.length === 0 ? "unpublished" : "published"}
+                onClick={() => selectDomain(domain)}
               >
                 {domain.title}
+                {domain.studies.length === 0 ? (
+                  <span className="planet-rail__domain-state">
+                    {translate("ui.world.domain.unpublished")}
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -166,6 +182,9 @@ export function PlanetRail({
           {(activeDomain ? [activeDomain] : domainPlan).map((domain) => (
             <div key={domain.id} className="planet-page__domain-group" data-domain-id={domain.id}>
               <div className="planet-page__domain-title">{domain.title}</div>
+              {domain.studies.length > 0 && domain.description ? (
+                <p className="planet-page__domain-description">{domain.description}</p>
+              ) : null}
               {domain.studies.map((study) => {
                 const active = study.id === selectedId;
                 const stage = studyStage(study);
@@ -216,13 +235,29 @@ export function PlanetRail({
         <div className="planet-page__detail">
           {selected ? (
             <StudyDetail study={selected} />
+          ) : activeDomain?.studies.length === 0 ? (
+            <div className="planet-page__empty" data-domain-empty={activeDomain.id}>
+              <div role="status">
+                <GameBadge tone="neutral">{translate("ui.world.domain.unpublished")}</GameBadge>
+                {activeDomain.description ? (
+                  <p className="planet-page__domain-description">{activeDomain.description}</p>
+                ) : null}
+                <p className="planet-page__hint">{translate("ui.world.domain.empty")}</p>
+              </div>
+              {returnDomain ? (
+                <GameButton
+                  type="button"
+                  variant="ghost"
+                  className="planet-page__return"
+                  onClick={() => selectDomain(returnDomain)}
+                >
+                  {translate("ui.world.domain.return", { title: returnDomain.title })}
+                </GameButton>
+              ) : null}
+            </div>
           ) : (
             <p className="planet-page__hint" role="status">
-              {activeDomain?.studies.length === 0
-                ? "这个领域还没有课程系列。"
-                : domainPlan.length === 0
-                  ? "还没有可选的课程系列。"
-                  : "从列表里选一个项目"}
+              {domainPlan.length === 0 ? "还没有可选的课程系列。" : "从列表里选一个项目"}
             </p>
           )}
         </div>

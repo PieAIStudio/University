@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
+import * as THREE from "three";
 
 import {
   CLOUD_LAYOUT_CONTRACT,
@@ -9,11 +10,19 @@ import {
   CUTE_CLOUD_CONTRACT,
   cloudHorizontalFootprint,
   cloudCarrierHome,
+  cloudCarrierClearance,
   cloudPuffs,
   cloudSafeCorridorRadius,
   cuteCloudLayout,
+  updateCloudCarrierInstances,
 } from "./cloud-sea.js";
-import { CLOUD_VOLUME_CONTRACT, createCloudVolumeGeometry } from "./cloud-volume.js";
+import {
+  CLOUD_BANK_SUPPORT_HEIGHT,
+  CLOUD_VOLUME_CONTRACT,
+  createCloudVolumeGeometry,
+  createCloudVolumeParts,
+} from "./cloud-volume.js";
+import { createCloudMaterials } from "./cloud-material.js";
 
 /**
  * Source with comments removed.
@@ -33,6 +42,65 @@ function code(file: string): string {
 const CLOUD_CALLERS = ["./cloud-sea.tsx", "../grid/GridCloudLayers.tsx"] as const;
 
 describe("cute cloud sea", () => {
+  it("keeps moved carrier bounds current without rewriting colours or adding instances", () => {
+    const layout = cuteCloudLayout(40, -5.2, "desktop");
+    const parts = createCloudVolumeParts(32, 9);
+    const materials = createCloudMaterials();
+    const upper = new THREE.InstancedMesh(parts.crown, materials.crown, layout.puffs.length);
+    const lower = new THREE.InstancedMesh(
+      parts.underbelly,
+      materials.underbelly,
+      layout.puffs.length,
+    );
+    const scratch = new THREE.Object3D();
+    for (const mesh of [upper, lower]) {
+      layout.lobes.forEach((bank, index) => {
+        scratch.position.set(...bank.position);
+        scratch.rotation.set(0, bank.rotationY, 0);
+        scratch.scale.set(...bank.scale);
+        scratch.updateMatrix();
+        mesh.setMatrixAt(index, scratch.matrix);
+        mesh.setColorAt(index, new THREE.Color(bank.color));
+      });
+      mesh.computeBoundingSphere();
+    }
+    const oldSphere = upper.boundingSphere!.clone();
+    const oldColour = upper.instanceColor!.array.slice();
+    const neighbour = new THREE.Matrix4();
+    upper.getMatrixAt(0, neighbour);
+    const firstMatrix = neighbour.clone();
+    const carrier = layout.lobes.at(-1)!;
+    const destination = new THREE.Vector3(
+      carrier.position[0] + 200,
+      carrier.position[1] + 15,
+      carrier.position[2] + 180,
+    );
+    expect(oldSphere.containsPoint(destination)).toBe(false);
+    updateCloudCarrierInstances(upper, lower, layout, 200, 15, 180, scratch);
+    for (const mesh of [upper, lower]) {
+      const matrix = new THREE.Matrix4();
+      mesh.getMatrixAt(mesh.count - 1, matrix);
+      expect(
+        new THREE.Vector3().setFromMatrixPosition(matrix).distanceTo(destination),
+      ).toBeLessThan(1e-5);
+      expect(mesh.boundingSphere!.containsPoint(destination)).toBe(true);
+      expect(mesh.count).toBe(layout.puffs.length);
+    }
+    upper.getMatrixAt(0, neighbour);
+    expect(neighbour).toEqual(firstMatrix);
+    expect(upper.instanceColor!.array).toEqual(oldColour);
+    expect(upper.geometry).toBe(parts.crown);
+    expect(lower.geometry).toBe(parts.underbelly);
+    expect(upper.material).toBe(materials.crown);
+    expect(lower.material).toBe(materials.underbelly);
+    upper.dispose();
+    lower.dispose();
+    parts.crown.dispose();
+    parts.underbelly.dispose();
+    materials.crown.dispose();
+    materials.underbelly.dispose();
+  });
+
   it("keeps a deterministic sculpted layout for each quality tier", () => {
     const desktop = cuteCloudLayout(40, -5.2, "desktop");
     const desktopAgain = cuteCloudLayout(40, -5.2, "desktop");
@@ -60,12 +128,14 @@ describe("cute cloud sea", () => {
     ]);
   });
 
-  it("uses six upper lobes and one opaque warm under-belly per puff", () => {
+  it("uses one continuous bank with complementary opaque surface batches per puff", () => {
     const layout = cuteCloudLayout(40, -5.2, "desktop");
 
     expect(layout.lobes).toHaveLength(layout.puffs.length * CUTE_CLOUD_CONTRACT.upperLobesPerPuff);
     expect(layout.underbellies).toHaveLength(layout.puffs.length);
-    expect(CUTE_CLOUD_CONTRACT.totalOpaqueLobesPerPuff).toBe(7);
+    expect(CUTE_CLOUD_CONTRACT.totalOpaqueLobesPerPuff).toBe(1);
+    expect(layout.lobes).toHaveLength(layout.puffs.length);
+    expect(layout.underbellies).toEqual(layout.lobes);
     expect(CUTE_CLOUD_CONTRACT.drawBatches).toBe(2);
     expect(CUTE_CLOUD_CONTRACT.opaque).toBe(true);
     expect(new Set(layout.lobes.map((lobe) => lobe.color)).size).toBeGreaterThan(1);
@@ -75,7 +145,7 @@ describe("cute cloud sea", () => {
     ).toBeGreaterThan(1);
   });
 
-  it("limits phone geometry while retaining a rounded vertical silhouette", () => {
+  it("limits phone geometry while retaining the same shallow silhouette", () => {
     const desktop = cuteCloudLayout(40, -5.2, "desktop");
     const mobile = cuteCloudLayout(40, -5.2, "mobile");
     const desktopHeight = desktop.lobes[5]!.scale[1];
@@ -89,17 +159,40 @@ describe("cute cloud sea", () => {
     );
     expect(desktopHeight).toBeGreaterThan(0);
     expect(mobileHeight).toBeGreaterThan(0);
-    expect(desktop.lobes.some((lobe) => lobe.scale[1] > lobe.scale[0] * 0.5)).toBe(true);
+    for (const tier of ["desktop", "mobile"] as const) {
+      const segments =
+        tier === "desktop"
+          ? CUTE_CLOUD_CONTRACT.desktopSegments
+          : CUTE_CLOUD_CONTRACT.mobileSegments;
+      const geometry = createCloudVolumeGeometry(segments.width, segments.height);
+      const size = geometry.boundingBox!.getSize(new THREE.Vector3());
+      expect(size.y).toBeGreaterThan(0.4);
+      expect(size.y / size.x).toBeLessThan(0.35);
+      geometry.dispose();
+    }
   });
 
   it("keeps every sculpted crown below the turf contract", () => {
-    const layout = cuteCloudLayout(40, -5.2, "desktop");
-    for (const lobe of layout.lobes) {
-      const source = layout.puffs[lobe.puffIndex]!;
-      expect(lobe.position[1] + lobe.scale[1]).toBeLessThan(
-        source.position[1] + source.scale * CUTE_CLOUD_CONTRACT.crownHeightPerScale + 1e-9,
-      );
-      expect(lobe.position[1] + lobe.scale[1]).toBeLessThan(0);
+    for (const quality of ["desktop", "mobile"] as const) {
+      const segments =
+        quality === "desktop"
+          ? CUTE_CLOUD_CONTRACT.desktopSegments
+          : CUTE_CLOUD_CONTRACT.mobileSegments;
+      const geometry = createCloudVolumeGeometry(segments.width, segments.height);
+      for (const level of [-5.2, 3]) {
+        const layout = cuteCloudLayout(40, level, quality);
+        for (const bank of layout.lobes) {
+          const source = layout.puffs[bank.puffIndex]!;
+          // The source is no longer a unit sphere. Measure its actual crown,
+          // retaining the original 1.12-per-scale / below-turf thresholds.
+          const top = bank.position[1] + geometry.boundingBox!.max.y * bank.scale[1];
+          expect(top).toBeLessThan(
+            source.position[1] + source.scale * CUTE_CLOUD_CONTRACT.crownHeightPerScale + 1e-9,
+          );
+          expect(top).toBeLessThan(-CLOUD_LAYOUT_CONTRACT.turfClearance);
+        }
+      }
+      geometry.dispose();
     }
   });
 
@@ -161,6 +254,22 @@ describe("cute cloud sea", () => {
     expect(source).not.toMatch(/RayMarchMaterial|raymarchShader|volumeCloud/i);
   });
 
+  it("keeps tier geometry cleanup separate from stable shared material cleanup", () => {
+    const source = code("./cloud-sea.tsx");
+    const cleanups = Array.from(
+      source.matchAll(/useLayoutEffect\(\s*\(\) => \(\) => \{([\s\S]*?)\},\s*\[([^\]]*)\],?\s*\)/g),
+    );
+    const geometry = cleanups.find((match) => match[1]!.includes("upperGeometry.dispose()"));
+    const materials = cleanups.find((match) => match[1]!.includes("upperMaterial.dispose()"));
+    expect(geometry).toBeDefined();
+    expect(materials).toBeDefined();
+    expect(geometry![1]).toContain("lowerGeometry.dispose()");
+    expect(geometry![1]).not.toContain("Material.dispose()");
+    expect(materials![1]).toContain("lowerMaterial.dispose()");
+    expect(materials![2]).not.toMatch(/geometry/i);
+    expect(geometry).not.toBe(materials);
+  });
+
   /*
    * These three used to read `cloud-sea.tsx` and count its two inline
    * materials. They now read the module that owns the answer, and they check
@@ -174,23 +283,34 @@ describe("cute cloud sea", () => {
    */
   it("keeps one lit material pair for every cloud in the product", () => {
     const shared = code("./cloud-material.ts");
-    // Constructions, not the two type annotations on the returned pair.
-    expect(shared.match(/new THREE\.MeshStandardMaterial/g)).toHaveLength(2);
-    expect(shared.match(/vertexColors:\s*true/g)).toHaveLength(2);
-    expect(shared.match(/transparent:\s*false/g)).toHaveLength(2);
+    // One factory, two actual owned materials for the catalogue; course and
+    // globe use the single-material entry and no longer leak an unused belly.
+    expect(shared.match(/new THREE\.MeshStandardMaterial/g)).toHaveLength(1);
+    const materials = createCloudMaterials();
+    expect(materials.crown).not.toBe(materials.underbelly);
+    for (const material of Object.values(materials)) {
+      expect(material).toBeInstanceOf(THREE.MeshStandardMaterial);
+      expect(material.vertexColors).toBe(true);
+      expect(material.transparent).toBe(false);
+      expect(material.map).toBeNull();
+      material.dispose();
+    }
     for (const file of CLOUD_CALLERS) {
       const source = code(file);
-      expect(source, file).toMatch(/createCloudMaterials\(/);
+      expect(source, file).toMatch(/createCloudMaterials?\(/);
       // An unlit or bespoke cloud material anywhere is the defect returning.
       expect(source, file).not.toMatch(/MeshBasicMaterial|MeshStandardMaterial/);
     }
   });
 
   it("depth-tests after the opaque scene without contributing cloud depth to AO", () => {
-    const shared = code("./cloud-material.ts");
     expect(CUTE_CLOUD_CONTRACT.renderOrder).toEqual({ underbelly: 3, upper: 4 });
-    expect(shared.match(/depthTest:\s*true/g)).toHaveLength(CUTE_CLOUD_CONTRACT.drawBatches);
-    expect(shared.match(/depthWrite:\s*false/g)).toHaveLength(CUTE_CLOUD_CONTRACT.drawBatches);
+    const materials = createCloudMaterials();
+    for (const material of Object.values(materials)) {
+      expect(material.depthTest).toBe(true);
+      expect(material.depthWrite).toBe(false);
+      material.dispose();
+    }
     for (const file of CLOUD_CALLERS) {
       const source = code(file);
       // A negative renderOrder draws before the opaque pass, which is only
@@ -218,4 +338,90 @@ describe("cute cloud sea", () => {
     expect(Math.max(...Array.from(position.array as ArrayLike<number>))).toBeGreaterThan(0.5);
     geometry.dispose();
   });
+
+  it.each(["desktop", "mobile"] as const)(
+    "retains the %s carrier's feet and full horizontal/vertical safety envelope",
+    (quality) => {
+      const segments =
+        quality === "desktop"
+          ? CUTE_CLOUD_CONTRACT.desktopSegments
+          : CUTE_CLOUD_CONTRACT.mobileSegments;
+      const geometry = createCloudVolumeGeometry(segments.width, segments.height);
+      const position = geometry.getAttribute("position");
+      for (const extent of [1, 12, 40, 120, 400]) {
+        const layout = cuteCloudLayout(extent, -5.2, quality);
+        const feet = cloudCarrierHome(extent, -5.2, quality);
+        const clearance = cloudCarrierClearance(extent, -5.2, quality);
+        expect(CLOUD_CARRIER_FOOT_OFFSET).toBe(1.55);
+        expect(clearance).toBeGreaterThan(CLOUD_CARRIER_FOOT_OFFSET);
+        for (const bank of layout.lobes) {
+          const puff = layout.puffs[bank.puffIndex]!;
+          const carrier = bank.puffIndex === layout.puffs.length - 1;
+          const transform = new THREE.Matrix4().compose(
+            new THREE.Vector3(...bank.position),
+            new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), bank.rotationY),
+            new THREE.Vector3(...bank.scale),
+          );
+          for (let index = 0; index < position.count; index += 1) {
+            const vertex = new THREE.Vector3()
+              .fromBufferAttribute(position, index)
+              .applyMatrix4(transform);
+            expect(
+              Math.hypot(vertex.x - puff.position[0], vertex.z - puff.position[2]),
+            ).toBeLessThanOrEqual(cloudHorizontalFootprint(puff.scale));
+            if (carrier)
+              expect(vertex.y).toBeGreaterThanOrEqual(
+                feet[1] - clearance + CLOUD_LAYOUT_CONTRACT.turfClearance,
+              );
+          }
+          if (carrier) {
+            const support = new THREE.Vector3(0, CLOUD_BANK_SUPPORT_HEIGHT, 0).applyMatrix4(
+              transform,
+            );
+            expect(support.distanceTo(new THREE.Vector3(...feet))).toBeLessThan(1e-10);
+            // The exact rendered crown, including its coarsest LOD, supports
+            // the avatar; it is not merely a point copied into the metadata.
+            const renderedSupport = new THREE.Vector3()
+              .fromBufferAttribute(position, 0)
+              .applyMatrix4(transform);
+            expect(renderedSupport.distanceTo(support)).toBeLessThan(1e-6);
+          }
+        }
+      }
+      geometry.dispose();
+    },
+  );
+
+  it.each([
+    ["desktop", 32, 9, 9, 4608],
+    ["mobile", 20, 6, 6, 1200],
+  ] as const)(
+    "keeps the %s surface split seamless and under the previous submitted triangle budget",
+    (_quality, width, height, count, expected) => {
+      const whole = createCloudVolumeGeometry(width, height);
+      const parts = createCloudVolumeParts(width, height);
+      const combined = [...parts.crown.index!.array, ...parts.underbelly.index!.array];
+      expect(combined).toEqual(Array.from(whole.index!.array));
+      expect((combined.length / 3) * count).toBe(expected);
+      expect(expected).toBeLessThan(_quality === "desktop" ? 14112 : 3780);
+      for (const attribute of ["position", "normal", "color"]) {
+        expect(parts.crown.getAttribute(attribute).array).toEqual(
+          parts.underbelly.getAttribute(attribute).array,
+        );
+        expect(parts.crown.getAttribute(attribute).array).not.toBe(
+          parts.underbelly.getAttribute(attribute).array,
+        );
+      }
+      const materials = createCloudMaterials();
+      expect(materials.crown.color).toEqual(materials.underbelly.color);
+      expect(materials.crown.emissive).toEqual(materials.underbelly.emissive);
+      expect(materials.crown.emissiveIntensity).toBe(materials.underbelly.emissiveIntensity);
+      expect(materials.crown.roughness).toBe(materials.underbelly.roughness);
+      whole.dispose();
+      parts.crown.dispose();
+      parts.underbelly.dispose();
+      materials.crown.dispose();
+      materials.underbelly.dispose();
+    },
+  );
 });

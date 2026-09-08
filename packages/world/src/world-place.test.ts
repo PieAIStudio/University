@@ -30,6 +30,76 @@ const NODES: readonly CourseNode[] = [
 const nothingDone = () => 0;
 
 describe("learner series archipelago", () => {
+  it("forms small ordered neighbourhoods with sky between them, not a uniform scatter", () => {
+    const nodes = Array.from({ length: 31 }, (_, index) =>
+      node({
+        studyId: "grouped-shoals",
+        courseId: `course-${String(index).padStart(3, "0")}`,
+        lessons: 12,
+        depth: index,
+      }),
+    );
+    const world = placeStudyArchipelago(nodes, nothingDone, "grouped-shoals");
+    // Connected components of nearby silhouettes, not a count of metadata
+    // groups which could pass while their islands were still spread everywhere.
+    const unseen = new Set(world.placements);
+    const groups: number[][] = [];
+    while (unseen.size > 0) {
+      const seed = unseen.values().next().value!;
+      unseen.delete(seed);
+      const queue = [seed];
+      const depths: number[] = [];
+      while (queue.length > 0) {
+        const entry = queue.pop()!;
+        depths.push(entry.node.depth);
+        for (const peer of unseen) {
+          const reserved =
+            worldIslandRadiusForState(entry.node.lessons, "live") +
+            worldIslandRadiusForState(peer.node.lessons, "live");
+          if (entry.position.distanceTo(peer.position) - reserved <= 3.5) {
+            unseen.delete(peer);
+            queue.push(peer);
+          }
+        }
+      }
+      groups.push(depths.sort((a, b) => a - b));
+    }
+    expect(groups.length).toBeGreaterThanOrEqual(6);
+    expect(groups.length).toBeLessThanOrEqual(10);
+    for (const group of groups) {
+      expect(group.length).toBeGreaterThanOrEqual(3);
+      expect(group.length).toBeLessThanOrEqual(6);
+      expect(group.at(-1)! - group[0]!).toBe(group.length - 1);
+    }
+  });
+
+  it("reserves future live radii so progress cannot rearrange dense large-course islands", () => {
+    const nodes = Array.from({ length: 31 }, (_, index) =>
+      node({
+        studyId: "stable-large-islands",
+        courseId: `course-${String(index).padStart(3, "0")}`,
+        lessons: [24, 41, 80][index % 3]!,
+        depth: index,
+        prerequisiteCourseIds: index === 0 ? [] : [`course-${String(index - 1).padStart(3, "0")}`],
+      }),
+    );
+    const initial = placeStudyArchipelago(nodes, nothingDone, "stable-large-islands");
+    for (const completed of [1, 15, 31]) {
+      const advanced = placeStudyArchipelago(
+        nodes,
+        (entry) => (entry.depth < completed ? 1 : 0),
+        "stable-large-islands",
+      );
+      expect(advanced.placements.map((entry) => entry.position.toArray())).toEqual(
+        initial.placements.map((entry) => entry.position.toArray()),
+      );
+      expect(advanced.extent).toBe(initial.extent);
+      for (const entry of advanced.placements) {
+        expect(entry.radius).toBe(worldIslandRadiusForState(entry.node.lessons, entry.state));
+      }
+    }
+  });
+
   it.each([0, 1, 20, 31, 53])(
     "keeps %i-course catalogues finite, separated and deterministic as content and progress vary",
     (count) => {

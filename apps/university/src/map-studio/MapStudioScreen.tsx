@@ -24,7 +24,11 @@ import {
   WorldMapCanvas,
 } from "@pieai/university-world";
 import { courseMarkers, frameCourse, worldCourse } from "@pieai/university-world/course-map.js";
-import { PlanetStage, type PlanetStudy } from "@pieai/university-world/planet.js";
+import {
+  PlanetStage,
+  type PlanetStudy,
+  type PlanetStudyDomain,
+} from "@pieai/university-world/planet.js";
 import {
   applyPreviewAssetOverrides,
   clearPreviewAssetOverrides,
@@ -60,6 +64,7 @@ interface MapStudioScreenProps {
   readonly progressPort: ProgressPort;
   readonly focusedStudyId: string | null;
   readonly planetStudies: readonly PlanetStudy[];
+  readonly planetDomainCatalog?: readonly PlanetStudyDomain[];
   readonly onSelectStudy: (studyId: string) => void;
 }
 
@@ -800,6 +805,7 @@ export function MapStudioScreen({
   progressPort,
   focusedStudyId,
   planetStudies,
+  planetDomainCatalog,
   onSelectStudy,
 }: MapStudioScreenProps) {
   const [activeLayer, setActiveLayer] = useState<StudioLayer>("planet");
@@ -875,6 +881,7 @@ export function MapStudioScreen({
     if (activeLayer === "planet") {
       return describePlanetLayer({
         studies: planetStudies,
+        domainCatalog: planetDomainCatalog,
         runtime,
       });
     }
@@ -910,6 +917,7 @@ export function MapStudioScreen({
     activeLayer,
     courseBlueprint,
     planetStudies,
+    planetDomainCatalog,
     previewWorld,
     runtime,
     selectedStudyId,
@@ -1041,7 +1049,10 @@ export function MapStudioScreen({
     previewWorld?.placements.find((entry) => entry.state === "live")?.position ??
     previewWorld?.placements[0]?.position ??
     null;
-  const worldFrame = useMemo(() => frameWorld(activeWorldLearner), [activeWorldLearner]);
+  const worldFrame = useMemo(
+    () => frameWorld(activeWorldLearner, previewWorld?.placements ?? []),
+    [activeWorldLearner, previewWorld],
+  );
   const courseFrame = useMemo(() => frameCourse(courseLessons), [courseLessons]);
   const camera =
     activeLayer === "world"
@@ -1203,6 +1214,7 @@ export function MapStudioScreen({
               {activeLayer === "planet" ? (
                 <PlanetStage
                   studies={planetStudies}
+                  domainCatalog={planetDomainCatalog}
                   selectedId={selectedStudyId}
                   onSelect={onSelectStudy}
                 >

@@ -1,6 +1,7 @@
 /** Readable domain names stay outside Canvas; the scene only projects anchors. */
 import { useMemo } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
+import { translate } from "@pieai/university-ui/i18n.js";
 import type { DomainResourceStatus } from "./use-domain-resources.js";
 import { buildDomainPlan } from "./domain-plan.js";
 import type { PlanetStudy, PlanetStudyDomain } from "./planet-copy.js";
@@ -39,6 +40,11 @@ export function PlanetDomainLabels({
           }}
         >
           {domain.title}
+          {domain.studies.length === 0 ? (
+            <span className="planet-domain-label__state">
+              {translate("ui.world.domain.unpublished")}
+            </span>
+          ) : null}
         </span>
       ))}
     </div>

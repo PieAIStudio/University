@@ -1404,7 +1404,7 @@ export function describePlanetLayer({
     },
     {
       id: "domainClouds",
-      label: "球面云带",
+      label: "球面云块",
       planned: null,
       count: domains.length,
       generator: "createDomainCloudGeometry",

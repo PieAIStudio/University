@@ -54,12 +54,8 @@ import {
   resolveIslandLookDebug,
 } from "./island/island-surface-style.js";
 import { hopPose, PlayerMarker, type AvatarRecipe } from "./avatar/index.js";
-import {
-  layoutStudyRoad,
-  layoutWorldCatalogue,
-  radiusForLessons,
-  unstickWorldIslands,
-} from "./course/layout";
+import { layoutStudyRoad, radiusForLessons } from "./course/layout";
+import { layoutWorldArchipelago } from "./world-layout.js";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
 import { hash } from "./island/random.js";
 import { cloudCarrierHome, CuteCloudSea, type CloudCarrierTarget } from "./sky/cloud-sea.js";
@@ -101,6 +97,7 @@ import { RemoteIslandField, type RemoteIslandPlacement } from "./island/remote-i
 import { projectWorldCourse } from "./world-course-projection.js";
 import { CourseOverviewContext } from "./camera/CourseOverview.js";
 import { worldCarrierHomeTarget, worldIslandCarrierTarget } from "./world-carrier.js";
+export { worldIslandCaptionTarget } from "./world-carrier.js";
 
 /**
  * The world's palette. Two greens for land, one warm accent for the only thing
@@ -474,11 +471,18 @@ export function placeWorld(
     scope === "catalogue"
       ? worldStudyOrder(nodes, studyId).flatMap((entry) => orderedStudyNodes(nodes, entry))
       : orderedStudyNodes(nodes, studyId);
-  const layoutKeys = orderedNodes.map((node) => `${node.studyId}/${node.courseId}`);
-  const laid =
+  const archipelago =
     scope === "catalogue"
-      ? layoutWorldCatalogue(layoutKeys)
-      : layoutStudyRoad(orderedNodes.map((node) => node.courseId));
+      ? layoutWorldArchipelago(
+          orderedNodes.map((node) => ({
+            key: `${node.studyId}/${node.courseId}`,
+            studyId: node.studyId,
+            radius:
+              radiusForLessons(node.lessons) * Math.max(...Object.values(WORLD_ISLAND_STATE_SCALE)),
+          })),
+        )
+      : null;
+  const laid = archipelago?.positions ?? layoutStudyRoad(orderedNodes.map((node) => node.courseId));
 
   const placements: WorldPlacement[] = [];
   for (const node of orderedNodes) {
@@ -519,30 +523,13 @@ export function placeWorld(
       radius: worldIslandRadiusForState(entry.node.lessons, state),
     };
   });
-  const separated =
-    scope === "catalogue"
-      ? unstickWorldIslands(
-          marked.map((entry) => ({
-            x: entry.position.x,
-            y: entry.position.y,
-            z: entry.position.z,
-            depth: entry.node.depth,
-          })),
-          marked.map((entry) => entry.radius),
-        )
-      : null;
-  const placed = separated
-    ? marked.map((entry, index) => ({
-        ...entry,
-        position: new THREE.Vector3(separated[index]!.x, separated[index]!.y, separated[index]!.z),
-      }))
-    : marked;
   const extent =
+    archipelago?.extent ??
     Math.max(
-      ...placed.map((entry) => Math.hypot(entry.position.x, entry.position.z) + entry.radius),
+      ...marked.map((entry) => Math.hypot(entry.position.x, entry.position.z) + entry.radius),
       1,
     ) + 5;
-  return { placements: placed, extent };
+  return { placements: marked, extent };
 }
 
 /** V5 M: a series page owns its courses, not the other domains' catalogue.

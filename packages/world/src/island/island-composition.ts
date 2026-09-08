@@ -42,6 +42,8 @@ export const COMPOSITION_SOURCE_EXTENTS = {
   bridge: { x: 11.0779, y: 3.5854, z: 5.0736 },
   "fountain-round": { x: 2, y: 0.28, z: 2 },
   stall: { x: 0.65, y: 0.3655, z: 1 },
+  "stall-bench": { x: 0.26, y: 0.2255014, z: 0.94 },
+  cart: { x: 0.8930242, y: 0.5355014, z: 1.34 },
   lantern: { x: 0.2164, y: 1.556, z: 0.2243 },
   rock_largeA: { x: 0.7849, y: 0.2598, z: 1.0155 },
   rock_smallA: { x: 0.3608, y: 0.1912, z: 0.3608 },

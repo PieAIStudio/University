@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-08
+last_reviewed: 2026-09-09
 domain: architecture
 tags:
   - 3d
@@ -138,7 +138,7 @@ relaxes the 0.25 contact, slope or clearance limits. The retained counterexample
 every 5×6/24/41 positive case and all-or-none occupied-ground rejection pass in
 `outpost-contact.test.ts`; the combined dressing/terrain suite is 33/33.
 
-## R38 candidate amendment: authored edges, grouped placement and one cloud form
+## R38 amendment: authored edges, grouped placement and one cloud form
 
 The user's 2026-09-08 ordinary screenshots reject the flat perimeter shelf,
 horizontal rock bands, uniform catalogue scatter and separately visible cloud
@@ -150,11 +150,18 @@ The candidate keeps the canonical outline/height field and the distant
 vertical rock shoulders rather than independent horizontal slabs. No glued-on
 donor rock shell, added terrain draw or second contact height is allowed.
 
-Clouds will use one continuous shallow cloud-bank mesh shared by catalogue,
+Clouds use one continuous shallow cloud-bank mesh shared by catalogue,
 carrier and globe (tangent-space projection). It replaces assembled sphere
 chains; no ray marching, extra lighting or post pass. Candidate budgets stay
 within the existing two catalogue cloud draws and 7,000 globe cloud triangles;
-the exact counts and material/geometry lifetime must be measured before locking.
+the final globe has at most seven separated banks (1,680 triangles), omitting
+banks inside real region protection cones. It rotates with its globe instead
+of drifting across a learning destination. The first 21-bank candidate still
+read as a necklace of rice grains in the ordinary browser; its rejected image
+is retained in `astra-r38/planet-candidate-rendered.png`. Catalogue cloud
+draws remain two: 4,608 desktop / 1,200 mobile triangles versus 14,112 / 3,780
+previously. A course cloud bank remains 36 triangles. These are cloud counts,
+not the full frame. Complementary crown/belly buffers own their disposal.
 Carrier feet, swept clearance, reduced-motion and 540ms travel remain unchanged.
 
 Course richness first uses the registered natural/semantic assemblies and
@@ -174,6 +181,36 @@ the existing whole-footprint query. A missing safe site omits the companion
 without moving or breaking the original facility. New bounds are independently
 checked against the imported GLBs; browser scale/contact and final frame cost
 remain acceptance requirements.
+
+R5's independent visual review rejected a remaining cover rim. The continuous
+height shoulder now retains a non-zero boundary slope instead of flattening
+at its last vertex. `coast-profile.ts` supplies the same geological lobe mask
+to the terrain projection and field rock/grass channels, so exposed buttresses
+reach the top without growing grass on a separately painted stone patch.
+Top and cliff lip colours are exactly equal; sheltered shoulders share compatible
+normals and actual creases above 60 degrees retain their face normals. Two
+over-smoothed corner failures remain in the evidence; the original normal,
+winding, 0.25 contact and 640-triangle distant limits were not relaxed.
+
+The lower rings keep warm stone rather than using the path's brown soil as
+their primary material. No light, grade or extra terrain draw was added.
+R5's field/contact/route integration passed 100 focused assertions; the full
+final verification, browser and device states belong to the delivery plan.
+
+R5 Mac Stage GPU queries (same scope/method as R37 below) each contain 24 valid
+non-disjoint samples. Source SHA-256 matches the production-browser receipt:
+`cefd59cc80f23f2ae98e1cb96f6115b050b17d19760a16f39f487b27eb0cfdb5`.
+
+| Projection | 1440×900 median / p95 ms | 375×812 median / p95 ms |
+| --- | --- | --- |
+| Real 41-lesson course | 2.322 / 3.106 | 0.698 / 0.976 |
+| Real selected series | 1.177 / 1.861 | 0.383 / 0.502 |
+| Three declared domains, two unpublished | 0.944 / 1.469 | 0.294 / 0.355 |
+| Synthetic 4 domains × 30 series | 0.942 / 1.383 | 0.348 / 0.637 |
+
+Raw queries: `.devspace-visual/astra-r38/gpu-r5.json`. This is not compositor
+time, phone FPS or VRAM. The production navigation pass is not used as a cold
+load benchmark; its first desktop run overlapped E2E preparation.
 
 ## R37 measured GPU scope, not a device-FPS promise
 

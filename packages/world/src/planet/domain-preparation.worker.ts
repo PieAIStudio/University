@@ -1,12 +1,14 @@
 import { prepareDomain, preparedDomainBuffers } from "./domain-preparation.js";
 import type { PlanetStudy } from "./planet-copy.js";
 import type { PlanetRepresentativeLimit } from "./atmospheric-regions.js";
+import type { DomainSurfaceStyle } from "./globe-style.js";
 
 type Request = {
   readonly id: number;
   readonly domainId: string;
   readonly studies: readonly PlanetStudy[];
   readonly limit: PlanetRepresentativeLimit;
+  readonly surfaceStyle?: DomainSurfaceStyle;
 };
 // A narrow worker contract avoids importing the Window and Worker lib globals together.
 const worker = self as unknown as {
@@ -15,7 +17,7 @@ const worker = self as unknown as {
 };
 worker.onmessage = ({ data }) => {
   try {
-    const packet = prepareDomain(data.domainId, data.studies, data.limit);
+    const packet = prepareDomain(data.domainId, data.studies, data.limit, data.surfaceStyle);
     worker.postMessage({ id: data.id, packet }, preparedDomainBuffers(packet));
   } catch (error) {
     worker.postMessage(

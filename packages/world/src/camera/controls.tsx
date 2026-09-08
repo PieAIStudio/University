@@ -643,7 +643,8 @@ export function LabelProbe({
       }
       const width = element.offsetWidth;
       const height = element.offsetHeight;
-      const anchor: LabelAnchor = marker.origin === "start" ? "start" : "center";
+      const anchor: LabelAnchor =
+        marker.origin === "start" ? "start" : marker.kind === "course" ? "island" : "center";
       if (marker.pinned) {
         pinned.push({ marker, element, x, y, z: projected.z, width, height, anchor });
         continue;

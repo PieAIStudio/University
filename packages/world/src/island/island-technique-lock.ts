@@ -390,7 +390,8 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
   domainPlanet: {
     technique:
       "One SphereGeometry(1, 64, 32) domain globe under the 5000-triangle surface ceiling, " +
-      "shared sampled land/ocean texture, merged cloud bands of 7 clusters with radial flatten 0.55 " +
+      "shared sampled land/ocean texture with named linear surface palettes, up to 7 clusters of merged shallow cloud banks " +
+      "(radial flatten 0.55; protected region directions remain clear; no independent cloud drift), " +
       "under the 7000-triangle cloud ceiling, and representative course islands from the remote " +
       "640-triangle base (desktop at most 5 / mobile at most 3 per study). Design ceiling 8 scene " +
       "draws per populated domain, counting atmosphere and submitted hit geometry. " +

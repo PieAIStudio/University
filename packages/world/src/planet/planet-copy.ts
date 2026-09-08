@@ -1,4 +1,5 @@
 import { hash } from "../island/random.js";
+import type { DomainSurfaceStyle } from "./globe-style.js";
 
 /**
  * The only "introduction" a study is allowed to have on this page.
@@ -17,6 +18,10 @@ import { hash } from "../island/random.js";
 export interface PlanetStudyDomain {
   readonly id: string;
   readonly title: string;
+  /** Authored domain positioning, never a fabricated description of a study. */
+  readonly description?: string;
+  /** Explicit reusable surface identity; absence is not inferred from a title. */
+  readonly surfaceStyle?: DomainSurfaceStyle;
 }
 
 export interface PlanetStudy {

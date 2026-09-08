@@ -17,6 +17,42 @@ function makeStudy(id: string, title: string, domain?: { id: string; title: stri
 }
 
 describe("buildDomainPlan", () => {
+  it("passes declared surface identities through empty/populated domains without guessing missing styles", () => {
+    const metadata = { id: "foundation", title: "AI 基础", surfaceStyle: "dawn" } as const;
+    expect(buildDomainPlan([], [metadata])).toEqual([{ ...metadata, studies: [] }]);
+    const real = makeStudy("real", "真实系列", { id: metadata.id, title: metadata.title });
+    expect(buildDomainPlan([real], [metadata])[0]?.surfaceStyle).toBe("dawn");
+    expect(buildDomainPlan([real])[0]).not.toHaveProperty("surfaceStyle");
+    const styled = { ...real, id: "styled", domain: metadata };
+    expect(buildDomainPlan([real, styled])).toEqual(buildDomainPlan([styled, real]));
+    expect(() => buildDomainPlan([styled], [{ ...metadata, surfaceStyle: "iris" }])).toThrow(
+      /Conflicting domain surface style/,
+    );
+  });
+
+  it("carries authored domain positioning without manufacturing study descriptions or courses", () => {
+    const metadata = { id: "empty", title: "AI 基础", description: "理解 AI 是什么。" };
+    expect(buildDomainPlan([], [metadata])).toEqual([{ ...metadata, studies: [] }]);
+    const real = makeStudy("real", "真实系列", metadata);
+    const plan = buildDomainPlan([real], [metadata]);
+    expect(plan[0]?.description).toBe(metadata.description);
+    expect(plan[0]?.studies).toEqual([real]);
+    expect(plan[0]?.studies[0]).not.toHaveProperty("description");
+  });
+
+  it("merges optional descriptions deterministically and rejects conflicting domain positioning", () => {
+    const first = makeStudy("first", "First", { id: "ai", title: "AI" });
+    const described = {
+      ...first,
+      id: "second",
+      domain: { id: "ai", title: "AI", description: "An authored scope." },
+    };
+    expect(buildDomainPlan([first, described])).toEqual(buildDomainPlan([described, first]));
+    expect(() =>
+      buildDomainPlan([described], [{ id: "ai", title: "AI", description: "A different scope." }]),
+    ).toThrow(/Conflicting domain description/);
+  });
+
   it("keeps declared empty domains without manufacturing studies", () => {
     expect(buildDomainPlan([], [{ id: "empty", title: "暂未开课" }])).toEqual([
       { id: "empty", title: "暂未开课", studies: [] },

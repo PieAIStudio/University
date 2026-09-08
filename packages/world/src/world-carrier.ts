@@ -13,6 +13,18 @@ interface WorldCarrierIsland {
   readonly position: THREE.Vector3;
 }
 
+/** The caption belongs under this island's drawn root, not above its avatar.
+ * Read the shared distant mesh cache; never prepare a second height source.
+ */
+export function worldIslandCaptionTarget(island: WorldCarrierIsland): THREE.Vector3 {
+  const base = getOrCreateRemoteBaseGeometry(island.blueprint, island.radius);
+  return new THREE.Vector3(
+    island.position.x,
+    island.position.y + base.bounds.min.y - 0.3,
+    island.position.z,
+  );
+}
+
 /**
  * One canonical distant mesh supplies the actual highest terrain point.
  * Placing feet at position.y buried the carrier and most of the avatar inside

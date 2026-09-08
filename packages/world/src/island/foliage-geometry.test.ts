@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
 import { ISLAND_TREE_TRIANGLE_CEILING } from "./island-technique-lock.js";
+import { foliageTintFromFieldSample } from "./foliage-tone.js";
 import {
   COURSE_BUSH_CROWN_DETAIL,
   COURSE_BUSH_CROWN_TRIANGLES,
@@ -79,6 +80,68 @@ describe("course crown geometry budgets", () => {
 });
 
 describe("crown lobe transforms", () => {
+  it("takes patch colour from meadow/rock/height, without changing a crown's shape", () => {
+    const meadow = { grass: 0.9, rock: 0.05, height: 2, ao: 0.8 };
+    const shoulder = { grass: 0.35, rock: 0.4, height: 7, ao: 0.98 };
+    const firstTint = foliageTintFromFieldSample(meadow, 8);
+    const secondTint = foliageTintFromFieldSample(shoulder, 8);
+    expect(firstTint).not.toBe(secondTint);
+    expect(foliageTintFromFieldSample({ ...meadow }, 8)).toBe(firstTint);
+    const first = treeCrownLobes({
+      ...unitTree(),
+      foliageTint: firstTint,
+      shapeSeed: "shared-grove",
+    });
+    const second = treeCrownLobes({
+      ...unitTree(),
+      foliageTint: secondTint,
+      shapeSeed: "shared-grove",
+    });
+    expect(first[0]!.color).toEqual(new THREE.Color(firstTint));
+    expect(second[0]!.color).toEqual(new THREE.Color(secondTint));
+    for (let index = 0; index < first.length; index += 1) {
+      expect(first[index]!.position).toEqual(second[index]!.position);
+      expect(first[index]!.quaternion).toEqual(second[index]!.quaternion);
+      expect(first[index]!.scale).toEqual(second[index]!.scale);
+    }
+    const nearTint = foliageTintFromFieldSample(
+      { ...meadow, grass: meadow.grass - 0.01, height: meadow.height + 0.01 },
+      8,
+    );
+    const firstColour = new THREE.Color(firstTint),
+      nearColour = new THREE.Color(nearTint);
+    expect(
+      Math.hypot(
+        firstColour.r - nearColour.r,
+        firstColour.g - nearColour.g,
+        firstColour.b - nearColour.b,
+      ),
+    ).toBeLessThan(0.02);
+  });
+
+  it("keeps foliage shape identity under a uniform preview scale", () => {
+    const placement = { ...unitTree(), shapeSeed: "stable-plant" };
+    const first = bushCrownLobes(placement);
+    const scale = 0.35;
+    const second = bushCrownLobes({
+      ...placement,
+      position: new THREE.Vector3(
+        placement.position.x,
+        placement.position.y,
+        placement.position.z,
+      ).multiplyScalar(scale),
+      height: placement.height * scale,
+    });
+    first.forEach((lobe, index) => {
+      expect(
+        lobe.position.clone().multiplyScalar(scale).distanceTo(second[index]!.position),
+      ).toBeLessThan(1e-10);
+      expect(lobe.quaternion).toEqual(second[index]!.quaternion);
+      expect(
+        lobe.scale.clone().multiplyScalar(scale).distanceTo(second[index]!.scale),
+      ).toBeLessThan(1e-10);
+    });
+  });
   it("bends leaf lighting without moving the crown surface or adding triangles", () => {
     const natural = createSmoothIcosahedron(COURSE_TREE_CROWN_DETAIL);
     const foliage = createSmoothIcosahedron(COURSE_TREE_CROWN_DETAIL, 1.2);
