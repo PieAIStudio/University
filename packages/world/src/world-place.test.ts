@@ -30,6 +30,42 @@ const NODES: readonly CourseNode[] = [
 const nothingDone = () => 0;
 
 describe("learner series archipelago", () => {
+  it.each([0, 1, 20, 31, 53])(
+    "keeps %i-course catalogues finite, separated and deterministic as content and progress vary",
+    (count) => {
+      const nodes = Array.from({ length: count }, (_, index) =>
+        node({
+          studyId: "layout-pressure",
+          courseId: `course-${String(index).padStart(3, "0")}`,
+          lessons: [3, 6, 24, 41, 80][index % 5]!,
+          depth: index,
+        }),
+      );
+      for (const progress of [
+        nothingDone,
+        (entry: CourseNode) => (nodes.indexOf(entry) % 2 === 0 ? 1 : 0),
+      ]) {
+        const world = placeStudyArchipelago(nodes, progress, "layout-pressure");
+        expect(world).toEqual(
+          placeStudyArchipelago([...nodes].reverse(), progress, "layout-pressure"),
+        );
+        expect(world.placements).toHaveLength(count);
+        expect(Number.isFinite(world.extent)).toBe(true);
+        for (const [index, entry] of world.placements.entries()) {
+          expect(entry.position.toArray().every(Number.isFinite)).toBe(true);
+          expect(Math.hypot(entry.position.x, entry.position.z) + entry.radius).toBeLessThan(
+            world.extent,
+          );
+          for (const other of world.placements.slice(index + 1)) {
+            expect(
+              Math.hypot(entry.position.x - other.position.x, entry.position.z - other.position.z),
+            ).toBeGreaterThanOrEqual(entry.radius + other.radius);
+          }
+        }
+      }
+    },
+  );
+
   it("uses the cheap remote catalogue projection without leaking another series", () => {
     const world = placeStudyArchipelago(NODES, nothingDone, "alpha");
     const reference = placeWorld(

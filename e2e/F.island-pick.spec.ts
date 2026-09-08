@@ -1,10 +1,10 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { humanClick, waitForStableBox } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
-import { LOCAL_ORIGIN } from "./ports.js";
+import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { openOnline, waitForMapReady } from "./harness/online-learner.js";
 import { namedStep } from "./harness/step.js";
 import { assertWorldCarrierAboveGround } from "./harness/world-carrier.js";
@@ -324,3 +324,63 @@ test.describe("F 点岛弹出「进入这门课」· 跟岛走", () => {
     consoleErrors.assertClean();
   });
 });
+
+for (const [mode, origin] of [["delivery", ONLINE_ORIGIN], ["authoring", LOCAL_ORIGIN]] as const) {
+  for (const width of [1440, 375]) {
+    test.describe(`F course label status ${mode} ${width}`, () => {
+      test.use({ viewport: { width, height: width === 1440 ? 900 : 812 }, colorScheme: "light" });
+      test("long names leave learning state and rewrite notices visible and clickable", async ({ page }) => {
+        const consoleErrors = watchConsole(page);
+        await page.goto(`${origin}/`, { waitUntil: "domcontentloaded" });
+        await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
+        await assertWorldCarrierAboveGround(page);
+        await waitForCourseLabelLayout(page);
+        const rows = await page.locator("button.label--course.is-visible").evaluateAll((elements) =>
+          elements.map((element) => {
+            const bounds = element.getBoundingClientRect();
+            const title = element.querySelector<HTMLElement>(".label__course-title");
+            return {
+              id: element.getAttribute("data-map-marker"),
+              title: title?.textContent ?? "",
+              titleWidth: title?.getBoundingClientRect().width ?? 0,
+              truncated: Boolean(title && title.scrollWidth > title.clientWidth + 1),
+              badges: [...element.querySelectorAll<HTMLElement>("small")].map((badge) => {
+                const box = badge.getBoundingClientRect();
+                return {
+                  text: badge.textContent,
+                  inside: box.left >= bounds.left && box.right <= bounds.right + 1 &&
+                    box.top >= bounds.top && box.bottom <= bounds.bottom + 1,
+                  notTruncated: badge.scrollWidth <= badge.clientWidth + 1,
+                  width: box.width,
+                  height: box.height,
+                };
+              }),
+            };
+          }),
+        );
+        expect(rows.length).toBeGreaterThan(0);
+        expect(rows.some((row) => row.truncated)).toBe(true);
+        expect(rows.flatMap((row) => row.badges).some((badge) => badge.text === "改写中")).toBe(true);
+        for (const row of rows) {
+          expect(row.titleWidth, row.id ?? "course title").toBeGreaterThan(20);
+          expect(row.badges.length).toBeGreaterThan(0);
+          for (const badge of row.badges) {
+            expect(badge.inside, `${row.id}/${badge.text} must not be clipped with the title`).toBe(true);
+            expect(badge.notTruncated).toBe(true);
+            expect(badge.width).toBeGreaterThan(0);
+            expect(badge.height).toBeGreaterThan(0);
+          }
+        }
+        const sample = rows.find((row) => row.truncated)!;
+        await clickCourseLabel(page, courseLabel(page, sample.id!));
+        await expect(enterCard(page)).toContainText(sample.title);
+        await expect(enterCard(page).getByRole("button", { name: /进入这门课/ })).toBeVisible();
+        const folder = "SCRATCH/e2e/course-label-status";
+        mkdirSync(folder, { recursive: true });
+        writeFileSync(`${folder}/${mode}-${width}.json`, JSON.stringify({ url: page.url(), width, rows }, null, 2));
+        await page.screenshot({ path: `${folder}/${mode}-${width}.png` });
+        consoleErrors.assertClean();
+      });
+    });
+  }
+}

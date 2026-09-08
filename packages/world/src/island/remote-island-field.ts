@@ -48,6 +48,9 @@ export function resetRemoteBaseGeometryBuildCount(): void {
   baseGeometryBuildCount = 0;
 }
 
+// Weak ownership alone cannot bound radius churn while a preview stays open.
+// Four learner states plus preview variants fit without a permanent resize log.
+const REMOTE_BASE_RADIUS_CACHE_LIMIT = 8;
 const baseGeometryCache = new WeakMap<IslandBlueprint, Map<number, RemoteBaseGeometry>>();
 
 export function buildRemoteBaseGeometry(
@@ -153,7 +156,12 @@ export function getOrCreateRemoteBaseGeometry(
   let cached = byRadius.get(safeRadius);
   if (!cached) {
     cached = buildRemoteBaseGeometry(blueprint, safeRadius);
-    byRadius.set(safeRadius, cached);
+  } else {
+    byRadius.delete(safeRadius);
+  }
+  byRadius.set(safeRadius, cached);
+  if (byRadius.size > REMOTE_BASE_RADIUS_CACHE_LIMIT) {
+    byRadius.delete(byRadius.keys().next().value!);
   }
   return cached;
 }

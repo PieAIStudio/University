@@ -10,6 +10,7 @@ import {
 import {
   buildRemoteIslandBatch,
   buildRemoteBaseGeometry,
+  getOrCreateRemoteBaseGeometry,
   getRemoteBaseGeometryBuildCount,
   resetRemoteBaseGeometryBuildCount,
   type RemoteIslandPlacement,
@@ -18,6 +19,32 @@ import {
 import { islandThemeSelectionForCourse } from "./kenney-recipes.js";
 
 describe("RemoteIslandField projection & batching", () => {
+  it("bounds radius variants per live blueprint without evicting the recently used shape", () => {
+    const blueprint = islandBlueprint({
+      studyId: "radius-cache",
+      courseId: "resized",
+      lessonCount: 6,
+    });
+    const originals = Array.from({ length: 8 }, (_, index) =>
+      getOrCreateRemoteBaseGeometry(blueprint, index + 2),
+    );
+    const before = originals[0]!.positions.slice();
+    expect(getOrCreateRemoteBaseGeometry(blueprint, 2)).toBe(originals[0]);
+    getOrCreateRemoteBaseGeometry(blueprint, 10);
+    expect(getOrCreateRemoteBaseGeometry(blueprint, 2)).toBe(originals[0]);
+    expect(getOrCreateRemoteBaseGeometry(blueprint, 3)).not.toBe(originals[1]);
+    // Eviction relinquishes cache ownership, not buffers a mounted consumer owns.
+    expect(originals[0]!.positions).toEqual(before);
+    const packet = originals[0]!;
+    console.log(
+      "[remote-radius-cache] slots=8 packetBytes=" +
+        (packet.positions.byteLength +
+          packet.normals.byteLength +
+          packet.colors.byteLength +
+          packet.indices.byteLength),
+    );
+  });
+
   it("handles empty island array cleanly with finite bounds", () => {
     const batch = buildRemoteIslandBatch([]);
     expect(batch.islandCount).toBe(0);

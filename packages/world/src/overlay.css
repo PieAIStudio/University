@@ -161,8 +161,24 @@ button.label:focus-visible {
   opacity: 0.78;
 }
 
+.label--course {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Only the name may truncate. A long name must not spend the space reserved
+   for learning state and the existing rewrite notice. The projector still
+   measures this one bounded label; this is not another overlay layer. */
+.label__course-title {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .label--course .label__course-progress {
   display: inline-block;
+  flex-shrink: 0;
   margin-inline-start: 0.4rem;
   font-size: 0.68rem;
   font-weight: 650;
@@ -176,6 +192,7 @@ button.label:focus-visible {
 
 .label--course .label__course-status {
   display: inline-block;
+  flex-shrink: 0;
   margin-inline-start: 0.4rem;
   padding: 0.1rem 0.36rem;
   border: 1px solid color-mix(in srgb, var(--game-ui-accent-bright) 48%, transparent);

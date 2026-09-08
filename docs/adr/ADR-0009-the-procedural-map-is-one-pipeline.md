@@ -165,6 +165,14 @@ not a value the inspector may pretend to measure on another device. The homologo
 worker reuses the same generators and has no early self-proof of cold-load
 duration.
 
+The remote base cache is weakly owned by the blueprint, with an eight-entry
+LRU for radius variants inside each live blueprint. A WeakMap alone does not
+bound repeated preview resizes while that blueprint remains mounted. The four
+learner states fit within this limit; a hit refreshes recency, and eviction
+relinquishes only CPU-cache ownership without disposing buffers still held by
+the mounted batch. The radius-churn regression first failed on the unbounded
+map and now guards both eviction and preservation of a recently used shape.
+
 `domain-preparation-client.ts` owns the worker and CPU-only bounded cache.
 Each callback belongs to the worker that installed it; termination clears
 handlers, and already-queued errors cannot cancel a later retry's jobs. A timeout

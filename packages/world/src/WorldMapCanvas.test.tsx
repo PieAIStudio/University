@@ -25,6 +25,46 @@ vi.mock("./Maps.js", () => ({
 }));
 
 describe("WorldMapCanvas rewrite marker", () => {
+  it.each(["live", "done", "open", "idle"] as const)(
+    "keeps the %s state and rewrite notice outside the truncated course title",
+    (state) => {
+      const title = "很长的课程名称：状态和改写提示不应被课程名称一起裁掉";
+      const host = document.createElement("div");
+      host.innerHTML = renderToStaticMarkup(
+        <WorldMapCanvas
+          world={null}
+          cameraFrom={[0, 0, 1]}
+          lookAt={[0, 0, 0]}
+          learnerAt={null}
+          avatarRecipe={null}
+          avatarSignedIn={false}
+          skyStudyId={null}
+          markers={[
+            {
+              id: "long-course",
+              position: new THREE.Vector3(),
+              text: title,
+              sub: "改写中",
+              kind: "course",
+              courseState: state,
+              activate: () => undefined,
+            },
+          ]}
+          onPick={() => undefined}
+          onHover={() => undefined}
+        />,
+      );
+      const button = host.querySelector("button.label--course")!;
+      const name = button.querySelector(".label__course-title");
+      expect(name?.textContent).toBe(title);
+      expect(name?.querySelector("small")).toBeNull();
+      expect(button.querySelector(".label__course-progress")?.parentElement).toBe(button);
+      expect(button.querySelector(".label__course-status")?.parentElement).toBe(button);
+      expect(button.querySelector(".label__course-status")?.textContent).toBe("改写中");
+      expect(button.getAttribute("aria-label")).toBeNull();
+    },
+  );
+
   it("keeps course progress visible and described without changing its accessible course name", () => {
     const states = ["live", "done", "open", "idle"] as const;
     const markup = renderToStaticMarkup(

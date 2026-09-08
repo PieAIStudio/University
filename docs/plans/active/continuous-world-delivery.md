@@ -33,16 +33,46 @@ superseded_by: null
 [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)，数据来源读
 [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md)，不在本页另写规范。
 
-## 接续：R35 正在收口最终版本
+## 接续：R37 最终源码验证通过，正在正常hooks提交推送
 
-**面板状态：105/128 项已关闭，23 项未关闭。** 保留所有原编号与失败反例；未勾选不表示
-源码未实现。当前工作区 `~/PieAI/University-3d`、分支 `codex/continuous-island`，HEAD
-`015c0e2` 已经通过正常 pre-commit/commit-msg hooks 提交文档整理；尚未推送。
-暂存为空，既有源码与测试修改全部保留；本地 tracking ahead 2。R34联网所见远端3D分支
-`e387e20`、main `4da3605`，最终推送仍须重新核实。聊天里的“没有做任何修改或验证”
-是错误总结，不能覆盖这些真实提交与收据。不 reset/clean/stash，不接管其他 worktree。
+本轮保留全部128个任务编号；最终verify **303文件/2319项**（world85/804）、双模式
+生产浏览器 **4/4** 和八组有效GPU查询已通过，正常pre-push与远端确认仍待完成。
+生产与GPU收据共享源码SHA-256 `7b711c9d914a082377308cf7c520180bf5a9d66809e648dd036b3233be78c23c`。
+R36实查工作区为
+`~/PieAI/University-3d`、分支`codex/continuous-island`，接续前工作区及暂存均干净。
+HEAD、tracking及实时`git ls-remote`均为`0e1edec201b795afc624bf064246a757a959a447`，
+ahead/behind为0/0。R35最后正常pre-push **68/68通过并推送成功**，完整原始回执在
+`.devspace-visual/astra-r35/push-product.log`，不是把前次59项与定向14项拼成全绿。
+`015c0e2`、`07c1d6f`、`67e38b6`、`0e1edec`均已在远端；原有`c199f2e`也一并保留。
+聊天中“没有执行”“仍有3个短课失败”的总结已落后于实际记录，不能覆盖本次实查。
 
-### 已修复、仍需最后全链回执的部分
+主线HEAD及实时远端main仍为`4da3605`；主线已有`.claude/launch.json`、PGS/AGENTS/
+manifest等独立修改原样保留，不称主线干净，不在此工作区接管。未reset/clean/stash。
+
+R36的普通Chrome裁切检查曾收到平台安全拒绝，没有项目侧退出码；该次失败保留，不曾
+交给子代理绕过。R37主线程先修代码，再经原有Playwright入口直接验证新版本，正常执行
+且 **F 6/6通过**：双模式×两视口中只省略课名，状态和改写提示实际边界不被裁切，真实
+指针可打开完整课程卡。四态结构红测→修复后相关32/32通过；不是以DOM存在冒充可见。
+
+F06/I07另补尺寸变更反例：蓝图WeakMap的内部半径Map原本可无限积累；现在每蓝图最多
+保留8个最近使用的纯CPU包。新反例先红，修复后单文件9/9通过，53岛准备231.84ms，
+原500ms门槛保留。联合定向94项曾有1项耗时767.60ms失败，原日志保留，未把复跑拼成
+整轮全绿。0/1/20/31/53课程×两种进度的有限性、间距和逆序稳定性19项已过。
+本轮证据根为`.devspace-visual/astra-r37/`：`label-e2e.log`、`radius-cache-before.log`、
+`lifecycle-targeted.log`、`radius-cache-final.log`。最后完整verify已独立通过（53岛203.49ms），
+见`verify-final.log`；首轮新增测试缺少3个必填props而类型失败，`verify.log`原样保留。
+生产、GPU为`production-release/receipt.json`、`gpu-release.json`；正常hooks仍待回执。
+
+只读子代理仅分配源码/既有证据审阅，禁止浏览器、写入与再委派；5分钟超时退出1、无结论，
+不算独立审查通过。主线程继续核查现有证据。当前真机仍阻断：ADB在线列表为空，原生
+Safari独立探测返回HTTP500 / session not created（`iphone-probe.json`），已关闭自己
+创建的driver，不接管其他会话。用户须USB连接并解锁目标手机；F10保留，不把桌面仿真当真机。
+
+本轮HTTP确认学习端`http://127.0.0.1:19998/`与检查器
+`http://127.0.0.1:19999/studio/map`均200；这只证明入口响应，不冒充新浏览器验收。
+下列R35修复、失败与收据均保留为证据，完成状态以本页任务编号为准。
+
+### R35保留证据（历史修复，不是当前接续指令）
 
 R34把outpost非空条件从每路线合计改为**每路线×长度**，抓到4个原短课空反例。
 扩大大石组搜索又挤掉长课树丛（12而非>15），该失败同样保留。R35保留原正常布局，
@@ -52,7 +82,7 @@ R34把outpost非空条件从每路线合计改为**每路线×长度**，抓到4
 
 R35独立发现旧worker延迟error会取消新重试，先复现红测，再给回调与超时加owner保护；
 worker/PlanetPage **19/19通过**。低高度横屏超长“进入系列”按钮已有完整DOM名称和
-单行裁切修复，最终O与生产构建验收待跑。F用例已改为同帧稳定ID采集，不降低左/右位置、
+单行裁切修复，随后最终O和生产构建已通过，见下述回执。F用例已改为同帧稳定ID采集，不降低左/右位置、
 420px距离、真实指针或44px命中标准；两模式定向2/2通过，不与旧完整结果拼成全绿。
 
 | 范围 | 原始证据与边界 |
@@ -71,7 +101,7 @@ R35 Android无在线设备及mDNS广播；iPhone虽在配对列表，原生Safar
 `HTTP 500 / session not created / device was disconnected`（R34曾为locked）。已请求用户
 USB连接并解锁，未切回旧5555、读取凭据或改系统防护。不把375px仿真叫实体手机通过。
 
-### 下一步与交付边界
+### R35发布过程记录（以本页开头与任务编号为当前状态）
 
 R35最终源码完整verify已退出0：303文件/2308项（world85文件/793项）、双模式构建、
 边界及全套文档检查通过，日志 `astra-r35/verify-clean-environment.log`；单独正确指向
@@ -90,7 +120,7 @@ R35最终源码完整verify已退出0：303文件/2308项（world85文件/793项
 **4/4通过**，`production-carrier-final.log`和`production-final/receipt.json`。最后GPU
 八组24次有效查询为`gpu-final.json`，与生产浏览器共享同一源码SHA-256
 `bea8dc2e3490d321cf99a48d9f78fb5314eb3f60990d8a55595bc95e7f2d977e`。
-当前等待正常pre-push完整default验收和远端确认，不把单项通过拼成全绿。
+当时尚待正常pre-push完整default验收和远端确认，后来结果见上方R36实查，不把单项通过拼成全绿。
 
 R35首次正常pre-push被门禁挡住，**59/68通过、9项失败**，没有推送成功。完整记录保存在
 `astra-r35/push-product-r1.log`和`pre-push-r1/test-results/`：G选中已经到达的当前课程却
@@ -98,14 +128,14 @@ R35首次正常pre-push被门禁挡住，**59/68通过、9项失败**，没有�
 O的7个有内容夹具实测主动作只有40px，原44px断言确实抓到问题。当前G增验同目标打开卡片
 但不伪造位移，再选不同稳定ID验证原540ms上限；N补相同owner/实际接地与标签净距门禁；
 主动作仍使用kit按钮，仅提高产品布局最小高度至48px以涵盖按压缩放。失败/阈值保留，
-先定向G/N/O复验再跑最后完整verify、生产页和正常pre-push，G08重开。
+当时G08重开；随后定向G/N/O、完整verify、生产页及正常pre-push的结果如下。
 
 上述G/N/O已完整定向 **14/14通过**，同目标无伪造飞行、不同目标原540ms、实际头像净距
 与44px断言均保留。随后最后源码完整verify **303/2309、world85/794**通过，双模式生产
 浏览器 **4/4**、八组GPU有效查询通过；最新收据为 `astra-r35/verify-release.log`、
 `production-release/receipt.json`、`gpu-release.json`，产品源码SHA-256一致为
 `097265d52d2fa5bd155ca6af0af633cd8be4ee34a45403dc610e210a6f349521`。
-G08恢复完成；下一步再次正常pre-push，仍不能把14项与前次59项相加冒充全绿。
+G08恢复完成；最后正常pre-push的独立完整68/68与推送回执见上方，不能把14项与前次59项相加冒充全绿。
 
 核对最新普通课程图，补最后成本与生命周期收据，完整 `pnpm verify`、完整default E2E、
 生产构建真实浏览器验收；经正常hooks提交推送，再核对远端与主线隔离，更新G12–G15。
@@ -222,13 +252,13 @@ G08恢复完成；下一步再次正常pre-push，仍不能把14项与前次59�
 - [x] **G05** 在 authoring 和 delivery 中核对同一学习者行为；R17 M 两模式均完成标记、阅读器进退、键盘与动态偏好。
 - [x] **G06** R35真实3/4/12/19/41节、三种现有路线、桌面/窄屏共10组通过，并保留五路线纯函数矩阵；规则按场地与课程长度通用计算，没有新增courseId特调或坐标表。完整普通采样见 `.devspace-visual/astra-r35/courses/receipt.json`。
 - [x] **G07** R32主代理实看普通5课程采样与真机图，发现模型替身巨型喷泉、短岛岩根裂口、课程状态不明确；已记录修复与反例。最新画面/原生outpost占地仍留B14/D02/D05/G06等，未把看图行为等同全视觉通过。
-- [x] **G08** R35最后发布候选的完整verify为303文件/2309项（world85/794）、双构建/文档exit0；另行真实源4份导出匹配。包含48px触控区最后修改，日志 `astra-r35/verify-release.log`，此前完整通过和失败均保留，不拼接子集覆盖新代码。
+- [x] **G08** R37最终完整verify 303文件/2319项（world85/804）、双构建/文档exit0，`astra-r37/verify-final.log`；单独真实源4份导出匹配见`source-freshness.log`。原性能超时、类型失败和R35结果均保留，不拼接子集覆盖新代码。
 - [x] **G09** R35逐项保留并处理：短课每格非空、扩搜索挤掉长课树量、旧worker中断新重试均有红→绿；F动态nth选择修正保留真实指针/左右位置阈值。自身verify环境变量错误导致27个夹具失败，正确环境77/77单独复跑及完整2308通过；未归咎负载、删断言或改课程来变绿。最终pre-push失败另由G13跟踪。
 - [ ] **G10** 更新 ADR 实测、任务回执与 `current-work`；运行 PGS 文档检查和 manifest scan。
 - [x] **G11** R35核对完整变更清单及渲染/检查器/目录/测试依赖diff：已退役远景donor树第二路径，正式avatar0.5.1 registry无临时tarball；不纳入SCRATCH、视觉证据、私有工具和字体。课程内容/发布目录无diff；主线HEAD仍4da3605，其独立PGS未提交修改原样保留，不把主线说成全干净。
-- [ ] **G12** 对完成且验证的改动提交；触及 pinned current-work 时使用既有 `Pinned-Override: REF-CURRENT-WORK`。
-- [ ] **G13** 正常运行 pre-push 默认 E2E；不绕过 hook，不调用 island-look 浏览器项目。
-- [ ] **G14** 推送 `codex/continuous-island`，核对远端提交、tracking 与本地一致；再次检查主线未受污染。
+- [x] **G12** R36核实R35分阶段提交`015c0e2`、`07c1d6f`、`67e38b6`、`0e1edec`及原有`c199f2e`均保留且已推送；提交回执包含正常pre-commit/commit-msg。后续变更仍按同样hooks提交，不把本轮面板更新当作已提交产品代码。
+- [x] **G13** R35最后正常pre-push独立完整default **68/68、8.7分钟**通过，`astra-r35/push-product.log`有hook成功和push回执；未绕过hook、未运行island-look浏览器项目。前次59/68失败仍保留在`push-product-r1.log`。
+- [x] **G14** R36实时核实HEAD/tracking/远端3D分支同为`0e1edec201b795afc624bf064246a757a959a447`，ahead/behind 0/0；主线HEAD/远端仍`4da3605`，其原有独立PGS修改清单未变化，本轮未写其他worktree。后续提交需再次核对远端，不以本条替代未来回执。
 - [ ] **G15** 展示最终实际截图与预览，报告通过项、局限及提交 ID；做一次可复用经验的保存/跳过判断。
 
 ## H · 资产登记与可接续的程序化模块

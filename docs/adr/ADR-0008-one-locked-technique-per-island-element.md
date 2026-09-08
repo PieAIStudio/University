@@ -138,9 +138,9 @@ relaxes the 0.25 contact, slope or clearance limits. The retained counterexample
 every 5×6/24/41 positive case and all-or-none occupied-ground rejection pass in
 `outpost-contact.test.ts`; the combined dressing/terrain suite is 33/33.
 
-## R35 measured GPU scope, not a device-FPS promise
+## R37 measured GPU scope, not a device-FPS promise
 
-On 2026-09-08, fresh visible Chrome contexts on the Mac's Apple M1 Max / ANGLE
+In R37 on 2026-09-08, fresh visible Chrome contexts on the Mac's Apple M1 Max / ANGLE
 Metal renderer used `EXT_disjoint_timer_query_webgl2` around the actual unique
 Stage render callback. Each row has 24 valid, non-disjoint queries, with no
 screenshot or CPU profiler. This includes that canvas's shadows, scene, AO and
@@ -149,14 +149,14 @@ avatar. DPR is 1. Values are GPU milliseconds, not FPS or allocated GPU memory.
 
 | Projection | 1440×900 median / p95 | 375×812 median / p95 |
 | --- | --- | --- |
-| Real 41-lesson course | 2.859 / 2.966 | 0.822 / 1.041 |
-| Real selected series | 1.674 / 2.482 | 0.523 / 0.854 |
-| Real one-domain catalogue | 1.223 / 1.267 | 0.275 / 0.582 |
-| Explicit synthetic 4 domains × 30 series | 1.462 / 2.024 | 0.608 / 1.004 |
+| Real 41-lesson course | 2.845 / 3.449 | 0.782 / 0.899 |
+| Real selected series | 1.590 / 1.897 | 0.548 / 0.772 |
+| Real one-domain catalogue | 1.219 / 1.241 | 0.277 / 0.613 |
+| Explicit synthetic 4 domains × 30 series | 1.415 / 1.483 | 0.602 / 0.878 |
 
-Raw queries and the restored temporary measurement wrapper are in
-`.devspace-visual/astra-r35/gpu-release.json` and `gpu-frames.mjs`; the earlier
-`gpu-frames.json` and `gpu-final.json` are retained, not silently overwritten.
+Raw queries are in `.devspace-visual/astra-r37/gpu-release.json`; the restored
+temporary measurement wrapper remains `astra-r35/gpu-frames.mjs`. All earlier
+R35 query files are retained, not silently overwritten.
 These are final-source samples, not a claim of improvement over an earlier run:
 the prior course p95 was 6.309ms on the same hardware. The final measurement
 and production-browser receipt share the same source SHA-256. A separate

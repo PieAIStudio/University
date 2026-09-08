@@ -293,7 +293,11 @@ export function WorldMapCanvas({
             : undefined;
           const content = (
             <>
-              {marker.text}
+              {marker.kind === "course" ? (
+                <span className="label__course-title">{marker.text}</span>
+              ) : (
+                marker.text
+              )}
               {courseState ? (
                 <small className="label__course-progress" aria-hidden="true">
                   {marker.courseState === "done" ? "✓ " : ""}
