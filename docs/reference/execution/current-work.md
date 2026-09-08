@@ -30,7 +30,7 @@ test totals, CLI/model choices or execution history. Read only the matching row.
 
 | Task | Authoritative entry |
 | --- | --- |
-| 3D delivery, remaining defects and verification | [Continuous world delivery](../../plans/active/continuous-world-delivery.md), starting with its current continuation section; the local `SCRATCH/HANDOFF.md` only points here, not to dated handoff copies |
+| 3D delivery evidence, remaining acceptance gates and physical-device follow-up | [Continuous world delivery](../../plans/active/continuous-world-delivery.md), starting with its current continuation section; preserve the implemented pipeline and follow the remaining task IDs rather than restarting the scenes. The local `SCRATCH/HANDOFF.md` remains the sole handoff entry |
 | Learner-visible design | [Player journey V5](../player-journey/v5/index.html), including decision M; only consult V4 for behavior V5 does not amend |
 | Technique, measurement scope and rejected alternatives | [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md) |
 | Shared blueprint/field, projections and source entry points | [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md) |
