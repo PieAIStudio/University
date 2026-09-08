@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "ai-for-kids-add-object-detection",
+  "courseId": "what-is-ai-really",
+  "unit": {
+    "id": "teaching-it-to-see"
+  },
+  "lessons": [
+    {
+      "id": "find-every-cat-and-box-it",
+      "title": "把照片里每一只猫都框出来",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完这一课，只要看一张照片的处理结果，你就能分得清：它到底是在回答“图里是什么”，还是在回答“有几个、各自在哪”。\n\n## 先给结论\n\n如果只给整张照片一个总答案，比如“有猫”，这就叫图像分类：它回答的是整张图里主要有什么。\n\n要是把照片里的每一只猫都找出来，数清楚有几只，还给每只猫画出位置框，这就叫目标检测：它同时回答了目标是什么、出现了几个、分别在哪里。\n\n所以你看，“这是一张猫的照片”和“有两只猫，一只在左边，一只在右边”，完全是两种不一样的回答。\n\n不过你要注意，目标检测也可能会漏掉猫，或者把框给画歪了；画上了框，可不代表它百分之百全对。\n\n## 一个类比\n\n这就像老师看一张班级合影。图像分类呢，就像老师只回答一句：“这是一张班级合影，还是风景照？”目标检测就像老师拿笔把每个同学分别圈出来，再告诉你：“一共有几个人，谁在左边，谁在右边。”\n\n不过，这个类比有一点跟电脑不太一样：老师能认出同学是谁，拿不准还能问问旁边的人确认；电脑看到的只是一堆数字，所以它可能会把两个挨得很近的东西挤进同一个框里，也可能会漏掉被挡住的东西。\n\n## 工作示例\n\n拿起你的手机，做一个“一个总答案和多个位置答案”的小实验。\n\n**第一步：准备一张图。** 翻翻相册，找一张能看到两只猫和一个盒子的照片。如果相册里没有猫，就把两个玩具和一个盒子摆在桌上拍一张；这一步只是为了练习同一件事：把东西数清楚，并且说出位置。\n\n**第二步：写分类答案。** 打开手机备忘录，用键盘打字、手写或者语音输入一句话：“这张图是什么？”接着只写一个代表整张图的答案，比如“猫和盒子”。这就是图像分类给出的答案样子。\n\n**第三步：写检测答案。** 继续在备忘录里写下一句：“有几个？各自在哪？”然后写下回答，比如“两个猫目标，分别在左上和右下；一个盒子，在中间”。记住，这里必须把每个目标分开写，不能只写一句“有猫”。\n\n**第四步：观察手机上的框。** 打开相机，对着照片里的人脸或者二维码照一下，看看手机上有没有跳出人脸框、扫码取景框或者对焦框；屏幕上出现了几个框，你就记下几个，大概在什么位置。这些框都能让你亲眼看到“先找到位置”是什么结果。不过，不同手机背后的做法可能不一样：手机上出现了一个框，并不代表所有功能用的都是同一种模型。\n\n**第五步：对照。** 把你在备忘录里写的那两句话，和手机上实际弹出来的框放在一起比一比。第一句话里只有整张图算什么类别，第二句话里才写出了数量和位置；这就是分类和目标检测的分界线。\n\n## 自检\n\n**做对了你会看到：** 你的分类答案里只有一个整张图的标签，检测答案里至少写了目标数量和每个目标大概在哪儿。你还记下了手机上实际出现了几个框；如果手机当时没有显示框，你会换一张光线更好、目标更清楚的照片再试一次，或者老老实实写下一句“这个功能没有把框显示出来”。\n\n**最常见的两种做错了：**\n\n1. **只写“这是猫”。** 这样写，你看到的只是一个类别，根本没有回答到底有几只、各自在哪。这时候你要回去，给每一只猫单独编上号，再补上它在左、右、上、下还是中间的位置。\n2. **把整张照片圈成一个大框，或把对焦框当成所有目标的答案。** 这么做，你就看不出每个目标具体在哪里了，还会把不同的功能搞混。你要回去给每一个目标分别记一个框；如果手机只给了一个对焦框，就把它记成“手机在找哪里更清楚”，千万不要把它当成完整的目标检测结果。\n\n## 重点\n\n- 图像分类是给整张图定一个类别或者打个标签。\n- 目标检测要把每个目标都找出来，说清楚它是什么、有几个、分别在哪里。\n- “有猫”和“有两只猫，分别在左边和右边”，是两种完全不同的任务回答。\n- 手机上看到了一个框，只能说明某项功能找到了某种位置，并不能证明所有的框都是同一种模型变出来的。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Apple Vision 官方文档把 object detection 列为分析图像和视频内容的计算机视觉任务，支持本节把“找出画面里的对象”单独讲出来。",
+          "sourceUrl": "https://developer.apple.com/documentation/vision",
+          "sourceTitle": "Apple Developer · Vision",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "TensorFlow.js 官方图像分类教程说明分类模型会为图像预测类别，支持本节与目标检测做对比。",
+          "sourceUrl": "https://www.tensorflow.org/js/tutorials/transfer/image_classification",
+          "sourceTitle": "TensorFlow.js · Image classification",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 说明浏览器可以在取得许可后从相机获得视频流，支持学习者直接用手机相机观察画面功能。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/MediaDevices/getUserMedia",
+          "sourceTitle": "MDN · MediaDevices.getUserMedia()",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "classification-gives-one-label",
+          "front": "图像分类和目标检测分别回答什么？",
+          "back": "图像分类给整张图一个类别或标签；目标检测还要找出每个目标是什么、有几个、各自在哪里。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow.js 官方教程展示了图像分类任务，Apple Vision 官方文档把目标检测列为另一类图像分析任务。",
+              "sourceUrl": "https://www.tensorflow.org/js/tutorials/transfer/image_classification",
+              "sourceTitle": "TensorFlow.js · Image classification",
+              "sourceAuthority": "official-docs"
+            },
+            {
+              "kind": "fact",
+              "note": "Apple Vision 官方文档把 object detection 列为图像和视频内容分析任务。",
+              "sourceUrl": "https://developer.apple.com/documentation/vision",
+              "sourceTitle": "Apple Developer · Vision",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "detection-needs-count-and-place",
+          "front": "为什么“有猫”和“有两只猫，分别在左边和右边”不是同一个答案？",
+          "back": "前一句只给整张图一个类别，属于图像分类；后一句还数出了每个目标并说出位置，符合目标检测要回答的内容。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "目标检测需要在图像分析中定位对象，而图像分类只预测图像的类别。",
+              "sourceUrl": "https://developer.apple.com/documentation/vision",
+              "sourceTitle": "Apple Developer · Vision",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "count-and-place-the-objects",
+          "title": "把整张图的答案拆成每个目标的答案",
+          "kind": "explain",
+          "prompt": "用手机找一张有多个东西的照片，或拍下两只玩具和一个盒子。先写一句整张图“是什么”，再写每个目标“有几个、各自在哪”，最后记录相机、相册或扫码功能实际显示了几个框。解释这两种答案的区别。",
+          "rubric": [
+            "真的用手机拍了或打开了一张多目标照片，并写下实际看到的内容",
+            "写出一个整张图的类别答案，没有把它冒充成位置答案",
+            "逐个写出目标数量和大概位置，而不是只写“有猫”",
+            "记录了手机实际显示的框或明确写下没有显示框，并说明框不一定来自同一种模型"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Apple Vision 官方文档把目标检测与图像内容定位列为计算机视觉任务，支持练习把类别和位置分开记录。",
+              "sourceUrl": "https://developer.apple.com/documentation/vision",
+              "sourceTitle": "Apple Developer · Vision",
+              "sourceAuthority": "official-docs"
+            },
+            {
+              "kind": "fact",
+              "note": "MDN 说明浏览器可以在取得许可后使用相机视频流，支持练习使用手机相机观察实际反馈。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/MediaDevices/getUserMedia",
+              "sourceTitle": "MDN · MediaDevices.getUserMedia()",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

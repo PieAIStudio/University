@@ -1,0 +1,379 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "ai-for-kids-teaching-it-to-see",
+  "courseId": "what-is-ai-really",
+  "unit": {
+    "id": "teaching-it-to-see",
+    "title": "让电脑看见",
+    "objective": "读完这一单元你能自己训练一个能认出你画的东西的模型，并说出它会认错什么。"
+  },
+  "lessons": [
+    {
+      "id": "find-the-edges-first",
+      "title": "先找边",
+      "variant": "现象",
+      "content": "## 学习目标\n\n在一张画里，找出机器最容易先抓到的边。\n\n## 先给结论\n\n照片在电脑里面可不是一张纸，而是许多很小很小的颜色格子拼成的。每一个小格子，都叫一个像素。\n\n要是挨在一起的像素，颜色或者明暗突然变了，这个地方就叫边缘。\n\n专门看图片的电脑系统，经常会先从这些边缘找起。因为比起猜“这到底是个什么东西”，边缘更容易变成数字算出来。\n\n不过你要记住，边缘只是线索，可不是答案。你看到一条黑线，它可能是盒子的边，但也可能只是一道影子。\n\n## 一个类比\n\n这就好比你在玩“找不同”游戏，眼睛总会先去找两块颜色突然接在一起的地方。你会先拿手指顺着这条轮廓画一画，然后再去猜轮廓里面到底是什么东西。\n\n不过，这个比方有一个跟电脑不一样的地方：你能一眼认出轮廓是“桌子的边”，可电脑一上来拿到的，只是挨着的像素数字突然变了。它根本不知道那条边到底是桌子，还是一道影子。\n\n## 工作示例\n\n用手机拍一张积木、拼图或者玩具的照片，然后在相册里把它放大。来，你完完整整做一次：\n\n1. 先找一个颜色变化特别突然的地方，比如红色积木碰上白色桌面的地方。\n2. 用你的手指，顺着这条变色的地方画一小段线。\n3. 再找一条没那么明显的边，比如同一块积木上，很亮的一面碰上暗沉沉那一面的地方。\n4. 最后去看看一块平平整整的白墙：要是中间根本没有突然的颜色变化，就千万不要硬画一条边。\n\n你刚刚走下来的顺序，是“先找数字变化，再去猜是什么东西”，而不是一上来就急着给整张照片起名字。\n\n## 自检\n\n**做对了你会看到：** 你圈出来的地方，确实都发生了特别明显的颜色或明暗变化。而且你能清楚地说出来：它只是一条线索，单凭这一条边，可不能证明那里就一定有一个物体。\n\n**最常见的两种做错了：**\n\n1. **把一整块同色区域都当成边。** 中间根本没有突然的变化，就不是你最先该找的边。快回到挨着的小格子上，比比看颜色到底有没有突然换档。\n2. **看到一条边就直接说出物体名字。** 地上的影子、纸上画的线条，还有东西的外轮廓，全都可以产生边缘。赶紧回过头，把“找到一条边”和“它到底属于什么”分做两步来办。\n\n## 重点\n\n- 像素，就是照片里一个个小小的颜色格子。\n- 边缘，就是挨着的像素里，颜色或明暗突然变了的地方。\n- 边缘只是帮你认出物体的线索，并不是物体的名字。\n- 影子和纸上画的线，看起来也可能像是一条边。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 说明 ImageData 的 data 是按顺序排列的像素数值，照片进入程序后可以被当成数字处理。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/ImageData/data",
+          "sourceTitle": "MDN · ImageData.data",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "Conv2D 是对图像做局部二维卷积的官方层，适合承接“从小块变化开始找线索”的解释。",
+          "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D",
+          "sourceTitle": "TensorFlow API · tf.keras.layers.Conv2D",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "edge-first-clue",
+          "front": "为什么图片识别常常先找边缘？",
+          "back": "边缘是相邻像素的颜色或亮暗突然变化，比较容易变成数字线索；但它只是线索，影子也可能产生边缘。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "ImageData 提供像素数字，Conv2D 对图像的局部区域做计算；两者共同支撑从局部数字变化找线索的说法。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/ImageData/data",
+              "sourceTitle": "MDN · ImageData.data",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "trace-edges-in-photo",
+          "title": "在相册里追一条边",
+          "kind": "explain",
+          "prompt": "打开手机相册里一张有玩具、积木或拼图的照片，放大后圈出三条颜色或亮暗变化明显的边。写下每条边旁边是什么，并说明哪一条也可能只是影子。",
+          "rubric": [
+            "圈出了相邻位置颜色或亮暗突然变化的地方，而不是整块同色区域",
+            "把边缘线索和物体名字分开描述",
+            "真的用手机相册试了一次，并写下了自己看到的三条边和结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明程序可以读取图像中按顺序排列的像素数据。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/ImageData/data",
+              "sourceTitle": "MDN · ImageData.data",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a-filter-is-a-small-window",
+      "title": "滤镜其实是一个小窗口在滑",
+      "variant": "术语",
+      "content": "## 学习目标\n\n用小窗口里的数字，亲手算出一回卷积的结果。\n\n## 先给结论\n\n你在这里看到的“滤镜”，可不是手机里的美颜效果，它其实就是一小块写着数字的窗口。\n\n把它盖在图片的一小块地方，你把窗口里的数字和图片上的数字一格一格对应乘起来，再把乘出来的结果全加在一起。\n\n只要你把这个小窗口从左往右挪、从上往下滑，一路算下来得到的一排新数字，就叫作一次卷积。\n\n换上不同数字的窗口，它就会对不同的线条变化有反应；但窗口自己根本不知道它看见的到底是小猫、水杯，还是你自己画的画。\n\n## 一个类比\n\n想象你手里拿着一块只能看到三个格子的透明小卡片，在一张“找不同”的图画上慢慢滑动。卡片每移到一个新地方，你就把卡片上的分数跟底下那三个格子的数字乘一乘，再全部加起来。要是哪里的分数特别高，就说明“这个地方值得多看两眼”。这个比方跟实际情况有点不一样：透明卡片没有真的看懂这张图，卷积窗口自己也没有眼睛，它只是每到一个地方，就重复把同一组数字乘起来、加在一起。\n\n## 工作示例\n\n拿出一张纸和笔，或者点开手机里的计算器，你来算一算一个 3×3 小窗口的结果。图片上的这一小块写成数字是：\n\n```\n0 1 0\n0 1 0\n0 1 0\n```\n\n这代表中间那一竖列比较亮。接着，你拿出一个专门找“中间竖线”的小窗口：\n\n```\n-1 2 -1\n-1 2 -1\n-1 2 -1\n```\n\n把对应格子里的数字乘起来：第一行是 0×-1、1×2、0×-1，算出的三个数是 0、2、0；第二行算出来也是 0、2、0；第三行算出来还是 0、2、0。现在把这九个结果加在一起：0+2+0+0+2+0+0+2+0=6。\n\n现在，你把图片小块里的数字全换成 0，再用同一个窗口重新算一遍。这回九个乘积全是 0，加起来的总数也是 0。窗口一点儿没换，只是图片这一小块里的数字变了，算出来的结果就完全不一样了。\n\n## 自检\n\n**做对了你会看到：** 中间有竖线的那一块算出了 6，全黑的那一块算出了 0；而且你能清楚指出，算式里的每一个 2 都是从“图片里的 1×窗口里的 2”乘出来的。\n\n**最常见的两种做错了：**\n\n1. **只把九个图片数字相加。** 你会算出 3，却完全忘了用窗口里的 -1 和 2。快倒回去，把格子挨个乘起来。\n2. **只算中间那一格。** 你会算出 2，漏掉了另外两行加进来的数字。快倒回去，把窗口完整盖在每一个格子上。\n\n## 重点\n\n- 卷积窗口是一小块在图片上挪来挪去的数字。\n- 每到一个地方，先挨个格子对应相乘，再把结果全部加在一起。\n- 窗口换上一组新数字，就会更偏向去抓另一种样子的局部变化。\n- 卷积算出来的只是一串数字，不是它“看懂了图里是什么东西”的一句话。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 的 Conv2D 官方 API 将其定义为图像上的二维卷积层，并提供 filters、kernel_size 等局部窗口相关设置。",
+          "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D",
+          "sourceTitle": "TensorFlow API · tf.keras.layers.Conv2D",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 说明 getImageData 可以取得画面指定区域的像素数组，支撑把图片小块拿出来做数字计算。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasRenderingContext2D/getImageData",
+          "sourceTitle": "MDN · CanvasRenderingContext2D.getImageData",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "sliding-window-filter",
+          "front": "卷积里的小窗口每到一个位置会做什么？",
+          "back": "它把窗口数字和图片这一小块的数字逐格相乘，再把所有乘积相加，得到这个位置的新数字。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Conv2D 是图像二维卷积层；getImageData 可以取得局部像素数组。",
+              "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D",
+              "sourceTitle": "TensorFlow API · tf.keras.layers.Conv2D",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "calculate-window-result",
+          "title": "滑到第二格再算一次",
+          "kind": "explain",
+          "prompt": "用手机计算器或纸笔计算：图片小块是 1 1 0 / 0 1 0 / 0 0 0，窗口是 1 0 -1 / 1 0 -1 / 1 0 -1。写下九个乘积、总数，并说出这个窗口更注意左边的数字还是右边的数字。",
+          "rubric": [
+            "逐格算了九个乘积，保留了窗口里的 1 和 -1",
+            "把九个乘积相加得到总数，并用自己的话解释总数",
+            "真的用手机计算器或纸笔试了一次，并写下了自己看到的计算结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Conv2D 官方 API 说明了图像二维卷积层，局部窗口计算是本题的手算模型。",
+              "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D",
+              "sourceTitle": "TensorFlow API · tf.keras.layers.Conv2D",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "edges-then-eyes-then-face",
+      "title": "从边，到眼睛，到脸",
+      "variant": "现象",
+      "content": "## 学习目标\n\n亲手画出图像里的特征，看它们是怎么从小线条一步一步组合成完整大图案的。\n\n## 先给结论\n\n所谓的特征，就是模型在图片里找到的小线索，而且它后面还会接着用。\n\n最开始的计算，能找出短线、长线、弯曲和颜色的变化。\n\n后面的计算，会把这些小线索拼成更大的图案。比如用两个圆点加上一圈边，就能拼出一个“像眼睛”的图案。\n\n再往后算，好几个“像零件”的图案凑在一起，就能变成“像一张脸”或者“像一个玩具”。不过你要记住，这些词只是人为了好讲才起的名字，模型肚子里从头到尾都只有数字。\n\n## 一个类比\n\n这好比你画一只小怪兽：先画出线条，再把线条拼成眼睛和嘴巴，最后把眼睛、嘴巴和身体拼成整只怪兽。你的每一步，都是接着上一步画下来的。不过，这个比方有个不灵的地方：画画的你心里明白“眼睛”是什么意思，但模型肚子里可没有一个会说话的小人，它只是把上一层的数字又重新组合了一遍而已。\n\n## 工作示例\n\n拿出手机拍一张你画的机器人，或者在相册里挑一张玩具脸的照片，写出三层记录：\n\n1. **线索层：** 圈出里面的横线、竖线、圆弧和深色小块。\n2. **零件层：** 说出哪些线索能拼成一个圆眼睛、方脑袋或者长胳膊的图案。\n3. **整体层：** 说出把哪些零件放在一起，会让你觉得它像个机器人。\n\n最后，拿手遮住照片的一半，再低头看你的记录：第一层的小线索在露出来的地方还能找得到，但整体层可能就不完整了。这就说明，小线索会被后面的层一层层继续组合，而不是每一层都直接从头瞎猜答案。\n\n## 自检\n\n**做对了你会看到：** 你的箭头从线条指向零件，再指向整体；每一个大一点的图案，你都能说出它用了哪些更小的线索。\n\n**最常见的两种做错了：**\n\n1. **把“眼睛”直接写成第一层就拿到的答案。** 你把线条和圆弧跳过去啦！快回去在中间补上一层，把组成眼睛的线索写出来。\n2. **以为模型里的数字真像人一样看见了眼睛。** 这么想就会误以为它明白物体的意思。快回去在记录旁边写上一句：“这是人给数字组合起的名字”。\n\n## 重点\n\n- 特征是模型找到、后面还能接着用的小图片线索。\n- 前面的层常负责抓线条和颜色变化，后面的层把它们组合成更大的图案。\n- “眼睛”和“脸”只是帮人听明白的说法，可不是模型脑子里懂的人话。\n- 每一层其实都只是在摆弄数字。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Conv2D 是针对图像局部区域的卷积层，多层模型可以把局部计算结果继续交给后面的层。",
+          "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D",
+          "sourceTitle": "TensorFlow API · tf.keras.layers.Conv2D",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Sequential 模型文档展示了按顺序堆叠层的结构，支撑从小线索到组合图案的教学路径。",
+          "sourceUrl": "https://www.tensorflow.org/guide/keras/sequential_model",
+          "sourceTitle": "TensorFlow Guide · The Sequential model",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "feature-hierarchy",
+          "front": "为什么模型可以从边缘走到“像眼睛”的图案？",
+          "back": "前面的层先得到线条、弯曲和颜色变化等小线索，后面的层把这些数字组合成更大的图案；“眼睛”只是人给组合结果取的名字。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Conv2D 处理图像局部区域，Sequential 让多层按顺序连接。",
+              "sourceUrl": "https://www.tensorflow.org/guide/keras/sequential_model",
+              "sourceTitle": "TensorFlow Guide · The Sequential model",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "build-feature-ladder",
+          "title": "给自己的照片搭三层梯子",
+          "kind": "explain",
+          "prompt": "用手机拍一张玩具、积木或自己画的怪兽，写三层：它有哪些小线条或颜色变化，哪些小线索组成零件，哪些零件组成整体。用箭头连起来，再写一句“这些是数字组合，不是模型真的懂了这个名字”。",
+          "rubric": [
+            "第一层写的是照片中可以看到的小线索",
+            "第二层和第三层都写出了由前一层组合而来的内容",
+            "真的用手机拍照或打开相册完成了一次，并写下了自己看到的三层结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Sequential 模型把多层计算按顺序连接起来。",
+              "sourceUrl": "https://www.tensorflow.org/guide/keras/sequential_model",
+              "sourceTitle": "TensorFlow Guide · The Sequential model",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "borrow-trained-eyes",
+      "title": "借一双别人练好的眼睛",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能说出为什么借一个练好的模型，能让你少拍很多张照片。\n\n## 先给结论\n\n那些看过了很多很多图片的模型，通常早就学会认那些常见的线条、颜色变化和简单形状了。\n\n迁移学习呢，就是把这部分已经练好的本领直接借过来，换去对付一个新的小任务。\n\n面对新任务，你常常只要教它最后分出名字就行，比如把“星星贴纸”和“月牙贴纸”区分开。\n\n这能帮你省下大把重新练习的时间。但这可不是魔法，要是新图片和旧图片差得太远，借来的本领也可能不好使。\n\n## 一个类比\n\n好比一个同学已经练熟了找横线、圆弧和颜色的变化，现在你让他来分两款新贴纸。你根本不用从“什么才叫一条线”开始重新教他，只要拿几张新贴纸给他瞧瞧，告诉他这两类叫什么名字就行。不过这个比方也有不灵的地方：同学没搞懂还能开口问你，模型可不行；它只会老老实实去算以前学到的那些数字线索。\n\n## 工作示例\n\n拿手机做一次“借本领”的观察小实验：\n\n1. 在纸上各画两张星星和月牙，放在亮堂的地方拍下来。\n2. 打开手机备忘录，把两张照片里都可能有的老线索写下来：比如尖角、弯弯的线，还有颜色的深浅变化。\n3. 再写下这次真正要分清的“新名字”：星星、月牙。\n4. 想象一下，一个本来就会找线条的模型，其实只要学最后一步：把它看到的那串数字组合，对上“星星”或者“月牙”这个新标签。\n5. 把其中一张纸挪到窗边再拍一张，问问你自己：光线变了，原来的线索还够用吗？如果不够用，你就得补几张不同光线下的例子。\n\n你可没有把“借来的眼睛”说成它本来就认识星星；你只是把原来的低层老线索留着，再教给它一个新的小分类。\n\n## 自检\n\n**做对了你会看到：** 你的记录分开了“早就学会找的线条”和“这次新教的名字”，而且写出了光线或者图形差得太多时，方法就会不灵。\n\n**最常见的两种做错了：**\n\n1. **以为迁移学习一张新图片都不用。** 要是没有新例子，模型根本不知道你的两类新东西长什么样。快回去，每类至少再拍几张新图。\n2. **以为借来的模型什么都认得。** 它很可能只是借来了线条这些基础线索。快回去，写出新任务和旧任务到底有什么差别。\n\n## 重点\n\n- 迁移学习会重新用上已经练过的模型的一部分本领。\n- 面对新任务，你通常还得拿自己的例子去教它认新的类别。\n- 旧任务和新任务要是差得太远，借过来的效果可能就会变差。\n- 少用图片，可不等于完全不用图片。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow.js 官方迁移学习教程展示了从已训练模型出发，为新的图像分类任务重新训练分类部分。",
+          "sourceUrl": "https://www.tensorflow.org/js/tutorials/transfer/image_classification",
+          "sourceTitle": "TensorFlow.js · Transfer learning image classifier",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "TensorFlow.js 官方文档说明 JavaScript 环境可以运行机器学习模型，支持把这件事放进浏览器语境。",
+          "sourceUrl": "https://www.tensorflow.org/js",
+          "sourceTitle": "TensorFlow.js · Machine learning in JavaScript",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "transfer-uses-old-features",
+          "front": "迁移学习借来的是什么，还要自己补什么？",
+          "back": "它借来已经练过的线条、颜色或形状等图片线索；你仍要给新任务的类别提供自己的例子，让最后的分类适应新东西。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow.js 迁移学习教程展示了复用已有模型并为新分类任务训练的做法。",
+              "sourceUrl": "https://www.tensorflow.org/js/tutorials/transfer/image_classification",
+              "sourceTitle": "TensorFlow.js · Transfer learning image classifier",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "explain-borrowed-eyes",
+          "title": "把借来的本领说清楚",
+          "kind": "explain",
+          "prompt": "用手机拍下你画的星星和月牙各两张，再写一段话：如果一个模型已经会找线条和颜色变化，哪些本领可以直接借来，哪些新东西还要用你的照片教？",
+          "rubric": [
+            "把旧本领写成线条、颜色变化或形状等图片线索，而不是写成已经认识星星",
+            "说出新任务仍需要星星和月牙的例子及类别名字",
+            "真的用手机拍了一次自己的图，并记录了你看到的照片差异"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow.js 迁移学习教程说明可以从已有图像模型转到新的图像分类任务。",
+              "sourceUrl": "https://www.tensorflow.org/js/tutorials/transfer/image_classification",
+              "sourceTitle": "TensorFlow.js · Transfer learning image classifier",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "train-your-own-in-browser",
+      "title": "在手机上训练你自己的第一个模型",
+      "variant": "现象",
+      "content": "## 学习目标\n\n训练一个小模型，让它能分清你画的两种东西。\n\n## 先给结论\n\n模型（这里指根据例子给出分类结果的数字程序）不需要你写一条条规则，你直接给它看例子就行。\n\n这次你用手机浏览器打开 Teachable Machine，建一个 Image Project，再给两个类别各自拍一些图片录进去。\n\n按下 Train Model 后，它就会在浏览器里开始训练；训练好了，按钮会从 Train Model 变成 Model Trained。\n\n最后把你画的图举到摄像头前，在 Output 那一区看看哪一类的条最长。\n\n## 一个类比\n\n好比你教同学认两种新贴纸：你先把星星贴纸放进“星星”那一堆，把月牙贴纸放进“月牙”那一堆，再拿出一张他没见过的贴纸让他看。你给的例子里，大小、位置和光线的变化照顾得越全面，他就越容易认对。这个比方和实际不太一样的地方是：同学可以开口问你“这张算哪类”，模型可不会问，它只会在你给过的类别里自己做比较。\n\n## 工作示例\n\n拿上手机，跟着完整做一遍。如果页面是英文的，照着下面的英文按钮找就行。\n\n1. 打开浏览器，进入 `https://teachablemachine.withgoogle.com/train/`。\n2. 点 **Image Project**。等弹出 **New Image Project** 界面后，点 **Standard image model**，千万别点 Embedded image model。标准模型的卡片上会写着 224x224px color images。\n3. 你会在屏幕上看到 **Class 1** 和 **Class 2**。如果想让名字更清楚，可以点一下类别旁边的铅笔，把它们改成“三角形”和“圆形”；当然，不改名字也完全能继续往下做。\n4. 在“三角形”这一栏点 **Webcam**。要是浏览器问“是否允许使用摄像头”，就点允许。把你画了三角形的纸放到镜头前，按住 **Hold to Record** 差不多 1 秒再松开；再把纸往左移一点、往右移一点、拿远一点，接着按住录上两三次。录好后，你会看到底下排出一小排样本。\n5. 在“圆形”这一栏照着重复做一遍：只对着画好的圆形拍，也多换一换位置和距离。记住，两类都要录好样本。\n6. 两类都有样本后，点一下 **Train Model**。我测试时等了大概 15 秒；你的手机可能会更快或者稍慢一点。这时候千万别退回上一页，耐心等按钮变成 **Model Trained**。\n7. 看右边那块 **Preview** 区域。在训练之前，它上面写着要你先在左边训练；训练完成后，先把一张画着三角形的纸放到镜头前，再换成圆形的纸。看看哪一个类别的分数条更长，把这两次的结果顺手记在备忘录里。\n\n看，你刚刚真的亲手搞定了一次完整的“给例子—训练—拿新图测试”，可不是光看了一段说明！\n\n## 自检\n\n**做对了你会看到：** 两个类别下面都有样本，Train Model 按钮可以按下去，等一会儿会变成 Model Trained；镜头前换不同的画时，Output 里面最长的那根条会跟着类别换。\n\n**最常见的两种做错了：**\n\n1. **选成 Embedded image model。** 你会看到上面写着 Embedded image model 和较小的 96x96px greyscale images 说明，训练按钮可能也会写成 Train Embedded Model。解决办法是回到新建 Image Project 那一步，改选 Standard image model。\n2. **只有一类有样本，或按 Webcam 后没有按住录制。** 遇到这种情况，Train Model 按钮会是灰色的按不动，或者样本区里还是空空的。快回到这两个类别那里，分别长按住 Hold to Record，亲眼看到两边都录上了样本再点训练。\n\n## 重点\n\n- Teachable Machine 的完整入口是 Image Project → Standard image model。\n- 每个类别都必须有样本，多换换位置和距离能让例子更丰富。\n- 录 Webcam 样本时一定要按住 Hold to Record，松手之后样本才会跳出来。\n- 训练完成的信号是按钮变成 Model Trained，测试结果去 Output 区看就行。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow.js 官方页面说明 JavaScript 可以运行机器学习模型，支撑把训练和预测放在浏览器里的工作示例。",
+          "sourceUrl": "https://www.tensorflow.org/js",
+          "sourceTitle": "TensorFlow.js · Machine learning in JavaScript",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "浏览器的 getUserMedia 接口会在网页使用摄像头前请求用户许可。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/MediaDevices/getUserMedia",
+          "sourceTitle": "MDN · MediaDevices.getUserMedia",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "train-two-classes",
+          "front": "在手机浏览器里训练一个图片模型，要先准备什么？",
+          "back": "打开 Image Project，选择 Standard image model，给两个类别各录一些 Webcam 样本；两边都有样本后按 Train Model，看到 Model Trained 再看 Output。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow.js 官方文档说明模型可以在 JavaScript 环境运行；本卡把实测网页步骤写成了可操作流程。",
+              "sourceUrl": "https://www.tensorflow.org/js",
+              "sourceTitle": "TensorFlow.js · Machine learning in JavaScript",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "train-paper-shapes",
+          "title": "训练并测试两种纸上图形",
+          "kind": "explain",
+          "prompt": "在手机浏览器打开 Teachable Machine 的 Image Project，选择 Standard image model。给三角形和圆形各录三次 Webcam 样本，点 Train Model，等到看到 Model Trained，再把两种图分别放到镜头前。写下 Output 最长的两条分别是什么，以及你在第几步看到样本出现。",
+          "rubric": [
+            "实际进入了 Image Project，并选择了 Standard image model",
+            "两个类别都录了样本，完成了 Train Model 到 Model Trained 的等待",
+            "真的用手机试了一次，并写下了两种图在 Output 中的实际结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow.js 官方文档说明机器学习模型可以在浏览器 JavaScript 环境中运行。",
+              "sourceUrl": "https://www.tensorflow.org/js",
+              "sourceTitle": "TensorFlow.js · Machine learning in JavaScript",
+              "sourceAuthority": "official-docs"
+            },
+            {
+              "kind": "fact",
+              "note": "getUserMedia 是网页取得摄像头媒体流时使用的浏览器接口。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/MediaDevices/getUserMedia",
+              "sourceTitle": "MDN · MediaDevices.getUserMedia",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "what-it-gets-wrong",
+      "title": "它会认错什么",
+      "variant": "决策",
+      "content": "## 学习目标\n\n找一找，看看你自己训练的模型会在什么情况下认错。\n\n## 先给结论\n\n你刚训练好的模型，其实只认识你给它的那些类别。\n\n当它看到新画面时，只会在这些类别里挑一个最像的。在它的选项里，可不一定有“都不是”这一项。\n\n所以就算哪项的分数条最长，也只代表它在这几类里排在第一，并不等于它一定正确。\n\n要想知道它会不会认错，你就要拿它没见过的角度、光线和新类别去试一试。\n\n## 一个类比\n\n这好比一道只有“苹果”和“香蕉”两个选项的选择题。你拿一块橡皮去答题，题目也会逼着你在苹果和香蕉里选一个。选得最快，可不代表答案就是对的。这个类比也有失效的地方：真正的模型其实可以设计一个“未知”出口，但你这次做的简单图片分类器，默认只会在给好的类别之间比来比去。\n\n## 工作示例\n\n回到你刚训练的“三角形”和“圆形”模型，你来故意给它找一次错：\n\n1. 先把一张训练时拍过的三角形摆正，让模型给出一次 Output，把最长的条记下来。\n2. 把同一张纸转一转角度，移到画面左边，再测一次；然后把光线调暗一点，再测一次。每次都要记下最长的那根条。\n3. 最后拿一个它没学过的东西，比如橡皮、尺子或者一本书，放到镜头前面。不要替它增加第三类，只记录它最后被迫选了“三角形”还是“圆形”。\n4. 把这四次记录比一比：它可能在角度或光线变了的时候认错，也可能对着完全不属于这两类的东西硬给出一个类别。把你实际看到认错的那一次写下来。\n\n做这次实验，可不是为了让它每一次都失败，而是要让你发现：“模型给了答案”和“答案真的对”，完全是两码事。\n\n## 自检\n\n**做对了你会看到：** 你至少测了一种它没见过的条件，记下了 Output 里的最长条，还能说明白为什么不能单凭最长条证明它一定正确。\n\n**最常见的两种做错了：**\n\n1. **把最长条当成正确答案。** 你一看到 80% 或者 90% 就立刻相信了。赶紧回去先问问自己：这个东西真的属于你训练过的类别吗？\n2. **只拿原来那张、原来那个位置测试。** 这样测虽然很顺利，但你根本不知道它遇到变化会怎样。赶紧回去换个角度、调调光线，或者拿一个没训练过的东西再试一次。\n\n## 重点\n\n- 模型只会在训练过的类别里，选出一个最像的结果。\n- 分数条最长，不等于它就是对的。\n- 没见过的角度、光线和新类别，都可能会让模型认错。\n- 测试模型时，你要故意改变条件，并且记下实际看到的结果。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow.js 的图像迁移学习教程展示了分类器把输入映射到预先给出的类别，并读取各类别的预测结果。",
+          "sourceUrl": "https://www.tensorflow.org/js/tutorials/transfer/image_classification",
+          "sourceTitle": "TensorFlow.js · Transfer learning image classifier",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "TensorFlow.js 可以在浏览器 JavaScript 环境中运行模型，支持用摄像头画面做反复测试。",
+          "sourceUrl": "https://www.tensorflow.org/js/guide/platform_environment",
+          "sourceTitle": "TensorFlow.js · Platform and environment",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "unknown-can-win",
+          "front": "为什么完全不属于训练类别的东西也会得到一个类别？",
+          "back": "因为这个简单分类器只在已经给出的类别之间比较，会挑一个最像的；最长的分数条表示排第一，不表示它真的认识这个东西。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow.js 图像分类教程展示了模型对给定类别输出预测结果；“没有都不是”是本节针对简单分类器的教学限制。",
+              "sourceUrl": "https://www.tensorflow.org/js/tutorials/transfer/image_classification",
+              "sourceTitle": "TensorFlow.js · Transfer learning image classifier",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "fool-your-model",
+          "title": "故意让模型猜错一次",
+          "kind": "explain",
+          "prompt": "用刚才训练的模型做三次测试：换一个角度、换一种光线、再拿一个完全不属于训练类别的东西。记录每次 Output 的最长条和分数，并挑一次你认为它认错的结果解释原因。",
+          "rubric": [
+            "实际改变了角度、光线和输入类别中的至少三种条件，并记录了结果",
+            "指出了一次“模型给了类别但实际不是”的情况，或诚实写下三次都没认错及原因",
+            "真的用手机摄像头试了一次，并把 Output 中看到的实际类别和分数写下来"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow.js 图像分类教程把输入图像送入分类器并输出各类别预测结果。",
+              "sourceUrl": "https://www.tensorflow.org/js/tutorials/transfer/image_classification",
+              "sourceTitle": "TensorFlow.js · Transfer learning image classifier",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

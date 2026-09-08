@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "add-reading-words",
+  "courseId": "what-is-ai-really",
+  "unit": {
+    "id": "machines-reading-words"
+  },
+  "lessons": [
+    {
+      "id": "does-it-remember-the-beginning",
+      "title": "读到后面，还记得开头吗",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完这一课，你就能说明白：读到“它”的时候，前面的人是怎样留在记忆里的，还有为什么这份记忆会慢慢变淡。\n\n## 先给结论\n\n后面的词要想看明白，常常得靠前面的词帮忙。比如读到“小熊在山洞里找到一把钥匙。它把钥匙放进盒子里”时，你得记着“它”前面的小熊。\n\n有一种办法会一个词一个词地往后读。它每次把新读到的词和一小份旧记忆合在一起，再把更新后的记忆带到下一步；这种办法就叫**循环网络**。\n\n它带走的并不是整句完整的话，而是一小份用数字写下的记忆。要是句子太长，开头的内容就可能会变淡，它有时就会认错“它”前面指的到底是谁。\n\n## 一个类比\n\n这就像你在听一个很长的寻宝线索。每听完一小句，你就把眼前最重要的内容写在手里的一张小纸条上，再拿着更新后的纸条继续往下听。它跟循环网络很像：每一步都把当前的词和上一刻的记忆放在一起，再交给下一步。\n\n线索要是很短，你看到“它”的时候，还能从纸条上认出前面提到的人。要是线索太长了，纸条上一开始写下的字，就可能被后面的内容挤淡了。\n\n不过，这个类比也不完全一样：你的小纸条能让你回头去看原本写下的字；但循环网络带走的是数字记忆，并不是整句话的声音录音，所以它没法保证早先的每一个词都能留得清清楚楚。\n\n## 工作示例\n\n打开手机备忘录，新建一页，你来做一个小小的动手模拟。真正的循环网络是用数字来计算的，下面的文字只是为了让你看清楚，“前面的内容是怎样一路跟到后面来的”。\n\n1. 先写一句短句：“小熊在山洞里找到一把钥匙。它把钥匙放进红色盒子里。”\n2. 在短句下面分出两列，左边写“读到”，右边写“现在的记忆”。照着顺序往下填：\n   - 小熊 → 主角：小熊\n   - 钥匙 → 主角：小熊；东西：钥匙\n   - 它 → 用现在的记忆回答：它是小熊\n3. 在同一页上再写一句长句：“小熊在山洞里找到一把钥匙。风吹过树叶。天空飘来三朵白云。小河绕过石头。山坡上长着红花。远处传来铃声。太阳落到山后。它把钥匙放进红色盒子里。”每读完一句，右边最多只能留下两条你觉得最有用的记忆。\n4. 读到最后一个“它”的时候，先别往上滑动屏幕，写下你想到的答案；然后再往上滑去看开头，检查一下自己到底有没有把“主角：小熊”给留住。\n5. 在备忘录最后写上两句对照：“短句里我很快想起小熊”；“长句里开头的信息更容易变淡”。这两句话讲的是一种现象，并不是说每个循环网络都会在同一个地方犯错。\n\n## 自检\n\n**做对了会看到：** 短句里的“它”，你能回答出是小熊；长句读到最后，你会发现自己必须带着前面的内容，而且心里明白这份记忆并不是把整段话原样照抄下来。你能用“每一步更新一小份记忆”，解释清楚它是怎么往后读的；也能用“太长会变淡”，说出它到底有什么限制。\n\n**最常见的两种做错了会看到：**\n\n1. **只看离“它”最近的词。** 你可能会随手把“它”猜成钥匙，这样短句的意思就讲不通了。赶紧回到第二步，把“主角：小熊”也一起放进记忆里吧。\n2. **以为前面的内容永远完整地留着。** 你会觉得短句和长句根本没什么分别，也不会想到要回头检查开头。赶快回到第三步，严格按照“最多两条”的规矩再读上一遍。\n\n## 重点\n\n- 循环网络一次只读一个词，并且会把更新后的记忆带到下一步。\n- 读到“它”的时候，前面的记忆可以帮它找出来“它”到底指的是谁。\n- 循环网络带走的是数字记忆，并不是整句话的原样录音。\n- 句子太长会让开头的信息变得更难保留，但并不代表它每一次都一定会出错。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 官方说明循环网络会逐步处理序列，同时维护记录此前步骤信息的内部状态；它还说明每一步的状态可以传给下一步。",
+          "sourceUrl": "https://www.tensorflow.org/guide/keras/working_with_rnns",
+          "sourceTitle": "TensorFlow · Working with RNNs",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "memory-carries-context",
+          "front": "循环网络读到“它”时，靠什么想起前面的人？",
+          "back": "它会把前面读到的内容留在一小份记忆里，读到“它”时把这份记忆和当前的词一起用。它不是把整句话原封不动地重播。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方说明循环网络在读序列时维护内部状态，并在下一步继续使用这个状态。",
+              "sourceUrl": "https://www.tensorflow.org/guide/keras/working_with_rnns",
+              "sourceTitle": "TensorFlow · Working with RNNs",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "long-sentence-fades",
+          "front": "句子越长，循环网络一定会忘掉开头吗？",
+          "back": "不一定。句子变长会让早先的内容更难保留，具体能记多久要看网络怎样设计；所以长句可能让它更容易认错，但不是每个长句都会错。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方说明很长的序列可以拆成短段并连续传递状态，说明长序列的记忆需要专门管理。",
+              "sourceUrl": "https://www.tensorflow.org/guide/keras/working_with_rnns",
+              "sourceTitle": "TensorFlow · Working with RNNs",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "track-the-pronoun-memory",
+          "title": "跟着“它”走一遍",
+          "kind": "explain",
+          "prompt": "打开手机备忘录，完成短句和长句的两列模拟：短句写“小熊在山洞里找到一把钥匙。它把钥匙放进盒子里”，长句在中间插入几句风景描写。写下两次你对“它”的答案、哪一次更容易想不起开头，以及你怎样用“每一步更新一小份记忆”解释这个差别。",
+          "rubric": [
+            "说明“它”要靠前面的主角信息来判断，而不是只看当前这个词",
+            "解释循环网络会把上一刻的记忆带到下一步，而不是保存一段可随时重播的完整原句",
+            "说出长句让开头信息更难保留，但没有说成长句一定会答错",
+            "真的用手机备忘录做了短句和长句模拟，并写下了自己看到的结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方说明循环网络逐步处理序列并维护内部状态；题目把这个过程改成了手机备忘录里的可见模拟。",
+              "sourceUrl": "https://www.tensorflow.org/guide/keras/working_with_rnns",
+              "sourceTitle": "TensorFlow · Working with RNNs",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "two-examples-and-it-gets-it",
+      "title": "给它两个例子，它就会了",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完之后，你就能说明白：为什么只要放两个例子，聊天 AI 回答的格式就会更贴合你的要求。\n\n## 先给结论\n\n你在问同一个问题前，要是先放上两个完整的“题目—答案”当例子，聊天 AI 写出来的回答，往往就更像你想要的写法。\n\n它可不是因为看了这两个例子，就永远学会了新本领，也没有把你的习惯永久刻进自己的脑子里。它只是把这次发给它的例子当成样板，从样板里猜出你想要的格式和口味。\n\n这种把少量例子放进问题里的办法叫少样本提示：少样本就是例子很少，提示就是你发给聊天 AI 的要求。\n\n## 一个类比\n\n好比你给同学看两张已经做好的游戏任务卡，再让他照着做第三张。卡片上题目、箭头、答案都在什么位置，他看一眼就能看出你想要的格式和口味；这就像少样本提示，例子本身就把要求演给他看了。\n\n不过，这个比方有一处对不上：同学能停下来问你“这条答案为什么是对的”，聊天 AI 可不一定懂例子背后真正的规则；要是你给的例子写错了，它也很可能会照着错的样子回答你。\n\n## 工作示例\n\n打开手机里已经在用的任意聊天 AI。要是你打字慢，按住麦克风说话就行；这次你要开两个新对话，免得第一轮的内容跑进第二轮。\n\n1. 在第一个新对话里说：“请判断‘找到隐藏出口’是好事还是麻烦，并说明原因。”把回答记下来，或者截一张图，特别看看它用了几行、有没有先给标签再说原因。\n2. 开第二个新对话，只说下面这一段：“例子一：捡到宝箱 → 好事：得到奖励。例子二：掉进泥坑 → 麻烦：移动变慢。现在判断：找到隐藏出口。”这里你不用再解释格式，两个例子会把格式和口味演给它看。\n3. 记下第二个回答，把两次回答放在备忘录里对照着看：第二次有没有更像“事件 → 标签：短原因”这一行？如果你的聊天 AI 没有跟上，也把真实结果写下来，因为不同的 AI 表现可能不一样。\n4. 最后给你自己补上一句结论：“两个例子改变的是这一次回答的示范，不是永久增加了聊天 AI 的本领。”\n\n## 自检\n\n**做对了会看到：** 你能在第二次回答里找出至少一种跟两个例子相同的形状，比如箭头、标签或者短原因；你还知道这只是本次问题里的示范。\n\n**最常见的两种做错了会看到：**\n\n1. **以为给过两个例子，以后不用再给了。** 等你换到一个新对话后，回答可能又不按那种格式来了。这时候回到第四步，记住：例子只在这一次输入里起作用。\n2. **以为例子里的答案一定是真规矩。** 你会把“捡到宝箱”或者“掉进泥坑”的写法当成世界上的真实道理。这时候回到类比那一段：例子要是错了，聊天 AI 也可能跟着模仿错；示范能教它排格式，可没法替你证明事实到底对不对。\n\n## 重点\n\n- 两个完整例子能让聊天 AI 看出这一次要用的格式和口味。\n- 少样本提示是把少量例子放进当前问题，不是永久重新训练聊天 AI。\n- 例子要是写得乱或者写错了，聊天 AI 也可能照着变乱或者照着错。\n- 示例让回答更贴合要求，不等于回答里的事实已经被证明。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 官方把 few-shot prompt 说明为在请求类似任务前，先传入成对的用户输入和助手输出作为示例，并说明示例有助于得到想要的格式。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Prompt_API/Adding_context",
+          "sourceTitle": "MDN · Adding context with initial and ongoing prompt inputs",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "few-examples-show-format",
+          "front": "两个例子能让聊天 AI 看出什么？",
+          "back": "两个完整的输入—答案例子能让聊天 AI 看出这一次要用什么格式和口味；它只是本次问题里的示范，不是永久新增的本领。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 官方说明 few-shot prompt 会在类似任务前提供输入和输出示例，用来展示期望的结构。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Prompt_API/Adding_context",
+              "sourceTitle": "MDN · Adding context with initial and ongoing prompt inputs",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "examples-are-not-training",
+          "front": "少样本提示是不是把聊天 AI 永久教会了？",
+          "back": "不是。它只是把少量例子作为这次输入的一部分，用来完成一个相似任务；换一个没有这些例子的对话，它不一定还会照着同一种格式回答。",
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "MDN 官方把 few-shot 例子描述为在请求前传给 API 的输入；由此可以区分本次输入示范和永久改变模型的训练。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Prompt_API/Adding_context",
+              "sourceTitle": "MDN · Adding context with initial and ongoing prompt inputs",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "compare-with-two-examples",
+          "title": "直接问一次，再给两个例子",
+          "kind": "explain",
+          "prompt": "用手机里的任意聊天 AI 做两次对照。第一次问“请判断‘找到隐藏出口’是好事还是麻烦，并说明原因”；第二次另开新对话，只给两个例子“捡到宝箱 → 好事：得到奖励”“掉进泥坑 → 麻烦：移动变慢”，再问“现在判断：找到隐藏出口”。记录两次回答，解释第二次有没有更贴近例子的格式，以及为什么这不等于聊天 AI 永久学会了。",
+          "rubric": [
+            "记录了同一个任务在没有例子和附两个例子时的两次实际回答",
+            "指出了第二次回答跟例子相同的格式、标签或原因写法，或诚实记录它没有跟上的结果",
+            "解释两个例子是在当前输入里展示格式和口味，不是把聊天 AI 永久训练好",
+            "真的用手机聊天 AI 做了两次对照，并写下了自己看到的结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 官方说明 few-shot prompt 会先给模型成对的输入和输出示例，再让它完成类似任务；本题把这个过程改成手机对照。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Prompt_API/Adding_context",
+              "sourceTitle": "MDN · Adding context with initial and ongoing prompt inputs",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "words-and-pictures-in-one-place",
+      "title": "字和图放进同一个地方",
+      "variant": "溯源",
+      "content": "## 学习目标\n\n读完这节课，你就能跟别人讲清楚：字和照片是怎么变成能互相比较的数字表示的，还有在相册里搜“狗”的时候，为什么能把它们两个连起来。\n\n## 先给结论\n\n在单元一的“相册里搜‘狗’”里，你已经知道相册里的 AI 会从一堆照片里挑出像狗的照片，但当时还没讲“狗”这个字到底是怎样跟照片对上的。\n\n电脑会先把你写下的字、和相册里的画面，都变成一串数字，然后让配成一对的那两串去比一比离得远不远。\n\n如果一段文字和一张图片说的是同一件事，就把它们的数字调得更近一点；如果说的不是同一件事，就调得更远一点。\n\n能同时处理字和图片的这种做法，名字叫多模态。让意思一样的字和图片在数字上靠得更近，这件事叫图文对齐。\n\n## 一个类比\n\n你可以想象一张大大的游戏地图，地图上同时摆着文字卡和图片卡。写着“狗”的文字卡和狗的照片卡放得很近，写着“猫”的文字卡和猫的照片卡也放得很近，这就好比图文对齐；而让文字卡和图片卡能一起出现在同一张地图上，这就好比多模态。\n\n不过打个比方总有一点跟实际不完全一样：游戏地图上的位置，你可以直接用眼睛看到；但模型心里的位置全都是数字。数字挨得近，只表示它在以前学过的例子里觉得这两个东西有关系，这可不代表它们俩完全相同，也没法保证挑出来的每张照片都判断正确。\n\n## 工作示例\n\n现在拿起手机，你来做一次“相册搜狗”的全过程模拟，什么东西都不用额外安装。要是相册里没有狗的照片，拿一张你自己画的狗、小狗玩偶，或者截一张视频里的狗都可以。\n\n1. 打开相册，搜索“狗”，挑一张真正的狗照片，再挑一张你觉得可能认错了的结果；接着搜索“猫”，挑一张猫照片。把你看到的结果数量，或者前五张里有几张是真的狗，写进备忘录里。\n2. 在备忘录里插入这三张照片；如果你的备忘录放不了图，就用语音输入写下“狗照片”、“可能认错的照片”和“猫照片”。在每一张旁边，写出搜索框里搜的字：\n   - 「狗」这个字，配上真的狗照片\n   - 「狗」这个字，配上可能认错的照片\n   - 「猫」这个字，配上猫照片\n3. 用手指在备忘录空白处点上三个小点：把带“狗”的那两行点画得近一点，把“猫”画得远一点。这只是帮你用手模拟一下数字关系地图，可不是模型里真正的数字。\n4. 挨着每一行，大声说出你的解释：相册会先分别把文字和图片，变成电脑能比较的数字；对应的文字和图片靠得近，所以搜索“狗”的时候，狗那一组就更容易被找出来；而那张可能认错的照片正好提醒你，在数字上靠近可不等于百分之百正确。\n5. 你再回过头看第一节的“相册里搜‘狗’”：那里讲了相册会自己看懂并判断照片；现在你把另一半也补齐了——搜索框里的字，也得跟图片一样有一套能比较远近的数字表示。\n\n## 自检\n\n**做对了会看到：** 你的备忘录里有一对“文字：狗”配狗照片，也有一对“文字：猫”配猫照片；你能给别人讲明白，为什么搜索“狗”会优先去找狗那一组，而且还能指着那张可能认错的照片说清楚：它可没有被施了魔法变成正确答案。\n\n**最常见的两种做错了会看到：**\n\n1. **以为“狗”这个字自己就是照片标签。** 你会只写一个“狗”字，却说不出它到底是怎么跟哪一张照片连起来的。快回到第二步，把文字和图片写在同一行、凑成一对。\n2. **以为数字靠近就等于百分之百相同。** 你会把玩偶、画出来的狗，或者相册认错的结果都当成真狗。快回到第四步，记住数字靠近只表示它们关系更像，找出来的结果你还是得亲自检查。\n\n## 重点\n\n- 文字和图片都要先变成电脑能处理的数字表示。\n- 图文对齐会让意思相同的文字和图片在数字上靠得更近。\n- 多模态表示一个系统可以一起处理文字和图片等不同的输入。\n- 相册搜索“狗”可以看成文字和图片两边的数字表示碰到了一起，但靠得近可不保证每张照片都正确。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 官方文章说明双编码器分别把图片和文字映射成向量，并让相关的图文有更大的相似度、在数字空间里更靠近。",
+          "sourceUrl": "https://blog.tensorflow.org/2022/05/on-device-text-to-image-search-with.html",
+          "sourceTitle": "TensorFlow Blog · On-device Text-to-Image Search with TensorFlow Lite Searcher Library",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "TensorFlow 官方词向量指南说明机器学习模型把文字变成数字向量，并用相近的编码表示相似的词。",
+          "sourceUrl": "https://www.tensorflow.org/text/guide/word_embeddings",
+          "sourceTitle": "TensorFlow · Word embeddings",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 官方示例说明一个多模态输入可以在同一次请求里同时带文字和图片。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Prompt_API/Multimodal",
+          "sourceTitle": "MDN · Multimodal prompts",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "text-and-image-share-space",
+          "front": "相册搜索里的“狗”字怎样和照片碰到一起？",
+          "back": "文字和图片各自变成数字表示，模型把对应的文字和图片调到更近的位置；于是搜索“狗”时，可以去找数字位置相近的照片。它不是人工把一个文字贴纸贴到你相册的每张照片上。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方文章说明文字和图片分别变成向量，并用相似度把相关的图文放得更近。",
+              "sourceUrl": "https://blog.tensorflow.org/2022/05/on-device-text-to-image-search-with.html",
+              "sourceTitle": "TensorFlow Blog · On-device Text-to-Image Search with TensorFlow Lite Searcher Library",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "close-does-not-prove",
+          "front": "图和字的数字靠得近，能保证照片一定是狗吗？",
+          "back": "不能。靠近只表示系统根据学过的例子觉得它们有关；玩偶、画或相册里的误认结果也可能被放进附近，所以你仍然要检查结果。",
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "TensorFlow 官方文章把靠近解释为相关图文有更高相似度；由此可以推出靠近是匹配线索，不是每张图片都正确的证明。",
+              "sourceUrl": "https://blog.tensorflow.org/2022/05/on-device-text-to-image-search-with.html",
+              "sourceTitle": "TensorFlow Blog · On-device Text-to-Image Search with TensorFlow Lite Searcher Library",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "pair-a-word-with-a-picture",
+          "title": "把文字和图片配成一对",
+          "kind": "explain",
+          "prompt": "打开手机相册搜索“狗”和“猫”，各记下几个结果。再在备忘录里放入一张狗照片、一张猫照片和一张可能认错的照片，在每张旁边写对应的文字，画点表示哪些文字和图片应该靠近。请解释：这怎样补上了单元一“相册里搜‘狗’”没有讲完的那一半？",
+          "rubric": [
+            "记录了手机相册搜索“狗”和“猫”时实际看到的结果",
+            "把文字与图片组成了成对的例子，并把相同意思的成对例子画得更近",
+            "解释文字和图片都先变成数字表示，靠近表示相关而不是百分之百正确",
+            "明确回指单元一的相册搜索，并说出文字怎样和照片连起来",
+            "真的用手机完成了配对和搜索，并写下了自己看到的结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方文章说明图像和文字各自生成向量，再用相似度检索相关图片；题目把这个过程改成了手机备忘录模拟。",
+              "sourceUrl": "https://blog.tensorflow.org/2022/05/on-device-text-to-image-search-with.html",
+              "sourceTitle": "TensorFlow Blog · On-device Text-to-Image Search with TensorFlow Lite Searcher Library",
+              "sourceAuthority": "official-docs"
+            },
+            {
+              "kind": "fact",
+              "note": "MDN 官方说明多模态请求可以同时接收文字和图片输入，支持把两种输入放在同一次处理里。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Prompt_API/Multimodal",
+              "sourceTitle": "MDN · Multimodal prompts",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "so-is-it-really-smart",
+  "courseId": "what-is-ai-really",
+  "unit": {
+    "id": "so-is-it-really-smart",
+    "title": "那它到底算不算聪明",
+    "objective": "读完这一单元你能解释判断 AI 聪不聪明时的三个观察角度。"
+  },
+  "lessons": [
+    {
+      "id": "what-counts-as-smart",
+      "title": "什么才算聪明",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完这篇，你就能跟小伙伴讲明白：为什么图灵测试不去测“谁更聪明”，而是只看你“分不分得出来”。\n\n## 先给结论\n\n要给“聪明”下个定义其实特别难，你很难找出一句话，能让所有人都点头赞同。\n很久以前，有人想出了一个很妙的办法：找一个人只读文字，猜屏幕对面到底是个真人，还是台机器。这个办法就叫**图灵测试**。\n要是这个人怎么猜也猜不出来，机器就算赢了这场游戏。但这只能说明机器说话很像人，可不能证明它真的会自己动脑子想事情，更不代表它有自己的开心和难过。\n所以，图灵测试给你提了个醒：大家老是先去测“你能不能分得出来”，接着就假装自己已经把“到底什么是聪明”给讲明白了。\n\n## 一个类比\n\n这个游戏就像是你把同样一份问题，同时交给你同学和一台会聊天的机器。他们写好之后，你把两份文字交给一位裁判。裁判只能看上面的字，不能看写答案的人。要是裁判猜不出来，机器赢下的也只是“回答得很像人”这一局。\n\n不过，这个比方有一处说不通：你的同学有自己的真实生活，也明白自己写的是什么；但机器根本没有同学的生活和感受。机器“赢了一局”，绝对不等于它有了记忆、有了心情，或者有了自己的想法。\n\n## 工作示例\n\n现在，你也可以自己动手玩一次文字猜人游戏。你找一位愿意回答问题的人，再找一位专门负责猜的人；AI 就是第二位答题者。整个游戏只用手机上的聊天页面和备忘录就能玩，什么都不用安装。\n\n1. 在备忘录里写下五个问题：\n   - 你最近最喜欢玩的游戏是什么？为什么？\n   - 如果你在游戏里只剩一滴血，你会先做什么？\n   - 请给输了比赛的朋友写一句安慰话。\n   - 你觉得把冰淇淋放在太阳下会怎样？为什么？\n   - 如果今天不用上学，你最想把上午用来做什么？\n2. 把这五个问题一字不改地发给那位答题的人，请他打字回答。记住，别把 AI 的回答给他看。\n3. 在手机浏览器里打开你手边的 AI 聊天工具，把同样的五个问题原样发给它。别提前告诉 AI 这是一个猜人游戏。\n4. 把两边的回答都复制到备忘录里，标成 A 和 B。把名字、头像和称呼都删干净，但别去改错别字和表情。\n5. 把 A 和 B 拿给第三个人看，只告诉他：“一份是真人写的，一份是 AI 写的。”请他猜猜哪份是谁写的，并把找到的线索记下来。\n6. 揭晓正确答案，记下到底谁是哪一份，再写下第三个人猜对了还是猜错了。\n\n你刚才玩的，就是一个小型图灵测试游戏。它的结果可不是“AI 变成了真人”，而仅仅是说：“在这一组文字问题里，第三个人到底能不能分出来”。\n\n## 自检\n\n**做对了会看到：** 你的备忘录里写着五个一模一样的问题、A 和 B 两份文字回答、第三个人猜的记录，以及最后的答案揭晓。你还能讲出这个道理：猜不出来，只说明这次的文字很难分清，不代表机器有了自己的想法。\n\n**最常见的两种做错了会看到：**\n\n1. **只凭头像、标点或者某一个问题就匆忙下结论。** 你会发现第三个人猜的可能只是身份线索，而不是回答的内容本身。这时候把漏出来的身份线索全删掉，用同一组五个问题重新玩一次。\n2. **把猜错当成机器已经变成人。** 这就像把一场文字游戏，误当成了去检查机器的脑瓜。这时候你要赶紧翻回“先给结论”，重新说一遍：游戏只测你能不能分出来，根本不能证明机器真的会想事情、会有感受。\n\n## 重点\n\n- 图灵测试是一个让人只看文字，猜回答者是人还是机器的游戏。\n- 机器在图灵测试里过关，只代表它的回答很难让人分清，并不等于它有了自己的想法。\n- “聪明”到底是什么，根本没有一个大家都赞成的单一标准。\n- 测试的结果，随时会受到问的问题、露出的信息，以及裁判是谁的影响。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "NIST 页面写道：图灵测试评估机器的智能，如果机器表现出被认为属于人类的智能，就算通过。",
+          "sourceUrl": "https://www.nist.gov/itl/math/acmd-seminar-reverse-turing-tests-distinguishing-ai-generated-texts-human-written-texts",
+          "sourceTitle": "NIST · ACMD Seminar: Reverse Turing Tests for Distinguishing AI-generated texts from Human-written texts",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "turing-test-measures-distinguishability",
+          "kind": "basic",
+          "front": "图灵测试真正测到什么？",
+          "back": "它测一个人能不能只靠文字分辨回答者是人还是机器。猜不出来，说明回答难以分辨；不等于机器已经有自己的想法。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NIST 页面写道：图灵测试评估机器的智能，如果机器表现出被认为属于人类的智能，就算通过。",
+              "sourceUrl": "https://www.nist.gov/itl/math/acmd-seminar-reverse-turing-tests-distinguishing-ai-generated-texts-human-written-texts",
+              "sourceTitle": "NIST · ACMD Seminar: Reverse Turing Tests for Distinguishing AI-generated texts from Human-written texts",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "smart-has-no-single-test",
+          "kind": "basic",
+          "front": "为什么图灵测试不是“聪明”的最终证明？",
+          "back": "因为“聪明”没有一个大家都接受的单一标准，而图灵测试只看回答能不能让人分不出来；过关也不能证明机器会想或会感受。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NIST 页面写道：图灵测试评估机器的智能，如果机器表现出被认为属于人类的智能，就算通过。",
+              "sourceUrl": "https://www.nist.gov/itl/math/acmd-seminar-reverse-turing-tests-distinguishing-ai-generated-texts-human-written-texts",
+              "sourceTitle": "NIST · ACMD Seminar: Reverse Turing Tests for Distinguishing AI-generated texts from Human-written texts",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "play-the-text-guessing-game",
+          "title": "玩一次文字猜人游戏",
+          "kind": "explain",
+          "prompt": "用手机完成一次文字猜人游戏：找一位真人回答者和一位第三人做裁判，让真人和 AI 回答同样的五个问题，把两份回答匿名成 A 和 B，再记录裁判的猜测与揭晓。请解释：这次结果能说明什么，不能说明什么？",
+          "rubric": [
+            "用了同一组至少五个文字问题，分别收到了真人和 AI 的回答",
+            "把两份回答去掉身份线索后交给第三个人猜，并记录了猜测和揭晓",
+            "解释猜不出来只说明文字难分辨，不能直接说明机器有自己的想法",
+            "真的用手机聊天和备忘录完成，并写下了实际猜测结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NIST 页面写道：图灵测试评估机器的智能，如果机器表现出被认为属于人类的智能，就算通过。",
+              "sourceUrl": "https://www.nist.gov/itl/math/acmd-seminar-reverse-turing-tests-distinguishing-ai-generated-texts-human-written-texts",
+              "sourceTitle": "NIST · ACMD Seminar: Reverse Turing Tests for Distinguishing AI-generated texts from Human-written texts",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "will-it-become-a-person",
+      "title": "它会变成人吗",
+      "variant": "术语",
+      "content": "## 学习目标\n\n读完这一课，你就能跟别人讲清楚，什么是弱 AI，什么是强 AI，它们俩到底有什么不一样。\n\n## 先给结论\n\n只能在固定范围里做事的 AI，叫做**弱 AI**。\n不管遇到什么事都能自己弄懂、自己去学、自己想办法，还能像真正的人一样有自己想法的 AI，叫做**强 AI**。\n照这个标准来看，你现在真正能用到的 AI，全都在弱 AI 这一边。这里的“弱”，可不是说它没用，而是说它的本领是有边界的。\n现在的聊天 AI 挺厉害，能写故事、能改病句，还能回答你的问题，看起来好像什么都会，但这依然不能证明它是强 AI。\n真正的强 AI 现在根本不存在，以后到底会不会有，现在谁也不知道。\n\n## 一个类比\n\n弱 AI 就像你班里一位只参加拼图比赛的同学：他拼拼图特别快，是个拼图高手；但你总不能因为他拼图厉害，就觉得他天生就会写作文、会照顾小猫、会修自行车吧？强 AI 呢，好比一位不管换成什么新功课、什么新游戏，都能像真正的人那样自己弄懂新规则、自己去学习的同学。\n\n不过，这个比方有一个地方不成立：同学有真正的身体、生活和喜怒哀乐，AI 可没有。而且，这里说的“只会一件事”，是说它的能力范围有边界，并不是说 AI 真的只能按一个按钮。聊天 AI 确实能一边写故事一边回答问题，但它能做的事情多，并不等于它懂得真实生活，更不等于它有了自己的想法。\n\n## 工作示例\n\n拿起你的手机，来做一次“能力边界”的小挑战吧！你这次测试可不是要把 AI 变成真正的人，而是要亲眼看看它究竟知道什么，又缺了什么。\n\n1. 打开你手边的 AI 聊天软件，先发一句：请把“我今天的游戏输了”改成给朋友的三句安慰话。把回答截图或者保存下来。\n2. 接着发一句：请从这四个词里排出找宝箱的步骤，并说明理由：地图、钥匙、宝箱、奖励。把回答保存好。\n3. 最后发一句：不要问我任何问题，也不要看照片，告诉我我现在桌上有几支笔，以及我刚才和谁一起玩游戏。把回答保存好。\n4. 在手机备忘录里写下三行：我给了什么信息、AI 做了什么、AI 不知道什么。针对第三个问题，如果它随口猜了一个答案，把那一行写成“猜测”，千万别写成“它知道”。\n5. 这时候，你再告诉 AI 桌上实际上有几支笔、你刚才到底和谁玩了游戏，看看它是不是在你给了新信息之后，才改变了回答。把前后的差别写下来。\n\n你刚才亲眼看到了两件事：第一，在你给出文字以后，AI 确实能帮你处理文字；第二，根据你给的规则，它也能排好步骤。但是，只要是你没给它的信息，它就只能反过来问你、老老实实承认不知道，或者随手蒙一个答案。\n\n## 自检\n\n**做对了会看到：** 你把三个问题的实际回答都保存好了。在第三个问题里，你没有给 AI 透露桌面上有几支笔，也没告诉它你刚才和谁玩了游戏。你能分得清“完成文字任务”和“知道你的真实生活”是完全不同的两码事。\n\n**最常见的两种做错了会看到：**\n\n1. **把“能写故事”当成“什么都会”。** 你可能只测了一个简单的文字任务就停手了。这时候，记得再加一个你没给过答案的个人真实问题，看看它到底是会追问、会承认不知道，还是在随口瞎猜。\n2. **把 AI 说“我想”或“我知道”当成证据。** 你可能看到它写出了这样的句子，就误以为它真的有想法了。这时候回到第三问，仔细检查它到底有没有拿到能支持这个答案的真实信息。\n\n## 重点\n\n- 弱 AI 的“弱”，意思是它的能力范围有边界，可不是说它没用。\n- 强 AI 是指能像真正的人一样，跨越很多事情去理解、学习和想办法的 AI。\n- 按照这个分法，你现在能用到的所有 AI 都属于弱 AI，强 AI 目前根本不存在。\n- 哪怕 AI 自己写出了“我有想法”，也不能单凭这一句话就证明它真的有想法。\n- 强 AI 以后到底会不会出现，现在谁也说不准。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "NIST 的技术报告把 Narrow/Weak AI 说明为 task-specific，把 General/Strong AI 说明为 human-level、跨领域的能力，并列出当前与未来概念的区别。",
+          "sourceUrl": "https://nvlpubs.nist.gov/nistpubs/ams/NIST.AMS.100-75.pdf",
+          "sourceTitle": "NIST · Artificial Intelligence and Manufacturing Workshop Report",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "weak-ai-means-narrow-range",
+          "kind": "basic",
+          "front": "弱 AI 里的“弱”是什么意思？",
+          "back": "它表示能力范围有边界，不表示它一定没用。弱 AI 可以在指定的一组事情上很能干，但不能因此推断它能像人一样处理所有生活问题。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NIST 技术报告把 Narrow/Weak AI 标为 task-specific；卡片把这个范围限制解释成“弱”的含义。",
+              "sourceUrl": "https://nvlpubs.nist.gov/nistpubs/ams/NIST.AMS.100-75.pdf",
+              "sourceTitle": "NIST · Artificial Intelligence and Manufacturing Workshop Report",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "strong-ai-is-not-here",
+          "kind": "basic",
+          "front": "现在有“什么都会、还有自己想法”的强 AI 吗？",
+          "back": "没有。现在能用到的 AI 按这个分法属于弱 AI；强 AI 目前不存在，以后会不会出现也还没有确定答案。",
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "NIST 技术报告把 General/Strong AI 列为 human-level、跨领域的类型，并把它与今天的 task-specific AI 分开；课程据此明确当前没有这种系统。",
+              "sourceUrl": "https://nvlpubs.nist.gov/nistpubs/ams/NIST.AMS.100-75.pdf",
+              "sourceTitle": "NIST · Artificial Intelligence and Manufacturing Workshop Report",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "weak-ai-boundary-test",
+          "title": "找出它知道和不知道的事",
+          "kind": "explain",
+          "prompt": "在手机上的 AI 聊天工具里做三个小测试：让它改写一句游戏相关的话；让它根据你给的四个词排出找宝箱的步骤；再问一个你没有提供信息的个人事实。保存三个回答，并解释哪些是它处理了你给出的文字，哪些只是它在追问或猜测。",
+          "rubric": [
+            "让 AI 完成了至少两个有明确文字输入的任务，并保存了实际回答",
+            "问了一个 AI 没有被提供信息的个人事实，并记录它是拒绝、追问还是猜测",
+            "把“能力范围有边界”和“完全没用”区分开了",
+            "真的用手机做过测试，并写下了提供真实信息前后的回答差别"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NIST 技术报告用 task-specific 的 Narrow/Weak AI 与跨领域 human-level 的 General/Strong AI 对照；本题让学习者在手机上观察一个系统的输入边界。",
+              "sourceUrl": "https://nvlpubs.nist.gov/nistpubs/ams/NIST.AMS.100-75.pdf",
+              "sourceTitle": "NIST · Artificial Intelligence and Manufacturing Workshop Report",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "people-said-this-before",
+      "title": "「AI 要来了」这句话，以前也有人说过",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完这一节，你能把听到的一句关于 AI 的宣传，换成一件半年后自己能回来查个明白的具体事。\n\n## 先给结论\n\n你现在是不是天天听人说「AI 要改变一切」？其实这话很久以前就有人说过啦——还不止一次，是好几次了。每一次大家都会先兴奋上一阵子，可后来发现它根本做不到当初说的那么多，大家的热情就冷下来一阵子。等过上几年，又重新兴奋起来。\n\n以前那些老故事你没法自己回去查，所以这一节不要你死记硬背年份。你只要学会一件自己就能做的事：\n\n**把你听到的说法，换成一件可以动手检查的事。**\n\n比如有人说「AI 会改变教育」——这句话你就没法去查，因为它根本没说到底是什么时候、做到什么样才算改变了。\n但如果换成说「明年这个 App 能自动帮我改数学作业，而且要是改错了，我一眼就能看出来」——这句就能检查了，因为到了明年，你只要打开看一眼就知道灵不灵。\n\n想弄明白一个 AI 到底能做什么，靠的是**看它实际上做到了什么**，而不是听别人嘴上说它能做什么。\n\n## 一个类比\n\n就像有人跑来跟你说：“那家新开的店特别好吃！”\n\n这话你没法挑毛病，也没法确定是真是假——因为到底什么算“好吃”，每个人心里的标准都不一样。但要是他告诉你：“他家的炸鸡等五分钟就能做好，一份只要十五块钱，还配了三种口味的酱”，那你只要跑去吃一次，就全知道了。\n\n听别人宣传 AI 也一模一样。**越是听起来让人热血沸腾的说法，往往越没法去检查；越是听起来平平淡淡、清清楚楚的具体事，越容易验证。**\n\n**不过这个比方有一处对不上**：那家店你明天就能跑去尝，但别人说的 AI，常常指的是一两年之后的事。所以你得多做一个小动作——**把它写下来，定个日子回来看**。要是不写下来，到时候你根本想不起当初人家到底承诺过什么。\n\n## 工作示例\n\n现在做一次只要花五分钟，等半年后再花五分钟看一眼：\n\n**第一步，找一句真的宣传。** 去广告、新闻标题或者产品介绍里，找一句别人说 AI 的话，把它抄下来。\n\n**第二步，对着它问三个问题。** 到底什么时候能做到？要是真做到了，我亲眼能看到什么？要是没做到，我又会看到什么？这三个问题都能清清楚楚答上来，这句话才算真的能检查。\n\n**第三步，把它换个说法。**\n原来那句话是：「这个 AI 让学习更高效」。\n\n换过说法之后是：「六个月后，我用它写作业花的时间比现在更少，而且要是它讲错了，我也能看出来」。\n\n**第四步，记在备忘录里，定一个半年后的提醒。** 这一步可千万不能偷懒——时间长了，人的记性会悄悄帮大话圆场，但写下来的字可不会骗人。\n\n**第五步，等半年到了，回过头来看看。** 不管最后它到底是做成了还是没做成，你都会拿到一样别人根本给不了你的宝贝：**这是你亲自验过一次的。**\n\n## 自检\n\n**要是你做对了，你会看到：** 你手头上正存着一句换过了说法、写着具体日期的句子，安安静静躺在备忘录里，等着半年后你去检查它。\n\n**大家最容易搞错的两种想法：**\n\n1. **以为学完这一节的意思是「所以 AI 全是吹牛，一个字都别信」。** 这可不对。这几年确实有好多以前办不到的事，现在 AI 都做成了。你在咱们这门课里也亲手训练过一个模型，那可都是真家伙，不是吹出来的。这一节真正想告诉你的是：**做判断要看它真做成了什么事，而不是听别人提前许下了什么承诺。**\n2. **以为只要换成“更快更好”，就算能检查了。** 光说「更快」根本没法查呀，除非你能说清楚：到底比什么更快？能快多少？到了什么时候去查？**一句真正能检查的话，是拿出来一眼就能分出对错的那种话。**\n\n## 重点\n\n- 「AI 要来了」这种话以前就有人说过，大家兴奋一阵又冷下来，这样翻来覆去好几回了。\n- 以前的历史你没法回去查，但你能做一件事：把听到的宣传大话，换成能去查清楚的具体事。\n- 怎样才叫能检查？就是要讲清楚三件事：时间定在哪天、做到了会看到什么、没做到又会看到什么。\n- 一定要把话写下来、定个提醒的日子，因为时间久了，脑子会悄悄帮别人吹的宣传圆场。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "权威框架要求按系统实际测出来的能力和风险来判断它，而不是按对它的宣称来判断。",
+          "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+          "sourceTitle": "NIST · AI Risk Management Framework",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "一个模型能做什么，是拿它在没见过的输入上的表现测出来的。",
+          "sourceUrl": "https://www.tensorflow.org/js",
+          "sourceTitle": "TensorFlow.js",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "ai-winter-is-a-cooling-period",
+          "kind": "basic",
+          "front": "AI 寒冬是什么意思？",
+          "back": "它是 AI 的期待、投入和研究支持一起变冷的一段时期。它不表示所有 AI 都停止了，而是表示实际表现没有跟上人们原来的期待。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "权威框架要求按系统实际测出来的能力和风险来判断它，而不是按对它的宣称来判断。",
+              "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "sourceTitle": "NIST · AI Risk Management Framework",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "test-the-claim-not-the-hype",
+          "kind": "basic",
+          "front": "听到“AI 要来了”时，先问什么？",
+          "back": "先把大说法换成具体任务，亲自检查它能做什么、在哪些条件下会错，再决定这句话有多可靠。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "权威框架要求按系统实际测出来的能力和风险来判断它，而不是按对它的宣称来判断。",
+              "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "sourceTitle": "NIST · AI Risk Management Framework",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "measure-the-claim-on-your-phone",
+          "title": "把一句大话拆成小测试",
+          "kind": "explain",
+          "prompt": "在手机备忘录里写下一句关于 AI 的大说法，再设计至少三个具体测试：一个正常任务、一个改了条件的任务、一个缺少真实信息的问题。把 AI 的每次回答截图或记下来，给结果标成完成、问信息、猜测或答错，并解释这组结果支持了什么、不支持什么。",
+          "rubric": [
+            "写下了一句待检查的 AI 说法，并把它和实际结果分开",
+            "设计了至少三个不同的小测试，其中有一个改变了条件、一个缺少真实信息",
+            "没有把自信猜测当成知道，也写出了 AI 缺少的输入",
+            "真的在手机上试过，并记录了每次看到的实际结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "权威框架要求按系统实际测出来的能力和风险来判断它，而不是按对它的宣称来判断。",
+              "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "sourceTitle": "NIST · AI Risk Management Framework",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "two-ways-to-make-it-smart",
+      "title": "让它变聪明的两条路",
+      "variant": "术语",
+      "content": "## 学习目标\n\n读完这一节，你就能给“写规则”和“举例学习”分别贴上属于它们的技术路线名字啦。\n\n## 先给结论\n\n想让 AI 帮你做事，其实有两条你之前学过的路线。\n第一条路，是人先把知道的规则一条条写好，再让电脑照着一步步执行，这叫**自上而下**（top-down）。第二条路，是先塞给电脑很多带答案的例子，让它自己从中调整出判断方法，这叫**自下而上**（bottom-up）。\n前面那条路常常和**符号方法**连在一起：这时候电脑负责处理具体的规则和关系。后面那条路常常和**神经网络**连在一起：里面许多小小的计算部分，会根据一个个例子跟着一起调整。\n它们之间可没有什么“高级”和“低级”的分辨，在实际做出来的系统里，你完全可以把这两条路放在一起用。\n\n## 一个类比\n\n这就像你教同学在游戏里找宝箱卡片一样。用自上而下的教法，你会先写下一条规则：“要是卡片上有五角星，就标成奖励卡；要是没有五角星，就标成普通卡”，让他完全照着这条规则去做。用自下而上的教法呢，你先给他看很多张卡片，里面的五角星有的大、有的小、有的位置还不一样。你直接告诉他每一张的正确答案，让他自己从这些例子里摸索出判断的办法。\n\n不过，这个比方有一个地方不成立：你的同学长着眼睛，还能靠平时的生活经验来理解图案；但神经网络可不像同学那样懂意思，它其实只是在反复调整数字。反过来说，写规则的办法也不一定就很差。它只是有一个小麻烦：一旦碰上你之前没写过的新情况，往往就得靠人再去把新规则补齐。\n\n## 工作示例\n\n这次你不需要训练新的 AI，只要拿出手机备忘录，把前面学过的两种教法各自走上一遍就行。\n\n1. 新建一条备忘录，写下大标题：“同一件事：分奖励卡和普通卡”。\n2. 在“规则路”这一栏底下写下一条规则：“如果卡片上有五角星，就写奖励卡；否则写普通卡。”接着用备忘录里的涂鸦功能画三张卡片，照着这条规则给它们写下答案；画完后，你再画一张五角星特别小、或者被挡住的新卡片，试着写下按原来的规则会怎么判。\n3. 在“例子路”这一栏底下，画三张大小和位置不一样的奖励卡，再画三张普通卡。在每张图下面把答案写好。然后用手指把答案挡住，另外画一张之前没见过的新卡片，先请家人猜猜它到底算哪一类，猜完再拿开手指核对答案。\n4. 在两栏最底下分别补上它们的名字：“人先写出规则”就是自上而下；“人给例子，让判断方法从例子里调出来”就是自下而上。\n5. 最后，在两边各自写下一句你发现的差别：规则路能清清楚楚说出自己靠的是哪条规则，但要是来了新情况，可能就根本不在规则里；例子路不用人把所有条件都写完，但新情况要是离学过的例子太远，它也很可能会猜错。\n\n你刚刚走完的，其实是一场在手机上的纸上模拟。真正的神经网络还会把图片或者文字全都换算成数字，再用大量的计算来调整内部方法；你做这次练习，只要负责把这两条路线的名字认清楚、记牢固就可以啦。\n\n## 自检\n\n**做对了会看到：** 你的备忘录里整整齐齐分成了“规则路”和“例子路”两栏；每一栏下面都写好了路线名字，也都实际测试了一次；你还能清清楚楚说出：前者是人先写规则，后者是人先给例子。\n\n**最常见的两种做错了会看到：**\n\n1. **因为两栏里都画了卡片例子，就把两边都叫成自下而上。** 这样你就会漏掉最根本的区别。这时候你要看看到底是谁先决定了判断方法：要是人先把条件写出来的，就是自上而下；要是人只给带答案的例子，就是自下而上。\n2. **把自下而上说成是“完全没有规则”。** 这样你会以为神经网络什么都没做。这时候你要回想一下刚才类比不成立的地方：神经网络一直在老老实实做数字计算呢，只是人没有逐条把所有的判断条件全都写出来而已。\n\n## 重点\n\n- 自上而下是人先把规则写好，再让电脑按规则做事。\n- 自下而上是人先给很多例子，让电脑自己从例子里调整判断方法。\n- 自上而下常常和符号方法连在一起，自下而上常常和神经网络连在一起。\n- 这两条路线不是高级和低级的排名，在实际系统里完全可以把它们放在一起用。\n- 新情况跟以前的例子长得越不像，靠例子学习的方法就越容易判断出错。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "NIST 报告把 AI 分成知识库型和神经网络型两类：知识库型是用规则、逻辑和推理的符号系统，神经网络型是另一条路线。",
+          "sourceUrl": "https://nvlpubs.nist.gov/nistpubs/ams/NIST.AMS.100-75.pdf",
+          "sourceTitle": "NIST AMS 100-75 · AI in Manufacturing and Supply Chain",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "NIST 技术报告把知识库 AI 说明为使用规则、逻辑和推理的符号系统，把神经网络 AI 说明为另一条发展路线；这支持本节给两种已学方法命名。",
+          "sourceUrl": "https://nvlpubs.nist.gov/nistpubs/ams/NIST.AMS.100-75.pdf",
+          "sourceTitle": "NIST · Artificial Intelligence and Manufacturing Workshop Report",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "top-down-writes-rules-first",
+          "kind": "basic",
+          "front": "自上而下这条路先做什么？",
+          "back": "人先把知道的规则、关系或步骤写出来，再让电脑照着做。它常和符号方法相连，优点是能指出用了哪条规则。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NIST 技术报告把知识库 AI 说明为规则、逻辑和推理系统；NIST 项目页也使用 top-down 这个策略名称。",
+              "sourceUrl": "https://nvlpubs.nist.gov/nistpubs/ams/NIST.AMS.100-75.pdf",
+              "sourceTitle": "NIST · Artificial Intelligence and Manufacturing Workshop Report",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "bottom-up-learns-from-examples",
+          "kind": "basic",
+          "front": "自下而上这条路先做什么？",
+          "back": "人先给电脑很多例子和答案，让神经网络里的计算部分根据例子调整判断方法。人不用逐条写完所有条件。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow.js 官方文档展示了在浏览器中使用数据训练模型；NIST 技术报告把神经网络列为数据驱动的 AI 路线。",
+              "sourceUrl": "https://www.tensorflow.org/js",
+              "sourceTitle": "TensorFlow.js",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "two-routes-can-be-combined",
+          "kind": "basic",
+          "front": "自上而下和自下而上是高低排名吗？",
+          "back": "不是。规则路擅长把依据写清楚，例子路擅长从很多样本里找规律；一个实际系统可以把两条路放在一起。",
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "NIST 资料分别讨论规则知识库、神经网络和把不同 AI 方法结合起来的路线；卡片把它们解释成互补选择而非高低等级。",
+              "sourceUrl": "https://nvlpubs.nist.gov/nistpubs/ams/NIST.AMS.100-75.pdf",
+              "sourceTitle": "NIST · Artificial Intelligence and Manufacturing Workshop Report",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "name-the-two-routes",
+          "title": "给两种教法贴名字",
+          "kind": "explain",
+          "prompt": "用手机备忘录做一张“奖励卡和普通卡”的双路线卡：一栏先写一条 if-then 规则再测试新卡，另一栏先画出三张不同大小或位置的奖励卡和三张普通卡，再用一张新卡检查猜测。请写下两栏各自的路线名字，并解释你在手机上看到的差别。",
+          "rubric": [
+            "完成了先写规则的一栏，并把它命名为自上而下",
+            "完成了先给带答案例子的一栏，并把它命名为自下而上",
+            "说明了规则路与例子路各自可能在哪种新情况中出错",
+            "真的在手机备忘录上画过、测试过，并写下了实际结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NIST 报告把 AI 分成知识库型和神经网络型两类：知识库型是用规则、逻辑和推理的符号系统，神经网络型是另一条路线。",
+              "sourceUrl": "https://nvlpubs.nist.gov/nistpubs/ams/NIST.AMS.100-75.pdf",
+              "sourceTitle": "NIST AMS 100-75 · AI in Manufacturing and Supply Chain",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

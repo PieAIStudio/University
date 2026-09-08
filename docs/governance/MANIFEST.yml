@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-06T02:47:55.888Z
-generator_version: doc-gov@0.9.10
-docs_count: 101
+generated_at: 2026-09-08T17:22:45.875Z
+generator_version: doc-gov@0.9.11
+docs_count: 104
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -121,35 +121,42 @@ docs:
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-17
+    last_reviewed: 2026-09-08
     pinned: false
   - id: POLICY-SHARED-BRAND-KIT-FIRST
     path: docs/policy/shared-rules/brand-kit-first.md
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-28
+    last_reviewed: 2026-09-08
     pinned: true
   - id: POLICY-SHARED-CLEAN-IMAGE-GENERATION
     path: docs/policy/shared-rules/clean-image-generation-rules.md
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-17
+    last_reviewed: 2026-09-08
+    pinned: false
+  - id: POLICY-SHARED-DOCUMENT-CONVERGENCE
+    path: docs/policy/shared-rules/document-convergence.md
+    type: policy
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-08
     pinned: false
   - id: POLICY-SHARED-DONORS
     path: docs/policy/shared-rules/donors.md
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-29
+    last_reviewed: 2026-09-08
     pinned: true
   - id: POLICY-SHARED-WEB3D-CAPABILITY-ALIGNMENT
     path: docs/policy/shared-rules/web3d-capability-alignment.md
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-08-28
+    last_reviewed: 2026-09-08
     pinned: true
   - id: REF-ISLAND-ART-V1-RETIRED
     path: docs/reference/_archive/island-art-reference-v1-natural/why-this-reference-is-retired.md
@@ -269,6 +276,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-08-31
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-LIVE-EVIDENCE-URL-IS-NOT-A-SUPPORTED-CLAIM-OPEN-THE-PAGE-AND-READ-IT
+    path: docs/reference/learnings/workflow-issues/a-live-evidence-url-is-not-a-supported-claim-open-the-page-and-read-it.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-08
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-STUDY-PICKER-MUST-AGGREGATE-ONE-STUDY-INTO-ONE-SHARED-LANDMASS
     path: docs/reference/learnings/workflow-issues/a-study-picker-must-aggregate-one-study-into-one-shared-landmass.md
@@ -654,6 +668,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-29
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-USE-STABLE-OFFICIAL-LANDING-PAGES-WHEN-EVIDENCE-PDFS-RETURN-200-BUT-TIME-OUT
+    path: docs/reference/learnings/workflow-issues/use-stable-official-landing-pages-when-evidence-pdfs-return-200-but-time-out.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-08
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-VERCEL-SOURCE-DEPLOY-MUST-SKIP-GIT-ONLY-PREPARE-HOOKS
     path: docs/reference/learnings/workflow-issues/vercel-source-deploy-must-skip-git-only-prepare-hooks.md

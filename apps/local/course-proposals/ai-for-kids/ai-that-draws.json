@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "ai-for-kids-ai-that-draws",
+  "courseId": "what-is-ai-really",
+  "unit": {
+    "id": "ai-that-draws",
+    "title": "会画画的 AI",
+    "objective": "读完这一单元你能说出“从噪点里看出一张图”是怎么回事，并能说出要判断画出来的东西算谁的需要先查什么。"
+  },
+  "lessons": [
+    {
+      "id": "noise-becomes-a-picture",
+      "title": "噪点怎样变成一张图",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能用自己的话讲出，一团雪花点是怎么一步步变成一张图的。\n\n## 先给结论\n\n噪点，其实就是一团随机散落的亮点和暗点。扩散模型呢，正是从这样一团噪点起步的。它会一步一步改掉那些不合适的点，最后变出一张完整的图像。每改一步，画面就会离你给的文字提示更近一点，也更符合它平时学会的图像规律。你要记住，它可不是从噪点里去把某张原图重新找回来，而是自己生成出一张全新的、看起来合情合理的图。\n\n## 一个类比\n\n这就好比电视机没有调好时，满屏幕都在乱跳雪花点。这时候，你请来一个很会画画的同学。他每次只擦掉一小部分看着不合适的点，一点一点改，慢慢地，夜空、星星和地面就全都显露出来了。这个比方在哪儿就不适用了呢？那位同学的脑子里，可能早就藏着一张画好的画；但扩散模型肚子里可没有藏着那张原图。它是看着你给的文字方向，按照自己学会的规律，全新做出一张可能合理的新图。\n\n## 工作示例\n\n打开你手机备忘录里的画笔，或者用手机自带的涂鸦功能，自己动手做一个小演示吧。你完全不需要安装任何东西：\n\n1. 先画一个 4×4 的小方格。在里面随便点上八个亮点和暗点，千万别画得像任何东西。这就是你的起点——最初的噪点。\n2. 在小方格的上方，写上一句文字方向：“一颗黄色五角星在蓝色天空中”。\n3. 开始动手改画啦！第一次改的时候，只擦掉几个孤零零的落单点，把挨在一起的点留下来。第二次改的时候，把留下的点慢慢排成五角星的外轮廓。第三次改的时候，补上黄色和蓝色，把轮廓画得清清楚楚。\n4. 把这四个阶段从左到右排在备忘录里，仔细看一看：画面是怎么从一堆乱点，一步步变成像星星的图的。\n\n你刚才亲自动手做了“多次小修改”：先是减少了乱七八糟的随机点，接着勾出了轮廓，最后补齐了细节。真正的扩散模型在工作时，也是在后台用数字进行很多次类似的小更新。你在手机上做这个小演示，并不是在手机里训练模型，而是把整个过程亲手画出来给自己看。\n\n## 自检\n\n**做对了你会看到：** 四个阶段一步步变过来，原本随机散落的亮暗点连成了一颗比较连贯的星星。这时候如果有人问你，你还能一口答出来：它可不是从噪点里找回了某一张旧照片！\n\n**最常见的两种做错了：**\n\n1. **以为扩散模型是在噪点里找回原图。** 这样想的话，你就会把生成出来的图当成原本就有的旧照片了。赶紧回去写上一句：“它是根据文字方向和学会的规律生成新图的。”\n2. **第一步就把所有噪点擦掉。** 这样一下子擦光，你就完全看不到画面一步一步变清楚的过程了。回去重新来过：每次只改一小部分，而且一定要把前一个阶段的样子留下来。\n\n## 重点\n\n- 噪点就是那些随机散落的亮点和暗点。\n- 扩散模型从噪点起步，经过很多次细微的小修改，最后得到一张图像。\n- 你给的文字提示和它学会的图像规律，会决定每一次修改往什么方向走。\n- 生成出来的图，绝不是从某张旧照片里原样找回来的。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 官方教程说明稳定扩散从随机噪点开始，经过反复去噪得到图像，并由文字提示引导生成方向。",
+          "sourceUrl": "https://www.tensorflow.org/tutorials/generative/generate_images_with_stable_diffusion",
+          "sourceTitle": "TensorFlow · High-performance image generation using Stable Diffusion in KerasCV",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "denoise-step-by-step",
+          "front": "扩散模型为什么要从噪点开始很多次修改？",
+          "back": "它从随机亮暗点开始，每次改掉一部分不合适的点，让画面逐渐符合文字方向和学过的图像规律，最后得到一张新图。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方教程把图像生成描述为从噪点开始并反复去噪的过程。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/generative/generate_images_with_stable_diffusion",
+              "sourceTitle": "TensorFlow · High-performance image generation using Stable Diffusion in KerasCV",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "trace-noise-to-picture",
+          "title": "把四个阶段画出来",
+          "kind": "explain",
+          "prompt": "用手机备忘录的画笔做四个小方格：第一个随意画噪点，第二个留下成团的点，第三个画出一个简单轮廓，第四个补上颜色和细节。给每格写一句你改了什么，并说明它为什么不是在找回某张旧照片。",
+          "rubric": [
+            "画出了从随机噪点到较完整图案的至少四个阶段",
+            "解释了每一步只改一部分，并把文字方向和学过的规律说成生成方向",
+            "真的用手机画笔试了一次，并写下了自己看到的四个阶段结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方教程说明稳定扩散通过反复去噪，从噪点得到图像；练习把这个过程缩成可手画的四步。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/generative/generate_images_with_stable_diffusion",
+              "sourceTitle": "TensorFlow · High-performance image generation using Stable Diffusion in KerasCV",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "what-a-prompt-really-says",
+      "title": "提示词不是一张施工图",
+      "variant": "术语",
+      "content": "## 学习目标\n\n拆开来看一看，你写给画画 AI 的一句提示词，到底是怎么起作用的。\n\n## 先给结论\n\n提示词，就是你写给画画 AI 的文字描述。它能清楚告诉 AI 要画什么、在做什么、在什么地方，以及用什么样的画风来画。AI 会先把这些词变成可以计算的数字，再用它们一路带路，把一片乱糟糟的噪点一步步变成图片。提示词是在给 AI 指明方向，可不是一张把每个位置都画死的死板图纸。\n\n## 一个类比\n\n就像你请同学帮忙画一只“穿黄色雨衣、站在石头旁边的小狗”。你这句话会告诉他要画什么角色、有哪些细节，但你肯定不会拿尺子规定他的每一条线必须画在画纸的哪个格子里。这个比方也有不灵的时候：同学听完能马上开口问你“石头到底有几块”，画画 AI 可不会主动问，它很可能会漏掉你写的数字、颜色或者动作；光靠文字也没法保证，画出来的图一定能和你脑子里想的那一张一模一样。\n\n## 工作示例\n\n你不用安装任何新软件，直接打开手机里的备忘录，来做一次提示词拆解：\n\n1. 写下这句提示词：“一只穿黄色雨衣的小狗，站在三块圆石旁边，儿童绘本风格。”要是你打字慢，也可以直接对着手机说话，让语音输入帮你打字。\n2. 把这句话拆成五行来写：对象是一只小狗；衣服是黄色雨衣；动作是站着；地方是三块圆石旁边；画风是儿童绘本。\n3. 把这句话复制一份，只改动一个地方：把“黄色雨衣”改成“蓝色雨衣”。接着在备忘录里写下你预先觉得会变的地方：衣服颜色；再写下你觉得不会变的地方：小狗、三块圆石和儿童绘本风格。\n4. 如果你手边正好有画画 AI 工具，就把这两句话分别发给它看一看，对比一下结果；要是手边没有，就在手机上画两只小狗的简单画，只改一下雨衣的颜色。最后圈出“我指定的内容”和“我没有指定的内容”。\n\n做完这次练习，你的记录里应该完整包含这些结果：两句提示词、一份拆成五项的清单，还有一份记录了“变了什么、没变什么”的笔记。它能让你亲眼看到，提示词其实是在给 AI 给方向，而不是在交一张把所有细节都定死的精确图纸。\n\n## 自检\n\n**做对了你会看到：** 你能把一句话顺畅拆成对象、动作、地方、细节和画风，而且只改其中一个词的时候，你也能立刻指出哪些内容会跟着变。\n\n**最常见的两种做错了：**\n\n1. **把提示词当成保证书。** 你心里可能会想，写了“三块”就一定能得到三块。快倒回去，把它改写成“这只是希望 AI 注意的方向”，然后再去记录它实际画出来的结果。\n2. **一次改很多地方。** 这样画面变了之后，你根本不知道到底是哪一个词带来的变化。快倒回去，一次只改动一个词，把其余内容原样保留下来。\n\n## 重点\n\n- 提示词就是你给画画 AI 指明大方向的文字。\n- 提示词里可以写清楚对象、动作、地方、细节和画风。\n- 画画 AI 会把文字变成数字，再靠这些数字引导生成图片。\n- 提示词并不是去精确规定每个像素的具体位置。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 官方教程展示了把文字提示编码后，用它引导从噪点生成图像的流程。",
+          "sourceUrl": "https://www.tensorflow.org/tutorials/generative/generate_images_with_stable_diffusion",
+          "sourceTitle": "TensorFlow · High-performance image generation using Stable Diffusion in KerasCV",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "prompt-parts",
+          "front": "一句提示词可以告诉画画 AI 哪些事？",
+          "back": "它可以提供对象、动作、地方、细节和画风等方向；画画 AI 会把文字变成数字，但不会把这句话变成一张每个位置都固定的施工图。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方教程说明文字提示会被编码并用于引导图像生成。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/generative/generate_images_with_stable_diffusion",
+              "sourceTitle": "TensorFlow · High-performance image generation using Stable Diffusion in KerasCV",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "rewrite-prompt",
+          "title": "只改一个词",
+          "kind": "explain",
+          "prompt": "在手机备忘录里写“一只穿黄色雨衣的小狗，站在三块圆石旁边，儿童绘本风格”，再复制一份，只把黄色改成蓝色。把两句分别拆成对象、动作、地方、细节和画风，并写下你预期会改变和不会改变的内容。",
+          "rubric": [
+            "把两句提示词拆成了对象、动作、地方、细节和画风",
+            "说明了只改颜色时哪些内容应当保持不变，并承认生成结果不一定完全听话",
+            "真的用手机备忘录或画笔试了一次，并写下了自己看到或画出的比较结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方教程用文字提示来引导图像生成；练习让学习者只改变一个提示词部分来观察方向变化。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/generative/generate_images_with_stable_diffusion",
+              "sourceTitle": "TensorFlow · High-performance image generation using Stable Diffusion in KerasCV",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "two-ais-competing",
+      "title": "两个 AI 的画画比赛",
+      "variant": "对比",
+      "content": "## 学习目标\n\n你能说出一轮比赛里，生成器和判别器各自要做什么。\n\n## 先给结论\n\n生成器就是负责做出候选图片的模型。判别器也是一个模型，专门负责看图片，判断它到底是更像训练资料，还是生成器做出来的图；这里的训练资料，就是给模型用来学习的图片。每次都是生成器先做图，判别器接着来判断。反复比上几轮之后，生成器会学着把图做得更像，判别器也会学着变得更会挑错。不过你要知道，它们其实只是在比较数字，并不是真的有喜欢或者不喜欢。\n\n## 一个类比\n\n好比班里有两个同学：一个同学负责画星星，另一个同学负责检查，看看“这到底像不像班里收集的星星贴纸”。画画的同学听了检查意见，就会把下一张改得更好；检查的同学看过的例子越来越多，也越来越会找差别。这个类比失效的地方是：真正的生成器和判别器可没有眼光、心情，也没有比赛奖杯，它们只是根据数字来算出结果。\n\n## 工作示例\n\n你可以用手机备忘录里的画笔，做三轮纸上比赛：\n\n1. 先画一张你觉得最标准的五角星，在旁边写上“训练资料”。再画两张歪一点的五角星，在旁边分别写上“候选图一”和“候选图二”。\n2. 第一轮你只看这三张图，先别看文字，用手指选出最像标准星星的那一张。你现在就是在扮演判别器，把你选了哪张、为什么这么选，都写进备忘录里。\n3. 接下来你扮演生成器，把刚才没被选中的候选图改上一处，比如把缺的角补齐，或者让五个角长得更均匀。记住，不要重画标准星星。\n4. 第二轮重新把它们比一比，并记录下来；到了第三轮，再改一处地方、再比较一次。最后你要写清楚：生成器每一轮都负责“做候选图”，判别器每一轮都负责“比较并挑差别”。\n\n这是把两个角色交给你自己来玩的纸上小比赛，并不是真的在手机里训练两个模型。这么做是想让你亲眼看到：“做图”和“检查”完全是两件不同的工作。\n\n## 自检\n\n**做对了你会看到：** 在你的三轮记录里，生成器每次都负责改出候选图，判别器每次都负责比较候选图和训练资料。\n\n**最常见的两种做错了：**\n\n1. **以为判别器负责画图。** 这样你就把两个角色搞混了。快回去给每一轮写上两行：生成器做了什么，判别器判断了什么。\n2. **以为生成器要复制某一张标准图。** 这样会把“更像这一类”误当成“完全相同”。快回去比较整体的特征，并不需要每一笔都画得一模一样。\n\n## 重点\n\n- 生成器负责做出候选图片。\n- 判别器负责比较图片，并找出不像的地方。\n- 两个角色反复互相推动，生成器会更会做图，判别器会更会挑错。\n- 真正的模型没有心情，也没有审美，它们只有数字计算出来的结果。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 的 DCGAN 官方教程把生成器和判别器放在对抗训练中：一个生成图片，另一个判断图片是否像真实资料。",
+          "sourceUrl": "https://www.tensorflow.org/tutorials/generative/dcgan",
+          "sourceTitle": "TensorFlow · Deep Convolutional Generative Adversarial Network",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "generator-and-discriminator",
+          "front": "生成器和判别器各自负责什么？",
+          "back": "生成器做出候选图片，判别器把候选图片和训练资料比较并判断像不像；两者反复练习，生成器学着更像，判别器学着更会挑错。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 的 DCGAN 官方教程说明生成器和判别器在对抗训练中承担相反任务。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/generative/dcgan",
+              "sourceTitle": "TensorFlow · Deep Convolutional Generative Adversarial Network",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "run-three-rounds",
+          "title": "自己跑三轮比赛",
+          "kind": "explain",
+          "prompt": "用手机备忘录的画笔画一张标准五角星和两张候选五角星，按“生成器做图、判别器比较”的顺序跑三轮。每轮只改候选图的一处，记录谁做了什么、你挑了哪张、为什么。",
+          "rubric": [
+            "三轮中都分开记录了生成器的候选图和判别器的比较结果",
+            "解释了“更像训练资料”不等于“复制同一张图”",
+            "真的用手机画笔或备忘录试了一次，并写下三轮看到的图和判断"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 的 DCGAN 官方教程说明生成器与判别器通过反复对抗训练互相推动；练习把角色缩成三轮手工比较。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/generative/dcgan",
+              "sourceTitle": "TensorFlow · Deep Convolutional Generative Adversarial Network",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "who-owns-what-it-draws",
+      "title": "画出来的东西还要问谁能用",
+      "variant": "决策",
+      "content": "## 学习目标\n\n列出一张 AI 图片里，你还需要继续追问的权利问题。\n\n## 先给结论\n\n训练资料，就是 AI 模型在学习时看过的图片或文字。提示词，是你写给画画 AI 的文字方向；输出，则是它根据你这次输入的内容生成出来的结果。所谓的权利问题，就是要去追问：谁能复制、修改或者发布一张图？谁又必须先得到同意？提示词虽然是你写的，但这可不等于它替你回答了训练资料和输出的所有使用问题；而且，不同的服务和不同地方的规则，可能也完全不一样。\n\n## 一个类比\n\n打个比方，你参加班里的画画比赛：题目是你想出来的，翻看的参考书可能属于图书馆，最后的画是你亲手在纸上画出来的。这时候，你得把它们分开去问：题目、参考书和画出来的成画，各自能不能复制，或者能不能带走？这个比方也有不适用的地方：画画 AI 的服务条款和当地规则，并不一定像班级规定那样，你在教室里的这套分工，可不能替你得出一个真实的使用结论。\n\n## 工作示例\n\n拿出手机备忘录，来做一张“使用前检查表”吧。你可以拿一张你已经看过的 AI 图片；要是手边正好没有，就先写下你想让画画 AI 生成的那张图：\n\n1. 第一行写上“我写的提示词：”，把你自己的文字写在后面。\n2. 第二行写上“这次输出：”，记下图片是谁生成的、什么时候生成的；要是还没有图片，就写上“还没有输出”。\n3. 第三行写上“参考内容：”，列出你到底有没有上传过参考图、有没有点名过某个角色，或者有没有模仿过某种作品；要是都没有，就写“没有”。\n4. 第四行写上“要查的问题：”，写下这三个小问：“这个服务允许我怎样复制、修改和发布？”“参考内容需要谁同意？”“我所在的地方还有什么规则？”然后把这三问拿给家长或老师看，和他们一起去查服务说明和当地规则。\n\n最后，千万不要急着写上“它一定归我”或者“谁都不能用”。这次完整练习做出来的结果，是一张把提示词、输出、参考内容和待查问题都分开放的检查表；这一节课只教你怎么提出问题，可不替你下法律结论。\n\n## 自检\n\n**做对了你会看到：** 你的检查表把自己写的提示词、这次生成的输出、可能用到的参考内容和待查规则，都清清楚楚分到了不同的位置上。\n\n**最常见的两种做错了：**\n\n1. **以为“提示词是我写的，所以整张图一定是我的”。** 这样想就跳过了参考内容和服务规则。赶紧倒回去，把它们分别写进第二、三、四行。\n2. **以为“图片是 AI 画的，所以没有人需要查规则”。** 这可是把生成出来的图片和能不能随便用，给混成一件事了。快倒回去，至少写出复制、修改、发布这三类问题。\n\n## 重点\n\n- 提示词、训练资料和输出，是需要你分开来看的三件事。\n- 能不能复制、修改或者发布，属于必须查清楚的权利问题。\n- 服务说明和所在地方的规则，可能都会影响你具体怎么去使用它。\n- 拿不准的时候先列出问题，和家长或老师一起核对，千万别凭着一句话就自己下结论。",
+      "evidence": [
+        {
+          "kind": "inference",
+          "note": "TensorFlow 官方教程把文字提示送进图像生成流程，并说明图像由模型从噪点生成；本节据此把提示词、模型学习材料和这次输出分开列问题，不把技术流程当成法律结论。",
+          "sourceUrl": "https://www.tensorflow.org/tutorials/generative/generate_images_with_stable_diffusion",
+          "sourceTitle": "TensorFlow · High-performance image generation using Stable Diffusion in KerasCV",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "output-needs-rule-check",
+          "front": "看到一张 AI 图片，使用前要分开查什么？",
+          "back": "先分开记录提示词、模型学习时用过的资料和这次输出，再查服务说明与当地规则怎样处理复制、修改、发布和参考内容。",
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "TensorFlow 官方教程区分文字提示、模型生成过程和当前图像结果；本卡把这一区分转成使用前的核对步骤，不宣称某地的法律答案。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/generative/generate_images_with_stable_diffusion",
+              "sourceTitle": "TensorFlow · High-performance image generation using Stable Diffusion in KerasCV",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "make-rights-checklist",
+          "title": "做一张使用前检查表",
+          "kind": "explain",
+          "prompt": "用手机备忘录做四行检查表：我写的提示词、这次输出、参考内容、要查的问题。写出至少三个问题，分别问复制、修改或发布，以及参考内容是否需要同意；再写下你会找谁一起核对。",
+          "rubric": [
+            "把提示词、输出、参考内容和待查规则分成四个位置",
+            "提出了关于复制、修改、发布或参考内容同意的至少三个问题，而不是直接宣布归属答案",
+            "真的用手机备忘录做了一次，并写下了自己的检查结果和准备一起核对的人"
+          ],
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "TensorFlow 官方教程说明文字提示引导模型生成当前输出；练习要求把技术输入、参考内容和使用规则分开核对，而不从技术文档推出法律结论。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/generative/generate_images_with_stable_diffusion",
+              "sourceTitle": "TensorFlow · High-performance image generation using Stable Diffusion in KerasCV",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
