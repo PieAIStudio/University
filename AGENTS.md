@@ -59,6 +59,7 @@ not a startup glob; load only the lane the task actually touches.
 | UI, shared components, tokens, brand behaviour, account, payment | `docs/policy/shared-rules/brand-kit-first.md` |
 | Model calls, grading, tutoring, cost | `docs/policy/shared-rules/ai-in-the-loop.md` and SPEC-0001 §Cost |
 | Current priorities or in-flight work | `docs/reference/execution/current-work.md` |
+| Local previews, physical devices, or Web-to-local tooling | `docs/reference/execution/local-device-testing.md` |
 
 Before non-trivial implementation, debugging, architecture, or integration
 work, run `pnpm pro-gov learn recall --query "<task summary>"` and read

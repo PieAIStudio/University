@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: project
 created: 2026-05-08
-last_reviewed: 2026-09-06
+last_reviewed: 2026-09-07
 domain: project-policy
 tags:
   - project-policy
@@ -45,7 +45,7 @@ skeleton; the nested link makes its children resolve to real directories.
 Per-study links are skipped by the shelf's `Dirent.isDirectory()` filter.
 The explicit `UNIVERSITY_LOCAL_STUDIES_ROOT` selects the nested root for the
 authoring server; the e2e launcher already detects that same layout. See the
-verified [worktree findings](../reference/execution/current-work.md#traps-found-the-hard-way).
+verified [worktree learning](../reference/learnings/workflow-issues/building-content-in-a-worktree-without-studies-silently-drops-baked-evidence.md).
 
 Prefer a sibling worktree when the project's tracked skill links point to the
 sibling ProjectGovernanceSystem checkout: preserving the directory depth keeps
@@ -74,6 +74,12 @@ same viewport, same theme, same URL. A before/after captured by two different
 setups is not evidence, and has already been mistaken for some.
 
 ## Where decisions live
+
+Keep current-work as a short index, the active plan as the only task-state list,
+and each decision in its existing ADR. Condense repeated rationale there; move
+dated execution narratives to a clearly marked archive without dropping task
+IDs, unresolved findings or evidence. Archive commands are not current authority.
+Do not load archives by default or copy runtime versions/counts into startup rules.
 
 - Product behaviour a learner can see: `docs/reference/player-journey/` (v5).
 - What technique draws each part of the island, and what was already tried and
