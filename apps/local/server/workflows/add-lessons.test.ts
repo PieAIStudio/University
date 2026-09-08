@@ -36,6 +36,27 @@ function evidence(snapshot: SnapshotManifest): EvidenceReference {
   };
 }
 
+const LESSON_BODY = [
+  "## 学习目标",
+  "读完你能说出一张图片在程序里变成了什么。",
+  "",
+  "## 先给结论",
+  "它变成一长串数字。",
+  "",
+  "## 一个类比",
+  "就像把一幅画拆成一格一格的方格纸，每格记一个数。",
+  "",
+  "## 工作示例",
+  "把一张照片放大到看得见小方块，每个小方块就是一个数。",
+  "",
+  "## 自检",
+  "做对了你会看到一格一格的颜色块。做错了你会以为它还是一张画。",
+  "",
+  "## 重点",
+  "- 图片在程序里是一串数字。",
+  "",
+].join("\n");
+
 /** A published, active course — the state in which a curriculum actually grows. */
 function setup() {
   const container = mkdtempSync(join(tmpdir(), "university-local-add-lessons-"));
@@ -232,6 +253,83 @@ describe("course lesson addition workflow", () => {
       targetSnapshotId: snapshot.id,
     });
     expect(readUnit(studiesRoot, STUDY_ID, COURSE_ID, "drift").status).toBe("active");
+  });
+
+  /*
+   * A general course — a study with no repository — is created against no
+   * snapshot and cites public authority pages instead. `create-course` has
+   * always allowed that; `add-lessons` required `targetSnapshotId` until an
+   * AI course written for the `general` study was created successfully and
+   * then could not be given its second unit. The lesson shape is shared
+   * between the two workflows precisely so a rule cannot hold at one entry
+   * point and not the other, and this one had forked without a test to notice.
+   */
+  it("grows a course that was created against no snapshot at all", () => {
+    const { studiesRoot } = setup();
+    const generalCourseId = "url-cited-course";
+    const urlEvidence: EvidenceReference = {
+      kind: "fact",
+      sourceUrl: "https://developer.mozilla.org/en-US/docs/Web/API/ImageData/data",
+      sourceTitle: "MDN · ImageData.data",
+      sourceAuthority: "mdn",
+      note: "A picture reaching a program is a run of pixel numbers.",
+    };
+    createCourse({
+      studiesRoot,
+      studyId: STUDY_ID,
+      proposal: {
+        schemaVersion: 1,
+        proposalId: "create-url-cited-course",
+        course: {
+          id: generalCourseId,
+          title: "What a computer sees",
+          audience: "Someone with a phone and no computer",
+          objectives: ["Say what a picture becomes inside a program"],
+          units: [
+            {
+              id: "first-unit",
+              title: "First unit",
+              objective: "Open the subject",
+              lessons: [
+                {
+                  id: "picture-is-numbers",
+                  title: "A picture is numbers",
+                  content: LESSON_BODY,
+                  evidence: [urlEvidence],
+                },
+              ],
+            },
+          ],
+        },
+      },
+    });
+    openCourseForEdit({ studiesRoot, studyId: STUDY_ID, courseId: generalCourseId });
+
+    const result = addCourseLessons({
+      studiesRoot,
+      studyId: STUDY_ID,
+      proposal: {
+        schemaVersion: 1,
+        proposalId: "add-second-unit",
+        courseId: generalCourseId,
+        unit: { id: "second-unit", title: "Second unit", objective: "Keep going" },
+        lessons: [
+          {
+            id: "sound-is-numbers",
+            title: "Sound is numbers too",
+            content: LESSON_BODY,
+            evidence: [urlEvidence],
+          },
+        ],
+      },
+    });
+
+    expect(result.outcome).toBe("added");
+    expect(result.targetSnapshotId).toBeNull();
+    expect(result.unitCreated).toBe(true);
+    expect(readUnit(studiesRoot, STUDY_ID, generalCourseId, "second-unit").lessonIds).toEqual([
+      "sound-is-numbers",
+    ]);
   });
 
   it("refuses a proposal whose unit claim disagrees with the course", () => {

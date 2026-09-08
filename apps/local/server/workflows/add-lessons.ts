@@ -45,7 +45,17 @@ const AddLessonsProposalSchema = z
   .object({
     schemaVersion: z.literal(1),
     proposalId: StableId,
-    targetSnapshotId: StableId,
+    /*
+      Optional for the same reason it is optional in `create-course`: a course
+      in a study with no repository is written against no snapshot, and cites
+      public authority pages instead. Requiring it here meant a general course
+      could be born and then never grow a chapter — `course create` accepted it
+      and `course add-lessons` refused it, for the same course, on the same
+      day. `lesson-proposal.ts` says a rule must not be true of one entry point
+      and false of the other; the lesson shape was shared, and this one rule
+      had quietly forked.
+    */
+    targetSnapshotId: StableId.optional(),
     targetAnalysisId: StableId.optional(),
     courseId: StableId,
     unit: UnitTargetSchema,
@@ -75,7 +85,7 @@ interface AddLessonsResult {
   readonly lessonIds: readonly string[];
   readonly cardIds: readonly string[];
   readonly exerciseIds: readonly string[];
-  readonly targetSnapshotId: string;
+  readonly targetSnapshotId: string | null;
   readonly targetAnalysisId: string | null;
 }
 
@@ -146,7 +156,7 @@ export function addCourseLessons(input: AddLessonsInput): AddLessonsResult {
   assertIdsAreFree(input.studiesRoot, input.studyId, proposal, course.unitIds);
 
   const target = readTargetIdentity(input.studiesRoot, input.studyId, {
-    targetSnapshotId: proposal.targetSnapshotId,
+    ...(proposal.targetSnapshotId ? { targetSnapshotId: proposal.targetSnapshotId } : {}),
     ...(proposal.targetAnalysisId ? { targetAnalysisId: proposal.targetAnalysisId } : {}),
   });
   for (const lesson of proposal.lessons) {
@@ -171,7 +181,7 @@ export function addCourseLessons(input: AddLessonsInput): AddLessonsResult {
       unitId: proposal.unit.id,
       unitCreated: !unitExists,
       ...summary,
-      targetSnapshotId: proposal.targetSnapshotId,
+      targetSnapshotId: proposal.targetSnapshotId ?? null,
       targetAnalysisId: proposal.targetAnalysisId ?? null,
     };
   }
@@ -232,7 +242,7 @@ export function addCourseLessons(input: AddLessonsInput): AddLessonsResult {
     unitId: proposal.unit.id,
     unitCreated: !unitExists,
     ...summary,
-    targetSnapshotId: proposal.targetSnapshotId,
+    targetSnapshotId: proposal.targetSnapshotId ?? null,
     targetAnalysisId: proposal.targetAnalysisId ?? null,
   };
 }
