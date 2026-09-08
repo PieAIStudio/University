@@ -212,6 +212,8 @@
 .planet-page__enter {
   grid-area: enter;
   justify-self: start;
+  /* Keep at least a 44px target during the kit's scale-on-press feedback. */
+  min-height: 48px;
   min-width: 0;
   max-width: 100%;
 }

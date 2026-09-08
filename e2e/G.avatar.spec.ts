@@ -253,8 +253,32 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
     await namedStep(page, "岛群层点课程，云飞到岛上而不是改写导航焦点", async () => {
       await openOnline(page);
       await waitForMapReady(page);
+      await page.waitForFunction(() => {
+        const current = (window as any).__avatarMotion?.world;
+        return current && !current.inFlight;
+      });
+      const home = (await motion(page, "world"))!;
+      const currentCourse = page.locator('button.label--course.is-visible[data-course-state="live"]');
+      await expect(currentCourse).toHaveCount(1);
+      await humanClick(page, currentCourse, "当前课程仍能打开卡片，无需伪造原地飞行");
+      const card = page.locator(".picked--follow.is-visible");
+      await expect(card).toBeVisible();
+      await page.evaluate(async () => { for (let i = 0; i < 3; i++) await new Promise(requestAnimationFrame); });
+      const sameTarget = (await motion(page, "world"))!;
+      expect(sameTarget.sequence).toBe(home.sequence);
+      expect(sameTarget.target).toEqual(home.target);
+      expect(sameTarget.inFlight).toBe(false);
+      evidence.worldSameTarget = { home, sameTarget };
+      await humanClick(page, card.locator(".picked__close"), "关闭当前课程卡");
+      await expect(card).toHaveCount(0);
+
+      // Home now correctly rests above the current course. Picking that same
+      // island cannot prove travel. Choose a different real destination and
+      // retain its stable ID rather than a reflowing visible-list nth index.
+      const targetId = await page.locator('button.label--course.is-visible:not([data-course-state="live"])').first().getAttribute("data-map-marker");
+      expect(targetId).toBeTruthy();
       const before = (await motion(page, "world"))?.sequence ?? 0;
-      const courseLabel = page.locator("button.label--course.is-visible").first();
+      const courseLabel = page.locator(`button.label--course[data-map-marker=${JSON.stringify(targetId)}]`);
       await expect(courseLabel).toBeVisible({ timeout: 30_000 });
       let startedAt = 0;
       await humanClick(page, courseLabel, "岛群里的课程", {
@@ -265,6 +289,7 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       const result = await waitForFlight(page, "world", before);
       const elapsedMs = await page.evaluate((start) => performance.now() - start, startedAt);
       assertFast(result.elapsedMs, "岛群（报告轮询）");
+      expect(result.report.target).not.toEqual(home.target);
       expect(result.report.position).toEqual(result.report.target);
       const cloud = await page.evaluate(() => {
         const bag = globalThis as unknown as {

@@ -490,6 +490,11 @@ for (const viewport of [
         page.getByRole("button", { name: "进入 TuringPact", exact: true }),
         "enter same study",
       );
+      // A visible DOM row can precede the returning scene's assets/arrival.
+      // Reuse the same owner and physical-settle contract as the outward leg
+      // before testing the next course click and warm resource equality.
+      await waitForOwnedLayerReady(page, "world", originalScene);
+      await assertWorldCarrierAboveGround(page);
       await expect(course).toBeVisible();
       await humanClick(page, course, "select original course");
       await humanClick(
@@ -511,6 +516,8 @@ for (const viewport of [
           page.getByRole("button", { name: /回到 TuringPact 地图/ }),
           "warm return to world",
         );
+        await waitForOwnedLayerReady(page, "world", originalScene);
+        await assertWorldCarrierAboveGround(page);
         await expect(course).toBeVisible();
         await humanClick(page, course, "warm select course");
         await humanClick(
