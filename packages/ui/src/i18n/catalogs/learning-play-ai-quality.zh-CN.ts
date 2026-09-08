@@ -22,7 +22,7 @@ export const messages = {
   "play.aiQuality.eval.newQuestion": "再出一道题",
   "play.aiQuality.eval.untried": "这份方案还没试过当前题。输入和验收要求已冻结，可以开始比较。",
   "play.aiQuality.eval.responseWaiting":
-    "先改一项请求条件、选好验收要求，再试一次。结果会留在这张请求单旁边。",
+    "确认或调整请求条件、选好验收要求，再试一次。结果会留在这张请求单旁边。",
   "play.aiQuality.eval.firstOnly":
     "这次符合，不代表下次仍然符合。可以保持输入完全不变，再看一份响应。",
   "play.aiQuality.eval.firstFailure":

@@ -1,6 +1,13 @@
 import { useMemo, useRef, useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
-import type { ActivityKind, ActivityResult } from "@pieai/university-core";
+import {
+  ACTIVITY_DIFFICULTIES,
+  selectActivityLevel,
+  type ActivityDifficulty,
+  type ActivityKind,
+  type ActivityResult,
+} from "@pieai/university-core";
+import { getExampleFamily } from "./difficulty-examples.js";
 import { translate as t, useI18n } from "../i18n/index.js";
 import { SoundToggle } from "../sound/index.js";
 import { LearningActivity } from "./LearningActivity.js";
@@ -45,13 +52,16 @@ export function LearningPlayLab({
   );
   const [mode, setMode] = useState<ActivityKind>(modes[0]!);
   const [variant, setVariant] = useState(0);
+  const [difficulty, setDifficulty] = useState<ActivityDifficulty>("intro");
   const [round, setRound] = useState(0);
-  const [completed, setCompleted] = useState<ReadonlySet<ActivityKind>>(() => new Set());
+  const [completed, setCompleted] = useState<ReadonlySet<string>>(() => new Set());
   const [playlist, setPlaylist] = useState<ActivityResult[] | null>(null);
   const [playlistDone, setPlaylistDone] = useState(false);
   const activityTop = useRef<HTMLDivElement>(null);
   const variants = examples.filter((example) => example.kind === mode);
-  const activity = variants[variant] ?? variants[0]!;
+  const baseActivity = variants[variant] ?? variants[0]!;
+  const family = useMemo(() => getExampleFamily(baseActivity), [baseActivity]);
+  const activity = selectActivityLevel(family, difficulty);
   const advanceFocus = () =>
     requestAnimationFrame(() => {
       activityTop.current?.scrollIntoView({ block: "start", behavior: "instant" });
@@ -85,7 +95,9 @@ export function LearningPlayLab({
   };
   const record = (result: ActivityResult) => {
     if (result.status === "completed")
-      setCompleted((previous) => new Set([...previous, result.kind]));
+      setCompleted(
+        (previous) => new Set([...previous, `${result.kind}:${result.difficulty ?? "practice"}`]),
+      );
     setPlaylist((previous) =>
       previous === null
         ? null
@@ -94,6 +106,9 @@ export function LearningPlayLab({
   };
   return (
     <div className="learning-play-lab">
+      <h1 className="play-visually-hidden">
+        {t(collection === "ai" ? "play.ai.title" : "play.lab.title")}
+      </h1>
       <div className="learning-play-lab__top">
         <a href="/practice">{t("play.lab.back")}</a>
         <SoundToggle />
@@ -106,30 +121,7 @@ export function LearningPlayLab({
           {t("play.ai.collection.foundations")}
         </a>
       </nav>
-      <header className="learning-play-lab__intro">
-        <div>
-          <h1>{t(collection === "ai" ? "play.ai.title" : "play.lab.title")}</h1>
-          <p>{t(collection === "ai" ? "play.ai.intro" : "play.lab.intro")}</p>
-        </div>
-        <div className="learning-play-lab__session">
-          <span>{t("play.lab.session", { count: completed.size })}</span>
-          <GameButton
-            sound={false}
-            type="button"
-            variant="secondary"
-            onClick={
-              playlist !== null && !playlistDone
-                ? () => {
-                    setPlaylist(null);
-                    setPlaylistDone(false);
-                  }
-                : startPlaylist
-            }
-          >
-            {t(playlist !== null && !playlistDone ? "play.lab.cancelMix" : "play.lab.mix")}
-          </GameButton>
-        </div>
-      </header>
+
       <nav className="learning-play-lab__modes" aria-label={t("play.lab.select")}>
         {modes.map((kind) => (
           <GameButton
@@ -145,9 +137,8 @@ export function LearningPlayLab({
             <PlayIcon name={kind} />
             <span>
               <strong>{t(`play.mode.${kind}`)}</strong>
-              <small>{t(`play.verb.${kind}`)}</small>
             </span>
-            {completed.has(kind) ? (
+            {completed.has(`${kind}:${difficulty}`) ? (
               <PlayIcon name="check" className="learning-play-lab__mode-check" />
             ) : null}
           </GameButton>
@@ -169,32 +160,56 @@ export function LearningPlayLab({
         </section>
       ) : (
         <>
-          <div className="learning-play-lab__variant">
-            <span>
-              {playlist !== null
-                ? `${t("play.lab.mixing")} · ${modes.indexOf(mode) + 1} / 5`
-                : t("play.lab.variant", { count: variant + 1 })}
-            </span>
-            {playlist === null ? (
-              <GameButton
-                sound={false}
-                static
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  setVariant((value) => (value + 1) % variants.length);
-                  setRound((value) => value + 1);
-                }}
-              >
-                {t("play.lab.example")}
-                <PlayIcon name="arrow" />
-              </GameButton>
-            ) : null}
+          <div className="learning-play-lab__options">
+            <div className="learning-play-lab__variant">
+              <span>
+                {playlist !== null
+                  ? `${t("play.lab.mixing")} · ${modes.indexOf(mode) + 1} / 5`
+                  : t("play.lab.variant", { count: variant + 1 })}
+              </span>
+              {playlist === null ? (
+                <GameButton
+                  sound={false}
+                  static
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setVariant((value) => (value + 1) % variants.length);
+                    setRound((value) => value + 1);
+                  }}
+                >
+                  {t("play.lab.example")}
+                  <PlayIcon name="arrow" />
+                </GameButton>
+              ) : null}
+            </div>
+            <div
+              className="learning-play-lab__difficulty"
+              role="group"
+              aria-label={t("play.difficulty.label")}
+            >
+              {ACTIVITY_DIFFICULTIES.map((level) => (
+                <GameButton
+                  key={level}
+                  variant={difficulty === level ? "primary" : "ghost"}
+                  aria-pressed={difficulty === level}
+                  onClick={() => {
+                    if (level === difficulty) return;
+                    setDifficulty(level);
+                    setRound((value) => value + 1);
+                    setPlaylistDone(false);
+                  }}
+                >
+                  {t(`play.difficulty.${level}`)}
+                </GameButton>
+              ))}
+            </div>
           </div>
           <div ref={activityTop} tabIndex={-1} className="learning-play-lab__activity">
             <LearningActivity
               key={`${activity.id}:${round}`}
               activity={activity}
+              occurrenceId={`${family.id}:${difficulty}:${round}`}
               onResult={record}
               onNext={next}
               nextLabel={
@@ -206,6 +221,41 @@ export function LearningPlayLab({
           </div>
         </>
       )}
+      <header className="learning-play-lab__intro">
+        <div>
+          <p className="learning-play-lab__closing-title">
+            {t(collection === "ai" ? "play.ai.title" : "play.lab.title")}
+          </p>
+        </div>
+        <div className="learning-play-lab__session">
+          <span>
+            {t("play.lab.session", {
+              count: modes.filter((kind) =>
+                ACTIVITY_DIFFICULTIES.some((level) => completed.has(`${kind}:${level}`)),
+              ).length,
+            })}
+          </span>
+          <GameButton
+            sound={false}
+            type="button"
+            variant="secondary"
+            onClick={
+              playlist !== null && !playlistDone
+                ? () => {
+                    setPlaylist(null);
+                    setPlaylistDone(false);
+                  }
+                : startPlaylist
+            }
+          >
+            {t(playlist !== null && !playlistDone ? "play.lab.cancelMix" : "play.lab.mix")}
+          </GameButton>
+        </div>
+      </header>
+      <p className="play-muted">{t("play.difficulty.change")}</p>
+      <p className="learning-play-lab__intro-detail">
+        {t(collection === "ai" ? "play.ai.intro" : "play.lab.intro")}
+      </p>
       <p className="learning-play-lab__note">{t("play.lab.note")}</p>
       <details className="play-model-note learning-play-lab__research">
         <summary>{t("play.lab.research")}</summary>

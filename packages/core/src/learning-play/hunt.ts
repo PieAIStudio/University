@@ -39,3 +39,24 @@ export function evaluateHunt(activity: HuntActivity, raw: string | number): Hunt
     activity.model === "threshold" ? input > activity.boundary : Math.min(activity.boundary, input);
   return { valid: true, input, expected, actual, counterexample: expected !== actual };
 }
+
+/** Challenge evidence is replayed from real inputs; a reported counterexample flag is not trusted. */
+export function assessHuntEvidence(activity: HuntActivity, history: readonly HuntObservation[]) {
+  const verified = history.filter((item) => {
+    const replay = evaluateHunt(activity, item.input);
+    return (
+      replay.valid &&
+      replay.expected === item.expected &&
+      replay.actual === item.actual &&
+      replay.counterexample === item.counterexample
+    );
+  });
+  const boundary = activity.model === "clamp" ? 0 : activity.boundary;
+  const sides = new Set(verified.map((item) => Math.sign(item.input - boundary)));
+  const found = verified.some((item) => item.counterexample);
+  return {
+    passed: found && (!activity.verifyBoundarySides || [-1, 0, 1].every((side) => sides.has(side))),
+    found,
+    sides: [...sides],
+  };
+}

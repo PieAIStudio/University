@@ -19,6 +19,8 @@ related:
 
 # 用 AI 做产品的五种玩法
 
+> 本文保留该轮的决定和原始验收；当前入口、引导与难度配置由后续[易玩度与三档迭代](play-usability.md)接续，旧截图不代表当前首屏。
+
 用户保留前轮五种玩法，并要求新增至少五种以普通人指挥 AI 做产品为中心的互动。
 沿用 `University-play` / `codex/learning-play-lab`，本轮基线 `f14383d`。
 具体任务板在 `SCRATCH/ai-play-lab/tasks.md`。既有玩法保留；课程发布仍走既有 CLI。

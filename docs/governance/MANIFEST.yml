@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-07T19:42:29.594Z
+generated_at: 2026-09-08T02:52:18.560Z
 generator_version: doc-gov@0.9.11
-docs_count: 104
+docs_count: 105
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -118,6 +118,13 @@ docs:
     pinned: false
   - id: PLAN-LEARNING-PLAY-LAB
     path: docs/plans/completed/learning-play-lab.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-09-08
+    pinned: false
+  - id: PLAN-PLAY-USABILITY
+    path: docs/plans/completed/play-usability.md
     type: plan
     status: completed
     canonical: true

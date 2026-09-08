@@ -10,6 +10,8 @@ export interface BriefConfiguration {
 export type BriefChoices = Partial<BriefConfiguration>;
 export interface BriefActivity extends ActivityBase {
   readonly kind: "ai-brief";
+  /** Given agreements, shown to the learner; never an acceptance receipt. */
+  readonly initialChoices?: BriefChoices;
   readonly productName: string;
   readonly productDescription: string;
   readonly visitorName: string;

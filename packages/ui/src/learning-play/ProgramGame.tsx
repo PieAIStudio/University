@@ -13,6 +13,7 @@ import {
 
 import { translate } from "../i18n/index.js";
 import { playSound } from "../sound/index.js";
+import { PlayGuide } from "./PlayGuide.js";
 import type { ActivityControls } from "./controls.js";
 
 const COMMAND_LABELS = {
@@ -188,7 +189,12 @@ export function ProgramGame(props: ActivityControls<ProgramActivity>) {
   return <ProgramSession key={props.activity.id} {...props} />;
 }
 
-function ProgramSession({ activity, disabled, onAttempt }: ActivityControls<ProgramActivity>) {
+function ProgramSession({
+  activity,
+  disabled,
+  onAttempt,
+  guided = false,
+}: ActivityControls<ProgramActivity>) {
   const id = useId();
   const [commands, setCommands] = useState<readonly EditableCommand[]>([]);
   const [execution, setExecution] = useState<ProgramResult | null>(null);
@@ -393,6 +399,28 @@ function ProgramSession({ activity, disabled, onAttempt }: ActivityControls<Prog
       data-running={running || undefined}
       data-instant={instant || undefined}
     >
+      {guided && !running && !disabled ? (
+        <PlayGuide
+          title={translate(
+            commands.length === 0
+              ? "play.usability.program.first"
+              : execution
+                ? "play.usability.program.edit"
+                : "play.usability.program.ready",
+          )}
+          action={translate(
+            commands.length === 0
+              ? "play.usability.program.add"
+              : execution
+                ? "play.usability.program.editAction"
+                : "play.usability.program.run",
+          )}
+          onAction={() =>
+            commands.length === 0 ? add("forward") : execution ? showEditor() : runProgram()
+          }
+          disabled={locked}
+        />
+      ) : null}
       <section className="play-program__map-section" aria-labelledby={`${id}-map-title`}>
         <div className="play-program__section-heading">
           <h3 id={`${id}-map-title`} ref={mapHeading} tabIndex={-1}>

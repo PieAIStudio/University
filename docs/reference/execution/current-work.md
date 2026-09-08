@@ -52,17 +52,16 @@ The short, current handoff. **What is true now, never how it got that way.**
 > 当前性能与观感已通过。已有实验和截图保留在原工作区及本机证据目录。
 
 > **学习玩法待整合（2026-09-08）**：`codex/learning-play-lab` 位于相邻
-> `University-play` worktree。基础五种保留于 `/play-lab`；新增五种 AI 产品玩法位于
-> `/play-lab/ai`，合计十种共享组件、二十个情境。AI 组包含客户变更、顾客试营业、
-> 文件权限驾驶、匿名逐次评测与双版本时间线，采用明确标注的预设教学沙盒。
-> 完整 `pnpm verify`（2032 个 Vitest 用例）、24 条唯一浏览器回归及真实课程源的
-> 四份导出核对通过。研究、迭代、独立审查与精选截图录像见
-> [AI 玩法完成回执](../../plans/completed/ai-product-play.md)；首轮记录仍在
-> [基础玩法计划](../../plans/completed/learning-play-lab.md)，接入 API 见
-> [组件 README](../../../packages/ui/src/learning-play/README.md)。
-> 固定预览：`http://127.0.0.1:21996/play-lab/ai`。合并时协调共享路由、CSS、
-> 翻译与导出注册、journey、current-work 和 manifest；配课经既有课程 CLI 进行。
-> 组件及沙盒行为已验收，真人乐趣、学习迁移与正式课程发布仍属上线阶段验证。
+> `University-play`。十种组件、二十情境都支持入门/进阶/挑战，共60份显式任务配置，
+> 共用原十个引擎。默认先给当前一步，完整工具按需展开；帮助与难度独立，课节可以
+> 混合不同难度，切档/课节位置清本轮而切帮助保留现场。组件结果记录难度与出现位置。
+> 完整 `pnpm verify`（2108个Vitest用例）、34条唯一浏览器回归、正式构建3条冒烟
+> 与4份真实课程源导出核对通过。方法、独立审查和同条件前后图见
+> [易玩度完成回执](../../plans/completed/play-usability.md)，AI配课/API归
+> [组件README](../../../packages/ui/src/learning-play/README.md)。
+> 固定试玩：`http://127.0.0.1:21996/play-lab/ai`；基础合集为 `/play-lab`。
+> 整合时保留各线对core导出、共享CSS/i18n、journey/current-work的增补，再重生成
+> manifest。原3D与课程源未改；正式配课仍走课程CLI，真人难度/学习效果在试学中验证。
 
 
 Reversals live in `docs/adr/` as decision records with `supersedes` links.

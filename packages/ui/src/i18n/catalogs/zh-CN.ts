@@ -1,3 +1,9 @@
+import { messages as qualityDifficulty } from "./learning-play-quality-difficulty.zh-CN.js";
+import { messages as workflowDifficulty } from "./learning-play-workflow-difficulty.zh-CN.js";
+import { messages as playDifficulty } from "./learning-play-difficulty.zh-CN.js";
+import { messages as qualityUsability } from "./learning-play-quality-usability.zh-CN.js";
+import { messages as workflowUsability } from "./learning-play-workflow-usability.zh-CN.js";
+import { messages as playUsability } from "./learning-play-usability.zh-CN.js";
 import { messages as aiPlay } from "./learning-play-ai.zh-CN.js";
 import { messages as aiWorkflow } from "./learning-play-ai-workflow.zh-CN.js";
 import { messages as aiQuality } from "./learning-play-ai-quality.zh-CN.js";
@@ -16,6 +22,12 @@ export const messages = {
   ...aiWorkflow,
   ...aiQuality,
   ...aiAgentPlay,
+  ...playUsability,
+  ...playDifficulty,
+  ...qualityDifficulty,
+  ...workflowDifficulty,
+  ...qualityUsability,
+  ...workflowUsability,
   ...learningPlayMessages,
   ...learningPlayProgram,
   ...learningPlayExtra,

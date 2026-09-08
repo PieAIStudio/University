@@ -26,7 +26,7 @@ export const messages = {
   "play.aiQuality.eval.untried":
     "This candidate has not tried the current case. Its input and expectation are frozen and ready to compare.",
   "play.aiQuality.eval.responseWaiting":
-    "Change a request condition, choose an acceptance expectation, and try once. Results appear beside this request.",
+    "Confirm or adjust the request conditions, choose an acceptance expectation, and try once. Results appear beside this request.",
   "play.aiQuality.eval.firstOnly":
     "A good result this time may change next time. Keep the input identical and inspect another response.",
   "play.aiQuality.eval.firstFailure":

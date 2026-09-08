@@ -11,6 +11,7 @@ import {
 
 import { formatNumber, translate } from "../i18n/index.js";
 import { playSound } from "../sound/sound.js";
+import { PlayGuide } from "./PlayGuide.js";
 import type { ActivityControls } from "./controls.js";
 
 type ClockMode = "untimed" | "running" | "paused" | "expired";
@@ -19,6 +20,7 @@ export function DispatchGame({
   activity,
   disabled,
   onAttempt,
+  guided = false,
 }: ActivityControls<DispatchActivity>) {
   const [state, setState] = useState<DispatchState>(createDispatchState);
   const stateRef = useRef(state);
@@ -206,73 +208,13 @@ export function DispatchGame({
 
   return (
     <div className="play-dispatch">
-      <div className="play-dispatch__meters">
-        <div>
-          <span>{translate("play.extra.dispatch.served")}</span>
-          <strong>
-            {formatNumber(state.cursor)} / {formatNumber(activity.cards.length)}
-          </strong>
-          <progress
-            aria-label={translate("play.extra.dispatch.progress")}
-            max={activity.cards.length}
-            value={state.cursor}
-          />
-        </div>
-        <div data-over-budget={state.spent > activity.budget}>
-          <span>{translate("play.extra.dispatch.cost")}</span>
-          <strong>
-            {translate("play.extra.dispatch.costValue", {
-              cost: state.spent,
-              budget: activity.budget,
-            })}
-          </strong>
-          <progress
-            aria-label={translate("play.extra.dispatch.costProgress")}
-            max={Math.max(1, activity.budget)}
-            value={Math.min(state.spent, activity.budget)}
-          />
-        </div>
-      </div>
-
-      <div className="play-dispatch__clock">
-        <GameToggle
-          checked={clockMode !== "untimed"}
-          disabled={disabled || terminal}
-          label={translate("play.extra.dispatch.timed")}
-          onClick={() => {
-            if (clockRef.current === "untimed") {
-              if (remainingRef.current <= 0) {
-                remainingRef.current = activity.seconds * 1_000;
-                setRemainingMs(remainingRef.current);
-              }
-              startClock();
-            } else {
-              useUntimedPractice();
-            }
-          }}
+      {guided && !terminal ? (
+        <PlayGuide
+          title={translate(
+            state.cursor ? "play.usability.dispatch.next" : "play.usability.dispatch.first",
+          )}
         />
-        <span className="play-dispatch__clock-time" role="timer">
-          {clockMode === "untimed"
-            ? translate("play.extra.dispatch.untimed")
-            : translate("play.extra.dispatch.timeLeft", {
-                seconds: Math.ceil(remainingMs / 1_000),
-              })}
-        </span>
-        {clockMode === "running" && !terminal ? (
-          <GameButton
-            variant="ghost"
-            sound={false}
-            disabled={disabled}
-            onClick={() => {
-              freezeClock();
-              playSound("ui.press");
-            }}
-          >
-            {translate("play.extra.dispatch.pause")}
-          </GameButton>
-        ) : null}
-        <p>{translate("play.extra.dispatch.timerHelp")}</p>
-      </div>
+      ) : null}
 
       {waiting && !terminal ? (
         <div className="play-dispatch__pause" role="status">
@@ -349,25 +291,6 @@ export function DispatchGame({
             </>
           ) : null}
         </section>
-
-        <section className="play-dispatch__cache">
-          <h4>{translate("play.extra.dispatch.cacheRack")}</h4>
-          {state.warmedCacheKeys.length === 0 ? (
-            <p>{translate("play.extra.dispatch.cacheEmpty")}</p>
-          ) : (
-            <ul>
-              {state.warmedCacheKeys.map((key) => (
-                <li key={key} data-current={current?.cacheKey === key}>
-                  <span aria-hidden="true">✓</span>
-                  <span>
-                    {activity.cards.find((card) => card.cacheKey === key)?.label}
-                    <small>{key}</small>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
       </div>
 
       <div
@@ -385,7 +308,7 @@ export function DispatchGame({
                 variant={isCache && cacheReady ? "primary" : "secondary"}
                 sound={false}
                 static
-                disabled={disabled || terminal || waiting}
+                disabled={disabled || terminal || waiting || (guided && isCache && !cacheReady)}
                 onClick={() => send(lane.id)}
                 className="play-dispatch__lane"
                 data-cache-ready={isCache && cacheReady}
@@ -423,6 +346,51 @@ export function DispatchGame({
         {feedback || translate("play.extra.dispatch.historyEmpty")}
       </p>
 
+      <details className="play-dispatch__cache" open={guided ? undefined : true}>
+        <summary>{translate("play.extra.dispatch.cacheRack")}</summary>
+        {state.warmedCacheKeys.length === 0 ? (
+          <p>{translate("play.extra.dispatch.cacheEmpty")}</p>
+        ) : (
+          <ul>
+            {state.warmedCacheKeys.map((key) => (
+              <li key={key} data-current={current?.cacheKey === key}>
+                <span aria-hidden="true">✓</span>
+                <span>
+                  {activity.cards.find((card) => card.cacheKey === key)?.label}
+                  <small>{key}</small>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </details>
+      <div className="play-dispatch__meters">
+        <div>
+          <span>{translate("play.extra.dispatch.served")}</span>
+          <strong>
+            {formatNumber(state.cursor)} / {formatNumber(activity.cards.length)}
+          </strong>
+          <progress
+            aria-label={translate("play.extra.dispatch.progress")}
+            max={activity.cards.length}
+            value={state.cursor}
+          />
+        </div>
+        <div data-over-budget={state.spent > activity.budget}>
+          <span>{translate("play.extra.dispatch.cost")}</span>
+          <strong>
+            {translate("play.extra.dispatch.costValue", {
+              cost: state.spent,
+              budget: activity.budget,
+            })}
+          </strong>
+          <progress
+            aria-label={translate("play.extra.dispatch.costProgress")}
+            max={Math.max(1, activity.budget)}
+            value={Math.min(state.spent, activity.budget)}
+          />
+        </div>
+      </div>
       {!terminal && activity.cards[state.cursor + 1] ? (
         <div className="play-dispatch__next">
           <span>{translate("play.extra.dispatch.upNext")}</span>
@@ -454,6 +422,48 @@ export function DispatchGame({
           </ol>
         </section>
       ) : null}
+      <details className="play-dispatch__optional-clock" open={guided ? undefined : true}>
+        <summary>{translate("play.usability.dispatch.options")}</summary>
+        <div className="play-dispatch__clock">
+          <GameToggle
+            checked={clockMode !== "untimed"}
+            disabled={disabled || terminal}
+            label={translate("play.extra.dispatch.timed")}
+            onClick={() => {
+              if (clockRef.current === "untimed") {
+                if (remainingRef.current <= 0) {
+                  remainingRef.current = activity.seconds * 1_000;
+                  setRemainingMs(remainingRef.current);
+                }
+                startClock();
+              } else {
+                useUntimedPractice();
+              }
+            }}
+          />
+          <span className="play-dispatch__clock-time" role="timer">
+            {clockMode === "untimed"
+              ? translate("play.extra.dispatch.untimed")
+              : translate("play.extra.dispatch.timeLeft", {
+                  seconds: Math.ceil(remainingMs / 1_000),
+                })}
+          </span>
+          {clockMode === "running" && !terminal ? (
+            <GameButton
+              variant="ghost"
+              sound={false}
+              disabled={disabled}
+              onClick={() => {
+                freezeClock();
+                playSound("ui.press");
+              }}
+            >
+              {translate("play.extra.dispatch.pause")}
+            </GameButton>
+          ) : null}
+          <p>{translate("play.extra.dispatch.timerHelp")}</p>
+        </div>
+      </details>
     </div>
   );
 }

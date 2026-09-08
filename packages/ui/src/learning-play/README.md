@@ -19,14 +19,61 @@ function ActivitySection({ activity }: { activity: LearningActivitySpec }) {
 ```
 
 应用入口已经统一导入 `learning-play.css`、`hunt.css`、`dispatch.css`、`program.css`、
-`ai-play.css`、`ai-workflow.css`、`ai-quality.css`、`ai-context-play.css`、`ai-agent-play.css`。其他宿主需从相同包的 `learning-play/`
+`ai-play.css`、`ai-workflow.css`、`ai-quality.css`、`ai-context-play.css`、`ai-agent-play.css`、`play-usability.css`、`workflow-usability.css`、`quality-usability.css`。其他宿主需从相同包的 `learning-play/`
 导出路径导入所使用合集的样式，并使用既有 I18n/品牌主题上下文。基础外壳始终需要
-`learning-play.css`；AI 组还需要上述五份 `ai-*` 样式。
+`learning-play.css`；AI 组需要上述五份 `ai-*` 样式；新的默认引导还需三份 `*-usability.css`，按应用入口的顺序导入。
 可选 `onNext` 与 `nextLabel` 由宿主决定下一步，组件不认识课程或播放列表。
 
 活动以 `id` 标识；切换 `id` 或点重新开始会创建新一轮。每轮只发一个结果：完成或跳过。
 同一 `id` 表示同一活动定义；修改内容时应使用新的修订 `id`。连续试玩重新进入同一活动时，宿主也可以设置新的 React `key`。
 停止执行保留指令，重新开始清空整轮；卸载、切换或跳过会取消尚未结束的播放。
+
+## 难度与上手提示分别配置
+
+每个情境现在有 `intro`（入门）、`practice`（进阶）、`challenge`（挑战）三份明确载荷。二十个情境共六十份难度配置，仍然只有十个组件和十套规则实现。`ActivityFamily` 的三份载荷必须同 kind、各有唯一 id、并标明对应 difficulty；`selectActivityLevel` 检查这些身份约束，不对分数、目标或计时做通用乘法。
+
+```tsx
+import { selectActivityLevel, type ActivityFamily } from "@pieai/university-core";
+
+function LessonActivity({ family }: { family: ActivityFamily }) {
+  const activity = selectActivityLevel(family, "intro");
+  return (
+    <LearningActivity
+      occurrenceId="lesson-context-1-practice-1"
+      activity={activity}
+      initialGuidance="guided"
+      onResult={(result) => console.info(result)}
+    />
+  );
+}
+```
+
+`occurrenceId` 标识一次课节里的位置；同一素材在另一节出现要换 occurrenceId。换活动 id、难度或 occurrenceId 会重新开始并取消旧播放。切换界面的“自由探索 / 跟着提示玩”只改变呈现，保留工作和收据。结果带 `difficulty`、`occurrenceId`、`guidanceUsed`，因此入门完成或用了帮助都不会冒充挑战/独立完成。尚未声明 difficulty 的既有直接载荷按 practice 记账，以兼容旧调用。
+
+试玩页默认入门；每个组件可以即时换档。难度不是账号等级、课程系列编号，也不会自动决定下一题。连玩允许不同关选不同难度；完成标记保留到本次会话，不写 XP 或课程进度。
+
+### AI 配课的选择顺序
+
+1. 先说清本节要练的一个判断，如“核对资料来源”，再选组件 kind。
+2. 列出学习者已经会做的动作和题目已给的事实。第一次接触、复习或长课中的轻任务用 intro；已会基本操作、需要组合判断用 practice；需要迁移、交叉条件或保住旧行为时才用 challenge。
+3. 从同一 family 明确选择一档。后期课程可以穿插 intro；每一节不必放组件，每一节也不必全选同档。不要因“第十系列”批量标成挑战。
+4. 检查本档 goal、关键约束和真实完成证据是否匹配课程内容。帮助的开关不改变完成规则，不作为升难办法；计时不是三档难度的定义。
+5. 为课节位置设置独立 occurrenceId，调用既有课程生产/校验流程。`difficulty-examples.ts` 只扩展本站预设案例；自定义活动要写显式 family，不能把任意 JSON 交给这个 fixture factory 或绕过课程 CLI。
+
+| 玩法  | 入门                  | 进阶               | 挑战的真实新增判断                                         |
+| ----- | --------------------- | ------------------ | ---------------------------------------------------------- |
+| 接线  | 三节点、两关系        | 全因果链与分支     | 失败后重新尝试的回路及探针                                 |
+| 调参  | 另一变量固化为常量    | 两变量取舍         | 图片最低宽度等独立约束；工作队列更紧的产出/等待/内存可行域 |
+| 反例  | 分界附近的小范围      | 完整输入范围       | 小于、等于、大于故障分界都留实际测试记录                   |
+| 调度  | 三请求认识服务/复用   | 七请求混合处理     | 同名新版缓存键与必须实时查询交错                           |
+| 指令  | 先到近处目标          | 原路径与检查点     | 新检查点使原解失效，需要绕行                               |
+| 原型  | 两项给定，只问一项    | 自己写三项约定     | 初次验收后的客户变更与再次验收                             |
+| 装箱  | 一顾客、两份来源      | 多顾客与来源冲突   | 8格约束要求摘取，仍允许充分的不同组合                      |
+| Agent | 读取并写一份草稿      | 混合写入与材料指令 | 后续动作出现第二种保护文件，旧进阶行动记录不够             |
+| 评测  | 正例+一种边界         | 四类请求           | 缺信息+无资源、缺信息+越界也要独立成题并回归               |
+| 返工  | 两改法、原问题+旧功能 | 三改法与双版检查   | 保留A把B改C，或改选后两次重开都正确                        |
+
+入门给定的是事实/配置，不是伪造的操作：Brief 的 `providedChoices` 和 `learnerChoices` 分开；Eval 入门题按下试跑才生成真实回执。挑战的扩展同样由原引擎验收：Hunt 聚合并重算三侧记录，Eval 检查交叉条件覆盖，Repair 检查业务保留项及实际重开时点。每档都有可运行的维护用解，但这些解不发给学习者当按钮。 新增 family 还须提交三档的任务差异、可运行解和至少一条更低档证据不足的反例；类型检查只证明载荷形状与身份，不自动证明主观难度。
 
 ## 选择哪种玩法
 
@@ -101,3 +148,5 @@ AI 组的人工复核路线（给维护者，学习界面不展示答案）：
 - 返工：预约连点产生重复单后封存失败，版本 A 虽止住连点却破坏改约，版本 B 保留旧能力。偏好保存后重开才暴露失败，版本 B 锁死偏好，版本 A 才可改选。应用修改后逐步看双版，核对原问题，再亲手走旧功能。
 
 AI 组的维护回归为 `e2e/Q.ai-product-play.spec.ts`；本轮研究、用户/设计者角度的反驳与真实验收记录见 [AI 玩法计划](../../../../docs/plans/completed/ai-product-play.md)。
+
+本轮易玩度、三档设计与同条件前后验证见 [易玩度计划](../../../../docs/plans/completed/play-usability.md)。前轮计划保留原始决定及证据，不作为当前难度配置清单。

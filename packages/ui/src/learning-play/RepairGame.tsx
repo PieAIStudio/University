@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GameButton, GameSlider } from "@pieai/swimmer-ui-kit";
 import {
   appendRepairComparisonEvent,
@@ -31,9 +31,17 @@ import {
   RepairTraceRecord,
   repairEventLabel,
   repairProductSummary,
+  repairChoiceLabel,
 } from "./RepairProductView.js";
+import { PlayGuide } from "./PlayGuide.js";
+import { repairActionCue } from "./QualityGuidance.js";
 
-export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<RepairActivity>) {
+export function RepairGame({
+  activity,
+  disabled,
+  onAttempt,
+  guided = false,
+}: ActivityControls<RepairActivity>) {
   const [workspace, setWorkspace] = useState(() => createRepairWorkspace(activity));
   const [evidence, setEvidence] = useState<RepairEvidence>();
   const [patch, setPatch] = useState<Exclude<RepairImplementation, "broken">>();
@@ -49,8 +57,12 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
   const [regressionReceipt, setRegressionReceipt] = useState<RepairTrace>();
   const [regressionActive, setRegressionActive] = useState(false);
   const [message, setMessage] = useState("");
+  const [panel, setPanel] = useState<"product" | "patch" | "history">("product");
+  const [focusRequest, setFocusRequest] = useState(0);
   const passed = useRef(false);
   const productHeading = useRef<HTMLHeadingElement>(null);
+  const patchHeading = useRef<HTMLHeadingElement>(null);
+  const historyHeading = useRef<HTMLHeadingElement>(null);
   const locked = disabled || passed.current;
   const frame = comparison ? repairComparisonFrame(activity, comparison) : undefined;
   const product = frame?.right ?? workspace.product;
@@ -66,13 +78,76 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
       ? comparison.mode === "replay" || comparison.cursor >= 40
       : workspace.events.length >= 40);
   const selectedPatches =
-    activity.model === "booking"
+    activity.offeredPatches ??
+    (activity.model === "booking"
       ? (["rewrite", "scoped", "removed"] as const)
-      : (["scoped", "removed", "rewrite"] as const);
+      : (["scoped", "removed", "rewrite"] as const));
+  const captureReady = !comparison && Boolean(captureRepairEvidence(activity, workspace));
+  const cueTrace =
+    comparison && frame
+      ? {
+          ...comparison.right,
+          events: comparison.events.slice(0, comparison.cursor),
+          entries: comparison.right.entries.slice(0, comparison.cursor),
+          product: frame.right,
+        }
+      : workspace;
+  const cue = repairActionCue(activity, cueTrace, regressionActive);
+  const replayFinished =
+    comparison?.mode === "replay" && comparison.cursor === comparison.events.length;
+  const nextReplayEvent = comparison?.events[comparison.cursor];
+  const guideTitle =
+    panel === "patch"
+      ? t("play.qualityGuide.repair.choosePatch")
+      : regressionReceipt && defectReceipt?.passed
+        ? t("play.qualityGuide.repair.finish")
+        : regressionActive
+          ? (cue.instruction ??
+            t(`play.qualityGuide.repair.${cue.name}`, {
+              submit: activity.submitLabel,
+              choice: repairChoiceLabel(activity, cue.choice ?? ""),
+            }))
+          : defectReceipt?.passed
+            ? t("play.qualityGuide.repair.oldNext")
+            : defectReceipt && !defectReceipt.passed
+              ? t("play.aiQuality.repair.defectFailed")
+              : comparison?.mode === "replay"
+                ? t(
+                    replayFinished
+                      ? "play.qualityGuide.repair.checkReplay"
+                      : "play.qualityGuide.repair.replay",
+                  )
+                : captureReady
+                  ? t("play.qualityGuide.repair.capture")
+                  : evidence
+                    ? t("play.qualityGuide.repair.restoreCue")
+                    : t(`play.qualityGuide.repair.${cue.name}`, {
+                        submit: activity.submitLabel,
+                        choice: repairChoiceLabel(activity, cue.choice ?? ""),
+                      });
+
+  useEffect(() => {
+    if (!focusRequest) return;
+    const heading =
+      panel === "patch"
+        ? patchHeading.current
+        : panel === "history"
+          ? historyHeading.current
+          : productHeading.current;
+    if (!heading) return;
+    const rect = heading.getBoundingClientRect();
+    if (rect.top < 0 || rect.bottom > window.innerHeight - 100)
+      heading.scrollIntoView({ block: "start", behavior: "instant" });
+    heading.focus({ preventScroll: true });
+  }, [panel, focusRequest]);
+
+  function showPanel(target: "product" | "patch" | "history") {
+    setPanel(target);
+    setFocusRequest((previous) => previous + 1);
+  }
 
   function showProduct() {
-    productHeading.current?.scrollIntoView({ block: "start", behavior: "instant" });
-    productHeading.current?.focus({ preventScroll: true });
+    showPanel("product");
   }
   function rememberTape(current = comparison) {
     if (!current || current.events.length === 0) return;
@@ -110,6 +185,7 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
     setEvidence(result);
     clearChecks();
     setMessage(t("play.aiQuality.repair.captured"));
+    if (guided) showPanel("patch");
   }
   function apply() {
     if (locked || !patch || !evidence) return;
@@ -246,17 +322,87 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
   }
 
   return (
-    <div className="ai-quality ai-repair">
-      <section className="ai-quality__contract">
+    <div className="ai-quality ai-repair" data-guided={guided}>
+      {guided && (evidence || workspace.events.length > 0) ? (
+        <nav
+          className="quality-guide__panels"
+          aria-label={t("play.qualityGuide.repair.navigation")}
+        >
+          {(["product", "patch", "history"] as const)
+            .filter((target) => target !== "patch" || evidence)
+            .map((target) => (
+              <GameButton
+                key={target}
+                variant={panel === target ? "primary" : "ghost"}
+                aria-pressed={panel === target}
+                onClick={() => showPanel(target)}
+              >
+                {t(`play.qualityGuide.repair.${target}Tab`)}
+              </GameButton>
+            ))}
+        </nav>
+      ) : null}
+      <section className="ai-quality__contract" hidden={guided}>
         <strong>{t("play.aiQuality.repair.report")}</strong>
         <p>{activity.defect}</p>
         <p>{t("play.aiQuality.repair.expect", { expected: activity.expected })}</p>
       </section>
-      <section className="ai-repair__live">
+      <section className="ai-repair__live" hidden={guided && panel !== "product"}>
         <h4 ref={productHeading} tabIndex={-1}>
           {activity.product}
         </h4>
-        <p className="ai-quality__muted">{activity.productBrief}</p>
+        {guided ? (
+          <PlayGuide title={guideTitle} />
+        ) : (
+          <p className="ai-quality__muted">{activity.productBrief}</p>
+        )}
+        <div className="ai-repair__shared-inputs" hidden={guided && comparison?.mode === "replay"}>
+          {!guided ? (
+            <strong>
+              {t(
+                comparison
+                  ? "play.aiQuality.repair.oneActionBoth"
+                  : "play.aiQuality.repair.yourAction",
+              )}
+            </strong>
+          ) : null}
+          <div className="ai-quality__choices ai-repair__product-choices">
+            {activity.choices.map((choice) => (
+              <GameButton
+                key={choice.id}
+                variant={product.choice === choice.id ? "primary" : "secondary"}
+                aria-pressed={product.choice === choice.id}
+                disabled={controlsLocked}
+                data-suggested={guided && cue.action === "choose" && cue.choice === choice.id}
+                onClick={() => operate({ type: "choose", value: choice.id })}
+              >
+                {choice.label}
+              </GameButton>
+            ))}
+          </div>
+          <div className="ai-quality__choices">
+            <GameButton
+              variant="primary"
+              disabled={controlsLocked || (!comparison && workspace.implementation === "removed")}
+              data-suggested={guided && cue.action === "submit"}
+              onClick={() => operate({ type: "submit" })}
+            >
+              {activity.submitLabel}
+            </GameButton>
+            <GameButton
+              variant="secondary"
+              disabled={controlsLocked}
+              data-suggested={guided && ["cancel", "reload"].includes(cue.action)}
+              onClick={() => operate({ type: activity.model === "booking" ? "cancel" : "reload" })}
+            >
+              {t(
+                activity.model === "booking"
+                  ? "play.aiQuality.repair.cancel"
+                  : "play.aiQuality.repair.reload",
+              )}
+            </GameButton>
+          </div>
+        </div>
         {comparison && frame ? (
           <>
             <div className="ai-repair__time-caption" role="status">
@@ -296,30 +442,7 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
               />
             </div>
             <div className="ai-repair__time-controls">
-              <fieldset
-                className="ai-repair__cursor-field"
-                disabled={locked || comparison.events.length === 0}
-              >
-                <GameSlider
-                  label={t("play.aiQuality.repair.cursor")}
-                  min={0}
-                  max={Math.max(1, comparison.events.length)}
-                  value={comparison.cursor}
-                  onChange={(cursor) => {
-                    if (!locked) setComparison(seekRepairComparison(comparison, cursor));
-                  }}
-                />
-              </fieldset>
-              <div className="ai-quality__choices">
-                <GameButton
-                  variant="secondary"
-                  disabled={locked || comparison.cursor === 0}
-                  onClick={() =>
-                    setComparison(seekRepairComparison(comparison, comparison.cursor - 1))
-                  }
-                >
-                  {t("play.aiQuality.repair.previous")}
-                </GameButton>
+              {comparison.mode === "replay" ? (
                 <GameButton
                   variant="primary"
                   disabled={locked || comparison.cursor >= comparison.events.length}
@@ -327,27 +450,72 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
                     setComparison(seekRepairComparison(comparison, comparison.cursor + 1))
                   }
                 >
-                  {t("play.aiQuality.repair.next")}
+                  {guided && nextReplayEvent
+                    ? t("play.qualityGuide.repair.replayNext", {
+                        action: repairEventLabel(activity, nextReplayEvent),
+                      })
+                    : t("play.aiQuality.repair.next")}
                 </GameButton>
-                <GameButton
-                  variant="ghost"
-                  disabled={locked || divergence === undefined}
-                  onClick={() => {
-                    if (divergence !== undefined)
-                      setComparison(seekRepairComparison(comparison, divergence));
-                  }}
+              ) : null}
+              <details className="quality-guide__replay-tools" open={!guided}>
+                <summary>{t("play.qualityGuide.repair.tools")}</summary>
+                <fieldset
+                  className="ai-repair__cursor-field"
+                  disabled={locked || comparison.events.length === 0}
                 >
-                  {t("play.aiQuality.repair.jumpDifference")}
+                  <GameSlider
+                    label={t("play.aiQuality.repair.cursor")}
+                    min={0}
+                    max={Math.max(1, comparison.events.length)}
+                    value={comparison.cursor}
+                    onChange={(cursor) => {
+                      if (!locked) setComparison(seekRepairComparison(comparison, cursor));
+                    }}
+                  />
+                </fieldset>
+                <div className="ai-quality__choices">
+                  <GameButton
+                    variant="secondary"
+                    disabled={locked || comparison.cursor === 0}
+                    onClick={() =>
+                      setComparison(seekRepairComparison(comparison, comparison.cursor - 1))
+                    }
+                  >
+                    {t("play.aiQuality.repair.previous")}
+                  </GameButton>
+                  {comparison.mode !== "replay" ? (
+                    <GameButton
+                      variant="primary"
+                      disabled={locked || comparison.cursor >= comparison.events.length}
+                      onClick={() =>
+                        setComparison(seekRepairComparison(comparison, comparison.cursor + 1))
+                      }
+                    >
+                      {t("play.aiQuality.repair.next")}
+                    </GameButton>
+                  ) : null}
+                  <GameButton
+                    variant="ghost"
+                    disabled={locked || divergence === undefined}
+                    onClick={() => {
+                      if (divergence !== undefined)
+                        setComparison(seekRepairComparison(comparison, divergence));
+                    }}
+                  >
+                    {t("play.aiQuality.repair.jumpDifference")}
+                  </GameButton>
+                </div>
+                <GameButton variant="secondary" disabled={locked} onClick={forkHere}>
+                  {t("play.aiQuality.repair.forkHere")}
                 </GameButton>
-              </div>
-              <GameButton variant="secondary" disabled={locked} onClick={forkHere}>
-                {t("play.aiQuality.repair.forkHere")}
-              </GameButton>
-              {comparison.mode === "replay" ? (
-                <p className="ai-quality__muted">{t("play.aiQuality.repair.replayControls")}</p>
-              ) : (
-                <p className="ai-quality__muted">{t("play.aiQuality.repair.sharedControls")}</p>
-              )}
+              </details>
+              {!guided ? (
+                comparison.mode === "replay" ? (
+                  <p className="ai-quality__muted">{t("play.aiQuality.repair.replayControls")}</p>
+                ) : (
+                  <p className="ai-quality__muted">{t("play.aiQuality.repair.sharedControls")}</p>
+                )
+              ) : null}
             </div>
           </>
         ) : (
@@ -356,57 +524,16 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
             product={product}
             label={version}
             effect={workspace.entries.at(-1)?.effect}
+            compact={guided}
           />
         )}
-        <div className="ai-repair__shared-inputs">
-          <strong>
-            {t(
-              comparison
-                ? "play.aiQuality.repair.oneActionBoth"
-                : "play.aiQuality.repair.yourAction",
-            )}
-          </strong>
-          <div className="ai-quality__choices ai-repair__product-choices">
-            {activity.choices.map((choice) => (
-              <GameButton
-                key={choice.id}
-                variant={product.choice === choice.id ? "primary" : "secondary"}
-                aria-pressed={product.choice === choice.id}
-                disabled={controlsLocked}
-                onClick={() => operate({ type: "choose", value: choice.id })}
-              >
-                {choice.label}
-              </GameButton>
-            ))}
-          </div>
-          <div className="ai-quality__choices">
-            <GameButton
-              variant="primary"
-              disabled={controlsLocked || (!comparison && workspace.implementation === "removed")}
-              onClick={() => operate({ type: "submit" })}
-            >
-              {activity.submitLabel}
-            </GameButton>
-            <GameButton
-              variant="secondary"
-              disabled={controlsLocked}
-              onClick={() => operate({ type: activity.model === "booking" ? "cancel" : "reload" })}
-            >
-              {t(
-                activity.model === "booking"
-                  ? "play.aiQuality.repair.cancel"
-                  : "play.aiQuality.repair.reload",
-              )}
-            </GameButton>
-          </div>
-        </div>
         {workspace.implementation === "removed" ? (
           <p className="ai-quality__warning">{t("play.aiQuality.repair.removedNote")}</p>
         ) : null}
         {(comparison?.cursor ?? workspace.events.length) >= 40 ? (
           <p className="ai-quality__warning">{t("play.aiQuality.repair.traceLimit")}</p>
         ) : null}
-        <details className="ai-repair__clues">
+        <details className="ai-repair__clues" hidden={guided && comparison?.mode === "replay"}>
           <summary>
             {t(
               regressionActive
@@ -414,6 +541,7 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
                 : "play.aiQuality.repair.reproduce",
             )}
           </summary>
+          {guided ? <p>{regressionActive ? activity.regression : activity.defect}</p> : null}
           <ol>
             {(regressionActive ? activity.regressionSteps : activity.reproduceSteps).map((step) => (
               <li key={step}>{step}</li>
@@ -421,12 +549,14 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
           </ol>
         </details>
         <div className="ai-quality__choices ai-repair__local-actions">
-          {workspace.implementation === "broken" && !comparison ? (
+          {workspace.implementation === "broken" && !comparison && (!guided || captureReady) ? (
             <GameButton variant="primary" disabled={locked} onClick={capture}>
               {t("play.aiQuality.repair.capture")}
             </GameButton>
           ) : null}
-          {comparison?.mode === "replay" ? (
+          {comparison?.mode === "replay" &&
+          (!guided || replayFinished) &&
+          (!guided || !defectReceipt) ? (
             <GameButton
               variant="primary"
               disabled={locked || comparison.cursor !== comparison.events.length}
@@ -435,14 +565,36 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
               {t("play.aiQuality.repair.checkReplay")}
             </GameButton>
           ) : null}
-          {regressionActive ? (
+          {regressionActive && (!guided || !regressionReceipt) ? (
             <GameButton variant="primary" disabled={locked} onClick={verifyRegression}>
               {t("play.aiQuality.repair.regressionCheck")}
+            </GameButton>
+          ) : null}
+          {guided && evidence && !comparison ? (
+            <GameButton variant="primary" disabled={locked} onClick={loadReplay}>
+              {t("play.aiQuality.repair.replay")}
+            </GameButton>
+          ) : null}
+          {guided && defectReceipt?.passed && !regressionActive && !regressionReceipt ? (
+            <GameButton variant="primary" disabled={locked} onClick={startRegression}>
+              {t("play.aiQuality.repair.regressionStart")}
+            </GameButton>
+          ) : null}
+          {guided &&
+          (defectReceipt?.passed === false || (regressionActive && cue.action === "patch")) ? (
+            <GameButton variant="primary" disabled={locked} onClick={() => showPanel("patch")}>
+              {t("play.qualityGuide.repair.tryAnother")}
+            </GameButton>
+          ) : null}
+          {guided && defectReceipt?.passed && regressionReceipt ? (
+            <GameButton variant="primary" disabled={locked} onClick={finish}>
+              {t("play.aiQuality.repair.finish")}
             </GameButton>
           ) : null}
           <GameButton
             variant="ghost"
             disabled={locked}
+            data-suggested={guided && cue.action === "reset"}
             onClick={() => {
               if (locked) return;
               if (comparison) startRegression();
@@ -455,11 +607,26 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
         <p className="ai-quality__status" role="status">
           {message}
         </p>
+        {guided && !comparison ? (
+          <details className="quality-guide__failure-report">
+            <summary>{t("play.qualityGuide.repair.failureReport")}</summary>
+            <p>{activity.productBrief}</p>
+            <p>{activity.defect}</p>
+            <p>{t("play.aiQuality.repair.expect", { expected: activity.expected })}</p>
+          </details>
+        ) : null}
       </section>
-      <RepairTraceRecord activity={activity} trace={comparison ? comparison.right : workspace} />
+      <div hidden={guided && panel !== "history"}>
+        {guided ? (
+          <h4 ref={historyHeading} tabIndex={-1}>
+            {t("play.qualityGuide.repair.historyTab")}
+          </h4>
+        ) : null}
+        <RepairTraceRecord activity={activity} trace={comparison ? comparison.right : workspace} />
+      </div>
       {evidence ? (
         <>
-          <details className="ai-repair__evidence">
+          <details className="ai-repair__evidence" hidden={guided && panel !== "history"}>
             <summary>
               <strong>{t("play.aiQuality.repair.evidence")}</strong>
             </summary>
@@ -475,9 +642,29 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
             </div>
             <RepairTraceRecord activity={activity} trace={evidence.actual} />
           </details>
-          <section className="ai-quality__stage ai-repair__patches">
-            <h4>{t("play.aiQuality.repair.patch")}</h4>
-            <p className="ai-quality__muted">{t("play.aiQuality.repair.patchNote")}</p>
+          <section
+            className="ai-quality__stage ai-repair__patches"
+            hidden={guided && panel !== "patch"}
+          >
+            <h4 ref={patchHeading} tabIndex={-1}>
+              {t("play.aiQuality.repair.patch")}
+            </h4>
+            {guided ? (
+              <PlayGuide title={t("play.qualityGuide.repair.choosePatch")} />
+            ) : (
+              <p className="ai-quality__muted">{t("play.aiQuality.repair.patchNote")}</p>
+            )}
+            {guided ? (
+              <p className="quality-guide__sealed-summary">
+                {t("play.aiQuality.repair.actual")}：
+                {repairProductSummary(activity, evidence.actual.product)} ·{" "}
+                {t("play.aiQuality.repair.expected")}：
+                {repairProductSummary(activity, evidence.expected.product)}
+              </p>
+            ) : null}
+            <p>
+              {t("play.qualityDifficulty.repair.preserve", { regression: activity.regression })}
+            </p>
             <div className="ai-repair__patch-offers">
               {selectedPatches.map((id) => (
                 <div key={id} data-selected={patch === id}>
@@ -499,7 +686,7 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
               <div className="ai-repair__scope">
                 <strong>{t("play.aiQuality.repair.scopeLabel")}</strong>
                 <p>{activity.patches[patch].scope}</p>
-                <details>
+                <details open={guided}>
                   <summary>{t("play.aiQuality.repair.changes")}</summary>
                   <p>{activity.patches[patch].change}</p>
                 </details>
@@ -509,7 +696,7 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
               </div>
             ) : null}
           </section>
-          <section className="ai-quality__stage">
+          <section className="ai-quality__stage" hidden={guided && panel !== "history"}>
             <h4>{t("play.aiQuality.repair.verify")}</h4>
             <div className="ai-repair__verification">
               <div className="ai-repair__check" data-passed={defectReceipt?.passed ?? false}>
@@ -544,7 +731,7 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
         </>
       ) : null}
       {tapes.length > 0 ? (
-        <section className="ai-repair__tapes">
+        <section className="ai-repair__tapes" hidden={guided && panel !== "history"}>
           <h4>{t("play.aiQuality.repair.tapes")}</h4>
           <ol>
             {tapes.map((tape) => (
@@ -576,7 +763,7 @@ export function RepairGame({ activity, disabled, onAttempt }: ActivityControls<R
           </ol>
         </section>
       ) : null}
-      <section className="ai-repair__timeline">
+      <section className="ai-repair__timeline" hidden={guided && panel !== "history"}>
         <h4>{t("play.aiQuality.repair.checkpoints")}</h4>
         {workspace.checkpoints.length === 0 ? (
           <p className="ai-quality__muted">{t("play.aiQuality.repair.checkpointsEmpty")}</p>

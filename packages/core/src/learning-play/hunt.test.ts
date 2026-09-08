@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { evaluateHunt } from "./hunt.js";
+import { assessHuntEvidence, evaluateHunt } from "./hunt.js";
 import type { HuntActivity } from "./types.js";
 
 const threshold: HuntActivity = {
@@ -98,5 +98,30 @@ describe("evaluateHunt", () => {
       valid: false,
       reason: "invalid-activity",
     });
+  });
+});
+
+describe("boundary evidence contract", () => {
+  it("keeps a discovered counterexample open until all required sides are tested", () => {
+    const activity = { ...threshold, verifyBoundarySides: true };
+    const rows = [99, 100, 101]
+      .map((value) => evaluateHunt(activity, value))
+      .filter((row): row is Extract<typeof row, { valid: true }> => row.valid);
+    expect(assessHuntEvidence(activity, [rows[1]!]).passed).toBe(false);
+    expect(assessHuntEvidence(activity, rows).passed).toBe(true);
+    expect(assessHuntEvidence(activity, [rows[0]!, rows[0]!, rows[1]!]).passed).toBe(false);
+    expect(
+      assessHuntEvidence(
+        activity,
+        rows.map((row) => ({ ...row, actual: true })),
+      ).passed,
+    ).toBe(false);
+  });
+  it("checks the lower clamp defect at zero, not the configured upper cap", () => {
+    const activity = { ...clamp, verifyBoundarySides: true };
+    const rows = [-1, 0, 1]
+      .map((value) => evaluateHunt(activity, value))
+      .filter((row): row is Extract<typeof row, { valid: true }> => row.valid);
+    expect(assessHuntEvidence(activity, rows).passed).toBe(true);
   });
 });

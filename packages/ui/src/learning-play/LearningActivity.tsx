@@ -17,6 +17,9 @@ import { PlayIcon } from "./PlayIcon.js";
 
 export interface LearningActivityProps {
   readonly activity: LearningActivitySpec;
+  /** A lesson occurrence is distinct from a reusable activity definition. */
+  readonly occurrenceId?: string;
+  readonly initialGuidance?: "guided" | "free";
   /** Completion is evidence, never a request to award course progress or XP. */
   readonly onResult?: (result: ActivityResult) => void;
   readonly onNext?: () => void;
@@ -28,7 +31,7 @@ export function LearningActivity(props: LearningActivityProps) {
   const [round, setRound] = useState(0);
   return (
     <ActivityRound
-      key={`${props.activity.id}:${round}`}
+      key={`${props.occurrenceId ?? props.activity.id}:${props.activity.id}:${props.activity.difficulty ?? "practice"}:${round}`}
       {...props}
       onRestart={() => setRound((value) => value + 1)}
     />
@@ -37,12 +40,16 @@ export function LearningActivity(props: LearningActivityProps) {
 
 function ActivityRound({
   activity,
+  occurrenceId,
+  initialGuidance = "guided",
   onResult,
   onNext,
   nextLabel,
   onRestart,
 }: LearningActivityProps & { readonly onRestart: () => void }) {
   const [hintOpen, setHintOpen] = useState(false);
+  const [guided, setGuided] = useState(initialGuidance === "guided");
+  const guidanceUsed = useRef(initialGuidance === "guided");
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [feedback, setFeedback] = useState<{ passed: boolean; message: string } | null>(null);
   const [outcome, setOutcome] = useState<ActivityResult | null>(null);
@@ -69,6 +76,9 @@ function ActivityRound({
         const result: ActivityResult = {
           activityId: activity.id,
           kind: activity.kind,
+          difficulty: activity.difficulty ?? "practice",
+          occurrenceId,
+          guidanceUsed: guidanceUsed.current,
           status: "completed",
           attempts: count.current,
           hintsUsed: hintsUsed.current,
@@ -78,15 +88,18 @@ function ActivityRound({
         resultCallback.current?.(result);
       }
     },
-    [activity.id, activity.kind],
+    [activity.id, activity.kind, activity.difficulty, occurrenceId],
   );
-  const controls = { disabled: outcome !== null, onAttempt };
+  const controls = { disabled: outcome !== null, onAttempt, guided };
   const skip = () => {
     if (reported.current) return;
     reported.current = true;
     const result: ActivityResult = {
       activityId: activity.id,
       kind: activity.kind,
+      difficulty: activity.difficulty ?? "practice",
+      occurrenceId,
+      guidanceUsed: guidanceUsed.current,
       status: "skipped",
       attempts: count.current,
       hintsUsed: hintsUsed.current,
@@ -102,6 +115,8 @@ function ActivityRound({
       tone="strong"
       data-activity={activity.kind}
       data-activity-id={activity.id}
+      data-guided={guided}
+      data-difficulty={activity.difficulty ?? "practice"}
     >
       <header className="learning-activity__head">
         <div className="learning-activity__symbol">
@@ -109,16 +124,30 @@ function ActivityRound({
         </div>
         <div>
           <h2>{activity.title}</h2>
-          <p>{activity.brief}</p>
         </div>
       </header>
-      <p className="learning-activity__goal">
-        <PlayIcon name="spark" />
-        <span>
-          <strong>{t("play.host.goal")}</strong>
-          {activity.goal}
-        </span>
-      </p>
+      <div className="learning-activity__orientation">
+        <details className="learning-activity__background">
+          <summary>
+            {activity.difficulty ? `${t(`play.difficulty.${activity.difficulty}`)} · ` : ""}
+            {t("play.usability.goal")}
+          </summary>
+          <p>{activity.brief}</p>
+          <p className="learning-activity__goal">{activity.goal}</p>
+        </details>
+        {!outcome ? (
+          <GameButton
+            variant="ghost"
+            onClick={() => {
+              if (!guided) guidanceUsed.current = true;
+              setGuided((value) => !value);
+            }}
+            aria-pressed={!guided}
+          >
+            {t(guided ? "play.usability.explore" : "play.usability.guide")}
+          </GameButton>
+        ) : null}
+      </div>
       {activity.kind.startsWith("ai-") ? (
         <p className="learning-activity__sandbox">{t("play.ai.sandbox")}</p>
       ) : null}

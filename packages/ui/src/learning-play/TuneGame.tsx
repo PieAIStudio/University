@@ -3,10 +3,16 @@ import { GameButton, GameSlider } from "@pieai/swimmer-ui-kit";
 import { evaluateTuning, type TuneActivity } from "@pieai/university-core";
 import { translate as t } from "../i18n/index.js";
 import type { ActivityControls } from "./controls.js";
+import { PlayGuide } from "./PlayGuide.js";
 import { PlayIcon } from "./PlayIcon.js";
 import { TuneVisualization } from "./TuneVisualization.js";
 
-export function TuneGame({ activity, disabled, onAttempt }: ActivityControls<TuneActivity>) {
+export function TuneGame({
+  activity,
+  disabled,
+  onAttempt,
+  guided = false,
+}: ActivityControls<TuneActivity>) {
   const [values, setValues] = useState<Record<string, number>>(() =>
     Object.fromEntries(activity.controls.map((control) => [control.id, control.initial])),
   );
@@ -37,6 +43,18 @@ export function TuneGame({ activity, disabled, onAttempt }: ActivityControls<Tun
   };
   return (
     <div className="play-tune">
+      {guided ? (
+        <PlayGuide
+          title={t(
+            activity.controls.some((control) => values[control.id] !== control.initial)
+              ? "play.usability.tune.changed"
+              : "play.usability.tune.first",
+            { name: activity.controls[0]!.label },
+          )}
+        >
+          {t("play.usability.tune.note")}
+        </PlayGuide>
+      ) : null}
       <div className="play-tune__workspace">
         <div className="play-tune__bench">
           <TuneVisualization activity={activity} values={values} metrics={result.metrics} />

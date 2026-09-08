@@ -303,3 +303,122 @@ describe("paired products and branchable action tapes", () => {
     expect(appendRepairComparisonEvent(booking, full, { type: "submit" })).toBe(full);
   });
 });
+
+describe("difficulty-specific repair regression contracts", () => {
+  const choices = [...booking.choices, { id: "evening", label: "Evening" }];
+  const keepOther: RepairActivity = {
+    ...booking,
+    choices,
+    capacity: 2,
+    regressionContract: "keep-other-booking",
+  };
+  const eachChange: RepairActivity = {
+    ...preference,
+    choices,
+    regressionContract: "persist-each-change",
+  };
+  const keepOtherSteps: readonly RepairEvent[] = [
+    { type: "submit" },
+    { type: "choose", value: "afternoon" },
+    { type: "submit" },
+    { type: "cancel" },
+    { type: "choose", value: "evening" },
+    { type: "submit" },
+  ];
+  const eachChangeSteps: readonly RepairEvent[] = [
+    { type: "choose", value: "afternoon" },
+    { type: "submit" },
+    { type: "reload" },
+    { type: "choose", value: "evening" },
+    { type: "submit" },
+    { type: "reload" },
+  ];
+
+  it("offers two usable intro alternatives without making an unoffered rewrite acceptable", () => {
+    const intro: RepairActivity = { ...booking, offeredPatches: ["scoped", "removed"] };
+    const evidence = captureRepairEvidence(intro, replay(intro, "broken", duplicate))!;
+    expect(evidence).toBeDefined();
+    expect(checkRepairDefect(intro, "scoped", evidence).passed).toBe(true);
+    expect(checkRepairDefect(intro, "removed", evidence).passed).toBe(false);
+    expect(checkRepairDefect(intro, "rewrite", evidence).passed).toBe(false);
+    expect(checkRepairRegression(intro, replay(intro, "scoped", bookingRegression))).toBe("passed");
+  });
+
+  it("keeps booking A while cancelling B and booking C, without exhausting the two-slot product", () => {
+    expect(captureRepairEvidence(keepOther, replay(keepOther, "broken", duplicate))).toBeDefined();
+    expect(
+      checkRepairRegression(keepOther, replay(keepOther, "scoped", bookingRegression)),
+    ).not.toBe("passed");
+    const trace = replay(keepOther, "scoped", keepOtherSteps);
+    expect(trace.product.reservations).toEqual(["morning", "evening"]);
+    expect(checkRepairRegression(keepOther, trace)).toBe("passed");
+    expect(checkRepairRegression(keepOther, replay(keepOther, "rewrite", keepOtherSteps))).toBe(
+      "failed",
+    );
+    const deleteAndRecreate: readonly RepairEvent[] = [
+      { type: "submit" },
+      { type: "cancel" },
+      ...keepOtherSteps,
+    ];
+    const recreated = replay(keepOther, "scoped", deleteAndRecreate);
+    expect(recreated.product).toEqual(trace.product);
+    expect(checkRepairRegression(keepOther, recreated)).toBe("failed");
+  });
+
+  it("requires both reopened preference observations, not merely three distinct saved values", () => {
+    const threeSavesOneRead: readonly RepairEvent[] = [
+      { type: "submit" },
+      { type: "choose", value: "afternoon" },
+      { type: "submit" },
+      { type: "choose", value: "evening" },
+      { type: "submit" },
+      { type: "reload" },
+    ];
+    expect(
+      checkRepairRegression(eachChange, replay(eachChange, "scoped", preferenceRegression)),
+    ).toBe("missing");
+    expect(checkRepairRegression(eachChange, replay(eachChange, "scoped", threeSavesOneRead))).toBe(
+      "missing",
+    );
+    expect(checkRepairRegression(eachChange, replay(eachChange, "scoped", eachChangeSteps))).toBe(
+      "passed",
+    );
+    expect(checkRepairRegression(eachChange, replay(eachChange, "broken", eachChangeSteps))).toBe(
+      "failed",
+    );
+    expect(checkRepairRegression(eachChange, replay(eachChange, "rewrite", eachChangeSteps))).toBe(
+      "failed",
+    );
+    const actual = replay(eachChange, "broken", eachChangeSteps);
+    const forged = { ...actual, entries: replay(eachChange, "scoped", eachChangeSteps).entries };
+    expect(checkRepairRegression(eachChange, forged)).toBe("failed");
+  });
+
+  it.each([
+    [keepOther, keepOtherSteps],
+    [eachChange, eachChangeSteps],
+  ] as const)("keeps authentic manual-origin checks for challenge %s", (activity, steps) => {
+    const replayed = createRepairComparison(activity, "broken", "scoped", steps)!;
+    const end = seekRepairComparison(replayed, steps.length);
+    expect(checkRepairRegression(activity, end.right)).toBe("passed");
+    expect(checkRepairComparisonRegression(activity, end)).toBe("missing");
+    expect(checkRepairComparisonRegression(activity, branchRepairComparison(end))).toBe("missing");
+    const manual = steps.reduce(
+      (state, event) => appendRepairComparisonEvent(activity, state, event),
+      createRepairComparison(activity, "broken", "scoped", [], "manual")!,
+    );
+    expect(checkRepairComparisonRegression(activity, manual)).toBe("passed");
+  });
+
+  it("rejects contradictory challenge contracts and unachievable choice inventories", () => {
+    expect(replayRepair({ ...keepOther, choices: booking.choices }, "scoped", [])).toMatchObject({
+      valid: false,
+    });
+    expect(
+      replayRepair({ ...booking, regressionContract: "persist-each-change" }, "scoped", []),
+    ).toMatchObject({ valid: false });
+    expect(
+      replayRepair({ ...booking, offeredPatches: ["removed", "rewrite"] }, "scoped", []),
+    ).toMatchObject({ valid: false });
+  });
+});

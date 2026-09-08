@@ -48,6 +48,9 @@ import "@pieai/university-ui/learning-play/ai-workflow.css";
 import "@pieai/university-ui/learning-play/ai-quality.css";
 import "@pieai/university-ui/learning-play/ai-context-play.css";
 import "@pieai/university-ui/learning-play/ai-agent-play.css";
+import "@pieai/university-ui/learning-play/play-usability.css";
+import "@pieai/university-ui/learning-play/quality-usability.css";
+import "@pieai/university-ui/learning-play/workflow-usability.css";
 
 import "@pieai/university-ui/practice/mistakes.css";
 import "@pieai/university-ui/presence/presence.css";

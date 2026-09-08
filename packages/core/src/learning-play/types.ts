@@ -5,8 +5,12 @@ import type { EvalActivity } from "./ai-eval.js";
 import type { RepairActivity } from "./ai-repair.js";
 
 /** Experimental activity payloads. These are not a second lesson/export schema. */
+export const ACTIVITY_DIFFICULTIES = ["intro", "practice", "challenge"] as const;
+export type ActivityDifficulty = (typeof ACTIVITY_DIFFICULTIES)[number];
 export interface ActivityBase {
   readonly id: string;
+  /** Task demand, independent from whether the host shows guidance. */
+  readonly difficulty?: ActivityDifficulty;
   readonly title: string;
   readonly brief: string;
   readonly goal: string;
@@ -82,6 +86,8 @@ export interface HuntActivity extends ActivityBase {
   readonly rule: string;
   readonly program: string;
   readonly outputLabel: string;
+  /** Require actual observations below, at and above the model's decision boundary. */
+  readonly verifyBoundarySides?: boolean;
 }
 
 export interface DispatchActivity extends ActivityBase {
@@ -139,9 +145,21 @@ export type LearningActivitySpec =
   | EvalActivity
   | RepairActivity;
 export type ActivityKind = LearningActivitySpec["kind"];
+export type ActivityFamily = {
+  [K in ActivityKind]: {
+    readonly id: string;
+    readonly kind: K;
+    readonly levels: Readonly<
+      Record<ActivityDifficulty, Extract<LearningActivitySpec, { kind: K }>>
+    >;
+  };
+}[ActivityKind];
 export interface ActivityResult {
   readonly activityId: string;
   readonly kind: ActivityKind;
+  readonly difficulty?: ActivityDifficulty;
+  readonly occurrenceId?: string;
+  readonly guidanceUsed?: boolean;
   readonly status: "completed" | "skipped";
   readonly attempts: number;
   readonly hintsUsed: number;

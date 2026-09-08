@@ -1,9 +1,15 @@
-import { useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { GameButton, GameField, GameInput, GameSlider } from "@pieai/swimmer-ui-kit";
-import { evaluateHunt, type HuntActivity, type HuntObservation } from "@pieai/university-core";
+import {
+  assessHuntEvidence,
+  evaluateHunt,
+  type HuntActivity,
+  type HuntObservation,
+} from "@pieai/university-core";
 
 import { formatNumber, translate } from "../i18n/index.js";
 import { playSound } from "../sound/sound.js";
+import { PlayGuide } from "./PlayGuide.js";
 import type { ActivityControls } from "./controls.js";
 
 function numberWithUnit(value: number, unit: string): string {
@@ -16,7 +22,12 @@ function outputText(value: number | boolean, unit: string): string {
     : numberWithUnit(value, unit);
 }
 
-export function HuntGame({ activity, disabled, onAttempt }: ActivityControls<HuntActivity>) {
+export function HuntGame({
+  activity,
+  disabled,
+  onAttempt,
+  guided = false,
+}: ActivityControls<HuntActivity>) {
   const [input, setInput] = useState(String(activity.input.initial));
   const [history, setHistory] = useState<readonly HuntObservation[]>([]);
   const [error, setError] = useState("");
@@ -37,8 +48,16 @@ export function HuntGame({ activity, disabled, onAttempt }: ActivityControls<Hun
     unit: activity.input.unit,
   };
 
-  function run(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  useEffect(() => {
+    if (!guided || !latest) return;
+    const result = document.getElementById(resultId);
+    const box = result?.getBoundingClientRect();
+    if (box && (box.top < 0 || box.bottom > window.innerHeight - 80))
+      result?.scrollIntoView?.({ block: "center", behavior: "instant" });
+  }, [guided, latest, resultId]);
+
+  function run(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
     if (disabled || passed.current) return;
     playSound("ui.press");
     // Submit the visible field value, including native autofill and an emptied number input.
@@ -59,18 +78,24 @@ export function HuntGame({ activity, disabled, onAttempt }: ActivityControls<Hun
     setError("");
     const next = [...history, result];
     setHistory(next);
-    passed.current = result.counterexample;
-    const message = result.counterexample
-      ? translate("play.extra.hunt.found", {
-          input: numberWithUnit(result.input, activity.input.unit),
-          expected: outputText(result.expected, activity.input.unit),
-          actual: outputText(result.actual, activity.input.unit),
-        })
-      : translate("play.extra.hunt.same", {
-          output: outputText(result.actual, activity.input.unit),
-        });
+    const assessment = assessHuntEvidence(activity, next);
+    passed.current = assessment.passed;
+    const message =
+      activity.verifyBoundarySides && assessment.found
+        ? translate(
+            assessment.passed ? "play.difficulty.hunt.complete" : "play.difficulty.hunt.more",
+          )
+        : result.counterexample
+          ? translate("play.extra.hunt.found", {
+              input: numberWithUnit(result.input, activity.input.unit),
+              expected: outputText(result.expected, activity.input.unit),
+              actual: outputText(result.actual, activity.input.unit),
+            })
+          : translate("play.extra.hunt.same", {
+              output: outputText(result.actual, activity.input.unit),
+            });
     onAttempt(
-      result.counterexample,
+      assessment.passed,
       {
         model: activity.model,
         boundary: activity.boundary,
@@ -87,6 +112,18 @@ export function HuntGame({ activity, disabled, onAttempt }: ActivityControls<Hun
 
   return (
     <div className="play-hunt">
+      {guided ? (
+        <PlayGuide
+          title={translate(
+            history.length ? "play.usability.hunt.next" : "play.usability.hunt.first",
+          )}
+          action={!history.length ? translate("play.usability.hunt.try") : undefined}
+          onAction={() => run()}
+          disabled={locked}
+        >
+          {activity.verifyBoundarySides ? activity.goal : undefined}
+        </PlayGuide>
+      ) : null}
       <section className="play-hunt__contract">
         <h4>{translate("play.extra.hunt.rule")}</h4>
         <p>{activity.rule}</p>
@@ -218,6 +255,17 @@ export function HuntGame({ activity, disabled, onAttempt }: ActivityControls<Hun
             <span className="play-hunt__reading-label">{activity.outputLabel}</span>
           </div>
         </div>
+        {guided && latest && !locked ? (
+          <GameButton
+            variant="secondary"
+            onClick={() => {
+              inputRef.current?.scrollIntoView?.({ block: "center", behavior: "instant" });
+              inputRef.current?.focus({ preventScroll: true });
+            }}
+          >
+            {translate("play.usability.hunt.change")}
+          </GameButton>
+        ) : null}
       </div>
 
       <details

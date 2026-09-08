@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { GameButton, GameToggle } from "@pieai/swimmer-ui-kit";
+import { GameButton } from "@pieai/swimmer-ui-kit";
 import {
   advanceAgent,
   advanceAgentRun,
@@ -17,11 +17,18 @@ import { translate } from "../i18n/index.js";
 import { playSound } from "../sound/sound.js";
 import type { ActivityControls } from "./controls.js";
 import { AgentActionFiles } from "./AgentActionFiles.js";
+import { AgentTools } from "./AgentTools.js";
+import { AgentWorkspace } from "./AgentWorkspace.js";
 
 // A visible step cadence, not simulated model latency. The first step is synchronous.
 const RUN_STEP_MS = 850;
 
-export function AgentGame({ activity, disabled, onAttempt }: ActivityControls<AgentActivity>) {
+export function AgentGame({
+  activity,
+  disabled,
+  guided = false,
+  onAttempt,
+}: ActivityControls<AgentActivity>) {
   const [state, setState] = useState<AgentState>(() => createAgentState(activity));
   const stateRef = useRef(state);
   const [fileId, setFileId] = useState(activity.files[0]?.id ?? "");
@@ -30,6 +37,7 @@ export function AgentGame({ activity, disabled, onAttempt }: ActivityControls<Ag
   const [blockedToolId, setBlockedToolId] = useState<string | null>(null);
   const [needsScopeEdit, setNeedsScopeEdit] = useState(false);
   const [running, setRunning] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const runner = useRef<{ active: boolean; timer: ReturnType<typeof setTimeout> | null }>({
     active: false,
     timer: null,
@@ -46,8 +54,36 @@ export function AgentGame({ activity, disabled, onAttempt }: ActivityControls<Ag
   const currentAction = activity.actions[state.cursor];
   const currentTool = activity.tools.find((tool) => tool.id === currentAction?.toolId);
   const inspection = inspectAgentAction(activity, state);
-  const activeFile = state.files.find((file) => file.id === fileId);
   const evaluation = evaluateAgentWorkspace(activity, state);
+  const readConsent =
+    guided &&
+    state.cursor === 0 &&
+    currentTool?.capability === "read" &&
+    currentAction?.authority === "user" &&
+    currentAction.effects.length === 0 &&
+    (state.capabilities[currentTool.id] ?? []).length === 0 &&
+    !!inspection?.targets.length &&
+    inspection.targets.every((target) => target.required && target.reads && !target.writes);
+  const needsFiles =
+    !!inspection &&
+    !inspection.execution.accepted &&
+    inspection.execution.reason === "scope-denied";
+  const damaged = evaluation.changedProtectedFileIds.length > 0;
+  const guideTitle = damaged
+    ? "play.ai.agent.guide.damaged"
+    : !currentAction
+      ? evaluation.broadToolIds.length
+        ? "play.ai.agent.guide.broad"
+        : "play.ai.agent.guide.finish"
+      : readConsent
+        ? "play.ai.agent.guide.first"
+        : currentAction.authority === "document"
+          ? "play.ai.agent.guide.document"
+          : inspection?.changedProtectedFileIds.length
+            ? "play.ai.agent.guide.risk"
+            : needsFiles || needsScopeEdit
+              ? "play.ai.agent.guide.scope"
+              : "play.ai.agent.guide.ready";
   const lastEntry = state.log.at(-1);
   const lastFileId =
     lastEntry?.changedFileIds.find((id) => evaluation.changedProtectedFileIds.includes(id)) ??
@@ -115,11 +151,51 @@ export function AgentGame({ activity, disabled, onAttempt }: ActivityControls<Ag
     playSound("ui.press");
     update(setAgentCapability(activity, stateRef.current, toolId, fileIds));
     setIsError(false);
+    setNeedsScopeEdit(false);
+    setBlockedToolId(null);
     setFeedback(
-      translate("play.ai.agent.play.scopeChanged", {
+      translate(guided ? "play.ai.agent.guide.scopeChanged" : "play.ai.agent.play.scopeChanged", {
         tool: activity.tools.find((tool) => tool.id === toolId)?.label ?? toolId,
       }),
     );
+  }
+
+  function authorizeRead() {
+    if (!readConsent || !currentTool || !inspection || disabled || reported.current) return;
+    // The button names this exact read-only grant; it never enables a writing tool.
+    update(
+      setAgentCapability(
+        activity,
+        stateRef.current,
+        currentTool.id,
+        inspection.targets
+          .filter((target) => target.required && target.reads)
+          .map((target) => target.fileId),
+      ),
+    );
+    advance("execute");
+  }
+
+  function focusScope() {
+    playSound("ui.press");
+    const section = scopeHeading.current?.closest("section");
+    const target =
+      section?.querySelector<HTMLButtonElement>(
+        '[data-risk="true"] button, [data-reachable="false"] button',
+      ) ?? scopeHeading.current;
+    target?.focus({ preventScroll: true });
+    target?.scrollIntoView({ block: "center", behavior: "instant" });
+  }
+
+  function openTools(toolId: string) {
+    setToolsOpen(true);
+    requestAnimationFrame(() => {
+      const target = toolHeadings.current.get(toolId);
+      const tool = target?.closest("details");
+      if (tool) tool.open = true;
+      target?.focus({ preventScroll: true });
+      target?.scrollIntoView({ block: "nearest", behavior: "instant" });
+    });
   }
 
   function showExecuted(outcome: Extract<AgentMove, { accepted: true }>) {
@@ -279,7 +355,18 @@ export function AgentGame({ activity, disabled, onAttempt }: ActivityControls<Ag
         : "",
     ].filter(Boolean);
     const message = result.passed
-      ? translate("play.ai.agent.success")
+      ? translate("play.ai.agent.difficulty.success", {
+          outputs: activity.goals
+            .map(
+              (goal) =>
+                activity.files.find((file) => file.id === goal.fileId)?.label ?? goal.fileId,
+            )
+            .join(" · "),
+          protected: activity.files
+            .filter((file) => file.protected)
+            .map((file) => file.label)
+            .join(" · "),
+        })
       : problems.join(" ") || translate("play.ai.agent.pending");
     setIsError(!result.passed);
     setFeedback(message);
@@ -313,111 +400,80 @@ export function AgentGame({ activity, disabled, onAttempt }: ActivityControls<Ag
     );
   }
 
+  const PrimaryFilesFrame = readConsent ? "details" : "div";
+  const primaryAction = (
+    <GameButton
+      variant={guided ? "primary" : "secondary"}
+      sound={false}
+      disabled={disabled}
+      onClick={
+        guided && damaged
+          ? restore
+          : readConsent
+            ? authorizeRead
+            : guided && needsFiles
+              ? focusScope
+              : () => advance("execute")
+      }
+    >
+      {translate(
+        guided && damaged
+          ? "play.ai.agent.restore"
+          : readConsent
+            ? "play.ai.agent.guide.readStart"
+            : guided && needsFiles
+              ? "play.ai.agent.guide.choose"
+              : "play.ai.agent.execute",
+      )}
+    </GameButton>
+  );
+  const toolbox = (
+    <AgentTools
+      activity={activity}
+      capabilities={state.capabilities}
+      currentToolId={currentAction?.toolId}
+      disabled={disabled}
+      headingRefs={toolHeadings}
+      onGrant={grant}
+    />
+  );
+  const workspace = (
+    <AgentWorkspace
+      files={state.files}
+      activeFileId={fileId}
+      changedProtectedFileIds={evaluation.changedProtectedFileIds}
+      onSelect={(id) => {
+        setFileId(id);
+        playSound("ui.press");
+      }}
+      onNext={
+        currentAction
+          ? () => {
+              actionHeading.current?.focus({ preventScroll: true });
+              actionHeading.current?.scrollIntoView({ block: "nearest" });
+            }
+          : undefined
+      }
+    />
+  );
+
   return (
-    <div className="play-ai-workflow play-ai-agent">
-      <p className="play-ai-workflow__intro">{translate("play.ai.agent.play.intro")}</p>
-      <aside className="play-ai-workflow__brief">
-        <strong>{translate("play.ai.agent.authorization")}</strong>
+    <div className="play-ai-workflow play-ai-agent" data-guided={guided}>
+      {!guided ? (
+        <p className="play-ai-workflow__intro">{translate("play.ai.agent.play.intro")}</p>
+      ) : null}
+      <details className="play-ai-workflow__brief play-agent-authorization" open={!guided}>
+        <summary>{guided ? activity.goal : translate("play.ai.agent.authorization")}</summary>
         <p>{activity.authorization}</p>
-      </aside>
-      <section className="play-ai-agent__tools">
-        <h4>{translate("play.ai.agent.toolbox")}</h4>
-        <p className="play-ai-workflow__note">{translate("play.ai.agent.scopeHelp")}</p>
-        <div className="play-ai-agent__tool-list">
-          {activity.tools.map((tool) => {
-            const grants = state.capabilities[tool.id] ?? [];
-            const isTaskScope =
-              grants.length === tool.taskFileIds.length &&
-              tool.taskFileIds.every((id) => grants.includes(id));
-            return (
-              <details
-                key={tool.id}
-                className="play-ai-agent__tool"
-                open={currentAction?.toolId === tool.id}
-              >
-                <summary
-                  ref={(node) => {
-                    if (node) toolHeadings.current.set(tool.id, node);
-                    else toolHeadings.current.delete(tool.id);
-                  }}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="play-ai-agent__tool-light"
-                    data-enabled={grants.length > 0}
-                  />
-                  <strong>{tool.label}</strong>
-                  <span>{grants.length ? grants.length : "—"}</span>
-                </summary>
-                <p>{tool.description}</p>
-                <div className="play-ai-agent__scope" role="group" aria-label={tool.label}>
-                  <GameButton
-                    variant={grants.length === 0 ? "primary" : "secondary"}
-                    sound={false}
-                    disabled={disabled}
-                    aria-pressed={grants.length === 0}
-                    onClick={() => grant(tool.id, [])}
-                  >
-                    {translate("play.ai.agent.grantOff")}
-                  </GameButton>
-                  <GameButton
-                    variant={isTaskScope ? "primary" : "secondary"}
-                    sound={false}
-                    disabled={disabled}
-                    aria-pressed={isTaskScope}
-                    onClick={() => grant(tool.id, tool.taskFileIds)}
-                  >
-                    {translate("play.ai.agent.grantTask")}
-                  </GameButton>
-                  <GameButton
-                    variant={grants.length === activity.files.length ? "primary" : "secondary"}
-                    sound={false}
-                    disabled={disabled}
-                    aria-pressed={grants.length === activity.files.length}
-                    onClick={() =>
-                      grant(
-                        tool.id,
-                        activity.files.map((file) => file.id),
-                      )
-                    }
-                  >
-                    {translate("play.ai.agent.grantAll")}
-                  </GameButton>
-                </div>
-                <p className="play-ai-agent__grant-paths">
-                  {grants.length
-                    ? translate("play.ai.agent.grants", { paths: paths(grants) })
-                    : translate("play.ai.agent.noAccess")}
-                </p>
-                <details className="play-ai-agent__custom-scope">
-                  <summary>{translate("play.ai.agent.chooseFiles")}</summary>
-                  {activity.files.map((file) => (
-                    <GameToggle
-                      key={file.id}
-                      checked={grants.includes(file.id)}
-                      disabled={disabled}
-                      label={`${tool.label} · ${file.path}`}
-                      onClick={() =>
-                        grant(
-                          tool.id,
-                          grants.includes(file.id)
-                            ? grants.filter((id) => id !== file.id)
-                            : [...grants, file.id],
-                        )
-                      }
-                    />
-                  ))}
-                </details>
-              </details>
-            );
-          })}
-        </div>
-      </section>
+      </details>
+      {!guided ? toolbox : null}
       <div className="play-ai-agent__cockpit">
         <section className="play-ai-agent__action">
           <header>
             <h4 ref={actionHeading} tabIndex={-1}>
-              {translate("play.ai.agent.action")}
+              {guided
+                ? (currentAction?.title ?? translate("play.ai.agent.check"))
+                : translate("play.ai.agent.action")}
             </h4>
             <span>
               {translate("play.ai.agent.step", {
@@ -426,53 +482,92 @@ export function AgentGame({ activity, disabled, onAttempt }: ActivityControls<Ag
               })}
             </span>
           </header>
-          <ol className="play-ai-agent__track" aria-label={translate("play.ai.agent.action")}>
-            {activity.actions.map((action, index) => (
-              <li
-                key={action.id}
-                data-done={index < state.cursor}
-                data-current={index === state.cursor}
-                title={action.title}
-              >
-                <span>{index < state.cursor ? "✓" : index + 1}</span>
-              </li>
-            ))}
-          </ol>
+          {!guided ? (
+            <ol className="play-ai-agent__track" aria-label={translate("play.ai.agent.action")}>
+              {activity.actions.map((action, index) => (
+                <li
+                  key={action.id}
+                  data-done={index < state.cursor}
+                  data-current={index === state.cursor}
+                  title={action.title}
+                >
+                  <span>{index < state.cursor ? "✓" : index + 1}</span>
+                </li>
+              ))}
+            </ol>
+          ) : null}
+          {guided ? (
+            <p
+              className="play-agent-prompt"
+              data-risk={damaged || !!inspection?.changedProtectedFileIds.length}
+            >
+              {translate(guideTitle)}
+            </p>
+          ) : null}
+          {readConsent && inspection ? (
+            <div className="play-agent-read-start">
+              <ul aria-label={translate("play.ai.agent.inputs")}>
+                {inspection.targets
+                  .filter((target) => target.required && target.reads)
+                  .map((target) => {
+                    const file = state.files.find((item) => item.id === target.fileId)!;
+                    return (
+                      <li key={file.id}>
+                        <strong>{file.label}</strong>
+                        <code>{file.path}</code>
+                      </li>
+                    );
+                  })}
+              </ul>
+              {primaryAction}
+            </div>
+          ) : null}
           {currentAction ? (
             <>
-              <p
-                className="play-ai-agent__authority"
-                data-document={currentAction.authority === "document"}
-              >
-                {translate(
-                  currentAction.authority === "document"
-                    ? "play.ai.agent.authorityDocument"
-                    : "play.ai.agent.authorityUser",
-                )}
-              </p>
-              <h5>{currentAction.title}</h5>
-              <p>{currentAction.intent}</p>
+              {!guided ? (
+                <>
+                  <p
+                    className="play-ai-agent__authority"
+                    data-document={currentAction.authority === "document"}
+                  >
+                    {translate(
+                      currentAction.authority === "document"
+                        ? "play.ai.agent.authorityDocument"
+                        : "play.ai.agent.authorityUser",
+                    )}
+                  </p>
+                  <h5>{currentAction.title}</h5>
+                  <p>{currentAction.intent}</p>
+                </>
+              ) : null}
               {currentAction.authority === "document" ? (
                 <blockquote>{currentAction.authorityText}</blockquote>
               ) : null}
-              {inspection && currentTool ? (
-                <AgentActionFiles
-                  inspection={inspection}
-                  files={state.files}
-                  tool={currentTool}
-                  disabled={disabled}
-                  headingRef={scopeHeading}
-                  onToggleFile={(id) => {
-                    const grants = stateRef.current.capabilities[currentTool.id] ?? [];
-                    grant(
-                      currentTool.id,
-                      grants.includes(id)
-                        ? grants.filter((fileId) => fileId !== id)
-                        : [...grants, id],
-                    );
-                  }}
-                />
-              ) : null}
+              <PrimaryFilesFrame className="play-agent-files-frame" data-read-consent={readConsent}>
+                {readConsent ? (
+                  <summary>{translate("play.ai.agent.guide.readDetails")}</summary>
+                ) : null}
+                {inspection && currentTool ? (
+                  <AgentActionFiles
+                    inspection={inspection}
+                    files={state.files}
+                    tool={currentTool}
+                    disabled={disabled}
+                    guided={guided}
+                    readConsent={readConsent}
+                    headingRef={scopeHeading}
+                    onToggleFile={(id) => {
+                      const grants = stateRef.current.capabilities[currentTool.id] ?? [];
+                      grant(
+                        currentTool.id,
+                        grants.includes(id)
+                          ? grants.filter((fileId) => fileId !== id)
+                          : [...grants, id],
+                      );
+                    }}
+                  />
+                ) : null}
+              </PrimaryFilesFrame>
             </>
           ) : (
             <p>{translate("play.ai.agent.roundEnd")}</p>
@@ -484,23 +579,27 @@ export function AgentGame({ activity, disabled, onAttempt }: ActivityControls<Ag
               data-damaged={evaluation.changedProtectedFileIds.includes(lastFile.id)}
             >
               <header>
-                <strong>{translate("play.ai.agent.play.resultTitle")}</strong>
+                <strong>
+                  {translate(
+                    guided ? "play.ai.agent.guide.result" : "play.ai.agent.play.resultTitle",
+                  )}
+                </strong>
                 <code>{lastFile.path}</code>
               </header>
               <pre tabIndex={0}>{lastFile.content || translate("play.ai.agent.fileEmpty")}</pre>
-              {lastEntry.changedFileIds.length ? (
+              {!guided && lastEntry.changedFileIds.length ? (
                 <p>
                   {translate("play.ai.agent.play.resultChanged", {
                     paths: paths(lastEntry.changedFileIds),
                   })}
                 </p>
-              ) : (
+              ) : !guided ? (
                 <p>
                   {translate("play.ai.agent.play.resultRead", {
                     paths: paths(lastEntry.readFileIds),
                   })}
                 </p>
-              )}
+              ) : null}
               {lastEntry.blockedFileIds.length ? (
                 <p>
                   {translate("play.ai.agent.play.resultBlocked", {
@@ -511,11 +610,20 @@ export function AgentGame({ activity, disabled, onAttempt }: ActivityControls<Ag
             </aside>
           ) : null}
           <div ref={driveRef} className="play-ai-agent__drive">
+            {guided && lastEntry && currentAction ? (
+              <strong className="play-agent-next">
+                {translate("play.ai.agent.guide.next", { title: currentAction.title })}
+              </strong>
+            ) : null}
             {currentAction ? (
               <>
-                <p className="play-ai-agent__run-note">
-                  {translate(running ? "play.ai.agent.play.running" : "play.ai.agent.play.runHelp")}
-                </p>
+                {!guided || running ? (
+                  <p className="play-ai-agent__run-note">
+                    {translate(
+                      running ? "play.ai.agent.play.running" : "play.ai.agent.play.runHelp",
+                    )}
+                  </p>
+                ) : null}
                 <div className="play-ai-agent__action-buttons">
                   {running ? (
                     <GameButton
@@ -530,7 +638,7 @@ export function AgentGame({ activity, disabled, onAttempt }: ActivityControls<Ag
                     >
                       {translate("play.ai.agent.play.stop")}
                     </GameButton>
-                  ) : (
+                  ) : !guided ? (
                     <GameButton
                       variant="primary"
                       sound={false}
@@ -539,25 +647,42 @@ export function AgentGame({ activity, disabled, onAttempt }: ActivityControls<Ag
                     >
                       {translate("play.ai.agent.play.run")}
                     </GameButton>
-                  )}
-                  <GameButton
-                    variant="secondary"
-                    sound={false}
-                    disabled={disabled}
-                    onClick={() => advance("execute")}
-                  >
-                    {translate("play.ai.agent.execute")}
-                  </GameButton>
-                  <GameButton
-                    variant="secondary"
-                    sound={false}
-                    disabled={disabled}
-                    onClick={() => advance("reject")}
-                  >
-                    {translate("play.ai.agent.reject")}
-                  </GameButton>
+                  ) : null}
+                  {!readConsent ? primaryAction : null}
+                  {!readConsent ? (
+                    <GameButton
+                      variant="secondary"
+                      sound={false}
+                      disabled={disabled}
+                      onClick={() => advance("reject")}
+                    >
+                      {translate("play.ai.agent.reject")}
+                    </GameButton>
+                  ) : null}
                 </div>
               </>
+            ) : null}
+            {guided && !currentAction ? (
+              <GameButton
+                variant="primary"
+                disabled={disabled}
+                sound={false}
+                onClick={
+                  damaged
+                    ? restore
+                    : evaluation.broadToolIds.length
+                      ? () => openTools(evaluation.broadToolIds[0]!)
+                      : check
+                }
+              >
+                {translate(
+                  damaged
+                    ? "play.ai.agent.restore"
+                    : evaluation.broadToolIds.length
+                      ? "play.ai.agent.guide.tools"
+                      : "play.ai.agent.check",
+                )}
+              </GameButton>
             ) : null}
             <p
               className="play-ai-agent__feedback"
@@ -567,35 +692,18 @@ export function AgentGame({ activity, disabled, onAttempt }: ActivityControls<Ag
             >
               {feedback}
             </p>
-            {needsScopeEdit ? (
+            {needsScopeEdit && !(guided && needsFiles) ? (
               <GameButton
                 variant="secondary"
                 sound={false}
                 disabled={disabled}
-                onClick={() => {
-                  playSound("ui.press");
-                  const section = scopeHeading.current?.closest("section");
-                  const target =
-                    section?.querySelector<HTMLButtonElement>(
-                      '[data-risk="true"] button, [data-reachable="false"] button',
-                    ) ?? scopeHeading.current;
-                  target?.focus({ preventScroll: true });
-                  target?.scrollIntoView({ block: "center" });
-                }}
+                onClick={focusScope}
               >
                 {translate("play.ai.agent.play.adjustHere")}
               </GameButton>
             ) : null}
-            {blockedToolId ? (
-              <GameButton
-                variant="ghost"
-                sound={false}
-                onClick={() => {
-                  const target = toolHeadings.current.get(blockedToolId);
-                  target?.focus({ preventScroll: true });
-                  target?.scrollIntoView({ block: "nearest" });
-                }}
-              >
+            {blockedToolId && !guided ? (
+              <GameButton variant="ghost" sound={false} onClick={() => openTools(blockedToolId)}>
                 {translate("play.ai.agent.adjustTool", {
                   tool:
                     activity.tools.find((tool) => tool.id === blockedToolId)?.label ??
@@ -603,82 +711,80 @@ export function AgentGame({ activity, disabled, onAttempt }: ActivityControls<Ag
                 })}
               </GameButton>
             ) : null}
+            {guided && currentAction ? (
+              <details className="play-agent-more">
+                <summary>{translate("play.ai.agent.guide.more")}</summary>
+                <p className="play-ai-agent__run-note">
+                  {translate("play.ai.agent.guide.runHelp")}
+                </p>
+                <div className="play-action-row">
+                  {!running ? (
+                    <GameButton
+                      variant="secondary"
+                      sound={false}
+                      disabled={disabled}
+                      onClick={startRun}
+                    >
+                      {translate("play.ai.agent.play.run")}
+                    </GameButton>
+                  ) : null}
+                  {readConsent ? (
+                    <GameButton
+                      variant="secondary"
+                      sound={false}
+                      disabled={disabled}
+                      onClick={() => advance("reject")}
+                    >
+                      {translate("play.ai.agent.reject")}
+                    </GameButton>
+                  ) : null}
+                </div>
+              </details>
+            ) : null}
           </div>
         </section>
-        <section className="play-ai-agent__workspace">
-          <h4>{translate("play.ai.agent.workspace")}</h4>
-          <div
-            className="play-ai-agent__file-tabs"
-            role="group"
-            aria-label={translate("play.ai.agent.workspace")}
-          >
-            {state.files.map((file) => (
-              <GameButton
-                key={file.id}
-                variant={file.id === fileId ? "primary" : "ghost"}
-                aria-pressed={file.id === fileId}
-                sound={false}
-                onClick={() => {
-                  setFileId(file.id);
-                  playSound("ui.press");
-                }}
-              >
-                {file.label}
-                {evaluation.changedProtectedFileIds.includes(file.id) ? " !" : ""}
-              </GameButton>
-            ))}
-          </div>
-          {activeFile ? (
-            <article
-              className="play-ai-agent__file"
-              data-damaged={evaluation.changedProtectedFileIds.includes(activeFile.id)}
-            >
-              <header>
-                <code>{activeFile.path}</code>
-                <span>
-                  {translate(
-                    evaluation.changedProtectedFileIds.includes(activeFile.id)
-                      ? "play.ai.agent.changed"
-                      : activeFile.protected
-                        ? "play.ai.agent.protected"
-                        : "play.ai.agent.editable",
-                  )}
-                </span>
-              </header>
-              <pre>{activeFile.content || translate("play.ai.agent.fileEmpty")}</pre>
-            </article>
-          ) : null}
-          {currentAction ? (
-            <GameButton
-              variant="ghost"
-              sound={false}
-              onClick={() => {
-                actionHeading.current?.focus({ preventScroll: true });
-                actionHeading.current?.scrollIntoView({ block: "nearest" });
-              }}
-            >
-              {translate("play.ai.agent.nextAction")}
-            </GameButton>
-          ) : null}
-        </section>
+        {!guided ? workspace : null}
       </div>
-      <section className="play-ai-agent__recovery">
-        <div>
-          <h4>{translate("play.ai.agent.checkpoint", { count: state.checkpoint.cursor })}</h4>
-          <p>{translate("play.ai.agent.checkpointNote")}</p>
-        </div>
-        <GameButton
-          variant="secondary"
-          sound={false}
-          disabled={disabled || !canRestore}
-          onClick={restore}
-        >
-          {translate("play.ai.agent.restore")}
+      {guided ? (
+        <>
+          <details
+            className="play-agent-tools"
+            open={toolsOpen}
+            onToggle={(event) => setToolsOpen(event.currentTarget.open)}
+          >
+            <summary>{translate("play.ai.agent.guide.tools")}</summary>
+            {toolbox}
+          </details>
+          <details className="play-agent-workspace">
+            <summary>{translate("play.ai.agent.guide.workspace")}</summary>
+            {workspace}
+          </details>
+        </>
+      ) : null}
+      <details className="play-agent-recovery" open={!guided}>
+        <summary>
+          {translate("play.ai.agent.checkpoint", { count: state.checkpoint.cursor })}
+        </summary>
+        <section className="play-ai-agent__recovery">
+          <div>
+            <h4>{translate("play.ai.agent.checkpoint", { count: state.checkpoint.cursor })}</h4>
+            <p>{translate("play.ai.agent.checkpointNote")}</p>
+          </div>
+          <GameButton
+            variant="secondary"
+            sound={false}
+            disabled={disabled || !canRestore}
+            onClick={restore}
+          >
+            {translate("play.ai.agent.restore")}
+          </GameButton>
+        </section>
+      </details>
+      {!guided ? (
+        <GameButton variant="primary" sound={false} disabled={disabled} onClick={check}>
+          {translate("play.ai.agent.check")}
         </GameButton>
-      </section>
-      <GameButton variant="primary" sound={false} disabled={disabled} onClick={check}>
-        {translate("play.ai.agent.check")}
-      </GameButton>
+      ) : null}
       <details className="play-ai-workflow__history">
         <summary>{translate("play.ai.agent.log")}</summary>
         {state.log.length ? (

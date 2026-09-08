@@ -57,6 +57,10 @@ export interface EvalActivity extends ActivityBase {
     readonly responses: Readonly<Record<EvalExpectation, readonly EvalOutcome[]>>;
   }[];
   readonly trials: number;
+  /** Always include a useful normal request and at least one boundary category. */
+  readonly requiredExpectations?: readonly EvalExpectation[];
+  /** Exact condition combinations the learner must freeze and include in the release run. */
+  readonly requiredInputs?: readonly EvalScenario[];
 }
 export interface EvalCase {
   readonly id: string;
@@ -102,6 +106,23 @@ export function expectedEvalOutcome(input: EvalScenario): EvalExpectation {
   return "fulfilled";
 }
 
+function validEvalRequirements(activity: EvalActivity): boolean {
+  const categories = activity.requiredExpectations ?? EVAL_EXPECTATIONS;
+  const inputs = activity.requiredInputs ?? [];
+  return (
+    Array.isArray(categories) &&
+    categories.length >= 2 &&
+    categories.length <= EVAL_EXPECTATIONS.length &&
+    categories.includes("fulfilled") &&
+    new Set(categories).size === categories.length &&
+    categories.every((category) => EVAL_EXPECTATIONS.includes(category)) &&
+    Array.isArray(inputs) &&
+    inputs.length <= 8 &&
+    inputs.every((input) => isScenario(input) && categories.includes(expectedEvalOutcome(input))) &&
+    new Set(inputs.map(inputKey)).size === inputs.length
+  );
+}
+
 export function freezeEvalCase(
   existing: readonly EvalCase[],
   input: EvalScenario,
@@ -142,6 +163,7 @@ export function runEvalCandidate(
   const candidate = activity.candidates.find((item) => item.id === candidateId);
   if (
     !candidate ||
+    !validEvalRequirements(activity) ||
     !Number.isInteger(activity.trials) ||
     activity.trials < 2 ||
     activity.trials > 5 ||
@@ -246,7 +268,9 @@ export function currentEvalReceipts(
 }
 
 export type EvalReleaseReason =
+  | "invalid-requirements"
   | "coverage"
+  | "input-coverage"
   | "change-required"
   | "blind-spot"
   | "run-required"
@@ -262,19 +286,34 @@ export function assessEvalRelease(
   readonly passed: boolean;
   readonly reason: EvalReleaseReason;
   readonly uncovered: readonly EvalExpectation[];
+  readonly uncoveredInputs: readonly EvalScenario[];
 } {
-  const uncovered = EVAL_EXPECTATIONS.filter(
+  const validRequirements = validEvalRequirements(activity);
+  const required = validRequirements ? (activity.requiredExpectations ?? EVAL_EXPECTATIONS) : [];
+  const uncovered = required.filter(
     (expected) =>
       !cases.some(
         (item) => item.expected === expected && expectedEvalOutcome(item.input) === expected,
+      ),
+  );
+  const uncoveredInputs = (validRequirements ? (activity.requiredInputs ?? []) : []).filter(
+    (input) =>
+      !cases.some(
+        (item) =>
+          isScenario(item.input) &&
+          inputKey(item.input) === inputKey(input) &&
+          item.expected === expectedEvalOutcome(input),
       ),
   );
   const verdict = (reason: EvalReleaseReason) => ({
     passed: reason === "ready",
     reason,
     uncovered,
+    uncoveredInputs,
   });
+  if (!validRequirements) return verdict("invalid-requirements");
   if (uncovered.length > 0) return verdict("coverage");
+  if (uncoveredInputs.length > 0) return verdict("input-coverage");
   if (!cases.some((item) => inputKey(item.input) !== inputKey(activity.initial)))
     return verdict("change-required");
   const signature = evalCaseSignature(cases);

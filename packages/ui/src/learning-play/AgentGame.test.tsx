@@ -86,10 +86,17 @@ function actualFileContent() {
   return container.querySelector(".play-ai-agent__workspace .play-ai-agent__file pre")?.textContent;
 }
 
-async function renderGame() {
+async function renderGame(currentActivity = activity, guided = false) {
   const onAttempt = vi.fn<ActivityControls<AgentActivity>["onAttempt"]>();
   await act(async () =>
-    root!.render(<AgentGame activity={activity} disabled={false} onAttempt={onAttempt} />),
+    root!.render(
+      <AgentGame
+        activity={currentActivity}
+        disabled={false}
+        guided={guided}
+        onAttempt={onAttempt}
+      />,
+    ),
   );
   return onAttempt;
 }
@@ -116,6 +123,127 @@ beforeEach(() => {
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
+});
+
+describe("Agent guidance uses the real permissions and workspace", () => {
+  const withRead: AgentActivity = {
+    ...activity,
+    tools: [
+      {
+        id: "reader",
+        label: "材料读取器",
+        description: "Read approved files.",
+        capability: "read",
+        // A wider allowed task scope must not be silently granted by the first-step button.
+        taskFileIds: ["source", "draft"],
+      },
+      ...activity.tools,
+    ],
+    actions: [
+      {
+        id: "read-source",
+        title: "Read the original records",
+        intent: "Read the records before drafting.",
+        toolId: "reader",
+        authority: "user",
+        authorityText: "User task",
+        inputFileIds: ["source"],
+        effects: [],
+        required: true,
+        requiredFileIds: ["source"],
+      },
+      ...activity.actions,
+    ],
+  };
+
+  it("grants only the displayed read files and keeps the actual read when switching views", async () => {
+    const onAttempt = await renderGame(withRead, true);
+    expect(container.querySelector<HTMLDetailsElement>(".play-agent-tools")?.open).toBe(false);
+    expect(container.querySelector<HTMLDetailsElement>(".play-agent-workspace")?.open).toBe(false);
+    expect(container.querySelector<HTMLDetailsElement>(".play-agent-files-frame")?.open).toBe(
+      false,
+    );
+    expect(container.querySelector(".play-agent-read-start ul")?.textContent).toContain(
+      "原始表/sandbox/source.txt",
+    );
+    expect(button("仅授权读取这些文件并开始").closest(".play-agent-read-start")).not.toBeNull();
+    expect(container.querySelector(".play-ai-agent__target-card code")?.textContent).toBe(
+      "/sandbox/source.txt",
+    );
+    expect(onAttempt).not.toHaveBeenCalled();
+
+    await click("仅授权读取这些文件并开始");
+    expect(container.querySelector(".play-ai-agent__last-result pre")?.textContent).toBe(
+      "Original records",
+    );
+    expect(button("允许「沙盒编辑器」触达「草稿」").getAttribute("aria-checked")).toBe("false");
+    expect(onAttempt).not.toHaveBeenCalled();
+
+    await act(async () =>
+      root!.render(
+        <AgentGame activity={withRead} disabled={false} guided={false} onAttempt={onAttempt} />,
+      ),
+    );
+    await click("验收沙盒里的工作");
+    expect(onAttempt.mock.lastCall).toEqual([
+      false,
+      expect.objectContaining({
+        capabilities: { reader: ["source"] },
+        completedActionIds: ["read-source"],
+        files: activity.files,
+        log: [
+          expect.objectContaining({
+            actionId: "read-source",
+            readFileIds: ["source"],
+            changedFileIds: [],
+          }),
+        ],
+      }),
+      expect.any(String),
+    ]);
+  });
+
+  it("keeps a mixed required step after rejection and executes only the player's allowed file", async () => {
+    const onAttempt = await renderGame(withRead, true);
+    await click("仅授权读取这些文件并开始");
+    await click("允许「沙盒编辑器」触达「草稿」");
+    await click("按当前范围执行一步");
+    expect(container.querySelector(".play-ai-agent__last-result pre")?.textContent).toBe(
+      "Draft v1",
+    );
+
+    await click("退回这一步");
+    expect(container.querySelector(".play-ai-agent__action > header h4")?.textContent).toBe(
+      "Draft step 2",
+    );
+    expect(container.querySelector(".play-ai-agent__feedback")?.textContent).toContain("没有执行");
+    await click("就在这里修改文件范围");
+    expect(document.activeElement).toBe(button("允许「沙盒编辑器」触达「原始表」"));
+    expect(button("允许「沙盒编辑器」触达「原始表」").getAttribute("aria-checked")).toBe("false");
+
+    await click("按当前范围执行一步");
+    expect(container.querySelector(".play-ai-agent__last-result pre")?.textContent).toBe(
+      "Draft v2",
+    );
+    await click("按当前范围执行一步");
+    await click("验收沙盒里的工作");
+    expect(onAttempt.mock.lastCall).toEqual([
+      true,
+      expect.objectContaining({
+        capabilities: { reader: ["source"], writer: ["draft"] },
+        files: [activity.files[0], { ...activity.files[1], content: "Final draft" }],
+        completedActionIds: ["read-source", "write-1", "write-2", "write-3"],
+        log: expect.arrayContaining([
+          expect.objectContaining({
+            actionId: "write-2",
+            changedFileIds: ["draft"],
+            blockedFileIds: ["source"],
+          }),
+        ]),
+      }),
+      expect.any(String),
+    ]);
+  });
 });
 
 afterEach(async () => {

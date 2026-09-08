@@ -8,6 +8,8 @@ interface AgentActionFilesProps {
   readonly files: readonly AgentFile[];
   readonly tool: AgentTool;
   readonly disabled: boolean;
+  readonly guided?: boolean;
+  readonly readConsent?: boolean;
   readonly headingRef: RefObject<HTMLHeadingElement | null>;
   readonly onToggleFile: (fileId: string) => void;
 }
@@ -18,17 +20,30 @@ export function AgentActionFiles({
   files,
   tool,
   disabled,
+  guided = false,
+  readConsent = false,
   headingRef,
   onToggleFile,
 }: AgentActionFilesProps) {
+  const BeforeContent = guided ? "details" : "div";
   return (
-    <section className="play-ai-agent__action-files">
+    <section
+      className="play-ai-agent__action-files"
+      data-guided={guided}
+      data-read-consent={readConsent}
+    >
       <header>
         <h4 ref={headingRef} tabIndex={-1}>
-          {translate("play.ai.agent.play.filesTitle")}
+          {translate(guided ? "play.ai.agent.guide.files" : "play.ai.agent.play.filesTitle", {
+            tool: tool.label,
+          })}
         </h4>
-        <p>{translate("play.ai.agent.play.usingTool", { tool: tool.label })}</p>
-        <p>{translate("play.ai.agent.play.filesHint")}</p>
+        {!guided ? (
+          <>
+            <p>{translate("play.ai.agent.play.usingTool", { tool: tool.label })}</p>
+            <p>{translate("play.ai.agent.play.filesHint")}</p>
+          </>
+        ) : null}
       </header>
       {inspection.targets.map((target) => {
         const file = files.find((item) => item.id === target.fileId)!;
@@ -57,37 +72,64 @@ export function AgentActionFiles({
               </span>
             </header>
             <div className="play-ai-agent__target-scope">
-              <GameToggle
-                checked={target.granted}
-                disabled={disabled}
-                label={translate("play.ai.agent.play.allowTarget", {
-                  tool: tool.label,
-                  file: file.label,
-                })}
-                onClick={() => onToggleFile(target.fileId)}
-              />
-              <p>
-                {translate(
-                  target.granted
-                    ? "play.ai.agent.play.targetAllowed"
-                    : target.required
-                      ? "play.ai.agent.play.targetRequiredBlocked"
-                      : "play.ai.agent.play.targetOptionalBlocked",
-                )}
-                {file.protected ? ` ${translate("play.ai.agent.protected")}` : ""}
-              </p>
+              {readConsent ? (
+                <p>{translate("play.ai.agent.guide.readOnly")}</p>
+              ) : (
+                <>
+                  <GameToggle
+                    checked={target.granted}
+                    disabled={disabled}
+                    label={translate("play.ai.agent.play.allowTarget", {
+                      tool: tool.label,
+                      file: file.label,
+                    })}
+                    onClick={() => onToggleFile(target.fileId)}
+                  />
+                  <p>
+                    {translate(
+                      guided
+                        ? target.granted
+                          ? "play.ai.agent.guide.allowed"
+                          : target.required
+                            ? "play.ai.agent.guide.required"
+                            : "play.ai.agent.guide.kept"
+                        : target.granted
+                          ? "play.ai.agent.play.targetAllowed"
+                          : target.required
+                            ? "play.ai.agent.play.targetRequiredBlocked"
+                            : "play.ai.agent.play.targetOptionalBlocked",
+                    )}
+                    {file.protected ? ` ${translate("play.ai.agent.protected")}` : ""}
+                  </p>
+                </>
+              )}
             </div>
             <div className="play-ai-agent__target-contents" data-writes={target.writes}>
-              <section>
-                <h5>
-                  {translate(
-                    target.writes ? "play.ai.agent.play.before" : "play.ai.agent.play.readContent",
-                  )}
-                </h5>
-                <pre tabIndex={0}>
-                  {target.beforeContent || translate("play.ai.agent.fileEmpty")}
-                </pre>
-              </section>
+              <BeforeContent className="play-agent-before">
+                {guided ? (
+                  <summary>
+                    {translate(
+                      target.writes
+                        ? "play.ai.agent.guide.before"
+                        : "play.ai.agent.guide.readDetails",
+                    )}
+                  </summary>
+                ) : null}
+                <section>
+                  {!guided ? (
+                    <h5>
+                      {translate(
+                        target.writes
+                          ? "play.ai.agent.play.before"
+                          : "play.ai.agent.play.readContent",
+                      )}
+                    </h5>
+                  ) : null}
+                  <pre tabIndex={0}>
+                    {target.beforeContent || translate("play.ai.agent.fileEmpty")}
+                  </pre>
+                </section>
+              </BeforeContent>
               {target.writes ? (
                 <section data-blocked={!target.granted}>
                   <h5>{translate("play.ai.agent.play.proposed")}</h5>
@@ -97,7 +139,7 @@ export function AgentActionFiles({
                 </section>
               ) : null}
             </div>
-            {target.writes && !target.granted ? (
+            {!guided && target.writes && !target.granted ? (
               <p className="play-ai-agent__target-outcome">
                 {translate("play.ai.agent.play.effectPrevented")}
               </p>
@@ -109,13 +151,15 @@ export function AgentActionFiles({
           </article>
         );
       })}
-      <p className="play-ai-agent__target-check" data-ready={inspection.execution.accepted}>
-        {translate(
-          inspection.execution.accepted
-            ? "play.ai.agent.play.engineReady"
-            : "play.ai.agent.play.engineBlocked",
-        )}
-      </p>
+      {!guided ? (
+        <p className="play-ai-agent__target-check" data-ready={inspection.execution.accepted}>
+          {translate(
+            inspection.execution.accepted
+              ? "play.ai.agent.play.engineReady"
+              : "play.ai.agent.play.engineBlocked",
+          )}
+        </p>
+      ) : null}
     </section>
   );
 }

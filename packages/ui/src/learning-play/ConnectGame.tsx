@@ -11,7 +11,12 @@ import { translate as t } from "../i18n/index.js";
 import { playSound } from "../sound/index.js";
 import type { ActivityControls } from "./controls.js";
 
-export function ConnectGame({ activity, disabled, onAttempt }: ActivityControls<ConnectActivity>) {
+export function ConnectGame({
+  activity,
+  disabled,
+  onAttempt,
+  guided = false,
+}: ActivityControls<ConnectActivity>) {
   const [edges, setEdges] = useState<Connection[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [compact, setCompact] = useState(false);
@@ -123,7 +128,11 @@ export function ConnectGame({ activity, disabled, onAttempt }: ActivityControls<
       <p className="play-instruction">
         {selected
           ? t("play.connect.selected", { label: nodeOf(selected).label })
-          : t("play.connect.help")}
+          : guided
+            ? edges.length
+              ? t("play.usability.connect.next", { count: edges.length })
+              : t("play.usability.connect.first", { name: activity.nodes[0]!.label })
+            : t("play.connect.help")}
       </p>
       <div
         ref={board}

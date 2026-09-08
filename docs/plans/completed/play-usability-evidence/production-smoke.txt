@@ -1,0 +1,10 @@
+
+Running 3 tests using 1 worker
+
+(node:93740) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [default] › e2e/R.play-usability.spec.ts:68:3 › R delivery 手机：十种玩法首屏都有真正可做的第一步 (2.8s)
+  ✓  2 [default] › e2e/R.play-usability.spec.ts:256:1 › R 难度身份：切档清本轮、切帮助保现场、三十种组合均可打开 (3.6s)
+  ✓  3 [default] › e2e/R.play-usability.spec.ts:292:1 › R 连玩可以混合难度，后续简单关不会被全局升难 (2.6s)
+
+  3 passed (16.2s)

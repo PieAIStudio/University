@@ -32,6 +32,56 @@ afterEach(async () => {
 });
 
 describe("activity host evidence boundary", () => {
+  it("separates difficulty and occurrence identity from reusable activity identity", async () => {
+    const onResult = vi.fn();
+    const base = getBaseExamples()[0]!;
+    await act(async () =>
+      root.render(
+        <LearningActivity
+          activity={{ ...base, difficulty: "intro" }}
+          occurrenceId="lesson-1-slot-1"
+          onResult={onResult}
+        />,
+      ),
+    );
+    await click("先跳过");
+    expect(onResult.mock.calls[0]![0]).toMatchObject({
+      difficulty: "intro",
+      occurrenceId: "lesson-1-slot-1",
+      status: "skipped",
+    });
+    await act(async () =>
+      root.render(
+        <LearningActivity
+          activity={{ ...base, difficulty: "intro" }}
+          occurrenceId="lesson-1-slot-2"
+          onResult={onResult}
+        />,
+      ),
+    );
+    expect(container.querySelector('[data-result="skipped"]')).toBeNull();
+    await click("自由探索");
+    expect(container.querySelector(".learning-activity")?.getAttribute("data-guided")).toBe(
+      "false",
+    );
+    await act(async () =>
+      root.render(
+        <LearningActivity
+          activity={{ ...base, difficulty: "challenge" }}
+          occurrenceId="lesson-1-slot-2"
+          onResult={onResult}
+        />,
+      ),
+    );
+    expect(container.querySelector(".learning-activity")?.getAttribute("data-guided")).toBe("true");
+    await click("先跳过");
+    expect(onResult.mock.calls[1]![0]).toMatchObject({
+      difficulty: "challenge",
+      occurrenceId: "lesson-1-slot-2",
+      attempts: 0,
+    });
+  });
+
   it("only reports a completed round once and preserves attempts and hints", async () => {
     const onResult = vi.fn();
     const original = getBaseExamples().find(
@@ -108,6 +158,7 @@ describe("activity host evidence boundary", () => {
         root.render(<LearningActivity activity={getAIBriefExamples()[0]!} onResult={onResult} />),
       );
       expect(container.textContent).toContain("预设 AI 案例");
+      await click("自由探索");
       await click("访客可提交");
       await click("先等审核");
       await click("仅组织者可见");

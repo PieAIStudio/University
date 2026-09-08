@@ -17,11 +17,27 @@ import {
 } from "@pieai/university-core";
 import { translate as t } from "../i18n/index.js";
 import type { ActivityControls } from "./controls.js";
+import { PlayGuide } from "./PlayGuide.js";
 import { PlayIcon } from "./PlayIcon.js";
 import { playSound } from "../sound/index.js";
 
-export function BriefGame({ activity, disabled, onAttempt }: ActivityControls<BriefActivity>) {
-  const [choices, setChoices] = useState<BriefChoices>({});
+export function BriefGame({
+  activity,
+  disabled,
+  onAttempt,
+  guided = false,
+}: ActivityControls<BriefActivity>) {
+  const [phase, setPhase] = useState<"observe" | "agree" | "test">("observe");
+  const [questionIndex, setQuestionIndex] = useState(() =>
+    Math.max(
+      0,
+      activity.questions.findIndex(
+        (question) => activity.initialChoices?.[question.axis] === undefined,
+      ),
+    ),
+  );
+  const contractTop = useRef<HTMLElement>(null);
+  const [choices, setChoices] = useState<BriefChoices>(activity.initialChoices ?? {});
   const [previews, setPreviews] = useState<readonly BriefPreview[]>([
     createBriefPreview(),
     createBriefPreview(),
@@ -100,6 +116,7 @@ export function BriefGame({ activity, disabled, onAttempt }: ActivityControls<Br
     playSound("ui.press");
   }
   function showPreview() {
+    setPhase("test");
     previewHeading.current?.scrollIntoView({ block: "start", behavior: "instant" });
     previewHeading.current?.focus({ preventScroll: true });
   }
@@ -108,6 +125,16 @@ export function BriefGame({ activity, disabled, onAttempt }: ActivityControls<Br
     const checkpoint: BriefAcceptance = { choices, observations };
     if (result.passed && activity.followUp && !revised) {
       setAccepted([checkpoint]);
+      setPhase("agree");
+      setQuestionIndex(
+        Math.max(
+          0,
+          activity.questions.findIndex(
+            (question) =>
+              activity.target[question.axis] !== activity.followUp!.target[question.axis],
+          ),
+        ),
+      );
       setPreviews([createBriefPreview(), createBriefPreview()]);
       setObservations([]);
       setExperiments([]);
@@ -161,16 +188,85 @@ export function BriefGame({ activity, disabled, onAttempt }: ActivityControls<Br
     const final = evaluateBriefRounds(activity, rounds);
     onAttempt(
       result.passed && final.passed,
-      { choices, asked, observations, checks: result, rounds, experiments, handoff },
+      {
+        choices,
+        providedChoices: activity.initialChoices ?? {},
+        learnerChoices: Object.fromEntries(
+          Object.entries(choices).filter(
+            ([axis, value]) => activity.initialChoices?.[axis as BriefAxis] !== value,
+          ),
+        ),
+        asked,
+        observations,
+        checks: result,
+        rounds,
+        experiments,
+        handoff,
+      },
       message,
     );
   }
   return (
-    <div className="ai-brief">
+    <div className="ai-brief" data-guided={guided} data-phase={phase}>
+      {guided ? (
+        <PlayGuide
+          title={
+            phase === "observe"
+              ? t(
+                  experiments.length
+                    ? "play.usability.brief.difference"
+                    : "play.usability.brief.start",
+                )
+              : phase === "agree"
+                ? t(revised ? "play.usability.brief.change" : "play.usability.brief.question", {
+                    current: activity.initialChoices ? 1 : questionIndex + 1,
+                    total: activity.initialChoices
+                      ? activity.questions.filter(
+                          (question) => activity.initialChoices?.[question.axis] === undefined,
+                        ).length
+                      : activity.questions.length,
+                  })
+                : t("play.usability.brief.test")
+          }
+          action={
+            phase === "observe"
+              ? t(
+                  experiments.length > 0
+                    ? "play.usability.brief.ask"
+                    : "play.ai.brief.compareSubmit",
+                )
+              : undefined
+          }
+          onAction={() => {
+            if (!experiments.length) {
+              compare("submit");
+              return;
+            }
+            setPhase("agree");
+            requestAnimationFrame(() =>
+              contractTop.current?.scrollIntoView({ block: "nearest", behavior: "instant" }),
+            );
+          }}
+          disabled={disabled}
+        >
+          {phase === "observe"
+            ? experiments.length
+              ? t("play.usability.brief.first")
+              : activity.request
+            : t(
+                phase === "agree"
+                  ? revised
+                    ? "play.usability.brief.changed"
+                    : "play.usability.brief.choose"
+                  : "play.usability.brief.testNote",
+              )}
+        </PlayGuide>
+      ) : null}
       <blockquote
         ref={requestTop}
         tabIndex={-1}
         className="ai-brief__request"
+        hidden={guided && phase !== "agree"}
         data-revised={revised}
       >
         <span>{t(revised ? "play.ai.brief.newRequest" : "play.ai.brief.request")}</span>
@@ -178,16 +274,24 @@ export function BriefGame({ activity, disabled, onAttempt }: ActivityControls<Br
         <p>{revised ? activity.followUp!.request : activity.request}</p>
         {revised ? <small>{t("play.ai.brief.keepOtherRules")}</small> : null}
       </blockquote>
-      <div className="ai-brief__preview-title">
-        <h3 ref={previewHeading} tabIndex={-1}>
+      <div className="ai-brief__preview-title" hidden={guided && phase === "agree"}>
+        <h3 ref={previewHeading} tabIndex={-1} hidden={guided && phase === "observe"}>
           {t("play.ai.brief.interpretations")}
         </h3>
-        <p>{t("play.ai.brief.previewNote")}</p>
-        <div className="play-action-row ai-brief__compare-controls">
+        <p hidden={guided}>{t("play.ai.brief.previewNote")}</p>
+        <div
+          className="play-action-row ai-brief__compare-controls"
+          hidden={guided && phase === "observe"}
+        >
           <GameButton variant="primary" disabled={disabled} onClick={() => compare("submit")}>
             {t("play.ai.brief.compareSubmit")}
           </GameButton>
-          <GameButton variant="secondary" disabled={disabled} onClick={() => compare("roster")}>
+          <GameButton
+            variant="secondary"
+            hidden={guided && phase === "observe"}
+            disabled={disabled}
+            onClick={() => compare("roster")}
+          >
             {t("play.ai.brief.compareRoster")}
           </GameButton>
         </div>
@@ -203,7 +307,11 @@ export function BriefGame({ activity, disabled, onAttempt }: ActivityControls<Br
           </div>
         ) : null}
       </div>
-      <div className="ai-brief__prototypes" data-converged={converged}>
+      <div
+        className="ai-brief__prototypes"
+        data-converged={converged}
+        hidden={guided && phase !== "test"}
+      >
         {([0, 1] as const).map((variant) => {
           const state = previews[variant]!;
           const configuration = resolveBrief(activity, choices, variant);
@@ -301,18 +409,66 @@ export function BriefGame({ activity, disabled, onAttempt }: ActivityControls<Br
           );
         })}
       </div>
-      <section className="ai-brief__contract" aria-label={t("play.ai.brief.contract")}>
+      {guided && phase === "test" ? (
+        <div className="play-action-row ai-brief__test-actions">
+          <GameButton disabled={disabled} onClick={verify}>
+            {t("play.ai.brief.verify")}
+          </GameButton>
+          <GameButton variant="ghost" disabled={disabled} onClick={() => setPhase("agree")}>
+            {t("play.usability.brief.review")}
+          </GameButton>
+        </div>
+      ) : null}
+      {activity.initialChoices ? (
+        <details className="play-model-note ai-brief__given">
+          <summary>{t("play.difficulty.brief.given")}</summary>
+          <p>{t("play.difficulty.brief.givenNote")}</p>
+          <ul>
+            {activity.questions.flatMap((question) =>
+              question.options
+                .filter((option) => activity.initialChoices?.[question.axis] === option.value)
+                .map((option) => <li key={question.axis}>{option.clause}</li>),
+            )}
+          </ul>
+        </details>
+      ) : null}
+      <section
+        ref={contractTop}
+        className="ai-brief__contract"
+        aria-label={t("play.ai.brief.contract")}
+        hidden={guided && phase !== "agree"}
+      >
         <h3>{t("play.ai.brief.contract")}</h3>
+        {guided ? (
+          <nav className="ai-brief__question-tabs" aria-label={t("play.usability.brief.review")}>
+            {activity.questions.map((question, index) => (
+              <GameButton
+                key={question.axis}
+                variant={index === questionIndex ? "primary" : "ghost"}
+                aria-pressed={index === questionIndex}
+                onClick={() => setQuestionIndex(index)}
+                disabled={disabled}
+              >
+                {question.label}
+              </GameButton>
+            ))}
+          </nav>
+        ) : null}
         <p className="ai-brief__convergence" role="status">
           {remaining
             ? t("play.ai.brief.openAssumptions", { count: remaining })
             : t("play.ai.brief.converged")}
         </p>
         <div className="ai-brief__questions">
-          {activity.questions.map((question) => (
-            <fieldset key={question.axis} disabled={disabled}>
+          {activity.questions.map((question, index) => (
+            <fieldset
+              key={question.axis}
+              hidden={guided && index !== questionIndex}
+              disabled={disabled}
+            >
               <legend>{question.label}</legend>
               <details
+                open={guided ? true : undefined}
                 onToggle={(event) => {
                   if (event.currentTarget.open)
                     setAsked((previous) => [...new Set([...previous, question.axis])]);
@@ -356,7 +512,28 @@ export function BriefGame({ activity, disabled, onAttempt }: ActivityControls<Br
             </fieldset>
           ))}
         </div>
-        <div className="play-action-row">
+        {guided ? (
+          <GameButton
+            disabled={disabled || !choices[activity.questions[questionIndex]!.axis]}
+            onClick={() => {
+              const next = activity.questions.findIndex(
+                (question, index) => index > questionIndex && !choices[question.axis],
+              );
+              if (next >= 0) setQuestionIndex(next);
+              else if (remaining > 0)
+                setQuestionIndex(
+                  activity.questions.findIndex((question) => !choices[question.axis]),
+                );
+              else {
+                setPhase("test");
+                requestAnimationFrame(showPreview);
+              }
+            }}
+          >
+            {t(remaining === 0 ? "play.usability.brief.try" : "play.usability.brief.next")}
+          </GameButton>
+        ) : null}
+        <div className="play-action-row" hidden={guided}>
           <GameButton type="button" sound={false} variant="secondary" onClick={showPreview}>
             {t("play.ai.brief.returnPreview")}
           </GameButton>

@@ -1,0 +1,260 @@
+.ai-quality [hidden] {
+  display: none !important;
+}
+
+.ai-quality[data-guided="true"] {
+  gap: 12px;
+}
+
+.quality-guide__candidate-fold,
+.quality-guide__collection-fold,
+.quality-guide__release-fold,
+.quality-guide__replay-tools,
+.quality-guide__failure-report {
+  min-width: 0;
+  border-block-end: 1px solid var(--game-ui-border-subtle);
+}
+
+.quality-guide__candidate-fold > summary,
+.quality-guide__collection-fold > summary,
+.quality-guide__release-fold > summary,
+.quality-guide__replay-tools > summary,
+.quality-guide__failure-report > summary {
+  color: var(--game-ui-text-muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.ai-eval[data-guided="true"] .ai-eval__experiment {
+  padding: 16px;
+}
+
+.ai-eval[data-guided="true"] .ai-eval__experiment[data-starter="true"] .ai-eval__test-pair {
+  grid-template-columns: 1fr;
+  margin-top: 0;
+}
+
+.quality-guide__eval-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px;
+  margin-block-start: 12px;
+}
+
+.ai-eval[data-guided="true"] .quality-guide__eval-options .ai-eval__contract {
+  padding: 0;
+  border: 0;
+  border-block-end: 1px solid var(--game-ui-border-subtle);
+  border-radius: 0;
+  background: transparent;
+}
+
+.ai-eval[data-guided="true"] .quality-guide__eval-options summary {
+  font-size: 12px;
+}
+
+.ai-eval[data-guided="true"] .quality-guide__eval-options .ai-eval__contract strong {
+  font-size: inherit;
+  font-weight: 650;
+  color: var(--game-ui-text-muted);
+}
+
+.ai-eval[data-guided="true"] .ai-eval__test-pair {
+  margin-top: 12px;
+  gap: 12px;
+}
+
+.ai-eval[data-guided="true"] .ai-eval__request-ticket,
+.ai-eval[data-guided="true"] .ai-eval__response-ticket {
+  padding: 12px;
+}
+
+.quality-guide__request {
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.quality-guide__starter-note {
+  font-size: 12px;
+}
+
+.ai-eval[data-guided="true"] .ai-eval__acceptance {
+  gap: 3px;
+  margin-block: 8px 12px;
+  padding-block: 8px;
+}
+
+.ai-eval[data-guided="true"] .ai-eval__response-strip {
+  gap: 8px;
+}
+
+.ai-eval[data-guided="true"] .ai-eval__response-strip li {
+  padding: 10px;
+}
+
+.ai-eval[data-guided="true"] .ai-eval__artifact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.ai-eval[data-guided="true"] .ai-eval__artifact > strong {
+  font-size: 17px;
+}
+
+.ai-eval[data-guided="true"] .ai-eval__response-ticket > button + button {
+  margin-block-start: 10px;
+}
+
+.quality-guide__panels {
+  display: flex;
+  gap: 6px;
+  border-block-end: 1px solid var(--game-ui-border-subtle);
+  padding-block-end: 8px;
+}
+
+.quality-guide__panels > button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-inline: 10px;
+  font-size: 13px;
+}
+
+.ai-repair[data-guided="true"] .ai-repair__live {
+  padding: 16px;
+}
+
+.ai-repair[data-guided="true"] .ai-repair__live > .play-guide {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin-block: 0 12px;
+}
+
+.ai-repair[data-guided="true"] .ai-repair__shared-inputs {
+  margin-block: 0 12px;
+  padding-block: 0 12px;
+  border-block-start: 0;
+  gap: 8px;
+}
+
+.ai-repair[data-guided="true"] .ai-repair__shared-inputs .ai-quality__choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ai-repair[data-guided="true"] button[data-suggested="true"] {
+  border-color: var(--game-ui-accent);
+}
+
+.ai-repair[data-guided="true"] .ai-repair__state-view {
+  padding: 12px;
+}
+
+.ai-repair[data-guided="true"] .ai-repair__state-label {
+  margin-block-end: 6px;
+}
+
+.ai-repair[data-guided="true"] .ai-repair__time-controls {
+  margin-block: 12px 0;
+  gap: 8px;
+}
+
+.ai-repair[data-guided="true"] .ai-repair__time-controls > button {
+  justify-self: stretch;
+}
+
+.quality-guide__replay-tools[open] {
+  padding-block-end: 10px;
+}
+
+.quality-guide__replay-tools > .ai-quality__choices {
+  margin-block: 12px;
+}
+
+.ai-repair[data-guided="true"] .ai-repair__local-actions {
+  margin-block-start: 12px;
+}
+
+.ai-repair[data-guided="true"] .ai-repair__local-actions > button {
+  flex-basis: 100%;
+}
+
+.quality-guide__sealed-summary {
+  padding-block: 12px;
+  border-block-end: 1px solid var(--game-ui-border-subtle);
+  color: var(--game-ui-text-muted);
+}
+
+.ai-repair[data-guided="true"] .ai-repair__patch-offers {
+  margin-block: 12px;
+}
+
+.ai-repair[data-guided="true"] .ai-repair__scope {
+  padding: 16px;
+  border: 1px solid var(--game-ui-border-strong);
+  border-radius: 12px;
+  background: var(--game-ui-panel);
+}
+
+@container ai-quality (max-width: 640px) {
+  .ai-eval[data-guided="true"] .ai-eval__experiment,
+  .ai-repair[data-guided="true"] .ai-repair__live {
+    padding: 12px;
+  }
+
+  .ai-eval[data-guided="true"] .ai-eval__request-ticket,
+  .ai-eval[data-guided="true"] .ai-eval__response-ticket {
+    padding: 10px;
+  }
+
+  .ai-eval[data-guided="true"] .ai-eval__experiment[data-starter="true"] {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .ai-eval[data-guided="true"] .ai-eval__experiment[data-starter="true"] .ai-eval__request-ticket {
+    padding: 12px;
+    border: 1px solid var(--game-ui-border-strong);
+  }
+
+  .quality-guide__eval-options {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .ai-eval[data-guided="true"] .ai-eval__response-context {
+    padding-block-end: 8px;
+  }
+
+  .ai-repair[data-guided="true"] .ai-repair__shared-inputs button {
+    padding-inline: 8px;
+    font-size: 13px;
+  }
+
+  .ai-repair[data-guided="true"] .ai-repair__paired-products .ai-repair__state-view {
+    padding: 8px;
+  }
+
+  .ai-repair[data-guided="true"] .ai-repair__paired-products .ai-repair__capacity {
+    gap: 4px;
+  }
+
+  .ai-repair[data-guided="true"] .ai-repair__paired-products .ai-repair__receipts > li {
+    padding-inline: 4px;
+  }
+
+  .ai-repair[data-guided="true"] .ai-repair__patch-offers > div {
+    grid-template-columns: 84px minmax(0, 1fr);
+    padding: 12px;
+  }
+}

@@ -27,10 +27,21 @@ test.afterEach(({ page }) => {
   ).toEqual([]);
 });
 
+async function btnLevelPractice(page: Page) {
+  await page.getByRole("button", { name: "进阶", exact: true }).click();
+}
+
+async function explore(page: Page) {
+  const control = page.getByRole("button", { name: "自由探索", exact: true });
+  if (await control.count()) await control.click();
+}
+
 async function openLab(page: Page, origin = ONLINE_ORIGIN) {
   await page.goto(`${origin}/play-lab/ai`, { waitUntil: "domcontentloaded" });
-  await expect(activity(page)).toHaveAttribute("data-activity-id", "ai-brief-walk");
+  await page.getByRole("button", { name: "挑战", exact: true }).click();
+  await expect(activity(page)).toHaveAttribute("data-activity-id", /^ai-brief-walk:/);
   await expect(page.locator(".learning-activity__sandbox")).toContainText("预设 AI 案例");
+  await explore(page);
 }
 async function mode(page: Page, name: string) {
   await humanClick(
@@ -40,6 +51,10 @@ async function mode(page: Page, name: string) {
       .getByRole("button", { name: new RegExp(`^${name}`) }),
     name,
   );
+  await page
+    .getByRole("button", { name: name === "原型对焦台" ? "挑战" : "进阶", exact: true })
+    .click();
+  await explore(page);
 }
 async function completed(page: Page) {
   await expect(activity(page).locator('[data-result="completed"]')).toBeVisible();
@@ -117,7 +132,8 @@ test.describe("Q AI product learning", () => {
     );
     await capture(page, "brief-walk-handoff", activity(page).locator(".learning-activity__result"));
     await button(page, "换个情境").click();
-    await expect(activity(page)).toHaveAttribute("data-activity-id", "ai-brief-club");
+    await explore(page);
+    await expect(activity(page)).toHaveAttribute("data-activity-id", /^ai-brief-club:/);
     await briefContract(page, ["先登录", "立即确认名额", "展示报名昵称"]);
     await previewA.getByRole("button", { name: "看看名单", exact: true }).click();
     await expect(previewA).not.toContainText("小安、小禾");
@@ -141,9 +157,9 @@ test.describe("Q AI product learning", () => {
   test("合集：原来五种保持可达，AI 连玩不会冒充课程进度", async ({ page }) => {
     await openLab(page);
     await page.getByRole("link", { name: "编程原理", exact: true }).click();
-    await expect(activity(page)).toHaveAttribute("data-activity-id", "connect-web");
+    await expect(activity(page)).toHaveAttribute("data-activity-id", /^connect-web:/);
     await page.getByRole("link", { name: "用 AI 做产品", exact: true }).click();
-    await expect(activity(page)).toHaveAttribute("data-activity-id", "ai-brief-walk");
+    await expect(activity(page)).toHaveAttribute("data-activity-id", /^ai-brief-walk:/);
     await button(page, "连玩五种").click();
     for (let index = 0; index < 5; index++) {
       await button(page, "先跳过").click();
@@ -152,7 +168,7 @@ test.describe("Q AI product learning", () => {
     }
     await expect(page.locator(".learning-play-lab__finish")).toContainText("完成 0 种，跳过 5 种");
     await page.reload();
-    await expect(activity(page)).toHaveAttribute("data-activity-id", "ai-brief-walk");
+    await expect(activity(page)).toHaveAttribute("data-activity-id", /^ai-brief-walk:/);
     await expect(page.locator(".learning-play-lab__session")).toContainText("本次发现 0 / 5");
   });
 });
@@ -248,7 +264,8 @@ test("Q 上下文：新点子不能推翻签字约定，整份与摘录都可交
   await expect(page.locator(".play-ai-context__result")).toContainText("28 元");
   await capture(page, "context-cafe-complete", page.locator(".play-ai-context__result"));
   await button(page, "换个情境").click();
-  await expect(activity(page)).toHaveAttribute("data-activity-id", "ai-context-workshop");
+  await explore(page);
+  await expect(activity(page)).toHaveAttribute("data-activity-id", /^ai-context-workshop:/);
   await contextDocument(page, "报名页定稿");
   await button(page, "移出整份").click();
   await page.getByRole("navigation", { name: "桌上的材料" }).getByRole("button").nth(3).click();
@@ -316,7 +333,8 @@ test("Q Agent：权限实际限制写入，误开范围能回退，全部拒绝�
   await completed(page);
   await capture(page, "agent-event-complete", page.locator(".play-ai-agent__workspace"));
   await button(page, "换个情境").click();
-  await expect(activity(page)).toHaveAttribute("data-activity-id", "ai-agent-recipe");
+  await explore(page);
+  await expect(activity(page)).toHaveAttribute("data-activity-id", /^ai-agent-recipe:/);
   for (const tool of ["材料读取器", "清单与文稿编辑器", "食谱预览器"]) await grant(page, tool);
   await button(page, "按当前范围执行一步").click();
   await button(page, "按当前范围执行一步").click();
@@ -471,6 +489,7 @@ test("Q 评测：第二情境第三次才变化，全部拒绝不能交付，完
   await openLab(page);
   await mode(page, "AI 试车场");
   await button(page, "换个情境").click();
+  await explore(page);
   await constructEvalSuite(page, "shop");
   await evalCandidate(page, "方案丙");
   await button(page, "用这题试当前方案").click();
@@ -584,6 +603,7 @@ test("Q 返工：保存提示不算证据，锁死偏好不能当修好", async 
   await openLab(page);
   await mode(page, "返工时光机");
   await button(page, "换个情境").click();
+  await explore(page);
   await button(page, "清爽素食").click();
   await button(page, "保存午餐偏好").click();
   await button(page, "封存这次失败证据").click();
@@ -639,6 +659,8 @@ test.describe("Q 连续手机试玩证据", () => {
     await finishBriefChange(page);
     await completed(page);
     await button(page, "下一个玩法").tap();
+    await btnLevelPractice(page);
+    await explore(page);
     await expect(activity(page).getByRole("heading", { level: 2 })).toBeInViewport({ ratio: 1 });
     await page.screenshot({
       path: resolve(EVIDENCE, "mobile-next-context-visible.png"),
@@ -660,6 +682,8 @@ test.describe("Q 连续手机试玩证据", () => {
     await completed(page);
     await capture(page, "mobile-context-result", page.locator(".play-ai-context__result"));
     await button(page, "下一个玩法").tap();
+    await btnLevelPractice(page);
+    await explore(page);
     await expect(activity(page).getByRole("heading", { level: 2 })).toBeInViewport({ ratio: 1 });
 
     await grant(page, "文件读取器");
@@ -675,6 +699,8 @@ test.describe("Q 连续手机试玩证据", () => {
     await completed(page);
     await capture(page, "mobile-agent-result", page.locator(".play-ai-agent__workspace"));
     await button(page, "下一个玩法").tap();
+    await btnLevelPractice(page);
+    await explore(page);
 
     await constructEvalSuite(page, "schedule");
     await page
@@ -688,6 +714,8 @@ test.describe("Q 连续手机试玩证据", () => {
     await button(page, "验收并保存回归清单").tap();
     await completed(page);
     await button(page, "下一个玩法").tap();
+    await btnLevelPractice(page);
+    await explore(page);
 
     await button(page, "预约这个时段").tap();
     await button(page, "预约这个时段").tap();

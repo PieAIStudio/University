@@ -19,12 +19,29 @@ import {
 } from "@pieai/university-core";
 import { translate as t } from "../i18n/index.js";
 import type { ActivityControls } from "./controls.js";
+import { PlayGuide } from "./PlayGuide.js";
+import { evalStarterQuestion } from "./QualityGuidance.js";
 
 const INPUTS = ["information", "availability", "supported"] as const;
 const inputSummary = (activity: EvalActivity, input: EvalScenario): string =>
   INPUTS.map((key) => activity.inputs[key][input[key] ? "present" : "absent"]).join(" · ");
 const sameCase = (left: EvalCase, right: EvalCase): boolean =>
   evalCaseSignature([left]) === evalCaseSignature([right]);
+const releaseMessageFor = (
+  activity: EvalActivity,
+  assessment: ReturnType<typeof assessEvalRelease>,
+): string =>
+  assessment.reason === "invalid-requirements"
+    ? t("play.qualityDifficulty.eval.invalid-requirements")
+    : assessment.reason === "input-coverage"
+      ? t("play.qualityDifficulty.eval.input-coverage", {
+          missing: assessment.uncoveredInputs
+            .map((input) => inputSummary(activity, input))
+            .join(" / "),
+        })
+      : t(`play.aiQuality.eval.${assessment.reason}`, {
+          missing: assessment.uncovered.map((item) => activity.outcomes[item].label).join(" / "),
+        });
 
 function ReleaseRecords({
   activity,
@@ -80,7 +97,12 @@ function ReleaseRecords({
   );
 }
 
-export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<EvalActivity>) {
+export function EvalGame({
+  activity,
+  disabled,
+  onAttempt,
+  guided = false,
+}: ActivityControls<EvalActivity>) {
   const [input, setInput] = useState<EvalScenario>({ ...activity.initial });
   const [expected, setExpected] = useState<EvalExpectation | "">("");
   const [cases, setCases] = useState<readonly EvalCase[]>([]);
@@ -91,14 +113,17 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
   const [releaseRuns, setReleaseRuns] = useState<Readonly<Record<string, EvalRun>>>({});
   const [message, setMessage] = useState("");
   const [releaseMessage, setReleaseMessage] = useState("");
+  const [composing, setComposing] = useState(false);
+  const [starterId, setStarterId] = useState("");
   const [focusRequest, setFocusRequest] = useState<{
-    readonly target: "trial" | "release";
+    readonly target: "composer" | "trial" | "release";
     readonly sequence: number;
   }>();
   const passed = useRef(false);
   const composer = useRef<HTMLHeadingElement>(null);
   const trialHeading = useRef<HTMLHeadingElement>(null);
   const releaseHeading = useRef<HTMLHeadingElement>(null);
+  const releaseFold = useRef<HTMLDetailsElement>(null);
   const locked = disabled || passed.current;
   const activeCase = cases.find((item) => item.id === activeCaseId);
   const selected = activity.candidates.find((item) => item.id === candidateId);
@@ -111,21 +136,55 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
   const changedResponse =
     activeReceipts.length > 1 &&
     new Set(activeReceipts.map((item) => item.observation.actual)).size > 1;
+  const starter = evalStarterQuestion(activity);
+  const showStarter = guided && !composing && cases.length === 0;
+  const assessment = assessEvalRelease(activity, cases, receipts, releaseRun);
+  const requiredCategories = activity.requiredExpectations ?? EVAL_EXPECTATIONS;
+  const nextCategory = assessment.uncovered[0];
+  const nextInput = assessment.uncoveredInputs[0];
+  const needsQuestion = Boolean(nextCategory || nextInput);
+  const nextQuestionPrompt = nextCategory
+    ? t(`play.qualityGuide.eval.next.${nextCategory}`)
+    : nextInput
+      ? t("play.qualityDifficulty.eval.crossNext", { input: inputSummary(activity, nextInput) })
+      : t("play.qualityGuide.eval.compose");
+  const introObserved =
+    activeReceipts.some((item) => !item.observation.passed) ||
+    activeReceipts.length >= activity.trials;
+  const canAddQuestion = !guided || composing || activeCase?.id !== starterId || introObserved;
+  const guideTitle = showStarter
+    ? t("play.qualityGuide.eval.start")
+    : !activeCase
+      ? nextQuestionPrompt
+      : activeReceipts.length === 0
+        ? t("play.qualityGuide.eval.tryCandidate")
+        : activeReceipts.length < activity.trials && !introObserved
+          ? t("play.qualityGuide.eval.repeat")
+          : needsQuestion
+            ? changedResponse
+              ? t("play.qualityGuide.eval.discovered")
+              : nextQuestionPrompt
+            : assessment.reason === "blind-spot"
+              ? t("play.qualityDifficulty.eval.moreTrials")
+              : t("play.qualityDifficulty.eval.release");
 
   useEffect(() => {
     const heading =
       focusRequest?.target === "release"
         ? releaseHeading.current
-        : focusRequest
-          ? trialHeading.current
-          : null;
+        : focusRequest?.target === "composer"
+          ? composer.current
+          : focusRequest
+            ? trialHeading.current
+            : null;
     if (!heading) return;
     const rect = heading.getBoundingClientRect();
     if (rect.top < 0 || rect.bottom > window.innerHeight - 100)
       heading.scrollIntoView({ block: "start", behavior: "instant" });
     heading.focus({ preventScroll: true });
   }, [focusRequest]);
-  function focus(target: "trial" | "release") {
+  function focus(target: "composer" | "trial" | "release") {
+    if (target === "release" && releaseFold.current) releaseFold.current.open = true;
     setFocusRequest((previous) => ({ target, sequence: (previous?.sequence ?? 0) + 1 }));
   }
   function probe(testCase: EvalCase) {
@@ -147,14 +206,19 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
     setMessage(t("play.aiQuality.eval.observed", { count: trial, total: activity.trials }));
     focus("trial");
   }
-  function freezeAndProbe() {
+  function freezeAndProbe(request = input, criterion = expected, starterRequest = false) {
     if (locked) return;
-    const result = freezeEvalCase(cases, input, expected as EvalExpectation);
+    const result = freezeEvalCase(cases, request, criterion as EvalExpectation);
     if (!result.valid) {
       setMessage(t(`play.aiQuality.eval.${result.reason}`));
       return;
     }
     setCases((previous) => [...previous, result.testCase]);
+    if (starterRequest) {
+      setStarterId(result.testCase.id);
+      setInput({ ...request });
+      setExpected(criterion);
+    }
     setActiveCaseId(result.testCase.id);
     setReleaseRuns({});
     setReleaseMessage("");
@@ -165,9 +229,9 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
     setActiveCaseId("");
     setInput({ ...activity.initial });
     setExpected("");
+    setComposing(true);
     setMessage("");
-    composer.current?.scrollIntoView({ block: "start", behavior: "instant" });
-    composer.current?.focus({ preventScroll: true });
+    focus("composer");
   }
   function removeCase(testCase: EvalCase, edit: boolean) {
     if (locked) return;
@@ -183,10 +247,10 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
       setExpected("");
     }
     setActiveCaseId("");
+    setComposing(true);
     setMessage(t("play.aiQuality.eval.caseChanged"));
     setReleaseMessage("");
-    composer.current?.scrollIntoView({ block: "start", behavior: "instant" });
-    composer.current?.focus({ preventScroll: true });
+    focus("composer");
   }
   function rerunBoundary() {
     if (locked) return;
@@ -197,11 +261,7 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
     }
     setReleaseRuns((previous) => ({ ...previous, [candidateId]: result.run }));
     const assessment = assessEvalRelease(activity, cases, receipts, result.run);
-    setReleaseMessage(
-      t(`play.aiQuality.eval.${assessment.reason}`, {
-        missing: assessment.uncovered.map((item) => activity.outcomes[item].label).join("、"),
-      }),
-    );
+    setReleaseMessage(releaseMessageFor(activity, assessment));
     focus("release");
   }
   function finish() {
@@ -209,9 +269,7 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
     const result = assessEvalRelease(activity, cases, receipts, releaseRun);
     const summary = result.passed
       ? t("play.aiQuality.eval.success")
-      : t(`play.aiQuality.eval.${result.reason}`, {
-          missing: result.uncovered.map((item) => activity.outcomes[item].label).join("、"),
-        });
+      : releaseMessageFor(activity, result);
     passed.current = result.passed;
     setReleaseMessage(summary);
     const handoff = [
@@ -263,72 +321,61 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
   }
 
   return (
-    <div className="ai-quality ai-eval">
-      <details className="ai-quality__contract ai-eval__contract" open>
-        <summary>
-          <strong>{activity.product}</strong>
-        </summary>
-        <p>{activity.contract}</p>
-      </details>
-      <section className="ai-eval__experiment">
-        <div className="ai-quality__row">
+    <div className="ai-quality ai-eval" data-guided={guided}>
+      {guided ? <PlayGuide title={guideTitle} /> : null}
+      <section className="ai-eval__experiment" data-starter={showStarter}>
+        <div className="ai-quality__row" hidden={showStarter}>
           <h4 ref={composer} tabIndex={-1}>
-            {t("play.aiQuality.eval.challenge")}
+            {showStarter ? t("play.qualityGuide.eval.starter") : t("play.aiQuality.eval.challenge")}
           </h4>
-          {activeCase ? (
+          {activeCase && canAddQuestion && !guided ? (
             <GameButton variant="ghost" disabled={locked} onClick={newQuestion}>
-              {t("play.aiQuality.eval.newQuestion")}
+              {t(guided ? "play.qualityGuide.eval.ownQuestion" : "play.aiQuality.eval.newQuestion")}
             </GameButton>
           ) : null}
         </div>
-        <div
-          className="ai-eval__candidate-switch"
-          role="group"
-          aria-label={t("play.aiQuality.eval.chooseCandidate")}
-        >
-          {activity.candidates.map((candidate) => (
-            <GameButton
-              key={candidate.id}
-              variant={candidateId === candidate.id ? "primary" : "secondary"}
-              disabled={locked}
-              aria-pressed={candidateId === candidate.id}
-              onClick={() => {
-                if (!locked) {
-                  setCandidateId(candidate.id);
-                  setMessage("");
-                  const assessment = assessEvalRelease(
-                    activity,
-                    cases,
-                    receipts,
-                    releaseRuns[candidate.id],
-                  );
-                  setReleaseMessage(
-                    t(`play.aiQuality.eval.${assessment.reason}`, {
-                      missing: assessment.uncovered
-                        .map((item) => activity.outcomes[item].label)
-                        .join("、"),
-                    }),
-                  );
-                }
-              }}
-            >
-              {candidate.label}
-            </GameButton>
-          ))}
-        </div>
-        <p className="ai-quality__muted">{t("play.aiQuality.eval.unknownNote")}</p>
         <div className="ai-eval__test-pair">
           <div className="ai-eval__request-ticket">
-            <strong>{t("play.aiQuality.eval.requestTicket")}</strong>
-            {activeCase ? (
+            <strong>
+              {t(
+                showStarter
+                  ? "play.qualityGuide.eval.starter"
+                  : "play.aiQuality.eval.requestTicket",
+              )}
+            </strong>
+            {showStarter ? (
               <>
-                <ul>
-                  {INPUTS.map((key) => (
-                    <li key={key}>
-                      {activity.inputs[key][activeCase.input[key] ? "present" : "absent"]}
-                    </li>
-                  ))}
-                </ul>
+                <p className="quality-guide__request">{inputSummary(activity, starter.input)}</p>
+                <div className="ai-eval__acceptance">
+                  <span>{t("play.aiQuality.eval.expect")}</span>
+                  <strong>{activity.outcomes[starter.expected].label}</strong>
+                </div>
+                <GameButton
+                  variant="primary"
+                  disabled={locked}
+                  onClick={() => freezeAndProbe(starter.input, starter.expected, true)}
+                >
+                  {t("play.qualityGuide.eval.startAction")}
+                </GameButton>
+                <p className="ai-quality__muted quality-guide__starter-note">
+                  {t("play.qualityGuide.eval.starterNote")}
+                </p>
+              </>
+            ) : activeCase ? (
+              <>
+                {guided ? (
+                  <p className="quality-guide__request">
+                    {inputSummary(activity, activeCase.input)}
+                  </p>
+                ) : (
+                  <ul>
+                    {INPUTS.map((key) => (
+                      <li key={key}>
+                        {activity.inputs[key][activeCase.input[key] ? "present" : "absent"]}
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <div className="ai-eval__acceptance">
                   <span>{t("play.aiQuality.eval.expect")}</span>
                   <strong>{activity.outcomes[activeCase.expected].label}</strong>
@@ -358,7 +405,10 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
                             disabled={locked}
                             aria-pressed={input[key] === present}
                             onClick={() => {
-                              if (!locked) setInput({ ...input, [key]: present });
+                              if (!locked) {
+                                setInput({ ...input, [key]: present });
+                                setComposing(true);
+                              }
                             }}
                           >
                             {activity.inputs[key][present ? "present" : "absent"]}
@@ -378,7 +428,10 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
                         disabled={locked}
                         aria-pressed={expected === outcome}
                         onClick={() => {
-                          if (!locked) setExpected(outcome);
+                          if (!locked) {
+                            setExpected(outcome);
+                            setComposing(true);
+                          }
                         }}
                       >
                         {activity.outcomes[outcome].label}
@@ -386,7 +439,7 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
                     ))}
                   </div>
                 </fieldset>
-                <GameButton variant="primary" disabled={locked} onClick={freezeAndProbe}>
+                <GameButton variant="primary" disabled={locked} onClick={() => freezeAndProbe()}>
                   {t("play.aiQuality.eval.freezeAndProbe")}
                 </GameButton>
                 <p className="ai-quality__status" role="status">
@@ -395,13 +448,13 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
               </>
             )}
           </div>
-          <div className="ai-eval__response-ticket">
+          <div className="ai-eval__response-ticket" hidden={showStarter}>
             <h5 ref={trialHeading} tabIndex={-1}>
               {t("play.aiQuality.eval.responseTicket", { candidate: selected?.label ?? "" })}
             </h5>
             {activeCase ? (
               <div className="ai-eval__response-context">
-                <p>{inputSummary(activity, activeCase.input)}</p>
+                {!guided ? <p>{inputSummary(activity, activeCase.input)}</p> : null}
                 <strong>
                   {t("play.aiQuality.eval.expected", {
                     result: activity.outcomes[activeCase.expected].label,
@@ -452,7 +505,7 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
             {changedResponse ? (
               <p className="ai-eval__discovery">{t("play.aiQuality.eval.responseChanged")}</p>
             ) : null}
-            {activeCase ? (
+            {activeCase && activeReceipts.length < activity.trials ? (
               <GameButton
                 variant="primary"
                 disabled={locked || activeReceipts.length >= activity.trials}
@@ -465,7 +518,7 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
                 )}
               </GameButton>
             ) : null}
-            {activeReceipts.length === 1 ? (
+            {activeReceipts.length === 1 && !guided ? (
               <p className="ai-quality__muted">
                 {t(
                   activeReceipts[0]!.observation.passed
@@ -477,6 +530,19 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
             {activeReceipts.length >= activity.trials ? (
               <p className="ai-quality__muted">{t("play.aiQuality.eval.sequenceDone")}</p>
             ) : null}
+            {guided && activeCase && introObserved ? (
+              <GameButton
+                variant="secondary"
+                disabled={locked}
+                onClick={needsQuestion ? newQuestion : () => focus("release")}
+              >
+                {t(
+                  needsQuestion
+                    ? "play.qualityGuide.eval.ownQuestion"
+                    : "play.qualityGuide.eval.openRelease",
+                )}
+              </GameButton>
+            ) : null}
             {activeCase ? (
               <p className="ai-quality__status" role="status">
                 {message}
@@ -484,102 +550,210 @@ export function EvalGame({ activity, disabled, onAttempt }: ActivityControls<Eva
             ) : null}
           </div>
         </div>
+        <div className="quality-guide__eval-options">
+          <details className="ai-quality__contract quality-guide__requirements" open={!guided}>
+            <summary>
+              {t("play.qualityDifficulty.eval.requirements", {
+                count: requiredCategories.length,
+                cross: activity.requiredInputs?.length
+                  ? t("play.qualityDifficulty.eval.crossCount", {
+                      count: activity.requiredInputs.length,
+                    })
+                  : "",
+              })}
+            </summary>
+            <ul>
+              {requiredCategories.map((category) => (
+                <li key={category} data-complete={!assessment.uncovered.includes(category)}>
+                  {activity.outcomes[category].label} ·{" "}
+                  {t(
+                    assessment.uncovered.includes(category)
+                      ? "play.qualityDifficulty.eval.requirementPending"
+                      : "play.qualityDifficulty.eval.requirementDone",
+                  )}
+                </li>
+              ))}
+            </ul>
+            {activity.requiredInputs?.length ? (
+              <>
+                <strong>{t("play.qualityDifficulty.eval.crossHeading")}</strong>
+                <ul>
+                  {activity.requiredInputs.map((input) => {
+                    const missing = assessment.uncoveredInputs.some((item) =>
+                      INPUTS.every((key) => item[key] === input[key]),
+                    );
+                    return (
+                      <li
+                        key={INPUTS.map((key) => Number(input[key])).join("")}
+                        data-complete={!missing}
+                      >
+                        {inputSummary(activity, input)} ·{" "}
+                        {t(
+                          missing
+                            ? "play.qualityDifficulty.eval.requirementPending"
+                            : "play.qualityDifficulty.eval.requirementDone",
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            ) : null}
+          </details>
+          <details className="ai-quality__contract ai-eval__contract" open={!guided}>
+            <summary>
+              <strong>{guided ? t("play.qualityGuide.eval.contract") : activity.product}</strong>
+            </summary>
+            <p>{activity.contract}</p>
+          </details>
+          <details className="quality-guide__candidate-fold" open={!guided}>
+            <summary>
+              {t("play.qualityGuide.eval.candidate", { candidate: selected?.label ?? "" })}
+            </summary>
+            <div
+              className="ai-eval__candidate-switch"
+              role="group"
+              aria-label={t("play.aiQuality.eval.chooseCandidate")}
+            >
+              {activity.candidates.map((candidate) => (
+                <GameButton
+                  key={candidate.id}
+                  variant={candidateId === candidate.id ? "primary" : "secondary"}
+                  disabled={locked}
+                  aria-pressed={candidateId === candidate.id}
+                  onClick={() => {
+                    if (!locked) {
+                      setCandidateId(candidate.id);
+                      setMessage("");
+                      const assessment = assessEvalRelease(
+                        activity,
+                        cases,
+                        receipts,
+                        releaseRuns[candidate.id],
+                      );
+                      setReleaseMessage(releaseMessageFor(activity, assessment));
+                    }
+                  }}
+                >
+                  {candidate.label}
+                </GameButton>
+              ))}
+            </div>
+            <p className="ai-quality__muted">{t("play.aiQuality.eval.unknownNote")}</p>
+          </details>
+        </div>
       </section>
       {cases.length > 0 ? (
         <>
-          <section className="ai-eval__collection">
-            <div className="ai-quality__row">
-              <h4>{t("play.aiQuality.eval.collection", { count: cases.length })}</h4>
-              <GameButton variant="secondary" disabled={locked} onClick={newQuestion}>
-                {t("play.aiQuality.eval.newQuestion")}
-              </GameButton>
-            </div>
-            <p className="ai-quality__muted">{t("play.aiQuality.eval.collectionNote")}</p>
-            <ol className="ai-eval__case-sheet">
-              {cases.map((testCase, index) => {
-                const records = receipts.filter((item) => sameCase(item.testCase, testCase));
-                return (
-                  <li key={testCase.id}>
-                    <span className="ai-eval__case-number" aria-hidden="true">
-                      {index + 1}
-                    </span>
-                    <div>
-                      <strong>{activity.outcomes[testCase.expected].label}</strong>
-                      <p>{inputSummary(activity, testCase.input)}</p>
-                      <small>
-                        {t("play.aiQuality.eval.collectionEvidence", {
-                          count: records.length,
-                          failures: records.filter((item) => !item.observation.passed).length,
-                        })}
-                      </small>
-                    </div>
-                    <div className="ai-eval__case-actions">
-                      <GameButton
-                        variant="secondary"
-                        disabled={locked}
-                        onClick={() => {
-                          if (!locked) {
-                            setActiveCaseId(testCase.id);
-                            setMessage("");
-                            composer.current?.scrollIntoView({
-                              block: "start",
-                              behavior: "instant",
-                            });
-                            composer.current?.focus({ preventScroll: true });
-                          }
-                        }}
-                      >
-                        {t("play.aiQuality.eval.viewCase")}
-                      </GameButton>
-                      <GameButton
-                        variant="ghost"
-                        disabled={locked}
-                        onClick={() => removeCase(testCase, false)}
-                      >
-                        {t("play.aiQuality.eval.remove")}
-                      </GameButton>
-                    </div>
-                  </li>
-                );
+          <details className="quality-guide__collection-fold" open={!guided}>
+            <summary>
+              {t("play.aiQuality.eval.collection", { count: cases.length })} ·{" "}
+              {t("play.qualityDifficulty.eval.coverage", {
+                count: requiredCategories.length - assessment.uncovered.length,
+                total: requiredCategories.length,
               })}
-            </ol>
-          </section>
-          <section className="ai-quality__stage ai-eval__release">
-            <h4 ref={releaseHeading} tabIndex={-1}>
-              {t("play.aiQuality.eval.releaseTitle")}
-            </h4>
-            <p>{t("play.aiQuality.eval.chosen", { name: selected?.label ?? "" })}</p>
-            <p className="ai-quality__muted">{t("play.aiQuality.eval.releaseNote")}</p>
-            <div className="ai-eval__guards">
-              {INPUTS.map((key) => (
-                <GameToggle
-                  key={key}
-                  label={activity.inputs[key].guard}
-                  checked={policy[key]}
-                  disabled={locked}
-                  onClick={() => {
-                    if (!locked) {
-                      setPolicy({ ...policy, [key]: !policy[key] });
-                      setReleaseRuns({});
-                      setReleaseMessage(t("play.aiQuality.eval.stale-run"));
-                    }
-                  }}
-                />
-              ))}
-            </div>
-            <GameButton variant="primary" onClick={rerunBoundary} disabled={locked}>
-              {t("play.aiQuality.eval.runBoundary")}
-            </GameButton>
-            <p className="ai-quality__status" role="status">
-              {releaseMessage}
-            </p>
-            {releaseRun ? (
-              <ReleaseRecords activity={activity} cases={cases} run={releaseRun} />
-            ) : null}
-            <GameButton variant="primary" onClick={finish} disabled={locked}>
-              {t("play.aiQuality.eval.finish")}
-            </GameButton>
-          </section>
+            </summary>
+            <section className="ai-eval__collection">
+              <div className="ai-quality__row">
+                <h4>{t("play.aiQuality.eval.collection", { count: cases.length })}</h4>
+                <GameButton variant="secondary" disabled={locked} onClick={newQuestion}>
+                  {t("play.aiQuality.eval.newQuestion")}
+                </GameButton>
+              </div>
+              <p className="ai-quality__muted">{t("play.aiQuality.eval.collectionNote")}</p>
+              <ol className="ai-eval__case-sheet">
+                {cases.map((testCase, index) => {
+                  const records = receipts.filter((item) => sameCase(item.testCase, testCase));
+                  return (
+                    <li key={testCase.id}>
+                      <span className="ai-eval__case-number" aria-hidden="true">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <strong>{activity.outcomes[testCase.expected].label}</strong>
+                        <p>{inputSummary(activity, testCase.input)}</p>
+                        <small>
+                          {t("play.aiQuality.eval.collectionEvidence", {
+                            count: records.length,
+                            failures: records.filter((item) => !item.observation.passed).length,
+                          })}
+                        </small>
+                      </div>
+                      <div className="ai-eval__case-actions">
+                        <GameButton
+                          variant="secondary"
+                          disabled={locked}
+                          onClick={() => {
+                            if (!locked) {
+                              setActiveCaseId(testCase.id);
+                              setMessage("");
+                              composer.current?.scrollIntoView({
+                                block: "start",
+                                behavior: "instant",
+                              });
+                              composer.current?.focus({ preventScroll: true });
+                            }
+                          }}
+                        >
+                          {t("play.aiQuality.eval.viewCase")}
+                        </GameButton>
+                        <GameButton
+                          variant="ghost"
+                          disabled={locked}
+                          onClick={() => removeCase(testCase, false)}
+                        >
+                          {t("play.aiQuality.eval.remove")}
+                        </GameButton>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
+          </details>
+          <details
+            className="quality-guide__release-fold"
+            ref={releaseFold}
+            open={!guided || !needsQuestion}
+          >
+            <summary>{t("play.qualityGuide.eval.releaseClosed")}</summary>
+            <section className="ai-quality__stage ai-eval__release">
+              <h4 ref={releaseHeading} tabIndex={-1}>
+                {t("play.aiQuality.eval.releaseTitle")}
+              </h4>
+              <p>{t("play.aiQuality.eval.chosen", { name: selected?.label ?? "" })}</p>
+              <p className="ai-quality__muted">{t("play.qualityDifficulty.eval.releaseNote")}</p>
+              <div className="ai-eval__guards">
+                {INPUTS.map((key) => (
+                  <GameToggle
+                    key={key}
+                    label={activity.inputs[key].guard}
+                    checked={policy[key]}
+                    disabled={locked}
+                    onClick={() => {
+                      if (!locked) {
+                        setPolicy({ ...policy, [key]: !policy[key] });
+                        setReleaseRuns({});
+                        setReleaseMessage(t("play.aiQuality.eval.stale-run"));
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+              <GameButton variant="primary" onClick={rerunBoundary} disabled={locked}>
+                {t("play.aiQuality.eval.runBoundary")}
+              </GameButton>
+              <p className="ai-quality__status" role="status">
+                {releaseMessage}
+              </p>
+              {releaseRun ? (
+                <ReleaseRecords activity={activity} cases={cases} run={releaseRun} />
+              ) : null}
+              <GameButton variant="primary" onClick={finish} disabled={locked}>
+                {t("play.aiQuality.eval.finish")}
+              </GameButton>
+            </section>
+          </details>
         </>
       ) : null}
     </div>

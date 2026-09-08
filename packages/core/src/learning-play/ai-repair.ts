@@ -1,6 +1,10 @@
 import type { ActivityBase } from "./types.js";
 
 export type RepairImplementation = "broken" | "scoped" | "rewrite" | "removed";
+export type RepairRegressionContract =
+  | "change-choice"
+  | "keep-other-booking"
+  | "persist-each-change";
 export type RepairEvent =
   | { readonly type: "choose"; readonly value: string }
   | { readonly type: "submit" | "cancel" | "reload" };
@@ -16,6 +20,9 @@ export interface RepairActivity extends ActivityBase {
   readonly reproduceSteps: readonly string[];
   readonly regression: string;
   readonly regressionSteps: readonly string[];
+  /** The first three choices are A (keep/original), B (first change), C (second change). */
+  readonly regressionContract?: RepairRegressionContract;
+  readonly offeredPatches?: readonly Exclude<RepairImplementation, "broken">[];
   readonly submitLabel: string;
   readonly patches: Readonly<
     Record<
@@ -164,7 +171,11 @@ export function replayRepair(
     !Number.isInteger(activity.capacity) ||
     activity.capacity < 2 ||
     activity.capacity > 12 ||
-    !["broken", "scoped", "rewrite", "removed"].includes(implementation)
+    !["broken", "scoped", "rewrite", "removed"].includes(implementation) ||
+    !validRepairContract(activity) ||
+    (implementation !== "broken" &&
+      activity.offeredPatches !== undefined &&
+      !activity.offeredPatches.includes(implementation))
   )
     return { valid: false, reason: "invalid-activity" };
   if (events.length > 40) return { valid: false, reason: "invalid-events" };
@@ -180,6 +191,24 @@ export function replayRepair(
     valid: true,
     trace: { implementation, events: events.map((event) => ({ ...event })), entries, product },
   };
+}
+
+function validRepairContract(activity: RepairActivity): boolean {
+  const contract = activity.regressionContract ?? "change-choice";
+  const offered = activity.offeredPatches;
+  return (
+    ["change-choice", "keep-other-booking", "persist-each-change"].includes(contract) &&
+    (contract === "change-choice" || activity.choices.length >= 3) &&
+    (contract !== "keep-other-booking" || activity.model === "booking") &&
+    (contract !== "persist-each-change" || activity.model === "preference") &&
+    (offered === undefined ||
+      (Array.isArray(offered) &&
+        offered.length >= 2 &&
+        offered.length <= 3 &&
+        offered.includes("scoped") &&
+        new Set(offered).size === offered.length &&
+        offered.every((patch) => ["scoped", "rewrite", "removed"].includes(patch))))
+  );
 }
 
 const observable = (activity: RepairActivity, product: RepairProduct): string =>
@@ -257,6 +286,10 @@ export function checkRepairRegression(
     return "failed";
   const expected = replayRepair(activity, "scoped", trace.events);
   if (!expected.valid) return "failed";
+  if (activity.regressionContract === "keep-other-booking")
+    return checkOtherBooking(activity, trace, expected.trace);
+  if (activity.regressionContract === "persist-each-change")
+    return checkEachSavedChange(activity, trace, expected.trace);
   const submits = expected.trace.entries.filter((entry) => entry.event.type === "submit");
   const distinct = new Set(submits.map((entry) => entry.before.choice));
   if (activity.model === "booking") {
@@ -292,6 +325,102 @@ export function checkRepairRegression(
   if (observable(activity, trace.product) !== observable(activity, expected.trace.product))
     return "failed";
   return "passed";
+}
+
+/** Cancelling B must never remove A, even if A is re-created later. */
+function checkOtherBooking(
+  activity: RepairActivity,
+  trace: RepairTrace,
+  expected: RepairTrace,
+): "missing" | "failed" | "passed" {
+  const [kept, cancelled, replacement] = activity.choices.map((choice) => choice.id);
+  const firstKeep = trace.entries.findIndex(
+    (entry) =>
+      entry.event.type === "submit" && entry.before.choice === kept && entry.effect === "submitted",
+  );
+  if (firstKeep < 0) return "missing";
+  if (
+    trace.entries
+      .slice(firstKeep)
+      .some((entry) => entry.after.reservations.filter((choice) => choice === kept).length !== 1)
+  )
+    return "failed";
+  const cancelIndex = trace.entries.findIndex(
+    (entry, index) =>
+      index > firstKeep &&
+      entry.event.type === "cancel" &&
+      entry.before.choice === cancelled &&
+      entry.before.reservations.includes(kept!) &&
+      entry.before.reservations.includes(cancelled!) &&
+      !entry.after.reservations.includes(cancelled!),
+  );
+  if (cancelIndex < 0) return "missing";
+  const replaced = trace.entries
+    .slice(cancelIndex + 1)
+    .some(
+      (entry) =>
+        entry.event.type === "submit" &&
+        entry.before.choice === replacement &&
+        entry.effect === "submitted",
+    );
+  if (!replaced) return "missing";
+  return trace.product.reservations.length === 2 &&
+    trace.product.reservations.includes(kept!) &&
+    trace.product.reservations.includes(replacement!) &&
+    !trace.product.reservations.includes(cancelled!) &&
+    observable(activity, trace.product) === observable(activity, expected.product)
+    ? "passed"
+    : "failed";
+}
+
+/** Find an actual choose → save → reopen before another choice replaces that observation. */
+function savedChangeReadAt(trace: RepairTrace, target: string, after: number): number | undefined {
+  let changed = false;
+  let saved = false;
+  for (let index = after + 1; index < trace.entries.length; index++) {
+    const entry = trace.entries[index]!;
+    if (entry.event.type === "choose") {
+      if (entry.after.choice !== target) {
+        changed = false;
+        saved = false;
+      } else if (entry.before.choice !== target) changed = true;
+    } else if (entry.event.type === "submit") {
+      saved = changed && entry.before.choice === target;
+    } else if (
+      entry.event.type === "reload" &&
+      saved &&
+      entry.after.choice === target &&
+      entry.after.savedChoice === target
+    ) {
+      return index;
+    }
+  }
+  return undefined;
+}
+
+function checkEachSavedChange(
+  activity: RepairActivity,
+  trace: RepairTrace,
+  expected: RepairTrace,
+): "missing" | "failed" | "passed" {
+  const firstChange = activity.choices[1]!.id;
+  const secondChange = activity.choices[2]!.id;
+  const firstRead = savedChangeReadAt(expected, firstChange, -1);
+  if (firstRead === undefined) return "missing";
+  const secondRead = savedChangeReadAt(expected, secondChange, firstRead);
+  if (secondRead === undefined) return "missing";
+  const readsMatch = ([firstRead, secondRead] as const).every(
+    (index) =>
+      trace.entries[index]!.after.choice === expected.entries[index]!.after.choice &&
+      trace.entries[index]!.after.savedChoice === expected.entries[index]!.after.savedChoice,
+  );
+  return readsMatch &&
+    trace.events.at(-1)?.type === "reload" &&
+    trace.product.choice === secondChange &&
+    trace.product.savedChoice === secondChange &&
+    observable(activity, trace.product) === observable(activity, expected.product)
+    ? "passed"
+    : "failed";
 }
 
 export function createRepairWorkspace(activity: RepairActivity): RepairWorkspace {

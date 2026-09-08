@@ -18,6 +18,8 @@ related:
 
 # 五种可复用的学习玩法
 
+> 本文保留该轮的决定和原始验收；当前入口、引导与难度配置由后续[易玩度与三档迭代](play-usability.md)接续，旧截图不代表当前首屏。
+
 用户要求独立分支、独立 worktree，循环实验直到交付五种有趣、有效、可以插入课程的玩法。
 本轮起点 `4da3605`，分支 `codex/learning-play-lab`，相邻工作区 `University-play`。
 学习者行为先定义于 [journey v5](../../reference/player-journey/v5/index.html#learning-play)。

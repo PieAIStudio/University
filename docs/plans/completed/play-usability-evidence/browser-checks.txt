@@ -1,0 +1,78 @@
+full-browser.log
+Running 30 tests using 1 worker
+  ✓   1 [default] › e2e/P.learning-play.spec.ts:109:3 › P 五种学习玩法 › 接线能纠正额外关系，两种情境都执行两条路径 (14.6s)
+  ✓   2 [default] › e2e/P.learning-play.spec.ts:141:3 › P 五种学习玩法 › 调参必须同时满足目标，保留实验对照与多个可行解 (3.7s)
+  ✓   3 [default] › e2e/P.learning-play.spec.ts:163:3 › P 五种学习玩法 › 反例来自用户输入：普通值无功、边界值与负数成立，重玩清空记录 (2.9s)
+  ✓   4 [default] › e2e/P.learning-play.spec.ts:188:3 › P 五种学习玩法 › 调度须先准备缓存，及时数据不能复用，两种工作流均守住预算 (2.5s)
+  ✓   5 [default] › e2e/P.learning-play.spec.ts:218:3 › P 五种学习玩法 › 指令碰撞能定位，停止保留编辑，重复动作在两个场地都走到终点 (16.8s)
+  ✓   6 [default] › e2e/P.learning-play.spec.ts:264:3 › P 五种学习玩法 › 暂停和超时保留调度现场，可以退出计时继续练习 (27.5s)
+  ✓   7 [default] › e2e/P.learning-play.spec.ts:289:3 › P 五种学习玩法 › 连续试玩单独记录跳过，刷新后不冒充课程进度 (2.8s)
+  ✓   8 [default] › e2e/P.learning-play.spec.ts:316:5 › P 手机与同一学习者表面 › delivery：五种玩法在窄屏都能操作，键盘找到反例 (5.0s)
+  ✓   9 [default] › e2e/P.learning-play.spec.ts:316:5 › P 手机与同一学习者表面 › authoring：五种玩法在窄屏都能操作，键盘找到反例 (5.1s)
+  ✓  10 [default] › e2e/P.learning-play.spec.ts:352:1 › P 手机长程序运行时棋盘和停止按钮都在视口里 (9.0s)
+  ✓  11 [default] › e2e/P.learning-play.spec.ts:381:1 › P 宽屏中的窄课文栏仍保留可读棋盘与单栏编辑 (2.3s)
+  ✓  12 [default] › e2e/Q.ai-product-play.spec.ts:104:3 › Q AI product learning › 原型：约束不能替代验收，两个任务要求真实产品行为 (5.5s)
+  ✓  13 [default] › e2e/Q.ai-product-play.spec.ts:157:3 › Q AI product learning › 合集：原来五种保持可达，AI 连玩不会冒充课程进度 (4.1s)
+  ✓  14 [default] › e2e/Q.ai-product-play.spec.ts:180:3 › Q delivery 手机：五个 AI 玩法可达，键盘能验证真实产品 (5.8s)
+  ✓  15 [default] › e2e/Q.ai-product-play.spec.ts:180:3 › Q authoring 手机：五个 AI 玩法可达，键盘能验证真实产品 (6.0s)
+  ✓  16 [default] › e2e/Q.ai-product-play.spec.ts:238:1 › Q 上下文：新点子不能推翻签字约定，整份与摘录都可交付 (3.7s)
+  ✓  17 [default] › e2e/Q.ai-product-play.spec.ts:301:1 › Q Agent：权限实际限制写入，误开范围能回退，全部拒绝不能交付 (3.7s)
+  ✓  18 [default] › e2e/Q.ai-product-play.spec.ts:349:1 › Q Agent 手机：推进在危险改写前停住，文件卡直接收回范围后继续 (6.5s)
+  ✓  19 [default] › e2e/Q.ai-product-play.spec.ts:447:1 › Q 评测：同题逐次揭示反差，收藏保留发现，编辑只失效对应证据 (4.5s)
+  ✓  20 [default] › e2e/Q.ai-product-play.spec.ts:487:1 › Q 评测：第二情境第三次才变化，全部拒绝不能交付，完整检查可扶正另一方案 (4.0s)
+  ✓  21 [default] › e2e/Q.ai-product-play.spec.ts:547:1 › Q 返工：同一失败的修复不能牺牲改约，检查点保留分支现场 (4.6s)
+  ✓  22 [default] › e2e/Q.ai-product-play.spec.ts:601:1 › Q 返工：保存提示不算证据，锁死偏好不能当修好 (4.2s)
+  ✓  23 [default] › e2e/Q.ai-product-play.spec.ts:632:1 › Q 宽屏内的 390px 课文栏：五个 AI 玩法按组件宽度排版 (4.0s)
+  ✓  24 [default] › e2e/Q.ai-product-play.spec.ts:651:3 › Q 连续手机试玩证据 › 五种 AI 学习动作在手机完成，中段操作与结果可读 (7.7s)
+  ✘  25 [default] › e2e/R.play-usability.spec.ts:68:3 › R delivery 手机：十种玩法首屏都有真正可做的第一步 (23.6s)
+  ✘  26 [default] › e2e/R.play-usability.spec.ts:68:3 › R authoring 手机：十种玩法首屏都有真正可做的第一步 (23.7s)
+  ✓  27 [default] › e2e/R.play-usability.spec.ts:130:1 › R 原型引导：只问一件事、自由切换保留工作、客户变更后重新试用 (2.7s)
+  ✘  28 [default] › e2e/R.play-usability.spec.ts:164:3 › R 入门 AI 情境 1：从真实问题进入并完成四种工作流 (22.0s)
+  ✘  29 [default] › e2e/R.play-usability.spec.ts:164:3 › R 入门 AI 情境 2：从真实问题进入并完成四种工作流 (22.1s)
+  ✘  30 [default] › e2e/R.play-usability.spec.ts:252:1 › R 难度身份：切档清本轮、切帮助保现场、三十种组合均可打开 (25.9s)
+  5 failed
+  25 passed (5.4m)
+
+final-browser.log
+Running 18 tests using 1 worker
+  ✓   1 [default] › e2e/P.learning-play.spec.ts:109:3 › P 五种学习玩法 › 接线能纠正额外关系，两种情境都执行两条路径 (14.2s)
+  ✓   2 [default] › e2e/P.learning-play.spec.ts:141:3 › P 五种学习玩法 › 调参必须同时满足目标，保留实验对照与多个可行解 (3.2s)
+  ✓   3 [default] › e2e/P.learning-play.spec.ts:163:3 › P 五种学习玩法 › 反例来自用户输入：普通值无功、边界值与负数成立，重玩清空记录 (3.0s)
+  ✓   4 [default] › e2e/P.learning-play.spec.ts:188:3 › P 五种学习玩法 › 调度须先准备缓存，及时数据不能复用，两种工作流均守住预算 (2.7s)
+  ✓   5 [default] › e2e/P.learning-play.spec.ts:218:3 › P 五种学习玩法 › 指令碰撞能定位，停止保留编辑，重复动作在两个场地都走到终点 (16.5s)
+  ✓   6 [default] › e2e/P.learning-play.spec.ts:264:3 › P 五种学习玩法 › 暂停和超时保留调度现场，可以退出计时继续练习 (29.3s)
+  ✓   7 [default] › e2e/P.learning-play.spec.ts:289:3 › P 五种学习玩法 › 连续试玩单独记录跳过，刷新后不冒充课程进度 (3.2s)
+  ✓   8 [default] › e2e/P.learning-play.spec.ts:316:5 › P 手机与同一学习者表面 › delivery：五种玩法在窄屏都能操作，键盘找到反例 (4.7s)
+  ✓   9 [default] › e2e/P.learning-play.spec.ts:316:5 › P 手机与同一学习者表面 › authoring：五种玩法在窄屏都能操作，键盘找到反例 (5.1s)
+  ✓  10 [default] › e2e/P.learning-play.spec.ts:352:1 › P 手机长程序运行时棋盘和停止按钮都在视口里 (9.2s)
+  ✓  11 [default] › e2e/P.learning-play.spec.ts:381:1 › P 宽屏中的窄课文栏仍保留可读棋盘与单栏编辑 (2.5s)
+  ✘  12 [default] › e2e/R.play-usability.spec.ts:68:3 › R delivery 手机：十种玩法首屏都有真正可做的第一步 (24.2s)
+  ✘  13 [default] › e2e/R.play-usability.spec.ts:68:3 › R authoring 手机：十种玩法首屏都有真正可做的第一步 (24.7s)
+  ✓  14 [default] › e2e/R.play-usability.spec.ts:133:1 › R 原型引导：只问一件事、自由切换保留工作、客户变更后重新试用 (2.7s)
+  ✓  15 [default] › e2e/R.play-usability.spec.ts:167:3 › R 入门 AI 情境 1：从真实问题进入并完成四种工作流 (3.9s)
+  ✓  16 [default] › e2e/R.play-usability.spec.ts:167:3 › R 入门 AI 情境 2：从真实问题进入并完成四种工作流 (4.5s)
+  ✓  17 [default] › e2e/R.play-usability.spec.ts:259:1 › R 难度身份：切档清本轮、切帮助保现场、三十种组合均可打开 (5.9s)
+  ✓  18 [default] › e2e/R.play-usability.spec.ts:295:1 › R 连玩可以混合难度，后续简单关不会被全局升难 (3.9s)
+  2 failed
+  16 passed (3.6m)
+
+levels-browser-final.log
+Running 10 tests using 1 worker
+  ✓   1 [default] › e2e/R.play-usability.spec.ts:68:3 › R delivery 手机：十种玩法首屏都有真正可做的第一步 (4.1s)
+  ✓   2 [default] › e2e/R.play-usability.spec.ts:68:3 › R authoring 手机：十种玩法首屏都有真正可做的第一步 (4.4s)
+  ✓   3 [default] › e2e/R.play-usability.spec.ts:130:1 › R 原型引导：只问一件事、自由切换保留工作、客户变更后重新试用 (2.6s)
+  ✓   4 [default] › e2e/R.play-usability.spec.ts:164:3 › R 入门 AI 情境 1：从真实问题进入并完成四种工作流 (3.8s)
+  ✓   5 [default] › e2e/R.play-usability.spec.ts:164:3 › R 入门 AI 情境 2：从真实问题进入并完成四种工作流 (4.4s)
+  ✓   6 [default] › e2e/R.play-usability.spec.ts:256:1 › R 难度身份：切档清本轮、切帮助保现场、三十种组合均可打开 (5.5s)
+  ✓   7 [default] › e2e/R.play-usability.spec.ts:292:1 › R 连玩可以混合难度，后续简单关不会被全局升难 (4.1s)
+  ✘   8 [default] › e2e/R.play-usability.spec.ts:304:3 › R 返工挑战 1：旧解不够，新保留条件能亲手完成 (22.3s)
+  ✘   9 [default] › e2e/R.play-usability.spec.ts:304:3 › R 返工挑战 2：旧解不够，新保留条件能亲手完成 (22.7s)
+  ✓  10 [default] › e2e/R.play-usability.spec.ts:369:1 › R 评测挑战：四类全过仍不足，交叉输入必须真的成题并重跑 (4.1s)
+  2 failed
+  8 passed (2.0m)
+
+repair-challenge-final.log
+Running 2 tests using 1 worker
+  ✓  1 [default] › e2e/R.play-usability.spec.ts:304:3 › R 返工挑战 1：旧解不够，新保留条件能亲手完成 (3.5s)
+  ✓  2 [default] › e2e/R.play-usability.spec.ts:304:3 › R 返工挑战 2：旧解不够，新保留条件能亲手完成 (3.7s)
+  2 passed (48.4s)

@@ -23,10 +23,17 @@ const activity = (page: Page) => page.locator(".learning-activity");
 const button = (page: Page, name: string | RegExp) =>
   page.getByRole("button", { name, exact: typeof name === "string" });
 
+async function explore(page: Page) {
+  const control = page.getByRole("button", { name: "自由探索", exact: true });
+  if (await control.count()) await control.click();
+}
+
 async function openLab(page: Page, origin = ONLINE_ORIGIN) {
   await page.goto(`${origin}/play-lab`, { waitUntil: "domcontentloaded" });
-  await expect(activity(page)).toHaveAttribute("data-activity-id", "connect-web");
+  await page.getByRole("button", { name: "进阶", exact: true }).click();
+  await expect(activity(page)).toHaveAttribute("data-activity-id", /^connect-web:/);
   await page.evaluate(() => document.documentElement.setAttribute("data-game-ui-theme", "light"));
+  await explore(page);
 }
 
 async function mode(page: Page, name: string) {
@@ -37,6 +44,7 @@ async function mode(page: Page, name: string) {
       .getByRole("button", { name: new RegExp(`^${name}`) }),
     name,
   );
+  await explore(page);
 }
 
 async function capture(page: Page, name: string) {
@@ -117,7 +125,8 @@ test.describe("P 五种学习玩法", () => {
     ]);
     await capture(page, "connect-web-success-light");
     await button(page, "换个情境").click();
-    await expect(activity(page)).toHaveAttribute("data-activity-id", "connect-film");
+    await explore(page);
+    await expect(activity(page)).toHaveAttribute("data-activity-id", /^connect-film:/);
     await connect(page, [
       "准备分镜素材",
       "剪辑片段",
@@ -143,6 +152,7 @@ test.describe("P 五种学习玩法", () => {
     await expect(page.locator(".play-tune__history li")).toHaveCount(2);
     await capture(page, "tune-image-success-light");
     await button(page, "换个情境").click();
+    await explore(page);
     await setRange(page.getByRole("slider", { name: "每批任务数" }), 6);
     await setRange(page.getByRole("slider", { name: "并发工作者" }), 2);
     await button(page, "记录这次实验").click();
@@ -168,6 +178,7 @@ test.describe("P 五种学习玩法", () => {
     await expect(input).toHaveValue("120");
     await expect(page.getByRole("region", { name: "测试记录" })).toHaveCount(0);
     await button(page, "换个情境").click();
+    await explore(page);
     await input.fill("-1");
     await button(page, "运行这个输入").click();
     await completed(page);
@@ -189,6 +200,7 @@ test.describe("P 五种学习玩法", () => {
     await expect(page.locator(".play-dispatch__history li")).toHaveCount(7);
     await capture(page, "dispatch-website-success-light");
     await button(page, "换个情境").click();
+    await explore(page);
     for (const lane of [
       "素材库",
       "制作服务",
@@ -233,6 +245,7 @@ test.describe("P 五种学习玩法", () => {
     await expect(page.locator(".play-program__pose")).toContainText("E1");
     await capture(page, "program-delivery-success-light");
     await button(page, "换个情境").click();
+    await explore(page);
     await program(page, [
       ["前进", 2],
       ["左转", 1],
@@ -284,7 +297,7 @@ test.describe("P 五种学习玩法", () => {
     await expect(page.locator(".learning-play-lab__finish")).toContainText("完成 0 种，跳过 5 种");
     await expect(page.locator(".learning-play-lab__session")).toContainText("本次发现 0 / 5");
     await page.reload();
-    await expect(activity(page)).toHaveAttribute("data-activity-id", "connect-web");
+    await expect(activity(page)).toHaveAttribute("data-activity-id", /^connect-web:/);
     await expect(page.locator(".learning-play-lab__session")).toContainText("本次发现 0 / 5");
   });
 });
@@ -342,6 +355,7 @@ test("P 手机长程序运行时棋盘和停止按钮都在视口里", async ({ 
   await openLab(page);
   await mode(page, "指令画布");
   await button(page, "换个情境").click();
+  await explore(page);
   await program(page, [
     ["前进", 2],
     ["左转", 1],

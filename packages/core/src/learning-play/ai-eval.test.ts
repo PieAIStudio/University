@@ -11,6 +11,7 @@ import {
   type EvalCase,
   type EvalExpectation,
   type EvalPolicy,
+  type EvalScenario,
 } from "./ai-eval.js";
 
 const activity: EvalActivity = {
@@ -243,5 +244,112 @@ describe("AI test bench", () => {
       valid: false,
     });
     expect(runEvalCandidate(activity, cases, "unknown")).toMatchObject({ valid: false });
+  });
+});
+
+describe("difficulty-specific evaluation requirements", () => {
+  const crossInputs: readonly EvalScenario[] = [
+    { information: false, availability: false, supported: true },
+    { information: false, availability: true, supported: false },
+  ];
+  const intro: EvalActivity = { ...activity, requiredExpectations: ["fulfilled", "clarify"] };
+  const challenge: EvalActivity = { ...activity, requiredInputs: crossInputs };
+  const allGuards: EvalPolicy = { information: true, availability: true, supported: true };
+  const runFor = (
+    target: EvalActivity,
+    suite: readonly EvalCase[],
+    candidate: string,
+    policy = EMPTY_EVAL_POLICY,
+  ) => {
+    const result = runEvalCandidate(target, suite, candidate, policy);
+    if (!result.valid) throw new Error(result.reason);
+    return result.run;
+  };
+
+  it("allows the smaller intro set only after a real blind spot and useful positive result", () => {
+    const suite = cases.filter((item) => intro.requiredExpectations!.includes(item.expected));
+    const observations = runFor(intro, suite, "eager");
+    const release = runFor(intro, suite, "careful");
+    expect(assessEvalRelease(intro, suite, [], release).reason).toBe("blind-spot");
+    expect(assessEvalRelease(intro, suite, [observations], release).passed).toBe(true);
+    expect(release.observations).toHaveLength(6);
+    expect(
+      assessEvalRelease(intro, suite, [observations], runFor(intro, suite, "refuse", allGuards))
+        .reason,
+    ).toBe("failed-cases");
+    expect(assessEvalRelease(intro, suite.slice(1), [observations], release).uncovered).toEqual([
+      "fulfilled",
+    ]);
+  });
+
+  it("requires the exact crossed conditions even when each isolated category already passes", () => {
+    const oldRelease = runFor(challenge, cases, "eager", allGuards);
+    expect(
+      assessEvalRelease(challenge, cases, [runFor(challenge, cases, "eager")], oldRelease),
+    ).toMatchObject({
+      passed: false,
+      reason: "input-coverage",
+      uncovered: [],
+      uncoveredInputs: crossInputs,
+    });
+    let suite = [...cases];
+    for (const [index, input] of crossInputs.entries()) {
+      const frozen = freezeEvalCase(suite, input, index === 0 ? "clarify" : "out-of-scope");
+      if (!frozen.valid) throw new Error(frozen.reason);
+      suite = [...suite, frozen.testCase];
+    }
+    const observations = runFor(challenge, suite, "eager");
+    expect(assessEvalRelease(challenge, suite, [observations], oldRelease).reason).toBe(
+      "stale-run",
+    );
+    const release = runFor(challenge, suite, "eager", allGuards);
+    expect(release.observations).toHaveLength(18);
+    expect(release.observations.slice(-6).map((item) => item.actual)).toEqual([
+      "clarify",
+      "clarify",
+      "clarify",
+      "out-of-scope",
+      "out-of-scope",
+      "out-of-scope",
+    ]);
+    expect(assessEvalRelease(challenge, suite, [observations], release).passed).toBe(true);
+    const wrongPriority = suite.map((item) =>
+      item.id === suite.at(-2)!.id ? { ...item, expected: "unavailable" as const } : item,
+    );
+    expect(assessEvalRelease(challenge, wrongPriority, [observations], release).reason).toBe(
+      "input-coverage",
+    );
+    const forged = { ...release, observations: release.observations.slice(0, -3) };
+    expect(assessEvalRelease(challenge, suite, [observations], forged).reason).toBe("stale-run");
+  });
+
+  it.each([
+    { categories: [] },
+    { categories: ["fulfilled"] },
+    { categories: ["clarify", "unavailable"] },
+    { categories: ["fulfilled", "clarify", "clarify"] },
+    { categories: ["fulfilled", "unknown"] },
+  ])("rejects invalid or positive-free requirement categories $categories", ({ categories }) => {
+    const invalid = {
+      ...activity,
+      requiredExpectations: categories as readonly EvalExpectation[],
+    };
+    expect(runEvalCandidate(invalid, cases, "eager")).toEqual({
+      valid: false,
+      reason: "invalid-activity",
+    });
+    expect(assessEvalRelease(invalid, cases, [], undefined).reason).toBe("invalid-requirements");
+  });
+
+  it("rejects duplicate, malformed or contradictory exact-input requirements", () => {
+    for (const requiredInputs of [
+      [crossInputs[0]!, crossInputs[0]!],
+      [{ information: "missing", availability: false, supported: true } as unknown as EvalScenario],
+      [crossInputs[1]!],
+    ]) {
+      expect(assessEvalRelease({ ...intro, requiredInputs }, cases, [], undefined).reason).toBe(
+        "invalid-requirements",
+      );
+    }
   });
 });

@@ -1,0 +1,420 @@
+/* A smaller first view; the activity state and evidence remain shared. */
+.learning-activity [hidden] {
+  display: none !important;
+}
+.learning-play-lab {
+  padding-block-start: 16px;
+}
+.learning-play-lab__top {
+  margin-block-end: 8px;
+}
+.learning-play-lab__collections {
+  margin-block-end: 10px;
+}
+.learning-play-lab__intro {
+  align-items: center;
+  gap: 12px;
+  margin-block-end: 12px;
+}
+.learning-play-lab__intro h1 {
+  font-size: clamp(19px, 2.2vw, 25px);
+  margin: 0;
+}
+.learning-play-lab__session {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+.learning-play-lab__session button {
+  font-size: 12px;
+  min-height: 36px;
+  padding: 6px 12px;
+}
+.learning-play-lab__modes {
+  display: flex;
+  overflow-x: auto;
+  gap: 6px;
+  padding-block: 2px 6px;
+  scrollbar-width: thin;
+}
+.learning-play-lab__mode {
+  flex: 1 0 auto;
+  min-height: 44px;
+  border-radius: 12px;
+  padding: 9px 14px;
+  flex-direction: row;
+  gap: 8px;
+}
+.learning-play-lab__mode > .play-icon {
+  width: 18px;
+  height: 18px;
+}
+.learning-play-lab__mode strong {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.learning-play-lab__variant {
+  margin-block: 4px;
+}
+.learning-play-lab__intro-detail {
+  font-size: 14px;
+  color: var(--game-ui-text-muted);
+  margin-block: 24px 8px;
+}
+.learning-activity {
+  padding: clamp(16px, 2vw, 26px);
+}
+.learning-activity__head {
+  gap: 12px;
+  margin-block-end: 8px;
+}
+.learning-activity__head h2 {
+  font-size: clamp(18px, 2vw, 23px);
+  line-height: 1.4;
+  margin: 0;
+}
+.learning-activity__symbol {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+}
+.learning-activity__symbol .play-icon {
+  width: 23px;
+  height: 23px;
+}
+.learning-activity__orientation {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-block: 0 10px;
+}
+.learning-activity__background {
+  min-width: 0;
+  flex: 1;
+  font-size: 13px;
+  color: var(--game-ui-text-muted);
+}
+.learning-activity__background summary {
+  cursor: pointer;
+  padding-block: 10px;
+}
+.learning-activity__background p {
+  margin-block: 6px 12px;
+  line-height: 1.7;
+}
+.learning-activity__background .learning-activity__goal {
+  display: block;
+  padding: 12px;
+  margin: 0;
+}
+.learning-activity__orientation > button {
+  flex-shrink: 0;
+  font-size: 12px;
+  min-height: 36px;
+  padding: 6px 10px;
+}
+.learning-activity__sandbox {
+  margin-block: 0 14px;
+  font-size: 12px;
+}
+.play-guide {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block: 0 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--game-ui-secondary) 10%, var(--game-ui-panel));
+}
+.play-guide strong {
+  display: block;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 750;
+}
+.play-guide p {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 4px 0 0;
+  color: var(--game-ui-text-muted);
+}
+.play-guide > button {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+.learning-activity[data-guided="true"] .play-program > .play-guide {
+  grid-column: 1 / -1;
+}
+.learning-activity[data-guided="true"] .play-tune__history:not(:has(ol)) {
+  display: none;
+}
+.learning-activity[data-guided="true"] .play-tune__target {
+  font-weight: 650;
+}
+.learning-activity[data-guided="true"] .play-tune__meter > .play-muted {
+  display: none;
+}
+.learning-activity[data-guided="true"] .play-tune__bench {
+  display: flex;
+  flex-direction: column;
+}
+.learning-activity[data-guided="true"] .play-tune__controls {
+  order: -1;
+}
+.ai-brief[data-guided="true"] .ai-brief__request {
+  padding: 0;
+  border: 0;
+  margin-block: 0 14px;
+  background: none;
+}
+.ai-brief[data-guided="true"] .ai-brief__request > span {
+  display: none;
+}
+.ai-brief[data-guided="true"] .ai-brief__request p {
+  font-size: 15px;
+  line-height: 1.7;
+}
+.ai-brief[data-guided="true"] .ai-brief__preview-title h3 {
+  font-size: 16px;
+}
+.ai-brief[data-guided="true"] .ai-brief__contract {
+  padding: 16px;
+}
+.ai-brief[data-guided="true"] .ai-brief__questions {
+  display: block;
+}
+.ai-brief[data-guided="true"] .ai-brief__questions fieldset {
+  margin-block: 14px;
+}
+.ai-brief[data-guided="true"] .ai-brief__questions details {
+  padding: 12px;
+  background: var(--game-ui-panel);
+  border-radius: 12px;
+}
+.ai-brief__question-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ai-brief__question-tabs button {
+  min-height: 38px;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+.ai-brief__test-actions {
+  margin-block: 16px;
+}
+.learning-activity[data-guided="true"] .play-dispatch__optional-clock {
+  margin-block: 12px;
+  font-size: 13px;
+}
+@container (max-width: 600px) {
+  .play-guide {
+    display: grid;
+    gap: 12px;
+    padding: 12px;
+  }
+  .play-guide > button {
+    justify-self: start;
+  }
+  .ai-brief[data-guided="true"] .ai-brief__prototypes {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .learning-play-lab {
+    padding-inline: 12px;
+    padding-block-start: 10px;
+  }
+  .learning-play-lab__intro {
+    flex-direction: row;
+    align-items: center;
+  }
+  .learning-play-lab__session > span {
+    display: none;
+  }
+  .learning-play-lab__session {
+    gap: 0;
+  }
+  .learning-play-lab__mode {
+    padding: 9px 12px;
+  }
+  .learning-play-lab__mode > .play-icon {
+    display: none;
+  }
+  .learning-play-lab__modes {
+    margin-inline: -2px;
+  }
+  .learning-activity {
+    padding: 14px 12px;
+  }
+  .learning-activity__head h2 {
+    font-size: 18px;
+  }
+}
+
+.learning-play-lab__intro {
+  display: flex;
+}
+.learning-activity {
+  gap: 6px;
+}
+.ai-brief[data-guided="true"] {
+  gap: 12px;
+}
+.ai-brief[data-guided="true"] > .play-guide {
+  margin-block-end: 0;
+}
+.ai-brief[data-guided="true"][data-phase="observe"] > .play-guide {
+  display: grid;
+}
+.ai-brief[data-guided="true"][data-phase="observe"] > .play-guide > button {
+  justify-self: start;
+}
+
+.learning-activity[data-guided="true"] .play-dispatch {
+  gap: 12px;
+}
+.learning-activity[data-guided="true"] .play-dispatch__board {
+  grid-template-columns: 1fr;
+}
+.learning-activity[data-guided="true"] .play-dispatch__meters > div {
+  padding: 8px 10px;
+  border: 0;
+}
+.learning-activity[data-guided="true"] .play-dispatch__meters progress {
+  display: none;
+}
+.learning-activity[data-guided="true"] .play-dispatch__meters strong {
+  font-size: 14px;
+}
+.learning-activity[data-guided="true"] .play-dispatch__request {
+  padding: 14px;
+}
+.learning-activity[data-guided="true"] .play-dispatch__lane {
+  padding: 12px;
+}
+.learning-activity[data-guided="true"] .play-dispatch__lane-note {
+  display: none;
+}
+.learning-activity[data-guided="true"] .play-dispatch__cache summary {
+  cursor: pointer;
+}
+
+.learning-play-lab > .learning-play-lab__intro {
+  margin-block-start: 28px;
+}
+.learning-activity[data-guided="true"] .play-dispatch__request {
+  min-height: 0;
+  min-block-size: 0;
+}
+.learning-activity[data-guided="true"] .play-dispatch__cache-notice {
+  margin-block-start: 8px;
+  padding: 8px;
+  font-size: 13px;
+}
+
+.learning-play-lab__difficulty {
+  display: flex;
+  gap: 4px;
+  margin-block: 0 8px;
+}
+.learning-play-lab__difficulty > button {
+  font-size: 13px;
+  min-height: 36px;
+  padding: 6px 16px;
+}
+.ai-brief__given {
+  font-size: 13px;
+}
+.ai-brief__given li {
+  margin-block: 6px;
+}
+
+.play-visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.learning-play-lab__closing-title {
+  font: 750 20px/1.4 var(--game-ui-font-display);
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .learning-play-lab__modes {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    overflow: visible;
+    gap: 4px;
+  }
+  .learning-play-lab__mode {
+    padding: 8px 4px;
+    min-inline-size: 0;
+    min-height: 48px;
+  }
+  .learning-play-lab__mode span {
+    min-inline-size: 0;
+  }
+  .learning-play-lab__mode strong {
+    white-space: normal;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+}
+
+.learning-play-lab__options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-block-end: 8px;
+}
+.learning-play-lab__options .learning-play-lab__variant {
+  flex: 1;
+  margin: 0;
+}
+.learning-play-lab__options .learning-play-lab__difficulty {
+  margin: 0;
+}
+.learning-activity[data-guided="true"] .play-dispatch__lanes {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.learning-activity[data-guided="true"] .play-dispatch__lane {
+  padding: 10px 6px;
+  min-inline-size: 0;
+}
+.learning-activity[data-guided="true"] .play-dispatch__lane-heading {
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+}
+.learning-activity[data-guided="true"] .play-dispatch__lane-heading strong {
+  font-size: 14px;
+}
+.learning-activity[data-guided="true"] .play-dispatch__lane-status {
+  font-size: 11px;
+}
+.learning-activity[data-guided="true"] .play-dispatch__cache-notice {
+  display: none;
+}
+.learning-activity[data-guided="true"] .play-hunt__result > button {
+  margin-block-start: 12px;
+}
+@media (max-width: 600px) {
+  .learning-play-lab__options .learning-play-lab__variant > span {
+    display: none;
+  }
+  .learning-play-lab__options .learning-play-lab__variant {
+    flex: 0 1 auto;
+  }
+  .learning-play-lab__difficulty > button {
+    padding-inline: 12px;
+  }
+}
