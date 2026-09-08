@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "ai-for-kids-pilot",
+  "course": {
+    "id": "what-is-ai-really",
+    "title": "AI 到底是什么",
+    "description": "从你手机上已经在用的东西讲起，一步步讲到它怎么看见、怎么读懂话、怎么画画，以及它会在哪儿犯错。不用装任何东西，一部手机就能跟着做。",
+    "audience": "十岁左右、只有手机或平板、没写过代码的人",
+    "objectives": [
+      "指着自己手机上的功能，说出哪件是 AI 在做、哪件只是写死的规则",
+      "说出一张图片、一段声音、一句话在电脑里各自变成了什么",
+      "用自己的话解释「它是背下来了还是真学会了」",
+      "在手机浏览器里训练出一个能认出自己画的东西的模型",
+      "说出哪几类决定不该交给 AI，并讲出理由"
+    ],
+    "units": [
+      {
+        "id": "you-already-use-it",
+        "title": "你早就在用 AI 了",
+        "objective": "读完这一单元，你能指着自己手机上的四件事，说出哪件是 AI 在做、哪件只是写死的规则。",
+        "lessons": [
+          {
+            "id": "phone-knows-your-face",
+            "title": "手机怎么一眼就认出是你",
+            "variant": "现象",
+            "content": "## 学习目标\n\n读完你能说出手机解锁时到底在比什么，并说出它为什么不是「把你的照片存起来对一遍」。\n\n## 先给结论\n\n你举起手机，它看你一眼就开了。这一眼里发生的事，不是你想的那样。\n\n它**没有**把你的自拍存在某个地方，也**没有**拿新拍的这张跟那张老照片一张一张比。\n\n它存的是一串**数字**。摄像头拍到的画面，先被变成一大堆数字；这堆数字再被压成一小串，大概几百个数。你第一次设置解锁时，它记下了这一小串。以后每次抬手机，它重新算一串，然后看这两串数**差得多不多**。差得少，就是你。\n\n所以手机里没有你的照片，只有一串谁也看不懂的数。\n\n## 一个类比\n\n这件事就像班里点名。\n\n老师不会把每个同学的照片贴在花名册上，一个个翻过去对脸。老师记的是**特征**：这个同学个子最高、那个说话有点沙、那个总穿蓝外套。你一进门，老师脑子里过一遍这几条，对上了就喊你名字。\n\n手机干的是同一件事，只不过它记的「特征」不是「个子高」这种话，而是几百个数字。眼睛离多远、鼻梁多高、脸多宽——每一条都变成一个数。\n\n**这个类比在一个地方不成立**：老师能说出他记的是什么（「你个子高」），手机说不出。那几百个数字没有一个能翻译成人话，它们只是一堆数。这一点很重要，后面讲到「它为什么会认错」的时候会再用到。\n\n## 工作示例\n\n拿起你的手机，做这三件事，每件事看一眼结果：\n\n**第一件：换个样子。** 戴上帽子，或者把刘海拨到一边，再解锁一次。多半还是开了。因为帽子改变不了眼睛之间的距离，那串数字里大部分没变。\n\n**第二件：捂住半张脸。** 用手把一边脸挡上，再试。这次多半开不了。因为被挡住的那半边，好几个数算不出来了，两串数就差得多了。\n\n**第三件：找个跟你长得像的人试试。** 如果家里有兄弟姐妹，让他试一次。大部分时候开不了；但确实有长得极像的人能开——这不是手机坏了，是那两串数字真的很接近。\n\n三件事连起来看，你会发现一个规律：**它在意的不是「像不像你」，是「那串数差多少」。**\n\n## 自检\n\n**做对了你会看到：** 你能用一句话说清解锁那一瞬间发生了什么——「摄像头拍到的画面被算成一串数，跟设置时记下的那串比，差得少就开」。你不会再说「它把我的照片对了一遍」。\n\n**最常见的两种理解错了：**\n\n1. **以为手机里存着你的照片。** 这样想的话，你会觉得「照片会不会被偷走」。实际上被记下来的是一串算出来的数，从这串数倒推回你的长相非常难。发现自己这样想了，回去看「先给结论」那三句。\n2. **以为它在比「像不像」。** 这样想的话，长得像的人能解锁就变成了「手机认错人」。实际上它从头到尾只在算一件事：两串数差多少。差得少它就开，不管你觉得像不像。\n\n## 重点\n\n- 手机解锁比的是两串数字差多少，不是两张照片像不像。\n- 摄像头拍到的画面，会先被变成一大堆数字，再被压成一小串。\n- 这一小串数字没有一个能翻译成人话，它们不是「眼睛」「鼻子」这样的词。\n- 挡住半张脸会解锁失败，是因为好几个数算不出来了，不是因为「它没看清」。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "note": "摄像头或屏幕上的一张图，在程序里就是一长串数字：每个像素四个数，按行排开。",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/ImageData/data",
+                "sourceTitle": "MDN · ImageData.data",
+                "sourceAuthority": "mdn"
+              },
+              {
+                "kind": "fact",
+                "note": "取出画面上某一块的像素数字，是拿到一个按行铺开的数组，而不是拿到一张图片文件。",
+                "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasRenderingContext2D/getImageData",
+                "sourceTitle": "MDN · getImageData",
+                "sourceAuthority": "mdn"
+              },
+              {
+                "kind": "fact",
+                "note": "系统提供的本地验证接口，只回答「这次是不是本人」，不把脸的原始数据交给应用。",
+                "sourceUrl": "https://developer.apple.com/documentation/localauthentication",
+                "sourceTitle": "Apple Developer · Local Authentication",
+                "sourceAuthority": "official-docs"
+              }
+            ],
+            "cards": [
+              {
+                "id": "unlock-compares-numbers",
+                "front": "手机刷脸解锁的那一瞬间，它在比什么？",
+                "back": "比两串数字差多少。设置时它把你的脸算成一小串数记下来，每次解锁重新算一串，两串差得少就开。手机里并没有存着你的照片，也不是拿两张照片在对。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "画面进入程序后是一长串像素数字，比对发生在数字上而不是图片文件上。",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/ImageData/data",
+                    "sourceTitle": "MDN · ImageData.data",
+                    "sourceAuthority": "mdn"
+                  }
+                ]
+              },
+              {
+                "id": "half-face-fails-why",
+                "front": "捂住半张脸就解不开锁，是因为手机「没看清」吗？",
+                "back": "不是。被挡住的那半边，有好几个数算不出来了，于是这次算出的那串数和记下的那串差得很多。它判断的依据始终是「差多少」，不是「清不清楚」。",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "被遮挡的区域对应的像素数字取不到原来的值，参与计算的输入随之改变。",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasRenderingContext2D/getImageData",
+                    "sourceTitle": "MDN · getImageData",
+                    "sourceAuthority": "mdn"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "explain-unlock-to-a-friend",
+                "title": "用一句话讲给同学听",
+                "kind": "explain",
+                "prompt": "你的同学说：「刷脸解锁就是手机把我的照片存起来，每次拿新照片对一遍。」他哪里说错了？用你自己的话说清楚正确的说法。",
+                "rubric": [
+                  "指出手机存的不是照片，而是一串算出来的数字",
+                  "说出解锁那一刻比的是两串数字差多少",
+                  "没有把「差得少」说成「长得像」"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "画面进入程序后是一长串像素数字，比对发生在这些数字上。",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/ImageData/data",
+                    "sourceTitle": "MDN · ImageData.data",
+                    "sourceAuthority": "mdn"
+                  }
+                ]
+              },
+              {
+                "id": "predict-the-hat-case",
+                "title": "先猜，再用手机试一次",
+                "kind": "explain",
+                "prompt": "戴上帽子通常还能解锁，捂住半张脸通常就不行。这两件事都改变了摄像头看到的画面，为什么结果不一样？先写下你的猜测，再拿手机各试一次，然后写你看到的结果。",
+                "rubric": [
+                  "说出帽子几乎没有改变那串数字里的大部分",
+                  "说出捂住半张脸让好几个数算不出来了，两串数差得多",
+                  "写下了自己实际试过之后看到的结果"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "只有被改变的那部分像素会改变后续算出来的数值，未被遮挡的区域保持原值。",
+                    "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasRenderingContext2D/getImageData",
+                    "sourceTitle": "MDN · getImageData",
+                    "sourceAuthority": "mdn"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -114,3 +114,8 @@ artifacts/
 /*.png
 
 .agents/manual-skills/
+
+# Adoption raw material. The outside course's own prose is input for rewriting,
+# never content: it is read repeatedly and quoted nowhere. check-verbatim.mjs
+# measures the rewrite against it, so it lives on disk and out of the history.
+apps/local/course-proposals/*/source/
