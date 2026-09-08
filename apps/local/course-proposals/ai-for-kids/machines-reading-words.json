@@ -1,0 +1,495 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "machines-reading-words",
+  "courseId": "what-is-ai-really",
+  "unit": {
+    "id": "machines-reading-words",
+    "title": "让电脑读懂话",
+    "objective": "解释语言模型怎样从词块和上下文猜出下一步，以及为什么会把猜错的内容写得像真的。"
+  },
+  "lessons": [
+    {
+      "id": "word-to-number-again",
+      "title": "再看一次：词怎么变成数字",
+      "variant": "术语",
+      "content": "## 学习目标\n\n解释一个词怎样从编号变成一串数字。\n\n## 先给结论\n\n电脑不能直接把一句话当成意思来计算。它先把句子切成一块一块的文字，每块叫一个词块，再给每块一个编号。编号只是门牌，电脑还会把这个编号查成一串数字；这串数字在数学里叫向量。向量不是一句翻译，而是模型继续计算时用的样子。\n\n## 一个类比\n\n这件事就像游戏里的角色卡。角色先有一个编号，方便游戏找到它；找到以后，游戏还要读出它的速度、跳跃力和生命值，才能决定它能不能跳过障碍。编号像门牌，向量像一排可以计算的属性。\n\n这个类比有一处不成立：真的向量里的每个数字通常不能直接叫作速度或生命值。它们更像机器自己用的记号，不一定能翻译成人话。\n\n## 工作示例\n\n打开手机里的备忘录，做一个小小的电脑模拟。\n\n第一步，写下这句话：小猫追球，小猫跑开。\n\n第二步，把它分成词块：小猫、追、球、小猫、跑、开。给第一次出现的词块编号：小猫是 1，追是 2，球是 3，跑是 4，开是 5。于是整句话变成：1、2、3、1、4、5。\n\n第三步，在下一行写一张假想的数字表：1 对应 0.3、-0.2、0.8；2 对应 -0.1、0.7、0.4；3 对应 0.9、0.1、-0.2；4 对应 0.2、0.6、0.5；5 对应 -0.4、0.3、0.1。把编号换成数字串，结果就是六串数字，其中两次出现的小猫都查到同一串数字。\n\n这些小数是你为了练习写的，不是真实模型的数字。你刚才完整走过了两步：先把文字换成编号，再把编号换成向量。\n\n## 自检\n\n做对了你会看到：同一个词块每次出现都得到同一个编号和同一串数字，而且编号本身没有大小意义。\n\n最常见的两种做错了：\n\n1. 把编号 1 当成最重要。编号只是查找用的门牌，不是分数。回到第二步，看看你是按第一次出现的顺序随手编号的。\n2. 给第二个小猫重新编号。相同的词块要查同一个门牌；如果你给它新编号，电脑就会以为那是另一个词。\n\n## 重点\n\n- 词块先变成编号，编号再被查成一串数字。\n- 编号是门牌，不代表词的好坏或重要程度。\n- 向量是一串供模型继续计算的数字，不一定能翻译成人话。\n- 同一个词块在同一张表里会查到同一串数字。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 官方说明文本可以先被切成词或词的一小部分并变成编号，再由 Embedding 把编号查成一串数字。",
+          "sourceUrl": "https://www.tensorflow.org/text/guide/word_embeddings",
+          "sourceTitle": "TensorFlow · Word embeddings",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "number-is-a-door-label",
+          "front": "词的编号代表这个词的意思吗？",
+          "back": "不代表。编号只是电脑查找词的门牌。电脑还要把这个编号查成一串数字，后面的计算才会使用这串数字。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方把整数编号和后面的数字向量分成两步，整数本身不表示词与词的关系。",
+              "sourceUrl": "https://www.tensorflow.org/text/guide/word_embeddings",
+              "sourceTitle": "TensorFlow · Word embeddings",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "vector-is-a-number-string",
+          "front": "电脑为什么要把编号换成一串数字？",
+          "back": "因为模型要对输入做计算。一串数字可以被加、减和比较，向量就是电脑继续处理文字时使用的数字表示。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方说明机器学习模型把文字变成数字，再用 Embedding 把编号换成稠密的数字向量。",
+              "sourceUrl": "https://www.tensorflow.org/text/guide/word_embeddings",
+              "sourceTitle": "TensorFlow · Word embeddings",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "make-a-word-number-table",
+          "title": "做一张自己的编号表",
+          "kind": "explain",
+          "prompt": "打开手机备忘录，写一句有一个词重复出现的话。把它切成词块，给每个词块编号，再给每个编号写一串你自己编的三个数字。写下：哪些是电脑要做的步骤，哪些数字只是你的练习假设。",
+          "rubric": [
+            "写出了一句手机备忘录里的自造句子，并切出了词块",
+            "同一个词块的重复出现使用了同一个编号和同一串数字",
+            "说明了编号是查找门牌，三位数字是为了模拟向量",
+            "真的用手机做了一次，并写下了自己看到的编号结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方说明文本先变成词汇编号，Embedding 再把每个编号查成一串向量数字。",
+              "sourceUrl": "https://www.tensorflow.org/text/guide/word_embeddings",
+              "sourceTitle": "TensorFlow · Word embeddings",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "close-meanings-close-numbers",
+      "title": "意思近的词，数字也挨得近",
+      "variant": "溯源",
+      "content": "## 学习目标\n\n判断两个词的数字表示为什么会靠近。\n\n## 先给结论\n\n向量里的数字不是人手写好的词典解释。模型看过很多句子后，会把常在相似地方出现的词放成相近的数字表示。这样，闯关、过关、通关可能挨得近，因为它们常在相似的游戏句子里出现。数字靠近表示用法有关系，不表示两个词每一次都完全一样。\n\n## 一个类比\n\n想象一张游戏地图。地图上常常一起出现的宝箱、钥匙和关卡入口，可以画在同一片区域；天气和宝箱没有多少共同任务，就画得远一些。词的数字表示也像这样的一张关系地图：它的位置来自它和别的词一起出现的样子。\n\n这个类比有一处不成立：游戏地图上的位置是人规定的，词的数字位置是模型从例子里调整出来的。而且地图画得近不等于两个词是同一个东西，最后还要看句子。\n\n## 工作示例\n\n打开手机备忘录，画一个五行五列的小方格。先在上面写六句你自己造的游戏句子：我终于闯关成功、这个关卡过关了、我们顺利通关、这一局输了、比赛失败了、我午饭吃苹果。\n\n第一步，用荧光笔或表情符号圈出每个目标词旁边的词。你会看到闯关、过关、通关都和关卡、成功、顺利这些词一起出现；输了、失败和比赛、这一局一起出现。\n\n第二步，在方格里放词：把闯关、过关、通关放在同一小片，把输了、失败放在另一小片，把苹果放远一点。这个方格不是在偷看真实模型，而是在手机上模拟模型根据用法画关系地图。\n\n第三步，把一句改成我今天通关了这个游戏，再把另一句改成我检查了电灯开关。重新圈词，你会发现通关和游戏仍然靠近，而开关虽然有一个相同的字，却不一定靠近。\n\n## 自检\n\n做对了你会看到：你能指出哪些词因为出现在相似句子里而靠近，也能指出一个字相同但用法不同的词不一定靠近。\n\n最常见的两种做错了：\n\n1. 以为靠近就一定是同义词。靠近只能说明例子里的用法相似，不能保证两个词完全相同。回到第一步，看它们旁边的词是不是也完全一样。\n2. 以为共享一个字就会靠近。字面相同不够，模型还要看它们和谁一起出现。回到第三步比较通关和开关。\n\n## 重点\n\n- 词的数字位置来自它在很多句子里的用法。\n- 用法相似的词，数字表示通常会更靠近。\n- 数字靠近不等于两个词完全相同。\n- 只共享一个字，不足以说明两个词的意思相近。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 官方说明词向量是训练出来的稠密数字表示，相似词可以有相似的编码并能在关系图上找近邻。",
+          "sourceUrl": "https://www.tensorflow.org/text/guide/word_embeddings",
+          "sourceTitle": "TensorFlow · Word embeddings",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "meaning-distance-comes-from-use",
+          "front": "词的数字表示为什么会靠近？",
+          "back": "因为模型在例子里看到它们常出现在相似的地方，于是训练出相近的数字表示。这个靠近来自用法，不是人手给它写的词典距离。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方说明训练会调整词向量，并用近邻来观察词之间学到的关系。",
+              "sourceUrl": "https://www.tensorflow.org/text/guide/word_embeddings",
+              "sourceTitle": "TensorFlow · Word embeddings",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "close-does-not-mean-identical",
+          "front": "数字表示靠近，是不是说明两个词完全一样？",
+          "back": "不是。它只说明两个词在模型看过的句子里用法有些相似。最后一句话的意思还要看词的顺序和周围的词。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方提醒词向量是在具体训练任务中学出的关系，数字表示不能代替完整句子的上下文。",
+              "sourceUrl": "https://www.tensorflow.org/text/guide/word_embeddings",
+              "sourceTitle": "TensorFlow · Word embeddings",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "draw-a-word-neighborhood",
+          "title": "画一张词的关系地图",
+          "kind": "explain",
+          "prompt": "在手机备忘录里写六句和游戏有关的话，挑出三组你觉得用法接近的词，再画方格把它们放在一起。另找一组字面有点像但用法不同的词，写下你为什么把它们分开。",
+          "rubric": [
+            "写出了自己造的六句手机备忘录句子",
+            "根据词的共同上下文而不是只看字形来分组",
+            "说明数字靠近表示用法相似，不等于两个词完全相同",
+            "真的用手机画了一次关系地图，并写下词的位置和看到的结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方用词向量近邻来展示模型从训练例子中学到的词语关系。",
+              "sourceUrl": "https://www.tensorflow.org/text/guide/word_embeddings",
+              "sourceTitle": "TensorFlow · Word embeddings",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "order-changes-meaning",
+      "title": "把词换个顺序，意思就变了",
+      "variant": "对比",
+      "content": "## 学习目标\n\n解释同一批词换个顺序后为什么不是同一句话。\n\n## 先给结论\n\n一句话不只是词的集合，还包括每个词站在哪里。小猫追小狗和小狗追小猫用了同样的词，做事的对象却换了。模型要把每个词的位置也记下来，才不会把这两句混在一起。把位置加到词的数字表示上，模型才有办法区分先后。\n\n## 一个类比\n\n这就像游戏里的出招顺序。先躲开再攻击，和先攻击再躲开，用的是同两个按钮，结果可能完全不同。你把按钮放进连招的第一个位置还是第二个位置，决定了动作怎样发生。\n\n这个类比有一处不成立：有些事情换顺序没有影响，比如购物清单里的苹果、牛奶、面包。语言里却常常有谁做什么的关系，所以读句子时不能总把顺序丢掉。\n\n## 工作示例\n\n打开手机备忘录，先把每个词写进一个小框里：小猫、追、小狗。给三个框标上位置 1、2、3，再在下面写小狗、追、小猫，也标上位置 1、2、3。\n\n第一行读作：小猫在追小狗。第二行读作：小狗在追小猫。你没有增加任何词，只交换了两个名词的位置，但回答谁在追谁时答案已经变了。\n\n再加一行：小猫没有追小狗。你会看到没有这个小词也会改变意思。把它和词的位置一起保留下来，才不会只看到小猫、追、小狗这三个词就急着下结论。\n\n最后，用手机的复制和粘贴把第一行的两个名词交换一次。把交换前后的句子和你回答的谁在追谁都记下来。\n\n## 自检\n\n做对了你会看到：两句含有同样词的句子，因为词站的位置不同而得到不同的谁在追谁答案；加上没有后，答案还会再变。\n\n最常见的两种做错了：\n\n1. 只数词，不看位置。这样两句会被你当成同一句。回到第一步，在每个词上方写 1、2、3。\n2. 只看第一个词就认定它一定是做事的人。遇到没有或更长的句子可能会错，应该把整句和每个位置一起读。\n\n## 重点\n\n- 句子的意思来自词和词的位置，不只是词的清单。\n- 小猫追小狗和小狗追小猫的做事者不同。\n- 模型需要保存位置提示，才能分清词的先后。\n- 一个小词也可能改变整句话的意思。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 官方 Transformer 教程说明注意力本身看见的是一组没有顺序的向量，所以必须加入位置表示来区分词的先后。",
+          "sourceUrl": "https://www.tensorflow.org/text/tutorials/transformer",
+          "sourceTitle": "TensorFlow · Neural machine translation with a Transformer and Keras",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "same-words-different-order",
+          "front": "为什么小猫追小狗和小狗追小猫不是同一句？",
+          "back": "因为同一批词站在不同位置，谁做动作、谁接收动作就换了。句子的意思需要词和词的顺序一起表示。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方说明如果不加入位置表示，模型会把只换顺序的词看成同一袋词。",
+              "sourceUrl": "https://www.tensorflow.org/text/tutorials/transformer",
+              "sourceTitle": "TensorFlow · Neural machine translation with a Transformer and Keras",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "swap-the-sentence-order",
+          "title": "交换词的位置",
+          "kind": "explain",
+          "prompt": "在手机备忘录里写一句有谁做了什么的话。只交换两个词的位置，写出新句子，再说明原句和新句子的意思哪里变了。",
+          "rubric": [
+            "写出了原句和只交换词序后的新句子",
+            "指出了谁做事或事情指向谁发生了变化",
+            "说明模型需要保存每个词的位置，而不能只数有哪些词",
+            "真的用手机交换了一次，并写下交换前后的结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方 Transformer 教程说明位置表示让模型分辨词的先后和上下文关系。",
+              "sourceUrl": "https://www.tensorflow.org/text/tutorials/transformer",
+              "sourceTitle": "TensorFlow · Neural machine translation with a Transformer and Keras",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "where-it-looks-when-reading",
+      "title": "读一句话时，它在看哪几个字",
+      "variant": "现象",
+      "content": "## 学习目标\n\n指出一句话里回答一个问题时最需要看的词。\n\n## 先给结论\n\n读一句话时，模型不会把每个词都当成同样有用。它会根据眼前要完成的问题，给不同位置分配不同的数字权重。要回答谁拿了球，就要更重视人名和拿；要回答拿了什么，就要更重视球。这个按相关程度分配权重的办法叫注意力。\n\n## 一个类比\n\n注意力就像做找不同。题目问红球在哪里，你会重点看红色和球附近的地方，不会把每片天空都看成同样重要；题目换成谁拿了红球，你又会把人物和拿这个动作看得更重。\n\n这个类比有一处不成立：你是真的理解问题后才圈重点，模型只是用数字比较和组合它见过的关系。注意力分数高，只表示它把那里放得更重，不保证它就答对了。\n\n## 工作示例\n\n打开手机备忘录，写下这句话：放学后，小明把红球交给小芳，因为她要去上课。\n\n第一步，在句子下面写问题一：什么被交出去了？用一个红色表情标出红球，再写答案：红球。\n\n第二步，写问题二：谁要去上课？用一个蓝色表情标出小芳和上课，再写答案：小芳。\n\n第三步，比较两次标记。整句话没有变，问题变了，你重点看的词也变了。你刚才用手机模拟了注意力：先看问题，再把相关的词放得更重。你没有真的看见某个模型内部的数字，这只是帮助你看懂它的工作方式。\n\n## 自检\n\n做对了你会看到：同一句话换一个问题后，你标出的重点词会改变；重点词能帮助你找到红球或小芳。\n\n最常见的两种做错了：\n\n1. 认为每个问题都只看同一个词。回到第二步，换问题再标一次，看看重点为什么变了。\n2. 把注意力当成人的眼睛或情绪。模型里的注意力是数字权重和组合，不是它真的看见了东西或产生了感觉。\n\n## 重点\n\n- 注意力会按当前问题给不同词分配不同权重。\n- 同一句话换问题，最重要的词也可能换。\n- 注意力是数字上的加权，不是人的眼睛或感情。\n- 注意力放得重不等于答案一定正确。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 官方教程说明注意力用问题向量和上下文向量比较匹配程度，再按分数加权组合信息。",
+          "sourceUrl": "https://www.tensorflow.org/text/tutorials/transformer",
+          "sourceTitle": "TensorFlow · Neural machine translation with a Transformer and Keras",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "attention-follows-the-question",
+          "front": "为什么同一句话换个问题，重点词也会换？",
+          "back": "注意力会比较当前问题和句中各处的关系，再把更相关的位置加重。问谁、问什么，相关的位置不同，所以重点会不同。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方说明注意力根据 query 与 context 的匹配程度加权组合上下文信息。",
+              "sourceUrl": "https://www.tensorflow.org/text/tutorials/transformer",
+              "sourceTitle": "TensorFlow · Neural machine translation with a Transformer and Keras",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "attention-is-not-proof",
+          "front": "注意力把一个词放得很重，能证明答案一定对吗？",
+          "back": "不能。它只表示模型把这个位置当成更相关的线索。模型仍可能把线索连错，最后给出错误答案。",
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "这是从 TensorFlow 对注意力加权机制的说明推出的限制：加重线索不等于已经验证事实。",
+              "sourceUrl": "https://www.tensorflow.org/text/tutorials/transformer",
+              "sourceTitle": "TensorFlow · Neural machine translation with a Transformer and Keras",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "mark-the-important-words",
+          "title": "同一句话问两次",
+          "kind": "explain",
+          "prompt": "在手机备忘录里写一句至少有一个人和一件物品的话，提出两个不同的问题。每次用颜色或表情标出你最需要看的词，并解释两次标记为什么不同。",
+          "rubric": [
+            "写出了一句自己造的完整句子和两个不同的问题",
+            "两个问题标出了不同的相关词",
+            "用自己的话解释了注意力是按问题分配数字权重，不是人的眼睛",
+            "真的用手机标记了一次，并写下两个问题下看到的不同重点"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方教程说明注意力让每个问题位置访问上下文，并按匹配程度组合上下文向量。",
+              "sourceUrl": "https://www.tensorflow.org/text/tutorials/transformer",
+              "sourceTitle": "TensorFlow · Neural machine translation with a Transformer and Keras",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "always-guessing-next-word",
+      "title": "它其实一直在猜下一个字",
+      "variant": "现象",
+      "content": "## 学习目标\n\n解释聊天 AI 怎样一小步一小步写出一句话。\n\n## 先给结论\n\n聊天 AI 会先看已经收到的词块和上下文，再给出它觉得最可能接在后面的下一个词块。词块可以是一个字、一个词，也可以是词的一小部分。它把刚选出的词块放回上下文，再猜下一块，一步一步接成答案；这种根据前文猜后文的系统叫语言模型。它猜得像人话，不等于它已经查过每个事实。\n\n## 一个类比\n\n这就像玩文字接龙。你看到今天放学后我想，就从手里的词里挑一个最像下一步的词；选完以后，下一轮要连着刚才的新词再挑。接龙的人如果只熟悉很多句子的外形，也能接得顺，却不一定知道每句话说的事情是真是假。\n\n这个类比有一处不成立：人可以停下来问清楚自己不知道的事，模型通常只是继续计算下一个可能的词块。它不是一个心里有完整答案的人在慢慢抄写。\n\n## 工作示例\n\n打开你平时使用的聊天 AI，用手机语音输入这句话：请只写一句和闯关游戏有关的话，开头是：今天我想。\n\n第一步，记下它写出的完整句子。\n\n第二步，再发一句：请只写一句和闯关游戏有关的话，开头是：今天我不想。记下第二个句子。\n\n第三步，比较两个开头只差了一个不字，后面的内容是否也跟着改变。你看不到模型内部每一个小步，但可以从结果看见它会根据前面的文字继续往下接。\n\n如果你的手机键盘上方有候选词，也可以在备忘录里输入今天放学后我想，逐次记录候选词，再把其中一个加到句子里。这个键盘实验只用来观察接着前文的现象，不证明键盘一定使用和聊天 AI 同一种模型。\n\n## 自检\n\n做对了你会看到：改动前面的文字会改变后面可能出现的文字，你能说出答案是一次次接出来的，而不是先有一篇完整文章再复制出来。\n\n最常见的两种做错了：\n\n1. 以为它先查到完整答案再逐字抄下来。回到第三步，比较两个不同开头带来的不同续写。\n2. 以为最可能出现的词就一定是真的。最可能只是根据上下文最像的接法，事实还需要另外检查。\n\n## 重点\n\n- 语言模型会根据前面的词块预测后面的词块。\n- 生成长答案，就是把一次次的小预测接起来。\n- 词块可能是字、词或词的一小部分。\n- 最像的续写不等于已经验证过的事实。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 官方文本生成教程把任务定义为根据已经看到的字符预测下一个字符，并把预测重复用于生成更长的文字。",
+          "sourceUrl": "https://www.tensorflow.org/text/tutorials/text_generation",
+          "sourceTitle": "TensorFlow · Text generation with an RNN",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "next-token-loop",
+          "front": "聊天 AI 怎样从几个字写出一长段话？",
+          "back": "它根据已经看到的词块猜下一块，把刚猜出的内容接回上下文，再猜下一块。许多次小预测连起来，就成了长答案。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方教程说明生成时会把模型的预测和新状态继续送回模型，重复得到后面的字符。",
+              "sourceUrl": "https://www.tensorflow.org/text/tutorials/text_generation",
+              "sourceTitle": "TensorFlow · Text generation with an RNN",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "likely-is-not-true",
+          "front": "模型觉得最可能的下一个词，就一定是真的吗？",
+          "back": "不一定。它挑的是和前文最像的续写，不是已经查证过的事实。写得顺和说得真是两件不同的事。",
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "这是从 TensorFlow 对下一字符预测任务的说明推出的边界：预测相似续写本身不包含事实核验。",
+              "sourceUrl": "https://www.tensorflow.org/text/tutorials/text_generation",
+              "sourceTitle": "TensorFlow · Text generation with an RNN",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "compare-two-next-word-starts",
+          "title": "改一个字，看后面怎么变",
+          "kind": "explain",
+          "prompt": "用手机语音或键盘让聊天 AI 续写两个开头：今天我想……和今天我不想……。记下两次结果，再说明前面只改一个字时，后面为什么可能整段改变。没有聊天 AI 时，用键盘候选词做同样的观察。",
+          "rubric": [
+            "记录了两个开头和手机实际给出的两次续写",
+            "指出了前面的一个字改变了后续上下文",
+            "说明长答案是一次次预测接起来的，不是完整答案被逐字抄写",
+            "写下了自己真的用手机试过后看到的结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方教程说明每一步的输入是当前字符，目标是下一个字符，生成时再把结果接回去。",
+              "sourceUrl": "https://www.tensorflow.org/text/tutorials/text_generation",
+              "sourceTitle": "TensorFlow · Text generation with an RNN",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "why-it-makes-things-up",
+      "title": "它为什么会一本正经地胡说",
+      "variant": "决策",
+      "content": "## 学习目标\n\n解释它为什么会把猜错的内容写得像真的。\n\n## 先给结论\n\n会接着前文写字的 AI，基本动作是根据前面的文字，猜下一块最像什么；这种系统常叫语言模型。最像的接法可以读起来很顺，却可能没有对应的真实事实。它如果没有找到可靠的资料，也可能继续把熟悉的句子样子接下去，而不是自动停下来。它没有想骗你的心思，也没有想把错误藏起来；这只是一次猜测没有对上事实。\n\n这种把不存在或不确定的内容写得像事实的现象，常被叫作幻觉。这个名字不是说模型看见了鬼，而是提醒你：像真的文字不等于真的事情。\n\n## 一个类比\n\n打个比方，你在手机备忘录里玩一个被规定必须出牌的文字接龙。前面写着月球食堂的主厨是，手里没有真实资料，但规则不许你说不知道，你只好从熟悉的人名或机器人里挑一个最像的接上。句子看起来完整，不代表你真的见过那家食堂。\n\n这个类比有一处不成立：人知道自己是在猜，还可能故意装懂；模型没有愿望、秘密计划或骗人的意图，它只是按照文字中学到的可能性继续算。把错误叫作撒谎，会误解它为什么会错。\n\n## 工作示例\n\n打开手机备忘录，做一次保证能完成的模拟。\n\n第一步，写下开头：月球食堂的主厨是。给自己三个可接的词：机器人、小王、彩虹。你没有任何真实资料，所以只能选一个看起来像句子的词。\n\n第二步，在下一行写：这个主厨最拿手的菜是。再给三个可接的词：月饼、星星面条、火山汤。挑一个最像故事的。\n\n第三步，把两次选择连起来读：月球食堂的主厨是……这个主厨最拿手的菜是……。你已经造出一段很顺的假消息，但你没有证明主厨或菜真的存在。\n\n第四步，在句子旁写上：我是在没有资料时从几个像样的接法里挑的。若你手边有聊天 AI，可以把同样的虚构问题用语音发给它，再把它的回答和你的模拟放在一起比较；重点不是答案是否一样，而是它有没有把无法确认的内容写成确定的事实。\n\n## 自检\n\n做对了你会看到：你能造出一段语气完整但没有证据的文字，并说出它是从可能的续写里挑出来的，不是模型有意撒谎。\n\n最常见的两种做错了：\n\n1. 把胡说理解成模型想骗你。这样会漏掉真正的原因：它只是在继续找像前文的词。回到第二段，删掉意图，换成猜测没有对上事实。\n2. 看到语气很确定就当成事实。回到第四步，在句子旁补一句：我还没有资料证明它。\n\n## 重点\n\n- 语言模型会选择像前文的续写，像真的不代表是真的。\n- 没有可靠资料时，它可能继续接出一个完整但虚构的说法。\n- 胡说不是模型在撒谎，因为模型没有想骗你的意图。\n- 看到确定语气时，仍要问这句话有没有证据。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 官方文本生成教程说明模型按已经看到的文字预测下一步，并把预测反复接回去。",
+          "sourceUrl": "https://www.tensorflow.org/text/tutorials/text_generation",
+          "sourceTitle": "TensorFlow · Text generation with an RNN",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "inference",
+          "note": "把逐步文字预测和 NIST 对 AI 输出风险的管理要求放在一起，可以推出：流畅的续写仍需要事实检查。",
+          "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+          "sourceTitle": "NIST · AI Risk Management Framework",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "hallucination-is-a-wrong-continuation",
+          "front": "语言模型为什么能把不存在的内容写得很像真的？",
+          "back": "它在挑选和前文最像的下一块文字。一个流畅的续写可能没有真实依据，所以读起来像真的，事实却是错的。",
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "这是从 TensorFlow 的逐步预测机制和 NIST 的输出风险管理要求推出的解释：流畅度不能代替事实证据。",
+              "sourceUrl": "https://www.tensorflow.org/text/tutorials/text_generation",
+              "sourceTitle": "TensorFlow · Text generation with an RNN",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "wrong-is-not-lying",
+          "front": "AI 胡说时，是不是它想骗你？",
+          "back": "不是。它没有想骗你的意图。它只是继续选择像前文的文字，结果把猜测接成了没有事实根据的说法。",
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "这是根据模型执行文字预测这一机制作出的边界说明：计算出错误续写不等于拥有骗人的意图。",
+              "sourceUrl": "https://www.tensorflow.org/text/tutorials/text_generation",
+              "sourceTitle": "TensorFlow · Text generation with an RNN",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "separate-smooth-from-true",
+          "title": "找出顺口但没证据的续写",
+          "kind": "explain",
+          "prompt": "用手机备忘录完成一次月球食堂三选一接龙，或者把同一个虚构问题发给你已经在用的聊天 AI。写下一段听起来完整的回答，再标出：哪一句只是可能的续写、哪一处没有证据、为什么这不等于模型在撒谎。",
+          "rubric": [
+            "写下了一段自己用手机得到或造出的完整续写",
+            "指出了至少一处听起来顺但没有事实证据的内容",
+            "用下一块文字的预测解释了它为什么会出现",
+            "明确写出模型没有想骗你的意图，并记录了手机实际看到的结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方说明模型逐步预测后续文字；NIST 要求把 AI 输出放进用途和风险背景中评估。",
+              "sourceUrl": "https://www.tensorflow.org/text/tutorials/text_generation",
+              "sourceTitle": "TensorFlow · Text generation with an RNN",
+              "sourceAuthority": "official-docs"
+            },
+            {
+              "kind": "fact",
+              "note": "NIST AI RMF 的目的包括在设计、使用和评估 AI 系统时管理可信度与风险。",
+              "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "sourceTitle": "NIST · AI Risk Management Framework",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "how-to-ask-it-well",
+      "title": "怎么问，它才答得好",
+      "variant": "对比",
+      "content": "## 学习目标\n\n改写一个问题，让聊天 AI 更容易按你的要求回答。\n\n## 先给结论\n\n你发给 AI 的问题或要求叫提示语。提示语越清楚，模型越容易知道你要它做什么、给谁看、写多长、用什么样子回答。你可以写任务、补上必要的背景，再规定格式。清楚的提示语只能让回答更贴近要求，不能保证每个事实都正确。\n\n## 一个类比\n\n好比你在游戏里叫 NPC 帮忙。只说帮我，NPC 不知道你要找地图、装备还是出口；如果你说请告诉我去冰山关卡的三步路线，每步不超过十个字，它就拿到了任务、地点和回答长度。\n\n这个类比有一处不成立：NPC 可能真的知道游戏地图，语言模型却可能没有可靠资料。把要求写得很清楚，只是把问题说清楚，不会凭空给它增加事实。\n\n## 工作示例\n\n打开手机里你已经在用的聊天 AI，先用语音输入一个短问题：讲讲月亮。把它的回答截图或抄下三点：有几段、讲了什么、有没有按你的年龄来写。\n\n然后再发一个更清楚的提示语：请给十岁孩子解释月亮为什么有圆有弯，用三句话，每句话不超过二十个字；不确定的资料请说不确定。把第二次回答也记下来。\n\n最后做一张对比表：第一句只给了主题，第二句给了对象、任务、长度和不确定时的说法。检查第二次回答有没有更接近这四个要求。如果它仍然说错，给那一条标上待查，不要因为格式变好了就相信它。\n\n如果你打字慢，就按住手机麦克风说出两段提示语；不要为了写得漂亮而漏掉任务和限制。\n\n## 自检\n\n做对了你会看到：第二次回答的对象、任务或格式至少有一项更贴近你的要求，而且你仍然会把事实正确和格式合适分开检查。\n\n最常见的两种做错了：\n\n1. 只加一句请回答得更好。这样没有告诉它要做什么，改成写清任务、对象和格式。回到第二个提示语看四个部分。\n2. 以为提示语写得详细就不会错。详细只是在减少误解，不是事实证明。把可疑内容标成待查，再去找可靠出处。\n\n## 重点\n\n- 提示语是发给模型的任务、问题或要求。\n- 任务、对象、背景和格式越清楚，回答越容易贴合需要。\n- 提示语能减少误解，但不能保证事实正确。\n- 语音输入可以代替快速打字，不需要安装新东西。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 官方说明 Prompt API 把发送给模型的文字作为输入和上下文，也可以用多条消息补充指令。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Prompt_API/Using",
+          "sourceTitle": "MDN · Using the Prompt API",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "NIST AI RMF 强调要记录 AI 系统的用途、上下文、限制以及人如何监督输出。",
+          "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+          "sourceTitle": "NIST · AI Risk Management Framework",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "prompt-adds-context",
+          "front": "怎样让聊天 AI 更容易按你的要求回答？",
+          "back": "把任务、给谁看、必要背景和回答格式说清楚。提示语提供的上下文越明确，模型越不容易误解你要它做的事。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 官方说明发送给模型的 prompt 是输入，也可以用消息内容提供上下文和回答要求。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Prompt_API/Using",
+              "sourceTitle": "MDN · Using the Prompt API",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "clear-prompt-is-not-proof",
+          "front": "提示语写得很清楚，能保证 AI 说的事实都对吗？",
+          "back": "不能。清楚的提示语只会让任务和格式更明白。回答里的事实仍要单独检查，尤其是模型说得很确定却没有出处时。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NIST 官方 AI 风险框架要求把系统用途、限制和输出监督写清楚，说明清楚的要求与事实可靠不是同一件事。",
+              "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "sourceTitle": "NIST · AI Risk Management Framework",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "rewrite-a-vague-prompt",
+          "title": "把问题说清楚",
+          "kind": "explain",
+          "prompt": "先在手机上问聊天 AI：讲讲月亮，再把问题改成包含读者、任务、长度和不确定时处理方式的版本。记录两次回答，说明第二次具体多了什么要求，以及它有没有因此变得更合适。",
+          "rubric": [
+            "记录了手机实际收到的模糊问题和清楚问题的回答",
+            "改写后的提示语包含了读者、任务、长度或格式等具体要求",
+            "指出了回答更合适和事实更可靠是两件不同的事",
+            "写下了自己真的用手机试过后看到的差异"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 官方说明 prompt 输入可以是发送给语言模型的文字，并会加入模型的上下文。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Prompt_API/Using",
+              "sourceTitle": "MDN · Using the Prompt API",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

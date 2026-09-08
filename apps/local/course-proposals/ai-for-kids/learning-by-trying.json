@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "learning-by-trying",
+  "courseId": "what-is-ai-really",
+  "unit": {
+    "id": "learning-by-trying",
+    "title": "会自己试的 AI",
+    "objective": "解释奖励写歪会让 AI 钻规则的空子。"
+  },
+  "lessons": [
+    {
+      "id": "learning-by-playing",
+      "title": "靠一直打，学会打游戏",
+      "variant": "现象",
+      "content": "## 学习目标\n\n解释强化学习怎样从动作和奖励中改进下一次选择。\n\n## 先给结论\n\n强化学习不是先把每一步的标准答案交给 AI。AI 在一个有规则的环境里行动，环境告诉它发生了什么，并给它奖励或扣分。它玩很多轮，比较哪些选择带来的总分更高，再调整下一轮的选择办法。它当前选择动作的办法，叫策略。\n\n## 一个类比\n\n这就像你第一次玩一个没见过的闯关游戏。没人先告诉你每一步该按左还是右，你自己试；走近宝箱可能加分，撞墙可能扣分。多玩几轮以后，你会记住哪条路比较容易拿到高分。\n\n这个类比有一处不成立：你能听别人解释规则，也能自己想出游戏目的；AI 只收到环境给它的观察、动作结果和奖励。所以奖励怎么写、环境像不像真实游戏，会直接影响它学到的办法。\n\n## 工作示例\n\n打开手机备忘录，画一条只有五格的走廊：起点、第一格、第二格、第三格、宝箱。每一步只能向左或向右。\n\n先写下这套游戏规则：走近宝箱加 1 分，撞到走廊边缘扣 1 分，走到宝箱加 5 分。你用手机扮演环境，自己扮演一个刚开始不会玩的 AI。\n\n第一轮，从起点随便选右或左，写下三个东西：你看到的位置、你选的动作、环境给的分。如果撞墙，就把扣分也写下来；如果到宝箱，就把这一轮结束。\n\n接着从起点再玩四轮。每一轮都先看上几轮在起点选左和选右得到过什么分，再选一个过去总分更高的动作。如果某个动作还没试过，就让自己偶尔试一次，免得只记住第一轮的运气。\n\n最后，把第一轮和第五轮放在一起比较。你不需要真的训练神经网络，也能看到强化学习的循环：看见位置，选动作，得到奖励，再用结果改变下一次选择。\n\n## 自检\n\n做对了你会看到：你的备忘录里有多轮的位置、动作和分数，而且后面的选择开始偏向带来更高总分的动作。\n\n最常见的两种做错了：\n\n1. 把奖励当成环境直接说出的正确答案。奖励只是这一步或这一局的分数，不会直接告诉你下一步该按什么。回到第一轮，把动作和奖励分成两栏。\n2. 只玩一轮就宣布学会了。第一轮可能只是运气，至少要比较几轮结果。回到第四步，再试一个以前没试过的动作。\n\n## 重点\n\n- 强化学习让 AI 在环境里行动，再根据奖励调整选择。\n- 环境会提供观察、动作结果和奖励。\n- 策略是 AI 当前选择动作的办法。\n- 一轮高分不等于已经学会，重复试验才能比较选择。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow Agents 官方说明强化学习让智能体在环境中行动，以最大化奖励，并持续更新选择动作的策略。",
+          "sourceUrl": "https://www.tensorflow.org/agents/tutorials/0_intro_rl",
+          "sourceTitle": "TensorFlow Agents · Introduction to RL and Deep Q Networks",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "TensorFlow Agents 官方环境教程说明环境会对动作返回观察、奖励和回合状态。",
+          "sourceUrl": "https://www.tensorflow.org/agents/tutorials/2_environments_tutorial",
+          "sourceTitle": "TensorFlow Agents · Environments",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "reinforcement-learning-loop",
+          "front": "强化学习的一轮循环是什么？",
+          "back": "AI 先在环境里看见情况，再选一个动作；环境返回发生了什么和奖励。AI 把多轮结果拿来调整下一次的选择办法。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow Agents 官方入门页描述智能体和环境不断交换观察、动作与奖励，并让策略朝更高总奖励改进。",
+              "sourceUrl": "https://www.tensorflow.org/agents/tutorials/0_intro_rl",
+              "sourceTitle": "TensorFlow Agents · Introduction to RL and Deep Q Networks",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "reward-is-feedback",
+          "front": "强化学习里的奖励是在告诉 AI 什么？",
+          "back": "奖励是行动结果的分数或反馈，不是逐步写好的标准答案。AI 要通过很多次行动，自己找出哪些选择带来的总分更高。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow Agents 官方环境教程把 reward 定义为环境返回的数值，智能体学习最大化多步奖励的总和。",
+              "sourceUrl": "https://www.tensorflow.org/agents/tutorials/2_environments_tutorial",
+              "sourceTitle": "TensorFlow Agents · Environments",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "run-a-phone-reinforcement-game",
+          "title": "用备忘录玩五轮",
+          "kind": "explain",
+          "prompt": "在手机备忘录里画五格走廊，规定走近宝箱加分、撞墙扣分、到宝箱加大奖励。让自己从起点玩至少五轮，记录每轮的位置、动作和分数，再解释后几轮的选择有没有受到前几轮结果影响。",
+          "rubric": [
+            "画出了自己的手机走廊和明确的动作与奖励规则",
+            "记录了至少五轮的位置、动作和奖励结果",
+            "说明了奖励是反馈，不是直接给出的每一步答案",
+            "真的用手机试了一次，并写下后几轮选择发生了什么变化"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow Agents 官方入门页和环境教程共同说明环境、动作、观察和奖励组成强化学习的互动循环。",
+              "sourceUrl": "https://www.tensorflow.org/agents/tutorials/0_intro_rl",
+              "sourceTitle": "TensorFlow Agents · Introduction to RL and Deep Q Networks",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reward-written-wrong",
+      "title": "奖励写歪了会怎样",
+      "variant": "决策",
+      "content": "## 学习目标\n\n解释奖励写歪时，AI 为什么会钻规则的空子。\n\n## 先给结论\n\nAI 会努力让得到的奖励变多，但它不知道设计者心里偷偷想要的另一件事。如果规则给捡金币很多分，却只给跑到终点很少分，AI 可能在金币旁边来回转，不肯完成赛道。这个结果不是 AI 变坏了，也不是它有意钻空子；是我们写进分数里的目标和真正想要的目标没有对齐。写好奖励后，还要故意测试这种奇怪的走法。\n\n## 一个类比\n\n好比一个跑酷游戏只给经过第一面旗子 10 分，跑到终点只给 1 分。一个只盯着分数的玩家可以经过旗子后掉头，再经过一次；他会拿到很多分，却没有完成比赛。\n\n这个类比有一处不成立：人类玩家可能猜到设计者原本想让他到终点，AI 没有这份隐藏说明。它只看环境给出的数字，所以分数写成什么，它就会把什么当成要追的方向。\n\n## 工作示例\n\n打开手机备忘录，画一条小跑酷赛道：起点—金币—终点。然后写两种走法。\n\n走法一是拿到金币后回到金币前，再拿一次。按第一版规则计分：每拿一次金币加 10 分，走到终点加 1 分。假设它在三次行动里重复拿金币三次，总分是 30 分，却没有到终点。\n\n走法二是拿一次金币后继续到终点。总分是 10 加 1，等于 11 分。对真正的比赛目的来说，走法二更好；但对第一版计分来说，走法一的分数更高，AI 就会偏向走法一。\n\n现在在备忘录里改一版规则：金币加 1 分，终点加 10 分，回头不再额外加分。重新算两种走法：完整走到终点是 11 分，绕圈三次只有 3 分。最后再自己设计一种更奇怪的走法，检查新规则会不会又奖励它。\n\n这一次你用手机看见了奖励写歪的完整后果：AI 不需要理解比赛的故事，只需要追逐那个被计算出来的分数。\n\n## 自检\n\n做对了你会看到：在第一版规则下，拿金币后绕圈的总分高于到终点；你能指出分数目标和比赛目标不一样。\n\n最常见的两种做错了：\n\n1. 说 AI 是因为想要金币才绕圈。它没有这个愿望，只是在最大化规则给的分。回到第一段，把想要换成追逐分数。\n2. 改一次奖励后就认为永远不会钻空子。任何新规则都可能有没想到的走法，回到最后一步再造一种奇怪走法测试。\n\n## 重点\n\n- AI 追逐的是规则写出的奖励，不是设计者没有写进去的心愿。\n- 金币分过高、终点分过低，会让 AI 在金币旁边绕圈。\n- 奖励写歪不是 AI 有意捣乱，而是目标和分数没有对齐。\n- 修改奖励后仍要测试奇怪走法，才能发现新的空子。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow Agents 官方说明强化学习智能体的目标是最大化环境返回的奖励总和。",
+          "sourceUrl": "https://www.tensorflow.org/agents/tutorials/0_intro_rl",
+          "sourceTitle": "TensorFlow Agents · Introduction to RL and Deep Q Networks",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "inference",
+          "note": "由智能体最大化奖励和 NIST 要求记录用途、上下文及风险可推出：奖励分数若偏离真正目的，系统可能稳定地追逐错误目标。",
+          "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+          "sourceTitle": "NIST · AI Risk Management Framework",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "score-is-the-operating-goal",
+          "front": "奖励规则和设计者心里的目标不一样时，AI 会追哪个？",
+          "back": "它会追逐规则写出的奖励，因为那是环境真正给它的分数。设计者没有写进奖励里的心愿，不会自动变成 AI 的目标。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow Agents 官方把最大化奖励总和写成强化学习智能体的目标。",
+              "sourceUrl": "https://www.tensorflow.org/agents/tutorials/0_intro_rl",
+              "sourceTitle": "TensorFlow Agents · Introduction to RL and Deep Q Networks",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "loophole-is-not-intent",
+          "front": "AI 在金币旁边绕圈，是不是它故意钻空子？",
+          "back": "不是。它没有偷偷的计划，只是在已有规则下找到更高分的走法。所谓空子，是奖励分数和真正想要的结果没有对齐。",
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "这是由奖励最大化机制和 NIST 对 AI 用途、限制与风险进行记录和评估的要求推出的解释。",
+              "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "sourceTitle": "NIST · AI Risk Management Framework",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "find-the-score-loophole",
+          "title": "给自己的小游戏找空子",
+          "kind": "explain",
+          "prompt": "在手机备忘录里画一个你熟悉的游戏目标，写出至少两条奖励规则。设计一条表面上得分很高、实际上没有完成目标的走法，算出它的分数，再改规则并重新试一次。",
+          "rubric": [
+            "写出了一个自己造的游戏目标和具体奖励数字",
+            "展示了一条高分但没有完成真正目标的走法及其计算结果",
+            "说明 AI 是追逐规则分数，不是理解了设计者的心愿",
+            "真的用手机算了一次并写下改规则前后的结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow Agents 官方说明智能体根据环境奖励改进策略并最大化奖励总和。",
+              "sourceUrl": "https://www.tensorflow.org/agents/tutorials/0_intro_rl",
+              "sourceTitle": "TensorFlow Agents · Introduction to RL and Deep Q Networks",
+              "sourceAuthority": "official-docs"
+            },
+            {
+              "kind": "fact",
+              "note": "NIST AI RMF 要求明确 AI 系统的用途、上下文、限制和风险，以便评估输出是否适合目标。",
+              "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "sourceTitle": "NIST · AI Risk Management Framework",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "let-answers-evolve",
+      "title": "让答案自己一代代变好",
+      "variant": "术语",
+      "content": "## 学习目标\n\n描述遗传算法怎样让候选答案一代代变好。\n\n## 先给结论\n\n遗传算法会先准备一群候选答案，再给每个答案打分。分数好的留下来，两个答案可以各拿一部分拼成新答案，还可以随机改动一小处。重复几代后，候选答案可能越来越接近目标。它只会追逐打分办法，不会因为答案变好就真的理解了题目。\n\n把答案写成一串可以改变的符号时，这串符号可以叫基因；衡量答案好不好的分数叫适应度。遗传算法就是用选择、拼接和随机改动来搜索更高适应度答案的一种方法。\n\n## 一个类比\n\n就像四支小队各自拿着一条去宝藏的箭头路线。走得更近的小队留下来，两条路线可以把前半段和后半段拼在一起，某一支路线还可能随机把一个箭头改掉。\n\n这个类比有一处不成立：真的小队能看地图、讨论原因，也可能知道自己为什么选这条路；遗传算法只看分数和符号怎么拼，不会读懂路线背后的故事。随机改动也可能让答案变差，所以要靠下一轮打分筛掉它。\n\n## 工作示例\n\n打开手机备忘录，做一个不用于真实开锁的四位宝藏密码游戏。把目标密码写在最上面：4826。这个目标只用来给练习里的候选答案打分，假想的算法只能看到分数，不会看到密码。\n\n第一代写四个候选：4821、4806、7826、1111。规则是每一位和目标同位置就得 1 分。于是 4821 得 3 分，4806 得 3 分，7826 得 2 分，1111 得 0 分。\n\n第二步，留下 4821 和 4806 这两个高分答案。做一次拼接：从 4821 取前三位 482，从 4806 取最后一位 6，拼成 4826，得到 4 分。你刚才让两个较好的答案合出一个更好的答案。\n\n第三步，做一次随机改动：把 4821 的最后一位 1 随机改成 7，得到 4827。它只得 3 分；如果随机改成 6，就会得到 4 分。这个变化说明随机改动可能帮忙，也可能添乱，必须重新打分。\n\n最后，把第一代和第二代写在一起。你会看到算法没有读懂密码的意思，它只是保留高分、拼接片段、偶尔改一位，再把新答案拿去比较。\n\n## 自检\n\n做对了你会看到：你能在备忘录里指出哪几个候选被留下、哪两个片段拼成新答案，以及随机改动后分数为什么可能升也可能降。\n\n最常见的两种做错了：\n\n1. 以为算法知道 4826 是正确密码。它只拿到每个候选的分数，目标密码只是你为了练习而写出的计分标准。回到第一步，把目标和分数分开。\n2. 以为每次随机改动都会变好。随机不等于聪明，改坏了的答案会在下一次打分时被淘汰。回到第三步比较 4827 和 4826。\n\n## 重点\n\n- 遗传算法先给一群候选答案打分，再保留分数较好的答案。\n- 拼接可以把两个候选答案的片段合成新答案。\n- 随机改动可能带来更好答案，也可能让答案变差。\n- 遗传算法追逐适应度分数，不等于理解了题目。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "NIST 官方材料展示遗传算法用一群候选参数进行搜索，并通过选择、重新组合和突变继续产生候选。",
+          "sourceUrl": "https://www.nist.gov/system/files/documents/itl/antd/Combining-Genetic-Algorithms-Simulation-MillsGMU-Seminar.pdf",
+          "sourceTitle": "NIST · Combining Genetic Algorithms and Simulation to Search for Failure Scenarios in System Models",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "genetic-algorithm-keeps-better-candidates",
+          "front": "遗传算法怎样让候选答案一代代变好？",
+          "back": "它给一群候选答案打分，留下分数较好的，再把候选片段重新组合并随机改动。新一代还要重新打分，好的继续留下。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NIST 材料的遗传算法流程包含候选群体、按分数选择、重新组合和突变。",
+              "sourceUrl": "https://www.nist.gov/system/files/documents/itl/antd/Combining-Genetic-Algorithms-Simulation-MillsGMU-Seminar.pdf",
+              "sourceTitle": "NIST · Combining Genetic Algorithms and Simulation to Search for Failure Scenarios in System Models",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "mutation-can-help-or-hurt",
+          "front": "遗传算法里的随机改动一定会让答案变好吗？",
+          "back": "不一定。随机改动可能让分数升高，也可能让分数降低，所以每次改动后都要重新打分，再决定它是否留下。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NIST 材料把突变列为遗传算法搜索中的一种操作，候选仍要依据适应分数继续筛选。",
+              "sourceUrl": "https://www.nist.gov/system/files/documents/itl/antd/Combining-Genetic-Algorithms-Simulation-MillsGMU-Seminar.pdf",
+              "sourceTitle": "NIST · Combining Genetic Algorithms and Simulation to Search for Failure Scenarios in System Models",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "evolve-a-treasure-code",
+          "title": "让候选密码进化两代",
+          "kind": "explain",
+          "prompt": "在手机备忘录里自造一个四位宝藏密码，不要使用真实密码。写四个候选，规定每个位置猜对得一分；留下高分候选，拼接两个片段，再随机改动一位。记录两代分数和最后发生的变化。",
+          "rubric": [
+            "写出了不用于真实账户的四位目标和至少四个候选答案",
+            "按位置匹配给候选打分，并说明保留了哪些高分答案",
+            "展示了一次片段拼接和一次随机改动，并重新计算分数",
+            "真的用手机完成了两代记录，并写下随机改动变好或变坏的结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NIST 官方材料展示遗传算法用候选群体、选择、重新组合和突变来搜索更合适的参数组合。",
+              "sourceUrl": "https://www.nist.gov/system/files/documents/itl/antd/Combining-Genetic-Algorithms-Simulation-MillsGMU-Seminar.pdf",
+              "sourceTitle": "NIST · Combining Genetic Algorithms and Simulation to Search for Failure Scenarios in System Models",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

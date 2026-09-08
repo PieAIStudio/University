@@ -1,0 +1,371 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "what-learning-means",
+  "courseId": "what-is-ai-really",
+  "unit": {
+    "id": "what-learning-means",
+    "title": "什么叫学会了",
+    "objective": "读完这一单元你能判断一个系统是真的抓住规律还是只背过例子，并设计公平测试。"
+  },
+  "lessons": [
+    {
+      "id": "teach-by-examples",
+      "title": "举例子教它，而不是告诉它规则",
+      "variant": "对比",
+      "content": "# 举例子教它，而不是告诉它规则\n\n## 学习目标\n\n读完你能用例子说明怎样教一个判断器。\n\n## 先给结论\n\n想教电脑分辨两类东西，可以给它许多‘东西和正确答案’放在一起的例子。\n这一组带着答案的例子叫**训练数据**。\n电脑会把例子里的样子和答案放在一起，调整自己的判断方式。\n训练数据里既要有你想找的东西，也要有不是它的东西。\n\n## 一个类比\n\n教同学认星星和圆形，就像教他玩找图游戏。你不必先写一本厚厚的规则书；你可以给他看几颗大小不同、位置不同的星星，也给他看几个圆形，然后告诉他每张图的答案。他看过一批之后，再试着给新图写答案。\n\n这个类比失效的地方是：同学会用眼睛和自己的经验理解图形，电脑不会自动理解‘星星长什么样’。电脑需要把图画成数字，再用训练数据调整自己的判断；所以例子怎么选，会影响它以后答得怎样。\n\n## 工作示例\n\n用手机备忘录模拟一次‘教电脑认星星’。这次你是在演练训练过程，不是在把手机真的训练成 AI。\n\n1. 在备忘录画三颗大小不同、位置不同的五角星，再画三个大小不同的圆。\n2. 给每张图写答案：星星写‘星’，圆写‘圆’。这六张带答案的图就是你的训练数据。\n3. 新建第二条备忘录，画一颗更小的星和一个偏到角落的圆，但先不要写答案。\n4. 把第二条备忘录交给家人，或自己先把答案折住；只看图猜‘星’还是‘圆’，再打开答案检查。\n5. 回到第一条备忘录，检查训练数据里是否两类都有、大小和位置是否不一样。\n\n你刚才完成了完整的‘例子—答案—新例子—检查’流程。真正的训练系统也需要例子和答案，但它会用数字做更多计算，不会像你一样凭感觉看图。\n\n## 自检\n\n**做对了会看到：** 你的第一条备忘录里每张训练图都有答案，第二条备忘录里有没见过的新图；你能把新图的猜测和答案逐一对照。\n\n**最常见的两种做错了会看到：**\n\n1. **只给‘是星星’的例子。** 你会发现圆形没有被教到，最后什么都可能被叫成星星。回到训练数据，补上同样清楚的‘不是星星’例子。\n2. **所有例子都长得一模一样。** 你会发现换个位置或大小就不敢判断。回到备忘录，补一些位置、大小或画法不同但答案仍正确的例子。\n\n## 重点\n\n- 训练数据是一组带着正确答案的例子。\n- 训练数据要同时包含想找的东西和不属于它的东西。\n- 例子的大小、位置和样子可以不同，答案仍要写对。\n- 教电脑找规律和直接写一条条规则，是两种不同的教法。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 官方分类教程展示了用带标签的数据训练分类任务；本节把标签说成孩子能操作的‘正确答案’。",
+          "sourceUrl": "https://www.tensorflow.org/tutorials/keras/classification",
+          "sourceTitle": "TensorFlow · Basic classification",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "training-data-has-answers",
+          "kind": "basic",
+          "front": "什么叫训练数据？",
+          "back": "训练数据是一组带着正确答案的例子，给电脑练习用；例如图片和‘星’或‘圆’的答案放在一起。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 分类教程使用带标签的数据进行训练；卡片把标签解释成每个例子的正确答案。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/keras/classification",
+              "sourceTitle": "TensorFlow · Basic classification",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "examples-teach-not-rules",
+          "kind": "basic",
+          "front": "举例教判断器和直接写规则有什么不同？",
+          "back": "举例是给很多输入及其答案，让电脑从对照中找规律；写规则是人逐条告诉电脑条件和动作。",
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "TensorFlow 分类教程把输入与标签交给训练流程；卡片把这种做法和人工写条件的做法分开。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/keras/classification",
+              "sourceTitle": "TensorFlow · Basic classification",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "teach-by-labelled-examples",
+          "title": "用备忘录准备一组训练数据",
+          "kind": "explain",
+          "prompt": "在手机备忘录里画三颗不同大小或位置的星和三个不同大小或位置的圆，给每张写上正确答案。再画一颗新星和一个新圆，先猜再打开答案检查。请解释：这些例子为什么比一条‘星星有五个角’的规则更像是在教电脑？",
+          "rubric": [
+            "准备了两类带答案的例子，而不是只有一类",
+            "用大小或位置不同的新图检查了自己是否能处理新例子",
+            "写下了自己在手机备忘录上实际画图、猜测和对照的结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 分类教程以输入样本和标签训练分类任务；本题让学习者在手机上手动完成输入、标签和新例子检查。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/keras/classification",
+              "sourceTitle": "TensorFlow · Basic classification",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "memorised-or-learned",
+      "title": "它是背下来了，还是真会了",
+      "variant": "对比",
+      "content": "# 它是背下来了，还是真会了\n\n## 学习目标\n\n读完你能分辨一个判断器是在背答案还是抓住规律。\n\n## 先给结论\n\n把练过的例子再拿出来，它答对了，不一定说明它学会了。\n真的抓住规律，应该能处理没见过、但仍属于同一类的新例子。\n只会答练过的例子，换个位置、大小或光线就答错，这种情况叫**过拟合**。\n所以要同时看它在旧例子上的表现和新例子上的表现。\n\n## 一个类比\n\n考试时只背答案，就像把练习册上的每一道题和答案都记住；题目原样出现时你很厉害，数字一换就不会了。真正学会方法的同学，没见过的新题也能按同一个方法试一试。\n\n这个类比失效的地方是：同学会说出自己用的步骤，电脑的判断方式藏在数字里；而且一道新题答错，不足以证明它只会背题。我们要准备一批新例子，才能看出差别。\n\n## 工作示例\n\n继续用手机备忘录，做一个‘记位置’和‘看形状’的对比。\n\n1. 在第一条备忘录的左上角画三颗星，在右下角画三个圆，给它们分别标‘星’和‘圆’。\n2. 在第二条备忘录画一颗右上角的小星和一个左下角的大圆。它们是新图，先不要写答案。\n3. 先演一个只会背图的判断器：你只允许自己记住‘左上角的样子叫星，右下角的样子叫圆’。用这条记忆去猜第二条备忘录，写下结果。\n4. 再演一个会看规律的判断器：你不管图在什么位置，只看它是五角星还是圆。重新猜第二条备忘录，写下结果。\n5. 比较两次：第一种方法记住了训练图的位置，第二种方法尝试抓住图形的共同样子。\n\n这不是手机上的真实 AI 成绩，而是把‘旧例子很好、新例子很差’和‘新例子也能处理’的差别演出来。\n\n## 自检\n\n**做对了会看到：** 只看位置的记忆法在新位置上容易答错，而看图形样子的办法能更好地猜出新星和新圆；你的备忘录里有两次猜测。\n\n**最常见的两种做错了会看到：**\n\n1. **把旧图答对就当成学会。** 你会只检查左上角的星和右下角的圆。回到第二条备忘录，先用新位置、新大小的图测试。\n2. **把一次新图答错就下结论。** 你会说它一定只会背。回到示例，多画几张同类的新图，再看错误是不是持续出现在新例子上。\n\n## 重点\n\n- 旧例子答对，只能说明它在这些例子上答对了。\n- 抓住规律的判断器，应该能处理同一类的新例子。\n- 过拟合是旧例子表现很好，但新例子表现明显变差。\n- 检查新例子，是分辨记忆和学习的关键。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 官方教程把训练表现与验证表现分开，并说明训练过久或数据不足会导致对新数据表现变差；这支持本节对过拟合的白话解释。",
+          "sourceUrl": "https://www.tensorflow.org/tutorials/keras/overfit_and_underfit",
+          "sourceTitle": "TensorFlow · Overfit and underfit",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "memorise-v-learn",
+          "kind": "basic",
+          "front": "什么情况更像‘背下来’？",
+          "back": "练过的例子答得对，换一个位置、大小或画法就答不好；它记住了旧例子，没有抓住能用到新例子的规律。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 的过拟合教程用训练数据与未见数据表现的差别解释过拟合；卡片把差别换成位置和画法的变化。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/keras/overfit_and_underfit",
+              "sourceTitle": "TensorFlow · Overfit and underfit",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "overfit-means-new-fails",
+          "kind": "basic",
+          "front": "过拟合要看哪两个表现？",
+          "back": "看它在练过的例子上表现很好，但在没见过的新例子上明显变差。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 官方教程说明过拟合的信号是训练表现继续变好而验证表现变差；卡片用旧例子和新例子复述这一点。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/keras/overfit_and_underfit",
+              "sourceTitle": "TensorFlow · Overfit and underfit",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "memorised-or-learned-test",
+          "title": "用新位置测试自己",
+          "kind": "explain",
+          "prompt": "用手机备忘录画一组固定位置的星和圆，再画一组新位置或新大小的星和圆。先用‘只记位置’的方法猜一次，再用‘看形状’的方法猜一次。请比较两次结果，并说明哪一次更像抓住了规律。",
+          "rubric": [
+            "把练过的旧图和位置或大小不同的新图分开",
+            "比较了只记位置与看形状两种方法在新图上的结果",
+            "写下了自己在手机备忘录上实际画图和测试后的差异"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 的过拟合教程要求关注训练数据之外的验证表现；本题用新位置和新大小模拟未见例子。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/keras/overfit_and_underfit",
+              "sourceTitle": "TensorFlow · Overfit and underfit",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "exam-cannot-use-old-questions",
+      "title": "考试不能用做过的题",
+      "variant": "决策",
+      "content": "# 考试不能用做过的题\n\n## 学习目标\n\n读完你能设计一次不让旧题帮忙的测试。\n\n## 先给结论\n\n教电脑用的一堆例子叫训练集；教完以后拿来查看它的一堆新例子叫测试集。\n如果同一批例子既拿来教又拿来考，你只能知道它记得这些答案，不能知道它能不能处理新情况。\n公平的测试要和训练集做同一种任务，但题目的具体图片、位置或组合要换掉。\n测试集要等教完以后再打开，不能一边偷看答案一边算成绩。\n\n## 一个类比\n\n学校考试就像一场检查：不能把昨天做过的练习原封不动地再发一次。练习题用来学习，考试题应该考同一种本领，但换一组数字或换一种问法。这样分数才更能说明你会不会做新的题。\n\n这个类比失效的地方是：电脑测试不只是换几个数字，还要注意新题不能难到完全不是同一种任务；如果训练题全是大星星，测试题全是动物，测到的就不是同一个本领。\n\n## 工作示例\n\n用手机备忘录设计一次‘星还是圆’的小考试。\n\n1. 在第一条备忘录画四张训练图：左上大星、右上小星、左下大圆、右下小圆，并写好答案。\n2. 在第二条备忘录画两张新图：把星和圆换到没用过的位置，再改变大小；先不要写答案。\n3. 合上第二条备忘录，先只看第一条备忘录，写下你会用的判断方法。\n4. 现在打开第二条备忘录，逐张写答案，再翻回去核对；记录两张里答对了几张。\n5. 最后检查：第二条图仍然是‘星还是圆’这个任务，只是具体位置和大小换了。\n\n这一次你把‘用来教’和‘用来考’的例子分开了。即使两张测试图都答对，也只说明这次测试通过，不能保证所有新图都不会错。\n\n## 自检\n\n**做对了会看到：** 你有一条带答案的训练备忘录和一条先不看答案的测试备忘录；测试图和训练图任务相同，但位置或大小不同。\n\n**最常见的两种做错了会看到：**\n\n1. **考试前偷看了测试答案。** 你会把‘答对’和‘记住’混在一起。回到示例，先把测试备忘录合上，做完自己的判断后再打开答案。\n2. **测试题换成了完全不同的东西。** 你会拿星和圆训练，却拿动物图片考试。回到类比，保持任务相同，只改变具体例子。\n\n## 重点\n\n- 训练集用来教，测试集用来检查没见过的新例子。\n- 同一批例子不能同时证明‘会做’和‘会处理新情况’。\n- 公平测试要保持任务相同，同时换掉具体图片或情况。\n- 测试答案应该在判断完成后才打开。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 分类教程把训练数据与测试数据分开使用；本节把这种分开改写成手机备忘录中的练习题与考试题。",
+          "sourceUrl": "https://www.tensorflow.org/tutorials/keras/classification",
+          "sourceTitle": "TensorFlow · Basic classification",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "test-set-stays-hidden",
+          "kind": "basic",
+          "front": "测试集什么时候才能打开？",
+          "back": "判断器用训练集学完以后，再打开测试集；这样才能知道它是否能处理没见过的例子。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 分类教程将测试数据用于训练后检查；卡片强调测试例子不能提前参与学习。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/keras/classification",
+              "sourceTitle": "TensorFlow · Basic classification",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "fair-test-same-kind-new",
+          "kind": "basic",
+          "front": "公平测试的例子应该怎样？",
+          "back": "和训练例子属于同一种任务，但具体图片或情况是新的；这样测到的才是能不能处理新例子。",
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "分类教程把同一分类任务的样本分成训练与测试部分；卡片把公平测试解释为同任务、不同具体样本。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/keras/classification",
+              "sourceTitle": "TensorFlow · Basic classification",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "exam-hide-two-examples",
+          "title": "把两张题藏起来",
+          "kind": "explain",
+          "prompt": "用手机备忘录画四张带答案的星和圆，再画两张同任务但位置或大小不同、暂时没有答案的图。先合上测试备忘录，写下你的判断，再打开核对。请解释为什么这比用同一批图来考试公平。",
+          "rubric": [
+            "把带答案的训练图和没见过的测试图放在不同备忘录里",
+            "说明测试图保持‘星还是圆’的任务，只改变了具体位置或大小",
+            "写下了自己在手机上先测试、后打开答案看到的结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 分类教程使用分开的训练与测试数据；本题让学习者在手机上亲手保持测试集未被提前看到。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/keras/classification",
+              "sourceTitle": "TensorFlow · Basic classification",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "how-wrong-is-wrong",
+      "title": "答错的时候，错了多少",
+      "variant": "术语",
+      "content": "# 答错的时候，错了多少\n\n## 学习目标\n\n读完你能比较两次答案谁错得更多。\n\n## 先给结论\n\n只说‘对’或‘错’，有时看不出一次答案离正确答案有多远。\n我们可以把一组答案的错误大小算成一个分数，这个分数叫**损失**。\n损失越小，通常表示这一组答案整体离正确答案越近。\n训练时，电脑会调整自己的判断方式，努力让损失变小，但损失不会保证每一道题都同样好。\n\n## 一个类比\n\n投飞镖就像给错误量尺子：扎在靶心旁边，只差一点；扎到墙边，就差很多。你可以把每支飞镖离靶心的距离加起来，用一个总分比较两轮谁更接近。\n\n这个类比失效的地方是：飞镖可以直接量距离，电脑里的损失要由人选一种计算方法；不同任务可以用不同的损失。一个总分还会藏住每一道题分别错在哪里，所以不能只看总分。\n\n## 工作示例\n\n用手机计算器算两组猜数的‘错误总分’。\n\n1. 在备忘录写目标数 `10`。第一组猜数写 `9` 和 `12`；第二组写 `6` 和 `11`。\n2. 用计算器算第一组每个猜数离 `10` 有多远：`10 - 9 = 1`，`12 - 10 = 2`，加起来是 `3`。\n3. 算第二组：`10 - 6 = 4`，`11 - 10 = 1`，加起来是 `5`。\n4. 比较 `3` 和 `5`：第一组损失更小，所以这两次猜数整体更接近目标。\n5. 把第一组的 `9` 改成 `7`，重新计算。你会看到一个猜数变远，损失也变大。\n\n这是一种很简单的错误分数，不是所有 AI 都用这一种算法；它只帮助你看懂‘错了多少’可以被算出来。\n\n## 自检\n\n**做对了会看到：** 你的计算器会算出第一组总分 `3`、第二组总分 `5`，你能选出整体更接近目标的那组。\n\n**最常见的两种做错了会看到：**\n\n1. **把损失当成答对的题数。** 你会只数‘对了几道’，却不看每道离答案多远。回到飞镖类比，先算每次离靶心的距离，再加总。\n2. **以为总分一样就代表每道题一样错。** 你会忽略一组可能是‘两次都差一点’，另一组可能是‘一次很远、一次刚好’。回到工作示例，把每个单独的错误也写在总分旁边。\n\n## 重点\n\n- 损失是用一个分数表示一组答案错得有多少。\n- 损失越小，通常表示整体离正确答案越近。\n- 总损失相同，不代表每一道题的错误分布相同。\n- 训练可以努力降低损失，但仍要另外检查新例子和每一道题。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 的损失函数 API 把 loss 定义为衡量预测与目标差异的计算；本节用‘错误总分’给这个概念一个手机可算的例子。",
+          "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/losses",
+          "sourceTitle": "TensorFlow · Losses",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "TensorFlow 的训练指南说明训练过程会使用损失来指导参数更新；本节只保留‘努力让错误分数变小’这一层意思。",
+          "sourceUrl": "https://www.tensorflow.org/guide/keras/training_with_built_in_methods",
+          "sourceTitle": "TensorFlow · Training with built-in methods",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "loss-measures-wrong",
+          "kind": "basic",
+          "front": "损失分数想告诉你什么？",
+          "back": "一组答案离正确答案整体有多远；在同一种计算方法下，分数越小，整体错误通常越少。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 损失函数 API 说明 loss 用来计算预测与目标之间的差异；卡片把它说成整体错误距离。",
+              "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/losses",
+              "sourceTitle": "TensorFlow · Losses",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "loss-not-every-mistake",
+          "kind": "basic",
+          "front": "两组答案损失一样，说明每个答案都一样错吗？",
+          "back": "不说明。总分可能一样，但错误可以分布在不同题目上；还要查看每一次单独错了多少。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "损失是对预测与目标差异的汇总计算；卡片提醒汇总分数不能替代查看每个预测。",
+              "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/losses",
+              "sourceTitle": "TensorFlow · Losses",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "loss-calculate-on-phone",
+          "title": "用计算器比较两组错误",
+          "kind": "explain",
+          "prompt": "在手机备忘录写目标数 10 和两组猜数。用计算器分别算每个猜数离 10 的距离，再把每组距离加起来。请说明哪组损失更小，并写下你实际算出的每个小错误和总分。",
+          "rubric": [
+            "为每个猜数单独算出了离目标的距离",
+            "把每组的小错误加成总损失，并比较了两组大小",
+            "写下了自己在手机计算器上实际看到的单个错误和总分"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 损失函数 API 支持用计算得到的数衡量预测与目标差异；本题用简单距离模拟这一过程。",
+              "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/losses",
+              "sourceTitle": "TensorFlow · Losses",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "more-examples-usually-help",
+      "title": "例子越多越好吗",
+      "variant": "决策",
+      "content": "# 例子越多越好吗\n\n## 学习目标\n\n读完你能判断加例子时要看数量还是样子。\n\n## 先给结论\n\n更多例子通常能让电脑见到更多情况，但只把同一张图复制很多遍，帮助很小。\n例子要有变化，最好包含不同的大小、位置、光线和角度，而且答案要写对。\n例子如果重复、贴错答案，或者完全没覆盖真实使用的情况，再多也可能让判断变差。\n例子有数量和质量的上限：它不能替你保证电脑遇到所有新情况都答对。\n\n## 一个类比\n\n教同学认你的拼图盒，就像给他看相册。给他看二十张完全相同的正面照片，数量很大，但他还是没见过侧面；给他看六张从远处、侧面、亮处和暗处拍的正确照片，他见到的情况更丰富。\n\n这个类比失效的地方是：同学会主动问问题，电脑不会；电脑还可能被错误答案带偏。所以例子不只是‘越多越好’，还要和以后真正要处理的情况有关。\n\n## 工作示例\n\n用手机相机和备忘录做一次‘数量还是变化’的对比。\n\n1. 选一个小物品，例如你的拼图盒，把它叫‘目标物’。\n2. 连拍三张几乎一样的正面照片，在备忘录标成‘目标物’；这是‘重复多’的一组。\n3. 再拍三张不同照片：从侧面拍一张、离远一点拍一张、让一半被书挡住拍一张；在备忘录也标成‘目标物’。这是‘变化多’的一组。\n4. 请家人把六张照片混在一起，只露出照片不露出标签，让他猜每张是不是目标物；如果不方便请家人，也可以自己先遮住标签逐张猜，再打开检查。\n5. 写下你观察到的结果：重复照片增加了数量，变化照片增加了新情况；哪组更容易认出被挡住、换角度或离远的目标物，要以你的实际结果为准。\n\n这仍然是手机上的人类模拟，不是训练了真正的 AI。它让你看到，准备例子时要问‘我增加了多少种情况’，而不只是问‘我有多少张照片’。\n\n## 自检\n\n**做对了会看到：** 你的备忘录里有三张近乎相同的照片和三张角度、距离或遮挡不同的照片；你能说出两组增加的东西不同。\n\n**最常见的两种做错了会看到：**\n\n1. **以为多复制就一定更会。** 你会只比较照片张数。回到示例，分别数‘重复’和‘新情况’，再用一张新角度照片检查。\n2. **为了变化而贴错答案。** 你会把被书挡住的目标物标成‘不是目标物’。回到相机照片，先确认照片里确实是同一个物品，再把标签写对。\n\n## 重点\n\n- 更多正确例子能增加电脑见过的情况，但重复例子增加的内容很少。\n- 例子的大小、位置、光线和角度变化，能帮助它面对不同样子。\n- 错误答案会把判断带偏，例子质量和数量一样重要。\n- 再多例子也不能保证所有没见过的情况都答对。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 分类教程展示了数据样本、标签与测试数据共同影响分类训练与检查；本节据此强调例子数量、变化和标签质量要一起看。",
+          "sourceUrl": "https://www.tensorflow.org/tutorials/keras/classification",
+          "sourceTitle": "TensorFlow · Basic classification",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "TensorFlow 的过拟合教程说明数据不足或数据范围不合适会让系统在新数据上表现变差；这支持本节‘数量不能保证全对’的边界。",
+          "sourceUrl": "https://www.tensorflow.org/tutorials/keras/overfit_and_underfit",
+          "sourceTitle": "TensorFlow · Overfit and underfit",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "variety-beats-duplicates",
+          "kind": "basic",
+          "front": "增加训练例子时，为什么不能只复制同一张？",
+          "back": "复制只增加数量，没有增加新的情况；不同位置、大小、光线或角度的正确例子，才会让判断器见到更多样子。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 分类教程把训练建立在数据样本与标签上；卡片把数据样本的变化解释成见到新的情况。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/keras/classification",
+              "sourceTitle": "TensorFlow · Basic classification",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "more-data-has-a-limit",
+          "kind": "basic",
+          "front": "例子越多会不会保证永远答对？",
+          "back": "不会。例子可能重复、错误或没覆盖真实情况；判断器仍然受例子的质量和范围限制。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 的过拟合教程指出数据不足、噪声或训练与新数据差异会造成泛化问题；卡片保留‘例子有边界’。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/keras/overfit_and_underfit",
+              "sourceTitle": "TensorFlow · Overfit and underfit",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "more-examples-photo-test",
+          "title": "比较重复照片和变化照片",
+          "kind": "explain",
+          "prompt": "用手机给同一个小物品拍三张几乎一样的照片，再拍三张角度、距离或遮挡不同的照片。把六张混在一起，遮住标签先猜，再打开检查。请比较：两组分别增加了数量还是新情况？写下你实际看到的结果。",
+          "rubric": [
+            "准备了重复照片和变化照片两组正确例子",
+            "说明两组增加的内容不同，并指出变化例子覆盖了哪些新情况",
+            "写下了自己用手机拍照、遮标签测试后实际看到的结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 分类教程与过拟合教程共同支持用不同样本和未见情况检查分类表现；本题用手机照片做无安装模拟。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/keras/overfit_and_underfit",
+              "sourceTitle": "TensorFlow · Overfit and underfit",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

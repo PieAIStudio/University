@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "clever-without-learning",
+  "courseId": "what-is-ai-really",
+  "unit": {
+    "id": "clever-without-learning",
+    "title": "不用学也能显得聪明",
+    "objective": "读完这一单元你能画出一棵‘如果…就…’的判断树，并指出它会失灵的地方。"
+  },
+  "lessons": [
+    {
+      "id": "a-pile-of-if-then",
+      "title": "一串「如果…就…」能走多远",
+      "variant": "术语",
+      "content": "# 一串「如果…就…」能走多远\n\n## 学习目标\n\n读完你能画出一棵只用‘如果…就…’的判断树。\n\n## 先给结论\n\n把每一步都写成‘如果…就…’，电脑就能按一条条条件走。\n规则就是把条件和动作连起来的句子：如果出现某种情况，就做某件事。\n规则不需要电脑从例子里猜，它只执行人写出的条件。\n规则越多，能处理的情况越多，但每一条都要有人先写出来。\n\n## 一个类比\n\n规则就像游戏里的通关提示。提示写着：如果血量变少，就先吃一颗回血果；如果门是蓝色，就用蓝钥匙。你照着提示走，游戏角色会显得反应很快。\n\n这个类比失效的地方是：游戏里的门和钥匙通常是设计好的一小组东西，现实里的情况会变得更多。提示没有写到的情况，角色不会自己想出新提示；它只能停住，或者照着最接近的一条走错路。\n\n## 工作示例\n\n用手机天气 app 和备忘录做一棵‘要不要带伞’的判断树。\n\n1. 打开天气 app，看今天出门时有没有下雨提示。在备忘录写下第一个问题：‘天气 app 显示下雨吗？’\n2. 写第一条规则：如果显示下雨，就带伞。把‘带伞’写在这条路的末尾。\n3. 在‘不下雨’这条路上再写一个问题：‘窗外有很黑的云吗？’\n4. 写第二条规则：如果有黑云，就带伞；如果没有黑云，就不带伞。\n5. 现在从第一个问题开始，只沿着你今天的答案走一遍，在末尾写下‘带伞’或‘不带伞’。\n\n你画出的就是一棵判断树：问题像树干，‘是’和‘不是’像树枝，最后的动作像树叶。电脑要做的不是猜天气，而是照着这条路走。\n\n## 自检\n\n**做对了会看到：** 你的备忘录有一个起点问题、至少两条分开的路和一个末尾动作；你能用今天手机天气 app 的答案走到一个结果。\n\n**最常见的两种做错了会看到：**\n\n1. **把条件和动作写反。** 你会写成‘如果带伞，就下雨’。回到每条规则，先圈出‘看到什么’，再圈出‘要做什么’，让箭头从条件指向动作。\n2. **以为规则会自己补上没写的情况。** 你会遇到天气 app 没写、窗外也看不清时仍然随便猜。回到树的分叉处，给这个新情况补一个明确问题，或者诚实写‘不知道’。\n\n## 重点\n\n- 规则是一句把条件和动作连起来的‘如果…就…’。\n- 判断树从一个问题开始，答案会把你带到下一问或最后的动作。\n- 规则式判断不会自己发明新规则，只会执行已经写出的规则。\n- 规则越多，能覆盖的情况越多，但每条规则都要有人负责写清楚。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 说明 if…else 会根据条件选择执行不同代码；本节把这种条件分支改写成孩子能画的‘如果…就…’判断树。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Statements/if...else",
+          "sourceTitle": "MDN · if...else",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "if-then-rule",
+          "kind": "basic",
+          "front": "规则是什么？",
+          "back": "规则是一条写明条件和动作的句子：如果出现某种情况，就做某件事。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 的 if…else 说明程序会根据条件选择不同动作；卡片用‘如果…就…’说出这个结构。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Statements/if...else",
+              "sourceTitle": "MDN · if...else",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "rule-tree-path",
+          "kind": "basic",
+          "front": "判断树为什么叫‘树’？",
+          "back": "它从一个问题开始，每个答案把你带到下一问或一个结果，分开的路径像树枝。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "条件语句可以在不同条件下走不同分支；卡片把这些分支整理成树形路径。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Statements/if...else",
+              "sourceTitle": "MDN · if...else",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "rules-draw-umbrella-tree",
+          "title": "画一棵带伞判断树",
+          "kind": "explain",
+          "prompt": "用手机天气 app 查今天的天气，在备忘录画一棵‘要不要带伞’的判断树。沿着今天的答案走到结尾，再用自己的话解释每个‘如果…就…’分别检查了什么。",
+          "rubric": [
+            "画出了从问题到分支再到动作的完整路径",
+            "至少写出一条条件和它对应的动作，并且没有把两者倒过来",
+            "写下了自己看手机天气 app 后实际走到的结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 的 if…else 说明条件会选择不同分支；本题把这个结构转成手机备忘录中的判断树。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Statements/if...else",
+              "sourceTitle": "MDN · if...else",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "expert-system-asks-you",
+      "title": "像看病一样一路问下去",
+      "variant": "现象",
+      "content": "# 像看病一样一路问下去\n\n## 学习目标\n\n读完你能用一组问题走完一个规则判断。\n\n## 先给结论\n\n有些规则系统不会先收集所有信息，而是先问你一个问题。\n你的回答会决定它接下来问什么，最后它按规则给出一个结果。\n这种用人写好的规则、再通过提问得到结果的系统叫**专家系统**。\n它看起来像在思考，其实是在保存问题答案、选择下一条规则和走完一条路径。\n\n## 一个类比\n\n专家系统就像猜动物的问答游戏。你心里想一只动物，朋友问‘有毛吗？’‘住水里吗？’，每个答案都会让他少猜几种，最后他说出一个结果。它也好比看诊时按症状一路提问的问卷，但这里我们只是在玩判断游戏，不是在给人看病。\n\n这个类比失效的地方是：人可以听懂含糊的回答，还能临时换一种问法；固定的专家系统只能处理它已经写过的问题和答案。遇到没有写进规则的新情况，它应该说‘没有足够信息’，不能假装自己真的懂了。\n\n## 工作示例\n\n用手机备忘录做一个‘四种动物’的问答系统，再请家人或自己扮演被猜的动物。\n\n1. 在备忘录写四条结果：猫、兔子、鱼、乌龟。\n2. 写第一问：‘有毛吗？’如果答案是‘有’，下一问是‘会喵喵叫吗？’如果答案是‘没有’，下一问是‘住水里吗？’\n3. 写完四条规则：有毛且会喵喵叫→猫；有毛但不会喵喵叫→兔子；没有毛且住水里→鱼；没有毛且不住水里→乌龟。\n4. 现在偷偷选‘兔子’，从第一问开始只回答和兔子有关的事实：有毛；不会喵喵叫。沿着这两个答案走到‘兔子’。\n5. 把‘兔子’换成‘鱼’，重新从第一问走一次：没有毛；住水里。你会走到‘鱼’。\n\n这一轮里，备忘录没有自己猜动物。它只是保存了规则，你的答案负责把路径选出来。\n\n## 自检\n\n**做对了会看到：** 选‘兔子’时会依次走到‘有毛’和‘不会喵喵叫’，选‘鱼’时会依次走到‘没有毛’和‘住水里’，两条路最后到不同结果。\n\n**最常见的两种做错了会看到：**\n\n1. **没有按顺序回答。** 你会一想到兔子就直接写结果，忘了第一问。回到备忘录，从第一问开始，每得到一个答案才走下一枝。\n2. **把猜出的结果当成规则自己知道的。** 你会说‘备忘录认出了鱼’。回到示例，把‘规则是谁写的’和‘答案是谁提供的’分别圈出来。\n\n## 重点\n\n- 专家系统把人写好的规则放在系统里，再用问题答案选择路径。\n- 前一个答案可以决定下一个问题，系统不必一开始就问完所有问题。\n- 专家系统的结果受规则范围限制，没写过的情况不能假装知道。\n- 一条清楚的提问路径，能让规则系统的判断过程被人看懂。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 说明条件语句会依据当前条件选择不同代码分支；本节把连续提问理解成连续选择规则路径。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Statements/if...else",
+          "sourceTitle": "MDN · if...else",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "expert-system-uses-rules",
+          "kind": "basic",
+          "front": "专家系统的‘专家’在哪里？",
+          "back": "在它事先装进去的规则里；它不是自己变成人类专家，而是按这些规则处理问题。",
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "条件分支的动作必须先写在程序里；卡片据此说明固定规则系统的‘专家’来自预先写好的规则。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Statements/if...else",
+              "sourceTitle": "MDN · if...else",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "expert-system-asks-next",
+          "kind": "basic",
+          "front": "规则系统为什么会一路问问题？",
+          "back": "前一个答案会选中下一条规则，让系统只问当前路径需要的信息，最后走到一个结果。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "条件语句会在不同条件下选择不同分支；卡片把连续分支写成一条提问路径。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Statements/if...else",
+              "sourceTitle": "MDN · if...else",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "expert-walk-animal-path",
+          "title": "走完一条动物判断路径",
+          "kind": "explain",
+          "prompt": "照着工作示例在手机备忘录里写出四种动物的规则。任选一只动物，从第一问开始逐个回答，最后解释：是哪几个答案把你带到了这个结果？写下你实际走的路径。",
+          "rubric": [
+            "写出了至少两层问题和每个答案对应的下一步",
+            "按问题顺序说明了答案怎样把自己带到最后结果",
+            "写下了自己在手机备忘录上实际走过的一只动物路径"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 的条件分支说明不同条件会走不同路径；本题要求学习者在手机上完整走一条路径。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Statements/if...else",
+              "sourceTitle": "MDN · if...else",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rules-run-out",
+      "title": "为什么规则永远写不完",
+      "variant": "决策",
+      "content": "# 为什么规则永远写不完\n\n## 学习目标\n\n读完你能指出规则越来越多时会卡在哪里。\n\n## 先给结论\n\n规则的力量也是它的边界：它只能处理有人提前写出的情况。\n真实世界会出现遮住一半的东西、光线变了的照片、画出来的东西和没见过的新东西。\n每遇到一个例外，就要再写条件、再加分支，还要检查新规则会不会和旧规则打架。\n规则写到很大时，人们会换一条路：给电脑许多例子，让它从例子里找规律，这件事常叫**机器学习**。\n\n## 一个类比\n\n给规则补例外就像给游戏写一本永远写不完的攻略。你先写‘看到红色圆形就是苹果’，马上有人拿来一个红色球；你再加‘还要有叶子’，又有人拿来一张没有叶子的苹果贴纸。每补一个洞，攻略就多一行。\n\n这个类比失效的地方是：机器学习也不是把攻略变成魔法。它仍然需要人准备例子、说明想分什么，还可能在新情况上答错；只是它不要求人把每一条细小规则都亲手列出来。\n\n## 工作示例\n\n用手机相册和备忘录做一次‘苹果还是球’的规则测试。\n\n1. 在相册找一张苹果照片和一张球的照片；没有合适照片，就现在各拍一张。再找一张红色的圆形物品照片。\n2. 在备忘录写第一条规则：‘如果东西是红色而且是圆的，就叫苹果。’\n3. 用这条规则检查三张照片。苹果会被叫对，但红色球也会被叫成苹果。把这个错误写下来。\n4. 给规则加一条：‘如果看得到叶子，才叫苹果。’再检查三张照片。红色球可能不再被叫成苹果，但没有拍到叶子的苹果贴纸可能又被漏掉。\n5. 在备忘录最后写一句：你每发现一个新情况，就得再加一条规则；当例外越来越多，规则表就越来越难维护。\n\n这个小实验没有把手机变成会学习的 AI；它让你亲眼看到规则为什么会不断长大，以及为什么下一步会需要‘从例子找规律’的方法。\n\n## 自检\n\n**做对了会看到：** 你能指出第一条规则把红色球误判成苹果，并能说明加上‘看得到叶子’后又可能漏掉什么；你的备忘录里有两次检查的结果。\n\n**最常见的两种做错了会看到：**\n\n1. **以为加一条规则就永远解决了问题。** 你会只检查原来的三张照片。回到相册，再找一张光线、角度或形状不同的照片，看看旧规则是否还够用。\n2. **以为机器学习只是把规则写得更多。** 你会把‘从例子找规律’和‘人逐条写条件’说成同一件事。回到类比，分别圈出谁在写规则、谁在准备例子。\n\n## 重点\n\n- 规则只能覆盖它已经写出的条件，没写过的情况可能没有答案。\n- 每个新例外都可能带来新分支，也可能和旧分支冲突。\n- 规则表变得很大时，维护和补全会越来越难。\n- 机器学习让电脑从许多例子里找规律，但它仍会受例子范围限制。",
+      "evidence": [
+        {
+          "kind": "inference",
+          "note": "MDN 的条件分支要求条件与动作被明确写出；本节据此推断每增加一种例外就需要增加或修改分支。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Statements/if...else",
+          "sourceTitle": "MDN · if...else",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "TensorFlow 官方分类教程展示了用带标签的例子训练分类模型；本节把它作为规则写不完之后的另一条思路。",
+          "sourceUrl": "https://www.tensorflow.org/tutorials/keras/classification",
+          "sourceTitle": "TensorFlow · Basic classification",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "rules-have-written-cases",
+          "kind": "basic",
+          "front": "规则系统遇到新情况为什么会卡住？",
+          "back": "因为它只会走有人提前写好的条件；没有匹配的条件，就没有可靠的下一步。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明条件分支要根据已写出的条件选择动作；卡片把这个限制说成新情况会缺少下一步。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Statements/if...else",
+              "sourceTitle": "MDN · if...else",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "learning-enters-when-rules-run-out",
+          "kind": "basic",
+          "front": "规则写不完时，另一条路是什么？",
+          "back": "给电脑许多带答案的例子，让它从例子里找出可用的规律；这通常叫机器学习。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "TensorFlow 分类教程用带类别的训练例子建立分类模型；卡片把这条方法说成从例子找规律。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/keras/classification",
+              "sourceTitle": "TensorFlow · Basic classification",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "rules-test-new-photo",
+          "title": "用相册找出规则的漏洞",
+          "kind": "explain",
+          "prompt": "在手机相册里找或拍三张‘苹果、球、红色圆东西’的照片，写一条你自己的判断规则并逐张检查。至少找出一次误判，再说明你会怎样补规则，以及为什么补完后仍可能遇到新漏洞。",
+          "rubric": [
+            "写出了一条明确的条件和结果，并用它检查了多张照片",
+            "指出了一次误判或漏判，说明是哪种新情况让规则失灵",
+            "写下了自己在手机相册上实际检查的照片和看到的结果，并承认新规则仍有范围"
+          ],
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "条件分支需要预先写出条件；本题让学习者用相册寻找没有被规则覆盖的情况。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Statements/if...else",
+              "sourceTitle": "MDN · if...else",
+              "sourceAuthority": "mdn"
+            },
+            {
+              "kind": "fact",
+              "note": "TensorFlow 分类教程展示了用例子训练分类任务；本题要求学习者对比逐条规则与之后的例子学习。",
+              "sourceUrl": "https://www.tensorflow.org/tutorials/keras/classification",
+              "sourceTitle": "TensorFlow · Basic classification",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

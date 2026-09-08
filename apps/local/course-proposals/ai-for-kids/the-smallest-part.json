@@ -1,0 +1,305 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "ai-for-kids-the-smallest-part",
+  "courseId": "what-is-ai-really",
+  "unit": {
+    "id": "the-smallest-part",
+    "title": "最小的那个零件",
+    "objective": "读完这一单元你能用纸笔算出一个神经元的输出，并说出它凭什么会“改正”。"
+  },
+  "lessons": [
+    {
+      "id": "one-neuron-is-arithmetic",
+      "title": "一个神经元做的事，你三年级就会",
+      "variant": "术语",
+      "content": "## 学习目标\n\n算出一个神经元在给定数字下的输出。\n\n## 先给结论\n\n先把“神经元”说清楚：在这节里，它指一小段收进数字、算出结果的计算。\n\n收进来的数字叫输入，算出来的数字叫输出；每个输入前面还有一个表示“在意多少”的数字，这个数字叫权重。\n\n神经元会把每个输入乘上自己的权重，再把乘积加起来。\n\n总数过了门槛，它输出 1；没过门槛，它输出 0。\n\n## 一个类比\n\n好比游戏里有一扇只认分数的门。你带来的每个线索都先乘上自己的分值，再把分值加起来；总分达到 6 分，门亮绿灯，否则亮红灯。线索本身没有在思考，门也没有在思考，它们只是按写好的算式走。这个类比失效的地方是：游戏门的分值通常是人写好的，而神经元的权重可以在训练时被改动。\n\n## 工作示例\n\n拿一张纸，或者打开手机备忘录，完整算一次。我们让神经元判断“总分够不够 6”。\n\n1. 写下输入 A=2、输入 B=3。\n2. 写下权重 A=2、权重 B=1。\n3. 分别相乘：2×2=4，3×1=3。\n4. 把乘积相加：4+3=7。\n5. 7 大于 6，所以输出是 1。\n\n再只改输入 A：把它换成 1。重新算：1×2=2，3×1=3，2+3=5。5 小于 6，所以输出是 0。你刚刚没有让它“想一想”，只是把数字送进了同一条算式。\n\n## 自检\n\n**做对了你会看到：** 第一组数字得到 7 和输出 1，第二组数字得到 5 和输出 0；你能指出每个乘积从哪两个数字来。\n\n**最常见的两种做错了：**\n\n1. **只把输入相加。** 你会算出 2+3=5，第一组也被判成 0。回去给每个输入先乘上对应权重。\n2. **把门槛当成要加进去的数字。** 你会算出 7+6=13。门槛只用来比较，不参加前面的相乘和相加。\n\n## 重点\n\n- 神经元可以先看成一条很短的算式：相乘、相加、和门槛比较。\n- 输入是送进神经元的数字，输出是它算出的结果。\n- 权重表示每个输入在这次判断里有多重要。\n- 输出 1 或 0 不是思考，而是算式比较后的结果。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 的 Dense 层把输入和权重相乘、加上偏置，再交给激活函数得到输出；本节把它缩小成孩子能手算的门槛版本。",
+          "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense",
+          "sourceTitle": "TensorFlow API · tf.keras.layers.Dense",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "TensorFlow 把模型训练和多维数字计算放在同一套工具里，说明神经网络首先是一组数字计算。",
+          "sourceUrl": "https://www.tensorflow.org/guide/basics",
+          "sourceTitle": "TensorFlow Guide · TensorFlow basics",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "neuron-arithmetic",
+          "front": "一个最小的神经元先做哪三步？",
+          "back": "它把每个输入乘上对应权重，把乘积加起来，再把总数和门槛比较，得到输出 1 或 0。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Dense 层的基本计算是输入与权重相乘、加上偏置并产生输出。",
+              "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense",
+              "sourceTitle": "TensorFlow API · tf.keras.layers.Dense",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "calculate-neuron-output",
+          "title": "把一次判断算到底",
+          "kind": "explain",
+          "prompt": "请用手机计算器或纸笔算一遍：输入 A=4、输入 B=1，权重 A=1、权重 B=3，门槛是 5。写下两个乘积、总数和最后的输出，并说出你为什么这样判。",
+          "rubric": [
+            "分别算出了 4×1 和 1×3，而不是直接把输入相加",
+            "把两个乘积相加后与门槛 5 比较，并写出输出 1 或 0",
+            "真的用手机计算器或纸笔试了一次，并写下了看到的数字结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Dense 层的核心是输入和权重的乘加计算。",
+              "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense",
+              "sourceTitle": "TensorFlow API · tf.keras.layers.Dense",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "weights-are-how-much-it-cares",
+      "title": "权重就是“这条我多在意”",
+      "variant": "对比",
+      "content": "## 学习目标\n\n解释权重如何改变一个神经元的判断。\n\n## 先给结论\n\n权重是放在输入旁边的数字，它决定这条线索对总分的影响有多大。\n\n权重很大，输入轻轻一变，总分就可能变很多；权重很小，这条线索的影响就小。\n\n权重不是“喜欢”或“讨厌”，它只是算式里的一根调节杆。\n\n训练神经元时，真正会被改动的，常常就是这些权重。\n\n## 一个类比\n\n想象你在猜一个宝箱里有没有星星。你看到“箱子上有星形贴纸”和“箱子发出亮光”两条线索。贴纸像一张小提示卡，亮光像一张大提示卡：同样看到一次，亮光给的分更多，所以它的权重更大。这个类比失效的地方是：你会用经验理解线索，神经元不会理解“亮光”是什么，它只收到 0、1 之类的数字。\n\n## 工作示例\n\n用手机备忘录写一个“星星宝箱”判断表。看到线索记 1，看不到记 0；总分达到 3 就输出“像有星星”。\n\n**第一次：**\n\n- 亮光输入=1，权重=3。\n- 贴纸输入=0，权重=1。\n- 总分是 1×3+0×1=3，输出 1。\n\n**第二次：**\n\n- 亮光输入=0，权重=3。\n- 贴纸输入=1，权重=1。\n- 总分是 0×3+1×1=1，输出 0。\n\n现在只改“贴纸”的权重，把 1 改成 3，再算第二次：0×3+1×3=3，输出从 0 变成 1。输入完全没变，改变判断的是权重。\n\n## 自检\n\n**做对了你会看到：** 第二次的输入一直是“没有亮光、有贴纸”，只把贴纸权重从 1 换成 3，总分才从 1 变成 3，输出才翻转。\n\n**最常见的两种做错了：**\n\n1. **把权重当成输入。** 你会说“贴纸从 1 变成 3，所以看见了三张贴纸”。其实贴纸仍然只有一个输入 1，变的是它对总分的影响。\n2. **以为权重越大就一定正确。** 你会把所有权重都调到最大。这样可能让错误线索也变得很有力。回去记住：权重只表示影响大小，不保证答案正确。\n\n## 重点\n\n- 权重是输入旁边的影响分。\n- 输入没变，改权重也可能让输出改变。\n- 权重越大，单条线索对总分的影响通常越大。\n- 权重不是理解，它只是会被训练调整的数字。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Dense 层文档把 kernel 和 bias 列为层的可训练参数，权重因此是会随训练更新的数字。",
+          "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense",
+          "sourceTitle": "TensorFlow API · tf.keras.layers.Dense",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "weight-changes-vote",
+          "front": "输入没变时，为什么改权重也会改变判断？",
+          "back": "因为权重会改变这条输入乘出来的分数。输入仍是原来的数字，但乘积变了，总分可能因此跨过门槛。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Dense 层用输入乘 kernel，再加上 bias；kernel 就是影响输入的可训练数字。",
+              "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense",
+              "sourceTitle": "TensorFlow API · tf.keras.layers.Dense",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "change-one-weight",
+          "title": "只动一根调节杆",
+          "kind": "explain",
+          "prompt": "在手机上算这个判断：输入 A=1、输入 B=1，权重 A=2、权重 B=1，门槛是 3。然后只把权重 B 改成 4，再算一次。写下两次总分和输出，并说出哪一个输入的影响变大了。",
+          "rubric": [
+            "第一次算出 1×2+1×1=3，并得到输出 1",
+            "第二次算出 1×2+1×4=6，并得到输出 1",
+            "真的用手机计算器或纸笔试了一次，并指出只有 B 的权重变大"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Dense 层的输出由输入和可训练权重的乘加共同决定。",
+              "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense",
+              "sourceTitle": "TensorFlow API · tf.keras.layers.Dense",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stack-them-into-a-layer",
+      "title": "把神经元排成一排",
+      "variant": "现象",
+      "content": "## 学习目标\n\n画出一层神经元怎样同时处理同一组输入。\n\n## 先给结论\n\n一层就是一排同时工作的神经元。\n\n这一排里的每个神经元都可以读同一组输入，但各自使用不同的权重和门槛。\n\n所以同一张图可以同时得到几个结果：一个神经元看尖角，另一个看弯线。\n\n把几层这样的计算接起来，就得到神经网络；前一层的输出会成为后一层的输入。\n\n## 一个类比\n\n好比食堂门口有三位“找不同”小裁判。三个人同时看同一盘拼图，但一个只数红色方块，一个只数圆形，一个只数三角形；他们各自写出自己的结果，再把三张小纸交给下一位。这个类比失效的地方是：裁判能说出“我看见了圆”，神经元交出的只是数字，数字本身没有人类的名字。\n\n## 工作示例\n\n在手机备忘录里画一个简单的输入表。我们只看两个线索：有没有尖角、有没有弯线。看到就写 1，没有就写 0。\n\n做两个神经元：\n\n- 神经元 A 的权重是“尖角 2、弯线 0”，门槛是 1；它负责看尖角。\n- 神经元 B 的权重是“尖角 0、弯线 2”，门槛是 1；它负责看弯线。\n\n现在给它一张三角形的简图：尖角=1、弯线=0。A 算出 1×2+0×0=2，输出 1；B 算出 1×0+0×2=0，输出 0。\n\n再给它一张圆形的简图：尖角=0、弯线=1。A 输出 0，B 算出 2，输出 1。两位神经元读的是同一组输入，却给出不同结果。\n\n## 自检\n\n**做对了你会看到：** 三角形的两个输出是“1、0”，圆形的两个输出是“0、1”；你能在纸上把同一组输入分别连到两个神经元。\n\n**最常见的两种做错了：**\n\n1. **把一层画成一条接力线。** 你会让 A 算完才轮到 B。回去把它们画在同一排，让两者都从同一组输入出发。\n2. **给两个神经元用同一套权重。** 这样它们会算出同样的东西。回去给每个神经元写出自己的权重。\n\n## 重点\n\n- 一层是一排同时计算的神经元。\n- 同一组输入可以送给多个神经元。\n- 不同权重让同一组输入得到不同的结果。\n- 一层的输出可以成为下一层的输入。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Keras Sequential 模型可以把层按顺序堆起来，前一层的结果会流向后一层。",
+          "sourceUrl": "https://www.tensorflow.org/guide/keras/sequential_model",
+          "sourceTitle": "TensorFlow Guide · The Sequential model",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Keras 的 Functional API 用张量连接多层，展示了一个输入可以连到多个计算节点。",
+          "sourceUrl": "https://www.tensorflow.org/guide/keras/functional",
+          "sourceTitle": "TensorFlow Guide · The Functional API",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "layer-shares-input",
+          "front": "一层里的多个神经元有什么共同点和不同点？",
+          "back": "它们可以读同一组输入，但各自有自己的权重和门槛，所以会从同一组数字算出不同结果。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Functional API 展示了把输入张量连接到多个层或计算分支的方式。",
+              "sourceUrl": "https://www.tensorflow.org/guide/keras/functional",
+              "sourceTitle": "TensorFlow Guide · The Functional API",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "draw-one-layer",
+          "title": "画出同时工作的两个神经元",
+          "kind": "explain",
+          "prompt": "用纸笔或手机备忘录画两个输入“有没有圆”和“有没有尖角”，再画两个神经元：一个只看圆，一个只看尖角。给一张你自己画的图，写下两个输出。",
+          "rubric": [
+            "画出了同一组输入同时连到两个神经元，而不是前后接力",
+            "给两个神经元写了不同的关注线索或权重",
+            "真的用手机备忘录或纸笔画了一次，并写下了自己那张图的两个结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Keras Functional API 支持从一个输入连接到多个计算分支。",
+              "sourceUrl": "https://www.tensorflow.org/guide/keras/functional",
+              "sourceTitle": "TensorFlow Guide · The Functional API",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "deeper-sees-more",
+      "title": "加一层，它能多认出什么",
+      "variant": "对比",
+      "content": "## 学习目标\n\n比较一层和多层网络能组合出的图案。\n\n## 先给结论\n\n一层神经元比较适合找简单线索，比如一条横线、一条竖线或一块深色。\n\n下一层可以把前一层的数字组合起来，找更大的图案，比如两个圆和一条弯线。\n\n再往后，组合可以变成一个物体的样子。\n\n层数多不等于一定更准；它还需要合适的例子和足够的检查。\n\n## 一个类比\n\n想象你用乐高拼机器人。第一步挑出长条、圆片和方块；第二步把两个圆片和一个方块拼成脸；第三步把脸、身体和脚拼成机器人。每一步都使用上一步已经挑好的零件。这个类比失效的地方是：神经网络没有真的抓住乐高，它处理的是数字；而且加很多层也不会自动得到好作品。\n\n## 工作示例\n\n拿手机拍一张玩具机器人，或打开相册里一张积木图。不要问模型“它懂不懂机器人”，只按层次写线索。\n\n1. **第一层：** 在照片上找横线、竖线、圆弧。比如头顶有一条横线，眼睛边上有圆弧。\n2. **第二层：** 把小线索组合成零件。两个圆弧加一个方形边框，可以组成“像一张脸”的图案。\n3. **第三层：** 把脸、身体和两只脚的图案放在一起，得到“像机器人”的整体。\n\n现在想象只有第一层：它能报告“这里有横线”，却很难单靠这一层说“这是机器人”。加上第二、第三层后，数字有了更多组合路径。\n\n## 自检\n\n**做对了你会看到：** 你的记录从小线条开始，经过零件，最后到整体；你能指出每一层用了上一层的结果。\n\n**最常见的两种做错了：**\n\n1. **以为第一层就认出了机器人。** 你会跳过中间的组合。回去按“线条—零件—整体”重写一次。\n2. **以为层数越多越好。** 你会只数层数，不看结果。回去给每一层写它新增的组合，并提醒自己还要用新例子检查。\n\n## 重点\n\n- 前面的层可以找小线索，后面的层可以组合小线索。\n- “更深”在这里指有更多层的数字计算，不是它真的看得更深。\n- 多层让复杂图案有了更多组合步骤。\n- 层数增加不会自动保证正确。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Sequential 模型把多层按顺序连接起来，说明多层网络可以把前面层的结果继续交给后面层。",
+          "sourceUrl": "https://www.tensorflow.org/guide/keras/sequential_model",
+          "sourceTitle": "TensorFlow Guide · The Sequential model",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Functional API 用图的方式描述多层之间的连接，而不是把网络限制成一条直线。",
+          "sourceUrl": "https://www.tensorflow.org/guide/keras/functional",
+          "sourceTitle": "TensorFlow Guide · The Functional API",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "more-layers-more-combinations",
+          "front": "多加一层，最直接多出来的是什么？",
+          "back": "多出一次把前面结果重新组合的机会：小线索可以先变成零件，零件再组合成更大的图案。多一层不等于一定更准。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Sequential 模型按顺序堆叠层，后层接收前层输出。",
+              "sourceUrl": "https://www.tensorflow.org/guide/keras/sequential_model",
+              "sourceTitle": "TensorFlow Guide · The Sequential model",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "compare-one-and-two-layers",
+          "title": "给一张图搭三层梯子",
+          "kind": "explain",
+          "prompt": "打开相册里一张有玩具、积木或拼图的照片。写三行：第一行它能找到什么小线条，第二行哪些小线条能组成一个零件，第三行哪些零件能组成整体。最后比较：只用第一行时，少了哪一步？",
+          "rubric": [
+            "第一行写的是可见的小线索，第二行写的是线索的组合，第三行写的是更大的整体",
+            "说清楚后面的结果来自前面的结果，而不是凭空出现",
+            "真的打开手机相册看了一张照片，并写下了自己看到的三层内容"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Sequential 模型展示了多层依次处理数据的结构。",
+              "sourceUrl": "https://www.tensorflow.org/guide/keras/sequential_model",
+              "sourceTitle": "TensorFlow Guide · The Sequential model",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hot-and-cold-correction",
+      "title": "冷了热了：它怎么自己改正",
+      "variant": "现象",
+      "content": "## 学习目标\n\n完成一次“猜数—看错—往回调”的改正。\n\n## 先给结论\n\n神经元不会突然明白“我错了”，它只会得到一个错误有多大的数字。这个数字叫损失：它表示现在的结果离目标有多远。\n\n训练时，系统会看看权重往哪个方向动，损失会变小；这个“往哪边调”的提示叫梯度。\n\n每次只改一点，再重新计算损失；重复很多次，结果通常会靠近目标。\n\n这套一步步减小错误的做法叫梯度下降。\n\n## 一个类比\n\n这就像你在手机上玩“猜数字冷热”：目标是 10，你猜 4，别人说“冷”；你猜 7，别人说“热一点”；你就往 10 的方向挪。你不是一下知道答案，而是比较每次离目标远不远。这个类比失效的地方是：人能凭感觉猜方向，神经网络里的方向来自数字计算；真实模型还要同时调很多个权重。\n\n## 工作示例\n\n用手机计算器做一个只有两个权重的小实验。目标总分是 6，输入 A=2、输入 B=1。总分公式是“2×权重 A+1×权重 B”。\n\n1. 先猜权重 A=1、权重 B=1。总分是 2×1+1×1=3，离目标 6 还差 3；记下损失 3。\n2. 只把权重 A 加 1，变成 2。总分是 2×2+1×1=5，离目标还差 1；损失从 3 变成 1，说明这个方向是热的。\n3. 保持权重 A=2，再把权重 B 加 1，变成 2。总分是 2×2+1×2=6，损失是 0。\n\n你做的不是“凭空变聪明”，而是每次试一个小改动，留下让损失变小的方向。\n\n## 自检\n\n**做对了你会看到：** 你写出的损失依次是 3、1、0；每一步都能说出是哪一个权重改变了总分。\n\n**最常见的两种做错了：**\n\n1. **往相反方向调。** 你把权重 A 从 1 改成 0，总分变成 1，损失变大。回到上一步，选择让损失变小的方向。\n2. **一步改得太大。** 你把权重 A 从 1 直接改成 10，可能一下越过目标。回去把每次改动变小，并重新算损失。\n\n## 重点\n\n- 损失用一个数字表示结果离目标有多远。\n- 梯度提供“往哪边调会更好”的数字线索。\n- 梯度下降是反复小步调整，让损失变小。\n- 神经网络的“改正”是重新算数字，不是它像人一样反省。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "TensorFlow 的自动微分指南展示了如何从计算结果求出梯度，梯度可以用来指导参数更新。",
+          "sourceUrl": "https://www.tensorflow.org/guide/autodiff",
+          "sourceTitle": "TensorFlow Guide · Automatic differentiation",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "SGD 优化器按梯度和学习率更新参数；本节用“每次改一点”解释这个动作。",
+          "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/optimizers/SGD",
+          "sourceTitle": "TensorFlow API · tf.keras.optimizers.SGD",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "correction-follows-error",
+          "front": "神经元怎样知道权重该往哪边改？",
+          "back": "先用损失量出离目标有多远，再用梯度提供调整方向，按小步更新权重，重新计算损失。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "自动微分得到梯度，SGD 使用梯度更新参数。",
+              "sourceUrl": "https://www.tensorflow.org/guide/autodiff",
+              "sourceTitle": "TensorFlow Guide · Automatic differentiation",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "play-hot-and-cold",
+          "title": "让损失一步步变小",
+          "kind": "explain",
+          "prompt": "用手机计算器完成一次自己的冷热游戏：目标是 10，先写一个你猜的数，再写一个更接近的数和一个更远的数。记录每次离 10 多远，然后用自己的话说哪一步是“往热的方向走”。",
+          "rubric": [
+            "写了至少三个实际猜数，并算出它们各自离 10 的距离",
+            "指出了让距离变小的调整方向，而不是只说“最后猜中了”",
+            "真的用手机计算器或纸笔试了一次，并写下了自己看到的距离结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "SGD 的基本思想是依据梯度更新参数，以降低目标函数。",
+              "sourceUrl": "https://www.tensorflow.org/api_docs/python/tf/keras/optimizers/SGD",
+              "sourceTitle": "TensorFlow API · tf.keras.optimizers.SGD",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

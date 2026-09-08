@@ -1,0 +1,375 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "ai-for-kids-it-gets-things-wrong",
+  "courseId": "what-is-ai-really",
+  "unit": {
+    "id": "it-gets-things-wrong",
+    "title": "它会犯错，也会不公平",
+    "objective": "读完这一单元，你能说出模型为什么会认错、为什么会对某些人更不准，并说出哪几类决定不该交给它。"
+  },
+  "lessons": [
+    {
+      "id": "it-learns-what-it-was-shown",
+      "title": "它学到的，就是你给它看的样子",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完这节课，你能说出一个模型为什么会认错，还能自己造出一个让它认错的例子。\n\n## 先给结论\n\n上一单元，你自己动手训练过一个模型。你给它看了几十张照片，它就学会分辨了。\n\n现在来琢磨一件事：**它见过的，只有你给它看的那些。**\n\n要是你只拍了自己房间里的东西，那它就只认得你房间里的光线。拿到教室里，同一支笔它可能就认不出来了。它可不是变笨了，是它从一开始就没见过教室长什么样。\n\n**它学到的不是“这个世界”，是“你给它看的那一小块世界”。** 这句话，就是这个单元剩下四节课的根。\n\n## 一个类比\n\n想象一个从没出过门的小孩。你只给他看金毛的照片，一张接着一张，一共看了两百张。\n\n这时候你问他：狗长什么样？\n\n他肯定会说：狗是金黄色的、大大的、毛很长。这可不是他笨，这是他见过的全部了。等他头一次看见吉娃娃，他会特别认真地告诉你——那根本不是狗。\n\n模型就像是这个小孩。唯一的区别在于，你能去问这个小孩“你为什么这么想”，他能回答；但是模型答不上来。\n\n**这个类比有一处不成立**：小孩慢慢长大了会自己出门，会亲眼看见吉娃娃，自己就会改过来。但模型可不会。它见过的东西，不会因为时间过去就自己变多，除非有人重新拿新的给它看。\n\n## 工作示例\n\n回到你上一节训练的那个模型，你来做一次实验：\n\n**第一步，让它出错。** 拿一个它本来认得出来的东西，给它换个地方——比如从桌上挪到窗边，或者从亮堂处拿到暗处。再让它认一次。这时候，它多半就认不准了。\n\n**第二步，想清楚为什么。** 并不是这个东西变了，而是**光变了**。你训练时拍的所有照片，光其实都差不多。对它来说，“这个东西”和“这种光”是一块儿学进去的，它根本分不开。\n\n**第三步，补上。** 在新的光线下，补拍十几张照片，重新训练一次。你再去试，它就又认得啦。\n\n这三步走完，你会摸出一个很有用的直觉：**它认错的时候，先别问“它怎么这么笨”，先问“我给它看过这种情况吗”。**\n\n## 自检\n\n**做对了你会看到：** 你能让自己训练的模型故意出错，而且能说清楚你是改了哪一个条件让它出错的。一看到“它认错了”，你就会把它翻译成“我没给它看过这种呀”。\n\n**最常见的两种理解错了：**\n\n1. **以为多训练几次就能变好。** 同样的照片你就算让它再训练十遍，它见识过的东西也一张没变多。真正让它变好的，是**新的、不一样的**照片，而不是一遍遍重复。\n2. **以为它错了是因为它笨。** 这样想你就不会去查数据了，可问题差不多总在数据里。要是发现自己这么想了，就赶紧回去，再做一次上面的第三步。\n\n## 重点\n\n- 模型学到的是你给它看的那一小块世界，不是这个世界。\n- 它认错的时候，先问“我给它看过这种情况吗”，再去想别的。\n- 同样的照片重复训练不会让它见识变多，新的、不一样的照片才会。\n- 它不会因为时间过去就自己学到新东西，除非有人重新拿给它看。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "权威机构把 AI 的偏见列为需要主动识别和管理的风险，而不是模型自己会长好的东西。",
+          "sourceUrl": "https://www.nist.gov/publications/towards-standard-identifying-and-managing-bias-artificial-intelligence",
+          "sourceTitle": "NIST · Identifying and Managing Bias in AI",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "model-sees-only-training-data",
+          "front": "一个模型认错东西的时候，最该先查的是什么？",
+          "back": "先查训练时给它看过的那些例子里，有没有这种情况。模型学到的只是被展示过的那一小块世界，认错通常是因为那一块里没有这一类。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "权威机构把 AI 的偏见列为需要主动识别和管理的风险，而不是模型自己会长好的东西。",
+              "sourceUrl": "https://www.nist.gov/publications/towards-standard-identifying-and-managing-bias-artificial-intelligence",
+              "sourceTitle": "NIST · Identifying and Managing Bias in AI",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "repeat-is-not-more-data",
+          "front": "把同样的照片再训练十遍，模型会变得更聪明吗？",
+          "back": "不会。它见过的东西一张也没有增加。让它变好的是新的、和原来不一样的例子，不是同一批例子重复更多次。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "权威机构把 AI 的偏见列为需要主动识别和管理的风险，而不是模型自己会长好的东西。",
+              "sourceUrl": "https://www.nist.gov/publications/towards-standard-identifying-and-managing-bias-artificial-intelligence",
+              "sourceTitle": "NIST · Identifying and Managing Bias in AI",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "make-your-model-fail",
+          "title": "故意把自己的模型骗一次",
+          "kind": "explain",
+          "prompt": "用你上一节训练的那个模型，想办法让它认错一次。写下：你改变了什么条件、它错成了什么、你打算补拍什么样的照片来修好它。",
+          "rubric": [
+            "写出了自己实际改变的那一个条件（光线、角度、背景等）",
+            "把认错解释成训练时没见过这种情况，而不是模型笨",
+            "说出了要补的新照片和原来那批的不同之处"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "权威机构把 AI 的偏见列为需要主动识别和管理的风险，而不是模型自己会长好的东西。",
+              "sourceUrl": "https://www.nist.gov/publications/towards-standard-identifying-and-managing-bias-artificial-intelligence",
+              "sourceTitle": "NIST · Identifying and Managing Bias in AI",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "who-was-missing-from-the-data",
+      "title": "数据里少了谁，它就看不见谁",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完之后，你能指着一份例子说出\"谁没被算进去\"，还能讲出这会造成什么后果。\n\n## 先给结论\n\n上一节说的是\"它只见过你给它看的\"。这一节要说的，是同一件事里更要紧的那一半：\n\n**没给它看过的那些人，对它来说就等于不存在。**\n\n要是训练一个认脸的模型，用的照片大多都是同一类人，那它认这类人会很准，认其他人就会经常认错。它可不是故意的，也没谁在里面写下\"对某些人差一点\"。**只是那些人从头到尾都没怎么出现在它见过的例子里。**\n\n这件事有个名字，叫偏见。它不是模型的脾气，而是数据的形状。\n\n## 一个类比\n\n打个比方，班里要选出\"大家最喜欢的午餐\"。\n\n老师只问了坐在前三排的同学，然后宣布结果：全班最喜欢咖喱饭。\n\n这个结果倒不算撒谎——被问到的同学确实是这么说的。可是坐在后面的同学一次都没被问过，他们喜欢什么，这个结果里一个字都没有。等到食堂真的天天做咖喱饭，被漏掉的人才发现有问题。\n\n模型就像这个统计结果。**它老老实实反映了给到它的那些人，而不是所有人。**\n\n**这个类比有一处不成立**：老师是能知道自己漏了谁的——他一抬头就能看到后排。模型可看不见自己漏了谁，因为漏掉的那些人从来没进过它的数据。**必须有人从外面去查。**\n\n## 工作示例\n\n拿你自己训练的模型试一次：\n\n**第一步，写下你拍的照片里\"都有谁\"。** 比如你训练它认笔，那就写一写：全都是同一支笔吗？全都是同一个人的手拿着吗？全都在同一张桌子上吗？\n\n**第二步，找出漏掉的那一类。** 上面那三个问题里，只要有一个答案是\"全都是\"，那\"不是这一类\"的情况就全被漏掉了。比如全是你自己的手，那别人的手就是被漏掉的那一类。\n\n**第三步，验证它。** 让家里另一个人用他的手拿着同一支笔，让模型认一次。如果准确率明显掉下来，你就亲眼看到\"被漏掉的人\"是什么意思了。\n\n**第四步，补上再试。** 请他帮你也拍十几张，重新训练一次。这一次，两个人的手它都认得啦。\n\n## 自检\n\n**做对了你会看到：** 你能指着自己的训练照片，说出\"这里面没有谁\"，而且能猜到模型会在什么情况下变差——接着去试一下，发现它果然变差了。\n\n**最常见的两种理解错了：**\n\n1. **以为准确率高就说明没问题。** 一个只问了前三排的统计，在前三排同学里可以百分之百准。准确率只是在**它见过的那些人**里算出来的，被漏掉的人根本不在这个分数里。\n2. **以为这是有人故意做的。** 大多数时候真没人存心这么干。大家只是收集例子时，顺手拿了手边的那些。**这反而更难发现**，因为根本没有人会来告诉你。\n\n## 重点\n\n- 没出现在训练例子里的人，对模型来说就等于不存在。\n- 这叫偏见，它来自数据的形状，不是模型的脾气。\n- 准确率是在它见过的那些人里算出来的，被漏掉的人根本不在这个分数里。\n- 模型看不见自己漏了谁，必须有人从外面去查。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "权威机构把 AI 的偏见列为需要主动识别和管理的风险，而不是模型自己会长好的东西。",
+          "sourceUrl": "https://www.nist.gov/publications/towards-standard-identifying-and-managing-bias-artificial-intelligence",
+          "sourceTitle": "NIST · Identifying and Managing Bias in AI",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "AI 风险管理框架要求在会影响到人的场景里保留人的判断，而不是把决定整个交出去。",
+          "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+          "sourceTitle": "NIST · AI Risk Management Framework",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "missing-from-data-is-invisible",
+          "front": "训练一个模型时，没被收进例子里的那类人会怎么样？",
+          "back": "模型对他们会经常出错，而且这不会体现在准确率上——准确率是在它见过的那些例子里算出来的。被漏掉的人根本没进这个分数。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "权威机构把 AI 的偏见列为需要主动识别和管理的风险，而不是模型自己会长好的东西。",
+              "sourceUrl": "https://www.nist.gov/publications/towards-standard-identifying-and-managing-bias-artificial-intelligence",
+              "sourceTitle": "NIST · Identifying and Managing Bias in AI",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "bias-is-usually-not-on-purpose",
+          "front": "模型对某一类人特别容易出错，通常是因为有人故意这么做吗？",
+          "back": "通常不是。多数情况只是收集例子时收到了手边最容易拿到的那些。正因为没有人存心，也就没有人会主动来告诉你，所以必须有人专门去查。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "AI 风险管理框架要求在会影响到人的场景里保留人的判断，而不是把决定整个交出去。",
+              "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "sourceTitle": "NIST · AI Risk Management Framework",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "find-who-is-missing",
+          "title": "找出你的数据里漏掉了谁",
+          "kind": "explain",
+          "prompt": "看着你训练模型时拍的那些照片，写下：这里面\\u201c都是\\u201d什么（同一个人、同一张桌子、同一种光）？据此说出被漏掉的是哪一类。然后真的找一个属于被漏掉那类的情况试一次，写下结果。",
+          "rubric": [
+            "指出了自己数据里\\u201c都是\\u201d的那个共同点",
+            "据此说出被漏掉的是哪一类情况或哪些人",
+            "真的试了一次并写下模型的表现变化"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "权威机构把 AI 的偏见列为需要主动识别和管理的风险，而不是模型自己会长好的东西。",
+              "sourceUrl": "https://www.nist.gov/publications/towards-standard-identifying-and-managing-bias-artificial-intelligence",
+              "sourceTitle": "NIST · Identifying and Managing Bias in AI",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "it-does-not-know-what-it-does-not-know",
+      "title": "它不知道自己不知道",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完之后，你就能说明白：为什么\"它很确定\"和\"它是对的\"完全是两码事。你还会知道，到底什么时候才不能信它。\n\n## 先给结论\n\n你训练出来的那个模型，每次给出答案时，旁边总会带着一个数，比如\"92%\"。\n\n你很容易把这个数当成：\"它有 92% 的把握是对的\"。**才不是呢。**\n\n那个数的意思其实只是：在它见过的那些东西里，眼前这个最像哪一个。**它根本就没有\"我没见过这种\"这个选项。** 就算你拿一样它从来没见过的东西给它看，它也绝不会说\"这我不认识\"。它只会从自己见过的几类里挑一个最像的，然后照样甩给你一个很高的数。\n\n所以经常会出现这种怪事：它错得彻彻底底，却显得特别确定。这两件事一点都不矛盾，因为**那个数测的从来就不是\"对不对\"。**\n\n## 一个类比\n\n想象一场考试，卷子上全是选择题，每道题只有四个选项，而且**不许交白卷**。\n\n你碰到了一道完全没学过的题。你不能空着不写，只能挑一个看着最顺眼的选项。卷子交上去，你的答案栏里写着一个大大的 B——写得清清楚楚，一点都不含糊。\n\n老师看你的卷子，只能看到一个写得特别肯定的 B。老师根本看不出来，你答题的时候脑子里其实一片空白。\n\n模型就像这个不许交白卷的考生。那个百分数好比它写下 B 时用了多大的力气，可不是说它真的做对了。\n\n**这个类比有一处不成立**：你自己心里很清楚这道题是蒙的。但模型心里根本没有这种感觉——它脑子里完全没有\"我是在瞎蒙\"这回事。所以考完试之后，它甚至都没办法告诉你，哪些题是它蒙出来的。\n\n## 工作示例\n\n拿你训练的模型亲手试一次，这次你故意去为难它一下：\n\n**第一步，给它看一样完全在类别之外的东西。** 比如你训练它分辨\"笔\"和\"橡皮\"，那这次你就偏给它看一只袜子。\n\n**第二步，看那个数。** 它可不会说\"这不是我认识的东西\"。它会直接告诉你\"笔，87%\"或者\"橡皮，91%\"这类答案。**这就是它不知道自己不知道的样子。**\n\n**第三步，再试两样类别外的东西。** 你会发现每一次它都给出了一个答案，而且每一次给出的那个数都不低。\n\n**第四步，写下你的结论。** 这个模型真正能告诉你的，只有\"在笔和橡皮里哪个长得更像一点\"，它永远都没办法告诉你\"其实两个都不是\"。\n\n## 自检\n\n**做对了你会看到：** 你能让模型对着一样它从来没见过的东西给出很高的数，而且你能讲清楚，为什么那个数根本不代表它是对的。\n\n**最常见的两种理解错了：**\n\n1. **把百分数当成可信度。** 所以只要看到它给出 95%，你可能一下子就放心了。但其实你应该反过来问一句：**我给它的这个东西，到底属于它认识的类别吗？** 要是不属于，那 95% 就一点意义也没有。\n2. **以为可以让它学会说\"我不知道\"。** 这事稍微能做到一点点，但根本没办法彻底解决——它没见过的东西多到数不清，而它翻来覆去只能在自己见过的那几类里比来比去。所以这可不是把模型改好就能彻底消掉的问题，**关键要靠用它的你多留个心眼。**\n\n## 重点\n\n- 它给出的那个百分数，意思只是\"在见过的几类里哪个最像\"，可不是\"我有大多把握是对的\"。\n- 哪怕给它一样类别之外的东西，它照样会给出一个很高的数，绝不会主动说\"我不认识\"。\n- 你该问的不是\"它有多确定\"，而是\"我给它的东西在它认识的范围里吗\"。\n- 这不是把模型改好就能彻底消掉的问题，你在用它的时候必须时刻留心。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "权威机构把 AI 的偏见列为需要主动识别和管理的风险，而不是模型自己会长好的东西。",
+          "sourceUrl": "https://www.nist.gov/publications/towards-standard-identifying-and-managing-bias-artificial-intelligence",
+          "sourceTitle": "NIST · Identifying and Managing Bias in AI",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "AI 风险管理框架要求在会影响到人的场景里保留人的判断，而不是把决定整个交出去。",
+          "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+          "sourceTitle": "NIST · AI Risk Management Framework",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "confidence-is-not-correctness",
+          "front": "模型给出答案时那个百分数，代表它有多大把握是对的吗？",
+          "back": "不代表。那个数说的是在它见过的几个类别里，哪一个最像。给它一样类别之外的东西，它照样会给出一个很高的数，因为它没有\\u201c我不认识\\u201d这个选项。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "权威机构把 AI 的偏见列为需要主动识别和管理的风险，而不是模型自己会长好的东西。",
+              "sourceUrl": "https://www.nist.gov/publications/towards-standard-identifying-and-managing-bias-artificial-intelligence",
+              "sourceTitle": "NIST · Identifying and Managing Bias in AI",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "ask-if-input-is-in-range",
+          "front": "看到模型给出很高的把握时，更该问自己什么问题？",
+          "back": "问\\u201c我给它的这个东西，属于它认识的类别吗\\u201d。如果不属于，那个高分数没有意义，因为它只是在见过的几类里挑了个最像的。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "AI 风险管理框架要求在会影响到人的场景里保留人的判断，而不是把决定整个交出去。",
+              "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "sourceTitle": "NIST · AI Risk Management Framework",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "show-it-something-unknown",
+          "title": "给它一样它没见过的东西",
+          "kind": "explain",
+          "prompt": "给你训练的模型看三样完全不属于它任何一个类别的东西，记下它每次给出的答案和那个百分数。然后用自己的话说：这个百分数到底在说什么？",
+          "rubric": [
+            "记下了三次类别之外的输入以及模型给出的结果和分数",
+            "指出模型没有\\u201c我不认识\\u201d这个选项",
+            "把百分数解释成\\u201c哪个类别最像\\u201d而不是\\u201c有多大把握正确\\u201d"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "权威机构把 AI 的偏见列为需要主动识别和管理的风险，而不是模型自己会长好的东西。",
+              "sourceUrl": "https://www.nist.gov/publications/towards-standard-identifying-and-managing-bias-artificial-intelligence",
+              "sourceTitle": "NIST · Identifying and Managing Bias in AI",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "what-should-not-be-decided-by-ai",
+      "title": "哪些事不该让它决定",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完这一节，你能说出有哪三类事情不该让 AI 自己拿主意，而且遇到一件具体的事情时，你也能做出准确的判断。\n\n## 先给结论\n\n前面三节讲的是它会在哪里犯错。这一节要告诉你的是：既然它会犯这些错，**到底哪些事不能全部甩给它**。\n\n一共有三类：\n\n**第一类，做错了会伤到人的事。** 比如判断一个人有没有生病、该不该放行通过。这种事它要是错了一次，造成的后果可不是重来一遍就能补上的。\n\n**第二类，需要有人负责的事。** 它可没法承担责任。一旦出了问题，你没法让它解释原因，它也没办法替你担责。这类事在最后一步必须有人签字确认，而且那个人必须是真的认真看过了。\n\n**第三类，只有当事人自己心里才知道答案的事。** 比如你今天到底想不想去朋友家玩。这种事根本没有什么“正确答案”能算出来，它只能由你说了算。\n\n**这三类情况，都不是说“AI 碰都不能碰”，而是“AI 不能自己拍板”。** 它可以帮你先看一看、列一列资料，但最后做决定的那一下，必须是真正的人。\n\n## 一个类比\n\n就像考试的时候，你可以用计算器。\n\n计算器算 47×83 比你算得快，也比你算得准，这没毛病。但**这道题到底要不要用乘法**，得由你来决定。如果这道题其实该用除法，那计算器可一点忙都帮不上——它只会非常快、非常准地，顺着错误的方向给你一个错答案。\n\n而且分数是记在你名下的，又不会记在计算器头上。它要是算错了，最后扣的也是你的分。\n\nAI 其实就是这个计算器，只不过它能做的事情多得多。**但是，它能做的事情越多，你就越容易忘记：“要不要用它、要在哪一步用它”，依然得由人来做决定。**\n\n**不过，这个类比有一处并不成立**：计算器要是按错了，你多半能一眼看出来，因为你心里对答案大概有个数。可是 AI 给出的回答，常常看起来非常有道理，你反而更难发现它其实搞错了。所以比起计算器，它**更**需要人在最后认真看一眼，而不是更不需要。\n\n## 工作示例\n\n拿三件具体的事，一件一件来看：\n\n**第一件：手机相册自动把照片按人来分类。** 错了会怎样？无非是把两个人的照片放混了，你自己一眼就能瞧见，动手改回来就行。代价很小，能马上发现，也不需要谁来担责任。**这一件，完全可以交给它。**\n\n**第二件：学校用一个模型来决定谁能进校篮球队。** 错了会怎样？一个孩子被刷下来了，他不知道为什么没被选上，也没法去申诉讲理。这属于第一类和第二类——**它可以帮教练列出参考数据，但拍板决定的必须是教练，而且教练还得能说出站得住脚的理由。**\n\n**第三件：一个模型告诉你今天应该跟谁做朋友。** 这件事根本没有正确答案能算出来。它只能看到以前见过的那些数据，根本看不到你和这个人之间发生过什么。**这属于第三类，整件事从头到尾都不该交给它。**\n\n走完这三件事，你就能掌握一套自己随时能用的问法：**错了会怎样？有人能负责吗？这件事有正确答案吗？**\n\n## 自检\n\n**做对了你会看到：** 哪怕给你一件没见过的新事情，你也能用这三个问题顺一遍，说出它属于哪一类、到底该不该交给 AI 拍板，并且清清楚楚说出你的理由。\n\n**最常见的两种理解错误：**\n\n1. **把结论记成“重要的事不能用 AI”。** 这样想太粗糙了，还会让你在真正该用它的时候反而不敢用。关键的界线并不是事情重不重要，而是**做错了能不能补救、有没有人负责、到底有没有正确答案**。\n2. **以为“只要人看一眼”就够了。** 如果负责看的那个人，只是照着模型给的答案随便点个确认，那和根本没有人看是一模一样的。必须得是这个人真的能讲出“我为什么同意”，才算真正有人在把关。\n\n## 重点\n\n- 三类不该由 AI 单独拍板的事：错了会伤到人的、需要有人负责的、只有当事人自己知道答案的。\n- 帮你做判断的问法是：错了会怎样？有人能负责吗？这件事有正确答案吗？\n- 记住不是“不许用”，而是“不能让它自己拍板”——它可以帮忙看、帮忙列。\n- 人要是光照着点确认，那就等于根本没有人参与在里面。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "AI 风险管理框架要求在会影响到人的场景里保留人的判断，而不是把决定整个交出去。",
+          "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+          "sourceTitle": "NIST · AI Risk Management Framework",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "权威机构把 AI 的偏见列为需要主动识别和管理的风险，而不是模型自己会长好的东西。",
+          "sourceUrl": "https://www.nist.gov/publications/towards-standard-identifying-and-managing-bias-artificial-intelligence",
+          "sourceTitle": "NIST · Identifying and Managing Bias in AI",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "three-questions-before-handing-over",
+          "front": "要判断一件事该不该交给 AI 拍板，问哪三个问题？",
+          "back": "错了会怎样（能不能补回来）？有人能为结果负责吗？这件事有没有正确答案？三个里只要有一个答案不好，最后那一下就必须由人来做。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "AI 风险管理框架要求在会影响到人的场景里保留人的判断，而不是把决定整个交出去。",
+              "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "sourceTitle": "NIST · AI Risk Management Framework",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "rubber-stamp-is-not-oversight",
+          "front": "让一个人在 AI 给出的结果上点一下确认，就算人在把关了吗？",
+          "back": "不算。如果那个人只是照着点，和没有人是一样的。要他能说出\\u201c我为什么同意这个结果\\u201d，人才真的还在里面。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "AI 风险管理框架要求在会影响到人的场景里保留人的判断，而不是把决定整个交出去。",
+              "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "sourceTitle": "NIST · AI Risk Management Framework",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "judge-three-cases",
+          "title": "用三个问题过一件事",
+          "kind": "explain",
+          "prompt": "想一件你身边真实发生的、有人在用 AI 帮忙决定的事（可以是学校的、家里的、游戏里的）。用\\u201c错了会怎样 / 有人能负责吗 / 有没有正确答案\\u201d这三个问题过一遍，然后说出你的判断：这件事该不该由 AI 拍板？",
+          "rubric": [
+            "写的是一件具体的、他身边真实的事，不是编的",
+            "三个问题都回答了，不是只答一个",
+            "结论落在\\u201c能不能自己拍板\\u201d上，而不是笼统的\\u201c能不能用\\u201d"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "AI 风险管理框架要求在会影响到人的场景里保留人的判断，而不是把决定整个交出去。",
+              "sourceUrl": "https://www.nist.gov/itl/ai-risk-management-framework",
+              "sourceTitle": "NIST · AI Risk Management Framework",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "where-did-your-photo-go",
+      "title": "你的照片去哪了",
+      "variant": "溯源",
+      "content": "## 学习目标\n\n读完这一课，你就能跟别人讲清楚：一个用摄像头的网页，拍下的照片到底是留在了你手里的设备上，还是被送到了外面。而且，你还会知道该去哪里查个明白。\n\n## 先给结论\n\n你之前训练模型的时候，拍了几十张照片。它们后来去哪儿了？\n\n那一次，它们**一步都没有离开你的设备**。模型就是在你自己的手机或者平板里训练出来的。照片刚从摄像头拍下来，就直接拿去训练了，全程都老老实实呆在你眼前这台机器上。\n\n但别的网页可不一定都是这样。**同样是“拍一张照片，让它告诉你这是什么”，有的直接在你手机里算，有的却会把照片传到别人的服务器上去算。** 光看屏幕上的画面，这两种情况长得一模一样，你根本看不出区别。\n\n所以你得学会一件事：**分清楚这两种情况，并且知道你自己随时有权拒绝。**\n\n## 一个类比\n\n打个比方，就像你要找人帮你检查作业。\n\n第一种情况，是你坐在自己房间里，对着参考答案一项项检查——作业本始终放在你的书桌上，没有第二个人能看到你写错了什么。\n\n另一种情况，是你拿手机把作业本拍下来发给别人，请他帮你看。他看完了把答案告诉你，这确实挺方便，但你的作业本现在也留在人家那儿了。他会不会偷偷存着？会不会转给别人看？你就只能凭嘴上相信他了。\n\n这两种办法都能帮你把作业改对。**关键的区别根本不在结果，而是在于作业本到底有没有离开过你的桌子。**\n\n**不过，这个比方有一点和实际不太一样**：作业本发出去你自己心里清清楚楚，因为“发送”键是你亲手按下去的。可网页把照片传出去的时候，根本不需要你按任何键；只要你不主动去查，自己根本就不会知道。\n\n## 工作示例\n\n你可以找一个真正的网页，亲自试上一遍：\n\n**第一步，看看它有没有找你要权限。** 只要网页想用摄像头，浏览器就一定会先弹出一个框，问你同不同意。**这个弹框是必须出现的**，网页根本绕不开它。只要看见了弹框，就说明它想用你的摄像头了。\n\n**第二步，试着把网络断开。** 这一招最管用。你先把手机的网络关掉，然后再去用一次这个功能：\n\n- **还能正常用** → 说明所有的计算都在你自己的设备上搞定，照片一张都没跑出去。\n- **不能用了，还提示你必须联网** → 说明它必须把照片送到别的地方，让别人的电脑帮忙算。\n\n**第三步，把权限收回来。** 去浏览器的网站设置里找到这个网页，把摄像头的开关直接关掉。你会发现它立刻就没法用了——**记住，权限是可以拿回来的，不是一旦给出去就没了。**\n\n**第四步，去你训练模型的那个网页上试一遍。** 哪怕你把网络全掐断了，它照样还能继续训练。这就是“照片没离开这台设备”的铁证，可不是别人随便说说哄你的承诺。\n\n## 自检\n\n**要是你做对了，你会发现：** 遇到一个用到摄像头的网页，你只要断网试一下，就能立刻分清它是在自己这台机器里算，还是被送到了外面，而且你还能顺利找到关掉权限的开关。\n\n**最容易搞错的两种想法：**\n\n1. **以为只要没弹框，就是没在用摄像头。** 事情其实得反过来看：**弹框是必须有的**，所以只要看见弹框，就说明它想用摄像头；但只要你点过一次同意，下次它可能就直接开了，不再特意问你。想确定它现在到底有没有在用，你得去网站设置里看权限，可别光看有没有弹框。\n2. **以为“在自己机器里算”就等于完全安全。** 照片确实没被送走，这已经是一件很重要的大好事了。但这台设备上的其他软件会不会看到、以及你后来自己把结果分享给了谁，那可是另外一码事了。**“照片没离开设备”只是回答了一个具体的问题，可不能保证解决所有的安全问题。**\n\n## 重点\n\n- 同样是“拍一张照片，让它告诉你这是什么”，有的在你自己设备上算，有的把照片送出去算，光看画面根本看不出来。\n- 把网络断开再试一次，就是分清这两种情况最直接的办法。\n- 网页想要用你的摄像头，必须先找你要权限，而且这个权限你随时都能收回来。\n- “照片没离开这台设备”确实是一个让人放心的好消息，但它并不能回答所有关于隐私的问题。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "浏览器里的模型可以在本机运行，数据不必离开这台设备。",
+          "sourceUrl": "https://www.tensorflow.org/js/guide/platform_environment",
+          "sourceTitle": "TensorFlow.js · Platform and environment",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "网页要用摄像头必须先向你要权限，你可以拒绝，也可以事后收回。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/MediaDevices/getUserMedia",
+          "sourceTitle": "MDN · getUserMedia",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "offline-test-tells-where-it-runs",
+          "front": "怎么判断一个用摄像头的网页是在你手机里算，还是把照片送出去算？",
+          "back": "把网关掉再用一次。还能用，说明计算在这台设备上；提示需要联网才能用，说明它要把东西送到别处。画面上看这两种是一样的。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "浏览器里的模型可以在本机运行，数据不必离开这台设备。",
+              "sourceUrl": "https://www.tensorflow.org/js/guide/platform_environment",
+              "sourceTitle": "TensorFlow.js · Platform and environment",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "camera-permission-can-be-taken-back",
+          "front": "给了一个网页摄像头权限之后，还能收回吗？",
+          "back": "能。浏览器要求网页在使用摄像头前必须先取得你的同意，而这个同意可以在网站设置里随时关掉，关掉后它立刻就用不了了。",
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "网页要用摄像头必须先向你要权限，你可以拒绝，也可以事后收回。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/MediaDevices/getUserMedia",
+              "sourceTitle": "MDN · getUserMedia",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "run-the-offline-test",
+          "title": "断网试一次",
+          "kind": "explain",
+          "prompt": "挑一个用到摄像头的网页（可以就用你训练模型的那个）。先看它有没有向你要摄像头权限，然后把网关掉再用一次，写下发生了什么。据此说出：这个网页是在你的设备上算，还是把照片送出去算的？",
+          "rubric": [
+            "写下了断网前后各自发生的事",
+            "据此得出\\u201c在本机算\\u201d或\\u201c送出去算\\u201d的结论，理由是断网结果而不是猜测",
+            "提到了权限这一步，或说出了去哪里可以把权限收回"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "网页要用摄像头必须先向你要权限，你可以拒绝，也可以事后收回。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/API/MediaDevices/getUserMedia",
+              "sourceTitle": "MDN · getUserMedia",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
