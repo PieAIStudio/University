@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-08T10:43:21.248Z
+generated_at: 2026-09-08T13:34:10.012Z
 generator_version: doc-gov@0.9.10
-docs_count: 107
+docs_count: 108
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -102,6 +102,13 @@ docs:
     canonical: false
     last_reviewed: 2026-08-29
     pinned: false
+  - id: REF-ISLAND-ART-V2
+    path: docs/archive/island-art-reference-v2.md
+    type: archive
+    status: archived
+    canonical: false
+    last_reviewed: 2026-09-08
+    pinned: false
   - id: GOV-AGENTS-ROUTING-ENGINEERING-RUNTIME-V1-1
     path: docs/governance/agents-routing/engineering-runtime-v1.1.md
     type: policy
@@ -198,7 +205,7 @@ docs:
     type: reference
     status: superseded
     canonical: false
-    last_reviewed: 2026-08-31
+    last_reviewed: 2026-09-08
     pinned: false
   - id: REF-DOCUMENTATION-MAP
     path: docs/reference/documentation-map.md
@@ -305,12 +312,12 @@ docs:
     canonical: true
     last_reviewed: 2026-08-27
     pinned: false
-  - id: REF-ISLAND-ART-V2
-    path: docs/reference/island-art-reference-v2/island-art-reference.md
+  - id: REF-ISLAND-ART-V3
+    path: docs/reference/FloatingIsland-Reference-v3/island-art-reference.md
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-31
+    last_reviewed: 2026-09-08
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-STUDY-PICKER-MUST-AGGREGATE-ONE-STUDY-INTO-ONE-SHARED-LANDMASS
     path: docs/reference/learnings/workflow-issues/a-study-picker-must-aggregate-one-study-into-one-shared-landmass.md

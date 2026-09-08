@@ -165,6 +165,15 @@ not a value the inspector may pretend to measure on another device. The homologo
 worker reuses the same generators and has no early self-proof of cold-load
 duration.
 
+R38 adds explicit unlaunched domain metadata (AI foundations and AI media) to
+the same catalogue, without synthetic studies. Named `surfaceStyle` presets
+belong to that metadata; `globe-style.ts` supplies one set of linear material
+stops to both the vertex fallback and worker texture bake. Changing the named
+style invalidates the same bounded CPU cache, while a title/progress update
+still does not. `domainPreparationKey` is shared by the client and hook so a
+new palette cannot accidentally reuse the previous domain texture. No new
+scene, coordinate table, content producer or output-colour pipeline is added.
+
 The remote base cache is weakly owned by the blueprint, with an eight-entry
 LRU for radius variants inside each live blueprint. A WeakMap alone does not
 bound repeated preview resizes while that blueprint remains mounted. The four

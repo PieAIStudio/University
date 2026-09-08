@@ -138,6 +138,43 @@ relaxes the 0.25 contact, slope or clearance limits. The retained counterexample
 every 5×6/24/41 positive case and all-or-none occupied-ground rejection pass in
 `outpost-contact.test.ts`; the combined dressing/terrain suite is 33/33.
 
+## R38 candidate amendment: authored edges, grouped placement and one cloud form
+
+The user's 2026-09-08 ordinary screenshots reject the flat perimeter shelf,
+horizontal rock bands, uniform catalogue scatter and separately visible cloud
+balls. Passing topology and old browser receipts did not establish those forms.
+V5 M records the revised appearance before implementation.
+
+The candidate keeps the canonical outline/height field and the distant
+640-triangle base. Coast relief reaches the edge; cliff rings describe continuous
+vertical rock shoulders rather than independent horizontal slabs. No glued-on
+donor rock shell, added terrain draw or second contact height is allowed.
+
+Clouds will use one continuous shallow cloud-bank mesh shared by catalogue,
+carrier and globe (tangent-space projection). It replaces assembled sphere
+chains; no ray marching, extra lighting or post pass. Candidate budgets stay
+within the existing two catalogue cloud draws and 7,000 globe cloud triangles;
+the exact counts and material/geometry lifetime must be measured before locking.
+Carrier feet, swept clearance, reduced-motion and 540ms travel remain unchanged.
+
+Course richness first uses the registered natural/semantic assemblies and
+cached placement plan. Density may increase within existing per-asset ceilings,
+but whole-footprint 0.25 contact and clearances remain hard constraints. Full
+Stage and physical-device costs, not raw instance counts, decide acceptance.
+Measurements and rejected trials will be appended here; task state belongs only
+to the active delivery plan.
+
+R38's first additional donor candidates are Fantasy Town `stall-bench` (180
+triangles, 14,168 bytes, source bounds 0.26×0.225501×0.94) and `cart` (608
+triangles, 52,920 bytes, transformed bounds 0.893024×0.535501×1.34). They share
+the existing colormap and CC0 pack. The explicit R01 whitelist grows from ten
+to twelve files, not a whole-pack import; per-prop triangle ceilings stay.
+Benches belong beside actual facilities and a cart beside a stall, fitted with
+the existing whole-footprint query. A missing safe site omits the companion
+without moving or breaking the original facility. New bounds are independently
+checked against the imported GLBs; browser scale/contact and final frame cost
+remain acceptance requirements.
+
 ## R37 measured GPU scope, not a device-FPS promise
 
 In R37 on 2026-09-08, fresh visible Chrome contexts on the Mac's Apple M1 Max / ANGLE

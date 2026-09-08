@@ -23,6 +23,29 @@ related:
 只在接本机服务、手机或工具时读取。这里保存可恢复的本机信息，不是产品部署配置、
 权限授权书或验收台账。动态地址和权限每次重查；产品通过项只记活动计划。
 
+## 当前连接说明（2026-09-08 R38接续）
+
+用户已在Android Chrome inspect中看到University LAN页面，iPhone Web Inspector也已能读取
+该项目DOM/CSS；这些证明网页可访问及Mac检查链已建立，不是产品验收。本机会话额外实查：
+`adb devices -l` 返回 `adb-d9fc88ec-MqXSOi._adb-tls-connect._tcp device`、
+`model:Redmi_K30_Pro`。19998/19999/20000的进程cwd均为本工作树`apps/university`，
+20000实际运行的是delivery生产`vite preview`，不是旧示例中的dev server。
+AI自动化能否完成全部触摸/方向/恢复动作仍须独立取得回执，验收状态只在活动计划记录。
+
+本机会话随后对LAN页面完成Android CDP读取和截图：实际视口392×766、DPR2.75。
+第一次 `/json/list` 返回空列表；仅用标准Chrome VIEW intent打开上述University URL后恢复，
+没有重新配对、重启ADB或建立页面reverse。具体脚本为
+`.devspace-visual/astra-r38/android-page-proof.mjs`，临时debug forward已移除。
+原生Safari现有20002 driver的 `POST /session` 则明确返回：
+`session not created` / `Remote Automation is turned off (turn it on via Settings > Safari > Advanced > Remote Automation)`。
+这不是Web Inspector断线。用户只需开启iPhone的该开关，之后重试同一接口；不要求重做连接。
+历史HTTP500/locked/disconnected记录保留，不把本次更具体的错误写成设备未准备好。
+
+当前优先沿用 `http://192.168.1.135:20000/` 和已配对的无线ADB TLS；不默认切USB，
+不另配页面转发，不删除配对或重启全局ADB/Safari服务。仅为CDP连接创建的本机临时
+debug-socket forward须限定目标设备、绑定回环、保留原映射并在结束后移除自己的映射。
+iPhone继续沿用现有Safari网络检查链；自动化接口错误不表示手机未准备好。
+
 ## 连接依据（历史事实，使用前重查）
 
 | 项目 | 已知事实及证据边界 |
@@ -66,8 +89,9 @@ pnpm --filter @pieai/university-app exec vite --mode delivery --host 192.168.1.1
 → 已授权 iPhone Safari。Connect via Network 作用于检查链，不会自动启动 Vite，也不会
 把 localhost 改成 Mac 地址。网络重连失败可先回到已信任的 USB 连接排查，不删除授权重来。
 
-Android 现在沿用已配对的 ADB TLS + `adb reverse`，不另配 Chrome 的 Port forwarding，
-不切回固定 5555、不并装第二套转发。所有调试连接只对可信设备/网络开放。
+Android 当前沿用已配对的 ADB TLS + LAN 20000，不另配 Chrome 的 Port forwarding，
+不切回固定 5555、不并装第二套转发。下方`adb reverse`是历史可选路线，不是当前前置要求。
+所有调试连接只对可信设备/网络开放。
 
 正式真机证据记录设备/系统/浏览器版本、完整 URL、构建/源码身份、可见 viewport/DPR、
 主题、真实触摸动作及前后台状态；分别验证页面进入/返回、拖缩、文字/键盘和暂停恢复。
