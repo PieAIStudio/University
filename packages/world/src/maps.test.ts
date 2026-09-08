@@ -6,6 +6,7 @@ import { placeCourse, placeWorld } from "./Maps.js";
 import type { Course, CourseNode } from "./course/course.js";
 import { islandGeometryProjection, sampleIslandSurface } from "./island/island-blueprint.js";
 import { sampleIslandTerrainTop } from "./island/island-geometry.js";
+import { courseMarkers } from "./course/course-map.js";
 
 const source: ProgressSource = {
   completionOf: () => ({ exercisesPassed: false, readConfirmed: false }),
@@ -95,6 +96,27 @@ function summaryNode(): CourseNode {
 }
 
 describe("Maps  projection contract", () => {
+  it("preserves four readable non-colour learning states independently of the unit sigil", () => {
+    const states = ["live", "idle", "done", "locked"] as const;
+    const lessons = placeCourse("turing-pact", makeCourse("state-cues", 4, 1), source).map(
+      (lesson, index) => ({ ...lesson, state: states[index]! }),
+    );
+    const labels = courseMarkers(lessons, { onPick: () => undefined });
+    const names = labels.filter((label) => label.kind === "lesson");
+    expect(names.map((label) => label.lessonState)).toEqual(states);
+    for (const [index, word] of ["当前关卡", "可学习", "已完成", "后续关卡"].entries()) {
+      expect(names[index]?.label).toContain(word);
+      expect(names[index]?.activate).toBeTypeOf("function");
+    }
+    expect(names[0]?.text).toBe("开始");
+    const completedIcon = labels.find(
+      (label) => label.kind === "icon" && label.lessonState === "done",
+    );
+    expect(completedIcon?.text).toBe("✓");
+    expect(
+      lessons.every((lesson) => lesson.visualToken.sigil === lessons[0]!.visualToken.sigil),
+    ).toBe(true);
+  });
   it("keeps real lesson and unit identities in one shared blueprint", () => {
     const lessons = placeCourse("turing-pact", course, source);
     const blueprint = lessons[0]?.blueprint;

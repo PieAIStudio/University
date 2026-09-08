@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-08T01:21:35.982Z
+generated_at: 2026-09-08T08:22:43.474Z
 generator_version: doc-gov@0.9.10
 docs_count: 107
 docs:
@@ -58,14 +58,14 @@ docs:
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-09-07
+    last_reviewed: 2026-09-08
     pinned: false
   - id: ADR-0009
     path: docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-09-07
+    last_reviewed: 2026-09-08
     pinned: false
   - id: ARCHIVE-ADR-0008-2026-09-07
     path: docs/archive/adr-0008-measurement-history-2026-09-07.md
@@ -156,7 +156,7 @@ docs:
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-09-07
+    last_reviewed: 2026-09-08
     pinned: true
   - id: POLICY-SHARED-AI-IN-THE-LOOP
     path: docs/policy/shared-rules/ai-in-the-loop.md

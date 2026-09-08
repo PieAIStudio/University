@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: project
 created: 2026-05-08
-last_reviewed: 2026-09-07
+last_reviewed: 2026-09-08
 domain: project-policy
 tags:
   - project-policy
@@ -60,6 +60,15 @@ evidence it could not read, while the hashes stay put — silent, and green unde
 shrinking write, and the error names the three ways out.
 
 ## Believing a red test
+
+Keep `pnpm verify` and unit tests free of a real-campus
+`UNIVERSITY_LOCAL_STUDIES_ROOT` override. CLI and HTTP tests construct temporary
+project roots, but the environment override wins over their configuration and
+can send a test to personal study storage instead. Scope that variable only to
+the intended preview command or the standalone `pnpm check:export-freshness`
+check. A full verify that skips source freshness on the worktree skeleton needs
+that separate, correctly scoped check; globally exporting the variable is not
+the fix.
 
 This suite is sensitive to machine load. With several agents running, tests that
 pass alone fail together — `island-blueprint`, `kenney-r01-assets` and the grass

@@ -166,11 +166,14 @@ for (const { name, viewport } of VIEWPORTS) {
       await openReadyMap(page);
       await captureEvidence(page, `scene-timeout-before-${name}`);
 
-      await page.route("**/*.glb", async (route) => {
-        await new Promise((resolve) => setTimeout(resolve, RECOVERY_TIMEOUT_MS + 5_000));
-        await route.abort().catch(() => undefined);
+      // Remote terrain no longer requires GLBs, and course decorations stream
+      // independently of the usable terrain. Stall the actual frame scheduler
+      // instead: WebGL can initialize, but the scene cannot produce a frame.
+      await page.addInitScript(() => {
+        window.requestAnimationFrame = () => 1;
+        window.cancelAnimationFrame = () => undefined;
       });
-      await namedStep(page, "注入场景资源一直不返回", async () => {
+      await namedStep(page, "注入渲染帧一直无法执行", async () => {
         await page.reload({ waitUntil: "domcontentloaded" });
       });
 

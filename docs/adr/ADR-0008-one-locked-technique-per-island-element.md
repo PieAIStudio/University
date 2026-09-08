@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-07
+last_reviewed: 2026-09-08
 domain: architecture
 tags:
   - 3d
@@ -53,7 +53,7 @@ owns completion status. This condensation changes none of those contracts.
 | Fire and lighting | Effects belong only to actual lit campfire assemblies. No per-fire shadow lights. Reduced motion/pause contracts remain. Use the shared Stage/SwimmerRenderKit output chain, with one tone map and one sRGB encoding. |
 | Series distant terrain | Canonical blueprint sampled at world detail: 640 triangles/island (352 top + 288 cliff, no route clips), merged across islands. Do not prepare a dense course field or load course GLBs. |
 | Series distant props | Optional pavilion up to 36 triangles plus at most four 12-triangle tree silhouettes: 0–84 props triangles/island. Bounded inward fitting may omit props; a sampled anchor does not prove zero gap across a sloping footprint. |
-| Batch accounting | Distant terrain + props have a three-draw batch ceiling and at most 724 triangles/island. This excludes avatars, sky, selection, shadows and post; it is not a full-frame promise. GPU time and VRAM are unmeasured. |
+| Batch accounting | Distant terrain + props have a three-draw batch ceiling and at most 724 triangles/island. This excludes avatars, sky, selection, shadows and post; it is not a full-frame promise. R35 GPU timings below have a separate scope; VRAM remains unmeasured. |
 | Domain globe | Surface ≤ 5,000 triangles; merged clouds ≤ 7,000 triangles with 7 clusters and radial flatten 0.55; design ceiling 8 scene draws per populated domain including atmosphere and hit geometry. Representatives: desktop at most 5 / mobile at most 3 per study, from the remote 640-triangle base, no course props. |
 
 Production world catalogue is `RemoteIslandField` plus `RemotePropsField` only.
@@ -67,7 +67,7 @@ Do not mix that history with the active 640 + 84 / 3-draw remote budget.
 Course overview uses the same `COURSE_DISTANCE = 36` camera with a different
 framing range; it does not change that default.
 
-## Domain globe and natural root: implemented candidates, not final visual acceptance
+## Domain globe and natural root
 
 V5 M replaces giant planar study islands with domain globes and atmospheric
 study regions. A study is not a domain. Actual IDs and explicit domain metadata
@@ -80,7 +80,7 @@ islands.
 The candidate uses a 3,968-triangle sphere (ceiling 5,000) and a 1,024×512
 linear RGBA surface texture from the same 3D land/ocean sampler. Base texture
 allocation is 2 MiB (about 2.67 MiB with mipmaps). That is not total GPU memory;
-VRAM and GPU time remain unknown. One merged cloud geometry stays below 7,000
+VRAM remains unknown; R35 measures GPU time separately below. One merged cloud geometry stays below 7,000
 triangles (7 clusters, radial scale 0.55). The design ceiling of eight scene
 draws per populated domain still includes atmosphere and submitted invisible
 hit geometry; it is not a measured GPU-time promise. No globe-sized trees,
@@ -121,8 +121,46 @@ guess. Whole-footprint fitting clips the convex footprint against the same cache
 top lattice and reads extrema across all intersected triangles, including internal
 ridges. This CPU query does not build road clips, cliff meshes or GPU resources.
 Finite spacing/ground searches still reject an entire unsafe outpost. The new
-five-route footprint tests passed; independent emitted-mesh comparison, final
-rendered contact and cost acceptance remain open in the delivery plan.
+five-route footprint tests passed; independent emitted-mesh comparison and
+rendered contact subsequently passed in R35. Overall release and device
+acceptance remain in the delivery plan.
+
+R35 strengthened the positive witness to every route/length pair, exposing four
+empty short-course outposts that a per-route aggregate concealed. Simply widening
+the large-rock search displaced an existing long-course grove (12 trees against
+the unchanged >15 assertion). The accepted fallback preserves all normal-tier
+placements and only attempts a compact rest when no ordinary outpost fitted and
+no real bridge exists. Its seat rock, companion and shrub have heights
+0.42 / 0.25 / 0.30; physical envelopes still come from the same measured models
+and crown recipes. At most 320 whole-group candidates cover route shoulders,
+including endpoints, once per cached plan. It neither scales buildings nor
+relaxes the 0.25 contact, slope or clearance limits. The retained counterexamples,
+every 5×6/24/41 positive case and all-or-none occupied-ground rejection pass in
+`outpost-contact.test.ts`; the combined dressing/terrain suite is 33/33.
+
+## R35 measured GPU scope, not a device-FPS promise
+
+On 2026-09-08, fresh visible Chrome contexts on the Mac's Apple M1 Max / ANGLE
+Metal renderer used `EXT_disjoint_timer_query_webgl2` around the actual unique
+Stage render callback. Each row has 24 valid, non-disjoint queries, with no
+screenshot or CPU profiler. This includes that canvas's shadows, scene, AO and
+grade; it excludes browser compositing and other canvases such as the navigation
+avatar. DPR is 1. Values are GPU milliseconds, not FPS or allocated GPU memory.
+
+| Projection | 1440×900 median / p95 | 375×812 median / p95 |
+| --- | --- | --- |
+| Real 41-lesson course | 2.939 / 5.202 | 0.819 / 1.904 |
+| Real selected series | 1.734 / 2.522 | 0.517 / 1.103 |
+| Real one-domain catalogue | 1.358 / 2.495 | 0.273 / 1.028 |
+| Explicit synthetic 4 domains × 30 series | 1.447 / 2.441 | 0.606 / 1.047 |
+
+Raw queries and the restored temporary measurement wrapper are in
+`.devspace-visual/astra-r35/gpu-frames.json` and `gpu-frames.mjs`. A separate
+blank→course→blank scheduling control measured rAF medians about 50 / 50 / 33ms;
+that delay is therefore not evidence that 3D GPU work itself costs 50ms. Do not
+delete scenery to chase headless scheduling intervals. These Mac/viewport data
+do not replace a current physical phone pass. CPU preparation profiles are
+inclusive sampled scopes and must not be added together as exact wall time.
 
 ## Rejected alternatives worth remembering
 

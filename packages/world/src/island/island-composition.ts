@@ -43,6 +43,8 @@ export const COMPOSITION_SOURCE_EXTENTS = {
   "fountain-round": { x: 2, y: 0.28, z: 2 },
   stall: { x: 0.65, y: 0.3655, z: 1 },
   lantern: { x: 0.2164, y: 1.556, z: 0.2243 },
+  rock_largeA: { x: 0.7849, y: 0.2598, z: 1.0155 },
+  rock_smallA: { x: 0.3608, y: 0.1912, z: 0.3608 },
 } as const;
 
 export type CompositionAssetId = keyof typeof COMPOSITION_SOURCE_EXTENTS;
@@ -781,7 +783,7 @@ export function isAssemblySafe(
 
 const SIDE_OFFSETS = [3.7, 4.35, 5.15, 5.9, 6.65] as const;
 const FRACTION_DELTAS = [0, -0.03, 0.03, -0.06, 0.06] as const;
-const BRIDGE_FRACTIONS = [0.26, 0.34, 0.42, 0.5, 0.58, 0.66] as const;
+export const BRIDGE_FRACTIONS = [0.26, 0.34, 0.42, 0.5, 0.58, 0.66] as const;
 
 function preferredSide(seedKey: string): number {
   return seeded(seedKey)() < 0.5 ? -1 : 1;
@@ -930,42 +932,42 @@ export const BORDER_ROCK_TIERS: readonly RockHierarchyTier[] = [
   {
     role: "rockLarge",
     count: 12,
-    minSpacing: 1.95,
-    radial: [0.72, 0.93],
-    height: [1.05, 1.48],
+    minSpacing: 1.5,
+    radial: [0.68, 0.9],
+    height: [0.65, 0.95],
     importance: [0.72, 0.88],
     maxSlope: 1.9,
     clustered: true,
-    prefersSlope: 1.0,
-    clusterRadius: 1.15,
+    prefersSlope: 0.6,
+    clusterRadius: 2.2,
   },
   {
     role: "rockMedium",
     count: 28,
-    minSpacing: 0.92,
-    radial: [0.7, 0.94],
-    height: [0.58, 0.98],
+    minSpacing: 0.85,
+    radial: [0.66, 0.92],
+    height: [0.4, 0.62],
     importance: [0.5, 0.72],
     maxSlope: 1.85,
     clustered: true,
-    prefersSlope: 0.95,
-    clusterRadius: 2.05,
+    prefersSlope: 0.6,
+    clusterRadius: 2.4,
   },
   {
     role: "rockSmall",
     count: 26,
-    minSpacing: 0.55,
-    radial: [0.68, 0.94],
-    height: [0.26, 0.48],
+    minSpacing: 0.5,
+    radial: [0.64, 0.92],
+    height: [0.22, 0.36],
     importance: [0.35, 0.55],
     maxSlope: 1.8,
     clustered: true,
-    prefersSlope: 0.9,
+    prefersSlope: 0.5,
     clusterRadius: 2.85,
   },
 ] as const;
 
-const ROCK_CLUSTER_MAX_SHORE = 0.9;
+const ROCK_CLUSTER_MAX_SHORE = 0.88;
 const ROCK_CLUSTER_MIN_INSIDE = 4;
 
 export function borderRockClusterCentres(

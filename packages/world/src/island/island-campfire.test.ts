@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
@@ -12,13 +14,27 @@ import {
   CAMPFIRE_FLAME_TRIANGLES,
   CAMPFIRE_FLAME_WIDTH,
   CAMPFIRE_NORMALIZED_ANCHOR,
+  CAMPFIRE_SIM_MAX_STEP,
+  CAMPFIRE_STATES,
+  CAMPFIRE_WOOD_COAL_HEIGHT_FRACTION,
+  advanceCampfireSimTime,
   campfireFlameTransform,
+  campfireFlickerScale,
   createCampfireFlameGeometry,
   createCampfireMaterial,
   deriveCampfireNormalizedAnchor,
   filterLitCampPlacements,
+  glbJsonFromBytes,
+  isCampfireState,
   isLitCampPlacement,
+  kitNormalizedFireAnchor,
+  measureCampfireGlbBounds,
 } from "./island-campfire.js";
+
+const CAMP_GLB = resolve(
+  import.meta.dirname,
+  "../../../../apps/university/public/models/elemental-serenity/camp.glb",
+);
 
 function dummyPlacement(overrides: Partial<IslandDressingPlacement> = {}): IslandDressingPlacement {
   return {
@@ -38,6 +54,10 @@ function dummyPlacement(overrides: Partial<IslandDressingPlacement> = {}): Islan
 
 describe("Campfire state selection contract", () => {
   it("selects only elemental-serenity camp assets with state lit", () => {
+    expect(CAMPFIRE_STATES).toEqual(["lit", "idle"]);
+    expect(isCampfireState("lit")).toBe(true);
+    expect(isCampfireState("idle")).toBe(true);
+    expect(isCampfireState("burning")).toBe(false);
     expect(isLitCampPlacement(dummyPlacement({ assetId: "camp", state: "lit" }))).toBe(true);
 
     // Reject alternate packs with same asset name
@@ -77,28 +97,39 @@ describe("Campfire state selection contract", () => {
 });
 
 describe("Campfire scale and anchor contract", () => {
-  it("derives fire anchor from normalized camp.glb model geometry", () => {
+  it("derives fire anchor from kit-normalised wood pit geometry", () => {
     const derived = deriveCampfireNormalizedAnchor();
     expect(derived.x).toBeCloseTo(CAMPFIRE_NORMALIZED_ANCHOR.x, 5);
     expect(derived.y).toBeCloseTo(CAMPFIRE_NORMALIZED_ANCHOR.y, 5);
     expect(derived.z).toBeCloseTo(CAMPFIRE_NORMALIZED_ANCHOR.z, 5);
 
-    // Normalized wood pit center relative to bounding box center and base
+    const kit = kitNormalizedFireAnchor(
+      CAMP_SCENE_TRANSFORMED_BOUNDS,
+      CAMP_WOOD_SCENE_TRANSFORMED_BOUNDS,
+      CAMPFIRE_WOOD_COAL_HEIGHT_FRACTION,
+    );
+    expect(CAMPFIRE_NORMALIZED_ANCHOR.x).toBeCloseTo(kit.x, 8);
+    expect(CAMPFIRE_NORMALIZED_ANCHOR.y).toBeCloseTo(kit.y, 8);
+    expect(CAMPFIRE_NORMALIZED_ANCHOR.z).toBeCloseTo(kit.z, 8);
+
     expect(CAMPFIRE_NORMALIZED_ANCHOR.x).toBeGreaterThan(0.03);
     expect(CAMPFIRE_NORMALIZED_ANCHOR.x).toBeLessThan(0.05);
     expect(CAMPFIRE_NORMALIZED_ANCHOR.z).toBeGreaterThan(-0.02);
     expect(CAMPFIRE_NORMALIZED_ANCHOR.z).toBeLessThan(0.0);
 
-    // Coal bed height is within the wood log vertical envelope (0.22 to 1.0)
-    expect(CAMPFIRE_NORMALIZED_ANCHOR.y).toBeGreaterThan(0.6);
-    expect(CAMPFIRE_NORMALIZED_ANCHOR.y).toBeLessThan(0.7);
+    const woodMinY =
+      (CAMP_WOOD_SCENE_TRANSFORMED_BOUNDS.min.y - CAMP_SCENE_TRANSFORMED_BOUNDS.min.y) /
+      CAMP_SCENE_TRANSFORMED_BOUNDS.size.y;
+    const woodMaxY =
+      (CAMP_WOOD_SCENE_TRANSFORMED_BOUNDS.max.y - CAMP_SCENE_TRANSFORMED_BOUNDS.min.y) /
+      CAMP_SCENE_TRANSFORMED_BOUNDS.size.y;
+    expect(CAMPFIRE_NORMALIZED_ANCHOR.y).toBeGreaterThan(woodMinY);
+    expect(CAMPFIRE_NORMALIZED_ANCHOR.y).toBeLessThan(woodMaxY);
 
-    // Raw model dimensions sanity check (2.70 x 0.73 x 2.50)
     expect(CAMP_SCENE_TRANSFORMED_BOUNDS.size.x).toBeCloseTo(2.7, 1);
     expect(CAMP_SCENE_TRANSFORMED_BOUNDS.size.y).toBeCloseTo(0.73, 2);
     expect(CAMP_SCENE_TRANSFORMED_BOUNDS.size.z).toBeCloseTo(2.5, 1);
 
-    // Wood pit bounds within total camp bounds
     expect(CAMP_WOOD_SCENE_TRANSFORMED_BOUNDS.size.x).toBeLessThan(
       CAMP_SCENE_TRANSFORMED_BOUNDS.size.x,
     );
@@ -107,37 +138,28 @@ describe("Campfire scale and anchor contract", () => {
     );
   });
 
-  it("verifies matrix-aware glTF measurements against node-transformed scene bounds", () => {
-    // Accessor 0 (Rocks) transformed by Node 0 matrix
-    const a0_min = new THREE.Vector3(-3.1736729, -2.808712, -0.509893);
-    const a0_max = new THREE.Vector3(3.1003899, 3.015656, 0.836373);
-    const n0_t = new THREE.Vector3(-5.6266961, 0.0767696, -6.9719725);
-    const n0_q = new THREE.Quaternion(-0.7071069, 0, 0, 0.7071066);
-    const n0_s = new THREE.Vector3(0.4297005, 0.4297005, 0.4297005);
-    const m0 = new THREE.Matrix4().compose(n0_t, n0_q, n0_s);
-    const b0 = new THREE.Box3(a0_min, a0_max).applyMatrix4(m0);
+  it("matches constants to the decoded local camp.glb node transforms", () => {
+    const document = glbJsonFromBytes(new Uint8Array(readFileSync(CAMP_GLB)));
+    expect(document).not.toBeNull();
+    const measured = measureCampfireGlbBounds(document!);
+    expect(measured).not.toBeNull();
 
-    // Accessor 4 (Wood) transformed by Node 1 matrix
-    const a1_min = new THREE.Vector3(-0.864386, -0.791158, -0.5024658);
-    const a1_max = new THREE.Vector3(0.81271, 0.794104, 0.045118);
-    const n1_t = new THREE.Vector3(-5.5876737, 0.5413535, -7.0230389);
-    const n1_q = new THREE.Quaternion(-0.7071069, 0, 0, 0.7071066);
-    const n1_s = new THREE.Vector3(1.0307534, 1.0307535, 1.0307535);
-    const m1 = new THREE.Matrix4().compose(n1_t, n1_q, n1_s);
-    const b1 = new THREE.Box3(a1_min, a1_max).applyMatrix4(m1);
+    expect(measured!.scene.min.x).toBeCloseTo(CAMP_RAW_BOUNDING_BOX.min.x, 4);
+    expect(measured!.scene.min.y).toBeCloseTo(CAMP_RAW_BOUNDING_BOX.min.y, 4);
+    expect(measured!.scene.min.z).toBeCloseTo(CAMP_RAW_BOUNDING_BOX.min.z, 4);
+    expect(measured!.scene.max.x).toBeCloseTo(CAMP_RAW_BOUNDING_BOX.max.x, 4);
+    expect(measured!.scene.max.y).toBeCloseTo(CAMP_RAW_BOUNDING_BOX.max.y, 4);
+    expect(measured!.scene.max.z).toBeCloseTo(CAMP_RAW_BOUNDING_BOX.max.z, 4);
 
-    const sceneTotal = b0.clone().union(b1);
+    expect(measured!.wood.min.x).toBeCloseTo(CAMP_WOOD_RAW_BOUNDING_BOX.min.x, 4);
+    expect(measured!.wood.max.x).toBeCloseTo(CAMP_WOOD_RAW_BOUNDING_BOX.max.x, 4);
+    expect(measured!.wood.min.y).toBeCloseTo(CAMP_WOOD_RAW_BOUNDING_BOX.min.y, 4);
+    expect(measured!.wood.max.y).toBeCloseTo(CAMP_WOOD_RAW_BOUNDING_BOX.max.y, 4);
 
-    // Authoritative check that recorded bounds match transformed glTF scene nodes
-    expect(sceneTotal.min.x).toBeCloseTo(CAMP_RAW_BOUNDING_BOX.min.x, 3);
-    expect(sceneTotal.min.y).toBeCloseTo(CAMP_RAW_BOUNDING_BOX.min.y, 3);
-    expect(sceneTotal.min.z).toBeCloseTo(CAMP_RAW_BOUNDING_BOX.min.z, 3);
-    expect(sceneTotal.max.x).toBeCloseTo(CAMP_RAW_BOUNDING_BOX.max.x, 3);
-    expect(sceneTotal.max.y).toBeCloseTo(CAMP_RAW_BOUNDING_BOX.max.y, 3);
-    expect(sceneTotal.max.z).toBeCloseTo(CAMP_RAW_BOUNDING_BOX.max.z, 3);
-
-    expect(b1.min.x).toBeCloseTo(CAMP_WOOD_RAW_BOUNDING_BOX.min.x, 3);
-    expect(b1.max.x).toBeCloseTo(CAMP_WOOD_RAW_BOUNDING_BOX.max.x, 3);
+    const fromFile = kitNormalizedFireAnchor(measured!.scene, measured!.wood);
+    expect(fromFile.x).toBeCloseTo(CAMPFIRE_NORMALIZED_ANCHOR.x, 5);
+    expect(fromFile.y).toBeCloseTo(CAMPFIRE_NORMALIZED_ANCHOR.y, 5);
+    expect(fromFile.z).toBeCloseTo(CAMPFIRE_NORMALIZED_ANCHOR.z, 5);
   });
 
   it("enforces modest flame dimensions (0.35m - 0.50m height, fitting pit footprint)", () => {
@@ -253,5 +275,63 @@ describe("Campfire low-poly geometry and material contract", () => {
     expect(mat.toneMapped).toBe(true);
     expect(mat.side).toBe(THREE.DoubleSide);
     mat.dispose();
+  });
+});
+
+describe("Campfire world transform from kit-normalised origin", () => {
+  it("places the flame origin at the yaw-rotated kit anchor, not the camp origin", () => {
+    const placement = dummyPlacement({
+      x: 4,
+      y: 1.2,
+      z: -3,
+      turn: 0.7,
+      height: CAMP_REFERENCE_HEIGHT,
+      state: "lit",
+    });
+    const matrix = campfireFlameTransform(placement);
+    const position = new THREE.Vector3();
+    const quaternion = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+    matrix.decompose(position, quaternion, scale);
+
+    const campHeight = placement.height;
+    const local = new THREE.Vector3(
+      CAMPFIRE_NORMALIZED_ANCHOR.x * campHeight,
+      CAMPFIRE_NORMALIZED_ANCHOR.y * campHeight,
+      CAMPFIRE_NORMALIZED_ANCHOR.z * campHeight,
+    ).applyAxisAngle(new THREE.Vector3(0, 1, 0), placement.turn);
+    expect(position.x).toBeCloseTo(placement.x + local.x, 6);
+    expect(position.y).toBeCloseTo(placement.y + local.y, 6);
+    expect(position.z).toBeCloseTo(placement.z + local.z, 6);
+    expect(position.x).not.toBeCloseTo(placement.x, 3);
+    expect(scale.y).toBeCloseTo(CAMPFIRE_FLAME_HEIGHT, 6);
+  });
+});
+
+describe("Campfire sim time does not chase wall-clock on resume", () => {
+  it("freezes while paused or reduced-motion and skips hitch deltas", () => {
+    let time = 0;
+    time = advanceCampfireSimTime(time, 0.016);
+    expect(time).toBeCloseTo(0.016, 8);
+    const playing = time;
+    time = advanceCampfireSimTime(time, 4.2, { paused: true });
+    expect(time).toBe(playing);
+    time = advanceCampfireSimTime(time, 4.2, { reducedMotion: true });
+    expect(time).toBe(playing);
+    time = advanceCampfireSimTime(time, 4.2);
+    expect(time).toBe(playing);
+    expect(4.2).toBeGreaterThan(CAMPFIRE_SIM_MAX_STEP);
+    time = advanceCampfireSimTime(time, 0.016);
+    expect(time).toBeCloseTo(playing + 0.016, 8);
+    expect(campfireFlickerScale(playing, 0)).toBe(campfireFlickerScale(playing, 0));
+    expect(campfireFlickerScale(0, 0)).toBe(1 + 0.038 * Math.sin(0) + 0.018 * Math.cos(0));
+  });
+
+  it("keeps the renderer on accumulated delta, not elapsed wall clock", () => {
+    const source = readFileSync(resolve(import.meta.dirname, "island-campfire-render.tsx"), "utf8");
+    expect(source).not.toMatch(/getElapsedTime/);
+    expect(source).toMatch(/advanceCampfireSimTime/);
+    expect(source).toMatch(/campfireFlickerScale/);
+    expect(source).not.toMatch(/PointLight|spotLight|castShadow=\{true\}/);
   });
 });

@@ -58,29 +58,187 @@ export const CAMP_WOOD_SCENE_TRANSFORMED_BOUNDS = {
 /** Alias for backward compatibility. */
 export const CAMP_WOOD_RAW_BOUNDING_BOX = CAMP_WOOD_SCENE_TRANSFORMED_BOUNDS;
 
+export const CAMPFIRE_STATES = ["lit", "idle"] as const;
+export type CampfireState = (typeof CAMPFIRE_STATES)[number];
+
+/** Embers sit in the upper-middle of the wood AABB, not the geometric centre. */
+export const CAMPFIRE_WOOD_COAL_HEIGHT_FRACTION = 0.55;
+
+/** Deltas larger than this are resume/hitch wall-clock, not flame time. */
+export const CAMPFIRE_SIM_MAX_STEP = 0.1;
+
+export interface CampfireAabb {
+  readonly min: THREE.Vector3;
+  readonly max: THREE.Vector3;
+  readonly size: THREE.Vector3;
+  readonly center: THREE.Vector3;
+}
+
+export function campfireAabbFromMinMax(min: THREE.Vector3, max: THREE.Vector3): CampfireAabb {
+  return {
+    min: min.clone(),
+    max: max.clone(),
+    size: max.clone().sub(min),
+    center: min.clone().add(max).multiplyScalar(0.5),
+  };
+}
+
 /**
- * Normalization helper matching AssetField / BatchedAssetLibraryField `partsFromScene`:
- * Base is shifted to y=0, horizontal coordinates centered on bounding box center,
- * and entire model scaled by 1 / height.
+ * Same normalisation as AssetField / BatchedAssetLibraryField `partsFromScene`:
+ * centre XZ, sit the base on y=0, scale by 1 / scene height.
  */
-export function deriveCampfireNormalizedAnchor(): THREE.Vector3 {
-  const height = CAMP_SCENE_TRANSFORMED_BOUNDS.size.y;
-  const normX =
-    (CAMP_WOOD_SCENE_TRANSFORMED_BOUNDS.center.x - CAMP_SCENE_TRANSFORMED_BOUNDS.center.x) / height;
-  const normZ =
-    (CAMP_WOOD_SCENE_TRANSFORMED_BOUNDS.center.z - CAMP_SCENE_TRANSFORMED_BOUNDS.center.z) / height;
-  // The ember coal bed sits inside the lower half of the logs (center is at y ~ 0.61, coal bed ~ 0.65)
-  const normY =
-    (CAMP_WOOD_SCENE_TRANSFORMED_BOUNDS.center.y - CAMP_SCENE_TRANSFORMED_BOUNDS.min.y) / height +
-    0.0365;
-  return new THREE.Vector3(normX, normY, normZ);
+export function kitNormalizedFireAnchor(
+  scene: CampfireAabb,
+  wood: CampfireAabb,
+  coalHeightFraction = CAMPFIRE_WOOD_COAL_HEIGHT_FRACTION,
+): THREE.Vector3 {
+  const height = scene.size.y;
+  const coalY = wood.min.y + wood.size.y * coalHeightFraction;
+  return new THREE.Vector3(
+    (wood.center.x - scene.center.x) / height,
+    (coalY - scene.min.y) / height,
+    (wood.center.z - scene.center.z) / height,
+  );
+}
+
+export function deriveCampfireNormalizedAnchor(
+  scene: CampfireAabb = CAMP_SCENE_TRANSFORMED_BOUNDS,
+  wood: CampfireAabb = CAMP_WOOD_SCENE_TRANSFORMED_BOUNDS,
+): THREE.Vector3 {
+  return kitNormalizedFireAnchor(scene, wood);
 }
 
 /**
  * Normalized fire anchor relative to the unit-height, base-centered camp model.
- * x: ~0.0385, y: ~0.65, z: ~ -0.0111
  */
 export const CAMPFIRE_NORMALIZED_ANCHOR = deriveCampfireNormalizedAnchor();
+
+interface CampGltfNode {
+  readonly mesh?: number;
+  readonly matrix?: number[];
+  readonly translation?: number[];
+  readonly rotation?: number[];
+  readonly scale?: number[];
+  readonly children?: number[];
+}
+
+interface CampGltfDocument {
+  readonly accessors?: readonly {
+    readonly min?: number[];
+    readonly max?: number[];
+  }[];
+  readonly meshes?: readonly {
+    readonly primitives?: readonly {
+      readonly attributes?: Readonly<Record<string, number>>;
+    }[];
+  }[];
+  readonly nodes?: readonly CampGltfNode[];
+  readonly scenes?: readonly { readonly nodes?: readonly number[] }[];
+  readonly scene?: number;
+}
+
+export function glbJsonFromBytes(bytes: Uint8Array): CampGltfDocument | null {
+  if (bytes.byteLength < 20) return null;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (view.getUint32(0, false) !== 0x676c5446 || view.getUint32(16, true) !== 0x4e4f534a) {
+    return null;
+  }
+  const length = view.getUint32(12, true);
+  if (length > bytes.byteLength - 20) return null;
+  try {
+    return JSON.parse(
+      new TextDecoder().decode(bytes.subarray(20, 20 + length)),
+    ) as CampGltfDocument;
+  } catch {
+    return null;
+  }
+}
+
+function nodeLocalMatrix(node: CampGltfNode): THREE.Matrix4 {
+  if (node.matrix) return new THREE.Matrix4().fromArray(node.matrix);
+  return new THREE.Matrix4().compose(
+    new THREE.Vector3().fromArray(node.translation ?? [0, 0, 0]),
+    new THREE.Quaternion().fromArray(node.rotation ?? [0, 0, 0, 1]),
+    new THREE.Vector3().fromArray(node.scale ?? [1, 1, 1]),
+  );
+}
+
+function primitiveBox(
+  document: CampGltfDocument,
+  primitive: { readonly attributes?: Readonly<Record<string, number>> },
+  matrix: THREE.Matrix4,
+): THREE.Box3 | null {
+  const position = document.accessors?.[primitive.attributes?.POSITION ?? -1];
+  if (!position?.min || !position.max) return null;
+  return new THREE.Box3(
+    new THREE.Vector3().fromArray(position.min),
+    new THREE.Vector3().fromArray(position.max),
+  ).applyMatrix4(matrix);
+}
+
+/**
+ * Decode camp.glb node transforms. Wood is the root mesh whose transformed
+ * max Y is highest (logs sit on the rock ring).
+ */
+export function measureCampfireGlbBounds(document: CampGltfDocument): {
+  readonly scene: CampfireAabb;
+  readonly wood: CampfireAabb;
+} | null {
+  const boxes: THREE.Box3[] = [];
+  const visited = new Set<number>();
+  const visit = (index: number, parent: THREE.Matrix4) => {
+    const node = document.nodes?.[index];
+    if (!node || visited.has(index)) return;
+    visited.add(index);
+    const matrix = parent.clone().multiply(nodeLocalMatrix(node));
+    if (node.mesh !== undefined) {
+      for (const primitive of document.meshes?.[node.mesh]?.primitives ?? []) {
+        const box = primitiveBox(document, primitive, matrix);
+        if (box) boxes.push(box);
+      }
+    }
+    for (const child of node.children ?? []) visit(child, matrix);
+    visited.delete(index);
+  };
+  const roots = document.scenes?.[document.scene ?? 0]?.nodes ?? [];
+  for (const root of roots) visit(root, new THREE.Matrix4());
+  if (boxes.length < 2) return null;
+  const woodBox = boxes.reduce((highest, box) => (box.max.y > highest.max.y ? box : highest));
+  const sceneBox = boxes.reduce((union, box) => union.union(box), boxes[0]!.clone());
+  if (sceneBox.isEmpty() || woodBox.isEmpty()) return null;
+  return {
+    scene: campfireAabbFromMinMax(sceneBox.min, sceneBox.max),
+    wood: campfireAabbFromMinMax(woodBox.min, woodBox.max),
+  };
+}
+
+export function isCampfireState(value: unknown): value is CampfireState {
+  return value === "lit" || value === "idle";
+}
+
+export function advanceCampfireSimTime(
+  current: number,
+  deltaSeconds: number,
+  options: {
+    readonly reducedMotion?: boolean;
+    readonly paused?: boolean;
+    readonly maxStep?: number;
+  } = {},
+): number {
+  if (options.reducedMotion || options.paused) return current;
+  if (!Number.isFinite(deltaSeconds) || deltaSeconds <= 0) return current;
+  const maxStep = options.maxStep ?? CAMPFIRE_SIM_MAX_STEP;
+  if (deltaSeconds > maxStep) return current;
+  return current + deltaSeconds;
+}
+
+export function campfireFlickerScale(simTime: number, instanceIndex: number): number {
+  return (
+    1 +
+    0.038 * Math.sin(simTime * 11 + instanceIndex * 1.7) +
+    0.018 * Math.cos(simTime * 19 + instanceIndex * 2.9)
+  );
+}
 
 /**
  * Modest flame height in world units at standard reference camp height 0.32m (0.35m - 0.5m range).

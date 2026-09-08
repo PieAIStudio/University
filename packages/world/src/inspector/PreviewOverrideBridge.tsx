@@ -4,7 +4,7 @@ import * as THREE from "three";
 
 import type { InspectorLayerId } from "./types.js";
 import type { PreviewSceneMetrics, PreviewTuningValues } from "./preview-runtime.js";
-import { measureProjectedGeometry } from "./projected-metrics.js";
+import { measureProjectedGeometry, planetProjectionStatus } from "./projected-metrics.js";
 
 interface GrassState {
   baseCount: number;
@@ -79,7 +79,10 @@ function applyPreviewTuning(
         material.userData.inspectorBaseGrassHeight = baseHeight;
         uniforms.uGrassHeightScale.value = baseHeight * tuning.grassHeightMultiplier;
       }
-      if (object.name === "island-terrain" && material instanceof THREE.MeshStandardMaterial) {
+      if (
+        (object.name === "island-terrain" || object.name === "remote-island-terrain") &&
+        material instanceof THREE.MeshStandardMaterial
+      ) {
         const base = material.userData.inspectorBaseColor as THREE.Color | undefined;
         if (!base) material.userData.inspectorBaseColor = material.color.clone();
         const original =
@@ -118,10 +121,11 @@ export function PreviewOverrideBridge({
     lastTuning.current = tuning;
     const grassInstances = applyPreviewTuning(scene, layer, tuning);
     const projected = measureProjectedGeometry(scene);
-    const signature = JSON.stringify({ layer, grassInstances, projected });
+    const status = layer === "planet" ? planetProjectionStatus(scene, projected) : {};
+    const signature = JSON.stringify({ layer, grassInstances, projected, ...status });
     if (onMetrics && lastSignature.current !== signature) {
       lastSignature.current = signature;
-      onMetrics({ grassInstances, projected });
+      onMetrics({ grassInstances, projected, ...status });
     }
   });
   return null;

@@ -5,8 +5,17 @@
  * is selectable only when its key set exactly matches this one.
  */
 export const messages = {
+  "ui.world.domain.programming": "编程",
+  "ui.world.domain.unclassified": "未分类",
   "app.mapstudio.mapStudioScreen.copy.按当前投影计量": "按当前投影计量",
   "ui.world.lessonState.current": "当前关卡",
+  "ui.world.courseState.live": "当前",
+  "ui.world.courseState.done": "已完成",
+  "ui.world.courseState.open": "可学",
+  "ui.world.courseState.idle": "后续",
+  "ui.world.overview.show": "总览课程岛",
+  "ui.world.overview.return": "回到当前关",
+  "ui.world.overview.unavailable": "暂时无法总览，请稍后重试。",
   "ui.world.lessonState.available": "可学习",
   "ui.world.lessonState.later": "后续关卡",
   "app.mapstudio.mapStudioScreen.copy.实际投影三角形": "实际投影三角形",

@@ -1,4 +1,6 @@
-import { useRef, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { GameButton } from "@pieai/swimmer-ui-kit";
+import { translate } from "@pieai/university-ui/i18n.js";
 import type { AuthoringFocus } from "@pieai/university-core";
 
 import { Controls, Flight, LabelProbe, WORLD_POLAR } from "./camera/controls.js";
@@ -7,6 +9,8 @@ import type { AvatarRecipe } from "./avatar/index.js";
 import type { CourseNode } from "./course/course.js";
 import type { IslandLookCameraPose, IslandLookSceneSource } from "./island/island-look.js";
 import { Stage } from "./Stage.js";
+import { CourseOverviewContext, CourseOverviewProbe } from "./camera/CourseOverview.js";
+import type { CourseOverviewFrame } from "./camera/course-overview.js";
 
 export type WorldMap = ReturnType<typeof placeWorld>;
 
@@ -57,6 +61,7 @@ export function WorldMapCanvas({
   fixedCamera = null,
   postProcessing = true,
   lookSource = null,
+  courseViewKey = null,
 }: {
   readonly className?: string;
   readonly world: WorldMap | null;
@@ -123,17 +128,43 @@ export function WorldMapCanvas({
   readonly fixedCamera?: IslandLookCameraPose | null;
   readonly postProcessing?: boolean;
   readonly lookSource?: IslandLookSceneSource | null;
+  /** A learner course route; absent on the reader, catalogue and diagnostic shots. */
+  readonly courseViewKey?: string | null;
 }) {
   const labelNodes = useRef(new Map<string, HTMLElement>());
   const draggedRef = useRef(false);
   const pointerOrigin = useRef<{ x: number; y: number } | null>(null);
+  const [overviewKey, setOverviewKey] = useState<string | null>(null);
+  const [overview, setOverview] = useState<{ key: string; frame: CourseOverviewFrame } | null>(
+    null,
+  );
+  const [overviewError, setOverviewError] = useState(false);
+  const overviewEnabled =
+    courseViewKey !== null && overviewKey === courseViewKey && fixedCamera === null;
+  const activeOverview = overviewEnabled && overview?.key === courseViewKey ? overview.frame : null;
+  const acceptOverview = useCallback(
+    (frame: CourseOverviewFrame) => {
+      if (courseViewKey) setOverview({ key: courseViewKey, frame });
+    },
+    [courseViewKey],
+  );
+  const rejectOverview = useCallback(() => {
+    setOverviewKey(null);
+    setOverviewError(true);
+  }, []);
+  const framedFrom = activeOverview?.cameraFrom ?? cameraFrom;
+  const framedLook = activeOverview?.lookAt ?? lookAt;
 
   return (
     <div
       className={className ? `stagewrap ${className}` : "stagewrap"}
       hidden={hidden}
+      data-map-view={courseViewKey ? (activeOverview ? "overview" : "learning") : undefined}
+      // Retiring a hint can move a DOM control. Wait for its complete click,
+      // rather than moving it between pointerdown and pointerup. Real drags
+      // retire the hint as soon as their intent is known below.
+      onClickCapture={() => onInteract?.()}
       onPointerDownCapture={(event) => {
-        onInteract?.();
         pointerOrigin.current = { x: event.clientX, y: event.clientY };
         draggedRef.current = false;
       }}
@@ -142,6 +173,7 @@ export function WorldMapCanvas({
         if (!origin || draggedRef.current) return;
         if (Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > 6) {
           draggedRef.current = true;
+          onInteract?.();
         }
       }}
       onPointerUpCapture={() => {
@@ -163,8 +195,9 @@ export function WorldMapCanvas({
         course cost a context teardown.
       */}
       <Stage
-        cameraFrom={cameraFrom}
-        lookAt={lookAt}
+        cameraFrom={framedFrom}
+        cameraFar={activeOverview?.far}
+        lookAt={framedLook}
         onSceneReady={onSceneReady}
         onSceneBusy={onSceneBusy}
         onContextLost={onContextLost}
@@ -176,41 +209,97 @@ export function WorldMapCanvas({
         lookSource={lookSource}
         postProcessing={postProcessing}
       >
-        <Controls target={lookAt} polar={polar} fixedCamera={fixedCamera} onInteract={onInteract} />
-        <Flight to={cameraFrom} look={lookAt} fixed={fixedCamera !== null} />
-        <LabelProbe
-          markers={markers}
-          limit={9}
-          nodes={labelNodes.current}
-          followId={followId}
-          followNode={followNode}
-        />
-        {world ? (
-          <WorldScene
-            placements={world.placements}
-            extent={world.extent}
-            learnerAt={learnerAt}
-            avatarRecipe={avatarRecipe}
-            avatarSignedIn={avatarSignedIn}
-            selectedCourseKey={selectedCourseKey}
-            skyStudyId={skyStudyId}
-            authoringFocus={authoringFocus}
-            assetRevision={assetRevision}
-            onPick={onPick}
-            onHover={onHover}
+        <CourseOverviewContext.Provider value={activeOverview}>
+          <Controls
+            target={framedLook}
+            polar={polar}
+            fixedCamera={fixedCamera}
+            onInteract={onInteract}
+            distanceRange={activeOverview?.distanceRange}
           />
-        ) : null}
-        {stageChildren}
+          <Flight to={framedFrom} look={framedLook} fixed={fixedCamera !== null} />
+          {overviewEnabled ? (
+            <CourseOverviewProbe
+              key={courseViewKey}
+              onFrame={acceptOverview}
+              onError={rejectOverview}
+              eyeDirection={[
+                cameraFrom[0] - lookAt[0],
+                cameraFrom[1] - lookAt[1],
+                cameraFrom[2] - lookAt[2],
+              ]}
+            />
+          ) : null}
+          <LabelProbe
+            markers={markers}
+            limit={9}
+            nodes={labelNodes.current}
+            followId={followId}
+            followNode={followNode}
+          />
+          {world ? (
+            <WorldScene
+              placements={world.placements}
+              extent={world.extent}
+              learnerAt={learnerAt}
+              avatarRecipe={avatarRecipe}
+              avatarSignedIn={avatarSignedIn}
+              selectedCourseKey={selectedCourseKey}
+              skyStudyId={skyStudyId}
+              authoringFocus={authoringFocus}
+              assetRevision={assetRevision}
+              onPick={onPick}
+              onHover={onHover}
+            />
+          ) : null}
+          {stageChildren}
+        </CourseOverviewContext.Provider>
       </Stage>
 
       {underlay}
 
+      {courseViewKey && fixedCamera === null ? (
+        <div
+          className="map-framing-tools"
+          data-has-map-hint={
+            (controlsHintVisible && controlsHint != null) ||
+            (entryHintVisible && entryHint != null) ||
+            hoverHint != null
+              ? "true"
+              : undefined
+          }
+        >
+          <GameButton
+            type="button"
+            variant="secondary"
+            aria-pressed={overviewEnabled}
+            onClick={() => {
+              setOverviewError(false);
+              setOverview(null);
+              setOverviewKey(overviewEnabled ? null : courseViewKey);
+            }}
+          >
+            {translate(overviewEnabled ? "ui.world.overview.return" : "ui.world.overview.show")}
+          </GameButton>
+          {overviewError ? <p role="status">{translate("ui.world.overview.unavailable")}</p> : null}
+        </div>
+      ) : null}
+
       <nav className="labels" aria-label="地图上的去处">
         {markers.map((marker) => {
           const isCourseRewriteMarker = marker.kind === "course" && marker.sub !== undefined;
+          const courseState = marker.courseState
+            ? translate(`ui.world.courseState.${marker.courseState}`)
+            : undefined;
           const content = (
             <>
               {marker.text}
+              {courseState ? (
+                <small className="label__course-progress" aria-hidden="true">
+                  {marker.courseState === "done" ? "✓ " : ""}
+                  {courseState}
+                </small>
+              ) : null}
               {marker.sub ? (
                 <small className={isCourseRewriteMarker ? "label__course-status" : undefined}>
                   {marker.sub}
@@ -276,7 +365,8 @@ export function WorldMapCanvas({
               className={className}
               data-map-marker={marker.id}
               data-lesson-state={marker.lessonState}
-              aria-description={marker.label}
+              data-course-state={marker.courseState}
+              aria-description={marker.label ?? courseState}
               style={{ "--placed": 0 } as CSSProperties}
               data-course-rewrite-marker={isCourseRewriteMarker ? "true" : undefined}
               onClick={() => {

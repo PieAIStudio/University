@@ -26,6 +26,7 @@ import { CLOUD_CARRIER_FOOT_OFFSET, type CloudCarrierTarget } from "./cloud-carr
 import { CLOUD_RENDER_ORDER, CLOUD_TONES, createCloudMaterials } from "./cloud-material.js";
 import { createCloudVolumeGeometry } from "./cloud-volume.js";
 import { renderTier } from "./tier.js";
+import { usePrefersReducedMotion } from "../reduced-motion.js";
 
 export { CLOUD_CARRIER_FOOT_OFFSET } from "./cloud-carrier-contract.js";
 export type { CloudCarrierTarget } from "./cloud-carrier-contract.js";
@@ -459,6 +460,28 @@ export function cloudCarrierHome(
   ];
 }
 
+/** Vertical support clearance from the actual carrier's seven lobe transforms.
+ * The target is the avatar's feet, not sea level or an island's origin.
+ */
+export function cloudCarrierClearance(
+  extent: number,
+  level: number,
+  quality?: CuteCloudQuality,
+): number {
+  const layout = cuteCloudLayout(extent, level, qualityFrom(quality));
+  const index = layout.puffs.length - 1;
+  const carrier = layout.puffs[index];
+  if (!carrier) return CLOUD_CARRIER_FOOT_OFFSET;
+  const bottom = Math.min(
+    ...[...layout.lobes, ...layout.underbellies]
+      .filter((lobe) => lobe.puffIndex === index)
+      .map((lobe) => lobe.position[1] - lobe.scale[1]),
+  );
+  return (
+    carrier.position[1] + CLOUD_CARRIER_FOOT_OFFSET - bottom + CLOUD_LAYOUT_CONTRACT.turfClearance
+  );
+}
+
 /**
  * Make the complete instance data without allocating any Three.js objects.
  * This is the seam for future workers or baked manifests: layout generation
@@ -603,6 +626,7 @@ export function CuteCloudSea({
     [extent, level, resolvedQuality],
   );
   const group = useRef<THREE.Group>(null);
+  const reducedMotion = usePrefersReducedMotion();
   const upper = useRef<THREE.InstancedMesh>(null);
   const lower = useRef<THREE.InstancedMesh>(null);
   const carrierPuffIndex = layout.puffs.length - 1;
@@ -683,18 +707,8 @@ export function CuteCloudSea({
     [geometry, lowerMaterial, upperMaterial],
   );
 
-  useFrame(({ clock }) => {
-    if (!drift || !group.current) return;
-    const time = clock.elapsedTime;
-    // The field moves as one composition.  Tiny horizontal movement gives the
-    // eye life without turning six lobes into six independent animations.
-    const driftX = Math.sin(time * 0.018) * safeExtent(extent) * 0.004;
-    const driftZ = Math.cos(time * 0.014) * safeExtent(extent) * 0.003;
-    group.current.position.x = driftX;
-    group.current.position.z = driftZ;
-
+  useLayoutEffect(() => {
     if (carrierTarget === undefined || carrierPuffIndex < 0) return;
-
     const target = carrierTarget;
     if (target) {
       carrierTargetScratch.set(target[0], target[1] - CLOUD_CARRIER_FOOT_OFFSET, target[2]);
@@ -707,9 +721,29 @@ export function CuteCloudSea({
       // from the carrier's current position, never from its old destination.
       carrierFrom.current.copy(carrierPosition.current);
       carrierGoal.current.copy(carrierTargetScratch);
-      carrierStartedAt.current = time;
+      // Share the avatar's selection-commit clock. A delayed first render
+      // must not add another whole frame before the 420ms journey begins.
+      carrierStartedAt.current = performance.now();
       carrierSequence.current += 1;
     }
+  }, [
+    carrierTarget?.[0],
+    carrierTarget?.[1],
+    carrierTarget?.[2],
+    carrierTarget === undefined,
+    layout,
+  ]);
+
+  useFrame(({ clock }) => {
+    if (!drift || !group.current) return;
+    const time = clock.elapsedTime;
+    // The field moves as one composition. Tiny horizontal movement gives the
+    // eye life without turning six lobes into six independent animations.
+    const driftX = reducedMotion ? 0 : Math.sin(time * 0.018) * safeExtent(extent) * 0.004;
+    const driftZ = reducedMotion ? 0 : Math.cos(time * 0.014) * safeExtent(extent) * 0.003;
+    group.current.position.x = driftX;
+    group.current.position.z = driftZ;
+    if (carrierTarget === undefined || carrierPuffIndex < 0) return;
 
     let lift = 0;
     if (carrierStartedAt.current === null) {
@@ -718,11 +752,8 @@ export function CuteCloudSea({
       const pose = hopPose({
         from: carrierFrom.current,
         to: carrierGoal.current,
-        elapsedMs: (time - carrierStartedAt.current) * 1000,
-        reducedMotion:
-          typeof window !== "undefined" &&
-          typeof window.matchMedia === "function" &&
-          window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+        elapsedMs: Math.max(0, performance.now() - carrierStartedAt.current),
+        reducedMotion,
       });
       carrierPosition.current.set(pose.position.x, pose.position.y, pose.position.z);
       lift = pose.lift;
@@ -777,7 +808,7 @@ export function CuteCloudSea({
       bag.__cloudCarrierMotion[carrierSurface] = {
         sequence: carrierSequence.current,
         inFlight: carrierStartedAt.current !== null,
-        startedAtClock: carrierStartedAt.current,
+        startedAtPerformanceMs: carrierStartedAt.current,
         position: carrierPosition.current.toArray(),
         target: carrierGoal.current.toArray(),
         arcLift: carrierArcLift.current,

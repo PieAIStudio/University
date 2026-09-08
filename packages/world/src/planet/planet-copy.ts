@@ -14,13 +14,19 @@ import { hash } from "../island/random.js";
  * the graph, in teaching order.
  */
 
+export interface PlanetStudyDomain {
+  readonly id: string;
+  readonly title: string;
+}
+
 export interface PlanetStudy {
   readonly id: string;
   readonly title: string;
+  readonly domain?: PlanetStudyDomain;
   readonly courseCount: number;
   readonly lessonCount: number;
   readonly lessonsDone: number;
-  /** The real course metadata used by the shared world projection. */
+  /** Real course metadata in canonical teaching order (spineOf); the first five represent this region. */
   readonly courses: readonly PlanetCourse[];
   /** Course names in teaching order. Used as the introduction, not decoration. */
   readonly courseTitles: readonly string[];

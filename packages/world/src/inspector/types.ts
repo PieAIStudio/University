@@ -35,7 +35,8 @@ export type InspectorTechniqueLockId =
   | "landmark"
   | "environmentLight"
   | "lessonNode"
-  | "undersideWorldLod";
+  | "undersideWorldLod"
+  | "domainPlanet";
 
 export interface InspectorAsset {
   readonly key: string;
@@ -166,20 +167,37 @@ export interface InspectorComposition {
 export interface InspectorRuntimeMetrics {
   readonly grassInstances?: number;
   readonly projected?: Partial<Readonly<Record<InspectorProjectionId, InspectorProjectionMetric>>>;
+  /**
+   * Projection ids explicitly confirmed absent after the scene is complete.
+   * An omitted id is not evidence of absence: it remains unknown until a
+   * complete runtime sample says otherwise.
+   */
+  readonly knownAbsent?: readonly InspectorProjectionId[];
+  /** Some peers are still loading: a partial aggregate is not a complete count. */
+  readonly incomplete?: readonly InspectorProjectionId[];
+  readonly planetRepresentativeLimit?: 3 | 5;
 }
 
 export type InspectorProjectionId =
+  | "domainGlobe"
+  | "domainClouds"
+  | "domainAtmosphere"
+  | "atmosphericIslands"
+  | "domainRegionTargets"
   | "terrain"
   | "grass"
   | "treeTrunk"
   | "treeCrown"
   | "bushCrown"
-  | "worldTreeCrown"
   | "campfire"
   | "medallion"
   | "sigil"
   | "footing"
-  | "inlay";
+  | "inlay"
+  | "planetFocus"
+  | "remoteLandmark"
+  | "remoteTree"
+  | "remoteProps";
 
 export interface InspectorProjectionMetric {
   readonly instances: number;

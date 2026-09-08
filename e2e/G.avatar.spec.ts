@@ -113,7 +113,7 @@ async function frameStats(page: Page): Promise<FrameStats> {
             return;
           }
           const sorted = [...samples].sort((left, right) => left - right);
-          const canvas = document.querySelector<HTMLCanvasElement>(".stagewrap canvas");
+          const canvas = document.querySelector<HTMLCanvasElement>("[data-planet-globe] canvas, .stagewrap:not([hidden]) canvas");
           const dataUrlLength = canvas ? canvas.toDataURL().length : 0;
           resolve({
             sampleCount: samples.length,
@@ -152,10 +152,10 @@ function assertFast(elapsedMs: number, surface: string): void {
   ).toBeLessThanOrEqual(FAST_TRAVEL_UPPER_BOUND_MS);
 }
 
-test.describe("G 玩家头像 · 三种高度共用云、兔子与跳跃逻辑", () => {
+test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
-  test("星球、岛群、岛内都跟随真实点击，并在快速上限内落地", async ({ page }) => {
+  test("星球区域与两层头像都跟随真实点击，并在快速上限内就位", async ({ page }) => {
     const consoleErrors = watchConsole(page);
     const evidence: Record<string, unknown> = {
       viewport: page.viewportSize(),
@@ -163,47 +163,91 @@ test.describe("G 玩家头像 · 三种高度共用云、兔子与跳跃逻辑",
       carrierFootOffset: CLOUD_CARRIER_FOOT_OFFSET,
     };
 
-    await namedStep(page, "星球层选择另一个系列，云和兔子一起飞", async () => {
+    await namedStep(page, "星球层选择系列，真实球体转向对应大气区域", async () => {
       await page.goto(`${ONLINE_ORIGIN}/planet`, { waitUntil: "domcontentloaded" });
       await expect(page.locator("[data-planet-globe] canvas")).toBeVisible({ timeout: 30_000 });
       await page.waitForFunction(() => {
-        const bag = globalThis as unknown as {
-          __planetProjection?: () => { readonly clusterCount: number };
-          __avatarMotion?: Record<string, Motion>;
-        };
-        return Boolean(bag.__planetProjection?.().clusterCount && bag.__avatarMotion?.planet);
+        const bag = globalThis as any;
+        return bag.__planetProjection?.().domainCount > 0 &&
+          bag.three?.scene.getObjectByName("domain-globe-programming");
       });
-      const before = (await motion(page, "planet"))?.sequence ?? 0;
+      if (process.env.UNIVERSITY_TIMING_PLANET === "1") {
+        await page.evaluate(() => {
+          const receipt = { events: [] as { name: string; at: number }[], tasks: [] as { at: number; duration: number }[], frames: [] as { at: number; selected: string | null; angle: number | null }[] };
+          const observer = new PerformanceObserver((entries) => {
+            for (const task of entries.getEntries()) receipt.tasks.push({ at: task.startTime, duration: task.duration });
+          });
+          observer.observe({ type: "longtask", buffered: true });
+          for (const name of ["pointerdown", "pointerup", "click"]) {
+            document.addEventListener(name, () => receipt.events.push({ name, at: performance.now() }), { once: true, capture: true });
+          }
+          let active = true;
+          const sample = () => {
+            const bag = window as any;
+            const state = bag.three;
+            const focus = state?.scene.getObjectByName("planet-study-focus-buzz");
+            const angle = focus ? focus.getWorldPosition(state.camera.position.clone()).normalize().dot(state.camera.position.clone().normalize()) : null;
+            receipt.frames.push({ at: performance.now(), selected: bag.__planetProjection?.().selectedId ?? null, angle });
+            if (active && receipt.frames.length < 180) requestAnimationFrame(sample);
+          };
+          requestAnimationFrame(sample);
+          (window as any).__planetTiming = { receipt, stop: () => { active = false; observer.disconnect(); } };
+        });
+      }
+      // Opt-in CPU evidence for the actual pointer path. Traces/screenshots
+      // stay off during this measurement so capture cannot stretch the turn.
+      const profile = process.env.UNIVERSITY_PROFILE_PLANET
+        ? await page.context().newCDPSession(page)
+        : null;
+      if (profile) {
+        await profile.send("Profiler.enable");
+        await profile.send("Profiler.start");
+        await page.evaluate(() => {
+          const events: { name: string; at: number }[] = [];
+          for (const name of ["pointerdown", "pointerup", "click"] as const) {
+            document.addEventListener(name, () => events.push({ name, at: performance.now() }), {
+              capture: true,
+              once: true,
+            });
+          }
+          Object.assign(window, { __planetClickProfile: events });
+        });
+      }
       let startedAt = 0;
       await humanClick(page, page.getByRole("button", { name: /^Buzz\b/ }), "星球上的 Buzz 系列", {
-        beforePress: async () => {
-          startedAt = await page.evaluate(() => performance.now());
-        },
+        beforePress: async () => { startedAt = await page.evaluate(() => performance.now()); },
       });
-      const result = await waitForFlight(page, "planet", before);
+      await page.waitForFunction(() => {
+        const bag = globalThis as any;
+        if (bag.__planetProjection?.().selectedId !== "buzz") return false;
+        const state = bag.three;
+        const focus = state?.scene.getObjectByName("planet-study-focus-buzz");
+        if (!focus) return false;
+        const direction = focus.getWorldPosition(state.camera.position.clone()).normalize();
+        return direction.dot(state.camera.position.clone().normalize()) > .999999;
+      }, undefined, {polling:"raf", timeout:10_000});
       const elapsedMs = await page.evaluate((start) => performance.now() - start, startedAt);
-      // The browser-side receipt starts as soon as the real pointer is up;
-      // `elapsedMs` is retained to show the full pointer-to-landing latency.
-      assertFast(result.elapsedMs, "星球（报告轮询）");
-      expect(result.report.position).toEqual(result.report.target);
-      const cloud = await page.evaluate(() => {
-        const bag = globalThis as unknown as {
-          __cloudCarrierMotion?: Record<
-            string,
-            { readonly position: readonly number[]; readonly target: readonly number[] }
-          >;
-        };
-        return bag.__cloudCarrierMotion?.planet ?? null;
-      });
-      expect(cloud).toBeTruthy();
-      expect(cloud!.position).toEqual(cloud!.target);
+      if (process.env.UNIVERSITY_TIMING_PLANET === "1") {
+        const timing = await page.evaluate(() => {
+          const entry = (window as any).__planetTiming;
+          entry.stop();
+          return entry.receipt;
+        });
+        console.log("PLANET_TIMING", JSON.stringify({ startedAt, elapsedMs, ...timing }));
+      }
+      if (profile) {
+        const cpu = await profile.send("Profiler.stop");
+        const events = await page.evaluate(() => (window as any).__planetClickProfile);
+        const directory = process.env.UNIVERSITY_PROFILE_PLANET!;
+        mkdirSync(directory, { recursive: true });
+        writeFileSync(`${directory}/planet-click.cpuprofile`, JSON.stringify(cpu.profile));
+        writeFileSync(`${directory}/timing.json`, JSON.stringify({ startedAt, elapsedMs, events }, null, 2));
+        await profile.detach();
+      }
+      assertFast(elapsedMs, "星球区域转向");
+      await expect(page.getByRole("button", {name:"进入 Buzz", exact:true})).toBeVisible();
       const measured = await measuredScene(page);
-      evidence.planet = {
-        elapsedMs,
-        report: result.report,
-        cloud,
-        ...measured,
-      };
+      evidence.planet = {elapsedMs, selectedStudyId:"buzz", ...measured};
     });
 
     await namedStep(page, "岛群层点课程，云飞到岛上而不是改写导航焦点", async () => {

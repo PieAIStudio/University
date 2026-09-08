@@ -24,6 +24,7 @@ import { ISLAND_GRASS_BLADE_TRIANGLES } from "../island/island-grass-render.js";
 import type { IslandBlueprint } from "../island/island-blueprint.js";
 import type { IslandDressingPlan } from "../island/island-dressing.js";
 import type { InspectorAsset, InspectorRuntimeMetrics, InspectorSourceRef } from "./types.js";
+import { projectedMetric } from "./projected-metrics.js";
 
 function worldSource(file: string, exportName: string): InspectorSourceRef {
   return { file: `packages/world/src/${file}`, export: exportName };
@@ -110,8 +111,8 @@ export function proceduralAssetRows({
     sourcePath: "packages/world/src/island/foliage-geometry.ts",
     bytes: null,
     triangles: COURSE_TREE_CROWN_TRIANGLES_PER_LOBE,
-    instances: isWorld ? 0 : treePlacements * COURSE_CROWN_LOBES_PER_TREE,
-    placementCount: isWorld ? 0 : treePlacements,
+    instances: treePlacements * COURSE_CROWN_LOBES_PER_TREE,
+    placementCount: treePlacements,
     projectionKind: "procedural",
     bytesSource: null,
     trianglesSource: worldSource(
@@ -123,9 +124,7 @@ export function proceduralAssetRows({
     technique: ISLAND_TECHNIQUE_LOCK.tree.technique,
     techniqueSource: worldSource("island/island-technique-lock.ts", "ISLAND_TECHNIQUE_LOCK.tree"),
     mutable: false,
-    note: isWorld
-      ? "世界投影保留单树干剪影与低多边形圆锥，不加载课程冠团。"
-      : `共 ${treePlacements} 棵树，每棵 3 个冠团（每团 80 三角，绘制投影共 ${treePlacements * 3} 实例 / ${treePlacements * 240} 三角）。`,
+    note: `共 ${treePlacements} 棵树，每棵 3 个冠团（每团 80 三角，绘制投影共 ${treePlacements * 3} 实例 / ${treePlacements * 240} 三角）。`,
   };
 
   // 3. Bush crown lobes
@@ -187,6 +186,7 @@ export function proceduralAssetRows({
   };
 
   // 5. Lesson waypoint medallion
+  const medallionMetric = projectedMetric(runtime, "medallion");
   const medallionRow: InspectorAsset = {
     key: "procedural/lesson-medallion",
     role: "路标徽座",
@@ -197,12 +197,8 @@ export function proceduralAssetRows({
     sourcePath: "packages/world/src/grid/lesson-medallion.ts",
     bytes: null,
     triangles: getMedallionTriangles(),
-    instances: isWorld ? 0 : (runtime?.projected?.medallion?.instances ?? totalRouteNodes),
-    totalTriangles: isWorld
-      ? 0
-      : runtime?.projected
-        ? (runtime.projected.medallion?.triangles ?? 0)
-        : null,
+    instances: isWorld ? 0 : runtime ? (medallionMetric?.instances ?? null) : totalRouteNodes,
+    totalTriangles: isWorld ? 0 : runtime ? (medallionMetric?.triangles ?? null) : null,
     placementCount: isWorld ? 0 : totalRouteNodes,
     projectionKind: "procedural",
     bytesSource: null,
@@ -247,28 +243,14 @@ export function proceduralAssetRows({
       entry: "buildMedallionInlays",
       triangles: null,
     },
-    {
-      id: "worldTreeCrown",
-      key: "world-tree-crown",
-      name: "世界树冠剪影（六边锥）",
-      file: "island/island-foliage-render.tsx",
-      entry: "TreeSilhouette",
-      triangles: 12,
-    },
   ] as const;
   const extras: InspectorAsset[] = dependentRows.map((row) => {
-    const enabled = row.id === "worldTreeCrown" ? isWorld : !isWorld;
-    const measured = runtime?.projected?.[row.id];
-    const total = !enabled
-      ? 0
-      : runtime?.projected
-        ? (measured?.triangles ?? 0)
-        : row.id === "worldTreeCrown"
-          ? treePlacements * 12
-          : null;
+    const enabled = !isWorld;
+    const measured = projectedMetric(runtime, row.id);
+    const total = !enabled ? 0 : runtime ? (measured?.triangles ?? null) : null;
     return {
       key: `procedural/${row.key}`,
-      role: row.id === "worldTreeCrown" ? "远景树冠" : "路标接地与刻纹",
+      role: "路标接地与刻纹",
       assetId: row.key,
       name: row.name,
       pack: "自有程序化",
@@ -277,18 +259,14 @@ export function proceduralAssetRows({
       bytes: null,
       triangles: row.triangles,
       totalTriangles: total,
-      instances: !enabled
-        ? 0
-        : (measured?.instances ?? (row.id === "worldTreeCrown" ? treePlacements : null)),
+      instances: !enabled ? 0 : (measured?.instances ?? null),
+      placementCount: !enabled ? 0 : (measured?.instances ?? null),
       projectionKind: "procedural",
       bytesSource: null,
       trianglesSource: worldSource(row.file, row.entry),
       instancesSource: worldSource("inspector/projected-metrics.ts", "measureProjectedGeometry"),
-      techniqueLock: row.id === "worldTreeCrown" ? "tree" : "lessonNode",
-      technique:
-        row.id === "worldTreeCrown"
-          ? "每棵 12 三角的远景剪影，不加载课程冠团。"
-          : "读取实际已提交的共享几何；不以刚性徽座三角数代替刻纹或贴地网格。",
+      techniqueLock: "lessonNode",
+      technique: "读取实际已提交的共享几何；不以刚性徽座三角数代替刻纹或贴地网格。",
       techniqueSource: worldSource(row.file, row.entry),
       mutable: false,
       note: !enabled
@@ -298,5 +276,7 @@ export function proceduralAssetRows({
           : `当前投影共 ${total} 三角；不含阴影重复绘制或后处理。`,
     };
   });
-  return [grassRow, treeCrownRow, bushCrownRow, flameRow, medallionRow, ...extras];
+  return isWorld
+    ? [grassRow, bushCrownRow, flameRow, medallionRow, ...extras]
+    : [grassRow, treeCrownRow, bushCrownRow, flameRow, medallionRow, ...extras];
 }

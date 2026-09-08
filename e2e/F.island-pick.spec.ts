@@ -41,6 +41,39 @@ async function visibleCourseLabels(page: Page): Promise<Locator> {
   return labels;
 }
 
+async function visibleCourseSnapshot(page: Page): Promise<{ id: string; box: Box }[]> {
+  const labels = await visibleCourseLabels(page);
+  // Read identities and rectangles in one browser turn. The .is-visible list
+  // changes as the rail finishes collapsing and the projector chooses labels;
+  // retaining nth(i) across awaits can silently turn a left-hand island into
+  // an unrelated right-hand island before the pointer is sent.
+  return labels.evaluateAll((elements) =>
+    elements.flatMap((element) => {
+      const id = element.getAttribute("data-map-marker");
+      const { x, y, width, height } = element.getBoundingClientRect();
+      return id && width >= 4 && height >= 4 ? [{ id, box: { x, y, width, height } }] : [];
+    }),
+  );
+}
+
+async function waitForCourseLabelLayout(page: Page): Promise<void> {
+  let previous = "";
+  let stableSamples = 0;
+  await expect.poll(async () => {
+    const snapshot = await visibleCourseSnapshot(page);
+    const signature = JSON.stringify(snapshot.map(({ id, box }) => [
+      id, Math.round(box.x), Math.round(box.y), Math.round(box.width), Math.round(box.height),
+    ]));
+    stableSamples = signature === previous ? stableSamples + 1 : 0;
+    previous = signature;
+    return stableSamples;
+  }, { message: "课程标签须在栏位动画和相机投影后保持身份与位置稳定", intervals: [100] }).toBeGreaterThanOrEqual(3);
+}
+
+function courseLabel(page: Page, id: string): Locator {
+  return page.locator(`button.label--course[data-map-marker=${JSON.stringify(id)}]`);
+}
+
 /**
  * Real pointer on the course-name button that sits on the island.
  *
@@ -51,11 +84,16 @@ async function visibleCourseLabels(page: Page): Promise<Locator> {
  */
 async function clickCourseLabel(page: Page, label: Locator): Promise<Box> {
   // The visible-label list is allowed to reflow when the entry hint retires
-  // after a pick. Resolve the chosen course by its accessible name before the
+  // after a pick. Resolve the chosen course by its stable marker ID before the
   // click, and retain the pre-click box: it is the screen point the pointer
   // actually aimed at, not a different nth label after the list reflowed.
-  const name = (await label.innerText()).trim();
-  const target = page.getByRole("button", { name, exact: true });
+  // innerText concatenates an inline rewrite badge without a separator,
+  // whereas the accessibility name separates child text nodes. It is not a
+  // reliable way to recover a role locator for that same button.
+  const id = await label.getAttribute("data-map-marker");
+  if (!id) throw new Error("课名标签缺少稳定地图身份");
+  const target = courseLabel(page, id);
+  await expect(target).toHaveCount(1);
   await waitForStableBox(target);
   const box = await target.boundingBox();
   if (!box) throw new Error("课名标签没有屏幕矩形");
@@ -116,34 +154,25 @@ async function clickEmptySky(page: Page): Promise<void> {
 }
 
 async function pickLeftishIsland(page: Page): Promise<Box> {
-  const labels = await visibleCourseLabels(page);
-  const count = await labels.count();
+  await waitForCourseLabelLayout(page);
   const viewport = page.viewportSize();
   if (!viewport) throw new Error("没有视口");
-  let best: { label: Locator; box: Box } | null = null;
-  for (let i = 0; i < count; i += 1) {
-    const label = labels.nth(i);
-    const box = await label.boundingBox();
-    if (!box || box.width < 4) continue;
-    if (box.x + box.width / 2 > viewport.width * 0.55) continue;
-    if (!best || box.x < best.box.x) best = { label, box };
-  }
-  const chosen = best ?? { label: labels.first(), box: (await labels.first().boundingBox())! };
-  return clickCourseLabel(page, chosen.label);
+  const chosen = (await visibleCourseSnapshot(page))
+    .filter(({ box }) => center(box).x <= viewport.width * 0.55)
+    .sort((a, b) => a.box.x - b.box.x)[0];
+  if (!chosen) throw new Error("没有真实偏左的可见课名，不能用右侧岛冒充左岛验收");
+  const clicked = await clickCourseLabel(page, courseLabel(page, chosen.id));
+  expect(center(clicked).x, "实际点击的同一座岛必须仍在左侧").toBeLessThanOrEqual(
+    viewport.width * 0.55,
+  );
+  return clicked;
 }
 
 async function pickRightEdgeIsland(page: Page): Promise<Box> {
-  const labels = await visibleCourseLabels(page);
-  const count = await labels.count();
-  let rightmost: { label: Locator; box: Box } | null = null;
-  for (let i = 0; i < count; i += 1) {
-    const label = labels.nth(i);
-    const box = await label.boundingBox();
-    if (!box) continue;
-    if (!rightmost || box.x + box.width > rightmost.box.x + rightmost.box.width) {
-      rightmost = { label, box };
-    }
-  }
+  await waitForCourseLabelLayout(page);
+  const rightmost = (await visibleCourseSnapshot(page)).sort(
+    (a, b) => center(b.box).x - center(a.box).x,
+  )[0];
   if (!rightmost) throw new Error("地图上没有可见的课名");
   const viewport = page.viewportSize();
   if (!viewport) throw new Error("没有视口");
@@ -162,20 +191,14 @@ async function pickRightEdgeIsland(page: Page): Promise<Box> {
     await page.mouse.up();
     await page.waitForTimeout(500);
   }
-  const labelsAfter = await visibleCourseLabels(page);
-  const afterCount = await labelsAfter.count();
-  let next: Locator = labelsAfter.first();
-  let nextBox: Box | null = null;
-  for (let i = 0; i < afterCount; i += 1) {
-    const label = labelsAfter.nth(i);
-    const box = await label.boundingBox();
-    if (!box) continue;
-    if (!nextBox || box.x > nextBox.x) {
-      next = label;
-      nextBox = box;
-    }
-  }
-  return clickCourseLabel(page, next);
+  await waitForCourseLabelLayout(page);
+  const next = (await visibleCourseSnapshot(page)).sort(
+    (a, b) => center(b.box).x - center(a.box).x,
+  )[0];
+  if (!next) throw new Error("平移后没有真实可见的课程岛");
+  const clicked = await clickCourseLabel(page, courseLabel(page, next.id));
+  expect(center(clicked).x, "翻边验收必须实际点到右侧岛").toBeGreaterThan(viewport.width * 0.62);
+  return clicked;
 }
 
 async function assertCardFollowsIsland(page: Page, island: Box): Promise<Box> {

@@ -15,7 +15,7 @@ import {
   frameWorld,
   islandBlueprint,
   islandThemeSelectionForCourse,
-  placeWorld,
+  placeStudyArchipelago,
   placeCourse,
   COURSE_POLAR,
   type CourseNode,
@@ -242,7 +242,9 @@ function catalogLabel(asset: { readonly pack: string; readonly assetId: string }
 }
 
 function downloadJson(filename: string, value: unknown): void {
-  const blob = new Blob([JSON.stringify(value, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(value, null, 2)], {
+    type: "application/json",
+  });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -763,7 +765,9 @@ function RolePicker({
   const hasInstances = role.currentKeys.length > 0;
   return (
     <GameField
-      label={translate("app.mapstudio.mapStudioScreen.copy.value0模型", { value0: role.label })}
+      label={translate("app.mapstudio.mapStudioScreen.copy.value0模型", {
+        value0: role.label,
+      })}
       hint={`${sourceText(role.source)}；${hasInstances ? roleCurrentLabel(role, description.dressing.assets) : translate("app.mapstudio.mapStudioScreen.copy.这一层当前没有实例")} ${role.note ?? ""}`}
     >
       <select
@@ -838,7 +842,10 @@ export function MapStudioScreen({
 
   const source = useMemo(() => progressSourceOf(progressPort), [progressPort]);
   const previewWorld = useMemo(
-    () => (nodes && selectedStudyId ? placeWorld(nodes, courseProgress, selectedStudyId) : world),
+    () =>
+      nodes && selectedStudyId
+        ? placeStudyArchipelago(nodes, courseProgress, selectedStudyId)
+        : world,
     [courseProgress, nodes, selectedStudyId, world],
   );
   const selectedCourse =
@@ -867,15 +874,24 @@ export function MapStudioScreen({
   const description = useMemo(() => {
     if (activeLayer === "planet") {
       return describePlanetLayer({
-        studyIds: planetStudies.map((study) => study.id),
-        courseCount: planetStudies.reduce((total, study) => total + study.courseCount, 0),
+        studies: planetStudies,
+        runtime,
       });
     }
     if (activeLayer === "world") {
       return describeWorldLayer({
         islands:
           previewWorld?.placements.flatMap((entry) =>
-            entry.blueprint ? [{ blueprint: entry.blueprint, targetRadius: entry.radius }] : [],
+            entry.blueprint
+              ? [
+                  {
+                    id: `${entry.node.studyId}/${entry.node.courseId}`,
+                    blueprint: entry.blueprint,
+                    position: entry.position,
+                    targetRadius: entry.radius,
+                  },
+                ]
+              : [],
           ) ?? [],
         runtime,
         skyStudyId: selectedStudyId,
@@ -1030,7 +1046,10 @@ export function MapStudioScreen({
   const camera =
     activeLayer === "world"
       ? worldFrame
-      : (courseFrame ?? { cameraFrom: [0, 22, 48] as const, lookAt: [0, 0, 0] as const });
+      : (courseFrame ?? {
+          cameraFrom: [0, 22, 48] as const,
+          lookAt: [0, 0, 0] as const,
+        });
 
   const modificationText = useMemo(
     () => buildModificationText(description, controlValues, assetChoices),
@@ -1187,7 +1206,12 @@ export function MapStudioScreen({
                   selectedId={selectedStudyId}
                   onSelect={onSelectStudy}
                 >
-                  <PreviewOverrideBridge layer="planet" tuning={tuning} onMetrics={setRuntime} />
+                  <PreviewOverrideBridge
+                    key={selectedStudyId}
+                    layer="planet"
+                    tuning={tuning}
+                    onMetrics={setRuntime}
+                  />
                 </PlanetStage>
               ) : (
                 <WorldMapCanvas
@@ -1214,13 +1238,19 @@ export function MapStudioScreen({
                           assetRevision={assetRevision}
                         />
                         <PreviewOverrideBridge
+                          key={selectedCourseId}
                           layer="island"
                           tuning={tuning}
                           onMetrics={setRuntime}
                         />
                       </>
                     ) : (
-                      <PreviewOverrideBridge layer="world" tuning={tuning} onMetrics={setRuntime} />
+                      <PreviewOverrideBridge
+                        key={selectedStudyId}
+                        layer="world"
+                        tuning={tuning}
+                        onMetrics={setRuntime}
+                      />
                     )
                   }
                 />

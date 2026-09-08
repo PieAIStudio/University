@@ -3,8 +3,8 @@
  *
  * Course trees keep the six registered donor trunks and replace the retired
  * alpha cards with three overlapping icosahedron lobes (V5 K / ADR-0008).
- * Bushes are three flattened lobes in a second instanced field. World keeps
- * one selected trunk plus the existing 12-triangle cone canopy.
+ * Bushes are three flattened lobes in a second instanced field. Distant
+ * vegetation belongs exclusively to remote-props; it never loads donor trunks.
  *
  * Placement is not authored here. IslandDressing passes IslandField points;
  * this module only projects those points.
@@ -93,7 +93,10 @@ function SolidCrownField({
   readonly placementCount?: number;
 }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
-  const geometry = useMemo(() => createSmoothIcosahedron(detail), [detail]);
+  // A crown represents many sun-facing leaves, not an opaque polished ball.
+  // Bend its shared normals upward to soften the hard Lambert terminator;
+  // positions, contact, shadows and geometry budgets remain unchanged.
+  const geometry = useMemo(() => createSmoothIcosahedron(detail, 1.2), [detail]);
   const material = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
@@ -137,14 +140,10 @@ function SolidCrownField({
   );
 }
 
-function normalizedTrunkVariants(
-  scene: THREE.Object3D,
-  maxVariants = Number.POSITIVE_INFINITY,
-): readonly TrunkVariant[] {
+function normalizedTrunkVariants(scene: THREE.Object3D): readonly TrunkVariant[] {
   scene.updateMatrixWorld(true);
   const variants: TrunkVariant[] = [];
   scene.traverse((object) => {
-    if (variants.length >= maxVariants) return;
     const mesh = object as THREE.Mesh;
     if (!mesh.isMesh) return;
     const sourceMaterial = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
@@ -318,73 +317,6 @@ function CourseBushFoliage({ placements }: { readonly placements: readonly Place
   );
 }
 
-function TreeSilhouette({
-  placements,
-  castShadow = true,
-}: {
-  readonly placements: readonly Placement[];
-  readonly castShadow?: boolean;
-}) {
-  const geometry = useMemo(() => {
-    const canopy = new THREE.ConeGeometry(0.42, 0.7, 6);
-    canopy.translate(0, 0.72, 0);
-    return canopy;
-  }, []);
-  const material = useMemo(
-    () => new THREE.MeshStandardMaterial({ color: 0x5d9045, flatShading: true, roughness: 0.95 }),
-    [],
-  );
-  const mesh = useRef<THREE.InstancedMesh>(null);
-  useLayoutEffect(() => {
-    const target = mesh.current;
-    if (!target) return;
-    placements.forEach((placement, index) => {
-      DUMMY.position.copy(placement.position);
-      DUMMY.quaternion.identity();
-      DUMMY.scale.setScalar(placement.height);
-      DUMMY.updateMatrix();
-      target.setMatrixAt(index, DUMMY.matrix);
-    });
-    target.instanceMatrix.needsUpdate = true;
-    target.computeBoundingSphere();
-  }, [placements]);
-  useEffect(
-    () => () => {
-      geometry.dispose();
-      material.dispose();
-    },
-    [geometry, material],
-  );
-  if (placements.length === 0) return null;
-  return (
-    <instancedMesh
-      ref={mesh}
-      args={[geometry, material, placements.length]}
-      castShadow={castShadow}
-      frustumCulled={false}
-      userData={{
-        islandLookWorldTreeSilhouetteTriangles: 12,
-        islandLookPlacementCount: placements.length,
-      }}
-    />
-  );
-}
-
-function WorldTreeSilhouette({ placements }: { readonly placements: readonly Placement[] }) {
-  const tree = useIslandGLTF(TREE_SRC);
-  // The aerial projection has no pixels for six trunk silhouettes. One
-  // selected donor trunk keeps the source material while avoiding six draw
-  // calls per island; course crown lobes never enter this branch.
-  const variants = useMemo(() => normalizedTrunkVariants(tree.scene, 1), [tree]);
-  useEffect(() => () => disposeTrunkVariants(variants), [variants]);
-  return (
-    <>
-      <TreeTrunks variants={variants} placements={placements} castShadow={false} />
-      <TreeSilhouette placements={placements} castShadow={false} />
-    </>
-  );
-}
-
 export function isIslandFoliagePlacement(placement: IslandDressingPlacement): boolean {
   return (
     placement.packId === ELEMENTAL_SERENITY_PACK &&
@@ -392,46 +324,35 @@ export function isIslandFoliagePlacement(placement: IslandDressingPlacement): bo
   );
 }
 
-function toPlacement(
-  placement: IslandDressingPlacement,
-  scale: number,
-  heightMultiplier: number,
-): Placement {
+function toPlacement(placement: IslandDressingPlacement, scale: number): Placement {
   return {
     position: new THREE.Vector3(placement.x * scale, placement.y * scale, placement.z * scale),
-    height: placement.height * scale * heightMultiplier,
+    height: placement.height * scale,
     turn: placement.turn,
   };
 }
 
 export function IslandFoliage({
   plan,
-  detail,
   scale,
-  heightMultiplier,
 }: {
   readonly plan: IslandDressingPlan;
-  readonly detail: "course" | "world";
   readonly scale: number;
-  readonly heightMultiplier: number;
 }) {
   const treePlacements = useMemo(
     () =>
       plan.placements
         .filter((placement) => placement.assetId === TREE_ASSET_ID)
-        .map((placement) => toPlacement(placement, scale, heightMultiplier)),
-    [heightMultiplier, plan, scale],
+        .map((placement) => toPlacement(placement, scale)),
+    [plan, scale],
   );
   const bushPlacements = useMemo(
     () =>
       plan.placements
         .filter((placement) => placement.assetId === BUSH_ASSET_ID)
-        .map((placement) => toPlacement(placement, scale, heightMultiplier)),
-    [heightMultiplier, plan, scale],
+        .map((placement) => toPlacement(placement, scale)),
+    [plan, scale],
   );
-  if (detail === "world") {
-    return treePlacements.length > 0 ? <WorldTreeSilhouette placements={treePlacements} /> : null;
-  }
   return (
     <>
       {treePlacements.length > 0 ? <CourseTreeFoliage placements={treePlacements} /> : null}

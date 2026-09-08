@@ -4,8 +4,11 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import { glbModelInfo } from "../inspector/triangle-count.js";
+
 import { islandBlueprint, sampleIslandSurface } from "./island-blueprint.js";
 import {
+  BRIDGE_FRACTIONS,
   COMPOSITION_SCALES,
   COMPOSITION_SOURCE_EXTENTS,
   ROADSIDE_CAMP_ASSEMBLY,
@@ -103,6 +106,50 @@ describe("oriented footprints", () => {
       worldSizeForAsset("wall-doorway-square", 2.3).z,
       3,
     );
+  });
+
+  it("computes normalized rock dimensions matching donor GLB proportions at height 1", () => {
+    // Independent known assertion: largeA at height 1 should be width ~3.021 and depth ~3.909
+    const large = worldSizeForAsset("rock_largeA", 1);
+    expect(large.x).toBeCloseTo(3.021, 2);
+    expect(large.y).toBe(1);
+    expect(large.z).toBeCloseTo(3.909, 2);
+
+    // Independent known assertion: smallA at height 1 should be width ~1.887
+    const small = worldSizeForAsset("rock_smallA", 1);
+    expect(small.x).toBeCloseTo(1.887, 2);
+    expect(small.y).toBe(1);
+    expect(small.z).toBeCloseTo(1.887, 2);
+  });
+
+  it("verifies source bounds from actual donor GLB assets", () => {
+    const largeGlb = readFileSync(
+      new URL(
+        "../../../../apps/university/public/kenney/r01/nature/rock_largeA.glb",
+        import.meta.url,
+      ),
+    );
+    const largeInfo = glbModelInfo(
+      largeGlb.buffer.slice(largeGlb.byteOffset, largeGlb.byteOffset + largeGlb.byteLength),
+    );
+    expect(largeInfo).not.toBeNull();
+    expect(largeInfo!.size![0]).toBeCloseTo(COMPOSITION_SOURCE_EXTENTS.rock_largeA.x, 3);
+    expect(largeInfo!.size![1]).toBeCloseTo(COMPOSITION_SOURCE_EXTENTS.rock_largeA.y, 3);
+    expect(largeInfo!.size![2]).toBeCloseTo(COMPOSITION_SOURCE_EXTENTS.rock_largeA.z, 3);
+
+    const smallGlb = readFileSync(
+      new URL(
+        "../../../../apps/university/public/kenney/r01/nature/rock_smallA.glb",
+        import.meta.url,
+      ),
+    );
+    const smallInfo = glbModelInfo(
+      smallGlb.buffer.slice(smallGlb.byteOffset, smallGlb.byteOffset + smallGlb.byteLength),
+    );
+    expect(smallInfo).not.toBeNull();
+    expect(smallInfo!.size![0]).toBeCloseTo(COMPOSITION_SOURCE_EXTENTS.rock_smallA.x, 3);
+    expect(smallInfo!.size![1]).toBeCloseTo(COMPOSITION_SOURCE_EXTENTS.rock_smallA.y, 3);
+    expect(smallInfo!.size![2]).toBeCloseTo(COMPOSITION_SOURCE_EXTENTS.rock_smallA.z, 3);
   });
 });
 
@@ -329,6 +376,24 @@ describe("bridge span gate", () => {
     expect(result.ok, result.reason).toBe(true);
     expect(result.placements).toHaveLength(1);
     expect(result.placements?.[0]).toMatchObject({ assetId: "bridge", y: 0.7 });
+  });
+
+  it("refuses a bridge without support and never returns a partial deck", () => {
+    expect(BRIDGE_FRACTIONS.length).toBeGreaterThan(0);
+    expect(BRIDGE_FRACTIONS.length).toBeLessThanOrEqual(8);
+    const blueprint = makeBlueprint();
+    const result = evaluateAssembly(
+      ROUTE_BRIDGE_ASSEMBLY,
+      {
+        blueprint,
+        field: islandFieldFor(blueprint),
+        heightAt: () => 0.4,
+      },
+      { point: { x: 0, z: 0 }, tangent: { x: 1, z: 0 }, normal: { x: 0, z: 1 } },
+    );
+    expect(result.ok).toBe(false);
+    expect(result.placements).toBeUndefined();
+    expect(result.reason).toBeTruthy();
   });
 });
 

@@ -112,6 +112,7 @@ function Pipeline({
   // Priority above zero: R3F stops rendering for us, and this is the loop.
   const measuring = useRef<((report: unknown) => void) | null>(null);
   const frameNumber = useRef(0);
+  const sceneRender = useRef({ calls: 0, triangles: 0, lines: 0, points: 0 });
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -126,7 +127,6 @@ function Pipeline({
   const recordFrame = (startedAt: number, sampled: boolean) => {
     if (!import.meta.env.DEV) return;
     const bag = globalThis as unknown as {
-      __lastStageSceneRender?: { calls: number; triangles: number };
       __stageFrameMetrics?: unknown;
     };
     const full = {
@@ -137,9 +137,10 @@ function Pipeline({
     };
     bag.__stageFrameMetrics = {
       frame: ++frameNumber.current,
-      scene: bag.__lastStageSceneRender,
+      sceneUuid: scene.uuid,
+      scene: sceneRender.current,
       full,
-      postCalls: full.calls - (bag.__lastStageSceneRender?.calls ?? 0),
+      postCalls: full.calls - sceneRender.current.calls,
       submissionMs: performance.now() - startedAt,
       measurementReadback: sampled,
       geometries: gl.info.memory.geometries,
@@ -155,20 +156,16 @@ function Pipeline({
 
   const recordSceneRender = () => {
     if (!import.meta.env.DEV) return;
-    const bag = globalThis as unknown as {
-      __lastStageSceneRender?: {
-        readonly calls: number;
-        readonly triangles: number;
-        readonly lines: number;
-        readonly points: number;
-      };
-    };
-    bag.__lastStageSceneRender = {
+    sceneRender.current = {
       calls: gl.info.render.calls,
       triangles: gl.info.render.triangles,
       lines: gl.info.render.lines,
       points: gl.info.render.points,
     };
+    // Legacy scene-only receipts still read this snapshot. Complete-frame
+    // accounting uses the local ref, never another canvas's global snapshot.
+    (globalThis as unknown as { __lastStageSceneRender?: unknown }).__lastStageSceneRender =
+      sceneRender.current;
   };
 
   useEffect(() => {
@@ -216,10 +213,16 @@ function Pipeline({
     };
   }, [clock, lookSource]);
 
-  useFrame(() => {
+  useFrame((state) => {
     const startedAt = import.meta.env.DEV ? performance.now() : 0;
     const sampled = measuring.current !== null;
-    if (import.meta.env.DEV) gl.info.reset();
+    if (import.meta.env.DEV) {
+      // The map canvas survives while the separate planet viewport is open.
+      // onCreated alone leaves the handle on that planet after it unmounts.
+      // Publish the owner of this rendered frame when the map resumes.
+      (globalThis as unknown as { three?: unknown }).three = state;
+      gl.info.reset();
+    }
     if (!pass) {
       const previousColorSpace = gl.outputColorSpace;
       const previousToneMapping = gl.toneMapping;
@@ -375,16 +378,25 @@ function ScenePresence({
   readonly onReady?: () => void;
   readonly onBusy?: () => void;
 }) {
+  const reported = useRef(false);
   useLayoutEffect(() => {
-    onReady?.();
+    reported.current = false;
     return () => onBusy?.();
   }, [onReady, onBusy]);
+  // Pipeline owns priority 1. Ready means an actual completed frame, not just
+  // a React commit while the browser's frame scheduler may still be stalled.
+  useFrame(() => {
+    if (reported.current) return;
+    reported.current = true;
+    onReady?.();
+  }, 2);
   return null;
 }
 
 interface StageProps {
   readonly children: ReactNode;
   readonly cameraFrom: readonly [number, number, number];
+  readonly cameraFar?: number;
   readonly lookAt?: readonly [number, number, number];
   /** The DOM overlay's cue that the first real scene has committed. */
   readonly onSceneReady?: () => void;
@@ -450,6 +462,7 @@ export function Stage({
   children,
   cameraFrom,
   lookAt = [0, 0, 0],
+  cameraFar = 1200,
   onSceneReady,
   onSceneBusy,
   onContextLost,
@@ -505,7 +518,7 @@ export function Stage({
         position: [...cameraFrom],
         fov: fixedCamera?.fov ?? (tier === "mobile" ? 42 : 34),
         near: 0.5,
-        far: 1200,
+        far: cameraFar,
       }}
       onPointerMissed={onPointerMissed}
       onCreated={(state) => {

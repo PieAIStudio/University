@@ -1,3 +1,28 @@
+.map-framing-tools {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
+.map-framing-tools p {
+  margin: 0.25rem 0 0;
+  padding: 0.5rem;
+  color: var(--game-ui-text);
+  background: var(--game-ui-panel);
+}
+
+.map-framing-tools button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.map-framing-tools[data-has-map-hint="true"] {
+  bottom: calc(4rem + env(safe-area-inset-bottom));
+}
+
 /*
   DOM overlay for the shared scene. Labels are DOM, never geometry.
 
@@ -134,6 +159,19 @@ button.label:focus-visible {
   font-weight: 400;
   letter-spacing: 0;
   opacity: 0.78;
+}
+
+.label--course .label__course-progress {
+  display: inline-block;
+  margin-inline-start: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.label--course[data-course-state="live"] .label__course-progress {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 .label--course .label__course-status {

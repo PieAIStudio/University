@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-07
+last_reviewed: 2026-09-08
 domain: architecture
 tags:
   - 3d
@@ -160,9 +160,17 @@ meshes or full dressing plan just to display or inspect a catalogue. Production
 world draws are `RemoteIslandField` plus `RemotePropsField` only.
 `IslandDressing` / `IslandFoliage` do not run at world or planet detail.
 Inspector counts describe the projection currently drawn, with unknown values
-explicit, including unknown GPU time and VRAM. The homologous-shape domain
+explicit. VRAM remains unknown; standalone R35 Mac GPU timing in ADR-0008 is
+not a value the inspector may pretend to measure on another device. The homologous-shape domain
 worker reuses the same generators and has no early self-proof of cold-load
 duration.
+
+`domain-preparation-client.ts` owns the worker and CPU-only bounded cache.
+Each callback belongs to the worker that installed it; termination clears
+handlers, and already-queued errors cannot cancel a later retry's jobs. A timeout
+only cancels a still-pending request. R35's late-error regression first reproduced
+the new-worker cancellation before this owner check; renderer resource disposal
+and worker transport identity are separate lifetime contracts.
 
 
 ## 2026-09-07 amendment: domains own globes; studies own atmospheric regions

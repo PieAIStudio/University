@@ -588,6 +588,7 @@ export function App() {
         // No world in a course view: the path below replaces it rather than
         // sitting behind it.
         world={view.kind === "world" ? world : null}
+        courseViewKey={view.kind === "course" ? `${view.studyId}/${view.courseId}` : null}
         cameraFrom={stageCameraFrom}
         lookAt={stageLookAt}
         learnerAt={learnerAt}

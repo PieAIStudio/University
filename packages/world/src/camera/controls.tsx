@@ -34,6 +34,7 @@ import type { Marker } from "../Maps";
 import { pinchDollyArmed } from "./pinch-dolly.js";
 import { mapOverlayObstacles, stageRelativeBox } from "../labels/chrome-obstacles.js";
 import { wheelIntent } from "./wheel-intent.js";
+import { usePrefersReducedMotion } from "../reduced-motion.js";
 
 /**
  * MapControls only handles `TWO` as `DOLLY_PAN` or `DOLLY_ROTATE`. Assigning
@@ -175,6 +176,7 @@ export function Controls({
   polar,
   fixedCamera,
   onInteract,
+  distanceRange,
 }: {
   target: readonly [number, number, number];
   /** The one tilt this view is allowed, in radians from straight down. */
@@ -185,11 +187,14 @@ export function Controls({
     readonly lookAt: readonly [number, number, number];
   } | null;
   readonly onInteract?: () => void;
+  readonly distanceRange?: readonly [number, number];
 }) {
   const { camera, gl } = useThree();
   const controls = useRef<MapControls | null>(null);
   const fixedCameraRef = useRef(fixedCamera ?? null);
   const onInteractRef = useRef(onInteract);
+  const distanceRangeRef = useRef(distanceRange);
+  distanceRangeRef.current = distanceRange;
 
   const polarRef = useRef(polar);
   polarRef.current = polar;
@@ -226,14 +231,17 @@ export function Controls({
     if (!instance) return;
     instance.minPolarAngle = polar;
     instance.maxPolarAngle = polar;
-    if (Math.abs(polar - COURSE_POLAR) < 1e-6) {
+    if (distanceRange) {
+      instance.minDistance = distanceRange[0];
+      instance.maxDistance = distanceRange[1];
+    } else if (Math.abs(polar - COURSE_POLAR) < 1e-6) {
       instance.minDistance = COURSE_DISTANCE_MIN;
       instance.maxDistance = COURSE_DISTANCE_MAX;
     } else {
       instance.minDistance = WORLD_DISTANCE_MIN;
       instance.maxDistance = WORLD_DISTANCE_MAX;
     }
-  }, [polar]);
+  }, [polar, distanceRange?.[0], distanceRange?.[1]]);
 
   /**
    * A two-finger trackpad swipe pans. A mouse wheel zooms.
@@ -319,7 +327,7 @@ export function Controls({
     // polar) — so the lever is distance, not height. A world-to-course flight
     // that arrives outside the course zoom range is eased to the 23-unit
     // landing distance; a normal course URL starts inside the same range.
-    if (Math.abs(polarRef.current - COURSE_POLAR) < 1e-6) {
+    if (!distanceRangeRef.current && Math.abs(polarRef.current - COURSE_POLAR) < 1e-6) {
       const dist = camera.position.distanceTo(instance.target);
       if (dist > COURSE_DISTANCE_MAX + 0.05) {
         const dir = camera.position.clone().sub(instance.target);
@@ -360,6 +368,7 @@ export function Flight({
   const { camera } = useThree();
   const from = useRef({ position: new THREE.Vector3(), target: new THREE.Vector3(), elapsed: 0 });
   const first = useRef(true);
+  const reducedMotion = usePrefersReducedMotion();
 
   // Keyed on the numbers, not on the arrays.
   //
@@ -387,7 +396,7 @@ export function Flight({
     // Arriving from a URL has no previous shot to fly out of, so there is
     // nothing to animate — snap, and let the flight be for navigation the
     // learner actually performed.
-    if (first.current) {
+    if (first.current || reducedMotion) {
       first.current = false;
       camera.position.set(...to);
       flight.elapsed = 1;

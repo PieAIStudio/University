@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { islandBlueprint, sampleIslandSurface } from "./island-blueprint.js";
@@ -6,15 +8,23 @@ import {
   footprintSamplePoints,
   orientedFootprintFor,
 } from "./island-composition.js";
+import { filterLitCampPlacements } from "./island-campfire.js";
 import {
+  assemblyFallbackFromPlacements,
   distanceToIslandRoute,
   islandDressingSafetyZones,
+  islandRouteClearance,
+  placeBridgeRestClearing,
+  outpostFootprint,
   planIslandDressing,
+  sceneryBandForLessonCount,
+  type IslandDressingPlacement,
 } from "./island-dressing.js";
 import { isIslandFoliagePlacement } from "./island-foliage-render.js";
-import { sampleIslandTerrainTop } from "./island-geometry.js";
+import { islandTerrainFootprintRange, sampleIslandTerrainTop } from "./island-geometry.js";
 import { islandFieldFor, sampleIslandField } from "./island-field.js";
 import { islandThemeSelectionForCourse, recipeById, type IslandRecipe } from "./kenney-recipes.js";
+import { resolveIslandRuntimeAssetFromRecipe } from "./island-asset-registry.js";
 
 const selection = islandThemeSelectionForCourse("turing-pact", "foundations-before-zero");
 const r01 = recipeById("R01-forest-academy") as IslandRecipe;
@@ -43,6 +53,33 @@ function makeBlueprint(unitIds?: readonly string[]) {
 }
 
 describe("Island dressing", () => {
+  it("does not disguise an unshipped accent as an oversized fountain or duplicate fallback model", () => {
+    for (const [studyId, courseId, lessonCount] of [
+      ["supaluv", "ai-cost-and-boundaries", 4],
+      ["supaluv", "generated-assets", 3],
+      ["buzz", "buzz-orientation", 12],
+      ["general", "product-website", 19],
+    ] as const) {
+      const blueprint = islandBlueprint({
+        studyId,
+        courseId,
+        lessonCount,
+        themeSelection: islandThemeSelectionForCourse(studyId, courseId),
+      });
+      const plan = planIslandDressing(blueprint, "course");
+      expect(plan.placements.length, courseId).toBeGreaterThan(0);
+      for (const placement of plan.placements) {
+        const resolved = resolveIslandRuntimeAssetFromRecipe(placement.packId, placement.assetId);
+        expect(resolved, placement.id).not.toBeNull();
+        expect(resolved?.usedFallback, `${courseId}/${placement.id}`).toBe(false);
+      }
+    }
+    const realMarket = planIslandDressing(makeBlueprint(), "course").placements;
+    expect(
+      realMarket.some((part) => part.outpostId === "route-market" && part.assetId === "stall"),
+    ).toBe(true);
+  });
+
   it("builds a deterministic, curated R01 composition inside the island", () => {
     const blueprint = makeBlueprint();
     const first = planIslandDressing(blueprint, "course");
@@ -107,7 +144,16 @@ describe("Island dressing", () => {
       const surface = sampleIslandSurface(blueprint, placement.x, placement.z);
       const renderedTop = sampleIslandTerrainTop(blueprint, "course", placement.x, placement.z);
       expect(surface.inside, placement.id).toBe(true);
-      if (!placement.assemblyId) {
+      if (placement.outpostId && !placement.assemblyId) {
+        const footprint = outpostFootprint(placement)!;
+        const range = islandTerrainFootprintRange(
+          blueprint,
+          footprintSamplePoints(footprint).slice(1, 5),
+        );
+        expect(range, placement.id).not.toBeNull();
+        expect(placement.y, placement.id).toBeCloseTo(range!.minY, 8);
+        expect(range!.maxY - placement.y, placement.id).toBeLessThanOrEqual(0.25);
+      } else if (!placement.assemblyId) {
         expect(placement.y, placement.id).toBeCloseTo(renderedTop.y + (placement.lift ?? 0), 8);
       }
       expect(placement.height).toBeGreaterThan(0);
@@ -470,6 +516,90 @@ describe("Island dressing", () => {
     }
   });
 
+  it("verifies rock whole-footprint grounding and zero shoreline spillover", () => {
+    const archetypes = [
+      "arc",
+      "horseshoe",
+      "loop-around-hill",
+      "switchback",
+      "serpentine",
+    ] as const;
+
+    const allRocks: IslandDressingPlacement[] = [];
+
+    for (const routeArchetype of archetypes) {
+      for (const lessonCount of [6, 24, 41]) {
+        const blueprint = islandBlueprint({
+          studyId: "turing-pact",
+          courseId: `rock-footprint-${routeArchetype}-${lessonCount}`,
+          lessonCount,
+          routeArchetype,
+          themeSelection: selection,
+        });
+        const field = islandFieldFor(blueprint);
+        const plan = planIslandDressing(blueprint, "course");
+        const rocks = plan.placements.filter((placement) => placement.kind === "rock");
+
+        // Positive examples must not be empty across all 5 routes x 6/24/41
+        expect(rocks.length, `rock count for ${routeArchetype}-${lessonCount}`).toBeGreaterThan(0);
+        allRocks.push(...rocks);
+
+        let outsideCount = 0;
+        for (const rock of rocks) {
+          // Use registered model bounds and orientedFootprintFor, not height * 0.45 guess
+          const footprint = orientedFootprintFor(
+            rock.assetId,
+            rock.height,
+            rock.x,
+            rock.z,
+            rock.turn,
+          );
+          const samplePoints = footprintSamplePoints(footprint);
+          for (const pt of samplePoints) {
+            const sample = sampleIslandField(field, pt.x, pt.z);
+            if (!sample.inside || sample.shore > 0.975) {
+              outsideCount += 1;
+            }
+            const top = sampleIslandTerrainTop(blueprint, "course", pt.x, pt.z);
+            // Grounding check: rock footprint stays grounded with bounded elevation delta
+            // and rock top emerges above the local terrain surface
+            expect(Math.abs(top.y - rock.y)).toBeLessThanOrEqual(0.25);
+            expect(rock.y + rock.height).toBeGreaterThan(top.y);
+
+            // Whole-footprint road clearance check
+            expect(distanceToIslandRoute(blueprint, pt)).toBeGreaterThanOrEqual(
+              islandRouteClearance(blueprint),
+            );
+
+            // Whole-footprint marker clearance check
+            for (const node of blueprint.nodes) {
+              expect(Math.hypot(pt.x - node.x, pt.z - node.z)).toBeGreaterThanOrEqual(
+                blueprint.route.nodeRadius,
+              );
+            }
+          }
+        }
+
+        // Assert zero spillover outside the coast margin
+        expect(outsideCount, `outside count for ${routeArchetype}-${lessonCount}`).toBe(0);
+      }
+    }
+
+    // Non-empty primary, secondary, and small rock hierarchy preserved
+    expect(
+      allRocks.some((r) => r.height >= 0.65),
+      "must have primary large rocks",
+    ).toBe(true);
+    expect(
+      allRocks.some((r) => r.height >= 0.4 && r.height < 0.65),
+      "must have secondary medium rocks",
+    ).toBe(true);
+    expect(
+      allRocks.some((r) => r.height < 0.4),
+      "must have small satellite rocks",
+    ).toBe(true);
+  }, 120_000);
+
   it("stays deterministic on 6/24/41 lesson routes", () => {
     for (const lessonCount of [6, 24, 41]) {
       for (const routeArchetype of [
@@ -516,10 +646,198 @@ describe("Island dressing", () => {
         ).toBe(true);
         expect(rejected).toBe(decision.attempts - 1);
       } else {
-        expect(decision.members).toEqual([]);
-        expect(decision.fallback).toBeDefined();
+        expect(["stone-rest-clearing", "natural-summit", "open-meadow"]).toContain(
+          decision.fallback,
+        );
         expect(rejected).toBeGreaterThan(0);
+        expect(
+          plan.placements.filter((placement) => placement.assemblyId === decision.assemblyId),
+        ).toHaveLength(0);
+        expect(decision.fallback).toBe(
+          assemblyFallbackFromPlacements(decision.kind, plan.placements),
+        );
+        if (decision.fallback === "stone-rest-clearing") {
+          const rest = plan.placements.filter(
+            (placement) => placement.outpostId === "bridge-rest-clearing",
+          );
+          expect(rest.length).toBeGreaterThanOrEqual(2);
+          expect(rest.every((placement) => placement.assetId !== "bridge")).toBe(true);
+          expect(decision.members).toEqual(rest.map((placement) => placement.id));
+        } else if (decision.fallback === "open-meadow") {
+          expect(decision.members).toEqual([]);
+        }
       }
+    }
+  });
+
+  it("retires the summit-grove leaf card and keeps only solid foliage ids", () => {
+    const source = readFileSync(resolve(import.meta.dirname, "island-dressing.ts"), "utf8");
+    expect(source).not.toMatch(/donorOutpostPart\(\s*"leaf"/);
+    expect(source).not.toMatch(/assetId:\s*"leaf"/);
+
+    const long = planIslandDressing(makeBlueprint(), "course");
+    const short = planIslandDressing(
+      islandBlueprint({
+        studyId: "turing-pact",
+        courseId: "short-grove-leaf",
+        lessonCount: 6,
+        routeArchetype: "switchback",
+        themeSelection: selection,
+      }),
+      "course",
+    );
+    for (const plan of [long, short]) {
+      expect(plan.placements.some((placement) => placement.assetId === "leaf")).toBe(false);
+      const grove = plan.placements.filter((placement) => placement.outpostId === "summit-grove");
+      if (grove.length === 0) continue;
+      expect(new Set(grove.map((placement) => placement.assetId))).toEqual(
+        new Set(["treeTrunks", "bushEmitter", "rock_smallA"]),
+      );
+      expect(grove.filter((placement) => placement.assetId === "bushEmitter").length).toBe(2);
+    }
+  });
+
+  it("shrinks outpost sets on short courses and keeps camp fire state explicit", () => {
+    const short = planIslandDressing(
+      islandBlueprint({
+        studyId: "turing-pact",
+        courseId: "capacity-short",
+        lessonCount: 6,
+        routeArchetype: "switchback",
+        themeSelection: selection,
+      }),
+      "course",
+    );
+    const long = planIslandDressing(
+      islandBlueprint({
+        studyId: "turing-pact",
+        courseId: "capacity-long",
+        lessonCount: 41,
+        routeArchetype: "switchback",
+        themeSelection: selection,
+      }),
+      "course",
+    );
+    const shortOutposts = new Set(
+      short.placements.map((placement) => placement.outpostId).filter(Boolean),
+    );
+    const longOutposts = new Set(
+      long.placements.map((placement) => placement.outpostId).filter(Boolean),
+    );
+    expect(shortOutposts.has("summit-grove")).toBe(false);
+    expect(shortOutposts.has("lantern-plaza")).toBe(false);
+    expect(shortOutposts.size).toBeLessThan(longOutposts.size);
+    expect(short.placements.filter((placement) => placement.kind === "tree").length).toBeLessThan(
+      long.placements.filter((placement) => placement.kind === "tree").length,
+    );
+
+    const camps = campPlacements(long);
+    const firePits = camps.filter((placement) => placement.assetId === "camp");
+    expect(firePits.every((placement) => placement.state === "lit")).toBe(true);
+    expect(filterLitCampPlacements(long.placements)).toEqual(firePits);
+    expect(
+      filterLitCampPlacements(camps.map((placement) => ({ ...placement, state: "idle" }))),
+    ).toEqual([]);
+  });
+
+  it("names assembly fallbacks from the actual generated set, never a fake bridge", () => {
+    expect(sceneryBandForLessonCount(6)).toBe("short");
+    expect(sceneryBandForLessonCount(24)).toBe("medium");
+    expect(sceneryBandForLessonCount(41)).toBe("long");
+    expect(
+      assemblyFallbackFromPlacements("bridge", [
+        { outpostId: "bridge-rest-clearing", id: "a" } as IslandDressingPlacement,
+        { outpostId: "bridge-rest-clearing", id: "b" } as IslandDressingPlacement,
+      ]),
+    ).toBe("stone-rest-clearing");
+    expect(assemblyFallbackFromPlacements("bridge", [])).toBe("open-meadow");
+    expect(
+      assemblyFallbackFromPlacements("building", [
+        { outpostId: "summit-grove", id: "g1" } as IslandDressingPlacement,
+        { outpostId: "summit-grove", id: "g2" } as IslandDressingPlacement,
+      ]),
+    ).toBe("natural-summit");
+    expect(assemblyFallbackFromPlacements("camp", [])).toBe("open-meadow");
+
+    const blueprint = makeBlueprint();
+    const rest = placeBridgeRestClearing(blueprint, islandFieldFor(blueprint), []);
+    expect(rest.every((placement) => placement.assetId !== "bridge")).toBe(true);
+    if (rest.length > 0) {
+      expect(rest.length).toBeGreaterThanOrEqual(2);
+      expect(new Set(rest.map((placement) => placement.outpostId))).toEqual(
+        new Set(["bridge-rest-clearing"]),
+      );
+    }
+  });
+
+  it("keeps 5-route × 6/24/41 placement identity without duplicate leaf or half assemblies", () => {
+    const routes = ["arc", "horseshoe", "loop-around-hill", "switchback", "serpentine"] as const;
+    const treeCounts: Record<number, number[]> = { 6: [], 24: [], 41: [] };
+    for (const lessonCount of [6, 24, 41]) {
+      for (const routeArchetype of routes) {
+        const blueprint = islandBlueprint({
+          studyId: "turing-pact",
+          courseId: `place-closeout-${routeArchetype}-${lessonCount}`,
+          lessonCount,
+          routeArchetype,
+          themeSelection: selection,
+        });
+        const first = planIslandDressing(blueprint, "course");
+        const second = planIslandDressing(blueprint, "course");
+        expect(first).toEqual(second);
+        expect(first.placements.some((placement) => placement.assetId === "leaf")).toBe(false);
+
+        const bridges = first.placements.filter(
+          (placement) => placement.assemblyId === "route-bridge",
+        );
+        expect(first.placements.filter((placement) => placement.assetId === "bridge")).toHaveLength(
+          bridges.length,
+        );
+        if (bridges.length > 0) {
+          expect(bridges).toHaveLength(1);
+          expect(
+            first.placements.filter((placement) => placement.outpostId === "bridge-rest-clearing"),
+          ).toHaveLength(0);
+        }
+
+        const academy = academyPlacements(first);
+        expect(academy.length === 0 || academy.length === 5).toBe(true);
+        const camp = campPlacements(first);
+        expect(camp.length === 0 || camp.length === 2).toBe(true);
+        if (camp.length === 2) {
+          expect(camp.find((placement) => placement.assetId === "camp")?.state).toBe("lit");
+        }
+
+        for (const placement of [...academy, ...camp, ...bridges]) {
+          const footprint = orientedFootprintFor(
+            placement.assetId,
+            placement.height,
+            placement.x,
+            placement.z,
+            placement.turn,
+          );
+          for (const sample of footprintSamplePoints(footprint)) {
+            expect(sampleIslandSurface(blueprint, sample.x, sample.z).inside).toBe(true);
+          }
+        }
+
+        for (const decision of first.decisions ?? []) {
+          if (decision.status !== "omitted") continue;
+          expect(decision.fallback).toBe(
+            assemblyFallbackFromPlacements(decision.kind, first.placements),
+          );
+          expect(
+            first.placements.some((placement) => placement.assemblyId === decision.assemblyId),
+          ).toBe(false);
+        }
+
+        treeCounts[lessonCount]!.push(
+          first.placements.filter((placement) => placement.kind === "tree").length,
+        );
+      }
+    }
+    for (let i = 0; i < routes.length; i += 1) {
+      expect(treeCounts[6]![i]!).toBeLessThan(treeCounts[41]![i]!);
     }
   });
 });

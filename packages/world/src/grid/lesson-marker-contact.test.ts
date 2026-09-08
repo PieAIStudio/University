@@ -156,6 +156,57 @@ describe("Lesson marker contact after the instance transform", () => {
     expect(source).toMatch(/prefers-reduced-motion: reduce/);
     expect(source).toMatch(/markerPulseAllowed/);
     expect(markerPulseAllowed()).toBe(!false);
+
+    // Simulated reduced motion check
+    const originalWindow = (globalThis as unknown as { window?: unknown }).window;
+    try {
+      (globalThis as unknown as { window: unknown }).window = {
+        matchMedia: (query: string) => ({
+          matches: query.includes("prefers-reduced-motion: reduce"),
+          media: query,
+          onchange: null,
+          addListener: () => {},
+          removeListener: () => {},
+          addEventListener: () => {},
+          removeEventListener: () => {},
+          dispatchEvent: () => true,
+        }),
+      };
+
+      expect(markerPulseAllowed()).toBe(false);
+    } finally {
+      if (originalWindow === undefined) {
+        delete (globalThis as unknown as { window?: unknown }).window;
+      } else {
+        (globalThis as unknown as { window: unknown }).window = originalWindow;
+      }
+    }
+  });
+
+  it("resets live marker engraving scale to 1.0 upon reduced motion", () => {
+    const marker = {
+      lesson: {
+        position: new THREE.Vector3(3, 4, 5),
+        state: "live" as const,
+      } as LessonPlacement,
+      radius: 0.62,
+      colour: 0xffffff,
+    };
+    const matrix = new THREE.Matrix4();
+    const scratch = createMarkerMatrixScratch();
+    // In unpulsed / reduced-motion state, scale is exactly radius * MEDALLION_TOP_RADIUS
+    const baselineScale = marker.radius * MEDALLION_TOP_RADIUS;
+    composeMarkerMatrix(marker, MARKER_ENGRAVING_OFFSET, baselineScale, matrix, scratch);
+    const position = new THREE.Vector3();
+    const quaternion = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+    matrix.decompose(position, quaternion, scale);
+    expect(scale.x).toBeCloseTo(baselineScale, 6);
+    expect(scale.z).toBeCloseTo(baselineScale, 6);
+
+    const source = readFileSync(new URL("./LessonMarkerField.tsx", import.meta.url), "utf8");
+    expect(source).toMatch(/usePrefersReducedMotion/);
+    expect(source).toMatch(/MEDALLION_TOP_RADIUS/);
   });
 
   for (const archetype of ISLAND_ROUTE_ARCHETYPES) {

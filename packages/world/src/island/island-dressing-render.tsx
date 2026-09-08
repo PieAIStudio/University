@@ -112,18 +112,14 @@ export function IslandDressing({
   targetRadius,
 }: {
   readonly blueprint: IslandBlueprint;
-  readonly detail: IslandDressingDetail;
+  readonly detail: "course";
   readonly targetRadius?: number;
   /** Accepted for caller compatibility. Course dressing is continuous and ignores hex maps. */
   readonly grid?: HexMap;
 }) {
   const identity = dressingIdentity(blueprint, detail);
-  const [readyIdentity, setReadyIdentity] = useState(detail === "course" ? "" : identity);
+  const [readyIdentity, setReadyIdentity] = useState("");
   useEffect(() => {
-    if (detail !== "course") {
-      setReadyIdentity(identity);
-      return;
-    }
     setReadyIdentity("");
     // Let the terrain, markers and camera commit one frame before GLB parsing
     // and GPU resource cloning begin. Readiness is the identity of this
@@ -143,38 +139,9 @@ export function IslandDressing({
     [assetsReady, blueprint, detail],
   );
   const scale = islandGeometryScale(blueprint, detail, targetRadius);
-  // A mathematically faithful world projection turns a tree into a dark
-  // three-pixel pin. Slight silhouette exaggeration is the same convention a
-  // board-game miniature uses: positions stay identical, only readable height
-  // survives the LOD.
-  const heightMultiplier = detail === "world" ? 3.2 : 1;
-  const fields = useMemo(
-    () => (plan ? islandDressingFields(plan, scale, heightMultiplier) : []),
-    [heightMultiplier, plan, scale],
-  );
+  const fields = useMemo(() => (plan ? islandDressingFields(plan, scale) : []), [plan, scale]);
   const batches = useMemo(() => islandDressingCourseBatches(fields), [fields]);
   if (!plan) return null;
-  if (detail !== "course") {
-    return (
-      <>
-        {fields.map((field) => (
-          <AssetField
-            key={field.key}
-            src={field.src}
-            at={field.at}
-            preserveMap={field.pack !== "nature-kit"}
-            castShadow={false}
-          />
-        ))}
-        <IslandFoliage
-          plan={plan}
-          detail={detail}
-          scale={scale}
-          heightMultiplier={heightMultiplier}
-        />
-      </>
-    );
-  }
   return (
     <group
       name="island-dressing-course"
@@ -201,13 +168,8 @@ export function IslandDressing({
           castShadow
         />
       ))}
-      <IslandFoliage
-        plan={plan}
-        detail={detail}
-        scale={scale}
-        heightMultiplier={heightMultiplier}
-      />
-      <IslandCampfire plan={plan} scale={scale} heightMultiplier={heightMultiplier} />
+      <IslandFoliage plan={plan} scale={scale} />
+      <IslandCampfire plan={plan} scale={scale} />
     </group>
   );
 }

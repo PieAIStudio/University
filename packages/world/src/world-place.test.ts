@@ -4,6 +4,7 @@ import type { CourseNode } from "./course/course.js";
 import {
   nextCourse,
   placeWorld,
+  placeStudyArchipelago,
   WORLD_ISLAND_STATE_SCALE,
   worldIslandRadiusForState,
 } from "./Maps.js";
@@ -27,6 +28,36 @@ const NODES: readonly CourseNode[] = [
 ];
 
 const nothingDone = () => 0;
+
+describe("learner series archipelago", () => {
+  it("uses the cheap remote catalogue projection without leaking another series", () => {
+    const world = placeStudyArchipelago(NODES, nothingDone, "alpha");
+    const reference = placeWorld(
+      NODES.filter((entry) => entry.studyId === "alpha"),
+      nothingDone,
+      "alpha",
+      "catalogue",
+    );
+    expect(world).toEqual(reference);
+    expect(world.placements.map((entry) => entry.node.courseId).sort()).toEqual(["a1", "a2"]);
+    expect(world.placements.filter((entry) => entry.state === "live")).toHaveLength(1);
+    expect(placeStudyArchipelago(NODES, nothingDone, "absent").placements).toEqual([]);
+  });
+
+  it("keeps all courses reachable across series without changing source IDs or progress", () => {
+    const progress = (entry: CourseNode) => (entry.courseId === "a1" ? 1 : 0);
+    const alpha = placeStudyArchipelago(NODES, progress, "alpha");
+    const beta = placeStudyArchipelago(NODES, progress, "beta");
+    expect(
+      [...alpha.placements, ...beta.placements]
+        .map((entry) => entry.node)
+        .sort((a, b) => a.courseId.localeCompare(b.courseId)),
+    ).toEqual(NODES);
+    expect(alpha.placements.find((entry) => entry.node.courseId === "a1")?.state).toBe("done");
+    expect(alpha.placements.find((entry) => entry.node.courseId === "a2")?.state).toBe("live");
+    expect(placeStudyArchipelago(NODES, progress, "alpha")).toEqual(alpha);
+  });
+});
 
 describe("placeWorld", () => {
   /*

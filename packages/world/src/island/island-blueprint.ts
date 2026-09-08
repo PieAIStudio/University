@@ -1045,6 +1045,7 @@ function makeGeometryBlueprint(input: ResolvedInput): IslandGeometryBlueprint {
     throw new Error("IslandBlueprint could not place hero inside the island outline");
   }
   const zoneRadius = Math.max(3.2, Math.min(7.5, Math.min(halfX, halfZ) * 0.2));
+  const maxHalf = Math.max(halfX, halfZ);
 
   const base: IslandGeometryBlueprint = {
     version: ISLAND_BLUEPRINT_VERSION,
@@ -1057,7 +1058,7 @@ function makeGeometryBlueprint(input: ResolvedInput): IslandGeometryBlueprint {
     geometryNodes,
     centerline: baseCenterline,
     outline,
-    bounds: { halfX, halfZ, maxHalf: Math.max(halfX, halfZ) },
+    bounds: { halfX, halfZ, maxHalf },
     terrainPatches,
     zones: [
       zoneAround("arrival", first, zoneRadius, 0.9),
@@ -1073,7 +1074,8 @@ function makeGeometryBlueprint(input: ResolvedInput): IslandGeometryBlueprint {
       importance: 1,
     },
     underside: {
-      depth: Math.max(6, Math.min(11, Math.min(halfX, halfZ) * 0.34)),
+      // A 6–11 clamp kept a 38-unit course island 11 deep and read as a platform.
+      depth: maxHalf * (0.7 + hash(`${seed}/${layoutRevision}/underside-depth`) * 0.2),
       taper: 0.72 + hash(`${seed}/${layoutRevision}/underside`) * 0.14,
       ringCount: 3,
       importance: 0.25,
@@ -1226,11 +1228,12 @@ export function sampleIslandSurface(
   // a landform rather than a coin.
   const reliefShore = smoothstep(0, 0.07, clamp(1 - radial, 0, 1));
   y += reliefShore * reliefAt(blueprint, x, z, maxHalf);
-  // Terracing belongs to the natural base, never to units.  It follows the
-  // continuous relief and fades before the shoreline, so it creates broad
-  // hill shelves in arbitrary places rather than six chapter-shaped zones or
-  // a bullseye of concentric rings.
-  const terraceInfluence = smoothstep(0.9, 0.73, radial) * 0.15;
+  // A very low-amplitude shelf pass belongs to the natural base, never to
+  // units. It follows the continuous relief and fades well before the
+  // shoreline, so it can suggest a broad hillside shelf without laying down
+  // the fine, repeated steps that made the earlier surface read like stacked
+  // terrain tiles.
+  const terraceInfluence = smoothstep(0.94, 0.72, radial) * 0.06;
   y = lerp(y, softTerrace(y, maxHalf * TERRACE_STEP_RATIO), terraceInfluence);
   return { y: clamp(y, 0, maxHalf * MAX_HEIGHT_RATIO), radial, inside: true };
 }
@@ -1247,14 +1250,16 @@ export function sampleIslandSurface(
  * frame's exposure and left the ground itself flat, and why the aerial camera
  * reads the island as a painted green plate.
  *
- * What follows adds three octaves of value noise on top of the existing
+ * What follows adds two broad octaves of value noise on top of the existing
  * patches. The patches stay because they are the authored large masses and
  * the blueprint schema and its tests are built around them; they are simply
- * given enough gain to be seen. The octaves supply the mid and fine relief
- * that a Gaussian bump of radius 14 cannot: octave two alone carries about
- * 22 degrees of slope, and where octaves land in phase the surface reaches
- * 35 to 40. That is the range where a hillside has a bright face and a dark
- * one without any change to the lights.
+ * given enough gain to be seen. The octaves supply the mid-scale relief that
+ * a Gaussian bump of radius 14 cannot, while deliberately omitting a third
+ * short octave: a few tenths of a unit of high-frequency displacement can
+ * survive the 52-ring course mesh as corrugated ridges even when the height
+ * range itself still looks healthy. The remaining broad and middle scales
+ * give a hillside a bright face and a dark one without asking the lights to
+ * invent the shape.
  *
  * Every amplitude and wavelength below is a ratio of the island's own
  * maxHalf, so a six-lesson island and a forty-lesson island get the same
@@ -1263,12 +1268,11 @@ export function sampleIslandSurface(
 export const BASE_PLATEAU_HEIGHT = 2.35;
 export const PATCH_GAIN = 3.4;
 export const MAX_HEIGHT_RATIO = 0.235;
-export const TERRACE_STEP_RATIO = 0.05;
+export const TERRACE_STEP_RATIO = 0.085;
 export const RELIEF_AMPLITUDE_RATIO = 0.12;
 const RELIEF_OCTAVES = [
-  { wavelength: 0.42, amplitude: 1, corridor: 0.34, ridge: 0.22, turn: 0 },
-  { wavelength: 0.2, amplitude: 0.18, corridor: 0.6, ridge: 0.12, turn: 0.9 },
-  { wavelength: 0.09, amplitude: 0.025, corridor: 0.92, ridge: 0, turn: 1.9 },
+  { wavelength: 0.48, amplitude: 1, corridor: 0.34, ridge: 0.14, turn: 0 },
+  { wavelength: 0.28, amplitude: 0.16, corridor: 0.58, ridge: 0.08, turn: 0.9 },
 ] as const;
 
 /**

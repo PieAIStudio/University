@@ -1075,10 +1075,13 @@ export async function clickAndMeasureResponse(
     })
     .catch(() => ({ clickedAt: null, respondedAt: null }));
   const urlChanged = page.url() !== beforeUrl;
-  const responseElapsed = navigationAt
-    ? navigationAt - clickStarted
-    : state.clickedAt !== null && state.respondedAt !== null
-      ? state.respondedAt - state.clickedAt
+  // For same-document navigation use the document's actual click timestamp.
+  // The navigation callback uses a different clock and includes humanClick's
+  // intentional mouse-down hold, so it must not override an earlier DOM response.
+  const responseElapsed = state.clickedAt !== null && state.respondedAt !== null
+    ? state.respondedAt - state.clickedAt
+    : navigationAt !== null
+      ? navigationAt - clickStarted
       : null;
   const elapsedMs = responseElapsed === null ? 301 : Math.max(0, Math.round(responseElapsed));
   return { urlChanged, domChanged: state.respondedAt !== null, elapsedMs };

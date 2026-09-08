@@ -89,7 +89,7 @@ const GRASS_WARM = new THREE.Color(0xc1cf5d); // dry sunlit meadow
 const MEADOW_LOW = new THREE.Color(0x9dbc4c); // sunlit flats
 const MEADOW_DEEP = new THREE.Color(0x3d6138); // hollows and north faces
 const HIGHLAND = new THREE.Color(0xc0bf69); // dry grass on high ground
-const SAND = new THREE.Color(0xead4a6); // cream shore ring
+const SAND = new THREE.Color(0xead4a6); // cream for local eroding faces
 const ROCK = new THREE.Color(0xa87950); // warm exposed slope
 const ROCK_DARK = new THREE.Color(0x704934); // steep brown faces
 const CLIFF = new THREE.Color(0xa57854); // sunlit cliff face
@@ -172,19 +172,50 @@ interface TopMeshVertex {
   readonly y: number;
 }
 
-function topMeshVertex(
+interface TopMeshLattice {
+  readonly segments: number;
+  readonly center: TopMeshVertex;
+  readonly rings: readonly (readonly TopMeshVertex[])[];
+  surfaceIndex?: SurfaceTriangleIndex;
+}
+
+const TOP_MESH_LATTICE_CACHE = new WeakMap<
+  IslandBlueprint,
+  Map<IslandGeometryDetail, TopMeshLattice>
+>();
+
+function getTopMeshLattice(
   blueprint: IslandBlueprint,
-  radial: number,
-  index: number,
-  segments: number,
-): TopMeshVertex {
-  if (radial === 0) {
-    return { x: 0, z: 0, y: sampleIslandSurface(blueprint, 0, 0).y };
+  detail: IslandGeometryDetail,
+): TopMeshLattice {
+  let byDetail = TOP_MESH_LATTICE_CACHE.get(blueprint);
+  if (!byDetail) {
+    byDetail = new Map();
+    TOP_MESH_LATTICE_CACHE.set(blueprint, byDetail);
   }
-  const point = outlineAt(blueprint.outline, index, segments);
-  const x = point.x * radial;
-  const z = point.z * radial;
-  return { x, z, y: sampleIslandSurface(blueprint, x, z).y };
+  let lattice = byDetail.get(detail);
+  if (lattice) return lattice;
+
+  const segments = sampleCount(detail, blueprint.outline);
+  const radials = topRadials(detail);
+  const center: TopMeshVertex = { x: 0, z: 0, y: sampleIslandSurface(blueprint, 0, 0).y };
+
+  const rings: TopMeshVertex[][] = [];
+  for (let r = 0; r < radials.length; r += 1) {
+    const radial = radials[r]!;
+    const ring: TopMeshVertex[] = [];
+    for (let s = 0; s < segments; s += 1) {
+      const point = outlineAt(blueprint.outline, s, segments);
+      const x = point.x * radial;
+      const z = point.z * radial;
+      ring.push({ x, z, y: sampleIslandSurface(blueprint, x, z).y });
+    }
+    rings.push(ring);
+  }
+
+  lattice = { segments, center, rings };
+  byDetail.set(detail, lattice);
+  return lattice;
 }
 
 function barycentricHeight(
@@ -207,6 +238,101 @@ function barycentricHeight(
   return first.y * firstWeight + second.y * secondWeight + third.y * thirdWeight;
 }
 
+/** The same cached top lattice as sampleIslandTerrainTop, without building
+ * road clips, cliff buffers or GPU resources just to fit a decoration.
+ */
+function terrainTopIndex(blueprint: IslandBlueprint): SurfaceTriangleIndex {
+  const lattice = getTopMeshLattice(blueprint, "course");
+  if (lattice.surfaceIndex) return lattice.surfaceIndex;
+  const triangles: SurfaceTriangle[] = [];
+  const ids = new Map([lattice.center, ...lattice.rings.flat()].map((vertex, id) => [vertex, id]));
+  const add = (a: TopMeshVertex, b: TopMeshVertex, c: TopMeshVertex) => {
+    triangles.push({
+      x0: a.x,
+      y0: a.y,
+      z0: a.z,
+      x1: b.x,
+      y1: b.y,
+      z1: b.z,
+      x2: c.x,
+      y2: c.y,
+      z2: c.z,
+      i0: ids.get(a)!,
+      i1: ids.get(b)!,
+      i2: ids.get(c)!,
+    });
+  };
+  for (let ring = 0; ring < lattice.rings.length; ring++) {
+    const outer = lattice.rings[ring]!;
+    for (let sector = 0; sector < lattice.segments; sector++) {
+      const next = (sector + 1) % lattice.segments;
+      if (ring === 0) add(lattice.center, outer[next]!, outer[sector]!);
+      else {
+        const inner = lattice.rings[ring - 1]!;
+        add(inner[sector]!, inner[next]!, outer[sector]!);
+        add(inner[next]!, outer[next]!, outer[sector]!);
+      }
+    }
+  }
+  lattice.surfaceIndex = buildSurfaceTriangleIndex(
+    triangles,
+    Math.max(0.5, blueprint.bounds.maxHalf * 0.06),
+  );
+  return lattice.surfaceIndex;
+}
+
+/** Exact extrema over a convex footprint clipped to the drawn terrain's
+ * triangles. Corner-only samples miss an interior peak or a crossed ridge.
+ * Missing coverage is rejected rather than silently using continuous height.
+ */
+export function islandTerrainFootprintRange(
+  blueprint: IslandBlueprint,
+  polygon: readonly { readonly x: number; readonly z: number }[],
+): { readonly minY: number; readonly maxY: number; readonly maxSlope: number } | null {
+  if (polygon.length < 3 || polygon.some((p) => !Number.isFinite(p.x) || !Number.isFinite(p.z)))
+    return null;
+  const area = Math.abs(doubleSignedAreaXZ(polygon)) / 2;
+  if (area <= 1e-9) return null;
+  const surface = terrainTopIndex(blueprint);
+  const xs = polygon.map((p) => p.x),
+    zs = polygon.map((p) => p.z);
+  let covered = 0,
+    minY = Infinity,
+    maxY = -Infinity,
+    maxSlope = 0;
+  for (const id of surface.candidates(
+    Math.min(...xs),
+    Math.min(...zs),
+    Math.max(...xs),
+    Math.max(...zs),
+  )) {
+    const triangle = surface.triangles[id]!;
+    const clipped = clipPolygonToTriangleXZ(polygon, triangle);
+    const partArea = Math.abs(doubleSignedAreaXZ(clipped)) / 2;
+    if (partArea <= 1e-10) continue;
+    covered += partArea;
+    for (const p of clipped) {
+      const weights = barycentricXZ(triangle, p.x, p.z);
+      if (!weights) return null;
+      const y = weights[0] * triangle.y0 + weights[1] * triangle.y1 + weights[2] * triangle.y2;
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y);
+    }
+    const ax = triangle.x1 - triangle.x0,
+      ay = triangle.y1 - triangle.y0,
+      az = triangle.z1 - triangle.z0;
+    const bx = triangle.x2 - triangle.x0,
+      by = triangle.y2 - triangle.y0,
+      bz = triangle.z2 - triangle.z0;
+    const ny = az * bx - ax * bz;
+    maxSlope = Math.max(maxSlope, Math.hypot(ay * bz - az * by, ax * by - ay * bx) / Math.abs(ny));
+  }
+  return Number.isFinite(minY + maxY + maxSlope) &&
+    Math.abs(covered - area) <= Math.max(1e-7, area * 1e-5)
+    ? { minY, maxY, maxSlope }
+    : null;
+}
+
 /**
  * Sample the height of the low-poly top mesh generated by `buildTerrain`.
  *
@@ -223,7 +349,8 @@ export function sampleIslandTerrainTop(
   const continuous = sampleIslandSurface(blueprint, x, z);
   if (!continuous.inside) return continuous;
 
-  const segments = sampleCount(detail, blueprint.outline);
+  const lattice = getTopMeshLattice(blueprint, detail);
+  const segments = lattice.segments;
   const radials = topRadials(detail);
   const normalX = x / blueprint.bounds.halfX;
   const normalZ = z / blueprint.bounds.halfZ;
@@ -237,24 +364,18 @@ export function sampleIslandTerrainTop(
     third: TopMeshVertex,
   ): number | null => barycentricHeight({ x, z }, first, second, third);
 
-  const heightInSector = (
-    innerRadial: number,
-    outerRadial: number,
-    sector: number,
-  ): number | null => {
+  const heightInSector = (ring: number, sector: number): number | null => {
     const next = (sector + segments) % segments;
     const following = (next + 1) % segments;
-    if (innerRadial <= 0) {
-      return tryTriangle(
-        topMeshVertex(blueprint, 0, 0, segments),
-        topMeshVertex(blueprint, outerRadial, next, segments),
-        topMeshVertex(blueprint, outerRadial, following, segments),
-      );
+    const outerRing = lattice.rings[ring]!;
+    if (ring === 0) {
+      return tryTriangle(lattice.center, outerRing[next]!, outerRing[following]!);
     }
-    const innerSector = topMeshVertex(blueprint, innerRadial, next, segments);
-    const innerNext = topMeshVertex(blueprint, innerRadial, following, segments);
-    const outerSector = topMeshVertex(blueprint, outerRadial, next, segments);
-    const outerNext = topMeshVertex(blueprint, outerRadial, following, segments);
+    const innerRing = lattice.rings[ring - 1]!;
+    const innerSector = innerRing[next]!;
+    const innerNext = innerRing[following]!;
+    const outerSector = outerRing[next]!;
+    const outerNext = outerRing[following]!;
     return (
       tryTriangle(innerSector, innerNext, outerSector) ??
       tryTriangle(innerNext, outerNext, outerSector)
@@ -278,10 +399,8 @@ export function sampleIslandTerrainTop(
   for (const ringOffset of ringOffsets) {
     const ring = predictedRing + ringOffset;
     if (ring < 0 || ring >= radials.length) continue;
-    const inner = ring === 0 ? 0 : radials[ring - 1]!;
-    const outer = radials[ring]!;
     for (const sectorOffset of sectorOffsets) {
-      y = heightInSector(inner, outer, predicted + sectorOffset);
+      y = heightInSector(ring, predicted + sectorOffset);
       if (y !== null) break;
     }
     if (y !== null) break;
@@ -290,10 +409,8 @@ export function sampleIslandTerrainTop(
     for (const ringOffset of ringOffsets) {
       const ring = predictedRing + ringOffset;
       if (ring < 0 || ring >= radials.length) continue;
-      const inner = ring === 0 ? 0 : radials[ring - 1]!;
-      const outer = radials[ring]!;
       for (let sector = 0; sector < segments && y === null; sector += 1) {
-        y = heightInSector(inner, outer, sector);
+        y = heightInSector(ring, sector);
       }
       if (y !== null) break;
     }
@@ -322,8 +439,8 @@ export function sampleIslandTerrainTop(
  *
  * A derivative is only meaningful at the scale its surface can represent, so
  * the baseline is now the lattice's own larger local spacing. Only slope and
- * curvature use it; the height, shore and patch terms are unchanged, so the
- * meadow keeps its broad variation and the coast keeps its sand ring.
+ * curvature use it; the height and patch terms are unchanged. The rim no
+ * longer paints a constant-width sand ring; grass and stone follow slope.
  */
 function colourSampleDelta(
   blueprint: IslandBlueprint,
@@ -425,11 +542,13 @@ function colorForTop(
     colour.lerp(stone, rockAmount * 0.9);
   }
 
-  // The shore ring. It replaces the old "brighten the rim" rule, which lifted
-  // the outer edge toward the same green and so read as a halo rather than a
-  // beach.
-  const beach = smoothstep01(0.955, 1, radial) * (1 - rockAmount * 0.7);
-  if (beach > 0) colour.lerp(SAND, beach * 0.72);
+  // A constant radial sand stripe read as a dinner-plate rim. Grass holds a
+  // gentle lip; cream only appears near the coast where the face is already
+  // steepening but not yet stone, so the break follows the landform instead
+  // of the ring index.
+  const eroding = smoothstep01(0.34, 0.86, slope) * (1 - rockAmount);
+  const nearRim = smoothstep01(0.88, 0.995, radial);
+  if (eroding > 0 && nearRim > 0) colour.lerp(SAND, eroding * nearRim * 0.32);
 
   // Hollows sit in their own shade and crests catch the sky. The asymmetry is
   // deliberate: an occlusion term that brightens as much as it darkens stops
@@ -953,6 +1072,242 @@ interface BuiltTerrain {
   readonly counts: IslandGeometryCounts;
 }
 
+interface CliffRingProfile {
+  readonly gather: number;
+  readonly yOffset: number;
+  readonly sky: number;
+  readonly gatherVary: number;
+  readonly depthVary: number;
+  /** Small tangential cant keeps the lower outline from becoming a revolved cone. */
+  readonly cant: number;
+}
+
+type CliffNormalFace =
+  | {
+      readonly kind: "side";
+      readonly vertices: readonly [number, number, number, number, number, number];
+    }
+  | {
+      readonly kind: "bottom";
+      readonly vertices: readonly [number, number, number];
+    };
+
+interface CliffVertex {
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+  readonly colour: THREE.Color;
+}
+
+/**
+ * Five rings, same capacity as the previous skirt: a thick collar, a thick
+ * body, then a seeded irregular root. Gather is the fraction of the way from
+ * the authored coast toward a slightly offset tip — not a cone of revolution
+ * and not a second generator.
+ */
+function cliffRingProfiles(depth: number, taper: number): readonly CliffRingProfile[] {
+  const root = clamp01((0.86 - taper) * 0.4);
+  return [
+    { gather: 0, yOffset: 0, sky: 1, gatherVary: 0, depthVary: 0, cant: 0 },
+    {
+      gather: 0.034,
+      yOffset: -depth * 0.16,
+      sky: 0.86,
+      gatherVary: 0.01,
+      depthVary: 0.012,
+      cant: 0,
+    },
+    {
+      gather: 0.15,
+      yOffset: -depth * 0.4,
+      sky: 0.64,
+      gatherVary: 0.028,
+      depthVary: 0.02,
+      cant: 0.0015,
+    },
+    {
+      gather: 0.42 + root,
+      yOffset: -depth * 0.73,
+      sky: 0.4,
+      gatherVary: 0.105,
+      depthVary: 0.035,
+      cant: 0.006,
+    },
+    {
+      gather: 0.7 + root * 1.1,
+      yOffset: -depth * 0.96,
+      sky: 0.22,
+      gatherVary: 0.14,
+      depthVary: 0.04,
+      cant: 0.012,
+    },
+  ];
+}
+
+function cliffRootLobe(phase: number, index: number, segments: number): number {
+  const angle = (index / segments) * Math.PI * 2;
+  // These are broad buttresses, not per-sector noise. Sampling the same
+  // low-frequency function at course/world resolutions keeps the silhouette
+  // related while the extra third harmonic stops one offset tip from reading
+  // as a revolved cone.
+  return (
+    0.78 * Math.sin(angle + phase) +
+    0.2 * Math.sin(angle * 2 + phase * 1.67) +
+    0.12 * Math.sin(angle * 3 - phase * 0.61)
+  );
+}
+
+function cliffRootTip(
+  blueprint: IslandBlueprint,
+  segments: number,
+  phase: number,
+): { readonly x: number; readonly z: number } {
+  let weightX = 0;
+  let weightZ = 0;
+  let minCoast = Infinity;
+  for (let index = 0; index < segments; index += 1) {
+    const point = outlineAt(blueprint.outline, index, segments);
+    const coast = Math.hypot(point.x, point.z);
+    minCoast = Math.min(minCoast, coast);
+    weightX += point.x * coast;
+    weightZ += point.z * coast;
+  }
+  const bias = Math.hypot(weightX, weightZ);
+  const pull = Math.min(blueprint.bounds.maxHalf * 0.12, Math.max(0, minCoast) * 0.28);
+  const candidate =
+    bias > 1e-8
+      ? { x: (weightX / bias) * pull, z: (weightZ / bias) * pull }
+      : { x: Math.cos(phase) * pull, z: Math.sin(phase) * pull };
+  // A star-shaped outline has the origin inside every edge half-plane. Keep
+  // the offset in that same kernel, with a small margin, so every radial ring
+  // can converge on it without folding a fan across a concave coast chord.
+  let fraction = 1;
+  for (let index = 0; index < segments; index += 1) {
+    const a = outlineAt(blueprint.outline, index, segments);
+    const b = outlineAt(blueprint.outline, (index + 1) % segments, segments);
+    const dx = b.x - a.x,
+      dz = b.z - a.z;
+    const atOrigin = dz * a.x - dx * a.z;
+    const shift = dx * candidate.z - dz * candidate.x;
+    if (shift < 0) fraction = Math.min(fraction, (atOrigin * 0.95) / -shift);
+  }
+  return { x: candidate.x * fraction, z: candidate.z * fraction };
+}
+
+/**
+ * Paint the same geological bands in both projections.
+ *
+ * The identity underside colour is useful as a restrained hue cue, but it is
+ * too dark to own the whole root. Warm cliff/rock/dirt strata carry the value
+ * structure first; the per-island underside colour is only a depth-weighted
+ * accent. `lobe` is geometry-derived variation, so the colour changes follow
+ * the same buttresses that change the silhouette instead of becoming a noise
+ * texture on top of it.
+ */
+function cliffStratumColour(
+  ground: THREE.Color,
+  cliffDark: THREE.Color,
+  profile: CliffRingProfile,
+  lobe: number,
+): THREE.Color {
+  const depth = clamp01(1 - profile.sky);
+  const stratum = CLIFF.clone()
+    // A light upper band catches the same edge that is broad enough to read
+    // near the camera; lower bands move through warm rock into dark earth.
+    .lerp(DIRT_LIGHT, smoothstep01(0.34, 0, depth) * 0.42)
+    .lerp(ROCK, smoothstep01(0.08, 0.72, depth) * 0.72)
+    .lerp(DIRT_DARK, smoothstep01(0.48, 1, depth) * 0.42)
+    // Preserve a little course identity without letting the underside swatch
+    // flatten every lower face into the same dark value.
+    .lerp(cliffDark, 0.04 + depth * 0.14);
+  const buttressWarmth = clamp01(0.5 + lobe * 0.45);
+  stratum.lerp(DIRT, buttressWarmth * 0.14);
+  stratum.multiplyScalar(clamp01(0.93 + profile.sky * 0.07 + lobe * 0.08));
+  return ground.clone().lerp(stratum, profile.sky >= 0.999 ? 0.1 : 0.92);
+}
+
+function appendCliffVertex(
+  positions: number[],
+  colors: number[],
+  vertex: CliffVertex,
+  scale: number,
+): number {
+  const index = positions.length / 3;
+  positions.push(vertex.x * scale, vertex.y * scale, vertex.z * scale);
+  pushColor(colors, vertex.colour);
+  return index;
+}
+
+function cliffTriangleNormal(
+  position: THREE.BufferAttribute,
+  first: number,
+  second: number,
+  third: number,
+): THREE.Vector3 {
+  const ab = new THREE.Vector3(
+    position.getX(second) - position.getX(first),
+    position.getY(second) - position.getY(first),
+    position.getZ(second) - position.getZ(first),
+  );
+  const ac = new THREE.Vector3(
+    position.getX(third) - position.getX(first),
+    position.getY(third) - position.getY(first),
+    position.getZ(third) - position.getZ(first),
+  );
+  return ab.cross(ac);
+}
+
+function outwardCliffFaceNormal(
+  position: THREE.BufferAttribute,
+  first: number,
+  second: number,
+  third: number,
+): THREE.Vector3 {
+  const face = cliffTriangleNormal(position, first, second, third);
+  if (face.lengthSq() < 1e-12) return face;
+  return face.normalize();
+}
+
+/**
+ * Keep the top and route normals smooth while giving each continuous geological
+ * band its own local normal boundary. Side quads use coincident shading
+ * vertices rather than one shared vertex across two steep planes; the boundary
+ * tests compare their coordinates so this remains a closed physical surface.
+ * The bottom centre and cap vertices are explicitly downward-facing.
+ */
+function resolveCliffNormals(
+  geometry: THREE.BufferGeometry,
+  faces: readonly CliffNormalFace[],
+): void {
+  if (faces.length === 0) return;
+  const position = geometry.getAttribute("position") as THREE.BufferAttribute;
+  const normal = geometry.getAttribute("normal") as THREE.BufferAttribute;
+
+  for (const face of faces) {
+    if (face.kind === "bottom") {
+      for (const vertex of face.vertices) normal.setXYZ(vertex, 0, -1, 0);
+      continue;
+    }
+
+    const [first, second, third, fourth, fifth, sixth] = face.vertices;
+    const geologicalA = outwardCliffFaceNormal(position, first, second, third);
+    const geologicalB = outwardCliffFaceNormal(position, fourth, fifth, sixth);
+    if (geologicalA.lengthSq() > 1e-12) {
+      geologicalA.normalize();
+      for (const vertex of [first, second, third]) {
+        normal.setXYZ(vertex, geologicalA.x, geologicalA.y, geologicalA.z);
+      }
+    }
+    if (geologicalB.lengthSq() > 1e-12) {
+      geologicalB.normalize();
+      for (const vertex of [fourth, fifth, sixth]) {
+        normal.setXYZ(vertex, geologicalB.x, geologicalB.y, geologicalB.z);
+      }
+    }
+  }
+  normal.needsUpdate = true;
+}
+
 function buildTerrain(
   blueprint: IslandBlueprint,
   detail: IslandGeometryDetail,
@@ -1018,9 +1373,11 @@ function buildTerrain(
   }
 
   // A broad, faceted cliff and a tapered root are the silhouette cue that the
-  // island is flying.  The tech ring is a separate component so it can be LOD
-  // switched without rebuilding the terrain mesh.
-  // Depth, not a fixed colour per ring.
+  // island is flying. The five-ring / 9-triangle-per-sector capacity is
+  // unchanged. What changed is the plan: each ring gathers the same authored
+  // outline toward a slightly offset tip, with low-frequency thickness
+  // variation, instead of scaling every sector by one radial. The lip copies
+  // the top-mesh outer ring so the contact edge cannot split.
   //
   // The old table painted the lip GRASS_DARK and everything below it two
   // greys, which under a 28-degree sun gave a near-vertical face almost no key
@@ -1030,50 +1387,111 @@ function buildTerrain(
   // and the rock below fades with depth the way a face does when less of the
   // sky can reach it. It is the same honest occlusion argument as the
   // curvature term on the top surface.
-  const rings = [
-    { radial: 1, depth: 0, sky: 1 },
-    { radial: 0.99, depth: -depth * 0.18, sky: 0.82 },
-    { radial: 0.82, depth: -depth * 0.43, sky: 0.58 },
-    { radial: 0.55, depth: -depth * 0.75, sky: 0.34 },
-    { radial: 0.22, depth: -depth * 0.98, sky: 0.16 },
-  ] as const;
   const cliffDark = new THREE.Color(islandCliffDarkFor(blueprint));
-  const cliffStart = positions.length / 3;
+  const rootPhase = hash(`${blueprint.seed}/cliff-root`) * Math.PI * 2;
+  const rootTip = cliffRootTip(blueprint, segments, rootPhase);
+  const rings = cliffRingProfiles(depth, blueprint.underside.taper);
+  const topOuterStart = 1 + (radials.length - 1) * segments;
+  const cliffRings: CliffVertex[][] = [];
   for (let ring = 0; ring < rings.length; ring += 1) {
     const profile = rings[ring]!;
+    const cliffRing: CliffVertex[] = [];
     for (let index = 0; index < segments; index += 1) {
       const point = outlineAt(blueprint.outline, index, segments);
       const sample = sampleIslandSurface(blueprint, point.x, point.z);
-      positions.push(
-        point.x * profile.radial * scale,
-        (sample.y + profile.depth) * scale,
-        point.z * profile.radial * scale,
-      );
+      const lobe = cliffRootLobe(rootPhase, index, segments);
+      let x = point.x;
+      let y = sample.y;
+      let z = point.z;
+      if (ring === 0) {
+        const source = (topOuterStart + index) * 3;
+        x = positions[source]! / scale;
+        y = positions[source + 1]! / scale;
+        z = positions[source + 2]! / scale;
+      } else {
+        const coastRadius = Math.hypot(point.x, point.z) || 1;
+        // Headlands retain a little more rock mass and bays taper sooner. This
+        // derives the lower silhouette from the same sampled outline instead
+        // of introducing a second radial/noise field for the root.
+        const headlandBias =
+          profile.gather >= 0.3
+            ? (clamp01(coastRadius / blueprint.bounds.maxHalf) - 0.72) * 0.12
+            : 0;
+        const gather = clamp01(profile.gather + lobe * profile.gatherVary - headlandBias);
+        // Every ring converges on the same bounded tip, with independent
+        // seeded radial mass. The cap cannot use a different offset from the
+        // ring it closes; that produced folded fans on concave short islands.
+        const radial = 1 - gather;
+        const angle = lobe * profile.cant;
+        const cos = Math.cos(angle),
+          sin = Math.sin(angle);
+        const localX = point.x - rootTip.x,
+          localZ = point.z - rootTip.z;
+        x = rootTip.x + radial * (localX * cos - localZ * sin);
+        z = rootTip.z + radial * (localX * sin + localZ * cos);
+        y = sample.y + profile.yOffset + depth * profile.depthVary * lobe;
+      }
       const ground = colorForTop(blueprint, detail, point.x, point.z, sample.radial, sample.y);
-      const stone = CLIFF.clone().lerp(cliffDark, 1 - profile.sky);
-      // The very lip keeps most of the meadow; one ring down is already rock.
-      const rockAmount = profile.sky >= 1 ? 0.18 : 0.86;
-      const colour = ground.lerp(stone, rockAmount);
-      colour.multiplyScalar(0.62 + profile.sky * 0.38);
-      pushColor(colors, colour);
+      cliffRing.push({
+        x,
+        y,
+        z,
+        colour: cliffStratumColour(ground, cliffDark, profile, lobe),
+      });
     }
+    cliffRings.push(cliffRing);
   }
+
+  const cliffFaces: CliffNormalFace[] = [];
   for (let ring = 0; ring < rings.length - 1; ring += 1) {
-    const upper = cliffStart + ring * segments;
-    const lower = upper + segments;
+    const upper = cliffRings[ring]!;
+    const lower = cliffRings[ring + 1]!;
     for (let index = 0; index < segments; index += 1) {
       const next = (index + 1) % segments;
-      indices.push(upper + index, upper + next, lower + index);
-      indices.push(upper + next, lower + next, lower + index);
+      const first = appendCliffVertex(positions, colors, upper[index]!, scale);
+      const second = appendCliffVertex(positions, colors, upper[next]!, scale);
+      const third = appendCliffVertex(positions, colors, lower[index]!, scale);
+      const fourth = appendCliffVertex(positions, colors, upper[next]!, scale);
+      const fifth = appendCliffVertex(positions, colors, lower[next]!, scale);
+      const sixth = appendCliffVertex(positions, colors, lower[index]!, scale);
+      const triangleA = [first, second, third] as const;
+      const triangleB = [fourth, fifth, sixth] as const;
+      indices.push(...triangleA);
+      indices.push(...triangleB);
+      cliffFaces.push({
+        kind: "side",
+        vertices: [
+          triangleA[0],
+          triangleA[1],
+          triangleA[2],
+          triangleB[0],
+          triangleB[1],
+          triangleB[2],
+        ],
+      });
     }
   }
-  const bottom = positions.length / 3;
-  positions.push(0, -depth * 1.08 * scale, 0);
-  pushColor(colors, cliffDark);
-  const last = cliffStart + (rings.length - 1) * segments;
+  const bottomColour = CLIFF.clone()
+    .lerp(ROCK, 0.72)
+    .lerp(DIRT_DARK, 0.24)
+    .lerp(cliffDark, 0.23)
+    .multiplyScalar(0.9);
+  const bottom = appendCliffVertex(
+    positions,
+    colors,
+    { x: rootTip.x, y: -depth * 1.08, z: rootTip.z, colour: bottomColour },
+    scale,
+  );
+  const last = cliffRings[rings.length - 1]!;
   for (let index = 0; index < segments; index += 1) {
     const next = (index + 1) % segments;
-    indices.push(bottom, last + index, last + next);
+    const first = appendCliffVertex(positions, colors, last[index]!, scale);
+    const second = appendCliffVertex(positions, colors, last[next]!, scale);
+    // Shared edges must have opposite directions. A consistent fan closes
+    // the last ring; individually flipping triangles can never repair a cap
+    // whose centre lies outside that ring's kernel.
+    indices.push(bottom, first, second);
+    cliffFaces.push({ kind: "bottom", vertices: [bottom, first, second] });
   }
 
   const geometry = new THREE.BufferGeometry();
@@ -1081,6 +1499,7 @@ function buildTerrain(
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
+  resolveCliffNormals(geometry, cliffFaces);
   resolveRouteNormals(geometry, routeShading);
   geometry.computeBoundingBox();
   geometry.computeBoundingSphere();
@@ -1102,19 +1521,20 @@ export function buildIslandGeometry(
   targetRadius?: number,
 ): IslandGeometryShape {
   const scale = islandGeometryScale(blueprint, detail, targetRadius);
-  // The course camera lives on the surface, where a seven-unit root is enough.
-  // The world map compresses a long island into a small icon; scaling that same
-  // absolute depth makes its underside a one-pixel line. Preserve a readable
-  // floating-island silhouette in that projection without duplicating the
-  // outline or terrain data.
-  const depth = detail === "world" ? blueprint.bounds.maxHalf * 0.54 : blueprint.underside.depth;
+  // Course and world share the authored root. World used to substitute
+  // maxHalf * 0.54 so a 6–11 unit course root would still silhouette after
+  // being scaled to an icon; that override is unnecessary once depth scales
+  // with the island. bounds.depth is the mesh's own minY, not the authoring
+  // number times scale, because the tip sits below that number and the rings vary.
+  const depth = blueprint.underside.depth;
   const built = buildTerrain(blueprint, detail, scale, depth);
+  const minY = built.geometry.boundingBox?.min.y ?? 0;
   return {
     terrain: built.geometry,
     bounds: {
       halfX: blueprint.bounds.halfX * scale,
       halfZ: blueprint.bounds.halfZ * scale,
-      depth: depth * scale,
+      depth: Math.max(0, -minY),
     },
     counts: built.counts,
     scale,

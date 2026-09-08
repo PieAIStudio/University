@@ -28,7 +28,7 @@ import {
 } from "@pieai/university-core";
 import { playSound } from "@pieai/university-ui/sound/index.js";
 import { useFrame } from "@react-three/fiber";
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, useContext, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { courseShapeOf, isFocusDimmed, type Course, type CourseNode } from "./course/course";
@@ -97,7 +97,10 @@ import {
   type MedallionGrounding,
   type MedallionInlays,
 } from "./grid/medallion-grounding.js";
-import { WorldHexField, type WorldGridIsland } from "./grid/WorldHexField.js";
+import { RemoteIslandField, type RemoteIslandPlacement } from "./island/remote-island-render.js";
+import { projectWorldCourse } from "./world-course-projection.js";
+import { CourseOverviewContext } from "./camera/CourseOverview.js";
+import { worldIslandCarrierTarget } from "./world-carrier.js";
 
 /**
  * The world's palette. Two greens for land, one warm accent for the only thing
@@ -291,17 +294,16 @@ export interface Marker {
   readonly locked?: boolean;
   /** Learning state remains DOM-readable as well as a scene tint. */
   readonly lessonState?: "done" | "live" | "idle" | "locked";
+  readonly courseState?: "done" | "live" | "open" | "idle";
 }
 
 interface WorldPlacement {
   readonly node: CourseNode;
   readonly position: THREE.Vector3;
   /**
-   * A renderer-facing projection of the stable island geometry. The catalogue
-   * field no longer builds this continuous island — it only needs the hex
-   * cluster — so the studio/study projection is the remaining caller.
+   * A renderer-facing projection of the stable continuous island geometry.
    */
-  readonly blueprint: IslandBlueprint | null;
+  readonly blueprint: IslandBlueprint;
   /** The same course grid, projected to the remote world scale. */
   readonly grid: HexMap;
   /** State hierarchy is a transform on the shared grid, not a new mesh. */
@@ -404,33 +406,7 @@ export function nextCourse(
  */
 export type WorldPlacementScope = "study" | "catalogue";
 
-/**
- * Build the one remote silhouette used by the catalogue and the planet.
- *
- * A planet course is still a world course: its cells, palette, height breaks
- * and footprint come from the same projection as the catalogue. Keeping this
- * helper beside `placeWorld` makes it impossible for the picker to quietly
- * grow a second island generator.
- */
-export function buildWorldCourseGrid(node: CourseNode, state: "done" | "idle" = "idle"): HexMap {
-  const lookSeed = islandLookSeedForCourse(node.courseId);
-  return buildCourseGrid({
-    studyId: node.studyId,
-    courseId: node.courseId,
-    seed: lookSeed ?? `${node.studyId}/${node.courseId}`,
-    activeLessonIndex: -1,
-    projection: "world",
-    footprintLessons: node.lessons,
-    lessons: [
-      {
-        lessonId: `${node.courseId}/world-anchor`,
-        unitId: `${node.courseId}/world-unit`,
-        unitIndex: 0,
-        state,
-      },
-    ],
-  });
-}
+export { buildWorldCourseGrid } from "./world-course-projection.js";
 
 /**
  * Build the one higher-level landmass for a study from the same world grid.
@@ -509,47 +485,12 @@ export function placeWorld(
     const layoutKey = scope === "catalogue" ? `${node.studyId}/${node.courseId}` : node.courseId;
     const local = laid.get(layoutKey);
     if (!local) continue;
-    const lookSeed = islandLookSeedForCourse(node.courseId);
     const baseState = stateOf(node, siblingsByStudy.get(node.studyId) ?? [], progressOf);
-    const geometry =
-      scope === "catalogue"
-        ? null
-        : islandGeometryBlueprint({
-            studyId: node.studyId,
-            courseId: node.courseId,
-            lessonCount: node.lessons,
-            seed: lookSeed,
-            themeSelection: islandThemeSelectionForCourse(node.studyId, node.courseId),
-          });
-    const blueprint = geometry ? projectIslandBlueprint(geometry) : null;
-    const grid =
-      scope === "catalogue"
-        ? buildWorldCourseGrid(node, baseState === "done" ? "done" : "idle")
-        : buildCourseGrid({
-            studyId: node.studyId,
-            courseId: node.courseId,
-            seed: blueprint?.seed ?? lookSeed ?? `${node.studyId}/${node.courseId}`,
-            routeArchetype: blueprint?.route.archetype,
-            routeAnchors: blueprint?.geometryNodes,
-            activeLessonIndex: -1,
-            projection: "world",
-            footprintLessons: node.lessons,
-            lessons: blueprint
-              ? blueprint.nodes.map((routeNode) => ({
-                  lessonId: routeNode.id,
-                  unitId: routeNode.unitId,
-                  unitIndex: routeNode.unitIndex,
-                  state: baseState === "done" ? ("done" as const) : ("idle" as const),
-                }))
-              : [
-                  {
-                    lessonId: `${node.courseId}/world-anchor`,
-                    unitId: `${node.courseId}/world-unit`,
-                    unitIndex: 0,
-                    state: baseState === "done" ? ("done" as const) : ("idle" as const),
-                  },
-                ],
-          });
+    const { blueprint, grid } = projectWorldCourse(
+      node,
+      scope,
+      baseState === "done" ? "done" : "idle",
+    );
     placements.push({
       node,
       position: new THREE.Vector3(local.x, 0, local.z),
@@ -587,7 +528,7 @@ export function placeWorld(
             z: entry.position.z,
             depth: entry.node.depth,
           })),
-          marked.map((entry) => entry.grid.bounds.maxHalf * entry.gridScale),
+          marked.map((entry) => entry.radius),
         )
       : null;
   const placed = separated
@@ -598,14 +539,27 @@ export function placeWorld(
     : marked;
   const extent =
     Math.max(
-      ...placed.map(
-        (entry) =>
-          Math.hypot(entry.position.x, entry.position.z) +
-          entry.grid.bounds.maxHalf * entry.gridScale,
-      ),
+      ...placed.map((entry) => Math.hypot(entry.position.x, entry.position.z) + entry.radius),
       1,
-    ) + 8;
+    ) + 5;
   return { placements: placed, extent };
+}
+
+/** V5 M: a series page owns its courses, not the other domains' catalogue.
+ * Keep the inexpensive catalogue projection/layout and one placement producer;
+ * filtering the input also prevents preparing geometry for invisible series.
+ */
+export function placeStudyArchipelago(
+  nodes: readonly CourseNode[],
+  progressOf: (node: CourseNode) => number,
+  studyId: string,
+): ReturnType<typeof placeWorld> {
+  return placeWorld(
+    nodes.filter((node) => node.studyId === studyId),
+    progressOf,
+    studyId,
+    "catalogue",
+  );
 }
 
 /**
@@ -731,13 +685,9 @@ export function LearnerMarker({
     };
   }, [surface]);
 
-  useFrame(({ clock }) => {
-    if (islandLookFrozen()) return;
+  useLayoutEffect(() => {
     const ground = travel.current;
-    const body = lift.current;
-    if (!ground || !body) return;
-
-    if (!target.current.equals(position)) {
+    if (ground && !target.current.equals(position)) {
       /*
         Retarget from wherever the avatar is now rather than from the node it
         set out from. A learner who picks a third island mid-flight should see
@@ -745,10 +695,19 @@ export function LearnerMarker({
       */
       from.current.copy(ground.position);
       target.current.copy(position);
-      startedAt.current = clock.elapsedTime;
+      // Start at the committed choice, not one rendered frame later. The
+      // first frame must catch up if it is late; the duration stays 420ms.
+      startedAt.current = performance.now();
       finishedAt.current = null;
       sequence.current += 1;
     }
+  }, [position.x, position.y, position.z]);
+
+  useFrame(() => {
+    if (islandLookFrozen()) return;
+    const ground = travel.current;
+    const body = lift.current;
+    if (!ground || !body) return;
     if (startedAt.current === null) {
       ground.position.copy(position);
       if (import.meta.env.DEV && surface) {
@@ -760,7 +719,7 @@ export function LearnerMarker({
           owner: reportOwner.current,
           sequence: sequence.current,
           inFlight: false,
-          startedAtClock: null,
+          startedAtPerformanceMs: null,
           finishedAt: finishedAt.current,
           position: ground.position.toArray(),
           target: target.current.toArray(),
@@ -769,7 +728,7 @@ export function LearnerMarker({
       return;
     }
 
-    const elapsedMs = (clock.elapsedTime - startedAt.current) * 1000;
+    const elapsedMs = Math.max(0, performance.now() - startedAt.current);
     const pose = hopPose({
       from: from.current,
       to: target.current,
@@ -792,7 +751,7 @@ export function LearnerMarker({
         owner: reportOwner.current,
         sequence: sequence.current,
         inFlight: startedAt.current !== null,
-        startedAtClock: startedAt.current,
+        startedAtPerformanceMs: startedAt.current,
         finishedAt: finishedAt.current,
         position: ground.position.toArray(),
         target: target.current.toArray(),
@@ -937,13 +896,14 @@ export function WorldScene({
   skyStudyId?: string | null;
   assetRevision?: number;
 }) {
-  const islands = useMemo<readonly WorldGridIsland[]>(
+  const remoteIslands = useMemo<readonly RemoteIslandPlacement[]>(
     () =>
       placements.map((entry) => ({
         id: `${entry.node.studyId}/${entry.node.courseId}`,
-        map: entry.grid,
+        blueprint: entry.blueprint,
         position: entry.position,
-        scale: entry.gridScale,
+        scale: 1,
+        radius: entry.radius,
         dimmed: entry.state === "idle" || isFocusDimmed(entry.node, authoringFocus),
       })),
     [authoringFocus, placements],
@@ -968,9 +928,9 @@ export function WorldScene({
   const carrierTarget = useMemo<CloudCarrierTarget>(
     () =>
       selectedPlacement
-        ? [selectedPlacement.position.x, selectedPlacement.position.y, selectedPlacement.position.z]
+        ? worldIslandCarrierTarget(selectedPlacement, weatherExtent, cloudLevel)
         : cloudHomeTarget,
-    [cloudHomeTarget, selectedPlacement],
+    [cloudHomeTarget, selectedPlacement, weatherExtent],
   );
   const carrierPosition = useMemo(() => new THREE.Vector3(...carrierTarget), [carrierTarget]);
   const carrierInitialPosition = useMemo(() => new THREE.Vector3(...cloudOrigin), [cloudOrigin]);
@@ -1003,11 +963,11 @@ export function WorldScene({
       {/*
         No roads between islands. The catalogue is an archipelago field, not a
         prerequisite diagram: order survives in labels and state, while the
-        shared instance field supplies the 53 silhouettes.
+        shared remote field supplies the 53 continuous silhouettes.
       */}
-      <WorldHexField
+      <RemoteIslandField
         key={assetRevision}
-        islands={islands}
+        islands={remoteIslands}
         onPick={(islandIndex) => {
           const entry = placements[islandIndex];
           if (!entry) return;
@@ -1337,6 +1297,7 @@ export function CourseScene({
   skyStudyId?: string | null;
   assetRevision?: number;
 }) {
+  const overview = useContext(CourseOverviewContext);
   const live = lessons.find((lesson) => lesson.state === "live");
   const avatarLesson = avatarLessonId
     ? (lessons.find((lesson) => lesson.lessonId === avatarLessonId) ?? null)
@@ -1385,7 +1346,14 @@ export function CourseScene({
       <Weather
         extent={extent * 1.6}
         groundRadius={extent}
-        fog={[88, 280]}
+        fog={
+          overview
+            ? [
+                Math.max(88, overview.distance + overview.radius * 1.1),
+                Math.max(280, overview.distance + overview.radius * 6),
+              ]
+            : [88, 280]
+        }
         sky={COURSE_SKY_STOPS}
         cloudLevel={-10.2}
         includeCloudSea={false}

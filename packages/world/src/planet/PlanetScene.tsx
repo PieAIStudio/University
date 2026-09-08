@@ -1,320 +1,461 @@
-/**
- * The first layer of the world is the same sky, seen from higher up.
- *
- * This scene deliberately has no globe, spherical terrain or planet-only
- * light rig. Each study is one real `projection: "world"` grid from Maps;
- * this file only composes those shared landmasses into one catalogue field and
- * chooses the camera distance that keeps their measured envelopes on screen.
- */
-import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
+/** Domain planets carry real study regions in their atmosphere (V5 decision M). */
+import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import * as THREE from "three";
-
-import { buildWorldStudyGrid, COURSE_SKY_STOPS, LearnerMarker, Weather } from "../Maps.js";
 import { Stage } from "../Stage.js";
 import type { AvatarRecipe } from "../avatar/index.js";
+import { HOP_DURATION_MS } from "../avatar/hop.js";
+import { MapLighting } from "../sky/lighting.js";
+import { SkyDome } from "../sky/skydome.js";
 import { renderTier } from "../sky/tier.js";
+import { islandLookFrozen } from "../island/island-surface-style.js";
+import { usePrefersReducedMotion } from "../reduced-motion.js";
+import { studyMarkerColor, type PlanetStudy, type PlanetStudyDomain } from "./planet-copy.js";
+import { buildDomainPlan, type DomainPlanGroup } from "./domain-plan.js";
+import { PlanetDomainLabels, PlanetResourceStatus } from "./PlanetDomainLabels.js";
+import { useDomainResources, type DomainResourceStatus } from "./use-domain-resources.js";
+import { domainPreparation } from "./domain-preparation-client.js";
 import {
-  CLOUD_CARRIER_FOOT_OFFSET,
-  cloudCarrierHome,
-  type CloudCarrierTarget,
-} from "../sky/cloud-sea.js";
-import { WorldHexField, type WorldGridIsland } from "../grid/WorldHexField.js";
-import { studyMarkerColor, type PlanetStudy } from "./planet-copy.js";
+  domainCameraDistance,
+  domainLabelWidth,
+  DOMAIN_OUTER_RADIUS,
+  DOMAIN_VIEW_FRONT as FRONT,
+  DOMAIN_VIEW_UP,
+  layoutDomainPlan,
+  type DomainPlacement,
+} from "./domain-layout.js";
+import { createDomainGlobeGeometry, createDomainCloudGeometry } from "./globe-geometry.js";
 import {
-  PLANET_CAMERA_POLAR,
-  placePlanetClusters,
-  planetCameraDistance,
-  type PlanetClusterLayout,
-} from "./placement.js";
+  planAtmosphericRegions,
+  planetRepresentativeLimit,
+  DOMAIN_RADIUS,
+  REGION_HIT_RADIUS,
+  atmosphericGeometryKey,
+  isAtmosphericRegionFacingCamera,
+} from "./atmospheric-regions.js";
 
-export const PLANET_ATMOSPHERE = {
-  /** The selected study rises as a readable layer in the same air. */
-  selectedLift: 1.08,
-  /** A small scale change makes the selected landmass own the eye. */
-  selectedScale: 1.045,
-  /** Stronger than the world catalogue so distance becomes the separator. */
-  fogNearRatio: 0.22,
-  fogFarRatio: 1.65,
-  cloudLevel: -10.2,
-} as const;
-
-interface PlanetStudyRecord {
-  readonly key: string;
-  readonly map: ReturnType<typeof buildWorldStudyGrid>;
-}
-
-interface PlanetProjection {
-  readonly layout: PlanetClusterLayout;
-  readonly records: ReadonlyMap<string, PlanetStudyRecord>;
-}
-
-/**
- * Build one actual shared world map per study, then feed the measured bounds
- * to the pure cluster solver. `useMemo` keeps this expensive generation stable
- * while selection only changes the visual transform below.
- */
-function buildPlanetProjection(studies: readonly PlanetStudy[]): PlanetProjection {
-  const records = new Map<string, PlanetStudyRecord>();
-  const layoutInputs = studies.map((study) => {
-    const map = buildWorldStudyGrid({
-      studyId: study.id,
-      studyTitle: study.title,
-      courseCount: study.courseCount,
-      lessonCount: study.lessonCount,
-    });
-    // The planet is the first-screen projection. The shared remote grid keeps
-    // its terrain, underside and palette, while optional GLB props stay on the
-    // catalogue projection because this standalone evidence host does not ship
-    // the app's public asset root. This is the explicit prop-count divergence
-    // allowed by the brief, not a second terrain path.
-    records.set(study.id, { key: study.id, map: { ...map, props: [] } });
-    return {
-      studyId: study.id,
-      courseCount: study.courseCount,
-      lessonCount: study.lessonCount,
-      cellCount: map.cells.length,
-      halfX: map.bounds.halfX,
-      halfZ: map.bounds.halfZ,
-      centerX: (map.bounds.minX + map.bounds.maxX) * 0.5,
-      centerZ: (map.bounds.minZ + map.bounds.maxZ) * 0.5,
-    };
-  });
-  return { layout: placePlanetClusters(layoutInputs), records };
-}
-
-function prefersReducedMotion(): boolean {
-  return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function PlanetClusterFocus({
-  cluster,
-  studyId,
-  y,
-}: {
-  readonly cluster: PlanetClusterLayout["clusters"][number];
-  readonly studyId: string;
-  readonly y: number;
-}) {
-  const ring = useRef<THREE.Mesh>(null);
-  const radius = Math.max(1.35, cluster.radius + 0.62);
-  const ringWidth = Math.min(0.46, Math.max(0.24, cluster.radius * 0.035));
-  const marker = studyMarkerColor(studyId);
-
-  useFrame(({ clock }) => {
-    if (!ring.current || prefersReducedMotion()) return;
-    const pulse = 1 + Math.sin(clock.getElapsedTime() * 2.2) * 0.055;
-    ring.current.scale.setScalar(pulse);
-  });
-
-  return (
-    <mesh
-      ref={ring}
-      name={`planet-study-focus-${studyId}`}
-      position={[cluster.centerX, y + 0.12, cluster.centerZ]}
-      rotation={[-Math.PI / 2, 0, 0]}
-      renderOrder={10}
-      userData={{ planetSelectedStudy: studyId, planetFocusRadius: radius }}
-    >
-      <ringGeometry args={[radius, radius + ringWidth, 48]} />
-      <meshBasicMaterial
-        color={marker.hex}
-        transparent
-        opacity={0.98}
-        depthTest={false}
-        depthWrite={false}
-        fog={false}
-        side={THREE.DoubleSide}
-        blending={THREE.AdditiveBlending}
-      />
-    </mesh>
-  );
-}
-
-function PlanetField({
-  projection,
+/** Physical dimensions, rather than selection-dependent island exaggeration. */
+export const PLANET_ATMOSPHERE = { radius: DOMAIN_RADIUS, regionAltitude: 1.12 } as const;
+const ORBIT_SKY = { zenith: 0x192e4e, mid: 0x425d79, horizon: 0x889eae, nadir: 0x233c58 };
+function DomainPlanet({
+  domain,
+  active,
+  position,
   selectedId,
   onSelect,
+  onSelectDomain,
+  labelNodes,
+  retry = 0,
+  onResourceStatus,
+  motionReduced,
 }: {
-  readonly projection: PlanetProjection;
+  readonly domain: DomainPlanGroup;
+  readonly active: boolean;
+  readonly position: readonly [number, number, number];
   readonly selectedId: string | null;
-  readonly onSelect?: (studyId: string) => void;
+  readonly onSelect?: (id: string) => void;
+  readonly onSelectDomain?: (id: string) => void;
+  readonly labelNodes?: ReadonlyMap<string, HTMLElement>;
+  readonly retry?: number;
+  readonly onResourceStatus?: (status: DomainResourceStatus) => void;
+  readonly motionReduced: boolean;
 }) {
-  const islands = useMemo<readonly WorldGridIsland[]>(() => {
-    return projection.layout.clusters.map((cluster) => {
-      const record = projection.records.get(cluster.studyId);
-      if (!record) throw new Error(`Missing planet study map ${cluster.studyId}`);
-      const selected = cluster.studyId === selectedId;
-      return {
-        id: `study/${record.key}`,
-        map: record.map,
-        position: new THREE.Vector3(
-          cluster.x,
-          selected ? PLANET_ATMOSPHERE.selectedLift : 0,
-          cluster.z,
-        ),
-        scale: selected ? PLANET_ATMOSPHERE.selectedScale : 1,
-        dimmed: selectedId !== null && !selected,
-      };
-    });
-  }, [projection, selectedId]);
-
-  const selectedCluster =
-    selectedId === null
-      ? null
-      : (projection.layout.clusters.find((cluster) => cluster.studyId === selectedId) ?? null);
-
+  const root = useRef<THREE.Group>(null);
+  const body = useRef<THREE.Group>(null);
+  const clouds = useRef<THREE.Mesh>(null);
+  const hits = useRef<THREE.InstancedMesh>(null);
+  const turn = useRef({ from: new THREE.Quaternion(), startedAt: 0 });
+  const initialized = useRef(false);
+  const lastSelected = useRef<string | undefined>(undefined);
+  const target = useRef(new THREE.Quaternion());
+  const cameraPoint = useRef(new THREE.Vector3());
+  const labelPoint = useRef(new THREE.Vector3());
+  const labelEdge = useRef(new THREE.Vector3());
+  const labelAnchor = useRef<{ x: number; y: number; node: HTMLElement | null }>({
+    x: NaN,
+    y: NaN,
+    node: null,
+  });
+  const viewportWidth = useThree((state) => state.size.width);
+  const representativeLimit = planetRepresentativeLimit(viewportWidth, renderTier());
+  const geometryKey = atmosphericGeometryKey(domain.studies, representativeLimit);
+  // Intentionally keyed by shape inputs, not learning-progress object identity.
+  const regions = useMemo(
+    () => planAtmosphericRegions(domain.studies, representativeLimit),
+    [geometryKey],
+  );
+  const globe = useMemo(() => createDomainGlobeGeometry(domain.id), [domain.id]);
+  const cloud = useMemo(() => createDomainCloudGeometry(domain.id), [domain.id]);
+  const { resources, preparationMs } = useDomainResources(
+    domain.id,
+    domain.studies,
+    retry,
+    onResourceStatus,
+    representativeLimit,
+  );
+  // Catalog refreshes rebuild only the islands. Each resource owns its cleanup
+  // so that change cannot dispose a globe/texture still used by this planet.
+  useEffect(() => () => globe.dispose(), [globe]);
+  useEffect(() => () => cloud.dispose(), [cloud]);
+  const selected = regions.find((region) => region.studyId === selectedId);
+  const oriented =
+    selected ?? regions.find((region) => region.studyId === lastSelected.current) ?? regions[0];
+  useLayoutEffect(() => {
+    if (selected) lastSelected.current = selected.studyId;
+    if (body.current) turn.current.from.copy(body.current.quaternion);
+    turn.current.startedAt = performance.now();
+  }, [oriented?.studyId]);
+  useLayoutEffect(() => {
+    if (!hits.current) return;
+    const matrix = new THREE.Matrix4();
+    for (let i = 0; i < regions.length; i++) {
+      matrix.makeTranslation(regions[i]!.position);
+      hits.current.setMatrixAt(i, matrix);
+    }
+    hits.current.instanceMatrix.needsUpdate = true;
+    hits.current.computeBoundingSphere();
+  }, [regions, resources]);
+  useFrame(({ camera, size }, delta) => {
+    if (!root.current || !body.current) return;
+    // Each peer faces the actual camera from its own centre. A fixed global
+    // normal is wrong for off-centre planets and fails after a narrow resize.
+    camera.getWorldPosition(cameraPoint.current);
+    root.current.worldToLocal(cameraPoint.current).normalize();
+    target.current.setFromUnitVectors(oriented?.normal ?? FRONT, cameraPoint.current);
+    if (!initialized.current) {
+      body.current.quaternion.copy(target.current);
+      turn.current.from.copy(target.current);
+      initialized.current = true;
+    }
+    // Selection travel follows elapsed time even when a frame is late.
+    // Capping delta here would stretch a 420ms turn on a slower device.
+    const elapsedMs = Math.max(0, performance.now() - turn.current.startedAt);
+    const frozen = motionReduced || islandLookFrozen();
+    const progress = frozen ? 1 : Math.min(1, elapsedMs / HOP_DURATION_MS);
+    body.current.quaternion.slerpQuaternions(
+      turn.current.from,
+      target.current,
+      1 - (1 - progress) ** 3,
+    );
+    if (clouds.current && !frozen) clouds.current.rotation.y += Math.min(delta, 0.05) * 0.008;
+    const label = labelNodes?.get(domain.id);
+    if (label) {
+      labelPoint.current.copy(DOMAIN_VIEW_UP).multiplyScalar(DOMAIN_RADIUS * 1.24);
+      root.current.localToWorld(labelPoint.current);
+      labelEdge.current.copy(labelPoint.current);
+      labelEdge.current.x += DOMAIN_OUTER_RADIUS;
+      labelEdge.current.project(camera);
+      labelPoint.current.project(camera);
+      const x = (labelPoint.current.x * 0.5 + 0.5) * size.width;
+      const y = (-labelPoint.current.y * 0.5 + 0.5) * size.height;
+      const pixelsPerUnit =
+        (Math.abs(labelEdge.current.x - labelPoint.current.x) * size.width) /
+        (2 * DOMAIN_OUTER_RADIUS);
+      const maxWidth = `${domainLabelWidth(pixelsPerUnit).toFixed(2)}px`;
+      if (label.style.maxWidth !== maxWidth) label.style.maxWidth = maxWidth;
+      const previous = labelAnchor.current;
+      if (
+        previous.node !== label ||
+        Math.abs(previous.x - x) > 0.01 ||
+        Math.abs(previous.y - y) > 0.01
+      ) {
+        label.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) translate(-50%, -100%)`;
+        previous.x = x;
+        previous.y = y;
+        previous.node = label;
+      }
+    }
+  });
+  const pickRegion = (event: ThreeEvent<MouseEvent>) => {
+    const region = event.instanceId === undefined ? undefined : regions[event.instanceId];
+    if (!region || !body.current) return;
+    if (
+      !isAtmosphericRegionFacingCamera(
+        region,
+        body.current.matrixWorld,
+        event.camera.getWorldPosition(new THREE.Vector3()),
+      )
+    )
+      return;
+    event.stopPropagation();
+    onSelectDomain?.(domain.id);
+    onSelect?.(region.studyId);
+  };
+  const focusOrientation = selected
+    ? new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), selected.normal)
+    : undefined;
   return (
-    <>
-      <WorldHexField
-        islands={islands}
-        onPick={(islandIndex) => {
-          const cluster = projection.layout.clusters[islandIndex];
-          if (cluster) onSelect?.(cluster.studyId);
-        }}
-        onHover={() => undefined}
-      />
-      {selectedCluster ? (
-        <PlanetClusterFocus
-          cluster={selectedCluster}
-          studyId={selectedCluster.studyId}
-          y={PLANET_ATMOSPHERE.selectedLift}
-        />
-      ) : null}
-    </>
+    <group
+      ref={root}
+      position={position}
+      name={`domain-planet-${domain.id}`}
+      userData={{
+        domainId: domain.id,
+        studyIds: domain.studies.map((study) => study.id),
+        planetAssetsReady: resources !== null,
+        preparationMs,
+        representativeLimit,
+      }}
+    >
+      <group ref={body}>
+        <mesh
+          geometry={globe}
+          scale={DOMAIN_RADIUS}
+          name={`domain-globe-${domain.id}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            onSelectDomain?.(domain.id);
+            if (!active && domain.studies[0]) onSelect?.(domain.studies[0].id);
+          }}
+        >
+          <meshStandardMaterial
+            key={resources?.texture.uuid ?? "preview"}
+            map={resources?.texture ?? null}
+            vertexColors={!resources}
+            roughness={0.95}
+          />
+        </mesh>
+        {/* Back faces provide a thin atmospheric limb; the opaque sphere hides its interior. */}
+        <mesh
+          geometry={globe}
+          scale={DOMAIN_RADIUS * 1.028}
+          name={`domain-atmosphere-${domain.id}`}
+        >
+          <meshBasicMaterial
+            color={0xa8d8ef}
+            transparent
+            opacity={0.24}
+            side={THREE.BackSide}
+            depthWrite={false}
+          />
+        </mesh>
+        <mesh
+          ref={clouds}
+          geometry={cloud}
+          scale={DOMAIN_RADIUS}
+          name={`domain-clouds-${domain.id}`}
+        >
+          <meshStandardMaterial color={0xf3f1e7} roughness={1} />
+        </mesh>
+        {resources?.islands.getAttribute("position") ? (
+          <mesh
+            geometry={resources.islands}
+            name={`domain-course-islands-${domain.id}`}
+            userData={{ atmosphericCourseIds: regions.flatMap((region) => region.courseIds) }}
+          >
+            <meshStandardMaterial vertexColors roughness={1} />
+          </mesh>
+        ) : null}
+        {resources && regions.length > 0 ? (
+          <instancedMesh
+            ref={hits}
+            args={[undefined, undefined, regions.length]}
+            name={`domain-region-targets-${domain.id}`}
+            onClick={pickRegion}
+          >
+            <sphereGeometry args={[REGION_HIT_RADIUS, 8, 6]} />
+            <meshBasicMaterial transparent opacity={0} colorWrite={false} depthWrite={false} />
+          </instancedMesh>
+        ) : null}
+        {selected && active ? (
+          <mesh
+            position={selected.position}
+            quaternion={focusOrientation}
+            name={`planet-study-focus-${selected.studyId}`}
+            userData={{ planetSelectedStudy: selected.studyId }}
+          >
+            <ringGeometry args={[0.73, 0.76, 48]} />
+            <meshBasicMaterial
+              color={studyMarkerColor(selected.studyId).hex}
+              side={THREE.DoubleSide}
+              transparent
+              opacity={0.85}
+              depthWrite={false}
+            />
+          </mesh>
+        ) : null}
+      </group>
+    </group>
   );
 }
 
-function PlanetCameraRig({ bounds }: { readonly bounds: PlanetClusterLayout["bounds"] }) {
-  const { camera, size } = useThree();
+function PlanetCameraRig({ placements }: { readonly placements: readonly DomainPlacement[] }) {
+  const { camera, size, gl } = useThree();
   useLayoutEffect(() => {
     if (!(camera instanceof THREE.PerspectiveCamera)) return;
-    const aspect = size.height > 0 ? size.width / size.height : 1;
-    const distance = planetCameraDistance(bounds, aspect, camera.fov);
-    const offset = new THREE.Vector3().setFromSpherical(
-      new THREE.Spherical(distance, PLANET_CAMERA_POLAR, 0.16),
-    );
-    camera.position.copy(offset);
-    camera.lookAt(0, 0, 0);
-    camera.updateProjectionMatrix();
-  }, [camera, bounds, size.height, size.width]);
+    const shell = gl.domElement.closest(".app-shell");
+    const configure = () => {
+      const rect = gl.domElement.getBoundingClientRect();
+      const rail = shell?.querySelector("#app-shell-rail")?.getBoundingClientRect();
+      const aside = shell?.querySelector("#app-shell-aside")?.getBoundingClientRect();
+      const desktop = size.width >= 768;
+      const left = desktop && rail && rail.width > 0 ? Math.max(0, rail.right - rect.left + 12) : 0;
+      const right =
+        desktop && aside && aside.width > 0 ? Math.max(0, rect.right - aside.left + 12) : 0;
+      const distance = domainCameraDistance(placements, {
+        height: size.height,
+        usableWidth: size.width - left - right - 36,
+        // Projected domain-name pills extend above their 3D anchor. Reserve
+        // their real one-line height plus breathing room on both edges;
+        // fitting spheres alone clipped the top row on a 375px viewport.
+        usableHeight: size.height - (placements.length > 1 ? 72 : 36),
+        fovDegrees: camera.fov,
+      });
+      camera.position.copy(FRONT).multiplyScalar(distance);
+      camera.lookAt(0, 0, 0);
+      camera.setViewOffset(size.width, size.height, (right - left) / 2, 0, size.width, size.height);
+      camera.updateProjectionMatrix();
+    };
+    configure();
+    const observer = new ResizeObserver(configure);
+    for (const id of ["#app-shell-rail", "#app-shell-aside"]) {
+      const element = shell?.querySelector(id);
+      if (element) observer.observe(element);
+    }
+    return () => {
+      observer.disconnect();
+      camera.clearViewOffset();
+    };
+  }, [camera, gl, size.width, size.height, placements]);
   return null;
 }
 
 export interface PlanetSceneProps {
   readonly studies: readonly PlanetStudy[];
+  readonly domainCatalog?: readonly PlanetStudyDomain[];
   readonly selectedId: string | null;
+  readonly selectedDomainId?: string | null;
+  readonly onSelectDomain?: (domainId: string) => void;
   readonly onSelect?: (studyId: string) => void;
   readonly avatarRecipe?: AvatarRecipe | null;
   readonly avatarSignedIn?: boolean;
 }
-
 export function PlanetScene({
   studies,
+  domainCatalog,
   selectedId,
+  selectedDomainId,
   onSelect,
-  avatarRecipe = null,
-  avatarSignedIn = false,
-}: PlanetSceneProps) {
-  const projection = useMemo(() => buildPlanetProjection(studies), [studies]);
-  const { camera, size } = useThree();
-  const aspect = size.height > 0 ? size.width / size.height : 1;
-  const fov = camera instanceof THREE.PerspectiveCamera ? camera.fov : 34;
-  const cameraDistance = planetCameraDistance(projection.layout.bounds, aspect, fov);
-  // Weather's extent sizes the shared sky/ground assets. Keep its clouds near
-  // the fitted field so their existing sculpted silhouettes remain readable
-  // from this higher camera instead of shrinking into a row of specks.
-  const weatherExtent = Math.max(projection.layout.bounds.maxHalf + 18, cameraDistance * 0.52);
-  const selectedCluster =
-    selectedId === null
-      ? null
-      : (projection.layout.clusters.find((cluster) => cluster.studyId === selectedId) ?? null);
-  const cloudLevel = PLANET_ATMOSPHERE.cloudLevel;
-  const cloudOrigin = useMemo(
-    () => cloudCarrierHome(weatherExtent, cloudLevel),
-    [cloudLevel, weatherExtent],
-  );
-  const carrierTarget = useMemo<CloudCarrierTarget>(
-    () =>
-      selectedCluster
-        ? [
-            selectedCluster.centerX,
-            PLANET_ATMOSPHERE.selectedLift + CLOUD_CARRIER_FOOT_OFFSET,
-            selectedCluster.centerZ,
-          ]
-        : cloudOrigin,
-    [cloudOrigin, selectedCluster],
-  );
-  const carrierPosition = useMemo(() => new THREE.Vector3(...carrierTarget), [carrierTarget]);
-  const carrierInitialPosition = useMemo(() => new THREE.Vector3(...cloudOrigin), [cloudOrigin]);
-
+  onSelectDomain,
+  labelNodes,
+  retry,
+  onResourceStatus,
+}: PlanetSceneProps & {
+  readonly labelNodes?: ReadonlyMap<string, HTMLElement>;
+  readonly retry?: number;
+  readonly onResourceStatus?: (status: DomainResourceStatus) => void;
+}) {
+  const domains = useMemo(() => buildDomainPlan(studies, domainCatalog), [studies, domainCatalog]);
+  const motionReduced = usePrefersReducedMotion();
+  const viewportWidth = useThree((state) => state.size.width);
+  const representativeLimit = planetRepresentativeLimit(viewportWidth, renderTier());
+  const layout = useMemo(() => layoutDomainPlan(domains.map((domain) => domain.id)), [domains]);
+  const activeId =
+    domains.find((domain) => domain.id === selectedDomainId)?.id ??
+    domains.find((domain) => domain.studies.some((study) => study.id === selectedId))?.id ??
+    domains[0]?.id;
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    const bag = globalThis as unknown as {
-      __planetProjection?: () => unknown;
-    };
+    const bag = globalThis as unknown as { __planetProjection?: () => unknown };
     const describe = () => ({
-      clusterCount: projection.layout.clusters.length,
-      courseCount: projection.layout.clusters.reduce(
-        (sum, cluster) => sum + cluster.courseCount,
-        0,
-      ),
-      clusters: projection.layout.clusters,
-      cells: projection.layout.clusters.reduce((sum, cluster) => sum + cluster.cellCount, 0),
-      bounds: projection.layout.bounds,
+      domainCount: domains.length,
+      domains: domains.map((domain) => ({
+        id: domain.id,
+        studyIds: domain.studies.map((study) => study.id),
+        position: layout.find((entry) => entry.domainId === domain.id)?.position,
+        regions: planAtmosphericRegions(domain.studies, representativeLimit).map((region) => ({
+          studyId: region.studyId,
+          courseIds: region.courseIds,
+          position: region.position.toArray(),
+        })),
+      })),
       selectedId,
-      selectedLift: PLANET_ATMOSPHERE.selectedLift,
+      activeDomainId: activeId,
+      courseCount: studies.reduce((sum, study) => sum + study.courseCount, 0),
+      preparation: domainPreparation.describe(),
+      representativeLimit,
     });
     bag.__planetProjection = describe;
     return () => {
       if (bag.__planetProjection === describe) delete bag.__planetProjection;
     };
-  }, [projection, selectedId]);
-
+  }, [domains, selectedId, studies, activeId, layout, representativeLimit]);
   return (
     <>
-      <PlanetCameraRig bounds={projection.layout.bounds} />
-      <Weather
-        extent={weatherExtent}
-        groundRadius={weatherExtent * 0.9}
-        fog={[
-          cameraDistance * PLANET_ATMOSPHERE.fogNearRatio,
-          cameraDistance * PLANET_ATMOSPHERE.fogFarRatio,
-        ]}
-        fogColor={COURSE_SKY_STOPS.nadir}
-        sky={COURSE_SKY_STOPS}
-        cloudLevel={cloudLevel}
-        includeSea={false}
-        includeDistantGround
-        shadows={false}
-        carrierTarget={carrierTarget}
-        carrierSurface="planet"
-      />
-      <PlanetField projection={projection} selectedId={selectedId} onSelect={onSelect} />
-      <LearnerMarker
-        position={carrierPosition}
-        initialPosition={carrierInitialPosition}
-        recipe={avatarRecipe}
-        signedIn={avatarSignedIn}
-        showRing={false}
-        surface="planet"
-      />
+      <PlanetCameraRig placements={layout} />
+      <color attach="background" args={[ORBIT_SKY.zenith]} />
+      <SkyDome stops={ORBIT_SKY} />
+      <MapLighting groundRadius={DOMAIN_RADIUS} skyMid={ORBIT_SKY.mid} shadows={false} />
+      {domains.map((domain) => {
+        const position = layout.find((entry) => entry.domainId === domain.id)!.position;
+        return (
+          <DomainPlanet
+            key={domain.id}
+            domain={domain}
+            active={domain.id === activeId}
+            position={position}
+            selectedId={selectedId}
+            onSelect={onSelect}
+            onSelectDomain={onSelectDomain}
+            labelNodes={labelNodes}
+            retry={retry}
+            onResourceStatus={onResourceStatus}
+            motionReduced={motionReduced}
+          />
+        );
+      })}
     </>
   );
 }
-
-function planetCamera(): readonly [number, number, number] {
-  return renderTier() === "mobile" ? [0, 22, 40] : [0, 34, 58];
-}
-
 export function PlanetStage({
   children,
   ...props
 }: PlanetSceneProps & { readonly children?: ReactNode }) {
+  const labelNodes = useRef(new Map<string, HTMLElement>());
+  const [resourceStates, setResourceStates] = useState<
+    Record<string, DomainResourceStatus["state"]>
+  >({});
+  const [retry, setRetry] = useState(0);
+  const domainIds = useMemo(
+    () => buildDomainPlan(props.studies, props.domainCatalog).map((domain) => domain.id),
+    [props.studies, props.domainCatalog],
+  );
+  const onResourceStatus = useCallback(({ domainId, state }: DomainResourceStatus) => {
+    setResourceStates((previous) =>
+      previous[domainId] === state ? previous : { ...previous, [domainId]: state },
+    );
+  }, []);
   return (
-    <Stage cameraFrom={planetCamera()} lookAt={[0, 0, 0]} ambientOcclusion={false}>
-      <PlanetScene {...props} />
-      {children}
-    </Stage>
+    <div className="planet-stage">
+      <Stage cameraFrom={[0, 0, 44]} lookAt={[0, 0, 0]} ambientOcclusion={false}>
+        <PlanetScene
+          {...props}
+          labelNodes={labelNodes.current}
+          retry={retry}
+          onResourceStatus={onResourceStatus}
+        />
+        {children}
+      </Stage>
+      <PlanetDomainLabels
+        studies={props.studies}
+        domainCatalog={props.domainCatalog}
+        selectedId={props.selectedId}
+        selectedDomainId={props.selectedDomainId}
+        nodes={labelNodes.current}
+      />
+      <PlanetResourceStatus
+        domainIds={domainIds}
+        states={resourceStates}
+        onRetry={() => setRetry((n) => n + 1)}
+      />
+    </div>
   );
 }

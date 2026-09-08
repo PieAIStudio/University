@@ -4,6 +4,7 @@ import * as THREE from "three";
 
 import { playSound } from "@pieai/university-ui/sound/index.js";
 import type { IslandUnitSigil } from "../island/island-blueprint.js";
+import { usePrefersReducedMotion } from "../reduced-motion.js";
 import { islandLookFrozen } from "../island/island-surface-style.js";
 import { unitRingGeometry, unitSigilArcCount } from "../island/unit-sigil.js";
 import type { LessonPlacement } from "../Maps.js";
@@ -207,6 +208,31 @@ export function LessonMarkerField({
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     });
   }, [batches, bodyTint, engravingTint, markers, matrix, scratch]);
+
+  const reducedMotion = usePrefersReducedMotion();
+
+  // If reduced-motion is dynamically enabled, restore live marker's engraving scale immediately to 1.0
+  useEffect(() => {
+    if (!reducedMotion) return;
+    const liveIndex = markers.findIndex((entry) => entry.lesson.state === "live");
+    if (liveIndex < 0) return;
+    const live = markers[liveIndex]!;
+    batches.forEach((batch, batchIndex) => {
+      const slot = batch.indices.indexOf(liveIndex);
+      if (slot < 0) return;
+      const mesh = engravingRefs.current[batchIndex];
+      if (!mesh) return;
+      composeMarkerMatrix(
+        live,
+        MARKER_ENGRAVING_OFFSET,
+        live.radius * MEDALLION_TOP_RADIUS,
+        matrix,
+        scratch,
+      );
+      mesh.setMatrixAt(slot, matrix);
+      mesh.instanceMatrix.needsUpdate = true;
+    });
+  }, [reducedMotion, batches, markers, matrix, scratch]);
 
   useFrame(({ clock }) => {
     if (!markerPulseAllowed()) return;

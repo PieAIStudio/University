@@ -69,6 +69,26 @@ const BUSH_LOBE_RECIPES: readonly LobeRecipe[] = [
 ];
 
 const UP = new THREE.Vector3(0, 1, 0);
+const CROWN_SCALE_JITTER = { min: 0.94, span: 0.12 } as const;
+
+/** Conservative XZ envelope of the actual lobe recipes under every seeded
+ * yaw/pitch and scale jitter. A rotation cannot enlarge a lobe's circumsphere.
+ * Planning reads these recipes, not a second guessed "tree height" radius.
+ */
+export function foliageFootprintRadius(kind: "tree" | "bush", height: number): number {
+  const recipes = kind === "tree" ? TREE_LOBE_RECIPES : BUSH_LOBE_RECIPES;
+  return (
+    height *
+    Math.max(
+      ...recipes.map(
+        (recipe) =>
+          Math.hypot(recipe.along, recipe.side) +
+          Math.max(recipe.radiusX, recipe.radiusY, recipe.radiusZ) *
+            (CROWN_SCALE_JITTER.min + CROWN_SCALE_JITTER.span),
+      ),
+    )
+  );
+}
 
 function geometryTriangleCount(geometry: THREE.BufferGeometry): number {
   const index = geometry.getIndex();
@@ -82,16 +102,25 @@ function geometryTriangleCount(geometry: THREE.BufferGeometry): number {
  * smooth normals. Three.js emits a non-indexed mesh; without the weld each
  * face is a unique triangle and shading goes flat.
  */
-export function createSmoothIcosahedron(detail: number): THREE.BufferGeometry {
+export function createSmoothIcosahedron(detail: number, upBias = 0): THREE.BufferGeometry {
   const source = new THREE.IcosahedronGeometry(1, detail);
-  // Strip UV and normal before weld: Foliage uses untextured vertex/instance colors,
-  // and UV cuts otherwise leave coincident vertices unmerged along seams with
-  // mismatched normals.
   source.deleteAttribute("uv");
   source.deleteAttribute("normal");
   const geometry = mergeVertices(source);
   source.dispose();
   geometry.computeVertexNormals();
+
+  if (upBias > 0) {
+    const normalAttr = geometry.getAttribute("normal");
+    const bias = new THREE.Vector3(0, upBias, 0);
+    const n = new THREE.Vector3();
+    for (let i = 0; i < normalAttr.count; i += 1) {
+      n.fromBufferAttribute(normalAttr, i);
+      n.add(bias).normalize();
+      normalAttr.setXYZ(i, n.x, n.y, n.z);
+    }
+    normalAttr.needsUpdate = true;
+  }
   return geometry;
 }
 
@@ -121,7 +150,7 @@ function lobesFromRecipes(
   const swing = (random() - 0.5) * 0.4;
   const lobes: CrownLobeTransform[] = [];
   for (const recipe of recipes) {
-    const scaleJitter = 0.94 + random() * 0.12;
+    const scaleJitter = CROWN_SCALE_JITTER.min + random() * CROWN_SCALE_JITTER.span;
     const yaw = placement.turn + recipe.yaw + swing + (random() - 0.5) * 0.18;
     const pitch = (random() - 0.5) * 0.16;
     const local = new THREE.Vector3(

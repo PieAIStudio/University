@@ -144,6 +144,50 @@ describe("PlanetPage contract", () => {
 });
 
 describe("PlanetPage", () => {
+  it("shows only the selected domain's real series and preserves an explicit empty domain", async () => {
+    const domainCatalog = [
+      { id: "a", title: "有课程" },
+      { id: "empty", title: "暂未开课" },
+    ];
+    const studies = STUDIES.map((study) => ({ ...study, domain: domainCatalog[0]! }));
+    const selectedDomains: string[] = [];
+    await act(async () =>
+      root.render(
+        <PlanetPage
+          studies={studies}
+          domainCatalog={domainCatalog}
+          selectedId="buzz"
+          selectedDomainId="empty"
+          onSelect={() => undefined}
+          onSelectDomain={(id) => selectedDomains.push(id)}
+          onEnter={() => undefined}
+          onClose={() => undefined}
+        />,
+      ),
+    );
+    expect(container.querySelectorAll("[data-study-id]")).toHaveLength(0);
+    expect(container.querySelector(".planet-page__enter")).toBeNull();
+    expect(container.textContent).toContain("这个领域还没有课程系列。");
+    const realDomain = container.querySelector('[data-domain-id="a"]')!;
+    await act(async () => dispatchPointerSequence(realDomain));
+    expect(selectedDomains).toEqual(["a"]);
+    await act(async () =>
+      root.render(
+        <PlanetPage
+          studies={studies}
+          domainCatalog={domainCatalog}
+          selectedId="buzz"
+          selectedDomainId="a"
+          onSelect={() => undefined}
+          onEnter={() => undefined}
+          onClose={() => undefined}
+        />,
+      ),
+    );
+    expect(container.querySelectorAll("[data-study-id]")).toHaveLength(2);
+    expect(container.querySelector(".planet-page__enter")?.textContent).toContain("Buzz");
+  });
+
   it("lists studies in the DOM and selects one from a real pointer sequence, not element.click()", async () => {
     const selected: string[] = [];
     await act(async () => {
@@ -242,20 +286,15 @@ describe("PlanetPage", () => {
     expect(rows.map((node) => node.getAttribute("data-study-id"))).toEqual(["buzz", "turing-pact"]);
   });
 
-  it("keeps the higher shared-world cluster contract and the project colour in the DOM", () => {
-    expect(SCENE_SRC).toContain("buildWorldStudyGrid");
-    expect(SCENE_SRC).toContain("WorldHexField");
-    expect(SCENE_SRC).toContain("Weather");
-    expect(SCENE_SRC).toContain("COURSE_SKY_STOPS");
-    expect(SCENE_SRC).toContain("placePlanetClusters");
-    expect(SCENE_SRC).toContain("PLANET_CAMERA_POLAR");
-    expect(SCENE_SRC).toContain("PLANET_ATMOSPHERE");
-    expect(SCENE_SRC).toContain("selectedScale");
-    expect(SCENE_SRC).not.toMatch(
-      /Icosahedron|sphericalFbm|buildPlanetGeometry|FloatingStudyCluster/,
-    );
-    expect(SCENE_SRC).not.toMatch(
-      /PIN_PROFILE|PIN_SCREEN_LIFT|PIN_BEAM_HEIGHT|latheGeometry|MARKER_QUIET/,
-    );
+  it("uses domain globes with atmospheric course islands and shared lighting", () => {
+    expect(SCENE_SRC).toContain("buildDomainPlan");
+    expect(SCENE_SRC).toContain("createDomainGlobeGeometry");
+    // Expensive preparation runs off-thread, using the same generator rather
+    // than swapping in synthetic islands or doing synchronous work on a click.
+    expect(SCENE_SRC).toContain("useDomainResources");
+    expect(SCENE_SRC).toContain("MapLighting");
+    expect(SCENE_SRC).not.toContain("RemoteIslandField");
+    expect(SCENE_SRC).not.toContain("directionalLight");
+    expect(SCENE_SRC).not.toContain("placePlanetClusters");
   });
 });

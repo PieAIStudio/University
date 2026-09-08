@@ -14,6 +14,7 @@ export {
   CourseScene,
   placeCourse,
   placeWorld,
+  placeStudyArchipelago,
   settlementSize,
   skyStopsForStudy,
   WorldScene,

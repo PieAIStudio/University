@@ -85,6 +85,61 @@ function sampledRelief(blueprint: ReturnType<typeof islandBlueprint>): number {
   return Math.max(...values) - Math.min(...values);
 }
 
+function percentile(values: readonly number[], fraction: number): number {
+  const ordered = [...values].sort((first, second) => first - second);
+  return ordered[Math.floor((ordered.length - 1) * fraction)] ?? 0;
+}
+
+function naturalReliefMetrics(blueprint: ReturnType<typeof islandBlueprint>): {
+  readonly relativeRange: number;
+  readonly curvatureP95: number;
+  readonly slopeP95: number;
+} {
+  // Measure at a stable fraction of the island rather than at every terrain
+  // vertex. This catches a short wrinkle or shelf that the course lattice can
+  // represent, while keeping the test about the shared surface rule rather
+  // than one projection's tessellation.
+  const step = Math.max(1.1, blueprint.bounds.maxHalf * 0.035);
+  const heights: number[] = [];
+  const curvatures: number[] = [];
+  const slopes: number[] = [];
+  for (let ix = 1; ix < 10; ix += 1) {
+    for (let iz = 1; iz < 10; iz += 1) {
+      const x = ((ix / 10) * 2 - 1) * blueprint.bounds.halfX * 0.82;
+      const z = ((iz / 10) * 2 - 1) * blueprint.bounds.halfZ * 0.82;
+      const centre = sampleIslandSurface(blueprint, x, z);
+      if (!centre.inside) continue;
+      const east = sampleIslandSurface(blueprint, x + step, z);
+      const west = sampleIslandSurface(blueprint, x - step, z);
+      const north = sampleIslandSurface(blueprint, x, z + step);
+      const south = sampleIslandSurface(blueprint, x, z - step);
+      if (!(east.inside && west.inside && north.inside && south.inside)) continue;
+      heights.push(centre.y);
+      curvatures.push(
+        Math.max(
+          Math.abs(east.y - 2 * centre.y + west.y),
+          Math.abs(north.y - 2 * centre.y + south.y),
+        ) /
+          (step * step),
+      );
+      slopes.push(
+        Math.max(
+          Math.abs(east.y - centre.y),
+          Math.abs(west.y - centre.y),
+          Math.abs(north.y - centre.y),
+          Math.abs(south.y - centre.y),
+        ) / step,
+      );
+    }
+  }
+  if (heights.length < 12) throw new Error("natural relief survey needs interior samples");
+  return {
+    relativeRange: (Math.max(...heights) - Math.min(...heights)) / blueprint.bounds.maxHalf,
+    curvatureP95: percentile(curvatures, 0.95),
+    slopeP95: percentile(slopes, 0.95),
+  };
+}
+
 describe("IslandBlueprint", () => {
   it.each([3, 6, 7, 12, 24, 41])(
     "builds a valid linear blueprint for %i lessons",
@@ -353,6 +408,57 @@ describe("IslandBlueprint", () => {
       expect(relief, `${lessonCount} relief`).toBeGreaterThanOrEqual(maxHalf * 0.075);
       expect(relief, `${lessonCount} relief`).toBeLessThanOrEqual(maxHalf * 0.235);
     }
+  });
+
+  it("keeps macro relief broad and micro curvature bounded across the 60-shape matrix", () => {
+    for (const routeArchetype of ISLAND_ROUTE_ARCHETYPES) {
+      for (const lessonCount of [6, 12, 24, 41]) {
+        for (const seed of ["coast", "upland", "grove"]) {
+          const blueprint = islandBlueprint({
+            ...INPUT,
+            lessonCount,
+            routeArchetype,
+            seed: `relief-matrix/${routeArchetype}/${lessonCount}/${seed}`,
+          });
+          const metrics = naturalReliefMetrics(blueprint);
+          const context = `${routeArchetype}/${lessonCount}/${seed}`;
+          // A visible broad landform remains; flattening the island to hide
+          // wrinkles is not an allowed way to pass this test.
+          expect(metrics.relativeRange, `${context} macro relief`).toBeGreaterThan(0.09);
+          expect(metrics.relativeRange, `${context} height ceiling`).toBeLessThanOrEqual(
+            0.235 + 1e-6,
+          );
+          // The old short octave and stronger shelf pass produced local
+          // corrugation at this scale. The p95 guard leaves room for a real
+          // hillside while rejecting a repeated fine step field.
+          expect(metrics.curvatureP95, `${context} curvature`).toBeLessThan(1.8);
+          expect(metrics.slopeP95, `${context} slope`).toBeLessThan(2.3);
+        }
+      }
+    }
+  });
+
+  it("sizes the floating root from maxHalf with a slight seed difference", () => {
+    const depths = new Set<number>();
+    for (const lessonCount of [6, 12, 24, 41]) {
+      for (const seed of ["coast", "upland", "grove"]) {
+        const blueprint = islandBlueprint({
+          ...INPUT,
+          lessonCount,
+          seed: `root-depth/${lessonCount}/${seed}`,
+        });
+        const ratio = blueprint.underside.depth / blueprint.bounds.maxHalf;
+        expect(ratio, `${lessonCount}/${seed}`).toBeGreaterThanOrEqual(0.7);
+        expect(ratio, `${lessonCount}/${seed}`).toBeLessThan(0.9);
+        expect(Number.isFinite(blueprint.underside.depth), `${lessonCount}/${seed}`).toBe(true);
+        depths.add(blueprint.underside.depth);
+      }
+    }
+    expect(depths.size).toBeGreaterThan(1);
+    const large = islandBlueprint({ ...INPUT, lessonCount: 41, seed: "root-depth/41/coast" });
+    expect(large.bounds.maxHalf).toBeGreaterThan(30);
+    expect(large.underside.depth).toBeGreaterThan(11);
+    expect(large.underside.depth).toBeGreaterThanOrEqual(large.bounds.maxHalf * 0.7);
   });
 
   it("keeps route, terrain, theme, and anchor geometry independent of unit identity", () => {

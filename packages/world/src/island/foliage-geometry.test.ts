@@ -79,6 +79,17 @@ describe("course crown geometry budgets", () => {
 });
 
 describe("crown lobe transforms", () => {
+  it("bends leaf lighting without moving the crown surface or adding triangles", () => {
+    const natural = createSmoothIcosahedron(COURSE_TREE_CROWN_DETAIL);
+    const foliage = createSmoothIcosahedron(COURSE_TREE_CROWN_DETAIL, 1.2);
+    expect(foliage.getAttribute("position").array).toEqual(natural.getAttribute("position").array);
+    expect(foliage.getIndex()?.array).toEqual(natural.getIndex()?.array);
+    normalsAreUnit(foliage);
+    const normals = foliage.getAttribute("normal");
+    for (let i = 0; i < normals.count; i += 1) expect(normals.getY(i)).toBeGreaterThan(0);
+    natural.dispose();
+    foliage.dispose();
+  });
   it("is deterministic and keeps tree proportions under the placement height", () => {
     const placement = unitTree();
     const first = treeCrownLobes(placement);
@@ -120,11 +131,16 @@ describe("crown lobe transforms", () => {
 });
 
 describe("world foliage source", () => {
-  it("keeps the donor trunk silhouette and 12-triangle canopy, with no course cards or emitter", () => {
+  it("retires the donor world path; the only distant tree is the 12-triangle remote-props projection", () => {
     const source = readFileSync(resolve(here, "island-foliage-render.tsx"), "utf8");
-    expect(source).toMatch(/normalizedTrunkVariants\(tree\.scene, 1\)/);
-    expect(source).toMatch(/new THREE\.ConeGeometry\(0\.42, 0\.7, 6\)/);
-    expect(source).toMatch(/islandLookWorldTreeSilhouetteTriangles: 12/);
+    const remote = readFileSync(resolve(here, "remote-props.ts"), "utf8");
+    const dressing = readFileSync(resolve(here, "island-dressing-render.tsx"), "utf8");
+    expect(source).not.toContain("WorldTreeSilhouette");
+    expect(source).not.toContain("ConeGeometry");
+    expect(dressing).not.toContain('detail === "world"');
+    expect(remote).toContain("REMOTE_TREE_TRIANGLES = 12");
+    expect(remote).toContain("createRemoteTreeGeometry");
+    expect(remote).not.toContain("useIslandGLTF");
     expect(source).not.toMatch(/MeshSurfaceSampler/);
     expect(source).not.toMatch(/LEAF_MASK/);
     expect(source).not.toMatch(/ShaderMaterial/);
