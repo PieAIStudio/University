@@ -149,13 +149,15 @@ avatar. DPR is 1. Values are GPU milliseconds, not FPS or allocated GPU memory.
 
 | Projection | 1440×900 median / p95 | 375×812 median / p95 |
 | --- | --- | --- |
-| Real 41-lesson course | 2.939 / 5.202 | 0.819 / 1.904 |
-| Real selected series | 1.734 / 2.522 | 0.517 / 1.103 |
-| Real one-domain catalogue | 1.358 / 2.495 | 0.273 / 1.028 |
-| Explicit synthetic 4 domains × 30 series | 1.447 / 2.441 | 0.606 / 1.047 |
+| Real 41-lesson course | 2.792 / 6.309 | 0.794 / 2.007 |
+| Real selected series | 1.566 / 3.021 | 0.537 / 1.747 |
+| Real one-domain catalogue | 1.190 / 2.250 | 0.281 / 1.239 |
+| Explicit synthetic 4 domains × 30 series | 1.451 / 2.528 | 0.611 / 1.649 |
 
 Raw queries and the restored temporary measurement wrapper are in
-`.devspace-visual/astra-r35/gpu-frames.json` and `gpu-frames.mjs`. A separate
+`.devspace-visual/astra-r35/gpu-final.json` and `gpu-frames.mjs`; the earlier
+`gpu-frames.json` is retained, not silently overwritten. The final measurement
+and production-browser receipt share the same source SHA-256. A separate
 blank→course→blank scheduling control measured rAF medians about 50 / 50 / 33ms;
 that delay is therefore not evidence that 3D GPU work itself costs 50ms. Do not
 delete scenery to chase headless scheduling intervals. These Mac/viewport data

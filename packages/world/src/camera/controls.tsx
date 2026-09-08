@@ -35,6 +35,7 @@ import { pinchDollyArmed } from "./pinch-dolly.js";
 import { mapOverlayObstacles, stageRelativeBox } from "../labels/chrome-obstacles.js";
 import { wheelIntent } from "./wheel-intent.js";
 import { usePrefersReducedMotion } from "../reduced-motion.js";
+import { AVATAR_OCCLUSION_TARGET, projectedAvatarBounds } from "../avatar/avatar-occlusion.js";
 
 /**
  * MapControls only handles `TWO` as `DOLLY_PAN` or `DOLLY_ROTATE`. Assigning
@@ -476,8 +477,9 @@ export function LabelProbe({
   followId?: string | null;
   followNode?: { readonly current: HTMLElement | null };
 }) {
-  const { camera, gl, size } = useThree();
+  const { camera, gl, size, scene } = useThree();
   const scratch = useRef(new THREE.Vector3());
+  const avatarBounds = useRef(new THREE.Box3());
   const chromeBoxesRef = useRef<readonly LabelBox[]>([]);
   const labelBoxesRef = useRef<readonly LabelBox[]>([]);
   const followViewportHeightRef = useRef<number | null>(null);
@@ -573,6 +575,25 @@ export function LabelProbe({
     // names go around them, and they do not spend the name budget.
     const candidates: LabelCandidate[] = [];
     const reserved: LabelBox[] = [];
+    // A course label used to hide the returned player's face. Reserve the
+    // actual world-avatar bounds in this existing layout pass, not a second
+    // text renderer or a guessed vertical offset. Course lesson icons retain
+    // their own pinned semantics; this applies only to the series avatar.
+    const avatar = scene
+      .getObjectByName("learner-marker-world")
+      ?.getObjectByName(AVATAR_OCCLUSION_TARGET);
+    if (avatar) {
+      avatarBounds.current.setFromObject(avatar);
+      const bounds = projectedAvatarBounds(avatarBounds.current, camera, scratch.current);
+      if (bounds.minX < bounds.maxX && bounds.minY < bounds.maxY) {
+        reserved.push({
+          left: ((bounds.minX + 1) / 2) * size.width - 6,
+          right: ((bounds.maxX + 1) / 2) * size.width + 6,
+          top: ((1 - bounds.maxY) / 2) * size.height - 6,
+          bottom: ((1 - bounds.minY) / 2) * size.height + 6,
+        });
+      }
+    }
     const pinned: {
       marker: Marker;
       element: HTMLElement;

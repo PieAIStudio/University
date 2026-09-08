@@ -172,6 +172,17 @@ only cancels a still-pending request. R35's late-error regression first reproduc
 the new-worker cancellation before this owner check; renderer resource disposal
 and worker transport identity are separate lifetime contracts.
 
+World carrier home and selected-course targets both sample the same cached
+distant geometry. R35's production screenshot exposed that only the selected
+state used the real island height; closing a card or returning to the series
+put the avatar under the rock root. `world-carrier.ts` now resolves the existing
+learner position against the actual placements for both states. The shared
+`LabelProbe` reserves the actual world-avatar screen bounds using the existing
+avatar visibility projection, so a course-name label cannot conceal its face.
+No second camera, hand-tuned island offset, or new text renderer is introduced.
+F/N browser guards raycast the drawn terrain and check actual DOM/geometry overlap;
+the before/after failures are in the active delivery plan.
+
 
 ## 2026-09-07 amendment: domains own globes; studies own atmospheric regions
 

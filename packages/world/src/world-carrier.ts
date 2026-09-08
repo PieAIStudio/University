@@ -1,7 +1,17 @@
 import * as THREE from "three";
 import type { IslandBlueprint } from "./island/island-blueprint.js";
 import { getOrCreateRemoteBaseGeometry } from "./island/remote-island-field.js";
-import { cloudCarrierClearance, type CloudCarrierTarget } from "./sky/cloud-sea.js";
+import {
+  cloudCarrierClearance,
+  cloudCarrierHome,
+  type CloudCarrierTarget,
+} from "./sky/cloud-sea.js";
+
+interface WorldCarrierIsland {
+  readonly blueprint: IslandBlueprint;
+  readonly radius: number;
+  readonly position: THREE.Vector3;
+}
 
 /**
  * One canonical distant mesh supplies the actual highest terrain point.
@@ -9,11 +19,7 @@ import { cloudCarrierClearance, type CloudCarrierTarget } from "./sky/cloud-sea.
  * the newly continuous island. Leave the existing cloud's full underside clear.
  */
 export function worldIslandCarrierTarget(
-  island: {
-    readonly blueprint: IslandBlueprint;
-    readonly radius: number;
-    readonly position: THREE.Vector3;
-  },
+  island: WorldCarrierIsland,
   weatherExtent: number,
   cloudLevel: number,
 ): CloudCarrierTarget {
@@ -23,4 +29,20 @@ export function worldIslandCarrierTarget(
     island.position.y + base.bounds.max.y + cloudCarrierClearance(weatherExtent, cloudLevel),
     island.position.z,
   ];
+}
+
+/** Closing a card changes selection, not the current course's terrain height.
+ * Resolve the existing learner position against actual placements, including
+ * an equivalent vector restored by navigation; never infer it from screen pixels.
+ */
+export function worldCarrierHomeTarget(
+  islands: readonly WorldCarrierIsland[],
+  learnerAt: THREE.Vector3 | null,
+  weatherExtent: number,
+  cloudLevel: number,
+): CloudCarrierTarget {
+  const island = learnerAt ? islands.find((entry) => entry.position.equals(learnerAt)) : null;
+  if (island) return worldIslandCarrierTarget(island, weatherExtent, cloudLevel);
+  const home = cloudCarrierHome(weatherExtent, cloudLevel);
+  return [learnerAt?.x ?? home[0], home[1], learnerAt?.z ?? home[2]];
 }

@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { ONLINE_ORIGIN } from "./ports.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
+import { assertWorldCarrierAboveGround } from "./harness/world-carrier.js";
 import { assertCompleteCourseOverview, courseOverviewEvidence, waitForCourseFraming } from "./harness/course-overview.js";
 
 const COURSE = "/turing-pact/foundations-before-zero";
@@ -437,6 +438,7 @@ for (const viewport of [
       await expect(course).toBeVisible();
       await waitForOwnedLayerReady(page, "world", originalScene);
       evidence.world = await frameEvidence(page, "world", originalScene);
+      evidence.unselectedCarrierContact = await assertWorldCarrierAboveGround(page);
       const seriesIds = await page.evaluate(() => {
         const field=(window as any).three?.scene.getObjectByName("remote-island-field");
         return field?.userData?.remoteIslandIds ?? null;

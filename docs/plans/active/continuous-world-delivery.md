@@ -79,7 +79,18 @@ R35最终源码完整verify已退出0：303文件/2308项（world85文件/793项
 作用于整轮verify，使CLI/HTTP夹具读到个人目录，27项失败保存在 `verify-final.log`；
 去掉该覆盖后原3文件77项单独复跑通过，再跑完整verify通过。未改测试断言或课程源码；
 防重犯说明写入baseline，旧sample测试缓存原位保留而未擅自清理其他工作树。
-最终课程准备/拖缩profile4组通过，生产双模式浏览器仍在收取最后回执。
+最终课程准备/拖缩profile4组通过，生产双模式普通导航4/4通过。但人工实看生产岛群图又
+抓出未选课头像藏在岩根后：原生射线实测脚底低于地面5.155，不能把导航通过当视觉通过。
+补齐home状态的同源高度后，课名又盖住脸；第二个DOM/实际头像包围盒红断言同样保留。
+现在共享LabelProbe避让真实头像范围，初始页/关闭卡片/返回状态由F/N共同守护；定向
+32/32及实际浏览器射线净距3.130、标签遮挡0通过。原图和两次红测保存在
+`astra-r35/carrier-home-before.log`、`carrier-label-before.log`及对应PNG，修复后的回执为
+`carrier-label-after.log`。G08曾因此重开，随后最后源码完整verify **303文件/2309项
+（world85/794）**及双构建/文档exit0，`verify-carrier-final.log`；生产双模式两视口
+**4/4通过**，`production-carrier-final.log`和`production-final/receipt.json`。最后GPU
+八组24次有效查询为`gpu-final.json`，与生产浏览器共享同一源码SHA-256
+`bea8dc2e3490d321cf99a48d9f78fb5314eb3f60990d8a55595bc95e7f2d977e`。
+当前等待正常pre-push完整default验收和远端确认，不把单项通过拼成全绿。
 
 核对最新普通课程图，补最后成本与生命周期收据，完整 `pnpm verify`、完整default E2E、
 生产构建真实浏览器验收；经正常hooks提交推送，再核对远端与主线隔离，更新G12–G15。
@@ -196,7 +207,7 @@ R35最终源码完整verify已退出0：303文件/2308项（world85文件/793项
 - [x] **G05** 在 authoring 和 delivery 中核对同一学习者行为；R17 M 两模式均完成标记、阅读器进退、键盘与动态偏好。
 - [x] **G06** R35真实3/4/12/19/41节、三种现有路线、桌面/窄屏共10组通过，并保留五路线纯函数矩阵；规则按场地与课程长度通用计算，没有新增courseId特调或坐标表。完整普通采样见 `.devspace-visual/astra-r35/courses/receipt.json`。
 - [x] **G07** R32主代理实看普通5课程采样与真机图，发现模型替身巨型喷泉、短岛岩根裂口、课程状态不明确；已记录修复与反例。最新画面/原生outpost占地仍留B14/D02/D05/G06等，未把看图行为等同全视觉通过。
-- [x] **G08** R35最终产品源码完整 `pnpm verify` 退出0：303个Vitest文件/2308项（world85/793）及脚本自检、双模式构建和文档门禁通过，实际源目录4份导出单独匹配。前次环境变量误用失败保留；日志 `astra-r35/verify-clean-environment.log` 和 `source-freshness-final.log`。
+- [x] **G08** R35最后完整verify为303文件/2309项（world85/794）、双构建/文档exit0；另行真实源4份导出匹配。包含生产看图发现的home头像高度/标签遮挡修复，旧2308通过和环境变量误用失败均保留；最终日志 `astra-r35/verify-carrier-final.log`，不拼接子集冒充完整通过。
 - [x] **G09** R35逐项保留并处理：短课每格非空、扩搜索挤掉长课树量、旧worker中断新重试均有红→绿；F动态nth选择修正保留真实指针/左右位置阈值。自身verify环境变量错误导致27个夹具失败，正确环境77/77单独复跑及完整2308通过；未归咎负载、删断言或改课程来变绿。最终pre-push失败另由G13跟踪。
 - [ ] **G10** 更新 ADR 实测、任务回执与 `current-work`；运行 PGS 文档检查和 manifest scan。
 - [x] **G11** R35核对完整变更清单及渲染/检查器/目录/测试依赖diff：已退役远景donor树第二路径，正式avatar0.5.1 registry无临时tarball；不纳入SCRATCH、视觉证据、私有工具和字体。课程内容/发布目录无diff；主线HEAD仍4da3605，其独立PGS未提交修改原样保留，不把主线说成全干净。

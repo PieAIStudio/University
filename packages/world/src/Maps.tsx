@@ -100,7 +100,7 @@ import {
 import { RemoteIslandField, type RemoteIslandPlacement } from "./island/remote-island-render.js";
 import { projectWorldCourse } from "./world-course-projection.js";
 import { CourseOverviewContext } from "./camera/CourseOverview.js";
-import { worldIslandCarrierTarget } from "./world-carrier.js";
+import { worldCarrierHomeTarget, worldIslandCarrierTarget } from "./world-carrier.js";
 
 /**
  * The world's palette. Two greens for land, one warm accent for the only thing
@@ -883,7 +883,7 @@ export function WorldScene({
   learnerAt: THREE.Vector3 | null;
   avatarRecipe?: AvatarRecipe | null;
   avatarSignedIn?: boolean;
-  /** `studyId/courseId` while the course card is open; null means the cloud home. */
+  /** `studyId/courseId` while a card is open; null returns above the learning focus. */
   selectedCourseKey?: string | null;
   onPick: (node: CourseNode) => void;
   onHover: (node: CourseNode | null) => void;
@@ -913,8 +913,8 @@ export function WorldScene({
   const weatherExtent = extent * 1.5;
   const cloudOrigin = useMemo(() => cloudCarrierHome(weatherExtent, cloudLevel), [weatherExtent]);
   const cloudHomeTarget = useMemo<CloudCarrierTarget>(
-    () => [learnerAt?.x ?? cloudOrigin[0], cloudOrigin[1], learnerAt?.z ?? cloudOrigin[2]],
-    [cloudOrigin, learnerAt],
+    () => worldCarrierHomeTarget(placements, learnerAt, weatherExtent, cloudLevel),
+    [placements, learnerAt, weatherExtent],
   );
   const selectedPlacement = useMemo(
     () =>

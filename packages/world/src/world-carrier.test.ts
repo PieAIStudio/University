@@ -8,7 +8,7 @@ import {
   cuteCloudLayout,
   CLOUD_CARRIER_FOOT_OFFSET,
 } from "./sky/cloud-sea.js";
-import { worldIslandCarrierTarget } from "./world-carrier.js";
+import { worldCarrierHomeTarget, worldIslandCarrierTarget } from "./world-carrier.js";
 
 describe("carrier contact on the real distant island", () => {
   it.each([6, 24, 41])(
@@ -29,8 +29,19 @@ describe("carrier contact on the real distant island", () => {
       expect(target[2]).toBe(island.position.z);
       expect(island.position).toEqual(before);
       expect(worldIslandCarrierTarget(island, 120, -5.2)).toEqual(target);
+      expect(worldCarrierHomeTarget([island], before.clone(), 120, -5.2)).toEqual(target);
     },
   );
+
+  it("retains the existing cloud home only when no actual course placement owns the focus", () => {
+    expect(worldCarrierHomeTarget([], null, 120, -5.2)).toEqual(cloudCarrierHome(120, -5.2));
+    const point = new THREE.Vector3(4, 0, -3);
+    expect(worldCarrierHomeTarget([], point, 120, -5.2)).toEqual([
+      point.x,
+      cloudCarrierHome(120, -5.2)[1],
+      point.z,
+    ]);
+  });
 
   it.each(["desktop", "mobile"] as const)(
     "derives clearance from the %s carrier lobes instead of a guessed height",

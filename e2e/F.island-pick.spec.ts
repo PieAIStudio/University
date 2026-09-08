@@ -7,6 +7,7 @@ import { watchConsole } from "./harness/console.js";
 import { LOCAL_ORIGIN } from "./ports.js";
 import { openOnline, waitForMapReady } from "./harness/online-learner.js";
 import { namedStep } from "./harness/step.js";
+import { assertWorldCarrierAboveGround } from "./harness/world-carrier.js";
 
 /**
  * The 「进入这门课」 card must follow the island, not pin to a screen corner.
@@ -229,6 +230,7 @@ async function walkIslandPick(page: Page, prefix: "online" | "local"): Promise<v
 
   await namedStep(page, "初始没有「进入这门课」卡片", async () => {
     await expect(page.locator(".picked--follow.is-visible")).toHaveCount(0);
+    await assertWorldCarrierAboveGround(page);
     await page.screenshot({ path: `${SHOTS}/${prefix}-unselected.png` });
   });
 
@@ -260,6 +262,7 @@ async function walkIslandPick(page: Page, prefix: "online" | "local"): Promise<v
     expect(closeBox.height, "关闭按钮高度够不上手指").toBeGreaterThanOrEqual(44);
     await humanClick(page, close, "关闭课程卡");
     await expect(page.locator(".picked--follow.is-visible")).toHaveCount(0);
+    await assertWorldCarrierAboveGround(page);
   });
 
   await namedStep(page, "再点回那座岛，好接着验海面", async () => {
