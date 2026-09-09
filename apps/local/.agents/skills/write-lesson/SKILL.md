@@ -35,7 +35,9 @@ deliberately holds roles and families, not a stale current id.
    use verified primary documents or recorded, reproducible observations when
    there is no repository. See [evidence-and-failures.md](references/evidence-and-failures.md).
    No invented paths, lines, outputs, or assertions inferred from a URL merely responding.
-3. Pick a variant → [references/variants.md](references/variants.md).
+3. Pick a variant → [references/variants.md](references/variants.md). In the
+   same step decide whether this lesson earns an interactive activity, which
+   one, and what role it serves → [references/activities.md](references/activities.md).
 4. Write. Run [references/checklist.md](references/checklist.md).
 5. **Polish.** See "The polish pass" below. A no-polish run needs the explicit
    status and reason required by `models.md` before the lesson ships;
@@ -228,11 +230,18 @@ names. Never put it in `content.md`.
 
 ## Interactive courseware
 
-Reuse the shared [activity contract](../../../../../packages/ui/src/learning-play/README.md).
-An activity may serve opening observation, a middle demonstration, or independent
-application. Choose by the learning goal; not every lesson needs one. Record
-which role it serves. Seeing or operating a guided demonstration does not prove
-independent application and never substitutes for the lesson's graded exercise.
+Decide this at step 3, with the variant — not after the prose exists. A lesson
+written first and fitted with a game afterwards gets a game for that paragraph,
+rather than the one thing in it that only makes sense once you have done it.
+
+**Default is no activity.** Which lessons earn one, which of the ten to pick,
+where it goes, and how to hand the reader over to it in the prose:
+[references/activities.md](references/activities.md). The payload contract and
+the engines are the shared
+[activity contract](../../../../../packages/ui/src/learning-play/README.md).
+
+Seeing or operating a guided demonstration does not prove independent
+application and never substitutes for the lesson's graded exercise.
 
 ## 源码从快照来，不要手抄
 
