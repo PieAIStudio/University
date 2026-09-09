@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-08
+last_reviewed: 2026-09-09
 domain: architecture
 tags:
   - 3d
@@ -216,6 +216,13 @@ records. Renderers never infer classification from titles or fabricate courses.
 Unknown membership is visible as unclassified. Actual counts are folded from
 real studies. This metadata can later come from the content producer through
 the same interface. It does not create another lesson authoring path.
+
+Peer planets are translated away from the world origin. Their orientation
+and its acceptance measurement compare the camera and region relative to the
+owning domain centre. R39's translated calibration exposed an origin-based
+measurement that never converged although the actual region faced the camera.
+`e2e/harness/planet-focus.ts` reads that real centre and retains the existing
+angular precision and travel deadline; it does not change the rendered pose.
 
 Sphere geometry describes the domain container, not a competing course terrain
 field. Tiny atmospheric course islands still derive from the existing blueprint

@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-09T02:58:21.629Z
+generated_at: 2026-09-09T04:13:58.584Z
 generator_version: doc-gov@0.9.11
 docs_count: 115
 docs:
@@ -65,7 +65,7 @@ docs:
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-09-08
+    last_reviewed: 2026-09-09
     pinned: false
   - id: ARCHIVE-ADR-0008-2026-09-07
     path: docs/archive/adr-0008-measurement-history-2026-09-07.md

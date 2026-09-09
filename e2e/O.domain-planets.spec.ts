@@ -7,6 +7,7 @@ import { watchConsole } from "./harness/console.js";
 const ORIGIN = `http://127.0.0.1:${process.env.E2E_ONLINE_PORT ?? "18093"}`;
 const cases = [
   { domains: 1, series: 1, width: 1440, height: 900, empty: false, long: false, reduced: false },
+  { domains: 1, series: 1, width: 1440, height: 900, empty: false, long: false, reduced: true },
   { domains: 1, series: 20, width: 375, height: 812, empty: false, long: false, reduced: false },
   { domains: 1, series: 30, width: 1440, height: 900, empty: false, long: false, reduced: true },
   { domains: 4, series: 1, width: 375, height: 812, empty: false, long: false, reduced: false },
@@ -304,20 +305,38 @@ test.describe("O 多领域星球 · 合成边界夹具（非课程目录）", ()
       expect(await fieldIdentity(page)).toEqual(initial);
       receipt.projection = await page.evaluate(() => (window as any).__planetProjection());
 
-      // Reduced motion is proven from real live cloud transforms, not a CSS media flag.
+      // R38 may omit every cloud in a crowded region. Check actual submitted
+      // world transforms (including the rotating parent), and retain a sparse
+      // positive witness with real clouds rather than accepting only absence.
       if (scenario.reduced) {
         const motion = await page.evaluate(async () => {
           const bag = window as any;
-          const clouds = bag
-            .__planetProjection()
-            .domains.map((domain: { id: string }) =>
-              bag.three.scene.getObjectByName(`domain-clouds-${domain.id}`),
-            );
-          const before = clouds.map((cloud: any) => cloud.quaternion.toArray());
+          const snapshot = () =>
+            bag.__planetProjection().domains.map((domain: { id: string }) => {
+              const root = bag.three.scene.getObjectByName(`domain-planet-${domain.id}`);
+              const globe = bag.three.scene.getObjectByName(`domain-globe-${domain.id}`);
+              const cloud = bag.three.scene.getObjectByName(`domain-clouds-${domain.id}`);
+              if (!root?.userData.planetAssetsReady || !globe)
+                throw new Error(`Domain not rendered: ${domain.id}`);
+              globe.updateWorldMatrix(true, false);
+              cloud?.updateWorldMatrix(true, false);
+              return {
+                id: domain.id,
+                globe: globe.matrixWorld.toArray(),
+                cloud: cloud?.matrixWorld.toArray() ?? null,
+              };
+            });
+          await new Promise(requestAnimationFrame);
+          const before = snapshot();
           for (let i = 0; i < 8; i++) await new Promise(requestAnimationFrame);
-          return { before, after: clouds.map((cloud: any) => cloud.quaternion.toArray()) };
+          return { before, after: snapshot() };
         });
         expect(motion.after).toEqual(motion.before);
+        if (scenario.series === 1)
+          expect(motion.before.some((domain: { cloud: unknown }) => domain.cloud !== null)).toBe(
+            true,
+          );
+        receipt.reducedMotion = motion;
       }
       const beforeReturn = await page.evaluate(() => ({
         frame: (window as any).__stageFrameMetrics,

@@ -13,6 +13,7 @@ import {
 } from "./harness/online-learner.js";
 import { ONLINE_ORIGIN } from "./ports.js";
 import { namedStep } from "./harness/step.js";
+import { planetFocusSample } from "./harness/planet-focus.js";
 
 const EVIDENCE = ".scratch/evidence-avatar";
 
@@ -113,7 +114,9 @@ async function frameStats(page: Page): Promise<FrameStats> {
             return;
           }
           const sorted = [...samples].sort((left, right) => left - right);
-          const canvas = document.querySelector<HTMLCanvasElement>("[data-planet-globe] canvas, .stagewrap:not([hidden]) canvas");
+          const canvas = document.querySelector<HTMLCanvasElement>(
+            "[data-planet-globe] canvas, .stagewrap:not([hidden]) canvas",
+          );
           const dataUrlLength = canvas ? canvas.toDataURL().length : 0;
           resolve({
             sampleCount: samples.length,
@@ -155,6 +158,43 @@ function assertFast(elapsedMs: number, surface: string): void {
 test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
+  test("星球测量尺：平移不改变对准精度（合成校准，不是产品验收）", () => {
+    const origin = planetFocusSample({
+      kind: "calibration",
+      centre: [0, 0, 0],
+      eye: [0, 0, 100],
+      focus: [0, 0, 10],
+      alignedOnly: true,
+    });
+    const translated = planetFocusSample({
+      kind: "calibration",
+      centre: [20, 10, 5],
+      eye: [20, 10, 105],
+      focus: [20, 10, 15],
+      alignedOnly: true,
+    });
+    expect(origin?.alignment).toBe(1);
+    expect(translated?.alignment).toBe(origin?.alignment);
+    expect(translated!.legacyWorldOriginAlignment).toBeLessThan(0.95);
+    expect(
+      planetFocusSample({
+        kind: "calibration",
+        centre: [20, 10, 5],
+        eye: [20, 10, 105],
+        focus: [20.02, 10, 15],
+        alignedOnly: true,
+      }),
+    ).toBeNull();
+    expect(
+      planetFocusSample({
+        kind: "calibration",
+        centre: [0, 0, 0],
+        eye: [0, 0, 0],
+        focus: [0, 0, 10],
+      }),
+    ).toBeNull();
+  });
+
   test("星球区域与两层头像都跟随真实点击，并在快速上限内就位", async ({ page }) => {
     const consoleErrors = watchConsole(page);
     const evidence: Record<string, unknown> = {
@@ -168,30 +208,55 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       await expect(page.locator("[data-planet-globe] canvas")).toBeVisible({ timeout: 30_000 });
       await page.waitForFunction(() => {
         const bag = globalThis as any;
-        return bag.__planetProjection?.().domainCount > 0 &&
-          bag.three?.scene.getObjectByName("domain-globe-programming");
+        return (
+          bag.__planetProjection?.().domainCount > 0 &&
+          bag.three?.scene.getObjectByName("domain-globe-programming")
+        );
       });
       if (process.env.UNIVERSITY_TIMING_PLANET === "1") {
+        await page.evaluate(planetFocusSample, { kind: "install" });
         await page.evaluate(() => {
-          const receipt = { events: [] as { name: string; at: number }[], tasks: [] as { at: number; duration: number }[], frames: [] as { at: number; selected: string | null; angle: number | null }[] };
+          const receipt = {
+            events: [] as { name: string; at: number }[],
+            tasks: [] as { at: number; duration: number }[],
+            frames: [] as { at: number; selected: string | null; angle: number | null }[],
+          };
           const observer = new PerformanceObserver((entries) => {
-            for (const task of entries.getEntries()) receipt.tasks.push({ at: task.startTime, duration: task.duration });
+            for (const task of entries.getEntries())
+              receipt.tasks.push({ at: task.startTime, duration: task.duration });
           });
           observer.observe({ type: "longtask", buffered: true });
           for (const name of ["pointerdown", "pointerup", "click"]) {
-            document.addEventListener(name, () => receipt.events.push({ name, at: performance.now() }), { once: true, capture: true });
+            document.addEventListener(
+              name,
+              () => receipt.events.push({ name, at: performance.now() }),
+              { once: true, capture: true },
+            );
           }
           let active = true;
+          let frameId = 0;
           const sample = () => {
+            if (!active) return;
             const bag = window as any;
-            const state = bag.three;
-            const focus = state?.scene.getObjectByName("planet-study-focus-buzz");
-            const angle = focus ? focus.getWorldPosition(state.camera.position.clone()).normalize().dot(state.camera.position.clone().normalize()) : null;
-            receipt.frames.push({ at: performance.now(), selected: bag.__planetProjection?.().selectedId ?? null, angle });
-            if (active && receipt.frames.length < 180) requestAnimationFrame(sample);
+            const angle =
+              bag.__testPlanetFocusSample({ kind: "scene", studyId: "buzz" })?.alignment ?? null;
+            receipt.frames.push({
+              at: performance.now(),
+              selected: bag.__planetProjection?.().selectedId ?? null,
+              angle,
+            });
+            if (receipt.frames.length < 180) frameId = requestAnimationFrame(sample);
           };
-          requestAnimationFrame(sample);
-          (window as any).__planetTiming = { receipt, stop: () => { active = false; observer.disconnect(); } };
+          frameId = requestAnimationFrame(sample);
+          (window as any).__planetTiming = {
+            receipt,
+            stop: () => {
+              active = false;
+              cancelAnimationFrame(frameId);
+              observer.disconnect();
+              delete (window as any).__testPlanetFocusSample;
+            },
+          };
         });
       }
       // Opt-in CPU evidence for the actual pointer path. Traces/screenshots
@@ -215,17 +280,17 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       }
       let startedAt = 0;
       await humanClick(page, page.getByRole("button", { name: /^Buzz\b/ }), "星球上的 Buzz 系列", {
-        beforePress: async () => { startedAt = await page.evaluate(() => performance.now()); },
+        beforePress: async () => {
+          startedAt = await page.evaluate(() => performance.now());
+        },
       });
-      await page.waitForFunction(() => {
-        const bag = globalThis as any;
-        if (bag.__planetProjection?.().selectedId !== "buzz") return false;
-        const state = bag.three;
-        const focus = state?.scene.getObjectByName("planet-study-focus-buzz");
-        if (!focus) return false;
-        const direction = focus.getWorldPosition(state.camera.position.clone()).normalize();
-        return direction.dot(state.camera.position.clone().normalize()) > .999999;
-      }, undefined, {polling:"raf", timeout:10_000});
+      const facing = await page.waitForFunction(
+        planetFocusSample,
+        { kind: "scene", studyId: "buzz", alignedOnly: true },
+        { polling: "raf", timeout: 10_000 },
+      );
+      const alignment = await facing.jsonValue();
+      await facing.dispose();
       const elapsedMs = await page.evaluate((start) => performance.now() - start, startedAt);
       if (process.env.UNIVERSITY_TIMING_PLANET === "1") {
         const timing = await page.evaluate(() => {
@@ -241,13 +306,16 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
         const directory = process.env.UNIVERSITY_PROFILE_PLANET!;
         mkdirSync(directory, { recursive: true });
         writeFileSync(`${directory}/planet-click.cpuprofile`, JSON.stringify(cpu.profile));
-        writeFileSync(`${directory}/timing.json`, JSON.stringify({ startedAt, elapsedMs, events }, null, 2));
+        writeFileSync(
+          `${directory}/timing.json`,
+          JSON.stringify({ startedAt, elapsedMs, events }, null, 2),
+        );
         await profile.detach();
       }
       assertFast(elapsedMs, "星球区域转向");
-      await expect(page.getByRole("button", {name:"进入 Buzz", exact:true})).toBeVisible();
+      await expect(page.getByRole("button", { name: "进入 Buzz", exact: true })).toBeVisible();
       const measured = await measuredScene(page);
-      evidence.planet = {elapsedMs, selectedStudyId:"buzz", ...measured};
+      evidence.planet = { elapsedMs, alignment, selectedStudyId: "buzz", ...measured };
     });
 
     await namedStep(page, "岛群层点课程，云飞到岛上而不是改写导航焦点", async () => {
@@ -258,12 +326,16 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
         return current && !current.inFlight;
       });
       const home = (await motion(page, "world"))!;
-      const currentCourse = page.locator('button.label--course.is-visible[data-course-state="live"]');
+      const currentCourse = page.locator(
+        'button.label--course.is-visible[data-course-state="live"]',
+      );
       await expect(currentCourse).toHaveCount(1);
       await humanClick(page, currentCourse, "当前课程仍能打开卡片，无需伪造原地飞行");
       const card = page.locator(".picked--follow.is-visible");
       await expect(card).toBeVisible();
-      await page.evaluate(async () => { for (let i = 0; i < 3; i++) await new Promise(requestAnimationFrame); });
+      await page.evaluate(async () => {
+        for (let i = 0; i < 3; i++) await new Promise(requestAnimationFrame);
+      });
       const sameTarget = (await motion(page, "world"))!;
       expect(sameTarget.sequence).toBe(home.sequence);
       expect(sameTarget.target).toEqual(home.target);
@@ -275,10 +347,15 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       // Home now correctly rests above the current course. Picking that same
       // island cannot prove travel. Choose a different real destination and
       // retain its stable ID rather than a reflowing visible-list nth index.
-      const targetId = await page.locator('button.label--course.is-visible:not([data-course-state="live"])').first().getAttribute("data-map-marker");
+      const targetId = await page
+        .locator('button.label--course.is-visible:not([data-course-state="live"])')
+        .first()
+        .getAttribute("data-map-marker");
       expect(targetId).toBeTruthy();
       const before = (await motion(page, "world"))?.sequence ?? 0;
-      const courseLabel = page.locator(`button.label--course[data-map-marker=${JSON.stringify(targetId)}]`);
+      const courseLabel = page.locator(
+        `button.label--course[data-map-marker=${JSON.stringify(targetId)}]`,
+      );
       await expect(courseLabel).toBeVisible({ timeout: 30_000 });
       let startedAt = 0;
       await humanClick(page, courseLabel, "岛群里的课程", {
