@@ -1,10 +1,11 @@
 # Evidence anchors and known failure modes
 
-Read when writing code-heavy lessons, or when a prior batch produced bad anchors.
+Read for either repository or no-repository lessons, and when a batch has bad anchors.
 
 ## Product syntax
 
-After each real code block (and at each 溯源 stop), emit a token the app parses:
+For repository code (and each repository 溯源 stop), emit a token the app parses.
+The token renders the source; do not hand-copy the source into a preceding fence:
 
 ```text
 [[evidence:index.html:30]]
@@ -15,10 +16,32 @@ After each real code block (and at each 溯源 stop), emit a token the app parse
 - Lines are 1-based; `start-end` for a range.
 - Range must be **covered** by this revision's manifest `evidence` (same path;
   lines inside a cited range; or any line if the citation has no line bounds).
-- Anchors inside fenced code stay literal and do not resolve — put them in prose
-  immediately after the fence.
+- Anchors inside fenced code stay literal and do not resolve — put them in prose.
 - Expanding coverage means updating `evidence` on the **new** revision and
   reporting that change. Do not cite lines nobody verified on the snapshot.
+
+## Without a repository
+
+Use the same five variants and lesson spine; only evidence changes:
+
+- `溯源`: follow real systems or documented operations, identifying what each
+  stop receives/does/produces. Support each stop with an appropriate primary
+  source or reproducible observation; do not invent file/line anchors.
+- `术语`: use three situations the reader can encounter, explained in plain
+  language. Primary documentation supports the claim; pasted official wording
+  is not a substitute for the explanation or for a real use case.
+- `现象`: show a reproducible observation or concrete task. Record the setup
+  and relevant conditions; a hypothetical teaching example must be labeled as
+  an example, not reported as an observed event.
+
+Use the existing URL evidence fields (`sourceUrl`, `sourceTitle`,
+`sourceAuthority`, `kind`, `note`). Put a normal Markdown source link beside the
+relevant explanation (`[来源标题](sourceUrl)`); the URL must be visible/clickable,
+not merely stored in metadata or quoted inside a code fence. Read the source and check the claim;
+HTTP 200 alone proves neither truth nor relevance. Official documentation may
+support a typical flow, not prove that this particular run followed it. Keep
+fact, inference, and constructed examples distinct. No fake repository,
+snapshot, commit, or `[[evidence:undefined:…]]` is needed for a no-repository lesson.
 
 ## Not anchors (do not count)
 
@@ -53,5 +76,5 @@ replace a real token after a code block:
 | Silent card/exercise edits or drops | Revise requires full list | Report changes; never drop ids |
 | Hand-edit old revision bytes | Faster than open-for-edit cycle | New revision only |
 | `variant` missing after `course revise` | Proposal schema may not carry `variant` | Verify new manifest has it; set on new revision only |
-| Two concepts in one lesson | Content does not fit any variant | Split; do not invent a sixth shape |
-| 自检 unanswerable / unrelated to exercises | Questions written for show | Answerable from this prose; prefer align with existing exercise |
+| Useful task discarded for lacking surprise | Treating anomaly as admission | Ground a real task; split only separate learning goals; keep five variants |
+| 自检 unanswerable / unrelated to exercises | Questions written for show | Change a condition/example but stay answerable from this prose; feedback belongs to the exercise |

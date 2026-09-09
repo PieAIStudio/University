@@ -93,10 +93,19 @@ function proposalFor(lesson: Record<string, unknown>) {
             {
               id: "one-lesson",
               title: "普通标题",
+              variant: "现象",
               content: baseContent(),
               evidence: [evidence],
               cards: [],
-              exercises: [],
+              exercises: [
+                {
+                  id: "one-exercise",
+                  kind: "short-answer",
+                  prompt: "换一个输入时该检查什么？",
+                  expectedAnswer: "输入",
+                  evidence: [evidence],
+                },
+              ],
               ...lesson,
             },
           ],

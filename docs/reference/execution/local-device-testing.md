@@ -23,7 +23,27 @@ related:
 只在接本机服务、手机或工具时读取。这里保存可恢复的本机信息，不是产品部署配置、
 权限授权书或验收台账。动态地址和权限每次重查；产品通过项只记活动计划。
 
-## R39 整合环境边界（2026-09-09）
+## R40 当前基线预览（2026-09-09）
+
+预览已迁回主目录`/Users/yuanfei/PieAI/University`，不是旧3D或临时整合树：
+
+| 模式 | 当前地址 | 进程工作目录 |
+| --- | --- | --- |
+| delivery 正式构建 | `http://127.0.0.1:20798/planet` | `University/apps/university` |
+| authoring 正式构建 | `http://127.0.0.1:20799/planet` | 同上，代理API20797 |
+| 手机LAN，同一delivery构建 | `http://192.168.1.135:20000/planet` | 同上，仅当前LAN地址 |
+| 本机课程API | `http://127.0.0.1:20797/` | `University/apps/local`，原main校园 |
+
+本次逐个核对并停止旧项目服务，退役19997／19998／19999／20001；没有重启ADB、
+Safari调试服务或手机，也没有删除配对。HTTP与进程归属已核实，未验证重启自动恢复。
+旧3D／course／play／launch工作树及后来完成收尾的integration不再是工作入口；保全位置
+由活动计划链接。新工作入口是相邻`University-visual`与`University-courses`，它们按baseline
+复用主树课程内容与校园源；后续在课程线写课时须协调共享源，不能把它们当隔离数据库。
+Easy Vibe仍由另一任务进行，本次未改其目录、分支或服务。
+
+以下R39／R38连接和错误保留原时点，不据当前桌面构建或服务迁移认定F10真机通过。
+
+## R39 整合环境边界（历史，2026-09-09）
 
 当前临时整合树为相邻 `University-integration`；原 `University-3d` 的19998／19999／
 LAN20000仍保留，不能把旧服务当作整合版。默认E2E自行管理18093／18094／18095及
@@ -101,7 +121,7 @@ Android收据不能替代iPhone；旧版本号、显示名、截图像素也不�
 先确认当前 Mac 仍拥有 `192.168.1.135`，检查端口与进程工作目录：
 
 ```bash
-cd /Users/yuanfei/PieAI/University-3d
+cd /Users/yuanfei/PieAI/University
 lsof -nP -iTCP:20000 -sTCP:LISTEN
 # 把上一步的 PID 代入；不要杀掉未知/其他工作区进程。
 lsof -a -p <PID> -d cwd
@@ -111,7 +131,7 @@ lsof -a -p <PID> -d cwd
 依赖/core/内容链接满足项目 baseline 后，执行用户已验证的命令：
 
 ```bash
-pnpm --filter @pieai/university-app exec vite --mode delivery --host 192.168.1.135 --port 20000 --strictPort
+pnpm --filter @pieai/university-app exec vite preview --mode delivery --host 192.168.1.135 --port 20000 --strictPort
 ```
 
 保持这个终端会话运行；它结束后预览可能随之停止。启动后确认输出仍是指定 IP/端口，

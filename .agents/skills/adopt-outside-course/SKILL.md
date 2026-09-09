@@ -1,6 +1,6 @@
 ---
 name: adopt-outside-course
-description: 把别人的在线课程改写成 University 的通用课。当任务涉及「纳入 / 搬运 / 引进」外部课程、教程、专栏、文档站的内容——包括 PMaker、VibeHub、掘金小册、公众号连载、GitHub 上的 tutorial——都用这个技能。它不是翻译也不是摘要：产出是一份能通过 `check-proposal-shape.mjs` 的 proposal JSON，每节课都重写成零基础能读的口语、带类比、带记忆卡片、带练习、并且每条引用都指向 MDN、RFC、官方文档这类权威原始资料——绝不引用被参考的那门课。凡是听到「把某某的课拿过来」「这个教程能不能变成我们的课」「这个站的路线我们也做一份」，先用这个技能。
+description: 将获准使用的外部课程、教程或文档站改写为 University 无仓库课程提案。用于纳入、引进、改编外部教学内容；不是翻译、摘要或直接落盘。复用 write-lesson 的统一骨架、变体与卡片练习合同，以白话和核实的权威原始资料重新讲清内容，不引用被参考课程作为事实依据。
 metadata:
   owner: University
   mode: production
@@ -101,26 +101,18 @@ node scripts/fetch-outline.mjs <url> --out outline/x.md --body-out source/x.md -
 
 ### 3 改写
 
-每节课的正文必须是这六个小节，顺序固定，一个都不能少：
+先读唯一的[写课合同](../../../apps/local/.agents/skills/write-lesson/SKILL.md)，
+再按其变体、检查清单与卡片／练习引用编写。这里不维护另一套章节模板。
+无仓库只改变证据来源，不改变教学合同；对应规则在写课技能的
+[无仓库证据附录](../../../apps/local/.agents/skills/write-lesson/references/evidence-and-failures.md#without-a-repository)。
 
-```
-## 学习目标
-## 先给结论
-## 一个类比
-## 工作示例
-## 自检
-## 重点
-```
-
-`## 一个类比` 是硬性的，不是可选的。这一条正是"给零基础的人写"在结构上的样子——
-一个没有类比的解释，只对已经懂的人成立。
-
-怎么写出真的好懂的句子，见 [rewriting.md](references/rewriting.md)。
-六个小节各自该装什么、卡片和练习怎么配，见 [lesson-shape.md](references/lesson-shape.md)。
+每节必须提供一道有开场依据的预测题；具体任务可以作为开场，不用捏造反常。
+类比仅在确实帮助理解时使用，先直白解释，再明确区隔类比并说明边界。
+白话改写方法见 [rewriting.md](references/rewriting.md)；它不另行规定课文形状。
 
 ## 提案的信封
 
-产出的 JSON 顶层必须是：
+新建整门课时，JSON顶层必须是：
 
 ```json
 { "schemaVersion": 1, "proposalId": "<和文件名同一个 kebab id>", "course": { ... } }
@@ -129,6 +121,9 @@ node scripts/fetch-outline.mjs <url> --out outline/x.md --body-out source/x.md -
 只写 `{ "course": ... }` 的提案**落不了盘**——`course create` 的
 `CourseCreationProposalSchema` 要这三个字段。第一份 VibeHub 提案就少了信封，
 是落盘那天才发现的。
+
+为已有课程追加单元／课时则沿用`unit`＋`lessons`的提案形状；
+`assets/sample-proposal.json`是这种追加提案，不是整门课的创建信封。
 
 **不要写 `targetSnapshotId`。** 通用课没有被研究的仓库，所以没有快照可指。
 那个字段现在是可选的，留空就是「这门课不研究任何代码」的正式说法。
@@ -149,15 +144,15 @@ node scripts/fetch-outline.mjs <url> --out outline/x.md --body-out source/x.md -
 
 然后加我们自己的，这是原课**没有**的部分，也是这门课凭什么比原课好的地方：
 
-- **练习**（`exercises`）——读完能不能自己做一次。每节至少一个。
-- **记忆卡片**（`cards`）——这节里值得三周后还记得的东西。每节最多四张，
-  卡片自己也要带 evidence。
+- **练习与记忆卡片**（`exercises` / `cards`）——数量、类型和内容以写课技能的
+  [卡片／练习合同](../../../apps/local/.agents/skills/write-lesson/references/cards-and-exercises.md)为准；
+  卡片自己也要带evidence。独立练习换输入、条件或例子，不能只复述正文答案。
 - **词条**——第一次出现的术语要能点开。
 - **AI 讲解入口**——卡住的地方留一个能问的口子。
 
-放的位置有讲究：**卡片贴着它解释的那段话放，不要堆在末尾。**
-练习放在 `## 自检` 里。一节课如果找不出值得做成卡片的东西，
-那多半是这节课没讲清一件具体的事，回去看 §2 的拆法。
+这些是结构化数据，不把卡片或exercise答案塞进Markdown的`## 自检`。
+正文以“一句话”结束，独立练习由下面的练习区判分并反馈。
+互动课件可用于观察、示范或独立应用；演示不能顶掉练习，试玩完成不能顶掉课程完成。
 
 ### 4 出 proposal
 
@@ -180,7 +175,7 @@ node .agents/skills/adopt-outside-course/scripts/check-verbatim.mjs proposal.jso
 node apps/local/scripts/check-proposal-shape.mjs proposal.json
 ```
 
-第一个检查通用课特有的规矩（出处、标记、类比是否真的是类比）。
+第一个检查通用课特有的规矩（出处与标记），不定义第二套课文骨架。
 `--verify-urls` 会**真的去请求每一条引用**——编一个看起来完全合理的 MDN 链接
 是 AI 写课的标志性错误，静态检查看不出来，人工评审也几乎发现不了。
 
@@ -194,7 +189,7 @@ node apps/local/scripts/check-proposal-shape.mjs proposal.json
 
 门禁只能证明形状对。找一节你**最不熟**的课，从头读到尾，问自己一个问题：
 
-> 如果我完全没接触过这个领域，读完这一节，我能做到「学习目标」里写的那件事吗？
+> 如果我完全没接触过这个领域，换一个输入、条件或例子，我还能用出这一节教的东西吗？
 
 答不上"能"，就回第 3 步。**这一步不能跳，也不能交给检查脚本。**
 

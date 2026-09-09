@@ -13,6 +13,7 @@
  *   node scripts/check-proposal-shape.mjs <proposal.json> [<proposal.json> ...]
  */
 import { readFileSync } from "node:fs";
+import { checkLessonSpine, checkLessonUrlEvidence } from "./lesson-spine.mjs";
 
 const SHAPE_DATA = JSON.parse(
   readFileSync(new URL("./proposal-shape-data.json", import.meta.url), "utf8"),
@@ -31,7 +32,6 @@ const SHAPE_DATA = JSON.parse(
   a course the shape checker then refused or, with no `variant` declared,
   silently skipped. The gate that ships inside `verify` is the real one.
 */
-const REQUIRED_SECTIONS = ["## 先猜一下", "## 答案", "## 自检", "## 一句话"];
 /** Phrases that assume the reader already knows the thing the lesson teaches. */
 const BANNED_PHRASES = ["众所周知", "显而易见", "简单来说", "不言而喻"];
 /** A card back has to stand on its own — it is read without the lesson around it. */
@@ -255,6 +255,12 @@ function check(proposal, options = {}) {
       claimId(lessonIds, lesson.id, "lesson", `unit ${unit.id}`);
       checkEvidence(lesson.evidence, where, problems);
       checkContent(lesson.content, where, problems);
+      for (const { message } of checkLessonSpine(lesson.content, lesson.variant)) {
+        problems.push(`${where}: ${message}`);
+      }
+      for (const message of checkLessonUrlEvidence(lesson.content, lesson.evidence)) {
+        problems.push(`${where}: ${message}`);
+      }
       if (!skippedChecks.has("analogy-order")) checkAnalogyOrder(lesson, where, problems);
       if (!skippedChecks.has("inline-evidence")) {
         checkInlineEvidence(lesson, where, problems, inlineEvidenceMaxLines());
@@ -263,6 +269,9 @@ function check(proposal, options = {}) {
 
       const cards = lesson.cards ?? [];
       const exercises = lesson.exercises ?? [];
+      if (exercises.length !== 1 || exercises[0]?.kind !== "short-answer") {
+        problems.push(`${where}: 新课必须有恰好 1 道 short-answer 独立练习；演示不能代替练习`);
+      }
       if (cards.length > 0 && exercises.length === 0) {
         problems.push(
           `${where}: has ${cards.length} card(s) and no exercise, so the cards can never enroll`,
@@ -344,10 +353,6 @@ function checkContent(content, where, problems) {
   if (!content?.trim()) {
     problems.push(`${where}: empty content`);
     return;
-  }
-  for (const section of REQUIRED_SECTIONS) {
-    if (!content.includes(section))
-      problems.push(`${where}: body is missing the "${section}" section`);
   }
   for (const phrase of BANNED_PHRASES) {
     if (content.includes(phrase))

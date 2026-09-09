@@ -49,6 +49,11 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import {
+  checkLessonSpine,
+  checkLessonUrlEvidence,
+  stripLessonCode as stripCode,
+} from "./lesson-spine.mjs";
 
 const args = process.argv.slice(2);
 const flag = (name) => {
@@ -99,21 +104,6 @@ const DEBT_RULE_ORDER = [
   DEBT_RULE.ORPHAN_EVIDENCE,
 ];
 
-const VARIANTS = {
-  现象: { openCount: 1, middleCount: 1 },
-  对比: { openCount: 1, middleCount: 2 },
-  溯源: { openCount: 1, middleCount: 1 },
-  决策: { openCount: 1, middleCount: 2 },
-  术语: { openCount: 1, middleCount: 2 },
-};
-
-const GUESS_LINES = [
-  "先写下你的判断，再往下看答案。",
-  // Compatibility for lessons written before the beginner-language rule was
-  // refined. New and rewritten lessons must use the first line; old lessons
-  // should not fail the whole knowledge base until they are actually revised.
-  "随便猜，猜错不影响任何进度。",
-];
 const BANNED = ["显然", "简单来说", "众所周知"];
 
 /**
@@ -147,17 +137,6 @@ const SYSTEM_VOCAB = [
  * Replacing a whole fence with one flat run of spaces would collapse every later
  * line number and make "fix the word on line N" unusable.
  */
-function stripCode(text) {
-  return text
-    .replace(/^[ \t]*(`{3,}|~{3,})[\s\S]*?^[ \t]*\1[ \t]*$/gm, (m) =>
-      m
-        .split("\n")
-        .map((line) => " ".repeat(line.length))
-        .join("\n"),
-    )
-    .replace(/`[^`\n]+`/g, (m) => " ".repeat(m.length));
-}
-
 /** Blank `[[evidence:…]]` tokens the same way code is blanked (keep offsets). */
 function stripEvidenceTokens(text) {
   return text.replace(/\[\[evidence:[^\]\n]+\]\]/g, (m) => " ".repeat(m.length));
@@ -192,42 +171,6 @@ function standardProseCharCount(text) {
   return withoutDetailBlocks(text)
     .replace(/^[ \t]*(`{3,}|~{3,})[\s\S]*?^[ \t]*\1[ \t]*$/gm, "")
     .replace(/`[^`\n]+`/g, "").length;
-}
-
-function sectionsOf(prose) {
-  return [...prose.matchAll(/^##[ \t]+(.+?)[ \t]*$/gm)].map((m) => m[1].trim());
-}
-
-/**
- * Text belonging to `## name`, up to the next `##`.
- *
- * Split rather than a lookahead regex: with the `m` flag `$` matches the end of
- * every line, so `(?=^##|$)` terminates the body at the first newline and every
- * section looks empty. That bug reported all six lessons as missing text they
- * plainly contained.
- */
-function sectionBody(prose, name) {
-  const parts = prose.split(/^##[ \t]+/m);
-  for (const part of parts.slice(1)) {
-    const newline = part.indexOf("\n");
-    const heading = (newline === -1 ? part : part.slice(0, newline)).trim();
-    if (heading === name) {
-      return newline === -1 ? "" : part.slice(newline + 1);
-    }
-  }
-  return "";
-}
-
-/**
- * Headings are matched exactly.
- *
- * A tolerant match sounds kind and is not: `## 答案（他们选了什么）` and
- * `## 答案` would both pass here while two different agents produced
- * structurally different files, and every downstream tool would need the same
- * tolerance or disagree about where a section starts.
- */
-function matches(heading, name) {
-  return heading === name;
 }
 
 /**
@@ -309,6 +252,9 @@ function checkOrphanEvidence(content, manifest, fail) {
   const citations = manifest.evidence ?? [];
   const tokens = parseEvidenceTokens(content);
   for (const citation of citations) {
+    // URL citations have their own visible-link check. They are not repository
+    // files and cannot be repaired with an [[evidence:undefined:…]] token.
+    if (citation.sourceUrl) continue;
     const path = citation.sourcePath;
     const covered = tokens.some(
       (token) =>
@@ -620,100 +566,27 @@ function checkScreenshotCommit(manifest, fail) {
   }
 }
 
-function lintLesson({ contentPath, manifestPath, content, manifest, id, previous }) {
+function lintLesson({ manifestPath, content, manifest, previous }) {
   const problems = [];
   /** @param {number} item @param {string} message @param {string|null} [debtRule] */
   const fail = (item, message, debtRule = null) => problems.push({ item, message, debtRule });
   const prose = stripCode(content);
-  const sections = sectionsOf(prose);
-
-  // 1 — variant declared in the manifest, absent from the prose.
-  const variant = manifest.variant;
-  const shape = VARIANTS[variant];
-  if (!shape)
-    return [{ item: 1, message: `manifest variant 不是五种之一：${variant}`, debtRule: null }];
+  // Existing persisted prose may retain the earlier invitation. New proposals
+  // must use the current line. Both entry points otherwise share one spine.
+  for (const { item, message } of checkLessonSpine(content, manifest.variant, {
+    allowLegacyGuessLine: true,
+  })) {
+    fail(item, message);
+  }
+  for (const message of checkLessonUrlEvidence(content, manifest.evidence)) fail(12, message);
   if (/<!--\s*variant/i.test(content)) {
     fail(1, "content.md 里还有 <!-- variant --> 注释，它会当作正文显示出来");
-  }
-
-  // 2 — the title is at least shaped like a question.
-  const title = /^#[ \t]+(.+)$/m.exec(content)?.[1]?.trim() ?? "";
-  if (!/[？?]\s*$/.test(title)) fail(2, `标题不是问句（不以问号结尾）：${title || "缺 H1"}`);
-
-  // 3, 4 — the variant's role slots, in order, with reader-facing headings.
-  // The four spine headings stay exact because downstream reader controls use
-  // them; variant-specific headings are allowed to say the actual question.
-  const guessPositions = sections.flatMap((heading, index) =>
-    heading === "先猜一下" ? [index] : [],
-  );
-  const guessAt = guessPositions[0] ?? -1;
-  const answerAt = sections.indexOf("答案", guessAt + 1);
-  const selfCheckAt = sections.indexOf("自检", answerAt + 1);
-  const takeawayAt = sections.indexOf("一句话", selfCheckAt + 1);
-  if (guessPositions.length !== 1) {
-    fail(3, `「先猜一下」出现了 ${guessPositions.length} 次，必须恰好 1 次`);
-  }
-  if (guessAt === -1 || answerAt === -1 || selfCheckAt === -1 || takeawayAt === -1) {
-    fail(3, `${variant} 变体缺少固定教学骨架（先猜一下 → 答案 → 自检 → 一句话）`);
-  } else {
-    const openHeadings = sections.slice(0, guessAt);
-    const middleHeadings = sections
-      .slice(answerAt + 1, selfCheckAt)
-      .filter((heading) => heading !== "再想想");
-    if (openHeadings.length !== shape.openCount) {
-      fail(
-        3,
-        `${variant} 变体需要恰好 ${shape.openCount} 个开场章节，实际为 ${openHeadings.length}`,
-      );
-    }
-    if (middleHeadings.length !== shape.middleCount) {
-      fail(
-        3,
-        `${variant} 变体需要 ${shape.middleCount} 个中段章节，实际为 ${middleHeadings.length}`,
-      );
-    }
-  }
-
-  // 5, 6, 7 — exactly one prediction, open-ended, with the verbatim invitation.
-  const guessBody = sectionBody(prose, "先猜一下");
-  if (!GUESS_LINES.some((line) => guessBody.includes(line))) {
-    fail(7, `「先猜一下」里缺少低压力作答提示：${GUESS_LINES[0]}`);
-  }
-  if (/^[ \t]*[-*][ \t]*[A-Da-d][.、)]/m.test(guessBody) || /^[ \t]*[A-D][.、)]/m.test(guessBody)) {
-    fail(6, "预测题看起来是选择题；选项会把答案泄漏出去");
-  }
-
-  // 9 — the answer is the very next section.
-  if (guessAt !== -1 && !matches(sections[guessAt + 1] ?? "", "答案")) {
-    fail(9, `「先猜一下」后面不是「答案」，而是「${sections[guessAt + 1] ?? "（没有了）"}」`);
-  }
-
-  // 14b — the self-check must not resolve itself.
-  const selfCheck = sectionBody(prose, "自检");
-  if (/\*\*答[：:]\*\*|^答[：:]/m.test(selfCheck)) {
-    fail(14, "「自检」里印了答案；自检只出题，答案由下面的练习题批改");
-  }
-
-  // 15, 16 — link budget and placement.
-  const links = [...prose.matchAll(/\[\[lesson:/g)];
-  if (links.length > 3) fail(15, `跨课链接 ${links.length} 个，上限 3 个`);
-  const openHeading = sections[0];
-  for (const name of [openHeading, "先猜一下"]) {
-    if (!name) continue;
-    if (/\[\[lesson:/.test(sectionBody(prose, name))) {
-      fail(16, `「${name}」里有跨课链接；这一段的任务是制造悬念，不该把人送走`);
-    }
   }
 
   // 20 — words that skip the explanation.
   for (const word of BANNED) {
     if (prose.includes(word)) fail(20, `出现了禁用词「${word}」`);
   }
-
-  // 21 — one bold sentence to keep.
-  const closing = sectionBody(prose, "一句话").trim();
-  if (!/^\*\*[\s\S]+\*\*$/.test(closing)) fail(21, "「一句话」不是单独一句加粗的话");
-  else if ((closing.match(/[。！？]/g) ?? []).length > 1) fail(21, "「一句话」超过一句");
 
   // 12 — hand-copied project source (fence + evidence token) is a defect;
   //      every evidence token must be covered by the manifest (hard);
@@ -953,9 +826,10 @@ for (const lesson of lessons("studies")) {
 for (const [unitKey, run] of rotation) {
   for (let i = 2; i < run.length; i += 1) {
     if (run[i] === run[i - 1] && run[i] === run[i - 2]) {
-      failed += 1;
-      console.log(`\n✗ ${unitKey}`);
-      console.log(`    22. 连续三节都是「${run[i]}」变体`);
+      console.log(`\n需人工复核 ${unitKey}`);
+      console.log(
+        `    22. 连续三节都是「${run[i]}」变体；作者报告须说明理由：为什么强行换会更糟。机器不裁定理由。`,
+      );
       break;
     }
   }

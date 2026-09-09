@@ -43,6 +43,10 @@ failures a machine can catch before a human or model re-reads.
 9. `[machine]` The prediction block includes the verbatim line
    `先写下你的判断，再往下看答案。`
 10. `[judgment]` It targets the lesson's **core**, not a side detail.
+    The opening supplies a basis for a reasoned guess, not the answer; no
+    unexplained prerequisite is required. A target term may be unfamiliar only
+    when its concrete use has been shown. Check exactly one core prediction,
+    not the number of question-mark characters.
 11. `[machine]` The next `##` heading after `## 先猜一下` is exactly `## 答案`
     (no suffix in the heading).
 12. `[judgment]` `## 答案` answers the prediction in one or two sentences, with
@@ -56,21 +60,26 @@ failures a machine can catch before a human or model re-reads.
 
 ## Evidence
 
-14. `[judgment]` Every factual claim traces to a snapshot file and line you
-    actually read.
+14. `[judgment]` Every factual claim traces to evidence actually read: pinned
+    repository lines, primary documents, or recorded observations as applicable.
+    URL reachability is not claim support; a documented typical flow is not an
+    observed execution. Apply [the evidence contract](evidence-and-failures.md).
 15. `[machine]` **No fenced code block is immediately followed by an
     `[[evidence:]]` token.** That pattern means the source was hand-copied into
     the lesson and then pointed at — two stored copies, one of them verified by
     nothing. Delete the fence; the token renders the real pinned source itself.
     Fences that are *not* project source (your own example, a command,
     pseudo-code, a counter-example) stay legal and are not flagged.
-16. `[machine]` `溯源`: every stop under `## 一站一站往回走` has its own
-    `[[evidence:]]` token.
+16. `[judgment]` `溯源`: every stop under its reader-facing middle heading has
+    appropriate evidence. Repository tokens are mechanically checked; whether
+    documents/observations actually support a no-repository stop needs reading.
 17. `[machine]` No `（位置：` / `**位置：**` used as a substitute for
     `[[evidence:]]` (prose may mention paths; it does not count as the anchor).
 18. `[machine]` Every `[[evidence:]]` range is covered by this revision's
     manifest `evidence` (same `sourcePath`; lines inside a cited range, or any
     line when the citation has no line bounds).
+    A URL citation instead has a visible ordinary Markdown link to `sourceUrl`;
+    it never needs a fictitious file range. Claim support remains item 14's judgment.
 19. `[judgment]` No invented file paths, line numbers, or output.
 
 ## Self-check
@@ -78,14 +87,17 @@ failures a machine can catch before a human or model re-reads.
 20. `[machine]` Exactly one `## 自检`.
 21. `[machine]` Under `## 自检`, none of: `答案`, `**答：**`, `答：`, or a
     parenthetical solution glued to the question. Questions only.
-22. `[judgment]` Each self-check question is answerable from this lesson's prose
-    (and ideally aligned with the existing exercise prompt when one exists).
+22. `[judgment]` Each self-check changes an input, condition, or example while
+    remaining answerable using this lesson. The independent exercise must also
+    require applying the idea, not copying the worked example. A guided
+    demonstration or its completion event cannot substitute for that exercise.
 
 ## Links
 
 23. `[machine]` At most 3 `[[lesson:...]]` tokens (outside code fences).
-24. `[machine]` No `[[lesson:...]]` inside the opening suspense section or
-    `## 先猜一下`.
+24. `[machine]` Every `[[lesson:...]]` is inside optional `## 再想想`, which
+    occurs after the middle and before `## 自检`. Source citations are not
+    cross-lesson links and may stay beside the claim they support.
 25. `[judgment]` Each target exists and genuinely goes deeper on something this
     lesson only gestured at.
 
@@ -142,6 +154,7 @@ failures a machine can catch before a human or model re-reads.
     before any analogy: what it is, where it lives, who reads it, and what it causes.
 45. `[judgment]` Every analogy is visibly separated and labeled (`打个比方` / `类比`); it never
     smuggles an unexplained metaphor or new term into the factual explanation.
+    Explain where it stops fitting; omit it when literal explanation is enough.
 46. `[judgment]` Headings, table labels, and transitions remain understandable when read alone;
     no shorthand such as `现象`, `两个东西`, `你碰什么`, `什么时候用哪个`, or `OK` carries
     essential meaning by itself.
@@ -167,6 +180,12 @@ failures a machine can catch before a human or model re-reads.
 | detail block count, question titles, closure, 60% volume | detail answers only its title, in the prose voice |
 | system-vocabulary collocations | whether a bare 证据/快照 belongs to the studied project |
 | — | skip-rewrite when already compliant (progress thrash) |
+
+**Scope of a green result:** machine checks do not establish the judgment rows.
+The author/reviewer records guessability and leakage, changed-condition use,
+claim support, activity role, and any rotation exception. This contract governs
+new writing/revisions; old published bytes are not silently rewritten or newly
+exempted just to make an audit green.
 
 If the linter and this checklist disagree on a `[machine]` item, **fix the
 lesson or the linter** — do not weaken the product syntax to match a bad batch.

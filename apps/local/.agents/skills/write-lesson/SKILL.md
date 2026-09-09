@@ -5,10 +5,11 @@ description: Write or rewrite a UniversityLocal lesson content.md into the house
 
 # Write a lesson
 
-A lesson that opens with 学习目标 and 先给结论 is a detective novel that names
-the murderer on page one. Nobody finishes it. This skill is the shape that
-fixes that, and the rules that keep hundreds of lessons from all sounding
-identical.
+This is the single lesson-writing contract for repository-based and no-repository
+courses. Each small lesson opens a concrete question, invites one grounded
+prediction, explains it, then checks independent use in a changed situation.
+Five content-led variants keep the middle useful without changing that spine.
+An ordinary task is a valid opening; never fabricate surprise to fit a template.
 
 Why this shape (research, rejected alternatives):
 [apps/local/docs/reference/lesson-pedagogy.md](../../../docs/reference/lesson-pedagogy.md).
@@ -30,7 +31,10 @@ deliberately holds roles and families, not a stale current id.
    **before dispatching any writing or checking task**.
 1. Read current `content.md` and `manifest.json` (evidence, card/exercise ids,
    `contentRevision`, `variant`).
-2. **Read the cited evidence in the study snapshot.** No invented paths or lines.
+2. **Read the cited evidence.** Use the pinned study snapshot for project code;
+   use verified primary documents or recorded, reproducible observations when
+   there is no repository. See [evidence-and-failures.md](references/evidence-and-failures.md).
+   No invented paths, lines, outputs, or assertions inferred from a URL merely responding.
 3. Pick a variant → [references/variants.md](references/variants.md).
 4. Write. Run [references/checklist.md](references/checklist.md).
 5. **Polish.** See "The polish pass" below. A no-polish run needs the explicit
@@ -136,7 +140,10 @@ Break one → rewrite.
 3. **Exactly one** open-ended prediction on the lesson core. Never multiple
    choice (including A/B/C bullets or「选一个」). Follow it with the line
    **先写下你的判断，再往下看答案。** on its own line. This keeps the
-   prediction low-stakes without talking down to the reader.
+   prediction low-stakes without talking down to the reader. Every lesson has
+   this step: the opening must provide enough context for a reasoned guess,
+   not the correct answer. Do not demand an unfamiliar prerequisite term or
+   require a correct prediction before the reader can continue.
 4. **Next section is exactly `## 答案`** (no heading suffix) and resolves the
    prediction in one or two sentences. Middle sections teach; do not dump the
    lesson into `## 答案`.
@@ -146,12 +153,14 @@ Break one → rewrite.
    [references/evidence-and-failures.md](references/evidence-and-failures.md).
 5b. **Cards and exercises have their own contract**, and this skill owns it:
    [references/cards-and-exercises.md](references/cards-and-exercises.md).
-   A lesson ships either both or neither — the creation schema refuses cards
-   without an exercise, because cards enter the review queue when the lesson is
-   completed and a lesson is completed by answering its exercises.
+   New lessons follow that writing contract; the generic schema's historical
+   ability to carry other assessment shapes is not an alternative authoring
+   recipe. Existing IDs and immutable revisions remain protected.
 
 6. **`## 自检` questions only** — no `答案：`, `**答：**`, or parenthetical
-   solutions. Graded exercises render below the prose.
+   solutions. Change an input, condition, or example to require independent use;
+   changing the entire project is unnecessary. The separate graded exercise
+   supplies feedback below the prose; a demonstration never replaces it.
 7. **Last section is `## 一句话`**: exactly one bold sentence.
 8. **No old-skeleton headings:** `## 学习目标` / `## 先给结论` / `## 一个类比` /
    `## 工作示例` / `## 重点`.
@@ -177,23 +186,25 @@ Break one → rewrite.
     where a real capture would do. See
     [references/media.md](references/media.md).
 
-One prediction + immediate answer is research-backed: benefit lands on what was
-asked; unguided struggle overloads beginners.
+The prediction and feedback are teaching choices informed by research, not proof
+that a heading sequence guarantees learning. Apply the checklist's judgment
+items: a machine passing the shape cannot prove clarity, truth, or transfer.
 
 ## Variants (pick by content)
 
 | Variant | Use when | Middle role (the heading is written in reader language) |
 | --- | --- | --- |
-| `现象` | Observable surprise | 1 个「为什么会这样」的解释段 |
+| `现象` | Observable situation or concrete task | 解释发生了什么，或示范怎样完成这件事 |
 | `对比` | Two things confused | 逐项分开比较 + 说明何时选哪一种 |
-| `溯源` | Value/call crosses files | 沿着真实路径逐站回查 |
+| `溯源` | Information/action crosses files or real systems | 沿着有证据的路径逐站回查 |
 | `决策` | A tradeoff was made | 说明取舍带来的收益/代价 + 说明何时反过来 |
-| `术语` | A word is misread | 这个词在项目里的真实用法 + 它不等于什么 |
+| `术语` | A word is misread | 读者会遇到的真实用法 + 它不等于什么 |
 
 变体决定的是**教学位置和数量**，不是把生硬的内部标签展示给读者。中段标题必须让一个
 没写过代码的人单独读也知道「这一段要解决什么」。例如把 `## 什么时候用哪个` 改成
 `## 这两种写法，分别在什么时候用？`，把 `## 现象` 改成
-`## 我们再看一眼这个反常的地方`。完整的结构约束见
+`## 我们再看一眼这个反常的地方`。决策的`## 什么时候该反过来`与术语的
+`## 它不是什么`保持固定，防止漏掉适用边界。完整的结构约束见
 [references/variants.md](references/variants.md)。
 
 **Rotation:** ≤ two consecutive lessons in a unit may share a variant. If a
@@ -208,11 +219,20 @@ names. Never put it in `content.md`.
 `|label`.
 
 - Max **3** per lesson.
-- Prefer `## 再想想`; also allowed in the middle. Never in the opening suspense
-  section or `## 先猜一下`.
+- Only inside `## 再想想`. Not in the opening, prediction, answer, middle,
+  self-check, or takeaway; this restriction concerns cross-lesson links, not
+  citations to the source being explained.
 - Target must exist and go deeper on something this lesson only gestured at.
 
 `## 再想想` is optional; if present, after the middle and before `## 自检`.
+
+## Interactive courseware
+
+Reuse the shared [activity contract](../../../../../packages/ui/src/learning-play/README.md).
+An activity may serve opening observation, a middle demonstration, or independent
+application. Choose by the learning goal; not every lesson needs one. Record
+which role it serves. Seeing or operating a guided demonstration does not prove
+independent application and never substitutes for the lesson's graded exercise.
 
 ## 源码从快照来，不要手抄
 
@@ -272,9 +292,10 @@ names. Never put it in `content.md`.
    劈成两半。
 4. **紧跟在引发疑问的那句话之后。** 不要攒到章节末尾。疑问在哪，答案就在哪。
 
-   **硬线：`## 先猜一下` 和 `## 答案` 里出现的每一个词，必须在它们之前就已经
-   解释过。** 让读者对着一个不认识的词做预测，是这套形状最坏的一种失败——
-   预测本来是要调动他已有的直觉，一个陌生词直接把这件事变成瞎猜。
+   **硬线：预测所需的背景和前置术语必须先铺垫。** 术语课正要辨认的目标词可以
+   未知，但必须先出现在读者看得懂的具体场景里；不能把孤立名词直接扔给读者背定义。
+   可答是能作有依据的初步判断，不是开场已经解释了正确答案。答案里若需要进一步命名，
+   先用白话解释，不连带抛出新的一串术语。
    块放在后面「反正也讲了」不算数：讲晚了等于没讲。
    如果发现预测题依赖一个还没解释的词，正确的修法是**把解释挪到前面**，
    或者**把那句话改成不需要那个词**——不是再加一块。
@@ -393,7 +414,7 @@ names. Never put it in `content.md`.
   **打个比方：** 这像把一张名单排成一张可操作的表格。
 
 类比不能代替机制、不能先于术语，也不能把新术语带进另一个新术语的解释里。删掉类比后，
-事实层必须仍然完整。一个类比若有用，就单独出现；不用类比也能懂，就删掉。
+事实层必须仍然完整。一个类比若有用，就单独出现并说明类比在哪儿不成立；不用类比也能懂，就删掉。
 
 ### 标题和过渡必须是人话
 
@@ -409,7 +430,9 @@ names. Never put it in `content.md`.
 预测题不能只是把人人都会点头的常识改成问句，例如「会用 App 等于会做 App 吗？」如果
 答案不需要读者调用本课内容就能得到，题目没有教学价值。改问具体后果、选择或判断依据：
 「如果只改了源文件却没有重新构建，用户打开的页面会不会变化？为什么？」预测必须仍然
-紧扣本课核心，而且答案要立刻落地。
+紧扣本课核心，而且答案要立刻落地。开场可以是正常任务，不必反常。删掉`## 答案`
+及其后文，检查核心问题是否仍悬着；同时检查开场是否提供了作判断的材料。缺材料就补背景，
+泄题就改开场，不靠删掉有价值的课或编一个惊奇来解决。
 
 ### 一节课只推进一个主题
 
