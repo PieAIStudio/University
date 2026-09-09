@@ -701,6 +701,7 @@ export const messages = {
   "ui.lesson.lessonReader.copy.回到刚才那一课": "← 回到刚才那一课",
   "ui.lesson.lessonReader.copy.外语模式": "外语模式",
   "ui.lesson.lessonReader.copy.完成本次更新": "完成本次更新",
+  "ui.lesson.lessonReader.copy.已经会了-直接答这一节的题": "已经会了？直接答这一节的题",
   "ui.lesson.lessonReader.copy.已确认读过这一版-还差练习": "已确认读过这一版。还差练习。",
   "ui.lesson.lessonReader.copy.打开课文-滚动页面或答对练习都不会自动完成-这个确认只针对当前固定版本":
     "答对题目不等于读过课文。点一下，这节才算读完。",

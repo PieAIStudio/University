@@ -193,3 +193,31 @@ describe("read confirmation stays an explicit remaining step", () => {
     ).toBe(false);
   });
 });
+
+describe("answering without reading", () => {
+  /*
+    The door for a learner who already knows this. It is offered only where it
+    means anything — before they have read it and before they have answered —
+    and it never claims the reading happened, which is what keeps a skipped
+    lesson's cards out of the review queue (V5 decision 12D/12E).
+  */
+  const skipControl = () =>
+    container.querySelector<HTMLButtonElement>(".lesson-skip-to-questions button");
+
+  it("offers the questions directly on a lesson that is neither read nor answered", async () => {
+    await renderReader({ exercisesPassed: false, readConfirmed: false });
+    expect(skipControl()).not.toBeNull();
+    expect(skipControl()?.textContent).toContain("已经会了");
+  });
+
+  it("stops offering once the questions are answered", async () => {
+    await renderReader({ exercisesPassed: true, readConfirmed: false });
+    expect(skipControl()).toBeNull();
+  });
+
+  it("stops offering once the prose is marked read", async () => {
+    // Someone who read it does not need a shortcut past what they just read.
+    await renderReader({ exercisesPassed: false, readConfirmed: true });
+    expect(skipControl()).toBeNull();
+  });
+});

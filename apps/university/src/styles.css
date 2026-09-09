@@ -4361,3 +4361,29 @@ button.label--icon[data-lesson-state="locked"] {
     justify-content: center;
   }
 }
+
+/*
+  The offer to answer without reading. Quiet on purpose: it is a door for the
+  person who already knows the material, not a shortcut the product recommends.
+*/
+.lesson-skip-to-questions {
+  margin: 0 0 1rem;
+}
+
+.lesson-skip-to-questions button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--game-ui-text-muted, currentColor);
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.lesson-skip-to-questions button:hover,
+.lesson-skip-to-questions button:focus-visible {
+  opacity: 1;
+}
