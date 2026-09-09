@@ -312,6 +312,13 @@ function buildLessonView(
         ...(asset.source?.license ? { license: asset.source.license } : {}),
         ...(asset.source?.aiNote ? { aiNote: asset.source.aiNote } : {}),
       })),
+      /*
+        Activities go out whole rather than by reference. An asset is a file the
+        reader fetches on its own URL, so the view sends a link; an activity is
+        the lesson's own content, and a second round trip to fetch it would give
+        the reader a paragraph with a hole in it while the request is open.
+      */
+      ...(lesson.activities.length ? { activities: lesson.activities } : {}),
       progress: serializeProgress(
         store?.getLessonProgress(lessonKey) ?? null,
         store?.hasLessonCompletion(lessonKey, lesson.contentRevision) ?? false,

@@ -10,6 +10,7 @@ import {
   ExerciseSchema,
   IsoDateTime,
   LessonManifestSchema,
+  LessonActivitySchema,
   LessonAssetSchema,
   LessonSectionSchema,
   LessonVariantSchema,
@@ -111,6 +112,13 @@ const CourseRevisionProposalSchema = z
         content: z.string().min(1),
         evidence: z.array(EvidenceReferenceSchema).min(1),
         assets: z.array(LessonAssetSchema).max(100).optional(),
+        /*
+          Omitted means unchanged, the way assets are: a revision that only
+          rewords prose must not silently drop the activity the lesson
+          embeds, and an author who did not mention activities did not ask
+          for one to disappear.
+        */
+        activities: z.array(LessonActivitySchema).max(3).optional(),
         assetFiles: z.array(LessonAssetFileProposalSchema).optional(),
         cards: z.array(CardRevisionProposalSchema),
         exercises: z.array(ExerciseRevisionProposalSchema),
@@ -478,25 +486,50 @@ interface ContentLocation {
   readonly lessonId: string;
 }
 
+/**
+ * Whether a proposal, renumbered to the revision already stored, is that stored
+ * item byte for byte.
+ *
+ * The revise contract makes a proposal list every existing card and exercise —
+ * dropping one is a deletion, not a smaller edit. Taken together with an
+ * unconditional bump, that meant no lesson's prose could be touched without
+ * minting a fresh revision of every card hanging off it, and a fresh revision
+ * resets completion and pulls that card out of the review queue. Adding one
+ * interactive activity to a lesson cost three learners' review schedules.
+ *
+ * `contentHash` covers `contentRevision`, so two revisions of identical text
+ * never hash alike. Renumbering the candidate to the stored revision first is
+ * what makes the comparison ask about the content instead of the number.
+ */
+function unchangedFrom<Item extends { readonly contentHash: string; readonly contentRevision: number }>(
+  current: Item | null,
+  build: (contentRevision: number) => Item,
+): Item | null {
+  if (current === null) return null;
+  return build(current.contentRevision).contentHash === current.contentHash ? current : null;
+}
+
 function createCardRevision(
   current: CardContent | null,
   proposal: CardRevisionProposal,
   location: ContentLocation,
 ): CardContent {
-  return normalizeCard({
-    schemaVersion: 1,
-    id: proposal.id,
-    kind: proposal.kind ?? current?.kind ?? "basic",
-    courseId: location.courseId,
-    unitId: location.unitId,
-    lessonId: location.lessonId,
-    front: proposal.front,
-    back: proposal.back,
-    contentRevision: current === null ? 1 : (proposal.expectedRevision ?? 0) + 1,
-    status: "active",
-    tags: proposal.tags ?? current?.tags ?? [],
-    evidence: proposal.evidence,
-  });
+  const build = (contentRevision: number) =>
+    normalizeCard({
+      schemaVersion: 1,
+      id: proposal.id,
+      kind: proposal.kind ?? current?.kind ?? "basic",
+      courseId: location.courseId,
+      unitId: location.unitId,
+      lessonId: location.lessonId,
+      front: proposal.front,
+      back: proposal.back,
+      contentRevision,
+      status: "active",
+      tags: proposal.tags ?? current?.tags ?? [],
+      evidence: proposal.evidence,
+    });
+  return unchangedFrom(current, build) ?? build(current === null ? 1 : (proposal.expectedRevision ?? 0) + 1);
 }
 
 function createExerciseRevision(
@@ -508,32 +541,35 @@ function createExerciseRevision(
   if (title === undefined) {
     throw new Error(`Exercise ${proposal.id} is new and must declare a title`);
   }
-  const common = {
-    schemaVersion: 1 as const,
-    id: proposal.id,
-    title,
-    courseId: location.courseId,
-    unitId: location.unitId,
-    lessonId: location.lessonId,
-    prompt: proposal.prompt,
-    contentRevision: current === null ? 1 : (proposal.expectedRevision ?? 0) + 1,
-    status: "active" as const,
-    evidence: proposal.evidence,
-  };
-  if ("expectedAnswer" in proposal) {
-    if (proposal.kind && proposal.kind !== "short-answer") {
-      throw new Error(`Exercise ${proposal.id} kind does not match expectedAnswer content`);
+  const build = (contentRevision: number): Exercise => {
+    const common = {
+      schemaVersion: 1 as const,
+      id: proposal.id,
+      title,
+      courseId: location.courseId,
+      unitId: location.unitId,
+      lessonId: location.lessonId,
+      prompt: proposal.prompt,
+      contentRevision,
+      status: "active" as const,
+      evidence: proposal.evidence,
+    };
+    if ("expectedAnswer" in proposal) {
+      if (proposal.kind && proposal.kind !== "short-answer") {
+        throw new Error(`Exercise ${proposal.id} kind does not match expectedAnswer content`);
+      }
+      return normalizeExercise({
+        ...common,
+        kind: "short-answer",
+        expectedAnswer: proposal.expectedAnswer,
+      });
     }
-    return normalizeExercise({
-      ...common,
-      kind: "short-answer",
-      expectedAnswer: proposal.expectedAnswer,
-    });
-  }
-  if (proposal.kind && proposal.kind !== "explain") {
-    throw new Error(`Exercise ${proposal.id} kind does not match rubric content`);
-  }
-  return normalizeExercise({ ...common, kind: "explain", rubric: proposal.rubric });
+    if (proposal.kind && proposal.kind !== "explain") {
+      throw new Error(`Exercise ${proposal.id} kind does not match rubric content`);
+    }
+    return normalizeExercise({ ...common, kind: "explain", rubric: proposal.rubric });
+  };
+  return unchangedFrom(current, build) ?? build(current === null ? 1 : (proposal.expectedRevision ?? 0) + 1);
 }
 
 function buildBundle(
@@ -669,6 +705,7 @@ function buildBundle(
     status: "active",
     evidence: proposal.lesson.evidence,
     assets,
+    activities: proposal.lesson.activities ?? currentLesson.activities,
     updatedAt: timestamp,
   });
   return { lesson, lessonContent: proposal.lesson.content, assetFiles, cards, exercises };
