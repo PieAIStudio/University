@@ -106,8 +106,15 @@ for (const lesson of lessons) {
   for (const link of before.match(/\[\[[^\]]+\]\]/gu) ?? [])
     if (!out.includes(link)) reasons.push(`丢了链接 ${link}`);
 
-  /* Numbers, commands and URLs are facts; a polish must not touch them. */
-  for (const url of before.match(/https?:\/\/\S+/gu) ?? [])
+  /*
+    URLs are facts; a polish must not touch them. The character class matters:
+    `\S+` looks right and is wrong here, because CJK text is not whitespace, so
+    it swallows the entire following clause into the "URL" and then reports the
+    lesson as having lost a link it never had. That rejected a correctly
+    polished lesson whose prose happened to mention `http://localhost:5173/`
+    mid-sentence. Bound it to characters a URL may actually contain.
+  */
+  for (const url of before.match(/https?:\/\/[\w\-.~:/?#[\]@!$&'()*+,;=%]+/gu) ?? [])
     if (!out.includes(url)) reasons.push(`丢了链接 ${url.slice(0, 40)}`);
 
   if (out.length < before.length * 0.55) reasons.push(`太短（${out.length} vs ${before.length}）`);
