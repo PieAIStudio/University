@@ -603,6 +603,7 @@ export function LessonReader({
               evidenceBasePath={loadWindowedEvidence}
               onOpenEvidence={(index, trigger) => openSourceSheet(index, trigger)}
               assets={view.lesson.assets}
+              {...(view.lesson.activities ? { activities: view.lesson.activities } : {})}
               sections={sections}
               detailMode={detailMode}
             >

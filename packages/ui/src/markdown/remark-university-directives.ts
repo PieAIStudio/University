@@ -1,7 +1,7 @@
 import type { Root } from "mdast";
 import { visit } from "unist-util-visit";
 
-const ALLOWED = new Set(["detail", "figure", "video"]);
+const ALLOWED = new Set(["detail", "figure", "video", "play"]);
 
 interface DirectiveNode {
   readonly type: "containerDirective" | "leafDirective";
@@ -52,7 +52,24 @@ export function remarkUniversityDirectives() {
         }
         if (typeof attributes.kind === "string") properties.kind = attributes.kind;
         else if (typeof attributes.class === "string") properties.kind = attributes.class;
-        if (typeof attributes.asset === "string") properties.assetId = attributes.asset;
+        /*
+          `::play{#some-activity}` points at an activity, not an asset, so the
+          target is chosen by directive name rather than by attribute — both
+          spell the reference `id`, and a play block arriving with an `assetId`
+          that names no asset would miss quietly instead of failing.
+
+          The `{#id}` shorthand, not `{id=…}`: measured, `{id=x}` parses in this
+          pipeline as a single valueless attribute literally named `id=x`, and
+          `{id="x"}` stops parsing as a directive at all. The one figure
+          directive written in the courses so far is `::figure[路径图]{#local-diagram}`,
+          which is the same shorthand. The `asset`/`poster`/`subtitles` reads
+          below are the `key=value` form and therefore cannot fire today; they
+          are left alone because removing them is a separate change from adding
+          this one.
+        */
+        if (name === "play") {
+          if (typeof attributes.id === "string") properties.activityId = attributes.id;
+        } else if (typeof attributes.asset === "string") properties.assetId = attributes.asset;
         else if (typeof attributes.id === "string") properties.assetId = attributes.id;
         if (typeof attributes.poster === "string") properties.posterId = attributes.poster;
         if (typeof attributes.subtitles === "string") properties.subtitlesId = attributes.subtitles;

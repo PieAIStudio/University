@@ -6,6 +6,8 @@ import remarkGfm from "remark-gfm";
 
 import type { LanguageLayer, TermRange } from "@pieai/university-core/domain/lesson-marks.js";
 import type { LexiconEntry } from "@pieai/university-core/domain/schemas.js";
+import type { ActivityResult, LearningActivitySpec } from "@pieai/university-core";
+import { LearningActivity } from "../learning-play/LearningActivity.js";
 import { shouldInlineEvidence } from "../evidence/display-policy.js";
 import { EvidenceInlineSource } from "../evidence/EvidenceInlineSource.js";
 import { CopyLocatorButton } from "../evidence/CopyLocatorButton.js";
@@ -368,6 +370,8 @@ export function MarkdownContent({
   onOpenEvidence,
   termAnchors,
   assets = [],
+  activities = [],
+  onActivityResult,
   sections = [],
   detailMode = "standard",
 }: {
@@ -388,6 +392,16 @@ export function MarkdownContent({
   readonly onOpenEvidence?: (index: number, trigger: HTMLElement) => void;
   readonly termAnchors?: readonly TermRange[];
   readonly assets?: readonly LessonAssetView[];
+  /**
+   * Interactive courseware this lesson embeds, resolved by `::play{id=…}`.
+   *
+   * Passed in rather than fetched here for the same reason assets are: this
+   * component renders one lesson's prose and knows nothing about where a
+   * lesson comes from, and a reader test should not have to stand up a
+   * content port to check that a paragraph renders.
+   */
+  readonly activities?: readonly LearningActivitySpec[];
+  readonly onActivityResult?: (result: ActivityResult) => void;
   readonly sections?: readonly LessonSectionView[];
   readonly detailMode?: "standard" | "all";
   /**
@@ -429,6 +443,10 @@ export function MarkdownContent({
     [active],
   );
   const assetsById = useMemo(() => new Map(assets.map((asset) => [asset.id, asset])), [assets]);
+  const activitiesById = useMemo(
+    () => new Map(activities.map((activity) => [activity.id, activity])),
+    [activities],
+  );
   /*
     The lesson header already says which layer of the project this lesson lives
     in. Repeating it above every snippet only says something new when the
@@ -742,6 +760,36 @@ export function MarkdownContent({
           </LessonMediaBlock>
         );
       },
+      "lesson-play"({
+        node,
+      }: {
+        readonly node?: { readonly properties?: Record<string, unknown> };
+      }) {
+        const id = directiveProperty(node, "activityId");
+        const activity = activitiesById.get(id);
+        /*
+          A play block that resolves to nothing is said out loud rather than
+          rendered as a gap. Silence here would read as "this lesson has no
+          activity", which is exactly the state a broken reference produces —
+          so the reader, and anyone reviewing the lesson, could not tell a
+          deliberate omission from a typo in an id.
+        */
+        if (!activity) {
+          return (
+            <p className="lesson-directive-unsupported" role="note">
+              {translate("ui.markdown.markdownContent.copy.找不到这个互动课件")}
+              <code>{id}</code>
+            </p>
+          );
+        }
+        return (
+          <LearningActivity
+            activity={activity}
+            occurrenceId={id}
+            onResult={onActivityResult}
+          />
+        );
+      },
       "lesson-directive-unsupported"({
         node,
       }: {
@@ -796,6 +844,8 @@ export function MarkdownContent({
       inlineEvidenceIndices,
       placeTellsThemApart,
       assetsById,
+      activitiesById,
+      onActivityResult,
       sectionsByTitle,
       detailMode,
       foreignSettings,

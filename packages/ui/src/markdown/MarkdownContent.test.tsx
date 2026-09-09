@@ -11,6 +11,7 @@ import {
   type LessonSectionView,
   type EvidenceView,
 } from "../view/lesson-view.js";
+import type { LearningActivitySpec } from "@pieai/university-core";
 import { isLocalUrl, MarkdownContent } from "./MarkdownContent.js";
 
 const mermaidMock = vi.hoisted(() => ({
@@ -876,5 +877,56 @@ describe("local-only link and image policy", () => {
     expect(panel?.getAttribute("data-kind")).toBe("term");
     expect(panel?.textContent).toContain("应用：用户点开图标就能用的那个成品");
     expect(panel?.querySelector(".reference-panel__full")).toBeNull();
+  });
+});
+
+describe("interactive courseware in the prose", () => {
+  const connectActivity: LearningActivitySpec = {
+    kind: "connect",
+    id: "where-a-click-goes",
+    difficulty: "intro",
+    title: "点一下之后，它去了哪里",
+    brief: "把按钮、处理函数和显示结果的位置连起来。",
+    goal: "看出点击不是直接改画面，中间隔着一步。",
+    takeaway: "按钮只负责喊一声，改画面的是另一段代码。",
+    hint: "先找哪一个是「被点的」，哪一个是「被改的」。",
+    source: {
+      label: "MDN · EventTarget.addEventListener",
+      url: "https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener",
+    },
+    nodes: [
+      { id: "button", label: "按钮", note: "页面上被点的那个", x: 0, y: 0 },
+      { id: "handler", label: "处理函数", note: "点了之后跑的那段", x: 1, y: 0 },
+      { id: "output", label: "结果区", note: "字最后出现的地方", x: 2, y: 0 },
+    ],
+    edges: [
+      { from: "button", to: "handler", why: "点击把这段代码叫起来" },
+      { from: "handler", to: "output", why: "这段代码才是改画面的那个" },
+    ],
+    probes: [{ label: "一次点击走过哪几站", path: ["button", "handler", "output"] }],
+  };
+
+  it("renders the activity a play directive points at", async () => {
+    await renderMarkdown("先自己连一次。\n\n::play{#where-a-click-goes}\n", {
+      activities: [connectActivity],
+    });
+
+    expect(container.querySelector(".learning-activity")).not.toBeNull();
+    expect(container.textContent).toContain("点一下之后，它去了哪里");
+    expect(container.textContent).not.toContain("::play");
+  });
+
+  /*
+    A reference that resolves to nothing has to say so. Rendering an empty gap
+    would look exactly like a lesson that deliberately has no activity, which
+    makes a typo in an id indistinguishable from an editorial choice — to the
+    reader and to whoever reviews the lesson.
+  */
+  it("says so out loud when the id matches no activity", async () => {
+    await renderMarkdown("::play{#never-authored}\n", { activities: [connectActivity] });
+
+    expect(container.querySelector(".learning-activity")).toBeNull();
+    expect(container.textContent).toContain("找不到这个互动课件");
+    expect(container.textContent).toContain("never-authored");
   });
 });

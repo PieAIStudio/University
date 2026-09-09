@@ -23,7 +23,7 @@ import imported from "./imported.json";
  * which means everything the reader needs — id, kind, mime, alt — was always
  * there; only this repository's type was a stub.
  */
-import type { AnswerKey, CourseLearnerFact } from "@pieai/university-core";
+import type { AnswerKey, CourseLearnerFact, LearningActivitySpec } from "@pieai/university-core";
 import type { LessonAssetView, LessonSectionView } from "@pieai/university-ui";
 import type { CourseNode } from "@pieai/university-world/course.js";
 
@@ -83,6 +83,7 @@ export interface Lesson {
   readonly sections?: readonly LessonSectionView[];
   readonly evidence: readonly EvidenceAnchor[];
   readonly assets: readonly LessonAsset[];
+  readonly activities?: readonly LearningActivitySpec[];
   readonly cards: readonly Card[];
   readonly exercises: readonly Exercise[];
 }

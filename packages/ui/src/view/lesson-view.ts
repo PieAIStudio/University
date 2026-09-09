@@ -1,3 +1,4 @@
+import type { LearningActivitySpec } from "@pieai/university-core";
 import { formatDate, translate } from "../i18n/index.js";
 import {
   isLessonComplete,
@@ -639,6 +640,11 @@ export interface LessonView {
     readonly progress: LessonProgress | null;
     readonly evidence: readonly EvidenceView[];
     readonly assets?: readonly LessonAssetView[];
+    /**
+     * Interactive courseware this lesson embeds, resolved by `::play{id=…}` in
+     * the prose. Optional because every lesson written before this predates it.
+     */
+    readonly activities?: readonly LearningActivitySpec[];
     readonly exercises: readonly {
       readonly id: string;
       readonly kind: string;

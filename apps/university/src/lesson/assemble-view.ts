@@ -130,6 +130,7 @@ export function assembleLessonView(input: {
             },
       ),
       assets: lesson.assets ?? [],
+      ...(lesson.activities?.length ? { activities: lesson.activities } : {}),
       exercises: lesson.exercises.map((exercise) => ({
         id: exercise.id,
         kind: exercise.kind,

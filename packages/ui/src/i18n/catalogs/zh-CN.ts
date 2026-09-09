@@ -799,6 +799,7 @@ export const messages = {
   "ui.markdown.markdownContent.copy.外部链接": "外部链接",
   "ui.markdown.markdownContent.copy.引用": "引用",
   "ui.markdown.markdownContent.copy.文字稿": "文字稿",
+  "ui.markdown.markdownContent.copy.找不到这个互动课件": "找不到这个互动课件：",
   "ui.markdown.markdownContent.copy.未启用的课程扩展": "未启用的课程扩展：",
   "ui.markdown.markdownContent.copy.本地媒体": "本地媒体",
   "ui.markdown.markdownContent.copy.来源": "来源",
