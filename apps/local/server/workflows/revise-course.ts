@@ -501,10 +501,9 @@ interface ContentLocation {
  * never hash alike. Renumbering the candidate to the stored revision first is
  * what makes the comparison ask about the content instead of the number.
  */
-function unchangedFrom<Item extends { readonly contentHash: string; readonly contentRevision: number }>(
-  current: Item | null,
-  build: (contentRevision: number) => Item,
-): Item | null {
+function unchangedFrom<
+  Item extends { readonly contentHash: string; readonly contentRevision: number },
+>(current: Item | null, build: (contentRevision: number) => Item): Item | null {
   if (current === null) return null;
   return build(current.contentRevision).contentHash === current.contentHash ? current : null;
 }
@@ -529,7 +528,10 @@ function createCardRevision(
       tags: proposal.tags ?? current?.tags ?? [],
       evidence: proposal.evidence,
     });
-  return unchangedFrom(current, build) ?? build(current === null ? 1 : (proposal.expectedRevision ?? 0) + 1);
+  return (
+    unchangedFrom(current, build) ??
+    build(current === null ? 1 : (proposal.expectedRevision ?? 0) + 1)
+  );
 }
 
 function createExerciseRevision(
@@ -569,7 +571,10 @@ function createExerciseRevision(
     }
     return normalizeExercise({ ...common, kind: "explain", rubric: proposal.rubric });
   };
-  return unchangedFrom(current, build) ?? build(current === null ? 1 : (proposal.expectedRevision ?? 0) + 1);
+  return (
+    unchangedFrom(current, build) ??
+    build(current === null ? 1 : (proposal.expectedRevision ?? 0) + 1)
+  );
 }
 
 function buildBundle(

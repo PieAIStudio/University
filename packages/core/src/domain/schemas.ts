@@ -629,9 +629,7 @@ export const LessonActivitySchema = z
     goal: z.string().min(1).max(1_000),
     takeaway: z.string().min(1).max(1_000),
     hint: z.string().min(1).max(1_000),
-    source: z
-      .object({ label: z.string().min(1).max(200), url: z.string().url() })
-      .strict(),
+    source: z.object({ label: z.string().min(1).max(200), url: z.string().url() }).strict(),
   })
   .passthrough();
 

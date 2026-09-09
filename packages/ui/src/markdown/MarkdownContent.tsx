@@ -783,11 +783,7 @@ export function MarkdownContent({
           );
         }
         return (
-          <LearningActivity
-            activity={activity}
-            occurrenceId={id}
-            onResult={onActivityResult}
-          />
+          <LearningActivity activity={activity} occurrenceId={id} onResult={onActivityResult} />
         );
       },
       "lesson-directive-unsupported"({

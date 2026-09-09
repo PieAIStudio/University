@@ -181,9 +181,7 @@ describe("proven, as distinct from finished", () => {
   it("is false while one lesson's exercises are still unanswered", () => {
     const allButOne: ProgressSource = {
       completionOf: (ref) =>
-        ref.lessonId === "c"
-          ? NOT_STARTED
-          : { exercisesPassed: true, readConfirmed: false },
+        ref.lessonId === "c" ? NOT_STARTED : { exercisesPassed: true, readConfirmed: false },
     };
     expect(readCourseProgress(course, allButOne).proven).toBe(false);
   });
