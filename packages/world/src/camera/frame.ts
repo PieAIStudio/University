@@ -1,107 +1,42 @@
 /**
- * Where the eye sits on the world map.
- *
- * Copied from the delivery shell's framing so both shells look at the same
- * archipelago from the same place. The camera lever is still polar-plus-
- * distance (see Controls); these numbers are the first pose, not a per-frame
- * override.
+ * One world-camera projection for the learner surface and asset inspector.
+ * The former +Z look-ahead belonged to a one-dimensional course road. R38's
+ * real grouped islands exposed that stale assumption: the camera aimed at
+ * empty sky while the catalogue accumulated above/right of the learner.
  */
 import * as THREE from "three";
-
 import { WORLD_DISTANCE_MIN, WORLD_POLAR } from "./controls.js";
-import { STUDY_PATH, STUDY_PATH_DIRECTION } from "../course/layout.js";
 
-/**
- * How far down the road the world shot aims, past the learner's own island.
- *
- * Two and a half courses. Less and the learner sits in the middle of the frame
- * with as much sea behind them as road ahead; more and their own island slides
- * off the bottom edge, which is the one thing on the map they are entitled to
- * always be able to find.
- */
-const WORLD_LOOK_AHEAD = STUDY_PATH.step * 2.5;
+const WORLD_NEIGHBOURS = 5;
+const WORLD_FOCUS_OFFSET_MAX = 8;
 
-function pose(
-  look: THREE.Vector3,
-  distance: number,
-  polar: number,
-  azimuth: number,
-): readonly [number, number, number] {
-  const offset = new THREE.Vector3().setFromSpherical(
-    new THREE.Spherical(distance, polar, azimuth),
-  );
-  return [look.x + offset.x, look.y + offset.y, look.z + offset.z];
-}
-
-/**
- * How much road is still in front of the learner, along the study path.
- *
- * Zero in a series with one course, which is the case that broke the shot: the
- * camera aimed a fixed two and a half course-steps down a road that had no
- * second course, so it framed open sea with the only island clinging to the
- * bottom edge. 通用课 shipped with exactly one course and looked broken on the
- * day it landed.
- */
-export function roadAhead(
-  placements: readonly { readonly position: THREE.Vector3 }[],
-  standingAt: THREE.Vector3 | null,
-): number {
-  if (placements.length === 0) return 0;
-  const from = standingAt?.z ?? 0;
-  const furthest =
-    STUDY_PATH_DIRECTION === "toward-positive-z"
-      ? Math.max(...placements.map((entry) => entry.position.z))
-      : Math.min(...placements.map((entry) => entry.position.z));
-  return STUDY_PATH_DIRECTION === "toward-positive-z"
-    ? Math.max(0, furthest - from)
-    : Math.max(0, from - furthest);
-}
-
-/**
- * @param standingAt Where the learner is on this project's road, or the head of
- *   the road in a project they have not started. `null` only while the course
- *   list is still resolving.
- *
- * The old signature took a study centre and an `overview` flag as well, because
- * the map used to hold every project at once and 「看全部四片海」 pulled the
- * camera back to the origin to show all of them. One project per scene retires
- * both: there is no ring to centre on any more, and the way to see the other
- * projects is the planet, which is a page and not a camera distance.
+/** Keep the current island legible, with a bounded hint of its ACTUAL neighbours.
+ * Names, progress and invented course-road directions are not layout inputs.
+ * A single/empty course catalogue aims at its learner instead of open sky.
  */
 export function frameWorld(
   standingAt: THREE.Vector3 | null,
-  /**
-   * Distance still to travel. The shot leads the learner by up to two and a
-   * half course-steps, but never past the end of what there is to look at.
-   */
-  ahead = Number.POSITIVE_INFINITY,
+  placements: readonly { readonly position: THREE.Vector3 }[] = [],
 ): {
   readonly cameraFrom: readonly [number, number, number];
   readonly lookAt: readonly [number, number, number];
 } {
-  /*
-    The study is a road running along +Z, and the shot has to be down it.
-
-    This used to point the camera along `learner − studyCentre`, which was the
-    right idea for a radial tree: the learner was somewhere out on a disc and
-    that vector said which way "outward" was. On a road it says almost nothing
-    — near the middle of a study it is a rounding error, and the ±0.32 bias
-    then decided the whole composition. The result was a road running corner to
-    corner with 60% of the frame on empty sea.
-
-    So: look down the road, and pull the target forward along it. The learner
-    lands in the lower third with the courses they have not opened yet filling
-    the rest, which is the same composition the course view uses and the same
-    answer to the same question.
-  */
-  const at = (standingAt ?? new THREE.Vector3(0, 0, 0)).clone();
-  const direction = STUDY_PATH_DIRECTION === "toward-positive-z" ? 1 : -1;
-  const look = new THREE.Vector3(at.x, at.y, at.z + direction * Math.min(WORLD_LOOK_AHEAD, ahead));
-  // A few degrees off the axis so the islands stagger instead of stacking into
-  // one column of discs.
-  const azimuth = 0.16;
-  return {
-    cameraFrom: pose(look, WORLD_DISTANCE_MIN, WORLD_POLAR, azimuth),
-    lookAt: [look.x, look.y, look.z],
-  };
+  const at = (standingAt ?? placements[0]?.position ?? new THREE.Vector3()).clone();
+  const neighbours = [...placements]
+    .sort(
+      (a, b) =>
+        a.position.distanceToSquared(at) - b.position.distanceToSquared(at) ||
+        a.position.x - b.position.x ||
+        a.position.z - b.position.z,
+    )
+    .slice(0, WORLD_NEIGHBOURS);
+  const centre = at.clone().multiplyScalar(2);
+  for (const entry of neighbours) centre.add(entry.position);
+  centre.divideScalar(2 + neighbours.length);
+  const offset = centre.sub(at).clampLength(0, WORLD_FOCUS_OFFSET_MAX);
+  const look = at.clone().add(offset);
+  const eye = new THREE.Vector3()
+    .setFromSpherical(new THREE.Spherical(WORLD_DISTANCE_MIN, WORLD_POLAR, 0.16))
+    .add(look);
+  return { cameraFrom: [eye.x, eye.y, eye.z], lookAt: [look.x, look.y, look.z] };
 }

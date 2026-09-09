@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 
-import { frameCourse } from "../course/course-map.js";
+import { COURSE_CAMERA_FRONT, frameCourse } from "../course/course-map.js";
 import { layoutCourse } from "../course/layout.js";
 import type { LessonPlacement } from "../Maps.js";
 
@@ -59,7 +59,7 @@ describe("frameCourse", () => {
       const offset = new THREE.Vector3(
         shot!.cameraFrom[0] - live.position.x,
         0,
-        shot!.cameraFrom[2] - live.position.z - 19,
+        shot!.cameraFrom[2] - live.position.z - COURSE_CAMERA_FRONT,
       );
       const tangent = next.position.clone().sub(live.position).setY(0);
       expect(offset.length()).toBeCloseTo(0.8, 5);
@@ -85,7 +85,18 @@ describe("frameCourse", () => {
 
     const desktop = frameCourse(lessons, { tier: "desktop" })!;
     const mobile = frameCourse(lessons, { tier: "mobile" })!;
-    expect(desktop.cameraFrom[0]).toBeLessThan(desktop.lookAt[0]);
+    // This route travels right and inward. The opposite shoulder would send
+    // its successors much farther sideways under the today panel.
+    expect(desktop.cameraFrom[0]).toBeGreaterThan(desktop.lookAt[0]);
+    const dx = lessons[1]!.position.x - lessons[0]!.position.x;
+    const dz = lessons[1]!.position.z - lessons[0]!.position.z;
+    const bearing = Math.atan2(
+      desktop.cameraFrom[0] - desktop.lookAt[0],
+      desktop.cameraFrom[2] - desktop.lookAt[2],
+    );
+    expect(Math.abs(Math.cos(bearing) * dx - Math.sin(bearing) * dz)).toBeLessThan(
+      Math.abs(Math.cos(-bearing) * dx - Math.sin(-bearing) * dz),
+    );
     expect(desktop.lookAt[1]).toBe(0.5);
     expect(mobile.lookAt[1]).toBe(3);
     expect(mobile.cameraFrom[2]).toBeGreaterThan(lessons[0]!.position.z);

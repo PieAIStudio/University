@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-08-28
+last_reviewed: 2026-09-08
 domain: architecture
 tags:
   - 3d
@@ -25,9 +25,9 @@ superseded_by: null
 
 ## Context
 
-The product has three 3D surfaces: a planet where a learner picks a study, an
-archipelago where they pick a course, and an island where they walk a course's
-lessons. They were built as three scenes, and every one of them independently
+The product has three 3D surfaces: a global domain/region picker, a series
+archipelago for courses, and a course island for lessons (V5 decision M).
+They were originally built as three scenes, and every one independently
 re-answered the same questions — where does terrain come from, where does
 colour come from, how much geometry may this cost, who decides.
 
@@ -84,8 +84,10 @@ space:
   belong, because this is where a triangle is more than one pixel wide.
 - **World** — an island is about 40px across. It gets a silhouette, one value
   break, and one bright pixel. Nothing else is legible at that size.
-- **Planet** — study clusters float in the atmosphere above the surface. They
-  are read as identity and position, not as terrain.
+- **Planet** — a domain owns a sphere and studies own atmospheric regions with
+  tiny representative course islands. Those islands retain the canonical
+  blueprint; the domain sphere is a container, not a competing course field.
+  The detailed domain/region contract is in the amendment below.
 
 This principle has already killed real work in both directions. A 569-line
 mechanical underside chassis was discarded because the underside it detailed is
@@ -131,3 +133,93 @@ its density from the field, and it spends its budget at the course projection".
   sampler. A document does not stop a second random field from appearing; a
   failing test does. This is the same mechanism ADR-0008 uses, and it has
   already caught a real change once.
+
+## Implementation entry points (2026-09-06)
+
+This is a navigation map, not a second algorithm specification. Read the named
+module and its adjacent tests before changing a rule.
+
+| Change | Source entry |
+| --- | --- |
+| Course identity, outline, route and macro relief | `packages/world/src/island/island-blueprint.ts` |
+| Shared masks, occupancy and ground samples | `packages/world/src/island/island-field.ts` |
+| Drawn terrain and clipped soil contact | `packages/world/src/island/island-geometry.ts`, `surface-clip.ts` |
+| Complete buildings, camps, bridges and natural clearances | `packages/world/src/island/island-composition.ts`, `island-dressing.ts` |
+| Model provenance, measured dimensions and allowed replacement | `packages/world/src/island/island-asset-registry.ts` |
+| Lesson body, engraving and bounded ground contact | `packages/world/src/grid/LessonMarkerField.tsx`, `medallion-grounding.ts` |
+| Course/world composition and catalogue placement | `packages/world/src/Maps.tsx` (`placeStudyArchipelago`, shared with app and MapStudio) |
+| Course dressing and foliage (course-only) | `packages/world/src/island/island-dressing-render.tsx`, `island-foliage-render.tsx` |
+| Low-cost shared distant geometry and picking | `packages/world/src/island/remote-island-field.ts`, `remote-island-render.tsx`, `remote-props.ts` |
+| Study aggregation and global framing | `packages/world/src/planet/PlanetScene.tsx`, `domain-layout.ts`, `domain-preparation.ts` |
+| Actual scene instances versus raw GLB metrics | `packages/world/src/inspector/projected-metrics.ts`, `descriptions.ts` |
+| Shared frame lifecycle and colour-pipeline owner | `packages/world/src/Stage.tsx`, `island/grade.ts` |
+
+Remote rendering samples the blueprint's canonical terrain at its existing
+world detail tier; it must not prepare the course's dense field, lesson contact
+meshes or full dressing plan just to display or inspect a catalogue. Production
+world draws are `RemoteIslandField` plus `RemotePropsField` only.
+`IslandDressing` / `IslandFoliage` do not run at world or planet detail.
+Inspector counts describe the projection currently drawn, with unknown values
+explicit. VRAM remains unknown; standalone R35 Mac GPU timing in ADR-0008 is
+not a value the inspector may pretend to measure on another device. The homologous-shape domain
+worker reuses the same generators and has no early self-proof of cold-load
+duration.
+
+R38 adds explicit unlaunched domain metadata (AI foundations and AI media) to
+the same catalogue, without synthetic studies. Named `surfaceStyle` presets
+belong to that metadata; `globe-style.ts` supplies one set of linear material
+stops to both the vertex fallback and worker texture bake. Changing the named
+style invalidates the same bounded CPU cache, while a title/progress update
+still does not. `domainPreparationKey` is shared by the client and hook so a
+new palette cannot accidentally reuse the previous domain texture. No new
+scene, coordinate table, content producer or output-colour pipeline is added.
+
+The remote base cache is weakly owned by the blueprint, with an eight-entry
+LRU for radius variants inside each live blueprint. A WeakMap alone does not
+bound repeated preview resizes while that blueprint remains mounted. The four
+learner states fit within this limit; a hit refreshes recency, and eviction
+relinquishes only CPU-cache ownership without disposing buffers still held by
+the mounted batch. The radius-churn regression first failed on the unbounded
+map and now guards both eviction and preservation of a recently used shape.
+
+`domain-preparation-client.ts` owns the worker and CPU-only bounded cache.
+Each callback belongs to the worker that installed it; termination clears
+handlers, and already-queued errors cannot cancel a later retry's jobs. A timeout
+only cancels a still-pending request. R35's late-error regression first reproduced
+the new-worker cancellation before this owner check; renderer resource disposal
+and worker transport identity are separate lifetime contracts.
+
+World carrier home and selected-course targets both sample the same cached
+distant geometry. R35's production screenshot exposed that only the selected
+state used the real island height; closing a card or returning to the series
+put the avatar under the rock root. `world-carrier.ts` now resolves the existing
+learner position against the actual placements for both states. The shared
+`LabelProbe` reserves the actual world-avatar screen bounds using the existing
+avatar visibility projection, so a course-name label cannot conceal its face.
+No second camera, hand-tuned island offset, or new text renderer is introduced.
+F/N browser guards raycast the drawn terrain and check actual DOM/geometry overlap;
+the before/after failures are in the active delivery plan.
+
+
+## 2026-09-07 amendment: domains own globes; studies own atmospheric regions
+
+V5 decision M corrects the highest projection. A learning domain is a spherical
+planet; each study is an atmospheric region containing representative course
+islands. The existing study/course/lesson IDs, course production and progress
+remain canonical. A planet is not a giant study island, and study count is not
+planet count. The three learner surfaces remain global selection, a series
+archipelago and a course island; global selection includes domain and region
+selection without inventing another course route.
+
+The app attaches explicit, read-only domain display metadata to existing study
+records. Renderers never infer classification from titles or fabricate courses.
+Unknown membership is visible as unclassified. Actual counts are folded from
+real studies. This metadata can later come from the content producer through
+the same interface. It does not create another lesson authoring path.
+
+Sphere geometry describes the domain container, not a competing course terrain
+field. Tiny atmospheric course islands still derive from the existing blueprint
+and low-detail geometry. Domain/region plans are pure data, shared by the globe,
+DOM selector and inspector. Large-scale sphere colour, cloud and atmosphere
+layers use the same Stage/SwimmerRenderKit output chain. Current planar planet
+receipts are historical measurements, not acceptance evidence for this amendment.

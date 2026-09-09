@@ -28,7 +28,7 @@ import {
 } from "@pieai/university-core";
 import { playSound } from "@pieai/university-ui/sound/index.js";
 import { useFrame } from "@react-three/fiber";
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, useContext, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { courseShapeOf, isFocusDimmed, type Course, type CourseNode } from "./course/course";
@@ -40,6 +40,11 @@ import {
   type IslandBlueprint,
   type IslandUnitVisualToken,
 } from "./island/island-blueprint.js";
+import {
+  createIslandHeightSampler,
+  islandSurfacePose,
+  sampleIslandTerrainTop,
+} from "./island/island-geometry.js";
 import { islandThemeSelectionForCourse } from "./island/kenney-recipes.js";
 import { IslandDressing } from "./island/island-dressing-render.js";
 import { IslandRender } from "./island/island-render.js";
@@ -49,12 +54,8 @@ import {
   resolveIslandLookDebug,
 } from "./island/island-surface-style.js";
 import { hopPose, PlayerMarker, type AvatarRecipe } from "./avatar/index.js";
-import {
-  layoutStudyRoad,
-  layoutWorldCatalogue,
-  radiusForLessons,
-  unstickWorldIslands,
-} from "./course/layout";
+import { layoutStudyRoad, radiusForLessons } from "./course/layout";
+import { layoutWorldArchipelago } from "./world-layout.js";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
 import { hash } from "./island/random.js";
 import { cloudCarrierHome, CuteCloudSea, type CloudCarrierTarget } from "./sky/cloud-sea.js";
@@ -73,9 +74,30 @@ import {
   WORLD_STUDY_GRID_CONTRACT,
 } from "./grid/course-grid.js";
 import { GRID_LESSON_MARKER_COLOURS } from "./grid/grid-palette.js";
-import { hexToWorld } from "./grid/hex.js";
-import { LessonMarkerField } from "./grid/LessonMarkerField.js";
-import { WorldHexField, type WorldGridIsland } from "./grid/WorldHexField.js";
+import {
+  composeMarkerMatrix,
+  createMarkerMatrixScratch,
+  LessonMarkerField,
+  type GridLessonMarker,
+} from "./grid/LessonMarkerField.js";
+import {
+  buildMedallionFooting,
+  MARKER_PLINTH_OFFSET,
+  medallionBottomRing,
+  medallionPoseLocals,
+  type MedallionFooting,
+} from "./grid/lesson-medallion.js";
+import {
+  buildMedallionInlays,
+  groundMedallion,
+  type MedallionGrounding,
+  type MedallionInlays,
+} from "./grid/medallion-grounding.js";
+import { RemoteIslandField, type RemoteIslandPlacement } from "./island/remote-island-render.js";
+import { projectWorldCourse } from "./world-course-projection.js";
+import { CourseOverviewContext } from "./camera/CourseOverview.js";
+import { worldCarrierHomeTarget, worldIslandCarrierTarget } from "./world-carrier.js";
+export { worldIslandCaptionTarget } from "./world-carrier.js";
 
 /**
  * The world's palette. Two greens for land, one warm accent for the only thing
@@ -267,17 +289,18 @@ export interface Marker {
   /** Accessible name for a decorative icon. */
   readonly label?: string;
   readonly locked?: boolean;
+  /** Learning state remains DOM-readable as well as a scene tint. */
+  readonly lessonState?: "done" | "live" | "idle" | "locked";
+  readonly courseState?: "done" | "live" | "open" | "idle";
 }
 
 interface WorldPlacement {
   readonly node: CourseNode;
   readonly position: THREE.Vector3;
   /**
-   * A renderer-facing projection of the stable island geometry. The catalogue
-   * field no longer builds this continuous island — it only needs the hex
-   * cluster — so the studio/study projection is the remaining caller.
+   * A renderer-facing projection of the stable continuous island geometry.
    */
-  readonly blueprint: IslandBlueprint | null;
+  readonly blueprint: IslandBlueprint;
   /** The same course grid, projected to the remote world scale. */
   readonly grid: HexMap;
   /** State hierarchy is a transform on the shared grid, not a new mesh. */
@@ -380,33 +403,7 @@ export function nextCourse(
  */
 export type WorldPlacementScope = "study" | "catalogue";
 
-/**
- * Build the one remote silhouette used by the catalogue and the planet.
- *
- * A planet course is still a world course: its cells, palette, height breaks
- * and footprint come from the same projection as the catalogue. Keeping this
- * helper beside `placeWorld` makes it impossible for the picker to quietly
- * grow a second island generator.
- */
-export function buildWorldCourseGrid(node: CourseNode, state: "done" | "idle" = "idle"): HexMap {
-  const lookSeed = islandLookSeedForCourse(node.courseId);
-  return buildCourseGrid({
-    studyId: node.studyId,
-    courseId: node.courseId,
-    seed: lookSeed ?? `${node.studyId}/${node.courseId}`,
-    activeLessonIndex: -1,
-    projection: "world",
-    footprintLessons: node.lessons,
-    lessons: [
-      {
-        lessonId: `${node.courseId}/world-anchor`,
-        unitId: `${node.courseId}/world-unit`,
-        unitIndex: 0,
-        state,
-      },
-    ],
-  });
-}
+export { buildWorldCourseGrid } from "./world-course-projection.js";
 
 /**
  * Build the one higher-level landmass for a study from the same world grid.
@@ -474,58 +471,30 @@ export function placeWorld(
     scope === "catalogue"
       ? worldStudyOrder(nodes, studyId).flatMap((entry) => orderedStudyNodes(nodes, entry))
       : orderedStudyNodes(nodes, studyId);
-  const layoutKeys = orderedNodes.map((node) => `${node.studyId}/${node.courseId}`);
-  const laid =
+  const archipelago =
     scope === "catalogue"
-      ? layoutWorldCatalogue(layoutKeys)
-      : layoutStudyRoad(orderedNodes.map((node) => node.courseId));
+      ? layoutWorldArchipelago(
+          orderedNodes.map((node) => ({
+            key: `${node.studyId}/${node.courseId}`,
+            studyId: node.studyId,
+            radius:
+              radiusForLessons(node.lessons) * Math.max(...Object.values(WORLD_ISLAND_STATE_SCALE)),
+          })),
+        )
+      : null;
+  const laid = archipelago?.positions ?? layoutStudyRoad(orderedNodes.map((node) => node.courseId));
 
   const placements: WorldPlacement[] = [];
   for (const node of orderedNodes) {
     const layoutKey = scope === "catalogue" ? `${node.studyId}/${node.courseId}` : node.courseId;
     const local = laid.get(layoutKey);
     if (!local) continue;
-    const lookSeed = islandLookSeedForCourse(node.courseId);
     const baseState = stateOf(node, siblingsByStudy.get(node.studyId) ?? [], progressOf);
-    const geometry =
-      scope === "catalogue"
-        ? null
-        : islandGeometryBlueprint({
-            studyId: node.studyId,
-            courseId: node.courseId,
-            lessonCount: node.lessons,
-            seed: lookSeed,
-            themeSelection: islandThemeSelectionForCourse(node.studyId, node.courseId),
-          });
-    const blueprint = geometry ? projectIslandBlueprint(geometry) : null;
-    const grid =
-      scope === "catalogue"
-        ? buildWorldCourseGrid(node, baseState === "done" ? "done" : "idle")
-        : buildCourseGrid({
-            studyId: node.studyId,
-            courseId: node.courseId,
-            seed: blueprint?.seed ?? lookSeed ?? `${node.studyId}/${node.courseId}`,
-            routeArchetype: blueprint?.route.archetype,
-            routeAnchors: blueprint?.geometryNodes,
-            activeLessonIndex: -1,
-            projection: "world",
-            footprintLessons: node.lessons,
-            lessons: blueprint
-              ? blueprint.nodes.map((routeNode) => ({
-                  lessonId: routeNode.id,
-                  unitId: routeNode.unitId,
-                  unitIndex: routeNode.unitIndex,
-                  state: baseState === "done" ? ("done" as const) : ("idle" as const),
-                }))
-              : [
-                  {
-                    lessonId: `${node.courseId}/world-anchor`,
-                    unitId: `${node.courseId}/world-unit`,
-                    unitIndex: 0,
-                    state: baseState === "done" ? ("done" as const) : ("idle" as const),
-                  },
-                ],
-          });
+    const { blueprint, grid } = projectWorldCourse(
+      node,
+      scope,
+      baseState === "done" ? "done" : "idle",
+    );
     placements.push({
       node,
       position: new THREE.Vector3(local.x, 0, local.z),
@@ -554,34 +523,30 @@ export function placeWorld(
       radius: worldIslandRadiusForState(entry.node.lessons, state),
     };
   });
-  const separated =
-    scope === "catalogue"
-      ? unstickWorldIslands(
-          marked.map((entry) => ({
-            x: entry.position.x,
-            y: entry.position.y,
-            z: entry.position.z,
-            depth: entry.node.depth,
-          })),
-          marked.map((entry) => entry.grid.bounds.maxHalf * entry.gridScale),
-        )
-      : null;
-  const placed = separated
-    ? marked.map((entry, index) => ({
-        ...entry,
-        position: new THREE.Vector3(separated[index]!.x, separated[index]!.y, separated[index]!.z),
-      }))
-    : marked;
   const extent =
+    archipelago?.extent ??
     Math.max(
-      ...placed.map(
-        (entry) =>
-          Math.hypot(entry.position.x, entry.position.z) +
-          entry.grid.bounds.maxHalf * entry.gridScale,
-      ),
+      ...marked.map((entry) => Math.hypot(entry.position.x, entry.position.z) + entry.radius),
       1,
-    ) + 8;
-  return { placements: placed, extent };
+    ) + 5;
+  return { placements: marked, extent };
+}
+
+/** V5 M: a series page owns its courses, not the other domains' catalogue.
+ * Keep the inexpensive catalogue projection/layout and one placement producer;
+ * filtering the input also prevents preparing geometry for invisible series.
+ */
+export function placeStudyArchipelago(
+  nodes: readonly CourseNode[],
+  progressOf: (node: CourseNode) => number,
+  studyId: string,
+): ReturnType<typeof placeWorld> {
+  return placeWorld(
+    nodes.filter((node) => node.studyId === studyId),
+    progressOf,
+    studyId,
+    "catalogue",
+  );
 }
 
 /**
@@ -628,7 +593,7 @@ export function settlementSize(
 function LiveRing({ radius, lift = 0.08 }: { radius: number; lift?: number }) {
   const mesh = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
-    if (islandLookFrozen()) return;
+    if (islandLookFrozen() || prefersReducedMotion()) return;
     const ring = mesh.current;
     if (!ring) return;
     const t = (Math.sin(clock.elapsedTime * 2.2) + 1) / 2;
@@ -707,13 +672,9 @@ export function LearnerMarker({
     };
   }, [surface]);
 
-  useFrame(({ clock }) => {
-    if (islandLookFrozen()) return;
+  useLayoutEffect(() => {
     const ground = travel.current;
-    const body = lift.current;
-    if (!ground || !body) return;
-
-    if (!target.current.equals(position)) {
+    if (ground && !target.current.equals(position)) {
       /*
         Retarget from wherever the avatar is now rather than from the node it
         set out from. A learner who picks a third island mid-flight should see
@@ -721,10 +682,19 @@ export function LearnerMarker({
       */
       from.current.copy(ground.position);
       target.current.copy(position);
-      startedAt.current = clock.elapsedTime;
+      // Start at the committed choice, not one rendered frame later. The
+      // first frame must catch up if it is late; the duration stays 420ms.
+      startedAt.current = performance.now();
       finishedAt.current = null;
       sequence.current += 1;
     }
+  }, [position.x, position.y, position.z]);
+
+  useFrame(() => {
+    if (islandLookFrozen()) return;
+    const ground = travel.current;
+    const body = lift.current;
+    if (!ground || !body) return;
     if (startedAt.current === null) {
       ground.position.copy(position);
       if (import.meta.env.DEV && surface) {
@@ -736,7 +706,7 @@ export function LearnerMarker({
           owner: reportOwner.current,
           sequence: sequence.current,
           inFlight: false,
-          startedAtClock: null,
+          startedAtPerformanceMs: null,
           finishedAt: finishedAt.current,
           position: ground.position.toArray(),
           target: target.current.toArray(),
@@ -745,7 +715,7 @@ export function LearnerMarker({
       return;
     }
 
-    const elapsedMs = (clock.elapsedTime - startedAt.current) * 1000;
+    const elapsedMs = Math.max(0, performance.now() - startedAt.current);
     const pose = hopPose({
       from: from.current,
       to: target.current,
@@ -768,7 +738,7 @@ export function LearnerMarker({
         owner: reportOwner.current,
         sequence: sequence.current,
         inFlight: startedAt.current !== null,
-        startedAtClock: startedAt.current,
+        startedAtPerformanceMs: startedAt.current,
         finishedAt: finishedAt.current,
         position: ground.position.toArray(),
         target: target.current.toArray(),
@@ -900,7 +870,7 @@ export function WorldScene({
   learnerAt: THREE.Vector3 | null;
   avatarRecipe?: AvatarRecipe | null;
   avatarSignedIn?: boolean;
-  /** `studyId/courseId` while the course card is open; null means the cloud home. */
+  /** `studyId/courseId` while a card is open; null returns above the learning focus. */
   selectedCourseKey?: string | null;
   onPick: (node: CourseNode) => void;
   onHover: (node: CourseNode | null) => void;
@@ -913,13 +883,14 @@ export function WorldScene({
   skyStudyId?: string | null;
   assetRevision?: number;
 }) {
-  const islands = useMemo<readonly WorldGridIsland[]>(
+  const remoteIslands = useMemo<readonly RemoteIslandPlacement[]>(
     () =>
       placements.map((entry) => ({
         id: `${entry.node.studyId}/${entry.node.courseId}`,
-        map: entry.grid,
+        blueprint: entry.blueprint,
         position: entry.position,
-        scale: entry.gridScale,
+        scale: 1,
+        radius: entry.radius,
         dimmed: entry.state === "idle" || isFocusDimmed(entry.node, authoringFocus),
       })),
     [authoringFocus, placements],
@@ -929,8 +900,8 @@ export function WorldScene({
   const weatherExtent = extent * 1.5;
   const cloudOrigin = useMemo(() => cloudCarrierHome(weatherExtent, cloudLevel), [weatherExtent]);
   const cloudHomeTarget = useMemo<CloudCarrierTarget>(
-    () => [learnerAt?.x ?? cloudOrigin[0], cloudOrigin[1], learnerAt?.z ?? cloudOrigin[2]],
-    [cloudOrigin, learnerAt],
+    () => worldCarrierHomeTarget(placements, learnerAt, weatherExtent, cloudLevel),
+    [placements, learnerAt, weatherExtent],
   );
   const selectedPlacement = useMemo(
     () =>
@@ -944,9 +915,9 @@ export function WorldScene({
   const carrierTarget = useMemo<CloudCarrierTarget>(
     () =>
       selectedPlacement
-        ? [selectedPlacement.position.x, selectedPlacement.position.y, selectedPlacement.position.z]
+        ? worldIslandCarrierTarget(selectedPlacement, weatherExtent, cloudLevel)
         : cloudHomeTarget,
-    [cloudHomeTarget, selectedPlacement],
+    [cloudHomeTarget, selectedPlacement, weatherExtent],
   );
   const carrierPosition = useMemo(() => new THREE.Vector3(...carrierTarget), [carrierTarget]);
   const carrierInitialPosition = useMemo(() => new THREE.Vector3(...cloudOrigin), [cloudOrigin]);
@@ -979,11 +950,11 @@ export function WorldScene({
       {/*
         No roads between islands. The catalogue is an archipelago field, not a
         prerequisite diagram: order survives in labels and state, while the
-        shared instance field supplies the 53 silhouettes.
+        shared remote field supplies the 53 continuous silhouettes.
       */}
-      <WorldHexField
+      <RemoteIslandField
         key={assetRevision}
-        islands={islands}
+        islands={remoteIslands}
         onPick={(islandIndex) => {
           const entry = placements[islandIndex];
           if (!entry) return;
@@ -1095,24 +1066,9 @@ export function placeCourse(
           ? ("locked" as const)
           : ("idle" as const);
   });
-  const grid = buildCourseGrid({
-    studyId,
-    courseId: course.id,
-    seed: blueprint.seed,
-    routeArchetype: blueprint.route.archetype,
-    routeAnchors: blueprint.geometryNodes,
-    activeLessonIndex: firstOpen,
-    lessons: sampleFlat.map((entry, index) => ({
-      lessonId: entry.lesson.id,
-      unitId: entry.unit.id,
-      unitIndex: entry.unitIndex,
-      state: states[index],
-    })),
-  });
   return sampleFlat.map((entry, index) => {
     const node = blueprint.nodes[index]!;
-    const cell = grid.lessons[index]!;
-    const point = hexToWorld(cell.coord, grid.hexSize);
+    const surface = sampleIslandTerrainTop(blueprint, "course", node.x, node.z);
     return {
       studyId,
       courseId: course.id,
@@ -1122,8 +1078,9 @@ export function placeCourse(
       lessonId: entry.lesson.id,
       lessonTitle: entry.lesson.title,
       chars: entry.lesson.content.length,
-      // The mesh, props and markers all query this one hex cell top centre.
-      position: new THREE.Vector3(point.x, cell.topY, point.z),
+      // Markers sit on the same rendered triangle-top dressing samples, not
+      // the analytic height field the mesh approximates.
+      position: new THREE.Vector3(node.x, surface.y, node.z),
       state: states[index]!,
       kind: pathNodeKind({
         variant: entry.lesson.variant,
@@ -1197,6 +1154,114 @@ export function courseSurfaceY(
 /* The renderer owns the single route ribbon; no second trail is drawn here. */
 
 /**
+ * How far the rigid medallion may be raised so its chamfer stays in the air.
+ * Ground contact is the footing, not this number.
+ */
+const MARKER_MAX_RAISE = 0.12;
+
+export interface CourseLessonLayout {
+  readonly markers: readonly GridLessonMarker[];
+  readonly footing: MedallionFooting;
+  readonly inlays: MedallionInlays;
+  readonly recoveries: readonly {
+    readonly lessonId: string;
+    readonly grounding: MedallionGrounding;
+  }[];
+}
+
+/**
+ * Lesson medallions plus the one footing mesh that meets the drawn ground.
+ *
+ * Radius, ids, positions and ordering stay as authored. The rigid disc is
+ * posed so the chamfer is visible; the footing closes the seam underneath.
+ */
+export function layoutCourseLessons(
+  blueprint: IslandBlueprint,
+  lessons: readonly LessonPlacement[],
+): CourseLessonLayout {
+  const ground = createIslandHeightSampler(blueprint);
+  try {
+    const locals = medallionPoseLocals();
+    const recoveries: { lessonId: string; grounding: MedallionGrounding }[] = [];
+    const markers: GridLessonMarker[] = lessons.map((lesson) => {
+      const radius =
+        blueprint.route.nodeRadius *
+        (0.96 + Math.min(1, Math.max(0, lesson.chars) / 12_000) * 0.08);
+      const pose = islandSurfacePose(blueprint, "course", lesson.position.x, lesson.position.z, {
+        radius,
+        originOffset: radius * MARKER_PLINTH_OFFSET,
+        maxEmbed: radius * MARKER_MAX_RAISE,
+        locals,
+        heightAt: ground.heightAt,
+        originY: lesson.position.y,
+      });
+      const grounding = groundMedallion({
+        position: lesson.position,
+        radius,
+        normal: new THREE.Vector3(...pose.normal),
+        lift: pose.lift,
+        heightAt: ground.heightAt,
+        surface: ground.index,
+      });
+      if (grounding.mode !== "plane") recoveries.push({ lessonId: lesson.lessonId, grounding });
+      return {
+        lesson,
+        radius,
+        colour: GRID_LESSON_MARKER_COLOURS[lesson.state],
+        sigil: lesson.visualToken.sigil,
+        unitIndex: lesson.unitIndex,
+        ...(grounding.mode === "inlay" ? { grounding: "inlay" as const } : {}),
+        surface: {
+          normal: grounding.normal,
+          lift: grounding.lift,
+        },
+      };
+    });
+    const matrix = new THREE.Matrix4();
+    const scratch = createMarkerMatrixScratch();
+    const ring = medallionBottomRing();
+    const rings = markers
+      .filter((marker) => marker.grounding !== "inlay")
+      .map((marker) => {
+        composeMarkerMatrix(marker, MARKER_PLINTH_OFFSET, marker.radius, matrix, scratch);
+        return ring.map((point) =>
+          new THREE.Vector3(point.x, point.y, point.z).applyMatrix4(matrix),
+        );
+      });
+    const footing = buildMedallionFooting(rings, ground.heightAt, ground.index);
+    const inlays = buildMedallionInlays(
+      markers.flatMap((marker, markerIndex) =>
+        marker.grounding === "inlay"
+          ? [
+              {
+                markerIndex,
+                position: marker.lesson.position,
+                radius: marker.radius,
+                sigil: marker.sigil,
+                state: marker.lesson.state,
+              },
+            ]
+          : [],
+      ),
+      ground.index,
+    );
+    return { markers, footing, inlays, recoveries };
+  } finally {
+    ground.dispose();
+  }
+}
+
+export function courseLessonMarkers(
+  blueprint: IslandBlueprint,
+  lessons: readonly LessonPlacement[],
+): readonly GridLessonMarker[] {
+  const layout = layoutCourseLessons(blueprint, lessons);
+  layout.footing.geometry?.dispose();
+  layout.inlays.geometry?.dispose();
+  return layout.markers;
+}
+
+/**
  * Inside a course: one island, and the lessons lying on it in order.
  */
 export function CourseScene({
@@ -1219,6 +1284,7 @@ export function CourseScene({
   skyStudyId?: string | null;
   assetRevision?: number;
 }) {
+  const overview = useContext(CourseOverviewContext);
   const live = lessons.find((lesson) => lesson.state === "live");
   const avatarLesson = avatarLessonId
     ? (lessons.find((lesson) => lesson.lessonId === avatarLessonId) ?? null)
@@ -1239,41 +1305,15 @@ export function CourseScene({
       }),
     [courseId, lessons, studyId],
   );
-  const grid = useMemo(
-    () =>
-      buildCourseGrid({
-        studyId,
-        courseId,
-        seed: blueprint.seed,
-        routeArchetype: blueprint.route.archetype,
-        routeAnchors: blueprint.geometryNodes,
-        activeLessonIndex: lessons.findIndex((lesson) => lesson.state === "live"),
-        lessons: lessons.map((lesson) => ({
-          lessonId: lesson.lessonId,
-          unitId: lesson.unitId,
-          unitIndex: lesson.unitIndex,
-          state: lesson.state,
-        })),
-      }),
-    [blueprint, courseId, lessons, studyId],
-  );
   const extent = blueprint.bounds.maxHalf;
-  const markers = useMemo(
-    () =>
-      lessons.map((lesson) => ({
-        lesson,
-        // The blueprint reserves this radius when spacing the road. A previous
-        // renderer ignored that contract and drew ~3× larger stones, so 41
-        // legitimate lesson nodes fused into one mechanical tube. The grid is
-        // now the visible unit, so convert that semantic cue to the actual hex
-        // radius before drawing the inset coral stone. Content length keeps
-        // only a restrained eight-percent cue.
-        radius:
-          grid.hexSize * 0.52 * (0.96 + Math.min(1, Math.max(0, lesson.chars) / 12_000) * 0.08),
-        colour: GRID_LESSON_MARKER_COLOURS[lesson.state],
-      })),
-    [grid.hexSize, lessons],
-  );
+  const layout = useMemo(() => layoutCourseLessons(blueprint, lessons), [blueprint, lessons]);
+  const markers = layout.markers;
+  useEffect(() => {
+    return () => {
+      layout.footing.geometry?.dispose();
+      layout.inlays.geometry?.dispose();
+    };
+  }, [layout]);
 
   return (
     <>
@@ -1293,18 +1333,31 @@ export function CourseScene({
       <Weather
         extent={extent * 1.6}
         groundRadius={extent}
-        fog={[88, 280]}
+        fog={
+          overview
+            ? [
+                Math.max(88, overview.distance + overview.radius * 1.1),
+                Math.max(280, overview.distance + overview.radius * 6),
+              ]
+            : [88, 280]
+        }
         sky={COURSE_SKY_STOPS}
         cloudLevel={-10.2}
         includeCloudSea={false}
         includeSea={false}
         includeDistantGround
       />
-      <IslandRender blueprint={blueprint} detail="course" grid={grid} />
+      <IslandRender blueprint={blueprint} detail="course" />
       <Suspense fallback={null}>
-        <IslandDressing key={assetRevision} blueprint={blueprint} detail="course" grid={grid} />
+        <IslandDressing key={assetRevision} blueprint={blueprint} detail="course" />
       </Suspense>
-      <LessonMarkerField markers={markers} onPick={onPick} onHover={onHover} />
+      <LessonMarkerField
+        markers={markers}
+        footing={layout.footing.geometry}
+        inlays={layout.inlays}
+        onPick={onPick}
+        onHover={onHover}
+      />
       {avatarAt ? (
         <LearnerMarker
           position={avatarAt.position}

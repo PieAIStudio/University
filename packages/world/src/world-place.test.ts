@@ -4,6 +4,7 @@ import type { CourseNode } from "./course/course.js";
 import {
   nextCourse,
   placeWorld,
+  placeStudyArchipelago,
   WORLD_ISLAND_STATE_SCALE,
   worldIslandRadiusForState,
 } from "./Maps.js";
@@ -27,6 +28,142 @@ const NODES: readonly CourseNode[] = [
 ];
 
 const nothingDone = () => 0;
+
+describe("learner series archipelago", () => {
+  it("forms small ordered neighbourhoods with sky between them, not a uniform scatter", () => {
+    const nodes = Array.from({ length: 31 }, (_, index) =>
+      node({
+        studyId: "grouped-shoals",
+        courseId: `course-${String(index).padStart(3, "0")}`,
+        lessons: 12,
+        depth: index,
+      }),
+    );
+    const world = placeStudyArchipelago(nodes, nothingDone, "grouped-shoals");
+    // Connected components of nearby silhouettes, not a count of metadata
+    // groups which could pass while their islands were still spread everywhere.
+    const unseen = new Set(world.placements);
+    const groups: number[][] = [];
+    while (unseen.size > 0) {
+      const seed = unseen.values().next().value!;
+      unseen.delete(seed);
+      const queue = [seed];
+      const depths: number[] = [];
+      while (queue.length > 0) {
+        const entry = queue.pop()!;
+        depths.push(entry.node.depth);
+        for (const peer of unseen) {
+          const reserved =
+            worldIslandRadiusForState(entry.node.lessons, "live") +
+            worldIslandRadiusForState(peer.node.lessons, "live");
+          if (entry.position.distanceTo(peer.position) - reserved <= 3.5) {
+            unseen.delete(peer);
+            queue.push(peer);
+          }
+        }
+      }
+      groups.push(depths.sort((a, b) => a - b));
+    }
+    expect(groups.length).toBeGreaterThanOrEqual(6);
+    expect(groups.length).toBeLessThanOrEqual(10);
+    for (const group of groups) {
+      expect(group.length).toBeGreaterThanOrEqual(3);
+      expect(group.length).toBeLessThanOrEqual(6);
+      expect(group.at(-1)! - group[0]!).toBe(group.length - 1);
+    }
+  });
+
+  it("reserves future live radii so progress cannot rearrange dense large-course islands", () => {
+    const nodes = Array.from({ length: 31 }, (_, index) =>
+      node({
+        studyId: "stable-large-islands",
+        courseId: `course-${String(index).padStart(3, "0")}`,
+        lessons: [24, 41, 80][index % 3]!,
+        depth: index,
+        prerequisiteCourseIds: index === 0 ? [] : [`course-${String(index - 1).padStart(3, "0")}`],
+      }),
+    );
+    const initial = placeStudyArchipelago(nodes, nothingDone, "stable-large-islands");
+    for (const completed of [1, 15, 31]) {
+      const advanced = placeStudyArchipelago(
+        nodes,
+        (entry) => (entry.depth < completed ? 1 : 0),
+        "stable-large-islands",
+      );
+      expect(advanced.placements.map((entry) => entry.position.toArray())).toEqual(
+        initial.placements.map((entry) => entry.position.toArray()),
+      );
+      expect(advanced.extent).toBe(initial.extent);
+      for (const entry of advanced.placements) {
+        expect(entry.radius).toBe(worldIslandRadiusForState(entry.node.lessons, entry.state));
+      }
+    }
+  });
+
+  it.each([0, 1, 20, 31, 53])(
+    "keeps %i-course catalogues finite, separated and deterministic as content and progress vary",
+    (count) => {
+      const nodes = Array.from({ length: count }, (_, index) =>
+        node({
+          studyId: "layout-pressure",
+          courseId: `course-${String(index).padStart(3, "0")}`,
+          lessons: [3, 6, 24, 41, 80][index % 5]!,
+          depth: index,
+        }),
+      );
+      for (const progress of [
+        nothingDone,
+        (entry: CourseNode) => (nodes.indexOf(entry) % 2 === 0 ? 1 : 0),
+      ]) {
+        const world = placeStudyArchipelago(nodes, progress, "layout-pressure");
+        expect(world).toEqual(
+          placeStudyArchipelago([...nodes].reverse(), progress, "layout-pressure"),
+        );
+        expect(world.placements).toHaveLength(count);
+        expect(Number.isFinite(world.extent)).toBe(true);
+        for (const [index, entry] of world.placements.entries()) {
+          expect(entry.position.toArray().every(Number.isFinite)).toBe(true);
+          expect(Math.hypot(entry.position.x, entry.position.z) + entry.radius).toBeLessThan(
+            world.extent,
+          );
+          for (const other of world.placements.slice(index + 1)) {
+            expect(
+              Math.hypot(entry.position.x - other.position.x, entry.position.z - other.position.z),
+            ).toBeGreaterThanOrEqual(entry.radius + other.radius);
+          }
+        }
+      }
+    },
+  );
+
+  it("uses the cheap remote catalogue projection without leaking another series", () => {
+    const world = placeStudyArchipelago(NODES, nothingDone, "alpha");
+    const reference = placeWorld(
+      NODES.filter((entry) => entry.studyId === "alpha"),
+      nothingDone,
+      "alpha",
+      "catalogue",
+    );
+    expect(world).toEqual(reference);
+    expect(world.placements.map((entry) => entry.node.courseId).sort()).toEqual(["a1", "a2"]);
+    expect(world.placements.filter((entry) => entry.state === "live")).toHaveLength(1);
+    expect(placeStudyArchipelago(NODES, nothingDone, "absent").placements).toEqual([]);
+  });
+
+  it("keeps all courses reachable across series without changing source IDs or progress", () => {
+    const progress = (entry: CourseNode) => (entry.courseId === "a1" ? 1 : 0);
+    const alpha = placeStudyArchipelago(NODES, progress, "alpha");
+    const beta = placeStudyArchipelago(NODES, progress, "beta");
+    expect(
+      [...alpha.placements, ...beta.placements]
+        .map((entry) => entry.node)
+        .sort((a, b) => a.courseId.localeCompare(b.courseId)),
+    ).toEqual(NODES);
+    expect(alpha.placements.find((entry) => entry.node.courseId === "a1")?.state).toBe("done");
+    expect(alpha.placements.find((entry) => entry.node.courseId === "a2")?.state).toBe("live");
+    expect(placeStudyArchipelago(NODES, progress, "alpha")).toEqual(alpha);
+  });
+});
 
 describe("placeWorld", () => {
   /*

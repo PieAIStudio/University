@@ -65,7 +65,80 @@ export const ISLAND_TREE_TRIANGLE_CEILING = 900;
 export const ISLAND_LANDMARK_TRIANGLE_CEILING = 8000;
 export const ISLAND_LANDMARK_MAX_PER_ISLAND = 6;
 
+/**
+ * Course `buildIslandGeometry` mesh triangles, measured 2026-09-06 on the
+ * `terrain/{count}` fixtures. The count grows with the in-mesh soil path, not
+ * with a second route draw.
+ */
+export const ISLAND_COURSE_TERRAIN_TRIANGLES = {
+  6: 15_234,
+  12: 14_805,
+  24: 16_820,
+  41: 16_629,
+} as const;
+
+import {
+  REMOTE_ISLAND_BUDGET_PER_ISLAND,
+  REMOTE_ISLAND_TERRAIN_TRIANGLES,
+  REMOTE_PAVILION_TRIANGLES,
+  REMOTE_PROPS_MAX_TRIANGLES_PER_ISLAND,
+  REMOTE_PROPS_PER_ISLAND_MAX,
+  REMOTE_PROPS_PER_ISLAND_MIN,
+  REMOTE_TREE_TRIANGLES,
+} from "./remote-props.js";
+
+/**
+ * Remote / world catalogue projection shared geometry budgets.
+ * Imported and re-exported from remote-props.ts (single source of truth).
+ */
+export {
+  REMOTE_ISLAND_BUDGET_PER_ISLAND,
+  REMOTE_ISLAND_BUDGET_PER_ISLAND as REMOTE_ISLAND_MAX_BUDGET,
+  REMOTE_ISLAND_TERRAIN_TRIANGLES,
+  REMOTE_PAVILION_TRIANGLES,
+  REMOTE_PROPS_MAX_TRIANGLES_PER_ISLAND,
+  REMOTE_PROPS_PER_ISLAND_MAX,
+  REMOTE_PROPS_PER_ISLAND_MIN,
+  REMOTE_TREE_TRIANGLES,
+};
+export const REMOTE_TREE_MAX_PER_ISLAND = REMOTE_PROPS_PER_ISLAND_MAX - 1;
+
 export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry>> = {
+  terrain: {
+    technique:
+      "Course view: one lathe-style BufferGeometry from IslandBlueprint: fifty-two course " +
+      "rings, outline samples, an in-mesh soil path, a faceted cliff and a " +
+      "tapered root. Vertex colour carries meadow, shore, rock and route tint; " +
+      "there is no second route mesh. Remote catalogue / world projection: shared " +
+      "640-triangle terrain mesh per island (352 top + 288 cliff, 0 route clips) " +
+      "batched into one merged BufferGeometry across all catalogue islands.",
+    source:
+      "Our own geometry in island-geometry.ts (buildTerrain) and remote-island-field.ts " +
+      "(buildRemoteIslandBatch).",
+    budget:
+      "course mesh triangles measured 2026-09-06 after soil clipping: " +
+      "15234 / 14805 / 16820 / 16629 at 6 / 12 / 24 / 41 lessons (seed terrain/{count}); " +
+      "remote catalogue = 640 triangles/island (measured CPU 3.8-14.2 ms/island, 50 islands ~344 ms; " +
+      "combined island terrain + remote props batches draw in 3 draw calls [1 merged terrain + 2 global instanced props], not whole frame)",
+    rejected: [
+      {
+        option: "Hex tiles as the course terrain draw",
+        why:
+          "HexField rebuilt a second height and route from a grid projection, so " +
+          "markers, dressing and the ground disagreed. V5 already specified one " +
+          "continuous field; reconnecting this mesh is the locked course draw.",
+        on: "2026-09-06",
+      },
+      {
+        option: "Dense course field or route-clipped mesh in remote catalogue view",
+        why:
+          "ADR-0009 requires spending budget by screen pixels. Dense field generation " +
+          "costs ~150-180 ms per island; 640-triangle world detail tier generates in " +
+          "3.8-6.3 ms/island and shares 1 merged BufferGeometry for the whole catalogue.",
+        on: "2026-09-06",
+      },
+    ],
+  },
   grass: {
     technique:
       "One generated three-vertex card, shipped 2026-08-28. Taper, wind bend, " +
@@ -115,19 +188,21 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
   decoration: {
     technique:
       "Instanced Kenney GLBs for fantasy-town architecture and the retained rock choice, " +
-      "placed by island-dressing against the island field; natural tree/bush IDs are not drawn.",
+      "placed by island-dressing against the island field in course view; natural tree/bush IDs are not drawn. " +
+      "Remote catalogue projection draws zero decoration GLBs (uses low-cost procedural silhouettes only).",
     source:
       "Kenney fantasy-town-kit and the compared nature-kit rocks, CC0, shipped under " +
-      "public/kenney/r01; elemental-serenity foliage is locked in the tree/bush entries.",
-    budget: `<= ${ISLAND_DECORATION_TRIANGLE_CEILING} tris per asset`,
+      "public/kenney/r01; elemental-serenity foliage is locked in the tree/bush entries; " +
+      "remote props in remote-props.ts.",
+    budget: `course <= ${ISLAND_DECORATION_TRIANGLE_CEILING} tris per asset; remote catalogue = 0 decoration GLBs`,
     rejected: [
       {
         option: "Keeping Kenney's block trees and plant_bushDetailed as natural vegetation",
         why:
           "The 114/402/246-triangle cones and 104-triangle bush are cheaper, but their " +
           "hard stacked geometry visibly conflicts with the already painterly terrain and " +
-          "grass. The donor construction stays below 408 triangles per tree and 24 per " +
-          "bush, so the visual mismatch—not raw triangles—decides this switch.",
+          "grass. The solid foliage construction stays at 624 triangles per tree (384 trunk + " +
+          "240 canopy) and 60 per bush, so the visual mismatch—not raw triangles—decides this switch.",
         on: "2026-08-29",
       },
       {
@@ -142,39 +217,88 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
   },
   tree: {
     technique:
-      "One selected mesh from elemental-serenity treeTrunks.glb plus 12 instanced " +
-      "procedural PlaneGeometry leaf cards around its crown in course view; world view " +
-      "keeps the trunk silhouette and a single low-poly canopy, never leaf instances.",
+      "Course view: six registered meshes from elemental-serenity treeTrunks.glb plus 3 " +
+      "instanced IcosahedronGeometry(1,1) crown lobes (80 tris each) overlapping as one " +
+      "rounded mass. IslandDressing and IslandFoliage are course-only; they do not accept " +
+      "a world detail. Production world catalogue and planet representatives use RemotePropsField " +
+      "only: up to 2-4 procedural 12-triangle cone trees per island (ConeGeometry(0.38, 0.72, 6)) " +
+      "in one global InstancedMesh, zero course GLBs. Placement uses bounded inward candidates and " +
+      "omits optional trees if not strictly inside the terrain footprint (props are optional on " +
+      "failed bounded fit; ground anchors match worldmesh height at the sample point, while ground slope " +
+      "remains across the footprint with no blanket zero-floating promise).",
     source:
-      "elemental-serenity treeTrunks.glb (six variants: 288/304/384/288/384/384 tris) " +
-      "plus the donor BushManager PlaneGeometry(1,1) card (2 tris per card); author " +
-      "permission granted 2026-08-28.",
+      "Course: elemental-serenity treeTrunks.glb (six variants: 288/304/384/288/384/384 tris) " +
+      "plus our own welded icosahedron crown volumes (detail 1, 80 tris per lobe); author " +
+      "permission granted 2026-08-28. Distant: our own procedural ConeGeometry in remote-props.ts.",
     budget:
-      "course <= 408 tris/tree (384-tri trunk max + 12 x 2-tri cards); world <= 396 " +
-      "tris/tree (384-tri trunk + 12-tri canopy silhouette); trunk shadow pass omitted " +
-      "in course to keep the measured frame budget",
-    rejected: [],
+      "course <= 624 tris/tree (384-tri trunk max + 3 x 80-tri lobes); remote catalogue = 12 " +
+      "tris/tree (up to 2-4 trees per island bounded by inward fitting and omission, max 48 tris/island, " +
+      "0 course GLBs); combined island terrain + props batches draw in 3 calls, not whole frame; " +
+      "trunk shadow pass omitted in course to keep the measured frame budget; GPU time and VRAM unmeasured",
+    rejected: [
+      {
+        option: "Rounded UV-mask PlaneGeometry cards around crown",
+        why:
+          "Intersecting flat discs still visible in combined-v4 camera shots; solid " +
+          "icosahedron lobes (3 x 80 + 384 = 624) fit within the 900-triangle ceiling.",
+        on: "2026-09-06",
+      },
+      {
+        option: "Loading treeTrunks.glb in remote catalogue projection",
+        why:
+          "Fetching and parsing treeTrunks.glb (2,032 triangles source) for distant 40px " +
+          "islands violates ADR-0009 pixel budget and causes network/parsing bottleneck; " +
+          "12-triangle procedural cone trees achieve legible silhouette at 0 GLB fetch cost.",
+        on: "2026-09-06",
+      },
+      {
+        option:
+          "IslandDressing(detail=world) donor trunk silhouette plus a 12-triangle cone canopy",
+        why:
+          "That path was a second renderer and a second 396-triangle budget beside RemotePropsField. " +
+          "Production world and planet draws are RemoteIslandField plus RemotePropsField only; " +
+          "IslandDressing and IslandFoliage are course-only as of 2026-09-07.",
+        on: "2026-09-07",
+      },
+    ],
   },
   bush: {
     technique:
-      "MeshSurfaceSampler points from bushEmitter.glb become 12 oriented PlaneGeometry " +
-      "leaf cards with a procedural UV alpha mask; shadow/mid/highlight colours are a " +
-      "normal ramp and customDepthMaterial repeats the mask for correct shadows.",
+      "Three flattened IcosahedronGeometry(1,0) lobes (20 tris each) in one instanced " +
+      "field, slightly buried; no bushEmitter sampling and no alpha cards. Remote " +
+      "catalogue projection draws 0 bush lobes (bush is omitted in remote view).",
     source:
-      "elemental-serenity BushManager.class.js and bush vertex/fragment GLSL, using " +
-      "bushEmitter.glb (192-tri emitter only) and the shared 2-triangle leaf-card technique; " +
-      "author permission granted 2026-08-28.",
-    budget: "course <= 24 tris/bush (12 x 2-tri cards); world = 0 leaf cards",
-    rejected: [],
+      "Our own welded icosahedron crown volumes (detail 0, 20 tris per lobe). " +
+      "bushEmitter.glb stays the dressing asset id but is not fetched for course draw.",
+    budget:
+      "course <= 60 tris/bush (3 x 20-tri lobes); world = 0 bush lobes; remote catalogue = 0 bush lobes",
+    rejected: [
+      {
+        option: "MeshSurfaceSampler + 12 cards with UV alpha mask from bushEmitter.glb",
+        why:
+          "Bristly fragments in combined-v4 and unnecessary GLB fetch; 3 welded " +
+          "icosahedron lobes cost 60 tris and draw in a single shared instanced mesh.",
+        on: "2026-09-06",
+      },
+    ],
   },
   landmark: {
     technique:
-      "A handful of large authored props placed at composition anchors, so the island " +
-      "has a scale hierarchy instead of one uniform size of clutter.",
+      "Course view: a handful of large authored props placed at composition anchors, so the " +
+      "island has a scale hierarchy instead of one uniform size of clutter. Remote catalogue " +
+      "and planet projection (RemotePropsField): up to 1 procedural 36-triangle stone pavilion silhouette " +
+      "(12-triangle roof cone + 24-triangle plinth cylinder) grounded on the hero anchor, " +
+      "drawn in a single global InstancedMesh with zero course GLBs; placement uses bounded inward " +
+      "candidates and omits if footprint is not strictly inside (props are optional on failed bounded fit; " +
+      "anchor matches worldmesh height at sample point, while ground slope remains across the base, " +
+      "no blanket zero-floating promise).",
     source:
-      "elemental-serenity bridge / camp / tent / rocks, author permission granted " +
-      "2026-08-28, plus Kenney fantasy-town for towers and walls.",
-    budget: `<= ${ISLAND_LANDMARK_TRIANGLE_CEILING} tris each, <= ${ISLAND_LANDMARK_MAX_PER_ISLAND} per island`,
+      "Course: elemental-serenity bridge / camp / tent / rocks, author permission granted " +
+      "2026-08-28, plus Kenney fantasy-town for towers and walls. Remote catalogue: our own " +
+      "procedural geometry in remote-props.ts (createRemotePavilionGeometry).",
+    budget:
+      `course <= ${ISLAND_LANDMARK_TRIANGLE_CEILING} tris per asset, <= ${ISLAND_LANDMARK_MAX_PER_ISLAND} semantic landmark places per island (complete assemblies/outposts count once, not once per wall); ` +
+      "remote catalogue = 36 tris/island (up to 1 stone pavilion silhouette with bounded omission, 0 course GLBs)",
     rejected: [
       {
         option: "Scattering more small props to fill the island",
@@ -184,6 +308,15 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
           "clutter rather than structure. The art reference fixes this with a few big " +
           "things, not many small ones.",
         on: "2026-08-28",
+      },
+      {
+        option:
+          "Loading course landmark GLBs (bridge/camp/tent/rocks) for remote catalogue islands",
+        why:
+          "Course landmark GLBs reach up to 1,120-3,600 triangles and require multi-mesh " +
+          "materials. At world/planet distance (island span ~40-120px) structure is not " +
+          "resolvable; 36-triangle stone pavilion silhouette anchors hero identity at zero GLB cost.",
+        on: "2026-09-06",
       },
     ],
   },
@@ -206,13 +339,20 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
   },
   lessonNode: {
     technique:
-      "A small carved stone in one of four deterministic procedural variants, with the " +
-      "unit cue engraved into its top face as a notched ring; the arc count carries unit " +
-      "identity so it survives greyscale (v5 decision D).",
-    source: "Our own geometry.",
+      "One pale 14-segment bevelled medallion lathe, instanced at the original lesson " +
+      "footprint; upward notched unit rings in at most six shared batches. A merged " +
+      "terrain-split footing closes contact. Unsafe rigid fits use bounded refitting " +
+      "then a terrain-clipped shallow inlay with the same ID, engraving and pick target.",
+    source: "Our own lesson-medallion.ts, medallion-grounding.ts and unit-sigil.ts.",
     budget:
-      "1 body mesh per marker from 4 shared geometries, plus one shared ring geometry per sigil",
+      "168 tris/body + 48-50 tris/unit ring; one merged footing draw (exposure <= 0.25); " +
+      "at most one merged inlay draw. Measured 6/24/41 switchback footings: 814/3292/5594 tris.",
     rejected: [
+      {
+        option: "Throw on a rigid marker's first oversized footing",
+        why: "Two of 120 seed fixtures exceeded 0.25 (0.260/0.253), which could blank a valid course. Bounded refit/inlay preserves all targets and passed the expanded contact envelope without raising the ceiling.",
+        on: "2026-09-06",
+      },
       {
         option: "A coloured ring with a solid octahedron/cone/sphere standing on the disc",
         why:
@@ -246,5 +386,32 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
     source: "Our own sky. No donated cubemap.",
     budget: "64² cube on desktop, 32² on mobile; regenerated only when the sky config changes",
     rejected: [],
+  },
+  domainPlanet: {
+    technique:
+      "One SphereGeometry(1, 64, 32) domain globe under the 5000-triangle surface ceiling, " +
+      "shared sampled land/ocean texture with named linear surface palettes, up to 7 clusters of merged shallow cloud banks " +
+      "(radial flatten 0.55; protected region directions remain clear; no independent cloud drift), " +
+      "under the 7000-triangle cloud ceiling, and representative course islands from the remote " +
+      "640-triangle base (desktop at most 5 / mobile at most 3 per study). Design ceiling 8 scene " +
+      "draws per populated domain, counting atmosphere and submitted hit geometry. " +
+      "prepareDomain in a module worker reuses those same generators; it has no early self-proof " +
+      "of cold-load duration. GPU time and VRAM are unknown.",
+    source:
+      "planet/globe-geometry.ts (DOMAIN_GLOBE_TRIANGLES_MAX, DOMAIN_CLOUD_TRIANGLES_MAX), " +
+      "planet/atmospheric-regions.ts (planetRepresentativeLimit), planet/domain-preparation.ts.",
+    budget:
+      "surface <= 5000 tris; cloud <= 7000 tris; 8 draws/domain design ceiling; " +
+      "representatives 5 desktop / 3 mobile; GPU time and VRAM unmeasured",
+    rejected: [
+      {
+        option: "Giant planar study islands or vertex-only globe colour as the domain container",
+        why:
+          "V5 M rejected the first; browser view exposed blurred land/ocean boundaries in the " +
+          "second. Shared sampled texture plus remote 640-triangle representatives remain the " +
+          "candidate, not a competing course field.",
+        on: "2026-09-07",
+      },
+    ],
   },
 } as const;

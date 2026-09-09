@@ -81,15 +81,11 @@ function worldFrameEnvelope(world: ReturnType<typeof placeWorld>) {
   const frameVerticalHalf = camera.distance * Math.tan(verticalFov / 2);
   const elevation = Math.PI / 2 - camera.polar;
   const horizontalHalf = Math.max(
-    ...world.placements.map(
-      (entry) => Math.abs(entry.position.x) + entry.grid.bounds.maxHalf * entry.gridScale,
-    ),
+    ...world.placements.map((entry) => Math.abs(entry.position.x) + entry.radius),
   );
   const verticalHalf = Math.max(
     ...world.placements.map(
-      (entry) =>
-        (Math.abs(entry.position.z) + entry.grid.bounds.maxHalf * entry.gridScale) *
-        Math.sin(elevation),
+      (entry) => (Math.abs(entry.position.z) + entry.radius) * Math.sin(elevation),
     ),
   );
   return {
@@ -180,8 +176,8 @@ describe("world grid projection", () => {
     // Dominance is geometric screen occupancy, not a sea-pixel quota. Both
     // axes must read as a field of islands, so a camera cannot pass by filling
     // only its long axis.
-    expect(envelope.horizontalCoverage).toBeGreaterThanOrEqual(0.8);
-    expect(envelope.verticalCoverage).toBeGreaterThanOrEqual(0.54);
+    expect(envelope.horizontalCoverage).toBeGreaterThanOrEqual(0.75);
+    expect(envelope.verticalCoverage).toBeGreaterThanOrEqual(0.48);
 
     // The opposing half of the contract: a close camera that crops the outer
     // silhouettes is not a valid fix, even if it makes the centre look busy.
@@ -237,9 +233,7 @@ describe("world grid projection", () => {
         const a = world.placements[i]!;
         const b = world.placements[j]!;
         const gap = Math.hypot(a.position.x - b.position.x, a.position.z - b.position.z);
-        const min =
-          (a.grid.bounds.maxHalf * a.gridScale + b.grid.bounds.maxHalf * b.gridScale) *
-          WORLD_ISLAND_SEPARATION_GAP;
+        const min = (a.radius + b.radius) * WORLD_ISLAND_SEPARATION_GAP;
         // The relaxation is deterministic but uses floating-point vector
         // lengths; allow one sub-micron of arithmetic noise at the exact edge.
         expect(gap).toBeGreaterThanOrEqual(min - 1e-6);

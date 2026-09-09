@@ -14,7 +14,10 @@ import { MapControlsHint, MapEntryHint, mapControlsHint } from "../camera/contro
 const CSS = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../overlay.css"), "utf8");
 
 function ruleBlock(css: string, selector: string): string {
-  const start = css.indexOf(`${selector} {`);
+  // Match the complete selector line, not the suffix of a qualified mobile
+  // override such as `.stagewrap .map-tools > .hint`.
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const start = css.search(new RegExp(`^\\s*${escaped}\\s*\\{`, "m"));
   if (start < 0) throw new Error(`missing ${selector}`);
   let depth = 0;
   for (let i = start; i < css.length; i += 1) {

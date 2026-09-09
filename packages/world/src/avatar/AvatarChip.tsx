@@ -18,6 +18,7 @@ import type { PerspectiveCamera } from "three";
 import { AvatarBust } from "./AvatarBust.js";
 import { frameBust } from "./frame-bust.js";
 import { hasWebGLContext } from "../webgl-capability.js";
+import { usePageVisibility } from "../page-visibility.js";
 
 export function AvatarChip({
   recipe,
@@ -35,6 +36,7 @@ export function AvatarChip({
   const host = useRef<HTMLDivElement>(null);
   const cameraRef = useRef<PerspectiveCamera | null>(null);
   const [live, setLive] = useState(true);
+  const pageVisible = usePageVisibility();
   const webglAvailable = hasWebGLContext();
 
   /*
@@ -47,15 +49,12 @@ export function AvatarChip({
     const node = host.current;
     if (!node || typeof IntersectionObserver !== "function") return;
     const observer = new IntersectionObserver(
-      ([entry]) => setLive(Boolean(entry?.isIntersecting) && !document.hidden),
+      ([entry]) => setLive(Boolean(entry?.isIntersecting)),
       { threshold: 0.01 },
     );
     observer.observe(node);
-    const onVisibility = () => setLive(!document.hidden);
-    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       observer.disconnect();
-      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 
@@ -69,7 +68,7 @@ export function AvatarChip({
   const body = webglAvailable ? (
     <div className="avatar-chip__stage" ref={host} style={{ width: size, height: size }}>
       <Canvas
-        frameloop={live ? "always" : "never"}
+        frameloop={live && pageVisible ? "always" : "never"}
         dpr={[1, 1.5]}
         gl={{ antialias: true, alpha: true }}
         camera={{ position: [0, 1.16, 2.35], fov: 26, near: 0.02, far: 40 }}

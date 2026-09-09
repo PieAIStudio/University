@@ -1,48 +1,21 @@
 /**
  * One sun for both map projections.
  *
- * Intensity is a multiply: it cannot create range on a smooth dome. Elevation
- * can, because it changes N·L from face to face. Runtime experiments on this
- * island (see `docs/reference/execution/island-look-contract.md`) found the
- * useful window at 16–28°; below that the back faces fall to scene-linear 0
- * and `measureScene().p05` becomes unusable.
+ * Elevation is candidate 40° (moved from 24°). On continuous-terrain course islands
+ * with natural ~22° median slopes, 24° caused grazing incidence on lit slopes (p05 ~4.2°)
+ * and extreme shadow lengths (>13x caster height), leading to severe self-shadowing acne.
+ * 40° lifts glancing slope incidence to ~20° while maintaining directional relief
+ * and miniature diorama readability.
  *
- * Colour split is from elemental-serenity `Lighting.class.js` at
- * `6b8cebefa0ee10e1bdd081dd342a01b3fe753e09` (day key `0xfff4e6`, fill
- * `0x87ceeb`). Numbers are re-measured for this dome; the donor's 35° key
- * elevation is rejected because it is still too close to noon here.
+ * Fill terms: hemisphere 0.90 (from 0.38) and ambient 0.22 (from 0.09), with rim 0.34
+ * and environment 0.16 unchanged. Shaded slope irradiance reaches ~1.28–1.30, preventing
+ * the post-grade contrast stretch from crushing shadow channels to zero.
  *
- * Azimuth sits just off the course-design look direction so the disc can
- * appear in the far sky (contre-jour) without becoming a centred flare.
- *
- * 2026-08-28 value pass: the settled 1440×900 course capture moved from
- * 9.0 / (0.3 + 0.1 + 0.1) = 18:1 to 5.2 / (1.3 + 0.4 + 0.8) = 2.08:1
- * when the PMREM environment is counted as fill. The canvas pixels below
- * display luminance 0.08 fell from 23.8781% to 11.8286%; the top
- * scene-linear p95 stayed in the same bright band (0.740 → 0.704). The lower hemisphere
- * bounce is deliberately warm, so the remaining shadow keeps hue instead of
- * becoming a neutral black hole.
- *
- * 2026-09-02 elevation re-test. The 16–28° window above was measured under the
- * old warm sky and against a scene where nothing cast a shadow, so it was worth
- * re-running once both had changed. Course-design, 1440×900, post=on:
- *
- * | elevation | landLightnessRise | what the picture does |
- * | --- | --- | --- |
- * | 20° | **25.3** | worst picture; half the island falls into one shadow, the
- *   greens go muddy olive, and several lesson plinths sit inside shade |
- * | 24° | 19.8 | kept |
- * | 30° | 14.4 | shadows shorten, the terraces stop reading as steps |
- *
- * 24° stays, and the reason is worth keeping: 20° **scores best** on the metric
- * that is supposed to mean "the land has a light gradient", and is plainly the
- * worst of the three to look at. This is the documented failure mode of
- * `island-look-contract.md` reproduced on purpose — the ratchet is a floor, and
- * an elevation chosen to maximise one of its rows would have shipped a course
- * island whose clickable nodes were in shadow.
+ * Azimuth sits just off the course-design look direction (210° vs camera 65°->245°)
+ * so the disc appears in the far sky (contre-jour) without becoming a centred flare.
  */
 export const WORLD_SUN = {
-  elevationDeg: 24,
+  elevationDeg: 40,
   /**
    * From +Z, clockwise in XZ the same way three's spherical azimuth is. The
    * course-design camera sits at 65°, looking toward 245°. 210° is a side-back
@@ -52,42 +25,21 @@ export const WORLD_SUN = {
   keyIntensity: 5.4,
   keyColor: 0xffefd2,
   /**
-   * 2026-09-02: the three fill terms below were cut to roughly half, because
-   * the ratio is the only thing that moves the picture and the numerator
-   * cannot move it. The 2026-08-28 note above already records that raising
-   * `keyIntensity` did nothing — a multiply scales key and fill together once
-   * the PMREM is counted as fill. Halving the denominator is the same
-   * arithmetic run the other way, and it is the one that works.
-   *
-   * The fill is now overwhelmingly blue: the hemisphere's upper half takes the
-   * course sky's `mid` stop, which is a saturated blue since the same date, and
-   * the PMREM is baked from that sky. That is the warm-key/cool-shadow split of
-   * LOOK-V2 §11 rule 2, obtained by pointing existing lights at the new sky
-   * rather than by adding a light.
+   * Upper hemisphere fill from sky mid stop. Restored to 0.90 so shaded slopes
+   * keep chromatic color and do not fall below the grade contrast clip floor.
    */
-  hemisphereIntensity: 0.38,
+  hemisphereIntensity: 0.9,
   /**
-   * Kept warm on purpose, and kept as the one warm term in the fill. It lights
-   * down-facing normals only, so it is what stops the undersides of the cliffs
-   * from going to a neutral hole once the blue fill above is halved.
+   * Kept warm on purpose to light down-facing normals and cliff undersides.
    */
   hemisphereGround: 0x8a5b45,
-  ambientIntensity: 0.09,
   /**
-   * Cool but deliberately desaturated. A first pass at 0x7fa4cc was measurably
-   * too saturated: combined with the blue hemisphere it turned the ivory lesson
-   * plinths teal (see `lighting.tsx`). Shadows have to keep hue without the
-   * fill becoming paint.
+   * Desaturated cool ambient fill, raised to 0.22 to support open shadow values.
    */
+  ambientIntensity: 0.22,
   ambientColor: 0xa9bdd4,
   /**
-   * The back rim, which is fill and has to be counted as fill.
-   *
-   * These two lived as literals inside `lighting.tsx`, which is how a 0.78
-   * teal light stayed invisible to `sun.test.ts` while that test asserted the
-   * scene's key-to-fill ratio from the other three terms. The ratio it checked
-   * was therefore never the scene's ratio. Keeping the numbers here is what
-   * makes the accounting checkable.
+   * The back rim, which provides silhouette separation against sky.
    */
   rimIntensity: 0.34,
   rimColor: 0xa6c3d2,
@@ -163,4 +115,28 @@ export function worldShadowFrustum(groundRadius: number): WorldShadowFrustum {
     far: lightDistance + half * 1.45,
     mapSize: 2048,
   };
+}
+
+/**
+ * Compute directional shadow normalBias scaled to shadow-map texel size in world units.
+ *
+ * `normalBias` pushes shadow receiver lookups along the surface normal. To clear
+ * self-shadowing acne on continuous terrain slopes down to ~14° incidence, the normal
+ * offset must cover approximately `texel / tan(minIncidence)`. For typical continuous
+ * terrain slopes, this requires ~4x the world-space texel size.
+ *
+ * Scaled with `frustum.half * 2 / mapSize` so desktop (2048) and mobile (1024)
+ * each get the bias their respective texel size requires (~0.14–0.18 on desktop 34u,
+ * ~0.28–0.32 on mobile 34u). Clamped to [0.04, 0.40] to avoid detached shadows
+ * (peter-panning) on large bounds while providing clean clearance on small ones.
+ */
+export function worldShadowNormalBias(
+  frustum: Pick<WorldShadowFrustum, "half">,
+  mapSize: number,
+): number {
+  const resolvedHalf = Number.isFinite(frustum.half) && frustum.half > 0 ? frustum.half : 14.16;
+  const resolvedMapSize = Number.isFinite(mapSize) && mapSize > 0 ? mapSize : 2048;
+  const texelSize = (resolvedHalf * 2) / resolvedMapSize;
+  const rawBias = texelSize * 4.0;
+  return Math.min(0.4, Math.max(0.04, +rawBias.toFixed(4)));
 }

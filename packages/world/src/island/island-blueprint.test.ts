@@ -51,6 +51,29 @@ function geometryProjection(blueprint: ReturnType<typeof islandBlueprint>) {
   return islandGeometryProjection(blueprint);
 }
 
+function firstLastCorridorGap(blueprint: ReturnType<typeof islandBlueprint>): number {
+  const points = blueprint.centerline;
+  const firstStart = points[0]!;
+  const firstEnd = points[1]!;
+  const lastStart = points.at(-2)!;
+  const lastEnd = points.at(-1)!;
+  return Math.min(
+    distanceToSegment(firstStart, lastStart, lastEnd),
+    distanceToSegment(firstEnd, lastStart, lastEnd),
+    distanceToSegment(lastStart, firstStart, firstEnd),
+    distanceToSegment(lastEnd, firstStart, firstEnd),
+  );
+}
+
+function requiredCorridorGap(blueprint: ReturnType<typeof islandBlueprint>): number {
+  return (
+    blueprint.route.roadWidth +
+    blueprint.route.shoulderWidth * 2 +
+    blueprint.route.nodeRadius * 2 +
+    blueprint.route.clearance
+  );
+}
+
 function sampledRelief(blueprint: ReturnType<typeof islandBlueprint>): number {
   const values: number[] = [];
   for (let x = -blueprint.bounds.halfX * 0.92; x <= blueprint.bounds.halfX * 0.92; x += 1.5) {
@@ -62,29 +85,87 @@ function sampledRelief(blueprint: ReturnType<typeof islandBlueprint>): number {
   return Math.max(...values) - Math.min(...values);
 }
 
+function percentile(values: readonly number[], fraction: number): number {
+  const ordered = [...values].sort((first, second) => first - second);
+  return ordered[Math.floor((ordered.length - 1) * fraction)] ?? 0;
+}
+
+function naturalReliefMetrics(blueprint: ReturnType<typeof islandBlueprint>): {
+  readonly relativeRange: number;
+  readonly curvatureP95: number;
+  readonly slopeP95: number;
+} {
+  // Measure at a stable fraction of the island rather than at every terrain
+  // vertex. This catches a short wrinkle or shelf that the course lattice can
+  // represent, while keeping the test about the shared surface rule rather
+  // than one projection's tessellation.
+  const step = Math.max(1.1, blueprint.bounds.maxHalf * 0.035);
+  const heights: number[] = [];
+  const curvatures: number[] = [];
+  const slopes: number[] = [];
+  for (let ix = 1; ix < 10; ix += 1) {
+    for (let iz = 1; iz < 10; iz += 1) {
+      const x = ((ix / 10) * 2 - 1) * blueprint.bounds.halfX * 0.82;
+      const z = ((iz / 10) * 2 - 1) * blueprint.bounds.halfZ * 0.82;
+      const centre = sampleIslandSurface(blueprint, x, z);
+      if (!centre.inside) continue;
+      const east = sampleIslandSurface(blueprint, x + step, z);
+      const west = sampleIslandSurface(blueprint, x - step, z);
+      const north = sampleIslandSurface(blueprint, x, z + step);
+      const south = sampleIslandSurface(blueprint, x, z - step);
+      if (!(east.inside && west.inside && north.inside && south.inside)) continue;
+      heights.push(centre.y);
+      curvatures.push(
+        Math.max(
+          Math.abs(east.y - 2 * centre.y + west.y),
+          Math.abs(north.y - 2 * centre.y + south.y),
+        ) /
+          (step * step),
+      );
+      slopes.push(
+        Math.max(
+          Math.abs(east.y - centre.y),
+          Math.abs(west.y - centre.y),
+          Math.abs(north.y - centre.y),
+          Math.abs(south.y - centre.y),
+        ) / step,
+      );
+    }
+  }
+  if (heights.length < 12) throw new Error("natural relief survey needs interior samples");
+  return {
+    relativeRange: (Math.max(...heights) - Math.min(...heights)) / blueprint.bounds.maxHalf,
+    curvatureP95: percentile(curvatures, 0.95),
+    slopeP95: percentile(slopes, 0.95),
+  };
+}
+
 describe("IslandBlueprint", () => {
-  it.each([3, 12, 24, 41])("builds a valid linear blueprint for %i lessons", (lessonCount) => {
-    const blueprint = islandBlueprint({ ...INPUT, lessonCount });
-    expect(blueprint.version).toBe(2);
-    expect(blueprint.layoutRevision).toBe(ISLAND_BLUEPRINT_LAYOUT_REVISION);
-    expect(blueprint.lessonCount).toBe(lessonCount);
-    expect(blueprint.nodes).toHaveLength(lessonCount);
-    expect(blueprint.centerline.length).toBeGreaterThan(lessonCount);
-    expect(blueprint.route.semantic).toBe("linear");
-    expect(ISLAND_ROUTE_ARCHETYPES).toContain(blueprint.route.archetype);
-    expect(blueprint.route.centerlineSamples).toBe(blueprint.centerline.length);
-    expect(blueprint.route.roadWidth).toBeGreaterThan(0);
-    expect(blueprint.route.shoulderWidth).toBeGreaterThanOrEqual(0);
-    expect(blueprint.route.nodeRadius).toBeGreaterThan(0);
-    expect(blueprint.route.clearance).toBeGreaterThan(0);
-    expect(blueprint.terrainPatches.length).toBeGreaterThanOrEqual(2);
-    expect(blueprint.terrainPatches.length).toBeLessThanOrEqual(4);
-    expect(blueprint.themeSelection).toEqual({
-      naturalBasePackId: DEFAULT_NATURAL_BASE_PACK_ID,
-      accentPackIds: [],
-    });
-    expect(validateIslandBlueprint(blueprint)).toEqual([]);
-  });
+  it.each([3, 6, 7, 12, 24, 41])(
+    "builds a valid linear blueprint for %i lessons",
+    (lessonCount) => {
+      const blueprint = islandBlueprint({ ...INPUT, lessonCount });
+      expect(blueprint.version).toBe(2);
+      expect(blueprint.layoutRevision).toBe(ISLAND_BLUEPRINT_LAYOUT_REVISION);
+      expect(blueprint.lessonCount).toBe(lessonCount);
+      expect(blueprint.nodes).toHaveLength(lessonCount);
+      expect(blueprint.centerline.length).toBeGreaterThan(lessonCount);
+      expect(blueprint.route.semantic).toBe("linear");
+      expect(ISLAND_ROUTE_ARCHETYPES).toContain(blueprint.route.archetype);
+      expect(blueprint.route.centerlineSamples).toBe(blueprint.centerline.length);
+      expect(blueprint.route.roadWidth).toBeGreaterThan(0);
+      expect(blueprint.route.shoulderWidth).toBeGreaterThanOrEqual(0);
+      expect(blueprint.route.nodeRadius).toBeGreaterThan(0);
+      expect(blueprint.route.clearance).toBeGreaterThan(0);
+      expect(blueprint.terrainPatches.length).toBeGreaterThanOrEqual(2);
+      expect(blueprint.terrainPatches.length).toBeLessThanOrEqual(4);
+      expect(blueprint.themeSelection).toEqual({
+        naturalBasePackId: DEFAULT_NATURAL_BASE_PACK_ID,
+        accentPackIds: [],
+      });
+      expect(validateIslandBlueprint(blueprint)).toEqual([]);
+    },
+  );
 
   it("keeps the authored road subordinate to the lesson stones", () => {
     const blueprint = islandBlueprint({ ...INPUT, lessonCount: 41 });
@@ -102,7 +183,7 @@ describe("IslandBlueprint", () => {
 
   it("validates multiple stable seeds at every supported fixture size", () => {
     for (const seedIndex of Array.from({ length: 8 }, (_, index) => index)) {
-      for (const lessonCount of [3, 12, 24, 41]) {
+      for (const lessonCount of [3, 6, 7, 12, 24, 41]) {
         const blueprint = islandBlueprint({
           ...INPUT,
           lessonCount,
@@ -243,7 +324,7 @@ describe("IslandBlueprint", () => {
   it("keeps every explicit route archetype valid across fixture sizes and seeds", () => {
     for (const archetype of ISLAND_ROUTE_ARCHETYPES) {
       for (const seedIndex of Array.from({ length: 8 }, (_, index) => index)) {
-        for (const lessonCount of [3, 12, 24, 41]) {
+        for (const lessonCount of [3, 6, 7, 12, 24, 41]) {
           const blueprint = islandBlueprint({
             ...INPUT,
             lessonCount,
@@ -329,6 +410,57 @@ describe("IslandBlueprint", () => {
     }
   });
 
+  it("keeps macro relief broad and micro curvature bounded across the 60-shape matrix", () => {
+    for (const routeArchetype of ISLAND_ROUTE_ARCHETYPES) {
+      for (const lessonCount of [6, 12, 24, 41]) {
+        for (const seed of ["coast", "upland", "grove"]) {
+          const blueprint = islandBlueprint({
+            ...INPUT,
+            lessonCount,
+            routeArchetype,
+            seed: `relief-matrix/${routeArchetype}/${lessonCount}/${seed}`,
+          });
+          const metrics = naturalReliefMetrics(blueprint);
+          const context = `${routeArchetype}/${lessonCount}/${seed}`;
+          // A visible broad landform remains; flattening the island to hide
+          // wrinkles is not an allowed way to pass this test.
+          expect(metrics.relativeRange, `${context} macro relief`).toBeGreaterThan(0.09);
+          expect(metrics.relativeRange, `${context} height ceiling`).toBeLessThanOrEqual(
+            0.235 + 1e-6,
+          );
+          // The old short octave and stronger shelf pass produced local
+          // corrugation at this scale. The p95 guard leaves room for a real
+          // hillside while rejecting a repeated fine step field.
+          expect(metrics.curvatureP95, `${context} curvature`).toBeLessThan(1.8);
+          expect(metrics.slopeP95, `${context} slope`).toBeLessThan(2.3);
+        }
+      }
+    }
+  });
+
+  it("sizes the floating root from maxHalf with a slight seed difference", () => {
+    const depths = new Set<number>();
+    for (const lessonCount of [6, 12, 24, 41]) {
+      for (const seed of ["coast", "upland", "grove"]) {
+        const blueprint = islandBlueprint({
+          ...INPUT,
+          lessonCount,
+          seed: `root-depth/${lessonCount}/${seed}`,
+        });
+        const ratio = blueprint.underside.depth / blueprint.bounds.maxHalf;
+        expect(ratio, `${lessonCount}/${seed}`).toBeGreaterThanOrEqual(0.7);
+        expect(ratio, `${lessonCount}/${seed}`).toBeLessThan(0.9);
+        expect(Number.isFinite(blueprint.underside.depth), `${lessonCount}/${seed}`).toBe(true);
+        depths.add(blueprint.underside.depth);
+      }
+    }
+    expect(depths.size).toBeGreaterThan(1);
+    const large = islandBlueprint({ ...INPUT, lessonCount: 41, seed: "root-depth/41/coast" });
+    expect(large.bounds.maxHalf).toBeGreaterThan(30);
+    expect(large.underside.depth).toBeGreaterThan(11);
+    expect(large.underside.depth).toBeGreaterThanOrEqual(large.bounds.maxHalf * 0.7);
+  });
+
   it("keeps route, terrain, theme, and anchor geometry independent of unit identity", () => {
     const lessonIds = Array.from({ length: 24 }, (_, index) => `lesson-${index + 1}`);
     const first = islandBlueprint({
@@ -366,5 +498,58 @@ describe("IslandBlueprint", () => {
         tokenA.motionVariant !== tokenB.motionVariant ||
         tokenA.variant !== tokenB.variant,
     ).toBe(true);
+  });
+
+  it("keeps the first-to-last route corridor open on short courses", () => {
+    for (const lessonCount of [3, 6, 7]) {
+      for (const archetype of ISLAND_ROUTE_ARCHETYPES) {
+        for (const seedIndex of [0, 1, 2]) {
+          const blueprint = islandBlueprint({
+            ...INPUT,
+            lessonCount,
+            seed: `explicit-${archetype}-${seedIndex}`,
+            routeArchetype: archetype,
+          });
+          const label = `${archetype}/${lessonCount}/${seedIndex}`;
+          expect(validateIslandBlueprint(blueprint), label).toEqual([]);
+          expect(firstLastCorridorGap(blueprint), label).toBeGreaterThanOrEqual(
+            requiredCorridorGap(blueprint) - 1e-6,
+          );
+          expect(blueprint.nodes.map((node) => node.index)).toEqual(
+            Array.from({ length: lessonCount }, (_, index) => index),
+          );
+          expect(blueprint.nodes.at(-1)?.next).toBeNull();
+          expect(
+            blueprint.nodes
+              .slice(0, -1)
+              .every((node, index) => node.next === blueprint.nodes[index + 1]!.id),
+          ).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("still reports a pinched three-lesson loop mouth", () => {
+    const blueprint = islandBlueprint({
+      ...INPUT,
+      lessonCount: 3,
+      seed: "explicit-loop-around-hill-0",
+      routeArchetype: "loop-around-hill",
+    });
+    const start = blueprint.centerline[0]!;
+    const last = blueprint.centerline.length - 1;
+    const centerline = blueprint.centerline.map((point, index) => {
+      if (index === last) {
+        return { ...start, x: start.x + 0.4, z: start.z + 0.4, t: point.t };
+      }
+      if (index === last - 1) {
+        return { ...start, x: start.x + 0.5, z: start.z + 0.3, t: point.t };
+      }
+      return { ...point };
+    });
+    const pinched = { ...blueprint, centerline };
+    expect(validateIslandBlueprint(pinched).some((issue) => issue.includes("non-adjacent"))).toBe(
+      true,
+    );
   });
 });

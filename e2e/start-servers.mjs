@@ -125,22 +125,6 @@ process.on("SIGINT", () => stop("SIGINT"));
 process.on("SIGTERM", () => stop("SIGTERM"));
 process.on("exit", () => stop("SIGTERM"));
 
-// The delivery gate needs source bytes, but this worktree deliberately keeps
-// its content directory as a symlink and the generated packages out of git.
-// Build a fresh, isolated baked fixture for every run so the browser never
-// passes by reading a stale none-mode package left by another task.
-console.log("e2e: importing baked course content for the delivery mode");
-must("pnpm", ["content"], ROOT, {
-  UNIVERSITY_CONTENT_ROOT: E2E_CONTENT_ROOT,
-  UNIVERSITY_IMPORTED_MANIFEST_PATH: E2E_IMPORTED_MANIFEST,
-  UNIVERSITY_EVIDENCE_MODE: "auto",
-  UNIVERSITY_REQUIRE_BAKED_EVIDENCE: "1",
-});
-
-console.log("e2e: building @pieai/university-core (the local API cannot import .ts)");
-must("pnpm", ["--filter", "@pieai/university-core", "build"], ROOT);
-must("pnpm", ["exec", "tsc", "-p", "tsconfig.server.build.json"], LOCAL);
-
 const localStudiesRoot = join(LOCAL, "studies");
 const nestedStudies = join(localStudiesRoot, "studies");
 const localApiEnv = {
@@ -181,6 +165,26 @@ if (existsSync(nestedStudies)) {
     }
   }
 }
+
+// Resolve the worktree source once, before either consumer starts. The baked
+// importer previously ran before this discovery and rejected the outer
+// studies skeleton even though the API knew about its nested source link.
+// An explicitly configured importer root still wins; its safety checks stay on.
+console.log("e2e: importing baked course content for the delivery mode");
+must("pnpm", ["content"], ROOT, {
+  UNIVERSITY_STUDIES_ROOT:
+    process.env.UNIVERSITY_STUDIES_ROOT ??
+    localApiEnv.UNIVERSITY_LOCAL_STUDIES_ROOT ??
+    localStudiesRoot,
+  UNIVERSITY_CONTENT_ROOT: E2E_CONTENT_ROOT,
+  UNIVERSITY_IMPORTED_MANIFEST_PATH: E2E_IMPORTED_MANIFEST,
+  UNIVERSITY_EVIDENCE_MODE: "auto",
+  UNIVERSITY_REQUIRE_BAKED_EVIDENCE: "1",
+});
+
+console.log("e2e: building @pieai/university-core (the local API cannot import .ts)");
+must("pnpm", ["--filter", "@pieai/university-core", "build"], ROOT);
+must("pnpm", ["exec", "tsc", "-p", "tsconfig.server.build.json"], LOCAL);
 
 run("node", [join(LOCAL, ".university-local-build/server/http-server.js")], LOCAL, localApiEnv);
 

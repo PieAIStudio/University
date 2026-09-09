@@ -1,19 +1,26 @@
 ---
 id: REF-ISLAND-ART-V2
 title: Island art reference (hexagonal tiles)
-type: reference
-status: active
-canonical: true
+type: archive
+status: archived
+superseded_by: REF-ISLAND-ART-V3
+canonical: false
 owner: human
 created: 2026-08-31
-last_reviewed: 2026-08-31
+last_reviewed: 2026-09-08
 domain: world
 tags:
   - island
   - art-reference
 ---
 
-# 飞岛参考图（六边形版）
+# 六边形参考的历史原文（已由自然浮岛 V3 替代）
+
+下文保留2026-08-31的判断，不是当前实施指令。V5 M、ADR-0008/0009和
+`REF-ISLAND-ART-V3` 是当前依据。旧图片保留在Git历史 `b3eebea` 的
+`docs/reference/island-art-reference-v2/`，不恢复用户已删除的本地旧参考。
+
+## 2026-08-31 原文
 
 这两张是当前有效的飞岛外观参考，由菲哥用 AI 生成后选定。
 上一版自然岩崖的参考图已作废，见 `REF-ISLAND-ART-V1-RETIRED`。

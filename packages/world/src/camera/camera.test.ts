@@ -44,13 +44,19 @@ describe("dolly range", () => {
 });
 
 describe("course composition", () => {
-  it("pins the selected low and near landing pose", () => {
-    expect(COURSE_POLAR).toBeCloseTo(THREE.MathUtils.degToRad(66));
-    expect(COURSE_DISTANCE).toBe(23);
-    expect(COURSE_DISTANCE_MIN).toBe(18);
-    // The far end still lets a learner pull back and inspect more levels after
-    // entering the close view, without restoring the old island-wide shot.
-    expect(COURSE_DISTANCE_MAX).toBe(54);
+  it("pins an elevated diorama landing that still clears picking bounds", () => {
+    const polarDeg = THREE.MathUtils.radToDeg(COURSE_POLAR);
+    expect(polarDeg).toBeGreaterThanOrEqual(50);
+    expect(polarDeg).toBeLessThanOrEqual(55);
+    expect(COURSE_DISTANCE).toBeGreaterThanOrEqual(34);
+    expect(COURSE_DISTANCE).toBeLessThanOrEqual(38);
+    expect(COURSE_DISTANCE).toBe(36);
+    expect(COURSE_POLAR).toBeCloseTo(THREE.MathUtils.degToRad(52));
+    // Close inspect still sits above the island peak; far is 3× so landform
+    // can be read without a second overview camera. Hex-era 18/23/54 described
+    // a near-horizon shot that hid the continuous route behind a foreground hill.
+    expect(COURSE_DISTANCE_MIN).toBe(24);
+    expect(COURSE_DISTANCE_MAX).toBe(72);
     expect(COURSE_DISTANCE_MAX / COURSE_DISTANCE_MIN).toBeLessThanOrEqual(3);
   });
 });
@@ -89,15 +95,15 @@ describe("the eye stays above the ground", () => {
 });
 
 /*
-  The course is intentionally a different composition from the world map:
-  entering it is the product's promised move onto an island. The lower course
-  tilt was selected from a fixed-seed contact sheet because it reveals a sky
-  band and keeps the next lesson markers in front of the learner.
+  Entering a course is still a closer shot than the world map, but it is no
+  longer a shallower horizon tilt. Hex-era 66° was 12° below WORLD_POLAR and
+  that is what hid the continuous road. The diorama polar sits near the world
+  tilt; distance is what makes the course feel like arriving on one island.
 */
 describe("course entry composition", () => {
-  it("keeps the course materially lower than the world overview", () => {
-    const degrees = Math.abs(COURSE_POLAR - WORLD_POLAR) * (180 / Math.PI);
-    expect(degrees).toBeGreaterThanOrEqual(10);
-    expect(degrees).toBeLessThanOrEqual(16);
+  it("keeps the course closer than the world overview without restoring the hex horizon tilt", () => {
+    expect(COURSE_DISTANCE).toBeLessThan(WORLD_DISTANCE_MIN);
+    expect(COURSE_POLAR).toBeLessThan(THREE.MathUtils.degToRad(60));
+    expect(COURSE_POLAR).toBeGreaterThan(THREE.MathUtils.degToRad(45));
   });
 });

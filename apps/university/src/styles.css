@@ -4338,3 +4338,21 @@ body,
   min-height: 44px;
   margin-top: 2px;
 }
+
+/* A later step has a dashed outline; a finished step has a DOM checkmark.
+   Colour is not the only way to distinguish learning states. */
+button.label--icon[data-lesson-state="locked"] {
+  outline: 1px dashed currentColor;
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  button.label--icon,
+  button.label--lesson {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

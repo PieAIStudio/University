@@ -7,7 +7,7 @@ canonical: false
 superseded_by: REF-ISLAND-ART-V2
 owner: human
 created: 2026-08-31
-last_reviewed: 2026-08-31
+last_reviewed: 2026-09-08
 domain: world
 tags:
   - island
@@ -25,4 +25,5 @@ tags:
 `docs/reference/` 下，下一个 AI 还会照着它做——所以它挪到这里，而不是
 删掉：删掉就不知道当初为什么会错。
 
-**当前有效的参考图：** `docs/reference/island-art-reference-v2/`
+**当时承接本版的参考：** `REF-ISLAND-ART-V2`，现存于 `docs/archive/island-art-reference-v2.md`。
+2026-09-08的新自然浮岛参考为 `REF-ISLAND-ART-V3`；不要将上文历史禁用判断当作当前指令。

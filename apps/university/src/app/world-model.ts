@@ -7,11 +7,17 @@ import {
   type StudySwitchItem,
 } from "@pieai/university-ui/navigation/StudySwitcher.js";
 import { spacedName } from "@pieai/university-ui/text/spaced-name.js";
-import { type LessonPlacement, placeWorld, type Marker } from "@pieai/university-world/Maps.js";
+import {
+  type LessonPlacement,
+  placeStudyArchipelago,
+  worldIslandCaptionTarget,
+  type Marker,
+} from "@pieai/university-world/Maps.js";
 import { courseMarkers } from "@pieai/university-world/course-map.js";
 import type { CourseNode } from "@pieai/university-world/course.js";
 import type { PlanetStudy } from "@pieai/university-world/planet.js";
 import { useMemo, type Dispatch, type SetStateAction } from "react";
+import { mapDomainForStudy } from "./map-domain-catalog.js";
 
 export type PathOverlay =
   | {
@@ -27,7 +33,7 @@ export type PathOverlay =
     };
 
 type LabelNodes = { readonly current: Map<string, HTMLElement> };
-type World = ReturnType<typeof placeWorld>;
+type World = ReturnType<typeof placeStudyArchipelago>;
 
 interface WorldModelOptions {
   readonly courseProgress: (node: CourseNode) => number;
@@ -80,16 +86,21 @@ export function useWorldModel({
   }, [view, navigationFocus, todayNode, studies]);
 
   /**
-   * The learner opens in the focused study, but the world field includes the
-   * complete catalogue. Study order stays first so the existing camera, labels
-   * and "next" beacon still answer the current-context question immediately.
+   * A series is an independent archipelago (V5 M). The full catalogue remains
+   * available through the planet and switcher; its other courses must not be
+   * prepared or rendered behind this series' labels.
+   * While picking a region on the planet, even the selected archipelago is
+   * hidden. Do not rebuild that layout and its hidden DOM labels on this
+   * pointer path. Entering the series prepares the same cached identities;
+   * the Stage itself remains mounted, so its WebGL context is not replaced.
    */
+  const planetOpen = view.kind === "planet";
   const world = useMemo(
     () =>
-      nodes && focusedStudyId
-        ? placeWorld(nodes, courseProgress, focusedStudyId, "catalogue")
+      !planetOpen && nodes && focusedStudyId
+        ? placeStudyArchipelago(nodes, courseProgress, focusedStudyId)
         : null,
-    [nodes, courseProgress, focusedStudyId],
+    [nodes, courseProgress, focusedStudyId, planetOpen],
   );
 
   /**
@@ -147,6 +158,7 @@ export function useWorldModel({
           id: study.id,
           title: study.title,
           courseCount: own.length || study.courses.length,
+          domain: mapDomainForStudy(study.id),
           lessonCount: own.reduce((sum, node) => sum + node.lessons, 0),
           lessonsDone: own.reduce((sum, node) => sum + lessonsDone(node), 0),
           courses: ordered.map((node) => ({
@@ -244,9 +256,10 @@ export function useWorldMarkers({
     const liveIndex = live ? (rank.get(live.node.courseId) ?? -1) : -1;
     return world.placements.map((entry) => ({
       id: entry.node.courseId,
-      position: entry.position.clone().setY(entry.position.y + entry.radius * 0.4 + 1.4),
+      position: worldIslandCaptionTarget(entry),
       text: entry.node.title,
       kind: "course" as const,
+      courseState: entry.state,
       sub:
         entry.node.isBeingRewritten === true
           ? translate("app.app.worldmodel.copy.改写中")

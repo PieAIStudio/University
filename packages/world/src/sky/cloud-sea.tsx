@@ -1,20 +1,7 @@
 /**
- * A small, deliberately sculpted cloud sea.
- *
- * The old cloud layer was one transparent flattened sphere per lobe.  At a
- * distance that turns every overlap grey and makes the clouds read as paint
- * smudges.  This version keeps the same cheap idea (no weather simulation and
- * no ray marching) but treats a cloud as one opaque little sculpture:
- * six shared rounded lobes above one warm under-belly.  The lobe transforms
- * are written once, then the whole field drifts as one group.
- *
- * There are exactly two instanced draw batches:
- *   - upper: six lobes per puff, with per-instance ivory/white colours;
- *   - lower: one warm contact belly per puff.
- *
- * Both batches share one low-poly sphere geometry.  The geometry is the only
- * resource whose segment count changes with the tier, so a phone gets a much
- * smaller silhouette without changing the visual language.
+ * One continuous shallow bank per puff, with two complementary surface
+ * batches. No intersecting spheres, separate belly slab or weather shader.
+ * The same closed source is also used by course frames and globe clouds.
  */
 import { useFrame } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef } from "react";
@@ -24,8 +11,9 @@ import { hopPose } from "../avatar/hop.js";
 import { seeded } from "../island/random.js";
 import { CLOUD_CARRIER_FOOT_OFFSET, type CloudCarrierTarget } from "./cloud-carrier-contract.js";
 import { CLOUD_RENDER_ORDER, CLOUD_TONES, createCloudMaterials } from "./cloud-material.js";
-import { createCloudVolumeGeometry } from "./cloud-volume.js";
+import { CLOUD_BANK_SUPPORT_HEIGHT, createCloudVolumeParts } from "./cloud-volume.js";
 import { renderTier } from "./tier.js";
+import { usePrefersReducedMotion } from "../reduced-motion.js";
 
 export { CLOUD_CARRIER_FOOT_OFFSET } from "./cloud-carrier-contract.js";
 export type { CloudCarrierTarget } from "./cloud-carrier-contract.js";
@@ -46,9 +34,8 @@ export interface CloudPuff {
  * are shared by the layout tests and the renderer's crown/footprint contract.
  */
 export const CLOUD_LAYOUT_CONTRACT = {
-  // A puff is already a complete seven-lobe cloud sculpture. Eighteen puffs
-  // made the authored clusters read as two giant banks of foam rather than as
-  // the small, toy-like clouds the reference establishes.
+  // Preserve the existing framing and carrier slot; changing the surface
+  // must not turn nine authored banks into another dense weather field.
   desktopPuffCount: 9,
   mobilePuffCount: 6,
   compositionClusterCount: 6,
@@ -296,8 +283,8 @@ export const CUTE_CLOUD_BATCH_NAMES = ["cute-cloud-upper", "cute-cloud-underbell
 const CUTE_CLOUD_RENDER_ORDER = CLOUD_RENDER_ORDER;
 
 export const CUTE_CLOUD_CONTRACT = {
-  upperLobesPerPuff: 6,
-  totalOpaqueLobesPerPuff: 7,
+  upperLobesPerPuff: 1,
+  totalOpaqueLobesPerPuff: 1,
   drawBatches: CUTE_CLOUD_BATCH_NAMES.length,
   batchNames: CUTE_CLOUD_BATCH_NAMES,
   desktopPuffCount: CLOUD_LAYOUT_CONTRACT.desktopPuffCount,
@@ -307,21 +294,19 @@ export const CUTE_CLOUD_CONTRACT = {
   nearEdgeClusterCount: CLOUD_LAYOUT_CONTRACT.nearEdgeClusterCount,
   safeCorridorRatio: CLOUD_LAYOUT_CONTRACT.safeCorridorRatio,
   crownHeightPerScale: CLOUD_LAYOUT_CONTRACT.crownHeightPerScale,
-  desktopSegments: { width: 14, height: 9 },
-  mobileSegments: { width: 9, height: 6 },
+  desktopSegments: { width: 32, height: 9 },
+  mobileSegments: { width: 20, height: 6 },
   renderOrder: CUTE_CLOUD_RENDER_ORDER,
   opaque: true,
   wholeFieldDrift: true,
 } as const;
 
 const CLOUD_ROLE_TONES: Readonly<
-  Record<CloudPuffRole, { readonly lift: number; readonly belly: number }>
+  Record<CloudPuffRole, { readonly lift: number; readonly tone: number }>
 > = {
-  // Near clouds catch the low sun; distant banks stay cooler and darker so
-  // the field has a near/far, light/dark reading instead of one foam value.
-  "near-edge": { lift: 1.06, belly: 0x6f5c50 },
-  frame: { lift: 1, belly: 0x8a7464 },
-  background: { lift: 0.72, belly: 0x4d5968 },
+  "near-edge": { lift: 1.06, tone: CLOUD_TONES.pearl },
+  frame: { lift: 1, tone: CLOUD_TONES.pearl },
+  background: { lift: 0.72, tone: CLOUD_TONES.ivory },
 };
 
 function scaleHex(color: number, amount: number): number {
@@ -332,9 +317,7 @@ function scaleHex(color: number, amount: number): number {
   return (red << 16) | (green << 8) | blue;
 }
 
-type Tone = keyof typeof CLOUD_TONES;
-
-/** One lobe's transform and tone, kept free of Three.js for deterministic tests. */
+/** One bank transform. The legacy list names remain the two batch inputs. */
 export interface CuteCloudLobe {
   readonly position: readonly [number, number, number];
   readonly scale: readonly [number, number, number];
@@ -343,14 +326,7 @@ export interface CuteCloudLobe {
   readonly puffIndex: number;
 }
 
-/** The lower warm lobe that gives the cloud a soft, grounded underside. */
-export interface CuteCloudUnderbelly {
-  readonly position: readonly [number, number, number];
-  readonly scale: readonly [number, number, number];
-  readonly rotationY: number;
-  readonly color: number;
-  readonly puffIndex: number;
-}
+export type CuteCloudUnderbelly = CuteCloudLobe;
 
 export interface CuteCloudLayout {
   readonly quality: CuteCloudQuality;
@@ -359,79 +335,14 @@ export interface CuteCloudLayout {
   readonly underbellies: readonly CuteCloudUnderbelly[];
 }
 
-interface LobeRecipe {
-  readonly offset: readonly [number, number, number];
-  readonly stretch: readonly [number, number, number];
-  readonly tone: Tone;
-}
-
-/*
- * The silhouette is intentionally asymmetrical.  A perfect four-lobe clover
- * looks like a logo; these six overlapping volumes read as a small cloud from
- * the aerial camera and retain a visible top/side/bottom hierarchy.
+/** Vary a whole bank, not its constituent balls. XZ stays in the unchanged
+ * 1.2-per-scale envelope, including all four shoulders and every yaw.
  */
-const UPPER_LOBE_RECIPES: readonly LobeRecipe[] = [
-  { offset: [0, 0.02, 0.04], stretch: [1.02, 0.4, 0.7], tone: "warm" },
-  { offset: [-0.56, 0.08, 0.03], stretch: [0.64, 0.5, 0.58], tone: "ivory" },
-  { offset: [0.56, 0.1, 0.02], stretch: [0.66, 0.54, 0.6], tone: "pearl" },
-  { offset: [-0.23, 0.27, -0.12], stretch: [0.52, 0.54, 0.53], tone: "pearl" },
-  { offset: [0.24, 0.29, -0.1], stretch: [0.5, 0.57, 0.52], tone: "pearl" },
-  { offset: [0.02, 0.39, 0.08], stretch: [0.4, 0.45, 0.42], tone: "ivory" },
-];
-
-interface CloudSilhouetteVariant {
-  readonly stretchX: readonly number[];
-  readonly stretchY: readonly number[];
-  readonly stretchZ: readonly number[];
-  readonly offsetX: readonly number[];
-  readonly offsetY: readonly number[];
-  readonly offsetZ: readonly number[];
-  readonly yaw: number;
-}
-
-/*
- * The recipe establishes the family resemblance; these small transforms keep
- * repeated instances from becoming a row of identical clovers. Vertical
- * factors stay at or below 1 so the established 1.12 crown contract remains
- * exact, while the shoulders and tails lean in different directions.
- */
-const CLOUD_SILHOUETTE_VARIANTS: readonly CloudSilhouetteVariant[] = [
-  {
-    stretchX: [1.02, 0.94, 1.08, 0.96, 0.9, 0.82],
-    stretchY: [0.94, 0.98, 0.9, 0.96, 0.86, 0.9],
-    stretchZ: [1.04, 0.92, 1.06, 0.94, 0.9, 0.84],
-    offsetX: [0, -0.03, 0.03, -0.01, 0.02, 0.04],
-    offsetY: [0, 0, 0.01, 0, 0, 0],
-    offsetZ: [0.02, 0.02, -0.01, -0.02, 0.02, 0.01],
-    yaw: -0.045,
-  },
-  {
-    stretchX: [0.92, 1.04, 0.96, 1.06, 0.84, 0.94],
-    stretchY: [0.9, 0.92, 0.98, 0.88, 0.94, 0.82],
-    stretchZ: [0.98, 1.05, 0.9, 1.02, 0.86, 0.9],
-    offsetX: [0.03, -0.02, 0.01, -0.04, 0.03, -0.01],
-    offsetY: [0, 0.01, 0, 0.01, 0, 0],
-    offsetZ: [-0.01, 0.03, 0.02, 0.01, -0.02, 0.03],
-    yaw: 0.06,
-  },
-  {
-    stretchX: [1.06, 0.88, 1.02, 0.9, 1.04, 0.78],
-    stretchY: [0.98, 0.9, 0.92, 0.94, 0.82, 0.96],
-    stretchZ: [0.9, 1.02, 1.04, 0.88, 1.02, 0.82],
-    offsetX: [-0.02, 0.04, -0.04, 0.02, -0.03, 0.01],
-    offsetY: [0, 0, 0, 0.01, 0, 0],
-    offsetZ: [0.03, -0.02, 0.03, 0.02, -0.01, 0.02],
-    yaw: -0.02,
-  },
-  {
-    stretchX: [0.96, 1.02, 0.9, 1.04, 0.92, 0.86],
-    stretchY: [0.92, 0.96, 0.88, 0.9, 0.98, 0.86],
-    stretchZ: [1.02, 0.9, 0.98, 1.04, 0.84, 0.92],
-    offsetX: [0.01, 0.02, -0.02, 0.04, -0.01, -0.04],
-    offsetY: [0, 0.01, 0, 0, 0.01, 0],
-    offsetZ: [0.01, 0.03, -0.02, 0.02, 0.01, -0.01],
-    yaw: 0.035,
-  },
+const CLOUD_SILHOUETTE_VARIANTS = [
+  { stretchX: 1.05, stretchY: 0.92, stretchZ: 1, yaw: -0.08 },
+  { stretchX: 0.98, stretchY: 1, stretchZ: 1.08, yaw: 0.1 },
+  { stretchX: 1.08, stretchY: 0.9, stretchZ: 0.94, yaw: -0.04 },
+  { stretchX: 1, stretchY: 0.96, stretchZ: 1.04, yaw: 0.06 },
 ] as const;
 
 function qualityFrom(quality?: CuteCloudQuality): CuteCloudQuality {
@@ -459,6 +370,29 @@ export function cloudCarrierHome(
   ];
 }
 
+/** Keep the existing conservative unit envelope around the carrier transform.
+ * The shallow body is contained by it; the turf safety margin is not reduced.
+ * The target is the avatar's feet, not sea level or an island's origin.
+ */
+export function cloudCarrierClearance(
+  extent: number,
+  level: number,
+  quality?: CuteCloudQuality,
+): number {
+  const layout = cuteCloudLayout(extent, level, qualityFrom(quality));
+  const index = layout.puffs.length - 1;
+  const carrier = layout.puffs[index];
+  if (!carrier) return CLOUD_CARRIER_FOOT_OFFSET;
+  const bottom = Math.min(
+    ...[...layout.lobes, ...layout.underbellies]
+      .filter((lobe) => lobe.puffIndex === index)
+      .map((lobe) => lobe.position[1] - lobe.scale[1]),
+  );
+  return (
+    carrier.position[1] + CLOUD_CARRIER_FOOT_OFFSET - bottom + CLOUD_LAYOUT_CONTRACT.turfClearance
+  );
+}
+
 /**
  * Make the complete instance data without allocating any Three.js objects.
  * This is the seam for future workers or baked manifests: layout generation
@@ -477,50 +411,36 @@ export function cuteCloudLayout(
   const underbellies: CuteCloudUnderbelly[] = [];
 
   puffs.forEach((puff, puffIndex) => {
-    // Keep each cloud recognisable but avoid a field of identical stamps. The
-    // variation affects only the sculpture, never its semantic position.
     const variation = ((puffIndex * 17) % 29) / 29 - 0.5;
     const silhouette =
       CLOUD_SILHOUETTE_VARIANTS[
         (puff.clusterIndex * 3 + puffIndex + (puff.role === "near-edge" ? 1 : 0)) %
           CLOUD_SILHOUETTE_VARIANTS.length
       ]!;
-    const yaw = variation * 0.22 + silhouette.yaw;
-    UPPER_LOBE_RECIPES.forEach((recipe, lobeIndex) => {
-      const [baseX, baseY, baseZ] = recipe.offset;
-      const [baseSx, baseSy, baseSz] = recipe.stretch;
-      const x = baseX + silhouette.offsetX[lobeIndex]!;
-      const y = baseY + silhouette.offsetY[lobeIndex]!;
-      const z = baseZ + silhouette.offsetZ[lobeIndex]!;
-      const sx = baseSx * silhouette.stretchX[lobeIndex]!;
-      const sy = baseSy * silhouette.stretchY[lobeIndex]!;
-      const sz = baseSz * silhouette.stretchZ[lobeIndex]!;
-      lobes.push({
-        position: [
-          puff.position[0] + (x + variation * 0.035) * puff.scale,
-          puff.position[1] + y * puff.scale,
-          puff.position[2] + z * puff.scale,
-        ],
-        scale: [sx * puff.scale, sy * puff.scale, sz * puff.scale],
-        rotationY: yaw + variation * 0.06,
-        color: scaleHex(CLOUD_TONES[recipe.tone], CLOUD_ROLE_TONES[puff.role].lift),
-        puffIndex,
-      });
-    });
-    underbellies.push({
-      position: [
-        puff.position[0] + variation * 0.05 * puff.scale,
-        // Tuck the warm belly into the shoulder mass. Leaving it a full lobe
-        // below the crown makes an aerial cloud look like it is sitting on a
-        // visible saucer.
-        puff.position[1] - 0.03 * puff.scale,
-        puff.position[2] + 0.04 * puff.scale,
-      ],
-      scale: [0.94 * puff.scale, 0.28 * puff.scale, 0.72 * puff.scale],
-      rotationY: yaw,
-      color: CLOUD_ROLE_TONES[puff.role].belly,
+    const scale: readonly [number, number, number] = [
+      silhouette.stretchX * puff.scale,
+      silhouette.stretchY * puff.scale,
+      silhouette.stretchZ * puff.scale,
+    ];
+    const carrier = puffIndex === puffs.length - 1;
+    // The last bank still owns the same foot target and horizontal origin.
+    // Align the source's centre crown to that target as the body becomes thin;
+    // otherwise replacing the balls would leave the bunny hovering above it.
+    const supportLift = carrier
+      ? CLOUD_CARRIER_FOOT_OFFSET - CLOUD_BANK_SUPPORT_HEIGHT * scale[1]
+      : 0;
+    const tone = CLOUD_ROLE_TONES[puff.role];
+    const bank: CuteCloudLobe = {
+      position: [puff.position[0], puff.position[1] + supportLift, puff.position[2]],
+      scale,
+      rotationY: variation * 0.22 + silhouette.yaw,
+      color: scaleHex(tone.tone, tone.lift),
       puffIndex,
-    });
+    };
+    lobes.push(bank);
+    // Same transform and colour, disjoint triangles. There is no second
+    // displaced belly that could expose a saucer or a material seam.
+    underbellies.push(bank);
   });
 
   return { quality: resolvedQuality, puffs, lobes, underbellies };
@@ -564,6 +484,35 @@ function setCarrierInstanceTransform(
   target.setMatrixAt(index, scratch.matrix);
 }
 
+/** Move the two existing surface instances and keep their culling bounds live.
+ * The carrier may leave the authored background arc; a birth-position sphere
+ * can otherwise cull the whole bank even while the avatar is on screen.
+ * No geometry, material, colour or additional instance is created here.
+ */
+export function updateCloudCarrierInstances(
+  upper: THREE.InstancedMesh | null,
+  lower: THREE.InstancedMesh | null,
+  layout: CuteCloudLayout,
+  offsetX: number,
+  offsetY: number,
+  offsetZ: number,
+  scratch: THREE.Object3D,
+): void {
+  const index = layout.puffs.length - 1;
+  const crown = layout.lobes[index];
+  const belly = layout.underbellies[index];
+  if (upper && crown) {
+    setCarrierInstanceTransform(upper, index, crown, offsetX, offsetY, offsetZ, scratch);
+    upper.instanceMatrix.needsUpdate = true;
+    upper.computeBoundingSphere();
+  }
+  if (lower && belly) {
+    setCarrierInstanceTransform(lower, index, belly, offsetX, offsetY, offsetZ, scratch);
+    lower.instanceMatrix.needsUpdate = true;
+    lower.computeBoundingSphere();
+  }
+}
+
 export interface CuteCloudSeaProps {
   readonly extent: number;
   readonly level: number;
@@ -603,6 +552,7 @@ export function CuteCloudSea({
     [extent, level, resolvedQuality],
   );
   const group = useRef<THREE.Group>(null);
+  const reducedMotion = usePrefersReducedMotion();
   const upper = useRef<THREE.InstancedMesh>(null);
   const lower = useRef<THREE.InstancedMesh>(null);
   const carrierPuffIndex = layout.puffs.length - 1;
@@ -619,12 +569,12 @@ export function CuteCloudSea({
   const carrierArcLift = useRef(0);
   const carrierSequence = useRef(0);
 
-  const geometry = useMemo(() => {
+  const { crown: upperGeometry, underbelly: lowerGeometry } = useMemo(() => {
     const segments =
       layout.quality === "mobile"
         ? CUTE_CLOUD_CONTRACT.mobileSegments
         : CUTE_CLOUD_CONTRACT.desktopSegments;
-    return createCloudVolumeGeometry(segments.width, segments.height);
+    return createCloudVolumeParts(segments.width, segments.height);
   }, [layout.quality]);
   // Both cloud fields take the same pair; `cloud-material.ts` says why a
   // second answer to "how is a cloud lit" is no longer a caller's to give.
@@ -676,25 +626,22 @@ export function CuteCloudSea({
 
   useLayoutEffect(
     () => () => {
-      geometry.dispose();
+      upperGeometry.dispose();
+      lowerGeometry.dispose();
+    },
+    [lowerGeometry, upperGeometry],
+  );
+
+  useLayoutEffect(
+    () => () => {
       upperMaterial.dispose();
       lowerMaterial.dispose();
     },
-    [geometry, lowerMaterial, upperMaterial],
+    [lowerMaterial, upperMaterial],
   );
 
-  useFrame(({ clock }) => {
-    if (!drift || !group.current) return;
-    const time = clock.elapsedTime;
-    // The field moves as one composition.  Tiny horizontal movement gives the
-    // eye life without turning six lobes into six independent animations.
-    const driftX = Math.sin(time * 0.018) * safeExtent(extent) * 0.004;
-    const driftZ = Math.cos(time * 0.014) * safeExtent(extent) * 0.003;
-    group.current.position.x = driftX;
-    group.current.position.z = driftZ;
-
+  useLayoutEffect(() => {
     if (carrierTarget === undefined || carrierPuffIndex < 0) return;
-
     const target = carrierTarget;
     if (target) {
       carrierTargetScratch.set(target[0], target[1] - CLOUD_CARRIER_FOOT_OFFSET, target[2]);
@@ -707,9 +654,29 @@ export function CuteCloudSea({
       // from the carrier's current position, never from its old destination.
       carrierFrom.current.copy(carrierPosition.current);
       carrierGoal.current.copy(carrierTargetScratch);
-      carrierStartedAt.current = time;
+      // Share the avatar's selection-commit clock. A delayed first render
+      // must not add another whole frame before the 420ms journey begins.
+      carrierStartedAt.current = performance.now();
       carrierSequence.current += 1;
     }
+  }, [
+    carrierTarget?.[0],
+    carrierTarget?.[1],
+    carrierTarget?.[2],
+    carrierTarget === undefined,
+    layout,
+  ]);
+
+  useFrame(({ clock }) => {
+    if (!drift || !group.current) return;
+    const time = clock.elapsedTime;
+    // The field moves as one composition. Tiny horizontal movement gives the
+    // eye life without turning the banks into independent weather systems.
+    const driftX = reducedMotion ? 0 : Math.sin(time * 0.018) * safeExtent(extent) * 0.004;
+    const driftZ = reducedMotion ? 0 : Math.cos(time * 0.014) * safeExtent(extent) * 0.003;
+    group.current.position.x = driftX;
+    group.current.position.z = driftZ;
+    if (carrierTarget === undefined || carrierPuffIndex < 0) return;
 
     let lift = 0;
     if (carrierStartedAt.current === null) {
@@ -718,11 +685,8 @@ export function CuteCloudSea({
       const pose = hopPose({
         from: carrierFrom.current,
         to: carrierGoal.current,
-        elapsedMs: (time - carrierStartedAt.current) * 1000,
-        reducedMotion:
-          typeof window !== "undefined" &&
-          typeof window.matchMedia === "function" &&
-          window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+        elapsedMs: Math.max(0, performance.now() - carrierStartedAt.current),
+        reducedMotion,
       });
       carrierPosition.current.set(pose.position.x, pose.position.y, pose.position.z);
       lift = pose.lift;
@@ -734,40 +698,21 @@ export function CuteCloudSea({
     }
 
     // The carrier remains fixed while the rest of the cloud composition drifts
-    // by cancelling only the parent group's tiny offset. The seven existing
-    // instances are rewritten in place; no geometry, material, batch or pass
+    // by cancelling only the parent group's tiny offset. The two existing
+    // surface instances are rewritten in place; no geometry, material, batch or pass
     // is created for the bunny's cloud.
     const offsetX = carrierPosition.current.x - carrierOrigin.x - driftX;
     const offsetY = carrierPosition.current.y - carrierOrigin.y + lift;
     const offsetZ = carrierPosition.current.z - carrierOrigin.z - driftZ;
-    const firstLobe = carrierPuffIndex * CUTE_CLOUD_CONTRACT.upperLobesPerPuff;
-    for (let lobeIndex = 0; lobeIndex < CUTE_CLOUD_CONTRACT.upperLobesPerPuff; lobeIndex += 1) {
-      const lobe = layout.lobes[firstLobe + lobeIndex];
-      if (!lobe || !upper.current) continue;
-      setCarrierInstanceTransform(
-        upper.current,
-        firstLobe + lobeIndex,
-        lobe,
-        offsetX,
-        offsetY,
-        offsetZ,
-        carrierScratch,
-      );
-    }
-    const belly = layout.underbellies[carrierPuffIndex];
-    if (belly && lower.current) {
-      setCarrierInstanceTransform(
-        lower.current,
-        carrierPuffIndex,
-        belly,
-        offsetX,
-        offsetY,
-        offsetZ,
-        carrierScratch,
-      );
-    }
-    if (upper.current) upper.current.instanceMatrix.needsUpdate = true;
-    if (lower.current) lower.current.instanceMatrix.needsUpdate = true;
+    updateCloudCarrierInstances(
+      upper.current,
+      lower.current,
+      layout,
+      offsetX,
+      offsetY,
+      offsetZ,
+      carrierScratch,
+    );
 
     if (import.meta.env.DEV && carrierSurface) {
       const bag = globalThis as unknown as {
@@ -777,7 +722,7 @@ export function CuteCloudSea({
       bag.__cloudCarrierMotion[carrierSurface] = {
         sequence: carrierSequence.current,
         inFlight: carrierStartedAt.current !== null,
-        startedAtClock: carrierStartedAt.current,
+        startedAtPerformanceMs: carrierStartedAt.current,
         position: carrierPosition.current.toArray(),
         target: carrierGoal.current.toArray(),
         arcLift: carrierArcLift.current,
@@ -790,14 +735,14 @@ export function CuteCloudSea({
       <instancedMesh
         ref={lower}
         name={CUTE_CLOUD_BATCH_NAMES[1]}
-        args={[geometry, lowerMaterial, layout.underbellies.length]}
+        args={[lowerGeometry, lowerMaterial, layout.underbellies.length]}
         frustumCulled
         renderOrder={CUTE_CLOUD_RENDER_ORDER.underbelly}
       />
       <instancedMesh
         ref={upper}
         name={CUTE_CLOUD_BATCH_NAMES[0]}
-        args={[geometry, upperMaterial, layout.lobes.length]}
+        args={[upperGeometry, upperMaterial, layout.lobes.length]}
         frustumCulled
         renderOrder={CUTE_CLOUD_RENDER_ORDER.upper}
       />

@@ -14,10 +14,8 @@ import {
   type IslandSurfaceStyleId,
 } from "./island-surface-style.js";
 import type { IslandBlueprint, IslandUnitSigil } from "./island-blueprint.js";
-import { buildCourseGrid, type HexMap } from "../grid/course-grid.js";
-import { HexField } from "../grid/HexField.js";
-import { GridCloudLayers } from "../grid/GridCloudLayers.js";
-import { Underside } from "../grid/Underside.js";
+import { unitRingGeometry, unitSigilArcCount } from "./unit-sigil.js";
+import type { HexMap } from "../grid/course-grid.js";
 
 const TECH = 0x5a6572;
 const TECH_DARK = 0x303a46;
@@ -28,6 +26,7 @@ export interface IslandRenderProps {
   readonly blueprint: IslandBlueprint;
   readonly detail: IslandGeometryDetail;
   readonly targetRadius?: number;
+  /** Accepted for caller compatibility. Course terrain is continuous and ignores hex maps. */
   readonly grid?: HexMap;
   readonly onClick?: () => void;
   readonly onPointerOver?: () => void;
@@ -327,7 +326,6 @@ export function IslandRender({
   blueprint,
   detail,
   targetRadius,
-  grid,
   onClick,
   onPointerOver,
   onPointerOut,
@@ -337,23 +335,6 @@ export function IslandRender({
     ? resolveIslandSurfaceStyle()
     : DEFAULT_ISLAND_SURFACE_STYLE;
   const surfaceTime = useRef<IslandSurfaceTimeUniform>({ value: 0 });
-  const courseMap = useMemo(() => {
-    if (detail !== "course") return null;
-    if (grid) return grid;
-    return buildCourseGrid({
-      studyId: blueprint.studyId,
-      courseId: blueprint.courseId,
-      seed: blueprint.seed,
-      routeArchetype: blueprint.route.archetype,
-      routeAnchors: blueprint.geometryNodes,
-      lessons: blueprint.nodes.map((node) => ({
-        lessonId: node.id,
-        unitId: node.unitId,
-        unitIndex: node.unitIndex,
-        state: "idle" as const,
-      })),
-    });
-  }, [blueprint, detail, grid]);
   useFrame(({ clock }) => {
     // The optional Elemental look is DEV-only. One shared uniform per island
     // keeps the terrain's procedural colour in phase without another loop.
@@ -367,48 +348,14 @@ export function IslandRender({
     }
   });
   const shape = useMemo(
-    () => (detail === "world" ? buildIslandGeometry(blueprint, detail, targetRadius) : null),
+    () => buildIslandGeometry(blueprint, detail, targetRadius),
     [blueprint, detail, targetRadius],
   );
-  useEffect(() => () => shape?.terrain.dispose(), [shape]);
-  if (detail === "course" && courseMap) {
-    return (
-      <group
-        name="hex-grid-course"
-        onClick={
-          onClick
-            ? (event) => {
-                event.stopPropagation();
-                onClick();
-              }
-            : undefined
-        }
-        onPointerOver={
-          onPointerOver
-            ? (event) => {
-                event.stopPropagation();
-                onPointerOver();
-              }
-            : undefined
-        }
-        onPointerOut={
-          onPointerOut
-            ? (event) => {
-                event.stopPropagation();
-                onPointerOut();
-              }
-            : undefined
-        }
-      >
-        <HexField map={courseMap} dimmed={dimmed} />
-        <Underside map={courseMap} dimmed={dimmed} />
-        <GridCloudLayers map={courseMap} dimmed={dimmed} />
-      </group>
-    );
-  }
-  if (!shape) return null;
+  useEffect(() => () => shape.terrain.dispose(), [shape]);
   return (
     <group
+      name={detail === "course" ? "island-course" : undefined}
+      userData={import.meta.env.DEV ? { islandBlueprint: blueprint } : undefined}
       onClick={
         onClick
           ? (event) => {
@@ -444,86 +391,23 @@ export function IslandRender({
           timeUniform={surfaceTime.current}
         />
       </mesh>
-      <TechUnderside
-        blueprint={blueprint}
-        scale={shape.scale}
-        depth={shape.bounds.depth}
-        detail={detail}
-        dimmed={dimmed}
-      />
       {detail === "world" ? (
-        <HeroLandmark blueprint={blueprint} scale={shape.scale} detail={detail} dimmed={dimmed} />
+        <>
+          <TechUnderside
+            blueprint={blueprint}
+            scale={shape.scale}
+            depth={shape.bounds.depth}
+            detail={detail}
+            dimmed={dimmed}
+          />
+          <HeroLandmark blueprint={blueprint} scale={shape.scale} detail={detail} dimmed={dimmed} />
+        </>
       ) : null}
     </group>
   );
 }
 
 const SIGIL_COLOURS = [0x80bd62, 0x5cc6c8, 0xf0b45c, 0xc18fe4, 0x8ea7d8, 0xff9b69] as const;
-
-/**
- * How many arcs the unit ring is broken into, per sigil.
- *
- * The count is the cue, not the colour: three arcs and six arcs are different
- * at a glance in greyscale, which is what v5 決定 D asks of a unit's visual
- * family ("即使把颜色去掉…也能靠符号、环纹、状态和 DOM 标签认出").
- */
-const SIGIL_ARCS: Readonly<Record<IslandUnitSigil, number>> = {
-  mountain: 2,
-  leaf: 3,
-  wave: 4,
-  star: 5,
-  shell: 6,
-  sun: 8,
-};
-
-const UNIT_RING_INNER = 0.66;
-const UNIT_RING_OUTER = 0.86;
-/** Fraction of each arc's slot left empty, so the arcs read as separate marks. */
-const UNIT_RING_GAP = 0.3;
-
-const unitRingCache = new Map<number, THREE.BufferGeometry>();
-
-/**
- * A flat notched ring, lying in the XZ plane, built without a merge helper.
- *
- * The marker this replaces floated a solid octahedron/cone/sphere above the
- * disc and drew a full ring under it. At the course camera that reads, in the
- * product owner's words, as "一个圆圈中间一个莫名其妙的小东西" — and the art
- * reference the product is aimed at (docs/reference/island-art-reference) has
- * clean pale discs with nothing standing on them. Engraving the unit cue into
- * the disc's own face keeps the reference's silhouette, keeps the non-colour
- * cue v5 requires, and costs one mesh per marker instead of two.
- */
-function unitRingGeometry(arcs: number): THREE.BufferGeometry {
-  const cached = unitRingCache.get(arcs);
-  if (cached) return cached;
-  const positions: number[] = [];
-  const indices: number[] = [];
-  const stepsPerArc = Math.max(3, Math.round(24 / arcs));
-  const slot = (Math.PI * 2) / arcs;
-  const span = slot * (1 - UNIT_RING_GAP);
-  for (let arc = 0; arc < arcs; arc += 1) {
-    const start = arc * slot + (slot - span) / 2;
-    const base = positions.length / 3;
-    for (let step = 0; step <= stepsPerArc; step += 1) {
-      const angle = start + (step / stepsPerArc) * span;
-      const cos = Math.cos(angle);
-      const sin = Math.sin(angle);
-      positions.push(cos * UNIT_RING_INNER, 0, sin * UNIT_RING_INNER);
-      positions.push(cos * UNIT_RING_OUTER, 0, sin * UNIT_RING_OUTER);
-    }
-    for (let step = 0; step < stepsPerArc; step += 1) {
-      const a = base + step * 2;
-      indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
-    }
-  }
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-  unitRingCache.set(arcs, geometry);
-  return geometry;
-}
 
 /** Non-colour unit cue; the geometry survives colour-blind / low-contrast views. */
 export function UnitSigil({
@@ -538,10 +422,9 @@ export function UnitSigil({
   readonly active?: boolean;
 }) {
   const colour = SIGIL_COLOURS[unitIndex % SIGIL_COLOURS.length]!;
-  const geometry = unitRingGeometry(SIGIL_ARCS[sigil]);
-  // The disc is a cylinder of height radius*0.2 centred at radius*0.1, so its
-  // top face is at radius*0.2. Sit one thousandth of a radius above that: any
-  // less z-fights, any more and the ring floats off its own disc.
+  const geometry = unitRingGeometry(unitSigilArcCount(sigil));
+  // Sit on the medallion's top face. The shared ring is the same geometry the
+  // instanced engraving uses; this wrapper is the non-instanced studio path.
   return (
     <mesh
       geometry={geometry}

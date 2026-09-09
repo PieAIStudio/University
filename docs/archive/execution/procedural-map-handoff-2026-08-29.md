@@ -1,9 +1,9 @@
 ---
-id: REF-PROCEDURAL-MAP-HANDOFF
-title: Procedural Map Handoff
-type: reference
-status: active
-canonical: true
+id: ARCHIVE-PROCEDURAL-MAP-HANDOFF-2026-08-29
+title: Procedural Map Handoff Snapshot 2026-08-29
+type: archive
+status: archived
+canonical: false
 owner: human
 created: 2026-08-28
 last_reviewed: 2026-08-29
@@ -15,6 +15,11 @@ pinned: false
 ---
 
 # 程序化地图：交接
+
+> 已退役的 2026-08-29 现场记录，不是当前派工或安全策略。
+> 下文“子代理正在跑”、固定模型名、无限制执行示例、旧树冠与机位指令均不得照做。
+> 当前任务读[活动计划](../../plans/active/continuous-world-delivery.md)，
+> 技术取舍读[ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)。
 
 给接手这条主线的 session 读。**先读完这一页再动任何代码。**
 
@@ -245,7 +250,7 @@ main 在 `e7ec944`，工作区干净。上一版这里写着「main 有未提交
 - **IBL**。真正的环境探针。
 - **有颜色的暗部**。主光比从 18:1 降到 **2.08:1**，暖棕色下半球反弹
   （`hemisphereGround: 0x8a5b45`），课程画面暗像素 23.88% → 11.83%。
-  完整测量在 [Island Look Contract](./island-look-contract.md) 第八节。
+  完整测量在 [Island Look Contract](../../reference/execution/island-look-contract.md) 第八节。
 - **donor 画意植被**（2026-08-29 合并 `bf6575a`）。Kenney 的
   `tree_default` / `tree_detailed` / `tree_pineDefaultB` / `plant_bushDetailed`
   已从仓库删除，树改成 donor `treeTrunks.glb` + 12 张 2 三角形叶片卡片，

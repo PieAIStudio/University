@@ -28,7 +28,7 @@ related:
 
 > **本计划已被 [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)、
 > [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md) 和
-> [程序化地图交接](../../reference/execution/procedural-map-handoff.md) 取代（2026-08-28）。**
+> [当前3D交付计划](../active/continuous-world-delivery.md) 取代。**
 >
 > 它写于岛屿第一版切片阶段，下面这几处**现在是错的**，读的时候直接跳过：
 >
@@ -40,7 +40,7 @@ related:
 >   的段落是旧事实。登记表在 `docs/policy/shared-rules/donors.md`。
 > - **donor 表**不在这里维护，也不在 University 维护。
 > - 未勾选的 checkbox **不代表没做**。第一座岛已经可玩，草、地形、装饰、机位、
->   行星页都已经重写过至少一轮。真实状态看交接文档，不要看这里的勾。
+>   行星页都已经重写过至少一轮。真实状态看当前交付计划，不要看这里的勾。
 >
 > 还值得读的只有两节：`## Level / Composition Plan`（构图意图）和
 > `## Core Interaction Contract`（交互合同）。其余部分保留是为了留住当时的推理，

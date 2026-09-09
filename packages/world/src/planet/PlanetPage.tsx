@@ -19,8 +19,10 @@ import {
   GameStatList,
 } from "@pieai/swimmer-ui-kit";
 import { useEffect, useId, useMemo } from "react";
+import { translate } from "@pieai/university-ui/i18n.js";
 
 import { PlanetStage } from "./PlanetScene.js";
+import { buildDomainPlan, type DomainPlanGroup } from "./domain-plan.js";
 import {
   STUDY_STAGE_LABEL,
   studyCounts,
@@ -30,14 +32,19 @@ import {
   studyStage,
   type PlanetCourse,
   type PlanetStudy,
+  type PlanetStudyDomain,
 } from "./planet-copy.js";
 import "./planet-page.css";
 
-export type { PlanetCourse, PlanetStudy };
+export type { DomainPlanGroup, PlanetCourse, PlanetStudy, PlanetStudyDomain };
 
 export interface PlanetPageProps {
   readonly studies: readonly PlanetStudy[];
+  /** Explicit metadata can include a domain with no series; never invent a study for it. */
+  readonly domainCatalog?: readonly PlanetStudyDomain[];
   readonly selectedId: string | null;
+  readonly selectedDomainId?: string | null;
+  readonly onSelectDomain?: (domainId: string) => void;
   readonly onSelect: (studyId: string) => void;
   /** 「进入 <名字>」 */
   readonly onEnter: (studyId: string) => void;
@@ -61,7 +68,10 @@ export interface PlanetPageProps {
  */
 export function PlanetRail({
   studies: given,
+  domainCatalog,
   selectedId,
+  selectedDomainId,
+  onSelectDomain,
   onSelect,
   onEnter,
   onClose,
@@ -76,17 +86,43 @@ export function PlanetRail({
     order that falls out of a file system is not a decision, and the reader has
     to relearn the list when they change campus.
 
-    By title, zh collation, so a Chinese name sorts by pronunciation rather
-    than by code point. Not by progress: a list that rearranges itself as you
-    learn is a list you cannot build a habit of scanning.
+    Domain and study IDs define one stable order shared with the sphere.
+    Progress and translated titles cannot rearrange the navigation list.
   */
-  const studies = useMemo(
-    () => [...given].sort((left, right) => left.title.localeCompare(right.title, "zh")),
-    [given],
-  );
+  const domainPlan = useMemo(() => buildDomainPlan(given, domainCatalog), [given, domainCatalog]);
 
   const titleId = useId();
-  const selected = studies.find((study) => study.id === selectedId) ?? null;
+  const selected = useMemo(() => {
+    for (const domain of domainPlan) {
+      if (selectedDomainId && domain.id !== selectedDomainId) continue;
+      const found = domain.studies.find((study) => study.id === selectedId);
+      if (found) return found;
+    }
+    return null;
+  }, [domainPlan, selectedId, selectedDomainId]);
+
+  const activeDomain = useMemo(() => {
+    const explicit = domainPlan.find((domain) => domain.id === selectedDomainId);
+    if (explicit) return explicit;
+    if (selected) {
+      return domainPlan.find((domain) => domain.studies.some((s) => s.id === selected.id)) ?? null;
+    }
+    return domainPlan[0] ?? null;
+  }, [domainPlan, selected, selectedDomainId]);
+
+  const returnDomain =
+    domainPlan.find((domain) => domain.studies.some((study) => study.id === selectedId)) ??
+    domainPlan.find((domain) => domain.studies.length > 0);
+  const selectDomain = (domain: DomainPlanGroup) => {
+    if (onSelectDomain) {
+      // The shell owns remembered selections, including a visit to an empty
+      // planet. An unconditional first-row callback would overwrite its restore.
+      onSelectDomain(domain.id);
+    } else {
+      const restored = domain.studies.find((study) => study.id === selectedId) ?? domain.studies[0];
+      if (restored && restored.id !== selectedId) onSelect(restored.id);
+    }
+  };
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -103,6 +139,7 @@ export function PlanetRail({
       className="planet-rail"
       data-planet-page="true"
       data-selected={selectedId ?? ""}
+      data-domain-empty={activeDomain?.studies.length ? undefined : "true"}
       aria-labelledby={titleId}
     >
       <header className="planet-rail__head">
@@ -114,57 +151,114 @@ export function PlanetRail({
         </GameButton>
       </header>
 
-      <div className="planet-page__rail">
-        <nav className="planet-page__list" aria-label="项目">
-          {studies.map((study) => {
-            const active = study.id === selectedId;
-            const stage = studyStage(study);
+      {domainPlan.length > 0 ? (
+        <div className="planet-rail__domains" role="toolbar" aria-label="领域列表">
+          {domainPlan.map((domain) => {
+            const isActive = activeDomain?.id === domain.id;
             return (
               <button
-                key={study.id}
+                key={domain.id}
                 type="button"
-                className="planet-page__row"
-                data-study-id={study.id}
-                aria-pressed={active}
-                onClick={() => onSelect(study.id)}
+                className={`planet-rail__domain-button${isActive ? " is-active" : ""}`}
+                aria-pressed={isActive}
+                data-domain-id={domain.id}
+                data-domain-state={domain.studies.length === 0 ? "unpublished" : "published"}
+                onClick={() => selectDomain(domain)}
               >
-                <span className="planet-page__row-head">
-                  <span className="planet-page__row-name-wrap">
-                    <span
-                      className="planet-page__row-swatch"
-                      aria-hidden="true"
-                      style={{ backgroundColor: studyMarkerColor(study.id).css }}
-                    />
-                    <span className="planet-page__row-name">{study.title}</span>
+                {domain.title}
+                {domain.studies.length === 0 ? (
+                  <span className="planet-rail__domain-state">
+                    {translate("ui.world.domain.unpublished")}
                   </span>
-                  {/*
-                    The one fact that decides which row you pick. Five rows of
-                    「N 门课 · M 节」 are five rows of the same shape; whether you
-                    are already inside one of them is what makes it yours.
-                  */}
-                  <GameBadge tone={stage === "learning" ? "warning" : "neutral"}>
-                    {STUDY_STAGE_LABEL[stage]}
-                  </GameBadge>
-                </span>
-                <span className="planet-page__row-meta">{studyCounts(study)}</span>
-                {study.lessonCount > 0 ? (
-                  <GameProgress
-                    label={`${study.title} 进度`}
-                    value={study.lessonsDone}
-                    max={study.lessonCount}
-                    valueLabel={`${studyPercent(study)}%`}
-                  />
                 ) : null}
               </button>
             );
           })}
+        </div>
+      ) : null}
+
+      <div className="planet-page__rail">
+        <nav className="planet-page__list" aria-label="项目">
+          {(activeDomain ? [activeDomain] : domainPlan).map((domain) => (
+            <div key={domain.id} className="planet-page__domain-group" data-domain-id={domain.id}>
+              <div className="planet-page__domain-title">{domain.title}</div>
+              {domain.studies.length > 0 && domain.description ? (
+                <p className="planet-page__domain-description">{domain.description}</p>
+              ) : null}
+              {domain.studies.map((study) => {
+                const active = study.id === selectedId;
+                const stage = studyStage(study);
+                return (
+                  <button
+                    key={study.id}
+                    type="button"
+                    className="planet-page__row"
+                    data-study-id={study.id}
+                    aria-pressed={active}
+                    onClick={() => {
+                      onSelectDomain?.(domain.id);
+                      onSelect(study.id);
+                    }}
+                  >
+                    <span className="planet-page__row-head">
+                      <span className="planet-page__row-name-wrap">
+                        <span
+                          className="planet-page__row-swatch"
+                          aria-hidden="true"
+                          style={{ backgroundColor: studyMarkerColor(study.id).css }}
+                        />
+                        <span className="planet-page__row-name">{study.title}</span>
+                      </span>
+                      {/*
+                        The one fact that decides which row you pick. Five rows of
+                        「N 门课 · M节」 are five rows of the same shape; whether you
+                        are already inside one of them is what makes it yours.
+                      */}
+                      <GameBadge tone={stage === "learning" ? "warning" : "neutral"}>
+                        {STUDY_STAGE_LABEL[stage]}
+                      </GameBadge>
+                    </span>
+                    <span className="planet-page__row-meta">
+                      <span>{studyCounts(study)}</span>
+                      {study.lessonCount > 0 ? <span>完成 {studyPercent(study)}%</span> : null}
+                    </span>
+                    {/* The selected detail owns the kit's animated progress.
+                        Thirty independent liquid bars exhaust its animation
+                        budget; list rows need the readable fact, not 30 effects. */}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="planet-page__detail">
           {selected ? (
             <StudyDetail study={selected} />
+          ) : activeDomain?.studies.length === 0 ? (
+            <div className="planet-page__empty" data-domain-empty={activeDomain.id}>
+              <div role="status">
+                <GameBadge tone="neutral">{translate("ui.world.domain.unpublished")}</GameBadge>
+                {activeDomain.description ? (
+                  <p className="planet-page__domain-description">{activeDomain.description}</p>
+                ) : null}
+                <p className="planet-page__hint">{translate("ui.world.domain.empty")}</p>
+              </div>
+              {returnDomain ? (
+                <GameButton
+                  type="button"
+                  variant="ghost"
+                  className="planet-page__return"
+                  onClick={() => selectDomain(returnDomain)}
+                >
+                  {translate("ui.world.domain.return", { title: returnDomain.title })}
+                </GameButton>
+              ) : null}
+            </div>
           ) : (
-            <p className="planet-page__hint">从列表里选一个项目</p>
+            <p className="planet-page__hint" role="status">
+              {domainPlan.length === 0 ? "还没有可选的课程系列。" : "从列表里选一个项目"}
+            </p>
           )}
         </div>
         {selected ? (
@@ -180,7 +274,7 @@ export function PlanetRail({
               category word the reader has to resolve against the card they are
               looking at, and the wrong category word — 通用课 is nobody's project.
             */}
-            进入 {selected.title}
+            <span className="planet-page__enter-label">进入 {selected.title}</span>
           </GameButton>
         ) : null}
       </div>
@@ -201,7 +295,10 @@ export function PlanetPage(props: PlanetPageProps) {
       <div className="planet-page__globe" data-planet-globe="true">
         <PlanetStage
           studies={props.studies}
+          domainCatalog={props.domainCatalog}
           selectedId={props.selectedId}
+          selectedDomainId={props.selectedDomainId}
+          onSelectDomain={props.onSelectDomain}
           onSelect={props.onSelect}
         />
       </div>

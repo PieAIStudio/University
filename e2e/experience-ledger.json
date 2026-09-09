@@ -396,8 +396,8 @@
       "state": "fixed",
       "foundBy": "菲哥",
       "foundOn": "2026-08-31",
-      "note": "设计已出：头像即玩家位置，三个高度（星球=乘云漂移、岛群=云飞向选中岛、岛内=兔子站在当前小节格子上，位置本身就是进度）。复用已建成的 avatar/hop.ts、PlayerMarker.tsx 与 Maps.tsx 的飞行中改向逻辑，不新建动画系统。设计稿 artifact a1621950。按「先设计后实现」，等菲哥确认再派工。",
-      "guardedBy": "e2e/G.avatar.spec.ts::星球、岛群、岛内都跟随真实点击，并在快速上限内落地 / e2e/G.avatar.spec.ts::完成第一节后回到岛内，头像仍停在刚点击的 lesson 格子"
+      "note": "当前设计以 docs/reference/player-journey/v5/index.html 决定 M 为准：最高层由领域球体转向系列区域表示位置，岛群仍由云载体飞向选中课程，课程岛由头像定位当前小节。旧的星球乘云漂移设计已被替代；G 守护实际点击和原快速上限。R35生产看图又抓出未选课头像位于岩根下、课名遮脸：原生地形射线和DOM/实际头像包围盒先红后绿，F/N补守初始、关闭卡片与返回状态，不另建动画或标签系统。",
+      "guardedBy": "e2e/G.avatar.spec.ts::星球区域与两层头像都跟随真实点击，并在快速上限内就位 / e2e/G.avatar.spec.ts::完成第一节后回到岛内，头像仍停在刚点击的 lesson 格子 / e2e/N.world-delivery.spec.ts::ordinary navigation preserves the course and records complete-frame costs / e2e/F.island-pick.spec.ts::本地端：同一套卡片，跟岛走"
     },
     {
       "id": "5af5df4513e8",

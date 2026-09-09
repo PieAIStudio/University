@@ -1,20 +1,17 @@
 import * as THREE from "three";
 
-/**
- * A small closed cloud body shared by the course frame and the world cloud
- * sea. The course bank is a low-poly extruded three-crown shape: the silhouette
- * keeps the illustrated lobe rhythm, while the closed side wall gives the key
- * and rim lights a real front/side/top break. The world puffs use the lobe
- * branch below so their existing spherical language stays unchanged.
- *
- * The geometry and its colour ramp are compiled once in the caller's
- * `useMemo`. There are no textures, shader samplers, or per-frame updates in
- * this helper.
+/** One shallow, closed cloud bank, shared by every projection (V5 M / R38).
+ * The lobes are broad variations of one surface, never intersecting spheres.
+ * Tessellation changes with screen size; the sampled form and value ramp do not.
  */
 export const CLOUD_VOLUME_CONTRACT = {
-  courseSegments: { width: 8, height: 5 },
+  courseSegments: { width: 9, height: 3 },
   courseForm: "bank",
-  /** Vertex colour is a value ramp, not an opacity/texture workaround. */
+  form: "continuous-shallow-bank",
+  broadCrowns: 4,
+  horizontalRadiusMax: 1.04,
+  crownHeightMax: 0.42,
+  undersideHeight: -0.18,
   usesVertexValueRamp: true,
   closedSurface: true,
 } as const;
@@ -23,91 +20,48 @@ function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));
 }
 
-function crownInfluence(x: number, y: number, z: number): number {
-  // The centres are directions on the unit sphere. A small amount of overlap
-  // makes one body read as a soft cloud rather than three disconnected rocks.
-  const crowns = [
-    [-0.48, 0.2, 0.02],
-    [0, 0.48, 0.02],
-    [0.5, 0.24, 0.01],
-  ] as const;
-  let strongest = 0;
-  for (const [cx, cy, cz] of crowns) {
-    const distance = (x - cx) ** 2 + (y - cy) ** 2 + (z - cz) ** 2;
-    strongest = Math.max(strongest, Math.exp(-distance * 8.5));
-  }
-  return strongest;
+/** Four soft shoulders around one bank, with no pinched inter-lobe valleys. */
+function bankOutline(angle: number): number {
+  return (
+    0.87 +
+    0.08 * Math.cos(3 * angle + 0.35) +
+    0.055 * Math.sin(5 * angle - 0.5) +
+    0.025 * Math.cos(2 * angle + 0.8)
+  );
 }
 
-function appendLowPolyCloudLobe(
-  positions: number[],
-  indices: number[],
-  offset: readonly [number, number, number],
-  scale: readonly [number, number, number],
-): void {
-  const base = positions.length / 3;
-  const push = (radius: number, y: number, angle: number) => {
-    positions.push(
-      offset[0] + Math.cos(angle) * radius * scale[0],
-      offset[1] + y * scale[1],
-      offset[2] + Math.sin(angle) * radius * scale[2],
-    );
-  };
-  // Two three-sided rings plus a crown and foot are 12 closed triangles per
-  // lobe. It is deliberately the same aggregate budget as the old flat bank
-  // while giving the key light actual top, side and underside normals.
-  push(0, 0.84, 0);
-  for (let index = 0; index < 3; index += 1) {
-    push(0.84, 0.28, index * ((Math.PI * 2) / 3) + Math.PI / 6);
+const BANK_CROWNS = [
+  [-0.5, -0.08, 0.085],
+  [-0.12, 0.25, 0.07],
+  [0.3, -0.2, 0.1],
+  [0.59, 0.14, 0.065],
+] as const;
+
+/** Smooth overlapping height influences, not a max/union of primitive bodies. */
+function bankCrown(x: number, z: number): number {
+  let height = 0.22;
+  for (const [cx, cz, lift] of BANK_CROWNS) {
+    height += lift * Math.exp(-((x - cx) ** 2 * 6 + (z - cz) ** 2 * 9));
   }
-  for (let index = 0; index < 3; index += 1) {
-    push(0.9, -0.34, index * ((Math.PI * 2) / 3) + Math.PI / 6);
-  }
-  push(0, -0.72, 0);
-  const top = base;
-  const upper = base + 1;
-  const lower = base + 4;
-  const bottom = base + 7;
-  for (let index = 0; index < 3; index += 1) {
-    const next = (index + 1) % 3;
-    indices.push(top, upper + next, upper + index);
-    indices.push(upper + index, upper + next, lower + next);
-    indices.push(upper + index, lower + next, lower + index);
-    indices.push(lower + index, lower + next, bottom);
-  }
+  return height;
 }
 
-/**
- * Add a stable light-to-shadow value ramp to a closed cloud body. Instanced
- * colours still supply role/tier identity; this attribute supplies the
- * within-body value break and is multiplied by those instance colours.
- */
+/** The carrier aligns its feet to this exact vertex, not a guessed sphere top. */
+export const CLOUD_BANK_SUPPORT_HEIGHT = bankCrown(0, 0);
+
+/** The same value range at every LOD, baked before any tangent-space transform. */
 export function addCloudVertexValueRamp(geometry: THREE.BufferGeometry): THREE.BufferGeometry {
   const position = geometry.getAttribute("position");
   const colours = new Float32Array(position.count * 3);
   for (let index = 0; index < position.count; index += 1) {
-    const y = position.getY(index);
-    const z = position.getZ(index);
-    const lift = clamp((y + 0.9) / 1.8, 0, 1);
-    const facing = clamp((z + 1) * 0.5, 0, 1);
-    // The closed body now has a readable underside and a sun-facing crown.
-    // This is a geometric light relationship carried by vertex value, not a
-    // global grade applied to the cloud batch.
-    // A cloud's shaded side is not a dark side. It scatters so much light
-    // internally that its underside stays bright — which is why a floor of
-    // 0.5 read as a navy wedge whenever the camera looked up at one, and why
-    // lifting the floor fixes every cloud in both views at once instead of
-    // per placement. The spread is what still separates crown from belly.
+    const lift = clamp(
+      (position.getY(index) - CLOUD_VOLUME_CONTRACT.undersideHeight) /
+        (CLOUD_VOLUME_CONTRACT.crownHeightMax - CLOUD_VOLUME_CONTRACT.undersideHeight),
+      0,
+      1,
+    );
+    const facing = clamp((position.getZ(index) + 1) * 0.5, 0, 1);
     const value = 0.72 + lift * 0.22 + facing * 0.08;
-    // The underside runs *warm*, not cool.
-    //
-    // It used to gain blue as it dropped, which is backwards: a cloud's belly
-    // is lit by bounce off the ground, so it goes warm, and only its crown
-    // sees the sky. With the old ramp the underside carried a cool tint into a
-    // scene whose fill is also deliberately cool, and the two multiplied — any
-    // cloud the camera looked *up* at rendered as a navy wedge. The same
-    // compounding turned the lesson marker's near-vertical bevel navy, and the
-    // fix there was the same: give the dark face somewhere warm to come from.
     colours[index * 3] = value * (1.03 - lift * 0.03);
     colours[index * 3 + 1] = value * (0.97 + lift * 0.03);
     colours[index * 3 + 2] = value * (0.9 + lift * 0.1);
@@ -116,47 +70,97 @@ export function addCloudVertexValueRamp(geometry: THREE.BufferGeometry): THREE.B
   return geometry;
 }
 
-/** Build the shared closed, lightly crowned cloud volume. */
+/**
+ * Welded latitude rings plus two poles: one connected manifold with no UV
+ * seam, duplicate rim, internal cap or zero-area polar triangles. More rings
+ * belong to the crown than the underside. The coarsest 9x3 bank costs 36 tris.
+ * The final input remains an alias for old callers, not a second shape.
+ */
 export function createCloudVolumeGeometry(
   widthSegments: number,
   heightSegments: number,
-  form: "lobe" | "bank" = "lobe",
+  _form: "lobe" | "bank" = "bank",
 ): THREE.BufferGeometry {
-  if (form === "bank") {
-    const positions: number[] = [];
-    const indices: number[] = [];
-    appendLowPolyCloudLobe(positions, indices, [-0.62, 0.01, 0], [0.86, 0.48, 0.68]);
-    appendLowPolyCloudLobe(positions, indices, [0, 0.16, 0.02], [0.82, 0.6, 0.7]);
-    appendLowPolyCloudLobe(positions, indices, [0.62, 0.02, 0], [0.88, 0.5, 0.68]);
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-    geometry.setIndex(indices);
-    // The indexed body has one shared value-ramp material, so it remains one
-    // draw even though each three-sided lobe is a closed surface.
-    geometry.clearGroups();
-    geometry.computeVertexNormals();
-    addCloudVertexValueRamp(geometry);
-    geometry.computeBoundingSphere();
-    geometry.userData.cloudVolume = CLOUD_VOLUME_CONTRACT;
-    return geometry;
+  const width = Number.isFinite(widthSegments) ? clamp(Math.floor(widthSegments), 9, 32) : 9;
+  const height = Number.isFinite(heightSegments) ? clamp(Math.floor(heightSegments), 3, 9) : 3;
+  const upperRings = Math.ceil((height * 2) / 3);
+  const lowerRings = height - upperRings;
+  const positions = [0, CLOUD_BANK_SUPPORT_HEIGHT, 0];
+  const indices: number[] = [];
+
+  const appendRing = (latitude: number) => {
+    const radius = Math.sin(latitude);
+    const vertical = Math.cos(latitude);
+    for (let column = 0; column < width; column += 1) {
+      const angle = (column / width) * Math.PI * 2;
+      const outline = bankOutline(angle);
+      const x = Math.cos(angle) * radius * outline;
+      const z = Math.sin(angle) * radius * outline * 0.68;
+      // Both halves meet at exactly zero. Cosine rounds into the rim without
+      // the vertical wall of an extruded flat plate.
+      const y =
+        Math.abs(vertical) < 1e-10
+          ? 0
+          : vertical * (vertical > 0 ? bankCrown(x, z) : -CLOUD_VOLUME_CONTRACT.undersideHeight);
+      positions.push(x, y, z);
+    }
+  };
+  for (let ring = 1; ring <= upperRings; ring += 1) {
+    appendRing((ring / upperRings) * Math.PI * 0.5);
   }
-  const geometry = new THREE.SphereGeometry(
-    1,
-    Math.max(6, Math.floor(widthSegments)),
-    Math.max(4, Math.floor(heightSegments)),
-  );
-  const position = geometry.getAttribute("position");
-  for (let index = 0; index < position.count; index += 1) {
-    const x = position.getX(index);
-    const y = position.getY(index);
-    const z = position.getZ(index);
-    const radius = 0.88 + crownInfluence(x, y, z) * 0.18;
-    const underside = y < -0.42 ? 0.96 + (y + 1) * 0.05 : 1;
-    position.setXYZ(index, x * radius * underside, y * radius * underside, z * radius * underside);
+  for (let ring = 1; ring < lowerRings; ring += 1) {
+    appendRing(Math.PI * 0.5 + (ring / lowerRings) * Math.PI * 0.5);
   }
+  const bottom = positions.length / 3;
+  positions.push(0, CLOUD_VOLUME_CONTRACT.undersideHeight, 0);
+
+  for (let column = 0; column < width; column += 1) {
+    indices.push(0, 1 + ((column + 1) % width), 1 + column);
+  }
+  let crownIndexCount = indices.length;
+  for (let ring = 0; ring < height - 2; ring += 1) {
+    const upper = 1 + ring * width;
+    const lower = upper + width;
+    for (let column = 0; column < width; column += 1) {
+      const next = (column + 1) % width;
+      indices.push(upper + column, upper + next, lower + next);
+      indices.push(upper + column, lower + next, lower + column);
+    }
+    if (ring < upperRings - 1) crownIndexCount = indices.length;
+  }
+  const lastRing = bottom - width;
+  for (let column = 0; column < width; column += 1) {
+    indices.push(lastRing + column, lastRing + ((column + 1) % width), bottom);
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
   geometry.computeVertexNormals();
   addCloudVertexValueRamp(geometry);
+  geometry.computeBoundingBox();
   geometry.computeBoundingSphere();
   geometry.userData.cloudVolume = CLOUD_VOLUME_CONTRACT;
+  geometry.userData.cloudCrownIndexCount = crownIndexCount;
   return geometry;
+}
+
+/** Two complementary draws of ONE shell. Shared rim normals/colours are copied
+ * from the closed source, so there is no seam or overlapped underside slab.
+ * Each returned geometry owns its buffers and is disposed by the mounted field.
+ */
+export function createCloudVolumeParts(
+  width: number,
+  height: number,
+): {
+  crown: THREE.BufferGeometry;
+  underbelly: THREE.BufferGeometry;
+} {
+  const crown = createCloudVolumeGeometry(width, height);
+  const underbelly = crown.clone();
+  const indices = Array.from(crown.index!.array);
+  const split = crown.userData.cloudCrownIndexCount as number;
+  crown.setIndex(indices.slice(0, split));
+  underbelly.setIndex(indices.slice(split));
+  return { crown, underbelly };
 }

@@ -9,6 +9,27 @@ metadata:
 
 # 程序化地图的审美复核
 
+## 先确认当前验收入口
+
+当前任务和验收边界以 `docs/plans/active/continuous-world-delivery.md` 为准，
+产品行为以 V5 最新决定为准，技术与预算以 ADR-0008/0009 为准。
+本技能规定看图和改规则的方法，不另立任务清单，也不以旧诊断入口覆盖当前计划。
+
+- 连续世界交付使用普通产品路由、正常后处理和真实指针/键盘操作。
+  当前计划不处理 `island-look` 浏览器项目；不要因加载本技能就运行或修复
+  `e2e/J.island-look.spec.ts`，也不改 shot 机位或阈值来取得绿色结果。
+- `shot`、`post=off`、`freeze` 和字段/法线可视化只用于有明确问题的诊断。
+  诊断图单独标记，不能替代普通页面的最终画面；运动验收不能使用冻结场景。
+- 使用项目脚本或 `pnpm exec playwright`，不调用可能版本不同的全局
+  `playwright`。WebKit 的可选课程冒烟入口为
+  `pnpm exec playwright test --config e2e/playwright.webkit.config.ts`；
+  它复用 K 的断言，不替代默认 E2E、三层验收或实体手机测试。
+- 每组证据记录 worktree/HEAD、完整 URL、视口、DPR、主题、浏览器、
+  seed/课程身份、机位和调试开关。固定端口先核对监听进程属于当前 worktree。
+  既有 E2E 继续写自己的 `SCRATCH/` 输出；显式选用 DevSpace 反馈技能时，
+  其新增证据使用 `.devspace-visual/`，本机交接使用 `.devspace-reports/`。
+  两类都不是可提交媒体或跨机器备份；验收状态只回写现有交付计划。
+
 ## 先回答那个问题：程序化生成本身不是上限
 
 「是不是程序化地图天生就做不漂亮，所以得让 AI 进来？」
@@ -65,15 +86,21 @@ metadata:
   显式传 `routeArchetype` 强制遍历，别指望 seed 会替你抽到
 - **至少三个不同 seed**
 
-### 二、渲染三个机位
+### 二、先拍普通页面，再按问题补诊断机位
 
-    ?shot=course-design   航拍，选课看到的那张
-    ?shot=course-near     近景，站在地上
-    ?shot=world-design    岛群图
+课程近景与拉远图通过普通课程页面的实际平移/缩放取得；系列岛群和领域星球
+通过正常导航取得。同条件前后对比保持课程身份、视口、主题和机位一致。
+地形抽样复用现有纯函数/浏览器夹具，不为凑样本改写课程内容。
 
-URL 形如
-`http://127.0.0.1:<port>/<study>/<course>?shot=<shot>&post=off&seed=<course>&freeze=1`，
-等 `window.__islandLookMetrics?.().ready === true` 再截。
+等待当前可见 canvas、当前场景身份和实际绘制资源就绪；复用 K/N 的对应
+条件，不只等待 DOM 出现或一个可能属于上个场景的全局 ready 标志。
+截图与帧时间分别采集，后台标签页、零尺寸 canvas、下载完成但未绘制都不算就绪。
+总览必须实际包含要验收的课程主体；只有天空或局部岛底的截图，即使用例通过、
+尺寸正确、绘制收据非零，也不能当作有效总览或视觉通过证据。
+
+检查岩根、断崖或遮挡时，另补能看到目标结构的侧面/诊断图，并标明它不是
+普通进入机位。既有 `?shot=course-design` / `course-near` / `world-design`
+可在问题确需时作为诊断输入，但不沿用旧 `post=off` 图作为最终验收依据。
 
 ### 三、亲眼看图。这一步不能跳，也不能用数字代替
 
@@ -109,7 +136,9 @@ URL 形如
 
 ### 七、把被推翻的结论写下来
 
-写进 `docs/reference/execution/island-look-contract.md`，带上前后的数。
+本轮结论和证据回写现有交付计划；技术取舍按 ADR-0008/0009 更新。
+只有任务明确涉及旧判官合同本身时，才更新
+`docs/reference/execution/island-look-contract.md`，带上前后的数。
 被推翻的假设比成立的假设更值钱——它是下一个人不用再走一遍的那条死路。
 
 已经记在那里的死路：主光强度、阴影相机宽度、整体压暗固有色、为指标压暗天空。
@@ -137,5 +166,8 @@ URL 形如
 
 - `docs/reference/execution/island-look-contract.md` — 门槛、基线、以及历次推翻记录
 - `docs/policy/shared-rules/donors.md` — donor 各自能拿什么、不能拿什么
-- `e2e/J.island-look.spec.ts` — 判官怎么跑
+- `docs/plans/active/continuous-world-delivery.md` — 当前验收入口、状态和回执
+- `e2e/K.continuous-course.spec.ts`、`e2e/N.world-delivery.spec.ts` — 普通页面与场景身份证据
+- `e2e/playwright.webkit.config.ts` — 可选 WebKit 课程冒烟，复用 K，不改变默认闸门
+- `e2e/J.island-look.spec.ts` — 旧判官实现；当前计划未授权运行或修改
 - `packages/world/src/island/look-contract.ts` — 门槛的当前值

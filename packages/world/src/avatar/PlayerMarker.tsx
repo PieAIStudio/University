@@ -1,4 +1,5 @@
 import { Avatar } from "@pieai/swimmer-avatar-kit/react-three-fiber";
+import { useFrame } from "@react-three/fiber";
 import type { AvatarHandle, AvatarRecipe } from "@pieai/swimmer-avatar-kit";
 import { useCallback, useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -27,6 +28,7 @@ export function PlayerMarker({
   readonly signedIn?: boolean;
 }) {
   const marker = useRef<THREE.Group>(null);
+  const worldPosition = useMemo(() => new THREE.Vector3(), []);
   const guest = useMemo(() => guestAvatarRecipe(), []);
   const shown = signedIn && recipe ? recipe : guest;
   const onBuilt = useCallback((avatar: AvatarHandle) => {
@@ -34,6 +36,18 @@ export function PlayerMarker({
     if (!node || avatar.bounds.h <= 0) return;
     node.scale.setScalar(PLAYER_MARKER_HEIGHT / avatar.bounds.h);
   }, []);
+
+  useFrame(({ camera }) => {
+    const node = marker.current;
+    if (!node) return;
+    node.getWorldPosition(worldPosition);
+    // Placement orientation, not a competing avatar animation. Kit-owned
+    // gaze/blink/breath still run inside this group unchanged.
+    node.rotation.y = Math.atan2(
+      camera.position.x - worldPosition.x,
+      camera.position.z - worldPosition.z,
+    );
+  });
 
   return (
     <group ref={marker} name={AVATAR_OCCLUSION_TARGET} position={position}>

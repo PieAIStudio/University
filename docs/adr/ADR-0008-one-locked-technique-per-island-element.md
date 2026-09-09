@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-03
+last_reviewed: 2026-09-09
 domain: architecture
 tags:
   - 3d
@@ -15,212 +15,261 @@ tags:
 pinned: false
 related:
   - ADR-0004
+  - ADR-0009
   - SPEC-0001
   - REF-ISLAND-LOOK-CONTRACT
   - REF-ISLAND-ART-DIRECTION-V2
+  - PLAN-CONTINUOUS-WORLD-DELIVERY
+  - ARCHIVE-ADR-0008-2026-09-07
 supersedes: []
 superseded_by: null
 ---
 
 # ADR-0008: One Locked Technique Per Island Element
 
-## Context
+## Decision and authority
 
-The procedural map keeps being re-decided at the level of *what technique draws
-this thing*. Grass alone has been rewritten three times, twice in opposite
-directions. The last reversal happened because a reviewer rejected a donor port
-on visual grounds without ever measuring its cost; when the measurement was
-finally taken it settled the question in one line.
+Each element has one named technique, source, measured scope and tested budget.
+The executable table and rejection list are
+`packages/world/src/island/island-technique-lock.ts` and its adjacent test.
+Change a technique only with a measurement, an amendment here and corresponding
+lock/tests. A discrepancy is something to investigate, not permission to silently
+prefer a stale number. [ADR-0009](ADR-0009-the-procedural-map-is-one-pipeline.md)
+owns data flow; [V5 I–M](../reference/player-journey/v5/index.html) owns appearance
+and interaction. The [delivery plan](../plans/active/continuous-world-delivery.md)
+owns completion status. This condensation changes none of those contracts.
 
-The measurement, taken 2026-08-28 on the 41-lesson pressure course:
+## Current course and series techniques
 
-| | per instance | instances | triangles |
-| --- | --- | --- | --- |
-| our five-leaf clump | 45 | 16,000 | **720,000** |
-| elemental-serenity blade | 1 | ≤112,500 | ≤112,500 |
-| three-stylized blade | 5–7 | caller's choice | — |
+| Element | Choice and scope |
+| --- | --- |
+| Course terrain and soil | One continuous `buildIslandGeometry(..., "course")` mesh. Soil is clipped against actual terrain triangles, not a second height source or separate terrain draw. |
+| Grass | Generated three-vertex, one-triangle blade; taper, wind, camera-facing rotation and ground normals in shader. LOD changes instance count. Near ceiling 6 is a ceiling, not the current blade shape; far draws zero grass. |
+| Course tree/shrub | Registered donor trunks plus three rounded 80-triangle crown lobes: at most 624 triangles/tree (within the 900 ceiling). Shrub: three 20-triangle lobes, 60 total. Course alpha-card crowns are replaced, not retained as a second aesthetic. |
+| Course props | Registered Kenney architecture and 16/80-triangle rocks; normal decoration ceiling 1,200 triangles/asset. Landmarks: at most six semantic places/assemblies, ceiling 8,000 per asset, not six individual walls. |
+| Lesson marker | Shared 14-segment bevelled medallion, 168 triangles; separate +Y-facing unit rings, 48–50 each, at most six ring batches. Readable text stays DOM. |
+| Ground contact | Merged footing splits at rendered triangle boundaries, embeds by 0.01 and retains exposed-height ceiling 0.25. Bounded stance recovery; unresolved contact uses a terrain-clipped shallow inlay at the same position/radius/ID, with engraving and picking preserved. |
+| Buildings/camp/bridge | Academy is four walls and one roof at a shared scale. Tent faces its actual lit pit. Bridge checks decoded support pads and arched deck across the span, not the model origin or just its centre. Failed fit returns a reason and a meaningful fallback. |
+| Fire and lighting | Effects belong only to actual lit campfire assemblies. No per-fire shadow lights. Reduced motion/pause contracts remain. Use the shared Stage/SwimmerRenderKit output chain, with one tone map and one sRGB encoding. |
+| Series distant terrain | Canonical blueprint sampled at world detail: 640 triangles/island (352 top + 288 cliff, no route clips), merged across islands. Do not prepare a dense course field or load course GLBs. |
+| Series distant props | Optional pavilion up to 36 triangles plus at most four 12-triangle tree silhouettes: 0–84 props triangles/island. Bounded inward fitting may omit props; a sampled anchor does not prove zero gap across a sloping footprint. |
+| Batch accounting | Distant terrain + props have a three-draw batch ceiling and at most 724 triangles/island. This excludes avatars, sky, selection, shadows and post; it is not a full-frame promise. R35 GPU timings below have a separate scope; VRAM remains unmeasured. |
+| Domain globe | Surface ≤ 5,000 triangles; merged clouds ≤ 7,000 triangles with 7 clusters and radial flatten 0.55; design ceiling 8 scene draws per populated domain including atmosphere and hit geometry. Representatives: desktop at most 5 / mobile at most 3 per study, from the remote 640-triangle base, no course props. |
 
-`island-grass.ts` already recorded the whole scene at 777,008 triangles, so
-**92.7% of the frame's geometry was grass**. For contrast the entire shipped
-Kenney kit — fourteen models including every tree, rock and building — is 2,518
-triangles. Trees were never the problem and two rounds were spent on them.
+Production world catalogue is `RemoteIslandField` plus `RemotePropsField` only.
+`IslandDressing` and `IslandFoliage` are course-only; they do not accept a world
+detail and do not load donor trunks for the catalogue. The former 396-triangle
+single-island world foliage path (donor trunk + cone) is a rejected second
+budget, recorded in the lock rejection list and in the
+[measurement history](../archive/adr-0008-measurement-history-2026-09-07.md).
+Do not mix that history with the active 640 + 84 / 3-draw remote budget.
 
-Nothing in the repository recorded which technique had been chosen for which
-element, or which alternatives had already been tried and rejected.
-`docs/policy/shared-rules/donors.md` records what we are *allowed* to take from
-each donor; it does not record what we *took*. Source comments record reasoning
-at the point of change, but they do not survive a rewrite — and a rewrite is
-precisely the event they need to survive.
+Course overview uses the same `COURSE_DISTANCE = 36` camera with a different
+framing range; it does not change that default.
 
-The cost of that gap is not aesthetic. It is that two AI sessions and a human
-spend their budget re-litigating a settled question instead of spending it on
-how well the chosen technique is used.
+## Domain globe and natural root
 
-## Decision
+V5 M replaces giant planar study islands with domain globes and atmospheric
+study regions. A study is not a domain. Actual IDs and explicit domain metadata
+remain authoritative; unknown membership is not guessed. Empty domains keep
+real DOM. Representative course islands use the 640-triangle projection, without
+course props, at most five per study on desktop and three on mobile
+(`planetRepresentativeLimit`). DOM/hit areas may be larger than the visible tiny
+islands.
 
-Every visual element of the island has exactly one locked technique, one named
-source, and one triangle budget. They live in
-`packages/world/src/island/island-technique-lock.ts` as data, are asserted by
-`island-technique-lock.test.ts`, and are summarised here in prose.
+The candidate uses a 3,968-triangle sphere (ceiling 5,000) and a 1,024×512
+linear RGBA surface texture from the same 3D land/ocean sampler. Base texture
+allocation is 2 MiB (about 2.67 MiB with mipmaps). That is not total GPU memory;
+VRAM remains unknown; R35 measures GPU time separately below. One merged cloud geometry stays below 7,000
+triangles (7 clusters, radial scale 0.55). The design ceiling of eight scene
+draws per populated domain still includes atmosphere and submitted invisible
+hit geometry; it is not a measured GPU-time promise. No globe-sized trees,
+photographic Earth asset or second colour pipeline.
 
-**A lock may only be changed by amending this ADR, and only with a measurement
-in hand.** Changing the code without amending the ADR is a defect, and the test
-is what catches it. Adding a technique nobody measured is the failure this
-document exists to stop.
+`prepareDomain` in a module worker reuses those same generators. There is no
+early self-proof that the worker makes cold load fluent. Shape caches exclude
+progress/name-only changes. Cold generation risk remains in F05.
 
-The lock's `rejected` list is as load-bearing as its choices. An option that was
-tried and lost stays written down with the number that killed it, so the next
-session does not spend its budget rediscovering it.
+Natural roots share the seeded outline, five cliff rings and depth of 0.7–0.9
+of maxHalf across course/world projections. Depth reports actual minY, not a
+nominal parameter. The distant terrain remains 640 triangles. Topology passing
+does not accept the rock silhouette; near/side/far browser evidence is still due.
 
-Both donors are MIT and both are already permitted for narrow technique
-adaptation by `donors.md`. Elemental-Serenity's media was cleared by the product
-owner on 2026-08-28, which changes two entries and not the third:
+R32 tightened that topology contract after an actual short-course screenshot
+showed a root slit. Paired undirected edges missed a folded cap: rings used
+40% of the offset while their cap used its full offset. All rings and their cap
+now converge on one outline-kernel point; cant is a bounded angular rotation
+around that point. Winding is consistent, never repaired by flipping individual
+triangles. The new directed-edge regression checks the three actual course
+counterexamples plus the 60-shape matrix. Radial mass and outward normals are
+measured relative to the actual root axis, not world zero, which need not lie
+inside an offset lower ring. Original variation/depth/triangle ceilings stay.
 
-- **Grass stays our own geometry even though the GLB is now allowed.** A blade
-  is three vertices; generating it costs one function against a fetch, a Draco
-  decode and 1.2 KB, and it lets the LOD tier vary the segment count, which a
-  fixed mesh cannot. Permission removed the obstacle and the answer did not
-  change — which is worth recording, or someone will "fix" it later.
-- **Trees become the donor's trunk-plus-leaf-card construction**, which is what
-  the product owner has wanted since the first comparison. The measured
-  implementation is capped at 408 triangles per course tree (384-triangle trunk
-  plus twelve 2-triangle procedural leaf cards) against Kenney's 114–402, so it is
-  affordable only out of the ~640,000 the grass rewrite returns. It therefore
-  lands *after* the grass, not beside it.
-- **Rocks stay an explicit comparison, not an automatic donor import.** The
-  natural-rock rule is not changed by permission alone: Kenney's two shipped
-  rocks are measured at 80 and 16 triangles, while `rocks.glb` is a 1,120-triangle
-  assembled donor scene. The same course camera and the same foliage environment
-  must decide whether that extra geometry buys a quieter silhouette.
-- **Landmarks become possible at all.** Bridge, camp, tent and rocks are large
-  authored props, and a handful of large things is exactly the scale hierarchy
-  the art reference has and this island lacks. They get their own ceiling
-  because the thing that bounds the frame is their count, not their size.
+Unshipped theme accents no longer become arbitrary fallback props in course
+outposts. R32 observed a requested crystal rendered as a fountain and enlarged
+by the wrong aspect ratio. The planner retains only actually shipped, semantically
+matched accent models; otherwise natural scenery/open ground remains. The registry
+still records source provenance and legacy fallback mappings, but the new course
+plan does not use those mappings to invent a market, light, or oversized pool.
 
-`docs/policy/shared-rules/donors.md` is portfolio-shared and still records the
-old "来源待确认". Updating it belongs upstream in ProjectGovernanceSystem, not
-in this repository; only the product-local asset manifest is updated here.
+R33 extends physical fitting to ordinary outposts. A model's semantic role cannot
+change its footprint: a 0.7-high `rock_largeA` has a measured circumscribed XZ
+radius about 1.729, not the old landmark guess of 0.42. Rigid extents come from
+the existing measured table; crown envelopes derive from their shared lobe
+recipes and jitter range. Missing measurements are not certified by a height
+guess. Whole-footprint fitting clips the convex footprint against the same cached
+top lattice and reads extrema across all intersected triangles, including internal
+ridges. This CPU query does not build road clips, cliff meshes or GPU resources.
+Finite spacing/ground searches still reject an entire unsafe outpost. The new
+five-route footprint tests passed; independent emitted-mesh comparison and
+rendered contact subsequently passed in R35. Overall release and device
+acceptance remain in the delivery plan.
 
-## Consequences
+R35 strengthened the positive witness to every route/length pair, exposing four
+empty short-course outposts that a per-route aggregate concealed. Simply widening
+the large-rock search displaced an existing long-course grove (12 trees against
+the unchanged >15 assertion). The accepted fallback preserves all normal-tier
+placements and only attempts a compact rest when no ordinary outpost fitted and
+no real bridge exists. Its seat rock, companion and shrub have heights
+0.42 / 0.25 / 0.30; physical envelopes still come from the same measured models
+and crown recipes. At most 320 whole-group candidates cover route shoulders,
+including endpoints, once per cached plan. It neither scales buildings nor
+relaxes the 0.25 contact, slope or clearance limits. The retained counterexamples,
+every 5×6/24/41 positive case and all-or-none occupied-ground rejection pass in
+`outpost-contact.test.ts`; the combined dressing/terrain suite is 33/33.
 
-- The grass blade becomes one generated tapered strip whose segment count is
-  chosen by the existing LOD tier: a curved blade near the learner, a single
-  triangle in the middle band, nothing at the aerial distance. One
-  implementation, one parameter, both donors' techniques, no donated media.
-- Tree trunks and leaf cards use the elemental-serenity projection below; rocks
-  remain Kenney until the paired comparison below says otherwise. Buildings stay
-  Kenney CC0. The natural assets are still placed from the one IslandField.
-- The archipelago underside is locked to silhouette, a value break, and one
-  bright pixel. Structure is not renderable at the size that projection draws.
-- `CLAUDE.md`'s 3D routing row points here, so the lock is loaded before any
-  session touches the renderer.
-- A future element with no lock entry is not "free to choose": it is missing an
-  entry, and the way to add one is to measure, then amend.
+## R38 amendment: authored edges, grouped placement and one cloud form
 
-## Amendment 2026-08-28: the grass rewrite shipped, and the tripwire caught it
+The user's 2026-09-08 ordinary screenshots reject the flat perimeter shelf,
+horizontal rock bands, uniform catalogue scatter and separately visible cloud
+balls. Passing topology and old browser receipts did not establish those forms.
+V5 M records the revised appearance before implementation.
 
-The blade landed. `createIslandGrassClumpGeometry()` is now three vertices and
-one indexed triangle; taper, wind bend, camera-facing Y rotation and
-terrain-normal replacement all moved into the vertex shader injected through
-`onBeforeCompile`, so the material stays `MeshStandardMaterial` and keeps the
-island's existing lighting.
+The candidate keeps the canonical outline/height field and the distant
+640-triangle base. Coast relief reaches the edge; cliff rings describe continuous
+vertical rock shoulders rather than independent horizontal slabs. No glued-on
+donor rock shell, added terrain draw or second contact height is allowed.
 
-This amendment exists because the lock worked as designed. The rewrite was
-authored on a branch, merged, and the merge failed
-`island-technique-lock.test.ts` on the pinned `45`. Nobody had to remember that
-the ADR existed; the test refused the merge until a fresh measurement replaced
-the old one. The pin is now `1`, and it changes again only the same way.
+Clouds use one continuous shallow cloud-bank mesh shared by catalogue,
+carrier and globe (tangent-space projection). It replaces assembled sphere
+chains; no ray marching, extra lighting or post pass. Candidate budgets stay
+within the existing two catalogue cloud draws and 7,000 globe cloud triangles;
+the final globe has at most seven separated banks (1,680 triangles), omitting
+banks inside real region protection cones. It rotates with its globe instead
+of drifting across a learning destination. The first 21-bank candidate still
+read as a necklace of rice grains in the ordinary browser; its rejected image
+is retained in `astra-r38/planet-candidate-rendered.png`. Catalogue cloud
+draws remain two: 4,608 desktop / 1,200 mobile triangles versus 14,112 / 3,780
+previously. A course cloud bank remains 36 triangles. These are cloud counts,
+not the full frame. Complementary crown/belly buffers own their disposal.
+Carrier feet, swept clearance, reduced-motion and 540ms travel remain unchanged.
 
-Two numbers moved with it, both chosen by looking at the shot rather than by
-argument:
+Course richness first uses the registered natural/semantic assemblies and
+cached placement plan. Density may increase within existing per-asset ceilings,
+but whole-footprint 0.25 contact and clearances remain hard constraints. Full
+Stage and physical-device costs, not raw instance counts, decide acceptance.
+Measurements and rejected trials will be appended here; task state belongs only
+to the active delivery plan.
 
-- **Segment count is no longer the LOD knob.** The original decision said "a
-  curved blade near the learner, a single triangle in the middle band". The
-  shipped blade is one triangle in every band and the LOD tier varies instance
-  count instead. The `near <= 6` entry stays as a ceiling, not as a shape: it is
-  the budget a future curved near-blade may spend, not a description of what
-  renders today.
-- **Density is 80,000 desktop / 24,000 mobile, not the donor's 112,500.** That
-  is roughly the old 16,000 clumps x five visible leaves, so the silhouette
-  density the learner already saw is preserved while the triangle count drops
-  from ~720,000 to ~80,000. The rest of the saving is deliberately unspent: the
-  near-camera art pass decides where it goes, and spending it on more grass is
-  the one thing this ADR exists to prevent.
+R38's first additional donor candidates are Fantasy Town `stall-bench` (180
+triangles, 14,168 bytes, source bounds 0.26×0.225501×0.94) and `cart` (608
+triangles, 52,920 bytes, transformed bounds 0.893024×0.535501×1.34). They share
+the existing colormap and CC0 pack. The explicit R01 whitelist grows from ten
+to twelve files, not a whole-pack import; per-prop triangle ceilings stay.
+Benches belong beside actual facilities and a cart beside a stall, fitted with
+the existing whole-footprint query. A missing safe site omits the companion
+without moving or breaking the original facility. New bounds are independently
+checked against the imported GLBs; browser scale/contact and final frame cost
+remain acceptance requirements.
 
-The `island-field` merge landed in the same integration and is the reason the
-density number is now safe to tune: grass, dressing and ground colour read one
-compiled field, so raising or lowering grass no longer silently disagrees with
-where the terrain is painted green.
+R5's independent visual review rejected a remaining cover rim. The continuous
+height shoulder now retains a non-zero boundary slope instead of flattening
+at its last vertex. `coast-profile.ts` supplies the same geological lobe mask
+to the terrain projection and field rock/grass channels, so exposed buttresses
+reach the top without growing grass on a separately painted stone patch.
+Top and cliff lip colours are exactly equal; sheltered shoulders share compatible
+normals and actual creases above 60 degrees retain their face normals. Two
+over-smoothed corner failures remain in the evidence; the original normal,
+winding, 0.25 contact and 640-triangle distant limits were not relaxed.
 
-## Amendment 2026-08-29: painterly donor foliage, with the world projection kept cheap
+The lower rings keep warm stone rather than using the path's brown soil as
+their primary material. No light, grade or extra terrain draw was added.
+R5's field/contact/route integration passed 100 focused assertions; the full
+final verification, browser and device states belong to the delivery plan.
 
-The product owner changed the natural-element direction: Kenney remains for the
-fantasy-town architecture, while trees and bushes use elemental-serenity's
-painted-card construction. This amendment is written before the implementation
-lock changes, with the source mesh counts measured from the checked-in GLBs and
-the frame baseline captured on the 41-lesson `turing-pact / foundations-before-zero`
-course at 1440x900, DPR 1, `post=off`, fixed seed and the same camera:
+R5 Mac Stage GPU queries (same scope/method as R37 below) each contain 24 valid
+non-disjoint samples. Source SHA-256 matches the production-browser receipt:
+`cefd59cc80f23f2ae98e1cb96f6115b050b17d19760a16f39f487b27eb0cfdb5`.
 
-| projection | baseline triangles | baseline draw calls | source measurement used by the new lock |
-| --- | ---: | ---: | --- |
-| course | 355,172 | 305 | Kenney tree 114/402/246, bush 104; donor trunk variant max 384 + 12 × procedural PlaneGeometry 2 = 408 per tree; 12 cards × 2 = 24 per bush |
-| world | 438,964 | 638 | no leaf instances; one donor trunk silhouette plus one 12-triangle canopy silhouette for the selected tree |
+| Projection | 1440×900 median / p95 ms | 375×812 median / p95 ms |
+| --- | --- | --- |
+| Real 41-lesson course | 2.322 / 3.106 | 0.698 / 0.976 |
+| Real selected series | 1.177 / 1.861 | 0.383 / 0.502 |
+| Three declared domains, two unpublished | 0.944 / 1.469 | 0.294 / 0.355 |
+| Synthetic 4 domains × 30 series | 0.942 / 1.383 | 0.348 / 0.637 |
 
-The six donor trunk meshes measure 288, 304, 384, 288, 384 and 384 triangles
-(2,032 in the assembled `treeTrunks.glb`). `bushEmitter.glb` measures 192
-triangles, but it is an emitter only and is never submitted to the renderer.
-The foliage cards use the donor's `MeshSurfaceSampler` pattern: bush emitter
-surface points provide the position and normal, and tree cards use the same
-instanced `PlaneGeometry(1,1)` around the selected trunk crown. The fragment shader
-keeps the donor's shadow/mid/highlight normal ramp. The unregistered donor alpha
-PNG is intentionally not imported; a procedural UV leaf mask is shared by the
-colour and custom depth shaders, so cut-out foliage casts a cut-out shadow
-without adding an untracked media dependency.
+Raw queries: `.devspace-visual/astra-r38/gpu-r5.json`. This is not compositor
+time, phone FPS or VRAM. The production navigation pass is not used as a cold
+load benchmark; its first desktop run overlapped E2E preparation.
 
-The world projection is a separate screen-pixel budget: it retains the donor
-trunk only as part of the tree silhouette and uses no leaf-card instances. The
-course projection is the only place that pays for the 12 leaf cards per tree.
-Neither projection creates placement noise; `island-dressing.ts` still reads
-the compiled `IslandField`, so this amendment changes stages 3/4 (projection and
-style), not stage 2 (the field/data source).
+## R37 measured GPU scope, not a device-FPS promise
 
-The course shadow pass keeps alpha-aware shadows on both instanced leaf fields,
-but omits a second pass for the low-pixel trunk faces. The measured pressure
-course therefore renders 340,880 triangles and 288 calls, below the original
-355,172 and 305, while retaining the shadow/mid/highlight leaf treatment. This
-is a render-budget decision, not a change to the donor trunk geometry.
+In R37 on 2026-09-08, fresh visible Chrome contexts on the Mac's Apple M1 Max / ANGLE
+Metal renderer used `EXT_disjoint_timer_query_webgl2` around the actual unique
+Stage render callback. Each row has 24 valid, non-disjoint queries, with no
+screenshot or CPU profiler. This includes that canvas's shadows, scene, AO and
+grade; it excludes browser compositing and other canvases such as the navigation
+avatar. DPR is 1. Values are GPU milliseconds, not FPS or allocated GPU memory.
 
-The rock comparison was then run in the same 1440x900 course shot after the
-procedural 2-triangle cards landed and the trunk shadow pass was removed.
-Retaining Kenney produced 340,880 triangles and 288 calls; replacing the two
-small rock references with the assembled donor `rocks.glb` produced 556,944
-triangles and 280 calls (+63.4% triangles). The donor version also repeated
-pale assembled clusters across the meadow, which read as noise next to the new
-foliage, while Kenney's 80/16-triangle rocks stayed quiet. Kenney is therefore
-retained; `rocks.glb` remains registered for landmark use but is not promoted
-to the scattered natural-rock projection.
+| Projection | 1440×900 median / p95 | 375×812 median / p95 |
+| --- | --- | --- |
+| Real 41-lesson course | 2.845 / 3.449 | 0.782 / 0.899 |
+| Real selected series | 1.590 / 1.897 | 0.548 / 0.772 |
+| Real one-domain catalogue | 1.219 / 1.241 | 0.277 / 0.613 |
+| Explicit synthetic 4 domains × 30 series | 1.415 / 1.483 | 0.602 / 0.878 |
 
-## Amendment 2026-09-03: separate scene geometry from post-processing counts
+Raw queries are in `.devspace-visual/astra-r37/gpu-release.json`; the restored
+temporary measurement wrapper remains `astra-r35/gpu-frames.mjs`. All earlier
+R35 query files are retained, not silently overwritten.
+These are final-source samples, not a claim of improvement over an earlier run:
+the prior course p95 was 6.309ms on the same hardware. The final measurement
+and production-browser receipt share the same source SHA-256. A separate
+blank→course→blank scheduling control measured rAF medians about 50 / 50 / 33ms;
+that delay is therefore not evidence that 3D GPU work itself costs 50ms. Do not
+delete scenery to chase headless scheduling intervals. These Mac/viewport data
+do not replace a current physical phone pass. CPU preparation profiles are
+inclusive sampled scopes and must not be added together as exact wall time.
 
-This is an audit amendment, not a renderer change. At HEAD `9cb6f79`, the real
-delivery Vite page was measured at 1440×900, DPR 2, with the fixed course-design
-shot:
+## Rejected alternatives worth remembering
 
-```text
-/turing-pact/foundations-before-zero?shot=course-design&seed=foundations-before-zero&freeze=1
-```
+| Alternative | Why it was rejected; do not generalize beyond this scope |
+| --- | --- |
+| Five-leaf volumetric grass | 45 triangles × 16,000 = 720,000, 92.7% of the then 777,008-triangle scene. More grass geometry was not the missing visual quality. |
+| Course hex terrain / independent height fields | Ground, route and markers disagreed. Restore the single continuous pipeline, not per-course correction tables. |
+| Course rounded alpha cards | Intersecting flat discs remained visible. Three solid lobes + trunk fit the 624-tree budget. Distant silhouettes are a different scope. |
+| Donor assembled rocks instead of retained Kenney rocks | Paired historical shot cost +63.4% scene triangles and added noisy pale clusters. Permission to use an asset is not a reason to import it. |
+| Rock model as a lesson pedestal | Existing 16/80-triangle rocks lack a consistent circular engraved top; the measured 168-triangle body serves that role. |
+| Uniform coastal trees, disconnected building parts | They read as a fence or unsupported props. Fix whole-assembly footprint, purpose and crown clearance rather than add instances. |
+| IslandDressing world donor trunk + cone canopy (396 tris) | Second renderer and second budget beside RemotePropsField. Production distant draws are remote field + remote props only. |
+| Giant flat island as a planet; vertex-only globe colour | User rejected the first; actual browser view exposed blurred boundaries in the second. Domain sphere and shared sampled texture are the current candidates. |
+| 6–11-unit root clamp / distant-only depth multiplier | Full-island view still looked like a thin plate or changed identity between views. Both details now consume the same seeded proportional depth. |
+| Post-processing or brighter material as a geometry repair | Cannot repair floating contact, missing silhouette or contradictory placement; ordinary final-output screenshots remain the acceptance surface. |
 
-With `post-processing` enabled, the settled `__lastStageSceneRender` receipt is
-**41 draw calls / 81,278 triangles** for the course scene. A complete desktop
-frame was measured by setting `gl.info.autoReset = false`, calling
-`info.reset()`, and triggering `invalidate()`: **43 draw calls / 81,280
-triangles**. The extra two calls and two triangles are the AO and grade
-fullscreen triangle passes, not course geometry.
+## Measurement provenance, not competing budgets
 
-This resolves two stale scopes without rewriting their history: the older ADR
-receipt of **340,880 triangles / 288 calls**, and the later contract snapshot of
-**36,090 triangles / 45 calls**, belong to earlier renderer states. The current
-lock remains unchanged because this hygiene round does not alter a technique,
-material, scene, or budget test. Future reports must label whether they count
-the scene pass or the complete post-processing frame; **43 / 81,278** is a
-mixed-scope shorthand and should not be used as a precise receipt.
+The `terrain/{count}` fixture has 15,234 / 14,805 / 16,820 / 16,629 terrain
+triangles for 6 / 12 / 24 / 41 lessons after soil clipping. The switchback
+`foundations-before-zero` delivery fixture is different: terrain 15,101 / 18,078 /
+20,906 and footing 814 / 3,292 / 5,594 for 6 / 24 / 41, with zero inlay in that
+fixture. Do not combine them into one count. Tests and new receipts determine
+whether these historical fixture measurements still hold after later edits.
+
+Report seed, course/fixture, projection, viewport/theme/DPR and whether a number
+is primitive geometry, a scene pass, a full Stage frame, CPU preparation or GPU
+time. Resource counts are not GPU bytes; rAF intervals are not physical-phone
+FPS. Screenshot capture and performance sampling are separate runs.
+
+Full dated tables, commands, rationale and rejected trials remain in the
+[measurement history](../archive/adr-0008-measurement-history-2026-09-07.md),
+loaded only when a changed technique or fixture needs that evidence. Old numerical
+receipts are not simultaneous requirements and never override the current lock.

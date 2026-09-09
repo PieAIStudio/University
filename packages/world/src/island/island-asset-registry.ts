@@ -42,6 +42,7 @@ export interface IslandRuntimeAssetResolution extends IslandRuntimeAsset {
   readonly requestedAssetId: string;
   readonly usedFallback: boolean;
   readonly fallbackReason?: string;
+  readonly heightScale?: number;
 }
 
 const kenneyManifest = kenneyManifestJson as KenneyRuntimeManifest;
@@ -68,15 +69,19 @@ for (const asset of [...kenneyManifest.assets, ...donorManifest.assets]) {
  * those placements into exact keys before installing an override. This keeps
  * the renderer's existing grouping and instancing path unchanged.
  */
-const runtimeOverrides = new Map<string, IslandRuntimeAsset>();
+const runtimeOverrides = new Map<string, IslandRuntimeAsset & { readonly heightScale?: number }>();
 
 export function setIslandRuntimeAssetOverrides(
-  overrides: Readonly<Record<string, Pick<IslandRuntimeAsset, "pack" | "assetId">>>,
+  overrides: Readonly<
+    Record<string, Pick<IslandRuntimeAsset, "pack" | "assetId"> & { readonly heightScale?: number }>
+  >,
 ): void {
   runtimeOverrides.clear();
   for (const [requestedKey, target] of Object.entries(overrides)) {
     const resolved = runtimeAssets.get(`${target.pack}/${target.assetId}`);
-    if (resolved) runtimeOverrides.set(requestedKey, resolved);
+    const heightScale = target.heightScale ?? 1;
+    if (resolved && Number.isFinite(heightScale) && heightScale > 0 && heightScale <= 1)
+      runtimeOverrides.set(requestedKey, { ...resolved, heightScale });
   }
 }
 

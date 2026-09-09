@@ -10,11 +10,11 @@ import {
   PATCH_GAIN,
   RELIEF_AMPLITUDE_RATIO,
   TERRACE_STEP_RATIO,
-  islandBlueprint,
   type IslandBlueprint,
 } from "../island/island-blueprint.js";
 import {
   buildIslandGeometry,
+  islandGeometryScale,
   ISLAND_GEOMETRY_PALETTE,
   type IslandGeometryDetail,
 } from "../island/island-geometry.js";
@@ -25,6 +25,7 @@ import {
   ISLAND_TECHNIQUE_LOCK,
   type IslandTechniqueEntry,
 } from "../island/island-technique-lock.js";
+import { COURSE_TREE_TRUNK_TRIANGLE_CEILING } from "../island/foliage-geometry.js";
 import {
   ISLAND_GRASS_BLADE_DENSITY_MULTIPLIER,
   ISLAND_GRASS_LIMITS,
@@ -35,33 +36,40 @@ import {
 import { ISLAND_GRASS_BLADE_TRIANGLES } from "../island/island-grass-render.js";
 import {
   islandRuntimeAssets,
-  resolveIslandRuntimeAssetFromRecipe,
+  resolveIslandRuntimeAsset,
   type IslandRuntimeAsset,
 } from "../island/island-asset-registry.js";
 import { assetKey } from "./triangle-count.js";
+import { proceduralAssetRows } from "./procedural-assets.js";
+import { previewReplacementReason } from "./preview-runtime.js";
+import { projectedMetric, projectedTriangleTotal } from "./projected-metrics.js";
+import { footprintSamplePoints, orientedFootprintFor } from "../island/island-composition.js";
 import {
   planIslandDressing,
   type IslandDressingKind,
   type IslandDressingPlan,
+  type IslandDressingPlacement,
 } from "../island/island-dressing.js";
 import {
   DEFAULT_ISLAND_SURFACE_STYLE,
   ISLAND_SURFACE_STYLE_PRESETS,
   resolveIslandSurfaceStyle,
 } from "../island/island-surface-style.js";
-import { islandThemeSelectionForCourse } from "../island/kenney-recipes.js";
-import { COURSE_SKY_STOPS, skyStopsForStudy } from "../Maps.js";
-import { WORLD_STUDY_GRID_CONTRACT } from "../grid/course-grid.js";
+import { skyStopsForStudy } from "../Maps.js";
 import { WORLD_SUN, worldKeyToFillRatio, worldShadowFrustum } from "../sky/sun.js";
+import { buildDomainPlan } from "../planet/domain-plan.js";
+import { DOMAIN_RADIUS, REGION_ALTITUDE } from "../planet/atmospheric-regions.js";
 import {
-  PLANET_CAMERA_POLAR,
-  PLANET_CLUSTER_LAYOUT_CONTRACT,
-  PLANET_STUDY_SIZE_CONTRACT,
-} from "../planet/placement.js";
-import { PLANET_ATMOSPHERE } from "../planet/PlanetScene.js";
+  createDomainGlobeGeometry,
+  DOMAIN_CLOUD_TRIANGLES_MAX,
+  DOMAIN_GLOBE_TRIANGLES_MAX,
+} from "../planet/globe-geometry.js";
+import type { PlanetStudy, PlanetStudyDomain } from "../planet/PlanetPage.js";
 
 import type {
   InspectorAsset,
+  InspectorAssetUse,
+  InspectorModelInfo,
   InspectorCatalogAsset,
   InspectorColorStop,
   InspectorLayerDescription,
@@ -73,14 +81,39 @@ import type {
   TriangleCountMapLike,
 } from "./types.js";
 
+import {
+  REMOTE_ISLAND_TERRAIN_TRIANGLES,
+  REMOTE_TREE_TRIANGLES,
+  REMOTE_PAVILION_TRIANGLES,
+  REMOTE_PROPS_MAX_TRIANGLES_PER_ISLAND,
+  REMOTE_ISLAND_BUDGET_PER_ISLAND,
+  planRemotePropsCatalogue,
+  type RemotePropPlacement,
+} from "../island/remote-props.js";
+
+export const REMOTE_ISLAND_TRIANGLES_PER_ISLAND = REMOTE_ISLAND_TERRAIN_TRIANGLES;
+export const REMOTE_FOCUS_TRIANGLES = 96;
+
 export interface WorldLayerIsland {
+  /** Production catalogue identity from Maps.placeWorld; missing means incomplete input. */
+  readonly id?: string;
   readonly blueprint: IslandBlueprint;
+  /** World-space position from Maps.placeWorld; missing means incomplete input. */
+  readonly position?: THREE.Vector3;
   readonly targetRadius?: number;
 }
 
+export interface DescribePlanetStudy extends Partial<PlanetStudy> {
+  readonly id: string;
+}
+
 export interface DescribePlanetLayerOptions {
-  readonly studyIds: readonly string[];
+  readonly studyIds?: readonly string[];
   readonly courseCount?: number;
+  readonly studies?: readonly (PlanetStudy | DescribePlanetStudy)[];
+  readonly domainCatalog?: readonly PlanetStudyDomain[];
+  readonly representativeLimit?: 3 | 5;
+  readonly runtime?: InspectorRuntimeMetrics;
 }
 
 export interface DescribeWorldLayerOptions {
@@ -88,6 +121,7 @@ export interface DescribeWorldLayerOptions {
   readonly skyStudyId?: string | null;
   readonly runtime?: InspectorRuntimeMetrics;
   readonly triangleCounts?: TriangleCountMapLike;
+  readonly models?: ReadonlyMap<string, InspectorModelInfo>;
 }
 
 export interface DescribeIslandLayerOptions {
@@ -95,6 +129,7 @@ export interface DescribeIslandLayerOptions {
   readonly skyStudyId?: string | null;
   readonly runtime?: InspectorRuntimeMetrics;
   readonly triangleCounts?: TriangleCountMapLike;
+  readonly models?: ReadonlyMap<string, InspectorModelInfo>;
 }
 
 const ROLE_LABELS: Readonly<Record<IslandDressingKind, string>> = {
@@ -113,7 +148,7 @@ const PACK_LABELS: Readonly<Record<string, string>> = {
 
 const LOCK_FOR_KIND: Readonly<Record<IslandDressingKind, InspectorTechniqueLockId>> = {
   tree: "tree",
-  bush: "decoration",
+  bush: "bush",
   rock: "decoration",
   landmark: "landmark",
   prop: "decoration",
@@ -146,7 +181,14 @@ function parameter(
   source: InspectorSourceRef,
   options: Partial<Pick<InspectorParameter, "unit" | "mutable" | "previewKey" | "note">> = {},
 ): InspectorParameter {
-  return { id, label, value, source, mutable: options.mutable ?? false, ...options };
+  return {
+    id,
+    label,
+    value,
+    source,
+    mutable: options.mutable ?? false,
+    ...options,
+  };
 }
 
 function colorStop(
@@ -166,6 +208,18 @@ function geometryTriangles(geometry: THREE.BufferGeometry): number {
 
 function disposeGeometry(geometry: THREE.BufferGeometry): void {
   geometry.dispose();
+}
+
+let cachedDomainGlobeTriangles: number | null = null;
+
+/** Keep the inspector's deterministic globe plan tied to the production generator. */
+function domainGlobeTriangles(): number {
+  if (cachedDomainGlobeTriangles === null) {
+    const globe = createDomainGlobeGeometry("inspector-domain-globe");
+    cachedDomainGlobeTriangles = geometryTriangles(globe);
+    disposeGeometry(globe);
+  }
+  return cachedDomainGlobeTriangles;
 }
 
 function sourceForAssetManifest(asset: IslandRuntimeAsset): InspectorSourceRef {
@@ -190,7 +244,10 @@ function techniqueFor(lockId: InspectorTechniqueLockId): IslandTechniqueEntry {
   return ISLAND_TECHNIQUE_LOCK[lockId]!;
 }
 
-function catalogAssets(triangleCounts: TriangleCountMapLike): InspectorCatalogAsset[] {
+function catalogAssets(
+  triangleCounts: TriangleCountMapLike,
+  models: ReadonlyMap<string, InspectorModelInfo>,
+): InspectorCatalogAsset[] {
   return islandRuntimeAssets().map((asset) => ({
     key: assetKey(asset),
     assetId: asset.assetId,
@@ -201,6 +258,7 @@ function catalogAssets(triangleCounts: TriangleCountMapLike): InspectorCatalogAs
     sourcePath: asset.source ?? null,
     bytes: asset.bytes ?? null,
     triangles: triangleCounts.get(assetKey(asset)) ?? null,
+    model: models.get(assetKey(asset)),
   }));
 }
 
@@ -210,6 +268,37 @@ interface PlacementAssetGroup {
   instances: number;
   requestedKeys: Set<string>;
   fallbackReason?: string;
+  readonly uses: InspectorAssetUse[];
+}
+
+function placementUse(
+  input: WorldLayerIsland,
+  placement: IslandDressingPlacement,
+): InspectorAssetUse {
+  const scale =
+    input.targetRadius === undefined
+      ? 1
+      : islandGeometryScale(input.blueprint, "world", input.targetRadius);
+  return {
+    studyId: input.blueprint.studyId,
+    courseId: input.blueprint.courseId,
+    id: placement.id,
+    assetKey: `${placement.packId}/${placement.assetId}`,
+    position: [placement.x * scale, placement.y * scale, placement.z * scale],
+    height:
+      placement.height *
+      scale *
+      (input.targetRadius === undefined ? 1 : 3.2) *
+      (resolveIslandRuntimeAsset(placement.packId, placement.assetId)?.heightScale ?? 1),
+    turn: placement.turn,
+    group:
+      placement.assemblyId ??
+      placement.outpostId ??
+      placement.clusterId ??
+      placement.companionOf ??
+      "natural",
+    state: placement.state ?? "static",
+  };
 }
 
 interface DressingRows {
@@ -221,6 +310,8 @@ interface DressingRows {
 function dressingRows(
   inputs: readonly WorldLayerIsland[],
   triangleCounts: TriangleCountMapLike,
+  runtime?: InspectorRuntimeMetrics,
+  models: ReadonlyMap<string, InspectorModelInfo> = new Map(),
 ): DressingRows {
   const groups = new Map<string, PlacementAssetGroup>();
   const roleKeys = new Map<IslandDressingKind, Set<string>>();
@@ -231,12 +322,18 @@ function dressingRows(
     const plan = planIslandDressing(input.blueprint, detail);
     plans.push(plan);
     for (const placement of plan.placements) {
+      // Course and world foliage renderers use procedural solid crown lobes;
+      // bushEmitter.glb is never fetched or drawn. Do not treat as rendered geometry.
+      if (placement.assetId === "bushEmitter") {
+        continue;
+      }
+
       const requestedKey = `${placement.packId}/${placement.assetId}`;
       const roleSet = roleKeys.get(placement.kind) ?? new Set<string>();
       roleSet.add(requestedKey);
       roleKeys.set(placement.kind, roleSet);
 
-      const resolution = resolveIslandRuntimeAssetFromRecipe(placement.packId, placement.assetId);
+      const resolution = resolveIslandRuntimeAsset(placement.packId, placement.assetId);
       if (!resolution) continue;
       const key = assetKey(resolution);
       const group = groups.get(key) ?? {
@@ -244,9 +341,11 @@ function dressingRows(
         roles: new Set<IslandDressingKind>(),
         instances: 0,
         requestedKeys: new Set<string>(),
+        uses: [],
       };
       group.roles.add(placement.kind);
       group.instances += 1;
+      group.uses.push(placementUse(input, placement));
       group.requestedKeys.add(requestedKey);
       if (resolution.usedFallback) group.fallbackReason = resolution.fallbackReason;
       groups.set(key, group);
@@ -262,8 +361,10 @@ function dressingRows(
         .sort((left, right) => (left === "landmark" ? -1 : right === "landmark" ? 1 : 0))[0]!;
       const lock = techniqueFor(lockId);
       const roles = [...group.roles].sort();
+      const isTreeTrunks = asset.assetId === "treeTrunks";
       return {
         key: assetKey(asset),
+        requestedKeys: [...group.requestedKeys],
         role: roles.map((kind) => ROLE_LABELS[kind]).join(" / "),
         assetId: asset.assetId,
         name: assetName(asset.assetId),
@@ -271,11 +372,27 @@ function dressingRows(
         packId: asset.pack,
         runtimePath: asset.src,
         sourcePath: asset.source ?? asset.src,
+        model: models.get(assetKey(asset)),
+        uses: group.uses,
         bytes: asset.bytes ?? null,
-        triangles: triangleCounts.get(assetKey(asset)) ?? null,
+        triangles: isTreeTrunks ? null : (triangleCounts.get(assetKey(asset)) ?? null),
+        ...(isTreeTrunks
+          ? {
+              totalTriangles: runtime
+                ? (projectedMetric(runtime, "treeTrunk")?.triangles ?? null)
+                : null,
+            }
+          : {}),
         instances: group.instances,
+        placementCount: group.instances,
+        projectionKind: "glb",
         bytesSource: sourceForAssetManifest(asset),
-        trianglesSource: trianglesSourceForAsset(asset),
+        trianglesSource: isTreeTrunks
+          ? worldSource(
+              "island/island-foliage-render.tsx",
+              "normalizedTrunkVariants (dynamic single-variant selection, max 384 tris)",
+            )
+          : trianglesSourceForAsset(asset),
         instancesSource: dressingInstancesSource(),
         techniqueLock: lockId,
         technique: lock.technique,
@@ -283,64 +400,59 @@ function dressingRows(
           "island/island-technique-lock.ts",
           `ISLAND_TECHNIQUE_LOCK.${lockId}`,
         ),
-        mutable: true,
-        note: group.fallbackReason
-          ? `运行时使用登记的 fallback：${group.fallbackReason}`
-          : "下拉替换只作用于当前预览，不写回配方。",
+        mutable: roles.every((role) => role === "rock"),
+        note: isTreeTrunks
+          ? "近景每棵选取 6 种树干之一（288–384 三角）；世界远景使用独立的 remote-props 剪影，不加载该树干。原始文件合计 2,032 三角不是单树成本；总量读取当前场景投影。骨架高度为完整树高的 0.68，冠团另计。"
+          : group.fallbackReason
+            ? `运行时使用登记的 fallback：${group.fallbackReason}`
+            : "下拉替换只作用于当前预览，不写回配方。",
       } satisfies InspectorAsset;
     });
 
-  const roles = (Object.keys(ROLE_LABELS) as IslandDressingKind[]).map(
-    (kind) =>
-      ({
-        id: kind,
-        label: ROLE_LABELS[kind],
-        currentKeys: [...(roleKeys.get(kind) ?? new Set<string>())],
-        source: dressingInstancesSource(),
-        mutable: true,
-        note: "替换只作用于这个配置台的预览；正式变更仍需修改配方。",
-      }) satisfies InspectorRoleChoice,
-  );
+  const roles = (Object.keys(ROLE_LABELS) as IslandDressingKind[]).map((kind) => {
+    const isBush = kind === "bush";
+    const isTree = kind === "tree";
+    const currentKeys = isBush ? [] : [...(roleKeys.get(kind) ?? new Set<string>())];
+    const compatibleKeys = islandRuntimeAssets()
+      .filter(
+        (asset) =>
+          previewReplacementReason({ role: kind, fromKeys: currentKeys, target: asset }, models) ===
+          null,
+      )
+      .map(assetKey);
+    return {
+      id: kind,
+      label: ROLE_LABELS[kind],
+      currentKeys,
+      compatibleKeys,
+      source: dressingInstancesSource(),
+      mutable: kind === "rock" && compatibleKeys.length > 0,
+      note: isBush
+        ? "灌木使用自有程序化实体团块（20 三角 icosahedron），渲染器不拉取外部 GLB；此处不可替换。"
+        : isTree
+          ? "树干与冠团有共同接点合同；任意 GLB 替换不安全，此处只读。"
+          : kind !== "rock"
+            ? "组合/效果资产不能逐件替换；需要从 composition 整组重新验证接地、尺度和锚点。"
+            : "只提供材质相容、原点接地且归一化占地不扩大的已登记石头；仅影响预览。",
+    } satisfies InspectorRoleChoice;
+  });
 
   return { assets, roles, plans };
 }
 
-function grassAsset(
-  detail: "course" | "world",
-  runtime: InspectorRuntimeMetrics | undefined,
-): InspectorAsset {
-  const lock = techniqueFor("grass");
-  const limit = ISLAND_GRASS_LIMITS[detail].desktop;
-  return {
-    key: "procedural/grass-blade",
-    role: "草",
-    assetId: "generated-three-vertex-blade",
-    name: "generated three-vertex blade",
-    pack: "自有程序化",
-    runtimePath: null,
-    sourcePath: "packages/world/src/island/island-grass-render.tsx",
-    bytes: null,
-    triangles: ISLAND_GRASS_BLADE_TRIANGLES,
-    instances: detail === "world" ? 0 : (runtime?.grassInstances ?? null),
-    bytesSource: null,
-    trianglesSource: worldSource("island/island-grass-render.tsx", "ISLAND_GRASS_BLADE_TRIANGLES"),
-    instancesSource: worldSource("island/island-grass.ts", `ISLAND_GRASS_LIMITS.${detail}.desktop`),
-    techniqueLock: "grass",
-    technique: lock.technique,
-    techniqueSource: worldSource("island/island-technique-lock.ts", "ISLAND_TECHNIQUE_LOCK.grass"),
-    mutable: true,
-    note:
-      detail === "world"
-        ? "世界投影按 ADR-0009 不画草；地形色承担远景信息。"
-        : `当前相机画面加载后显示实际实例数；上限来自 ${limit.toLocaleString()}。`,
-  };
-}
+const terrainDescriptionCache = new WeakMap<
+  IslandBlueprint,
+  Map<string, InspectorLayerDescription["terrain"]>
+>();
 
 function islandTerrain(
   blueprint: IslandBlueprint,
   detail: IslandGeometryDetail,
   targetRadius?: number,
 ): InspectorLayerDescription["terrain"] {
+  const cacheKey = `${detail}/${targetRadius ?? "full"}`;
+  const cached = terrainDescriptionCache.get(blueprint)?.get(cacheKey);
+  if (cached) return cached;
   const shape = buildIslandGeometry(blueprint, detail, targetRadius);
   const maxPatchAmplitude = Math.max(
     ...blueprint.terrainPatches.map((patch) => patch.amplitude),
@@ -502,6 +614,9 @@ function islandTerrain(
     geometrySource: worldSource("island/island-geometry.ts", "buildIslandGeometry().terrain"),
   } satisfies InspectorLayerDescription["terrain"];
   disposeGeometry(shape.terrain);
+  const cache = terrainDescriptionCache.get(blueprint) ?? new Map();
+  cache.set(cacheKey, terrain);
+  terrainDescriptionCache.set(blueprint, cache);
   return terrain;
 }
 
@@ -532,14 +647,22 @@ function islandLighting(
         "太阳光强",
         WORLD_SUN.keyIntensity,
         worldSource("sky/sun.ts", "WORLD_SUN.keyIntensity"),
-        { mutable: true, previewKey: "keyLightIntensity", note: "只改当前预览的第一盏方向光。" },
+        {
+          mutable: true,
+          previewKey: "keyLightIntensity",
+          note: "只改当前预览的第一盏方向光。",
+        },
       ),
       parameter(
         "ambient-intensity",
         "环境光强",
         WORLD_SUN.ambientIntensity,
         worldSource("sky/sun.ts", "WORLD_SUN.ambientIntensity"),
-        { mutable: true, previewKey: "ambientLightIntensity", note: "只改当前预览的环境光。" },
+        {
+          mutable: true,
+          previewKey: "ambientLightIntensity",
+          note: "只改当前预览的环境光。",
+        },
       ),
       parameter(
         "hemisphere-intensity",
@@ -688,25 +811,77 @@ function dressingDescription(
   runtime: InspectorRuntimeMetrics | undefined,
   triangleCounts: TriangleCountMapLike,
   note: string,
+  models: ReadonlyMap<string, InspectorModelInfo> = new Map(),
 ): InspectorLayerDescription["dressing"] {
-  const rows = dressingRows(inputs, triangleCounts);
+  const rows = dressingRows(inputs, triangleCounts, runtime, models);
   const styleId = resolveIslandSurfaceStyle();
   const style =
     ISLAND_SURFACE_STYLE_PRESETS[styleId] ??
     ISLAND_SURFACE_STYLE_PRESETS[DEFAULT_ISLAND_SURFACE_STYLE];
-  const grass = grassAsset(detail, runtime);
+  const procedural = proceduralAssetRows({
+    detail,
+    blueprints: inputs.map((i) => i.blueprint),
+    plans: rows.plans,
+    runtime,
+  });
   return {
-    assets: [grass, ...rows.assets],
-    catalog: catalogAssets(triangleCounts),
+    assets: [...procedural, ...rows.assets],
+    catalog: catalogAssets(triangleCounts, models),
     roles: rows.roles,
     parameters: dressingParameters(detail, style.brightness),
     note,
+    compositions: rows.plans.flatMap((plan, index) =>
+      (plan.decisions ?? []).map((decision) => {
+        const input = inputs[index]!;
+        const members = plan.placements.filter((placement) =>
+          decision.members.includes(placement.id),
+        );
+        const points = members.flatMap((placement) =>
+          footprintSamplePoints(
+            orientedFootprintFor(
+              placement.assetId,
+              placement.height,
+              placement.x,
+              placement.z,
+              placement.turn,
+            ),
+          ),
+        );
+        return {
+          studyId: input.blueprint.studyId,
+          courseId: input.blueprint.courseId,
+          id: decision.assemblyId,
+          kind: decision.kind,
+          status: decision.status,
+          attempts: decision.attempts,
+          rejections: decision.rejections,
+          fallback: decision.fallback,
+          members: members.map((placement) => placementUse(input, placement)),
+          footprint: points.length
+            ? ([
+                Math.max(...points.map((point) => point.x)) -
+                  Math.min(...points.map((point) => point.x)),
+                Math.max(...points.map((point) => point.z)) -
+                  Math.min(...points.map((point) => point.z)),
+              ] as const)
+            : null,
+          span: decision.span,
+          slope: decision.slope,
+        };
+      }),
+    ),
   };
 }
 
 function resourceTriangles(assets: readonly InspectorAsset[]): number | null {
   let total = 0;
   for (const asset of assets) {
+    if (asset.totalTriangles !== undefined) {
+      if (asset.totalTriangles === null) return null;
+      total += asset.totalTriangles;
+      continue;
+    }
+    if (asset.instances === 0) continue;
     if (asset.instances === null || asset.triangles === null) return null;
     total += asset.instances * asset.triangles;
   }
@@ -716,13 +891,20 @@ function resourceTriangles(assets: readonly InspectorAsset[]): number | null {
 function resourceBudget(assets: readonly InspectorAsset[]): number {
   return assets.reduce((total, asset) => {
     if (asset.instances === null) return total;
+    if (asset.projectionKind === "procedural") {
+      return total + (asset.totalTriangles ?? asset.instances * (asset.triangles ?? 0));
+    }
     const ceiling =
-      asset.techniqueLock === "landmark"
-        ? ISLAND_LANDMARK_TRIANGLE_CEILING
-        : asset.techniqueLock === "tree"
-          ? ISLAND_TREE_TRIANGLE_CEILING
-          : ISLAND_DECORATION_TRIANGLE_CEILING;
-    return total + asset.instances * ceiling;
+      asset.assetId === "treeTrunks"
+        ? COURSE_TREE_TRUNK_TRIANGLE_CEILING
+        : asset.techniqueLock === "landmark"
+          ? ISLAND_LANDMARK_TRIANGLE_CEILING
+          : asset.assetId === "treeTrunks"
+            ? 384
+            : asset.techniqueLock === "tree"
+              ? ISLAND_TREE_TRIANGLE_CEILING
+              : ISLAND_DECORATION_TRIANGLE_CEILING;
+    return total + (asset.placementCount ?? asset.instances) * ceiling;
   }, 0);
 }
 
@@ -747,323 +929,699 @@ function islandBudget(
       "docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md",
       "第三阶段：按屏幕像素分配预算",
     ),
-    basis,
+    basis:
+      actualTriangles === null
+        ? `${basis}（等待当前投影：动态树干、刻纹、贴地底沿和浅嵌盘逐项测量；未知值不记作零）`
+        : basis,
     breakdown: [
       { label: "地形网格", triangles: terrainTriangles },
       { label: "草：桌面上限 × 单片草", triangles: grassBudget },
-      { label: "装饰 / 地标：技术锁上限", triangles: resourceBudget(decoration) },
+      {
+        label: "装饰 / 地标：技术锁上限",
+        triangles: resourceBudget(decoration),
+      },
     ],
+  };
+}
+
+const WORLD_TERRAIN_COLORS: readonly InspectorColorStop[] = [
+  colorStop(
+    "grass",
+    "草地",
+    ISLAND_GEOMETRY_PALETTE.grass,
+    worldSource("island/island-geometry.ts", "ISLAND_GEOMETRY_PALETTE.grass"),
+  ),
+  colorStop(
+    "meadow-low",
+    "低地草色",
+    ISLAND_GEOMETRY_PALETTE.meadowLow,
+    worldSource("island/island-geometry.ts", "ISLAND_GEOMETRY_PALETTE.meadowLow"),
+  ),
+  colorStop(
+    "meadow-deep",
+    "深谷草色",
+    ISLAND_GEOMETRY_PALETTE.meadowDeep,
+    worldSource("island/island-geometry.ts", "ISLAND_GEOMETRY_PALETTE.meadowDeep"),
+  ),
+  colorStop(
+    "sand",
+    "沙岸",
+    ISLAND_GEOMETRY_PALETTE.sand,
+    worldSource("island/island-geometry.ts", "ISLAND_GEOMETRY_PALETTE.sand"),
+  ),
+  colorStop(
+    "rock",
+    "岩石",
+    ISLAND_GEOMETRY_PALETTE.rock,
+    worldSource("island/island-geometry.ts", "ISLAND_GEOMETRY_PALETTE.rock"),
+  ),
+  colorStop(
+    "cliff",
+    "峭壁",
+    ISLAND_GEOMETRY_PALETTE.cliff,
+    worldSource("island/island-geometry.ts", "ISLAND_GEOMETRY_PALETTE.cliff"),
+  ),
+];
+
+function worldTerrainParameters(
+  blueprint: IslandBlueprint | null,
+  islandCount: number,
+): readonly InspectorParameter[] {
+  const countParam = parameter(
+    "island-count",
+    "当前画面岛屿数",
+    islandCount,
+    worldSource("Maps.tsx", "WorldScene.placements"),
+    {
+      unit: "islands",
+      note: islandCount === 0 ? "课程书架加载完成后会替换预览样本。" : undefined,
+    },
+  );
+
+  if (!blueprint || islandCount === 0) {
+    return [countParam];
+  }
+
+  const maxPatchAmplitude = Math.max(
+    ...blueprint.terrainPatches.map((patch) => patch.amplitude),
+    0,
+  );
+
+  return [
+    countParam,
+    parameter(
+      "route-archetype",
+      "路线形状",
+      blueprint.route.archetype,
+      worldSource("island/island-blueprint.ts", "islandBlueprint().route.archetype"),
+    ),
+    parameter(
+      "road-width",
+      "路线宽度",
+      blueprint.route.roadWidth,
+      worldSource("island/island-blueprint.ts", "islandBlueprint().route.roadWidth"),
+      { unit: "units" },
+    ),
+    parameter(
+      "shoulder-width",
+      "路线肩带",
+      blueprint.route.shoulderWidth,
+      worldSource("island/island-blueprint.ts", "islandBlueprint().route.shoulderWidth"),
+      { unit: "units" },
+    ),
+    parameter(
+      "node-radius",
+      "节点半径",
+      blueprint.route.nodeRadius,
+      worldSource("island/island-blueprint.ts", "islandBlueprint().route.nodeRadius"),
+      { unit: "units" },
+    ),
+    parameter(
+      "centerline-samples",
+      "中心线采样",
+      blueprint.route.centerlineSamples,
+      worldSource("island/island-blueprint.ts", "islandBlueprint().route.centerlineSamples"),
+      { unit: "samples" },
+    ),
+    parameter(
+      "terrain-patches",
+      "地形起伏块",
+      blueprint.terrainPatches.length,
+      worldSource("island/island-blueprint.ts", "islandBlueprint().terrainPatches"),
+      { unit: "patches" },
+    ),
+    parameter(
+      "max-patch-amplitude",
+      "最大起伏幅度",
+      maxPatchAmplitude,
+      worldSource("island/island-blueprint.ts", "islandBlueprint().terrainPatches[].amplitude"),
+      { unit: "units" },
+    ),
+    parameter(
+      "base-plateau-height",
+      "基础高原高度",
+      BASE_PLATEAU_HEIGHT,
+      worldSource("island/island-blueprint.ts", "BASE_PLATEAU_HEIGHT"),
+      { unit: "units" },
+    ),
+    parameter(
+      "patch-gain",
+      "起伏块增益",
+      PATCH_GAIN,
+      worldSource("island/island-blueprint.ts", "PATCH_GAIN"),
+      { unit: "×" },
+    ),
+    parameter(
+      "max-height-ratio",
+      "最高高度比例",
+      MAX_HEIGHT_RATIO,
+      worldSource("island/island-blueprint.ts", "MAX_HEIGHT_RATIO"),
+      { unit: "ratio" },
+    ),
+    parameter(
+      "terrace-step-ratio",
+      "梯田台阶比例",
+      TERRACE_STEP_RATIO,
+      worldSource("island/island-blueprint.ts", "TERRACE_STEP_RATIO"),
+      { unit: "ratio" },
+    ),
+    parameter(
+      "relief-amplitude-ratio",
+      "细节起伏比例",
+      RELIEF_AMPLITUDE_RATIO,
+      worldSource("island/island-blueprint.ts", "RELIEF_AMPLITUDE_RATIO"),
+      { unit: "ratio" },
+    ),
+    parameter(
+      "shore-band",
+      "岸线保留带",
+      ISLAND_ROUTE_SHORE_BAND,
+      worldSource("island/island-blueprint.ts", "ISLAND_ROUTE_SHORE_BAND"),
+      { unit: "units" },
+    ),
+    parameter(
+      "min-node-spacing",
+      "节点最小间距",
+      ISLAND_BLUEPRINT_MIN_NODE_SPACING,
+      worldSource("island/island-blueprint.ts", "ISLAND_BLUEPRINT_MIN_NODE_SPACING"),
+      { unit: "units" },
+    ),
+    parameter(
+      "layout-revision",
+      "布局版本",
+      ISLAND_BLUEPRINT_LAYOUT_REVISION,
+      worldSource("island/island-blueprint.ts", "ISLAND_BLUEPRINT_LAYOUT_REVISION"),
+    ),
+    parameter(
+      "detail-spacing",
+      "中心线最小采样间距",
+      ISLAND_BLUEPRINT_MIN_CENTERLINE_SPACING,
+      worldSource("island/island-blueprint.ts", "ISLAND_BLUEPRINT_MIN_CENTERLINE_SPACING"),
+      { unit: "units" },
+    ),
+  ];
+}
+
+interface PlannedWorldIsland {
+  readonly id: string;
+  readonly blueprint: IslandBlueprint;
+  readonly position: THREE.Vector3;
+  readonly scale: 1;
+  readonly radius: number;
+}
+
+/**
+ * Remote props must be planned from the same catalogue placement identity and
+ * position that Maps renders. An incomplete adapter is deliberately not
+ * reconstructed with a study road or an origin: its planned counts remain
+ * unknown until production placement data arrives.
+ */
+function worldPlacementInputs(
+  islands: readonly WorldLayerIsland[],
+): readonly PlannedWorldIsland[] | null {
+  const ids = new Set<string>();
+  const planned: PlannedWorldIsland[] = [];
+  for (const island of islands) {
+    const id = island.id?.trim();
+    const position = island.position;
+    const radius = island.targetRadius ?? island.blueprint.bounds.maxHalf;
+    if (
+      !id ||
+      ids.has(id) ||
+      !position ||
+      !Number.isFinite(position.x) ||
+      !Number.isFinite(position.y) ||
+      !Number.isFinite(position.z) ||
+      !Number.isFinite(radius) ||
+      radius <= 0
+    ) {
+      return null;
+    }
+    ids.add(id);
+    planned.push({
+      id,
+      blueprint: island.blueprint,
+      position: position.clone(),
+      scale: 1,
+      radius,
+    });
+  }
+  return planned;
+}
+
+function remotePropUse(
+  prop: RemotePropPlacement,
+  host: WorldLayerIsland | undefined,
+  assetKey: string,
+  index: number,
+): InspectorAssetUse {
+  return {
+    studyId: host?.blueprint.studyId ?? prop.islandId,
+    courseId: host?.blueprint.courseId ?? prop.islandId,
+    id: `${prop.islandId}/${prop.kind}-${index}`,
+    assetKey,
+    position: [prop.position.x, prop.position.y, prop.position.z],
+    height: prop.scale,
+    turn: prop.rotationY,
+    group: prop.islandId,
+    state: prop.dimmed ? "dimmed" : "static",
   };
 }
 
 function worldBudget(
-  terrainTriangles: number,
-  assets: readonly InspectorAsset[],
+  islandCount: number,
+  runtime?: InspectorRuntimeMetrics,
 ): InspectorLayerDescription["budget"] {
-  const actualResources = resourceTriangles(assets);
-  return {
-    triangleBudget: terrainTriangles + resourceBudget(assets),
-    actualTriangles: actualResources === null ? null : terrainTriangles + actualResources,
-    budgetSource: projectSource(
-      "docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md",
-      "第三阶段：按屏幕像素分配预算",
-    ),
-    basis: "群岛视角把岛压缩到约 40px；因此不画草，只保留轮廓、明暗断点和亮点。",
-    breakdown: [
-      { label: "世界投影地形", triangles: terrainTriangles },
-      { label: "世界投影装饰 / 地标锁上限", triangles: resourceBudget(assets) },
-    ],
-  };
-}
+  const estimatedTerrainTriangles = islandCount * REMOTE_ISLAND_TERRAIN_TRIANGLES;
+  const estimatedPropsTriangles = islandCount * REMOTE_PROPS_MAX_TRIANGLES_PER_ISLAND;
+  const estimatedTotal = islandCount * REMOTE_ISLAND_BUDGET_PER_ISLAND;
+  const projectedTerrain = projectedMetric(runtime, "terrain");
+  const projectedProps = projectedMetric(runtime, "remoteProps");
+  const actualTriangles =
+    islandCount === 0
+      ? 0
+      : runtime && projectedTerrain && projectedProps
+        ? projectedTerrain.triangles + projectedProps.triangles
+        : null;
 
-function planetGeometry(
-  studyIds: readonly string[],
-  courseCount = 0,
-): {
-  readonly terrainTriangles: number;
-  readonly focusTriangles: number;
-} {
-  // Inspector callers only have the study list. The count is therefore an
-  // explicitly labelled estimate; browser evidence records the real GL
-  // counter. One world cell uses the same shared 18-triangle prism as Maps.
-  const estimatedStudyCount = Math.max(1, studyIds.length);
-  const estimatedCourses = Math.max(courseCount, estimatedStudyCount);
-  const estimatedCellsPerStudy = Math.max(
-    WORLD_STUDY_GRID_CONTRACT.minCells,
-    Math.min(
-      WORLD_STUDY_GRID_CONTRACT.maxCells,
-      Math.round((estimatedCourses / estimatedStudyCount) * 12),
-    ),
-  );
   return {
-    terrainTriangles: estimatedStudyCount * estimatedCellsPerStudy * 18,
-    focusTriangles: 96,
-  };
-}
-
-function planetTerrain(
-  studyCount: number,
-  courseCount: number,
-  terrainTriangles: number,
-): InspectorLayerDescription["terrain"] {
-  return {
-    generator: "buildWorldStudyGrid → WorldHexField (shared instanced hex prism)",
-    parameters: [
-      parameter(
-        "study-count",
-        "当前项目数",
-        studyCount,
-        worldSource("planet/PlanetScene.tsx", "PlanetSceneProps.studies"),
-        { unit: "studies" },
-      ),
-      parameter(
-        "course-count",
-        "真实课程数",
-        courseCount,
-        worldSource("planet/PlanetScene.tsx", "buildPlanetProjection()"),
-        { unit: "courses" },
-      ),
-      parameter(
-        "study-cell-floor",
-        "study 地块最小格数",
-        PLANET_STUDY_SIZE_CONTRACT.minCells,
-        worldSource("grid/course-grid.ts", "WORLD_STUDY_GRID_CONTRACT.minCells"),
-        { unit: "cells" },
-      ),
-      parameter(
-        "study-cell-ceiling",
-        "study 地块最大格数",
-        PLANET_STUDY_SIZE_CONTRACT.maxCells,
-        worldSource("grid/course-grid.ts", "WORLD_STUDY_GRID_CONTRACT.maxCells"),
-        { unit: "cells" },
-      ),
-      parameter(
-        "inter-cluster-gap",
-        "簇间最小间距",
-        PLANET_CLUSTER_LAYOUT_CONTRACT.interClusterGap,
-        worldSource("planet/placement.ts", "PLANET_CLUSTER_LAYOUT_CONTRACT.interClusterGap"),
-        { unit: "world units" },
-      ),
-      parameter(
-        "max-neighbour-gap",
-        "最大邻居间距",
-        PLANET_CLUSTER_LAYOUT_CONTRACT.maxNearestClusterGap,
-        worldSource("planet/placement.ts", "PLANET_CLUSTER_LAYOUT_CONTRACT.maxNearestClusterGap"),
-        { unit: "world units" },
-      ),
-      parameter(
-        "selected-lift",
-        "选中簇抬升",
-        PLANET_ATMOSPHERE.selectedLift,
-        worldSource("planet/PlanetScene.tsx", "PLANET_ATMOSPHERE.selectedLift"),
-        { unit: "world units" },
-      ),
-      parameter(
-        "selected-scale",
-        "选中簇缩放",
-        PLANET_ATMOSPHERE.selectedScale,
-        worldSource("planet/PlanetScene.tsx", "PLANET_ATMOSPHERE.selectedScale"),
-      ),
-      parameter(
-        "camera-polar",
-        "高位相机角",
-        PLANET_CAMERA_POLAR,
-        worldSource("planet/placement.ts", "PLANET_CAMERA_POLAR"),
-        { unit: "radians" },
-      ),
-      parameter(
-        "terrain-triangles",
-        "共享地形估算三角形",
-        terrainTriangles,
-        worldSource("grid/WorldHexField.tsx", "HEX_GEOMETRY_TRIANGLES"),
-        { unit: "tris", note: "按每个 study 的平均课程数估算；真实值以浏览器计数为准。" },
-      ),
-    ],
-    colors: [
-      colorStop(
-        "sky-zenith",
-        "天空顶",
-        COURSE_SKY_STOPS.zenith,
-        worldSource("Maps.tsx", "COURSE_SKY_STOPS.zenith"),
-      ),
-      colorStop(
-        "sky-mid",
-        "天空中部",
-        COURSE_SKY_STOPS.mid,
-        worldSource("Maps.tsx", "COURSE_SKY_STOPS.mid"),
-      ),
-      colorStop(
-        "sky-horizon",
-        "天空地平线",
-        COURSE_SKY_STOPS.horizon,
-        worldSource("Maps.tsx", "COURSE_SKY_STOPS.horizon"),
-      ),
-      colorStop(
-        "soil-cliff",
-        "共享崖土",
-        0x64594f,
-        worldSource("grid/grid-palette.ts", "GRID_SHARED_SOIL.cliff"),
-      ),
-    ],
-    geometryTriangles: terrainTriangles,
-    geometrySource: worldSource("grid/WorldHexField.tsx", "WorldHexTerrain"),
-  };
-}
-
-function planetLighting(): InspectorLayerDescription["lighting"] {
-  return {
-    parameters: [
-      parameter(
-        "key-intensity",
-        "共享太阳光强",
-        WORLD_SUN.keyIntensity,
-        worldSource("sky/sun.ts", "WORLD_SUN.keyIntensity"),
-      ),
-      parameter(
-        "ambient-intensity",
-        "共享环境光强",
-        WORLD_SUN.ambientIntensity,
-        worldSource("sky/sun.ts", "WORLD_SUN.ambientIntensity"),
-      ),
-      parameter(
-        "hemisphere-intensity",
-        "共享半球光强",
-        WORLD_SUN.hemisphereIntensity,
-        worldSource("sky/sun.ts", "WORLD_SUN.hemisphereIntensity"),
-      ),
-      parameter(
-        "atmosphere-fog-far",
-        "星球大气远端",
-        PLANET_ATMOSPHERE.fogFarRatio,
-        worldSource("planet/PlanetScene.tsx", "PLANET_ATMOSPHERE.fogFarRatio"),
-        { unit: "× weather extent" },
-      ),
-    ],
-    colors: [
-      colorStop(
-        "key",
-        "太阳光色",
-        WORLD_SUN.keyColor,
-        worldSource("sky/sun.ts", "WORLD_SUN.keyColor"),
-      ),
-      colorStop(
-        "hemisphere-ground",
-        "半球下方反弹",
-        WORLD_SUN.hemisphereGround,
-        worldSource("sky/sun.ts", "WORLD_SUN.hemisphereGround"),
-      ),
-      colorStop(
-        "fog",
-        "大气雾色",
-        COURSE_SKY_STOPS.nadir ?? COURSE_SKY_STOPS.horizon,
-        worldSource("Maps.tsx", "COURSE_SKY_STOPS.nadir"),
-      ),
-    ],
-  };
-}
-
-function planetBudget(
-  terrainTriangles: number,
-  focusTriangles: number,
-): InspectorLayerDescription["budget"] {
-  const estimatedTriangles = terrainTriangles + focusTriangles;
-  return {
-    triangleBudget: estimatedTriangles,
-    actualTriangles: null,
+    triangleBudget: islandCount > 0 ? estimatedTotal : 0,
+    actualTriangles,
     budgetSource: projectSource(
       "docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md",
       "第三阶段：按屏幕像素分配预算",
     ),
     basis:
-      "星球页复用远景 instanced hex field；静态摘要是估算，真实调用与三角形以同口径浏览器证据为准。",
+      "群岛是世界远景投影：一个合并连续地形 mesh（RemoteIslandField）与最多两批全局 InstancedMesh 轻量道具（RemotePropsField）；部分运行时采样不补零，只有地形和 remote-props 同时可见或明确为空时才给出实测总量。",
     breakdown: [
-      { label: "共享 world 地形（估算）", triangles: terrainTriangles },
-      { label: "选中簇焦点环", triangles: focusTriangles },
+      {
+        label: "世界投影连续地形",
+        triangles: runtime
+          ? (projectedTerrain?.triangles ?? null)
+          : islandCount > 0
+            ? estimatedTerrainTriangles
+            : 0,
+      },
+      {
+        label: "远景轻量地标与树剪影",
+        triangles: runtime
+          ? (projectedProps?.triangles ?? null)
+          : islandCount > 0
+            ? estimatedPropsTriangles
+            : 0,
+      },
     ],
   };
 }
 
-function emptyDressing(note: string): InspectorLayerDescription["dressing"] {
+function worldDressingDescription(
+  islands: readonly WorldLayerIsland[],
+  runtime?: InspectorRuntimeMetrics,
+): InspectorLayerDescription["dressing"] {
+  const styleId = resolveIslandSurfaceStyle();
+  const style =
+    ISLAND_SURFACE_STYLE_PRESETS[styleId] ??
+    ISLAND_SURFACE_STYLE_PRESETS[DEFAULT_ISLAND_SURFACE_STYLE];
+
+  if (islands.length === 0) {
+    return {
+      assets: [],
+      catalog: [],
+      roles: [],
+      parameters: dressingParameters("world", style.brightness),
+      note: "群岛是世界远景投影：复用连续浮岛共享网格（RemoteIslandField），不生成课程近景道具，零草叶（ISLAND_GRASS_LIMITS.world.desktop = 0），零关卡节点。",
+      compositions: [],
+    };
+  }
+
+  const plannedIslands = worldPlacementInputs(islands);
+  const propsPlan = plannedIslands ? planRemotePropsCatalogue(plannedIslands) : null;
+  const hostById = new Map(
+    plannedIslands?.map((planned, index) => [planned.id, islands[index]!] as const),
+  );
+  const landmarkUses = propsPlan
+    ? propsPlan.landmarks.map((prop, index) =>
+        remotePropUse(prop, hostById.get(prop.islandId), "procedural/world-landmark", index),
+      )
+    : [];
+  const treeUses = propsPlan
+    ? propsPlan.trees.map((prop, index) =>
+        remotePropUse(prop, hostById.get(prop.islandId), "procedural/world-tree-crown", index),
+      )
+    : [];
+  const placementNote = plannedIslands
+    ? ""
+    : "生产 Maps catalogue placement 的 id/position 不完整；不使用原点或 study-layout fallback，未知不记作 0。";
+
+  const measuredLandmark = projectedMetric(runtime, "remoteLandmark");
+  const measuredTree = projectedMetric(runtime, "remoteTree");
+
+  const remoteLandmarkAsset: InspectorAsset = {
+    key: "procedural/world-landmark",
+    role: "远景地标",
+    assetId: "world-landmark",
+    name: "世界地标石亭剪影（六棱石亭）",
+    pack: "自有程序化",
+    runtimePath: null,
+    sourcePath: "packages/world/src/island/remote-props.ts",
+    bytes: null,
+    triangles: REMOTE_PAVILION_TRIANGLES,
+    totalTriangles: runtime
+      ? (measuredLandmark?.triangles ?? null)
+      : propsPlan
+        ? propsPlan.landmarks.length * REMOTE_PAVILION_TRIANGLES
+        : null,
+    instances: runtime
+      ? (measuredLandmark?.instances ?? null)
+      : (propsPlan?.landmarks.length ?? null),
+    placementCount: propsPlan?.landmarks.length ?? null,
+    projectionKind: "procedural",
+    bytesSource: null,
+    trianglesSource: worldSource("island/remote-props.ts", "REMOTE_PAVILION_TRIANGLES"),
+    instancesSource: worldSource("island/remote-props.ts", "planRemotePropsCatalogue"),
+    techniqueLock: "landmark",
+    technique:
+      "至多 1 座 36 三角的低成本石亭剪影，对应英雄锚点位置与朝向（候选点未全部 inside 则有界省略，地面坡度仍存在）。",
+    techniqueSource: worldSource("island/remote-props.ts", "createRemotePavilionGeometry"),
+    mutable: false,
+    uses: landmarkUses,
+    note: propsPlan
+      ? `每个岛屿规划至多 1 座石亭地标轮廓（${propsPlan.landmarks.length} 岛规划 ${propsPlan.landmarks.length} 座）；锚点采样同 worldmesh，若未全部 inside 则有界省略，地面坡度仍存在。`
+      : placementNote,
+  };
+
+  const remoteTreeAsset: InspectorAsset = {
+    key: "procedural/world-tree-crown",
+    role: "远景树冠",
+    assetId: "world-tree-crown",
+    name: "世界树冠剪影（六边锥）",
+    pack: "自有程序化",
+    runtimePath: null,
+    sourcePath: "packages/world/src/island/remote-props.ts",
+    bytes: null,
+    triangles: REMOTE_TREE_TRIANGLES,
+    totalTriangles: runtime
+      ? (measuredTree?.triangles ?? null)
+      : propsPlan
+        ? propsPlan.trees.length * REMOTE_TREE_TRIANGLES
+        : null,
+    instances: runtime ? (measuredTree?.instances ?? null) : (propsPlan?.trees.length ?? null),
+    placementCount: propsPlan?.trees.length ?? null,
+    projectionKind: "procedural",
+    bytesSource: null,
+    trianglesSource: worldSource("island/remote-props.ts", "REMOTE_TREE_TRIANGLES"),
+    instancesSource: worldSource("island/remote-props.ts", "planRemotePropsCatalogue"),
+    techniqueLock: "tree",
+    technique:
+      "至多 2-4 棵 12 三角的六棱锥树剪影，不加载课程冠团（候选点未全部 inside 则有界省略，地面坡度仍存在）。",
+    techniqueSource: worldSource("island/remote-props.ts", "createRemoteTreeGeometry"),
+    mutable: false,
+    uses: treeUses,
+    note: propsPlan
+      ? `每个岛屿规划至多 2-4 棵树剪影（${propsPlan.trees.length} 棵）；若未全部 inside 则有界省略，地面坡度仍存在。`
+      : placementNote,
+  };
+
+  const procedural = proceduralAssetRows({
+    detail: "world",
+    blueprints: islands.map((i) => i.blueprint),
+    plans: [],
+    runtime,
+  });
+
   return {
-    assets: [],
+    assets: [remoteLandmarkAsset, remoteTreeAsset, ...procedural],
     catalog: [],
     roles: [],
-    parameters: [],
-    note,
+    parameters: dressingParameters("world", style.brightness),
+    note: `群岛是世界远景投影：复用连续浮岛共享网格（RemoteIslandField）与全局 InstancedMesh 剪影道具，零草叶、零近景关卡节点。${placementNote ? ` ${placementNote}` : ""}`,
+    compositions: [],
   };
 }
 
 export function describePlanetLayer({
   studyIds,
-  courseCount = 0,
+  courseCount,
+  studies,
+  domainCatalog,
+  representativeLimit: requestedLimit = 5,
+  runtime,
 }: DescribePlanetLayerOptions): InspectorLayerDescription {
-  const geometry = planetGeometry(studyIds, courseCount);
+  const studyInputs = studies ?? (studyIds ?? []).map<DescribePlanetStudy>((id) => ({ id }));
+  const studyList: PlanetStudy[] = studyInputs.map((study) => ({
+    ...study,
+    title: study.title ?? study.id,
+    courseCount: study.courseCount ?? 0,
+    lessonCount: study.lessonCount ?? 0,
+    lessonsDone: study.lessonsDone ?? 0,
+    courses: study.courses ?? [],
+    courseTitles: study.courseTitles ?? [],
+  }));
+  const representativeLimit = runtime?.planetRepresentativeLimit ?? requestedLimit;
+  const representativeCounts = studyInputs.map((study) =>
+    study.courses !== undefined
+      ? Math.min(representativeLimit, study.courses.length)
+      : study.courseCount !== undefined
+        ? Math.min(representativeLimit, Math.max(0, study.courseCount))
+        : null,
+  );
+  const representativeCount = representativeCounts.some((count) => count === null)
+    ? null
+    : representativeCounts.reduce<number>((sum, count) => sum + (count ?? 0), 0);
+  const domains = buildDomainPlan(studyList, domainCatalog);
+  const totalCourses = studies
+    ? studyList.reduce((sum, study) => sum + study.courseCount, 0)
+    : (courseCount ?? 0);
+  const globeTriangles = domainGlobeTriangles();
+  const definitions = [
+    {
+      id: "domainGlobe",
+      label: "领域球体",
+      planned: domains.length * globeTriangles,
+      count: domains.length,
+      generator: "createDomainGlobeGeometry",
+      file: "planet/globe-geometry.ts",
+    },
+    {
+      id: "domainClouds",
+      label: "球面云块",
+      planned: null,
+      count: domains.length,
+      generator: "createDomainCloudGeometry",
+      file: "planet/globe-geometry.ts",
+    },
+    {
+      id: "domainAtmosphere",
+      label: "大气轮廓",
+      planned: domains.length * globeTriangles,
+      count: domains.length,
+      generator: "DomainPlanet",
+      file: "planet/PlanetScene.tsx",
+    },
+    {
+      id: "atmosphericIslands",
+      label: "真实课程代表岛",
+      planned:
+        representativeCount === null ? null : representativeCount * REMOTE_ISLAND_TERRAIN_TRIANGLES,
+      count: representativeCount,
+      generator: "buildAtmosphericIslands",
+      file: "planet/atmospheric-regions.ts",
+    },
+    {
+      id: "domainRegionTargets",
+      label: "系列区域命中体",
+      planned: studyList.length * 80,
+      count: studyList.length,
+      generator: "DomainPlanet",
+      file: "planet/PlanetScene.tsx",
+    },
+    {
+      id: "planetFocus",
+      label: "选中系列区域环",
+      planned: null,
+      count: null,
+      generator: "DomainPlanet",
+      file: "planet/PlanetScene.tsx",
+    },
+  ] as const;
+  const assets: InspectorAsset[] = definitions.map((definition) => {
+    const value = projectedMetric(runtime, definition.id);
+    const source = worldSource(definition.file, definition.generator);
+    const geometrySource =
+      definition.id === "domainGlobe" || definition.id === "domainAtmosphere"
+        ? worldSource("planet/globe-geometry.ts", "createDomainGlobeGeometry")
+        : source;
+    return {
+      key: `procedural/${definition.id}`,
+      role: definition.label,
+      assetId: definition.id,
+      name: definition.label,
+      pack: "自有程序化",
+      runtimePath: null,
+      sourcePath: `packages/world/src/${definition.file}`,
+      bytes: null,
+      triangles: null,
+      totalTriangles: runtime ? (value?.triangles ?? null) : definition.planned,
+      instances: runtime ? (value?.instances ?? null) : definition.count,
+      placementCount: definition.count ?? value?.instances ?? null,
+      projectionKind: "procedural",
+      bytesSource: null,
+      trianglesSource: geometrySource,
+      instancesSource: source,
+      techniqueLock: "domainPlanet",
+      technique: definition.generator,
+      techniqueSource: source,
+      mutable: false,
+      note:
+        definition.id === "atmosphericIslands"
+          ? representativeCount === null
+            ? "代表课程列表与数量未完整提供；实际代表岛及三角数保持未知，不以 0 代替。"
+            : "每系列最多呈现前 5 门真实课程的地形代表；完整课程数在 DOM 列表，合并网格数不是课程数。"
+          : definition.id === "domainRegionTargets"
+            ? "透明命中体仍有提交成本；不代表可见实体。"
+            : "无运行时采样时仅展示已知规划量；云带与选中环不伪造实际值。",
+    };
+  });
+  const representativeBudgetCount = representativeCount ?? studyList.length * 5;
+  const plannedTerrainTriangles =
+    domains.length * globeTriangles + representativeBudgetCount * REMOTE_ISLAND_TERRAIN_TRIANGLES;
+  const measuredTerrainTriangles = projectedTriangleTotal(runtime, [
+    "domainGlobe",
+    "atmosphericIslands",
+  ]);
+  const terrainTriangles = measuredTerrainTriangles ?? plannedTerrainTriangles;
+  const actualTriangles =
+    domains.length === 0
+      ? 0
+      : projectedTriangleTotal(
+          runtime,
+          definitions.map((definition) => definition.id),
+        );
   return {
     id: "planet",
     title: "行星",
-    projection: "研究项目选择器的行星投影",
-    liveSource: worldSource("planet/PlanetScene.tsx", "PlanetStage → PlanetScene"),
-    terrain: planetTerrain(studyIds.length, courseCount, geometry.terrainTriangles),
-    dressing: emptyDressing(
-      "项目组复用 WorldPropField 的远景装饰；星球页只改变簇组合、相机与选中态，不另造一套资产。",
-    ),
-    lighting: planetLighting(),
-    budget: planetBudget(geometry.terrainTriangles, geometry.focusTriangles),
+    projection: "学习领域球体 → 大气层系列区域 → 课程代表岛",
+    liveSource: worldSource("planet/PlanetScene.tsx", "PlanetScene"),
+    terrain: {
+      generator: "buildDomainPlan → createDomainGlobeGeometry + buildAtmosphericIslands",
+      parameters: [
+        parameter(
+          "domain-count",
+          "真实领域数",
+          domains.length,
+          worldSource("planet/domain-plan.ts", "buildDomainPlan"),
+        ),
+        parameter(
+          "study-count",
+          "系列区域数",
+          studyList.length,
+          worldSource("planet/atmospheric-regions.ts", "planAtmosphericRegions"),
+        ),
+        parameter(
+          "course-count",
+          "真实课程数",
+          totalCourses,
+          worldSource("planet/planet-copy.ts", "PlanetStudy.courseCount"),
+        ),
+        parameter(
+          "representative-count",
+          "课程代表岛数",
+          representativeCount ?? "未知",
+          worldSource("planet/atmospheric-regions.ts", "planAtmosphericRegions"),
+        ),
+        parameter(
+          "domain-radius",
+          "球体半径",
+          DOMAIN_RADIUS,
+          worldSource("planet/atmospheric-regions.ts", "DOMAIN_RADIUS"),
+        ),
+        parameter(
+          "region-altitude",
+          "区域轨道半径",
+          DOMAIN_RADIUS * REGION_ALTITUDE,
+          worldSource("planet/atmospheric-regions.ts", "REGION_ALTITUDE"),
+        ),
+      ],
+      colors: [],
+      geometryTriangles: terrainTriangles,
+      geometrySource: worldSource("planet/PlanetScene.tsx", "DomainPlanet"),
+    },
+    dressing: {
+      assets,
+      catalog: [],
+      roles: [],
+      parameters: [],
+      compositions: [],
+      note:
+        domains
+          .map(
+            (domain) =>
+              `${domain.title}：${domain.studies.map((study) => study.title).join("、") || "暂无系列"}`,
+          )
+          .join("；") || "暂无已发布领域。",
+    },
+    lighting: {
+      parameters: [
+        parameter(
+          "key-intensity",
+          "共享太阳光强",
+          WORLD_SUN.keyIntensity,
+          worldSource("sky/sun.ts", "WORLD_SUN.keyIntensity"),
+        ),
+      ],
+      colors: [
+        colorStop(
+          "key",
+          "共享太阳光色",
+          WORLD_SUN.keyColor,
+          worldSource("sky/sun.ts", "WORLD_SUN.keyColor"),
+        ),
+      ],
+    },
+    budget: {
+      triangleBudget:
+        domains.length *
+          (DOMAIN_GLOBE_TRIANGLES_MAX + DOMAIN_CLOUD_TRIANGLES_MAX + DOMAIN_GLOBE_TRIANGLES_MAX) +
+        representativeBudgetCount * REMOTE_ISLAND_TERRAIN_TRIANGLES +
+        studyList.length * 80 +
+        (studyList.length ? REMOTE_FOCUS_TRIANGLES : 0),
+      actualTriangles,
+      budgetSource: projectSource(
+        "docs/adr/ADR-0008-one-locked-technique-per-island-element.md",
+        "领域星球",
+      ),
+      basis:
+        "领域球体、云带、大气壳、代表岛和交互几何；运行时采样为场景图提交几何，不含天空、阴影和后处理。缺失投影不补零，只有完整场景明确声明 optional 投影不存在时才计 0。代表课程元数据缺失时，预算使用每系列最多 5 门的保守上限，实测总量仍为未知。表面纹理每领域 1024×512 RGBA，基础 2 MiB，含 mipmap 约 2.67 MiB。",
+      breakdown: assets.map((asset) => ({
+        label: asset.name,
+        triangles: asset.totalTriangles ?? null,
+      })),
+    },
   };
-}
-
-function previewBlueprint(): IslandBlueprint {
-  return islandBlueprint({
-    studyId: "map-studio-preview",
-    courseId: "map-studio-preview",
-    lessonCount: 1,
-    themeSelection: islandThemeSelectionForCourse("map-studio-preview", "map-studio-preview"),
-  });
 }
 
 export function describeWorldLayer({
   islands,
   skyStudyId = null,
   runtime,
-  triangleCounts = new Map(),
 }: DescribeWorldLayerOptions): InspectorLayerDescription {
-  const activeIslands =
-    islands.length > 0
-      ? islands
-      : [{ blueprint: previewBlueprint(), targetRadius: 1 } satisfies WorldLayerIsland];
-  const first = activeIslands[0]!;
-  const terrainDescriptions = activeIslands.map((island) =>
-    islandTerrain(island.blueprint, "world", island.targetRadius),
-  );
-  const terrainTriangles = terrainDescriptions.reduce(
-    (total, description) => total + description.geometryTriangles,
-    0,
-  );
-  const representativeTerrain = terrainDescriptions[0]!;
-  const terrain = {
-    ...representativeTerrain,
-    parameters: [
-      parameter(
-        "island-count",
-        "当前画面岛屿数",
-        islands.length,
-        worldSource("Maps.tsx", "WorldScene.placements"),
-        {
-          unit: "islands",
-          note: islands.length === 0 ? "课程书架加载完成后会替换预览样本。" : undefined,
-        },
-      ),
-      ...representativeTerrain.parameters,
-    ],
+  const islandCount = islands.length;
+  const estimatedTerrainTriangles = islandCount * REMOTE_ISLAND_TRIANGLES_PER_ISLAND;
+  const projectedTerrain = projectedMetric(runtime, "terrain");
+  const terrainTriangles =
+    projectedTerrain?.triangles ?? (islandCount > 0 ? estimatedTerrainTriangles : 0);
+
+  const terrain: InspectorLayerDescription["terrain"] = {
+    generator: "buildRemoteIslandBatch → RemoteIslandField (shared continuous mesh)",
+    parameters: worldTerrainParameters(islandCount > 0 ? islands[0]!.blueprint : null, islandCount),
+    colors: WORLD_TERRAIN_COLORS,
     geometryTriangles: terrainTriangles,
-  } satisfies InspectorLayerDescription["terrain"];
-  const dressing = dressingDescription(
-    activeIslands,
-    "world",
-    runtime,
-    triangleCounts,
-    "群岛是世界投影：草的真实上限来自 ISLAND_GRASS_LIMITS.world.desktop = 0；保留岛的轮廓、地标和少量装饰。",
-  );
+    geometrySource: worldSource("island/remote-island-field.ts", "buildRemoteIslandBatch"),
+  };
+
+  const dressing = worldDressingDescription(islands, runtime);
+  const maxHalf = islandCount > 0 ? islands[0]!.blueprint.bounds.maxHalf : 0;
+
   return {
     id: "world",
     title: "群岛",
@@ -1071,8 +1629,8 @@ export function describeWorldLayer({
     liveSource: worldSource("Maps.tsx", "WorldScene"),
     terrain,
     dressing,
-    lighting: islandLighting(skyStudyId, first.blueprint.bounds.maxHalf),
-    budget: worldBudget(terrainTriangles, dressing.assets),
+    lighting: islandLighting(skyStudyId, maxHalf),
+    budget: worldBudget(islandCount, runtime),
   };
 }
 
@@ -1081,6 +1639,7 @@ export function describeIslandLayer({
   skyStudyId = null,
   runtime,
   triangleCounts = new Map(),
+  models = new Map(),
 }: DescribeIslandLayerOptions): InspectorLayerDescription {
   const terrain = islandTerrain(blueprint, "course");
   const dressing = dressingDescription(
@@ -1089,6 +1648,7 @@ export function describeIslandLayer({
     runtime,
     triangleCounts,
     "课程岛是近景投影：草、树、灌木、石头和地标全部来自同一个 blueprint + dressing plan；替换只留在当前预览。",
+    models,
   );
   return {
     id: "island",

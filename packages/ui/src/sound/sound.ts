@@ -49,6 +49,9 @@ let player: UISFXPlayer | null = null;
 let armed = false;
 let unlocked = false;
 let enabled = readSoundEnabled();
+let cancelPreparation: (() => void) | null = null;
+let disarmSound: (() => void) | null = null;
+const soundOwners = new Set<symbol>();
 
 /**
  * Sound is on unless the learner said otherwise.
@@ -98,26 +101,87 @@ export function isUnlocked(): boolean {
 }
 
 /**
- * Arm the latch. Safe to call on mount: it registers listeners and nothing
- * else. Returns its own disarm function, so a component can own it in an
- * effect without a second cleanup path.
+ * Prepare the same player's suspended context while the page is idle.
+ *
+ * A real first-pointer CPU profile (2026-09-07) spent 162ms in UISFX's
+ * AudioContext constructor, before the click could even reach navigation.
+ * UISFX 0.4's public preload([]) only constructs that context: an empty cue
+ * list synthesizes nothing and neither resumes the context nor starts a
+ * source. unlock() still runs exclusively inside the real gesture below.
+ * Do not replace this with play(), unlock(), or a second AudioContext.
  */
-export function armSoundUnlock(): () => void {
-  if (armed || typeof window === "undefined") return () => undefined;
+function prepareSilently(): void {
+  if (!enabled || unlocked) return;
+  try {
+    void ensurePlayer()
+      ?.preload([])
+      .catch(() => undefined);
+  } catch {
+    // The real gesture may retry. Sound preparation never blocks navigation
+    // with an exception when Web Audio is unavailable.
+  }
+}
+
+function schedulePreparation(): () => void {
+  if (typeof window.requestIdleCallback === "function") {
+    const id = window.requestIdleCallback(prepareSilently, { timeout: 1_000 });
+    return () => window.cancelIdleCallback(id);
+  }
+  // Let the initial DOM paint first on browsers without requestIdleCallback.
+  const id = window.setTimeout(prepareSilently, 100);
+  return () => window.clearTimeout(id);
+}
+
+/** Install one listener set for all mounted viewports, not one per canvas. */
+function installSoundLatch(): void {
   armed = true;
+  cancelPreparation = schedulePreparation();
   const events = ["pointerdown", "keydown", "touchstart"] as const;
+  let unlocking = false;
   const unlock = () => {
-    for (const event of events) window.removeEventListener(event, unlock);
-    const active = ensurePlayer();
-    if (!active) return;
-    void active.unlock().then((ok) => {
-      unlocked = ok;
-    });
+    if (!enabled || unlocked || unlocking) return;
+    cancelPreparation?.();
+    cancelPreparation = null;
+    try {
+      const active = ensurePlayer();
+      if (!active) return;
+      unlocking = true;
+      void active
+        .unlock()
+        .then((ok) => {
+          if (disarmSound !== disarm) return;
+          unlocked = ok;
+          if (ok) for (const event of events) window.removeEventListener(event, unlock);
+        })
+        .catch(() => undefined)
+        .finally(() => {
+          unlocking = false;
+        });
+    } catch {
+      unlocking = false;
+      // A refused context is silence, not a broken first click.
+    }
   };
   for (const event of events) window.addEventListener(event, unlock, { passive: true });
-  return () => {
+  const disarm = () => {
+    cancelPreparation?.();
+    cancelPreparation = null;
     for (const event of events) window.removeEventListener(event, unlock);
     armed = false;
+    if (disarmSound === disarm) disarmSound = null;
+  };
+  disarmSound = disarm;
+}
+
+/** Releasing the first Stage must not disarm another Stage still on screen. */
+export function armSoundUnlock(): () => void {
+  if (typeof window === "undefined") return () => undefined;
+  const owner = Symbol("sound-viewport");
+  soundOwners.add(owner);
+  if (!armed) installSoundLatch();
+  return () => {
+    if (!soundOwners.delete(owner)) return;
+    if (soundOwners.size === 0) disarmSound?.();
   };
 }
 
@@ -145,6 +209,10 @@ export function playSound(moment: SoundMoment): void {
 
 /** Testing seam: forget the latch, the player and the cached preference. */
 export function resetSoundForTests(): void {
+  disarmSound?.();
+  soundOwners.clear();
+  cancelPreparation?.();
+  cancelPreparation = null;
   player = null;
   armed = false;
   unlocked = false;

@@ -100,7 +100,7 @@ export const WORLD_GRADE = defineGrade("diorama", {
   tiltShift: false,
   grain: 0,
   saturation: 1.06,
-  contrast: 1.17,
+  contrast: 1.06,
   contrastPivot: srgbToDisplayLinear(WORLD_GRADE_PIVOT_SRGB8),
   coolShadow: {
     // 2026-09-02: 0.26 → 0.15. Not because cool shadows stopped being wanted —

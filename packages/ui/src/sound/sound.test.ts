@@ -8,24 +8,32 @@
  * before a gesture, nothing plays when the learner said no, and nothing that
  * goes wrong in here is allowed to throw into a render.
  */
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CUE_FOR, INCIDENTAL, type SoundMoment } from "./cues.js";
 
 const played: string[] = [];
 let unlockResult = true;
 let created = 0;
+let unlockCalls = 0;
+const preloaded: string[][] = [];
 
 vi.mock("uisfx", () => ({
   createUISFX: () => {
     created += 1;
     return {
-      unlock: () => Promise.resolve(unlockResult),
+      unlock: () => {
+        unlockCalls += 1;
+        return Promise.resolve(unlockResult);
+      },
       play: (cue: string) => {
         played.push(cue);
         return null;
       },
-      preload: () => Promise.resolve(),
+      preload: (cues: string[]) => {
+        preloaded.push(cues);
+        return Promise.resolve();
+      },
       setPack: () => undefined,
       setVolume: () => undefined,
     };
@@ -42,14 +50,44 @@ async function gesture() {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers();
   played.length = 0;
+  preloaded.length = 0;
   created = 0;
+  unlockCalls = 0;
   unlockResult = true;
   window.localStorage.clear();
   resetSoundForTests();
 });
 
+afterEach(() => {
+  resetSoundForTests();
+  vi.useRealTimers();
+});
+
 describe("the latch", () => {
+  it("retains the gesture listener until the last mounted viewport is released", async () => {
+    const releaseFirst = armSoundUnlock();
+    const releaseSecond = armSoundUnlock();
+    releaseFirst();
+    releaseFirst();
+    await gesture();
+    expect(isUnlocked()).toBe(true);
+    expect(created).toBe(1);
+    releaseSecond();
+  });
+
+  it("retries on a later gesture after the browser refused the first unlock", async () => {
+    unlockResult = false;
+    const disarm = armSoundUnlock();
+    await gesture();
+    await Promise.resolve();
+    expect(isUnlocked()).toBe(false);
+    unlockResult = true;
+    await gesture();
+    expect(isUnlocked()).toBe(true);
+    disarm();
+  });
   it("plays nothing before a gesture, which is baseline rule 5", async () => {
     const disarm = armSoundUnlock();
     playSound("answer.correct");
@@ -61,6 +99,42 @@ describe("the latch", () => {
     const disarm = armSoundUnlock();
     expect(created).toBe(0);
     disarm();
+  });
+
+  it("prepares one silent player while idle but never resumes or plays before a gesture", async () => {
+    armSoundUnlock();
+    await vi.runOnlyPendingTimersAsync();
+    expect(created).toBe(1);
+    expect(preloaded).toEqual([[]]);
+    expect(unlockCalls).toBe(0);
+    expect(isUnlocked()).toBe(false);
+    playSound("answer.correct");
+    expect(played).toEqual([]);
+    await gesture();
+    expect(created).toBe(1);
+    expect(unlockCalls).toBe(1);
+    expect(isUnlocked()).toBe(true);
+  });
+
+  it("cancels pending preparation on unmount", async () => {
+    const disarm = armSoundUnlock();
+    disarm();
+    await vi.runOnlyPendingTimersAsync();
+    await gesture();
+    expect(created).toBe(0);
+    expect(unlockCalls).toBe(0);
+  });
+
+  it("does not allocate or unlock audio when muted, and can unlock on a later enabled gesture", async () => {
+    writeSoundEnabled(false);
+    armSoundUnlock();
+    await vi.runOnlyPendingTimersAsync();
+    await gesture();
+    expect(created).toBe(0);
+    expect(unlockCalls).toBe(0);
+    writeSoundEnabled(true);
+    await gesture();
+    expect(unlockCalls).toBe(1);
   });
 
   it("plays after a gesture", async () => {

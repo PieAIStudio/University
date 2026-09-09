@@ -14,7 +14,12 @@ export {
   type PreviewTuningValues,
 } from "./preview-runtime.js";
 export { PreviewOverrideBridge } from "./PreviewOverrideBridge.js";
-export { assetKey, glbTriangleCount, loadIslandAssetTriangleCounts } from "./triangle-count.js";
+export {
+  assetKey,
+  glbTriangleCount,
+  loadIslandAssetTriangleCounts,
+  loadIslandAssetModelInfo,
+} from "./triangle-count.js";
 export type {
   DescribeIslandLayerOptions,
   DescribePlanetLayerOptions,
@@ -23,6 +28,7 @@ export type {
 } from "./descriptions.js";
 export type {
   InspectorAsset,
+  InspectorModelInfo,
   InspectorCatalogAsset,
   InspectorColorStop,
   InspectorLayerDescription,
