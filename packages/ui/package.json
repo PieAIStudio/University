@@ -112,7 +112,8 @@
     "./learning-play/ai-agent-play.css": "./src/learning-play/ai-agent-play.css",
     "./learning-play/play-usability.css": "./src/learning-play/play-usability.css",
     "./learning-play/quality-usability.css": "./src/learning-play/quality-usability.css",
-    "./learning-play/workflow-usability.css": "./src/learning-play/workflow-usability.css"
+    "./learning-play/workflow-usability.css": "./src/learning-play/workflow-usability.css",
+    "./learning-play/sort.css": "./src/learning-play/sort.css"
   },
   "scripts": {
     "typecheck": "tsc -b --pretty false",

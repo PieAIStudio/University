@@ -22,6 +22,7 @@ export const messages = {
   "play.lab.research": "How these activities teach",
   "play.lab.researchCopy":
     "Explain relationships through action, test a hypothesis, then try a new situation. One completed challenge is one observation; lasting learning needs learner evaluation.",
+  "play.mode.sort": "Sorting bench",
   "play.mode.connect": "Causal connections",
   "play.mode.tune": "Tuning lab",
   "play.mode.hunt": "Counterexample hunt",

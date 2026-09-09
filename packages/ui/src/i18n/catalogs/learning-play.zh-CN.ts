@@ -19,6 +19,7 @@ export const messages = {
   "play.lab.research": "玩法背后的学习方法",
   "play.lab.researchCopy":
     "用动作解释关系，用实验检验猜想，再换一个情境看看能否举一反三。一次完成只代表这次挑战成立；长期学习效果还需要真实试学验证。",
+  "play.mode.sort": "归类台",
   "play.mode.connect": "因果接线台",
   "play.mode.tune": "调参实验室",
   "play.mode.hunt": "反例猎手",

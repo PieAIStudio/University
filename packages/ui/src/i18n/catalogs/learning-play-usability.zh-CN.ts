@@ -1,6 +1,10 @@
 export const messages = {
   "play.usability.hunt.change": "再换一个输入试试",
   "play.usability.goal": "本关目标与背景",
+  "play.sort.guidePickItem": "先点一样东西，再点它属于哪一格。",
+  "play.sort.guidePickBucket": "现在点它属于的那一格。",
+  "play.sort.missGeneric": "这一格装的不是它。再想想它是什么。",
+  "play.sort.misses": "放错 {{value0}} 次。放错不扣什么，想清楚再放。",
   "play.usability.explore": "自由探索",
   "play.usability.guide": "跟着提示玩",
   "play.usability.brief.start": "同一句要求，两份成品会怎么做？",

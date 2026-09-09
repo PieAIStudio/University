@@ -4,6 +4,7 @@ import type { ActivityResult, LearningActivitySpec } from "@pieai/university-cor
 import { translate as t } from "../i18n/index.js";
 import { playSound } from "../sound/index.js";
 import { ConnectGame } from "./ConnectGame.js";
+import { SortGame } from "./SortGame.js";
 import { TuneGame } from "./TuneGame.js";
 import { HuntGame } from "./HuntGame.js";
 import { DispatchGame } from "./DispatchGame.js";
@@ -154,6 +155,7 @@ function ActivityRound({
       {outcome?.status !== "skipped" ? (
         <div className="learning-activity__game">
           {activity.kind === "connect" ? <ConnectGame activity={activity} {...controls} /> : null}
+          {activity.kind === "sort" ? <SortGame activity={activity} {...controls} /> : null}
           {activity.kind === "tune" ? <TuneGame activity={activity} {...controls} /> : null}
           {activity.kind === "hunt" ? <HuntGame activity={activity} {...controls} /> : null}
           {activity.kind === "dispatch" ? <DispatchGame activity={activity} {...controls} /> : null}

@@ -41,6 +41,7 @@ import "@pieai/university-ui/path/path-cards.css";
 import "@pieai/university-ui/practice/practice.css";
 import "@pieai/university-ui/learning-play/learning-play.css";
 import "@pieai/university-ui/learning-play/hunt.css";
+import "@pieai/university-ui/learning-play/sort.css";
 import "@pieai/university-ui/learning-play/dispatch.css";
 import "@pieai/university-ui/learning-play/program.css";
 import "@pieai/university-ui/learning-play/ai-play.css";

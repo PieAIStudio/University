@@ -73,7 +73,36 @@ function checkConnect(activity, where) {
   }
 }
 
-const CHECKS = { connect: checkConnect };
+/*
+  `sort` is asked of the engine rather than re-checked here. `isValidSortActivity`
+  already knows what an unplayable board is — a bucket nothing lands in, a
+  temptation pointing at the right answer — and a second copy of those rules
+  would drift from it the first time the engine gains one.
+
+  Imported from the built output because this is a plain script, not a workspace
+  package. A build that has not run yet leaves the sort check unavailable, and
+  that is said out loud rather than silently skipped: a gate that quietly stops
+  looking is worse than one that is missing.
+*/
+let isValidSortActivity = null;
+try {
+  ({ isValidSortActivity } = await import("../../../packages/core/dist/learning-play/sort.js"));
+} catch {
+  console.log(
+    "  ! 读不到 core 的构建产物，sort 组件这一项没有检查（先跑 pnpm --filter @pieai/university-core build）",
+  );
+}
+
+function checkSort(activity, where) {
+  if (!isValidSortActivity) return;
+  if (!isValidSortActivity(activity)) {
+    problems.push(
+      `${where}: 引擎判定这个归类台无法完成——空格子、指向正确答案的诱饵，或指向不存在的格子`,
+    );
+  }
+}
+
+const CHECKS = { connect: checkConnect, sort: checkSort };
 
 for (const studyId of dirs(studiesRoot)) {
   const coursesRoot = join(studiesRoot, studyId, "courses");

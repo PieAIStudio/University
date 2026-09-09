@@ -2,6 +2,10 @@ import type { messages as sourceMessages } from "./learning-play-usability.zh-CN
 export const messages = {
   "play.usability.hunt.change": "Try a different input",
   "play.usability.goal": "Goal and background",
+  "play.sort.guidePickItem": "Pick something, then pick where it belongs.",
+  "play.sort.guidePickBucket": "Now pick the bucket it belongs in.",
+  "play.sort.missGeneric": "That bucket does not hold this one. Think again about what it is.",
+  "play.sort.misses": "{{value0}} misplaced so far. A miss costs nothing — take your time.",
   "play.usability.explore": "Explore freely",
   "play.usability.guide": "Follow the prompts",
   "play.usability.brief.start": "One request. What will these two products do?",
