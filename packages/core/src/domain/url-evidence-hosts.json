@@ -21,13 +21,21 @@
     "postgresql.org",
     "supabase.com",
     "tensorflow.org",
-    "nist.gov"
+    "nist.gov",
+    "docs.stripe.com",
+    "vercel.com",
+    "docs.anthropic.com",
+    "docs.github.com",
+    "code.visualstudio.com",
+    "designcouncil.org.uk",
+    "nngroup.com"
   ],
   "forbiddenHosts": [
     "pmaker.space",
     "vibe-hub.org",
     "vibehub.org",
-    "oiloil.org"
+    "oiloil.org",
+    "datawhalechina.github.io"
   ],
   "authorityTags": [
     "mdn",

@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-08T17:22:45.875Z
+generated_at: 2026-09-09T04:54:59.819Z
 generator_version: doc-gov@0.9.11
-docs_count: 104
+docs_count: 105
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -283,6 +283,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-09-08
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-STRIPPING-REGEX-DECIDES-WHAT-A-GATE-CAN-SEE-SO-BOUND-IT-TO-A-LINE
+    path: docs/reference/learnings/workflow-issues/a-stripping-regex-decides-what-a-gate-can-see-so-bound-it-to-a-line.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-09
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-STUDY-PICKER-MUST-AGGREGATE-ONE-STUDY-INTO-ONE-SHARED-LANDMASS
     path: docs/reference/learnings/workflow-issues/a-study-picker-must-aggregate-one-study-into-one-shared-landmass.md

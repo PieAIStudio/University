@@ -52,11 +52,24 @@ if (!proposalPath || !against) {
   process.exit(2);
 }
 
-/** Strip everything that is not prose: whitespace, punctuation, markup. */
+/**
+ * Strip everything that is not prose: whitespace, punctuation, markup.
+ *
+ * Inline code must not span a newline. Markdown says so, but the reason to
+ * enforce it here is that this function decides *what the gate can see*.
+ * A source file with one unpaired backtick used to let `` `[^`]*` `` pair it
+ * with the next backtick thousands of lines away and delete everything
+ * between. On easy-vibe that single span was 129,021 characters, and the gate
+ * ended up comparing against 213k of the source's 948k Chinese characters —
+ * it reported 0.0% overlap while looking at 22% of the material.
+ *
+ * A verbatim gate that silently stops reading is worse than no gate: it
+ * produces a number that gets quoted in a commit message.
+ */
 function normalise(text) {
   return text
     .replace(/```[\s\S]*?```/g, " ") // fenced code is meant to match
-    .replace(/`[^`]*`/g, " ") // inline code likewise
+    .replace(/`[^`\n]*`/g, " ") // inline code likewise, but never across lines
     .replace(/https?:\/\/\S+/g, " ")
     .replace(/[\s\p{P}\p{S}]+/gu, "");
 }
