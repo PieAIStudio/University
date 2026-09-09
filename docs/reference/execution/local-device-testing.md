@@ -37,8 +37,8 @@ related:
 本次逐个核对并停止旧项目服务，退役19997／19998／19999／20001；没有重启ADB、
 Safari调试服务或手机，也没有删除配对。HTTP与进程归属已核实，未验证重启自动恢复。
 旧3D／course／play／launch工作树及后来完成收尾的integration不再是工作入口；保全位置
-由活动计划链接。新工作入口是相邻`University-visual`与`University-courses`，它们按baseline
-复用主树课程内容与校园源；后续在课程线写课时须协调共享源，不能把它们当隔离数据库。
+由活动计划链接。此前预建的`University-visual`与`University-courses`已按用户决定取消，
+当前继续在main迭代；以后实际开工时再从最新main建对应工作树，不提前占位。
 Easy Vibe仍由另一任务进行，本次未改其目录、分支或服务。
 
 以下R39／R38连接和错误保留原时点，不据当前桌面构建或服务迁移认定F10真机通过。

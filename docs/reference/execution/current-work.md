@@ -30,7 +30,7 @@ test totals, CLI/model choices or execution history. Read only the matching row.
 
 | Task | Authoritative entry |
 | --- | --- |
-| Four-domain baseline, visual/course work lanes and remaining 3D acceptance gates | [Continuous world delivery](../../plans/active/continuous-world-delivery.md), starting with its current continuation section; preserve the implemented pipeline and follow the remaining task IDs rather than restarting the scenes |
+| Mainline iteration, teaching contracts and remaining 3D acceptance gates | [Continuous world delivery](../../plans/active/continuous-world-delivery.md), starting with its current continuation section; preserve the implemented pipeline and follow the remaining task IDs rather than restarting the scenes |
 | Learner-visible design | [Player journey V5](../player-journey/v5/index.html), including decision M; only consult V4 for behavior V5 does not amend |
 | Technique, measurement scope and rejected alternatives | [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md) |
 | Shared blueprint/field, projections and source entry points | [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md) |
@@ -41,7 +41,9 @@ test totals, CLI/model choices or execution history. Read only the matching row.
 
 ## Work boundaries
 
-The active plan records the main baseline and the visual/course worktrees.
+The active plan records mainline work and explicitly started worktrees. Do not
+pre-create future course or visual worktrees while main is still being refined;
+create a lane from the then-current main only when the user actually starts it.
 Recheck Git and process ownership before writing; a historical receipt is not
 permission to reset, delete or take over another task. Preserve original material
 before retiring a worktree. Preserving an experiment does not accept its behavior.

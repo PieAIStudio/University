@@ -33,7 +33,17 @@ superseded_by: null
 [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)，数据来源读
 [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md)，不在本页另写规范。
 
-## 接续：R41 每小节教学合同收敛
+## 接续：R42 取消预建工作树
+
+用户明确：主线仍在优化迭代，不提前预留后续工作树。取消本轮预建的
+`University-courses`／`codex/course-iteration`与`University-visual`／`codex/visual-experience`；
+以后只有实际启动且用户明确授权相应工作线时，才从当时最新main创建。Easy Vibe保持原样。
+
+- [x] **R42-01** 两条本地与远端分支均为`250e962`，与main无独有提交；工作区干净，没有以两树为cwd的活动进程。忽略项仅为依赖、构建、主树内容／校园链接及本机配置。
+- [x] **R42-02** 已用正常worktree remove／branch -d删除两棵预留工作树及本地分支；main课程源和内容保留，Easy Vibe未动。无独有提交；两份本机配置保存在既有`SCRATCH/course-baseline-r40-UKGaqT/retired-reserved-lanes/`，不另留一棵备用工作树。
+- [x] **R42-03** 对应远端分支已通过正常pre-push删除，联网回读确认不再存在；本地仅main与Easy Vibe。当前索引和本机说明已移除预留入口，记录主线继续迭代、实际开工再建。仅做Git与文档核对，未重跑或冒称新增产品验收。
+
+## R41 每小节教学合同收敛（已交付）
 
 用户已确认执行讨论后的方案。本轮在main落实写课技能、引课入口、样例与机械检查；不批量改写
 现有课程，不读写Easy Vibe，不新增第六变体，不改3D、阅读器布局或收费。`write-lesson`仍是唯一
