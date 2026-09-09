@@ -98,6 +98,78 @@
       ]
     },
     {
+      "id": "first-thing-that-runs",
+      "title": "让第一个东西亮起来",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能把 AI 生成的 HTML 文件在浏览器里打开。\n\n## 先给结论\n\n生成网页后，先找到那个以 .html 结尾的文件，再用浏览器打开它。最直接的做法是保存文件、确认它没有偷偷变成 .html.txt，然后双击文件；浏览器会把它显示成网页，而不是把里面的文字当成普通说明读给你看。\n\n文件名和文件所在位置也属于网页的一部分。MDN 建议把网站相关文件放在一个单独的项目文件夹里，并用合理的文件结构组织它们；它的入门示例最后也是保存 HTML 文件后用浏览器打开。现在只记住这一条路径：生成文件 → 找到文件 → 浏览器打开。\n\n## 一个类比\n\n这就像收到一张快递取件单。文件是包裹，文件名是包裹上的地址，浏览器是帮你拆开查看内容的窗口。你得拿对那一个包裹，不能拿同名的旧件，也不能把地址写成另一种格式。\n\n不一样的地方是，快递单会直接告诉你包裹在哪个柜子，电脑有时会把文件扩展名藏起来。于是你看到的可能是“第一版网页”，实际全名却是“第一版网页.html.txt”。先打开文件名显示，再确认最后一段真的是 .html。\n\n## 工作示例\n\n我们让 AI 生成一个最小页面，自己完成一次打开：\n\n1. 在项目文件夹里新建文件，完整名字写成 say-it.html。\n2. 把下面这段内容放进去并保存：\n\n~~~html\n<!doctype html>\n<html lang='zh-CN'>\n  <body>\n    <h1>我的第一盏灯</h1>\n    <p>网页已经打开。</p>\n  </body>\n</html>\n~~~\n\n3. 回到文件夹，确认文件名显示为 say-it.html，不是 say-it.html.txt。\n4. 双击 say-it.html，选择浏览器打开；如果系统询问使用哪个应用，就选择 Chrome、Safari 或 Edge。\n5. 浏览器标签页出现“我的第一盏灯”和“网页已经打开。”，说明这次打开成功。\n6. 把 h1 里的文字改成“说人话”，保存后回到浏览器刷新，确认标题变了。这样你知道自己打开的是刚才那一份文件，而不是另一个旧副本。\n\n## 自检\n\n**做对了会看到什么：**浏览器标签页里出现页面上的标题和段落，地址栏显示的是刚才那个文件的位置；改文件、保存、刷新后，页面显示新的文字。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、双击后打开的是编辑器，或者浏览器显示一堆带尖括号的文字。**先检查文件最后是不是 .html；如果变成了 .html.txt，打开文件名显示并重命名，再用浏览器打开。\n\n**二、浏览器显示的还是旧标题。**你可能打开了另一个同名文件。回到文件夹确认路径和文件名，再从那一个文件重新打开，保存后刷新。\n\n## 重点\n\n- 先确认文件真正以 .html 结尾，再用浏览器打开。\n- 网站相关文件放在一个容易找到的项目文件夹里，路径出错也会导致页面不对。\n- 双击 HTML 文件可以看到一个最小网页，不必先把代码全部读懂。\n- 修改后保存并刷新，用页面文字确认打开的是刚改的文件。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 说明网站文件应放在合理的项目结构中，并明确示范保存 HTML 文件后使用浏览器打开该文件。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Learn_web_development/Getting_started/Environment_setup/Dealing_with_files",
+          "sourceTitle": "MDN · 处理文件",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "open-html-in-browser",
+          "kind": "basic",
+          "front": "AI 生成 HTML 文件后，最短的打开路径是什么？",
+          "back": "找到真正以 .html 结尾的文件，保存后用浏览器打开；先确认没有被保存成 .html.txt。",
+          "tags": ["first-run"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 的文件入门页示范保存 HTML 文件，然后使用浏览器打开该文件。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Learn_web_development/Getting_started/Environment_setup/Dealing_with_files",
+              "sourceTitle": "MDN · 处理文件",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "html-extension-is-part-of-the-name",
+          "kind": "basic",
+          "front": "双击网页文件却没有得到网页，先检查什么？",
+          "back": "检查完整文件名和路径，尤其确认最后的扩展名是 .html，而不是被隐藏或变成了 .html.txt。",
+          "tags": ["first-run"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 提醒某些系统默认隐藏已知文件类型的扩展名；该页的 HTML 示例以 .html 文件为入口。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Learn_web_development/Getting_started/Environment_setup/Dealing_with_files",
+              "sourceTitle": "MDN · 处理文件",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "open-your-generated-file",
+          "title": "把自己的第一个文件打开",
+          "kind": "explain",
+          "prompt": "找出 AI 刚生成的网页文件，记录它的完整文件名和所在位置。用浏览器打开它，改一处页面文字、保存、刷新，再写下你看到的变化。如果打开的不是网页，记录实际打开了什么以及你检查了哪两个地方。",
+          "rubric": [
+            "写出了实际打开的文件名和所在位置，而不是只写“打开了项目”",
+            "浏览器确实显示了页面内容，并记录了一个可见结果",
+            "修改、保存、刷新后能看到新文字，或诚实记录了没有变化",
+            "遇到问题时检查了完整扩展名和是否打开了正确副本"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明 HTML 文件保存后可以用浏览器打开，并提醒注意文件结构和扩展名。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Learn_web_development/Getting_started/Environment_setup/Dealing_with_files",
+              "sourceTitle": "MDN · 处理文件",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "it-writes-it-does-not-know",
       "title": "它在接着写，不是在查答案",
       "variant": "溯源",

@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-09T04:54:59.819Z
+generated_at: 2026-09-09T06:14:31.623Z
 generator_version: doc-gov@0.9.11
-docs_count: 105
+docs_count: 106
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -276,6 +276,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-08-31
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-DETECTOR-AND-ITS-ACCEPTOR-MUST-NORMALISE-IDENTICALLY-OR-THE-GATE-REJECTS-THE-S
+    path: docs/reference/learnings/workflow-issues/a-detector-and-its-acceptor-must-normalise-identically-or-the-gate-rejects-the-s.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-09
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-LIVE-EVIDENCE-URL-IS-NOT-A-SUPPORTED-CLAIM-OPEN-THE-PAGE-AND-READ-IT
     path: docs/reference/learnings/workflow-issues/a-live-evidence-url-is-not-a-supported-claim-open-the-page-and-read-it.md

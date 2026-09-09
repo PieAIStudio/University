@@ -1,0 +1,504 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "from-runs-to-usable",
+  "courseId": "from-idea-to-live",
+  "unit": {
+    "id": "from-runs-to-usable",
+    "title": "从「能跑」到「能用」",
+    "objective": "读完这一单元你能找出自己那个产品里最挡人的一处，并改掉它。",
+    "prerequisiteUnitIds": [
+      "getting-paid"
+    ]
+  },
+  "lessons": [
+    {
+      "id": "use-it-yourself-start-to-finish",
+      "title": "自己从头到尾用一次",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能按第一次用户的顺序完整走完自己的产品。\n\n## 先给结论\n\n把产品从打开到完成目标走一遍，重点不是证明它好，而是找出你平时跳过去的那一步。你知道按钮在哪、下一页会发生什么，所以很容易替用户代办。测试时要按一个陌生人的顺序来：从空白开始，照页面给的线索行动，记录每一步本来想看到什么、实际看到什么。\n\n这次自测不能代替真实用户测试。它的价值是先把最明显的断点找出来，免得把一个连自己都走不完的流程交给别人。可用性测试通常让参与者做现实中的任务，主持人观察行为并听反馈；这给了我们一个很实用的检查方向：不要只看代码有没有报错，要看任务能不能走到结果。\n\n## 一个类比\n\n好比你第一次去一家外卖店点餐。店主熟悉后厨，知道“招牌饭”其实就是菜单最下面那一项，也知道没有写出来的取餐规则。店主自己点一次，可能会直接跳过菜单、直接报菜名；第一次来的顾客没有这些记忆，只能照菜单上的字走。\n\n你的产品自测就像店主把自己当成第一次顾客：不能靠脑中的路线，必须看页面有没有把下一步写出来。不一样的地方是，外卖店能当面问你要吃什么，网页通常没有一个人替它解释，所以你要把卡点留下来，改到页面里。\n\n## 工作示例\n\n我们从全新的浏览器窗口开始检查《说人话》，不使用收藏夹，也不提前告诉自己按钮在哪里。\n\n1. 打开首页，只看第一眼。记录：我知道要粘什么吗？我知道结果会出现在哪里吗？\n2. 看到输入框后，粘入一条自己编的租房条款：房屋交付后，水电费按实际使用量由承租人承担。\n3. 点击页面上唯一的主要按钮。记录按钮文字、等待时的画面，以及结果是否紧跟在输入框下面。\n4. 读完解释后，点击保存，再重新打开“我的记录”。检查刚才那条是否能找到。\n5. 打开分享入口，复制链接，用另一个无痕窗口打开。检查陌生窗口里显示的是哪一段内容，以及没有登录时页面会告诉我什么。\n\n这次走完后，记录表可以是这样：\n\n| 步骤 | 我本来要找的东西 | 实际看到的东西 | 挡点 |\n| --- | --- | --- | --- |\n| 第 1 步 | 输入示例 | 只有空框和按钮 | 不知道该粘什么 |\n| 第 3 步 | 处理中提示 | 按钮没有变化 | 不确定是否点成功 |\n| 第 5 步 | 可打开的分享页 | 链接打开后空白 | 结果没有被带过去 |\n\n这里不需要马上修三处。先挑一处最早出现、又会让后面全部走不下去的挡点。这个例子里先改第一屏：加入一条可直接照着做的示例文字。\n\n## 自检\n\n**做对了会看到什么：**你留下了一条从打开页面到完成目标的连续记录，里面有具体操作、看到的画面和停住的地方；你没有靠记忆跳过任何页面。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、直接从结果页开始。**你会得到“结果看起来不错”的结论，却不知道第一次打开的人是否能到达结果。回到全新的窗口，从首页第一眼开始走。\n\n**二、边走边替页面解释。**你会在心里补上“这个按钮就是保存”，然后把它记成没有问题。把脑中的解释删掉，只记录页面实际给出的字和动作；缺的线索才是待改的地方。\n\n## 重点\n\n- 自测要从全新窗口开始，按页面给出的线索走完整条路径。\n- 每一步都记录“本来要看到什么”和“实际看到什么”。\n- 自测用于先找明显断点，不能代替观察真实用户。\n- 最先修会让后续流程无法继续的挡点。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这页把可用性测试描述为让参与者完成现实任务、主持人观察行为并听取反馈的方法。",
+          "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+          "sourceTitle": "Nielsen Norman Group · Usability Testing 101",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "start-fresh-and-follow-the-path",
+          "kind": "basic",
+          "front": "自己检查产品时，为什么要从全新的窗口开始？",
+          "back": "因为作者熟悉隐藏路线，容易跳过第一次用户会遇到的步骤；从全新窗口按页面线索走，才能记录真实的入口和断点。",
+          "tags": [
+            "usability-testing"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NN/g 说明可用性测试使用现实任务并观察参与者行为；从真实任务路径检查产品是本卡的依据。",
+              "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+              "sourceTitle": "Nielsen Norman Group · Usability Testing 101",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "self-test-is-not-user-test",
+          "kind": "basic",
+          "front": "自己走通一遍，能证明产品对别人也好用吗？",
+          "back": "不能。自己走通只能先发现明显断点；真实可用性还要靠真实用户完成任务时的行为和反馈来检查。",
+          "tags": [
+            "usability-testing"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NN/g 写明要靠真实用户的观察迭代体验，不能仅凭设计者自己的判断。",
+              "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+              "sourceTitle": "Nielsen Norman Group · Usability Testing 101",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "walk-your-own-product",
+          "title": "走完你自己的第一条路",
+          "kind": "explain",
+          "prompt": "开一个全新的浏览器窗口，用你那个念头做出来的页面完成一次最重要的任务。按顺序记录至少五步，每步写下你本来想看到什么、实际看到了什么。最后只选一处挡点，说明它为什么比其他问题更早让用户停住，以及你准备改页面上的哪一句话或哪一个动作。",
+          "rubric": [
+            "记录从打开页面开始，而不是从已经熟悉的中间页开始",
+            "至少五步都包含具体动作和实际看到的结果",
+            "选出的挡点确实出现在目标完成之前，并说明了选择理由",
+            "改法落到页面上的文字、位置或动作，不是泛泛写“优化体验”"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NN/g 说明现实任务、参与者行为和反馈是可用性检查的核心材料。",
+              "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+              "sourceTitle": "Nielsen Norman Group · Usability Testing 101",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "does-a-first-timer-know-what-to-do",
+      "title": "第一次打开的人知道干什么吗",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能把首次打开时的第一步写在页面上。\n\n## 先给结论\n\n第一次打开的人不应该先读一篇产品说明书，才有资格开始。第一屏要让他看出这是什么、现在可以做哪一个小动作，以及做完会得到什么。需要引导时，先让引导短、可跳过、贴着真实操作发生；能用默认值直接开始，就不要先让人填一堆设置。\n\nApple 的设计指南把 onboarding（首次引导）放在“帮助人快速开始”的位置：理想情况是用户通过实际体验理解产品；如果确实需要引导，应当快速、有趣、可选，并尽量用互动来教。这里的结论不是“每个产品都要做欢迎页”，而是第一步不能藏在作者脑子里。\n\n## 一个类比\n\n这就像第一次去餐厅点外卖。一个好的点单页会告诉你今天卖什么、怎么选一份、按下确认后会发生什么；它不会先要求你读完厨房的操作手册。你可以先点一份小餐，边点边熟悉菜单。\n\n不一样的地方是，餐厅有人可以看见你发愣并开口提醒；网页不会自动知道你哪里不懂。因此页面上的示例文字和按钮名称要自己承担这次提醒，而且提醒应该靠近动作，不要变成一整页必须背下来的说明。\n\n## 工作示例\n\n先看《说人话》的旧第一屏：\n\n> 说人话\n>\n> 一个 AI 文本工具\n>\n> [输入框] [开始]\n\n第一次来的人可能问：输入框放什么？“开始”会做什么？结果在哪儿？\n\n把它改成一个能马上动手的第一屏：\n\n> 说人话\n>\n> 把你看不懂的一句话粘进来，我们先用白话解释它。\n>\n> [输入框：例如：租房合同里“提前退租需承担违约责任”是什么意思？]\n>\n> [讲给我听]\n>\n> 小提示：先试这一句，不用注册。\n\n现在从页面就能读出三件事：输入是什么、点击会得到什么、第一次可以先做什么。用户可以直接粘入示例，不必先设置分类，也不必先看功能清单。\n\n如果你担心“讲给我听”太轻松，可以在按钮下方放一个不打断操作的“这会怎么处理？”链接，解释会保留原文、生成白话说明，但不挡住第一次尝试。\n\n## 自检\n\n**做对了会看到什么：**把第一屏给一个没看过产品的人，他能指出要输入什么、该点哪个动作、结果大概出现在哪里；他可以立刻试一次，不必先完成一串设置。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、第一屏只写产品类别。**“一个 AI 文本工具”让人知道技术方向，却不知道现在要做什么。把类别换成一个具体动作和一个具体示例。\n\n**二、把引导做成不能跳过的长教程。**用户还没得到价值就被迫读完规则，容易把启动过程当成阻碍。保留必要的短提示，其余内容放到需要时再看。\n\n## 重点\n\n- 第一屏要写清输入、第一步动作和预期结果。\n- 首次引导应当快速、可选，并尽量让用户通过实际操作学习。\n- 能用合理默认值开始，就不要先增加设置步骤。\n- 示例文字要贴着真正要操作的控件出现。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Apple 指南说 onboarding 用来帮助人快速开始；若需要，应当快速、有趣、可选，并建议通过互动来教。",
+          "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+          "sourceTitle": "Apple Human Interface Guidelines · Onboarding",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "first-screen-first-action",
+          "kind": "basic",
+          "front": "第一次打开的第一屏，至少要让人看出什么？",
+          "back": "它是什么、现在能做的第一个动作是什么、做完大概会得到什么。",
+          "tags": [
+            "onboarding"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Apple 将 onboarding 定位为帮助用户快速开始，并建议通过互动理解产品。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+              "sourceTitle": "Apple Human Interface Guidelines · Onboarding",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "onboarding-is-optional",
+          "kind": "basic",
+          "front": "首次引导是不是每个产品都必须有？",
+          "back": "不是。Apple 建议理想情况下让人直接体验产品；确实需要引导时，也应当快速、可选，并围绕产品自己的体验。",
+          "tags": [
+            "onboarding"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Apple 明确把 onboarding 写成必要时才使用、且应当快速和可选的流程。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+              "sourceTitle": "Apple Human Interface Guidelines · Onboarding",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "rewrite-your-first-screen",
+          "title": "给自己的第一屏补上第一步",
+          "kind": "explain",
+          "prompt": "把你那个产品当前的第一屏抄成文字，不要解释它本来想表达什么。然后改写标题、输入提示、主要按钮和结果说明，让一个第一次见到它的人能直接做一次最小动作。最后写出你删掉了哪一个不必要的设置或说明。",
+          "rubric": [
+            "先记录了页面实际写着什么，没有用作者意图代替页面文字",
+            "改版第一屏明确了输入、第一步动作和预期结果",
+            "提供了一个可以立即尝试的具体示例或默认值",
+            "指出一个被延后或删除的非必要设置，并说明这样做如何缩短开始路径"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Apple 建议用互动帮助用户理解产品，并提供合理默认值，让大多数人能马上开始操作。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+              "sourceTitle": "Apple Human Interface Guidelines · Onboarding",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "did-anything-happen-when-i-clicked",
+      "title": "点了有没有回应",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能为一次等待写出用户此刻能看到的状态。\n\n## 先给结论\n\n点击之后，页面要让人知道动作有没有被接住、正在做什么、做完了没有。短到几乎感觉不到的等待可以直接进入结果；等待明显变长时，空白会让人猜是不是坏了。此时至少显示一个进行中的状态，完成后换成结果，失败后换成能继续处理的提示。\n\nApple 的 loading 指南建议尽快显示一些内容，避免把“什么都没有”留给正在等待的人；需要等待时，可以用进度指示器说明操作仍在进行。它还区分了两种情况：能估计完成程度时用有进度的指示，无法估计时用不表示百分比的进行中状态。反馈指南则把状态、成功和失败都列为反馈要传达的信息。\n\n## 一个类比\n\n相当于在银行柜台递出一张材料。柜员接过材料后，如果既不点头、也不告诉你正在录入，你会忍不住再递一次，甚至以为材料掉了。一个小小的“已收到，正在处理”就能让你停下来等结果。\n\n不一样的地方是，柜员可以用声音补充说明，网页只有文字、形状和动画这些线索。线索必须跟着按钮或结果出现，而且不能把一个不停转圈的图标误当成已经完成。\n\n## 工作示例\n\n《说人话》调用模型时，我们把主按钮设计成四个状态：\n\n1. 还没开始的时候，按钮写“讲给我听”，输入框可编辑。\n2. 已经接住的时候，点击后按钮变成“正在整理这段话…”，按钮暂时不可再次提交，结果区域出现“正在读原文并组织解释”的短提示。\n3. 成功之后，结果区域出现白话解释，按钮恢复“再讲一段”，并保留刚才的原文。\n4. 失败之后，结果区域写“这次没有生成成功，原文还在。检查网络后再试”，旁边放“重试”。\n\n这里的“正在整理”不是为了装饰，而是把当前状态告诉用户；“重试”也不是另一个功能，它是失败状态里给出的下一步。若系统能知道已经处理了 2 个步骤中的 1 个，可以显示“1/2”；如果不知道还要多久，就不要编一个假的百分比。\n\n## 自检\n\n**做对了会看到什么：**点击之后，按钮或结果区立刻出现可辨认的状态；成功、等待、失败分别有不同文字，用户不会靠重复点击来确认有没有收到。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、点击后整页空白。**用户不知道是没点到、正在算，还是页面坏了。保留页面结构，在按钮附近或结果位置放一个明确的进行中状态。\n\n**二、所有情况都显示一个转圈。**成功时还在转，失败时也在转，用户无法知道下一步。把完成和失败从“处理中”里分出来，失败时保留原文并提供重试。\n\n## 重点\n\n- 点击后的反馈要说明当前状态、成功结果或失败原因。\n- 等待明显时不要让页面空白，要尽快显示进行中的内容。\n- 知道完成程度时可显示进度，不知道时使用进行中状态，不编造百分比。\n- 失败状态要保留可恢复的入口，例如重试和保留输入。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Apple 建议加载时尽快显示内容，避免空白被理解成应用出问题；需要等待时可用进度指示器说明加载仍在进行。",
+          "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/loading",
+          "sourceTitle": "Apple Human Interface Guidelines · Loading",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Apple 将反馈的作用列为传达当前状态以及重要操作的成功或失败。",
+          "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/feedback",
+          "sourceTitle": "Apple Human Interface Guidelines · Feedback",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "show-the-current-state",
+          "kind": "basic",
+          "front": "点击一个需要等待的动作后，页面至少要让人知道什么？",
+          "back": "动作是否被接住、现在是否仍在处理、最后是成功还是失败。",
+          "tags": [
+            "loading",
+            "feedback"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Apple 说明反馈应传达状态、成功或失败，加载指南说明等待时要显示正在进行的状态。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/feedback",
+              "sourceTitle": "Apple Human Interface Guidelines · Feedback",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "determinate-or-indeterminate",
+          "kind": "basic",
+          "front": "什么时候显示具体进度，什么时候只显示正在处理？",
+          "back": "知道任务完成程度时显示具体进度；不知道还要多久时显示不带百分比的进行中状态。",
+          "tags": [
+            "loading"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Apple 的 loading 指南区分了知道持续时间时的 determinate 指示和无法量化时的 indeterminate 指示。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/loading",
+              "sourceTitle": "Apple Human Interface Guidelines · Loading",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "draw-your-waiting-states",
+          "title": "画出一次点击后的四个状态",
+          "kind": "explain",
+          "prompt": "选你产品里一个会等待的按钮，写出点击前、处理中、成功、失败四个状态。每个状态只写用户能看到的文字和动作；失败状态要说明用户下一步怎么继续，且不能丢掉已经填好的内容。",
+          "rubric": [
+            "四个状态都写了，且点击前、处理中、成功、失败能互相区分",
+            "处理中状态告诉用户动作已被接住，而不是只留下空白",
+            "成功状态给出可见结果，失败状态说明原因或下一步",
+            "失败后输入或重要内容仍然可继续使用，没有被无提示清空"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Apple 说明加载中应显示进行状态，反馈应传达成功或失败，并帮助用户知道下一步。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/feedback",
+              "sourceTitle": "Apple Human Interface Guidelines · Feedback",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "can-they-keep-going-after-an-error",
+      "title": "出错以后还能不能继续",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能把错误提示改成一条下一步指令。\n\n## 先给结论\n\n错误提示不是给产品作者看的日志，而是给正在完成任务的人看的路标。它至少要回答两件事：刚才哪一步没有完成，以及现在可以怎样继续。能保留原输入就保留，能直接重试就放一个重试入口；不要只写“出错了”然后把人赶回起点。\n\nApple 的反馈指南建议告诉用户命令无法执行以及原因，同时给出纠正错误或问题的机会。它还提醒，反馈的强弱要和信息的重要程度相称：普通状态可以安静地放在附近，可能造成损失的警告才需要打断当前动作。\n\n## 一个类比\n\n这就像银行柜台退回一张表。柜员只说“不能办”没有用；你需要知道是身份证过期、少了一页，还是账号写错，才能决定补材料、改字段或换一条办理路径。\n\n不一样的地方是，柜员可以看着你的整份材料解释；界面常常只给一小块文字。所以错误提示要贴近出错的输入或按钮，写出能执行的下一步，而不是把内部错误编号丢给用户。\n\n## 工作示例\n\n《说人话》遇到三种不同的错误，不能都用同一句话：\n\n- **没有输入**：输入框下写“先粘一段看不懂的话，例如合同或报告中的一句”，焦点回到输入框。\n- **内容太长**：写“这次先处理前 2,000 字，或删掉不需要的段落后再试”，同时保留原文，让用户能选择。\n- **请求失败**：结果位置写“这次没有生成成功，原文还在。检查网络后重试”，按钮变成“重试”。\n\n注意三条提示都没有写“系统异常”。第一条告诉用户该填什么，第二条给出缩短办法，第三条告诉用户能重试。它们分别对应三个不同的下一步。\n\n改之前的版本是：\n\n> Error: request failed\n\n这句话对开发者可能有用，对第一次使用的人没有行动方向。改后的版本不需要暴露内部编号，却要诚实地告诉人现在发生了什么。\n\n## 自检\n\n**做对了会看到什么：**每个错误状态都能被读成一个动作：补什么、删什么、重试什么；用户原来输入的内容还在。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、只换成更礼貌的废话。**把“出错了”改成“哎呀，好像出了点问题”，语气变软了，行动还是没有。补上原因和下一步，不要只换表情。\n\n**二、直接把内部报错贴给用户。**堆一串请求编号、调用栈或英文异常，用户仍然不知道该做什么。把内部细节留给排错入口，用户看到的是能执行的恢复动作。\n\n## 重点\n\n- 错误提示要说明哪一步没完成，以及下一步怎么走。\n- 能保留的输入要保留，能重试的地方要给重试。\n- 不同原因要给不同的恢复办法，不能所有错误都用同一句话。\n- 内部错误编号可以帮助开发者，但不能替代用户能执行的说明。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Apple 建议在命令无法执行时说明原因，并帮助用户理解如何纠正错误或问题。",
+          "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/feedback",
+          "sourceTitle": "Apple Human Interface Guidelines · Feedback",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "error-needs-a-next-step",
+          "kind": "basic",
+          "front": "一条给用户看的错误提示至少要回答哪两件事？",
+          "back": "哪一步没有完成，以及用户现在可以怎样继续或纠正它。",
+          "tags": [
+            "error-feedback"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Apple 的反馈指南要求说明命令不能执行的原因，并帮助用户纠正错误。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/feedback",
+              "sourceTitle": "Apple Human Interface Guidelines · Feedback",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "keep-recoverable-input",
+          "kind": "basic",
+          "front": "请求失败时，为什么要尽量保留用户已经填好的内容？",
+          "back": "这样用户可以检查、修改或重试，不必因为一次失败从头重做；它把错误变成可恢复的状态。",
+          "tags": [
+            "error-feedback"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Apple 把反馈的作用包含帮助用户纠正问题；保留输入是把这个作用落实到界面的做法。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/feedback",
+              "sourceTitle": "Apple Human Interface Guidelines · Feedback",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "rewrite-one-error-state",
+          "title": "把一个错误改成可继续的提示",
+          "kind": "explain",
+          "prompt": "找出你产品里一条只写“失败”“出错了”或类似话术的提示。先写出用户当时做了什么、哪一步没有完成，再改成一条包含原因和下一步的提示。说明输入、草稿或已完成部分是否应该保留。",
+          "rubric": [
+            "写清了用户触发错误前做的具体动作",
+            "改后的提示说明了哪一步没有完成，而不是只换语气",
+            "改后的提示给出至少一个用户可以立刻执行的下一步",
+            "说明了哪些已有内容保留，以及用户如何继续或重试"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Apple 建议展示不能执行的命令及其原因，并帮助用户纠正错误。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/feedback",
+              "sourceTitle": "Apple Human Interface Guidelines · Feedback",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "watch-someone-else-use-it",
+      "title": "看别人用一次，只给目标",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能用一个不带答案的任务观察一次使用。\n\n## 先给结论\n\n找一个接近目标用户的人，给他一个现实任务，然后先看他怎么走，不要把正确路径提前说出来。你要记录的是他停在哪里、先看哪里、说了什么、最后是否完成，而不是替他把流程走通。\n\nNN/g 说明可用性测试的基本动作是：主持人给参与者任务，观察参与者的行为并听取反馈；主持人也可以回答问题、提出追问，但同时要避免无意中把参与者的行为推向某个方向。所以“不要解释按钮在哪里”是一条为了保护观察质量的测试纪律，不是“主持人永远不许开口”的绝对规则。\n\n## 一个类比\n\n好比请朋友第一次去一家餐厅点餐。你坐在旁边观察他先看菜单、问什么、在哪一步犹豫；如果他问“这里能不能选套餐”，你可以回答问题，但不能一开始就把手指放在菜单上替他点完。\n\n相似之处在于，你要看到他自然会做的动作。不一样的地方是，餐厅的目标是把这一单卖出去，而测试的目标是发现菜单哪里让人困惑；为了测试，允许这一单暂时停住，停住本身就是证据。\n\n## 工作示例\n\n我们邀请一位没看过《说人话》的同事，先不讲产品背景，只把屏幕共享打开。\n\n**给他的任务：**“你刚看到租房合同里一句不太明白的话。请用这个页面把它弄懂，并把你认为最需要核对的地方说出来。”\n\n测试者只做四件事：\n\n1. 记下从第一眼到第一次点击花了多久，不提醒他看哪里。\n2. 记录他把鼠标移向标题、输入框还是按钮；他说“讲人话是什么意思”时原样记下。\n3. 他问“我应该粘什么”时，先问“你现在会怎么判断？”而不是直接指按钮。如果他已经明确表示不知道如何继续，再给一个不包含答案的提示：“你可以先试着把那句合同原文放进页面。”\n4. 任务完成后再问“刚才哪一步最不确定？你希望页面当时告诉你什么？”把事后回答和过程中发生的行为分开记。\n\n这次观察可能得到三条记录：他先点标题而不是输入框；他把合同原文粘进去后以为要按回车；结果出来后先问“这是谁的判断”。三条都比“他说页面挺好”更能指向修改：补示例、让回车也提交、给解释附上原文位置或提醒核对。\n\n## 自检\n\n**做对了会看到什么：**记录里有任务、实际动作、停顿和原话；你的提示没有替他指出答案，事后问题也没有被混进操作过程。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、开场先演示正确路径。**他会沿着你刚才的路线走，你只能确认他能模仿，不能知道他自己会先找什么。重新测试时只给目标和必要背景。\n\n**二、他一停就马上救场。**你可能很快让他完成了任务，却丢掉了最有价值的停顿。先观察、记下他在找什么；需要维持测试继续时，再给不带具体按钮答案的中性提示，并把这次提示记在记录里。\n\n## 重点\n\n- 测试任务要像真实用户会做的事，而不是让人点评页面。\n- 先观察自然动作，再决定是否需要中性提示。\n- 主持人可以回答问题和追问，但要留意不要无意影响行为。\n- 过程中的停顿和原话比事后一句“挺好”更能指向修改。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "NN/g 说明主持人给出任务、观察行为、听取反馈，也可以回答问题和追问；同时主持人要避免无意影响参与者行为。",
+          "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+          "sourceTitle": "Nielsen Norman Group · Usability Testing 101",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "task-before-explanation",
+          "kind": "basic",
+          "front": "让别人试用时，为什么先给任务而不是先演示正确路径？",
+          "back": "任务让你看到对方自然会找什么、做什么和在哪儿停；演示会让对方只是在复现你的路线。",
+          "tags": [
+            "usability-testing"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NN/g 将现实任务、参与者行为和主持人观察列为可用性测试的核心元素。",
+              "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+              "sourceTitle": "Nielsen Norman Group · Usability Testing 101",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "facilitator-can-answer-with-care",
+          "kind": "basic",
+          "front": "可用性测试的主持人是不是永远不能回答问题？",
+          "back": "不是。主持人可以回答问题和追问，但要避免无意中影响参与者的行为；先观察，再用不带具体答案的提示维持流程。",
+          "tags": [
+            "usability-testing"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NN/g 同时写到主持人可以回答参与者问题、提出追问，以及需要避免意外影响参与者行为。",
+              "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+              "sourceTitle": "Nielsen Norman Group · Usability Testing 101",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "observe-actions-and-words",
+          "kind": "basic",
+          "front": "一次使用测试里，除了最后有没有完成，还要记录什么？",
+          "back": "记录他先看哪里、做了哪些动作、在哪里停住，以及过程中说出的原话。",
+          "tags": [
+            "usability-testing"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NN/g 说明测试中应观察参与者行为并听取反馈，而不只看最终结果。",
+              "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+              "sourceTitle": "Nielsen Norman Group · Usability Testing 101",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "run-a-neutral-observation",
+          "title": "只给目标，观察一次真实使用",
+          "kind": "explain",
+          "prompt": "找一个接近你目标用户的人，给他一个现实任务，不先演示页面。记录他第一次看到页面时做的第一个动作、一次停顿、一次原话和最终结果。若你中途给了提示，把提示原文也记下来，并说明它有没有可能影响行为。",
+          "rubric": [
+            "任务描述的是用户要完成的事情，没有直接说出按钮或答案",
+            "记录包含具体动作、停顿、原话和最终结果",
+            "把观察过程和任务结束后的追问分开记录",
+            "如有提示，原样写出并诚实说明提示可能造成的影响"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NN/g 说明主持人应给任务、观察行为、听反馈，并在追问时避免无意影响参与者行为。",
+              "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+              "sourceTitle": "Nielsen Norman Group · Usability Testing 101",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "say-what-it-is-in-a-minute",
+      "title": "一分钟讲清你做了什么",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能用一分钟说清产品解决的一个具体处境。\n\n## 先给结论\n\n一分钟介绍不是把功能清单念完，而是让没见过它的人立刻知道：谁在什么时刻卡住了，用它先做什么，做完会得到什么。只讲一个场景，才能让对方在脑中放下一个具体问题；技术、模型和未来功能先不抢位置。\n\n这句话的用途是给人一张方向牌，不是拿来证明需求成立。NN/g 提醒，访谈里让人根据一段描述猜未来怎么使用新技术，得到的回答很弱；真正的功能是否有效，仍要让人实际使用来观察。Apple 也建议首次引导聚焦于产品提供的体验，而不是让人先学习设备本身。\n\n## 一个类比\n\n这就像在银行柜台排队时，旁边的人问你这个窗口办什么。你不会把银行所有业务都背一遍，只会说“这里帮第一次租房的人在签字前看懂一条合同”。对方听完能判断这是不是自己此刻要找的窗口。\n\n不一样的地方是，柜台前的人已经在同一个场景里，网页外的人没有你的背景；所以一分钟里要把处境和结果说全，不能只说“这是一个智能工具”。\n\n## 工作示例\n\n先把《说人话》的介绍写成四版：\n\n**版本一：**“一个 AI 文本工具。”\n\n**版本二：**“一个把难懂文字讲清楚的工具。”\n\n**版本三：**“给第一次租房的人解释合同。”\n\n**版本四：**“给第一次租房、正被催着签字的人，把合同里看不懂的一条变成白话说明，方便他先找出要核对的地方。”\n\n版本四里有一个人、一个时刻、一个动作和一个可见结果。把它压成一分钟口头说明，可以这样说：\n\n> “《说人话》给第一次租房、马上要签字的人用。你把合同里看不懂的一条粘进去，它先把原句讲成白话，帮你看出哪一处值得再核对。它不是律师，也不替你作决定；它只是让你先知道自己该问什么。”\n\n讲完停下来。若对方追问，再回答保存、分享等后续能力；不要在第一分钟把所有功能都塞进去。\n\n## 自检\n\n**做对了会看到什么：**一个没看过产品的人能复述出服务谁、在什么处境下使用、第一步做什么和得到什么；他不会只记住“用了 AI”。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、介绍里全是功能。**“可以输入、保存、分享、生成链接”让人听见按钮，却听不见为什么要打开它。删到只剩一个场景和一个结果。\n\n**二、介绍听起来像承诺答案正确。**尤其是合同、体检报告等内容，若把工具说成替人作决定，用户会误解边界。补上一句它能帮什么、不能替什么。\n\n## 重点\n\n- 一分钟介绍先说具体的人、处境、第一步动作和结果。\n- 第一版只讲一个场景，不把功能清单当成产品解释。\n- 介绍是方向牌，不是对未来使用的验证。\n- 涉及重要决定时，要说清工具的边界，不把解释说成专业结论。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "NN/g 说明用户很难根据描述准确设想自己会怎样使用尚未见过的技术，具体功能应通过实际使用评估。",
+          "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+          "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Apple 建议 onboarding 聚焦于应用提供的体验，而不是让用户先学习系统或设备。",
+          "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+          "sourceTitle": "Apple Human Interface Guidelines · Onboarding",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "one-minute-product-introduction",
+          "kind": "basic",
+          "front": "一分钟介绍一个产品，先说哪四样？",
+          "back": "具体的人、具体的处境、他要做的第一步，以及完成后能看到的结果。",
+          "tags": [
+            "product-clarity"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Apple 建议首次引导围绕应用提供的体验，让用户快速开始；本卡把这个要求压成一段口头说明的检查项。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+              "sourceTitle": "Apple Human Interface Guidelines · Onboarding",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "pitch-is-not-validation",
+          "kind": "basic",
+          "front": "把产品讲得很清楚，能证明用户真的需要它吗？",
+          "back": "不能。介绍只能让人知道使用场景；用户对未来会不会使用的猜测很弱，功能是否有效还要看实际使用。",
+          "tags": [
+            "user-research"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NN/g 说明基于描述猜测未来使用很不可靠，并建议让人实际使用功能来评估。",
+              "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+              "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "give-your-one-minute-explanation",
+          "title": "给自己的念头录一分钟",
+          "kind": "explain",
+          "prompt": "为你那个念头写一段不超过一分钟的口头介绍。第一句说具体的人和处境，第二句说他要做的第一步，第三句说会得到什么，最后补一句工具不负责什么。把功能名词删掉后，交给一个没看过项目的人复述。",
+          "rubric": [
+            "介绍里有一个具体的人和一个具体的使用时刻",
+            "听者能复述第一次要做的动作和预期结果",
+            "没有把多个场景或一长串功能塞进同一分钟",
+            "清楚说出一个边界，并记录听者复述时遗漏或误解的地方"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "NN/g 说明对未见过的功能进行未来使用预测不可靠；Apple 建议说明产品提供的体验并帮助人快速开始。",
+              "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+              "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

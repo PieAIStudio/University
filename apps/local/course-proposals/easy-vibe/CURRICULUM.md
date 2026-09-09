@@ -122,10 +122,15 @@ turing-pact 那 20 门       ← 已经在真实仓库里，指挥 AI 干活
 | `idea-is-not-need` | 点子和需求是两样东西 | 点子是你想做的，需求是别人已经在费劲解决的 | NN/g |
 | `what-people-say-vs-do` | 人说的和人做的不一样 | 偏好和实际表现只有 0.44 的相关 | NN/g |
 | `ask-about-last-time` | 问上一次，不问下一次 | 「你会用吗」问不出东西，「你上次怎么弄的」能 | NN/g |
-| `dont-pitch-in-an-interview` | 一开口介绍，答案就废了 | 你一夸自己的点子，对方就只会说好听的 | NN/g |
 | `i-would-use-that-is-not-validation` | 「我会用的」不算数 | 验证要看他已经付出过什么，不是他打算付出什么 | NN/g |
-| `the-job-not-the-feature` | 他雇你的东西去干什么活 | 人买的不是功能，是让某件事有进展 | NN/g |
-| `one-sentence` | 一句话说清你做的是什么 | 说不清一句话，就是还没想清楚 | Apple 官方设计指南 |
+| `one-sentence` | 一句话说清你做的是什么 | 说不清一句话，就是还没想清楚 | NN/g |
+
+**写的时候合并掉了两节，记在这儿：**
+`the-job-not-the-feature` 和 `idea-is-not-need` 写出来是同一节课换了个名字——
+两节都靠 NN/g 同一页、都在讲「名词是方案，动词才是需求」，合并进前者。
+`dont-pitch-in-an-interview` 的内容（一开口介绍答案就废了）已经在
+`what-people-say-vs-do` 的「自检」里讲完了，单开一节会重复。
+七节变五节，**不是砍掉，是发现它们本来就是同一件事。**
 
 ## 单元 4 · 从一堆想法收敛成一版能做的（`narrow-it-down`）
 
@@ -136,9 +141,13 @@ turing-pact 那 20 门       ← 已经在真实仓库里，指挥 AI 干活
 | `two-diamonds` | 为什么要把问题和方案分开 | 先想清楚问题是什么，再想方案 | Design Council |
 | `discover-then-define` | 第一颗钻：先打开，再收口 | Discover 是铺开，Define 是挑出一个 | Design Council |
 | `develop-then-deliver` | 第二颗钻：多想几个，再挑一个 | Develop 是发散方案，Deliver 是做出来试 | Design Council |
-| `four-ways-it-goes-wrong` | 双钻最常见的四种走偏 | 最常见的一种是还没 Discover 就直接 Deliver | Design Council |
 | `three-screens` | 白板上的三页 | 进来看到什么、要操作什么、拿到什么 | Apple 官方设计指南 |
-| `what-the-first-version-will-not-do` | 第一版不做什么 | 写下「不做」比写下「要做」更能保住进度 | Design Council |
+| `what-the-first-version-will-not-do` | 第一版不做什么 | 写下「不做」比写下「要做」更能保住进度 | Design Council / Apple |
+
+**砍掉了一节，理由值得记：**原计划有 `four-ways-it-goes-wrong` 讲双钻的四种常见走偏。
+去读 Design Council 那一页之后发现，**它根本没有讲误用**。
+找不到权威出处的说法就不写——这是技能自己的规矩。
+其中唯一站得住的那条（还没 Discover 就直接 Deliver）并进了 `two-diamonds` 的自检。
 
 ## 单元 5 · 做出第一版（`build-the-first-version`）
 

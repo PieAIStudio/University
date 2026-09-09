@@ -1,0 +1,394 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "when-vibing-stops-working",
+  "courseId": "from-idea-to-live",
+  "unit": {
+    "id": "when-vibing-stops-working",
+    "title": "什么时候不能再靠感觉",
+    "objective": "读完这一单元你能判断手上这件事该直接开做，还是该先写清楚。",
+    "prerequisiteUnitIds": ["from-runs-to-usable"]
+  },
+  "lessons": [
+    {
+      "id": "vibe-coding-has-a-range",
+      "title": "凭感觉做，有它的适用范围",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能按错误代价判断一件事是直接开做还是先写规格。\n\n## 先给结论\n\n先做出来、边看边改的方式，适合错误代价小、结果容易推倒、很快就能看出方向的事情。它不适合那些做错以后会影响付款、权限、隐私、重要数据，或需要几个人接着维护的事情。\n\n判断标准不是“我会不会写文档”，而是“如果这次猜错，回头要付什么代价”。代价越大、边界越多、未来还要继续改，就越应该先把目标、范围和验收写下来。把这些写清楚的说明，后面叫作规格（spec）。\n\nClaude 官方文档提醒，模型能参考的是这次请求里的上下文；内容变长时，准确率和回忆能力可能下降，更多上下文并不自动带来更好的结果。另一页也说明，即使是先进模型，也可能生成事实不正确的内容。两条放在一起，就是一条实用判断：能随手试的地方可以先试，不能靠猜的地方先把约束写出来。\n\n## 一个类比\n\n好比银行柜台。你想试一张新的取号牌颜色，拿纸做一张看效果，错了撕掉就行；但你要改转账限额、谁能取钱、失败后钱是否退回，就不能凭当下感觉让柜员随便猜，必须把条件写清再办。\n\n两件事都可能从一句话开始，但代价不同：前者错了只是重做一张纸，后者错了可能影响真实的钱。这个类比不代表规格能保证绝对正确；它只告诉你什么时候值得先把“错了会怎样”写下来。\n\n## 工作示例\n\n把《说人话》的两个改动放在一起比较。\n\n**改动甲：换首页文案。**\n\n目标是看看“把难懂的一句话粘进来”是否比“开始使用”更容易明白。只改标题、输入提示和按钮，打开页面看一眼，再让一个人试一下。错了可以马上改回去，通常适合直接做一个小版本。\n\n**改动乙：让分享链接显示保存的解释。**\n\n这会涉及谁能打开、分享者是否能看到原文、未登录的人看到什么、链接被转发后是否仍有效。这里先写四条约束：\n\n- 只有创建者能改动记录。\n- 分享页能显示解释，但不暴露不该公开的原文。\n- 链接失效时要显示原因和下一步。\n- 验收时用创建者、未登录访客和另一个账号各试一次。\n\n改动甲的错误成本是返工一处文案；改动乙的错误成本可能是隐私问题和无法追回的错误数据。它们都能让 AI 写代码，但不该用同一套准备方式。\n\n## 自检\n\n**做对了会看到什么：**你能说清一件事的错误成本、影响范围和是否需要长期维护，再据此决定先做小实验还是先写规格。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、把“很快能做”当成“可以随便做”。**支付或权限改动也许只需几行代码，却不代表错了容易收回。重新问“谁会受影响、能不能恢复”。\n\n**二、把“要写规格”理解成写几十页。**结果你因为怕麻烦什么都不写。先写目标、范围、不做和验收四段，够用再加，不要把文档长度当成安全感。\n\n## 重点\n\n- 错误代价小且容易推倒的改动，可以先做小实验。\n- 涉及钱、权限、隐私、重要数据或长期维护时，先写清约束。\n- 上下文变长不代表模型会更准确，事实仍需要核验。\n- 规格的目的不是写得长，而是让“做完”变得可检查。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Claude 文档说明上下文窗口包含模型生成回答时可参考的文本，内容变长时准确率和回忆能力会下降，更多上下文不自动更好。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+          "sourceTitle": "Claude Platform Docs · Context windows",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Claude 文档明确提醒模型有时会生成事实上不正确或与给定上下文不一致的内容。",
+          "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+          "sourceTitle": "Claude Platform Docs · Reduce hallucinations",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "choose-by-cost-of-error",
+          "kind": "basic",
+          "front": "什么时候可以先凭感觉做一个小版本？",
+          "back": "当错误代价小、结果容易推倒、很快能看出方向时。涉及钱、权限、隐私、重要数据或长期维护时，应先写清约束。",
+          "tags": ["spec-driven"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 文档指出模型可能生成错误内容，且长上下文会出现准确率和回忆能力下降；按错误代价决定是否增加约束是本卡的工作规则。",
+              "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+              "sourceTitle": "Claude Platform Docs · Reduce hallucinations",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "more-context-is-not-always-better",
+          "kind": "basic",
+          "front": "把更多聊天记录都塞给模型，会自动让结果更好吗？",
+          "back": "不会。上下文变长时，准确率和回忆能力可能下降；要整理真正相关的约束，而不是无止境堆消息。",
+          "tags": ["context-window"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 的上下文窗口文档直接说明 more context is not automatically better，并提到 token 增长时准确率和回忆能力会下降。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+              "sourceTitle": "Claude Platform Docs · Context windows",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "sort-two-work-items",
+          "title": "把手上的两件事分流",
+          "kind": "explain",
+          "prompt": "从你那个产品的待办里选两件事：一件你认为可以直接做的小改动，一件你认为应该先写清楚的改动。分别写出错误代价、受影响的人、是否容易恢复，以及你的分流决定。",
+          "rubric": [
+            "两件事都写成了具体改动，而不是“优化产品”这类大词",
+            "分别说明了错误代价、影响范围和恢复难度",
+            "分流决定与前面写出的代价一致，不是因为自己更喜欢某种方法",
+            "需要规格的那件事至少列出一个必须先确认的边界"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 文档说明模型可能产生不正确内容，并建议对重要信息进行验证；本练习把这条风险转成了按代价分流的检查。",
+              "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+              "sourceTitle": "Claude Platform Docs · Reduce hallucinations",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a-spec-is-what-done-means",
+      "title": "规格就是把「做完了」写下来",
+      "variant": "术语",
+      "content": "## 学习目标\n\n读完你能把“做完了”改写成可检查的句子。\n\n## 先给结论\n\n“把分享做好”“让页面更友好”“接上登录”都不能直接验收，因为它们没有告诉任何人什么时候算完成。把用户能做什么、第一版不做什么、失败时怎样处理、最后能看到什么写成句子，这份说明就是规格（spec）。\n\n规格不是给专业人士看的作文，也不是把技术名词堆在一起。它是人和 AI 共用的一张检查单：做之前用它收拢范围，做之后用它逐条对照。Claude 的提示工程文档建议给出清楚、明确的指令，并把希望得到的输出说具体；规格做的正是把“希望”改成可以检查的结果。\n\n如果一句话无法让你想象出怎样验证，它还不是验收标准。继续追问“用户做什么、看到什么、失败后怎么办”，直到能在页面上或测试里观察到答案。\n\n## 一个类比\n\n这就像去银行办一项业务。你对柜员说“帮我把账户弄好”，对方不知道要开哪种服务；你若说“把这张卡绑定到这个账户，办完后我能看到绑定状态，失败时告诉我缺什么材料”，柜员和你就有了一份共同的办理标准。\n\n不一样的地方是，银行有固定表格和柜台流程，而你的产品没有现成表格；你要自己把目标、边界和结果写出来。写下来也不代表一定正确，它只是让错误能被发现、被讨论、被修改。\n\n## 工作示例\n\n把《说人话》的模糊任务“做一个分享功能”改成四句可检查的话：\n\n- 用户能在一条已经生成的解释旁点击“生成分享链接”。\n- 第一版只分享解释结果和生成时间，不分享账号设置，也不开放编辑。\n- 如果生成失败，原解释仍留在当前页面，并显示“重试”。\n- 验收时，创建者打开链接能看到结果；没有权限的人不能改动结果；失效链接会显示原因。\n\n再把“做完分享功能”换成一句收口的话：\n\n> 当一条解释已经生成时，创建者点击分享按钮能得到可打开的链接；链接页显示这条解释，失败时原文和结果不被清空，权限和失效情况按上面规则显示。\n\n现在 AI 即使提出技术方案，你也有东西可对照。它可以建议用什么存储方式，但不能把“顺手加一个公开编辑入口”当成默认完成项。\n\n## 自检\n\n**做对了会看到什么：**别人只读你的句子，就能设计一个检查方法，知道成功、失败和不做的边界；你不需要靠“看起来差不多”判断完成。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、写成技术文件清单。**“新增一个组件、一个接口、一个表”并没有说明用户得到什么。把每条技术动作改成用户能观察的行为或结果。\n\n**二、只写正常路径。**演示时能生成链接，但失效链接、权限错误和请求失败都没有说法。补上至少一种失败结果和恢复动作。\n\n## 重点\n\n- 规格把目标、边界、失败处理和可观察结果写成共同标准。\n- “做完了”必须能被页面行为或测试结果证明。\n- 技术文件清单不能代替用户行为和验收标准。\n- 规格不是保证正确，而是让错误有地方暴露和修改。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Claude 官方提示工程文档说模型对清楚、明确的指令响应更好，具体说明期望输出有助于改善结果。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct",
+          "sourceTitle": "Claude Platform Docs · Be clear and direct",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "spec-makes-done-checkable",
+          "kind": "basic",
+          "front": "规格要把“做完了”变成什么？",
+          "back": "变成用户能做什么、看到什么、失败时怎么办、哪些范围不包含在内的可检查句子。",
+          "tags": ["spec-driven"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 官方文档建议把指令和期望输出写得清楚、具体；本卡把它落实成可检查的规格内容。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct",
+              "sourceTitle": "Claude Platform Docs · Be clear and direct",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "technical-list-is-not-acceptance",
+          "kind": "basic",
+          "front": "“新增一个组件和一个接口”为什么不等于功能做完？",
+          "back": "它只说改了哪些技术对象，没有说明用户完成什么、看到什么结果、失败时怎样处理。",
+          "tags": ["acceptance-criteria"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 文档强调要具体说明想要的输出；只列技术动作而不写期望结果，无法形成清楚的指令。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct",
+              "sourceTitle": "Claude Platform Docs · Be clear and direct",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "rewrite-done-as-observable",
+          "title": "把一句模糊完成改成验收句",
+          "kind": "explain",
+          "prompt": "从你那个产品的待办里找一句“做一个……”“优化一下……”之类的话。把它改写成至少四条：用户动作、预期结果、一个失败处理、第一版不做什么。最后用一句话说明怎样判断它真的完成。",
+          "rubric": [
+            "至少一条写用户做的动作，至少一条写用户能看到的结果",
+            "失败处理写了触发条件和用户下一步，而不是只写“显示错误”",
+            "明确了第一版边界，避免把未决定的功能默认加入",
+            "最后的完成判断能通过页面操作或测试观察到"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 官方文档建议使用清晰、明确的指令并具体说明期望输出；本练习要求把模糊待办变成具体结果。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct",
+              "sourceTitle": "Claude Platform Docs · Be clear and direct",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "the-smallest-spec",
+      "title": "一份最小规格有哪几段",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能写出一份四段的最小规格。\n\n## 先给结论\n\n一份刚好够用的规格先写四段：要达到的目标、这一版要做的范围、明确不做的事、可以怎样验收。四段不是神奇格式，也不是以后永远不能加的上限；它是一个人在还没想清全部细节时，先把最容易返工的决定钉住的起点。\n\n目标回答“为什么做”；范围回答“这次做到哪里”；不做回答“哪些诱惑先放下”；验收回答“拿什么结果证明做到了”。每段都写成具体句子，不用“尽量”“智能”“体验好”这类没人能对照的形容词。\n\n官方提示工程文档支持把要求和预期输出写得清楚、直接、具体。四段模板是本课为了练习而给的工作方法，不是 Claude 文档规定的唯一格式；你要的是一份能指导下一步的短说明。\n\n## 一个类比\n\n想象你租一间房。最小的约定要先写清用途、这次租哪一间、哪些家具不包含、交房时怎样验收。你不需要第一天就写出整栋楼的物业制度，但不能把“住得舒服”当成验收办法。\n\n不一样的地方是，租房约定通常由双方签字后保持一段时间，产品规格会随着学习和测试被修改。类比帮你记住的是四个问题，不是让产品规格变成法律合同。\n\n## 工作示例\n\n为《说人话》写一份最小规格，主题是“保存一次解释”：\n\n### 目标\n\n让第一次使用的人在生成解释后，能在下次打开产品时找回这条解释。\n\n### 第一版范围\n\n- 用户点击保存后，保存原文、白话解释和创建时间。\n- 历史页按最近创建时间显示记录。\n- 用户可以打开一条记录并复制分享链接。\n\n### 第一版不做\n\n- 不做多人协作编辑。\n- 不做按关键词搜索。\n- 不做自动判断解释是否正确。\n- 不做手机推送提醒。\n\n### 验收\n\n- 新建一条解释并点击保存，刷新后仍能在历史页找到它。\n- 打开另一条记录时，原文和解释仍是一一对应的。\n- 保存失败时页面保留当前输入，并出现可重试的提示。\n- 没有记录时显示空状态，而不是空白或错误页。\n\n这份说明只有一页不到，却已经能阻止三种常见漂移：把保存做成自动公开、顺手加搜索、把“没有记录”误画成系统故障。\n\n## 自检\n\n**做对了会看到什么：**你的规格能被另一个人按四段读懂，且验收条目可以直接转成几次页面操作。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、四段都写成愿望。**“做得好看、足够快、很智能”无法检查。把每个愿望改成用户动作和可见结果。\n\n**二、范围和不做互相打架。**前面写第一版不做分享，后面验收却要求分享。逐条检查同一个功能有没有被两边同时写到，冲突就先做决定。\n\n## 重点\n\n- 最小规格先写目标、范围、不做和验收四段。\n- “不做”是保护第一版边界的正式信息。\n- 验收条目要描述可以观察或测试的结果。\n- 四段模板是起点，随着新证据出现可以修改。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Claude 官方提示工程文档建议使用清楚、明确的指令，并具体说明期望的输出；本课四段模板是把这条原则用于产品任务的课程方法。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct",
+          "sourceTitle": "Claude Platform Docs · Be clear and direct",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "four-parts-of-a-small-spec",
+          "kind": "basic",
+          "front": "一份最小规格先写哪四段？",
+          "back": "目标、第一版范围、明确不做的事、验收标准。",
+          "tags": ["spec-driven"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 文档支持把目标和期望输出写得清楚具体；四段是本课用于落实这一原则的最小模板。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct",
+              "sourceTitle": "Claude Platform Docs · Be clear and direct",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "why-not-do-list-matters",
+          "kind": "basic",
+          "front": "最小规格为什么要写“第一版不做”？",
+          "back": "它把暂时不处理的诱惑写成边界，避免 AI 或自己把范围顺手扩大。",
+          "tags": ["scope-control"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 文档要求把期望输出说具体；明确边界是让任务要求不再依赖猜测的课程做法。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct",
+              "sourceTitle": "Claude Platform Docs · Be clear and direct",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "write-four-part-spec",
+          "title": "写一页四段规格",
+          "kind": "explain",
+          "prompt": "选你那个产品的一个最小功能，用目标、范围、不做、验收四段写成一页。验收至少写三条正常结果和一条失败结果。写完后删掉所有无法通过操作或观察检查的形容词。",
+          "rubric": [
+            "四段齐全，目标没有偷塞实现细节",
+            "范围和不做互相不冲突，且能看出第一版边界",
+            "验收条目描述了至少三种可观察的正常结果",
+            "至少一条验收覆盖失败处理，并删除了不可检查的空泛形容词"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 官方文档建议清楚、直接地说明要求和期望输出；本练习把它转成一页可执行的规格。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct",
+              "sourceTitle": "Claude Platform Docs · Be clear and direct",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "make-it-follow-the-spec",
+      "title": "让它照着规格做，而不是读完就忘",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能按规格逐项检查一次改动。\n\n## 先给结论\n\n规格写完不等于 AI 会永远记得。每次让它改动时，都要把相关规格放在它当前能看到的位置，并要求它先对照目标、范围和验收，再开始动手。改完以后，不问“是不是做好了”，而是逐条问“第几条已经验证、第几条还没有”。\n\nClaude 的上下文窗口指模型生成回答时能参考的全部文字，包含之前的消息、工具结果和这次请求；对话越长，内容越容易接近容量，准确率和回忆能力也可能下降。官方提示文档还建议把指令和希望得到的输出说得清楚、具体。因此规格要成为每轮工作的入口，不要只在最开始贴一次，然后期待它在很长的聊天里自己保持完整。\n\n## 一个类比\n\n这就像餐厅后厨的出餐单。厨师不能只在早上看一次菜单，晚上凭记忆做每桌的特殊要求；每张订单都要把这桌的忌口和出餐标准放在当前工作台旁。做完后，服务员逐项核对，缺一道就退回去补。\n\n不一样的地方是，厨师可能一直站在厨房里，而 AI 每一轮实际能参考的文字会受当前上下文限制；所以你的做法不是把整本菜谱不断贴进聊天，而是拿出这次改动真正相关的那几条。\n\n## 工作示例\n\n《说人话》的保存功能已经有四段规格。现在要让 AI 只改“保存失败时保留输入”这一项。\n\n**发给 AI 的工作请求：**\n\n> 先阅读下面这条规格，只处理保存失败的界面行为。\n>\n> 验收：请求失败后，输入框里的原文仍在；页面显示“没有保存成功，请重试”；点击重试不会要求重新粘贴。\n>\n> 这次不要增加登录、搜索或分享功能。开始前先用三句话复述你将检查的范围；完成后列出改了哪些地方，并逐条写出怎样验证。\n\n收到结果后，我们不凭截图上的“完成”判断，而是照三步操作：断开网络或使用一个会失败的测试响应，点击保存；检查原文是否还在；点击重试，检查是否仍然使用原文。最后回到规格，给这一条打上“已验证”或“还不能验证”。\n\n如果 AI 顺手加了分享入口，哪怕页面看起来更丰富，也要退回这次范围之外的改动。清楚的规格不是限制创造力，而是让你知道这轮到底在验证什么。\n\n## 自检\n\n**做对了会看到什么：**每次请求都带着相关规格，AI 先复述范围，改完能对照验收；你能指出已验证和未验证的条目。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、只在第一轮聊天里贴规格。**几轮之后 AI 开始顺手加入新功能，或者忘记失败路径。新开一轮或继续一轮时，再贴当前相关的规格片段。\n\n**二、只看 AI 的自我总结。**它说“全部完成”不等于你已经观察到结果。按验收条目真的操作一次，把未验证的项标出来。\n\n## 重点\n\n- 每次改动都把当前相关的规格放进工作上下文。\n- 先限定范围，再要求 AI 复述、修改、列验证方式。\n- 对话变长时要重新整理上下文，不要无止境堆聊天记录。\n- “已完成”要由验收操作证明，不由 AI 自己宣布。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Claude 的上下文窗口文档说明之前的消息、工具结果和当前请求都会计入上下文，内容变长时准确率和回忆能力会下降。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+          "sourceTitle": "Claude Platform Docs · Context windows",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Claude 的提示工程文档建议使用清楚、明确的指令，并具体说明期望输出。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct",
+          "sourceTitle": "Claude Platform Docs · Be clear and direct",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "put-relevant-spec-in-context",
+          "kind": "basic",
+          "front": "为什么不能只在聊天开头贴一次规格？",
+          "back": "因为后续消息和工具结果会继续占用上下文，内容变长时模型的准确率和回忆能力可能下降；每轮应重新提供当前相关的约束。",
+          "tags": ["context-window", "spec-driven"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 文档说明上下文会累积所有消息和工具结果，并指出长上下文可能带来准确率和回忆能力下降。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+              "sourceTitle": "Claude Platform Docs · Context windows",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "verify-acceptance-items",
+          "kind": "basic",
+          "front": "改完代码后，怎样判断规格里的条目真的完成？",
+          "back": "逐条执行验收操作，记录已经观察到的结果和还不能验证的条目，不把 AI 的“完成”自述当成证据。",
+          "tags": ["acceptance-criteria"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 文档建议让输出具体、可核验；本卡把“完成”落到逐条验证，而不是依赖模型自述。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct",
+              "sourceTitle": "Claude Platform Docs · Be clear and direct",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "run-a-spec-check-loop",
+          "title": "让一次改动经过规格检查",
+          "kind": "explain",
+          "prompt": "选你规格中的一个功能，写一条给 AI 的工作请求：先贴相关验收项，写明本轮不做什么，要求它先复述范围、再修改、最后列验证方式。拿到结果后，按验收项实际检查，并把每项标成已验证或未验证。",
+          "rubric": [
+            "请求里带了与本轮直接相关的规格，而不是只写一个功能名",
+            "明确写了至少一项本轮不做的内容",
+            "要求 AI 复述范围并列出验证方式",
+            "最后的记录区分了实际观察到的结果和仍未验证的项目"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 官方文档支持使用明确指令、具体期望输出，并提醒上下文会随消息和工具结果累积；本练习将两点合成一轮检查。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+              "sourceTitle": "Claude Platform Docs · Context windows",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "where-to-go-next",
+      "title": "你现在能去学什么了",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能选出自己下一步该补的实战入口。\n\n## 先给结论\n\n你刚做完的是一条从念头到网页的通用练习：能描述问题、做出浏览器里的第一版、检查体验、在需要时写最小规格。下一步不是立刻把这套网页丢进一个更大的真实项目，而是先补上“读项目、跑命令、看改动、按验收检查”的桥。\n\nUniversity 已有的实战课读的是真实仓库，材料会出现 TypeScript，也会出现 Rust；它们不是把一页网页再做一遍，而是带你在已有产品里找入口、读文件、理解模块和验证改动。你现在手里的网页和真实仓库之间，至少隔着三种能力：知道一个项目的文件和命令从哪里开始，能读懂一点函数与数据流，能在不破坏旧行为的前提下跑检查。\n\n这段落差要老实保留。不会 TypeScript 或 Rust，不代表你的念头做错了；但如果你连项目根目录、启动命令和一条失败信息都还认不出来，直接进入真实仓库会把“产品想法”和“工程地基”混成一个困难。先补桥，再进实战，速度通常更快。\n\n## 一个类比\n\n这就像你已经做出一辆能在小区里开的自行车，下一站想参加长途骑行。你还需要先会看路线、补胎、读路牌和检查刹车；不是因为小区骑行没有价值，而是长途的故障代价更高。\n\n不一样的地方是，代码项目的“路牌”不是自然长出来的，常见在 README、package.json、启动脚本、测试命令和版本记录里。先学会看这些入口，才不会把第一次见到的仓库当成一面没有门的墙。\n\n## 工作示例\n\n以《说人话》为例，先做一个交接清单：\n\n**你已经会的：**\n\n- 用一句话描述谁在什么处境下需要它。\n- 让浏览器打开一个第一版页面。\n- 走完整条用户路径，记录挡点。\n- 写四段最小规格，并按验收项检查一次改动。\n\n**进入真实实战前要补的：**\n\n1. 找到项目入口：知道 README、项目配置、启动脚本和源代码分别在哪里。\n2. 跑一次项目：能区分安装、启动、测试、构建这些命令各自做什么。\n3. 读一小段真实代码：能指出输入从哪里来，结果在哪里显示，失败在哪里处理。\n4. 看一次改动：能读懂 AI 改了哪些文件，知道怎样回到上一版。\n\n然后按你的缺口选择入口：如果你还不熟文件、代码、终端和浏览器之间的关系，先从 University 的《在开始之前：App、代码、和你》开始；如果已经能打开项目并想练习逐行读 TypeScript，再进入《读懂一行代码》或《读懂一段逻辑》；如果你的目标仓库是 Rust，就先补同样的文件、命令和测试基础，再去对应的 Rust 实战路线。不要把“我会让 AI 生成网页”误当成“我已经会维护真实仓库”。\n\n最后把这门通用课的规格带进下一门课：第一页写你想保留的用户目标，旁边写你还不懂的工程词。交接不是把问题藏起来，而是让下一门课知道从哪一格开始补。\n\n## 自检\n\n**做对了会看到什么：**你能说出自己已经会的能力、缺的桥接能力和下一门课的入口，不会因为看见 Rust 或 TypeScript 就假装已经准备好。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、直接跳进最复杂的真实仓库。**第一天同时处理陌生语言、陌生命令和产品需求，任何报错都无法归因。先完成文件入口、启动、测试和读一小段代码这四项桥接。\n\n**二、因为不会 Rust 或 TypeScript 就放弃产品念头。**语言是下一段工具，不是对念头的判决。保留产品目标，先把最小工程基础补齐，再选择相应路线。\n\n## 重点\n\n- 浏览器第一版和真实仓库之间，需要补文件入口、命令、代码阅读和验证能力。\n- University 的实战课使用真实仓库，不能把它当成刚做完的网页教程的直接续集。\n- 《在开始之前：App、代码、和你》适合先补文件、代码、终端和浏览器地基。\n- TypeScript 读码可从《读懂一行代码》《读懂一段逻辑》进入；Rust 也要先补同一组工程入口。\n- 把本课的用户目标和规格带到下一门课，交接才不会从零开始。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Claude 官方文档建议把指令写得清楚、明确，并具体说明希望得到的输出；把当前目标和未解决缺口带入下一轮是本节交接模板的依据。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct",
+          "sourceTitle": "Claude Platform Docs · Be clear and direct",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Claude 官方文档建议让模型在不确定时明确说不知道，并对重要信息进行验证；这支持交接时把未知项显式列出来，而不是假装已经掌握。",
+          "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+          "sourceTitle": "Claude Platform Docs · Reduce hallucinations",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "bridge-before-real-repository",
+          "kind": "basic",
+          "front": "从浏览器第一版进入真实仓库前，至少要补哪四种能力？",
+          "back": "找到项目入口、跑懂安装和启动等命令、读一小段真实代码、按验收项检查并看懂改动。",
+          "tags": ["handoff", "real-repository"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 文档强调要把任务要求和期望输出写清楚、具体；本卡把进入真实项目前的桥接目标写成可检查的清单。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct",
+              "sourceTitle": "Claude Platform Docs · Be clear and direct",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "unknown-is-a-handoff-item",
+          "kind": "basic",
+          "front": "交给下一门实战课时，遇到还不会的工程词该怎么处理？",
+          "back": "把它列成明确的未知项，带着用户目标和规格交接；不要把不懂假装成已经掌握。",
+          "tags": ["handoff"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 的减少幻觉指南建议允许模型承认不确定，并对关键内容进行验证；显式列出未知项是对这一原则的课程化应用。",
+              "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+              "sourceTitle": "Claude Platform Docs · Reduce hallucinations",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "choose-your-practical-entry",
+          "title": "写一张真实交接卡",
+          "kind": "explain",
+          "prompt": "为你那个网页项目写一张交接卡：先列三件你已经能做的事，再列四项进入真实仓库前要补的桥接能力。根据缺口选择一个 University 实战入口，写明你为什么先选它、第一周准备验证什么、哪些 Rust 或 TypeScript 词你还不会。",
+          "rubric": [
+            "已会能力来自你真实做过的网页流程，而不是泛泛写“会做产品”",
+            "桥接能力具体到项目入口、命令、代码阅读或验证动作",
+            "选择的实战入口与自己的缺口有关，并解释了选择理由",
+            "诚实列出至少一个未知的 Rust 或 TypeScript 词，并写出准备怎样验证它"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Claude 官方文档建议具体说明希望得到的输出，并允许模型明确表达不确定；本练习要求交接卡同时记录目标、入口和未知项。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct",
+              "sourceTitle": "Claude Platform Docs · Be clear and direct",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
