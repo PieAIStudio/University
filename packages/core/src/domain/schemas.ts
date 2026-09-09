@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import type { ActivityKind } from "../learning-play/types.js";
 import { AUTHORITY_TAGS, urlEvidenceIssue } from "./url-evidence.js";
 
 const SchemaVersion = z.literal(1);
@@ -574,11 +575,19 @@ export const LessonAssetSchema = z
  * Deliberately a list here rather than an import from `../learning-play`: this
  * schema is the wire contract a stored lesson is read back through, and the
  * activity types are TypeScript interfaces that vanish at runtime. Naming the
- * ten keeps a typo in a stored lesson a validation error rather than a blank
+ * eleven keeps a typo in a stored lesson a validation error rather than a blank
  * space where a game should be.
+ *
+ * The list is the wire half of `Activity` in `learning-play/types.ts`, and the
+ * two must be added to together. `sort` shipped with an engine, a renderer and
+ * a gate but not with this line, and the omission was silent in exactly the way
+ * a missing name here always will be: nothing that already existed broke, and
+ * every attempt to store the new kind was rejected as a typo. Three lessons sat
+ * decided-but-unlanded for a day because of it.
  */
 export const LessonActivityKindSchema = z.enum([
   "connect",
+  "sort",
   "tune",
   "hunt",
   "dispatch",
@@ -589,6 +598,26 @@ export const LessonActivityKindSchema = z.enum([
   "ai-eval",
   "ai-repair",
 ]);
+
+/**
+ * The enum above and `ActivityKind` in `learning-play/types.ts` are one list in
+ * two halves — one for the wire, one for the engines. A kind added to only one
+ * half is invisible from both sides: nothing that already worked breaks, and
+ * every attempt to store the new kind comes back indistinguishable from a typo.
+ * `sort` sat that way for a day with an engine, a renderer and a gate but no
+ * name here, and three finished lessons could not be landed.
+ *
+ * This lives beside the enum rather than in `schemas.test.ts` because
+ * `tsconfig.json` excludes test files and vitest transpiles without
+ * checking — a type-level assertion written in a test is not a weak guard, it
+ * is not a guard at all.
+ */
+type Exactly<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+/** Fails to satisfy its own constraint, and so fails to compile, when `T` is not `true`. */
+type AssertTrue<T extends true> = T;
+export type ActivityKindsAgree = AssertTrue<
+  Exactly<z.infer<typeof LessonActivityKindSchema>, ActivityKind>
+>;
 
 /**
  * Which teaching job this activity is doing in this lesson.
@@ -629,7 +658,27 @@ export const LessonActivitySchema = z
     goal: z.string().min(1).max(1_000),
     takeaway: z.string().min(1).max(1_000),
     hint: z.string().min(1).max(1_000),
-    source: z.object({ label: z.string().min(1).max(200), url: z.string().url() }).strict(),
+    /**
+     * A page, or a place in the studied repository — the same union
+     * `ActivityBase` declares. It was a URL only here long after the interface
+     * had both, so an activity citing pinned code could not be stored at all
+     * and the field shape went on deciding which lessons may have an activity.
+     *
+     * `commit` is a real commit id rather than a free string, because the
+     * receipt renders `path:line@commit` and a snapshot id pasted into this
+     * field renders as `@git-7bdf` — legible enough to look deliberate.
+     */
+    source: z.union([
+      z.object({ label: z.string().min(1).max(200), url: z.string().url() }).strict(),
+      z
+        .object({
+          label: z.string().min(1).max(200),
+          path: RepositoryRelativePath,
+          line: z.number().int().positive().optional(),
+          commit: GitCommit.optional(),
+        })
+        .strict(),
+    ]),
   })
   .passthrough();
 

@@ -7,6 +7,8 @@ import {
   EvidenceReferenceSchema,
   ExerciseSchema,
   KnowledgeNoteSchema,
+  LessonActivityKindSchema,
+  LessonActivitySchema,
   SnapshotManifestSchema,
   UaAnalysisManifestSchema,
   UaEngineProvenanceSchema,
@@ -251,5 +253,68 @@ describe("study domain schemas", () => {
         ],
       }).cards,
     ).toHaveLength(4);
+  });
+});
+
+describe("LessonActivitySchema", () => {
+  const base = {
+    id: "vector-boundary-sort",
+    role: "apply",
+    title: "别把这三种“变少”混在一起",
+    brief: "b",
+    goal: "g",
+    takeaway: "t",
+    hint: "h",
+  } as const;
+
+  /**
+   * The enum is the wire half of the `Activity` union, and the halves are one
+   * list. When they were not, the effect was invisible from either side: the
+   * engine, the renderer and the activities gate all knew `sort`, while every
+   * attempt to store one came back as a typo. Nothing that already worked
+   * broke, so nothing reported it.
+   *
+   * The halves are held together by `ActivityKindsAgree` in `schemas.ts`,
+   * which tsc checks; this only pins the kind the omission cost.
+   */
+  it("names the eleventh game", () => {
+    expect(LessonActivityKindSchema.options).toContain("sort");
+  });
+
+  it("stores an activity that cites a place in the studied repository", () => {
+    const parsed = LessonActivitySchema.parse({
+      ...base,
+      kind: "sort",
+      source: {
+        label: "把一句话收成固定长度的那一行",
+        path: "semantic-image-search-web/src/worker.js",
+        line: 8,
+        commit,
+      },
+    });
+    expect(parsed.source).toMatchObject({ line: 8, commit });
+  });
+
+  /**
+   * `git-7bdf9a52bbf8` is a snapshot id and `7bdf9a52…` is the commit it pins.
+   * Gluing the prefix onto the commit produced a value that read as either one
+   * at a glance and rendered in the learner's receipt as `@git-7bdf`.
+   */
+  it("rejects a snapshot id where the commit belongs", () => {
+    const result = LessonActivitySchema.safeParse({
+      ...base,
+      kind: "sort",
+      source: { label: "l", path: "src/worker.js", commit: `git-${commit}` },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("still stores a citation that is a page", () => {
+    const parsed = LessonActivitySchema.parse({
+      ...base,
+      kind: "connect",
+      source: { label: "l", url: "https://example.com/a" },
+    });
+    expect(parsed.source).toMatchObject({ url: "https://example.com/a" });
   });
 });
