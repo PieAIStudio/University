@@ -19,7 +19,7 @@ import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 
 const MAIN = "/Users/yuanfei/PieAI/University";
-const WT = "/Users/yuanfei/PieAI/University-wt-easy-vibe";
+const WT = "/Users/yuanfei/PieAI/University-courses";
 const SKILL = `${MAIN}/apps/local/.agents/skills/write-lesson`;
 
 const [unitFile, lessonId, variant, outPath] = process.argv.slice(2);
@@ -108,6 +108,8 @@ ${lesson.content}
   题干里如果给了选项，选项字面必须和 \`expectedAnswer\` 一模一样
 
 再确认一遍最容易翻车的几条：
+0. **标题下面必须先有一个 \`##\` 开场小标题**，再写开场正文。开场正文直接跟在
+   \`# 标题\` 下面、中间没有 \`##\` 的，机器会判「开场章节 0 个」当场退回。
 1. \`## 先猜一下\` 恰好一次，紧跟其后必须是 \`## 答案\`（标题就两个字，不许加后缀）
 2. \`## 先猜一下\` 里必须原样包含这一行：先写下你的判断，再往下看答案。
 3. \`## 一句话\` 是最后一节，正文是**一句**加粗的话
@@ -133,7 +135,11 @@ const out = execFileSync(
     "--always-approve",
     "--prompt-file", promptFile,
   ],
-  { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, timeout: 1_500_000, cwd: "/tmp" },
+  // 60 minutes. Sequential runs took ~23; three in parallel all exceeded a
+  // 25-minute cap and were killed mid-answer, which cost the work rather than
+  // revealing whether parallelism helps. Set the cap well clear of the
+  // measurement so the measurement is the thing that binds.
+  { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, timeout: 3_600_000, cwd: "/tmp" },
 );
 
 /*
