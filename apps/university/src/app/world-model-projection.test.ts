@@ -105,3 +105,58 @@ describe("the planet's pointer path", () => {
     }
   });
 });
+
+describe("a course whose prerequisites are not met", () => {
+  /*
+    Greyed and still clickable. The marker carries `locked` so the label can dim,
+    and it keeps its activate handler, because locking the door would shut out
+    exactly the learner this whole mechanism exists for — the one who already
+    knows the earlier material and is trying to skip past it (V5 decision 12C).
+  */
+  it("is marked locked for dimming but keeps its click action", async () => {
+    Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+    const first = {
+      studyId: "chain",
+      studyTitle: "Chain",
+      courseId: "first",
+      title: "第一门",
+      lessons: 6,
+      depth: 0,
+      prerequisiteCourseIds: [],
+      trackId: null,
+    };
+    const second = { ...first, courseId: "second", title: "第二门", depth: 1 };
+    const world = worldMaps.placeStudyArchipelago([first, second], () => 0, first.studyId);
+    // The projection reads the placement's state; drive it directly so this test
+    // is about the marker, not about how a listing decides a course is idle.
+    const placements = world.placements.map((placement, index) => ({
+      ...placement,
+      state: index === 0 ? ("open" as const) : ("idle" as const),
+    }));
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    let markers: ReturnType<typeof useWorldMarkers> = [];
+    function Probe() {
+      markers = useWorldMarkers({
+        world: { ...world, placements },
+        lessons: [],
+        view: { kind: "world" },
+        labelNodes: { current: new Map() },
+        setPathOverlay: vi.fn(),
+        setPicked: vi.fn(),
+        onCoursePick: vi.fn(),
+      });
+      return null;
+    }
+    try {
+      await act(async () => root.render(createElement(Probe)));
+      const open = markers.find((marker) => marker.id === "first");
+      const idle = markers.find((marker) => marker.id === "second");
+      expect(open?.locked).toBe(false);
+      expect(idle?.locked).toBe(true);
+      expect(typeof idle?.activate).toBe("function");
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+});

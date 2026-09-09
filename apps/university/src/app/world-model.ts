@@ -259,6 +259,15 @@ export function useWorldMarkers({
       text: entry.node.title,
       kind: "course" as const,
       courseState: entry.state,
+      /*
+        Greyed, never blocked. A course whose prerequisites are unmet is dimmed
+        and says what it assumes you have done — and still opens when clicked.
+        Locking it out would keep exactly the learner this whole mechanism
+        exists for, the one who already knows the earlier material, standing
+        outside the door. Dimming is information; locking is permission, and
+        only the first is ours to give (V5 decision 12C).
+      */
+      locked: entry.state === "idle",
       sub:
         entry.node.isBeingRewritten === true
           ? translate("app.app.worldmodel.copy.改写中")

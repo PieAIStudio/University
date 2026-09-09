@@ -995,6 +995,11 @@ button.label:focus-visible {
   user-select: none;
 }
 
+.label--course.is-locked {
+  opacity: 0.62;
+  filter: grayscale(0.7);
+}
+
 .label--icon.is-locked {
   filter: grayscale(1) brightness(0.82) drop-shadow(0 1px 1px rgb(8 16 22 / 40%));
 }
