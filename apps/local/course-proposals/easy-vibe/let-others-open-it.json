@@ -1,0 +1,654 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "let-others-open-it",
+  "courseId": "from-idea-to-live",
+  "unit": {
+    "id": "let-others-open-it",
+    "title": "让别人能打开它",
+    "objective": "读完这一单元你能把自己那个东西变成一个别人点得开的网址。",
+    "prerequisiteUnitIds": []
+  },
+  "lessons": [
+    {
+      "id": "your-computer-is-not-the-internet",
+      "title": "本地能开不等于发布了",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能判断一个网址是不是只在自己电脑上有效。\n\n## 先给结论\n\n你在自己的浏览器里看见页面，只能证明这台电脑上有东西在回应。`localhost` 和 `127.0.0.1` 会把请求带回当前设备；它们适合试做，不是朋友可以直接访问的公共地址。\n\n把 `http://localhost:5173` 发给别人时，对方的电脑会把 `localhost` 理解成对方自己的这台电脑，不会穿过网络找到你。要让别人打开，需要把项目放到一台能从公网访问的机器上，再拿那台机器提供的地址。\n\n## 一个类比\n\n就像你在自家厨房试做一道菜。你自己站在灶台旁，当然能尝到；但把“我家厨房”这几个字发给朋友，并没有给朋友一条进门路线。本地地址相当于只在家里响的门铃，发布地址像街边店的门牌。\n\n相似的地方是两者都能带你找到一个正在工作的地方。不相似的地方也要记住：门牌能让陌生人沿街找到店，门铃号码不会把陌生人送进你的厨房。\n\n## 工作示例\n\n我们给《说人话》做第一次试跑。\n\n1. 你让 AI 先做一个输入框、一个“讲人话”按钮和一段结果区域，然后在自己的电脑上启动它。终端显示 `http://localhost:5173`。\n2. 你在这台电脑打开地址，粘贴一条租房合同，点击按钮，页面出现结果。这里验证的是“本地版本能工作”。\n3. 你把这个地址发给朋友。朋友点击后看到连接失败，或者看到的是他自己电脑上另一个占用 5173 端口的页面。这不是朋友操作错了，而是这个名字在他的电脑上指向他自己。\n4. 你把项目交给一个能提供公网地址的托管平台。平台完成部署后给出类似 `https://say-human-demo.example` 的地址。朋友打开这个新地址，才是在测试同一个线上版本。\n\n所以一次完整验收要问两句：我自己的电脑能开吗？另一台设备能沿着新地址打开吗？前一句通过，不能替后一句盖章。\n\n## 自检\n\n**做对了会看到什么：**你能把本地地址和公共地址分开说清楚，并且用另一台设备或请朋友打开公共地址。对方看到的是你的页面，而不是“无法连接”或他自己机器上的页面。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、把 localhost 发给朋友。**你自己的页面明明正常，朋友却打不开；这说明你测到的是回环地址，不是发布结果。回到部署步骤，找到托管平台给出的 `https://` 地址再分享。\n\n**二、把“本机连不上”当成“发布失败”。**你在本地服务没有启动时看到连接被拒绝，于是反复改页面。回到终端启动开发服务；但启动后仍只能说明本机可用，别忘了再做一次跨设备测试。\n\n## 重点\n\n- `localhost` 和 `127.0.0.1` 指向当前设备，不是朋友的设备。\n- 本地页面能开，只证明本机有程序在回应。\n- 发布后的网址必须能从另一台设备走通。\n- “启动本地服务”和“把项目放到公网”是两件不同的事。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 说明 loopback 地址只能由同一台设备访问，并以 127.0.0.1 作为常见例子；公开地址才可从其他设备访问。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Local_network_access",
+          "sourceTitle": "MDN · Local network access",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "localhost-is-loopback",
+          "kind": "basic",
+          "front": "为什么把 localhost 发给朋友，朋友还是打不开？",
+          "back": "localhost 会在每台电脑上指向那台电脑自己。朋友打开它时，找的是朋友自己的电脑，不是你的电脑。",
+          "tags": ["publishing", "localhost"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 将 loopback 地址定义为只能从本机访问的地址，并举出 127.0.0.1 这个例子。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Local_network_access",
+              "sourceTitle": "MDN · Local network access",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "public-url-needs-host",
+          "kind": "basic",
+          "front": "本地地址通过了哪一关，还没通过哪一关？",
+          "back": "它通过了“这台电脑能运行”的一关，还没通过“另一台设备能找到并打开”的一关。后一关需要公网可访问的托管地址。",
+          "tags": ["publishing", "localhost"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 区分只能本机访问的 loopback 地址和可以被更广范围访问的公开地址。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Local_network_access",
+              "sourceTitle": "MDN · Local network access",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "test-public-reachability",
+          "title": "给自己的念头做一次跨设备测试",
+          "kind": "explain",
+          "prompt": "写下你那个东西在本机测试时会用的地址，以及你准备分享给别人的地址。说明你会怎样用另一台设备检查后一个地址，最后写出本机能开但朋友打不开时你先查什么。",
+          "rubric": [
+            "把本地测试地址和分享地址写成两个不同的对象",
+            "说明了另一台设备或另一位真实使用者怎样打开分享地址",
+            "写出本机正常不代表公网可用，而不是只说“再试一次”",
+            "遇到打不开时先区分地址指向和服务是否启动"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明 loopback 地址只在当前设备可达，这支持把跨设备打开作为独立检查。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Local_network_access",
+              "sourceTitle": "MDN · Local network access",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a-repo-is-the-thing-being-deployed",
+      "title": "部署部的是仓库，不是文件夹",
+      "variant": "溯源",
+      "content": "## 学习目标\n\n读完你能指出平台部署时要连接的那份项目材料。\n\n## 先给结论\n\n文件夹是你电脑上的工作副本，仓库是带着文件和变更历史、能被远端服务定位的一份项目记录。两者可以来自同一个项目，但不是同一个位置。\n\n走 Git 连接的部署路线时，平台读的是 GitHub 上的仓库、指定分支和项目根目录，不是你还没有上传的本地文件夹。你改完本地文件后，平台看不到这次改动，通常不是平台坏了，而是改动还没有进入它能读到的那份记录。\n\n## 一个类比\n\n好比你把手写稿放在家里桌面上，又把一份编号、可追踪的复印件交到快递站。桌面上的稿子方便你继续改，快递站的那份才有一个别人可以按地址取到的记录。\n\n相似的地方是两份内容都可能来自同一篇稿子。不相似的地方是：你只改桌上的那份，快递站不会凭空知道；要让托管平台拿到新版本，你得把变更送到它连接的远端记录。\n\n## 工作示例\n\n我们把《说人话》从桌面项目接到部署平台。\n\n1. 你在电脑上有一个 `say-human` 文件夹，里面是页面、接口和构建配置。它是工作地点，不是朋友能访问的地址。\n2. 你在 GitHub 建一个同名仓库，把本地项目初始化成 Git 项目，提交第一版，再把提交推到 GitHub。GitHub 页面此时能看到文件，也能看到这次变更留下的记录。\n3. 你在 Vercel 选择 New Project，选中这个 GitHub 仓库，再确认分支和项目根目录。这里连接的是远端仓库，不是你电脑上那个文件夹的路径。\n4. 你在本地把按钮文案从“讲人话”改成“翻译一下”，但只保存、不提交、不推送。Vercel 仍然部署旧版本。\n5. 你完成提交并推送后，连接的仓库出现新记录，平台才有机会按这次变更重新部署。\n\n如果项目放在一个大仓库的子目录里，还要确认项目根目录。根目录选错时，平台可能找不到真正的构建配置，即使仓库地址选对了也会失败。\n\n## 自检\n\n**做对了会看到什么：**Vercel 项目页能显示它连接的仓库、分支和最近一次提交；你推送一笔新提交后，部署记录出现对应的变化。你也能指出电脑上的文件夹只是本地工作副本。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、只在电脑上改了文件。**你刷新部署页面，线上仍是旧文案；本地 `git status` 还有未提交的变化。回到提交和推送，确认远端仓库真的出现了这次改动。\n\n**二、仓库选对了，根目录选错了。**部署日志提示找不到构建脚本或依赖，页面没有生成。回到项目设置，核对真正放着构建配置的目录，不要只重复点 Deploy。\n\n## 重点\n\n- 文件夹是本地工作副本，仓库是可被远端服务连接的项目记录。\n- Git 部署读的是远端仓库中的提交，不会读取你电脑上尚未上传的改动。\n- 连接仓库时要同时确认仓库、分支和项目根目录。\n- 推送之后平台才有材料生成新的部署。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "GitHub 官方把仓库描述为存放代码、文件和修订历史的地方，并解释了分支、克隆和远端的关系。",
+          "sourceUrl": "https://docs.github.com/en/repositories/creating-and-managing-repositories/about-repositories",
+          "sourceTitle": "GitHub Docs · About repositories",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Vercel 文档说明最常见的部署方式是把代码推到已连接的 Git 仓库，并可在导入时选择项目配置。",
+          "sourceUrl": "https://vercel.com/docs/git",
+          "sourceTitle": "Vercel Docs · Deploying Git repositories with Vercel",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "folder-and-repository-are-different",
+          "kind": "basic",
+          "front": "电脑上的文件夹和部署平台连接的仓库，差在哪里？",
+          "back": "文件夹是本地工作副本；仓库是带着文件和变更历史、能被远端服务定位的项目记录。只改文件夹而不推送，平台看不到新版本。",
+          "tags": ["publishing", "repository"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "GitHub 官方说明仓库包含项目文件和修订历史；Vercel 官方说明可从连接的 Git 仓库创建部署。",
+              "sourceUrl": "https://docs.github.com/en/repositories/creating-and-managing-repositories/about-repositories",
+              "sourceTitle": "GitHub Docs · About repositories",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "deployment-reads-remote-repository",
+          "kind": "basic",
+          "front": "为什么本地改完，线上还是旧版本？",
+          "back": "因为连接 Git 的部署读取的是远端仓库里的提交。本地保存、提交但不推送，或者推送到了另一个仓库，线上都没有拿到这次变化。",
+          "tags": ["publishing", "repository"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Vercel 文档说明连接 Git 仓库后，推送代码会触发新的部署；这支持用远端提交检查线上材料。",
+              "sourceUrl": "https://vercel.com/docs/deployments",
+              "sourceTitle": "Vercel Docs · Deploy and verify applications on Vercel",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "map-repo-to-deploy",
+          "title": "画出自己的项目材料链",
+          "kind": "explain",
+          "prompt": "针对你那个念头，写出“本地工作地点 → 一次提交 → 远端仓库 → 部署项目”四个节点。每个节点写一句它保存或负责什么，再指出你最容易漏掉的节点。",
+          "rubric": [
+            "四个节点都出现，且本地文件夹与远端仓库没有混成一个东西",
+            "说明提交留下一个可追踪的版本",
+            "说明部署项目连接的是远端仓库或其中的分支和根目录",
+            "指出一个真实的漏点，并写出看到的症状"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "GitHub 官方解释仓库和修订历史；Vercel 官方解释从连接的 Git 仓库触发部署。",
+              "sourceUrl": "https://vercel.com/docs/git",
+              "sourceTitle": "Vercel Docs · Deploying Git repositories with Vercel",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "commit-push-go-back",
+      "title": "提交、推送、退回",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能判断改动该提交、推送还是退回。\n\n## 先给结论\n\n这三个动作不是同一个按钮。提交把选中的改动记进本地历史；推送把本地已有的提交送到远端；退回要看坏改动有没有被提交和分享。\n\n还没提交的坏改动，可以用 `git restore` 把工作区恢复到一个已知版本。已经提交、甚至已经推送给别人看的坏改动，用 `git revert` 新增一笔反向记录。这样历史仍然能看见发生过什么，线上也有机会回到正确状态。\n\n提交不等于上线。连接了自动部署的平台，通常要等推送后才会看见远端变化；所以“我明明提交了，朋友怎么还看到旧页面”有一个很普通的答案：提交还留在你的电脑上。\n\n## 一个类比\n\n打个比方，你在家写一封信。保存草稿像留下当前改动，盖章归档像提交，寄到异地柜台像推送。草稿写坏了可以撕掉重写；信已经寄出后，不能假装它没寄过，只能再寄一封更正说明。\n\n相似的地方是每一步都在改变“别人手里是哪一版”。不相似的地方是 Git 会保留更细的历史，退回不是把时间抹掉，而是留下一个说明“用新记录抵消旧记录”。\n\n## 工作示例\n\n我们给《说人话》留两个可恢复的版本。\n\n1. 页面、输入框和结果区做完后，你查看改动，提交一笔“完成第一次可用页面”的本地记录。此时自己的历史有了版本，但 GitHub 和线上还不知道。\n2. 你把这笔提交推送到远端。Vercel 随后收到远端变化，部署出第一版可分享页面。\n3. 你试着改按钮逻辑，结果页面点一下就发出两次请求。这个坏改动还没提交，你先查看差异，再用 `git restore` 放弃它。远端和线上不需要额外修复。\n4. 第二天你误把一段错误提示提交并推送了。此时不能只在本地恢复再假设线上会变好；你用 `git revert` 针对那笔错误提交生成一笔新的反向提交，再推送这笔新记录。\n5. 重新部署完成后，朋友看见正确提示。历史里同时留着错误版本和修正动作，未来排查时能说清楚是哪一次改动造成问题。\n\n## 自检\n\n**做对了会看到什么：**你能先用状态和差异判断改动在哪，再根据“是否已经提交、是否已经推送”选择动作。未提交的本地错误被丢掉，已分享的错误通过新提交被抵消，远端历史和线上结果都能核对。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、只改文件就点提交。**提交完成了，但目标文件没有包含在这笔记录里；查看状态时仍有未提交变化，线上当然不变。回到暂存和差异检查，确认要交的文件真的进了提交。\n\n**二、线上已经坏了，却只在自己电脑上 restore。**你的本地页面恢复了，GitHub 和朋友看到的页面仍然坏。回到远端历史，针对已经分享的错误创建 revert，再推送并观察部署。\n\n## 重点\n\n- 提交记录先落在本地，推送才把它送到远端。\n- 未提交的错误适合恢复工作区，已经分享的错误适合用新记录抵消。\n- 提交、推送、部署是相邻但不同的动作。\n- 看状态和差异，比凭感觉猜“现在是哪一版”可靠。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Git 官方手册说明 commit 会根据暂存区创建新的提交并让分支指向它；这支持把提交理解为本地历史记录。",
+          "sourceUrl": "https://git-scm.com/docs/git-commit",
+          "sourceTitle": "Git · git-commit Documentation",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Git 官方手册说明 push 会更新远端引用并传送远端缺少的数据；这支持把推送理解为把提交送到远端。",
+          "sourceUrl": "https://git-scm.com/docs/git-push",
+          "sourceTitle": "Git · git-push Documentation",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Git 官方文档分别说明 restore 可恢复工作区或暂存区，revert 则通过新提交反向抵消已有提交。",
+          "sourceUrl": "https://git-scm.com/docs/git-revert",
+          "sourceTitle": "Git · git-revert Documentation",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "commit-is-local-history",
+          "kind": "basic",
+          "front": "提交和推送分别把改动送到哪里？",
+          "back": "提交把选中的改动记进本地历史；推送把本地已有的提交送到远端。只提交不推送，远端和线上仍可能是旧版。",
+          "tags": ["git", "version-history"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Git 官方手册把 commit 描述为创建新提交，把 push 描述为更新远端引用并传送数据。",
+              "sourceUrl": "https://git-scm.com/docs/git-commit",
+              "sourceTitle": "Git · git-commit Documentation",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "push-sends-to-remote",
+          "kind": "basic",
+          "front": "改动已经推送后发现错误，为什么不只在本地删掉它？",
+          "back": "因为远端已经有那笔记录。对已分享的错误，用一个新的反向提交说明并抵消它，再把新提交推送出去，远端和线上才会一起得到修正。",
+          "tags": ["git", "version-history"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Git 官方说明 revert 会记录一个新的提交，用来反向应用已有提交造成的改动。",
+              "sourceUrl": "https://git-scm.com/docs/git-revert",
+              "sourceTitle": "Git · git-revert Documentation",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "restore-or-revert",
+          "kind": "basic",
+          "front": "还没分享的坏改动和已经分享的坏改动，退回方式一样吗？",
+          "back": "不一样。还没提交的本地改动可以用 restore 恢复；已经提交或推送的改动用 revert 产生新的反向提交。",
+          "tags": ["git", "version-history"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Git 官方文档分别定义 restore 的恢复范围和 revert 的新反向提交行为。",
+              "sourceUrl": "https://git-scm.com/docs/git-restore",
+              "sourceTitle": "Git · git-restore Documentation",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "recover-a-bad-change",
+          "title": "给自己的念头安排三个恢复动作",
+          "kind": "explain",
+          "prompt": "假设你那个东西经历三种情况：只在本地改坏、已提交但未推送、已推送后被别人看见。分别写你会先查看什么、选择哪个动作、做完后去哪里确认结果。",
+          "rubric": [
+            "三种情况按是否提交、是否推送区分清楚",
+            "本地未提交的情况选择恢复工作区，并写出本地确认方式",
+            "已经推送的情况选择新的反向提交，而不是只改自己电脑",
+            "每种情况都写了动作后的验证位置，例如状态、远端历史或线上页面"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Git 官方文档说明 restore 用于恢复工作区或暂存区，revert 用新提交反向抵消已有提交。",
+              "sourceUrl": "https://git-scm.com/docs/git-restore",
+              "sourceTitle": "Git · git-restore Documentation",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "what-one-click-deploy-does",
+      "title": "一键部署替你做了什么",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能把“一键部署”拆成三个可检查的动作。\n\n## 先给结论\n\n“一键部署”不是平台替你检查产品对不对，而是把一串固定工作接在一个按钮后面。对《说人话》来说，可以拆成取到项目、准备依赖并完成构建、把成功的结果放进可访问环境。\n\nVercel 把一次部署描述成项目成功构建后的结果，并会给这次部署一个独立网址。连接 Git 仓库后，新的提交还可以触发新的部署。真正有用的不是“按钮很神奇”，而是你能在日志和网址上逐项检查这三步。\n\n## 一个类比\n\n这就像云厨房接到一张订单。厨房先拿到菜谱和食材，再备料、烹饪，最后把做好的餐盒交到取餐窗口。你按“一键出餐”，并不代表厨师读懂了你想讨好谁，也不代表顾客一定会喜欢；它只代表一套流程被启动了。\n\n相似的地方是平台替你重复执行准备、制作、交付。不相似的地方是平台不会替你判断“租房条款讲得准不准”或“按钮点起来顺不顺”，这些仍要你验收。\n\n## 工作示例\n\n把《说人话》接到 Vercel，完整看一遍发生了什么。\n\n1. 你在 Vercel 的 New Project 里选中 GitHub 仓库，确认项目根目录、构建命令和需要的环境配置。这里是“取到项目”和“告诉平台怎么处理它”。\n2. 你点击 Deploy。平台在自己的环境准备项目需要的依赖，再执行构建命令。构建日志会显示正在做什么；如果命令不存在，流程在这里就停下。\n3. 构建成功后，Vercel 生成一个部署网址。你打开它，粘贴一行体检报告，点击“讲人话”，检查页面、接口和结果是否都工作。这个网址是“交付结果”，不是构建日志的替代品。\n4. 你修改一句欢迎语并推送。连接的仓库产生新部署；你先在 Preview 环境检查，确认没问题后再让生产环境使用这版。\n\n从头到尾，你都能找到对应证据：仓库和提交说明材料从哪里来，构建日志说明中间做了什么，部署网址说明结果是否真的可访问。\n\n## 自检\n\n**做对了会看到什么：**你能把一次部署说成“取项目、构建、交付网址”三步，并在平台页面分别找到仓库/提交、构建日志和部署地址。生产版本与预览版本也能分开验证。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、构建失败后只盯着空白页面。**平台会给出失败日志，例如缺少脚本或依赖；空白页面只是结果，不是原因。回到日志，再在本地先跑同一套构建检查配置。\n\n**二、预览页改好了，生产地址却没变。**你看到的是一个新预览部署，而朋友访问的是生产环境。回到部署列表确认分支和发布动作，不要把预览网址误当成生产网址。\n\n## 重点\n\n- 一键部署启动的是一串工作，不是替你验收产品。\n- 先取到正确项目，再准备并构建，最后才有可访问网址。\n- 构建日志是查失败原因的地方，部署网址是查结果的地方。\n- Preview 可以试新版本，Production 才是面向用户的版本。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Vercel 文档说明部署是项目成功构建后的结果，每次部署会生成独立网址，并区分 Local、Preview、Production 环境。",
+          "sourceUrl": "https://vercel.com/docs/deployments",
+          "sourceTitle": "Vercel Docs · Deploy and verify applications on Vercel",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Vercel 文档说明导入 Git 仓库后，提交或拉取请求可以自动触发新的部署。",
+          "sourceUrl": "https://vercel.com/docs/git",
+          "sourceTitle": "Vercel Docs · Deploying Git repositories with Vercel",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "one-click-is-a-pipeline",
+          "kind": "basic",
+          "front": "一键部署背后至少要检查哪三段？",
+          "back": "检查它取到的是正确项目，构建是否成功，以及生成的网址能不能按预期打开。按钮只启动流程，不替你验收内容。",
+          "tags": ["deployment", "vercel"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Vercel 将部署定义为成功构建后的结果，并提供部署网址、构建时间和日志供检查。",
+              "sourceUrl": "https://vercel.com/docs/deployments",
+              "sourceTitle": "Vercel Docs · Deploy and verify applications on Vercel",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "preview-and-production-differ",
+          "kind": "basic",
+          "front": "预览环境和生产环境各自用来做什么？",
+          "back": "预览环境用来测试和协作，不影响正式站点；生产环境承载面向用户的最终版本。看到预览成功，不等于生产已经换版。",
+          "tags": ["deployment", "vercel"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Vercel 文档把 Preview 定义为不影响线上站点的测试与协作环境，把 Production 定义为面向用户的正式环境。",
+              "sourceUrl": "https://vercel.com/docs/deployments",
+              "sourceTitle": "Vercel Docs · Deploy and verify applications on Vercel",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "inspect-one-click-deploy",
+          "title": "把自己的部署按钮拆开",
+          "kind": "explain",
+          "prompt": "以你那个念头为例，写一份三行检查表：平台从哪里取项目、怎样知道构建成功、用户最后要打开哪个地址。再补一行：如果预览成功而生产没变，你会看哪里。",
+          "rubric": [
+            "写清楚了仓库或其他部署来源，而不是只写“点部署”",
+            "把构建命令或构建日志作为成功证据",
+            "写出可分享的部署地址，并说明它与本地地址不同",
+            "能区分预览版本和生产版本的检查位置"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Vercel 文档说明部署会经历构建并产生唯一网址，同时提供预览和生产环境的区别。",
+              "sourceUrl": "https://vercel.com/docs/deployments",
+              "sourceTitle": "Vercel Docs · Deploy and verify applications on Vercel",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "secrets-go-in-the-environment",
+      "title": "密钥怎么带上去而不写进代码",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能把一个密钥放进部署平台的环境配置里。\n\n## 先给结论\n\n需要保密的值不应该跟着网页代码一起旅行。代码里保留变量名，真正的值放在部署平台的环境配置中；平台在构建或运行时把它提供给服务端代码读取。\n\n环境配置还要选对范围。Preview 和 Production 可以有不同的值，也可以只给其中一个环境。一个变量在预览里存在，不代表正式环境里也存在。\n\n如果密钥已经进过公开仓库或浏览器代码，删掉那一行不等于它从未泄露；应当把它当成已经暴露，去服务商后台更换，再把新值放进正确的环境。\n\n## 一个类比\n\n好比银行卡密码。你可以把“要用哪张卡”的编号写在工作单上，但不把密码印在工作单正面；密码放在柜台的受控抽屉里，办事的人按权限取用。\n\n相似的地方是代码只需要知道一个名字，运行时再拿到真正的值。不相似的地方是平台的环境配置也不是魔法保险箱：有项目权限的人可能接触到它，错误的环境范围也会让服务拿不到它。\n\n## 工作示例\n\n让《说人话》调用文本服务，但不把密钥贴进项目。\n\n1. 你在本地开发配置中写变量名 `TEXT_SERVICE_KEY`，把本地值放在不会提交的环境文件里，并确认版本控制忽略它。页面代码不把这个值渲染出来。\n2. 你把项目推到 GitHub 时，搜索代码和提交差异，确认没有出现真正的密钥。仓库里只留下“读取 `TEXT_SERVICE_KEY`”的代码。\n3. 你在 Vercel 项目设置里新增同名环境变量，把它的范围选为 Preview 和 Production。Vercel 文档把这类值作为源代码之外的键值配置，构建和函数可以读取。\n4. 你重新部署。预览环境发起一次解释请求；如果服务端能读到变量，结果返回。再检查生产环境，因为它可能有单独的配置。\n5. 如果你曾经把密钥写进 GitHub，先到文本服务后台撤销旧值并生成新值，再更新平台配置。只删 GitHub 上当前文件，不能让旧提交消失。\n\n## 自检\n\n**做对了会看到什么：**代码里只能看到变量名，平台设置里能看到对应环境的配置，部署后的服务端能读到它；浏览器开发者工具和公开仓库里都找不到真正的密钥。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、把 `sk-...` 直接写进 JavaScript。**搜索代码、提交差异或浏览器资源就能看见它；这不是“暂时先用用”，而是已经暴露。回到服务商后台撤销并更换旧值，再只把新值放入环境配置。\n\n**二、只给 Preview 配了值。**预览能解释，生产请求却提示缺少配置或返回服务错误。回到平台环境范围，给 Production 加上正确值，再重新部署。\n\n## 重点\n\n- 代码保存变量名，环境配置保存真正的密钥值。\n- 环境变量要按 Preview、Production 等范围分别核对。\n- 密钥进过公开代码后要更换，单纯删除当前文件不够。\n- 浏览器能看见的东西按公开信息处理，秘密值应留在服务端可读的环境里。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Vercel 文档将环境变量描述为在源代码之外、按环境配置的键值，并说明构建和函数可以读取这些值，静态存储时会加密。",
+          "sourceUrl": "https://vercel.com/docs/environment-variables",
+          "sourceTitle": "Vercel Docs · Environment variables",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "secret-lives-outside-source",
+          "kind": "basic",
+          "front": "为什么代码里只写密钥的名字，不写密钥本身？",
+          "back": "代码会进入仓库、构建产物或浏览器；真正的秘密值应放在部署平台的环境配置里，让服务端在运行时读取。",
+          "tags": ["secrets", "environment-variables"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Vercel 文档说明环境变量存放在源代码之外，并可在构建和函数中读取。",
+              "sourceUrl": "https://vercel.com/docs/environment-variables",
+              "sourceTitle": "Vercel Docs · Environment variables",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "environment-has-a-scope",
+          "kind": "basic",
+          "front": "预览环境能读到一个变量，能推出生产环境也能读到吗？",
+          "back": "不能。环境变量按环境配置；要让正式站点使用它，必须单独确认 Production 范围已有值，并重新部署验证。",
+          "tags": ["secrets", "environment-variables"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Vercel 文档说明环境变量可以按不同环境配置，项目在构建和运行时按所处环境读取。",
+              "sourceUrl": "https://vercel.com/docs/environment-variables",
+              "sourceTitle": "Vercel Docs · Environment variables",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "move-a-secret-safely",
+          "title": "为自己的念头安排一条密钥路径",
+          "kind": "explain",
+          "prompt": "列出你的产品可能用到的三个配置值，并标出哪些是秘密、哪些可以公开。对每个秘密值写出“代码里留什么、平台哪里放、在哪两个环境验证”，再写出已经泄露时的第一步。",
+          "rubric": [
+            "至少区分一个秘密值和一个可公开配置，而不是把所有字符串都叫密钥",
+            "秘密值的代码形态是变量名，不是实际值",
+            "写清楚了平台配置位置和 Preview、Production 的范围检查",
+            "泄露后的处理包含撤销或更换旧值，而不只是删除当前文件"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Vercel 官方文档说明环境变量在源代码之外按环境配置，并可供构建与函数读取。",
+              "sourceUrl": "https://vercel.com/docs/environment-variables",
+              "sourceTitle": "Vercel Docs · Environment variables",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "domain-and-the-lock",
+      "title": "域名，和地址栏那把锁",
+      "variant": "术语",
+      "content": "## 学习目标\n\n读完你能解释地址栏锁能保证什么、不能保证什么。\n\n## 先给结论\n\n域名是给人记的那串网址名字，HTTPS 是浏览器和网站之间使用的一种受保护连接。地址栏出现锁，通常表示这次连接使用了 TLS。MDN 说明 TLS 会加密传输中的数据、帮助发现内容被改动，并用证书把密钥和域名联系起来。\n\n这把锁保护的是“路上怎么传”。它不是网站好坏认证，不证明站主说的每句话都是真的，也不保证你没有进到一个专门骗取信息的相似域名。看到锁以后，仍要核对域名、内容和你正在交给谁。\n\n## 一个类比\n\n相当于把一份文件装进运输途中能看出被拆过的信封。信封上的封条让路上的旁人不容易读到内容，也能让你发现途中被动过；但封条不会替你调查寄件人是不是好人，更不会检查文件里的承诺是真是假。\n\n相似的地方是锁和封条都在保护传输过程。不相似的地方是网站收到数据以后怎么保存、怎么使用，以及网站本身是不是值得信任，不由地址栏这一个图标替你决定。\n\n## 工作示例\n\n给《说人话》挂一个可以分享的地址。\n\n1. 你为部署选择一个容易记的域名，例如 `say-human.example`，把它指向线上部署。\n2. 朋友打开 `https://say-human.example`。你先看地址是否确实是这个域名，再看浏览器是否正常建立 HTTPS 连接。\n3. 你粘贴一段不敏感的体检报告，观察页面能否完成解释。锁说明这段文字在传输路上有保护，不说明解释结果一定正确。\n4. 你收到一个长得很像的地址 `say-human-help.example`，它也有锁。你不能因此直接把租房合同交给它；先核对域名来源和产品说明。\n\n这里的检查有两层：锁检查连接，域名和产品核对检查你面对的对象。把两层合成一句“有锁所以可信”，就漏掉了最重要的判断。\n\n## 自检\n\n**做对了会看到什么：**你能说出锁保护的是传输中的机密性、完整性和与域名相关的证书关系；同时能说出锁不等于网站内容、站主或交易可信。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、页面仍用 `http` 或混入不安全资源。**浏览器可能给出警告、没有预期的锁，或者显示连接不完全受保护。回到部署和资源地址，确认页面与资源都走 HTTPS。\n\n**二、看到锁就把所有资料交出去。**页面看起来很正规，但域名拼写、来源或请求内容有问题；锁不会替你拦住这种欺骗。回到域名核对和最小化提交资料，不要把锁当成信用背书。\n\n## 重点\n\n- 域名是可记的地址名字，HTTPS/TLS 保护的是连接。\n- 锁意味着传输过程有 TLS 保护，不意味着网站内容可信。\n- 证书与域名的关系不等于站主获得了道德或商业认证。\n- 先核对域名和内容，再决定交出什么资料。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 说明 TLS 在不受信网络上提供安全连接，包含传输加密、完整性保护以及证书对密钥和域名的绑定。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security",
+          "sourceTitle": "MDN · Transport Layer Security (TLS)",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "Vercel 文档说明可以把自定义域名指向某个部署，这支持把域名理解为部署的可分享地址。",
+          "sourceUrl": "https://vercel.com/docs/deployments",
+          "sourceTitle": "Vercel Docs · Deploy and verify applications on Vercel",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "lock-protects-the-connection",
+          "kind": "basic",
+          "front": "地址栏的锁主要保护哪一段？",
+          "back": "它主要保护浏览器到网站之间的传输：TLS 会加密传输中的数据、帮助发现被改动，并用证书把连接和域名联系起来。",
+          "tags": ["domain", "https"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 对 TLS 的说明包括传输加密、完整性保护和证书与域名的绑定。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security",
+              "sourceTitle": "MDN · Transport Layer Security (TLS)",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "lock-is-not-a-trust-badge",
+          "kind": "basic",
+          "front": "为什么有锁也不能直接说网站可信？",
+          "back": "锁说明连接受 TLS 保护，不是内容审核或站主信用认证。还要核对域名、来源、页面承诺和你准备提交的资料。",
+          "tags": ["domain", "https"],
+          "evidence": [
+            {
+              "kind": "inference",
+              "note": "MDN 描述 TLS 的范围是连接加密、完整性和证书与域名的关系；本课据此把锁和网站内容或经营者的可信度分开。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security",
+              "sourceTitle": "MDN · Transport Layer Security (TLS)",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "audit-domain-and-lock",
+          "title": "为自己的网址写两层检查",
+          "kind": "explain",
+          "prompt": "假设你的念头已经有一个分享地址。写两列检查：第一列只检查连接和地址栏，第二列检查域名来源、产品内容和要收集的资料。最后举一个“有锁但你仍不会提交敏感资料”的情况。",
+          "rubric": [
+            "连接一列包含 HTTPS 或浏览器连接状态的检查",
+            "对象一列包含域名拼写或来源核对，而不是重复写锁",
+            "明确写出锁不等于内容和站主可信",
+            "例子里说明了在什么信号出现时会停止提交资料"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明 TLS 保护传输连接并把证书与域名联系起来，这支持把连接检查和对象检查分成两层。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Transport_Layer_Security",
+              "sourceTitle": "MDN · Transport Layer Security (TLS)",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "anyone-can-send-anything",
+      "title": "上了公网，谁都能给它发东西",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能从接口地址推断谁可以向它发请求。\n\n## 先给结论\n\n网页只是一个入口，接口是另一条可以接收请求的地址。公开接口收到的请求不一定来自你的页面，也不一定由人在浏览器里点出来；别人可以直接构造 HTTP 请求发过去。\n\n浏览器有一层跨站限制，主要控制网页脚本能不能读取另一个来源的响应。这层限制方便浏览器里的普通页面，但它不是登录、权限、额度或输入检查。真正面对每个请求的服务端，必须自己决定接不接受、处理多少、给谁看结果。\n\n## 一个类比\n\n好比餐厅把菜单放在门口，又在后厨留了一个传菜窗口。大多数客人沿着菜单点单，但有人也可能直接对着窗口报菜名。菜单上的按钮不是后厨的保安。\n\n相似的地方是页面和接口都通向同一项服务。不相似的地方是页面可以给好人提示和限制，不能阻止别人绕过它；真正的入口如果没有身份、数量和内容检查，窗口就会照收请求。\n\n## 工作示例\n\n给《说人话》的“讲人话”功能做一次绕过页面的检查。\n\n1. 正常用户在页面粘贴租房条款，页面向 `/api/explain` 发送一条请求，服务端返回解释。\n2. 你不打开页面，直接用脚本或命令把一段 JSON 发到同一个接口。页面的按钮和前端提示都没有出现，但接口仍然收到了这次尝试。\n3. 你再发一条超长文本、一个缺少字段的请求和连续很多次请求。服务端应该在自己的入口检查格式、长度、身份和频率，而不是假定“页面已经检查过了”。\n4. 如果浏览器控制台出现 CORS 报错，你不能把这理解成接口已经上锁。它只说明这个浏览器页面是否被允许读取响应；服务端是否收到请求、是否验证请求，要看服务端的规则和日志。\n\n这次示例的重点不是学会攻击，而是换一个观察位置：不要只从按钮往里看，也要从接口边界往外问“任何客户端带着什么数据来，我会怎样处理”。\n\n## 自检\n\n**做对了会看到什么：**你能列出产品的接口地址，并说明一个不打开页面的客户端也可以尝试请求；服务端日志和响应能显示它做了自己的接受、拒绝或限流判断。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、只点击页面按钮就说接口安全。**你看不到绕过页面的请求，直到有人直接发请求才发现接口照单全收。回到接口清单，为每条入口写服务端的身份、格式、数量检查。\n\n**二、把 CORS 报错当成权限墙。**浏览器里读不到响应，但换一个客户端可能仍能发到服务器；这说明浏览器读权限和服务端访问权限是两件事。回到服务端认证和输入检查，不要只加一个浏览器配置。\n\n## 重点\n\n- 页面是入口之一，接口本身也是需要防守的入口。\n- 请求可以不经过你的页面直接到达公开接口。\n- CORS 主要是浏览器的跨来源读写限制，不等于身份认证。\n- 服务端要对每次请求重新检查身份、内容、数量和权限。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 说明 CORS 是通过 HTTP 头让服务器声明哪些跨来源请求可被浏览器读取的机制，属于浏览器与服务器之间的跨来源处理。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS",
+          "sourceTitle": "MDN · Cross-Origin Resource Sharing (CORS)",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 明确提醒攻击者可以绕过客户端校验并直接构造 HTTP 请求，因此服务器必须在处理前重新验证输入。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Input_validation",
+          "sourceTitle": "MDN · Input validation",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "page-is-not-the-firewall",
+          "kind": "basic",
+          "front": "为什么隐藏按钮不能保护接口？",
+          "back": "按钮只是页面上的一个入口。别人可以不打开页面，直接向接口发 HTTP 请求；接口必须在服务端自己检查请求。",
+          "tags": ["security", "api"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 的输入校验指南说明攻击者可以绕过客户端校验并直接构造 HTTP 请求。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Input_validation",
+              "sourceTitle": "MDN · Input validation",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "cors-is-not-authentication",
+          "kind": "basic",
+          "front": "CORS 主要解决什么问题，不解决什么问题？",
+          "back": "CORS 主要控制浏览器脚本能否读取跨来源响应；它不是登录、权限、额度或服务端输入校验。",
+          "tags": ["security", "api"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 将 CORS 定义为通过 HTTP 头控制跨来源资源是否可被浏览器读取的机制。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS",
+              "sourceTitle": "MDN · Cross-Origin Resource Sharing (CORS)",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "probe-public-interface",
+          "title": "从接口边界检查自己的念头",
+          "kind": "explain",
+          "prompt": "列出你的产品至少一条接口地址，写出一个不经过页面的请求会带什么数据。然后说明服务端会检查哪三件事，以及浏览器出现跨站错误时你不会把它误判成什么。",
+          "rubric": [
+            "写出了接口而不是只写页面按钮",
+            "请求数据至少包含一个可能被改写或遗漏的字段",
+            "服务端检查覆盖身份、格式、数量或权限中的至少三项",
+            "明确把浏览器跨站限制与服务端认证区分开"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 同时说明 CORS 是浏览器跨来源机制，以及客户端校验可以被绕过、服务器仍须验证。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Input_validation",
+              "sourceTitle": "MDN · Input validation",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "never-trust-what-came-from-the-page",
+      "title": "从页面来的东西一律不能当真",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能把一条前端校验改成服务端也会检查的规则。\n\n## 先给结论\n\n前端校验是给正常使用者的即时提示，服务端校验才是处理请求前的最后判断。页面上的隐藏字段、禁用按钮、价格数字、用户编号和“我有权限”的标记，都可能被改写；服务端不能把它们当成事实。\n\n服务端收到数据后，要重新检查格式和范围，确认当前登录者是谁、能不能访问目标资源，并从自己的配置或数据库决定敏感值。前端可以提前提醒，但它拦不住一个愿意自己发请求的人。\n\n## 一个类比\n\n想象你在办证。网上表格可以提醒好人把姓名填完整，但真正发证的柜台还要核对证件和权限。你把表格里的“我是本人”改成什么，柜台都不能只看这一格就发证。\n\n相似的地方是表格和页面都能减少普通人的填写错误。不相似的地方是页面在申请人手里，申请人可以改；服务端像最终柜台，必须重新看它能验证的凭据和数据。\n\n## 工作示例\n\n把《说人话》的历史翻译和付费功能放在同一条可信规则上。\n\n1. 页面限制输入最多 5000 字，并把当前计划显示成“免费”。这让普通用户较早看到提示，但不构成安全边界。\n2. 有人直接向接口发送 100000 字，把 `plan` 改成 `pro`，再把 `userId` 改成另一个人的编号。服务端收到后不能照着三个字段执行。\n3. 服务端重新检查文本长度；只接受自己配置过的计划标识；从登录会话得到当前用户，而不是相信请求里的 `userId`；查数据库确认这个用户是否拥有那条历史记录。\n4. 任一检查失败就返回明确的拒绝结果，不调用昂贵的文本服务、不读别人的记录，也不因为前端按钮原本是灰色就放行。\n5. 通过检查的请求才进入解释流程，结果写回当前用户自己的记录。这样前端负责体验，服务端负责事实。\n\n## 自检\n\n**做对了会看到什么：**正常页面请求和手工改过的请求走到同一套服务端规则。合法数据得到结果；超长文本、未知计划或别人的记录得到拒绝；服务端日志能说明拒绝发生在哪一项检查。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、只隐藏或禁用按钮。**页面上看不到入口，但直接请求仍能成功，说明“看不见”没有变成“不能做”。回到服务端路由，把长度、计划和权限检查放在处理动作之前。\n\n**二、服务端照抄请求里的用户编号。**你换一个编号就能看到别人的历史，说明身份和资源所有权没有由服务端确认。回到登录会话和数据库查询，用服务端认出的用户决定能读哪条记录。\n\n## 重点\n\n- 前端校验负责及时提示，不能承担最终安全判断。\n- 服务端必须重验输入、身份、权限和敏感配置。\n- 隐藏字段、禁用按钮和页面数字都属于可被改写的输入。\n- 对不合法请求要在执行昂贵动作或返回数据之前拒绝。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 说明客户端校验只能改善用户体验，攻击者可绕过它；服务器必须在处理输入前做服务端校验。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Input_validation",
+          "sourceTitle": "MDN · Input validation",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 说明 HTML 约束校验可以被开发者工具、手工 HTTP 请求或脚本绕过，因此始终需要服务端校验。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Constraint_validation",
+          "sourceTitle": "MDN · Constraint validation",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "frontend-checks-are-not-gates",
+          "kind": "basic",
+          "front": "前端校验和服务端校验各自负责什么？",
+          "back": "前端校验给正常用户即时提示；服务端校验在处理请求前重新判断输入、身份和权限，不能把前端的结果当成事实。",
+          "tags": ["security", "server-validation"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 明确区分客户端校验的用户体验作用和服务端校验的必要性。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Input_validation",
+              "sourceTitle": "MDN · Input validation",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "server-derives-sensitive-values",
+          "kind": "basic",
+          "front": "用户编号、价格或权限为什么不能直接听页面的？",
+          "back": "页面发来的字段可以被改写。服务端应从登录会话、自己的配置或数据库重新得到用户、价格和权限，再决定是否执行。",
+          "tags": ["security", "server-validation"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明客户端约束可以被手工请求绕过，服务器不能依赖页面的限制而必须自行校验。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Constraint_validation",
+              "sourceTitle": "MDN · Constraint validation",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "move-check-to-server",
+          "title": "把一个页面限制搬到服务端",
+          "kind": "explain",
+          "prompt": "从你的念头里挑一条现在可能写在页面上的限制，例如字数、计划、用户编号或按钮权限。写出前端给好人的提示，再写服务端收到被改写请求时会怎样重新检查、拒绝或从自己的数据推导。",
+          "rubric": [
+            "选出的规则具体到一个字段或一个动作",
+            "前端部分写的是即时提示，而不是声称它能挡住攻击者",
+            "服务端部分包含重新检查或从可信来源推导",
+            "写出改写请求会看到的拒绝结果或不会获得的数据"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明客户端限制可以被绕过，服务端必须在处理前验证输入。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Input_validation",
+              "sourceTitle": "MDN · Input validation",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
