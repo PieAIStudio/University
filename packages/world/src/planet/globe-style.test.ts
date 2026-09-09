@@ -5,7 +5,7 @@ import { prepareDomain } from "./domain-preparation.js";
 
 describe("named domain material families share one geometry and bake", () => {
   it("changes colour, not shape, topology or the domain seed", () => {
-    const shapes = (["meadow", "dawn", "iris"] as const).map((style) =>
+    const shapes = (["meadow", "dawn", "iris", "lagoon"] as const).map((style) =>
       createDomainGlobeGeometry("same-world", style),
     );
     try {
@@ -26,11 +26,16 @@ describe("named domain material families share one geometry and bake", () => {
       expect(shapes[1]!.getAttribute("color").array).not.toEqual(
         shapes[2]!.getAttribute("color").array,
       );
+      for (const previous of shapes.slice(0, 3)) {
+        expect(shapes[3]!.getAttribute("color").array).not.toEqual(
+          previous.getAttribute("color").array,
+        );
+      }
     } finally {
       for (const shape of shapes) shape.dispose();
     }
   });
-  it.each(["dawn", "iris"] as const)(
+  it.each(["dawn", "iris", "lagoon"] as const)(
     "worker applies the declared %s style, with no invented courses",
     (style) => {
       const texture = createDomainSurfaceTexture("empty", style);

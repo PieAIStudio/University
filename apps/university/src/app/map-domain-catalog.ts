@@ -24,6 +24,12 @@ export function mapDomainCatalog(): readonly MapDomain[] {
       description: translate("ui.world.domain.aiFoundations.description"),
     },
     {
+      id: "ai-games",
+      surfaceStyle: "lagoon",
+      title: translate("ui.world.domain.aiGames"),
+      description: translate("ui.world.domain.aiGames.description"),
+    },
+    {
       id: "ai-media",
       surfaceStyle: "iris",
       title: translate("ui.world.domain.aiMedia"),
@@ -32,13 +38,13 @@ export function mapDomainCatalog(): readonly MapDomain[] {
   ];
 }
 
-const STUDY_DOMAINS: Readonly<Record<string, "programming">> = Object.freeze({
-  "turing-pact": "programming",
-  buzz: "programming",
-  supaluv: "programming",
-  general: "programming",
-  "browser-ai": "programming",
-});
+const STUDY_DOMAINS: Readonly<Record<string, "programming" | "ai-foundations" | "ai-games">> =
+  Object.freeze({
+    "turing-pact": "ai-games",
+    "ai-foundations": "ai-foundations",
+    general: "programming",
+    "browser-ai": "programming",
+  });
 
 export function mapDomainForStudy(studyId: string): MapDomain {
   const id = Object.hasOwn(STUDY_DOMAINS, studyId) ? STUDY_DOMAINS[studyId]! : "unclassified";

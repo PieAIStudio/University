@@ -115,6 +115,7 @@ import { useMistakeSummary } from "./mistake-summary";
 import { useSceneCamera } from "./scene-camera";
 import { useSceneInteraction } from "./scene-interaction";
 import { useStudyContext } from "./study-context";
+import { readNavigationFocus } from "./navigation-focus.js";
 import { mapDomainCatalog, studyForMapDomain } from "./map-domain-catalog.js";
 import { useTodaySectionData } from "./today-section-data";
 import { trackEvent, type AnalyticsEvent } from "../analytics/productAnalytics";
@@ -153,11 +154,13 @@ export function App() {
   const { lookSeedNode, view } = useIslandLookView({ lookDebug, nodes, routeView });
   const shellConfig = shellConfigForView(view);
   /**
-   * The learner's transient navigation choice. `undefined` means "not chosen
+   * The learner's tab-local navigation choice. `undefined` means "not chosen
    * yet" — fall back to the learner's next course so the name, the sky and the
-   * eye agree. It is never written to the authoring config or account data.
+   * eye agree. Same-tab session memory carries only this ID across native
+   * links; it is never written to the authoring config or account data.
    */
-  const [navigationFocus, setNavigationFocus] = useState<LearnerNavigationFocus>(undefined);
+  const [navigationFocus, setNavigationFocus] =
+    useState<LearnerNavigationFocus>(readNavigationFocus);
   const [hovered, setHovered] = useState<string | null>(null);
   /** The island-entry action stays discoverable until the learner picks once. */
   const [mapEntryLearned, setMapEntryLearned] = useState(false);
@@ -372,6 +375,7 @@ export function App() {
     courseProgress,
     courseProgressForNode,
     focusedStudyId,
+    navigationFocus,
     nodes,
     setNavigationFocus,
     setView,

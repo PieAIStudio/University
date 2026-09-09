@@ -408,6 +408,7 @@ for (const studyId of readdirSync(upstream).sort()) {
   shelf.studies.push({
     id: index.study.id,
     title: index.study.title,
+    ...(index.study.description ? { description: index.study.description } : {}),
     courses: shelfCourses,
   });
 }

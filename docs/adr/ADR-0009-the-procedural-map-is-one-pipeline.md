@@ -174,6 +174,15 @@ still does not. `domainPreparationKey` is shared by the client and hook so a
 new palette cannot accidentally reuse the previous domain texture. No new
 scene, coordinate table, content producer or output-colour pipeline is added.
 
+R40 adds the AI-games domain with a named `lagoon` palette through that same
+metadata contract. The fourth preset changes neither globe topology nor texture
+resolution; it is exercised by the same vertex/bake equivalence tests. Route
+descriptions now pass from the authored study manifest through both ContentPort
+shelves into PlanetStudy and its DOM detail, rather than being invented in the
+map or duplicated between modes. Renaming a route does not change its existing
+course IDs. Course retirement and the new foundations source are content changes,
+not rendering rules; the active plan records their exact acceptance scope.
+
 The remote base cache is weakly owned by the blueprint, with an eight-entry
 LRU for radius variants inside each live blueprint. A WeakMap alone does not
 bound repeated preview resizes while that blueprint remains mounted. The four

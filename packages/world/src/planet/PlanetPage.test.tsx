@@ -117,6 +117,21 @@ function dispatchPointerSequence(target: EventTarget) {
 }
 
 describe("PlanetPage contract", () => {
+  it("shows only source-authored route positioning and its real case", async () => {
+    const description = "以《图灵密约》为真实案例，学会用 AI 做游戏。";
+    const props = {
+      studies: [{ ...STUDIES[0]!, description }],
+      selectedId: STUDIES[0]!.id,
+      onSelect: vi.fn(),
+      onEnter: vi.fn(),
+      onClose: vi.fn(),
+    };
+    await act(async () => root.render(<PlanetPage {...props} />));
+    expect(container.querySelector("[data-study-description]")?.textContent).toBe(description);
+    await act(async () => root.render(<PlanetPage {...props} studies={[STUDIES[0]!]} />));
+    expect(container.querySelector("[data-study-description]")).toBeNull();
+  });
+
   it("does not read the library or progress itself — those come in as props", () => {
     // Assert on imports, not on the comment that names the things we refuse.
     // A grep of the whole file would ban the sentence explaining the rule.

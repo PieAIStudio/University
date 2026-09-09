@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "study": {
+    "id": "ai-foundations",
+    "title": "认识 AI，从这里开始",
+    "description": "从手机里已经在用的功能认识 AI。已有内容开放学习，课程仍在编写与整理，后续会按学习主题拆成多门课。",
+    "goals": [],
+    "defaultCourseId": "what-is-ai-really",
+    "status": "active"
+  },
+  "courses": [
+    {
+      "courseId": "what-is-ai-really",
+      "file": "what-is-ai-really.6ab9b23399e20485dfb99b156ad370dc65ac04e5766987acae39f1d4b5386197.recovery.json",
+      "sha256": "sha256:6ab9b23399e20485dfb99b156ad370dc65ac04e5766987acae39f1d4b5386197",
+      "isBeingRewritten": true
+    }
+  ]
+}

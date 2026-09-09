@@ -36,7 +36,7 @@ vi.mock("@pieai/university-world/planet.js", async (importOriginal) => ({
 }));
 vi.mock("../ports/index", () => {
   const studies = [
-    { id: "buzz", title: "Buzz", courses: [] },
+    { id: "browser-ai", title: "学会用 AI 做应用", courses: [] },
     { id: "turing-pact", title: "TuringPact", courses: [] },
   ];
   return {
@@ -75,15 +75,26 @@ function study(id: string, domainId: string): PlanetStudy {
 }
 
 describe("map domain catalogue", () => {
-  it("declares exactly three real domain identities and only authored domain-level positioning", () => {
+  it("declares four real domain identities and only authored domain-level positioning", () => {
     const catalog = mapDomainCatalog();
     expect(catalog.map((domain) => domain.id)).toEqual([
       "programming",
       "ai-foundations",
+      "ai-games",
       "ai-media",
     ]);
-    expect(catalog.map((domain) => domain.title)).toEqual(["AI 与编程", "AI 基础", "AI 媒体创作"]);
-    expect(catalog.map((domain) => domain.surfaceStyle)).toEqual(["meadow", "dawn", "iris"]);
+    expect(catalog.map((domain) => domain.title)).toEqual([
+      "AI 与编程",
+      "AI 基础",
+      "AI 与游戏",
+      "AI 媒体创作",
+    ]);
+    expect(catalog.map((domain) => domain.surfaceStyle)).toEqual([
+      "meadow",
+      "dawn",
+      "lagoon",
+      "iris",
+    ]);
     for (const domain of catalog) {
       expect(domain.description?.length).toBeGreaterThan(5);
       expect(domain).not.toHaveProperty("studies");
@@ -92,9 +103,14 @@ describe("map domain catalogue", () => {
     }
   });
 
-  it("groups the existing programming series into one domain", () => {
-    const domains = ["general", "buzz", "supaluv", "turing-pact"].map(mapDomainForStudy);
-    expect(new Set(domains.map((domain) => domain.id))).toEqual(new Set(["programming"]));
+  it("assigns each learning route once by learning goal, not project name", () => {
+    expect(mapDomainForStudy("general").id).toBe("programming");
+    expect(mapDomainForStudy("browser-ai").id).toBe("programming");
+    expect(mapDomainForStudy("turing-pact").id).toBe("ai-games");
+    expect(mapDomainForStudy("ai-foundations").id).toBe("ai-foundations");
+    for (const retired of ["buzz", "supaluv"]) {
+      expect(mapDomainForStudy(retired).id).toBe("unclassified");
+    }
   });
 
   it("keeps unknown studies visible without guessing from their names", () => {
@@ -146,7 +162,10 @@ describe("map domain catalogue", () => {
     const stage = () => container.querySelector("[data-test-planet-stage]")!;
     try {
       await act(async () => root.render(createElement(StrictMode, null, createElement(App))));
-      expect(stage().getAttribute("data-catalog")).toBe("programming,ai-foundations,ai-media");
+      expect(stage().getAttribute("data-catalog")).toBe(
+        "programming,ai-foundations,ai-games,ai-media",
+      );
+      await click('[data-test-globe-domain="ai-games"]');
       await click('button[data-study-id="turing-pact"]');
       expect(stage().getAttribute("data-selected-study")).toBe("turing-pact");
       for (const domain of ["ai-foundations", "ai-media"]) {
@@ -164,7 +183,7 @@ describe("map domain catalogue", () => {
         expect(container.querySelector("[data-domain-empty]")?.textContent).toContain("暂未发布");
       }
       await click(".planet-page__return");
-      expect(stage().getAttribute("data-selected-domain")).toBe("programming");
+      expect(stage().getAttribute("data-selected-domain")).toBe("ai-games");
       expect(stage().getAttribute("data-selected-study")).toBe("turing-pact");
       expect(container.querySelector(".planet-page__enter")?.textContent).toContain("TuringPact");
       expect(

@@ -4,7 +4,7 @@
  */
 import * as THREE from "three";
 
-export type DomainSurfaceStyle = "meadow" | "dawn" | "iris";
+export type DomainSurfaceStyle = "meadow" | "dawn" | "iris" | "lagoon";
 
 export const DOMAIN_SURFACE_PALETTES = {
   meadow: {
@@ -27,6 +27,13 @@ export const DOMAIN_SURFACE_PALETTES = {
     shore: new THREE.Color(0.83, 0.78, 0.9),
     land: new THREE.Color(0.55, 0.35, 0.56),
     highland: new THREE.Color(0.34, 0.23, 0.4),
+  },
+  lagoon: {
+    deep: new THREE.Color(0.19, 0.25, 0.42),
+    shallow: new THREE.Color(0.29, 0.43, 0.6),
+    shore: new THREE.Color(0.91, 0.8, 0.65),
+    land: new THREE.Color(0.26, 0.55, 0.54),
+    highland: new THREE.Color(0.18, 0.38, 0.4),
   },
 } as const;
 

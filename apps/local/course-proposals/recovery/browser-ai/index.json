@@ -5,8 +5,8 @@
   "droppedUaBindingCount": 0,
   "study": {
     "id": "browser-ai",
-    "title": "浏览器里的 AI 应用",
-    "description": "",
+    "title": "学会用 AI 做应用",
+    "description": "从浏览器里的真实应用入手，学习运行项目、理解功能、调整交互并验证改动。",
     "goals": [],
     "defaultCourseId": null,
     "status": "active"

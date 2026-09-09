@@ -213,6 +213,21 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
           bag.three?.scene.getObjectByName("domain-globe-programming")
         );
       });
+      await humanClick(
+        page,
+        page.locator('button[data-domain-id="programming"]'),
+        "select the populated programming domain",
+      );
+      await humanClick(
+        page,
+        page.locator('[data-study-id="general"]'),
+        "start on the website region",
+      );
+      await page.waitForFunction(planetFocusSample, {
+        kind: "scene",
+        studyId: "general",
+        alignedOnly: true,
+      });
       if (process.env.UNIVERSITY_TIMING_PLANET === "1") {
         await page.evaluate(planetFocusSample, { kind: "install" });
         await page.evaluate(() => {
@@ -239,7 +254,8 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
             if (!active) return;
             const bag = window as any;
             const angle =
-              bag.__testPlanetFocusSample({ kind: "scene", studyId: "buzz" })?.alignment ?? null;
+              bag.__testPlanetFocusSample({ kind: "scene", studyId: "browser-ai" })?.alignment ??
+              null;
             receipt.frames.push({
               at: performance.now(),
               selected: bag.__planetProjection?.().selectedId ?? null,
@@ -279,14 +295,14 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
         });
       }
       let startedAt = 0;
-      await humanClick(page, page.getByRole("button", { name: /^Buzz\b/ }), "星球上的 Buzz 系列", {
+      await humanClick(page, page.locator('[data-study-id="browser-ai"]'), "星球上的应用学习路线", {
         beforePress: async () => {
           startedAt = await page.evaluate(() => performance.now());
         },
       });
       const facing = await page.waitForFunction(
         planetFocusSample,
-        { kind: "scene", studyId: "buzz", alignedOnly: true },
+        { kind: "scene", studyId: "browser-ai", alignedOnly: true },
         { polling: "raf", timeout: 10_000 },
       );
       const alignment = await facing.jsonValue();
@@ -313,9 +329,11 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
         await profile.detach();
       }
       assertFast(elapsedMs, "星球区域转向");
-      await expect(page.getByRole("button", { name: "进入 Buzz", exact: true })).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "进入 学会用 AI 做应用", exact: true }),
+      ).toBeVisible();
       const measured = await measuredScene(page);
-      evidence.planet = { elapsedMs, alignment, selectedStudyId: "buzz", ...measured };
+      evidence.planet = { elapsedMs, alignment, selectedStudyId: "browser-ai", ...measured };
     });
 
     await namedStep(page, "岛群层点课程，云飞到岛上而不是改写导航焦点", async () => {

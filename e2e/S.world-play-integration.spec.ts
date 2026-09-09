@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { humanClick } from "./harness/click.js";
@@ -8,6 +8,9 @@ import { assertCompleteCourseOverview, waitForCourseFraming } from "./harness/co
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 
 const COURSE = "/turing-pact/foundations-before-zero";
+const GAME_ROUTE_TITLE: string = JSON.parse(
+  readFileSync("apps/university/src/content/imported.json", "utf8"),
+).studies.find((study: { studyId: string }) => study.studyId === "turing-pact").title;
 const RUN = new Date().toISOString().replaceAll(":", "-");
 
 async function inspectWholeCourse(page: Page, screenshot: string) {
@@ -64,11 +67,11 @@ test.describe("S 课程岛与学习玩法的整合边界", () => {
           "open practice from the real shell",
         );
         await expect(
-          page.getByRole("button", { name: "当前系列 TuringPact", exact: true }),
+          page.getByRole("button", { name: `当前系列 ${GAME_ROUTE_TITLE}`, exact: true }),
         ).toBeVisible();
         await humanClick(
           page,
-          page.getByRole("button", { name: "去互动游乐场", exact: true }),
+          page.getByRole("button", { name: "体验互动课件", exact: true }),
           "open the learning activities",
         );
         await expect(page.locator(".learning-activity")).toHaveAttribute(
@@ -76,7 +79,7 @@ test.describe("S 课程岛与学习玩法的整合边界", () => {
           "connect",
         );
         await expect(
-          page.getByRole("button", { name: "当前系列 TuringPact", exact: true }),
+          page.getByRole("button", { name: `当前系列 ${GAME_ROUTE_TITLE}`, exact: true }),
         ).toBeVisible();
         await expect(page.locator(".stagewrap")).toHaveCount(0);
 
@@ -90,7 +93,7 @@ test.describe("S 课程岛与学习玩法的整合边界", () => {
           "ai-brief",
         );
         await expect(
-          page.getByRole("button", { name: "当前系列 TuringPact", exact: true }),
+          page.getByRole("button", { name: `当前系列 ${GAME_ROUTE_TITLE}`, exact: true }),
         ).toBeVisible();
         await expect(page.locator(".learning-activity")).toHaveAttribute("data-guided", "true");
         await humanClick(
@@ -109,7 +112,7 @@ test.describe("S 课程岛与学习玩法的整合边界", () => {
         );
         await humanClick(page, page.getByRole("button", { name: /关卡地图/ }), "return to the map");
         await expect(
-          page.getByRole("button", { name: "当前系列 TuringPact", exact: true }),
+          page.getByRole("button", { name: `当前系列 ${GAME_ROUTE_TITLE}`, exact: true }),
         ).toBeVisible();
         const course = page.locator(
           'button.label--course[data-map-marker="foundations-before-zero"]',

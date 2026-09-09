@@ -27,6 +27,8 @@ export interface PlanetStudyDomain {
 export interface PlanetStudy {
   readonly id: string;
   readonly title: string;
+  /** Source-authored learning goal and case positioning; never inferred by the renderer. */
+  readonly description?: string;
   readonly domain?: PlanetStudyDomain;
   readonly courseCount: number;
   readonly lessonCount: number;

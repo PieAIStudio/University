@@ -137,11 +137,9 @@ export function useWorldModel({
    * every number here is counted off `nodes`, and the course names are the
    * spine order the map already walks.
    *
-   * There is no blurb, and there is no place to put one — a study in
-   * `imported.json` carries an id, a title, a default course and a course list.
-   * The honest introduction is what the data actually knows: how big it is, how
-   * far in you are, and what the courses are called. Writing a sentence here
-   * would be this shell inventing content, which is the one thing it may not do.
+   * Route positioning comes from the author's study manifest through Shelf,
+   * in both modes. Counts and the ordered course names remain derived from
+   * the actual graph; the shell does not invent a case or teaching promise.
    */
   const planetStudies: readonly PlanetStudy[] = useMemo(
     () =>
@@ -157,6 +155,7 @@ export function useWorldModel({
         return {
           id: study.id,
           title: study.title,
+          ...(study.description ? { description: study.description } : {}),
           courseCount: own.length || study.courses.length,
           domain: mapDomainForStudy(study.id),
           lessonCount: own.reduce((sum, node) => sum + node.lessons, 0),

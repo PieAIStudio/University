@@ -311,6 +311,11 @@ function StudyDetail({ study }: { readonly study: PlanetStudy }) {
   const listed = studyCourseList(study);
   return (
     <GamePanel tone="strong" className="planet-page__card" title={study.title}>
+      {study.description ? (
+        <p className="planet-page__domain-description" data-study-description>
+          {study.description}
+        </p>
+      ) : null}
       <p className="planet-page__counts">{studyCounts(study)}</p>
       {study.lessonCount > 0 ? (
         <GameProgress

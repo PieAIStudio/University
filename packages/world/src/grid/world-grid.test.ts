@@ -205,9 +205,10 @@ describe("world grid projection", () => {
     },
   );
 
-  it("makes real course length legible while keeping both ends usable", () => {
+  it("retains the original 3/19/41-lesson footprint calibration without pinning retired course IDs", () => {
     const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
-    const short = courseEntry(world, "generated-assets");
+    const byLength = [...world.placements].sort((a, b) => a.node.lessons - b.node.lessons);
+    const short = byLength[0]!;
     const medium = courseEntry(world, "product-website");
     const long = courseEntry(world, "foundations-before-zero");
     const medianFootprint = median(world.placements.map((entry) => entry.grid.bounds.maxHalf));
@@ -215,7 +216,7 @@ describe("world grid projection", () => {
 
     // The lower and upper bounds come from the real catalogue's median-sized
     // course: the 3-lesson tail must retain at least 60% of that footprint,
-    // while the 41-lesson outlier stays below 1.75× it. The two explicit ratios
+    // while the original 41-lesson sample stays below 1.75× it. The two explicit ratios
     // make the length signal visible instead of merely non-zero.
     expect(short.grid.bounds.maxHalf).toBeGreaterThanOrEqual(medianFootprint * 0.6);
     expect(long.grid.bounds.maxHalf).toBeLessThanOrEqual(medianFootprint * 1.75);

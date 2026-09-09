@@ -45,12 +45,21 @@ describe("the 2D directory against the library the map uses", () => {
     /*
       The literal is the point of this line: the two sides above could agree
       with each other while both silently dropping a study, and this is what
-      would catch that. R39 integrates four already-exported browser-ai
-      courses with the previous 44; their identities are checked below too.
-      The original 44 manifest entries were independently compared unchanged.
+      would catch that. R40 deliberately retires 12 courses from R39's 48
+      and adds the existing 61-lesson AI foundations course. All 36 retained
+      recovery hashes stay unchanged; the website rewrite flag is explicit.
       This moves only when the recovery transport deliberately changes.
     */
-    expect(fromLibrary).toBe(48);
+    expect(fromLibrary).toBe(37);
+    expect(library.studies.map((study) => study.studyId)).toEqual([
+      "ai-foundations",
+      "browser-ai",
+      "general",
+      "turing-pact",
+    ]);
+    expect(
+      library.studies.find((study) => study.studyId === "ai-foundations")?.courses,
+    ).toMatchObject([{ courseId: "what-is-ai-really", lessons: 61 }]);
     expect(
       library.studies
         .find((study) => study.studyId === "browser-ai")
@@ -91,26 +100,31 @@ describe("the 2D directory against the library the map uses", () => {
       }
     }
 
-    // The four browser-ai recovery packages add four units and 21 lessons.
-    expect(listing.totals.units).toBe(132);
-    expect(listing.totals.lessons).toBe(516);
+    // Approved R40 catalogue, not counts derived from the same generated input.
+    expect(listing.totals.units).toBe(112);
+    expect(listing.totals.lessons).toBe(463);
   });
 
   it("folds the generated shelf into the same directory read model", () => {
     expect(assembleCatalogListingFromShelf(shelf as Shelf, progressSource())).toEqual(listingOf());
   });
 
-  it("lays buzz flat instead of inventing a chain", () => {
-    const buzz = listingOf().studies.find((study) => study.id === "buzz");
-    const fromLibrary = library.studies.find((study) => study.studyId === "buzz");
-    expect(buzz).toBeDefined();
-    expect(fromLibrary).toBeDefined();
-    expect(buzz!.flat).toBe(true);
-    expect(buzz!.courses.every((course) => course.depth === 0)).toBe(true);
-    expect(buzz!.courses.every((course) => course.prerequisiteCourseIds.length === 0)).toBe(true);
-    expect(buzz!.courses.map((course) => course.id)).toEqual(
-      fromLibrary!.courses.map((course) => course.courseId),
-    );
+  it("lays independent courses flat instead of inventing a chain (synthetic shelf)", () => {
+    const base = (shelf as Shelf).studies.find((study) => study.id === "ai-foundations")!
+      .courses[0]!;
+    const courses = ["first", "second", "third"].map((id) => ({
+      ...base,
+      id,
+      prerequisiteCourseIds: [],
+    }));
+    const flat = assembleCatalogListingFromShelf(
+      { studies: [{ id: "flat-fixture", title: "Synthetic independent courses", courses }] },
+      progressSource(),
+    ).studies[0]!;
+    expect(flat.flat).toBe(true);
+    expect(flat.courses.every((course) => course.depth === 0)).toBe(true);
+    expect(flat.courses.every((course) => course.prerequisiteCourseIds.length === 0)).toBe(true);
+    expect(flat.courses.map((course) => course.id)).toEqual(courses.map((course) => course.id));
   });
 
   it("keeps the fourteen-layer turing-pact climb readable as depth order", () => {
@@ -128,28 +142,28 @@ describe("the 2D directory against the library the map uses", () => {
   it("marks locked courses idle until every in-study prerequisite is finished", () => {
     const empty = listingOf();
     const locked = empty.studies
-      .find((study) => study.id === "supaluv")
-      ?.courses.find((course) => course.id === "ai-cost-and-boundaries");
+      .find((study) => study.id === "turing-pact")
+      ?.courses.find((course) => course.id === "foundations-terrain");
     expect(locked?.state).toBe("idle");
-    expect(locked?.prerequisiteCourseIds).toEqual(["founder-engineer"]);
+    expect(locked?.prerequisiteCourseIds).toEqual(["foundations-before-zero"]);
 
     const packaged = packagedCourses();
-    const preface = packaged.get("supaluv/founder-engineer");
+    const preface = packaged.get("turing-pact/foundations-before-zero");
     expect(preface).toBeDefined();
     for (const unit of preface!.units) {
       for (const lesson of unit.lessons) {
-        advanceLesson(lessonKey("supaluv", preface!.id, lesson.id), 1);
+        advanceLesson(lessonKey("turing-pact", preface!.id, lesson.id), lesson.contentRevision);
       }
     }
 
     const opened = listingOf();
     const next = opened.studies
-      .find((study) => study.id === "supaluv")
-      ?.courses.find((course) => course.id === "ai-cost-and-boundaries");
+      .find((study) => study.id === "turing-pact")
+      ?.courses.find((course) => course.id === "foundations-terrain");
     expect(next?.state).toBe("open");
     const done = opened.studies
-      .find((study) => study.id === "supaluv")
-      ?.courses.find((course) => course.id === "founder-engineer");
+      .find((study) => study.id === "turing-pact")
+      ?.courses.find((course) => course.id === "foundations-before-zero");
     expect(done?.state).toBe("done");
   });
 
@@ -159,10 +173,10 @@ describe("the 2D directory against the library the map uses", () => {
       .flatMap((study) => study.courses)
       .filter((course) => course.state === "live");
     expect(live).toHaveLength(1);
-    expect(live[0]?.id).toBe("foundations-before-zero");
+    expect(live[0]?.id).toBe("what-is-ai-really");
     expect(listing.nextLesson).toEqual({
-      studyId: "turing-pact",
-      courseId: "foundations-before-zero",
+      studyId: "ai-foundations",
+      courseId: "what-is-ai-really",
       unitId: live[0]!.units[0]!.id,
       lessonId: live[0]!.units[0]!.lessons[0]!.id,
     });

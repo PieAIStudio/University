@@ -130,8 +130,7 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
       // (no learner to aim at, so `frameWorld` takes its overview branch);
       // a returning one opens at the near stop.
       const deltaY = await page.evaluate(() => {
-        const controls = (globalThis as unknown as { mapControls?: MapControlsHandle })
-          .mapControls;
+        const controls = (globalThis as unknown as { mapControls?: MapControlsHandle }).mapControls;
         if (!controls) return 120;
         const distance = controls.object.position.distanceTo(controls.target);
         const max = (controls as unknown as { maxDistance: number }).maxDistance;
@@ -216,11 +215,11 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
         pinned, because that row sits exactly where the dead 「看全部四片海」 used
         to be, and two ways out of one menu is the shape of that bug returning.
       */
-      await expect(menu.locator("[role='option']").filter({ hasText: "看所有课程系列" })).toHaveCount(
-        1,
-      );
-      await expect(menu).toContainText("TuringPact");
-      await expect(menu).toContainText("通用课");
+      await expect(
+        menu.locator("[role='option']").filter({ hasText: "看所有课程系列" }),
+      ).toHaveCount(1);
+      await expect(menu).toContainText("学会用 AI 做游戏");
+      await expect(menu).toContainText("学会用 AI 做网站");
       await page.screenshot({ path: `${SHOTS}/switcher.png` });
     });
 

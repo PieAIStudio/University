@@ -5,7 +5,11 @@ import { ONLINE_ORIGIN } from "./ports.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { assertWorldCarrierAboveGround } from "./harness/world-carrier.js";
-import { assertCompleteCourseOverview, courseOverviewEvidence, waitForCourseFraming } from "./harness/course-overview.js";
+import {
+  assertCompleteCourseOverview,
+  courseOverviewEvidence,
+  waitForCourseFraming,
+} from "./harness/course-overview.js";
 
 const COURSE = "/turing-pact/foundations-before-zero";
 const OUTPUT = "SCRATCH/e2e/world-delivery";
@@ -42,7 +46,12 @@ const LAYER_CONTRACT: Record<
   },
   planet: {
     canvasSelector: "[data-planet-globe] canvas",
-    present: ["domain-planet-programming", "domain-globe-programming", "domain-clouds-programming", "domain-course-islands-programming"],
+    present: [
+      "domain-planet-programming",
+      "domain-globe-programming",
+      "domain-clouds-programming",
+      "domain-course-islands-programming",
+    ],
     absent: ["island-dressing-course", "remote-props", "remote-island-terrain"],
   },
 };
@@ -101,9 +110,15 @@ function resourcesOf(metrics: FrameEvidence): ResourceSnapshot {
 async function remoteBatchDrawEvidence(page: Page) {
   return page.evaluate(async () => {
     const state = (globalThis as any).three;
-    const roots = [state.scene.getObjectByName("remote-island-terrain"), state.scene.getObjectByName("remote-props")];
+    const roots = [
+      state.scene.getObjectByName("remote-island-terrain"),
+      state.scene.getObjectByName("remote-props"),
+    ];
     const meshes = new Set<any>();
-    for (const root of roots) root?.traverse((object: any) => { if (object.isMesh) meshes.add(object); });
+    for (const root of roots)
+      root?.traverse((object: any) => {
+        if (object.isMesh) meshes.add(object);
+      });
     const originals = new Map<any, any>();
     const draws = new Map<number, { calls: number; names: string[] }>();
     try {
@@ -124,7 +139,8 @@ async function remoteBatchDrawEvidence(page: Page) {
     }
     return {
       source: "actual onAfterRender callbacks, grouped by renderer.info.render.frame",
-      scope: "remote merged terrain and remote prop batches only, excluding avatars, sky, shadows and post; full Stage cost is recorded separately",
+      scope:
+        "remote merged terrain and remote prop batches only, excluding avatars, sky, shadows and post; full Stage cost is recorded separately",
       sceneUuid: state.scene.uuid,
       meshCount: meshes.size,
       samples: [...draws].map(([rendererFrame, entry]) => ({ rendererFrame, ...entry })),
@@ -410,25 +426,33 @@ for (const viewport of [
 
       const nearView = await courseOverviewEvidence(page);
       const courseUrl = page.url();
-      await humanClick(page,page.getByRole("button",{name:"总览课程岛",exact:true}),"frame the entire actual course island");
+      await humanClick(
+        page,
+        page.getByRole("button", { name: "总览课程岛", exact: true }),
+        "frame the entire actual course island",
+      );
       const overview = await assertCompleteCourseOverview(page);
       expect(overview.geometryId).toBe(nearView.geometryId);
       expect(overview.sceneId).toBe(nearView.sceneId);
       expect(overview.avatarTarget).toEqual(nearView.avatarTarget);
       expect(overview.fov).toBe(nearView.fov);
       expect(page.url()).toBe(courseUrl);
-      await page.screenshot({path:join(folder,"course-overview.png")});
-      evidence.overview={near:nearView,full:overview};
-      await humanClick(page,page.getByRole("button",{name:"回到当前关",exact:true}),"restore the ordinary learning camera");
+      await page.screenshot({ path: join(folder, "course-overview.png") });
+      evidence.overview = { near: nearView, full: overview };
+      await humanClick(
+        page,
+        page.getByRole("button", { name: "回到当前关", exact: true }),
+        "restore the ordinary learning camera",
+      );
       await waitForCourseFraming(page);
       const restored = await courseOverviewEvidence(page);
-      expect(restored.distance).toBeCloseTo(36,3);
+      expect(restored.distance).toBeCloseTo(36, 3);
       expect(restored.avatarTarget).toEqual(nearView.avatarTarget);
       expect(restored.geometryId).toBe(nearView.geometryId);
 
       await humanClick(
         page,
-        page.getByRole("button", { name: /回到 TuringPact 地图/ }),
+        page.getByRole("button", { name: /回到\s*.+地图/ }),
         "return to archipelago",
       );
       const course = page.getByRole("button", {
@@ -440,30 +464,37 @@ for (const viewport of [
       evidence.world = await frameEvidence(page, "world", originalScene);
       evidence.unselectedCarrierContact = await assertWorldCarrierAboveGround(page);
       const seriesIds = await page.evaluate(() => {
-        const field=(window as any).three?.scene.getObjectByName("remote-island-field");
+        const field = (window as any).three?.scene.getObjectByName("remote-island-field");
         return field?.userData?.remoteIslandIds ?? null;
       });
       // Names remain in the keyboard DOM even when their visual label is culled.
       const shelfResponse = await page.request.get(`${ONLINE_ORIGIN}/content/shelf.json`);
       expect(shelfResponse.ok()).toBe(true);
       const shelf = await shelfResponse.json();
-      const publishedCourses = shelf.studies.find((study: {id:string})=>study.id === "turing-pact").courses.map((course: {id:string})=>course.id);
+      const publishedCourses = shelf.studies
+        .find((study: { id: string }) => study.id === "turing-pact")
+        .courses.map((course: { id: string }) => course.id);
       expect(publishedCourses.length).toBeGreaterThan(0);
-      expect(seriesIds?.slice().sort()).toEqual(publishedCourses.map((id: string)=>`turing-pact/${id}`).sort());
+      expect(seriesIds?.slice().sort()).toEqual(
+        publishedCourses.map((id: string) => `turing-pact/${id}`).sort(),
+      );
       expect(await page.locator("button.label--course").count()).toBe(publishedCourses.length);
-      evidence.seriesIslandIds=seriesIds;
+      evidence.seriesIslandIds = seriesIds;
       const remoteDraws = await remoteBatchDrawEvidence(page);
       evidence.remoteBatchDraws = remoteDraws;
       expect(remoteDraws.sceneUuid).toBe(originalScene);
       expect(remoteDraws.samples.length).toBeGreaterThan(3);
       for (const sample of remoteDraws.samples) {
-        expect(sample.calls, "terrain + optional pavilion + trees: actual base-pass draw ceiling").toBeLessThanOrEqual(3);
+        expect(
+          sample.calls,
+          "terrain + optional pavilion + trees: actual base-pass draw ceiling",
+        ).toBeLessThanOrEqual(3);
         expect(sample.calls).toBeGreaterThan(0);
       }
       await page.screenshot({ path: join(folder, "world.png") });
       await humanClick(
         page,
-        page.getByRole("button", { name: "当前系列 TuringPact", exact: true }),
+        page.getByRole("button", { name: "当前系列 学会用 AI 做游戏", exact: true }),
         "study switcher",
       );
       await humanClick(
@@ -475,8 +506,21 @@ for (const viewport of [
       const expand = page.getByRole("button", { name: "展开上下文", exact: true });
       if (await expand.isVisible()) await humanClick(page, expand, "show study choices");
       await expect(page.locator('[data-study-id="turing-pact"]')).toBeVisible();
-      await humanClick(page, page.locator('[data-study-id="buzz"]'), "select another study");
-      await expect(page.locator('[data-study-id="buzz"]')).toHaveAttribute("aria-pressed", "true");
+      await humanClick(
+        page,
+        page.locator('button[data-domain-id="programming"]'),
+        "visit another learning domain",
+      );
+      await humanClick(page, page.locator('[data-study-id="browser-ai"]'), "select another study");
+      await expect(page.locator('[data-study-id="browser-ai"]')).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      await humanClick(
+        page,
+        page.locator('button[data-domain-id="ai-games"]'),
+        "return to the game domain",
+      );
       await humanClick(
         page,
         page.locator('[data-study-id="turing-pact"]'),
@@ -487,7 +531,7 @@ for (const viewport of [
       await page.screenshot({ path: join(folder, "planet.png") });
       await humanClick(
         page,
-        page.getByRole("button", { name: "进入 TuringPact", exact: true }),
+        page.getByRole("button", { name: "进入 学会用 AI 做游戏", exact: true }),
         "enter same study",
       );
       // A visible DOM row can precede the returning scene's assets/arrival.
@@ -513,7 +557,7 @@ for (const viewport of [
       for (let round = 0; round < 2; round += 1) {
         await humanClick(
           page,
-          page.getByRole("button", { name: /回到 TuringPact 地图/ }),
+          page.getByRole("button", { name: /回到\s*.+地图/ }),
           "warm return to world",
         );
         await waitForOwnedLayerReady(page, "world", originalScene);

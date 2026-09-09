@@ -3,8 +3,24 @@
   "evidenceMode": "none",
   "studies": [
     {
+      "studyId": "ai-foundations",
+      "title": "认识 AI，从这里开始",
+      "defaultCourseId": "what-is-ai-really",
+      "courses": [
+        {
+          "courseId": "what-is-ai-really",
+          "title": "AI 到底是什么",
+          "isBeingRewritten": true,
+          "sha256": "sha256:6ab9b23399e20485dfb99b156ad370dc65ac04e5766987acae39f1d4b5386197",
+          "packageBytes": 469909,
+          "servedBytes": 371299,
+          "lessons": 61
+        }
+      ]
+    },
+    {
       "studyId": "browser-ai",
-      "title": "浏览器里的 AI 应用",
+      "title": "学会用 AI 做应用",
       "defaultCourseId": null,
       "courses": [
         {
@@ -46,146 +62,24 @@
       ]
     },
     {
-      "studyId": "buzz",
-      "title": "Buzz",
-      "defaultCourseId": "buzz-orientation",
-      "courses": [
-        {
-          "courseId": "buzz-orientation",
-          "title": "《你屏幕上这套东西背后是什么？》",
-          "isBeingRewritten": false,
-          "sha256": "sha256:1dc01e8b943da07bd32a8c010bfb75461771b1ec06e1a858f269c549ee062115",
-          "packageBytes": 76710,
-          "servedBytes": 48474,
-          "lessons": 12
-        },
-        {
-          "courseId": "buzz-reading-rust",
-          "title": "《如何读懂 Buzz 里的 Rust 结构？》",
-          "isBeingRewritten": false,
-          "sha256": "sha256:78a06f7376e8dae6e0bacbcbd9df2597676d8c9043a6e5badeb6ac0553b85574",
-          "packageBytes": 82093,
-          "servedBytes": 52735,
-          "lessons": 12
-        },
-        {
-          "courseId": "buzz-one-message",
-          "title": "《一条消息怎样走完 Buzz？》",
-          "isBeingRewritten": false,
-          "sha256": "sha256:a52282c8926d6523007d6de96790708ddb17c63e04d0a7a2a951ad6612e4fa7c",
-          "packageBytes": 89005,
-          "servedBytes": 56912,
-          "lessons": 12
-        },
-        {
-          "courseId": "buzz-agents-as-members",
-          "title": "《Agent 为什么可以像成员一样工作？》",
-          "isBeingRewritten": false,
-          "sha256": "sha256:384dc8db10ce5ffb60a54d76a63d70c5d6e04588128f3addb8118a7591d079dc",
-          "packageBytes": 84120,
-          "servedBytes": 53903,
-          "lessons": 12
-        },
-        {
-          "courseId": "buzz-design-tokens",
-          "title": "《Buzz 如何把视觉设计变成可维护的令牌？》",
-          "isBeingRewritten": false,
-          "sha256": "sha256:6a92c8042a67bf1d15785e2294b2a72f8cd0e9725112457a4c44cb3c0a73ac8f",
-          "packageBytes": 79214,
-          "servedBytes": 51701,
-          "lessons": 12
-        }
-      ]
-    },
-    {
       "studyId": "general",
-      "title": "通用课",
+      "title": "学会用 AI 做网站",
       "defaultCourseId": "product-website",
       "courses": [
         {
           "courseId": "product-website",
           "title": "从零做一个产品官网",
-          "isBeingRewritten": false,
+          "isBeingRewritten": true,
           "sha256": "sha256:8dc022626760652dd1c50ea5b272f58b29b8ae770964b0645d77223579cc00de",
           "packageBytes": 162970,
-          "servedBytes": 129695,
+          "servedBytes": 129694,
           "lessons": 19
         }
       ]
     },
     {
-      "studyId": "supaluv",
-      "title": "SupaLuv",
-      "defaultCourseId": "ai-cost-and-boundaries",
-      "courses": [
-        {
-          "courseId": "founder-engineer",
-          "title": "创始人工程师：SupaLuv",
-          "isBeingRewritten": false,
-          "sha256": "sha256:ea3c4d1307873b706a681a75eb9da19d25f548a5cb756f2341f1752c2266bec4",
-          "packageBytes": 18068,
-          "servedBytes": 11908,
-          "lessons": 1
-        },
-        {
-          "courseId": "ai-cost-and-boundaries",
-          "title": "AI 产品的成本与边界",
-          "isBeingRewritten": false,
-          "sha256": "sha256:cf7f8add2d2a8e42dcba02b2a91da40a5453d2a88f909a213848f76203e22a62",
-          "packageBytes": 36838,
-          "servedBytes": 27188,
-          "lessons": 4
-        },
-        {
-          "courseId": "ai-branching-narrative",
-          "title": "分支叙事：作者意图与 AI 的分工",
-          "isBeingRewritten": false,
-          "sha256": "sha256:d1632dd4b606dea89123108954c8333b54db3a52dd305d7c1965c9ea55d96df9",
-          "packageBytes": 111975,
-          "servedBytes": 82413,
-          "lessons": 12
-        },
-        {
-          "courseId": "generated-assets",
-          "title": "一个人如何量产内容",
-          "isBeingRewritten": false,
-          "sha256": "sha256:566373afe564a1fabbd7b4831e061486818d500ea3551adade0a422a2bf6381c",
-          "packageBytes": 36129,
-          "servedBytes": 26282,
-          "lessons": 3
-        },
-        {
-          "courseId": "media-tooling",
-          "title": "一个人的媒体流水线",
-          "isBeingRewritten": false,
-          "sha256": "sha256:d74705dee80b7c278a2b74c52d8c6d0f35bd9991275bacdce1f493173f0a2302",
-          "packageBytes": 98865,
-          "servedBytes": 73149,
-          "lessons": 12
-        },
-        {
-          "courseId": "content-as-package",
-          "title": "把内容当依赖包管理",
-          "isBeingRewritten": false,
-          "sha256": "sha256:afedbcb002cf8f4614823d732ae85ef398b7496cccd99d7e1fa0050a716bb2b4",
-          "packageBytes": 99205,
-          "servedBytes": 74933,
-          "lessons": 11
-        },
-        {
-          "courseId": "automated-playtesting",
-          "title": "让机器替你玩一千遍",
-          "isBeingRewritten": false,
-          "sha256": "sha256:db9332fb48e901c32ebfdb2cadc93039257d92a7101681e4b80d2dc95ab7cb28",
-          "packageBytes": 92032,
-          "servedBytes": 67791,
-          "lessons": 11
-        }
-      ]
-    },
-    {
       "studyId": "turing-pact",
-      "title": "TuringPact",
+      "title": "学会用 AI 做游戏",
       "defaultCourseId": "foundations-before-zero",
       "courses": [
         {

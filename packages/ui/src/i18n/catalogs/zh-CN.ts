@@ -19,9 +19,11 @@ import { messages as learningPlayMessages } from "./learning-play.zh-CN.js";
  */
 export const messages = {
   "ui.world.domain.programming": "AI 与编程",
-  "ui.world.domain.programming.description": "用 AI 理解软件、学习编程与开发应用。",
+  "ui.world.domain.programming.description": "学会用 AI 做网站和应用，理解功能、数据与交互。",
   "ui.world.domain.aiFoundations": "AI 基础",
   "ui.world.domain.aiFoundations.description": "理解 AI 是什么，以及模型、训练和推理等基础概念。",
+  "ui.world.domain.aiGames": "AI 与游戏",
+  "ui.world.domain.aiGames.description": "学会用 AI 设计与制作游戏，理解玩法、规则和体验。",
   "ui.world.domain.aiMedia": "AI 媒体创作",
   "ui.world.domain.aiMedia.description": "认识图像、视频、音乐等生成式媒体的创作方法。",
   "ui.world.domain.unpublished": "暂未发布",

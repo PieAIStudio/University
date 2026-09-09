@@ -3,6 +3,20 @@
   "note": "键是 screen+element+category，不是描述。同一个缺陷会被不同评审说成症状或原因；按文字去重会把它们分成两条。",
   "findings": [
     {
+      "id": "de425267808b",
+      "screen": "shared-navigation",
+      "element": "当前系列与返回地图",
+      "category": "context-loss",
+      "viewport": "both",
+      "summary": "从直达课程返回地图，或经普通链接进入练习后，当前系列退回全局默认，可能跳到另一颗星球。",
+      "severity": "friction",
+      "state": "fixed",
+      "foundBy": "codex-browser-regression",
+      "foundOn": "2026-09-09",
+      "guardedBy": "e2e/P.domain-release.spec.ts / e2e/S.world-play-integration.spec.ts / apps/university/src/app/study-switch.test.tsx",
+      "evidence": ".devspace-visual/astra-r40/targeted-r2-failures/ and targeted-r3-failures/"
+    },
+    {
       "id": "d6cab639f3e9",
       "screen": "/",
       "element": "课程卡 picked--follow",
