@@ -9,6 +9,14 @@ coverage/
 !.env.example
 .scratch/
 .artifacts/
+# Local DevSpace captures and handoffs; never runtime inputs or committed media.
+/.devspace-visual/
+/.devspace-reports/
+/e2e/.devspace-visual/
+
+# This Mac's optional Blender MCP points to an isolated local tool environment.
+# Do not commit absolute executable paths as portable project dependencies.
+/.mcp.json
 university.config.local.json
 
 # PGS skill symlinks are intentionally visible in Git as part of the project

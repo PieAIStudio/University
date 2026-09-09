@@ -420,6 +420,8 @@ export const KENNEY_ISLAND_RECIPES: readonly IslandRecipe[] = [
           "fountain-round",
           "stall",
           "lantern",
+          "stall-bench",
+          "cart",
         ],
         visualWeight: "primary",
         zone: "center",
@@ -437,7 +439,7 @@ export const KENNEY_ISLAND_RECIPES: readonly IslandRecipe[] = [
     // The route is baked into the procedural terrain; no Fantasy Town road
     // tile is loaded. Keeping the whitelist honest prevents a model strip
     // from quietly returning when this recipe is expanded.
-    rawGlbBudget: 10,
+    rawGlbBudget: 12,
   },
   {
     id: "R02-river-market",

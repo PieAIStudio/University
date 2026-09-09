@@ -333,9 +333,9 @@ async function returnFromLesson(page: Page): Promise<void> {
   const fixture = await getExperienceFixture(page);
   await humanClick(page, page.getByRole("button", { name: "离开课文" }), "课文离开");
   await expect(page).toHaveURL(new RegExp(`${fixture.coursePath.replaceAll("/", "\\/")}$`));
-  const map = page.getByRole("button", { name: /回到 .*地图/ });
+  const map = page.locator(".picked--left").getByRole("button", { name: /回到\s*.+地图/ });
   await expect(map).toBeVisible({ timeout: 30_000 });
-  await humanClick(page, map, "课程地图返回世界");
+  await humanClick(page, map, "课程地图返回系列岛群");
   await expect(page).toHaveURL(`${ONLINE_ORIGIN}/`);
   await waitForMapReady(page);
 }
@@ -1075,11 +1075,15 @@ export async function clickAndMeasureResponse(
     })
     .catch(() => ({ clickedAt: null, respondedAt: null }));
   const urlChanged = page.url() !== beforeUrl;
-  const responseElapsed = navigationAt
-    ? navigationAt - clickStarted
-    : state.clickedAt !== null && state.respondedAt !== null
+  // For same-document navigation use the document's actual click timestamp.
+  // The navigation callback uses a different clock and includes humanClick's
+  // intentional mouse-down hold, so it must not override an earlier DOM response.
+  const responseElapsed =
+    state.clickedAt !== null && state.respondedAt !== null
       ? state.respondedAt - state.clickedAt
-      : null;
+      : navigationAt !== null
+        ? navigationAt - clickStarted
+        : null;
   const elapsedMs = responseElapsed === null ? 301 : Math.max(0, Math.round(responseElapsed));
   return { urlChanged, domChanged: state.respondedAt !== null, elapsedMs };
 }

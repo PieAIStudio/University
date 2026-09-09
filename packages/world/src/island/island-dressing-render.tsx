@@ -2,11 +2,11 @@
 import { useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
 
-import { AssetField, type Placement } from "../kit.js";
-import { buildCourseGrid, type HexMap } from "../grid/course-grid.js";
-import { PropField } from "../grid/PropField.js";
+import { AssetField, BatchedAssetLibraryField, type Placement } from "../kit.js";
+import type { HexMap } from "../grid/course-grid.js";
 import { resolveIslandRuntimeAsset, type IslandAssetPackId } from "./island-asset-registry.js";
 import { IslandFoliage, isIslandFoliagePlacement } from "./island-foliage-render.js";
+import { IslandCampfire } from "./island-campfire-render.js";
 import {
   planIslandDressing,
   type IslandDressingDetail,
@@ -44,7 +44,7 @@ export function islandDressingFields(
     };
     field.at.push({
       position: new THREE.Vector3(placement.x * scale, placement.y * scale, placement.z * scale),
-      height: placement.height * scale * heightMultiplier,
+      height: placement.height * scale * heightMultiplier * (resolution.heightScale ?? 1),
       turn: placement.turn,
     });
     grouped.set(key, field);
@@ -52,91 +52,126 @@ export function islandDressingFields(
   return [...grouped.entries()].map(([key, field]) => ({ key, ...field }));
 }
 
+/**
+ * GLB JSON audit of the course outpost models (camp/tent/rocks/bridge):
+ *
+ * - camp, bridge: opaque, no images, no COLOR_0, metalness 0, uniform
+ *   roughness 1, per-mesh baseColorFactor. Safe for one vertex-colour batch.
+ * - tent: mixed roughness 0.5/0.8/1.0 and primitives with the default
+ *   metallic material. AssetField keeps those contracts.
+ * - rocks: no materials array; every primitive is the glTF default
+ *   (metallic 1, white). Not the untextured dielectric batch.
+ * - treeTrunks: embedded palette textures. Fountain Kenney water is BLEND.
+ *
+ * Nature stays on AssetField with preserveMap=false (PAINT), not PROP_FAMILY.
+ * Hex family recolour is the grid PropField path, not this one.
+ */
+const COURSE_BATCHABLE_OPAQUE_UNTEXTURED_SRCS = new Set([
+  "/models/elemental-serenity/camp.glb",
+  "/models/elemental-serenity/bridge.glb",
+]);
+
+/**
+ * AssetField preserveMap=true uses max(0.72, authored). Camp and bridge are 1.
+ * Passing this keeps the batched material from collapsing that to 0.86.
+ */
+export const COURSE_BATCHED_MATERIAL_ROUGHNESS = 1;
+
+export function isCourseBatchableOpaqueUntexturedSrc(src: string): boolean {
+  return COURSE_BATCHABLE_OPAQUE_UNTEXTURED_SRCS.has(src);
+}
+
+/**
+ * Course dressing splits by material contract so one vertex-colour BatchedMesh
+ * cannot strip Kenney colormaps, fountain water alpha, tent roughness, or
+ * default-metallic rocks.
+ */
+export function islandDressingCourseBatches(fields: readonly IslandDressingField[]): {
+  readonly batched: readonly { readonly src: string; readonly at: readonly Placement[] }[];
+  readonly fallback: readonly IslandDressingField[];
+} {
+  const batched: { src: string; at: readonly Placement[] }[] = [];
+  const fallback: IslandDressingField[] = [];
+  for (const field of fields) {
+    if (field.pack !== "nature-kit" && isCourseBatchableOpaqueUntexturedSrc(field.src)) {
+      batched.push({ src: field.src, at: field.at });
+    } else {
+      fallback.push(field);
+    }
+  }
+  return { batched, fallback };
+}
+
+function dressingIdentity(blueprint: IslandBlueprint, detail: IslandDressingDetail): string {
+  return `${blueprint.studyId}/${blueprint.courseId}/${blueprint.seed}/${blueprint.layoutRevision}/${blueprint.lessonCount}/${detail}`;
+}
+
 export function IslandDressing({
   blueprint,
   detail,
   targetRadius,
-  grid,
 }: {
   readonly blueprint: IslandBlueprint;
-  readonly detail: IslandDressingDetail;
+  readonly detail: "course";
   readonly targetRadius?: number;
+  /** Accepted for caller compatibility. Course dressing is continuous and ignores hex maps. */
   readonly grid?: HexMap;
 }) {
-  const courseMap = useMemo(() => {
-    if (detail !== "course") return null;
-    if (grid) return grid;
-    return buildCourseGrid({
-      studyId: blueprint.studyId,
-      courseId: blueprint.courseId,
-      seed: blueprint.seed,
-      routeArchetype: blueprint.route.archetype,
-      routeAnchors: blueprint.geometryNodes,
-      lessons: blueprint.nodes.map((node) => ({
-        lessonId: node.id,
-        unitId: node.unitId,
-        unitIndex: node.unitIndex,
-        state: "idle" as const,
-      })),
-    });
-  }, [blueprint, detail, grid]);
-  const [visibleCourseMap, setVisibleCourseMap] = useState<HexMap | null>(null);
+  const identity = dressingIdentity(blueprint, detail);
+  const [readyIdentity, setReadyIdentity] = useState("");
   useEffect(() => {
-    if (detail !== "course" || courseMap === null) return;
-    setVisibleCourseMap(null);
-    // Let the grid, markers and camera commit one frame before GLB parsing and
-    // GPU resource cloning begin. The props still arrive immediately after
-    // entry, but they cannot hide the first useful map frame behind Suspense.
+    setReadyIdentity("");
+    // Let the terrain, markers and camera commit one frame before GLB parsing
+    // and GPU resource cloning begin. Readiness is the identity of this
+    // blueprint, so switching courses cannot keep the previous ready flag.
     let secondFrame: number | undefined;
     const firstFrame = requestAnimationFrame(() => {
-      secondFrame = requestAnimationFrame(() => setVisibleCourseMap(courseMap));
+      secondFrame = requestAnimationFrame(() => setReadyIdentity(identity));
     });
     return () => {
       cancelAnimationFrame(firstFrame);
       if (secondFrame !== undefined) cancelAnimationFrame(secondFrame);
     };
-  }, [courseMap, detail]);
+  }, [detail, identity]);
+  const assetsReady = readyIdentity === identity;
   const plan = useMemo(
-    () => (detail === "course" ? null : planIslandDressing(blueprint, detail)),
-    [blueprint, detail],
+    () => (assetsReady ? planIslandDressing(blueprint, detail) : null),
+    [assetsReady, blueprint, detail],
   );
   const scale = islandGeometryScale(blueprint, detail, targetRadius);
-  // A mathematically faithful world projection turns a tree into a dark
-  // three-pixel pin. Slight silhouette exaggeration is the same convention a
-  // board-game miniature uses: positions stay identical, only readable height
-  // survives the LOD.
-  const heightMultiplier = detail === "world" ? 3.2 : 1;
-  const fields = useMemo(
-    () => (plan ? islandDressingFields(plan, scale, heightMultiplier) : []),
-    [heightMultiplier, plan, scale],
-  );
-  if (detail === "course" && courseMap) {
-    return (
-      <group name="hex-grid-dressing">
-        {visibleCourseMap === courseMap ? <PropField map={courseMap} /> : null}
-      </group>
-    );
-  }
+  const fields = useMemo(() => (plan ? islandDressingFields(plan, scale) : []), [plan, scale]);
+  const batches = useMemo(() => islandDressingCourseBatches(fields), [fields]);
   if (!plan) return null;
   return (
-    <>
-      {fields.map((field) => (
+    <group
+      name="island-dressing-course"
+      userData={{
+        islandDressingReady: true,
+        ...(import.meta.env.DEV ? { islandDressingPlan: plan } : {}),
+      }}
+    >
+      {batches.batched.length > 0 ? (
+        <BatchedAssetLibraryField
+          fields={batches.batched}
+          name="course-elemental-batch"
+          castShadow
+          colorSource="material"
+          roughness={COURSE_BATCHED_MATERIAL_ROUGHNESS}
+        />
+      ) : null}
+      {batches.fallback.map((field) => (
         <AssetField
           key={field.key}
           src={field.src}
           at={field.at}
           preserveMap={field.pack !== "nature-kit"}
-          // The world projection is a silhouette/value read at roughly 40px
-          // per island. Its props do not need a second shadow-map pass.
-          castShadow={detail === "course"}
+          castShadow
         />
       ))}
-      <IslandFoliage
-        plan={plan}
-        detail={detail}
-        scale={scale}
-        heightMultiplier={heightMultiplier}
-      />
-    </>
+      <IslandFoliage plan={plan} scale={scale} />
+      <IslandCampfire plan={plan} scale={scale} />
+    </group>
   );
 }
+
+export { IslandCampfire } from "./island-campfire-render.js";

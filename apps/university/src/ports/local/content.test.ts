@@ -197,7 +197,11 @@ describe("the shelf the authoring API answers with", () => {
           });
         }
         return jsonOk({
-          study: { id: "turing-pact", title: "TuringPact" },
+          study: {
+            id: "turing-pact",
+            title: "TuringPact",
+            description: "以《图灵密约》为真实案例",
+          },
           courses: [
             {
               id: "foundations-before-zero",
@@ -233,6 +237,7 @@ describe("the shelf the authoring API answers with", () => {
 
     const shelf = await createLocalContentPort({ progress }).shelf();
 
+    expect(shelf.studies[0]?.description).toBe("以《图灵密约》为真实案例");
     expect(shelf.studies[0]?.courses[0]?.units[0]?.lessons[0]?.exerciseIds).toEqual([
       "current-exercise",
     ]);

@@ -8,6 +8,7 @@
  */
 import { routeDistanceAt, sampleIslandSurface, type IslandBlueprint } from "./island-blueprint.js";
 import { hash } from "./random.js";
+import { coastalRockMask } from "./coast-profile.js";
 
 export const DEFAULT_ISLAND_FIELD_RESOLUTION = 192;
 const MIN_ISLAND_FIELD_RESOLUTION = 8;
@@ -276,7 +277,10 @@ export function compileIslandField(
       const routeDistance = routeDistanceAt(blueprint, x, z);
       const routeBand = blueprint.route.roadWidth / 2 + blueprint.route.shoulderWidth;
       const routeStrength = 1 - smoothstep(routeBand, routeBand + 1.1, routeDistance);
-      const rockExposure = slope[index]!;
+      const coastRock = surfaceInside
+        ? coastalRockMask(blueprint, x, z, currentRadial, height[index]!)
+        : 0;
+      const rockExposure = Math.max(slope[index]!, coastRock);
       const highness = surfaceInside ? clamp01((height[index]! - landMinimum) / landRange) : 1;
       const lowland = 1 - smoothstep(0.2, 0.8, highness);
       const steepness = smoothstep(0.1, 0.46, rockExposure);
@@ -297,7 +301,8 @@ export function compileIslandField(
           steepness * 0.55 +
           (variation - 0.5) * 0.1 +
           (1 - aoValues[index]!) * 0.08 -
-          shoreDryness * 0.08
+          shoreDryness * 0.08 -
+          coastRock * 0.5
         : 0;
       const shoreMask = surfaceInside ? currentRadial : 1;
       writeMask(mask, index, ISLAND_FIELD_MASK_CHANNELS.route, routeStrength);

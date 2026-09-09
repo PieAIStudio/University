@@ -34,25 +34,32 @@ function baseContent({
   conclusion = "这节课先把一个小概念放进地图。",
   work = "工作示例把它放回真实场景。",
 } = {}) {
-  return `# 示例课
+  /*
+    现行骨架：先猜一下 → 答案 → 中段 → 自检 → 一句话。
+    `conclusion` 必须落在「答案」之前，因为 analogy-order 现在以「答案」为界，
+    量的是「术语在读者需要它之前有没有被解释」——注入点在答案之后就测不到了。
+  */
+  return `# 这件事为什么会这样？
 
-## 学习目标
-完成本课后，你能用自己的话复述这件事。
-
-## 先给结论
+## 你多半也遇到过这种情况
 ${conclusion}
 
-## 一个类比
-它像一扇普通的门：先看门怎么开，再记门的名字。
+## 先猜一下
+你觉得刚才那件事，为什么会是这个样子？
 
-## 工作示例
+先写下你的判断，再往下看答案。
+
+## 答案
+它就按上面说的那样工作，没有别的机关。
+
+## 那它具体是怎么转起来的？
 ${work}
 
 ## 自检
 你能说明刚才这件事为什么这样工作吗？
 
-## 重点
-先理解关系，再记住需要查找的名字。
+## 一句话
+**先理解关系，再记住需要查找的名字。**
 `;
 }
 
@@ -199,9 +206,22 @@ describe("proposal teaching gates", () => {
       }
     }
 
+    /*
+      关掉全部教学检查之后，这份真实 proposal 仍然不通过，而且**应该**不通过：
+      它是 foundations-before-zero 当初的建课记录，写在已经退休的六小节骨架上
+      （学习目标 / 先给结论 / 一个类比 / 工作示例 / 自检 / 重点）。今天把它喂给
+      course create，产出的会是一门现行形状检查器拒收的课。
+
+      所以这里断言的是「教学检查确实全被关掉了」，而不是「整份文件干净」——
+      把它改成期待 status 0，等于要求形状闸门对退休骨架放行。
+    */
     const allSkipped = runReal([...CHECK_IDS]);
-    expect(allSkipped.status).toBe(0);
-    expect(allSkipped.output).toContain("ok  ");
+    expect(allSkipped.status).toBe(1);
+    expect(allSkipped.output).toContain('body is missing the "## 先猜一下" section');
+    for (const checkId of CHECK_IDS) {
+      expect(allSkipped.output).toContain(`(${checkId}) — cost:`);
+    }
+    expect(allSkipped.output).not.toContain("术语“运行时”");
   });
 
   it("does not alter the real course fixture while reading it", () => {

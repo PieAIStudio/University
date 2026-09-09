@@ -1,4 +1,5 @@
 import { hash } from "../island/random.js";
+import type { DomainSurfaceStyle } from "./globe-style.js";
 
 /**
  * The only "introduction" a study is allowed to have on this page.
@@ -14,13 +15,25 @@ import { hash } from "../island/random.js";
  * the graph, in teaching order.
  */
 
+export interface PlanetStudyDomain {
+  readonly id: string;
+  readonly title: string;
+  /** Authored domain positioning, never a fabricated description of a study. */
+  readonly description?: string;
+  /** Explicit reusable surface identity; absence is not inferred from a title. */
+  readonly surfaceStyle?: DomainSurfaceStyle;
+}
+
 export interface PlanetStudy {
   readonly id: string;
   readonly title: string;
+  /** Source-authored learning goal and case positioning; never inferred by the renderer. */
+  readonly description?: string;
+  readonly domain?: PlanetStudyDomain;
   readonly courseCount: number;
   readonly lessonCount: number;
   readonly lessonsDone: number;
-  /** The real course metadata used by the shared world projection. */
+  /** Real course metadata in canonical teaching order (spineOf); the first five represent this region. */
   readonly courses: readonly PlanetCourse[];
   /** Course names in teaching order. Used as the introduction, not decoration. */
   readonly courseTitles: readonly string[];

@@ -8,7 +8,7 @@
 import * as THREE from "three";
 
 import { renderTier } from "./tier.js";
-import { WORLD_SUN, worldShadowFrustum, worldSunPosition } from "./sun.js";
+import { WORLD_SUN, worldShadowFrustum, worldShadowNormalBias, worldSunPosition } from "./sun.js";
 
 /**
  * How far the hemisphere's upward fill is pulled off the sky's own stop.
@@ -52,9 +52,10 @@ export function MapLighting({ groundRadius, skyMid, shadows = true }: MapLightin
   return (
     <>
       {/*
-        Fill is the denominator of scene-linear range. The current warm lower
-        bounce plus blue ambient/PMREM fill is measured at 2.08:1 against the
-        5.2 key, so the shadow still reads as a shadow without dropping to black.
+        Fill is the denominator of scene-linear range. Shaded slope irradiance reaches
+        ~1.28–1.30 across the warm lower bounce, restored blue hemisphere (0.90), cool
+        ambient (0.22), rim (0.34), and PMREM (0.16), keeping shadow channels above
+        the post-grade contrast clip floor.
       */}
       <hemisphereLight
         args={[
@@ -65,10 +66,10 @@ export function MapLighting({ groundRadius, skyMid, shadows = true }: MapLightin
       />
       <ambientLight color={WORLD_SUN.ambientColor} intensity={WORLD_SUN.ambientIntensity} />
       {/*
-        `normalBias` is still the acne fix that matters on small curved
-        geometry. The frustum itself is fitted to `groundRadius` so the 2048
-        map covers the design shot without stretching across the weather
-        sphere.
+        Directional shadow normalBias scales dynamically via `worldShadowNormalBias(shadow, mapSize)`
+        to clear slope acne without detached shadows across desktop (2048) and mobile (1024)
+        map sizes. The frustum itself is fitted to `groundRadius` so the map covers the
+        design shot without stretching across the weather sphere.
       */}
       <directionalLight
         color={WORLD_SUN.keyColor}
@@ -83,7 +84,7 @@ export function MapLighting({ groundRadius, skyMid, shadows = true }: MapLightin
         shadow-camera-near={shadow.near}
         shadow-camera-far={shadow.far}
         shadow-bias={-0.0002}
-        shadow-normalBias={0.06}
+        shadow-normalBias={worldShadowNormalBias(shadow, mapSize)}
       />
       {/* A low cool rim separates the island silhouette from the sky. It has no
           shadow map: this is a fill edge, not another expensive key.

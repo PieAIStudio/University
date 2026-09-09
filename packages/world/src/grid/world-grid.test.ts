@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { CourseNode } from "../course/course.js";
 import { WORLD_ISLAND_SEPARATION_GAP } from "../course/layout.js";
 import { islandLookCameraForShot } from "../island/island-look.js";
-import { buildWorldStudyGrid, placeWorld } from "../Maps.js";
+import { buildWorldStudyGrid, placeStudyArchipelago, placeWorld } from "../Maps.js";
 import { GRID_SHARED_SOIL } from "./grid-palette.js";
 import {
   worldGridFootprintForLessons,
@@ -81,15 +81,11 @@ function worldFrameEnvelope(world: ReturnType<typeof placeWorld>) {
   const frameVerticalHalf = camera.distance * Math.tan(verticalFov / 2);
   const elevation = Math.PI / 2 - camera.polar;
   const horizontalHalf = Math.max(
-    ...world.placements.map(
-      (entry) => Math.abs(entry.position.x) + entry.grid.bounds.maxHalf * entry.gridScale,
-    ),
+    ...world.placements.map((entry) => Math.abs(entry.position.x) + entry.radius),
   );
   const verticalHalf = Math.max(
     ...world.placements.map(
-      (entry) =>
-        (Math.abs(entry.position.z) + entry.grid.bounds.maxHalf * entry.gridScale) *
-        Math.sin(elevation),
+      (entry) => (Math.abs(entry.position.z) + entry.radius) * Math.sin(elevation),
     ),
   );
   return {
@@ -173,25 +169,46 @@ describe("world grid projection", () => {
     expect(highland!.grid.cells.length).toBeGreaterThan(plateau!.grid.cells.length);
   });
 
-  it("lets the real catalogue dominate the fixed frame without losing its boundary", () => {
+  it.each(catalogue.studies)(
+    "keeps $studyId's production framing inputs independent of other catalogue series",
+    (study) => {
+      // V5 M replaced the all-catalogue planar view with domain globes and
+      // per-study archipelagos. The former fixed world-design assertion
+      // clipped at 48 courses (horizontal coverage 1.101 > 0.93); R39 keeps
+      // that receipt rather than tuning the diagnostic shot to hide it.
+      // Actual course boundaries are also checked by the ordinary N/S browser
+      // overview assertions. Do not restore global-catalogue camera acceptance.
+      const own = catalogueNodes.filter((node) => node.studyId === study.studyId);
+      const isolated = placeStudyArchipelago(own, () => 0, study.studyId);
+      const inCatalogue = placeStudyArchipelago(catalogueNodes, () => 0, study.studyId);
+      const signature = (world: ReturnType<typeof placeStudyArchipelago>) =>
+        world.placements.map((entry) => ({
+          studyId: entry.node.studyId,
+          courseId: entry.node.courseId,
+          position: entry.position.toArray(),
+          radius: entry.radius,
+          state: entry.state,
+        }));
+
+      expect(inCatalogue.placements).toHaveLength(study.courses.length);
+      expect(new Set(inCatalogue.placements.map((entry) => entry.node.courseId))).toEqual(
+        new Set(study.courses.map((course) => course.courseId)),
+      );
+      expect(signature(inCatalogue)).toEqual(signature(isolated));
+      expect(inCatalogue.extent).toBe(isolated.extent);
+      expect(Number.isFinite(inCatalogue.extent)).toBe(true);
+      for (const entry of inCatalogue.placements) {
+        expect(Math.hypot(entry.position.x, entry.position.z) + entry.radius).toBeLessThanOrEqual(
+          inCatalogue.extent,
+        );
+      }
+    },
+  );
+
+  it("retains the original 3/19/41-lesson footprint calibration without pinning retired course IDs", () => {
     const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
-    const envelope = worldFrameEnvelope(world);
-
-    // Dominance is geometric screen occupancy, not a sea-pixel quota. Both
-    // axes must read as a field of islands, so a camera cannot pass by filling
-    // only its long axis.
-    expect(envelope.horizontalCoverage).toBeGreaterThanOrEqual(0.8);
-    expect(envelope.verticalCoverage).toBeGreaterThanOrEqual(0.54);
-
-    // The opposing half of the contract: a close camera that crops the outer
-    // silhouettes is not a valid fix, even if it makes the centre look busy.
-    expect(envelope.horizontalCoverage).toBeLessThanOrEqual(0.93);
-    expect(envelope.verticalCoverage).toBeLessThanOrEqual(0.82);
-  });
-
-  it("makes real course length legible while keeping both ends usable", () => {
-    const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
-    const short = courseEntry(world, "generated-assets");
+    const byLength = [...world.placements].sort((a, b) => a.node.lessons - b.node.lessons);
+    const short = byLength[0]!;
     const medium = courseEntry(world, "product-website");
     const long = courseEntry(world, "foundations-before-zero");
     const medianFootprint = median(world.placements.map((entry) => entry.grid.bounds.maxHalf));
@@ -199,7 +216,7 @@ describe("world grid projection", () => {
 
     // The lower and upper bounds come from the real catalogue's median-sized
     // course: the 3-lesson tail must retain at least 60% of that footprint,
-    // while the 41-lesson outlier stays below 1.75× it. The two explicit ratios
+    // while the original 41-lesson sample stays below 1.75× it. The two explicit ratios
     // make the length signal visible instead of merely non-zero.
     expect(short.grid.bounds.maxHalf).toBeGreaterThanOrEqual(medianFootprint * 0.6);
     expect(long.grid.bounds.maxHalf).toBeLessThanOrEqual(medianFootprint * 1.75);
@@ -237,9 +254,7 @@ describe("world grid projection", () => {
         const a = world.placements[i]!;
         const b = world.placements[j]!;
         const gap = Math.hypot(a.position.x - b.position.x, a.position.z - b.position.z);
-        const min =
-          (a.grid.bounds.maxHalf * a.gridScale + b.grid.bounds.maxHalf * b.gridScale) *
-          WORLD_ISLAND_SEPARATION_GAP;
+        const min = (a.radius + b.radius) * WORLD_ISLAND_SEPARATION_GAP;
         // The relaxation is deterministic but uses floating-point vector
         // lengths; allow one sub-micron of arithmetic noise at the exact edge.
         expect(gap).toBeGreaterThanOrEqual(min - 1e-6);

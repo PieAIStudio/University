@@ -1,4 +1,5 @@
 import { expect, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
 
 import { ONLINE_ORIGIN } from "../ports.js";
 import { assertImagesStayInViewport, assertPanelIsPainted, assertVisibleText } from "./assert.js";
@@ -10,9 +11,29 @@ export const FIRST_COURSE_TITLE = "《在开始之前：App、代码、和你》
 export const FIRST_ANSWER = "图灵密约";
 export const COST_LINE = /读 \d+ 分钟 · \d+ 道题/;
 export const SETTLEMENT_PROGRESS = /1\s*\/\s*41\s*关/;
+export const GAME_ROUTE_TITLE: string = JSON.parse(
+  readFileSync("apps/university/src/content/imported.json", "utf8"),
+).studies.find((study: { studyId: string }) => study.studyId === "turing-pact").title;
 
 export async function openOnline(page: Page): Promise<void> {
   await page.goto(`${ONLINE_ORIGIN}/`, { waitUntil: "domcontentloaded" });
+  await selectGameRoute(page);
+}
+
+export async function selectGameRoute(page: Page): Promise<void> {
+  // The default can legitimately change when a new domain opens. This
+  // settlement fixture chooses its real, deterministically graded course
+  // through the same visible series picker a learner uses, without seeding
+  // navigation/progress or pretending it is still the global default.
+  await waitForMapReady(page);
+  const picker = page.locator(".study-switcher__trigger");
+  await humanClick(page, picker, "choose the actual game-learning route");
+  await humanClick(
+    page,
+    page.getByRole("option").filter({ hasText: GAME_ROUTE_TITLE }),
+    "select the flagship course fixture",
+  );
+  await expect(picker).toHaveAttribute("aria-label", `当前系列 ${GAME_ROUTE_TITLE}`);
 }
 
 /**

@@ -34,6 +34,7 @@ export function PracticeHost({ onOpen }: { onOpen: (view: View) => void }) {
       onOpenWorld={() => onOpen(WORLD)}
       onBrowse={() => onOpen({ kind: "concepts" })}
       onOpenReview={() => onOpen({ kind: "review" })}
+      onOpenPlayLab={() => onOpen({ kind: "play-lab" })}
       renderReward={(question) => (
         <EntryPage
           breadcrumb={[

@@ -18,14 +18,20 @@ const SHAPE_DATA = JSON.parse(
   readFileSync(new URL("./proposal-shape-data.json", import.meta.url), "utf8"),
 );
 
-const REQUIRED_SECTIONS = [
-  "## 学习目标",
-  "## 先给结论",
-  "## 一个类比",
-  "## 工作示例",
-  "## 自检",
-  "## 重点",
-];
+/*
+  The house spine, and the only headings that stay exact — the middle sections
+  are variant-controlled and are written in the reader's own words, so they
+  cannot be a fixed list.
+
+  This used to name the retired six-section skeleton (学习目标 / 先给结论 /
+  一个类比 / 工作示例 / 自检 / 重点). `lint-lessons.mjs` — which runs inside
+  `pnpm verify` — requires the spine below and the write-lesson skill bans five
+  of those six outright, so the two gates pointed in opposite directions: a
+  lesson could not satisfy both, and a proposal written to pass this file landed
+  a course the shape checker then refused or, with no `variant` declared,
+  silently skipped. The gate that ships inside `verify` is the real one.
+*/
+const REQUIRED_SECTIONS = ["## 先猜一下", "## 答案", "## 自检", "## 一句话"];
 /** Phrases that assume the reader already knows the thing the lesson teaches. */
 const BANNED_PHRASES = ["众所周知", "显而易见", "简单来说", "不言而喻"];
 /** A card back has to stand on its own — it is read without the lesson around it. */
@@ -49,7 +55,54 @@ const TEACHING_CHECKS = {
     label: "同义词漂移",
     cost: "同一节课中称呼改变造成的迷惑可能继续留给学习者",
   },
+  "inline-evidence": {
+    label: "证据太长，渲染不成代码",
+    cost: "课文里指向源码的那一句会落空，读者看到的是一个小标记而不是代码",
+  },
 };
+
+/**
+ * How many cited lines still render as source inside the prose.
+ *
+ * Read out of the UI's own policy rather than copied, because a second copy of
+ * this number is a copy that drifts, and the drift is invisible: a lesson whose
+ * range grew past the cap keeps passing every check and quietly stops showing
+ * the reader any code. Throwing here is deliberate — a shape checker that
+ * cannot find the rule it is enforcing must say so, not skip the rule.
+ */
+function inlineEvidenceMaxLines() {
+  const policy = new URL("../../../packages/ui/src/evidence/display-policy.ts", import.meta.url);
+  const found = /INLINE_EVIDENCE_MAX_LINES\s*=\s*(\d+)/.exec(readFileSync(policy, "utf8"));
+  if (!found) {
+    throw new Error(
+      "could not read INLINE_EVIDENCE_MAX_LINES from packages/ui/src/evidence/display-policy.ts",
+    );
+  }
+  return Number(found[1]);
+}
+
+const EVIDENCE_TOKEN = /\[\[evidence:([^\]:]+):(\d+)(?:-(\d+))?\]\]/g;
+
+/**
+ * A lesson points at source with `[[evidence:path:lines]]`, and the reader sees
+ * the real code only when the cited range is short enough to sit inside the
+ * prose. Past that, the same token renders as a reference chip — so a sentence
+ * like 「就是这些：」 followed by the token lands on nothing, and every other
+ * gate stays green because the token itself is perfectly valid.
+ */
+function checkInlineEvidence(lesson, where, problems, maxLines) {
+  const content = lesson.content ?? "";
+  for (const match of content.matchAll(EVIDENCE_TOKEN)) {
+    const [token, path, start, end] = match;
+    const lines = Number(end ?? start) - Number(start) + 1;
+    if (lines <= maxLines) continue;
+    problems.push(
+      `${where}: ${token} 引了 ${lines} 行，超过 ${maxLines}，读者看到的会是一个引用标记而不是源码；` +
+        `请把范围收紧到真正要读的那几行（${path} 里通常有整段可以不看的部分），` +
+        `或用 --skip-check inline-evidence（代价：${TEACHING_CHECKS["inline-evidence"].cost}）。`,
+    );
+  }
+}
 
 /**
  * Measured against the reviewed course's first six lessons:
@@ -203,6 +256,9 @@ function check(proposal, options = {}) {
       checkEvidence(lesson.evidence, where, problems);
       checkContent(lesson.content, where, problems);
       if (!skippedChecks.has("analogy-order")) checkAnalogyOrder(lesson, where, problems);
+      if (!skippedChecks.has("inline-evidence")) {
+        checkInlineEvidence(lesson, where, problems, inlineEvidenceMaxLines());
+      }
       if (!skippedChecks.has("term-drift")) checkTermDrift(lesson, where, problems);
 
       const cards = lesson.cards ?? [];
@@ -385,8 +441,22 @@ function withoutFencedCode(text) {
  */
 function checkAnalogyOrder(lesson, where, problems) {
   const content = lesson.content ?? "";
-  const analogyIndex = content.indexOf("## 一个类比");
-  if (analogyIndex === -1) return;
+  /*
+    The defect is "a term used before the reader has been given it", and the
+    boundary is wherever the lesson's claim lands — 「答案」 in the current
+    shape, 「一个类比」 in the retired one.
+
+    Both are accepted on purpose. Keying only to the current heading looked
+    right and silently dropped every archival proposal: with no 「答案」 to find,
+    the check returned early and reported a clean run it never performed. The
+    repository still holds real proposals in the old shape as the record of how
+    a landed course was created, and losing coverage on them is not a trade
+    anyone chose — it is a probe going quiet because the page it watched moved.
+  */
+  const analogyIndex = ["## 答案", "## 一个类比"]
+    .map((heading) => content.indexOf(heading))
+    .find((index) => index !== -1);
+  if (analogyIndex === undefined) return;
 
   const text = withoutFencedCode(content);
   for (const term of definedTerms(text)) {
@@ -397,7 +467,7 @@ function checkAnalogyOrder(lesson, where, problems) {
 
     const line = lineNumberAt(content, firstIndex);
     problems.push(
-      `${where}: 术语“${term}”在类比段（第 ${lineOfHeading(content, "## 一个类比")} 行）之前首次出现于正文第 ${line} 行，但同一段没有先给解释；请先用一个类比/白话说明，再引入这个词，或用 --skip-check analogy-order（代价：${TEACHING_CHECKS["analogy-order"].cost}）。`,
+      `${where}: 术语“${term}”在第 ${lineOfHeading(content, content.includes("## 答案") ? "## 答案" : "## 一个类比")} 行之前首次出现于正文第 ${line} 行，但同一段没有先给解释；请先用白话或类比说明，再引入这个词，或用 --skip-check analogy-order（代价：${TEACHING_CHECKS["analogy-order"].cost}）。`,
     );
   }
 }

@@ -51,6 +51,7 @@ import { islandLookFrozen } from "./island/island-surface-style.js";
 import { WorldEnvironment } from "./sky/environment.js";
 import { renderTier } from "./sky/tier";
 import { hasWebGLContext } from "./webgl-capability.js";
+import { usePageVisibility } from "./page-visibility.js";
 
 export { hasWebGLContext, resetWebGLContextProbe } from "./webgl-capability.js";
 
@@ -110,23 +111,61 @@ function Pipeline({
 
   // Priority above zero: R3F stops rendering for us, and this is the loop.
   const measuring = useRef<((report: unknown) => void) | null>(null);
+  const frameNumber = useRef(0);
+  const sceneRender = useRef({ calls: 0, triangles: 0, lines: 0, points: 0 });
 
-  const recordSceneRender = () => {
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const previous = gl.info.autoReset;
+    // Otherwise each AO / grade render clears the previous pass's counters.
+    gl.info.autoReset = false;
+    return () => {
+      gl.info.autoReset = previous;
+    };
+  }, [gl]);
+
+  const recordFrame = (startedAt: number, sampled: boolean) => {
     if (!import.meta.env.DEV) return;
     const bag = globalThis as unknown as {
-      __lastStageSceneRender?: {
-        readonly calls: number;
-        readonly triangles: number;
-        readonly lines: number;
-        readonly points: number;
-      };
+      __stageFrameMetrics?: unknown;
     };
-    bag.__lastStageSceneRender = {
+    const full = {
       calls: gl.info.render.calls,
       triangles: gl.info.render.triangles,
       lines: gl.info.render.lines,
       points: gl.info.render.points,
     };
+    bag.__stageFrameMetrics = {
+      frame: ++frameNumber.current,
+      sceneUuid: scene.uuid,
+      scene: sceneRender.current,
+      full,
+      postCalls: full.calls - sceneRender.current.calls,
+      submissionMs: performance.now() - startedAt,
+      measurementReadback: sampled,
+      geometries: gl.info.memory.geometries,
+      textures: gl.info.memory.textures,
+      programs: gl.info.programs?.length ?? 0,
+      dpr: gl.getPixelRatio(),
+      buffer: { width: gl.domElement.width, height: gl.domElement.height },
+      camera: { position: camera.position.toArray(), quaternion: camera.quaternion.toArray() },
+      scope:
+        "one complete Stage frame including shadows and post passes; submissionMs is CPU submission, not GPU time or FPS",
+    };
+  };
+
+  const recordSceneRender = () => {
+    if (!import.meta.env.DEV) return;
+    sceneRender.current = {
+      calls: gl.info.render.calls,
+      triangles: gl.info.render.triangles,
+      lines: gl.info.render.lines,
+      points: gl.info.render.points,
+    };
+    // Legacy scene-only receipts still read this snapshot. Complete-frame
+    // accounting uses the local ref, never another canvas's global snapshot.
+    (globalThis as unknown as { __lastStageSceneRender?: unknown }).__lastStageSceneRender =
+      sceneRender.current;
   };
 
   useEffect(() => {
@@ -174,7 +213,16 @@ function Pipeline({
     };
   }, [clock, lookSource]);
 
-  useFrame(() => {
+  useFrame((state) => {
+    const startedAt = import.meta.env.DEV ? performance.now() : 0;
+    const sampled = measuring.current !== null;
+    if (import.meta.env.DEV) {
+      // The map canvas survives while the separate planet viewport is open.
+      // onCreated alone leaves the handle on that planet after it unmounts.
+      // Publish the owner of this rendered frame when the map resumes.
+      (globalThis as unknown as { three?: unknown }).three = state;
+      gl.info.reset();
+    }
     if (!pass) {
       const previousColorSpace = gl.outputColorSpace;
       const previousToneMapping = gl.toneMapping;
@@ -198,6 +246,7 @@ function Pipeline({
       recordSceneRender();
       gl.outputColorSpace = previousColorSpace;
       gl.toneMapping = previousToneMapping;
+      recordFrame(startedAt, sampled);
       return;
     }
     gl.setRenderTarget(pass.target);
@@ -219,6 +268,7 @@ function Pipeline({
     } else {
       pass.render(gl);
     }
+    recordFrame(startedAt, sampled);
   }, 1);
 
   // Baseline rule 3 says a grade must have recorded provenance, and the shared
@@ -328,16 +378,25 @@ function ScenePresence({
   readonly onReady?: () => void;
   readonly onBusy?: () => void;
 }) {
+  const reported = useRef(false);
   useLayoutEffect(() => {
-    onReady?.();
+    reported.current = false;
     return () => onBusy?.();
   }, [onReady, onBusy]);
+  // Pipeline owns priority 1. Ready means an actual completed frame, not just
+  // a React commit while the browser's frame scheduler may still be stalled.
+  useFrame(() => {
+    if (reported.current) return;
+    reported.current = true;
+    onReady?.();
+  }, 2);
   return null;
 }
 
 interface StageProps {
   readonly children: ReactNode;
   readonly cameraFrom: readonly [number, number, number];
+  readonly cameraFar?: number;
   readonly lookAt?: readonly [number, number, number];
   /** The DOM overlay's cue that the first real scene has committed. */
   readonly onSceneReady?: () => void;
@@ -403,6 +462,7 @@ export function Stage({
   children,
   cameraFrom,
   lookAt = [0, 0, 0],
+  cameraFar = 1200,
   onSceneReady,
   onSceneBusy,
   onContextLost,
@@ -418,6 +478,7 @@ export function Stage({
   const tier = renderTier();
   const frozenLook = import.meta.env.DEV && lookSource !== null && islandLookFrozen();
   const rendererAvailable = useMemo(() => hasWebGLContext(), []);
+  const pageVisible = usePageVisibility();
 
   useEffect(() => armSoundUnlock(), []);
   useEffect(() => {
@@ -457,7 +518,7 @@ export function Stage({
         position: [...cameraFrom],
         fov: fixedCamera?.fov ?? (tier === "mobile" ? 42 : 34),
         near: 0.5,
-        far: 1200,
+        far: cameraFar,
       }}
       onPointerMissed={onPointerMissed}
       onCreated={(state) => {
@@ -490,7 +551,7 @@ export function Stage({
       // damp, and the clouds drift, so there is no settled state to stop at.
       // `never` the moment the canvas is hidden — that is the only thing here
       // that was ever burning frames for nobody.
-      frameloop={paused ? "never" : frozenLook ? "demand" : "always"}
+      frameloop={paused || !pageVisible ? "never" : frozenLook ? "demand" : "always"}
     >
       <WorldEnvironment>
         <RendererLifecycle onContextLost={onContextLost} onContextRestored={onContextRestored} />

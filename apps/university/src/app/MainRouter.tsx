@@ -33,7 +33,11 @@ import { MistakeList, MistakesEntry } from "@pieai/university-ui/practice/mistak
 import { pathLessonOf, pathUnitOf } from "@pieai/university-ui/path/from-course-view.js";
 import type { ContentPort, ContentStudy, Shelf } from "@pieai/university-ui/content/port.js";
 import type { CourseView, UnitView } from "@pieai/university-ui/view/lesson-view.js";
-import { PlanetStage, type PlanetStudy } from "@pieai/university-world/planet.js";
+import {
+  PlanetStage,
+  type PlanetStudy,
+  type PlanetStudyDomain,
+} from "@pieai/university-world/planet.js";
 import type { AvatarRecipe } from "@pieai/university-world/avatar.js";
 import type { WorldMap } from "@pieai/university-world/WorldMapCanvas.js";
 
@@ -54,6 +58,12 @@ import {
 } from "../screens/lazy";
 import { CourseIsland, type CourseIslandProps } from "./CourseIsland.js";
 import type { PathOverlay } from "./world-model";
+
+const LearningPlayLab = lazy(() =>
+  import("@pieai/university-ui/learning-play/LearningPlayLab.js").then((mod) => ({
+    default: mod.LearningPlayLab,
+  })),
+);
 
 const ProfileAvatar = lazy(() =>
   import("./ProfileAvatar.js").then((mod) => ({ default: mod.ProfileAvatar })),
@@ -83,6 +93,10 @@ interface MainRouterProps {
   readonly pathOverlay: PathOverlay | null;
   readonly pathUnit: UnitView | undefined;
   readonly planetStudies: readonly PlanetStudy[];
+  readonly planetDomainCatalog?: readonly PlanetStudyDomain[];
+  readonly selectedPlanetDomainId?: string | null;
+  readonly onSelectPlanetDomain?: (domainId: string) => void;
+  readonly onSelectPlanetStudy?: (studyId: string) => void;
   readonly presencePort: PresencePort;
   readonly reviewReminderPort: ReviewReminderPort;
   readonly profileStats: {
@@ -132,6 +146,10 @@ export function MainRouter({
   pathOverlay,
   pathUnit,
   planetStudies,
+  planetDomainCatalog,
+  selectedPlanetDomainId,
+  onSelectPlanetDomain,
+  onSelectPlanetStudy,
   presencePort,
   reviewReminderPort,
   profileStats,
@@ -190,6 +208,14 @@ export function MainRouter({
         </div>
       ) : null}
       {AUTHORING && view.kind === "world" ? <AuthoringMapNotes studyId={focusedStudyId} /> : null}
+      {view.kind === "play-lab" ? (
+        <Suspense fallback={<RouteFallback />}>
+          <LearningPlayLab
+            key={view.collection ?? "foundations"}
+            collection={view.collection ?? "foundations"}
+          />
+        </Suspense>
+      ) : null}
       {view.kind === "avatar-lab" ? (
         <Suspense fallback={<RouteFallback />}>
           <AvatarLab
@@ -369,8 +395,11 @@ export function MainRouter({
         <div className="planet-page__globe" data-planet-globe="true">
           <PlanetStage
             studies={planetStudies}
+            domainCatalog={planetDomainCatalog}
             selectedId={focusedStudyId}
-            onSelect={setNavigationFocus}
+            selectedDomainId={selectedPlanetDomainId}
+            onSelectDomain={onSelectPlanetDomain}
+            onSelect={onSelectPlanetStudy ?? setNavigationFocus}
             avatarRecipe={avatarRecipe}
             avatarSignedIn={avatarSignedIn}
           />
@@ -391,6 +420,7 @@ export function MainRouter({
           progressPort={progressPort}
           focusedStudyId={focusedStudyId}
           planetStudies={planetStudies}
+          planetDomainCatalog={planetDomainCatalog}
           onSelectStudy={focusStudy}
         />
       ) : null}

@@ -26,11 +26,11 @@ describe("R01 Kenney runtime whitelist", () => {
   it("contains exactly the recipe budget with portable provenance", () => {
     expect(manifest.selection.naturalBasePackId).toBe("nature-kit");
     expect(manifest.selection.accentPackIds).toEqual(["fantasy-town-kit"]);
-    expect(manifest.selection.rawGlbBudget).toBe(10);
-    expect(manifest.assets).toHaveLength(10);
-    expect(new Set(manifest.assets.map((asset) => `${asset.pack}/${asset.assetId}`)).size).toBe(10);
+    expect(manifest.selection.rawGlbBudget).toBe(12);
+    expect(manifest.assets).toHaveLength(12);
+    expect(new Set(manifest.assets.map((asset) => `${asset.pack}/${asset.assetId}`)).size).toBe(12);
     expect(manifest.dependencies).toHaveLength(1);
-    expect(Object.keys(manifest.runtimeFallbacks)).toHaveLength(58);
+    expect(Object.keys(manifest.runtimeFallbacks)).toHaveLength(57);
     expect(JSON.stringify(manifest)).not.toContain("/Users/");
     expect(manifest.sourceRoot).toBe("local-donor:Kenney");
     for (const retiredNaturalFile of [
@@ -82,9 +82,9 @@ describe("R01 Kenney runtime whitelist", () => {
         );
       }
     }
-    // There are 61 missing recipe references, represented by 58 unique keys
+    // There are 60 missing recipe references, represented by 57 unique keys
     // because watercraft and space assets recur in more than one recipe.
-    expect(fallbackReferenceCount).toBe(61);
+    expect(fallbackReferenceCount).toBe(60);
   });
 
   it("keeps every recipe placement on the shared renderer field path", () => {

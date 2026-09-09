@@ -22,11 +22,17 @@
     "supabase.com",
     "tensorflow.org",
     "nist.gov",
+    "huggingface.co",
+    "antigravity.google",
+    "developers.openai.com",
+    "platform.openai.com",
+    "docs.anthropic.com",
+    "docs.github.com",
+    "npmjs.com",
+    "learn.chatgpt.com",
     "docs.stripe.com",
     "vercel.com",
-    "docs.anthropic.com",
     "platform.claude.com",
-    "docs.github.com",
     "code.visualstudio.com",
     "docs.npmjs.com",
     "designcouncil.org.uk",
@@ -39,12 +45,5 @@
     "oiloil.org",
     "datawhalechina.github.io"
   ],
-  "authorityTags": [
-    "mdn",
-    "rfc",
-    "w3c",
-    "whatwg",
-    "official-docs",
-    "spec"
-  ]
+  "authorityTags": ["mdn", "rfc", "w3c", "whatwg", "official-docs", "spec"]
 }

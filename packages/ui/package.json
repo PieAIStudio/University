@@ -98,7 +98,21 @@
     "./theme.js": "./src/theme.ts",
     "./today/TodaySection.js": "./src/today/TodaySection.tsx",
     "./today/today.css": "./src/today/today.css",
-    "./view/lesson-view.js": "./src/view/lesson-view.ts"
+    "./view/lesson-view.js": "./src/view/lesson-view.ts",
+    "./learning-play/LearningActivity.js": "./src/learning-play/LearningActivity.tsx",
+    "./learning-play/LearningPlayLab.js": "./src/learning-play/LearningPlayLab.tsx",
+    "./learning-play/learning-play.css": "./src/learning-play/learning-play.css",
+    "./learning-play/hunt.css": "./src/learning-play/hunt.css",
+    "./learning-play/dispatch.css": "./src/learning-play/dispatch.css",
+    "./learning-play/program.css": "./src/learning-play/program.css",
+    "./learning-play/ai-play.css": "./src/learning-play/ai-play.css",
+    "./learning-play/ai-workflow.css": "./src/learning-play/ai-workflow.css",
+    "./learning-play/ai-quality.css": "./src/learning-play/ai-quality.css",
+    "./learning-play/ai-context-play.css": "./src/learning-play/ai-context-play.css",
+    "./learning-play/ai-agent-play.css": "./src/learning-play/ai-agent-play.css",
+    "./learning-play/play-usability.css": "./src/learning-play/play-usability.css",
+    "./learning-play/quality-usability.css": "./src/learning-play/quality-usability.css",
+    "./learning-play/workflow-usability.css": "./src/learning-play/workflow-usability.css"
   },
   "scripts": {
     "typecheck": "tsc -b --pretty false",

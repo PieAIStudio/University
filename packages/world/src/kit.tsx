@@ -206,11 +206,11 @@ const EMPTY_LIBRARY: readonly string[] = [];
  * drift — and because a single shared `customProgramCacheKey` is what keeps
  * three from compiling a second program for the same look.
  */
-function createBatchedPropMaterial(): THREE.MeshStandardMaterial {
+function createBatchedPropMaterial(roughness = 0.86): THREE.MeshStandardMaterial {
   const material = new THREE.MeshStandardMaterial({
     color: 0xffffff,
     vertexColors: true,
-    roughness: 0.86,
+    roughness,
     metalness: 0,
     flatShading: true,
     side: THREE.DoubleSide,
@@ -440,6 +440,56 @@ function isFoliageMaterial(source: THREE.Material): boolean {
  * already resolved to. Every copy still differs from its neighbour — LOOK-V2
  * §11 rule 2, variation beats detail — but a family stays itself.
  */
+export type BatchedPropColorSource = "family" | "material";
+
+function bakedPartColour(part: Part, colorSource: BatchedPropColorSource): THREE.Color {
+  if (colorSource === "material") {
+    const material = part.sourceMaterial as THREE.MeshStandardMaterial;
+    return material.color?.clone?.() ?? new THREE.Color(0xffffff);
+  }
+  return batchedPropColour(part.sourceMaterial);
+}
+
+/**
+ * Bake the COLOR_0 buffer a BatchedMesh part will actually draw.
+ *
+ * `material` matches AssetField: MeshStandardMaterial multiplies
+ * `material.color` with vertex colours when both exist. The batched material
+ * is white, so that product has to live in the attribute. `family` keeps the
+ * hex-grid contract: authored COLOR_0 is already the albedo (colormap bake),
+ * so a missing attribute is filled from PROP_FAMILY and an existing one is
+ * copied unchanged.
+ */
+export function bakeBatchedColourBuffer(
+  positionCount: number,
+  sourceColour:
+    | Pick<THREE.BufferAttribute, "count" | "itemSize" | "getX" | "getY" | "getZ">
+    | undefined,
+  factor: THREE.Color,
+  multiplyFactor: boolean,
+): Float32Array {
+  const colours = new Float32Array(positionCount * 3);
+  if (sourceColour) {
+    if (sourceColour.count !== positionCount || sourceColour.itemSize < 3) {
+      throw new Error("A batched prop color attribute must have one RGB value per position");
+    }
+    for (let index = 0; index < positionCount; index += 1) {
+      if (multiplyFactor) {
+        colours[index * 3] = sourceColour.getX(index) * factor.r;
+        colours[index * 3 + 1] = sourceColour.getY(index) * factor.g;
+        colours[index * 3 + 2] = sourceColour.getZ(index) * factor.b;
+      } else {
+        colours[index * 3] = sourceColour.getX(index);
+        colours[index * 3 + 1] = sourceColour.getY(index);
+        colours[index * 3 + 2] = sourceColour.getZ(index);
+      }
+    }
+    return colours;
+  }
+  for (let index = 0; index < positionCount; index += 1) factor.toArray(colours, index * 3);
+  return colours;
+}
+
 function batchedFoliageInstanceMultiplier(
   source: THREE.Material,
   placement: Placement,
@@ -452,7 +502,10 @@ function batchedFoliageInstanceMultiplier(
   return new THREE.Color(value * (1 + tilt), value, value * (1 - tilt * 0.6));
 }
 
-function normaliseBatchedGeometry(part: Part): THREE.BufferGeometry {
+function normaliseBatchedGeometry(
+  part: Part,
+  colorSource: BatchedPropColorSource = "family",
+): THREE.BufferGeometry {
   const geometry = cloneOwnedPartGeometry(part.sourceGeometry);
   // BatchedMesh requires one attribute signature for the whole batch. The
   // grid parts carry position/normal/color. UVs are deliberately not part of
@@ -469,22 +522,38 @@ function normaliseBatchedGeometry(part: Part): THREE.BufferGeometry {
     geometry.computeVertexNormals();
   }
   const sourceColour = geometry.getAttribute("color");
-  const colours = new Float32Array(position.count * 3);
-  if (sourceColour) {
-    if (sourceColour.count !== position.count || sourceColour.itemSize < 3) {
-      throw new Error("A batched prop color attribute must have one RGB value per position");
-    }
-    for (let index = 0; index < position.count; index += 1) {
-      colours[index * 3] = sourceColour.getX(index);
-      colours[index * 3 + 1] = sourceColour.getY(index);
-      colours[index * 3 + 2] = sourceColour.getZ(index);
-    }
-  } else {
-    const colour = batchedPropColour(part.sourceMaterial);
-    for (let index = 0; index < position.count; index += 1) colour.toArray(colours, index * 3);
-  }
+  const colours = bakeBatchedColourBuffer(
+    position.count,
+    sourceColour,
+    bakedPartColour(part, colorSource),
+    colorSource === "material",
+  );
   geometry.setAttribute("color", new THREE.BufferAttribute(colours, 3));
   return geometry;
+}
+
+function batchedLibrarySourceKey(
+  fields: readonly { readonly src: string; readonly at: readonly Placement[] }[],
+): string {
+  return [...new Set(fields.map((field) => field.src))].sort().join("\0");
+}
+
+function batchedLibraryLayoutKey(
+  fields: readonly { readonly src: string; readonly at: readonly Placement[] }[],
+  colorSource: BatchedPropColorSource,
+  name: string,
+  castShadow: boolean,
+  roughness: number,
+): string {
+  let key = `${name}|${colorSource}|${castShadow ? 1 : 0}|${roughness}`;
+  for (const field of fields) {
+    key += `|${field.src}|${field.at.length}`;
+    for (const placement of field.at) {
+      const width = placement.width ?? "";
+      key += `@${placement.position.x},${placement.position.y},${placement.position.z},${placement.height},${placement.turn},${width}`;
+    }
+  }
+  return key;
 }
 
 /**
@@ -511,17 +580,36 @@ export function BatchedAssetLibraryField({
   fields,
   castShadow = false,
   name = "hex-grid-batched-library",
+  colorSource = "family",
+  roughness = 0.86,
 }: {
   readonly fields: readonly { readonly src: string; readonly at: readonly Placement[] }[];
   readonly castShadow?: boolean;
   readonly name?: string;
+  /**
+   * `family` is the hex nature path (PROP_FAMILY swatches). `material` bakes
+   * each part's authored colour so untextured donor GLBs keep their factors
+   * instead of the hex paint table. When a part also has COLOR_0, `material`
+   * multiplies the factor with those vertices, matching AssetField.
+   */
+  readonly colorSource?: BatchedPropColorSource;
+  /**
+   * Shared BatchedMesh roughness. Hex props keep 0.86. Callers that must match
+   * AssetField pass the authored value (floored the same way `repaint` does).
+   * Mixed-roughness assets do not belong in this field.
+   */
+  readonly roughness?: number;
 }) {
-  const sources = useMemo(() => [...new Set(fields.map((field) => field.src))].sort(), [fields]);
+  const sourceKey = batchedLibrarySourceKey(fields);
+  const sources = useMemo(() => (sourceKey === "" ? [] : sourceKey.split("\0")), [sourceKey]);
   const partsBySource = usePartsFromSources(sources);
   const [batch, setBatch] = useState<THREE.BatchedMesh | null>(null);
+  const fieldsRef = useRef(fields);
+  fieldsRef.current = fields;
+  const layoutKey = batchedLibraryLayoutKey(fields, colorSource, name, castShadow, roughness);
 
   useLayoutEffect(() => {
-    const drawn = fields.filter((field) => field.at.length > 0);
+    const drawn = fieldsRef.current.filter((field) => field.at.length > 0);
     if (drawn.length === 0 || partsBySource.size === 0) return;
 
     const geometryBySource = new Map<string, THREE.BufferGeometry[]>();
@@ -532,7 +620,7 @@ export function BatchedAssetLibraryField({
       const parts = partsBySource.get(field.src);
       if (!parts || parts.length === 0) continue;
       if (!geometryBySource.has(field.src)) {
-        const geometries = parts.map(normaliseBatchedGeometry);
+        const geometries = parts.map((part) => normaliseBatchedGeometry(part, colorSource));
         geometryBySource.set(field.src, geometries);
         for (const geometry of geometries) {
           maxVertexCount += geometry.getAttribute("position").count;
@@ -543,7 +631,7 @@ export function BatchedAssetLibraryField({
     }
     if (maxInstanceCount === 0) return;
 
-    const material = createBatchedPropMaterial();
+    const material = createBatchedPropMaterial(roughness);
     const target = new THREE.BatchedMesh(
       maxInstanceCount,
       Math.max(1, maxVertexCount),
@@ -581,12 +669,14 @@ export function BatchedAssetLibraryField({
         geometryIds.forEach((geometryId, partIndex) => {
           const instanceId = target.addInstance(geometryId);
           target.setMatrixAt(instanceId, local.multiplyMatrices(world, parts[partIndex]!.offset));
-          const foliageMultiplier = batchedFoliageInstanceMultiplier(
-            parts[partIndex]!.sourceMaterial,
-            placement,
-            placementIndex,
-          );
-          if (foliageMultiplier) target.setColorAt(instanceId, foliageMultiplier);
+          if (colorSource === "family") {
+            const foliageMultiplier = batchedFoliageInstanceMultiplier(
+              parts[partIndex]!.sourceMaterial,
+              placement,
+              placementIndex,
+            );
+            if (foliageMultiplier) target.setColorAt(instanceId, foliageMultiplier);
+          }
         });
         placed += 1;
       });
@@ -597,7 +687,7 @@ export function BatchedAssetLibraryField({
       islandLookMaterials: [...partsBySource.entries()].flatMap(([src, parts]) =>
         parts.map(
           (part) =>
-            `${src.split("/").pop()}::${part.sourceMaterial.name}::${batchedPropColour(part.sourceMaterial).getHexString()}`,
+            `${src.split("/").pop()}::${part.sourceMaterial.name}::${bakedPartColour(part, colorSource).getHexString()}`,
         ),
       ),
     };
@@ -613,7 +703,7 @@ export function BatchedAssetLibraryField({
       target.dispose();
       material.dispose();
     };
-  }, [castShadow, fields, name, partsBySource]);
+  }, [castShadow, colorSource, layoutKey, name, partsBySource, roughness]);
 
   if (!batch) return null;
   return <primitive object={batch} dispose={null} />;
@@ -640,7 +730,7 @@ export function BatchedAssetField({
 
   useLayoutEffect(() => {
     if (parts.length === 0 || at.length === 0) return;
-    const geometries = parts.map(normaliseBatchedGeometry);
+    const geometries = parts.map((part) => normaliseBatchedGeometry(part));
     const material = createBatchedPropMaterial();
     const maxVertexCount = geometries.reduce(
       (total, geometry) => total + geometry.getAttribute("position").count,

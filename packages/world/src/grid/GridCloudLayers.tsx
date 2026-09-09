@@ -3,8 +3,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { islandLookFrozen } from "../island/island-surface-style.js";
-import { CLOUD_RENDER_ORDER, CLOUD_TONES, createCloudMaterials } from "../sky/cloud-material.js";
-import { createCloudVolumeGeometry } from "../sky/cloud-volume.js";
+import { usePrefersReducedMotion } from "../reduced-motion.js";
+import { CLOUD_RENDER_ORDER, CLOUD_TONES, createCloudMaterial } from "../sky/cloud-material.js";
+import { CLOUD_VOLUME_CONTRACT, createCloudVolumeGeometry } from "../sky/cloud-volume.js";
 import type { HexMap } from "./course-grid.js";
 
 /**
@@ -48,7 +49,8 @@ const CLOUD_DEPTH_TONE: Readonly<Record<CloudDepth, number>> = {
 };
 
 function cloudGeometry(): THREE.BufferGeometry {
-  return createCloudVolumeGeometry(8, 5, "bank");
+  const { width, height } = CLOUD_VOLUME_CONTRACT.courseSegments;
+  return createCloudVolumeGeometry(width, height);
 }
 
 function cloudPositions(
@@ -129,30 +131,18 @@ function cloudPlacements(
   );
 }
 
-/*
- * No separate underbelly instance here, deliberately, and the reason is worth
- * keeping: one was tried and it looked worse than what it replaced.
- *
- * `cloud-sea` splits each puff into a lit crown and a darker belly, and that
- * works because six overlapping crown lobes bury the belly so only its rim
- * shows. The course form is `bank` — three flattened lobes — so the same drop
- * left the belly hanging in open sky as a separate slab, and its warm albedo,
- * lit by nothing but the cool fill, went navy. Both course clouds turned into
- * dark wedges.
- *
- * The bank body already carries its own dark side: `addCloudVertexValueRamp`
- * bakes 0.5 at the underside against 0.88 at the crown. That ramp was always
- * there — it simply could not be seen through an unlit `MeshBasicMaterial`.
- * Giving the body the shared lit material is the entire fix; a second body was
- * me copying a relationship instead of the reason for it.
+/* The course field draws the same complete closed bank in one batch.
+ * Its underside is part of the body, with the shared vertex ramp and normals.
+ * A second displaced shell would expose a saucer at the low course camera.
  */
 
 export function GridCloudLayers({ map, dimmed = false }: { map: HexMap; dimmed?: boolean }) {
   const group = useRef<THREE.Group>(null);
+  const reducedMotion = usePrefersReducedMotion();
   const crownMesh = useRef<THREE.InstancedMesh>(null);
   const placements = useMemo(() => cloudPlacements(map), [map]);
   const geometry = useMemo(cloudGeometry, []);
-  const { crown } = useMemo(() => createCloudMaterials(dimmed), [dimmed]);
+  const crown = useMemo(() => createCloudMaterial(dimmed), [dimmed]);
   const rotation = useMemo(
     () => new THREE.Quaternion().setFromEuler(new THREE.Euler(0, (65 * Math.PI) / 180, 0)),
     [],
@@ -178,6 +168,11 @@ export function GridCloudLayers({ map, dimmed = false }: { map: HexMap; dimmed?:
     // is scenery. Frozen for look screenshots so a visual diff stays a diff.
     const target = group.current;
     if (!target || islandLookFrozen()) return;
+    if (reducedMotion) {
+      target.position.x = 0;
+      target.position.z = 0;
+      return;
+    }
     const time = clock.elapsedTime;
     const span = map.bounds.maxX - map.bounds.minX;
     target.position.x = Math.sin(time * 0.018) * span * 0.004;

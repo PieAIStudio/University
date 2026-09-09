@@ -87,20 +87,36 @@ function findAvatarTarget(scene: THREE.Scene): THREE.Object3D | null {
   return found;
 }
 
-function projectedBounds(box: THREE.Box3, camera: THREE.Camera) {
-  const points: THREE.Vector3[] = [];
-  for (const x of [box.min.x, box.max.x]) {
-    for (const y of [box.min.y, box.max.y]) {
-      for (const z of [box.min.z, box.max.z]) {
-        points.push(new THREE.Vector3(x, y, z).project(camera));
-      }
-    }
+/** Shared projection for the visibility probe and ordinary DOM-label layout.
+ * A caller-owned scratch vector keeps the live projector allocation-bounded.
+ */
+export function projectedAvatarBounds(
+  box: THREE.Box3,
+  camera: THREE.Camera,
+  point = new THREE.Vector3(),
+) {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (let corner = 0; corner < 8; corner++) {
+    point
+      .set(
+        corner & 1 ? box.max.x : box.min.x,
+        corner & 2 ? box.max.y : box.min.y,
+        corner & 4 ? box.max.z : box.min.z,
+      )
+      .project(camera);
+    minX = Math.min(minX, point.x);
+    maxX = Math.max(maxX, point.x);
+    minY = Math.min(minY, point.y);
+    maxY = Math.max(maxY, point.y);
   }
   return {
-    minX: Math.max(-1, Math.min(...points.map((point) => point.x))),
-    maxX: Math.min(1, Math.max(...points.map((point) => point.x))),
-    minY: Math.max(-1, Math.min(...points.map((point) => point.y))),
-    maxY: Math.min(1, Math.max(...points.map((point) => point.y))),
+    minX: Math.max(-1, minX),
+    maxX: Math.min(1, maxX),
+    minY: Math.max(-1, minY),
+    maxY: Math.min(1, maxY),
   };
 }
 
@@ -117,7 +133,7 @@ export function measureAvatarOcclusion(
   const bounds = new THREE.Box3().setFromObject(target);
   if (bounds.isEmpty()) return { ...EMPTY_REPORT, targetFound: true };
 
-  const boundsOnScreen = projectedBounds(bounds, camera);
+  const boundsOnScreen = projectedAvatarBounds(bounds, camera);
   const raycaster = new THREE.Raycaster();
   const blockers: AvatarOcclusionBlocker[] = [];
   let avatarSurfaceRayCount = 0;

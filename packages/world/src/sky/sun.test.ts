@@ -5,44 +5,71 @@ import {
   WORLD_SUN,
   worldKeyToFillRatio,
   worldShadowFrustum,
+  worldShadowNormalBias,
   worldSunDirection,
   worldSunPosition,
   worldTotalFill,
 } from "./sun.js";
 
 describe("world sun", () => {
-  it("keeps elevation inside the measured 16–28° window", () => {
-    expect(WORLD_SUN.elevationDeg).toBeGreaterThanOrEqual(16);
-    expect(WORLD_SUN.elevationDeg).toBeLessThanOrEqual(28);
+  it("keeps elevation inside the intentional 38–42° window", () => {
+    expect(WORLD_SUN.elevationDeg).toBeGreaterThanOrEqual(38);
+    expect(WORLD_SUN.elevationDeg).toBeLessThanOrEqual(42);
   });
 
   it("keeps key:fill at or above the look-contract floor", () => {
     expect(worldKeyToFillRatio()).toBeGreaterThanOrEqual(3);
   });
 
-  it("keeps total key-to-fill inside the measured stylized range", () => {
-    // Was 2–4 over hemisphere + ambient + environment. Two things were wrong
-    // with that, and only one of them is that the band moved.
-    //
-    // 1. The denominator was not the scene's fill. The back rim is a fourth
-    //    fill light, and it lived as a literal in `lighting.tsx` where this
-    //    test could not see it — at 0.78 it was the largest single fill term
-    //    in the rig while this assertion reported the scene as 2.08:1. It is
-    //    in `WORLD_SUN` now, and `worldTotalFill` is the whole denominator.
-    // 2. 2–4 is the overcast band, and it was left deliberately on 2026-09-02.
-    //    The reference look is direct sun: a warm key against a cool, much
-    //    smaller fill. On the complete accounting the scene moved from
-    //    5.4/2.15 = 2.5:1 to 5.4/0.97 = 5.6:1.
-    //
-    // The ceiling is the part that still guards something. Fill is what keeps
-    // colour in the shadows, and cutting it far enough turns low-poly faces
-    // into one black shape — the failure `sun.ts` records. 7 is the measured
-    // stop: at the chosen values `measureScene()` on course-design reads
-    // scene-linear p05 0.047, comfortably unclipped, and the margin to 7 is
-    // roughly the room that reading leaves.
-    const ratio = WORLD_SUN.keyIntensity / worldTotalFill(WORLD_ENVIRONMENT.intensity);
-    expect(ratio).toBeGreaterThanOrEqual(4);
-    expect(ratio).toBeLessThanOrEqual(7);
+  it("maintains intentional fill values and stylized key-to-fill ratio", () => {
+    expect(WORLD_SUN.hemisphereIntensity).toBe(0.9);
+    expect(WORLD_SUN.ambientIntensity).toBe(0.22);
+    expect(WORLD_SUN.rimIntensity).toBe(0.34);
+
+    const totalFill = worldTotalFill(WORLD_ENVIRONMENT.intensity);
+    expect(totalFill).toBeCloseTo(1.62, 2);
+
+    // With restored open fill terms (hemisphere 0.90, ambient 0.22, rim 0.34, env 0.16),
+    // total key-to-fill ratio sits at ~3.33:1 (5.4 / 1.62), keeping shaded slope irradiance
+    // around ~1.28–1.30 to avoid crushing shadow channels below the post-grade contrast floor.
+    const ratio = WORLD_SUN.keyIntensity / totalFill;
+    expect(ratio).toBeGreaterThanOrEqual(3.0);
+    expect(ratio).toBeLessThanOrEqual(4.0);
+  });
+
+  it("computes finite, bounded shadow normal bias that scales with half and inversely with map size", () => {
+    // Finite and bounded in [0.04, 0.40] across standard and extreme bounds
+    const desktopBias = worldShadowNormalBias({ half: 35 }, 2048);
+    const mobileBias = worldShadowNormalBias({ half: 35 }, 1024);
+
+    expect(Number.isFinite(desktopBias)).toBe(true);
+    expect(Number.isFinite(mobileBias)).toBe(true);
+    expect(desktopBias).toBeGreaterThanOrEqual(0.04);
+    expect(desktopBias).toBeLessThanOrEqual(0.4);
+    expect(mobileBias).toBeGreaterThanOrEqual(0.04);
+    expect(mobileBias).toBeLessThanOrEqual(0.4);
+
+    // Clamping limits
+    const tinyBias = worldShadowNormalBias({ half: 1 }, 4096);
+    expect(tinyBias).toBe(0.04);
+    const hugeBias = worldShadowNormalBias({ half: 200 }, 512);
+    expect(hugeBias).toBe(0.4);
+
+    // Fallback on non-finite or invalid inputs
+    const fallbackBias = worldShadowNormalBias({ half: NaN }, 0);
+    expect(Number.isFinite(fallbackBias)).toBe(true);
+    expect(fallbackBias).toBeGreaterThanOrEqual(0.04);
+    expect(fallbackBias).toBeLessThanOrEqual(0.4);
+
+    // Scales linearly with half (when within unclamped range)
+    const biasHalf15 = worldShadowNormalBias({ half: 15 }, 2048);
+    const biasHalf30 = worldShadowNormalBias({ half: 30 }, 2048);
+    expect(biasHalf30).toBeGreaterThan(biasHalf15);
+    expect(biasHalf30).toBeCloseTo(biasHalf15 * 2, 2);
+
+    // Scales inversely with map size (mobile 1024 gets 2x desktop 2048 bias)
+    expect(mobileBias).toBeGreaterThan(desktopBias);
+    expect(mobileBias).toBeCloseTo(desktopBias * 2, 2);
   });
 
   it("counts the rim as fill and keeps it small next to the key", () => {

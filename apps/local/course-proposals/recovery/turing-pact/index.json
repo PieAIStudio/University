@@ -5,8 +5,8 @@
   "droppedUaBindingCount": 1282,
   "study": {
     "id": "turing-pact",
-    "title": "TuringPact",
-    "description": "学习图灵密约（Turing Pact）：双语社交推理游戏里人类 vs AI 的产品边界、架构与工程实现。",
+    "title": "学会用 AI 做游戏",
+    "description": "以《图灵密约》为真实案例，从零理解游戏的玩法、界面、规则与工程实现，学习用 AI 制作和验证自己的游戏。",
     "goals": [
       "理解产品定位与 Web pilot 商业验证路径",
       "掌握核心玩法、协议边界与关键子系统划分",

@@ -115,6 +115,8 @@ import { useMistakeSummary } from "./mistake-summary";
 import { useSceneCamera } from "./scene-camera";
 import { useSceneInteraction } from "./scene-interaction";
 import { useStudyContext } from "./study-context";
+import { readNavigationFocus } from "./navigation-focus.js";
+import { mapDomainCatalog, studyForMapDomain } from "./map-domain-catalog.js";
 import { useTodaySectionData } from "./today-section-data";
 import { trackEvent, type AnalyticsEvent } from "../analytics/productAnalytics";
 
@@ -152,11 +154,13 @@ export function App() {
   const { lookSeedNode, view } = useIslandLookView({ lookDebug, nodes, routeView });
   const shellConfig = shellConfigForView(view);
   /**
-   * The learner's transient navigation choice. `undefined` means "not chosen
+   * The learner's tab-local navigation choice. `undefined` means "not chosen
    * yet" — fall back to the learner's next course so the name, the sky and the
-   * eye agree. It is never written to the authoring config or account data.
+   * eye agree. Same-tab session memory carries only this ID across native
+   * links; it is never written to the authoring config or account data.
    */
-  const [navigationFocus, setNavigationFocus] = useState<LearnerNavigationFocus>(undefined);
+  const [navigationFocus, setNavigationFocus] =
+    useState<LearnerNavigationFocus>(readNavigationFocus);
   const [hovered, setHovered] = useState<string | null>(null);
   /** The island-entry action stays discoverable until the learner picks once. */
   const [mapEntryLearned, setMapEntryLearned] = useState(false);
@@ -325,10 +329,53 @@ export function App() {
       view,
     });
 
+  // Browsing an empty domain changes the planet focus, never the study/account
+  // selection. Both DOM and globe consume this one transient selection owner.
+  const planetDomainCatalog = useMemo(() => mapDomainCatalog(), []);
+  const [planetDomainChoice, setPlanetDomainChoice] = useState<string | null>(null);
+  const lastStudyByDomain = useRef(new Map<string, string>());
+  const focusedPlanetDomainId =
+    planetStudies.find((study) => study.id === focusedStudyId)?.domain?.id ??
+    (focusedStudyId ? "unclassified" : "programming");
+  const selectedPlanetDomainId = planetDomainChoice ?? focusedPlanetDomainId;
+  useEffect(() => {
+    if (focusedStudyId) lastStudyByDomain.current.set(focusedPlanetDomainId, focusedStudyId);
+    if (view.kind !== "planet") setPlanetDomainChoice(null);
+  }, [focusedPlanetDomainId, focusedStudyId, view.kind]);
+  const selectPlanetDomain = useCallback(
+    (domainId: string) => {
+      if (
+        !planetDomainCatalog.some((domain) => domain.id === domainId) &&
+        !planetStudies.some((study) => (study.domain?.id ?? "unclassified") === domainId)
+      )
+        return;
+      const restored = studyForMapDomain(
+        domainId,
+        planetStudies,
+        focusedStudyId,
+        lastStudyByDomain.current.get(domainId),
+      );
+      setPlanetDomainChoice(domainId);
+      if (restored) setNavigationFocus(restored);
+    },
+    [focusedStudyId, planetDomainCatalog, planetStudies],
+  );
+  const selectPlanetStudy = useCallback(
+    (studyId: string) => {
+      const study = planetStudies.find((entry) => entry.id === studyId);
+      if (!study) return;
+      lastStudyByDomain.current.set(study.domain?.id ?? "unclassified", studyId);
+      setPlanetDomainChoice(study.domain?.id ?? "unclassified");
+      setNavigationFocus(studyId);
+    },
+    [planetStudies],
+  );
+
   const { projectName, focusedTodayNode, focusedNextUpProgress, focusStudy } = useStudyContext({
     courseProgress,
     courseProgressForNode,
     focusedStudyId,
+    navigationFocus,
     nodes,
     setNavigationFocus,
     setView,
@@ -578,7 +625,7 @@ export function App() {
   const stageCameraFrom = fixedCamera?.cameraFrom ?? cameraFrom;
   const stageLookAt = fixedCamera?.lookAt ?? lookAt;
   const stage =
-    view.kind === "avatar-lab" || studioMap ? null : (
+    view.kind === "avatar-lab" || view.kind === "play-lab" || studioMap ? null : (
       <WorldMapCanvas
         key={sceneAttempt}
         hidden={!SHOWS_THE_MAP.has(view.kind)}
@@ -588,6 +635,7 @@ export function App() {
         // No world in a course view: the path below replaces it rather than
         // sitting behind it.
         world={view.kind === "world" ? world : null}
+        courseViewKey={view.kind === "course" ? `${view.studyId}/${view.courseId}` : null}
         cameraFrom={stageCameraFrom}
         lookAt={stageLookAt}
         learnerAt={learnerAt}
@@ -815,8 +863,11 @@ export function App() {
       {view.kind === "planet" ? (
         <PlanetRail
           studies={planetStudies}
+          domainCatalog={planetDomainCatalog}
           selectedId={focusedStudyId}
-          onSelect={setNavigationFocus}
+          selectedDomainId={selectedPlanetDomainId}
+          onSelectDomain={selectPlanetDomain}
+          onSelect={selectPlanetStudy}
           onEnter={(studyId) => {
             setNavigationFocus(studyId);
             setView({ kind: "world" });
@@ -851,6 +902,10 @@ export function App() {
       pathOverlay={pathOverlay}
       pathUnit={pathUnit}
       planetStudies={planetStudies}
+      planetDomainCatalog={planetDomainCatalog}
+      selectedPlanetDomainId={selectedPlanetDomainId}
+      onSelectPlanetDomain={selectPlanetDomain}
+      onSelectPlanetStudy={selectPlanetStudy}
       presencePort={presencePort}
       reviewReminderPort={reviewReminderPort}
       profileStats={profileStats}

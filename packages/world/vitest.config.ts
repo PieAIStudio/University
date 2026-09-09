@@ -11,7 +11,43 @@ import { defineConfig } from "vitest/config";
  */
 export default defineConfig({
   test: {
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
-    testTimeout: 60_000,
+    projects: [
+      {
+        test: {
+          name: "world",
+          include: ["src/**/*.{test,spec}.{ts,tsx}"],
+          exclude: [
+            "src/island/remote-props.test.ts",
+            "src/island/remote-island-field.test.ts",
+            "src/island/remote-world-projection.test.ts",
+            "src/world-course-projection.test.ts",
+            "src/island/island-geometry.test.ts",
+          ],
+          testTimeout: 60_000,
+          sequence: { groupOrder: 0 },
+        },
+      },
+      {
+        // CPU budgets need an uncontended runner, after the seeded suite.
+        // The 60-shape topology matrix also belongs here: in R32 it took
+        // 36s alone but exceeded 60s under concurrent geometry workers.
+        // The cache probe measured 2.4ms alone versus 24.3ms in that same
+        // contention. Keep all assertions and the 20ms/60s limits unchanged.
+        test: {
+          name: "remote-performance",
+          include: [
+            "src/island/remote-props.test.ts",
+            "src/island/remote-island-field.test.ts",
+            "src/island/remote-world-projection.test.ts",
+            "src/world-course-projection.test.ts",
+            "src/island/island-geometry.test.ts",
+          ],
+          fileParallelism: false,
+          maxWorkers: 1,
+          testTimeout: 60_000,
+          sequence: { groupOrder: 1 },
+        },
+      },
+    ],
   },
 });

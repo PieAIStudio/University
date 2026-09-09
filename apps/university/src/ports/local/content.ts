@@ -140,6 +140,7 @@ export function createLocalContentPort(options: {
           return {
             id: view.study.id,
             title: view.study.title,
+            ...(view.study.description ? { description: view.study.description } : {}),
             /*
               The server's own `progress` fields are dropped on the way out.
               They were this campus's answer to 「这一关学完了吗」 and the

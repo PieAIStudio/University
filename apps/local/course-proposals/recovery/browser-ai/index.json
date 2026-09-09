@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "study": {
+    "id": "browser-ai",
+    "title": "学会用 AI 做应用",
+    "description": "从浏览器里的真实应用入手，学习运行项目、理解功能、调整交互并验证改动。",
+    "goals": [],
+    "defaultCourseId": null,
+    "status": "active"
+  },
+  "source": {
+    "defaultRef": "HEAD"
+  },
+  "courses": [
+    {
+      "courseId": "run-a-real-project-with-ai",
+      "file": "run-a-real-project-with-ai.c1af04fc5be4a347db974db549542578608212e658d95551e0f7693bd5990178.recovery.json",
+      "sha256": "sha256:c1af04fc5be4a347db974db549542578608212e658d95551e0f7693bd5990178",
+      "isBeingRewritten": false
+    },
+    {
+      "courseId": "make-the-cutout-app-yours",
+      "file": "make-the-cutout-app-yours.79f6b951948c797f7c5d99bce6271cd9c4ffe043e808d4da612b34f10bfe8223.recovery.json",
+      "sha256": "sha256:79f6b951948c797f7c5d99bce6271cd9c4ffe043e808d4da612b34f10bfe8223",
+      "isBeingRewritten": false
+    },
+    {
+      "courseId": "when-a-project-is-too-big-to-read",
+      "file": "when-a-project-is-too-big-to-read.12c7751eaf45f1cd63d037a8385fff31f3f250c41e5d3221d69586af71df067d.recovery.json",
+      "sha256": "sha256:12c7751eaf45f1cd63d037a8385fff31f3f250c41e5d3221d69586af71df067d",
+      "isBeingRewritten": false
+    },
+    {
+      "courseId": "search-your-own-photos",
+      "file": "search-your-own-photos.f74bb922d5a621cd8970d05197993ee6deeb148955efa52c6e144b57636f5817.recovery.json",
+      "sha256": "sha256:f74bb922d5a621cd8970d05197993ee6deeb148955efa52c6e144b57636f5817",
+      "isBeingRewritten": false
+    }
+  ]
+}

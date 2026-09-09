@@ -7,10 +7,6 @@
   "scripts": {
     "dev": "pnpm --filter @pieai/university-core build && node scripts/dev.mjs",
     "dev:api": "pnpm --filter @pieai/university-core build && tsc -p tsconfig.server.build.json && node .university-local-build/server/http-server.js",
-    "bootstrap:supaluv": "tsc -p tsconfig.server.build.json && node scripts/bootstrap-supaluv.mjs",
-    "prepare:supaluv:ua": "tsc -p tsconfig.server.build.json && node scripts/prepare-supaluv-ua.mjs",
-    "finalize:supaluv:ua": "tsc -p tsconfig.server.build.json && node scripts/finalize-supaluv-ua.mjs",
-    "create:supaluv:course": "tsc -p tsconfig.server.build.json && node scripts/create-supaluv-course.mjs",
     "studies:init": "tsc -p tsconfig.server.build.json && node scripts/init-studies-root.mjs",
     "university": "tsc -p tsconfig.server.build.json && node scripts/university-local.mjs",
     "build": "tsc -b && tsc -p tsconfig.server.build.json",

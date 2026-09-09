@@ -39,6 +39,8 @@ import type {
 export interface ShelfStudy {
   readonly id: string;
   readonly title: string;
+  /** Authored route positioning from the same study manifest in both modes. */
+  readonly description?: string;
   readonly courses: readonly CourseView[];
 }
 

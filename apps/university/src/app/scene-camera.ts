@@ -1,6 +1,6 @@
 import type { View } from "@pieai/university-core";
 import { frameCourse } from "@pieai/university-world/course-map.js";
-import { frameWorld, roadAhead } from "@pieai/university-world/frame.js";
+import { frameWorld } from "@pieai/university-world/frame.js";
 import type { LessonPlacement } from "@pieai/university-world/Maps.js";
 import type { WorldMap } from "@pieai/university-world/WorldMapCanvas.js";
 import { useMemo } from "react";
@@ -25,10 +25,7 @@ export function useSceneCamera({ learnerAt, lessons, viewKind, world, wide }: Sc
    * they came, up, and off the axis so the road does not stack into a column of
    * discs — is what makes the map answer "where am I" in one glance.
    */
-  const framed = useMemo(
-    () => frameWorld(learnerAt, roadAhead(world?.placements ?? [], learnerAt)),
-    [learnerAt, world],
-  );
+  const framed = useMemo(() => frameWorld(learnerAt, world?.placements ?? []), [learnerAt, world]);
 
   /**
    * Inside a course the camera stands on the road instead of above it.

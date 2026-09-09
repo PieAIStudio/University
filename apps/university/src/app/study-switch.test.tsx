@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act } from "react";
+import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -8,7 +8,12 @@ import { App } from "./App.js";
 import { progressPort } from "../progress/store.js";
 
 vi.mock("@pieai/university-world/WorldMapCanvas.js", () => ({
-  WorldMapCanvas: () => null,
+  WorldMapCanvas: ({ underlay, overlay }: { underlay?: ReactNode; overlay?: ReactNode }) => (
+    <>
+      {underlay}
+      {overlay}
+    </>
+  ),
 }));
 
 vi.mock("../ports/index", () => {
@@ -97,6 +102,7 @@ beforeEach(() => {
   document.body.append(container);
   root = createRoot(container);
   progressPort.resetAll();
+  sessionStorage.removeItem("university.navigation.study");
   history.replaceState(null, "", "/");
   vi.stubGlobal("matchMedia", (query: string) => ({
     matches: false,
@@ -115,10 +121,38 @@ afterEach(async () => {
   container.remove();
   history.replaceState(null, "", "/");
   progressPort.resetAll();
+  sessionStorage.removeItem("university.navigation.study");
   vi.unstubAllGlobals();
 });
 
 describe("study context", () => {
+  it("retains a non-default route when returning from a direct course URL", async () => {
+    history.replaceState(null, "", "/beta/beta-course");
+    await act(async () => root.render(<App />));
+    expect(container.querySelector("[aria-label='当前系列 Beta']")).not.toBeNull();
+    const back = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
+      /回到\s*Beta\s*地图/.test(button.textContent ?? ""),
+    );
+    expect(back).toBeDefined();
+    await act(async () => back!.click());
+    expect(location.pathname).toBe("/");
+    expect(container.querySelector("[aria-label='当前系列 Beta']")).not.toBeNull();
+    expect(container.textContent).toContain("Beta · Beta Course");
+  });
+
+  it("keeps the direct course's route across a full document navigation to practice", async () => {
+    history.replaceState(null, "", "/beta/beta-course");
+    await act(async () => root.render(<App />));
+    // A native navigation remounts App; a popstate-only test misses the loss.
+    // This simulates that lifecycle; S still drives the real anchor/pointer.
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    history.replaceState(null, "", "/practice");
+    await act(async () => root.render(<App />));
+    expect(location.pathname).toBe("/practice");
+    expect(container.querySelector("[aria-label='当前系列 Beta']")).not.toBeNull();
+  });
+
   it("updates the Today context when the selected study changes", async () => {
     await act(async () => {
       root.render(<App />);

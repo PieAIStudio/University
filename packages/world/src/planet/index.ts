@@ -19,5 +19,10 @@ export type {
 export { PlanetScene, PlanetStage, PLANET_ATMOSPHERE } from "./PlanetScene.js";
 export type { PlanetSceneProps } from "./PlanetScene.js";
 export { PlanetPage, PlanetRail } from "./PlanetPage.js";
-export type { PlanetPageProps, PlanetCourse, PlanetStudy } from "./PlanetPage.js";
+export type {
+  PlanetPageProps,
+  PlanetCourse,
+  PlanetStudy,
+  PlanetStudyDomain,
+} from "./PlanetPage.js";
 export { studyCounts, studyCourseList } from "./planet-copy.js";

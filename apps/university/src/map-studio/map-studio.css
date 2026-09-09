@@ -187,7 +187,8 @@
 
 .map-studio__renderer > div,
 .map-studio__renderer > .stagewrap,
-.map-studio .stagewrap {
+.map-studio .stagewrap,
+.map-studio .map-studio__renderer > .stagewrap:not([hidden]) {
   position: relative;
   width: 100%;
   height: 100%;

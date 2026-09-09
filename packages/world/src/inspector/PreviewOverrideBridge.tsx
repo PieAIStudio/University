@@ -4,6 +4,7 @@ import * as THREE from "three";
 
 import type { InspectorLayerId } from "./types.js";
 import type { PreviewSceneMetrics, PreviewTuningValues } from "./preview-runtime.js";
+import { measureProjectedGeometry, planetProjectionStatus } from "./projected-metrics.js";
 
 interface GrassState {
   baseCount: number;
@@ -78,7 +79,10 @@ function applyPreviewTuning(
         material.userData.inspectorBaseGrassHeight = baseHeight;
         uniforms.uGrassHeightScale.value = baseHeight * tuning.grassHeightMultiplier;
       }
-      if (object.name === "island-terrain" && material instanceof THREE.MeshStandardMaterial) {
+      if (
+        (object.name === "island-terrain" || object.name === "remote-island-terrain") &&
+        material instanceof THREE.MeshStandardMaterial
+      ) {
         const base = material.userData.inspectorBaseColor as THREE.Color | undefined;
         if (!base) material.userData.inspectorBaseColor = material.color.clone();
         const original =
@@ -106,12 +110,22 @@ export function PreviewOverrideBridge({
   readonly onMetrics?: (metrics: PreviewSceneMetrics) => void;
 }) {
   const scene = useThree(({ scene: current }) => current);
-  const lastGrassCount = useRef<number | null>(null);
+  const lastSignature = useRef("");
+  const lastTuning = useRef<PreviewTuningValues | null>(null);
+  const frames = useRef(0);
   useFrame(() => {
+    frames.current += 1;
+    // Knob edits apply on the next frame. Settling async model loads is sampled
+    // at 5 Hz, rather than walking every material sixty times per second.
+    if (lastTuning.current === tuning && frames.current % 12 !== 0) return;
+    lastTuning.current = tuning;
     const grassInstances = applyPreviewTuning(scene, layer, tuning);
-    if (onMetrics && lastGrassCount.current !== grassInstances) {
-      lastGrassCount.current = grassInstances;
-      onMetrics({ grassInstances });
+    const projected = measureProjectedGeometry(scene);
+    const status = layer === "planet" ? planetProjectionStatus(scene, projected) : {};
+    const signature = JSON.stringify({ layer, grassInstances, projected, ...status });
+    if (onMetrics && lastSignature.current !== signature) {
+      lastSignature.current = signature;
+      onMetrics({ grassInstances, projected, ...status });
     }
   });
   return null;

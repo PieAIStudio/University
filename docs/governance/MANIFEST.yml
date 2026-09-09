@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-09T06:14:31.623Z
+generated_at: 2026-09-09T11:35:31.567Z
 generator_version: doc-gov@0.9.11
-docs_count: 106
+docs_count: 118
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -58,14 +58,56 @@ docs:
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-09-03
+    last_reviewed: 2026-09-09
     pinned: false
   - id: ADR-0009
     path: docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-08-28
+    last_reviewed: 2026-09-09
+    pinned: false
+  - id: ARCHIVE-ADR-0008-2026-09-07
+    path: docs/archive/adr-0008-measurement-history-2026-09-07.md
+    type: archive
+    status: archived
+    canonical: false
+    last_reviewed: 2026-09-07
+    pinned: false
+  - id: ARCHIVE-CONTINUOUS-WORLD-R26-R33
+    path: docs/archive/execution/continuous-world-delivery-r26-r33.md
+    type: archive
+    status: archived
+    canonical: false
+    last_reviewed: 2026-09-08
+    pinned: false
+  - id: ARCHIVE-CONTINUOUS-WORLD-R01-R25
+    path: docs/archive/execution/continuous-world-delivery-through-r25.md
+    type: archive
+    status: archived
+    canonical: false
+    last_reviewed: 2026-09-07
+    pinned: false
+  - id: ARCHIVE-CURRENT-WORK-2026-09-07
+    path: docs/archive/execution/current-work-before-consolidation-2026-09-07.md
+    type: archive
+    status: archived
+    canonical: false
+    last_reviewed: 2026-09-07
+    pinned: false
+  - id: ARCHIVE-PROCEDURAL-MAP-HANDOFF-2026-08-29
+    path: docs/archive/execution/procedural-map-handoff-2026-08-29.md
+    type: archive
+    status: archived
+    canonical: false
+    last_reviewed: 2026-08-29
+    pinned: false
+  - id: REF-ISLAND-ART-V2
+    path: docs/archive/island-art-reference-v2.md
+    type: archive
+    status: archived
+    canonical: false
+    last_reviewed: 2026-09-08
     pinned: false
   - id: GOV-AGENTS-ROUTING-ENGINEERING-RUNTIME-V1-1
     path: docs/governance/agents-routing/engineering-runtime-v1.1.md
@@ -102,6 +144,20 @@ docs:
     canonical: true
     last_reviewed: 2026-07-13
     pinned: true
+  - id: PLAN-CONTINUOUS-WORLD-DELIVERY
+    path: docs/plans/active/continuous-world-delivery.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-09
+    pinned: false
+  - id: PLAN-AI-PRODUCT-PLAY
+    path: docs/plans/completed/ai-product-play.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-09-08
+    pinned: false
   - id: PLAN-ISLAND-V2-VERTICAL-SLICE
     path: docs/plans/completed/island-v2-vertical-slice.md
     type: plan
@@ -109,12 +165,26 @@ docs:
     canonical: false
     last_reviewed: 2026-08-27
     pinned: false
+  - id: PLAN-LEARNING-PLAY-LAB
+    path: docs/plans/completed/learning-play-lab.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-09-08
+    pinned: false
+  - id: PLAN-PLAY-USABILITY
+    path: docs/plans/completed/play-usability.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-09-08
+    pinned: false
   - id: POLICY-PROJECT-BEST-PRACTICE
     path: docs/policy/best-practice-for-this-project.md
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-09-06
+    last_reviewed: 2026-09-08
     pinned: true
   - id: POLICY-SHARED-AI-IN-THE-LOOP
     path: docs/policy/shared-rules/ai-in-the-loop.md
@@ -163,14 +233,14 @@ docs:
     type: reference
     status: superseded
     canonical: false
-    last_reviewed: 2026-08-31
+    last_reviewed: 2026-09-08
     pinned: false
   - id: REF-DOCUMENTATION-MAP
     path: docs/reference/documentation-map.md
     type: reference
     status: active
     canonical: true
-    last_reviewed: YYYY-MM-DD
+    last_reviewed: 2026-09-08
     pinned: false
   - id: REF-3D-REFERENCES
     path: docs/reference/execution/3d-references.md
@@ -198,7 +268,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-06
+    last_reviewed: 2026-09-09
     pinned: true
   - id: REF-FEEDBACK-BACKEND-GAP
     path: docs/reference/execution/feedback-backend-gap.md
@@ -228,19 +298,19 @@ docs:
     canonical: true
     last_reviewed: 2026-09-03
     pinned: false
+  - id: REF-LOCAL-DEVICE-TESTING
+    path: docs/reference/execution/local-device-testing.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-09
+    pinned: false
   - id: REF-PAYMENT-BACKEND-GAP
     path: docs/reference/execution/payment-backend-gap.md
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-27
-    pinned: false
-  - id: REF-PROCEDURAL-MAP-HANDOFF
-    path: docs/reference/execution/procedural-map-handoff.md
-    type: reference
-    status: active
-    canonical: true
-    last_reviewed: 2026-08-29
+    last_reviewed: 2026-09-09
     pinned: false
   - id: REF-PUBLISH-LANE
     path: docs/reference/execution/publish-lane.md
@@ -270,12 +340,19 @@ docs:
     canonical: true
     last_reviewed: 2026-08-27
     pinned: false
-  - id: REF-ISLAND-ART-V2
-    path: docs/reference/island-art-reference-v2/island-art-reference.md
+  - id: REF-ISLAND-ART-V3
+    path: docs/reference/FloatingIsland-Reference-v3/island-art-reference.md
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-31
+    last_reviewed: 2026-09-08
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-200-FROM-A-JS-RENDERED-DOCS-SITE-PROVES-NOTHING-RENDER-IT-BEFORE-CITING-IT
+    path: docs/reference/learnings/workflow-issues/a-200-from-a-js-rendered-docs-site-proves-nothing-render-it-before-citing-it.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-09
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-DETECTOR-AND-ITS-ACCEPTOR-MUST-NORMALISE-IDENTICALLY-OR-THE-GATE-REJECTS-THE-S
     path: docs/reference/learnings/workflow-issues/a-detector-and-its-acceptor-must-normalise-identically-or-the-gate-rejects-the-s.md
@@ -436,7 +513,7 @@ docs:
     type: reference
     status: stable
     canonical: true
-    last_reviewed: 2026-08-29
+    last_reviewed: 2026-09-08
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-GRID-PROP-DENSITY-NEEDS-CLUSTER-GEOMETRY-AND-ROUTE-VISIBLE-FLOORS
     path: docs/reference/learnings/workflow-issues/grid-prop-density-needs-cluster-geometry-and-route-visible-floors.md
@@ -528,6 +605,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-30
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-MOBILE-PLAYBACK-MUST-BRING-THE-OUTPUT-AND-ITS-CONTROLS-INTO-VIEW
+    path: docs/reference/learnings/workflow-issues/mobile-playback-must-bring-the-output-and-its-controls-into-view.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-08
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-MODEL-STAGE-WRAPPERS-NEED-CLOSE-EVENT-RECEIPTS-AND-FIRST-H1-OUTPUT-SEPARATION
     path: docs/reference/learnings/workflow-issues/model-stage-wrappers-need-close-event-receipts-and-first-h1-output-separation.md

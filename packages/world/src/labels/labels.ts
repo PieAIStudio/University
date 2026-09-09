@@ -13,7 +13,7 @@
  * jitter or a live layout measurement; we do not.
  */
 
-export type LabelAnchor = "center" | "start" | "aside";
+export type LabelAnchor = "center" | "start" | "aside" | "island";
 
 export interface LabelBox {
   readonly left: number;
@@ -38,6 +38,7 @@ export interface LabelCandidate {
    * Where (x, y) sits on the box. `center` is a caption over a point;
    * `start` is a left-aligned name growing toward the path;
    * `aside` is a follow card sitting beside a point, never on it.
+   * `island` is a caption just below the actual rock root, with bounded drift.
    */
   readonly anchor?: LabelAnchor;
   /**
@@ -124,6 +125,19 @@ function slotsFor(
   const { x, y, width, height } = candidate;
   const stepX = width + gap;
   const stepY = height + gap;
+  if (candidate.anchor === "island") {
+    const belowY = y + height / 2 + gap;
+    const sideways = Math.min(32, width / 4);
+    return [
+      ...[0, 1, -1, 2, -2].map((step) => ({ x, y: belowY + step * stepY })),
+      // A short landscape view can need both moves: the rail blocks the
+      // unshifted column while an entry hint blocks the base row. Keep the
+      // same small bounds, but allow their combinations before hiding a name.
+      ...[sideways, -sideways].flatMap((dx) =>
+        [0, 1, -1, 2, -2].map((step) => ({ x: x + dx, y: belowY + step * stepY })),
+      ),
+    ];
+  }
   if (candidate.anchor === "start") {
     return [
       { x, y },
@@ -169,7 +183,7 @@ function slotsFor(
  * only a crowded candidate pays for this wider search.
  */
 function additionalVerticalSlots(candidate: LabelCandidate, gap: number): readonly Slot[] {
-  if (candidate.anchor === "aside") return [];
+  if (candidate.anchor === "aside" || candidate.anchor === "island") return [];
   const step = candidate.height + gap;
   const baseY = candidate.anchor === "start" ? candidate.y : candidate.y - candidate.height / 2;
   const offsets = [-1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7, 8, -8];

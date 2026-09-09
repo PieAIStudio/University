@@ -1,3 +1,16 @@
+import { messages as qualityDifficulty } from "./learning-play-quality-difficulty.zh-CN.js";
+import { messages as workflowDifficulty } from "./learning-play-workflow-difficulty.zh-CN.js";
+import { messages as playDifficulty } from "./learning-play-difficulty.zh-CN.js";
+import { messages as qualityUsability } from "./learning-play-quality-usability.zh-CN.js";
+import { messages as workflowUsability } from "./learning-play-workflow-usability.zh-CN.js";
+import { messages as playUsability } from "./learning-play-usability.zh-CN.js";
+import { messages as aiPlay } from "./learning-play-ai.zh-CN.js";
+import { messages as aiWorkflow } from "./learning-play-ai-workflow.zh-CN.js";
+import { messages as aiQuality } from "./learning-play-ai-quality.zh-CN.js";
+import { messages as aiAgentPlay } from "./learning-play-ai-agent-play.zh-CN.js";
+import { messages as learningPlayProgram } from "./learning-play-program.zh-CN.js";
+import { messages as learningPlayExtra } from "./learning-play-extra.zh-CN.js";
+import { messages as learningPlayMessages } from "./learning-play.zh-CN.js";
 /**
  * Chinese source messages for the University learner surface.
  *
@@ -5,6 +18,50 @@
  * is selectable only when its key set exactly matches this one.
  */
 export const messages = {
+  "ui.world.domain.programming": "AI 与编程",
+  "ui.world.domain.programming.description": "学会用 AI 做网站和应用，理解功能、数据与交互。",
+  "ui.world.domain.aiFoundations": "AI 基础",
+  "ui.world.domain.aiFoundations.description": "理解 AI 是什么，以及模型、训练和推理等基础概念。",
+  "ui.world.domain.aiGames": "AI 与游戏",
+  "ui.world.domain.aiGames.description": "学会用 AI 设计与制作游戏，理解玩法、规则和体验。",
+  "ui.world.domain.aiMedia": "AI 媒体创作",
+  "ui.world.domain.aiMedia.description": "认识图像、视频、音乐等生成式媒体的创作方法。",
+  "ui.world.domain.unpublished": "暂未发布",
+  "ui.world.domain.empty": "这个领域还没有课程系列。",
+  "ui.world.domain.return": "返回 {{title}}",
+  "ui.world.domain.unclassified": "未分类",
+  "app.mapstudio.mapStudioScreen.copy.按当前投影计量": "按当前投影计量",
+  "ui.world.lessonState.current": "当前关卡",
+  "ui.world.courseState.live": "当前",
+  "ui.world.courseState.done": "已完成",
+  "ui.world.courseState.open": "可学",
+  "ui.world.courseState.idle": "后续",
+  "ui.world.overview.show": "总览课程岛",
+  "ui.world.overview.return": "回到当前关",
+  "ui.world.overview.unavailable": "暂时无法总览，请稍后重试。",
+  "ui.world.lessonState.available": "可学习",
+  "ui.world.lessonState.later": "后续关卡",
+  "app.mapstudio.mapStudioScreen.copy.实际投影三角形": "实际投影三角形",
+  "app.mapstudio.mapStudioScreen.copy.原始模型尺寸": "原始模型尺寸（宽 × 高 × 深）",
+  "app.mapstudio.mapStudioScreen.copy.场景尺寸范围": "场景尺寸范围（物件局部轴）",
+  "app.mapstudio.mapStudioScreen.copy.实际使用与语义组": "实际使用与语义组",
+  "app.mapstudio.mapStudioScreen.copy.尺寸来自原始节点变换-场景统一归一化高度-树干是多变体骨架不能按整包宽度相乘":
+    "尺寸包含原始节点变换；场景按统一高度归一化。树干是多变体骨架，不能按整包宽度相乘。使用记录显示本岛局部坐标和真实组合身份。",
+  "app.mapstudio.mapStudioScreen.copy.组合与降级": "组合与降级",
+  "app.mapstudio.mapStudioScreen.copy.占地-高差-坡度": "整组占地 / 地面高差 / 坡度",
+  ...aiPlay,
+  ...aiWorkflow,
+  ...aiQuality,
+  ...aiAgentPlay,
+  ...playUsability,
+  ...playDifficulty,
+  ...qualityDifficulty,
+  ...workflowDifficulty,
+  ...qualityUsability,
+  ...workflowUsability,
+  ...learningPlayMessages,
+  ...learningPlayProgram,
+  ...learningPlayExtra,
   "app.app.app.copy.书架上还没有课": "书架上还没有课",
   "app.app.app.copy.今天": "今天",
   "app.app.app.copy.从这里开始": "从这里开始",

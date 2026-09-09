@@ -363,3 +363,18 @@ export {
   type LibraryTab,
   type View,
 } from "./routing/view.js";
+
+export type * from "./learning-play/types.js";
+export * from "./learning-play/connect.js";
+export * from "./learning-play/tune.js";
+export * from "./learning-play/hunt.js";
+export * from "./learning-play/dispatch.js";
+export * from "./learning-play/program.js";
+
+export * from "./learning-play/ai-brief.js";
+export * from "./learning-play/ai-context.js";
+export * from "./learning-play/ai-agent.js";
+export * from "./learning-play/ai-eval.js";
+export * from "./learning-play/ai-repair.js";
+export { ACTIVITY_DIFFICULTIES } from "./learning-play/types.js";
+export * from "./learning-play/difficulty.js";

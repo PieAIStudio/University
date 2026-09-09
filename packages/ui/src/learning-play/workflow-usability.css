@@ -1,0 +1,286 @@
+/* These disclosures change presentation only; both views use the same activity state. */
+.play-ai-context[data-guided="false"]
+  :is(
+    .play-context-materials,
+    .play-context-materials__body,
+    .play-context-library,
+    .play-context-packed,
+    .play-context-result
+  ),
+.ai-context-counter[data-guided="false"] .play-context-queue,
+.play-ai-agent[data-guided="false"] .play-agent-recovery,
+.play-ai-agent__action-files[data-guided="false"] .play-agent-before {
+  display: contents;
+}
+.play-ai-context[data-guided="false"]
+  :is(.play-context-materials, .play-context-library, .play-context-packed, .play-context-result)
+  > summary,
+.ai-context-counter[data-guided="false"] .play-context-queue > summary,
+.play-ai-agent[data-guided="false"] .play-agent-recovery > summary,
+.play-ai-agent__action-files[data-guided="false"] .play-agent-before > summary {
+  display: none;
+}
+.play-agent-before + section {
+  border-inline-start: 1px solid var(--game-ui-border-subtle);
+}
+.play-agent-before > section {
+  min-inline-size: 0;
+}
+
+.play-ai-workflow[data-guided="true"] {
+  gap: 12px;
+}
+.play-ai-workflow[data-guided="true"] > details > summary {
+  font-weight: 700;
+}
+.play-ai-workflow[data-guided="true"]
+  :is(
+    .play-context-materials,
+    .play-context-result,
+    .play-agent-tools,
+    .play-agent-workspace,
+    .play-agent-recovery
+  ) {
+  border-block-start: 1px solid var(--game-ui-border-subtle);
+}
+
+.ai-context-counter[data-guided="true"] .ai-context-counter__sign {
+  padding: 12px 16px;
+}
+.ai-context-counter[data-guided="true"] .ai-context-counter__sign > span {
+  margin-block-end: 3px;
+}
+.ai-context-counter[data-guided="true"] .ai-context-counter__sign h4 {
+  font-size: 1rem;
+}
+.ai-context-counter[data-guided="true"] .ai-context-counter__answer {
+  display: grid;
+  gap: 10px;
+  margin: 12px;
+  padding: 14px;
+  scroll-margin-block: 16px;
+}
+.ai-context-counter[data-guided="true"] .ai-context-counter__answer > strong {
+  font-size: 1.0625rem;
+}
+.ai-context-counter[data-guided="true"] .ai-context-counter__answer > button {
+  justify-self: start;
+}
+.ai-context-counter[data-guided="true"] .ai-context-counter__response {
+  font-size: 0.9375rem;
+}
+.ai-context-counter[data-guided="true"] .ai-context-counter__clues {
+  margin-block-start: 0;
+}
+.ai-context-counter[data-guided="true"] .ai-context-counter__clues > span {
+  display: none;
+}
+.ai-context-counter[data-guided="true"] .ai-context-counter__clues > button {
+  border: 1px solid var(--game-ui-border-subtle);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.ai-context-counter[data-guided="true"] footer {
+  padding: 10px 16px;
+}
+.ai-context-counter[data-guided="true"] footer > span {
+  margin-block-end: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.8125rem;
+}
+.ai-context-counter[data-guided="true"] footer .play-action-row:not(:empty) {
+  margin-block-start: 10px;
+}
+.ai-context-counter[data-guided="true"] .play-context-queue {
+  padding-inline: 16px;
+  border-block-start: 1px solid var(--game-ui-border-subtle);
+}
+.ai-context-counter[data-guided="true"] .play-context-queue > summary {
+  color: var(--game-ui-text-muted);
+  font-size: 0.8125rem;
+}
+.ai-context-counter[data-guided="true"] .ai-context-counter__queue {
+  padding: 6px 0 12px;
+}
+.play-context-materials__body {
+  display: grid;
+  gap: 12px;
+}
+.play-context-materials__hint {
+  color: var(--game-ui-text-muted);
+  font-size: 0.8125rem;
+}
+.play-ai-context[data-guided="true"] .play-ai-context__desk {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.play-ai-context[data-guided="true"] .play-context-library > summary {
+  font-size: 0.875rem;
+}
+.play-ai-context[data-guided="true"] .play-ai-context__library {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  padding-block-end: 10px;
+}
+.play-ai-context[data-guided="true"] .play-ai-context__library > h4 {
+  display: none;
+}
+.play-ai-context[data-guided="true"] .play-ai-context__paper > header {
+  padding: 12px 14px;
+}
+.play-ai-context[data-guided="true"] .play-ai-context__paper h4 {
+  scroll-margin-block: 20px;
+}
+.play-ai-context[data-guided="true"] .play-ai-context__paragraph {
+  padding: 12px 14px;
+  gap: 8px;
+}
+.play-context-build {
+  position: sticky;
+  inset-block-end: calc(72px + env(safe-area-inset-bottom));
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--game-ui-border-strong);
+  border-radius: 12px;
+  background: var(--game-ui-panel-strong);
+}
+.play-context-build[data-stale="true"] {
+  border-color: var(--game-ui-secondary);
+}
+.play-context-build[data-over-capacity="true"] {
+  border-color: var(--game-ui-warning);
+}
+.play-context-build > p,
+.play-context-packed > summary {
+  font-size: 0.8125rem;
+  color: var(--game-ui-text-muted);
+}
+.play-context-build > button {
+  white-space: normal;
+}
+
+.play-ai-agent[data-guided="true"] .play-agent-authorization {
+  display: block;
+  padding: 0 12px;
+  font-size: 0.8125rem;
+}
+.play-ai-agent[data-guided="true"] .play-agent-authorization > p {
+  padding-block-end: 12px;
+  color: var(--game-ui-text-muted);
+}
+.play-ai-agent[data-guided="true"] .play-ai-agent__cockpit {
+  grid-template-columns: minmax(0, 1fr);
+}
+.play-ai-agent[data-guided="true"] .play-ai-agent__action {
+  padding: 14px;
+  gap: 10px;
+}
+.play-agent-prompt {
+  color: var(--game-ui-text-muted);
+  font-size: 0.875rem;
+}
+.play-agent-prompt[data-risk="true"] {
+  color: var(--game-ui-text);
+  border-inline-start: 1px solid var(--game-ui-warning);
+  padding-inline-start: 10px;
+}
+.play-ai-agent__action-files[data-guided="true"] {
+  gap: 10px;
+}
+.play-ai-agent__action-files[data-guided="true"] > header h4 {
+  font-size: 0.8125rem;
+  color: var(--game-ui-text-muted);
+}
+.play-ai-agent__action-files[data-guided="true"] .play-ai-agent__target-card > header {
+  padding: 10px 12px;
+}
+.play-ai-agent__action-files[data-read-consent="true"] .play-ai-agent__target-scope {
+  display: none;
+}
+.play-ai-agent__action-files[data-guided="true"] .play-ai-agent__target-contents {
+  display: flex;
+  flex-direction: column;
+}
+.play-ai-agent__action-files[data-guided="true"] .play-ai-agent__target-contents > section {
+  order: -1;
+  border-inline-start: 0;
+}
+.play-ai-agent__action-files[data-guided="true"] .play-agent-before > summary {
+  padding-inline: 12px;
+  font-size: 0.8125rem;
+  color: var(--game-ui-text-muted);
+}
+.play-ai-agent__action-files[data-guided="true"] .play-ai-agent__target-contents pre {
+  min-block-size: 0;
+  max-block-size: 140px;
+  padding: 8px 12px 12px;
+  font-size: 0.8125rem;
+}
+.play-ai-agent[data-guided="true"] .play-ai-agent__last-result pre {
+  max-block-size: 112px;
+  font-size: 0.8125rem;
+}
+.play-ai-agent[data-guided="true"] .play-ai-agent__last-result > header {
+  padding-block: 8px;
+  font-size: 0.8125rem;
+}
+.play-ai-agent[data-guided="true"] .play-ai-agent__action-buttons {
+  grid-template-columns: minmax(0, 1fr);
+}
+.play-agent-next {
+  font-size: 0.875rem;
+}
+.play-agent-more > summary {
+  color: var(--game-ui-text-muted);
+  font-size: 0.8125rem;
+}
+.play-agent-more .play-action-row {
+  margin-block-start: 8px;
+}
+
+@container (max-width: 520px) {
+  .play-agent-before + section {
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--game-ui-border-subtle);
+  }
+  .play-context-build > button {
+    inline-size: 100%;
+  }
+}
+
+.play-agent-read-start {
+  display: grid;
+  gap: 8px;
+}
+.play-agent-read-start > ul {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.play-agent-read-start li {
+  display: grid;
+  gap: 2px;
+  min-inline-size: 0;
+  font-size: 0.8125rem;
+}
+.play-agent-read-start code {
+  color: var(--game-ui-text-muted);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+.play-agent-read-start > button {
+  white-space: normal;
+}
+.play-agent-files-frame[data-read-consent="false"] {
+  display: contents;
+}
+.play-agent-files-frame[data-read-consent="true"] > summary {
+  color: var(--game-ui-text-muted);
+  font-size: 0.8125rem;
+}

@@ -1,0 +1,124 @@
+.ai-context-counter {
+  border: 1px solid var(--game-ui-border-strong);
+  border-radius: 16px;
+  background: var(--game-ui-panel-strong);
+  overflow: hidden;
+  container: ai-counter / inline-size;
+}
+.ai-context-counter-anchor {
+  scroll-margin-block: 16px;
+}
+.ai-context-counter__sign {
+  padding: 20px;
+  background: color-mix(in srgb, var(--game-ui-secondary) 10%, var(--game-ui-panel));
+  border-block-end: 1px solid var(--game-ui-border-subtle);
+}
+.ai-context-counter__sign > span {
+  display: block;
+  font-size: 12px;
+  margin-block-end: 8px;
+  color: var(--game-ui-text-muted);
+}
+.ai-context-counter__sign h4 {
+  margin: 0;
+  font-size: 21px;
+}
+.ai-context-counter__sign p {
+  margin-block-end: 0;
+}
+.ai-context-counter__queue {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 18px;
+}
+.ai-context-counter__queue > button {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  text-align: start;
+  justify-content: start;
+  padding: 14px;
+  min-width: 0;
+}
+.ai-context-counter__queue strong,
+.ai-context-counter__queue small {
+  display: block;
+}
+.ai-context-counter__queue small {
+  font-weight: 400;
+  margin-block-start: 4px;
+}
+.ai-context-counter__queue > button > span:last-child {
+  margin-inline-start: auto;
+}
+.ai-context-counter__person {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.ai-context-counter__answer {
+  padding: 18px;
+  margin: 0 18px 18px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: 12px;
+  background: var(--game-ui-panel);
+  scroll-margin-block: 88px;
+}
+.ai-context-counter__answer[data-passed="true"] {
+  border-color: var(--game-ui-success);
+}
+.ai-context-counter__response {
+  font-size: 18px;
+}
+.ai-context-counter__clues {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+.ai-context-counter__clues > button {
+  display: grid;
+  text-align: start;
+  justify-content: start;
+  gap: 4px;
+}
+.ai-context-counter__clues small {
+  font-size: 12px;
+  color: var(--game-ui-text-muted);
+}
+.ai-context-counter footer {
+  padding: 18px;
+  border-block-start: 1px solid var(--game-ui-border-subtle);
+}
+.ai-context-counter footer > span {
+  display: block;
+  margin-block-end: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.ai-context-counter__stale {
+  padding-inline: 18px;
+}
+@container ai-counter (max-width: 580px) {
+  .ai-context-counter__queue {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+  .ai-context-counter__queue > button {
+    padding: 10px 14px;
+  }
+  .ai-context-counter__answer {
+    margin-inline: 14px;
+    padding: 14px;
+  }
+  .ai-context-counter__sign {
+    padding: 16px;
+  }
+  .ai-context-counter footer {
+    padding: 14px;
+  }
+}

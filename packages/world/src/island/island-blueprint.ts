@@ -501,7 +501,7 @@ function routeShapePoint(
       z = 1.15 * u;
       break;
     case "loop-around-hill": {
-      const angle = -Math.PI * 0.55 + Math.PI * 1.72 * t;
+      const angle = -Math.PI * 0.55 + loopAroundHillSweep(lessonCount) * t;
       x = 0.9 * Math.cos(angle);
       z = 0.9 * Math.sin(angle);
       break;
@@ -838,6 +838,18 @@ function routeLengthFactor(archetype: IslandRouteArchetype): number {
 }
 
 /**
+ * How far the loop walks around the hill, in radians.
+ *
+ * 1.72π is a 310° mouth. On a 3–7 lesson island that opening is narrower than
+ * the road-plus-node corridor (2.36), so the first and last segments fail
+ * non-adjacent clearance while the line still does not self-intersect. Eight
+ * lessons already clear it; leave those loops on the established sweep.
+ */
+function loopAroundHillSweep(lessonCount: number): number {
+  return lessonCount <= 7 ? Math.PI * 1.38 : Math.PI * 1.72;
+}
+
+/**
  * Derive visual identity from the unit itself, never from route position or
  * terrain. The motion token names a possible state cue; it does not make all
  * nodes continuously animate.
@@ -1033,6 +1045,7 @@ function makeGeometryBlueprint(input: ResolvedInput): IslandGeometryBlueprint {
     throw new Error("IslandBlueprint could not place hero inside the island outline");
   }
   const zoneRadius = Math.max(3.2, Math.min(7.5, Math.min(halfX, halfZ) * 0.2));
+  const maxHalf = Math.max(halfX, halfZ);
 
   const base: IslandGeometryBlueprint = {
     version: ISLAND_BLUEPRINT_VERSION,
@@ -1045,7 +1058,7 @@ function makeGeometryBlueprint(input: ResolvedInput): IslandGeometryBlueprint {
     geometryNodes,
     centerline: baseCenterline,
     outline,
-    bounds: { halfX, halfZ, maxHalf: Math.max(halfX, halfZ) },
+    bounds: { halfX, halfZ, maxHalf },
     terrainPatches,
     zones: [
       zoneAround("arrival", first, zoneRadius, 0.9),
@@ -1061,7 +1074,8 @@ function makeGeometryBlueprint(input: ResolvedInput): IslandGeometryBlueprint {
       importance: 1,
     },
     underside: {
-      depth: Math.max(6, Math.min(11, Math.min(halfX, halfZ) * 0.34)),
+      // A 6–11 clamp kept a 38-unit course island 11 deep and read as a platform.
+      depth: maxHalf * (0.7 + hash(`${seed}/${layoutRevision}/underside-depth`) * 0.2),
       taper: 0.72 + hash(`${seed}/${layoutRevision}/underside`) * 0.14,
       ringCount: 3,
       importance: 0.25,
@@ -1187,12 +1201,22 @@ export function sampleIslandSurface(
   if (!inside) return { y: 0, radial, inside: false };
 
   const edge = clamp(1 - radial, 0, 1);
-  // Most of the island is a broad playable plateau; only the outer ~17% rolls
-  // into the cliff. Applying smoothstep across the whole radius made a dome,
-  // which the aerial camera reads as a concave green bowl.
+  // A coast is a continuation of the land, not a forced sea-level contour.
+  // The previous zero-at-edge masks erased every hill at exactly the same
+  // height, leaving a horizontal plate even on a strongly undulating island.
+  // Only the outer shoulder rolls down: broad headlands retain more of the
+  // SAME relief, bays less. Interior route/assembly heights remain unchanged.
   const shore = clamp(edge / 0.17, 0, 1);
-  const plateau = shore * shore * (3 - 2 * shore);
   const basePhase = blueprint.terrainPatches[0]?.phase ?? 0;
+  const coastRetention =
+    0.22 +
+    0.7 *
+      smoothstep(
+        -0.8,
+        0.85,
+        Math.sin(angle * 2 + basePhase) * 0.72 + Math.cos(angle * 3 - basePhase * 0.7) * 0.28,
+      );
+  const plateau = coastRetention + (1 - coastRetention) * Math.sin(shore * Math.PI * 0.5);
   const maxHalf = blueprint.bounds.maxHalf;
   let y = plateau * (BASE_PLATEAU_HEIGHT + Math.sin(normalX * 1.7 + basePhase) * 0.1);
   for (const patch of blueprint.terrainPatches) {
@@ -1205,20 +1229,17 @@ export function sampleIslandSurface(
         Math.cos((z - patch.z) * patch.frequency * 0.83 - patch.phase);
     y += plateau * patch.amplitude * PATCH_GAIN * influence * lowFrequency;
   }
-  // Relief uses its own, later shore fade. The plateau mask reaches zero at
-  // 17% from the rim, which guaranteed a perfectly smooth elliptical
-  // silhouette no matter how much relief the generator produced: every hill
-  // was flattened before it could reach an edge the camera can see against
-  // the sea. Holding relief to within 7% of the shoreline lets headlands and
-  // saddles break that outline, which is most of what makes an island read as
-  // a landform rather than a coin.
-  const reliefShore = smoothstep(0, 0.07, clamp(1 - radial, 0, 1));
+  // Keep the later relief fade, but never reset it to zero at the lip. Both
+  // projections and every contact sampler consume this exact boundary.
+  const reliefShore =
+    coastRetention + (1 - coastRetention) * Math.sin(clamp(edge / 0.07, 0, 1) * Math.PI * 0.5);
   y += reliefShore * reliefAt(blueprint, x, z, maxHalf);
-  // Terracing belongs to the natural base, never to units.  It follows the
-  // continuous relief and fades before the shoreline, so it creates broad
-  // hill shelves in arbitrary places rather than six chapter-shaped zones or
-  // a bullseye of concentric rings.
-  const terraceInfluence = smoothstep(0.9, 0.73, radial) * 0.72;
+  // A very low-amplitude shelf pass belongs to the natural base, never to
+  // units. It follows the continuous relief and fades well before the
+  // shoreline, so it can suggest a broad hillside shelf without laying down
+  // the fine, repeated steps that made the earlier surface read like stacked
+  // terrain tiles.
+  const terraceInfluence = smoothstep(0.94, 0.72, radial) * 0.06;
   y = lerp(y, softTerrace(y, maxHalf * TERRACE_STEP_RATIO), terraceInfluence);
   return { y: clamp(y, 0, maxHalf * MAX_HEIGHT_RATIO), radial, inside: true };
 }
@@ -1235,14 +1256,16 @@ export function sampleIslandSurface(
  * frame's exposure and left the ground itself flat, and why the aerial camera
  * reads the island as a painted green plate.
  *
- * What follows adds three octaves of value noise on top of the existing
+ * What follows adds two broad octaves of value noise on top of the existing
  * patches. The patches stay because they are the authored large masses and
  * the blueprint schema and its tests are built around them; they are simply
- * given enough gain to be seen. The octaves supply the mid and fine relief
- * that a Gaussian bump of radius 14 cannot: octave two alone carries about
- * 22 degrees of slope, and where octaves land in phase the surface reaches
- * 35 to 40. That is the range where a hillside has a bright face and a dark
- * one without any change to the lights.
+ * given enough gain to be seen. The octaves supply the mid-scale relief that
+ * a Gaussian bump of radius 14 cannot, while deliberately omitting a third
+ * short octave: a few tenths of a unit of high-frequency displacement can
+ * survive the 52-ring course mesh as corrugated ridges even when the height
+ * range itself still looks healthy. The remaining broad and middle scales
+ * give a hillside a bright face and a dark one without asking the lights to
+ * invent the shape.
  *
  * Every amplitude and wavelength below is a ratio of the island's own
  * maxHalf, so a six-lesson island and a forty-lesson island get the same
@@ -1251,25 +1274,21 @@ export function sampleIslandSurface(
 export const BASE_PLATEAU_HEIGHT = 2.35;
 export const PATCH_GAIN = 3.4;
 export const MAX_HEIGHT_RATIO = 0.235;
-export const TERRACE_STEP_RATIO = 0.0125;
-export const RELIEF_AMPLITUDE_RATIO = 0.165;
+export const TERRACE_STEP_RATIO = 0.085;
+export const RELIEF_AMPLITUDE_RATIO = 0.12;
 const RELIEF_OCTAVES = [
-  { wavelength: 0.3, amplitude: 1, corridor: 0.34, ridge: 0.55, turn: 0 },
-  { wavelength: 0.13, amplitude: 0.38, corridor: 0.6, ridge: 0.35, turn: 0.9 },
-  { wavelength: 0.055, amplitude: 0.1, corridor: 0.92, ridge: 0, turn: 1.9 },
+  { wavelength: 0.48, amplitude: 1, corridor: 0.34, ridge: 0.14, turn: 0 },
+  { wavelength: 0.28, amplitude: 0.16, corridor: 0.58, ridge: 0.08, turn: 0.9 },
 ] as const;
 
 /**
  * Smooth value noise makes blobs; land makes ridges.
  *
- * Folding the noise about zero turns each octave's zero crossing into a crest,
- * so the surface gets saddles and spurs where plain noise gives domes. The
- * exponent softens the crease: a raw fold reads as a knife edge, which is
- * wrong for a stylised island, while 1.6 keeps the ridge line and rounds its
- * top.
+ * A rounded quadratic fold about zero turns each octave's zero crossing into a
+ * smooth crest without sharp derivative spikes or pinched normal seams.
  */
 function ridgeFold(value: number): number {
-  return Math.pow(1 - Math.abs(value), 1.6) * 2 - 1;
+  return Math.pow(Math.max(0, 1 - value * value), 1.2) * 2 - 1;
 }
 const RELIEF_AMPLITUDE_SUM = RELIEF_OCTAVES.reduce((total, o) => total + o.amplitude, 0);
 
@@ -1878,9 +1897,13 @@ export function validateIslandBlueprint(input: unknown): IslandBlueprintValidati
         errors.push("route: required clearance is too large for the route scale");
       }
       const lessonSectionCount = Math.max(1, Number(lessonCount) - 1);
-      const minimumSegmentIndexGap = Math.max(
-        6,
-        Math.ceil((centerlinePoints.length - 1) / lessonSectionCount) * 2,
+      const lastSegmentIndex = centerlinePoints.length - 2;
+      // Cap at the first-to-last segment span. Without that, a 3-lesson
+      // centerline (64 samples, two lesson sections) computes a skip of 64
+      // and never compares the mouth of a short loop.
+      const minimumSegmentIndexGap = Math.min(
+        lastSegmentIndex,
+        Math.max(6, Math.ceil((centerlinePoints.length - 1) / lessonSectionCount) * 2),
       );
       for (let first = 0; first + 1 < centerlinePoints.length; first += 1) {
         for (let second = first + 2; second + 1 < centerlinePoints.length; second += 1) {

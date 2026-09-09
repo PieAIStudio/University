@@ -12,7 +12,7 @@
   "registryProvenance": {
     "schema": "agent-assets-registry",
     "version": 1,
-    "hash": "sha256:9fea57d6d467228f54b71a1bf0f839d117b5903baca510b14262a8bf07610113",
+    "hash": "sha256:7bac86b1d8e3685838d526e2aa790f84b0185fb124326c133557f1ce09b056d4",
     "assetCount": 66
   },
   "assets": [
@@ -160,43 +160,43 @@
       "id": "pie-rules/ai-in-the-loop",
       "sourcePath": "rules/pie-rules/ai-in-the-loop.md",
       "delivery": "symlink",
-      "contentHash": "sha256:344eba8c3b1f3130ed33e4b6a4511a332e2ca477e6a40ad7d4c73006197f5445",
+      "contentHash": "sha256:727495c221692756143191b66bace38d8da0bf720ac4e2b668a8f04a2ea68910",
       "targetPath": "docs/policy/shared-rules/ai-in-the-loop.md"
     },
     {
       "id": "pie-rules/brand-kit-first",
       "sourcePath": "rules/pie-rules/brand-kit-first.md",
       "delivery": "symlink",
-      "contentHash": "sha256:30bb78d836e5bc3ef478f132fd0363bad2bb88398892e46ce5c579e7701a2529",
+      "contentHash": "sha256:8a973d7a40906c9d5a07d8586430603b4030e7000588e91bec11946d0d824519",
       "targetPath": "docs/policy/shared-rules/brand-kit-first.md"
     },
     {
       "id": "pie-rules/clean-image-generation-rules",
       "sourcePath": "rules/pie-rules/clean-image-generation-rules.md",
       "delivery": "symlink",
-      "contentHash": "sha256:cd6a79b9971af50003812b498827837ca5c2c284d5b2c95ad3bbf3778483f74a",
+      "contentHash": "sha256:3642eb50666795d9bed4b835d74bae9c1c729d70ac11156a7280132b3b24efc8",
       "targetPath": "docs/policy/shared-rules/clean-image-generation-rules.md"
+    },
+    {
+      "id": "pie-rules/document-convergence",
+      "sourcePath": "rules/pie-rules/document-convergence.md",
+      "delivery": "symlink",
+      "contentHash": "sha256:66e689c13711b5b80970fb11f5ffbea5628ec4d9fa6c22f404968ff8f9d0c4d2",
+      "targetPath": "docs/policy/shared-rules/document-convergence.md"
     },
     {
       "id": "pie-rules/donors",
       "sourcePath": "rules/pie-rules/donors.md",
       "delivery": "symlink",
-      "contentHash": "sha256:3cf9de780b847f3c7f600bef3a562ae063cbcfb5b0c25c274f84484d5848ba90",
+      "contentHash": "sha256:6c638c6e27d1a8260ae73521938b88f7abeb5a2d5b3e0e80fd949bbaf6230544",
       "targetPath": "docs/policy/shared-rules/donors.md"
     },
     {
       "id": "pie-rules/web3d-capability-alignment",
       "sourcePath": "rules/pie-rules/web3d-capability-alignment.md",
       "delivery": "symlink",
-      "contentHash": "sha256:ed0a7a662a67f1bd9f01c1b24b22f215847e7ada5369157ce16d873bdad121bf",
+      "contentHash": "sha256:c557d97eb5b03f6d2a506d2d75a1959377f561379e9d78069c95be1a6f42c164",
       "targetPath": "docs/policy/shared-rules/web3d-capability-alignment.md"
-    },
-    {
-      "id": "pie-skills/devspace-feedback-loop",
-      "sourcePath": "skills/pie-skills/devspace-feedback-loop",
-      "delivery": "symlink",
-      "contentHash": "sha256:f22d07af485a672c82c9ba8854b962dc284ce345f6bdff2cce01356cbb350c08",
-      "targetPath": ".agents/manual-skills/devspace-feedback-loop"
     },
     {
       "id": "pie-skills/experience-capture",

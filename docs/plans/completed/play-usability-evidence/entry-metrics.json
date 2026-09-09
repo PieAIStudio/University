@@ -1,0 +1,463 @@
+{
+  "before": [
+    {
+      "game": "ai-brief",
+      "size": "desktop",
+      "result": {
+        "height": 1812,
+        "gameTop": 692.625,
+        "gameControls": 14,
+        "firstAction": "同样提交一次",
+        "firstActionTop": 844.515625
+      }
+    },
+    {
+      "game": "ai-context",
+      "size": "desktop",
+      "result": {
+        "height": 2894,
+        "gameTop": 717.8125,
+        "gameControls": 20,
+        "firstAction": "1小安我明早几点、去哪里取？…",
+        "firstActionTop": 865
+      }
+    },
+    {
+      "game": "ai-agent",
+      "size": "desktop",
+      "result": {
+        "height": 2738,
+        "gameTop": 717.8125,
+        "gameControls": 14,
+        "firstAction": "关闭",
+        "firstActionTop": 1074.578125
+      }
+    },
+    {
+      "game": "ai-eval",
+      "size": "desktop",
+      "result": {
+        "height": 1352,
+        "gameTop": 717.8125,
+        "gameControls": 8,
+        "firstAction": "方案甲",
+        "firstActionTop": 913.40625
+      }
+    },
+    {
+      "game": "ai-repair",
+      "size": "desktop",
+      "result": {
+        "height": 1293,
+        "gameTop": 717.8125,
+        "gameControls": 6,
+        "firstAction": "周六上午",
+        "firstActionTop": 1196.6875
+      }
+    },
+    {
+      "game": "connect",
+      "size": "desktop",
+      "result": {
+        "height": 779,
+        "gameTop": 647.4375,
+        "gameControls": 6,
+        "firstAction": "点击刷新用户发出意图",
+        "firstActionTop": 707.4375
+      }
+    },
+    {
+      "game": "tune",
+      "size": "desktop",
+      "result": {
+        "height": 1182,
+        "gameTop": 647.4375,
+        "gameControls": 4,
+        "firstAction": "对照原始细节",
+        "firstActionTop": 834.734375
+      }
+    },
+    {
+      "game": "hunt",
+      "size": "desktop",
+      "result": {
+        "height": 991,
+        "gameTop": 672.625,
+        "gameControls": 3,
+        "firstAction": "",
+        "firstActionTop": 869.671875
+      }
+    },
+    {
+      "game": "dispatch",
+      "size": "desktop",
+      "result": {
+        "height": 1079,
+        "gameTop": 672.625,
+        "gameControls": 4,
+        "firstAction": "限时挑战",
+        "firstActionTop": 764.625
+      }
+    },
+    {
+      "game": "program",
+      "size": "desktop",
+      "result": {
+        "height": 870,
+        "gameTop": 647.4375,
+        "gameControls": 3,
+        "firstAction": "前进",
+        "firstActionTop": 703.4375
+      }
+    },
+    {
+      "game": "ai-brief",
+      "size": "phone",
+      "result": {
+        "height": 2180,
+        "gameTop": 815.4375,
+        "gameControls": 14,
+        "firstAction": "同样提交一次",
+        "firstActionTop": 996.125
+      }
+    },
+    {
+      "game": "ai-context",
+      "size": "phone",
+      "result": {
+        "height": 3239,
+        "gameTop": 815.4375,
+        "gameControls": 20,
+        "firstAction": "1小安我明早几点、去哪里取？…",
+        "firstActionTop": 975.375
+      }
+    },
+    {
+      "game": "ai-agent",
+      "size": "phone",
+      "result": {
+        "height": 3138,
+        "gameTop": 864.03125,
+        "gameControls": 14,
+        "firstAction": "关闭",
+        "firstActionTop": 1308.484375
+      }
+    },
+    {
+      "game": "ai-eval",
+      "size": "phone",
+      "result": {
+        "height": 1418,
+        "gameTop": 815.4375,
+        "gameControls": 8,
+        "firstAction": "方案甲",
+        "firstActionTop": 1050.828125
+      }
+    },
+    {
+      "game": "ai-repair",
+      "size": "phone",
+      "result": {
+        "height": 1393,
+        "gameTop": 815.4375,
+        "gameControls": 6,
+        "firstAction": "周六上午",
+        "firstActionTop": 1337.90625
+      }
+    },
+    {
+      "game": "connect",
+      "size": "phone",
+      "result": {
+        "height": 946,
+        "gameTop": 735.453125,
+        "gameControls": 6,
+        "firstAction": "点击刷新用户发出意图",
+        "firstActionTop": 818.4375
+      }
+    },
+    {
+      "game": "tune",
+      "size": "phone",
+      "result": {
+        "height": 1571,
+        "gameTop": 755.25,
+        "gameControls": 4,
+        "firstAction": "对照原始细节",
+        "firstActionTop": 983.9375
+      }
+    },
+    {
+      "game": "hunt",
+      "size": "phone",
+      "result": {
+        "height": 941,
+        "gameTop": 755.25,
+        "gameControls": 3,
+        "firstAction": "",
+        "firstActionTop": 937.5625
+      }
+    },
+    {
+      "game": "dispatch",
+      "size": "phone",
+      "result": {
+        "height": 1307,
+        "gameTop": 735.453125,
+        "gameControls": 4,
+        "firstAction": "限时挑战",
+        "firstActionTop": 837.453125
+      }
+    },
+    {
+      "game": "program",
+      "size": "phone",
+      "result": {
+        "height": 1332,
+        "gameTop": 735.453125,
+        "gameControls": 3,
+        "firstAction": "前进",
+        "firstActionTop": 1374.5625
+      }
+    }
+  ],
+  "after": [
+    {
+      "game": "ai-brief",
+      "size": "desktop",
+      "result": {
+        "height": 484,
+        "gameTop": 402.71875,
+        "gameControls": 1,
+        "firstAction": "同样提交一次",
+        "firstActionTop": 483.109375
+      }
+    },
+    {
+      "game": "ai-context",
+      "size": "desktop",
+      "result": {
+        "height": 778,
+        "gameTop": 402.71875,
+        "gameControls": 1,
+        "firstAction": "请小安试问",
+        "firstActionTop": 542.953125
+      }
+    },
+    {
+      "game": "ai-agent",
+      "size": "desktop",
+      "result": {
+        "height": 900,
+        "gameTop": 402.71875,
+        "gameControls": 1,
+        "firstAction": "仅授权读取这些文件并开始",
+        "firstActionTop": 596.4375
+      }
+    },
+    {
+      "game": "ai-eval",
+      "size": "desktop",
+      "result": {
+        "height": 786,
+        "gameTop": 402.71875,
+        "gameControls": 1,
+        "firstAction": "试跑这道入门题",
+        "firstActionTop": 635.796875
+      }
+    },
+    {
+      "game": "ai-repair",
+      "size": "desktop",
+      "result": {
+        "height": 815,
+        "gameTop": 402.71875,
+        "gameControls": 5,
+        "firstAction": "周六上午",
+        "firstActionTop": 487.21875
+      }
+    },
+    {
+      "game": "connect",
+      "size": "desktop",
+      "result": {
+        "height": 676,
+        "gameTop": 363.53125,
+        "gameControls": 6,
+        "firstAction": "点击刷新用户发出意图",
+        "firstActionTop": 423.53125
+      }
+    },
+    {
+      "game": "tune",
+      "size": "desktop",
+      "result": {
+        "height": 1103,
+        "gameTop": 363.53125,
+        "gameControls": 4,
+        "firstAction": "",
+        "firstActionTop": 577.3125
+      }
+    },
+    {
+      "game": "hunt",
+      "size": "desktop",
+      "result": {
+        "height": 961,
+        "gameTop": 363.53125,
+        "gameControls": 4,
+        "firstAction": "先测这一次",
+        "firstActionTop": 377.53125
+      }
+    },
+    {
+      "game": "dispatch",
+      "size": "desktop",
+      "result": {
+        "height": 903,
+        "gameTop": 363.53125,
+        "gameControls": 2,
+        "firstAction": "文件服务成本 1提供现成图片和样式文件，留下一份缓存。",
+        "firstActionTop": 599.1875
+      }
+    },
+    {
+      "game": "program",
+      "size": "desktop",
+      "result": {
+        "height": 877,
+        "gameTop": 363.53125,
+        "gameControls": 4,
+        "firstAction": "加一条前进",
+        "firstActionTop": 377.53125
+      }
+    },
+    {
+      "game": "ai-brief",
+      "size": "phone",
+      "result": {
+        "height": 475,
+        "gameTop": 426.71875,
+        "gameControls": 1,
+        "firstAction": "同样提交一次",
+        "firstActionTop": 523.5
+      }
+    },
+    {
+      "game": "ai-context",
+      "size": "phone",
+      "result": {
+        "height": 755,
+        "gameTop": 426.71875,
+        "gameControls": 1,
+        "firstAction": "请小安试问",
+        "firstActionTop": 566.953125
+      }
+    },
+    {
+      "game": "ai-agent",
+      "size": "phone",
+      "result": {
+        "height": 912,
+        "gameTop": 443.09375,
+        "gameControls": 1,
+        "firstAction": "仅授权读取这些文件并开始",
+        "firstActionTop": 655.6875
+      }
+    },
+    {
+      "game": "ai-eval",
+      "size": "phone",
+      "result": {
+        "height": 778,
+        "gameTop": 426.71875,
+        "gameControls": 1,
+        "firstAction": "试跑这道入门题",
+        "firstActionTop": 678.890625
+      }
+    },
+    {
+      "game": "ai-repair",
+      "size": "phone",
+      "result": {
+        "height": 815,
+        "gameTop": 426.71875,
+        "gameControls": 5,
+        "firstAction": "周六上午",
+        "firstActionTop": 535.21875
+      }
+    },
+    {
+      "game": "connect",
+      "size": "phone",
+      "result": {
+        "height": 815,
+        "gameTop": 383.9375,
+        "gameControls": 6,
+        "firstAction": "点击刷新用户发出意图",
+        "firstActionTop": 446.921875
+      }
+    },
+    {
+      "game": "tune",
+      "size": "phone",
+      "result": {
+        "height": 1406,
+        "gameTop": 383.9375,
+        "gameControls": 4,
+        "firstAction": "",
+        "firstActionTop": 584.515625
+      }
+    },
+    {
+      "game": "hunt",
+      "size": "phone",
+      "result": {
+        "height": 940,
+        "gameTop": 383.9375,
+        "gameControls": 4,
+        "firstAction": "先测这一次",
+        "firstActionTop": 431.9375
+      }
+    },
+    {
+      "game": "dispatch",
+      "size": "phone",
+      "result": {
+        "height": 845,
+        "gameTop": 383.9375,
+        "gameControls": 2,
+        "firstAction": "文件服务成本 1提供现成图片和样式文件，留下一份缓存。",
+        "firstActionTop": 614.59375
+      }
+    },
+    {
+      "game": "program",
+      "size": "phone",
+      "result": {
+        "height": 1356,
+        "gameTop": 383.9375,
+        "gameControls": 4,
+        "firstAction": "加一条前进",
+        "firstActionTop": 431.9375
+      }
+    }
+  ],
+  "method": {
+    "url": "http://127.0.0.1:21996/play-lab and /play-lab/ai",
+    "viewports": [
+      [
+        1280,
+        900
+      ],
+      [
+        390,
+        844
+      ]
+    ],
+    "theme": "night",
+    "before": "d6cd44f fixed delivery build",
+    "after": "current fixed delivery build; practice level for comparable task demand",
+    "controlDefinition": "Visible enabled button/input in the game area, sorted by visual top position; first control is not a measured time-to-understanding or necessarily the first completed experiment."
+  }
+}
