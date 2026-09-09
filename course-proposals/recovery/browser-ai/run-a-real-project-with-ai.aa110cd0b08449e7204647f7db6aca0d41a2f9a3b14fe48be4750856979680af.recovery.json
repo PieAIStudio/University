@@ -1,0 +1,568 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "course": {
+    "id": "run-a-real-project-with-ai",
+    "title": "用 AI 把一个真实开源项目跑起来",
+    "description": "从「AI 软件到底是什么」开始，一路走到把一个真实的开源 AI 应用装在自己电脑上跑起来、送上线、装进手机。不教敲代码，教怎么指挥 AI 去做。",
+    "audience": "没写过代码、想让 AI 替自己把一个真实项目跑起来的人",
+    "objectives": [
+      "说出会聊天的 AI 和会动手的 AI 差在哪，并判断什么时候该用哪一个",
+      "把一个会动手的 AI 装到自己电脑上，并说出那一行安装命令在做什么",
+      "说清楚你打的那句话在你的电脑和远处的服务器之间走了什么路",
+      "看懂它请求执行一条命令时屏幕上在展示什么，并自己决定放不放行"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [],
+    "trackId": null,
+    "units": [
+      {
+        "id": "what-is-a-doing-ai",
+        "title": "这个叫 AI 的软件，到底是个什么东西",
+        "objective": "读完这一单元，你能说出会聊天的 AI 和会动手的 AI 差在哪，能把一个会动手的装到自己电脑上，并且说得出你打的那句话在本机和服务器之间走了什么路。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "chat-ai-versus-doing-ai",
+            "title": "网页上那个会聊天的 AI，为什么没法替你把项目跑起来？",
+            "content": "# 网页上那个会聊天的 AI，为什么没法替你把项目跑起来？\n\n## 你已经跟它对过话了吧？\n\n你用过那种网页。一个输入框，你打字，它回一段话。\n\n你会问它：这段红字是什么意思？这个东西怎么装到我电脑上？它给你一串步骤，读着像那么回事。\n\n然后活还是你的。你打开自己的电脑，照着敲。敲到一半，屏幕上又是一堆你看不懂的字。你把字贴回去，它换一版说法。你再敲。\n\n来回几趟，你容易往「聪不聪明」上想。是你问得不准？还是它不够好？\n\n先把这个问题放下。你要的不是一篇更完整的说明。你要的是：别人做好的那一堆文件，在你自己的电脑上，真的能打开、能用。\n\n说明是字。跑起来是你机器上发生的事。这两件事，不是一回事。\n\n## 先猜一下\n\n网页上的 AI 把「怎么把项目跑起来」写清楚了，你照着做却还是卡在自己的电脑上。你觉得，真正过不去的是哪一块？\n\n先写下你的判断，再往下看答案。\n\n## 答案\n\n过不去的通常不是那几句话写得不够清楚，是它碰不到你的电脑。它只能把做法告诉你，每一敲还是得你自己来。\n\n## 那个只会回字的，手里其实什么都没有？\n\n你在网页上用的那个，进出都是文字。你给它字，它给你字。\n\n它很会说「你该怎么做」。它不会替你做。\n\n它打不开你电脑上的文件夹。它写不进你电脑里存着的任何一份文件。你刚敲下去的那一句，在你机器上成了还是没成，它不知道。除非你把屏幕上的结果再贴给它——它「看见」的，也只是你贴过去的那几行字。\n\n所以你才会那么熟这个循环：问，抄步骤，自己敲，出错，再问。每一圈里，手都是你的。它只负责说出下一句。\n\n这不是因为它笨。网页上的对话框够不着你电脑里的文件，也够不着你电脑上那个下命令的窗口。\n\n你电脑上有一种窗口，几乎没有按钮。你要干什么，就打字下一句给电脑的指令。这种指令，叫命令。装东西、跑起来、看刚才那句到底成没成，很多时候就在这里发生。这个窗口叫终端。网页上的 AI 进不去终端。它只能根据你的描述，把「你大概该在里面做什么」写成中文步骤。\n\n:::detail[那它为什么有时候说得好像已经看见我的电脑了？]\n因为它会根据你贴过去的文字做推断。你贴一段红字，它能判断「这大概是哪类问题」。判断得再像，也还是根据文字在判断。你没贴的文件，它没读过；你没打出去的命令，它没跑过。说得像亲眼见过，不等于它碰过你的机器。\n:::\n\n## 那个跑在你电脑上的，手能伸到哪？\n\n还有一种 AI，不待在网页对话框里。它跑在你自己的电脑上。\n\n跑在你电脑上，意思很具体：它够得着你的文件，够得着终端，能把命令真正执行出去，而不是把命令写给你看。干完，它把结果拿给你看。\n\n有一种程序就待在终端里，直接操作你这台机器。它叫 Codex CLI。名字里的 CLI，指的就是跑在终端里的这种程序。\n\n还有一种叫 Antigravity CLI，同样跑在你这台电脑上。它可以读写文件，可以在终端里执行命令，可以让一些事情在后台继续跑，可以在那些写给电脑看的文字里查找——这种文字常被叫做代码——也可以控制浏览器。\n\n控制浏览器，不是再开一个聊天网页跟你说话。浏览器在这里是伸到你这台机器上的一只手，和读写文件、执行命令是同一类事。\n\n你会不会觉得，这是更聪明、更高级的一种？不是。会写字、会推理的那套东西，跟网页上那个是同一类。有人把这套东西叫做模型。同一类模型，只是接上了这台电脑的手和脚。看起来会干活，不是因为它变成了另一个物种。\n\n那你什么时候用哪个？\n\n你要的只是一段话，用网页上会聊天的那个就够。这段话什么意思，这封邮件怎么写，这行红字按字面在说什么。活停在文字上，它就停在文字上。\n\n你要的是你电脑上的真实变化，就得用会动手的那个。把需要的东西装好，改某一份文件，跑一条命令，看它到底起没起来。活落在你的文件和终端上。聊天框够不着的地方，手才够得着。\n\n你要把别人做好、公开出来、你可以拿来用的项目，在自己电脑上真正跑起来。靠的是这双手，不是又一篇更长的步骤。\n\n:::detail[「执行命令」到底是在干什么？]\n就是在终端里把一句命令真正打出去，让你的电脑去做那件事。网页上的 AI 也可以把这句命令写给你看，但写下来不等于做了。会动手的那个是自己打出去，再读电脑回过来的字。成功了还是失败了，它看见的是你这台机器上刚发生的事，不是一段想象。\n:::\n\n:::detail[它能控制浏览器，那跟我在网页里聊天有什么不一样？]\n你在网页里聊天，浏览器是你坐的位置，对话框是它的嘴。它能控制浏览器，指的是浏览器变成它在这台电脑上能用的一只手。这和读写文件、执行命令是同一类能力：动手，不是更会聊。不要把它理解成「又换了一个聊天窗口」。\n:::\n\n两边各能碰到什么，你已经知道了。自己连一次看看——把每一个连到它真够得着的\n东西上。连错的地方，那趟走不过去，屏幕会当场告诉你卡在哪一步。\n\n::play{#what-each-one-can-reach}\n\n## 自检\n\n你把网页 AI 给出的安装步骤抄到自己电脑上，敲到一半失败了。那个网页上的 AI，知不知道你这台机器上刚才实际发生了什么？\n\n换到你自己电脑上会动手的那个，它还要不要你把每一条命令亲手敲一遍，再把结果贴回去？\n\n有人说会动手的 AI 更聪明、更高级。你同意吗？为什么？\n\n## 一句话\n\n**差的不是谁更聪明，是谁有手：会聊天的那个把做法告诉你，会动手的那个自己做完，再把结果拿给你看。**\n",
+            "contentRevision": 3,
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://antigravity.google/docs/cli/features",
+                "sourceTitle": "Antigravity CLI · 功能",
+                "sourceAuthority": "official-docs",
+                "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developers.openai.com/codex/cli/features",
+                "sourceTitle": "Codex CLI · 功能",
+                "sourceAuthority": "official-docs",
+                "note": "Codex CLI 是跑在终端里、操作本机的 agent。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "chat-ai-cannot-touch-computer",
+                "kind": "basic",
+                "front": "网页上的 AI 为什么没法替你把软件跑起来？",
+                "back": "因为它碰不到你的电脑。网页上的 AI 进出都是文字：打不开你的文件夹，写不进你的文件，也进不了你敲指令的窗口。做法写得再清楚，每敲一下还得你自己来。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+                  }
+                ]
+              },
+              {
+                "id": "doing-ai-is-not-smarter",
+                "kind": "basic",
+                "front": "能自己改文件、自己打命令的 AI，是更聪明的一种吗？",
+                "back": "不是。会写字、会推理的那套底子跟网页上的是同一类。看起来能干活，只是因为它接上了这台电脑的手和脚，不是因为它变成了另一种更聪明的东西。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+                  }
+                ]
+              },
+              {
+                "id": "writing-is-not-doing",
+                "kind": "basic",
+                "front": "网页上的 AI 把该敲的那句话写给你看，算已经做完了吗？",
+                "back": "不算。写下来不等于做了。会动手的那种自己把那句话打进电脑，催着机器去干，再读机器回过来的字。成了还是没成，它看见的是你这台机器上刚发生的事，不是一段想象。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "pick-doing-ai-to-run-project",
+                "kind": "short-answer",
+                "title": "想跑起来该用哪个",
+                "prompt": "同事把一套公开的记账软件文件发给你，你想在自己电脑上打开来用。网页聊天框已经列出十二步安装法，你照着敲到一半又报错了。你要的是这套软件在你电脑上真能用。下一步该再要一份更长的说明，还是换成会动手的？请只回答：更长的说明 或 会动手的",
+                "expectedAnswer": "会动手的",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "one-line-install",
+            "title": "往那个黑窗口里贴一行字，到底在干什么？",
+            "content": "# 往那个黑窗口里贴一行字，到底在干什么？\n\n## 那个只能打字的窗口，是干什么的？\n\n你要装上第一个会动手的 AI。装法不是点一个大按钮，是往一个几乎只有字的窗口里，贴一行字。\n\n你第一次看见那个窗口，很可能会愣一下。字很多，按钮几乎没有，跟你平时点来点去的软件一点都不像。电影里黑客面前也常是这种画面，所以你容易把它想成「不是给我用的东西」。\n\n它就是一个窗口。专门用来打字。你写一句话，按下回车，电脑去做那件事，再用字把结果打回来。没有动画，没有确认框，就是你说一句、它回一句。\n\n电脑平时跟你打交道，靠的是图标和鼠标：你点一下，它做一下。这个窗口把那一层装饰拿掉了，只留下对话本身。有人把它叫做「终端」。终端不是另一种电脑，也不是黑客通道。你的电脑里本来就有它。你只是以前很少打开。\n\n它看起来冷，是因为它把花活全收走了。收走之后，你跟电脑之间只剩下一句话。\n\n:::detail[我平时点按钮，电脑是不是也在听一句类似的话？]\n对。你点「保存」，软件内部就是在替你说一句「把这个文件存下来」。终端把中间这层拿走了，让你自己把那句话说出来。所以它看起来光秃秃的——不是因为它高级，是因为它更直接。\n:::\n\n## 先猜一下\n\n你觉得那一行字贴进窗口、按下回车之后，电脑到底会干什么？\n\n先写下你的判断，再往下看答案。\n\n## 答案\n\n电脑会把那一行字当成一句它必须照做的话。它不是在跟你聊天，是在按这句话，把会动手的 AI 装到你这台电脑上。\n\n## 那一行字，不就是跟电脑说一句话吗？\n\n你已经会跟 AI 说话了。你打「帮我写一封邮件」，它就去写。那是一句话，对方听懂了就动手。\n\n跟电脑直接说话，是同一件事的另一种说法。你写一句话，电脑听懂了就去做。这样的一句话，有人叫它「命令」。命令不是咒语，不是密码，也不是只有懂技术的人才能说的话。它就是一句说给电脑听的话。\n\n跟 AI 聊天，你说得随便一点，它往往还能猜。说给电脑听的命令不行。电脑不会猜。你多一个空格、少一个字母、把大写写成小写，它就当没听懂。不是它在刁难你，是它只认那一种写法。所以那一行字必须一个字都不差。\n\n装这个会动手的 AI，官方的办法就是这样一行命令。窗口里有一个专门听你打字的程序：你用 Mac，或者用另一种电脑系统、叫 Linux 的，它叫 bash，那一行就交给它去做；你用 Windows，它叫 PowerShell。名字不同，活是一样的。\n\n那一行命令真正在做的事也很具体：它会去官方那里，取一份安装步骤，然后照着做。这样一份「自己去取步骤、再自己做完」的字，有人叫它「安装脚本」。脚本听着像演戏的本子，其实就是一份写好的步骤清单。你贴的不是一句空话，是一份会自己跑完的安装步骤。\n\n:::detail[我要先装一个叫 Node.js 的东西吗？]\n不用。有人会听说得先装一个垫脚用的软件，名字叫 Node.js。还有人会听说得先装别的一堆东西。装这个会动手的 AI，官方没要求你先做这些。你现在只需要搞懂这行字是什么意思。\n:::\n\n## 那我是不是得看懂每一个字母才行？\n\n不用。\n\n命令必须一个字都不差，不等于你必须把每一个字母翻译成人话。你发微信时，一条链接也必须一个字都不差，但你不会把链接拆开研究。你复制，贴上，发出去。官方写好的那一行命令，也是这样。你的事是原样交给电脑，不是把它背下来，也不是先当翻译。\n\n它也不等于「你在干一件很可怕的事」。终端看起来像电影，只因为电影爱拍这种窗口。你在自己的电脑上，让它去官方取一份安装步骤，这件事本身不可怕。真正要留神的，是随便把来路不明的字贴进去——那跟你随便点来路不明的下载链接，是同一类事。官方写好的那一行，不是来路不明的字。\n\n它更不等于「你已经会写代码了」。贴一行别人写好的话，跟自己会写，差得很远。你会把一句命令交给电脑，只说明会动手的 AI 在你电脑上有了一个入口。别的先不用往自己身上加。\n\n它也不等于你要在窗口里自己编出那一行。Mac 和 Linux 用同一类那一行，Windows 用另一行，官方都写好了。你认自己正在用的系统，用对应的那一句，原样贴进去。别改，别凭感觉加空格，也别少复制半截。\n\n:::detail[为什么 Mac 和 Windows 不是同一行字？]\n因为窗口里负责听你打字的程序不是同一个。Mac 和 Linux 上，官方用的是一行交给 bash 的字；这行字会用到一个专门去网上把东西取回来的小工具，叫 curl。Windows 上，官方用的是一行说给 PowerShell 听的字。听话的程序不同，话就要换成对方听得懂的那种。你不需要把每种系统的那一行都记住，认准自己那一台就行。\n:::\n\n## 自检\n\n有人说终端是「黑客窗口」。你怎么用自己的话纠正他？\n\n命令和你跟 AI 说的那句话，像的地方是什么？不能随便改的地方又是什么？\n\n你贴进去的那一行字，它自己会去干什么？你需不需要先把每一个字母都读懂，再手工一步步做？\n\n## 一句话\n\n**命令就是一句说给电脑听的话，所以每一个字都必须对。**\n",
+            "contentRevision": 1,
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://antigravity.google/docs/cli/install/",
+                "sourceTitle": "Antigravity CLI · 安装",
+                "sourceAuthority": "official-docs",
+                "note": "官方安装方式是一行命令，文档未要求任何前置运行时。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "typing-window-not-hacker-channel",
+                "kind": "basic",
+                "front": "电脑上那个几乎没按钮的窗口，是黑客通道吗？",
+                "back": "不是。它就是个打字窗口，本来就在你电脑里。你敲一句话、按下回车，电脑照办，再把结果打回来。它看着冷，只因为把图标和按钮收走了，让你自己把话说出来。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/install/",
+                    "sourceTitle": "Antigravity CLI · 安装",
+                    "sourceAuthority": "official-docs",
+                    "note": "官方安装方式是一行命令，文档未要求任何前置运行时。"
+                  }
+                ]
+              },
+              {
+                "id": "computer-command-will-not-guess",
+                "kind": "basic",
+                "front": "贴进打字窗口的那行字，能随便改几个字吗？",
+                "back": "不能。那一行是命令：一句说给电脑听、让它照办的话。跟 AI 聊天，你说得随便一点，它往往还能猜。电脑不会猜。多一个空格、少一个字母、把大写写成小写，它就当没听懂。所以必须一个字都不差。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/install/",
+                    "sourceTitle": "Antigravity CLI · 安装",
+                    "sourceAuthority": "official-docs",
+                    "note": "官方安装方式是一行命令，文档未要求任何前置运行时。"
+                  }
+                ]
+              },
+              {
+                "id": "pasted-line-runs-install-steps",
+                "kind": "basic",
+                "front": "贴进窗口的官方那一行，要先读懂每个字母吗？",
+                "back": "不用。命令必须一个字不差，不等于你得先当翻译。电脑会去官方取一份写好的安装步骤，自己跑完。你原样贴进去就行。窗口里刷过很多英文，常常只是步骤在往前走，字多不等于出事。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/install/",
+                    "sourceTitle": "Antigravity CLI · 安装",
+                    "sourceAuthority": "official-docs",
+                    "note": "官方安装方式是一行命令，文档未要求任何前置运行时。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "copy-install-line-from-official-site",
+                "kind": "short-answer",
+                "title": "这行字该从哪抄",
+                "prompt": "你要装那个会动手的 AI。同事在群里发来一张截图，一行英文、斜杠、横杠挤成一团，旁边写着「官方给的，贴进那个打字窗口就行」。你该把截图里的字直接贴进去，还是去这个 AI 自己的官网抄？请只回答：直接贴 或 去官网抄",
+                "expectedAnswer": "去官网抄",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/install/",
+                    "sourceTitle": "Antigravity CLI · 安装",
+                    "sourceAuthority": "official-docs",
+                    "note": "官方安装方式是一行命令，文档未要求任何前置运行时。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "first-sentence-to-an-agent",
+            "title": "同样是打字，怎么这次出来的不是答案？",
+            "content": "# 同样是打字，怎么这次出来的不是答案？\n\n## 我等的是一段话，屏幕怎么自己滚起来了？\n\n你刚把工具装好。你对着它打了第一句话。\n\n你等着一段文字回来。你以前用的那些 AI，都是这样：你问一句，它答一段。\n\n这次没有。屏幕自己往下滚。一行说它正在看哪个文件。又一行，它在让你的电脑立刻做某件具体的事。字在往外冒，可那不像在跟你聊天。\n\n你习惯的是「问一句，答一段」。这个是「你说一句，它去办」。\n\n同样是打字。你等的是答案。出来的是动作。\n\n## 先猜一下\n\n那些一行行滚过屏幕的字，你觉得它们到底是什么？\n\n先写下你的判断，再往下看答案。\n\n## 答案\n\n那不是写给你看的一段回复。那是它正在你的电脑上做事，做一步，屏幕上就多一行。\n\n## 为什么打字进去，出来的是动作？\n\n你以前用的那些 AI，来回搬的都是字。你打进去，它吐出来。它可以告诉你「可以这么做」。真正伸手的人，还是你。\n\n你刚装上的这个工具不是这样。它能在你这台电脑上动手：文件它能看、能改，让电脑立刻做事它也能做，有的活还能丢到后面自己跑。它的名字叫 Antigravity CLI。\n\n所以你打进去的那句话，对它来说不是「请回我一段话」，是「请去办」。它一旦动手，你看见的就不是答案，是动作本身。它看了哪个文件、让电脑做了哪件事，都会一行行写在屏幕上。\n\n不是它懒得理你。是这个工具本来就会把「说」换成「做」。\n\n:::detail[那些滚出来的字，是它编来哄我的吗？]\n不是。你看见它在看某个文件，就是它真的在你电脑上读了；你看见它在让电脑做事，就是那件事真的在发生。那是正在发生的事，不是它编的一段解说。\n:::\n\n:::detail[以前那个会写步骤的 AI，不也是在帮我吗？]\n是在帮你。可步骤还是字，手还是你的：它写，你去点、你去敲。这一次中间少了你这道手。你说完，它直接在你电脑上做。所以你看到的不是说明书，是它正在做的动作。\n:::\n\n:::detail[丢到后面自己跑，是什么意思？]\n有的事不用你盯着屏幕等它做完。它把这件活放下，自己在后面继续做。你现在只要知道：那也是在做事，不是在回你一段话。\n:::\n\n## 自检\n\n你刚才打进去的那句话，你心里是在问「这是什么」，还是在交代「去干一件事」？\n\n屏幕再自己往下滚的时候，你根据什么判断：那是一段回答，还是它正在做事？\n\n## 一句话\n\n**你打的是交代，滚出来的是它正在办的事。**\n",
+            "contentRevision": 1,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://antigravity.google/docs/cli/features",
+                "sourceTitle": "Antigravity CLI · 功能",
+                "sourceAuthority": "official-docs",
+                "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "scrolling-is-work-not-reply",
+                "kind": "basic",
+                "front": "打字窗口里一行行滚出来的字，是一段回复吗？",
+                "back": "不是。那不是写给你看的一段回复。那是它正在你的电脑上做事：做一步，屏幕上就多一行。它打开了哪份文件、让电脑做了哪件事，都会这样写出来。字在往外冒，不等于它在跟你聊天。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+                  }
+                ]
+              },
+              {
+                "id": "sentence-is-please-go-do-it",
+                "kind": "basic",
+                "front": "对会干活的那个交代一件事，它当成请回话还是请去办？",
+                "back": "当成「请去办」。网页上那种 AI 来回搬的都是字，真正改文件、让电脑跑那一步的还是你。会干活的那个能打开相关文件、按你的意思改，也能让电脑立刻做事。你说的是要办的事，它就把说换成做。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+                  }
+                ]
+              },
+              {
+                "id": "doing-is-not-ignoring-you",
+                "kind": "basic",
+                "front": "没回话却去干活，是懒得理你，还是从此不会回话？",
+                "back": "都不是。不是它懒得理你，也不是它从此只会干活、不会回话。你说的是一件要办的事，它就把「说」换成「做」。你要是在问「这是什么」，它仍然可以回话。滚出来的是动作，因为你打进去的是交代。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "errand-scrolling-is-doing",
+                "kind": "short-answer",
+                "title": "滚出来的是什么",
+                "prompt": "你刚装好待在打字窗口里干活的那个工具。你打了一句：「把桌面上那份名单里重复的行去掉。」屏幕自己往下滚：一行说它正在打开那份名单，又一行说它正在改文件。这是写给你看的一段回复，还是它正在办事？请只回答：一段回复 或 正在办事",
+                "expectedAnswer": "正在办事",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "two-tools-same-sentence",
+            "title": "换一家公司的工具，我跟它说的话也得换吗？",
+            "content": "# 换一家公司的工具，我跟它说的话也得换吗？\n\n## 第二个看起来完全是另一回事？\n\n你已经会用第一个了。\n\n一行命令装上。待在那个黑窗口里。能读你电脑上的文件，能改这些文件，也能替你执行命令。\n\n现在你要装第二个。另一家公司做的，叫 Codex CLI。还是那种待在黑窗口里用的，不是网页上点按钮的那种。可你一看：安装那一行跟你用过的不一样。窗口长得也不一样，里面的字也不一样。\n\n你的第一反应很正常——这是另一个软件，我是不是得从头学。\n\n## 先猜一下\n\n公司换了，安装那一行换了，窗口也换了。你觉得，你开口跟它说话的方式，会怎么变？\n\n先写下你的判断，再往下看答案。\n\n## 答案\n\n不用整套换掉。公司、安装那一行、窗口都可以换，你要说的那句话不用换。\n\n## 我已经会用的那一个，到底在干什么？\n\n先说你手头这个。\n\n它叫 Antigravity CLI。装的时候就是一行命令。装完以后，它跑在你已经用过的那个黑窗口里。这个窗口叫终端。它能读写文件，也能执行命令。\n\n你跟它打交道，不是在背某一个软件的按钮位置。你是在说你想干什么：改哪个文件、跑哪一步。它在你这台电脑上动手。\n\n:::detail[「能读写文件、执行命令」到底指什么？]\n读文件：它能打开你电脑上已经有的东西来看。写文件：它能按你的意思改这些东西，或者新建。执行命令：它能在那个黑窗口里替你跑一步操作，而不是只在对话里给一句建议。你用过的那一个，就是这种。\n:::\n\n## 另一家那个，我是不是得当成新东西来学？\n\n再说第二个。\n\nCodex CLI 装的时候，也是一行命令。苹果电脑上，那一行会写成：先把要装的东西拉下来，再立刻执行。干这两步的命令，一个叫 curl，一个叫 sh。还有些电脑用的系统叫 Linux，那一行的写法和苹果电脑是同一类。Windows 上没有这套写法，换成一行，敲在 Windows 自带的那种命令窗口里。那个窗口叫 PowerShell。\n\n你不必现在把这些词都啃透。对你来说，动作没变：复制一行，贴进去，回车。\n\n:::detail[curl、sh、PowerShell，我需要现在就搞懂吗？]\n不需要。你只要认出：这是「一行安装命令」在不同电脑上的写法。苹果电脑和 Linux 共用一种窗口语言，所以写成 curl 交给 sh；Windows 是另一种，所以写成一行 PowerShell。换电脑，换那一行。不换你跟装好之后那个程序说话的方式。\n:::\n\n装上以后，它同样跑在终端里。它待在你眼前这台电脑上，听你说话，自己去碰文件、跑命令。这种能替你在这台机器上动手的程序，叫 agent。Codex CLI 就是跑在终端里、操作你这台机器的 agent。\n\n对着看。\n\n公司，不一样。\n\n安装那一行怎么写，不一样。苹果电脑和 Linux 是 curl 交给 sh，Windows 是一行 PowerShell。跟你装第一个时看到的那行，本来就不必长得一样。\n\n窗口里的字、窗口的长相，不一样。\n\n再看没变的。\n\n都是一行命令装上。\n\n都跑在终端里。\n\n都能读写你这台机器上的文件，都能执行命令。\n\n你要说的话，一模一样。\n\n你学的不是某一个软件的用法。你学的是跟这类软件打交道的方式。以后换成第三个、第四个，只要还是这一类，你不用重新学怎么开口。你要重新看一眼的，只是那一行怎么装、窗口长什么样。\n\n什么时候用哪个？从你这边看，没有「换一家就得换一套说法」这件事。你今天用哪一个，取决于你手里在装哪一个，不取决于你要不要另学一门说话方式。在你要掌握的这件事上，它们是同一种东西。\n\n:::detail[以后再换第三个，哪些不用重学？]\n不用重学的是你怎么开口，以及它能在你电脑上干什么这类事。还是得看一眼的是：那一行安装命令怎么写，窗口里的字长什么样。名字可以换，公司可以换，窗口皮肤可以换。只要还是一行命令装上、跑在终端里、能读写文件并执行命令，这一类就没换。\n:::\n\n## 自检\n\n公司不同、安装那一行不同、窗口长得不同。这三样换掉以后，你跟它说话的方式要不要跟着换？\n\n如果有人问你「你到底学的是哪个软件」，你现在会怎么回答？\n\n再出现第三个，也是一行命令装上、跑在终端里、能读写你这台机器上的文件并执行命令。你还要不要把它当成一门全新的手艺，从头学一遍？\n\n## 一句话\n\n**你学的不是某一个软件的用法，是跟这类软件打交道的方式。**\n",
+            "contentRevision": 1,
+            "sections": [],
+            "variant": "对比",
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://developers.openai.com/codex/cli/features",
+                "sourceTitle": "Codex CLI · 功能",
+                "sourceAuthority": "official-docs",
+                "note": "Codex CLI 是跑在终端里、操作本机的 agent。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://antigravity.google/docs/cli/features",
+                "sourceTitle": "Antigravity CLI · 功能",
+                "sourceAuthority": "official-docs",
+                "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "same-speech-after-company-change",
+                "kind": "basic",
+                "front": "公司、安装那一行、窗口都换了，跟它说话的方式要换吗？",
+                "back": "不用换。换公司、换安装那一行、换窗口长相，都不换你开口的方式。你还是用平常说话告诉它想干什么。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developers.openai.com/codex/cli/features",
+                    "sourceTitle": "Codex CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "Codex CLI 是跑在终端里、操作本机的 agent。"
+                  }
+                ]
+              },
+              {
+                "id": "different-look-still-same-kind",
+                "kind": "basic",
+                "front": "公司不同、窗口不同，还是同一种东西吗？",
+                "back": "在你要掌握的这件事上，是同一种。都是一行命令装上，都待在黑窗口里，都能读写你这台机器上的文件、替你执行命令。看起来像另一个软件，不等于你要掌握的事情换了。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developers.openai.com/codex/cli/features",
+                    "sourceTitle": "Codex CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "Codex CLI 是跑在终端里、操作本机的 agent。"
+                  }
+                ]
+              },
+              {
+                "id": "third-tool-not-a-new-craft",
+                "kind": "basic",
+                "front": "第三个也是一行命令装上、能改文件，要当成全新手艺吗？",
+                "back": "不用。只要还是一行命令装上、待在黑窗口里、能读写你这台机器上的文件并执行命令，就不是一门全新的手艺。要重新看一眼的，只是那一行怎么装、窗口长什么样。开口的方式不用从头学。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developers.openai.com/codex/cli/features",
+                    "sourceTitle": "Codex CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "Codex CLI 是跑在终端里、操作本机的 agent。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "keep-speech-for-the-other-company",
+                "kind": "short-answer",
+                "title": "换一家怎么开口",
+                "prompt": "你用第一个把桌面上那份名单改好了。同事让你改用另一家公司做的：也是一行命令装上，也待在黑窗口里，也能改文件、跑命令。可安装那一行不一样，窗口里的字也不一样。接下来改另一份名单，跟它说话的方式要不要换？请只回答：要换 或 不用换",
+                "expectedAnswer": "不用换",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://developers.openai.com/codex/cli/features",
+                    "sourceTitle": "Codex CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "Codex CLI 是跑在终端里、操作本机的 agent。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "it-asks-before-it-touches",
+            "title": "它明明能自己动手，为什么执行前还要问你？",
+            "content": "# 它明明能自己动手，为什么执行前还要问你？\n\n## 它怎么突然停住了？\n\n你让它去办事。它想好了，那一行要电脑执行的字也准备好了——这一行可以叫做指令。然后它没立刻执行。它停住，把那一行摊在你眼前，等你点头。\n\n这很怪。一个能自己动手的东西，真要动手时，却先问你一声。你也许会觉得：它是不是自己也没把握？\n\n可你看那一行，它要做什么已经写在上面了。它不像是还没想好。\n\n:::detail[停下来的时候，我看见的到底是什么？]\n你看见的是它准备让电脑执行的那一行指令，以及一次确认。提示长什么样，会跟着你的设置变。变的是问的样子；没变的是这件事——需要确认的指令，执行前可以先让你看见。\n:::\n\n## 先猜一下\n\n它已经能自己动手了，还在执行前停下来问你。你觉得这个停顿是在干什么？\n\n先写下你的判断，再往下看答案。\n\n## 答案\n\n这个停顿是给你的，不是给它的。它已经知道要执行什么，停下来是把那一行交给你看，等你点头。\n\n## 它为什么不直接做完？\n\n因为它动手，动的是你这边的事。\n\n指令按下去，电脑就会去做。它能准备那一行，也能执行那一行。可「能做」和「现在就做」不是同一件事。所以它在真要执行之前，先把计划摊开。你要看的不是它想得清不清楚，而是那一行：它到底要执行什么。看完，你再决定让不让它做。\n\n这个「问不问」，你可以调。\n\n有一档是每次都先给你审，叫做 `request-review`。有一档是不用问、直接做，叫做 `always-proceed`。还有更严的一档，叫做 `strict`。三档用 `/permissions` 切换。\n\n你不必现在挑一档。先记住：只要它停下来了，那一眼里看的人是你。调的是它问不问、以及有多严。\n\n有时你还会碰到另一层限制。这层限制叫做沙盒。沙盒会给出一个选项：不带沙盒限制运行。它用来临时放行一条你信得过的命令。\n\n:::detail[那三档分别是什么？怎么换？]\n`request-review`：每次都先给你审。`always-proceed`：不用问，直接做。`strict`：更严的一档。更严具体严在哪一步，别靠想象去补。你只要知道这三档能换，换的入口是 `/permissions`。\n:::\n\n:::detail[「不带沙盒限制运行」是什么意思？]\n沙盒是一层限制。这个选项的意思是：这一次不带着那层限制去跑。它用来临时放行一条你信得过的命令。\n:::\n\n## 自检\n\n它停下来的时候，摊开给你看的是什么？\n\n这个停顿是给它自己的，还是给你的？\n\n「问不问」能不能调？你用什么切换那三档？\n\n「不带沙盒限制运行」是拿来做什么的？\n\n## 一句话\n\n**那个停顿是给你的：你看清它要执行什么，再决定让不让它动手。**\n",
+            "contentRevision": 1,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://antigravity.google/docs/cli/features",
+                "sourceTitle": "Antigravity CLI · 权限",
+                "sourceAuthority": "official-docs",
+                "note": "执行需确认的终端命令前会提示确认；三种自主程度经 /permissions 切换。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "pause-is-for-you",
+                "kind": "basic",
+                "front": "它执行前停下来，是在等谁决定？",
+                "back": "是在等你决定。它已经知道要执行什么，停下来是把准备好的指令给你看，等你点头；这不是因为它还没想好。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 权限",
+                    "sourceAuthority": "official-docs",
+                    "note": "执行需确认的终端命令前会提示确认；三种自主程度经 /permissions 切换。"
+                  }
+                ]
+              },
+              {
+                "id": "can-do-vs-proceed",
+                "kind": "basic",
+                "front": "为什么“能做”和“现在就做”不同？",
+                "back": "“能做”表示它有能力准备并执行指令；“现在就做”还需要你的许可。因为指令会让电脑处理你这边的事，执行前要先由你决定。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 权限",
+                    "sourceAuthority": "official-docs",
+                    "note": "执行需确认的终端命令前会提示确认；三种自主程度经 /permissions 切换。"
+                  }
+                ]
+              },
+              {
+                "id": "permission-modes",
+                "kind": "basic",
+                "front": "三档设置怎样处理执行前确认？",
+                "back": "`request-review` 每次先让你审；`always-proceed` 不询问就执行；`strict` 更严。用 `/permissions` 切换这三档。具体设置改变的是它问不问、以及限制有多严。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 权限",
+                    "sourceAuthority": "official-docs",
+                    "note": "执行需确认的终端命令前会提示确认；三种自主程度经 /permissions 切换。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "decide-who-the-pause-is-for",
+                "kind": "short-answer",
+                "title": "判断停顿的对象",
+                "prompt": "小林让它整理电脑里的文件。它已经写好要执行的指令，却在执行前把指令展示给小林，等小林点头。这个停顿主要是给谁的？请只回答：它自己 或 你",
+                "expectedAnswer": "你",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 权限",
+                    "sourceAuthority": "official-docs",
+                    "note": "执行需确认的终端命令前会提示确认；三种自主程度经 /permissions 切换。"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "say-once-it-does-the-rest",
+            "title": "它替你动手，你还干什么？",
+            "content": "# 它替你动手，你还干什么？\n\n## 它自己动手了，那我是旁观者吗？\n\n你对它说过话。不是拿它当搜索框，是吩咐它去办事。\n\n说完，你没有自己一步一步点。它先在那边把事情想一遍，接着在你这台电脑上动手。\n\n动手是真的。你装的 Antigravity CLI 和 Codex CLI，都能在这台机器上翻文件、改文件，也能让电脑按一条指令去干活——这种指令叫命令。文件被改了，就是被改了。命令跑了，就是跑了。\n\n你也见过那个停顿。Antigravity CLI 在执行需要你确认的命令前，会先停下来问你一声。那一下不是它不会了。是它要动你的电脑，先过你这关。\n\n到这儿，顺序已经在你眼前了：你说一句，它去想，它动手。你看起来像在旁边看。是不是真的只是看，你先别急着下结论。\n\n## 先猜一下\n\n动手的人换成它之后，你觉得自己还不能放手的那一步是什么？\n\n先写下你的判断，再往下看答案。\n\n## 答案\n\n你还得看它做完的东西对不对，对了才收。过程可以不是你做的，最后这一眼必须是你的。\n\n## 你交出去的是什么，换回来的又是什么？\n\n这是一笔交易。你拿一样，换另一样。\n\n做成一件事，本来有一条路：每一步都你自己会，自己上手。你不会其中一步，整件事就停。现在你走另一条：步骤交给它。你交出去的，就是「每一步都由你动手」的那份控制。\n\n换回来的很硬。你不用会每一步，也能把事情做成。你负责说人话。它去想，它动手。\n\n可你得付代价。动手的不是你，过程里的每一手你就不在场。你不能靠「这是我亲手做的」来知道它对。你能抓住的，是做完摊在你面前的那个结果。\n\n所以你多出来一份活：看。看这个结果能不能用，对不对，收不收。这个「看完再决定收不收」，叫验收。\n\n整件事就这一套：你说一句，它去想，它动手，你验收。能听你说话、又能在电脑上干活的这类软件，都是这个形状。你点收，就是认这笔结果。你不看就点，等于把判断也交出去了。那不是原来那笔换。那是另外一笔，而且亏。\n\n:::detail[不会每一步，和完全不管，是一回事吗？]\n\n不是。你交出去的是步骤，不是整件事。你不必会那些命令，也不必自己去改文件。你得知道做成了是什么样子，并且真的去看。不管的人没有验收。你会验收，这件事还是你的。\n\n:::\n\n:::detail[那个停顿，是不是就已经算我看过了？]\n\n那一拍只问「这条命令能不能执行」。Antigravity CLI 在需要你确认的命令前停下来，是来问你允不允许它动手。你点了，只是同意它做。做完的东西对不对，那个停顿不会替你看。同意动手，和收下结果，不是同一件事。\n\n:::\n\n## 什么时候这笔换不划算？\n\n反过来也很清楚。\n\n你连它做完的结果对不对都判断不了的时候，这笔换就不划算。你没有验收的底，点头就是瞎点。步骤你不会，本来没关系。「对」你也不认得，那就有关系了。\n\n你会认「对」，才有资格把步骤交给它。你自己都写不清这件事做成了长什么样，就先别交。不是你不够聪明。是你这边的那一拍还没着落，交出去你收不回来。\n\n所以该拿回来的时候，你拿回来的不是「每一步都自己做」的安全感。是这件事成没成得由你说了算。你说了不算，就先别换。等你能认出对错了，再把步骤交出去。\n\n:::detail[那我是不是只能交给它做我会的事？]\n\n不是。你不会的是步骤，不是结果。你可能不会写命令，但你知道做成了该多出一个文件，里面该是你刚才说的那段话。这就够你验收。真正不能交的，是你做完了也看不出好坏的事——不是「我没做过」，是「我看了也不知道对不对」。\n\n:::\n\n## 自检\n\n动手换成它之后，你必须自己留下的那一步是什么？\n\n你交出去的是什么？换回来的是什么？你付出的代价是什么？\n\n什么样的事，你现在不该交给它？你根据什么这么判断？\n\n## 一句话\n\n**你说一句，它去想，它动手，你验收，你拿「每一步自己做」换「不会每一步也能做成」，看不懂结果对不对就先别换。**\n",
+            "contentRevision": 1,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "sourceUrl": "https://antigravity.google/docs/cli/features",
+                "sourceTitle": "Antigravity CLI · 功能",
+                "sourceAuthority": "official-docs",
+                "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+              },
+              {
+                "kind": "fact",
+                "sourceUrl": "https://antigravity.google/docs/cli/features",
+                "sourceTitle": "Antigravity CLI · 权限",
+                "sourceAuthority": "official-docs",
+                "note": "执行需确认的终端命令前会提示确认；三种自主程度经 /permissions 切换。"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "keep-final-acceptance",
+                "kind": "basic",
+                "front": "AI 替你动手后，你还必须保留哪一步？",
+                "back": "你必须检查 AI 做出的结果是否正确、可用，再决定是否收下。步骤可以交给 AI，但验收不能交出去；验收就是看完结果后决定收不收。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+                  }
+                ]
+              },
+              {
+                "id": "trade-steps-for-completion",
+                "kind": "basic",
+                "front": "把步骤交给 AI，你换回了什么？",
+                "back": "你交出的是每一步亲手操作的控制，换来的是即使不会每个命令，也能把事情做成。你负责说清目标，AI 负责想办法并动手。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+                  }
+                ]
+              },
+              {
+                "id": "delegate-only-judgeable-results",
+                "kind": "basic",
+                "front": "什么时候不该把步骤交给 AI？",
+                "back": "当你连完成后的正确样子都说不清、看不出对错时，不该交给 AI。你可以不会步骤，但必须认得合格结果；否则没有验收的底，点头就是瞎点。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "separate-permission-from-acceptance",
+                "kind": "short-answer",
+                "title": "先问能不能做，做完还要看",
+                "prompt": "小林让命令工具把一段文字保存成文件。工具执行前停下来问能不能运行命令，小林点了允许；命令完成后，她还没打开文件检查内容。她现在需要的是同意执行，还是验收结果？请只回答：同意执行 或 验收结果",
+                "expectedAnswer": "验收结果",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "sourceUrl": "https://antigravity.google/docs/cli/features",
+                    "sourceTitle": "Antigravity CLI · 功能",
+                    "sourceAuthority": "official-docs",
+                    "note": "CLI 在本机可读写文件、执行终端命令、跑后台任务、检索代码、控制浏览器。"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
