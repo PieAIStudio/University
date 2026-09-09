@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-09T11:35:31.567Z
+generated_at: 2026-09-09T17:29:49.739Z
 generator_version: doc-gov@0.9.11
-docs_count: 118
+docs_count: 119
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -381,6 +381,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-30
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-AN-ADD-ONLY-PROPOSAL-PLUS-AN-UNCONDITIONAL-WRITE-RESETS-EVERYTHING-THE-PROPOSAL
+    path: docs/reference/learnings/workflow-issues/an-add-only-proposal-plus-an-unconditional-write-resets-everything-the-proposal-.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-09
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-AN-EXISTING-INSTANCED-CLOUD-PUFF-CAN-CARRY-THE-AVATAR-WITHOUT-A-NEW-RENDER-BATCH
     path: docs/reference/learnings/workflow-issues/an-existing-instanced-cloud-puff-can-carry-the-avatar-without-a-new-render-batch.md
