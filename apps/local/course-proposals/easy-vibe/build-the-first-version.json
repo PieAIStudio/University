@@ -76,6 +76,15 @@
             "说明参考内容与自造内容的边界",
             "写出一项第一轮不做的功能",
             "给出一个浏览器中的比较动作"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页说明 Claude 可以接收并分析图像，图片可以作为请求内容和文字一起提供。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/vision",
+              "sourceTitle": "Claude Platform Docs · Vision",
+              "sourceAuthority": "official-docs"
+            }
           ]
         }
       ]
@@ -153,6 +162,15 @@
             "指出主要动作的位置或可见性",
             "检查文字可读性与区域间距",
             "单独列出一个交互问题而不混入视觉结论"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页把 scale、visual hierarchy、balance、contrast 和 Gestalt 列为视觉设计原则，并说明视觉层次会引导眼睛的观看顺序。",
+              "sourceUrl": "https://www.nngroup.com/articles/principles-visual-design/",
+              "sourceTitle": "Nielsen Norman Group · 5 Principles of Visual Design in UX",
+              "sourceAuthority": "official-docs"
+            }
           ]
         }
       ]
@@ -231,6 +249,15 @@
             "三页都有可识别地址",
             "写出页面之间的进入方式",
             "四项检查都覆盖到"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明 History API 可以操作浏览器会话历史，并支持单页应用在不加载整页的情况下更新页面。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/History_API",
+              "sourceTitle": "MDN · History API",
+              "sourceAuthority": "mdn"
+            }
           ]
         }
       ]
@@ -307,6 +334,15 @@
             "A 写出可比较的视觉目标并限制范围",
             "B 写出动作、预期和实际",
             "B 写出复现步骤或准确错误线索"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页建议让用户完成代表性任务并观察其成功与困难，同时避免在测试过程中引导用户。",
+              "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+              "sourceTitle": "Nielsen Norman Group · Usability (User) Testing 101",
+              "sourceAuthority": "official-docs"
+            }
           ]
         }
       ]
@@ -399,10 +435,18 @@
             "限定暂存文件并说明会查看差异",
             "给出能识别当前版本的提交说明",
             "说明恢复前先确认未提交改动"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Git 书籍说明版本控制会记录文件随时间发生的变化，因而可以回看或恢复较早的状态。",
+              "sourceUrl": "https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control",
+              "sourceTitle": "Git · About Version Control",
+              "sourceAuthority": "official-docs"
+            }
           ]
         }
       ]
     }
   ]
 }
-

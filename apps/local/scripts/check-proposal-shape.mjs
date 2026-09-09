@@ -452,9 +452,22 @@ function paragraphAt(text, index) {
   return { text: text.slice(start, end), relativeIndex: index - start };
 }
 
+/**
+ * Emphasis markers are stripped off both boundaries before looking for the
+ * explanation, because `definedTerms` finds the term inside `**…**` and then
+ * `text.indexOf` lands the cursor on the closing `**` rather than on the
+ * colon. Without this, `**术语**：解释` — the exact shape `markedDefinition`
+ * above is written to detect — could never satisfy this function: the check
+ * hunted for a pattern it was then unable to accept, so a correctly written
+ * definition was flagged and the only ways out were unbolding the term or
+ * `--skip-check`. The unbolded form was accepted all along, which is what
+ * makes this a formatting bug and not a rule.
+ */
 function hasInlineExplanation(paragraph, relativeIndex, term) {
-  const after = paragraph.slice(relativeIndex + term.length);
-  const before = paragraph.slice(Math.max(0, relativeIndex - 32), relativeIndex);
+  const after = paragraph.slice(relativeIndex + term.length).replace(/^[*_`]+/, "");
+  const before = paragraph
+    .slice(Math.max(0, relativeIndex - 32), relativeIndex)
+    .replace(/[*_`]+$/, "");
   return (
     /^\s*(?:[：:]|——|—|–|[-－]|[（(][^）)\n]{0,80}[）)])/.test(after) ||
     /^\s*(?:是|就是|指|指的是|用来|负责|表示|意味着|叫作|也就是|可以理解为)/.test(after) ||

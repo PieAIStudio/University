@@ -89,6 +89,15 @@
             "能把启动或运行命令分给终端",
             "能把观察页面结果分给浏览器",
             "能说明 IDE 是集中这些工作的工作台"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "这一页把 VS Code 的工作台列为文件、搜索、源代码管理、运行与调试等视图，并说明集成终端可以在工作区里运行命令。",
+              "sourceUrl": "https://code.visualstudio.com/docs/editing/getting-started/overview",
+              "sourceTitle": "VS Code · Core editor features",
+              "sourceAuthority": "official-docs"
+            }
           ]
         }
       ]
@@ -181,6 +190,15 @@
             "能把小片段续写和补全联系起来",
             "能把解释现象和对话联系起来",
             "能把多步骤多文件工作和代理联系起来"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "这一页把 inline suggestions、chat 和 autonomous agents 列为不同的 AI 能力面，并描述代理可以规划、编辑文件、运行命令和迭代。",
+              "sourceUrl": "https://code.visualstudio.com/docs/agents/reference/ai-features-cheat-sheet",
+              "sourceTitle": "VS Code · AI features in VS Code cheat sheet",
+              "sourceAuthority": "official-docs"
+            }
           ]
         }
       ]
@@ -264,6 +282,15 @@
             "能指出端口是 5174",
             "能指出路径是 /history",
             "能说明以开发服务器实际打印的地址为准"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明 URI 的 host 表示服务器地址、port 表示服务器监听请求的端口，并用 localhost 与端口号组成的地址作例子。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Authority",
+              "sourceTitle": "MDN · URI authority",
+              "sourceAuthority": "mdn"
+            }
           ]
         }
       ]
@@ -333,6 +360,15 @@
             "只安排一个主要动作",
             "写出动作后能观察到的结果",
             "写出一项本轮不做的边界"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页建议把要求写得清楚、直接、具体；当顺序或完整性重要时，可以用编号步骤表达。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+              "sourceTitle": "Claude Platform Docs · Prompting best practices",
+              "sourceAuthority": "official-docs"
+            }
           ]
         }
       ]
@@ -402,6 +438,15 @@
             "每轮只有一个主要变化",
             "每轮都有浏览器验证动作",
             "至少有一轮写出清楚的范围边界"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页建议把有顺序的要求拆成清楚的步骤，以帮助模型按顺序完成并保持完整。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+              "sourceTitle": "Claude Platform Docs · Prompting best practices",
+              "sourceAuthority": "official-docs"
+            }
           ]
         }
       ]
@@ -478,6 +523,15 @@
             "能为纯行为或报错问题选择准确文字和步骤",
             "能为混合问题组合截图与文字",
             "能说明材料要服务于现象而不是越多越好"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页说明 Claude 可以接收并分析图像，图片可以作为请求内容和文字一起提供。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/vision",
+              "sourceTitle": "Claude Platform Docs · Vision",
+              "sourceAuthority": "official-docs"
+            }
           ]
         }
       ]
@@ -568,6 +622,15 @@
             "分开写预期和实际",
             "提供一项准确线索而不是只写报错",
             "限定 AI 本轮检查或修改的范围"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Chrome 文档说明 DevTools 内置于浏览器，可用来检查页面资源、查看网络活动和诊断页面问题。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/",
+              "sourceTitle": "Chrome for Developers · Chrome DevTools",
+              "sourceAuthority": "official-docs"
+            }
           ]
         }
       ]
@@ -670,6 +733,15 @@
             "能把记录或响应问题分给 Network 并说明找请求证据",
             "能把布局问题分给 Elements 并说明看结构或样式",
             "每项都写出具体要寻找的线索"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Chrome 的 Network 文档说明 Network 会记录网络活动，并能查看请求、响应和请求细节。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/network/overview",
+              "sourceTitle": "Chrome for Developers · Network panel: Analyze network load and resources",
+              "sourceAuthority": "official-docs"
+            }
           ]
         }
       ]
@@ -862,10 +934,18 @@
             "能把 API 说成软件交互的规则或接口",
             "能区分 request 是发出、response 是返回",
             "能把 Network 和请求响应检查联系起来"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 将 API 说明为软件之间交互时遵循的一组功能和规则，也可以把它看成一份接口契约。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Glossary/API",
+              "sourceTitle": "MDN · API glossary",
+              "sourceAuthority": "mdn"
+            }
           ]
         }
       ]
     }
   ]
 }
-
