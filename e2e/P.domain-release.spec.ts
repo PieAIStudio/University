@@ -74,6 +74,34 @@ test.describe("P 正式领域目录与未发布星球", () => {
             )
           );
         });
+        if (width === 375) {
+          const enter = await page.locator(".planet-page__enter").boundingBox();
+          const feedback = await page
+            .getByRole("button", { name: "提意见", exact: true })
+            .boundingBox();
+          expect(enter).not.toBeNull();
+          expect(feedback).not.toBeNull();
+          const overlapX = Math.max(
+            0,
+            Math.min(enter!.x + enter!.width, feedback!.x + feedback!.width) -
+              Math.max(enter!.x, feedback!.x),
+          );
+          const overlapY = Math.max(
+            0,
+            Math.min(enter!.y + enter!.height, feedback!.y + feedback!.height) -
+              Math.max(enter!.y, feedback!.y),
+          );
+          expect(overlapX * overlapY, "feedback must not cover the domain entry action").toBe(0);
+          await expect(page.locator(".planet-domain-label")).toHaveCount(4);
+          const clipped = await page
+            .locator(".planet-domain-label")
+            .evaluateAll((labels) =>
+              labels
+                .filter((label) => label.scrollWidth > label.clientWidth + 1)
+                .map((label) => label.textContent),
+            );
+          expect(clipped, "the four ordinary domain names must fit their globe labels").toEqual([]);
+        }
         const initial = await page.evaluate(() => {
           const bag = window as any;
           return ["programming", "ai-foundations", "ai-games", "ai-media"].map((id) => {

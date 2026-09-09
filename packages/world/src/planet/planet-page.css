@@ -503,9 +503,9 @@
   }
 
   .planet-page__enter {
-    /* Leave a lane for the fixed 提意见 chip at the bottom-left. */
-    justify-self: end;
-    width: calc(100% - 4.75rem);
+    /* The shell's fixed feedback chip is at the inline end, not the start. */
+    justify-self: start;
+    width: calc(100% - 6rem);
   }
 }
 

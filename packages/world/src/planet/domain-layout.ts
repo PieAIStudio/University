@@ -12,7 +12,7 @@ const DOMAIN_SPACING = DOMAIN_OUTER_RADIUS * 2.5;
  * Viewport vw alone ignores the short globe row above a mobile catalogue.
  */
 export function domainLabelWidth(pixelsPerUnit: number): number {
-  return Math.max(1, Math.min(176, Math.max(0, pixelsPerUnit) * DOMAIN_OUTER_RADIUS * 2 - 8));
+  return Math.max(1, Math.min(176, Math.max(0, pixelsPerUnit) * DOMAIN_SPACING - 12));
 }
 
 export interface DomainPlacement {

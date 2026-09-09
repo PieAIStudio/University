@@ -3,6 +3,34 @@
   "note": "键是 screen+element+category，不是描述。同一个缺陷会被不同评审说成症状或原因；按文字去重会把它们分成两条。",
   "findings": [
     {
+      "id": "12a05c677a75",
+      "screen": "/planet",
+      "element": "星球名称标签",
+      "category": "text-clipped",
+      "summary": "四领域手机竖屏中，AI媒体创作被截为AI媒体…，虽然相邻列间仍有可用空间。",
+      "viewport": "phone",
+      "severity": "friction",
+      "state": "fixed",
+      "foundBy": "codex-production-screenshot",
+      "foundOn": "2026-09-09",
+      "guardedBy": "e2e/P.domain-release.spec.ts",
+      "evidence": ".devspace-visual/astra-r40/production-r1/delivery-375/planet-all.png; planet-controls-red.log; planet-controls-green.log"
+    },
+    {
+      "id": "b3a68705af77",
+      "screen": "/planet",
+      "element": "进入课程系列按钮",
+      "category": "overlap",
+      "summary": "手机端右侧反馈浮钮遮挡进入课程系列按钮，旧CSS却为左侧预留空间。",
+      "viewport": "phone",
+      "severity": "friction",
+      "state": "fixed",
+      "foundBy": "codex-production-screenshot",
+      "foundOn": "2026-09-09",
+      "guardedBy": "e2e/P.domain-release.spec.ts",
+      "evidence": ".devspace-visual/astra-r40/production-r1/delivery-375/planet-all.png; planet-controls-red.log; planet-controls-green.log"
+    },
+    {
       "id": "de425267808b",
       "screen": "shared-navigation",
       "element": "当前系列与返回地图",
