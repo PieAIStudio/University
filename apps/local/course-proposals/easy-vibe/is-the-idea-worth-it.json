@@ -1,0 +1,517 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "is-the-idea-worth-it",
+  "courseId": "from-idea-to-live",
+  "unit": {
+    "id": "is-the-idea-worth-it",
+    "title": "这个念头值不值得做",
+    "objective": "读完这一单元你能判断自己那个念头是真需求，还是自己想出来的。",
+    "prerequisiteUnitIds": [
+      "tools-and-talking"
+    ]
+  },
+  "lessons": [
+    {
+      "id": "idea-is-not-need",
+      "title": "点子和需求是两样东西",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能把自己那个念头改写成一句不含解决方案的话。\n\n## 先给结论\n\n点子是**你想做的东西**。需求是**别人已经在费劲解决的事**。\n\n这两样经常被当成一回事，代价是：你花三个月做了一个没人在等的东西。\n\n分辨的办法有一个很简单的判据——**把你的念头里的「做一个……」删掉，看还剩什么。**\n\n剩下的还是一句完整的、别人身上正在发生的事，那你手里有需求。剩下的什么都没有，那你手里只有一个点子。\n\n尼尔森诺曼集团在讲怎么写需求的时候，用了一个很锋利的例子：**用户从来不需要一个下拉框，他需要的是看见有哪些选项、然后选一个。**下拉框是解决方案，看见并选择才是需求。这两句话对应的可做方案数量，差着几十倍。\n\n## 一个类比\n\n这就像去五金店。\n\n有人走进去说「我要一把八毫米的钻头」。老板卖给他。生意成交，皆大欢喜。\n\n但如果老板多问一句「你要打什么」，答案可能是「我要在墙上挂一幅画」。而这面墙是石膏板，八毫米的钻头会把它打穿——**他真正要的是画挂稳，不是那个洞。**\n\n「钻头」是点子，「画挂稳」是需求。\n\n不一样的地方，而且对你不利：五金店老板不问也能把钻头卖出去，钱照收。**而你不问，做出来的东西就没人要**——你没有一个「不管怎样都能收钱」的柜台。\n\n所以这一问不是客气，是你自己那三个月的保险。\n\n## 工作示例\n\n拿这门课的样板产品走一遍，看这个判据怎么用。\n\n**原始念头：**\n\n> 做一个网页，把看不懂的合同条款翻译成大白话。\n\n**用判据切一刀：**删掉「做一个网页」，剩下——\n\n> 把看不懂的合同条款翻译成大白话。\n\n还是一句方案。再切：谁在什么时候，被什么卡住了？\n\n**问自己三个问题，逐个填：**\n\n- **谁**——签租房合同的人\n- **在什么情况下**——中介催着当场签，手边没有懂行的人\n- **想要什么进展**——搞清楚这一条对自己有没有坑，然后敢签字\n\n**拼起来：**\n\n> 一个正在签租房合同的人，被中介催着当场签、手边又没有懂行的人，他想搞清楚某一条对自己有没有坑，好敢下笔。\n\n**注意这句话里没有出现「网页」「AI」「翻译」。**它描述的是一件已经在发生的事。\n\n**它立刻带来的好处：**这句话一写出来，可做的方案就不止一个了。\n\n- 一个网页，粘进去讲人话\n- 一个只讲最常见十个坑的清单\n- 一个能十分钟内接通律师的按钮\n- 一句「先别签，说这句话就能拖到明天」的话术\n\n原来的念头只允许第一种。**第四种也许最有用，而且做起来最便宜。**\n\n如果你一上来就锁死在「做一个网页」，后面三种你连想都不会想到。\n\n## 自检\n\n**做对了会看到什么：**你写出来的那句话里，没有任何名词指向一个功能——没有网页、没有 App、没有按钮、没有 AI。全是人、处境、和他想要的进展。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、把方案换个说法，当成需求。**「用户需要一个能快速翻译合同的工具」——这还是方案，只是把「网页」换成了「工具」。**判据是能不能删掉那个名词还剩下东西**，删完什么都不剩，就是没改。\n\n**二、人群写得太宽。**「所有需要看合同的人」——这等于没写。宽到这个程度，任何设计决定都能找到理由，也就等于没有理由。**具体到你能想起一张脸**：上个月租房那个同事、催着签字的那个下午。\n\n## 重点\n\n- 点子是你想做的东西，需求是别人已经在费劲解决的事。\n- 判据：删掉「做一个……」，看还剩不剩一句别人身上正在发生的事。\n- 用户从来不需要一个下拉框，他需要的是看见选项并选一个——名词是方案，动词才是需求。\n- 一句不含方案的需求，会同时打开好几条可做的路。\n- 人群宽到「所有需要的人」，等于没写；要具体到你能想起一张脸。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页说明需求应当写成用户的目标与动机而不是解决方案，并给出「用户从来不需要一个下拉框，他需要的是看见有哪些选项然后选一个」这个动词优先于名词的例子；同时给出需求陈述的三个组成部分：具体的用户、真正的需求、以及背后的目标或洞察。",
+          "sourceUrl": "https://www.nngroup.com/articles/user-need-statements/",
+          "sourceTitle": "Nielsen Norman Group · User Need Statements",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "idea-vs-need",
+          "kind": "basic",
+          "front": "怎么一句话分辨手里是点子还是需求？",
+          "back": "删掉「做一个……」。还剩一句别人身上正在发生的事，就是需求；什么都不剩，就只是点子。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「需求要写成用户的目标而非解决方案」出自这一页。",
+              "sourceUrl": "https://www.nngroup.com/articles/user-need-statements/",
+              "sourceTitle": "Nielsen Norman Group · User Need Statements",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "nobody-needs-a-dropdown",
+          "kind": "basic",
+          "front": "「用户需要一个下拉框」这句话错在哪？",
+          "back": "下拉框是解决方案。用户需要的是看见有哪些选项、然后选一个——名词锁死方案，动词才留住需求。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "这个下拉框的例子与「动词优先于名词」的主张直接出自这一页。",
+              "sourceUrl": "https://www.nngroup.com/articles/user-need-statements/",
+              "sourceTitle": "Nielsen Norman Group · User Need Statements",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "three-parts-of-a-need",
+          "kind": "basic",
+          "front": "一句需求要说清哪三样？",
+          "back": "具体是谁、他真正需要什么、以及背后那个让这件事重要的目标。三样都在，方案才不会被提前锁死。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "需求陈述由「具体用户 + 需求 + 背后的目标或洞察」三部分构成，出自这一页。",
+              "sourceUrl": "https://www.nngroup.com/articles/user-need-statements/",
+              "sourceTitle": "Nielsen Norman Group · User Need Statements",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "strip-the-solution-out",
+          "title": "把方案从你那句话里剥掉",
+          "kind": "explain",
+          "prompt": "写下你那个念头原本的样子（多半以「做一个……」开头）。然后按谁、在什么情况下、想要什么进展，重写成一句不含任何功能名词的话。最后列出这句话允许的三条不同的路，其中至少一条不是做软件。",
+          "rubric": [
+            "重写后的那句话里没有网页、App、按钮、AI 这类功能名词",
+            "写清了具体是谁，而不是「所有需要的人」这种宽泛人群",
+            "写清了处境和他想要的进展，不只是他的身份",
+            "列出的三条路确实不同，且至少一条不是做软件"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「按具体用户、需求、背后目标三部分来写，避免锁死方案」出自这一页。",
+              "sourceUrl": "https://www.nngroup.com/articles/user-need-statements/",
+              "sourceTitle": "Nielsen Norman Group · User Need Statements",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "what-people-say-vs-do",
+      "title": "人说的和人做的，不是一回事",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能把一句「你会用这个吗」，改写成一句能问出真话的问题。\n\n## 先给结论\n\n你拿着自己的想法去问别人「我做这么个东西，你会用吗」，对方说「会啊，挺好的」——这句话里几乎没有信息。\n\n不是对方在骗你。是**人预测自己将来会做什么，本来就不准**。做可用性研究的尼尔森诺曼集团测过这件事：人嘴上说的偏好，和他实际用起来的表现，相关性是 0.44。他们自己的说法是，从「他说他喜欢哪个」，大概只能推出四分之一的「他用哪个更顺手」。\n\n所以问法要换。不问他将来会不会用，**问他上一次遇到这件事的时候是怎么解决的**。将来的事他只能猜，上个月的事他记得。\n\n## 一个类比\n\n这件事就像健身房卖年卡。办卡的时候它会问你：「你以后打算一周来几次？」办卡的人几乎都说三次。健身房比谁都清楚这个数字是假的——它们的生意能成立，靠的正是大部分人办完卡不来。\n\n它们真正在意的不是你怎么回答，是**你以前有没有在别的地方坚持运动过**。那是发生过的事，改不了。\n\n不一样的地方在这儿，而且这一点决定了你要做什么：健身房手里有你的会员记录，它可以直接去查。**你手里什么都没有，所以你得把记录问出来。**\n\n这就是「问上一次」这个动作的全部意思——你不是在闲聊，你是在替自己补一份本来不存在的记录。\n\n## 工作示例\n\n就用这门课要做的那个东西举例：一个把看不懂的话讲成人话的小工具。下面是同一个人，两种问法，问出来的东西差多少。\n\n**问法一，问将来：**\n\n> 你：我在做一个东西，能把看不懂的合同条款翻译成大白话，你会用吗？\n>\n> 他：会啊，挺有用的。\n\n你记下：「一个潜在用户」。\n\n这条记录的价值是零。他没花过一分钱、一分钟，他只是在礼貌地回应一个刚刚被介绍给他的东西。\n\n**问法二，问上一次：**\n\n> 你：你上一次看到一份自己看不懂的合同，是什么时候？\n>\n> 他：上个月租房。\n>\n> 你：看不懂的那部分，你最后是怎么弄的？\n>\n> 他：拍了照发给我表姐，她是做律师的。\n>\n> 你：她多久回你？\n>\n> 他：第二天。可我那天下午就得签，最后没弄明白就签了。\n\n四句话，问出了三件已经发生过的事：\n\n- **多久遇到一次**——租房的时候会遇到，不是每天\n- **他现在的办法**——找懂行的熟人，不花钱，但要欠人情\n- **这个办法的代价**——要等一天；而那一次他等不起，最后是没弄明白就签了字\n\n第三条最值钱。**他为这件事已经付出过实实在在的代价了。**那不是「会不会用」，那是他正在承担的东西。\n\n注意这四句里，你自己那个想法一次都没被提起。\n\n## 自检\n\n**做对了会看到什么：**你的笔记里全是发生过的事——哪一天、他当时怎么做的、花了多少时间或者多少钱。整段对话从头到尾，你要做的那个东西一次都没出现。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、对方开始夸你。**「这想法挺好的」「肯定有人需要」——只要出现夸奖，就说明你已经先把想法说出去了。尼尔森诺曼集团把这类现象叫作提问效应：只要你问，人就能对任何事情当场生出一个看法，哪怕那件事根本不重要。你一介绍，他手里就有了可以发表看法的东西，后面的回答就都往好听的方向偏了。回到上一句，重新只问他自己的事。\n\n**二、回答里全是「一般」「通常」「都会」。**「我一般会去搜一下」——这句描述的是一个想象中的他，不是上个月的他。追一句：「最近的一次是什么时候？」如果他想不起具体哪一次，那这件事在他身上大概没有真的发生过。\n\n## 重点\n\n- 人对自己将来行为的预测并不准；尼尔森诺曼集团测得的偏好与实际表现相关性是 0.44。\n- 「你会用吗」问不出有用的东西，因为它要求对方预测未来。\n- 换成问上一次：什么时候遇到的、当时怎么解决的、为此付出了什么。\n- 只要你先介绍了自己的想法，对方就有了可以发表看法的东西，答案会往好听的方向偏。\n- 说不出具体哪一次，就说明这件事在他身上没有真的发生过。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页说明人对自己未来行为的预测不可靠，并给出偏好与实际表现的相关性为 0.44，以及「大约只能预测四分之一」的解读。",
+          "sourceUrl": "https://www.nngroup.com/articles/first-rule-of-usability-dont-listen-to-users/",
+          "sourceTitle": "Nielsen Norman Group · First Rule of Usability? Don't Listen to Users",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "这一页给出「让受访者回忆具体某一次经历」的访谈做法，并说明为什么不能问受访者没见过的东西；提问效应（人可以对任何被问到的事当场生成看法）也出自这一页。",
+          "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+          "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "why-will-you-use-this-fails",
+          "kind": "basic",
+          "front": "问别人「你会用这个吗」，为什么几乎问不出有用的信息？",
+          "back": "因为这句话要求对方预测自己将来的行为，而人在这件事上并不准。尼尔森诺曼集团测得的偏好与实际表现相关性只有 0.44。",
+          "tags": [
+            "user-research"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "0.44 这个数字和「预测不可靠」的结论都出自这一页。",
+              "sourceUrl": "https://www.nngroup.com/articles/first-rule-of-usability-dont-listen-to-users/",
+              "sourceTitle": "Nielsen Norman Group · First Rule of Usability? Don't Listen to Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "ask-about-the-last-time",
+          "kind": "basic",
+          "front": "「你会用吗」该换成什么问法？",
+          "back": "问上一次：他最近一次遇到这件事是什么时候、当时怎么解决的、为此花了多少时间或多少钱。将来的事他只能猜，发生过的事他记得。",
+          "tags": [
+            "user-research"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "让受访者回忆具体某一次经历，是这一页给出的访谈做法。",
+              "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+              "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "the-query-effect",
+          "kind": "basic",
+          "front": "为什么一旦你先介绍了自己的想法，后面的回答就不能信了？",
+          "back": "因为人可以对任何被问到的事情当场生出一个看法，哪怕那件事对他根本不重要。你一介绍，他手里就有了可以发表看法的东西，答案会往好听的方向偏。",
+          "tags": [
+            "user-research"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "提问效应——人能对任何被问及的事情产生看法——出自这一页。",
+              "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+              "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "generally-means-never",
+          "kind": "basic",
+          "front": "对方说「我一般都会去搜一下」，你该追问什么？",
+          "back": "追问「最近的一次是什么时候」。说不出具体哪一次，就说明这件事在他身上没有真的发生过，那句「一般」描述的是想象中的他。",
+          "tags": [
+            "user-research"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "回忆具体某一次经历比泛泛而谈更可靠，依据是这一页的访谈做法。",
+              "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+              "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "rewrite-one-question",
+          "title": "把你自己那句问题改写一遍",
+          "kind": "explain",
+          "prompt": "写下你原本打算拿去问别人的那句话（多半长得像「你会用……吗」）。然后把它改写成三个问上一次的问题。最后说明：改写之后，你指望从对方嘴里拿到哪一件已经发生过的事？",
+          "rubric": [
+            "写出了原来那句问将来的问题",
+            "三个新问题问的都是过去发生过的具体某一次，不是习惯、不是意愿",
+            "三个问题里至少有一个在问代价——花了多少时间、多少钱、或者欠了谁的人情",
+            "说清楚了想拿到的是哪一件已经发生过的事，而不是一个态度"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「问具体某一次经历」这个改写方向出自这一页给出的访谈做法。",
+              "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+              "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "i-would-use-that-is-not-validation",
+      "title": "「我会用的」不算数",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能列出三种比「我会用」更硬的信号。\n\n## 先给结论\n\n十个人说「我会用」，等于零个用户。\n\n这句话听起来刻薄，但它有依据。尼尔森诺曼集团讲得很直接：**尤其不要相信人们预测自己将来可能会做什么。**他们举过一个例子，用户声称会用某个功能，实际上并不意味着他们真的会用、或者会喜欢。\n\n那什么才算数？**看他已经付出过什么，不是他打算付出什么。**\n\n已经付出过的东西有三种，按硬度排：\n\n钱最硬——他已经为这件事花过钱，哪怕只有九块九。时间次之——他为这件事定期花掉一段时间，比如每周手动整理一次。人情再次之——他为这件事欠过别人，比如麻烦过朋友。\n\n三种都没有，那这件事对他而言只是「有了也不错」。\n\n## 一个类比\n\n这就像有人对你说「改天一起吃饭」。\n\n没有人在说这句话时是撒谎的，说的时候是真心的。但**这句话和真的吃上饭之间，隔着一整套没发生的事**：谁定时间、谁定地方、谁先发消息。\n\n真正会发生的那顿饭长什么样？「我下周二晚上有空，你在城东还是城西？」——**这句话里有代价**：他把一个具体的晚上让出来了。\n\n不一样的地方在这儿，而且它是你要小心的：吃饭没吃成，损失一句客套。**你按着十句「我会用」去做三个月，损失的是三个月。**\n\n所以你要听的不是热情，是**具体到会让他付出点什么的那种句子**。\n\n## 工作示例\n\n同一场对话的两段，一段没有信号，一段有。\n\n**没有信号的那段：**\n\n> 他：这个挺好的啊，我经常看不懂合同。\n>\n> 你：那你会用吗？\n>\n> 他：会啊，做出来告诉我。\n\n**四句话，零个已经付出的东西。**「经常看不懂」是印象，「会用」是预测，「告诉我」是客气。\n\n**有信号的那段：**\n\n> 他：上个月我为了搞懂一份合同，专门请我表姐吃了顿饭。\n>\n> 你：就为了问这个？\n>\n> 他：主要是这个。她做律师的，白问不好意思。\n\n**这里面有一顿饭。**那是钱，也是人情，而且已经花掉了。\n\n**怎么把它变成可以下判断的东西：**继续问代价的大小和频率。\n\n> 你：这种事一年碰上几回？\n>\n> 他：租房一次，工作合同一次，去年还有个装修的。\n>\n> 你：每次都得请一顿？\n>\n> 他：也不是，有时候就忍了直接签。\n\n**「有时候就忍了直接签」这一句，比前面所有话都值钱。**\n\n它说明两件事：这件事一年发生三次左右（不高频），而且他有一个**免费的替代方案——忍着不管**。\n\n那么你要打败的不是「找律师朋友」，**是「忍着不管」**。这是一个便宜得多、也强大得多的对手，而你只有问到这里才会知道它存在。\n\n## 自检\n\n**做对了会看到什么：**你的笔记里能指出具体的付出——某月某日、多少钱、多少小时、欠了谁一个人情。你还知道他现在那个免费的替代方案是什么。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、把热情当信号。**对方越兴奋你越有信心。但兴奋是当场产生的，**它在你离开的那一刻就开始衰减**。一个平静地说「我上个月为这事花了两百块」的人，比一个兴奋地说「太需要了」的人有价值得多。\n\n**二、只找他现在花钱的方案当对手，忘了「什么都不做」。**绝大多数产品真正的竞争对手是「忍一忍算了」，因为它免费、零学习成本、而且立刻可用。**没把它列进对手，你的判断就是错的。**\n\n## 重点\n\n- 尼尔森诺曼集团说得很直接：尤其不要相信人们预测自己将来可能会做什么。\n- 算数的是已经付出过的东西，不是打算付出的。\n- 硬度排序：花过的钱最硬，定期花掉的时间次之，欠过的人情再次之。\n- 三种都没有，说明这件事对他只是「有了也不错」。\n- 最强的竞争对手常常是「忍着不管」——免费、零学习成本、立刻可用。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页明确写着不要相信人们对自己未来行为的预测，并举例说明用户声称会使用某功能并不代表他们真的会用或喜欢。",
+          "sourceUrl": "https://www.nngroup.com/articles/first-rule-of-usability-dont-listen-to-users/",
+          "sourceTitle": "Nielsen Norman Group · First Rule of Usability? Don't Listen to Users",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "这一页说明询问用户没有见过、没有用过的东西得不到可靠回答，因此要转向他实际发生过的经历。",
+          "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+          "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "three-hard-signals",
+          "kind": "basic",
+          "front": "比「我会用」更硬的三种信号，按硬度排是什么？",
+          "back": "花过的钱最硬，为这件事定期花掉的时间次之，为这件事欠过的人情再次之。三种都没有，说明只是「有了也不错」。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「不要相信人对自己未来行为的预测」是要求转向已发生代价的依据，出自这一页。",
+              "sourceUrl": "https://www.nngroup.com/articles/first-rule-of-usability-dont-listen-to-users/",
+              "sourceTitle": "Nielsen Norman Group · First Rule of Usability? Don't Listen to Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "the-real-competitor",
+          "kind": "basic",
+          "front": "大多数产品真正的竞争对手是什么？",
+          "back": "「忍着不管」。它免费、零学习成本、立刻可用。没把它列进对手名单，判断就是错的。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "要了解用户当前实际怎么做（包括什么都不做），依据是这一页要求问已发生的真实经历。",
+              "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+              "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "enthusiasm-decays",
+          "kind": "basic",
+          "front": "对方越兴奋，信号越强吗？",
+          "back": "不是。兴奋是当场产生的，你一离开就开始衰减。平静地说「我上个月为这事花了两百块」比兴奋地说「太需要了」有价值得多。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「不要相信人们预测自己将来会做什么」出自这一页。",
+              "sourceUrl": "https://www.nngroup.com/articles/first-rule-of-usability-dont-listen-to-users/",
+              "sourceTitle": "Nielsen Norman Group · First Rule of Usability? Don't Listen to Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "find-the-free-alternative",
+          "title": "找出那个免费的对手",
+          "kind": "explain",
+          "prompt": "针对你那个念头，写下目标用户现在解决这件事的所有办法，包括「什么都不做，忍着」。逐个标出每种办法要花他多少钱、多少时间、或者多少人情。最后回答：如果他现在最常用的就是「忍着」，你打算靠什么让他改？",
+          "rubric": [
+            "把「什么都不做/忍着」明确列进了办法清单，而不是只列付费方案",
+            "每种办法都标了具体代价，钱、时间或人情，不是「比较麻烦」这种描述",
+            "指出了他现在最常用的是哪一种，并说明依据",
+            "针对「忍着」给出了具体的争取办法，而不是断言自己的东西更好"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "要问用户实际怎么做而非会怎么做，依据是这一页的访谈做法。",
+              "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+              "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ask-about-last-time",
+      "title": "问上一次，五个问题的顺序",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能按顺序问完一次访谈的五个问题。\n\n## 先给结论\n\n上一节说了要问过去。这一节说怎么问，因为**顺序错了，问题本身就白问了**。\n\n五个问题，顺序是死的：\n\n先定位一次具体的经历，再问他当时具体做了什么，再问这件事花了他什么，再问最后结果怎样，**最后才问他还试过别的办法没有**。\n\n为什么最后一个必须放最后？因为你一提「有没有别的办法」，他就从回忆状态切换到了思考状态——**开始给你想主意，而不是给你讲事实**。前面四问的原料就被污染了。\n\n尼尔森诺曼集团的访谈指南里有一个专门的做法，叫回忆关键事件：让受访者回想某一次特别困难、或者特别顺利的具体经历。**因为极端的那几次在人脑子里最清晰。**\n\n## 一个类比\n\n这就像医生问诊。\n\n医生不会一上来就问「你觉得自己是不是胃炎」。他问的是：什么时候开始的？疼在哪个位置？吃过什么？疼的时候在干什么？\n\n**全是已经发生的事实，而且从最容易回答的开始。**「什么时候开始的」谁都答得上来，「疼在哪」也答得上来。等你答完四个，你自己都想起来「哦对，那天我喝了冰的」。\n\n不一样的地方，你要占的正是这个便宜：医生最后还能开检查单，有客观证据兜底。**你没有检查单，受访者的记忆就是你全部的证据。**\n\n所以顺序对你比对医生更重要——你得靠提问的顺序，把记忆一层层剥出来。\n\n## 工作示例\n\n完整的一次，五个问题，一句不多。\n\n> **一、定位一次具体的：**上一次你看到一份自己看不懂的东西，是什么时候？\n>\n> ——上个月，租房合同。\n>\n> **二、当时具体做了什么：**看不懂的那部分，你当时是怎么处理的？\n>\n> ——先自己搜了一下，没搜明白。然后拍照发给我表姐，她做律师。\n>\n> **三、花了什么：**从你发照片到她回你，隔了多久？\n>\n> ——第二天下午才回。我等的时候挺焦虑的，中介一直在催。\n>\n> **四、结果怎样：**那最后签了吗？\n>\n> ——签了。她回我之前就签了，我那天下午必须签完。\n>\n> **五（这时候才问）：除了问她，你还试过别的办法吗？**\n>\n> ——搜过，还问过一个 AI，但它说得挺含糊的，我不敢信。\n\n**看第五问带来了什么：**他已经试过 AI 了，而且**不敢信**。\n\n这一条如果放在第一个问，你根本听不到——他会开始跟你讨论 AI 靠不靠谱，而不是回忆他那天下午干了什么。\n\n而「不敢信」这三个字，直接决定了你那个产品最该解决的问题：**不是把话讲明白，是让人敢信。**这可能意味着你要标出依据出自合同哪一条，而不是只给一段流畅的解释。\n\n**一次二十分钟的对话，改掉了你的核心设计。**\n\n## 自检\n\n**做对了会看到什么：**你的笔记里有一条时间线——哪天、他做了什么、等了多久、最后怎样。你能复述出来，而且里面没有任何一句是他的观点。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、第一问就问宽了。**「你平时怎么处理看不懂的合同？」——「平时」两个字一出现，他就开始描述一个想象中的自己。**要钉在某一次上**：上一次、最近一次、你还记得的那一次。\n\n**二、他答完第二问你就急着追问方案。**「那你觉得如果有个工具能……」——这一句把剩下三问全毁了。**忍住。**第五问之前，你嘴里不能出现任何你想做的东西。\n\n## 重点\n\n- 五个问题的顺序是死的：定位一次、当时做了什么、花了什么、结果怎样、最后才问别的办法。\n- 「还有没有别的办法」必须放最后，一问出口对方就从回忆切换到出主意。\n- 尼尔森诺曼集团的做法是让人回忆特别困难或特别顺利的那一次，因为极端经历记得最清楚。\n- 第一问不能带「平时」「一般」，要钉在具体某一次上。\n- 第五问之前，你嘴里不能出现你想做的那个东西。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页给出「回忆关键事件」的访谈做法：请受访者回想特别困难或特别顺利的具体某一次，因为极端经历在记忆中更鲜明；同时提醒不要用引导性提问。",
+          "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+          "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "five-questions-in-order",
+          "kind": "basic",
+          "front": "问上一次，五个问题按什么顺序？",
+          "back": "定位一次具体的、当时做了什么、花了什么、结果怎样、最后才问还试过别的办法没有。",
+          "tags": [
+            "user-research"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "以具体某一次经历为线索展开访谈，出自这一页的关键事件做法。",
+              "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+              "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "why-alternatives-go-last",
+          "kind": "basic",
+          "front": "「你还试过别的办法吗」为什么必须放最后问？",
+          "back": "一问出口，对方就从回忆状态切换到出主意状态，开始给你想方案而不是讲事实，前面几问的原料会被污染。",
+          "tags": [
+            "user-research"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "这一页提醒避免引导性提问、避免让受访者对没见过的东西发表看法。",
+              "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+              "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "critical-incident",
+          "kind": "basic",
+          "front": "让对方回忆哪一次，得到的信息最可靠？",
+          "back": "特别困难或者特别顺利的那一次。尼尔森诺曼集团的说法是，极端的经历在人的记忆里最鲜明。",
+          "tags": [
+            "user-research"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「请受访者回忆特别困难或特别顺利的具体经历，因为这类极端情况记忆更鲜明」出自这一页。",
+              "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+              "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "run-one-real-interview",
+          "title": "真的去问一个人",
+          "kind": "explain",
+          "prompt": "找一个可能遇到过你那件事的人，按五问的顺序问一遍，把回答记下来。然后写出：第五问带来了什么你原本不知道的东西？如果没有带来新东西，说明你在前四问里哪一步可能问宽了。",
+          "rubric": [
+            "记录的是对方说过的具体事实，含时间、动作、代价，不是概括",
+            "五个问题按规定顺序问了，第五问确实在最后",
+            "老实回答了第五问有没有带来新东西，没有也算合格",
+            "如果没有新东西，指出了前四问里可能问宽的那一步"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "以具体经历为线索、避免引导性提问，均出自这一页的访谈指导。",
+              "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+              "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "one-sentence",
+      "title": "一句话说清你做的是什么",
+      "variant": "术语",
+      "content": "## 学习目标\n\n读完你能写出一句包含谁、什么处境、什么进展的介绍。\n\n## 先给结论\n\n说不清一句话，说明还没想清楚。这不是文案问题，是**思考没有收敛**。\n\n尼尔森诺曼集团给需求陈述定了三个部分：**一个具体的人、他真正需要的东西、以及背后那个让这件事重要的目标。**三样齐了，这句话才立得住。\n\n对应到你要说的那句话，就是：\n\n> 给【某种处境里的某个人】，在【某个具体时刻】，能【做成某件他现在做不成的事】。\n\n注意里面没有位置留给「用了什么技术」。**「基于大模型的」「AI 驱动的」这类词，一个都不要出现**——它们描述的是你怎么做的，不是他能得到什么。\n\n## 一个类比\n\n这就像在电梯里碰到多年不见的老同学，他问「你现在做什么呢」。\n\n**你有一层楼的时间。**\n\n如果你说「我在做一个基于大模型的智能文本理解平台」，他会点头说「厉害厉害」，然后电梯门开了，他这辈子都不会再想起这件事。\n\n如果你说「专门帮人看懂租房合同里的坑，签字前两分钟能查完」——他可能会说「哎我上次租房……」\n\n**后一种回答开启了一段对话，前一种结束了一段对话。**这就是这句话唯一的作用。\n\n不一样的地方，也是它比电梯难的地方：老同学会礼貌地追问一句。**你的潜在用户不会**，他划走了就是划走了。所以那一层楼的时间，实际上更短。\n\n## 工作示例\n\n同一个东西，四个版本，一版一版改。\n\n**版本一（大多数人的起点）：**\n\n> 一个基于大模型的智能文档解读工具。\n\n这一版的毛病是全在讲你怎么做的。删掉技术词之后，剩下「解读文档」——太宽，谁都可以是用户，等于没有用户。\n\n**版本二（加了人）：**\n\n> 帮普通人看懂看不懂的文件。\n\n这一版的毛病是「普通人」不是人，只是一个词。「看不懂的文件」也不是一件事，是一类事。**还是想不起一张脸。**\n\n**版本三（加了处境）：**\n\n> 帮第一次租房的人看懂合同。\n\n有进步了，能想起一张脸了。但还缺一样：**他为什么现在就要用，而不是收藏起来以后再说？**\n\n**版本四（加了时刻和进展）：**\n\n> 给第一次租房、被中介催着当场签字的人，两分钟看清这份合同里哪几条对自己不利。\n\n这一版里有：**谁**（第一次租房的人）、**什么处境**（被催着当场签）、**什么进展**（看清哪几条不利）、**还有一个隐含的约束**（两分钟——因为他就只有这么点时间）。\n\n**那个「两分钟」是整句话里最值钱的三个字。**它一出现，你后面所有的设计决定都有了判据：\n\n- 要不要做用户注册？——两分钟，不做。\n- 结果要不要写得详尽？——两分钟，只给最要命的三条。\n- 要不要支持上传 PDF？——他手里是一张纸和一部手机，做拍照。\n\n**一句话写对了，它会替你回答后面几十个问题。**\n\n## 自检\n\n**做对了会看到什么：**把这句话念给一个完全不了解的人听，他能复述出「给谁、在什么时候、能干成什么」。而且这句话里没有任何技术名词。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、句子里有「等」「以及」「还可以」。**「帮人看懂合同、说明书、体检报告等各种文件」——**每多一个「等」，那张脸就模糊一分**。第一版只服务一种人、一个场景，剩下的写在别处。\n\n**二、听的人回一句「哦，就是个 AI 助手嘛」。**这说明你说的是技术，不是处境。**重说一遍，从那个人被卡住的那个下午开始讲。**\n\n## 重点\n\n- 说不清一句话不是文案问题，是思考还没收敛。\n- 一句需求要有三样：具体的人、他真正需要的、以及背后那个目标。\n- 句式：给某种处境里的某个人，在某个具体时刻，能做成某件他现在做不成的事。\n- 「基于大模型的」「AI 驱动的」一个都不要出现，那是你怎么做的，不是他得到什么。\n- 句子里的时间约束往往最值钱，它会替你回答后面几十个设计问题。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页给出需求陈述的三个组成部分：具体的用户、他真正的需求、以及背后的目标或洞察；并主张用动词表达的目标而非名词表达的方案。",
+          "sourceUrl": "https://www.nngroup.com/articles/user-need-statements/",
+          "sourceTitle": "Nielsen Norman Group · User Need Statements",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "one-sentence-shape",
+          "kind": "basic",
+          "front": "一句话介绍产品，句式里要有哪几样？",
+          "back": "给某种处境里的某个具体的人，在某个具体时刻，能做成某件他现在做不成的事。技术怎么实现的不进这句话。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "需求陈述由具体用户、真正的需求、背后的目标三部分构成，出自这一页。",
+              "sourceUrl": "https://www.nngroup.com/articles/user-need-statements/",
+              "sourceTitle": "Nielsen Norman Group · User Need Statements",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "no-tech-words",
+          "kind": "basic",
+          "front": "为什么介绍里不能出现「基于大模型的」这类词？",
+          "back": "因为那描述的是你怎么做的，不是对方能得到什么。听的人只会回一句「哦，就是个 AI 助手嘛」，对话就结束了。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「需求要写成用户的目标而非解决方案」出自这一页对动词优先于名词的主张。",
+              "sourceUrl": "https://www.nngroup.com/articles/user-need-statements/",
+              "sourceTitle": "Nielsen Norman Group · User Need Statements",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "the-word-deng-blurs-the-face",
+          "kind": "basic",
+          "front": "介绍里出现「等」「以及」「还可以」，说明什么？",
+          "back": "说明用户那张脸正在变模糊。每多一样，服务的人就少一分具体。第一版只服务一种人、一个场景。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "需求陈述要求写出一个具体的用户，这是反对泛化人群的依据，出自这一页。",
+              "sourceUrl": "https://www.nngroup.com/articles/user-need-statements/",
+              "sourceTitle": "Nielsen Norman Group · User Need Statements",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "four-versions-of-your-sentence",
+          "title": "把你那句话改四版",
+          "kind": "explain",
+          "prompt": "照着工作示例的四步，把你那个念头的介绍写四个版本：先写你现在会脱口而出的那版，然后依次加上具体的人、具体的处境、具体的时刻与进展。写完之后指出：第四版里哪个词最值钱，它替你回答了哪个设计问题？",
+          "rubric": [
+            "四个版本是递进的，能看出每一版补上了什么",
+            "第四版里没有出现技术名词，也没有「等」「以及」",
+            "第四版包含具体的人、处境、时刻和他能做成的事",
+            "指出的那个最值钱的词，确实能推出一个具体的设计决定"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "需求陈述三部分与「动词优先于名词」的判据出自这一页。",
+              "sourceUrl": "https://www.nngroup.com/articles/user-need-statements/",
+              "sourceTitle": "Nielsen Norman Group · User Need Statements",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

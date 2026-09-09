@@ -1,0 +1,630 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "make-it-remember",
+  "courseId": "from-idea-to-live",
+  "unit": {
+    "id": "make-it-remember",
+    "title": "让它记住东西",
+    "objective": "读完这一单元你能说出自己那个产品要存哪几列，以及谁能看见它们。",
+    "prerequisiteUnitIds": []
+  },
+  "lessons": [
+    {
+      "id": "refresh-and-it-is-gone",
+      "title": "一刷新就没了，为什么",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能保存一段文字到浏览器的持久存储中。\n\n## 先给结论\n\n页面里用变量暂存的内容，只属于这一次页面运行；刷新会重新加载脚本，那个变量也重新开始。想让浏览器下次打开还能取回，就要主动写进持久存储，例如 `localStorage`。它按网站的 origin 保存键和值，数据可以跨浏览器会话留下来。它解决的是“这台设备上的这个网站记住草稿”，不是自动变成云端数据。\n\n## 一个类比\n\n想象你在会议室白板上写下合同笔记，散会后清洁人员把白板擦掉；普通页面变量就像白板。把内容写进 `localStorage`，相当于再抄进自己带走的笔记本，下次进会议室还能翻出来。但它不像云端档案室：笔记本在你这台设备和这个网站名下，换设备、换网站地址或清掉浏览器数据，都不能假定还能看到同一份内容。\n\n## 工作示例\n\n《说人话》先只有一个输入框。用户粘贴一条体检报告，代码把它放进 `text` 变量；用户按刷新，输入框回到空白，因为页面只记得当前运行中的变量。\n\n给草稿加一个明确的键，就能把写入和取回接上：\n\n```js\nconst draftKey = 'say-people-plain-draft';\n\nfunction saveDraft(text) {\n  localStorage.setItem(draftKey, text);\n}\n\nfunction loadDraft(textarea) {\n  const saved = localStorage.getItem(draftKey);\n  if (saved !== null) textarea.value = saved;\n}\n```\n\n用户输入“报告写的是偶尔出现提前跳动”，点击保存，`setItem` 把这段文字写进浏览器；页面再次加载时调用 `loadDraft`，`getItem` 取出同一个键的值，输入框重新出现这句话。这就是一次完整的本地记忆：写入、刷新、读取。\n\n## 自检\n\n做对时，保存草稿后刷新页面，输入框仍出现原来的文字；在同一个网站下关闭再打开浏览器，也能按 `localStorage` 的规则尝试取回。\n\n最常见的做错法有两种。第一种只把内容放在 `let text` 里，没有 `setItem`；刷新后必然归零，补上写入动作。第二种写入时用 `say-draft`，读取时却用 `say-people-plain-draft`；两个键不是同一个抽屉，统一成一个常量。\n\n## 重点\n\n- 页面变量只活在当前页面运行期间。\n- `localStorage` 用键和值保存浏览器端数据，并能跨会话留下来。\n- 记住草稿必须同时有写入和读取。\n- 本地存储属于当前网站和设备，不自动等于云端同步。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 说明 localStorage 属于当前 document 的 origin，保存的数据会跨浏览器会话存在。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage",
+          "sourceTitle": "Window: localStorage property - Web APIs | MDN",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 展示了用 setItem 写入、getItem 读取和 removeItem 删除 localStorage 项的方式。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage",
+          "sourceTitle": "Window: localStorage property - Web APIs | MDN",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "make-it-remember-local-storage-lifecycle",
+          "kind": "basic",
+          "front": "为什么页面变量刷新后会消失，而 localStorage 里的值能留下？",
+          "back": "页面变量属于当前一次脚本运行，刷新会重新创建它；localStorage 把键和值保存到当前网站的浏览器存储空间，按规则可以跨浏览器会话读取。",
+          "tags": [
+            "local-storage",
+            "persistence"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明 localStorage 数据跨浏览器会话保存，并给出 getItem 读取示例。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage",
+              "sourceTitle": "Window: localStorage property - Web APIs | MDN",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "make-it-remember-save-your-draft",
+          "title": "给自己的念头留一份草稿",
+          "kind": "explain",
+          "prompt": "说出你的产品里哪一段内容需要在刷新后留下，并写清楚保存时使用的键名、读取时使用的键名，以及用户会在哪个动作后看到它回来。",
+          "rubric": [
+            "指出一个具体字段或文字，而不是笼统的“保存数据”",
+            "保存和读取使用同一个稳定的键名",
+            "把刷新后的可观察结果说出来"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 文档说明 localStorage 的 setItem 与 getItem 分别用于写入和读取。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage",
+              "sourceTitle": "Window: localStorage property - Web APIs | MDN",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rows-and-columns",
+      "title": "表、行、列",
+      "variant": "术语",
+      "content": "## 学习目标\n\n读完你能设计自己产品的一张表和它的列。\n\n## 先给结论\n\n数据库表可以先看成一张有固定表头的表格。表头下的一列只放同一种信息，一行代表一条完整记录；多条记录放在同一张表里，才能按列查找、筛选和更新。做产品前先列出你真正要存的字段，别把一整团互不相干的内容塞进一个大字符串。\n\n## 一个类比\n\n好比银行柜台的客户登记表：上方写着姓名、证件号、联系电话这些表头，每一横行是一位客户，每一竖列是同一种资料。数据库表和它相似，都是让每一格有明确位置；但它不是纸张，数据库还会按字段类型和规则检查你写进去的值，行也能被查询和修改，不是填完就锁死的表。\n\n## 工作示例\n\n《说人话》要保存“用户以后能翻回来的解释”。先不写页面，先设计一张叫 `explanations` 的表：\n\n```text\n表：explanations\n\nid          | user_id       | source_text                         | plain_text                         | created_at\nexp_001     | user_101      | 承租方需交三个月保证金                 | 入住前先交相当于三个月租金的钱             | 2026-09-09\nexp_002     | user_202      | 窦性心律，偶发早搏                     | 记录里说心跳节律大体正常，但偶尔提前跳动     | 2026-09-09\n```\n\n这里表名说的是这一组记录的主题；`id` 放每条解释的编号；`user_id` 放归属者；`source_text` 放原文；`plain_text` 放模型结果；`created_at` 放创建时间。第一行和第二行是两次不同的解释，而不是五列各自独立的资料。以后用户打开历史页，程序就能从这张表取出一行，再把对应列放进原文和大白话两个区域。\n\n## 自检\n\n做对时，你能拿出一张表，写出至少一行完整记录，并能对每一列说出“它存的是什么”。\n\n最常见的做错法有两种。第一种把原文、解释、日期和用户信息全拼成一段文字，后来无法只改解释或只按用户筛选；拆成用途明确的列。第二种把不同意思的值混进同一列，例如 `source_text` 有时放原文、有时放标签；给每列定一个稳定含义，改变含义就另设列。\n\n## 重点\n\n- 表是一组同类记录的容器。\n- 行代表一条记录，列代表一种字段。\n- 设计表时先从产品要保存的字段开始。\n- 一列最好有单一、稳定、可说明的含义。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "PostgreSQL 官方文档说明创建表时要指定表名、列名和列类型，并用示例展示列的定义。",
+          "sourceUrl": "https://www.postgresql.org/docs/current/tutorial-table.html",
+          "sourceTitle": "PostgreSQL: Documentation: 18: 2.3. Creating a New Table",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "make-it-remember-row-column-meaning",
+          "kind": "basic",
+          "front": "数据库表里的行和列分别代表什么？",
+          "back": "列代表一种字段，例如 source_text 或 created_at；行代表一条完整记录，例如某一次解释。表把许多同样结构的行放在一起。",
+          "tags": [
+            "database-table",
+            "rows",
+            "columns"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "PostgreSQL 官方建表文档要求声明表名、列名和列类型。",
+              "sourceUrl": "https://www.postgresql.org/docs/current/tutorial-table.html",
+              "sourceTitle": "PostgreSQL: Documentation: 18: 2.3. Creating a New Table",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "make-it-remember-table-sketch",
+          "title": "画出你的第一张表",
+          "kind": "explain",
+          "prompt": "为你的产品写出一张表的名字、四到六个列名，再写一行示例记录。逐列说明它保存的内容，不要用一个大字段代替所有信息。",
+          "rubric": [
+            "列名对应产品实际要保存的不同信息",
+            "示例行的每个值都能放回某一列并保持含义稳定",
+            "能说出为什么这些信息应该放在同一张表"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "PostgreSQL 官方示例展示了表名、列名和类型共同构成一张表。",
+              "sourceUrl": "https://www.postgresql.org/docs/current/tutorial-table.html",
+              "sourceTitle": "PostgreSQL: Documentation: 18: 2.3. Creating a New Table",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "add-read-change-delete",
+      "title": "数据只有四件事",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能列出产品数据的新增、读取、修改、删除四种操作。\n\n## 先给结论\n\n对一张表里的数据，最先要分清四种动作：新增一行、读取已有行、修改已有值、删除不再需要的行。常见功能只是把这四种动作组合成流程，例如“保存解释”是新增，“历史列表”是读取，“改标题”是修改，“移除记录”是删除。先问清楚动作，再选接口和按钮，排错会容易很多。\n\n## 一个类比\n\n好比餐厅的订单本：顾客下单是在本子上新增，服务员查看订单是在读取，顾客改成少辣是在修改，取消整单是在删除。相似之处是每个动作都改变或读取同一本记录；但它不像餐厅，数据库不会替你猜“这一笔是不是同一个订单”，你必须提供要操作的表、字段和目标条件，尤其不能让修改或删除没有范围。\n\n## 工作示例\n\n《说人话》保存历史解释时，可以把一次用户动作拆成四个按钮背后的数据动作：\n\n```js\n// 新增一条解释\nawait supabase.from('explanations').insert({\n  user_id: currentUserId,\n  source_text: sourceText,\n  plain_text: plainText\n});\n\n// 读取历史解释\nconst { data: history } = await supabase\n  .from('explanations')\n  .select('id, source_text, plain_text, created_at');\n\n// 修改一条解释的标题\nawait supabase\n  .from('explanations')\n  .update({ title: '体检报告那一条' })\n  .eq('id', explanationId);\n\n// 删除一条解释\nawait supabase\n  .from('explanations')\n  .delete()\n  .eq('id', explanationId);\n```\n\n用户第一次点击“保存”，调用 `insert` 产生一行；打开历史页，调用 `select` 取回多行；把标题改成“体检报告那一条”，调用 `update` 只改目标行；点击删除，调用 `delete` 去掉目标行。这里 `explanationId` 是范围，少了它，修改和删除就没有明确的对象。\n\n## 自检\n\n做对时，你能把每个数据按钮说成新增、读取、修改或删除中的一种，并能指出它操作哪张表、哪一行。\n\n最常见的做错法有两种。第一种用“保存”按钮反复 `insert`，用户每点一次就多出一条重复记录；先判断这是新增还是修改，并用记录 ID 区分。第二种调用 `update` 或 `delete` 却不加过滤条件，可能影响不该动的多行；给操作加明确的 `eq`、`match` 等过滤，并在测试数据上先确认范围。\n\n## 重点\n\n- 数据动作先分成新增、读取、修改、删除四类。\n- 一个产品功能可能组合多个数据动作。\n- 修改和删除必须有明确目标范围。\n- 按动作命名和检查接口，比只盯着按钮名称可靠。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Supabase 官方 JavaScript 参考分别提供 insert、update 和 delete 操作，并展示用过滤器定位记录。",
+          "sourceUrl": "https://supabase.com/docs/reference/javascript/insert",
+          "sourceTitle": "JavaScript: insert | Supabase Docs",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Supabase 官方 update 参考展示了 update 后用 eq 指定目标记录。",
+          "sourceUrl": "https://supabase.com/docs/reference/javascript/update",
+          "sourceTitle": "JavaScript: update | Supabase Docs",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Supabase 官方 delete 参考展示了 delete 后用 eq 指定要删除的记录。",
+          "sourceUrl": "https://supabase.com/docs/reference/javascript/delete",
+          "sourceTitle": "JavaScript: delete | Supabase Docs",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+              {
+                "id": "make-it-remember-four-data-actions",
+          "kind": "basic",
+          "front": "新增、读取、修改、删除分别解决什么问题？",
+          "back": "新增把一条新记录放进表，读取把已有记录取出来，修改改变已有记录的字段，删除移除不再需要的记录。保存、历史、编辑、移除等功能通常由它们组合而成。",
+          "tags": [
+            "crud",
+            "data-actions"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Supabase JavaScript 参考提供了 insert、update、delete 方法，读取则通过 select 返回表中的数据。",
+              "sourceUrl": "https://supabase.com/docs/reference/javascript/insert",
+              "sourceTitle": "JavaScript: insert | Supabase Docs",
+              "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-insert-can-duplicate",
+                "kind": "basic",
+                "front": "为什么把“保存”按钮一直接到 insert 会产生重复记录？",
+                "back": "insert 的作用是新增一行，不是寻找并改掉旧行；用户每点一次就可能再放进一条记录。已有记录要修改时，应使用 update，并用记录 ID 或其他条件锁定目标。",
+                "tags": [
+                  "crud",
+                  "insert",
+                  "update"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Supabase 官方文档把 insert 定义为向表或视图执行 INSERT，并单独提供 update 操作。",
+                    "sourceUrl": "https://supabase.com/docs/reference/javascript/insert",
+                    "sourceTitle": "JavaScript: insert | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-scope-update-delete",
+                "kind": "basic",
+                "front": "修改或删除一条数据时，为什么要带明确的过滤条件？",
+                "back": "update 和 delete 都需要知道目标是哪一行；用 eq 之类的条件锁定记录 ID，才能避免把同一张表里不该动的其他行一起改掉或删掉。",
+                "tags": [
+                  "crud",
+                  "update",
+                  "delete",
+                  "data-scope"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Supabase 的 update 和 delete 示例都在动作后用 eq 指定目标记录。",
+                    "sourceUrl": "https://supabase.com/docs/reference/javascript/update",
+                    "sourceTitle": "JavaScript: update | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  },
+                  {
+                    "kind": "fact",
+                    "note": "Supabase delete 参考展示了 delete 后用 eq 指定要删除的记录。",
+                    "sourceUrl": "https://supabase.com/docs/reference/javascript/delete",
+                    "sourceTitle": "JavaScript: delete | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
+      "exercises": [
+        {
+          "id": "make-it-remember-crud-map",
+          "title": "把你的功能拆成四种动作",
+          "kind": "explain",
+          "prompt": "挑选你产品中的一个完整功能，例如保存一份结果或管理一条记录。按发生顺序写出它会做哪些新增、读取、修改、删除动作，并指出每个动作的目标记录。",
+          "rubric": [
+            "四种动作的名称和实际含义对应正确",
+            "至少一个修改或删除动作带有明确记录范围",
+            "说明多个动作如何串成一个用户功能"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Supabase 官方文档展示了 CRUD 方法及通过过滤器定位更新、删除对象的做法。",
+              "sourceUrl": "https://supabase.com/docs/reference/javascript/update",
+              "sourceTitle": "JavaScript: update | Supabase Docs",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "who-can-see-whose-data",
+      "title": "谁能看谁的数据",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能规定每个用户只能看到自己的记录。\n\n## 先给结论\n\n带个人内容的产品，默认规则应该是“谁也看不见别人的”。仅仅在页面上隐藏别人的卡片不算保护，因为访客仍可能直接发查询请求；要把“这一行归谁”写进数据库的访问规则。Supabase 的 RLS 会在数据库内部按策略决定请求能作用于哪些行，常见的个人数据策略是把当前用户的 ID 和行里的 `user_id` 对上。\n\n## 一个类比\n\n好比银行档案室，每份文件贴着客户编号，柜员每次取档案都先核对正在办事的人和文件编号。把“我的历史”按钮藏起来，只像把柜门上的目录遮住，文件仍可能被直接拿走；RLS 相当于档案室内部的核对规则。但它不像人工柜员，规则写错会稳定地错，所以必须用两个用户分别测试允许和拒绝。\n\n## 工作示例\n\n《说人话》的 `explanations` 表每行都有 `user_id`。如果只写下面的查询，页面会请求“所有当前请求允许看到的行”；如果表暴露、没有正确的 RLS 和策略，就可能把多个用户的解释一起返回：\n\n```js\nconst { data } = await supabase\n  .from('explanations')\n  .select('*');\n```\n\n在数据库里先启用行级安全，再给已登录用户写一条只读自己的策略：\n\n```sql\nalter table public.explanations enable row level security;\n\ncreate policy read_own_explanations\non public.explanations for select\nto authenticated\nusing ((select auth.uid()) = user_id);\n```\n\n这条规则的意思是：请求者是已登录角色，并且当前请求的用户 ID 等于这一行的 `user_id`，才让这行出现在读取结果里。user_101 查询时只能看到 user_101 的解释，user_202 查询时只能看到 user_202 的解释；没有登录的请求没有可匹配的当前用户。新增、修改和删除也要分别设计策略，不能只保护读取。\n\n上线前用两个测试账号各保存一条不同的合同解释。登录 user_101 读取，应该看到自己的那一条；把请求换成 user_202，应该看不到 user_101 的文字。再尝试修改或删除对方的 ID，应该被数据库规则挡住，而不是靠按钮不显示来“保证安全”。\n\n## 自检\n\n做对时，两个账号各有一行数据，互相查询只返回自己的行；直接请求数据库接口也遵守同一条边界。\n\n最常见的做错法有两种。第一种只在前端加 `eq('user_id', currentUserId)`，以为用户不能改请求；把 RLS 和数据库策略补上，因为客户端传来的过滤条件不能代替数据库的拒绝规则。第二种只写了 `select` 策略，却让新增时客户端可以把 `user_id` 填成别人；为 insert、update、delete 分别写允许条件，并用两个账号测试每一种动作。\n\n## 重点\n\n- 个人数据的默认答案是用户只能看到自己的行。\n- UI 隐藏不是数据权限，数据库必须自己执行边界。\n- RLS 策略可以按 `auth.uid()` 与行的 `user_id` 比较来筛选。\n- 读取、新增、修改、删除需要分别验证允许与拒绝。\n- 两个测试账号是发现“所有人都能看”的最低成本检查。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Supabase 说明暴露 schema 中没有 RLS 的表可能被有相应 grant 的角色读写，并建议为表启用 RLS。",
+          "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+          "sourceTitle": "Row Level Security | Supabase Docs",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Supabase 展示了使用 authenticated、auth.uid() 和 user_id 创建只允许用户查看自己行的 SELECT policy。",
+          "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+          "sourceTitle": "Row Level Security | Supabase Docs",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Supabase 说明 insert、update、delete 也要使用各自的策略条件，且 with check 可限制新行归属。",
+          "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+          "sourceTitle": "Row Level Security | Supabase Docs",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+              {
+                "id": "make-it-remember-rls-owner-filter",
+          "kind": "basic",
+          "front": "为什么只在前端过滤 user_id 不够？",
+          "back": "前端发来的过滤条件可以被改掉，不能承担最终权限。RLS 在数据库里执行策略，例如让 auth.uid() 必须等于行的 user_id，直接请求数据库时也会受到这条边界约束。",
+          "tags": [
+            "rls",
+            "data-privacy",
+            "row-owner"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Supabase 将 RLS 描述为运行在数据库内部的细粒度授权规则，并给出 auth.uid() 对 user_id 的策略。",
+              "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+              "sourceTitle": "Row Level Security | Supabase Docs",
+              "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-default-private",
+                "kind": "basic",
+                "front": "为什么个人数据的起点应该是“谁也看不见别人的”？",
+                "back": "因为把表暴露出去而没有正确的 RLS，具备相应权限的角色可能直接读写它。先把默认边界设成只能访问自己的行，再明确开放共享，漏写规则时才不会把隐私当成默认公开。",
+                "tags": [
+                  "rls",
+                  "data-privacy",
+                  "default-private"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Supabase 说明没有 RLS 的暴露表可能被具备相应 grant 的角色读写，并建议为表启用 RLS。",
+                    "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+                    "sourceTitle": "Row Level Security | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-policies-per-action",
+                "kind": "basic",
+                "front": "为什么不能只写一条读取策略就算保护了个人数据？",
+                "back": "读取、新增、修改、删除是四种不同动作，RLS 要分别规定每种动作允许什么。尤其新增要检查新行的 user_id，修改还要同时检查原行和改完后的行归谁。",
+                "tags": [
+                  "rls",
+                  "crud",
+                  "data-privacy"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Supabase RLS 指南分别说明 select、insert、update、delete 的策略条件，并说明 with check 可限制新行归属。",
+                    "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+                    "sourceTitle": "Row Level Security | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-two-account-smoke-test",
+                "kind": "basic",
+                "front": "用两个账号互测个人数据时，最低要验证什么？",
+                "back": "账号 A 保存一条记录后，A 能读到自己的记录；换成账号 B，读不到 A 的记录。再用 B 尝试修改和删除 A 的记录，数据库也应拒绝，而不是只在页面上隐藏按钮。",
+                "tags": [
+                  "rls",
+                  "two-user-test",
+                  "data-privacy"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Supabase RLS 示例用请求用户的 auth.uid() 与行的 user_id 比较，并分别展示读取、修改和删除策略。",
+                    "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+                    "sourceTitle": "Row Level Security | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
+      "exercises": [
+        {
+          "id": "make-it-remember-two-user-access-test",
+          "title": "用两个用户验收隐私边界",
+          "kind": "explain",
+          "prompt": "为你的产品写一个双用户测试：用户 A 存下一条记录，用户 B 登录后尝试读取、修改和删除它。请写出每一步应该成功还是被拒，以及哪条数据字段用来判断归属。",
+          "rubric": [
+            "明确写出 A 能看到自己的记录、B 看不到 A 的记录",
+            "读取、修改、删除至少分别说明预期结果",
+            "指出数据库中的归属字段和当前用户身份如何比较"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Supabase 官方 RLS 指南要求为各操作写策略，并展示使用 auth.uid() 约束用户自己的行。",
+              "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+              "sourceTitle": "Row Level Security | Supabase Docs",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "what-logging-in-really-is",
+      "title": "登录到底在做什么",
+      "variant": "溯源",
+      "content": "## 学习目标\n\n读完你能说明登录后请求凭什么被认作某个用户。\n\n## 先给结论\n\n登录不只是把页面右上角的文字换成“你好，某某”。登录成功后，认证系统会建立一个 session，里面有给后续请求使用的 access token 和 refresh token；请求带着有效的会话凭证，数据层才有机会判断“这是哪个用户”。所以“登录”和“谁能看哪一行”是两件相连但不同的事：前者提供身份，后者用身份执行权限规则。\n\n## 一个类比\n\n好比你去银行办业务，先出示证件并拿到一张本次业务的凭证，之后柜员用凭证知道正在服务哪位客户。这个过程和登录 session 相似；但它不像一张永久通行证，access token 会过期，session 也可能因退出登录或安全设置而终止，应用需要处理会话更新和失效。\n\n## 工作示例\n\n《说人话》用户第一次打开历史页时还没有身份，页面只能把他当作未登录访客。用户完成邮箱登录后，Supabase Auth 建立一个 session；应用拿到 session 中的访问凭证，之后请求 `explanations` 表。\n\n完整的观察顺序是：\n\n```text\n提交登录信息\n  → Auth 验证并建立 session\n  → 应用拿到 access token 与 refresh token\n  → 后续数据请求带上当前 session\n  → 数据库策略用 auth.uid() 判断行归属\n  → 页面显示当前用户获准看到的解释\n```\n\n如果 user_101 登录后读取历史，RLS 可以把会话里的用户身份和行的 `user_id` 比较；user_101 退出后，session 终止，下一次请求不能再把他当作已登录用户。即使页面还暂时显示“user_101”，那也只是界面状态，不能作为数据库权限依据。\n\n做产品时把两个问题分开写在纸上：第一问“用户有没有有效 session”；第二问“这个用户对这张表的哪些操作被策略允许”。只有第一问没有第二问，所有登录用户仍可能看到所有行；只有第二问没有可靠身份，规则也找不到要比较的用户。\n\n## 自检\n\n做对时，登录后能在会话状态里找到凭证，后续请求带着这个会话，RLS 能识别当前用户；退出后请求不再按已登录身份处理。\n\n最常见的做错法有两种。第一种只改页面上的用户名，不建立真实 session；刷新或直接调用数据接口就无法证明身份，检查认证系统实际返回的 session。第二种把用户自己填的 `user_id` 当成身份；用户可以改输入值，改用认证 session 提供的当前用户 ID，并让数据库策略再次核对。\n\n## 重点\n\n- 登录成功会建立 session，不只是改变一段界面文字。\n- session 用 access token 和 refresh token 表示后续身份。\n- 身份认证回答“你是谁”，RLS 策略回答“你能碰哪些行”。\n- 页面显示的用户名不能代替会话凭证。\n- 退出或会话失效后，数据请求要回到未认证状态。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Supabase 说明用户登录时创建 session，session 由 access token 和 refresh token 表示。",
+          "sourceUrl": "https://supabase.com/docs/guides/auth/sessions",
+          "sourceTitle": "User sessions | Supabase Docs",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Supabase 说明 session 在用户登录时启动，应用会收到 access token 和 refresh token，退出登录等事件可以终止 session。",
+          "sourceUrl": "https://supabase.com/docs/guides/auth/sessions",
+          "sourceTitle": "User sessions | Supabase Docs",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Supabase RLS 文档说明 auth.uid() 返回发起请求的用户 ID，可用于和表中的 user_id 比较。",
+          "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+          "sourceTitle": "Row Level Security | Supabase Docs",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+              {
+                "id": "make-it-remember-session-identity",
+          "kind": "basic",
+          "front": "登录成功后，后续请求凭什么知道是哪个用户？",
+          "back": "认证系统建立 session，并用 access token 与 refresh token 表示它。后续请求带着有效的 session，数据库才能取得当前用户身份，再用它执行行级权限规则。",
+          "tags": [
+            "login",
+            "session",
+            "identity"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Supabase 官方会话文档说明 session 的建立时机及其 access token、refresh token 表示。",
+              "sourceUrl": "https://supabase.com/docs/guides/auth/sessions",
+              "sourceTitle": "User sessions | Supabase Docs",
+              "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-auth-vs-authorization",
+                "kind": "basic",
+                "front": "认证和授权分别回答什么问题？",
+                "back": "认证回答“当前请求是谁”，由登录建立的 session 和令牌提供身份；授权回答“这个身份能碰哪些行”，由 RLS 等数据策略决定。登录成功不代表自动拥有所有数据权限。",
+                "tags": [
+                  "login",
+                  "authentication",
+                  "authorization"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Supabase 会话文档说明 session 由 access token 和 refresh token 表示，RLS 文档说明 auth.uid() 可用于行归属策略。",
+                    "sourceUrl": "https://supabase.com/docs/guides/auth/sessions",
+                    "sourceTitle": "User sessions | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  },
+                  {
+                    "kind": "fact",
+                    "note": "Supabase RLS 文档展示用 auth.uid() 与 user_id 比较来限制用户可访问的行。",
+                    "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+                    "sourceTitle": "Row Level Security | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-user-id-is-not-proof",
+                "kind": "basic",
+                "front": "为什么不能把用户自己填写的 user_id 当成登录身份？",
+                "back": "输入框里的 user_id 是用户可以改的普通数据，不是认证凭证。当前用户身份应来自有效 session，数据库再用 auth.uid() 与行的 user_id 比较，而不是相信页面传来的归属值。",
+                "tags": [
+                  "login",
+                  "identity",
+                  "row-owner"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Supabase RLS 文档说明 auth.uid() 返回发起请求的用户 ID，未认证时返回 null。",
+                    "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+                    "sourceTitle": "Row Level Security | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
+      "exercises": [
+        {
+          "id": "make-it-remember-login-to-row-access",
+          "title": "把登录接到一行数据",
+          "kind": "explain",
+          "prompt": "描述你的产品从用户登录到读取一条个人记录的完整链路：session 在哪里产生，后续请求带什么，数据库拿哪个当前用户标识和表里的哪一列比较？",
+          "rubric": [
+            "把登录 session 和后续数据请求连接起来",
+            "指出当前用户身份来源于会话而非用户自己填写的字段",
+            "说出权限规则比较的表列或等价归属信息"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Supabase 会话文档说明登录后应用收到令牌，RLS 文档说明 auth.uid() 可用于行归属判断。",
+              "sourceUrl": "https://supabase.com/docs/guides/auth/sessions",
+              "sourceTitle": "User sessions | Supabase Docs",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "one-real-query",
+      "title": "一条真的查询长什么样",
+      "variant": "术语",
+      "content": "## 学习目标\n\n读完你能拆解一条查询中列、表和条件各自的作用。\n\n## 先给结论\n\n一条 `SELECT` 至少要回答三个问题：取哪些列、从哪张表取、哪些行符合条件。`WHERE` 决定保留哪些行，`ORDER BY` 只负责排列结果；把列写成 `*` 会请求所有列，不适合拿来掩盖你其实还没决定要什么。下面直接拆一条《说人话》的真实查询形状。\n\n## 一个类比\n\n好比你请图书管理员找资料：先说要抄哪些信息栏，再说去哪个书架，最后说只要满足什么条件的书，拿回来后还可以要求按日期排序。这个过程和 `SELECT` 的列、`FROM` 的表、`WHERE` 的条件、`ORDER BY` 的顺序相似。但它不是口头请求，SQL 每个部分都必须写在正确位置，漏掉条件可能一次拿回所有允许访问的行。\n\n## 工作示例\n\n假设 `explanations` 表保存每次解释，user_101 的 ID 是示例 UUID。产品历史页要取编号、原文、大白话和创建时间，只看 user_101 的记录，并把新的放前面：\n\n```sql\nSELECT id, source_text, plain_text, created_at\nFROM public.explanations\nWHERE user_id = '11111111-1111-1111-1111-111111111111'\nORDER BY created_at DESC;\n```\n\n逐块看：\n\n- `SELECT id, source_text, plain_text, created_at` 是要返回的四列。它没有写 `*`，所以不会主动取出表里的每一列。\n- `FROM public.explanations` 指定数据来自 `public` schema 下的 `explanations` 表。\n- `WHERE user_id = '...'` 是行条件，只保留归属这个用户 ID 的记录。\n- `ORDER BY created_at DESC` 让结果按创建时间倒序，新的记录排在前面。\n- 末尾分号表示这条 SQL 到这里结束。\n\n如果表里有三位用户各两条解释，这条查询的意图是从六行里留下 user_101 的两行，再按时间排列。数据库的 RLS 仍然是另一道边界：即使有人把查询里的 UUID 改成 user_202，数据库策略也应该只允许当前会话有权看到的行。\n\n## 自检\n\n做对时，你能指着自己的 SQL 说出返回哪几列、来源哪张表、用哪一个条件筛行；执行结果的行数和条件相符，排序也符合页面需要。\n\n最常见的做错法有两种。第一种写成 `SELECT * FROM explanations`，结果把不需要的列和别人的风险字段一起带出来；把列名明确列出。第二种忘记 `WHERE user_id = ...`，历史页突然出现所有允许返回的记录；在个人数据查询里先写归属条件，再检查 RLS 是否也存在。\n\n## 重点\n\n- `SELECT` 后面列出要取的列。\n- `FROM` 后面写数据来源表。\n- `WHERE` 只保留条件为真的行。\n- `ORDER BY` 改变结果顺序，不负责权限。\n- 查询条件和 RLS 是两层边界，不能互相替代。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "PostgreSQL 官方把 SELECT 拆成返回列的 select list、数据来源的 table list 和可选的限制条件。",
+          "sourceUrl": "https://www.postgresql.org/docs/current/tutorial-select.html",
+          "sourceTitle": "PostgreSQL: Documentation: 18: 2.5. Querying a Table",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "PostgreSQL 官方说明 WHERE 只返回布尔条件为真的行，并展示 ORDER BY 对查询结果排序。",
+          "sourceUrl": "https://www.postgresql.org/docs/current/tutorial-select.html",
+          "sourceTitle": "PostgreSQL: Documentation: 18: 2.5. Querying a Table",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Supabase 说明 RLS policy 会像额外的 WHERE 条件一样作用于查询，并可用 auth.uid() 与行的 user_id 比较。",
+          "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+          "sourceTitle": "Row Level Security | Supabase Docs",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+              {
+                "id": "make-it-remember-select-three-questions",
+          "kind": "basic",
+          "front": "读一条 SELECT 时先找哪三块？",
+          "back": "先找 SELECT 后要返回的列，再找 FROM 后的数据表，最后找 WHERE 后筛选行的条件；若有 ORDER BY，再看结果如何排序。",
+          "tags": [
+            "sql",
+            "select",
+            "query"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "PostgreSQL 官方将 SELECT 说明为列清单、表清单和可选限制条件的组合，并解释 WHERE。",
+              "sourceUrl": "https://www.postgresql.org/docs/current/tutorial-select.html",
+              "sourceTitle": "PostgreSQL: Documentation: 18: 2.5. Querying a Table",
+              "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-where-vs-order",
+                "kind": "basic",
+                "front": "SQL 里的 WHERE 和 ORDER BY 分别做什么？",
+                "back": "WHERE 决定哪些行符合条件、可以被返回；ORDER BY 只改变这些结果的排列顺序。排序不会替你筛掉不该访问的行。",
+                "tags": [
+                  "sql",
+                  "where",
+                  "order-by"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "PostgreSQL 官方文档说明 WHERE 只返回条件为真的行，并单独说明 ORDER BY 用于排序查询结果。",
+                    "sourceUrl": "https://www.postgresql.org/docs/current/tutorial-select.html",
+                    "sourceTitle": "PostgreSQL: Documentation: 18: 2.5. Querying a Table",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-query-vs-rls",
+                "kind": "basic",
+                "front": "SQL 里的 WHERE 条件能代替 RLS 吗？",
+                "back": "不能。WHERE 是这一条查询主动写出的筛选条件；RLS 是数据库对请求额外执行的访问规则。个人数据要两层都正确，不能只相信页面传来的 user_id。",
+                "tags": [
+                  "sql",
+                  "rls",
+                  "data-privacy"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "PostgreSQL 说明 WHERE 负责限定查询返回哪些行，Supabase 说明 RLS policy 会像额外的 WHERE 条件作用于查询。",
+                    "sourceUrl": "https://www.postgresql.org/docs/current/tutorial-select.html",
+                    "sourceTitle": "PostgreSQL: Documentation: 18: 2.5. Querying a Table",
+                    "sourceAuthority": "official-docs"
+                  },
+                  {
+                    "kind": "fact",
+                    "note": "Supabase RLS 文档说明策略会在数据库层限制请求可见的行，并可用 auth.uid() 与 user_id 比较。",
+                    "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+                    "sourceTitle": "Row Level Security | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
+      "exercises": [
+        {
+          "id": "make-it-remember-write-one-select",
+          "title": "为你的产品写一条查询",
+          "kind": "explain",
+          "prompt": "为你设计的表写一条真实的 SELECT：明确列出要取的列、写出表名、写出一个能保护或筛选目标记录的 WHERE 条件，再解释每一块在做什么。",
+          "rubric": [
+            "SELECT 后不是含糊的“取数据”，而是明确列名",
+            "FROM 指向你设计的表，WHERE 指向一个具体筛选条件",
+            "能用自己的话逐块解释查询，并说明遗漏条件会造成什么结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "PostgreSQL 官方文档直接定义 SELECT、FROM、WHERE 各自承担的查询部分。",
+              "sourceUrl": "https://www.postgresql.org/docs/current/tutorial-select.html",
+              "sourceTitle": "PostgreSQL: Documentation: 18: 2.5. Querying a Table",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

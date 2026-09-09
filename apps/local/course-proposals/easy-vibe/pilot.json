@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "easy-vibe-pilot",
+  "course": {
+    "id": "from-idea-to-live",
+    "title": "一个念头，怎么变成别人能打开的东西",
+    "description": "写给没写过代码、但手里有一个想做的东西的人。从判断这个念头值不值得做，一路做到一个别人点得开的网址。",
+    "audience": "没写过代码，会用电脑，手里有一个自己想做的东西的人",
+    "objectives": [
+      "判断自己那个念头是别人真的在费劲解决的事，还是自己想出来的",
+      "把念头收敛成一版说得清、做得完的东西",
+      "让 AI 做出这一版，并说清它哪里不对",
+      "给它接上模型、存下数据、发到网上、收到钱"
+    ],
+    "units": [
+      {
+        "id": "is-the-idea-worth-it",
+        "title": "这个念头值不值得做",
+        "objective": "读完这一单元你能判断自己那个念头是真需求，还是自己想出来的。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "what-people-say-vs-do",
+            "title": "人说的和人做的，不是一回事",
+            "variant": "对比",
+            "content": "## 学习目标\n\n读完你能把一句「你会用这个吗」，改写成一句能问出真话的问题。\n\n## 先给结论\n\n你拿着自己的想法去问别人「我做这么个东西，你会用吗」，对方说「会啊，挺好的」——这句话里几乎没有信息。\n\n不是对方在骗你。是**人预测自己将来会做什么，本来就不准**。做可用性研究的尼尔森诺曼集团测过这件事：人嘴上说的偏好，和他实际用起来的表现，相关性是 0.44。他们自己的说法是，从「他说他喜欢哪个」，大概只能推出四分之一的「他用哪个更顺手」。\n\n所以问法要换。不问他将来会不会用，**问他上一次遇到这件事的时候是怎么解决的**。将来的事他只能猜，上个月的事他记得。\n\n## 一个类比\n\n这件事就像健身房卖年卡。办卡的时候它会问你：「你以后打算一周来几次？」办卡的人几乎都说三次。健身房比谁都清楚这个数字是假的——它们的生意能成立，靠的正是大部分人办完卡不来。\n\n它们真正在意的不是你怎么回答，是**你以前有没有在别的地方坚持运动过**。那是发生过的事，改不了。\n\n不一样的地方在这儿，而且这一点决定了你要做什么：健身房手里有你的会员记录，它可以直接去查。**你手里什么都没有，所以你得把记录问出来。**\n\n这就是「问上一次」这个动作的全部意思——你不是在闲聊，你是在替自己补一份本来不存在的记录。\n\n## 工作示例\n\n就用这门课要做的那个东西举例：一个把看不懂的话讲成人话的小工具。下面是同一个人，两种问法，问出来的东西差多少。\n\n**问法一，问将来：**\n\n> 你：我在做一个东西，能把看不懂的合同条款翻译成大白话，你会用吗？\n>\n> 他：会啊，挺有用的。\n\n你记下：「一个潜在用户」。\n\n这条记录的价值是零。他没花过一分钱、一分钟，他只是在礼貌地回应一个刚刚被介绍给他的东西。\n\n**问法二，问上一次：**\n\n> 你：你上一次看到一份自己看不懂的合同，是什么时候？\n>\n> 他：上个月租房。\n>\n> 你：看不懂的那部分，你最后是怎么弄的？\n>\n> 他：拍了照发给我表姐，她是做律师的。\n>\n> 你：她多久回你？\n>\n> 他：第二天。可我那天下午就得签，最后没弄明白就签了。\n\n四句话，问出了三件已经发生过的事：\n\n- **多久遇到一次**——租房的时候会遇到，不是每天\n- **他现在的办法**——找懂行的熟人，不花钱，但要欠人情\n- **这个办法的代价**——要等一天；而那一次他等不起，最后是没弄明白就签了字\n\n第三条最值钱。**他为这件事已经付出过实实在在的代价了。**那不是「会不会用」，那是他正在承担的东西。\n\n注意这四句里，你自己那个想法一次都没被提起。\n\n## 自检\n\n**做对了会看到什么：**你的笔记里全是发生过的事——哪一天、他当时怎么做的、花了多少时间或者多少钱。整段对话从头到尾，你要做的那个东西一次都没出现。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、对方开始夸你。**「这想法挺好的」「肯定有人需要」——只要出现夸奖，就说明你已经先把想法说出去了。尼尔森诺曼集团把这类现象叫做提问效应：只要你问，人就能对任何事情当场生出一个看法，哪怕那件事根本不重要。你一介绍，他手里就有了可以发表看法的东西，后面的回答就都往好听的方向偏了。回到上一句，重新只问他自己的事。\n\n**二、回答里全是「一般」「通常」「都会」。**「我一般会去搜一下」——这句描述的是一个想象中的他，不是上个月的他。追一句：「最近的一次是什么时候？」如果他想不起具体哪一次，那这件事在他身上大概没有真的发生过。\n\n## 重点\n\n- 人对自己将来行为的预测并不准；尼尔森诺曼集团测得的偏好与实际表现相关性是 0.44。\n- 「你会用吗」问不出有用的东西，因为它要求对方预测未来。\n- 换成问上一次：什么时候遇到的、当时怎么解决的、为此付出了什么。\n- 只要你先介绍了自己的想法，对方就有了可以发表看法的东西，答案会往好听的方向偏。\n- 说不出具体哪一次，就说明这件事在他身上没有真的发生过。\n",
+            "evidence": [
+              {
+                "kind": "fact",
+                "note": "这一页说明人对自己未来行为的预测不可靠，并给出偏好与实际表现的相关性为 0.44，以及「大约只能预测四分之一」的解读。",
+                "sourceUrl": "https://www.nngroup.com/articles/first-rule-of-usability-dont-listen-to-users/",
+                "sourceTitle": "Nielsen Norman Group · First Rule of Usability? Don't Listen to Users",
+                "sourceAuthority": "official-docs"
+              },
+              {
+                "kind": "fact",
+                "note": "这一页给出「让受访者回忆具体某一次经历」的访谈做法，并说明为什么不能问受访者没见过的东西；提问效应（人可以对任何被问到的事当场生成看法）也出自这一页。",
+                "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+                "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+                "sourceAuthority": "official-docs"
+              }
+            ],
+            "cards": [
+              {
+                "id": "why-will-you-use-this-fails",
+                "kind": "basic",
+                "front": "问别人「你会用这个吗」，为什么几乎问不出有用的信息？",
+                "back": "因为这句话要求对方预测自己将来的行为，而人在这件事上并不准。尼尔森诺曼集团测得的偏好与实际表现相关性只有 0.44。",
+                "tags": ["user-research"],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "0.44 这个数字和「预测不可靠」的结论都出自这一页。",
+                    "sourceUrl": "https://www.nngroup.com/articles/first-rule-of-usability-dont-listen-to-users/",
+                    "sourceTitle": "Nielsen Norman Group · First Rule of Usability? Don't Listen to Users",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "ask-about-the-last-time",
+                "kind": "basic",
+                "front": "「你会用吗」该换成什么问法？",
+                "back": "问上一次：他最近一次遇到这件事是什么时候、当时怎么解决的、为此花了多少时间或多少钱。将来的事他只能猜，发生过的事他记得。",
+                "tags": ["user-research"],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "让受访者回忆具体某一次经历，是这一页给出的访谈做法。",
+                    "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+                    "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "the-query-effect",
+                "kind": "basic",
+                "front": "为什么一旦你先介绍了自己的想法，后面的回答就不能信了？",
+                "back": "因为人可以对任何被问到的事情当场生出一个看法，哪怕那件事对他根本不重要。你一介绍，他手里就有了可以发表看法的东西，答案会往好听的方向偏。",
+                "tags": ["user-research"],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "提问效应——人能对任何被问及的事情产生看法——出自这一页。",
+                    "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+                    "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "generally-means-never",
+                "kind": "basic",
+                "front": "对方说「我一般都会去搜一下」，你该追问什么？",
+                "back": "追问「最近的一次是什么时候」。说不出具体哪一次，就说明这件事在他身上没有真的发生过，那句「一般」描述的是想象中的他。",
+                "tags": ["user-research"],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "回忆具体某一次经历比泛泛而谈更可靠，依据是这一页的访谈做法。",
+                    "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+                    "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "rewrite-one-question",
+                "title": "把你自己那句问题改写一遍",
+                "kind": "explain",
+                "prompt": "写下你原本打算拿去问别人的那句话（多半长得像「你会用……吗」）。然后把它改写成三个问上一次的问题。最后说明：改写之后，你指望从对方嘴里拿到哪一件已经发生过的事？",
+                "rubric": [
+                  "写出了原来那句问将来的问题",
+                  "三个新问题问的都是过去发生过的具体某一次，不是习惯、不是意愿",
+                  "三个问题里至少有一个在问代价——花了多少时间、多少钱、或者欠了谁的人情",
+                  "说清楚了想拿到的是哪一件已经发生过的事，而不是一个态度"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "「问具体某一次经历」这个改写方向出自这一页给出的访谈做法。",
+                    "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+                    "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

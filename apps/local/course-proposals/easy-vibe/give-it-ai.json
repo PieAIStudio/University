@@ -1,0 +1,696 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "give-it-ai",
+  "courseId": "from-idea-to-live",
+  "unit": {
+    "id": "give-it-ai",
+    "title": "让它有 AI 的能力",
+    "objective": "读完这一单元你能让自己的页面调用一次模型，并把结果显示出来。",
+    "prerequisiteUnitIds": []
+  },
+  "lessons": [
+    {
+      "id": "what-an-api-is",
+      "title": "接口是什么",
+      "variant": "术语",
+      "content": "## 学习目标\n\n读完你能搭出一次从页面发出文字、收到模型文字的调用。\n\n## 先给结论\n\n程序之间也需要约定说什么、把话送到哪里、回来时长什么样。这样的一套约定，叫 API；你可以先把它当成程序之间的一扇办事窗口。对《说人话》来说，页面把一段难懂的文字交给自己的服务端，服务端再把请求交给模型，最后把模型回复交回页面。页面不会因为有输入框就自动拥有模型能力，它需要发出一次请求，也需要接住一次回应。\n\n## 一个类比\n\n好比你去银行柜台办一件事。你递上材料，柜员按固定格式收下，再把结果和回执交回来；这和 API 的相似处是双方都要按约定交接，不能把身份证明写在取件地址里，也不能期待对方猜出你要办什么。但它不是银行：另一端没有一个人替你判断，接口只会按程序接收字段、处理请求、返回数据。\n\n## 工作示例\n\n先看《说人话》的一次完整往返。读者把租房合同中的“承租方应于交付日前支付相当于三个月租金的履约保证金”粘进输入框，点击“讲人话”。页面只做页面的事：把文字装进请求，送到自己的 `/api/explain`。\n\n```js\nconst response = await fetch('/api/explain', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ text })\n});\n\nconst result = await response.json();\noutput.textContent = result.explanation;\n```\n\n服务端收到 `{ text }` 后，准备模型请求，把同一段文字放进消息内容，再把模型回来的文本整理成 `{ explanation }`。页面拿到这个字段后，把它放进结果区域。于是完整链路是“输入框文字 → 页面请求 → 自己的服务端 → 模型回复 → 页面显示”。任何一段没有接上，用户都会只看到按钮转圈或空白。\n\n## 自检\n\n做对时，你会在浏览器的 Network 面板看到一次发往 `/api/explain` 的 `POST`，回应里有一段解释文字，页面也出现“这笔钱相当于三个月租金”的大白话。\n\n最常见的做错法有两种。第一种是只改了按钮文字和结果区域，点击后没有任何网络请求；回到按钮事件里，确认它真的调用了 `fetch`。第二种是页面直接请求了一个你没有准备好的模型地址，结果出现跨域、401 或空响应；先让页面只请求自己的服务端地址，再让服务端负责对接模型。\n\n## 重点\n\n- API 是程序之间关于请求和回应的共同约定。\n- 一次模型功能至少有输入、请求、回应、显示四个可观察环节。\n- 页面负责收集和展示，服务端负责替它与模型沟通。\n- 没有真正发出请求，改再多界面也不会产生模型回复。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Anthropic 的 Messages API 用 POST 请求接收结构化消息，并生成下一条模型消息。",
+          "sourceUrl": "https://platform.claude.com/docs/en/api/http/messages/create",
+          "sourceTitle": "Create a Message - Claude API Reference",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 说明 fetch 会发起网络获取并在回应可用时提供 Response 对象。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch",
+          "sourceTitle": "Window: fetch() method - Web APIs | MDN",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+              {
+                "id": "give-it-ai-api-request-response",
+          "kind": "basic",
+          "front": "一次最小的模型调用要看哪四段？",
+          "back": "看输入、发出的请求、收到的回应、页面显示。输入是读者粘来的文字，请求把它送到接口，回应带回模型文本，显示把文本放进页面。",
+          "tags": [
+            "api",
+            "request-response"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Messages API 的接口定义了输入消息和模型生成的下一条消息。",
+              "sourceUrl": "https://platform.claude.com/docs/en/api/http/messages/create",
+              "sourceTitle": "Create a Message - Claude API Reference",
+              "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-api-contract-parts",
+                "kind": "basic",
+                "front": "一个 API 约定至少要说清楚哪些事？",
+                "back": "要说清请求发到哪里、用什么方法、带哪些输入字段，以及回应会以什么结构回来。缺了其中一块，调用双方就无法稳定交接。",
+                "tags": [
+                  "api",
+                  "contract",
+                  "request-response"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Anthropic 的 Messages API 参考列出 POST /v1/messages，并定义 messages 输入和模型生成的下一条消息。",
+                    "sourceUrl": "https://platform.claude.com/docs/en/api/http/messages/create",
+                    "sourceTitle": "Create a Message - Claude API Reference",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-page-needs-fetch",
+                "kind": "basic",
+                "front": "页面有了输入框，为什么还不会自动出现模型回复？",
+                "back": "输入框只收集文字；页面还要用 fetch 发出请求，读取返回的 Response，再把回应里的文字放进结果区域。少了请求或显示，输入就不会变成用户看见的答案。",
+                "tags": [
+                  "fetch",
+                  "request-response",
+                  "frontend"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "MDN 展示 fetch 发起请求后得到 Response，并读取回应继续处理。",
+                    "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch",
+                    "sourceTitle": "Window: fetch() method - Web APIs | MDN",
+                    "sourceAuthority": "mdn"
+                  }
+                ]
+              }
+            ],
+      "exercises": [
+        {
+          "id": "give-it-ai-map-your-call",
+          "title": "画出你的第一次往返",
+          "kind": "explain",
+          "prompt": "把你自己的那个念头改写成一次 API 往返：写出页面收集的输入、页面请求的地址、模型可能返回的内容，以及页面把它放在哪里。不要只写“调用 AI”，要写清楚这四段。",
+          "rubric": [
+            "明确写出一个真实输入，而不是笼统的“用户数据”",
+            "把请求、回应和页面显示分别说清楚",
+            "说明页面与模型之间是否需要自己的服务端转发"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 的 fetch 文档说明请求会得到 Response，适合用来检查一次往返是否真的发生。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch",
+              "sourceTitle": "Window: fetch() method - Web APIs | MDN",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "the-key-is-a-password",
+      "title": "密钥就是密码",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能保护模型密钥不出现在浏览器代码里。\n\n## 先给结论\n\n模型密钥就是一串要保密的凭证，不是普通的页面配置。只要你把它放进浏览器要下载或执行的 JavaScript，打开页面的人就能用 F12 在 Sources 里找到代码，或在 Network 里看到请求头。这个风险当天就能变得很具体：拿到密钥的人可以拿它重放模型请求，消耗属于你的账户权限和用量；“我只是把它藏在变量名里”不会改变事实。正确的路线是浏览器只请求自己的 `/api/explain`，由服务端从环境变量或密钥管理器取出密钥。\n\n## 一个类比\n\n好比你租了一间房，房门钥匙应该只交给住户和管理处。把钥匙印在小区公告里，等于邀请路过的人进门；把钥匙放进一个叫 `secret` 的信封里也没有用，因为公告和信封都能被看到。但它又不像租房：模型密钥不一定直接打开你的电脑，它授权的是某个模型服务账户；别人拿它调用服务，留下的是你的账户用量和账单方向。\n\n## 工作示例\n\n假设你给《说人话》加了一个“讲清楚”按钮。下面这种写法看起来能跑，实际上把密码交给了每个访客：\n\n```js\nconst apiKey = 'sk-ant-example-only';\n\nfetch('https://api.anthropic.com/v1/messages', {\n  method: 'POST',\n  headers: { 'x-api-key': apiKey },\n  body: JSON.stringify({ model: 'MODEL_ID', max_tokens: 200, messages: [{ role: 'user', content: text }] })\n});\n```\n\n你打开页面，按 F12。Sources 可以列出页面加载过的 JavaScript 文件，搜索 `sk-ant` 就可能在代码里找到这串值；如果按钮真的发起了请求，Network 里的 Headers 还能显示请求头。你不需要破解服务器，也不需要猜密码，浏览器已经替你拿到了它。别人可以做同样的检查，再用这个凭证发起自己的请求。\n\n改成安全的分工：页面只做 `fetch('/api/explain')`；服务端代码读取 `process.env.ANTHROPIC_API_KEY`，把密钥放进服务端发给模型的请求里，最后只把解释文字返回页面。给前端变量改名、压缩代码、混淆字符串，或者让前端从 `.env` 读出密钥，都没有改变“浏览器拿到了它”这件事。若一串真实密钥已经进过公开页面或代码仓库，应立刻在提供方停用或轮换，再检查服务端日志和用量。\n\n## 自检\n\n做对时，浏览器的源码里没有模型密钥，Network 只看到浏览器发给自己 `/api/explain` 的请求；真正的提供方请求只发生在服务端。\n\n最常见的做错法有两种。第一种是把密钥放在 `const`、全局对象或前端 `.env`，然后以为文件名或变量名能保密；用 F12 搜索真实密钥片段，搜得到就算失败，移到服务端环境变量。第二种是发现泄露后只删掉页面代码，不停用旧密钥；旧值已经交出去，删除页面不会让它失效，先到提供方停用或轮换，再部署修复。\n\n## 重点\n\n- 送进浏览器的东西都应按“访客可见”来设计。\n- API 密钥应只出现在服务端请求或密钥管理器里。\n- F12 的 Sources 能看页面资源，Network 能看请求头和载荷。\n- 泄露后的第一动作是停用或轮换旧密钥，不是改变量名。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Anthropic 把 API key 称为静态秘密，说明每次请求会携带它，并建议放入密钥管理器、发现泄露时停用或删除。",
+          "sourceUrl": "https://platform.claude.com/docs/en/manage-claude/authentication",
+          "sourceTitle": "Authentication - Claude Platform Docs",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Chrome DevTools 的 Sources 面板可以查看页面加载的 JavaScript 等资源。",
+          "sourceUrl": "https://developer.chrome.com/docs/devtools/sources",
+          "sourceTitle": "Sources panel overview | Chrome DevTools",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Chrome DevTools 的 Network 面板会记录请求，并提供 Headers 和 Payload 视图。",
+          "sourceUrl": "https://developer.chrome.com/docs/devtools/network/reference/",
+          "sourceTitle": "Network features reference | Chrome DevTools",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+              {
+                "id": "give-it-ai-browser-secret",
+          "kind": "basic",
+          "front": "为什么把 API 密钥写进前端就等于公开？",
+          "back": "因为浏览器必须先拿到前端代码和请求才能执行它。访客可以用 F12 的 Sources 看加载的代码，也可以在 Network 查看请求头；只要密钥在其中，访客就能复制它，而不是只能看到一个不可用的名字。",
+          "tags": [
+            "api-key",
+            "browser-security"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Chrome 官方文档分别说明 Sources 能查看页面资源、Network 能查看请求头。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/network/reference/",
+              "sourceTitle": "Network features reference | Chrome DevTools",
+              "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-secret-rotation",
+                "kind": "basic",
+                "front": "真实 API 密钥已经进了公开页面，删掉代码后还要做什么？",
+                "back": "先在提供方停用或删除这把旧钥匙，再部署代码修复。删掉页面只能让新访客暂时看不到，不能让已经被拿走的凭证自动失效。",
+                "tags": [
+                  "api-key",
+                  "incident-response",
+                  "browser-security"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Anthropic 认证文档把 API key 作为静态秘密，并说明发现泄露时应停用或删除。",
+                    "sourceUrl": "https://platform.claude.com/docs/en/manage-claude/authentication",
+                    "sourceTitle": "Authentication - Claude Platform Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-server-holds-secret",
+                "kind": "basic",
+                "front": "安全的模型调用里，浏览器和服务端各自该拿到什么？",
+                "back": "浏览器拿到自己的业务接口和解释结果；服务端才读取并保存模型 API 密钥，再代表页面请求模型。密钥应留在你能控制秘密存储的服务端。",
+                "tags": [
+                  "api-key",
+                  "server",
+                  "secret-storage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Anthropic 认证文档将静态 API key 归为适合由调用方控制秘密存储的服务器场景的凭证。",
+                    "sourceUrl": "https://platform.claude.com/docs/en/manage-claude/authentication",
+                    "sourceTitle": "Authentication - Claude Platform Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
+      "exercises": [
+        {
+          "id": "give-it-ai-redraw-secret-route",
+          "title": "把密码从页面里拿走",
+          "kind": "explain",
+          "prompt": "下面的设计让浏览器直接带着提供方密钥请求模型：页面输入 → 提供方接口。请用文字重画一条安全路线，并指出访客按 F12 时应该看见什么、绝不应该看见什么。",
+          "rubric": [
+            "路线包含浏览器、自己的服务端和模型提供方三个角色",
+            "明确密钥只由服务端读取，浏览器只拿到业务结果",
+            "能说出 Sources 或 Network 为什么足以暴露前端里的密钥"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Anthropic 官方建议把 API key 放入密钥管理器，并在怀疑泄露时停用或删除。",
+              "sourceUrl": "https://platform.claude.com/docs/en/manage-claude/authentication",
+              "sourceTitle": "Authentication - Claude Platform Docs",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "first-request",
+      "title": "照着官方示例走通第一次",
+      "variant": "溯源",
+      "content": "## 学习目标\n\n读完你能跑通官方最小示例的一次模型回复。\n\n## 先给结论\n\n第一次调用的任务不是把整个产品写完，而是证明四件事能连起来：密钥能被读取、模型 ID 有效、请求格式正确、回应里确实有文字。先把官方最小示例原样跑通，再只替换一个输入或提示语，这样出了问题时你还有一个可比较的基线。第一次成功的证据应该是一条真实回应，而不是“代码没有报红”。\n\n## 一个类比\n\n好比第一次做一道新菜，先照着菜谱做出一盘，再换自己的配料。菜谱版能告诉你炉子、锅和火候是否工作；一上来同时换锅、换调料、换做法，最后不好吃时你不知道是哪一步出了问题。但它也不是厨房：API 的“菜谱”是精确字段和凭证，漏一个字段可能直接得到错误回应，不能靠尝一口猜。\n\n## 工作示例\n\n给《说人话》做第一次验证时，先在服务端环境里准备密钥，再执行一个只改变输入内容的最小请求。模型 ID 用你在官方模型列表里确认过的当前 ID，不要凭记忆填写。下面是一个保持官方 Messages API 结构、但使用我们自己的合同句子的 JavaScript 形状：\n\n```js\nconst message = await client.messages.create({\n  model: 'MODEL_ID_FROM_OFFICIAL_DOCS',\n  max_tokens: 200,\n  messages: [\n    {\n      role: 'user',\n      content: '用普通人的话解释：承租方应在交付日前支付三个月租金作为保证金。'\n    }\n  ]\n});\n\nfor (const block of message.content) {\n  if (block.type === 'text') console.log(block.text);\n}\n```\n\n先在终端或服务端脚本中运行它。若成功，你会看到模型返回一段文字，例如“入住前先交一笔相当于三个月租金的钱，作为履约保证”。接着只做一个改动：把这段固定合同句换成页面传来的 `text`，其他字段先不动。再把 `console.log` 换成服务端回应，再由页面显示。这样每一小步都有明确的比较对象。\n\n不要把示例里的模型 ID、字段名、认证方式混成自己的发明。官方快速入门给出了设置环境变量、创建消息、运行代码的顺序；你需要做的是确认自己的语言版本和模型 ID，然后逐项替换。\n\n## 自检\n\n做对时，你会有一份原始回应，其中至少能找到模型回应的文字内容；随后把固定输入替换成页面输入，仍能得到类似结构的回应。\n\n最常见的做错法有两种。第一种是一开始同时改模型名、请求字段、提示语和页面解析，最后只看到“失败”；退回官方最小例子，每次只改一处。第二种是把示例中的 `MODEL_ID_FROM_OFFICIAL_DOCS` 当成真的模型 ID，收到模型不存在或请求无效；去当前官方模型文档复制可用 ID，不要把示例占位符直接提交。\n\n## 重点\n\n- 第一次成功要证明“请求真的到达并返回文字”。\n- 官方示例是基线，先跑通再做单点替换。\n- 模型 ID、密钥来源、消息结构都要以当前官方文档为准。\n- 页面接入应该建立在一个已经单独验证过的服务端调用上。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Anthropic 快速入门要求先设置环境变量，再创建项目、写入 Messages API 调用并运行代码。",
+          "sourceUrl": "https://platform.claude.com/docs/en/get-started",
+          "sourceTitle": "Get started with Claude - Claude Platform Docs",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Messages API 参考页定义了 model、max_tokens 和 messages 等基本请求字段。",
+          "sourceUrl": "https://platform.claude.com/docs/en/api/http/messages/create",
+          "sourceTitle": "Create a Message - Claude API Reference",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+              {
+                "id": "give-it-ai-baseline-first",
+          "kind": "basic",
+          "front": "为什么第一次要先原样跑官方示例？",
+          "back": "它提供一个已说明请求结构和运行顺序的基线。先得到原始模型回复，再一次只改输入，出了问题时可以把自己的改动与基线逐项比较。",
+          "tags": [
+            "quickstart",
+            "baseline"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "官方快速入门把设置密钥、写调用和运行调用拆成连续步骤，并展示第一次回应。",
+              "sourceUrl": "https://platform.claude.com/docs/en/get-started",
+              "sourceTitle": "Get started with Claude - Claude Platform Docs",
+              "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-first-success-proof",
+                "kind": "basic",
+                "front": "第一次调用什么才算真的成功？",
+                "back": "要看到一次真实的模型文字回应。代码没有报红只能说明程序暂时没在语法处停下，不能证明密钥、模型、请求字段和回应链路都已经接通。",
+                "tags": [
+                  "quickstart",
+                  "verification",
+                  "model-response"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Anthropic 快速入门把设置密钥、创建消息、运行调用和查看回应列为最小路径。",
+                    "sourceUrl": "https://platform.claude.com/docs/en/get-started",
+                    "sourceTitle": "Get started with Claude - Claude Platform Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-max-tokens-is-a-ceiling",
+                "kind": "basic",
+                "front": "请求里的 max_tokens 是实际会生成的字数吗？",
+                "back": "不是。它只是允许生成的最高 token 数，模型可能在达到这个上限前就停止；实际回应长短仍要看这次生成结果。",
+                "tags": [
+                  "quickstart",
+                  "max-tokens",
+                  "model-response"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Anthropic Messages API 参考明确说明 max_tokens 是生成上限，模型可能在达到上限前停止。",
+                    "sourceUrl": "https://platform.claude.com/docs/en/api/http/messages/create",
+                    "sourceTitle": "Create a Message - Claude API Reference",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
+      "exercises": [
+        {
+          "id": "give-it-ai-one-change-log",
+          "title": "记录一次单点替换",
+          "kind": "explain",
+          "prompt": "为你自己的产品写一份第一次调用记录：你先照着哪一个官方最小示例，原始回应会在哪里出现，第一次只替换哪一处，成功的可观察证据是什么？",
+          "rubric": [
+            "写出一个不超过一处的第一次改动",
+            "把成功定义成可看到的回应或字段，而不是代码不报错",
+            "说明发生失败时如何退回可比较的基线"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "官方快速入门明确展示了设置环境变量、创建调用和运行调用的最小路径。",
+              "sourceUrl": "https://platform.claude.com/docs/en/get-started",
+              "sourceTitle": "Get started with Claude - Claude Platform Docs",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "it-does-not-answer-at-once",
+      "title": "有些接口不会马上给结果",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能区分创建异步任务和查询任务结果的两次请求。\n\n## 先给结论\n\n有些服务不会在创建请求里直接放最终答案，而是先收下工作、返回一个任务 ID，再让你用第二次请求查询状态和结果。第一条回应里的 `in_progress` 意味着任务已登记，不等于模型已经回答完。你的页面需要保存这个 ID，显示处理中，之后再查询或接收完成通知。不要把“暂时没有答案”误判成“接口坏了”。\n\n## 一个类比\n\n好比你把一箱东西交给快递站，柜台先给你运单号；你拿运单号查询，才会看到运输中的位置或签收结果。运单号和查询是两个动作，这一点和异步接口相似。但它不是快递：任务可能由模型批量处理，状态名字和等待时间由服务定义，不能凭“通常几分钟”写死一个保证。\n\n## 工作示例\n\n《说人话》平时一条合同可以同步解释；如果用户一次导入一百条条款，产品可以把它们作为批处理任务提交。第一次请求创建批次：\n\n```text\nPOST /v1/messages/batches\n\nrequests:\n  - custom_id: lease-clause-01\n    params: 一条普通的模型消息\n```\n\n回应里有一个类似 `msgbatch_example_123` 的 `id`，还有 `processing_status: in_progress`。页面把这个 ID 写进当前任务状态，显示“正在处理 100 条条款”，此时不要从这份回应里寻找最终解释。\n\n稍后第二次请求带上这个 ID：\n\n```text\nGET /v1/messages/batches/msgbatch_example_123\n```\n\n如果状态变成 `ended`，再请求结果地址，按每个 `custom_id` 把“第 1 条条款”和对应解释配回去。于是用户看到的是“提交成功 → 处理中 → 已完成 → 可查看结果”，而不是点击一次按钮后让浏览器无限等待。\n\n## 自检\n\n做对时，Network 中至少能辨认出创建任务和查询任务的两类请求；页面保存了任务 ID，查询到完成状态后才展示结果。\n\n最常见的做错法有两种。第一种是创建请求一返回就把 `in_progress` 当成最终答案，结果列表是空的；先显示处理中，等状态完成再取结果。第二种是第二次查询没有带第一次回应的任务 ID，或者每次刷新都丢掉 ID；把 ID 放在任务状态中，并在请求路径或参数里明确带上它。\n\n## 重点\n\n- 异步接口常见的形状是“创建任务、保存 ID、查询状态、取结果”。\n- `in_progress` 是处理中状态，不是模型回答。\n- 页面要保存任务 ID，才能把后续结果找回原任务。\n- 批处理适合一批工作，不要把它当成单条即时聊天的替代品。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Anthropic 的 Message Batches 创建后会返回批次 ID，初始处理状态为 in_progress。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/batch-processing",
+          "sourceTitle": "Batch processing - Claude Platform Docs",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Anthropic 文档说明可以用批次 ID 查询状态，并在状态 ended 后取得结果。",
+          "sourceUrl": "https://platform.claude.com/docs/en/api/messages/batches",
+          "sourceTitle": "Batches - Claude API Reference",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "give-it-ai-task-id",
+          "kind": "basic",
+          "front": "异步接口第一次回应里的任务 ID 是干什么的？",
+          "back": "它是后续查询这项工作的凭据。页面先保存它，再用它查询处理状态；状态完成后仍用它找到对应结果，不能把任务 ID 当成最终回答。",
+          "tags": [
+            "async",
+            "task-id"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Message Batches 参考列出了按 message_batch_id 查询批次和结果的接口。",
+              "sourceUrl": "https://platform.claude.com/docs/en/api/messages/batches",
+              "sourceTitle": "Batches - Claude API Reference",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "give-it-ai-async-state-machine",
+          "title": "给你的产品补上处理中",
+          "kind": "explain",
+          "prompt": "假设你的产品有一个不能立刻完成的动作。请写出第一次创建请求之后页面保存的 ID、处理中时用户看到的内容、第二次查询要带什么，以及什么时候才显示最终结果。",
+          "rubric": [
+            "明确区分创建请求和查询请求",
+            "说明任务 ID 如何连接两次请求",
+            "没有把处理中状态当作最终答案"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Anthropic 批处理文档展示了 in_progress 到 ended 的状态变化和轮询方式。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/batch-processing",
+              "sourceTitle": "Batch processing - Claude Platform Docs",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "why-words-appear-one-by-one",
+      "title": "为什么字是一个个蹦出来的",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能解释流式返回为何能让文字逐段出现。\n\n## 先给结论\n\n流式返回不是给页面加的打字动画，而是服务端在模型产生一部分结果后就把一部分结果送出来。客户端收到一段就追加一段，所以读者能先看到开头，不必等整段文字全部准备好。Anthropic 的 Messages API 可以用 `stream: true` 请求 SSE 事件，事件里会有文本增量和结束信号。流式只改变结果到达的方式，不会把模型的思考变成更聪明的答案。\n\n## 一个类比\n\n好比餐厅出菜，厨师做好一道小菜就先端出一道，客人边吃边等后面的菜；这和流式传输的相似处是结果分批到达，前台每到一批就能更新。它又不像餐厅：模型的分段可能停在半个词或标点前，事件也可能报错或中断，不能把每一段当成完整句子，更不能假设最后一段一定独立可读。\n\n## 工作示例\n\n《说人话》收到一条体检报告：“窦性心律，偶发早搏，建议复查”。服务端开启流式调用后，模型可能陆续送来这些文字片段：\n\n```text\n“先说结论：”\n“这句话描述的是”\n“心脏跳动的节律，”\n“其中提到偶尔出现一次提前的跳动，”\n“医生建议之后再做检查确认。”\n```\n\n页面维护一个 `answer` 字符串。每收到一个文本增量，就执行 `answer += chunk`，再把完整的 `answer` 写入结果区域；收到结束事件后，关闭连接并把最终文字交给保存流程。前端看到的是文字逐步长出来，服务端看到的是一个持续的事件流。\n\n如果你直接接 Anthropic 的流，官方文档列出的事件顺序包括开始事件、内容块开始、若干内容块增量、内容块结束、消息结束。若由自己的服务端转给浏览器，可以把有用的文本增量包装成自己的事件格式，但要保留“追加、结束、出错”三种状态。\n\n## 自检\n\n做对时，Network 中的回应会保持连接并出现事件流，结果区域随着新片段增加；最终会有明确的完成处理，刷新页面后也不会因为残留连接继续追加。\n\n最常见的做错法有两种。第一种是用定时器把完整答案一个字一个字播放，网络上其实仍是一次性回应；停掉定时器检查 Network，若只有一份完整 JSON，就还没有实现流式。第二种是收到第一段就替换旧文字，结果屏幕只剩最后一块；改成累加每个文本增量，并单独处理结束和错误事件。\n\n## 重点\n\n- 流式是结果分段到达，不是视觉特效。\n- `stream: true` 会让 Messages API 以 SSE 事件逐步传回结果。\n- 页面应追加文本片段，并处理结束与错误。\n- 分片边界不保证是完整句子或完整词语。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Anthropic 说明设置 stream 为 true 会用 Server-Sent Events 增量传输回应，并列出内容增量和结束事件。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/streaming",
+          "sourceTitle": "Streaming messages - Claude Platform Docs",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 说明 SSE 是服务器向页面发送事件的数据流，事件流使用 text/event-stream 格式。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events",
+          "sourceTitle": "Using server-sent events - Web APIs | MDN",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "give-it-ai-stream-is-transport",
+          "kind": "basic",
+          "front": "流式返回和打字动画有什么区别？",
+          "back": "流式返回时服务器真的把模型结果分成多个事件送来，页面边收到边追加；打字动画只是已经拿到完整答案后慢慢播放，两者在 Network 中的到达方式不同。",
+          "tags": [
+            "streaming",
+            "sse"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Anthropic 官方把流式回应定义为通过 SSE 增量传输，并提供 stream 参数。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/streaming",
+              "sourceTitle": "Streaming messages - Claude Platform Docs",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "give-it-ai-diagnose-fake-stream",
+          "title": "找出假的逐字显示",
+          "kind": "explain",
+          "prompt": "某页面等了三秒后拿到完整答案，再用定时器逐字播放。请说明它为什么不是流式返回，并写出你会在 Network 面板寻找的两个证据。",
+          "rubric": [
+            "指出答案是在定时器之前一次性到达的",
+            "提到事件流或分段回应，而不是只谈动画快慢",
+            "给出可在请求或回应中检查的具体证据"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Chrome DevTools 文档说明 Network 面板可以查看服务器通过 Fetch、EventSource 和 XHR 流出的事件。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/network/reference/",
+              "sourceTitle": "Network features reference | Chrome DevTools",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "what-a-call-costs",
+      "title": "一次调用花多少钱",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能估算一次模型调用的输入费与输出费。\n\n## 先给结论\n\n模型服务通常按 token 计量，而且输入 token 和输出 token 使用两套价格。最基本的估算式是“输入 token 数 × 输入单价 + 输出 token 数 × 输出单价”，具体单价要查你所用模型的当前价格页。长对话越来越贵，常见原因是下一轮请求会把之前的消息也放进输入上下文，旧内容于是反复占用输入 token；不是因为模型记性变差才收费更多。\n\n## 一个类比\n\n好比餐厅账单把你带来的食材和厨师做出的菜分开记账：你带进厨房的东西越多，输入这一栏越长；厨师端出的菜越多，输出这一栏越长。多轮对话像每次都把前面的菜单和聊天记录重新放上桌，这和上下文会继续进入下一次请求相似。但它不像餐厅：token 不是固定一个字或一个词，分词方式会随模型变化，不能拿汉字数直接当账单。\n\n## 工作示例\n\n《说人话》第一次解释一条合同。假设一次请求实际用了 800 个输入 token，模型回了 260 个输出 token。记当前模型的输入单价为 `r_in`，输出单价为 `r_out`，这次估算就是：\n\n```text\n800 × r_in + 260 × r_out\n```\n\n第二次用户追问“那我什么时候要交钱”，如果请求里带上了系统说明、原合同、第一次解释和新问题，输入可能变成 1,900 token，输出变成 300 token：\n\n```text\n1900 × r_in + 300 × r_out\n```\n\n这两次都只得到一段短文字，但第二次的输入项更大。Anthropic 的 Messages 文档允许把此前的对话轮次放进 messages；价格页说明重复处理对话历史会增加输入成本，并把 Base input tokens 和 Output tokens 分成不同栏目。回应的 `usage` 里会报告本次实际消耗，发送前还可以用 token counting 端点估算输入量。\n\n`max_tokens: 500` 只是允许模型最多生成多少，并不表示每次都会用满 500，也不等于固定收费。上线前给《说人话》加两个护栏：限制粘贴文本长度，显示或记录每次回应的 usage；如果要进一步优化，再研究摘要或提示缓存，而不是先猜价格。\n\n## 自检\n\n做对时，你能把一笔调用拆成输入数量和输出数量两项，再分别乘以当前模型的单价；还会在回应的 usage 或 token counting 结果里找到数量依据。\n\n最常见的做错法有两种。第一种只数模型回来的字，漏掉系统提示、用户输入和历史消息；把本次请求送出的内容都算进输入，再看 usage。第二种把当前模型价格写死在代码或课件里，过一阵子账目对不上；单价放在配置或价格核对表里，按提供方当前页面更新。\n\n## 重点\n\n- 一次调用的基本费用由输入 token 和输出 token 两部分组成。\n- 估算式是输入数量乘输入单价，再加输出数量乘输出单价。\n- 多轮请求若带回历史消息，后续输入 token 可能逐轮增加。\n- `max_tokens` 是输出上限，不是这次必付的输出数量。\n- 价格会变，实际核算要看当前模型价格页和回应 usage。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Anthropic 当前价格页把 Base input tokens 与 Output tokens 分成不同价格栏目，并以 MTok 为计量单位。",
+          "sourceUrl": "https://platform.claude.com/docs/en/about-claude/pricing",
+          "sourceTitle": "Pricing - Claude Platform Docs",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Anthropic 的上下文说明每轮输入包含此前对话和当前用户消息，输出会成为后续轮次的输入。",
+          "sourceUrl": "https://platform.claude.com/docs/en/api/http/messages/create",
+          "sourceTitle": "Context windows - Claude Platform Docs",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Anthropic 提供 token counting 端点来在发送消息前估算输入 token，并把成本管理列为用途。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/token-counting",
+          "sourceTitle": "Token counting - Claude Platform Docs",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+              {
+                "id": "give-it-ai-input-output-billing",
+          "kind": "basic",
+          "front": "为什么一次模型调用要把输入和输出分开算？",
+          "back": "提供方会分别统计送进模型的 input tokens 和模型生成的 output tokens，并给它们各自的单价。估算时把两项分别相乘再相加，不能只数回复文字。",
+          "tags": [
+            "tokens",
+            "cost"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Anthropic 价格页的模型表分别列出 Base input tokens 和 Output tokens。",
+              "sourceUrl": "https://platform.claude.com/docs/en/about-claude/pricing",
+              "sourceTitle": "Pricing - Claude Platform Docs",
+              "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-history-raises-input",
+                "kind": "basic",
+                "front": "多轮对话为什么可能让下一轮输入费变高？",
+                "back": "如果下一次请求把之前的用户消息和模型回复一并放回 messages，它们也会成为这次要处理的输入 token。对话变长时，输入项可能反复增加。",
+                "tags": [
+                  "tokens",
+                  "context",
+                  "cost"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Anthropic Messages API 参考说明此前的 user、assistant 对话轮次可以放进 messages，作为当前请求的输入。",
+                    "sourceUrl": "https://platform.claude.com/docs/en/api/http/messages/create",
+                    "sourceTitle": "Create a Message - Claude API Reference",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-count-before-sending",
+                "kind": "basic",
+                "front": "想在发送《说人话》的长文本前估算输入量，可以用什么？",
+                "back": "用提供方的 token counting 端点先估算这条消息会占多少输入 token，再结合当前价格页计算可能的输入费用。它是发送前的估算，不是最终账单。",
+                "tags": [
+                  "tokens",
+                  "cost",
+                  "token-counting"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Anthropic 提供 token counting 端点，用来在发送消息前估算输入 token。",
+                    "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/token-counting",
+                    "sourceTitle": "Token counting - Claude Platform Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
+      "exercises": [
+        {
+          "id": "give-it-ai-estimate-two-turns",
+          "title": "算两轮对话的差别",
+          "kind": "explain",
+          "prompt": "你的产品第一轮用了 600 个输入 token 和 180 个输出 token，第二轮因为带回历史消息用了 1,500 个输入 token 和 220 个输出 token。请用符号 `r_in` 与 `r_out` 写出两轮费用，并解释第二轮哪一项变大、为什么。",
+          "rubric": [
+            "两轮都写出输入项与输出项，而不是只写输出",
+            "费用表达式使用各自的 token 数乘对应单价",
+            "能把第二轮输入增加与带回历史上下文联系起来"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Messages 参考说明可以把此前对话放回 messages，价格页说明输入和输出有不同价格栏目。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+              "sourceTitle": "Context windows - Claude Platform Docs",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401-429-timeout",
+      "title": "三种最常见的错各是什么意思",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能定位 401、429 和超时各自代表的故障方向。\n\n## 先给结论\n\n401 表示请求没有带上有效的认证凭证，先查密钥、认证头和服务端环境变量。429 表示一段时间内请求太多，先放慢请求速度，查看是否有 `Retry-After`。超时表示你设定的等待期限到了仍没有拿到结果，它可能没有 HTTP 状态码，先查网络、服务端等待时间和请求大小。三者的修法不同，看到错误数字就重试，反而可能让问题更糟。\n\n## 一个类比\n\n好比银行柜台排队：401 像你递来的证件无效，柜员不能确认你是谁；429 像短时间涌来太多人，柜台请你晚点再来；超时像柜员还在查一份复杂档案，但你的等候计时已经结束。相似之处是三种现象都需要先看“柜台给的信号”再处理；但它不是银行，浏览器的超时还可能由网络断开或本地取消造成，不一定是模型服务拒绝了请求。\n\n## 工作示例\n\n《说人话》点击“讲人话”后，服务端把提供方的结果转成自己的错误回应，页面统一按状态处理：\n\n```js\ntry {\n  const response = await fetch('/api/explain', {\n    signal: AbortSignal.timeout(20000)\n  });\n\n  if (response.status === 401) {\n    showError('服务端没有拿到有效密钥');\n  } else if (response.status === 429) {\n    showError('请求太密了，请稍后再试');\n  } else if (!response.ok) {\n    showError('服务暂时出错');\n  } else {\n    showResult(await response.json());\n  }\n} catch (error) {\n  if (error.name === 'TimeoutError') {\n    showError('这次等待超过了 20 秒');\n  }\n}\n```\n\n如果日志显示提供方返回 401，先确认服务端是否真的读到了 `ANTHROPIC_API_KEY`，以及请求认证头是否正确；不要先改用户的合同文字。如果返回 429，检查按钮是否被重复点击、输入变化是否每次都触发调用，再根据 `Retry-After` 或服务策略安排等待。如果本地抛出 `TimeoutError`，先确认请求是不是仍在服务器处理中，再决定缩短输入、降低输出上限、采用流式或改为异步任务；不要在超时后无条件连续重发。\n\n## 自检\n\n做对时，401 页面提示“凭证方向”，429 页面提示“频率方向”，超时页面提示“等待方向”；服务端日志还保留了提供方状态和请求 ID，便于继续查。\n\n最常见的做错法有两种。第一种把所有失败都显示成“密钥错了”，导致 429 和超时都去重发密钥；按 `response.status` 和异常名称分开处理。第二种以为 `fetch` 遇到 401 或 429 就一定进入 `catch`；MDN 说明 HTTP 错误回应仍会得到 Response，代码要主动检查 `status` 或 `ok`。\n\n## 重点\n\n- 401 先查认证凭证。\n- 429 先查请求频率，并尊重 Retry-After。\n- 超时先区分“还在处理”与“网络已断”。\n- `fetch` 不会自动把所有 HTTP 错误变成异常。\n- 不同故障要给不同提示和修复动作。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 将 401 定义为缺少有效认证凭证的请求失败。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/401",
+          "sourceTitle": "401 Unauthorized - HTTP | MDN",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 将 429 定义为一段时间内发送了过多请求，并说明可能带有 Retry-After。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/429",
+          "sourceTitle": "429 Too Many Requests - HTTP | MDN",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 说明 fetch 在服务器返回 HTTP 错误状态时仍会解析为 Response，需要检查 ok 或 status；AbortSignal.timeout 会在指定时间后以 TimeoutError 中止。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch",
+          "sourceTitle": "Window: fetch() method - Web APIs | MDN",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 说明 AbortSignal.timeout 会在指定时间后自动中止，并以 TimeoutError 作为超时原因。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/timeout_static",
+          "sourceTitle": "AbortSignal: timeout() static method - Web APIs | MDN",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+              {
+                "id": "give-it-ai-three-failure-directions",
+          "kind": "basic",
+          "front": "401、429、超时各先查什么？",
+          "back": "401 先查认证凭证；429 先查请求是否过密并等待；超时先查网络和服务是否仍在处理。401 和 429 是 HTTP 状态，超时也可能是 fetch 被 AbortSignal 在期限后中止。",
+          "tags": [
+            "http-errors",
+            "debugging"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 分别定义 401、429，并说明 fetch 要主动检查 HTTP 状态。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/401",
+              "sourceTitle": "401 Unauthorized - HTTP | MDN",
+              "sourceAuthority": "mdn"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-http-errors-are-responses",
+                "kind": "basic",
+                "front": "fetch 收到 401 或 429 时，为什么不能只等 catch？",
+                "back": "HTTP 错误回应通常仍会形成 Response；代码要主动检查 response.status 或 response.ok，才能把认证失败和请求过密分开处理。",
+                "tags": [
+                  "http-errors",
+                  "fetch",
+                  "debugging"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "MDN 的 fetch 示例在收到回应后主动检查 response.ok 和 response.status。",
+                    "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch",
+                    "sourceTitle": "Window: fetch() method - Web APIs | MDN",
+                    "sourceAuthority": "mdn"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-timeout-is-abort",
+                "kind": "basic",
+                "front": "AbortSignal.timeout 触发时，超时到底发生了什么？",
+                "back": "到达设定时限后，AbortSignal 会自动中止关联操作，并把 TimeoutError 作为中止原因。它说明等待期限结束，不等于服务端返回了 401 或 429。",
+                "tags": [
+                  "timeout",
+                  "abort-signal",
+                  "debugging"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "MDN 说明 AbortSignal.timeout 会在指定时间后中止，并将 TimeoutError 作为原因。",
+                    "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/timeout_static",
+                    "sourceTitle": "AbortSignal: timeout() static method - Web APIs | MDN",
+                    "sourceAuthority": "mdn"
+                  }
+                ]
+              }
+            ],
+      "exercises": [
+        {
+          "id": "give-it-ai-triage-three-errors",
+          "title": "给三张错误截图分诊",
+          "kind": "explain",
+          "prompt": "你看到三条记录：A 是状态 401，B 是状态 429 且带 Retry-After，C 是请求抛出 TimeoutError。请分别写出页面提示、第一项检查和一个不该立刻做的动作。",
+          "rubric": [
+            "A 的处理指向认证凭证，B 的处理指向请求频率",
+            "C 被识别为等待期限结束，而不是被误写成 401",
+            "至少有一项避免无条件重复请求或重复扣费的动作"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 对 429 的 Retry-After 和 AbortSignal.timeout 的 TimeoutError 都给出了明确含义。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/429",
+              "sourceTitle": "429 Too Many Requests - HTTP | MDN",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,594 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "when-it-does-not-run",
+  "courseId": "from-idea-to-live",
+  "unit": {
+    "id": "when-it-does-not-run",
+    "title": "跑不起来的时候，你在看什么",
+    "objective": "读完这一单元你能把一次「跑不起来」定位到具体是哪一类，再去问 AI。",
+    "prerequisiteUnitIds": ["build-the-first-version"]
+  },
+  "lessons": [
+    {
+      "id": "read-one-error-message",
+      "title": "一条报错里有三样东西",
+      "variant": "术语",
+      "content": "## 学习目标\n\n读完你能把一条报错拆成「哪个文件、第几行、什么类型」这三块。\n\n## 先给结论\n\n报错看起来是一大坨英文，其实结构很固定，你只需要认三样。\n\n第一样是出事的位置，也就是哪个文件、第几行。第二样是它归哪一类毛病，那个词写在冒号前面。第三样是那一句具体的描述，通常就跟在冒号后面。\n\n剩下的那一大段叫作调用栈，是「谁调用了谁」的链条。**刚开始完全可以不看。**\n\n认出这三样之后，你就从「它报错了」变成了「第 12 行有个东西没定义」。这两句话拿去问 AI，得到的回答质量差一个数量级。\n\nMDN 有一整个页面在列这些类型分别是什么意思，遇到不认识的，那儿查得到。\n\n## 一个类比\n\n这就像一张体检化验单。第一次拿到手，满纸看不懂的英文缩写和数字，人会本能地把整张纸交给医生说「你看看」。\n\n但其实你只需要认三样：**哪个项目、数值多少、箭头朝上还是朝下**。认出这三样，你就能说出「我的血红蛋白偏低」，而不是「我化验单不正常」。\n\n不一样的地方对你有利：化验单要等医生解读，**报错不用等**。它已经精确到了第几行第几个字符——它比化验单诚实得多，只是长得吓人。\n\n所以「看不懂报错」这件事，绝大多数时候不是看不懂，是**没有去拆**。\n\n## 工作示例\n\n一条真实形状的报错，拆给你看。\n\n```\nUncaught ReferenceError: userInput is not defined\n    at handleClick (app.js:12:18)\n    at HTMLButtonElement.<anonymous> (app.js:31:9)\n```\n\n**第一步，找位置。**看第一个 `at` 后面：`app.js:12:18`。\n\n第 12 行，第 18 个字符。这是**你的**代码里出事的地方。\n\n（下面那行 `app.js:31:9` 是「谁调用了它」。你现在不需要它。）\n\n**第二步，找类型。**冒号前面那个词：`ReferenceError`。\n\n这一类的意思是：代码里用了一个名字，但这个名字没有被定义过。\n\n**第三步，读那一句。**`userInput is not defined`——那个没定义的名字叫 `userInput`。\n\n**拼起来：**\n\n> app.js 第 12 行用了一个叫 userInput 的东西，但这个东西从来没被定义过。\n\n**现在对比两种问法：**\n\n> 问法一：我的代码报错了，你帮我看看。\n>\n> 问法二：app.js 第 12 行报 ReferenceError，说 userInput 没有定义。第 12 行是这一句：`const text = userInput.value;`\n\n第二种问法里，AI 不需要猜。它甚至不需要看你整个文件。\n\n**这三步全程没有要求你看懂代码。**你只是在念一张化验单。\n\n## 自检\n\n**做对了会看到什么：**你能用一句中文复述那条报错——「某个文件第几行，某某东西没定义」。复述得出来，就说明你已经拆开了。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、直接把整坨报错原样甩给 AI，不说别的。**这样也能得到答案，但你会一直停在「我看不懂报错」的状态。**拆的动作只花十秒，而它是这门课里回报最高的十秒。**\n\n**二、盯着调用栈的第二行第三行看。**那几行往往指向浏览器内部或者某个库的文件，看起来更「专业」，其实和你没关系。**先看第一个指向你自己文件的那一行。**\n\n## 重点\n\n- 一条报错只需要认三样：哪个文件第几行、什么类型、那一句描述。\n- 冒号前面那个词是类型，MDN 有整页在列每一类是什么意思。\n- 第一个 `at` 后面的位置才是你的代码出事的地方，下面几行是调用链。\n- 把报错复述成一句中文，再去问 AI，回答质量差一个数量级。\n- 拆报错不需要看懂代码，它更像念化验单。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 这一页按类型列出 JavaScript 的各种报错，包括 ReferenceError 这类「用了一个没有定义过的名字」的错误，可以按类型名查到含义。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Errors",
+          "sourceTitle": "MDN · JavaScript 错误参考",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 这一页讲怎么排查出错的 JavaScript，说明报错信息会给出出错的文件与行号，以及错误类型。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Learn_web_development/Core/Scripting/What_went_wrong",
+          "sourceTitle": "MDN · 出什么问题了？排查 JavaScript 代码",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "three-parts-of-an-error",
+          "kind": "basic",
+          "front": "读一条报错，先认哪三样？",
+          "back": "哪个文件第几行、什么类型（冒号前那个词）、那一句描述。剩下的调用栈刚开始可以不看。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明报错会给出出错文件、行号与错误类型。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Learn_web_development/Core/Scripting/What_went_wrong",
+              "sourceTitle": "MDN · 出什么问题了？排查 JavaScript 代码",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "which-stack-line-matters",
+          "kind": "basic",
+          "front": "报错下面好几行 at，该看哪一行？",
+          "back": "第一个指向你自己文件的那一行。再往下是「谁调用了它」，常常指向浏览器内部或某个库，和你要改的地方无关。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 排查页说明报错定位到具体文件与行号，据此可先看指向自身代码的位置。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Learn_web_development/Core/Scripting/What_went_wrong",
+              "sourceTitle": "MDN · 出什么问题了？排查 JavaScript 代码",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "reference-error-means",
+          "kind": "basic",
+          "front": "ReferenceError 这一类是什么意思？",
+          "back": "代码里用了一个名字，但这个名字从来没有被定义过。MDN 的错误参考页按类型列出了每一类的含义。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 错误参考页按类型列出 JavaScript 报错，其中包含「未定义」这一类。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Errors",
+              "sourceTitle": "MDN · JavaScript 错误参考",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "retell-one-error",
+          "title": "把一条报错复述成一句中文",
+          "kind": "explain",
+          "prompt": "找一条你真的遇到过的报错（没有就故意制造一个：把代码里某个名字拼错一个字母）。把它拆成三块写下来，然后用一句中文复述它。最后写出你打算拿去问 AI 的那句话——要包含位置、类型，和那一行代码本身。",
+          "rubric": [
+            "三块都拆出来了：文件与行号、类型、描述",
+            "那句中文复述是具体的，比如「第 12 行用了一个没定义过的 userInput」，不是「代码报错了」",
+            "给 AI 的问句里带上了出事的那一行代码原文",
+            "没有把整坨调用栈原样粘贴当作提问"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「报错会指明文件、行号与类型」是这条练习成立的前提，出自 MDN 排查页。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Learn_web_development/Core/Scripting/What_went_wrong",
+              "sourceTitle": "MDN · 出什么问题了？排查 JavaScript 代码",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "port-is-already-in-use",
+      "title": "地址栏里那个号码，为什么自己变了",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能说出为什么页面还是旧的，而代码明明改了。\n\n## 先给结论\n\n你启动了本地服务，打开 5173 看到页面。中午关了电脑又打开，改了半天代码，刷新页面**一点变化都没有**。你开始怀疑 AI 骗了你。\n\n没有。**它把服务开到另一个号码上去了。**\n\nVite 的官方文档写得很清楚：如果那个号码已经被占用，它会**自动换到下一个可用的号码**，所以你写在配置里的那个数字，可能不是它实际用的那个。\n\n你刷新的那一页，是上一次那个还没关掉的服务在提供——**代码是旧的**。\n\n所以每次启动之后，**看终端里打印出来的那个地址**，不要凭记忆敲，也不要点收藏夹。\n\n## 一个类比\n\n这就像住酒店。你订的是 501，到了前台发现上一位客人还没退房。前台不会去赶人，直接给你 502，房号写在房卡套上。\n\n如果你没看房卡套，凭着「我订的是 501」走过去敲门——**门后面是别人**，而且屋里的东西全是上一位客人的。\n\n这正是你刷新时看到旧页面的原因：那个页面是「上一位客人」的。\n\n不一样的地方在这儿：敲错门会有人开门骂你，**敲错端口不会**。页面照常打开，看起来一切正常，只是它不是你刚改的那个。**这种错误不吵不闹，所以特别费时间。**\n\n## 工作示例\n\n完整一次，从困惑到解决。\n\n**你看到的：**改了按钮文字，保存，刷新页面，按钮还是原来那几个字。再刷新，还是。强制刷新，还是。\n\n**第一步，回去看终端。**启动服务那个窗口里会有类似这样一段：\n\n```\n  ➜  Local:   http://localhost:5174/\n  ➜  Network: http://192.168.1.8:5174/\n```\n\n**看那个数字：5174。**而你浏览器地址栏里是 5173。\n\n找到了。你一直在看一个半天前启动、代码还是旧版本的服务。\n\n**第二步，两种收尾方式，选一种：**\n\n**方式一（最省事）：**直接打开终端里打印的那个地址。改动立刻就在。\n\n**方式二（更干净）：**把旧的那个关掉。它多半在另一个终端窗口里还开着——找到那个窗口，按 Ctrl+C。然后重启，号码就回到 5173 了。\n\n**第三步，防止它再发生。**如果你希望「号码被占用就直接报错，别偷偷换」，Vite 有一个叫 `strictPort` 的开关，打开之后端口被占它就退出，而不是换一个。\n\n**对初学者我建议打开它**——一个吵闹的失败，比一个安静的错误便宜得多。\n\n## 自检\n\n**做对了会看到什么：**你启动服务之后的第一个动作，是去终端里读那个地址，然后从那儿打开页面。这个习惯一旦养成，这类问题就再也不会浪费你时间。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、反复刷新、清缓存、重启浏览器，就是不回头看终端。**症状是「改了没反应」，人的第一反应永远是怀疑浏览器。**先看终端里的地址对不对，这一眼只要两秒。**\n\n**二、把旧服务关掉了，但关的是错的那个窗口。**你可能开了三四个终端窗口，每个里面都跑过一次。挨个看，找到打印着那个地址的那个窗口再按 Ctrl+C。\n\n## 重点\n\n- 端口被占用时，Vite 会自动换到下一个可用端口，配置里的数字未必是实际用的。\n- 你刷新看到的旧页面，是上一次没关掉的那个服务提供的。\n- 每次启动后读终端里打印的地址，不要凭记忆、不要点收藏夹。\n- `strictPort` 打开后，端口被占会直接退出而不是偷偷换。\n- 一个吵闹的失败比一个安静的错误便宜。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Vite 官方文档在 server.port 处写明：如果端口已被占用，Vite 会自动尝试下一个可用端口，因此配置里的数字未必是服务实际监听的端口；server.strictPort 设为 true 时改为直接退出。",
+          "sourceUrl": "https://vite.dev/config/server-options",
+          "sourceTitle": "Vite 官方文档 · Server Options",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "vite-auto-increments-port",
+          "kind": "basic",
+          "front": "本地服务的端口被占用了，会发生什么？",
+          "back": "Vite 会自动换到下一个可用端口，所以配置里写的数字未必是它实际监听的那个。要看终端打印出来的地址。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「端口被占用时自动尝试下一个可用端口」出自 Vite 官方 server.port 说明。",
+              "sourceUrl": "https://vite.dev/config/server-options",
+              "sourceTitle": "Vite 官方文档 · Server Options",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "why-the-page-looks-old",
+          "kind": "basic",
+          "front": "代码改了，刷新页面却毫无变化，最先该查什么？",
+          "back": "查终端打印的地址和浏览器地址栏里的端口是不是同一个。多半是在看上一次没关掉的那个旧服务。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "端口会被自动改换，这正是浏览器可能停在旧服务上的原因——依据是 Vite 官方端口说明。",
+              "sourceUrl": "https://vite.dev/config/server-options",
+              "sourceTitle": "Vite 官方文档 · Server Options",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "strict-port",
+          "kind": "basic",
+          "front": "怎么让端口被占用时直接报错，而不是偷偷换一个？",
+          "back": "把 strictPort 设为 true。这时端口被占用服务会直接退出，而不是尝试下一个端口。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "server.strictPort 为 true 时端口被占则退出，出自 Vite 官方 Server Options 页。",
+              "sourceUrl": "https://vite.dev/config/server-options",
+              "sourceTitle": "Vite 官方文档 · Server Options",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "make-the-port-move",
+          "title": "故意让它换一次端口",
+          "kind": "explain",
+          "prompt": "启动一次本地服务，不要关它，再开一个终端窗口把同一个项目再启动一次。记下两次终端打印的地址有什么不同。然后在浏览器里打开第一个地址，改一行代码，说明你看到了什么、为什么。",
+          "rubric": [
+            "记下了两次启动打印的两个不同地址",
+            "说明了第二次为什么换了号码，而不是只描述现象",
+            "指出在旧地址上看不到新改动，并说清那一页是哪个服务提供的",
+            "给出了自己以后要养成的那个习惯：启动后先读终端里的地址"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "这条练习成立的依据是 Vite 会在端口被占时自动改用下一个可用端口。",
+              "sourceUrl": "https://vite.dev/config/server-options",
+              "sourceTitle": "Vite 官方文档 · Server Options",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "command-not-found",
+      "title": "打了命令说找不到",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能从命令所在位置查出终端为什么找不到它。\n\n## 先给结论\n\n看到“command not found”，先不要把它翻译成“没安装”。命令可能已经在项目里，只是当前终端没有去项目的本地可执行目录找；也可能装在全局位置，但那个位置没有进入当前终端的 PATH。npm 的文档把本地安装和全局安装放在不同位置，本地命令会连到项目的 node_modules/.bin，全局命令会连到 Node 的 prefix/bin，并要求这个目录在 PATH 里。\n\n还有一个容易漏掉的原因：你是在什么目录、用什么终端启动的。VS Code 的集成终端默认从当前工作区根目录打开，也会使用系统检测到的 shell。终端若开在错误的项目、旧的 shell 配置里，命令查找结果就可能和另一扇终端不一样。\n\n所以排查顺序是：先确认当前项目和目录，再看它是本地装还是全局装，最后查当前终端是否能找到对应位置。不要一看到报错就重复安装。\n\n## 一个类比\n\n这就像仓库里明明有一箱货，但柜台系统只查一个货架。货在项目的本地货架时，柜台要按项目订单去找；货在总仓时，柜台要知道总仓地址。你换到另一个柜台，或者站到了另一家分店，查找范围也会变。\n\n不一样的地方是，现实中的仓库员可能会主动帮你找，终端不会猜你的项目和安装方式。你必须先确认自己站在哪个项目、当前柜台使用哪套地址，再判断是没有货，还是地址没有接上。\n\n## 工作示例\n\n假设《说人话》项目里已经安装了一个开发工具。你在项目终端运行启动脚本能成功，但直接输入工具名却得到“找不到命令”。完整排查这样走：\n\n1. 在 VS Code 的 Explorer 中确认打开的是《说人话》的项目，打开一个新的集成终端，先看它是不是从这个工作区开始。\n2. 打开项目的 package.json，看到这个工具写在项目的开发依赖里；这说明它更可能是本地安装，不是全局命令。\n3. 再运行项目已经提供的启动脚本。若脚本能调用工具，而直接敲工具名失败，说明项目里的可执行文件存在，但当前 shell 没把本地 .bin 目录当成裸命令来找。\n4. 如果你要判断全局工具，则查看 npm 的全局 prefix 和对应的 bin 目录，再确认这个目录是否在当前终端的 PATH 中。不要直接把另一个人的路径复制进来。\n5. 回到正确的项目终端，用项目脚本启动；需要长期使用的命令，再按当前系统的 shell 配置修复 PATH，并重新打开终端验证。\n\n这次的结论不是“重新安装一次就好了”，而是“工具在本地，项目脚本能找到；裸命令不在当前 shell 的查找范围”。下一次看到同样报错，你可以从这个结论开始问 AI。\n\n## 自检\n\n**做对了会看到什么：**你能说出当前终端所在的项目、工具是本地还是全局安装，以及命令查找范围缺了哪一段；修好后能在新的终端里重复验证。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、每次都再安装一遍。**项目可能已经有本地依赖，重复安装只会增加版本和路径混乱。先看 package.json、项目脚本和当前工作区。\n\n**二、随手复制网上的 PATH。**不同系统、Node 安装位置和 shell 可能不同，复制别人的路径可能让另一个命令失效。先查当前机器的 prefix 和实际终端，再只补缺失的目录。\n\n## 重点\n\n- “命令找不到”可能是安装位置不在当前终端的查找范围，不等于一定没安装。\n- npm 的本地可执行文件在项目的 node_modules/.bin，全局可执行文件在 prefix 下的 bin 目录。\n- VS Code 集成终端默认从工作区根目录打开，当前目录会影响项目命令的查找。\n- 先分清本地安装、全局安装和当前 PATH，再决定是否需要修复或安装。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "npm 文档说明本地安装使用当前包根目录下的 node_modules，本地可执行文件链接到 node_modules/.bin；全局可执行文件链接到 prefix/bin，并需要该目录在 PATH 中。",
+          "sourceUrl": "https://docs.npmjs.com/cli/v10/configuring-npm/folders",
+          "sourceTitle": "npm Docs · folders",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "VS Code 文档说明集成终端默认从工作区根目录打开，并使用系统检测到的 shell；它也说明终端工作目录可以配置。",
+          "sourceUrl": "https://code.visualstudio.com/docs/terminal/basics",
+          "sourceTitle": "Visual Studio Code · Terminal Basics",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "command-location-before-reinstall",
+          "kind": "basic",
+          "front": "看到 command not found，为什么不能马上认定没安装？",
+          "back": "它可能装在项目的本地 node_modules/.bin，或装在全局 prefix/bin，但当前终端没有把那个位置放进命令查找范围。",
+          "tags": ["command-line", "path"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "npm 文档区分本地与全局安装位置，并说明全局可执行目录需要在 PATH 中、本地可执行文件位于项目的 node_modules/.bin。",
+              "sourceUrl": "https://docs.npmjs.com/cli/v10/configuring-npm/folders",
+              "sourceTitle": "npm Docs · folders",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "workspace-root-matters",
+          "kind": "basic",
+          "front": "在 VS Code 里，为什么当前打开的项目和终端位置会影响命令？",
+          "back": "集成终端默认从当前工作区根目录打开，项目本地依赖和脚本会按这个位置寻找。",
+          "tags": ["command-line", "workspace"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "VS Code Terminal Basics 说明集成终端默认从工作区根目录打开，并有独立的工作目录设置。",
+              "sourceUrl": "https://code.visualstudio.com/docs/terminal/basics",
+              "sourceTitle": "Visual Studio Code · Terminal Basics",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "local-and-global-bin-are-different",
+          "kind": "basic",
+          "front": "npm 本地安装和全局安装的命令位置有什么不同？",
+          "back": "本地可执行文件连在当前项目的 node_modules/.bin；全局可执行文件连在 Node prefix 下的 bin 目录。",
+          "tags": ["npm", "path"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "npm folders 文档分别说明了本地 node_modules/.bin 和全局 prefix/bin 的可执行文件位置。",
+              "sourceUrl": "https://docs.npmjs.com/cli/v10/configuring-npm/folders",
+              "sourceTitle": "npm Docs · folders",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "diagnose-a-missing-command",
+          "title": "给 AI 一条不乱装东西的诊断",
+          "kind": "explain",
+          "prompt": "找一个真的出现过“找不到命令”的项目，记录当前工作区、package.json 里有没有这个工具、项目脚本能不能调用它，以及当前终端使用的 shell。最后写一条给 AI 的提问，要求它先判断本地安装、全局安装还是 PATH 问题，再给修复步骤。",
+          "rubric": [
+            "记录了当前项目或工作区，而不是只写命令名称",
+            "检查了本地依赖或项目脚本，说明工具是否可能已经装在项目里",
+            "区分了本地安装、全局安装和 PATH 查找问题",
+            "提问要求先诊断再修复，没有直接要求重复安装或复制别人的路径"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "npm 文档提供本地与全局可执行文件的位置差异，VS Code 文档提供工作区和终端工作目录信息；这些是本练习的诊断依据。",
+              "sourceUrl": "https://docs.npmjs.com/cli/v10/configuring-npm/folders",
+              "sourceTitle": "npm Docs · folders",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "env-file-not-loaded",
+      "title": "写了 .env，它还是读不到",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能说出改完环境变量之后必须做的那一步。\n\n## 先给结论\n\n两件事，第二件比第一件重要得多。\n\n先说要重启这一件。环境变量是服务启动那一刻读进去的，你改了文件，正在跑的那个服务手里还是旧的那一份。热更新救得了你的页面，救不了这个。\n\n再说能省你一大笔钱的那一件。在 Vite 里，只有带 `VITE_` 这个前缀的变量才会被交给浏览器里的代码。这听起来像个方便功能，其实是一道墙——没有这个前缀的，浏览器根本拿不到。\n\n而墙的另一边是这样的。Vite 官方文档明确写着，带这个前缀的变量不应该放敏感信息，比如 API 密钥，因为它们在打包的时候会被写进最终产物里，**任何人都能看到**。\n\n所以「我把密钥放进 .env 了，所以它安全了」——**这句话是错的**，而且是初学者最贵的一个误会。放进 `.env` 只是把它从代码里挪了个地方；一旦加上那个前缀交给了前端，它就是公开的。\n\n## 一个类比\n\n先说重启这件事。这就像改了家里的门牌号，但快递员手上那张单子是出发前打印的。他不会在路上重新查一遍——**他按单子送**。你得让他回一趟站点重新取单，那趟「回站点」就是重启。\n\n再说前缀这件事，它更像另一回事：小区门口的公告栏。\n\n有些通知贴在**保安室里**，只有物业看得见；有些贴在**门口公告栏上**，谁路过都能看。那个前缀就是「贴到门口公告栏」的意思。\n\n不一样的地方，也是最容易出事的地方：真的公告栏你贴之前会犹豫一下，因为你看得见它在外面。**而这里你看不见**——你只是在文件里多打了五个字母，产物里就多了一行谁都能读到的密钥，页面上什么变化都没有。\n\n## 工作示例\n\n完整走一次，包括那个错误的做法长什么样。\n\n**你有一个密钥要用。**先看两种写法：\n\n```\n# 写法一\nVITE_MODEL_KEY=sk-abc123...\n\n# 写法二\nMODEL_KEY=sk-abc123...\n```\n\n**写法一：**浏览器里的代码能直接读到它。**同时，任何打开你网站的人也能读到它**——它被打包进了发给浏览器的文件里，右键查看源代码就在那儿。\n\n**写法二：**浏览器里的代码读不到。你必须让**服务端**去用它。麻烦一点，但密钥没有离开你的机器。\n\n**正确的做法是写法二**，然后让页面去请求你自己的服务端，由服务端拿着密钥去调模型。这门课后面接 AI 那个单元会完整走一遍。\n\n**现在演一次「改了没生效」：**\n\n1. 服务正在跑着。\n2. 你在 `.env` 里加了一行 `MODEL_KEY=sk-abc123`。\n3. 保存。页面自动刷新了一下——**看起来像是生效了**。\n4. 代码里读这个变量，读到的是空的。\n\n第 3 步那个自动刷新是骗你的：它刷的是页面，不是服务的启动参数。\n\n**收尾：**回到跑服务的那个终端，Ctrl+C，重新启动。这次读得到了。\n\n**记一个判据：**改代码 → 刷新就行。改 `.env`、改配置文件、改依赖 → **重启**。\n\n## 自检\n\n**做对了会看到什么：**你能说出自己那个项目里，哪些变量是给浏览器的、哪些是不给的，以及为什么密钥必须在第二组里。改完 `.env` 你会条件反射地去重启服务。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、读不到就给它加前缀。**这是最危险的一种「解决」：加上前缀之后确实读到了，问题「解决」了——**同时你的密钥公开了**。读不到通常说明你在错误的一侧使用它，要改的是谁去用它，不是墙的位置。\n\n**二、页面自动刷新了，就以为环境变量也重新读了。**这两件事没有关系。**看到页面刷新不等于服务重启**，判断的办法是看终端里有没有重新打印那一段启动信息。\n\n## 重点\n\n- 环境变量在服务启动时读入，改完必须重启，页面刷新不算。\n- 在 Vite 里只有带 `VITE_` 前缀的变量会交给浏览器代码，没有前缀的拿不到。\n- Vite 官方文档写明，`VITE_*` 变量不应该包含 API 密钥这类敏感信息。\n- 带前缀的变量会被打包进产物，任何访问者都能看到——放进 `.env` 不等于安全。\n- 读不到就加前缀，是把「用错了地方」换成「泄露了密钥」。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Vite 官方文档说明只有以 VITE_ 为前缀的环境变量会暴露给客户端代码，未加前缀的不会；并明确写着 VITE_* 变量不应包含 API 密钥这类敏感信息，因为它们会在构建时打进产物、对外可见。",
+          "sourceUrl": "https://vite.dev/guide/env-and-mode",
+          "sourceTitle": "Vite 官方文档 · Env Variables and Modes",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "restart-after-env-change",
+          "kind": "basic",
+          "front": "改完 .env 之后，为什么刷新页面没用？",
+          "back": "环境变量是服务启动那一刻读进去的，正在跑的服务手里还是旧的那份。必须重启服务，热更新只刷页面。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Vite 官方环境变量页说明变量在构建/启动时被处理并注入，据此改动需重新启动才生效。",
+              "sourceUrl": "https://vite.dev/guide/env-and-mode",
+              "sourceTitle": "Vite 官方文档 · Env Variables and Modes",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "vite-prefix-is-a-wall",
+          "kind": "basic",
+          "front": "在 Vite 里，哪些环境变量浏览器代码能读到？",
+          "back": "只有带 VITE_ 前缀的。没有前缀的不会暴露给客户端代码——那个前缀是一道墙，不是一个方便功能。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「只有 VITE_ 前缀的变量会暴露给客户端代码」出自 Vite 官方环境变量页。",
+              "sourceUrl": "https://vite.dev/guide/env-and-mode",
+              "sourceTitle": "Vite 官方文档 · Env Variables and Modes",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "env-does-not-mean-secret",
+          "kind": "basic",
+          "front": "把密钥放进 .env，它就安全了吗？",
+          "back": "不。官方文档明确写着 VITE_* 变量不应包含 API 密钥这类敏感信息——它们会被打包进产物，任何访问者都能看到。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「VITE_* 变量不应包含 API 密钥等敏感信息，因为会打进产物公开可见」直接出自 Vite 官方页。",
+              "sourceUrl": "https://vite.dev/guide/env-and-mode",
+              "sourceTitle": "Vite 官方文档 · Env Variables and Modes",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "refresh-vs-restart",
+          "kind": "basic",
+          "front": "什么时候刷新就够，什么时候必须重启？",
+          "back": "改代码，刷新就行。改环境变量、改配置文件、改依赖，必须重启。判断办法是看终端有没有重新打印启动信息。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "环境变量在启动时注入，这是「改它必须重启」的依据，出自 Vite 官方环境变量页。",
+              "sourceUrl": "https://vite.dev/guide/env-and-mode",
+              "sourceTitle": "Vite 官方文档 · Env Variables and Modes",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "sort-your-own-variables",
+          "title": "把你自己那些变量分到墙的两边",
+          "kind": "explain",
+          "prompt": "列出你那个东西需要的三到五个配置项（比如模型密钥、数据库地址、页面标题、免费次数上限）。逐个判断它该在墙的哪一边——能给浏览器，还是绝不能。对于「绝不能」的那些，说明页面要用到它的时候该怎么办。",
+          "rubric": [
+            "每一项都明确判了「能给浏览器」还是「绝不能」，没有含糊过去",
+            "所有密钥、令牌类的都判在了「绝不能」一侧",
+            "对「绝不能」的那些给出了替代路径：由服务端持有并代为请求",
+            "没有出现「加个前缀就能读到了」这种解法"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「带前缀的变量会公开、不应放密钥」是这条练习的判据，出自 Vite 官方环境变量页。",
+              "sourceUrl": "https://vite.dev/guide/env-and-mode",
+              "sourceTitle": "Vite 官方文档 · Env Variables and Modes",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "it-worked-yesterday",
+      "title": "昨天还好好的",
+      "variant": "溯源",
+      "content": "## 学习目标\n\n读完你能说出为什么一行没改的代码今天跑不起来了。\n\n## 先给结论\n\n因为**变的不是你的代码，是你的代码依赖的东西**。\n\n你的项目里有一份清单，写着「我需要这几个别人写的包」。但那份清单上写的常常不是一个确定的版本，而是一个范围——「1.2 以上都行」。\n\n于是昨天你装到的是 1.2.3，今天别人发布了 1.2.4，你（或者换了台电脑的你）装到的就是 1.2.4。**清单一个字没改，装进来的东西变了。**\n\n解决办法叫锁文件。npm 的官方文档说得很直白：它的作用是让**每一次安装，在任何机器上，都装出完全相同的那一棵依赖树**。\n\n所以有两条规矩：\n\n1. **锁文件要提交进仓库。**它不是临时文件。\n2. **跑不起来又想不出为什么的时候，先怀疑它。**\n\n## 一个类比\n\n这就像一份写着「加一包酵母」的菜谱。\n\n你上次买的那个牌子，一包是 5 克。这次超市换了货，同样叫「一包」，里面是 11 克。**菜谱一个字没改，面发过头了。**\n\n锁文件干的事，就是把菜谱改成「某某牌、5 克装、那一批」。下次谁照着做，拿到的都是同一样东西。\n\n不一样的地方，而且它解释了为什么这事总在最坏的时候发生：面发过头你当场就看见了。**依赖变了你看不见**——它可能只在某个你三天后才会点到的按钮上出错。所以「昨天还好好的」这句话往往不准确，准确的说法是「昨天我没走到那一步」。\n\n## 工作示例\n\n完整一次，怎么确认到底是不是这回事。\n\n**症状：**昨天能跑，今天启动就报一个你从没见过的错，而你今天还没改过任何代码。\n\n**第一步，先确认「没改过代码」是真的。**在项目目录里看一下有没有未提交的改动。人经常记错——尤其是让 AI 改过一轮之后。\n\n**第二步，看锁文件在不在。**项目根目录里应该有一个锁文件（`package-lock.json` 或者同类的）。\n\n- **不在** → 基本可以确认是这个问题。每个人、每次装，装到的东西都可能不一样。\n- **在，但显示被改动过** → 说明有人（可能是你自己，可能是某次自动操作）动过依赖。\n\n**第三步，回到已知能跑的那一版。**如果锁文件在仓库里，把它恢复成上一次能跑的那个版本，重新安装一次，让它严格照着锁文件装。\n\n**第四步，这一步最容易被跳过：把结论记下来。**\n\n> 某月某日，某某包从 1.2.3 变成 1.2.4，启动报某某错。锁定在 1.2.3。\n\n记这一笔的理由很实在：**三个月后你会再遇到它**，而那时你只会记得「好像以前碰到过」。\n\n## 自检\n\n**做对了会看到什么：**你的仓库里有锁文件，而且它和代码一起被提交。换一台电脑、或者叫别人帮你跑，装出来的东西和你这儿一样。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、把锁文件当成垃圾文件，删了或者加进了忽略名单。**它看起来又长又乱又是自动生成的，很像不该进仓库的东西。**但它正是「在你机器上能跑」这件事的凭证。**删掉它，等于每次安装都重新抽一次签。\n\n**二、一跑不起来就删掉整个依赖目录重装。**这偶尔碰巧能好，但你没有得到任何信息——**下次还会发生，而你还是不知道为什么**。而且如果没有锁文件，重装等于又抽了一次签，可能装到一个更新的、更坏的版本。\n\n## 重点\n\n- 「一行没改却跑不起来」，先怀疑依赖变了，不是自己的代码变了。\n- 依赖清单上写的常常是版本范围，所以不同时间装到的可能是不同版本。\n- 锁文件的作用是让每次安装在任何机器上都装出完全相同的依赖树。\n- 锁文件必须提交进仓库，它是「能跑」这件事的凭证，不是临时文件。\n- 删掉依赖目录重装偶尔管用，但不产生任何信息，下次还会发生。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "npm 官方文档说明 package-lock.json 会被自动生成并应提交到仓库，其作用是让后续安装在任何机器上都得到完全相同的依赖树。",
+          "sourceUrl": "https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json",
+          "sourceTitle": "npm 官方文档 · package-lock.json",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "what-a-lockfile-is-for",
+          "kind": "basic",
+          "front": "锁文件是干什么用的？",
+          "back": "让每一次安装、在任何机器上，都装出完全相同的那一棵依赖树。没有它，同一份清单不同时候装到的版本可能不一样。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「让后续安装得到完全相同的依赖树」出自 npm 官方 package-lock.json 页。",
+              "sourceUrl": "https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json",
+              "sourceTitle": "npm 官方文档 · package-lock.json",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "commit-the-lockfile",
+          "kind": "basic",
+          "front": "锁文件该不该提交进仓库？",
+          "back": "该。npm 官方文档明确要求把它提交到源码仓库。它是「在你机器上能跑」这件事的凭证，不是临时文件。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "npm 官方文档写明 package-lock.json 应当提交到源代码仓库。",
+              "sourceUrl": "https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json",
+              "sourceTitle": "npm 官方文档 · package-lock.json",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "it-worked-yesterday-first-suspect",
+          "kind": "basic",
+          "front": "一行代码没改，今天却跑不起来了，先怀疑什么？",
+          "back": "先怀疑依赖变了。清单上写的常常是版本范围，不同时候安装会装到不同版本，而你的代码一个字没动。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "锁文件之所以必要，正是因为不加锁定时安装结果会变——依据是 npm 官方对锁文件作用的说明。",
+              "sourceUrl": "https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json",
+              "sourceTitle": "npm 官方文档 · package-lock.json",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "check-your-lockfile",
+          "title": "查一下你那份凭证在不在",
+          "kind": "explain",
+          "prompt": "打开你的项目目录，确认锁文件在不在、有没有被提交进仓库、有没有被写进忽略名单。写下你查到的结果。然后回答：如果现在把这个项目发给另一个人，他装出来的东西会不会和你这儿一样？为什么？",
+          "rubric": [
+            "如实写出锁文件是否存在、是否已提交、是否被忽略",
+            "回答了「别人装出来会不会一样」，并给出理由而不是只答是或否",
+            "理由落在「锁文件保证依赖树一致」这一点上，不是泛泛的「版本问题」",
+            "如果发现锁文件被忽略或缺失，写出了打算怎么处理"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「锁文件保证任何机器上安装出相同依赖树、且应提交仓库」出自 npm 官方文档。",
+              "sourceUrl": "https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json",
+              "sourceTitle": "npm 官方文档 · package-lock.json",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ask-with-evidence",
+      "title": "带着证据去问，而不是带着情绪",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能把一句「它坏了」改写成一条带证据的提问。\n\n## 先给结论\n\n你问得多具体，它答得多具体。这不是客套话，是因为**它看不见你的屏幕**。\n\n一条能用的提问要有四样东西。你做了什么，具体到点了哪个按钮、填了什么。你看到了什么，报错原文，或者页面上具体的样子。你期望看到什么。以及出事位置附近的那几行代码，不是整个文件。\n\n其中报错原文有个来源你可能还不知道：浏览器自带一套开发者工具，Chrome 的官方文档管其中一块叫控制台，**网页里出错的信息会打印在那儿**。页面上什么都看不出来的时候，那里往往已经写着答案了。\n\n打开它的办法：在页面上点右键，选「检查」。\n\n## 一个类比\n\n这就像看病。\n\n**说法一：**「大夫，我不舒服。」\n\n**说法二：**「从昨天晚上开始，右下腹一按就疼，走路震一下更疼，没发烧，昨晚吃的是火锅。」\n\n同一个医生，同一个你，第二种说法能省掉一整轮检查。\n\n不一样的地方，而且这一点对你有利：医生可以追问你，一来一回也就几句话。**而你每追问一轮 AI，都要往那张越来越满的桌子上再堆两条消息**——你在前面那个单元见过，堆得越满它越糊涂。\n\n所以「一次说清楚」在这里不只是礼貌，**它是省钱也是省准确率**。\n\n## 工作示例\n\n同一个问题，两种问法，完整对比。\n\n**问法一：**\n\n> 我那个页面点了按钮没反应，你看看怎么回事。\n\nAI 只能猜。它会给你一串「可能是 A、可能是 B、可能是 C」，然后你逐个试。三轮之后桌子上堆满了没用的猜测。\n\n**问法二：**\n\n> **我做了什么：**在输入框里粘了一段文字，点了「讲人话」按钮。\n>\n> **我看到了什么：**页面没有任何变化。右键「检查」打开控制台，里面有一条红字：\n> `Uncaught TypeError: Cannot read properties of null (reading 'value')  at handleClick (app.js:12:29)`\n>\n> **我期望看到什么：**按钮下面出现一段解释文字。\n>\n> **相关的那几行：**app.js 第 10 到 14 行是这样：\n> ```\n> function handleClick() {\n>   const box = document.getElementById(\"input-box\");\n>   const text = box.value;\n>   ...\n> ```\n\n第二种问法里，答案几乎已经在问题里了：报错说「在 null 上读 value」，而第 12 行正好在 `box` 上读 `value`——**说明 `box` 是空的，也就是没找到那个 id**。多半是 HTML 里那个输入框的 id 不叫 `input-box`。\n\n**注意这里发生了什么：**你在整理证据的过程中，自己就快把问题定位出来了。\n\n这是这套格式最值钱的部分——**它一半的价值不在于让 AI 答得好，在于让你想清楚。**很多人写到第二条就自己找到了原因，根本没发出去。\n\n## 自检\n\n**做对了会看到什么：**你的提问里有报错原文（复制粘贴的，不是转述的），有具体的操作步骤，有你期望的结果。你能在三十秒内打开控制台看有没有红字。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、转述报错而不是复制它。**「它说什么什么未定义」——**具体是哪个名字、哪一行，全丢了**。报错里每一个字符都是线索，转述会把线索磨掉。直接复制粘贴。\n\n**二、把整个文件贴过去。**这看起来是「给足信息」，其实相反：桌子被一下子占满，而真正相关的那三行淹没在里面。**贴出事位置前后各几行就够**，不够它会问你要。\n\n## 重点\n\n- 一条能用的提问有四样：我做了什么、我看到了什么、我期望什么、相关的那几行。\n- 浏览器自带开发者工具，网页出错的信息会打印在控制台里；右键「检查」打开。\n- 报错要复制原文，不要转述——转述会把线索磨掉。\n- 贴出事位置前后几行，不要贴整个文件；整个文件会把上下文占满。\n- 整理证据的过程本身就在定位问题，很多人写到一半自己就找到了。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Chrome 官方开发者工具文档说明控制台会显示页面记录的信息与 JavaScript 运行时的报错，可用于查看网页出错的具体信息。",
+          "sourceUrl": "https://developer.chrome.com/docs/devtools/console",
+          "sourceTitle": "Chrome 开发者文档 · Console",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 这一页介绍浏览器开发者工具是什么、怎么打开，以及它用来查看页面实际发生了什么。",
+          "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Learn_web_development/Howto/Tools_and_setup/What_are_browser_developer_tools",
+          "sourceTitle": "MDN · 什么是浏览器开发者工具",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "four-parts-of-a-good-question",
+          "kind": "basic",
+          "front": "一条能用的排错提问要有哪四样？",
+          "back": "我做了什么、我看到了什么（报错原文）、我期望看到什么、相关的那几行代码。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "报错原文来自控制台，Chrome 官方文档说明控制台会显示 JavaScript 运行时报错。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/console",
+              "sourceTitle": "Chrome 开发者文档 · Console",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "where-the-red-text-is",
+          "kind": "basic",
+          "front": "页面看起来没反应，报错信息在哪儿？",
+          "back": "在浏览器开发者工具的控制台里。页面上点右键选「检查」打开，网页运行时的报错会打印在那儿。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 介绍浏览器开发者工具及其打开方式；Chrome 文档说明控制台显示运行时报错。",
+              "sourceUrl": "https://developer.mozilla.org/zh-CN/docs/Learn_web_development/Howto/Tools_and_setup/What_are_browser_developer_tools",
+              "sourceTitle": "MDN · 什么是浏览器开发者工具",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "copy-dont-paraphrase",
+          "kind": "basic",
+          "front": "报错该复制原文还是用自己的话转述？",
+          "back": "复制原文。转述会把具体的名字和行号磨掉，而报错里每个字符都是线索。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "控制台给出的是包含具体位置与类型的完整报错，依据是 Chrome 官方控制台文档。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/console",
+              "sourceTitle": "Chrome 开发者文档 · Console",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "dont-paste-the-whole-file",
+          "kind": "basic",
+          "front": "为什么不该把整个文件贴给 AI？",
+          "back": "整个文件会把上下文占满，真正相关的那几行淹没在里面。贴出事位置前后几行就够，不够它会再问。",
+          "tags": ["debugging"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "报错已经定位到具体文件与行号，因此可以只提供该位置附近的代码——依据是控制台报错含位置信息。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/console",
+              "sourceTitle": "Chrome 开发者文档 · Console",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "rewrite-it-is-broken",
+          "title": "把「它坏了」改写成一条能用的提问",
+          "kind": "explain",
+          "prompt": "回想你最近一次卡住的时候，第一句话是怎么问的。把它按四段式重写一遍：我做了什么、我看到了什么、我期望什么、相关的那几行。写完之后回答一个问题：在整理这四段的过程中，你有没有自己想到新的可能原因？",
+          "rubric": [
+            "四段齐全，每段都是具体的，不是「点了按钮」「报错了」这种概括",
+            "「我看到了什么」里是复制来的报错原文或页面上的具体描述，不是转述",
+            "「相关的那几行」是出事位置附近的几行，不是整个文件",
+            "如实回答了整理过程中有没有想到新原因，包括「没有」也算合格答案"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「报错原文来自控制台且含具体位置」是这条练习成立的依据。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/console",
+              "sourceTitle": "Chrome 开发者文档 · Console",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

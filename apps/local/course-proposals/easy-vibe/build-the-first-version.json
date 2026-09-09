@@ -1,0 +1,452 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "build-the-first-version",
+  "courseId": "from-idea-to-live",
+  "unit": {
+    "id": "build-the-first-version",
+    "title": "做出第一版",
+    "objective": "读完这一单元你能让 AI 做出那三页，并说清它哪里不对。",
+    "prerequisiteUnitIds": []
+  },
+  "lessons": [
+    {
+      "id": "copy-from-a-screenshot",
+      "title": "从一张截图开始",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能从一张截图里，提炼出拿来跟页面对照的布局要求。\n\n## 先给结论\n\n截图能把页面各个元素的相对位置、大小、留白和视觉层次，一下子交代给 AI。但光给图还不够，你得用文字跟它说清楚：哪些内容允许它自己编，哪些内容必须原样保留，以及这一轮到底要不要做交互。\n\n图片可不是一份完整的规格书。光看图，它通常看不出点击之后会发生什么；图里的文字、标志或者素材，也不保证能直接拿来用。\n\n## 一个类比\n\n好比你给餐厅看一张菜的照片。厨师能看清盘子有多大、摆盘位置和颜色，却看不出味道、过敏原，或者上菜的先后流程；这些要求，你还得用话跟他说清楚。\n\n不一样的地方是：截图只是页面成品的一个观察角度。AI 也可能看错小字或者细节，所以做完之后，你必须把它放到真正的浏览器里亲自复核。\n\n## 工作示例\n\n给《说人话》做首页时，你先准备一张自己画的参考截图：顶部是标题，中间是一块宽输入区，输入区下方是结果卡片，右上角有一个“历史”入口。把截图和下面的要求一起交给 AI：\n\n~~~\n请把这张图当作《说人话》首页的布局参考。第一轮只做静态页面：保留顶部标题、中央输入区、下方结果卡片和右上角历史入口的关系。文案、图标和颜色请重新制作，不复制参考图里的品牌内容。先适配桌面和手机宽度，不接真实 AI、不做登录。完成后列出修改文件和本地检查步骤。\n~~~\n\n接着打开它生成的页面，把浏览器拉到和参考图差不多的宽度，两边对着看。先看这四块的位置关系成不成立，看准了，再决定下一轮要改哪一处。\n\n## 自检\n\n当你做对时，AI 能跟你复述出截图里的主要区域、哪些部分允许它重新做，以及第一轮先不做的功能；页面在浏览器里显示出来后，你能指得出一处它跟参考图的差异。\n\n最常见的做错法有两种。第一种是只上传了截图，没说清楚这是布局参考还是要逐字照抄，AI 只能自己猜目标；这时候，给它补一句“保留什么、重做什么”就行。第二种是截图里的字太小、主体被裁掉了一块，AI 根本看不清各个区域的关系；这时候，换一张清楚而且包含完整上下文的图片给它。\n\n## 重点\n\n- 截图主要是用来传递空间摆放位置和视觉线索的。\n- 你得用文字补齐内容边界、行为边界，还有最后的验收目标。\n- 第一轮你可以只做静态布局。\n- AI 照着图做出来的结果，你必须回到真正的浏览器页面里去检查。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "该页说明 Claude 可以接收并分析图像，图片可以作为请求内容和文字一起提供。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/vision",
+          "sourceTitle": "Claude Platform Docs · Vision",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "copy-from-a-screenshot-what-image-gives",
+          "kind": "basic",
+          "front": "一张页面截图最适合传递什么？",
+          "back": "它最适合传递区域之间的位置、大小、留白和整体视觉关系；隐藏的点击行为仍要用文字说明。",
+          "tags": [
+            "copy-from-a-screenshot",
+            "screenshot",
+            "layout"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页说明 Claude 可以接收并分析图像，图片可以作为请求内容和文字一起提供。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/vision",
+              "sourceTitle": "Claude Platform Docs · Vision",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "copy-from-a-screenshot-add-words",
+          "kind": "basic",
+          "front": "截图后面为什么还要补一句话？",
+          "back": "图片不一定说明内容边界、交互范围或素材限制；文字把这一轮保留和不做的事情说清楚。",
+          "tags": [
+            "copy-from-a-screenshot",
+            "prompt",
+            "scope"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页说明 Claude 可以接收并分析图像，图片可以作为请求内容和文字一起提供。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/vision",
+              "sourceTitle": "Claude Platform Docs · Vision",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "copy-from-a-screenshot-write-a-brief",
+          "title": "给自己的截图配要求",
+          "kind": "explain",
+          "prompt": "找一张你想参考的页面截图，写一段交给 AI 的要求。请说明至少三个要保留的视觉关系、一项要重新制作的内容、第一轮不做的功能，以及你打算怎样在浏览器里比较结果。",
+          "rubric": [
+            "写出至少三个可观察的视觉关系",
+            "说明参考内容与自造内容的边界",
+            "写出一项第一轮不做的功能",
+            "给出一个浏览器中的比较动作"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页说明 Claude 可以接收并分析图像，图片可以作为请求内容和文字一起提供。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/vision",
+              "sourceTitle": "Claude Platform Docs · Vision",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "make-it-look-right-first",
+      "title": "第一版先做到「能看」",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能自己动手，把一页原型的视觉层次调准。\n\n## 先给结论\n\n第一轮所谓的“能看”，可不是要你把所有功能一口气全做完。它是指别人打开页面时，能一眼看出哪个是主要内容、哪个是次要内容；字能读清楚，主要动作能立马找到；各个区域之间的间距和颜色对比看着顺眼、不打架。你得先对照着把眼前的视觉排版理顺，然后再去测点击、保存或者发请求这些具体行为。视觉排版的规矩能帮你看出哪里太抢眼、分散了注意力，但它可不会替你拿主意，决定你的产品到底该做什么。\n\n## 一个类比\n\n好比去餐厅吃饭，店里得先把菜摆好盘，再去检查厨房能不能照着单子把菜做出来：盘子端上桌是不是清清爽爽，这是一类检查；客人下单之后后厨是不是真的把菜送出来了，是另一类检查。不一样的地方是：网页的长相和它背后的行为常常拴在一起，改动同一处地方，往往两边都会跟着变。所以你每改完一轮外观，依然要亲自回到页面上操作一次。\n\n## 工作示例\n\n就拿你手里的《说人话》第一版来说，页面上虽然有了标题、输入区、结果区和历史入口，但现在看着很别扭：标题居然和按钮一样大，结果区死死贴着屏幕边，在手机上打开还会左右乱晃、出现横向滚动。\n\n先给 AI 发一条只改视觉的请求：\n\n~~~\n请只调整《说人话》首页的视觉层次：让标题成为最先看到的主标题，让输入区和“讲给我听”成为主要动作，让结果区与输入区保持清楚的间距，并消除手机横向滚动。不要改点击逻辑、数据结构或页面地址。完成后告诉我你改了哪些样式。\n~~~\n\n在电脑和手机宽度下各看一次，记下这几点：“标题是不是最醒目、主要动作容不容易找到、结果区能不能读得清、页面有没有超出屏幕横向溢出”。这四项都通过后，你再让 AI 去做按钮点击和历史页。\n\n## 自检\n\n当你做对的时候，第一版页面一打开，视线扫过去会有很清晰的先后顺序，主要动作能立刻找到，页面在设定的屏幕宽度内也规规矩矩、不会横向溢出。至于按钮按下去有没有反应，留给后面的行为检查去单独确认就行。\n\n最常见的做错法有两种。第一种是先花时间去调阴影和圆角，结果标题、输入区和结果区谁大谁小都没理顺；遇到这种情况，你得先停下，回到整个页面的主次层次上来。第二种是一边调颜色，一边又让 AI 新增真实接口，最后页面出错了，你根本不知道问题来自排版还是来自功能；记住，把这两类请求彻底分开提。\n\n## 重点\n\n- 所谓的“能看”，优先盯住四件事：层次、好不好读、区域间距，以及页面有没有超出屏幕。\n- 视觉对照和交互检查是两轮完全不同的验收，别混在一块儿做。\n- 先把整个页面的大关系理顺，再去抠那些装饰细节。\n- 每次向 AI 提视觉请求时，都要写清楚：哪些现有的行为千万不要改。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "该页把 scale、visual hierarchy、balance、contrast 和 Gestalt 列为视觉设计原则，并说明视觉层次会引导眼睛的观看顺序。",
+          "sourceUrl": "https://www.nngroup.com/articles/principles-visual-design/",
+          "sourceTitle": "Nielsen Norman Group · 5 Principles of Visual Design in UX",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "该页说明原型可以是单页或多页、静态或可交互，选择取决于测试目标；测试原型可以帮助发现交互问题并改进设计。",
+          "sourceUrl": "https://www.nngroup.com/articles/ux-prototype-hi-lo-fidelity/",
+          "sourceTitle": "Nielsen Norman Group · UX Prototypes: Low Fidelity vs. High Fidelity",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "make-it-look-right-first-visual-pass",
+          "kind": "basic",
+          "front": "第一版“能看”先验收什么？",
+          "back": "先验收阅读主次、主要动作、文字可读性、区域间距和目标宽度内的完整显示。",
+          "tags": [
+            "make-it-look-right-first",
+            "visual-hierarchy"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页把 scale、visual hierarchy、balance、contrast 和 Gestalt 列为视觉设计原则，并说明视觉层次会引导眼睛的观看顺序。",
+              "sourceUrl": "https://www.nngroup.com/articles/principles-visual-design/",
+              "sourceTitle": "Nielsen Norman Group · 5 Principles of Visual Design in UX",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "make-it-look-right-first-two-passes",
+          "kind": "basic",
+          "front": "为什么把视觉和交互分成两轮？",
+          "back": "分开后你能分别判断页面长得怎样、操作有没有反应，出问题时更容易写出准确反馈。",
+          "tags": [
+            "make-it-look-right-first",
+            "prototype",
+            "verification"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页说明原型可以是单页或多页、静态或可交互，选择取决于测试目标；测试原型可以帮助发现交互问题并改进设计。",
+              "sourceUrl": "https://www.nngroup.com/articles/ux-prototype-hi-lo-fidelity/",
+              "sourceTitle": "Nielsen Norman Group · UX Prototypes: Low Fidelity vs. High Fidelity",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "make-it-look-right-first-audit-page",
+          "title": "给一页做视觉验收",
+          "kind": "explain",
+          "prompt": "打开你自己的第一版页面，写出四条视觉验收记录：谁最先被看到、主要动作在哪里、文字是否读得清、手机宽度是否溢出。再写一条暂时不要混进这轮的交互问题。",
+          "rubric": [
+            "写出页面视觉主次",
+            "指出主要动作的位置或可见性",
+            "检查文字可读性与区域间距",
+            "单独列出一个交互问题而不混入视觉结论"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页把 scale、visual hierarchy、balance、contrast 和 Gestalt 列为视觉设计原则，并说明视觉层次会引导眼睛的观看顺序。",
+              "sourceUrl": "https://www.nngroup.com/articles/principles-visual-design/",
+              "sourceTitle": "Nielsen Norman Group · 5 Principles of Visual Design in UX",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "from-one-page-to-several",
+      "title": "从一页到几页",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能补出两个带地址的页面。\n\n## 先给结论\n\n你的东西从一页变成几页后，用户得能通过链接或导航点进不同的地址，浏览器也要能记录来过的页面，这样按返回和前进才管用。单页应用可以在不重新加载整张页面的情况下更新内容，但每个页面状态，依然要有能认出来的地址。做完之后，你要亲自测试三件事：点击能不能进去、刷新能不能直达，以及按浏览器的返回键管不管用。\n\n## 一个类比\n\n好比一栋酒店分出几间房：大厅、历史房和分享房都在同一栋楼里，房号能让客人说清楚自己到了哪里。不一样的地方是：网页换了地址，不一定真的换了文件。但如果别人把某个房号直接报给前台，前台依然得把客人送到正确的房间；只在酒店大厅里能点得进去可不行，别人拿着房号直接找过来也能进得去，才算合格。\n\n## 工作示例\n\n给《说人话》补出三页：\n\n- 首页，地址用根路径，完成粘贴和查看解释。\n- 历史页，地址用 history 路径，列出已经保存好的条目。\n- 分享页，地址用 share/demo-7 路径，显示一条能直接看的结果。\n\n让 AI 先把导航做出来，先别接真实模型：\n\n~~~\n请在当前《说人话》项目里补出历史页和分享页。保留首页已有输入流程；导航要能进入首页、历史页和分享页；每页都要有可识别的地址。完成后逐项检查：点击导航、直接打开每个地址、刷新、使用浏览器返回。不要接入登录或真实 AI。\n~~~\n\n你按顺序点一点这三个入口，把每个地址复制下来，单独粘贴到浏览器里打开试试，最后再按返回键退回上一页。这中间只要任何一个动作卡住了，就把它单独记下来当成一个问题，千万不要含糊地说“多页做完了”。\n\n## 自检\n\n如果你做对了，三个页面都能从导航顺利点进去，每个页面的地址单独打开也没问题，页面刷新后内容依然对得上当前地址，点返回键也能退回到上一页。\n\n最常见的做错情况有两种。第一种，你点击时能看到历史页，但把地址复制出来一刷新，就出现找不到页面；这时候让 AI 检查直接访问该地址时的处理。第二种，三个页面的内容确实在变，但地址栏里的地址却始终不变，返回键根本没有退路；这时候让 AI 把页面状态与地址绑定好，再去测导航。\n\n## 重点\n\n- 想要有多页的体验，每个页面都要有能被认出来的地址。\n- 点击进入、直接打开、刷新网页、按返回键，这是四个完全不同的测试项。\n- 同一个应用完全可以装得下好几个不同的页面状态。\n- 地址能分享给别人，前提是对方从这个地址点进来，能进到正确的页面。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 说明 History API 可以操作浏览器会话历史，并支持单页应用在不加载整页的情况下更新页面。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/History_API",
+          "sourceTitle": "MDN · History API",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 说明 URL 由多个部分组成，路径用来定位资源在站点中的位置。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_URL",
+          "sourceTitle": "MDN · What is a URL?",
+          "sourceAuthority": "mdn"
+        }
+      ],
+      "cards": [
+        {
+          "id": "from-one-page-to-several-page-address",
+          "kind": "basic",
+          "front": "从一页增加到几页，地址解决什么问题？",
+          "back": "地址让用户和浏览器能区分当前页面，也让某个页面可以被单独打开或分享。",
+          "tags": [
+            "from-one-page-to-several",
+            "url",
+            "navigation"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明 URL 由多个部分组成，路径用来定位资源在站点中的位置。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_URL",
+              "sourceTitle": "MDN · What is a URL?",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "from-one-page-to-several-history",
+          "kind": "basic",
+          "front": "为什么要测试浏览器返回？",
+          "back": "页面切换应留下可用的会话历史；返回测试能检查用户是否能回到刚才的页面。",
+          "tags": [
+            "from-one-page-to-several",
+            "history",
+            "browser"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明 History API 可以操作浏览器会话历史，并支持单页应用在不加载整页的情况下更新页面。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/History_API",
+              "sourceTitle": "MDN · History API",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "from-one-page-to-several-design-routes",
+          "title": "给你的念头补两页",
+          "kind": "explain",
+          "prompt": "为你自己的念头设计三个页面：现有首页、一个新增页面和另一个新增页面。请给每页一个地址，写出页面之间的入口，并列出点击、直接打开、刷新、返回四项检查。",
+          "rubric": [
+            "三页都有清楚的页面职责",
+            "三页都有可识别地址",
+            "写出页面之间的进入方式",
+            "四项检查都覆盖到"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明 History API 可以操作浏览器会话历史，并支持单页应用在不加载整页的情况下更新页面。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/History_API",
+              "sourceTitle": "MDN · History API",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "looks-wrong-vs-works-wrong",
+      "title": "「看起来不对」和「用起来不对」要分开说",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能分清一个页面问题到底是属于外观，还是属于操作。\n\n## 先给结论\n\n“看起来不对”，说的是你眼睛看到的画面有差错，重点在位置、大小、颜色、间距和文字层次；“用起来不对”，说的是你动手指做了操作，却没有拿到想要的结果，重点在动作、预期、实际表现和复现步骤。这两类问题你都可以交给 AI 来改，但提问时的句式不一样。\n\n外观句式可以写成：\n\n~~~\n我在【页面区域】看到【现在的样子】；我希望【位置、大小、颜色或间距】变成【目标样子】；请只调整视觉，不改变点击逻辑。\n~~~\n\n操作句式可以写成：\n\n~~~\n我先做了【动作】；我预期【应该发生什么】；实际是【发生了什么或出现哪条错误】；我能按【复现步骤】再次触发；请先检查这条操作路径。\n~~~\n\n## 一个类比\n\n好比你在餐厅吃饭，端上来的盘子摆歪了，这是外观问题；你点了套餐却没拿到主菜，这是操作结果出了问题。不一样的地方是：网页里的一个按钮，既有长相又有动作。看着特别漂亮的按钮，点上去可能完全没反应；能正常提交数据的按钮，也可能丑得让你找都找不到。所以在向 AI 描述时，你得先把这两件事分开说。\n\n## 工作示例\n\n在《说人话》里，你碰到了两个问题。\n\n外观问题你可以这样问：“我在首页结果区看到卡片占了整行；我希望它在桌面宽度下比输入区窄一些、左右留白相近；请只调整布局，不改变点击和保存。”\n\n操作问题你可以这样问：“我在首页粘贴一段租房条款后点击‘讲给我听’；我预期下方出现结果卡片；实际按钮变灰且没有结果；我每次先粘贴再点击都能复现；请先检查按钮禁用条件和相关错误。”\n\n前一句话让 AI 去找样式，后一句话让 AI 去顺着动作路径排查。你可以先把它们分别验收好，再看这两个问题会不会互相影响。\n\n## 自检\n\n你做对的时候，外观句能让人在脑子里想出目标画面的样子，操作句能让人跟着一步步重做动作，并对照预期和实际结果。\n\n大家最常做错的就两种情况。第一种，把“按钮太靠右”写成了“点击没反应”，AI 会跑去查脚本代码而不是排查布局；这时你要换用位置、大小和间距来跟它说。第二种，把“点击后没有结果”写成了“页面很丑”，AI 手里根本没有动作线索；这时你得把操作顺序、本来预期的结果和实际发生的事情给它补齐。\n\n## 重点\n\n- 外观句要盯住位置、大小、颜色、间距和文字层次。\n- 操作句要讲清动作、预期、实际、错误和复现步骤。\n- 页面里的同一个控件，可能同时存在外观问题和操作问题。\n- 每次给 AI 提反馈，先说其中一类毛病，AI 才更容易找准范围帮你改。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "该页把 scale、visual hierarchy、balance、contrast 和 Gestalt 列为视觉设计原则，并说明视觉层次会引导眼睛的观看顺序。",
+          "sourceUrl": "https://www.nngroup.com/articles/principles-visual-design/",
+          "sourceTitle": "Nielsen Norman Group · 5 Principles of Visual Design in UX",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "该页建议让用户完成代表性任务并观察其成功与困难，同时避免在测试过程中引导用户。",
+          "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+          "sourceTitle": "Nielsen Norman Group · Usability (User) Testing 101",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "looks-wrong-vs-works-wrong-looks",
+          "kind": "basic",
+          "front": "外观问题的反馈句式抓什么？",
+          "back": "抓页面区域、现在看到的样子、希望的视觉目标，并说明只调整视觉。",
+          "tags": [
+            "looks-wrong-vs-works-wrong",
+            "visual-feedback"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页把 scale、visual hierarchy、balance、contrast 和 Gestalt 列为视觉设计原则，并说明视觉层次会引导眼睛的观看顺序。",
+              "sourceUrl": "https://www.nngroup.com/articles/principles-visual-design/",
+              "sourceTitle": "Nielsen Norman Group · 5 Principles of Visual Design in UX",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "looks-wrong-vs-works-wrong-works",
+          "kind": "basic",
+          "front": "操作问题的反馈句式抓什么？",
+          "back": "抓做了什么、预期什么、实际什么、怎样复现，并让 AI 先检查操作路径。",
+          "tags": [
+            "looks-wrong-vs-works-wrong",
+            "behavior-feedback"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页建议让用户完成代表性任务并观察其成功与困难，同时避免在测试过程中引导用户。",
+              "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+              "sourceTitle": "Nielsen Norman Group · Usability (User) Testing 101",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "looks-wrong-vs-works-wrong-rewrite-feedback",
+          "title": "把模糊反馈改成两种句子",
+          "kind": "explain",
+          "prompt": "把下面两句改写成可交给 AI 的反馈：A. “这个结果框看着不舒服。” B. “提交好像坏了。” A 要写成外观句，B 要写成操作句；请使用本课的两套结构。",
+          "rubric": [
+            "A 写出具体区域和视觉现状",
+            "A 写出可比较的视觉目标并限制范围",
+            "B 写出动作、预期和实际",
+            "B 写出复现步骤或准确错误线索"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页建议让用户完成代表性任务并观察其成功与困难，同时避免在测试过程中引导用户。",
+              "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+              "sourceTitle": "Nielsen Norman Group · Usability (User) Testing 101",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "keep-a-version-you-can-go-back-to",
+      "title": "留一个能退回去的版本",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能亲手存下一个自己以后能认出来的 Git 版本。\n\n## 先给结论\n\n版本控制做的事情，就是随着时间帮你把项目的变化一步步记下来。每一次 Git 提交，都可以当作一个带说明的存档检查点。所以，在让 AI 动手大改你的东西之前，先确认现在的页面能正常打开，再存下一个容易认出来的版本名字。提交前，先看一眼状态和改动；提交后，再看一眼历史记录。这样万一后面改坏了，你手里才有一个能拿来对比的正常旧版本。\n\n## 一个类比\n\n这就好比你去银行柜台办重要业务前，先把核对好的文件盖上日期章，装进档案袋；要是后面新填的内容写乱了，你手里至少还能翻出那份确认无误的底稿。不一样的地方是：Git 不会替你判断哪一版值得保留，提交时写的那句说明得由你来写，里面装着密码的环境文件，也绝不能因为要“存档”就随手交出去。\n\n## 工作示例\n\n假设你手里的《说人话》首页已经能打开了，标题、输入框和固定结果卡片也都检查过、没问题。这时，先在项目的终端里看一眼状态和改动细节，然后只把你确认好的页面文件放进暂存区：\n\n~~~\ngit status\ngit diff\ngit add index.html src\ngit diff --cached\ngit commit -m \"feat: add readable text home page\"\ngit log --oneline -1\n~~~\n\n要是你项目的页面文件不在这些位置，就按实际路径替换掉名字；如果看到了环境变量文件、密钥或者无关的文件，千万不要顺手把它们一起暂存进去。仔细看完暂存区里的改动，确认它确实就是“首页能打开”的那一版，然后再开始让 AI 去加历史页。\n\n如果大改动还没提交、某个文件已经被明显改坏了，先用 git diff 看清到底变动了什么，再谨慎地恢复指定的文件：\n\n~~~\ngit restore -- path/to/file\n~~~\n\n这会彻底丢掉这个文件里还没提交的所有改动，动手执行前一定要看准文件路径；至于你之前已经提交好的检查点，会安稳留在那里的历史记录中。\n\n## 自检\n\n做对的时候，你的提交记录里会有一条能讲清页面状态的说明，提交前后的改动你都仔细看过，提交后也能在历史记录里翻到这一版。\n\n最常见的踩坑情况有两种。第一种是直接把所有文件一股脑塞进暂存区，根本没检查里面有没有混进无关内容或私密信息；解决办法是先看 status 和暂存区的改动差异。第二种是页面已经被改坏了，才想起来做第一次提交，导致历史记录里根本没有能用的“之前那一版”；解决办法是在让 AI 做大改动之前，就提早存好检查点。\n\n## 重点\n\n- Git 版本是你自己能随时回看的项目检查点，不是 AI 给你的自动备份承诺。\n- 提交之前，一定要看清楚状态、改动细节和准备保存的文件。\n- 提交说明要写明白，好让以后的你一眼就能认出这一版。\n- 恢复还没提交的文件前，一定要先确认它会丢掉哪些改动。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Git 书籍说明版本控制会记录文件随时间发生的变化，因而可以回看或恢复较早的状态。",
+          "sourceUrl": "https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control",
+          "sourceTitle": "Git · About Version Control",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "git-commit 文档说明 commit 会把当前内容记录为一次提交，并接受提交说明。",
+          "sourceUrl": "https://git-scm.com/docs/git-commit",
+          "sourceTitle": "Git · git-commit Documentation",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "git-restore 文档说明它可以把工作树中的文件恢复到指定来源的内容。",
+          "sourceUrl": "https://git-scm.com/docs/git-restore",
+          "sourceTitle": "Git · git-restore Documentation",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "keep-a-version-you-can-go-back-to-commit",
+          "kind": "basic",
+          "front": "为什么大改动前要先提交一次？",
+          "back": "先留下一个能说明当前状态的检查点，之后比较差异或恢复时才有明确的之前。",
+          "tags": [
+            "keep-a-version-you-can-go-back-to",
+            "git",
+            "commit"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Git 书籍说明版本控制会记录文件随时间发生的变化，因而可以回看或恢复较早的状态。",
+              "sourceUrl": "https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control",
+              "sourceTitle": "Git · About Version Control",
+              "sourceAuthority": "official-docs"
+            },
+            {
+              "kind": "fact",
+              "note": "git-commit 文档说明 commit 会把当前内容记录为一次提交，并接受提交说明。",
+              "sourceUrl": "https://git-scm.com/docs/git-commit",
+              "sourceTitle": "Git · git-commit Documentation",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "keep-a-version-you-can-go-back-to-restore",
+          "kind": "basic",
+          "front": "git restore 前要先做什么？",
+          "back": "先看清指定文件的差异，确认要丢掉尚未提交的修改，再执行恢复。",
+          "tags": [
+            "keep-a-version-you-can-go-back-to",
+            "restore",
+            "safety"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "git-restore 文档说明它可以把工作树中的文件恢复到指定来源的内容。",
+              "sourceUrl": "https://git-scm.com/docs/git-restore",
+              "sourceTitle": "Git · git-restore Documentation",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "keep-a-version-you-can-go-back-to-checkpoint",
+          "title": "写出你的改动前检查点",
+          "kind": "explain",
+          "prompt": "假设你准备让 AI 给自己的念头新增一页功能。请写出提交前会检查什么、会暂存哪些文件、提交说明准备写什么，以及如果本轮改坏了你会如何先查看差异再决定是否恢复。",
+          "rubric": [
+            "写出页面当前可用状态的检查",
+            "限定暂存文件并说明会查看差异",
+            "给出能识别当前版本的提交说明",
+            "说明恢复前先确认未提交改动"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Git 书籍说明版本控制会记录文件随时间发生的变化，因而可以回看或恢复较早的状态。",
+              "sourceUrl": "https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control",
+              "sourceTitle": "Git · About Version Control",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

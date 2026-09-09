@@ -1,0 +1,536 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "narrow-it-down",
+  "courseId": "from-idea-to-live",
+  "unit": {
+    "id": "narrow-it-down",
+    "title": "从一堆想法收敛成一版能做的",
+    "objective": "读完这一单元你能把自己那个念头收敛成一版说得清、做得完的东西。",
+    "prerequisiteUnitIds": [
+      "is-the-idea-worth-it"
+    ]
+  },
+  "lessons": [
+    {
+      "id": "two-diamonds",
+      "title": "为什么要把问题和方案分开",
+      "variant": "溯源",
+      "content": "## 学习目标\n\n读完你能说出自己现在处在四个阶段里的哪一个。\n\n## 先给结论\n\n做东西这件事有一个被用了二十多年的框架，长得像两颗并排的钻石，叫双钻。\n\n它把整件事分成四段，顺序是固定的：**先搞清楚问题（Discover）、把问题定下来（Define）、想出几种方案（Develop）、做出来试（Deliver）。**\n\n提出它的英国设计委员会自己的说法是：这是对设计与创新过程的一种直观表示，**不管你用什么方法、什么工具，都可以用它来描述项目走到了哪一步。**\n\n为什么长成两颗钻石而不是一条直线？因为**每一颗钻石都是先胖后瘦**：先尽量铺开，再收到一个点上。第一颗铺开的是「问题可能是什么」，第二颗铺开的是「方案可能有哪些」。\n\n而绝大多数人做东西的方式是：跳过第一颗钻，直接从第二颗钻的末端开始——**心里已经有了一个方案，剩下的时间都在把它做出来。**\n\n## 一个类比\n\n这就像看病。\n\n第一颗钻是诊断：先把症状问清楚、该查的查了，最后收敛成一句「是什么病」。第二颗钻是治疗：这个病有几种治法，权衡之后选一种，开始治。\n\n**一个人绝不会接受医生跳过诊断直接开药。**但他自己做产品的时候，几乎一定会跳。\n\n不一样的地方，而且它解释了为什么人人都跳：医生跳过诊断，病人当场就会拦住他。**你跳过第一颗钻，没有任何人会拦你**——你甚至会觉得自己效率很高，因为你第一天就开始写代码了。\n\n代价要三个月后才结账。\n\n## 工作示例\n\n同一个念头，跳和不跳，走出两条完全不同的路。\n\n**跳过第一颗钻：**\n\n> 念头：做一个把合同条款翻译成大白话的网页。\n>\n> 第一天：开始做。第三周：做完了。第四周：发出去，二十个人点进来，三个人粘了东西进去，没有人回来第二次。\n\n钱花完了，你还是不知道为什么。\n\n**不跳：**\n\n**第一颗钻，先铺开。**去问五个最近签过合同的人（上一单元那五个问题）。你会收集到一堆互相矛盾的东西：\n\n- 有人怕的是被坑，有人怕的是显得自己不专业\n- 有人是在中介办公室里，有人是在家慢慢看\n- 有人已经付过钱找律师，有人从来没想过要找谁\n\n**第一颗钻收口。**从这一堆里挑出一句：\n\n> 被催着当场签字的人，没有时间也没有人可问，最后只能硬着头皮签。\n\n设计委员会那一页说得很准：**从探索阶段收集到的洞察，能帮你用一种不同的方式来定义这个挑战。**注意它说的是「不同的方式」——如果你 Define 出来的东西和你一开始想的一模一样，那多半是你没有真的 Discover。\n\n**第二颗钻，再铺开。**围绕「被催着、没人可问」这一句，方案就不止一个了：\n\n- 粘进去讲人话的网页\n- 一张只列最常见十个坑的图，存在手机相册里\n- 一句能把签字拖到明天的话术\n- 一个能十分钟接通律师的按钮\n\n**第二颗钻收口。**挑一个做出来试。\n\n**注意第二条：**一张图，做起来一个小时，而且它在中介办公室里比网页更好用——因为不用打字。\n\n**这个方案只有在你 Define 出「被催着」这三个字之后才可能被想到。**\n\n## 自检\n\n**做对了会看到什么：**你能说出自己现在在哪一段，而且你 Define 出来的那句话，和你最初的念头不完全一样。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、Discover 完了，Define 出来的还是原来那句。**这说明你不是在探索，是在找证据支持你已经想好的东西。**信号很明显：整个过程里你有没有听到一句让你意外的话？**一句都没有，就是没做。\n\n**二、Define 之后又偷偷把问题改了。**做到一半发现方案不好做，于是把问题挪一挪，让方案变得好做。**这时候你已经在解一个没人有的问题了。**要改问题可以，但要退回第一颗钻重新收口，不能在第二颗钻里悄悄改。\n\n## 重点\n\n- 双钻把做东西分成四段：Discover、Define、Develop、Deliver，顺序固定。\n- 设计委员会说它不依赖任何具体方法和工具，只是用来描述项目走到了哪一步。\n- 每颗钻石都是先铺开再收口；第一颗铺问题，第二颗铺方案。\n- 探索得到的洞察，应该让你用一种不同的方式重新定义问题。\n- Define 出来的和最初的念头一模一样，通常说明没有真的探索过。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页给出双钻模型的四个阶段名称与顺序（Discover、Define、Develop、Deliver），说明它是对设计与创新过程的直观表示、不依赖具体方法与工具，并写明探索阶段得到的洞察可以帮助以不同的方式定义挑战。",
+          "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+          "sourceTitle": "Design Council · The Double Diamond",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "four-phases-in-order",
+          "kind": "basic",
+          "front": "双钻模型的四个阶段，按顺序是哪四个？",
+          "back": "Discover 搞清楚问题、Define 把问题定下来、Develop 想出几种方案、Deliver 做出来试。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "四个阶段的名称与顺序出自设计委员会这一页。",
+              "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+              "sourceTitle": "Design Council · The Double Diamond",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "define-should-differ",
+          "kind": "basic",
+          "front": "怎么判断自己有没有真的做过 Discover？",
+          "back": "看 Define 出来的那句话和最初的念头一样不一样。设计委员会说，探索得到的洞察应该帮你用一种不同的方式定义挑战；一模一样，多半是在找证据支持已想好的方案。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「探索阶段的洞察可以帮助以不同的方式定义挑战」出自这一页。",
+              "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+              "sourceTitle": "Design Council · The Double Diamond",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "why-two-diamonds-not-a-line",
+          "kind": "basic",
+          "front": "为什么是两颗钻石，不是一条直线？",
+          "back": "因为每一颗都先铺开再收口。第一颗铺开的是问题可能是什么，第二颗铺开的是方案可能有哪些。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "双钻的四阶段结构与其作为过程直观表示的定位出自这一页。",
+              "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+              "sourceTitle": "Design Council · The Double Diamond",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "locate-yourself",
+          "title": "说出你现在在哪一段",
+          "kind": "explain",
+          "prompt": "写下你那个念头现在的状态，然后判断你正处在四段里的哪一段，并给出判断依据。接着回答：你有没有跳过 Discover？如果跳过了，写出你打算去问哪三个人、问什么。",
+          "rubric": [
+            "明确说出了在哪一段，并给了依据而不是只报名字",
+            "老实回答了有没有跳过 Discover，承认跳过也算合格",
+            "如果跳过了，列出了具体要问的人和问题，而不是「去做用户调研」",
+            "没有把「我已经想好要做什么了」当成已经完成 Define"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "四个阶段及其顺序出自设计委员会这一页，是这条练习的判据。",
+              "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+              "sourceTitle": "Design Council · The Double Diamond",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "discover-then-define",
+      "title": "第一颗钻：先打开，再收口",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能把一堆零散的访谈记录收敛成一句问题。\n\n## 先给结论\n\n第一颗钻的两段，做的事完全相反，所以**不能同时做**。\n\n设计委员会对这两段的说法是：探索阶段要**去理解问题，而不是假设它是什么**，办法是去接触那些真正受影响的人；定义阶段则是用探索到的洞察，**换一种方式把挑战重新表述出来**。\n\n落到你手上就是两个动作。\n\n第一个动作叫**摊开**——把听到的每一句照着原话写下来，不许归纳、不许下结论、不许合并相似的。这一步做完你手里应该是一堆乱的、互相矛盾的东西——**乱是对的**，不乱说明你在收集的过程中就已经偷偷筛过了。\n\n第二个动作叫**收口**——从这一堆里挑出一句。不是三句，是一句。\n\n## 一个类比\n\n这就像警察查案。\n\n第一步是把所有线索都摊在桌上：监控、口供、时间线、物证。这时候不下判断，连「谁最可疑」都不想——**因为一旦心里有了嫌疑人，后面所有的线索都会往他身上靠。**\n\n第二步才是从这一桌东西里收敛成一句话：这个案子到底是什么案子。\n\n不一样的地方在这儿：警察摊开线索是因为不知道谁干的。**你摊开线索，是因为你太知道自己想做什么了**——你要防的不是不知道，是知道得太早。\n\n所以这一步真正的难点不是收集，是**忍住不下结论**。\n\n## 工作示例\n\n完整走一次收口，从一堆乱的到一句。\n\n**摊开（问了五个人之后的原始记录，一条都没合并）：**\n\n- A：中介催得急，没细看就签了\n- B：拍照发给做律师的表姐，等了一天\n- C：自己搜了两个小时，越搜越不确定\n- D：签之前没看，签完才后悔，但也没去改\n- E：让朋友陪着一起去的，朋友也不懂，但心里踏实点\n- B：主要是不敢信网上说的，怕搜到的不适用于自己这份\n- C：其实条款看得懂字，就是不知道哪条重要\n\n**这一堆是乱的。**有人缺时间、有人缺信任、有人缺判断力、有人缺的是壮胆。\n\n**收口（在这一堆里找那个反复出现的东西）：**\n\n注意 C 最后那句和 B 那句——「**看得懂字，但不知道哪条重要**」和「**不敢信，怕不适用于自己这份**」。\n\n再回头看 E：他找朋友来，朋友也不懂。**他要的根本不是知识，是有个人跟他一起承担。**\n\n**收出来的那一句：**\n\n> 签合同的人卡住的地方不是看不懂字，是不知道哪几条对自己重要、以及敢不敢信自己的判断。\n\n**这一句和「把条款翻译成大白话」差得很远**，而翻译恰恰是你一开始想做的。\n\n**它改变了什么：**如果问题是「不知道哪条重要」，那产品就不该把整份合同都翻译一遍——**那反而增加了他要读的字数**。它该做的是指出哪三条最要命，其余不提。\n\n一句收口，砍掉了你八成的工作量。\n\n## 自检\n\n**做对了会看到什么：**你的原始记录里有互相矛盾的条目，而且你能指出收口那句话是从哪几条里长出来的。那句话读起来不像你最初的念头。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、边听边归纳。**你记录的时候写的是「用户需要更简单的解释」，而不是他说的原话「我搜了两个小时越搜越不确定」。**原话里有信息，归纳里没有。**归纳是收口那一步的事，不是记录这一步的事。\n\n**二、收出来三句，舍不得删。**「他缺时间、缺信任、还缺判断力」——三句等于没收口，因为你后面每做一个决定都能从三句里挑一句支持自己。**必须是一句。**另外两句写在旁边，标明这一版不解决。\n\n## 重点\n\n- 探索是去理解问题，不是去假设问题；办法是接触真正受影响的人。\n- 定义是用探索到的洞察，换一种方式把挑战重新说一遍。\n- 摊开的时候不许归纳，记原话；乱是对的。\n- 收口只能收出一句，三句等于没收。\n- 收出来的那句话如果和最初的念头很像，回去重听。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页说明探索阶段是去理解问题而不是假设问题、通过接触受影响的人来进行；定义阶段则用探索得到的洞察以不同的方式重新定义挑战。",
+          "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+          "sourceTitle": "Design Council · The Double Diamond",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "这一页给出「回忆具体某一次经历」的访谈做法，是记录原话而非归纳的依据。",
+          "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+          "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "discover-is-not-assume",
+          "kind": "basic",
+          "front": "探索阶段要做的是什么？",
+          "back": "去理解问题，而不是假设问题是什么。办法是接触那些真正受影响的人。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「理解问题而非假设问题、接触受影响的人」出自这一页对 Discover 的说明。",
+              "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+              "sourceTitle": "Design Council · The Double Diamond",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "record-the-original-words",
+          "kind": "basic",
+          "front": "访谈记录该写原话还是写归纳？",
+          "back": "写原话。「我搜了两个小时越搜越不确定」里有信息，「用户需要更简单的解释」里没有。归纳是收口那一步的事。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "以具体经历原话为访谈素材，出自这一页的访谈做法。",
+              "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+              "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "converge-to-exactly-one",
+          "kind": "basic",
+          "front": "收口该收出几句话？",
+          "back": "一句。三句等于没收口，因为后面每个决定都能从三句里挑一句来支持自己。另外两句写在旁边，标明这一版不解决。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "定义阶段是把挑战重新表述成一个明确的问题，依据是这一页对 Define 的说明。",
+              "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+              "sourceTitle": "Design Council · The Double Diamond",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "converge-your-notes",
+          "title": "把你的记录收成一句",
+          "kind": "explain",
+          "prompt": "把你上一单元问到的所有原话原样列出来，一条都不要合并。然后从里面收出一句问题，并指明这句话是从哪几条长出来的。最后回答：这一句和你最初的念头差在哪儿？如果几乎不差，说明哪一步可能没做够。",
+          "rubric": [
+            "列的是原话，能看出互相矛盾的地方，而不是已经归纳过的概括",
+            "收出来的是一句，不是三句",
+            "指明了这一句是从哪几条原话长出来的",
+            "老实比较了这一句和最初念头的差别，包括承认差别不大"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「用探索得到的洞察以不同方式重新定义挑战」是这条练习的判据，出自这一页。",
+              "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+              "sourceTitle": "Design Council · The Double Diamond",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "develop-then-deliver",
+      "title": "第二颗钻：多做几个，再挑一个",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能针对同一个问题写出三个不同的方案。\n\n## 先给结论\n\n问题定死之后，**不要立刻做你想到的第一个方案。**\n\n设计委员会对这两段的说法是这样的。发展阶段要**针对已经清楚定义的问题给出多个不同的解答**，从别处汲取灵感，并且拉不同的人一起参与；交付阶段则是**小规模地测试这些方案，淘汰掉行不通的，把可行的那个改好。**\n\n注意两个词，它们都容易被跳过：\n\n先说「多个」这个词。第一个想到的方案，通常是你在 Discover 之前就已经有的那个。它不是被选出来的，是**残留下来的**。\n\n再说「小规模」。它不是做完了再测，而是**做小了去测**。\n\n## 一个类比\n\n这就像饭馆上新菜。\n\n后厨不会直接把新菜印进菜单、备两百份料。他们先做三个版本，端给几个熟客尝，看哪个被吃光、哪个剩了一半。**剩一半的那个当场就砍掉了**，砍的时候只损失了一盘菜的成本。\n\n不一样的地方，也是你比后厨难的地方：熟客当场就把盘子推回来了，反馈是免费而且立刻的。**你的用户不会推盘子，他直接关掉页面**，而且你看不见他关了。\n\n所以你得主动去要那个反馈——**做小一点，找到人，看着他用。**这就是这门课倒数第二个单元整个在讲的事。\n\n## 工作示例\n\n同一个问题，三个方案，怎么选。\n\n**上一节收口出来的那句问题**\n\n> 签合同的人卡住的地方不是看不懂字，是不知道哪几条对自己重要、以及敢不敢信自己的判断。\n\n**方案一，粘进去，指出最要命的三条。**\n\n- 大概要一周\n- 小规模怎么试——先不做网页。你自己扮演这个产品——让三个人把合同拍给你，你手动挑出三条发回去，看他们的反应。\n\n**方案二，一张「签之前先看这十条」的图，存手机相册。**\n\n- 大概要一小时\n- 小规模怎么试——直接发到三个正在租房的人的微信里，问一句「有用吗」。\n\n**方案三，一句能把签字拖到明天的话术。**\n\n- 大概要十分钟\n- 小规模怎么试——发给下一个说要签合同的人，事后问他用没用、管不管用。\n\n**现在看这三个：**\n\n方案三十分钟就能试，而且它直接打的是问题里那个「敢不敢」——**它甚至不解决「哪几条重要」，它解决的是「先别签」**。\n\n如果它管用，你会学到一件极重要的事——**这些人真正缺的是时间，不是信息。**那样的话，方案一那个网页可能压根不该做。\n\n**建议的顺序是三、二、一。**从最便宜的开始，因为它们能杀死后面那个贵的。\n\n**大多数人的顺序是直接做方案一**，因为它最像一个「产品」。\n\n## 自检\n\n**做对了会看到什么：**你手上有三个针对同一句问题的、真的不一样的方案，而且你能说出每个用多小的代价去试。三个里至少有一个不是做软件。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、三个方案其实是一个方案的三种样子。**「网页版、小程序版、App 版」——**这是三种壳，不是三个方案。**判据是：它们解决问题的路子一样吗？一样就只算一个。\n\n**二、把「小规模测试」理解成「做完了先给少数人用」。**不是。小规模指的是**这一版本身就该很小**，小到你舍得扔掉。做了三周的东西，你舍不得扔，于是测试结果不好你也会说服自己继续。\n\n## 重点\n\n- 发展阶段要针对同一个问题给出多个不同的解答，并从别处汲取灵感。\n- 交付阶段是小规模测试、淘汰行不通的、把可行的改好。\n- 第一个想到的方案通常不是被选出来的，是 Discover 之前就残留下来的。\n- 三种壳不算三个方案；判据是解决问题的路子一样不一样。\n- 从最便宜的方案开始试，因为便宜的能杀死贵的。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页说明发展阶段要针对清晰定义的问题给出多个不同的解答、从别处汲取灵感并让不同的人参与；交付阶段是小规模测试方案、淘汰行不通的、改进可行的。",
+          "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+          "sourceTitle": "Design Council · The Double Diamond",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "develop-means-several",
+          "kind": "basic",
+          "front": "发展阶段为什么要写好几个方案？",
+          "back": "因为第一个想到的方案通常不是被选出来的，是探索之前就残留下来的。设计委员会说这一段要针对同一个问题给出多个不同的解答。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「针对清晰定义的问题给出多个不同解答」出自这一页对 Develop 的说明。",
+              "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+              "sourceTitle": "Design Council · The Double Diamond",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "small-scale-means-small",
+          "kind": "basic",
+          "front": "「小规模测试」是指做完了先给少数人用吗？",
+          "back": "不是。指这一版本身就该很小，小到你舍得扔。做了三周的东西你舍不得扔，测试结果不好也会说服自己继续。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「小规模测试方案、淘汰行不通的」出自这一页对 Deliver 的说明。",
+              "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+              "sourceTitle": "Design Council · The Double Diamond",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "three-shells-are-one-plan",
+          "kind": "basic",
+          "front": "「网页版、小程序版、App 版」算三个方案吗？",
+          "back": "不算，那是三种壳。判据是解决问题的路子一样不一样，一样就只算一个方案。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「多个不同的解答」要求的是不同解法，依据是这一页对 Develop 的说明。",
+              "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+              "sourceTitle": "Design Council · The Double Diamond",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "write-three-real-options",
+          "title": "写出三个真的不一样的方案",
+          "kind": "explain",
+          "prompt": "针对你上一节收口出来的那句问题，写三个方案。每个标出做多久、以及用多小的代价能试出它管不管用。三个里至少有一个不是做软件。最后排一个先后顺序，并说明为什么最便宜的排在最前。",
+          "rubric": [
+            "三个方案解决问题的路子确实不同，不是同一方案的三种壳",
+            "每个都标了大致耗时和一个具体的小规模验证办法",
+            "至少一个不是做软件",
+            "排序把最便宜的放在最前，并说明了便宜的能杀死贵的这个理由"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「多个不同解答」与「小规模测试、淘汰行不通的」是这条练习的判据，出自这一页。",
+              "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+              "sourceTitle": "Design Council · The Double Diamond",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "three-screens",
+      "title": "白板上的三页",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能画出自己那个东西的三页草图。\n\n## 先给结论\n\n方案挑定之后，别急着让 AI 生成代码。**先在纸上画三页**，五分钟的事。\n\n分别画他从哪儿进来看到什么、他要操作什么、以及他拿到了什么。\n\n绝大多数第一版产品的毛病都出在第一页。苹果的界面指南里有一句很值得记住的话：**理想情况下，人们只要用一下你的应用就能明白它是什么。**它把引导流程放在「必要时才做」的位置上——也就是说，**需要长篇解释才能用的东西，本身就是个问题。**\n\n它还给了一条很具体的做法。如果说明是针对界面上某个特定区域的，**就把说明放在那个区域旁边。**\n\n## 一个类比\n\n这就像开一家小店。\n\n**第一页是店门口**，路过的人一眼看到什么，知不知道这是卖什么的。**第二页是柜台**，他要指哪个、说什么、付多少。**第三页是他拿着东西走出去**：手里是什么，满不满意。\n\n一家店如果门口挂着「欢迎光临」四个字，别的什么都没有，路过的人不会进来问——**他直接走了**。\n\n不一样的地方，而且对你更狠：实体店路过的人会瞥一眼橱窗，多少能猜到。**网页没有橱窗**，只有你写在第一屏上的那几个字。他看不懂就关掉，全程不到两秒。\n\n## 工作示例\n\n三页草图，用样板产品画一遍。真的只要几行字。\n\n**第一页 · 进来**\n\n```\n┌──────────────────────────┐\n│  签合同前，先看看有没有坑    │\n│                          │\n│  ┌────────────────────┐  │\n│  │ 把看不懂的那一条粘进来 │  │\n│  │ 比如租房合同里的违约金 │  │\n│  └────────────────────┘  │\n│                          │\n│      [ 帮我看看 ]         │\n└──────────────────────────┘\n```\n\n注意输入框里那行灰字。**那行灰字正是「把说明放在它指的那个区域旁边」**，而不是写在页面顶部的一段介绍，是写在他手指要点的那个框里。\n\n**第二页 · 操作**\n\n粘进去之后，按钮变成「正在看…」，下面出现一行小字，写着「大概十秒」。\n\n**这一页最容易被整个跳过**，然后用户点完按钮盯着一个没有任何变化的屏幕，三秒后又点了一次。\n\n**第三页 · 拿到**\n\n```\n┌──────────────────────────┐\n│  这一条里有 2 处要注意      │\n│                          │\n│  ① 违约金写的是三个月租金   │\n│     通常是一个月           │\n│  ② 押金退还没写期限        │\n│                          │\n│  ─────────────────       │\n│  [ 再看一条 ]  [ 存起来 ]  │\n└──────────────────────────┘\n```\n\n**第三页有个几乎人人都漏的东西，就是下一步。**\n\n结果出来之后，他站在原地。你不给他「再看一条」和「存起来」，他就只能关掉页面——**而那正是你最不希望他做的事。**\n\n**画完这三页，你就有了给 AI 的需求。**你不再需要描述「做一个合同分析工具」，你可以说「第一页是这样，第二页是这样，第三页是这样」。\n\n## 自检\n\n**做对了会看到什么：**三页都画了，而且第一页上有一句话说清这是干什么的、有一个示范告诉他该填什么。第三页上有明确的下一步。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、第一页只有一个空框。**你自己知道该往里填什么，所以你不会觉得空框有问题。**给一个从没见过它的人看两秒，问他该填什么。**他答不上来，就补那行灰字。\n\n**二、第三页画完就结束了。**结果显示出来，然后呢？没有然后。**每一页都要能回答「接下来我该干嘛」**，最后一页也不例外。\n\n## 重点\n\n- 那三页分别是他从哪儿进来看到什么、他要操作什么、以及他拿到了什么。\n- 苹果的说法是，理想情况下人们只要用一下就能明白它是什么，需要长篇解释本身就是问题。\n- 说明要放在它所指的那个区域旁边，不是写在页面顶部。\n- 第二页最容易被跳过，结果是用户点完按钮盯着不动的屏幕再点一次。\n- 最后一页必须给出下一步，否则用户只能关掉。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "苹果界面指南这一页写明：理想情况下人们只要体验一下就能理解你的应用，引导流程只在必要时才设计，且应当快速、有趣、可跳过；并指出当说明性内容指向界面上某个特定区域时，应把说明显示在该区域附近。",
+          "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+          "sourceTitle": "Apple · Human Interface Guidelines · Onboarding",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "the-three-screens",
+          "kind": "basic",
+          "front": "动手之前该画哪三页？",
+          "back": "他从哪儿进来看到什么、他要操作什么、他拿到了什么。三页画完就是给 AI 的需求。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「理想情况下人们只要体验一下就能理解应用」是把第一屏当作首要设计对象的依据，出自这一页。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+              "sourceTitle": "Apple · Human Interface Guidelines · Onboarding",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "put-the-hint-where-it-belongs",
+          "kind": "basic",
+          "front": "该把「该填什么」这句说明放在哪儿？",
+          "back": "放在输入框里或紧挨着它。苹果的指南说，说明性内容指向界面上某个区域时，就显示在那个区域附近，而不是写在页面顶部。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「说明指向某个界面区域时应显示在该区域附近」出自这一页。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+              "sourceTitle": "Apple · Human Interface Guidelines · Onboarding",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "needing-a-long-explanation",
+          "kind": "basic",
+          "front": "一个东西需要长篇说明才会用，说明什么？",
+          "back": "说明这个东西本身有问题。苹果的指南把理想状态写成「只要用一下就能明白它是什么」，引导流程只在必要时才做。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「理想情况下人们只要体验就能理解，引导仅在必要时设计且应可跳过」出自这一页。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+              "sourceTitle": "Apple · Human Interface Guidelines · Onboarding",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "last-screen-needs-a-next-step",
+          "kind": "basic",
+          "front": "结果页上最容易漏掉什么？",
+          "back": "下一步。结果显示完就结束，用户只能关掉页面；每一页都要能回答「接下来我该干嘛」，最后一页也不例外。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "苹果指南主张让人能立即继续使用、不被额外步骤阻断，这里据此要求结果页给出下一步。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+              "sourceTitle": "Apple · Human Interface Guidelines · Onboarding",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "draw-your-three-screens",
+          "title": "画你自己那三页",
+          "kind": "explain",
+          "prompt": "用文字或者简单的框图画出你那个东西的三页。第一页必须包含一句说清这是干什么的话，和一个告诉用户该填什么的示范。第三页必须有下一步。画完之后，把第一页念给一个没听你讲过的人听两秒，写下他的第一反应。",
+          "rubric": [
+            "三页都画了，能看出进来、操作、拿到三段",
+            "第一页有一句说清用途的话，以及一个具体的填写示范，不是空框",
+            "第二页交代了等待时用户会看到什么",
+            "第三页给出了至少一个下一步动作",
+            "记录了真实的第一反应，包括对方答不上来这种结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「说明放在它所指的区域旁边」「理想情况下体验一下就能明白」都出自这一页。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+              "sourceTitle": "Apple · Human Interface Guidelines · Onboarding",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "what-the-first-version-will-not-do",
+      "title": "第一版不做什么",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能写出一份「这一版不做」的清单。\n\n## 先给结论\n\n**写下「不做什么」，比写下「要做什么」更能保住你的第一版。**\n\n因为「要做什么」这张单子只会变长，永远不会变短——每想到一个功能，加上去的成本是零。而那张写着不做什么的单子会变成一道闸——一个功能要挤进第一版，得先从不做那栏搬到要做那栏，**这个搬动作会让你看见代价。**\n\n设计委员会讲交付阶段的时候说的是：小规模地测试，把行不通的淘汰掉。**要能淘汰，前提是这一版得足够小。**\n\n苹果的界面指南也给了一条同方向的：**把非必要的设置和自定义步骤往后放**，给出合理的默认值，让大多数人一进来就能直接用，不必先做配置。\n\n**所有「先让用户设置一下」的念头，都是第一版不做的候选。**\n\n## 一个类比\n\n这就像搬家打包。\n\n没人是靠列一张「要带走的东西」清单搬家的——那张单子等于整个屋子。真正管用的是反过来：**先划一条线，这个箱子装满就不装了。**然后每样东西都要回答「你凭什么占这个位置」。\n\n那条线不是限制，是**唯一让你把东西真的搬完的办法**。\n\n不一样的地方，而且它对你有利：搬家扔掉的东西是真的没了。**你砍掉的功能没有消失**，它在「不做」那张单子上躺着，随时能搬回来。\n\n**砍掉不是拒绝，是排队。**这一句能让你砍得下手。\n\n## 工作示例\n\n样板产品的两张单子，真实的样子。\n\n**第一版要做的**\n\n- 一个输入框，粘进去一段文字\n- 一个按钮，点了出结果\n- 结果里指出最多三处要注意的地方\n\n**完了。三条。**\n\n**这一版不做的**\n\n| 不做什么 | 为什么现在不做 | 什么时候重新考虑 |\n| --- | --- | --- |\n| 注册登录 | 问题那句话里有「被催着当场签」，注册要一分钟 | 有人问「我上次那份哪去了」的时候 |\n| 上传 PDF | 他在中介办公室，手里是纸和手机 | 有人说「我这是电子合同」的时候 |\n| 保存历史 | 依赖注册登录 | 同上 |\n| 分享链接 | 还不知道他想不想给别人看 | 有人截图发给别人的时候 |\n| 选择模型 | 他不知道模型是什么 | 永远不做 |\n| 深色模式 | 与那句问题无关 | 有人抱怨的时候 |\n\n**注意第三列。**它是这张表的关键——它把「不做」变成了「等一个信号」。\n\n有了它，你不用再纠结「到底该不该做注册」。**你只要等，等到有人问「我上次那份哪去了」。**在那之前，做注册就是浪费。\n\n**还要注意「选择模型」那一行写的是永远不做。**有些东西不是排队，是不该存在——它只对做这个东西的人有意义，对用它的人没有。\n\n**这张表最省钱的用法：**每次你冒出一个新点子，第一反应不是「要不要做」，是**「它进哪一张单子」**。绝大多数会进第二张，而且你会松一口气。\n\n## 自检\n\n**做对了会看到什么：**要做那张单子三到五条，不做那张比它长。不做的每一条都有一个具体的、可观察的重新考虑信号，不是「以后再说」。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、不做清单里写的是「暂时不做」，没有条件。**「登录暂时不做」——那么什么时候做？没写的话，它会在你某个周末心血来潮的时候被做掉。**信号要具体到能被观察**：有人问了某句话、有多少人做了某件事。\n\n**二、要做清单里混进了「顺便」。**「顺便把深色模式做了，反正就一行代码」——**没有顺便这回事。**每加一样，你要测的组合就多一倍，出问题时要排查的地方也多一处。\n\n## 重点\n\n- 「不做什么」是一道闸，功能要挤进来得先搬一次，搬的时候你会看见代价。\n- 要能淘汰行不通的方案，前提是这一版足够小。\n- 苹果的指南建议把非必要的设置和自定义往后放，给合理默认值，让人一进来就能用。\n- 不做清单的每一条都要写一个具体的、可观察的重新考虑信号。\n- 砍掉不是拒绝，是排队——这一句能让你砍得下手。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页说明交付阶段是小规模测试方案、淘汰行不通的、改进可行的，据此第一版需要足够小才可能被淘汰重来。",
+          "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+          "sourceTitle": "Design Council · The Double Diamond",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "苹果界面指南这一页写明：把非必要的设置或自定义步骤往后放，提供合理的默认设置，让大多数人无需先做配置就能立即开始使用。",
+          "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+          "sourceTitle": "Apple · Human Interface Guidelines · Onboarding",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "the-not-doing-list-is-a-gate",
+          "kind": "basic",
+          "front": "为什么「不做什么」比「要做什么」更管用？",
+          "back": "因为要做的单子只会变长，加一条成本为零；不做的单子是一道闸，功能要挤进来必须先搬一次，搬的时候你才看得见代价。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「小规模测试、淘汰行不通的」要求这一版足够小，是收窄范围的依据。",
+              "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+              "sourceTitle": "Design Council · The Double Diamond",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "every-cut-needs-a-signal",
+          "kind": "basic",
+          "front": "不做清单里每一条还要写什么？",
+          "back": "一个具体的、能被观察到的重新考虑信号，比如「有人问我上次那份哪去了」。写「以后再说」等于没写。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "小规模测试并据结果淘汰或改进，是「按观察到的信号再决定」的依据，出自这一页。",
+              "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+              "sourceTitle": "Design Council · The Double Diamond",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "postpone-setup",
+          "kind": "basic",
+          "front": "「先让用户设置一下」这类步骤该怎么处理？",
+          "back": "往后放，给合理的默认值。苹果的指南说要让大多数人不必做任何配置就能立即开始使用。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「把非必要的设置与自定义步骤往后放、提供合理默认值」出自这一页。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+              "sourceTitle": "Apple · Human Interface Guidelines · Onboarding",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "there-is-no-just-one-more",
+          "kind": "basic",
+          "front": "「顺便把这个也做了，反正就一行代码」，问题在哪？",
+          "back": "没有顺便这回事。每加一样，要测的组合多一倍，出问题时要排查的地方多一处。",
+          "tags": [
+            "product-thinking"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "交付阶段要求小规模、可淘汰，据此反对无成本地扩大第一版范围。",
+              "sourceUrl": "https://www.designcouncil.org.uk/our-resources/the-double-diamond/",
+              "sourceTitle": "Design Council · The Double Diamond",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "write-your-not-doing-list",
+          "title": "写你自己的两张单子",
+          "kind": "explain",
+          "prompt": "写出你第一版的「要做」清单，控制在五条以内。然后写「不做」清单，每一条都要有两栏：为什么现在不做、以及什么信号出现时重新考虑。最后从不做清单里挑一条，说明它如果偷偷溜进第一版，会给你多带来哪些工作。",
+          "rubric": [
+            "要做清单不超过五条",
+            "不做清单比要做清单长",
+            "每条不做都写了具体可观察的重新考虑信号，不是「以后再说」",
+            "挑出的那一条说清了连带成本，比如要多测什么、多维护什么"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「把非必要设置往后放、给默认值」是不做清单的典型候选，出自苹果这一页。",
+              "sourceUrl": "https://developer.apple.com/design/human-interface-guidelines/onboarding",
+              "sourceTitle": "Apple · Human Interface Guidelines · Onboarding",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

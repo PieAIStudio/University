@@ -1,0 +1,951 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "tools-and-talking",
+  "courseId": "from-idea-to-live",
+  "unit": {
+    "id": "tools-and-talking",
+    "title": "工具，和怎么跟它说话",
+    "objective": "读完这一单元你能在自己电脑上让 AI 改一处，并看到页面变了。",
+    "prerequisiteUnitIds": []
+  },
+  "lessons": [
+    {
+      "id": "what-an-ide-is",
+      "title": "编辑器、IDE、终端，各是什么",
+      "variant": "术语",
+      "content": "## 学习目标\n\n读完你能准确指出编辑器、IDE 和终端在一次改页面中各自负责哪件事。\n\n## 先给结论\n\n编辑器就是你写字、修改文件内容的地方。IDE 是一个综合工作台，它把看文件、运行程序、调试排错、源代码管理这堆活儿，全都放进了同一个软件界面里。终端则是一个窗口，专门让你直接敲文字向电脑发命令。这三样工具通常配合着一起用，但它们真不是同一个东西换了三个名字。\n\n## 一个类比\n\n打个比方，这就像开一家小餐馆。编辑器就像你写菜单、改配方用的纸；IDE 就像把菜单、后厨、出餐记录全拢在一起的综合工作台；终端就像你打给后厨的点单电话。电话能让后厨去干活，但它可不会替你摆盘；工作台再齐全，也不会自动替你判断菜品味道。\n\n不一样的地方是：电脑可听不懂你说“做得好一点”，它根本不知道什么是验收标准；而且你敲个命令，还可能直接把文件里的配方给改了。所以动手前，你得先看清自己正站在什么位置。\n\n## 工作示例\n\n你拿《说人话》做一次最小改动。先在电脑上打开项目文件夹 speak-human，用 IDE 找到页面文件，比如 index.html。在编辑器里把页面标题改成“说人话”，保存文件。\n\n接着在 IDE 自带的终端里运行：\n\n~~~\nnpm run dev\n~~~\n\n终端会打印出一个本地网址。你把它放到浏览器里打开，再回到编辑器把标题改一次，保存好，最后回浏览器刷新一下。当你看到标题变了，这三样工具的分工你就完整走了一遍：编辑器负责改文字，终端负责启动程序，IDE 把这些操作入口集中在同一处，浏览器负责把结果展示给你看。\n\n## 自检\n\n你做对的时候，能一口指出：“改哪一行”是在编辑器里完成的；“启动页面”是在终端里搞定的；而“找文件、看问题和运行入口全集中在一起”，属于 IDE 的功劳。\n\n最容易做错的情况通常有两种。第一种，你在编辑器里改了文件，但忘了保存，或者改错了文件的位置，页面自然一点变化都没有；这时候，回到文件路径和保存状态去检查一下。第二种，你在终端里敲了命令，但终端当前根本不在项目所在的位置，它就会提示找不到脚本；这时候，先确认好终端当前的工作区停在哪里，找对地方再试一次。\n\n## 重点\n\n- 编辑器的核心工作，就是写和改文件内容。\n- IDE 是围绕一个项目、把多种开发工作组织在一起的工作台。\n- 终端是靠敲命令来启动程序、查看信息或执行操作的窗口。\n- 浏览器里看到的变化，不能反过来推导是哪一个工具完成了哪一步。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页把 VS Code 的工作台列为文件、搜索、源代码管理、运行与调试等视图，并说明集成终端可以在工作区里运行命令。",
+          "sourceUrl": "https://code.visualstudio.com/docs/editing/getting-started/overview",
+          "sourceTitle": "VS Code · Core editor features",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "这一页说明集成终端从工作区开始运行，并能执行与独立终端相同的命令。",
+          "sourceUrl": "https://code.visualstudio.com/docs/terminal/basics",
+          "sourceTitle": "VS Code · Terminal Basics",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "what-an-ide-is-editor-job",
+          "kind": "basic",
+          "front": "编辑器最直接的工作是什么？",
+          "back": "在文件里写和改文字；它不会替你启动本地服务，也不会替你判断页面是否达到目标。",
+          "tags": [
+            "what-an-ide-is",
+            "editor"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "这一页把 VS Code 的工作台列为文件、搜索、源代码管理、运行与调试等视图，并说明集成终端可以在工作区里运行命令。",
+              "sourceUrl": "https://code.visualstudio.com/docs/editing/getting-started/overview",
+              "sourceTitle": "VS Code · Core editor features",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "what-an-ide-is-three-roles",
+          "kind": "basic",
+          "front": "一次改页面时，IDE 和终端怎样配合？",
+          "back": "IDE 集中项目工作入口，终端用命令启动或操作项目；编辑器负责改文件，浏览器负责显示结果。",
+          "tags": [
+            "what-an-ide-is",
+            "ide",
+            "terminal"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "这一页把 VS Code 的工作台列为文件、搜索、源代码管理、运行与调试等视图，并说明集成终端可以在工作区里运行命令。",
+              "sourceUrl": "https://code.visualstudio.com/docs/editing/getting-started/overview",
+              "sourceTitle": "VS Code · Core editor features",
+              "sourceAuthority": "official-docs"
+            },
+            {
+              "kind": "fact",
+              "note": "这一页说明集成终端从工作区开始运行，并能执行与独立终端相同的命令。",
+              "sourceUrl": "https://code.visualstudio.com/docs/terminal/basics",
+              "sourceTitle": "VS Code · Terminal Basics",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "what-an-ide-is-sort-a-change",
+          "title": "给一次改动分工",
+          "kind": "explain",
+          "prompt": "你要把《说人话》的标题从“文本工具”改成“说人话”，再启动页面检查结果。请用自己的话说明哪一步放在编辑器、哪一步放在终端、哪一步要在浏览器完成，并说明 IDE 在其中帮你做什么。",
+          "rubric": [
+            "能把改文件分给编辑器",
+            "能把启动或运行命令分给终端",
+            "能把观察页面结果分给浏览器",
+            "能说明 IDE 是集中这些工作的工作台"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "这一页把 VS Code 的工作台列为文件、搜索、源代码管理、运行与调试等视图，并说明集成终端可以在工作区里运行命令。",
+              "sourceUrl": "https://code.visualstudio.com/docs/editing/getting-started/overview",
+              "sourceTitle": "VS Code · Core editor features",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "what-ai-ide-adds",
+      "title": "AI IDE 多出来的那三档",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能针对同一个页面改动，挑出到底该用补全、对话还是代理。\n\n## 先给结论\n\n在 AI IDE 里，AI 帮你的方式通常可以分成三档。补全，就是顺着你当前这一小段文字或代码，直接接着往下写。对话，用来回答你的问题、解释遇到的现象，或者按照你点名的范围提出修改建议。代理，则是接下一个比较完整的目标，它会去查看相关文件、修改多处内容、替你运行命令，再把结果带回来交给你。它动手的范围越大，你就越要提前写清楚边界和验收方法。\n\n## 一个类比\n\n好比餐厅里有三种服务。补全就像厨师看见你已经切好的菜，顺手把紧接着的下一步接上；对话就像你跑去问厨师“这道菜为什么咸”，他给你解释原因，或者动手帮你做一处调整；代理就像你把“准备今晚六人的菜单”全权交给领班，他得去查看库存、安排好几道菜、还要应对各种临时状况。不一样的地方是：软件代理能一次改动多个文件，但电脑可不会替你品尝成品，最后的判断始终都在你手里。\n\n## 工作示例\n\n拿《说人话》这个项目来说，首页上有一个输入框和一个“讲给我听”按钮。\n\n当你只是想在已有代码后面补一个固定标题，用补全就够了，让它接出一行短短的内容。你要是想问“为什么点击后没有结果”，可以用对话，把你的点击步骤、预期结果和实际现象交给它，只要求它先解释清楚原因，并指出该改哪一处。\n\n如果你要新增“讲过的内容”页面、加上导航、保留首页原本的功能，并且在做完后运行检查，你可以把这整个目标直接交给代理。给代理划定边界时，你可以这样写：“只改当前项目中与首页和历史页有关的文件；先列计划；做完运行已有检查；不要接入真实模型。”这三档都能帮上忙，只是它们接的任务大小完全不同。\n\n## 自检\n\n做对的时候，你能明显看到这三个区别：补全只接一小段，对话围绕着一个问题跟你来回沟通，代理则是负责搞定一段划好边界的工作并向你报告改动。\n\n最常见的做错法有两种。第一种是只为了改个错别字就去启动代理，结果它顺手把多处代码全给重排了；遇到这种小改动，退回去用补全或对话。第二种是张口就只说“帮我做历史页”，却没有给现有的页面、范围和验收条件；一定要先帮它把上下文补齐，再让它行动。\n\n## 重点\n\n- 补全适合非常小、紧挨着当前编辑位置的续写。\n- 对话适合提问、要解释，以及在限定范围内做修改。\n- 代理适合步骤比较多、需要查看文件和运行命令的目标。\n- 能力档位越高，可不代表你身上的验收责任就能变少。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页把 inline suggestions、chat 和 autonomous agents 列为不同的 AI 能力面，并描述代理可以规划、编辑文件、运行命令和迭代。",
+          "sourceUrl": "https://code.visualstudio.com/docs/agents/reference/ai-features-cheat-sheet",
+          "sourceTitle": "VS Code · AI features in VS Code cheat sheet",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "这一页说明 inline suggestions 会在编辑位置给出可接受的代码或注释补全，并把它放在聊天和代理等 AI 能力旁边。",
+          "sourceUrl": "https://code.visualstudio.com/docs/editing/ai-powered-suggestions",
+          "sourceTitle": "VS Code · Inline suggestions from GitHub Copilot in VS Code",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "这一页描述 AI 代理可根据自然语言目标规划、修改多个文件、运行终端命令，并根据错误继续迭代。",
+          "sourceUrl": "https://code.visualstudio.com/docs/editing/getting-started/editor-tutorial",
+          "sourceTitle": "VS Code · Tutorial: Get started with Visual Studio Code",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "what-ai-ide-adds-three-tiers",
+          "kind": "basic",
+          "front": "补全、对话、代理的主要差别是什么？",
+          "back": "补全续写小片段，对话围绕问题解释或改小范围，代理围绕完整目标查看上下文、改动并运行检查。",
+          "tags": [
+            "what-ai-ide-adds",
+            "completion",
+            "chat",
+            "agent"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "这一页把 inline suggestions、chat 和 autonomous agents 列为不同的 AI 能力面，并描述代理可以规划、编辑文件、运行命令和迭代。",
+              "sourceUrl": "https://code.visualstudio.com/docs/agents/reference/ai-features-cheat-sheet",
+              "sourceTitle": "VS Code · AI features in VS Code cheat sheet",
+              "sourceAuthority": "official-docs"
+            },
+            {
+              "kind": "fact",
+              "note": "这一页说明 inline suggestions 会在编辑位置给出可接受的代码或注释补全，并把它放在聊天和代理等 AI 能力旁边。",
+              "sourceUrl": "https://code.visualstudio.com/docs/editing/ai-powered-suggestions",
+              "sourceTitle": "VS Code · Inline suggestions from GitHub Copilot in VS Code",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "what-ai-ide-adds-scope",
+          "kind": "basic",
+          "front": "什么时候不该直接用代理？",
+          "back": "当任务只是一个小改动、边界很窄时，优先用补全或对话，避免不必要的多文件改动。",
+          "tags": [
+            "what-ai-ide-adds",
+            "scope"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "这一页把 inline suggestions、chat 和 autonomous agents 列为不同的 AI 能力面，并描述代理可以规划、编辑文件、运行命令和迭代。",
+              "sourceUrl": "https://code.visualstudio.com/docs/agents/reference/ai-features-cheat-sheet",
+              "sourceTitle": "VS Code · AI features in VS Code cheat sheet",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "what-ai-ide-adds-choose-a-tier",
+          "title": "给三种任务选档位",
+          "kind": "explain",
+          "prompt": "请为下面三件事分别选择补全、对话或代理，并写出理由：补上一个按钮的文字；解释点击后白屏的原因；新增历史页、导航和一条本地检查。理由要提到任务范围。",
+          "rubric": [
+            "三个任务都给出一种档位",
+            "能把小片段续写和补全联系起来",
+            "能把解释现象和对话联系起来",
+            "能把多步骤多文件工作和代理联系起来"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "这一页把 inline suggestions、chat 和 autonomous agents 列为不同的 AI 能力面，并描述代理可以规划、编辑文件、运行命令和迭代。",
+              "sourceUrl": "https://code.visualstudio.com/docs/agents/reference/ai-features-cheat-sheet",
+              "sourceTitle": "VS Code · AI features in VS Code cheat sheet",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "localhost-and-ports",
+      "title": "为什么地址是 localhost 加一串数字",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能找出一个本地网址里的主机和端口。\n\n## 先给结论\n\n当你看到“http://localhost:5173/”时：前面的 localhost 代表你正在用的这台电脑，5173 是开发服务器接收请求的端口号，最后那个 / 则是路径的开头。\n\n这是一个本地开发地址，不是发到互联网上的公开网址。Vite 默认会使用 localhost 和 5173；要是这个数字已经被别的程序占用了，实际打印出来的地址就可能换成下一个端口。\n\n## 一个类比\n\n好比一家银行大楼只在内部开放：主机名就像大楼地址，端口号就像里面不同业务窗口的编号。你得先找到这栋楼，再找到对应的窗口，事情才会送到正确的服务手里。\n\n不一样的地方是：一台电脑可以同时开很多服务，窗口号码可能会撞车；而且你就算把自己的内部地址念给朋友听，他的电脑也不会顺着它进到你的电脑里。\n\n## 工作示例\n\n你在终端里启动《说人话》的本地开发服务：\n\n~~~\nnpm run dev\n~~~\n\n假设终端打印出这行：\n\n~~~\nLocal: http://localhost:5173/\n~~~\n\n把这个完整地址复制粘贴到浏览器里，看到首页之后，你再打开像“http://localhost:5173/history”这样的路径，就可以测试历史页了。要是终端打印的是“http://localhost:5174/”，千万不要手动改回 5173，直接用终端给出的 5174 就好。如果你想让别人也能访问，就需要另外做局域网设置或者部署；光把 localhost 发给别人，通常是没有用的。\n\n## 自检\n\n当你做对时，你能从地址里指出“当前电脑”是 localhost，“服务入口号码”是 5173，并且能直接用终端实际打印出来的地址打开页面。\n\n最常见的做错法有两种。第一种是端口被占用后，你还在反复打开旧数字，这时浏览器会连到别的程序或者显示连接失败；记住一定要以终端最新的输出为准。第二种是直接把 localhost 复制给同事或者发到手机上去测，别人看到的根本不是你的页面；遇到这种情况，得改用局域网地址或者发布后的网址。\n\n## 重点\n\n- localhost 指向你当前正在用的这台机器。\n- 端口号负责把请求交给你机器上的某个服务。\n- Vite 的默认端口是 5173，但实际用哪个端口，得看启动时的输出。\n- 你在本地能打开，不等于别人就能访问得到。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 说明 URI 的 host 表示服务器地址、port 表示服务器监听请求的端口，并用 localhost 与端口号组成的地址作例子。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Authority",
+          "sourceTitle": "MDN · URI authority",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "Vite 文档把开发服务器的默认 host 写成 localhost、默认 port 写成 5173，并说明端口占用时可以尝试下一个端口。",
+          "sourceUrl": "https://vite.dev/config/server-options",
+          "sourceTitle": "Vite · Server Options",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "localhost-and-ports-read-an-address",
+          "kind": "basic",
+          "front": "“http://localhost:5173/”中的 5173 表示什么？",
+          "back": "它是开发服务器监听请求的端口号；若端口被占用，实际使用的数字可能不同。",
+          "tags": [
+            "localhost-and-ports",
+            "port"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明 URI 的 host 表示服务器地址、port 表示服务器监听请求的端口，并用 localhost 与端口号组成的地址作例子。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Authority",
+              "sourceTitle": "MDN · URI authority",
+              "sourceAuthority": "mdn"
+            },
+            {
+              "kind": "fact",
+              "note": "Vite 文档把开发服务器的默认 host 写成 localhost、默认 port 写成 5173，并说明端口占用时可以尝试下一个端口。",
+              "sourceUrl": "https://vite.dev/config/server-options",
+              "sourceTitle": "Vite · Server Options",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "localhost-and-ports-local-only",
+          "kind": "basic",
+          "front": "为什么把 localhost 发给朋友通常没用？",
+          "back": "localhost 指向朋友自己的电脑，不是你的电脑；分享给别人要用局域网地址或已经发布的公开地址。",
+          "tags": [
+            "localhost-and-ports",
+            "localhost"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明 URI 的 host 表示服务器地址、port 表示服务器监听请求的端口，并用 localhost 与端口号组成的地址作例子。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Authority",
+              "sourceTitle": "MDN · URI authority",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "localhost-and-ports-parse-a-url",
+          "title": "读懂一条本地地址",
+          "kind": "explain",
+          "prompt": "请解释“http://localhost:5174/history”的主机、端口和路径分别是什么，再说明你会怎样判断《说人话》到底应该打开 5173 还是 5174。",
+          "rubric": [
+            "能指出主机是 localhost",
+            "能指出端口是 5174",
+            "能指出路径是 /history",
+            "能说明以开发服务器实际打印的地址为准"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明 URI 的 host 表示服务器地址、port 表示服务器监听请求的端口，并用 localhost 与端口号组成的地址作例子。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Authority",
+              "sourceTitle": "MDN · URI authority",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "say-it-so-it-can-build-it",
+      "title": "把「差不多这个意思」说成它能做的话",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能写出一整段页面需求，让 AI 拿到就能直接照着动手做。\n\n## 先给结论\n\nAI 需要的是看得见、能检查的具体目标，不是“做得高级”这种飘忽的心情。一段能让它直接动手的页面需求，你至少要讲清楚四件事：谁会打开页面、他要做什么、页面应该出现什么，以及哪些事情暂时不做。最后再补上相关文件或者技术限制，AI 才能跟你按同一个标准把活干出来。\n\n## 一个类比\n\n这好比你点外卖。要是只说“来点好吃的”，等于把选择全丢给店家；只有把菜名、份量、忌口和送达时间交代清楚，才是一张能照着下单的要求。\n\n不一样的地方是：餐厅有现成的固定菜单，而 AI 不会自动知道你的项目文件、品牌语气和验收方式，所以这些都得由你写出来。\n\n## 工作示例\n\n给《说人话》的首页写一条需求：\n\n~~~\n请在当前页面保留输入框。首次打开时显示标题“说人话”和一句说明。用户粘贴一段文本并点击“讲给我听”后，在输入框下方出现一个结果卡片，卡片先显示固定示例“这段话是在说……”，暂时不要连接真实 AI。结果卡片放一个复制按钮，手机宽度下按钮不能跑出卡片。开始前先列出准备修改的文件，完成后告诉我本地验证步骤。\n~~~\n\n这段话把谁在用、做了什么动作、能看到什么结果，还有哪儿先不做，全写出来了。它没让 AI 去瞎猜“高级感”，而是给出了一个看得见、能一步步对照检查的画面和动作。\n\n## 自检\n\n做对的时候，AI 能复述出这几件事：刚进页面是什么样、用户做了什么、结果显示在哪，以及哪些部分暂时不处理；你也能顺着这些，写出一份点击前后的检查步骤。\n\n最常见的做错方式有两种。第一种只写“做得漂亮、像产品一样”，AI 只能自己瞎猜风格；你得补上具体的区域、状态和限制。第二种是一次把登录、真实模型、分享、支付全塞进来，几个目标互相抢位置；你得先把不影响第一次使用的要求删掉。\n\n## 重点\n\n- 需求要写成用户的动作，以及眼睛能看到的结果。\n- 具体的页面状态，比“高级”“有质感”更容易检查。\n- 明确暂时不做什么，能给第一轮划好边界。\n- 文件范围和验证方式，就是给 AI 的干活背景。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "该页建议把要求写得清楚、直接、具体；当顺序或完整性重要时，可以用编号步骤表达。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+          "sourceTitle": "Claude Platform Docs · Prompting best practices",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "say-it-so-it-can-build-it-four-questions",
+          "kind": "basic",
+          "front": "一条能执行的页面需求至少回答哪四个问题？",
+          "back": "谁进入、做什么、看到什么、这一轮不做什么；必要时再补文件范围和验证方式。",
+          "tags": [
+            "say-it-so-it-can-build-it",
+            "requirements"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页建议把要求写得清楚、直接、具体；当顺序或完整性重要时，可以用编号步骤表达。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+              "sourceTitle": "Claude Platform Docs · Prompting best practices",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "say-it-so-it-can-build-it-observable",
+          "kind": "basic",
+          "front": "为什么“做得高级”不是好的验收条件？",
+          "back": "它没有指出区域、动作或结果，无法让你和 AI 对照同一个画面判断是否完成。",
+          "tags": [
+            "say-it-so-it-can-build-it",
+            "acceptance"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页建议把要求写得清楚、直接、具体；当顺序或完整性重要时，可以用编号步骤表达。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+              "sourceTitle": "Claude Platform Docs · Prompting best practices",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "say-it-so-it-can-build-it-rewrite-idea",
+          "title": "把你的念头写成需求",
+          "kind": "explain",
+          "prompt": "选你自己的一个念头，先写一句“我想做个……”，再把它改成一段可执行需求。请交代使用者、一个动作、一个看得见的结果，以及这轮明确不做的事情。",
+          "rubric": [
+            "写出明确的使用者或进入场景",
+            "只安排一个主要动作",
+            "写出动作后能观察到的结果",
+            "写出一项本轮不做的边界"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页建议把要求写得清楚、直接、具体；当顺序或完整性重要时，可以用编号步骤表达。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+              "sourceTitle": "Claude Platform Docs · Prompting best practices",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "one-step-at-a-time",
+      "title": "先能跑，再变复杂",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能把要做的事情，拆成一串每次只改一处的小步骤。\n\n## 先给结论\n\n你做东西的时候，先让页面能显示出来，再让某一个动作有反应，最后再去加保存、历史或分享。每轮你只交给 AI 一个能动手检查的变化，它做完后，你立刻运行起来、点一点验证一下。这样一旦哪里出了问题，你最先该查的就是刚刚改动的那一步。这不是在限制你的想象力，而是在给你排查错误时留下清楚的线索。\n\n## 一个类比\n\n打个比方，这好比你在给租来的房子搞翻新：先把一间房的灯装好，打开开关试一次确认亮了，再去刷墙，最后才添家具。要是全屋同时拆、装、刷，哪一处出了毛病，你都很难查出根源。\n\n不一样的地方是：软件改动确实可以很快生成出来，但它同样需要你在每一轮都留下一个“现在能做什么”的记录，绝不能把“改得快”当成“已经验收通过”。\n\n## 工作示例\n\n你可以把《说人话》拆成四轮来做，每轮做完，你都要打开页面检查一下：\n\n1. 只做首页骨架：让标题、输入框和按钮能显示出来。\n2. 只做按钮反应：点击按钮后，能出现一张固定的结果卡片。\n3. 只做一次本地保存：刷新页面之后，还能保留最近的一条示例。\n4. 只做历史入口：能顺利导航到历史页，还能顺畅退回到首页。\n\n你每轮给 AI 发要求，开头都可以写：“本轮只处理第 2 步，先说明准备改哪些文件；不要提前加入登录、真实接口或新页面；完成后停下来告诉我检查动作。”等第 2 步验证通过了，你再开始让它做第 3 步。\n\n## 自检\n\n如果你做对了，你能给自己的每一轮都写出一个改动和一个验证动作，比如“点击按钮后出现卡片”；每一轮做出来的结果，你都能单独说得清清楚楚。\n\n最常见的做错法有两种。第一种，一口气向 AI 提十项功能，等它生成完，一旦报错，你根本不知道是哪一处引发的错误；正确的做法是把清单拆细，变成一个个可以独立验证的小轮次。第二种，上一轮改完后还没打开页面检查，就急着继续加新功能，前面的错误就会被后面的改动直接盖住；正确的做法是先停下来，把代码跑一次，记录下实际运行的结果。\n\n## 重点\n\n- 一轮只推进一个你能亲眼看到的变化。\n- 每一轮完成后，马上运行起来，去点击或者刷新检查。\n- 一旦出了问题，先回头看最近这一轮改了什么。\n- “先能跑”只是你一步一步验证的顺序，不是最终的产品标准。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "该页建议把要求写得清楚、直接、具体；当顺序或完整性重要时，可以用编号步骤表达。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+          "sourceTitle": "Claude Platform Docs · Prompting best practices",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "one-step-at-a-time-single-change",
+          "kind": "basic",
+          "front": "为什么每轮只加一个改动？",
+          "back": "每轮都有清楚的前后差异，出错时能先检查最近加入的那一件事。",
+          "tags": [
+            "one-step-at-a-time",
+            "iteration"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页建议把要求写得清楚、直接、具体；当顺序或完整性重要时，可以用编号步骤表达。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+              "sourceTitle": "Claude Platform Docs · Prompting best practices",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "one-step-at-a-time-check-loop",
+          "kind": "basic",
+          "front": "一轮改动的最小闭环是什么？",
+          "back": "说清本轮范围，完成改动，运行或操作页面检查，再决定下一轮。",
+          "tags": [
+            "one-step-at-a-time",
+            "verification"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页建议把要求写得清楚、直接、具体；当顺序或完整性重要时，可以用编号步骤表达。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+              "sourceTitle": "Claude Platform Docs · Prompting best practices",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "one-step-at-a-time-plan-your-build",
+          "title": "排一条小步路线",
+          "kind": "explain",
+          "prompt": "把你自己的念头拆成至少四轮。每轮只写一个页面变化，并给出一个能在浏览器中完成的验证动作；再写一句本轮不做什么。",
+          "rubric": [
+            "至少写出四轮",
+            "每轮只有一个主要变化",
+            "每轮都有浏览器验证动作",
+            "至少有一轮写出清楚的范围边界"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页建议把有顺序的要求拆成清楚的步骤，以帮助模型按顺序完成并保持完整。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+              "sourceTitle": "Claude Platform Docs · Prompting best practices",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "show-it-the-screen",
+      "title": "说不清就把画面给它",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能为手头碰到的问题，整理出合适的文字、截图或组合材料。\n\n## 先给结论\n\n页面的外观位置、间距、大小或者颜色不对，直接截图给 AI，一张图就能把画面关系交代清楚。要是碰上错误编号、控制台消息或者请求内容不对，直接复制文字更靠谱。要是问题既涉及“哪里长得不对”，又涉及“点了以后发生什么”，就把截图、操作步骤和准确文字一起给它。图片能提供线索，但改得对不对，不能代替你在真实页面上亲自复核一遍。\n\n## 一个类比\n\n好比你去银行办事：柜台标牌歪了，拍一张窗口全貌，比光说“那里怪怪的”清楚得多；账号或者回执号码错了，直接抄下号码，比拍一张模糊的纸更稳当；柜台歪着、号码也错，那就两样都带上。\n\n不一样的地方是：照片能显示空间位置关系，却可能把背后的真正原因藏起来；一串文字虽然很精确，却没办法告诉对方东西到底在画面的哪一边。\n\n## 工作示例\n\n在《说人话》里，结果卡片离输入框太远了。你可以截取包含输入框和结果卡片的完整浏览器区域，并写：“结果卡片应紧挨输入框下方，现在间距明显过大，请只调整布局，不改变按钮行为。”\n\n要是点击“讲给我听”后没有结果，文字就比截图重要。你要写清楚操作顺序、预期结果、实际结果，再复制 Console 中的错误行。要是页面有一半挤出了屏幕，同时点击也失效了，就给出截图、操作步骤和错误文字，要求 AI 先判断属于视觉还是行为问题。\n\n## 自检\n\n你做对的时候，是这样的：视觉问题的截图里包含了相关的上下文，并写出了你期望的变化；行为问题带上了可以一步步照着做的动作，以及准确的消息；混合问题同时备齐了两类材料。\n\n最常见的做错方式有两种。第一种是只截了一个按钮，裁掉了它和周围内容的关系；你应该把容器、相邻区域和状态一起放进画面里。第二种是复制了一大段无关代码，或者只丢过去一张截图，却没写“现在怎样、希望怎样”；你应该删掉无关材料，补上一条期望结果。\n\n## 重点\n\n- 截图主要回答“画面哪里不对”。\n- 复制文字主要回答“消息、数据或错误具体是什么”。\n- 材料后面要跟上操作步骤和期望结果。\n- AI 给出的图像判断，仍要回到真实页面去验证。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "该页说明 Claude 可以接收并分析图像，图片可以作为请求内容和文字一起提供。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/vision",
+          "sourceTitle": "Claude Platform Docs · Vision",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Chrome 的 Console 文档说明 Console 会记录消息，也可以执行 JavaScript。",
+          "sourceUrl": "https://developer.chrome.com/docs/devtools/console/",
+          "sourceTitle": "Chrome for Developers · Console overview",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "show-it-the-screen-choose-material",
+          "kind": "basic",
+          "front": "什么情况优先给截图？",
+          "back": "页面位置、间距、大小、颜色或整体布局不对时，优先给包含相关上下文的截图。",
+          "tags": [
+            "show-it-the-screen",
+            "screenshot"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页说明 Claude 可以接收并分析图像，图片可以作为请求内容和文字一起提供。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/vision",
+              "sourceTitle": "Claude Platform Docs · Vision",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "show-it-the-screen-copy-text",
+          "kind": "basic",
+          "front": "什么情况优先复制文字？",
+          "back": "错误消息、Console 行、请求结果或具体数据不对时，优先复制准确文字并写出操作步骤。",
+          "tags": [
+            "show-it-the-screen",
+            "error-report"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Chrome 的 Console 文档说明 Console 会记录消息，也可以执行 JavaScript。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/console/",
+              "sourceTitle": "Chrome for Developers · Console overview",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "show-it-the-screen-match-evidence",
+          "title": "给三个现象配材料",
+          "kind": "explain",
+          "prompt": "请为三个现象分别安排材料并说明原因：结果卡片偏到右边；点击按钮后页面没有新内容；卡片偏右且点击后还出现报错。你的回答要写出截图、文字、操作步骤各自承担什么信息。",
+          "rubric": [
+            "能为纯视觉问题选择截图",
+            "能为纯行为或报错问题选择准确文字和步骤",
+            "能为混合问题组合截图与文字",
+            "能说明材料要服务于现象而不是越多越好"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "该页说明 Claude 可以接收并分析图像，图片可以作为请求内容和文字一起提供。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/vision",
+              "sourceTitle": "Claude Platform Docs · Vision",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "when-the-code-does-not-run",
+      "title": "跑不起来时的一套通用流程",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能写出一份东西跑不起来时、AI 真正能接手排错的求助提问。\n\n## 先给结论\n\n遇到问题，千万别只跟 AI 扔一句“它不行”。\n\n你要先写清楚：你刚才做了什么、本来期待看到什么、实际上出现了什么、刚才随手改动了哪一步。接着，把页面上完整的报错行、当前的网址，还有必要的运行环境信息原样贴上。\n\n最后，只问它一个最小的具体问题，比如：“先帮我看看，为什么点击之后拿不到输入框里的内容”。这样 AI 才能抓着同一个具体现象帮你排查，等它改完了，你也能照着刚才一模一样的步骤重新试一遍。\n\n## 一个类比\n\n好比你去银行柜台说“业务办不了”，工作人员手里缺少你的排队号、不知道你办到了哪一步、纸面单据上有什么提示，更不知道你到底想办什么业务。把这些信息补齐，人家才有可能帮你查到具体是哪个窗口的问题。\n\n不一样的地方是：电脑通常会留下一串极其精确的消息，但它可不会主动替你整理前后的上下文。所以，这份梳理线索的工作，必须由你来完成。\n\n## 工作示例\n\n假设你的《说人话》页面可以正常打开，但点击“讲给我听”之后没有任何反应。这时候先别急着让 AI 把整页代码重写，照着下面这个格式写给它：\n\n~~~\n我打开的是 http://localhost:5173/。\n我在输入框粘贴“租约期满后按月续租”。\n我点击“讲给我听”。\n我原本期待下方出现固定结果卡片。\n实际页面没有新增内容。\nConsole 显示：TypeError: readerBox is undefined at main.js:18:9。\n这是我刚改过按钮处理的版本。请先解释这条错误最可能指向哪一步，只检查相关文件，不要重写页面。\n~~~\n\n把这段发给 AI 之后，先看它指出了哪个文件、给出了什么理由，再让它只做这一处修改。修改之后，你把刚才粘贴、点击的动作重新做一遍；如果刚才的问题不再出现了，才进入下一步。\n\n## 自检\n\n当你做对的时候，你的提问里会有动作、预期、实际情况、现场证据和排查范围，任何人都能照着你给的步骤把问题重现出来。\n\n最容易做错的方式有两种。第一种是只说“页面打不开”或者“代码报错了”，却没给网址和报错原文；这时候要把发生问题的位置和完整报错消息全补上。第二种是一看到报错就慌着喊“全部重写”，这会让原来的排查线索全断掉；正确的做法是先让 AI 定位出具体的一处问题，再一步一步改。\n\n## 重点\n\n- 排错要从能一步步重现的现象开始，千万别靠瞎猜。\n- 你原本期待的结果，和实际发生的结果，一定要分开发。\n- 报错原文、当前网址和最近改过的地方，都是极有用的线索。\n- 修完之后，一定要用一模一样的动作再检查一遍。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Chrome 文档说明 DevTools 内置于浏览器，可用来检查页面资源、查看网络活动和诊断页面问题。",
+          "sourceUrl": "https://developer.chrome.com/docs/devtools/",
+          "sourceTitle": "Chrome for Developers · Chrome DevTools",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Chrome 的 Console 文档说明 Console 会记录消息，也可以执行 JavaScript。",
+          "sourceUrl": "https://developer.chrome.com/docs/devtools/console/",
+          "sourceTitle": "Chrome for Developers · Console overview",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "该页建议把要求写得清楚、直接、具体；当顺序或完整性重要时，可以用编号步骤表达。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+          "sourceTitle": "Claude Platform Docs · Prompting best practices",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "when-the-code-does-not-run-five-pieces",
+          "kind": "basic",
+          "front": "一条可处理的排错请求要带什么？",
+          "back": "操作动作、预期结果、实际结果、准确错误或截图、当前网址与最近改动，并说明本轮范围。",
+          "tags": [
+            "when-the-code-does-not-run",
+            "debugging"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Chrome 的 Console 文档说明 Console 会记录消息，也可以执行 JavaScript。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/console/",
+              "sourceTitle": "Chrome for Developers · Console overview",
+              "sourceAuthority": "official-docs"
+            },
+            {
+              "kind": "fact",
+              "note": "该页建议把要求写得清楚、直接、具体；当顺序或完整性重要时，可以用编号步骤表达。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+              "sourceTitle": "Claude Platform Docs · Prompting best practices",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "when-the-code-does-not-run-reproduce",
+          "kind": "basic",
+          "front": "为什么修完还要重复原来的操作？",
+          "back": "只有用同一动作重现并检查，才能判断这次修改是否真的消除了原现象。",
+          "tags": [
+            "when-the-code-does-not-run",
+            "reproduce"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Chrome 文档说明 DevTools 内置于浏览器，可用来检查页面资源、查看网络活动和诊断页面问题。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/",
+              "sourceTitle": "Chrome for Developers · Chrome DevTools",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "when-the-code-does-not-run-write-a-bug-report",
+          "title": "写一条能复现的报错",
+          "kind": "explain",
+          "prompt": "假设你自己的页面“点击提交后没有结果”。请写一条交给 AI 的排错请求，至少包含网址或页面位置、操作顺序、预期、实际、可用的错误或截图线索，以及“这一轮不要做什么”。",
+          "rubric": [
+            "写出可重复的操作顺序",
+            "分开写预期和实际",
+            "提供一项准确线索而不是只写报错",
+            "限定 AI 本轮检查或修改的范围"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Chrome 文档说明 DevTools 内置于浏览器，可用来检查页面资源、查看网络活动和诊断页面问题。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/",
+              "sourceTitle": "Chrome for Developers · Chrome DevTools",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "console-network-elements",
+      "title": "三个面板各回答什么问题",
+      "variant": "术语",
+      "content": "## 学习目标\n\n读完你能根据碰到的页面问题，直接挑出第一个该去查的浏览器面板。\n\n## 先给结论\n\n出问题先看现象，再挑从哪儿入手：要是页面一片空白、有脚本报错，或者要看运行消息，你先看 Console；要是请求压根没发出去、请求失败了，或者回来的内容不对，你先看 Network；要是页面骨架走样、文字位置偏了、样式排版不对，你先看 Elements。这三个面板后面可以接力查，但你第一眼，必须先盯住离眼前现象最近的地方。\n\n## 一个类比\n\n好比银行大厅里有三个窗口：一个专门翻叫号和办理记录，一个专门查资料来回传递的情况，还有一个专门看柜台本身的摆设。你总不会因为“窗口歪了”，就先跑去查转账流水。不一样的地方是：窗口工作人员会主动问你要办什么业务，但浏览器面板只会显示机器留下的技术细节；所以你还是得把自己刚才做了什么操作、本来想达成什么目标，亲口跟 AI 说出来。\n\n## 工作示例\n\n在《说人话》中：\n\n- 点击“讲给我听”后完全没有动静，你先打开 Console，看里头有没有脚本报错或者记录。\n- 结果卡片出来了，但文字是空的，或者外部请求返回失败了，你去 Network 查查请求到底发没发出去，再看送回来的内容和状态。\n- 结果内容没问题，但卡片太宽了、标题跑偏了、按钮被挤到了屏幕外边，你去 Elements 看页面的结构和当前的样式。\n\n你跟 AI 描述情况时，不要只说一句“我看了 DevTools”。你可以写：“我在 Console 看到某行错误，点击路径是……，我期待……”；或者写：“Network 中这个请求的响应为空”；也可以附上 Elements 里选中的区域截图，说明你期望的尺寸和位置。\n\n## 自检\n\n做对时，你能对照“代码消息、网络往返、页面外观”这三类现象，分别选出 Console、Network、Elements。\n\n最常见的做错法有两种。第一种是不管遇到什么问题都先贴 Console，忽略了请求根本就没发出去；遇到数据或响应问题时，你得补查 Network。第二种是看到按钮位置不对，转头就去改业务代码；你应该先在 Elements 里看好结构和样式，再决定是否需要改动文件。\n\n## 重点\n\n- Console 主要回答你：“运行时留下了什么消息”。\n- Network 主要回答你：“请求有没有来回、内容到底是什么”。\n- Elements 主要回答你：“页面结构和样式现在长什么样”。\n- 提面板名称时后面一定要带上具体现象，AI 才能用得上。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Chrome 的 Console 文档说明 Console 会记录消息，也可以执行 JavaScript。",
+          "sourceUrl": "https://developer.chrome.com/docs/devtools/console/",
+          "sourceTitle": "Chrome for Developers · Console overview",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Chrome 的 Network 文档说明 Network 会记录网络活动，并能查看请求、响应和请求细节。",
+          "sourceUrl": "https://developer.chrome.com/docs/devtools/network/overview",
+          "sourceTitle": "Chrome for Developers · Network panel: Analyze network load and resources",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Chrome 的 DOM 文档说明可以在 DevTools 中查看和修改页面的 DOM。",
+          "sourceUrl": "https://developer.chrome.com/docs/devtools/dom/",
+          "sourceTitle": "Chrome for Developers · Get started with viewing and changing the DOM",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "console-network-elements-console",
+          "kind": "basic",
+          "front": "页面空白或脚本报错先看哪里？",
+          "back": "先看 Console，因为它会记录运行消息，也能显示脚本执行时留下的错误。",
+          "tags": [
+            "console-network-elements",
+            "console"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Chrome 的 Console 文档说明 Console 会记录消息，也可以执行 JavaScript。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/console/",
+              "sourceTitle": "Chrome for Developers · Console overview",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "console-network-elements-network",
+          "kind": "basic",
+          "front": "数据没回来或请求失败先看哪里？",
+          "back": "先看 Network，检查请求是否发生、请求细节和响应内容。",
+          "tags": [
+            "console-network-elements",
+            "network"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Chrome 的 Network 文档说明 Network 会记录网络活动，并能查看请求、响应和请求细节。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/network/overview",
+              "sourceTitle": "Chrome for Developers · Network panel: Analyze network load and resources",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "console-network-elements-elements",
+          "kind": "basic",
+          "front": "页面样子不对先看哪里？",
+          "back": "先看 Elements，检查页面结构以及当前元素的样式。",
+          "tags": [
+            "console-network-elements",
+            "elements"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Chrome 的 DOM 文档说明可以在 DevTools 中查看和修改页面的 DOM。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/dom/",
+              "sourceTitle": "Chrome for Developers · Get started with viewing and changing the DOM",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "console-network-elements-route-symptoms",
+          "title": "把现象送到正确面板",
+          "kind": "explain",
+          "prompt": "请为以下现象分别指定首个面板，并写出你要在那里找的证据：A. 页面加载后全白；B. 历史页显示“暂无记录”，但你刚刚保存过；C. 结果卡片超出手机屏幕。",
+          "rubric": [
+            "能把白屏分给 Console 并说明找运行消息",
+            "能把记录或响应问题分给 Network 并说明找请求证据",
+            "能把布局问题分给 Elements 并说明看结构或样式",
+            "每项都写出具体要寻找的线索"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Chrome 的 Network 文档说明 Network 会记录网络活动，并能查看请求、响应和请求细节。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/network/overview",
+              "sourceTitle": "Chrome for Developers · Network panel: Analyze network load and resources",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "words-you-will-keep-hearing",
+      "title": "你会反复听到的那十几个词",
+      "variant": "术语",
+      "content": "## 学习目标\n\n读完你能在一整段提示里，准确认出那些常见的网页词。\n\n## 先给结论\n\n你可以先把这些词归进三组：第一组看页面是由什么拼成的，第二组看地址和数据怎么来回跑，第三组看工具怎么盯状态、怎么存记录。你不用一次就把它们背成教材上的死定义。只要你在 AI 的回复里、终端的输出里，还有浏览器的面板里能把它们一眼认出来，你就能继续顺着往下追问了。\n\n## 一个类比\n\n好比你去银行办事，你会先分清手里拿着什么材料、该走去哪个业务窗口、办完拿到手里的回执是哪张，以及最后的底单该留档在什么地方。网页里的这些词，其实也在做着类似的分工。\n\n不一样的地方是，它们并不是摸得着的纸张和柜台：同一个词可能会在不同的项目里反复出现。你真正要做的，是看清楚它在眼下这句话里究竟是在指哪一类东西。\n\n## 工作示例\n\n你先读一读这句话：\n\n~~~\n浏览器打开 http://localhost:5173/history。HTML 负责页面结构，CSS 负责外观，JavaScript 响应点击；浏览器把页面放进 DOM。页面通过 API 发出 request，收到 response；Network 能看往返，Console 能看运行消息，Git 留下修改记录。\n~~~\n\n逐个换成人话：\n\n- HTML 是用来定页面结构的标记语言。\n- CSS 是专门管页面长相外观的样式语言。\n- JavaScript 是让网页能对操作做出反应的脚本语言。\n- DOM 是浏览器内部搭出来的页面结构模型，代码能靠它找到里面的具体节点。\n- API 是不同软件之间提前说好的一套交互规则。\n- URL 是资源在网络上的地址；localhost 指你手头当前这台电脑；port 是服务接收请求的入口号码。\n- request 是发出去的请求，response 是拿回来的响应。\n- Network 专门盯着网络上的数据来回，Console 负责记录运行消息，Git 帮你把不同时间改出来的版本存好。\n\n把这些词放回《说人话》里看，其实特别具体：输入框属于页面结构的一部分；按钮点下去有反应，是由脚本在背后触发的；历史页这类页面可以拥有自己的 URL；数据有没有送过去、拿回来，去 Network 里一查便知；遇到错误消息，直接去 Console 里找就行。\n\n## 自检\n\n你做对的时候，一看到 localhost:数字 就能立刻想到这是本机服务的入口；看到 HTML、CSS、JavaScript，能分别对应到结构、外观和行为；看到 Network、Console、Git，能对应想到去盯网络来回、看运行消息和找历史版本。\n\n最常见的做错方式有两种。第一种，是你把 HTML、CSS、JavaScript 当成了三个可以随便换着叫的名字，结果想改外观的时候，反而跑去找脚本；这时候赶紧回到“结构、外观、行为”的三分法来理清。第二种，是你一看到 API、request、response，就直接去瞎猜具体的业务含义；先看清楚它们在句子里到底是在指规则约定、发出的东西，还是返回的东西，然后再向 AI 追问具体的对象是谁。\n\n## 重点\n\n- HTML 管页面结构，CSS 管页面外观，JavaScript 管网页里的动态行为。\n- URL、localhost 和 port 一起帮你找准本地页面的入口。\n- request 负责发出去，response 负责返回来；Network 能帮你盯紧这一趟往返。\n- DOM 是浏览器里的页面模型，Console 是你看运行消息的窗口。\n- Git 让你能随时回看项目随时间留下的各个版本。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "MDN 将 HTML 说明为规定网页结构的描述语言。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Glossary/HTML",
+          "sourceTitle": "MDN · HTML glossary",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 将 CSS 说明为控制网页外观的声明式语言。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Glossary/CSS",
+          "sourceTitle": "MDN · CSS glossary",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 说明 JavaScript 常用于网页中的动态脚本，并可通过 DOM 操作页面内容。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Glossary/JavaScript",
+          "sourceTitle": "MDN · JavaScript glossary",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 说明 DOM 是浏览器加载的文档模型，以节点树表示文档，并允许代码访问和改变节点。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Glossary/DOM",
+          "sourceTitle": "MDN · DOM glossary",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 将 API 说明为软件之间交互时遵循的一组功能和规则，也可以把它看成一份接口契约。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Glossary/API",
+          "sourceTitle": "MDN · API glossary",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "MDN 说明 URI 的 host 表示服务器地址、port 表示服务器监听请求的端口，并用 localhost 与端口号组成的地址作例子。",
+          "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Authority",
+          "sourceTitle": "MDN · URI authority",
+          "sourceAuthority": "mdn"
+        },
+        {
+          "kind": "fact",
+          "note": "Chrome 的 Console 文档说明 Console 会记录消息，也可以执行 JavaScript。",
+          "sourceUrl": "https://developer.chrome.com/docs/devtools/console/",
+          "sourceTitle": "Chrome for Developers · Console overview",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Chrome 的 Network 文档说明 Network 会记录网络活动，并能查看请求、响应和请求细节。",
+          "sourceUrl": "https://developer.chrome.com/docs/devtools/network/overview",
+          "sourceTitle": "Chrome for Developers · Network panel: Analyze network load and resources",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "words-you-will-keep-hearing-structure-style-behavior",
+          "kind": "basic",
+          "front": "HTML、CSS、JavaScript 分别先记成什么？",
+          "back": "HTML 先记页面结构，CSS 先记外观，JavaScript 先记网页中的动态行为。",
+          "tags": [
+            "words-you-will-keep-hearing",
+            "html",
+            "css",
+            "javascript"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 将 HTML 说明为规定网页结构的描述语言。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Glossary/HTML",
+              "sourceTitle": "MDN · HTML glossary",
+              "sourceAuthority": "mdn"
+            },
+            {
+              "kind": "fact",
+              "note": "MDN 将 CSS 说明为控制网页外观的声明式语言。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Glossary/CSS",
+              "sourceTitle": "MDN · CSS glossary",
+              "sourceAuthority": "mdn"
+            },
+            {
+              "kind": "fact",
+              "note": "MDN 说明 JavaScript 常用于网页中的动态脚本，并可通过 DOM 操作页面内容。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Glossary/JavaScript",
+              "sourceTitle": "MDN · JavaScript glossary",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "words-you-will-keep-hearing-address-flow",
+          "kind": "basic",
+          "front": "URL、localhost、port、request、response 怎样串起来？",
+          "back": "URL 给出地址，localhost 指本机，port 找到服务入口；request 发出去，response 返回来。",
+          "tags": [
+            "words-you-will-keep-hearing",
+            "url",
+            "port",
+            "request",
+            "response"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明 URI 的 host 表示服务器地址、port 表示服务器监听请求的端口，并用 localhost 与端口号组成的地址作例子。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Authority",
+              "sourceTitle": "MDN · URI authority",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "words-you-will-keep-hearing-dom-api",
+          "kind": "basic",
+          "front": "DOM 和 API 在网页里各指什么？",
+          "back": "DOM 是浏览器里的页面模型，API 是软件之间约定交互方式的一组功能和规则。",
+          "tags": [
+            "words-you-will-keep-hearing",
+            "dom",
+            "api"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 说明 DOM 是浏览器加载的文档模型，以节点树表示文档，并允许代码访问和改变节点。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Glossary/DOM",
+              "sourceTitle": "MDN · DOM glossary",
+              "sourceAuthority": "mdn"
+            },
+            {
+              "kind": "fact",
+              "note": "MDN 将 API 说明为软件之间交互时遵循的一组功能和规则，也可以把它看成一份接口契约。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Glossary/API",
+              "sourceTitle": "MDN · API glossary",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        },
+        {
+          "id": "words-you-will-keep-hearing-tools",
+          "kind": "basic",
+          "front": "Console、Network、Git 各自留下什么线索？",
+          "back": "Console 看运行消息，Network 看请求和响应，Git 留下项目修改的版本记录。",
+          "tags": [
+            "words-you-will-keep-hearing",
+            "console",
+            "network",
+            "git"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Chrome 的 Console 文档说明 Console 会记录消息，也可以执行 JavaScript。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/console/",
+              "sourceTitle": "Chrome for Developers · Console overview",
+              "sourceAuthority": "official-docs"
+            },
+            {
+              "kind": "fact",
+              "note": "Chrome 的 Network 文档说明 Network 会记录网络活动，并能查看请求、响应和请求细节。",
+              "sourceUrl": "https://developer.chrome.com/docs/devtools/network/overview",
+              "sourceTitle": "Chrome for Developers · Network panel: Analyze network load and resources",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "words-you-will-keep-hearing-translate-a-message",
+          "title": "把术语换成人话",
+          "kind": "explain",
+          "prompt": "请把这句话翻成人话，并指出需要打开哪个面板：JavaScript 通过 API 发出 request，response 为空，Network 里能看到状态。你的回答要分别解释 JavaScript、API、request、response 和 Network。",
+          "rubric": [
+            "能把 JavaScript 说成网页中的动态脚本或行为",
+            "能把 API 说成软件交互的规则或接口",
+            "能区分 request 是发出、response 是返回",
+            "能把 Network 和请求响应检查联系起来"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "MDN 将 API 说明为软件之间交互时遵循的一组功能和规则，也可以把它看成一份接口契约。",
+              "sourceUrl": "https://developer.mozilla.org/en-US/docs/Glossary/API",
+              "sourceTitle": "MDN · API glossary",
+              "sourceAuthority": "mdn"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

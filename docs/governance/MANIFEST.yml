@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-09T04:52:23.559Z
+generated_at: 2026-09-09T11:35:31.567Z
 generator_version: doc-gov@0.9.11
-docs_count: 115
+docs_count: 118
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -347,12 +347,33 @@ docs:
     canonical: true
     last_reviewed: 2026-09-08
     pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-200-FROM-A-JS-RENDERED-DOCS-SITE-PROVES-NOTHING-RENDER-IT-BEFORE-CITING-IT
+    path: docs/reference/learnings/workflow-issues/a-200-from-a-js-rendered-docs-site-proves-nothing-render-it-before-citing-it.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-09
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-DETECTOR-AND-ITS-ACCEPTOR-MUST-NORMALISE-IDENTICALLY-OR-THE-GATE-REJECTS-THE-S
+    path: docs/reference/learnings/workflow-issues/a-detector-and-its-acceptor-must-normalise-identically-or-the-gate-rejects-the-s.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-09
+    pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-LIVE-EVIDENCE-URL-IS-NOT-A-SUPPORTED-CLAIM-OPEN-THE-PAGE-AND-READ-IT
     path: docs/reference/learnings/workflow-issues/a-live-evidence-url-is-not-a-supported-claim-open-the-page-and-read-it.md
     type: reference
     status: stable
     canonical: true
     last_reviewed: 2026-09-08
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-STRIPPING-REGEX-DECIDES-WHAT-A-GATE-CAN-SEE-SO-BOUND-IT-TO-A-LINE
+    path: docs/reference/learnings/workflow-issues/a-stripping-regex-decides-what-a-gate-can-see-so-bound-it-to-a-line.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-09
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-STUDY-PICKER-MUST-AGGREGATE-ONE-STUDY-INTO-ONE-SHARED-LANDMASS
     path: docs/reference/learnings/workflow-issues/a-study-picker-must-aggregate-one-study-into-one-shared-landmass.md

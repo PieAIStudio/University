@@ -29,8 +29,21 @@
     "docs.anthropic.com",
     "docs.github.com",
     "npmjs.com",
-    "learn.chatgpt.com"
+    "learn.chatgpt.com",
+    "docs.stripe.com",
+    "vercel.com",
+    "platform.claude.com",
+    "code.visualstudio.com",
+    "docs.npmjs.com",
+    "designcouncil.org.uk",
+    "nngroup.com"
   ],
-  "forbiddenHosts": ["pmaker.space", "vibe-hub.org", "vibehub.org", "oiloil.org"],
+  "forbiddenHosts": [
+    "pmaker.space",
+    "vibe-hub.org",
+    "vibehub.org",
+    "oiloil.org",
+    "datawhalechina.github.io"
+  ],
   "authorityTags": ["mdn", "rfc", "w3c", "whatwg", "official-docs", "spec"]
 }

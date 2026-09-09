@@ -1,0 +1,398 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "getting-paid",
+  "courseId": "from-idea-to-live",
+  "unit": {
+    "id": "getting-paid",
+    "title": "收钱",
+    "objective": "读完这一单元你能说出一条最小的收钱链路，以及哪一步决定钱真的到了。",
+    "prerequisiteUnitIds": []
+  },
+  "lessons": [
+    {
+      "id": "price-cannot-come-from-the-page",
+      "title": "价格不能由页面说了算",
+      "variant": "决策",
+      "content": "## 学习目标\n\n读完你能准确指出，支付请求里到底哪一项才是必须由后端决定的价格依据。\n\n## 先给结论\n\n页面上展示的数字只是给人看的报价，绝不能当作真正的收款依据。任何用你网站的人，都能随手改页面、改输入框里的内容，甚至能跳过页面自己发一条请求。要是你的服务端发来多少钱就直接收多少钱，那就等于让买家自己给自己定账单了。\n\n更稳妥的做法是，让页面只负责发一句“我想买哪个方案”，服务端收到后再把这个方案，对上自己保存好的 Stripe Price。在 Stripe 里面，Product 用来表示你在卖什么，Price 用来表示具体收多少钱，以及是一次性扣费还是按周期续费。等到创建 Checkout Session 时，由服务端传进去已经选好的 Price。\n\n像折扣码、购买数量或者买家所在的地区，这些信息确实可能来自用户输入，但服务端拿到了依然要仔细检查它们到底适不适用，然后再去算最终总价。原则始终不变：页面只能提出“我想买什么”的意图，绝对不能由它单方面宣布该收多少钱。\n\n## 一个类比\n\n就像餐厅菜单上印着“午餐套餐 38 元”，客人可以指着套餐说想点它，但收银台必须按店里收银系统的价目表来结账。哪怕客人把菜单照片改成了 1 元，收银台也绝不可能跟着改系统里的价格。\n\n相似的地方是，页面和菜单一样，都只负责把选项展示出来。不一样的地方是，网页上的字段全在用户自己手里，就像菜单照片随时能被人动手改掉一样；所以最终到底收多少钱，必须来自收银台自己能核对的记录，绝对不能看展示层。\n\n## 工作示例\n\n给《说人话》增加“解锁历史翻译”的付费入口。\n\n1. 页面上显示两个方案：一次购买的“30 天历史包”，和按月续费的“讲人话 Pro”。当按钮被点击时，页面只发送方案的标识代号，比如 `archive-30d` 或者 `pro-monthly`，绝不能把页面上写的“19”或“9.9”当成最终金额发过去。\n2. 服务端自己在后台存一张方案表，把 `archive-30d` 映射到你在 Stripe 里早就配好的 Price，把 `pro-monthly` 映射到另一个周期性的 Price。只要碰上不认识的未知方案，直接拒绝。\n3. 服务端收到请求时，就算在里面看到了类似 `amount: 1` 这样的字段，也千万别拿来用。它只根据自己的方案表拿到对应的固定 Price，然后再去创建 Checkout Session。\n4. 当用户跳进 Stripe 的结账页时，看到的金额完全来自服务端传过去的那条 Price。你在 Stripe 后台和自己应用的订单记录里核对一下方案，确认页面显示、实际收款和给用户的权益规则说的是同一件事。\n5. 你试着把页面上的 9.9 改成 0.1，然后重新发送一次请求。一个写得正确的服务绝对不会因此生成一张便宜账单；它要么按服务端定好的方案收费，要么直接拒绝这个它看不懂的购买请求。\n\n## 自检\n\n**做对了会看到什么：**浏览器发出的请求里只有方案标识，而不是可信的最终金额；服务端能从自己的方案表里找到对应的 Price；结账页显示的金额跟你服务端的选择完全一致。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、服务端直接使用页面传来的 amount。**把金额改小后，结账页居然真的变便宜了；这说明收银台完全听了买家自己填的数字。赶紧回到服务端，改成只接收被允许的方案标识，并把它映射到固定 Price。\n\n**二、页面不传金额了，但服务端仍相信任意 plan 字符串。**把 `pro-monthly` 改成一个不存在的值后，服务端可能会套用错误的默认方案，或者报出一堆混乱的报错。赶紧回到服务端的方案白名单，只要遇到不认识的未知方案，一概明确拒绝。\n\n## 重点\n\n- 页面上的价格只是拿来展示的，服务端的方案和 Price 才是真正收款的依据。\n- 用户随时可以改动页面上的字段，所以页面传来的最终金额你千万不能当真。\n- Product 说明你在卖什么，Price 说明要收多少钱以及怎么收费。\n- 折扣和数量可以由用户提出来，但到底能不能用、最终该收多少钱，依然得由服务端来核对。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Stripe Checkout 快速开始文档要求把价格和库存等敏感商品信息放在服务端，以防止被用户篡改，并从服务端创建 Checkout Session。",
+          "sourceUrl": "https://docs.stripe.com/checkout/quickstart",
+          "sourceTitle": "Stripe Docs · Checkout quickstart",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Stripe 产品与价格文档区分 Product（卖什么）和 Price（多少钱以及按什么频率收费）。",
+          "sourceUrl": "https://docs.stripe.com/products-prices/manage-prices",
+          "sourceTitle": "Stripe Docs · Manage prices",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "price-needs-server-choice",
+          "kind": "basic",
+          "front": "支付按钮应该把金额发给后端吗？",
+          "back": "不应该把页面金额当成事实。页面发送购买方案，后端从自己的方案表选择 Stripe Price，再创建结账会话。",
+          "tags": [
+            "payments",
+            "pricing"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Stripe Checkout 文档要求把价格等敏感商品信息放在服务端，避免用户篡改。",
+              "sourceUrl": "https://docs.stripe.com/checkout/quickstart",
+              "sourceTitle": "Stripe Docs · Checkout quickstart",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "checkout-session-holds-payment-plan",
+          "kind": "basic",
+          "front": "Stripe 的 Product 和 Price 分别说明什么？",
+          "back": "Product 说明你卖的东西；Price 说明收费金额以及一次性或周期性方式。服务端应选择已配置的 Price。",
+          "tags": [
+            "payments",
+            "pricing"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Stripe 官方产品与价格文档把产品和价格分别定义为卖什么、多少钱以及多久收一次。",
+              "sourceUrl": "https://docs.stripe.com/products-prices/manage-prices",
+              "sourceTitle": "Stripe Docs · Manage prices",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "design-server-price-map",
+          "title": "为自己的念头画一张方案表",
+          "kind": "explain",
+          "prompt": "给你的产品设计至少两个购买方案。写出页面会发送的方案标识、服务端会选择的 Price 或价格记录，以及用户篡改金额时服务端的反应。",
+          "rubric": [
+            "页面发送的是方案意图，不是可以直接采信的最终金额",
+            "每个方案都有服务端可核对的 Price 或内部价格记录",
+            "未知方案或不适用折扣会被服务端拒绝或重新计算",
+            "写出了篡改请求后会看到的结果，而不是只写“防止篡改”"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Stripe 文档要求服务端保管敏感的价格信息，并说明 Checkout Session 使用服务端传入的 Price。",
+              "sourceUrl": "https://docs.stripe.com/checkout/quickstart",
+              "sourceTitle": "Stripe Docs · Checkout quickstart",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "smallest-payment-path",
+      "title": "最小的一条收钱链路",
+      "variant": "溯源",
+      "content": "## 学习目标\n\n读完你能画出一条从购买按钮到订单记录的收钱链路。\n\n## 先给结论\n\n一条足够轻巧、又不会把关键事实全交给浏览器的收钱链路，你可以这么走：页面先发起购买意图，你的服务端去创建 Checkout Session，接着让用户去 Stripe 托管的结账页付款。付完钱后，Stripe 会把支付事件直接送回你的服务端，服务端记下这笔订单和对应的权益，最后页面再去读取这个最新的状态。\n\n购买按钮只负责起个头，结账页只管让用户完成付款，而你的服务端，负责把这笔付出去的钱，跟你自己的用户、购买方案、订单牢牢对上。这里头只要少了一步，就会出现最尴尬的断层——钱可能真收到了，但你根本不知道该给哪个用户开通什么权益。\n\n## 一个类比\n\n好比你去实体店买东西。你在货架前指着一件商品，店员照着店里的价目表给你开单；你走到收银台付款，银行在后台处理这笔交易；店里的后台收到入账通知后，把这笔订单记在你的会员名下；最后取货窗口核对好了，再告诉你现在能拿走什么。\n\n相似的地方在于，挑选购买、掏钱付款、后台入账和交付商品，本身就是一整条连贯的路。不一样的地方是，线上付款有时候会晚一点才确认，而且顾客付完钱后，可能直接关掉网页，根本没有回到你的网站。所以你千万不能只盯着用户最后看到的那张页面。\n\n## 工作示例\n\n你可以把《说人话》的“解锁历史翻译”完整走完一遍：\n\n1. 用户在页面上点击“解锁 30 天历史”。浏览器向你的 `/api/checkout` 发送方案标识和当前登录身份，绝不能让浏览器自己在前端去拼最终价格。\n2. 服务端先核查身份和方案，从自己的方案表里找到对应的 Stripe Price，创建 Checkout Session，并把会话地址返回给浏览器。按照 Stripe 的接口文档，你在创建会话时需要设置好 line items、Price、数量、模式和返回地址。\n3. 浏览器拿到地址后，跳转到 Stripe 托管的结账页。用户在那里填写支付信息并完成付款；你的页面完全不碰本应由 Stripe 处理的支付细节。\n4. 用户付完款，Stripe 会主动向你的 webhook 地址发送支付事件。服务端验证这个事件，找出对应的用户和方案，把订单状态改写成已确认，并给这个用户打开 30 天历史权益。\n5. 用户回到《说人话》的结果页。页面向你的服务端查询最新的订单和权益，显示“已解锁”或者“正在确认”，而不是凭 URL 自己单方面宣布成功。\n\n在实际做的时候，你可以给每一步都留一个看得见的证据：请求的方案、创建的会话、Stripe 事件、订单记录和最终权益。这样一旦出了问题，你一眼就能排查清楚：到底是压根没有建单、用户没有付款、服务端没有收到通知，还是记录根本没写对。\n\n## 自检\n\n**做对了会看到什么：**你能顺着购买按钮一路画到订单记录，并清清楚楚说出每个节点的负责人。你的服务端至少得同时清楚用户、方案、Checkout Session 和订单状态这四件事；页面只展示从服务端查到的真实结果。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、页面直接跳到支付平台，没有自己的建单和用户关联。**钱哪怕真收到了，你也根本没法知道应该给哪个账户开通哪项权益。遇到这种情况，先回到服务端把会话创建好，并保存好属于你自己的订单关联。\n\n**二、只做了购买按钮和返回页，没有通知入口。**用户跳回页面时，你的网页根本分不清他是已付、支付失败、有延迟，还是压根就没完成。遇到这种情况，回到支付平台的 webhook 设置里，让你的服务端能接收到支付状态的变化。\n\n## 重点\n\n- 最小收钱链路只有这几步：表达意图、创建会话、完成付款、接收通知、写入订单与权益。\n- 页面只负责开头和展示，服务端负责选定价格、关联用户和管理订单状态。\n- Stripe Checkout Session 把商品行、Price、数量、收费模式和返回地址组合在一起。\n- 订单记录就像一座桥，负责把外面的付款稳稳接回你自己的产品里。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Stripe Checkout 快速开始文档展示服务端创建 Checkout Session、配置商品和价格、再把用户重定向到 Checkout 的流程。",
+          "sourceUrl": "https://docs.stripe.com/checkout/quickstart",
+          "sourceTitle": "Stripe Docs · Checkout quickstart",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Stripe 的 Checkout Session API 说明创建会话时可传入 line items、Price、数量、收费模式和 success_url。",
+          "sourceUrl": "https://docs.stripe.com/api/checkout/sessions/create",
+          "sourceTitle": "Stripe API Reference · Create a Checkout Session",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Stripe Webhooks 文档说明事件可以直接发送到服务器端点，服务端应接收并验证这些事件。",
+          "sourceUrl": "https://docs.stripe.com/webhooks",
+          "sourceTitle": "Stripe Docs · Webhooks",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "payment-path-has-a-server",
+          "kind": "basic",
+          "front": "一条最小收钱链路中，服务端至少接住哪几件事？",
+          "back": "服务端接住购买方案和用户，创建 Checkout Session，接收支付事件，再把结果写成自己的订单与权益记录。",
+          "tags": [
+            "payments",
+            "checkout"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Stripe 文档展示由服务端创建 Checkout Session，并通过 webhook 把事件送到服务器。",
+              "sourceUrl": "https://docs.stripe.com/checkout/quickstart",
+              "sourceTitle": "Stripe Docs · Checkout quickstart",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "webhook-closes-the-loop",
+          "kind": "basic",
+          "front": "为什么订单记录不能只靠购买按钮或返回页面写入？",
+          "back": "按钮只表示用户想买，返回页面只表示浏览器回来了。服务端还要接收支付平台的事件并核对状态，才能把付款关联到订单和权益。",
+          "tags": [
+            "payments",
+            "checkout"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Stripe Webhooks 文档说明支付平台会把事件直接推送给服务器端点，用于处理支付后的业务动作。",
+              "sourceUrl": "https://docs.stripe.com/webhooks",
+              "sourceTitle": "Stripe Docs · Webhooks",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "draw-payment-chain",
+          "title": "画出自己的最小收钱链路",
+          "kind": "explain",
+          "prompt": "针对你的产品，画或写出从购买按钮到订单记录的每一步。标明哪一步由浏览器做、哪一步由服务端做、哪一步由支付平台通知，并指出“真正决定是否开通”的数据从哪里来。",
+          "rubric": [
+            "链路至少包含购买意图、服务端建单、支付页、平台通知和订单记录",
+            "没有把最终价格或订单状态交给浏览器单方面决定",
+            "写清楚支付平台事件怎样回到服务端并关联到用户",
+            "指出开通依据是服务端核对后的支付状态，而不是按钮点击或页面跳转"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Stripe 官方文档分别说明服务端创建 Checkout Session、支付平台向服务器发送 webhook，以及用支付状态做业务处理。",
+              "sourceUrl": "https://docs.stripe.com/payments/payment-intents/verifying-status",
+              "sourceTitle": "Stripe Docs · Payment status updates",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "success-page-is-not-payment",
+      "title": "回到 success 页不等于钱到了",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能判断一笔支付到底该不该开通权益。\n\n## 先给结论\n\n浏览器跳回 success 页面，仅仅代表浏览器打开了这个网址。这本身既不能证明钱真的付完了，更不能证明你的服务端已经把这笔钱记在了账上。用户付完款后可能直接关掉页面，也可能碰上网络中断，甚至有人会在地址栏里手动输入 success 的网址。这些情况都会让“跳回页面”和“真实付款”完全对不上号。\n\n真正能用来修改订单、开通权益的凭据，必须来自支付平台直接发给你服务端的 webhook。服务端核对完事件和支付状态后，按订单记录一次；你的 success 页面只管去读这条记录，要是还没查到，就显示“正在确认”。Stripe 还提醒过，webhook 可能会重试发送，所以同一个事件就算发来两次，你也绝对不能给人家发两份权益。\n\n## 一个类比\n\n好比你去银行转账。你看到手机跳回“办理完成”的页面，就像走回到了柜台门口；银行后台的入账通知，才是账本上真正把钱记下的信号。门口的页面可能还没加载完，入账通知也可能会慢一点，但你绝不能把这两件事混为一谈。\n\n相似的地方是，页面和通知都在告诉你流程走到了哪一步。\n\n不一样的地方是，页面是由顾客的浏览器控制的，通知则是支付平台直接发给你的服务端。前者只适合拿来给用户看个反馈，后者才适合拿来驱动订单的真实状态。\n\n## 工作示例\n\n你可以用这三条路径，来测试《说人话》的 Pro 解锁：\n\n1. 用户付完款后网络断开，根本没看到 success 页面。但 Stripe 的 webhook 依然送到了服务端，服务端验证事件、把订单写成已确认。用户第二天重新登录进来，页面一查订单，照样正常显示已解锁。\n2. 用户根本没付款，自己在浏览器里手动打开 `/success?session_id=not-mine`。这时 success 页不能直接给权益，而是去问服务端：这个会话有没有对应的已确认订单？查不到就显示“尚未确认”，不会解锁。\n3. 同一条 webhook 因为网络重试，前后发来了两次。服务端用 Checkout Session 或者事件标识来查重，第二次收到时只返回已经处理过了，不会重复增加使用次数，也不会延长权益时间。\n4. 如果某种支付方式需要晚一点才能确定结果，订单就先保持“待确认”。页面可以让用户稍等一下或者晚点再回来看；服务端在收到明确的成功或失败事件后，再去更新状态。\n\n所以，success 页只是让体验更顺畅，但它不是收钱的闸门。真正的收钱闸门，是在你的服务端收到并核对完平台通知之后。\n\n## 自检\n\n**做对了会看到什么：**用户付完款哪怕没回到页面，订单也能因为 webhook 正常记下；别人直接在浏览器访问 success 地址，绝对不会凭空拿到权益；平台重复发来通知，你也不会重复发货或者重复加额度。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、跳回 success 就立刻解锁。**别人手动改个网址就能白拿服务，或者用户付了款却因为页面没加载出来导致漏记订单。正确的做法是回到服务端：只有在核对完平台事件和支付状态后才开通，success 页只负责展示查询结果。\n\n**二、每收到一次通知就加一次权益。**Stripe 一重试发通知，用户的使用次数或者有效期就突然翻倍了。正确的做法是回到订单表：存好已经处理过的会话或事件标识，让你的处理逻辑就算重复执行也能安全防重。\n\n## 重点\n\n- success 页只能证明浏览器跳到了某个地址，不代表钱真的到账了。\n- webhook 会把支付平台的事件直接送到你的服务端，这才是确认收钱和开通权益的凭据。\n- 页面可以显示待确认，但绝不能拿页面跳转带的参数替代服务端里的真实订单状态。\n- webhook 可能会重试发送，你的订单处理必须做好防重复。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Stripe 文档明确说不要在客户端处理订单履约，因为用户可能在付款完成后离开页面；应使用 webhook 监听成功状态并异步处理。",
+          "sourceUrl": "https://docs.stripe.com/payments/payment-intents/verifying-status",
+          "sourceTitle": "Stripe Docs · Payment status updates",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Stripe Webhooks 文档说明事件会发送到服务器、需要验证签名，并介绍了重复事件和失败重试需要被处理。",
+          "sourceUrl": "https://docs.stripe.com/webhooks",
+          "sourceTitle": "Stripe Docs · Webhooks",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "redirect-is-not-proof",
+          "kind": "basic",
+          "front": "success 页加载出来，能不能直接开通权益？",
+          "back": "不能。它只说明浏览器回到了页面；开通要等服务端收到并核对支付平台的 webhook 和支付状态。",
+          "tags": [
+            "payments",
+            "webhook"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Stripe 文档说明客户可能在支付后离开页面，不能只靠客户端或返回页处理履约，应使用 webhook。",
+              "sourceUrl": "https://docs.stripe.com/payments/payment-intents/verifying-status",
+              "sourceTitle": "Stripe Docs · Payment status updates",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "webhook-is-server-notice",
+          "kind": "basic",
+          "front": "webhook 在这条收钱链路中做什么？",
+          "back": "它把支付平台的事件送到你的服务端。服务端验证事件、查重并更新订单，再让页面读取已确认或待确认的状态。",
+          "tags": [
+            "payments",
+            "webhook"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Stripe Webhooks 文档说明事件直接发送到服务器端点，并要求服务端验证签名和处理重复投递。",
+              "sourceUrl": "https://docs.stripe.com/webhooks",
+              "sourceTitle": "Stripe Docs · Webhooks",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "payment-notification-can-retry",
+          "kind": "basic",
+          "front": "同一条支付通知来了两次，应该给用户两份权益吗？",
+          "back": "不应该。服务端应按支付会话或事件标识查重；第二次投递只确认已经处理，不重复发货、加额度或延长时间。",
+          "tags": [
+            "payments",
+            "webhook"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Stripe Webhooks 文档说明事件可能重复送达、失败会重试，因此处理程序需要安全地应对重复事件。",
+              "sourceUrl": "https://docs.stripe.com/webhooks",
+              "sourceTitle": "Stripe Docs · Webhooks",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "decide-entitlement-source",
+          "title": "给自己的产品画 success 与 webhook 的分工",
+          "kind": "explain",
+          "prompt": "写两个场景：用户付款后正常回到 success 页，以及用户付款后关掉页面或手动输入 success 地址。说明两种场景分别由谁更新订单、页面显示什么、什么时候才开通你的权益。再补一句如何处理重复通知。",
+          "rubric": [
+            "把 success 页定义为反馈或查询入口，而不是收款证明",
+            "把 webhook 放在服务端订单状态更新的位置",
+            "覆盖付款后没回页面和手动打开页面两种不同结果",
+            "写出重复事件不会重复开通的查重或幂等策略"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Stripe 官方文档说明客户端页面不可靠，webhook 用于服务端确认支付并处理履约，且事件投递可能重试。",
+              "sourceUrl": "https://docs.stripe.com/payments/payment-intents/verifying-status",
+              "sourceTitle": "Stripe Docs · Payment status updates",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "once-vs-every-month",
+      "title": "买断和订阅差在哪",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能清楚说出买断和订阅后续各自要持续处理哪些事。\n\n## 先给结论\n\n买断其实很简单，通常就是围绕一笔付款和一个订单展开；但订阅以后还要反复收钱，中间还会经历头一次付款、后面续期、扣款失败、暂停服务、彻底取消等各种状态变化。这两者在 Checkout 里根本不是同一种收费模式，你的后台系统也千万不能用“反正收过一次钱”的逻辑去包打天下。\n\nStripe 官方讲得很清楚，订阅会自动生成发票、自动去尝试扣款，并且管着完整的生命周期；只有在第一张发票真正付清之后，订阅才会正式进入可用状态。在这之后，你得根据订阅状态和每次付款的动静，来决定继续给用户什么权益、什么时候发提醒、什么时候彻底停掉服务。\n\n这并不是说订阅就一定比买断更好。它代表你给用户的承诺变了：买断只要讲清楚花钱能买到什么就行；搞订阅，你还必须额外交代清楚每次续费、主动取消以及扣款失败欠费时，到底会发生什么。\n\n## 一个类比\n\n就像去买一本纸质书和办一张健身房会员卡。买书时你结一次账，把书拿走就完事了；会员卡每个月都会产生一笔扣费，这期间你得一直处理自动续费、请假暂停和退会退卡。\n\n相似的地方是，这两件事都是从头一回掏钱买单开始的。不一样的地方是，你跟会员的关系在后续会不断发生变化，而买书的那笔买卖做完就做完了，书店绝不会每个月又自动给你开一张账单扣钱；你绝不能拿“把书寄出去一次”的思路，去应对会员后面每个月的复杂情况。\n\n## 工作示例\n\n让你的《说人话》同时提供低风险的买断套餐和 Pro 订阅：\n\n1. “30 天历史包”使用一次性支付模式。支付平台确认收到了钱，服务端就创建一条订单，给用户一段清清楚楚的有效期；到期之后，绝不会因为时间到了就自动再去扣一笔钱。\n2. “Pro 每月版”使用订阅模式。服务端发起创建订阅的 Checkout Session，等第一笔发票真正付款成功后，才把用户的 Pro 状态设为可用；服务端要老老实实存好这个订阅标识和它当前的状态。\n3. 下一个账期到来时，平台会自动去处理发票和扣款。服务端一旦收到扣款成功的事件，就顺延或确认本周期的使用权益；要是扣款失败了，就先标成待处理，照着你的产品规则去提醒用户或者暂停权益，而不是假装用户仍然付过钱一样继续开放使用。\n4. 用户点击取消时，服务端记下取消安排和正式生效的时间，页面上也得明明白白告诉用户接下来还能用到哪一天。之后不要把新的扣款错当成第一次购买，更不要把早就结束的订阅继续当成有效会员。\n5. 如果你目前只想验证“到底有没有人愿意付钱”，先做一次性方案会省心很多，能少处理整整一套续费和取消的状态；等把服务承诺、扣费提醒和账单处理这套流程想明白了，再打开订阅也不迟。\n\n## 自检\n\n**做对了会看到什么：**你能给自己的方案讲得清清楚楚，到底是一次性收费还是周期性扣费。你心里明白一次性支付该记录什么，也清楚做订阅必须一路盯紧发票、付款状态、续期和取消。用户第二个月能不能用，绝不会靠第一次的付款记录瞎猜。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、把订阅当成买断。**用户第一次付完款后，就被系统永久标记成了 Pro，哪怕后来欠费或者主动取消了也还能继续用；服务端里只存了最初那一次订单，完全没有跟踪订阅状态的变化。赶紧回头查订阅记录和 webhook，把状态变化真正接进权益判断里。\n\n**二、把失败续费当成普通报错。**后台一直在生成账单或者等待扣款，用户那端却连个提醒都看不见，或者权益突然没了而且没有任何解释。赶紧回到产品规则上，把扣款失败、重试、取消和恢复这几种情况下的页面展示和通知提醒，分别设计清楚。\n\n## 重点\n\n- 买断主要处理一笔订单，订阅还要处理未来的账单和状态。\n- Checkout 的 payment 与 subscription 是不同收费模式。\n- 订阅首次付款成功、续费成功、失败和取消都可能改变权益。\n- 订阅产品必须把续费、欠款和退订写进产品承诺，而不是只写一个价格。",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "Stripe 的 Checkout Session API 区分 payment（一次性付款）和 subscription（固定价格订阅）两种模式。",
+          "sourceUrl": "https://docs.stripe.com/api/checkout/sessions/create",
+          "sourceTitle": "Stripe API Reference · Create a Checkout Session",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "Stripe 订阅概览说明订阅会产生周期性付款和发票，并由平台管理从创建到取消的生命周期；webhook 可用于处理状态转换。",
+          "sourceUrl": "https://docs.stripe.com/billing/subscriptions/overview",
+          "sourceTitle": "Stripe Docs · How subscriptions work",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "purchase-vs-subscription",
+          "kind": "basic",
+          "front": "买断和订阅最关键的区别是什么？",
+          "back": "买断围绕一笔付款和一份订单；订阅会继续产生账单，还要处理续费、付款失败、状态变化和取消。",
+          "tags": [
+            "payments",
+            "subscription"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Stripe 订阅文档说明订阅是周期性付款，会生成发票并经历从创建到取消的生命周期。",
+              "sourceUrl": "https://docs.stripe.com/billing/subscriptions/overview",
+              "sourceTitle": "Stripe Docs · How subscriptions work",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "subscription-has-a-life-cycle",
+          "kind": "basic",
+          "front": "订阅什么时候可以给用户开通有效权益？",
+          "back": "服务端要根据订阅和付款状态判断；对需要首次付款的订阅，Stripe 文档说明首张发票付清后订阅才会进入 active。",
+          "tags": [
+            "payments",
+            "subscription"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Stripe 订阅概览说明需要立即付款的订阅初始可能是 incomplete，首张发票支付后才变为 active，并可用 webhook 处理状态变化。",
+              "sourceUrl": "https://docs.stripe.com/billing/subscriptions/overview",
+              "sourceTitle": "Stripe Docs · How subscriptions work",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "payment-mode-is-not-subscription-mode",
+          "kind": "basic",
+          "front": "为什么不能用一次性付款的模式创建订阅？",
+          "back": "Checkout Session 的模式不同：payment 用于一次性付款，subscription 用于固定价格订阅。模式会决定后续要处理的账单与生命周期。",
+          "tags": [
+            "payments",
+            "subscription"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Stripe Checkout Session API 明确列出 payment 和 subscription 两种模式及其用途。",
+              "sourceUrl": "https://docs.stripe.com/api/checkout/sessions/create",
+              "sourceTitle": "Stripe API Reference · Create a Checkout Session",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "choose-payment-model",
+          "title": "为自己的念头选择买断还是订阅",
+          "kind": "explain",
+          "prompt": "为你的产品选择一次性买断或订阅，并写出选择依据。分别列出用户付款后、下一次账期、付款失败、取消时，服务端要更新什么以及用户会看到什么。",
+          "rubric": [
+            "明确写出选择 payment 或 subscription，并说明产品承诺",
+            "一次性方案至少有订单与权益交付，订阅方案至少有周期账单与状态",
+            "覆盖续费或下一账期、付款失败和取消三个持续处理场景",
+            "每个状态都对应一个用户可见的解释或权益结果"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "Stripe 官方文档区分一次性支付和订阅模式，并说明订阅需要处理发票、付款收集和生命周期状态。",
+              "sourceUrl": "https://docs.stripe.com/billing/subscriptions/overview",
+              "sourceTitle": "Stripe Docs · How subscriptions work",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
