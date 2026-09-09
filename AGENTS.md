@@ -181,3 +181,10 @@ Do not locally invent doc-gov core changes such as new document statuses,
 frontmatter schema, lifecycle rules, shared agents-routing rules, or external
 shared-rule placement contracts. Propose them in the Project Governance System
 upstream repository first.
+
+## Document Convergence
+
+When creating docs, changing documented truth, or completing a feature/phase,
+read `docs/policy/shared-rules/document-convergence.md` and reconcile the affected
+facts and references. Preserve decision rationale and original evidence; do not
+turn routine development into a whole-repository cleanup.
