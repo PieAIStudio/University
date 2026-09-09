@@ -4,7 +4,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { watchConsole } from "./harness/console.js";
 import { namedStep } from "./harness/step.js";
-import { FIRST_COURSE_TITLE, openOnline } from "./harness/online-learner.js";
+import { FIRST_COURSE_TITLE, openOnline, selectGameRoute } from "./harness/online-learner.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 
 const PARITY_SCREENSHOT_DIR = join(process.cwd(), "SCRATCH", "e2e", "parity");
@@ -159,6 +159,7 @@ test.describe("G 两个校园穿同一套壳", () => {
 */
 async function walkToNodeCard(page: Page, origin: string) {
   await page.goto(`${origin}/`, { waitUntil: "domcontentloaded" });
+  await selectGameRoute(page);
   const firstCourse = page.locator(".labels button.label", { hasText: FIRST_COURSE_TITLE });
   await expect(firstCourse).toHaveCount(1, { timeout: 60_000 });
   await firstCourse.click();

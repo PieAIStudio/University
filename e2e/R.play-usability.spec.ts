@@ -27,7 +27,7 @@ async function open(page: Page, collection = "ai", origin = ONLINE_ORIGIN) {
 }
 async function mode(page: Page, name: string) {
   await page
-    .getByRole("navigation", { name: "挑一种玩法" })
+    .getByRole("navigation", { name: "挑一种互动课件" })
     .getByRole("button", { name, exact: true })
     .click();
   const kinds = [

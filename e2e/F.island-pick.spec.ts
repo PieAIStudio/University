@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { humanClick, waitForStableBox } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
-import { openOnline, waitForMapReady } from "./harness/online-learner.js";
+import { openOnline, selectGameRoute, waitForMapReady } from "./harness/online-learner.js";
 import { namedStep } from "./harness/step.js";
 import { assertWorldCarrierAboveGround } from "./harness/world-carrier.js";
 
@@ -332,7 +332,7 @@ for (const [mode, origin] of [["delivery", ONLINE_ORIGIN], ["authoring", LOCAL_O
       test("long names leave learning state and rewrite notices visible and clickable", async ({ page }) => {
         const consoleErrors = watchConsole(page);
         await page.goto(`${origin}/`, { waitUntil: "domcontentloaded" });
-        await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
+        await selectGameRoute(page);
         await assertWorldCarrierAboveGround(page);
         await waitForCourseLabelLayout(page);
         const rows = await page.locator("button.label--course.is-visible").evaluateAll((elements) =>

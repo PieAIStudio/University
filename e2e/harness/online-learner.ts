@@ -17,6 +17,10 @@ export const GAME_ROUTE_TITLE: string = JSON.parse(
 
 export async function openOnline(page: Page): Promise<void> {
   await page.goto(`${ONLINE_ORIGIN}/`, { waitUntil: "domcontentloaded" });
+  await selectGameRoute(page);
+}
+
+export async function selectGameRoute(page: Page): Promise<void> {
   // The default can legitimately change when a new domain opens. This
   // settlement fixture chooses its real, deterministically graded course
   // through the same visible series picker a learner uses, without seeding
