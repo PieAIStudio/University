@@ -103,6 +103,11 @@ describe("map domain catalogue", () => {
     }
   });
 
+  it("places the integrated browser AI application series in its explicitly assigned domain", () => {
+    expect(mapDomainForStudy("browser-ai").id).toBe("programming");
+    expect(mapDomainForStudy("browser-ai-unregistered").id).toBe("unclassified");
+  });
+
   it("restores the domain's actual selected study before a deterministic first-row fallback", () => {
     const studies = [
       study("c", "programming"),

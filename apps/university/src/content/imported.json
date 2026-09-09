@@ -1,7 +1,50 @@
 {
-  "importedAt": "2026-09-01",
+  "importedAt": "2026-09-09",
   "evidenceMode": "none",
   "studies": [
+    {
+      "studyId": "browser-ai",
+      "title": "浏览器里的 AI 应用",
+      "defaultCourseId": null,
+      "courses": [
+        {
+          "courseId": "run-a-real-project-with-ai",
+          "title": "用 AI 把一个真实开源项目跑起来",
+          "isBeingRewritten": false,
+          "sha256": "sha256:c1af04fc5be4a347db974db549542578608212e658d95551e0f7693bd5990178",
+          "packageBytes": 57035,
+          "servedBytes": 47205,
+          "lessons": 6
+        },
+        {
+          "courseId": "make-the-cutout-app-yours",
+          "title": "把这个抠图应用改成你的",
+          "isBeingRewritten": false,
+          "sha256": "sha256:79f6b951948c797f7c5d99bce6271cd9c4ffe043e808d4da612b34f10bfe8223",
+          "packageBytes": 53648,
+          "servedBytes": 39591,
+          "lessons": 6
+        },
+        {
+          "courseId": "when-a-project-is-too-big-to-read",
+          "title": "当项目大到读不完",
+          "isBeingRewritten": false,
+          "sha256": "sha256:12c7751eaf45f1cd63d037a8385fff31f3f250c41e5d3221d69586af71df067d",
+          "packageBytes": 36202,
+          "servedBytes": 26935,
+          "lessons": 4
+        },
+        {
+          "courseId": "search-your-own-photos",
+          "title": "把搜图改成搜你自己的相册",
+          "isBeingRewritten": false,
+          "sha256": "sha256:f74bb922d5a621cd8970d05197993ee6deeb148955efa52c6e144b57636f5817",
+          "packageBytes": 43796,
+          "servedBytes": 32456,
+          "lessons": 5
+        }
+      ]
+    },
     {
       "studyId": "buzz",
       "title": "Buzz",

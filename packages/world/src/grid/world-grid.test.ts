@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { CourseNode } from "../course/course.js";
 import { WORLD_ISLAND_SEPARATION_GAP } from "../course/layout.js";
 import { islandLookCameraForShot } from "../island/island-look.js";
-import { buildWorldStudyGrid, placeWorld } from "../Maps.js";
+import { buildWorldStudyGrid, placeStudyArchipelago, placeWorld } from "../Maps.js";
 import { GRID_SHARED_SOIL } from "./grid-palette.js";
 import {
   worldGridFootprintForLessons,
@@ -169,21 +169,41 @@ describe("world grid projection", () => {
     expect(highland!.grid.cells.length).toBeGreaterThan(plateau!.grid.cells.length);
   });
 
-  it("lets the real catalogue dominate the fixed frame without losing its boundary", () => {
-    const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
-    const envelope = worldFrameEnvelope(world);
+  it.each(catalogue.studies)(
+    "keeps $studyId's production framing inputs independent of other catalogue series",
+    (study) => {
+      // V5 M replaced the all-catalogue planar view with domain globes and
+      // per-study archipelagos. The former fixed world-design assertion
+      // clipped at 48 courses (horizontal coverage 1.101 > 0.93); R39 keeps
+      // that receipt rather than tuning the diagnostic shot to hide it.
+      // Actual course boundaries are also checked by the ordinary N/S browser
+      // overview assertions. Do not restore global-catalogue camera acceptance.
+      const own = catalogueNodes.filter((node) => node.studyId === study.studyId);
+      const isolated = placeStudyArchipelago(own, () => 0, study.studyId);
+      const inCatalogue = placeStudyArchipelago(catalogueNodes, () => 0, study.studyId);
+      const signature = (world: ReturnType<typeof placeStudyArchipelago>) =>
+        world.placements.map((entry) => ({
+          studyId: entry.node.studyId,
+          courseId: entry.node.courseId,
+          position: entry.position.toArray(),
+          radius: entry.radius,
+          state: entry.state,
+        }));
 
-    // Dominance is geometric screen occupancy, not a sea-pixel quota. Both
-    // axes must read as a field of islands, so a camera cannot pass by filling
-    // only its long axis.
-    expect(envelope.horizontalCoverage).toBeGreaterThanOrEqual(0.75);
-    expect(envelope.verticalCoverage).toBeGreaterThanOrEqual(0.48);
-
-    // The opposing half of the contract: a close camera that crops the outer
-    // silhouettes is not a valid fix, even if it makes the centre look busy.
-    expect(envelope.horizontalCoverage).toBeLessThanOrEqual(0.93);
-    expect(envelope.verticalCoverage).toBeLessThanOrEqual(0.82);
-  });
+      expect(inCatalogue.placements).toHaveLength(study.courses.length);
+      expect(new Set(inCatalogue.placements.map((entry) => entry.node.courseId))).toEqual(
+        new Set(study.courses.map((course) => course.courseId)),
+      );
+      expect(signature(inCatalogue)).toEqual(signature(isolated));
+      expect(inCatalogue.extent).toBe(isolated.extent);
+      expect(Number.isFinite(inCatalogue.extent)).toBe(true);
+      for (const entry of inCatalogue.placements) {
+        expect(Math.hypot(entry.position.x, entry.position.z) + entry.radius).toBeLessThanOrEqual(
+          inCatalogue.extent,
+        );
+      }
+    },
+  );
 
   it("makes real course length legible while keeping both ends usable", () => {
     const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");

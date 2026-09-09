@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-09T01:20:59.336Z
+generated_at: 2026-09-09T02:58:21.629Z
 generator_version: doc-gov@0.9.11
 docs_count: 115
 docs:
@@ -310,7 +310,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-27
+    last_reviewed: 2026-09-09
     pinned: false
   - id: REF-PUBLISH-LANE
     path: docs/reference/execution/publish-lane.md

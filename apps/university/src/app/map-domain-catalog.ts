@@ -37,6 +37,7 @@ const STUDY_DOMAINS: Readonly<Record<string, "programming">> = Object.freeze({
   buzz: "programming",
   supaluv: "programming",
   general: "programming",
+  "browser-ai": "programming",
 });
 
 export function mapDomainForStudy(studyId: string): MapDomain {

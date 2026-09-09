@@ -45,12 +45,23 @@ describe("the 2D directory against the library the map uses", () => {
     /*
       The literal is the point of this line: the two sides above could agree
       with each other while both silently dropping a study, and this is what
-      would catch that. It moves when the shelf really moves — 44 is 43
-      repository courses plus 通用课's first, which cites MDN rather than a
-      commit and is the first course here that studies no codebase. It was 53
-      until the UniversityLocal study was retired on 2026-08-31.
+      would catch that. R39 integrates four already-exported browser-ai
+      courses with the previous 44; their identities are checked below too.
+      The original 44 manifest entries were independently compared unchanged.
+      This moves only when the recovery transport deliberately changes.
     */
-    expect(fromLibrary).toBe(44);
+    expect(fromLibrary).toBe(48);
+    expect(
+      library.studies
+        .find((study) => study.studyId === "browser-ai")
+        ?.courses.map((course) => course.courseId)
+        .sort(),
+    ).toEqual([
+      "make-the-cutout-app-yours",
+      "run-a-real-project-with-ai",
+      "search-your-own-photos",
+      "when-a-project-is-too-big-to-read",
+    ]);
   });
 
   it("keeps each course's units and lessons identical to the package the map loads", () => {
@@ -80,9 +91,9 @@ describe("the 2D directory against the library the map uses", () => {
       }
     }
 
-    // 124 + 4 units and 476 + 19 lessons: 通用课's first course.
-    expect(listing.totals.units).toBe(128);
-    expect(listing.totals.lessons).toBe(495);
+    // The four browser-ai recovery packages add four units and 21 lessons.
+    expect(listing.totals.units).toBe(132);
+    expect(listing.totals.lessons).toBe(516);
   });
 
   it("folds the generated shelf into the same directory read model", () => {
