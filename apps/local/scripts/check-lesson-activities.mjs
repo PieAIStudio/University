@@ -86,11 +86,13 @@ function checkConnect(activity, where) {
   looking is worse than one that is missing.
 */
 let isValidSortActivity = null;
+let isValidProgramActivity = null;
 try {
   ({ isValidSortActivity } = await import("../../../packages/core/dist/learning-play/sort.js"));
+  ({ isValidProgramActivity } = await import("../../../packages/core/dist/learning-play/program.js"));
 } catch {
   console.log(
-    "  ! 读不到 core 的构建产物，sort 组件这一项没有检查（先跑 pnpm --filter @pieai/university-core build）",
+    "  ! 读不到 core 的构建产物，sort/program 组件这一项没有检查（先跑 pnpm --filter @pieai/university-core build）",
   );
 }
 
@@ -177,7 +179,23 @@ function checkSource(activity, where, studyId) {
   }
 }
 
-const CHECKS = { connect: checkConnect, sort: checkSort };
+function checkProgram(activity, where) {
+  if (!isValidProgramActivity) return;
+  if (!isValidProgramActivity(activity)) {
+    problems.push(`${where}: 引擎判定这个程序题本身不成立——起点、终点或指令上限有问题`);
+  }
+}
+
+/*
+  Three of the eleven kinds can be asked whether they are playable without
+  first playing them; the other eight decide it inside a move, from state this
+  script does not have. That is a fine reason not to check them and a bad
+  reason to say nothing, which is the same rule the missing-build branch above
+  already follows — so the kinds that got no engine check are named in the
+  summary rather than counted as passing.
+*/
+const CHECKS = { connect: checkConnect, sort: checkSort, program: checkProgram };
+const unchecked = new Set();
 
 for (const studyId of dirs(studiesRoot)) {
   const coursesRoot = join(studiesRoot, studyId, "courses");
@@ -214,6 +232,7 @@ for (const studyId of dirs(studiesRoot)) {
           checkSource(activity, `${where} · ${activity.id}`, studyId);
           const check = CHECKS[activity.kind];
           if (check) check(activity, `${where} · ${activity.id}`);
+          else unchecked.add(activity.kind);
         }
       }
     }
@@ -221,6 +240,11 @@ for (const studyId of dirs(studiesRoot)) {
 }
 
 console.log(`扫过 ${lessons} 节课，${activities} 个互动组件`);
+if (unchecked.size > 0) {
+  console.log(
+    `  ! 这几种玩法没有可单独调用的引擎判定，只检查了共同约定和出处：${[...unchecked].join("、")}`,
+  );
+}
 if (problems.length === 0) {
   console.log("ok  每个组件都解得开，每个引用都指得到");
   process.exit(0);
