@@ -72,9 +72,38 @@ const PAYLOAD_FILES = [
   "ai-eval.ts",
   "ai-repair.ts",
 ];
+/*
+  Declarations only. `ai-repair.ts` is six hundred lines and most of it is the
+  engine, which the author of a payload does not need and which quadrupled the
+  prompt — the fix for one bias should not be paid for with four times the
+  tokens. Keeps `export interface` / `export type` blocks up to their closing
+  brace at column zero, plus the exported const enums the fields refer to.
+*/
+function declarationsOf(source) {
+  const lines = source.split("\n");
+  const kept = [];
+  let depth = 0;
+  let inside = false;
+  for (const line of lines) {
+    if (!inside && /^export (interface|type) /.test(line)) inside = true;
+    else if (!inside && /^export const [A-Z_]+ = \[/.test(line)) inside = true;
+    if (!inside) continue;
+    kept.push(line);
+    depth += (line.match(/[{[]/g) ?? []).length - (line.match(/[}\]]/g) ?? []).length;
+    // A one-line `export type X = "a" | "b";` never opens a brace at all.
+    if (depth <= 0 && (line.endsWith(";") || line.startsWith("}"))) {
+      inside = false;
+      depth = 0;
+      kept.push("");
+    }
+  }
+  return kept.join("\n");
+}
+
 const typesSource = PAYLOAD_FILES.map(
-  (name) => `// ── ${name} ──\n${text(`${WT}/packages/core/src/learning-play/${name}`)}`,
-).join("\n\n");
+  (name) =>
+    `// ── ${name} ──\n${declarationsOf(text(`${WT}/packages/core/src/learning-play/${name}`))}`,
+).join("\n");
 
 const prompt = `你要为一节**已经写好、形状已经合格**的课，判断它该不该配一个互动课件。
 
@@ -140,7 +169,9 @@ ${content}
 1. 玩法的**必填字段这节课没有对应的真事**，就换一种或者不配。编一个假预算、
    假阈值来把字段填满，是这条规则最主要的坏掉方式。
 2. \`role\` 是 \`observe\` 时，组件**不许泄题**——玩完之后预测题必须还悬着。
-3. \`source.url\` 必须是上面出处列表里出现过的网址。
+3. \`source\` 跟着这节课的出处走：课引网页就用 \`{label, url}\`（网址必须在上面列表里），
+   课引仓库代码就用 \`{label, path, line?, commit?}\`（照抄上面的 sourcePath / lineStart /
+   sourceCommit）。**不许为了填字段去找一个新链接。**
 4. 所有面向读者的文字都用中文口语，对象是没写过代码的成年人。
 5. id 用 kebab-case，且不要和课的 id 重名。
 `;
@@ -148,12 +179,54 @@ ${content}
 const promptFile = resolve(`${outPath}.prompt.txt`);
 writeFileSync(promptFile, prompt);
 
+/*
+  Grok first, Codex when Grok cannot answer for a reason topping up would fix.
+  Written as a fallback rather than a switch so the preferred arm comes back on
+  its own the moment the balance does — the measured pipeline puts Grok first,
+  and a hard-coded swap would quietly keep the second-best arm forever.
+
+  Only quota and auth failures fall through. A crash, a timeout or a malformed
+  answer is a real failure and must stay visible; retrying those on another arm
+  would turn a defect into a slower defect.
+*/
+const FALLBACK_SIGNS = ["402", "balance exhausted", "usage limit", "not authenticated", "quota"];
+
+function runGrok() {
+  return execFileSync(
+    "grok",
+    ["-m", "grok-4.6", "--effort", "xhigh", "--always-approve", "--prompt-file", promptFile],
+    { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, timeout: 3_600_000, cwd: "/tmp" },
+  );
+}
+
+function runCodex() {
+  // cwd stays /tmp so neither arm can reach a worktree; codex refuses to start
+  // outside a trusted repository unless told that is deliberate.
+  return execFileSync(
+    "codex",
+    ["exec", "--skip-git-repo-check", "--model", "gpt-5.6-luna", "-"],
+    {
+    encoding: "utf8",
+    input: prompt,
+    maxBuffer: 64 * 1024 * 1024,
+    timeout: 3_600_000,
+    cwd: "/tmp",
+    },
+  );
+}
+
 const started = Date.now();
-const out = execFileSync(
-  "grok",
-  ["-m", "grok-4.6", "--effort", "xhigh", "--always-approve", "--prompt-file", promptFile],
-  { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, timeout: 3_600_000, cwd: "/tmp" },
-);
+let arm = "grok";
+let out;
+try {
+  out = runGrok();
+} catch (error) {
+  const text = `${error.message ?? ""}${error.stdout ?? ""}${error.stderr ?? ""}`.toLowerCase();
+  if (!FALLBACK_SIGNS.some((sign) => text.includes(sign))) throw error;
+  console.log(`  grok 不可用（${FALLBACK_SIGNS.find((sign) => text.includes(sign))}），改用 codex`);
+  arm = "codex";
+  out = runCodex();
+}
 
 // Grok narrates onto the same stream as its answer, so take the last balanced
 // JSON object rather than the whole of stdout.
@@ -168,6 +241,6 @@ writeFileSync(outPath, JSON.stringify(parsed, null, 2) + "\n");
 const seconds = Math.round((Date.now() - started) / 1000);
 console.log(
   parsed.decision === "add"
-    ? `${lessonId}：配 ${parsed.activity?.kind}/${parsed.activity?.role} —— ${parsed.why} (${seconds}s)`
-    : `${lessonId}：不配 —— ${parsed.why} (${seconds}s)`,
+    ? `${lessonId}：配 ${parsed.activity?.kind}/${parsed.activity?.role} —— ${parsed.why} (${arm}, ${seconds}s)`
+    : `${lessonId}：不配 —— ${parsed.why} (${arm}, ${seconds}s)`,
 );

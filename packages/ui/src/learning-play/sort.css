@@ -7,7 +7,7 @@
 .play-sort {
   display: flex;
   flex-direction: column;
-  gap: var(--game-ui-space-region, 16px);
+  gap: 16px;
 }
 
 .play-sort__question {
@@ -37,7 +37,7 @@
   gap: 4px;
   max-width: 260px;
   padding: 10px 12px;
-  border: 1px solid var(--game-ui-border);
+  border: 1px solid var(--game-ui-border-subtle);
   border-radius: 12px;
   background: var(--game-ui-panel);
   color: var(--game-ui-text);
@@ -65,7 +65,7 @@
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  border: 1px dashed var(--game-ui-border);
+  border: 1px dashed var(--game-ui-border-subtle);
   border-radius: 16px;
   background: var(--game-ui-panel-strong);
 }
@@ -109,24 +109,24 @@
 .play-sort__placed {
   padding: 6px 10px;
   border-radius: 8px;
-  background: color-mix(in srgb, var(--game-ui-success, currentColor) 18%, transparent);
+  background: color-mix(in srgb, var(--game-ui-success) 18%, transparent);
   font-size: 13px;
 }
 
 .play-sort__note {
   margin: 0;
   padding: 10px 12px;
-  border-inline-start: 3px solid var(--game-ui-border);
-  border-radius: var(--game-ui-radius-feedback, 12px);
+  border-inline-start: 3px solid var(--game-ui-border-subtle);
+  border-radius: 12px;
   background: var(--game-ui-panel);
 }
 
 .play-sort__note--right {
-  border-inline-start-color: var(--game-ui-success, var(--game-ui-secondary));
+  border-inline-start-color: var(--game-ui-success);
 }
 
 .play-sort__note--wrong {
-  border-inline-start-color: var(--game-ui-warning, var(--game-ui-accent));
+  border-inline-start-color: var(--game-ui-warning);
 }
 
 .play-sort__done {

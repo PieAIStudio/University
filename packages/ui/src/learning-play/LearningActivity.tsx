@@ -198,9 +198,27 @@ function ActivityRound({
               <div className="learning-activity__receipt">
                 <span>{t("play.host.attempts", { count: outcome.attempts })}</span>
                 <span>{t("play.host.hints", { count: outcome.hintsUsed })}</span>
-                <a href={activity.source.url} target="_blank" rel="noreferrer">
-                  {activity.source.label}
-                </a>
+                {/*
+                  A link when the source is a page, the pinned location when it
+                  is code. A repository citation is not a worse source, it is a
+                  different one — and rendering it as a dead link, or leaving it
+                  out, would be the receipt lying about where the facts came
+                  from.
+                */}
+                {"url" in activity.source ? (
+                  <a href={activity.source.url} target="_blank" rel="noreferrer">
+                    {activity.source.label}
+                  </a>
+                ) : (
+                  <span>
+                    {activity.source.label}{" "}
+                    <code>
+                      {activity.source.path}
+                      {activity.source.line ? `:${activity.source.line}` : ""}
+                      {activity.source.commit ? `@${activity.source.commit.slice(0, 8)}` : ""}
+                    </code>
+                  </span>
+                )}
               </div>
             </>
           ) : null}

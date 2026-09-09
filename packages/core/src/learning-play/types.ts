@@ -17,7 +17,25 @@ export interface ActivityBase {
   readonly goal: string;
   readonly takeaway: string;
   readonly hint: string;
-  readonly source: { readonly label: string; readonly url: string };
+  /**
+   * Where this activity's facts come from.
+   *
+   * A web address, or a place in the studied repository. It was a URL only,
+   * and that quietly barred three quarters of the courses: fifteen of
+   * browser-ai's twenty-one lessons cite a pinned file and line rather than a
+   * page, because that is what an honest citation is when the subject is the
+   * code in front of you. An activity for one of those lessons could not name
+   * its own source without either inventing a link or borrowing an unrelated
+   * one, so the field shape was deciding which lessons may have an activity.
+   */
+  readonly source:
+    | { readonly label: string; readonly url: string }
+    | {
+        readonly label: string;
+        readonly path: string;
+        readonly line?: number;
+        readonly commit?: string;
+      };
 }
 
 export interface ConnectActivity extends ActivityBase {
