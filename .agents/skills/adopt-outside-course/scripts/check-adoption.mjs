@@ -151,28 +151,16 @@ function checkEvidence(evidence, where, problems) {
   }
 }
 
-/**
- * 类比小节是硬性的，但一个空壳标题也能骗过"有没有这个小节"的检查。
- * 这里做一个很轻的实质检查：类比要足够长，而且要出现一个比较词。
- * 它拦不住坏类比 —— 那要人来读 —— 但拦得住"标题在、内容不在"。
- */
-function checkAnalogy(content, where, problems) {
-  const match = /## 一个类比\s*([\s\S]*?)(?=\n## |$)/u.exec(content ?? "");
-  if (!match) return; // 缺小节由 check-proposal-shape.mjs 报
-  const body = match[1].trim();
-  if (body.length < 60) {
-    problems.push(`${where}: 「一个类比」只有 ${body.length} 字，像个占位标题而不是类比`);
-  }
-  // 词表宽一点：真正的类比不一定用「就像」。窄词表会把好类比误判成占位，
-  // 而误判会让人开始迎合检查器写句子，那比漏判更坏。
-  if (!/就像|好比|相当于|类似于|想象|想成|当作|看成|打个比方|如同|等于是|好像/u.test(body)) {
-    problems.push(
-      `${where}: 「一个类比」里没看到常见的比喻说法。` +
-        `这只是个提示，不是判决 —— 确认它真的在拿一个熟悉的东西打比方`,
-    );
-  }
-}
+/*
+  这里曾经有一个 checkAnalogy：它要求每节课有 `## 一个类比` 小节，并且检查
+  里面出现了比喻说法。那个小节已经随旧骨架一起退休，`write-lesson` 现在明令
+  禁止这个标题——所以这个检查在每一节现行课文上都会提前返回，然后报告一次
+  它根本没做的检查。挂在不存在的标题上的探针，比没有探针更坏。
 
+  它想守的东西没有消失：「先解释，再使用」现在由
+  apps/local/scripts/check-proposal-shape.mjs 的 analogy-order 守着，
+  边界从「类比段之前」改成了「答案段之前」。
+*/
 function check(proposal) {
   const problems = [];
   const units = unitsOf(proposal);
@@ -182,7 +170,6 @@ function check(proposal) {
     for (const lesson of unit.lessons ?? []) {
       const where = `lesson ${lesson.id}`;
       checkEvidence(lesson.evidence, where, problems);
-      checkAnalogy(lesson.content, where, problems);
       for (const card of lesson.cards ?? []) {
         checkEvidence(card.evidence, `${where} → card ${card.id}`, problems);
       }

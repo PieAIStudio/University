@@ -120,6 +120,29 @@ node scripts/check-lesson-hedges.mjs --before <original.md> --after <polished.md
 
 It fails on a lost hedge, a new absolute, or a new 「只要…才」.
 
+**The hedge check is not the whole gate.** Measured 2026-09-06: a bounded
+polish deleted the line 「先写下你的判断，再往下看答案。」 outright — the
+low-stakes prompt that invariant 3 requires — and
+`check-lesson-hedges.mjs` passed it without a murmur. Hedges 0 → 0, absolutes
+0 → 0, body 779 → 734 characters, which reads as a well-behaved polish right
+up until you notice a required line is gone.
+
+That is not a bug in the checker. It measures hedges, absolutes and growth,
+and it measured all three correctly. It is a gap in what "the polish failed"
+was taken to mean. A polish that quietly removes a spine element is exactly as
+unshippable as one that manufactures an absolute, so the rule below —
+**non-zero → throw it away and ship your own draft** — has to be triggered by
+the structural check as well:
+
+```bash
+node scripts/check-lesson-hedges.mjs --before <fixed.md> --after <polished.md>
+node scripts/lint-lessons.mjs --study <id> --course <id>   # or an equivalent shape check
+```
+
+Both must pass before the polished version replaces the draft. Discarding it
+costs one model call; shipping it costs a lesson whose prediction has no
+answer prompt, and the reader is the one who finds out.
+
 **Polish once, not twice.** The first instinct is to add a second Flash pass at
 the end to apply the fixes Grok finds. Do not: every pass is another chance to
 absolutise, and running two doubles a risk that has been measured rather than
@@ -155,6 +178,80 @@ loop and is already in the skill.
 
 So the detector's yield **falls over time by design**. Re-evaluate after about 40
 lessons: if a run reports only defects the skill already names, stop running it.
+
+## Dispatching to a submodel: inline the rules, do not make it read them
+
+Measured 2026-09-06, on the first run of this pipeline against a brand-new
+study. The obvious way to brief a Writer submodel is to point it at `SKILL.md`
+and `references/variants.md` and let it read them. **Do not.**
+
+Three runs briefed that way were still going at ten minutes and produced
+nothing; the model spent the whole budget exploring the repository before it
+began writing. The same lesson, with the invariants and the variant table
+pasted into the prompt and an explicit "do not use any tools, do not read any
+files", finished in **287 seconds** and passed every invariant on the first
+attempt.
+
+So a dispatch prompt carries the rules; it does not carry a path to them. That
+is a duplication, and it is the right one: the rules move slowly, and the cost
+of the alternative is the whole run.
+
+The same brief must also pin the facts. Give the submodel the exact claims it
+may use and the exact evidence ranges — for a repository lesson, the file paths
+and line numbers, chosen by whoever dispatches. A writer asked to find its own
+citations will find plausible ones. `check-proposal-evidence.mjs` now fetches
+URL citations for exactly this reason, but a fabricated *line range* inside a
+real file still resolves, and only the person who picked the range would know.
+
+## The brief must say what the reader already knows
+
+A dispatch brief that describes only *this* lesson produces a lesson written
+for someone arriving from nowhere. Measured 2026-09-06: a lesson positioned in
+the third course of a curriculum — seventy-five lessons in — opened by defining
+「代码」, because nothing in its brief said the reader had met the word in
+lesson two. The model was not wrong; it was told the lesson's subject and not
+its place.
+
+Across a hundred-lesson line that compounds into a course that re-teaches its
+own vocabulary, and re-teaching is worse than it sounds: it tells a reader who
+did the work that their progress did not count.
+
+So a brief carries two things beyond the subject: **what the reader is assumed
+to already hold**, and **what this lesson must not re-explain**. Both are short
+lists. Writing them is the dispatcher's job, not the model's — the model cannot
+see the other lessons, and a model asked to guess what came before will guess
+generously and define everything.
+
+## Every role must be told to emit an H1
+
+`lesson-pipeline-runner.mjs` splits model stdout at the first Markdown H1:
+everything before it is progress, everything after is the answer. Only the
+Writer produces one unprompted. A Detector prompt that asks for a report, and a
+Polisher prompt that does not restate the requirement, both come back with
+`model stdout had no Markdown H1` after the model did perfectly good work.
+
+Put the instruction in the prompt for **every** role, not just the writing ones.
+
+## First run of this pipeline on a new study — 2026-09-06
+
+Seven lessons existed before this batch; these are the next ones. Recording the
+numbers because both of this file's scheduled re-evaluations are counted in
+lessons, and an unrecorded run does not count.
+
+- **Writer, first attempt, no retries:** 6 of 6 lessons passed every structural
+  invariant — spine, variant section counts, the prediction line, questions-only
+  self-check, single bold takeaway, detail blocks, 「你」 density. Lesson length
+  1,015–2,139 characters; 「你」 density 23–47 per 1,000 against a floor of 2.
+- **Detector:** on the first lesson it reported five findings, two of them in
+  the "too late" class this file calls its most valuable — including one where
+  the term appeared **in the H1 title** and its plain-language gloss did not
+  arrive until the third-to-last paragraph. It proposed no wording. A human
+  reader independently flagged the same redundant detail block it flagged.
+- **Fixer:** moved the explanations rather than adding paragraphs, and deleted
+  the redundant block rather than rewriting it. Length **+1.2%**.
+- **Polisher, bounded:** hedges 3 → 3, absolutes 0 → 0, body **−1.7%**.
+  `check-lesson-hedges.mjs` passed. This is the first data point of the
+  re-evaluation this file asks for after about ten lessons.
 
 ## Commands
 

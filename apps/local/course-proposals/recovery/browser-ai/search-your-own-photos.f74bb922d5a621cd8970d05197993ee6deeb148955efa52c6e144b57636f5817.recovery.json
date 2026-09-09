@@ -1,0 +1,566 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "course": {
+    "id": "search-your-own-photos",
+    "title": "把搜图改成搜你自己的相册",
+    "description": "它输入一句话就能找出对应的图。先搞懂它凭什么做到，再把它搜的对象换成你自己的相册。",
+    "audience": "想把一个现成的 AI 应用改造成对自己有用的人",
+    "objectives": [
+      "说出它不是在搜关键词而是在比「像不像」",
+      "解释一句话被变成了什么东西才能拿去比较",
+      "沿着真实路径说出「像不像」是怎么算出一个分数的",
+      "指出这个应用搜的是别人的图，并算清楚改成搜自己相册要付什么代价"
+    ],
+    "currency": "follow-ref",
+    "prerequisiteCourseIds": [],
+    "trackId": null,
+    "units": [
+      {
+        "id": "how-it-understands-a-sentence",
+        "title": "它到底怎么「看懂」一句话",
+        "objective": "读完这一单元，你能说出一句话和一张图是怎么被变成可以互相比较的东西的，并且知道这个应用搜的根本不是你的照片。",
+        "prerequisiteUnitIds": [],
+        "lessons": [
+          {
+            "id": "how-does-it-find-a-dog-on-a-beach",
+            "title": "照片上一个字都没有，它怎么找到海边的狗？",
+            "content": "# 照片上一个字都没有，它怎么找到海边的狗？\n\n## 你搜的是几个字，怎么出来的是照片？\n\n你打进去五个字：海边的狗。\n\n出来的真是海边的狗。沙滩、水、狗，一眼就能看出来。\n\n可那些照片上并没有写着「海边的狗」。你对着画面找，一个字都对不上。\n\n要是它在搜字，这几张不该出来。字根本不在上面。\n\n但它出来了。\n\n这就怪了：你给它的是字，它还你的是没写字的图。两边对不上，它却对上了。\n\n## 先猜一下\n\n你觉得它是靠什么，把你打的五个字，跟那些一个字都没写的照片对上的？\n\n先写下你的判断，再往下看答案。\n\n## 答案\n\n它不是在照片上找这五个字。你打的那句话和每一张照片，被变成了同一种可以互相比较的东西，然后比谁更像。\n\n## 字和照片怎么能放到一起比？\n\n字是字，照片是照片。平常你拿一句话去搜，是在一堆文字里找这几个字有没有原样出现——按字找，也叫按关键词找。\n\n这里不是。\n\n你打「海边的狗」的时候，心里浮出来的是画面。照片本身也是画面。一边用字说，一边用图说，说的其实是同一类事。要让两边能比，就得先把它们变成同一种东西。变成同一种之后，比的就不是「字一不一样」，是「像不像」。\n\n你打进去的那句话，会先被拆开，处理成能拿去比较的样子：\n\n[[evidence:semantic-image-search-web/src/worker.js:74-78]]\n\n处理完，它不会拿这五个字去照片上逐个对。它拿处理后的那句话，跟相册里每一张图比一遍：\n\n[[evidence:semantic-image-search-web/src/worker.js:47-62]]\n\n哪张更像，哪张排前面。哪张不像，哪张往后放。\n\n所以一张完全没写字的海边的狗，可以排得很靠前。不是因为它身上写了这五个字，是因为它看起来就是这么回事。\n\n:::detail[那它是在认照片上印着的字吗？]\n不是靠认字。就算照片画面上一个字都没有，只要看起来像你说的那件事，它也能排到前面。它拿去比的是「你那句话」和「这张图」像不像，不是照片上有没有出现那几个字。\n:::\n\n:::detail[为什么要一张一张比？]\n因为它事先不知道哪一张更像。你的话处理完以后，相册里的图是挨个过的：这张像不像，下一张像不像。都比过了，才能排出先来后到。\n:::\n\n:::detail[那我还要不要给每张照片写上「狗」「海边」？]\n不用靠这些字当标签。你搜的时候打的是字，但拿去比较的不是这几个字有没有出现在照片上。照片没写「海边的狗」，照样能被找到——只要它看起来像。\n:::\n\n## 自检\n\n你搜「雨里的橘猫」。相册里有一张照片，画面就是雨里的橘猫，上面一个字都没有。如果它只是在照片上搜字，这张该不该出现？如果它是在比像不像，这张该不该出现？\n\n你打进去一句话之后，它是拿这几个字去照片上对，还是先把这句话处理一遍，再跟每张图比像不像？\n\n## 一句话\n\n**它不是在找关键词，是在比「像不像」。**\n",
+            "contentRevision": 1,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-7bdf9a52bbf8",
+                "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                "sourcePath": "semantic-image-search-web/src/worker.js",
+                "lineStart": 74,
+                "lineEnd": 78,
+                "nodeIds": [],
+                "note": "把你打的那句话先拆开处理"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-7bdf9a52bbf8",
+                "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                "sourcePath": "semantic-image-search-web/src/worker.js",
+                "lineStart": 47,
+                "lineEnd": 62,
+                "nodeIds": [],
+                "note": "拿你那串数跟库里每一张逐个比，得出一串分数"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "text-image-comparison",
+                "kind": "basic",
+                "front": "文字和照片怎样才能互相比较？",
+                "back": "先把文字和照片处理成同一种可比较的表示，再比较它们表达的内容有多像，而不是逐字寻找。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 74,
+                    "lineEnd": 78,
+                    "nodeIds": [],
+                    "note": "把你打的那句话先拆开处理"
+                  }
+                ]
+              },
+              {
+                "id": "textless-image-search",
+                "kind": "basic",
+                "front": "为什么没写字的照片也能搜到？",
+                "back": "因为搜索比较的是文字描述和照片内容是否相似，不是检查照片上有没有出现这些字。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 74,
+                    "lineEnd": 78,
+                    "nodeIds": [],
+                    "note": "把你打的那句话先拆开处理"
+                  }
+                ]
+              },
+              {
+                "id": "similarity-ranking",
+                "kind": "basic",
+                "front": "搜索结果为什么要逐张比较？",
+                "back": "系统要把查询和相册里的每张图都比较，才能按相似程度排序：越像的越靠前。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 74,
+                    "lineEnd": 78,
+                    "nodeIds": [],
+                    "note": "把你打的那句话先拆开处理"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "judge-semantic-image-search",
+                "kind": "short-answer",
+                "title": "判断搜索方式",
+                "prompt": "你输入“雨里的橘猫”，相册中有一张没有文字的雨中橘猫照片。它是先处理输入再和照片比像不像，还是只检查照片上有没有这几个字？请只回答：先处理再比像不像 或 只检查照片文字",
+                "expectedAnswer": "先处理再比像不像",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 74,
+                    "lineEnd": 78,
+                    "nodeIds": [],
+                    "note": "把你打的那句话先拆开处理"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "a-sentence-turned-into-numbers",
+            "title": "能拿来比较的那串数，到底是什么？",
+            "content": "# 能拿来比较的那串数，到底是什么？\n\n## 同一种可以比较的东西，长什么样？\n\n你已经知道：一句话和一张图，没法直接拿来比。字对不上像素。要比，就得先变成同一种可以比较的东西。\n\n那种东西，不是一段更短的话，也不是一张小图。是一串数。\n\n你丢进去一句话，出来一串数。你丢进去一张图，也出来一串数。两串一样长。一样长，你才能把它们当成同一类东西来比。\n\n多长？不是随口估的，是锁死的：\n\n[[evidence:semantic-image-search-web/src/worker.js:8]]\n\n512 个。一句话 512 个，一张图也 512 个。你拿别的句子、别的图，出来还是 512 个。长度不动。动的是每个数是几。\n\n:::detail[为什么非要锁成一样长？]\n一串短、一串长，对不齐。你就又回到老问题：这还是两种东西，比不了。锁成一样长，你手里才是两份同一种规格的东西。规格相同，才谈得上近不近。\n:::\n\n## 先猜一下\n\n一句话、一张图都变成 512 个数了，你觉得原来那句话、原来那张图去哪儿了？\n\n先写下你的判断，再往下看答案。\n\n## 答案\n\n找不回来了。这 512 个数里没有原话，也没有原图。\n\n## 这串数，到底在记什么？\n\n它不记你用了哪些字，也不记图上涂了哪些颜色。它记的是意思。\n\n窗台上趴着一只橘猫——你写成一句话，或拍成一张照片，样子完全不同。可是意思近，这串数就近。你再拿「今天股票跌了」去比，意思远，这串数就远。\n\n所以这串数干的事很窄：把一样东西的意思，收成一串固定长度的数。你拿两串数看近不近，就等于在看两样东西的意思近不近。\n\n这个东西常被叫做「向量」。你要是在别处见过这个词，脑子里多半先冒出一支箭头：有方向，有长短。这里不是那个。这里说的向量，就是一串固定长度的数，用来代表一样东西的意思。没有箭头可画。就是数。\n\n:::detail[看见「向量」该往哪想？]\n往「一串用来代表意思的数」上想。有人说「这句话的向量」，白话就是：这句话变成的那 512 个数。有人说「这张图的向量」，就是这张图变成的那 512 个数。别往黑板上的箭头想。\n:::\n\n## 这不就是把东西压小了吗？\n\n你很容易这么想。512 个数，比一整段话短，比一整张图更短。那不就是压缩吗？再不然，那不就是摘要吗？\n\n都不是。\n\n压缩是变小，但还能变回去。你把一张照片压成更小的文件，打开还得是那张照片。摘要是用更少的字把原意讲出来，你读完还知道原来在说什么。\n\n向量两样都不是。你盯着这 512 个数，读不出原来那句话，也拼不出原来那张图。它不是写给人看的，是拿去跟另一串数比远近的。比完，你知道像不像。你拿不回原文。\n\n少了「能还原」这一条，它就不是压缩，也不是摘要。它只是一串用来比较的数。\n\n:::detail[那这串数到底留下了什么？]\n留下的是拿来比较的痕迹，不是缩小的原件。痕迹够用：意思近不近，看两串数近不近就行。痕迹不够还原：你想从这串数里把那句话、那张图找回来，没有这条路。\n:::\n\n## 自检\n\n你随口说一句话，它会变成一串多长的数？一张图呢？\n\n别人跟你说「这是这句话的向量」，你用自己的话怎么讲？\n\n你为什么不能把这串数叫做压缩，也不能叫做摘要？\n\n## 一句话\n\n**向量在这里不是箭头，是一串固定长度的数，用来代表一样东西的意思；它还原不了原文，所以也不是压缩，不是摘要。**\n",
+            "contentRevision": 1,
+            "sections": [],
+            "variant": "术语",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-7bdf9a52bbf8",
+                "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                "sourcePath": "semantic-image-search-web/src/worker.js",
+                "lineStart": 8,
+                "lineEnd": 8,
+                "nodeIds": [],
+                "note": "这串数固定有多长"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "fixed-length-for-comparison",
+                "kind": "basic",
+                "front": "为什么句子和图片要变成同样长的数？",
+                "back": "因为只有长度相同，两个对象才是同一规格，才能对齐并比较远近。句子和图片都会变成512个数。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "这串数固定有多长"
+                  }
+                ]
+              },
+              {
+                "id": "vector-represents-meaning",
+                "kind": "basic",
+                "front": "向量里的数主要代表什么？",
+                "back": "它代表对象的意思，不是原文里的字或图里的颜色。意思越近，两串数通常越近。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "这串数固定有多长"
+                  }
+                ]
+              },
+              {
+                "id": "vector-not-compression-summary",
+                "kind": "basic",
+                "front": "为什么向量不是压缩或摘要？",
+                "back": "因为这512个数不能还原原句或原图；它只保留比较意思远近所需的信息，不负责让人读回原内容。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "这串数固定有多长"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "vector-or-compression",
+                "kind": "short-answer",
+                "title": "判断这串数的用途",
+                "prompt": "小林把“窗台上趴着一只橘猫”输入系统，得到512个数。几天后，他只拿着这512个数，无法写回原句。请判断，这串数更像“压缩文件”还是“比较用的向量”？请只回答：压缩文件 或 比较用的向量",
+                "expectedAnswer": "比较用的向量",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 8,
+                    "lineEnd": 8,
+                    "nodeIds": [],
+                    "note": "这串数固定有多长"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "how-close-is-close",
+            "title": "「像不像」是怎么变成一个能排队的数字的？",
+            "content": "# 「像不像」是怎么变成一个能排队的数字的？\n\n## 你打了一句话，图凭什么排到你眼前？\n\n你打了一句话。然后你看到一排图。靠前的比较像你刚说的，靠后的就不怎么像。\n\n这感觉很像：它听懂了。\n\n可图是图，字是字。你眼里的画面，它看不见；你话里的意思，它也不用你那种办法去读。两样对不上号的东西，却排出了先来后到。\n\n能排队，说明中间冒出过一个数。数大的往前，数小的往后。你真正要弄清的是：这个数是从哪来的？\n\n## 先猜一下\n\n你觉得，它靠什么判断哪张图更像你刚打的那句话？\n\n先写下你的判断，再往下看答案。\n\n## 答案\n\n它靠的不是理解。它靠的是比较：比完得到分数，分数才能排队。\n\n## 从你打完字，到图排好队，中间到底过了哪几站？\n\n你顺着实际发生的事，一站一站走就行。\n\n第一站：那些已经放在那儿、等你来搜的图，每一张都有它自己的那一串数。你看见的是图，拿来比的是这串数。\n\n第二站：你打的那句话，也会变成一串数。不是把每个字翻译成你熟悉的那种「意思」，是把整句话收成跟图同一种能对上的东西：一串数。两边这才有得比。\n\n第三站：拿你这一串，去跟每一张的那一串，一张一张看有多靠近。每靠近一次，就记下一个分数。比完，你手里是一串分数，一张图对一个。\n\n[[evidence:semantic-image-search-web/src/worker.js:47-62]]\n\n就是这一步在算那个「有多靠近」。库里有多少张，就比多少张。没有先想明白再出手，就是老老实实一张一张比过去。\n\n第四站：分数高的排前面。你看到的搜索结果，就是这个队。\n\n走完这四站，有一件事可以钉死：这里没有理解，只有比较。它不知道你话里每个词对你意味着什么。它只知道两串数近不近。近的分数高，高的站前面。\n\n:::detail[图和话明明不是一种东西，凭什么能比？]\n你没法拿一张照片去跟一句话比大小。一个是颜色和形状，一个是汉字。所以两边都先变成同一种东西：一串数。变成数之后，「有多靠近」才说得出口。这不是因为它突然懂了中文，是因为两边被收成了能对上的格式。\n:::\n\n:::detail[「一张一张比」到底比了谁？]\n就是字面意思。你的那一串数，会跟库里每一张的那一串都算出一个分数。不是先挑几张「看起来像那么回事」的再比，是每张都比。你看到的排序，是这整串分数排出来的。\n:::\n\n:::detail[分数高，就等于它懂你了吗？]\n不等于。分数只表示：在「两串数有多接近」这件事上，这张图赢了。它可能碰巧对你的胃口，也可能只是数靠近了、画面却让你对不上。排队用的是这个分数，不是你心里那个「对」。\n:::\n\n## 自检\n\n库里新放进一张图。你再用同一句话去搜，这张新图要怎样才能出现在那个队里？\n\n有人说：它理解了你的话，所以图能对上。你怎么用刚才那几站反驳他？\n\n排在最前面的那张，和你心里最想要的那张，是一回事吗？如果不是，对不上的是哪一步？\n\n## 一句话\n\n**这里没有理解，只有比较——而且是老老实实一张一张比过去的。**\n",
+            "contentRevision": 1,
+            "sections": [],
+            "variant": "溯源",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-7bdf9a52bbf8",
+                "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                "sourcePath": "semantic-image-search-web/src/worker.js",
+                "lineStart": 47,
+                "lineEnd": 62,
+                "nodeIds": [],
+                "note": "拿你那串数跟库里每一张逐个比，得出一串分数"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "same-format-before-comparison",
+                "kind": "basic",
+                "front": "图和话为什么能比较？",
+                "back": "因为图和话都会先变成同一种格式：一串数。比较两串数的接近程度，才会得到分数。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 47,
+                    "lineEnd": 62,
+                    "nodeIds": [],
+                    "note": "拿你那串数跟库里每一张逐个比，得出一串分数"
+                  }
+                ]
+              },
+              {
+                "id": "score-determines-order",
+                "kind": "basic",
+                "front": "搜索结果怎样排出先后？",
+                "back": "系统把你的句子和库里每张图的数串一一比较，每张图得到一个分数；分数高的排在前面。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 47,
+                    "lineEnd": 62,
+                    "nodeIds": [],
+                    "note": "拿你那串数跟库里每一张逐个比，得出一串分数"
+                  }
+                ]
+              },
+              {
+                "id": "score-is-not-understanding",
+                "kind": "basic",
+                "front": "分数高说明系统理解你了吗？",
+                "back": "不说明。分数只表示两串数更接近，不等于系统理解了词义，也不保证这张图正是你最想要的。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 47,
+                    "lineEnd": 62,
+                    "nodeIds": [],
+                    "note": "拿你那串数跟库里每一张逐个比，得出一串分数"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "new-image-enters-search-results",
+                "kind": "short-answer",
+                "title": "新图能不能进队",
+                "prompt": "图片库新加入一张图。用同一句话搜索时，它先变成一串数，再和你的句子那串数比较；如果分数足够高，它就能排在前面。请只回答：能进队 或 不能进队",
+                "expectedAnswer": "能进队",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 47,
+                    "lineEnd": 62,
+                    "nodeIds": [],
+                    "note": "拿你那串数跟库里每一张逐个比，得出一串分数"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "those-are-not-your-photos",
+            "title": "你搜的这些图，到底是谁的？",
+            "content": "# 你搜的这些图，到底是谁的？\n\n## 我什么都没放进去，图怎么就出来了？\n\n你打开它，打几个字，图就出来了。\n\n停一下。你自己过一遍刚才的动作。\n\n你有没有选过电脑上的某个文件夹？\n有没有放进去一张自己拍的照片？\n\n没有。\n\n可图还是出现了。你打字，你看到结果，手感很像在搜自己的东西。\n\n那这些图是从哪来的？\n\n## 先猜一下\n\n你一直在搜的这些图，你觉得它们是从哪来的？\n\n先写下你的判断，再往下看答案。\n\n## 答案\n\n不是你的，也跟你没关系。你搜的是别人预先准备好的一批图。\n\n## 为什么一打开就能搜，却一张都不是我的？\n\n不是程序坏了。作者就是要你一打开就能用。\n\n要做到这一点，就得先有一批图，再加上每张图事先算好的那串数。作者没有问你要这些。他选的办法是：用别人已经准备好的。\n\n程序里有一个网址，被直接填进去了。打开之后，它就去那个地址拿图。不问你，你也改不了——除非去改程序本身。这种「填进去就不再问你」的写法，叫做写死。\n\n[[evidence:semantic-image-search-web/src/worker.js:11-13]]\n\n那个网址指向别人预先准备好的两万五千张图。一张都不在你的电脑上，一张都不是你拍的。\n\n光有图还不够。按意思搜，靠的不是文件名，是每张图事先算好的那串数。那串数也是别人算好的。程序会把它们整份下载下来。\n\n[[evidence:semantic-image-search-web/src/worker.js:29-36]]\n\n所以你打字是真的，按意思去对也是真的。只是拿来对的那批材料，从头到尾都不是你的：图是别人的，数是别人的。合在一起，就是别人的数据。你的电脑在这件事里，只负责让你打字、让你看结果。\n\n一打开就能用，这是好处。\n代价是：这个东西对你个人毫无用处。你找不到自己的合影，找不到任何一张属于你的照片。它从来就不是为你的相册准备的。\n\n:::detail[那两万五千张图里都是什么？]\n这段程序能告诉你的只有一件事：它们是别人预先准备好的，有一个写死的网址指向它们。拍的是谁、拍的是什么、你认不认识——这些都没有写。你也不用猜。你只要记住：那不是你的相册。\n:::\n\n:::detail[为什么连算好的数也要整份下载？]\n按意思搜，靠的是每张图事先算好的那串数。作者要你一打开就能搜，所以数也得是现成的：别人算好，程序一启动就整份拉下来。图是别人的，数也是别人的。你这边既没有提供照片，也没有参与计算。\n:::\n\n:::detail[既然对我没用，为什么还要做成这样？]\n因为作者要的是另一件事：任何人打开就能搜，不用先准备两万五千张图，也不用先算那串数。你立刻能用，换来的是：它跟你的生活毫无关系。\n:::\n\n## 自检\n\n你凭什么断定，这些图不是你电脑里的？\n\n「对你个人毫无用处」说的是哪一件事你做不到？\n\n再用一个打开就能出结果的东西时，你打算先问自己哪句话？\n\n## 一句话\n\n**用一个东西之前，先搞清楚它用的是谁的数据。**\n",
+            "contentRevision": 1,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-7bdf9a52bbf8",
+                "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                "sourcePath": "semantic-image-search-web/src/worker.js",
+                "lineStart": 11,
+                "lineEnd": 13,
+                "nodeIds": [],
+                "note": "图和数都来自这个写死的网址"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-7bdf9a52bbf8",
+                "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                "sourcePath": "semantic-image-search-web/src/worker.js",
+                "lineStart": 29,
+                "lineEnd": 36,
+                "nodeIds": [],
+                "note": "预先算好的那串数，是整包下载来的"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "image-source-is-not-local",
+                "kind": "basic",
+                "front": "程序没要照片，搜到的图从哪来？",
+                "back": "它们来自别人预先准备好的一批图片，不是你电脑里的照片。程序通过写好的网址把这些图片拿来搜索。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 11,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "图和数都来自这个写死的网址"
+                  }
+                ]
+              },
+              {
+                "id": "preloaded-search-data",
+                "kind": "basic",
+                "front": "为什么打开程序就能立刻搜？",
+                "back": "作者预先把数据地址写进程序，启动时自动拉取现成图片和对应数值，不需要你提供或计算。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 11,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "图和数都来自这个写死的网址"
+                  }
+                ]
+              },
+              {
+                "id": "personal-use-limit",
+                "kind": "basic",
+                "front": "这个搜图程序为什么对你没用？",
+                "back": "它只搜索别人准备的图片和数据，不接入你的相册或照片，所以不能帮你找到属于自己的合影。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 11,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "图和数都来自这个写死的网址"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "identify-image-data-source",
+                "kind": "short-answer",
+                "title": "判断图片来源",
+                "prompt": "小林打开一个搜图程序，没有选择文件夹，也没有上传照片；程序启动后从写好的网址下载图片和算好的数。这些图属于哪一类？A：你的个人相册；B：别人预先准备的数据。请只回答：A 或 B",
+                "expectedAnswer": "B",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 11,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "图和数都来自这个写死的网址"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "what-it-would-take-to-use-your-own",
+            "title": "想搜自己的相册，得换掉哪几处？",
+            "content": "# 想搜自己的相册，得换掉哪几处？\n\n## 现在搜到的那些图，是谁的？\n\n你现在能按意思找图。找得到，是因为桌上已经摆好了一摞。\n\n那摞图不是你的。不是你去年拍的旅行，也不是你手机里的家人。是别人备好的一批图。\n\n每一张旁边还跟着一串数。那串数不给人读：它把「这张图长什么样」翻成机器能拿来比较的数字。你搜的时候，其实是在比这些数。\n\n图在，数也在，所以你一点开就能搜。没有人问你要相册，也没让你在那儿干等。货是别人备好的。\n\n:::detail[既然图不是我的，我为什么还能搜？]\n因为现在这套东西根本没打算用你的相册。它用的是一批现成的图，加上一批对着这些图预先算好的数。你来，是来搜这批现成的货。所以它不必问你要照片，也不必在你的电脑上现算。\n:::\n\n## 先猜一下\n\n如果改成搜你自己电脑上的照片，你觉得真正得换掉的是什么？\n\n先写下你的判断，再往下看答案。\n\n## 答案\n\n两处：图从哪来，和那串数从哪来。第一处好换，第二处才是你要付的账。\n\n## 换成你自己的照片，到底要付出什么？\n\n先看现在钉死的那两处。\n\n图从哪来、数从哪来，都来自同一个写死的网址。写死的意思是：地址已经填在程序里，打开就去那个地方拿。拿的是别人的图，也是别人的数。\n\n[[evidence:semantic-image-search-web/src/worker.js:11-13]]\n\n预先算好的那串数，是整包下载来的。不是在你电脑上当场算的。所以你能马上搜——账别人结完了，你只负责把那包数拿过来。\n\n[[evidence:semantic-image-search-web/src/worker.js:29-36]]\n\n第一处好换。别人的图换成你自己电脑上的照片，你按意思找，找到的就是你自己拍过的东西。你换来的是：这是我的相册。\n\n第二处不好换。别人的那串数是预先算好的，你自己的照片没有人替你算过。每一张都得在你自己的设备上现算，一张一张来。电脑、手机，总之是你手头这台机器。照片越多，第一次要等得越久。\n\n这是一笔明白的交易。你换来「这是我的相册」。你付出去的是等待：第一次要等，等多久取决于你有多少张照片。\n\n你要「这是我的相册」，就得接受第一次要等。两样一起拿走，这笔账里没有。\n\n:::detail[为什么别人的数不能直接用在我的照片上？]\n那串数是对着那批图算出来的。图换了，数就对不上。别人的数再现成，描述的也是别人的图。你的每一张照片，都得重新翻成那串数，而且是在你自己的设备上做。\n:::\n\n## 什么时候不该换成你的？\n\n你只是想试试看这东西好不好玩的时候，别换。\n\n试的时候，你要的是马上知道：按意思找图，是什么感觉。别人备好的图和数，正好适合这个。你不用等。\n\n换成自己的相册，你换来「这是我的」。可你还在试的时候，你并不真的需要「我的」。你等了，得到的可能只是「原来要等」，不是「我开始搜自己的照片了」。\n\n什么时候该反过来？你还在摸「按意思搜」这件事本身，图是谁的并不重要。那就继续用别人那批图。\n\n什么时候才划算？你已经清楚，你要搜的就是自己的照片。并且你接受，第一次要等，等多久看你有多少张。\n\n:::detail[以后真要用自己的相册，现在先换掉是不是更省事？]\n不。现在换，你付的是等待，换来的却还不是「开始用自己的相册」——你还在判断这东西好不好用。等你确定要搜的就是自己的照片，再付那笔等待。试的时候用别人备好的货，不是偷懒，是还没到付账的时候。\n:::\n\n## 自检\n\n图和数现在都从哪来？\n\n换成你自己的照片之后，哪一处只是换货，哪一处要你自己在设备上算？\n\n你只是想试试看好不好玩的时候，该不该换？\n\n## 一句话\n\n**想搜自己的相册，图要换成你的，数也得你自己算，换来「这是我的」，代价是第一次要等。**\n",
+            "contentRevision": 1,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-7bdf9a52bbf8",
+                "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                "sourcePath": "semantic-image-search-web/src/worker.js",
+                "lineStart": 11,
+                "lineEnd": 13,
+                "nodeIds": [],
+                "note": "图和数都来自这个写死的网址"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-7bdf9a52bbf8",
+                "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                "sourcePath": "semantic-image-search-web/src/worker.js",
+                "lineStart": 29,
+                "lineEnd": 36,
+                "nodeIds": [],
+                "note": "预先算好的那串数，是整包下载来的"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-cannot-reuse-others-numbers",
+                "kind": "basic",
+                "front": "为什么不能直接把现成算好的那串数，用在自己的照片上？",
+                "back": "因为那串数专门记录了原来那批图长什么样。图换成你自己的，原来的数就对不上了。每张新照片都必须在设备上重新转化成属于它自己的那串数，才能用于比对。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 11,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "图和数都来自这个写死的网址"
+                  }
+                ]
+              },
+              {
+                "id": "cost-of-using-own-album",
+                "kind": "basic",
+                "front": "改成搜自己的相册后，第一次使用需要付出的代价是什么？",
+                "back": "是等待。现成图片的数是别人预先算好直接下载的，而你自己的照片没人替你算过，必须由你自己的设备一张张现场计算出对应的那串数，照片越多等得越久。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 11,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "图和数都来自这个写死的网址"
+                  }
+                ]
+              },
+              {
+                "id": "when-to-use-ready-made-images",
+                "kind": "basic",
+                "front": "刚接触按意思搜图时，为什么最好先别急着换自己的相册？",
+                "back": "因为试用时最重要的是快速体验搜图效果。现成图片无需等待即可使用；若过早换成自己的相册，需要先花大量时间等待设备计算全部照片，拖慢了判断工具好不好用的节奏。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 11,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "图和数都来自这个写死的网址"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "waiting-source-for-own-photos",
+                "kind": "short-answer",
+                "title": "换成自己相册时的等待来源",
+                "prompt": "小李准备把搜图程序的图片换成自己电脑里的 3000 张家庭照片。这次改造包含两处：一是把图片来源换成自己的照片文件夹，二是让电脑为每一张照片算出用来比对的那串数。在第一次运行程序时，导致小李必须长时间等待的主要是哪一处？请只回答：更换图片来源 或 计算照片的那串数",
+                "expectedAnswer": "计算照片的那串数",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "semantic-image-search-web/src/worker.js",
+                    "lineStart": 11,
+                    "lineEnd": 13,
+                    "nodeIds": [],
+                    "note": "图和数都来自这个写死的网址"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

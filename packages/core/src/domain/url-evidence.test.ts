@@ -40,6 +40,35 @@ describe("URL evidence", () => {
     );
   });
 
+  it.each([
+    "www.tensorflow.org",
+    "www.nist.gov",
+    "huggingface.co",
+    "antigravity.google",
+    "developers.openai.com",
+    "platform.openai.com",
+    "docs.anthropic.com",
+    "docs.github.com",
+    "npmjs.com",
+    "learn.chatgpt.com",
+  ])("retains the independently admitted course authority %s", (host) => {
+    // Schema-only fixture: admission does not prove that a page supports a claim.
+    expect(
+      messages({
+        ...mdn,
+        sourceUrl: `https://${host}/`,
+        sourceTitle: "Authority admission fixture",
+        sourceAuthority: "official-docs",
+      }),
+    ).toBe("");
+  });
+
+  it("does not admit a lookalike suffix when combining authority lists", () => {
+    expect(messages({ ...mdn, sourceUrl: "https://www.nist.gov.example.com/" })).toMatch(
+      /authority-host|not on the/,
+    );
+  });
+
   it("rejects a URL that points at the adopted source site", () => {
     expect(messages({ ...mdn, sourceUrl: "https://vibe-hub.org/courses/product-website" })).toMatch(
       /adopted source|vibe-hub/,

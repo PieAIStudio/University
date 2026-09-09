@@ -342,7 +342,21 @@ function failureMessage(processResult, parsed, timeoutMs) {
   if (processResult.exitCode !== 0) {
     return `model process exited with code ${processResult.exitCode ?? "unknown"}${processResult.signal ? ` (${processResult.signal})` : ""}`;
   }
-  if (!parsed.finalText) return "model stdout did not contain a Markdown H1 final answer";
+  /*
+    The H1 is how progress narration gets separated from the answer, so every
+    role has to produce one — including the ones whose output is a report
+    rather than a lesson. A Detector prompt that does not ask for a heading
+    gets a perfectly good report and this error, which is why the message says
+    what to change rather than only what went wrong.
+  */
+  if (!parsed.finalText) {
+    return (
+      "model stdout had no Markdown H1, so there is nothing to separate the final answer " +
+      "from the progress narration. Every role must be asked to start its output with a " +
+      "`# ` heading — a Detector or Polisher prompt needs that instruction spelled out, " +
+      "because only the Writer produces one unprompted."
+    );
+  }
   return null;
 }
 

@@ -21,20 +21,16 @@
     "postgresql.org",
     "supabase.com",
     "tensorflow.org",
-    "nist.gov"
+    "nist.gov",
+    "huggingface.co",
+    "antigravity.google",
+    "developers.openai.com",
+    "platform.openai.com",
+    "docs.anthropic.com",
+    "docs.github.com",
+    "npmjs.com",
+    "learn.chatgpt.com"
   ],
-  "forbiddenHosts": [
-    "pmaker.space",
-    "vibe-hub.org",
-    "vibehub.org",
-    "oiloil.org"
-  ],
-  "authorityTags": [
-    "mdn",
-    "rfc",
-    "w3c",
-    "whatwg",
-    "official-docs",
-    "spec"
-  ]
+  "forbiddenHosts": ["pmaker.space", "vibe-hub.org", "vibehub.org", "oiloil.org"],
+  "authorityTags": ["mdn", "rfc", "w3c", "whatwg", "official-docs", "spec"]
 }
