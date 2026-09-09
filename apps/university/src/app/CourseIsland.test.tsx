@@ -39,6 +39,7 @@ const UNSTARTED: CourseProgress = {
   done: 0,
   total: 1,
   complete: false,
+  proven: false,
   next: null,
 };
 

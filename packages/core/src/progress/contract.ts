@@ -197,6 +197,18 @@ export interface CourseProgress {
   readonly done: number;
   readonly total: number;
   readonly complete: boolean;
+  /**
+   * Every lesson's exercises are passed, whether or not its prose was read.
+   *
+   * What a prerequisite asks is "can you do this yet", and that is the question
+   * the exercises answer; `readConfirmed` records diligence, which is a
+   * different thing and not one a later course depends on. Keeping the two
+   * apart is also what lets a learner test out of a unit without the product
+   * claiming they read pages they never opened — and without their unread
+   * cards entering the review queue, where a card for prose you have not seen
+   * only teaches you to ignore the reminder (V5 decision 12E).
+   */
+  readonly proven: boolean;
   readonly next: LessonRef | null;
 }
 
@@ -209,6 +221,7 @@ export interface CourseProgress {
  */
 export function readCourseProgress(course: CourseShape, source: ProgressSource): CourseProgress {
   let done = 0;
+  let proven = 0;
   let total = 0;
   let next: LessonRef | null = null;
   for (const unit of course.units) {
@@ -220,9 +233,17 @@ export function readCourseProgress(course: CourseShape, source: ProgressSource):
         unitId: unit.unitId,
         lessonId: lesson.lessonId,
       };
-      if (isLessonComplete(source.completionOf(ref, lesson))) done += 1;
+      const completion = source.completionOf(ref, lesson);
+      if (completion.exercisesPassed) proven += 1;
+      if (isLessonComplete(completion)) done += 1;
       else next ??= ref;
     }
   }
-  return { done, total, complete: total > 0 && done === total, next };
+  return {
+    done,
+    total,
+    complete: total > 0 && done === total,
+    proven: total > 0 && proven === total,
+    next,
+  };
 }

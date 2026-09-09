@@ -109,6 +109,8 @@ interface DraftedCourse {
   readonly done: number;
   readonly total: number;
   readonly complete: boolean;
+  /** Exercises passed, prose not necessarily read. What a prerequisite asks. */
+  readonly proven: boolean;
   readonly summaryLessons: number;
   readonly units: readonly CatalogUnit[];
   readonly state: Exclude<CatalogCourse["state"], "live">;
@@ -185,6 +187,7 @@ function assembleCatalogListingFromStudies(
           (id) => titleById.get(id) ?? id,
         ),
         done: progress.done,
+        proven: progress.proven,
         total: progress.total,
         complete: progress.complete,
         summaryLessons: course.units.reduce((sum, unit) => sum + unit.lessons.length, 0),
@@ -194,9 +197,16 @@ function assembleCatalogListingFromStudies(
     });
 
     for (const entry of inStudy) {
+      /*
+        Unlocking asks whether the earlier course's exercises were passed, not
+        whether its prose was also marked read. That is what makes testing out
+        of a course possible at all: someone who already knows the material
+        answers the questions and moves on, without the product recording that
+        they read pages they never opened (V5 decision 12).
+      */
       const unlocked = entry.prerequisiteCourseIds.every((id) => {
         const peer = inStudy.find((candidate) => candidate.id === id);
-        return peer?.complete === true;
+        return peer?.proven === true;
       });
       drafted.push({
         ...entry,
