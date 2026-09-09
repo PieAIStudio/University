@@ -12,6 +12,7 @@
  *
  * Usage: node apps/local/scripts/check-lesson-activities.mjs [studiesRoot]
  */
+import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 
@@ -102,6 +103,80 @@ function checkSort(activity, where) {
   }
 }
 
+/**
+ * Where an activity says its facts came from, checked rather than read.
+ *
+ * This was the half of the payload nothing looked at, and it rotted in three
+ * separate ways at once while the gate stayed green: three citations pointed at
+ * `blob/main/`, which moves out from under a lesson pinned to a snapshot; one
+ * carried a snapshot id in the `commit` field, which the receipt renders as
+ * `@git-7bdf`; and one named a line that was not the line its own label
+ * described. A receipt that names the wrong place is worse than no receipt,
+ * because the reader has no reason to doubt it.
+ *
+ * The schema now rejects a malformed commit, so what is left for a gate is
+ * everything the schema cannot see: whether the ref moves, and whether the file
+ * and line are really there in the snapshot this study is pinned to.
+ */
+const FLOATING_REF = /\/blob\/(main|master|HEAD)\//;
+
+function studySnapshot(studyId) {
+  const sourceRoot = join(studiesRoot, studyId, "source");
+  const snapshotsRoot = join(sourceRoot, "snapshots");
+  const mirror = join(sourceRoot, "repository.git");
+  if (!existsSync(snapshotsRoot) || !existsSync(mirror)) return null;
+  const names = readdirSync(snapshotsRoot).filter((name) => name.endsWith(".json"));
+  if (names.length !== 1) return null;
+  return { mirror, ...read(join(snapshotsRoot, names[0])) };
+}
+
+const snapshots = new Map();
+function snapshotFor(studyId) {
+  if (!snapshots.has(studyId)) snapshots.set(studyId, studySnapshot(studyId));
+  return snapshots.get(studyId);
+}
+
+function checkSource(activity, where, studyId) {
+  const source = activity.source;
+  if (!source) return;
+
+  if (source.url) {
+    if (FLOATING_REF.test(source.url)) {
+      problems.push(
+        `${where}: 出处指向会移动的分支（blob/main 之类）——上游一改，这节课就在引用别的代码了`,
+      );
+    }
+    return;
+  }
+
+  const snapshot = snapshotFor(studyId);
+  if (!snapshot) {
+    problems.push(`${where}: 出处引用了仓库里的文件，但这个 study 没有可核对的快照`);
+    return;
+  }
+  if (source.commit && source.commit !== snapshot.sourceCommit) {
+    problems.push(
+      `${where}: 出处钉在 ${source.commit.slice(0, 8)}，这门课钉在 ${snapshot.sourceCommit.slice(0, 8)}`,
+    );
+    return;
+  }
+  let file;
+  try {
+    file = execFileSync(
+      "git",
+      ["--git-dir", snapshot.mirror, "show", `${snapshot.sourceCommit}:${source.path}`],
+      { encoding: "utf8", maxBuffer: 32 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] },
+    );
+  } catch {
+    problems.push(`${where}: 快照里没有 ${source.path} 这个文件`);
+    return;
+  }
+  const lines = file.split("\n").length;
+  if (source.line && source.line > lines) {
+    problems.push(`${where}: 出处指到第 ${source.line} 行，${source.path} 只有 ${lines} 行`);
+  }
+}
+
 const CHECKS = { connect: checkConnect, sort: checkSort };
 
 for (const studyId of dirs(studiesRoot)) {
@@ -136,6 +211,7 @@ for (const studyId of dirs(studiesRoot)) {
           if (!referenced.includes(activity.id)) {
             problems.push(`${where}: 清单里有组件 ${activity.id}，正文从没引用它`);
           }
+          checkSource(activity, `${where} · ${activity.id}`, studyId);
           const check = CHECKS[activity.kind];
           if (check) check(activity, `${where} · ${activity.id}`);
         }
