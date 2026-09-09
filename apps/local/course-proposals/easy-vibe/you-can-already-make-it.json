@@ -1,0 +1,411 @@
+{
+  "schemaVersion": 1,
+  "proposalId": "you-can-already-make-it",
+  "courseId": "from-idea-to-live",
+  "unit": {
+    "id": "you-can-already-make-it",
+    "title": "先看见它能跑",
+    "objective": "读完这一单元你能让 AI 生成一个能在浏览器里打开的小东西，并说出它替你做了什么。",
+    "prerequisiteUnitIds": []
+  },
+  "lessons": [
+    {
+      "id": "what-vibe-coding-actually-is",
+      "title": "用说的写程序，到底谁在干活",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能说出用 AI 写程序的时候，哪一段活是它的，哪一段活退不掉是你的。\n\n## 先给结论\n\n这件事看起来是两个角色：你说要什么，它写代码。\n\n**其实是三个，而第三个也是你——验收。**\n\n漏掉的永远是第三个。人拿到一段代码，看它跑起来了，就当做完了。但「跑起来」和「做对了」是两件事，而这中间没有别人替你把关。\n\n这不是我谨慎。Anthropic 自己的文档在讲怎么减少模型胡编时，末尾写了一句：这些手段能显著减少胡编，**但消除不了**，重要的信息永远要自己核实。写文档的人比谁都清楚这一点。\n\n## 一个类比\n\n这就像找装修队。你说「我要个开放式厨房，插座多留几个」，他们干活，钱货两清。\n\n但**验收是你的事**。没有人会替你去数插座装了几个、去试每一个开关。你不去试，那些没装的插座就一直不存在，直到某天你站在厨房里插不上电饭煲。\n\n不一样的地方在这儿，而且它对你不利：装修有国标、有监理，验收这件事你花钱能外包出去。**AI 写的代码没有监理。**这一步退不掉，它就是你的。\n\n所以这门课后面每一节的「自检」，都是在教你怎么验收这一次。\n\n## 工作示例\n\n完整走一次，从说需求到验收。就用这门课要做的那个东西：一个能把看不懂的话讲成人话的小工具。\n\n**第一步，你说要什么：**\n\n> 做一个网页，中间一个大输入框，下面一个按钮写着「讲人话」。点了按钮之后，把输入框里的字原样显示在按钮下面。先不接任何 AI，就先把这个页面做出来。\n\n**第二步，它写代码。**你会拿到一段文字，存成一个文件。\n\n**第三步，验收。**这一步具体是三个动作，不是「看一眼」：\n\n1. **打开它。**不是看 AI 的文字总结，是真的在浏览器里打开那个文件，亲眼看见输入框和按钮。\n2. **正常用一次。**打字，点按钮，看下面有没有出现你打的字。\n3. **不正常用一次。**什么都不打，直接点按钮。看它是空着、还是报错、还是弹出个奇怪的东西。\n\n第三个动作是分水岭。绝大多数人只做前两个，于是他的产品在遇到第一个「什么都没填就点了」的真实用户时才第一次暴露问题。\n\n注意：这三个动作里没有一个需要你看懂代码。\n\n## 自检\n\n**做对了会看到什么：**你能用一句话说出刚才那次改动改了什么，而且你是**亲眼在页面上看到**它生效的，不是从 AI 的回复里读到的。空着点按钮的情况你也试过了，你知道那时候会发生什么。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、你只看了它的总结。**AI 回复里写着「已完成，现在点击按钮会显示输入的文字」，你就当成做完了。可它写的是它以为它做了什么。**验收的定义是你看见了，不是它说了。**回去打开页面。\n\n**二、你只试了顺利的那条路。**输入框里打了字、点了按钮、结果出现了，于是收工。空输入、超长输入、连点五下——这些你一个都没试。真实用户会替你试，而且是在你不在场的时候。\n\n## 重点\n\n- 用 AI 写程序有三个角色：你说需求、它写代码、你验收。第三个也是你。\n- 官方文档明确写着：减少胡编的手段消除不了胡编，重要信息永远要自己核实。\n- 验收的定义是你亲眼在页面上看见了，不是 AI 在回复里说完成了。\n- 验收至少三个动作：打开它、正常用一次、不正常用一次。\n- 只试顺利的那条路，等于让真实用户替你做测试。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页在结尾明确写着：这些技巧能显著减少幻觉，但不能完全消除，重要信息务必自行核实。「验收退不掉」这一条的依据就是它。",
+          "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+          "sourceTitle": "Claude 官方文档 · Reduce hallucinations",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "three-roles-two-are-yours",
+          "kind": "basic",
+          "front": "用 AI 写程序时有哪三个角色？哪几个是你的？",
+          "back": "你说需求、它写代码、你验收。三个里有两个是你的，最容易漏的是验收。",
+          "tags": ["vibe-coding"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "官方文档写明减少幻觉的手段不能完全消除幻觉，重要信息要自行核实——所以验收这一步退不掉。",
+              "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+              "sourceTitle": "Claude 官方文档 · Reduce hallucinations",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "acceptance-means-you-saw-it",
+          "kind": "basic",
+          "front": "怎么算「验收过了」？",
+          "back": "你亲眼在页面上看见改动生效了。AI 在回复里写「已完成」不算——那是它以为它做了什么。",
+          "tags": ["vibe-coding"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "官方文档要求对重要信息自行核实，不能只依赖模型自述。",
+              "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+              "sourceTitle": "Claude 官方文档 · Reduce hallucinations",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "three-acceptance-actions",
+          "kind": "basic",
+          "front": "验收一次改动，至少要做哪三个动作？",
+          "back": "打开它、正常用一次、不正常用一次（比如什么都不填就点按钮）。第三个最容易被跳过，也是真实用户最先撞上的。",
+          "tags": ["vibe-coding"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「不能只信模型的自述、要实际核实」这一条出自官方文档对幻觉的说明。",
+              "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+              "sourceTitle": "Claude 官方文档 · Reduce hallucinations",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "acceptance-for-your-own-idea",
+          "title": "给你自己那个念头写一份验收动作",
+          "kind": "explain",
+          "prompt": "写下你想做的那个东西，最核心的一个动作是什么（比如「点了按钮之后出现结果」）。然后写出三条验收动作：一条正常路径，两条不正常路径。最后说明：这三条里，哪一条是你原本不会想到去试的？",
+          "rubric": [
+            "写清楚了自己那个东西最核心的一个动作",
+            "正常路径那一条具体到「点哪里、看到什么」，不是笼统的「能用」",
+            "两条不正常路径是真的会发生的情况，比如空输入、超长输入、断网、连点",
+            "老实指出了哪一条自己原本不会想到，而不是三条都说想到了"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「必须自己核实、不能依赖模型自述」这一要求出自官方文档。",
+              "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+              "sourceTitle": "Claude 官方文档 · Reduce hallucinations",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "it-writes-it-does-not-know",
+      "title": "它在接着写，不是在查答案",
+      "variant": "溯源",
+      "content": "## 学习目标\n\n读完你能说出模型为什么在完全不懂的问题上也答得很像样。\n\n## 先给结论\n\n它不是在查一份正确答案，**它是在用学过的规律接着往下写**。\n\n这一条解释了初学者最困惑的一件事：为什么它有时候错得那么离谱，语气却和答对的时候一模一样。因为对它来说这两次做的是同一件事——把话接下去，接得像模像样。\n\n**它永远接得出来。**这正是危险的地方，也是它好用的原因，同一件事的两面。\n\nAnthropic 的文档把这两样东西分得很清楚：一样是模型训练时用过的那一大堆资料，另一样是这次对话里它能看到的内容，文档管后者叫模型的「工作记忆」。你现在跟它说的话属于后者。\n\n## 一个类比\n\n这就像一个把某个菜系吃透了的厨师。你报一道他从没做过的菜名，他也能端出一盘看起来非常像那道菜的东西——因为他知道这类菜**应该长什么样**：什么颜色、什么摆盘、配什么。\n\n好不好吃另说，但**盘子一定端得出来**。他不会站在那儿说「这道菜我没做过」。\n\n不一样的地方，而且这是你要记住的那一点：真厨师心里知道自己没做过，你问一句他会承认。模型默认不会——它没有一个「我没把握」的开关自己按下去。\n\n**但你可以替它按。**官方文档里减少胡编的第一条手段，就是在提问时明确告诉它：不确定就说不知道。这一句话加不加，差别很大。\n\n## 工作示例\n\n同一个问题，问两次，差别全在最后一句。\n\n**问法一：**\n\n> 我们那个「讲人话」的工具，用 xyzFormatter 这个库来处理排版，你给我一段接入代码。\n\n（`xyzFormatter` 是我编的，世界上没有这个库。）\n\n它大概率会给你一段**看起来非常合理**的代码：`import` 写得像模像样，函数名起得很专业，参数也配齐了。你照着装，装不上，然后你会以为是自己装错了——**因为代码本身看起来毫无问题**。\n\n**问法二，只多了最后一句：**\n\n> 我们那个「讲人话」的工具，用 xyzFormatter 这个库来处理排版，你给我一段接入代码。\n> **如果你不确定这个库存不存在，直接说你不确定，不要编代码。**\n\n加上这一句之后，它说出「我不确定有这个库」的概率明显变高。\n\n**这一句话的成本是三秒钟，省下的是半小时的自我怀疑。**\n\n把它变成习惯：凡是问到具体的名字——库名、函数名、参数名、某个平台某个菜单在哪——都在后面挂上这一句。\n\n## 自检\n\n**做对了会看到什么：**你能分辨两种回答。一种是「这个我不确定」，另一种是流畅、具体、带着代码的回答。你知道**第二种不代表更可靠**，它只代表更流畅。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、把语气当成把握。**回答越具体、越有条理、越带代码，你越信。可流畅是它的默认状态，不是它有把握的信号。判断该不该信，要看这句话能不能查证，不看它说得多顺。\n\n**二、错了就再问一遍，一模一样地问。**它会给你另一个同样流畅的答案，你于是有了两个都不知真假的版本。**要改的是问法**——加上那句「不确定就说不确定」，或者让它先告诉你依据是什么。\n\n## 重点\n\n- 模型是用学过的规律把话接下去，不是在查一份正确答案。\n- 它永远接得出来，所以「答得流畅」和「答得对」没有关系。\n- 训练时用过的资料，和这次对话里它能看到的内容，是两样东西；后者官方叫「工作记忆」。\n- 官方文档列的第一条减少胡编手段，是明确允许它说「我不知道」。\n- 问到具体名字时挂一句「不确定就直说」，成本三秒。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页把「模型训练时用过的大量资料」和「这次请求里模型能引用的全部文本」分开，并把后者称为模型的工作记忆。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+          "sourceTitle": "Claude 官方文档 · Context windows",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "这一页说明模型有时会生成事实上不正确的内容，并把「明确允许模型说不知道」列为减少这种情况的第一条手段。",
+          "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+          "sourceTitle": "Claude 官方文档 · Reduce hallucinations",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "fluent-is-not-correct",
+          "kind": "basic",
+          "front": "为什么模型答错的时候，语气和答对的时候一样自信？",
+          "back": "因为两次它做的是同一件事——用学过的规律把话接下去。流畅是它的默认状态，不是有把握的信号。",
+          "tags": ["how-models-work"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "官方文档说明模型有时会生成事实上不正确、或与给定上下文不一致的内容。",
+              "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+              "sourceTitle": "Claude 官方文档 · Reduce hallucinations",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "let-it-say-i-dont-know",
+          "kind": "basic",
+          "front": "问具体的库名、函数名时，该在问题后面加哪一句？",
+          "back": "「如果你不确定，就直说不确定，不要编。」官方文档把明确允许模型承认不确定，列为减少胡编的第一条手段。",
+          "tags": ["how-models-work"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「明确允许模型说不知道可以大幅减少错误信息」出自这一页的第一条策略。",
+              "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+              "sourceTitle": "Claude 官方文档 · Reduce hallucinations",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "trained-on-vs-can-see",
+          "kind": "basic",
+          "front": "「它学过的东西」和「它现在能看到的东西」，是同一样吗？",
+          "back": "不是。前者是训练时用过的大量资料，后者是这一次请求里它能引用的全部文本，官方称之为它的「工作记忆」。",
+          "tags": ["how-models-work"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "这一页明确区分训练语料与上下文窗口，并把后者称为模型的工作记忆。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+              "sourceTitle": "Claude 官方文档 · Context windows",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "asking-again-the-same-way",
+          "kind": "basic",
+          "front": "答案可疑，一模一样地再问一遍，会怎么样？",
+          "back": "会得到另一个同样流畅的答案，于是你有两个都不知真假的版本。要改的是问法，不是重复次数。",
+          "tags": ["how-models-work"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "官方文档给出的减少胡编手段是改变提问方式（允许说不知道、要求引用依据），而非重复提问。",
+              "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+              "sourceTitle": "Claude 官方文档 · Reduce hallucinations",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "catch-it-making-something-up",
+          "title": "亲手抓它编一次",
+          "kind": "explain",
+          "prompt": "编一个不存在的东西——一个库名、一个函数名、或者某个软件里一个不存在的菜单项。先原样问它怎么用，把回答记下来。再把同一个问题问一遍，末尾加上「如果你不确定这个东西存不存在，直接说不确定」。写出两次回答的差别，以及第一次那个回答里，哪些细节让它显得可信。",
+          "rubric": [
+            "编的那个名字确实不存在，而且看起来像真的",
+            "两次回答都记下来了，不是只描述印象",
+            "指出了第一次回答里让人信以为真的具体细节，比如函数名合理、参数齐全、语气笃定",
+            "说清楚了加那一句之后回答发生了什么变化，包括「没有变化」也如实写"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「允许模型说不知道」作为减少胡编的手段，出自官方文档这一页。",
+              "sourceUrl": "https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations",
+              "sourceTitle": "Claude 官方文档 · Reduce hallucinations",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "where-it-breaks",
+      "title": "为什么聊得越久它越糊涂",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能说出长对话里 AI 变差的原因，并说出该在什么时候开新对话。\n\n## 先给结论\n\n你一定会遇到这个：一开始它又快又准，聊到第四五十轮，它开始把你三条消息前定好的事情改回去、把已经删掉的功能又加回来、或者给出和刚才自相矛盾的方案。\n\n**这不是它累了，也不是你的错。**这有名字，而且官方文档里写着。\n\n它这次对话能看见的全部内容——你说的、它说的、你贴的报错、你给的图——都堆在一个有大小的地方，官方叫**上下文窗口**。每聊一轮，堆进去的东西就多一点。\n\n而 Anthropic 的文档写得很直白：随着堆进去的内容变多，**模型的准确率和回忆能力会下降**，这个现象有个名字，叫 context rot。中文可以叫「上下文腐化」。\n\n所以对策不是接着聊，是**换一张桌子**。\n\n## 一个类比\n\n把这次对话想象成一张会议桌。所有东西都得摆在桌上它才看得见：你的需求、它写的代码、你贴的报错、你发的截图。桌子有大小。\n\n东西越堆越满，翻找就越容易翻错——它可能翻出你半小时前那份已经作废的需求，当成现在的要求。\n\n**不一样的地方在这儿，而且这一点很要命：**真桌子堆满了你一眼就看见了。聊天框永远那么大，**它不会告诉你桌子快满了**。你唯一能察觉的信号，就是它开始变笨。\n\n所以「它变笨了」这件事，在这门课里不是抱怨，是一个**读数**。读到了就该动手。\n\n## 工作示例\n\n一次真实的长对话，和该在哪里切断。\n\n**第 1–10 轮：**你让它做出「讲人话」的页面，反复调样式。顺利。\n\n**第 11–25 轮：**你接上模型接口，调通了。中间贴过两次很长的报错。顺利，但桌上已经堆了两大段报错日志。\n\n**第 26 轮，出现第一个信号：**你说「把按钮改回蓝色」，它改了，**顺手把你第 8 轮删掉的副标题又加了回来**。\n\n这就是读数。不要在这里说「你怎么把副标题加回来了」——那只会再往桌上堆两轮。\n\n**正确动作：开一个新对话，并且带一份交接。**交接不是把旧对话复制过去，是你自己写的一小段：\n\n> 我在做一个网页工具，一个输入框加一个按钮，点了之后把输入的内容发给模型、把回复显示在下面。\n>\n> 已经定下来的：按钮是蓝色的；没有副标题；结果显示在按钮下面；接口已经调通。\n>\n> 现在要做的：给结果区加一个「复制」按钮。\n\n三段：**这是什么、已经定死的、现在要做的。**\n\n新对话的桌子是空的，它只看得见这三段——而这三段全是当前有效的信息，没有一条作废的旧需求。\n\n**你会发现新对话立刻又变聪明了。**它没有变聪明，是桌子干净了。\n\n## 自检\n\n**做对了会看到什么：**你手里有一份能随时更新的交接稿，三段式。换对话对你来说是十秒钟的事，不是重头再来。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、它改错了，你就在原对话里纠正，一直纠正。**每纠正一轮，桌上就多两条消息，包括那条错误的输出——**它也在桌上，也在影响后面的判断**。越纠正越乱，这是最常见的一种消耗。\n\n**二、开新对话的时候，把旧对话整段复制过去。**那等于把旧桌子连同上面所有作废的东西一起搬到新桌子上，新桌子当场又满了。交接稿要**你自己写**，而且只写现在还成立的事。\n\n## 重点\n\n- 这次对话里它能看见的全部内容堆在一个有大小的地方，官方叫上下文窗口。\n- 堆进去的内容越多，模型的准确率和回忆能力会下降，官方给这个现象起名 context rot。\n- 聊天框不会提示桌子快满了，「它开始变笨」就是唯一的读数。\n- 出现读数时开新对话，而不是继续纠正——纠正也会堆进桌子。\n- 交接稿三段：这是什么、已经定死的、现在要做的。不要整段复制旧对话。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页说明上下文窗口是模型生成回复时能引用的全部文本，随对话推进逐轮累积；并写明随着 token 数增长，准确率和回忆能力会下降，称之为 context rot。",
+          "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+          "sourceTitle": "Claude 官方文档 · Context windows",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "context-rot",
+          "kind": "basic",
+          "front": "长对话里 AI 越来越不准，官方管这个现象叫什么？",
+          "back": "context rot（上下文腐化）。官方文档写明：随着上下文里 token 数增长，模型的准确率和回忆能力会下降。",
+          "tags": ["how-models-work"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "context rot 这个名字和「准确率与回忆随 token 增长而下降」的结论都出自这一页。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+              "sourceTitle": "Claude 官方文档 · Context windows",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "what-counts-into-the-window",
+          "kind": "basic",
+          "front": "一次对话里，哪些东西会占掉上下文窗口？",
+          "back": "全部都占：你说的话、它的每一次回复、贴进去的报错、图片和文档，连它这一轮生成的输出也算在里面。",
+          "tags": ["how-models-work"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "这一页写明请求里的一切都计入上下文窗口，包括消息、工具结果、图片、文档，以及模型生成的输出。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+              "sourceTitle": "Claude 官方文档 · Context windows",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "the-handoff-note",
+          "kind": "basic",
+          "front": "开新对话时，交接稿写哪三段？",
+          "back": "这是什么、已经定死的、现在要做的。只写当前还成立的事，不要整段复制旧对话。",
+          "tags": ["how-models-work"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "整段复制会把作废内容一并计入新的上下文窗口——依据是这一页「请求里的一切都计入窗口」。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+              "sourceTitle": "Claude 官方文档 · Context windows",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "correcting-costs-context",
+          "kind": "basic",
+          "front": "在原对话里反复纠正它的错误，为什么会越纠越乱？",
+          "back": "因为每纠正一轮就往上下文里多堆两条消息，那条错误的输出也留在里面继续影响后面的判断。",
+          "tags": ["how-models-work"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "模型生成的输出会成为下一轮的输入，且全部计入上下文窗口——出自这一页的输入输出流程说明。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+              "sourceTitle": "Claude 官方文档 · Context windows",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "write-your-handoff",
+          "title": "给你自己那个东西写一份交接稿",
+          "kind": "explain",
+          "prompt": "按三段式写一份交接稿：这是什么、已经定死的、现在要做的。写完之后回答一个问题：如果把这份交接稿交给一个完全没参与过的人，他会不会问你「那……某某怎么办」？如果会，是哪一条你漏了。",
+          "rubric": [
+            "三段齐全，而且分得清——不是三段都在讲要做什么",
+            "「已经定死的」写的是具体结论，比如「按钮蓝色」「没有副标题」，不是「样式已确定」这种空话",
+            "「现在要做的」只有一件事，不是一串",
+            "老实找出了至少一处会让接手的人追问的遗漏，或说明为什么确实没有遗漏"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "交接稿要短、要只留有效信息，依据是这一页说明请求中的一切都计入上下文窗口且窗口有上限。",
+              "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/context-windows",
+              "sourceTitle": "Claude 官方文档 · Context windows",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "running-is-not-done",
+      "title": "「跑起来了」离「能用」还有多远",
+      "variant": "对比",
+      "content": "## 学习目标\n\n读完你能说出为什么自己觉得好用，不能算数。\n\n## 先给结论\n\n代码跑起来了，只证明一件事：**没有写错到跑不动的程度。**\n\n它不证明别人看得懂，不证明别人找得到按钮，不证明别人愿意用第二次。\n\n更难接受的是第二句：**你自己觉得好用，也不算数。**你知道那个按钮在哪，因为是你让它放在那儿的。你知道要先粘文字再点按钮，因为整个流程是你想出来的。你已经不可能像第一次见到它的人那样看它了。\n\n有一家几十年来专门研究「人拿到一个东西之后实际会怎么用」的机构，叫作尼尔森诺曼集团。他们的说法很硬：「把用户体验做对的唯一办法就是测试它。」他们那一页里还有一句更不留情面的——**即使是最好的设计师，不靠对真实用户的观察反复迭代，也做不出足够好的体验。**\n\n注意这句话的主语：最好的设计师。不是新手。\n\n## 一个类比\n\n这就像考试交卷。写完了、字数够了、没有空题——这些只证明你交上去了一份完整的卷子，**不证明分数**。\n\n代码「能跑」就相当于「卷子交上去了」。\n\n不一样的地方，而且它比考试残酷：卷子有老师批，会告诉你错在哪、扣了几分。产品没有老师，只有用户。**而用户不给分，他直接走**，什么都不说。\n\n所以你得自己造一个「批卷」的环节出来——那就是找个人来用一次，坐在旁边看着。这门课最后一个单元专门讲怎么做。\n\n## 工作示例\n\n同一个页面，两个人打开，看见的不是同一个东西。\n\n**你打开它：**\n\n> 输入框在中间，我粘一段合同条款进去，点「讲人话」，下面出结果。三秒钟的事。\n\n**一个第一次见到它的人打开它：**\n\n> 一个空白输入框，一个按钮写着「讲人话」。\n>\n> ——讲什么人话？\n> ——我要往里面填什么？填我自己的话？还是填别人的话？\n> ——填错了会怎么样？会不会被存起来？\n> ——「讲人话」是把我的话变得更礼貌，还是把难懂的话翻译一遍？\n\n他卡住的地方，你一个都不会卡。**因为这四个问题的答案都在你脑子里，不在页面上。**\n\n差别只有一处：输入框里有没有一行灰色的示范文字。\n\n> 把看不懂的话粘进来，比如租房合同里的一条\n\n一行字。你写页面的时候完全不会想到要加，因为你从来没被这个问题卡住过。\n\n这就是「自己觉得好用不算数」的具体样子——**不是你水平不够，是你没法回到不知道的状态。**\n\n## 自检\n\n**做对了会看到什么：**你能说出至少一个「只有你知道、页面上没写」的信息。找得出来，说明你开始能用别人的眼睛看它了。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、拿它去问「你觉得怎么样」。**对方会说「挺好的」「挺清楚的」。这句话你已经在前面那一节见过了——**问感想问不出东西**。要让他做一件事，然后闭嘴看着。\n\n**二、他卡住了，你张嘴解释。**「你点那个按钮就行了」——这一句出口，这次测试就结束了。他卡住的那三秒钟，才是你唯一要收集的东西。**你的解释救了这一次，救不了下一个用户**，因为下一个用户身边没有你。\n\n## 重点\n\n- 代码能跑只证明没写错到跑不动，不证明别人看得懂、用得下去。\n- 尼尔森诺曼集团：把用户体验做对的唯一办法就是测试它。\n- 即使是最好的设计师，不靠对真实用户的观察反复迭代，也做不出足够好的体验。\n- 你没法回到不知道的状态，所以自己觉得好用不能当证据。\n- 别人卡住的时候你一开口解释，这次测试就作废了。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "这一页写明「把用户体验做对的唯一办法就是测试它」，以及即使最好的 UX 设计师不靠对真实用户的观察做迭代设计，也无法做出足够好的用户体验。",
+          "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+          "sourceTitle": "Nielsen Norman Group · Usability Testing 101",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "这一页说明询问用户的看法不可靠：人可以对任何被问到的事情当场生成一个看法。",
+          "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+          "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "running-proves-only-syntax",
+          "kind": "basic",
+          "front": "「代码跑起来了」证明了什么？",
+          "back": "只证明没有写错到跑不动的程度。它不证明别人看得懂、找得到按钮、或者愿意用第二次。",
+          "tags": ["usability"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「把用户体验做对的唯一办法是测试」出自这一页，即可用性不能由代码能否运行推出。",
+              "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+              "sourceTitle": "Nielsen Norman Group · Usability Testing 101",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "even-the-best-designers",
+          "kind": "basic",
+          "front": "只有新手才需要拿产品去测试吗？",
+          "back": "不是。尼尔森诺曼集团写明：即使最好的 UX 设计师，不靠对真实用户的观察反复迭代，也做不出足够好的体验。",
+          "tags": ["usability"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "这句关于「最好的设计师也做不到」的论断出自这一页。",
+              "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+              "sourceTitle": "Nielsen Norman Group · Usability Testing 101",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "dont-ask-how-do-you-like-it",
+          "kind": "basic",
+          "front": "为什么不能拿产品去问别人「你觉得怎么样」？",
+          "back": "因为人可以对任何被问到的事情当场生成一个看法，答案会是「挺好的」。要让他做一件具体的事，然后闭嘴看着。",
+          "tags": ["usability"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「人可以对任何被问及的事情产生看法」出自这一页对提问效应的说明。",
+              "sourceUrl": "https://www.nngroup.com/articles/interviewing-users/",
+              "sourceTitle": "Nielsen Norman Group · Interviewing Users",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "find-what-only-you-know",
+          "title": "找出只有你知道的那几件事",
+          "kind": "explain",
+          "prompt": "对着你想做的那个东西的第一屏，写出三个「第一次见到它的人一定会问、而页面上没有答案」的问题。然后针对其中一个，写出你打算怎么把答案放进页面里——注意是放进页面，不是写进说明书。",
+          "rubric": [
+            "三个问题是真的会被问的，比如「我要填什么」「这会不会被存下来」，不是「这个产品好不好」",
+            "三个问题的答案确实都不在页面上，而在作者自己脑子里",
+            "选出的那一个给了具体做法，比如加一行示范文字、改按钮上的字，而不是「加个说明」",
+            "解决办法放在界面里，不是靠另写一份说明或者当面解释"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "「只有观察真实用户才能发现体验问题」这一前提出自这一页。",
+              "sourceUrl": "https://www.nngroup.com/articles/usability-testing-101/",
+              "sourceTitle": "Nielsen Norman Group · Usability Testing 101",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
