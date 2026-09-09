@@ -1,0 +1,9 @@
+# Scratch output from dispatch.mjs / pick-activity.mjs / queue.mjs when they
+# are run with this directory as QUEUE_DIR or cwd. Prompts and model answers
+# are working material, not course content; the landed result goes through
+# revise-lesson.mjs into the study tree instead.
+acts/
+logs/
+drafts/
+*.prompt.txt
+*.extras.json
