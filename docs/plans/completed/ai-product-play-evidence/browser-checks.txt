@@ -1,0 +1,67 @@
+Browser test receipts — selected progress/verdict lines from the unmodified source logs. Failed intermediate batches are intentionally retained.
+
+
+gameplay-e2e-final.log
+Running 24 tests using 1 worker
+  ✓   1 [default] › e2e/P.learning-play.spec.ts:101:3 › P 五种学习玩法 › 接线能纠正额外关系，两种情境都执行两条路径 (14.3s)
+  ✓   2 [default] › e2e/P.learning-play.spec.ts:132:3 › P 五种学习玩法 › 调参必须同时满足目标，保留实验对照与多个可行解 (3.0s)
+  ✓   3 [default] › e2e/P.learning-play.spec.ts:153:3 › P 五种学习玩法 › 反例来自用户输入：普通值无功、边界值与负数成立，重玩清空记录 (2.7s)
+  ✓   4 [default] › e2e/P.learning-play.spec.ts:177:3 › P 五种学习玩法 › 调度须先准备缓存，及时数据不能复用，两种工作流均守住预算 (3.0s)
+  ✓   5 [default] › e2e/P.learning-play.spec.ts:206:3 › P 五种学习玩法 › 指令碰撞能定位，停止保留编辑，重复动作在两个场地都走到终点 (16.1s)
+  ✓   6 [default] › e2e/P.learning-play.spec.ts:251:3 › P 五种学习玩法 › 暂停和超时保留调度现场，可以退出计时继续练习 (28.4s)
+  ✓   7 [default] › e2e/P.learning-play.spec.ts:276:3 › P 五种学习玩法 › 连续试玩单独记录跳过，刷新后不冒充课程进度 (2.3s)
+  ✓   8 [default] › e2e/P.learning-play.spec.ts:303:5 › P 手机与同一学习者表面 › delivery：五种玩法在窄屏都能操作，键盘找到反例 (4.1s)
+  ✓   9 [default] › e2e/P.learning-play.spec.ts:303:5 › P 手机与同一学习者表面 › authoring：五种玩法在窄屏都能操作，键盘找到反例 (4.5s)
+  ✓  10 [default] › e2e/P.learning-play.spec.ts:339:1 › P 手机长程序运行时棋盘和停止按钮都在视口里 (8.6s)
+  ✓  11 [default] › e2e/P.learning-play.spec.ts:367:1 › P 宽屏中的窄课文栏仍保留可读棋盘与单栏编辑 (1.9s)
+  ✓  12 [default] › e2e/Q.ai-product-play.spec.ts:89:3 › Q AI product learning › 原型：约束不能替代验收，两个任务要求真实产品行为 (4.9s)
+  ✓  13 [default] › e2e/Q.ai-product-play.spec.ts:141:3 › Q AI product learning › 合集：原来五种保持可达，AI 连玩不会冒充课程进度 (3.8s)
+  ✓  14 [default] › e2e/Q.ai-product-play.spec.ts:164:3 › Q delivery 手机：五个 AI 玩法可达，键盘能验证真实产品 (5.1s)
+  ✓  15 [default] › e2e/Q.ai-product-play.spec.ts:164:3 › Q authoring 手机：五个 AI 玩法可达，键盘能验证真实产品 (5.0s)
+  ✘  16 [default] › e2e/Q.ai-product-play.spec.ts:222:1 › Q 上下文：新点子不能推翻签字约定，整份与摘录都可交付 (21.8s)
+  ✓  17 [default] › e2e/Q.ai-product-play.spec.ts:284:1 › Q Agent：权限实际限制写入，误开范围能回退，全部拒绝不能交付 (3.4s)
+  ✘  18 [default] › e2e/Q.ai-product-play.spec.ts:331:1 › Q Agent 手机：推进在危险改写前停住，文件卡直接收回范围后继续 (24.9s)
+  ✓  19 [default] › e2e/Q.ai-product-play.spec.ts:425:1 › Q 评测：同题逐次揭示反差，收藏保留发现，编辑只失效对应证据 (4.2s)
+  ✓  20 [default] › e2e/Q.ai-product-play.spec.ts:459:1 › Q 评测：第二情境第三次才变化，全部拒绝不能交付，完整检查可扶正另一方案 (3.5s)
+  ✓  21 [default] › e2e/Q.ai-product-play.spec.ts:510:1 › Q 返工：同一失败的修复不能牺牲改约，检查点保留分支现场 (3.3s)
+  ✓  22 [default] › e2e/Q.ai-product-play.spec.ts:561:1 › Q 返工：保存提示不算证据，锁死偏好不能当修好 (3.4s)
+  ✓  23 [default] › e2e/Q.ai-product-play.spec.ts:591:1 › Q 宽屏内的 390px 课文栏：五个 AI 玩法按组件宽度排版 (3.0s)
+  ✓  24 [default] › e2e/Q.ai-product-play.spec.ts:610:3 › Q 连续手机试玩证据 › 五种 AI 学习动作在手机完成，中段操作与结果可读 (6.8s)
+    Error: expect(locator).toContainText(expected) failed
+    Received string:    "页面试营业社区咖啡预订页 · 制作单你接手了一份待核对的材料包。先让顾客来试试，看看这页哪里答不上来。1小安我明早几点、去哪里取？…2阿远一份套餐到底多少钱？…3小禾我提交以后会看到什么？✓小安：我明早几点、去哪里取？制作单无法同时采用这几种说法。回到任务指定的来源，核对后移出不适用的段落。这位顾客还没得到可用的答案。线索就在材料里。顺着这句话找材料：次日 08:00—10:00 门店自取，不收配送地址。店主页面定稿14:00—17:00 配送到办公室。周末活动点子当前材料 · 已验证 1 / 3 位顾客用当前材料重新生成交付这版页面"
+           - unexpected value "页面试营业社区咖啡预订页 · 制作单你接手了一份待核对的材料包。先让顾客来试试，看看这页哪里答不上来。1小安我明早几点、去哪里取？…2阿远一份套餐到底多少钱？…3小禾我提交以后会看到什么？✓小安：我明早几点、去哪里取？制作单无法同时采用这几种说法。回到任务指定的来源，核对后移出不适用的段落。这位顾客还没得到可用的答案。线索就在材料里。顺着这句话找材料：次日 08:00—10:00 门店自取，不收配送地址。店主页面定稿14:00—17:00 配送到办公室。周末活动点子当前材料 · 已验证 1 / 3 位顾客用当前材料重新生成交付这版页面"
+    Error: expect(locator).toContainText(expected) failed
+  2 failed
+  22 passed (3.7m)
+
+
+gameplay-confirm.log
+Running 13 tests using 1 worker
+  ✓   1 [default] › e2e/Q.ai-product-play.spec.ts:89:3 › Q AI product learning › 原型：约束不能替代验收，两个任务要求真实产品行为 (4.9s)
+  ✓   2 [default] › e2e/Q.ai-product-play.spec.ts:141:3 › Q AI product learning › 合集：原来五种保持可达，AI 连玩不会冒充课程进度 (3.5s)
+  ✓   3 [default] › e2e/Q.ai-product-play.spec.ts:164:3 › Q delivery 手机：五个 AI 玩法可达，键盘能验证真实产品 (5.0s)
+  ✓   4 [default] › e2e/Q.ai-product-play.spec.ts:164:3 › Q authoring 手机：五个 AI 玩法可达，键盘能验证真实产品 (5.3s)
+  ✓   5 [default] › e2e/Q.ai-product-play.spec.ts:222:1 › Q 上下文：新点子不能推翻签字约定，整份与摘录都可交付 (3.0s)
+  ✓   6 [default] › e2e/Q.ai-product-play.spec.ts:284:1 › Q Agent：权限实际限制写入，误开范围能回退，全部拒绝不能交付 (3.0s)
+  ✘   7 [default] › e2e/Q.ai-product-play.spec.ts:331:1 › Q Agent 手机：推进在危险改写前停住，文件卡直接收回范围后继续 (26.3s)
+  ✓   8 [default] › e2e/Q.ai-product-play.spec.ts:426:1 › Q 评测：同题逐次揭示反差，收藏保留发现，编辑只失效对应证据 (4.5s)
+  ✓   9 [default] › e2e/Q.ai-product-play.spec.ts:466:1 › Q 评测：第二情境第三次才变化，全部拒绝不能交付，完整检查可扶正另一方案 (3.5s)
+  ✓  10 [default] › e2e/Q.ai-product-play.spec.ts:525:1 › Q 返工：同一失败的修复不能牺牲改约，检查点保留分支现场 (3.5s)
+  ✓  11 [default] › e2e/Q.ai-product-play.spec.ts:576:1 › Q 返工：保存提示不算证据，锁死偏好不能当修好 (3.4s)
+  ✓  12 [default] › e2e/Q.ai-product-play.spec.ts:606:1 › Q 宽屏内的 390px 课文栏：五个 AI 玩法按组件宽度排版 (2.9s)
+  ✓  13 [default] › e2e/Q.ai-product-play.spec.ts:625:3 › Q 连续手机试玩证据 › 五种 AI 学习动作在手机完成，中段操作与结果可读 (6.9s)
+    Error: expect(locator).toBeVisible() failed
+  1 failed
+  12 passed (1.9m)
+
+
+gameplay-agent-confirm.log
+Running 1 test using 1 worker
+  ✓  1 [default] › e2e/Q.ai-product-play.spec.ts:331:1 › Q Agent 手机：推进在危险改写前停住，文件卡直接收回范围后继续 (6.3s)
+  1 passed (43.3s)
+
+
+gameplay-repair-evidence.log
+Running 1 test using 1 worker
+  ✓  1 [default] › e2e/Q.ai-product-play.spec.ts:528:1 › Q 返工：同一失败的修复不能牺牲改约，检查点保留分支现场 (4.4s)
+  1 passed (41.4s)

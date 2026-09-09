@@ -1,0 +1,9 @@
+
+Running 2 tests using 1 worker
+
+(node:89358) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [default] › e2e/Q.ai-product-play.spec.ts:89:3 › Q AI product learning › 原型：约束不能替代验收，两个任务要求真实产品行为 (4.2s)
+  ✓  2 [default] › e2e/Q.ai-product-play.spec.ts:141:3 › Q AI product learning › 合集：原来五种保持可达，AI 连玩不会冒充课程进度 (2.0s)
+
+  2 passed (7.3s)

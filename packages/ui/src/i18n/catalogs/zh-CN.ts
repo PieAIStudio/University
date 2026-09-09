@@ -1,3 +1,16 @@
+import { messages as qualityDifficulty } from "./learning-play-quality-difficulty.zh-CN.js";
+import { messages as workflowDifficulty } from "./learning-play-workflow-difficulty.zh-CN.js";
+import { messages as playDifficulty } from "./learning-play-difficulty.zh-CN.js";
+import { messages as qualityUsability } from "./learning-play-quality-usability.zh-CN.js";
+import { messages as workflowUsability } from "./learning-play-workflow-usability.zh-CN.js";
+import { messages as playUsability } from "./learning-play-usability.zh-CN.js";
+import { messages as aiPlay } from "./learning-play-ai.zh-CN.js";
+import { messages as aiWorkflow } from "./learning-play-ai-workflow.zh-CN.js";
+import { messages as aiQuality } from "./learning-play-ai-quality.zh-CN.js";
+import { messages as aiAgentPlay } from "./learning-play-ai-agent-play.zh-CN.js";
+import { messages as learningPlayProgram } from "./learning-play-program.zh-CN.js";
+import { messages as learningPlayExtra } from "./learning-play-extra.zh-CN.js";
+import { messages as learningPlayMessages } from "./learning-play.zh-CN.js";
 /**
  * Chinese source messages for the University learner surface.
  *
@@ -34,6 +47,19 @@ export const messages = {
     "尺寸包含原始节点变换；场景按统一高度归一化。树干是多变体骨架，不能按整包宽度相乘。使用记录显示本岛局部坐标和真实组合身份。",
   "app.mapstudio.mapStudioScreen.copy.组合与降级": "组合与降级",
   "app.mapstudio.mapStudioScreen.copy.占地-高差-坡度": "整组占地 / 地面高差 / 坡度",
+  ...aiPlay,
+  ...aiWorkflow,
+  ...aiQuality,
+  ...aiAgentPlay,
+  ...playUsability,
+  ...playDifficulty,
+  ...qualityDifficulty,
+  ...workflowDifficulty,
+  ...qualityUsability,
+  ...workflowUsability,
+  ...learningPlayMessages,
+  ...learningPlayProgram,
+  ...learningPlayExtra,
   "app.app.app.copy.书架上还没有课": "书架上还没有课",
   "app.app.app.copy.今天": "今天",
   "app.app.app.copy.从这里开始": "从这里开始",

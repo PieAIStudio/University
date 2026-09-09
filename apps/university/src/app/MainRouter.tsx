@@ -59,6 +59,12 @@ import {
 import { CourseIsland, type CourseIslandProps } from "./CourseIsland.js";
 import type { PathOverlay } from "./world-model";
 
+const LearningPlayLab = lazy(() =>
+  import("@pieai/university-ui/learning-play/LearningPlayLab.js").then((mod) => ({
+    default: mod.LearningPlayLab,
+  })),
+);
+
 const ProfileAvatar = lazy(() =>
   import("./ProfileAvatar.js").then((mod) => ({ default: mod.ProfileAvatar })),
 );
@@ -202,6 +208,14 @@ export function MainRouter({
         </div>
       ) : null}
       {AUTHORING && view.kind === "world" ? <AuthoringMapNotes studyId={focusedStudyId} /> : null}
+      {view.kind === "play-lab" ? (
+        <Suspense fallback={<RouteFallback />}>
+          <LearningPlayLab
+            key={view.collection ?? "foundations"}
+            collection={view.collection ?? "foundations"}
+          />
+        </Suspense>
+      ) : null}
       {view.kind === "avatar-lab" ? (
         <Suspense fallback={<RouteFallback />}>
           <AvatarLab

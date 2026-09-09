@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-09-08
+last_reviewed: 2026-09-09
 domain: execution
 tags:
   - current-work
@@ -30,20 +30,21 @@ test totals, CLI/model choices or execution history. Read only the matching row.
 
 | Task | Authoritative entry |
 | --- | --- |
-| 3D delivery evidence, remaining acceptance gates and physical-device follow-up | [Continuous world delivery](../../plans/active/continuous-world-delivery.md), starting with its current continuation section; preserve the implemented pipeline and follow the remaining task IDs rather than restarting the scenes. The local `SCRATCH/HANDOFF.md` remains the sole handoff entry |
+| Worktree integration, 3D delivery evidence and remaining acceptance gates | [Continuous world delivery](../../plans/active/continuous-world-delivery.md), starting with its current continuation section; preserve the implemented pipeline and follow the remaining task IDs rather than restarting the scenes |
 | Learner-visible design | [Player journey V5](../player-journey/v5/index.html), including decision M; only consult V4 for behavior V5 does not amend |
 | Technique, measurement scope and rejected alternatives | [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md) |
 | Shared blueprint/field, projections and source entry points | [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md) |
 | Local preview, iPhone/Android, Web-to-local tools | [Local device testing](local-device-testing.md) |
 | Course authoring | [Parity contract](../../specs/active/SPEC-0001-universitylocal-parity-contract.md); use `apps/local` workflows and keep publication separate |
+| Learning activities, embedding and difficulty selection | [Component contract](../../../packages/ui/src/learning-play/README.md), [interaction design](../../../packages/ui/src/learning-play/DESIGN.md) and [prior acceptance evidence](../../plans/completed/play-usability.md); samples do not publish courses or award course completion |
 | Designed but unfinished learner/business capabilities | [V5 review](v5-journey-review.md), [payment](payment-backend-gap.md), [feedback](feedback-backend-gap.md), [reminders](review-reminders-backend-gap.md), [commercial model](commercial-model.md) |
 
 ## Work boundaries
 
-3D works in sibling `University-3d` on `codex/continuous-island`; course work is
-separate. Recheck Git and process ownership before writing. Do not reset,
-delete, merge or claim ownership of other worktrees from historical receipts.
-Preserving an experiment does not accept its behavior.
+The active plan records the current integration checkout and source worktrees.
+Recheck Git and process ownership before writing; a historical receipt is not
+permission to reset, delete or take over another task. Preserve original material
+before retiring a worktree. Preserving an experiment does not accept its behavior.
 
 One browser app, two modes: `apps/university` uses `--mode delivery` or
 `--mode authoring`; `apps/local` is the authoring Node server. Shared domain

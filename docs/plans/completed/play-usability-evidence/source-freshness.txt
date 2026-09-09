@@ -1,0 +1,2 @@
+$ node apps/local/scripts/check-export-freshness.mjs
+check-export-freshness: 4 export(s) match their courses.

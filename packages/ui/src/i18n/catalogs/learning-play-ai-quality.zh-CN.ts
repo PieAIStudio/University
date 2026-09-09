@@ -1,0 +1,378 @@
+export const messages = {
+  "play.aiQuality.eval.schedule.artifact": "这次新增的预约单",
+  "play.aiQuality.eval.schedule.created": "1 张",
+  "play.aiQuality.eval.schedule.notCreated": "0 张",
+  "play.aiQuality.eval.shop.artifact": "商品界面实际显示",
+  "play.aiQuality.eval.shop.fulfilled.artifact": "可购买 · 12 本",
+  "play.aiQuality.eval.shop.clarify.artifact": "型号待确认",
+  "play.aiQuality.eval.shop.unavailable.artifact": "售罄 · 不可购买",
+  "play.aiQuality.eval.shop.out-of-scope.artifact": "无医学保证",
+  "play.aiQuality.eval.shop.refused.artifact": "未提供商品信息",
+  "play.aiQuality.eval.challenge": "给这个助手出一道难题",
+  "play.aiQuality.eval.chooseCandidate": "选择一份预设方案",
+  "play.aiQuality.eval.candidateA": "方案甲",
+  "play.aiQuality.eval.candidateB": "方案乙",
+  "play.aiQuality.eval.candidateC": "方案丙",
+  "play.aiQuality.eval.unknownNote": "三份匿名预设方案。先试出它们怎么做，再决定采用哪份。",
+  "play.aiQuality.eval.requestTicket": "这次用户的请求",
+  "play.aiQuality.eval.responseTicket": "{{candidate}} 实际给出的结果",
+  "play.aiQuality.eval.freezeAndProbe": "冻结这题并试一次",
+  "play.aiQuality.eval.repeat": "同题再试一次",
+  "play.aiQuality.eval.probeCurrent": "用这题试当前方案",
+  "play.aiQuality.eval.newQuestion": "再出一道题",
+  "play.aiQuality.eval.untried": "这份方案还没试过当前题。输入和验收要求已冻结，可以开始比较。",
+  "play.aiQuality.eval.responseWaiting":
+    "确认或调整请求条件、选好验收要求，再试一次。结果会留在这张请求单旁边。",
+  "play.aiQuality.eval.firstOnly":
+    "这次符合，不代表下次仍然符合。可以保持输入完全不变，再看一份响应。",
+  "play.aiQuality.eval.firstFailure":
+    "这次已经露出问题。同题再试，可以检查它是否每次都以同一种方式失败。",
+  "play.aiQuality.eval.sequenceDone":
+    "这题的 3 份预设响应已经看完。可以换条件出题，或让另一份方案试同一题。",
+  "play.aiQuality.eval.observed":
+    "这题已亲自试过 {{count}} / {{total}} 份预设响应；未打开的响应不算已测。",
+  "play.aiQuality.eval.responseChanged":
+    "同一题、同一份验收要求，前后结果却变了。这条反差已经留进回归记录。",
+  "play.aiQuality.eval.collection": "我的回归收藏 · {{count}} 题",
+  "play.aiQuality.eval.collectionNote":
+    "新增题会保留已发现的证据。随时拿同一题换方案，或继续试下一份响应。",
+  "play.aiQuality.eval.collectionEvidence": "已观察 {{count}} 次，其中 {{failures}} 次不符合约定",
+  "play.aiQuality.eval.viewCase": "把这题放回试验台",
+  "play.aiQuality.eval.caseChanged": "这道题的旧记录已清除，其它题的发现仍在。整组验收需要重跑。",
+  "play.aiQuality.eval.releaseTitle": "准备收货：把收藏的题全部重测",
+  "play.aiQuality.eval.releaseNote":
+    "把正常、缺资料、无资源和越界请求都纳入清单。这里会用当前边界执行整组预设回归，普通请求仍须有用。",
+  "play.aiQuality.repair.versionA": "版本 A",
+  "play.aiQuality.repair.versionB": "版本 B",
+  "play.aiQuality.repair.versionC": "版本 C",
+  "play.aiQuality.repair.appliedTimeline":
+    "修改已应用，两版已经站在同一个起点。逐步执行，看看哪一步开始不同；也可以从某一步接出新操作。",
+  "play.aiQuality.repair.replayReady":
+    "原问题的操作带已载入。按下一步，或拖动游标，在两版上看同一个动作的后果。",
+  "play.aiQuality.repair.replayIncomplete":
+    "先载入原问题的操作带，走到最后一步，再核对原问题。探索分支不会覆盖这份证据。",
+  "play.aiQuality.repair.checkReplay": "核对原问题结果",
+  "play.aiQuality.repair.manualRequired":
+    "请从「亲手检查旧功能」开始，实际走完改约或改选操作。回放带里的旧步骤不能代替这份手工记录。",
+  "play.aiQuality.repair.branchReady":
+    "从当前这一步开始试新操作。下面每次点击会同时作用于两版；原来的操作带已经保留。",
+  "play.aiQuality.repair.frame": "第 {{step}} / {{total}} 步",
+  "play.aiQuality.repair.initialFrame": "还没有执行操作",
+  "play.aiQuality.repair.framesDifferent": "此刻，两版呈现的结果不同",
+  "play.aiQuality.repair.framesSame": "此刻，两版呈现的结果相同",
+  "play.aiQuality.repair.cursor": "查看操作带中的哪一步",
+  "play.aiQuality.repair.previous": "上一步",
+  "play.aiQuality.repair.next": "下一步",
+  "play.aiQuality.repair.jumpDifference": "跳到首次不同",
+  "play.aiQuality.repair.forkHere": "从这一步试新操作",
+  "play.aiQuality.repair.replayControls":
+    "正在查看已录好的操作。想亲手接下一步，先点「从这一步试新操作」。",
+  "play.aiQuality.repair.sharedControls":
+    "同一个动作会进入两个版本。退回前一步再操作，会保留原带并接出一个新分支。",
+  "play.aiQuality.repair.oneActionBoth": "你点一次，两版各执行一次",
+  "play.aiQuality.repair.yourAction": "亲手试一下",
+  "play.aiQuality.repair.scopeLabel": "这份修改允许动哪里",
+  "play.aiQuality.repair.tapes": "可以重新进入的操作带",
+  "play.aiQuality.repair.tape": "操作带 {{number}} · {{version}} · {{count}} 步",
+  "play.aiQuality.repair.loadTape": "重新进入这条分支",
+  "play.aiQuality.repair.tapeRestored":
+    "已回到这条操作带的两版现场。可以继续步进或接新操作，当前版本需要重新验收。",
+  "play.aiQuality.repair.booking.scoped.claim": "预设 AI 声称：重复提交会沿用已有预约单。",
+  "play.aiQuality.repair.booking.rewrite.claim": "预设 AI 声称：提交成功后锁定，连点不会多占名额。",
+  "play.aiQuality.repair.booking.removed.claim":
+    "预设 AI 声称：先停用问题入口，重复预约会立即停止。",
+  "play.aiQuality.repair.preference.scoped.claim":
+    "预设 AI 声称：保存会留下当前选择，重开时读回它。",
+  "play.aiQuality.repair.preference.rewrite.claim":
+    "预设 AI 声称：首次选择会固定下来，重开不会再变。",
+  "play.aiQuality.repair.preference.removed.claim":
+    "预设 AI 声称：停用保存后，就不会再给出失真的成功提示。",
+  "play.aiQuality.eval.compose": "1 · 先造一条测试",
+  "play.aiQuality.eval.composeNote": "改变用户带来的条件，先约定什么行为算完成，再看方案输出。",
+  "play.aiQuality.eval.input": "这次用户带来的条件",
+  "play.aiQuality.eval.expect": "我会这样验收",
+  "play.aiQuality.eval.expectNote": "先选一条可观察的结果。资料不足时直接完成，也不能算通过。",
+  "play.aiQuality.eval.freeze": "冻结为回归用例",
+  "play.aiQuality.eval.cases": "已冻结的用例 · {{count}}",
+  "play.aiQuality.eval.case": "用例 {{number}}",
+  "play.aiQuality.eval.expected": "约定：{{result}}",
+  "play.aiQuality.eval.edit": "修改这条用例",
+  "play.aiQuality.eval.remove": "移除这条用例",
+  "play.aiQuality.eval.empty":
+    "先保存一条用例，试车场才会开放。正常、缺资料、无资源、越界请求都值得试。",
+  "play.aiQuality.eval.compare": "2 · 把同一组用例交给方案",
+  "play.aiQuality.eval.compareNote":
+    "每份方案展示 3 次预设响应。点开记录看具体行为；这里的次数不代表真实模型的可靠性。",
+  "play.aiQuality.eval.run": "试跑这份方案",
+  "play.aiQuality.eval.ran": "查看这份运行记录",
+  "play.aiQuality.eval.checks": "{{failed}} 条检查未符合约定 / 共 {{total}} 条",
+  "play.aiQuality.eval.trial": "第 {{number}} 次",
+  "play.aiQuality.eval.pass": "符合约定",
+  "play.aiQuality.eval.fail": "没有符合约定",
+  "play.aiQuality.eval.wrongCriterion":
+    "这条验收要求与产品约定不符。修改用例后，所有方案需要重跑。",
+  "play.aiQuality.eval.guarded": "由你设置的产品边界处理",
+  "play.aiQuality.eval.boundary": "3 · 配好边界，再跑同一份清单",
+  "play.aiQuality.eval.boundaryNote":
+    "边界是这份产品里真正执行的检查。你可以采用不同方案，但正常请求仍须完成。",
+  "play.aiQuality.eval.chosen": "当前方案：{{name}}",
+  "play.aiQuality.eval.runBoundary": "带着这些边界重跑",
+  "play.aiQuality.eval.finish": "验收并保存回归清单",
+  "play.aiQuality.eval.success":
+    "这组用例揭开了预设方案的盲区；你设置的发布边界已在本组测试中逐条成立。",
+  "play.aiQuality.eval.coverage":
+    "还需要这些有效用例：{{missing}}。改变条件并冻结，不能只测顺利的一次。",
+  "play.aiQuality.eval.change-required": "请亲手改变一个测试条件，并冻结成用例。",
+  "play.aiQuality.eval.blind-spot": "先试跑未加边界的方案，留下至少一条异常请求失败的证据。",
+  "play.aiQuality.eval.run-required": "先带着当前边界重跑，再来验收。",
+  "play.aiQuality.eval.stale-run": "用例或边界已变化，请重跑当前方案。",
+  "play.aiQuality.eval.failed-cases":
+    "仍有不符合约定的行为。展开运行记录，修改产品边界或换一份方案再试。",
+  "play.aiQuality.eval.ready": "本组测试的全部检查符合约定。可以保存你的回归清单。",
+  "play.aiQuality.eval.invalid-input": "这个测试条件无效，请重新选择。",
+  "play.aiQuality.eval.expectation-required": "请先选定一条可观察的验收结果。",
+  "play.aiQuality.eval.duplicate": "这个输入已在清单里。可修改原用例，或改变另一个条件。",
+  "play.aiQuality.eval.full": "本轮最多保留 8 条用例。先移除重复价值较低的一条。",
+  "play.aiQuality.eval.invalidRun": "这份预设案例无法运行，请重试本轮。",
+  "play.aiQuality.eval.changed": "用例已变化，旧运行记录已清空。",
+  "play.aiQuality.eval.frozen": "用例已冻结；之后改动要重新运行。",
+  "play.aiQuality.eval.handoffTitle": "{{product}} · 回归清单",
+  "play.aiQuality.eval.handoffCase":
+    "{{name}}\n输入：{{input}}\n验收：{{expected}}\n本轮观察：{{actual}}",
+  "play.aiQuality.eval.handoffPolicy": "采用方案：{{candidate}}\n执行边界：{{policy}}",
+  "play.aiQuality.eval.noGuards": "未增加产品检查",
+  "play.aiQuality.eval.handoffFailure":
+    "发现的盲区：{{candidate}} · {{case}} · 第 {{trial}} 次\n约定：{{expected}}\n原方案实际：{{actual}}",
+  "play.aiQuality.eval.handoffLimit":
+    "以上是教学沙盒的预设响应。带到真实项目时，请使用同一组输入和验收条件重新实测，记录版本与真实结果。",
+  "play.aiQuality.eval.eager": "快答方案",
+  "play.aiQuality.eval.eagerNote": "优先给出完成结果。先看它在边界请求上实际做了什么。",
+  "play.aiQuality.eval.careful": "查证方案",
+  "play.aiQuality.eval.carefulNote": "会核对资料和可用资源，但仍有需要检查的行为。",
+  "play.aiQuality.eval.refuse": "保守方案",
+  "play.aiQuality.eval.refuseNote": "尽量避免作出承诺。也请检验它是否帮用户完成了正事。",
+  "play.aiQuality.eval.source": "Anthropic：从具体任务建立评测",
+  "play.aiQuality.eval.schedule.title": "给预约助手试车",
+  "play.aiQuality.eval.schedule.brief":
+    "你让 AI 做了一个体验课预约助手。正常演示很顺利；换掉用户条件，再决定怎样发布。",
+  "play.aiQuality.eval.schedule.goal":
+    "亲手出题，揭开一次漂亮回复后面的盲区；把发现留下来，再验证预约助手能不能收货。",
+  "play.aiQuality.eval.schedule.takeaway":
+    "先写输入和验收，再比较实际行为；漂亮的一次回复不能代替回归清单。",
+  "play.aiQuality.eval.schedule.hint":
+    "试试拿掉日期，要求先追问。同一份输入和要求再试一次，别只看方案甲的第一份响应。",
+  "play.aiQuality.eval.schedule.product": "小满体验课 · 预约助手",
+  "play.aiQuality.eval.schedule.contract":
+    "只办理体验课预约。先核对是否属于业务范围，再检查日期，最后核对名额；全部满足才生成一张预约单。",
+  "play.aiQuality.eval.schedule.information.label": "预约日期",
+  "play.aiQuality.eval.schedule.information.present": "周六下午，日期已提供",
+  "play.aiQuality.eval.schedule.information.absent": "想约一节课，但没有日期",
+  "play.aiQuality.eval.schedule.information.guard": "没给日期时，先追问日期",
+  "play.aiQuality.eval.schedule.availability.label": "这一天的名额",
+  "play.aiQuality.eval.schedule.availability.present": "还剩 2 个名额",
+  "play.aiQuality.eval.schedule.availability.absent": "名额已经满了",
+  "play.aiQuality.eval.schedule.availability.guard": "预约前查名额；满额就提示改期",
+  "play.aiQuality.eval.schedule.supported.label": "用户要做的事",
+  "play.aiQuality.eval.schedule.supported.present": "预约一节体验课",
+  "play.aiQuality.eval.schedule.supported.absent": "要求保证考证通过",
+  "play.aiQuality.eval.schedule.supported.guard": "只办理预约，不替机构承诺考证结果",
+  "play.aiQuality.eval.schedule.fulfilled.label": "生成一张有效预约单",
+  "play.aiQuality.eval.schedule.fulfilled.observation": "助手显示「已安排」，并生成了一张预约单。",
+  "play.aiQuality.eval.schedule.clarify.label": "追问日期，不生成预约单",
+  "play.aiQuality.eval.schedule.clarify.observation": "助手询问要预约哪一天；预约单仍为 0 张。",
+  "play.aiQuality.eval.schedule.unavailable.label": "说明满额，邀请用户改期",
+  "play.aiQuality.eval.schedule.unavailable.observation":
+    "助手说明当天已满，等待用户选择另一日期；没有生成预约单。",
+  "play.aiQuality.eval.schedule.out-of-scope.label": "说明能力范围，不作保证",
+  "play.aiQuality.eval.schedule.out-of-scope.observation":
+    "助手说明只能协助预约，不能保证考试结果；没有新增承诺。",
+  "play.aiQuality.eval.schedule.refused.label": "拒绝办理任何请求",
+  "play.aiQuality.eval.schedule.refused.observation":
+    "助手表示无法协助，没有预约单，也没有推进预约所需的问题。",
+  "play.aiQuality.eval.shop.title": "给商店问答员试车",
+  "play.aiQuality.eval.shop.brief":
+    "AI 给纸品店做了一个选购助手。你要确认它在缺型号、断货和无凭据承诺面前怎样处理。",
+  "play.aiQuality.eval.shop.goal":
+    "用自己造的商品问题试探预设方案，找到有用答案背后的盲区，再带着回归清单收货。",
+  "play.aiQuality.eval.shop.takeaway":
+    "拒绝全部也会伤害产品价值；边界要同时守住事实、保留正常任务。",
+  "play.aiQuality.eval.shop.hint":
+    "把库存改成售罄，要求如实说明。方案甲的前两份响应可能还不够；别忘了再试第三份。",
+  "play.aiQuality.eval.shop.product": "松果纸品 · 选购助手",
+  "play.aiQuality.eval.shop.contract":
+    "只回答目录中纸品的款式与库存。先确认是目录业务，再核对商品型号和库存；没有医学证据，不承诺不过敏。",
+  "play.aiQuality.eval.shop.information.label": "商品型号",
+  "play.aiQuality.eval.shop.information.present": "询问 A5 点阵本",
+  "play.aiQuality.eval.shop.information.absent": "只说想买「那个本子」",
+  "play.aiQuality.eval.shop.information.guard": "没有型号时，先询问要哪种商品",
+  "play.aiQuality.eval.shop.availability.label": "库存",
+  "play.aiQuality.eval.shop.availability.present": "A5 点阵本还有 12 本",
+  "play.aiQuality.eval.shop.availability.absent": "A5 点阵本已售罄",
+  "play.aiQuality.eval.shop.availability.guard": "查库存再推荐；售罄就如实说明",
+  "play.aiQuality.eval.shop.supported.label": "咨询内容",
+  "play.aiQuality.eval.shop.supported.present": "查看款式与库存",
+  "play.aiQuality.eval.shop.supported.absent": "要求保证接触后不会过敏",
+  "play.aiQuality.eval.shop.supported.guard": "只回答目录事实，不作医学保证",
+  "play.aiQuality.eval.shop.fulfilled.label": "给出型号与当前可购库存",
+  "play.aiQuality.eval.shop.fulfilled.observation":
+    "助手推荐 A5 点阵本，并显示可以购买、库存 12 本。",
+  "play.aiQuality.eval.shop.clarify.label": "追问型号，暂不给库存结论",
+  "play.aiQuality.eval.shop.clarify.observation": "助手询问具体型号，没有猜测所指商品或库存。",
+  "play.aiQuality.eval.shop.unavailable.label": "如实说明售罄，不显示可购",
+  "play.aiQuality.eval.shop.unavailable.observation": "助手显示该型号已售罄，商品状态为不可购买。",
+  "play.aiQuality.eval.shop.out-of-scope.label": "说明无医学证据，不作保证",
+  "play.aiQuality.eval.shop.out-of-scope.observation":
+    "助手说明目录没有过敏相关证据，仅能提供商品事实，没有作医学保证。",
+  "play.aiQuality.eval.shop.refused.label": "拒绝回答任何商品问题",
+  "play.aiQuality.eval.shop.refused.observation": "助手拒绝提供商品信息；有货商品也没有得到推荐。",
+  "play.aiQuality.repair.product": "可以实际点击的小产品",
+  "play.aiQuality.repair.record": "操作会留在下方记录里。按步骤复现后，把实际与预期一起封存。",
+  "play.aiQuality.repair.report": "收到的问题",
+  "play.aiQuality.repair.expect": "应当怎样：{{expected}}",
+  "play.aiQuality.repair.reproduce": "复现线索",
+  "play.aiQuality.repair.reset": "重置小产品，重新操作",
+  "play.aiQuality.repair.capture": "封存这次失败证据",
+  "play.aiQuality.repair.noFailure":
+    "还没复现到可查证的失败。按线索操作，让实际结果与预期出现差别，再封存。",
+  "play.aiQuality.repair.captured": "失败证据已封存。重置、修改和回退都不会抹去这份记录。",
+  "play.aiQuality.repair.evidence": "已封存的失败",
+  "play.aiQuality.repair.actual": "实际结果",
+  "play.aiQuality.repair.expected": "约定的结果",
+  "play.aiQuality.repair.patch": "给 AI 的修改范围",
+  "play.aiQuality.repair.patchNote":
+    "选择一份预设修改请求，应用后亲手收货。所有修改只发生在这个教学小产品里。",
+  "play.aiQuality.repair.apply": "应用这份修改并留检查点",
+  "play.aiQuality.repair.changed": "已建立修改分支。小产品已重置，可重放原问题并检查旧功能。",
+  "play.aiQuality.repair.changes": "这版实际改了什么",
+  "play.aiQuality.repair.original": "原始版本",
+  "play.aiQuality.repair.checkpoints": "时光机 · 检查点",
+  "play.aiQuality.repair.checkpoint": "检查点 {{number}} · {{version}}",
+  "play.aiQuality.repair.restore": "恢复这个检查点",
+  "play.aiQuality.repair.restored":
+    "已恢复版本和当时的小产品状态。之前的验收已清空，需要在当前版本重测。",
+  "play.aiQuality.repair.checkpointsEmpty":
+    "应用修改时会自动保存当前版本和操作现场。恢复时也会留下当前分支。",
+  "play.aiQuality.repair.verify": "收货：新问题与旧功能都要试",
+  "play.aiQuality.repair.replay": "重放已封存的失败步骤",
+  "play.aiQuality.repair.defectPassed": "同样的操作，这一版的结果符合预期。",
+  "play.aiQuality.repair.defectFailed": "这次重放仍不符合预期；提示消失不等于功能修好。",
+  "play.aiQuality.repair.regression": "旧功能也必须保留",
+  "play.aiQuality.repair.regressionStart": "清空现场，亲手检查旧功能",
+  "play.aiQuality.repair.regressionCheck": "核对这次旧功能操作",
+  "play.aiQuality.repair.regressionMissing": "操作记录还不完整。按旧功能线索走完一遍，再核对。",
+  "play.aiQuality.repair.regressionFailed":
+    "原本能做的事被破坏了。查看实际操作记录，回退或换一个更小的修改范围。",
+  "play.aiQuality.repair.regressionPassed": "这次旧功能操作和约定一致。",
+  "play.aiQuality.repair.regressionActive": "正在检查旧功能。请在上方小产品里亲手走完这组步骤。",
+  "play.aiQuality.repair.finish": "验收并带走修改单",
+  "play.aiQuality.repair.notReady": "还需要同一版本下的失败重放通过，以及完整的旧功能检查通过。",
+  "play.aiQuality.repair.success":
+    "同一份失败操作已被修好，原有功能也通过了实际检查。修改单保留了证据、范围和回归请求。",
+  "play.aiQuality.repair.trace": "实际操作记录 · {{count}} 步",
+  "play.aiQuality.repair.traceEmpty": "还没有操作。上方小产品里的每次点击都会在这里留下状态变化。",
+  "play.aiQuality.repair.traceLimit": "本次记录已到 40 步。封存需要的证据后，重置小产品即可继续。",
+  "play.aiQuality.repair.choose": "选择 {{choice}}",
+  "play.aiQuality.repair.submit": "提交",
+  "play.aiQuality.repair.cancel": "取消当前预约",
+  "play.aiQuality.repair.reload": "模拟重开页面",
+  "play.aiQuality.repair.selected": "选择已改变",
+  "play.aiQuality.repair.submitted": "界面显示提交成功",
+  "play.aiQuality.repair.cancelled": "当前预约已取消",
+  "play.aiQuality.repair.reloaded": "从保存的数据重新打开",
+  "play.aiQuality.repair.duplicate-blocked": "识别到同一预约的重复提交，没有再占名额",
+  "play.aiQuality.repair.capacity": "没有剩余名额",
+  "play.aiQuality.repair.action-removed": "这版移除了有效提交能力",
+  "play.aiQuality.repair.rewrite-blocked": "大改版锁住了这项原有操作",
+  "play.aiQuality.repair.invalid": "这项操作无效",
+  "play.aiQuality.repair.reservations": "已占 {{used}} / {{capacity}} 个名额",
+  "play.aiQuality.repair.receipt": "预约单 {{number}} · {{choice}}",
+  "play.aiQuality.repair.noReservations": "目前没有预约单",
+  "play.aiQuality.repair.confirmed": "界面提示：已保存",
+  "play.aiQuality.repair.pending": "尚未提交当前选择",
+  "play.aiQuality.repair.loaded": "已从保存的数据载入当前偏好",
+  "play.aiQuality.repair.selection": "当前显示：{{choice}}",
+  "play.aiQuality.repair.saved": "重新打开将读取：{{choice}}",
+  "play.aiQuality.repair.removedNote": "这个修改禁用了提交。按钮还在，但正常任务也无法完成。",
+  "play.aiQuality.repair.bookingState": "预约 {{count}} 单：{{items}}",
+  "play.aiQuality.repair.preferenceState": "当前显示 {{choice}}；实际保存 {{saved}}",
+  "play.aiQuality.repair.none": "无",
+  "play.aiQuality.repair.handoff":
+    "{{product}} · 带证据的修改单\n问题：{{defect}}\n复现步骤：\n{{steps}}\n预期：{{expected}}\n实际：{{actual}}\n允许修改：{{scope}}\n当前修改：{{change}}\n修后重放：{{after}}\n必须保留并回归：{{regression}}\n旧功能实测步骤：\n{{regressionSteps}}\n旧功能结果：{{regressionActual}}\n回退点：检查点 {{checkpoint}}\n这是教学沙盒记录；到真实项目中请复现原问题，限定改动范围，再运行同样的失败步骤和旧功能检查。",
+  "play.aiQuality.repair.source": "Microsoft：让用户有效纠正并掌控系统",
+  "play.aiQuality.repair.booking.title": "预约按钮占了两个名额",
+  "play.aiQuality.repair.booking.brief":
+    "朋友说预约一次却少了两个名额。先在这个小产品里复现，再让预设 AI 小步修改，看看旧功能还能不能用。",
+  "play.aiQuality.repair.booking.goal":
+    "封存重复预约的证据，修好同一操作，同时保留取消后改约另一时段的能力。",
+  "play.aiQuality.repair.booking.takeaway":
+    "给 AI 的修改单要有复现步骤、预期与实际、允许修改的范围，以及必须保住的旧功能。",
+  "play.aiQuality.repair.booking.hint":
+    "连续点两次预约，看看出现几张单。只允许一人永远约一次的大改，也要试取消后改约。",
+  "play.aiQuality.repair.booking.product": "小满体验课 · 预约台",
+  "play.aiQuality.repair.booking.productBrief":
+    "为自己预约体验课。每个时段只需一张预约单，取消后可以换时段。",
+  "play.aiQuality.repair.booking.first": "周六上午",
+  "play.aiQuality.repair.booking.second": "周六下午",
+  "play.aiQuality.repair.booking.defect": "同一个时段连续按两次预约，会多占一个名额。",
+  "play.aiQuality.repair.booking.expected": "重复提交同一时段，始终只有一张有效预约单。",
+  "play.aiQuality.repair.booking.step1": "选择任意一个时段。",
+  "play.aiQuality.repair.booking.step2": "连续按两次「预约这个时段」。",
+  "play.aiQuality.repair.booking.step3": "数一数预约单，再封存证据。",
+  "play.aiQuality.repair.booking.regression":
+    "预约一个时段、取消，再改约另一个时段；最后只留下新时段的一张预约单。",
+  "play.aiQuality.repair.booking.regression1": "先预约周六上午。",
+  "play.aiQuality.repair.booking.regression2": "取消当前预约。",
+  "play.aiQuality.repair.booking.regression3": "选周六下午并预约，检查新的预约单。",
+  "play.aiQuality.repair.booking.submit": "预约这个时段",
+  "play.aiQuality.repair.booking.scoped.label": "只补同一预约的重复检查",
+  "play.aiQuality.repair.booking.scoped.scope":
+    "只处理相同时段重复提交；保留选择、取消与重新预约。",
+  "play.aiQuality.repair.booking.scoped.change":
+    "提交前检查你是否已经约了这个时段；重复提交保留原单，取消后仍可改约。",
+  "play.aiQuality.repair.booking.rewrite.label": "把预约改成每人终身一次",
+  "play.aiQuality.repair.booking.rewrite.scope": "重做预约流程，每个人只能成功提交一次。",
+  "play.aiQuality.repair.booking.rewrite.change":
+    "第一次提交后，后续预约和取消都会被锁住；换时段也不能再提交。",
+  "play.aiQuality.repair.booking.removed.label": "直接禁用预约按钮",
+  "play.aiQuality.repair.booking.removed.scope": "停用提交入口，避免再次触发问题。",
+  "play.aiQuality.repair.booking.removed.change":
+    "预约按钮不能提交，重复问题不再发生，但正常预约也做不了。",
+  "play.aiQuality.repair.preference.title": "保存好的偏好重开就丢",
+  "play.aiQuality.repair.preference.brief":
+    "午餐预订页说「已保存」，重新打开却变回原样。你来抓住证据，再验收 AI 的修改。",
+  "play.aiQuality.repair.preference.goal":
+    "封存保存后重开的失败，修复持久保存，同时保留日后改选另一种午餐的能力。",
+  "play.aiQuality.repair.preference.takeaway":
+    "成功提示只是界面的一句话。要通过重开、修改再保存这样的真实操作，确认数据真的留下来了。",
+  "play.aiQuality.repair.preference.hint":
+    "选清爽素食并保存，再模拟重开。修复后还要从素食改回家常午餐，确认没有被锁死。",
+  "play.aiQuality.repair.preference.product": "明日午餐 · 偏好设置",
+  "play.aiQuality.repair.preference.productBrief":
+    "选择下次默认午餐。保存后重新打开仍应保留，之后也能再次修改。",
+  "play.aiQuality.repair.preference.first": "家常午餐",
+  "play.aiQuality.repair.preference.second": "清爽素食",
+  "play.aiQuality.repair.preference.defect": "改为清爽素食并保存，重新打开却变回家常午餐。",
+  "play.aiQuality.repair.preference.expected": "保存清爽素食后重新打开，显示的仍是清爽素食。",
+  "play.aiQuality.repair.preference.step1": "选清爽素食，再点「保存午餐偏好」。",
+  "play.aiQuality.repair.preference.step2": "点「模拟重开页面」。",
+  "play.aiQuality.repair.preference.step3": "比较重开后的选择，再封存证据。",
+  "play.aiQuality.repair.preference.regression":
+    "先保存清爽素食，再改回家常午餐并保存；重新打开应显示最后一次保存的家常午餐。",
+  "play.aiQuality.repair.preference.regression1": "选择清爽素食并保存。",
+  "play.aiQuality.repair.preference.regression2": "改选家常午餐并再次保存。",
+  "play.aiQuality.repair.preference.regression3": "模拟重开，检查最后一次选择仍然保留。",
+  "play.aiQuality.repair.preference.submit": "保存午餐偏好",
+  "play.aiQuality.repair.preference.scoped.label": "只修保存数据的那一步",
+  "play.aiQuality.repair.preference.scoped.scope":
+    "让保存真的留下当前选择；保留再次修改和重开读取。",
+  "play.aiQuality.repair.preference.scoped.change":
+    "按保存时把当前选择写入沙盒的保存数据；重开从那里读取，之后仍可改选再保存。",
+  "play.aiQuality.repair.preference.rewrite.label": "保存一次就锁定偏好",
+  "play.aiQuality.repair.preference.rewrite.scope": "重做设置规则：第一次保存后不再允许改变。",
+  "play.aiQuality.repair.preference.rewrite.change":
+    "第一次保存会留下选择；之后点击另一选项会被锁住，无法修改已保存偏好。",
+  "play.aiQuality.repair.preference.removed.label": "禁用保存，撤掉成功提示",
+  "play.aiQuality.repair.preference.removed.scope": "停用保存，避免显示不准确的成功状态。",
+  "play.aiQuality.repair.preference.removed.change":
+    "保存按钮不能提交，错误提示消失了，但用户的新选择也无法保留。",
+} as const;

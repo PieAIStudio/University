@@ -1,0 +1,57 @@
+# 十种玩法：独立体验复核简报
+
+本批发现的两个确定问题已修，并通过独立同区域复核。限定本次检查范围，没有需继续修复的阻断项。实际查看了十个手机入口，走了 Agent 与评测入门的前三个决定，检查评测挑战要求及状态切换；另补核主代理已列的调度入口和反例反馈。
+
+这是独立 AI 观察，不是真人学习效果验证。会话为独立 `play-aftercritic-independent-361f7992ad12`，390×844、dark、http://127.0.0.1:21998，现已关闭。本人没有改产品、构建或运行测试。最终21996静态构建对照仍由主代理捕获；本简报的两项fixed只使用本人同一21998前后区域证据。
+
+## 集中处理的两项问题
+
+| 项目 | 影响 | 处置 |
+| --- | --- | --- |
+| AC-001 评测首按钮与意见入口相交 | High：主动作右段被另一按钮占用 | 合并情境与难度行后上移44px，已复核fixed |
+| AC-002 正常题却要求先改条件 | High：字面提示把学习者引离当前要验证的正常请求 | 改为“确认或调整条件”，同路径复核fixed |
+
+### AC-001：主操作现在完整可点
+
+修复前：
+
+![评测首按钮修复前](/Users/yuanfei/PieAI/University-play/SCRATCH/play-usability/critic-evidence/eval-entry-before-crop.png)
+
+修复后，同一首屏区域：
+
+![评测首按钮修复后](/Users/yuanfei/PieAI/University-play/SCRATCH/play-usability/critic-evidence/eval-entry-after-crop.png)
+
+试跑按钮目前在y678.89–722.89，意见入口在y727–761，两者不相交。原图：[前](/Users/yuanfei/PieAI/University-play/SCRATCH/play-usability/critic-evidence/eval-intro-0.png)、[后](/Users/yuanfei/PieAI/University-play/SCRATCH/play-usability/critic-evidence/eval-intro-fixed-entry-ready.png)。结论只覆盖指定首按钮，没有扩展成“所有浮动入口都不会挡内容”。
+
+### AC-002：正常条件可以直接拿去验收
+
+原空态要求先改条件：
+
+![正常题提示修复前](/Users/yuanfei/PieAI/University-play/SCRATCH/play-usability/critic-evidence/eval-compose-before-crop.png)
+
+同一实际路径修复后：
+
+![正常题提示修复后](/Users/yuanfei/PieAI/University-play/SCRATCH/play-usability/critic-evidence/eval-compose-after-crop.png)
+
+当前界面已经给出日期、名额和支持的业务，下一步就是自己选择预期结果并冻结；“确认或调整”不会强迫把正常条件改成异常。原图：[前](/Users/yuanfei/PieAI/University-play/SCRATCH/play-usability/critic-evidence/eval-intro-3-compose.png)、[后](/Users/yuanfei/PieAI/University-play/SCRATCH/play-usability/critic-evidence/eval-intro-fixed-compose.png)。
+
+## 另外确认的行为
+
+- Agent 入门：手动读取授权→选择具体草稿文件→执行，结果确实写成草稿；自由探索往返保留当前步骤和授权，不假造完成。
+- 评测入门：同一输入实际出现0单／1单的反差；自行选择正常验收后，已有异常用例保留。换挑战会新开一轮。
+- 评测挑战：公开列出4类请求和2条交叉条件，约定写清范围→信息→名额优先级；没有仅靠隐藏提示冒充难度。[要求证据](/Users/yuanfei/PieAI/University-play/SCRATCH/play-usability/critic-evidence/eval-challenge-2-requirements-open.png)。
+- 调度：三个入口同排，不能用的缓存灰置，两个有效入口完整进入首屏；处理后进入下一请求并显示成本变化。
+
+![调度有效入口](/Users/yuanfei/PieAI/University-play/SCRATCH/play-usability/critic-evidence/dispatch-entry-after-crop.png)
+
+- 反例：第一次试验后，输入、规格与实际结果一起可见；返回按钮确实把焦点送回可见输入框。
+
+![反例真实结果](/Users/yuanfei/PieAI/University-play/SCRATCH/play-usability/critic-evidence/hunt-result-after-crop.png)
+
+调度／反例这两项是根代理同批发现后的补核，本人没有对应修复前动态截图，因此只报告修复后行为成立。
+
+## 收束与限制
+
+主代理已按本轮授权处理两项发现，无需新增批准；后续只需既定测试与最终静态构建证据收束。本次没有增加新的设计方向或扩大成全套通关审查。
+
+未覆盖全部情境／难度的完整通关、英文、桌面与真实手机；未评价动画节奏和真人理解／记忆。完整逐屏七问、路径顺序、排除的HMR诊断截图见[独立报告](/Users/yuanfei/PieAI/University-play/SCRATCH/play-usability/after-critic.md)，结构化问题见[证据包](/Users/yuanfei/PieAI/University-play/SCRATCH/play-usability/critic-evidence/evidence-packets.json)。
