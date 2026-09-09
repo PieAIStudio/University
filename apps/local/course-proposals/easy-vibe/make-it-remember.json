@@ -162,8 +162,8 @@
         }
       ],
       "cards": [
-        {
-          "id": "make-it-remember-four-data-actions",
+              {
+                "id": "make-it-remember-four-data-actions",
           "kind": "basic",
           "front": "新增、读取、修改、删除分别解决什么问题？",
           "back": "新增把一条新记录放进表，读取把已有记录取出来，修改改变已有记录的字段，删除移除不再需要的记录。保存、历史、编辑、移除等功能通常由它们组合而成。",
@@ -178,10 +178,58 @@
               "sourceUrl": "https://supabase.com/docs/reference/javascript/insert",
               "sourceTitle": "JavaScript: insert | Supabase Docs",
               "sourceAuthority": "official-docs"
-            }
-          ]
-        }
-      ],
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-insert-can-duplicate",
+                "kind": "basic",
+                "front": "为什么把“保存”按钮一直接到 insert 会产生重复记录？",
+                "back": "insert 的作用是新增一行，不是寻找并改掉旧行；用户每点一次就可能再放进一条记录。已有记录要修改时，应使用 update，并用记录 ID 或其他条件锁定目标。",
+                "tags": [
+                  "crud",
+                  "insert",
+                  "update"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Supabase 官方文档把 insert 定义为向表或视图执行 INSERT，并单独提供 update 操作。",
+                    "sourceUrl": "https://supabase.com/docs/reference/javascript/insert",
+                    "sourceTitle": "JavaScript: insert | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-scope-update-delete",
+                "kind": "basic",
+                "front": "修改或删除一条数据时，为什么要带明确的过滤条件？",
+                "back": "update 和 delete 都需要知道目标是哪一行；用 eq 之类的条件锁定记录 ID，才能避免把同一张表里不该动的其他行一起改掉或删掉。",
+                "tags": [
+                  "crud",
+                  "update",
+                  "delete",
+                  "data-scope"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Supabase 的 update 和 delete 示例都在动作后用 eq 指定目标记录。",
+                    "sourceUrl": "https://supabase.com/docs/reference/javascript/update",
+                    "sourceTitle": "JavaScript: update | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  },
+                  {
+                    "kind": "fact",
+                    "note": "Supabase delete 参考展示了 delete 后用 eq 指定要删除的记录。",
+                    "sourceUrl": "https://supabase.com/docs/reference/javascript/delete",
+                    "sourceTitle": "JavaScript: delete | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
       "exercises": [
         {
           "id": "make-it-remember-crud-map",
@@ -234,8 +282,8 @@
         }
       ],
       "cards": [
-        {
-          "id": "make-it-remember-rls-owner-filter",
+              {
+                "id": "make-it-remember-rls-owner-filter",
           "kind": "basic",
           "front": "为什么只在前端过滤 user_id 不够？",
           "back": "前端发来的过滤条件可以被改掉，不能承担最终权限。RLS 在数据库里执行策略，例如让 auth.uid() 必须等于行的 user_id，直接请求数据库时也会受到这条边界约束。",
@@ -251,10 +299,70 @@
               "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
               "sourceTitle": "Row Level Security | Supabase Docs",
               "sourceAuthority": "official-docs"
-            }
-          ]
-        }
-      ],
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-default-private",
+                "kind": "basic",
+                "front": "为什么个人数据的起点应该是“谁也看不见别人的”？",
+                "back": "因为把表暴露出去而没有正确的 RLS，具备相应权限的角色可能直接读写它。先把默认边界设成只能访问自己的行，再明确开放共享，漏写规则时才不会把隐私当成默认公开。",
+                "tags": [
+                  "rls",
+                  "data-privacy",
+                  "default-private"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Supabase 说明没有 RLS 的暴露表可能被具备相应 grant 的角色读写，并建议为表启用 RLS。",
+                    "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+                    "sourceTitle": "Row Level Security | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-policies-per-action",
+                "kind": "basic",
+                "front": "为什么不能只写一条读取策略就算保护了个人数据？",
+                "back": "读取、新增、修改、删除是四种不同动作，RLS 要分别规定每种动作允许什么。尤其新增要检查新行的 user_id，修改还要同时检查原行和改完后的行归谁。",
+                "tags": [
+                  "rls",
+                  "crud",
+                  "data-privacy"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Supabase RLS 指南分别说明 select、insert、update、delete 的策略条件，并说明 with check 可限制新行归属。",
+                    "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+                    "sourceTitle": "Row Level Security | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-two-account-smoke-test",
+                "kind": "basic",
+                "front": "用两个账号互测个人数据时，最低要验证什么？",
+                "back": "账号 A 保存一条记录后，A 能读到自己的记录；换成账号 B，读不到 A 的记录。再用 B 尝试修改和删除 A 的记录，数据库也应拒绝，而不是只在页面上隐藏按钮。",
+                "tags": [
+                  "rls",
+                  "two-user-test",
+                  "data-privacy"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Supabase RLS 示例用请求用户的 auth.uid() 与行的 user_id 比较，并分别展示读取、修改和删除策略。",
+                    "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+                    "sourceTitle": "Row Level Security | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
       "exercises": [
         {
           "id": "make-it-remember-two-user-access-test",
@@ -307,8 +415,8 @@
         }
       ],
       "cards": [
-        {
-          "id": "make-it-remember-session-identity",
+              {
+                "id": "make-it-remember-session-identity",
           "kind": "basic",
           "front": "登录成功后，后续请求凭什么知道是哪个用户？",
           "back": "认证系统建立 session，并用 access token 与 refresh token 表示它。后续请求带着有效的 session，数据库才能取得当前用户身份，再用它执行行级权限规则。",
@@ -324,10 +432,57 @@
               "sourceUrl": "https://supabase.com/docs/guides/auth/sessions",
               "sourceTitle": "User sessions | Supabase Docs",
               "sourceAuthority": "official-docs"
-            }
-          ]
-        }
-      ],
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-auth-vs-authorization",
+                "kind": "basic",
+                "front": "认证和授权分别回答什么问题？",
+                "back": "认证回答“当前请求是谁”，由登录建立的 session 和令牌提供身份；授权回答“这个身份能碰哪些行”，由 RLS 等数据策略决定。登录成功不代表自动拥有所有数据权限。",
+                "tags": [
+                  "login",
+                  "authentication",
+                  "authorization"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Supabase 会话文档说明 session 由 access token 和 refresh token 表示，RLS 文档说明 auth.uid() 可用于行归属策略。",
+                    "sourceUrl": "https://supabase.com/docs/guides/auth/sessions",
+                    "sourceTitle": "User sessions | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  },
+                  {
+                    "kind": "fact",
+                    "note": "Supabase RLS 文档展示用 auth.uid() 与 user_id 比较来限制用户可访问的行。",
+                    "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+                    "sourceTitle": "Row Level Security | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-user-id-is-not-proof",
+                "kind": "basic",
+                "front": "为什么不能把用户自己填写的 user_id 当成登录身份？",
+                "back": "输入框里的 user_id 是用户可以改的普通数据，不是认证凭证。当前用户身份应来自有效 session，数据库再用 auth.uid() 与行的 user_id 比较，而不是相信页面传来的归属值。",
+                "tags": [
+                  "login",
+                  "identity",
+                  "row-owner"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Supabase RLS 文档说明 auth.uid() 返回发起请求的用户 ID，未认证时返回 null。",
+                    "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+                    "sourceTitle": "Row Level Security | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
       "exercises": [
         {
           "id": "make-it-remember-login-to-row-access",
@@ -380,8 +535,8 @@
         }
       ],
       "cards": [
-        {
-          "id": "make-it-remember-select-three-questions",
+              {
+                "id": "make-it-remember-select-three-questions",
           "kind": "basic",
           "front": "读一条 SELECT 时先找哪三块？",
           "back": "先找 SELECT 后要返回的列，再找 FROM 后的数据表，最后找 WHERE 后筛选行的条件；若有 ORDER BY，再看结果如何排序。",
@@ -397,10 +552,57 @@
               "sourceUrl": "https://www.postgresql.org/docs/current/tutorial-select.html",
               "sourceTitle": "PostgreSQL: Documentation: 18: 2.5. Querying a Table",
               "sourceAuthority": "official-docs"
-            }
-          ]
-        }
-      ],
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-where-vs-order",
+                "kind": "basic",
+                "front": "SQL 里的 WHERE 和 ORDER BY 分别做什么？",
+                "back": "WHERE 决定哪些行符合条件、可以被返回；ORDER BY 只改变这些结果的排列顺序。排序不会替你筛掉不该访问的行。",
+                "tags": [
+                  "sql",
+                  "where",
+                  "order-by"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "PostgreSQL 官方文档说明 WHERE 只返回条件为真的行，并单独说明 ORDER BY 用于排序查询结果。",
+                    "sourceUrl": "https://www.postgresql.org/docs/current/tutorial-select.html",
+                    "sourceTitle": "PostgreSQL: Documentation: 18: 2.5. Querying a Table",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "make-it-remember-query-vs-rls",
+                "kind": "basic",
+                "front": "SQL 里的 WHERE 条件能代替 RLS 吗？",
+                "back": "不能。WHERE 是这一条查询主动写出的筛选条件；RLS 是数据库对请求额外执行的访问规则。个人数据要两层都正确，不能只相信页面传来的 user_id。",
+                "tags": [
+                  "sql",
+                  "rls",
+                  "data-privacy"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "PostgreSQL 说明 WHERE 负责限定查询返回哪些行，Supabase 说明 RLS policy 会像额外的 WHERE 条件作用于查询。",
+                    "sourceUrl": "https://www.postgresql.org/docs/current/tutorial-select.html",
+                    "sourceTitle": "PostgreSQL: Documentation: 18: 2.5. Querying a Table",
+                    "sourceAuthority": "official-docs"
+                  },
+                  {
+                    "kind": "fact",
+                    "note": "Supabase RLS 文档说明策略会在数据库层限制请求可见的行，并可用 auth.uid() 与 user_id 比较。",
+                    "sourceUrl": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+                    "sourceTitle": "Row Level Security | Supabase Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
       "exercises": [
         {
           "id": "make-it-remember-write-one-select",

@@ -31,8 +31,8 @@
         }
       ],
       "cards": [
-        {
-          "id": "give-it-ai-api-request-response",
+              {
+                "id": "give-it-ai-api-request-response",
           "kind": "basic",
           "front": "一次最小的模型调用要看哪四段？",
           "back": "看输入、发出的请求、收到的回应、页面显示。输入是读者粘来的文字，请求把它送到接口，回应带回模型文本，显示把文本放进页面。",
@@ -47,10 +47,50 @@
               "sourceUrl": "https://platform.claude.com/docs/en/api/http/messages/create",
               "sourceTitle": "Create a Message - Claude API Reference",
               "sourceAuthority": "official-docs"
-            }
-          ]
-        }
-      ],
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-api-contract-parts",
+                "kind": "basic",
+                "front": "一个 API 约定至少要说清楚哪些事？",
+                "back": "要说清请求发到哪里、用什么方法、带哪些输入字段，以及回应会以什么结构回来。缺了其中一块，调用双方就无法稳定交接。",
+                "tags": [
+                  "api",
+                  "contract",
+                  "request-response"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Anthropic 的 Messages API 参考列出 POST /v1/messages，并定义 messages 输入和模型生成的下一条消息。",
+                    "sourceUrl": "https://platform.claude.com/docs/en/api/http/messages/create",
+                    "sourceTitle": "Create a Message - Claude API Reference",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-page-needs-fetch",
+                "kind": "basic",
+                "front": "页面有了输入框，为什么还不会自动出现模型回复？",
+                "back": "输入框只收集文字；页面还要用 fetch 发出请求，读取返回的 Response，再把回应里的文字放进结果区域。少了请求或显示，输入就不会变成用户看见的答案。",
+                "tags": [
+                  "fetch",
+                  "request-response",
+                  "frontend"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "MDN 展示 fetch 发起请求后得到 Response，并读取回应继续处理。",
+                    "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch",
+                    "sourceTitle": "Window: fetch() method - Web APIs | MDN",
+                    "sourceAuthority": "mdn"
+                  }
+                ]
+              }
+            ],
       "exercises": [
         {
           "id": "give-it-ai-map-your-call",
@@ -103,8 +143,8 @@
         }
       ],
       "cards": [
-        {
-          "id": "give-it-ai-browser-secret",
+              {
+                "id": "give-it-ai-browser-secret",
           "kind": "basic",
           "front": "为什么把 API 密钥写进前端就等于公开？",
           "back": "因为浏览器必须先拿到前端代码和请求才能执行它。访客可以用 F12 的 Sources 看加载的代码，也可以在 Network 查看请求头；只要密钥在其中，访客就能复制它，而不是只能看到一个不可用的名字。",
@@ -119,10 +159,50 @@
               "sourceUrl": "https://developer.chrome.com/docs/devtools/network/reference/",
               "sourceTitle": "Network features reference | Chrome DevTools",
               "sourceAuthority": "official-docs"
-            }
-          ]
-        }
-      ],
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-secret-rotation",
+                "kind": "basic",
+                "front": "真实 API 密钥已经进了公开页面，删掉代码后还要做什么？",
+                "back": "先在提供方停用或删除这把旧钥匙，再部署代码修复。删掉页面只能让新访客暂时看不到，不能让已经被拿走的凭证自动失效。",
+                "tags": [
+                  "api-key",
+                  "incident-response",
+                  "browser-security"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Anthropic 认证文档把 API key 作为静态秘密，并说明发现泄露时应停用或删除。",
+                    "sourceUrl": "https://platform.claude.com/docs/en/manage-claude/authentication",
+                    "sourceTitle": "Authentication - Claude Platform Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-server-holds-secret",
+                "kind": "basic",
+                "front": "安全的模型调用里，浏览器和服务端各自该拿到什么？",
+                "back": "浏览器拿到自己的业务接口和解释结果；服务端才读取并保存模型 API 密钥，再代表页面请求模型。密钥应留在你能控制秘密存储的服务端。",
+                "tags": [
+                  "api-key",
+                  "server",
+                  "secret-storage"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Anthropic 认证文档将静态 API key 归为适合由调用方控制秘密存储的服务器场景的凭证。",
+                    "sourceUrl": "https://platform.claude.com/docs/en/manage-claude/authentication",
+                    "sourceTitle": "Authentication - Claude Platform Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
       "exercises": [
         {
           "id": "give-it-ai-redraw-secret-route",
@@ -168,8 +248,8 @@
         }
       ],
       "cards": [
-        {
-          "id": "give-it-ai-baseline-first",
+              {
+                "id": "give-it-ai-baseline-first",
           "kind": "basic",
           "front": "为什么第一次要先原样跑官方示例？",
           "back": "它提供一个已说明请求结构和运行顺序的基线。先得到原始模型回复，再一次只改输入，出了问题时可以把自己的改动与基线逐项比较。",
@@ -184,10 +264,50 @@
               "sourceUrl": "https://platform.claude.com/docs/en/get-started",
               "sourceTitle": "Get started with Claude - Claude Platform Docs",
               "sourceAuthority": "official-docs"
-            }
-          ]
-        }
-      ],
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-first-success-proof",
+                "kind": "basic",
+                "front": "第一次调用什么才算真的成功？",
+                "back": "要看到一次真实的模型文字回应。代码没有报红只能说明程序暂时没在语法处停下，不能证明密钥、模型、请求字段和回应链路都已经接通。",
+                "tags": [
+                  "quickstart",
+                  "verification",
+                  "model-response"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Anthropic 快速入门把设置密钥、创建消息、运行调用和查看回应列为最小路径。",
+                    "sourceUrl": "https://platform.claude.com/docs/en/get-started",
+                    "sourceTitle": "Get started with Claude - Claude Platform Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-max-tokens-is-a-ceiling",
+                "kind": "basic",
+                "front": "请求里的 max_tokens 是实际会生成的字数吗？",
+                "back": "不是。它只是允许生成的最高 token 数，模型可能在达到这个上限前就停止；实际回应长短仍要看这次生成结果。",
+                "tags": [
+                  "quickstart",
+                  "max-tokens",
+                  "model-response"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Anthropic Messages API 参考明确说明 max_tokens 是生成上限，模型可能在达到上限前停止。",
+                    "sourceUrl": "https://platform.claude.com/docs/en/api/http/messages/create",
+                    "sourceTitle": "Create a Message - Claude API Reference",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
       "exercises": [
         {
           "id": "give-it-ai-one-change-log",
@@ -370,8 +490,8 @@
         }
       ],
       "cards": [
-        {
-          "id": "give-it-ai-input-output-billing",
+              {
+                "id": "give-it-ai-input-output-billing",
           "kind": "basic",
           "front": "为什么一次模型调用要把输入和输出分开算？",
           "back": "提供方会分别统计送进模型的 input tokens 和模型生成的 output tokens，并给它们各自的单价。估算时把两项分别相乘再相加，不能只数回复文字。",
@@ -386,10 +506,50 @@
               "sourceUrl": "https://platform.claude.com/docs/en/about-claude/pricing",
               "sourceTitle": "Pricing - Claude Platform Docs",
               "sourceAuthority": "official-docs"
-            }
-          ]
-        }
-      ],
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-history-raises-input",
+                "kind": "basic",
+                "front": "多轮对话为什么可能让下一轮输入费变高？",
+                "back": "如果下一次请求把之前的用户消息和模型回复一并放回 messages，它们也会成为这次要处理的输入 token。对话变长时，输入项可能反复增加。",
+                "tags": [
+                  "tokens",
+                  "context",
+                  "cost"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Anthropic Messages API 参考说明此前的 user、assistant 对话轮次可以放进 messages，作为当前请求的输入。",
+                    "sourceUrl": "https://platform.claude.com/docs/en/api/http/messages/create",
+                    "sourceTitle": "Create a Message - Claude API Reference",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-count-before-sending",
+                "kind": "basic",
+                "front": "想在发送《说人话》的长文本前估算输入量，可以用什么？",
+                "back": "用提供方的 token counting 端点先估算这条消息会占多少输入 token，再结合当前价格页计算可能的输入费用。它是发送前的估算，不是最终账单。",
+                "tags": [
+                  "tokens",
+                  "cost",
+                  "token-counting"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "Anthropic 提供 token counting 端点，用来在发送消息前估算输入 token。",
+                    "sourceUrl": "https://platform.claude.com/docs/en/build-with-claude/token-counting",
+                    "sourceTitle": "Token counting - Claude Platform Docs",
+                    "sourceAuthority": "official-docs"
+                  }
+                ]
+              }
+            ],
       "exercises": [
         {
           "id": "give-it-ai-estimate-two-turns",
@@ -449,8 +609,8 @@
         }
       ],
       "cards": [
-        {
-          "id": "give-it-ai-three-failure-directions",
+              {
+                "id": "give-it-ai-three-failure-directions",
           "kind": "basic",
           "front": "401、429、超时各先查什么？",
           "back": "401 先查认证凭证；429 先查请求是否过密并等待；超时先查网络和服务是否仍在处理。401 和 429 是 HTTP 状态，超时也可能是 fetch 被 AbortSignal 在期限后中止。",
@@ -465,10 +625,50 @@
               "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/401",
               "sourceTitle": "401 Unauthorized - HTTP | MDN",
               "sourceAuthority": "mdn"
-            }
-          ]
-        }
-      ],
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-http-errors-are-responses",
+                "kind": "basic",
+                "front": "fetch 收到 401 或 429 时，为什么不能只等 catch？",
+                "back": "HTTP 错误回应通常仍会形成 Response；代码要主动检查 response.status 或 response.ok，才能把认证失败和请求过密分开处理。",
+                "tags": [
+                  "http-errors",
+                  "fetch",
+                  "debugging"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "MDN 的 fetch 示例在收到回应后主动检查 response.ok 和 response.status。",
+                    "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch",
+                    "sourceTitle": "Window: fetch() method - Web APIs | MDN",
+                    "sourceAuthority": "mdn"
+                  }
+                ]
+              },
+              {
+                "id": "give-it-ai-timeout-is-abort",
+                "kind": "basic",
+                "front": "AbortSignal.timeout 触发时，超时到底发生了什么？",
+                "back": "到达设定时限后，AbortSignal 会自动中止关联操作，并把 TimeoutError 作为中止原因。它说明等待期限结束，不等于服务端返回了 401 或 429。",
+                "tags": [
+                  "timeout",
+                  "abort-signal",
+                  "debugging"
+                ],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "note": "MDN 说明 AbortSignal.timeout 会在指定时间后中止，并将 TimeoutError 作为原因。",
+                    "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/timeout_static",
+                    "sourceTitle": "AbortSignal: timeout() static method - Web APIs | MDN",
+                    "sourceAuthority": "mdn"
+                  }
+                ]
+              }
+            ],
       "exercises": [
         {
           "id": "give-it-ai-triage-three-errors",

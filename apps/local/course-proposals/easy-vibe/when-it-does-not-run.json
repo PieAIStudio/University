@@ -193,6 +193,101 @@
       ]
     },
     {
+      "id": "command-not-found",
+      "title": "打了命令说找不到",
+      "variant": "现象",
+      "content": "## 学习目标\n\n读完你能从命令所在位置查出终端为什么找不到它。\n\n## 先给结论\n\n看到“command not found”，先不要把它翻译成“没安装”。命令可能已经在项目里，只是当前终端没有去项目的本地可执行目录找；也可能装在全局位置，但那个位置没有进入当前终端的 PATH。npm 的文档把本地安装和全局安装放在不同位置，本地命令会连到项目的 node_modules/.bin，全局命令会连到 Node 的 prefix/bin，并要求这个目录在 PATH 里。\n\n还有一个容易漏掉的原因：你是在什么目录、用什么终端启动的。VS Code 的集成终端默认从当前工作区根目录打开，也会使用系统检测到的 shell。终端若开在错误的项目、旧的 shell 配置里，命令查找结果就可能和另一扇终端不一样。\n\n所以排查顺序是：先确认当前项目和目录，再看它是本地装还是全局装，最后查当前终端是否能找到对应位置。不要一看到报错就重复安装。\n\n## 一个类比\n\n这就像仓库里明明有一箱货，但柜台系统只查一个货架。货在项目的本地货架时，柜台要按项目订单去找；货在总仓时，柜台要知道总仓地址。你换到另一个柜台，或者站到了另一家分店，查找范围也会变。\n\n不一样的地方是，现实中的仓库员可能会主动帮你找，终端不会猜你的项目和安装方式。你必须先确认自己站在哪个项目、当前柜台使用哪套地址，再判断是没有货，还是地址没有接上。\n\n## 工作示例\n\n假设《说人话》项目里已经安装了一个开发工具。你在项目终端运行启动脚本能成功，但直接输入工具名却得到“找不到命令”。完整排查这样走：\n\n1. 在 VS Code 的 Explorer 中确认打开的是《说人话》的项目，打开一个新的集成终端，先看它是不是从这个工作区开始。\n2. 打开项目的 package.json，看到这个工具写在项目的开发依赖里；这说明它更可能是本地安装，不是全局命令。\n3. 再运行项目已经提供的启动脚本。若脚本能调用工具，而直接敲工具名失败，说明项目里的可执行文件存在，但当前 shell 没把本地 .bin 目录当成裸命令来找。\n4. 如果你要判断全局工具，则查看 npm 的全局 prefix 和对应的 bin 目录，再确认这个目录是否在当前终端的 PATH 中。不要直接把另一个人的路径复制进来。\n5. 回到正确的项目终端，用项目脚本启动；需要长期使用的命令，再按当前系统的 shell 配置修复 PATH，并重新打开终端验证。\n\n这次的结论不是“重新安装一次就好了”，而是“工具在本地，项目脚本能找到；裸命令不在当前 shell 的查找范围”。下一次看到同样报错，你可以从这个结论开始问 AI。\n\n## 自检\n\n**做对了会看到什么：**你能说出当前终端所在的项目、工具是本地还是全局安装，以及命令查找范围缺了哪一段；修好后能在新的终端里重复验证。\n\n**做错了会看到什么，两种最常见的：**\n\n**一、每次都再安装一遍。**项目可能已经有本地依赖，重复安装只会增加版本和路径混乱。先看 package.json、项目脚本和当前工作区。\n\n**二、随手复制网上的 PATH。**不同系统、Node 安装位置和 shell 可能不同，复制别人的路径可能让另一个命令失效。先查当前机器的 prefix 和实际终端，再只补缺失的目录。\n\n## 重点\n\n- “命令找不到”可能是安装位置不在当前终端的查找范围，不等于一定没安装。\n- npm 的本地可执行文件在项目的 node_modules/.bin，全局可执行文件在 prefix 下的 bin 目录。\n- VS Code 集成终端默认从工作区根目录打开，当前目录会影响项目命令的查找。\n- 先分清本地安装、全局安装和当前 PATH，再决定是否需要修复或安装。\n",
+      "evidence": [
+        {
+          "kind": "fact",
+          "note": "npm 文档说明本地安装使用当前包根目录下的 node_modules，本地可执行文件链接到 node_modules/.bin；全局可执行文件链接到 prefix/bin，并需要该目录在 PATH 中。",
+          "sourceUrl": "https://docs.npmjs.com/cli/v10/configuring-npm/folders",
+          "sourceTitle": "npm Docs · folders",
+          "sourceAuthority": "official-docs"
+        },
+        {
+          "kind": "fact",
+          "note": "VS Code 文档说明集成终端默认从工作区根目录打开，并使用系统检测到的 shell；它也说明终端工作目录可以配置。",
+          "sourceUrl": "https://code.visualstudio.com/docs/terminal/basics",
+          "sourceTitle": "Visual Studio Code · Terminal Basics",
+          "sourceAuthority": "official-docs"
+        }
+      ],
+      "cards": [
+        {
+          "id": "command-location-before-reinstall",
+          "kind": "basic",
+          "front": "看到 command not found，为什么不能马上认定没安装？",
+          "back": "它可能装在项目的本地 node_modules/.bin，或装在全局 prefix/bin，但当前终端没有把那个位置放进命令查找范围。",
+          "tags": ["command-line", "path"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "npm 文档区分本地与全局安装位置，并说明全局可执行目录需要在 PATH 中、本地可执行文件位于项目的 node_modules/.bin。",
+              "sourceUrl": "https://docs.npmjs.com/cli/v10/configuring-npm/folders",
+              "sourceTitle": "npm Docs · folders",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "workspace-root-matters",
+          "kind": "basic",
+          "front": "在 VS Code 里，为什么当前打开的项目和终端位置会影响命令？",
+          "back": "集成终端默认从当前工作区根目录打开，项目本地依赖和脚本会按这个位置寻找。",
+          "tags": ["command-line", "workspace"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "VS Code Terminal Basics 说明集成终端默认从工作区根目录打开，并有独立的工作目录设置。",
+              "sourceUrl": "https://code.visualstudio.com/docs/terminal/basics",
+              "sourceTitle": "Visual Studio Code · Terminal Basics",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        },
+        {
+          "id": "local-and-global-bin-are-different",
+          "kind": "basic",
+          "front": "npm 本地安装和全局安装的命令位置有什么不同？",
+          "back": "本地可执行文件连在当前项目的 node_modules/.bin；全局可执行文件连在 Node prefix 下的 bin 目录。",
+          "tags": ["npm", "path"],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "npm folders 文档分别说明了本地 node_modules/.bin 和全局 prefix/bin 的可执行文件位置。",
+              "sourceUrl": "https://docs.npmjs.com/cli/v10/configuring-npm/folders",
+              "sourceTitle": "npm Docs · folders",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "diagnose-a-missing-command",
+          "title": "给 AI 一条不乱装东西的诊断",
+          "kind": "explain",
+          "prompt": "找一个真的出现过“找不到命令”的项目，记录当前工作区、package.json 里有没有这个工具、项目脚本能不能调用它，以及当前终端使用的 shell。最后写一条给 AI 的提问，要求它先判断本地安装、全局安装还是 PATH 问题，再给修复步骤。",
+          "rubric": [
+            "记录了当前项目或工作区，而不是只写命令名称",
+            "检查了本地依赖或项目脚本，说明工具是否可能已经装在项目里",
+            "区分了本地安装、全局安装和 PATH 查找问题",
+            "提问要求先诊断再修复，没有直接要求重复安装或复制别人的路径"
+          ],
+          "evidence": [
+            {
+              "kind": "fact",
+              "note": "npm 文档提供本地与全局可执行文件的位置差异，VS Code 文档提供工作区和终端工作目录信息；这些是本练习的诊断依据。",
+              "sourceUrl": "https://docs.npmjs.com/cli/v10/configuring-npm/folders",
+              "sourceTitle": "npm Docs · folders",
+              "sourceAuthority": "official-docs"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "env-file-not-loaded",
       "title": "写了 .env，它还是读不到",
       "variant": "决策",
