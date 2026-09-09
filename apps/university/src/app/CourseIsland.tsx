@@ -35,7 +35,7 @@ export function CourseIsland({
   onBackToMap,
   onOpenLesson,
 }: CourseIslandProps) {
-  const showRouteQuiz = hasRouteQuiz(course.id) && viewedProgress?.done === 0;
+  const showRouteQuiz = hasRouteQuiz(course) && viewedProgress?.done === 0;
   const showRouteDetails = pathUnit != null || showRouteQuiz;
 
   return (

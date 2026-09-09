@@ -30,7 +30,16 @@ const COURSE = {
       id: "what-is-an-app",
       title: "App 是什么",
       objective: "",
-      lessons: [{ id: "you-already-know-apps", title: "你已经会用 App" }],
+      // Four lessons, because the route quiz only offers itself when there is
+      // something worth skipping into. A one-lesson course was never a course
+      // this question could be asked about; it passed before only because the
+      // old hand-written table keyed on the course id and ignored its size.
+      lessons: [
+        { id: "you-already-know-apps", title: "你已经会用 App" },
+        { id: "an-app-is-files", title: "App 其实是一堆文件" },
+        { id: "code-is-text", title: "代码就是文字" },
+        { id: "where-it-runs", title: "它跑在哪儿" },
+      ],
     },
   ],
 } as unknown as CourseView;

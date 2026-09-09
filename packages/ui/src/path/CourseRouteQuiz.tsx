@@ -43,31 +43,44 @@ const COURSE_ROUTE_QUESTIONS: readonly RouteQuestion[] = [
 ];
 
 /**
- * Where each answer lands, per course.
+ * Where each answer lands, derived from the course's own units.
  *
- * This used to be one flat table of three lesson ids, and the caller passed
- * whatever course it had — which was always 「在开始之前」 because the workbench
- * looked that course up by name and rendered nothing otherwise. A course whose
- * entry points nobody has written down cannot be routed into thirds, and
- * guessing would send a learner to a lesson that has no business being anyone's
- * starting point, so a course that is not in this table simply does not ask.
+ * This used to be a hand-written table of three lesson ids per course, and it
+ * held exactly one course — so every other course simply never asked. A table
+ * somebody has to fill in for each of thirty-seven courses, and refill whenever
+ * a unit is added, is a table that stays at one entry.
+ *
+ * Units are the author's own chunking, so a unit boundary is the honest place
+ * to drop somebody in: it is where one idea finishes and the next starts. A
+ * course written as a single unit has no such seam, so those fall back to
+ * thirds — a guess, and treated as one by `hasRouteQuiz`, which declines to ask
+ * at all when there is too little to skip into.
  */
-const ROUTE_STARTS: Readonly<
-  Record<
-    string,
-    Readonly<Record<CourseRouteLevel, { readonly unitId: string; readonly lessonId: string }>>
-  >
-> = {
-  "foundations-before-zero": {
-    beginner: { unitId: "what-is-an-app", lessonId: "you-already-know-apps" },
-    familiar: { unitId: "what-is-code", lessonId: "code-is-text" },
-    builder: { unitId: "files-and-folders", lessonId: "file-vs-folder" },
-  },
-};
+function routeEntryIndex(course: CourseView, level: CourseRouteLevel): number {
+  if (level === "beginner") return 0;
+  const lengths = course.units.map((unit) => unit.lessons.length);
+  const total = lengths.reduce((sum, count) => sum + count, 0);
+  if (course.units.length >= 3) {
+    const before = (upTo: number) => lengths.slice(0, upTo).reduce((sum, n) => sum + n, 0);
+    return level === "familiar" ? before(1) : before(course.units.length - 1);
+  }
+  if (course.units.length === 2) {
+    const second = lengths[0] ?? 0;
+    return level === "familiar" ? second : second + Math.floor((lengths[1] ?? 0) / 2);
+  }
+  return level === "familiar" ? Math.floor(total / 3) : Math.floor((total * 2) / 3);
+}
 
-/** Whether this course has written down where each answer should land. */
-export function hasRouteQuiz(courseId: string): boolean {
-  return courseId in ROUTE_STARTS;
+/**
+ * Whether skipping into this course is a real offer.
+ *
+ * Under four lessons there is nothing worth skipping into — telling somebody to
+ * start at lesson two of three is noise dressed as a decision.
+ */
+export function hasRouteQuiz(course: {
+  readonly units: readonly { readonly lessons: readonly unknown[] }[];
+}): boolean {
+  return course.units.reduce((sum, unit) => sum + unit.lessons.length, 0) >= 4;
 }
 
 const ROUTE_COPY: Record<
@@ -111,14 +124,9 @@ function getCourseRoutePlan(course: CourseView, level: CourseRouteLevel) {
   const lessons = course.units.flatMap((unit) =>
     unit.lessons.map((lesson) => ({ unitId: unit.id, lesson })),
   );
-  const requested = ROUTE_STARTS[course.id]?.[level];
-  const startIndex = Math.max(
-    0,
-    requested
-      ? lessons.findIndex(
-          (entry) => entry.unitId === requested.unitId && entry.lesson.id === requested.lessonId,
-        )
-      : 0,
+  const startIndex = Math.min(
+    Math.max(0, routeEntryIndex(course, level)),
+    Math.max(0, lessons.length - 1),
   );
   return {
     ...ROUTE_COPY[level],

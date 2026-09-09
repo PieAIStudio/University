@@ -33,16 +33,20 @@ describe("course route quiz", () => {
     expect(classifyCourseRoute(6)).toBe("builder");
   });
 
-  it("only offers itself for a course whose entry points are written down", () => {
+  it("only offers itself when there is something worth skipping into", () => {
     /*
-      The table used to be three lesson ids with no course beside them, and the
-      one caller looked 「在开始之前」 up by name before rendering. Any other
-      course would have been routed into thirds by ids that are not in it, and
-      `findIndex` returning -1 would have quietly sent every learner to lesson
-      one — a recommendation that looks like a recommendation and is not one.
+      Entry points used to come from a hand-written table of three lesson ids,
+      and it held one course. Every other course fell through `findIndex`
+      returning -1 and was quietly routed to lesson one — a recommendation that
+      looks like a recommendation and is not one. Entry points now come from the
+      course's own units, so the remaining question is only whether the course
+      is long enough for the offer to mean anything.
     */
-    expect(hasRouteQuiz("foundations-before-zero")).toBe(true);
-    expect(hasRouteQuiz("reading-a-repository")).toBe(false);
+    const unitOf = (count: number) => ({ lessons: Array.from({ length: count }, () => ({})) });
+    expect(hasRouteQuiz({ units: [unitOf(3), unitOf(3)] })).toBe(true);
+    expect(hasRouteQuiz({ units: [unitOf(4)] })).toBe(true);
+    expect(hasRouteQuiz({ units: [unitOf(3)] })).toBe(false);
+    expect(hasRouteQuiz({ units: [] })).toBe(false);
   });
 
   it("asks its first question before it has an answer", () => {
