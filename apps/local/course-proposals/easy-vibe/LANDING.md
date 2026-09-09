@@ -63,7 +63,7 @@ node apps/local/.university-local-build/server/cli.js \
            ↓
    这门课               从一个念头到一个别人能打开的网址
            ↓
-   turing-pact 那 20 门  已经在真实仓库里，指挥 AI 干活
+   turing-pact 那 31 门  已经在真实仓库里，指挥 AI 干活
    ```
 
 3. **补授权凭据。**`ADOPTION-NOTE.md` 里写着为什么这门课的成立
