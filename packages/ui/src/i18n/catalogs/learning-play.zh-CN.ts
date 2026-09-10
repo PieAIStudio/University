@@ -20,7 +20,7 @@ export const messages = {
   "play.lab.researchCopy":
     "用动作解释关系，用实验检验猜想，再换一个情境看看能否举一反三。一次完成只代表这次挑战成立；长期学习效果还需要真实试学验证。",
   "play.mode.sort": "归类台",
-  "play.mode.connect": "因果接线台",
+  "play.mode.connect": "接线台",
   "play.mode.tune": "调参实验室",
   "play.mode.hunt": "反例猎手",
   "play.mode.dispatch": "请求调度台",
@@ -44,7 +44,7 @@ export const messages = {
   "play.connect.help":
     "点一个方块，再点它连到的那个方块，就接上一条线。一个方块可以接出好几条线。接错了，点下面那条记录就能删掉。",
   "play.connect.selected": "从「{{label}}」出发，接到哪里？",
-  "play.connect.board": "可接线的因果图",
+  "play.connect.board": "可以接线的图",
   "play.connect.empty": "还没有线。先找到会触发下一步的那个动作。",
   "play.connect.remove": "移除 {{from}} 到 {{to}}",
   "play.connect.run": "放出测试信号",

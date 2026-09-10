@@ -47,7 +47,7 @@ export const messages = {
   "play.connect.help":
     "Pick a box, then pick the box it connects to. One box can send out several lines. Remove a line by selecting its record below.",
   "play.connect.selected": "From “{{label}}” to where?",
-  "play.connect.board": "Interactive causal diagram",
+  "play.connect.board": "Diagram you can draw lines on",
   "play.connect.empty": "No connections yet. Find an action that triggers the next one.",
   "play.connect.remove": "Remove {{from}} to {{to}}",
   "play.connect.run": "Send a test signal",
