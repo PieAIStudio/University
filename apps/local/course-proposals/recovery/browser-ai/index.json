@@ -35,9 +35,9 @@
     },
     {
       "courseId": "when-a-project-is-too-big-to-read",
-      "file": "when-a-project-is-too-big-to-read.3f73d2519527fa1af22cad30bae0fa9bda82733c29acebc0df326d2106d1e2e7.recovery.json",
-      "sha256": "sha256:3f73d2519527fa1af22cad30bae0fa9bda82733c29acebc0df326d2106d1e2e7",
-      "isBeingRewritten": false
+      "file": "when-a-project-is-too-big-to-read.af86e667523000075feb28ed823d7106759dc2dcbb48c79028187496c6161775.recovery.json",
+      "sha256": "sha256:af86e667523000075feb28ed823d7106759dc2dcbb48c79028187496c6161775",
+      "isBeingRewritten": true
     }
   ]
 }
