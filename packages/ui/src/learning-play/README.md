@@ -153,17 +153,18 @@ function LessonActivity({ family }: { family: ActivityFamily }) {
 
 问「组件是不是硬绑定」，答案不是一句话，是三档：
 
-**空框，任何课都能装（7 种）：** `connect`、`sort`、`contrast`、`weigh`、`tune`、
-`hunt`、`program`、`dispatch`——载荷决定读者看到的每一个字。
+**空框，任何课都能装（9 种 = 编程原理那 8 种，加上刚解开的 `ai-brief`）：**
+`connect`、`sort`、`contrast`、`weigh`、`tune`、`hunt`、`dispatch`、`program`、
+`ai-brief`——载荷决定读者看到的每一个字。
 
-**这一轮解开了一种：`ai-brief`。** 它原来把三条约定轴写死在引擎里
+**`ai-brief` 是这一轮解开的那一个。** 它原来把三条约定轴写死在引擎里
 （`access` / `confirmation` / `roster`），值也是写死的字面量，所以任何一门课想用
 「把含糊的要求钉成能验收的行为」这个教法，读者看到的都是同一个报名产品。
 现在轴来自这节课自己的提问、动作和结果来自载荷，引擎里不再有任何一个产品名词——
 [引擎测试](../../../core/src/learning-play/ai-brief.test.ts)整份是一个「分享文件」
 的产品，一个报名相关的词都没有，这是唯一能证明词是真的没了、而不是改了名的办法。
 
-**仍然绑定（4 种）：** `ai-context`、`ai-agent`、`ai-eval`、`ai-repair`。
+**仍然绑定（4 种，9 + 4 = 13）：** `ai-context`、`ai-agent`、`ai-eval`、`ai-repair`。
 它们的情境、界面文案和状态机仍然写死在共享 i18n 和渲染器里。想解开，
 路子和 `ai-brief` 一样：把「这个产品有哪些动作、每个动作由哪条约定决定、
 各自的结果怎么说」搬进载荷。**没有先解它们，是因为这四种加起来目前 3 节课在用，
