@@ -17,27 +17,27 @@
   "courses": [
     {
       "courseId": "run-a-real-project-with-ai",
-      "file": "run-a-real-project-with-ai.d720b0010c7cf9e7237520ee83feac4a20d3f865e36c0ca7f1b70789db78e217.recovery.json",
-      "sha256": "sha256:d720b0010c7cf9e7237520ee83feac4a20d3f865e36c0ca7f1b70789db78e217",
+      "file": "run-a-real-project-with-ai.0e1ca93cf29f04a07f24e5d85242ffaad32a5287f966444402d240bb1b26de08.recovery.json",
+      "sha256": "sha256:0e1ca93cf29f04a07f24e5d85242ffaad32a5287f966444402d240bb1b26de08",
       "isBeingRewritten": false
     },
     {
       "courseId": "make-the-cutout-app-yours",
-      "file": "make-the-cutout-app-yours.dcb43c182259e88ffbf4e5f5df6cef4cc8f514ff481c066d2687336a6bb0d699.recovery.json",
-      "sha256": "sha256:dcb43c182259e88ffbf4e5f5df6cef4cc8f514ff481c066d2687336a6bb0d699",
+      "file": "make-the-cutout-app-yours.d5dfd1fbf40a98b037b5ed3461e5511ac1d2cfd8639b187e726471f34294ca20.recovery.json",
+      "sha256": "sha256:d5dfd1fbf40a98b037b5ed3461e5511ac1d2cfd8639b187e726471f34294ca20",
       "isBeingRewritten": false
     },
     {
       "courseId": "search-your-own-photos",
-      "file": "search-your-own-photos.46d3959abf1dc35a38efb44331e7a17ea88b8f899f4bced2c8c792a54578e499.recovery.json",
-      "sha256": "sha256:46d3959abf1dc35a38efb44331e7a17ea88b8f899f4bced2c8c792a54578e499",
+      "file": "search-your-own-photos.b19706858a6f02afb707f32b99ffd448337aff429b007b652953a0085345eabe.recovery.json",
+      "sha256": "sha256:b19706858a6f02afb707f32b99ffd448337aff429b007b652953a0085345eabe",
       "isBeingRewritten": false
     },
     {
       "courseId": "when-a-project-is-too-big-to-read",
-      "file": "when-a-project-is-too-big-to-read.af86e667523000075feb28ed823d7106759dc2dcbb48c79028187496c6161775.recovery.json",
-      "sha256": "sha256:af86e667523000075feb28ed823d7106759dc2dcbb48c79028187496c6161775",
-      "isBeingRewritten": true
+      "file": "when-a-project-is-too-big-to-read.a0c823e8c7c702d26fbbdc79c97c7652e5b5cc5a0f68ab38cd24a139ccb2f384.recovery.json",
+      "sha256": "sha256:a0c823e8c7c702d26fbbdc79c97c7652e5b5cc5a0f68ab38cd24a139ccb2f384",
+      "isBeingRewritten": false
     }
   ]
 }

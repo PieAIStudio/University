@@ -822,6 +822,19 @@ if (unchecked.size > 0) {
     `  ! 这几种玩法没有可单独调用的引擎判定，只检查了共同约定和出处：${[...unchecked].join("、")}`,
   );
 }
+/*
+  Nothing scanned is a failure, not a pass.
+
+  This script resolves `studies/` and the delivery package relative to the
+  working directory, so running it from `apps/local` instead of the repository
+  root walked zero lessons and still printed `ok` — a green light for a gate
+  that was not looking at anything. Every real run has hundreds of lessons, so
+  a floor of one costs nothing and turns the silent case into a loud one.
+*/
+if (lessons === 0) {
+  console.log("  这一趟一节课都没扫到——多半是从错误的目录跑的，请从仓库根目录跑");
+  process.exit(1);
+}
 if (problems.length === 0) {
   console.log("ok  每个组件都解得开，每个引用都指得到");
   process.exit(0);

@@ -48,8 +48,12 @@ test totals, CLI/model choices or execution history. Read only the matching row.
 
 Measured, not guessed — `git diff --name-only main...HEAD` grouped by area.
 
-- **`packages/world`: nothing at all.** The 3D lane cannot conflict with this
-  branch.
+- **`packages/world`: one function, `stateOf` in `Maps.tsx`** (+18 −3). An
+  inline `prerequisiteCourseIds.every(...)` became a call to `prerequisitesMet`,
+  so the island's lighting and the sentence the island shows are one reading of
+  the graph rather than two. It still only decides `open` vs `idle`; nothing in
+  it blocks entry. This is the one place the 3D lane could collide, and the
+  collision is a three-line body, not a design.
 - **`apps/university/src/app/App.tsx`: thirteen added lines.** The skip test's
   logic is `app/skip-test.ts` (a hook, like `useCourseProgress`), specifically so
   the file every lane has to merge holds a call rather than fifty lines.
@@ -61,8 +65,10 @@ Measured, not guessed — `git diff --name-only main...HEAD` grouped by area.
   is new.
 - **`packages/ui/src/learning-play`: mostly new files.** Two games were added.
   The shared files a new game still has to touch are the renderer dispatch, the
-  lab's shelf, the icon table and the family selector; each is now held against
-  the wire enum by a test, so they go stale together or not at all.
+  lab's shelf and the fixture family; all three are held against the wire enum
+  by `LearningPlayLab.test.tsx`, so they go stale together or not at all. The
+  fourth, the shelf button's label, needs no test: `translate` takes a
+  `MessageKey`, so a kind with no `play.mode.<kind>` message is a type error.
 - **`apps/local/studies/browser-ai` is a symlink into the main checkout and is
   gitignored.** Lesson prose changes are not in this branch's diff; the
   version-controlled copy is `apps/local/course-proposals/recovery/browser-ai/`,
