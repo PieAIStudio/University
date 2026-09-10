@@ -1,6 +1,6 @@
 {
-  "importedAt": "2026-09-09",
-  "evidenceMode": "none",
+  "importedAt": "2026-09-10",
+  "evidenceMode": "auto",
   "studies": [
     {
       "studyId": "ai-foundations",
@@ -27,37 +27,37 @@
           "courseId": "run-a-real-project-with-ai",
           "title": "用 AI 把一个真实开源项目跑起来",
           "isBeingRewritten": false,
-          "sha256": "sha256:c1af04fc5be4a347db974db549542578608212e658d95551e0f7693bd5990178",
-          "packageBytes": 57035,
-          "servedBytes": 47205,
+          "sha256": "sha256:aa110cd0b08449e7204647f7db6aca0d41a2f9a3b14fe48be4750856979680af",
+          "packageBytes": 57281,
+          "servedBytes": 47451,
           "lessons": 6
         },
         {
           "courseId": "make-the-cutout-app-yours",
           "title": "把这个抠图应用改成你的",
           "isBeingRewritten": false,
-          "sha256": "sha256:79f6b951948c797f7c5d99bce6271cd9c4ffe043e808d4da612b34f10bfe8223",
-          "packageBytes": 53648,
-          "servedBytes": 39591,
+          "sha256": "sha256:5e6234d65f592fbe61276758ff23fdb3d1fecbddefe97330b8fe8f43501b3362",
+          "packageBytes": 54415,
+          "servedBytes": 45386,
           "lessons": 6
-        },
-        {
-          "courseId": "when-a-project-is-too-big-to-read",
-          "title": "当项目大到读不完",
-          "isBeingRewritten": false,
-          "sha256": "sha256:12c7751eaf45f1cd63d037a8385fff31f3f250c41e5d3221d69586af71df067d",
-          "packageBytes": 36202,
-          "servedBytes": 26935,
-          "lessons": 4
         },
         {
           "courseId": "search-your-own-photos",
           "title": "把搜图改成搜你自己的相册",
           "isBeingRewritten": false,
-          "sha256": "sha256:f74bb922d5a621cd8970d05197993ee6deeb148955efa52c6e144b57636f5817",
-          "packageBytes": 43796,
-          "servedBytes": 32456,
+          "sha256": "sha256:30ab6041fe7a2879ec059e33c0a6be6654100531d523f268cac118cf6e07af01",
+          "packageBytes": 44164,
+          "servedBytes": 36648,
           "lessons": 5
+        },
+        {
+          "courseId": "when-a-project-is-too-big-to-read",
+          "title": "当项目大到读不完",
+          "isBeingRewritten": false,
+          "sha256": "sha256:09c123b375c183d554d801c2562ee687ea259882094ead530d9972abac79a377",
+          "packageBytes": 36642,
+          "servedBytes": 30767,
+          "lessons": 4
         }
       ]
     },
@@ -88,7 +88,7 @@
           "isBeingRewritten": false,
           "sha256": "sha256:5ad853c0d7699fc49340967fb4561dd3508e79ebb2258f11935aaf38d3a727f8",
           "packageBytes": 5672170,
-          "servedBytes": 365001,
+          "servedBytes": 396554,
           "lessons": 41
         },
         {
@@ -97,7 +97,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:599e692524c95d661ad4c9ecfce04224c755cea009b780ed69a3d26cf341082a",
           "packageBytes": 129299,
-          "servedBytes": 88331,
+          "servedBytes": 100886,
           "lessons": 12
         },
         {
@@ -106,7 +106,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:ce471bbd0d33a75cf8c0369d9f798b83952615b474cccb5bfcebc4c3185e9e9e",
           "packageBytes": 133952,
-          "servedBytes": 102792,
+          "servedBytes": 114132,
           "lessons": 11
         },
         {
@@ -115,7 +115,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:2a94e51f72fce29484018a6c6caeeb3813b8e6d2a230f157cbfa8519aa33edfc",
           "packageBytes": 149061,
-          "servedBytes": 117330,
+          "servedBytes": 128103,
           "lessons": 13
         },
         {
@@ -124,7 +124,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:edea104ba71d257b15671be1686e90c4b316c06c9a042188b70a1794339d041b",
           "packageBytes": 152857,
-          "servedBytes": 117871,
+          "servedBytes": 130015,
           "lessons": 13
         },
         {
@@ -133,7 +133,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:1081aecfbb402b26daa15169145fa0306be030c9715bbecac04707d1449cec65",
           "packageBytes": 129505,
-          "servedBytes": 96751,
+          "servedBytes": 107790,
           "lessons": 12
         },
         {
@@ -142,7 +142,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:994c822b3da53a295357f3a7c091091221d2bc61d924f0eb6f99e1f8e542dfd0",
           "packageBytes": 145768,
-          "servedBytes": 112272,
+          "servedBytes": 123322,
           "lessons": 12
         },
         {
@@ -151,7 +151,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:ddacc928ea0ac63c15684ed11cc071e2eecab3113a85c26e75ba1599d355df37",
           "packageBytes": 132851,
-          "servedBytes": 97883,
+          "servedBytes": 110033,
           "lessons": 13
         },
         {
@@ -160,7 +160,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:06a3a86bb46ec4aa15d0847d498b8d10ccf579ad295f50e6c335fd3579f0e3e8",
           "packageBytes": 135407,
-          "servedBytes": 100928,
+          "servedBytes": 113078,
           "lessons": 12
         },
         {
@@ -169,7 +169,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:ffebb99663ecef753151503616d04c3e33798d792c0dafafb4bf86734472db06",
           "packageBytes": 29953,
-          "servedBytes": 22932,
+          "servedBytes": 25227,
           "lessons": 3
         },
         {
@@ -178,7 +178,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:376a0b3a3c8d7fd2d91cf45d4ad316c374eb31380598092c0df3f58f52f5969a",
           "packageBytes": 42413,
-          "servedBytes": 30422,
+          "servedBytes": 34250,
           "lessons": 3
         },
         {
@@ -187,7 +187,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:266c5b042b8ef99afd878a1abf80cc16b0ae8688110db01889d754ee38d608e1",
           "packageBytes": 46239,
-          "servedBytes": 35499,
+          "servedBytes": 39090,
           "lessons": 4
         },
         {
@@ -196,7 +196,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:77ae05f9d71839e0030604708bb8df25dcc3cb6342a4d8a5e4f4c17ce75e3d95",
           "packageBytes": 58459,
-          "servedBytes": 44851,
+          "servedBytes": 50411,
           "lessons": 4
         },
         {
@@ -205,7 +205,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:7baa09afbd7fa230ed86d7948bb4ff387b53634a0c3a65bf43218bd8a2249028",
           "packageBytes": 119741,
-          "servedBytes": 90563,
+          "servedBytes": 101934,
           "lessons": 12
         },
         {
@@ -214,7 +214,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:39e58565cfd10eede65405a47b678b135bcc9c38add9b51cfb44c994e54e0a4d",
           "packageBytes": 122484,
-          "servedBytes": 93638,
+          "servedBytes": 104843,
           "lessons": 12
         },
         {
@@ -223,7 +223,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:19002a473686349584f6773ebff677953af1b310cea56870630da16df99e9aee",
           "packageBytes": 101706,
-          "servedBytes": 75831,
+          "servedBytes": 85540,
           "lessons": 11
         },
         {
@@ -232,7 +232,7 @@
           "isBeingRewritten": false,
           "sha256": "sha256:e0fb9ee85e4134eba70d8e338bed4d435908a4a7384fbac9401b97dd81ee32fd",
           "packageBytes": 103316,
-          "servedBytes": 77499,
+          "servedBytes": 86952,
           "lessons": 12
         },
         {
@@ -241,7 +241,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:70216cfab140feffcf4dcc74816a77ae9c043bce11dad936cf5a4695d56a6c40",
           "packageBytes": 98897,
-          "servedBytes": 70459,
+          "servedBytes": 81179,
           "lessons": 12
         },
         {
@@ -250,7 +250,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:094b82fad8cc4f40a9e1ab9ad5262d3aa1b31ed8f46807bcdc43a4a1e3d4a66e",
           "packageBytes": 100377,
-          "servedBytes": 71373,
+          "servedBytes": 82227,
           "lessons": 12
         },
         {
@@ -259,7 +259,7 @@
           "isBeingRewritten": false,
           "sha256": "sha256:c938a83f8fbb72c2dbec5156fef73832e50f63979eead41dc55a72d09b321857",
           "packageBytes": 88110,
-          "servedBytes": 64558,
+          "servedBytes": 73238,
           "lessons": 11
         },
         {
@@ -268,7 +268,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:0525e5b4b5194a535f58b48ab5f20f0eb6f2cc1a6a3548d184d0dd7821762301",
           "packageBytes": 84576,
-          "servedBytes": 59206,
+          "servedBytes": 68107,
           "lessons": 11
         },
         {
@@ -277,7 +277,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:50db6ce201acc83cf4f8beaa81127fe13d6094c15a79a0b945d3261db787bffc",
           "packageBytes": 84761,
-          "servedBytes": 60682,
+          "servedBytes": 69565,
           "lessons": 11
         },
         {
@@ -286,7 +286,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:0397756479c8e470c753525560f9fd6c405d6ebef1c3b6b9ca14abe816777966",
           "packageBytes": 105319,
-          "servedBytes": 77242,
+          "servedBytes": 87670,
           "lessons": 12
         },
         {
@@ -295,7 +295,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:f76b1fc1e88dfc2640bfbddc1e631f5e11f64c165d53fe14c97d392758c0a106",
           "packageBytes": 106906,
-          "servedBytes": 78668,
+          "servedBytes": 89649,
           "lessons": 12
         },
         {
@@ -304,7 +304,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:97c3cc4d611d92f44611deebe9242e9e1ea9a76bc6088943006dc4aee836b4bc",
           "packageBytes": 110028,
-          "servedBytes": 85050,
+          "servedBytes": 94503,
           "lessons": 11
         },
         {
@@ -313,7 +313,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:5b0d27d48fdcfb7d53dceabf47128554361037794fff410baaafcd992e78b3eb",
           "packageBytes": 113445,
-          "servedBytes": 85639,
+          "servedBytes": 95443,
           "lessons": 12
         },
         {
@@ -322,7 +322,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:4bf5996f41d895ca98586c590b4268e3eaf6d7158e4efc72163b1eb517fe1068",
           "packageBytes": 116760,
-          "servedBytes": 87398,
+          "servedBytes": 98354,
           "lessons": 12
         },
         {
@@ -331,7 +331,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:075f3a539f4f6d3ea783e2cd83f2cd3879bd2bfceae564a49309313d837d388f",
           "packageBytes": 109236,
-          "servedBytes": 82994,
+          "servedBytes": 92508,
           "lessons": 12
         },
         {
@@ -340,7 +340,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:6babb75ebd4fca2e5a36e5aba916e785cb42d68c2f274c1b514de757fcd55175",
           "packageBytes": 110565,
-          "servedBytes": 83698,
+          "servedBytes": 93318,
           "lessons": 12
         },
         {
@@ -349,7 +349,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:5e434058afb1667c294048ad862243ccc528cf9780f4690863a573649f98496d",
           "packageBytes": 117736,
-          "servedBytes": 81727,
+          "servedBytes": 94958,
           "lessons": 12
         },
         {
@@ -358,7 +358,7 @@
           "isBeingRewritten": true,
           "sha256": "sha256:4254bbb334461c1fec57d73dae029aadf2431debe7fb1c656538fe74bd882969",
           "packageBytes": 89193,
-          "servedBytes": 62172,
+          "servedBytes": 71757,
           "lessons": 10
         }
       ]

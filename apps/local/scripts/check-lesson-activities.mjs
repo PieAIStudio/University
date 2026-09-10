@@ -89,7 +89,8 @@ let isValidSortActivity = null;
 let isValidProgramActivity = null;
 try {
   ({ isValidSortActivity } = await import("../../../packages/core/dist/learning-play/sort.js"));
-  ({ isValidProgramActivity } = await import("../../../packages/core/dist/learning-play/program.js"));
+  ({ isValidProgramActivity } =
+    await import("../../../packages/core/dist/learning-play/program.js"));
 } catch {
   console.log(
     "  ! 读不到 core 的构建产物，sort/program 组件这一项没有检查（先跑 pnpm --filter @pieai/university-core build）",
