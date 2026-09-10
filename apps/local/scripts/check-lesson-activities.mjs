@@ -88,6 +88,7 @@ function checkConnect(activity, where) {
 let isValidSortActivity = null;
 let isValidContrastActivity = null;
 let isValidWeighActivity = null;
+let isValidBriefActivity = null;
 let isValidProgramActivity = null;
 let agentEngine = null;
 let evalEngine = null;
@@ -100,6 +101,8 @@ try {
   ({ isValidContrastActivity } =
     await import("../../../packages/core/dist/learning-play/contrast.js"));
   ({ isValidWeighActivity } = await import("../../../packages/core/dist/learning-play/weigh.js"));
+  ({ isValidBriefActivity } =
+    await import("../../../packages/core/dist/learning-play/ai-brief.js"));
   ({ isValidProgramActivity } =
     await import("../../../packages/core/dist/learning-play/program.js"));
   agentEngine = await import("../../../packages/core/dist/learning-play/ai-agent.js");
@@ -155,6 +158,26 @@ function checkWeigh(activity, where) {
   if (!isValidWeighActivity(activity)) {
     problems.push(
       `${where}: 引擎判定这个取舍台不成立——有个选项一次都赢不了（那它就不是取舍，是送分），或者情况数少于选项数、正确选项不在选项里`,
+    );
+  }
+}
+
+/**
+ * A brief has to be agreeable and then observable.
+ *
+ * This kind had no engine check at all, because until the axes came out of the
+ * engine there was nothing payload-specific left to be wrong: every brief was
+ * the same three axes and the same two buttons. Now that a lesson brings its
+ * own agreements, the joins can miss — an action decided by an axis nobody is
+ * asked about, a gate on one, an outcome with nothing to show for it — and each
+ * of those renders as a product that does not react to what the learner just
+ * agreed to.
+ */
+function checkBrief(activity, where) {
+  if (!isValidBriefActivity) return;
+  if (!isValidBriefActivity(activity)) {
+    problems.push(
+      `${where}: 引擎判定这个原型台不成立——某个动作或门槛挂在没人问到的约定上，或者某个结果没有对应的说法`,
     );
   }
 }
@@ -626,6 +649,7 @@ const CHECKS = {
   sort: checkSort,
   contrast: checkContrast,
   weigh: checkWeigh,
+  "ai-brief": checkBrief,
   program: checkProgram,
   "ai-agent": checkAgent,
   "ai-eval": checkEval,

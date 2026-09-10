@@ -4,6 +4,7 @@ import {
   actOnBrief,
   assessHuntEvidence,
   checkConnections,
+  BRIEF_UNLOCK,
   createBriefPreview,
   createDispatchState,
   evaluateBrief,
@@ -145,10 +146,17 @@ describe("curated foundation difficulty tasks", () => {
             expect(evaluateBrief(task, task.initialChoices ?? {}, []).passed).toBe(false);
             let product = createBriefPreview();
             const observations = [];
-            for (const action of task.target.access === "account"
-              ? (["submit", "login", "submit", "roster"] as const)
-              : (["submit", "roster"] as const)) {
-              const result = actOnBrief(task.target, product, action, 0);
+            /*
+              The walkthrough is derived from the payload rather than written
+              out. It used to read `task.target.access === "account"` and name
+              「submit」「login」「roster」 — a maintenance solution that only
+              worked for a sign-up sheet, which is the same assumption the engine
+              itself used to carry.
+            */
+            const ids = task.actions.map((action) => action.id);
+            const gated = task.gate && task.target[task.gate.axis] === task.gate.requiresUnlock;
+            for (const action of gated ? [ids[0]!, BRIEF_UNLOCK, ...ids] : ids) {
+              const result = actOnBrief(task, task.target, product, action, 0);
               product = result.state;
               if (result.observation) observations.push(result.observation);
             }

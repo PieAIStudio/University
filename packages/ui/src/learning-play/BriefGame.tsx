@@ -2,14 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import {
   actOnBrief,
-  BRIEF_AXES,
+  BRIEF_UNLOCK,
+  briefAxes,
+  briefBlocked,
   briefFingerprint,
+  briefOutcomeText,
   createBriefPreview,
   evaluateBrief,
   evaluateBriefRounds,
   resolveBrief,
   type BriefActivity,
-  type BriefAxis,
   type BriefChoices,
   type BriefObservation,
   type BriefPreview,
@@ -43,7 +45,7 @@ export function BriefGame({
     createBriefPreview(),
   ]);
   const [observations, setObservations] = useState<readonly BriefObservation[]>([]);
-  const [asked, setAsked] = useState<readonly BriefAxis[]>([]);
+  const [asked, setAsked] = useState<readonly string[]>([]);
   const [accepted, setAccepted] = useState<readonly BriefAcceptance[]>([]);
   const [experiments, setExperiments] = useState<
     readonly {
@@ -62,14 +64,25 @@ export function BriefGame({
     }
   }, [revised]);
   const previewHeading = useRef<HTMLHeadingElement>(null);
-  const remaining = BRIEF_AXES.filter((axis) => choices[axis] === undefined).length;
+  const axes = briefAxes(activity);
+  /*
+    What an outcome id looks like to the reader. The id is the lesson's own
+    word for an agreement — 「read-only」, 「a-week」 — and the action that
+    produced it is what knows how to say it out loud.
+  */
+  const outcomeText = (actionId: string, result: string, state?: BriefPreview) => {
+    const action = activity.actions.find((candidate) => candidate.id === actionId);
+    if (!action) return result;
+    return state ? briefOutcomeText(action, result, state) : (action.outcomes[result] ?? result);
+  };
+  const remaining = axes.filter((axis) => choices[axis] === undefined).length;
   const experimentConfiguration = ([0, 1] as const)
-    .map((variant) => briefFingerprint(resolveBrief(activity, choices, variant)))
+    .map((variant) => briefFingerprint(activity, resolveBrief(activity, choices, variant)))
     .join(";");
   const converged =
-    briefFingerprint(resolveBrief(activity, choices, 0)) ===
-    briefFingerprint(resolveBrief(activity, choices, 1));
-  function choose(axis: BriefAxis, value?: string) {
+    briefFingerprint(activity, resolveBrief(activity, choices, 0)) ===
+    briefFingerprint(activity, resolveBrief(activity, choices, 1));
+  function choose(axis: string, value?: string) {
     const next = { ...choices };
     if (value === undefined) delete next[axis];
     else Object.assign(next, { [axis]: value });
@@ -77,9 +90,10 @@ export function BriefGame({
     setPreviews([createBriefPreview(), createBriefPreview()]);
     setObservations([]);
   }
-  function operate(variant: 0 | 1, action: "submit" | "roster" | "login") {
+  function operate(variant: 0 | 1, action: string) {
     if (disabled) return;
     const result = actOnBrief(
+      activity,
       resolveBrief(activity, choices, variant),
       previews[variant]!,
       action,
@@ -91,10 +105,16 @@ export function BriefGame({
     if (result.observation)
       setObservations((previous) => [...previous, result.observation!].slice(-16));
   }
-  function compare(action: "submit" | "roster") {
+  function compare(action: string) {
     if (disabled) return;
     const trials = ([0, 1] as const).map((variant) =>
-      actOnBrief(resolveBrief(activity, choices, variant), previews[variant]!, action, variant),
+      actOnBrief(
+        activity,
+        resolveBrief(activity, choices, variant),
+        previews[variant]!,
+        action,
+        variant,
+      ),
     );
     setPreviews(trials.map((trial) => trial.state));
     setObservations((previous) =>
@@ -141,14 +161,21 @@ export function BriefGame({
       playSound("answer.correct");
       return;
     }
-    const names = (axes: readonly BriefAxis[]) =>
+    const names = (axes: readonly string[]) =>
       axes
         .map((axis) => activity.questions.find((question) => question.axis === axis)!.label)
         .join(" / ");
+    /*
+      Which actions are still untried, named by the payload's own labels. This
+      was three fixed sentences — 「去试提交」「去看名单」「去撞一次登录」 — one per
+      hardcoded step, so a product with different steps had no way to say what
+      was missing.
+    */
     const unchecked = [
-      !result.accessChecked && t("play.ai.brief.checkAccess"),
-      !result.submitted && t("play.ai.brief.checkSubmit"),
-      !result.rosterChecked && t("play.ai.brief.checkRoster"),
+      ...result.tried
+        .filter((row) => !row.ok)
+        .map((row) => activity.actions.find((action) => action.id === row.id)?.label ?? row.id),
+      ...(result.gateChecked ? [] : [activity.gate?.unlockLabel ?? ""]),
     ]
       .filter(Boolean)
       .join(" / ");
@@ -193,7 +220,7 @@ export function BriefGame({
         providedChoices: activity.initialChoices ?? {},
         learnerChoices: Object.fromEntries(
           Object.entries(choices).filter(
-            ([axis, value]) => activity.initialChoices?.[axis as BriefAxis] !== value,
+            ([axis, value]) => activity.initialChoices?.[axis] !== value,
           ),
         ),
         asked,
@@ -239,7 +266,7 @@ export function BriefGame({
           }
           onAction={() => {
             if (!experiments.length) {
-              compare("submit");
+              compare(activity.actions[0]!.id);
               return;
             }
             setPhase("agree");
@@ -283,14 +310,18 @@ export function BriefGame({
           className="play-action-row ai-brief__compare-controls"
           hidden={guided && phase === "observe"}
         >
-          <GameButton variant="primary" disabled={disabled} onClick={() => compare("submit")}>
+          <GameButton
+            variant="primary"
+            disabled={disabled}
+            onClick={() => compare(activity.actions[0]!.id)}
+          >
             {t("play.ai.brief.compareSubmit")}
           </GameButton>
           <GameButton
             variant="secondary"
             hidden={guided && phase === "observe"}
             disabled={disabled}
-            onClick={() => compare("roster")}
+            onClick={() => compare(activity.actions[1]?.id ?? activity.actions[0]!.id)}
           >
             {t("play.ai.brief.compareRoster")}
           </GameButton>
@@ -301,7 +332,7 @@ export function BriefGame({
             {experiments.at(-1)!.results.map((value, index) => (
               <p key={index}>
                 <b>{index === 0 ? "A" : "B"}</b>
-                {t(`play.ai.brief.result.${value}`)}
+                {outcomeText(experiments.at(-1)!.action, value)}
               </p>
             ))}
           </div>
@@ -329,66 +360,72 @@ export function BriefGame({
               <div className="ai-brief__product">
                 <h4>{activity.productName}</h4>
                 <p>{activity.productDescription}</p>
-                <div className="ai-brief__identity">
-                  {t(state.signedIn ? "play.ai.brief.member" : "play.ai.brief.visitor", {
-                    name: activity.visitorName,
-                  })}
-                </div>
-                <GameButton
-                  type="button"
-                  sound={false}
-                  disabled={
-                    disabled || state.submission === "joined" || state.submission === "queued"
-                  }
-                  onClick={() => operate(variant, "submit")}
-                >
-                  {activity.actionLabel}
-                </GameButton>
-                <div
-                  className="ai-brief__product-response"
-                  role="status"
-                  data-result={state.submission}
-                >
-                  <p>
-                    {state.submission === "none"
-                      ? t("play.ai.brief.status.none")
-                      : t(`play.ai.brief.result.${state.submission}`)}
-                  </p>
-                  {state.submission === "login" ? (
-                    <GameButton
-                      type="button"
-                      variant="secondary"
-                      disabled={disabled}
-                      onClick={() => operate(variant, "login")}
-                    >
-                      {t("play.ai.brief.login")}
-                    </GameButton>
-                  ) : null}
-                </div>
-                <GameButton
-                  type="button"
-                  variant="ghost"
-                  static
-                  disabled={disabled}
-                  onClick={() => operate(variant, "roster")}
-                >
-                  {t("play.ai.brief.roster")}
-                </GameButton>
-                {state.rosterOpen ? (
-                  <p className="ai-brief__roster" role="status">
-                    {t(
-                      `play.ai.brief.result.${configuration.access === "account" && !state.signedIn ? "login" : configuration.roster}`,
-                    )}
-                  </p>
+                {/*
+                  Whether the visitor has identified themselves, said only when
+                  this product has something that asks them to. A product with
+                  no gate has no such state, and printing 「访客」 at somebody
+                  using a page that never asks who they are is the game
+                  describing itself rather than the product.
+                */}
+                {activity.gate ? (
+                  <div className="ai-brief__identity">
+                    <span>
+                      {t(state.unlocked ? "play.ai.brief.identified" : "play.ai.brief.anonymous", {
+                        name: activity.visitorName,
+                      })}
+                    </span>
+                    {/*
+                      One control, next to who the visitor currently is —
+                      not one per action. Identifying yourself is a fact about
+                      the visitor, and a copy of the button under every blocked
+                      action reads as several different ways to sign in.
+                    */}
+                    {briefBlocked(activity, configuration, state.unlocked) &&
+                    Object.values(state.done).includes(activity.gate.blockedOutcome) ? (
+                      <GameButton
+                        type="button"
+                        variant="secondary"
+                        disabled={disabled}
+                        onClick={() => operate(variant, BRIEF_UNLOCK)}
+                      >
+                        {activity.gate.unlockLabel}
+                      </GameButton>
+                    ) : null}
+                  </div>
                 ) : null}
-                {state.rosterOpen &&
-                configuration.roster === "public" &&
-                state.submission === "joined" ? (
-                  <p className="ai-brief__roster" role="status">
-                    {t("play.ai.brief.ownEntry", { name: activity.visitorName })}
-                  </p>
-                ) : null}
-                {(state.signedIn || state.submission !== "none") && !disabled ? (
+                {/*
+                  One control per action the payload declares, with the outcome
+                  in that action's own words underneath. This was two hardcoded
+                  buttons — 「报名」 and 「看名单」 — which is how a game about
+                  pinning down a vague request came to teach a sign-up sheet.
+                */}
+                {activity.actions.map((action) => {
+                  const result = state.done[action.id];
+                  return (
+                    <div className="ai-brief__action" key={action.id}>
+                      <GameButton
+                        type="button"
+                        sound={false}
+                        disabled={disabled}
+                        onClick={() => operate(variant, action.id)}
+                      >
+                        {action.label}
+                      </GameButton>
+                      <div
+                        className="ai-brief__product-response"
+                        role="status"
+                        data-result={result ?? "none"}
+                      >
+                        <p>
+                          {result === undefined
+                            ? t("play.ai.brief.status.none")
+                            : briefOutcomeText(action, result, state)}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+                {(state.unlocked || Object.keys(state.done).length > 0) && !disabled ? (
                   <GameButton
                     type="button"
                     variant="ghost"
@@ -550,7 +587,7 @@ export function BriefGame({
               <li key={index}>
                 {t("play.ai.brief.observed", {
                   variant: observation.variant === 0 ? "A" : "B",
-                  result: t(`play.ai.brief.result.${observation.result}`),
+                  result: outcomeText(observation.action, observation.result),
                 })}
               </li>
             ))}

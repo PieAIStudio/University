@@ -60,9 +60,6 @@ export const messages = {
     "{{items}} differs from the client's request. Open that interview and check the original answer.",
   "play.ai.brief.untested":
     "The brief matches. Now try: {{items}}. Recheck after changing constraints.",
-  "play.ai.brief.checkAccess": "whether a visitor can submit directly",
-  "play.ai.brief.checkSubmit": "whether submission confirms or queues a place",
-  "play.ai.brief.checkRoster": "who can see the attendee list",
   "play.ai.brief.done":
     "Your brief matches the actual behavior. Three important details no longer depend on AI guessing.",
   "play.ai.brief.receipt": "Your trial record",
@@ -145,4 +142,6 @@ export const messages = {
     "The organizer has enough spaces now: confirm attendance immediately after submission. First-time visitors still need no account, and only the organizer can see the roster.",
   "play.ai.brief.club.followUp":
     "A member raises a privacy concern: only the organizer should see the roster. Login is still required and submissions still confirm attendance immediately. Preserve those two rules.",
+  "play.ai.brief.identified": "Signed in: {{name}}",
+  "play.ai.brief.anonymous": "Visitor: {{name}}",
 } as const;

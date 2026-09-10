@@ -141,7 +141,13 @@ test.describe("Q AI product learning", () => {
     await previewA.getByRole("button", { name: "以会员身份继续试用", exact: true }).click();
     await previewA.getByRole("button", { name: "报名本周活动", exact: true }).click();
     await button(page, "验收这份任务单").click();
-    await expect(failure(page)).toContainText("谁能看见名单");
+    /*
+      The activity names what is still untried using the payload's own action
+      label. It used to be one of three fixed sentences written into the engine's
+      i18n — 「谁能看见名单」 — which only made sense for a sign-up sheet, and was
+      the last place the product was spelled into the game.
+    */
+    await expect(failure(page)).toContainText("看看名单");
     await previewA.getByRole("button", { name: "看看名单", exact: true }).click();
     await expect(previewA).toContainText("新加入：小林");
     await button(page, "验收这份任务单").click();

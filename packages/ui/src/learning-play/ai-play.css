@@ -121,10 +121,23 @@
   line-height: 1.7;
   margin: 0;
 }
+/* 身份那一行现在也放着「去登录」，所以它要能排两样东西。 */
 .ai-brief__identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   font-size: 12px;
   color: var(--game-ui-text-muted);
   padding-block: 4px;
+}
+
+/* 一个动作 = 一个按钮加它自己的结果，各自成块。 */
+.ai-brief__action {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  inline-size: 100%;
 }
 .ai-brief__product button {
   max-inline-size: 100%;
