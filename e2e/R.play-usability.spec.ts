@@ -4,8 +4,37 @@ import { expect, test, type Page } from "@playwright/test";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 
 const ROOT = resolve("SCRATCH/play-usability/browser");
+/*
+  Label to engine kind, by name rather than by position.
+
+  This was a second array read with `[...AI, ...BASE].indexOf(name)`, so adding
+  `sort` to the middle of the foundation shelf silently paired every game after
+  it with the wrong engine — and the assertion still looked like it was checking
+  something. Three parallel lists in this file went stale the same way at once.
+*/
+const KIND: Readonly<Record<string, string>> = {
+  原型对焦台: "ai-brief",
+  上下文装箱: "ai-context",
+  "Agent 驾驶舱": "ai-agent",
+  "AI 试车场": "ai-eval",
+  返工时光机: "ai-repair",
+  接线台: "connect",
+  归类台: "sort",
+  调参实验室: "tune",
+  反例猎手: "hunt",
+  请求调度台: "dispatch",
+  指令画布: "program",
+};
+
 const AI = ["原型对焦台", "上下文装箱", "Agent 驾驶舱", "AI 试车场", "返工时光机"];
-const BASE = ["因果接线台", "调参实验室", "反例猎手", "请求调度台", "指令画布"];
+/*
+  The foundation shelf, in the order the lab prints it, index-aligned with the
+  「first step」 locators below. The first entry said 「因果接线台」 and the button
+  has said 「接线台」 for a while, so both mobile cases had been failing on their
+  first click; 「归类台」 is new because `sort` was on the shelf everywhere except
+  the page that shows the shelf.
+*/
+const BASE = ["接线台", "归类台", "调参实验室", "反例猎手", "请求调度台", "指令画布"];
 const act = (page: Page) => page.locator(".learning-activity");
 const btn = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
 const errors = new WeakMap<Page, string[]>();
@@ -30,19 +59,7 @@ async function mode(page: Page, name: string) {
     .getByRole("navigation", { name: "挑一种互动课件" })
     .getByRole("button", { name, exact: true })
     .click();
-  const kinds = [
-    "ai-brief",
-    "ai-context",
-    "ai-agent",
-    "ai-eval",
-    "ai-repair",
-    "connect",
-    "tune",
-    "hunt",
-    "dispatch",
-    "program",
-  ];
-  await expect(act(page)).toHaveAttribute("data-activity", kinds[[...AI, ...BASE].indexOf(name)]!);
+  await expect(act(page)).toHaveAttribute("data-activity", KIND[name]!);
   await page.evaluate(() => {
     window.scrollTo(0, 0);
     const s = document.querySelector(".app-shell__main");
@@ -65,7 +82,7 @@ for (const [name, origin] of [
   ["delivery", ONLINE_ORIGIN],
   ["authoring", LOCAL_ORIGIN],
 ] as const) {
-  test(`R ${name} 手机：十种玩法首屏都有真正可做的第一步`, async ({ page }) => {
+  test(`R ${name} 手机：每种玩法首屏都有真正可做的第一步`, async ({ page }) => {
     for (const [collection, names] of [
       ["ai", AI],
       ["base", BASE],
@@ -89,6 +106,7 @@ for (const [name, origin] of [
               ][index]!
             : [
                 page.locator(".play-connect__node").first(),
+                page.locator(".play-sort__item").first(),
                 page.locator('.play-tune input[type="range"]').first(),
                 btn(page, "先测这一次"),
                 page.locator(".play-dispatch__lane").nth(1),
@@ -96,7 +114,7 @@ for (const [name, origin] of [
               ][index]!;
         await expect(first).toBeInViewport({ ratio: 1 });
         await capture(page, `${name}-${collection}-${index}-entry`);
-        if (collection === "base" && index === 1) {
+        if (collection === "base" && index === 2) {
           await first.focus();
           await page.keyboard.press("ArrowLeft");
         } else await first.click();
@@ -115,11 +133,20 @@ for (const [name, origin] of [
             "aria-pressed",
             "true",
           );
-        if (collection === "base" && index === 2)
-          await expect(page.locator(".play-hunt__result")).toBeInViewport({ ratio: 1 });
+        /*
+          One index per game, and `sort` arriving at 1 moved every one after it.
+          Indices into two parallel arrays are exactly the shape that goes wrong
+          silently when the shelf grows — which is why `LearningPlayLab.test.tsx`
+          holds the shelf itself against the wire enum rather than against a list
+          like this one.
+        */
+        if (collection === "base" && index === 1)
+          await expect(page.locator(".play-sort__guide")).toContainText("现在点它属于的那一格");
         if (collection === "base" && index === 3)
-          await expect(page.locator(".play-dispatch__meters > div").first()).toContainText("1 / 3");
+          await expect(page.locator(".play-hunt__result")).toBeInViewport({ ratio: 1 });
         if (collection === "base" && index === 4)
+          await expect(page.locator(".play-dispatch__meters > div").first()).toContainText("1 / 3");
+        if (collection === "base" && index === 5)
           await expect(page.locator(".play-program__command")).toHaveCount(1);
         await capture(page, `${name}-${collection}-${index}-action`, ".learning-activity__game");
       }
@@ -253,7 +280,7 @@ for (const variant of [0, 1]) {
   });
 }
 
-test("R 难度身份：切档清本轮、切帮助保现场、三十种组合均可打开", async ({ page }) => {
+test("R 难度身份：切档清本轮、切帮助保现场、每种玩法三档都可打开", async ({ page }) => {
   await open(page);
   const seen = new Set<string>();
   for (const [collection, names] of [
@@ -278,7 +305,12 @@ test("R 难度身份：切档清本轮、切帮助保现场、三十种组合均
       }
     }
   }
-  expect(seen.size).toBe(30);
+  /*
+    Three tiers for every game on both shelves, and every one of them a distinct
+    activity id. Counted from the lists rather than written as 30, which is what
+    it was until `sort` made the foundation shelf six.
+  */
+  expect(seen.size).toBe((AI.length + BASE.length) * 3);
   await open(page);
   await btn(page, "同样提交一次").click();
   const receipt = await page.locator(".ai-brief__comparison").textContent();
@@ -291,7 +323,8 @@ test("R 难度身份：切档清本轮、切帮助保现场、三十种组合均
 
 test("R 连玩可以混合难度，后续简单关不会被全局升难", async ({ page }) => {
   await open(page);
-  await btn(page, "连玩五种").click();
+  // The AI shelf, so five. The label counts the shelf rather than saying 「五」.
+  await btn(page, "连玩 5 种").click();
   for (const [index, level] of ["入门", "挑战", "入门", "进阶", "入门"].entries()) {
     await btn(page, level).click();
     await btn(page, "先跳过").click();

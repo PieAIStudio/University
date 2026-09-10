@@ -160,7 +160,8 @@ test.describe("Q AI product learning", () => {
     await expect(activity(page)).toHaveAttribute("data-activity-id", /^connect-web:/);
     await page.getByRole("link", { name: "用 AI 做产品", exact: true }).click();
     await expect(activity(page)).toHaveAttribute("data-activity-id", /^ai-brief-walk:/);
-    await button(page, "连玩五种").click();
+    // Five, because this is the AI shelf; the label counts what it is on.
+    await button(page, "连玩 5 种").click();
     for (let index = 0; index < 5; index++) {
       await button(page, "先跳过").click();
       await expect(activity(page).locator(".learning-activity__handoff")).toHaveCount(0);

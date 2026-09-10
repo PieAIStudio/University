@@ -167,7 +167,27 @@ describe("「我会了」", () => {
       await test.click("交这一题");
     }
 
+    expect(test.text()).toContain("错了 2 道");
     expect(test.text()).toContain("从头读一遍");
+    expect(test.provenCalls).toEqual([]);
+    test.root.unmount();
+  });
+
+  /*
+    Three wrong reaches the same branch as two, and it used to say 「错了两道」
+    there — telling somebody who got everything wrong that they got one right.
+    A count printed from the number the component already has, not from the
+    threshold that led to the branch.
+  */
+  it("says how many were actually wrong, not the threshold that got here", async () => {
+    const test = mount();
+    await test.click("我会了");
+    for (let index = 0; index < 3; index += 1) {
+      await test.answer("不对");
+      await test.click("交这一题");
+    }
+    expect(test.text()).toContain("错了 3 道");
+    expect(test.text()).not.toContain("错了 2 道");
     expect(test.provenCalls).toEqual([]);
     test.root.unmount();
   });
@@ -182,6 +202,25 @@ describe("「我会了」", () => {
     const test = mount({ load: (lessonId) => lessonView(lessonId, null) });
     await test.click("我会了");
     expect(test.text()).toContain("没法用做题跳过");
+    expect(test.provenCalls).toEqual([]);
+    test.root.unmount();
+  });
+
+  /*
+    Two settleable questions is not a cheaper sitting, it is a different one:
+    the 「at most one wrong」 floor is a floor on three, so a two-question test
+    would let one right answer prove a four-lesson unit. 31 of the 117 units on
+    the shelf can only supply one or two, so this is the common case rather than
+    the edge one.
+  */
+  it("declines rather than shortening the sitting when the unit cannot fill it", async () => {
+    const test = mount({
+      load: (lessonId) =>
+        lessonView(lessonId, ["l1", "l2"].includes(lessonId) ? ANSWERS[lessonId]! : null),
+    });
+    await test.click("我会了");
+    expect(test.text()).toContain("凑不出三道");
+    expect(test.text()).not.toContain("第 1 / 2 题");
     expect(test.provenCalls).toEqual([]);
     test.root.unmount();
   });

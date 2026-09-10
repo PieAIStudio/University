@@ -114,7 +114,18 @@ export function UnitSkipTest({
         size: SKIP_TEST_SIZE,
         ...(pick ? { pick } : {}),
       });
-      if (questions.length === 0) {
+      /*
+        A short sitting is not a cheaper sitting, it is a different one.
+
+        `pickSkipTest` returns what it can, and 31 of the 117 units on the shelf
+        can only supply one or two settleable questions — one exercise per lesson
+        is the writing contract, and the rest ask for a sentence. Running the test
+        anyway would let a single right answer prove a six-lesson unit, because
+        the 「at most one wrong」 floor is a floor on three. 决定 B says 「随机抽
+        这个单元里的三道」; fewer than three is a unit that cannot be tested, and
+        saying so is the honest answer.
+      */
+      if (questions.length < SKIP_TEST_SIZE) {
         setSitting({ kind: "unavailable" });
         return;
       }
@@ -188,7 +199,7 @@ export function UnitSkipTest({
   }
 
   /*
-    Said plainly rather than by hiding the button. 36 of the 117 units on the
+    Said plainly rather than by hiding the button. About half the units on the
     shelf are in this state — their exercises ask for a sentence, and a sentence
     is exactly what tier one cannot judge — and a learner who clicked 「我会了」
     is owed the reason, not a control that quietly does nothing.
@@ -198,7 +209,7 @@ export function UnitSkipTest({
       <div className="skip-test" aria-live="polite">
         <p className="skip-test__note">
           {translate(
-            "ui.path.unitSkipTest.copy.这一单元的练习要写一整句话-没法当场判对错-所以不能靠做题跳过",
+            "ui.path.unitSkipTest.copy.这一单元凑不出三道能当场判对错的题-所以没法用做题跳过",
           )}
         </p>
       </div>
@@ -242,7 +253,15 @@ export function UnitSkipTest({
       {sitting.proven.length === 0 ? (
         <>
           <p className="skip-test__verdict">
-            {translate("ui.path.unitSkipTest.copy.错了两道以上-这一单元还是从头读一遍吧")}
+            {/*
+              The number, not the threshold. This branch is reached on two wrong
+              answers and on three, and 「错了两道」 is simply false in the second
+              case — to a learner who just got everything wrong, being told they
+              got one right is the product not having watched.
+            */}
+            {translate("ui.path.unitSkipTest.copy.错了几道-这一单元还是从头读一遍吧", {
+              wrong: sitting.wrong,
+            })}
           </p>
           <GameButton variant="ghost" onClick={() => setSitting({ kind: "idle" })}>
             {translate("ui.path.unitSkipTest.copy.再测一次")}
