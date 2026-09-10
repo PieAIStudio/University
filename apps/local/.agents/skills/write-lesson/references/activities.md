@@ -169,6 +169,30 @@
   可能这个单元讲的本来就是同一类关系（读一段代码追谁连着谁，就该全是 `connect`），
   也可能是没认真看别的九种——这两种情况看起来一模一样，只有写的人分得清。
 
+## 落地之后：把课程恢复成 active
+
+`course open-for-edit` 会把课程和它的单元置为 `stale`，因为 `course revise` 拒绝
+改动 active 的容器。**而 stale 的课程在阅读器里打不开**——读者看到的是
+「课程资料没有打开」，正文一个字都没有。
+
+所有闸门对此一律绿灯：linter 干净、`check:activities` 说 ok、引擎接受载荷、
+连页面标题都正确解析出新修订的标题。**只有真的在浏览器里打开那一节才看得见。**
+
+所以顺序是固定的，而且 reactivate 必须在最后（reactivate 之后就改不动了）：
+
+```
+open-for-edit  →  revise（一节或多节）  →  验证  →  reactivate
+```
+
+```bash
+cd apps/local
+node scripts/university-local.mjs course reactivate \
+  --study <study> --course <course> --snapshot <snapshot-id>
+```
+
+2026-09-10 实测：三个并行 agent 各改一门课，两个把课程留在 stale 就交付了，
+它们跑的每一条检查都是绿的。
+
 ## 出处：网址或者仓库里的位置，看这节课引的是哪一种
 
 组件的 `source` 跟着这节课的出处走，两种形状都行：

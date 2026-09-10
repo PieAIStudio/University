@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-10T13:24:31.722Z
+generated_at: 2026-09-10T15:27:58.487Z
 generator_version: doc-gov@0.9.11
-docs_count: 125
+docs_count: 127
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -361,6 +361,13 @@ docs:
     canonical: true
     last_reviewed: 2026-09-09
     pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-COURSE-LEFT-OPEN-FOR-EDIT-IS-UNREADABLE-AND-EVERY-GATE-STAYS-GREEN
+    path: docs/reference/learnings/workflow-issues/a-course-left-open-for-edit-is-unreadable-and-every-gate-stays-green.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-10
+    pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-DETECTOR-AND-ITS-ACCEPTOR-MUST-NORMALISE-IDENTICALLY-OR-THE-GATE-REJECTS-THE-S
     path: docs/reference/learnings/workflow-issues/a-detector-and-its-acceptor-must-normalise-identically-or-the-gate-rejects-the-s.md
     type: reference
@@ -412,6 +419,13 @@ docs:
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-UI-OVERLAP-SWEEP-THAT-SKIPS-ELEMENTFROMPOINTS-TWO-TRAPS-REPORTS-THE-WHOLE-PROD
     path: docs/reference/learnings/workflow-issues/a-ui-overlap-sweep-that-skips-elementfrompoints-two-traps-reports-the-whole-prod.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-10
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-AN-ACTIVITY-CAN-PASS-EVERY-ENGINE-CHECK-AND-STILL-BE-THE-WRONG-GAME-FOR-THE-LESS
+    path: docs/reference/learnings/workflow-issues/an-activity-can-pass-every-engine-check-and-still-be-the-wrong-game-for-the-less.md
     type: reference
     status: stable
     canonical: true
