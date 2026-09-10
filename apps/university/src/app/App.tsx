@@ -41,6 +41,7 @@ import {
   isBareView,
   lessonRefKey,
   progressSourceOf,
+  unmetPrerequisites,
   type FeedbackContext,
   type LessonRef,
 } from "@pieai/university-core";
@@ -537,6 +538,27 @@ export function App() {
     () => new Set(Object.keys(progress.provenLessons ?? {})),
     [progress.provenLessons],
   );
+  /*
+    What a course assumes and the learner has not done — one reading of the
+    graph, shared with the map's lighting through `unmetPrerequisites`. Named
+    courses rather than a count, because 决定 C asks the product to 「说明它假定
+    你已经会了什么」 and a number does not.
+  */
+  const unmetFor = useCallback(
+    (node: { readonly prerequisiteCourseIds?: readonly string[] } | null, studyId: string) => {
+      if (!node) return [];
+      const sameStudy = (nodes ?? []).filter((peer) => peer.studyId === studyId);
+      return unmetPrerequisites(
+        node,
+        sameStudy.map((peer) => ({ courseId: peer.courseId, title: peer.title })),
+        (courseId) => {
+          const peer = sameStudy.find((candidate) => candidate.courseId === courseId);
+          return peer !== undefined && courseProgress(peer) >= 1;
+        },
+      );
+    },
+    [nodes, courseProgress],
+  );
   const courseIslandProps =
     view.kind === "course" && course
       ? {
@@ -549,6 +571,9 @@ export function App() {
           contentPort,
           provenLessonKeys,
           onProven: markUnitProven,
+          unmetPrerequisites: unmetFor(course, view.studyId),
+          onOpenCourse: (courseId: string) =>
+            setView({ kind: "course", studyId: view.studyId, courseId }),
           onOpenUnitOverlay: openUnitOverlay,
           onBackToMap: backToCourseMap,
           onOpenLesson: openCourseLesson,
@@ -797,7 +822,7 @@ export function App() {
                 title={picked.title}
                 studyTitle={picked.studyTitle}
                 depth={picked.depth}
-                prerequisiteCount={picked.prerequisiteCourseIds.length}
+                unmetPrerequisites={unmetFor(picked, picked.studyId)}
                 objectives={pickedCourse.objectives}
                 stats={pickedStats}
                 isBeingRewritten={picked.isBeingRewritten === true}

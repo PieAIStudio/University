@@ -140,6 +140,26 @@ test.describe("跳级：自述只缩小范围，做对题才跳过", () => {
     await openCourseIsland(page);
 
     /*
+      V5 §12 决定 C, on the way past. This course lists 「把这个抠图应用改成你的」
+      as a prerequisite and a fresh profile has finished nothing, so the island
+      is one the map draws unlit — and the sentence is what a dimmed island
+      cannot say on its own.
+
+      The door is asserted open in the same breath. A notice that named the
+      course and took the route quiz away would be a lock with better manners.
+    */
+    await namedStep(page, "灰是信息，锁是权力", async () => {
+      const assumes = page.locator(".picked--left .picked__assumes");
+      await expect(assumes).toContainText("这门课假定你已经做过");
+      await expect(assumes).toContainText("把这个抠图应用改成你的");
+      await expect(assumes).toContainText("没做过也拦不住你");
+      await expect(page.getByRole("button", { name: /去：把这个抠图应用改成你的/ })).toBeVisible();
+      // Everything below it still works: this is the same panel either way.
+      await expect(page.locator("details.course-route-quiz")).toBeVisible();
+      await expect(page.locator(".unit-strip__list")).toBeVisible();
+    });
+
+    /*
       决定 D's entrance, checked before the recommender's: 「每个单元入口都有一个
       『我会了』。」 It is not a consequence of having answered the opening
       questions — a learner who never opens the recommender, or who comes back a

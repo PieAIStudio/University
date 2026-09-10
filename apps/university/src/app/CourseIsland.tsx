@@ -21,6 +21,9 @@ export interface CourseIslandProps {
     unitId: string,
     lessonIds: readonly string[],
   ) => void;
+  /** Courses this one assumes and the learner has not finished — named, never counted. */
+  readonly unmetPrerequisites: readonly { readonly courseId: string; readonly title: string }[];
+  readonly onOpenCourse: (courseId: string) => void;
   readonly onOpenUnitOverlay: (unitId: string, returnFocusTo: HTMLElement) => void;
   readonly onBackToMap: () => void;
   readonly onOpenLesson: (locator: LessonRef) => void;
@@ -45,6 +48,8 @@ export function CourseIsland({
   contentPort,
   provenLessonKeys,
   onProven,
+  unmetPrerequisites,
+  onOpenCourse,
   onOpenUnitOverlay,
   onBackToMap,
   onOpenLesson,
@@ -61,6 +66,47 @@ export function CourseIsland({
         {viewedProgress ? viewedProgress.total - viewedProgress.done : 0}{" "}
         {translate("app.app.courseIsland.copy.关")}
       </p>
+      {/*
+        V5 §12 决定 C, in the one place the learner is standing when it matters.
+
+        The island is already dimmed on the map when a prerequisite is unmet —
+        that is `stateOf` returning `idle` — but a dimmed island says only 「not
+        yet」, which a learner with real experience reads as 「not for you」. The
+        design asks for the sentence as well: 「点了先给一句『这节假定你已经做过
+        X，要不要先测一下』，然后由学习者决定。」
+
+        So this names the course, offers to go there, and says out loud that
+        staying is allowed. There is no branch anywhere in this component that
+        withholds a lesson: 「灰是信息，锁是权力；这里我们只给信息。」
+      */}
+      {unmetPrerequisites.length > 0 ? (
+        <section
+          className="picked__assumes"
+          aria-label={translate("app.app.courseIsland.copy.这门课假定你会什么")}
+        >
+          <p>
+            {translate("app.app.courseIsland.copy.这门课假定你已经做过")}
+            {unmetPrerequisites.map((prerequisite) => prerequisite.title).join("、")}
+            {translate("app.app.courseIsland.copy.要不要先去那门课测一测")}
+          </p>
+          <div className="picked__assumes-actions">
+            {unmetPrerequisites.map((prerequisite) => (
+              <button
+                key={prerequisite.courseId}
+                type="button"
+                className="text-button"
+                onClick={() => onOpenCourse(prerequisite.courseId)}
+              >
+                {translate("app.app.courseIsland.copy.去")}
+                {prerequisite.title}
+              </button>
+            ))}
+          </div>
+          <p className="picked__assumes-note">
+            {translate("app.app.courseIsland.copy.没做过也拦不住你-这里只是先说一声")}
+          </p>
+        </section>
+      ) : null}
       {showRouteDetails ? (
         <details key={`${studyId}:${course.id}`} className="picked__route">
           {/* key remounts this closed when the series or course changes. */}

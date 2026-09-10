@@ -282,6 +282,10 @@ export * from "./progress/depth.js";
 // of them are drawn, and what passing them proves — which is never 「学过」.
 export * from "./progress/skip-test.js";
 
+// Which courses a course assumes you have done. Deliberately no `locked`: the
+// prerequisite graph is information the learner is given, not a gate (V5 §12 C).
+export * from "./progress/prerequisites.js";
+
 // Recommended learning sequence (spine order) per study — a linear extension
 // of the prerequisite DAG so there is always exactly one "next step".
 export * from "./progress/spine.js";

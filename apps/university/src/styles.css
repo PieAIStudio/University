@@ -4365,6 +4365,13 @@ button.label--icon[data-lesson-state="locked"] {
 /*
   The offer to answer without reading. Quiet on purpose: it is a door for the
   person who already knows the material, not a shortcut the product recommends.
+
+  Quiet is `--game-ui-text-muted`, and that is the whole of it. It also carried
+  `opacity: 0.75`, which composited the muted token down to about 3.1:1 on the
+  reader's ground — under the AA floor, on a control offered to somebody who is
+  choosing not to read the page it sits on. axe caught it on both viewports.
+  The muted token is already three steps quieter than body text; multiplying it
+  by an opacity was quiet twice, and the second one cost legibility.
 */
 .lesson-skip-to-questions {
   margin: 0 0 1rem;
@@ -4380,10 +4387,9 @@ button.label--icon[data-lesson-state="locked"] {
   text-decoration: underline;
   text-underline-offset: 0.2em;
   cursor: pointer;
-  opacity: 0.75;
 }
 
 .lesson-skip-to-questions button:hover,
 .lesson-skip-to-questions button:focus-visible {
-  opacity: 1;
+  color: var(--game-ui-text);
 }

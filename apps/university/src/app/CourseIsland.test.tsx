@@ -67,6 +67,8 @@ const BASE_PROPS = {
   contentPort: { lesson: () => Promise.reject(new Error("not asked")) },
   provenLessonKeys: new Set<string>(),
   onProven: () => undefined,
+  unmetPrerequisites: [],
+  onOpenCourse: () => undefined,
   onOpenUnitOverlay: () => undefined,
   onBackToMap: () => undefined,
   onOpenLesson: () => undefined,
@@ -175,5 +177,72 @@ describe("CourseIsland", () => {
       await act(async () => root.unmount());
       host.remove();
     }
+  });
+});
+
+/*
+  V5 §12 决定 C, on the surface the learner is standing on.
+
+  The map already dims an island whose prerequisites are unmet, and a dimmed
+  island says only 「not yet」 — which somebody with real experience reads as
+  「not for you」, the exact outcome this whole section exists to prevent. So the
+  island says it in words, names the course, and says out loud that staying is
+  allowed.
+
+  The second case is the one that matters: every lesson control this panel has is
+  identical with and without an unmet prerequisite. 「灰是信息，锁是权力；这里我们
+  只给信息。」
+*/
+describe("CourseIsland and an unmet prerequisite", () => {
+  const UNMET = [{ courseId: "foundations-before-zero", title: "在开始之前" }];
+
+  it("names the course it assumes and offers a way there", () => {
+    const opened: string[] = [];
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    act(() => {
+      root.render(
+        <CourseIsland
+          {...BASE_PROPS}
+          viewedProgress={UNSTARTED}
+          unmetPrerequisites={UNMET}
+          onOpenCourse={(courseId) => opened.push(courseId)}
+        />,
+      );
+    });
+
+    expect(container.textContent).toContain("这门课假定你已经做过");
+    expect(container.textContent).toContain("在开始之前");
+    expect(container.textContent).toContain("没做过也拦不住你");
+
+    const goThere = [...container.querySelectorAll("button")].find((node) =>
+      (node.textContent ?? "").includes("在开始之前"),
+    );
+    act(() => goThere?.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(opened).toEqual(["foundations-before-zero"]);
+
+    act(() => root.unmount());
+    container.remove();
+  });
+
+  it("takes nothing away — the panel is the same panel either way", () => {
+    const withUnmet = renderToStaticMarkup(
+      <CourseIsland {...BASE_PROPS} viewedProgress={UNSTARTED} unmetPrerequisites={UNMET} />,
+    );
+    const without = renderToStaticMarkup(
+      <CourseIsland {...BASE_PROPS} viewedProgress={UNSTARTED} />,
+    );
+    /*
+      Compared by what the panel offers rather than by its whole markup: the
+      notice is supposed to differ. Everything a learner could act on — the
+      route quiz, the skip test, the unit control, the way back — must not.
+    */
+    const controls = (markup: string) =>
+      [...markup.matchAll(/<button[^>]*class="([^"]*)"/g)]
+        .map((match) => match[1])
+        .filter((className) => !className?.includes("text-button"));
+    expect(controls(withUnmet)).toEqual(controls(without));
+    expect(withUnmet).toContain("先测测你的学习起点");
   });
 });

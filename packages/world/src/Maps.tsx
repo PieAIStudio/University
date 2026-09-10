@@ -21,6 +21,7 @@
  */
 import {
   isLessonComplete,
+  prerequisitesMet,
   readCourseProgress,
   spineOf,
   type AuthoringFocus,
@@ -346,10 +347,24 @@ function stateOf(
 ): WorldPlacement["state"] {
   const progress = progressOf(node);
   if (progress >= 1) return "done";
-  const unlocked = node.prerequisiteCourseIds.every((id) =>
-    siblings.some((peer) => peer.courseId === id && progressOf(peer) >= 1),
+  /*
+    One reading of the prerequisite graph, shared with the surfaces that say the
+    same thing in words. It was an inline `every(...)` here, which meant the
+    island's lighting and any card describing it were two computations of one
+    fact — and 「灰是信息」 only holds while the picture and the sentence agree.
+
+    Still only lighting. `idle` dims an island; nothing here stops it being
+    entered, which is V5 §12 决定 C: 「灰是信息，锁是权力；这里我们只给信息。」
+  */
+  const met = prerequisitesMet(
+    node,
+    siblings.map((peer) => ({ courseId: peer.courseId, title: peer.title })),
+    (courseId) => {
+      const peer = siblings.find((candidate) => candidate.courseId === courseId);
+      return peer !== undefined && progressOf(peer) >= 1;
+    },
   );
-  return unlocked ? "open" : "idle";
+  return met ? "open" : "idle";
 }
 
 /**

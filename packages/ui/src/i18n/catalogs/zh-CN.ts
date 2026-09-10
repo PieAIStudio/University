@@ -1082,6 +1082,15 @@ export const messages = {
   "ui.path.coursePickCard.copy.这门课有": "这门课有：",
   "ui.path.coursePickCard.copy.进入这门课": "进入这门课",
   "ui.path.courseRouteQuiz.copy.3-个小问题": "3 个小问题",
+  "app.app.courseIsland.copy.这门课假定你会什么": "这门课假定你会什么",
+  "app.app.courseIsland.copy.这门课假定你已经做过": "这门课假定你已经做过：",
+  "app.app.courseIsland.copy.要不要先去那门课测一测": "。要不要先去那门课测一测？",
+  "app.app.courseIsland.copy.去": "去：",
+  "app.app.courseIsland.copy.没做过也拦不住你-这里只是先说一声":
+    "没做过也拦不住你。这里只是先说一声，去留你自己定。",
+  "ui.path.coursePickCard.copy.这门课假定你已经学过上面这几门-没学过也进得去":
+    "这门课假定你已经学过上面这几门。没学过也进得去，只是会更费劲。",
+
   "ui.path.courseRouteQuiz.copy.已回答": "已回答",
   "ui.path.courseRouteQuiz.copy.根据你的回答": "根据你的回答：",
   "ui.path.courseRouteQuiz.copy.看起来你可以跳过前面": "看起来你可以跳过前面",
