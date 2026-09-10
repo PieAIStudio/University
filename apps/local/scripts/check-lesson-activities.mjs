@@ -89,6 +89,7 @@ let isValidSortActivity = null;
 let isValidContrastActivity = null;
 let isValidWeighActivity = null;
 let isValidBriefActivity = null;
+let huntEngine = null;
 let isValidProgramActivity = null;
 let agentEngine = null;
 let evalEngine = null;
@@ -103,6 +104,7 @@ try {
   ({ isValidWeighActivity } = await import("../../../packages/core/dist/learning-play/weigh.js"));
   ({ isValidBriefActivity } =
     await import("../../../packages/core/dist/learning-play/ai-brief.js"));
+  huntEngine = await import("../../../packages/core/dist/learning-play/hunt.js");
   ({ isValidProgramActivity } =
     await import("../../../packages/core/dist/learning-play/program.js"));
   agentEngine = await import("../../../packages/core/dist/learning-play/ai-agent.js");
@@ -158,6 +160,42 @@ function checkWeigh(activity, where) {
   if (!isValidWeighActivity(activity)) {
     problems.push(
       `${where}: 引擎判定这个取舍台不成立——有个选项一次都赢不了（那它就不是取舍，是送分），或者情况数少于选项数、正确选项不在选项里`,
+    );
+  }
+}
+
+/**
+ * A hunt has to have a counterexample inside the range the learner can reach.
+ *
+ * This is the only kind that had no check, and the reason it went last is the
+ * reason it was worth writing: the engine already refuses a malformed payload
+ * with `"invalid-activity"`, so the shape was covered — but a well-formed hunt
+ * whose boundary sits outside `input.min…max` is a round nobody can finish.
+ * The reader tries values until they give up, and it looks exactly like being
+ * bad at it.
+ *
+ * The points are sampled rather than reasoned about, because the engine is
+ * where the two models live and a second copy of 「threshold differs at the
+ * boundary, clamp differs below zero」 here would be a rule that drifts.
+ */
+function checkHunt(activity, where) {
+  if (!huntEngine) return;
+  const { min, max } = activity.input ?? {};
+  const shape = huntEngine.evaluateHunt(activity, activity.input?.initial ?? min);
+  if (!shape.valid && shape.reason === "invalid-activity") {
+    problems.push(`${where}: 引擎判定这个反例猎手本身不成立——范围或分界写错了`);
+    return;
+  }
+  const points = new Set([min, max, activity.boundary, 0, -1, activity.boundary - 1]);
+  for (let step = 0; step <= 40; step += 1) points.add(min + ((max - min) * step) / 40);
+  const found = [...points].some((value) => {
+    if (!Number.isFinite(value) || value < min || value > max) return false;
+    const verdict = huntEngine.evaluateHunt(activity, value);
+    return verdict.valid && verdict.counterexample;
+  });
+  if (!found) {
+    problems.push(
+      `${where}: 这一关的输入范围里找不到任何反例——读者怎么试都过不了，而且看起来像是自己没试对`,
     );
   }
 }
@@ -650,6 +688,7 @@ const CHECKS = {
   contrast: checkContrast,
   weigh: checkWeigh,
   "ai-brief": checkBrief,
+  hunt: checkHunt,
   program: checkProgram,
   "ai-agent": checkAgent,
   "ai-eval": checkEval,
