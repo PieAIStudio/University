@@ -143,6 +143,25 @@ Both must pass before the polished version replaces the draft. Discarding it
 costs one model call; shipping it costs a lesson whose prediction has no
 answer prompt, and the reader is the one who finds out.
 
+**And the third one, measured 2026-09-10.** 「关掉网，这个页面还能抠图吗？」 came
+back from the Polisher passing hedges, absolutes, length, second person *and* the
+structural check — and inside a `:::detail` explaining what 「发出去」 means it had
+rewritten 「那台电脑上会多出一份拷贝」 as 「别人那边会多出一份备份」. A copy on
+somebody else's machine and a backup are different claims, in the lesson whose
+entire point is that the reader's photo never leaves.
+
+The prompt already forbids this in as many words — 「所有关于代码、文件、命令的事实
+陈述…你没见过这些代码，没资格改任何技术判断」 — so being told is not the control.
+`check-lesson-hedges.mjs` now also compares the terms the lesson uses, in both
+directions: a term the original had and the polish dropped, or one the polish
+introduced that the original never used, is a failure. That polish is discarded,
+and the lesson keeps revision 1.
+
+Three blind spots have now been found in this gate, all the same shape: the
+checker measured what it was asked to measure, correctly, and the polish went
+wrong somewhere nobody had thought to look. Expect a fourth. When you find it,
+add it here rather than remembering it.
+
 **Polish once, not twice.** The first instinct is to add a second Flash pass at
 the end to apply the fixes Grok finds. Do not: every pass is another chance to
 absolutise, and running two doubles a risk that has been measured rather than

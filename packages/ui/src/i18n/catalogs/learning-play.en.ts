@@ -4,10 +4,10 @@ export const messages = {
     "Connect an idea, break a rule, or send a little courier on its way. Pick a way to explore.",
   "play.lab.entry": "Open the learning playground",
   "play.lab.back": "Back to practice",
-  "play.lab.mix": "Play all five",
+  "play.lab.mix": "Play all {{total}}",
   "play.lab.mixing": "Playlist in progress",
   "play.lab.cancelMix": "Explore freely",
-  "play.lab.session": "Explored this session: {{count}} / 5",
+  "play.lab.session": "Explored this session: {{count}} / {{total}}",
   "play.lab.note":
     "Playground · Session progress only. Completion here does not change course grades.",
   "play.lab.select": "Choose a way to play",
@@ -15,7 +15,7 @@ export const messages = {
   "play.lab.variant": "Situation {{count}}",
   "play.lab.next": "Next activity",
   "play.lab.again": "Play another round",
-  "play.lab.allDone": "You tried all five. Which one made something click?",
+  "play.lab.allDone": "You tried them all. Which one made something click?",
   "play.lab.mixDone": "Round complete",
   "play.lab.mixSummary":
     "Completed {{complete}}, skipped {{skipped}}. You can return to any activity.",

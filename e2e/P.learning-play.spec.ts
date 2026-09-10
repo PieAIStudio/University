@@ -18,7 +18,19 @@ test.afterEach(({ page }) => {
     "A completed activity must not hide an uncaught browser error",
   ).toEqual([]);
 });
-const MODES = ["因果接线台", "调参实验室", "反例猎手", "请求调度台", "指令画布"];
+/*
+  The foundation shelf, in the order the lab prints it. Six, not five: `sort`
+  had an engine, a renderer, three lessons and a gate before it had a button
+  here. Keeping the list explicit is deliberate — a spec that derived it from
+  the component could not notice a game disappearing from both at once — but
+  `LearningPlayLab.test.tsx` is what holds the component against the wire enum.
+
+  The first entry said 「因果接线台」 and the button has said 「接线台」 for a while,
+  so the two mobile cases below could never find it and had been red on their
+  first click. Nothing else in this file uses the list, which is why it went
+  unnoticed: a stale name in a fixture fails loudly only where it is read.
+*/
+const MODES = ["接线台", "归类台", "调参实验室", "反例猎手", "请求调度台", "指令画布"];
 const activity = (page: Page) => page.locator(".learning-activity");
 const button = (page: Page, name: string | RegExp) =>
   page.getByRole("button", { name, exact: typeof name === "string" });
@@ -103,7 +115,7 @@ async function program(page: Page, commands: readonly (readonly [string, number]
   }
 }
 
-test.describe("P 五种学习玩法", () => {
+test.describe("P 基础玩法", () => {
   test.use({ viewport: { width: 1440, height: 1100 } });
 
   test("接线能纠正额外关系，两种情境都执行两条路径", async ({ page }) => {
@@ -288,17 +300,23 @@ test.describe("P 五种学习玩法", () => {
 
   test("连续试玩单独记录跳过，刷新后不冒充课程进度", async ({ page }) => {
     await openLab(page);
-    await button(page, "连玩五种").click();
-    for (let index = 0; index < 5; index++) {
+    await button(page, `连玩 ${MODES.length} 种`).click();
+    for (let index = 0; index < MODES.length; index++) {
       await button(page, "先跳过").click();
       await expect(activity(page).locator('[data-result="skipped"]')).toBeVisible();
-      await button(page, index === 4 ? "这一轮结束了" : "下一个玩法").click();
+      await button(page, index === MODES.length - 1 ? "这一轮结束了" : "下一个玩法").click();
     }
-    await expect(page.locator(".learning-play-lab__finish")).toContainText("完成 0 种，跳过 5 种");
-    await expect(page.locator(".learning-play-lab__session")).toContainText("本次发现 0 / 5");
+    await expect(page.locator(".learning-play-lab__finish")).toContainText(
+      `完成 0 种，跳过 ${MODES.length} 种`,
+    );
+    await expect(page.locator(".learning-play-lab__session")).toContainText(
+      `本次发现 0 / ${MODES.length}`,
+    );
     await page.reload();
     await expect(activity(page)).toHaveAttribute("data-activity-id", /^connect-web:/);
-    await expect(page.locator(".learning-play-lab__session")).toContainText("本次发现 0 / 5");
+    await expect(page.locator(".learning-play-lab__session")).toContainText(
+      `本次发现 0 / ${MODES.length}`,
+    );
   });
 });
 
@@ -313,7 +331,7 @@ test.describe("P 手机与同一学习者表面", () => {
     ["delivery", ONLINE_ORIGIN],
     ["authoring", LOCAL_ORIGIN],
   ]) {
-    test(`${name}：五种玩法在窄屏都能操作，键盘找到反例`, async ({ page }) => {
+    test(`${name}：基础玩法在窄屏都能操作，键盘找到反例`, async ({ page }) => {
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
       await openLab(page, origin);

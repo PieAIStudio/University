@@ -14,20 +14,29 @@ import { LearningActivity } from "./LearningActivity.js";
 import { getBaseExamples } from "./base-examples.js";
 import { extraExamples } from "./extra-examples.js";
 import { getProgramExamples } from "./program-examples.js";
+import { getSortExamples } from "./sort-examples.js";
 import { PlayIcon } from "./PlayIcon.js";
 import { getAIBriefExamples } from "./ai-brief-examples.js";
 import { getAIWorkflowExamples } from "./ai-workflow-examples.js";
 import { getAIQualityExamples } from "./ai-quality-examples.js";
 
-const FOUNDATION_MODES = [
+/*
+  The lab's two shelves, exported so a test can hold them against the wire
+  enum. `sort` had an engine, a renderer, three lessons using it and a gate
+  checking it, and was still absent from this list — so the page that exists to
+  let somebody try every game could only offer ten of the eleven, and nothing
+  said so. A list of names is exactly the shape that goes stale quietly.
+*/
+export const FOUNDATION_MODES = [
   "connect",
+  "sort",
   "tune",
   "hunt",
   "dispatch",
   "program",
 ] as const satisfies readonly ActivityKind[];
 
-const AI_MODES = [
+export const AI_MODES = [
   "ai-brief",
   "ai-context",
   "ai-agent",
@@ -47,7 +56,7 @@ export function LearningPlayLab({
     () =>
       collection === "ai"
         ? [...getAIBriefExamples(), ...getAIWorkflowExamples(), ...getAIQualityExamples()]
-        : [...getBaseExamples(), ...extraExamples(), ...getProgramExamples()],
+        : [...getBaseExamples(), ...getSortExamples(), ...extraExamples(), ...getProgramExamples()],
     [locale, collection],
   );
   const [mode, setMode] = useState<ActivityKind>(modes[0]!);
@@ -164,7 +173,7 @@ export function LearningPlayLab({
             <div className="learning-play-lab__variant">
               <span>
                 {playlist !== null
-                  ? `${t("play.lab.mixing")} · ${modes.indexOf(mode) + 1} / 5`
+                  ? `${t("play.lab.mixing")} · ${modes.indexOf(mode) + 1} / ${modes.length}`
                   : t("play.lab.variant", { count: variant + 1 })}
               </span>
               {playlist === null ? (
@@ -229,10 +238,17 @@ export function LearningPlayLab({
         </div>
         <div className="learning-play-lab__session">
           <span>
+            {/*
+              Both numbers come from the shelf being shown. The total used to be
+              the character 五 baked into three sentences and a `/ 5` in the
+              progress line, which was correct for exactly as long as there were
+              five games — and `sort` was the sixth.
+            */}
             {t("play.lab.session", {
               count: modes.filter((kind) =>
                 ACTIVITY_DIFFICULTIES.some((level) => completed.has(`${kind}:${level}`)),
               ).length,
+              total: modes.length,
             })}
           </span>
           <GameButton
@@ -248,7 +264,9 @@ export function LearningPlayLab({
                 : startPlaylist
             }
           >
-            {t(playlist !== null && !playlistDone ? "play.lab.cancelMix" : "play.lab.mix")}
+            {playlist !== null && !playlistDone
+              ? t("play.lab.cancelMix")
+              : t("play.lab.mix", { total: modes.length })}
           </GameButton>
         </div>
       </header>

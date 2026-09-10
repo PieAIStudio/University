@@ -2,6 +2,7 @@ import type { ActivityFamily, LearningActivitySpec } from "@pieai/university-cor
 import { getFoundationFamily } from "./foundation-difficulty.js";
 import { getWorkflowFamily } from "./workflow-difficulty.js";
 import { getQualityFamily } from "./quality-difficulty.js";
+import { getSortFamily } from "./sort-difficulty.js";
 
 /** Only the lab's curated fixtures are expanded here. Course authors supply explicit families. */
 export function getExampleFamily(activity: LearningActivitySpec): ActivityFamily {
@@ -14,14 +15,14 @@ export function getExampleFamily(activity: LearningActivitySpec): ActivityFamily
       return getQualityFamily(activity);
     case "sort":
       /*
-        Lessons may embed `sort`; the lab's curated three-tier fixtures do not
-        include it yet. Inventing tiers here would put a showcase on screen that
-        nobody designed, and the family contract wants a real task difference at
-        each tier plus a runnable solution — that is authoring work, not a
-        fallback. Unreachable in practice: the lab only ever passes its own
-        fixtures, and this branch exists so the type stops pretending otherwise.
+        This used to throw. The note said the tiers were authoring work rather
+        than a fallback, which was true and stayed true for as long as `sort`
+        was also missing from the lab's mode list — so the throw was
+        unreachable, and the page quietly offered ten of the eleven games.
+        `LearningPlayLab.test.tsx` now holds the list against the wire enum, so
+        the two cannot drift apart again without something going red.
       */
-      throw new Error("sort has no curated lab family yet");
+      return getSortFamily(activity);
     default:
       return getFoundationFamily(activity);
   }
