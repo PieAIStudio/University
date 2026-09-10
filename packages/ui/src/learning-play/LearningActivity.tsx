@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
+import { formatLineRange } from "@pieai/university-core";
 import type { ActivityResult, LearningActivitySpec } from "@pieai/university-core";
 import { translate as t } from "../i18n/index.js";
 import { playSound } from "../sound/index.js";
@@ -214,7 +215,9 @@ function ActivityRound({
                     {activity.source.label}{" "}
                     <code>
                       {activity.source.path}
-                      {activity.source.line ? `:${activity.source.line}` : ""}
+                      {activity.source.line
+                        ? `:${formatLineRange(activity.source.line, activity.source.lineEnd)}`
+                        : ""}
                       {activity.source.commit ? `@${activity.source.commit.slice(0, 8)}` : ""}
                     </code>
                   </span>

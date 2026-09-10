@@ -132,6 +132,7 @@ export {
   type SectionProblem,
   type SectionProblemCode,
 } from "./domain/entry-section.js";
+export { formatLineRange } from "./domain/line-range.js";
 export {
   COLLECTION_IDS,
   CollectionIdSchema,

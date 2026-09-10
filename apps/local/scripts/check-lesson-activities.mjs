@@ -174,8 +174,9 @@ function checkSource(activity, where, studyId) {
     return;
   }
   const lines = file.split("\n").length;
-  if (source.line && source.line > lines) {
-    problems.push(`${where}: 出处指到第 ${source.line} 行，${source.path} 只有 ${lines} 行`);
+  const far = source.lineEnd ?? source.line;
+  if (far && far > lines) {
+    problems.push(`${where}: 出处指到第 ${far} 行，${source.path} 只有 ${lines} 行`);
   }
 }
 

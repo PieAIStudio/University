@@ -23,8 +23,8 @@
     },
     {
       "courseId": "make-the-cutout-app-yours",
-      "file": "make-the-cutout-app-yours.99f3171a00b6baadba2f197112216406f952c55eadc475fcd6232a942f5cc343.recovery.json",
-      "sha256": "sha256:99f3171a00b6baadba2f197112216406f952c55eadc475fcd6232a942f5cc343",
+      "file": "make-the-cutout-app-yours.5e6234d65f592fbe61276758ff23fdb3d1fecbddefe97330b8fe8f43501b3362.recovery.json",
+      "sha256": "sha256:5e6234d65f592fbe61276758ff23fdb3d1fecbddefe97330b8fe8f43501b3362",
       "isBeingRewritten": false
     },
     {
@@ -35,8 +35,8 @@
     },
     {
       "courseId": "when-a-project-is-too-big-to-read",
-      "file": "when-a-project-is-too-big-to-read.3198bb0d539751dfc258bb822a7fe77e00801fa2fc94289d428c5ad1963b4e80.recovery.json",
-      "sha256": "sha256:3198bb0d539751dfc258bb822a7fe77e00801fa2fc94289d428c5ad1963b4e80",
+      "file": "when-a-project-is-too-big-to-read.09c123b375c183d554d801c2562ee687ea259882094ead530d9972abac79a377.recovery.json",
+      "sha256": "sha256:09c123b375c183d554d801c2562ee687ea259882094ead530d9972abac79a377",
       "isBeingRewritten": false
     }
   ]

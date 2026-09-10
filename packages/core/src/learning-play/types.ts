@@ -33,7 +33,17 @@ export interface ActivityBase {
     | {
         readonly label: string;
         readonly path: string;
+        /**
+         * `line` alone, or `line`–`lineEnd` for a span.
+         *
+         * The evidence an activity cites records `lineStart`/`lineEnd`, so a
+         * citation that could hold only one number silently truncated every
+         * span it was given to its first line — which for `App.jsx` lines 1–4
+         * meant a receipt pointing at the React import while its label promised
+         * three component imports. The url form could already write `#L1-L4`.
+         */
         readonly line?: number;
+        readonly lineEnd?: number;
         readonly commit?: string;
       };
 }

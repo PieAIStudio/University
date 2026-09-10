@@ -675,9 +675,16 @@ export const LessonActivitySchema = z
           label: z.string().min(1).max(200),
           path: RepositoryRelativePath,
           line: z.number().int().positive().optional(),
+          lineEnd: z.number().int().positive().optional(),
           commit: GitCommit.optional(),
         })
-        .strict(),
+        .strict()
+        .refine(
+          (value) =>
+            value.lineEnd === undefined ||
+            (value.line !== undefined && value.lineEnd >= value.line),
+          { message: "lineEnd needs a line to end, and cannot come before it", path: ["lineEnd"] },
+        ),
     ]),
   })
   .passthrough();

@@ -170,8 +170,10 @@ ${content}
    假阈值来把字段填满，是这条规则最主要的坏掉方式。
 2. \`role\` 是 \`observe\` 时，组件**不许泄题**——玩完之后预测题必须还悬着。
 3. \`source\` 跟着这节课的出处走：课引网页就用 \`{label, url}\`（网址必须在上面列表里），
-   课引仓库代码就用 \`{label, path, line?, commit?}\`（照抄上面的 sourcePath / lineStart /
-   sourceCommit）。**不许为了填字段去找一个新链接。**
+   课引仓库代码就用 \`{label, path}\`——\`path\` 照抄上面某一条的 \`sourcePath\`，
+   行号和 commit 不用你填，脚本会按这条出处补上。**不许为了填字段去找一个新链接。**
+   \`label\` 只写"这个位置为什么重要"的白话，不要把路径或行号再抄一遍——读者
+   看到的收条已经把它们印在后面了。
 4. 所有面向读者的文字都用中文口语，对象是没写过代码的成年人。
 5. id 用 kebab-case，且不要和课的 id 重名。
 `;
@@ -236,6 +238,41 @@ if (start < 0 || end < start) {
   throw new Error(`${lessonId}：${out.length} 字节输出里没有 JSON`);
 }
 const parsed = JSON.parse(out.slice(start, end + 1));
+
+/*
+  A repository citation is bound to the evidence rather than believed.
+
+  The evidence entry prints `snapshotId: "git-7bdf9a52bbf8"` directly above
+  `sourceCommit: "7bdf9a52bbf8158a…"`, and the two share their first twelve
+  characters. Told to copy the commit, two runs out of three copied one onto the
+  other and produced `git-7bdf9a52bbf8158a…` — a value that is neither, and that
+  the learner's receipt renders as `@git-7bdf`. A clearer instruction would have
+  been a fourth thing to get right; taking the fields from the evidence the
+  activity cites leaves nothing to get wrong.
+
+  The label stays the model's, because the label is prose about why this place
+  matters and only the model has read the lesson.
+*/
+const citation = parsed.activity?.source;
+if (citation && !citation.url) {
+  const evidence = (manifest.evidence ?? []).filter((item) => item.sourcePath);
+  const cited =
+    evidence.find((item) => item.sourcePath === citation.path) ??
+    (evidence.length === 1 ? evidence[0] : null);
+  if (!cited) {
+    throw new Error(
+      `${lessonId}：组件引的 ${citation.path ?? "（没写 path）"} 不在这节课的出处里`,
+    );
+  }
+  parsed.activity.source = {
+    label: citation.label,
+    path: cited.sourcePath,
+    ...(cited.lineStart ? { line: cited.lineStart } : {}),
+    ...(cited.lineEnd && cited.lineEnd > cited.lineStart ? { lineEnd: cited.lineEnd } : {}),
+    commit: cited.sourceCommit,
+  };
+}
+
 writeFileSync(outPath, JSON.stringify(parsed, null, 2) + "\n");
 
 const seconds = Math.round((Date.now() - started) / 1000);
