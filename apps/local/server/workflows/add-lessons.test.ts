@@ -11,7 +11,12 @@ import { createStudy, registerLocalGitSource } from "../studies/repository.js";
 import { createCleanSnapshot } from "../studies/snapshots.js";
 import { addCourseLessons } from "./add-lessons.js";
 import { createCourse } from "./create-course.js";
-import { openCourseForEdit, reactivateCourse } from "./revise-course.js";
+import { LessonCreationProposalSchema } from "./lesson-proposal.js";
+import {
+  CourseRevisionProposalSchema,
+  openCourseForEdit,
+  reactivateCourse,
+} from "./revise-course.js";
 
 const STUDY_ID = "sample";
 const COURSE_ID = "solo-founder";
@@ -425,5 +430,100 @@ describe("course lesson addition workflow", () => {
     expect(readUnit(studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID).lessonIds).toEqual([
       "why-boundaries",
     ]);
+  });
+  /*
+    A lesson is born through this workflow and changed through `course revise`.
+    When the revision proposal can set a field that the creation proposal cannot
+    express, a new lesson is structurally unable to be born with it — the field
+    is not merely inconvenient to supply, it is unsayable, because the creation
+    schema is `.strict()`.
+
+    That has now happened twice, silently, and both times the symptom was the
+    same: revision 1 of a brand-new lesson was a version of itself with a part
+    missing, and nothing anywhere went red. `variant` went that way first, which
+    meant a course written in the house shape from its first line was the one
+    thing the shape linter skipped. `activities` went the same way after it, so
+    every one of the nine activities that has ever shipped was bolted on by a
+    later revision whose only purpose was to carry it.
+
+    Comparing the two shapes is what neither of those defects could survive. The
+    exceptions are listed by name rather than by count, so adding a third is a
+    decision someone writes down here instead of a thing that happens.
+  */
+  it("lets a lesson be born with every field a revision can give it", () => {
+    /*
+      `.refine()` keeps the object's `shape` in this zod version rather than
+      wrapping it. If that ever changes, `shape` becomes undefined and this
+      throws — which is the loud failure, not the silent pass this test exists
+      to prevent.
+    */
+    const born = new Set(Object.keys(LessonCreationProposalSchema.shape));
+    const revised = Object.keys(CourseRevisionProposalSchema.shape.lesson.shape);
+
+    /** Fields a revision addresses that have no meaning at birth. */
+    const notABirthField = new Set([
+      "courseId", // the proposal says where the lesson goes; a revision says where it is
+      "unitId",
+      "expectedRevision", // there is no revision to expect yet
+      "assetFiles", // paths copied in during a revision; creation has no source to copy from
+    ]);
+    /*
+      Nobody has needed to be born with these yet. Fixing them unexercised would
+      be a fix nobody has checked, so they stay named here until a lesson wants
+      one — at which point this list is where the argument happens.
+    */
+    const knownUnborn = new Set(["sections", "assets"]);
+
+    const missing = revised.filter(
+      (field) => !born.has(field) && !notABirthField.has(field) && !knownUnborn.has(field),
+    );
+    expect(missing).toEqual([]);
+    expect(born.has("activities")).toBe(true);
+    expect(born.has("variant")).toBe(true);
+  });
+
+  it("keeps an activity a new lesson was born with", () => {
+    const { studiesRoot, snapshot } = setup();
+    openCourseForEdit({ studiesRoot, studyId: STUDY_ID, courseId: COURSE_ID });
+
+    const lesson = lessonProposal(snapshot, "reachable-parts");
+    addCourseLessons({
+      studiesRoot,
+      studyId: STUDY_ID,
+      proposal: proposal(snapshot, {
+        lessons: [
+          {
+            ...lesson,
+            content: `${lesson.content}\n::play{#reachable-parts-connect}\n`,
+            activities: [
+              {
+                id: "reachable-parts-connect",
+                kind: "connect",
+                role: "apply",
+                difficulty: "intro",
+                title: "谁能碰到谁",
+                brief: "把左边的东西连到它真能碰到的那一样。",
+                goal: "连出真实的可达关系。",
+                takeaway: "能碰到什么，是由边界决定的，不是由名字决定的。",
+                hint: "先问：这一边真的够得着那一边吗？",
+                source: { label: "边界写在这里", path: "truth.ts", line: 1, lineEnd: 1 },
+                nodes: [
+                  { id: "caller", label: "调用方", note: "发出请求的那一边", x: 0, y: 0 },
+                  { id: "boundary", label: "边界", note: "可以被检查的承诺", x: 1, y: 0 },
+                ],
+                edges: [{ from: "caller", to: "boundary", why: "请求先到边界" }],
+                probes: [{ label: "一次请求", path: ["caller", "boundary"] }],
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    const written = readLatestLesson(studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, "reachable-parts");
+    expect(written.manifest.activities.map((activity) => activity.id)).toEqual([
+      "reachable-parts-connect",
+    ]);
+    expect(written.manifest.contentRevision).toBe(1);
   });
 });

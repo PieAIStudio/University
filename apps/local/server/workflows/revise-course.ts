@@ -94,7 +94,12 @@ const LessonAssetFileProposalSchema = z
   })
   .strict();
 
-const CourseRevisionProposalSchema = z
+/**
+ * Exported for the birth-and-revision agreement check in `add-lessons.test.ts`:
+ * a field this schema can set on a lesson but the creation proposal cannot
+ * express is a field a new lesson is structurally unable to be born with.
+ */
+export const CourseRevisionProposalSchema = z
   .object({
     schemaVersion: z.literal(1),
     proposalId: StableId,

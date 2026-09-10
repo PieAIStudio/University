@@ -17,20 +17,20 @@
   "courses": [
     {
       "courseId": "run-a-real-project-with-ai",
-      "file": "run-a-real-project-with-ai.65aa34771752da37d46e2b1807d53ccc5febbdbade45794342c0a03b1124d470.recovery.json",
-      "sha256": "sha256:65aa34771752da37d46e2b1807d53ccc5febbdbade45794342c0a03b1124d470",
+      "file": "run-a-real-project-with-ai.d720b0010c7cf9e7237520ee83feac4a20d3f865e36c0ca7f1b70789db78e217.recovery.json",
+      "sha256": "sha256:d720b0010c7cf9e7237520ee83feac4a20d3f865e36c0ca7f1b70789db78e217",
       "isBeingRewritten": false
     },
     {
       "courseId": "make-the-cutout-app-yours",
-      "file": "make-the-cutout-app-yours.bdc04a1efbad58a47d4e1386a4ec453fa2490fd22c0cec2c570f976d12917d29.recovery.json",
-      "sha256": "sha256:bdc04a1efbad58a47d4e1386a4ec453fa2490fd22c0cec2c570f976d12917d29",
+      "file": "make-the-cutout-app-yours.dcb43c182259e88ffbf4e5f5df6cef4cc8f514ff481c066d2687336a6bb0d699.recovery.json",
+      "sha256": "sha256:dcb43c182259e88ffbf4e5f5df6cef4cc8f514ff481c066d2687336a6bb0d699",
       "isBeingRewritten": false
     },
     {
       "courseId": "search-your-own-photos",
-      "file": "search-your-own-photos.75cb51d7f2e11be6948e7fa55a1f52bf1ddafaa70dcad3e35b2cde7278918fbc.recovery.json",
-      "sha256": "sha256:75cb51d7f2e11be6948e7fa55a1f52bf1ddafaa70dcad3e35b2cde7278918fbc",
+      "file": "search-your-own-photos.46d3959abf1dc35a38efb44331e7a17ea88b8f899f4bced2c8c792a54578e499.recovery.json",
+      "sha256": "sha256:46d3959abf1dc35a38efb44331e7a17ea88b8f899f4bced2c8c792a54578e499",
       "isBeingRewritten": false
     },
     {

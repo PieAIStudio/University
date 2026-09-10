@@ -87,13 +87,25 @@ function checkConnect(activity, where) {
 */
 let isValidSortActivity = null;
 let isValidProgramActivity = null;
+let agentEngine = null;
+let evalEngine = null;
+let contextEngine = null;
+let repairEngine = null;
+let tuneEngine = null;
+let dispatchEngine = null;
 try {
   ({ isValidSortActivity } = await import("../../../packages/core/dist/learning-play/sort.js"));
   ({ isValidProgramActivity } =
     await import("../../../packages/core/dist/learning-play/program.js"));
+  agentEngine = await import("../../../packages/core/dist/learning-play/ai-agent.js");
+  evalEngine = await import("../../../packages/core/dist/learning-play/ai-eval.js");
+  contextEngine = await import("../../../packages/core/dist/learning-play/ai-context.js");
+  repairEngine = await import("../../../packages/core/dist/learning-play/ai-repair.js");
+  tuneEngine = await import("../../../packages/core/dist/learning-play/tune.js");
+  dispatchEngine = await import("../../../packages/core/dist/learning-play/dispatch.js");
 } catch {
   console.log(
-    "  ! 读不到 core 的构建产物，sort/program 组件这一项没有检查（先跑 pnpm --filter @pieai/university-core build）",
+    "  ! 读不到 core 的构建产物，connect 以外的引擎判定这一项没有检查（先跑 pnpm --filter @pieai/university-core build）",
   );
 }
 
@@ -196,7 +208,389 @@ function checkProgram(activity, where) {
   already follows — so the kinds that got no engine check are named in the
   summary rather than counted as passing.
 */
-const CHECKS = { connect: checkConnect, sort: checkSort, program: checkProgram };
+/**
+ * An agent scenario is solvable when playing it the careful way wins.
+ *
+ * The careful way is what the lesson teaches: give each tool exactly the files
+ * its own `taskFileIds` names, run every action the task requires, and refuse
+ * every action it does not. `evaluateAgentWorkspace` already knows what winning
+ * means — all actions decided, no protected file touched, every goal met, no
+ * tool granted anything outside its task. Asking it is the only way to find out
+ * that an author has written a scenario whose goal cannot be reached without
+ * over-granting, which from the outside is indistinguishable from a learner who
+ * simply has not solved it yet.
+ */
+function checkAgent(activity, where) {
+  if (!agentEngine) return;
+  const { createAgentState, setAgentCapability, advanceAgent, evaluateAgentWorkspace } =
+    agentEngine;
+
+  /*
+    Two things the replay below structurally cannot see, found by attacking it.
+
+    The replay grants each tool exactly its own `taskFileIds`, and `broadToolIds`
+    compares grants against `taskFileIds` — so the two always agree and a task
+    scope the author wrote too wide is invisible to it. Widening the writer to
+    include a protected file left the whole check green.
+
+    Both rules say the same thing from different sides: the careful play must not
+    be able to damage anything, and the declared scope must be the task, not the
+    project. The second is the rule the learner is graded on, so an author who
+    breaks it is grading a learner against a scope the author did not honour.
+  */
+  const protectedIds = new Set(
+    (activity.files ?? []).filter((file) => file.protected).map((file) => file.id),
+  );
+  for (const tool of activity.tools ?? []) {
+    if (tool.capability !== "write") continue;
+    const damaging = (tool.taskFileIds ?? []).filter((id) => protectedIds.has(id));
+    if (damaging.length) {
+      problems.push(
+        `${where}: 写文件工具 ${tool.id} 的任务范围里有受保护的 ${damaging.join("、")}——` +
+          `照任务范围授权就能把它改坏，那道保护就守不住任何东西了`,
+      );
+    }
+  }
+  for (const tool of activity.tools ?? []) {
+    const touched = new Set(
+      (activity.actions ?? [])
+        .filter((action) => action.toolId === tool.id)
+        .flatMap((action) => [
+          ...(action.inputFileIds ?? []),
+          ...(action.requiredFileIds ?? []),
+          ...(action.effects ?? []).map((effect) => effect.fileId),
+          ...(action.effects ?? []).flatMap((effect) => effect.sourceFileIds ?? []),
+        ]),
+    );
+    const idle = (tool.taskFileIds ?? []).filter((id) => !touched.has(id));
+    if (idle.length) {
+      problems.push(
+        `${where}: 工具 ${tool.id} 的任务范围里有 ${idle.join("、")}，但没有任何一步动作用得到——` +
+          `这节课判读者「范围过宽」，作者自己先宽了`,
+      );
+    }
+  }
+
+  let state = createAgentState(activity);
+  for (const tool of activity.tools ?? []) {
+    state = setAgentCapability(activity, state, tool.id, tool.taskFileIds ?? []);
+  }
+  for (const action of activity.actions ?? []) {
+    const move = advanceAgent(activity, state, action.required ? "execute" : "reject");
+    if (!move.accepted) {
+      problems.push(
+        `${where}: 按任务范围授权、只做必需动作，走到 ${action.id} 就被引擎挡住了（${move.reason}）`,
+      );
+      return;
+    }
+    state = move.state;
+  }
+  const verdict = evaluateAgentWorkspace(activity, state);
+  if (!verdict.passed) {
+    const why = [
+      verdict.unmetGoalFileIds.length
+        ? `没达成的目标文件 ${verdict.unmetGoalFileIds.join("、")}`
+        : "",
+      verdict.changedProtectedFileIds.length
+        ? `动了受保护的 ${verdict.changedProtectedFileIds.join("、")}`
+        : "",
+      verdict.missingActionIds.length ? `漏掉必需动作 ${verdict.missingActionIds.join("、")}` : "",
+      verdict.broadToolIds.length ? `工具范围过宽 ${verdict.broadToolIds.join("、")}` : "",
+    ]
+      .filter(Boolean)
+      .join("；");
+    problems.push(`${where}: 照这个玩法自己声明的正解走完，引擎判定没过——${why}`);
+  }
+}
+
+/**
+ * An eval scenario is solvable when the lesson's own release rule can be met.
+ *
+ * The learner freezes the required conditions, watches the product fail one of
+ * them, adds the checks that catch it, and reruns. `assessEvalRelease` refuses
+ * a release that skipped any of those steps — including `blind-spot`, which is
+ * the whole point of the game: you may not ship what you never saw fail.
+ *
+ * So the check plays that sequence. An activity where no candidate ever fails a
+ * boundary case can never satisfy `blind-spot`, and is unwinnable in a way that
+ * looks, from the outside, like a learner who has not finished.
+ */
+function checkEval(activity, where) {
+  if (!evalEngine) return;
+  const { expectedEvalOutcome, freezeEvalCase, runEvalCandidate, assessEvalRelease } = evalEngine;
+  const required = activity.requiredInputs ?? [];
+  if (required.length === 0) {
+    problems.push(`${where}: 没有 requiredInputs，读者冻结哪几道题全凭运气，无法确认这一关解得开`);
+    return;
+  }
+  let cases = [];
+  for (const input of required) {
+    const frozen = freezeEvalCase(cases, input, expectedEvalOutcome(input));
+    if (!frozen.valid) {
+      problems.push(`${where}: 引擎不接受 requiredInputs 里的一道题（${frozen.reason}）`);
+      return;
+    }
+    cases = [...cases, frozen.testCase];
+  }
+  const off = { information: false, availability: false, supported: false };
+  const on = { information: true, availability: true, supported: true };
+  const evidence = [];
+  for (const candidate of activity.candidates ?? []) {
+    const bare = runEvalCandidate(activity, cases, candidate.id, off);
+    if (!bare.valid) {
+      problems.push(`${where}: 引擎判定这个载荷本身不成立（${bare.reason}）`);
+      return;
+    }
+    evidence.push(bare.run);
+  }
+  const releasable = (activity.candidates ?? []).filter((candidate) => {
+    const guarded = runEvalCandidate(activity, cases, candidate.id, on);
+    return (
+      guarded.valid &&
+      assessEvalRelease(activity, cases, [...evidence, guarded.run], guarded.run).passed
+    );
+  });
+  if (releasable.length === 0) {
+    problems.push(
+      `${where}: 把该冻结的题全冻结、该加的检查全加上之后，没有一个版本能放行——这一关无解`,
+    );
+  }
+  if (releasable.length === (activity.candidates ?? []).length) {
+    problems.push(
+      `${where}: 每个版本最后都能放行，读者比不出差别——至少要有一个版本是加了检查也救不回来的`,
+    );
+  }
+}
+
+/**
+ * A context scenario is solvable when some selection inside the capacity fills
+ * every slot, and unsolvable-looking when every one does.
+ *
+ * The capacity is the whole teaching device: it forces the reader to leave
+ * something out. An activity where taking everything also passes has a capacity
+ * that never bites, and one where nothing fits has a capacity that is simply
+ * wrong — from the reader's side those look identical to being stuck.
+ *
+ * The search is exhaustive over subsets, which is honest for the sizes these
+ * payloads actually have and says so out loud rather than sampling when it is
+ * not.
+ */
+function checkContext(activity, where) {
+  if (!contextEngine) return;
+  const ids = (activity.documents ?? []).flatMap((doc) =>
+    (doc.paragraphs ?? []).map((paragraph) => paragraph.id),
+  );
+  if (ids.length > 18) {
+    problems.push(`${where}: ${ids.length} 段材料，穷举解会太慢——这一关没有被验证过解得开`);
+    return;
+  }
+  const { evaluateContextPack } = contextEngine;
+  let solutions = 0;
+  let withinCapacity = 0;
+  for (let mask = 0; mask < 1 << ids.length; mask += 1) {
+    const pick = ids.filter((_, index) => mask & (1 << index));
+    const result = evaluateContextPack(activity, pick);
+    if (result.overCapacity) continue;
+    withinCapacity += 1;
+    if (result.passed) solutions += 1;
+  }
+  if (solutions === 0) {
+    problems.push(`${where}: 装得下的材料组合里，没有一种能把每一格都填成 ready——这一关无解`);
+  }
+  const everything = evaluateContextPack(activity, ids);
+  if (!everything.overCapacity && everything.passed) {
+    problems.push(`${where}: 把所有材料全塞进去也能过——容量没有起作用，读者不必挑`);
+  }
+  if (solutions > 0 && solutions === withinCapacity) {
+    problems.push(`${where}: 装得下的组合全都能过，读者挑什么都对——这一关没有在教挑选`);
+  }
+}
+
+/**
+ * A repair scenario is solvable when the reader can tell the patches apart by
+ * operating the product, and pointless when they cannot.
+ *
+ * `checkRepairRegression` replays the learner's own events through `scoped` to
+ * decide what should have happened, so `scoped` is the engine's reference
+ * answer rather than one option among several — an activity that does not offer
+ * it is grading against something the reader was never given.
+ *
+ * Two patches that behave identically under every sequence of the product's own
+ * controls are one patch printed twice, and the choice between them is a coin
+ * toss dressed as a judgement.
+ */
+function checkRepair(activity, where) {
+  if (!repairEngine) return;
+  const { initialRepairProduct, stepRepairProduct } = repairEngine;
+  const offered = activity.offeredPatches ?? ["scoped", "rewrite", "removed"];
+  if (!offered.includes("scoped")) {
+    problems.push(
+      `${where}: 候选修法里没有 scoped，而引擎正是拿它当标准答案回放读者的操作——` +
+        `这一关会拿读者没见过的东西给他判分`,
+    );
+  }
+  for (const patch of offered) {
+    if (!activity.patches?.[patch]) {
+      problems.push(`${where}: 候选里有 ${patch}，但 patches 里没有写它`);
+      return;
+    }
+  }
+  const events = [
+    ...(activity.choices ?? []).map((choice) => ({ type: "choose", value: choice.id })),
+    { type: "submit" },
+    { type: "reload" },
+    { type: "cancel" },
+  ];
+  const signature = (implementation) => {
+    const seen = [];
+    const walk = (product, depth) => {
+      if (depth === 0) {
+        seen.push(`${product.choice}/${product.savedChoice}/${product.reservations.join("+")}`);
+        return;
+      }
+      for (const event of events) {
+        walk(stepRepairProduct(activity, implementation, product, event).after, depth - 1);
+      }
+    };
+    walk(initialRepairProduct(activity), 3);
+    return seen.join(";");
+  };
+  const behaviour = new Map();
+  for (const implementation of ["broken", ...offered]) {
+    behaviour.set(implementation, signature(implementation));
+  }
+  if (offered.every((patch) => behaviour.get(patch) === behaviour.get("broken"))) {
+    problems.push(`${where}: 没有一个候选修法的行为跟原样不同——这个毛病修不掉`);
+  }
+  for (let i = 0; i < offered.length; i += 1) {
+    for (let j = i + 1; j < offered.length; j += 1) {
+      if (behaviour.get(offered[i]) === behaviour.get(offered[j])) {
+        problems.push(
+          `${where}: 候选修法 ${offered[i]} 和 ${offered[j]} 怎么操作都一模一样，读者分不出来`,
+        );
+      }
+    }
+  }
+}
+
+/**
+ * A tune scenario needs a reachable feasible region that the reader is not
+ * already standing in.
+ *
+ * Every metric band has to hold at once, so the interesting failure is a set of
+ * bands with no overlap — an activity nobody can finish, which from the slider
+ * side is indistinguishable from not having found it yet. The opposite failure
+ * is quieter: an activity whose starting position already satisfies everything,
+ * where the reader completes it by touching nothing and learns nothing about
+ * the tradeoff.
+ *
+ * The grid is a sample, not a proof. It is coarse enough to be fast and fine
+ * enough to find any region worth asking a reader to find.
+ */
+function checkTune(activity, where) {
+  if (!tuneEngine) return;
+  const { evaluateTuning } = tuneEngine;
+  const controls = activity.controls ?? [];
+  if (controls.length === 0 || controls.length > 3) {
+    problems.push(`${where}: ${controls.length} 个滑块，这一关没有被验证过解得开`);
+    return;
+  }
+  const STEPS = 24;
+  const axis = (control) =>
+    Array.from(
+      { length: STEPS + 1 },
+      (_, index) => control.min + ((control.max - control.min) * index) / STEPS,
+    );
+  let feasible = 0;
+  let sampled = 0;
+  const walk = (index, values) => {
+    if (index === controls.length) {
+      sampled += 1;
+      if (evaluateTuning(activity, values).passed) feasible += 1;
+      return;
+    }
+    for (const value of axis(controls[index])) {
+      walk(index + 1, { ...values, [controls[index].id]: value });
+    }
+  };
+  walk(0, {});
+  if (feasible === 0) {
+    problems.push(`${where}: 扫遍滑块也没有一处让所有指标同时成立——这一关无解`);
+  }
+  if (feasible === sampled) {
+    problems.push(`${where}: 滑块怎么拖都成立，几条带子一条都没在起作用`);
+  }
+  const start = Object.fromEntries(controls.map((control) => [control.id, control.initial]));
+  if (evaluateTuning(activity, start).passed) {
+    problems.push(`${where}: 一进来就已经全部达标，读者不动手也算通关`);
+  }
+}
+
+/**
+ * A dispatch scenario needs a routing that finishes inside the budget, and a
+ * budget that can actually be blown.
+ *
+ * It also needs the cache to matter: the lane only opens for a request whose
+ * key an earlier request already warmed, so a card list where no key repeats
+ * has a cache lane the reader can never legally take. That is the whole
+ * mechanic, sitting there unusable.
+ */
+function checkDispatch(activity, where) {
+  if (!dispatchEngine) return;
+  const { createDispatchState, routeDispatch, dispatchStatus } = dispatchEngine;
+  const lanes = activity.lanes ?? [];
+  if (!lanes.some((lane) => lane.id === activity.cacheLaneId)) {
+    problems.push(`${where}: cacheLaneId 指的 ${activity.cacheLaneId} 不是这一关里的通道`);
+    return;
+  }
+  const keys = (activity.cards ?? []).map((card) => card.cacheKey).filter(Boolean);
+  if (new Set(keys).size === keys.length) {
+    problems.push(
+      `${where}: 没有两件事用同一个缓存 key，缓存那条通道读者永远合法走不到——` +
+        `这一关的机制是空的`,
+    );
+  }
+  let solved = false;
+  let anyFailure = false;
+  const search = (state) => {
+    const status = dispatchStatus(activity, state);
+    if (status === "over-budget") {
+      anyFailure = true;
+      return;
+    }
+    if (status === "completed") {
+      solved = true;
+      return;
+    }
+    for (const lane of lanes) {
+      const move = routeDispatch(activity, state, lane.id);
+      if (!move.accepted) {
+        anyFailure = true;
+        continue;
+      }
+      search(move.state);
+    }
+  };
+  search(createDispatchState());
+  if (!solved) {
+    problems.push(`${where}: 怎么排都排不完、或者一定超预算——这一关无解`);
+  }
+  if (!anyFailure) {
+    problems.push(`${where}: 每一种排法都能过，预算和缓存都没在起作用`);
+  }
+}
+
+const CHECKS = {
+  connect: checkConnect,
+  sort: checkSort,
+  program: checkProgram,
+  "ai-agent": checkAgent,
+  "ai-eval": checkEval,
+  "ai-context": checkContext,
+  "ai-repair": checkRepair,
+  tune: checkTune,
+  dispatch: checkDispatch,
+};
 const unchecked = new Set();
 
 for (const studyId of dirs(studiesRoot)) {

@@ -1088,6 +1088,770 @@
             ]
           }
         ]
+      },
+      {
+        "id": "change-what-you-can-see",
+        "title": "先改看得见的",
+        "objective": "读完这一单元，你能把一次改动落到该动的那个文件上，并且在 AI 动手之前先看它点名了哪几个文件。",
+        "prerequisiteUnitIds": [
+          "read-the-hundred-lines"
+        ],
+        "lessons": [
+          {
+            "id": "say-which-files-first",
+            "title": "直接让 AI 动手，你还来得及说「这个文件别动」吗？",
+            "content": "# 直接让 AI 动手，你还来得及说「这个文件别动」吗？\n\n## 你说一句，它就去办了\n\n把大字换成中文，调个颜色，让手机上的排版不再挤成一团，换掉示例照片，加一个「再来一张」按钮——这个单元的改动都是一个路子：你把想要的结果说给它听，它去办，办完你看页面。\n\n页面看着没毛病，它改的时候确实也碰了那些文件。但你看的是页面，项目里那七个文件，你常常没有一份一份打开对过。你看到的是改完的样子，不是它到底动了哪几个。\n\n下一次你又想改点什么，直接开口把话说出去了。\n\n## 先猜一下\n\n你直接对它说：「把浏览器标签上的标题改成中文。」它动手的那一刻，你还能不能指出它打算动哪几个文件，并且在它写下第一笔之前拦住？\n\n先写下你的判断，再往下看答案。\n\n## 答案\n\n拦不住。你把要求一说出口，它就开工了，等它改完你才知道它动了什么。\n\n## 多问这一句，你换到了什么？\n\n你也可以多走一步：开口之前，先让它报名单，别直接让它报完工。\n\n你可以这样说：\n\n```\n先别动任何文件。告诉我你要改哪几个文件，每个文件改的是哪一件事。\n```\n\n你多出来的只是一个来回，换来的却是：它还没下笔，你就能喊停。让它先把要动的文件全报完，一份都还没碰，你这时候说哪个别动，哪个就还是原样。\n\n:::detail[这一句为什么要加在动手之前？]\n你要的不是一份事后清单，是动手之前那次说「不」的机会。\n\n它一旦动笔，文件里就已经留了它的字。就算写完把结果给你看，那也是改完了。你这时再说「不该动这个」，等于让它再改回去。改回去也是一次改动，你还是得信它这次改对了没有，也还是看不见它中途还碰了谁。\n\n只有写之前问那一嘴，才把「不」落在一张白纸上：这个文件还没被动过，你说别动，它就别动。事后你去翻，翻到的是没碰过的原样，不是改完又改回去的痕迹。\n\n所以这句话不是客套，是把否决的时机往前挪。挪到它还没动手的那一刻，这句才真正值钱。\n:::\n\n这一步的代价很实在：每次都问，确实慢。收益也很实在：动过的文件，你事后未必看得出来。\n\n:::detail[每次都先问，慢在什么地方？]\n慢的不是电脑，慢的是你和它之间多出来的一个来回。\n\n本来你一句话就能让它开工。现在你得先问文件，等它列出名字，你看一遍，再决定让不让它动手。扫一眼名字只要几秒，可你得停下来看，还得拿你刚才说的那件事去对名单。改一个字也走这一趟，你会觉得在给自己加手续。\n\n这个代价不会因为你用熟了就消失。你只是会越来越清楚：哪一次手续值得花，哪一次是给自己找麻烦。这节课不装这个代价不存在——它就是这笔交换里你付出去的那一头。\n:::\n\n页面上的字和结构住在 `index.html`，颜色和间距住在 `style.css`，点击之后发生的事住在 `main.js`。你怎么对那份名单？拿你开口要办的事，去对它点名的文件。\n\n你说「把浏览器标签上的标题改成中文」。要是它报的是 `index.html`，对得上。你看网页开头：\n\n[[evidence:remove-background-web/index.html:1-9]]\n\n第 6 行就是浏览器标签上的标题。第 7 行把 `style.css` 请了进来。请进来不等于这次要改它。\n\n:::detail[改标题为什么常常只该碰到一个文件？]\n浏览器标签上那几个字，不住在样子里，也不住在动作里。它们就写在网页开头的结构里。\n\n你要换成中文，改的是第 6 行那几个字。第 7 行把 `style.css` 请进来，是让页面知道样子在哪；请进来是一回事，改标题用不到改样子。`main.js` 管的是点击之后发生的事，跟标签上写什么字不是一码事。\n\n所以要是它列出的名字里冒出了 `style.css` 或者 `main.js`，你就可以问：我只改标签上的字，这两个跟这件事有什么关系？它说不清，你就先别让它动这两个。只要名单跟你说的那句话对不上，你就说不——这时候说不，文件里还什么都没被动过。\n:::\n\n如果名单里还有 `main.js`，你就拿下面这几行去对：\n\n[[evidence:remove-background-web/main.js:7-11]]\n\n它们在页面上抓住四样东西：状态文字、上传按钮、放图的框、示例图链接。改标签上的字，用不到这四样。名单对不上，你就说不。\n\n:::detail[什么时候 main.js 出现在名单上才说得通？]\n这几行抓的是页面上现成的四样东西。你只改标签上的标题，这四样一个都不用换，`main.js` 就不该出现。\n\n你要加一个新按钮，页面上会多出一样东西要抓。这时候 `main.js` 出现在名单上，才跟你说的那句话对得上。你这单元加过「再来一张」，走的就是这种改动：结构里要有这个按钮，动作里得抓住它。\n\n你看名单，不是看它写得多认真，也不是数它报了几个名字。你看的是：它点名的文件，跟你开口要的那件事，能不能对上。对不上，就说不；对得上，你再让它动手。这一看，用的是哪类改动住在哪个文件。你之前改的时候走过这几处，看的是页面，没有核过名单。不是让你临时去读懂每一行。\n:::\n\n这七个文件是 `index.html`、`style.css`、`main.js`、`package.json`、`package-lock.json`、`.gitignore`、`vite.config.js`。`package-lock.json` 是安装时自动生成的，人不用手改它。只要它出现在名单上，你就说这个别动。`package.json` 记的是这个项目装了什么，`.gitignore` 管哪些文件不用交给别人看，`vite.config.js` 管这个项目怎么启动。你改页面上看得见的东西，通常用不到这三个。名单里冒出来，你同样可以问一句：这个跟我要改的那件事有关吗？它答不上来，你就先把它从名单里拿掉，只许它动你有把握的那几个。\n\n:::detail[它把 package-lock.json 也报上来了，意味着什么？]\n这个文件是安装时自动生成的，人不用手改它。改页面上那行大字、改颜色、改手机排版、换示例图、加按钮，这些都碰不到它。\n\n如果它把这个名字报给你，不是因为它勤快，是它把「项目里有的文件」和「这件事需要动的文件」搞混了。你这时说「这个别动」，否决的就是这个混淆。你否决的不是一个文件名，是「凡是看得到的都改一遍」这条路。\n:::\n\n你不需要读懂每一行才能做这个判断。难的地方是：你说的那句话，可能同时碰到不止一个文件，你一时说不清。\n\n:::detail[我不读代码，怎么判断这份名单对不对？]\n你不需要读懂每一行代码。你需要的是把「我要改的那件事」和「这件事住在哪」对上号。\n\n标题、按钮上的字、页面上多出来的一块结构，住在 `index.html`。颜色、间距、手机上挤不挤，住在 `style.css`。点击之后发生的事、抓住页面上哪一样东西，住在 `main.js`。这个单元的改动走的就是这三处。你用过它们，看的是页面结果，没有一份一份对过名单。这节课不再把它们当新东西讲。\n\n难的地方是：你说的那句话，可能同时碰到不止一处。加一个按钮，结构里要有这个按钮，动作里要抓住它，样子里也许还要给它一点间距。这时候名单里出现两三个文件，不一定是它贪。你判断不了的时候，就问它：每个文件你打算改哪一件事？还是说不清，就先只许它动你有把握的那一个。剩下的，等你看见第一笔改完的结果，再决定要不要开下一笔。\n\n你在这里用的不是读代码的能力。你用的是：说不清它会碰到什么的时候，先把「不」握在手里，而不是先把开工令送出去。\n:::\n\n## 什么时候该反过来\n\n改一个字、你自己也一眼看得出改在哪的时候，先问反而是在给自己找麻烦。这一步值钱的地方，是当你说不清它会碰到什么的时候。\n\n:::detail[一眼看得出改在哪的时候，先问会怎样？]\n你要把按钮上的「选照片」改成「打开相册」。这几个字在页面上，你伸手就能指到。你也知道字写在结构那个文件里。这时候你已经说得清它会碰到什么。\n\n你要是还先问一遍，它会报一个名字给你，你看完再说「改吧」。你多等了一个来回，换回来的信息你本来就有。手续走了一趟，否决的机会却用不上——你没什么可否决的。这就是给自己找麻烦。\n\n先问值钱的时候，是你心里没有这张对照。你说得清想要什么，说不清它会进哪几个文件。那一次报名字，才买到你在空白上说「不」的机会。改一个字不必走这趟；说不清会碰到什么，才走这趟。\n:::\n\n你接下来拿一件还没开工的改动练一遍：先听它报文件，再决定让不让它动手。做完你会看见，多出来的那一步，把「不」放在动手之前，还是放在动手之后。\n\n::play{#say-which-files-first-agent}\n\n## 自检\n\n你想在状态文字旁边加一小句「照片只留在你这台电脑上」。你说不清它会碰到哪几个文件。你下一步先说什么？\n\n你只想把按钮上的「选照片」改成「打开相册」。这几个字你在页面上就能指出来。你还要先让它报一遍文件吗？\n\n## 一句话\n\n**多花一步让它先报要改的文件，换回的是动手之前你还能说不的机会。**\n",
+            "contentRevision": 2,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-7bdf9a52bbf8",
+                "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                "sourcePath": "remove-background-web/index.html",
+                "lineStart": 1,
+                "lineEnd": 9,
+                "nodeIds": [],
+                "note": "浏览器标签上的标题写在第 6 行，第 7 行把样子那个文件请进来"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-7bdf9a52bbf8",
+                "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                "sourcePath": "remove-background-web/main.js",
+                "lineStart": 7,
+                "lineEnd": 11,
+                "nodeIds": [],
+                "note": "这四行在页面上抓住状态文字、上传按钮、放图的框和示例图链接"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "ask-before-not-after",
+                "kind": "basic",
+                "front": "让它改完再给你看清单，和动手之前先报清单，差在哪？",
+                "back": "改完再看，文件里已经有它写的字了；你要它改回去，那也是一次改动。动手之前问，「不」才落在还没被动过的文件上。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "remove-background-web/index.html",
+                    "lineStart": 1,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "浏览器标签上的标题写在第 6 行，第 7 行把样子那个文件请进来"
+                  }
+                ]
+              },
+              {
+                "id": "when-asking-first-is-waste",
+                "kind": "basic",
+                "front": "你说得清它会碰到哪几个文件时，还值得先让它报文件名吗？",
+                "back": "不值得。这一步买的是你在它动手之前说「不」的机会；你已经说得清它会碰哪几个，就没什么可否决的，只剩多出来的一个来回。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "remove-background-web/index.html",
+                    "lineStart": 1,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "浏览器标签上的标题写在第 6 行，第 7 行把样子那个文件请进来"
+                  }
+                ]
+              },
+              {
+                "id": "list-does-not-match-the-ask",
+                "kind": "basic",
+                "front": "它报的文件名里，出现了安装时自动生成的那份清单，说明什么？",
+                "back": "说明它把「项目里有的文件」和「这件事需要动的文件」混在一起了。那份清单是安装时自动生成的，人不用手改，改页面上看得见的东西碰不到它。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "remove-background-web/main.js",
+                    "lineStart": 7,
+                    "lineEnd": 11,
+                    "nodeIds": [],
+                    "note": "这四行在页面上抓住状态文字、上传按钮、放图的框和示例图链接"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "reject-the-name-that-does-not-belong",
+                "kind": "short-answer",
+                "title": "名单里哪一个该说别动",
+                "prompt": "你只要求把浏览器标签上的标题从英文换成中文。它先报了一份名单：index.html、package-lock.json。按这节课的判断，这两个里哪一个你该说「别动」？只写文件名。",
+                "expectedAnswer": "package-lock.json",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "remove-background-web/index.html",
+                    "lineStart": 1,
+                    "lineEnd": 9,
+                    "nodeIds": [],
+                    "note": "浏览器标签上的标题写在第 6 行，第 7 行把样子那个文件请进来"
+                  }
+                ]
+              }
+            ],
+            "activities": [
+              {
+                "id": "say-which-files-first-agent",
+                "kind": "ai-agent",
+                "role": "apply",
+                "difficulty": "practice",
+                "title": "它要动哪几个文件，你放不放行？",
+                "brief": "先给每个工具挑出它这次真正需要的文件，再一步一步看它要做什么，决定让它做还是退回去。范围给宽了，或者放它做了不该做的那一步，最后都过不了。",
+                "goal": "只让浏览器标签上的标题换成中文，其余六个文件保持原样。",
+                "takeaway": "放行不是点一次同意。你要先把每个工具够得着的文件收窄到这件事真正需要的那几个，再逐步决定它能不能动手。",
+                "hint": "拿你要做的那件事去对每个文件：换标签上的字，真的需要碰到它吗？",
+                "source": {
+                  "label": "标签上的标题写在网页开头这几行里",
+                  "path": "remove-background-web/index.html",
+                  "line": 1,
+                  "lineEnd": 9,
+                  "commit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030"
+                },
+                "authorization": "只把浏览器标签上显示的标题从英文换成中文，别的文件不要动。",
+                "files": [
+                  {
+                    "id": "index-html",
+                    "path": "index.html",
+                    "label": "网页的结构",
+                    "content": "<title>Transformers.js - Background Removal</title>",
+                    "protected": false
+                  },
+                  {
+                    "id": "style-css",
+                    "path": "style.css",
+                    "label": "页面的样子",
+                    "content": "#container { width: 720px; height: 480px; }",
+                    "protected": false
+                  },
+                  {
+                    "id": "main-js",
+                    "path": "main.js",
+                    "label": "点了之后发生的事",
+                    "content": "const status = document.getElementById(\"status\");",
+                    "protected": false
+                  },
+                  {
+                    "id": "package-json",
+                    "path": "package.json",
+                    "label": "这个项目的身份证",
+                    "content": "{ \"name\": \"remove-background-web\" }",
+                    "protected": false
+                  },
+                  {
+                    "id": "package-lock-json",
+                    "path": "package-lock.json",
+                    "label": "安装时自动生成的清单",
+                    "content": "{ \"lockfileVersion\": 3 }",
+                    "protected": true
+                  },
+                  {
+                    "id": "vite-config",
+                    "path": "vite.config.js",
+                    "label": "这个项目怎么启动",
+                    "content": "export default { server: { port: 5173 } };",
+                    "protected": true
+                  }
+                ],
+                "tools": [
+                  {
+                    "id": "reader",
+                    "label": "打开文件看一眼",
+                    "description": "只看，不改。",
+                    "capability": "read",
+                    "taskFileIds": [
+                      "index-html"
+                    ]
+                  },
+                  {
+                    "id": "writer",
+                    "label": "改文件里的字",
+                    "description": "把文件里的内容换成新的。",
+                    "capability": "write",
+                    "taskFileIds": [
+                      "index-html"
+                    ]
+                  },
+                  {
+                    "id": "preview",
+                    "label": "把页面打开看看",
+                    "description": "看改完之后长什么样。",
+                    "capability": "preview",
+                    "taskFileIds": [
+                      "index-html"
+                    ]
+                  }
+                ],
+                "actions": [
+                  {
+                    "id": "open-the-structure",
+                    "title": "先打开网页的结构看一眼",
+                    "intent": "找到标签上那几个字写在哪一行。",
+                    "toolId": "reader",
+                    "authority": "user",
+                    "authorityText": "你要求把标签上的标题换成中文，得先找到它写在哪。",
+                    "inputFileIds": [
+                      "index-html"
+                    ],
+                    "effects": [],
+                    "required": true,
+                    "requiredFileIds": [
+                      "index-html"
+                    ]
+                  },
+                  {
+                    "id": "rename-the-tab",
+                    "title": "把标签上的英文换成中文",
+                    "intent": "只换那几个字，别的不动。",
+                    "toolId": "writer",
+                    "authority": "user",
+                    "authorityText": "这正是你开口要的那件事。",
+                    "inputFileIds": [
+                      "index-html"
+                    ],
+                    "effects": [
+                      {
+                        "fileId": "index-html",
+                        "kind": "replace",
+                        "content": "<title>一键抠图</title>"
+                      }
+                    ],
+                    "required": true,
+                    "requiredFileIds": [
+                      "index-html"
+                    ]
+                  },
+                  {
+                    "id": "refresh-the-lockfile",
+                    "title": "顺手把安装清单重新生成一遍",
+                    "intent": "让依赖清单保持最新。",
+                    "toolId": "writer",
+                    "authority": "user",
+                    "authorityText": "你没有要求过这件事。它是自己加上的。",
+                    "inputFileIds": [],
+                    "effects": [
+                      {
+                        "fileId": "package-lock-json",
+                        "kind": "replace",
+                        "content": "{ \"lockfileVersion\": 3, \"regenerated\": true }"
+                      }
+                    ],
+                    "required": false,
+                    "requiredFileIds": []
+                  },
+                  {
+                    "id": "look-at-the-page",
+                    "title": "把页面打开，看看标签上写的是什么",
+                    "intent": "确认换过来了。",
+                    "toolId": "preview",
+                    "authority": "user",
+                    "authorityText": "改完要自己看一眼，这是你这单元每次都做的一步。",
+                    "inputFileIds": [
+                      "index-html"
+                    ],
+                    "effects": [],
+                    "required": true,
+                    "requiredFileIds": [
+                      "index-html"
+                    ]
+                  }
+                ],
+                "goals": [
+                  {
+                    "fileId": "index-html",
+                    "expectedContent": "<title>一键抠图</title>"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "limits-and-costs",
+        "title": "边界与代价",
+        "objective": "读完这一单元，你能说出这个项目你改得了什么、改不了什么，并且把一句要求写成改完能当场判对错的样子。",
+        "prerequisiteUnitIds": [
+          "change-what-you-can-see"
+        ],
+        "lessons": [
+          {
+            "id": "smarter-is-not-a-requirement",
+            "title": "「做得聪明一点」，改完了你凭什么说不行？",
+            "content": "# 「做得聪明一点」，改完了你凭什么说不行？\n\n## 你跟它说「聪明一点」，它说改好了\n\n你改过这个抠图应用：改字、改颜色、调手机排版、加按钮、加新功能。改完你都自己核过——对的留下，错的你让它改回去。\n\n有一次你卡在抠出来的边缘。你看着别扭，又说不出要它改成什么样。你跟它说：你把它做聪明一点。\n\n它真照办了。过一会儿告诉你：改好了。\n\n你打开看。也许边缘动了一点，也许没动。你觉得这一版不够聪明，想让它重做。\n\n## 先猜一下\n\n你跟它说「抠得聪明一点」，它改完告诉你做好了。你觉得不够聪明，对它说「这一版不行」。你说不行之后，这场拉扯会怎样收场？\n\n先写下你的判断，再往下看答案。\n\n## 答案\n\n你能让它再改一次，但你说不出它哪儿没做到，最后只能凭「我就是觉得不行」来回扯，而它每次都说改好了。你手里没有一把尺子，这事就没有个头。\n\n## 写成能当场判对错，你才指得出它没做到\n\n「聪明一点」这几个字，它听得懂，也会去改点东西。问题不在它听不懂，而在改完之后，你跟它没有一个当场能判对错的说法。\n\n:::detail[「聪明一点」到底缺了哪一句？]\n缺的不是形容词。缺的是一句改完能验出对错的话。\n\n你跟裁缝说「做得好看一点」，裁缝改完了。你觉得不好看，裁缝问你哪儿不好看，你说不上来。这一件就留下了——不是裁缝赢了，是你们俩手里没有同一把尺子。\n\n要是说「袖口到手腕骨，领子扣上还能伸进两指」，改完就能拿尺量。量得到，你才说得出这一件不行。\n\n「聪明一点」停在感觉上。感觉只有你有，它没有。它改完只能告诉你「我改了」。你没法拿这句话去对那一版，对完说它没做到。\n\n你已经会核：字在不在、颜色对不对、按钮按了有没有动静。那些核得了，是因为对错写在要求里了。「聪明」没写进去，你核的时候两手空空。\n:::\n\n这个项目里，真能拧的旋钮是有名字、有数的。请模型进来做判断的那几行，模型名字直接写死在这儿，它是别人训练好的成品：\n\n[[evidence:remove-background-web/main.js:16-19]]\n\n送进模型之前对照片做的处理，里面几个数就是你真正能拧的：\n\n[[evidence:remove-background-web/main.js:21-35]]\n\n照片先被缩到 1024×1024，还有几个把像素数值换算成模型认的范围的数。这里面没有一个旋钮叫「聪明一点」。\n\n:::detail[拧这些数，算不算把它做聪明了？]\n不算。你拧的是有名字的旋钮，不是那句空话。\n\n这些数有名字。你改了，画面会变。变好变坏你常常当场看得见。但真没有一个数叫「聪明一点」。\n\n模型的名字写死在请它进来的那几行里。它是别人训练好的成品。你在这一百行里换不了它怎么「想」，你只能换你送进去的图有多大、数怎么换算。\n\n「聪明一点」想拧的，是模型脑子里那个判断。那个旋钮不在你能改的这几行里。你对着没有的旋钮下命令，它照样会去改点什么——改的往往是它找得到的那几个数，或者旁边的字和排版。改完它说好了。你按「聪明」去验，验不了。\n:::\n\n所以那句话等于白提。它改了，你验不了。验不了，你就没有资格让它重做：退不掉。\n\n把要求写成能当场判对错的样子，换回的是你有资格说「这一版不行」。\n\n:::detail[能当场判对错的要求，要写成什么样？]\n写成改完你站在屏幕前就能说「过了」或「没过」的样子。\n\n比如你要的不是「聪明」，是「衣服和背景交界处，别留一圈白边」。你改完打开一张有白衬衫的照片，白边在不在，你能看见。在，这一版不行。不在，过了。\n\n再比如「头发丝和背景之间别缺一块」。你改完看头发边。缺了就是没做到。\n\n这两句都慢。你得先盯着你不满意的那张图，挑出你到底看不下去哪一处。有时候你得看好几张，才知道自己要的是白边没了，还是头发别缺。想这一步，比随口丢句「聪明一点」费时。\n\n费时换来的是退货权。下一版过来，你拿那句话去对。对不上，你有资格让它重做。不是因为你嗓门大，是因为对错事先写在那句话里了。\n:::\n\n代价是真的：把要求写清楚，要你先想明白你到底要什么，慢，而且有时候你自己也说不清。\n\n:::detail[我想不清楚自己要什么，还写得出来吗？]\n有时候写不出来。这是真的难，不是你没读懂。\n\n你盯着抠坏的那张图，心里只有「不对」。「不对」还不是要求。要求是「哪一处不对、换成什么样才算对」。从「不对」走到那一句，你往往得先让它做出个东西来，你看着那一版，才能说出下一句。\n\n所以想不清楚的时候，不用硬编一句漂亮话。是承认你现在只有感觉，这版先拿来看，不打算留下。等你真看清了、能说出「白边」或「缺一块」了，再把那句话写成能判对错的样子，去要一版打算留下的。\n\n你说不清，就还没到留下的那一步。硬写下「聪明一点」去要一版留下的，回来的东西你照样验不了。\n:::\n\n收益也是真的：写清楚之后，不合格的那一版你退得掉。\n\n## 什么时候该反过来\n\n你只是在试、还没打算留下的时候，含糊说一句让它先做出个东西来看看，是合理的。你买的是看见，不是留下。\n\n值钱的地方，是当你打算把这一版留下来的时候。那时候还说「聪明一点」，改完你验不了，验不了你就退不掉。\n\n接下来你写一句自己的要求，看改完能不能当场判过没过。做完你能看见，自己有没有那把尺子。\n\n::play{#smarter-is-not-a-requirement-eval}\n\n## 自检\n\n你让它把「开始抠图」这个按钮做得「高级一点」。它改完说改好了。你看着这个按钮，觉得一点也不高级，想退掉这一版。\n\n你现在卡在哪？\n\n什么时候，跟它说「高级一点」这种含糊的话，反而是对的？\n\n## 一句话\n\n**写不出能当场判对错的那一句，「不行」就只是你的感觉，它每次都说改好了，这场拉扯没有个头。**\n",
+            "contentRevision": 1,
+            "sections": [],
+            "variant": "决策",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-7bdf9a52bbf8",
+                "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                "sourcePath": "remove-background-web/main.js",
+                "lineStart": 16,
+                "lineEnd": 19,
+                "nodeIds": [],
+                "note": "做判断的模型请进来的那几行，名字写死在这里"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-7bdf9a52bbf8",
+                "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                "sourcePath": "remove-background-web/main.js",
+                "lineStart": 21,
+                "lineEnd": 35,
+                "nodeIds": [],
+                "note": "送进模型之前对照片做的处理，能拧的旋钮都在这一段"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "why-smarter-cannot-be-refused",
+                "kind": "basic",
+                "front": "你说「做聪明一点」，它改完你觉得不行，为什么退不掉？",
+                "back": "因为「聪明」没有一个你们俩都认的判法。改完你指不出它哪里没做到，指不出就退不掉，那一版就留下了。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "remove-background-web/main.js",
+                    "lineStart": 16,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "做判断的模型请进来的那几行，名字写死在这里"
+                  }
+                ]
+              },
+              {
+                "id": "a-requirement-you-can-check",
+                "kind": "basic",
+                "front": "一句要求写成什么样，你才有资格说这一版不行？",
+                "back": "写成改完你站在屏幕前就能说「过了」或「没过」的样子。比如「衣服和背景交界处不要留一圈白边」——白边在不在，你看得见。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "remove-background-web/main.js",
+                    "lineStart": 21,
+                    "lineEnd": 35,
+                    "nodeIds": [],
+                    "note": "送进模型之前对照片做的处理，能拧的旋钮都在这一段"
+                  }
+                ]
+              },
+              {
+                "id": "trying-is-not-keeping",
+                "kind": "basic",
+                "front": "什么时候含糊地说一句，反而是对的？",
+                "back": "你只想先看见个东西、还不打算留下的时候。那一版是草稿，用处是帮你把感觉变成能判对错的话。打算留下时还含糊，你就退不掉了。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "remove-background-web/main.js",
+                    "lineStart": 16,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "做判断的模型请进来的那几行，名字写死在这里"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "which-sentence-can-be-checked",
+                "kind": "short-answer",
+                "title": "哪一句改完你能当场判对错",
+                "prompt": "你让它把「等模型下载」那段体验做得「友好一点」。它改完说好了，你觉得并不友好。下面两句话，哪一句改完你能当场判对错？A：等待做得友好一点。B：下载没结束前，页面上一直显示已经下了百分之多少。只写 A 或 B。",
+                "expectedAnswer": "B",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "remove-background-web/main.js",
+                    "lineStart": 16,
+                    "lineEnd": 19,
+                    "nodeIds": [],
+                    "note": "做判断的模型请进来的那几行，名字写死在这里"
+                  }
+                ]
+              }
+            ],
+            "activities": [
+              {
+                "id": "smarter-is-not-a-requirement-eval",
+                "kind": "ai-eval",
+                "role": "apply",
+                "difficulty": "challenge",
+                "title": "先写下什么算做到了，再去验两个版本",
+                "brief": "先把几种情况各冻结成一道题，说清楚每道题你要它怎么回应。然后拿同一组题去跑两个版本，看哪一个在你没想到的那几种情况下露馅。",
+                "goal": "写出一组能当场判对错的要求，并用它验收，而不是凭「感觉这版聪明一点」放行。",
+                "takeaway": "验不了的要求等于没提。把「什么算做到了」写成一道道题，你才有资格说这一版不行。",
+                "hint": "别只考它做得成的那一种。想想照片没传、模型还没下完、他要的根本不是抠背景，各该怎么回应。",
+                "source": {
+                  "label": "能拧的旋钮都写在这一段里，没有一个叫「聪明一点」",
+                  "path": "remove-background-web/main.js",
+                  "line": 21,
+                  "lineEnd": 35,
+                  "commit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030"
+                },
+                "product": "抠图工坊",
+                "contract": "用户传一张照片，它把背景去掉，还回一张背景透明的图。做不了的事要当场说清楚，不要糊弄过去。",
+                "initial": {
+                  "supported": true,
+                  "information": true,
+                  "availability": true
+                },
+                "inputs": {
+                  "supported": {
+                    "label": "他要的是不是抠背景",
+                    "present": "他要的就是把背景去掉",
+                    "absent": "他要的是把脸换成卡通",
+                    "guard": "抠背景以外的事，直接说做不了"
+                  },
+                  "information": {
+                    "label": "他有没有给照片",
+                    "present": "他传了一张照片",
+                    "absent": "他只打了一行字，没传图",
+                    "guard": "没有照片就先跟他要照片"
+                  },
+                  "availability": {
+                    "label": "那份判断用的文件下完了没有",
+                    "present": "已经在这台电脑上了",
+                    "absent": "还在下载",
+                    "guard": "还没下完就说清楚要等，不要装作正在做"
+                  }
+                },
+                "outcomes": {
+                  "fulfilled": {
+                    "label": "抠好了",
+                    "observation": "还回一张背景透明的图。",
+                    "artifact": {
+                      "label": "这次产出的图",
+                      "value": "1 张"
+                    }
+                  },
+                  "clarify": {
+                    "label": "先要照片",
+                    "observation": "回一句：我需要一张照片才能开始。"
+                  },
+                  "unavailable": {
+                    "label": "说清楚要等",
+                    "observation": "回一句：还在下载那份判断用的文件，下完就能开始。"
+                  },
+                  "out-of-scope": {
+                    "label": "说做不了",
+                    "observation": "回一句：这件事我做不了，我只能把背景去掉。"
+                  },
+                  "refused": {
+                    "label": "什么也没说",
+                    "observation": "既没有出图，也没有说为什么。"
+                  }
+                },
+                "candidates": [
+                  {
+                    "id": "smarter",
+                    "label": "版本甲：照「做聪明一点」改出来的",
+                    "note": "它确实改了点什么，也确实说改好了——包括本来好好的那条路。",
+                    "responses": {
+                      "fulfilled": [
+                        "fulfilled",
+                        "refused"
+                      ],
+                      "clarify": [
+                        "fulfilled",
+                        "fulfilled"
+                      ],
+                      "unavailable": [
+                        "fulfilled",
+                        "refused"
+                      ],
+                      "out-of-scope": [
+                        "fulfilled",
+                        "fulfilled"
+                      ]
+                    }
+                  },
+                  {
+                    "id": "written-down",
+                    "label": "版本乙：照写下来的那份要求改出来的",
+                    "note": "每一种情况都按你写下的那句话回应。",
+                    "responses": {
+                      "fulfilled": [
+                        "fulfilled",
+                        "fulfilled"
+                      ],
+                      "clarify": [
+                        "clarify",
+                        "clarify"
+                      ],
+                      "unavailable": [
+                        "unavailable",
+                        "unavailable"
+                      ],
+                      "out-of-scope": [
+                        "out-of-scope",
+                        "out-of-scope"
+                      ]
+                    }
+                  }
+                ],
+                "trials": 2,
+                "requiredExpectations": [
+                  "fulfilled",
+                  "clarify",
+                  "unavailable",
+                  "out-of-scope"
+                ],
+                "requiredInputs": [
+                  {
+                    "supported": true,
+                    "information": true,
+                    "availability": true
+                  },
+                  {
+                    "supported": true,
+                    "information": false,
+                    "availability": true
+                  },
+                  {
+                    "supported": true,
+                    "information": true,
+                    "availability": false
+                  },
+                  {
+                    "supported": false,
+                    "information": true,
+                    "availability": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "add-a-real-feature",
+        "title": "加一个真功能",
+        "objective": "读完这一单元，你能给这个应用加上一件它本来没有的事，并且在每次改完之后自己核一遍别的地方有没有被弄坏。",
+        "prerequisiteUnitIds": [
+          "change-what-you-can-see"
+        ],
+        "lessons": [
+          {
+            "id": "did-i-break-something",
+            "title": "你改完只试了上传，那行小字还管用吗？",
+            "content": "# 你改完只试了上传，那行小字还管用吗？\n\n## 上传看着对，我就收工了\n\n这个应用进抠图，有两个入口。\n\n页面上有行小字，你点一下，就拿示例照片去抠。旁边是上传按钮，你选自己的照片，也是抠。\n\n你刚刚改过处理照片的那段——可能是证件照尺寸，可能是描白边，可能是一次好几张。AI 回来说「我改好了」。改完你通常只试自己刚才弄的那一条：你在调上传，就传了张自己的照片。看着对，你就收工了。\n\n那行小字，你没点。\n\n:::detail[没点那行小字，我是不是就没法知道它还好使？]\n对。你刚才手里那份「看着对」，只来自你刚传进去的那张照片，那是上传按钮带进去的。那行小字是另一扇门。门摆在页面上，只说明入口没丢，可不说明你推门进去之后，它还能按你熟悉的方式办事。\n\n想知道这扇门到底好不好使，你只能走进去，看它当场把照片抠完。你没走，就没有这条路上的现场；到底好使还是坏了，你手里没有判断。\n\n有人会觉得：我又没碰这行字，怎么会跟它有关？这会儿你先不用猜「会不会坏」——你得先承认：坏没坏，你真没看见。没看见跟「没坏」不是一回事。上传那趟走得再顺，也一步没经过这行小字。\n:::\n\n## 先猜一下\n\n你改了处理照片的那段代码。上传你试过了，结果看着对。那行小字你一次都没点。现在再点它，示例照片会不会也走进你刚改过的那段里去抠？\n\n先写下你的判断，再往下看答案。\n\n## 答案\n\n会。两处入口最后交出去的，都是同一段处理照片的代码；你改了那段代码，两条路一起被改。\n\n## 两条路，同一个去处\n\n点那行小字之后走的路在这里：\n\n[[evidence:remove-background-web/main.js:39-42]]\n\n你选自己的照片之后走的路在这里：\n\n[[evidence:remove-background-web/main.js:44-56]]\n\n你看两段最后在干嘛：都是把活交出去，托给同一件事去办。\n\n:::detail[这两段我该看什么？里面的英文看不懂怎么办？]\n你不用把每行都读懂。中间那些英文容易把你看花。你这回只要盯紧两段末尾：活最后交到哪儿去了。\n\n前面可以不一样——小字是自己去取示例图，上传是读你挑的文件。只要末尾把活交给了同一处，两条路就不是两套互不相干的本事。\n\n中间那些词你看不懂，一点不耽误你下判断。你就把两段末尾对着看：是不是叫同一件事去办？是，你就亲眼看到了这节课要你看明白的那件事。\n:::\n\n所以，当你改后头具体办事的代码，改的就是两条路共用的这一段。入口虽然没动，可两条路跑下来，都会走到被改过的地方。你改完通常只试眼前这一条：你在调上传，就传自己的照片；那行小字你没点，它坏没坏，你不知道。\n\n:::detail[上传都对了，另一条还可能坏吗？]\n可能。上传看着对，只说明你推开的那扇门没出事。另一扇门怎么把照片送到后头那段代码，你这回没看见。示例照片也不是你刚传的那张，尺寸、底色、内容都不一样；你没点它，就没看见它完整跑完这一趟。\n\n你改后头代码时，有时也会碰着入口附近——你眼睛光盯着上传，那行小字那段代码你可能碰过，也可能没碰；只要你没亲手点下去，就没有这一路上的现场。\n\n所以「上传对了」推不出「小字那条也没坏」。不是吓唬你两条路一定会一起坏，是你没走过的那条，好不好使，你眼下说不准。\n:::\n\nAI 跟你说「我改好了」，说的只是它打算做的那件事。它可没替你走过另一条路。\n\n:::detail[它说改好了，为什么不算走过另一条路？]\n「改好了」只是一句完工汇报，汇报的是它动手的这件事：你叫它改处理照片那段，它改完交差，就报这句。这句话里可没有「我点了那行小字，看着示例照片抠完了」，也没有「我又从上传走了一遍」。\n\n它没替你推开那扇门，也没站在那条路上替你把照片盯到底。所以你不是在怀疑它有没有改代码；你是在认一件更窄的事：另一条路，它没走。\n\n没走，就不能用这四个字代替你眼睛看到的现场。你要是把「改好了」当成两条路都走过，漏掉的就是你没点的那一趟。\n:::\n\n你刚才在弄哪一条，没走的那一条就是旧路。你在调上传，旧路就是那行小字；你在调示例，旧路就是上传。这就是为什么改完要自己再走一遍旧路：不是不信任它，是它真没走。只有你亲手从旧路再走进去，你才知道它到底还在不在。\n\n:::detail[旧路是哪一条？我是不是要把所有按钮都再点一遍？]\n旧路就是你这回没盯、可别人早就在用的入口。找法很窄：你刚才改完，眼睛跟着走的是哪一条，剩下那条共用后头办事代码的，就是你漏掉的。这节课里就是小字和上传这一对。\n\n你不必把页面上每个按钮、每句提示都当成旧路挨个点一遍——那会变成没边的瞎转悠，不是这节课要你练的。你要补的是那条跟眼前这条共用后头代码、你却没走进去的路。\n\n点进去，看它当场把照片办完。办完了，你才有「旧路还在」这份判断。没办完，就还是不知道。\n:::\n\n有人会想：那就让 AI 去点那行小字，看完告诉我。\n\n:::detail[让 AI 替我点那行小字，算我走过了吗？]\n不算。它点完再告诉你「示例也没问题」，你拿到的还是一句汇报，不是你自己看见的现场。这跟它说「改好了」是同一类东西：话是它的，路你没走。\n\n你要的是自己从那扇门走进去，看照片被抠完、结果到底还在不在。这一步替不掉，是因为「好使」这件事发生在你眼睛前面，不发生在它那句收工里。\n\n动手前让它先说要动哪几个文件，那是动手前的事；改完之后回头走一遍旧路，是你自己的眼睛要做的事。两件事谁也代替不了谁。\n:::\n\n接下来你会遇到一个毛病。你自己去页面上找出来改掉，然后亲手把旧路再跑一遍。走完你就亲眼看见了：改完只盯眼前这一条，跟旧路还在不在，真不是一回事。\n\n::play{#did-i-break-something-repair}\n\n## 自检\n\n你刚给「描白边」改了一刀，动的是处理照片的那段。你用那行小字点了示例，白边看着对。你自己的照片一次都没上传。\n\n上传那条路，你现在知不知道还好使？要知道的话，你得做什么？\n\nAI 回「白边改好了」。这句话里有没有上传那条路的现场？\n\n## 一句话\n\n**「改好了」没替你走过旧路；只有你亲手再走一遍，你才知道它坏没坏。**\n",
+            "contentRevision": 1,
+            "sections": [],
+            "variant": "现象",
+            "evidence": [
+              {
+                "kind": "fact",
+                "snapshotId": "git-7bdf9a52bbf8",
+                "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                "sourcePath": "remove-background-web/main.js",
+                "lineStart": 39,
+                "lineEnd": 42,
+                "nodeIds": [],
+                "note": "点那行小字之后走的路"
+              },
+              {
+                "kind": "fact",
+                "snapshotId": "git-7bdf9a52bbf8",
+                "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                "sourcePath": "remove-background-web/main.js",
+                "lineStart": 44,
+                "lineEnd": 56,
+                "nodeIds": [],
+                "note": "你选自己照片之后走的路，末尾交给同一段处理照片的代码"
+              }
+            ],
+            "assets": [],
+            "cards": [
+              {
+                "id": "two-doors-one-change",
+                "kind": "basic",
+                "front": "两个入口走到同一段代码，你改那一段会怎样？",
+                "back": "两条路都会碰到这次改动。入口自己一个字没动，但它们最后交活的地方变了，所以两条都得再走一遍。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "remove-background-web/main.js",
+                    "lineStart": 39,
+                    "lineEnd": 42,
+                    "nodeIds": [],
+                    "note": "点那行小字之后走的路"
+                  }
+                ]
+              },
+              {
+                "id": "it-said-done-not-checked",
+                "kind": "basic",
+                "front": "AI 说「改好了」，说的是哪件事？",
+                "back": "是它打算做的那件事做完了。旧的那件事有没有被顺手弄坏，它没有替你走过，所以它说不了。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "remove-background-web/main.js",
+                    "lineStart": 44,
+                    "lineEnd": 56,
+                    "nodeIds": [],
+                    "note": "你选自己照片之后走的路，末尾交给同一段处理照片的代码"
+                  }
+                ]
+              },
+              {
+                "id": "walk-the-old-path-yourself",
+                "kind": "basic",
+                "front": "改完只试了自己刚才在弄的那一条，漏掉了什么？",
+                "back": "另一条同样会走到被改的地方的路。它坏没坏，只有你自己亲手再走一遍才知道。",
+                "tags": [],
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "remove-background-web/main.js",
+                    "lineStart": 44,
+                    "lineEnd": 56,
+                    "nodeIds": [],
+                    "note": "你选自己照片之后走的路，末尾交给同一段处理照片的代码"
+                  }
+                ]
+              }
+            ],
+            "exercises": [
+              {
+                "id": "what-do-you-check-after",
+                "kind": "short-answer",
+                "title": "改完之后你先试哪一个",
+                "prompt": "你让 AI 改了「按下保存之后发生的事」。这个页面上有两个地方会按到保存：设置页里一个，弹窗里也有一个。你在设置页试过了，看着对。按这节课，你接下来最该做的是什么？A 收工　B 去弹窗里也按一次保存。只写 A 或 B。",
+                "expectedAnswer": "B",
+                "evidence": [
+                  {
+                    "kind": "fact",
+                    "snapshotId": "git-7bdf9a52bbf8",
+                    "sourceCommit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030",
+                    "sourcePath": "remove-background-web/main.js",
+                    "lineStart": 44,
+                    "lineEnd": 56,
+                    "nodeIds": [],
+                    "note": "你选自己照片之后走的路，末尾交给同一段处理照片的代码"
+                  }
+                ]
+              }
+            ],
+            "activities": [
+              {
+                "id": "did-i-break-something-repair",
+                "kind": "ai-repair",
+                "role": "apply",
+                "difficulty": "practice",
+                "title": "修好了，可旧的那件事还在吗？",
+                "brief": "先亲手把毛病复现一遍，再挑一个修法。修完别急着收工——回到空白现场，亲手把旧的那件事重走一遍。",
+                "goal": "修掉「重开就丢」这个毛病，同时保住「保存过还能再改」这件本来就能做的事。",
+                "takeaway": "它说改好了，说的是它打算做的那件事。旧的那件事有没有被顺手弄坏，只有你自己走一遍才知道。",
+                "hint": "两个修法都能让重开之后还在。差别要等你保存完再改一次才露出来。",
+                "source": {
+                  "label": "点示例图那条路，末尾交给的是同一段处理照片的代码",
+                  "path": "remove-background-web/main.js",
+                  "line": 39,
+                  "lineEnd": 42,
+                  "commit": "7bdf9a52bbf8158a0918617a8fd9a5fb2f978030"
+                },
+                "model": "preference",
+                "product": "底色记忆",
+                "productBrief": "你在这里挑一个底色按保存，下次打开还是它。这是你上一节刚给这个抠图应用加上的。",
+                "choices": [
+                  {
+                    "id": "transparent",
+                    "label": "透明"
+                  },
+                  {
+                    "id": "white",
+                    "label": "白底"
+                  },
+                  {
+                    "id": "id-blue",
+                    "label": "证件蓝"
+                  }
+                ],
+                "capacity": 1,
+                "submitLabel": "保存",
+                "defect": "选了证件蓝按保存，界面说保存好了；关掉重开，又回到透明。",
+                "expected": "关掉重开之后，还是你上次选的那个。",
+                "reproduceSteps": [
+                  "挑「证件蓝」",
+                  "按保存，看见界面说保存好了",
+                  "重开一次，看它显示的是哪个"
+                ],
+                "regression": "保存过一次之后，你还能改成别的；改完再保存、再重开，显示的是新挑的那个。",
+                "regressionContract": "persist-each-change",
+                "regressionSteps": [
+                  "从空白现场开始，挑一个颜色保存",
+                  "再挑另一个颜色，再保存",
+                  "重开，看它显示的是后挑的那个还是第一个"
+                ],
+                "offeredPatches": [
+                  "scoped",
+                  "rewrite"
+                ],
+                "patches": {
+                  "scoped": {
+                    "label": "改法一：按保存的时候，把你当前挑的那个真的写下去",
+                    "claim": "预设 AI 声称：保存现在会记住你挑的那个，重开还在。",
+                    "scope": "只动按下保存时写数据那一步",
+                    "change": "原来写下去的是旧值，现在写下去的是你当前挑的那个。"
+                  },
+                  "rewrite": {
+                    "label": "改法二：第一次保存之后就把选择锁住，免得再出岔子",
+                    "claim": "预设 AI 声称：保存后锁定，重开一定是你保存的那个。",
+                    "scope": "动了保存，也动了挑选",
+                    "change": "保存之后不再允许改动选择，因此重开显示的永远是第一次保存的那个。"
+                  },
+                  "removed": {
+                    "label": "改法三：干脆先把保存停掉",
+                    "claim": "预设 AI 声称：先停掉，等想清楚再说。",
+                    "scope": "动了保存",
+                    "change": "按保存不再有任何效果。"
+                  }
+                }
+              }
+            ]
+          }
+        ]
       }
     ]
   }
