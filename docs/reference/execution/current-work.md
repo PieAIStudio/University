@@ -44,6 +44,31 @@ test totals, CLI/model choices or execution history. Read only the matching row.
 | What a unit the learner tested out of looks like on the map | **Undecided, and it needs deciding before it is built.** `placeCourse` in `packages/world/src/Maps.tsx` gives each lesson tile one of `done` / `live` / `idle` / `locked`, and a lesson proved through the skip test currently gets `idle` — identical to one never opened. V5 §12 决定 E says proved is not learned, so it cannot borrow `done`; a fifth state is a learner-surface design decision that belongs in [the journey](../player-journey/v5/index.html) first. The unit-entry card already says it in words; only the scene is silent |
 | Designed but unfinished learner/business capabilities | [V5 review](v5-journey-review.md), [payment](payment-backend-gap.md), [feedback](feedback-backend-gap.md), [reminders](review-reminders-backend-gap.md), [commercial model](commercial-model.md) |
 
+## What `work/course-interactive` touches, for whoever merges it
+
+Measured, not guessed — `git diff --name-only main...HEAD` grouped by area.
+
+- **`packages/world`: nothing at all.** The 3D lane cannot conflict with this
+  branch.
+- **`apps/university/src/app/App.tsx`: thirteen added lines.** The skip test's
+  logic is `app/skip-test.ts` (a hook, like `useCourseProgress`), specifically so
+  the file every lane has to merge holds a call rather than fifty lines.
+- **`packages/ui/src/path`: real overlap, and inherent.** `CourseRouteQuiz.tsx`
+  is rewritten rather than extended — the old one let three self-reported
+  answers drop a learner at a lesson, which V5 §12 names as the failure it
+  exists to prevent. There is no smaller version of that change. `UnitCard.tsx`
+  takes a `skipTest` slot rather than embedding anything, and `UnitSkipTest.tsx`
+  is new.
+- **`packages/ui/src/learning-play`: mostly new files.** Two games were added.
+  The shared files a new game still has to touch are the renderer dispatch, the
+  lab's shelf, the icon table and the family selector; each is now held against
+  the wire enum by a test, so they go stale together or not at all.
+- **`apps/local/studies/browser-ai` is a symlink into the main checkout and is
+  gitignored.** Lesson prose changes are not in this branch's diff; the
+  version-controlled copy is `apps/local/course-proposals/recovery/browser-ai/`,
+  whose filenames carry a content hash. Re-export after any lesson change or
+  `check:export-freshness` fails.
+
 ## Work boundaries
 
 The active plan records mainline work and explicitly started worktrees. Do not
