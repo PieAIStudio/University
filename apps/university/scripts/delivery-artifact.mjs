@@ -54,6 +54,34 @@ const AUTHOR_ONLY_KEY_SET = new Set(AUTHOR_ONLY_KEYS);
 const ANSWER_KEY_PATTERN = /answer|solution|rubric/i;
 const AUTHOR_ONLY_VALUE_PATTERNS = [/^file-manager:/i];
 
+/*
+  Three places where these names mean something a learner is meant to see.
+
+  `AUTHOR_ONLY_KEYS` is blunt on purpose: a key called `source` or `path`
+  anywhere in a shipped package is an author's machine leaking until something
+  structural says otherwise. Inside an activity, `source` is the citation the
+  reader's receipt prints — the same fact `sourcePath` already carries publicly
+  on evidence, under a name that happened not to collide — and `path` is either
+  the repository-relative file inside that citation or, in a connect probe, an
+  ordered list of node ids that never was a filesystem path at all.
+
+  Written as the three exact positions rather than as "skip activities". A hole
+  around the whole payload would stop the detector looking at the one shape here
+  whose fields are not enumerated anywhere, which is the shape most likely to
+  grow a leak. Everything else inside an activity is still checked, and the
+  value-level rules are not relaxed anywhere at all: a `file-manager:` route
+  pasted into an activity's citation is still a failure.
+*/
+const ACTIVITY_CITATION_AT = /\.activities\[\d+\]$/;
+const ACTIVITY_CITATION_FIELD_AT = /\.activities\[\d+\]\.source$/;
+const ACTIVITY_PROBE_AT = /\.activities\[\d+\]\.probes\[\d+\]$/;
+
+function meansSomethingElseInsideAnActivity(key, at) {
+  if (key === "source") return ACTIVITY_CITATION_AT.test(at);
+  if (key === "path") return ACTIVITY_CITATION_FIELD_AT.test(at) || ACTIVITY_PROBE_AT.test(at);
+  return false;
+}
+
 function fail(message) {
   throw new Error(`delivery artifact: ${message}`);
 }
@@ -329,7 +357,11 @@ export function publicDtoViolations(value, path = "package") {
     }
     if (current === null || typeof current !== "object") return;
     for (const [key, child] of Object.entries(current)) {
-      if (key !== "answerKey" && (ANSWER_KEY_PATTERN.test(key) || AUTHOR_ONLY_KEY_SET.has(key))) {
+      if (
+        key !== "answerKey" &&
+        (ANSWER_KEY_PATTERN.test(key) || AUTHOR_ONLY_KEY_SET.has(key)) &&
+        !meansSomethingElseInsideAnActivity(key, at)
+      ) {
         found.push(`${at}.${key}`);
       }
       visit(child, `${at}.${key}`);

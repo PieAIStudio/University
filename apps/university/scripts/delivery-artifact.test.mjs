@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   PROJECT_ROOT,
   sha256,
+  publicDtoViolations,
   validateDeliveryArtifact,
   validateRecoveryInput,
   writeReleaseMetadata,
@@ -324,5 +325,37 @@ describe("delivery artifact gate", () => {
     expect(() => validateRecoveryInput(resolve(PROJECT_ROOT, "apps/local/studies"))).toThrow(
       /apps\/local\/studies/,
     );
+  });
+});
+
+/*
+  `source` and `path` are on the author-only key list, and an activity uses both
+  for things the reader is meant to see. The exemption for that is three exact
+  positions wide, and the point of these cases is the six that are still caught:
+  an activity's payload is the one shape crossing this boundary whose fields are
+  enumerated nowhere, so it is the shape most likely to grow a leak.
+*/
+describe("public DTO gate inside an activity", () => {
+  const wrap = (activity) => ({ course: { units: [{ lessons: [{ activities: [activity] }] }] } });
+  const activity = {
+    id: "from-screen-box-to-file",
+    kind: "connect",
+    source: { label: "出处", path: "src/worker.js", line: 8 },
+    probes: [{ label: "一条路径", path: ["search-bar", "app-jsx"] }],
+  };
+
+  it("passes the citation and a connect probe's node ids", () => {
+    expect(publicDtoViolations(wrap(activity), "pkg")).toEqual([]);
+  });
+
+  it.each([
+    ["an author-machine route in the citation", { source: { label: "l", url: "file-manager:/Users/me/x" } }],
+    ["a bare path beside the citation rather than inside it", { path: "/Users/me/secret" }],
+    ["a nested source block one level below the citation", { source: { label: "l", source: { sourceRoot: "/Users/me" } } }],
+    ["a payload digest", { sha256: "sha256:abc" }],
+    ["a rubric under a new home", { rubric: "the reference answer" }],
+    ["analysis node ids on a probe", { probes: [{ path: ["a"], nodeIds: ["n"] }] }],
+  ])("still catches %s", (_name, extra) => {
+    expect(publicDtoViolations(wrap({ ...activity, ...extra }), "pkg").length).toBeGreaterThan(0);
   });
 });
