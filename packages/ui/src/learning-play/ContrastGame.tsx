@@ -11,11 +11,10 @@ import { translate as t } from "../i18n/index.js";
 import { playSound } from "../sound/index.js";
 import type { ActivityControls } from "./controls.js";
 
+/** Which case the last prediction was about, and whether it was right. */
 interface Reveal {
   readonly caseId: string;
   readonly right: boolean;
-  readonly agree: boolean;
-  readonly why: string;
 }
 
 /**
@@ -46,7 +45,7 @@ export function ContrastGame({
     const right = verdict.kind === "right";
     playSound(right ? "answer.correct" : "answer.wrong");
     setState(verdict.state);
-    setReveal({ caseId, right, agree: verdict.agree, why: verdict.why });
+    setReveal({ caseId, right });
     setOpen(caseId);
     if (right && isContrastComplete(activity, verdict.state)) {
       onAttempt(
@@ -127,13 +126,27 @@ export function ContrastGame({
                 </div>
               ) : null}
 
-              {showing && reveal?.caseId === kase.id ? (
+              {/*
+                The reason comes from the case, not from the attempt.
+
+                It used to be read off `reveal`, which holds only the most
+                recent prediction — so reopening an earlier case with 「点开再看
+                一次」 gave the reader two columns and no explanation of them,
+                which is the half that was worth reopening for. `reveal` still
+                decides whether to say 「跟你猜的不一样」, because that is a fact
+                about the attempt rather than about the case.
+              */}
+              {showing ? (
                 <p
-                  className={`play-contrast__why play-contrast__why--${reveal.right ? "right" : "wrong"}`}
+                  className={`play-contrast__why play-contrast__why--${
+                    reveal?.caseId === kase.id && !reveal.right ? "wrong" : "right"
+                  }`}
                   role="status"
                 >
-                  {reveal.right ? "" : `${t("play.contrast.notWhatYouSaid")} `}
-                  {reveal.why}
+                  {reveal?.caseId === kase.id && !reveal.right
+                    ? `${t("play.contrast.notWhatYouSaid")} `
+                    : ""}
+                  {kase.why}
                 </p>
               ) : null}
             </li>

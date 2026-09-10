@@ -172,4 +172,51 @@ describe("the play lab offers every game that exists", () => {
       }
     }
   });
+
+  /*
+    Reopening a settled contrast case has to show its reason again.
+
+    The reason used to be read off the most recent prediction, so after
+    answering a second case the first one reopened with two columns and no
+    explanation of them — and the explanation is the half worth reopening for.
+    「跟你猜的不一样」 still comes from the attempt, because that is a fact about
+    the attempt.
+  */
+  it("shows a contrast case's reason again when it is reopened", async () => {
+    Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+    const activity = getContrastExamples()[0]!;
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    try {
+      await act(async () =>
+        root.render(<LearningActivity activity={activity} onResult={() => undefined} />),
+      );
+      const answer = async (index: number) => {
+        const choices = [
+          ...container.querySelectorAll<HTMLButtonElement>(".play-contrast__choice"),
+        ];
+        await act(async () => choices[index]!.click());
+      };
+      /*
+        Settle two cases, so `reveal` points at the second one. The fixture's
+        first case agrees and its second splits, so the right button differs —
+        answering both with 「会一样」 leaves the second unsettled and the test
+        measuring nothing.
+      */
+      await answer(0);
+      await answer(1);
+      const toggles = [...container.querySelectorAll<HTMLButtonElement>(".play-contrast__toggle")];
+      expect(toggles.length).toBeGreaterThanOrEqual(2);
+      // Once. The toggle closes on a second click, and a closed case shows
+      // nothing at all — which would pass for the wrong reason.
+      await act(async () => toggles[0]!.click());
+      const why = container.querySelector(".play-contrast__why");
+      expect(why, "重新点开的情况没有显示它的理由").not.toBeNull();
+      expect((why?.textContent ?? "").trim().length).toBeGreaterThan(0);
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+    }
+  });
 });
