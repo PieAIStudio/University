@@ -516,6 +516,27 @@ export function App() {
     setPathOverlay,
     setView,
   });
+  /*
+    The one write a skip test makes, and the only one it is allowed to make.
+    `markLessonsProven` deliberately has no companion here — no `advanceLesson`,
+    no `dropCards` — because 「证明过」 must not become 「学过」 (V5 §12 决定 E).
+  */
+  const markUnitProven = useCallback(
+    (studyId: string, courseId: string, unitId: string, lessonIds: readonly string[]) => {
+      progressPort.markLessonsProven({ studyId, courseId, unitId, lessonIds });
+    },
+    [],
+  );
+  /*
+    Every lesson a skip test has proved, read off the same subscribed document
+    the rest of the screen reads. Not `progressPort.provenLessonKeys()` called
+    directly: that is a snapshot, and a unit that had just been proved would
+    keep offering its test until something else happened to re-render.
+  */
+  const provenLessonKeys = useMemo(
+    () => new Set(Object.keys(progress.provenLessons ?? {})),
+    [progress.provenLessons],
+  );
   const courseIslandProps =
     view.kind === "course" && course
       ? {
@@ -525,6 +546,9 @@ export function App() {
           pathUnit,
           unitOverlayOpen: pathOverlay?.kind === "unit",
           backToMapLabel,
+          contentPort,
+          provenLessonKeys,
+          onProven: markUnitProven,
           onOpenUnitOverlay: openUnitOverlay,
           onBackToMap: backToCourseMap,
           onOpenLesson: openCourseLesson,

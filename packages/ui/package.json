@@ -64,6 +64,7 @@
     "./path/CourseRouteQuiz.js": "./src/path/CourseRouteQuiz.tsx",
     "./path/NodeCard.js": "./src/path/NodeCard.tsx",
     "./path/UnitCard.js": "./src/path/UnitCard.tsx",
+    "./path/UnitSkipTest.js": "./src/path/UnitSkipTest.tsx",
     "./path/course-route-quiz.css": "./src/path/course-route-quiz.css",
     "./path/from-course-view.js": "./src/path/from-course-view.ts",
     "./path/path-cards.css": "./src/path/path-cards.css",

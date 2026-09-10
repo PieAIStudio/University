@@ -58,6 +58,15 @@ const BASE_PROPS = {
   pathUnit: COURSE.units[0],
   unitOverlayOpen: false,
   backToMapLabel: "← 回到 TuringPact 地图",
+  /*
+    The skip test never asks for a lesson here: nothing in these renders clicks
+    「我会了」, so a port that rejects is the honest double. If one of them ever
+    starts loading lessons on first paint, this fails loudly instead of quietly
+    fanning out one request per lesson on every course island.
+  */
+  contentPort: { lesson: () => Promise.reject(new Error("not asked")) },
+  provenLessonKeys: new Set<string>(),
+  onProven: () => undefined,
   onOpenUnitOverlay: () => undefined,
   onBackToMap: () => undefined,
   onOpenLesson: () => undefined,

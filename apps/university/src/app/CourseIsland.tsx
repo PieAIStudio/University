@@ -1,6 +1,7 @@
 import { translate } from "@pieai/university-ui/i18n.js";
 import type { CourseProgress, LessonRef } from "@pieai/university-core";
 import { CourseRouteQuiz, hasRouteQuiz } from "@pieai/university-ui/path/CourseRouteQuiz.js";
+import type { ContentPort } from "@pieai/university-ui/content/port.js";
 import type { CourseView, UnitView } from "@pieai/university-ui/view/lesson-view.js";
 
 export interface CourseIslandProps {
@@ -10,6 +11,16 @@ export interface CourseIslandProps {
   readonly pathUnit: UnitView | undefined;
   readonly unitOverlayOpen: boolean;
   readonly backToMapLabel: string;
+  /** Only `lesson` is used, by the skip test the route quiz hands its units to. */
+  readonly contentPort: Pick<ContentPort, "lesson">;
+  /** Lesson document keys a skip test has already proved, for this learner. */
+  readonly provenLessonKeys: ReadonlySet<string>;
+  readonly onProven: (
+    studyId: string,
+    courseId: string,
+    unitId: string,
+    lessonIds: readonly string[],
+  ) => void;
   readonly onOpenUnitOverlay: (unitId: string, returnFocusTo: HTMLElement) => void;
   readonly onBackToMap: () => void;
   readonly onOpenLesson: (locator: LessonRef) => void;
@@ -31,6 +42,9 @@ export function CourseIsland({
   pathUnit,
   unitOverlayOpen,
   backToMapLabel,
+  contentPort,
+  provenLessonKeys,
+  onProven,
   onOpenUnitOverlay,
   onBackToMap,
   onOpenLesson,
@@ -91,7 +105,14 @@ export function CourseIsland({
             you are twenty lessons in is asking about a decision you already made.
           */}
           {showRouteQuiz ? (
-            <CourseRouteQuiz studyId={studyId} course={course} onOpenLesson={onOpenLesson} />
+            <CourseRouteQuiz
+              studyId={studyId}
+              course={course}
+              content={contentPort}
+              proven={provenLessonKeys}
+              onProven={(unit, lessonIds) => onProven(studyId, course.id, unit.id, lessonIds)}
+              onOpenLesson={onOpenLesson}
+            />
           ) : null}
         </details>
       ) : null}

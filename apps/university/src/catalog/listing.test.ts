@@ -100,9 +100,17 @@ describe("the 2D directory against the library the map uses", () => {
       }
     }
 
-    // Approved R40 catalogue, not counts derived from the same generated input.
-    expect(listing.totals.units).toBe(112);
-    expect(listing.totals.lessons).toBe(463);
+    /*
+      Approved catalogue, not counts derived from the same generated input.
+      Hand-written so that content appearing or vanishing has to be looked at by
+      a person rather than absorbed by a formula — and it worked: restoring the
+      browser-ai curriculum moved this and turned the suite red until somebody
+      confirmed the new numbers. 469 and 37 are what `check-content-revisions`
+      counts off the studies on disk; 117 is the unit count in the packages the
+      map loads.
+    */
+    expect(listing.totals.units).toBe(117);
+    expect(listing.totals.lessons).toBe(469);
   });
 
   it("folds the generated shelf into the same directory read model", () => {

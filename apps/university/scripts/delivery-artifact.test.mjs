@@ -330,10 +330,16 @@ describe("delivery artifact gate", () => {
 
 /*
   `source` and `path` are on the author-only key list, and an activity uses both
-  for things the reader is meant to see. The exemption for that is three exact
-  positions wide, and the point of these cases is the six that are still caught:
-  an activity's payload is the one shape crossing this boundary whose fields are
+  for things the reader is meant to see. The exemption for that is four exact
+  positions wide, and the point of these cases is the ones still caught: an
+  activity's payload is the one shape crossing this boundary whose fields are
   enumerated nowhere, so it is the shape most likely to grow a leak.
+
+  The fourth position — an `ai-agent` scenario's `files[].path` — arrived after
+  this list said three, and it arrived by turning the whole delivery gate red,
+  which is the detector working. What must not follow from that is a hole around
+  activities: the row below keeps a `file-manager:` route caught even when it is
+  pasted into a scenario file name, where the key is now allowed.
 */
 describe("public DTO gate inside an activity", () => {
   const wrap = (activity) => ({ course: { units: [{ lessons: [{ activities: [activity] }] }] } });
@@ -342,9 +348,10 @@ describe("public DTO gate inside an activity", () => {
     kind: "connect",
     source: { label: "出处", path: "src/worker.js", line: 8 },
     probes: [{ label: "一条路径", path: ["search-bar", "app-jsx"] }],
+    files: [{ id: "index-html", path: "index.html", label: "网页的结构", protected: false }],
   };
 
-  it("passes the citation and a connect probe's node ids", () => {
+  it("passes the citation, a connect probe's node ids, and a scenario's file names", () => {
     expect(publicDtoViolations(wrap(activity), "pkg")).toEqual([]);
   });
 
@@ -355,6 +362,14 @@ describe("public DTO gate inside an activity", () => {
     ["a payload digest", { sha256: "sha256:abc" }],
     ["a rubric under a new home", { rubric: "the reference answer" }],
     ["analysis node ids on a probe", { probes: [{ path: ["a"], nodeIds: ["n"] }] }],
+    [
+      "an author-machine route wearing a scenario file's name",
+      { files: [{ id: "f", path: "file-manager:/Users/me/index.html" }] },
+    ],
+    [
+      "a path one level below a scenario file rather than on it",
+      { files: [{ id: "f", path: "index.html", origin: { path: "/Users/me/x" } }] },
+    ],
   ])("still catches %s", (_name, extra) => {
     expect(publicDtoViolations(wrap({ ...activity, ...extra }), "pkg").length).toBeGreaterThan(0);
   });

@@ -137,6 +137,12 @@ export function assembleLessonView(input: {
         title: exercise.title ?? translate("app.lesson.assembleview.copy.自检"),
         prompt: exercise.prompt,
         contentRevision,
+        // The package has carried this since tier one shipped; the view was
+        // dropping it, so the only thing that could grade an answer in this
+        // build was the grading port. The skip test grades outside that port
+        // on purpose — it must not record an attempt against the lesson — so
+        // it needs the fingerprint here. Never the answer: see `AnswerKey`.
+        ...(exercise.answerKey ? { answerKey: exercise.answerKey } : {}),
       })),
       cards: lesson.cards.map((card) => ({
         id: card.id,

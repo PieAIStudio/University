@@ -185,13 +185,26 @@ export function gradeDeterministically(learnerAnswer: string, key: AnswerKey | u
   };
 }
 
+/**
+ * Whether tier one can reach a verdict on this exercise at all.
+ *
+ * Two callers needed the same predicate and only one of them had it: `coverage`
+ * measured a library with the rule inline, and the skip test has to choose
+ * questions by it — a question tier one cannot settle is a question that can
+ * only be answered by spending the learner's money, on a test whose whole
+ * purpose is to let them skip work. Written once so the measurement and the
+ * choice can never disagree about which exercises are free to decide.
+ */
+export function isSelfGradable(key: AnswerKey | undefined): boolean {
+  if (key === undefined) return false;
+  const length = decidableLength(key);
+  return length > 0 && length <= FACTUAL_LENGTH;
+}
+
 /** How much of a library tier one can actually settle, computed, not claimed. */
 export function coverage(keys: readonly (AnswerKey | undefined)[]) {
   const total = keys.length;
-  const decidable = keys.filter(
-    (key) =>
-      key !== undefined && decidableLength(key) > 0 && decidableLength(key) <= FACTUAL_LENGTH,
-  ).length;
+  const decidable = keys.filter((key) => isSelfGradable(key)).length;
   return { total, decidable, share: total === 0 ? 0 : decidable / total };
 }
 

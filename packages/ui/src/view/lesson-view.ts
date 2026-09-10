@@ -1,4 +1,4 @@
-import type { LearningActivitySpec } from "@pieai/university-core";
+import type { AnswerKey, LearningActivitySpec } from "@pieai/university-core";
 import { formatDate, translate } from "../i18n/index.js";
 import {
   isLessonComplete,
@@ -651,6 +651,22 @@ export interface LessonView {
       readonly title: string;
       readonly prompt: string;
       readonly contentRevision: number;
+      /**
+       * The fingerprint tier one compares against — never the answer itself.
+       *
+       * Both campuses send it, and that is the point: the skip test picks its
+       * questions by whether this can decide them, so a question that is free
+       * to settle on the delivery campus has to be free to settle on the
+       * authoring one too, or the same unit would offer a different test in
+       * each build. `compileAnswerKey` is one-way, so shipping it discloses
+       * nothing the reader could not already derive by reading the lesson.
+       *
+       * Optional because a lesson written before answer keys existed has none,
+       * and because 通用课 exercises deliberately ask open questions that no
+       * fingerprint can judge. Absent means 「第 1 层判不了」, which is a real
+       * answer the skip test acts on rather than an error.
+       */
+      readonly answerKey?: AnswerKey;
       readonly awaitingHostGrade?: boolean;
       readonly hostGrade?: HostExerciseGradeView | null;
       readonly latestSubmission?: { readonly answer: string; readonly occurredAt: string } | null;

@@ -115,6 +115,28 @@ export interface RetrievalAttemptRecord {
   readonly confidence?: number;
 }
 
+/**
+ * One lesson a learner proved they did not need, by answering its own exercise.
+ *
+ * Deliberately not a `LessonProgress` row with a flag on it. 「证明过」 and
+ * 「学过」 are different facts, and a shell that stores the first inside the
+ * second has already told the review scheduler that the prose was read — which
+ * is how a card for an unread lesson ends up in the queue three weeks later
+ * (V5 §12 决定 E). Keeping it in its own map is what makes that impossible
+ * rather than merely discouraged.
+ *
+ * `unitId` is here because the proof was earned as a unit: the learner answered
+ * three questions and the whole unit opened. Without it the record cannot be
+ * explained back to the person who earned it.
+ */
+export interface ProvenLessonRecord {
+  /** The same three-segment document key `lessons` uses. */
+  readonly lessonKey: string;
+  readonly unitId: string;
+  /** Milliseconds since epoch. The first proof is the fact; a retake is not. */
+  readonly provenAt: number;
+}
+
 /** The one learner write that turns a typed teach-back into a scheduled card. */
 export interface RecapCardInput {
   readonly locator: LessonRef;
@@ -138,6 +160,8 @@ export interface ProgressDocument {
   exerciseAttempts: Record<string, ExerciseAttemptRecord>;
   /** Cloud-synchronised recall answers for review-card coaching. */
   retrievalAttempts: Record<string, RetrievalAttemptRecord>;
+  /** Lessons a skip test proved, keyed by lesson document key. Never 「学过」. */
+  provenLessons: Record<string, ProvenLessonRecord>;
   /** Device-specific push endpoints, including revoked tombstones. */
   pushSubscriptions: Record<string, PushSubscriptionRecord>;
   /** Account-owned library, practice and reading preferences. */
@@ -220,6 +244,24 @@ export interface ProgressPort {
   ): ExerciseAttemptRecord | null;
   recordRetrievalAttempt(record: RetrievalAttemptRecord): void;
   retrievalAttempts(cardKey: string): readonly RetrievalAttemptRecord[];
+  /**
+   * Record that a skip test proved these lessons.
+   *
+   * The whole write, deliberately. There is no companion call that advances a
+   * lesson or drops its cards, because 「证明过」 must not become 「学过」 — see
+   * `ProvenLessonRecord`. A learner who later reads the lesson properly
+   * finishes it through the normal path and only then gets its cards.
+   */
+  markLessonsProven(input: {
+    readonly studyId: string;
+    readonly courseId: string;
+    readonly unitId: string;
+    readonly lessonIds: readonly string[];
+    /** Milliseconds; defaults to now. Injected by tests, not by the product. */
+    readonly provenAt?: number;
+  }): void;
+  /** Every lesson key a skip test has proved, for this learner, on any device. */
+  provenLessonKeys(): ReadonlySet<string>;
   /** Return active and revoked device subscriptions for diagnostics and sync. */
   pushSubscriptions(): readonly PushSubscriptionRecord[];
   /** Add or refresh one browser endpoint in the shared progress document. */

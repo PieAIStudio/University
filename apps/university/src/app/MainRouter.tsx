@@ -3,6 +3,7 @@ import { lazy, Suspense, type Dispatch, type ReactNode, type SetStateAction } fr
 import {
   LIBRARY_VIEW_TAB,
   libraryTabOf,
+  provenIdsForUnit,
   toPath,
   type CourseProgress,
   type IdentityPort,
@@ -29,6 +30,7 @@ import {
 } from "@pieai/university-ui/navigation/screens.js";
 import { NodeCard } from "@pieai/university-ui/path/NodeCard.js";
 import { UnitCard } from "@pieai/university-ui/path/UnitCard.js";
+import { UnitSkipTest } from "@pieai/university-ui/path/UnitSkipTest.js";
 import { MistakeList, MistakesEntry } from "@pieai/university-ui/practice/mistakes.js";
 import { pathLessonOf, pathUnitOf } from "@pieai/university-ui/path/from-course-view.js";
 import type { ContentPort, ContentStudy, Shelf } from "@pieai/university-ui/content/port.js";
@@ -271,6 +273,39 @@ export function MainRouter({
         <UnitCard
           open
           unit={pathUnitOf(pathUnit)}
+          /*
+            V5 §12 决定 D: 「每个单元入口都有一个『我会了』」 — on the unit's own
+            entry, always, not only at the start of a course. 「人的能力是一路
+            长的，只在进门时测一次，等于假定他一年后还是进门那天的样子。」
+
+            The same component the course-opening recommender renders. The two
+            are the same mechanism with two entrances, so there is one of it.
+          */
+          skipTest={
+            <UnitSkipTest
+              studyId={view.studyId}
+              courseId={view.courseId}
+              unit={pathUnit}
+              content={contentPort}
+              proven={provenIdsForUnit(
+                new Set(Object.keys(progress.provenLessons ?? {})),
+                { studyId: view.studyId, courseId: view.courseId },
+                pathUnit.lessons.map((lesson) => lesson.id),
+              )}
+              onProven={(lessonIds) =>
+                progressPort.markLessonsProven({
+                  studyId: view.studyId,
+                  courseId: view.courseId,
+                  unitId: pathUnit.id,
+                  lessonIds,
+                })
+              }
+              onOpenLesson={(locator) => {
+                setPathOverlay(null);
+                setView({ kind: "lesson", ...locator });
+              }}
+            />
+          }
           onClose={() => setPathOverlay(null)}
           onStart={() => {
             const first = pathUnit.lessons[0];

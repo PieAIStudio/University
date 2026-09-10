@@ -32,11 +32,18 @@ import type {
   CardProgress,
   RetrievalAttemptRecord,
   RecapCardInput,
+  ProvenLessonRecord,
 } from "../ports/progress.js";
 import type { PushSubscriptionRecord } from "../ports/notifications.js";
 import type { ReaderMark } from "../domain/reader-marks.js";
 import type { LessonRef } from "./contract.js";
-import { cloneProgress, emptyProgress, parseProgress, recapCardKeyOf } from "./document.js";
+import {
+  cloneProgress,
+  emptyProgress,
+  lessonKey,
+  parseProgress,
+  recapCardKeyOf,
+} from "./document.js";
 import { mergeProgress } from "./merge.js";
 import { xpFor } from "./xp.js";
 import {
@@ -517,6 +524,46 @@ export function createProgressPort(options: { readonly persistence: Persistence 
       .sort((a, b) => Date.parse(b.revealedAt) - Date.parse(a.revealedAt));
   }
 
+  /**
+   * The whole of what passing a skip test writes.
+   *
+   * Note what is missing: no `advanceLesson`, no `recordExerciseAttempt`, no
+   * `dropCards`. A proven lesson is therefore still `NOT_STARTED` to the
+   * completion contract, so it contributes nothing to the review queue and
+   * nothing to the map's done count — which is V5 §12 决定 E, held by the
+   * absence of three calls rather than by a flag somebody has to remember to
+   * check.
+   *
+   * The first proof wins. Retaking a unit a year later does not restamp it,
+   * because the fact being recorded is that the learner already knew this —
+   * and they knew it on the earlier date.
+   */
+  function markLessonsProven(input: {
+    readonly studyId: string;
+    readonly courseId: string;
+    readonly unitId: string;
+    readonly lessonIds: readonly string[];
+    readonly provenAt?: number;
+  }): void {
+    const provenAt = input.provenAt ?? Date.now();
+    if (!Number.isSafeInteger(provenAt) || provenAt <= 0) return;
+    if (![input.studyId, input.courseId, input.unitId].every((id) => id.trim())) return;
+    let changed = false;
+    for (const lessonId of input.lessonIds) {
+      if (!lessonId.trim()) continue;
+      const key = lessonKey(input.studyId, input.courseId, lessonId);
+      if (state.provenLessons[key]) continue;
+      const record: ProvenLessonRecord = { lessonKey: key, unitId: input.unitId, provenAt };
+      state.provenLessons[key] = record;
+      changed = true;
+    }
+    if (changed) commit();
+  }
+
+  function provenLessonKeys(): ReadonlySet<string> {
+    return new Set(Object.keys(state.provenLessons));
+  }
+
   function pushSubscriptions(): readonly PushSubscriptionRecord[] {
     return Object.values(state.pushSubscriptions)
       .sort((a, b) => a.endpoint.localeCompare(b.endpoint))
@@ -633,6 +680,8 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     latestExerciseAttempt,
     recordRetrievalAttempt,
     retrievalAttempts,
+    markLessonsProven,
+    provenLessonKeys,
     pushSubscriptions,
     savePushSubscription,
     revokePushSubscription,

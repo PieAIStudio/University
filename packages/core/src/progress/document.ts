@@ -32,6 +32,7 @@ export const emptyProgress = (): ProgressDocument => ({
   readerMarks: {},
   exerciseAttempts: {},
   retrievalAttempts: {},
+  provenLessons: {},
   pushSubscriptions: {},
   account: emptyAccountData(),
 });
@@ -117,6 +118,9 @@ export function parseProgress(raw: string | null): ProgressDocument {
       readerMarks: parsed.readerMarks ?? {},
       exerciseAttempts: parsed.exerciseAttempts ?? {},
       retrievalAttempts: parsed.retrievalAttempts ?? {},
+      // Skip-test proofs arrived after v2 as well. Absent means this learner
+      // has never taken one, which is the normal case, not a broken document.
+      provenLessons: parsed.provenLessons ?? {},
       pushSubscriptions: parsePushSubscriptions(parsed.pushSubscriptions),
       account: parseAccountData(parsed.account),
     };
@@ -137,6 +141,7 @@ export function cloneProgress(document: ProgressDocument): ProgressDocument {
     readerMarks: { ...document.readerMarks },
     exerciseAttempts: { ...document.exerciseAttempts },
     retrievalAttempts: { ...document.retrievalAttempts },
+    provenLessons: { ...document.provenLessons },
     pushSubscriptions: clonePushSubscriptions(document.pushSubscriptions ?? {}),
     account: cloneAccountData(document.account),
   };

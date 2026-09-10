@@ -278,6 +278,10 @@ export * from "./ports/index.js";
 export * from "./progress/contract.js";
 export * from "./progress/depth.js";
 
+// The skip test: which of a unit's own exercises can stand in for it, how three
+// of them are drawn, and what passing them proves — which is never 「学过」.
+export * from "./progress/skip-test.js";
+
 // Recommended learning sequence (spine order) per study — a linear extension
 // of the prerequisite DAG so there is always exactly one "next step".
 export * from "./progress/spine.js";
