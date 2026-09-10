@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-10T12:36:39.411Z
+generated_at: 2026-09-10T13:02:35.136Z
 generator_version: doc-gov@0.9.11
-docs_count: 124
+docs_count: 125
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -66,6 +66,13 @@ docs:
     status: accepted
     canonical: true
     last_reviewed: 2026-09-09
+    pinned: false
+  - id: ADR-0010
+    path: docs/adr/ADR-0010-difficulty-moves-when-the-learner-moves-it.md
+    type: decision
+    status: accepted
+    canonical: true
+    last_reviewed: 2026-09-10
     pinned: false
   - id: ARCHIVE-ADR-0008-2026-09-07
     path: docs/archive/adr-0008-measurement-history-2026-09-07.md

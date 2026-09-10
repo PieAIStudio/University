@@ -19,6 +19,7 @@ related:
   - REF-LOCAL-DEVICE-TESTING
   - REF-FEEDBACK-BACKEND-GAP
   - REF-V5-JOURNEY-REVIEW
+  - ADR-0010
 ---
 
 # Current Work
@@ -39,6 +40,7 @@ test totals, CLI/model choices or execution history. Read only the matching row.
 | Which interactive activity a lesson gets, and where it sits | [Activity selection](../../../apps/local/.agents/skills/write-lesson/references/activities.md), decided with the variant at step 3 of [write-lesson](../../../apps/local/.agents/skills/write-lesson/SKILL.md); every new lesson carries at least one — `LessonCreationProposalSchema` requires it and refuses an activity the prose never points at. Lessons written before 2026-09-09 are counted, not failed, by `lint-lessons` |
 | Activity payloads, engines and difficulty tiers | [Component contract](../../../packages/ui/src/learning-play/README.md), [interaction design](../../../packages/ui/src/learning-play/DESIGN.md) and [prior acceptance evidence](../../plans/completed/play-usability.md); an embedded activity never substitutes for a lesson's graded exercise, and `pnpm check:activities` names the lessons an engine change breaks, and checks that each activity's citation still points where it says |
 | Where a learner starts, what is dimmed, and testing out of a unit | [V5 decision 12](../player-journey/v5/index.html); unlocking asks `CourseProgress.proven` (exercises passed), never `complete`, and self-report proposes what to test out of rather than unlocking anything |
+| Whether difficulty adapts by itself | [ADR-0010](../../adr/ADR-0010-difficulty-moves-when-the-learner-moves-it.md): it does not. The learner moves it; the system never infers a level. Read it before adding anything that watches performance and re-routes |
 | What a unit the learner tested out of looks like on the map | **Undecided, and it needs deciding before it is built.** `placeCourse` in `packages/world/src/Maps.tsx` gives each lesson tile one of `done` / `live` / `idle` / `locked`, and a lesson proved through the skip test currently gets `idle` — identical to one never opened. V5 §12 决定 E says proved is not learned, so it cannot borrow `done`; a fifth state is a learner-surface design decision that belongs in [the journey](../player-journey/v5/index.html) first. The unit-entry card already says it in words; only the scene is silent |
 | Designed but unfinished learner/business capabilities | [V5 review](v5-journey-review.md), [payment](payment-backend-gap.md), [feedback](feedback-backend-gap.md), [reminders](review-reminders-backend-gap.md), [commercial model](commercial-model.md) |
 
