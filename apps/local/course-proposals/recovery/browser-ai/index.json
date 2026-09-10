@@ -17,26 +17,26 @@
   "courses": [
     {
       "courseId": "run-a-real-project-with-ai",
-      "file": "run-a-real-project-with-ai.aa110cd0b08449e7204647f7db6aca0d41a2f9a3b14fe48be4750856979680af.recovery.json",
-      "sha256": "sha256:aa110cd0b08449e7204647f7db6aca0d41a2f9a3b14fe48be4750856979680af",
+      "file": "run-a-real-project-with-ai.51110ec24c79f5d53d90f664107d1f97fafd077014a439823e0593aa260facd0.recovery.json",
+      "sha256": "sha256:51110ec24c79f5d53d90f664107d1f97fafd077014a439823e0593aa260facd0",
       "isBeingRewritten": false
     },
     {
       "courseId": "make-the-cutout-app-yours",
-      "file": "make-the-cutout-app-yours.5e6234d65f592fbe61276758ff23fdb3d1fecbddefe97330b8fe8f43501b3362.recovery.json",
-      "sha256": "sha256:5e6234d65f592fbe61276758ff23fdb3d1fecbddefe97330b8fe8f43501b3362",
+      "file": "make-the-cutout-app-yours.bdc04a1efbad58a47d4e1386a4ec453fa2490fd22c0cec2c570f976d12917d29.recovery.json",
+      "sha256": "sha256:bdc04a1efbad58a47d4e1386a4ec453fa2490fd22c0cec2c570f976d12917d29",
       "isBeingRewritten": false
     },
     {
       "courseId": "search-your-own-photos",
-      "file": "search-your-own-photos.30ab6041fe7a2879ec059e33c0a6be6654100531d523f268cac118cf6e07af01.recovery.json",
-      "sha256": "sha256:30ab6041fe7a2879ec059e33c0a6be6654100531d523f268cac118cf6e07af01",
+      "file": "search-your-own-photos.75cb51d7f2e11be6948e7fa55a1f52bf1ddafaa70dcad3e35b2cde7278918fbc.recovery.json",
+      "sha256": "sha256:75cb51d7f2e11be6948e7fa55a1f52bf1ddafaa70dcad3e35b2cde7278918fbc",
       "isBeingRewritten": false
     },
     {
       "courseId": "when-a-project-is-too-big-to-read",
-      "file": "when-a-project-is-too-big-to-read.09c123b375c183d554d801c2562ee687ea259882094ead530d9972abac79a377.recovery.json",
-      "sha256": "sha256:09c123b375c183d554d801c2562ee687ea259882094ead530d9972abac79a377",
+      "file": "when-a-project-is-too-big-to-read.3f73d2519527fa1af22cad30bae0fa9bda82733c29acebc0df326d2106d1e2e7.recovery.json",
+      "sha256": "sha256:3f73d2519527fa1af22cad30bae0fa9bda82733c29acebc0df326d2106d1e2e7",
       "isBeingRewritten": false
     }
   ]

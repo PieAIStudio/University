@@ -188,6 +188,123 @@ describe("the public course DTO", () => {
     });
   });
 
+  /*
+    Nine landed activities reached no delivery learner, because this list did
+    not name them — while the prose that references them crossed intact, so the
+    reader rendered "找不到这个互动课件" in the middle of nine paid lessons. The
+    field was not withheld on purpose; it was added to the lesson after this
+    list was written, and an allowlist's whole point is that it does not notice.
+  */
+  it("publishes the activities the prose points at, payload and all", () => {
+    const published = toPublicPackage({
+      course: {
+        units: [
+          {
+            lessons: [
+              {
+                id: "l",
+                content: "::play{#vector-boundary-sort}",
+                contentRevision: 2,
+                cards: [],
+                exercises: [],
+                activities: [
+                  {
+                    id: "vector-boundary-sort",
+                    kind: "sort",
+                    role: "apply",
+                    difficulty: "intro",
+                    title: "标题",
+                    brief: "引子",
+                    goal: "目标",
+                    takeaway: "收获",
+                    hint: "提示",
+                    source: { label: "出处", path: "src/worker.js", line: 8, commit: "a".repeat(40) },
+                    buckets: [{ id: "vector", label: "向量" }],
+                    items: [{ id: "one", label: "一句话", bucketId: "vector" }],
+                    question: "放进哪一格？",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    const activity = published.course.units[0].lessons[0].activities[0];
+    expect(activity.id).toBe("vector-boundary-sort");
+    expect(activity.source).toEqual({
+      label: "出处",
+      path: "src/worker.js",
+      line: 8,
+      commit: "a".repeat(40),
+    });
+    // The engine cannot play a board it was handed without buckets or items.
+    expect(activity.buckets).toHaveLength(1);
+    expect(activity.items).toHaveLength(1);
+    expect(activity.question).toBe("放进哪一格？");
+  });
+
+  it("strips authoring state from an activity", () => {
+    const published = toPublicPackage({
+      course: {
+        units: [
+          {
+            lessons: [
+              {
+                id: "l",
+                content: "::play{#a}",
+                contentRevision: 1,
+                cards: [],
+                exercises: [],
+                activities: [
+                  {
+                    id: "a",
+                    kind: "connect",
+                    role: "observe",
+                    title: "t",
+                    brief: "b",
+                    goal: "g",
+                    takeaway: "k",
+                    hint: "h",
+                    source: { label: "l", url: "https://example.com/a" },
+                    nodes: [],
+                    edges: [],
+                    probes: [],
+                    contentHash: "sha256:private",
+                    status: "draft",
+                    lessonId: "l",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    const activity = published.course.units[0].lessons[0].activities[0];
+    expect(activity).not.toHaveProperty("contentHash");
+    expect(activity).not.toHaveProperty("status");
+    expect(activity).not.toHaveProperty("lessonId");
+    expect(activity.nodes).toEqual([]);
+  });
+
+  /*
+    An empty array and a missing key read the same to `::play`, but not to a
+    reviewer diffing two published packages — and a lesson with no activity is
+    the normal case, not a lesson whose activities went missing.
+  */
+  it("omits the key entirely when a lesson has no activity", () => {
+    const published = toPublicPackage({
+      course: {
+        units: [{ lessons: [{ id: "l", content: "正文", contentRevision: 1, cards: [], exercises: [] }] }],
+      },
+    });
+
+    expect(published.course.units[0].lessons[0]).not.toHaveProperty("activities");
+  });
+
   it("rejects a lesson without a source content revision", () => {
     expect(() =>
       toPublicPackage({

@@ -14,8 +14,8 @@
   "courses": [
     {
       "courseId": "what-is-ai-really",
-      "file": "what-is-ai-really.6ab9b23399e20485dfb99b156ad370dc65ac04e5766987acae39f1d4b5386197.recovery.json",
-      "sha256": "sha256:6ab9b23399e20485dfb99b156ad370dc65ac04e5766987acae39f1d4b5386197",
+      "file": "what-is-ai-really.7df601e5e5bf23da84ee4e72e4a18803c5c56525fc39a71b423c3ed354e6b395.recovery.json",
+      "sha256": "sha256:7df601e5e5bf23da84ee4e72e4a18803c5c56525fc39a71b423c3ed354e6b395",
       "isBeingRewritten": true
     }
   ]

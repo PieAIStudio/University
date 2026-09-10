@@ -46,8 +46,14 @@ export const PUBLIC_DTO_FIELDS = Object.freeze({
       "assets",
       "cards",
       "exercises",
+      "activities",
     ],
-    "The reader uses these fields to render prose, progress sections, source material, media, cards and exercises.",
+    "The reader uses these fields to render prose, progress sections, source material, media, cards, exercises and the activities the prose embeds.",
+  ),
+  // Learners play the activity, so the host frame is named and the engine payload follows it.
+  activity: fields(
+    ["id", "kind", "role", "difficulty", "title", "brief", "goal", "takeaway", "hint", "source"],
+    "The host names and frames the activity; everything past this list is the engine payload it plays.",
   ),
   // Learners need both sides of a card and its stable identity when reviewing it.
   card: fields(
@@ -154,6 +160,45 @@ function publicAsset(asset) {
   return pick(candidate, PUBLIC_DTO_FIELDS.asset);
 }
 
+/*
+  What an activity may not carry across.
+
+  Every other shape here is an allowlist, because every other shape mixes
+  learner facts with authoring state. An activity does not: it has no revision
+  record, no validation status, and no reference answer held back from the
+  reader — it is not graded, and `LessonActivitySchema` says why: an activity
+  never discharges the lesson's exercise. Its payload is the engine's, left
+  unenumerated by core's own wire schema, and re-enumerating eleven payload
+  shapes here would be the second copy of the engine rules that `schemas.ts`
+  refuses to keep — one that would silently drop a field the first time an
+  engine gained one, leaving a game that renders and cannot be finished.
+
+  So the payload crosses whole, and this names the keys that would mean an
+  activity had grown authoring state after all.
+*/
+const ACTIVITY_PRIVATE = Object.freeze([
+  "schemaVersion",
+  "contentRevision",
+  "contentHash",
+  "status",
+  "expectedRevision",
+  "courseId",
+  "unitId",
+  "lessonId",
+]);
+
+function publicActivity(activity) {
+  if (activity === null || typeof activity !== "object") return {};
+  const payload = Object.fromEntries(
+    Object.entries(activity).flatMap(([key, value]) =>
+      PUBLIC_DTO_FIELDS.activity.fields.includes(key) || ACTIVITY_PRIVATE.includes(key)
+        ? []
+        : [[key, value]],
+    ),
+  );
+  return { ...pick(activity, PUBLIC_DTO_FIELDS.activity), ...payload };
+}
+
 function publicCard(card) {
   const result = pick(card, PUBLIC_DTO_FIELDS.card);
   if (Array.isArray(card?.evidence)) result.evidence = card.evidence.map(publicEvidence);
@@ -181,6 +226,15 @@ function publicLesson(lesson) {
   result.assets = (lesson?.assets ?? []).map(publicAsset);
   result.cards = (lesson?.cards ?? []).map(publicCard);
   result.exercises = (lesson?.exercises ?? []).map(publicExercise);
+  /*
+    Omitted rather than empty when there are none. `::play` resolves against
+    this list, and the reader prints "找不到这个互动课件" when a marker finds
+    nothing — which is right, and is exactly what a delivery learner saw on
+    nine lessons while this field was missing from the list above.
+  */
+  const activities = (lesson?.activities ?? []).map(publicActivity);
+  if (activities.length > 0) result.activities = activities;
+  else delete result.activities;
   return result;
 }
 

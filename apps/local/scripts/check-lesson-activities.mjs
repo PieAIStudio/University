@@ -241,7 +241,56 @@ for (const studyId of dirs(studiesRoot)) {
   }
 }
 
-console.log(`扫过 ${lessons} 节课，${activities} 个互动组件`);
+/*
+  The same two directions, one boundary later.
+
+  Everything above reads `apps/local/studies`, which is the authoring side — and
+  that is where this check was green while nine `::play` markers shipped to
+  delivery pointing at activities the publish DTO had dropped. The reader says
+  so out loud when a marker resolves to nothing, so what a customer got was a
+  block reading "找不到这个互动课件" in the middle of a paid lesson. A gate that
+  only ever reads the authoring copy cannot see a boundary losing things.
+
+  `apps/university/content` is generated and git-ignored, so it may be absent or
+  behind. That is said rather than skipped in silence, for the same reason the
+  missing-build branch above says it.
+*/
+const deliveryRoot = join(studiesRoot, "..", "..", "university", "content");
+let deliveryLessons = 0;
+if (!existsSync(deliveryRoot)) {
+  console.log("  ! 没有交付内容可以核对（先跑 pnpm --filter @pieai/university-app content）");
+} else {
+  for (const studyId of dirs(deliveryRoot)) {
+    for (const name of readdirSync(join(deliveryRoot, studyId))) {
+      if (!name.endsWith(".json")) continue;
+      const pkg = read(join(deliveryRoot, studyId, name));
+      for (const unit of pkg.course?.units ?? pkg.units ?? []) {
+        for (const lesson of unit.lessons ?? []) {
+          deliveryLessons += 1;
+          const declared = new Set((lesson.activities ?? []).map((a) => a.id));
+          const where = `交付 ${studyId}/${name.replace(/\.json$/, "")}/${lesson.id}`;
+          for (const [, id] of (lesson.content ?? "").matchAll(/::play\{#([a-z0-9-]+)\}/g)) {
+            if (!declared.has(id)) {
+              problems.push(
+                `${where}: 正文引用了 ::play{#${id}}，交付包里没有它——读者会看到一块报错`,
+              );
+            }
+          }
+          for (const id of declared) {
+            if (!(lesson.content ?? "").includes(`::play{#${id}}`)) {
+              problems.push(`${where}: 交付包里有组件 ${id}，正文从没引用它`);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+console.log(
+  `扫过 ${lessons} 节课，${activities} 个互动组件` +
+    (deliveryLessons > 0 ? `；交付包里另核对 ${deliveryLessons} 节` : ""),
+);
 if (unchecked.size > 0) {
   console.log(
     `  ! 这几种玩法没有可单独调用的引擎判定，只检查了共同约定和出处：${[...unchecked].join("、")}`,
