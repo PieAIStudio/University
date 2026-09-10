@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-10T08:03:13.683Z
+generated_at: 2026-09-10T12:36:39.411Z
 generator_version: doc-gov@0.9.11
-docs_count: 122
+docs_count: 124
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -403,6 +403,13 @@ docs:
     canonical: true
     last_reviewed: 2026-09-10
     pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-UI-OVERLAP-SWEEP-THAT-SKIPS-ELEMENTFROMPOINTS-TWO-TRAPS-REPORTS-THE-WHOLE-PROD
+    path: docs/reference/learnings/workflow-issues/a-ui-overlap-sweep-that-skips-elementfrompoints-two-traps-reports-the-whole-prod.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-10
+    pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-AN-ADD-ONLY-PROPOSAL-PLUS-AN-UNCONDITIONAL-WRITE-RESETS-EVERYTHING-THE-PROPOSAL
     path: docs/reference/learnings/workflow-issues/an-add-only-proposal-plus-an-unconditional-write-resets-everything-the-proposal-.md
     type: reference
@@ -703,6 +710,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-31
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-REGENERATING-A-PER-LESSON-DEBT-BASELINE-IN-A-WORKTREE-DELETES-THE-DEBT-OF-STUDIE
+    path: docs/reference/learnings/workflow-issues/regenerating-a-per-lesson-debt-baseline-in-a-worktree-deletes-the-debt-of-studie.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-10
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-RELEASE-BUILDS-MUST-PIN-EVIDENCE-INPUTS-AND-RESTORE-TRACKED-GENERATED-MANIFESTS
     path: docs/reference/learnings/workflow-issues/release-builds-must-pin-evidence-inputs-and-restore-tracked-generated-manifests.md
