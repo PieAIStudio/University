@@ -24,9 +24,9 @@ export function ConnectGame({
   const [activeNode, setActiveNode] = useState<string | null>(null);
   const [activeProbe, setActiveProbe] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
-  const [traces, setTraces] = useState<{ label: string; visited: string[]; blocked: boolean }[]>(
-    [],
-  );
+  const [traces, setTraces] = useState<
+    { label: string; visited: string[]; blocked: { from: string; to: string } | null }[]
+  >([]);
   const board = useRef<HTMLDivElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const markerId = useId().replaceAll(":", "");
@@ -79,15 +79,30 @@ export function ConnectGame({
     setSelected(null);
     const result = checkConnections(activity, edges);
     const extra = result.extra[0];
+    const paths = activity.probes.map((probe) => {
+      const trace = traceConnectionProbe(probe.path, edges);
+      return { label: probe.label, visited: trace.visited, blocked: trace.blocked };
+    });
+    /*
+      Say why the line the learner just watched stop is missing — not why the
+      first line the author happened to list is.
+
+      `missing[0]` is in author order, so a learner who had drawn two of four
+      edges was told about a third edge unrelated to the probe that had visibly
+      failed in front of them. The advice was true and answered a question
+      nobody had asked, which reads as the game being broken.
+    */
+    const stuck = paths.find((path) => path.blocked)?.blocked ?? null;
+    const stuckWhy = stuck
+      ? activity.edges.find((edge) => edge.from === stuck.from && edge.to === stuck.to)?.why
+      : undefined;
     const message = result.passed
       ? t("play.connect.win", { count: activity.edges.length })
       : extra
         ? t("play.connect.extra", { from: nodeOf(extra.from).label, to: nodeOf(extra.to).label })
-        : t("play.connect.missing", { why: result.missing[0]?.why ?? activity.hint });
-    const paths = activity.probes.map((probe) => {
-      const trace = traceConnectionProbe(probe.path, edges);
-      return { label: probe.label, visited: trace.visited, blocked: trace.blocked !== null };
-    });
+        : t("play.connect.missing", {
+            why: stuckWhy ?? result.missing[0]?.why ?? activity.hint,
+          });
     const frames = paths.flatMap((path) => path.visited.map((id) => ({ id, label: path.label })));
     const finish = () => {
       setRunning(false);
@@ -251,7 +266,9 @@ export function ConnectGame({
         >
           {t(running ? "play.connect.running" : "play.connect.run")}
         </GameButton>
-        <span className="play-muted">{t("play.connect.progress", { count: edges.length })}</span>
+        <span className="play-muted">
+          {t("play.connect.progress", { count: edges.length, total: activity.edges.length })}
+        </span>
       </div>
       {traces.length > 0 ? (
         <div className="play-connect__traces" aria-label={t("play.connect.trace")}>
@@ -260,7 +277,16 @@ export function ConnectGame({
               <strong>{trace.label}</strong>
               <span>
                 {trace.visited.map((id) => nodeOf(id).label).join(" → ")}
-                {trace.blocked ? " …" : " ✓"}
+                {trace.blocked ? (
+                  <em className="play-connect__gap">
+                    {t("play.connect.gap", {
+                      from: nodeOf(trace.blocked.from).label,
+                      to: nodeOf(trace.blocked.to).label,
+                    })}
+                  </em>
+                ) : (
+                  " ✓"
+                )}
               </span>
             </p>
           ))}

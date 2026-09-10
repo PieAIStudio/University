@@ -45,14 +45,15 @@ export const messages = {
   "play.host.attempts": "{{count}} attempts",
   "play.host.hints": "{{count}} clues used",
   "play.connect.help":
-    "Choose a starting node, then a destination. Remove a connection by selecting its record below.",
+    "Pick a box, then pick the box it connects to. One box can send out several lines. Remove a line by selecting its record below.",
   "play.connect.selected": "From “{{label}}” to where?",
   "play.connect.board": "Interactive causal diagram",
   "play.connect.empty": "No connections yet. Find an action that triggers the next one.",
   "play.connect.remove": "Remove {{from}} to {{to}}",
   "play.connect.run": "Send a test signal",
   "play.connect.running": "Following the signal…",
-  "play.connect.progress": "{{count}} connections made",
+  "play.connect.progress": "{{count}} of {{total}} lines drawn",
+  "play.connect.gap": " — missing: {{from}} → {{to}}",
   "play.connect.need": "Make a connection first, then follow the signal.",
   "play.connect.extra":
     "This connection does not follow the process: “{{from}}” does not directly trigger “{{to}}”. Check the node notes.",

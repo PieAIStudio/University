@@ -27,9 +27,9 @@
           "courseId": "run-a-real-project-with-ai",
           "title": "用 AI 把一个真实开源项目跑起来",
           "isBeingRewritten": false,
-          "sha256": "sha256:51110ec24c79f5d53d90f664107d1f97fafd077014a439823e0593aa260facd0",
-          "packageBytes": 61370,
-          "servedBytes": 49388,
+          "sha256": "sha256:65aa34771752da37d46e2b1807d53ccc5febbdbade45794342c0a03b1124d470",
+          "packageBytes": 61385,
+          "servedBytes": 49403,
           "lessons": 6
         },
         {

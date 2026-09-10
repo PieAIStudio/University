@@ -41,14 +41,16 @@ export const messages = {
   "play.host.source": "继续了解",
   "play.host.attempts": "{{count}} 次尝试",
   "play.host.hints": "用了 {{count}} 个线索",
-  "play.connect.help": "点一个节点作为起点，再点另一个接上。接错的线可以点下方连接记录移除。",
+  "play.connect.help":
+    "点一个方块，再点它连到的那个方块，就接上一条线。一个方块可以接出好几条线。接错了，点下面那条记录就能删掉。",
   "play.connect.selected": "从「{{label}}」出发，接到哪里？",
   "play.connect.board": "可接线的因果图",
   "play.connect.empty": "还没有线。先找到会触发下一步的那个动作。",
   "play.connect.remove": "移除 {{from}} 到 {{to}}",
   "play.connect.run": "放出测试信号",
   "play.connect.running": "信号正在经过…",
-  "play.connect.progress": "已接 {{count}} 条线",
+  "play.connect.progress": "已接 {{count}} 条，一共 {{total}} 条",
+  "play.connect.gap": " —— 差一条：{{from}} → {{to}}",
   "play.connect.need": "先接一条线，再看看信号会怎样走。",
   "play.connect.extra":
     "这条直接关系不成立：「{{from}}」不会直接触发「{{to}}」。检查节点上的提示。",
