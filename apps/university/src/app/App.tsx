@@ -41,7 +41,6 @@ import {
   isBareView,
   lessonRefKey,
   progressSourceOf,
-  unmetPrerequisites,
   type FeedbackContext,
   type LessonRef,
 } from "@pieai/university-core";
@@ -110,6 +109,7 @@ import { usePageMetadata } from "./page-metadata";
 import { WorldSourceControls } from "../learner/WorldSourceControls";
 import { useAnalyticsPorts } from "./analytics-ports";
 import { useAvatarPreferences } from "./avatar-preferences";
+import { useSkipTest } from "./skip-test.js";
 import { useCoursePathActions } from "./course-path-actions";
 import { useIslandLookSource, useIslandLookView } from "./island-look-view";
 import { useMistakeSummary } from "./mistake-summary";
@@ -517,48 +517,11 @@ export function App() {
     setPathOverlay,
     setView,
   });
-  /*
-    The one write a skip test makes, and the only one it is allowed to make.
-    `markLessonsProven` deliberately has no companion here — no `advanceLesson`,
-    no `dropCards` — because 「证明过」 must not become 「学过」 (V5 §12 决定 E).
-  */
-  const markUnitProven = useCallback(
-    (studyId: string, courseId: string, unitId: string, lessonIds: readonly string[]) => {
-      progressPort.markLessonsProven({ studyId, courseId, unitId, lessonIds });
-    },
-    [],
-  );
-  /*
-    Every lesson a skip test has proved, read off the same subscribed document
-    the rest of the screen reads. Not `progressPort.provenLessonKeys()` called
-    directly: that is a snapshot, and a unit that had just been proved would
-    keep offering its test until something else happened to re-render.
-  */
-  const provenLessonKeys = useMemo(
-    () => new Set(Object.keys(progress.provenLessons ?? {})),
-    [progress.provenLessons],
-  );
-  /*
-    What a course assumes and the learner has not done — one reading of the
-    graph, shared with the map's lighting through `unmetPrerequisites`. Named
-    courses rather than a count, because 决定 C asks the product to 「说明它假定
-    你已经会了什么」 and a number does not.
-  */
-  const unmetFor = useCallback(
-    (node: { readonly prerequisiteCourseIds?: readonly string[] } | null, studyId: string) => {
-      if (!node) return [];
-      const sameStudy = (nodes ?? []).filter((peer) => peer.studyId === studyId);
-      return unmetPrerequisites(
-        node,
-        sameStudy.map((peer) => ({ courseId: peer.courseId, title: peer.title })),
-        (courseId) => {
-          const peer = sameStudy.find((candidate) => candidate.courseId === courseId);
-          return peer !== undefined && courseProgress(peer) >= 1;
-        },
-      );
-    },
-    [nodes, courseProgress],
-  );
+  const { markUnitProven, provenLessonKeys, unmetFor } = useSkipTest({
+    nodes,
+    progress,
+    courseProgress,
+  });
   const courseIslandProps =
     view.kind === "course" && course
       ? {

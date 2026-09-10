@@ -699,6 +699,32 @@ const CHECKS = {
 };
 const unchecked = new Set();
 
+/*
+  Every kind the wire enum accepts must have a check here.
+
+  This was a warning line, and a warning is what let `hunt` sit with no engine
+  check at all while the gate printed 「ok」 — the same silence that let `sort`
+  ship without a line in the enum. A kind is added to the enum precisely when
+  lessons may start storing it, so that is exactly the moment its payloads start
+  going unchecked.
+
+  It reads the enum through the built core rather than a list here, because a
+  list here is the thing that goes stale.
+*/
+try {
+  const { LessonActivityKindSchema } =
+    await import("../../../packages/core/dist/domain/schemas.js");
+  const missing = LessonActivityKindSchema.options.filter((kind) => !CHECKS[kind]);
+  if (missing.length > 0) {
+    problems.push(
+      `这几种玩法在 wire enum 里，但这里没有对应的引擎判定：${missing.join("、")}——` +
+        `课文可以存它们了，而没有任何检查看得见它们是否解得开`,
+    );
+  }
+} catch {
+  console.log("  ! 读不到 core 的构建产物，玩法覆盖这一项没有检查");
+}
+
 for (const studyId of dirs(studiesRoot)) {
   const coursesRoot = join(studiesRoot, studyId, "courses");
   for (const courseId of dirs(coursesRoot)) {
