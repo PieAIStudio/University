@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 
 import {
@@ -8,7 +9,11 @@ import {
 } from "@pieai/university-core";
 import { LessonActivityKindSchema } from "@pieai/university-core/domain/schemas.js";
 
+import { act } from "react";
+import { createRoot } from "react-dom/client";
+
 import { AI_MODES, FOUNDATION_MODES } from "./LearningPlayLab.js";
+import { LearningActivity } from "./LearningActivity.js";
 import { getExampleFamily } from "./difficulty-examples.js";
 import { getBaseExamples } from "./base-examples.js";
 import { extraExamples } from "./extra-examples.js";
@@ -118,6 +123,52 @@ describe("the play lab offers every game that exists", () => {
       for (const [level, task] of Object.entries(family.levels)) {
         expect(task.kind).toBe("weigh");
         expect(isValidWeighActivity(task as never), `${example.id} 的 ${level} 档`).toBe(true);
+      }
+    }
+  });
+
+  /*
+    And every kind must actually draw something.
+
+    `LearningActivity` dispatches with one ternary per kind. A kind added to the
+    enum, given a fixture and left out of that chain renders the shell — title,
+    goal, the hint button, the skip button — and an empty space where the game
+    is. Nothing throws. The lab's mode button works. It is the same silence as a
+    missing line in the wire enum, one layer up, and this file exists because
+    that silence has now cost four separate fixes on this branch.
+  */
+  it("draws a board for every kind the shelf offers", async () => {
+    const examples = [
+      ...getBaseExamples(),
+      ...getSortExamples(),
+      ...getContrastExamples(),
+      ...getWeighExamples(),
+      ...extraExamples(),
+      ...getProgramExamples(),
+      ...getAIBriefExamples(),
+      ...getAIWorkflowExamples(),
+      ...getAIQualityExamples(),
+    ];
+    Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+    for (const kind of offered as ReadonlySet<ActivityKind>) {
+      const activity = examples.find((example) => example.kind === kind);
+      expect(activity, `${kind} 没有任何示例`).toBeDefined();
+      const container = document.createElement("div");
+      document.body.append(container);
+      const root = createRoot(container);
+      try {
+        await act(async () =>
+          root.render(<LearningActivity activity={activity!} onResult={() => undefined} />),
+        );
+        const board = container.querySelector(".learning-activity__game");
+        expect(board, `${kind} 连游戏区都没有`).not.toBeNull();
+        expect(
+          (board?.textContent ?? "").trim().length,
+          `${kind} 的游戏区是空的——多半是 LearningActivity 里少了这一支`,
+        ).toBeGreaterThan(0);
+      } finally {
+        await act(async () => root.unmount());
+        container.remove();
       }
     }
   });
