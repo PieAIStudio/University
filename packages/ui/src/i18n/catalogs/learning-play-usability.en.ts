@@ -42,4 +42,24 @@ export const messages = {
   "play.usability.program.ready": "Your instructions are ready. Run them to see what happens.",
   "play.usability.program.edit": "See where it stopped? Change your instructions and try again.",
   "play.usability.program.editAction": "Edit the instructions",
+  "play.contrast.guidePredict":
+    "Guess first: will these two give the same result this time? Then you get to see what each one did.",
+  "play.contrast.predictSame": "Same",
+  "play.contrast.predictApart": "Different",
+  "play.contrast.landedSame": "Both landed the same \u2014 open it again",
+  "play.contrast.landedApart": "They came apart \u2014 open it again",
+  "play.contrast.notWhatYouSaid": "Not what you guessed.",
+  "play.contrast.summary":
+    "Give the same thing to \u201c{{value0}}\u201d and \u201c{{value1}}\u201d and sometimes they land together, sometimes they do not.",
+  "play.contrast.misses":
+    "{{value0}} wrong so far. A wrong guess costs nothing \u2014 it is the one that teaches you something.",
+  "play.weigh.guideDecide":
+    "For this situation, which one? The same choice will not be right every time.",
+  "play.weigh.progress": "Situation {{value0}} of {{value1}}",
+  "play.weigh.notHere":
+    "Not this one, not here. Try again: what are you actually short of in this situation?",
+  "play.weigh.costOfOther": "Picking \u201c{{value0}}\u201d would have cost: {{value1}}",
+  "play.weigh.flipHeading": "Look back \u2014 same two choices, and the answer changed sides:",
+  "play.weigh.misses":
+    "{{value0}} wrong so far. A wrong pick costs nothing; knowing why is the point.",
 } as const satisfies Record<keyof typeof sourceMessages, string>;

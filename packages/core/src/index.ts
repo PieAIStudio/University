@@ -376,6 +376,8 @@ export {
 export type * from "./learning-play/types.js";
 export * from "./learning-play/connect.js";
 export * from "./learning-play/sort.js";
+export * from "./learning-play/contrast.js";
+export * from "./learning-play/weigh.js";
 export * from "./learning-play/tune.js";
 export * from "./learning-play/hunt.js";
 export * from "./learning-play/dispatch.js";

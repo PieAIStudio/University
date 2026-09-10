@@ -19,9 +19,10 @@ test.afterEach(({ page }) => {
   ).toEqual([]);
 });
 /*
-  The foundation shelf, in the order the lab prints it. Six, not five: `sort`
-  had an engine, a renderer, three lessons and a gate before it had a button
-  here. Keeping the list explicit is deliberate — a spec that derived it from
+  The foundation shelf, in the order the lab prints it. Eight now: `sort` had an
+  engine, a renderer, three lessons and a gate before it had a button here, and
+  `contrast` and `weigh` arrived together to cover the 对比 and 决策 lesson
+  shapes — 221 of 469 lessons — that had no playable shape at all. Keeping the list explicit is deliberate — a spec that derived it from
   the component could not notice a game disappearing from both at once — but
   `LearningPlayLab.test.tsx` is what holds the component against the wire enum.
 
@@ -30,7 +31,16 @@ test.afterEach(({ page }) => {
   first click. Nothing else in this file uses the list, which is why it went
   unnoticed: a stale name in a fixture fails loudly only where it is read.
 */
-const MODES = ["接线台", "归类台", "调参实验室", "反例猎手", "请求调度台", "指令画布"];
+const MODES = [
+  "接线台",
+  "归类台",
+  "对照台",
+  "取舍台",
+  "调参实验室",
+  "反例猎手",
+  "请求调度台",
+  "指令画布",
+];
 const activity = (page: Page) => page.locator(".learning-activity");
 const button = (page: Page, name: string | RegExp) =>
   page.getByRole("button", { name, exact: typeof name === "string" });

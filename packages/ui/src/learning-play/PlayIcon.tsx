@@ -13,6 +13,10 @@ export function PlayIcon({
       "M6 8V5h12v3M6 16v3h12v-3M6 11v2M18 11v2M3 8h6v3H3zM15 8h6v3h-6zM3 13h6v3H3zM15 13h6v3h-6z",
     // Two trays and a thing on its way into one of them.
     sort: "M3 14h7v6H3zM14 14h7v6h-7zM10 6h4v4h-4zM12 10v3m0 0-2-2m2 2 2-2",
+    // Two columns fed the same thing: one line splits, the other lands together.
+    contrast: "M4 4h7v16H4zM13 4h7v16h-7zM6 9h3M15 9h3M6 15h3M15 15h3M11 12h2",
+    // A balance whose two pans are not level, and a pivot that can move.
+    weigh: "M12 4v16M5 20h14M4 8h16M6 8l-3 5a3 3 0 0 0 6 0zM18 8l-3 5a3 3 0 0 0 6 0z",
     tune: "M5 3v6m0 4v8M12 3v11m0 4v3M19 3v3m0 4v11M2 9h6v4H2zM9 14h6v4H9zM16 6h6v4h-6z",
     hunt: "M15 15l6 6M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0M7 10h6M10 7v6",
     dispatch: "M3 12h6m0 0 4-7h8M9 12h12M9 12l4 7h8M18 2l3 3-3 3M18 9l3 3-3 3M18 16l3 3-3 3",

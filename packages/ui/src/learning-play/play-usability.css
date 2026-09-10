@@ -31,12 +31,19 @@
   min-height: 36px;
   padding: 6px 12px;
 }
+/*
+  玩法入口一行放不下就换行，不横向滚。
+
+  原来是 `overflow-x: auto`。五个入口时一行放得下，滚动条从不出现，所以那条规则
+  一直看着是对的；加到八个之后，第七、八个被裁在右边缘外，而横向滚动区没有任何
+  提示——读者看到的是「一共六种玩法」，而且没有任何线索说明还有别的。
+  这个页面的全部意义就是「每一种都在这儿，挑一个试」，藏起两种就是把它变成别的东西。
+*/
 .learning-play-lab__modes {
   display: flex;
-  overflow-x: auto;
+  flex-wrap: wrap;
   gap: 6px;
   padding-block: 2px 6px;
-  scrollbar-width: thin;
 }
 .learning-play-lab__mode {
   flex: 1 0 auto;
@@ -348,8 +355,9 @@
 }
 @media (max-width: 600px) {
   .learning-play-lab__modes {
+    /* 列数跟着入口数走，不写死。写死 5 的那一版在第六种玩法出现时才被发现。 */
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
     overflow: visible;
     gap: 4px;
   }

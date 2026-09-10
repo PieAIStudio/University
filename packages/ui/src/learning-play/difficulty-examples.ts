@@ -3,6 +3,8 @@ import { getFoundationFamily } from "./foundation-difficulty.js";
 import { getWorkflowFamily } from "./workflow-difficulty.js";
 import { getQualityFamily } from "./quality-difficulty.js";
 import { getSortFamily } from "./sort-difficulty.js";
+import { getContrastFamily } from "./contrast-difficulty.js";
+import { getWeighFamily } from "./weigh-difficulty.js";
 
 /** Only the lab's curated fixtures are expanded here. Course authors supply explicit families. */
 export function getExampleFamily(activity: LearningActivitySpec): ActivityFamily {
@@ -13,6 +15,10 @@ export function getExampleFamily(activity: LearningActivitySpec): ActivityFamily
     case "ai-eval":
     case "ai-repair":
       return getQualityFamily(activity);
+    case "contrast":
+      return getContrastFamily(activity);
+    case "weigh":
+      return getWeighFamily(activity);
     case "sort":
       /*
         This used to throw. The note said the tiers were authoring work rather

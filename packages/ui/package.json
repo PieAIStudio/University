@@ -114,7 +114,9 @@
     "./learning-play/play-usability.css": "./src/learning-play/play-usability.css",
     "./learning-play/quality-usability.css": "./src/learning-play/quality-usability.css",
     "./learning-play/workflow-usability.css": "./src/learning-play/workflow-usability.css",
-    "./learning-play/sort.css": "./src/learning-play/sort.css"
+    "./learning-play/sort.css": "./src/learning-play/sort.css",
+    "./learning-play/contrast.css": "./src/learning-play/contrast.css",
+    "./learning-play/weigh.css": "./src/learning-play/weigh.css"
   },
   "scripts": {
     "typecheck": "tsc -b --pretty false",

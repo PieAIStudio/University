@@ -86,6 +86,8 @@ function checkConnect(activity, where) {
   looking is worse than one that is missing.
 */
 let isValidSortActivity = null;
+let isValidContrastActivity = null;
+let isValidWeighActivity = null;
 let isValidProgramActivity = null;
 let agentEngine = null;
 let evalEngine = null;
@@ -95,6 +97,9 @@ let tuneEngine = null;
 let dispatchEngine = null;
 try {
   ({ isValidSortActivity } = await import("../../../packages/core/dist/learning-play/sort.js"));
+  ({ isValidContrastActivity } =
+    await import("../../../packages/core/dist/learning-play/contrast.js"));
+  ({ isValidWeighActivity } = await import("../../../packages/core/dist/learning-play/weigh.js"));
   ({ isValidProgramActivity } =
     await import("../../../packages/core/dist/learning-play/program.js"));
   agentEngine = await import("../../../packages/core/dist/learning-play/ai-agent.js");
@@ -114,6 +119,42 @@ function checkSort(activity, where) {
   if (!isValidSortActivity(activity)) {
     problems.push(
       `${where}: 引擎判定这个归类台无法完成——空格子、指向正确答案的诱饵，或指向不存在的格子`,
+    );
+  }
+}
+
+/**
+ * A contrast board has to contain both answers.
+ *
+ * The engine refuses a board whose cases all agree or all split, because a
+ * reader who answers the same way every time finishes it — and finishing it is
+ * indistinguishable, from outside, from having understood the distinction it
+ * was supposed to teach. The other half is quieter: an `outcomes` map missing a
+ * key renders a blank column, which reads as 「it does nothing here」 rather
+ * than as the missing text it is.
+ */
+function checkContrast(activity, where) {
+  if (!isValidContrastActivity) return;
+  if (!isValidContrastActivity(activity)) {
+    problems.push(
+      `${where}: 引擎判定这个对照台不成立——两边的结果全一样或全不一样（那就没有对照），或者某个情况没写全两种做法各自的结果`,
+    );
+  }
+}
+
+/**
+ * A weigh board must not have a choice that is always right.
+ *
+ * This is the one rule that separates a trade-off from a quiz, and it is
+ * invisible to every other check: each situation has an answer, each answer has
+ * a reason, the reader can finish. They finish by picking the same thing every
+ * time, which is the exact habit a 决策 lesson exists to break.
+ */
+function checkWeigh(activity, where) {
+  if (!isValidWeighActivity) return;
+  if (!isValidWeighActivity(activity)) {
+    problems.push(
+      `${where}: 引擎判定这个取舍台不成立——有个选项一次都赢不了（那它就不是取舍，是送分），或者情况数少于选项数、正确选项不在选项里`,
     );
   }
 }
@@ -583,6 +624,8 @@ function checkDispatch(activity, where) {
 const CHECKS = {
   connect: checkConnect,
   sort: checkSort,
+  contrast: checkContrast,
+  weigh: checkWeigh,
   program: checkProgram,
   "ai-agent": checkAgent,
   "ai-eval": checkEval,

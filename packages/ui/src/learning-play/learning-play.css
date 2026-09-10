@@ -53,7 +53,8 @@
 }
 .learning-play-lab__modes {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  /* 见 play-usability.css：列数由入口数决定，不是写死的五。 */
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
   gap: 8px;
 }
 .learning-play-lab__mode {

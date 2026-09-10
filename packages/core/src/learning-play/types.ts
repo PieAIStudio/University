@@ -4,6 +4,8 @@ import type { AgentActivity } from "./ai-agent.js";
 import type { EvalActivity } from "./ai-eval.js";
 import type { RepairActivity } from "./ai-repair.js";
 import type { SortActivity } from "./sort.js";
+import type { ContrastActivity } from "./contrast.js";
+import type { WeighActivity } from "./weigh.js";
 
 /** Experimental activity payloads. These are not a second lesson/export schema. */
 export const ACTIVITY_DIFFICULTIES = ["intro", "practice", "challenge"] as const;
@@ -165,6 +167,8 @@ export interface ProgramActivity extends ActivityBase {
 export type LearningActivitySpec =
   | ConnectActivity
   | SortActivity
+  | ContrastActivity
+  | WeighActivity
   | TuneActivity
   | HuntActivity
   | DispatchActivity

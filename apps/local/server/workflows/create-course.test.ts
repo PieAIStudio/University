@@ -77,7 +77,9 @@ function minimalProposal(snapshot: SnapshotManifest) {
             {
               id: "why-boundaries",
               title: "Why boundaries",
-              content: "# Why boundaries\n\nA boundary is a promise you can check.\n",
+              content:
+                "# Why boundaries\n\nA boundary is a promise you can check.\n\n::play{#why-boundaries-play}\n",
+              activities: [activity(snapshot, "why-boundaries")],
               evidence: [evidence(snapshot)],
               cards: [
                 {
@@ -101,6 +103,52 @@ function minimalProposal(snapshot: SnapshotManifest) {
         },
       ],
     },
+  };
+}
+
+/**
+ * The smallest activity that satisfies the shape, for lessons whose subject is
+ * the workflow rather than the game.
+ *
+ * A lesson cannot be created without one any more, so every fixture here needs
+ * one — and the fixtures are as close to real as the schema demands: the `sort`
+ * payload is one the engine would accept, and the prose carries the `::play`
+ * marker, because a proposal whose activity nothing points at is refused too.
+ */
+function activity(snapshot: SnapshotManifest, lessonId: string) {
+  return {
+    id: `${lessonId}-play`,
+    kind: "sort" as const,
+    role: "apply" as const,
+    difficulty: "practice" as const,
+    title: "放进它属于的那一格",
+    brief: "先点一样东西，再点它属于哪一格。",
+    goal: "说得出这两类的界线在哪。",
+    takeaway: "界线是「能不能被检查」，不是「听起来对不对」。",
+    hint: "先问：这句话有没有办法证伪？",
+    source: { label: "这一课引用的那段代码", path: "truth.ts" },
+    question: "下面这些，哪些是可以检查的？",
+    buckets: [
+      { id: "checkable", label: "可以检查", note: "有办法证明它不成立。" },
+      { id: "not", label: "没法检查", note: "怎么说都对。" },
+    ],
+    items: [
+      {
+        id: "returns-a-number",
+        label: "它返回一个数",
+        detail: "调一次就知道。",
+        bucketId: "checkable",
+        why: "跑一次就能看见结果对不对。",
+      },
+      {
+        id: "well-designed",
+        label: "它设计得很好",
+        detail: "读起来很舒服。",
+        bucketId: "not",
+        why: "没有哪一次运行能证明它不成立。",
+        tempting: { bucketId: "checkable", whyNot: "「舒服」没有一个能失败的判定。" },
+      },
+    ],
   };
 }
 
@@ -165,7 +213,9 @@ describe("course creation workflow", () => {
         {
           id: "checkable-claims",
           title: "Checkable claims",
-          content: "# Checkable claims\n\nEvery claim needs a way to fail.\n",
+          content:
+            "# Checkable claims\n\nEvery claim needs a way to fail.\n\n::play{#checkable-claims-play}\n",
+          activities: [activity(snapshot, "checkable-claims")],
           evidence: [evidence(snapshot, "other.ts")],
           cards: [],
           exercises: [],

@@ -15,6 +15,8 @@ import { getBaseExamples } from "./base-examples.js";
 import { extraExamples } from "./extra-examples.js";
 import { getProgramExamples } from "./program-examples.js";
 import { getSortExamples } from "./sort-examples.js";
+import { getContrastExamples } from "./contrast-examples.js";
+import { getWeighExamples } from "./weigh-examples.js";
 import { PlayIcon } from "./PlayIcon.js";
 import { getAIBriefExamples } from "./ai-brief-examples.js";
 import { getAIWorkflowExamples } from "./ai-workflow-examples.js";
@@ -30,6 +32,8 @@ import { getAIQualityExamples } from "./ai-quality-examples.js";
 export const FOUNDATION_MODES = [
   "connect",
   "sort",
+  "contrast",
+  "weigh",
   "tune",
   "hunt",
   "dispatch",
@@ -56,7 +60,14 @@ export function LearningPlayLab({
     () =>
       collection === "ai"
         ? [...getAIBriefExamples(), ...getAIWorkflowExamples(), ...getAIQualityExamples()]
-        : [...getBaseExamples(), ...getSortExamples(), ...extraExamples(), ...getProgramExamples()],
+        : [
+            ...getBaseExamples(),
+            ...getSortExamples(),
+            ...getContrastExamples(),
+            ...getWeighExamples(),
+            ...extraExamples(),
+            ...getProgramExamples(),
+          ],
     [locale, collection],
   );
   const [mode, setMode] = useState<ActivityKind>(modes[0]!);

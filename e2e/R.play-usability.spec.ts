@@ -20,6 +20,8 @@ const KIND: Readonly<Record<string, string>> = {
   返工时光机: "ai-repair",
   接线台: "connect",
   归类台: "sort",
+  对照台: "contrast",
+  取舍台: "weigh",
   调参实验室: "tune",
   反例猎手: "hunt",
   请求调度台: "dispatch",
@@ -34,7 +36,16 @@ const AI = ["原型对焦台", "上下文装箱", "Agent 驾驶舱", "AI 试车�
   first click; 「归类台」 is new because `sort` was on the shelf everywhere except
   the page that shows the shelf.
 */
-const BASE = ["接线台", "归类台", "调参实验室", "反例猎手", "请求调度台", "指令画布"];
+const BASE = [
+  "接线台",
+  "归类台",
+  "对照台",
+  "取舍台",
+  "调参实验室",
+  "反例猎手",
+  "请求调度台",
+  "指令画布",
+];
 const act = (page: Page) => page.locator(".learning-activity");
 const btn = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
 const errors = new WeakMap<Page, string[]>();
@@ -324,7 +335,7 @@ test("R 难度身份：切档清本轮、切帮助保现场、每种玩法三档
 test("R 连玩可以混合难度，后续简单关不会被全局升难", async ({ page }) => {
   await open(page);
   // The AI shelf, so five. The label counts the shelf rather than saying 「五」.
-  await btn(page, "连玩 5 种").click();
+  await btn(page, `连玩 ${BASE.length} 种`).click();
   for (const [index, level] of ["入门", "挑战", "入门", "进阶", "入门"].entries()) {
     await btn(page, level).click();
     await btn(page, "先跳过").click();

@@ -588,6 +588,8 @@ export const LessonAssetSchema = z
 export const LessonActivityKindSchema = z.enum([
   "connect",
   "sort",
+  "contrast",
+  "weigh",
   "tune",
   "hunt",
   "dispatch",

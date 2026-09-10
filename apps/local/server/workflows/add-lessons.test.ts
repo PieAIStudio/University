@@ -62,6 +62,70 @@ const LESSON_BODY = [
   "",
 ].join("\n");
 
+/**
+ * The smallest activity that satisfies the shape, for lessons whose subject is
+ * the workflow rather than the game.
+ *
+ * A lesson cannot be created without one any more, so every fixture here needs
+ * one — and the fixtures are as close to real as the schema demands: the `sort`
+ * payload is one the engine would accept, and the prose carries the `::play`
+ * marker, because a proposal whose activity nothing points at is refused too.
+ */
+function activity(snapshot: SnapshotManifest, lessonId: string) {
+  return {
+    id: `${lessonId}-play`,
+    kind: "sort" as const,
+    role: "apply" as const,
+    difficulty: "practice" as const,
+    title: "放进它属于的那一格",
+    brief: "先点一样东西，再点它属于哪一格。",
+    goal: "说得出这两类的界线在哪。",
+    takeaway: "界线是「能不能被检查」，不是「听起来对不对」。",
+    hint: "先问：这句话有没有办法证伪？",
+    source: { label: "这一课引用的那段代码", path: "truth.ts" },
+    question: "下面这些，哪些是可以检查的？",
+    buckets: [
+      { id: "checkable", label: "可以检查", note: "有办法证明它不成立。" },
+      { id: "not", label: "没法检查", note: "怎么说都对。" },
+    ],
+    items: [
+      {
+        id: "returns-a-number",
+        label: "它返回一个数",
+        detail: "调一次就知道。",
+        bucketId: "checkable",
+        why: "跑一次就能看见结果对不对。",
+      },
+      {
+        id: "well-designed",
+        label: "它设计得很好",
+        detail: "读起来很舒服。",
+        bucketId: "not",
+        why: "没有哪一次运行能证明它不成立。",
+        tempting: { bucketId: "checkable", whyNot: "「舒服」没有一个能失败的判定。" },
+      },
+    ],
+  };
+}
+
+/**
+ * The same fixture for a study with no repository behind it.
+ *
+ * `source` is a union, and which arm is honest depends on what the lesson
+ * cites. A study with no snapshot has no `path` to point at, so an activity
+ * there has to carry a URL — which is the same reason the union exists.
+ */
+function urlActivity(lessonId: string) {
+  const { source: _drop, ...rest } = activity(null as never, lessonId);
+  return {
+    ...rest,
+    source: {
+      label: "一张图片进到程序里是什么",
+      url: "https://developer.mozilla.org/en-US/docs/Web/API/ImageData/data",
+    },
+  };
+}
+
 /** A published, active course — the state in which a curriculum actually grows. */
 function setup() {
   const container = mkdtempSync(join(tmpdir(), "university-local-add-lessons-"));
@@ -98,8 +162,10 @@ function setup() {
               {
                 id: "why-boundaries",
                 title: "Why boundaries",
-                content: "# Why boundaries\n\nA boundary is a promise you can check.\n",
+                content:
+                  "# Why boundaries\n\nA boundary is a promise you can check.\n\n::play{#why-boundaries-play}\n",
                 evidence: [evidence(snapshot)],
+                activities: [activity(snapshot, "why-boundaries")],
                 cards: [
                   {
                     id: "boundary-card",
@@ -131,8 +197,9 @@ function lessonProposal(snapshot: SnapshotManifest, id: string) {
   return {
     id,
     title: `Lesson ${id}`,
-    content: `# ${id}\n\nSomething true about the source.\n`,
+    content: `# ${id}\n\nSomething true about the source.\n\n::play{#${id}-play}\n`,
     evidence: [evidence(snapshot)],
+    activities: [activity(snapshot, id)],
     cards: [
       {
         id: `${id}-card`,
@@ -299,8 +366,9 @@ describe("course lesson addition workflow", () => {
                 {
                   id: "picture-is-numbers",
                   title: "A picture is numbers",
-                  content: LESSON_BODY,
+                  content: `${LESSON_BODY}\n::play{#picture-is-numbers-play}\n`,
                   evidence: [urlEvidence],
+                  activities: [urlActivity("picture-is-numbers")],
                 },
               ],
             },
@@ -322,8 +390,9 @@ describe("course lesson addition workflow", () => {
           {
             id: "sound-is-numbers",
             title: "Sound is numbers too",
-            content: LESSON_BODY,
+            content: `${LESSON_BODY}\n::play{#sound-is-numbers-play}\n`,
             evidence: [urlEvidence],
+            activities: [urlActivity("sound-is-numbers")],
           },
         ],
       },
@@ -525,5 +594,47 @@ describe("course lesson addition workflow", () => {
       "reachable-parts-connect",
     ]);
     expect(written.manifest.contentRevision).toBe(1);
+  });
+});
+
+/*
+  The floor, and the thing the floor makes newly easy to get wrong.
+
+  Both are asserted here rather than trusted to the schema's shape, because
+  `.min(1)` and the `::play` refinement are one edit away from being deleted by
+  somebody who hits them while writing a fixture and reads them as pedantry.
+  The first is the product decision — a lesson is not a page — and the second is
+  what stops that decision from being satisfied by an attachment nobody sees.
+*/
+describe("a lesson cannot be born without something to do", () => {
+  it("refuses a lesson that carries no activity", () => {
+    const { studiesRoot, snapshot } = setup();
+    openCourseForEdit({ studiesRoot, studyId: STUDY_ID, courseId: COURSE_ID });
+    const { activities: _none, ...noActivity } = lessonProposal(snapshot, "reads-like-a-page");
+
+    expect(() =>
+      addCourseLessons({
+        studiesRoot,
+        studyId: STUDY_ID,
+        proposal: { ...proposal(snapshot), lessons: [noActivity] },
+      }),
+    ).toThrow(/activities/);
+  });
+
+  it("refuses an activity the prose never points at", () => {
+    const { studiesRoot, snapshot } = setup();
+    openCourseForEdit({ studiesRoot, studyId: STUDY_ID, courseId: COURSE_ID });
+    const lesson = lessonProposal(snapshot, "attached-but-invisible");
+
+    expect(() =>
+      addCourseLessons({
+        studiesRoot,
+        studyId: STUDY_ID,
+        proposal: {
+          ...proposal(snapshot),
+          lessons: [{ ...lesson, content: lesson.content.replace(/::play\{#[a-z0-9-]+\}/, "") }],
+        },
+      }),
+    ).toThrow(/::play/);
   });
 });

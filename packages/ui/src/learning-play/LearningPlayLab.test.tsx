@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { isValidSortActivity, type ActivityKind } from "@pieai/university-core";
+import {
+  isValidContrastActivity,
+  isValidSortActivity,
+  isValidWeighActivity,
+  type ActivityKind,
+} from "@pieai/university-core";
 import { LessonActivityKindSchema } from "@pieai/university-core/domain/schemas.js";
 
 import { AI_MODES, FOUNDATION_MODES } from "./LearningPlayLab.js";
@@ -9,6 +14,8 @@ import { getBaseExamples } from "./base-examples.js";
 import { extraExamples } from "./extra-examples.js";
 import { getProgramExamples } from "./program-examples.js";
 import { getSortExamples } from "./sort-examples.js";
+import { getContrastExamples } from "./contrast-examples.js";
+import { getWeighExamples } from "./weigh-examples.js";
 import { getAIBriefExamples } from "./ai-brief-examples.js";
 import { getAIWorkflowExamples } from "./ai-workflow-examples.js";
 import { getAIQualityExamples } from "./ai-quality-examples.js";
@@ -49,6 +56,8 @@ describe("the play lab offers every game that exists", () => {
       ...extraExamples(),
       ...getProgramExamples(),
       ...getSortExamples(),
+      ...getContrastExamples(),
+      ...getWeighExamples(),
       ...getAIBriefExamples(),
       ...getAIWorkflowExamples(),
       ...getAIQualityExamples(),
@@ -81,6 +90,34 @@ describe("the play lab offers every game that exists", () => {
       for (const [level, task] of Object.entries(family.levels)) {
         expect(task.kind).toBe("sort");
         expect(isValidSortActivity(task as never), `${example.id} 的 ${level} 档`).toBe(true);
+      }
+    }
+  });
+
+  /*
+    Same check as `sort` above, for the same reason, against the two rules that
+    carry these boards: a `contrast` tier must contain a case where the two
+    approaches agree *and* one where they split, and a `weigh` tier must not
+    leave any option unwon. Both are easy to break while curating tiers — drop
+    one case from a tier and the board silently becomes a board that rewards
+    answering the same way every time.
+  */
+  it("hands the contrast engine three boards it agrees teach a contrast", () => {
+    for (const example of getContrastExamples()) {
+      const family = getExampleFamily(example);
+      for (const [level, task] of Object.entries(family.levels)) {
+        expect(task.kind).toBe("contrast");
+        expect(isValidContrastActivity(task as never), `${example.id} 的 ${level} 档`).toBe(true);
+      }
+    }
+  });
+
+  it("hands the weigh engine three boards where no single option always wins", () => {
+    for (const example of getWeighExamples()) {
+      const family = getExampleFamily(example);
+      for (const [level, task] of Object.entries(family.levels)) {
+        expect(task.kind).toBe("weigh");
+        expect(isValidWeighActivity(task as never), `${example.id} 的 ${level} 档`).toBe(true);
       }
     }
   });
