@@ -17,26 +17,6 @@
   font-size: 16px;
 }
 
-.play-weigh__options {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-}
-
-.play-weigh__option-card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px;
-  border: 1px solid var(--game-ui-border-subtle);
-  border-radius: 16px;
-  background: var(--game-ui-panel-strong);
-}
-
-.play-weigh__option-card small {
-  color: var(--game-ui-text-muted);
-}
-
 .play-weigh__current {
   display: flex;
   flex-direction: column;
@@ -69,21 +49,35 @@
   font-size: 13px;
 }
 
+/*
+  选项就是按钮本身，说明写在按钮上。
+
+  原来说明在上面一排卡片里、按钮在下面——同样三样东西写了两遍，而在手机上
+  那排卡片把第一个能按的东西挤到了屏幕外面，开屏没有一件事可做。
+*/
 .play-weigh__choices {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 8px;
 }
 
 .play-weigh__choice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   min-height: 44px;
-  padding: 10px 16px;
+  padding: 10px 14px;
   border: 1px solid var(--game-ui-border-subtle);
   border-radius: 12px;
   background: color-mix(in srgb, var(--game-ui-secondary) 16%, transparent);
   color: var(--game-ui-text);
+  text-align: start;
   font: inherit;
   cursor: pointer;
+}
+
+.play-weigh__choice small {
+  color: var(--game-ui-text-muted);
 }
 
 .play-weigh__miss {

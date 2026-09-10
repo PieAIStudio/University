@@ -354,6 +354,23 @@
   margin: 0;
 }
 @media (max-width: 600px) {
+  /*
+    每一个能点的东西，在手机上至少 44px 高。
+
+    DESIGN.md 早就写了「主要操作保持可点击高度（至少 44px）」，但那句话没有一条
+    规则在管它，于是实际值散在各处：外壳的「重新开始 / 先跳过 / 给我一个线索」是
+    40，「跟着提示玩」36，展开三角 38，调度台的两个入口只有 22——不到该有的一半。
+    八种玩法一个一个量出来的，八种一样，因为它们本来就是同一个外壳。
+
+    所以规则写在外壳这一层，而不是各玩法里：新加一种玩法自动继承，不会再有人
+    重新发现一次。滑块不在内，它有自己的命中区域。
+  */
+  .learning-activity button,
+  .learning-activity summary,
+  .learning-activity [role="button"] {
+    min-height: 44px;
+  }
+
   .learning-play-lab__modes {
     /* 列数跟着入口数走，不写死。写死 5 的那一版在第六种玩法出现时才被发现。 */
     display: grid;

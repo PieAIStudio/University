@@ -129,12 +129,6 @@ test.describe("取舍台：选项常驻，情况一个一个来", () => {
 
       await allVisibleAndInside(
         page,
-        activity(page).locator(".play-weigh__option-card"),
-        "选项说明",
-        options,
-      );
-      await allVisibleAndInside(
-        page,
         activity(page).locator(".play-weigh__choice"),
         "可点的选项按钮",
         options,
@@ -244,3 +238,116 @@ test.describe("试玩页的玩法入口，一个都不能藏", () => {
     });
   }
 });
+
+/*
+  The same question asked of the whole shelf, without needing each payload's
+  numbers: every control a board puts on the screen must be visible, have a
+  real size, be the thing under its own centre point, and — on a phone — be big
+  enough for a thumb.
+
+  The centre-point check is the one worth explaining, because it is easy to get
+  backwards. `document.elementFromPoint` at a button's middle normally returns
+  that button's own `<span>`, which is a descendant and perfectly correct. A
+  sweep that forgets to allow for that reports every labelled button in the
+  product as covered — 44 findings, none real, which is exactly what a first
+  pass at this produced. What it must compare is whether the hit is inside the
+  control's own subtree; only when it is not is something genuinely sitting on
+  top. Elements outside the viewport are skipped rather than guessed at, since
+  `elementFromPoint` means nothing for a point that is not on the screen.
+*/
+const FOUNDATION = [
+  "接线台",
+  "归类台",
+  "对照台",
+  "取舍台",
+  "调参实验室",
+  "反例猎手",
+  "请求调度台",
+  "指令画布",
+] as const;
+
+interface Reachability {
+  readonly zeroSized: readonly string[];
+  readonly covered: readonly { readonly text: string; readonly by: string }[];
+  readonly tooSmall: readonly { readonly text: string; readonly height: number }[];
+  readonly overflowing: readonly string[];
+}
+
+async function sweep(page: Page, phone: boolean): Promise<Reachability> {
+  return page.evaluate(async (isPhone) => {
+    const settle = () => new Promise((done) => requestAnimationFrame(() => done(null)));
+    const board = document.querySelector(".learning-activity");
+    const zeroSized: string[] = [];
+    const covered: { text: string; by: string }[] = [];
+    const tooSmall: { text: string; height: number }[] = [];
+    const overflowing: string[] = [];
+    if (!board) return { zeroSized, covered, tooSmall, overflowing };
+    const boardBox = board.getBoundingClientRect();
+    const name = (node: Element) => (node.textContent ?? "").trim().slice(0, 40) || node.tagName;
+
+    for (const node of board.querySelectorAll(
+      'button, input, select, textarea, [role="button"], summary',
+    )) {
+      const box = node.getBoundingClientRect();
+      const style = getComputedStyle(node);
+      if (style.display === "none" || style.visibility === "hidden") continue;
+      if (box.width === 0 || box.height === 0) {
+        zeroSized.push(name(node));
+        continue;
+      }
+      // Anything reaching past the board's own right edge is content the reader
+      // has to find rather than read.
+      if (box.right > boardBox.right + 1) overflowing.push(name(node));
+      if (isPhone && box.height < 44) tooSmall.push({ text: name(node), height: box.height });
+
+      // Put it in the middle of the screen and ask there. A control the reader
+      // can scroll clear of the bottom bar is a control the reader can reach.
+      node.scrollIntoView({ block: "center", behavior: "instant" });
+      await settle();
+      const settledBox = node.getBoundingClientRect();
+      const cx = settledBox.x + settledBox.width / 2;
+      const cy = settledBox.y + settledBox.height / 2;
+      if (cy < 0 || cy > window.innerHeight || cx < 0 || cx > window.innerWidth) continue;
+      const hit = document.elementFromPoint(cx, cy);
+      if (!hit) {
+        covered.push({ text: name(node), by: "(nothing)" });
+        continue;
+      }
+      if (!node.contains(hit) && !hit.contains(node)) {
+        covered.push({ text: name(node), by: `${hit.tagName}.${hit.className}` });
+      }
+    }
+    return { zeroSized, covered, tooSmall, overflowing };
+  }, phone);
+}
+
+for (const [where, phone] of [
+  ["桌面", false],
+  ["手机", true],
+] as const) {
+  test.describe(`${where}：八种玩法的每个控件都够得着`, () => {
+    for (const mode of FOUNDATION) {
+      for (const tier of ["入门", "进阶", "挑战"] as const) {
+        test(`${mode} · ${tier}`, async ({ page }) => {
+          if (phone) await page.setViewportSize(PHONE);
+          await openLab(page, mode, tier);
+          const found = await sweep(page, phone);
+
+          expect(found.zeroSized, `${mode}/${tier}：这些控件宽或高是 0`).toEqual([]);
+          expect(found.covered, `${mode}/${tier}：这些控件被别的元素盖住了`).toEqual([]);
+          expect(found.overflowing, `${mode}/${tier}：这些控件伸到了活动区右边外面`).toEqual([]);
+          /*
+            DESIGN.md asks for 44px on a phone and nothing was holding it: the
+            shell's own controls measured 36 to 40 across all eight games, and
+            dispatch had two at 22. One rule in the shell fixed all of them at
+            once, so this can be an assertion rather than a printed number.
+          */
+          if (phone) {
+            expect(found.tooSmall, `${mode}/${tier}：手机上这些控件矮于 44px`).toEqual([]);
+          }
+          await noSidewaysScroll(page);
+        });
+      }
+    }
+  });
+}

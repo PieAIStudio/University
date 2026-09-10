@@ -25,6 +25,12 @@ interface Settled {
  * is right once and wrong once, and the summary at the end is where those two
  * facts are put side by side, because neither situation on its own shows the
  * answer moving.
+ *
+ * What each option costs is written on the button rather than in a standing row
+ * of cards above it. The cards were a second copy of the same three things, and
+ * on a phone they pushed the first thing the reader can actually press off the
+ * bottom of the screen — a game whose opening screen has nothing to do on it.
+ * One block also puts the explanation on the control it explains.
  */
 export function WeighGame({
   activity,
@@ -76,15 +82,6 @@ export function WeighGame({
     <div className="play-weigh">
       <p className="play-weigh__question">{activity.question}</p>
 
-      <div className="play-weigh__options">
-        {activity.options.map((option) => (
-          <section key={option.id} className="play-weigh__option-card">
-            <strong>{option.label}</strong>
-            <small>{option.note}</small>
-          </section>
-        ))}
-      </div>
-
       {current ? (
         <section className="play-weigh__current">
           <p className="play-weigh__progress">
@@ -107,7 +104,8 @@ export function WeighGame({
                 disabled={disabled}
                 onClick={() => decide(option.id)}
               >
-                {option.label}
+                <strong>{option.label}</strong>
+                <small>{option.note}</small>
               </button>
             ))}
           </div>
