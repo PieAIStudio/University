@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-10T00:03:27.367Z
+generated_at: 2026-09-10T00:38:58.321Z
 generator_version: doc-gov@0.9.11
-docs_count: 119
+docs_count: 121
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -361,6 +361,13 @@ docs:
     canonical: true
     last_reviewed: 2026-09-09
     pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-FIELD-ADDED-AFTER-A-BOUNDARYS-FIELD-LIST-IS-WRITTEN-VANISHES-SILENTLY-AT-EVERY
+    path: docs/reference/learnings/workflow-issues/a-field-added-after-a-boundarys-field-list-is-written-vanishes-silently-at-every.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-10
+    pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-LIVE-EVIDENCE-URL-IS-NOT-A-SUPPORTED-CLAIM-OPEN-THE-PAGE-AND-READ-IT
     path: docs/reference/learnings/workflow-issues/a-live-evidence-url-is-not-a-supported-claim-open-the-page-and-read-it.md
     type: reference
@@ -381,6 +388,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-30
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-TYPE-LEVEL-GUARD-WRITTEN-IN-A-TEST-FILE-IS-NOT-A-WEAK-GUARD-IT-IS-NO-GUARD
+    path: docs/reference/learnings/workflow-issues/a-type-level-guard-written-in-a-test-file-is-not-a-weak-guard-it-is-no-guard.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-10
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-AN-ADD-ONLY-PROPOSAL-PLUS-AN-UNCONDITIONAL-WRITE-RESETS-EVERYTHING-THE-PROPOSAL
     path: docs/reference/learnings/workflow-issues/an-add-only-proposal-plus-an-unconditional-write-resets-everything-the-proposal-.md
