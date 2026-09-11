@@ -87,6 +87,14 @@ App、测试和完整图文证据已形成实际提交 `283b9261cf04514f16e7786c
 
 本机诊断日志保留在 `.scratch/product-handoff/`，重点是 `verify.log`、`published-freshness.log`、`published-default-e2e.log`、`product-preview.log`。接手不必读全部流水账：按本节的保留项、依赖和命令继续即可。不要把这些本机日志路径当作远端已携带文件。
 
+### 最终交付方式：本机分支，不冒充远端已推送
+
+已经执行正常的 `git push --set-upstream origin HEAD:refs/heads/codex/product-ux`，没有禁用或绕过 hook。仓库的 pre-push 启动默认双模式测试，再次复现 `F.island-pick` 作者端边缘卡片和 `G.one-chrome` 两模式控件比对失败；确认重复失败后主动中止这次推送。该轮 `G.avatar` 时长测试通过，说明时长问题不能简单写成“每次都失败”，仍需在最终组合上复测。远端查询确认尚无 `refs/heads/codex/product-ux`，因此不能让接手者只从 GitHub 找这批成果。
+
+同一台 Mac 上，现有工作树共用这个仓库的本地分支，整合负责人可在独立整合分支直接读取和合入 `codex/product-ux`，无需等待 GitHub。此方式不把未通过的组合版本推入主线，也不绕过发布验收。为防止工作目录搬动，另生成 Git bundle 作为传递副本，位置为本工作树 `.scratch/product-handoff/University-product-for-integration.bundle`，由 `git bundle verify` 校验；它以基线 `cea753e27e3c5196936ee30bf6a498aff8496c38` 为前提，不包含被忽略的课程输入。
+
+所以本批状态是：**本机已提交、可作为集中整合输入；远端推送和最终联合验收未完成。** 不需要重做本轮已验收的 UIUX；先保留此树及测试输入，按上面的冲突地图整合其他两条线。合并后的完整检查通过之前，不删除旧树、不发布、不用提高性能阈值或删除断言来消除红灯。
+
 ## 实施与验证历史（按需追溯）
 
 行为权威是 [V5 产品完整性决定](../../reference/player-journey/v5/index.html#product-completeness)。[三轮检查](../../reference/execution/product-completeness-review.md) 是原始发现，不作为另一份待办。以下是唯一实施状态表。
