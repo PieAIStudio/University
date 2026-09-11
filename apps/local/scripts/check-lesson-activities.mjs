@@ -40,6 +40,71 @@ let lessons = 0;
 let activities = 0;
 
 /**
+ * Reachability and the difficulty-family rules, for one copy of a lesson.
+ *
+ * Both directions: an unreferenced activity is dead weight the reader never
+ * meets, and a reference to nothing is a hole in the lesson. A family is the
+ * one legitimate exception — it is a single activity at several difficulties,
+ * so the prose points at one of its ids and the learner reaches the rest
+ * through the picker on the component. Requiring every member to appear in the
+ * text would either fail every levelled lesson or push authors to write three
+ * `::play` markers for one activity, which is three activities on the page.
+ *
+ * This exists as one function because it did not, and the omission had teeth.
+ * The rules were added to the walk over `studies/` and not to the walk over the
+ * delivery package below, so the first lesson ever to author three levels
+ * passed on disk and failed on delivery — the two extra levels read as dead
+ * weight to the only copy a customer will ever hold. A feature that cannot be
+ * shipped is not shipped, and the gate would have said so at exactly the wrong
+ * end of the pipe.
+ *
+ * `noun` is what the caller calls the thing it is checking, and `missingTail`
+ * lets the delivery side keep its extra warning about what the reader sees.
+ */
+function checkActivitySet(declared, content, where, noun, missingTail) {
+  const byId = new Map(declared.map((activity) => [activity.id, activity]));
+  const text = content ?? "";
+  const referenced = [...text.matchAll(/::play\{#([a-z0-9-]+)\}/g)].map((m) => m[1]);
+  for (const id of referenced) {
+    if (!byId.has(id)) {
+      problems.push(`${where}: 正文引用了 ::play{#${id}}，${noun}里没有它${missingTail}`);
+    }
+  }
+
+  const families = new Map();
+  for (const activity of declared) {
+    if (!activity.family) continue;
+    families.set(activity.family, [...(families.get(activity.family) ?? []), activity]);
+  }
+  const referencedFamilies = new Set(
+    declared.filter((a) => referenced.includes(a.id) && a.family).map((a) => a.family),
+  );
+  for (const [family, members] of families) {
+    const kinds = new Set(members.map((member) => member.kind));
+    if (kinds.size > 1) {
+      problems.push(
+        `${where}: 难度组 ${family} 里混了 ${[...kinds].join("、")} 几种玩法；` +
+          `一个组件的三档要跑在同一个引擎上`,
+      );
+    }
+    const levels = members.map((member) => member.difficulty ?? "practice");
+    if (new Set(levels).size !== levels.length) {
+      problems.push(`${where}: 难度组 ${family} 里有两个组件难度相同（${levels.join("、")}）`);
+    }
+    if (!referencedFamilies.has(family)) {
+      problems.push(`${where}: 难度组 ${family} 的组件，正文一个都没引用`);
+    }
+  }
+
+  for (const activity of declared) {
+    const reachable =
+      referenced.includes(activity.id) ||
+      (activity.family && referencedFamilies.has(activity.family));
+    if (!reachable) problems.push(`${where}: ${noun}里有组件 ${activity.id}，正文从没引用它`);
+  }
+}
+
+/**
  * A connect activity is solvable when every probe can be walked.
  *
  * `traceConnectionProbe` stops at the first pair the learner has not joined, so
@@ -751,56 +816,10 @@ for (const studyId of dirs(studiesRoot)) {
         );
         const where = `${studyId}/${courseId}/${unitId}/${lessonId}`;
         const declared = manifest.activities ?? [];
-        const byId = new Map(declared.map((activity) => [activity.id, activity]));
-
-        // Both directions. An unreferenced activity is dead weight the reader
-        // never meets; a reference to nothing is a hole in the lesson.
-        const referenced = [...content.matchAll(/::play\{#([a-z0-9-]+)\}/g)].map((m) => m[1]);
-        for (const id of referenced) {
-          if (!byId.has(id)) problems.push(`${where}: 正文引用了 ::play{#${id}}，清单里没有它`);
-        }
-        /*
-          A family is one activity at several difficulties, so the prose points
-          at one of its ids and the learner reaches the rest through the picker.
-          Requiring every member to appear in the text would either fail every
-          levelled lesson or push authors to write three ::play markers for one
-          activity, which is three activities on the page.
-        */
-        const families = new Map();
-        for (const activity of declared) {
-          if (!activity.family) continue;
-          families.set(activity.family, [...(families.get(activity.family) ?? []), activity]);
-        }
-        const referencedFamilies = new Set(
-          declared.filter((a) => referenced.includes(a.id) && a.family).map((a) => a.family),
-        );
-        for (const [family, members] of families) {
-          const kinds = new Set(members.map((member) => member.kind));
-          if (kinds.size > 1) {
-            problems.push(
-              `${where}: 难度组 ${family} 里混了 ${[...kinds].join("、")} 几种玩法；` +
-                `一个组件的三档要跑在同一个引擎上`,
-            );
-          }
-          const levels = members.map((member) => member.difficulty ?? "practice");
-          if (new Set(levels).size !== levels.length) {
-            problems.push(
-              `${where}: 难度组 ${family} 里有两个组件难度相同（${levels.join("、")}）`,
-            );
-          }
-          if (!referencedFamilies.has(family)) {
-            problems.push(`${where}: 难度组 ${family} 的组件，正文一个都没引用`);
-          }
-        }
+        checkActivitySet(declared, content, where, "清单", "");
 
         for (const activity of declared) {
           activities += 1;
-          const reachable =
-            referenced.includes(activity.id) ||
-            (activity.family && referencedFamilies.has(activity.family));
-          if (!reachable) {
-            problems.push(`${where}: 清单里有组件 ${activity.id}，正文从没引用它`);
-          }
           checkSource(activity, `${where} · ${activity.id}`, studyId);
           checkRolePosition(activity, content, `${where} · ${activity.id}`);
           const check = CHECKS[activity.kind];
@@ -838,20 +857,14 @@ if (!existsSync(deliveryRoot)) {
       for (const unit of pkg.course?.units ?? pkg.units ?? []) {
         for (const lesson of unit.lessons ?? []) {
           deliveryLessons += 1;
-          const declared = new Set((lesson.activities ?? []).map((a) => a.id));
           const where = `交付 ${studyId}/${name.replace(/\.json$/, "")}/${lesson.id}`;
-          for (const [, id] of (lesson.content ?? "").matchAll(/::play\{#([a-z0-9-]+)\}/g)) {
-            if (!declared.has(id)) {
-              problems.push(
-                `${where}: 正文引用了 ::play{#${id}}，交付包里没有它——读者会看到一块报错`,
-              );
-            }
-          }
-          for (const id of declared) {
-            if (!(lesson.content ?? "").includes(`::play{#${id}}`)) {
-              problems.push(`${where}: 交付包里有组件 ${id}，正文从没引用它`);
-            }
-          }
+          checkActivitySet(
+            lesson.activities ?? [],
+            lesson.content ?? "",
+            where,
+            "交付包",
+            "——读者会看到一块报错",
+          );
         }
       }
     }

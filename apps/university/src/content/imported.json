@@ -1,5 +1,5 @@
 {
-  "importedAt": "2026-09-10",
+  "importedAt": "2026-09-11",
   "evidenceMode": "auto",
   "studies": [
     {
@@ -54,9 +54,9 @@
           "courseId": "when-a-project-is-too-big-to-read",
           "title": "当项目大到读不完",
           "isBeingRewritten": false,
-          "sha256": "sha256:a0c823e8c7c702d26fbbdc79c97c7652e5b5cc5a0f68ab38cd24a139ccb2f384",
-          "packageBytes": 64329,
-          "servedBytes": 52187,
+          "sha256": "sha256:82ba7108a8343096db0e99aa4c1b2cee7319b1cbfabbdf119b5794c2ed7f2dc8",
+          "packageBytes": 74958,
+          "servedBytes": 57679,
           "lessons": 4
         }
       ]

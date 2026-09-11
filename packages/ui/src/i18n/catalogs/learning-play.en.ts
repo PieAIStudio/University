@@ -58,7 +58,8 @@ export const messages = {
   "play.connect.extra":
     "This connection does not follow the process: “{{from}}” does not directly trigger “{{to}}”. Check the node notes.",
   "play.connect.missing": "The signal cannot get through yet: {{why}}",
-  "play.connect.win": "All {{count}} relationships and both test paths work.",
+  // See the note beside the zh-CN entry: the probe count is not two.
+  "play.connect.win": "All {{count}} relationships connected, and every test path traces.",
   "play.connect.trace": "Signal paths",
   "play.connect.web.title": "Make a page respond to a click",
   "play.connect.web.brief":

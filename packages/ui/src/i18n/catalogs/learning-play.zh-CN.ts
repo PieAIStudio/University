@@ -55,7 +55,14 @@ export const messages = {
   "play.connect.extra":
     "这条直接关系不成立：「{{from}}」不会直接触发「{{to}}」。检查节点上的提示。",
   "play.connect.missing": "信号还走不通：{{why}}",
-  "play.connect.win": "接通了全部 {{count}} 条关系，两条测试路径都走通。",
+  /*
+    「两条」was a hardcoded count, written when every board in the kit happened
+    to ship two probes. The first lesson to author a third level put three on
+    the board, and the pass message then told the learner something false at the
+    exact moment it was congratulating them. Stating the property instead of the
+    number is true at one probe, at three, and at whatever a later board wants.
+  */
+  "play.connect.win": "接通了全部 {{count}} 条关系，每一条测试路径都走通了。",
   "play.connect.trace": "信号经过的路径",
   "play.connect.web.title": "让网页回应一次点击",
   "play.connect.web.brief": "屏幕不会自己更新。把点击之后发生的事情接起来，别漏掉失败的那条路。",
