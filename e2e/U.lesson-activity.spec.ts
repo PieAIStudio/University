@@ -152,47 +152,72 @@ test("手机宽度下，每块板子上的东西都在板子里面", async ({ pa
     await page.goto(`${LOCAL_ORIGIN}${target.path}`, {
       waitUntil: "domcontentloaded",
     });
-    const board = page.locator(".learning-activity__game");
-    await expect(board).toBeVisible({ timeout: 20_000 });
-    const box = await board.boundingBox();
-    if (!box) {
-      escaped.push(`${target.kind} @ ${target.path} — 板子没有尺寸`);
-      continue;
-    }
+    await expect(page.locator(".learning-activity__game")).toBeVisible({
+      timeout: 20_000,
+    });
 
     /*
-      Everything the reader is meant to see or press. Wires are excluded: an
-      SVG overlay legitimately spans the board and is not a thing to reach.
+      The whole measurement happens in one evaluate, on purpose.
+
+      Measuring across Playwright calls — `toBeVisible`, then `boundingBox`,
+      then a box per piece — re-resolves the locator every time, and a board
+      that re-renders after mount can swap its node in any of those gaps.
+      `boundingBox` then returns null for an element that is on the screen, and
+      the failure reads 「板子没有尺寸」 about a board measured at 261×545 in a
+      real browser a moment later. `ai-repair` did exactly that. Reading the
+      board and every piece synchronously in the page removes the gap rather
+      than papering over it with a retry.
+
+      Wires are excluded: an SVG overlay legitimately spans the board and is
+      not a thing the reader reaches for.
     */
-    const pieces = board.locator(
-      "button, .play-connect__node, .play-contrast__case, .play-sort__item, .play-weigh__situation",
-    );
-    const total = await pieces.count();
+    const report = await page.evaluate(() => {
+      const board = document.querySelector(".learning-activity__game");
+      if (!board) return { ok: false as const, why: "板子不在页面上" };
+      const box = board.getBoundingClientRect();
+      if (box.width === 0 || box.height === 0) {
+        return {
+          ok: false as const,
+          why: `板子尺寸是 ${box.width}×${box.height}`,
+        };
+      }
+      const pieces = [
+        ...board.querySelectorAll(
+          "button, .play-connect__node, .play-contrast__case, .play-sort__item, .play-weigh__situation",
+        ),
+      ];
+      const shown = pieces.filter((piece) => {
+        const style = getComputedStyle(piece);
+        return style.display !== "none" && style.visibility !== "hidden";
+      });
+      const escapes: string[] = [];
+      for (const [index, piece] of shown.entries()) {
+        const rect = piece.getBoundingClientRect();
+        const label =
+          piece.textContent?.trim().slice(0, 20) || `第 ${index + 1} 个`;
+        if (rect.width === 0 || rect.height === 0) {
+          escapes.push(`「${label}」宽或高为 0`);
+          continue;
+        }
+        // One pixel of slack for sub-pixel rounding on borders.
+        if (rect.left < box.left - 1)
+          escapes.push(`「${label}」左边露到板子外`);
+        if (rect.right > box.right + 1)
+          escapes.push(`「${label}」右边露到板子外`);
+      }
+      return { ok: true as const, pieces: shown.length, escapes };
+    });
+
+    if (!report.ok) {
+      escaped.push(`${target.kind} @ ${target.path} — ${report.why}`);
+      continue;
+    }
     expect(
-      total,
+      report.pieces,
       `${target.kind} @ ${target.path} 板子上一个可见的东西都没有`,
     ).toBeGreaterThan(0);
-
-    for (let index = 0; index < total; index += 1) {
-      const piece = pieces.nth(index);
-      if (!(await piece.isVisible())) continue;
-      const pieceBox = await piece.boundingBox();
-      if (!pieceBox) continue;
-      const label =
-        ((await piece.textContent()) ?? "").trim().slice(0, 20) ||
-        `第 ${index + 1} 个`;
-      if (pieceBox.width === 0 || pieceBox.height === 0) {
-        escaped.push(
-          `${target.kind} @ ${target.path} — 「${label}」宽或高为 0`,
-        );
-        continue;
-      }
-      // One pixel of slack for sub-pixel rounding on borders.
-      if (pieceBox.x < box.x - 1)
-        escaped.push(`${target.kind} — 「${label}」左边露到板子外`);
-      if (pieceBox.x + pieceBox.width > box.x + box.width + 1) {
-        escaped.push(`${target.kind} — 「${label}」右边露到板子外`);
-      }
+    for (const escape of report.escapes) {
+      escaped.push(`${target.kind} @ ${target.path} — ${escape}`);
     }
   }
   expect(escaped, "手机上这些东西掉出了板子").toEqual([]);
