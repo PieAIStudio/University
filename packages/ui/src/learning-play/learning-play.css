@@ -812,3 +812,119 @@
   background: var(--game-ui-accent-pale);
   color: var(--game-ui-ink-deep);
 }
+
+/* ── 棋子与托盘：品牌里游戏那一半 ──────────────────────────────
+  These boards were drawn with half the brand and it showed.
+
+  Measured before changing anything: across every activity stylesheet,
+  `--game-ui-ease-pop` (the brand's overshoot curve) was used 0 times,
+  `--game-ui-shadow-seat` 0, `--game-ui-shadow-scenery` 0,
+  `--game-ui-accent-bright` 0, `--game-ui-z-playfield` 0. What was used was
+  `ease-soft` and `radius-card` — the document half. So the boards came out
+  colour-correct and flat: a reader saw three outlined rectangles that read as
+  form fieldsets, on a surface at the same value as the prose around it.
+
+  Nothing here is new brand vocabulary, and SwimmerUIKit needed no change: every
+  token below already existed in both the light and `[data-game-ui-theme='night']`
+  palettes, and the boards simply never reached for them. That is why this layer
+  is tokens only — a literal colour here would be the one thing that breaks when
+  the theme flips.
+
+  Two ideas, applied once each rather than thirteen times per kind:
+
+  1. A board is a tray, recessed into the page (`shadow-inset`).
+  2. A piece sits on that tray (`surface-raised` + `shadow-seat`), lifts when
+     you point at it, and presses in when you push it (`ease-pop`, which
+     overshoots — that overshoot is most of what 「像游戏」 actually means).
+
+  Movement is vertical on purpose. `U.lesson-activity` measures whether every
+  control stays inside its board's left and right edges on a phone, and a hover
+  that scaled horizontally would fight that test for no gain.
+*/
+
+.learning-activity__game {
+  position: relative;
+  z-index: var(--game-ui-z-playfield, 1);
+}
+
+/*
+  Every selector below carries `.learning-activity`, and that one extra class is
+  load-bearing rather than decorative. `sort.css`, `contrast.css` and `weigh.css`
+  are imported after `learning-play.css`, so a bare `.play-sort__item` here loses
+  to the same bare selector there — which is exactly what happened on the first
+  pass: the sort board came out with its pieces DARKER than the tray they sit in,
+  the depth ladder upside down, while connect looked right because its rule lives
+  in this same file. The shell is an ancestor in both the lab and a lesson, so the
+  prefix is available everywhere this layer applies.
+*/
+
+/*
+  Trays: the thing pieces are arranged on.
+
+  `panel-deep` rather than a shadow alone, because a shadow alone did not carry
+  it. Measured on the night theme after the first attempt: the tray came out at
+  rgb(57, 49, 37) and the piece on top of it at rgb(63, 46, 33) — the same
+  luminance, so the only thing separating them was a soft shadow, and the board
+  still read flat. Three values instead of one is what makes a piece look like
+  it is on top of something: panel #3a2a1e, tray #2c1f16, piece lighter again.
+*/
+.learning-activity .play-connect__board,
+.learning-activity .play-sort__bucket,
+.learning-activity .play-weigh__current {
+  background: var(--game-ui-panel-deep);
+  box-shadow: var(--game-ui-shadow-inset);
+}
+
+/* Pieces: raised, seated, and pointable. */
+.learning-activity .play-connect__node,
+.learning-activity .play-sort__item,
+.learning-activity .play-contrast__case,
+.learning-activity .play-weigh__situation {
+  border: 1px solid var(--game-ui-border-strong);
+  background: var(--game-ui-surface-raised);
+  box-shadow: var(--game-ui-shadow-seat);
+  transition:
+    transform 160ms var(--game-ui-ease-pop),
+    box-shadow 160ms var(--game-ui-ease-soft),
+    border-color 160ms var(--game-ui-ease-soft);
+}
+
+/* Pointing at a piece lifts it; pressing it seats it back down. */
+.learning-activity .play-connect__node:hover:not(:disabled),
+.learning-activity .play-sort__item:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--game-ui-accent-bright);
+  box-shadow: var(--game-ui-shadow-callout);
+}
+.learning-activity .play-connect__node:active:not(:disabled),
+.learning-activity .play-sort__item:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: var(--game-ui-shadow-inset);
+}
+
+/* The connector on a node reads as a socket rather than a bullet. */
+.play-connect__port {
+  background: var(--game-ui-accent-bright);
+  box-shadow: 0 0 0 3px var(--game-ui-accent-pale);
+}
+
+/*
+  Landing is an event.
+
+  A piece that has found its place pops once and stays put. The overshoot is
+  the whole point: a linear settle reads as a value changing, and a bounce
+  reads as a thing landing.
+*/
+@keyframes play-seat {
+  0% {
+    transform: translateY(-6px) scale(0.97);
+  }
+  100% {
+    transform: none;
+  }
+}
+.play-sort__placed,
+.play-weigh__settled,
+.play-contrast__outcomes {
+  animation: play-seat 240ms var(--game-ui-ease-pop) both;
+}
