@@ -282,7 +282,11 @@ function checkSource(activity, where, studyId) {
     file = execFileSync(
       "git",
       ["--git-dir", snapshot.mirror, "show", `${snapshot.sourceCommit}:${source.path}`],
-      { encoding: "utf8", maxBuffer: 32 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] },
+      {
+        encoding: "utf8",
+        maxBuffer: 32 * 1024 * 1024,
+        stdio: ["ignore", "pipe", "ignore"],
+      },
     );
   } catch {
     problems.push(`${where}: 快照里没有 ${source.path} 这个文件`);
@@ -538,7 +542,10 @@ function checkRepair(activity, where) {
     }
   }
   const events = [
-    ...(activity.choices ?? []).map((choice) => ({ type: "choose", value: choice.id })),
+    ...(activity.choices ?? []).map((choice) => ({
+      type: "choose",
+      value: choice.id,
+    })),
     { type: "submit" },
     { type: "reload" },
     { type: "cancel" },
@@ -758,6 +765,7 @@ for (const studyId of dirs(studiesRoot)) {
             problems.push(`${where}: 清单里有组件 ${activity.id}，正文从没引用它`);
           }
           checkSource(activity, `${where} · ${activity.id}`, studyId);
+          checkRolePosition(activity, content, `${where} · ${activity.id}`);
           const check = CHECKS[activity.kind];
           if (check) check(activity, `${where} · ${activity.id}`);
           else unchecked.add(activity.kind);
@@ -822,6 +830,51 @@ if (unchecked.size > 0) {
     `  ! 这几种玩法没有可单独调用的引擎判定，只检查了共同约定和出处：${[...unchecked].join("、")}`,
   );
 }
+/*
+  `role` says where the activity sits; `::play{#id}` is where it actually sits.
+
+  activities.md gives the three roles three different jobs, and each is defined
+  by a position in the prose: `observe` comes before 「先猜一下」 so the reader
+  has seen the phenomenon before predicting, `apply` comes after 「答案」 so it
+  is a first use of something just learned, and `observe` additionally 「不能泄
+  题」 — a board sitting after the prediction question cannot be the thing that
+  sets it up.
+
+  Nothing checked that the field and the marker agreed, which made `role` a
+  second source of truth for a fact the prose already decides. All 27 activities
+  on the shelf happen to agree today, and all 27 are `apply`, so the other two
+  values have never been exercised at all. That is the moment to add the check,
+  not after the first lesson where they disagree.
+
+  Silence where a section is absent is deliberate: not every variant has a
+  「先猜一下」, and a missing landmark is not evidence of a misplaced board.
+*/
+function checkRolePosition(activity, content, where) {
+  const lines = content.split("\n");
+  const at = (pattern) => lines.findIndex((line) => pattern.test(line));
+  const play = lines.findIndex((line) => line.includes(`::play{#${activity.id}}`));
+  if (play < 0) return; // The missing-reference check above already said so.
+  const predict = at(/^## 先猜一下/u);
+  const answer = at(/^## 答案/u);
+  const selfCheck = at(/^## 自检/u);
+
+  if (activity.role === "observe" && predict >= 0 && play > predict) {
+    problems.push(
+      `${where}: role 写的是 observe，组件却放在「先猜一下」之后——` +
+        `放在预测之后的组件会泄题，要么挪到前面，要么它的 role 不是 observe`,
+    );
+  }
+  if (activity.role === "apply" && answer >= 0 && play < answer) {
+    problems.push(
+      `${where}: role 写的是 apply，组件却放在「答案」之前——` +
+        `apply 的意思是刚学完第一次自己用，这个位置上读者还没学到`,
+    );
+  }
+  if (activity.role === "apply" && selfCheck >= 0 && play > selfCheck) {
+    problems.push(`${where}: role 写的是 apply，组件却放在「自检」之后`);
+  }
+}
+
 /*
   Nothing scanned is a failure, not a pass.
 

@@ -18,6 +18,7 @@ import { AgentGame } from "./AgentGame.js";
 import { EvalGame } from "./EvalGame.js";
 import { RepairGame } from "./RepairGame.js";
 import { PlayIcon } from "./PlayIcon.js";
+import type { ActivityControls } from "./controls.js";
 
 export interface LearningActivityProps {
   readonly activity: LearningActivitySpec;
@@ -28,6 +29,61 @@ export interface LearningActivityProps {
   readonly onResult?: (result: ActivityResult) => void;
   readonly onNext?: () => void;
   readonly nextLabel?: string;
+}
+
+/** Everything a board needs except the board's own payload. */
+type GameControls = Omit<ActivityControls<LearningActivitySpec>, "activity">;
+
+/*
+  One board per kind, and the compiler holds the list.
+
+  This was thirteen ternaries in the JSX, which is a lookup table written in
+  the one shape that cannot be checked: a kind with no branch rendered an empty
+  `learning-activity__game` and nothing anywhere said so. That is not
+  hypothetical — `sort` shipped with an engine, a renderer, fixtures and a gate
+  while three boundaries silently dropped it, and a blank board is exactly what
+  a reader would have seen. A switch with a `never` default turns the same
+  omission into a build failure, which is the earliest place it can be caught
+  and the only one that does not depend on somebody running the right test.
+
+  `LearningPlayLab.test.tsx` still renders every kind, because this only proves
+  a branch exists — it cannot prove the branch draws anything.
+*/
+function renderGame(activity: LearningActivitySpec, controls: GameControls) {
+  switch (activity.kind) {
+    case "connect":
+      return <ConnectGame activity={activity} {...controls} />;
+    case "sort":
+      return <SortGame activity={activity} {...controls} />;
+    case "contrast":
+      return <ContrastGame activity={activity} {...controls} />;
+    case "weigh":
+      return <WeighGame activity={activity} {...controls} />;
+    case "tune":
+      return <TuneGame activity={activity} {...controls} />;
+    case "hunt":
+      return <HuntGame activity={activity} {...controls} />;
+    case "dispatch":
+      return <DispatchGame activity={activity} {...controls} />;
+    case "program":
+      return <ProgramGame activity={activity} {...controls} />;
+    case "ai-brief":
+      return <BriefGame activity={activity} {...controls} />;
+    case "ai-context":
+      return <ContextGame activity={activity} {...controls} />;
+    case "ai-agent":
+      return <AgentGame activity={activity} {...controls} />;
+    case "ai-eval":
+      return <EvalGame activity={activity} {...controls} />;
+    case "ai-repair":
+      return <RepairGame activity={activity} {...controls} />;
+    default: {
+      // A kind that reaches here has no board. `never` is what makes that a
+      // compile error instead of an empty div in front of a reader.
+      const unrendered: never = activity;
+      return unrendered;
+    }
+  }
 }
 
 /** Embeddable in a lesson, a standalone section, or a host-owned playlist. */
@@ -55,12 +111,18 @@ function ActivityRound({
   const [guided, setGuided] = useState(initialGuidance === "guided");
   const guidanceUsed = useRef(initialGuidance === "guided");
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
-  const [feedback, setFeedback] = useState<{ passed: boolean; message: string } | null>(null);
+  const [feedback, setFeedback] = useState<{
+    passed: boolean;
+    message: string;
+  } | null>(null);
   const [outcome, setOutcome] = useState<ActivityResult | null>(null);
   const feedbackElement = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if ((activity.kind === "ai-brief" || activity.kind === "ai-context") && feedback)
-      feedbackElement.current?.scrollIntoView?.({ block: "nearest", behavior: "instant" });
+      feedbackElement.current?.scrollIntoView?.({
+        block: "nearest",
+        behavior: "instant",
+      });
   }, [activity.kind, feedback]);
   const count = useRef(0);
   const hintsUsed = useRef(0);
@@ -156,23 +218,7 @@ function ActivityRound({
         <p className="learning-activity__sandbox">{t("play.ai.sandbox")}</p>
       ) : null}
       {outcome?.status !== "skipped" ? (
-        <div className="learning-activity__game">
-          {activity.kind === "connect" ? <ConnectGame activity={activity} {...controls} /> : null}
-          {activity.kind === "sort" ? <SortGame activity={activity} {...controls} /> : null}
-          {activity.kind === "contrast" ? <ContrastGame activity={activity} {...controls} /> : null}
-          {activity.kind === "weigh" ? <WeighGame activity={activity} {...controls} /> : null}
-          {activity.kind === "tune" ? <TuneGame activity={activity} {...controls} /> : null}
-          {activity.kind === "hunt" ? <HuntGame activity={activity} {...controls} /> : null}
-          {activity.kind === "dispatch" ? <DispatchGame activity={activity} {...controls} /> : null}
-          {activity.kind === "program" ? <ProgramGame activity={activity} {...controls} /> : null}
-          {activity.kind === "ai-brief" ? <BriefGame activity={activity} {...controls} /> : null}
-          {activity.kind === "ai-context" ? (
-            <ContextGame activity={activity} {...controls} />
-          ) : null}
-          {activity.kind === "ai-agent" ? <AgentGame activity={activity} {...controls} /> : null}
-          {activity.kind === "ai-eval" ? <EvalGame activity={activity} {...controls} /> : null}
-          {activity.kind === "ai-repair" ? <RepairGame activity={activity} {...controls} /> : null}
-        </div>
+        <div className="learning-activity__game">{renderGame(activity, controls)}</div>
       ) : null}
       {feedback ? (
         <div
