@@ -56,6 +56,17 @@ export function ConnectGame({
     [],
   );
   const rows = Math.max(1, Math.ceil(activity.nodes.length / 2));
+  /*
+    The board's height comes from the layout, not from a constant.
+
+    It was a flat 288px, which fits the two rows every example happened to use
+    and silently overlaps a third. That stopped being hypothetical the moment a
+    learner could reach the challenge level: its seventh node sits between two
+    others in the same column, and all three drew on top of each other. A node
+    is 88px tall, so a band needs about 140 to clear its neighbours.
+  */
+  const bands = new Set(activity.nodes.map((node) => Math.round(node.y / 12))).size;
+  const boardHeight = compact ? rows * 150 : Math.max(288, bands * 140);
   const nodes = activity.nodes.map((node, index) => ({
     ...node,
     x: compact ? (index % 2 === 0 ? 25 : 75) : node.x,
@@ -153,7 +164,7 @@ export function ConnectGame({
         ref={board}
         className="play-connect__board"
         data-compact={compact}
-        style={compact ? { height: rows * 150 } : undefined}
+        style={{ height: boardHeight }}
         aria-label={t("play.connect.board")}
       >
         <svg

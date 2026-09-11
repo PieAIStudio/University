@@ -7,12 +7,17 @@ import { getContrastFamily } from "./contrast-difficulty.js";
 import { getWeighFamily } from "./weigh-difficulty.js";
 
 /*
-  Only the play lab's own fixtures are expanded here.
+  The play lab's own fixtures, expanded to three tiers from one example.
 
-  Not 「course authors supply explicit families」, which is what this line used
-  to say and is not something a course author can do: `LessonActivitySchema`
-  stores one payload and a `difficulty` label, and has no family field at all.
-  A lesson's board is fixed at the tier its author chose (ADR-0010).
+  This is not how a lesson gets its levels, and the distinction matters. A
+  lesson authors each level as a real payload and ties them together with
+  `family`; `groupActivityLevels` reads those. These fixtures exist because the
+  lab has one example per game and still wants to demonstrate all three tiers.
+
+  The note here used to say a course author could not supply levels at all,
+  which was true until `family` was added to `LessonActivitySchema` — the
+  missing field that had left `selectActivityLevel` with one call site, this
+  one, for a year.
 */
 export function getExampleFamily(activity: LearningActivitySpec): ActivityFamily {
   switch (activity.kind) {
