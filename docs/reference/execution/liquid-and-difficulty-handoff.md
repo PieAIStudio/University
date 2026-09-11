@@ -19,11 +19,14 @@ tags:
 For the session that picks this up cold. Everything below was measured or run,
 not assumed; where something is a judgement it says so.
 
+The three tasks this page was written to hand over are done. What follows is
+the state they left, and the work they uncovered and did not do.
+
 ## Where things stand
 
 - Branch `work/course-interactive` in `University-courses`. **Not merged to
   main** on purpose — other worktrees merge together later.
-- `@pieai/swimmer-ui-kit` **2.3.0 is published** and all three consuming
+- `@pieai/swimmer-ui-kit` **2.4.0 is published** and all three consuming
   packages are on it. `pnpm verify` green in both repos.
 - The brand kit lives at `/Users/yuanfei/PieAI/SwimmerUIKit` (sibling checkout).
   Brand-kit-first: a capability gap gets fixed there and released, never forked
@@ -33,22 +36,43 @@ not assumed; where something is a judgement it says so.
   `npm publish` — and it is not published until
   `npm view @pieai/swimmer-ui-kit@<v> version --registry https://registry.npmjs.org/`
   returns.
+- **The six other consuming repos are still on 2.3.0.** Anvil, Break, Collapse,
+  OwnMySpace, Show, TuringPact, YaZu pin their own versions on purpose; the
+  playbook's 全生态版本对齐清单 is the procedure. Nothing in 2.4.0 is
+  breaking, so this is housekeeping rather than a blocker.
 
 ### What the liquid surface is now
 
 - Shape comes from **path data**, not from a filter. `blobPath` in
   `SwimmerUIKit/src/liquidGooeyGeometry.ts` pours the outline outward along a
   closed Catmull-Rom spline. Outward-only by construction, so the silhouette
-  always contains the control's box.
+  always contains the control's box. The clamp is exported as
+  `LIQUID_BLOB_MAX_FRACTION` (0.18 of the shorter side).
 - Material is a single `feSpecularLighting` pass at 22° elevation, scaled by
   each form's `gloss`.
 - Motion is `scaleY` (the two scale axes may disagree) plus the `wobbly` spring
   preset — squash and stretch, crossing rest three or four times.
-- Six named forms in `liquidGooeyForms.ts`: `press`, `settle`, `merge`,
-  `follow`, `fill`, `drain`.
-- `GameUiPreview` has a 「Liquid surface」 section. Run `pnpm --dir
-  ../SwimmerUIKit dev` (port 5174) or `preview_start` the
-  `swimmer-ui-showcase` config in `.claude/launch.json`.
+- **The body casts a shadow.** Two layers on the forms that are bodies with
+  weight: a tight, barely-offset *seat* that says it is touching, and a wide
+  low *cast* that gives height. Both are outer and spreadless, so they compile
+  to compositor `drop-shadow()` and hug the poured outline rather than a
+  rounded rectangle. `shadowEngaged` tightens both when the body is pressed,
+  and `settle` rests mid-air with no seat and gains one on landing. Colour is
+  one token per theme, `--game-ui-shadow-liquid-ink`.
+- **Twelve named forms**, split by `kind`. Bodies — `set`, `press`, `swell`,
+  `settle`, `fill`, `reach`, `ripple`, `drain` — go straight into
+  `LiquidSurface`. Relationships — `follow`, `merge`, `split`, `bead` — describe
+  the space between siblings and need a `LiquidGroup` the caller arranges;
+  handing one to `LiquidSurface` warns, in every build, instead of rendering a
+  body that never moves.
+- **The Liquid page is the canonical home**, at `/liquid.html` on the showcase
+  site (`SwimmerUIKit/liquid.html` + `preview/liquid.tsx` +
+  `src/LiquidPreview.tsx`). Every form live at two sizes, on any of the four
+  tones, in both themes, with its knobs and its derived edge width beside it.
+  `GameUiPreview` keeps the component — `surface` is a second axis on
+  `GameButton` — and links out for the vocabulary. Run `pnpm --dir
+  ../SwimmerUIKit dev` (port 5174) or `preview_start` the `swimmer-ui-showcase`
+  config in `.claude/launch.json`.
 
 ### What the difficulty feature is now
 
@@ -58,132 +82,121 @@ not assumed; where something is a judgement it says so.
   prose's single `::play{#id}` can point at any of them.
 - `LearningActivity` renders the picker when a set has more than one level, and
   defaults to the easiest level authored (V5 「默认先提供入门」).
-- Enforced twice — `LessonManifestSchema.superRefine` and
-  `apps/local/scripts/check-lesson-activities.mjs`: one engine carries all
-  levels, each level appears once, the family is referenced at least once.
-- **Nothing authors a family yet.** All 27 written lessons store one level.
+- Enforced in three places now — `LessonManifestSchema.superRefine`, the walk
+  over `studies/` in `apps/local/scripts/check-lesson-activities.mjs`, and the
+  walk over the **delivery package** in the same script. The third one was
+  missing and is why the first levelled lesson passed on disk and failed on
+  delivery; both walks call one function, and
+  `apps/local/scripts/check-lesson-activities.test.ts` holds that.
+- **One lesson has three levels**: `browser-ai` →
+  `when-a-project-is-too-big-to-read` → `ask-where-not-what`, revision 5, family
+  `screen-to-file`, a `connect` board at 3 / 6 / 9 nodes. The other 26 written
+  lessons still store one level each, which is legal — `family` absent is one
+  level.
 
 ---
 
-## Task A — author one lesson's three levels, end to end
+## What the three tasks found
 
-The pipe is open and no content has gone through it. Until one lesson does,
-nobody knows whether the authoring shape is workable.
+### Task A — one lesson's three levels, end to end · done
 
-1. Pick one browser-ai lesson whose activity has an adjustable difficulty — a
-   `connect` or `sort` board is the easiest honest case. Studies live under
-   `apps/local/studies/browser-ai/courses/*/units/*/lessons/*/revisions/<n>/`.
-2. Write the other two levels as **real payloads**, not scaled numbers. The
-   engines deliberately do not multiply anything by difficulty; see
-   `packages/core/src/learning-play/difficulty.ts`. What changes is how many
-   conditions the learner holds at once — see
-   `apps/local/.agents/skills/write-lesson/references/activities.md`
-   §三档难度.
-3. Give all three the same `family` and the same `kind`, distinct
-   `difficulty`. Leave the prose's single `::play{#id}` alone.
-4. Land it as a **new revision** — never rewrite revision bytes.
-5. Gates: `node apps/local/scripts/check-lesson-activities.mjs` **from the
-   repository root**, and `pnpm --filter @pieai/university-local lint:lessons`
-   (that one resolves `studies/` relative to cwd and now fails loudly if it
-   scanned nothing).
-6. Verify in a real browser: open the lesson, confirm the picker defaults to
-   入门, switching swaps the board, and the completion record carries the level
-   actually played (`ActivityResult.difficulty`).
+Revision 5 of `ask-where-not-what`. The prose is untouched and still carries a
+single `::play`; the picker is on the component and defaults to 入门. Verified
+in a real browser at device ratio 1: the picker swaps 3 → 6 → 9 nodes, both
+harder boards solve in one attempt with every probe tracing, and the nine-node
+board lays out without overlap.
 
-Acceptance: one lesson where a learner can move between levels, both gates
-green, screenshot evidence at device ratio 1.
+The levels are real payloads. What changes is how many conditions the learner
+holds at once, and every node is something that exists at the pinned commit:
+入门 collapses the two halves of the method into one hop; 进阶 pulls them apart
+(the arrangement gives a *name*; only the import lines turn a name into a file)
+and runs two screen targets through both hubs; 挑战 adds two decoys that must be
+left unconnected — `Image.jsx`, whose name is the most guessable on the board
+and which the arrangement never mentions, and `worker.js`, which the same file
+does mention and which draws nothing.
 
----
+**Two defects only real content could find**, both fixed:
 
-## Task B — a dedicated Liquid page, with the full vocabulary
+- The delivery walk of `check:activities` had no family awareness, so the
+  feature could not ship the first time it was used.
+- `play.connect.win` said 「两条测试路径」 with a hardcoded two. The challenge
+  board has three, so the pass message told the learner something false at the
+  moment it congratulated them. It states the property now.
 
-Liquid is becoming the brand's signature and will keep being upgraded, so it
-needs somewhere of its own rather than one section inside the component dump.
+**One gap left open, deliberately.** The acceptance criterion 「完成记录里存
+的是学习者真正做的那一档」 could not be verified, because there is no
+completion record: `LessonReader` never passes `onActivityResult`, and the only
+consumer of `ActivityResult` in the repository is the play lab's in-memory
+state. The value is correct at the moment it is built (`activity.difficulty ??
+"practice"`, which the host also renders as `data-difficulty`); there is simply
+no sink. Wiring one is a product decision — what an activity completion means
+for lesson progress, and whether it touches `CourseProgress.proven` — not a
+verification fix, so it was not invented here.
 
-**Where:** `SwimmerUIKit`. The showcase site is `index.html` +
-`preview/main.tsx` (Vite, port 5174, deploys to swimmer-ui.pieaistudio.com) and
-its nav bar already has the shape for a second destination — it links 组件总览
-and Storybook today. Add a Liquid page beside them. Keep the section that is
-already in `GameUiPreview` or move it; the page is the canonical home either
-way.
+### Task B — a dedicated Liquid page · done
 
-**What the page has to show,** because these are the questions someone
-choosing a form actually asks:
+`liquid.html` is a second real HTML entry rather than a route: the nav already
+links out to a separate Storybook origin, and the components page's bundle
+should not grow for a page it does not render. The nav and theme toggle moved
+into `preview/ShowcaseNav.tsx`; there is one of each.
 
-- Every form, live and triggerable, at more than one size — a 44px control and
-  a 14px meter behave differently and the clamp is why.
-- Each form on every tone (primary / secondary / success / danger) and in both
-  themes, because the material adapts to the fill.
-- Rest, engaged and disabled side by side with the flat equivalent.
-- The knobs written out next to each: blur, contrast, blob amplitude, gloss.
+**Tone is a control, not a section.** The brief asked for every form on every
+tone, which is forty-eight tiles — forty-eight near-identical pictures of the
+thing that does not vary, against an animation budget that degrades the surplus
+to static. One picker recolours all twelve at once, so every form really is
+available on every tone, live, and the page stays a page.
 
-**Forms that do not exist yet.** Six is not the vocabulary, it is where it got
-to. Candidates, each with what it would *say*:
+**The six new forms have no landing site, and that is the point.** Each earns
+its place in the vocabulary by saying something none of the others could; none
+is wired into a product. `merge` and `split` are the signature moves, and the
+rest earn a screen one real moment at a time. The recorded finding stands:
+gooey on a static solid block reads as damage, and one screen wants one liquid
+element with one layer of intent.
 
-| Name | Says | Likely home |
-| --- | --- | --- |
-| `split` | one body separating into two | undo, branching, "keep both" |
-| `swell` | attention without a press | a hint arriving, a new item |
-| `reach` | a body stretching toward a target | dragging, making a connection |
-| `bead` | many small droplets | counters, tokens, collected items |
-| `ripple` | a disturbance crossing a surface | a wrong answer, a rejection |
-| `set` | liquid becoming solid | locked, confirmed, submitted |
+A naming note for whoever extends this: `set` and `settle` sit next to each
+other in the same picker. `set` is the correct material verb and the summary
+always shows beside the name, so it shipped — but a thirteenth form should not
+add a third word in that neighbourhood.
 
-Build them so they can be **seen and chosen** — that is the point of the page.
-But a judgement worth carrying: do not wire a form into the product until it
-has a real moment to mark. The recorded finding is that gooey on a static solid
-block reads as damage, and that one screen wants one liquid element with one
-layer of intent. `merge` and `split` are the signature moves; the rest earn
-their place one landing site at a time.
+### Task C — the liquid body has no shadow under it · done
 
----
+Verified at device ratio 1 against the flat control, which is the only
+comparison that answers 「does it look grounded」. A seat alone glues the body
+to the page; a cast alone leaves it hovering; the flat button carries both as a
+solid lip plus `--game-ui-shadow-button`, so the liquid one needs both too.
 
-## Task C — the liquid body has no shadow under it
-
-**Verified, not a guess.** `LiquidSurface` accepts a `shadow` prop and passes
-it through, and **no form sets one**, so every liquid button floats: the flat
-button has a lip *and* `--game-ui-shadow-button`, and the liquid one has
-neither. That is most of why it reads flatter than it should.
-
-The pattern already exists in the product:
-`University-courses/packages/ui/src/cta/LiquidCtaButton.tsx` passes
-`shadow="var(--liquid-cta-shadow)"`, defined in `liquid-cta.css` as
-`0 5px 10px color-mix(in srgb, var(--game-ui-accent-contrast) 32%, transparent)`
-and set to `none` when disabled.
-
-What to do:
-
-1. Give the single-body forms a shadow in `liquidGooeyForms.ts` — `press`,
-   `settle` and `drain` at minimum. It belongs in the form bundle, not at every
-   call site; that is the whole reason forms exist.
-2. Read `SwimmerUIKit/src/liquidGooeyShadow.ts` first. Blurred offset shadows
-   **without spread** are compiled to a CSS `drop-shadow()` on the silhouette
-   SVG and cost nothing extra; inset and spread stay inside the SVG filter and
-   are charged against the filter-area budget. Prefer the compositor form.
-3. The shadow must hug the poured outline, not a rectangle — it will, because
-   it is applied to the silhouette, but **verify it at device ratio 1**, since
-   the shape is irregular and a shadow that follows a rounded rect would be
-   obvious and wrong.
-4. Check the shadow does not get clipped: the silhouette already paints outside
-   the control's box, and a drop-shadow paints outside the filter region on
-   purpose.
+`fill`, `merge`, `follow`, `split` and `bead` stay ungrounded on purpose, and a
+test says so in case a later reader reads the gap as an oversight: a level that
+shadows the groove it is filling has stopped being a level, and a group form's
+caller arranges the items and therefore owns the ground they sit on.
 
 ---
 
-## Also worth doing, in my judgement
+## What is next, in my judgement
 
-- **Liquid is on two surfaces in University.** The activity host's 「下一个」
-  and connect's run button, plus `settle` on a sorted chip. The rule that keeps
-  it from becoming noise is one liquid control per screen; more boards have a
-  completing action that could carry it.
-- **`LiquidMetalButton` / `liquidMetalWebGL.ts` are unused.** Confirmed zero
-  call sites in University, and the showcase gives them a whole section. They
-  require WebGL2 and carry their own budget module. Either find them a home or
-  propose removing them in a major.
+- **The completion record.** See Task A above. Until a lesson activity's result
+  goes somewhere, the difficulty a learner chose is invisible to everything
+  downstream — progress, review scheduling, and any future 「this was too easy」
+  signal. ADR-0010 is the constraint: the learner moves difficulty, the system
+  never infers it. Recording what they chose is not inferring.
+- **`LiquidMetalButton` / `liquidMetalWebGL.ts` are still unused.** Confirmed
+  zero call sites in University, and the showcase gives them a whole section
+  while the surface that actually ships now has its own page. Either find them
+  a home or propose removing them in a major.
+- **A second levelled lesson.** One is enough to prove the pipe; it is not
+  enough to know whether the authoring shape survives a `sort` board, where
+  difficulty is bucket count and decoys rather than node count.
 - **442 lessons still have no activity** (turing-pact 362, ai-foundations 61,
-  general 19). They are grandfathered by a date cutoff in
-  `lint-lessons.mjs`, and **a rewrite expires that** — so the linter will
-  demand one the moment those courses are rewritten. That is intended.
+  general 19). They are grandfathered by a date cutoff in `lint-lessons.mjs`,
+  and **a rewrite expires that** — so the linter will demand one the moment
+  those courses are rewritten. That is intended. Separately,
+  `pnpm --filter @pieai/university-local lint:lessons` is red on 69 lessons
+  (ai-foundations 61, turing-pact 8), all pre-existing prose debt and none of it
+  in `browser-ai`.
+- **`revise-course` caps a lesson at three activities.** Three levels use the
+  whole allowance, so a lesson that wants a levelled activity *and* a second
+  one cannot be proposed. Nothing needs it yet; it will bite the first time
+  something does.
 - **The `write-lesson` skill was corrected**, not shortened. Fourteen of its
   sixteen invariants are machine-checked and each now names the rule number
   that catches it. If it still feels long, the lever is moving more rules into
@@ -228,3 +241,28 @@ These cost real time this round.
    3–6 where the constants were tuned at 1 — five times the intended strength,
    which put a hard gold ring around every body. It was caught by looking at a
    real screenshot, not by a test.
+
+8. **Publishing a revision is a separate act, and three commands long.**
+   `course revise` refuses an active course, so the sequence is
+   `course open-for-edit` → `course revise` → `course reactivate --snapshot
+   <id>`. In between, the course is `stale`, and `studies/` is symlinked into
+   every worktree — so every sibling branch's `pnpm verify` is blocked for as
+   long as the window is open. Chain the three in one command. Then
+   `course recovery export` and `pnpm content`, or `check:export-freshness`
+   fails and names the exact command.
+
+9. **A gate with two passes can have the rule on only one of them.** The
+   difficulty-family rules were on the walk over `studies/` and not on the walk
+   over the delivery package, in the same file, forty lines apart. The first
+   lesson to use the feature passed on disk and failed on delivery. Both walks
+   call one function now; when a rule is added to one walk, add it to the
+   function, not to the walk.
+
+10. **Copy that counts something is copy that will be wrong.** 「两条测试路径」
+    was a hardcoded two in `play.connect.win`, correct for every board that
+    existed when it was written. State the property, not the number.
+
+11. **A disabled `GameButton surface="liquid"` is not a liquid button.** It
+    drops the liquid entirely by design, so `.game-ui-liquid-surface` is absent
+    from the DOM — which looks exactly like the surface not being applied.
+    On the connect board the run button is disabled until one line is drawn.
