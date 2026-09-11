@@ -19,6 +19,7 @@ function attempt(
     readonly passed: boolean | null;
     readonly contentRevision?: number;
     readonly locator?: Partial<typeof LOCATOR>;
+    readonly outcome?: "pass" | "fail" | "undecided";
   },
 ): ExerciseAttemptRecord {
   const hostGrade =
@@ -31,6 +32,7 @@ function attempt(
           host: "test",
           learnerAnswer: "answer",
           occurredAt: options.occurredAt,
+          ...(options.outcome ? { outcome: options.outcome } : {}),
         };
   return {
     commandId,
@@ -102,6 +104,7 @@ describe("answerStatsOf", () => {
       firstPassRate: null,
       totalAttempts: 4,
       pendingFirstAttemptCount: 1,
+      undecidedFirstAttemptCount: 0,
     });
   });
 
@@ -125,6 +128,7 @@ describe("answerStatsOf", () => {
     expect(stats.firstPassRate).toBe(0.5);
     expect(stats.totalAttempts).toBe(3);
     expect(stats.pendingFirstAttemptCount).toBe(0);
+    expect(stats.undecidedFirstAttemptCount).toBe(0);
   });
 
   it("does not turn an empty or ungraded set into a fake percentage", () => {
@@ -135,6 +139,7 @@ describe("answerStatsOf", () => {
       firstPassRate: null,
       totalAttempts: 0,
       pendingFirstAttemptCount: 0,
+      undecidedFirstAttemptCount: 0,
     });
 
     expect(
@@ -149,5 +154,27 @@ describe("answerStatsOf", () => {
         1,
       ).firstPassRate,
     ).toBeNull();
+  });
+
+  it("keeps an undecided first answer out of the failure rate", () => {
+    const stats = answerStatsForAttempts(
+      [
+        attempt("undecided", {
+          exerciseId: "explain",
+          occurredAt: "2026-08-30T09:00:00.000Z",
+          passed: false,
+          outcome: "undecided",
+        }),
+      ],
+      1,
+    );
+
+    expect(stats).toMatchObject({
+      firstAttemptCount: 1,
+      firstPassCount: 0,
+      firstPassRate: null,
+      pendingFirstAttemptCount: 0,
+      undecidedFirstAttemptCount: 1,
+    });
   });
 });

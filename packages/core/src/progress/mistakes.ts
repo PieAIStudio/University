@@ -1,4 +1,5 @@
 import type { ExerciseAttemptRecord, ProgressDocument } from "../ports/progress.js";
+import { exerciseGradeOutcome } from "../ports/grading.js";
 import { lessonRefKey, type LessonRef } from "./contract.js";
 
 export interface Mistake {
@@ -40,14 +41,18 @@ export function mistakesOf(document: ProgressDocument): readonly Mistake[] {
     const currentAttempts = attempts.filter(
       (attempt) => attempt.contentRevision === contentRevision,
     );
-    const wrong = currentAttempts.filter((attempt) => attempt.hostGrade?.passed === false);
+    const wrong = currentAttempts.filter(
+      (attempt) => attempt.hostGrade && exerciseGradeOutcome(attempt.hostGrade) === "fail",
+    );
     if (wrong.length === 0) continue;
 
     const latestWrong = [...wrong].sort(compareAttemptsDesc)[0]!;
     const corrected = [...currentAttempts]
       .filter(
         (attempt) =>
-          attempt.hostGrade?.passed === true && compareAttemptsDesc(attempt, latestWrong) < 0,
+          attempt.hostGrade &&
+          exerciseGradeOutcome(attempt.hostGrade) === "pass" &&
+          compareAttemptsDesc(attempt, latestWrong) < 0,
       )
       .sort(compareAttemptsDesc)[0];
 

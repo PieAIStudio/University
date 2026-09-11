@@ -20,11 +20,30 @@ export function bindProgressToIdentity(
   readRemoteEntitlements?: () => Promise<EntitlementReadModel | null>,
 ): () => void {
   let tail = Promise.resolve();
+  let generation = 0;
+  let active = true;
+  let previous = identity.status();
   const sync = () => {
     const status = identity.status();
+    // An in-progress login is not a logout. Preserve the identity scope while
+    // its form waits; the learner surface already shows the pending state.
+    if (status.kind === "pending") return;
+    const adoptAnonymousId =
+      previous.kind === "anonymous" && status.kind === "signed_in" ? previous.user.id : undefined;
+    previous = status;
+    const version = ++generation;
+    const nextUser =
+      status.kind === "anonymous" || status.kind === "signed_in" ? status.user.id : null;
+    // Scope the rendered cache immediately, not after an old entitlement request.
+    const localBinding =
+      progress.syncState().userId !== nextUser
+        ? progress.bindAccount(nextUser, null, { adoptAnonymousId })
+        : Promise.resolve();
     tail = tail
       .catch(() => undefined)
       .then(async () => {
+        await localBinding;
+        if (!active || version !== generation) return;
         let entitlements = readLocalEntitlements({
           identity: status,
           remoteAvailable: remote !== null,
@@ -37,11 +56,13 @@ export function bindProgressToIdentity(
             // baseline; it must never accidentally turn on cloud sync.
           }
         }
+        if (!active || version !== generation) return;
         const syncRemote = entitlements.sync.available ? remote : null;
         return status.kind === "anonymous" || status.kind === "signed_in"
           ? progress.bindAccount(status.user.id, syncRemote)
           : progress.bindAccount(null, null);
-      });
+      })
+      .catch(() => undefined);
   };
 
   const unsubscribe = identity.subscribe(sync);
@@ -53,6 +74,8 @@ export function bindProgressToIdentity(
   if (typeof addEventListener === "function") addEventListener("online", onOnline);
 
   return () => {
+    active = false;
+    generation += 1;
     unsubscribe();
     if (typeof removeEventListener === "function") removeEventListener("online", onOnline);
   };

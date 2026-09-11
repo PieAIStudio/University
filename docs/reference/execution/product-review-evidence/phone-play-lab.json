@@ -1,0 +1,374 @@
+{
+  "name": "phone-play-lab",
+  "capturedAt": "2026-09-09T15:46:28.259Z",
+  "browser": "153.0.8010.36",
+  "mode": "delivery production",
+  "sourceCommit": "cea753e",
+  "query": "none",
+  "freshContext": false,
+  "theme": "light",
+  "account": "fresh guest; backend public configuration absent in this worktree",
+  "url": "http://127.0.0.1:21898/play-lab",
+  "title": "University",
+  "visible": "visible",
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "dpr": 1
+  },
+  "bodyWidth": 390,
+  "text": "学一下，玩一下。\n回到练习\n🔊\n用 AI 做产品\n编程原理\n因果接线台\n调参实验室\n反例猎手\n请求调度台\n指令画布\n换个情境\n入门\n进阶\n挑战\n让网页回应一次点击\n入门 · 本关目标与背景\n自由探索\n\n先点「点击刷新」，再点它会引发的下一站。\n\n点击刷新\n用户发出意图\n发出请求\n把意图送出去\n服务端处理\n读取数据并回应\n\n还没有线。先找到会触发下一步的那个动作。\n\n放出测试信号\n已接 0 条线\n给我一个线索\n重新开始\n先跳过\n\n学一下，玩一下。\n\n连玩五种\n\n换难度会开始新一轮；提示可以独立切换。\n\n接通一个想法，试坏一条规则，或让小邮差跑起来。挑一种，动手就会有发现。\n\n试玩场 · 进度只保留在当前页面。这里的完成不会计入课程成绩。\n\n玩法背后的学习方法\n认识 AI，从这里开始\n▾\n0\n学习\n练习\n任务\n排行榜\n图鉴\n会员\n我\n提意见",
+  "headings": [
+    "学一下，玩一下。",
+    "让网页回应一次点击"
+  ],
+  "controls": [
+    {
+      "tag": "A",
+      "text": "回到练习",
+      "href": "/practice",
+      "disabled": false,
+      "x": 12,
+      "y": 78.46875,
+      "w": 64,
+      "h": 22
+    },
+    {
+      "tag": "BUTTON",
+      "text": "🔊",
+      "href": null,
+      "disabled": false,
+      "x": 344.625,
+      "y": 76,
+      "w": 33.375,
+      "h": 26.9375
+    },
+    {
+      "tag": "A",
+      "text": "用 AI 做产品",
+      "href": "/play-lab/ai",
+      "disabled": false,
+      "x": 12,
+      "y": 110.9375,
+      "w": 116.390625,
+      "h": 44
+    },
+    {
+      "tag": "A",
+      "text": "编程原理",
+      "href": "/play-lab",
+      "disabled": false,
+      "x": 136.390625,
+      "y": 110.9375,
+      "w": 94,
+      "h": 44
+    },
+    {
+      "tag": "BUTTON",
+      "text": "因果接线台",
+      "href": null,
+      "disabled": false,
+      "x": 10,
+      "y": 166.9375,
+      "w": 70.796875,
+      "h": 48
+    },
+    {
+      "tag": "BUTTON",
+      "text": "调参实验室",
+      "href": null,
+      "disabled": false,
+      "x": 84.796875,
+      "y": 166.9375,
+      "w": 70.796875,
+      "h": 48
+    },
+    {
+      "tag": "BUTTON",
+      "text": "反例猎手",
+      "href": null,
+      "disabled": false,
+      "x": 159.59375,
+      "y": 166.9375,
+      "w": 70.796875,
+      "h": 48
+    },
+    {
+      "tag": "BUTTON",
+      "text": "请求调度台",
+      "href": null,
+      "disabled": false,
+      "x": 234.390625,
+      "y": 166.9375,
+      "w": 70.796875,
+      "h": 48
+    },
+    {
+      "tag": "BUTTON",
+      "text": "指令画布",
+      "href": null,
+      "disabled": false,
+      "x": 309.1875,
+      "y": 166.9375,
+      "w": 70.8125,
+      "h": 48
+    },
+    {
+      "tag": "BUTTON",
+      "text": "换个情境",
+      "href": null,
+      "disabled": false,
+      "x": 12,
+      "y": 220.9375,
+      "w": 106,
+      "h": 38
+    },
+    {
+      "tag": "BUTTON",
+      "text": "入门",
+      "href": null,
+      "disabled": false,
+      "x": 214,
+      "y": 221.9375,
+      "w": 52,
+      "h": 36
+    },
+    {
+      "tag": "BUTTON",
+      "text": "进阶",
+      "href": null,
+      "disabled": false,
+      "x": 270,
+      "y": 221.9375,
+      "w": 52,
+      "h": 36
+    },
+    {
+      "tag": "BUTTON",
+      "text": "挑战",
+      "href": null,
+      "disabled": false,
+      "x": 326,
+      "y": 221.9375,
+      "w": 52,
+      "h": 36
+    },
+    {
+      "tag": "BUTTON",
+      "text": "自由探索",
+      "href": null,
+      "disabled": false,
+      "x": 295,
+      "y": 329.9375,
+      "w": 70,
+      "h": 36
+    },
+    {
+      "tag": "BUTTON",
+      "text": "点击刷新\n用户发出意图",
+      "href": null,
+      "disabled": false,
+      "x": 36.90625,
+      "y": 446.9375,
+      "w": 146.1875,
+      "h": 88
+    },
+    {
+      "tag": "BUTTON",
+      "text": "发出请求\n把意图送出去",
+      "href": null,
+      "disabled": false,
+      "x": 206.90625,
+      "y": 446.9375,
+      "w": 146.1875,
+      "h": 88
+    },
+    {
+      "tag": "BUTTON",
+      "text": "服务端处理\n读取数据并回应",
+      "href": null,
+      "disabled": false,
+      "x": 36.90625,
+      "y": 596.9375,
+      "w": 146.1875,
+      "h": 88
+    },
+    {
+      "tag": "BUTTON",
+      "text": "放出测试信号",
+      "href": null,
+      "disabled": true,
+      "x": 25,
+      "y": 791.9375,
+      "w": 130,
+      "h": 44
+    },
+    {
+      "tag": "BUTTON",
+      "text": "给我一个线索",
+      "href": null,
+      "disabled": false,
+      "x": 25,
+      "y": 880.9375,
+      "w": 84,
+      "h": 40
+    },
+    {
+      "tag": "BUTTON",
+      "text": "重新开始",
+      "href": null,
+      "disabled": false,
+      "x": 246,
+      "y": 880.9375,
+      "w": 62,
+      "h": 40
+    },
+    {
+      "tag": "BUTTON",
+      "text": "先跳过",
+      "href": null,
+      "disabled": false,
+      "x": 314,
+      "y": 880.9375,
+      "w": 51,
+      "h": 40
+    },
+    {
+      "tag": "BUTTON",
+      "text": "连玩五种",
+      "href": null,
+      "disabled": false,
+      "x": 304,
+      "y": 981.9375,
+      "w": 74,
+      "h": 36
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "https://ies.ed.gov/ncee/wwc/PracticeGuide/1",
+      "disabled": false,
+      "x": 12,
+      "y": 1309.703125,
+      "w": 152.6875,
+      "h": 21.59375
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "https://arxiv.org/abs/1306.6544",
+      "disabled": false,
+      "x": 182.6875,
+      "y": 1309.703125,
+      "w": 144.78125,
+      "h": 21.59375
+    },
+    {
+      "tag": "BUTTON",
+      "text": "认识 AI，从这里开始\n▾",
+      "href": null,
+      "disabled": false,
+      "x": 16,
+      "y": 10,
+      "w": 182.28125,
+      "h": 34
+    },
+    {
+      "tag": "A",
+      "text": "0",
+      "href": "/quests",
+      "disabled": false,
+      "x": 206.28125,
+      "y": 10,
+      "w": 167.71875,
+      "h": 34
+    },
+    {
+      "tag": "A",
+      "text": "学习",
+      "href": "/",
+      "disabled": false,
+      "x": 0,
+      "y": 788,
+      "w": 55.703125,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "练习",
+      "href": "/practice",
+      "disabled": false,
+      "x": 55.703125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "任务",
+      "href": "/quests",
+      "disabled": false,
+      "x": 111.421875,
+      "y": 788,
+      "w": 55.703125,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "排行榜",
+      "href": "/league",
+      "disabled": false,
+      "x": 167.125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "图鉴",
+      "href": "/library",
+      "disabled": false,
+      "x": 222.84375,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "会员",
+      "href": "/plans",
+      "disabled": false,
+      "x": 278.5625,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "我",
+      "href": "/me",
+      "disabled": false,
+      "x": 334.28125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "BUTTON",
+      "text": "提意见",
+      "href": null,
+      "disabled": false,
+      "x": 291.4375,
+      "y": 727,
+      "w": 86.5625,
+      "h": 34
+    }
+  ],
+  "canvases": [
+    {
+      "width": 300,
+      "height": 150
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,147 @@
+{
+  "name": "phone-review",
+  "capturedAt": "2026-09-09T15:46:09.206Z",
+  "browser": "153.0.8010.36",
+  "mode": "delivery production",
+  "sourceCommit": "cea753e",
+  "query": "none",
+  "freshContext": false,
+  "theme": "light",
+  "account": "fresh guest; backend public configuration absent in this worktree",
+  "url": "http://127.0.0.1:21898/review",
+  "title": "University",
+  "visible": "visible",
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "dpr": 1
+  },
+  "bodyWidth": 390,
+  "text": "今天的第一件事\n\n手机怎么一眼就认出是你\n\n认识 AI，从这里开始 · AI 到底是什么\n\n开始学习\n尚未开始\n\n课程负责建立理解，卡片只负责把重要知识留在长期记忆里。\n\n今天没有到期卡片\n学一节新课，它会掉落新的卡片，明天就有事做了。\n认识 AI，从这里开始\n▾\n0\n学习\n练习\n任务\n排行榜\n图鉴\n会员\n我\n提意见",
+  "headings": [
+    "手机怎么一眼就认出是你"
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "text": "开始学习",
+      "href": null,
+      "disabled": false,
+      "x": 0,
+      "y": 347.8125,
+      "w": 390,
+      "h": 44
+    },
+    {
+      "tag": "BUTTON",
+      "text": "认识 AI，从这里开始\n▾",
+      "href": null,
+      "disabled": false,
+      "x": 16,
+      "y": 76.890625,
+      "w": 182.28125,
+      "h": 34
+    },
+    {
+      "tag": "A",
+      "text": "0",
+      "href": "/quests",
+      "disabled": false,
+      "x": 206.28125,
+      "y": 76.890625,
+      "w": 167.71875,
+      "h": 34
+    },
+    {
+      "tag": "A",
+      "text": "学习",
+      "href": "/",
+      "disabled": false,
+      "x": 0,
+      "y": 788,
+      "w": 55.703125,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "练习",
+      "href": "/practice",
+      "disabled": false,
+      "x": 55.703125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "任务",
+      "href": "/quests",
+      "disabled": false,
+      "x": 111.421875,
+      "y": 788,
+      "w": 55.703125,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "排行榜",
+      "href": "/league",
+      "disabled": false,
+      "x": 167.125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "图鉴",
+      "href": "/library",
+      "disabled": false,
+      "x": 222.84375,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "会员",
+      "href": "/plans",
+      "disabled": false,
+      "x": 278.5625,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "我",
+      "href": "/me",
+      "disabled": false,
+      "x": 334.28125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "BUTTON",
+      "text": "提意见",
+      "href": null,
+      "disabled": false,
+      "x": 291.4375,
+      "y": 727,
+      "w": 86.5625,
+      "h": 34
+    }
+  ],
+  "canvases": [
+    {
+      "width": 300,
+      "height": 150
+    },
+    {
+      "width": 300,
+      "height": 150
+    }
+  ],
+  "errors": []
+}

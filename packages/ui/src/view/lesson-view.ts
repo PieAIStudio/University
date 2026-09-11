@@ -572,6 +572,7 @@ export function buildCardCoachingPacket(input: {
 
 /** An AI host's verdict, written back through the CLI or the loopback API. */
 export interface HostExerciseGradeView {
+  readonly outcome?: "pass" | "fail" | "undecided";
   readonly passed: boolean;
   readonly evaluation: string;
   readonly extensions: readonly string[];
@@ -646,6 +647,8 @@ export interface LessonView {
       readonly prompt: string;
       readonly contentRevision: number;
       readonly awaitingHostGrade?: boolean;
+      /** A passing attempt exists for this exact exercise revision. Monotonic. */
+      readonly hasPassed?: boolean;
       readonly hostGrade?: HostExerciseGradeView | null;
       readonly latestSubmission?: { readonly answer: string; readonly occurredAt: string } | null;
     }[];

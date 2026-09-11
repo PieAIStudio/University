@@ -1,0 +1,168 @@
+{
+  "name": "phone-practice",
+  "capturedAt": "2026-09-09T15:46:11.480Z",
+  "browser": "153.0.8010.36",
+  "mode": "delivery production",
+  "sourceCommit": "cea753e",
+  "query": "none",
+  "freshContext": false,
+  "theme": "light",
+  "account": "fresh guest; backend public configuration absent in this worktree",
+  "url": "http://127.0.0.1:21898/practice",
+  "title": "University",
+  "visible": "visible",
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "dpr": 1
+  },
+  "bodyWidth": 390,
+  "text": "← 关卡地图\n\n学习 / 练习 / 概念图鉴\n\n今天适合练吗？\n今天无到期\n\n今天没有到期复习卡。想巩固，可以练一道判断；答对后会打开完整词条。\n\n今天复习\n没有\n明天复习\n没有\n最近练过\n0 个概念\n题流来自概念图鉴\n281 个概念题\n\n前端\n137\n后端\n40\n产品\n17\n技术栈\n26\nAI\n25\nGit\n12\n设计风格\n24\n\n掌握度 暂未记录。这里只记最近练过，不把一次答对伪装成「已掌握」。\n\n体验互动课件\n今天练一道判断\n\n概念自己带着判断题。答对一道，展开这一条。题流没有尽头，停下来就行。\n\n开始一道判断\n认识 AI，从这里开始\n▾\n0\n学习\n练习\n任务\n排行榜\n图鉴\n会员\n我\n提意见",
+  "headings": [
+    "今天适合练吗？",
+    "今天练一道判断"
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "text": "← 关卡地图",
+      "href": null,
+      "disabled": false,
+      "x": 0,
+      "y": 94.90625,
+      "w": 86.15625,
+      "h": 44
+    },
+    {
+      "tag": "BUTTON",
+      "text": "体验互动课件",
+      "href": null,
+      "disabled": false,
+      "x": 0,
+      "y": 531.09375,
+      "w": 130,
+      "h": 44
+    },
+    {
+      "tag": "BUTTON",
+      "text": "开始一道判断",
+      "href": null,
+      "disabled": false,
+      "x": 15,
+      "y": 700.09375,
+      "w": 129.046875,
+      "h": 44
+    },
+    {
+      "tag": "BUTTON",
+      "text": "认识 AI，从这里开始\n▾",
+      "href": null,
+      "disabled": false,
+      "x": 16,
+      "y": 24.453125,
+      "w": 182.28125,
+      "h": 34
+    },
+    {
+      "tag": "A",
+      "text": "0",
+      "href": "/quests",
+      "disabled": false,
+      "x": 206.28125,
+      "y": 24.453125,
+      "w": 167.71875,
+      "h": 34
+    },
+    {
+      "tag": "A",
+      "text": "学习",
+      "href": "/",
+      "disabled": false,
+      "x": 0,
+      "y": 788,
+      "w": 55.703125,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "练习",
+      "href": "/practice",
+      "disabled": false,
+      "x": 55.703125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "任务",
+      "href": "/quests",
+      "disabled": false,
+      "x": 111.421875,
+      "y": 788,
+      "w": 55.703125,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "排行榜",
+      "href": "/league",
+      "disabled": false,
+      "x": 167.125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "图鉴",
+      "href": "/library",
+      "disabled": false,
+      "x": 222.84375,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "会员",
+      "href": "/plans",
+      "disabled": false,
+      "x": 278.5625,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "我",
+      "href": "/me",
+      "disabled": false,
+      "x": 334.28125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "BUTTON",
+      "text": "提意见",
+      "href": null,
+      "disabled": false,
+      "x": 291.4375,
+      "y": 727,
+      "w": 86.5625,
+      "h": 34
+    }
+  ],
+  "canvases": [
+    {
+      "width": 300,
+      "height": 150
+    },
+    {
+      "width": 300,
+      "height": 150
+    }
+  ],
+  "errors": []
+}

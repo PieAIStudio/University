@@ -207,7 +207,7 @@ export function createMemoryPresencePort(options?: {
   const self = options?.self ?? null;
   const seeAs = new Map(Object.entries(options?.seeAs ?? {}));
   const sent = { locations: 0, cursors: 0 };
-  let sharesPresence = options?.sharesPresence ?? true;
+  let sharesPresence = options?.sharesPresence ?? false;
 
   const member: MemoryMember | null = self
     ? {
@@ -389,7 +389,7 @@ export function createRealtimePresencePort(
   const { channel, self } = options;
   const seeAs = options.seeAs ?? (() => "group" as const);
   const listeners = new Set<() => void>();
-  let sharesPresence = true;
+  let sharesPresence = false;
   let location: PresenceLocation | null = null;
   const remote = new Map<string, PresencePeer>();
   const cursors = new Map<string, PresenceCursor>();
@@ -510,7 +510,7 @@ export function createRealtimePresencePort(
 }
 
 function createUnconfiguredPresencePort(): PresencePort {
-  let sharesPresence = true;
+  let sharesPresence = false;
   const listeners = new Set<() => void>();
   let cached: PresenceSnapshot = { sharesPresence, self: null, peers: [] };
   const notify = () => {

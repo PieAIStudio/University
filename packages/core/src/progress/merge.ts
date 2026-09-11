@@ -45,6 +45,7 @@ import type {
   WordProgress,
   RetrievalAttemptRecord,
 } from "../ports/progress.js";
+import { exerciseGradeOutcome } from "../ports/grading.js";
 import type { PushSubscriptionRecord } from "../ports/notifications.js";
 import {
   cloneProgress,
@@ -302,6 +303,9 @@ function eventAt(mark: StoredReaderMark): number {
 }
 
 function pickAttempt(a: ExerciseAttemptRecord, b: ExerciseAttemptRecord): ExerciseAttemptRecord {
+  const aPassed = a.hostGrade && exerciseGradeOutcome(a.hostGrade) === "pass";
+  const bPassed = b.hostGrade && exerciseGradeOutcome(b.hostGrade) === "pass";
+  if (aPassed !== bPassed) return aPassed ? { ...a } : { ...b };
   const aAt = Date.parse(a.occurredAt);
   const bAt = Date.parse(b.occurredAt);
   return bAt > aAt ? { ...b } : { ...a };

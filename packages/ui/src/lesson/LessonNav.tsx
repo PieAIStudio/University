@@ -281,7 +281,7 @@ export function LessonToolbar({
       value={valueNow}
       max={valueMax}
       tone="accent"
-      valueLabel={valued ? `${current}/${total}` : undefined}
+      valueLabel={valued ? translate("product.reading.sections", { current, total }) : undefined}
     />
   );
 

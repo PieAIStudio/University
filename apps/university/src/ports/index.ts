@@ -106,4 +106,6 @@ export const reviewReminderPort: ReviewReminderPort = createBrowserReviewReminde
  * When SwimmerBackend grows the sender, set the key and the pre-prompt comes
  * back on its own. Nothing about it needs rewriting.
  */
-export const REVIEW_REMINDER_SENDER_CONFIGURED = Boolean(vapidPublicKey?.trim());
+// A public VAPID key is not proof of a sender. The current adapter has no
+// verified sender capability; no permission prompt until that service exists.
+export const REVIEW_REMINDER_SENDER_CONFIGURED = false;

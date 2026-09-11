@@ -45,23 +45,17 @@ export function CapabilityExplanation({
       }
     >
       <div className="capability-explanation__body">
-        <section>
-          <h3>{translate("ui.capability.capabilityExplanation.copy.它是什么")}</h3>
-          <p>{explanation.whatItDoes}</p>
-        </section>
-        <section>
-          <h3>{translate("ui.capability.capabilityExplanation.copy.为什么这一端现在做不到")}</h3>
-          <p>{explanation.whyUnavailable}</p>
-        </section>
-        <section>
-          <h3>{translate("ui.capability.capabilityExplanation.copy.以后怎么支持")}</h3>
-          <p>{explanation.futureSupport}</p>
-        </section>
+        <p>{explanation.whyUnavailable}</p>
         {action ? (
           <p className="capability-explanation__action">
             <a href={action.href}>{action.label}</a>
           </p>
         ) : null}
+        <details className="product-details">
+          <summary>{translate("product.feedback.moreDetails")}</summary>
+          <p>{explanation.whatItDoes}</p>
+          <p>{explanation.futureSupport}</p>
+        </details>
       </div>
     </GameModal>
   );

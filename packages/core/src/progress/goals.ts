@@ -85,7 +85,7 @@ export function questsForToday(document: ProgressDocument, now: number): Quest[]
     {
       id: "lesson",
       title: "学一节新课",
-      detail: "一节就够。今天读完的那节，明天会掉两张卡回来找你。",
+      detail: "读完讲解、完成练习，就完成这一节。复习会按实际学过的内容安排。",
       done: Math.min(lessonsToday, 1),
       goal: 1,
     },
@@ -100,8 +100,8 @@ export function questsForToday(document: ProgressDocument, now: number): Quest[]
       title: dueNow + reviewedToday === 0 ? "今天没有到期的卡片" : "清掉今天到期的卡片",
       detail:
         dueNow + reviewedToday === 0
-          ? "这不是偷懒，是排程本来就没安排。学一节新课，明天就有事做了。"
-          : "到期才复习。没到期的卡片提前看，等于把还记得的东西又背一遍，间隔就白算了。",
+          ? "今天不用复习。可以学一点新内容，也可以先休息。"
+          : "把今天到期的卡片回想一遍。忘了也没关系，后面会再安排。",
       done: reviewedToday,
       goal: Math.max(dueNow + reviewedToday, reviewedToday),
       informational: dueNow + reviewedToday === 0,

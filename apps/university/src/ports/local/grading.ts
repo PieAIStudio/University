@@ -32,6 +32,7 @@ export function createLocalGradingPort(options: {
 
   return {
     async submitExercise(input) {
+      const accountScope = options.progress?.syncState().userId ?? null;
       const body = await readJson<ExerciseAttemptResult>(
         await fetch(`${lessonPath(input.locator)}/exercises/${input.exerciseId}/attempt`, {
           method: "POST",
@@ -43,6 +44,9 @@ export function createLocalGradingPort(options: {
           }),
         }),
       );
+      if ((options.progress?.syncState().userId ?? null) !== accountScope) {
+        throw new Error("账号已切换。这次回答没有写入新账号，原来的输入仍保留在原账号中。");
+      }
       options.progress?.recordExerciseAttempt({
         commandId: input.commandId,
         locator: input.locator,
@@ -54,7 +58,10 @@ export function createLocalGradingPort(options: {
         hostGrade: body.hostGrade ?? null,
         occurredAt: body.hostGrade?.occurredAt ?? new Date().toISOString(),
       });
-      return body;
+      return {
+        ...body,
+        answerStored: options.progress ? options.progress.localSaveState?.() === "saved" : true,
+      };
     },
 
     async meteredGradingOffer(): Promise<MeteredGradingOffer> {

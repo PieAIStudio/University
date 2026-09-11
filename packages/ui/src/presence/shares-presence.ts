@@ -14,9 +14,9 @@ const SHARES_KEY = "university.shares-presence";
 
 export function readSharesPresence(): boolean {
   try {
-    return window.localStorage.getItem(SHARES_KEY) !== "off";
+    return window.localStorage.getItem(SHARES_KEY) === "on";
   } catch {
-    return true;
+    return false;
   }
 }
 

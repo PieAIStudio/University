@@ -153,7 +153,7 @@ export function AppShell({
       <main className="app-shell__main">
         <div className="app-shell__content">{children}</div>
       </main>
-      <div className="app-shell__east">
+      <header className="app-shell__east">
         <div className="app-shell__east-stack">
           <CounterRow
             counters={counters ?? []}
@@ -182,7 +182,7 @@ export function AppShell({
             </aside>
           ) : null}
         </div>
-      </div>
+      </header>
       <TabBar items={tabs} activeId={activeId} />
     </div>
   );

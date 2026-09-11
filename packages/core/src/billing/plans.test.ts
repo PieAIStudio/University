@@ -40,10 +40,8 @@ describe("billing configuration", () => {
       openTutoringTurnsPerDay: null,
     });
     expect(free?.sync).toEqual({ included: false, seats: 0 });
-    expect(free?.lines).toContain("全部已发布课程、全部关卡，课文永远不收费");
-    expect(free?.lines).toContain(
-      "绑定邮箱后每天有少量结构化 AI 批改尝鲜额度，用完今天停止，明天恢复",
-    );
+    expect(free?.lines).toContain("全部课程免费学");
+    expect(free?.lines).toContain("绑定邮箱，每天体验 AI 批改");
   });
 
   it("keeps the config as the only plan collection", () => {

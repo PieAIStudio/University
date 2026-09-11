@@ -28,6 +28,7 @@ import {
   type ProgressSource,
 } from "./contract.js";
 import type { ProgressPort } from "../ports/progress.js";
+import { exerciseGradeOutcome } from "../ports/grading.js";
 import { lessonKeyOf } from "./document.js";
 
 export function progressSourceOf(port: ProgressPort): ProgressSource {
@@ -39,10 +40,13 @@ export function progressSourceOf(port: ProgressPort): ProgressSource {
       const state = port.lessonState(lessonKeyOf(ref));
       const exercisesPassed =
         lesson.exerciseIdsComplete !== false &&
-        lesson.exerciseIds.every(
-          (exerciseId) =>
-            port.latestExerciseAttempt(ref, exerciseId, lesson.contentRevision)?.hostGrade
-              ?.passed === true,
+        lesson.exerciseIds.every((exerciseId) =>
+          port
+            .exerciseAttempts(ref, exerciseId, lesson.contentRevision)
+            .some(
+              (attempt) =>
+                attempt.hostGrade !== null && exerciseGradeOutcome(attempt.hostGrade) === "pass",
+            ),
         );
       const readConfirmed =
         state.readConfirmed === true &&

@@ -19,6 +19,8 @@ related:
   - REF-LOCAL-DEVICE-TESTING
   - REF-FEEDBACK-BACKEND-GAP
   - REF-V5-JOURNEY-REVIEW
+  - REF-PRODUCT-COMPLETENESS-REVIEW
+  - PLAN-PRODUCT-COMPLETENESS
 ---
 
 # Current Work
@@ -38,6 +40,7 @@ test totals, CLI/model choices or execution history. Read only the matching row.
 | Course authoring and each lesson's teaching shape | [Parity contract](../../specs/active/SPEC-0001-universitylocal-parity-contract.md), then the single [write-lesson contract](../../../apps/local/.agents/skills/write-lesson/SKILL.md); use `apps/local` workflows and keep publication separate |
 | Learning activities, embedding and difficulty selection | [Component contract](../../../packages/ui/src/learning-play/README.md), [interaction design](../../../packages/ui/src/learning-play/DESIGN.md) and [prior acceptance evidence](../../plans/completed/play-usability.md); samples do not publish courses or award course completion |
 | Designed but unfinished learner/business capabilities | [V5 review](v5-journey-review.md), [payment](payment-backend-gap.md), [feedback](feedback-backend-gap.md), [reminders](review-reminders-backend-gap.md), [commercial model](commercial-model.md) |
+| Product worktree: integration handoff | 接手先看 [产品线集中整合交接](../../plans/active/product-completeness.md#集中整合交接入口)，包含保留项、冲突地图、测试输入与已知依赖。看实际变化用 [改前／改后图文对照](product-before-after/before-after.md)；产品决定仍在 [V5](../player-journey/v5/index.html#product-lightness) |
 
 ## Work boundaries
 

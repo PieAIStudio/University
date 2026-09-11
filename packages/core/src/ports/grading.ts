@@ -63,14 +63,34 @@ export function walletGradingBalanceText(powerUnits: string): string {
   return attempts === 0n ? "你的钱包还不够一次了" : `你的钱包还够 ${attempts} 次`;
 }
 
+/** The three facts a grader can honestly establish about one submitted answer. */
+export type ExerciseGradeOutcome = "pass" | "fail" | "undecided";
+
 /** A grader's verdict, written back through the CLI or returned immediately. */
 export interface HostExerciseGrade {
+  /**
+   * Additive because older cloud documents and the local authoring server only
+   * carry `passed`. `passed: true` always remains a pass; `passed: false` plus
+   * an absent outcome is a legacy fail. New undecided records set this field so
+   * callers never have to pretend that "not passed" means "wrong".
+   */
+  readonly outcome?: ExerciseGradeOutcome;
   readonly passed: boolean;
   readonly evaluation: string;
   readonly extensions: readonly string[];
   readonly host: string | null;
   readonly learnerAnswer: string | null;
   readonly occurredAt: string;
+}
+
+/** Read old binary records and new three-state records through one safe seam. */
+export function exerciseGradeOutcome(
+  grade: Pick<HostExerciseGrade, "passed" | "outcome">,
+): ExerciseGradeOutcome {
+  // A persisted pass is monotonic. Even an inconsistent newer writer cannot
+  // revoke it by attaching an undecided/fail label to `passed: true`.
+  if (grade.passed) return "pass";
+  return grade.outcome === "undecided" ? "undecided" : "fail";
 }
 
 /**
@@ -97,6 +117,8 @@ export function graderLabel(host: string | null): string {
  * that can decide immediately fills `hostGrade` on the same turn.
  */
 export interface ExerciseAttemptResult {
+  /** False when the browser kept the response in memory but could not save it. */
+  readonly answerStored?: boolean;
   readonly correct: boolean;
   readonly attemptCount: number;
   readonly score: number;
@@ -238,6 +260,7 @@ export function createMemoryGradingPort(): MemoryGradingPort {
         maxScore: 1,
         awaitingHostGrade: false,
         hostGrade: {
+          outcome: passed ? "pass" : "fail",
           passed,
           evaluation: passed ? "答对了。" : "再想一下。",
           extensions: [],

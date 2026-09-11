@@ -1,3 +1,7 @@
+import { messages as productWelcome } from "./product-welcome.en.js";
+import { messages as productNavigation } from "./product-navigation.en.js";
+import { messages as productBilling } from "./product-billing.en.js";
+import { messages as productSave } from "./product-save.en.js";
 import { messages as qualityDifficulty } from "./learning-play-quality-difficulty.en.js";
 import { messages as workflowDifficulty } from "./learning-play-workflow-difficulty.en.js";
 import { messages as playDifficulty } from "./learning-play-difficulty.en.js";
@@ -19,6 +23,10 @@ import type { MessageCatalog } from "../types.js";
  * completeness gate without showing a half-translated product.
  */
 export const messages = {
+  ...productWelcome,
+  ...productNavigation,
+  ...productBilling,
+  ...productSave,
   ...aiPlay,
   ...aiWorkflow,
   ...aiQuality,

@@ -12,7 +12,6 @@ import {
 
 import {
   ACCOUNT_PENDING_LABEL,
-  ACCOUNT_SIGNED_IN_TITLE,
   ACCOUNT_SIGN_IN,
   ACCOUNT_SIGN_OUT,
   ACCOUNT_UNCONFIGURED_ACTION,
@@ -82,7 +81,7 @@ describe("empty destinations", () => {
     expect(markup).toContain("高品质");
     expect(markup).toContain("钱包和付费权益尚未接入");
     expect(markup).toContain("disabled");
-    expect(markup).toContain("语言层");
+    expect(markup).toContain("阅读辅助设置");
     expect(renderToStaticMarkup(<SettingsSubnav />)).toContain("个人档案");
   });
 
@@ -109,7 +108,8 @@ describe("empty destinations", () => {
       />,
     );
     expect(markup).toContain("头像");
-    expect(markup).toContain("还没读过真实代码 —— 第一节里就有");
+    expect(markup).toContain("学一点，再用自己的话留下一张复习卡");
+    expect(markup).not.toContain("第一节里就有");
     expect(markup).toContain("还没学完一节 —— 从这里开始");
     expect(markup).toContain("/turing-pact/foundations-before-zero");
     /*
@@ -146,7 +146,7 @@ describe("AccountPanel", () => {
   it("explains why login is unavailable when the backend is not configured", () => {
     const markup = renderToStaticMarkup(<AccountPanel identity={createIdentityPort(null)} />);
     expect(markup).toContain(ACCOUNT_UNSIGNED_TITLE);
-    expect(markup).toContain(ACCOUNT_UNCONFIGURED_DESCRIPTION);
+    expect(markup).not.toContain(ACCOUNT_UNCONFIGURED_DESCRIPTION);
     expect(markup).toContain(ACCOUNT_UNCONFIGURED_ACTION);
     expect(markup).not.toContain('type="password"');
     /*
@@ -165,6 +165,7 @@ describe("AccountPanel", () => {
     const markup = renderToStaticMarkup(<AccountPanel identity={createMemoryIdentityPort()} />);
     expect(markup).toContain(ACCOUNT_UNSIGNED_TITLE);
     expect(markup).toContain(ACCOUNT_UNSIGNED_DESCRIPTION);
+    expect(markup).toContain("跨设备同步需要对应会员权益");
     expect(markup).toContain(ACCOUNT_SIGN_IN);
     expect(markup).toContain("免密码登录");
     expect(markup).toContain('type="password"');
@@ -188,7 +189,7 @@ describe("AccountPanel", () => {
         })}
       />,
     );
-    expect(markup).toContain(ACCOUNT_SIGNED_IN_TITLE);
+    expect(markup).toContain("account-panel__signed-in");
     expect(markup).toContain("ada@example.com");
     expect(markup).toContain(ACCOUNT_SIGN_OUT);
     expect(markup).not.toContain('type="password"');

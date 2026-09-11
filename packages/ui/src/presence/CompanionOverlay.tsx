@@ -30,6 +30,7 @@ export function CompanionMarkers({
   return (
     <div
       className="companions"
+      role="group"
       aria-label={translate("ui.presence.companionOverlay.copy.一起学的同伴")}
       style={{ pointerEvents: "none" }}
     >

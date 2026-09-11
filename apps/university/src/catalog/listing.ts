@@ -38,6 +38,7 @@ interface CatalogUnit {
 interface CatalogCourse {
   readonly id: string;
   readonly title: string;
+  readonly searchText?: string;
   readonly depth: number;
   readonly prerequisiteCourseIds: readonly string[];
   readonly prerequisiteTitles: readonly string[];
@@ -76,6 +77,9 @@ const courseKey = (studyId: string, courseId: string) => `${studyId}/${courseId}
 interface CatalogCourseInput {
   readonly id: string;
   readonly title: string;
+  readonly description?: string;
+  readonly audience?: string;
+  readonly objectives?: readonly string[];
   readonly prerequisiteCourseIds?: readonly string[];
   readonly units: readonly {
     readonly id: string;
@@ -103,6 +107,7 @@ interface DraftedCourse {
   readonly libraryIndex: number;
   readonly id: string;
   readonly title: string;
+  readonly searchText: string;
   readonly depth: number;
   readonly prerequisiteCourseIds: readonly string[];
   readonly prerequisiteTitles: readonly string[];
@@ -179,6 +184,9 @@ function assembleCatalogListingFromStudies(
         libraryIndex,
         id: course.id,
         title: course.title,
+        searchText: [course.description, course.audience, ...(course.objectives ?? [])]
+          .filter(Boolean)
+          .join(" "),
         depth: depths.get(course.id) ?? 0,
         prerequisiteCourseIds: course.prerequisiteCourseIds ?? [],
         prerequisiteTitles: (course.prerequisiteCourseIds ?? []).map(
@@ -282,6 +290,7 @@ function toCatalogCourse(entry: DraftedCourse, live: DraftedCourse | undefined):
   return {
     id: entry.id,
     title: entry.title,
+    searchText: entry.searchText,
     depth: entry.depth,
     prerequisiteCourseIds: entry.prerequisiteCourseIds,
     prerequisiteTitles: entry.prerequisiteTitles,

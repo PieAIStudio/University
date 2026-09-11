@@ -180,6 +180,53 @@ describe("practiceSolvedLabel", () => {
 });
 
 describe("PracticeStream", () => {
+  it("P1 a short round ends after three distinct correct answers, not clicks or retries", async () => {
+    const third = questionFor(
+      { ...APP, senseId: "third.program", headword: "third" },
+      "第三个问题",
+      "第三个正确说法",
+      "第三个错误说法",
+    );
+    const onFinish = vi.fn();
+    const store = await renderStream({ questions: [...QUESTIONS, third], onFinish });
+    const start = container.querySelector<HTMLButtonElement>("[data-practice-round]");
+    expect(start).not.toBeNull();
+    await act(async () => start?.click());
+    await submitOption(APP_WRONG);
+    expect(container.textContent).toContain("0 / 3");
+    await submitOption(APP_CORRECT);
+    expect(container.textContent).toContain("1 / 3");
+    await act(async () => buttonWith(CHOICE_NEXT_LABEL)?.click());
+    await submitOption(API_CORRECT);
+    await act(async () => buttonWith(CHOICE_NEXT_LABEL)?.click());
+    await submitOption("第三个正确说法");
+    expect(container.querySelector("[data-practice-round-complete]")).toBeNull();
+    expect(container.textContent).toContain("这是对的判据。");
+    expect(buttonWith("完成这一轮")).toBeTruthy();
+    expect(new Set(store.read().ids).size).toBe(3);
+    await act(async () => buttonWith("完成这一轮")?.click());
+    expect(container.querySelector("[data-practice-round-complete]")).not.toBeNull();
+    expect(container.textContent).toContain("这一轮，完成！");
+    expect(container.querySelector(".practice-stream__celebrate")).not.toBeNull();
+    expect(new Set(store.read().ids).size).toBe(3);
+    await act(async () => buttonWith("今天先到这里")?.click());
+    expect(onFinish).toHaveBeenCalledTimes(1);
+  });
+
+  it("P2 a round with a smaller question bank states its real size and can continue freely", async () => {
+    await renderStream({ questions: [QUESTIONS[0]] });
+    const start = container.querySelector<HTMLButtonElement>("[data-practice-round]");
+    expect(start?.textContent).toContain("练 1 题");
+    await act(async () => start?.click());
+    await submitOption(APP_CORRECT);
+    expect(container.querySelector("[data-practice-round-complete]")).toBeNull();
+    await act(async () => buttonWith("完成这一轮")?.click());
+    expect(container.querySelector("[data-practice-round-complete]")).not.toBeNull();
+    await act(async () => buttonWith("继续自由练习")?.click());
+    expect(container.querySelector("[data-practice-round-complete]")).toBeNull();
+    expect(container.textContent).toContain(APP_PROMPT);
+  });
+
   it("shows the empty state when the bank has no term quizzes", async () => {
     const onBrowse = vi.fn();
     await renderStream({ questions: [], onBrowse });
@@ -209,7 +256,10 @@ describe("PracticeStream", () => {
     expect(container.querySelector(".practice-stream__ordinal")?.textContent).toBe("本次已答对 0");
     expect(container.textContent).toContain(APP_PROMPT);
     expect(container.textContent).toContain(PRACTICE_UNLOCK_HINT);
-    expect(container.querySelector(".practice-reward-panel")?.className).toContain("is-locked");
+    expect(container.querySelector(".practice-reward-panel")).toBeNull();
+    expect(container.querySelector(".practice-stream__unlock-hint")?.textContent).toBe(
+      PRACTICE_UNLOCK_HINT,
+    );
     expect(container.textContent).not.toContain(APP.gloss);
     expect(container.querySelector("[role='progressbar']")).toBeNull();
     expect(container.textContent).not.toMatch(/共\s*\d+\s*题/);
@@ -241,12 +291,35 @@ describe("PracticeStream", () => {
     expect(container.textContent).not.toContain(PRACTICE_UNLOCK_HINT);
     expect(container.querySelector(".practice-reward-panel")?.className).not.toContain("is-locked");
     expect(container.querySelector(".entry-page")).not.toBeNull();
-    expect(container.querySelector("h1")?.textContent).toContain("app");
+    expect(container.querySelector(".entry-page h1")?.textContent).toContain("app");
+    expect(container.querySelector("[data-practice-reward]")?.hasAttribute("open")).toBe(false);
     expect(container.textContent).toContain(APP.gloss);
     expect(container.textContent).toContain("术语图鉴");
     expect(playSound).toHaveBeenCalledWith("answer.correct");
     expect(buttonWith(CHOICE_NEXT_LABEL)).toBeTruthy();
     expect(container.querySelector(".practice-stream__ordinal")?.textContent).toBe("本次已答对 1");
+  });
+
+  it("P3 only shows preparation before starting and keeps focus on each new task", async () => {
+    await renderStream({
+      introduction: <h1 data-preparation>练习准备</h1>,
+      extraAction: <button>其他玩法</button>,
+    });
+    expect(container.querySelector("[data-preparation]")).not.toBeNull();
+    await startSitting();
+    expect(container.querySelector("[data-preparation]")).toBeNull();
+    expect(buttonWith("其他玩法")).toBeUndefined();
+    expect(document.activeElement).toBe(container.querySelector("[data-practice-focus]"));
+    await submitOption(APP_CORRECT);
+    const details = container.querySelector<HTMLDetailsElement>("[data-practice-reward]");
+    expect(details).not.toBeNull();
+    details!.open = true;
+    await act(async () => buttonWith(CHOICE_NEXT_LABEL)?.click());
+    expect(container.querySelector("[data-practice-reward]")).toBeNull();
+    expect(document.activeElement).toBe(container.querySelector("[data-practice-focus]"));
+    await act(async () => buttonWith("先停一下")?.click());
+    expect(container.querySelector("[data-preparation]")).not.toBeNull();
+    expect(buttonWith("其他玩法")).toBeTruthy();
   });
 
   it("advances the sitting, remembers the derived id, and locks the next term", async () => {

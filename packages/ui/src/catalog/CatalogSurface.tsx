@@ -1,6 +1,8 @@
 import { translate } from "../i18n/index.js";
-import { useRef, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import type { LessonRef } from "@pieai/university-core";
+import { GameButton, GameField, GameInput } from "@pieai/swimmer-ui-kit";
+import { searchCatalogLessons } from "./catalog-search.js";
 
 export interface CatalogLesson {
   readonly id: string;
@@ -18,6 +20,7 @@ export interface CatalogUnit {
 export interface CatalogCourse {
   readonly id: string;
   readonly title: string;
+  readonly searchText?: string;
   readonly depth: number;
   readonly prerequisiteCourseIds: readonly string[];
   readonly prerequisiteTitles: readonly string[];
@@ -58,6 +61,10 @@ export function CatalogSurface({
   readonly lessonHref: (lesson: LessonRef) => string;
 }) {
   const here = listing.nextLesson;
+  const [query, setQuery] = useState("");
+  const searchInput = useRef<HTMLInputElement>(null);
+  const matches = useMemo(() => searchCatalogLessons(listing, query), [listing, query]);
+  const searching = query.trim().length > 0;
   return (
     <div className="catalog" aria-label={translate("ui.catalog.catalogSurface.copy.课程目录")}>
       <div className="catalog__inner">
@@ -75,18 +82,75 @@ export function CatalogSurface({
           {listing.totals.units} {translate("ui.catalog.catalogSurface.copy.单元")}{" "}
           {listing.totals.lessons} {translate("ui.catalog.catalogSurface.copy.节")}
         </p>
-        {listing.studies.map((study) => (
-          <StudyBlock
-            key={study.id}
-            study={study}
-            defaultOpen={here?.studyId === study.id}
-            currentCourseId={here?.studyId === study.id ? here.courseId : null}
-            currentUnitId={here?.studyId === study.id ? here.unitId : null}
-            currentLessonId={here?.studyId === study.id ? here.lessonId : null}
-            onOpenLesson={onOpenLesson}
-            lessonHref={lessonHref}
-          />
-        ))}
+        <div className="catalog__search">
+          <GameField label={translate("product.catalog.search")}>
+            <GameInput
+              ref={searchInput}
+              type="search"
+              value={query}
+              maxLength={160}
+              placeholder={translate("product.catalog.placeholder")}
+              onChange={(event) => setQuery(event.currentTarget.value)}
+            />
+          </GameField>
+          {searching ? (
+            <GameButton
+              variant="secondary"
+              static
+              onClick={() => {
+                setQuery("");
+                searchInput.current?.focus();
+              }}
+            >
+              {translate("product.catalog.clear")}
+            </GameButton>
+          ) : null}
+        </div>
+        {searching ? (
+          <>
+            <p role="status" className="catalog__search-status">
+              {translate(matches.length > 50 ? "product.catalog.more" : "product.catalog.found", {
+                count: matches.length,
+                shown: Math.min(50, matches.length),
+              })}
+            </p>
+            {matches.length === 0 ? (
+              <p>{translate("product.catalog.empty")}</p>
+            ) : (
+              <ul className="catalog__search-results">
+                {matches.slice(0, 50).map((match) => (
+                  <li key={lessonHref(match.locator)}>
+                    <p>
+                      {match.studyTitle} · {match.courseTitle} · {match.unitTitle}
+                    </p>
+                    <LessonLink
+                      studyId={match.locator.studyId}
+                      courseId={match.locator.courseId}
+                      unitId={match.locator.unitId}
+                      lesson={match.lesson}
+                      current={false}
+                      lessonHref={lessonHref}
+                      onOpenLesson={onOpenLesson}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        ) : (
+          listing.studies.map((study) => (
+            <StudyBlock
+              key={study.id}
+              study={study}
+              defaultOpen={here?.studyId === study.id}
+              currentCourseId={here?.studyId === study.id ? here.courseId : null}
+              currentUnitId={here?.studyId === study.id ? here.unitId : null}
+              currentLessonId={here?.studyId === study.id ? here.lessonId : null}
+              onOpenLesson={onOpenLesson}
+              lessonHref={lessonHref}
+            />
+          ))
+        )}
       </div>
     </div>
   );
@@ -172,7 +236,7 @@ function CourseBlock({
             </span>
             <h3>{course.title}</h3>
             <span className={`catalog__gate catalog__gate--${course.state}`}>
-              {gateLabel(course.state)}
+              {gateLabel(course.state, course.done)}
             </span>
           </span>
           <span className="catalog__progress">
@@ -300,6 +364,8 @@ function LessonLink({
       href={lessonHref(ref)}
       aria-current={current ? "location" : undefined}
       onClick={(event) => {
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+          return;
         event.preventDefault();
         onOpenLesson(ref);
       }}
@@ -313,19 +379,19 @@ function LessonLink({
       ) : null}
       {lesson.state === "live" ? (
         <span className="catalog__gate catalog__gate--live">
-          {translate("ui.catalog.catalogSurface.copy.正在学")}
+          {translate("product.catalog.next")}
         </span>
       ) : null}
     </a>
   );
 }
 
-function gateLabel(state: CatalogCourse["state"]): string {
+function gateLabel(state: CatalogCourse["state"], completedCount: number): string {
   switch (state) {
     case "done":
       return translate("ui.catalog.catalogSurface.copy.已完成");
     case "live":
-      return translate("ui.catalog.catalogSurface.copy.正在学");
+      return translate(completedCount > 0 ? "product.catalog.next" : "product.catalog.start");
     case "open":
       return translate("ui.catalog.catalogSurface.copy.可以学");
     case "idle":

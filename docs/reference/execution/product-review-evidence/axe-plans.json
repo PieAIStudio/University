@@ -1,0 +1,26 @@
+{
+  "url": "http://127.0.0.1:21898/plans",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "violations": [
+    {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "help": "Elements must meet minimum color contrast ratio thresholds",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+      "nodes": [
+        {
+          "target": [
+            ".plan-card__saving"
+          ],
+          "html": "<p class=\"plan-card__saving\">比按月付省 $79.00，也就是 35%</p>",
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.8 (foreground color: #e8743b, background color: #fef6ea, font size: 9.8pt (13.12px), font weight: bold). Expected contrast ratio of 4.5:1"
+        }
+      ]
+    }
+  ],
+  "incompleteCount": 1
+}

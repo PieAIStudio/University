@@ -1,4 +1,5 @@
 import { translate } from "@pieai/university-ui/i18n.js";
+import { LearningSaveStatus } from "@pieai/university-ui/progress/LearningSaveStatus.js";
 import { lazy, Suspense, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import {
   LIBRARY_VIEW_TAB,
@@ -434,8 +435,19 @@ export function MainRouter({
       {view.kind === "league" ? (
         <LeagueScreen document={progress} signedIn={avatarSignedIn} />
       ) : null}
-      {view.kind === "quests" ? <QuestsScreen document={progress} /> : null}
-      {view.kind === "plans" ? <PlansScreen paymentPort={paymentPort} /> : null}
+      {view.kind === "quests" ? (
+        <QuestsScreen
+          document={progress}
+          learnHref={
+            nextUpProgress?.next
+              ? toPath({ kind: "lesson", ...nextUpProgress.next })
+              : toPath({ kind: "catalog" })
+          }
+        />
+      ) : null}
+      {view.kind === "plans" ? (
+        <PlansScreen key={progressPort.syncState().userId ?? "guest"} paymentPort={paymentPort} />
+      ) : null}
       {view.kind === "settings" ? (
         <SettingsScreen
           presence={presencePort}
@@ -456,8 +468,18 @@ export function MainRouter({
               <ProfileAvatar avatarRecipe={avatarRecipe} signedIn={avatarSignedIn} />
             </Suspense>
           }
-          account={<AccountPanel identity={identityPort} focusRequest={accountFocusRequest} />}
+          account={
+            <>
+              <LearningSaveStatus
+                key={progressPort.syncState().userId ?? "guest"}
+                progress={progressPort}
+                allowGuestImport
+              />
+              <AccountPanel identity={identityPort} focusRequest={accountFocusRequest} />
+            </>
+          }
           totalXp={progress.totalXp}
+          reviewCardCount={Object.keys(progress.cards).length}
           badges={<BadgeWall document={progress} coursesFinished={profileStats.coursesFinished} />}
           passagesRead={profileStats.passagesRead}
           lessonsCompleted={profileStats.lessonsCompleted}

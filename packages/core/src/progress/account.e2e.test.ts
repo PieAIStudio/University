@@ -110,7 +110,7 @@ describe("one cloud progress document across devices", () => {
     expectConsoleClean(spies);
   });
 
-  it("3. sign-in uploads local progress instead of overwriting it", async () => {
+  it("3. explicit guest import uploads local progress instead of overwriting it", async () => {
     const persistence = createMemoryPersistence();
     const port = createProgressPort({ persistence });
     const identity = createMemoryIdentityPort();
@@ -125,7 +125,7 @@ describe("one cloud progress document across devices", () => {
     expect(status.kind).toBe("signed_in");
     if (status.kind !== "signed_in") throw new Error("expected signed_in");
 
-    await port.bindAccount(status.user.id, remote);
+    await port.bindAccount(status.user.id, remote, { adoptGuest: true });
 
     expect(port.snapshot().lessons[LESSON]?.progress).toBe(1);
     expect(remote.records.get(status.user.id)?.lessons[LESSON]?.progress).toBe(1);
@@ -144,7 +144,7 @@ describe("one cloud progress document across devices", () => {
     phone.dropCards("turing-pact", "foundations-before-zero", "you-already-know-apps", [
       "only-on-phone",
     ]);
-    await phone.bindAccount(userId, remote);
+    await phone.bindAccount(userId, remote, { adoptGuest: true });
 
     const laptop = createProgressPort({ persistence: createMemoryPersistence() });
     const other = lessonKey("turing-pact", "foundations-before-zero", "app-is-a-pile-of-files");
@@ -153,7 +153,7 @@ describe("one cloud progress document across devices", () => {
       "only-on-laptop",
     ]);
     laptop.advanceLesson(LESSON, 0.4);
-    await laptop.bindAccount(userId, remote);
+    await laptop.bindAccount(userId, remote, { adoptGuest: true });
 
     const merged = laptop.snapshot();
     expect(merged.lessons[LESSON]?.progress).toBe(1);
@@ -180,7 +180,9 @@ describe("one cloud progress document across devices", () => {
     await port.flush();
 
     expect(port.snapshot().lessons[LESSON]?.progress).toBe(1);
-    expect(parseProgress(persistence.raw()).lessons[LESSON]?.progress).toBe(1);
+    expect(parseProgress(persistence.readAccount?.(userId) ?? null).lessons[LESSON]?.progress).toBe(
+      1,
+    );
     expect(remote.records.get(userId)?.lessons[LESSON]).toBeUndefined();
     expect(port.syncState().status).toBe("offline");
     expect(port.syncState().dirty).toBe(true);
@@ -193,7 +195,7 @@ describe("one cloud progress document across devices", () => {
     expect(remote.records.get(userId)?.lessons[LESSON]?.progress).toBe(1);
   });
 
-  it("6. sign-out keeps local progress: wiping it would throw away the lesson they just finished", async () => {
+  it("6. sign-out preserves the account cache without exposing it to a guest", async () => {
     const persistence = createMemoryPersistence();
     const port = createProgressPort({ persistence });
     const identity = createMemoryIdentityPort();
@@ -210,11 +212,16 @@ describe("one cloud progress document across devices", () => {
     await port.bindAccount(null, null);
 
     expect(identity.status().kind).toBe("signed_out");
-    expect(port.snapshot().lessons[LESSON]?.progress).toBe(1);
-    expect(parseProgress(persistence.raw()).lessons[LESSON]?.progress).toBe(1);
+    expect(port.snapshot().lessons[LESSON]).toBeUndefined();
+    expect(parseProgress(persistence.raw()).lessons[LESSON]).toBeUndefined();
+    expect(
+      parseProgress(persistence.readAccount?.(status.user.id) ?? null).lessons[LESSON]?.progress,
+    ).toBe(1);
     expect(port.syncState().userId).toBeNull();
     expect(port.syncState().status).toBe("idle");
     expect(remote.records.get(status.user.id)?.lessons[LESSON]?.progress).toBe(1);
+    await port.bindAccount(status.user.id, null);
+    expect(port.snapshot().lessons[LESSON]?.progress).toBe(1);
   });
 
   it("7. carries marks and AI answers from one computer to another", async () => {
@@ -259,10 +266,10 @@ describe("one cloud progress document across devices", () => {
       hostGrade,
       occurredAt: hostGrade.occurredAt,
     });
-    await phone.bindAccount(userId, remote);
+    await phone.bindAccount(userId, remote, { adoptGuest: true });
 
     const laptop = createProgressPort({ persistence: createMemoryPersistence() });
-    await laptop.bindAccount(userId, remote);
+    await laptop.bindAccount(userId, remote, { adoptGuest: true });
 
     expect(laptop.readerMarks(locator.studyId)).toEqual([mark]);
     expect(laptop.latestExerciseAttempt(locator, "explain-the-model", 3)).toMatchObject({
@@ -288,10 +295,10 @@ describe("one cloud progress document across devices", () => {
     };
     const phone = createProgressPort({ persistence: createMemoryPersistence() });
     phone.saveReaderMark(mark);
-    await phone.bindAccount(userId, remote);
+    await phone.bindAccount(userId, remote, { adoptGuest: true });
 
     const laptop = createProgressPort({ persistence: createMemoryPersistence() });
-    await laptop.bindAccount(userId, remote);
+    await laptop.bindAccount(userId, remote, { adoptGuest: true });
     laptop.deleteReaderMark("turing-pact", mark.markId);
     await laptop.flush();
 
@@ -326,7 +333,7 @@ describe("one cloud progress document across devices", () => {
       "shared-card",
     ]);
     writer.gradeCard(firstCardKey, "good");
-    await writer.bindAccount(userId, remote);
+    await writer.bindAccount(userId, remote, { adoptGuest: true });
 
     const reader = createProgressPort({ persistence: createMemoryPersistence() });
     await reader.bindAccount(userId, remote);

@@ -65,7 +65,7 @@ describe("ReviewReminderSettings", () => {
     );
     await act(async () => toggle?.click());
     expect(reminders.enable).not.toHaveBeenCalled();
-    expect(container.textContent).toContain("这里不会反复弹窗");
+    expect(container.textContent).toContain("不会再自动弹窗");
   });
 
   it("does not imply that an active subscription can deliver before the server exists", async () => {
@@ -76,7 +76,8 @@ describe("ReviewReminderSettings", () => {
     });
     await act(async () => root.render(<ReviewReminderSettings reminders={reminders} />));
 
-    expect(container.textContent).toContain("已订阅，但服务端还没接上，暂时不会真的收到提醒");
+    expect(container.querySelector('[role="status"]')?.textContent).toContain("等待提醒服务连接");
+    expect(container.querySelector('[role="status"]')?.textContent).not.toContain("已开启");
   });
 
   it("drops the caveat once the subscription has a sender that can reach it", async () => {
@@ -87,7 +88,9 @@ describe("ReviewReminderSettings", () => {
     });
     await act(async () => root.render(<ReviewReminderSettings reminders={reminders} />));
 
-    expect(container.textContent).toContain("已订阅。每天最多一条，有卡才提醒。");
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      "已开启 · 每天最多一条",
+    );
     expect(container.textContent).not.toContain("服务端还没接上");
   });
 });

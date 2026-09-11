@@ -1,5 +1,11 @@
 import { translate } from "../../i18n/index.js";
-import { GameButton, GameCallout, GamePanel, GameSegmentedControl } from "@pieai/swimmer-ui-kit";
+import {
+  GameAssetIcon,
+  GameButton,
+  GameCallout,
+  GamePanel,
+  GameSegmentedControl,
+} from "@pieai/swimmer-ui-kit";
 import {
   createUnavailablePaymentPort,
   walletGradingBalanceText,
@@ -14,7 +20,7 @@ import {
   type PlanPricing,
   type WalletBalance,
 } from "@pieai/university-core";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { CapabilityExplanation } from "../../capability/CapabilityExplanation.js";
 import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
@@ -27,11 +33,19 @@ export const PLANS_TITLE = translate("ui.navigation.screens.plansScreen.copy.会
   line breaks into spaces, and a space after a full-width comma reads as a typo
   on the one page where a typo costs money.
 */
-const PLANS_LEDE = translate(
-  "ui.navigation.screens.plansScreen.copy.所有已发布课程都能免费学-课文和关卡永远不收费-绑定邮箱后-每天有少量-AI-批改尝鲜额度-用完今天停止-明天恢",
-);
+const PLANS_LEDE = translate("product.billing.lede");
 
 const FALLBACK_PAYMENT_PORT = createUnavailablePaymentPort();
+const NO_SUBSCRIPTION = () => () => undefined;
+const UNSCOPED_ACCOUNT = () => "unconfigured";
+const CYCLE_KEY = "university.purchase-cycle.v1";
+function readYearlyChoice(): boolean {
+  try {
+    return globalThis.localStorage.getItem(CYCLE_KEY) !== "monthly";
+  } catch {
+    return true;
+  }
+}
 
 const BILLING_CYCLE_OPTIONS = [
   { id: "yearly", label: translate("ui.navigation.screens.plansScreen.copy.按年") },
@@ -124,9 +138,7 @@ function planButtonLabel(pricing: PlanPricing, availability: PaymentAvailability
     return translate("ui.navigation.screens.plansScreen.copy.先绑定邮箱");
   if (availability === "account-required")
     return translate("ui.navigation.screens.plansScreen.copy.先登录");
-  if (availability === "unavailable")
-    return translate("ui.navigation.screens.plansScreen.copy.记录购买意向");
-  return translate("ui.navigation.screens.plansScreen.copy.购买");
+  return translate("product.billing.upgrade");
 }
 
 function PlanCard({
@@ -134,21 +146,25 @@ function PlanCard({
   yearly,
   busyOfferId,
   purchaseAvailability,
+  currentPlanId,
   onPurchase,
 }: {
   readonly plan: Plan;
   readonly yearly: boolean;
   readonly busyOfferId: string | null;
   readonly purchaseAvailability: PaymentAvailability;
+  readonly currentPlanId: string | null;
   readonly onPurchase: (offerId: string) => void;
 }) {
   const purchasable = plan.pricing.kind !== "free";
   const saving = yearly ? configuredYearlySaving(plan.pricing) : null;
+  const current = plan.id === currentPlanId;
 
   return (
     <li className={purchasable ? "plan-card plan-card--featured" : "plan-card"}>
       <GamePanel>
         <div className="plan-card__head">
+          {purchasable ? <GameAssetIcon icon="crown" size="md" /> : null}
           <h2 className="plan-card__name">{plan.name}</h2>
         </div>
 
@@ -159,8 +175,7 @@ function PlanCard({
 
         {saving ? (
           <p className="plan-card__saving">
-            {translate("ui.navigation.screens.plansScreen.copy.比按月付省")} {saving.amount}
-            {translate("ui.navigation.screens.plansScreen.copy.也就是")} {saving.percent}%
+            {translate("product.billing.saving", { percent: saving.percent })}
           </p>
         ) : null}
 
@@ -169,8 +184,21 @@ function PlanCard({
             <li key={line}>{line}</li>
           ))}
         </ul>
-
         {purchasable ? (
+          <p className="plan-card__terms">
+            {yearly
+              ? translate("product.billing.yearlyShort")
+              : translate("product.billing.monthlyShort")}
+            <br />
+            {translate("product.billing.walletShort")}
+          </p>
+        ) : null}
+
+        {purchasable && current ? (
+          <p className="plan-card__note" data-current-membership>
+            {translate("product.billing.currentMember")}
+          </p>
+        ) : purchasable ? (
           <>
             {/*
               The reassurance appears only where billing can actually begin.
@@ -206,7 +234,9 @@ function PlanCard({
           </>
         ) : (
           <p className="plan-card__note">
-            {translate("ui.navigation.screens.plansScreen.copy.你现在就在用")}
+            {currentPlanId === "member"
+              ? translate("product.billing.freeIncluded")
+              : translate("ui.navigation.screens.plansScreen.copy.你现在就在用")}
           </p>
         )}
       </GamePanel>
@@ -277,14 +307,36 @@ function PaymentOrderNotice({
         {statusLabel(order.status)} {translate("ui.navigation.screens.plansScreen.copy.订单号")}{" "}
         {order.orderId}
       </p>
-      {order.checkoutUrl ? (
+      {order.quote ? (
+        <div className="payment-order__quote">
+          <p>
+            {translate("product.billing.quote")} ·{" "}
+            {order.quote.billingCycle === "yearly"
+              ? translate("ui.navigation.screens.plansScreen.copy.按年")
+              : translate("ui.navigation.screens.plansScreen.copy.按月")}
+          </p>
+          <p>
+            {translate("product.billing.subtotal")}：
+            {formatCurrency(order.quote.subtotalCents, order.quote.currency)}
+          </p>
+          <p>
+            {translate("product.billing.tax")}：
+            {formatCurrency(order.quote.taxCents, order.quote.currency)}
+          </p>
+          <p>
+            {translate("product.billing.total")}：
+            {formatCurrency(order.quote.totalCents, order.quote.currency)}
+          </p>
+        </div>
+      ) : null}
+      {order.checkoutUrl && order.status === "pending" ? (
         <p className="payment-order__line">
           <a href={order.checkoutUrl} target="_blank" rel="noreferrer">
             {translate("ui.navigation.screens.plansScreen.copy.继续付款")}
           </a>
         </p>
       ) : null}
-      {order.status === "pending" ? (
+      {order.status === "pending" || order.status === "paid" ? (
         <GameButton variant="secondary" type="button" onClick={onRefresh} disabled={refreshing}>
           {refreshing
             ? translate("ui.navigation.screens.plansScreen.copy.正在查询")
@@ -297,7 +349,19 @@ function PaymentOrderNotice({
 
 export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPort } = {}) {
   const payment = paymentPort ?? FALLBACK_PAYMENT_PORT;
-  const [yearly, setYearly] = useState(true);
+  const accountKey = useSyncExternalStore(
+    payment.subscribe ?? NO_SUBSCRIPTION,
+    payment.accountKey ?? UNSCOPED_ACCOUNT,
+    payment.accountKey ?? UNSCOPED_ACCOUNT,
+  );
+  return <PlansSession key={accountKey} payment={payment} />;
+}
+
+function PlansSession({ payment }: { readonly payment: PaymentPort }) {
+  const [yearly, setYearly] = useState(readYearlyChoice);
+  const [recovering, setRecovering] = useState(
+    Boolean(payment.resumePurchase && payment.accountKey?.().startsWith("signed_in:")),
+  );
   const [balance, setBalance] = useState<PaymentResult<WalletBalance> | null>(null);
   const [entitlement, setEntitlement] = useState<PaymentResult<EntitlementReadModel> | null>(null);
   const [busyOfferId, setBusyOfferId] = useState<string | null>(null);
@@ -305,16 +369,36 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
   const [order, setOrder] = useState<PaymentOrder | null>(null);
   const [explanation, setExplanation] = useState<PaymentExplanation | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [portalUrl, setPortalUrl] = useState<string | null>(null);
+  const purchaseBusy = useRef(false);
   const hasConfiguredCycle = PLANS.some((plan) => plan.pricing.kind === "configured");
   const purchaseAvailability = payment.purchaseAvailability();
 
   useEffect(() => {
     let active = true;
+    void (payment.resumePurchase?.() ?? Promise.resolve(null))
+      .then((result) => {
+        if (!active || !result) return;
+        if (result.kind === "explanation") setExplanation(result);
+        else {
+          setOrder(result.value);
+          if (result.value.quote) setYearly(result.value.quote.billingCycle === "yearly");
+        }
+      })
+      .catch(() => {
+        if (active) setError(translate("product.billing.readFailed"));
+      })
+      .finally(() => {
+        if (active) setRecovering(false);
+      });
     void Promise.all([payment.readBalance(), payment.readEntitlements()]).then(
       ([nextBalance, nextEntitlement]) => {
         if (!active) return;
         setBalance(nextBalance);
         setEntitlement(nextEntitlement);
+      },
+      () => {
+        if (active) setError(translate("product.billing.readFailed"));
       },
     );
     return () => {
@@ -332,11 +416,24 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
   }
 
   async function startPurchase(offerId: string): Promise<void> {
+    if (purchaseBusy.current || recovering) return;
+    if (order?.status === "pending") {
+      setError(translate("product.billing.pending"));
+      return;
+    }
+    purchaseBusy.current = true;
     setBusyOfferId(offerId);
     setError(null);
     try {
-      const result = await payment.initiatePurchase({ offerId });
+      const result = await payment.initiatePurchase({
+        offerId,
+        billingCycle: yearly ? "yearly" : "monthly",
+      });
       if (result.kind === "explanation") {
+        if (payment.purchaseAvailability() === "unavailable") {
+          setError(translate("product.billing.purchaseFailed"));
+          return;
+        }
         setExplanation(result);
         return;
       }
@@ -349,7 +446,20 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
           : translate("ui.navigation.screens.plansScreen.copy.购买请求暂时失败-请稍后再试"),
       );
     } finally {
+      purchaseBusy.current = false;
       setBusyOfferId(null);
+    }
+  }
+
+  async function manageSubscription() {
+    if (!payment.manageSubscription) return;
+    setPortalUrl(null);
+    try {
+      const result = await payment.manageSubscription();
+      if (result.kind === "explanation") setExplanation(result);
+      else setPortalUrl(result.value.url);
+    } catch {
+      setError(translate("product.billing.readFailed"));
     }
   }
 
@@ -377,13 +487,11 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
   }
 
   return (
-    <section className="shell-screen">
+    <section className="shell-screen plans-screen">
       <header className="shell-screen__head">
         <h1>{PLANS_TITLE}</h1>
         <p className="shell-screen__lede">{PLANS_LEDE}</p>
       </header>
-
-      <PaymentSummary balance={balance} entitlement={entitlement} />
 
       {hasConfiguredCycle ? (
         <div className="plan-toggle">
@@ -391,23 +499,67 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
             label={translate("ui.navigation.screens.plansScreen.copy.计费周期")}
             activeId={yearly ? "yearly" : "monthly"}
             options={BILLING_CYCLE_OPTIONS}
-            onSelect={(id) => setYearly(id === "yearly")}
+            onSelect={(id) => {
+              if (purchaseBusy.current || recovering || order?.status === "pending") return;
+              setYearly(id === "yearly");
+              try {
+                globalThis.localStorage.setItem(CYCLE_KEY, id);
+              } catch {
+                /* Selection still works for this page. */
+              }
+            }}
           />
         </div>
       ) : null}
 
+      {error ? (
+        <p className="payment-order__error" role="alert">
+          {error}
+        </p>
+      ) : null}
       <ul className="plan-grid">
-        {PLANS.map((plan) => (
+        {[
+          ...PLANS.filter((plan) => plan.pricing.kind !== "free"),
+          ...PLANS.filter((plan) => plan.pricing.kind === "free"),
+        ].map((plan) => (
           <PlanCard
             key={plan.id}
             plan={plan}
             yearly={yearly}
-            busyOfferId={busyOfferId}
+            busyOfferId={recovering ? plan.id : busyOfferId}
             purchaseAvailability={purchaseAvailability}
+            currentPlanId={entitlement?.kind === "value" ? entitlement.value.planId : null}
             onPurchase={(offerId) => void startPurchase(offerId)}
           />
         ))}
       </ul>
+      <details className="product-details" data-billing-details>
+        <summary>{translate("product.billing.details")}</summary>
+        <p>{translate("product.billing.yearlyTotal")}</p>
+        <p>{translate("product.billing.walletSeparate")}</p>
+        <p>{translate("product.billing.renewalDetails")}</p>
+      </details>
+      <PaymentSummary balance={balance} entitlement={entitlement} />
+      {(payment.accountKey?.().startsWith("signed_in:") || purchaseAvailability === "available") &&
+      payment.manageSubscription ? (
+        <GameButton
+          static
+          variant="secondary"
+          data-subscription-management
+          onClick={() => void manageSubscription()}
+        >
+          {translate("product.billing.manage")}
+        </GameButton>
+      ) : null}
+      {portalUrl ? (
+        <p>
+          <a href={portalUrl} target="_blank" rel="noreferrer">
+            {translate("product.billing.portal")}
+          </a>
+          <br />
+          {translate("product.billing.portalHint")}
+        </p>
+      ) : null}
 
       {order ? (
         <PaymentOrderNotice
@@ -416,12 +568,6 @@ export function PlansScreen({ paymentPort }: { readonly paymentPort?: PaymentPor
           onRefresh={() => void refreshOrder()}
         />
       ) : null}
-      {error ? (
-        <p className="payment-order__error" role="alert">
-          {error}
-        </p>
-      ) : null}
-
       {explanation ? (
         <CapabilityExplanation explanation={explanation} onClose={() => setExplanation(null)} />
       ) : null}

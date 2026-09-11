@@ -17,7 +17,7 @@ import {
   type EntitlementGrant,
   type EntitlementReadModel,
 } from "../billing/entitlements.js";
-import type { BillingConfig } from "../billing/plans.js";
+import { BILLING_CONFIG, planById, type BillingConfig } from "../billing/plans.js";
 import { createIdentityPort, type IdentityPort, type IdentityStatus } from "./identity.js";
 
 export interface WalletBalance {
@@ -27,6 +27,16 @@ export interface WalletBalance {
 }
 
 export type PaymentOrderStatus = "pending" | "paid" | "failed" | "cancelled";
+export type BillingCycle = "monthly" | "yearly";
+
+/** Server quote: base offer, any tax, and payable total stay distinct. */
+export interface PaymentQuote {
+  readonly billingCycle: BillingCycle;
+  readonly currency: string;
+  readonly subtotalCents: number;
+  readonly taxCents: number;
+  readonly totalCents: number;
+}
 
 export interface PaymentOrder {
   readonly orderId: string;
@@ -35,6 +45,8 @@ export interface PaymentOrder {
   readonly status: PaymentOrderStatus;
   /** Null when the server has not created a checkout action yet. */
   readonly checkoutUrl: string | null;
+  /** Old historical reads may lack this; a NEW purchase may not. */
+  readonly quote?: PaymentQuote;
 }
 
 /** The state a purchase CTA can explain before a learner presses it. */
@@ -72,14 +84,20 @@ export interface PaymentTransport {
     readonly userId: string;
     readonly orderId: string;
     readonly offerId: string;
+    readonly billingCycle: BillingCycle;
   }) => Promise<PaymentOrder>;
   readonly getOrderStatus?: (input: {
     readonly userId: string;
     readonly orderId: string;
   }) => Promise<PaymentOrder>;
+  /** Authenticated server creates a session in its actual subscription portal. */
+  readonly createSubscriptionPortal?: (userId: string) => Promise<string>;
 }
 
 export interface PaymentPort {
+  /** Stable identity boundary for clearing visible wallet/order data on account changes. */
+  accountKey?(): string;
+  subscribe?(listener: () => void): () => void;
   /**
    * A presentational hint only. `initiatePurchase` remains the authority and
    * returns a PaymentExplanation when the state changed or is unavailable.
@@ -89,11 +107,15 @@ export interface PaymentPort {
   readEntitlements(): Promise<PaymentResult<EntitlementReadModel>>;
   initiatePurchase(input: {
     readonly offerId: string;
+    readonly billingCycle?: BillingCycle;
     /** Tests and durable retry flows may reuse the id the browser generated. */
     readonly orderId?: string;
   }): Promise<PaymentResult<PaymentOrder>>;
   getOrderStatus(orderId: string): Promise<PaymentResult<PaymentOrder>>;
   refreshEntitlements(): Promise<PaymentResult<EntitlementReadModel>>;
+  /** Query a retained intent; never create an order merely by opening a page. */
+  resumePurchase?(): Promise<PaymentResult<PaymentOrder> | null>;
+  manageSubscription?(): Promise<PaymentResult<{ readonly url: string }>>;
 }
 
 export interface CreatePaymentPortOptions {
@@ -101,7 +123,25 @@ export interface CreatePaymentPortOptions {
   readonly transport: PaymentTransport | null;
   readonly billingConfig?: BillingConfig;
   readonly orderIdFactory?: () => string;
+  readonly intentStore?: {
+    read(userId: string): string | null;
+    write(userId: string, raw: string): void;
+  };
 }
+
+interface PurchaseIntent {
+  readonly orderId: string;
+  readonly offerId: string;
+  readonly billingCycle: BillingCycle;
+}
+
+const INTENT_UNAVAILABLE: PaymentExplanation = {
+  kind: "explanation",
+  title: "先确认上一次购买",
+  whatItDoes: "保留同一个订单号，避免刷新或断网后重复购买。",
+  whyUnavailable: "上次订单还没有确认，或这台设备暂时无法保存订单号。本次没有发起新的购买。",
+  futureSupport: "请先查询已有订单。若本机存储不可用，恢复后重试；不要重复付款。",
+};
 
 const DEFAULT_NO_CHANNEL_EXPLANATION: PaymentExplanation = {
   kind: "explanation",
@@ -110,7 +150,7 @@ const DEFAULT_NO_CHANNEL_EXPLANATION: PaymentExplanation = {
   whyUnavailable:
     "当前还没有可用的 University 订单服务。现在点击不会扣款、不会创建订单，也不会改变你的权益。",
   futureSupport:
-    "如果以后开放，仍会先由服务端确认订单，再更新权益；在此之前你可以继续学习所有已发布课程，进度和复习记录照常留在当前账号里。",
+    "购买、账单查询和取消续费一起准备好后才会开售。在此之前可以继续免费学课；本机保存和云端同步会分别说明。",
   action: { label: "继续学习", href: "#/" },
 };
 
@@ -171,6 +211,87 @@ const INVALID_ORDER_EXPLANATION: PaymentExplanation = {
   futureSupport: "重新从购买入口发起一次请求，浏览器会生成新的订单号。",
 };
 
+const MANAGEMENT_UNAVAILABLE: PaymentExplanation = {
+  kind: "explanation",
+  title: "订阅管理暂时无法打开",
+  whatItDoes: "查看账单和管理续费；停止下次续费不等于立即退款。",
+  whyUnavailable: "还没有取得可用的订阅管理页面。这次没有取消或更改任何订阅。",
+  futureSupport: "请稍后重试。只有真实订阅管理和订单服务同时就绪，产品才会开放购买。",
+};
+
+/** Redirects come from the authenticated backend, never from URL query input. */
+export function safePaymentUrl(value: string): boolean {
+  try {
+    // The core does not depend on DOM or Node declarations. Both supported
+    // runtimes supply the standard parser; a missing parser fails closed.
+    const Url = (
+      globalThis as unknown as {
+        URL: new (value: string) => {
+          protocol: string;
+          hostname: string;
+          username: string;
+          password: string;
+        };
+      }
+    ).URL;
+    const url = new Url(value);
+    const host = url.hostname.toLowerCase();
+    return (
+      url.protocol === "https:" &&
+      !url.username &&
+      !url.password &&
+      host.includes(".") &&
+      host !== "localhost" &&
+      !host.endsWith(".localhost") &&
+      !host.endsWith(".local") &&
+      !/^\d+(?:\.\d+){3}$/u.test(host) &&
+      !host.includes(":")
+    );
+  } catch {
+    return false;
+  }
+}
+
+function validateOrder(
+  order: PaymentOrder,
+  expected?: { offerId: string; billingCycle: BillingCycle },
+  config = BILLING_CONFIG as BillingConfig,
+): void {
+  if (expected && order.offerId !== expected.offerId)
+    throw new Error("Payment order offer does not match the request");
+  if (!["pending", "paid", "failed", "cancelled"].includes(order.status))
+    throw new Error("Payment order status is invalid");
+  if (order.checkoutUrl !== null && !safePaymentUrl(order.checkoutUrl))
+    throw new Error("Payment checkout URL is unsafe");
+  const quote = order.quote;
+  if (!expected && !quote) return; // Read-only legacy orders are not new purchases.
+  const plan = planById(expected?.offerId ?? order.offerId, config);
+  const cycle = expected?.billingCycle ?? quote?.billingCycle;
+  const pricing = plan?.pricing;
+  const price =
+    pricing?.kind === "configured"
+      ? cycle === "yearly"
+        ? pricing.yearlyCents
+        : pricing.monthlyCents
+      : null;
+  if (
+    !quote ||
+    (cycle !== "monthly" && cycle !== "yearly") ||
+    !pricing ||
+    pricing.kind !== "configured" ||
+    price === null ||
+    quote.billingCycle !== cycle ||
+    quote.currency !== pricing.currency ||
+    quote.subtotalCents !== price ||
+    ![quote.subtotalCents, quote.taxCents, quote.totalCents].every(
+      (value) => Number.isSafeInteger(value) && value >= 0,
+    ) ||
+    quote.totalCents !== quote.subtotalCents + quote.taxCents
+  ) {
+    throw new Error("Payment quote does not match the selected offer / 订单报价与所选方案不一致");
+  }
+}
+
 function accountRequiredExplanation(status: IdentityStatus): PaymentExplanation {
   return status.kind === "anonymous"
     ? ANONYMOUS_ACCOUNT_REQUIRED_EXPLANATION
@@ -188,8 +309,52 @@ function accountRequiredExplanation(status: IdentityStatus): PaymentExplanation 
 export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPort {
   const requests = new Map<
     string,
-    { readonly offerId: string; readonly result: Promise<PaymentResult<PaymentOrder>> }
+    {
+      readonly offerId: string;
+      readonly billingCycle: BillingCycle;
+      readonly result: Promise<PaymentResult<PaymentOrder>>;
+    }
   >();
+  // A transport timeout is not proof that the backend did not create an order.
+  // Keep the retry identity until this page's caller deliberately chooses a new intent.
+  const intents = new Map<string, PurchaseIntent | null>();
+  function loadIntent(userId: string): PurchaseIntent | null {
+    if (intents.has(userId)) return intents.get(userId) ?? null;
+    const raw = options.intentStore?.read(userId);
+    const value: unknown = raw ? JSON.parse(raw) : null;
+    if (value === null) return null;
+    if (typeof value !== "object" || Array.isArray(value))
+      throw new Error("Invalid purchase intent");
+    const item = value as Record<string, unknown>;
+    if (
+      typeof item.orderId !== "string" ||
+      !item.orderId.trim() ||
+      item.orderId.length > 200 ||
+      typeof item.offerId !== "string" ||
+      !item.offerId.trim() ||
+      item.offerId.length > 200 ||
+      (item.billingCycle !== "monthly" && item.billingCycle !== "yearly")
+    )
+      throw new Error("Invalid purchase intent");
+    const intent: PurchaseIntent = {
+      orderId: item.orderId,
+      offerId: item.offerId,
+      billingCycle: item.billingCycle,
+    };
+    intents.set(userId, intent);
+    return intent;
+  }
+  function saveIntent(userId: string, intent: PurchaseIntent | null): void {
+    // Persist before sending. A write failure must not create an untraceable order.
+    options.intentStore?.write(userId, JSON.stringify(intent));
+    intents.set(userId, intent);
+  }
+  const completeChannel = () =>
+    Boolean(
+      options.transport?.createOrder &&
+      options.transport.getOrderStatus &&
+      options.transport.createSubscriptionPortal,
+    );
 
   const userIdOf = (): string | null => {
     const status = options.identity.status();
@@ -205,6 +370,7 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
     if (status.kind === "signed_in" && options.transport?.readEntitlement) {
       try {
         grant = await options.transport.readEntitlement(status.user.id);
+        if (userIdOf() !== status.user.id) return ENTITLEMENT_UNAVAILABLE_EXPLANATION;
       } catch {
         return ENTITLEMENT_UNAVAILABLE_EXPLANATION;
       }
@@ -224,11 +390,19 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
   };
 
   return {
+    accountKey: () => {
+      const status = options.identity.status();
+      return status.kind === "signed_in" || status.kind === "anonymous"
+        ? `${status.kind}:${status.user.id}`
+        : status.kind;
+    },
+    subscribe: (listener) => options.identity.subscribe(listener),
     purchaseAvailability() {
+      if (!completeChannel()) return "unavailable";
       const status = options.identity.status();
       if (status.kind === "anonymous") return "anonymous";
       if (status.kind !== "signed_in") return "account-required";
-      return options.transport?.createOrder ? "available" : "unavailable";
+      return "available";
     },
 
     async readBalance() {
@@ -238,7 +412,9 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
       const readBalance = options.transport?.readBalance;
       if (!readBalance) return BALANCE_UNAVAILABLE_EXPLANATION;
       try {
-        return { kind: "value", value: await readBalance(userId) };
+        const value = await readBalance(userId);
+        if (userIdOf() !== userId) return BALANCE_UNAVAILABLE_EXPLANATION;
+        return { kind: "value", value };
       } catch {
         return BALANCE_UNAVAILABLE_EXPLANATION;
       }
@@ -247,6 +423,7 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
     readEntitlements: readEntitlementResult,
 
     async initiatePurchase(input) {
+      if (!completeChannel()) return DEFAULT_NO_CHANNEL_EXPLANATION;
       const status = options.identity.status();
       const userId = userIdOf();
       if (!userId) return accountRequiredExplanation(status);
@@ -255,26 +432,51 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
 
       const offerId = input.offerId.trim();
       if (!offerId) throw new Error("Payment offerId must not be empty");
-      const orderId = input.orderId?.trim() || options.orderIdFactory?.();
+      const billingCycle = input.billingCycle;
+      if (billingCycle !== "monthly" && billingCycle !== "yearly")
+        throw new Error("请选择按月或按年，再继续购买。");
+      let previous: PurchaseIntent | null;
+      try {
+        previous = loadIntent(userId);
+      } catch {
+        return INTENT_UNAVAILABLE;
+      }
+      if (
+        previous &&
+        (previous.offerId !== offerId ||
+          previous.billingCycle !== billingCycle ||
+          (input.orderId && input.orderId.trim() !== previous.orderId))
+      )
+        return INTENT_UNAVAILABLE;
+      const orderId = previous?.orderId || input.orderId?.trim() || options.orderIdFactory?.();
       if (!orderId) throw new Error("Payment orderId must not be empty");
+      try {
+        saveIntent(userId, { orderId, offerId, billingCycle });
+      } catch {
+        return INTENT_UNAVAILABLE;
+      }
 
       const requestKey = requestKeyOf(userId, orderId);
       const existing = requests.get(requestKey);
       if (existing) {
-        if (existing.offerId !== offerId) {
+        if (existing.offerId !== offerId || existing.billingCycle !== billingCycle) {
           throw new Error("Payment order id cannot be reused for a different offer");
         }
         return existing.result;
       }
 
       const result = (async (): Promise<PaymentResult<PaymentOrder>> => {
-        const order = await createOrder({ userId, orderId, offerId });
+        const order = await createOrder({ userId, orderId, offerId, billingCycle });
+        if (userIdOf() !== userId) return accountRequiredExplanation(options.identity.status());
         if (order.orderId !== orderId || order.offerId !== offerId) {
           throw new Error("Payment backend returned an order for a different request");
         }
+        validateOrder(order, { offerId, billingCycle }, options.billingConfig);
+        if (order.status === "failed" || order.status === "cancelled") saveIntent(userId, null);
         return { kind: "value", value: order };
       })();
-      requests.set(requestKey, { offerId, result });
+      requests.set(requestKey, { offerId, billingCycle, result });
+      if (requests.size > 40) requests.delete(requests.keys().next().value!);
 
       try {
         return await result;
@@ -294,8 +496,22 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
       if (!getOrderStatus) return ORDER_STATUS_UNAVAILABLE_EXPLANATION;
       try {
         const order = await getOrderStatus({ userId, orderId: normalizedOrderId });
+        if (userIdOf() !== userId) return accountRequiredExplanation(options.identity.status());
         if (order.orderId !== normalizedOrderId) {
           throw new Error("Payment backend returned an order for a different request");
+        }
+        const intent = loadIntent(userId);
+        validateOrder(
+          order,
+          intent?.orderId === normalizedOrderId ? intent : undefined,
+          options.billingConfig,
+        );
+        if (
+          intent?.orderId === normalizedOrderId &&
+          (order.status === "failed" || order.status === "cancelled")
+        ) {
+          saveIntent(userId, null);
+          requests.delete(requestKeyOf(userId, normalizedOrderId));
         }
         return { kind: "value", value: order };
       } catch {
@@ -304,6 +520,29 @@ export function createPaymentPort(options: CreatePaymentPortOptions): PaymentPor
     },
 
     refreshEntitlements: readEntitlementResult,
+    async resumePurchase() {
+      const userId = userIdOf();
+      if (!userId) return null;
+      try {
+        const intent = loadIntent(userId);
+        return intent ? await this.getOrderStatus(intent.orderId) : null;
+      } catch {
+        return INTENT_UNAVAILABLE;
+      }
+    },
+    async manageSubscription() {
+      const userId = userIdOf();
+      if (!userId) return accountRequiredExplanation(options.identity.status());
+      const open = options.transport?.createSubscriptionPortal;
+      if (!open) return MANAGEMENT_UNAVAILABLE;
+      try {
+        const url = await open(userId);
+        if (userIdOf() !== userId || !safePaymentUrl(url)) return MANAGEMENT_UNAVAILABLE;
+        return { kind: "value", value: { url } };
+      } catch {
+        return MANAGEMENT_UNAVAILABLE;
+      }
+    },
   };
 }
 

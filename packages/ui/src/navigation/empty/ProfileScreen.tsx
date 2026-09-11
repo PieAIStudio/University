@@ -25,6 +25,7 @@ export function ProfileScreen({
   totalXp,
   badges,
   nextHref = "/",
+  reviewCardCount = 0,
 }: {
   readonly avatar?: ReactNode;
   /** Quiet account door. Absent when a shell has not wired identity yet. */
@@ -36,6 +37,7 @@ export function ProfileScreen({
   /** The badge wall, from a shell that has a progress document to build it from. */
   readonly badges?: ReactNode;
   readonly nextHref?: string;
+  readonly reviewCardCount?: number;
 }) {
   return (
     <div className="profile-screen">
@@ -43,13 +45,25 @@ export function ProfileScreen({
       {totalXp === undefined ? null : <LevelProgress totalXp={totalXp} />}
       {account}
       <dl className="profile-screen__stats">
-        <Stat
-          label={translate("ui.navigation.empty.profileScreen.copy.读过真实代码")}
-          value={passagesRead}
-          unit={translate("ui.navigation.empty.profileScreen.copy.段")}
-          invite={translate("ui.navigation.empty.profileScreen.copy.还没读过真实代码-第一节里就有")}
-          href={nextHref}
-        />
+        {passagesRead > 0 ? (
+          <Stat
+            label={translate("ui.navigation.empty.profileScreen.copy.读过真实代码")}
+            value={passagesRead}
+            unit={translate("ui.navigation.empty.profileScreen.copy.段")}
+            invite={translate(
+              "ui.navigation.empty.profileScreen.copy.还没读过真实代码-第一节里就有",
+            )}
+            href={nextHref}
+          />
+        ) : (
+          <Stat
+            label={translate("product.profile.cards")}
+            value={reviewCardCount}
+            unit={translate("product.profile.cardsUnit")}
+            invite={translate("product.profile.cardsEmpty")}
+            href={nextHref}
+          />
+        )}
         <Stat
           label={translate("ui.navigation.empty.profileScreen.copy.学完")}
           value={lessonsCompleted}

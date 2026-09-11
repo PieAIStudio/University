@@ -22,10 +22,18 @@ function port(
       return state;
     },
     latestExerciseAttempt: (_locator, exerciseId, contentRevision) =>
-      attempts.find(
+      attempts
+        .filter(
+          (attempt) =>
+            attempt.exerciseId === exerciseId && attempt.contentRevision === contentRevision,
+        )
+        .sort((left, right) => Date.parse(right.occurredAt) - Date.parse(left.occurredAt))[0] ??
+      null,
+    exerciseAttempts: (_locator, exerciseId, contentRevision) =>
+      attempts.filter(
         (attempt) =>
           attempt.exerciseId === exerciseId && attempt.contentRevision === contentRevision,
-      ) ?? null,
+      ),
   } as unknown as ProgressPort;
 }
 
@@ -54,6 +62,32 @@ function passed(exerciseId: string, contentRevision: number): ExerciseAttemptRec
       occurredAt: "2026-08-26T00:00:00.000Z",
     },
     occurredAt: "2026-08-26T00:00:00.000Z",
+  };
+}
+
+function undecided(
+  exerciseId: string,
+  contentRevision: number,
+  occurredAt: string,
+): ExerciseAttemptRecord {
+  return {
+    commandId: `${exerciseId}-${contentRevision}-undecided`,
+    locator: REF,
+    exerciseId,
+    contentRevision,
+    answer: "一个合理的改写",
+    score: 0,
+    maxScore: 1,
+    hostGrade: {
+      passed: false,
+      outcome: "undecided",
+      evaluation: "暂时无法判断",
+      extensions: [],
+      host: "tier-1",
+      learnerAnswer: "一个合理的改写",
+      occurredAt,
+    },
+    occurredAt,
   };
 }
 
@@ -223,6 +257,34 @@ describe("progressSourceOf", () => {
   it("keeps legacy progress-1 records complete without exercise attempts", () => {
     const source = progressSourceOf(
       port({ progress: 1, completedAt: null, attempts: 1, readConfirmed: undefined }),
+    );
+
+    expect(source.completionOf(REF, snapshot(8, ["exercise"]))).toEqual({
+      exercisesPassed: true,
+      readConfirmed: true,
+    });
+  });
+
+  it("keeps an earlier current-revision pass after an undecided retry", () => {
+    const earlierPass = {
+      ...passed("exercise", 8),
+      occurredAt: "2026-08-26T09:00:00.000Z",
+      hostGrade: {
+        ...passed("exercise", 8).hostGrade!,
+        occurredAt: "2026-08-26T09:00:00.000Z",
+      },
+    };
+    const source = progressSourceOf(
+      port(
+        {
+          progress: 0,
+          completedAt: null,
+          attempts: 2,
+          readConfirmed: true,
+          readConfirmedRevision: 8,
+        },
+        [earlierPass, undecided("exercise", 8, "2026-08-26T10:00:00.000Z")],
+      ),
     );
 
     expect(source.completionOf(REF, snapshot(8, ["exercise"]))).toEqual({

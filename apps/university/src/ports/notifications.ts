@@ -13,6 +13,8 @@ export interface BrowserReviewReminderOptions {
   readonly progress: ProgressPort;
   /** Public VAPID key only. The private signing key belongs to SwimmerBackend. */
   readonly vapidPublicKey?: string;
+  /** Verified service capability, not merely a public key in a build variable. */
+  readonly senderReady?: () => boolean;
   readonly serviceWorkerUrl?: string;
   readonly scope?: string;
 }
@@ -59,7 +61,7 @@ export function createBrowserReviewReminderPort(
     }
     if (permission !== "granted") {
       currentEndpoint = null;
-      setStatus({ kind: "permission-default" });
+      setStatus(senderReady() ? { kind: "permission-default" } : senderUnavailable());
       return;
     }
 
@@ -79,7 +81,7 @@ export function createBrowserReviewReminderPort(
       setStatus({
         kind: "subscribed",
         endpoint: record.endpoint,
-        serverConnected: senderReaches(record, options.vapidPublicKey),
+        serverConnected: senderReady() && senderReaches(record, options.vapidPublicKey),
       });
     } catch (error) {
       setStatus({ kind: "error", message: browserErrorMessage(error) });
@@ -105,6 +107,10 @@ export function createBrowserReviewReminderPort(
     const currentPermission = readPermission();
     if (currentPermission === "denied") {
       setStatus({ kind: "permission-denied" });
+      return;
+    }
+    if (!senderReady()) {
+      setStatus(senderUnavailable());
       return;
     }
 
@@ -152,7 +158,7 @@ export function createBrowserReviewReminderPort(
       setStatus({
         kind: "subscribed",
         endpoint: record.endpoint,
-        serverConnected: senderReaches(record, options.vapidPublicKey),
+        serverConnected: senderReady() && senderReaches(record, options.vapidPublicKey),
       });
     } catch (error) {
       setStatus({ kind: "error", message: browserErrorMessage(error) });
@@ -224,7 +230,19 @@ export function createBrowserReviewReminderPort(
     const permission = readPermission();
     if (permission === "denied") return { kind: "permission-denied" };
     if (permission === "granted") return { kind: "permission-granted" };
-    return { kind: "permission-default" };
+    return senderReady() ? { kind: "permission-default" } : senderUnavailable();
+  }
+
+  function senderReady(): boolean {
+    try {
+      return Boolean(options.vapidPublicKey?.trim()) && options.senderReady?.() === true;
+    } catch {
+      return false;
+    }
+  }
+
+  function senderUnavailable(): ReviewReminderStatus {
+    return { kind: "error", message: translate("product.reminders.unavailable") };
   }
 
   function capabilityStatus():

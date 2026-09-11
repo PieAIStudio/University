@@ -95,6 +95,7 @@ describe("AppShell", () => {
     await renderShell();
     expect(document.querySelectorAll(".counter-row")).toHaveLength(1);
     expect(document.querySelectorAll("nav")).toHaveLength(2);
+    expect(document.querySelector("header.app-shell__east .counter-row")).not.toBeNull();
     expect(rail().getAttribute("aria-label")).toBeTruthy();
     expect(tabs().getAttribute("aria-label")).toBeTruthy();
     expect(rail().getAttribute("aria-label")).not.toBe(tabs().getAttribute("aria-label"));

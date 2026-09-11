@@ -66,11 +66,7 @@ export const BILLING_CONFIG = {
         openTutoringTurnsPerDay: null,
       },
       sync: { included: false, seats: 0 },
-      lines: [
-        "全部已发布课程、全部关卡，课文永远不收费",
-        "答案对不对，能当场判的当场判",
-        "绑定邮箱后每天有少量结构化 AI 批改尝鲜额度，用完今天停止，明天恢复",
-      ],
+      lines: ["全部课程免费学", "练习与复习卡", "绑定邮箱，每天体验 AI 批改"],
     },
     /*
       The overseas launch hypothesis is $19 monthly or $149 yearly. Keeping
@@ -113,12 +109,7 @@ export const BILLING_CONFIG = {
         button says so in its own words rather than leaving the reader to find
         out by clicking.
       */
-      lines: [
-        "结构化 AI 批改不受每日免费尝鲜额度封顶",
-        "开放式辅导按用量计费，额度和账单都在同一个账号里",
-        "换手机也不用从头来：登录同一账号，进度和复习卡接着走",
-        "同时登录三台设备，手机、电脑、平板都算一台",
-      ],
+      lines: ["学习进度、复习卡同步", "手机、电脑、平板接着学", "AI 批改不受每日免费额度限制"],
     },
   ],
 } satisfies BillingConfig;

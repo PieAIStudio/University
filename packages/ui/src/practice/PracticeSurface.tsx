@@ -110,28 +110,35 @@ export function PracticeSurface({
 
   return (
     <div className="terms">
-      {onOpenWorld ? (
-        <GameButton
-          variant="ghost"
-          static
-          type="button"
-          className="practice-stream__leave"
-          onClick={onOpenWorld}
-        >
-          {translate("ui.practice.practiceSurface.copy.关卡地图")}
-        </GameButton>
-      ) : null}
-      <PracticeOverview {...overview} onOpenReview={onOpenReview} />
-      {onOpenPlayLab ? (
-        <GameButton type="button" variant="secondary" onClick={onOpenPlayLab}>
-          {translate("play.lab.entry")}
-        </GameButton>
-      ) : null}
       <PracticeStream
         questions={questions}
         store={store}
         onBrowse={onBrowse}
         renderReward={reward}
+        onFinish={onOpenWorld}
+        introduction={
+          <>
+            {onOpenWorld ? (
+              <GameButton
+                variant="ghost"
+                static
+                type="button"
+                className="practice-stream__leave"
+                onClick={onOpenWorld}
+              >
+                {translate("ui.practice.practiceSurface.copy.关卡地图")}
+              </GameButton>
+            ) : null}
+            <PracticeOverview {...overview} onOpenReview={onOpenReview} />
+          </>
+        }
+        extraAction={
+          onOpenPlayLab ? (
+            <GameButton type="button" variant="ghost" static onClick={onOpenPlayLab}>
+              {translate("play.lab.entry")}
+            </GameButton>
+          ) : null
+        }
       />
     </div>
   );

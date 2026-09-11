@@ -1,0 +1,168 @@
+{
+  "name": "phone-first-visit",
+  "capturedAt": "2026-09-09T15:45:58.621Z",
+  "browser": "153.0.8010.36",
+  "mode": "delivery production",
+  "sourceCommit": "cea753e",
+  "query": "none",
+  "freshContext": true,
+  "theme": "light",
+  "account": "fresh guest; backend public configuration absent in this worktree",
+  "url": "http://127.0.0.1:21898/",
+  "title": "University",
+  "visible": "visible",
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "dpr": 1
+  },
+  "bodyWidth": 390,
+  "text": "AI 到底是什么\n当前\n改写中\n\n从这里开始\n\n手机怎么一眼就认出是你\n\n认识 AI，从这里开始\n\n打开项目地图\n开始学习 →\n\n拖动平移\n·\n双指缩放\n\n点岛进入\n\n认识 AI，从这里开始\n▾\n0\n学习\n练习\n任务\n排行榜\n图鉴\n会员\n我\n提意见",
+  "headings": [
+    "手机怎么一眼就认出是你",
+    "手机怎么一眼就认出是你"
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "text": "AI 到底是什么\n当前\n改写中",
+      "href": null,
+      "disabled": false,
+      "x": 106.40625,
+      "y": 474.1950378417969,
+      "w": 177.1875,
+      "h": 23.984375
+    },
+    {
+      "tag": "BUTTON",
+      "text": "打开项目地图",
+      "href": null,
+      "disabled": false,
+      "x": 258.109375,
+      "y": 209.609375,
+      "w": 100.890625,
+      "h": 40
+    },
+    {
+      "tag": "BUTTON",
+      "text": "开始学习 →",
+      "href": null,
+      "disabled": false,
+      "x": 45,
+      "y": 259.609375,
+      "w": 314,
+      "h": 44
+    },
+    {
+      "tag": "BUTTON",
+      "text": "认识 AI，从这里开始\n▾",
+      "href": null,
+      "disabled": false,
+      "x": 16,
+      "y": 42.796875,
+      "w": 182.28125,
+      "h": 34
+    },
+    {
+      "tag": "A",
+      "text": "0",
+      "href": "/quests",
+      "disabled": false,
+      "x": 206.28125,
+      "y": 42.796875,
+      "w": 167.71875,
+      "h": 34
+    },
+    {
+      "tag": "A",
+      "text": "学习",
+      "href": "/",
+      "disabled": false,
+      "x": 0,
+      "y": 788,
+      "w": 55.703125,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "练习",
+      "href": "/practice",
+      "disabled": false,
+      "x": 55.703125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "任务",
+      "href": "/quests",
+      "disabled": false,
+      "x": 111.421875,
+      "y": 788,
+      "w": 55.703125,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "排行榜",
+      "href": "/league",
+      "disabled": false,
+      "x": 167.125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "图鉴",
+      "href": "/library",
+      "disabled": false,
+      "x": 222.84375,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "会员",
+      "href": "/plans",
+      "disabled": false,
+      "x": 278.5625,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "我",
+      "href": "/me",
+      "disabled": false,
+      "x": 334.28125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "BUTTON",
+      "text": "提意见",
+      "href": null,
+      "disabled": false,
+      "x": 291.4375,
+      "y": 727,
+      "w": 86.5625,
+      "h": 34
+    }
+  ],
+  "canvases": [
+    {
+      "width": 300,
+      "height": 150
+    },
+    {
+      "width": 390,
+      "height": 590
+    }
+  ],
+  "errors": []
+}

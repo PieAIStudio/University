@@ -135,7 +135,8 @@ describe("the four screens that read the progress document", () => {
     });
     const text = container.textContent ?? "";
     expect(text).toContain("石阶");
-    expect(text).toContain("还没有别人可以比");
+    expect(text).toContain("这里记录你自己的积累");
+    expect(container.querySelector("[data-growth-details]")?.hasAttribute("open")).toBe(false);
     expect(text).not.toContain("排行榜还没开");
   });
 

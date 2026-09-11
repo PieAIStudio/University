@@ -3,11 +3,11 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEven
 import {
   GameButton,
   GameCallout,
-  GameEmptyState,
   GameField,
   GameInput,
   GameLoadingState,
   GameModal,
+  GamePanel,
   GameTabs,
 } from "@pieai/swimmer-ui-kit";
 import type { IdentityPort } from "@pieai/university-core";
@@ -23,31 +23,18 @@ import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
  * `GameInput` — so this file does not invent a password box.
  */
 
-export const ACCOUNT_UNSIGNED_TITLE = translate(
-  "ui.navigation.empty.accountPanel.copy.登录后跨设备同步",
-);
-export const ACCOUNT_UNSIGNED_DESCRIPTION = translate(
-  "ui.navigation.empty.accountPanel.copy.登录后进度-批注-答案-复习和收藏会跟账号走-断网时本机继续-联网后同步",
-);
+export const ACCOUNT_UNSIGNED_TITLE = translate("product.account.title");
+export const ACCOUNT_UNSIGNED_DESCRIPTION = translate("product.account.description");
 /**
  * Said from the learner's side of the screen, not ours.
  *
  * If the backend is not configured, say that plainly. The local cache still
  * works, but it is not a cross-device guarantee until an account is connected.
  */
-export const ACCOUNT_UNCONFIGURED_DESCRIPTION = translate(
-  "ui.navigation.empty.accountPanel.copy.云端账号还未配置-当前仅保留本机离线缓存-配置完成后登录即可跨设备同步",
-);
-export const ACCOUNT_UNCONFIGURED_ACTION = translate(
-  "ui.navigation.empty.accountPanel.copy.暂未开放-了解原因",
-);
-export const ACCOUNT_UNCONFIGURED_REASON = translate(
-  "ui.navigation.empty.accountPanel.copy.当前环境没有配置云端账号服务-所以现在不能登录-也不会假装已经同步-你仍可以在本机继续学习-配置账号服务后-这里",
-);
+export const ACCOUNT_UNCONFIGURED_DESCRIPTION = translate("product.account.unconfigured");
+export const ACCOUNT_UNCONFIGURED_ACTION = translate("product.account.open");
+export const ACCOUNT_UNCONFIGURED_REASON = translate("product.account.retryReason");
 export const ACCOUNT_SIGNED_IN_TITLE = translate("ui.navigation.empty.accountPanel.copy.已经登录");
-const ACCOUNT_SIGNED_IN_DESCRIPTION = translate(
-  "ui.navigation.empty.accountPanel.copy.进度-批注-答案-复习-收藏和设置已绑定账号-断网也能继续学-连上再同步",
-);
 export const ACCOUNT_PENDING_LABEL = translate("ui.navigation.empty.accountPanel.copy.正在登录");
 export const ACCOUNT_SIGN_IN = translate("ui.navigation.empty.accountPanel.copy.登录");
 const ACCOUNT_SIGN_UP = translate("ui.navigation.empty.accountPanel.copy.创建账号");
@@ -94,23 +81,21 @@ export function AccountPanel({
         className="account-panel"
         aria-label={translate("ui.navigation.empty.accountPanel.copy.账号")}
       >
-        <GameEmptyState
-          title={ACCOUNT_UNSIGNED_TITLE}
-          description={ACCOUNT_UNCONFIGURED_DESCRIPTION}
-          action={
-            <GameButton
-              variant="secondary"
-              type="button"
-              onClick={() => setShowUnavailableReason(true)}
-            >
-              {ACCOUNT_UNCONFIGURED_ACTION}
-            </GameButton>
-          }
-        />
+        <GamePanel className="account-panel__invitation" title={ACCOUNT_UNSIGNED_TITLE}>
+          <p>{translate("product.account.invitation")}</p>
+          <GameButton
+            variant="primary"
+            static
+            type="button"
+            onClick={() => setShowUnavailableReason(true)}
+          >
+            {ACCOUNT_UNCONFIGURED_ACTION}
+          </GameButton>
+        </GamePanel>
         {showUnavailableReason ? (
           <GameModal
             open
-            title={translate("ui.navigation.empty.accountPanel.copy.登录暂未开放")}
+            title={translate("product.account.retryTitle")}
             closeLabel={translate("ui.navigation.empty.accountPanel.copy.关闭登录说明")}
             closeOnBackdrop
             onClose={() => setShowUnavailableReason(false)}
@@ -145,22 +130,12 @@ export function AccountPanel({
         className="account-panel"
         aria-label={translate("ui.navigation.empty.accountPanel.copy.账号")}
       >
-        <GameEmptyState
-          title={ACCOUNT_SIGNED_IN_TITLE}
-          description={
-            status.user.email
-              ? translate("ui.navigation.empty.accountPanel.copy.value0-现在是-value1", {
-                  value0: ACCOUNT_SIGNED_IN_DESCRIPTION,
-                  value1: status.user.email,
-                })
-              : ACCOUNT_SIGNED_IN_DESCRIPTION
-          }
-          action={
-            <GameButton variant="ghost" type="button" onClick={() => void identity.signOut()}>
-              {ACCOUNT_SIGN_OUT}
-            </GameButton>
-          }
-        />
+        <div className="account-panel__signed-in">
+          <p>{status.user.email ?? ACCOUNT_SIGNED_IN_TITLE}</p>
+          <GameButton variant="ghost" type="button" onClick={() => void identity.signOut()}>
+            {ACCOUNT_SIGN_OUT}
+          </GameButton>
+        </div>
       </section>
     );
   }
@@ -199,13 +174,19 @@ function UnsignedAccountForm({
   const passwordId = useId();
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const formDetails = useRef<HTMLDetailsElement>(null);
   const tabs = anonymous ? PASSWORD_AUTH_TABS : AUTH_TABS;
 
   useEffect(() => {
     if (focusRequest <= 0) return;
+    if (formDetails.current) formDetails.current.open = true;
     emailRef.current?.scrollIntoView({ block: "nearest" });
     emailRef.current?.focus();
   }, [focusRequest]);
+
+  useEffect(() => {
+    if (error && formDetails.current) formDetails.current.open = true;
+  }, [error]);
 
   useEffect(() => {
     if (!anonymous || mode !== "magic") return;
@@ -273,8 +254,12 @@ function UnsignedAccountForm({
 
   return (
     <div className="account-panel">
-      <GameEmptyState title={ACCOUNT_UNSIGNED_TITLE} description={ACCOUNT_UNSIGNED_DESCRIPTION} />
-      <div className="account-panel__form">
+      <h2>{ACCOUNT_UNSIGNED_TITLE}</h2>
+      <p>{translate("product.account.invitation")}</p>
+      <details className="product-details account-panel__form" ref={formDetails}>
+        <summary>{translate("product.account.open")}</summary>
+        <p>{ACCOUNT_UNSIGNED_DESCRIPTION}</p>
+        {anonymous ? <p>{translate("product.save.anonymousMerge")}</p> : null}
         <GameTabs
           id="account-mode"
           activeId={mode}
@@ -339,7 +324,7 @@ function UnsignedAccountForm({
             </LiquidCtaButton>
           </form>
         </div>
-      </div>
+      </details>
     </div>
   );
 }

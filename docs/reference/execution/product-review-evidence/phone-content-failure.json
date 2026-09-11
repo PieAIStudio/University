@@ -1,0 +1,58 @@
+{
+  "name": "phone-content-failure",
+  "capturedAt": "2026-09-09T15:50:39.032Z",
+  "browser": "153.0.8010.36",
+  "mode": "delivery production",
+  "sourceCommit": "cea753e",
+  "account": "isolated fresh guest; no cloud configuration",
+  "theme": "light",
+  "url": "http://127.0.0.1:21898/",
+  "title": "University",
+  "visible": "visible",
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "dpr": 1
+  },
+  "bodyWidth": 390,
+  "text": "课程资料没有打开\n\n这次没有拿到课程资料，可能是网络刚刚断了一下。再试一次，或先回到课程列表。\n\n重试课程资料\n先看课程列表\n提意见",
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "role": null,
+      "text": "重试课程资料",
+      "href": null,
+      "disabled": false,
+      "x": 53,
+      "y": 281.765625,
+      "w": 284,
+      "h": 40
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "role": null,
+      "text": "先看课程列表",
+      "href": null,
+      "disabled": false,
+      "x": 53,
+      "y": 332.15625,
+      "w": 284,
+      "h": 40
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "role": null,
+      "text": "提意见",
+      "href": null,
+      "disabled": false,
+      "x": 291.4375,
+      "y": 727,
+      "w": 86.5625,
+      "h": 34
+    }
+  ],
+  "faultInjection": "content requests deliberately aborted; not an observed live outage"
+}

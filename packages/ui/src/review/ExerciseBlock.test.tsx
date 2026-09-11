@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ExerciseAttemptResult, GradingPort, LessonRef } from "@pieai/university-core";
 
 import { ExerciseBlock } from "./ExerciseBlock.js";
+import { writeAnswerDraft, type AnswerDraftStorage } from "./answer-draft.js";
 import type { LessonView } from "../view/lesson-view.js";
 
 const LOCATOR: LessonRef = {
@@ -34,6 +35,7 @@ const TIER_ONE_RESULT: ExerciseAttemptResult = {
   awaitingHostGrade: false,
   meteredEligible: true,
   hostGrade: {
+    outcome: "undecided",
     passed: false,
     evaluation: "再看一眼你刚才读过的这句：\n\n> 这一段会说明为什么。",
     extensions: [],
@@ -50,6 +52,7 @@ const TIER_TWO_RESULT: ExerciseAttemptResult = {
   meteredEligible: false,
   hostGrade: {
     ...TIER_ONE_RESULT.hostGrade!,
+    outcome: "pass",
     passed: true,
     evaluation: "你的解释抓住了关键关系。",
     host: "tier-2",
@@ -93,6 +96,7 @@ beforeEach(() => {
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
+  window.localStorage.clear();
 });
 
 afterEach(async () => {
@@ -106,28 +110,41 @@ function buttonWith(text: string): HTMLButtonElement | undefined {
   );
 }
 
-async function renderBlock(grading: GradingPort) {
+async function renderBlock(
+  grading: GradingPort,
+  options: {
+    readonly scope?: string;
+    readonly exercise?: LessonView["lesson"]["exercises"][number];
+    readonly storage?: AnswerDraftStorage | null;
+  } = {},
+) {
   await act(async () => {
     root.render(
       <ExerciseBlock
         locator={LOCATOR}
-        exercise={EXERCISE}
+        exercise={options.exercise ?? EXERCISE}
         grading={grading}
         onRefresh={async () => undefined}
+        answerDraftScope={options.scope ?? "local-guest"}
+        {...("storage" in options ? { answerDraftStorage: options.storage } : {})}
       />,
     );
   });
 }
 
-async function answerAndSubmit() {
+async function typeAnswer(value: string) {
   const textarea = container.querySelector<HTMLTextAreaElement>("textarea");
   if (!textarea) throw new Error("missing answer field");
   await act(async () => {
     const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
     if (!setter) throw new Error("missing textarea value setter");
-    setter.call(textarea, "我的理解是另一回事。");
+    setter.call(textarea, value);
     textarea.dispatchEvent(new Event("input", { bubbles: true }));
   });
+}
+
+async function answerAndSubmit() {
+  await typeAnswer("我的理解是另一回事。");
   const submit = buttonWith("提交");
   if (!submit) throw new Error("missing submit button");
   await act(async () => {
@@ -160,12 +177,12 @@ describe("ExerciseBlock metered grading choice", () => {
     expect(container.textContent).toContain("你的钱包还够 9 次");
     expect(container.textContent).toContain("只有点“使用 AI 批改”才会从钱包扣除这次批改");
     expect(container.textContent).not.toContain("power units");
-    expect(buttonWith("只看 tier‑1 免费提示（不使用钱包）")).toBeTruthy();
+    expect(buttonWith("先看提示（不使用钱包）")).toBeTruthy();
 
     await act(async () => {
-      buttonWith("只看 tier‑1 免费提示（不使用钱包）")?.click();
+      buttonWith("先看提示（不使用钱包）")?.click();
     });
-    expect(container.textContent).toContain("已选择 tier‑1 免费提示（不使用钱包）");
+    expect(container.textContent).toContain("已选择先看提示（不使用钱包）");
     expect(submitExercise).toHaveBeenCalledTimes(1);
 
     await act(async () => {
@@ -201,7 +218,7 @@ describe("ExerciseBlock metered grading choice", () => {
     expect(container.textContent).not.toContain("power units");
     expect(container.textContent).not.toContain("钱包还剩");
     expect(buttonWith("使用今日免费 AI 批改（使用 1 次）")).toBeTruthy();
-    expect(buttonWith("只看 tier‑1 免费提示（不占今天的免费次数）")).toBeTruthy();
+    expect(buttonWith("先看提示（不占今天的免费次数）")).toBeTruthy();
 
     await act(async () => {
       buttonWith("使用今日免费 AI 批改（使用 1 次）")?.click();
@@ -238,7 +255,7 @@ describe("ExerciseBlock metered grading choice", () => {
     expect(container.textContent).toContain("你的钱包还不够一次了");
     expect(container.textContent).not.toContain("0 次");
     expect(buttonWith("查看 AI 批改说明")).toBeTruthy();
-    expect(buttonWith("只看 tier‑1 免费提示（不使用钱包）")).toBeTruthy();
+    expect(buttonWith("先看提示（不使用钱包）")).toBeTruthy();
   });
 
   it("opens the shared explanation and links anonymous learners to email binding", async () => {
@@ -302,7 +319,7 @@ describe("ExerciseBlock metered grading choice", () => {
     await answerAndSubmit();
 
     expect(container.textContent).toContain(freeQuotaMessage);
-    const tierOneButton = buttonWith("只看 tier‑1 免费提示（不使用钱包）");
+    const tierOneButton = buttonWith("先看提示（不使用钱包）");
     expect(tierOneButton).toBeTruthy();
     expect(tierOneButton?.disabled).toBe(false);
     expect(buttonWith("查看 AI 批改说明")).toBeTruthy();
@@ -340,5 +357,102 @@ describe("ExerciseBlock metered grading choice", () => {
 
     expect(container.textContent).toContain("今天的免费 AI 批改用完了，明天恢复");
     expect(container.querySelector('a[href="/plans"]')?.textContent).toBe("查看会员方案");
+  });
+});
+
+describe("ExerciseBlock unsubmitted answer recovery", () => {
+  const grading: GradingPort = {
+    submitExercise: vi.fn(async () => TIER_ONE_RESULT),
+    meteredGradingOffer: vi.fn(async () => ({
+      kind: "unavailable" as const,
+      costPowerUnits: "100",
+      availablePowerUnits: null,
+      explanation: {
+        kind: "explanation" as const,
+        title: "暂不可用",
+        whatItDoes: "说明",
+        whyUnavailable: "未接通",
+        futureSupport: "稍后再试",
+      },
+    })),
+  };
+
+  function memoryStorage(): AnswerDraftStorage {
+    const values = new Map<string, string>();
+    return {
+      getItem: (key) => values.get(key) ?? null,
+      setItem: (key, value) => values.set(key, value),
+    };
+  }
+
+  it("restores the last edit after the component is remounted", async () => {
+    const storage = memoryStorage();
+    await renderBlock(grading, { storage });
+    await typeAnswer("刷新后还在的答案");
+    expect(container.textContent).toContain("草稿已存本机");
+
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await renderBlock(grading, { storage });
+
+    expect(container.querySelector<HTMLTextAreaElement>("textarea")?.value).toBe(
+      "刷新后还在的答案",
+    );
+  });
+
+  it("isolates editor state immediately when the account changes", async () => {
+    const storage = memoryStorage();
+    await renderBlock(grading, { scope: "account:ada", storage });
+    await typeAnswer("Ada 的未提交答案");
+
+    await renderBlock(grading, { scope: "account:lin", storage });
+    expect(container.querySelector<HTMLTextAreaElement>("textarea")?.value).toBe("");
+    expect(container.textContent).not.toContain("Ada 的未提交答案");
+
+    await renderBlock(grading, { scope: "account:ada", storage });
+    expect(container.querySelector<HTMLTextAreaElement>("textarea")?.value).toBe(
+      "Ada 的未提交答案",
+    );
+  });
+
+  it("keeps useful text in memory and reports when browser storage is unavailable", async () => {
+    await renderBlock(grading, { storage: null });
+    await typeAnswer("不能落盘也不能消失");
+
+    expect(container.querySelector<HTMLTextAreaElement>("textarea")?.value).toBe(
+      "不能落盘也不能消失",
+    );
+    expect(container.textContent).toContain("此浏览器不能保存未提交答案");
+    expect(container.textContent).not.toContain("未提交答案已保存在本机");
+  });
+
+  it("does not replace a newer local draft with an older submitted answer", async () => {
+    const storage = memoryStorage();
+    writeAnswerDraft(
+      storage,
+      {
+        accountScope: "account:ada",
+        locator: LOCATOR,
+        exerciseId: EXERCISE.id,
+        contentRevision: EXERCISE.contentRevision,
+      },
+      "提交之后继续写的新草稿",
+      Date.parse("2026-08-27T00:01:00.000Z"),
+    );
+    await renderBlock(grading, {
+      scope: "account:ada",
+      storage,
+      exercise: {
+        ...EXERCISE,
+        latestSubmission: {
+          answer: "已经提交的旧答案",
+          occurredAt: "2026-08-27T00:00:00.000Z",
+        },
+      },
+    });
+
+    expect(container.querySelector<HTMLTextAreaElement>("textarea")?.value).toBe(
+      "提交之后继续写的新草稿",
+    );
   });
 });

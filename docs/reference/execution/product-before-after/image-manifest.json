@@ -1,0 +1,1225 @@
+{
+  "generatedAt": "2026-09-10T17:01:43.429Z",
+  "note": "真实截图排版；裁切记录在每个 source.crop。原始文件不被改写。",
+  "figures": [
+    {
+      "id": "focus-01-question",
+      "title": "开始之后：让题目和提交按钮进入第一屏",
+      "file": "images/focus-01-question.png",
+      "sha256": "7adc62317f5f6f6023e6124143d10889d28cd7fd9f31a53d815b9f842abc2ac3",
+      "bytes": 178939,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/focus/before/question-390.png",
+          "sha256": "b001ab50a409e38c5396c523336a96a8b65cbe077840c28df18c12a2fc5067d4",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "本次改前",
+          "capturedAt": "2026-09-10T16:33:15.686Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "account": null
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/focus/final/question-390.png",
+          "sha256": "b5b5207754cbdec38f98ac0ef842d4577bb8f333b8e537627772b7ab2dcf0d1a",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "本次改后",
+          "capturedAt": "2026-09-10T16:58:44.712Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "account": null
+        }
+      ]
+    },
+    {
+      "id": "focus-02-last-answer",
+      "title": "第三题：先读解释，再决定结束",
+      "file": "images/focus-02-last-answer.png",
+      "sha256": "36584dce05b959001be61b55321a16feb2ad00526da6df5d5a3f1822ac45c39d",
+      "bytes": 181236,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/focus/before/last-answer-390.png",
+          "sha256": "bdf8d1b7efb05fa54cf247a3ec4b983341bd3b01292551a5908f3ecc2e2bf1ed",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "原来 · 答对立刻跳走",
+          "capturedAt": "2026-09-10T16:33:19.991Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "account": null
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/focus/final/last-answer-390.png",
+          "sha256": "f0d1e871dffdd9b25744e286beb0fa7df57c3a900f87c2633250f6ccadbdd856",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "现在 · 保留本题解释",
+          "capturedAt": "2026-09-10T16:58:49.219Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "account": null
+        }
+      ]
+    },
+    {
+      "id": "focus-03-complete",
+      "title": "完成一轮：一个清楚的结束动作",
+      "file": "images/focus-03-complete.png",
+      "sha256": "46f2694729b4f85cf8853a0692c795ea6988efac09add4d4e9d4d11d2f7912e3",
+      "bytes": 119209,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/focus/before/complete-390.png",
+          "sha256": "bdf8d1b7efb05fa54cf247a3ec4b983341bd3b01292551a5908f3ecc2e2bf1ed",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "本次改前",
+          "capturedAt": "2026-09-10T16:33:20.926Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "account": null
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/focus/final/complete-390.png",
+          "sha256": "95cd9e4caf5936ba7ccabf64e5bf3515c3d954a4972c4173f63bea0f43c4299c",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "本次改后",
+          "capturedAt": "2026-09-10T16:58:50.329Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "account": null
+        }
+      ]
+    },
+    {
+      "id": "focus-04-disabled",
+      "title": "看图补修：未选答案时，按钮也要看得清",
+      "file": "images/focus-04-disabled.png",
+      "sha256": "b211d01971b27c6b717a0a1a5021ee838d86738d7c2e9faccc34a0b2e1ea135c",
+      "bytes": 35769,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/focus/after/question-390.png",
+          "sha256": "336868ace2356fe28e6ec213961b45e1c170bfe9c4e6dc83a18bb7ee0144617b",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": {
+            "x": 16,
+            "y": 653,
+            "width": 358,
+            "height": 104
+          },
+          "label": "自查中发现 · 字融进底色",
+          "capturedAt": "2026-09-10T16:41:33.028Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "account": null
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/focus/final/question-390.png",
+          "sha256": "b5b5207754cbdec38f98ac0ef842d4577bb8f333b8e537627772b7ab2dcf0d1a",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": {
+            "x": 16,
+            "y": 531,
+            "width": 358,
+            "height": 104
+          },
+          "label": "修正后 · 仍不可提交",
+          "capturedAt": "2026-09-10T16:58:44.712Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "account": null
+        }
+      ]
+    },
+    {
+      "id": "lightness-01-plans",
+      "title": "会员：撤下开发告示，先看价值与价格",
+      "file": "images/lightness-01-plans.png",
+      "sha256": "6a603b74e4b7aadfe84be41a17d56f645b2aee91fc08f98c6f70cdb00655f8d5",
+      "bytes": 211190,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/before/plans-390.png",
+          "sha256": "85121ceaeeb81f025f7867424b1e484b1b6f843f1c850f0829297d3e9d55e3d8",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "上一版",
+          "capturedAt": "2026-09-10T13:38:02.067Z",
+          "url": "http://127.0.0.1:21898/plans",
+          "viewport": null,
+          "account": null
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/final/plans-390.png",
+          "sha256": "499fada45f95a9d12ae6ad83afe2c2edccfbf4544f437fc49a2a4b21a932f413",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "现在",
+          "capturedAt": "2026-09-10T14:51:52.241Z",
+          "url": "http://127.0.0.1:21898/plans",
+          "viewport": null,
+          "account": null
+        }
+      ]
+    },
+    {
+      "id": "lightness-02-welcome",
+      "title": "欢迎：一句主张，一个开始",
+      "file": "images/lightness-02-welcome.png",
+      "sha256": "e0c96dbb710943498eb79e474f0d458706a5d2d83f8d49d52bc6cdf532e69cc2",
+      "bytes": 147061,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/before/welcome-390.png",
+          "sha256": "c2f3219924ac3a0b721669c74148fdcdb4ccbe4633d5cf3c1558659bd32fe3e3",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "上一版",
+          "capturedAt": "2026-09-10T13:37:57.222Z",
+          "url": "http://127.0.0.1:21898/",
+          "viewport": null,
+          "account": null
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/final/welcome-390.png",
+          "sha256": "89212e805b4d240830b40d2df09f7d47e66e2ca437878954afadb861f3dbe38c",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "现在",
+          "capturedAt": "2026-09-10T14:51:47.793Z",
+          "url": "http://127.0.0.1:21898/",
+          "viewport": null,
+          "account": null
+        }
+      ]
+    },
+    {
+      "id": "lightness-03-feedback",
+      "title": "答题：一个结论，提示需要时展开",
+      "file": "images/lightness-03-feedback.png",
+      "sha256": "40dbfdaa7ff19871a49a1bea7d1c68081a02afba7de8455bab1e436ffe4e9bc5",
+      "bytes": 196762,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/before/feedback-390.png",
+          "sha256": "9e17b8904b72c621c92e9b2be76cd5f03b1f3145335022578c5653648800f708",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "上一版",
+          "capturedAt": "2026-09-10T13:38:00.986Z",
+          "url": "http://127.0.0.1:21898/ai-foundations/what-is-ai-really/you-already-use-it/phone-knows-your-face",
+          "viewport": null,
+          "account": null
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/final/feedback-390.png",
+          "sha256": "e2d88fec21320b67b9fa97c9d15185c63496406dc83589fb98c9598ef13a580d",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "现在",
+          "capturedAt": "2026-09-10T14:51:51.134Z",
+          "url": "http://127.0.0.1:21898/ai-foundations/what-is-ai-really/you-already-use-it/phone-knows-your-face",
+          "viewport": null,
+          "account": null
+        }
+      ]
+    },
+    {
+      "id": "lightness-04-practice",
+      "title": "练习：先开始，不先读统计表",
+      "file": "images/lightness-04-practice.png",
+      "sha256": "4b9ab81492745f419645d538f36bee18e9c2d3e2a7802e5c34e68e9fb955a1f0",
+      "bytes": 162228,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/before/practice-390.png",
+          "sha256": "dc38119b89701b680c217705e677fe9bbb19d920745f65cea0bc659201d2eac0",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "上一版",
+          "capturedAt": "2026-09-10T13:38:03.427Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": null,
+          "account": null
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/final/practice-390.png",
+          "sha256": "1198bc0aa1f6c8285208a6025fed0d03751beb6dd412513fd7c905790b64b89d",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "现在",
+          "capturedAt": "2026-09-10T14:51:53.581Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": null,
+          "account": null
+        }
+      ]
+    },
+    {
+      "id": "lightness-05-quests",
+      "title": "任务：状态和动作，少一点重复",
+      "file": "images/lightness-05-quests.png",
+      "sha256": "0325023ae80bc54ed414cbf047319eebcf437a2016952d9d61df54e189699623",
+      "bytes": 109634,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/before/quests-390.png",
+          "sha256": "e2cc003b5c777bdbf0405032e2d421cea1a77b22a0a59a02eda2a05416866682",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "上一版",
+          "capturedAt": "2026-09-10T13:38:04.455Z",
+          "url": "http://127.0.0.1:21898/quests",
+          "viewport": null,
+          "account": null
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/final/quests-390.png",
+          "sha256": "0558ad3b6b3bc384dcafba18db906574a9d15cc2c3e29db8461d827a40346773",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "现在",
+          "capturedAt": "2026-09-10T14:51:54.585Z",
+          "url": "http://127.0.0.1:21898/quests",
+          "viewport": null,
+          "account": null
+        }
+      ]
+    },
+    {
+      "id": "lightness-06-growth",
+      "title": "成长：先看进展，再看规则",
+      "file": "images/lightness-06-growth.png",
+      "sha256": "d98da06469f3d96fa0bd99bfd523ed04f8318aff999a669dac15a62b9b0c0dcc",
+      "bytes": 116566,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/before/league-390.png",
+          "sha256": "3a68081993f9331d56dda31f7bd5b18cd43019360d755a50f1f39b589d9a7a25",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "上一版",
+          "capturedAt": "2026-09-10T13:38:05.498Z",
+          "url": "http://127.0.0.1:21898/league",
+          "viewport": null,
+          "account": null
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/final/league-390.png",
+          "sha256": "e6fc7e779bc9301fe3e3d700d4a0f71d222ea7cc69ae253971a4e52a807cad20",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "现在",
+          "capturedAt": "2026-09-10T14:51:55.600Z",
+          "url": "http://127.0.0.1:21898/league",
+          "viewport": null,
+          "account": null
+        }
+      ]
+    },
+    {
+      "id": "lightness-07-account",
+      "title": "档案：轻状态，清楚的登录入口",
+      "file": "images/lightness-07-account.png",
+      "sha256": "7ef0329facb0043325a396a18e13d3f44d8a71a04b653f2aba9af43cdf26a6b0",
+      "bytes": 130608,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/before/me-390.png",
+          "sha256": "6b5edfccdd042f00db15ee0414b0464a0a734def629462fef504d0a7b8cb1e7e",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "上一版",
+          "capturedAt": "2026-09-10T13:38:06.521Z",
+          "url": "http://127.0.0.1:21898/me",
+          "viewport": null,
+          "account": null
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/final/me-390.png",
+          "sha256": "49aa0d0691c898806190bb699e5f37cbc92f9df7dbb1af059d862f1ef7900abf",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "现在",
+          "capturedAt": "2026-09-10T14:51:56.628Z",
+          "url": "http://127.0.0.1:21898/me",
+          "viewport": null,
+          "account": null
+        }
+      ]
+    },
+    {
+      "id": "lightness-08-settings",
+      "title": "设置：开关在前，说明按需看",
+      "file": "images/lightness-08-settings.png",
+      "sha256": "7513671dd8e839f20bfe3490cd1a570f31b640b9a5558da7f44a61039b270735",
+      "bytes": 168345,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/before/settings-390.png",
+          "sha256": "137490826135836ec9f0a8d9c4bde7b72563dc1553efa02d9164eac52277bc05",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "上一版",
+          "capturedAt": "2026-09-10T13:38:07.883Z",
+          "url": "http://127.0.0.1:21898/settings",
+          "viewport": null,
+          "account": null
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/final/settings-390.png",
+          "sha256": "ce003f549f8ed9501752052a1143c8851c9c520563a98a74181cd5093d695960",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "现在",
+          "capturedAt": "2026-09-10T14:51:58.017Z",
+          "url": "http://127.0.0.1:21898/settings",
+          "viewport": null,
+          "account": null
+        }
+      ]
+    },
+    {
+      "id": "lightness-09-complete",
+      "title": "完成一轮：从长解释到一次短庆祝",
+      "file": "images/lightness-09-complete.png",
+      "sha256": "984bee2eaa2faa1449ab03e180419e1677088c1e9d4b311c019453754c51b989",
+      "bytes": 172455,
+      "sources": [
+        {
+          "path": ".scratch/product-audit/change-guide-captures/practice-complete-after.png",
+          "sha256": "696457e9e5079e740f15d5fd7258878e87ed5f936c8e453c3260822d34810527",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "上一版 · 先前留存",
+          "capturedAt": "2026-09-10T02:11:11.677Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "existing delivery production preview; isolated synthetic guest"
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/final/round-complete-390.png",
+          "sha256": "bdf8d1b7efb05fa54cf247a3ec4b983341bd3b01292551a5908f3ecc2e2bf1ed",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "现在",
+          "capturedAt": "2026-09-10T14:52:02.336Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": null,
+          "account": null
+        }
+      ]
+    },
+    {
+      "id": "lightness-10-details",
+      "title": "点开后：费用说明仍能完整查看",
+      "file": "images/lightness-10-details.png",
+      "sha256": "d6a9894f324297d2b89561cf9df727dc4777c2028f8c91ddc92cf10998335e4b",
+      "bytes": 104600,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/lightness/final/pricing-details-390.png",
+          "sha256": "d606c8d93affdc2f6f1f87bbdf1eda8244a61bba74e9ccbfcbb40eb0cf01a86c",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "现在 · 点开详情",
+          "capturedAt": "2026-09-10T14:51:59.238Z",
+          "url": "http://127.0.0.1:21898/plans",
+          "viewport": null,
+          "account": null
+        }
+      ]
+    },
+    {
+      "id": "01-welcome",
+      "title": "首次进入：原来没有欢迎页，现在新增",
+      "file": "images/01-welcome.png",
+      "sha256": "5162d3db5d5edd5ead24a7154800be42925f65b5cad83802d735d70220dab15e",
+      "bytes": 186758,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/phone-first-visit.png",
+          "sha256": "c79c156708072aee9853494daa87e832a02daa0788617a5a95c16bd2b959d87b",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改前",
+          "capturedAt": null,
+          "url": "http://127.0.0.1:21898/",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "fresh guest; backend public configuration absent in this worktree"
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/implementation-independent/post-recovery/welcome-390.png",
+          "sha256": "c2f3219924ac3a0b721669c74148fdcdb4ccbe4633d5cf3c1558659bd32fe3e3",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改后",
+          "capturedAt": "2026-09-10T00:55:05.178Z",
+          "url": "http://127.0.0.1:21898/",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "delivery build; isolated browser; no cloud account"
+        }
+      ]
+    },
+    {
+      "id": "01-welcome-choices",
+      "title": "新增：欢迎页中可以展开换方向",
+      "file": "images/01-welcome-choices.png",
+      "sha256": "25ed2e84847b53f30dcde178e8e733620dc65f800148fe0b3ae591d94da451f0",
+      "bytes": 124326,
+      "sources": [
+        {
+          "path": ".scratch/product-audit/change-guide-captures/welcome-choices-after.png",
+          "sha256": "79b5a40cf0ca79d9553cb5f0f3ffafb685b950ae1b12b0baba945266c74e7415",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "新增内容",
+          "capturedAt": "2026-09-10T02:11:03.620Z",
+          "url": "http://127.0.0.1:21898/",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "existing delivery production preview; isolated synthetic guest"
+        }
+      ]
+    },
+    {
+      "id": "02-draft",
+      "title": "同一句文字：旧版刷新丢失，新版刷新恢复",
+      "file": "images/02-draft.png",
+      "sha256": "d6a4f4303697170141e2059fec203b49fb527fb3a28dff7515ad3516b9eec290",
+      "bytes": 258835,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/phone-answer-before-reload.png",
+          "sha256": "0c2024922f1aceb89acd987bed9a4b847a39594b937035c2163a890ad2177eed",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改前 · 刷新前",
+          "capturedAt": "2026-09-09T15:57:33.141Z",
+          "url": "http://127.0.0.1:21898/ai-foundations/what-is-ai-really/you-already-use-it/phone-knows-your-face",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "isolated guest; cloud unconfigured"
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/phone-answer-after-reload.png",
+          "sha256": "9c18a627ef38607673303267066407818cd04eadcc4fb8da6fcc209cd637424f",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改前 · 刷新后",
+          "capturedAt": "2026-09-09T15:57:35.896Z",
+          "url": "http://127.0.0.1:21898/ai-foundations/what-is-ai-really/you-already-use-it/phone-knows-your-face",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "isolated guest; cloud unconfigured"
+        },
+        {
+          "path": ".scratch/product-audit/change-guide-captures/draft-restored-after.png",
+          "sha256": "452e641d6b8c387f1f8fb9e314c6cccf8c89d88dd2e8a3e6f7d7870d4a6496b5",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改后 · 刷新后",
+          "capturedAt": "2026-09-10T02:11:05.705Z",
+          "url": "http://127.0.0.1:21898/ai-foundations/what-is-ai-really/you-already-use-it/phone-knows-your-face",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "existing delivery production preview; isolated synthetic guest"
+        }
+      ]
+    },
+    {
+      "id": "03-grading",
+      "title": "不能判断，不再被说成“未通过”",
+      "file": "images/03-grading.png",
+      "sha256": "d260204e0a8570a81267f05136138071121c8b9af46ab410ad5b3c71a92d1a12",
+      "bytes": 161573,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/phone-answer-result.png",
+          "sha256": "29fb2348501129a0ba44a61f5a5febf517a6c1566e30afbf5197a4695e2e2e8b",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改前",
+          "capturedAt": "2026-09-09T15:57:38.392Z",
+          "url": "http://127.0.0.1:21898/ai-foundations/what-is-ai-really/you-already-use-it/phone-knows-your-face",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "isolated guest; cloud unconfigured"
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/implementation-independent/post-recovery/answer-undecided-390.png",
+          "sha256": "5f0f3f30c6b8c6a9fdda683002c97041f3eb44991b4920e4570db59239e7f7cf",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改后",
+          "capturedAt": "2026-09-10T00:55:07.690Z",
+          "url": "http://127.0.0.1:21898/ai-foundations/what-is-ai-really/you-already-use-it/phone-knows-your-face",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "delivery build; isolated browser; no cloud account"
+        }
+      ]
+    },
+    {
+      "id": "04-reading",
+      "title": "顶部数字：补上“阅读”和“段”",
+      "file": "images/04-reading.png",
+      "sha256": "7fdef260044d5033633465a33a1d453e6fe580dc2691bb25c69ac77902cb1fed",
+      "bytes": 41874,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/phone-answer-result.png",
+          "sha256": "29fb2348501129a0ba44a61f5a5febf517a6c1566e30afbf5197a4695e2e2e8b",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 112
+          },
+          "label": "改前",
+          "capturedAt": "2026-09-09T15:57:38.392Z",
+          "url": "http://127.0.0.1:21898/ai-foundations/what-is-ai-really/you-already-use-it/phone-knows-your-face",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "isolated guest; cloud unconfigured"
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/implementation-independent/post-recovery/answer-undecided-390.png",
+          "sha256": "5f0f3f30c6b8c6a9fdda683002c97041f3eb44991b4920e4570db59239e7f7cf",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 112
+          },
+          "label": "改后",
+          "capturedAt": "2026-09-10T00:55:07.690Z",
+          "url": "http://127.0.0.1:21898/ai-foundations/what-is-ai-really/you-already-use-it/phone-knows-your-face",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "delivery build; isolated browser; no cloud account"
+        }
+      ]
+    },
+    {
+      "id": "05-catalog",
+      "title": "目录：新增搜索，不虚报“正在学”",
+      "file": "images/05-catalog.png",
+      "sha256": "d14dbb4ef6c541740b9ec1fa3f3e948b6169d8579d41dd7169116a3f197bc9cc",
+      "bytes": 149175,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/phone-catalog.png",
+          "sha256": "49b89eb3ea5388f22246e135c0c00c05c2d2eb634303a0eb6302ac8dbda36453",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改前",
+          "capturedAt": null,
+          "url": "http://127.0.0.1:21898/catalog",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "fresh guest; backend public configuration absent in this worktree"
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/implementation-independent/post-recovery/catalog-390.png",
+          "sha256": "ea611a968eeab789a035682a2f5abdf4d5be0913944d43d81c202c2e864e0539",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改后",
+          "capturedAt": "2026-09-10T00:55:15.222Z",
+          "url": "http://127.0.0.1:21898/catalog",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "delivery build; isolated browser; no cloud account"
+        }
+      ]
+    },
+    {
+      "id": "05-search",
+      "title": "新增：搜索结果可以直接进入课文",
+      "file": "images/05-search.png",
+      "sha256": "86242607314adb46a7c9879a57c51df4ded0acd14ce023508bbc07f8ceb3ea4f",
+      "bytes": 93477,
+      "sources": [
+        {
+          "path": ".scratch/product-audit/change-guide-captures/catalog-search-after.png",
+          "sha256": "25a89b2fb112d4297ee5b3f927a91a475be0616a271c2347ec9d4c6db9466110",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "新增内容",
+          "capturedAt": "2026-09-10T02:11:06.091Z",
+          "url": "http://127.0.0.1:21898/catalog",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "existing delivery production preview; isolated synthetic guest"
+        }
+      ]
+    },
+    {
+      "id": "06-quests",
+      "title": "任务卡：从只看说明，到直接去学习",
+      "file": "images/06-quests.png",
+      "sha256": "24faa51e76cf6ae5713a39f02617ed5df8d8594f513057ccb18158f26b443411",
+      "bytes": 135368,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/phone-quests.png",
+          "sha256": "aad7528e572b7cc0ea1c3f9c8f5fbaef424c59df7ffc3e76df288541c8c38dca",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改前",
+          "capturedAt": null,
+          "url": "http://127.0.0.1:21898/quests",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "fresh guest; backend public configuration absent in this worktree"
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/implementation-independent/post-recovery/quests-390.png",
+          "sha256": "e2cc003b5c777bdbf0405032e2d421cea1a77b22a0a59a02eda2a05416866682",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改后",
+          "capturedAt": "2026-09-10T00:55:16.124Z",
+          "url": "http://127.0.0.1:21898/quests",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "delivery build; isolated browser; no cloud account"
+        }
+      ]
+    },
+    {
+      "id": "07-practice",
+      "title": "练习：新增三题一轮，保留自由练习",
+      "file": "images/07-practice.png",
+      "sha256": "949c405ec108cdcddeef0fdb85d13423ba1ae5db0f663ec8f815d5d7a84b6208",
+      "bytes": 201775,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/phone-practice.png",
+          "sha256": "bcca66417afab81d0ca4eb31e822ca1440a31bf0e90a769e7221fca953295e75",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改前",
+          "capturedAt": null,
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "fresh guest; backend public configuration absent in this worktree"
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/implementation-independent/post-recovery/practice-390.png",
+          "sha256": "dc38119b89701b680c217705e677fe9bbb19d920745f65cea0bc659201d2eac0",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改后",
+          "capturedAt": "2026-09-10T00:55:17.285Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "delivery build; isolated browser; no cloud account"
+        }
+      ]
+    },
+    {
+      "id": "07-round",
+      "title": "原先没有的短回合过程与结束页",
+      "file": "images/07-round.png",
+      "sha256": "2aee437cc0a380e69a6a86f54d61d757ea0c16a801905d2aca72169e9b42d17e",
+      "bytes": 185684,
+      "sources": [
+        {
+          "path": ".scratch/product-audit/change-guide-captures/practice-round-after.png",
+          "sha256": "5263c8a5f12af8abe9c4d9bbc718a2013a170abc7a7e6bd63198f7c6ebf909c4",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "新增 · 回合过程中",
+          "capturedAt": "2026-09-10T02:11:08.498Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "existing delivery production preview; isolated synthetic guest"
+        },
+        {
+          "path": ".scratch/product-audit/change-guide-captures/practice-complete-after.png",
+          "sha256": "696457e9e5079e740f15d5fd7258878e87ed5f936c8e453c3260822d34810527",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "新增 · 三题完成后",
+          "capturedAt": "2026-09-10T02:11:11.677Z",
+          "url": "http://127.0.0.1:21898/practice",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "existing delivery production preview; isolated synthetic guest"
+        }
+      ]
+    },
+    {
+      "id": "08-growth",
+      "title": "排行榜 → 成长：说清是自己的记录",
+      "file": "images/08-growth.png",
+      "sha256": "6b4132130150147ba159715cc9b0ccda13ef5b60412364210f806feacef41c61",
+      "bytes": 128607,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/phone-league.png",
+          "sha256": "6805e3135eaa8d57bc3be35f7c67b0956dae0f4a6418c5f10db212654cf6716f",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改前",
+          "capturedAt": null,
+          "url": "http://127.0.0.1:21898/league",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "fresh guest; backend public configuration absent in this worktree"
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/implementation-independent/post-recovery/league-390.png",
+          "sha256": "3a68081993f9331d56dda31f7bd5b18cd43019360d755a50f1f39b589d9a7a25",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改后",
+          "capturedAt": "2026-09-10T00:55:18.591Z",
+          "url": "http://127.0.0.1:21898/league",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "delivery build; isolated browser; no cloud account"
+        }
+      ]
+    },
+    {
+      "id": "09-profile",
+      "title": "个人档案：新增保存状态，改掉过度承诺",
+      "file": "images/09-profile.png",
+      "sha256": "296c48ee5a4aaebef713e189c8b1bb8e32dd3ff5e7724ad1274bfae6aa8f7f86",
+      "bytes": 142794,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/phone-me.png",
+          "sha256": "27f07ec5608fdeaa3ac18455ec4eb979983d8c6b0bd038ff9e20e3d4bae473c5",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改前",
+          "capturedAt": null,
+          "url": "http://127.0.0.1:21898/me",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "fresh guest; backend public configuration absent in this worktree"
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/implementation-independent/post-recovery/me-390.png",
+          "sha256": "3e4f4e2c8e2f53bd215acb5bd5c2339bbe1fd5227e000db8c8685dadf775172c",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改后",
+          "capturedAt": "2026-09-10T00:55:21.024Z",
+          "url": "http://127.0.0.1:21898/me",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "delivery build; isolated browser; no cloud account"
+        }
+      ]
+    },
+    {
+      "id": "10-settings",
+      "title": "设置：默认不分享；提醒未就绪就说清",
+      "file": "images/10-settings.png",
+      "sha256": "ba61633159520bcb3f44bdd56551d1a148e3a6ff955a3ca66ea6ee2576115ff9",
+      "bytes": 180185,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/phone-reminder.png",
+          "sha256": "599e8af7310d74d006886ef99af1fca528d34db8eab5d850d460884dd8a7abbb",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改前",
+          "capturedAt": null,
+          "url": "http://127.0.0.1:21898/settings",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "isolated fresh guest; no cloud configuration"
+        },
+        {
+          "path": ".scratch/product-audit/change-guide-captures/privacy-reminders-after.png",
+          "sha256": "df253da4614d5797e694e2aa5bb8fbb98d5e9f9f27ac5bc50364a5368099c0d1",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改后 · 补拍",
+          "capturedAt": "2026-09-10T02:11:06.674Z",
+          "url": "http://127.0.0.1:21898/settings",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "existing delivery production preview; isolated synthetic guest"
+        }
+      ]
+    },
+    {
+      "id": "11-plans",
+      "title": "会员：先说明尚未开售，再解释费用",
+      "file": "images/11-plans.png",
+      "sha256": "cd06ef6f4e3ac007f06db53f5ee2f22e23279ebf57a08be08f71ee7a92962f1d",
+      "bytes": 316647,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/desktop-plans.png",
+          "sha256": "8b05e70e9729e445e289f0afb11e119b82c0f3997a39a1585327dd7ad3cfee8e",
+          "originalSize": {
+            "width": 1440,
+            "height": 900
+          },
+          "crop": {
+            "x": 430,
+            "y": 45,
+            "width": 655,
+            "height": 855
+          },
+          "label": "改前",
+          "capturedAt": null,
+          "url": "http://127.0.0.1:21898/plans",
+          "viewport": {
+            "width": 1440,
+            "height": 900,
+            "dpr": 1
+          },
+          "account": "fresh guest; backend public configuration absent in this worktree"
+        },
+        {
+          "path": "docs/reference/execution/product-review-evidence/implementation-independent/post-recovery/plans-1440.png",
+          "sha256": "c98595dcb291bef1c56358cef7f939320fde1d773185c3ba912160fa74c3e699",
+          "originalSize": {
+            "width": 1440,
+            "height": 900
+          },
+          "crop": {
+            "x": 430,
+            "y": 45,
+            "width": 655,
+            "height": 855
+          },
+          "label": "改后",
+          "capturedAt": "2026-09-10T00:55:00.562Z",
+          "url": "http://127.0.0.1:21898/plans",
+          "viewport": {
+            "width": 1440,
+            "height": 900,
+            "dpr": 1
+          },
+          "account": "delivery build; isolated browser; no cloud account"
+        }
+      ]
+    },
+    {
+      "id": "12-purchase",
+      "title": "购买入口：不再为了买不到的服务先登录",
+      "file": "images/12-purchase.png",
+      "sha256": "3867846677689a8fc882877b95b2999b7fbb65dcc569fb420d49b205819f8eab",
+      "bytes": 243871,
+      "sources": [
+        {
+          "path": "docs/reference/execution/product-review-evidence/phone-payment-gate.png",
+          "sha256": "ab02c5a98a65f5f589d7ae4c4dbbb09ca92c9ea16a0bfbd83ffd8296a7b8aac1",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改前",
+          "capturedAt": null,
+          "url": "http://127.0.0.1:21898/plans",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "isolated fresh guest; no cloud configuration"
+        },
+        {
+          "path": ".scratch/product-audit/change-guide-captures/payment-gate-after.png",
+          "sha256": "8ca577eedd380822e71bab3096e032bf93eac0f994d0785378124e2af54d16f4",
+          "originalSize": {
+            "width": 390,
+            "height": 844
+          },
+          "crop": null,
+          "label": "改后 · 补拍",
+          "capturedAt": "2026-09-10T02:11:07.226Z",
+          "url": "http://127.0.0.1:21898/plans",
+          "viewport": {
+            "width": 390,
+            "height": 844,
+            "dpr": 1
+          },
+          "account": "existing delivery production preview; isolated synthetic guest"
+        }
+      ]
+    }
+  ]
+}

@@ -45,10 +45,13 @@ describe("PracticeOverview", () => {
   it("answers whether practice is due without inventing mastery", async () => {
     await renderOverview();
 
-    expect(container.querySelector("h1")?.textContent).toBe("今天适合练吗？");
-    expect(container.textContent).toContain("今天没有到期复习卡");
+    expect(container.querySelector("h1")?.textContent).toBe("练一点，记得更牢。");
+    expect(container.querySelector("[data-practice-details]")?.hasAttribute("open")).toBe(false);
+    expect(container.querySelector(".practice-overview__facts")?.textContent).toContain(
+      "今天复习没有",
+    );
     expect(container.textContent).toContain("281 个概念题");
-    expect(container.textContent).toContain("掌握度 暂未记录");
+    expect(container.querySelectorAll("button")).toHaveLength(0);
     expect(container.textContent).not.toContain("已掌握 0");
   });
 
@@ -59,7 +62,7 @@ describe("PracticeOverview", () => {
     const button = [...container.querySelectorAll("button")].find((item) =>
       item.textContent?.includes("先去复习"),
     );
-    expect(container.textContent).toContain("今天有 3 张复习卡到期");
+    expect(container.textContent).toContain("今天有 3 张卡片等你复习");
     expect(button).toBeTruthy();
     await act(async () => button?.click());
     expect(onOpenReview).toHaveBeenCalledTimes(1);

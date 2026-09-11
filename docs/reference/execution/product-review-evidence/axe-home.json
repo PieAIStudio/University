@@ -1,0 +1,42 @@
+{
+  "url": "http://127.0.0.1:21898/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "violations": [
+    {
+      "id": "aria-prohibited-attr",
+      "impact": "serious",
+      "description": "Ensure ARIA attributes are not prohibited for an element's role",
+      "help": "Elements must only use permitted ARIA attributes",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/aria-prohibited-attr?application=playwright",
+      "nodes": [
+        {
+          "target": [
+            ".companions"
+          ],
+          "html": "<div class=\"companions\" aria-label=\"一起学的同伴\" style=\"pointer-events: none;\"></div>",
+          "failureSummary": "Fix all of the following:\n  aria-label attribute cannot be used on a div with no valid role attribute."
+        }
+      ]
+    },
+    {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "help": "Elements must meet minimum color contrast ratio thresholds",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/color-contrast?application=playwright",
+      "nodes": [
+        {
+          "target": [
+            ".nextup__eyebrow"
+          ],
+          "html": "<p class=\"nextup__eyebrow\">从这里开始</p>",
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.84 (foreground color: #e8743b, background color: #fff8ec, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+        }
+      ]
+    }
+  ],
+  "incompleteCount": 1
+}
