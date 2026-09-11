@@ -40,7 +40,12 @@ function ActivitySection({ activity }: { activity: LearningActivitySpec }) {
 
 所以下面这段是**试玩页**的用法。课文配组件不需要写三份，写一份、标好 `difficulty` 就够了。要不要让课文里也能换档，见 [ADR-0010](../../../../docs/adr/ADR-0010-difficulty-moves-when-the-learner-moves-it.md) 的「什么还开着」。
 
-每个情境三份难度配置，而规则实现仍然只有每种玩法一套。`ActivityFamily` 的三份载荷必须同 kind、各有唯一 id、并标明对应 difficulty；`selectActivityLevel` 检查这些身份约束，不对分数、目标或计时做通用乘法。
+每个情境三份难度配置，而规则实现仍然只有每种玩法一套。
+
+课文里的三档走另一条路：同一个 `family`、同一个 `kind`、不同 `difficulty` 的几个
+activity 由 `groupActivityLevels` 归成一组，`LearningActivity` 在头部渲染切档按钮。
+`ActivityFamily` 要求三档齐全（play lab 自己的例子能保证），课文那条是部分 map ——
+一节课写一档也合法，而且现有二十七节都是一档。`ActivityFamily` 的三份载荷必须同 kind、各有唯一 id、并标明对应 difficulty；`selectActivityLevel` 检查这些身份约束，不对分数、目标或计时做通用乘法。
 
 ```tsx
 import { selectActivityLevel, type ActivityFamily } from "@pieai/university-core";

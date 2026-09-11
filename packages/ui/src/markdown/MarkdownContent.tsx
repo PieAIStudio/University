@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 
 import type { LanguageLayer, TermRange } from "@pieai/university-core/domain/lesson-marks.js";
 import type { LexiconEntry } from "@pieai/university-core/domain/schemas.js";
+import { groupActivityLevels } from "@pieai/university-core";
 import type { ActivityResult, LearningActivitySpec } from "@pieai/university-core";
 import { LearningActivity } from "../learning-play/LearningActivity.js";
 import { shouldInlineEvidence } from "../evidence/display-policy.js";
@@ -448,6 +449,11 @@ export function MarkdownContent({
     [activities],
   );
   /*
+    Keyed by every member id, so which of a family's three ids the prose points
+    `::play` at does not decide whether the learner gets a difficulty picker.
+  */
+  const levelsById = useMemo(() => groupActivityLevels(activities), [activities]);
+  /*
     The lesson header already says which layer of the project this lesson lives
     in. Repeating it above every snippet only says something new when the
     snippets come from more than one layer; on a single-layer lesson it printed
@@ -783,7 +789,12 @@ export function MarkdownContent({
           );
         }
         return (
-          <LearningActivity activity={activity} occurrenceId={id} onResult={onActivityResult} />
+          <LearningActivity
+            activity={activity}
+            levels={levelsById.get(id)}
+            occurrenceId={id}
+            onResult={onActivityResult}
+          />
         );
       },
       "lesson-directive-unsupported"({
@@ -841,6 +852,7 @@ export function MarkdownContent({
       placeTellsThemApart,
       assetsById,
       activitiesById,
+      levelsById,
       onActivityResult,
       sectionsByTitle,
       detailMode,

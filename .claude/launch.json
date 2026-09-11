@@ -70,6 +70,16 @@
         "--strictPort"
       ],
       "port": 18211
+    },
+    {
+      "name": "swimmer-ui-showcase",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--dir",
+        "../SwimmerUIKit",
+        "dev"
+      ],
+      "port": 5174
     }
   ]
 }

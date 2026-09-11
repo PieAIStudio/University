@@ -928,3 +928,23 @@
 .play-contrast__outcomes {
   animation: play-seat 240ms var(--game-ui-ease-pop) both;
 }
+
+/*
+  The difficulty picker.
+
+  It sits above the goal line rather than beside it because the choice is about
+  the whole activity, not about the summary it happens to be next to — and
+  because on a phone a control wrapped onto the same row as a <summary> puts a
+  tap target inside a disclosure toggle.
+*/
+.learning-activity .learning-activity__levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-block-end: 10px;
+}
+.learning-activity .learning-activity__levels .game-ui-button {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: var(--game-ui-font-sm);
+}

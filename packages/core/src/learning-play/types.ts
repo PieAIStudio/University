@@ -14,6 +14,16 @@ export interface ActivityBase {
   readonly id: string;
   /** Task demand, independent from whether the host shows guidance. */
   readonly difficulty?: ActivityDifficulty;
+  /**
+   * Ties this activity to its other difficulty levels.
+   *
+   * Same family + same kind + different `difficulty` means one activity the
+   * learner can move between, not three activities in a row. Without it a
+   * lesson could only ever store one payload and a label, which is why the
+   * three-level design existed for a year while only the play lab could reach
+   * it: `selectActivityLevel` had no way to be given a lesson's levels.
+   */
+  readonly family?: string;
   readonly title: string;
   readonly brief: string;
   readonly goal: string;

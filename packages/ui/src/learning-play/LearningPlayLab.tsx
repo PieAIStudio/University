@@ -4,6 +4,7 @@ import {
   ACTIVITY_DIFFICULTIES,
   selectActivityLevel,
   type ActivityDifficulty,
+  type ActivityLevels,
   type ActivityKind,
   type ActivityResult,
 } from "@pieai/university-core";
@@ -82,6 +83,17 @@ export function LearningPlayLab({
   const baseActivity = variants[variant] ?? variants[0]!;
   const family = useMemo(() => getExampleFamily(baseActivity), [baseActivity]);
   const activity = selectActivityLevel(family, difficulty);
+  /*
+    The lab used to own a difficulty row of its own, beside the activity rather
+    than on it. Once a lesson could carry its levels, that was two controls
+    doing one job — and the lab's copy was the one a learner never sees, so it
+    was the one that could drift. The picker now comes from the activity, and
+    the lab only listens.
+  */
+  const levels = useMemo<ActivityLevels>(
+    () => ({ id: family.id, levels: family.levels }),
+    [family],
+  );
   const advanceFocus = () =>
     requestAnimationFrame(() => {
       activityTop.current?.scrollIntoView({ block: "start", behavior: "instant" });
@@ -203,32 +215,16 @@ export function LearningPlayLab({
                 </GameButton>
               ) : null}
             </div>
-            <div
-              className="learning-play-lab__difficulty"
-              role="group"
-              aria-label={t("play.difficulty.label")}
-            >
-              {ACTIVITY_DIFFICULTIES.map((level) => (
-                <GameButton
-                  key={level}
-                  variant={difficulty === level ? "primary" : "ghost"}
-                  aria-pressed={difficulty === level}
-                  onClick={() => {
-                    if (level === difficulty) return;
-                    setDifficulty(level);
-                    setRound((value) => value + 1);
-                    setPlaylistDone(false);
-                  }}
-                >
-                  {t(`play.difficulty.${level}`)}
-                </GameButton>
-              ))}
-            </div>
           </div>
           <div ref={activityTop} tabIndex={-1} className="learning-play-lab__activity">
             <LearningActivity
-              key={`${activity.id}:${round}`}
+              key={`${family.id}:${round}`}
               activity={activity}
+              levels={levels}
+              onLevelChange={(level) => {
+                setDifficulty(level);
+                setPlaylistDone(false);
+              }}
               occurrenceId={`${family.id}:${difficulty}:${round}`}
               onResult={record}
               onNext={next}

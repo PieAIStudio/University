@@ -759,9 +759,46 @@ for (const studyId of dirs(studiesRoot)) {
         for (const id of referenced) {
           if (!byId.has(id)) problems.push(`${where}: 正文引用了 ::play{#${id}}，清单里没有它`);
         }
+        /*
+          A family is one activity at several difficulties, so the prose points
+          at one of its ids and the learner reaches the rest through the picker.
+          Requiring every member to appear in the text would either fail every
+          levelled lesson or push authors to write three ::play markers for one
+          activity, which is three activities on the page.
+        */
+        const families = new Map();
+        for (const activity of declared) {
+          if (!activity.family) continue;
+          families.set(activity.family, [...(families.get(activity.family) ?? []), activity]);
+        }
+        const referencedFamilies = new Set(
+          declared.filter((a) => referenced.includes(a.id) && a.family).map((a) => a.family),
+        );
+        for (const [family, members] of families) {
+          const kinds = new Set(members.map((member) => member.kind));
+          if (kinds.size > 1) {
+            problems.push(
+              `${where}: 难度组 ${family} 里混了 ${[...kinds].join("、")} 几种玩法；` +
+                `一个组件的三档要跑在同一个引擎上`,
+            );
+          }
+          const levels = members.map((member) => member.difficulty ?? "practice");
+          if (new Set(levels).size !== levels.length) {
+            problems.push(
+              `${where}: 难度组 ${family} 里有两个组件难度相同（${levels.join("、")}）`,
+            );
+          }
+          if (!referencedFamilies.has(family)) {
+            problems.push(`${where}: 难度组 ${family} 的组件，正文一个都没引用`);
+          }
+        }
+
         for (const activity of declared) {
           activities += 1;
-          if (!referenced.includes(activity.id)) {
+          const reachable =
+            referenced.includes(activity.id) ||
+            (activity.family && referencedFamilies.has(activity.family));
+          if (!reachable) {
             problems.push(`${where}: 清单里有组件 ${activity.id}，正文从没引用它`);
           }
           checkSource(activity, `${where} · ${activity.id}`, studyId);

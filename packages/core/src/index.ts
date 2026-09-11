@@ -390,3 +390,4 @@ export * from "./learning-play/ai-eval.js";
 export * from "./learning-play/ai-repair.js";
 export { ACTIVITY_DIFFICULTIES } from "./learning-play/types.js";
 export * from "./learning-play/difficulty.js";
+export * from "./learning-play/lesson-levels.js";

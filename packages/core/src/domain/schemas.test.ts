@@ -9,6 +9,7 @@ import {
   KnowledgeNoteSchema,
   LessonActivityKindSchema,
   LessonActivitySchema,
+  LessonManifestSchema,
   SnapshotManifestSchema,
   UaAnalysisManifestSchema,
   UaEngineProvenanceSchema,
@@ -316,5 +317,79 @@ describe("LessonActivitySchema", () => {
       source: { label: "l", url: "https://example.com/a" },
     });
     expect(parsed.source).toMatchObject({ url: "https://example.com/a" });
+  });
+});
+
+describe("activity difficulty families", () => {
+  const activity = (id: string, extra: Record<string, unknown>) => ({
+    id,
+    kind: "connect",
+    role: "apply",
+    title: "t",
+    brief: "b",
+    goal: "g",
+    takeaway: "k",
+    hint: "h",
+    source: { label: "l", url: "https://example.com/a" },
+    ...extra,
+  });
+  const manifest = (activities: unknown[]) => ({
+    schemaVersion: 1,
+    id: "how-a-click-travels",
+    title: "t",
+    courseId: "browser-ai",
+    unitId: "the-shell",
+    contentRevision: 1,
+    contentHash: hash,
+    status: "draft",
+    createdAt: "2026-09-11T00:00:00.000Z",
+    updatedAt: "2026-09-11T00:00:00.000Z",
+    evidence: [{ ...evidence, nodeIds: ["kn-aaaaaaaaaaaa"] }],
+    activities,
+  });
+
+  /*
+    A family is one activity at several levels, and both halves of that have to
+    hold or the picker offers something it cannot deliver: one engine carries
+    all three, and each level appears once. Neither is checkable at the point
+    the renderer would have to notice.
+  */
+  it("rejects a family that mixes engines", () => {
+    const result = LessonManifestSchema.safeParse(
+      manifest([
+        activity("wiring-intro", { family: "wiring", difficulty: "intro" }),
+        activity("wiring-hard", { family: "wiring", difficulty: "challenge", kind: "sort" }),
+      ]),
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects two activities at the same level in one family", () => {
+    const result = LessonManifestSchema.safeParse(
+      manifest([
+        activity("wiring-intro", { family: "wiring", difficulty: "intro" }),
+        activity("wiring-hard", { family: "wiring", difficulty: "intro" }),
+      ]),
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts one activity at three levels", () => {
+    const result = LessonManifestSchema.safeParse(
+      manifest([
+        activity("wiring-intro", { family: "wiring", difficulty: "intro" }),
+        activity("wiring-hard", { family: "wiring", difficulty: "practice" }),
+        activity("wiring-pro", { family: "wiring", difficulty: "challenge" }),
+      ]),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  /* The twenty-seven lessons that already store one activity and a label. */
+  it("still accepts a lesson with no family at all", () => {
+    const result = LessonManifestSchema.safeParse(
+      manifest([activity("solo", { difficulty: "practice" })]),
+    );
+    expect(result.success).toBe(true);
   });
 });

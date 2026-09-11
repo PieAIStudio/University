@@ -655,6 +655,14 @@ export const LessonActivitySchema = z
     kind: LessonActivityKindSchema,
     role: LessonActivityRoleSchema,
     difficulty: z.enum(["intro", "practice", "challenge"]).default("practice"),
+    /**
+     * Ties this activity to its other difficulty levels.
+     *
+     * Same family + same kind + different `difficulty` is one activity the
+     * learner can move between. Optional because a lesson may author a single
+     * level, and because twenty-seven lessons already did.
+     */
+    family: StableId.optional(),
     title: z.string().min(1).max(200),
     brief: z.string().min(1).max(2_000),
     goal: z.string().min(1).max(1_000),
@@ -717,7 +725,42 @@ export const LessonManifestSchema = z
      *
      * Optional because every lesson written so far predates it.
      */
-    activities: z.array(LessonActivitySchema).max(3).default([]),
+    activities: z
+      .array(LessonActivitySchema)
+      .max(3)
+      .default([])
+      /*
+        A family has to be one activity at several levels, not several
+        activities wearing one name. Same engine, distinct levels — the two
+        things the host relies on when it offers a picker, and neither is
+        something a renderer can check at the point it would have to.
+      */
+      .superRefine((activities, ctx) => {
+        const families = new Map<string, { kind: string; difficulty: string }[]>();
+        for (const activity of activities) {
+          if (!activity.family) continue;
+          const members = families.get(activity.family) ?? [];
+          members.push({ kind: activity.kind, difficulty: activity.difficulty });
+          families.set(activity.family, members);
+        }
+        for (const [family, members] of families) {
+          if (new Set(members.map((member) => member.kind)).size > 1) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `activity family "${family}" mixes kinds; all levels of one activity run on one engine`,
+              path: ["activities"],
+            });
+          }
+          const levels = members.map((member) => member.difficulty);
+          if (new Set(levels).size !== levels.length) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `activity family "${family}" has two activities at the same difficulty`,
+              path: ["activities"],
+            });
+          }
+        }
+      }),
     /**
      * Which teaching shape this lesson uses. Metadata about the lesson, so it
      * lives here rather than in the prose: an authoring marker inside

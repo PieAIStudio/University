@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
-import { formatLineRange } from "@pieai/university-core";
-import type { ActivityResult, LearningActivitySpec } from "@pieai/university-core";
+import { availableLevels, defaultActivityLevel, formatLineRange } from "@pieai/university-core";
+import type {
+  ActivityDifficulty,
+  ActivityLevels,
+  ActivityResult,
+  LearningActivitySpec,
+} from "@pieai/university-core";
 import { translate as t } from "../i18n/index.js";
 import { playSound } from "../sound/index.js";
 import { ConnectGame } from "./ConnectGame.js";
@@ -22,6 +27,16 @@ import type { ActivityControls } from "./controls.js";
 
 export interface LearningActivityProps {
   readonly activity: LearningActivitySpec;
+  /**
+   * The other difficulties this activity was authored at.
+   *
+   * When there is more than one, the header stops being a badge and becomes a
+   * control — which is the whole of V5's 「难度逐个组件选择」. Absent, or with
+   * one level, nothing changes: the label reads exactly as it did.
+   */
+  readonly levels?: ActivityLevels;
+  /** Told when the learner moves to another level, for hosts that track it. */
+  readonly onLevelChange?: (level: ActivityDifficulty) => void;
   /** A lesson occurrence is distinct from a reusable activity definition. */
   readonly occurrenceId?: string;
   readonly initialGuidance?: "guided" | "free";
@@ -87,12 +102,28 @@ function renderGame(activity: LearningActivitySpec, controls: GameControls) {
 }
 
 /** Embeddable in a lesson, a standalone section, or a host-owned playlist. */
-export function LearningActivity(props: LearningActivityProps) {
+export function LearningActivity({ levels, onLevelChange, ...props }: LearningActivityProps) {
   const [round, setRound] = useState(0);
+  const [picked, setPicked] = useState<ActivityDifficulty | null>(null);
+  const offered = levels ? availableLevels(levels) : [];
+  /*
+    V5: 「默认先提供入门」. The start level is the easiest the lesson authored,
+    not the level of whichever activity the prose happened to point `::play` at
+    — otherwise the default would depend on the author's id choice rather than
+    on what the learner needs.
+  */
+  const difficulty = picked ?? (levels ? defaultActivityLevel(levels) : null);
+  const activity = (difficulty ? levels?.levels[difficulty] : undefined) ?? props.activity;
   return (
     <ActivityRound
-      key={`${props.occurrenceId ?? props.activity.id}:${props.activity.id}:${props.activity.difficulty ?? "practice"}:${round}`}
+      key={`${props.occurrenceId ?? activity.id}:${activity.id}:${activity.difficulty ?? "practice"}:${round}`}
       {...props}
+      activity={activity}
+      levels={offered.length > 1 ? offered : undefined}
+      onPickLevel={(level) => {
+        setPicked(level);
+        onLevelChange?.(level);
+      }}
       onRestart={() => setRound((value) => value + 1)}
     />
   );
@@ -105,8 +136,14 @@ function ActivityRound({
   onResult,
   onNext,
   nextLabel,
+  levels,
+  onPickLevel,
   onRestart,
-}: LearningActivityProps & { readonly onRestart: () => void }) {
+}: Omit<LearningActivityProps, "levels"> & {
+  readonly levels?: readonly ActivityDifficulty[];
+  readonly onPickLevel?: (level: ActivityDifficulty) => void;
+  readonly onRestart: () => void;
+}) {
   const [hintOpen, setHintOpen] = useState(false);
   const [guided, setGuided] = useState(initialGuidance === "guided");
   const guidanceUsed = useRef(initialGuidance === "guided");
@@ -193,9 +230,39 @@ function ActivityRound({
         </div>
       </header>
       <div className="learning-activity__orientation">
+        {/*
+          The difficulty stops being a label and becomes a control the moment a
+          lesson authors more than one level. It was a badge for a year — the
+          engine, the three-level family type, the selector and the completion
+          record all worked, and the only thing that could reach them was the
+          play lab, because a lesson had nowhere to store a second payload.
+        */}
+        {levels ? (
+          <div
+            className="learning-activity__levels"
+            role="group"
+            aria-label={t("play.difficulty.label")}
+          >
+            {levels.map((level) => (
+              <GameButton
+                key={level}
+                sound={false}
+                static
+                type="button"
+                variant={level === (activity.difficulty ?? "practice") ? "primary" : "ghost"}
+                aria-pressed={level === (activity.difficulty ?? "practice")}
+                onClick={() => onPickLevel?.(level)}
+              >
+                {t(`play.difficulty.${level}`)}
+              </GameButton>
+            ))}
+          </div>
+        ) : null}
         <details className="learning-activity__background">
           <summary>
-            {activity.difficulty ? `${t(`play.difficulty.${activity.difficulty}`)} · ` : ""}
+            {!levels && activity.difficulty
+              ? `${t(`play.difficulty.${activity.difficulty}`)} · `
+              : ""}
             {t("play.usability.goal")}
           </summary>
           <p>{activity.brief}</p>
