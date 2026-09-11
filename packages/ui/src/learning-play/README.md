@@ -33,12 +33,20 @@ function ActivitySection({ activity }: { activity: LearningActivitySpec }) {
 
 ## 难度与上手提示分别配置
 
-每个情境现在有 `intro`（入门）、`practice`（进阶）、`challenge`（挑战）三份明确载荷。每个情境三份难度配置，而规则实现仍然只有每种玩法一套。`ActivityFamily` 的三份载荷必须同 kind、各有唯一 id、并标明对应 difficulty；`selectActivityLevel` 检查这些身份约束，不对分数、目标或计时做通用乘法。
+**先分清两件事，它们长得像但不是一回事：**
+
+- **试玩页的情境**有 `intro`（入门）/ `practice`（进阶）/ `challenge`（挑战）三份明确载荷，读者可以随时换档。这是 `ActivityFamily`，由 `packages/ui/src/learning-play/*-difficulty.ts` 从一份素材展开出来——那六个文件是**试玩页的示例数据**，不是课文功能。
+- **课文里的组件只存一份载荷**，外加一个 `difficulty` 标签（`LessonActivitySchema`）。它没有 family，读者也换不了档；那个标签只用来告诉读者这一关的分量，并记进完成证据。
+
+所以下面这段是**试玩页**的用法。课文配组件不需要写三份，写一份、标好 `difficulty` 就够了。要不要让课文里也能换档，见 [ADR-0010](../../../../docs/adr/ADR-0010-difficulty-moves-when-the-learner-moves-it.md) 的「什么还开着」。
+
+每个情境三份难度配置，而规则实现仍然只有每种玩法一套。`ActivityFamily` 的三份载荷必须同 kind、各有唯一 id、并标明对应 difficulty；`selectActivityLevel` 检查这些身份约束，不对分数、目标或计时做通用乘法。
 
 ```tsx
 import { selectActivityLevel, type ActivityFamily } from "@pieai/university-core";
 
-function LessonActivity({ family }: { family: ActivityFamily }) {
+// 试玩页的用法：一份 family，读者在三档之间切换。课文不是这样调的。
+function PlayLabActivity({ family }: { family: ActivityFamily }) {
   const activity = selectActivityLevel(family, "intro");
   return (
     <LearningActivity
@@ -61,7 +69,7 @@ function LessonActivity({ family }: { family: ActivityFamily }) {
 2. 列出学习者已经会做的动作和题目已给的事实。第一次接触、复习或长课中的轻任务用 intro；已会基本操作、需要组合判断用 practice；需要迁移、交叉条件或保住旧行为时才用 challenge。
 3. 从同一 family 明确选择一档。后期课程可以穿插 intro；每一节不必放组件，每一节也不必全选同档。不要因“第十系列”批量标成挑战。
 4. 检查本档 goal、关键约束和真实完成证据是否匹配课程内容。帮助的开关不改变完成规则，不作为升难办法；计时不是三档难度的定义。
-5. 为课节位置设置独立 occurrenceId，调用既有课程生产/校验流程。`difficulty-examples.ts` 只扩展本站预设案例；自定义活动要写显式 family，不能把任意 JSON 交给这个 fixture factory 或绕过课程 CLI。
+5. 为课节位置设置独立 occurrenceId，调用既有课程生产/校验流程。`difficulty-examples.ts` 只扩展试玩页的预设案例。**课文配组件写一份载荷、标好 `difficulty` 即可——`LessonActivitySchema` 里没有 family 这个字段**（这里原来写的是「自定义活动要写显式 family」，照做是做不成的）。任何情况下都不能把任意 JSON 交给这个 fixture factory 或绕过课程 CLI。
 
 | 玩法  | 入门                  | 进阶                       | 挑战的真实新增判断                                         |
 | ----- | --------------------- | -------------------------- | ---------------------------------------------------------- |

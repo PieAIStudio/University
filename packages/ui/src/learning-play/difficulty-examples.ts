@@ -6,7 +6,14 @@ import { getSortFamily } from "./sort-difficulty.js";
 import { getContrastFamily } from "./contrast-difficulty.js";
 import { getWeighFamily } from "./weigh-difficulty.js";
 
-/** Only the lab's curated fixtures are expanded here. Course authors supply explicit families. */
+/*
+  Only the play lab's own fixtures are expanded here.
+
+  Not 「course authors supply explicit families」, which is what this line used
+  to say and is not something a course author can do: `LessonActivitySchema`
+  stores one payload and a `difficulty` label, and has no family field at all.
+  A lesson's board is fixed at the tier its author chose (ADR-0010).
+*/
 export function getExampleFamily(activity: LearningActivitySpec): ActivityFamily {
   switch (activity.kind) {
     case "ai-context":
