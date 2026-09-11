@@ -106,11 +106,18 @@
   list-style: none;
 }
 
+/*
+  The placed chip's look now comes from the liquid body behind it, so the list
+  item is just a container. Leaving the old background here would have painted
+  a hard rectangle behind the very silhouette that is supposed to be the shape.
+*/
 .play-sort__placed {
-  padding: 6px 10px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--game-ui-success) 18%, transparent);
   font-size: 13px;
+}
+
+.play-sort__placed-label {
+  display: block;
+  padding: 6px 10px;
 }
 
 .play-sort__note {

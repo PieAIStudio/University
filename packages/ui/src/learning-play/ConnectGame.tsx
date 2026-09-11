@@ -258,9 +258,17 @@ export function ConnectGame({
         )}
       </div>
       <div className="play-action-row">
+        {/*
+          The board's one primary action, and the only button on it that gets
+          the brand's liquid surface. Spreading it to the hint and restart
+          controls beside it would spend the signal that says 「this is the
+          thing to press」 — the same reason a page has one CTA.
+        */}
         <GameButton
           sound={false}
+          surface="liquid"
           type="button"
+          variant="primary"
           disabled={disabled || running || edges.length === 0}
           onClick={run}
         >

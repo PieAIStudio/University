@@ -298,8 +298,25 @@ function ActivityRound({
             </details>
           ) : null}
           <div className="play-action-row">
+            {/*
+              The one liquid control every activity kind shares.
+
+              Each board may also give its own completing action the liquid
+              surface — connect's 「放出测试信号」 does — but this is the moment
+              that exists on all thirteen of them, and it is the one worth
+              spending the brand's loudest surface on: the learner has just
+              finished, and this is the way forward. Putting it here rather
+              than in each game is also what keeps 「one liquid control per
+              screen」 true by construction instead of by discipline.
+            */}
             {onNext ? (
-              <GameButton sound={false} type="button" onClick={onNext}>
+              <GameButton
+                sound={false}
+                surface="liquid"
+                type="button"
+                variant="primary"
+                onClick={onNext}
+              >
                 {nextLabel ?? t("play.lab.next")}
                 <PlayIcon name="arrow" />
               </GameButton>

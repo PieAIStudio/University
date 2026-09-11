@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { GameButton, GameToggle } from "@pieai/swimmer-ui-kit";
+import { GameButton, GameProgress, GameToggle } from "@pieai/swimmer-ui-kit";
 import {
   createDispatchState,
   dispatchStatus,
@@ -370,8 +370,15 @@ export function DispatchGame({
           <strong>
             {formatNumber(state.cursor)} / {formatNumber(activity.cards.length)}
           </strong>
-          <progress
-            aria-label={translate("play.extra.dispatch.progress")}
+          {/*
+            The kit's bar, not the browser's. A bare <progress> is styled by
+            the platform, which means it is the one element on the board that
+            does not belong to the brand — and the kit's own bar carries the
+            liquid level for free, which is the form that exists for exactly
+            this: a quantity rising and holding.
+          */}
+          <GameProgress
+            label={translate("play.extra.dispatch.progress")}
             max={activity.cards.length}
             value={state.cursor}
           />
@@ -384,9 +391,10 @@ export function DispatchGame({
               budget: activity.budget,
             })}
           </strong>
-          <progress
-            aria-label={translate("play.extra.dispatch.costProgress")}
+          <GameProgress
+            label={translate("play.extra.dispatch.costProgress")}
             max={Math.max(1, activity.budget)}
+            tone={state.spent > activity.budget ? "danger" : "accent"}
             value={Math.min(state.spent, activity.budget)}
           />
         </div>

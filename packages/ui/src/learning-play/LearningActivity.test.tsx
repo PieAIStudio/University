@@ -22,7 +22,17 @@ beforeEach(() => {
   document.body.append(container);
   root = createRoot(container);
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-  vi.stubGlobal("matchMedia", () => ({ matches: true }));
+  /*
+    A stub has to be shaped like the thing it replaces. `{ matches }` alone is
+    not a MediaQueryList, and a component that subscribed to it threw — the kit
+    now tolerates that shape because Safari really had it until 14, but a test
+    should not be the reason we found out.
+  */
+  vi.stubGlobal("matchMedia", () => ({
+    matches: true,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  }));
 });
 afterEach(async () => {
   await act(async () => root.unmount());
@@ -129,7 +139,11 @@ describe("activity host evidence boundary", () => {
   });
   it("cancels an in-flight signal when skipped, without a late completion", async () => {
     vi.useFakeTimers();
-    vi.stubGlobal("matchMedia", () => ({ matches: false }));
+    vi.stubGlobal("matchMedia", () => ({
+      matches: false,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }));
     const onResult = vi.fn();
     const activity = getBaseExamples()[0] as ConnectActivity;
     await act(async () =>
