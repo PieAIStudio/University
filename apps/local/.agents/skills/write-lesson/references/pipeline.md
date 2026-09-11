@@ -297,3 +297,22 @@ models under `agy` fail outright, and the detector may never propose wording.
   inside ranges it already cites.
 - Never trust a self-reported "all checks pass". Run
   `node scripts/lint-lessons.mjs --study <id> --course <id>` yourself.
+
+## When refresh-study invokes write-lesson
+
+`refresh-study` is the parent workflow. It owns source snapshot preparation, UA,
+freshness audit, stale marking, and course reactivation. This skill is only the
+content step for one stale lesson:
+
+1. Accept the exact target snapshot, analysis, audit reasons, current lesson
+   manifest, and all existing card/exercise IDs from the handoff.
+2. Own the lesson prose, cards, and exercises, including their evidence and
+   checklist; keep IDs and structure stable. Append a revision when the content
+   needs rewriting **or** when stale evidence must be rebound, even if the text
+   is unchanged.
+3. Return the revision proposal and dry-run result to the parent. Do not run
+   `refresh prepare`, `refresh finalize`, `refresh audit`, `refresh audit --apply`,
+   or `course reactivate` from this child step.
+
+When writing a lesson independently, the same content contract applies; only
+the parent orchestration differs.

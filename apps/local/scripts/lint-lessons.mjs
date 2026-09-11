@@ -893,6 +893,23 @@ if (updateBaseline) {
 }
 
 console.log(`\n${checked} 节课已检查，${failed} 节有问题。`);
+/*
+  A gate that scanned nothing has not passed, it has not looked.
+
+  `lessons("studies")` is a path relative to the working directory, so running
+  this from the repository root instead of `apps/local` finds no studies at all
+  and prints 「0 节课已检查」 followed by a zero exit — the same shape as a
+  clean run, and the same defect already fixed once in
+  `check-lesson-activities.mjs`. From the right directory this scans 450
+  lessons, so zero is never a legitimate result here.
+*/
+if (checked === 0) {
+  console.error(
+    "\n✗ 一节课都没扫到。这个脚本按相对路径找 studies/，请在 apps/local 下运行" +
+      "（pnpm --filter @pieai/university-local lint:lessons）。",
+  );
+  process.exit(1);
+}
 console.log(
   `存量豁免：无 detail ${debtExempt[DEBT_RULE.DETAIL]} / 手抄 fence ${debtExempt[DEBT_RULE.HAND_COPIED_FENCE]} / 系统词汇 ${debtExempt[DEBT_RULE.SYSTEM_VOCAB]} / 孤儿证据 ${debtExempt[DEBT_RULE.ORPHAN_EVIDENCE]} / 截图版本 ${debtExempt[DEBT_RULE.SCREENSHOT_COMMIT]}（改写后自动失效）`,
 );

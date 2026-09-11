@@ -35,9 +35,10 @@ deliberately holds roles and families, not a stale current id.
    use verified primary documents or recorded, reproducible observations when
    there is no repository. See [evidence-and-failures.md](references/evidence-and-failures.md).
    No invented paths, lines, outputs, or assertions inferred from a URL merely responding.
-3. Pick a variant → [references/variants.md](references/variants.md). In the
-   same step decide whether this lesson earns an interactive activity, which
-   one, and what role it serves → [references/activities.md](references/activities.md).
+3. Pick a variant → [references/variants.md](references/variants.md), and in
+   the same step pick the lesson's activity and the role it serves →
+   [references/activities.md](references/activities.md). Every lesson gets one;
+   the choice is which, not whether.
 4. Write. Run [references/checklist.md](references/checklist.md).
 5. **Polish.** See "The polish pass" below. A no-polish run needs the explicit
    status and reason required by `models.md` before the lesson ships;
@@ -88,68 +89,53 @@ pnpm lint:hedges --before /tmp/before.md --after /tmp/after.md
 ```
 
 **Exit 0 → keep the polished version. Non-zero → throw it away and ship your
-own draft.** Do not hand-repair the polish. The failures this catches are the
-model disagreeing with the author about how certain the world is, and a model
-that got that wrong once in a file will have got it wrong somewhere the linter
-cannot see.
+own draft.** Do not hand-repair the polish. Why the prompt alone was not enough,
+with the measured numbers:
+[references/polish-prompt.md](references/polish-prompt.md).
 
-### Why there is a linter and not just a prompt
+Called from `refresh-study`? That workflow owns the snapshot, UA, freshness
+audit and reactivation; this skill owns one lesson's prose, cards and exercises
+and returns a revision proposal. The exact split:
+[references/pipeline.md](references/pipeline.md).
 
-[references/polish-prompt.md](references/polish-prompt.md) states both rules,
-and the prompt alone was not enough. Told only in prose to change wording only,
-the model removed 10 of the author's 23 hedges, manufactured 10 absolutes where
-the originals had zero, and grew every lesson by 7–9%. 「通常能照着清单重新装」
-came back as 「随时都能重新装」.
+## The gates (run these; they hold most of this file)
 
-For a beginner those are different claims. The second one teaches them that on
-the day the network is down, the failure is theirs.
+```bash
+pnpm --filter @pieai/university-local lint:lessons   # shape, spine, evidence, detail, voice, activity
+pnpm --filter @pieai/university-local lint:hedges --before /tmp/before.md --after /tmp/after.md
+```
 
-So the two red lines are enforced twice: written in the prompt, and checked by
-`scripts/check-lesson-hedges.mjs`, which fails on a lost hedge, a new absolute,
-a 「只要…才」 mispairing, or prose growing more than 3%. It ignores fenced code
-and evidence anchors, so a lesson that legitimately gained a code block does not
-read as growth. It also fails closed: a crash exits non-zero.
+Fourteen of the sixteen invariants below are machine-checked, and each one names
+the rule number that catches it. That is the answer to 「这么多规则记不住」: you
+are not expected to hold them in your head, you are expected to run the gate
+before you claim a lesson is done. What no machine checks — whether the lesson
+is true, clear, and transferable — is in
+[references/checklist.md](references/checklist.md), and that is where the
+attention freed up by the gate should go.
 
-Both rules are machine-checked because a rule only a reader enforces is a rule
-that holds until the day someone is in a hurry.
-
-## When refresh-study invokes this skill
-
-`refresh-study` is the parent workflow. It owns source snapshot preparation, UA,
-freshness audit, stale marking, and course reactivation. This skill is only the
-content step for one stale lesson:
-
-1. Accept the exact target snapshot, analysis, audit reasons, current lesson
-   manifest, and all existing card/exercise IDs from the handoff.
-2. Own the lesson prose, cards, and exercises, including their evidence and
-   checklist; keep IDs and structure stable. Append a revision when the content
-   needs rewriting **or** when stale evidence must be rebound, even if the text
-   is unchanged.
-3. Return the revision proposal and dry-run result to the parent. Do not run
-   `refresh prepare`, `refresh finalize`, `refresh audit`, `refresh audit --apply`,
-   or `course reactivate` from this child step.
-
-When writing a lesson independently, the same content contract applies; only
-the parent orchestration differs.
+`lint:lessons` finds `studies/` by a path relative to the working directory, so
+run it through the filter above or from `apps/local`. From anywhere else it
+scans nothing.
 
 ## The invariants
 
-Break one → rewrite.
+Break one → rewrite. The tag after each is the `lint:lessons` rule number
+that catches it; **judgment** means nothing catches it but a reader.
 
-1. **Title is a question** an outsider wants answered — not a noun phrase, not
+1. *(rule 2)* **Title is a question** an outsider wants answered — not a noun phrase, not
    "X 的作用".
-2. **No answer before `## 先猜一下`** (title, body, or heading).
-3. **Exactly one** open-ended prediction on the lesson core. Never multiple
+2. *(judgment)* **No answer before `## 先猜一下`** (title, body, or heading).
+3. *(rules 7, 8)* **Exactly one** open-ended prediction on the lesson core. Never multiple
    choice (including A/B/C bullets or「选一个」). Follow it with the line
    **先写下你的判断，再往下看答案。** on its own line. This keeps the
    prediction low-stakes without talking down to the reader. Every lesson has
    this step: the opening must provide enough context for a reasoned guess,
    not the correct answer. Do not demand an unfamiliar prerequisite term or
    require a correct prediction before the reader can continue.
-4. **Next section is exactly `## 答案`** (no heading suffix) and resolves the
+4. *(rule 3)* **Next section is exactly `## 答案`** (no heading suffix) and resolves the
    prediction in one or two sentences. Middle sections teach; do not dump the
    lesson into `## 答案`.
-5. **Project source appears only as an `[[evidence:path:line]]` token**, covered
+5. *(rule 12)* **Project source appears only as an `[[evidence:path:line]]` token**, covered
    by this revision's manifest evidence. Never hand-type the source into a
    fence. See 源码从快照来 below. Banned substitutes:
    [references/evidence-and-failures.md](references/evidence-and-failures.md).
@@ -159,34 +145,39 @@ Break one → rewrite.
    ability to carry other assessment shapes is not an alternative authoring
    recipe. Existing IDs and immutable revisions remain protected.
 
-6. **`## 自检` questions only** — no `答案：`, `**答：**`, or parenthetical
+6. *(rule 14)* **`## 自检` questions only** — no `答案：`, `**答：**`, or parenthetical
    solutions. Change an input, condition, or example to require independent use;
    changing the entire project is unnecessary. The separate graded exercise
    supplies feedback below the prose; a demonstration never replaces it.
-7. **Last section is `## 一句话`**: exactly one bold sentence.
-8. **No old-skeleton headings:** `## 学习目标` / `## 先给结论` / `## 一个类比` /
+7. *(rule 21)* **Last section is `## 一句话`**: exactly one bold sentence.
+8. *(rule 6)* **No old-skeleton headings:** `## 学习目标` / `## 先给结论` / `## 一个类比` /
    `## 工作示例` / `## 重点`.
-9. **No HTML comments in `content.md`.** Variant lives only in `manifest.json`.
-10. **Warming an already-shaped lesson may not grow its standard prose past
+9. *(rule 1)* **No HTML comments in `content.md`.** Variant lives only in `manifest.json`.
+10. *(growth check)* **Warming an already-shaped lesson may not grow its standard prose past
     115%.** Measured on the body **with all `:::detail` blocks removed** —
     adding a detail layer is new structure, not padding, and is not counted
     here. If the previous revision has no `variant`, this is a structural
     rewrite and the standard prose will roughly double; the rule does not
     apply. Once a lesson is in shape, warmth is phrasing, not extra material.
     See 语气 below.
-11. **Talk to the reader**: at least 2 occurrences of 「你」 per 1000 characters.
+11. *(second-person check)* **Talk to the reader**: at least 2 occurrences of 「你」 per 1000 characters.
     A lesson with none is a lecture delivered to an empty room.
-12. **Never narrate the teaching apparatus.** The reader does not know this app
+12. *(rule 20)* **Never narrate the teaching apparatus.** The reader does not know this app
     exists. See 不许讲教学装置 below.
-13. **Detail blocks carry the second reading level.** Every lesson ships
+13. *(detail check)* **Detail blocks carry the second reading level.** Every lesson ships
     `:::detail` blocks; each answers one named question. See 详细讲解层 below.
-14. **Never hand-copy project source into a fence.** The `[[evidence:]]` token
+14. *(hand-copy check)* **Never hand-copy project source into a fence.** The `[[evidence:]]` token
     renders the real pinned source itself.
-15. **Every picture must survive the delete test**: remove it, add one sentence
+15. *(judgment; rule 28 only checks the file exists)* **Every picture must
+    survive the delete test**: remove it, add one sentence
     — is the reader worse off? Decorative images buy affection, not
     understanding. Max 3 per lesson, never taken off the web, never AI-generated
     where a real capture would do. See
     [references/media.md](references/media.md).
+
+16. *(rule 30, and hard in the proposal schema)* **The lesson carries at least
+    one interactive activity**, chosen at step 3 with the variant. See
+    Interactive courseware below.
 
 The prediction and feedback are teaching choices informed by research, not proof
 that a heading sequence guarantees learning. Apply the checklist's judgment
@@ -230,14 +221,23 @@ names. Never put it in `content.md`.
 
 ## Interactive courseware
 
-Decide this at step 3, with the variant — not after the prose exists. A lesson
-written first and fitted with a game afterwards gets a game for that paragraph,
+**Every lesson carries at least one activity.** Not a preference — a lesson
+without `activities` fails `LessonCreationProposalSchema`, and any lesson
+rewritten after 2026-09-09 fails `lint:lessons` rule 30.
+
+This paragraph used to read 「default is no activity」, which contradicted both
+gates and both of them are newer than it. That default is measurable: under it,
+15 of 469 lessons carried an activity. A rule that decides for everyone decided
+that this product ships a stack of text.
+
+Decide it at step 3, with the variant — not after the prose exists. A lesson
+written first and fitted with a game afterwards gets a game for a paragraph,
 rather than the one thing in it that only makes sense once you have done it.
 
-**Default is no activity.** Which lessons earn one, which of the ten to pick,
-where it goes, and how to hand the reader over to it in the prose:
-[references/activities.md](references/activities.md). The payload contract and
-the engines are the shared
+Three is the ceiling, one is normal. Which of the thirteen to pick, where it
+goes, how to hand the reader over to it, and what to do when none of them fits:
+[references/activities.md](references/activities.md) — read it at step 3, not
+after the linter complains. The payload contract and the engines are the shared
 [activity contract](../../../../../packages/ui/src/learning-play/README.md).
 
 Seeing or operating a guided demonstration does not prove independent
