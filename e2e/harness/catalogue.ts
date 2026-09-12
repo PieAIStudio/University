@@ -943,13 +943,27 @@ export async function installSingleCourseShelfFixture(
   });
 }
 
+/*
+ * Three distinct course identities, spread over as many studies as ship.
+ *
+ * Every assertion in W is per-course: it reads one island blueprint and checks
+ * that the shared art kept that course's own id, lesson ids, successors and
+ * route. Nothing in it needs a second study, so demanding one turned three live
+ * regressions into a skip the day the catalogue became single-study. Taking one
+ * course per study before taking a second from any keeps the cross-study spread
+ * the moment a package is unlocked, without making it a precondition.
+ */
 export const SHARED_LANDSCAPE_CASES: readonly ShippedCourse[] = (() => {
-  if (SHIPPED_CATALOGUE.length < 2 || SHIPPED_COURSES.length < 3) return [];
-  const firstStudy = SHIPPED_CATALOGUE[0]!;
-  const secondStudy = SHIPPED_CATALOGUE.find((study) => study.id !== firstStudy.id)!;
-  const fromFirst = firstStudy.courses.slice(0, 2);
-  const fromSecond = secondStudy.courses.slice(0, 1);
-  return [...fromFirst, ...fromSecond].slice(0, 3);
+  const byStudy = SHIPPED_CATALOGUE.map((study) => [...study.courses]);
+  const spread: ShippedCourse[] = [];
+  for (let depth = 0; spread.length < 3; depth += 1) {
+    const round = byStudy
+      .map((courses) => courses[depth])
+      .filter((course): course is ShippedCourse => course !== undefined);
+    if (round.length === 0) break;
+    spread.push(...round);
+  }
+  return spread.slice(0, 3);
 })();
 
-export const SHARED_LANDSCAPE_CATALOGUE_REASON = `当前发布目录只有 ${SHIPPED_CATALOGUE.length} 个 study、${SHIPPED_COURSES.length} 门课；这个回归要求跨至少两个 study 的三门真实课，须在解锁 package 后再提出。`;
+export const SHARED_LANDSCAPE_CATALOGUE_REASON = `当前发布目录只有 ${SHIPPED_COURSES.length} 门课；这个回归要求三门各不相同的真实课，须在解锁 package 后再提出。`;
