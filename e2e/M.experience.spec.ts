@@ -12,7 +12,6 @@ import {
   openLessonLayerDialog,
   openLessonSourceDialog,
   openLibraryDialog,
-  openPlansDialog,
   openExperienceRoute,
   prepareCoverageTarget,
   assertVisibleAndHittableAtFivePoints,
@@ -66,7 +65,12 @@ const DIALOG_SCENARIOS: readonly DialogScenario[] = [
    * the configured shape draws a sign-in form and no dialog at all. X2/X3
    * still walk /me, and readyProfile now fails if the way in disappears.
    */
-  { id: "plans", label: "会员能力说明", open: openPlansDialog },
+  /*
+   * An unavailable purchase attempt is an inline alert, not a dialog. T3
+   * checks that boundary and that no payment is taken; listing it here would
+   * make this overlay invariant demand a dialog the product deliberately does
+   * not render.
+   */
   { id: "feedback", label: "提意见", open: openFeedbackDialog },
   { id: "lesson-source", label: "课文源码证据", open: openLessonSourceDialog },
   { id: "lesson-layer", label: "课文项目分层", open: openLessonLayerDialog },
@@ -82,7 +86,7 @@ const touchRoutes = EXPERIENCE_ROUTES.filter((route) => TOUCH_ROUTE_IDS.has(rout
 
 // The complete route table stays in the helper. The BRIEF's speed fallback
 // samples core routes, plus the known touch-target and login paths.
-const FAST_DIALOG_IDS = new Set(["course-pick", "account", "plans", "feedback", "lesson-source"]);
+const FAST_DIALOG_IDS = new Set(["course-pick", "feedback", "lesson-source"]);
 const FAST_DIALOG_SCENARIOS = DIALOG_SCENARIOS.filter((scenario) =>
   FAST_DIALOG_IDS.has(scenario.id),
 );
