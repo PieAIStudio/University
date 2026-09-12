@@ -2,16 +2,17 @@ import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ONLINE_ORIGIN } from "./ports.js";
+import {
+  installTerrainLengthFixture,
+  TERRAIN_LENGTH_FIXTURES,
+  coursePathOf,
+} from "./harness/catalogue.js";
 import { humanClick } from "./harness/click.js";
 import { waitForCourseFraming, assertCompleteCourseOverview } from "./harness/course-overview.js";
 import { watchConsole } from "./harness/console.js";
 import { measureStageGpu } from "./harness/stage-gpu-timing.js";
 import { captureDrawnMaterials } from "./harness/drawn-materials.js";
 
-const courses = [
-  { path: "/turing-pact/foundations-before-zero", count: 41, name: "foundations" },
-  { path: "/ai-foundations/what-is-ai-really", count: 61, name: "long-course" },
-];
 const OUTPUT = process.env.R47_EVIDENCE_DIR ?? "SCRATCH/e2e/surface-landscape";
 
 for (const viewport of [
@@ -25,13 +26,14 @@ for (const viewport of [
       colorScheme: "dark",
       reducedMotion: viewport.width === 375 ? "reduce" : "no-preference",
     });
-    for (const course of courses) {
-      test(`${course.name}: real route, shared texture, broad bank and reversible navigation`, async ({
+    for (const fixture of TERRAIN_LENGTH_FIXTURES) {
+      test(`${fixture.name}: shaped length, shared texture, broad bank and reversible navigation`, async ({
         page,
       }) => {
         const errors = watchConsole(page);
-        const folder = join(OUTPUT, `${viewport.width}`, course.name);
+        const folder = join(OUTPUT, `${viewport.width}`, fixture.name);
         mkdirSync(folder, { recursive: true });
+        await installTerrainLengthFixture(page, fixture);
         const ready = async () => {
           await page.waitForFunction(
             () => {
@@ -87,7 +89,7 @@ for (const viewport of [
               overflow: document.documentElement.scrollWidth - innerWidth,
             };
           });
-        await page.goto(ONLINE_ORIGIN + course.path);
+        await page.goto(ONLINE_ORIGIN + coursePathOf(fixture.course));
         await ready();
         if (viewport.width >= 768) {
           const rail = page.locator('#app-shell-rail button[aria-expanded="true"]');
@@ -104,13 +106,13 @@ for (const viewport of [
         const drawnCraft = materials.materials.find((m) => m.mesh === "course-garden-flora");
         expect(drawnCraft?.maps.uSurfaceSwatch?.uuid).toBe(drawnTerrain?.maps.uSurfaceSwatch?.uuid);
         expect(drawnCraft?.craftCoordinateBytes).toBeGreaterThan(0);
-        if (course.name === "foundations")
+        if (fixture.name === "short-shaped")
           expect(drawnCraft?.craftRoles).toEqual([0, 1, 2, 3, 4, 5]);
-        expect(before.lessonIds).toHaveLength(course.count);
+        expect(before.lessonIds).toHaveLength(fixture.lessonCount);
         expect(
           before.lessonIds.every((id: unknown) => typeof id === "string" && id.length > 0),
         ).toBe(true);
-        expect(new Set(before.lessonIds).size).toBe(course.count);
+        expect(new Set(before.lessonIds).size).toBe(fixture.lessonCount);
         expect(before.successors).toEqual([...before.lessonIds.slice(1), null]);
         expect(new Set(before.visibleLessonIds)).toEqual(new Set(before.lessonIds));
         expect(before.swatch.sharedWithRock).toBe(true);

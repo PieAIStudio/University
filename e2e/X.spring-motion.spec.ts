@@ -2,13 +2,22 @@ import { test, expect } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ONLINE_ORIGIN } from "./ports.js";
+import {
+  COURSE_SCENE_FIXTURE,
+  coursePathOf,
+  installCourseSceneFixture,
+} from "./harness/catalogue.js";
 import { watchConsole } from "./harness/console.js";
+
+const COURSE_ROUTE = coursePathOf(COURSE_SCENE_FIXTURE.course);
+
 test("X real coastal spring: restrained flow stops and resets without moving water support", async ({
   page,
 }) => {
   const errors = watchConsole(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto(`${ONLINE_ORIGIN}/ai-foundations/what-is-ai-really`);
+  await installCourseSceneFixture(page);
+  await page.goto(`${ONLINE_ORIGIN}${COURSE_ROUTE}`);
   await page.waitForFunction(
     () => {
       const s = (window as any).three?.scene;

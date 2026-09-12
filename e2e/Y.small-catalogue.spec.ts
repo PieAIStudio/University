@@ -2,15 +2,24 @@ import { test, expect } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ONLINE_ORIGIN } from "./ports.js";
+import {
+  CATALOGUE_ROLES,
+  coursePathOf,
+  installSingleCourseShelfFixture,
+} from "./harness/catalogue.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
+
+const COURSE = CATALOGUE_ROLES.settlement.course;
+const STUDY = CATALOGUE_ROLES.settlement.study;
 
 test("Y a real one-course archipelago retains identity and readable atmosphere", async ({
   page,
 }) => {
   const errors = watchConsole(page);
-  await page.goto(`${ONLINE_ORIGIN}/ai-foundations/what-is-ai-really`);
-  const back = page.getByRole("button", { name: /回到认识 AI，从这里开始地图/ });
+  await installSingleCourseShelfFixture(page, COURSE);
+  await page.goto(`${ONLINE_ORIGIN}${coursePathOf(COURSE)}`);
+  const back = page.getByRole("button", { name: new RegExp(`回到.*${STUDY.title}.*地图`) });
   await expect(back).toBeVisible({ timeout: 90000 });
   await humanClick(page, back, "回到单课程飞岛群");
   await page.waitForFunction(
@@ -88,10 +97,10 @@ test("Y a real one-course archipelago retains identity and readable atmosphere",
       frame: (window as any).__stageFrameMetrics,
     };
   });
-  expect(receipt.ids).toEqual(["ai-foundations/what-is-ai-really"]);
+  expect(receipt.ids).toEqual([`${COURSE.studyId}/${COURSE.id}`]);
   expect(receipt.hazeAtArrival).toBeLessThan(0.08);
-  expect(receipt.breadcrumb).toContain("认识 AI，从这里开始");
-  expect(receipt.switcher).toContain("认识 AI，从这里开始");
+  expect(receipt.breadcrumb).toContain(STUDY.title);
+  expect(receipt.switcher).toContain(STUDY.title);
   const folder = process.env.R50_EVIDENCE_DIR ?? "SCRATCH/e2e/small-catalogue";
   mkdirSync(folder, { recursive: true });
   await page.screenshot({ path: join(folder, "one-course-world.png") });

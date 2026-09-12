@@ -5,7 +5,9 @@ import { FAST_TRAVEL_UPPER_BOUND_MS } from "../packages/world/src/avatar/hop.js"
 import { CLOUD_CARRIER_FOOT_OFFSET } from "../packages/world/src/sky/cloud-carrier-contract.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
+import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
 import {
+  FIRST_COURSE_ROUTE,
   openOnline,
   readAndAnswerFirstLesson,
   waitForMapReady,
@@ -16,6 +18,8 @@ import { namedStep } from "./harness/step.js";
 import { planetFocusSample } from "./harness/planet-focus.js";
 
 const EVIDENCE = ".scratch/evidence-avatar";
+const PRIMARY_STUDY = CATALOGUE_ROLES.settlement.study;
+const ALTERNATE_COURSE = CATALOGUE_ROLES.alternateCourse.course;
 
 type Motion = {
   readonly sequence: number;
@@ -218,19 +222,31 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
         page.locator('button[data-domain-id="programming"]'),
         "select the populated programming domain",
       );
+      // The released shelf currently has one study. Exercise the empty-domain
+      // boundary first, then choose the real study from the populated domain;
+      // the planet must not invent a second study just to keep an old journey.
       await humanClick(
         page,
-        page.locator('[data-study-id="general"]'),
-        "start on the website region",
+        page.locator('button[data-domain-id="ai-foundations"]'),
+        "先看尚未发布的空域",
       );
+      await expect(page.locator("[data-study-id]")).toHaveCount(0);
+      await humanClick(
+        page,
+        page.locator('button[data-domain-id="programming"]'),
+        "回到已发布的学习域",
+      );
+      const primaryStudy = page.locator(`[data-study-id=${JSON.stringify(PRIMARY_STUDY.id)}]`);
+      await expect(primaryStudy).toBeVisible();
+      await humanClick(page, primaryStudy, "星球上的已发布学习路线");
       await page.waitForFunction(planetFocusSample, {
         kind: "scene",
-        studyId: "general",
+        studyId: PRIMARY_STUDY.id,
         alignedOnly: true,
-      });
+      } as const);
       if (process.env.UNIVERSITY_TIMING_PLANET === "1") {
-        await page.evaluate(planetFocusSample, { kind: "install" });
-        await page.evaluate(() => {
+        await page.evaluate(planetFocusSample, { kind: "install" } as const);
+        await page.evaluate((studyId) => {
           const receipt = {
             events: [] as { name: string; at: number }[],
             tasks: [] as { at: number; duration: number }[],
@@ -254,8 +270,7 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
             if (!active) return;
             const bag = window as any;
             const angle =
-              bag.__testPlanetFocusSample({ kind: "scene", studyId: "browser-ai" })?.alignment ??
-              null;
+              bag.__testPlanetFocusSample({ kind: "scene", studyId })?.alignment ?? null;
             receipt.frames.push({
               at: performance.now(),
               selected: bag.__planetProjection?.().selectedId ?? null,
@@ -273,7 +288,7 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
               delete (window as any).__testPlanetFocusSample;
             },
           };
-        });
+        }, PRIMARY_STUDY.id);
       }
       // Opt-in CPU evidence for the actual pointer path. Traces/screenshots
       // stay off during this measurement so capture cannot stretch the turn.
@@ -295,14 +310,14 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
         });
       }
       let startedAt = 0;
-      await humanClick(page, page.locator('[data-study-id="browser-ai"]'), "星球上的应用学习路线", {
+      await humanClick(page, primaryStudy, "星球上的已发布学习路线", {
         beforePress: async () => {
           startedAt = await page.evaluate(() => performance.now());
         },
       });
       const facing = await page.waitForFunction(
         planetFocusSample,
-        { kind: "scene", studyId: "browser-ai", alignedOnly: true },
+        { kind: "scene", studyId: PRIMARY_STUDY.id, alignedOnly: true } as const,
         { polling: "raf", timeout: 10_000 },
       );
       const alignment = await facing.jsonValue();
@@ -330,10 +345,10 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       }
       assertFast(elapsedMs, "星球区域转向");
       await expect(
-        page.getByRole("button", { name: "进入 学会用 AI 做应用", exact: true }),
+        page.getByRole("button", { name: `进入 ${PRIMARY_STUDY.title}`, exact: true }),
       ).toBeVisible();
       const measured = await measuredScene(page);
-      evidence.planet = { elapsedMs, alignment, selectedStudyId: "browser-ai", ...measured };
+      evidence.planet = { elapsedMs, alignment, selectedStudyId: PRIMARY_STUDY.id, ...measured };
     });
 
     await namedStep(page, "岛群层点课程，云飞到岛上而不是改写导航焦点", async () => {
@@ -365,14 +380,10 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       // Home now correctly rests above the current course. Picking that same
       // island cannot prove travel. Choose a different real destination and
       // retain its stable ID rather than a reflowing visible-list nth index.
-      const targetId = await page
-        .locator('button.label--course.is-visible:not([data-course-state="live"])')
-        .first()
-        .getAttribute("data-map-marker");
-      expect(targetId).toBeTruthy();
+      const targetId = ALTERNATE_COURSE.id;
       const before = (await motion(page, "world"))?.sequence ?? 0;
       const courseLabel = page.locator(
-        `button.label--course[data-map-marker=${JSON.stringify(targetId)}]`,
+        `button.label--course.is-visible[data-map-marker=${JSON.stringify(targetId)}]`,
       );
       await expect(courseLabel).toBeVisible({ timeout: 30_000 });
       let startedAt = 0;
@@ -402,7 +413,7 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       evidence.world = { elapsedMs, report: result.report, cloud, ...measured };
 
       await humanClick(page, page.getByRole("button", { name: /进入这门课/ }), "进入课程岛");
-      await expect(page).toHaveURL(/\/turing-pact\/[^/]+$/);
+      await expect(page).toHaveURL(`${ONLINE_ORIGIN}${coursePathOf(ALTERNATE_COURSE)}`);
     });
 
     await namedStep(page, "岛内点一个 lesson 标记，真实兔子跳到对应格子", async () => {
@@ -433,9 +444,7 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
 
   test("完成第一节后回到岛内，头像仍停在刚点击的 lesson 格子", async ({ page }) => {
     const consoleErrors = watchConsole(page);
-    await page.goto(`${ONLINE_ORIGIN}/turing-pact/foundations-before-zero`, {
-      waitUntil: "domcontentloaded",
-    });
+    await page.goto(`${ONLINE_ORIGIN}${FIRST_COURSE_ROUTE}`, { waitUntil: "domcontentloaded" });
     await expect(page.locator(".stagewrap canvas")).toBeVisible({ timeout: 30_000 });
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
 
@@ -461,7 +470,7 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
     const backToCourse = page.getByRole("button", { name: /回关卡地图/ }).first();
     await backToCourse.scrollIntoViewIfNeeded();
     await humanClick(page, backToCourse, "回到课程岛");
-    await expect(page).toHaveURL(/\/turing-pact\/foundations-before-zero$/);
+    await expect(page).toHaveURL(`${ONLINE_ORIGIN}${FIRST_COURSE_ROUTE}`);
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
     await page.waitForFunction(() => {
       const bag = globalThis as unknown as {

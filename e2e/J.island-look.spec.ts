@@ -8,9 +8,10 @@ import { ISLAND_LOOK_SHOT_IDS } from "../packages/world/src/island/island-look.j
 import { ISLAND_LOOK_CONTRACT } from "../packages/world/src/island/look-contract.js";
 import type { IslandLookBrowserReport } from "../packages/world/src/island/look-metrics.js";
 import { ONLINE_ORIGIN } from "./ports.js";
+import { CATALOGUE_ROLES } from "./harness/catalogue.js";
 
-const PRESSURE_STUDY_ID = "turing-pact";
-const PRESSURE_COURSE_ID = "foundations-before-zero";
+const PRESSURE_STUDY_ID = CATALOGUE_ROLES.settlement.study.id;
+const PRESSURE_COURSE_ID = CATALOGUE_ROLES.settlement.course.id;
 const MATRIX_MODE = process.env.ISLAND_LOOK_MATRIX === "1";
 const VARIANT = process.env.ISLAND_LOOK_VARIANT ?? "main";
 const SHOT_IDS = MATRIX_MODE

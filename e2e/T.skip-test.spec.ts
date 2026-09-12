@@ -7,6 +7,7 @@ import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { ONLINE_ORIGIN } from "./ports.js";
 import { namedStep } from "./harness/step.js";
+import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
 
 /**
  * 「我会了」, end to end, in a real browser.
@@ -24,10 +25,11 @@ import { namedStep } from "./harness/step.js";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SHOTS = fileURLToPath(new URL("../SHOTS", import.meta.url));
-const STUDY = "browser-ai";
-const COURSE = "search-your-own-photos";
+const SKIP_TEST = CATALOGUE_ROLES.skipTest;
+const STUDY = SKIP_TEST.study.id;
+const COURSE = SKIP_TEST.course.id;
 /** Five lessons, every one of them carrying a question tier one can settle. */
-const UNIT = "how-it-understands-a-sentence";
+const UNIT = SKIP_TEST.unit.id;
 
 /**
  * The reference answers, read off the same records the importer fingerprints.
@@ -59,14 +61,20 @@ function authoredAnswers(): ReadonlyMap<string, string> {
 }
 
 async function openCourseIsland(page: Page): Promise<void> {
-  await page.goto(`${ONLINE_ORIGIN}/${STUDY}/${COURSE}`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${ONLINE_ORIGIN}${coursePathOf(SKIP_TEST.course)}`, {
+    waitUntil: "domcontentloaded",
+  });
   await namedStep(page, "等待地图铺好", async () => {
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
     await expect(page.locator("aside.picked--left")).toBeVisible({ timeout: 30_000 });
   });
   await namedStep(page, "展开学习路线", async () => {
     await humanClick(page, page.locator("details.picked__route > summary"), "学习路线");
-    await humanClick(page, page.locator("details.course-route-quiz > summary"), "先测测你的学习起点");
+    await humanClick(
+      page,
+      page.locator("details.course-route-quiz > summary"),
+      "先测测你的学习起点",
+    );
   });
 }
 
@@ -87,7 +95,6 @@ async function answerOneQuestion(page: Page, answers: ReadonlyMap<string, string
   await humanClick(page, page.getByRole("button", { name: "交这一题" }).first(), "交这一题");
 }
 
-
 /**
  * Contrast of one element's text against what is actually behind it.
  *
@@ -100,8 +107,7 @@ async function contrastOf(page: Page, selector: string): Promise<number> {
   return page.evaluate((target) => {
     const node = document.querySelector(target);
     if (!node) throw new Error(`no element for ${target}`);
-    const parse = (value: string): readonly number[] =>
-      (value.match(/[\d.]+/g) ?? []).map(Number);
+    const parse = (value: string): readonly number[] => (value.match(/[\d.]+/g) ?? []).map(Number);
     const over = (top: readonly number[], bottom: readonly number[]): readonly number[] => {
       const alpha = top[3] ?? 1;
       return [0, 1, 2].map((i) => (top[i] ?? 0) * alpha + (bottom[i] ?? 0) * (1 - alpha));
@@ -151,9 +157,11 @@ test.describe("跳级：自述只缩小范围，做对题才跳过", () => {
     await namedStep(page, "灰是信息，锁是权力", async () => {
       const assumes = page.locator(".picked--left .picked__assumes");
       await expect(assumes).toContainText("这门课假定你已经做过");
-      await expect(assumes).toContainText("把这个抠图应用改成你的");
+      await expect(assumes).toContainText(SKIP_TEST.prerequisiteCourse.title);
       await expect(assumes).toContainText("没做过也拦不住你");
-      await expect(page.getByRole("button", { name: /去：把这个抠图应用改成你的/ })).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: new RegExp(`去：${SKIP_TEST.prerequisiteCourse.title}`) }),
+      ).toBeVisible();
       // Everything below it still works: this is the same panel either way.
       await expect(page.locator("details.course-route-quiz")).toBeVisible();
       await expect(page.locator(".unit-strip__list")).toBeVisible();
@@ -177,7 +185,9 @@ test.describe("跳级：自述只缩小范围，做对题才跳过", () => {
     await reportExperience(page);
 
     await namedStep(page, "自述只给出建议，不解锁", async () => {
-      await expect(page.locator(".course-route-quiz__result")).toContainText("看起来你可以跳过前面");
+      await expect(page.locator(".course-route-quiz__result")).toContainText(
+        "看起来你可以跳过前面",
+      );
       await expect(page.locator(".course-route-quiz__result")).toContainText(
         "回答这几个问题本身不会跳过任何一节课",
       );
@@ -240,7 +250,9 @@ test.describe("跳级：自述只缩小范围，做对题才跳过", () => {
         ".course-route-quiz__unit-name",
         ".course-route-quiz__summary-meta",
       ]) {
-        expect(await contrastOf(page, selector), `${selector} 的对比度`).toBeGreaterThanOrEqual(4.5);
+        expect(await contrastOf(page, selector), `${selector} 的对比度`).toBeGreaterThanOrEqual(
+          4.5,
+        );
       }
     });
 
@@ -295,7 +307,9 @@ test.describe("跳级面板：深色校园", () => {
         ".course-route-quiz__note",
         ".course-route-quiz__summary-meta",
       ]) {
-        expect(await contrastOf(page, selector), `${selector} 的对比度`).toBeGreaterThanOrEqual(4.5);
+        expect(await contrastOf(page, selector), `${selector} 的对比度`).toBeGreaterThanOrEqual(
+          4.5,
+        );
       }
     });
     await page.screenshot({ path: join(SHOTS, "skip-test-dark.png") });

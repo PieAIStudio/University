@@ -9,6 +9,7 @@ import { watchConsole } from "./harness/console.js";
 import { ONLINE_ORIGIN } from "./ports.js";
 import { namedStep } from "./harness/step.js";
 import { waitForCourseTrees } from "./harness/course-foliage.js";
+import { FIRST_COURSE_ROUTE } from "./harness/online-learner.js";
 
 const DEFAULT_CAPTURE_DIR = fileURLToPath(
   new URL("../SCRATCH/e2e/continuous-course", import.meta.url),
@@ -16,7 +17,7 @@ const DEFAULT_CAPTURE_DIR = fileURLToPath(
 const CAPTURE_DIR = process.env.UNIVERSITY_COURSE_CAPTURE_DIR
   ? resolve(process.env.UNIVERSITY_COURSE_CAPTURE_DIR)
   : DEFAULT_CAPTURE_DIR;
-const COURSE_PATH = "/turing-pact/foundations-before-zero";
+const COURSE_PATH = FIRST_COURSE_ROUTE;
 
 interface ViewportConfig {
   readonly name: "desktop" | "narrow-viewport";
@@ -218,7 +219,9 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
   await namedStep(page, `[${vp.name}] 点击开始进入课文并确认进入阅读器`, async () => {
     const startBtn = page.getByRole("dialog").getByRole("button", { name: /^开始/ });
     await humanClick(page, startBtn, `${vp.name} 开始课文`);
-    await expect(page).toHaveURL(/\/turing-pact\/foundations-before-zero\/[^/]+\/[^/]+$/);
+    await expect(page).toHaveURL(
+      new RegExp(`${COURSE_PATH.replaceAll("/", "\\/")}\/[^/]+\/[^/]+$`),
+    );
     await expect(page.locator(".lesson-reader")).toBeVisible({ timeout: 30_000 });
   });
 

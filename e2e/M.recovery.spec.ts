@@ -7,13 +7,16 @@ import { expect, test, type Page } from "@playwright/test";
 import { assertVisibleText } from "./harness/assert.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
+import { coursePackagePathOf, CATALOGUE_ROLES, lessonPathOf } from "./harness/catalogue.js";
 import { openOnline, waitForMapReady, FIRST_LESSON_TITLE } from "./harness/online-learner.js";
 import { namedStep } from "./harness/step.js";
 import { ONLINE_ORIGIN } from "./ports.js";
 
 const RECOVERY_TIMEOUT_MS = 20_000;
-const FIRST_LESSON_PATH =
-  "/turing-pact/foundations-before-zero/what-is-an-app/you-already-know-apps";
+const FIRST_LESSON_PATH = lessonPathOf(
+  CATALOGUE_ROLES.settlement.course,
+  CATALOGUE_ROLES.settlement.lesson,
+);
 const EVIDENCE_DIR = fileURLToPath(new URL("../.scratch/recovery/", import.meta.url));
 const VIEWPORTS = [
   { name: "desktop", viewport: { width: 1440, height: 900 } },
@@ -205,18 +208,21 @@ for (const { name, viewport } of VIEWPORTS) {
       await captureEvidence(page, `content-before-${name}`);
 
       let failOnce = true;
-      await page.route("**/content/turing-pact/foundations-before-zero.json", async (route) => {
-        if (failOnce) {
-          failOnce = false;
-          await route.fulfill({
-            status: 503,
-            contentType: "application/json",
-            body: JSON.stringify({ error: "injected recovery test failure" }),
-          });
-          return;
-        }
-        await route.continue();
-      });
+      await page.route(
+        `**${coursePackagePathOf(CATALOGUE_ROLES.settlement.course)}`,
+        async (route) => {
+          if (failOnce) {
+            failOnce = false;
+            await route.fulfill({
+              status: 503,
+              contentType: "application/json",
+              body: JSON.stringify({ error: "injected recovery test failure" }),
+            });
+            return;
+          }
+          await route.continue();
+        },
+      );
       await namedStep(page, "注入课程包 503", async () => {
         await page.reload({ waitUntil: "domcontentloaded" });
       });

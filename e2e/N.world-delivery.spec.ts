@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
+import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { assertWorldCarrierAboveGround } from "./harness/world-carrier.js";
@@ -11,7 +12,11 @@ import {
   waitForCourseFraming,
 } from "./harness/course-overview.js";
 
-const COURSE = "/turing-pact/foundations-before-zero";
+const COURSE_ROLE = CATALOGUE_ROLES.settlement.course;
+const COURSE = coursePathOf(COURSE_ROLE);
+const STUDY = CATALOGUE_ROLES.settlement.study;
+const PRIMARY_DOMAIN_ID = "programming";
+const EMPTY_DOMAIN_ID = "ai-foundations";
 const OUTPUT = "SCRATCH/e2e/world-delivery";
 const STABLE_COMPLETE_FRAMES = 6;
 const OWNED_READY_TIMEOUT_MS = 90_000;
@@ -46,9 +51,7 @@ for (const [mode, origin] of [
         await waitForCourseFraming(page);
         await page.evaluate(() => document.fonts.ready);
         const trail = page.locator("nav.map-breadcrumbs");
-        await expect(trail.locator("[aria-current=page]")).toHaveText(
-          "《在开始之前：App、代码、和你》",
-        );
+        await expect(trail.locator("[aria-current=page]")).toHaveText(COURSE_ROLE.title);
         await expect(trail.locator("a")).toHaveCount(2);
         for (const link of await trail.locator("a").all()) {
           expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
@@ -74,7 +77,7 @@ for (const [mode, origin] of [
         await expect(page).toHaveURL(`${origin}/`);
         await waitForOwnedLayerReady(page, "world");
         await waitForCourseFraming(page);
-        await expect(trail.locator("[aria-current=page]")).toHaveText("学会用 AI 做游戏");
+        await expect(trail.locator("[aria-current=page]")).toHaveText(STUDY.title);
         evidence.world = await frameEvidence(page, "world");
         evidence.remoteBatches = await remoteBatchDrawEvidence(page);
         await page.screenshot({ path: join(folder, "world.png") });
@@ -82,58 +85,65 @@ for (const [mode, origin] of [
         await expect(page).toHaveURL(`${origin}/planet`);
         await waitForOwnedLayerReady(page, "planet");
         await expect(page.locator("[data-planet-resources]")).toHaveCount(0, { timeout: 90_000 });
-        await expect(page.locator('[data-planet-domain-label="ai-games"]')).toHaveAttribute(
-          "data-active",
-          "true",
-        );
-        await expect(page.locator('[data-planet-domain-label="ai-games"]')).toContainText("已选");
+        await expect(
+          page.locator(`[data-planet-domain-label="${PRIMARY_DOMAIN_ID}"]`),
+        ).toHaveAttribute("data-active", "true");
+        await expect(
+          page.locator(`[data-planet-domain-label="${PRIMARY_DOMAIN_ID}"]`),
+        ).toContainText("已选");
 
         // Hit the actual unselected globe rather than a proxy DOM button.
-        const point = await page.evaluate(() => {
+        const point = await page.evaluate((domainId) => {
           const state = (window as any).three;
-          const root = state.scene.getObjectByName("domain-planet-ai-foundations");
+          const root = state.scene.getObjectByName(`domain-planet-${domainId}`);
           const p = root.getWorldPosition(state.camera.position.clone()).project(state.camera);
           const rect = state.gl.domElement.getBoundingClientRect();
           return {
             x: rect.left + ((p.x + 1) * rect.width) / 2,
             y: rect.top + ((1 - p.y) * rect.height) / 2,
           };
-        });
+        }, EMPTY_DOMAIN_ID);
         await page.mouse.click(point.x, point.y);
-        await expect(page.locator('button[data-domain-id="ai-foundations"]')).toHaveAttribute(
+        await expect(page.locator(`button[data-domain-id="${EMPTY_DOMAIN_ID}"]`)).toHaveAttribute(
           "aria-pressed",
           "true",
         );
         await humanClick(
           page,
-          page.locator('button[data-domain-id="ai-games"]'),
-          "restore games domain",
+          page.locator(`button[data-domain-id="${PRIMARY_DOMAIN_ID}"]`),
+          "restore the published domain",
         );
         await page.mouse.move(2, 2);
-        await page.waitForFunction(() => {
-          const state = (window as any).three;
-          return (
-            Math.abs(state.scene.getObjectByName("domain-planet-ai-games").scale.x - 1.1) < 0.001 &&
-            Math.abs(state.scene.getObjectByName("domain-planet-ai-foundations").scale.x - 0.82) <
-              0.001
-          );
-        });
+        await page.waitForFunction(
+          ({ primary, empty }) => {
+            const state = (window as any).three;
+            return (
+              Math.abs(state.scene.getObjectByName(`domain-planet-${primary}`).scale.x - 1.1) <
+                0.001 &&
+              Math.abs(state.scene.getObjectByName(`domain-planet-${empty}`).scale.x - 0.82) < 0.001
+            );
+          },
+          { primary: PRIMARY_DOMAIN_ID, empty: EMPTY_DOMAIN_ID },
+        );
         evidence.planet = await frameEvidence(page, "planet");
         await page.screenshot({ path: join(folder, "planet.png") });
         const pose = () =>
-          page.evaluate(() => {
-            const state = (window as any).three;
-            return ["ai-games", "ai-foundations"].map((id) => {
-              const root = state.scene.getObjectByName(`domain-planet-${id}`);
-              const cloud = state.scene.getObjectByName(`domain-clouds-${id}`);
-              return {
-                id,
-                scale: root.scale.x,
-                body: root.children[0].quaternion.toArray(),
-                cloud: cloud?.matrixWorld.toArray() ?? null,
-              };
-            });
-          });
+          page.evaluate(
+            ({ primary, empty }) => {
+              const state = (window as any).three;
+              return [primary, empty].map((id) => {
+                const root = state.scene.getObjectByName(`domain-planet-${id}`);
+                const cloud = state.scene.getObjectByName(`domain-clouds-${id}`);
+                return {
+                  id,
+                  scale: root.scale.x,
+                  body: root.children[0].quaternion.toArray(),
+                  cloud: cloud?.matrixWorld.toArray() ?? null,
+                };
+              });
+            },
+            { primary: PRIMARY_DOMAIN_ID, empty: EMPTY_DOMAIN_ID },
+          );
         const frames = () =>
           page.evaluate(async () => {
             for (let i = 0; i < 32; i++) await new Promise(requestAnimationFrame);
@@ -166,26 +176,24 @@ for (const [mode, origin] of [
         await page.screenshot({ path: join(folder, "planet-empty.png") });
         await humanClick(
           page,
-          page.locator('button[data-domain-id="ai-games"]'),
+          page.locator(`button[data-domain-id="${PRIMARY_DOMAIN_ID}"]`),
           "return to the original domain",
         );
         await humanClick(
           page,
-          page.getByRole("button", { name: "进入 学会用 AI 做游戏", exact: true }),
+          page.getByRole("button", { name: `进入 ${STUDY.title}`, exact: true }),
           "enter same series",
         );
         await waitForOwnedLayerReady(page, "world");
-        await expect(trail.locator("[aria-current=page]")).toHaveText("学会用 AI 做游戏");
+        await expect(trail.locator("[aria-current=page]")).toHaveText(STUDY.title);
         await page.goBack();
         await expect(page).toHaveURL(`${origin}/planet`);
         await page.goBack();
         await expect(page).toHaveURL(`${origin}/`);
-        await expect(trail.locator("[aria-current=page]")).toHaveText("学会用 AI 做游戏");
+        await expect(trail.locator("[aria-current=page]")).toHaveText(STUDY.title);
         await page.goBack();
         await expect(page).toHaveURL(`${origin}${COURSE}`);
-        await expect(trail.locator("[aria-current=page]")).toHaveText(
-          "《在开始之前：App、代码、和你》",
-        );
+        await expect(trail.locator("[aria-current=page]")).toHaveText(COURSE_ROLE.title);
         evidence.errors = console.errors();
         writeFileSync(join(folder, "receipt.json"), JSON.stringify(evidence, null, 2));
         console.assertClean();
@@ -634,7 +642,7 @@ for (const viewport of [
         "return to archipelago",
       );
       const course = page.getByRole("button", {
-        name: "《在开始之前：App、代码、和你》",
+        name: COURSE_ROLE.title,
         exact: true,
       });
       await expect(course).toBeVisible();
@@ -650,11 +658,11 @@ for (const viewport of [
       expect(shelfResponse.ok()).toBe(true);
       const shelf = await shelfResponse.json();
       const publishedCourses = shelf.studies
-        .find((study: { id: string }) => study.id === "turing-pact")
+        .find((study: { id: string }) => study.id === STUDY.id)
         .courses.map((course: { id: string }) => course.id);
       expect(publishedCourses.length).toBeGreaterThan(0);
       expect(seriesIds?.slice().sort()).toEqual(
-        publishedCourses.map((id: string) => `turing-pact/${id}`).sort(),
+        publishedCourses.map((id: string) => `${STUDY.id}/${id}`).sort(),
       );
       expect(await page.locator("button.label--course").count()).toBe(publishedCourses.length);
       evidence.seriesIslandIds = seriesIds;
@@ -680,7 +688,7 @@ for (const viewport of [
       await page.screenshot({ path: join(folder, "world.png") });
       await humanClick(
         page,
-        page.getByRole("button", { name: "当前系列 学会用 AI 做游戏", exact: true }),
+        page.getByRole("button", { name: `当前系列 ${STUDY.title}`, exact: true }),
         "study switcher",
       );
       await humanClick(
@@ -691,33 +699,36 @@ for (const viewport of [
       await expect(page.locator("[data-planet-globe] canvas")).toBeVisible();
       const expand = page.getByRole("button", { name: "展开上下文", exact: true });
       if (await expand.isVisible()) await humanClick(page, expand, "show study choices");
-      await expect(page.locator('[data-study-id="turing-pact"]')).toBeVisible();
+      await expect(page.locator(`[data-study-id=${JSON.stringify(STUDY.id)}]`)).toBeVisible();
       await humanClick(
         page,
-        page.locator('button[data-domain-id="programming"]'),
-        "visit another learning domain",
+        page.locator(`button[data-domain-id="${EMPTY_DOMAIN_ID}"]`),
+        "visit an empty learning domain",
       );
-      await humanClick(page, page.locator('[data-study-id="browser-ai"]'), "select another study");
-      await expect(page.locator('[data-study-id="browser-ai"]')).toHaveAttribute(
+      await expect(page.locator(`[data-domain-empty="${EMPTY_DOMAIN_ID}"]`)).toContainText(
+        "暂未发布",
+      );
+      await expect(page.locator("[data-study-id]")).toHaveCount(0);
+      await humanClick(
+        page,
+        page.locator(`button[data-domain-id="${PRIMARY_DOMAIN_ID}"]`),
+        "return to the published domain",
+      );
+      await humanClick(
+        page,
+        page.locator(`[data-study-id=${JSON.stringify(STUDY.id)}]`),
+        "restore selected study",
+      );
+      await expect(page.locator(`[data-study-id=${JSON.stringify(STUDY.id)}]`)).toHaveAttribute(
         "aria-pressed",
         "true",
-      );
-      await humanClick(
-        page,
-        page.locator('button[data-domain-id="ai-games"]'),
-        "return to the game domain",
-      );
-      await humanClick(
-        page,
-        page.locator('[data-study-id="turing-pact"]'),
-        "restore selected study",
       );
       await waitForOwnedLayerReady(page, "planet", originalScene);
       evidence.planet = await frameEvidence(page, "planet", originalScene);
       await page.screenshot({ path: join(folder, "planet.png") });
       await humanClick(
         page,
-        page.getByRole("button", { name: "进入 学会用 AI 做游戏", exact: true }),
+        page.getByRole("button", { name: `进入 ${STUDY.title}`, exact: true }),
         "enter same study",
       );
       // A visible DOM row can precede the returning scene's assets/arrival.
@@ -732,7 +743,7 @@ for (const viewport of [
         page.getByRole("button", { name: /进入这门课/ }),
         "enter original course",
       );
-      await expect(page).toHaveURL(new RegExp(`${COURSE}$`));
+      await expect(page).toHaveURL(`${ONLINE_ORIGIN}${COURSE}`);
       await expect(page.locator("button.label--icon.is-visible").first()).toBeVisible();
       await waitForOwnedLayerReady(page, "course", originalScene);
       const returnedCourse = await frameEvidence(page, "course", originalScene);

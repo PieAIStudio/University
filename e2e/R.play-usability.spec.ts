@@ -48,6 +48,18 @@ const BASE = [
 ];
 const act = (page: Page) => page.locator(".learning-activity");
 const btn = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
+function preferenceChoices(page: Page): Locator {
+  return page.locator(".ai-repair__product-choices:visible").getByRole("button");
+}
+async function choosePreference(page: Page, index: number): Promise<string> {
+  const choices = preferenceChoices(page);
+  expect(await choices.count(), "偏好产品至少要保留两个可选项").toBeGreaterThanOrEqual(2);
+  const choice = choices.nth(index);
+  await expect(choice).toBeVisible();
+  const label = (await choice.innerText()).trim();
+  await choice.click();
+  return label;
+}
 const errors = new WeakMap<Page, string[]>();
 test.use({
   viewport: { width: 390, height: 844 },
@@ -149,7 +161,8 @@ for (const [name, origin] of [
           归类台: () =>
             expect(page.locator(".play-sort__guide")).toContainText("现在点它属于的那一格"),
           对照台: () => expect(page.locator(".play-contrast__outcomes")).toHaveCount(1),
-          取舍台: () => expect(page.locator(".play-weigh__settled-row, .play-weigh__miss")).toHaveCount(1),
+          取舍台: () =>
+            expect(page.locator(".play-weigh__settled-row, .play-weigh__miss")).toHaveCount(1),
           反例猎手: () => expect(page.locator(".play-hunt__result")).toBeInViewport({ ratio: 1 }),
           请求调度台: () =>
             expect(page.locator(".play-dispatch__meters > div").first()).toContainText("1 / 3"),
@@ -367,7 +380,7 @@ for (const variant of [0, 1]) {
     await btn(page, "挑战").click();
     if (variant) await btn(page, "换个情境").click();
     if (variant) {
-      await btn(page, "清爽素食").click();
+      await choosePreference(page, 1);
       await btn(page, "保存午餐偏好").click();
       await btn(page, "模拟重开页面").click();
     } else {
@@ -382,9 +395,7 @@ for (const variant of [0, 1]) {
     await btn(page, "核对原问题结果").click();
     await btn(page, "清空现场，亲手检查旧功能").click();
     if (variant) {
-      await btn(page, "清爽素食").click();
-      await btn(page, "保存午餐偏好").click();
-      await btn(page, "高蛋白午餐").click();
+      await choosePreference(page, 0);
       await btn(page, "保存午餐偏好").click();
       await btn(page, "模拟重开页面").click();
     } else {
@@ -397,11 +408,12 @@ for (const variant of [0, 1]) {
     await expect(btn(page, "验收并带走修改单")).toHaveCount(0);
     await expect(act(page).locator('[data-result="completed"]')).toHaveCount(0);
     await btn(page, "重置小产品，重新操作").click();
+    let finalPreference = "";
     if (variant) {
-      await btn(page, "清爽素食").click();
+      await choosePreference(page, 1);
       await btn(page, "保存午餐偏好").click();
       await btn(page, "模拟重开页面").click();
-      await btn(page, "高蛋白午餐").click();
+      finalPreference = await choosePreference(page, 0);
       await btn(page, "保存午餐偏好").click();
       await btn(page, "模拟重开页面").click();
     } else {
@@ -416,7 +428,7 @@ for (const variant of [0, 1]) {
     await btn(page, "验收并带走修改单").click();
     await complete(page);
     const candidate = page.locator(".ai-repair__paired-products .ai-repair__state-view").last();
-    if (variant) await expect(candidate).toContainText("高蛋白午餐");
+    if (variant) await expect(candidate).toContainText(finalPreference);
     else
       await expect(candidate.locator(".ai-repair__receipts li")).toHaveText([
         "预约单 1 · 周六上午",

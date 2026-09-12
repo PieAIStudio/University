@@ -1,8 +1,12 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { ONLINE_ORIGIN } from "./ports.js";
+import { CATALOGUE_ROLES, lessonPathOf } from "./harness/catalogue.js";
 
-const LESSON = "/ai-foundations/what-is-ai-really/you-already-use-it/phone-knows-your-face";
+const LESSON = lessonPathOf(
+  CATALOGUE_ROLES.undecidedGrading.course,
+  CATALOGUE_ROLES.undecidedGrading.lesson,
+);
 
 for (const width of [390, 320, 1440]) {
   test.describe(`U light product ${width}`, () => {
@@ -13,7 +17,9 @@ for (const width of [390, 320, 1440]) {
       isMobile: width < 768,
     });
 
-    test("U1 value and full price precede details; missing transport does not pretend to charge", async ({ page }) => {
+    test("U1 value and full price precede details; missing transport does not pretend to charge", async ({
+      page,
+    }) => {
       await page.goto(`${ONLINE_ORIGIN}/plans`);
       const card = page.locator(".plan-card--featured");
       const cta = card.getByRole("button", { name: "升级会员", exact: true });
@@ -49,7 +55,9 @@ for (const width of [390, 320, 1440]) {
       await expect(page.locator(".lesson-reader")).toBeVisible();
     });
 
-    test("U3 practice leads with an action; optional rules do not crowd the first screen", async ({ page }) => {
+    test("U3 practice leads with an action; optional rules do not crowd the first screen", async ({
+      page,
+    }) => {
       await page.goto(`${ONLINE_ORIGIN}/practice`);
       const start = page.locator("[data-practice-round]");
       await expect(start).toBeVisible();
@@ -86,7 +94,9 @@ for (const width of [390, 320, 1440]) {
 
 test.describe("U details accessibility", () => {
   test.use({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
-  test("U5 details work with keyboard and reduced motion keeps feedback readable", async ({ page }) => {
+  test("U5 details work with keyboard and reduced motion keeps feedback readable", async ({
+    page,
+  }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(`${ONLINE_ORIGIN}/plans`);
     const summary = page.locator("[data-billing-details] summary");
@@ -97,10 +107,14 @@ test.describe("U details accessibility", () => {
     await expect(page.locator("[data-billing-details]")).not.toHaveAttribute("open");
     const result = await new AxeBuilder({ page }).analyze();
     expect(result.violations).toEqual([]);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      390,
+    );
   });
 
-  test("U6 dark mode supports revealed hints, settings and a concise account error", async ({ page }) => {
+  test("U6 dark mode supports revealed hints, settings and a concise account error", async ({
+    page,
+  }) => {
     await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
     await page.goto(`${ONLINE_ORIGIN}/settings`);
     await expect(page.locator(".settings-screen")).toBeVisible();
@@ -111,46 +125,70 @@ test.describe("U details accessibility", () => {
     await expect(details).toHaveAttribute("open", "");
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     await page.goto(`${ONLINE_ORIGIN}/me`);
-    await page.getByRole("button", { name: "登录 / 创建账号", exact: true }).click();
-    await expect(page.getByRole("dialog")).toContainText("这次没能登录");
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("dialog")).toHaveCount(0);
+    const accountForm = page.locator("details.account-panel__form");
+    await expect(accountForm).toBeVisible();
+    await accountForm.locator("summary").click();
+    await expect(accountForm).toHaveAttribute("open", "");
+    const email = accountForm.locator('input[name="email"]');
+    await email.fill("learner@example.com");
+    await expect(email).toHaveValue("learner@example.com");
+    await accountForm.locator('form button[type="submit"]').click();
+    await expect(accountForm).toContainText("密码至少需要 8 个字符");
     await page.goto(`${ONLINE_ORIGIN}${LESSON}`);
     const exercise = page.locator(".exercise-panel").first();
     await exercise.locator("textarea").fill("画面被算成数字，与设置时记录的特征比较。");
     await exercise.getByRole("button", { name: /^提交$/ }).click();
     await expect(exercise.locator("[data-grade-summary]")).toContainText("还不能判断");
     await exercise.locator("[data-grade-details] summary").click();
-    expect((await new AxeBuilder({ page }).include(".exercise-panel").analyze()).violations).toEqual([]);
+    expect(
+      (await new AxeBuilder({ page }).include(".exercise-panel").analyze()).violations,
+    ).toEqual([]);
   });
 
-  test("U7 the short-round ending celebrates real answers and reduced motion stops the decoration", async ({ page }) => {
+  test("U7 the short-round ending celebrates real answers and reduced motion stops the decoration", async ({
+    page,
+  }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(`${ONLINE_ORIGIN}/practice`);
-    expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
+    expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(
+      true,
+    );
     await page.locator("[data-practice-round]").click();
     for (let question = 0; question < 3; question += 1) {
       const block = page.locator(".practice-stream__question .choice-block");
       const options = block.locator(".choice-block__option");
       // Exercise the published quiz through real selections, not seeded completion.
-      for (let candidate = 0; candidate < await options.count(); candidate += 1) {
+      for (let candidate = 0; candidate < (await options.count()); candidate += 1) {
         await options.nth(candidate).click();
         await block.locator(".choice-block__submit button").click();
-        if (await page.locator("[data-practice-round-complete]").count() || await block.locator(".choice-block__option--correct").count()) break;
+        if (
+          (await page.locator("[data-practice-round-complete]").count()) ||
+          (await block.locator(".choice-block__option--correct").count())
+        )
+          break;
       }
       if (question < 2) await block.locator(".choice-block__submit button").click();
     }
     await expect(page.locator("[data-practice-round-complete]")).toHaveCount(0);
-    await page.locator(".practice-stream__question").getByRole("button", { name: "完成这一轮", exact: true }).click();
+    await page
+      .locator(".practice-stream__question")
+      .getByRole("button", { name: "完成这一轮", exact: true })
+      .click();
     const completed = page.locator("[data-practice-round-complete]");
     await expect(completed).toContainText("3 道题");
     const icon = completed.locator(".practice-stream__celebrate");
     await expect(icon).toBeVisible();
-    expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
+    expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(
+      true,
+    );
     expect(await icon.evaluate((element) => getComputedStyle(element).animationName)).toBe("none");
     await page.emulateMedia({ reducedMotion: "no-preference" });
-    expect(await icon.evaluate((element) => getComputedStyle(element).animationName)).toBe("practice-celebrate");
-    expect(await icon.evaluate((element) => getComputedStyle(element).animationIterationCount)).toBe("1");
+    expect(await icon.evaluate((element) => getComputedStyle(element).animationName)).toBe(
+      "practice-celebrate",
+    );
+    expect(
+      await icon.evaluate((element) => getComputedStyle(element).animationIterationCount),
+    ).toBe("1");
     await page.getByRole("button", { name: "今天先到这里", exact: true }).click();
     await expect(page.locator("[data-practice-round-complete]")).toHaveCount(0);
   });
