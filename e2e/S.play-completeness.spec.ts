@@ -298,7 +298,13 @@ async function sweep(page: Page, phone: boolean): Promise<Reachability> {
       // Anything reaching past the board's own right edge is content the reader
       // has to find rather than read.
       if (box.right > boardBox.right + 1) overflowing.push(name(node));
-      if (isPhone && box.height < 44) tooSmall.push({ text: name(node), height: box.height });
+      // Round before comparing. A control that CSS holds at 44px can measure
+      // 43.99996948 through getBoundingClientRect once a fractional layout
+      // position is involved, and three ten-thousandths of a pixel is not a
+      // thumb missing its target. A real violation is 34 against 44, which
+      // rounding leaves exactly as red as it was.
+      if (isPhone && Math.round(box.height) < 44)
+        tooSmall.push({ text: name(node), height: box.height });
 
       // Put it in the middle of the screen and ask there. A control the reader
       // can scroll clear of the bottom bar is a control the reader can reach.

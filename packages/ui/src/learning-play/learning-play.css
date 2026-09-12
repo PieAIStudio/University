@@ -948,3 +948,22 @@
   padding: 0 12px;
   font-size: var(--game-ui-font-sm);
 }
+/*
+  34px is the compact picker a mouse deserves; a finger does not. DESIGN.md asks
+  for at least 44px on the primary controls, and the difficulty picker is the
+  first thing a learner touches in every one of the eight games — it set its own
+  height just above and so opted out of the floor the shell already holds.
+
+  It has to sit here, after that rule, rather than with the other narrow-width
+  overrides at the top of the file: a media query carries no specificity, so the
+  34px declaration further down the sheet was simply winning on source order.
+
+  Width, not `pointer: coarse`: the sweep sets a 375px viewport without
+  emulating touch, so a pointer query would leave the gate blind to the control
+  it guards.
+*/
+@media (max-width: 680px) {
+  .learning-activity .learning-activity__levels .game-ui-button {
+    min-height: 44px;
+  }
+}
