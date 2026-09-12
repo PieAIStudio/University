@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: project
 created: 2026-07-20
-last_reviewed: 2026-08-17
+last_reviewed: 2026-09-12
 domain: project-policy
 tags:
   - project-policy
@@ -21,15 +21,17 @@ superseded_by: null
 
 # Best Practice for This Project
 
-UniversityLocal is personal learning infrastructure. It lets an AI host study
-external repositories with the user, teach from real evidence, and keep the
-learning system independent from the repositories being studied.
+This policy covers University's `apps/local` authoring module. UniversityLocal
+is the historical name retained by its CLI and teaching contracts, not a second
+browser product. The repository-root router and baseline own the single-app,
+two-mode and shared-cloud boundaries. This module lets an AI host study external
+repositories with the user without writing learning artifacts into them.
 
 ## Truth Hierarchy
 
 1. Current user instruction.
-2. UniversityLocal Canon and active governed requirements, once approved.
-3. UniversityLocal runtime code, configuration, schemas, and lockfile for installed
+2. Root University contracts, then this module's approved teaching requirements.
+3. University runtime code, configuration, schemas, and root lockfile for installed
    reality.
 4. The inspected source repository for facts about that source project.
 5. Research references and historical records for evidence, not authority.
@@ -53,16 +55,18 @@ an older commit, but it must say so.
 
 ## Runtime Boundaries
 
-- TypeScript is the common language. The browser UI uses Vite, React, and React
-  DOM.
+- TypeScript is the common language. This module is a Node server and CLI;
+  the browser UI lives in `apps/university` and shared DOM in `packages/ui`
+  relative to the repository root. Server and app never import one another.
 - The AI host is the teacher and researcher. UniversityLocal should prepare context,
   evidence, durable state, exercises, and verification rather than hiding a
   second autonomous agent inside the app without a proven need.
 - The local shell is not permanently offline. It uses the same SwimmerBackend
   account and cloud learner document as the online shell. Browser/SQLite data is
   only a cache, migration source, or offline outbox; course sources, snapshots,
-  UA artifacts, and authoring notes remain local. The only runtime difference is
-  the grading source: local AI host/clipboard versus the metered online adapter.
+  UA artifacts, and authoring notes remain local. AI source, content source and
+  access to the repository behind a lesson differ only through the root-defined
+  ports; do not invent another mode boundary in this module.
 - SwimmerUIKit owns reusable Pie components and tokens; UniversityLocal owns learning
   workflows, pages, information architecture, and local visual composition.
 - SwimmerAIKit is used only for real runtime model calls. SwimmerGameServerKit is

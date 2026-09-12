@@ -6,13 +6,14 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-12
 domain: execution
 tags:
   - current-work
   - navigation
 pinned: true
 related:
+  - PLAN-AI-READINESS-ALIGNMENT
   - PLAN-CONTINUOUS-WORLD-DELIVERY
   - ADR-0008
   - ADR-0009
@@ -29,11 +30,21 @@ related:
 This page routes active work; it does not duplicate project rules, task states,
 test totals, CLI/model choices or execution history. Read only the matching row.
 
+## Integrated mainline (2026-09-12)
+
+The course, product and visual branch commits are merged into `main`; the
+integration baseline is `2316755f`. Work in the main checkout unless the owner
+starts another lane. Retained sibling worktrees preserve original materials and
+dated evidence; their old previews and pre-merge handoffs do not prove the
+current mainline. Recheck Git and listener ownership rather than replaying an
+old merge or using a remembered port. The current approved task is below.
+
 ## Active lanes
 
 | Task | Authoritative entry |
 | --- | --- |
-| Mainline iteration, teaching contracts and remaining 3D acceptance gates | [Continuous world delivery](../../plans/active/continuous-world-delivery.md), starting with its current continuation section; preserve the implemented pipeline and follow the remaining task IDs rather than restarting the scenes |
+| Approved AI Readiness repairs and PGS alignment | [AI Readiness alignment](../../plans/active/ai-readiness-alignment.md); finish and verify this phase before the separate UIKit 2.6.1/CTA migration |
+| Mainline iteration, teaching contracts and remaining 3D acceptance gates | [Continuous world delivery](../../plans/active/continuous-world-delivery.md), reading its integrated-mainline continuation first; pre-merge sections are historical evidence, not open task assignments |
 | Learner-visible design | [Player journey V5](../player-journey/v5/index.html), including decision M; only consult V4 for behavior V5 does not amend |
 | Technique, measurement scope and rejected alternatives | [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md) |
 | Shared blueprint/field, projections and source entry points | [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md) |
@@ -46,11 +57,15 @@ test totals, CLI/model choices or execution history. Read only the matching row.
 | Whether difficulty adapts by itself | [ADR-0010](../../adr/ADR-0010-difficulty-moves-when-the-learner-moves-it.md): it does not. The learner moves it; the system never infers a level. Read it before adding anything that watches performance and re-routes |
 | What a unit the learner tested out of looks like on the map | **Undecided, and it needs deciding before it is built.** `placeCourse` in `packages/world/src/Maps.tsx` gives each lesson tile one of `done` / `live` / `idle` / `locked`, and a lesson proved through the skip test currently gets `idle` — identical to one never opened. V5 §12 决定 E says proved is not learned, so it cannot borrow `done`; a fifth state is a learner-surface design decision that belongs in [the journey](../player-journey/v5/index.html) first. The unit-entry card already says it in words; only the scene is silent |
 | Designed but unfinished learner/business capabilities | [V5 review](v5-journey-review.md), [payment](payment-backend-gap.md), [feedback](feedback-backend-gap.md), [reminders](review-reminders-backend-gap.md), [commercial model](commercial-model.md) |
-| Product worktree: integration handoff | 接手先看 [产品线集中整合交接](../../plans/active/product-completeness.md#集中整合交接入口)，包含保留项、冲突地图、测试输入与已知依赖。看实际变化用 [改前／改后图文对照](product-before-after/before-after.md)；产品决定仍在 [V5](../player-journey/v5/index.html#product-lightness) |
+| Product changes and remaining product gates | [Product completeness](../../plans/active/product-completeness.md); its integration handoff describes the already-merged lane. Historical [before/after comparison](product-before-after/before-after.md) explains its changes; current product decisions remain in [V5](../player-journey/v5/index.html#product-lightness) |
 
-## What `work/course-interactive` touches, for whoever merges it
+## Historical course-lane integration map
 
-Measured, not guessed — `git diff --name-only main...HEAD` grouped by area.
+The following overlap map is retained to explain the completed merge, not to
+request another one. Use current Git and source for any new integration.
+
+Measured before integration — the then-current `git diff --name-only main...HEAD`
+grouped by area.
 
 - **`packages/world`: one function, `stateOf` in `Maps.tsx`** (+18 −3). An
   inline `prerequisiteCourseIds.every(...)` became a call to `prerequisitesMet`,

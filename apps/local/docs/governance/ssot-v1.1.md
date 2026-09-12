@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: human
 created: 2026-07-13
-last_reviewed: 2026-07-13
+last_reviewed: 2026-09-10
 domain: doc-governance
 tags:
   - ssot
@@ -26,8 +26,10 @@ This rule defines how projects using Project Governance System handle
 **SSOT (Single Source of Truth)** for governed documentation and project-level
 AI-host entry and skill discovery.
 
-Use it whenever an AI agent creates, modifies, moves, deletes, archives, or
-cross-references project documents, routers, or project skill roots.
+Consult the relevant sections when changing scope, canonical ownership,
+directory contracts, lifecycle or host aliases. For ordinary content edits,
+use the short documentation guide selected by `AGENTS.md` instead of loading
+the complete governance rules.
 
 Beginner version: every important fact should have one home. Other files and
 host compatibility paths may point to that home, but they must not become
@@ -91,6 +93,15 @@ locations:
 - Host-specific runtime settings may remain in native host configuration files,
   but they must not introduce a second project router or project skill tree.
 
+On Windows, local materialization may use a hard link for `CLAUDE.md`
+(same device and inode as `AGENTS.md`) and a directory link or junction for
+`.claude/skills` that resolves to canonical `.agents/skills`. The host-aware
+validators accept these proven aliases; copied files, copied directories,
+wrong targets, and dangling links remain invalid. This is an existing local
+adapter allowance. The portable Git representation remains the exact relative
+symlinks above, and Git's plain-text symlink checkout must be materialized before
+host use. It does not create another source of truth.
+
 This exact-relative rule applies only to the two compatibility links above.
 Individual entries under `.agents/skills/<skill>` may be directories or valid
 absolute or relative symlinks. Skill managers may choose absolute per-skill
@@ -118,34 +129,27 @@ as part of a portable project router contract.
 - **No parallel systems**: do not keep old and new documentation, router, or
   skill structures alive unless the project explicitly says it is in a
   migration window.
-- **No AI dump folders inside governed docs**: do not create ad-hoc `Temp/`,
-  `Drafts/`, `Opus/`, `Codex/`, or AI-name folders under `docs/**`.
+- **Purpose, not session author**: directory indexes (including README.md) and
+  tool-topic guides are allowed with normal governed metadata and ownership.
+  Do not use AI-author folders to collect unowned temporary process drafts.
 
 ## Discovery Order
 
-Before changing docs, look for project-local guidance in this order:
+Start with `AGENTS.md` and its task-scoped guide. Use README.md, the existing
+documentation index and `docs/policy/` for relevant context, not as a startup
+checklist. Consult classification/lifecycle rules for metadata changes, the
+boundary and this SSOT for scope/ownership/host changes, and agents-routing for
+workflow changes. Follow the actual runtime sources named by the project.
 
-1. `AGENTS.md`, reached directly or through a compliant compatibility link.
-2. `docs/governance/boundary.md`.
-3. `docs/governance/ssot-v1.1.md`.
-4. `docs/governance/agents-routing/` and the project's selected agents-routing file.
-5. `docs/reference/documentation-map.md`, root `README.md` for human-facing
-   orientation, or another project-defined documentation index.
-6. `docs/policy/`, `docs/governance/`, or equivalent project rules.
-7. Any project-specific doc tooling such as `doc-gov`, `mintlify`,
-   `docusaurus`, `vitepress`, or custom scripts.
-8. Runtime truth locations named by the project, such as config files, schemas,
-   manifests, source packages, product packages, or asset manifests.
+Use existing tooling: `pnpm doc-gov find <topic>` discovers current documents;
+`--include-history` includes retired records. Diagnostics and exit 1 indicate
+invalid or incomplete input even when useful matches are returned. Discovery
+is not a health gate or permission to write. Run relevant checks and required
+delivery gates; do not build a parallel document system.
 
-If the project uses `doc-gov`, follow it:
-
-```bash
-pnpm doc-gov find <topic>
-pnpm doc-gov check
-pnpm doc-gov scan --check
-```
-
-Do not invent a second structure when doc-gov already defines one.
+Small tasks do not require new Spec, Plan, ADR or proof documents. Use the
+existing roles below for substantial work, cross-session handoff and durable
+decisions; keep current-work as an index, not a duplicate plan or task database.
 
 ## Choosing The Truth Layer
 
@@ -172,21 +176,20 @@ works for governed docs:
 If the project has different layers, use the project layers instead of this
 table.
 
-## Editing Rules
+## Editing And Completion
 
 When modifying documentation or project AI-host compatibility:
 
-1. Find the canonical source first.
-2. Decide whether the file is a governed doc, compatibility link, or product
-   artifact.
-3. Edit only the canonical source for the durable fact.
-4. Preserve exact compatibility link targets instead of editing through a
-   duplicate host-specific body.
-5. Update navigation links if names or paths change.
-6. Replace duplicated content with a one-line summary plus link.
-7. If code/runtime behavior changed, update the runtime truth first, then align
-   docs.
-8. Run the project's checks before claiming completion.
+1. Identify the canonical source and whether the path is a governed doc,
+   compatibility link or product artifact. Edit only the authorized source.
+2. Preserve the host-link contract above and valid per-skill links. Do not edit
+   through a symlink into a source outside the authorized workspace.
+3. Update affected references, navigation, manifests and symlinks after changes;
+   replace competing copies with a summary and link. Runtime truth comes first.
+4. Preserve decision rationale, source/approval records and original evidence.
+5. Run relevant project checks and required delivery gates before completion.
+   Repeat or expand only after related changes, failure or unresolved questions;
+   old logs do not verify new content.
 
 ## Moving Or Deleting Docs
 
@@ -194,40 +197,7 @@ When modifying documentation or project AI-host compatibility:
   project-approved `docs/archive/**` path.
 - If the content is stale, misleading, and already superseded, deletion can be
   better than hoarding.
-- Do not preserve obsolete drafts just to feel safe; excessive history increases
-  AI cognitive load.
 - If a file is moved, update indexes, manifests, and symlinks.
 - Do not move product artifacts into `docs/**` as a cleanup shortcut.
 - Before replacing an incompatible skill directory, preserve any unique skills
   by moving them into the canonical `.agents/skills/` tree.
-
-## Completion Checklist
-
-Before reporting doc or host-compatibility work complete:
-
-- [ ] I found the project documentation system.
-- [ ] I identified whether the changed path is canonical, compatible, governed
-      documentation, or a product artifact.
-- [ ] I updated the canonical source, not a duplicate.
-- [ ] `CLAUDE.md` and `.claude/skills` use their exact relative link targets.
-- [ ] I did not rewrite valid per-skill links merely because they are absolute.
-- [ ] I did not create ungoverned temp/draft/AI-name folders under `docs/**`.
-- [ ] I updated links/navigation after moves or renames.
-- [ ] I kept runtime data in runtime/config files, not Markdown copies.
-- [ ] I kept product prompts/assets in the product package unless explicitly
-      governed.
-- [ ] I ran the project's validation commands when available.
-
-## Common Mistakes
-
-| Mistake | Better move |
-| --- | --- |
-| Copying the same design rule into five docs | Keep one canonical doc, link from the others. |
-| Keeping a separate `CLAUDE.md` body | Link `CLAUDE.md` exactly to `AGENTS.md`. |
-| Copying skills into `.claude/skills/` | Keep skills in `.agents/skills/` and link the compatible root. |
-| Rewriting every absolute per-skill link | Leave valid per-skill installation links alone; the exact-relative rule is for compatibility roots. |
-| Treating old migration sources as current truth | Archive or delete them after migration. |
-| Letting Markdown override runtime config | Runtime/config wins; docs explain intent. |
-| Moving every `.md` file into `docs/**` | Govern discussion records; keep product artifacts in their product package. |
-| Creating a new folder because the current structure feels inconvenient | Use the governed structure or update governance first. |
-| Keeping outdated drafts forever | Archive only useful history; delete misleading noise. |

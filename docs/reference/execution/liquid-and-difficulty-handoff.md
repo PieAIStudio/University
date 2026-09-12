@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-09-11
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-12
 domain: execution
 tags:
   - handoff
@@ -22,10 +22,19 @@ not assumed; where something is a judgement it says so.
 The three tasks this page was written to hand over are done. What follows is
 the state they left, and the work they uncovered and did not do.
 
-## Where things stand
+## Integrated status (2026-09-12)
 
-- Branch `work/course-interactive` in `University-courses`. **Not merged to
-  main** on purpose — other worktrees merge together later.
+The course branch is now merged into main, alongside the product and visual
+lanes (integration baseline `2316755f`). Continue from
+[current work](current-work.md), not by repeating this handoff. The owner has
+separately requested UIKit 2.6.1 adoption and CTA migration; its new validation
+must not inherit the older successes below. Installed versions remain in the
+package manifests and lockfile.
+
+## Historical handoff state (2026-09-11)
+
+- At this handoff, branch `work/course-interactive` in `University-courses`
+  had intentionally not yet merged; that merge is now complete.
 - `@pieai/swimmer-ui-kit` **2.4.0 is published** and all three consuming
   packages are on it. `pnpm verify` green in both repos.
 - The brand kit lives at `/Users/yuanfei/PieAI/SwimmerUIKit` (sibling checkout).

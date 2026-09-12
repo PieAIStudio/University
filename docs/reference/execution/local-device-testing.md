@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: ai-assisted
 created: 2026-09-07
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-12
 domain: execution
 tags:
   - local-preview
@@ -23,7 +23,15 @@ related:
 只在接本机服务、手机或工具时读取。这里保存可恢复的本机信息，不是产品部署配置、
 权限授权书或验收台账。动态地址和权限每次重查；产品通过项只记活动计划。
 
-## R40 当前基线预览（2026-09-09）
+## 当前源码归属（2026-09-12）
+
+当前工作入口是整合后的 `University/main`，见 [current-work](current-work.md)。
+下文 R40/R39/R38 的地址、设备连接与工作树状态均为历史记录，不是当前在线
+承诺。2026-09-12 实查的 21999 监听者仍属于 `University-visual/apps/university`，
+不能借它证明 main 已验收。每次验证重新核对监听者、源码/构建身份和实际页面；
+不接管、停止或删除别人的预览与设备连接。
+
+## R40 历史基线预览（2026-09-09）
 
 预览已迁回主目录`/Users/yuanfei/PieAI/University`，不是旧3D或临时整合树：
 

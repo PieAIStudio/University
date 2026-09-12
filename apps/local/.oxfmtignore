@@ -1,0 +1,27 @@
+# Seeded by `pro-gov init`. This file is project-local after seeding — add
+# your own build outputs and generated paths freely.
+
+# Dependencies and build output
+node_modules
+dist
+build
+coverage
+out
+.next
+.turbo
+.tmp
+
+# ─────────────────────────────────────────────────────────────────────────
+# PGS-managed content — DO NOT REFORMAT. Keep these entries.
+#
+# `pro-gov sync --check` byte-compares docs/governance against the packaged
+# starter, and `pro-gov portfolio assets-check` byte-compares the shared-rule
+# snapshots. A formatter that only pads Markdown table cells is enough to fail
+# both, and the guardrails cannot tell cosmetic padding from a real local edit
+# — re-applying the asset then refuses with asset-lock-drift.
+#
+# If you need one of these files changed, change it upstream in Project
+# Governance System and re-sync; do not restyle it here.
+# ─────────────────────────────────────────────────────────────────────────
+docs/governance
+docs/policy/shared-rules

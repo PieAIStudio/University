@@ -32,7 +32,7 @@
     "build": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@pieai/swimmer-avatar-kit": "0.5.1",
+    "@pieai/swimmer-avatar-kit": "0.6.0",
     "@pieai/swimmer-render-kit": "0.3.0",
     "@pieai/swimmer-ui-kit": "2.4.0",
     "@pieai/university-core": "workspace:*",
@@ -40,24 +40,24 @@
     "three-stdlib": "^2.36.1"
   },
   "devDependencies": {
-    "@react-three/drei": "^10.7.8",
+    "@react-three/drei": "10.7.8",
     "@react-three/fiber": "9.6.1",
-    "@types/react": "19.2.17",
-    "@types/react-dom": "19.2.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
     "jsdom": "29.1.1",
     "oxfmt": "0.58.0",
     "oxlint": "1.73.0",
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "three": "0.185.1",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   },
   "peerDependencies": {
-    "@react-three/drei": "^10.7.8",
+    "@react-three/drei": "10.7.8",
     "@react-three/fiber": "9.6.1",
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "three": "0.185.1"
   }
 }

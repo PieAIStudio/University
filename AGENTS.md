@@ -37,11 +37,12 @@ fresh clone; their absence must not hide or replace the portable policy rules.
 
 ## Documentation Tasks
 
-When the task creates, edits, moves, deletes, or governs documentation, read
-`docs/governance/boundary.md`, `docs/governance/ssot-v1.1.md`,
-`docs/governance/doc-agent-rules.md`, `docs/governance/doc-types.md`, the
-selected agents routing file, and the policy files that govern the changed
-surface. Keep project AI development policy in `docs/policy/`.
+For ordinary documentation edits, read `docs/governance/doc-agent-rules.md`
+and policies for the changed subject. Read `docs/governance/doc-types.md`
+for metadata or lifecycle changes, `docs/governance/boundary.md` and relevant
+`docs/governance/ssot-v1.1.md` sections for ownership, directories or host
+aliases, and the selected agents routing file for workflow changes. Project
+AI development policy stays in `docs/policy/`.
 
 <!-- PGS-ROUTER:END -->
 
@@ -65,6 +66,15 @@ Before non-trivial implementation, debugging, architecture, or integration
 work, run `pnpm pro-gov learn recall --query "<task summary>"` and read
 relevant hits.
 
+Specialist skills live in `.agents/manual-skills/`. Discover their names for
+the task, then read only the selected skill's SKILL.md; they are a toolbox, not a
+startup reading list. The complete managed selection is `.pro-gov/assets.json`.
+Course-authoring skills belong to `apps/local/.agents/skills/`; read that
+module's `AGENTS.md` before using them. User-owned tools stay at user scope.
+No skill's installation, deployment or publication instructions expand the
+current task's authority. Shared-brand and teaching contracts still win over
+generic design or writing suggestions.
+
 ## Portfolio Laws
 
 - Brand kits first: `docs/policy/shared-rules/brand-kit-first.md`. 2D UI,
@@ -72,9 +82,10 @@ relevant hits.
   model calls go through SwimmerAIKit. Colour pipeline comes from
   SwimmerRenderKit. If a kit cannot do the job, change the kit and release a
   version; do not fork it here.
-- Donors: `docs/policy/shared-rules/donors.md`. Read this project's row before
-  any 3D, audio, or asset-pipeline work. A donor published on npm is a
-  dependency, not a transplant.
+- Donors: read the shared catalog in `docs/policy/shared-rules/donors.md`
+  before 3D, audio or asset-pipeline work, then the existing project ADR or
+  asset manifest for the chosen source. The shared catalog no longer assigns
+  per-project rows. A donor published on npm is a dependency, not a transplant.
 - Web3D capability baseline: this project is registered `web3d-default`. The
   eight outcome rules apply from the first `<Canvas>`, not later.
 

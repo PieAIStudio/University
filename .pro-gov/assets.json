@@ -1,80 +1,285 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "host": "codex",
   "scope": "project",
-  "placement": "registry",
-  "bundleIds": [
-    "base-governance",
-    "frontend-app",
-    "threejs-game",
-    "threejs-creative"
-  ],
-  "assetIds": [
-    "npx-skills/3d-web-experience",
-    "npx-skills/archify",
-    "npx-skills/eli5",
-    "npx-skills/fireworks-open-eli5",
-    "npx-skills/frontend-design",
-    "npx-skills/img2threejs",
-    "npx-skills/impeccable",
-    "npx-skills/threejs",
-    "npx-skills/threejs-3d-generator",
-    "npx-skills/threejs-aaa-graphics-builder",
-    "npx-skills/threejs-audio-generator",
-    "npx-skills/threejs-debug-profiler",
-    "npx-skills/threejs-game-director",
-    "npx-skills/threejs-game-ui-designer",
-    "npx-skills/threejs-gameplay-systems",
-    "npx-skills/threejs-image-generator",
-    "npx-skills/threejs-qa-release",
-    "npx-skills/threejs-skills",
-    "npx-skills/ui-ux-pro-max",
-    "npx-skills/webgl-3d-object",
-    "pie-rules/ai-in-the-loop",
-    "pie-rules/brand-kit-first",
-    "pie-rules/clean-image-generation-rules",
-    "pie-rules/document-convergence",
-    "pie-rules/donors",
-    "pie-rules/web3d-capability-alignment",
-    "pie-skills/experience-capture",
-    "pie-skills/mermaid-diagrams",
-    "pie-skills/screenwalk",
-    "third-party-skills/fireworks-tech-graph",
-    "third-party-skills/game-studio",
-    "third-party-skills/imagegen",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-atmosphere-aerial-perspective",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-bloom",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-camera-direction",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-exposure-color-grading",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-image-pipeline",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-parallax-occlusion-mapping",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-precipitation-surfaces",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-animation",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-architecture",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-fields",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-geometry",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-materials",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-planets",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-vegetation",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-vfx",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-raymarched-space-effects",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-screen-space-ambient-occlusion",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-shadow-systems",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-skill-router",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-spectral-ocean",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-temporal-surfaces",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-visual-validation",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-volumetric-clouds",
-    "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-water-optics",
-    "third-party-skills/threejs-skills/threejs-animation",
-    "third-party-skills/threejs-skills/threejs-fundamentals",
-    "third-party-skills/threejs-skills/threejs-geometry",
-    "third-party-skills/threejs-skills/threejs-interaction",
-    "third-party-skills/threejs-skills/threejs-lighting",
-    "third-party-skills/threejs-skills/threejs-loaders",
-    "third-party-skills/threejs-skills/threejs-materials",
-    "third-party-skills/threejs-skills/threejs-postprocessing",
-    "third-party-skills/threejs-skills/threejs-shaders",
-    "third-party-skills/threejs-skills/threejs-textures"
+  "assets": [
+    {
+      "id": "npx-skills/3d-web-experience",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/archify",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/defuddle",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/eli5",
+      "placement": "auto"
+    },
+    {
+      "id": "npx-skills/fireworks-open-eli5",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/frontend-design",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/img2threejs",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/impeccable",
+      "placement": "auto"
+    },
+    {
+      "id": "npx-skills/make-interfaces-feel-better",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/pdf",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/threejs",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/threejs-3d-generator",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/threejs-aaa-graphics-builder",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/threejs-audio-generator",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/threejs-debug-profiler",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/threejs-game-director",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/threejs-game-ui-designer",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/threejs-gameplay-systems",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/threejs-image-generator",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/threejs-qa-release",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/threejs-skills",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/ui-ux-pro-max",
+      "placement": "manual"
+    },
+    {
+      "id": "npx-skills/webgl-3d-object",
+      "placement": "manual"
+    },
+    {
+      "id": "pie-rules/ai-in-the-loop"
+    },
+    {
+      "id": "pie-rules/brand-kit-first"
+    },
+    {
+      "id": "pie-rules/clean-image-generation-rules"
+    },
+    {
+      "id": "pie-rules/document-convergence"
+    },
+    {
+      "id": "pie-rules/donors"
+    },
+    {
+      "id": "pie-rules/web3d-capability-alignment"
+    },
+    {
+      "id": "pie-skills/experience-capture",
+      "placement": "auto"
+    },
+    {
+      "id": "pie-skills/fable5-workflow",
+      "placement": "manual"
+    },
+    {
+      "id": "pie-skills/mermaid-diagrams",
+      "placement": "manual"
+    },
+    {
+      "id": "pie-skills/screenwalk",
+      "placement": "auto"
+    },
+    {
+      "id": "third-party-skills/fireworks-tech-graph",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/game-studio",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/imagegen",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-atmosphere-aerial-perspective",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-bloom",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-camera-direction",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-exposure-color-grading",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-image-pipeline",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-parallax-occlusion-mapping",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-precipitation-surfaces",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-animation",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-architecture",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-fields",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-geometry",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-materials",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-planets",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-vegetation",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-procedural-vfx",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-raymarched-space-effects",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-screen-space-ambient-occlusion",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-shadow-systems",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-skill-router",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-spectral-ocean",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-temporal-surfaces",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-visual-validation",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-volumetric-clouds",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-awesome-graphics-agent-skills/threejs-water-optics",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-animation",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-fundamentals",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-geometry",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-interaction",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-lighting",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-loaders",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-materials",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-postprocessing",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-shaders",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/threejs-skills/threejs-textures",
+      "placement": "manual"
+    },
+    {
+      "id": "third-party-skills/web-3d-asset-pipeline",
+      "placement": "manual"
+    }
   ]
 }

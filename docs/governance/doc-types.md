@@ -28,6 +28,7 @@ Allowed types:
 | Type | Default path |
 | --- | --- |
 | `policy` | `docs/policy/` for project policy; `docs/governance/` for doc-system policy |
+| `decision` | `docs/adr/` |
 | `spec` | `docs/specs/active/` or `docs/specs/completed/` |
 | `plan` | `docs/plans/active/` or `docs/plans/completed/` |
 | `canon` | `docs/canon/` |
@@ -36,11 +37,9 @@ Allowed types:
 
 Markdown outside `docs/**` is not a governed doc by default.
 
-Normal documents use:
-
-```text
-draft -> active -> completed -> stable -> superseded -> archived
-```
+Normal documents use `draft`, `active`, `completed`, `stable`,
+`superseded`, or `archived`. Choose the truthful state; this list does not
+require every document to pass through every state.
 
 Durable decisions use the governed `docs/adr/**` surface and the decision
 lifecycle. Do not duplicate them in another decision folder.

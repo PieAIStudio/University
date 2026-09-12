@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: human
 created: 2026-07-13
-last_reviewed: 2026-08-17
+last_reviewed: 2026-09-10
 domain: agents-routing
 tags:
   - agents-routing
@@ -34,9 +34,9 @@ flowchart TD
   B --> C{"Does the task depend on current priorities or in-flight work?"}
   C -->|"yes"| D["Read current work"]
   C -->|"no"| E["Skip current work"]
-  D --> F["Classify with local lane profile"]
+  D --> F["Choose workflow depth for this task"]
   E --> F
-  F --> G["Enter local lane"]
+  F --> G["Apply relevant project-specific conventions"]
   G --> H["Use the relevant verification cycle"]
   H --> I["Record durable evidence only when its document role requires it"]
 ```
@@ -68,18 +68,17 @@ Use this router only to pick depth and workflow. Do not use it as a project road
 This is a behavior contract, not a requirement to add another hook, CI service,
 or local tool. Reuse the project's existing scripts and verification ladder.
 
-## Project-Local Lane Profile
+## Project-Specific Conventions
 
-Every engineering project must define its own lane profile in `AGENTS.md` or `docs/policy/best-practice-for-this-project.md`.
+Use existing commands and actual project constraints in `AGENTS.md` or
+`docs/policy/best-practice-for-this-project.md`. A project may document special
+lanes, but common task categories do not require a separate lane profile.
 
-Typical lanes:
-
-- visual / UX / game-feel
-- content / config / canon
-- behavior-critical code
-- pure refactor
-
-But the shared router must not define project-specific lanes.
+Planning, research and testing should match the change's risk. Use relevant
+checks and required delivery gates; expand or repeat only for related changes,
+failures or unresolved questions. Routine work does not require new Spec, Plan,
+ADR or proof documents. Keep durable decisions and handoff evidence in their
+existing document roles.
 
 ## Host Compatibility Boundary
 

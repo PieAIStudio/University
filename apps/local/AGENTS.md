@@ -1,4 +1,11 @@
-# UniversityLocal AI Router
+# University Course-Authoring Module
+
+This directory is the course-authoring module inside the University repository,
+not a second product or checkout. Resolve the repository root with Git; read
+that root's AGENTS.md and docs/policy/best-practice-for-this-project.md first.
+Paths below are relative to this module unless explicitly linked to the root.
+The local documentation/skill entry preserves course-authoring knowledge; it
+does not override the root's product, shared-code, cloud-data or mode boundaries.
 
 ## PGS Router Block
 
@@ -6,10 +13,10 @@
 
 ## Boundary
 
-- UniversityLocal is a personal AI-host-driven research and teaching system. Grok
-  Build, Codex, Claude Code, and compatible coding hosts study external projects with the user; the
-  resulting learning material belongs to UniversityLocal by default, not to the
-  inspected project.
+- This is University's Node course-authoring server and CLI. AI hosts study
+  external projects with the user; learning material belongs to University's
+  authoring storage, never to the inspected project by default. The historical
+  UniversityLocal name still identifies retained CLI and teaching contracts.
 - PGS governs this `AGENTS.md` entry and governed Markdown under `docs/**`.
 - `AGENTS.md` is the canonical project router; `CLAUDE.md` must be the exact
   relative symlink `AGENTS.md`.
@@ -30,8 +37,8 @@ Every task starts with this router and
 `docs/policy/best-practice-for-this-project.md`. The policy tree is an index,
 not a startup glob; load only the lane that the task actually touches.
 The discovery surface is `docs/policy/**/*.md`, including subdirectories and
-any symlinked shared-rule files; current PGS-managed shared rules are portable
-snapshots. This sentence describes what can be discovered, not a requirement
+any symlinked shared-rule files; this module now links the current shared PGS
+rules rather than retaining independent old snapshots. This describes what can be discovered, not a requirement
 to read the whole tree.
 
 | Task surface                                            | Read additionally                                                                                                                                                                                     |
@@ -46,8 +53,10 @@ hits. Do not load unrelated policy or historical work by default.
 
 ## Skill Availability
 
-`.pro-gov/assets.json` and `.pro-gov/assets.lock.json` record desired assets;
-they do not prove that an optional skill is installed, host-discoverable,
+This module's `.pro-gov/assets.json` and `.pro-gov/assets.lock.json` record its
+shared-rule adoption. Generic skills are selected at the University repository
+root, not reinstalled here; user tools remain user-owned. These records
+do not prove that an optional skill is installed, host-discoverable,
 loaded, or invoked. Use a skill only when its SKILL.md actually exists and
 can be read. Project-owned teaching skills are portable files; centrally
 managed generic skill links may need the PGS control plane to materialize them
@@ -64,10 +73,9 @@ unrelated policy lane mandatory.
 
 ## Portfolio Laws
 
-- Brand kits first: `docs/policy/shared-rules/brand-kit-first.md`. Prefer
-  SwimmerUIKit when this teaching UI actually needs brand components. Skip
-  game-server and backend kits unless a real product surface appears. If a
-  needed kit cannot do the job, change the kit rather than forking it here.
+- Brand kits first: follow the root shared rules. Browser UI belongs to the
+  repository-root apps/university and shared learner DOM to packages/ui, not
+  this Node server. Use the existing backend/AI ports; do not fork shared kits.
 
 ## Upstream Rule
 
@@ -76,7 +84,7 @@ frontmatter schema, lifecycle rules, shared agents-routing rules, or external
 shared-rule placement contracts. Propose them in the Project Governance System
 upstream repository first.
 
-## UniversityLocal Rules
+## Course-Authoring Rules
 
 - Treat external repositories as study subjects. Read-only inspection is the
   default; never write learning artifacts into them unless the user explicitly
@@ -91,21 +99,20 @@ upstream repository first.
   into portable data. Learner/account data is different: the shared cloud
   document is canonical, while SQLite/browser storage is only an offline cache,
   migration source, or outbox.
-- The AI host performs research and teaching. The local shell's AI always comes
+- The AI host performs research and teaching. The authoring mode's AI comes
   from that host/clipboard path; it must not require a product API key. Do not
   add direct model-provider calls merely to imitate the host. Online model calls
   go through SwimmerAIKit and the shared grading boundary.
-- UniversityLocal is not a permanently-offline product. It uses the same
-  SwimmerBackend account and learner-data sync lane as the online shell. Its
-  only permitted runtime difference is the source of AI grading; course source
-  and authoring work remain local by design.
-- Canonical course recovery packages under `course-proposals/recovery/` are this
-  project's only outward content surface, and they are a **pull** surface. The
-  consuming product reads them; UniversityLocal never gains an uploader, a sync
-  client, a publish command, or any awareness that a consumer exists. A request
-  to "just push the courses over" is a request to break the rule above, and the
-  correct answer is to change the consumer instead. `University` registered
-  that direction as its own constraint on 2026-08-18.
+- The authoring mode is not permanently offline. Both modes use the same
+  SwimmerBackend account and learner-data sync lane. The root router defines
+  the permitted AI-source, content-source and source-access port boundaries;
+  this module does not define a different set. Never import browser app code
+  into the server or server code into the app; share domain code through core.
+- Canonical recovery packages under `course-proposals/recovery/` are read by
+  University's existing content-import pipeline. Preserve that pull boundary:
+  this module creates lesson revisions but does not independently upload or
+  publish them. Publication remains a separate gated act in the root product
+  contract; do not add a second content producer or duplicate sync client.
 - Before implementing or replacing a non-trivial capability, inspect mature
   open-source and portfolio donors first. Record license, maintenance, security,
   accessibility, data-boundary, and stack fit; directly reuse a maintained dependency

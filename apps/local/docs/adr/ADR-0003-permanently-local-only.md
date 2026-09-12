@@ -1,6 +1,6 @@
 ---
 id: ADR-0003
-title: Superseded: Keep UniversityLocal Permanently Local-Only
+title: "Superseded: Keep UniversityLocal Permanently Local-Only"
 type: decision
 status: superseded
 canonical: false

@@ -43,9 +43,9 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
-    "@pieai/doc-gov": "0.9.11",
-    "@pieai/pro-gov": "0.9.11",
-    "@playwright/test": "^1.62.1",
+    "@pieai/doc-gov": "0.14.0",
+    "@pieai/pro-gov": "0.14.0",
+    "@playwright/test": "1.63.0",
     "lefthook": "^2.1.10"
   },
   "engines": {
