@@ -210,11 +210,41 @@ async function assertCardFollowsIsland(page: Page, island: Box): Promise<Box> {
   if (!cardBox) throw new Error("进入这门课卡片没有屏幕矩形");
   const islandAt = center(island);
   const cardAt = center(cardBox);
-  const distance = Math.hypot(cardAt.x - islandAt.x, cardAt.y - islandAt.y);
+  /*
+    Edge gap, not centre distance.
+
+    `controls.tsx` places this card through `placeLabels` with `anchor: "aside"`
+    and `gap: 8`, then keeps it inside the follow viewport and clear of the
+    opaque shell. Staying inside is the card doing its job, and centre distance
+    punished it for that — the card runs ~740px tall against an island label
+    24px tall, so an island low on the screen pushes the two centres apart while
+    the boxes are still touching. Measured on 2026-09-12 across the four
+    placements this walk produces: edge gap 0, 0, 0 and 20px, while the centre
+    distance the old gate measured ranged 368 to 460 and tripped only at the
+    island nearest the right edge — the one placement with the least room left.
+
+    48px is the `gap: 8` the placer asks for, with room for the panel's own
+    border and rounding. Checked against a real break rather than assumed:
+    pushing the card 260px further along the side it already sits on — so the
+    side and viewport assertions below stay green and only this one can speak —
+    measures 214px and fails here, which is what a card that stopped following
+    would look like.
+  */
+  const gapX = Math.max(
+    0,
+    island.x - (cardBox.x + cardBox.width),
+    cardBox.x - (island.x + island.width),
+  );
+  const gapY = Math.max(
+    0,
+    island.y - (cardBox.y + cardBox.height),
+    cardBox.y - (island.y + island.height),
+  );
+  const gap = Math.hypot(gapX, gapY);
   expect(
-    distance,
-    `卡片应跟在岛旁边（距岛心 < 420px），现在是 ${distance.toFixed(0)}px。钉在角落会远得多。`,
-  ).toBeLessThan(420);
+    gap,
+    `卡片应贴着岛（边缘间隙 < 48px），现在是 ${gap.toFixed(0)}px。钉在角落会是几百。`,
+  ).toBeLessThan(48);
   expect(Math.abs(cardAt.x - islandAt.x), "卡片应在岛的一侧，而不是叠在岛心上").toBeGreaterThan(20);
   const viewport = page.viewportSize();
   if (!viewport) throw new Error("没有视口");
