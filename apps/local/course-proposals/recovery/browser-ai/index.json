@@ -17,26 +17,26 @@
   "courses": [
     {
       "courseId": "run-a-real-project-with-ai",
-      "file": "run-a-real-project-with-ai.c1af04fc5be4a347db974db549542578608212e658d95551e0f7693bd5990178.recovery.json",
-      "sha256": "sha256:c1af04fc5be4a347db974db549542578608212e658d95551e0f7693bd5990178",
+      "file": "run-a-real-project-with-ai.0e1ca93cf29f04a07f24e5d85242ffaad32a5287f966444402d240bb1b26de08.recovery.json",
+      "sha256": "sha256:0e1ca93cf29f04a07f24e5d85242ffaad32a5287f966444402d240bb1b26de08",
       "isBeingRewritten": false
     },
     {
       "courseId": "make-the-cutout-app-yours",
-      "file": "make-the-cutout-app-yours.79f6b951948c797f7c5d99bce6271cd9c4ffe043e808d4da612b34f10bfe8223.recovery.json",
-      "sha256": "sha256:79f6b951948c797f7c5d99bce6271cd9c4ffe043e808d4da612b34f10bfe8223",
-      "isBeingRewritten": false
-    },
-    {
-      "courseId": "when-a-project-is-too-big-to-read",
-      "file": "when-a-project-is-too-big-to-read.12c7751eaf45f1cd63d037a8385fff31f3f250c41e5d3221d69586af71df067d.recovery.json",
-      "sha256": "sha256:12c7751eaf45f1cd63d037a8385fff31f3f250c41e5d3221d69586af71df067d",
+      "file": "make-the-cutout-app-yours.d5dfd1fbf40a98b037b5ed3461e5511ac1d2cfd8639b187e726471f34294ca20.recovery.json",
+      "sha256": "sha256:d5dfd1fbf40a98b037b5ed3461e5511ac1d2cfd8639b187e726471f34294ca20",
       "isBeingRewritten": false
     },
     {
       "courseId": "search-your-own-photos",
-      "file": "search-your-own-photos.f74bb922d5a621cd8970d05197993ee6deeb148955efa52c6e144b57636f5817.recovery.json",
-      "sha256": "sha256:f74bb922d5a621cd8970d05197993ee6deeb148955efa52c6e144b57636f5817",
+      "file": "search-your-own-photos.b19706858a6f02afb707f32b99ffd448337aff429b007b652953a0085345eabe.recovery.json",
+      "sha256": "sha256:b19706858a6f02afb707f32b99ffd448337aff429b007b652953a0085345eabe",
+      "isBeingRewritten": false
+    },
+    {
+      "courseId": "when-a-project-is-too-big-to-read",
+      "file": "when-a-project-is-too-big-to-read.82ba7108a8343096db0e99aa4c1b2cee7319b1cbfabbdf119b5794c2ed7f2dc8.recovery.json",
+      "sha256": "sha256:82ba7108a8343096db0e99aa4c1b2cee7319b1cbfabbdf119b5794c2ed7f2dc8",
       "isBeingRewritten": false
     }
   ]

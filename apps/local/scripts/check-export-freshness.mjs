@@ -213,7 +213,7 @@ for (const entry of stale) {
   console.error(`  ${entry.study}${entry.reason ? ` — ${entry.reason}` : ""}`);
   for (const course of entry.courses) console.error(`    - ${course}`);
   console.error(
-    `    fix: node scripts/university-local.mjs course recovery export --study ${entry.study} --out course-proposals/recovery/${entry.study}`,
+    `    fix: node apps/local/scripts/university-local.mjs course recovery export --study ${entry.study} --out course-proposals/recovery/${entry.study}`,
   );
   console.error("");
 }

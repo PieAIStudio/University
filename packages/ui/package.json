@@ -64,6 +64,7 @@
     "./path/CourseRouteQuiz.js": "./src/path/CourseRouteQuiz.tsx",
     "./path/NodeCard.js": "./src/path/NodeCard.tsx",
     "./path/UnitCard.js": "./src/path/UnitCard.tsx",
+    "./path/UnitSkipTest.js": "./src/path/UnitSkipTest.tsx",
     "./path/course-route-quiz.css": "./src/path/course-route-quiz.css",
     "./path/from-course-view.js": "./src/path/from-course-view.ts",
     "./path/path-cards.css": "./src/path/path-cards.css",
@@ -112,7 +113,10 @@
     "./learning-play/ai-agent-play.css": "./src/learning-play/ai-agent-play.css",
     "./learning-play/play-usability.css": "./src/learning-play/play-usability.css",
     "./learning-play/quality-usability.css": "./src/learning-play/quality-usability.css",
-    "./learning-play/workflow-usability.css": "./src/learning-play/workflow-usability.css"
+    "./learning-play/workflow-usability.css": "./src/learning-play/workflow-usability.css",
+    "./learning-play/sort.css": "./src/learning-play/sort.css",
+    "./learning-play/contrast.css": "./src/learning-play/contrast.css",
+    "./learning-play/weigh.css": "./src/learning-play/weigh.css"
   },
   "scripts": {
     "typecheck": "tsc -b --pretty false",
@@ -124,7 +128,7 @@
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.20",
-    "@pieai/swimmer-ui-kit": "2.0.0",
+    "@pieai/swimmer-ui-kit": "2.4.0",
     "@pieai/university-core": "workspace:*",
     "mermaid": "11.16.0",
     "react-markdown": "10.1.0",

@@ -427,7 +427,6 @@ function checkSystemVocabulary(content, fail) {
         27,
         `第 ${i + 1} 行出现了系统词汇「${word}」。读者不知道本 App 存在——删掉或改成读者世界里的说法（「本课」写成「这节课」）。`,
         DEBT_RULE.SYSTEM_VOCAB,
-        DEBT_RULE.SCREENSHOT_COMMIT,
       );
       // Blank the match so a longer phrase already reported does not also fire
       // its shorter substring on the same line (e.g. 固定快照 → 快照).
@@ -566,6 +565,55 @@ function checkScreenshotCommit(manifest, fail) {
   }
 }
 
+/**
+ * Every lesson does something with its hands.
+ *
+ * The product thesis, stated as a check: a lesson the reader only reads is a
+ * page, and a page is the thing this is supposed to be an alternative to.
+ * Fifteen of 469 lessons carried an activity when this rule was written — three
+ * per cent — so the shelf was, on the only measurement that counts, a book.
+ *
+ * ## Why a date and not the debt ledger
+ *
+ * The ledger was the obvious home, and it is the wrong one. Regenerating it
+ * here drops every entry for a study this checkout cannot see, and studies
+ * arrive in a worktree as symlinks that resolve to nothing when the sibling
+ * checkout is not there — a trial run deleted 352 entries belonging to `buzz`
+ * and `supaluv` and would have failed those lessons hard the next time anybody
+ * linted them somewhere else. A ledger of four hundred and thirty-five ids is
+ * also four hundred and thirty-five chances to do that again.
+ *
+ * The cutoff needs no file. It says the same thing the ledger would have said —
+ * lessons that predate the rule are not held to it, and a rewrite expires that
+ * — and it says it about lessons this process cannot even see. The data
+ * separates cleanly: on the day this was written every lesson carrying an
+ * activity was last touched after 2026-09-09T17:40Z and every lesson without
+ * one before 2026-09-08T17:21Z, so the boundary sits inside a real gap rather
+ * than cutting through a working day.
+ *
+ * The other half of this rule lives in `LessonCreationProposalSchema`, where it
+ * is hard and has no cutoff at all: a lesson being born has no history to
+ * inherit, and 「默认不配」 is what produced the three per cent.
+ */
+const ACTIVITY_REQUIRED_FROM = Date.parse("2026-09-09T00:00:00Z");
+
+function checkHasActivity(manifest, fail) {
+  if ((manifest.activities ?? []).length > 0) return;
+  const updated = Date.parse(manifest.updatedAt ?? "");
+  // An unparseable date is treated as old. Failing a lesson because its
+  // timestamp is malformed would report the wrong defect at the wrong lesson.
+  if (!Number.isFinite(updated) || updated < ACTIVITY_REQUIRED_FROM) {
+    lessonsWithoutActivity += 1;
+    return;
+  }
+  fail(
+    30,
+    "这节课没有互动组件。读者从头到尾只是在读——挑一种玩法，让这节课至少有一件事要动手做。" +
+      "（选哪一种见 write-lesson 的 references/activities.md；实在配不上的，" +
+      "在 agent report 里说清楚是哪种形状没有落脚点。）",
+  );
+}
+
 function lintLesson({ manifestPath, content, manifest, previous }) {
   const problems = [];
   /** @param {number} item @param {string} message @param {string|null} [debtRule] */
@@ -618,6 +666,7 @@ function lintLesson({ manifestPath, content, manifest, previous }) {
 
   // 29 — a picture of the version this lesson actually teaches.
   checkScreenshotCommit(manifest, fail);
+  checkHasActivity(manifest, fail);
 
   return problems;
 }
@@ -754,11 +803,14 @@ let failed = 0;
 const rotation = new Map();
 
 // Active suppressions this run (unique lessons per debt rule).
+let lessonsWithoutActivity = 0;
+
 const debtExempt = {
   [DEBT_RULE.DETAIL]: 0,
   [DEBT_RULE.HAND_COPIED_FENCE]: 0,
   [DEBT_RULE.SYSTEM_VOCAB]: 0,
   [DEBT_RULE.ORPHAN_EVIDENCE]: 0,
+  [DEBT_RULE.SCREENSHOT_COMMIT]: 0,
 };
 
 for (const lesson of lessons("studies")) {
@@ -841,8 +893,33 @@ if (updateBaseline) {
 }
 
 console.log(`\n${checked} 节课已检查，${failed} 节有问题。`);
+/*
+  A gate that scanned nothing has not passed, it has not looked.
+
+  `lessons("studies")` is a path relative to the working directory, so running
+  this from the repository root instead of `apps/local` finds no studies at all
+  and prints 「0 节课已检查」 followed by a zero exit — the same shape as a
+  clean run, and the same defect already fixed once in
+  `check-lesson-activities.mjs`. From the right directory this scans 450
+  lessons, so zero is never a legitimate result here.
+*/
+if (checked === 0) {
+  console.error(
+    "\n✗ 一节课都没扫到。这个脚本按相对路径找 studies/，请在 apps/local 下运行" +
+      "（pnpm --filter @pieai/university-local lint:lessons）。",
+  );
+  process.exit(1);
+}
 console.log(
-  `存量豁免：无 detail ${debtExempt[DEBT_RULE.DETAIL]} / 手抄 fence ${debtExempt[DEBT_RULE.HAND_COPIED_FENCE]} / 系统词汇 ${debtExempt[DEBT_RULE.SYSTEM_VOCAB]} / 孤儿证据 ${debtExempt[DEBT_RULE.ORPHAN_EVIDENCE]}（改写后自动失效）`,
+  `存量豁免：无 detail ${debtExempt[DEBT_RULE.DETAIL]} / 手抄 fence ${debtExempt[DEBT_RULE.HAND_COPIED_FENCE]} / 系统词汇 ${debtExempt[DEBT_RULE.SYSTEM_VOCAB]} / 孤儿证据 ${debtExempt[DEBT_RULE.ORPHAN_EVIDENCE]} / 截图版本 ${debtExempt[DEBT_RULE.SCREENSHOT_COMMIT]}（改写后自动失效）`,
+);
+/*
+  Reported, never failed. These lessons predate the rule, so the number is not
+  a list of defects — it is how far the shelf still is from 「every lesson does
+  something」, and it is the only place that distance is visible at all.
+*/
+console.log(
+  `没有互动组件的存量课文：${lessonsWithoutActivity} 节（写于规则之前，不计为失败；重写时才按新标准要求）`,
 );
 if (checked === 0) console.log("（没有带 variant 的课文——尚未按新辩体重写。）");
 

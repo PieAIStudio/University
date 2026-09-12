@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
   EvidenceReferenceSchema,
+  LessonActivitySchema,
   LessonVariantSchema,
   StableId,
 } from "@pieai/university-core/domain/schemas.js";
@@ -66,6 +67,42 @@ export const LessonCreationProposalSchema = z
      * thing the shape checker never looked at.
      */
     variant: LessonVariantSchema.optional(),
+    /**
+     * Interactive courseware the lesson embeds, referenced from its prose by
+     * `::play{#id}`.
+     *
+     * Same defect as `variant` above, one field over, and found the same way:
+     * the manifest has always been able to hold activities and `course revise`
+     * has always been able to send them, but this schema is `.strict()` and did
+     * not name them — so a lesson could not be born with one. Every activity
+     * that has shipped was bolted on afterwards by a revision whose only
+     * purpose was to carry it, which means a brand-new lesson's revision 1 was
+     * guaranteed to be a version of itself with the game missing.
+     *
+     * `sections` and `assets` are still in that state. They are left alone here
+     * rather than fixed on the way past, because nobody has yet needed to be
+     * born with one and a fix nobody exercises is a fix nobody has checked.
+     *
+     * ## Required, not defaulted
+     *
+     * It was `.default([])`, and the writing skill said 「默认是不配」 — a
+     * lesson had to argue its way into having a game. Fifteen of 469 lessons
+     * ended up with one. Three per cent is not a rule being applied carefully;
+     * it is a rule that decided the answer, and what it decided was that this
+     * product ships pages of text.
+     *
+     * So the default is inverted rather than softened. A lesson cannot be born
+     * without something for the reader to do, and an author who genuinely
+     * cannot find a shape has to say so in the agent report instead of letting
+     * the field quietly stay empty. The cap stays at three and the guidance
+     * stays at one — two games in one small lesson spends the reader's
+     * attention on learning the second game — but the floor is now one.
+     *
+     * The 454 lessons that predate this keep working: this schema governs
+     * creation, and nothing revalidates a stored manifest through it.
+     * `lint-lessons.mjs` is where those are counted, behind a dated cutoff.
+     */
+    activities: z.array(LessonActivitySchema).min(1).max(3),
     evidence: z.array(EvidenceReferenceSchema).min(1),
     cards: z.array(CardCreationProposalSchema).default([]),
     exercises: z.array(ExerciseCreationProposalSchema).default([]),
@@ -78,6 +115,29 @@ export const LessonCreationProposalSchema = z
    * written to disk and never scheduled — silently invisible work. Refuse the
    * shape rather than let the course look finished while part of it is inert.
    */
+  /**
+   * An activity the prose never hands the reader to is one the reader never
+   * meets.
+   *
+   * This mattered less when activities were optional and rare: an author who
+   * went to the trouble of writing one generally remembered to point at it.
+   * Now that every lesson must carry one, the cheapest way to satisfy that is
+   * to attach a payload and move on — and the result renders as nothing at all,
+   * which is indistinguishable from the lesson simply not having one.
+   *
+   * `check-lesson-activities.mjs` checks both directions across the whole
+   * shelf, and will keep doing so. This is the same rule one boundary earlier,
+   * where the author is still in the room to fix it.
+   */
+  .refine(
+    (lesson) =>
+      lesson.activities.every((activity) => lesson.content.includes(`::play{#${activity.id}}`)),
+    {
+      message:
+        "Every activity must be referenced from the lesson prose as ::play{#id}; an unreferenced activity renders as nothing",
+      path: ["activities"],
+    },
+  )
   .refine((lesson) => lesson.cards.length === 0 || lesson.exercises.length > 0, {
     message:
       "A lesson with cards needs at least one exercise; cards are only enrolled for review once the lesson is completed",
@@ -153,6 +213,7 @@ export function writeLessonBundle(input: WriteLessonBundleInput): LessonProposal
       contentRevision: 1,
       status: "active",
       ...(lesson.variant ? { variant: lesson.variant } : {}),
+      activities: lesson.activities,
       evidence: lesson.evidence,
       createdAt: timestamp,
       updatedAt: timestamp,

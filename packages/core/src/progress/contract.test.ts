@@ -159,3 +159,36 @@ describe("courseShapeOf", () => {
     ).toBe(true);
   });
 });
+
+describe("proven, as distinct from finished", () => {
+  /*
+    A learner who already knows the material answers the questions and moves on.
+    The read model has to be able to say "they can do this" without also saying
+    "they read it", because the second claim is what would put cards for unread
+    prose into the review queue (V5 decision 12E).
+  */
+  const answeredNotRead: ProgressSource = {
+    completionOf: () => ({ exercisesPassed: true, readConfirmed: false }),
+  };
+
+  it("is true when every exercise is passed and no prose was marked read", () => {
+    const progress = readCourseProgress(course, answeredNotRead);
+    expect(progress.proven).toBe(true);
+    expect(progress.complete).toBe(false);
+    expect(progress.done).toBe(0);
+  });
+
+  it("is false while one lesson's exercises are still unanswered", () => {
+    const allButOne: ProgressSource = {
+      completionOf: (ref) =>
+        ref.lessonId === "c" ? NOT_STARTED : { exercisesPassed: true, readConfirmed: false },
+    };
+    expect(readCourseProgress(course, allButOne).proven).toBe(false);
+  });
+
+  it("is true for a course finished the ordinary way", () => {
+    // Reading and answering everything proves it too; proven is the weaker
+    // claim, so finishing must never fail to imply it.
+    expect(readCourseProgress(course, sourceOf(["a", "b", "c"])).proven).toBe(true);
+  });
+});

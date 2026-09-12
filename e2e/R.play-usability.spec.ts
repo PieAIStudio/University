@@ -1,11 +1,51 @@
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 
 const ROOT = resolve("SCRATCH/play-usability/browser");
+/*
+  Label to engine kind, by name rather than by position.
+
+  This was a second array read with `[...AI, ...BASE].indexOf(name)`, so adding
+  `sort` to the middle of the foundation shelf silently paired every game after
+  it with the wrong engine — and the assertion still looked like it was checking
+  something. Three parallel lists in this file went stale the same way at once.
+*/
+const KIND: Readonly<Record<string, string>> = {
+  原型对焦台: "ai-brief",
+  上下文装箱: "ai-context",
+  "Agent 驾驶舱": "ai-agent",
+  "AI 试车场": "ai-eval",
+  返工时光机: "ai-repair",
+  接线台: "connect",
+  归类台: "sort",
+  对照台: "contrast",
+  取舍台: "weigh",
+  调参实验室: "tune",
+  反例猎手: "hunt",
+  请求调度台: "dispatch",
+  指令画布: "program",
+};
+
 const AI = ["原型对焦台", "上下文装箱", "Agent 驾驶舱", "AI 试车场", "返工时光机"];
-const BASE = ["因果接线台", "调参实验室", "反例猎手", "请求调度台", "指令画布"];
+/*
+  The foundation shelf, in the order the lab prints it, index-aligned with the
+  「first step」 locators below. The first entry said 「因果接线台」 and the button
+  has said 「接线台」 for a while, so both mobile cases had been failing on their
+  first click; 「归类台」 is new because `sort` was on the shelf everywhere except
+  the page that shows the shelf.
+*/
+const BASE = [
+  "接线台",
+  "归类台",
+  "对照台",
+  "取舍台",
+  "调参实验室",
+  "反例猎手",
+  "请求调度台",
+  "指令画布",
+];
 const act = (page: Page) => page.locator(".learning-activity");
 const btn = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
 const errors = new WeakMap<Page, string[]>();
@@ -30,19 +70,7 @@ async function mode(page: Page, name: string) {
     .getByRole("navigation", { name: "挑一种互动课件" })
     .getByRole("button", { name, exact: true })
     .click();
-  const kinds = [
-    "ai-brief",
-    "ai-context",
-    "ai-agent",
-    "ai-eval",
-    "ai-repair",
-    "connect",
-    "tune",
-    "hunt",
-    "dispatch",
-    "program",
-  ];
-  await expect(act(page)).toHaveAttribute("data-activity", kinds[[...AI, ...BASE].indexOf(name)]!);
+  await expect(act(page)).toHaveAttribute("data-activity", KIND[name]!);
   await page.evaluate(() => {
     window.scrollTo(0, 0);
     const s = document.querySelector(".app-shell__main");
@@ -65,7 +93,7 @@ for (const [name, origin] of [
   ["delivery", ONLINE_ORIGIN],
   ["authoring", LOCAL_ORIGIN],
 ] as const) {
-  test(`R ${name} 手机：十种玩法首屏都有真正可做的第一步`, async ({ page }) => {
+  test(`R ${name} 手机：每种玩法首屏都有真正可做的第一步`, async ({ page }) => {
     for (const [collection, names] of [
       ["ai", AI],
       ["base", BASE],
@@ -78,49 +106,66 @@ for (const [name, origin] of [
           scroll: node.scrollWidth,
         }));
         expect(bounds.scroll).toBeLessThanOrEqual(bounds.client + 1);
-        const first =
-          collection === "ai"
-            ? [
-                btn(page, "同样提交一次"),
-                btn(page, "请小安试问"),
-                btn(page, "仅授权读取这些文件并开始"),
-                btn(page, "试跑这道入门题"),
-                btn(page, "预约这个时段"),
-              ][index]!
-            : [
-                page.locator(".play-connect__node").first(),
-                page.locator('.play-tune input[type="range"]').first(),
-                btn(page, "先测这一次"),
-                page.locator(".play-dispatch__lane").nth(1),
-                btn(page, "加一条前进"),
-              ][index]!;
-        await expect(first).toBeInViewport({ ratio: 1 });
+        /*
+          Keyed by the button's label, never by its position.
+
+          This array was indexed by `index` into `BASE`, and adding two games in
+          the middle of the shelf silently re-paired every game after them with
+          somebody else's first control — 归类台 was asked for a slider. It is
+          the second time the same shape broke here; `KIND` above was converted
+          for the same reason after `sort` shifted it. A label that goes stale
+          fails loudly on the game it belongs to; a position that goes stale
+          fails on a different game entirely, which is how it survives review.
+        */
+        const FIRST_STEP: Readonly<Record<string, () => Locator>> = {
+          原型对焦台: () => btn(page, "同样提交一次"),
+          上下文装箱: () => btn(page, "请小安试问"),
+          "Agent 驾驶舱": () => btn(page, "仅授权读取这些文件并开始"),
+          "AI 试车场": () => btn(page, "试跑这道入门题"),
+          返工时光机: () => btn(page, "预约这个时段"),
+          接线台: () => page.locator(".play-connect__node").first(),
+          归类台: () => page.locator(".play-sort__item").first(),
+          对照台: () => page.locator(".play-contrast__choice").first(),
+          取舍台: () => page.locator(".play-weigh__choice").first(),
+          调参实验室: () => page.locator('.play-tune input[type="range"]').first(),
+          反例猎手: () => btn(page, "先测这一次"),
+          请求调度台: () => page.locator(".play-dispatch__lane").nth(1),
+          指令画布: () => btn(page, "加一条前进"),
+        };
+        /** What that first step must visibly produce, again by label. */
+        const AFTER: Readonly<Record<string, () => Promise<unknown>>> = {
+          原型对焦台: () => expect(page.locator(".ai-brief__comparison")).toContainText("A"),
+          上下文装箱: () =>
+            expect(page.locator(".ai-context-counter__answer")).toContainText("小安"),
+          "Agent 驾驶舱": () =>
+            expect(page.locator(".play-ai-agent__last-result code")).toContainText("/source/"),
+          "AI 试车场": () => expect(page.locator(".ai-eval__response-strip li")).toHaveCount(1),
+          返工时光机: () => expect(page.locator(".ai-repair__receipts li")).toHaveCount(1),
+          接线台: () =>
+            expect(page.locator(".play-connect__node").first()).toHaveAttribute(
+              "aria-pressed",
+              "true",
+            ),
+          归类台: () =>
+            expect(page.locator(".play-sort__guide")).toContainText("现在点它属于的那一格"),
+          对照台: () => expect(page.locator(".play-contrast__outcomes")).toHaveCount(1),
+          取舍台: () => expect(page.locator(".play-weigh__settled-row, .play-weigh__miss")).toHaveCount(1),
+          反例猎手: () => expect(page.locator(".play-hunt__result")).toBeInViewport({ ratio: 1 }),
+          请求调度台: () =>
+            expect(page.locator(".play-dispatch__meters > div").first()).toContainText("1 / 3"),
+          指令画布: () => expect(page.locator(".play-program__command")).toHaveCount(1),
+        };
+
+        const first = FIRST_STEP[label]!();
+        await expect(first, `${label} 的第一步控件`).toBeInViewport({ ratio: 1 });
         await capture(page, `${name}-${collection}-${index}-entry`);
-        if (collection === "base" && index === 1) {
+        // The slider is driven by the keyboard; a click on a range input does
+        // not move it in a way the engine reads.
+        if (label === "调参实验室") {
           await first.focus();
           await page.keyboard.press("ArrowLeft");
         } else await first.click();
-        if (collection === "ai" && index === 0)
-          await expect(page.locator(".ai-brief__comparison")).toContainText("A");
-        if (collection === "ai" && index === 1)
-          await expect(page.locator(".ai-context-counter__answer")).toContainText("小安");
-        if (collection === "ai" && index === 2)
-          await expect(page.locator(".play-ai-agent__last-result code")).toContainText("/source/");
-        if (collection === "ai" && index === 3)
-          await expect(page.locator(".ai-eval__response-strip li")).toHaveCount(1);
-        if (collection === "ai" && index === 4)
-          await expect(page.locator(".ai-repair__receipts li")).toHaveCount(1);
-        if (collection === "base" && index === 0)
-          await expect(page.locator(".play-connect__node").first()).toHaveAttribute(
-            "aria-pressed",
-            "true",
-          );
-        if (collection === "base" && index === 2)
-          await expect(page.locator(".play-hunt__result")).toBeInViewport({ ratio: 1 });
-        if (collection === "base" && index === 3)
-          await expect(page.locator(".play-dispatch__meters > div").first()).toContainText("1 / 3");
-        if (collection === "base" && index === 4)
-          await expect(page.locator(".play-program__command")).toHaveCount(1);
+        await AFTER[label]?.();
         await capture(page, `${name}-${collection}-${index}-action`, ".learning-activity__game");
       }
     }
@@ -253,7 +298,7 @@ for (const variant of [0, 1]) {
   });
 }
 
-test("R 难度身份：切档清本轮、切帮助保现场、三十种组合均可打开", async ({ page }) => {
+test("R 难度身份：切档清本轮、切帮助保现场、每种玩法三档都可打开", async ({ page }) => {
   await open(page);
   const seen = new Set<string>();
   for (const [collection, names] of [
@@ -278,7 +323,12 @@ test("R 难度身份：切档清本轮、切帮助保现场、三十种组合均
       }
     }
   }
-  expect(seen.size).toBe(30);
+  /*
+    Three tiers for every game on both shelves, and every one of them a distinct
+    activity id. Counted from the lists rather than written as 30, which is what
+    it was until `sort` made the foundation shelf six.
+  */
+  expect(seen.size).toBe((AI.length + BASE.length) * 3);
   await open(page);
   await btn(page, "同样提交一次").click();
   const receipt = await page.locator(".ai-brief__comparison").textContent();
@@ -291,13 +341,23 @@ test("R 难度身份：切档清本轮、切帮助保现场、三十种组合均
 
 test("R 连玩可以混合难度，后续简单关不会被全局升难", async ({ page }) => {
   await open(page);
-  await btn(page, "连玩五种").click();
-  for (const [index, level] of ["入门", "挑战", "入门", "进阶", "入门"].entries()) {
+  /*
+    `open` defaults to the AI shelf, so the playlist is `AI.length` — not
+    `BASE.length`, which is the foundation shelf and is now three longer. Both
+    counts come from the arrays rather than from a literal, because the last
+    literal here said 「5」 and stayed right only for as long as neither shelf
+    grew.
+  */
+  await btn(page, `连玩 ${AI.length} 种`).click();
+  const levels = ["入门", "挑战", "入门", "进阶", "入门"].slice(0, AI.length);
+  for (const [index, level] of levels.entries()) {
     await btn(page, level).click();
     await btn(page, "先跳过").click();
-    await btn(page, index === 4 ? "这一轮结束了" : "下一个玩法").click();
+    await btn(page, index === levels.length - 1 ? "这一轮结束了" : "下一个玩法").click();
   }
-  await expect(page.locator(".learning-play-lab__finish")).toContainText("完成 0 种，跳过 5 种");
+  await expect(page.locator(".learning-play-lab__finish")).toContainText(
+    `完成 0 种，跳过 ${AI.length} 种`,
+  );
 });
 
 for (const variant of [0, 1]) {

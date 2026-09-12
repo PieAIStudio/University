@@ -4,6 +4,7 @@ import {
   ACTIVITY_DIFFICULTIES,
   selectActivityLevel,
   type ActivityDifficulty,
+  type ActivityLevels,
   type ActivityKind,
   type ActivityResult,
 } from "@pieai/university-core";
@@ -14,20 +15,33 @@ import { LearningActivity } from "./LearningActivity.js";
 import { getBaseExamples } from "./base-examples.js";
 import { extraExamples } from "./extra-examples.js";
 import { getProgramExamples } from "./program-examples.js";
+import { getSortExamples } from "./sort-examples.js";
+import { getContrastExamples } from "./contrast-examples.js";
+import { getWeighExamples } from "./weigh-examples.js";
 import { PlayIcon } from "./PlayIcon.js";
 import { getAIBriefExamples } from "./ai-brief-examples.js";
 import { getAIWorkflowExamples } from "./ai-workflow-examples.js";
 import { getAIQualityExamples } from "./ai-quality-examples.js";
 
-const FOUNDATION_MODES = [
+/*
+  The lab's two shelves, exported so a test can hold them against the wire
+  enum. `sort` had an engine, a renderer, three lessons using it and a gate
+  checking it, and was still absent from this list — so the page that exists to
+  let somebody try every game could only offer ten of the eleven, and nothing
+  said so. A list of names is exactly the shape that goes stale quietly.
+*/
+export const FOUNDATION_MODES = [
   "connect",
+  "sort",
+  "contrast",
+  "weigh",
   "tune",
   "hunt",
   "dispatch",
   "program",
 ] as const satisfies readonly ActivityKind[];
 
-const AI_MODES = [
+export const AI_MODES = [
   "ai-brief",
   "ai-context",
   "ai-agent",
@@ -47,7 +61,14 @@ export function LearningPlayLab({
     () =>
       collection === "ai"
         ? [...getAIBriefExamples(), ...getAIWorkflowExamples(), ...getAIQualityExamples()]
-        : [...getBaseExamples(), ...extraExamples(), ...getProgramExamples()],
+        : [
+            ...getBaseExamples(),
+            ...getSortExamples(),
+            ...getContrastExamples(),
+            ...getWeighExamples(),
+            ...extraExamples(),
+            ...getProgramExamples(),
+          ],
     [locale, collection],
   );
   const [mode, setMode] = useState<ActivityKind>(modes[0]!);
@@ -62,6 +83,17 @@ export function LearningPlayLab({
   const baseActivity = variants[variant] ?? variants[0]!;
   const family = useMemo(() => getExampleFamily(baseActivity), [baseActivity]);
   const activity = selectActivityLevel(family, difficulty);
+  /*
+    The lab used to own a difficulty row of its own, beside the activity rather
+    than on it. Once a lesson could carry its levels, that was two controls
+    doing one job — and the lab's copy was the one a learner never sees, so it
+    was the one that could drift. The picker now comes from the activity, and
+    the lab only listens.
+  */
+  const levels = useMemo<ActivityLevels>(
+    () => ({ id: family.id, levels: family.levels }),
+    [family],
+  );
   const advanceFocus = () =>
     requestAnimationFrame(() => {
       activityTop.current?.scrollIntoView({ block: "start", behavior: "instant" });
@@ -164,7 +196,7 @@ export function LearningPlayLab({
             <div className="learning-play-lab__variant">
               <span>
                 {playlist !== null
-                  ? `${t("play.lab.mixing")} · ${modes.indexOf(mode) + 1} / 5`
+                  ? `${t("play.lab.mixing")} · ${modes.indexOf(mode) + 1} / ${modes.length}`
                   : t("play.lab.variant", { count: variant + 1 })}
               </span>
               {playlist === null ? (
@@ -183,32 +215,16 @@ export function LearningPlayLab({
                 </GameButton>
               ) : null}
             </div>
-            <div
-              className="learning-play-lab__difficulty"
-              role="group"
-              aria-label={t("play.difficulty.label")}
-            >
-              {ACTIVITY_DIFFICULTIES.map((level) => (
-                <GameButton
-                  key={level}
-                  variant={difficulty === level ? "primary" : "ghost"}
-                  aria-pressed={difficulty === level}
-                  onClick={() => {
-                    if (level === difficulty) return;
-                    setDifficulty(level);
-                    setRound((value) => value + 1);
-                    setPlaylistDone(false);
-                  }}
-                >
-                  {t(`play.difficulty.${level}`)}
-                </GameButton>
-              ))}
-            </div>
           </div>
           <div ref={activityTop} tabIndex={-1} className="learning-play-lab__activity">
             <LearningActivity
-              key={`${activity.id}:${round}`}
+              key={`${family.id}:${round}`}
               activity={activity}
+              levels={levels}
+              onLevelChange={(level) => {
+                setDifficulty(level);
+                setPlaylistDone(false);
+              }}
               occurrenceId={`${family.id}:${difficulty}:${round}`}
               onResult={record}
               onNext={next}
@@ -229,10 +245,17 @@ export function LearningPlayLab({
         </div>
         <div className="learning-play-lab__session">
           <span>
+            {/*
+              Both numbers come from the shelf being shown. The total used to be
+              the character 五 baked into three sentences and a `/ 5` in the
+              progress line, which was correct for exactly as long as there were
+              five games — and `sort` was the sixth.
+            */}
             {t("play.lab.session", {
               count: modes.filter((kind) =>
                 ACTIVITY_DIFFICULTIES.some((level) => completed.has(`${kind}:${level}`)),
               ).length,
+              total: modes.length,
             })}
           </span>
           <GameButton
@@ -248,7 +271,9 @@ export function LearningPlayLab({
                 : startPlaylist
             }
           >
-            {t(playlist !== null && !playlistDone ? "play.lab.cancelMix" : "play.lab.mix")}
+            {playlist !== null && !playlistDone
+              ? t("play.lab.cancelMix")
+              : t("play.lab.mix", { total: modes.length })}
           </GameButton>
         </div>
       </header>

@@ -132,6 +132,7 @@ export {
   type SectionProblem,
   type SectionProblemCode,
 } from "./domain/entry-section.js";
+export { formatLineRange } from "./domain/line-range.js";
 export {
   COLLECTION_IDS,
   CollectionIdSchema,
@@ -277,6 +278,14 @@ export * from "./ports/index.js";
 export * from "./progress/contract.js";
 export * from "./progress/depth.js";
 
+// The skip test: which of a unit's own exercises can stand in for it, how three
+// of them are drawn, and what passing them proves — which is never 「学过」.
+export * from "./progress/skip-test.js";
+
+// Which courses a course assumes you have done. Deliberately no `locked`: the
+// prerequisite graph is information the learner is given, not a gate (V5 §12 C).
+export * from "./progress/prerequisites.js";
+
 // Recommended learning sequence (spine order) per study — a linear extension
 // of the prerequisite DAG so there is always exactly one "next step".
 export * from "./progress/spine.js";
@@ -366,6 +375,9 @@ export {
 
 export type * from "./learning-play/types.js";
 export * from "./learning-play/connect.js";
+export * from "./learning-play/sort.js";
+export * from "./learning-play/contrast.js";
+export * from "./learning-play/weigh.js";
 export * from "./learning-play/tune.js";
 export * from "./learning-play/hunt.js";
 export * from "./learning-play/dispatch.js";
@@ -378,3 +390,4 @@ export * from "./learning-play/ai-eval.js";
 export * from "./learning-play/ai-repair.js";
 export { ACTIVITY_DIFFICULTIES } from "./learning-play/types.js";
 export * from "./learning-play/difficulty.js";
+export * from "./learning-play/lesson-levels.js";

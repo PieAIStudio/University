@@ -14,8 +14,8 @@
   "courses": [
     {
       "courseId": "product-website",
-      "file": "product-website.8dc022626760652dd1c50ea5b272f58b29b8ae770964b0645d77223579cc00de.recovery.json",
-      "sha256": "sha256:8dc022626760652dd1c50ea5b272f58b29b8ae770964b0645d77223579cc00de",
+      "file": "product-website.94b0f446fca7d54268576872dc3f478ad60d223148fe75bdf86d68f7befbcacd.recovery.json",
+      "sha256": "sha256:94b0f446fca7d54268576872dc3f478ad60d223148fe75bdf86d68f7befbcacd",
       "isBeingRewritten": true
     }
   ]

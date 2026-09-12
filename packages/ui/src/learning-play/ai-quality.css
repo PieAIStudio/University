@@ -567,13 +567,29 @@
   border-radius: 16px;
   background: var(--game-ui-panel-strong);
 }
+/*
+  Two candidates, side by side when they fit and stacked when they do not.
+
+  It was `display: flex` with `flex: 1` and no wrap, which sounds like 「share
+  the row」 and behaves like 「never be narrower than my text」: a flex item's
+  default `min-width: auto` refuses to shrink past its content, so on a 261px
+  board inside a lesson the two buttons laid out at 527px and the second one
+  sat entirely outside the board — 295 to 556 against a board ending at 290.
+  Not clipped, not scrollable, just gone: unreadable and unclickable, on every
+  course that uses `ai-eval`.
+
+  `min-width: 0` lets them shrink, and the 12rem basis decides when shrinking
+  stops being worth it and they should stack instead.
+*/
 .ai-eval__candidate-switch {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-block: 8px;
 }
 .ai-eval__candidate-switch > button {
-  flex: 1;
+  flex: 1 1 12rem;
+  min-width: 0;
 }
 .ai-eval__test-pair {
   display: grid;

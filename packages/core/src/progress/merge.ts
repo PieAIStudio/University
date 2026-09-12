@@ -34,6 +34,12 @@
  * Streak. The later calendar day wins; on the same day, the higher count.
  * A streak is a fact about *this person's* recent days, and the machine that
  * was used more recently is the one that knows.
+ *
+ * Skip-test proofs. Union, earliest `provenAt`. Same reasoning as
+ * `completedAt`: the first time they proved it is the fact, and a retake on
+ * another machine is not a second proof. There is no tombstone because nothing
+ * un-proves a lesson — reading it properly later adds a `lessons` row beside
+ * this one rather than replacing it.
  */
 
 import type {
@@ -41,6 +47,7 @@ import type {
   ExerciseAttemptRecord,
   LessonProgress,
   ProgressDocument,
+  ProvenLessonRecord,
   StoredReaderMark,
   WordProgress,
   RetrievalAttemptRecord,
@@ -125,6 +132,13 @@ export function mergeProgress(
     retrievalAttempts[key] = current ? pickRetrievalAttempt(current, other) : { ...other };
   }
 
+  const provenLessons: Record<string, ProvenLessonRecord> = { ...left.provenLessons };
+  for (const [key, other] of Object.entries(right.provenLessons ?? {})) {
+    const current = provenLessons[key];
+    provenLessons[key] =
+      current && current.provenAt <= other.provenAt ? { ...current } : { ...other };
+  }
+
   const pushSubscriptions = mergePushSubscriptions(
     left.pushSubscriptions ?? {},
     right.pushSubscriptions ?? {},
@@ -151,6 +165,7 @@ export function mergeProgress(
     readerMarks,
     exerciseAttempts,
     retrievalAttempts,
+    provenLessons,
     pushSubscriptions,
     account: {
       favourites: materializeFavourites(favouriteChanges),

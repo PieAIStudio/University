@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-09T11:35:31.567Z
+generated_at: 2026-09-11T09:10:25.023Z
 generator_version: doc-gov@0.9.11
-docs_count: 118
+docs_count: 129
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -66,6 +66,13 @@ docs:
     status: accepted
     canonical: true
     last_reviewed: 2026-09-09
+    pinned: false
+  - id: ADR-0010
+    path: docs/adr/ADR-0010-difficulty-moves-when-the-learner-moves-it.md
+    type: decision
+    status: accepted
+    canonical: true
+    last_reviewed: 2026-09-10
     pinned: false
   - id: ARCHIVE-ADR-0008-2026-09-07
     path: docs/archive/adr-0008-measurement-history-2026-09-07.md
@@ -212,7 +219,7 @@ docs:
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-09-08
+    last_reviewed: 2026-09-10
     pinned: false
   - id: POLICY-SHARED-DONORS
     path: docs/policy/shared-rules/donors.md
@@ -268,7 +275,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-09
+    last_reviewed: 2026-09-11
     pinned: true
   - id: REF-FEEDBACK-BACKEND-GAP
     path: docs/reference/execution/feedback-backend-gap.md
@@ -297,6 +304,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-09-03
+    pinned: false
+  - id: REF-LIQUID-DIFFICULTY-HANDOFF
+    path: docs/reference/execution/liquid-and-difficulty-handoff.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-11
     pinned: false
   - id: REF-LOCAL-DEVICE-TESTING
     path: docs/reference/execution/local-device-testing.md
@@ -354,12 +368,33 @@ docs:
     canonical: true
     last_reviewed: 2026-09-09
     pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-COURSE-LEFT-OPEN-FOR-EDIT-IS-UNREADABLE-AND-EVERY-GATE-STAYS-GREEN
+    path: docs/reference/learnings/workflow-issues/a-course-left-open-for-edit-is-unreadable-and-every-gate-stays-green.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-10
+    pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-DETECTOR-AND-ITS-ACCEPTOR-MUST-NORMALISE-IDENTICALLY-OR-THE-GATE-REJECTS-THE-S
     path: docs/reference/learnings/workflow-issues/a-detector-and-its-acceptor-must-normalise-identically-or-the-gate-rejects-the-s.md
     type: reference
     status: stable
     canonical: true
     last_reviewed: 2026-09-09
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-FIELD-ADDED-AFTER-A-BOUNDARYS-FIELD-LIST-IS-WRITTEN-VANISHES-SILENTLY-AT-EVERY
+    path: docs/reference/learnings/workflow-issues/a-field-added-after-a-boundarys-field-list-is-written-vanishes-silently-at-every.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-10
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-LIST-OF-KINDS-GOES-STALE-IN-EVERY-COPY-AT-ONCE-CHECK-IT-AGAINST-THE-WIRE-ENUM
+    path: docs/reference/learnings/workflow-issues/a-list-of-kinds-goes-stale-in-every-copy-at-once-check-it-against-the-wire-enum.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-10
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-LIVE-EVIDENCE-URL-IS-NOT-A-SUPPORTED-CLAIM-OPEN-THE-PAGE-AND-READ-IT
     path: docs/reference/learnings/workflow-issues/a-live-evidence-url-is-not-a-supported-claim-open-the-page-and-read-it.md
@@ -381,6 +416,34 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-30
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-TYPE-LEVEL-GUARD-WRITTEN-IN-A-TEST-FILE-IS-NOT-A-WEAK-GUARD-IT-IS-NO-GUARD
+    path: docs/reference/learnings/workflow-issues/a-type-level-guard-written-in-a-test-file-is-not-a-weak-guard-it-is-no-guard.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-10
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-UI-OVERLAP-SWEEP-THAT-SKIPS-ELEMENTFROMPOINTS-TWO-TRAPS-REPORTS-THE-WHOLE-PROD
+    path: docs/reference/learnings/workflow-issues/a-ui-overlap-sweep-that-skips-elementfrompoints-two-traps-reports-the-whole-prod.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-10
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-AN-ACTIVITY-CAN-PASS-EVERY-ENGINE-CHECK-AND-STILL-BE-THE-WRONG-GAME-FOR-THE-LESS
+    path: docs/reference/learnings/workflow-issues/an-activity-can-pass-every-engine-check-and-still-be-the-wrong-game-for-the-less.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-10
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-AN-ADD-ONLY-PROPOSAL-PLUS-AN-UNCONDITIONAL-WRITE-RESETS-EVERYTHING-THE-PROPOSAL
+    path: docs/reference/learnings/workflow-issues/an-add-only-proposal-plus-an-unconditional-write-resets-everything-the-proposal-.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-09
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-AN-EXISTING-INSTANCED-CLOUD-PUFF-CAN-CARRY-THE-AVATAR-WITHOUT-A-NEW-RENDER-BATCH
     path: docs/reference/learnings/workflow-issues/an-existing-instanced-cloud-puff-can-carry-the-avatar-without-a-new-render-batch.md
@@ -676,6 +739,13 @@ docs:
     canonical: true
     last_reviewed: 2026-08-31
     pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-REGENERATING-A-PER-LESSON-DEBT-BASELINE-IN-A-WORKTREE-DELETES-THE-DEBT-OF-STUDIE
+    path: docs/reference/learnings/workflow-issues/regenerating-a-per-lesson-debt-baseline-in-a-worktree-deletes-the-debt-of-studie.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-10
+    pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-RELEASE-BUILDS-MUST-PIN-EVIDENCE-INPUTS-AND-RESTORE-TRACKED-GENERATED-MANIFESTS
     path: docs/reference/learnings/workflow-issues/release-builds-must-pin-evidence-inputs-and-restore-tracked-generated-manifests.md
     type: reference
@@ -794,6 +864,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-08-30
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-WHEN-AN-ENGINE-DERIVES-THE-ANSWER-FROM-ONE-FIELD-AND-THE-READER-READS-ANOTHER-TH
+    path: docs/reference/learnings/workflow-issues/when-an-engine-derives-the-answer-from-one-field-and-the-reader-reads-another-th.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-10
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-WIDENING-EXERCISESCHEMA-KIND-BREAKS-LOCAL-RECOVERY-AND-COACHING-PACKETS
     path: docs/reference/learnings/workflow-issues/widening-exerciseschema-kind-breaks-local-recovery-and-coaching-packets.md

@@ -24,9 +24,9 @@ export function ConnectGame({
   const [activeNode, setActiveNode] = useState<string | null>(null);
   const [activeProbe, setActiveProbe] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
-  const [traces, setTraces] = useState<{ label: string; visited: string[]; blocked: boolean }[]>(
-    [],
-  );
+  const [traces, setTraces] = useState<
+    { label: string; visited: string[]; blocked: { from: string; to: string } | null }[]
+  >([]);
   const board = useRef<HTMLDivElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const markerId = useId().replaceAll(":", "");
@@ -56,6 +56,17 @@ export function ConnectGame({
     [],
   );
   const rows = Math.max(1, Math.ceil(activity.nodes.length / 2));
+  /*
+    The board's height comes from the layout, not from a constant.
+
+    It was a flat 288px, which fits the two rows every example happened to use
+    and silently overlaps a third. That stopped being hypothetical the moment a
+    learner could reach the challenge level: its seventh node sits between two
+    others in the same column, and all three drew on top of each other. A node
+    is 88px tall, so a band needs about 140 to clear its neighbours.
+  */
+  const bands = new Set(activity.nodes.map((node) => Math.round(node.y / 12))).size;
+  const boardHeight = compact ? rows * 150 : Math.max(288, bands * 140);
   const nodes = activity.nodes.map((node, index) => ({
     ...node,
     x: compact ? (index % 2 === 0 ? 25 : 75) : node.x,
@@ -79,15 +90,30 @@ export function ConnectGame({
     setSelected(null);
     const result = checkConnections(activity, edges);
     const extra = result.extra[0];
+    const paths = activity.probes.map((probe) => {
+      const trace = traceConnectionProbe(probe.path, edges);
+      return { label: probe.label, visited: trace.visited, blocked: trace.blocked };
+    });
+    /*
+      Say why the line the learner just watched stop is missing — not why the
+      first line the author happened to list is.
+
+      `missing[0]` is in author order, so a learner who had drawn two of four
+      edges was told about a third edge unrelated to the probe that had visibly
+      failed in front of them. The advice was true and answered a question
+      nobody had asked, which reads as the game being broken.
+    */
+    const stuck = paths.find((path) => path.blocked)?.blocked ?? null;
+    const stuckWhy = stuck
+      ? activity.edges.find((edge) => edge.from === stuck.from && edge.to === stuck.to)?.why
+      : undefined;
     const message = result.passed
       ? t("play.connect.win", { count: activity.edges.length })
       : extra
         ? t("play.connect.extra", { from: nodeOf(extra.from).label, to: nodeOf(extra.to).label })
-        : t("play.connect.missing", { why: result.missing[0]?.why ?? activity.hint });
-    const paths = activity.probes.map((probe) => {
-      const trace = traceConnectionProbe(probe.path, edges);
-      return { label: probe.label, visited: trace.visited, blocked: trace.blocked !== null };
-    });
+        : t("play.connect.missing", {
+            why: stuckWhy ?? result.missing[0]?.why ?? activity.hint,
+          });
     const frames = paths.flatMap((path) => path.visited.map((id) => ({ id, label: path.label })));
     const finish = () => {
       setRunning(false);
@@ -138,7 +164,7 @@ export function ConnectGame({
         ref={board}
         className="play-connect__board"
         data-compact={compact}
-        style={compact ? { height: rows * 150 } : undefined}
+        style={{ height: boardHeight }}
         aria-label={t("play.connect.board")}
       >
         <svg
@@ -243,15 +269,25 @@ export function ConnectGame({
         )}
       </div>
       <div className="play-action-row">
+        {/*
+          The board's one primary action, and the only button on it that gets
+          the brand's liquid surface. Spreading it to the hint and restart
+          controls beside it would spend the signal that says 「this is the
+          thing to press」 — the same reason a page has one CTA.
+        */}
         <GameButton
           sound={false}
+          surface="liquid"
           type="button"
+          variant="primary"
           disabled={disabled || running || edges.length === 0}
           onClick={run}
         >
           {t(running ? "play.connect.running" : "play.connect.run")}
         </GameButton>
-        <span className="play-muted">{t("play.connect.progress", { count: edges.length })}</span>
+        <span className="play-muted">
+          {t("play.connect.progress", { count: edges.length, total: activity.edges.length })}
+        </span>
       </div>
       {traces.length > 0 ? (
         <div className="play-connect__traces" aria-label={t("play.connect.trace")}>
@@ -260,7 +296,16 @@ export function ConnectGame({
               <strong>{trace.label}</strong>
               <span>
                 {trace.visited.map((id) => nodeOf(id).label).join(" → ")}
-                {trace.blocked ? " …" : " ✓"}
+                {trace.blocked ? (
+                  <em className="play-connect__gap">
+                    {t("play.connect.gap", {
+                      from: nodeOf(trace.blocked.from).label,
+                      to: nodeOf(trace.blocked.to).label,
+                    })}
+                  </em>
+                ) : (
+                  " ✓"
+                )}
               </span>
             </p>
           ))}

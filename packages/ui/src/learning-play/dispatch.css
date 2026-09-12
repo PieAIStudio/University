@@ -44,11 +44,9 @@
   font-variant-numeric: tabular-nums;
 }
 
-.play-dispatch__meters progress {
+.play-dispatch__meters .game-ui-progress {
   grid-column: 1 / -1;
   inline-size: 100%;
-  block-size: 8px;
-  accent-color: var(--game-ui-secondary);
 }
 
 .play-dispatch__meters > div[data-over-budget="true"] {

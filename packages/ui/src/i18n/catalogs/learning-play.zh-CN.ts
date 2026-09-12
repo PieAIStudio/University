@@ -3,23 +3,24 @@ export const messages = {
   "play.lab.intro": "接通一个想法，试坏一条规则，或让小邮差跑起来。挑一种，动手就会有发现。",
   "play.lab.entry": "体验互动课件",
   "play.lab.back": "回到练习",
-  "play.lab.mix": "连玩五种",
+  "play.lab.mix": "连玩 {{total}} 种",
   "play.lab.mixing": "连玩进行中",
   "play.lab.cancelMix": "自由试玩",
-  "play.lab.session": "本次发现 {{count}} / 5",
+  "play.lab.session": "本次发现 {{count}} / {{total}}",
   "play.lab.note": "试玩场 · 进度只保留在当前页面。这里的完成不会计入课程成绩。",
   "play.lab.select": "挑一种互动课件",
   "play.lab.example": "换个情境",
   "play.lab.variant": "情境 {{count}}",
   "play.lab.next": "下一个玩法",
   "play.lab.again": "再来一轮",
-  "play.lab.allDone": "五种都试过了。哪一种让你突然想通了？",
+  "play.lab.allDone": "都试过了。哪一种让你突然想通了？",
   "play.lab.mixDone": "这一轮结束了",
   "play.lab.mixSummary": "完成 {{complete}} 种，跳过 {{skipped}} 种。可以随时回去接着试。",
   "play.lab.research": "玩法背后的学习方法",
   "play.lab.researchCopy":
     "用动作解释关系，用实验检验猜想，再换一个情境看看能否举一反三。一次完成只代表这次挑战成立；长期学习效果还需要真实试学验证。",
-  "play.mode.connect": "因果接线台",
+  "play.mode.sort": "归类台",
+  "play.mode.connect": "接线台",
   "play.mode.tune": "调参实验室",
   "play.mode.hunt": "反例猎手",
   "play.mode.dispatch": "请求调度台",
@@ -40,19 +41,28 @@ export const messages = {
   "play.host.source": "继续了解",
   "play.host.attempts": "{{count}} 次尝试",
   "play.host.hints": "用了 {{count}} 个线索",
-  "play.connect.help": "点一个节点作为起点，再点另一个接上。接错的线可以点下方连接记录移除。",
+  "play.connect.help":
+    "点一个方块，再点它连到的那个方块，就接上一条线。一个方块可以接出好几条线。接错了，点下面那条记录就能删掉。",
   "play.connect.selected": "从「{{label}}」出发，接到哪里？",
-  "play.connect.board": "可接线的因果图",
+  "play.connect.board": "可以接线的图",
   "play.connect.empty": "还没有线。先找到会触发下一步的那个动作。",
   "play.connect.remove": "移除 {{from}} 到 {{to}}",
   "play.connect.run": "放出测试信号",
   "play.connect.running": "信号正在经过…",
-  "play.connect.progress": "已接 {{count}} 条线",
+  "play.connect.progress": "已接 {{count}} 条，一共 {{total}} 条",
+  "play.connect.gap": " —— 差一条：{{from}} → {{to}}",
   "play.connect.need": "先接一条线，再看看信号会怎样走。",
   "play.connect.extra":
     "这条直接关系不成立：「{{from}}」不会直接触发「{{to}}」。检查节点上的提示。",
   "play.connect.missing": "信号还走不通：{{why}}",
-  "play.connect.win": "接通了全部 {{count}} 条关系，两条测试路径都走通。",
+  /*
+    「两条」was a hardcoded count, written when every board in the kit happened
+    to ship two probes. The first lesson to author a third level put three on
+    the board, and the pass message then told the learner something false at the
+    exact moment it was congratulating them. Stating the property instead of the
+    number is true at one probe, at three, and at whatever a later board wants.
+  */
+  "play.connect.win": "接通了全部 {{count}} 条关系，每一条测试路径都走通了。",
   "play.connect.trace": "信号经过的路径",
   "play.connect.web.title": "让网页回应一次点击",
   "play.connect.web.brief": "屏幕不会自己更新。把点击之后发生的事情接起来，别漏掉失败的那条路。",

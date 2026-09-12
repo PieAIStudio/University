@@ -411,6 +411,51 @@
   line-height: 1.45;
 }
 
+/*
+ * 「这门课假定你已经学过…」 — V5 §12 决定 C, styled as information.
+ *
+ * Muted and below the fold of the card's own numbers, not a warning colour and
+ * not a banner: 「灰是信息，锁是权力；这里我们只给信息。」 The enter button
+ * directly beneath it is deliberately unchanged by its presence, which is the
+ * half of the decision a stylesheet can break on its own.
+ *
+ * One class, one sheet, two components: the pick card is in this package and
+ * the course island is in the app, and they print the same sentence about the
+ * same fact. Splitting the rules across two stylesheets is how one of them ends
+ * up dressed and the other bare — the defect `check-shared-styles.mjs` exists
+ * because of.
+ */
+.picked__assumes {
+  margin: 10px 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.picked--left .picked__assumes {
+  display: grid;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--game-ui-border-subtle);
+}
+
+.picked--left .picked__assumes p {
+  margin: 0;
+  color: var(--game-ui-text);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.picked--left .picked__assumes-note {
+  color: var(--game-ui-text-muted);
+}
+
+.picked--left .picked__assumes-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
 .picked__enter {
   width: 100%;
   margin-top: 14px;

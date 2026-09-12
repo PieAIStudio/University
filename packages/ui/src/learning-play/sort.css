@@ -1,0 +1,148 @@
+/*
+  归类台。物件在上，格子在下，中间只隔一次点击。
+
+  没有拖拽：拖拽要求按住不放的指针、移动中还够得着的落点，以及另建一条键盘路径；
+  接线台已经证明「先点一样，再点它的去处」在手机上读得清楚。
+*/
+.play-sort {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.play-sort__question {
+  margin: 0;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.play-sort__guide {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 13px;
+}
+
+.play-sort__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.play-sort__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 260px;
+  padding: 10px 12px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: 12px;
+  background: var(--game-ui-panel);
+  color: var(--game-ui-text);
+  text-align: start;
+  cursor: pointer;
+}
+
+.play-sort__item[aria-pressed="true"] {
+  border-color: var(--game-ui-accent);
+  box-shadow: 0 0 0 2px var(--game-ui-accent);
+}
+
+.play-sort__item small {
+  color: var(--game-ui-text-muted);
+}
+
+.play-sort__buckets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.play-sort__bucket {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px dashed var(--game-ui-border-subtle);
+  border-radius: 16px;
+  background: var(--game-ui-panel-strong);
+}
+
+.play-sort__bucket-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: inherit;
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+}
+
+/*
+  格子只在手里拿着东西时才亮成可放。一个永远看着能点的格子，会让读者以为
+  自己漏了一步，而不是先去挑一样东西。
+*/
+.play-sort__bucket-head:enabled {
+  background: color-mix(in srgb, var(--game-ui-secondary) 16%, transparent);
+}
+
+.play-sort__bucket-head small {
+  color: var(--game-ui-text-muted);
+  font-weight: 400;
+}
+
+.play-sort__bucket ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+  The placed chip's look now comes from the liquid body behind it, so the list
+  item is just a container. Leaving the old background here would have painted
+  a hard rectangle behind the very silhouette that is supposed to be the shape.
+*/
+.play-sort__placed {
+  font-size: 13px;
+}
+
+.play-sort__placed-label {
+  display: block;
+  padding: 6px 10px;
+}
+
+.play-sort__note {
+  margin: 0;
+  padding: 10px 12px;
+  border-inline-start: 3px solid var(--game-ui-border-subtle);
+  border-radius: 12px;
+  background: var(--game-ui-panel);
+}
+
+.play-sort__note--right {
+  border-inline-start-color: var(--game-ui-success);
+}
+
+.play-sort__note--wrong {
+  border-inline-start-color: var(--game-ui-warning);
+}
+
+.play-sort__done {
+  margin: 0;
+  font-weight: 700;
+}
+
+.play-sort__misses {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 13px;
+}

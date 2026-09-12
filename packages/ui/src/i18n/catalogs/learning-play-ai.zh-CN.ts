@@ -50,9 +50,6 @@ export const messages = {
   "play.ai.brief.missing": "任务单还缺：{{items}}。问清楚，再写给 AI。",
   "play.ai.brief.mismatch": "{{items}} 与委托人的要求不同。展开那一条访谈，核对原话。",
   "play.ai.brief.untested": "任务单对齐了，还需要亲自试用：{{items}}。改动约束后要重新验收。",
-  "play.ai.brief.checkAccess": "访客能否直接提交",
-  "play.ai.brief.checkSubmit": "提交后是确认还是待审核",
-  "play.ai.brief.checkRoster": "谁能看见名单",
   "play.ai.brief.done": "任务单和实际行为对上了。你让 AI 少猜了三件关键的事。",
   "play.ai.brief.receipt": "本轮试用记录",
   "play.ai.brief.observed": "解释 {{variant}}：{{result}}",
@@ -119,4 +116,6 @@ export const messages = {
     "组织者刚确认：现在名额充足，提交后直接确认参加，不再等待审核。第一次来的用户仍不用注册，名单仍只给组织者看。",
   "play.ai.brief.club.followUp":
     "有会员提出隐私顾虑：参加名单只让组织者看。仍然先登录，报名仍立即确认，不要顺手改掉这两条。",
+  "play.ai.brief.identified": "已登录：{{name}}",
+  "play.ai.brief.anonymous": "访客：{{name}}",
 } as const;

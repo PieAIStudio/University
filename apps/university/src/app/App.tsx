@@ -109,6 +109,7 @@ import { usePageMetadata } from "./page-metadata";
 import { WorldSourceControls } from "../learner/WorldSourceControls";
 import { useAnalyticsPorts } from "./analytics-ports";
 import { useAvatarPreferences } from "./avatar-preferences";
+import { useSkipTest } from "./skip-test.js";
 import { useCoursePathActions } from "./course-path-actions";
 import { useIslandLookSource, useIslandLookView } from "./island-look-view";
 import { useMistakeSummary } from "./mistake-summary";
@@ -516,6 +517,11 @@ export function App() {
     setPathOverlay,
     setView,
   });
+  const { markUnitProven, provenLessonKeys, unmetFor } = useSkipTest({
+    nodes,
+    progress,
+    courseProgress,
+  });
   const courseIslandProps =
     view.kind === "course" && course
       ? {
@@ -525,6 +531,12 @@ export function App() {
           pathUnit,
           unitOverlayOpen: pathOverlay?.kind === "unit",
           backToMapLabel,
+          contentPort,
+          provenLessonKeys,
+          onProven: markUnitProven,
+          unmetPrerequisites: unmetFor(course, view.studyId),
+          onOpenCourse: (courseId: string) =>
+            setView({ kind: "course", studyId: view.studyId, courseId }),
           onOpenUnitOverlay: openUnitOverlay,
           onBackToMap: backToCourseMap,
           onOpenLesson: openCourseLesson,
@@ -773,7 +785,7 @@ export function App() {
                 title={picked.title}
                 studyTitle={picked.studyTitle}
                 depth={picked.depth}
-                prerequisiteCount={picked.prerequisiteCourseIds.length}
+                unmetPrerequisites={unmetFor(picked, picked.studyId)}
                 objectives={pickedCourse.objectives}
                 stats={pickedStats}
                 isBeingRewritten={picked.isBeingRewritten === true}

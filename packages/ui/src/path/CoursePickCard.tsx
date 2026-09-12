@@ -24,7 +24,7 @@ export function CoursePickCard({
   title,
   studyTitle,
   depth,
-  prerequisiteCount,
+  unmetPrerequisites,
   objectives,
   stats,
   isBeingRewritten,
@@ -35,7 +35,18 @@ export function CoursePickCard({
   readonly title: string;
   readonly studyTitle: string;
   readonly depth: number;
-  readonly prerequisiteCount: number;
+  /**
+   * The courses this one assumes and the learner has not finished — by name.
+   *
+   * It was a count. 「先修 2」 is a number somebody can read and still not know
+   * what to do about, and V5 §12 决定 C asks for the opposite: 「说明它假定你已经
+   * 会了什么」. An empty list is the normal case and prints 「无」.
+   *
+   * Nothing here reads its length to decide whether the enter button works. The
+   * island is dimmed and the assumption is stated; both of those are
+   * information. 「灰是信息，锁是权力；这里我们只给信息。」
+   */
+  readonly unmetPrerequisites: readonly { readonly courseId: string; readonly title: string }[];
   readonly objectives: readonly string[];
   readonly stats: CoursePickStats;
   readonly isBeingRewritten: boolean;
@@ -138,8 +149,17 @@ export function CoursePickCard({
           <dt>{translate("ui.path.coursePickCard.copy.层")}</dt>
           <dd>{depth + 1}</dd>
           <dt>{translate("ui.path.coursePickCard.copy.先修")}</dt>
-          <dd>{prerequisiteCount || translate("ui.path.coursePickCard.copy.无")}</dd>
+          <dd>
+            {unmetPrerequisites.length > 0
+              ? unmetPrerequisites.map((course) => course.title).join("、")
+              : translate("ui.path.coursePickCard.copy.无")}
+          </dd>
         </dl>
+        {unmetPrerequisites.length > 0 ? (
+          <p className="picked__assumes">
+            {translate("ui.path.coursePickCard.copy.这门课假定你已经学过上面这几门-没学过也进得去")}
+          </p>
+        ) : null}
         <div className="picked__action">
           <section className="picked__inventory" aria-labelledby={inventoryHeadingId}>
             <h4 id={inventoryHeadingId}>{translate("ui.path.coursePickCard.copy.这门课有")}</h4>

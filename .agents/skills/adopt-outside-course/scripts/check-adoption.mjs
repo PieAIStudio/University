@@ -60,19 +60,45 @@ if (paths.length === 0) {
 const forbidden = [...FORBIDDEN_HOSTS, ...extraForbidden];
 const verifyUrls = argv.includes("--verify-urls");
 
-/** 每条出处真的请求一次。编出来的 MDN 链接看起来和真的一模一样。 */
+/**
+ * 每条出处真的去请求。编出来的 MDN 链接看起来和真的一模一样。
+ *
+ * 重试和限并发都不是保险起见，是实测：一次把二十条一起打出去、每条只试一次，
+ * 连跑三遍报了三条**不同**的死链，而那三条 curl 过去全是 200。一个会把活着的
+ * 权威出处判死的门禁，第一次被无视之后就再没人看了。
+ *
+ * 只有网络错误和 429/5xx 才重试——那些是「现在不行」。4xx 一次定案，
+ * 因为 404 重试一百遍还是 404，多试只会把编造的链接拖成一次慢通过。
+ */
+const RETRIES = 3;
+const CONCURRENCY = 4;
+
+async function probe(url) {
+  let last = "";
+  for (let attempt = 1; attempt <= RETRIES; attempt += 1) {
+    try {
+      const res = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(20_000) });
+      if (res.ok) return null;
+      last = `HTTP ${res.status}`;
+      if (res.status < 500 && res.status !== 429) return `${url} → ${last}`;
+    } catch (error) {
+      last = (error && error.message) || String(error);
+    }
+    if (attempt < RETRIES) await new Promise((r) => setTimeout(r, 500 * 2 ** (attempt - 1)));
+  }
+  return `${url} → ${last}（重试 ${RETRIES} 次）`;
+}
+
 async function verify(urls) {
+  const queue = [...urls];
   const dead = [];
-  await Promise.all(
-    [...urls].map(async (url) => {
-      try {
-        const res = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(20_000) });
-        if (!res.ok) dead.push(`${url} → HTTP ${res.status}`);
-      } catch (error) {
-        dead.push(`${url} → ${(error && error.message) || error}`);
-      }
-    }),
-  );
+  const workers = Array.from({ length: Math.min(CONCURRENCY, queue.length) }, async () => {
+    for (let url = queue.shift(); url !== undefined; url = queue.shift()) {
+      const failure = await probe(url);
+      if (failure) dead.push(failure);
+    }
+  });
+  await Promise.all(workers);
   return dead;
 }
 

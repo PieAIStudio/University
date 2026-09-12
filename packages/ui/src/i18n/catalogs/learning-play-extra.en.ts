@@ -1,4 +1,72 @@
 export const messages = {
+  "play.difficulty.sort.intro":
+    "Two bins only: are you adding something to the page, or changing how it looks?",
+  "play.difficulty.sort.practice":
+    "All three bins: what is on the page, how it looks, and what happens on a click.",
+  "play.difficulty.sort.challenge":
+    "A fourth bin for changes none of the three files own. Not everything is one of them.",
+  "play.sort.files.title": "Which file do you open for this?",
+  "play.sort.files.brief":
+    "Put each change in the file that really owns it. A miss tells you why that bin does not hold it.",
+  "play.sort.files.goal":
+    "Tell apart what is on the page, how it looks, and what happens on a click — and find the file from that.",
+  "play.sort.files.takeaway":
+    "Adding or rewording goes in index.html, colour and spacing in style.css, what happens after a click in main.js.",
+  "play.sort.files.hint":
+    "Ask first: is this thing already on the page? If it is, are you changing how it looks or how it responds?",
+  "play.sort.files.source": "The files a web page is made of",
+  "play.sort.files.question": "Which layer does this change mostly belong to?",
+  "play.sort.files.bucket.html": "What is on the page (index.html)",
+  "play.sort.files.bucket.htmlNote": "Text, buttons and images — the things the page holds.",
+  "play.sort.files.bucket.css": "How it looks (style.css)",
+  "play.sort.files.bucket.cssNote": "Colour, spacing, corners, size — appearance.",
+  "play.sort.files.bucket.js": "What happens on a click (main.js)",
+  "play.sort.files.bucket.jsNote": "What follows a click or a choice.",
+  "play.sort.files.bucket.elsewhere": "None of these three files",
+  "play.sort.files.bucket.elsewhereNote":
+    "Some changes live outside all three. Spotting one beats forcing it into a bin.",
+  "play.sort.files.addLine": "Put another line of explanation on the page",
+  "play.sort.files.addLineDetail": "That line is not on the page at all yet.",
+  "play.sort.files.addLineWhy": "You are making a line exist that did not. Open index.html first.",
+  "play.sort.files.addLineNot":
+    "It will need a position too, but the job right now is making it exist. style.css only changes how existing things look.",
+  "play.sort.files.renameButton": "Change the wording on a button",
+  "play.sort.files.renameButtonDetail": "Same button, different words on it.",
+  "play.sort.files.renameButtonWhy": "You are changing text the page already holds, so index.html.",
+  "play.sort.files.renameButtonNot":
+    "What the button does when clicked has not changed, and that is what main.js owns.",
+  "play.sort.files.darkerButton": "Make a button's colour darker",
+  "play.sort.files.darkerButtonDetail": "Button and wording stay; only the colour changes.",
+  "play.sort.files.darkerButtonWhy":
+    "The thing is still there; only how it looks changed, so style.css.",
+  "play.sort.files.darkerButtonNot":
+    "You added nothing and removed nothing. index.html owns whether something is there, not how good it looks.",
+  "play.sort.files.widerGap": "Push two buttons further apart",
+  "play.sort.files.widerGapDetail": "Both buttons stay; they are just too close together.",
+  "play.sort.files.widerGapWhy": "Spacing is part of how it looks, so style.css.",
+  "play.sort.files.widerGapNot":
+    "The number of buttons and their order did not change, so this is not in index.html.",
+  "play.sort.files.messageAfterClick": "Show a done message only after the button is clicked",
+  "play.sort.files.messageAfterClickDetail":
+    "The line is not there on load; it appears after a click.",
+  "play.sort.files.messageAfterClickWhy": "You are changing what a click sets off, so main.js.",
+  "play.sort.files.messageAfterClickNot":
+    "A line of text does end up on screen, but it is not fixed content the page holds from the start.",
+  "play.sort.files.disableUntilPicked": "Keep the button unclickable until a photo is chosen",
+  "play.sort.files.disableUntilPickedDetail":
+    "The button is always there, but only becomes usable after a photo is picked.",
+  "play.sort.files.disableUntilPickedWhy":
+    "When it may and may not be clicked is a rule somebody has to decide, so main.js.",
+  "play.sort.files.disableUntilPickedNot":
+    "Drawing it greyed out is style.css, but something still has to make the grey one actually refuse the click.",
+  "play.sort.files.swapModel": "Swap in a more accurate model for the cut-out",
+  "play.sort.files.swapModelDetail":
+    "Page, look and clicks all stay; only the thing doing the judging changes.",
+  "play.sort.files.swapModelWhy":
+    "The model is something the page fetches separately. It does not live in any of the three files — this bin is for exactly that.",
+  "play.sort.files.swapModelNot":
+    "main.js says which one to fetch, but the model itself is not in main.js. Changing a name and swapping a thing are different jobs.",
+
   "play.extra.hunt.rule": "The specification",
   "play.extra.hunt.program": "The running program",
   "play.extra.hunt.inputRange":
@@ -186,4 +254,122 @@ export const messages = {
   "play.extra.sample.video.progressWhy":
     "Only the production service can query the current export state. An earlier progress value cannot be reused.",
   "play.extra.sample.video.source": "MDN · Caching and reuse",
+  "play.contrast.search.title": "Matching the words, or matching the meaning",
+  "play.contrast.search.brief":
+    "Guess whether the two will agree this time, then see what each one did.",
+  "play.contrast.search.goal":
+    "Say when these two ways of searching give the same answer and when they do not.",
+  "play.contrast.search.takeaway":
+    "When the words match, either works; change the wording and only one still finds it; and landing in the same place does not mean it is the place you wanted.",
+  "play.contrast.search.hint":
+    "Ask first: do the words you typed appear in the text exactly as you typed them?",
+  "play.contrast.search.source": "How search finds things",
+  "play.contrast.search.question": "Give the same phrase to both. Will they agree?",
+  "play.contrast.search.literal": "Match the words",
+  "play.contrast.search.literalNote": "Take what you typed and look for it in the text as-is.",
+  "play.contrast.search.similar": "Match the meaning",
+  "play.contrast.search.similarNote":
+    "Turn the meaning into numbers, then find the closest passage.",
+  "play.contrast.search.exact": "Search “invoice”; the article says “invoice”",
+  "play.contrast.search.exactDetail": "The word appears in the text exactly.",
+  "play.contrast.search.exactBoth": "Finds that passage",
+  "play.contrast.search.exactWhy":
+    "The words line up and the meaning is closest too, so both roads lead to the same passage.",
+  "play.contrast.search.synonym": "Search “receipt”; the article says “invoice”",
+  "play.contrast.search.synonymDetail": "Close in meaning, not a single shared letter.",
+  "play.contrast.search.synonymLiteral": "Finds nothing",
+  "play.contrast.search.synonymSimilar": "Finds that passage",
+  "play.contrast.search.synonymWhy":
+    "Matching words only knows words. Matching meaning still gets there.",
+  "play.contrast.search.typo": "Search “invoise” — you mistyped it",
+  "play.contrast.search.typoDetail": "You still want the invoice passage.",
+  "play.contrast.search.typoLiteral": "Finds nothing",
+  "play.contrast.search.typoSimilar": "Finds that passage",
+  "play.contrast.search.typoWhy":
+    "One wrong letter and the words no longer line up; the meaning is still there, so the other road is unaffected.",
+  "play.contrast.search.homograph": "Search “Apple” wanting the phone; the article is about fruit",
+  "play.contrast.search.homographDetail": "Same word, two entirely different things.",
+  "play.contrast.search.homographBoth": "Finds the passage about fruit",
+  "play.contrast.search.homographWhy":
+    "This time both land in the same place — and neither is what you wanted. The words match and the meaning really is close; close is not the same as right.",
+  "play.contrast.search.orderId": "Search order number A7X99204",
+  "play.contrast.search.orderIdDetail": "A string nobody can read a meaning into.",
+  "play.contrast.search.orderIdLiteral": "Finds exactly that order",
+  "play.contrast.search.orderIdSimilar":
+    "Returns a pile of similar-looking numbers, maybe not this one",
+  "play.contrast.search.orderIdWhy":
+    "With no meaning to convert, matching the meaning does worse than matching the characters.",
+  "play.weigh.reading.title": "Read the whole project, or only the part you are changing",
+  "play.weigh.reading.brief":
+    "Pick one for each situation. The same pick will not be right every time.",
+  "play.weigh.reading.goal": "Say when each way of reading is worth what it costs.",
+  "play.weigh.reading.takeaway":
+    "When you know where to go, go there; when you do not, the time you saved comes back doubled.",
+  "play.weigh.reading.hint": "Ask first: do you know which file you are changing?",
+  "play.weigh.reading.source": "When a project is too big to read",
+  "play.weigh.reading.question": "This time, how are you going to read this project?",
+  "play.weigh.reading.piece": "Only the part I am changing",
+  "play.weigh.reading.pieceNote": "Fast. But you cannot see what it is attached to.",
+  "play.weigh.reading.whole": "Go through the whole project first",
+  "play.weigh.reading.wholeNote": "Slow. But nothing you did not think of breaks afterwards.",
+  "play.weigh.reading.ask": "Ask who owns this part",
+  "play.weigh.reading.askNote": "Costs no reading time, but you wait for an answer.",
+  "play.weigh.reading.button": "Change a button’s label from “Submit” to “Save”",
+  "play.weigh.reading.buttonDetail": "You already know which file it is in.",
+  "play.weigh.reading.buttonWhy":
+    "You know where it is and the change touches nothing else; reading everything buys you nothing.",
+  "play.weigh.reading.buttonCost":
+    "A read-through costs an afternoon, and none of it gets used this time.",
+  "play.weigh.reading.crash": "Big uploads crash and you do not know which part does it",
+  "play.weigh.reading.crashDetail": "The error points at a file you have never seen.",
+  "play.weigh.reading.crashWhy":
+    "When you do not know where to change, “that part” cannot be found — you have to see what is attached to what.",
+  "play.weigh.reading.crashCost":
+    "Diving into the file in the error spends your time on code that is not the cause.",
+  "play.weigh.reading.rename": "Rename something used in dozens of places",
+  "play.weigh.reading.renameDetail": "You do not know which dozens.",
+  "play.weigh.reading.renameWhy":
+    "Changing one is not changing it. You have to know everywhere it appears, or you are building a half-changed project.",
+  "play.weigh.reading.renameCost":
+    "Change only the ones you saw and the rest break when somebody else hits them, long after anyone remembers this edit.",
+  "play.weigh.reading.newPage": "Add a new page that touches nothing existing",
+  "play.weigh.reading.newPageDetail": "It reads none of what is already there.",
+  "play.weigh.reading.newPageWhy":
+    "It is attached to nothing, so there is nothing unforeseen to break.",
+  "play.weigh.reading.newPageCost":
+    "Reading two thousand unrelated files to write one standalone thing.",
+  "play.weigh.reading.firstDay":
+    "First day on this project, asked to change a feature you have never heard of",
+  "play.weigh.reading.firstDayDetail": "You are not even sure what it is called here.",
+  "play.weigh.reading.firstDayWhy":
+    "Reading the whole thing takes a week; reading “that part” needs you to know where that part is. Asking is the cheapest step here.",
+  "play.weigh.reading.firstDayCost":
+    "Reading it yourself, however much, spends a day rebuilding what is already in somebody’s head.",
+  "play.weigh.reading.nobody": "Everyone who built this project has left; there is nobody to ask",
+  "play.weigh.reading.nobodyDetail": "And the part you are changing is central.",
+  "play.weigh.reading.nobodyWhy":
+    "With nobody to ask, the project itself is the only documentation there is.",
+  "play.weigh.reading.nobodyCost":
+    "Insisting on saving that time with nobody to ask is changing something central with your eyes shut.",
+  "play.difficulty.contrast.intro": "See it once: when they agree, and when they do not.",
+  "play.difficulty.contrast.practice": "Judge all four, and say where the line is.",
+  "play.difficulty.contrast.challenge":
+    "Including the time both land in the same place and it is the wrong place.",
+  "play.difficulty.weigh.intro": "Two situations, and the same two choices change sides.",
+  "play.difficulty.weigh.practice": "Decide all four, and say what each one is short of.",
+  "play.difficulty.weigh.challenge": "Add “ask somebody”, then find where that stops working too.",
+  "play.mode.contrast": "Same or different",
+  "play.mode.weigh": "Which one, here",
+  "play.weigh.reading.buttonCostAsk":
+    "Waiting on somebody to reply, to change a button you already know the location of.",
+  "play.weigh.reading.crashCostAsk":
+    "Somebody can tell you who owns this part; nobody can tell you which line crashes it.",
+  "play.weigh.reading.renameCostAsk":
+    "They list a few places from memory, and the ones they forget break anyway.",
+  "play.weigh.reading.newPageCostAsk":
+    "It is attached to nobody, so there is no \\u201cwho owns this\\u201d to ask about.",
+  "play.weigh.reading.firstDayCostWhole":
+    "Reading the whole project takes a week, and one question answers this.",
+  "play.weigh.reading.nobodyCostAsk":
+    "There is nobody to ask \\u2014 that is the premise of this situation.",
 } as const;

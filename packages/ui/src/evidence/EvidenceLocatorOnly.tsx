@@ -1,9 +1,10 @@
+import { formatLineRange } from "@pieai/university-core";
+
 import { translate } from "../i18n/index.js";
 
-function formatLineRange(start: number | null | undefined, end: number | null | undefined): string {
+function lineLabelOf(start: number | null | undefined, end: number | null | undefined): string {
   if (!start || start < 1) return translate("ui.evidence.evidenceLocatorOnly.copy.未提供行号");
-  const last = end && end >= start ? end : start;
-  return start === last ? `L${start}` : `L${start}–${last}`;
+  return `L${formatLineRange(start, end)}`;
 }
 
 /** A truthful evidence state when the citation survived but its source bytes did not. */
@@ -16,7 +17,7 @@ export function EvidenceLocatorOnly({
   readonly lineStart?: number | null;
   readonly lineEnd?: number | null;
 }) {
-  const lineLabel = formatLineRange(lineStart, lineEnd);
+  const lineLabel = lineLabelOf(lineStart, lineEnd);
 
   return (
     <div className="evidence-locator-only" data-evidence-state="locator-only" role="status">

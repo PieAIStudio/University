@@ -34,6 +34,52 @@ const HEDGE =
 const ABSOLUTE =
   /绝不|绝对|一定会|必然|必定|从不|永远不|全都是|根本不|根本碰不到|压根|随时都能|随时能|完全可以|无论如何|所有的都/g;
 
+/**
+ * Words this product uses as terms, where the near-synonym means a different
+ * thing to a beginner.
+ *
+ * The third measured failure, 2026-09-10. A polish of 「关掉网，这个页面还能抠图
+ * 吗？」 passed hedges, absolutes, length, second person and the structure gate,
+ * and inside a `:::detail` explaining what 「发出去」 means it had rewritten
+ * 「那台电脑上会多出一份拷贝」 as 「别人那边会多出一份备份」.
+ *
+ * A copy on someone else's machine and a backup are not the same claim, and
+ * this lesson's whole point is that the reader's photo never leaves. Its own
+ * prompt forbids exactly this — 「所有关于代码、文件、命令的事实陈述…你没见过
+ * 这些代码，没资格改任何技术判断」 — so the model was told and did it anyway,
+ * which is the argument for measuring rather than instructing.
+ *
+ * A list, like HEDGE and ABSOLUTE above, and grown the same way: from failures
+ * somebody actually saw. It is not a dictionary and does not pretend to be —
+ * it catches a term swapped for its neighbour, in both directions, and says
+ * nothing about a word neither list knows.
+ */
+const GLOSSARY = [
+  "拷贝",
+  "备份",
+  "模型",
+  "算法",
+  "程序",
+  "代码",
+  "文件",
+  "文档",
+  "目录",
+  "文件夹",
+  "上传",
+  "下载",
+  "发送",
+  "提交",
+  "缓存",
+  "浏览器",
+  "服务器",
+  "网址",
+  "链接",
+  "命令",
+  "变量",
+  "函数",
+  "接口",
+];
+
 /** 「只要…就」 and 「只有…才」 are the correct pairings. 「只要…才」 is not. */
 const MISPAIRED = /只要[^。！？\n]{0,20}才(?![^。！？\n]{0,6}(行|对))/g;
 
@@ -60,6 +106,7 @@ function scan(text) {
     mispaired: text.match(MISPAIRED) ?? [],
     prose: proseLength(text),
     address: (text.match(/你/g) ?? []).length,
+    terms: new Set(GLOSSARY.filter((term) => text.includes(term))),
   };
 }
 
@@ -134,7 +181,26 @@ if (args[0] === "--before" && args[2] === "--after") {
     );
     failed = true;
   }
-  if (!failed) console.log("✓ 让步强度未被削弱，正文没有变长，仍然对着读者说话");
+  const droppedTerms = [...before.terms].filter((term) => !after.terms.has(term));
+  const addedTerms = [...after.terms].filter((term) => !before.terms.has(term));
+  console.log(`术语 ${before.terms.size} → ${after.terms.size}`);
+  if (droppedTerms.length > 0) {
+    console.error(
+      `✗ 原文用过的术语在润色版里没有了：${droppedTerms.join(" ")}。` +
+        `换说法可以，换术语不行——读者是靠这些词把两件事分开的。`,
+    );
+    failed = true;
+  }
+  if (addedTerms.length > 0) {
+    console.error(
+      `✗ 润色版引入了原文没有的术语：${addedTerms.join(" ")}。` +
+        `润色者没读过这些代码，没有资格替课文改技术判断。`,
+    );
+    failed = true;
+  }
+  if (!failed) {
+    console.log("✓ 让步强度未被削弱，正文没有变长，仍然对着读者说话，术语一个没换");
+  }
 } else {
   for (const path of args) {
     const found = scan(readFileSync(path, "utf8"));

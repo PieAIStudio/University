@@ -8,6 +8,7 @@ import {
   type KnowledgeNote,
   type StudyManifest,
 } from "@pieai/university-core/domain/schemas.js";
+import { compileAnswerKey } from "@pieai/university-core";
 import { resolveTermLinks, termRangeOf } from "@pieai/university-core/marks/terms.js";
 import { resolveEvidenceAnchors } from "../content/evidence-anchors.js";
 import { loadLexicon } from "../language/lexicon.js";
@@ -312,6 +313,13 @@ function buildLessonView(
         ...(asset.source?.license ? { license: asset.source.license } : {}),
         ...(asset.source?.aiNote ? { aiNote: asset.source.aiNote } : {}),
       })),
+      /*
+        Activities go out whole rather than by reference. An asset is a file the
+        reader fetches on its own URL, so the view sends a link; an activity is
+        the lesson's own content, and a second round trip to fetch it would give
+        the reader a paragraph with a hole in it while the request is open.
+      */
+      ...(lesson.activities.length ? { activities: lesson.activities } : {}),
       progress: serializeProgress(
         store?.getLessonProgress(lessonKey) ?? null,
         store?.hasLessonCompletion(lessonKey, lesson.contentRevision) ?? false,
@@ -339,6 +347,25 @@ function buildLessonView(
           title: exercise.title,
           prompt: exercise.prompt,
           contentRevision: exercise.contentRevision,
+          /*
+            The fingerprint, not the answer — even here, where the reader is
+            the author and the answer is one directory away.
+
+            Not a privacy measure on this campus. It is here so that both
+            campuses hand the skip test the same thing: the test picks its
+            questions by whether tier one can settle them, and a unit that
+            offers three questions to a customer has to offer the same three
+            to the author, or 「the learner surface is the same in both modes」
+            is broken by a field rather than by a branch.
+
+            An `explain` exercise carries a rubric and no expected answer, so
+            it gets no key and the skip test will never draw it. That is the
+            truth about the exercise, not a gap: a rubric is what tier two
+            reads.
+          */
+          ...(exercise.kind === "short-answer"
+            ? { answerKey: compileAnswerKey(exercise.expectedAnswer) }
+            : {}),
           awaitingHostGrade: !hostPassed,
           latestSubmission: submission
             ? { answer: submission.answer, occurredAt: submission.occurredAt.toISOString() }

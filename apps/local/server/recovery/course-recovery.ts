@@ -20,6 +20,7 @@ import { z } from "zod";
 import {
   CourseCurrency,
   EvidenceReferenceSchema,
+  LessonActivitySchema,
   LessonAssetSchema,
   LessonSectionSchema,
   LessonVariantSchema,
@@ -146,6 +147,22 @@ const RecoveryLessonSchema = z
     assets: z.array(RecoveryAssetSchema).max(100).default([]),
     cards: z.array(RecoveryCardSchema),
     exercises: z.array(RecoveryExerciseSchema),
+    /**
+     * The activities the prose embeds, carried whole.
+     *
+     * A recovery package is the only way a lesson reaches the delivery side, so
+     * a field missing here is a field a customer never sees. `activities` was
+     * missing, while the `::play` markers that reference them travel inside
+     * `content` — which meant nine lessons shipped with the reader's
+     * "找不到这个互动课件" block where a game should be. The prose and the thing
+     * the prose points at have to cross together or not at all.
+     *
+     * `LessonActivitySchema` is reused rather than restated. It is already the
+     * wire contract for the same object one boundary earlier, and a second
+     * spelling of it here is how `sort` came to exist in the engine, the
+     * renderer and the gate but in no schema that could store it.
+     */
+    activities: z.array(LessonActivitySchema).max(3).default([]),
   })
   .strict();
 
@@ -539,6 +556,7 @@ function serializeCourse(
           }),
           cards,
           exercises,
+          activities: lesson.manifest.activities ?? [],
         };
       }),
     };

@@ -107,6 +107,16 @@
         "dev:local"
       ],
       "port": 9999
+    },
+    {
+      "name": "swimmer-ui-showcase",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--dir",
+        "../SwimmerUIKit",
+        "dev"
+      ],
+      "port": 5174
     }
   ]
 }

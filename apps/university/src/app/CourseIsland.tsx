@@ -1,6 +1,7 @@
 import { translate } from "@pieai/university-ui/i18n.js";
 import type { CourseProgress, LessonRef } from "@pieai/university-core";
 import { CourseRouteQuiz, hasRouteQuiz } from "@pieai/university-ui/path/CourseRouteQuiz.js";
+import type { ContentPort } from "@pieai/university-ui/content/port.js";
 import type { CourseView, UnitView } from "@pieai/university-ui/view/lesson-view.js";
 
 export interface CourseIslandProps {
@@ -10,6 +11,19 @@ export interface CourseIslandProps {
   readonly pathUnit: UnitView | undefined;
   readonly unitOverlayOpen: boolean;
   readonly backToMapLabel: string;
+  /** Only `lesson` is used, by the skip test the route quiz hands its units to. */
+  readonly contentPort: Pick<ContentPort, "lesson">;
+  /** Lesson document keys a skip test has already proved, for this learner. */
+  readonly provenLessonKeys: ReadonlySet<string>;
+  readonly onProven: (
+    studyId: string,
+    courseId: string,
+    unitId: string,
+    lessonIds: readonly string[],
+  ) => void;
+  /** Courses this one assumes and the learner has not finished — named, never counted. */
+  readonly unmetPrerequisites: readonly { readonly courseId: string; readonly title: string }[];
+  readonly onOpenCourse: (courseId: string) => void;
   readonly onOpenUnitOverlay: (unitId: string, returnFocusTo: HTMLElement) => void;
   readonly onBackToMap: () => void;
   readonly onOpenLesson: (locator: LessonRef) => void;
@@ -31,11 +45,16 @@ export function CourseIsland({
   pathUnit,
   unitOverlayOpen,
   backToMapLabel,
+  contentPort,
+  provenLessonKeys,
+  onProven,
+  unmetPrerequisites,
+  onOpenCourse,
   onOpenUnitOverlay,
   onBackToMap,
   onOpenLesson,
 }: CourseIslandProps) {
-  const showRouteQuiz = hasRouteQuiz(course.id) && viewedProgress?.done === 0;
+  const showRouteQuiz = hasRouteQuiz(course) && viewedProgress?.done === 0;
   const showRouteDetails = pathUnit != null || showRouteQuiz;
 
   return (
@@ -47,6 +66,47 @@ export function CourseIsland({
         {viewedProgress ? viewedProgress.total - viewedProgress.done : 0}{" "}
         {translate("app.app.courseIsland.copy.关")}
       </p>
+      {/*
+        V5 §12 决定 C, in the one place the learner is standing when it matters.
+
+        The island is already dimmed on the map when a prerequisite is unmet —
+        that is `stateOf` returning `idle` — but a dimmed island says only 「not
+        yet」, which a learner with real experience reads as 「not for you」. The
+        design asks for the sentence as well: 「点了先给一句『这节假定你已经做过
+        X，要不要先测一下』，然后由学习者决定。」
+
+        So this names the course, offers to go there, and says out loud that
+        staying is allowed. There is no branch anywhere in this component that
+        withholds a lesson: 「灰是信息，锁是权力；这里我们只给信息。」
+      */}
+      {unmetPrerequisites.length > 0 ? (
+        <section
+          className="picked__assumes"
+          aria-label={translate("app.app.courseIsland.copy.这门课假定你会什么")}
+        >
+          <p>
+            {translate("app.app.courseIsland.copy.这门课假定你已经做过")}
+            {unmetPrerequisites.map((prerequisite) => prerequisite.title).join("、")}
+            {translate("app.app.courseIsland.copy.要不要先去那门课测一测")}
+          </p>
+          <div className="picked__assumes-actions">
+            {unmetPrerequisites.map((prerequisite) => (
+              <button
+                key={prerequisite.courseId}
+                type="button"
+                className="text-button"
+                onClick={() => onOpenCourse(prerequisite.courseId)}
+              >
+                {translate("app.app.courseIsland.copy.去")}
+                {prerequisite.title}
+              </button>
+            ))}
+          </div>
+          <p className="picked__assumes-note">
+            {translate("app.app.courseIsland.copy.没做过也拦不住你-这里只是先说一声")}
+          </p>
+        </section>
+      ) : null}
       {showRouteDetails ? (
         <details key={`${studyId}:${course.id}`} className="picked__route">
           {/* key remounts this closed when the series or course changes. */}
@@ -91,7 +151,14 @@ export function CourseIsland({
             you are twenty lessons in is asking about a decision you already made.
           */}
           {showRouteQuiz ? (
-            <CourseRouteQuiz studyId={studyId} course={course} onOpenLesson={onOpenLesson} />
+            <CourseRouteQuiz
+              studyId={studyId}
+              course={course}
+              content={contentPort}
+              proven={provenLessonKeys}
+              onProven={(unit, lessonIds) => onProven(studyId, course.id, unit.id, lessonIds)}
+              onOpenLesson={onOpenLesson}
+            />
           ) : null}
         </details>
       ) : null}

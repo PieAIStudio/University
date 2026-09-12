@@ -54,6 +54,50 @@ const AUTHOR_ONLY_KEY_SET = new Set(AUTHOR_ONLY_KEYS);
 const ANSWER_KEY_PATTERN = /answer|solution|rubric/i;
 const AUTHOR_ONLY_VALUE_PATTERNS = [/^file-manager:/i];
 
+/*
+  Four places where these names mean something a learner is meant to see.
+
+  `AUTHOR_ONLY_KEYS` is blunt on purpose: a key called `source` or `path`
+  anywhere in a shipped package is an author's machine leaking until something
+  structural says otherwise. Inside an activity, `source` is the citation the
+  reader's receipt prints — the same fact `sourcePath` already carries publicly
+  on evidence, under a name that happened not to collide — and `path` is one of
+  three things: the repository-relative file inside that citation, an ordered
+  list of node ids in a connect probe that never was a filesystem path at all,
+  or the name of a file in an `ai-agent` scenario's invented workspace.
+
+  That fourth one arrived after this list said three, and it is the case the
+  wording had already anticipated: `files[].path` is `index.html` or
+  `package.json`, printed on screen for the learner to decide about. It is not
+  a route on anybody's machine — the workspace does not exist outside the
+  payload — but it is spelled exactly like one, so the detector was right to
+  stop and a human was right to be asked.
+
+  Written as four exact positions rather than as "skip activities". A hole
+  around the whole payload would stop the detector looking at the one shape here
+  whose fields are not enumerated anywhere, which is the shape most likely to
+  grow a leak. Everything else inside an activity is still checked, and the
+  value-level rules are not relaxed anywhere at all: a `file-manager:` route
+  pasted into an activity's citation, or into a scenario file name, is still a
+  failure.
+*/
+const ACTIVITY_CITATION_AT = /\.activities\[\d+\]$/;
+const ACTIVITY_CITATION_FIELD_AT = /\.activities\[\d+\]\.source$/;
+const ACTIVITY_PROBE_AT = /\.activities\[\d+\]\.probes\[\d+\]$/;
+const ACTIVITY_WORKSPACE_FILE_AT = /\.activities\[\d+\]\.files\[\d+\]$/;
+
+function meansSomethingElseInsideAnActivity(key, at) {
+  if (key === "source") return ACTIVITY_CITATION_AT.test(at);
+  if (key === "path") {
+    return (
+      ACTIVITY_CITATION_FIELD_AT.test(at) ||
+      ACTIVITY_PROBE_AT.test(at) ||
+      ACTIVITY_WORKSPACE_FILE_AT.test(at)
+    );
+  }
+  return false;
+}
+
 function fail(message) {
   throw new Error(`delivery artifact: ${message}`);
 }
@@ -329,7 +373,11 @@ export function publicDtoViolations(value, path = "package") {
     }
     if (current === null || typeof current !== "object") return;
     for (const [key, child] of Object.entries(current)) {
-      if (key !== "answerKey" && (ANSWER_KEY_PATTERN.test(key) || AUTHOR_ONLY_KEY_SET.has(key))) {
+      if (
+        key !== "answerKey" &&
+        (ANSWER_KEY_PATTERN.test(key) || AUTHOR_ONLY_KEY_SET.has(key)) &&
+        !meansSomethingElseInsideAnActivity(key, at)
+      ) {
         found.push(`${at}.${key}`);
       }
       visit(child, `${at}.${key}`);

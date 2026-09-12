@@ -70,8 +70,8 @@ importers:
         specifier: 0.3.0
         version: 0.3.0(three@0.185.1)
       '@pieai/swimmer-ui-kit':
-        specifier: 2.0.0
-        version: 2.0.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: 2.4.0
+        version: 2.4.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pieai/university-backend':
         specifier: workspace:*
         version: link:../../packages/backend
@@ -242,8 +242,8 @@ importers:
         specifier: ^0.27.20
         version: 0.27.20(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pieai/swimmer-ui-kit':
-        specifier: 2.0.0
-        version: 2.0.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: 2.4.0
+        version: 2.4.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../core
@@ -309,8 +309,8 @@ importers:
         specifier: 0.3.0
         version: 0.3.0(three@0.185.1)
       '@pieai/swimmer-ui-kit':
-        specifier: 2.0.0
-        version: 2.0.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: 2.4.0
+        version: 2.4.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../core
@@ -791,8 +791,8 @@ packages:
       three:
         optional: true
 
-  '@pieai/swimmer-ui-kit@2.0.0':
-    resolution: {integrity: sha512-MgYafDyqosF6EWUx4DFfPULnRZsaQGcl5Si+/HzJ0XS69Wo9zWq9FwU8rBtOowtys0xDlwpa6qHQ4vTlDWjGSw==}
+  '@pieai/swimmer-ui-kit@2.4.0':
+    resolution: {integrity: sha512-eGlkU6W1ychr270FGbu2dG1TyIOwv2zBlHNVNLKk8HP8oKYkUchvpHa8f+BXMgz0ZFmwUwbyJYXq1TRAOb7JAw==}
     engines: {node: '>=24 <25'}
     hasBin: true
     peerDependencies:
@@ -1459,6 +1459,9 @@ packages:
 
   bidi-js@1.0.3:
     resolution: {integrity: sha512-RKshQI1R3YQ+n9YJz2QQ147P66ELpa1FQEg20Dk8oW9t2KgLbpDLLp9aGZ7y8WHSshDknG0bknqGw5/tyCs5tw==}
+
+  bidi-js@1.1.0:
+    resolution: {integrity: sha512-fX1Onk0tdVPC7obPWB5EbJ1z7NVhLq4m2xZLq2YXBkxzMXIGRpNMU88n0EPgWseKl12J7zXs7qrDxPK4sRs2fg==}
 
   buffer@6.0.3:
     resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
@@ -2875,7 +2878,7 @@ snapshots:
     dependencies:
       '@asamuzakjp/generational-cache': 1.0.1
       '@asamuzakjp/nwsapi': 2.3.9
-      bidi-js: 1.0.3
+      bidi-js: 1.1.0
       css-tree: 3.2.1
       is-potential-custom-element-name: 1.0.1
 
@@ -3134,7 +3137,7 @@ snapshots:
     optionalDependencies:
       three: 0.185.1
 
-  '@pieai/swimmer-ui-kit@2.0.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+  '@pieai/swimmer-ui-kit@2.4.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -3775,6 +3778,10 @@ snapshots:
   base64-js@1.5.1: {}
 
   bidi-js@1.0.3:
+    dependencies:
+      require-from-string: 2.0.2
+
+  bidi-js@1.1.0:
     dependencies:
       require-from-string: 2.0.2
 

@@ -145,7 +145,13 @@ export { ConceptIndex, CONCEPT_SEARCH_PLACEHOLDER } from "./reference/ConceptInd
 export { CollectionIndex } from "./reference/CollectionIndex.js";
 export { KnowledgeNotes } from "./reference/KnowledgeNotes.js";
 export { LibrarySurface, REFERENCE_TABS, type ReferenceTab } from "./reference/LibrarySurface.js";
-export { CourseRouteQuiz, classifyCourseRoute, hasRouteQuiz } from "./path/CourseRouteQuiz.js";
+export {
+  CourseRouteQuiz,
+  classifyCourseRoute,
+  hasRouteQuiz,
+  recommendedSkipUnitCount,
+} from "./path/CourseRouteQuiz.js";
+export { UnitSkipTest, type UnitSkipTestProps } from "./path/UnitSkipTest.js";
 export {
   CatalogSurface,
   type CatalogCourse,

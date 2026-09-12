@@ -1,0 +1,165 @@
+/*
+  对照台。两种做法常驻在顶上，下面一条一条地喂同一样东西进去。
+
+  两栏结果始终并排，窄屏也不折成上下——「同时看见」正是这个玩法要教的东西，
+  折了就变成两段先后读到的文字，比较关系就没了。窄屏改为让两栏各自更窄，
+  长句子在栏内折行。
+*/
+.play-contrast {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.play-contrast__question {
+  margin: 0;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.play-contrast__approaches {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.play-contrast__approach {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: 16px;
+  background: var(--game-ui-panel-strong);
+}
+
+.play-contrast__approach small {
+  color: var(--game-ui-text-muted);
+}
+
+.play-contrast__guide {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 13px;
+}
+
+.play-contrast__cases {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.play-contrast__case {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: 16px;
+  background: var(--game-ui-panel);
+}
+
+.play-contrast__case-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.play-contrast__case-label {
+  font-weight: 700;
+}
+
+.play-contrast__case-head small {
+  color: var(--game-ui-text-muted);
+}
+
+.play-contrast__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.play-contrast__choice {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--game-ui-secondary) 16%, transparent);
+  color: var(--game-ui-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.play-contrast__toggle {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--game-ui-success) 18%, transparent);
+  color: var(--game-ui-text);
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* 结果两栏永远并排；这是这个玩法的比较关系本身，不随宽度折叠。 */
+.play-contrast__outcomes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.play-contrast__outcome {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--game-ui-panel-strong);
+  overflow-wrap: anywhere;
+}
+
+.play-contrast__outcome small {
+  color: var(--game-ui-text-muted);
+}
+
+.play-contrast__why {
+  margin: 0;
+  padding: 10px 12px;
+  border-inline-start: 3px solid var(--game-ui-border-subtle);
+  border-radius: 12px;
+  background: var(--game-ui-panel-strong);
+}
+
+.play-contrast__why--right {
+  border-inline-start-color: var(--game-ui-success);
+}
+
+.play-contrast__why--wrong {
+  border-inline-start-color: var(--game-ui-warning);
+}
+
+.play-contrast__done {
+  margin: 0;
+  font-weight: 700;
+}
+
+.play-contrast__misses {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 13px;
+}
+
+@media (width <= 540px) {
+  .play-contrast__approaches {
+    gap: 8px;
+  }
+
+  .play-contrast__approach,
+  .play-contrast__outcome {
+    padding: 8px;
+  }
+}

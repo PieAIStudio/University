@@ -4,7 +4,7 @@ export const messages = {
   "play.difficulty.practice": "进阶",
   "play.difficulty.challenge": "挑战",
   "play.difficulty.change": "换难度会开始新一轮；提示可以独立切换。",
-  "play.difficulty.connect.intro": "先把前三站接起来，试跑这段因果链。",
+  "play.difficulty.connect.intro": "先把前三站接起来，放一次信号看看。",
   "play.difficulty.connect.practice": "接好全部关系，同时检查成功与失败分支。",
   "play.difficulty.connect.challenge": "接好成功、失败及重新尝试的回路，实际跑通两种路径。",
   "play.difficulty.connect.retry": "准备再试",

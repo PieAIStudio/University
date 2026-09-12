@@ -2,6 +2,7 @@
 
 import { act, createRef, type RefObject } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CoursePickCard } from "./CoursePickCard.js";
@@ -71,7 +72,7 @@ async function renderCard({
           title="认识地形"
           studyTitle="图灵密约"
           depth={0}
-          prerequisiteCount={0}
+          unmetPrerequisites={[]}
           objectives={objectives}
           stats={stats}
           isBeingRewritten={isBeingRewritten}
@@ -171,5 +172,56 @@ describe("CoursePickCard", () => {
     await renderCard({ isBeingRewritten: false });
 
     expect(container.querySelector("[data-course-rewrite-notice]")).toBeNull();
+  });
+});
+
+/*
+  V5 §12 决定 C. The card is where a learner first meets a course they have not
+  earned their way to, and 「灰是信息，锁是权力」 decides what it may do about it:
+  say what the course assumes, by name, and leave the door open.
+
+  Both halves are asserted, because either one alone reads as done. A card that
+  names the prerequisite and disables the button has locked them out politely; a
+  card that lets them in and says nothing has told them nothing.
+*/
+describe("a course whose prerequisites are unmet", () => {
+  const withUnmet = (unmet: readonly { readonly courseId: string; readonly title: string }[]) =>
+    renderToStaticMarkup(
+      <CoursePickCard
+        title="用 AI 把一个真实开源项目跑起来"
+        studyTitle="学会用 AI 做应用"
+        depth={1}
+        unmetPrerequisites={unmet}
+        objectives={["跑起来一个真实项目"]}
+        stats={{ lessons: 8, exercises: 8, maxXp: 400 }}
+        isBeingRewritten={false}
+        onEnter={() => undefined}
+        onDismiss={() => undefined}
+        cardRef={{ current: null }}
+      />,
+    );
+
+  it("names what it assumes rather than counting it", () => {
+    const markup = withUnmet([{ courseId: "before-you-start", title: "在开始之前" }]);
+    expect(markup).toContain("在开始之前");
+    expect(markup).toContain("没学过也进得去");
+  });
+
+  it("still offers the way in, and offers it the same way as a course with none", () => {
+    const unmet = withUnmet([{ courseId: "before-you-start", title: "在开始之前" }]);
+    const met = withUnmet([]);
+    expect(unmet).toContain("进入这门课");
+    const enterMarkup = /<button[^>]*picked__enter[\s\S]*?<\/button>/.exec(unmet)?.[0] ?? "";
+    expect(enterMarkup).not.toContain("disabled");
+    expect(enterMarkup).not.toContain("aria-disabled");
+    /*
+      The enter control is byte-identical in both cards. A weaker assertion —
+      「the button is present」 — would pass with it greyed, relabelled 「先去学
+      先修课」, or wrapped in something that swallows the click.
+    */
+    const enterOf = (markup: string) =>
+      /<button[^>]*picked__enter[\s\S]*?<\/button>/.exec(markup)?.[0];
+    expect(enterOf(unmet)).toBeTruthy();
+    expect(enterOf(unmet)).toEqual(enterOf(met));
   });
 });

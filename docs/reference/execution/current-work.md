@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-11
 domain: execution
 tags:
   - current-work
@@ -19,6 +19,7 @@ related:
   - REF-LOCAL-DEVICE-TESTING
   - REF-FEEDBACK-BACKEND-GAP
   - REF-V5-JOURNEY-REVIEW
+  - ADR-0010
 ---
 
 # Current Work
@@ -35,9 +36,45 @@ test totals, CLI/model choices or execution history. Read only the matching row.
 | Technique, measurement scope and rejected alternatives | [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md) |
 | Shared blueprint/field, projections and source entry points | [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md) |
 | Local preview, iPhone/Android, Web-to-local tools | [Local device testing](local-device-testing.md) |
+| The brand's liquid surface, and lesson difficulty levels | [Liquid and difficulty handoff](liquid-and-difficulty-handoff.md) — what shipped, what is next, and the measurements not to redo |
 | Course authoring and each lesson's teaching shape | [Parity contract](../../specs/active/SPEC-0001-universitylocal-parity-contract.md), then the single [write-lesson contract](../../../apps/local/.agents/skills/write-lesson/SKILL.md); use `apps/local` workflows and keep publication separate |
-| Learning activities, embedding and difficulty selection | [Component contract](../../../packages/ui/src/learning-play/README.md), [interaction design](../../../packages/ui/src/learning-play/DESIGN.md) and [prior acceptance evidence](../../plans/completed/play-usability.md); samples do not publish courses or award course completion |
+| Which interactive activity a lesson gets, and where it sits | [Activity selection](../../../apps/local/.agents/skills/write-lesson/references/activities.md), decided with the variant at step 3 of [write-lesson](../../../apps/local/.agents/skills/write-lesson/SKILL.md); every new lesson carries at least one — `LessonCreationProposalSchema` requires it and refuses an activity the prose never points at. Lessons written before 2026-09-09 are counted, not failed, by `lint-lessons` |
+| Activity payloads, engines and difficulty tiers | [Component contract](../../../packages/ui/src/learning-play/README.md), [interaction design](../../../packages/ui/src/learning-play/DESIGN.md) and [prior acceptance evidence](../../plans/completed/play-usability.md); an embedded activity never substitutes for a lesson's graded exercise, and `pnpm check:activities` names the lessons an engine change breaks, and checks that each activity's citation still points where it says |
+| Where a learner starts, what is dimmed, and testing out of a unit | [V5 decision 12](../player-journey/v5/index.html); unlocking asks `CourseProgress.proven` (exercises passed), never `complete`, and self-report proposes what to test out of rather than unlocking anything |
+| Whether difficulty adapts by itself | [ADR-0010](../../adr/ADR-0010-difficulty-moves-when-the-learner-moves-it.md): it does not. The learner moves it; the system never infers a level. Read it before adding anything that watches performance and re-routes |
+| What a unit the learner tested out of looks like on the map | **Undecided, and it needs deciding before it is built.** `placeCourse` in `packages/world/src/Maps.tsx` gives each lesson tile one of `done` / `live` / `idle` / `locked`, and a lesson proved through the skip test currently gets `idle` — identical to one never opened. V5 §12 决定 E says proved is not learned, so it cannot borrow `done`; a fifth state is a learner-surface design decision that belongs in [the journey](../player-journey/v5/index.html) first. The unit-entry card already says it in words; only the scene is silent |
 | Designed but unfinished learner/business capabilities | [V5 review](v5-journey-review.md), [payment](payment-backend-gap.md), [feedback](feedback-backend-gap.md), [reminders](review-reminders-backend-gap.md), [commercial model](commercial-model.md) |
+
+## What `work/course-interactive` touches, for whoever merges it
+
+Measured, not guessed — `git diff --name-only main...HEAD` grouped by area.
+
+- **`packages/world`: one function, `stateOf` in `Maps.tsx`** (+18 −3). An
+  inline `prerequisiteCourseIds.every(...)` became a call to `prerequisitesMet`,
+  so the island's lighting and the sentence the island shows are one reading of
+  the graph rather than two. It still only decides `open` vs `idle`; nothing in
+  it blocks entry. This is the one place the 3D lane could collide, and the
+  collision is a three-line body, not a design.
+- **`apps/university/src/app/App.tsx`: thirteen added lines.** The skip test's
+  logic is `app/skip-test.ts` (a hook, like `useCourseProgress`), specifically so
+  the file every lane has to merge holds a call rather than fifty lines.
+- **`packages/ui/src/path`: real overlap, and inherent.** `CourseRouteQuiz.tsx`
+  is rewritten rather than extended — the old one let three self-reported
+  answers drop a learner at a lesson, which V5 §12 names as the failure it
+  exists to prevent. There is no smaller version of that change. `UnitCard.tsx`
+  takes a `skipTest` slot rather than embedding anything, and `UnitSkipTest.tsx`
+  is new.
+- **`packages/ui/src/learning-play`: mostly new files.** Two games were added.
+  The shared files a new game still has to touch are the renderer dispatch, the
+  lab's shelf and the fixture family; all three are held against the wire enum
+  by `LearningPlayLab.test.tsx`, so they go stale together or not at all. The
+  fourth, the shelf button's label, needs no test: `translate` takes a
+  `MessageKey`, so a kind with no `play.mode.<kind>` message is a type error.
+- **`apps/local/studies/browser-ai` is a symlink into the main checkout and is
+  gitignored.** Lesson prose changes are not in this branch's diff; the
+  version-controlled copy is `apps/local/course-proposals/recovery/browser-ai/`,
+  whose filenames carry a content hash. Re-export after any lesson change or
+  `check:export-freshness` fails.
 
 ## Work boundaries
 

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
 import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
@@ -24,19 +25,22 @@ export type { PathUnit };
 export function UnitCard({
   open,
   unit,
+  skipTest,
   onClose,
   onStart,
   returnFocusTo,
 }: {
   readonly open: boolean;
   readonly unit: PathUnit;
+  /** 「我会了」 for this unit — V5 §12 决定 D's entrance. */
+  readonly skipTest?: ReactNode;
   readonly onClose: () => void;
   readonly onStart: () => void;
   readonly returnFocusTo?: HTMLElement | null;
 }) {
   return (
     <PathDialog open={open} title={unit.title} onClose={onClose} returnFocusTo={returnFocusTo}>
-      <UnitCardBody unit={unit} onStart={onStart} />
+      <UnitCardBody unit={unit} onStart={onStart} skipTest={skipTest} />
     </PathDialog>
   );
 }
@@ -44,10 +48,21 @@ export function UnitCard({
 export function UnitCardBody({
   unit,
   onStart,
+  skipTest,
   liquid = true,
 }: {
   readonly unit: PathUnit;
   readonly onStart: () => void;
+  /**
+   * 「我会了」, as a slot rather than as a component this file constructs.
+   *
+   * `PathUnit` is a stats projection with no ids on it — it is what the cards
+   * print, deliberately — and the skip test needs the course, the unit and a
+   * content port. Passing the node in keeps the projection a projection instead
+   * of widening it into a second course view, and keeps the port plumbing where
+   * the rest of it already lives.
+   */
+  readonly skipTest?: ReactNode;
   /** NodeCard already owns the one liquid action while its preview is open. */
   readonly liquid?: boolean;
 }) {
@@ -81,6 +96,7 @@ export function UnitCardBody({
           {START_UNIT_LABEL}
         </GameButton>
       )}
+      {skipTest}
     </div>
   );
 }

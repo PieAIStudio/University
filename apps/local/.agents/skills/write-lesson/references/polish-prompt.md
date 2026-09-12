@@ -54,3 +54,23 @@
 ## 输出
 
 只输出润色后的完整 Markdown 正文，不要任何说明、前言、总结或代码围栏包裹。
+
+## Why there is a linter and not just a prompt
+
+[references/polish-prompt.md](references/polish-prompt.md) states both rules,
+and the prompt alone was not enough. Told only in prose to change wording only,
+the model removed 10 of the author's 23 hedges, manufactured 10 absolutes where
+the originals had zero, and grew every lesson by 7–9%. 「通常能照着清单重新装」
+came back as 「随时都能重新装」.
+
+For a beginner those are different claims. The second one teaches them that on
+the day the network is down, the failure is theirs.
+
+So the two red lines are enforced twice: written in the prompt, and checked by
+`scripts/check-lesson-hedges.mjs`, which fails on a lost hedge, a new absolute,
+a 「只要…才」 mispairing, or prose growing more than 3%. It ignores fenced code
+and evidence anchors, so a lesson that legitimately gained a code block does not
+read as growth. It also fails closed: a crash exits non-zero.
+
+Both rules are machine-checked because a rule only a reader enforces is a rule
+that holds until the day someone is in a hurry.

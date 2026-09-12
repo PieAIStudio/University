@@ -163,6 +163,8 @@ export function LessonReader({
   const bodyRef = useRef<HTMLDivElement>(null);
   /** Margin notes are placed relative to this column's top edge. */
   const marginRef = useRef<HTMLElement>(null);
+  /** Where "已经会了，直接答题" lands. */
+  const exercisesRef = useRef<HTMLDivElement>(null);
   const annotated = view.lesson.language?.status === "annotated";
 
   useEffect(() => {
@@ -578,6 +580,30 @@ export function LessonReader({
               ) : null}
             </div>
           </header>
+          {/*
+            The offer to skip straight to the questions, on every lesson the
+            learner has neither read nor answered.
+
+            Someone arriving with the material already in their head should not
+            have to scroll a page they do not need in order to prove it, and
+            hiding the option would not stop them — it would only make the
+            product feel like it did not believe them. Answering without reading
+            leaves `readConfirmed` false, which is what keeps the lesson honest
+            about what happened and keeps its cards out of the review queue
+            (V5 decision 12D/12E).
+          */}
+          {!readConfirmed && !exercisesPassed && view.lesson.exercises.length > 0 ? (
+            <p className="lesson-skip-to-questions">
+              <button
+                type="button"
+                onClick={() =>
+                  exercisesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }
+              >
+                {translate("ui.lesson.lessonReader.copy.已经会了-直接答这一节的题")}
+              </button>
+            </p>
+          ) : null}
           <div className="markdown-body lesson-prose" ref={bodyRef}>
             <MarkdownContent
               {...(view.lesson.language
@@ -603,6 +629,7 @@ export function LessonReader({
               evidenceBasePath={loadWindowedEvidence}
               onOpenEvidence={(index, trigger) => openSourceSheet(index, trigger)}
               assets={view.lesson.assets}
+              {...(view.lesson.activities ? { activities: view.lesson.activities } : {})}
               sections={sections}
               detailMode={detailMode}
             >
@@ -623,6 +650,7 @@ export function LessonReader({
               <p>{translate("ui.lesson.lessonReader.copy.已确认读过这一版-还差练习")}</p>
             </section>
           ) : null}
+          <div ref={exercisesRef} />
           {view.lesson.exercises.map((exercise) => (
             <ExerciseBlock
               key={exercise.id}

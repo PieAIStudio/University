@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import type { ActivityKind } from "../learning-play/types.js";
 import { AUTHORITY_TAGS, urlEvidenceIssue } from "./url-evidence.js";
 
 const SchemaVersion = z.literal(1);
@@ -568,6 +569,136 @@ export const LessonAssetSchema = z
     }
   });
 
+/**
+ * The ten interactive courseware kinds a lesson may embed.
+ *
+ * Deliberately a list here rather than an import from `../learning-play`: this
+ * schema is the wire contract a stored lesson is read back through, and the
+ * activity types are TypeScript interfaces that vanish at runtime. Naming the
+ * eleven keeps a typo in a stored lesson a validation error rather than a blank
+ * space where a game should be.
+ *
+ * The list is the wire half of `Activity` in `learning-play/types.ts`, and the
+ * two must be added to together. `sort` shipped with an engine, a renderer and
+ * a gate but not with this line, and the omission was silent in exactly the way
+ * a missing name here always will be: nothing that already existed broke, and
+ * every attempt to store the new kind was rejected as a typo. Three lessons sat
+ * decided-but-unlanded for a day because of it.
+ */
+export const LessonActivityKindSchema = z.enum([
+  "connect",
+  "sort",
+  "contrast",
+  "weigh",
+  "tune",
+  "hunt",
+  "dispatch",
+  "program",
+  "ai-brief",
+  "ai-context",
+  "ai-agent",
+  "ai-eval",
+  "ai-repair",
+]);
+
+/**
+ * The enum above and `ActivityKind` in `learning-play/types.ts` are one list in
+ * two halves — one for the wire, one for the engines. A kind added to only one
+ * half is invisible from both sides: nothing that already worked breaks, and
+ * every attempt to store the new kind comes back indistinguishable from a typo.
+ * `sort` sat that way for a day with an engine, a renderer and a gate but no
+ * name here, and three finished lessons could not be landed.
+ *
+ * This lives beside the enum rather than in `schemas.test.ts` because
+ * `tsconfig.json` excludes test files and vitest transpiles without
+ * checking — a type-level assertion written in a test is not a weak guard, it
+ * is not a guard at all.
+ */
+type Exactly<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+/** Fails to satisfy its own constraint, and so fails to compile, when `T` is not `true`. */
+type AssertTrue<T extends true> = T;
+export type ActivityKindsAgree = AssertTrue<
+  Exactly<z.infer<typeof LessonActivityKindSchema>, ActivityKind>
+>;
+
+/**
+ * Which teaching job this activity is doing in this lesson.
+ *
+ * Recorded rather than inferred, because the same game in the same lesson is a
+ * different teaching act depending on where it sits: an observation before the
+ * prediction, a demonstration in the middle, or independent use after the
+ * answer. A reviewer cannot recover the intent from the payload, and the
+ * writing skill picks the role at the same step it picks the variant.
+ *
+ * `demonstrate` never discharges the lesson's graded exercise. Watching a
+ * worked example is not evidence that the reader can do it alone, so the
+ * exercise stays a separate, separately-answered thing — which is why
+ * activities live here and not inside `ExerciseSchema`.
+ */
+export const LessonActivityRoleSchema = z.enum(["observe", "demonstrate", "apply"]);
+
+/**
+ * One embedded activity: the shared contract every kind honours, plus whatever
+ * that kind's own engine needs.
+ *
+ * The kind-specific payload is passed through rather than restated field by
+ * field. A second copy of ten payload shapes would be a second source of truth
+ * that drifts the first time an engine gains a field, and the engines already
+ * know what they accept — `isValidProgramActivity` and hunt's
+ * `"invalid-activity"` were written before this schema existed. So this checks
+ * identity and the shared contract; whether the payload actually plays is
+ * checked by running it through its own engine, where that answer lives.
+ */
+export const LessonActivitySchema = z
+  .object({
+    id: StableId,
+    kind: LessonActivityKindSchema,
+    role: LessonActivityRoleSchema,
+    difficulty: z.enum(["intro", "practice", "challenge"]).default("practice"),
+    /**
+     * Ties this activity to its other difficulty levels.
+     *
+     * Same family + same kind + different `difficulty` is one activity the
+     * learner can move between. Optional because a lesson may author a single
+     * level, and because twenty-seven lessons already did.
+     */
+    family: StableId.optional(),
+    title: z.string().min(1).max(200),
+    brief: z.string().min(1).max(2_000),
+    goal: z.string().min(1).max(1_000),
+    takeaway: z.string().min(1).max(1_000),
+    hint: z.string().min(1).max(1_000),
+    /**
+     * A page, or a place in the studied repository — the same union
+     * `ActivityBase` declares. It was a URL only here long after the interface
+     * had both, so an activity citing pinned code could not be stored at all
+     * and the field shape went on deciding which lessons may have an activity.
+     *
+     * `commit` is a real commit id rather than a free string, because the
+     * receipt renders `path:line@commit` and a snapshot id pasted into this
+     * field renders as `@git-7bdf` — legible enough to look deliberate.
+     */
+    source: z.union([
+      z.object({ label: z.string().min(1).max(200), url: z.string().url() }).strict(),
+      z
+        .object({
+          label: z.string().min(1).max(200),
+          path: RepositoryRelativePath,
+          line: z.number().int().positive().optional(),
+          lineEnd: z.number().int().positive().optional(),
+          commit: GitCommit.optional(),
+        })
+        .strict()
+        .refine(
+          (value) =>
+            value.lineEnd === undefined ||
+            (value.line !== undefined && value.lineEnd >= value.line),
+          { message: "lineEnd needs a line to end, and cannot come before it", path: ["lineEnd"] },
+        ),
+    ]),
+  })
+  .passthrough();
+
 export const LessonManifestSchema = z
   .object({
     schemaVersion: SchemaVersion,
@@ -583,6 +714,53 @@ export const LessonManifestSchema = z
     evidence: z.array(EvidenceReferenceSchema).min(1),
     sections: z.array(LessonSectionSchema).max(100).default([]),
     assets: z.array(LessonAssetSchema).max(100).default([]),
+    /**
+     * Interactive courseware embedded in this lesson, referenced from the prose
+     * by `::play{id=…}`.
+     *
+     * Capped at three the way assets are, and in practice one: a second game in
+     * one small lesson spends the reader's attention on learning the game
+     * rather than the thing the game is about. That is the same effect the
+     * voice rules ban anecdotes for, measured the same way.
+     *
+     * Optional because every lesson written so far predates it.
+     */
+    activities: z
+      .array(LessonActivitySchema)
+      .max(3)
+      .default([])
+      /*
+        A family has to be one activity at several levels, not several
+        activities wearing one name. Same engine, distinct levels — the two
+        things the host relies on when it offers a picker, and neither is
+        something a renderer can check at the point it would have to.
+      */
+      .superRefine((activities, ctx) => {
+        const families = new Map<string, { kind: string; difficulty: string }[]>();
+        for (const activity of activities) {
+          if (!activity.family) continue;
+          const members = families.get(activity.family) ?? [];
+          members.push({ kind: activity.kind, difficulty: activity.difficulty });
+          families.set(activity.family, members);
+        }
+        for (const [family, members] of families) {
+          if (new Set(members.map((member) => member.kind)).size > 1) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `activity family "${family}" mixes kinds; all levels of one activity run on one engine`,
+              path: ["activities"],
+            });
+          }
+          const levels = members.map((member) => member.difficulty);
+          if (new Set(levels).size !== levels.length) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `activity family "${family}" has two activities at the same difficulty`,
+              path: ["activities"],
+            });
+          }
+        }
+      }),
     /**
      * Which teaching shape this lesson uses. Metadata about the lesson, so it
      * lives here rather than in the prose: an authoring marker inside
@@ -809,6 +987,9 @@ export type UnitManifest = z.infer<typeof UnitManifestSchema>;
 export type LessonManifest = z.infer<typeof LessonManifestSchema>;
 export type LessonSection = z.infer<typeof LessonSectionSchema>;
 export type LessonAsset = z.infer<typeof LessonAssetSchema>;
+export type LessonActivity = z.infer<typeof LessonActivitySchema>;
+export type LessonActivityKind = z.infer<typeof LessonActivityKindSchema>;
+export type LessonActivityRole = z.infer<typeof LessonActivityRoleSchema>;
 export type ChoiceOption = z.infer<typeof ChoiceOptionSchema>;
 export type ChoiceExercise = z.infer<typeof ChoiceExerciseSchema>;
 export type Exercise = z.infer<typeof ExerciseSchema>;

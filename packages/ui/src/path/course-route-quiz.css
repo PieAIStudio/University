@@ -20,10 +20,15 @@
   */
   container-type: inline-size;
   margin-top: 22px;
-  border: 1px solid rgb(47 179 162 / 34%);
+  border: 1px solid var(--game-ui-secondary);
   border-radius: 16px;
   background:
-    radial-gradient(circle at 100% 0, rgb(47 179 162 / 14%), transparent 18rem), rgb(24 40 37 / 42%);
+    radial-gradient(
+      circle at 100% 0,
+      color-mix(in srgb, var(--game-ui-secondary) 16%, transparent),
+      transparent 18rem
+    ),
+    var(--game-ui-panel);
 }
 
 .course-route-quiz > summary {
@@ -53,13 +58,13 @@
 }
 
 .course-route-quiz > summary strong {
-  color: #fff2dc;
+  color: var(--game-ui-ink-title);
   font-family: var(--game-ui-font-display);
   font-size: 1.2rem;
 }
 
 .course-route-quiz__summary-meta {
-  color: #7ad9c9;
+  color: var(--game-ui-ink-heading);
   font-size: 0.78rem;
   font-weight: 800;
   white-space: nowrap;
@@ -78,7 +83,7 @@
 .course-route-quiz__question,
 .course-route-quiz__result {
   padding: 18px 0 0;
-  border-top: 1px solid rgb(122 217 201 / 16%);
+  border-top: 1px solid var(--game-ui-border-subtle);
 }
 
 .course-route-quiz__progress {
@@ -90,7 +95,7 @@
 }
 
 .course-route-quiz__progress span:first-child {
-  color: #f0a868;
+  color: var(--game-ui-accent-ink);
   font-weight: 800;
 }
 
@@ -98,7 +103,7 @@
 .course-route-quiz__result h4 {
   max-width: 760px;
   margin: 12px 0 0;
-  color: #fff2dc;
+  color: var(--game-ui-ink-title);
   font-family: var(--game-ui-font-display);
   font-size: 1.02rem;
   line-height: 1.35;
@@ -133,10 +138,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 13px 15px;
-  border: 1px solid rgb(122 217 201 / 26%);
+  border: 1px solid var(--game-ui-border-strong);
   border-radius: 11px;
-  background: rgb(13 26 24 / 52%);
-  color: #e9f5ed;
+  background: var(--game-ui-surface);
+  color: var(--game-ui-text);
   font-size: 0.84rem;
   line-height: 1.4;
   text-align: start;
@@ -148,13 +153,13 @@
 }
 
 .course-route-quiz__option span {
-  color: #7ad9c9;
+  color: var(--game-ui-ink-heading);
   font-size: 1.1rem;
 }
 
 .course-route-quiz__option:hover {
-  border-color: #7ad9c9;
-  background: rgb(47 179 162 / 13%);
+  border-color: var(--game-ui-secondary);
+  background: color-mix(in srgb, var(--game-ui-secondary) 13%, transparent);
   transform: translateY(-1px);
 }
 
@@ -173,17 +178,17 @@
   ) {
   max-width: 760px;
   margin: 9px 0 0;
-  color: #e9f5ed;
+  color: var(--game-ui-text);
   line-height: 1.6;
 }
 
 .course-route-quiz__result h4 {
-  color: #7ad9c9;
+  color: var(--game-ui-ink-title);
 }
 
 .course-route-quiz__reason {
   margin-top: 9px;
-  color: #f0d5ad;
+  color: var(--game-ui-text);
 }
 
 .course-route-quiz__actions {
@@ -196,7 +201,7 @@
 
 .course-route-quiz__note {
   margin-top: 14px;
-  color: rgb(233 245 237 / 58%);
+  color: var(--game-ui-text-muted);
 }
 
 /*
@@ -220,4 +225,114 @@
     flex-direction: column;
     gap: 4px;
   }
+}
+
+/*
+ * 「我会了」 — the skip test, which is this same mechanism's other entrance.
+ *
+ * In this sheet rather than its own because the design says these are not two
+ * things: 「开场的几个问题和单元入口的『我会了』不是两套东西，是同一个机制的两个
+ * 入口。」 The course-opening self-report renders the very same component per
+ * unit, so a second stylesheet would be one mechanism dressed twice.
+ *
+ * Kit tokens throughout, like the rules above — see the note at the top of
+ * this file for why the literals had to go.
+ */
+
+.skip-test {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--game-ui-border-subtle);
+}
+
+.skip-test--entry {
+  gap: 8px;
+}
+
+.skip-test__pitch {
+  margin: 0;
+  color: var(--game-ui-text);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.skip-test__progress {
+  margin: 0;
+  color: var(--game-ui-accent-ink);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.skip-test__prompt {
+  max-width: 760px;
+  margin: 0;
+  color: var(--game-ui-text);
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.skip-test__label {
+  color: var(--game-ui-text-muted);
+  font-size: 0.74rem;
+}
+
+.skip-test__answer {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--game-ui-border-strong);
+  border-radius: 10px;
+  background: var(--game-ui-surface);
+  color: var(--game-ui-text);
+  font: inherit;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.skip-test__answer:focus-visible {
+  border-color: var(--game-ui-secondary);
+  outline: none;
+}
+
+.skip-test__verdict {
+  max-width: 760px;
+  margin: 0;
+  color: var(--game-ui-ink-title);
+  font-family: var(--game-ui-font-display);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.skip-test__open {
+  text-align: start;
+}
+
+/*
+ * The sentence that keeps 「跳过不等于学过」 in front of the person who just
+ * skipped. Quieter than the verdict, but never hidden behind a disclosure and
+ * never below the contrast floor: it is the difference between a product that
+ * skipped some lessons and a product that quietly told the review scheduler
+ * those lessons were read.
+ */
+.skip-test__note {
+  max-width: 760px;
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+/* One recommended unit, and the test that is the only way past it. */
+.course-route-quiz__unit {
+  margin-top: 16px;
+}
+
+.course-route-quiz__unit-name {
+  margin: 0;
+  color: var(--game-ui-text);
+  font-family: var(--game-ui-font-display);
+  font-size: 0.92rem;
 }

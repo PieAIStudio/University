@@ -701,6 +701,7 @@ export const messages = {
   "ui.lesson.lessonReader.copy.回到刚才那一课": "← 回到刚才那一课",
   "ui.lesson.lessonReader.copy.外语模式": "外语模式",
   "ui.lesson.lessonReader.copy.完成本次更新": "完成本次更新",
+  "ui.lesson.lessonReader.copy.已经会了-直接答这一节的题": "已经会了？直接答这一节的题",
   "ui.lesson.lessonReader.copy.已确认读过这一版-还差练习": "已确认读过这一版。还差练习。",
   "ui.lesson.lessonReader.copy.打开课文-滚动页面或答对练习都不会自动完成-这个确认只针对当前固定版本":
     "答对题目不等于读过课文。点一下，这节才算读完。",
@@ -799,6 +800,7 @@ export const messages = {
   "ui.markdown.markdownContent.copy.外部链接": "外部链接",
   "ui.markdown.markdownContent.copy.引用": "引用",
   "ui.markdown.markdownContent.copy.文字稿": "文字稿",
+  "ui.markdown.markdownContent.copy.找不到这个互动课件": "找不到这个互动课件：",
   "ui.markdown.markdownContent.copy.未启用的课程扩展": "未启用的课程扩展：",
   "ui.markdown.markdownContent.copy.本地媒体": "本地媒体",
   "ui.markdown.markdownContent.copy.来源": "来源",
@@ -1080,10 +1082,45 @@ export const messages = {
   "ui.path.coursePickCard.copy.这门课有": "这门课有：",
   "ui.path.coursePickCard.copy.进入这门课": "进入这门课",
   "ui.path.courseRouteQuiz.copy.3-个小问题": "3 个小问题",
-  "ui.path.courseRouteQuiz.copy.从-App-文件和代码的最小概念开始-把这门课完整走一遍":
-    "从 App、文件和代码的最小概念开始，把这门课完整走一遍。",
-  "ui.path.courseRouteQuiz.copy.从推荐起点开始": "从推荐起点开始",
-  "ui.path.courseRouteQuiz.copy.从零开始": "从零开始",
+  "app.app.courseIsland.copy.这门课假定你会什么": "这门课假定你会什么",
+  "app.app.courseIsland.copy.这门课假定你已经做过": "这门课假定你已经做过：",
+  "app.app.courseIsland.copy.要不要先去那门课测一测": "。要不要先去那门课测一测？",
+  "app.app.courseIsland.copy.去": "去：",
+  "app.app.courseIsland.copy.没做过也拦不住你-这里只是先说一声":
+    "没做过也拦不住你。这里只是先说一声，去留你自己定。",
+  "ui.path.coursePickCard.copy.这门课假定你已经学过上面这几门-没学过也进得去":
+    "这门课假定你已经学过上面这几门。没学过也进得去，只是会更费劲。",
+
+  "ui.path.courseRouteQuiz.copy.已回答": "已回答",
+  "ui.path.courseRouteQuiz.copy.根据你的回答": "根据你的回答：",
+  "ui.path.courseRouteQuiz.copy.看起来你可以跳过前面": "看起来你可以跳过前面",
+  "ui.path.courseRouteQuiz.copy.个单元-要不要各测三道": "个单元。要不要各测三道？",
+  "ui.path.courseRouteQuiz.copy.这门课从第一节开始最省力": "这门课从第一节开始最省力。",
+  "ui.path.courseRouteQuiz.copy.从第一节开始": "从第一节开始",
+  "ui.path.courseRouteQuiz.copy.回答本身不会解锁任何一节-做对题才会":
+    "回答这几个问题本身不会跳过任何一节课。做对题才会。",
+  "ui.path.unitSkipTest.copy.我会了": "我会了",
+  "ui.path.unitSkipTest.copy.再测一次": "再测一次",
+  "ui.path.unitSkipTest.copy.再试一次": "再试一次",
+  "ui.path.unitSkipTest.copy.交这一题": "交这一题",
+  "ui.path.unitSkipTest.copy.去读": "去读：",
+  "ui.path.unitSkipTest.copy.把你的答案写在这里": "把你的答案写在这里",
+  "ui.path.unitSkipTest.copy.先写下你的答案-再交": "先写下你的答案，再交。",
+  "ui.path.unitSkipTest.copy.正在从这一单元里抽题": "正在从这一单元里抽题……",
+  "ui.path.unitSkipTest.copy.这一单元的题没读出来-再试一次": "这一单元的题没读出来。再试一次。",
+  "ui.path.unitSkipTest.copy.这一单元你已经会了-做三道它自己的题就能跳过去":
+    "已经会了？做三道这一单元自己的题，做对就跳过去。",
+  "ui.path.unitSkipTest.copy.这一单元你已经证明过了-想再试一次也可以":
+    "这一单元你已经跳过了。想再做一次也可以。",
+  "ui.path.unitSkipTest.copy.这一单元凑不出三道能当场判对错的题-所以没法用做题跳过":
+    "这一单元凑不出三道能当场判对错的题——它的练习多半要写一整句话。所以这一单元没法用做题跳过。",
+  "ui.path.unitSkipTest.copy.三道全对-这一单元你不用从头学了": "三道全对。这一单元你不用从头学了。",
+  "ui.path.unitSkipTest.copy.错了一道-那一节读一下-其余的算你会了":
+    "错了一道。那一节读一下，其余的算你会了。",
+  "ui.path.unitSkipTest.copy.错了几道-这一单元还是从头读一遍吧":
+    "错了 {{wrong}} 道。这一单元还是从头读一遍吧。",
+  "ui.path.unitSkipTest.copy.跳过不等于学过-这几节的复习卡不会进复习队列-想正式读随时点进来-那时才开始排期":
+    "跳过不等于学过：这几节的复习卡不会进你的复习队列。想正式读，随时点进来，那时才开始排期。",
   "ui.path.courseRouteQuiz.copy.你以前把一个项目改过-并重新跑起来吗":
     "你以前把一个项目改过，并重新跑起来吗？",
   "ui.path.courseRouteQuiz.copy.你会先建立-屏幕上的东西和文件里的代码有关-这条最重要的连接":
@@ -1097,32 +1134,19 @@ export const messages = {
   "ui.path.courseRouteQuiz.copy.如果-App-里的按钮文字不对-你第一反应更接近哪一种":
     "如果 App 里的按钮文字不对，你第一反应更接近哪一种？",
   "ui.path.courseRouteQuiz.copy.学习路线": "学习路线",
-  "ui.path.courseRouteQuiz.copy.建议先学": "建议先学",
   "ui.path.courseRouteQuiz.copy.我会在界面里继续找": "我会在界面里继续找",
   "ui.path.courseRouteQuiz.copy.我会打开项目找代码并运行检查": "我会打开项目找代码并运行检查",
   "ui.path.courseRouteQuiz.copy.我会猜某个文件可能负责它": "我会猜某个文件可能负责它",
   "ui.path.courseRouteQuiz.copy.我能大致说出它们分别做什么": "我能大致说出它们分别做什么",
   "ui.path.courseRouteQuiz.copy.改过-也能自己排查问题": "改过，也能自己排查问题",
   "ui.path.courseRouteQuiz.copy.改过小地方-但过程不太稳定": "改过小地方，但过程不太稳定",
-  "ui.path.courseRouteQuiz.copy.有一点基础": "有一点基础",
-  "ui.path.courseRouteQuiz.copy.有开发经验": "有开发经验",
-  "ui.path.courseRouteQuiz.copy.根据你的回答-推荐起点是": "根据你的回答，推荐起点是",
   "ui.path.courseRouteQuiz.copy.看到-tsx-package-json-这些名字时-你大概处在什么状态":
     "看到 `.tsx`、`package.json` 这些名字时，你大概处在什么状态？",
   "ui.path.courseRouteQuiz.copy.看起来都很陌生": "看起来都很陌生",
   "ui.path.courseRouteQuiz.copy.第": "第",
   "ui.path.courseRouteQuiz.copy.继续回答-系统会自动判断": "继续回答，系统会自动判断",
-  "ui.path.courseRouteQuiz.copy.节": "节）。",
-  "ui.path.courseRouteQuiz.copy.节-这门课共": "节（这门课共",
-  "ui.path.courseRouteQuiz.copy.节课": "节课。",
   "ui.path.courseRouteQuiz.copy.见过-但需要有人带着看": "见过，但需要有人带着看",
-  "ui.path.courseRouteQuiz.copy.跳过入门解释-从文件-配置和运行关系开始":
-    "跳过入门解释，从文件、配置和运行关系开始。",
-  "ui.path.courseRouteQuiz.copy.跳过最前面的使用者视角-从代码和文件的关系开始":
-    "跳过最前面的使用者视角，从代码和文件的关系开始。",
   "ui.path.courseRouteQuiz.copy.还没有": "还没有",
-  "ui.path.courseRouteQuiz.copy.这是推荐起点-不会锁住前面的课-你仍然可以展开全部":
-    "这是推荐起点，不会锁住前面的课；你仍然可以展开全部",
   "ui.path.courseRouteQuiz.copy.重新回答": "重新回答",
   "ui.path.courseRouteQuiz.copy.题": "题",
   "ui.path.pathDialog.copy.关闭": "关闭",

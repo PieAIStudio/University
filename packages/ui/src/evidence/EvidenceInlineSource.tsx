@@ -1,3 +1,5 @@
+import { formatLineRange } from "@pieai/university-core";
+
 import { translate } from "../i18n/index.js";
 import { useEffect, useId, useState } from "react";
 
@@ -6,10 +8,6 @@ import { EvidenceUaPlace } from "./EvidenceUaPlace.js";
 import { EvidenceCode } from "./EvidenceCode.js";
 import { EvidenceLocatorOnly } from "./EvidenceLocatorOnly.js";
 import { loadEvidenceSnippet, type EvidenceSource } from "./load-evidence-snippet.js";
-
-function formatLineRange(start: number, end: number): string {
-  return start === end ? `L${start}` : `L${start}–${end}`;
-}
 
 function parseLineRange(lines: string): { readonly start: number; readonly end: number } {
   const match = /^(\d+)(?:-(\d+))?$/.exec(lines.trim());
@@ -87,7 +85,7 @@ export function EvidenceInlineSource({
 
   const displayStart = snippet?.highlightStartLine ?? snippet?.startLine ?? cited.start;
   const displayEnd = snippet?.highlightEndLine ?? snippet?.endLine ?? cited.end;
-  const lineLabel = formatLineRange(displayStart, displayEnd);
+  const lineLabel = `L${formatLineRange(displayStart, displayEnd)}`;
   const pathLabel =
     sourcePath || snippet?.sourcePath || translate("ui.evidence.evidenceInlineSource.copy.源码");
   const commit = sourceCommit ?? snippet?.sourceCommit;

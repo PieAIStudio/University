@@ -1,5 +1,8 @@
-import type { BriefActivity, BriefConfiguration } from "@pieai/university-core";
+import type { BriefAction, BriefActivity, BriefConfiguration } from "@pieai/university-core";
 import { translate as t } from "../i18n/index.js";
+
+/** Widens each literal to `BriefAction` so the two outcome maps stay one type. */
+const satisfiesActions = (actions: readonly BriefAction[]): readonly BriefAction[] => actions;
 
 export function getAIBriefExamples(): readonly BriefActivity[] {
   const targets: readonly BriefConfiguration[] = [
@@ -16,7 +19,53 @@ export function getAIBriefExamples(): readonly BriefActivity[] {
     productName: t(`play.ai.brief.${name}.name`),
     productDescription: t(`play.ai.brief.${name}.description`),
     visitorName: t("play.ai.brief.visitorName"),
-    actionLabel: t(`play.ai.brief.${name}.action`),
+    /*
+      The two things a visitor can do here, and which agreement decides each.
+
+      They used to be built into the engine — a submit and a roster view, with a
+      login in front of them — which is what made every lesson using this game
+      teach a sign-up sheet. Written out, this product is one payload among
+      possible others rather than the shape of the game.
+    */
+    actions: satisfiesActions([
+      {
+        id: "submit",
+        label: t(`play.ai.brief.${name}.action`),
+        decidedBy: "confirmation",
+        outcomes: {
+          instant: t("play.ai.brief.result.joined"),
+          review: t("play.ai.brief.result.queued"),
+          login: t("play.ai.brief.result.login"),
+        },
+      },
+      {
+        id: "roster",
+        label: t("play.ai.brief.roster"),
+        decidedBy: "roster",
+        outcomes: {
+          private: t("play.ai.brief.result.private"),
+          public: t("play.ai.brief.result.public"),
+          login: t("play.ai.brief.result.login"),
+        },
+        // A public list shows you too, once you are on it. That is what makes
+        // 「公开」 a decision rather than a word.
+        after: {
+          action: "submit",
+          outcome: "instant",
+          outcomes: {
+            public: `${t("play.ai.brief.result.public")} ${t("play.ai.brief.ownEntry", {
+              name: t("play.ai.brief.visitorName"),
+            })}`,
+          },
+        },
+      },
+    ]),
+    gate: {
+      axis: "access",
+      requiresUnlock: "account",
+      unlockLabel: t("play.ai.brief.login"),
+      blockedOutcome: "login",
+    },
     hint: t("play.ai.brief.hint"),
     takeaway: t("play.ai.brief.takeaway"),
     source: {

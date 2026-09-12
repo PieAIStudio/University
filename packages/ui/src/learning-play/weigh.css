@@ -1,0 +1,156 @@
+/*
+  取舍台。两三个选择常驻在顶上，情况一个一个来。
+
+  选择卡永远在原地、永远是同一份文字——读者第二次看见它们时选了另一个，
+  这件事只有在选项没有变过的前提下才说明得了问题。所以这里不做「本轮可选」
+  的高亮或重排：变的是情况，不是选择。
+*/
+.play-weigh {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.play-weigh__question {
+  margin: 0;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.play-weigh__current {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--game-ui-accent);
+  border-radius: 16px;
+  background: var(--game-ui-panel);
+}
+
+.play-weigh__progress {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 13px;
+}
+
+.play-weigh__situation {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.play-weigh__situation small {
+  color: var(--game-ui-text-muted);
+}
+
+.play-weigh__guide {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 13px;
+}
+
+/*
+  选项就是按钮本身，说明写在按钮上。
+
+  原来说明在上面一排卡片里、按钮在下面——同样三样东西写了两遍，而在手机上
+  那排卡片把第一个能按的东西挤到了屏幕外面，开屏没有一件事可做。
+*/
+.play-weigh__choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.play-weigh__choice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--game-ui-secondary) 16%, transparent);
+  color: var(--game-ui-text);
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+}
+
+.play-weigh__choice small {
+  color: var(--game-ui-text-muted);
+}
+
+.play-weigh__miss {
+  margin: 0;
+  padding: 10px 12px;
+  border-inline-start: 3px solid var(--game-ui-warning);
+  border-radius: 12px;
+  background: var(--game-ui-panel-strong);
+}
+
+.play-weigh__settled {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.play-weigh__settled-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-inline-start: 3px solid var(--game-ui-success);
+  border-radius: 12px;
+  background: var(--game-ui-panel-strong);
+}
+
+.play-weigh__settled-row small {
+  color: var(--game-ui-text-muted);
+}
+
+.play-weigh__settled-pick {
+  font-weight: 700;
+}
+
+/* 「换成另一个的话」是这个玩法教的东西本身，不能退到脚注里去。 */
+.play-weigh__cost {
+  padding-block-start: 4px;
+  border-block-start: 1px dashed var(--game-ui-border-subtle);
+}
+
+.play-weigh__done {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--game-ui-success);
+  border-radius: 16px;
+  background: var(--game-ui-panel);
+}
+
+.play-weigh__flip {
+  margin: 0;
+  font-weight: 700;
+}
+
+.play-weigh__done ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding-inline-start: 18px;
+}
+
+.play-weigh__takeaway {
+  margin: 0;
+  font-weight: 700;
+}
+
+.play-weigh__misses {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  font-size: 13px;
+}
