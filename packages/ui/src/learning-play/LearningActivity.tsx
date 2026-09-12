@@ -35,6 +35,12 @@ export interface LearningActivityProps {
    * one level, nothing changes: the label reads exactly as it did.
    */
   readonly levels?: ActivityLevels;
+  /**
+   * The host's current level when it swaps the activity payload underneath
+   * this component. Standalone lessons omit it and still start at the easiest
+   * authored level.
+   */
+  readonly initialDifficulty?: ActivityDifficulty;
   /** Told when the learner moves to another level, for hosts that track it. */
   readonly onLevelChange?: (level: ActivityDifficulty) => void;
   /** A lesson occurrence is distinct from a reusable activity definition. */
@@ -102,9 +108,14 @@ function renderGame(activity: LearningActivitySpec, controls: GameControls) {
 }
 
 /** Embeddable in a lesson, a standalone section, or a host-owned playlist. */
-export function LearningActivity({ levels, onLevelChange, ...props }: LearningActivityProps) {
+export function LearningActivity({
+  levels,
+  initialDifficulty,
+  onLevelChange,
+  ...props
+}: LearningActivityProps) {
   const [round, setRound] = useState(0);
-  const [picked, setPicked] = useState<ActivityDifficulty | null>(null);
+  const [picked, setPicked] = useState<ActivityDifficulty | null>(initialDifficulty ?? null);
   const offered = levels ? availableLevels(levels) : [];
   /*
     V5: 「默认先提供入门」. The start level is the easiest the lesson authored,
