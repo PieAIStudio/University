@@ -1,6 +1,8 @@
 import imported from "../../../../apps/university/src/content/imported.json";
 import { describe, expect, it } from "vitest";
 
+import { CALIBRATION_CATALOGUE } from "../grid/calibration-catalogue.js";
+
 import { buildWorldStudyGrid } from "../Maps.js";
 import {
   PLANET_CLUSTER_LAYOUT_CONTRACT,
@@ -10,8 +12,23 @@ import {
   type PlanetStudyLayoutInput,
 } from "./placement.js";
 
-function realStudyInputs(): PlanetStudyLayoutInput[] {
-  return imported.studies.map((study) => {
+/*
+  Cluster placement is checked for how it behaves across study sizes — a
+  one-course study still reaches the clickable floor, a thirty-one-course study
+  does not own the frame, and neighbouring landmasses keep their gap. The
+  shipped catalogue became a single four-course study on 2026-09-12 and can no
+  longer pose any of those questions, so the size contracts read the frozen
+  shapes in `grid/calibration-catalogue.ts`. `shippedStudyInputs` keeps the live
+  import for the one claim that is about what actually ships.
+*/
+function studyInputsFrom(
+  studies: readonly {
+    readonly studyId: string;
+    readonly title: string;
+    readonly courses: readonly { readonly lessons: number }[];
+  }[],
+): PlanetStudyLayoutInput[] {
+  return studies.map((study) => {
     const lessonCount = study.courses.reduce((sum, course) => sum + course.lessons, 0);
     const map = buildWorldStudyGrid({
       studyId: study.studyId,
@@ -32,6 +49,16 @@ function realStudyInputs(): PlanetStudyLayoutInput[] {
   });
 }
 
+/** The frozen shapes the size and gap contracts were calibrated against. */
+function calibrationStudyInputs(): PlanetStudyLayoutInput[] {
+  return studyInputsFrom(CALIBRATION_CATALOGUE.studies);
+}
+
+/** What actually ships today. Moves when a package is locked or unlocked. */
+function shippedStudyInputs(): PlanetStudyLayoutInput[] {
+  return studyInputsFrom(imported.studies);
+}
+
 function circleGap(
   left: { readonly centerX: number; readonly centerZ: number; readonly radius: number },
   right: { readonly centerX: number; readonly centerZ: number; readonly radius: number },
@@ -45,7 +72,7 @@ function circleGap(
 
 describe("placePlanetClusters", () => {
   it("uses one measured landmass per real study, not one map per course", () => {
-    const inputs = realStudyInputs();
+    const inputs = calibrationStudyInputs();
     const layout = placePlanetClusters(inputs);
 
     // One landmass per study, carrying that study's own course count. Written
@@ -66,7 +93,7 @@ describe("placePlanetClusters", () => {
   });
 
   it("keeps each study landmass separate while preserving one catalogue field", () => {
-    const layout = placePlanetClusters(realStudyInputs());
+    const layout = placePlanetClusters(calibrationStudyInputs());
     const nearestGaps = layout.clusters.map((cluster, index) =>
       Math.min(
         ...layout.clusters
@@ -83,8 +110,31 @@ describe("placePlanetClusters", () => {
     );
   });
 
+  /*
+    The live half of the split. The contracts above are calibrated on frozen
+    shapes; this one is about the catalogue that actually ships, and is what
+    catches a locked or unlocked package that stops reaching the planet at all.
+  */
+  it("places every shipped study as its own reachable cluster", () => {
+    const shipped = shippedStudyInputs();
+    expect(shipped.length).toBeGreaterThan(0);
+    const layout = placePlanetClusters(shipped);
+    expect(layout.clusters).toHaveLength(shipped.length);
+    expect(new Set(layout.clusters.map((cluster) => cluster.studyId))).toEqual(
+      new Set(shipped.map((study) => study.studyId)),
+    );
+    expect(
+      layout.clusters.every(
+        (cluster) =>
+          cluster.cellCount >= PLANET_STUDY_SIZE_CONTRACT.minCells &&
+          cluster.radius >= PLANET_STUDY_SIZE_CONTRACT.minRadius,
+      ),
+    ).toBe(true);
+    expect(Number.isFinite(layout.bounds.maxHalf)).toBe(true);
+  });
+
   it("keeps the one-course floor clickable and the 31-course study from owning the frame", () => {
-    const layout = placePlanetClusters(realStudyInputs());
+    const layout = placePlanetClusters(calibrationStudyInputs());
     const general = layout.clusters.find((cluster) => cluster.studyId === "general");
     const turing = layout.clusters.find((cluster) => cluster.studyId === "turing-pact");
     expect(general).toBeDefined();
@@ -99,7 +149,7 @@ describe("placePlanetClusters", () => {
   });
 
   it("does not retarget the layout origin when catalogue order or selection changes", () => {
-    const input = realStudyInputs();
+    const input = calibrationStudyInputs();
     const shuffled = [...input].reverse();
     const forward = placePlanetClusters(input);
     const reversed = placePlanetClusters(shuffled);
@@ -113,7 +163,7 @@ describe("placePlanetClusters", () => {
 
 describe("planetCameraDistance", () => {
   it("fits the measured bounds in both desktop and narrow mobile frames", () => {
-    const bounds = placePlanetClusters(realStudyInputs()).bounds;
+    const bounds = placePlanetClusters(calibrationStudyInputs()).bounds;
     for (const [aspect, fov] of [
       [1440 / 810, 34],
       [390 / 844, 42],

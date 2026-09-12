@@ -45,21 +45,17 @@ describe("the 2D directory against the library the map uses", () => {
     /*
       The literal is the point of this line: the two sides above could agree
       with each other while both silently dropping a study, and this is what
-      would catch that. R40 deliberately retires 12 courses from R39's 48
-      and adds the existing 61-lesson AI foundations course. All 36 retained
-      recovery hashes stay unchanged; the website rewrite flag is explicit.
+      would catch that. R40 deliberately retired 12 courses from R39's 48 and
+      added the 61-lesson AI foundations course. On 2026-09-12 everything but
+      `browser-ai` was locked — moved to `apps/local/course-proposals/locked/`,
+      which nothing in the delivery path reads — because all 29 interactive
+      activities live in `browser-ai` and the rest predate the contract that
+      requires one in every lesson. They come back a package at a time as each
+      is rewritten, and this line is where that has to be confirmed by a person.
       This moves only when the recovery transport deliberately changes.
     */
-    expect(fromLibrary).toBe(37);
-    expect(library.studies.map((study) => study.studyId)).toEqual([
-      "ai-foundations",
-      "browser-ai",
-      "general",
-      "turing-pact",
-    ]);
-    expect(
-      library.studies.find((study) => study.studyId === "ai-foundations")?.courses,
-    ).toMatchObject([{ courseId: "what-is-ai-really", lessons: 61 }]);
+    expect(fromLibrary).toBe(4);
+    expect(library.studies.map((study) => study.studyId)).toEqual(["browser-ai"]);
     expect(
       library.studies
         .find((study) => study.studyId === "browser-ai")
@@ -107,10 +103,12 @@ describe("the 2D directory against the library the map uses", () => {
       browser-ai curriculum moved this and turned the suite red until somebody
       confirmed the new numbers. 469 and 37 are what `check-content-revisions`
       counts off the studies on disk; 117 is the unit count in the packages the
-      map loads.
+      map loads. The 2026-09-12 lock took them from 117 and 469 to the shipped
+      `browser-ai` curriculum alone; `check-content-revisions` counts the same
+      27 lessons across 4 courses off the studies on disk.
     */
-    expect(listing.totals.units).toBe(117);
-    expect(listing.totals.lessons).toBe(469);
+    expect(listing.totals.units).toBe(9);
+    expect(listing.totals.lessons).toBe(27);
   });
 
   it("folds the generated shelf into the same directory read model", () => {
@@ -118,8 +116,7 @@ describe("the 2D directory against the library the map uses", () => {
   });
 
   it("lays independent courses flat instead of inventing a chain (synthetic shelf)", () => {
-    const base = (shelf as Shelf).studies.find((study) => study.id === "ai-foundations")!
-      .courses[0]!;
+    const base = (shelf as Shelf).studies.find((study) => study.id === "browser-ai")!.courses[0]!;
     const courses = ["first", "second", "third"].map((id) => ({
       ...base,
       id,
@@ -135,12 +132,21 @@ describe("the 2D directory against the library the map uses", () => {
     expect(flat.courses.map((course) => course.id)).toEqual(courses.map((course) => course.id));
   });
 
-  it("keeps the fourteen-layer turing-pact climb readable as depth order", () => {
-    const pact = listingOf().studies.find((study) => study.id === "turing-pact");
+  /*
+    The shipped chain, whatever its length. This read the fourteen-layer
+    `turing-pact` climb until that package was locked on 2026-09-12; what it
+    actually guards is that a study whose courses declare prerequisites renders
+    as an ordered climb rather than a flat shelf, and `browser-ai` still does
+    that across four courses. The depth literal moves with the shipped set on
+    purpose — this file tests the directory against the library the map really
+    loads, so it is the place a catalogue change has to be looked at.
+  */
+  it("keeps the shipped climb readable as depth order", () => {
+    const pact = listingOf().studies.find((study) => study.id === "browser-ai");
     expect(pact).toBeDefined();
     expect(pact!.flat).toBe(false);
     const depths = pact!.courses.map((course) => course.depth);
-    expect(Math.max(...depths)).toBe(13);
+    expect(Math.max(...depths)).toBe(3);
     expect(depths).toEqual([...depths].sort((left, right) => left - right));
     const withPrereq = pact!.courses.filter((course) => course.prerequisiteCourseIds.length > 0);
     expect(withPrereq.length).toBeGreaterThan(0);
@@ -150,28 +156,35 @@ describe("the 2D directory against the library the map uses", () => {
   it("marks locked courses idle until every in-study prerequisite is finished", () => {
     const empty = listingOf();
     const locked = empty.studies
-      .find((study) => study.id === "turing-pact")
-      ?.courses.find((course) => course.id === "foundations-terrain");
+      .find((study) => study.id === "browser-ai")
+      ?.courses.find((course) => course.id === "make-the-cutout-app-yours");
     expect(locked?.state).toBe("idle");
-    expect(locked?.prerequisiteCourseIds).toEqual(["foundations-before-zero"]);
+    expect(locked?.prerequisiteCourseIds).toEqual(["run-a-real-project-with-ai"]);
 
     const packaged = packagedCourses();
-    const preface = packaged.get("turing-pact/foundations-before-zero");
+    const preface = packaged.get("browser-ai/run-a-real-project-with-ai");
     expect(preface).toBeDefined();
     for (const unit of preface!.units) {
       for (const lesson of unit.lessons) {
-        advanceLesson(lessonKey("turing-pact", preface!.id, lesson.id), lesson.contentRevision);
+        advanceLesson(lessonKey("browser-ai", preface!.id, lesson.id), lesson.contentRevision);
       }
     }
 
     const opened = listingOf();
     const next = opened.studies
-      .find((study) => study.id === "turing-pact")
-      ?.courses.find((course) => course.id === "foundations-terrain");
-    expect(next?.state).toBe("open");
+      .find((study) => study.id === "browser-ai")
+      ?.courses.find((course) => course.id === "make-the-cutout-app-yours");
+    /*
+      Reachable is the claim; whether it is also the accented one is the
+      accent rule's business. With a single shipped study the course that just
+      opened is also the shallowest open course, so it arrives as `live` rather
+      than `open` — both mean the prerequisite gate let go, and `idle`,
+      `locked` and `done` all still fail here.
+    */
+    expect(["open", "live"]).toContain(next?.state);
     const done = opened.studies
-      .find((study) => study.id === "turing-pact")
-      ?.courses.find((course) => course.id === "foundations-before-zero");
+      .find((study) => study.id === "browser-ai")
+      ?.courses.find((course) => course.id === "run-a-real-project-with-ai");
     expect(done?.state).toBe("done");
   });
 
@@ -181,10 +194,10 @@ describe("the 2D directory against the library the map uses", () => {
       .flatMap((study) => study.courses)
       .filter((course) => course.state === "live");
     expect(live).toHaveLength(1);
-    expect(live[0]?.id).toBe("what-is-ai-really");
+    expect(live[0]?.id).toBe("run-a-real-project-with-ai");
     expect(listing.nextLesson).toEqual({
-      studyId: "ai-foundations",
-      courseId: "what-is-ai-really",
+      studyId: "browser-ai",
+      courseId: "run-a-real-project-with-ai",
       unitId: live[0]!.units[0]!.id,
       lessonId: live[0]!.units[0]!.lessons[0]!.id,
     });

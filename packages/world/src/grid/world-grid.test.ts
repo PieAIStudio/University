@@ -16,6 +16,7 @@ import {
   worldUndersideSpikeCountForCells,
   worldUndersideTriangleCountForIslands,
 } from "./world-underside.js";
+import { CALIBRATION_CATALOGUE } from "./calibration-catalogue.js";
 
 interface ImportedCourse {
   readonly courseId: string;
@@ -39,6 +40,26 @@ const catalogue = JSON.parse(
     "utf8",
   ),
 ) as ImportedCatalogue;
+
+/*
+  Two catalogues on purpose. `catalogue` is what ships right now and is what the
+  "nothing gets dropped" assertions read; `CALIBRATION_CATALOGUE` is the frozen
+  set of shapes the geometry numbers below were calibrated against, because a
+  shipped catalogue of four short courses cannot exercise a 41-lesson silhouette
+  or a thirty-one-course study. See calibration-catalogue.ts.
+*/
+const calibrationNodes: readonly CourseNode[] = CALIBRATION_CATALOGUE.studies.flatMap((study) =>
+  study.courses.map((course, depth) => ({
+    courseId: course.courseId,
+    title: course.title,
+    lessons: course.lessons,
+    studyId: study.studyId,
+    studyTitle: study.title,
+    depth,
+    prerequisiteCourseIds: [],
+    trackId: null,
+  })),
+);
 
 const catalogueNodes: readonly CourseNode[] = catalogue.studies.flatMap((study) =>
   study.courses.map((course, depth) => ({
@@ -135,11 +156,11 @@ describe("world grid projection", () => {
   });
 
   it("projects every real course into one deterministic, earthy catalogue", () => {
-    const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
-    // Against the catalogue's own size, not a number written down once: the
-    // thing worth catching is a course that gets dropped, and a literal only
-    // catches that until someone publishes or retires one.
-    expect(world.placements).toHaveLength(catalogueNodes.length);
+    const world = placeWorld(calibrationNodes, () => 0, "turing-pact", "catalogue");
+    // Against the fixture's own size, not a number written down once. The same
+    // claim about what actually ships is made by "projects the shipped
+    // catalogue without dropping a course" below, which reads the live import.
+    expect(world.placements).toHaveLength(calibrationNodes.length);
 
     const topColours = new Set(world.placements.map((entry) => entry.grid.palette.top));
     expect(topColours.size).toBeGreaterThan(1);
@@ -159,8 +180,24 @@ describe("world grid projection", () => {
     expect(totalCells * 18).toBeLessThan(22_000);
   });
 
+  /*
+    The live half of the split. Everything above calibrates geometry against
+    frozen shapes; this is the one that still has to move when a package is
+    locked or unlocked, and it is what catches a course that silently fails to
+    reach the scene.
+  */
+  it("projects the shipped catalogue without dropping a course", () => {
+    const world = placeWorld(catalogueNodes, () => 0, catalogueNodes[0]!.studyId, "catalogue");
+    expect(catalogueNodes.length).toBeGreaterThan(0);
+    expect(world.placements).toHaveLength(catalogueNodes.length);
+    expect(new Set(world.placements.map((entry) => entry.node.courseId))).toEqual(
+      new Set(catalogueNodes.map((node) => node.courseId)),
+    );
+    expect(world.placements.every((entry) => entry.grid.cells.length > 0)).toBe(true);
+  });
+
   it("makes the 41-lesson silhouette wider than a 12-lesson plateau", () => {
-    const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
+    const world = placeWorld(calibrationNodes, () => 0, "turing-pact", "catalogue");
     const plateau = world.placements.find((entry) => entry.node.lessons === 12);
     const highland = world.placements.find((entry) => entry.node.lessons === 41);
     expect(plateau).toBeDefined();
@@ -206,7 +243,7 @@ describe("world grid projection", () => {
   );
 
   it("retains the original 3/19/41-lesson footprint calibration without pinning retired course IDs", () => {
-    const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
+    const world = placeWorld(calibrationNodes, () => 0, "turing-pact", "catalogue");
     const byLength = [...world.placements].sort((a, b) => a.node.lessons - b.node.lessons);
     const short = byLength[0]!;
     const medium = courseEntry(world, "product-website");
@@ -237,7 +274,7 @@ describe("world grid projection", () => {
   });
 
   it("keeps the silhouettes from fusing and from lining up as a grid", () => {
-    const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
+    const world = placeWorld(calibrationNodes, () => 0, "turing-pact", "catalogue");
     const origin = world.placements[0]!;
     expect(Math.hypot(origin.position.x, origin.position.z)).toBeLessThan(0.001);
     expect(world.placements.every((entry) => entry.grid.projection === "world")).toBe(true);
@@ -263,7 +300,7 @@ describe("world grid projection", () => {
   });
 
   it("only keeps the large world-scale landmarks on the remote field", () => {
-    const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
+    const world = placeWorld(calibrationNodes, () => 0, "turing-pact", "catalogue");
     /*
      * 2026-09-02: this used to pin four literal asset ids, because the grid had
      * one hard-coded nine-model list and the world projection kept the four
@@ -293,11 +330,11 @@ describe("world grid projection", () => {
   });
 
   it("keeps the actual island underside instanced and under its budget", () => {
-    const world = placeWorld(catalogueNodes, () => 0, "turing-pact", "catalogue");
+    const world = placeWorld(calibrationNodes, () => 0, "turing-pact", "catalogue");
     const cellCounts = world.placements.map((entry) => entry.grid.cells.length);
     const triangles = worldUndersideTriangleCountForIslands(cellCounts);
 
-    expect(world.placements).toHaveLength(catalogueNodes.length);
+    expect(world.placements).toHaveLength(calibrationNodes.length);
     expect(
       cellCounts.every((cellCount) => {
         const spikes = worldUndersideSpikeCountForCells(cellCount);
