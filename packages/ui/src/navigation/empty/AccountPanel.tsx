@@ -256,7 +256,7 @@ function UnsignedAccountForm({
     <div className="account-panel">
       <h2>{ACCOUNT_UNSIGNED_TITLE}</h2>
       <p>{translate("product.account.invitation")}</p>
-      <details className="product-details account-panel__form" ref={formDetails}>
+      <details className="product-details account-panel__form" open ref={formDetails}>
         <summary>{translate("product.account.open")}</summary>
         <p>{ACCOUNT_UNSIGNED_DESCRIPTION}</p>
         {anonymous ? <p>{translate("product.save.anonymousMerge")}</p> : null}
