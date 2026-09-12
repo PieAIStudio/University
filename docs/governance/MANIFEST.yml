@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-12T04:26:08.773Z
+generated_at: 2026-09-12T12:09:23.274Z
 generator_version: doc-gov@0.9.11
-docs_count: 133
+docs_count: 134
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -416,6 +416,13 @@ docs:
     status: stable
     canonical: true
     last_reviewed: 2026-09-10
+    pinned: false
+  - id: REF-LEARNING-WORKFLOW-ISSUES-A-KEYED-LEARNING-ACTIVITY-LOSES-THE-SELECTED-DIFFICULTY-ON-SCENARIO-CHANGE
+    path: docs/reference/learnings/workflow-issues/a-keyed-learning-activity-loses-the-selected-difficulty-on-scenario-change.md
+    type: reference
+    status: stable
+    canonical: true
+    last_reviewed: 2026-09-12
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-LIST-OF-KINDS-GOES-STALE-IN-EVERY-COPY-AT-ONCE-CHECK-IT-AGAINST-THE-WIRE-ENUM
     path: docs/reference/learnings/workflow-issues/a-list-of-kinds-goes-stale-in-every-copy-at-once-check-it-against-the-wire-enum.md
