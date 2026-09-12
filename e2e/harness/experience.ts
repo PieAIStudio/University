@@ -245,6 +245,20 @@ async function readyPlans(page: Page): Promise<void> {
 
 async function readyProfile(page: Page): Promise<void> {
   await expect(page.locator(".account-panel")).toBeVisible({ timeout: 30_000 });
+  /*
+   * The sign-in form lives behind a closed <details>. That is the design —
+   * 5da6852b called it a quiet account door, never a gate — and both
+   * N.nocollide and U.product-lightness walk /me by clicking the summary open.
+   * This probe used to assert the submit button was already visible, which is
+   * only true if the door stands open, so opening it here was the fix rather
+   * than opening it in the product. The door itself still has to be there:
+   * a missing summary fails below, and PROFILE_PRIMARY still fails if the
+   * configured shape stops drawing a real form.
+   */
+  const door = page.locator("details.account-panel__form");
+  await expect(door).toBeVisible({ timeout: 30_000 });
+  if ((await door.getAttribute("open")) === null) await door.locator("summary").click();
+  await expect(door).toHaveAttribute("open", "");
   await expect(PROFILE_PRIMARY.locate(page)).toBeVisible({ timeout: 30_000 });
 }
 
