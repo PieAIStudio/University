@@ -413,6 +413,14 @@
 
 .planet-domain-label[data-active="true"] {
   box-shadow: 0 0 0 1px var(--game-ui-accent);
+  background: var(--game-ui-panel-deep);
+}
+
+.planet-domain-label__selected {
+  display: block;
+  color: var(--game-ui-accent);
+  font-size: 0.65rem;
+  font-weight: 600;
 }
 
 .planet-page__row-name,

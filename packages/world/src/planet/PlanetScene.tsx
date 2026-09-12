@@ -27,13 +27,17 @@ import { domainPreparation } from "./domain-preparation-client.js";
 import {
   domainCameraDistance,
   domainLabelWidth,
+  domainLabelY,
   DOMAIN_OUTER_RADIUS,
+  DOMAIN_PEER_SCALE,
+  DOMAIN_SELECTED_SCALE,
   DOMAIN_VIEW_FRONT as FRONT,
   DOMAIN_VIEW_UP,
   layoutDomainPlan,
   type DomainPlacement,
 } from "./domain-layout.js";
 import { createDomainGlobeGeometry, createDomainCloudGeometry } from "./globe-geometry.js";
+import { createGlobeMaterial } from "./globe-material.js";
 import {
   planAtmosphericRegions,
   planetRepresentativeLimit,
@@ -71,6 +75,11 @@ function DomainPlanet({
 }) {
   const root = useRef<THREE.Group>(null);
   const body = useRef<THREE.Group>(null);
+  const clouds = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
+  const scaleTurn = useRef({ from: 1, startedAt: 0 });
+  const idle = useRef({ time: 0, angle: 0, quaternion: new THREE.Quaternion() });
+  const waterTime = useMemo(() => ({ value: 0 }), []);
   const hits = useRef<THREE.InstancedMesh>(null);
   const turn = useRef({ from: new THREE.Quaternion(), startedAt: 0 });
   const initialized = useRef(false);
@@ -79,10 +88,18 @@ function DomainPlanet({
   const cameraPoint = useRef(new THREE.Vector3());
   const labelPoint = useRef(new THREE.Vector3());
   const labelEdge = useRef(new THREE.Vector3());
-  const labelAnchor = useRef<{ x: number; y: number; node: HTMLElement | null }>({
+  const labelAnchor = useRef<{
+    x: number;
+    y: number;
+    node: HTMLElement | null;
+    measureKey: string;
+    height: number;
+  }>({
     x: NaN,
     y: NaN,
     node: null,
+    measureKey: "",
+    height: 0,
   });
   const viewportWidth = useThree((state) => state.size.width);
   const representativeLimit = planetRepresentativeLimit(viewportWidth, renderTier());
@@ -113,6 +130,11 @@ function DomainPlanet({
     representativeLimit,
     domain.surfaceStyle,
   );
+  const surfaceMaterial = useMemo(
+    () => createGlobeMaterial(resources?.texture ?? null, waterTime),
+    [resources?.texture, waterTime],
+  );
+  useEffect(() => () => surfaceMaterial.dispose(), [surfaceMaterial]);
   // Catalog refreshes rebuild only the islands. Each resource owns its cleanup
   // so that change cannot dispose a globe/texture still used by this planet.
   useEffect(() => () => globe.dispose(), [globe]);
@@ -125,7 +147,11 @@ function DomainPlanet({
     if (selected) lastSelected.current = selected.studyId;
     if (body.current) turn.current.from.copy(body.current.quaternion);
     turn.current.startedAt = performance.now();
-  }, [oriented?.studyId]);
+    if (active) idle.current.angle = 0;
+  }, [oriented?.studyId, active]);
+  useLayoutEffect(() => {
+    scaleTurn.current = { from: root.current?.scale.x ?? 1, startedAt: performance.now() };
+  }, [active, hovered]);
   useLayoutEffect(() => {
     if (!hits.current) return;
     const matrix = new THREE.Matrix4();
@@ -136,28 +162,55 @@ function DomainPlanet({
     hits.current.instanceMatrix.needsUpdate = true;
     hits.current.computeBoundingSphere();
   }, [regions, resources]);
-  useFrame(({ camera, size }) => {
+  useFrame(({ camera, size }, delta) => {
     if (!root.current || !body.current) return;
+    const frozen = motionReduced || islandLookFrozen();
+    // Stage owns pause/visibility. Clamp only ambient time, never selection travel.
+    if (!frozen) {
+      const step = Math.min(Math.max(delta, 0), 0.05);
+      idle.current.time += step;
+      if (!active) idle.current.angle += step * 0.022;
+      waterTime.value = idle.current.time;
+    }
+    const chosenScale = active ? DOMAIN_SELECTED_SCALE : hovered ? 0.9 : DOMAIN_PEER_SCALE;
+    const scaleProgress = frozen
+      ? 1
+      : Math.min(1, Math.max(0, performance.now() - scaleTurn.current.startedAt) / HOP_DURATION_MS);
+    root.current.scale.setScalar(
+      initialized.current
+        ? THREE.MathUtils.lerp(scaleTurn.current.from, chosenScale, 1 - (1 - scaleProgress) ** 3)
+        : chosenScale,
+    );
+    root.current.updateMatrixWorld();
     // Each peer faces the actual camera from its own centre. A fixed global
     // normal is wrong for off-centre planets and fails after a narrow resize.
     camera.getWorldPosition(cameraPoint.current);
     root.current.worldToLocal(cameraPoint.current).normalize();
     target.current.setFromUnitVectors(oriented?.normal ?? FRONT, cameraPoint.current);
+    if (!active) {
+      idle.current.quaternion.setFromAxisAngle(THREE.Object3D.DEFAULT_UP, idle.current.angle);
+      target.current.multiply(idle.current.quaternion);
+    }
     if (!initialized.current) {
       body.current.quaternion.copy(target.current);
       turn.current.from.copy(target.current);
+      scaleTurn.current.from = chosenScale;
       initialized.current = true;
     }
     // Selection travel follows elapsed time even when a frame is late.
     // Capping delta here would stretch a 420ms turn on a slower device.
     const elapsedMs = Math.max(0, performance.now() - turn.current.startedAt);
-    const frozen = motionReduced || islandLookFrozen();
     const progress = frozen ? 1 : Math.min(1, elapsedMs / HOP_DURATION_MS);
     body.current.quaternion.slerpQuaternions(
       turn.current.from,
       target.current,
       1 - (1 - progress) ** 3,
     );
+    if (clouds.current) {
+      clouds.current.scale.setScalar(
+        DOMAIN_RADIUS * (1 + Math.sin(idle.current.time * 0.38) * 0.0015),
+      );
+    }
     const label = labelNodes?.get(domain.id);
     if (label) {
       labelPoint.current.copy(DOMAIN_VIEW_UP).multiplyScalar(DOMAIN_RADIUS * 1.24);
@@ -167,13 +220,20 @@ function DomainPlanet({
       labelEdge.current.project(camera);
       labelPoint.current.project(camera);
       const x = (labelPoint.current.x * 0.5 + 0.5) * size.width;
-      const y = (-labelPoint.current.y * 0.5 + 0.5) * size.height;
+      const projectedY = (-labelPoint.current.y * 0.5 + 0.5) * size.height;
       const pixelsPerUnit =
         (Math.abs(labelEdge.current.x - labelPoint.current.x) * size.width) /
         (2 * DOMAIN_OUTER_RADIUS);
       const maxWidth = `${domainLabelWidth(pixelsPerUnit).toFixed(2)}px`;
       if (label.style.maxWidth !== maxWidth) label.style.maxWidth = maxWidth;
       const previous = labelAnchor.current;
+      // Measure only when layout inputs change, not on every ambient frame.
+      const measureKey = `${maxWidth}|${label.textContent}|${document.fonts.status}`;
+      if (previous.node !== label || previous.measureKey !== measureKey) {
+        previous.height = label.offsetHeight;
+        previous.measureKey = measureKey;
+      }
+      const y = domainLabelY(projectedY, previous.height, size.height);
       if (
         previous.node !== label ||
         Math.abs(previous.x - x) > 0.01 ||
@@ -220,37 +280,34 @@ function DomainPlanet({
       <group ref={body}>
         <mesh
           geometry={globe}
+          material={surfaceMaterial}
           scale={DOMAIN_RADIUS}
           name={`domain-globe-${domain.id}`}
+          onPointerOver={() => setHovered(true)}
+          onPointerOut={() => setHovered(false)}
           onClick={(event) => {
             event.stopPropagation();
             onSelectDomain?.(domain.id);
             if (!onSelectDomain && !active && domain.studies[0]) onSelect?.(domain.studies[0].id);
           }}
-        >
-          <meshStandardMaterial
-            key={resources?.texture.uuid ?? "preview"}
-            map={resources?.texture ?? null}
-            vertexColors={!resources}
-            roughness={0.95}
-          />
-        </mesh>
+        />
         {/* Back faces provide a thin atmospheric limb; the opaque sphere hides its interior. */}
         <mesh
           geometry={globe}
-          scale={DOMAIN_RADIUS * 1.028}
+          scale={DOMAIN_RADIUS * (active ? 1.045 : 1.028)}
           name={`domain-atmosphere-${domain.id}`}
         >
           <meshBasicMaterial
             color={0xa8d8ef}
             transparent
-            opacity={0.24}
+            opacity={active ? 0.4 : hovered ? 0.3 : 0.2}
             side={THREE.BackSide}
             depthWrite={false}
           />
         </mesh>
         {cloud.index?.count ? (
           <mesh
+            ref={clouds}
             geometry={cloud}
             material={cloudMaterial}
             scale={DOMAIN_RADIUS}

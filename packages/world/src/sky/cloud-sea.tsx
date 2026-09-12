@@ -11,7 +11,11 @@ import { hopPose } from "../avatar/hop.js";
 import { seeded } from "../island/random.js";
 import { CLOUD_CARRIER_FOOT_OFFSET, type CloudCarrierTarget } from "./cloud-carrier-contract.js";
 import { CLOUD_RENDER_ORDER, CLOUD_TONES, createCloudMaterials } from "./cloud-material.js";
-import { CLOUD_BANK_SUPPORT_HEIGHT, createCloudVolumeParts } from "./cloud-volume.js";
+import {
+  CLOUD_BANK_SUPPORT_HEIGHT,
+  CLOUD_VOLUME_CONTRACT,
+  createCloudVolumeParts,
+} from "./cloud-volume.js";
 import { renderTier } from "./tier.js";
 import { usePrefersReducedMotion } from "../reduced-motion.js";
 
@@ -335,6 +339,26 @@ export interface CuteCloudLayout {
   readonly underbellies: readonly CuteCloudUnderbelly[];
 }
 
+export interface ArchipelagoCloudFrame {
+  readonly radius: number;
+  /** Lowest actual root in this projection; scenery clouds remain below it. */
+  readonly floor: number;
+}
+
+const ARCHIPELAGO_BANK_ANCHORS = [
+  [-13.1, -8.4, 0.67],
+  [7.05, -2.44, 0.7],
+  [-7.63, -1.74, 0.55],
+  [4.78, -15.13, 0.62],
+  [0.66, -16.71, 0.62],
+  [-6.09, 3.44, 0.57],
+  [7.05, 1.52, 0.63],
+  [9.04, -9.22, 0.48],
+] as const;
+// Broader cotton shoulders, not upright grey pebbles. The carrier is excluded
+// from this transform and keeps its exact foot-support datum.
+const ARCHIPELAGO_CLOUD_HEIGHT_SCALE = 1.22;
+
 /** Vary a whole bank, not its constituent balls. XZ stays in the unchanged
  * 1.2-per-scale envelope, including all four shoulders and every yaw.
  */
@@ -402,11 +426,31 @@ export function cuteCloudLayout(
   extent: number,
   level: number,
   quality?: CuteCloudQuality,
+  frame?: ArchipelagoCloudFrame,
 ): CuteCloudLayout {
   const resolvedQuality = qualityFrom(quality);
   const resolvedExtent = safeExtent(extent);
   const resolvedLevel = safeLevel(level);
-  const puffs = cloudPuffs(resolvedExtent, resolvedQuality === "mobile", resolvedLevel);
+  const basePuffs = cloudPuffs(resolvedExtent, resolvedQuality === "mobile", resolvedLevel);
+  const puffs = frame
+    ? basePuffs.map((puff, index): CloudPuff => {
+        if (index === basePuffs.length - 1) return puff;
+        const anchor = ARCHIPELAGO_BANK_ANCHORS[index % ARCHIPELAGO_BANK_ANCHORS.length]!;
+        const unit = clamp(frame.radius, 3, 5);
+        const scale = unit * anchor[2];
+        return {
+          ...puff,
+          scale,
+          position: [
+            anchor[0] * unit,
+            frame.floor -
+              3 -
+              scale * CLOUD_VOLUME_CONTRACT.crownHeightMax * ARCHIPELAGO_CLOUD_HEIGHT_SCALE,
+            anchor[1] * unit,
+          ],
+        };
+      })
+    : basePuffs;
   const lobes: CuteCloudLobe[] = [];
   const underbellies: CuteCloudUnderbelly[] = [];
 
@@ -419,7 +463,9 @@ export function cuteCloudLayout(
       ]!;
     const scale: readonly [number, number, number] = [
       silhouette.stretchX * puff.scale,
-      silhouette.stretchY * puff.scale,
+      silhouette.stretchY *
+        puff.scale *
+        (frame && puffIndex !== puffs.length - 1 ? ARCHIPELAGO_CLOUD_HEIGHT_SCALE : 1),
       silhouette.stretchZ * puff.scale,
     ];
     const carrier = puffIndex === puffs.length - 1;
@@ -434,7 +480,7 @@ export function cuteCloudLayout(
       position: [puff.position[0], puff.position[1] + supportLift, puff.position[2]],
       scale,
       rotationY: variation * 0.22 + silhouette.yaw,
-      color: scaleHex(tone.tone, tone.lift),
+      color: scaleHex(tone.tone, frame && !carrier ? Math.max(0.94, tone.lift) : tone.lift),
       puffIndex,
     };
     lobes.push(bank);
@@ -528,6 +574,7 @@ export interface CuteCloudSeaProps {
   readonly carrierTarget?: CloudCarrierTarget | null;
   /** Development evidence key; it is omitted from production callers. */
   readonly carrierSurface?: "world" | "planet";
+  readonly frame?: ArchipelagoCloudFrame;
 }
 
 /**
@@ -545,11 +592,12 @@ export function CuteCloudSea({
   drift = true,
   carrierTarget,
   carrierSurface,
+  frame,
 }: CuteCloudSeaProps) {
   const resolvedQuality = qualityFrom(quality);
   const layout = useMemo(
-    () => cuteCloudLayout(extent, level, resolvedQuality),
-    [extent, level, resolvedQuality],
+    () => cuteCloudLayout(extent, level, resolvedQuality, frame),
+    [extent, level, resolvedQuality, frame?.radius, frame?.floor],
   );
   const group = useRef<THREE.Group>(null);
   const reducedMotion = usePrefersReducedMotion();

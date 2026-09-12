@@ -37,6 +37,7 @@ export type InspectorTechniqueLockId =
   | "lessonNode"
   | "undersideWorldLod"
   | "domainPlanet";
+// Course landscape uses the existing landmark lock, not an extra renderer.
 
 export interface InspectorAsset {
   readonly key: string;
@@ -188,6 +189,8 @@ export type InspectorProjectionId =
   | "grass"
   | "treeTrunk"
   | "treeCrown"
+  | "courseTrees"
+  | "courseLandscape"
   | "bushCrown"
   | "campfire"
   | "medallion"

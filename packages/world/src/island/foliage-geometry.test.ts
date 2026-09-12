@@ -71,7 +71,7 @@ describe("course crown geometry budgets", () => {
     expect(bush.getIndex()?.count).toBe(COURSE_BUSH_CROWN_TRIANGLES_PER_LOBE * 3);
     // Welded without split UV seams: detail 1 has 42 vertices, detail 0 has 12 vertices
     expect(tree.getAttribute("position")?.count).toBe(42);
-    expect(bush.getAttribute("position")?.count).toBe(12);
+    expect(bush.getAttribute("position")?.count).toBe(42);
     normalsAreUnit(tree);
     normalsAreUnit(bush);
     tree.dispose();
@@ -194,14 +194,16 @@ describe("crown lobe transforms", () => {
 });
 
 describe("world foliage source", () => {
-  it("retires the donor world path; the only distant tree is the 12-triangle remote-props projection", () => {
+  it("retires the donor world path; distant crowns use the shared procedural miniature kit", () => {
     const source = readFileSync(resolve(here, "island-foliage-render.tsx"), "utf8");
     const remote = readFileSync(resolve(here, "remote-props.ts"), "utf8");
     const dressing = readFileSync(resolve(here, "island-dressing-render.tsx"), "utf8");
     expect(source).not.toContain("WorldTreeSilhouette");
     expect(source).not.toContain("ConeGeometry");
     expect(dressing).not.toContain('detail === "world"');
-    expect(remote).toContain("REMOTE_TREE_TRIANGLES = 12");
+    expect(remote).toContain("REMOTE_TREE_TRIANGLES = 292");
+    expect(remote).toContain("miniatureLayoutFor");
+    expect(remote).toContain("createMiniatureAsset");
     expect(remote).toContain("createRemoteTreeGeometry");
     expect(remote).not.toContain("useIslandGLTF");
     expect(source).not.toMatch(/MeshSurfaceSampler/);

@@ -8,6 +8,7 @@ import { humanClick, waitForStableBox } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { ONLINE_ORIGIN } from "./ports.js";
 import { namedStep } from "./harness/step.js";
+import { waitForCourseTrees } from "./harness/course-foliage.js";
 
 const DEFAULT_CAPTURE_DIR = fileURLToPath(
   new URL("../SCRATCH/e2e/continuous-course", import.meta.url),
@@ -125,15 +126,12 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
   mkdirSync(CAPTURE_DIR, { recursive: true });
 
   await namedStep(page, `[${vp.name}] 打开课程岛直达地址并等待就绪`, async () => {
-    const glbCompleted = new Set<string>();
     const glbFailures: string[] = [];
     page.on("response", (res) => {
       const url = res.url();
       if (url.includes(".glb")) {
         if (!res.ok()) {
           glbFailures.push(`${url} (HTTP ${res.status()})`);
-        } else {
-          glbCompleted.add(url);
         }
       }
     });
@@ -145,17 +143,10 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
     await expect(page.locator(".stagewrap canvas")).toBeVisible({ timeout: 30_000 });
     await expect(page.locator(".picked--left")).toBeVisible({ timeout: 30_000 });
 
-    // 等待关键植被与修饰 GLB 资产下载完成 (treeTrunks.glb 依然下载；bush 已由二十面体实心几何替代，不再拉取 bushEmitter.glb)
-    await expect
-      .poll(
-        () => {
-          const completed = [...glbCompleted];
-          const hasTree = completed.some((u) => u.includes("treeTrunks.glb"));
-          return hasTree;
-        },
-        { timeout: 30_000 },
-      )
-      .toBe(true);
+    // R46 complete tree fields replace donor-trunk downloads. Wait for the
+    // actual planned number of rendered tree instances on the visible canvas,
+    // not a retired asset URL (which made WebKit wait forever for no reason).
+    await waitForCourseTrees(page);
 
     if (glbFailures.length > 0) {
       throw new Error(`Dressing asset HTTP load failed: ${glbFailures.join(", ")}`);
@@ -250,19 +241,22 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
       await expect(route).not.toHaveAttribute("open", "");
     }
 
-    // 在视口中寻找非遮挡的 Canvas 点位
+    // Search the actual canvas, not four fixed window fractions. The shared
+    // breadcrumb/tool bars move a narrow canvas below the window midpoint.
+    // A real hit-test still rejects every card, label and opaque toolbar.
     const unobstructedPoint = await page.evaluate(() => {
-      const canvas = document.querySelector(".stagewrap canvas");
+      const canvas = document.querySelector(".stagewrap:not([hidden]) canvas");
       if (!canvas) return null;
-      const candidates = [
-        { x: Math.round(window.innerWidth * 0.55), y: Math.round(window.innerHeight * 0.45) },
-        { x: Math.round(window.innerWidth * 0.6), y: Math.round(window.innerHeight * 0.4) },
-        { x: Math.round(window.innerWidth * 0.5), y: Math.round(window.innerHeight * 0.5) },
-        { x: Math.round(window.innerWidth * 0.5), y: Math.round(window.innerHeight * 0.35) },
-      ];
-      for (const pt of candidates) {
-        if (document.elementFromPoint(pt.x, pt.y) === canvas) {
-          return pt;
+      const rect = canvas.getBoundingClientRect();
+      const left = Math.max(0, rect.left),
+        top = Math.max(0, rect.top);
+      const width = Math.min(innerWidth, rect.right) - left;
+      const height = Math.min(innerHeight, rect.bottom) - top;
+      if (width <= 0 || height <= 0) return null;
+      for (const fy of [0.65, 0.8, 0.5, 0.35, 0.2]) {
+        for (const fx of [0.5, 0.3, 0.7, 0.15, 0.85]) {
+          const pt = { x: Math.round(left + width * fx), y: Math.round(top + height * fy) };
+          if (document.elementFromPoint(pt.x, pt.y) === canvas) return pt;
         }
       }
       return null;

@@ -57,9 +57,11 @@ describe("domain labels", () => {
           />,
         ),
       );
-      expect(nodes.get("ai-foundations")?.textContent).toBe("AI 基础");
+      expect(nodes.get("ai-foundations")?.textContent).toBe("AI 基础已选");
+      expect(nodes.get("ai-foundations")?.textContent).not.toContain("暂未发布");
       expect(nodes.get("ai-foundations")?.dataset.active).toBe("true");
       expect(nodes.get("ai-media")?.textContent).toContain("暂未发布");
+      expect(nodes.get("ai-media")?.textContent).not.toContain("已选");
     } finally {
       await act(async () => root.unmount());
     }

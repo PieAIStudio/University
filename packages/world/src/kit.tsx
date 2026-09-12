@@ -357,17 +357,26 @@ export function AssetField({
   at,
   preserveMap = true,
   castShadow = true,
+  materialTreatment,
 }: {
   readonly src: string;
   readonly at: readonly Placement[];
   readonly preserveMap?: boolean;
   readonly castShadow?: boolean;
+  /** Optional art treatment of the committed clone, never the cached donor. */
+  readonly materialTreatment?: AssetMaterialTreatment;
 }) {
   const parts = usePartsFromSource(src, preserveMap);
   return (
     <>
       {parts.map((part, index) => (
-        <PartField key={`${src}-${index}`} part={part} at={at} castShadow={castShadow} />
+        <PartField
+          key={`${src}-${index}`}
+          part={part}
+          at={at}
+          castShadow={castShadow}
+          materialTreatment={materialTreatment}
+        />
       ))}
     </>
   );
@@ -792,14 +801,21 @@ export function BatchedAssetField({
   return <primitive object={batch} dispose={null} />;
 }
 
+export type AssetMaterialTreatment = (
+  material: THREE.Material,
+  normalizedModelMatrix: THREE.Matrix4,
+) => void;
+
 function PartField({
   part,
   at,
   castShadow = true,
+  materialTreatment,
 }: {
   part: Part;
   at: readonly Placement[];
   castShadow?: boolean;
+  materialTreatment?: AssetMaterialTreatment;
 }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
   const ownedRef = useRef<OwnedPartResources | null>(null);
@@ -821,6 +837,12 @@ function PartField({
       geometry,
       material: repaint(part.sourceMaterial, part.preserveMap),
     };
+    try {
+      materialTreatment?.(resources.material, part.offset);
+    } catch (error) {
+      disposeOwnedPartResources([resources]);
+      throw error;
+    }
     ownedRef.current = resources;
     setOwned(resources);
 
@@ -828,7 +850,7 @@ function PartField({
       if (ownedRef.current === resources) ownedRef.current = null;
       disposeOwnedPartResources([resources]);
     };
-  }, [part]);
+  }, [part, materialTreatment]);
 
   useLayoutEffect(() => {
     const target = mesh.current;

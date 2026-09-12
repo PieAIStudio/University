@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 
-import { WORLD_DISTANCE_MIN } from "./controls";
+import { WORLD_HOME_DISTANCE } from "./controls";
 import { frameWorld } from "./frame";
 
 describe("frameWorld", () => {
@@ -22,7 +22,7 @@ describe("frameWorld", () => {
 
     const from = new THREE.Vector3(...framed.cameraFrom);
     const at = new THREE.Vector3(...framed.lookAt);
-    expect(from.distanceTo(at)).toBeCloseTo(WORLD_DISTANCE_MIN, 5);
+    expect(from.distanceTo(at)).toBeCloseTo(WORLD_HOME_DISTANCE, 5);
   });
 
   /*
@@ -53,7 +53,7 @@ describe("frameWorld", () => {
     expect(framed.lookAt[2]).toBe(0);
     const from = new THREE.Vector3(...framed.cameraFrom);
     const at = new THREE.Vector3(...framed.lookAt);
-    expect(from.distanceTo(at)).toBeCloseTo(WORLD_DISTANCE_MIN, 5);
+    expect(from.distanceTo(at)).toBeCloseTo(WORLD_HOME_DISTANCE, 5);
     const only = new THREE.Vector3(7, 2, -14);
     expect(frameWorld(only, [{ position: only }]).lookAt).toEqual(only.toArray());
   });

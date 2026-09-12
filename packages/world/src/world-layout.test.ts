@@ -67,6 +67,18 @@ describe("ordered archipelago shoals", () => {
                 expect(Math.hypot(a.x - b.x, a.z - b.z) - minimum).toBeGreaterThanOrEqual(
                   5.2 - 1e-6,
                 );
+              } else {
+                const near = a.z >= b.z ? entry : peer;
+                const far = a.z >= b.z ? peer : entry;
+                if (far.radius >= near.radius * 1.25) {
+                  const side = Math.abs(a.x - b.x - (a.z - b.z) * 0.16);
+                  const down = Math.abs(a.z - b.z) * 0.59;
+                  expect(
+                    side >= far.radius * 0.5 + near.radius * 0.7 + 0.45 - 1e-6 ||
+                      down >= far.radius * 1.35 * 0.81 + near.radius * 0.75 + 0.9 - 1e-6,
+                    `${entry.key}/${peer.key}: a large rear root must leave the foreground miniature legible`,
+                  ).toBe(true);
+                }
               }
             }
           }

@@ -34,6 +34,10 @@ export interface RemoteBaseGeometry {
   readonly indices: Uint16Array | Uint32Array;
   readonly vertexCount: number;
   readonly triangleCount: number;
+  /** Emitted top range, for optional surface baking; never inferred from normals. */
+  readonly topTriangleCount?: number;
+  /** Top plus the first turf band. Remaining cliff vertices use a neutral texel. */
+  readonly surfaceVertexEnd?: number;
   readonly bounds: THREE.Box3;
   readonly radius: number;
 }
@@ -135,6 +139,8 @@ export function buildRemoteBaseGeometry(
       indices,
       vertexCount,
       triangleCount,
+      topTriangleCount: shape.counts.topTriangles,
+      surfaceVertexEnd: terrain.userData.miniatureSurfaceVertexEnd as number | undefined,
       bounds,
       radius,
     };
@@ -223,7 +229,9 @@ export function buildRemoteIslandBatch(
     const { positions, normals, colors, indices, vertexCount, triangleCount } = base;
 
     const islandBounds = new THREE.Box3();
-    const dimMultiplier = dimmed ? 0.62 : 1.0;
+    // "Later" is already explicit in DOM. Keep its landscape inviting rather
+    // than turning every unstarted course into the same muddy silhouette.
+    const dimMultiplier = dimmed ? 0.9 : 1.0;
 
     const px = position.x;
     const py = position.y + lift;

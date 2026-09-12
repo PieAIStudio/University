@@ -25,6 +25,7 @@ import {
   clampLabelOutOfChrome,
   FOLLOW_CLEARANCE,
   labelBox,
+  islandCaptionLeader,
   placeLabels,
   type LabelAnchor,
   type LabelBox,
@@ -165,13 +166,14 @@ export const COURSE_DISTANCE_MAX = 72;
  * as it has courses. Ninety units back from a road that narrow spends most of
  * the frame on sea, and the islands come out at about 4% of the viewport.
  *
- * 62 puts a course island at roughly the size a lesson marker gets inside a
- * course, which is the size at which a thing reads as something you click. The
- * span is 2.9×, inside the ≤3× rule; polar is 54°, so camera height at min is
- * `WORLD_DISTANCE_MIN * cos(polar)` ≈ 36, well above the largest island.
+ * The approved arrival remains at 62. The old arrival was also the dolly
+ * minimum, so trying to inspect the finished miniatures did nothing. A 48–144
+ * range preserves the 3× envelope and lets normal input reveal their craft.
+ * At the pinned 54° polar, the near eye is still above the largest island.
  */
-export const WORLD_DISTANCE_MIN = 62;
-export const WORLD_DISTANCE_MAX = 180;
+export const WORLD_HOME_DISTANCE = 62;
+export const WORLD_DISTANCE_MIN = 48;
+export const WORLD_DISTANCE_MAX = 144;
 export function Controls({
   target,
   polar,
@@ -480,6 +482,9 @@ export function LabelProbe({
   const { camera, gl, size, scene } = useThree();
   const scratch = useRef(new THREE.Vector3());
   const avatarBounds = useRef(new THREE.Box3());
+  const sceneryBounds = useRef(new THREE.Box3());
+  const sceneryFrustum = useRef(new THREE.Frustum());
+  const sceneryProjection = useRef(new THREE.Matrix4());
   const chromeBoxesRef = useRef<readonly LabelBox[]>([]);
   const labelBoxesRef = useRef<readonly LabelBox[]>([]);
   const followViewportHeightRef = useRef<number | null>(null);
@@ -592,6 +597,37 @@ export function LabelProbe({
           top: ((1 - bounds.maxY) / 2) * size.height - 6,
           bottom: ((1 - bounds.minY) / 2) * size.height + 6,
         });
+      }
+    }
+    // A neighbour's caption must not cut through a windmill or tree crown.
+    // Bounds are emitted once by the actual batched geometry producer; only
+    // eight corners per prop enter this existing label-layout loop.
+    sceneryFrustum.current.setFromProjectionMatrix(
+      sceneryProjection.current.multiplyMatrices(
+        camera.projectionMatrix,
+        camera.matrixWorldInverse,
+      ),
+    );
+    for (const name of ["remote-props-trees", "remote-props-landmarks"]) {
+      const mesh = scene.getObjectByName(name) as THREE.Mesh | undefined;
+      const boxes = mesh?.geometry?.userData.miniatureSceneryBounds as
+        | readonly { min: number[]; max: number[] }[]
+        | undefined;
+      if (!mesh || !boxes) continue;
+      for (const box of boxes) {
+        sceneryBounds.current.min.fromArray(box.min);
+        sceneryBounds.current.max.fromArray(box.max);
+        sceneryBounds.current.applyMatrix4(mesh.matrixWorld);
+        if (!sceneryFrustum.current.intersectsBox(sceneryBounds.current)) continue;
+        const bounds = projectedAvatarBounds(sceneryBounds.current, camera, scratch.current);
+        if (bounds.maxX < -1 || bounds.minX > 1 || bounds.maxY < -1 || bounds.minY > 1) continue;
+        if (bounds.minX < bounds.maxX && bounds.minY < bounds.maxY)
+          reserved.push({
+            left: (bounds.minX + 1) * 0.5 * size.width,
+            right: (bounds.maxX + 1) * 0.5 * size.width,
+            top: (1 - bounds.maxY) * 0.5 * size.height,
+            bottom: (1 - bounds.minY) * 0.5 * size.height,
+          });
       }
     }
     const pinned: {
@@ -761,6 +797,18 @@ export function LabelProbe({
       const marker = markers.find((entry) => entry.id === placement.id);
       if (!marker) continue;
       writePlacement(element, marker, placement.x, placement.y, placement.visible);
+      const anchor = projectedById.get(placement.id);
+      const leader =
+        marker.kind === "course" && anchor && placement.visible
+          ? islandCaptionLeader(anchor, placement, element.offsetWidth, element.offsetHeight)
+          : null;
+      element.dataset.labelLeader = leader ? "true" : "false";
+      if (leader) {
+        element.style.setProperty("--leader-x", `${leader.x}px`);
+        element.style.setProperty("--leader-y", `${leader.y}px`);
+        element.style.setProperty("--leader-length", `${leader.length}px`);
+        element.style.setProperty("--leader-angle", `${leader.angle}rad`);
+      }
       if (placement.visible) {
         const candidate = candidates.find((entry) => entry.id === placement.id);
         if (candidate) {

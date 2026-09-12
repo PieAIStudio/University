@@ -16,6 +16,10 @@ function projectionId(mesh: THREE.Mesh): InspectorProjectionId | null {
   if (mesh.geometry.name === "IslandGrassBladeGeometry") return "grass";
   if (mesh.userData.islandLookTreeTrunkTriangles !== undefined) return "treeTrunk";
   if (mesh.name === "course-tree-crowns") return "treeCrown";
+  if (mesh.name === "course-fir-trees" || mesh.name === "course-broadleaf-trees")
+    return "courseTrees";
+  if (["course-rock-outcrops", "course-garden-flora", "course-coastal-spring"].includes(mesh.name))
+    return "courseLandscape";
   if (mesh.name === "course-bush-crowns") return "bushCrown";
   if (mesh.name === "island-campfire-flames") return "campfire";
   if (mesh.name === "hex-grid-lesson-plinths") return "medallion";
@@ -136,9 +140,12 @@ export function measureProjectedGeometry(
             : null;
       if (kind) {
         const previousKind = projected[kind];
+        const placements = Number.isInteger(mesh.userData.remotePlacementCount)
+          ? (mesh.userData.remotePlacementCount as number)
+          : instances;
         projected[kind] = {
           triangles: (previousKind?.triangles ?? 0) + triangles,
-          instances: (previousKind?.instances ?? 0) + instances,
+          instances: (previousKind?.instances ?? 0) + placements,
           meshes: (previousKind?.meshes ?? 0) + 1,
         };
       }

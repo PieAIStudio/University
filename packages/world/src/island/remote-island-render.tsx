@@ -14,6 +14,7 @@ import {
   type RemoteIslandPlacement,
 } from "./remote-island-field.js";
 import { RemotePropsField } from "./remote-props-render.js";
+import { createMiniatureSurfaceAtlas } from "./miniature-surface-atlas.js";
 
 export interface RemoteIslandFieldProps {
   readonly islands: readonly RemoteIslandPlacement[];
@@ -30,17 +31,23 @@ export function RemoteIslandField({
 }: RemoteIslandFieldProps) {
   const hoveredIsland = useRef<number | null>(null);
   const batch = useMemo<RemoteIslandBatch>(() => buildRemoteIslandBatch(islands), [islands]);
+  const surface = useMemo(
+    () => (showProps && islands.length > 0 ? createMiniatureSurfaceAtlas(islands, batch) : null),
+    [islands, batch, showProps],
+  );
 
   useEffect(() => () => batch.dispose(), [batch]);
+  useEffect(() => () => surface?.dispose(), [surface]);
 
   const material = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
         vertexColors: true,
+        map: surface?.texture ?? null,
         roughness: 0.68,
         metalness: 0,
       }),
-    [],
+    [surface],
   );
 
   useEffect(() => () => material.dispose(), [material]);
@@ -55,6 +62,7 @@ export function RemoteIslandField({
         ...(import.meta.env.DEV ? { remoteIslandIds: islands.map((island) => island.id) } : {}),
         remoteTriangleCount: batch.triangleCount,
         remoteSharedGeometry: true,
+        ...(surface ? { surfaceAtlas: surface.info } : {}),
         remoteDrawModel: "one-merged-continuous-mesh",
       }}
     >
@@ -101,7 +109,7 @@ export function RemoteIslandField({
           }
         }}
       />
-      {showProps ? <RemotePropsField islands={islands} /> : null}
+      {showProps ? <RemotePropsField islands={islands} onPick={onPick} onHover={onHover} /> : null}
     </group>
   );
 }

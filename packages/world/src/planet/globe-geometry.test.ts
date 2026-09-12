@@ -245,12 +245,25 @@ describe("domain surface texture", () => {
   it("stays within 2 MiB per domain and uses the shared linear colour pipeline", () => {
     const first = createDomainSurfaceTexture("programming");
     const second = createDomainSurfaceTexture("programming");
-    expect(first.image.data).not.toBeNull();
-    expect(first.image.data!.byteLength).toBeLessThanOrEqual(2 * 1024 * 1024);
-    expect(first.colorSpace).toBe(THREE.LinearSRGBColorSpace);
-    expect(first.wrapS).toBe(THREE.RepeatWrapping);
-    expect(first.image.data).toEqual(second.image.data);
-    first.dispose();
-    second.dispose();
+    try {
+      expect(first.image.data).not.toBeNull();
+      expect(first.image.data!.byteLength).toBeLessThanOrEqual(2 * 1024 * 1024);
+      expect(first.colorSpace).toBe(THREE.LinearSRGBColorSpace);
+      expect(first.wrapS).toBe(THREE.RepeatWrapping);
+      const a = first.image.data!,
+        b = second.image.data!;
+      expect(a.constructor).toBe(b.constructor);
+      expect(a.byteLength).toBe(b.byteLength);
+      const left = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
+      const right = new Uint8Array(b.buffer, b.byteOffset, b.byteLength);
+      // Compare EVERY emitted byte without asking the assertion library to
+      // recursively format two million numeric properties. This preserves
+      // exact determinism and reports the first changed offset on failure.
+      const difference = left.findIndex((value, index) => value !== right[index]);
+      expect(difference, "first non-deterministic texture byte").toBe(-1);
+    } finally {
+      first.dispose();
+      second.dispose();
+    }
   });
 });

@@ -1,137 +1,155 @@
-/**
- * R3F component for batch rendering lightweight remote props.
- *
- * Renders all catalogue landmark silhouettes and tree cones with 2 global
- * InstancedMesh draw calls, matching the exact worldmesh elevations.
- */
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+/** One shared miniature kit, three batched layers; ground shade is in the atlas. */
+import { useFrame, type ThreeEvent } from "@react-three/fiber";
+import { useEffect, useMemo } from "react";
 import * as THREE from "three";
-
-import {
-  createRemotePavilionGeometry,
-  createRemoteTreeGeometry,
-  planRemotePropsCatalogue,
-  REMOTE_PAVILION_TRIANGLES,
-  REMOTE_TREE_TRIANGLES,
-} from "./remote-props.js";
+import { mergeBufferGeometries } from "three-stdlib";
+import { planRemotePropsCatalogue } from "./remote-props.js";
 import type { RemoteIslandPlacement } from "./remote-island-field.js";
-
-const DUMMY = new THREE.Object3D();
+import { buildMiniatureSurfaces, mergeMiniatureProps } from "./miniature-batch.js";
+import { usePrefersReducedMotion } from "../reduced-motion.js";
+import { islandLookFrozen } from "./island-surface-style.js";
 
 export interface RemotePropsFieldProps {
   readonly islands: readonly RemoteIslandPlacement[];
+  readonly onPick?: (index: number) => void;
+  readonly onHover?: (index: number | null) => void;
 }
+const triangles = (g: THREE.BufferGeometry) => (g.index?.count ?? 0) / 3;
 
-export function RemotePropsField({ islands }: RemotePropsFieldProps) {
-  const landmarkMeshRef = useRef<THREE.InstancedMesh>(null);
-  const treeMeshRef = useRef<THREE.InstancedMesh>(null);
-
+export function RemotePropsField({ islands, onPick, onHover }: RemotePropsFieldProps) {
+  const reduced = usePrefersReducedMotion();
   const plan = useMemo(() => planRemotePropsCatalogue(islands), [islands]);
-
-  const pavilionGeometry = useMemo(() => createRemotePavilionGeometry(), []);
-  const treeGeometry = useMemo(() => createRemoteTreeGeometry(), []);
-
-  const landmarkMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: 0xb5aba0,
-        roughness: 0.85,
-        metalness: 0.1,
-        flatShading: true,
-      }),
-    [],
-  );
-
-  const treeMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: 0x588b40,
-        roughness: 0.9,
-        metalness: 0.05,
-        flatShading: true,
-      }),
-    [],
-  );
-
+  const batch = useMemo(() => {
+    const trees = mergeMiniatureProps(plan.trees);
+    const props = mergeMiniatureProps([...plan.landmarks, ...plan.accents]);
+    const surfaces = buildMiniatureSurfaces(plan);
+    const scenery =
+      surfaces.bank.index?.count && props.index?.count
+        ? mergeBufferGeometries([props, surfaces.bank])!
+        : props;
+    scenery.userData.miniatureRanges = props.userData.miniatureRanges;
+    scenery.userData.miniatureSceneryBounds = props.userData.miniatureSceneryBounds;
+    if (scenery !== props) props.dispose();
+    surfaces.bank.dispose();
+    return { trees, scenery, water: surfaces.water };
+  }, [plan, islands]);
+  const materials = useMemo(() => {
+    const time = { value: 0 };
+    const solid = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.88,
+      metalness: 0,
+    });
+    const water = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.82,
+      metalness: 0,
+      side: THREE.DoubleSide,
+    });
+    water.onBeforeCompile = (shader) => {
+      shader.uniforms.uMiniatureTime = time;
+      shader.vertexShader = `varying vec3 vMiniaturePosition;\n${shader.vertexShader}`.replace(
+        "#include <begin_vertex>",
+        "#include <begin_vertex>\nvMiniaturePosition = position;",
+      );
+      shader.fragmentShader =
+        `uniform float uMiniatureTime;\nvarying vec3 vMiniaturePosition;\n${shader.fragmentShader}`.replace(
+          "#include <color_fragment>",
+          `#include <color_fragment>
+          float ripple = sin(vMiniaturePosition.y * 24.0 + vMiniaturePosition.z * 9.0 + uMiniatureTime * 2.0);
+          diffuseColor.rgb *= 1.0 + ripple * 0.055;`,
+        );
+    };
+    water.customProgramCacheKey = () => "miniature-water-v1";
+    return { solid, water, time };
+  }, []);
+  useFrame((_, delta) => {
+    if (!reduced && !islandLookFrozen()) materials.time.value += Math.min(0.05, Math.max(0, delta));
+  });
+  useEffect(() => () => Object.values(batch).forEach((g) => g.dispose()), [batch]);
   useEffect(
     () => () => {
-      pavilionGeometry.dispose();
-      treeGeometry.dispose();
-      landmarkMaterial.dispose();
-      treeMaterial.dispose();
+      materials.solid.dispose();
+      materials.water.dispose();
     },
-    [pavilionGeometry, treeGeometry, landmarkMaterial, treeMaterial],
+    [materials],
   );
-
-  useLayoutEffect(() => {
-    const landmarkMesh = landmarkMeshRef.current;
-    if (landmarkMesh && plan.landmarks.length > 0) {
-      plan.landmarks.forEach((landmark, index) => {
-        DUMMY.position.copy(landmark.position);
-        DUMMY.rotation.set(0, landmark.rotationY, 0);
-        DUMMY.scale.setScalar(landmark.scale);
-        DUMMY.updateMatrix();
-        landmarkMesh.setMatrixAt(index, DUMMY.matrix);
-        landmarkMesh.setColorAt(index, new THREE.Color().setScalar(landmark.dimmed ? 0.62 : 1));
-      });
-      landmarkMesh.instanceMatrix.needsUpdate = true;
-      if (landmarkMesh.instanceColor) landmarkMesh.instanceColor.needsUpdate = true;
-    }
-
-    const treeMesh = treeMeshRef.current;
-    if (treeMesh && plan.trees.length > 0) {
-      plan.trees.forEach((tree, index) => {
-        DUMMY.position.copy(tree.position);
-        DUMMY.rotation.set(0, tree.rotationY, 0);
-        DUMMY.scale.setScalar(tree.scale);
-        DUMMY.updateMatrix();
-        treeMesh.setMatrixAt(index, DUMMY.matrix);
-        treeMesh.setColorAt(index, new THREE.Color().setScalar(tree.dimmed ? 0.62 : 1));
-      });
-      treeMesh.instanceMatrix.needsUpdate = true;
-      if (treeMesh.instanceColor) treeMesh.instanceColor.needsUpdate = true;
-    }
-  }, [plan]);
-
-  if (plan.totalProps === 0) return null;
-
+  const totalTriangles = Object.values(batch).reduce((sum, g) => sum + triangles(g), 0);
+  const pickIndex = (event: ThreeEvent<MouseEvent | PointerEvent>) => {
+    const mesh = event.object as THREE.Mesh;
+    const ranges = mesh.geometry.userData.miniatureRanges as
+      | readonly { start: number; end: number; islandId: string }[]
+      | undefined;
+    const range =
+      typeof event.faceIndex === "number"
+        ? ranges?.find((r) => event.faceIndex! >= r.start && event.faceIndex! < r.end)
+        : undefined;
+    return range ? islands.findIndex((island) => island.id === range.islandId) : -1;
+  };
+  const events = {
+    onClick: (event: ThreeEvent<MouseEvent>) => {
+      const index = pickIndex(event);
+      if (index >= 0) {
+        event.stopPropagation();
+        onPick?.(index);
+      }
+    },
+    onPointerMove: (event: ThreeEvent<PointerEvent>) => {
+      const index = pickIndex(event);
+      if (index >= 0) {
+        event.stopPropagation();
+        onHover?.(index);
+      }
+    },
+    onPointerOut: () => onHover?.(null),
+  };
   return (
     <group
       name="remote-props"
       userData={{
         remoteProps: true,
         remotePropCount: plan.totalProps,
-        remoteLandmarkCount: plan.landmarks.length,
         remoteTreeCount: plan.trees.length,
-        remoteTriangleCount: plan.totalTriangles,
+        remoteLandmarkCount: plan.landmarks.length,
+        remoteAccentCount: plan.accents.length,
+        remoteTriangleCount: totalTriangles,
+        miniatureStyles: islands.map((island) => island.blueprint.themeSelection.recipeId),
       }}
     >
-      {plan.landmarks.length > 0 ? (
-        <instancedMesh
-          ref={landmarkMeshRef}
-          name="remote-props-landmarks"
-          args={[pavilionGeometry, landmarkMaterial, plan.landmarks.length]}
-          castShadow={false}
-          frustumCulled={false}
-          userData={{
-            remoteProps: true,
-            remotePropsKind: "landmark",
-            remoteTrianglesPerInstance: REMOTE_PAVILION_TRIANGLES,
-          }}
-        />
-      ) : null}
-      {plan.trees.length > 0 ? (
-        <instancedMesh
-          ref={treeMeshRef}
+      {triangles(batch.trees) > 0 ? (
+        <mesh
           name="remote-props-trees"
-          args={[treeGeometry, treeMaterial, plan.trees.length]}
-          castShadow={false}
+          geometry={batch.trees}
+          material={materials.solid}
+          {...events}
           frustumCulled={false}
           userData={{
             remoteProps: true,
             remotePropsKind: "tree",
-            remoteTrianglesPerInstance: REMOTE_TREE_TRIANGLES,
+            remotePlacementCount: plan.trees.length,
           }}
+        />
+      ) : null}
+      {triangles(batch.scenery) > 0 ? (
+        <mesh
+          name="remote-props-landmarks"
+          geometry={batch.scenery}
+          material={materials.solid}
+          {...events}
+          frustumCulled={false}
+          userData={{
+            remoteProps: true,
+            remotePropsKind: "landmark",
+            remotePlacementCount: plan.landmarks.length + plan.accents.length,
+          }}
+        />
+      ) : null}
+      {triangles(batch.water) > 0 ? (
+        <mesh
+          name="remote-props-water"
+          geometry={batch.water}
+          material={materials.water}
+          frustumCulled={false}
         />
       ) : null}
     </group>

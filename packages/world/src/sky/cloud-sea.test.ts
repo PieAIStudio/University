@@ -145,7 +145,7 @@ describe("cute cloud sea", () => {
     ).toBeGreaterThan(1);
   });
 
-  it("limits phone geometry while retaining the same shallow silhouette", () => {
+  it("limits phone geometry while retaining the shared rounded-bank silhouette", () => {
     const desktop = cuteCloudLayout(40, -5.2, "desktop");
     const mobile = cuteCloudLayout(40, -5.2, "mobile");
     const desktopHeight = desktop.lobes[5]!.scale[1];
@@ -167,9 +167,44 @@ describe("cute cloud sea", () => {
       const geometry = createCloudVolumeGeometry(segments.width, segments.height);
       const size = geometry.boundingBox!.getSize(new THREE.Vector3());
       expect(size.y).toBeGreaterThan(0.4);
-      expect(size.y / size.x).toBeLessThan(0.35);
+      // R44 replaces the old flat-bank art proportion, not its physical
+      // clearance, carrier support, instance counts or closed-shell tests.
+      expect(size.y / size.x).toBeGreaterThan(0.35);
+      expect(size.y / size.x).toBeLessThan(CLOUD_VOLUME_CONTRACT.verticalAspectMax);
       geometry.dispose();
     }
+  });
+
+  it("uses finite outward sculpture normals at every cloud detail level", () => {
+    const supports: number[][] = [];
+    for (const [width, height] of [
+      [9, 3],
+      [20, 6],
+      [32, 9],
+    ]) {
+      const geometry = createCloudVolumeGeometry(width!, height!);
+      try {
+        const positions = geometry.getAttribute("position"),
+          normals = geometry.getAttribute("normal");
+        const point = new THREE.Vector3(),
+          normal = new THREE.Vector3();
+        for (let i = 0; i < positions.count; i++) {
+          point.fromBufferAttribute(positions, i);
+          normal.fromBufferAttribute(normals, i);
+          if (
+            !normal.toArray().every(Number.isFinite) ||
+            Math.abs(normal.length() - 1) > 1e-5 ||
+            normal.dot(point) <= 0
+          )
+            throw new Error(`Invalid bank normal ${width}/${height}/${i}`);
+        }
+        supports.push(new THREE.Vector3().fromBufferAttribute(normals, 0).toArray());
+      } finally {
+        geometry.dispose();
+      }
+    }
+    expect(supports[0]).toEqual(supports[1]);
+    expect(supports[1]).toEqual(supports[2]);
   });
 
   it("keeps every sculpted crown below the turf contract", () => {

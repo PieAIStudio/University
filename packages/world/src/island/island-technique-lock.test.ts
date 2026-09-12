@@ -171,11 +171,11 @@ describe("Island technique lock", () => {
     expect(ISLAND_TECHNIQUE_LOCK.tree.technique).toContain("IcosahedronGeometry(1,1)");
     expect(ISLAND_TECHNIQUE_LOCK.tree.technique).toContain("course-only");
     expect(ISLAND_TECHNIQUE_LOCK.tree.technique).toContain("RemotePropsField");
-    expect(ISLAND_TECHNIQUE_LOCK.tree.technique).toContain("12-triangle cone trees");
+    expect(ISLAND_TECHNIQUE_LOCK.tree.technique).toContain("5 rounded trees");
     expect(ISLAND_TECHNIQUE_LOCK.tree.technique).not.toContain("callable");
     expect(ISLAND_TECHNIQUE_LOCK.tree.technique).not.toContain('detail="world"');
     expect(ISLAND_TECHNIQUE_LOCK.tree.budget).toContain("624 tris/tree");
-    expect(ISLAND_TECHNIQUE_LOCK.tree.budget).toContain("12 tris/tree");
+    expect(ISLAND_TECHNIQUE_LOCK.tree.budget).toContain("600 tris/asset");
     expect(ISLAND_TECHNIQUE_LOCK.tree.budget).toContain("0 course GLBs");
     expect(ISLAND_TECHNIQUE_LOCK.tree.budget).not.toContain("396");
     expect(
@@ -186,14 +186,14 @@ describe("Island technique lock", () => {
 
     expect(ISLAND_TECHNIQUE_LOCK.bush.technique).toContain("IcosahedronGeometry(1,0)");
     expect(ISLAND_TECHNIQUE_LOCK.bush.technique).toContain("no bushEmitter sampling");
-    expect(ISLAND_TECHNIQUE_LOCK.bush.budget).toContain("60 tris/bush");
+    expect(ISLAND_TECHNIQUE_LOCK.bush.budget).toContain("240 tris/bush");
 
     const treeLobe = createSmoothIcosahedron(COURSE_TREE_CROWN_DETAIL);
     expect(trianglesOf(treeLobe)).toBe(80);
     treeLobe.dispose();
 
     const bushLobe = createSmoothIcosahedron(COURSE_BUSH_CROWN_DETAIL);
-    expect(trianglesOf(bushLobe)).toBe(20);
+    expect(trianglesOf(bushLobe)).toBe(80);
     bushLobe.dispose();
 
     expect(
@@ -216,7 +216,7 @@ describe("Island technique lock", () => {
     expect(trianglesOf(worldShape.terrain)).toBe(REMOTE_ISLAND_TERRAIN_TRIANGLES);
     worldShape.terrain.dispose();
 
-    // 12-triangle procedural cone tree silhouette (0 course GLBs)
+    // 80-triangle shared rounded crown + trunk silhouette (0 course GLBs)
     const treeGeom = createRemoteTreeGeometry();
     expect(trianglesOf(treeGeom)).toBe(REMOTE_TREE_TRIANGLES);
     treeGeom.dispose();
@@ -228,20 +228,18 @@ describe("Island technique lock", () => {
 
     expect(ISLAND_TECHNIQUE_LOCK.landmark.technique).toContain("RemotePropsField");
     expect(ISLAND_TECHNIQUE_LOCK.landmark.technique).toContain(
-      "36-triangle stone pavilion silhouette",
+      "recipe-matched miniature focal assembly",
     );
-    expect(ISLAND_TECHNIQUE_LOCK.landmark.budget).toContain("36 tris/island");
+    expect(ISLAND_TECHNIQUE_LOCK.landmark.budget).toContain("600 tris per miniature asset");
     expect(ISLAND_TECHNIQUE_LOCK.landmark.budget).toContain("0 course GLBs");
 
     // Remote props and island max budgets match exact arithmetic
-    expect(REMOTE_PROPS_MAX_TRIANGLES_PER_ISLAND).toBe(
-      REMOTE_PAVILION_TRIANGLES + REMOTE_TREE_MAX_PER_ISLAND * REMOTE_TREE_TRIANGLES,
-    );
-    expect(REMOTE_PROPS_MAX_TRIANGLES_PER_ISLAND).toBe(84);
+    expect(REMOTE_TREE_MAX_PER_ISLAND).toBe(5);
+    expect(REMOTE_PROPS_MAX_TRIANGLES_PER_ISLAND).toBe(6000);
     expect(REMOTE_ISLAND_MAX_BUDGET).toBe(
       REMOTE_ISLAND_TERRAIN_TRIANGLES + REMOTE_PROPS_MAX_TRIANGLES_PER_ISLAND,
     );
-    expect(REMOTE_ISLAND_MAX_BUDGET).toBe(724);
+    expect(REMOTE_ISLAND_MAX_BUDGET).toBe(6640);
 
     // Technique strings explicitly state truthful scoping and bounding
     expect(ISLAND_TECHNIQUE_LOCK.tree.technique).toContain(

@@ -25,7 +25,7 @@ interface LocalIsland extends WorldLayoutIsland {
 
 // The smaller gap makes neighbours read together; the larger gap is actual
 // unoccupied sky between their maximum-state outlines, not centre spacing.
-const NEIGHBOUR_GAP = 0.9;
+const NEIGHBOUR_GAP = 1.15;
 const SKY_CHANNEL = 5.2;
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
@@ -80,7 +80,21 @@ function clearNeighbour(candidate: LocalIsland, peer: LocalIsland): boolean {
   // in the foreshortened ground plane as well as between physical outlines.
   // This is conservative placement slack, not a replacement for DOM layout
   // or an assertion that a 44px target fits at every possible zoom level.
-  return dx * dx + dz * dz >= groundGap ** 2 && dx * dx + dz * dz * 0.35 >= 3.5 ** 2;
+  if (dx * dx + dz * dz < groundGap ** 2 || dx * dx + dz * dz * 0.35 < 3.5 ** 2) return false;
+  // A large rear island's tapered root must not swallow a small foreground
+  // miniature. Reserve its default-approach silhouette as well as its ground
+  // circle. Equal peers keep the existing compact shoals; this is a bounded
+  // composition constraint, not camera/progress-dependent layout or a global
+  // spacing multiplier. The slight oblique approach is included in side slack.
+  const near = dz >= 0 ? candidate : peer;
+  const far = dz >= 0 ? peer : candidate;
+  if (far.radius < near.radius * 1.25) return true;
+  const sideways = Math.abs(dx - dz * 0.16);
+  // Protect the shoulder as well as the tip: the earlier half-radius margin
+  // left a small windmill island half hidden behind the main rock wall.
+  const sideClear = far.radius * 0.79 + near.radius * 0.86 + 0.5;
+  const downClear = far.radius * 1.35 * 0.81 + near.radius * 0.75 + NEIGHBOUR_GAP;
+  return sideways >= sideClear || Math.abs(dz) * 0.59 >= downClear;
 }
 
 /** An open, tapered fan around the largest real course, not a closed orbit.
@@ -123,6 +137,40 @@ function localGroup(group: readonly WorldLayoutIsland[], index: number): LocalIs
         ) {
           candidate = point;
           break;
+        }
+      }
+    }
+    // A tiny neighbour beside a very large root can exhaust the preferred
+    // anchor fan. Search around an already placed member of the SAME shoal
+    // before the finite emergency fallback; otherwise the extra root safety
+    // could turn it into an orphan. Earlier positions remain untouched.
+    if (candidate === null) {
+      recovery: for (const peer of placed) {
+        const base = Math.max(
+          3.5,
+          (peer.radius + entry.radius) * WORLD_ISLAND_SEPARATION_GAP + NEIGHBOUR_GAP,
+        );
+        for (let step = 0; step < 4; step++) {
+          const radius = base + step * 0.3;
+          for (let slot = 0; slot < 64; slot++) {
+            const turn = angle + slot * GOLDEN_ANGLE;
+            const point = {
+              ...entry,
+              x: peer.x + Math.cos(turn) * radius,
+              z: peer.z + Math.sin(turn) * radius,
+            };
+            if (
+              placed.every((other) => clearNeighbour(point, other)) &&
+              placed.some(
+                (other) =>
+                  Math.hypot(point.x - other.x, point.z - other.z) - point.radius - other.radius <=
+                  3.5,
+              )
+            ) {
+              candidate = point;
+              break recovery;
+            }
+          }
         }
       }
     }

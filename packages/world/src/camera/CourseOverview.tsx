@@ -44,16 +44,50 @@ export function CourseOverviewProbe({
       const stage = gl.domElement.closest<HTMLElement>(".stagewrap");
       const shell = gl.domElement.closest<HTMLElement>(".app-shell");
       const obstacles = stage && shell ? mapOverlayObstacles(stage, shell).labels : [];
-      const bounds = new THREE.Box3()
-        .setFromObject(terrain)
-        .union(new THREE.Box3().setFromObject(dressing));
+      // The tapered root is not a cuboid. Its empty lower corners used to
+      // consume most of the overview's space. Fit every rendered terrain
+      // vertex plus the conservative dressing envelope, without changing the
+      // normal course lens, the terrain, or any interaction target.
+      const mesh = terrain as THREE.Mesh;
+      const attribute = mesh.geometry.getAttribute("position");
+      terrain.updateWorldMatrix(true, false);
+      const supports = Array.from({ length: attribute.count }, (_, index) =>
+        new THREE.Vector3().fromBufferAttribute(attribute, index).applyMatrix4(terrain.matrixWorld),
+      );
+      const dressingBounds = new THREE.Box3().setFromObject(dressing);
+      if (!dressingBounds.isEmpty()) {
+        for (const x of [dressingBounds.min.x, dressingBounds.max.x])
+          for (const y of [dressingBounds.min.y, dressingBounds.max.y])
+            for (const z of [dressingBounds.min.z, dressingBounds.max.z])
+              supports.push(new THREE.Vector3(x, y, z));
+      }
+      const bounds = new THREE.Box3().setFromPoints(supports);
+      const eye = new THREE.Vector3(...eyeDirection).normalize();
+      const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), eye).normalize();
+      const up = new THREE.Vector3().crossVectors(eye, right).normalize();
+      const projectedSize = (axis: THREE.Vector3) => {
+        let low = Infinity,
+          high = -Infinity;
+        for (const point of supports) {
+          const value = point.dot(axis);
+          low = Math.min(low, value);
+          high = Math.max(high, value);
+        }
+        return high - low;
+      };
+      const subjectAspect = projectedSize(right) / Math.max(1e-6, projectedSize(up));
       onFrame(
-        frameCourseOverview(bounds, new THREE.Vector3(...eyeDirection), {
-          width: size.width,
-          height: size.height,
-          fov: camera.fov,
-          usable: overviewViewport(size.width, size.height, obstacles),
-        }),
+        frameCourseOverview(
+          bounds,
+          eye,
+          {
+            width: size.width,
+            height: size.height,
+            fov: camera.fov,
+            usable: overviewViewport(size.width, size.height, obstacles, subjectAspect),
+          },
+          supports,
+        ),
       );
     } catch {
       onError();

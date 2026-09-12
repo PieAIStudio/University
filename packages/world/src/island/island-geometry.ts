@@ -16,6 +16,7 @@ import {
 } from "./island-blueprint.js";
 import { hash } from "./random.js";
 import { cliffLobeAtAngle, coastalRockMask } from "./coast-profile.js";
+import { miniatureStyleFor } from "./miniature-style.js";
 import {
   barycentricXZ,
   buildSurfaceTriangleIndex,
@@ -95,6 +96,8 @@ const ROCK = new THREE.Color(0xa87950); // warm exposed slope
 const ROCK_DARK = new THREE.Color(0x704934); // steep brown faces
 const CLIFF = new THREE.Color(0xb0a58f); // exposed warm stone, not the path's brown soil
 const CLIFF_STONE_SHADE = new THREE.Color(0x746f73);
+const COURSE_CLIFF_FACE = new THREE.Color(0xaab5bd);
+const COURSE_CLIFF_RECESS = new THREE.Color(0x82909f);
 const CLIFF_BASE_DARK = new THREE.Color(0x5d3d32); // inspector fallback only
 // Creamy earth tones keep the route visibly separate from both the yellow-green
 // meadow and the warm brown cliff, without creating a second route mesh.
@@ -243,8 +246,11 @@ function barycentricHeight(
 /** The same cached top lattice as sampleIslandTerrainTop, without building
  * road clips, cliff buffers or GPU resources just to fit a decoration.
  */
-function terrainTopIndex(blueprint: IslandBlueprint): SurfaceTriangleIndex {
-  const lattice = getTopMeshLattice(blueprint, "course");
+function terrainTopIndex(
+  blueprint: IslandBlueprint,
+  detail: IslandGeometryDetail,
+): SurfaceTriangleIndex {
+  const lattice = getTopMeshLattice(blueprint, detail);
   if (lattice.surfaceIndex) return lattice.surfaceIndex;
   const triangles: SurfaceTriangle[] = [];
   const ids = new Map([lattice.center, ...lattice.rings.flat()].map((vertex, id) => [vertex, id]));
@@ -290,12 +296,13 @@ function terrainTopIndex(blueprint: IslandBlueprint): SurfaceTriangleIndex {
 export function islandTerrainFootprintRange(
   blueprint: IslandBlueprint,
   polygon: readonly { readonly x: number; readonly z: number }[],
+  detail: IslandGeometryDetail = "course",
 ): { readonly minY: number; readonly maxY: number; readonly maxSlope: number } | null {
   if (polygon.length < 3 || polygon.some((p) => !Number.isFinite(p.x) || !Number.isFinite(p.z)))
     return null;
   const area = Math.abs(doubleSignedAreaXZ(polygon)) / 2;
   if (area <= 1e-9) return null;
-  const surface = terrainTopIndex(blueprint);
+  const surface = terrainTopIndex(blueprint, detail);
   const xs = polygon.map((p) => p.x),
     zs = polygon.map((p) => p.z);
   let covered = 0,
@@ -476,6 +483,15 @@ function colorForTop(
 ): THREE.Color {
   const seed = blueprint.seed;
   const maxHalf = blueprint.bounds.maxHalf;
+  if (detail === "world") {
+    // At miniature scale broad material masses beat noisy near-view shading.
+    // Height and coastal exposure still come from the canonical blueprint.
+    const style = miniatureStyleFor(blueprint);
+    const elevation = clamp01(height / Math.max(0.001, maxHalf * 0.18));
+    return new THREE.Color(style.shade)
+      .lerp(new THREE.Color(style.meadow), 0.56 + elevation * 0.4)
+      .lerp(new THREE.Color(0xc2c5b2), coastalRockMask(blueprint, x, z, radial, height) * 0.22);
+  }
   // The clamp in the height rule sits at 0.235 of maxHalf, but the relief
   // model only reaches about two thirds of it in practice. Normalising
   // against the clamp meant the highland tone never engaged. This is the
@@ -560,7 +576,7 @@ function colorForTop(
   colour.multiplyScalar(1 - hollow * 0.26 + crest * 0.1);
   // The exposed root reaches the upper surface in geological patches. Without
   // this shared field mask, every cliff had an uninterrupted green cover rim.
-  colour.lerp(CLIFF, coastalRockMask(blueprint, x, z, radial, height) * 0.97);
+  colour.lerp(COURSE_CLIFF_FACE, coastalRockMask(blueprint, x, z, radial, height) * 0.72);
   return colour;
 }
 
@@ -1110,41 +1126,49 @@ interface CliffVertex {
  * the authored coast toward a slightly offset tip — not a cone of revolution
  * and not a second generator.
  */
-function cliffRingProfiles(depth: number, taper: number): readonly CliffRingProfile[] {
+function cliffRingProfiles(
+  depth: number,
+  taper: number,
+  detail: IslandGeometryDetail,
+): readonly CliffRingProfile[] {
   const root = clamp01((0.86 - taper) * 0.4);
+  // The world projection keeps its approved five-ring silhouette. At course
+  // scale a tenth of root depth was several metres of green/tan wall. Spend
+  // the SAME first ring on a shallow soil lip; all deeper root datums remain.
+  const lip = detail === "course" ? Math.min(0.42, depth * 0.018) : depth * 0.1;
   return [
     { gather: 0, yOffset: 0, sky: 1, gatherVary: 0, depthVary: 0, cant: 0 },
     {
-      gather: 0.08,
-      yOffset: -depth * 0.1,
-      sky: 0.86,
-      gatherVary: 0.065,
-      depthVary: 0.042,
+      gather: 0.02,
+      yOffset: -lip,
+      sky: detail === "course" ? 0.985 : 0.955,
+      gatherVary: 0.008,
+      depthVary: detail === "course" ? (lip / depth) * 0.12 : 0.014,
       cant: 0,
     },
     {
-      gather: 0.15,
-      yOffset: -depth * 0.4,
+      gather: 0.13,
+      yOffset: -depth * 0.34,
       sky: 0.64,
-      gatherVary: 0.13,
-      depthVary: 0.068,
+      gatherVary: 0.09,
+      depthVary: 0.13,
       cant: 0.0015,
     },
     {
-      gather: 0.42 + root,
+      gather: 0.39 + root,
       yOffset: -depth * 0.73,
       sky: 0.4,
-      gatherVary: 0.105,
-      depthVary: 0.058,
+      gatherVary: 0.075,
+      depthVary: 0.075,
       cant: 0.006,
     },
     {
-      gather: 0.7 + root * 1.1,
-      yOffset: -depth * 0.96,
+      gather: 0.76 + root * 1.1,
+      yOffset: -depth * 0.95,
       sky: 0.22,
-      gatherVary: 0.14,
-      depthVary: 0.04,
-      cant: 0.012,
+      gatherVary: 0.075,
+      depthVary: 0.025,
+      cant: 0.008,
     },
   ];
 }
@@ -1211,24 +1235,43 @@ function cliffStratumColour(
   profile: CliffRingProfile,
   lobe: number,
   exposure: number,
+  detail: IslandGeometryDetail,
 ): THREE.Color {
   const depth = clamp01(1 - profile.sky);
-  const stratum = CLIFF.clone()
+  if (detail === "world") {
+    // A real, shallow turf edge, rather than green fading immediately into
+    // grey. The next band's separate shading vertices own the stone crease.
+    if (depth < 0.08) return ground.clone().multiplyScalar(1 - depth * 0.9);
+    const rock = new THREE.Color(0xaeb8c3)
+      .lerp(new THREE.Color(0x8290a0), depth * 0.72)
+      .multiplyScalar(0.94 - lobe * 0.15);
+    return ground.clone().lerp(rock, smoothstep01(0, 0.18 - exposure * 0.08, depth));
+  }
+  // The near-detail collar is only 0.42 units deep. It is real sod, not the
+  // several-metre grassy wall of the old profile. Keep its living colour
+  // through that physical thickness; the next mineral band owns its separate
+  // crease vertices. Exposed coast patches retain their own ground colour.
+  if (depth < 0.08) return ground.clone().multiplyScalar(1 - depth * 0.6);
+  const stratum = COURSE_CLIFF_FACE.clone()
     // A light upper band catches the same edge that is broad enough to read
     // near the camera; lower bands move through warm rock into dark earth.
-    .lerp(SAND, smoothstep01(0.34, 0, depth) * 0.32)
-    .lerp(CLIFF_STONE_SHADE, smoothstep01(0.08, 0.92, depth) * 0.55)
-    .lerp(DIRT_DARK, smoothstep01(0.48, 1, depth) * 0.16)
+    .lerp(SAND, smoothstep01(0.34, 0, depth) * 0.08)
+    .lerp(COURSE_CLIFF_RECESS, smoothstep01(0.08, 0.92, depth) * 0.46)
     // Preserve a little course identity without letting the underside swatch
     // flatten every lower face into the same dark value.
-    .lerp(cliffDark, 0.04 + depth * 0.14);
+    .lerp(cliffDark, 0.025 + depth * 0.035);
   const buttressWarmth = clamp01(0.5 + lobe * 0.45);
-  stratum.lerp(DIRT, buttressWarmth * 0.14);
-  stratum.multiplyScalar(clamp01(0.93 + profile.sky * 0.07 + lobe * 0.08));
+  stratum.lerp(DIRT, buttressWarmth * 0.035);
+  // Broad mineral values follow the same vertical buttresses, not horizontal
+  // noise bands. Negative lobes project outward; recessed bays stay quieter.
+  stratum.multiplyScalar(clamp01(0.88 + profile.sky * 0.1 - lobe * 0.1));
   // Exactly the same colour at the shared lip. Below it, turf rolls into
   // sheltered bays while exposed buttresses turn to stone sooner; never one
   // fixed colour jump at the same ring around the entire island.
-  return ground.clone().lerp(stratum, smoothstep01(0, 0.24 - exposure * 0.18, depth));
+  // The close camera resolves the grass/stone transition. Do not paint a
+  // several-metre grassy wall simply because the first structural ring is
+  // deep: exposed faces turn mineral sooner, sheltered edges retain turf.
+  return ground.clone().lerp(stratum, smoothstep01(0, 0.06 - exposure * 0.018, depth));
 }
 
 function appendCliffVertex(
@@ -1274,6 +1317,7 @@ function resolveCliffNormals(
   geometry: THREE.BufferGeometry,
   faces: readonly CliffNormalFace[],
   segments: number,
+  detail: IslandGeometryDetail,
 ): void {
   if (faces.length === 0) return;
   const position = geometry.getAttribute("position") as THREE.BufferAttribute;
@@ -1309,11 +1353,21 @@ function resolveCliffNormals(
       const geometric = cliffTriangleNormal(position, ...triangle).normalize();
       for (const vertex of triangle) {
         const smooth = [first, second, fourth].includes(vertex) ? upper : lower;
+        // Broad stone planes should not advertise a quad's diagonal split.
+        // Share more of the vertical buttress normal only when it faces the
+        // real triangle; a sharply recessed bay keeps its geometric crease.
+        const smoothWeight = geometric.dot(smooth) > 0.7 ? 0.65 : 0.25;
         const resolved = geometric
           .clone()
-          .multiplyScalar(0.65)
-          .addScaledVector(smooth, 0.35)
+          .multiplyScalar(1 - smoothWeight)
+          .addScaledVector(smooth, smoothWeight)
           .normalize();
+        // Soft turf scatters sky light around its physical edge. Bound the
+        // normal bend; stone and the mesh's actual support are untouched.
+        if (detail === "world" && faceIndex < segments) {
+          resolved.y += 1.15;
+          resolved.normalize();
+        }
         normal.setXYZ(vertex, resolved.x, resolved.y, resolved.z);
       }
     }
@@ -1460,7 +1514,7 @@ function buildTerrain(
   const cliffDark = new THREE.Color(islandCliffDarkFor(blueprint));
   const rootPhase = hash(`${blueprint.seed}/cliff-root`) * Math.PI * 2;
   const rootTip = cliffRootTip(blueprint, segments, rootPhase);
-  const rings = cliffRingProfiles(depth, blueprint.underside.taper);
+  const rings = cliffRingProfiles(depth, blueprint.underside.taper, detail);
   const topOuterStart = 1 + (radials.length - 1) * segments;
   const cliffRings: CliffVertex[][] = [];
   const edgeExposures: number[] = [];
@@ -1509,7 +1563,7 @@ function buildTerrain(
         x,
         y,
         z,
-        colour: cliffStratumColour(ground, cliffDark, profile, lobe, edgeExposures[index]!),
+        colour: cliffStratumColour(ground, cliffDark, profile, lobe, edgeExposures[index]!, detail),
       });
     }
     cliffRings.push(cliffRing);
@@ -1521,12 +1575,26 @@ function buildTerrain(
     const lower = cliffRings[ring + 1]!;
     for (let index = 0; index < segments; index += 1) {
       const next = (index + 1) % segments;
-      const first = appendCliffVertex(positions, colors, upper[index]!, scale);
-      const second = appendCliffVertex(positions, colors, upper[next]!, scale);
-      const third = appendCliffVertex(positions, colors, lower[index]!, scale);
-      const fourth = appendCliffVertex(positions, colors, upper[next]!, scale);
-      const fifth = appendCliffVertex(positions, colors, lower[next]!, scale);
-      const sixth = appendCliffVertex(positions, colors, lower[index]!, scale);
+      // Continuous geometry, separate material domains. Paired sectors form
+      // broad mineral faces instead of random per-triangle colour noise.
+      const mineral = 0.92 + hash(`${blueprint.seed}/mineral-face/${Math.floor(index / 2)}`) * 0.16;
+      const stoneVertex = (vertex: CliffVertex, top: boolean): CliffVertex => {
+        if (ring === 0) return vertex;
+        const colour =
+          top && ring === 1
+            ? new THREE.Color(detail === "world" ? 0xa4aeb8 : 0xb4b7b4).lerp(
+                new THREE.Color(0x98a7b8),
+                (1 - mineral) * 0.6,
+              )
+            : vertex.colour.clone();
+        return { ...vertex, colour: colour.multiplyScalar(mineral) };
+      };
+      const first = appendCliffVertex(positions, colors, stoneVertex(upper[index]!, true), scale);
+      const second = appendCliffVertex(positions, colors, stoneVertex(upper[next]!, true), scale);
+      const third = appendCliffVertex(positions, colors, stoneVertex(lower[index]!, false), scale);
+      const fourth = appendCliffVertex(positions, colors, stoneVertex(upper[next]!, true), scale);
+      const fifth = appendCliffVertex(positions, colors, stoneVertex(lower[next]!, false), scale);
+      const sixth = appendCliffVertex(positions, colors, stoneVertex(lower[index]!, false), scale);
       const triangleA = [first, second, third] as const;
       const triangleB = [fourth, fifth, sixth] as const;
       indices.push(...triangleA);
@@ -1568,11 +1636,12 @@ function buildTerrain(
   }
 
   const geometry = new THREE.BufferGeometry();
+  geometry.userData.miniatureSurfaceVertexEnd = 1 + radials.length * segments + segments * 6;
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
-  resolveCliffNormals(geometry, cliffFaces, segments);
+  resolveCliffNormals(geometry, cliffFaces, segments, detail);
   resolveCoastNormals(geometry, cliffFaces, segments, topOuterStart, edgeExposures);
   resolveRouteNormals(geometry, routeShading);
   geometry.computeBoundingBox();

@@ -60,6 +60,7 @@ import {
   TermEntryHost,
 } from "../screens/lazy";
 import { CourseIsland, type CourseIslandProps } from "./CourseIsland.js";
+import { MapBreadcrumbs } from "./MapBreadcrumbs.js";
 import type { PathOverlay } from "./world-model";
 
 const LearningPlayLab = lazy(() =>
@@ -190,6 +191,14 @@ export function MainRouter({
       */}
       {studyNames.length === 0 && !shelf ? (
         <p className="loading-copy">{translate("app.app.mainRouter.copy.正在打开校园档案")}</p>
+      ) : null}
+      {view.kind === "planet" || view.kind === "world" || view.kind === "course" ? (
+        <MapBreadcrumbs
+          layer={view.kind}
+          studyTitle={studies.find((study) => study.id === focusedStudyId)?.title}
+          courseTitle={view.kind === "course" ? course?.title : undefined}
+          onNavigate={setView}
+        />
       ) : null}
       {stage ? (
         <div className="learn-stage">

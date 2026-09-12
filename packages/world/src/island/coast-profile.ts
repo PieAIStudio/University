@@ -22,12 +22,16 @@ export function coastalRockMask(
   radial: number,
   height: number,
 ): number {
-  if (radial < 0.83) return 0;
+  if (radial < 0.74) return 0;
   const angle = Math.atan2(z / blueprint.bounds.halfZ, x / blueprint.bounds.halfX);
   const lobe = cliffLobeAtAngle(hash(`${blueprint.seed}/cliff-root`) * Math.PI * 2, angle);
   // Projecting buttresses expose rock; gathered bays retain grassy shoulders.
   // Actual height varies exposure instead of painting identical radial stripes.
   const buttress = smooth(0.32, -0.7, lobe);
   const raised = 0.5 + 0.5 * smooth(0.015, 0.075, height / blueprint.bounds.maxHalf);
-  return smooth(0.83, 0.995, radial) * buttress * raised;
+  // Stone reaches inland on projecting headlands, while sheltered bays keep
+  // their rolled turf. A constant radial start painted a uniform pale rim
+  // at catalogue scale even though the cliff itself had geological lobes.
+  const stoneStart = 0.91 - buttress * 0.17;
+  return smooth(stoneStart, 0.995, radial) * buttress * raised;
 }

@@ -100,7 +100,10 @@ export function estimateEnvironmentTextureMemory(
 
 export function skyEnvironmentKey(stops: SkyDomeStops): string {
   const hex = (value: number) => (value >>> 0).toString(16).padStart(6, "0");
-  return `${hex(stops.zenith)}:${hex(stops.mid)}:${hex(stops.horizon)}`;
+  const colours = `${hex(stops.zenith)}:${hex(stops.mid)}:${hex(stops.horizon)}`;
+  // Both optional inputs affect the actual capture. Ignoring them reuses an
+  // environment with the wrong lower sky or sun when the projection changes.
+  return `${colours}${stops.nadir === undefined ? "" : `:${hex(stops.nadir)}`}${stops.sunProfile && stops.sunProfile !== "course" ? `:${stops.sunProfile}` : ""}`;
 }
 
 type EnvironmentResource = {

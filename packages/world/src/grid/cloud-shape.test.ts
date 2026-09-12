@@ -70,10 +70,13 @@ describe("one cloud-bank source across projections", () => {
     },
   );
 
-  it("has broad shallow shoulders, not pinched beads or a vertical extruded wall", () => {
+  it("has broad rounded shoulders, not pinched beads or a vertical extruded wall", () => {
     const geometry = createCloudVolumeGeometry(32, 9);
     const position = geometry.getAttribute("position");
     const normal = geometry.getAttribute("normal");
+    const bounds = geometry.boundingBox!;
+    const halfX = Math.max(Math.abs(bounds.min.x), Math.abs(bounds.max.x));
+    const halfZ = Math.max(Math.abs(bounds.min.z), Math.abs(bounds.max.z));
     const rim: number[] = [];
     for (let index = 0; index < position.count; index += 1) {
       const x = position.getX(index);
@@ -82,8 +85,10 @@ describe("one cloud-bank source across projections", () => {
       expect(Math.hypot(x, z)).toBeLessThanOrEqual(CLOUD_VOLUME_CONTRACT.horizontalRadiusMax);
       expect(y).toBeLessThanOrEqual(CLOUD_VOLUME_CONTRACT.crownHeightMax);
       expect(y).toBeGreaterThanOrEqual(CLOUD_VOLUME_CONTRACT.undersideHeight - 1e-7);
-      if (y === 0) {
-        rim.push(Math.hypot(x, z / 0.68));
+      // The new radial shell evaluates cos(pi/2); equator membership must
+      // tolerate round-off, not silently depend on the old hand-set zero.
+      if (Math.abs(y) < 1e-7) {
+        rim.push(Math.hypot(x / halfX, z / halfZ));
         // One smooth shared rim normal, not split top/wall normals.
         expect(Math.abs(normal.getY(index))).toBeLessThan(0.75);
       }
@@ -96,7 +101,13 @@ describe("one cloud-bank source across projections", () => {
     );
     expect(peaks.length).toBeGreaterThanOrEqual(3);
     expect(peaks.length).toBeLessThanOrEqual(5);
-    expect(Math.max(...rim) / Math.min(...rim)).toBeLessThan(1.4);
+    // Normalize against this shell's real footprint, not the retired bank's
+    // hard-coded 0.68 Z squeeze. Lobed round clouds may have broad bays, but
+    // no neck may collapse toward the centre or shoot outside the envelope.
+    expect(Math.min(...rim)).toBeGreaterThan(0.625);
+    expect(Math.max(...rim)).toBeLessThan(1.1);
+    for (let i = 0; i < rim.length; i++)
+      expect(Math.abs(rim[i]! - rim[(i + 1) % rim.length]!)).toBeLessThan(0.2);
     geometry.dispose();
   });
 

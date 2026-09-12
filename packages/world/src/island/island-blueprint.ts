@@ -613,7 +613,7 @@ function pointOnSegment(point: IslandPoint, first: IslandPoint, second: IslandPo
   return dot <= 1e-7;
 }
 
-function pointInsideOutline(point: IslandPoint, outline: readonly IslandPoint[]): boolean {
+export function pointInsideOutline(point: IslandPoint, outline: readonly IslandPoint[]): boolean {
   if (outline.length < 3) return false;
   let inside = false;
   for (let index = 0, previous = outline.length - 1; index < outline.length; previous = index++) {
@@ -1075,7 +1075,7 @@ function makeGeometryBlueprint(input: ResolvedInput): IslandGeometryBlueprint {
     },
     underside: {
       // A 6–11 clamp kept a 38-unit course island 11 deep and read as a platform.
-      depth: maxHalf * (0.7 + hash(`${seed}/${layoutRevision}/underside-depth`) * 0.2),
+      depth: maxHalf * (1.1 + hash(`${seed}/${layoutRevision}/underside-depth`) * 0.2),
       taper: 0.72 + hash(`${seed}/${layoutRevision}/underside`) * 0.14,
       ringCount: 3,
       importance: 0.25,

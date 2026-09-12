@@ -1,17 +1,18 @@
 import * as THREE from "three";
 
-/** One shallow, closed cloud bank, shared by every projection (V5 M / R38).
- * The lobes are broad variations of one surface, never intersecting spheres.
+/** One closed cloud bank, shared by every projection (V5 M / R44).
+ * Four rounded influences are sampled as ONE exterior, never intersecting draws.
  * Tessellation changes with screen size; the sampled form and value ramp do not.
  */
 export const CLOUD_VOLUME_CONTRACT = {
   courseSegments: { width: 9, height: 3 },
   courseForm: "bank",
-  form: "continuous-shallow-bank",
+  form: "continuous-lobed-bank",
   broadCrowns: 4,
   horizontalRadiusMax: 1.04,
-  crownHeightMax: 0.42,
-  undersideHeight: -0.18,
+  crownHeightMax: 0.64,
+  undersideHeight: -0.3,
+  verticalAspectMax: 0.52,
   usesVertexValueRamp: true,
   closedSurface: true,
 } as const;
@@ -20,34 +21,64 @@ function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));
 }
 
-/** Four soft shoulders around one bank, with no pinched inter-lobe valleys. */
-function bankOutline(angle: number): number {
-  return (
-    0.87 +
-    0.08 * Math.cos(3 * angle + 0.35) +
-    0.055 * Math.sin(5 * angle - 0.5) +
-    0.025 * Math.cos(2 * angle + 0.8)
-  );
-}
-
-const BANK_CROWNS = [
-  [-0.5, -0.08, 0.085],
-  [-0.12, 0.25, 0.07],
-  [0.3, -0.2, 0.1],
-  [0.59, 0.14, 0.065],
+// Each influence contains the origin, so every outward ray has one positive
+// exit and their union is star-shaped. A small smooth maximum joins shoulders
+// without internal surfaces, sphere intersections, extra lobes or draw calls.
+const BANK_MASSES = [
+  { centre: [-0.05, 0.18, -0.04], radii: [0.58, 0.4, 0.56] },
+  { centre: [-0.42, 0.04, 0.02], radii: [0.48, 0.33, 0.4] },
+  { centre: [0.45, 0.035, -0.03], radii: [0.5, 0.325, 0.4] },
+  { centre: [0.05, 0.06, 0.25], radii: [0.53, 0.32, 0.5] },
 ] as const;
 
-/** Smooth overlapping height influences, not a max/union of primitive bodies. */
-function bankCrown(x: number, z: number): number {
-  let height = 0.22;
-  for (const [cx, cz, lift] of BANK_CROWNS) {
-    height += lift * Math.exp(-((x - cx) ** 2 * 6 + (z - cz) ** 2 * 9));
+function bankRayExit(x: number, y: number, z: number): number {
+  let distance = 0;
+  const shoulderBlend = 0.09;
+  for (const { centre: c, radii: r } of BANK_MASSES) {
+    const a = (x / r[0]) ** 2 + (y / r[1]) ** 2 + (z / r[2]) ** 2;
+    const b = (x * c[0]) / r[0] ** 2 + (y * c[1]) / r[1] ** 2 + (z * c[2]) / r[2] ** 2;
+    const cc = (c[0] / r[0]) ** 2 + (c[1] / r[1]) ** 2 + (c[2] / r[2]) ** 2 - 1;
+    const exit = (b + Math.sqrt(b * b - a * cc)) / a;
+    const blend = Math.max(0, shoulderBlend - Math.abs(distance - exit)) / shoulderBlend;
+    distance = Math.max(distance, exit) + blend * blend * shoulderBlend * 0.25;
   }
-  return height;
+  return distance;
 }
 
 /** The carrier aligns its feet to this exact vertex, not a guessed sphere top. */
-export const CLOUD_BANK_SUPPORT_HEIGHT = bankCrown(0, 0);
+export const CLOUD_BANK_SUPPORT_HEIGHT = bankRayExit(0, 1, 0);
+
+/** Normals sample the sculpted surface itself, not an average of the coarse
+ * triangles. The same source is smooth on a phone without subdividing its mesh.
+ */
+function resolveBankNormals(geometry: THREE.BufferGeometry): void {
+  const position = geometry.getAttribute("position"),
+    normal = geometry.getAttribute("normal");
+  const direction = new THREE.Vector3(),
+    axis = new THREE.Vector3();
+  const right = new THREE.Vector3(),
+    tangent = new THREE.Vector3();
+  const near = new THREE.Vector3(),
+    far = new THREE.Vector3();
+  const du = new THREE.Vector3(),
+    dv = new THREE.Vector3(),
+    outward = new THREE.Vector3();
+  const sample = (out: THREE.Vector3, along: THREE.Vector3, step: number) => {
+    out.copy(direction).addScaledVector(along, step).normalize();
+    return out.multiplyScalar(bankRayExit(out.x, out.y, out.z));
+  };
+  for (let i = 0; i < position.count; i++) {
+    direction.fromBufferAttribute(position, i).normalize();
+    axis.set(Math.abs(direction.y) > 0.9 ? 1 : 0, Math.abs(direction.y) > 0.9 ? 0 : 1, 0);
+    right.crossVectors(axis, direction).normalize();
+    tangent.crossVectors(direction, right);
+    du.subVectors(sample(near, right, 0.001), sample(far, right, -0.001));
+    dv.subVectors(sample(near, tangent, 0.001), sample(far, tangent, -0.001));
+    outward.crossVectors(du, dv).normalize();
+    if (outward.dot(direction) < 0) outward.negate();
+    normal.setXYZ(i, outward.x, outward.y, outward.z);
+  }
+}
 
 /** The same value range at every LOD, baked before any tangent-space transform. */
 export function addCloudVertexValueRamp(geometry: THREE.BufferGeometry): THREE.BufferGeometry {
@@ -93,16 +124,10 @@ export function createCloudVolumeGeometry(
     const vertical = Math.cos(latitude);
     for (let column = 0; column < width; column += 1) {
       const angle = (column / width) * Math.PI * 2;
-      const outline = bankOutline(angle);
-      const x = Math.cos(angle) * radius * outline;
-      const z = Math.sin(angle) * radius * outline * 0.68;
-      // Both halves meet at exactly zero. Cosine rounds into the rim without
-      // the vertical wall of an extruded flat plate.
-      const y =
-        Math.abs(vertical) < 1e-10
-          ? 0
-          : vertical * (vertical > 0 ? bankCrown(x, z) : -CLOUD_VOLUME_CONTRACT.undersideHeight);
-      positions.push(x, y, z);
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const distance = bankRayExit(x, vertical, z);
+      positions.push(x * distance, vertical * distance, z * distance);
     }
   };
   for (let ring = 1; ring <= upperRings; ring += 1) {
@@ -112,7 +137,7 @@ export function createCloudVolumeGeometry(
     appendRing(Math.PI * 0.5 + (ring / lowerRings) * Math.PI * 0.5);
   }
   const bottom = positions.length / 3;
-  positions.push(0, CLOUD_VOLUME_CONTRACT.undersideHeight, 0);
+  positions.push(0, -bankRayExit(0, -1, 0), 0);
 
   for (let column = 0; column < width; column += 1) {
     indices.push(0, 1 + ((column + 1) % width), 1 + column);
@@ -137,6 +162,7 @@ export function createCloudVolumeGeometry(
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
+  resolveBankNormals(geometry);
   addCloudVertexValueRamp(geometry);
   geometry.computeBoundingBox();
   geometry.computeBoundingSphere();

@@ -7,7 +7,7 @@ import { watchConsole } from "./harness/console.js";
 import { openOnline, waitForMapReady } from "./harness/online-learner.js";
 import { namedStep } from "./harness/step.js";
 
-const SHOTS = "/tmp/world-after";
+const SHOTS = process.env.R50_EVIDENCE_DIR ?? "/tmp/world-after";
 
 type MapControlsHandle = {
   minDistance: number;
@@ -153,18 +153,10 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
       await expect
         .poll(
           async () => {
-            await page.evaluate((delta) => {
-              document.querySelector(".stagewrap canvas")?.dispatchEvent(
-                new WheelEvent("wheel", {
-                  deltaX: 0,
-                  deltaY: delta,
-                  deltaMode: 0,
-                  ctrlKey: false,
-                  bubbles: true,
-                  cancelable: true,
-                }),
-              );
-            }, deltaY);
+            const canvas = await page.locator(".stagewrap canvas").boundingBox();
+            if (!canvas) throw new Error("Missing visible map canvas");
+            await page.mouse.move(canvas.x + canvas.width * 0.65, canvas.y + canvas.height * 0.56);
+            await page.mouse.wheel(0, deltaY);
             const next = await readDistance();
             return next == null ? 0 : Math.abs(next - (before as number));
           },
@@ -174,23 +166,57 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
     });
 
     await namedStep(page, "镜头推到最近，相机到地面大于岛的半径", async () => {
+      const canvas = await page.locator(".stagewrap canvas").boundingBox();
+      if (!canvas) throw new Error("Missing visible map canvas");
+      await page.mouse.move(canvas.x + canvas.width * 0.65, canvas.y + canvas.height * 0.56);
+      await expect
+        .poll(
+          async () => {
+            await page.mouse.wheel(0, -240);
+            return page.evaluate(() => {
+              const c = (window as any).mapControls;
+              return c.object.position.distanceTo(c.target) - c.minDistance;
+            });
+          },
+          { timeout: 15000, intervals: [80, 80, 120, 150] },
+        )
+        .toBeLessThan(0.02);
       const sample = await page.evaluate(() => {
         const controls = (globalThis as unknown as { mapControls?: MapControlsHandle }).mapControls;
         if (!controls) return { ok: false as const, reason: "no mapControls" };
-        const offset = controls.object.position.clone().sub(controls.target);
-        offset.setLength(controls.minDistance);
-        controls.object.position.copy(controls.target).add(offset);
-        controls.update();
+        const state = (window as any).three;
+        const vertex = state.camera.position.clone();
+        let highest = -Infinity;
+        for (const name of [
+          "remote-island-terrain",
+          "remote-props-trees",
+          "remote-props-landmarks",
+        ]) {
+          const mesh = state.scene.getObjectByName(name);
+          if (!mesh?.geometry) continue;
+          const position = mesh.geometry.attributes.position;
+          for (let i = 0; i < position.count; i++) {
+            vertex.fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld);
+            highest = Math.max(highest, vertex.y);
+          }
+        }
         return {
           ok: true as const,
           y: controls.object.position.y,
           minDistance: controls.minDistance,
+          distance: controls.object.position.distanceTo(controls.target),
+          highestActualGeometry: highest,
         };
       });
       if (!sample.ok) throw new Error(`无法采样相机: ${sample.reason}`);
       writeFileSync(`${SHOTS}/camera-min.json`, JSON.stringify(sample, null, 2));
-      expect(sample.minDistance).toBeGreaterThan(48);
-      expect(sample.y).toBeGreaterThan(3.24);
+      // R49 deliberately changed the stop to 48. The old >48 check rejected
+      // that approved stop while never measuring the actual scenery below it.
+      // Keep the stronger physical contract, reached through real input.
+      expect(sample.minDistance).toBeGreaterThan(0);
+      expect(Math.abs(sample.distance - sample.minDistance)).toBeLessThan(0.03);
+      expect(Number.isFinite(sample.highestActualGeometry)).toBe(true);
+      expect(sample.y - sample.highestActualGeometry).toBeGreaterThan(2);
     });
 
     await namedStep(page, "换系列控件列出每一个系列", async () => {

@@ -13,6 +13,7 @@ import {
   foliageFootprintRadius,
   bushCrownLobes,
   createSmoothIcosahedron,
+  COURSE_BUSH_CROWN_DETAIL,
 } from "./foliage-geometry.js";
 import { toFoliageRenderPlacement } from "./island-foliage-render.js";
 import { sampleIslandTerrainTop } from "./island-geometry.js";
@@ -45,7 +46,7 @@ describe("route-side vegetation beats (synthetic length/seed matrix)", () => {
           const vergeCentres = routeVegetationCentres(blueprint, "verge", reserved);
           treeCounts.push(trees.length);
           expect(groveCentres.length).toBeLessThanOrEqual(
-            lessonCount <= 8 ? 3 : lessonCount <= 24 ? 7 : 9,
+            lessonCount <= 8 ? 3 : lessonCount <= 12 ? 7 : lessonCount <= 24 ? 8 : 14,
           );
           expect(verge.length).toBeGreaterThan(0);
           const tones = new Map<string, number>();
@@ -55,9 +56,10 @@ describe("route-side vegetation beats (synthetic length/seed matrix)", () => {
             const centre = (isVerge ? vergeCentres : groveCentres)[centreIndex]!;
             expect(centre, placement.id).toBeDefined();
             // No foliage fallback to a random annulus: every member stays in a
-            // route-derived patch. The existing 3.65 grove radius is retained.
+            // route-derived patch. R43 widens the grove, not the road apron;
+            // the actual crown/road clearance assertion below is unchanged.
             expect(Math.hypot(placement.x - centre.x, placement.z - centre.z)).toBeLessThanOrEqual(
-              isVerge ? 1.7 : placement.kind === "tree" ? 4.1 : 3.2,
+              isVerge ? 1.7 : placement.kind === "tree" ? 5.1 : 5.3,
             );
             expect(
               distanceToIslandRoute(blueprint, placement) - islandRouteClearance(blueprint),
@@ -107,7 +109,7 @@ describe("route-side vegetation beats (synthetic length/seed matrix)", () => {
 });
 
 it("keeps every emitted low shrub lobe grounded on the same terrain after preview scaling", () => {
-  const geometry = createSmoothIcosahedron(0);
+  const geometry = createSmoothIcosahedron(COURSE_BUSH_CROWN_DETAIL);
   const positions = geometry.getAttribute("position");
   const scratch = new THREE.Vector3();
   for (const routeArchetype of ISLAND_ROUTE_ARCHETYPES) {

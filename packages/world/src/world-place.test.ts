@@ -95,7 +95,18 @@ describe("learner series archipelago", () => {
       );
       expect(advanced.extent).toBe(initial.extent);
       for (const entry of advanced.placements) {
-        expect(entry.radius).toBe(worldIslandRadiusForState(entry.node.lessons, entry.state));
+        const stateRadius = worldIslandRadiusForState(entry.node.lessons, entry.state);
+        // R44 fills existing sky gaps without moving the ordered layout.
+        // Validate the declared growth AND every actual pairwise gap rather
+        // than requiring the retired pre-miniature radius to remain exact.
+        expect(entry.radius).toBeGreaterThanOrEqual(stateRadius);
+        expect(entry.radius).toBeLessThanOrEqual(stateRadius * 1.25);
+        for (const peer of advanced.placements) {
+          if (peer === entry) continue;
+          expect(
+            entry.position.distanceTo(peer.position) - entry.radius - peer.radius,
+          ).toBeGreaterThanOrEqual(0.9 - 1e-8);
+        }
       }
     }
   });
