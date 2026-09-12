@@ -7,11 +7,14 @@ import { watchConsole } from "./harness/console.js";
 import { assertCompleteCourseOverview, waitForCourseFraming } from "./harness/course-overview.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { waitForCourseTrees } from "./harness/course-foliage.js";
+import {
+  FIRST_COURSE_ROUTE,
+  GAME_ROUTE_TITLE as HARNESS_GAME_ROUTE_TITLE,
+} from "./harness/online-learner.js";
 
-const COURSE = "/turing-pact/foundations-before-zero";
-const GAME_ROUTE_TITLE: string = JSON.parse(
-  readFileSync("apps/university/src/content/imported.json", "utf8"),
-).studies.find((study: { studyId: string }) => study.studyId === "turing-pact").title;
+const COURSE = FIRST_COURSE_ROUTE;
+/* One implementation of the settlement fixture; see harness/online-learner.ts. */
+const GAME_ROUTE_TITLE = HARNESS_GAME_ROUTE_TITLE;
 const RUN = new Date().toISOString().replaceAll(":", "-");
 
 async function inspectWholeCourse(page: Page, screenshot: string) {
