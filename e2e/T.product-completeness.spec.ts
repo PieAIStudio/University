@@ -9,7 +9,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
   test.describe(`T product completeness ${viewport.width}`, () => {
     test.use({ viewport, hasTouch: viewport.width < 768, isMobile: viewport.width < 768, storageState: { cookies: [], origins: [] } });
 
-    test("T1 fresh welcome is optional, first action reachable, draft reload and undecided feedback are honest", async ({ page }) => {
+    test("T1 fresh welcome is optional, first action reachable, draft reload and determined feedback are honest", async ({ page }) => {
       await page.goto(ONLINE_ORIGIN, { waitUntil: "domcontentloaded" });
       const welcome = page.locator("[data-welcome]");
       const start = page.locator("[data-welcome-start]");
@@ -29,11 +29,19 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
       await page.reload({ waitUntil: "domcontentloaded" });
       await expect(answer).toHaveValue(RECOVERY_ANSWER);
       await humanClick(page, exercise.getByRole("button", { name: /^提交$/ }), "submit recovered answer");
-      await expect(exercise).toContainText(/暂时无法判断|还不能.*判断|无法可靠判断/u);
-      await expect(exercise).not.toContainText("当场判定 · 未通过");
+      /*
+       * The release shelf now starts with a strict two-choice exercise. This
+       * preserved draft is intentionally from the retired open explanation;
+       * it must be rejected as a definite mismatch, not presented as an
+       * undecided semantic answer. Open-ended exercises still own the
+       * undecided contract in the grading tests and reader UI.
+       */
+      await expect(exercise).toContainText("当场判定 · 未通过");
+      await expect(exercise).not.toContainText(/暂时无法判断|还不能.*判断|无法可靠判断/u);
       await page.reload({ waitUntil: "domcontentloaded" });
       await expect(answer).toHaveValue(RECOVERY_ANSWER);
-      await expect(exercise).toContainText(/暂时无法判断|还不能.*判断|无法可靠判断/u);
+      await expect(exercise).toContainText("当场判定 · 未通过");
+      await expect(exercise).not.toContainText(/暂时无法判断|还不能.*判断|无法可靠判断/u);
       await page.goto(ONLINE_ORIGIN, { waitUntil: "domcontentloaded" });
       await expect(page.locator("[data-welcome]")).toHaveCount(0);
       const fresh = await page.context().browser()!.newContext({ viewport, locale: "zh-CN" });
