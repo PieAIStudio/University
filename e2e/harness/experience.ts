@@ -5,38 +5,10 @@ import { fileURLToPath } from "node:url";
 
 import { ONLINE_ORIGIN } from "../ports.js";
 import { humanClick } from "./click.js";
+import { selectCompleteLessonEntry, type ShelfForSelection } from "./catalogue.js";
 import { TODAY_CTA, waitForMapReady } from "./online-learner.js";
 
-type ShelfLesson = {
-  readonly id: string;
-  readonly title: string;
-  readonly exerciseCount?: number;
-  readonly evidenceLocators?: readonly string[];
-};
-
-type ShelfCourse = {
-  readonly id: string;
-  readonly title: string;
-  readonly units: readonly {
-    readonly id: string;
-    readonly lessons: readonly ShelfLesson[];
-  }[];
-};
-
-type ExperienceShelf = {
-  readonly studies: readonly {
-    readonly id: string;
-    readonly title: string;
-    readonly courses: readonly ShelfCourse[];
-  }[];
-};
-
-type ShelfEntry = {
-  readonly study: ExperienceShelf["studies"][number];
-  readonly course: ShelfCourse;
-  readonly unit: ShelfCourse["units"][number];
-  readonly lesson: ShelfLesson;
-};
+type ExperienceShelf = ShelfForSelection;
 
 export interface ExperienceFixture {
   readonly studyId: string;
@@ -53,28 +25,6 @@ export interface ExperienceFixture {
 
 const EXPERIENCE_FIXTURES = new WeakMap<Page, Promise<ExperienceFixture>>();
 
-function hasShortEvidence(lesson: ShelfLesson): boolean {
-  return (lesson.evidenceLocators ?? []).some((locator) => {
-    const match = /:(\d+)(?:-(\d+))?$/u.exec(locator.trim());
-    if (!match) return false;
-    const start = Number(match[1]);
-    const end = Number(match[2] ?? match[1]);
-    return (
-      Number.isInteger(start) && Number.isInteger(end) && end >= start && end - start + 1 <= 16
-    );
-  });
-}
-
-function hasSingleEvidence(lesson: ShelfLesson): boolean {
-  const locators = lesson.evidenceLocators ?? [];
-  return locators.length === 1;
-}
-
-function isCourseStart(entry: ShelfEntry): boolean {
-  const firstUnit = entry.course.units[0];
-  return firstUnit?.id === entry.unit.id && firstUnit.lessons[0]?.id === entry.lesson.id;
-}
-
 function nonEmptyShelfId(value: string, label: string): string {
   expect(value.trim().length, `${label} 不能为空`).toBeGreaterThan(0);
   return value;
@@ -85,24 +35,11 @@ async function readExperienceFixture(page: Page): Promise<ExperienceFixture> {
   expect(response.ok(), `实际发布货架读取失败：HTTP ${response.status()}`).toBe(true);
   const shelf = (await response.json()) as ExperienceShelf;
 
-  const entries: ShelfEntry[] = (shelf.studies ?? []).flatMap((study) =>
-    (study.courses ?? []).flatMap((course) =>
-      course.units.flatMap((unit) =>
-        unit.lessons.map((lesson) => ({ study, course, unit, lesson })),
-      ),
-    ),
-  );
-  const eligible = (entry: (typeof entries)[number]) =>
-    (entry.lesson.exerciseCount ?? 0) > 0 && hasShortEvidence(entry.lesson);
   // Prefer a released one-snippet lesson so the journey has one source entry
   // to exercise without making the fixture depend on a course or lesson id.
-  // If that lesson is retired, the fallback still follows a complete lesson
-  // from the shelf, and the course-start pass keeps the course page's own
-  // "next lesson" contract available to N2.
-  const selected =
-    entries.find((entry) => eligible(entry) && hasSingleEvidence(entry.lesson)) ??
-    entries.find((entry) => eligible(entry) && isCourseStart(entry)) ??
-    entries.find(eligible);
+  // The selection contract lives beside the shipped-catalogue roles, so a
+  // second spec cannot quietly grow a different notion of a complete lesson.
+  const selected = selectCompleteLessonEntry(shelf.studies);
   if (selected) {
     const studyId = nonEmptyShelfId(selected.study.id, "货架 study id");
     const courseId = nonEmptyShelfId(selected.course.id, "货架课程 id");

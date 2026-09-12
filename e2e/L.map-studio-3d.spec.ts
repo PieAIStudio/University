@@ -5,8 +5,11 @@ import { join } from "node:path";
 import { LOCAL_ORIGIN } from "./ports.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
+import { installMapStudioFixture, MAP_STUDIO_FIXTURE } from "./harness/catalogue.js";
 
 const OUTPUT = "SCRATCH/e2e/map-studio-3d";
+const PREVIEW_STUDY = MAP_STUDIO_FIXTURE.study;
+const PREVIEW_COURSE = MAP_STUDIO_FIXTURE.course;
 
 test.describe("L actual 3D asset inspector", () => {
   test.use({
@@ -20,9 +23,12 @@ test.describe("L actual 3D asset inspector", () => {
   }) => {
     const console = watchConsole(page);
     mkdirSync(OUTPUT, { recursive: true });
+    await installMapStudioFixture(page);
     await page.goto(`${LOCAL_ORIGIN}/studio/map`);
     await expect(page.locator("[data-map-studio]")).toBeVisible();
-    await page.getByRole("combobox", { name: "预览项目", exact: true }).selectOption("turing-pact");
+    await page
+      .getByRole("combobox", { name: "预览项目", exact: true })
+      .selectOption(PREVIEW_STUDY.id);
 
     // 1. Initial planet projection verification
     await expect(page.locator(".map-studio__generator")).toContainText("createDomainGlobeGeometry");
@@ -77,7 +83,7 @@ test.describe("L actual 3D asset inspector", () => {
       exact: true,
     });
     await expect(course).toBeEnabled();
-    await course.selectOption("foundations-before-zero");
+    await course.selectOption(PREVIEW_COURSE.id);
     await page.waitForFunction(() => {
       const bag = globalThis as unknown as {
         three?: {
@@ -113,9 +119,12 @@ test.describe("L actual 3D asset inspector", () => {
     await expect
       .poll(async () => footing.locator(".map-studio__metric strong").last().innerText())
       .not.toBe("加载中");
-    const roof = page.locator('[data-asset-key="fantasy-town-kit/roof-gable"]');
-    await expect(roof).toContainText("原始模型尺寸");
-    await expect(roof).toContainText("场景尺寸范围");
+    // The academy roof is owned by the fitted course-landscape assembly, so
+    // it is intentionally absent from the standalone live-asset rows. The
+    // same R01 scene still exposes a live GLB member for the dimension audit.
+    const liveModel = page.locator('[data-asset-key="fantasy-town-kit/lantern"]');
+    await expect(liveModel).toContainText("原始模型尺寸");
+    await expect(liveModel).toContainText("场景尺寸范围");
     await expect(page.locator('[data-assembly-id="summit-academy-building"]')).toBeAttached();
     const before = await page.evaluate(() => {
       const bag = globalThis as unknown as {

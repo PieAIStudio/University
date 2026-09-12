@@ -5,6 +5,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { assertCompleteCourseOverview, waitForCourseFraming } from "./harness/course-overview.js";
+import { CATALOGUE_ROLES } from "./harness/catalogue.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { waitForCourseTrees } from "./harness/course-foliage.js";
 import {
@@ -13,6 +14,7 @@ import {
 } from "./harness/online-learner.js";
 
 const COURSE = FIRST_COURSE_ROUTE;
+const COURSE_ID = CATALOGUE_ROLES.settlement.course.id;
 /* One implementation of the settlement fixture; see harness/online-learner.ts. */
 const GAME_ROUTE_TITLE = HARNESS_GAME_ROUTE_TITLE;
 const RUN = new Date().toISOString().replaceAll(":", "-");
@@ -114,7 +116,7 @@ test.describe("S 课程岛与学习玩法的整合边界", () => {
           page.getByRole("button", { name: `当前系列 ${GAME_ROUTE_TITLE}`, exact: true }),
         ).toBeVisible();
         const course = page.locator(
-          'button.label--course[data-map-marker="foundations-before-zero"]',
+          `button.label--course[data-map-marker=${JSON.stringify(COURSE_ID)}]`,
         );
         await expect(course).toContainText("当前");
         await humanClick(page, course, "select the original course after remounting the world");

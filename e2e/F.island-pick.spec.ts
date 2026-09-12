@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { humanClick, waitForStableBox } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
+import { installCourseLabelFixture } from "./harness/catalogue.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { openOnline, selectGameRoute, waitForMapReady } from "./harness/online-learner.js";
 import { namedStep } from "./harness/step.js";
@@ -60,15 +61,26 @@ async function visibleCourseSnapshot(page: Page): Promise<{ id: string; box: Box
 async function waitForCourseLabelLayout(page: Page): Promise<void> {
   let previous = "";
   let stableSamples = 0;
-  await expect.poll(async () => {
-    const snapshot = await visibleCourseSnapshot(page);
-    const signature = JSON.stringify(snapshot.map(({ id, box }) => [
-      id, Math.round(box.x), Math.round(box.y), Math.round(box.width), Math.round(box.height),
-    ]));
-    stableSamples = signature === previous ? stableSamples + 1 : 0;
-    previous = signature;
-    return stableSamples;
-  }, { message: "课程标签须在栏位动画和相机投影后保持身份与位置稳定", intervals: [100] }).toBeGreaterThanOrEqual(3);
+  await expect
+    .poll(
+      async () => {
+        const snapshot = await visibleCourseSnapshot(page);
+        const signature = JSON.stringify(
+          snapshot.map(({ id, box }) => [
+            id,
+            Math.round(box.x),
+            Math.round(box.y),
+            Math.round(box.width),
+            Math.round(box.height),
+          ]),
+        );
+        stableSamples = signature === previous ? stableSamples + 1 : 0;
+        previous = signature;
+        return stableSamples;
+      },
+      { message: "课程标签须在栏位动画和相机投影后保持身份与位置稳定", intervals: [100] },
+    )
+    .toBeGreaterThanOrEqual(3);
 }
 
 function courseLabel(page: Page, id: string): Locator {
@@ -132,10 +144,10 @@ async function clickEmptySky(page: Page): Promise<void> {
         const el = entry as HTMLElement;
         return Boolean(
           el.closest(".picked--follow") ||
-            el.closest("button.label") ||
-            el.closest(".app-shell__collapse") ||
-            el.closest(".nav-rail") ||
-            el.closest(".app-shell__aside"),
+          el.closest("button.label") ||
+          el.closest(".app-shell__collapse") ||
+          el.closest(".nav-rail") ||
+          el.closest(".app-shell__aside"),
         );
       });
       return stack.some((entry) => entry.tagName === "CANVAS") && !blocked;
@@ -347,7 +359,9 @@ test.describe("F 点岛弹出「进入这门课」· 跟岛走", () => {
       await expect(page.getByText(/正在打开校园档案/)).toHaveCount(0, { timeout: 30_000 });
       await expect(page.locator(".stagewrap canvas")).toBeVisible({ timeout: 30_000 });
       await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
-      await expect(page.locator("button.label.is-visible").first()).toBeVisible({ timeout: 30_000 });
+      await expect(page.locator("button.label.is-visible").first()).toBeVisible({
+        timeout: 30_000,
+      });
       await page.waitForTimeout(600);
     });
     await walkIslandPick(page, "local");
@@ -355,12 +369,18 @@ test.describe("F 点岛弹出「进入这门课」· 跟岛走", () => {
   });
 });
 
-for (const [mode, origin] of [["delivery", ONLINE_ORIGIN], ["authoring", LOCAL_ORIGIN]] as const) {
+for (const [mode, origin] of [
+  ["delivery", ONLINE_ORIGIN],
+  ["authoring", LOCAL_ORIGIN],
+] as const) {
   for (const width of [1440, 375]) {
     test.describe(`F course label status ${mode} ${width}`, () => {
       test.use({ viewport: { width, height: width === 1440 ? 900 : 812 }, colorScheme: "light" });
-      test("long names leave learning state and rewrite notices visible and clickable", async ({ page }) => {
+      test("long names leave learning state and rewrite notices visible and clickable", async ({
+        page,
+      }) => {
         const consoleErrors = watchConsole(page);
+        await installCourseLabelFixture(page);
         await page.goto(`${origin}/`, { waitUntil: "domcontentloaded" });
         await selectGameRoute(page);
         await assertWorldCarrierAboveGround(page);
@@ -378,8 +398,11 @@ for (const [mode, origin] of [["delivery", ONLINE_ORIGIN], ["authoring", LOCAL_O
                 const box = badge.getBoundingClientRect();
                 return {
                   text: badge.textContent,
-                  inside: box.left >= bounds.left && box.right <= bounds.right + 1 &&
-                    box.top >= bounds.top && box.bottom <= bounds.bottom + 1,
+                  inside:
+                    box.left >= bounds.left &&
+                    box.right <= bounds.right + 1 &&
+                    box.top >= bounds.top &&
+                    box.bottom <= bounds.bottom + 1,
                   notTruncated: badge.scrollWidth <= badge.clientWidth + 1,
                   width: box.width,
                   height: box.height,
@@ -390,12 +413,16 @@ for (const [mode, origin] of [["delivery", ONLINE_ORIGIN], ["authoring", LOCAL_O
         );
         expect(rows.length).toBeGreaterThan(0);
         expect(rows.some((row) => row.truncated)).toBe(true);
-        expect(rows.flatMap((row) => row.badges).some((badge) => badge.text === "改写中")).toBe(true);
+        expect(rows.flatMap((row) => row.badges).some((badge) => badge.text === "改写中")).toBe(
+          true,
+        );
         for (const row of rows) {
           expect(row.titleWidth, row.id ?? "course title").toBeGreaterThan(20);
           expect(row.badges.length).toBeGreaterThan(0);
           for (const badge of row.badges) {
-            expect(badge.inside, `${row.id}/${badge.text} must not be clipped with the title`).toBe(true);
+            expect(badge.inside, `${row.id}/${badge.text} must not be clipped with the title`).toBe(
+              true,
+            );
             expect(badge.notTruncated).toBe(true);
             expect(badge.width).toBeGreaterThan(0);
             expect(badge.height).toBeGreaterThan(0);
@@ -407,7 +434,10 @@ for (const [mode, origin] of [["delivery", ONLINE_ORIGIN], ["authoring", LOCAL_O
         await expect(enterCard(page).getByRole("button", { name: /进入这门课/ })).toBeVisible();
         const folder = "SCRATCH/e2e/course-label-status";
         mkdirSync(folder, { recursive: true });
-        writeFileSync(`${folder}/${mode}-${width}.json`, JSON.stringify({ url: page.url(), width, rows }, null, 2));
+        writeFileSync(
+          `${folder}/${mode}-${width}.json`,
+          JSON.stringify({ url: page.url(), width, rows }, null, 2),
+        );
         await page.screenshot({ path: `${folder}/${mode}-${width}.png` });
         consoleErrors.assertClean();
       });

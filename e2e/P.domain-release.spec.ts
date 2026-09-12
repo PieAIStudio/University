@@ -4,9 +4,20 @@ import { expect, test } from "@playwright/test";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
+import {
+  CATALOGUE_ROLES,
+  HAS_MULTIPLE_SHIPPED_STUDIES,
+  MULTI_STUDY_CATALOGUE_REASON,
+  SECONDARY_COURSE,
+  SECONDARY_STUDY,
+  SHIPPED_CATALOGUE,
+  coursePathOf,
+} from "./harness/catalogue.js";
 import { GAME_ROUTE_TITLE } from "./harness/online-learner.js";
 
 const RUN = new Date().toISOString().replaceAll(":", "-");
+const PRIMARY_STUDY = CATALOGUE_ROLES.settlement.study;
+const PRIMARY_COURSE = CATALOGUE_ROLES.settlement.course;
 
 test.describe("P 正式领域目录与未发布星球", () => {
   for (const [mode, origin] of [
@@ -15,6 +26,7 @@ test.describe("P 正式领域目录与未发布星球", () => {
   ] as const) {
     for (const width of [1440, 375, 872]) {
       test(`${mode} ${width}px 保留真实系列与空星球往返`, async ({ page }) => {
+        test.skip(!HAS_MULTIPLE_SHIPPED_STUDIES, MULTI_STUDY_CATALOGUE_REASON);
         const errors = watchConsole(page);
         const folder = join(
           process.cwd(),
@@ -29,7 +41,7 @@ test.describe("P 正式领域目录与未发布星球", () => {
           width,
           height: width === 1440 ? 900 : width === 872 ? 286 : 812,
         });
-        await page.goto(`${origin}/turing-pact/foundations-before-zero`);
+        await page.goto(`${origin}${coursePathOf(PRIMARY_COURSE)}`);
         await expect(page.getByRole("button", { name: "总览课程岛", exact: true })).toBeVisible();
         await humanClick(
           page,
@@ -38,7 +50,7 @@ test.describe("P 正式领域目录与未发布星球", () => {
         );
         if (width === 872) {
           const current = page.locator(
-            'button.label--course[data-map-marker="foundations-before-zero"]',
+            `button.label--course[data-map-marker=${JSON.stringify(PRIMARY_COURSE.id)}]`,
           );
           await expect(current).toHaveClass(/is-visible/);
           await expect(current).toHaveCSS("opacity", "1");
@@ -111,9 +123,9 @@ test.describe("P 正式领域目录与未发布星球", () => {
         });
         await page.screenshot({ path: join(folder, "four-domains.png") });
         for (const [domain, expected] of [
-          ["programming", ["browser-ai", "general"]],
-          ["ai-foundations", ["ai-foundations"]],
-          ["ai-games", ["turing-pact"]],
+          ["programming", SHIPPED_CATALOGUE.map((study) => study.id)],
+          ["ai-foundations", SECONDARY_STUDY ? [SECONDARY_STUDY.id] : []],
+          ["ai-games", [PRIMARY_STUDY.id]],
         ] as const) {
           await humanClick(
             page,
@@ -126,8 +138,12 @@ test.describe("P 正式领域目录与未发布星球", () => {
           expect(actual).toEqual([...expected].sort());
           await expect(page.locator(".planet-page__enter")).toBeVisible();
           await expect(page.locator("[data-study-description]")).toBeVisible();
-          if (domain === "ai-foundations")
-            await expect(page.locator('[data-study-id="ai-foundations"]')).toContainText("61 节");
+          if (domain === "ai-foundations" && SECONDARY_STUDY)
+            await expect(
+              page.locator(`[data-study-id=${JSON.stringify(SECONDARY_STUDY.id)}]`),
+            ).toContainText(
+              `${SECONDARY_STUDY.courses.reduce((sum, course) => sum + course.lessonCount, 0)} 节`,
+            );
         }
         for (const id of ["ai-media"]) {
           await humanClick(page, page.locator(`button[data-domain-id="${id}"]`), `select ${id}`);
@@ -167,10 +183,9 @@ test.describe("P 正式领域目录与未发布星球", () => {
           "aria-pressed",
           "true",
         );
-        await expect(page.locator('[data-study-id="turing-pact"]')).toHaveAttribute(
-          "aria-pressed",
-          "true",
-        );
+        await expect(
+          page.locator(`[data-study-id=${JSON.stringify(PRIMARY_STUDY.id)}]`),
+        ).toHaveAttribute("aria-pressed", "true");
         const returned = await page.evaluate(() => {
           const bag = window as any;
           return ["programming", "ai-foundations", "ai-games", "ai-media"].map((id) => {
@@ -190,15 +205,17 @@ test.describe("P 正式领域目录与未发布星球", () => {
         await humanClick(page, page.locator(".planet-page__enter"), "open foundations archipelago");
         await humanClick(
           page,
-          page.locator('button.label--course[data-map-marker="what-is-ai-really"]'),
-          "choose the 61-lesson course",
+          page.locator(
+            `button.label--course[data-map-marker=${JSON.stringify(SECONDARY_COURSE.id)}]`,
+          ),
+          `choose the ${SECONDARY_COURSE.lessonCount}-lesson course`,
         );
         await humanClick(
           page,
           page.getByRole("button", { name: /进入这门课/ }),
           "enter the actual foundations course",
         );
-        await expect(page).toHaveURL(`${origin}/ai-foundations/what-is-ai-really`);
+        await expect(page).toHaveURL(`${origin}${coursePathOf(SECONDARY_COURSE)}`);
         await humanClick(
           page,
           page.getByRole("button", { name: "开始", exact: true }),
@@ -211,7 +228,10 @@ test.describe("P 正式领域目录与未发布星球", () => {
         );
         await expect(page.getByRole("button", { name: "离开课文", exact: true })).toBeVisible();
         await expect(
-          page.getByRole("heading", { name: "手机怎么一眼就认出是你", exact: true }),
+          page.getByRole("heading", {
+            name: CATALOGUE_ROLES.longestCourse.lesson.title,
+            exact: true,
+          }),
         ).toBeVisible();
         await page.screenshot({ path: join(folder, "foundations-reader.png") });
         await humanClick(
@@ -237,17 +257,16 @@ test.describe("P 正式领域目录与未发布星球", () => {
           page.locator('button[data-domain-id="ai-games"]'),
           "return to game learning",
         );
-        await expect(page.locator('[data-study-id="turing-pact"]')).toHaveAttribute(
-          "aria-pressed",
-          "true",
-        );
+        await expect(
+          page.locator(`[data-study-id=${JSON.stringify(PRIMARY_STUDY.id)}]`),
+        ).toHaveAttribute("aria-pressed", "true");
         await humanClick(
           page,
           page.getByRole("button", { name: `进入 ${GAME_ROUTE_TITLE}`, exact: true }),
           "return to existing series",
         );
         await expect(
-          page.getByRole("button", { name: "《在开始之前：App、代码、和你》", exact: true }),
+          page.getByRole("button", { name: PRIMARY_COURSE.title, exact: true }),
         ).toBeVisible();
         errors.assertClean();
         writeFileSync(

@@ -2,11 +2,16 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { waitForStableBox } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
+import {
+  COURSE_SCENE_FIXTURE,
+  coursePathOf,
+  installCourseSceneFixture,
+} from "./harness/catalogue.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { namedStep } from "./harness/step.js";
 import { assertCompleteCourseOverview, waitForCourseFraming } from "./harness/course-overview.js";
 
-const COURSE_PATH = "/turing-pact/foundations-before-zero";
+const COURSE_PATH = coursePathOf(COURSE_SCENE_FIXTURE.course);
 
 interface ModeConfig {
   readonly mode: "delivery" | "authoring";
@@ -59,6 +64,8 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
       test(`${mode}: 触控点击关卡标记 → 课程卡打开 → 课文阅读器进退`, async ({ page }) => {
         const consoleErrors = watchConsole(page);
 
+        await installCourseSceneFixture(page);
+
         await namedStep(page, `打开 ${mode} 课程岛页面`, async () => {
           await page.goto(`${origin}${COURSE_PATH}`, {
             waitUntil: "domcontentloaded",
@@ -68,9 +75,9 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
         });
 
         await namedStep(page, "真实触控点击第一节关卡标记", async () => {
-          await page.getByRole("button",{name:"总览课程岛",exact:true}).tap();
+          await page.getByRole("button", { name: "总览课程岛", exact: true }).tap();
           await assertCompleteCourseOverview(page);
-          await page.getByRole("button",{name:"回到当前关",exact:true}).tap();
+          await page.getByRole("button", { name: "回到当前关", exact: true }).tap();
           await waitForCourseFraming(page);
           const marker = page
             .locator(
@@ -121,6 +128,8 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
 
       test(`${mode}: 键盘 Tab 遍历关卡标记并激活，Escape 关闭`, async ({ page }) => {
         const consoleErrors = watchConsole(page);
+
+        await installCourseSceneFixture(page);
 
         await page.goto(`${origin}${COURSE_PATH}`, {
           waitUntil: "domcontentloaded",
@@ -178,6 +187,8 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
       }) => {
         const consoleErrors = watchConsole(page);
 
+        await installCourseSceneFixture(page);
+
         // 普通无 freeze / seed 参数 URL
         await page.emulateMedia({ reducedMotion: "reduce" });
         await page.goto(`${origin}${COURSE_PATH}`, {
@@ -192,7 +203,7 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
         });
         expect(respectsReducedMotion).toBe(true);
 
-        const overviewButton = page.getByRole("button",{name:"总览课程岛",exact:true});
+        const overviewButton = page.getByRole("button", { name: "总览课程岛", exact: true });
         await overviewButton.focus();
         await page.keyboard.press("Enter");
         await assertCompleteCourseOverview(page);

@@ -3,12 +3,17 @@ import { expect, test } from "@playwright/test";
 import { watchConsole } from "./harness/console.js";
 import { humanClick } from "./harness/click.js";
 import { ONLINE_ORIGIN } from "./ports.js";
-import { walkFirstOnlineLesson } from "./harness/online-learner.js";
+import {
+  FIRST_COURSE_ID,
+  FIRST_COURSE_ROUTE,
+  SETTLEMENT_LESSON_COUNT,
+  walkFirstOnlineLesson,
+} from "./harness/online-learner.js";
 
 test.describe("A 新学习者 · 在线端 · 手机宽度", () => {
   test.use({ viewport: { width: 375, height: 812 }, hasTouch: false });
 
-  test("清空 storage → 落地 → 第一节 → 结算 1/41", async ({ page }) => {
+  test(`清空 storage → 落地 → 第一节 → 结算 1/${SETTLEMENT_LESSON_COUNT}`, async ({ page }) => {
     const consoleErrors = watchConsole(page);
     await walkFirstOnlineLesson(page);
     consoleErrors.assertClean();
@@ -27,10 +32,8 @@ test.describe("A 新学习者 · 在线端 · 手机宽度", () => {
   test("课程岛收起时仍能直接回到地图", async ({ page }) => {
     const consoleErrors = watchConsole(page);
     await page.goto(
-      `${ONLINE_ORIGIN}/turing-pact/foundations-before-zero?seed=foundations-before-zero&freeze=1`,
-      {
-        waitUntil: "domcontentloaded",
-      },
+      `${ONLINE_ORIGIN}${FIRST_COURSE_ROUTE}?seed=${encodeURIComponent(FIRST_COURSE_ID)}&freeze=1`,
+      { waitUntil: "domcontentloaded" },
     );
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
 
@@ -65,10 +68,8 @@ test.describe("A 新学习者 · 在线端 · 手机宽度", () => {
   test("点开学习路线后手机也能到达分级测验并回地图", async ({ page }) => {
     const consoleErrors = watchConsole(page);
     await page.goto(
-      `${ONLINE_ORIGIN}/turing-pact/foundations-before-zero?seed=foundations-before-zero&freeze=1`,
-      {
-        waitUntil: "domcontentloaded",
-      },
+      `${ONLINE_ORIGIN}${FIRST_COURSE_ROUTE}?seed=${encodeURIComponent(FIRST_COURSE_ID)}&freeze=1`,
+      { waitUntil: "domcontentloaded" },
     );
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
 

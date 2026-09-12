@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { assertPanelIsPainted } from "./harness/assert.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
+import { SHIPPED_STUDY_TITLES } from "./harness/catalogue.js";
 import { openOnline, waitForMapReady } from "./harness/online-learner.js";
 import { namedStep } from "./harness/step.js";
 
@@ -244,8 +245,7 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
       await expect(
         menu.locator("[role='option']").filter({ hasText: "看所有课程系列" }),
       ).toHaveCount(1);
-      await expect(menu).toContainText("学会用 AI 做游戏");
-      await expect(menu).toContainText("学会用 AI 做网站");
+      for (const title of SHIPPED_STUDY_TITLES) await expect(menu).toContainText(title);
       await page.screenshot({ path: `${SHOTS}/switcher.png` });
     });
 

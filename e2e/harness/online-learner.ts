@@ -1,79 +1,27 @@
 import { expect, type Page } from "@playwright/test";
-import { readFileSync } from "node:fs";
 
 import { ONLINE_ORIGIN } from "../ports.js";
 import { assertImagesStayInViewport, assertPanelIsPainted, assertVisibleText } from "./assert.js";
+import { CATALOGUE_ROLES, coursePathOf, lessonPathOf } from "./catalogue.js";
 import { humanClick } from "./click.js";
 import { namedStep } from "./step.js";
 
-/*
-  The settlement fixture, addressed by id and read out of the shipped package.
+const SETTLEMENT = CATALOGUE_ROLES.settlement;
+const SETTLEMENT_LESSONS = SETTLEMENT.course.units.flatMap((unit) => unit.lessons);
+export const SETTLEMENT_LESSON_COUNT = SETTLEMENT_LESSONS.length;
 
-  It used to be four string literals copied from `turing-pact`'s opening course,
-  and when that package was locked on 2026-09-12 every spec importing this file
-  failed at module load — not on an assertion, on `.title` of `undefined`, so
-  Playwright could not even collect them. Ids are the stable half of a lesson
-  and its prose is the half an author rewrites, so the ids are written here and
-  every piece of display text is looked up.
-
-  The answer is the one thing that cannot be derived: `import-courses` strips
-  answer keys out of the package and leaves a fingerprint, which is the point.
-  "会动手的" is what this exercise's prompt asks the learner to choose between.
-*/
-const FIXTURE = {
-  studyId: "browser-ai",
-  courseId: "run-a-real-project-with-ai",
-  lessonId: "chat-ai-versus-doing-ai",
-  answer: "会动手的",
-} as const;
-
-interface PackagedLesson {
-  readonly id: string;
-  readonly title: string;
-}
-interface PackagedCourse {
-  readonly id: string;
-  readonly title: string;
-  readonly units: readonly { readonly lessons: readonly PackagedLesson[] }[];
-}
-
-const catalogue = JSON.parse(
-  readFileSync("apps/university/src/content/imported.json", "utf8"),
-) as { readonly studies: readonly { readonly studyId: string; readonly title: string }[] };
-
-const study = catalogue.studies.find((entry) => entry.studyId === FIXTURE.studyId);
-if (!study) {
-  throw new Error(
-    `e2e fixture: study ${FIXTURE.studyId} is not in the shipped catalogue. ` +
-      `Shipped: ${catalogue.studies.map((entry) => entry.studyId).join(", ") || "(none)"}. ` +
-      `Point FIXTURE at a shipped study, or unlock this one.`,
-  );
-}
-
-const packaged = JSON.parse(
-  readFileSync(
-    `apps/university/content/${FIXTURE.studyId}/${FIXTURE.courseId}.json`,
-    "utf8",
-  ),
-) as { readonly course?: PackagedCourse } & Partial<PackagedCourse>;
-const course = (packaged.course ?? packaged) as PackagedCourse;
-const lessons = course.units.flatMap((unit) => unit.lessons);
-const firstLesson = lessons.find((lesson) => lesson.id === FIXTURE.lessonId);
-if (!firstLesson) {
-  throw new Error(
-    `e2e fixture: lesson ${FIXTURE.lessonId} is not in ${FIXTURE.courseId}. ` +
-      `Lessons: ${lessons.map((lesson) => lesson.id).join(", ")}.`,
-  );
-}
-
-export const FIRST_LESSON_TITLE = firstLesson.title;
-export const FIRST_COURSE_TITLE = course.title;
-export const FIRST_ANSWER: string = FIXTURE.answer;
+export const FIRST_STUDY_ID = SETTLEMENT.study.id;
+export const FIRST_COURSE_ID = SETTLEMENT.course.id;
+export const FIRST_LESSON_ID = SETTLEMENT.lesson.id;
+export const FIRST_LESSON_TITLE = SETTLEMENT.lesson.title;
+export const FIRST_COURSE_TITLE = SETTLEMENT.course.title;
+export const FIRST_ANSWER: string = SETTLEMENT.answer;
 export const COST_LINE = /读 \d+ 分钟 · \d+ 道题/;
-export const SETTLEMENT_PROGRESS = new RegExp(`1\\s*/\\s*${lessons.length}\\s*关`);
-export const GAME_ROUTE_TITLE: string = study.title;
-/** The settlement course's own route, so a spec never spells the ids again. */
-export const FIRST_COURSE_ROUTE = `/${FIXTURE.studyId}/${FIXTURE.courseId}`;
+export const SETTLEMENT_PROGRESS = new RegExp(`1\\s*/\\s*${SETTLEMENT_LESSON_COUNT}\\s*关`);
+export const GAME_ROUTE_TITLE: string = SETTLEMENT.study.title;
+/** Settlement routes are role-derived; specs never spell study/course/lesson ids. */
+export const FIRST_COURSE_ROUTE = coursePathOf(SETTLEMENT.course);
+export const FIRST_LESSON_ROUTE = lessonPathOf(SETTLEMENT.course, SETTLEMENT.lesson);
 
 export async function openOnline(page: Page): Promise<void> {
   await page.goto(`${ONLINE_ORIGIN}/`, { waitUntil: "domcontentloaded" });
@@ -178,7 +126,9 @@ export async function waitForSettlementProgress(page: Page): Promise<void> {
     await expect(page.getByText("读完了。")).toBeVisible({ timeout: 20_000 });
     // The bar animates from the old value. Reading too early catches "0 / 41 关".
     await expect(page.getByText(SETTLEMENT_PROGRESS)).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText(/0\s*\/\s*41\s*关/)).toHaveCount(0);
+    await expect(
+      page.getByText(new RegExp(`0\\s*/\\s*${SETTLEMENT_LESSON_COUNT}\\s*关`)),
+    ).toHaveCount(0);
     await page.waitForTimeout(700);
     await expect(page.getByText(SETTLEMENT_PROGRESS)).toBeVisible();
     await assertImagesStayInViewport(page);

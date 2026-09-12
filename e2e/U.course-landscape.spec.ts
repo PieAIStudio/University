@@ -2,6 +2,12 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { ONLINE_ORIGIN } from "./ports.js";
+import {
+  CATALOGUE_ROLES,
+  COURSE_SCENE_FIXTURE,
+  coursePathOf,
+  installCourseSceneFixture,
+} from "./harness/catalogue.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { assertCompleteCourseOverview, waitForCourseFraming } from "./harness/course-overview.js";
@@ -9,7 +15,8 @@ import { captureSurfaceMaterialStudy } from "./harness/surface-material-study.js
 import { captureCourseShadowStudy } from "./harness/course-shadow-study.js";
 import { captureSourceSwatchStudy } from "./harness/source-swatch-study.js";
 
-const COURSE = "/turing-pact/foundations-before-zero";
+const COURSE = coursePathOf(COURSE_SCENE_FIXTURE.course);
+const STUDY_TITLE = CATALOGUE_ROLES.settlement.study.title;
 const OUTPUT = process.env.R46_EVIDENCE_DIR ?? "SCRATCH/e2e/course-landscape";
 
 async function ready(page: Page) {
@@ -41,6 +48,7 @@ for (const viewport of [
       const errors = watchConsole(page);
       const folder = join(OUTPUT, String(viewport.width));
       mkdirSync(folder, { recursive: true });
+      await installCourseSceneFixture(page);
       await page.goto(`${ONLINE_ORIGIN}${COURSE}`, { waitUntil: "domcontentloaded" });
       await ready(page);
       if (viewport.width >= 768) {
@@ -220,7 +228,7 @@ for (const viewport of [
       const trail = page.getByRole("navigation", { name: "当前位置", exact: true });
       await humanClick(
         page,
-        trail.getByRole("link", { name: "学会用 AI 做游戏", exact: true }),
+        trail.getByRole("link", { name: STUDY_TITLE, exact: true }),
         "return to series",
       );
       await expect(page).toHaveURL(`${ONLINE_ORIGIN}/`);

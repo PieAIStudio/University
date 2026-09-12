@@ -5,11 +5,14 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { watchConsole } from "./harness/console.js";
 import { namedStep } from "./harness/step.js";
 import { FIRST_COURSE_TITLE, openOnline, selectGameRoute } from "./harness/online-learner.js";
+import { CATALOGUE_ROLES, lessonPathOf } from "./harness/catalogue.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 
 const PARITY_SCREENSHOT_DIR = join(process.cwd(), "SCRATCH", "e2e", "parity");
-const PARITY_LESSON_PATH =
-  "/turing-pact/foundations-before-zero/what-is-an-app/why-so-many-files-preview";
+const PARITY_LESSON_PATH = lessonPathOf(
+  CATALOGUE_ROLES.completeLesson.course,
+  CATALOGUE_ROLES.completeLesson.lesson,
+);
 mkdirSync(PARITY_SCREENSHOT_DIR, { recursive: true });
 
 async function parityScreenshot(page: Page, name: string) {

@@ -2,10 +2,16 @@ import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ONLINE_ORIGIN } from "./ports.js";
+import {
+  CATALOGUE_ROLES,
+  coursePathOf,
+  installReferenceArchipelagoFixture,
+} from "./harness/catalogue.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 
-const COURSE = "/turing-pact/foundations-before-zero";
+const COURSE = CATALOGUE_ROLES.settlement.course;
+const COURSE_PATH = coursePathOf(COURSE);
 const OUTPUT = process.env.R44_EVIDENCE_DIR ?? "SCRATCH/e2e/archipelago-reference";
 
 async function ready(page: Page, group: string) {
@@ -101,7 +107,8 @@ for (const viewport of [
       const console = watchConsole(page);
       const folder = join(OUTPUT, String(viewport.width));
       mkdirSync(folder, { recursive: true });
-      await page.goto(`${ONLINE_ORIGIN}${COURSE}`, { waitUntil: "domcontentloaded" });
+      await installReferenceArchipelagoFixture(page);
+      await page.goto(`${ONLINE_ORIGIN}${COURSE_PATH}`, { waitUntil: "domcontentloaded" });
       await ready(page, "island-dressing-course");
       const courseLight = await page.evaluate(() => {
         const light = (window as any).three.scene.getObjectByName("map-key-light");
@@ -323,11 +330,11 @@ for (const viewport of [
       const breadcrumb = page.getByRole("navigation", { name: "当前位置", exact: true });
       await expect(breadcrumb.getByRole("link", { name: "学习星球" })).toBeVisible();
       // Click real canvas scenery, not the DOM label or a programmatic .click().
-      const target = await page.evaluate(() => {
+      const target = await page.evaluate((courseKey) => {
         const state = (window as any).three;
         const mesh = state.scene.getObjectByName("remote-props-trees");
         const range = mesh.geometry.userData.miniatureRanges.find(
-          (r: any) => r.islandId === "turing-pact/foundations-before-zero",
+          (r: any) => r.islandId === courseKey,
         );
         const p = state.camera.position.clone().set(0, 0, 0);
         const position = mesh.geometry.getAttribute("position"),
@@ -344,7 +351,7 @@ for (const viewport of [
           x: rect.left + ((p.x + 1) * rect.width) / 2,
           y: rect.top + ((1 - p.y) * rect.height) / 2,
         };
-      });
+      }, `${COURSE.studyId}/${COURSE.id}`);
       await page.mouse.click(target.x, target.y);
       await expect(page.getByRole("button", { name: /进入这门课/ })).toBeVisible();
       await humanClick(
@@ -352,12 +359,15 @@ for (const viewport of [
         page.getByRole("button", { name: /进入这门课/ }),
         "enter selected miniature course",
       );
-      await expect(page).toHaveURL(new RegExp(`${COURSE}$`));
+      await expect(page).toHaveURL(new RegExp(`${COURSE_PATH.replaceAll("/", "\\/")}$`));
       await ready(page, "island-dressing-course");
-      await expect(breadcrumb.locator('[aria-current="page"]')).toContainText("在开始之前");
+      await expect(breadcrumb.locator('[aria-current="page"]')).toContainText(COURSE.title);
       await humanClick(
         page,
-        breadcrumb.getByRole("link", { name: "学会用 AI 做游戏", exact: true }),
+        breadcrumb.getByRole("link", {
+          name: CATALOGUE_ROLES.settlement.study.title,
+          exact: true,
+        }),
         "return through the shared trail",
       );
       await ready(page, "remote-props");
