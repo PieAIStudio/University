@@ -168,6 +168,7 @@ describe("AccountPanel", () => {
     expect(markup).toContain("跨设备同步需要对应会员权益");
     expect(markup).toContain(ACCOUNT_SIGN_IN);
     expect(markup).toContain("免密码登录");
+    expect(markup).toMatch(/<details[^>]*account-panel__form[^>]*open/);
     expect(markup).toContain('type="password"');
     expect(markup).toContain("game-ui-input");
     expect(markup).toContain("game-ui-field");

@@ -221,6 +221,7 @@ export function LearningPlayLab({
               key={`${family.id}:${round}`}
               activity={activity}
               levels={levels}
+              initialDifficulty={difficulty}
               onLevelChange={(level) => {
                 setDifficulty(level);
                 setPlaylistDone(false);

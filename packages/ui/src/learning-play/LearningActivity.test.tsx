@@ -6,6 +6,7 @@ import type { ConnectActivity, TuneActivity } from "@pieai/university-core";
 import { LearningActivity } from "./LearningActivity.js";
 import { getBaseExamples } from "./base-examples.js";
 import { getAIBriefExamples } from "./ai-brief-examples.js";
+import { getExampleFamily } from "./difficulty-examples.js";
 
 let container: HTMLDivElement;
 let root: Root;
@@ -42,6 +43,27 @@ afterEach(async () => {
 });
 
 describe("activity host evidence boundary", () => {
+  it("keeps a host-selected level when the host swaps to another payload", async () => {
+    const base = getBaseExamples()[0]!;
+    const family = getExampleFamily(base);
+    await act(async () =>
+      root.render(
+        <LearningActivity
+          activity={family.levels.intro}
+          levels={{ id: family.id, levels: family.levels }}
+          initialDifficulty="practice"
+        />,
+      ),
+    );
+
+    expect(container.querySelector(".learning-activity")?.getAttribute("data-activity-id")).toBe(
+      "connect-web:practice:v1",
+    );
+    expect(container.querySelector(".learning-activity")?.getAttribute("data-difficulty")).toBe(
+      "practice",
+    );
+  });
+
   it("separates difficulty and occurrence identity from reusable activity identity", async () => {
     const onResult = vi.fn();
     const base = getBaseExamples()[0]!;

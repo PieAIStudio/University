@@ -219,6 +219,7 @@ button.label:focus-visible {
 .label--course {
   display: inline-flex;
   align-items: center;
+  min-block-size: 48px;
   overflow: visible;
 }
 

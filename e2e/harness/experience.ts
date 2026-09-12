@@ -139,8 +139,8 @@ const LIBRARY_PRIMARY: ExperienceTarget = {
 
 const PRACTICE_PRIMARY: ExperienceTarget = {
   id: "practice-start",
-  label: "开始一道判断",
-  locate: (page) => page.getByRole("button", { name: "开始一道判断" }),
+  label: "练习一轮",
+  locate: (page) => page.locator("button[data-practice-round]"),
 };
 
 const PLANS_PRIMARY: ExperienceTarget = {
@@ -232,7 +232,7 @@ async function readyLibrary(page: Page): Promise<void> {
 }
 
 async function readyPractice(page: Page): Promise<void> {
-  await readyShellHeading(page, "今天适合练吗？");
+  await readyShellHeading(page, "练一点，记得更牢。");
   await expect(PRACTICE_PRIMARY.locate(page)).toBeVisible({ timeout: 30_000 });
 }
 

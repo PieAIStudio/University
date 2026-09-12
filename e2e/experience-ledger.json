@@ -101,11 +101,11 @@
       "viewport": "phone",
       "severity": "blocking",
       "state": "fixed",
-      "guardedBy": "e2e/T.product-completeness.spec.ts::T1 / apps/university/src/ports/online/grading.test.ts / packages/core/src/progress/mistakes.test.ts",
+      "guardedBy": "apps/university/src/ports/online/grading.test.ts / packages/core/src/progress/mistakes.test.ts",
       "foundBy": "product-audit",
       "foundOn": "2026-09-09",
       "evidence": "docs/reference/execution/product-review-evidence/phone-answer-result.png; docs/reference/execution/product-review-evidence/phone-answer-result.json",
-      "note": "事项10。原访客路径复现保留。现在 pass/fail/undecided 分开：未决不记错、不奖通关、不推翻既有通过。T1 在提交及刷新后核对原合理改写；在线适配、错题和进度测试覆盖语义。另有发送前身份切换红绿测试；不等于真实付费 AI 联调。"
+      "note": "事项10。原访客路径复现保留。现在 pass/fail/undecided 分开：未决不记错、不奖通关、不推翻既有通过。当前 T1 的首课是严格二选一题，已由另一条回归记录守住；本条继续由在线适配、错题和进度测试覆盖未决语义。另有发送前身份切换红绿测试；不等于真实付费 AI 联调。"
     },
     {
       "id": "2cf150bda2e3",
@@ -761,6 +761,51 @@
       "foundBy": "claude",
       "foundOn": "2026-09-02",
       "note": "【原 id 5ab1fc8b0b50；element 改了所以 id 跟着重算。2026-09-02 当天自我更正，原判读是错的，保留原文以免下一个人重犯】\n\n原文我写的是「手机上课程落点淡成一条虚线，从可点的目的地退化成地表纹理」，并说我看了图才写的。图我确实看了，但**我看的是判官的截图，而判官那个机位不是学习者的相机**。\n\n查证：apps/university/src/app/App.tsx:572 那一段，islandLookCameraForShot 只在 `import.meta.env.DEV && lookDebug?.shot` 时才生效——它是带 debug 查询参数、只在开发模式下启用的固定测量机位，存在的目的就是让 look contract 跨次运行可比。学习者真正的课内相机是 apps/university/src/app/scene-camera.ts 的 frameCourse(lessons, {tier: 'mobile'|'desktop'})，注释写得很清楚：「课程里相机站在路上而不是路的上方」，而且它明确说whole-island 俯瞰那一版是**被有意替换掉的**——「那是地图该有的镜头，不是一条路该有的镜头」。\n\n我随后在 375×812 真机尺寸的浏览器里进了 turing-pact/foundations-before-zero 亲眼看：**课程落点又大又清楚**，兔子站在石墩上，橙色中心一眼可见，下一颗石墩就在旁边。完全不是虚线。\n\n所以这条发现的正确范围小得多，而且不是产品缺陷：\n\n① accentArea 在手机 design 机位低于硬带，这个数字是真的；\n② 但它很可能说明**硬带本身对竖屏不成立**，而不是场景有问题——course-design 机位按「投影范围 ≤ 84% 画面」拟合距离，在 390×844 竖屏上先卡住的是宽度，于是竖直方向大片留空，accent 占全画比例结构性地就比 1440×900 低一半。同一个场景，换个画幅，share-of-frame 类指标本来就不可比。\n③ 真正该问的是：accentArea 这种「占全画比例」的指标要不要按画幅归一化，或者手机机位要不要单独的带。这是判官的问题，不是产品的问题。\n\n降级为 polish，因为学习者看不到它。**教训：判官的机位不等于产品的相机，引用判官截图去描述「学习者看到什么」之前，先确认那个机位是不是产品真的会用的。**"
+    },
+    {
+      "id": "3732faaa4a85",
+      "screen": "/play-lab",
+      "element": "活动难度选择与换情境",
+      "category": "state-loss",
+      "viewport": "both",
+      "summary": "切换玩法或情境后，已选的进阶/挑战会被重置为入门，学习者看不到刚刚选择的控件和工具。",
+      "severity": "blocking",
+      "state": "fixed",
+      "foundBy": "codex-e2e-regression",
+      "foundOn": "2026-09-12",
+      "guardedBy": "packages/ui/src/learning-play/LearningActivity.test.tsx::keeps a host-selected level when the host swaps to another payload / e2e/P.learning-play.spec.ts::接线能纠正额外关系，两种情境都执行两条路径",
+      "evidence": ".scratch/failure-details.txt; SCRATCH/defect-review/after-play-difficulty-phone.png",
+      "note": "根因是宿主 LearningPlayLab 的 difficulty 没有传入活动；切换 payload 会重新挂载 LearningActivity，而活动只从 null 开始，所以进阶选择静默退回 intro。现在由 initialDifficulty 保留宿主选择；单测守住跨 payload，P 全场景浏览器回归并亲眼确认 challenge 控件仍在。"
+    },
+    {
+      "id": "69c9753b545e",
+      "screen": "/me",
+      "element": "未登录账号表单",
+      "category": "visibility",
+      "viewport": "both",
+      "summary": "已配置账号时登录表单默认折叠，直接打开个人档案的学习者看不到可提交的账号入口。",
+      "severity": "blocking",
+      "state": "fixed",
+      "foundBy": "codex-e2e-regression",
+      "foundOn": "2026-09-12",
+      "guardedBy": "e2e/M.experience.spec.ts::X3/X5 / packages/ui/src/navigation/empty/empty-screens.test.tsx::offers a kit form when signed out, not a modal",
+      "evidence": ".scratch/failure-details.txt; SCRATCH/defect-review/after-me-submit-phone.png",
+      "note": "根因是 UnsignedAccountForm 使用原生 details 但没有 open；直接访问 /me 时表单虽在 DOM 中却对学习者隐藏，Playwright 也因此认为提交按钮不可见。现在 details 默认展开，仍保留原生折叠能力和 kit 表单；M 的桌面/手机路径与组件测试守住可见提交控件。"
+    },
+    {
+      "id": "a8cba6a9af7e",
+      "screen": "/",
+      "element": "课程地图标签",
+      "category": "touch-target",
+      "viewport": "mobile",
+      "summary": "手机地图课程标签的触控盒小于无障碍下限，且未放置的锁定标签仍以半透明状态叠在可用标签上。",
+      "severity": "blocking",
+      "state": "fixed",
+      "foundBy": "codex-e2e-regression",
+      "foundOn": "2026-09-12",
+      "guardedBy": "e2e/M.experience.spec.ts::X2/X6 / X4",
+      "evidence": ".scratch/failure-details.txt; SCRATCH/defect-review/after-map-phone.png",
+      "note": "原始手机 axe 失败点名 run-a-real-project-with-ai 与 make-the-cutout-app-yours 的 target-size，触控盒高度不足且锁定标签互相覆盖。课程标签现在至少 48px 高；锁定样式只作用于实际可见标签，未放置标签继续由 --placed 隐藏。M 的整页 axe、手机触控检查和真实浏览器截图通过；axe-baseline.json 没有扩大。"
     }
   ]
 }
