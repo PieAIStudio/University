@@ -5,7 +5,7 @@
  * empty sky while the catalogue accumulated above/right of the learner.
  */
 import * as THREE from "three";
-import { WORLD_DISTANCE_MIN, WORLD_POLAR } from "./controls.js";
+import { WORLD_HOME_DISTANCE, WORLD_POLAR } from "./controls.js";
 
 const WORLD_NEIGHBOURS = 5;
 const WORLD_FOCUS_OFFSET_MAX = 8;
@@ -36,7 +36,7 @@ export function frameWorld(
   const offset = centre.sub(at).clampLength(0, WORLD_FOCUS_OFFSET_MAX);
   const look = at.clone().add(offset);
   const eye = new THREE.Vector3()
-    .setFromSpherical(new THREE.Spherical(WORLD_DISTANCE_MIN, WORLD_POLAR, 0.16))
+    .setFromSpherical(new THREE.Spherical(WORLD_HOME_DISTANCE, WORLD_POLAR, 0.16))
     .add(look);
   return { cameraFrom: [eye.x, eye.y, eye.z], lookAt: [look.x, look.y, look.z] };
 }

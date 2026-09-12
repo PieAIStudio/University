@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-11
 domain: architecture
 tags:
   - 3d
@@ -22,6 +22,26 @@ superseded_by: null
 ---
 
 # ADR-0009: The Procedural Map Is One Pipeline, Not Three Scenes
+
+The current R50 projection retains this pipeline. Upland groves read the existing
+field; rock-rooted foliage reads the bank's actual emitted triangle datums.
+Renderer and inspector consume the same successfully fitted replacement IDs,
+not independent eligibility filters. Material detail and falling-water flow do
+not move terrain or create another route. Choices, rejected experiments and
+budgets are recorded in [ADR-0008](ADR-0008-one-locked-technique-per-island-element.md#r50-fitted-ownership-layered-groves-and-finished-learning-places).
+
+## R52 amendment: one field, one deterministic form rule, one material owner
+
+R52 does not add a fifth projection or a second producer. Course tree form still
+comes from the blueprint's deterministic hash and the two existing tree
+geometries; changing the split only makes the shared field's broadleaf layer
+legible in clearings. Course ground still projects one terrain mesh through the
+existing StandardMaterial extension and its shared 128² scalar swatch. The
+lower-frequency sample changes only the material response across the existing
+field. Routes, lesson IDs, facilities, roots, resource leases and the Stage
+output chain stay owned by the same stages. R52's browser evidence and any
+full-gate boundary are recorded in the active delivery plan, rather than
+creating a parallel visual specification.
 
 ## Context
 
@@ -100,12 +120,39 @@ paying for detail nobody could see on things far from them.
 `IslandStyle` holds colour, texture groups, and sun/sky. It is the artist-facing
 surface. Changing how the map looks should not require reading a renderer.
 
+R48's course colour texture reads the existing field and the canonical dressing
+plan. Its tree/bank/working-place marks have real scene owners, not a second
+noise-based ecology. `course-surface-atlas.ts` is a material compilation stage;
+it must not edit the blueprint, route, positions or terrain height. The distant
+catalogue never requests this course texture. Representation budgets and the
+near sod-edge treatment remain in ADR-0008.
+
 ### And the technique lock, which is the fifth piece
 
 ADR-0008 governs the orthogonal question: *what technique draws each element*.
 This ADR governs where data comes from and how much it may cost. They compose —
 the lock says "grass is one billboard card", this pipeline says "and it reads
 its density from the field, and it spends its budget at the course projection".
+
+### R49: support belongs to the actual owner, not the screenshot
+
+The miniature bevel/crown compilation is asset geometry, not another island
+field. Course grove sizes and conservative clearances belong to the canonical
+dressing plan. Full-tree roots record their actual terrain contact offset there;
+the renderer does not relocate or silently remove a failing tree.
+
+Optional courtyard borders derive from existing facilities. The crafted stall
+replaces an existing placement within its old footprint and cuts only its four
+supports to actual ground, leaving one rigid countertop/canopy datum. Small
+plants on a reserved geological bank read `courseRockTopPoints` and the same
+triangles that its geometry emitter consumes. This scenery-local support must
+never become another navigable terrain sampler or modify lesson routes.
+
+`course-landscape-plan` explicitly records these scenery replacements and
+companions; renderers and the inspector consume that result. The course atlas's
+facility earth coverage is derived from real dressing and the existing field,
+not a new random biome mask. Donor material treatments run only on committed
+projection-owned clones and preserve the cached source maps and disposal owner.
 
 ## Consequences
 

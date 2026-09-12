@@ -3,6 +3,58 @@ import * as THREE from "three";
 import { frameCourseOverview, overviewViewport } from "./course-overview.js";
 
 describe("the learner's complete island overview", () => {
+  it("fits a tapered root's actual vertices, not the empty corners of its cuboid", () => {
+    const supports = [
+      new THREE.Vector3(-30, 0, 0),
+      new THREE.Vector3(30, 0, 0),
+      new THREE.Vector3(0, 0, -30),
+      new THREE.Vector3(0, 0, 30),
+      new THREE.Vector3(-3, -30, 2),
+      new THREE.Vector3(0, 8, 0),
+    ];
+    const bounds = new THREE.Box3().setFromPoints(supports);
+    const eye = new THREE.Vector3(1, 1.1, 1).normalize();
+    const view = {
+      width: 1600,
+      height: 1000,
+      fov: 34,
+      usable: { left: 281, right: 1256, top: 294, bottom: 932 },
+    };
+    const old = frameCourseOverview(bounds, eye, view);
+    const actual = frameCourseOverview(bounds, eye, view, supports);
+    expect(actual.distance).toBeLessThan(old.distance * 0.9);
+    const camera = new THREE.PerspectiveCamera(34, 1.6, 0.5, actual.far);
+    camera.position.set(...actual.cameraFrom);
+    camera.lookAt(...actual.lookAt);
+    camera.updateMatrixWorld(true);
+    for (const point of supports) {
+      const p = point.clone().project(camera);
+      expect((p.x + 1) * 800).toBeGreaterThanOrEqual(view.usable.left);
+      expect((p.x + 1) * 800).toBeLessThanOrEqual(view.usable.right);
+      expect((1 - p.y) * 500).toBeGreaterThanOrEqual(view.usable.top);
+      expect((1 - p.y) * 500).toBeLessThanOrEqual(view.usable.bottom);
+    }
+  });
+  it("fits the island below the toolbar instead of preferring a narrow tall strip of sky", () => {
+    const obstacles = [
+      { left: 16, right: 273, top: 16, bottom: 984 },
+      { left: 1265, right: 1584, top: 16, bottom: 680 },
+      { left: 285, right: 545, top: 76, bottom: 286 },
+      { left: 285, right: 720, top: 16, bottom: 60 },
+      { left: 742, right: 862, top: 940, bottom: 990 },
+    ];
+    const usable = overviewViewport(1600, 1000, obstacles, 1.3);
+    expect(usable.right - usable.left).toBeGreaterThan(900);
+    expect(usable.top).toBeGreaterThanOrEqual(294);
+    for (const box of obstacles) {
+      expect(
+        usable.left >= box.right ||
+          usable.right <= box.left ||
+          usable.top >= box.bottom ||
+          usable.bottom <= box.top,
+      ).toBe(true);
+    }
+  });
   it("chooses measured free space rather than guessing the shell's rail widths", () => {
     const obstacles = [
       { left: 16, right: 272, top: 16, bottom: 884 },

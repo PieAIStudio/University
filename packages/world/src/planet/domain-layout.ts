@@ -4,7 +4,10 @@ import { DOMAIN_RADIUS } from "./atmospheric-regions.js";
 
 export const DOMAIN_VIEW_FRONT = new THREE.Vector3(0, 0.12, -1).normalize();
 export const DOMAIN_VIEW_UP = new THREE.Vector3(0, -DOMAIN_VIEW_FRONT.z, DOMAIN_VIEW_FRONT.y);
-export const DOMAIN_OUTER_RADIUS = DOMAIN_RADIUS * 1.26;
+export const DOMAIN_SELECTED_SCALE = 1.1;
+export const DOMAIN_PEER_SCALE = 0.82;
+// Reserve the selected atmosphere/regions even while all peers are small.
+export const DOMAIN_OUTER_RADIUS = DOMAIN_RADIUS * 1.26 * DOMAIN_SELECTED_SCALE;
 const DOMAIN_SPACING = DOMAIN_OUTER_RADIUS * 2.5;
 
 /**
@@ -13,6 +16,13 @@ const DOMAIN_SPACING = DOMAIN_OUTER_RADIUS * 2.5;
  */
 export function domainLabelWidth(pixelsPerUnit: number): number {
   return Math.max(1, Math.min(176, Math.max(0, pixelsPerUnit) * DOMAIN_SPACING - 12));
+}
+
+/** Labels are bottom-anchored DOM boxes. The extra selected/unpublished row
+ * must fit too, not just the projected point above the sphere. */
+export function domainLabelY(anchor: number, boxHeight: number, viewportHeight: number): number {
+  const bottom = Math.max(4, viewportHeight - 4);
+  return Math.max(Math.min(boxHeight + 4, bottom), Math.min(anchor, bottom));
 }
 
 export interface DomainPlacement {

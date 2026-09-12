@@ -71,6 +71,27 @@ async function fieldIdentity(page: Page) {
   });
 }
 
+/** Selection changes scale, never identity or geometry. Wait for the actual
+ * transition rather than asserting the retired equal-size globe design. */
+async function expectSettledEmphasis(page: Page) {
+  await page.waitForFunction(() => {
+    const bag = window as any;
+    return bag.__planetProjection().domains.every((domain: { id: string }) => {
+      const active =
+        document
+          .querySelector(`button[data-domain-id="${domain.id}"]`)
+          ?.getAttribute("aria-pressed") === "true";
+      const root = bag.three.scene.getObjectByName(`domain-planet-${domain.id}`);
+      return (
+        root &&
+        // The production lerp snaps to the exact endpoint at 420ms. An epsilon
+        // admitted a still-running transition into the byte-identical snapshot.
+        root.scale.toArray().every((v: number) => v === (active ? 1.1 : 0.82))
+      );
+    });
+  });
+}
+
 test.describe("O 多领域星球 · 合成边界夹具（非课程目录）", () => {
   for (const scenario of cases) {
     test(`${scenario.domains}领域 ${scenario.series}系列 ${scenario.width}px${scenario.empty ? " 长名称与空领域" : ""}${scenario.reduced ? " 减少动态" : ""}`, async ({
@@ -124,8 +145,8 @@ test.describe("O 多领域星球 · 合成边界夹具（非课程目录）", ()
       ).toBeLessThan(300);
       await waitForPreparedDomains(page, scenario.domains);
       receipt.detailsReadyAt = await page.evaluate(() => performance.now());
+      await expectSettledEmphasis(page);
       const initial = await fieldIdentity(page);
-      for (const domain of initial) expect(domain.scale).toEqual([1, 1, 1]);
 
       // Actual projected vertices, not a count of scene objects, must fit the visible canvas.
       const framing = await page.evaluate(() => {
@@ -300,9 +321,16 @@ test.describe("O 多领域星球 · 合成边界夹具（非课程目录）", ()
         expect(labelFit.fullName).toContain("进入");
         expect(labelFit.whiteSpace).toBe("nowrap");
       }
+      await expectSettledEmphasis(page);
+      const beforeProgress = await fieldIdentity(page);
+      // The earlier selection intentionally changed emphasis; a progress-only
+      // update must now leave both that emphasis and every resource unchanged.
       await humanClick(page, progress, "update progress without rebuilding domain geometry");
       await expect(page.locator("[data-fixture-revision]")).toHaveText("2");
-      expect(await fieldIdentity(page)).toEqual(initial);
+      expect(await fieldIdentity(page)).toEqual(beforeProgress);
+      const resourceIdentity = (domains: typeof initial) =>
+        domains.map(({ scale: _scale, ...identity }) => identity);
+      expect(resourceIdentity(beforeProgress)).toEqual(resourceIdentity(initial));
       receipt.projection = await page.evaluate(() => (window as any).__planetProjection());
 
       // R38 may omit every cloud in a crowded region. Check actual submitted

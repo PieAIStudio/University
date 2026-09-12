@@ -6,6 +6,7 @@ import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { assertCompleteCourseOverview, waitForCourseFraming } from "./harness/course-overview.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
+import { waitForCourseTrees } from "./harness/course-foliage.js";
 
 const COURSE = "/turing-pact/foundations-before-zero";
 const GAME_ROUTE_TITLE: string = JSON.parse(
@@ -20,12 +21,7 @@ async function inspectWholeCourse(page: Page, screenshot: string) {
     "inspect the whole retained island",
   );
   await assertCompleteCourseOverview(page);
-  await page.waitForFunction(
-    () => (window as any).three?.scene.getObjectByName("course-tree-crowns")?.count > 0,
-  );
-  const crowns = await page.evaluate(
-    () => (window as any).three.scene.getObjectByName("course-tree-crowns").count as number,
-  );
+  const trees = await waitForCourseTrees(page);
   await page.screenshot({ path: screenshot });
   await humanClick(
     page,
@@ -33,7 +29,7 @@ async function inspectWholeCourse(page: Page, screenshot: string) {
     "restore the learning camera",
   );
   await waitForCourseFraming(page);
-  return crowns;
+  return trees;
 }
 
 test.describe("S 课程岛与学习玩法的整合边界", () => {

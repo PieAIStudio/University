@@ -66,7 +66,8 @@ import {
   DistantGround,
 } from "./sky/horizon-sea.js";
 import { MapLighting } from "./sky/lighting.js";
-import { SkyDome } from "./sky/skydome.js";
+import { SceneFog } from "./sky/scene-fog.js";
+import { SkyDome, type SkyDomeStops } from "./sky/skydome.js";
 import {
   buildCourseGrid,
   type HexMap,
@@ -132,19 +133,26 @@ export const WORLD_SKY_CONTRACT = {
   // explicit instead of inheriting a study climate and moving one grade.
   zenith: 0x152d76,
   mid: 0x9ccfec,
-  horizon: 0xf3f0ff,
-  nadir: 0x4d3e86,
-  fogColor: 0x6a79ad,
+  horizon: 0xd3efff,
+  nadir: 0x526fba,
+  fogColor: 0x819dcc,
   fogNearRatio: 0.55,
   fogFarRatio: 3.5,
+  // A one-course field can be smaller than the fixed 62-unit arrival camera.
+  // Atmospheric depth is a viewing distance, not just island radius: keep
+  // that nearby subject readable without changing large catalogue haze.
+  minimumFogFar: 186,
 } as const;
 
-export type SkyStops = {
-  readonly zenith: number;
-  readonly mid: number;
-  readonly horizon: number;
-  readonly nadir?: number;
-};
+export function worldFogRange(extent: number): readonly [number, number] {
+  const safeExtent = Number.isFinite(extent) ? Math.max(0, extent) : 0;
+  return [
+    safeExtent * WORLD_SKY_CONTRACT.fogNearRatio,
+    Math.max(WORLD_SKY_CONTRACT.minimumFogFar, safeExtent * WORLD_SKY_CONTRACT.fogFarRatio),
+  ];
+}
+
+export type SkyStops = SkyDomeStops;
 
 /**
  * The course frame is a cold sky so the warm island can sit in front of it.
@@ -170,6 +178,7 @@ export type SkyStops = {
  * illustration, not a photograph.
  */
 export const COURSE_SKY_STOPS: SkyStops = {
+  sunProfile: "garden",
   zenith: 0x1c5aa8,
   mid: 0x3d86c9,
   horizon: 0x7fb8e0,
@@ -514,7 +523,7 @@ export function placeWorld(
     .filter((entry) => entry.node.studyId === studyId)
     .filter((entry) => entry.state === "open")
     .sort((a, b) => a.node.depth - b.node.depth || b.node.lessons - a.node.lessons)[0];
-  const marked = placements.map((entry) => {
+  const markedStates = placements.map((entry) => {
     const state: WorldIslandVisualState = entry === next ? "live" : entry.state;
     return {
       ...entry,
@@ -523,6 +532,27 @@ export function placeWorld(
       radius: worldIslandRadiusForState(entry.node.lessons, state),
     };
   });
+  // Use existing sky gaps to make the miniature readable, without rerunning
+  // the ordered shoal layout when art gets richer. Each pair puts the same
+  // upper bound on both radii, so their sum still leaves 0.9 world units free.
+  // This changes a projection size, never course order or position.
+  const marked =
+    scope === "catalogue"
+      ? markedStates.map((entry) => {
+          const growth = Math.min(
+            1.25,
+            ...markedStates
+              .filter((peer) => peer !== entry)
+              .map((peer) =>
+                Math.max(
+                  1,
+                  (entry.position.distanceTo(peer.position) - 0.9) / (entry.radius + peer.radius),
+                ),
+              ),
+          );
+          return { ...entry, radius: entry.radius * growth };
+        })
+      : markedStates;
   const extent =
     archipelago?.extent ??
     Math.max(
@@ -775,6 +805,7 @@ export function Weather({
   shadows = true,
   carrierTarget,
   carrierSurface,
+  cloudFrame,
 }: {
   extent: number;
   /**
@@ -811,6 +842,7 @@ export function Weather({
   carrierTarget?: CloudCarrierTarget | null;
   /** Development-only evidence key for the carrier motion. */
   carrierSurface?: "world" | "planet";
+  cloudFrame?: { readonly radius: number; readonly floor: number };
 }) {
   const [, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
   // FogExp2 has no near plane. Density is derived from the old far so the
@@ -822,9 +854,14 @@ export function Weather({
   return (
     <>
       <color attach="background" args={[sky.zenith]} />
-      <fogExp2 attach="fog" args={[fogColor ?? sky.horizon, density]} />
+      <SceneFog colour={fogColor ?? sky.horizon} density={density} />
       <SkyDome stops={sky} />
-      <MapLighting groundRadius={shadowedGround} skyMid={sky.mid} shadows={shadows} />
+      <MapLighting
+        groundRadius={shadowedGround}
+        skyMid={sky.mid}
+        shadows={shadows}
+        sunProfile={sky.sunProfile}
+      />
       {includeSea ? (
         <Suspense
           fallback={<AerialWorldPlateFallback extent={extent} level={cloudLevel} visible />}
@@ -841,6 +878,7 @@ export function Weather({
           drift={!islandLookFrozen()}
           carrierTarget={carrierTarget}
           carrierSurface={carrierSurface}
+          frame={cloudFrame}
         />
       ) : null}
     </>
@@ -928,6 +966,7 @@ export function WorldScene({
       mid: WORLD_SKY_CONTRACT.mid,
       horizon: WORLD_SKY_CONTRACT.horizon,
       nadir: WORLD_SKY_CONTRACT.nadir,
+      sunProfile: "catalogue" as const,
     }),
     [skyStudyId],
   );
@@ -937,7 +976,7 @@ export function WorldScene({
       <Weather
         extent={weatherExtent}
         groundRadius={extent * 0.9}
-        fog={[extent * WORLD_SKY_CONTRACT.fogNearRatio, extent * WORLD_SKY_CONTRACT.fogFarRatio]}
+        fog={worldFogRange(extent)}
         fogColor={WORLD_SKY_CONTRACT.fogColor}
         sky={sky}
         cloudLevel={cloudLevel}
@@ -946,6 +985,24 @@ export function WorldScene({
         shadows={false}
         carrierTarget={carrierTarget}
         carrierSurface="world"
+        cloudFrame={{
+          radius: Math.max(
+            3,
+            ...remoteIslands.map((island) => island.radius ?? island.blueprint.bounds.maxHalf),
+          ),
+          floor: Math.min(
+            -2,
+            ...remoteIslands.map(
+              (island) =>
+                island.position.y +
+                (island.lift ?? 0) -
+                (island.blueprint.underside.depth / island.blueprint.bounds.maxHalf) *
+                  (island.radius ?? island.blueprint.bounds.maxHalf) *
+                  (island.scale ?? 1) *
+                  1.08,
+            ),
+          ),
+        }}
       />
       {/*
         No roads between islands. The catalogue is an archipelago field, not a

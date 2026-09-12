@@ -14,6 +14,9 @@ import {
 } from "./island-dressing.js";
 import { islandGeometryScale } from "./island-geometry.js";
 import type { IslandBlueprint } from "./island-blueprint.js";
+import { CourseLandscape } from "./course-landscape-render.js";
+import { courseFacilityTreatment } from "./course-facility-material.js";
+import { courseLandscapePlan, courseReplacementIds } from "./course-landscape-plan.js";
 
 export interface IslandDressingField {
   readonly key: string;
@@ -30,10 +33,12 @@ export function islandDressingFields(
   plan: IslandDressingPlan,
   scale: number,
   heightMultiplier = 1,
+  replacementIds?: ReadonlySet<string>,
 ): readonly IslandDressingField[] {
   const grouped = new Map<string, { pack: IslandAssetPackId; src: string; at: Placement[] }>();
   for (const placement of plan.placements) {
     if (isIslandFoliagePlacement(placement)) continue;
+    if (replacementIds?.has(placement.id)) continue;
     const resolution = resolveIslandRuntimeAsset(placement.packId, placement.assetId);
     if (!resolution) continue;
     const key = `${resolution.pack}/${resolution.assetId}`;
@@ -139,15 +144,28 @@ export function IslandDressing({
     [assetsReady, blueprint, detail],
   );
   const scale = islandGeometryScale(blueprint, detail, targetRadius);
-  const fields = useMemo(() => (plan ? islandDressingFields(plan, scale) : []), [plan, scale]);
+  const landscape = useMemo(
+    () => (plan ? courseLandscapePlan(blueprint, plan) : null),
+    [blueprint, plan],
+  );
+  const replacements = useMemo(
+    () => (landscape ? courseReplacementIds(landscape) : undefined),
+    [landscape],
+  );
+  const fields = useMemo(
+    () => (plan ? islandDressingFields(plan, scale, 1, replacements) : []),
+    [plan, scale, replacements],
+  );
   const batches = useMemo(() => islandDressingCourseBatches(fields), [fields]);
-  if (!plan) return null;
+  if (!plan || !landscape) return null;
   return (
     <group
       name="island-dressing-course"
       userData={{
         islandDressingReady: true,
-        ...(import.meta.env.DEV ? { islandDressingPlan: plan } : {}),
+        ...(import.meta.env.DEV
+          ? { islandDressingPlan: plan, replacementIds: [...(replacements ?? [])] }
+          : {}),
       }}
     >
       {batches.batched.length > 0 ? (
@@ -166,10 +184,12 @@ export function IslandDressing({
           at={field.at}
           preserveMap={field.pack !== "nature-kit"}
           castShadow
+          materialTreatment={courseFacilityTreatment(field.key)}
         />
       ))}
       <IslandFoliage plan={plan} scale={scale} />
       <IslandCampfire plan={plan} scale={scale} />
+      <CourseLandscape blueprint={blueprint} dressing={plan} scale={scale} plan={landscape} />
     </group>
   );
 }

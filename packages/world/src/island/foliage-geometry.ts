@@ -9,13 +9,15 @@ import { mergeVertices } from "three-stdlib";
 import { seeded } from "./random.js";
 
 export const COURSE_TREE_CROWN_DETAIL = 1;
-export const COURSE_BUSH_CROWN_DETAIL = 0;
+export const COURSE_BUSH_CROWN_DETAIL = 1;
 export const COURSE_CROWN_LOBES_PER_TREE = 3;
 export const COURSE_CROWN_LOBES_PER_BUSH = 3;
 export const COURSE_TREE_CROWN_TRIANGLES_PER_LOBE = 80;
-export const COURSE_BUSH_CROWN_TRIANGLES_PER_LOBE = 20;
+export const COURSE_BUSH_CROWN_TRIANGLES_PER_LOBE = 80;
 export const COURSE_TREE_CROWN_TRIANGLES = 240;
-export const COURSE_BUSH_CROWN_TRIANGLES = 60;
+export const COURSE_BUSH_CROWN_TRIANGLES = 240;
+/** Both complete scenic tree roots fit this normalized horizontal disk. */
+export const COURSE_TREE_ROOT_RADIUS_RATIO = 0.1;
 export const COURSE_TREE_TRUNK_TRIANGLE_CEILING = 384;
 export const COURSE_TREE_TOTAL_TRIANGLE_CEILING = 624;
 /** The donor contains bare branch skeletons, not complete tree silhouettes. */
@@ -67,9 +69,9 @@ const TREE_LOBE_RECIPES: readonly LobeRecipe[] = [
 
 /** Flattened buns, slightly buried so the silhouette sits on the ground. */
 const BUSH_LOBE_RECIPES: readonly LobeRecipe[] = [
-  { along: 0, up: 0.48, side: 0, radiusX: 0.42, radiusY: 0.54, radiusZ: 0.4, yaw: 0 },
-  { along: -0.16, up: 0.34, side: 0.08, radiusX: 0.32, radiusY: 0.36, radiusZ: 0.3, yaw: 0.7 },
-  { along: 0.15, up: 0.32, side: -0.07, radiusX: 0.3, radiusY: 0.34, radiusZ: 0.28, yaw: -0.8 },
+  { along: 0, up: 0.37, side: 0, radiusX: 0.49, radiusY: 0.44, radiusZ: 0.45, yaw: 0 },
+  { along: -0.16, up: 0.26, side: 0.08, radiusX: 0.32, radiusY: 0.31, radiusZ: 0.31, yaw: 0.7 },
+  { along: 0.15, up: 0.23, side: -0.07, radiusX: 0.3, radiusY: 0.28, radiusZ: 0.29, yaw: -0.8 },
 ];
 
 const UP = new THREE.Vector3(0, 1, 0);

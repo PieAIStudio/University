@@ -153,7 +153,7 @@ function sampleGlobeColor(
 function domainColorSampler(
   seed: string,
   style: DomainSurfaceStyle = "meadow",
-): (x: number, y: number, z: number, target: THREE.Color) => void {
+): (x: number, y: number, z: number, target: THREE.Color) => number {
   const palette = domainSurfacePalette(style);
   const rng = createRng(`globe:${seed}`);
   const perlin = new PerlinNoise3D(rng);
@@ -166,6 +166,8 @@ function domainColorSampler(
       perlin.noise(x * 2.8 + ox + 31.7, y * 2.8 + oy + 47.3, z * 2.8 + oz + 19.1) * 0.22 +
       perlin.noise(x * 5.6 + ox + 67.2, y * 5.6 + oy + 89.4, z * 5.6 + oz + 41.5) * 0.06;
     sampleGlobeColor(n, target, palette);
+    // Share the exact coastline with the material; never infer water from hue.
+    return smoothstep(-0.04, 0.025, n);
   };
 }
 
@@ -183,7 +185,7 @@ export function createDomainSurfaceTexture(
     const theta = (1 - (y + 0.5) / height) * Math.PI;
     for (let x = 0; x < width; x++) {
       const phi = ((x + 0.5) / width) * Math.PI * 2;
-      sample(
+      const land = sample(
         -Math.cos(phi) * Math.sin(theta),
         Math.cos(theta),
         Math.sin(phi) * Math.sin(theta),
@@ -193,7 +195,7 @@ export function createDomainSurfaceTexture(
       pixels[offset] = Math.round(color.r * 255);
       pixels[offset + 1] = Math.round(color.g * 255);
       pixels[offset + 2] = Math.round(color.b * 255);
-      pixels[offset + 3] = 255;
+      pixels[offset + 3] = Math.round(land * 255);
     }
   }
   const texture = new THREE.DataTexture(pixels, width, height, THREE.RGBAFormat);

@@ -40,6 +40,11 @@ export function PlanetDomainLabels({
           }}
         >
           {domain.title}
+          {domain.id === active ? (
+            <span className="planet-domain-label__selected">
+              {translate("ui.world.domain.selected")}
+            </span>
+          ) : null}
           {domain.studies.length === 0 ? (
             <span className="planet-domain-label__state">
               {translate("ui.world.domain.unpublished")}

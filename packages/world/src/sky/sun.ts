@@ -1,5 +1,5 @@
 /**
- * One sun for both map projections.
+ * One light rig, with explicit course/catalogue art-direction profiles.
  *
  * Elevation is candidate 40° (moved from 24°). On continuous-terrain course islands
  * with natural ~22° median slopes, 24° caused grazing incidence on lit slopes (p05 ~4.2°)
@@ -47,6 +47,33 @@ export const WORLD_SUN = {
   distanceFactor: 2.65,
 } as const;
 
+export type MapSunProfile = "course" | "catalogue" | "garden";
+
+/** The default catalogue approach sees the cliffs from +Z. Side-front
+ * daylight reveals their real planes instead of lighting only their backs.
+ * Nothing follows the camera; all sky and baked shadows use this same source.
+ * The course's established light and every fill term remain unchanged.
+ */
+export const CATALOGUE_SUN = {
+  ...WORLD_SUN,
+  elevationDeg: 50,
+  azimuthDeg: 315,
+  keyIntensity: 3.4,
+} as const;
+
+/** R46 normal course camera views the inhabited garden from +Z. Keep the
+ * validated 40-degree elevation but reveal the stone faces with side-front
+ * light; planet/default and catalogue profiles remain unchanged. */
+export const GARDEN_SUN = {
+  ...WORLD_SUN,
+  azimuthDeg: 315,
+  keyIntensity: 3.8,
+} as const;
+
+export function mapSunStyle(profile: MapSunProfile = "course") {
+  return profile === "catalogue" ? CATALOGUE_SUN : profile === "garden" ? GARDEN_SUN : WORLD_SUN;
+}
+
 /**
  * Every fill term in the rig, including the rim and the PMREM environment.
  *
@@ -75,13 +102,24 @@ function directionFrom(
 }
 
 const SUN_DIRECTION = directionFrom(WORLD_SUN.elevationDeg, WORLD_SUN.azimuthDeg);
+const CATALOGUE_SUN_DIRECTION = directionFrom(CATALOGUE_SUN.elevationDeg, CATALOGUE_SUN.azimuthDeg);
+const GARDEN_SUN_DIRECTION = directionFrom(GARDEN_SUN.elevationDeg, GARDEN_SUN.azimuthDeg);
 
-export function worldSunDirection(): readonly [number, number, number] {
-  return SUN_DIRECTION;
+export function worldSunDirection(
+  profile: MapSunProfile = "course",
+): readonly [number, number, number] {
+  return profile === "catalogue"
+    ? CATALOGUE_SUN_DIRECTION
+    : profile === "garden"
+      ? GARDEN_SUN_DIRECTION
+      : SUN_DIRECTION;
 }
 
-export function worldSunPosition(distance: number): readonly [number, number, number] {
-  const [x, y, z] = worldSunDirection();
+export function worldSunPosition(
+  distance: number,
+  profile: MapSunProfile = "course",
+): readonly [number, number, number] {
+  const [x, y, z] = worldSunDirection(profile);
   const resolved = Number.isFinite(distance) && distance > 0 ? distance : 40;
   return [x * resolved, y * resolved, z * resolved];
 }

@@ -85,6 +85,7 @@ import {
   REMOTE_PROPS_PER_ISLAND_MAX,
   REMOTE_PROPS_PER_ISLAND_MIN,
   REMOTE_TREE_TRIANGLES,
+  REMOTE_TREE_MAX_PER_ISLAND,
 } from "./remote-props.js";
 
 /**
@@ -100,8 +101,8 @@ export {
   REMOTE_PROPS_PER_ISLAND_MAX,
   REMOTE_PROPS_PER_ISLAND_MIN,
   REMOTE_TREE_TRIANGLES,
+  REMOTE_TREE_MAX_PER_ISLAND,
 };
-export const REMOTE_TREE_MAX_PER_ISLAND = REMOTE_PROPS_PER_ISLAND_MAX - 1;
 
 export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry>> = {
   terrain: {
@@ -111,7 +112,8 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       "tapered root. Vertex colour carries meadow, shore, rock and route tint; " +
       "there is no second route mesh. Remote catalogue / world projection: shared " +
       "640-triangle terrain mesh per island (352 top + 288 cliff, 0 route clips) " +
-      "batched into one merged BufferGeometry across all catalogue islands.",
+      "batched into one merged BufferGeometry across all catalogue islands. One bounded linear " +
+      "colour atlas bakes actual terrain and static miniature caster shadows; no contact mesh.",
     source:
       "Our own geometry in island-geometry.ts (buildTerrain) and remote-island-field.ts " +
       "(buildRemoteIslandBatch).",
@@ -119,7 +121,8 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       "course mesh triangles measured 2026-09-06 after soil clipping: " +
       "15234 / 14805 / 16820 / 16629 at 6 / 12 / 24 / 41 lessons (seed terrain/{count}); " +
       "remote catalogue = 640 triangles/island (measured CPU 3.8-14.2 ms/island, 50 islands ~344 ms; " +
-      "combined island terrain + remote props batches draw in 3 draw calls [1 merged terrain + 2 global instanced props], not whole frame)",
+      "R44 catalogue ceiling: 4 base-pass draws including terrain and all miniature scenery, not whole frame; " +
+      "one RGBA atlas <= 2048 per side, 31 islands measured at 1024x512 / 2 MiB base plus mipmaps)",
     rejected: [
       {
         option: "Hex tiles as the course terrain draw",
@@ -217,24 +220,25 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
   },
   tree: {
     technique:
-      "Course view: six registered meshes from elemental-serenity treeTrunks.glb plus 3 " +
-      "instanced IcosahedronGeometry(1,1) crown lobes (80 tris each) overlapping as one " +
-      "rounded mass. IslandDressing and IslandFoliage are course-only; they do not accept " +
-      "a world detail. Production world catalogue and planet representatives use RemotePropsField " +
-      "only: up to 2-4 procedural 12-triangle cone trees per island (ConeGeometry(0.38, 0.72, 6)) " +
-      "in one global InstancedMesh, zero course GLBs. Placement uses bounded inward candidates and " +
-      "omits optional trees if not strictly inside the terrain footprint (props are optional on " +
-      "failed bounded fit; ground anchors match worldmesh height at the sample point, while ground slope " +
-      "remains across the footprint with no blanket zero-floating promise).",
+      "Course view: complete shared procedural fir (312 tris) and broadleaf (368 tris) " +
+      "trees, one instanced field per form. Broadleaf course lobes use IcosahedronGeometry(1,1); " +
+      "treeTrunks.glb is a retained provenance id, not a loaded course draw. " +
+      "IslandDressing and IslandFoliage are course-only; they do not accept " +
+      "a world detail. Production world catalogue uses RemotePropsField: the R44 named miniature kit " +
+      "with up to 5 rounded trees per island in one merged vegetation batch, zero course GLBs. " +
+      "Actual world-triangle footprint coverage and finite local searches govern placement; " +
+      "props are optional on failed bounded fit, with no blanket zero-floating promise. " +
+      "Planet representatives remain terrain-only.",
     source:
-      "Course: elemental-serenity treeTrunks.glb (six variants: 288/304/384/288/384/384 tris) " +
-      "plus our own welded icosahedron crown volumes (detail 1, 80 tris per lobe); author " +
-      "permission granted 2026-08-28. Distant: our own procedural ConeGeometry in remote-props.ts.",
+      "miniature-assets.ts owns both projection tiers, course-trees.tsx instances the course tier. " +
+      "The retired elemental-serenity trunk source remains attributed in the asset registry; " +
+      "no new model file is imported or fetched for course trees.",
     budget:
-      "course <= 624 tris/tree (384-tri trunk max + 3 x 80-tri lobes); remote catalogue = 12 " +
-      "tris/tree (up to 2-4 trees per island bounded by inward fitting and omission, max 48 tris/island, " +
-      "0 course GLBs); combined island terrain + props batches draw in 3 calls, not whole frame; " +
-      "trunk shadow pass omitted in course to keep the measured frame budget; GPU time and VRAM unmeasured",
+      "course actual 312/368, below 624 tris/tree previous ceiling; R44 remote kit <= 600 " +
+      "tris/asset, <= 4800 opaque prop tris/island and <= 6000 including water/bank, 0 course GLBs; " +
+      "4 base-pass draws including terrain, not whole frame; contact lives in the atlas, not a mesh. " +
+      "Complete course trees cast shadows in the existing light pass; no separate trunk batch. " +
+      "New GPU time and VRAM require separate measurements.",
     rejected: [
       {
         option: "Rounded UV-mask PlaneGeometry cards around crown",
@@ -268,10 +272,10 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       "field, slightly buried; no bushEmitter sampling and no alpha cards. Remote " +
       "catalogue projection draws 0 bush lobes (bush is omitted in remote view).",
     source:
-      "Our own welded icosahedron crown volumes (detail 0, 20 tris per lobe). " +
+      "Our own welded icosahedron crown volumes (detail 1, 80 tris per lobe). " +
       "bushEmitter.glb stays the dressing asset id but is not fetched for course draw.",
     budget:
-      "course <= 60 tris/bush (3 x 20-tri lobes); world = 0 bush lobes; remote catalogue = 0 bush lobes",
+      "course <= 240 tris/bush (3 x 80-tri lobes); world = 0 bush lobes; remote catalogue = 0 bush lobes",
     rejected: [
       {
         option: "MeshSurfaceSampler + 12 cards with UV alpha mask from bushEmitter.glb",
@@ -285,20 +289,21 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
   landmark: {
     technique:
       "Course view: a handful of large authored props placed at composition anchors, so the " +
-      "island has a scale hierarchy instead of one uniform size of clutter. Remote catalogue " +
-      "and planet projection (RemotePropsField): up to 1 procedural 36-triangle stone pavilion silhouette " +
-      "(12-triangle roof cone + 24-triangle plinth cylinder) grounded on the hero anchor, " +
-      "drawn in a single global InstancedMesh with zero course GLBs; placement uses bounded inward " +
-      "candidates and omits if footprint is not strictly inside (props are optional on failed bounded fit; " +
-      "anchor matches worldmesh height at sample point, while ground slope remains across the base, " +
-      "no blanket zero-floating promise).",
+      "island has a scale hierarchy instead of one uniform size of clutter. R46 reserves up to " +
+      "four decorative rock/ruin volumes and an optional supported coastal spring before vegetation; " +
+      "rock/bank, garden flora and water occupy at most three extra course batches. Remote catalogue " +
+      "projection (RemotePropsField): up to 1 recipe-matched miniature focal assembly plus natural " +
+      "companions, combined into one opaque scenery batch with zero course GLBs. Footprints use " +
+      "actual world terrain triangles; props are optional on failed bounded fit, with " +
+      "no blanket zero-floating promise. Planet representatives carry no landmark props.",
     source:
       "Course: elemental-serenity bridge / camp / tent / rocks, author permission granted " +
       "2026-08-28, plus Kenney fantasy-town for towers and walls. Remote catalogue: our own " +
-      "procedural geometry in remote-props.ts (createRemotePavilionGeometry).",
+      "procedural miniature-assets.ts kit and miniature-layout.ts placement plan.",
     budget:
       `course <= ${ISLAND_LANDMARK_TRIANGLE_CEILING} tris per asset, <= ${ISLAND_LANDMARK_MAX_PER_ISLAND} semantic landmark places per island (complete assemblies/outposts count once, not once per wall); ` +
-      "remote catalogue = 36 tris/island (up to 1 stone pavilion silhouette with bounded omission, 0 course GLBs)",
+      "R44 remote <= 600 tris per miniature asset; bounded omission, 0 course GLBs; shared 6000-triangle scenery ceiling includes water and bank. Contact is baked into the ground atlas. " +
+      "R46 course landscape <= 50000 tris / 220 low flora groups; rock 288, ruin 348, one spring including banks <= 800 tris. At most three extra base-pass meshes, not full-frame cost.",
     rejected: [
       {
         option: "Scattering more small props to fill the island",

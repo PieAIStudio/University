@@ -32,4 +32,8 @@ export const messages = {
   ...learningPlayMessages,
   ...learningPlayProgram,
   ...learningPlayExtra,
+  "ui.world.domain.selected": "Selected",
+  "ui.world.navigation.planets": "Learning planets",
+  "ui.world.navigation.archipelago": "Course archipelago",
+  "ui.world.navigation.island": "Course island",
 } satisfies Partial<MessageCatalog>;

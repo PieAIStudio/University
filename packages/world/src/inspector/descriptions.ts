@@ -41,6 +41,7 @@ import {
 } from "../island/island-asset-registry.js";
 import { assetKey } from "./triangle-count.js";
 import { proceduralAssetRows } from "./procedural-assets.js";
+import { courseLandscapePlan, courseReplacementIds } from "../island/course-landscape-plan.js";
 import { previewReplacementReason } from "./preview-runtime.js";
 import { projectedMetric, projectedTriangleTotal } from "./projected-metrics.js";
 import { footprintSamplePoints, orientedFootprintFor } from "../island/island-composition.js";
@@ -83,8 +84,6 @@ import type {
 
 import {
   REMOTE_ISLAND_TERRAIN_TRIANGLES,
-  REMOTE_TREE_TRIANGLES,
-  REMOTE_PAVILION_TRIANGLES,
   REMOTE_PROPS_MAX_TRIANGLES_PER_ISLAND,
   REMOTE_ISLAND_BUDGET_PER_ISLAND,
   planRemotePropsCatalogue,
@@ -321,12 +320,15 @@ function dressingRows(
     const detail = input.targetRadius === undefined ? "course" : "world";
     const plan = planIslandDressing(input.blueprint, detail);
     plans.push(plan);
+    const replacements =
+      detail === "course" ? courseReplacementIds(courseLandscapePlan(input.blueprint, plan)) : null;
     for (const placement of plan.placements) {
       // Course and world foliage renderers use procedural solid crown lobes;
       // bushEmitter.glb is never fetched or drawn. Do not treat as rendered geometry.
-      if (placement.assetId === "bushEmitter") {
+      if (placement.assetId === "bushEmitter" || placement.assetId === "treeTrunks") {
         continue;
       }
+      if (replacements?.has(placement.id)) continue;
 
       const requestedKey = `${placement.packId}/${placement.assetId}`;
       const roleSet = roleKeys.get(placement.kind) ?? new Set<string>();
@@ -430,7 +432,7 @@ function dressingRows(
       note: isBush
         ? "灌木使用自有程序化实体团块（20 三角 icosahedron），渲染器不拉取外部 GLB；此处不可替换。"
         : isTree
-          ? "树干与冠团有共同接点合同；任意 GLB 替换不安全，此处只读。"
+          ? "树位使用共用的完整程序化针叶／阔叶造型；任意 GLB 替换不安全，此处只读。"
           : kind !== "rock"
             ? "组合/效果资产不能逐件替换；需要从 composition 整组重新验证接地、尺度和锚点。"
             : "只提供材质相容、原点接地且归一化占地不扩大的已登记石头；仅影响预览。",
@@ -1212,7 +1214,7 @@ function worldBudget(
       "第三阶段：按屏幕像素分配预算",
     ),
     basis:
-      "群岛是世界远景投影：一个合并连续地形 mesh（RemoteIslandField）与最多两批全局 InstancedMesh 轻量道具（RemotePropsField）；部分运行时采样不补零，只有地形和 remote-props 同时可见或明确为空时才给出实测总量。",
+      "飞岛群使用同源连续地形与合批微缩景观：树木、主题景物、水景和接触阴影分批，地形及景观最多六次基础绘制。只有地形和 remote-props 的实测都完整或明确为空时才给出总量；不含头像、天空和后处理。",
     breakdown: [
       {
         label: "世界投影连续地形",
@@ -1223,7 +1225,7 @@ function worldBudget(
             : 0,
       },
       {
-        label: "远景轻量地标与树剪影",
+        label: "微缩景观、树木、水景与接触阴影",
         triangles: runtime
           ? (projectedProps?.triangles ?? null)
           : islandCount > 0
@@ -1259,8 +1261,9 @@ function worldDressingDescription(
   const hostById = new Map(
     plannedIslands?.map((planned, index) => [planned.id, islands[index]!] as const),
   );
+  const sceneryProps = propsPlan ? [...propsPlan.landmarks, ...propsPlan.accents] : [];
   const landmarkUses = propsPlan
-    ? propsPlan.landmarks.map((prop, index) =>
+    ? sceneryProps.map((prop, index) =>
         remotePropUse(prop, hostById.get(prop.islandId), "procedural/world-landmark", index),
       )
     : [];
@@ -1280,33 +1283,35 @@ function worldDressingDescription(
     key: "procedural/world-landmark",
     role: "远景地标",
     assetId: "world-landmark",
-    name: "世界地标石亭剪影（六棱石亭）",
+    name: "微缩主题景物与伴生花草",
     pack: "自有程序化",
     runtimePath: null,
     sourcePath: "packages/world/src/island/remote-props.ts",
     bytes: null,
-    triangles: REMOTE_PAVILION_TRIANGLES,
+    triangles: null,
     totalTriangles: runtime
       ? (measuredLandmark?.triangles ?? null)
       : propsPlan
-        ? propsPlan.landmarks.length * REMOTE_PAVILION_TRIANGLES
+        ? sceneryProps.reduce((sum, prop) => sum + prop.triangles, 0)
         : null,
     instances: runtime
       ? (measuredLandmark?.instances ?? null)
-      : (propsPlan?.landmarks.length ?? null),
-    placementCount: propsPlan?.landmarks.length ?? null,
+      : propsPlan
+        ? sceneryProps.length
+        : null,
+    placementCount: propsPlan ? sceneryProps.length : null,
     projectionKind: "procedural",
     bytesSource: null,
     trianglesSource: worldSource("island/remote-props.ts", "REMOTE_PAVILION_TRIANGLES"),
     instancesSource: worldSource("island/remote-props.ts", "planRemotePropsCatalogue"),
     techniqueLock: "landmark",
     technique:
-      "至多 1 座 36 三角的低成本石亭剪影，对应英雄锚点位置与朝向（候选点未全部 inside 则有界省略，地面坡度仍存在）。",
-    techniqueSource: worldSource("island/remote-props.ts", "createRemotePavilionGeometry"),
+      "每岛一处配方主题看点与花草石组；读取实际地形三角形拟合完整占地，按材质合并而非逐物体绘制。",
+    techniqueSource: worldSource("island/miniature-assets.ts", "createMiniatureAsset"),
     mutable: false,
     uses: landmarkUses,
     note: propsPlan
-      ? `每个岛屿规划至多 1 座石亭地标轮廓（${propsPlan.landmarks.length} 岛规划 ${propsPlan.landmarks.length} 座）；锚点采样同 worldmesh，若未全部 inside 则有界省略，地面坡度仍存在。`
+      ? `主题看点 ${propsPlan.landmarks.length} 处，伴生花草石组 ${propsPlan.accents.length} 组。未测时的三角数仅含规划实体；运行时另计合入的水岸，水面和接触阴影计入景观总预算。`
       : placementNote,
   };
 
@@ -1314,16 +1319,16 @@ function worldDressingDescription(
     key: "procedural/world-tree-crown",
     role: "远景树冠",
     assetId: "world-tree-crown",
-    name: "世界树冠剪影（六边锥）",
+    name: "微缩林团（针叶、阔叶、樱花与秋树）",
     pack: "自有程序化",
     runtimePath: null,
     sourcePath: "packages/world/src/island/remote-props.ts",
     bytes: null,
-    triangles: REMOTE_TREE_TRIANGLES,
+    triangles: null,
     totalTriangles: runtime
       ? (measuredTree?.triangles ?? null)
       : propsPlan
-        ? propsPlan.trees.length * REMOTE_TREE_TRIANGLES
+        ? propsPlan.trees.reduce((sum, prop) => sum + prop.triangles, 0)
         : null,
     instances: runtime ? (measuredTree?.instances ?? null) : (propsPlan?.trees.length ?? null),
     placementCount: propsPlan?.trees.length ?? null,
@@ -1333,12 +1338,12 @@ function worldDressingDescription(
     instancesSource: worldSource("island/remote-props.ts", "planRemotePropsCatalogue"),
     techniqueLock: "tree",
     technique:
-      "至多 2-4 棵 12 三角的六棱锥树剪影，不加载课程冠团（候选点未全部 inside 则有界省略，地面坡度仍存在）。",
-    techniqueSource: worldSource("island/remote-props.ts", "createRemoteTreeGeometry"),
+      "每岛至多五棵有树干和完整树冠的配方树木，合并为一个树木批次，不加载岛内课程模型；完整支撑面通过远景地形三角形检查。",
+    techniqueSource: worldSource("island/miniature-assets.ts", "createMiniatureAsset"),
     mutable: false,
     uses: treeUses,
     note: propsPlan
-      ? `每个岛屿规划至多 2-4 棵树剪影（${propsPlan.trees.length} 棵）；若未全部 inside 则有界省略，地面坡度仍存在。`
+      ? `当前规划 ${propsPlan.trees.length} 棵树；不同树型的三角数直接求和，不用一个原型的面数乘整个目录。`
       : placementNote,
   };
 
@@ -1354,7 +1359,7 @@ function worldDressingDescription(
     catalog: [],
     roles: [],
     parameters: dressingParameters("world", style.brightness),
-    note: `群岛是世界远景投影：复用连续浮岛共享网格（RemoteIslandField）与全局 InstancedMesh 剪影道具，零草叶、零近景关卡节点。${placementNote ? ` ${placementNote}` : ""}`,
+    note: `飞岛群复用连续地形（RemoteIslandField）与单一微缩景观计划（RemotePropsField）；仅有少量合批草簇，不运行岛内草地生成器或近景关卡节点。${placementNote ? ` ${placementNote}` : ""}`,
     compositions: [],
   };
 }

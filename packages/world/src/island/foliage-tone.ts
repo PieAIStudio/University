@@ -6,8 +6,8 @@ import { sampleIslandField, type IslandField, type IslandFieldSample } from "./i
 import type { IslandPoint } from "./island-blueprint.js";
 
 export const FOLIAGE_PATCH_PALETTE = {
-  moss: 0x71914b,
-  jade: 0x418775,
+  moss: 0x6c9951,
+  jade: 0x518e68,
   dryGold: 0xa69854,
 } as const;
 

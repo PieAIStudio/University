@@ -16,6 +16,10 @@ import {
 import type { IslandBlueprint, IslandUnitSigil } from "./island-blueprint.js";
 import { unitRingGeometry, unitSigilArcCount } from "./unit-sigil.js";
 import type { HexMap } from "../grid/course-grid.js";
+import {
+  createSurfaceMaterialDetail,
+  prepareSurfaceDetailCoordinates,
+} from "./surface-material-detail.js";
 
 const TECH = 0x5a6572;
 const TECH_DARK = 0x303a46;
@@ -35,6 +39,7 @@ export interface IslandRenderProps {
 }
 
 function IslandSurfaceMaterial({
+  blueprint,
   role,
   style,
   vertexColors,
@@ -44,6 +49,7 @@ function IslandSurfaceMaterial({
   polygonOffsetFactor,
   timeUniform,
 }: {
+  readonly blueprint: IslandBlueprint;
   readonly role: IslandSurfaceRole;
   readonly style: IslandSurfaceStyleId;
   readonly vertexColors: boolean;
@@ -57,18 +63,42 @@ function IslandSurfaceMaterial({
     () => createIslandSurfaceMaterialAdapter(role, style, import.meta.env.DEV, timeUniform),
     [role, timeUniform],
   );
+  const detail = useMemo(() => createSurfaceMaterialDetail("terrain", blueprint), [blueprint]);
+  useLayoutEffect(() => {
+    detail.activate();
+    return () => detail.dispose();
+  }, [detail]);
+  const hybrid = useMemo(
+    () => ({
+      onBeforeCompile(
+        shader: THREE.WebGLProgramParametersWithUniforms,
+        renderer: THREE.WebGLRenderer,
+      ) {
+        adapter.onBeforeCompile(shader, renderer);
+        detail.onBeforeCompile(shader);
+      },
+      customProgramCacheKey: () =>
+        `${adapter.enabled ? adapter.customProgramCacheKey() : "standard"}/${detail.customProgramCacheKey()}`,
+    }),
+    [adapter, detail],
+  );
   useLayoutEffect(() => {
     adapter.setStyle(style);
   }, [adapter, style]);
   return (
     <meshStandardMaterial
+      key={detail.materialKey}
       vertexColors={vertexColors}
       roughness={roughness}
       metalness={metalness}
       polygonOffset={polygonOffset}
       polygonOffsetFactor={polygonOffsetFactor}
-      onBeforeCompile={adapter.enabled ? adapter.onBeforeCompile : undefined}
-      customProgramCacheKey={adapter.enabled ? adapter.customProgramCacheKey : undefined}
+      onBeforeCompile={hybrid.onBeforeCompile}
+      customProgramCacheKey={hybrid.customProgramCacheKey}
+      userData={{
+        surfaceDetailInfo: detail.info,
+        ...(import.meta.env.DEV ? { surfaceDetail: detail.uniforms } : {}),
+      }}
     />
   );
 }
@@ -347,10 +377,11 @@ export function IslandRender({
       surfaceTime.current.value = clock.elapsedTime;
     }
   });
-  const shape = useMemo(
-    () => buildIslandGeometry(blueprint, detail, targetRadius),
-    [blueprint, detail, targetRadius],
-  );
+  const shape = useMemo(() => {
+    const result = buildIslandGeometry(blueprint, detail, targetRadius);
+    prepareSurfaceDetailCoordinates(result.terrain, result.scale);
+    return result;
+  }, [blueprint, detail, targetRadius]);
   useEffect(() => () => shape.terrain.dispose(), [shape]);
   return (
     <group
@@ -383,6 +414,7 @@ export function IslandRender({
     >
       <mesh name="island-terrain" geometry={shape.terrain} castShadow receiveShadow>
         <IslandSurfaceMaterial
+          blueprint={blueprint}
           role="terrain"
           style={surfaceStyle}
           vertexColors

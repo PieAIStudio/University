@@ -14,7 +14,7 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { islandLookFrozen } from "../island/island-surface-style.js";
-import { worldSunDirection, WORLD_SUN } from "./sun.js";
+import { worldSunDirection, mapSunStyle, type MapSunProfile } from "./sun.js";
 
 export type SkyDomeStops = {
   readonly zenith: number;
@@ -22,6 +22,8 @@ export type SkyDomeStops = {
   readonly horizon: number;
   /** Optional course-only lower sky colour; world maps keep the blue nadir. */
   readonly nadir?: number;
+  /** Consumed by both the visible dome and the Stage-owned PMREM capture. */
+  readonly sunProfile?: MapSunProfile;
 };
 
 /** Stable discovery keys used by Stage's environment owner. */
@@ -92,14 +94,14 @@ void main() {
 
 /** One shader/uniform implementation for both the visible dome and its IBL. */
 export function createSkyDomeUniforms(stops: SkyDomeStops) {
-  const sunDirection = worldSunDirection();
+  const sunDirection = worldSunDirection(stops.sunProfile);
   return {
     uZenith: { value: new THREE.Color(stops.zenith) },
     uMid: { value: new THREE.Color(stops.mid) },
     uHorizon: { value: new THREE.Color(stops.horizon) },
     uNadir: { value: new THREE.Color(stops.nadir ?? 0x3a7f92) },
     uSunDirection: { value: new THREE.Vector3(...sunDirection) },
-    uSunColor: { value: new THREE.Color(WORLD_SUN.keyColor) },
+    uSunColor: { value: new THREE.Color(mapSunStyle(stops.sunProfile).keyColor) },
     uSunGlowColor: { value: new THREE.Color(0xffc56a) },
     uSunSize: { value: 0.032 },
     uSunGlowSize: { value: 0.11 },
@@ -108,11 +110,10 @@ export function createSkyDomeUniforms(stops: SkyDomeStops) {
 
 export function SkyDome({ stops }: { stops: SkyDomeStops }) {
   const mesh = useRef<THREE.Mesh>(null);
-  const sunDirection = worldSunDirection();
+  const sunDirection = worldSunDirection(stops.sunProfile);
   const uniforms = useMemo(
     () => createSkyDomeUniforms(stops),
-    // Climate identity is the stops object; the sun is the shared world sun.
-    [stops.horizon, stops.mid, stops.zenith, sunDirection],
+    [stops.horizon, stops.mid, stops.zenith, stops.nadir, sunDirection],
   );
   uniforms.uZenith.value.setHex(stops.zenith);
   uniforms.uMid.value.setHex(stops.mid);

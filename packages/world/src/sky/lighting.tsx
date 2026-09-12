@@ -8,7 +8,13 @@
 import * as THREE from "three";
 
 import { renderTier } from "./tier.js";
-import { WORLD_SUN, worldShadowFrustum, worldShadowNormalBias, worldSunPosition } from "./sun.js";
+import {
+  mapSunStyle,
+  type MapSunProfile,
+  worldShadowFrustum,
+  worldShadowNormalBias,
+  worldSunPosition,
+} from "./sun.js";
 
 /**
  * How far the hemisphere's upward fill is pulled off the sky's own stop.
@@ -41,11 +47,18 @@ export interface MapLightingProps {
   /** Sky colour used by the hemisphere's upper-facing fill. */
   readonly skyMid: number;
   readonly shadows?: boolean;
+  readonly sunProfile?: MapSunProfile;
 }
 
-export function MapLighting({ groundRadius, skyMid, shadows = true }: MapLightingProps) {
+export function MapLighting({
+  groundRadius,
+  skyMid,
+  shadows = true,
+  sunProfile = "course",
+}: MapLightingProps) {
   const shadow = worldShadowFrustum(groundRadius);
-  const sunPosition = worldSunPosition(shadow.lightDistance);
+  const sun = mapSunStyle(sunProfile);
+  const sunPosition = worldSunPosition(shadow.lightDistance, sunProfile);
   const mobile = renderTier() === "mobile";
   const mapSize = mobile ? 1024 : shadow.mapSize;
 
@@ -58,13 +71,9 @@ export function MapLighting({ groundRadius, skyMid, shadows = true }: MapLightin
         the post-grade contrast clip floor.
       */}
       <hemisphereLight
-        args={[
-          hemisphereSkyTint(skyMid),
-          WORLD_SUN.hemisphereGround,
-          WORLD_SUN.hemisphereIntensity,
-        ]}
+        args={[hemisphereSkyTint(skyMid), sun.hemisphereGround, sun.hemisphereIntensity]}
       />
-      <ambientLight color={WORLD_SUN.ambientColor} intensity={WORLD_SUN.ambientIntensity} />
+      <ambientLight color={sun.ambientColor} intensity={sun.ambientIntensity} />
       {/*
         Directional shadow normalBias scales dynamically via `worldShadowNormalBias(shadow, mapSize)`
         to clear slope acne without detached shadows across desktop (2048) and mobile (1024)
@@ -72,10 +81,14 @@ export function MapLighting({ groundRadius, skyMid, shadows = true }: MapLightin
         design shot without stretching across the weather sphere.
       */}
       <directionalLight
-        color={WORLD_SUN.keyColor}
+        color={sun.keyColor}
         position={sunPosition}
-        intensity={WORLD_SUN.keyIntensity}
+        intensity={sun.keyIntensity}
+        name="map-key-light"
+        userData={{ sunProfile }}
         castShadow={shadows}
+        shadow-intensity={sunProfile === "garden" ? 0.64 : 1}
+        shadow-radius={sunProfile === "garden" && !mobile ? 2.5 : 1}
         shadow-mapSize={[mapSize, mapSize]}
         shadow-camera-left={-shadow.half}
         shadow-camera-right={shadow.half}
@@ -99,9 +112,9 @@ export function MapLighting({ groundRadius, skyMid, shadows = true }: MapLightin
           key and in a cool grey rather than a cyan. A rim is for silhouette. It
           is not allowed to become the scene's ambient. */}
       <directionalLight
-        color={WORLD_SUN.rimColor}
+        color={sun.rimColor}
         position={[-sunPosition[0] * 0.82, shadow.lightDistance * 0.44, -sunPosition[2] * 0.82]}
-        intensity={WORLD_SUN.rimIntensity}
+        intensity={sun.rimIntensity}
       />
     </>
   );

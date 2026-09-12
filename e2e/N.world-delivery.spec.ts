@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ONLINE_ORIGIN } from "./ports.js";
+import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { assertWorldCarrierAboveGround } from "./harness/world-carrier.js";
@@ -15,6 +15,184 @@ const COURSE = "/turing-pact/foundations-before-zero";
 const OUTPUT = "SCRATCH/e2e/world-delivery";
 const STABLE_COMPLETE_FRAMES = 6;
 const OWNED_READY_TIMEOUT_MS = 90_000;
+
+for (const [mode, origin] of [
+  ["delivery", ONLINE_ORIGIN],
+  ["authoring", LOCAL_ORIGIN],
+] as const) {
+  for (const viewport of [
+    { width: 1600, height: 1000 },
+    { width: 375, height: 812 },
+  ]) {
+    test.describe(`N R43 visual navigation ${mode} ${viewport.width}`, () => {
+      test.use({ viewport, deviceScaleFactor: 1, colorScheme: "light" });
+      test("breadcrumbs, real globe picks and restrained motion share the same selection", async ({
+        page,
+      }) => {
+        const console = watchConsole(page);
+        const folder = join(OUTPUT, `r43-${mode}-${viewport.width}`);
+        mkdirSync(folder, { recursive: true });
+        const evidence: Record<string, unknown> = {
+          mode,
+          origin,
+          viewport,
+          dpr: 1,
+          theme: "light",
+          debug: "ordinary route; no shot, freeze or post override",
+        };
+        await page.goto(`${origin}${COURSE}`);
+        await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
+        await waitForOwnedLayerReady(page, "course");
+        await waitForCourseFraming(page);
+        await page.evaluate(() => document.fonts.ready);
+        const trail = page.locator("nav.map-breadcrumbs");
+        await expect(trail.locator("[aria-current=page]")).toHaveText(
+          "《在开始之前：App、代码、和你》",
+        );
+        await expect(trail.locator("a")).toHaveCount(2);
+        for (const link of await trail.locator("a").all()) {
+          expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+        }
+        if (viewport.width < 768) {
+          const navBox = await trail.boundingBox();
+          const canvas = await page.locator(".stagewrap:not([hidden]) canvas").boundingBox();
+          expect(navBox!.y + navBox!.height).toBeLessThanOrEqual(canvas!.y + 1);
+        }
+        evidence.course = await frameEvidence(page, "course");
+        await page.screenshot({ path: join(folder, "course-near.png") });
+        await humanClick(
+          page,
+          page.getByRole("button", { name: "总览课程岛", exact: true }),
+          "complete overview",
+        );
+        evidence.overview = await assertCompleteCourseOverview(page);
+        await page.screenshot({ path: join(folder, "course-overview.png") });
+
+        // A real keyboard action, not invoking the React callback in a test.
+        await trail.locator('a[href="/"]').focus();
+        await page.keyboard.press("Enter");
+        await expect(page).toHaveURL(`${origin}/`);
+        await waitForOwnedLayerReady(page, "world");
+        await waitForCourseFraming(page);
+        await expect(trail.locator("[aria-current=page]")).toHaveText("学会用 AI 做游戏");
+        evidence.world = await frameEvidence(page, "world");
+        evidence.remoteBatches = await remoteBatchDrawEvidence(page);
+        await page.screenshot({ path: join(folder, "world.png") });
+        await humanClick(page, trail.locator('a[href="/planet"]'), "visible ancestor to planets");
+        await expect(page).toHaveURL(`${origin}/planet`);
+        await waitForOwnedLayerReady(page, "planet");
+        await expect(page.locator("[data-planet-resources]")).toHaveCount(0, { timeout: 90_000 });
+        await expect(page.locator('[data-planet-domain-label="ai-games"]')).toHaveAttribute(
+          "data-active",
+          "true",
+        );
+        await expect(page.locator('[data-planet-domain-label="ai-games"]')).toContainText("已选");
+
+        // Hit the actual unselected globe rather than a proxy DOM button.
+        const point = await page.evaluate(() => {
+          const state = (window as any).three;
+          const root = state.scene.getObjectByName("domain-planet-ai-foundations");
+          const p = root.getWorldPosition(state.camera.position.clone()).project(state.camera);
+          const rect = state.gl.domElement.getBoundingClientRect();
+          return {
+            x: rect.left + ((p.x + 1) * rect.width) / 2,
+            y: rect.top + ((1 - p.y) * rect.height) / 2,
+          };
+        });
+        await page.mouse.click(point.x, point.y);
+        await expect(page.locator('button[data-domain-id="ai-foundations"]')).toHaveAttribute(
+          "aria-pressed",
+          "true",
+        );
+        await humanClick(
+          page,
+          page.locator('button[data-domain-id="ai-games"]'),
+          "restore games domain",
+        );
+        await page.mouse.move(2, 2);
+        await page.waitForFunction(() => {
+          const state = (window as any).three;
+          return (
+            Math.abs(state.scene.getObjectByName("domain-planet-ai-games").scale.x - 1.1) < 0.001 &&
+            Math.abs(state.scene.getObjectByName("domain-planet-ai-foundations").scale.x - 0.82) <
+              0.001
+          );
+        });
+        evidence.planet = await frameEvidence(page, "planet");
+        await page.screenshot({ path: join(folder, "planet.png") });
+        const pose = () =>
+          page.evaluate(() => {
+            const state = (window as any).three;
+            return ["ai-games", "ai-foundations"].map((id) => {
+              const root = state.scene.getObjectByName(`domain-planet-${id}`);
+              const cloud = state.scene.getObjectByName(`domain-clouds-${id}`);
+              return {
+                id,
+                scale: root.scale.x,
+                body: root.children[0].quaternion.toArray(),
+                cloud: cloud?.matrixWorld.toArray() ?? null,
+              };
+            });
+          });
+        const frames = () =>
+          page.evaluate(async () => {
+            for (let i = 0; i < 32; i++) await new Promise(requestAnimationFrame);
+          });
+        const before = await pose();
+        await frames();
+        const after = await pose();
+        expect(after[0]!.body).toEqual(before[0]!.body);
+        expect(after[1]!.body).not.toEqual(before[1]!.body);
+        evidence.motion = { before, after };
+        await page.emulateMedia({ reducedMotion: "reduce" });
+        await frames();
+        const reducedBefore = await pose();
+        await frames();
+        const reducedAfter = await pose();
+        expect(reducedAfter).toEqual(reducedBefore);
+        evidence.reducedMotion = { before: reducedBefore, after: reducedAfter };
+        await humanClick(
+          page,
+          page.locator('button[data-domain-id="ai-media"]'),
+          "unpublished domain remains selectable",
+        );
+        await expect(page.locator('[data-planet-domain-label="ai-media"]')).toHaveAttribute(
+          "data-active",
+          "true",
+        );
+        await expect(page.locator('[data-planet-domain-label="ai-media"]')).toContainText(
+          "暂未发布",
+        );
+        await page.screenshot({ path: join(folder, "planet-empty.png") });
+        await humanClick(
+          page,
+          page.locator('button[data-domain-id="ai-games"]'),
+          "return to the original domain",
+        );
+        await humanClick(
+          page,
+          page.getByRole("button", { name: "进入 学会用 AI 做游戏", exact: true }),
+          "enter same series",
+        );
+        await waitForOwnedLayerReady(page, "world");
+        await expect(trail.locator("[aria-current=page]")).toHaveText("学会用 AI 做游戏");
+        await page.goBack();
+        await expect(page).toHaveURL(`${origin}/planet`);
+        await page.goBack();
+        await expect(page).toHaveURL(`${origin}/`);
+        await expect(trail.locator("[aria-current=page]")).toHaveText("学会用 AI 做游戏");
+        await page.goBack();
+        await expect(page).toHaveURL(`${origin}${COURSE}`);
+        await expect(trail.locator("[aria-current=page]")).toHaveText(
+          "《在开始之前：App、代码、和你》",
+        );
+        evidence.errors = console.errors();
+        writeFileSync(join(folder, "receipt.json"), JSON.stringify(evidence, null, 2));
+        console.assertClean();
+      });
+    });
+  }
+}
 
 type Layer = "course" | "world" | "planet";
 
@@ -487,9 +665,17 @@ for (const viewport of [
       for (const sample of remoteDraws.samples) {
         expect(
           sample.calls,
-          "terrain + optional pavilion + trees: actual base-pass draw ceiling",
-        ).toBeLessThanOrEqual(3);
+          "terrain + merged trees + merged scenery + water: actual base-pass draw ceiling",
+        ).toBeLessThanOrEqual(4);
         expect(sample.calls).toBeGreaterThan(0);
+        expect(new Set(sample.names).size).toBe(sample.calls);
+        for (const name of sample.names)
+          expect([
+            "remote-island-terrain",
+            "remote-props-trees",
+            "remote-props-landmarks",
+            "remote-props-water",
+          ]).toContain(name);
       }
       await page.screenshot({ path: join(folder, "world.png") });
       await humanClick(

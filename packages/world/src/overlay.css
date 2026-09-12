@@ -219,6 +219,21 @@ button.label:focus-visible {
 .label--course {
   display: inline-flex;
   align-items: center;
+  overflow: visible;
+}
+
+.label--course[data-label-leader="true"]::before {
+  content: "";
+  position: absolute;
+  left: calc(50% + var(--leader-x));
+  top: calc(50% + var(--leader-y));
+  width: var(--leader-length);
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+  transform: rotate(var(--leader-angle));
+  transform-origin: 0 50%;
+  pointer-events: none;
 }
 
 /* Only the name may truncate. A long name must not spend the space reserved

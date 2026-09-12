@@ -27,10 +27,10 @@ export function createCloudMaterial(dimmed = false): THREE.MeshStandardMaterial 
     vertexColors: true,
     roughness: 0.82,
     metalness: 0,
-    // Preserve the existing scattered-light fill; this is not a brightness
-    // pass. The silhouette improvement comes from the continuous geometry.
-    emissive: 0x6d6a64,
-    emissiveIntensity: 0.3,
+    // Shared cool sky scattering keeps the shaded belly airy rather than
+    // stone-grey. It is a material fill, not another light or post pass.
+    emissive: 0xa9bed2,
+    emissiveIntensity: 0.35,
     transparent: false,
     fog: false,
     depthTest: true,

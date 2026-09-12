@@ -79,6 +79,40 @@ export interface LabelPlacement {
 
 const DEFAULT_MAX_VISIBLE = 12;
 const DEFAULT_GAP = 4;
+
+/** A displaced island caption still needs to identify its OWN rock root.
+ * The DOM draws this short, pointer-inert line; ordinary centred captions
+ * have none. Coordinates are relative to the measured label's centre.
+ */
+export function islandCaptionLeader(
+  anchor: { readonly x: number; readonly y: number },
+  placed: { readonly x: number; readonly y: number },
+  width: number,
+  height: number,
+) {
+  const dx = anchor.x - placed.x,
+    dy = anchor.y - placed.y;
+  const distance = Math.hypot(dx, dy);
+  if (
+    !Number.isFinite(distance) ||
+    distance <= Math.max(24, height / 2 + 8) ||
+    width <= 0 ||
+    height <= 0
+  )
+    return null;
+  const edge = Math.min(
+    dx === 0 ? Infinity : width / (2 * Math.abs(dx)),
+    dy === 0 ? Infinity : height / (2 * Math.abs(dy)),
+  );
+  const length = distance * (1 - edge) - 4;
+  if (length < 5) return null;
+  return {
+    x: dx * edge + (dx / distance) * 2,
+    y: dy * edge + (dy / distance) * 2,
+    length,
+    angle: Math.atan2(dy, dx),
+  };
+}
 /**
  * How far an `aside` card sits off the projected peak.
  *
@@ -188,6 +222,29 @@ function additionalVerticalSlots(candidate: LabelCandidate, gap: number): readon
   const baseY = candidate.anchor === "start" ? candidate.y : candidate.y - candidate.height / 2;
   const offsets = [-1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7, 8, -8];
   return offsets.map((offset) => ({ x: candidate.x, y: baseY + offset * step }));
+}
+
+/** The current course and its immediate neighbours must not disappear just
+ * because its 32px-neighbourhood is occupied. Search at most one caption width
+ * sideways and three caption rows vertically, nearest first. The existing DOM
+ * leader retains ownership; chrome/scenery collision checks still apply. */
+function currentIslandSlots(candidate: LabelCandidate, gap: number): readonly Slot[] {
+  if (candidate.anchor !== "island" || (candidate.weight ?? 0) < 2) return [];
+  const row = candidate.height + gap;
+  const baseY = candidate.y + candidate.height / 2 + gap;
+  const columns =
+    (candidate.weight ?? 0) >= 4 ? [-1, -0.7, -0.4, 0.4, 0.7, 1] : [-0.7, -0.4, 0, 0.4, 0.7];
+  return columns
+    .flatMap((dx) =>
+      [0, 1, -1, 2, -2, 3, -3].map((dy) => ({
+        x: candidate.x + dx * candidate.width,
+        y: baseY + dy * row,
+      })),
+    )
+    .sort(
+      (a, b) =>
+        Math.hypot(a.x - candidate.x, a.y - baseY) - Math.hypot(b.x - candidate.x, b.y - baseY),
+    );
 }
 
 /**
@@ -506,6 +563,7 @@ export function placeLabels(
       slotsFor(candidate, gap, viewport),
       asideObstacleSlots(candidate, viewport, gap, obstacles),
       additionalVerticalSlots(candidate, gap),
+      currentIslandSlots(candidate, gap),
     ];
     for (const slots of slotGroups) {
       for (const slot of slots) {

@@ -448,8 +448,8 @@ describe("IslandBlueprint", () => {
           seed: `root-depth/${lessonCount}/${seed}`,
         });
         const ratio = blueprint.underside.depth / blueprint.bounds.maxHalf;
-        expect(ratio, `${lessonCount}/${seed}`).toBeGreaterThanOrEqual(0.7);
-        expect(ratio, `${lessonCount}/${seed}`).toBeLessThan(0.9);
+        expect(ratio, `${lessonCount}/${seed}`).toBeGreaterThanOrEqual(1.1);
+        expect(ratio, `${lessonCount}/${seed}`).toBeLessThan(1.3);
         expect(Number.isFinite(blueprint.underside.depth), `${lessonCount}/${seed}`).toBe(true);
         depths.add(blueprint.underside.depth);
       }
@@ -458,7 +458,7 @@ describe("IslandBlueprint", () => {
     const large = islandBlueprint({ ...INPUT, lessonCount: 41, seed: "root-depth/41/coast" });
     expect(large.bounds.maxHalf).toBeGreaterThan(30);
     expect(large.underside.depth).toBeGreaterThan(11);
-    expect(large.underside.depth).toBeGreaterThanOrEqual(large.bounds.maxHalf * 0.7);
+    expect(large.underside.depth).toBeGreaterThanOrEqual(large.bounds.maxHalf * 1.1);
   });
 
   it("keeps route, terrain, theme, and anchor geometry independent of unit identity", () => {

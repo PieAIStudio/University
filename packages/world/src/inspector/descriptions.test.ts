@@ -2,10 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 
 import { islandBlueprint } from "../island/island-blueprint.js";
-import {
-  COURSE_BUSH_CROWN_TRIANGLES_PER_LOBE,
-  COURSE_TREE_CROWN_TRIANGLES_PER_LOBE,
-} from "../island/foliage-geometry.js";
+import { COURSE_BUSH_CROWN_TRIANGLES_PER_LOBE } from "../island/foliage-geometry.js";
 import { CAMPFIRE_FLAME_TRIANGLES } from "../island/island-campfire.js";
 import { ISLAND_GRASS_LIMITS } from "../island/island-grass.js";
 import { ISLAND_GRASS_BLADE_TRIANGLES } from "../island/island-grass-render.js";
@@ -98,14 +95,19 @@ describe("H02: Procedural assets and world layer LOD", () => {
     expect(grass?.projectionKind).toBe("procedural");
     expect(grass?.mutable).toBe(false);
 
-    // 2. Tree crown lobes
-    const treeCrown = assets.find((a) => a.key === "procedural/tree-crown");
+    // Complete trees include trunks; the mixed forms have separate exact counts.
+    const treeCrown = assets.find((a) => a.key === "procedural/course-trees");
     expect(treeCrown).toBeDefined();
-    expect(treeCrown?.role).toBe("树冠");
-    expect(treeCrown?.triangles).toBe(COURSE_TREE_CROWN_TRIANGLES_PER_LOBE);
+    expect(treeCrown?.role).toBe("完整树木");
+    expect(treeCrown?.triangles).toBeNull();
     expect(treeCrown?.projectionKind).toBe("procedural");
     expect(treeCrown?.mutable).toBe(false);
-    expect(treeCrown?.instances).toBe((treeCrown?.placementCount ?? 0) * 3);
+    expect(treeCrown?.instances).toBe(treeCrown?.placementCount);
+    expect(treeCrown?.totalTriangles).toBeGreaterThanOrEqual(
+      (treeCrown?.placementCount ?? 0) * 408,
+    );
+    expect(treeCrown?.totalTriangles).toBeLessThanOrEqual((treeCrown?.placementCount ?? 0) * 432);
+    expect(assets.find((a) => a.key === "procedural/tree-crown")).toBeUndefined();
 
     // 3. Bush crown lobes
     const bushCrown = assets.find((a) => a.key === "procedural/bush-crown");
@@ -161,17 +163,18 @@ describe("H02: Procedural assets and world layer LOD", () => {
 });
 
 describe("H03: Tree trunks truthful triangle handling and island budget", () => {
-  it("marks treeTrunks triangles as null to prevent 2,028x multiplication and yields truthful budget", () => {
+  it("does not count a retired donor file or crown draw as current course trees", () => {
     const blueprint = createTestBlueprint(6);
     const triangleCounts = new Map([["elemental-serenity/treeTrunks", 2028]]);
     const description = describeIslandLayer({ blueprint, triangleCounts });
 
     const treeTrunks = description.dressing.assets.find((asset) => asset.assetId === "treeTrunks");
-    expect(treeTrunks, "the fixture must actually contain the donor trunk row").toBeDefined();
-    // The source file contains all variants; it is never a single-tree cost.
-    expect(treeTrunks!.triangles).toBeNull();
-    expect(treeTrunks!.note).toContain("2,032");
-    expect(treeTrunks!.note).toContain("384");
+    expect(treeTrunks).toBeUndefined();
+    const trees = description.dressing.assets.find(
+      (asset) => asset.key === "procedural/course-trees",
+    );
+    expect(trees).toBeDefined();
+    expect(trees!.note).toContain("树干已包含");
 
     expect(description.budget.actualTriangles).toBeNull();
     expect(description.budget.basis).toContain("未知值不记作零");
@@ -251,9 +254,10 @@ describe("H08: Distant view descriptions for continuous archipelago and planet l
       const treeAsset = worldDesc.dressing.assets.find(
         (a) => a.key === "procedural/world-tree-crown",
       );
-      expect(landmarkAsset?.instances).toBe(2);
+      expect(landmarkAsset?.instances).toBe(landmarkAsset?.uses?.length);
+      expect(landmarkAsset?.instances).toBeGreaterThan(2);
       expect(treeAsset?.instances).toBeGreaterThanOrEqual(4);
-      expect(treeAsset?.instances).toBeLessThanOrEqual(8);
+      expect(treeAsset?.instances).toBeLessThanOrEqual(10);
       expect(
         worldDesc.dressing.assets.filter((asset) => asset.key === "procedural/world-tree-crown"),
       ).toHaveLength(1);
@@ -261,7 +265,7 @@ describe("H08: Distant view descriptions for continuous archipelago and planet l
       expect(treeAsset?.trianglesSource?.file).toBe("packages/world/src/island/remote-props.ts");
       expect(
         new Set(landmarkAsset?.uses?.map((use) => `${use.position[0]}:${use.position[2]}`)).size,
-      ).toBe(2);
+      ).toBe(landmarkAsset?.instances);
       expect(treeAsset?.uses?.some((use) => use.position[0] !== 0 || use.position[2] !== 0)).toBe(
         true,
       );
@@ -427,8 +431,9 @@ describe("H08: Distant view descriptions for continuous archipelago and planet l
     const landmark = description.dressing.assets.find(
       (asset) => asset.key === "procedural/world-landmark",
     );
-    expect(landmark?.instances).toBe(2);
-    expect(landmark?.uses?.map((use) => use.group)).toEqual([
+    expect(landmark?.instances).toBe(landmark?.uses?.length);
+    expect(landmark?.instances).toBeGreaterThan(2);
+    expect([...new Set(landmark?.uses?.map((use) => use.group))]).toEqual([
       "inspector-test/course",
       "inspector-test/course-2",
     ]);

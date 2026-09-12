@@ -235,7 +235,9 @@ export function LessonMarkerField({
   }, [reducedMotion, batches, markers, matrix, scratch]);
 
   useFrame(({ clock }) => {
-    if (!markerPulseAllowed()) return;
+    // Use the same subscribed preference as the reset effect. Creating a new
+    // MediaQueryList in every frame bypassed that owner during live switches.
+    if (reducedMotion || islandLookFrozen()) return;
     const liveIndex = markers.findIndex((entry) => entry.lesson.state === "live");
     if (liveIndex < 0) return;
     const live = markers[liveIndex]!;

@@ -28,6 +28,13 @@ function dispose(shape: ReturnType<typeof buildIslandGeometry>): void {
 
 const CLIFF_RING_COUNT = 5;
 
+/** Same per-vertex/per-face limits, without constructing millions of matcher
+ * objects on the valid path. Failures still identify the exact fixture and
+ * offending vertex/face; no sample, timeout or tolerance is weakened. */
+function geometryInvariant(valid: boolean, context: string, value?: number): void {
+  if (!valid) throw new Error(`${context}${value === undefined ? "" : `: ${value}`}`);
+}
+
 function projectionSegments(
   blueprint: ReturnType<typeof islandBlueprint>,
   detail: "course" | "world",
@@ -129,10 +136,11 @@ function edgeBoundary(
   end: number,
 ): { readonly open: readonly string[]; readonly nonManifold: number } {
   const edges = new Map<string, { readonly a: number; readonly b: number; count: number }>();
+  const pointKeys: Array<string | undefined> = [];
   const pointKey = (id: number): string =>
-    [position.getX(id), position.getY(id), position.getZ(id)]
+    (pointKeys[id] ??= [position.getX(id), position.getY(id), position.getZ(id)]
       .map((value) => Math.round(value * 1e5))
-      .join(",");
+      .join(","));
   for (let face = start; face < end; face += 3) {
     for (let corner = 0; corner < 3; corner += 1) {
       const a = index.getX(face + corner);
@@ -278,6 +286,12 @@ describe("Island geometry projections", () => {
             const outerStart = 1 + (topRings - 1) * segments;
             for (let index = 0; index < segments; index += 1) {
               const lip = cliff.rings[0]![index]!;
+              // The near projection owns a real shallow sod edge, not a
+              // multi-metre green wall. The deeper five-ring root still obeys
+              // the original contraction, winding and depth assertions.
+              const sodDepth = lip.y - cliff.rings[1]![index]!.y;
+              expect(sodDepth, `${context} shallow turf ${index}`).toBeGreaterThan(0.1);
+              expect(sodDepth, `${context} shallow turf ${index}`).toBeLessThan(0.55);
               expect(positions.getX(outerStart + index), `${context} lip x ${index}`).toBeCloseTo(
                 lip.x,
                 5,
@@ -401,13 +415,17 @@ describe("Island geometry projections", () => {
                   normal.getY(vertex),
                   normal.getZ(vertex),
                 );
-                expect(normalLength, `${context}/${detail} normal ${vertex}`).toBeGreaterThan(0.5);
+                geometryInvariant(
+                  normalLength > 0.5,
+                  `${context}/${detail} normal ${vertex} > 0.5`,
+                  normalLength,
+                );
               }
               expect(maxY, `${context}/${detail} vertical span`).toBeGreaterThan(minY);
               expect(shape.bounds.depth, `${context}/${detail} real minY`).toBeCloseTo(-minY, 5);
               const relativeDepth = -minY / shape.scale / blueprint.bounds.maxHalf;
-              expect(relativeDepth, `${context}/${detail} authored depth`).toBeGreaterThan(0.7);
-              expect(relativeDepth, `${context}/${detail} authored depth`).toBeLessThan(1.05);
+              expect(relativeDepth, `${context}/${detail} authored depth`).toBeGreaterThan(1.1);
+              expect(relativeDepth, `${context}/${detail} authored depth`).toBeLessThan(1.41);
 
               const segments = projectionSegments(blueprint, detail);
               const cliffStart = (shape.counts.topTriangles + shape.counts.routeTriangles) * 3;
@@ -418,22 +436,25 @@ describe("Island geometry projections", () => {
                 const first = index.getX(face);
                 const second = index.getX(face + 1);
                 const third = index.getX(face + 2);
-                expect(
+                geometryInvariant(
                   [first, second, third].every(
                     (vertex) => Number.isInteger(vertex) && vertex >= 0 && vertex < position.count,
                   ),
                   `${context}/${detail} face ${face / 3} indices`,
-                ).toBe(true);
+                );
                 const cross = triangleCross(position, first, second, third);
-                expect(
-                  Math.hypot(cross[0], cross[1], cross[2]),
-                  `${context}/${detail} face ${face / 3} area`,
-                ).toBeGreaterThan(1e-12);
+                const area = Math.hypot(cross[0], cross[1], cross[2]);
+                geometryInvariant(
+                  area > 1e-12,
+                  `${context}/${detail} face ${face / 3} area > 1e-12`,
+                  area,
+                );
                 if (face < shape.counts.topTriangles * 3) {
-                  expect(
+                  geometryInvariant(
+                    cross[1] > 1e-10,
+                    `${context}/${detail} top face ${face / 3} winding > 1e-10`,
                     cross[1],
-                    `${context}/${detail} top face ${face / 3} winding`,
-                  ).toBeGreaterThan(1e-10);
+                  );
                 } else if (face >= cliffStart && face < cliffBottomStart) {
                   const centreX =
                     (position.getX(first) + position.getX(second) + position.getX(third)) / 3 -
@@ -446,10 +467,12 @@ describe("Island geometry projections", () => {
                   // Consistency across faces is independently checked by
                   // the directed-edge regression, not repaired by flips.
                   const radial = Math.hypot(centreX, centreZ);
-                  expect(
-                    (cross[0] * centreX + cross[2] * centreZ) / radial,
-                    `${context}/${detail} cliff face ${face / 3} outward winding`,
-                  ).toBeGreaterThan(1e-8);
+                  const outward = (cross[0] * centreX + cross[2] * centreZ) / radial;
+                  geometryInvariant(
+                    outward > 1e-8,
+                    `${context}/${detail} cliff face ${face / 3} outward winding > 1e-8`,
+                    outward,
+                  );
                   const crossLength = Math.hypot(cross[0], cross[1], cross[2]);
                   const normalLength = Math.hypot(
                     normal.getX(first),
@@ -461,19 +484,22 @@ describe("Island geometry projections", () => {
                       cross[1] * normal.getY(first) +
                       cross[2] * normal.getZ(first)) /
                     (crossLength * normalLength);
-                  expect(
+                  geometryInvariant(
+                    normalAlignment > 0.4,
+                    `${context}/${detail} cliff face ${face / 3} normal alignment > 0.4`,
                     normalAlignment,
-                    `${context}/${detail} cliff face ${face / 3} normal alignment`,
-                  ).toBeGreaterThan(0.4);
+                  );
                 } else if (face >= cliffBottomStart) {
-                  expect(
+                  geometryInvariant(
+                    cross[1] < -1e-10,
+                    `${context}/${detail} bottom face ${face / 3} winding < -1e-10`,
                     cross[1],
-                    `${context}/${detail} bottom face ${face / 3} winding`,
-                  ).toBeLessThan(-1e-10);
-                  expect(
+                  );
+                  geometryInvariant(
+                    normal.getY(first) < -0.99,
+                    `${context}/${detail} bottom face ${face / 3} normal < -0.99`,
                     normal.getY(first),
-                    `${context}/${detail} bottom face ${face / 3} normal`,
-                  ).toBeLessThan(-0.99);
+                  );
                 }
               }
 
@@ -599,12 +625,17 @@ describe("Island geometry projections", () => {
     expect(position.count).toBeGreaterThan(0);
     expect(colour.count).toBe(position.count);
     for (let index = 0; index < position.count; index += 1) {
-      expect(Number.isFinite(position.getX(index))).toBe(true);
-      expect(Number.isFinite(position.getY(index))).toBe(true);
-      expect(Number.isFinite(position.getZ(index))).toBe(true);
-      expect(Number.isFinite(colour.getX(index))).toBe(true);
-      expect(Number.isFinite(colour.getY(index))).toBe(true);
-      expect(Number.isFinite(colour.getZ(index))).toBe(true);
+      geometryInvariant(
+        [
+          position.getX(index),
+          position.getY(index),
+          position.getZ(index),
+          colour.getX(index),
+          colour.getY(index),
+          colour.getZ(index),
+        ].every(Number.isFinite),
+        `compiled terrain vertex ${index} finite`,
+      );
     }
 
     // There is deliberately no independent road/shoulder/path object. The
@@ -675,7 +706,7 @@ describe("Island geometry projections", () => {
         let minY = Infinity;
         for (let index = 0; index < position.count; index += 1) {
           const y = position.getY(index);
-          expect(Number.isFinite(y)).toBe(true);
+          geometryInvariant(Number.isFinite(y), `terrain vertex ${index} finite y`, y);
           minY = Math.min(minY, y);
         }
         return minY;
@@ -790,8 +821,8 @@ it("uses the same full-depth geological root in course and distant projections",
         for (let i = 0; i < positions.count; i++) minY = Math.min(minY, positions.getY(i));
         expect(shape.bounds.depth).toBeCloseTo(-minY, 5);
         const relative = -minY / shape.scale / source.bounds.maxHalf;
-        expect(relative).toBeGreaterThan(0.7);
-        expect(relative).toBeLessThan(1.05);
+        expect(relative).toBeGreaterThan(1.1);
+        expect(relative).toBeLessThan(1.41);
         return -minY / shape.scale;
       });
       expect(depths[0]).toBeCloseTo(depths[1]!, 4);
