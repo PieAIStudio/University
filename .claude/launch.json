@@ -36,7 +36,7 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": [
         "--dir",
-        "/Users/yuanfei/PieAI/SwimmerUIKit-wt-gooey",
+        "../SwimmerUIKit-wt-gooey",
         "storybook"
       ],
       "port": 6006
@@ -46,7 +46,7 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": [
         "-C",
-        "/Users/yuanfei/PieAI/University-wt-hexgrid",
+        "../University-wt-hexgrid",
         "--filter",
         "@pieai/university-app",
         "dev",
@@ -61,7 +61,7 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": [
         "-C",
-        "/Users/yuanfei/PieAI/University-wt-ctamaterial",
+        "../University-wt-ctamaterial",
         "--filter",
         "@pieai/university-app",
         "dev",
@@ -70,6 +70,43 @@
         "--strictPort"
       ],
       "port": 18211
+    },
+    {
+      "name": "cutout-studio",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--dir",
+        "../CutoutStudio",
+        "dev",
+        "--port",
+        "5199",
+        "--strictPort"
+      ],
+      "port": 5199
+    },
+    {
+      "name": "courses-local-server",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "-C",
+        "../University-courses",
+        "--filter",
+        "@pieai/university-local",
+        "dev"
+      ],
+      "port": 4317
+    },
+    {
+      "name": "courses-authoring",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "-C",
+        "../University-courses",
+        "--filter",
+        "@pieai/university-app",
+        "dev:local"
+      ],
+      "port": 9999
     }
   ]
 }
