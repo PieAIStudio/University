@@ -1,4 +1,5 @@
 import type { ExerciseAttemptRecord, ProgressDocument } from "../ports/progress.js";
+import { exerciseGradeOutcome } from "../ports/grading.js";
 import type { LessonRef } from "./contract.js";
 
 /** The answer facts an author can compare with one lesson's feedback. */
@@ -15,6 +16,8 @@ export interface LessonAnswerStats {
   readonly totalAttempts: number;
   /** First answers that exist but are still waiting for a host verdict. */
   readonly pendingFirstAttemptCount: number;
+  /** First answers that were graded honestly but could not be decided. */
+  readonly undecidedFirstAttemptCount: number;
 }
 
 /**
@@ -45,10 +48,13 @@ export function answerStatsForAttempts(
   );
   const firstAttemptCount = firstAttempts.length;
   const firstPassCount = firstAttempts.filter(
-    (attempt) => attempt.hostGrade?.passed === true,
+    (attempt) => attempt.hostGrade && exerciseGradeOutcome(attempt.hostGrade) === "pass",
   ).length;
   const pendingFirstAttemptCount = firstAttempts.filter(
     (attempt) => attempt.hostGrade == null,
+  ).length;
+  const undecidedFirstAttemptCount = firstAttempts.filter(
+    (attempt) => attempt.hostGrade && exerciseGradeOutcome(attempt.hostGrade) === "undecided",
   ).length;
 
   return {
@@ -56,11 +62,12 @@ export function answerStatsForAttempts(
     firstAttemptCount,
     firstPassCount,
     firstPassRate:
-      firstAttemptCount > 0 && pendingFirstAttemptCount === 0
+      firstAttemptCount > 0 && pendingFirstAttemptCount === 0 && undecidedFirstAttemptCount === 0
         ? firstPassCount / firstAttemptCount
         : null,
     totalAttempts: attempts.length,
     pendingFirstAttemptCount,
+    undecidedFirstAttemptCount,
   };
 }
 

@@ -1,6 +1,6 @@
 import { translate } from "../../i18n/index.js";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { GameButton, GameCallout, GameToggle } from "@pieai/swimmer-ui-kit";
+import { GameCallout, GameToggle } from "@pieai/swimmer-ui-kit";
 import type {
   NotificationExplanation,
   ReviewReminderPort,
@@ -13,6 +13,7 @@ import { CapabilityExplanation } from "../../capability/CapabilityExplanation.js
 export function ReviewReminderSettings({ reminders }: { readonly reminders: ReviewReminderPort }) {
   const status = useSyncExternalStore(reminders.subscribe, reminders.snapshot, reminders.snapshot);
   const [explanation, setExplanation] = useState<NotificationExplanation | null>(null);
+  const [attempted, setAttempted] = useState(false);
 
   useEffect(() => {
     // Reading settings must never ask for permission. `refresh` only inspects
@@ -29,6 +30,7 @@ export function ReviewReminderSettings({ reminders }: { readonly reminders: Revi
 
   async function toggle(): Promise<void> {
     if (pending) return;
+    setAttempted(true);
     if (canExplain) {
       setExplanation(notificationExplanationOf(status));
       return;
@@ -47,67 +49,37 @@ export function ReviewReminderSettings({ reminders }: { readonly reminders: Revi
       </h2>
       <GameToggle
         checked={checked}
-        disabled={pending || canExplain}
+        disabled={pending}
         label={translate("ui.navigation.empty.reviewReminderSettings.copy.明天有卡时提醒我")}
         onClick={() => void toggle()}
       />
-      <p className="settings-screen__hint">{statusLabel(status)}</p>
-      {status.kind === "error" ? (
+      <p className="settings-screen__hint" role="status">
+        {pending
+          ? translate("product.settings.reminderPending")
+          : status.kind === "subscribed"
+            ? translate(
+                status.serverConnected
+                  ? "product.settings.reminderOn"
+                  : "product.settings.reminderWaiting",
+              )
+            : translate("product.settings.reminderBrief")}
+      </p>
+      {attempted && status.kind === "error" ? (
         <GameCallout
           heading={translate("ui.navigation.empty.reviewReminderSettings.copy.提醒没有开启")}
           tone="warning"
           role="alert"
         >
-          <p>{status.message}</p>
+          <p>{translate("product.settings.reminderFailed")}</p>
         </GameCallout>
       ) : null}
-      {status.kind === "permission-denied" ? (
-        <GameCallout
-          heading={translate("ui.navigation.empty.reviewReminderSettings.copy.浏览器已拒绝")}
-          tone="warning"
-        >
-          <p>
-            {translate(
-              "ui.navigation.empty.reviewReminderSettings.copy.请到浏览器的网站通知设置里允许-University-这里不会反复弹窗",
-            )}
-          </p>
-          <GameButton
-            variant="secondary"
-            type="button"
-            onClick={() => setExplanation(notificationExplanationOf(status))}
-          >
-            {translate("ui.navigation.empty.reviewReminderSettings.copy.查看怎么开启")}
-          </GameButton>
-        </GameCallout>
-      ) : null}
-      {status.kind === "ios-home-screen-required" || status.kind === "unsupported" ? (
-        <GameCallout
-          heading={translate(
-            "ui.navigation.empty.reviewReminderSettings.copy.这台设备需要先准备好",
-          )}
-          tone="info"
-        >
-          <p>{statusLabel(status)}</p>
-          <GameButton
-            variant="secondary"
-            type="button"
-            onClick={() => setExplanation(notificationExplanationOf(status))}
-          >
-            {translate("ui.navigation.empty.reviewReminderSettings.copy.查看说明")}
-          </GameButton>
-        </GameCallout>
-      ) : null}
-      {status.kind === "subscribed" ? (
-        <p className="settings-screen__hint">
-          {status.serverConnected
-            ? translate(
-                "ui.navigation.empty.reviewReminderSettings.copy.已订阅-每天最多一条-有卡才提醒",
-              )
-            : translate(
-                "ui.navigation.empty.reviewReminderSettings.copy.已订阅-但服务端还没接上-暂时不会真的收到提醒-每天最多一条-有卡才提醒",
-              )}
-        </p>
-      ) : null}
+      <details className="product-details">
+        <summary>{translate("product.settings.reminderDetails")}</summary>
+        <p>{statusLabel(status)}</p>
+        {status.kind === "subscribed" && !status.serverConnected ? (
+          <p>{translate("product.settings.reminderWaiting")}</p>
+        ) : null}
+      </details>
       {explanation ? (
         <CapabilityExplanation explanation={explanation} onClose={() => setExplanation(null)} />
       ) : null}

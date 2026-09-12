@@ -44,6 +44,12 @@ export function createUniversityBackend(env: BrowserEnv): UniversityBackend {
       identity: identityPort,
       transport: client ? createSupabasePaymentRemote(client) : null,
       orderIdFactory: createPaymentOrderId,
+      intentStore: {
+        read: (userId) =>
+          globalThis.localStorage.getItem(`university.purchase-intent.v1:${userId}`),
+        write: (userId, raw) =>
+          globalThis.localStorage.setItem(`university.purchase-intent.v1:${userId}`, raw),
+      },
     }),
     progressRemoteStore: client ? createSupabaseProgressRemoteStore(client) : null,
   };

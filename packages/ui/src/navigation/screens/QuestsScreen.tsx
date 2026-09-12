@@ -18,10 +18,20 @@ import {
  */
 export const QUESTS_TITLE = translate("ui.navigation.screens.questsScreen.copy.今天");
 
-function QuestRow({ quest }: { quest: Quest }) {
+function QuestRow({
+  quest,
+  learnHref,
+  reviewHref,
+}: {
+  quest: Quest;
+  learnHref: string;
+  reviewHref: string;
+}) {
   const done = questComplete(quest);
   return (
-    <li className={`quest${done ? " quest--done" : ""}`}>
+    <li
+      className={`quest${done ? " quest--done" : ""}${quest.informational ? " quest--info" : ""}`}
+    >
       <div className="quest__head">
         <span className="quest__title">{quest.title}</span>
         <GameBadge tone={quest.informational ? "neutral" : done ? "success" : "neutral"}>
@@ -32,14 +42,30 @@ function QuestRow({ quest }: { quest: Quest }) {
               : `${quest.done}/${quest.goal}`}
         </GameBadge>
       </div>
-      <GameProgress
-        label={quest.title}
-        value={questProgress(quest)}
-        max={1}
-        tone={done ? "success" : "accent"}
-        valueLabel={`${quest.done} / ${quest.goal}`}
-      />
-      <p className="quest__detail">{quest.detail}</p>
+      {quest.goal > 1 && !quest.informational ? (
+        <GameProgress
+          label={quest.title}
+          value={questProgress(quest)}
+          max={1}
+          tone={done ? "success" : "accent"}
+          valueLabel={`${quest.done} / ${quest.goal}`}
+        />
+      ) : null}
+      {!done && !quest.informational ? (
+        <a
+          className="linkish quest__action"
+          data-quest-action={quest.id}
+          href={quest.id === "review" ? reviewHref : learnHref}
+        >
+          {translate(
+            quest.id === "review"
+              ? "product.quest.review"
+              : quest.id === "streak"
+                ? "product.quest.streak"
+                : "product.quest.learn",
+          )}
+        </a>
+      ) : null}
     </li>
   );
 }
@@ -47,9 +73,13 @@ function QuestRow({ quest }: { quest: Quest }) {
 export function QuestsScreen({
   document: progress,
   now = Date.now(),
+  learnHref = "/",
+  reviewHref = "/review",
 }: {
   readonly document: ProgressDocument;
   readonly now?: number;
+  readonly learnHref?: string;
+  readonly reviewHref?: string;
 }) {
   const quests = questsForToday(progress, now);
   // Scored, not all: a review quest with nothing due is satisfied before the
@@ -62,11 +92,7 @@ export function QuestsScreen({
     <section className="shell-screen">
       <header className="shell-screen__head">
         <h1>{QUESTS_TITLE}</h1>
-        <p className="shell-screen__lede">
-          {translate(
-            "ui.navigation.screens.questsScreen.copy.每天都是同样几件-换着花样出任务是让人来开-App-的手段-天天一样才养得成习惯-而间隔重复要的就是习惯",
-          )}
-        </p>
+        <p className="shell-screen__lede">{translate("product.quest.intro")}</p>
       </header>
 
       <GamePanel tone="strong">
@@ -81,18 +107,24 @@ export function QuestsScreen({
 
       <ul className="quest-list">
         {quests.map((quest) => (
-          <QuestRow key={quest.id} quest={quest} />
+          <QuestRow key={quest.id} quest={quest} learnHref={learnHref} reviewHref={reviewHref} />
         ))}
       </ul>
+      <details className="product-details">
+        <summary>{translate("product.quest.details")}</summary>
+        {quests.map((quest) => (
+          <p key={quest.id}>
+            <strong>{quest.title}</strong> · {quest.detail}
+          </p>
+        ))}
+      </details>
 
       {finished === scored.length ? (
         <GameCallout
           tone="success"
           heading={translate("ui.navigation.screens.questsScreen.copy.今天到这儿就够了")}
         >
-          {translate(
-            "ui.navigation.screens.questsScreen.copy.再学下去当然可以-但今天该记住的东西已经安排好了-真正决定你记不记得住的是明天来不来-不是今天学了多少",
-          )}
+          {translate("product.quest.doneBrief")}
         </GameCallout>
       ) : null}
     </section>

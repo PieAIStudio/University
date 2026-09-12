@@ -27,12 +27,24 @@ export function createBrowserPersistence(): Persistence {
       }
     },
     write(raw: string) {
+      // Core catches this at the mutation boundary and retains the live data.
+      // Swallowing it here would make a failed cache write look successful.
+      window.localStorage.setItem(PROGRESS_STORAGE_KEY, raw);
+    },
+    readAccount(userId: string) {
       try {
-        window.localStorage.setItem(PROGRESS_STORAGE_KEY, raw);
+        return window.localStorage.getItem(
+          `${PROGRESS_STORAGE_KEY}.account.${encodeURIComponent(userId)}`,
+        );
       } catch {
-        // Private browsing, or a full quota. Losing the write is survivable;
-        // throwing in the middle of a lesson is not.
+        return null;
       }
+    },
+    writeAccount(userId: string, raw: string) {
+      window.localStorage.setItem(
+        `${PROGRESS_STORAGE_KEY}.account.${encodeURIComponent(userId)}`,
+        raw,
+      );
     },
   };
 }

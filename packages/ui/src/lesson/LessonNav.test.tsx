@@ -148,7 +148,7 @@ describe("LessonToolbar", () => {
     });
     expect(container.querySelector("nav")).toBeNull();
     expect(container.textContent).not.toContain("关卡地图");
-    expect(container.textContent).toContain("1/3");
+    expect(container.textContent).toContain("阅读 1/3 段");
     const close = container.querySelector<HTMLButtonElement>(".lesson-toolbar__close");
     expect(close?.getAttribute("aria-label")).toBe("离开课文");
     await act(async () => {
@@ -179,7 +179,7 @@ describe("LessonToolbar", () => {
       "1",
     );
     expect(container.querySelector("[role='progressbar']")?.getAttribute("aria-valuetext")).toBe(
-      "1/3",
+      "阅读 1/3 段",
     );
 
     stubLessonRects({ s1: -200, s2: -20, s3: 40 });
@@ -199,7 +199,7 @@ describe("LessonToolbar", () => {
       "3",
     );
     expect(container.querySelector("[role='progressbar']")?.getAttribute("aria-valuetext")).toBe(
-      "3/3",
+      "阅读 3/3 段",
     );
   });
 });

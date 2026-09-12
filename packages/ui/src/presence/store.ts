@@ -41,6 +41,7 @@ export function createBrowserPresencePort(self?: PresenceSelf): PresencePort {
 
   if (fixtureRequested()) {
     const ada = createMemoryPresencePort({
+      sharesPresence: true,
       self: FIXTURE_ADA,
       bus: port.bus,
       seeAs: { [me.userId]: "group" },
@@ -48,6 +49,7 @@ export function createBrowserPresencePort(self?: PresenceSelf): PresencePort {
     ada.publishLocation(FIXTURE_LESSON);
     ada.publishCursor({ x: 0.46, y: 0.42, viewKey: "world" });
     const lin = createMemoryPresencePort({
+      sharesPresence: true,
       self: FIXTURE_LIN,
       bus: port.bus,
       seeAs: { [me.userId]: "group" },

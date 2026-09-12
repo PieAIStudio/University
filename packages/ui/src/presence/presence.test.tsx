@@ -4,12 +4,20 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createMemoryPresencePort, CURSOR_BROADCAST_INTERVAL_MS } from "@pieai/university-core";
+import {
+  createMemoryPresencePort as createUnconfiguredMemoryPresencePort,
+  CURSOR_BROADCAST_INTERVAL_MS,
+} from "@pieai/university-core";
 
 import { CompanionCursors, CompanionMarkers } from "./CompanionOverlay.js";
 import { stepCursor } from "./interpolate.js";
 import { presenceAnchorId } from "./anchors.js";
 import { SettingsScreen } from "../navigation/empty/SettingsScreen.js";
+
+// Rendering peers is tested with their explicit consent; the default remains off.
+const createMemoryPresencePort = (
+  options: Parameters<typeof createUnconfiguredMemoryPresencePort>[0],
+) => createUnconfiguredMemoryPresencePort({ sharesPresence: true, ...options });
 
 const AT_LESSON = {
   studyId: "turing-pact",
@@ -167,10 +175,10 @@ describe("SettingsScreen presence", () => {
     await act(async () => {
       root.render(<SettingsScreen presence={ada} />);
     });
-    expect(container.textContent).toContain("让小组看到我在学什么");
+    expect(container.textContent).toContain("共享学习动态");
 
     const toggle = [...container.querySelectorAll("button")].find((button) =>
-      button.textContent?.includes("让小组看到我在学什么"),
+      button.textContent?.includes("共享学习动态"),
     );
     expect(toggle).toBeDefined();
     await act(async () => {
@@ -186,6 +194,6 @@ describe("SettingsScreen presence", () => {
   it("keeps the settings page working without a presence port", () => {
     const markup = renderToStaticMarkup(<SettingsScreen />);
     expect(markup).toContain("偏好设置");
-    expect(markup).not.toContain("让小组看到我在学什么");
+    expect(markup).not.toContain("共享学习动态");
   });
 });

@@ -10,9 +10,11 @@
  * campuses came to disagree about what happens when a lesson is finished.
  */
 import { translate } from "@pieai/university-ui/i18n.js";
+import { LearningSaveStatus } from "@pieai/university-ui/progress/LearningSaveStatus.js";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   courseShapeOf,
+  exerciseGradeOutcome,
   isLessonComplete,
   lessonKeyOf,
   lessonRefKey,
@@ -35,6 +37,7 @@ import type { EntitlementReader } from "@pieai/university-ui/capability/ai-entit
 import { trackEvent, withProductAnalyticsReview } from "../analytics/productAnalytics";
 import { contentPort, gradingPort, readerPort, sourceAccessPort } from "../ports/index.js";
 import { progressPort } from "../progress/store.js";
+import { identityPort } from "../account/identity.js";
 
 function exerciseAnalyticsKey(locator: LessonRef, exerciseId: string): string {
   return `${locator.studyId}/${locator.courseId}/${locator.unitId}/${locator.lessonId}/${exerciseId}`;
@@ -83,12 +86,21 @@ export function LessonScreen({
   readonly readEntitlements?: EntitlementReader;
 }) {
   const progress = useSyncExternalStore(progressPort.subscribe, progressPort.snapshot);
+  const identity = useSyncExternalStore(
+    identityPort.subscribe,
+    identityPort.status,
+    identityPort.status,
+  );
+  const answerDraftScope =
+    identity.kind === "anonymous" || identity.kind === "signed_in"
+      ? `account:${identity.user.id}`
+      : "local-guest";
   const [view, setView] = useState<{ readonly key: string; readonly view: LessonView } | null>(
     null,
   );
   const [error, setError] = useState<string | null>(null);
   const [reloads, setReloads] = useState(0);
-  const requested = lessonRefKey(locator);
+  const requested = `${answerDraftScope}\0${lessonRefKey(locator)}`;
   const source = useMemo(() => progressSourceOf(progressPort), []);
   const pendingExerciseResults = useRef(
     new Map<
@@ -100,6 +112,10 @@ export function LessonScreen({
     >(),
   );
   const knownExerciseGrades = useRef(new Map<string, string>());
+  useEffect(() => {
+    pendingExerciseResults.current.clear();
+    knownExerciseGrades.current.clear();
+  }, [answerDraftScope]);
 
   const trackedReader = useMemo(
     () => ({
@@ -135,15 +151,19 @@ export function LessonScreen({
           tier: exerciseTierOf(result),
         });
         if (result.hostGrade && isNewGrade(result.hostGrade.occurredAt, previousGradeAt)) {
-          trackEvent({
-            name: "exercise_result",
-            studyId: input.locator.studyId,
-            courseId: input.locator.courseId,
-            lessonId: input.locator.lessonId,
-            passed: result.hostGrade.passed,
-            attemptCount: result.attemptCount,
-          });
-        } else {
+          const outcome = exerciseGradeOutcome(result.hostGrade);
+          {
+            trackEvent({
+              name: "exercise_result",
+              studyId: input.locator.studyId,
+              courseId: input.locator.courseId,
+              lessonId: input.locator.lessonId,
+              passed: outcome === "undecided" ? null : outcome === "pass",
+              outcome,
+              attemptCount: result.attemptCount,
+            });
+          }
+        } else if (!result.hostGrade) {
           pendingExerciseResults.current.set(key, {
             attemptCount: result.attemptCount,
             previousGradeAt,
@@ -160,9 +180,15 @@ export function LessonScreen({
     setError(null);
     void contentPort
       .lesson(locator, { signal: controller.signal })
-      .then((loaded) => setView({ key: requested, view: loaded }))
+      .then((loaded) => {
+        if (!controller.signal.aborted) setView({ key: requested, view: loaded });
+      })
       .catch((reason: unknown) => {
-        if (reason instanceof DOMException && reason.name === "AbortError") return;
+        if (
+          controller.signal.aborted ||
+          (reason instanceof DOMException && reason.name === "AbortError")
+        )
+          return;
         setError(
           reason instanceof Error
             ? reason.message
@@ -183,7 +209,10 @@ export function LessonScreen({
    * the document.
    */
   const settled = useRef<string | null>(null);
-  const shown = view?.key === requested ? view.view : null;
+  const identityUser =
+    identity.kind === "anonymous" || identity.kind === "signed_in" ? identity.user.id : null;
+  const shown =
+    view?.key === requested && progressPort.syncState().userId === identityUser ? view.view : null;
 
   useEffect(() => {
     if (!shown) return;
@@ -193,14 +222,18 @@ export function LessonScreen({
       const pending = pendingExerciseResults.current.get(key);
       if (pending && occurredAt && isNewGrade(occurredAt, pending.previousGradeAt)) {
         pendingExerciseResults.current.delete(key);
-        trackEvent({
-          name: "exercise_result",
-          studyId: locator.studyId,
-          courseId: locator.courseId,
-          lessonId: locator.lessonId,
-          passed: exercise.hostGrade?.passed === true,
-          attemptCount: pending.attemptCount,
-        });
+        if (exercise.hostGrade) {
+          const outcome = exerciseGradeOutcome(exercise.hostGrade);
+          trackEvent({
+            name: "exercise_result",
+            studyId: locator.studyId,
+            courseId: locator.courseId,
+            lessonId: locator.lessonId,
+            passed: outcome === "undecided" ? null : outcome === "pass",
+            outcome,
+            attemptCount: pending.attemptCount,
+          });
+        }
       }
       knownExerciseGrades.current.set(key, occurredAt);
     }
@@ -335,7 +368,9 @@ export function LessonScreen({
         onFollowLink={onFollowLink}
         {...(returnDepth > 0 ? { onReturn } : {})}
         toolbarExtras={<SoundToggle progress={progressPort} />}
+        answerDraftScope={answerDraftScope}
       />
+      <LearningSaveStatus progress={progressPort} />
     </main>
   );
 }
@@ -349,27 +384,47 @@ export function LessonScreen({
  * answer given on a phone shows on a laptop either way.
  */
 function overlayCloudRecords(view: LessonView, locator: LessonRef): LessonView {
+  const isGuest = progressPort.syncState().userId === null;
   return {
     ...view,
     lesson: {
       ...view.lesson,
-      exercises: view.lesson.exercises.map((exercise) => {
-        const latest = progressPort.latestExerciseAttempt(
+      exercises: view.lesson.exercises.map((sourceExercise) => {
+        // Disk authoring history belongs to the local guest unless an owned
+        // submission has already been imported into this identity's document.
+        const exercise = isGuest
+          ? sourceExercise
+          : {
+              ...sourceExercise,
+              hostGrade: null,
+              latestSubmission: null,
+              awaitingHostGrade: false,
+              hasPassed: false,
+            };
+        const attempts = progressPort.exerciseAttempts(
           locator,
           exercise.id,
           exercise.contentRevision,
         );
-        if (!latest) return exercise;
+        const latest = attempts[0];
+        const hasPassed =
+          attempts.some(
+            (attempt) =>
+              attempt.hostGrade !== null && exerciseGradeOutcome(attempt.hostGrade) === "pass",
+          ) || Boolean(exercise.hostGrade && exerciseGradeOutcome(exercise.hostGrade) === "pass");
+        if (!latest) return hasPassed ? { ...exercise, hasPassed: true } : exercise;
         const localAt = Date.parse(
           exercise.hostGrade?.occurredAt ?? exercise.latestSubmission?.occurredAt ?? "",
         );
         if (Number.isFinite(localAt) && localAt > Date.parse(latest.occurredAt)) return exercise;
         return {
           ...exercise,
-          awaitingHostGrade: latest.hostGrade?.passed !== true,
+          hasPassed,
+          awaitingHostGrade: latest.hostGrade === null,
           latestSubmission: { answer: latest.answer, occurredAt: latest.occurredAt },
           hostGrade: latest.hostGrade
             ? {
+                ...(latest.hostGrade.outcome ? { outcome: latest.hostGrade.outcome } : {}),
                 passed: latest.hostGrade.passed,
                 evaluation: latest.hostGrade.evaluation,
                 extensions: latest.hostGrade.extensions,

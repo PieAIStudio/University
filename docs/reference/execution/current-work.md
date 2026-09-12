@@ -20,6 +20,8 @@ related:
   - REF-FEEDBACK-BACKEND-GAP
   - REF-V5-JOURNEY-REVIEW
   - ADR-0010
+  - REF-PRODUCT-COMPLETENESS-REVIEW
+  - PLAN-PRODUCT-COMPLETENESS
 ---
 
 # Current Work
@@ -44,6 +46,7 @@ test totals, CLI/model choices or execution history. Read only the matching row.
 | Whether difficulty adapts by itself | [ADR-0010](../../adr/ADR-0010-difficulty-moves-when-the-learner-moves-it.md): it does not. The learner moves it; the system never infers a level. Read it before adding anything that watches performance and re-routes |
 | What a unit the learner tested out of looks like on the map | **Undecided, and it needs deciding before it is built.** `placeCourse` in `packages/world/src/Maps.tsx` gives each lesson tile one of `done` / `live` / `idle` / `locked`, and a lesson proved through the skip test currently gets `idle` — identical to one never opened. V5 §12 决定 E says proved is not learned, so it cannot borrow `done`; a fifth state is a learner-surface design decision that belongs in [the journey](../player-journey/v5/index.html) first. The unit-entry card already says it in words; only the scene is silent |
 | Designed but unfinished learner/business capabilities | [V5 review](v5-journey-review.md), [payment](payment-backend-gap.md), [feedback](feedback-backend-gap.md), [reminders](review-reminders-backend-gap.md), [commercial model](commercial-model.md) |
+| Product worktree: integration handoff | 接手先看 [产品线集中整合交接](../../plans/active/product-completeness.md#集中整合交接入口)，包含保留项、冲突地图、测试输入与已知依赖。看实际变化用 [改前／改后图文对照](product-before-after/before-after.md)；产品决定仍在 [V5](../player-journey/v5/index.html#product-lightness) |
 
 ## What `work/course-interactive` touches, for whoever merges it
 

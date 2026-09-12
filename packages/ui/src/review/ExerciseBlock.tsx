@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
 import {
+  exerciseGradeOutcome,
   freeGradingRemainingText,
   gradingAttemptText,
   METERED_GRADING_COST_POWER_UNITS,
@@ -27,6 +28,13 @@ import {
   type EntitlementReader,
 } from "../capability/ai-entitlements.js";
 import type { LessonRef, LessonView } from "../view/lesson-view.js";
+import {
+  answerDraftIdentityKey,
+  type AnswerDraftIdentity,
+  type AnswerDraftStorage,
+} from "./answer-draft.js";
+import { useAnswerDraft } from "./use-answer-draft.js";
+import { translate } from "../i18n/index.js";
 
 /**
  * How long the page keeps watching for a host grade on its own. Past this the
@@ -50,25 +58,49 @@ const METERED_OFFER_READ_FAILURE: MeteredGradingOffer = {
   },
 };
 
-export function ExerciseBlock({
-  locator,
-  exercise,
-  grading,
-  readEntitlements,
-  onRefresh,
-}: {
+interface ExerciseBlockProps {
   readonly locator: LessonRef;
   readonly exercise: LessonView["lesson"]["exercises"][number];
   readonly grading: GradingPort;
   /** Reads the server-selected AI plan before an open tutoring request. */
   readonly readEntitlements?: EntitlementReader;
+  /** Account/user id projection; local guests deliberately share one stable scope. */
+  readonly answerDraftScope?: string;
+  /** Test seam. Undefined resolves browser storage; null means unavailable. */
+  readonly answerDraftStorage?: AnswerDraftStorage | null;
   /**
    * Reloads campus data after a submission or a host write-back. Completion is
    * owned by the explicit lesson confirmation endpoint, never by rendering a
    * passed exercise.
    */
   readonly onRefresh: () => Promise<void>;
-}) {
+}
+
+export function ExerciseBlock(props: ExerciseBlockProps) {
+  const draftIdentity: AnswerDraftIdentity = {
+    accountScope: props.answerDraftScope ?? "local-guest",
+    locator: props.locator,
+    exerciseId: props.exercise.id,
+    contentRevision: props.exercise.contentRevision,
+  };
+  return (
+    <ExerciseBlockSession
+      key={answerDraftIdentityKey(draftIdentity)}
+      {...props}
+      draftIdentity={draftIdentity}
+    />
+  );
+}
+
+function ExerciseBlockSession({
+  locator,
+  exercise,
+  grading,
+  readEntitlements,
+  onRefresh,
+  answerDraftStorage,
+  draftIdentity,
+}: ExerciseBlockProps & { readonly draftIdentity: AnswerDraftIdentity }) {
   /**
    * The answer the server already has, or the one being typed now.
    *
@@ -77,7 +109,12 @@ export function ExerciseBlock({
    * predates it.
    */
   const storedAnswer = exercise.latestSubmission?.answer ?? exercise.hostGrade?.learnerAnswer ?? "";
-  const [answer, setAnswer] = useState(storedAnswer);
+  const { answer, setAnswer, persistence, markSubmitted, discardDraft } = useAnswerDraft({
+    identity: draftIdentity,
+    submittedAnswer: storedAnswer,
+    submittedAt: exercise.latestSubmission?.occurredAt ?? exercise.hostGrade?.occurredAt ?? null,
+    ...(answerDraftStorage === undefined ? {} : { storage: answerDraftStorage }),
+  });
   const [result, setResult] = useState<ExerciseAttemptResult | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,29 +142,21 @@ export function ExerciseBlock({
    */
   const [reopened, setReopened] = useState(false);
   const isExplain = exercise.kind === "explain";
-  const passed = hostGrade?.passed === true;
-  const solved = passed && !reopened;
+  const currentOutcome = hostGrade ? exerciseGradeOutcome(hostGrade) : null;
+  const [passedOnce, setPassedOnce] = useState(
+    exercise.hasPassed === true || currentOutcome === "pass",
+  );
+  const solved = passedOnce && !reopened;
 
   useEffect(() => {
     setHostGrade(exercise.hostGrade ?? null);
+    if (
+      exercise.hasPassed === true ||
+      (exercise.hostGrade && exerciseGradeOutcome(exercise.hostGrade) === "pass")
+    ) {
+      setPassedOnce(true);
+    }
   }, [exercise.id, exercise.contentRevision, exercise.hostGrade]);
-
-  // A different exercise, or the same one at new content, is a different
-  // question. Carrying the previous answer's text into it would be a lie about
-  // what was submitted.
-  const answeredExercise = useRef(`${exercise.id}@${exercise.contentRevision}`);
-  useEffect(() => {
-    const identity = `${exercise.id}@${exercise.contentRevision}`;
-    if (answeredExercise.current === identity) return;
-    answeredExercise.current = identity;
-    setAnswer(storedAnswer);
-    setReopened(false);
-    setResult(null);
-    setMeteredOffer(null);
-    setMeteredChoice(null);
-    setExpressionCopied(false);
-    setExpressionExplanation(null);
-  }, [exercise.id, exercise.contentRevision, storedAnswer]);
 
   useEffect(() => {
     if (result?.meteredEligible !== true || hostGrade?.host !== "tier-1") {
@@ -270,6 +299,7 @@ export function ExerciseBlock({
   }
 
   async function submit(allowMetered = false, funding: "free" | "wallet" = "wallet") {
+    const submittedAnswer = answer;
     setPending(true);
     setError(null);
     setPacketCopied(false);
@@ -283,16 +313,28 @@ export function ExerciseBlock({
         locator,
         exerciseId: exercise.id,
         contentRevision: exercise.contentRevision,
-        answer,
+        answer: submittedAnswer,
         commandId: crypto.randomUUID(),
         allowMetered,
         meteredFunding: allowMetered ? funding : undefined,
       });
       setResult(body);
-      if (body.hostGrade) setHostGrade(body.hostGrade);
+      if (body.hostGrade) {
+        setHostGrade(body.hostGrade);
+        if (exerciseGradeOutcome(body.hostGrade) === "pass") setPassedOnce(true);
+      }
+      if (passedOnce || (body.hostGrade && exerciseGradeOutcome(body.hostGrade) === "pass")) {
+        setReopened(false);
+      }
       if (allowMetered && body.hostGrade?.host !== "tier-2") setMeteredChoice("tier-1");
-      setGradeWatermark(body.hostGrade?.occurredAt ?? "");
-      if (!body.hostGrade?.passed) await copyCoachingPacket();
+      setGradeWatermark(
+        body.awaitingHostGrade === true ? (body.hostGrade?.occurredAt ?? "") : null,
+      );
+      if (body.answerStored !== false) markSubmitted(submittedAnswer);
+      else
+        setError(
+          "这次评估已返回，但学习记录还没有保存成功。输入仍保留在这里，请不要关闭页面；恢复存储后可重试。",
+        );
       await onRefresh();
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : "暂时无法提交练习";
@@ -342,13 +384,26 @@ export function ExerciseBlock({
                 : "用自己的话回答。"
           }
           rows={isExplain ? 6 : 3}
-          readOnly={solved}
+          readOnly={solved || pending}
         />
       </label>
+      {answer.trim() && persistence === "saved" ? (
+        <p className="answer-field__draft-status" role="status">
+          {translate("product.feedback.draftSaved")}
+        </p>
+      ) : persistence === "unavailable" ? (
+        <p className="answer-field__draft-status answer-field__draft-status--warning" role="status">
+          此浏览器不能保存未提交答案；文字仍保留在当前页面。
+        </p>
+      ) : persistence === "failed" ? (
+        <p className="answer-field__draft-status answer-field__draft-status--warning" role="status">
+          未提交答案没能保存到本机；文字仍保留在当前页面，请先不要关闭。
+        </p>
+      ) : null}
       {exercise.latestSubmission && !result ? (
         <p className="answer-field__saved">
           这是你 {new Date(exercise.latestSubmission.occurredAt).toLocaleString("zh-CN")}{" "}
-          提交的答案， 已存在本机。
+          已提交的答案。
         </p>
       ) : null}
 
@@ -368,13 +423,13 @@ export function ExerciseBlock({
           */}
           {pending ? "正在提交…" : solved ? "已完成" : reopened ? "重新提交" : "提交"}
         </GameButton>
-        {passed ? (
+        {passedOnce ? (
           <GameButton
             variant="ghost"
             onClick={() => {
               // Leaving the reopen restores what the server holds, so backing
               // out cannot be the thing that loses the saved answer.
-              if (reopened) setAnswer(storedAnswer);
+              if (reopened) discardDraft(storedAnswer);
               setReopened(!reopened);
               setResult(null);
             }}
@@ -399,7 +454,7 @@ export function ExerciseBlock({
         ) : null}
       </div>
 
-      {result && !hostGrade?.passed && grading.coachingPacket ? (
+      {result && hostGrade === null && grading.coachingPacket ? (
         <GameCallout heading="答案已记录 · 等 AI 评估" tone="warning" role="status">
           {awaitingGrade
             ? "本页不自己判对错。把答疑包贴给任意 AI 宿主，它写回后这里会自动出现评估 —— 不用守着，回到这个页面时也会立刻刷新。"
@@ -445,68 +500,90 @@ export function ExerciseBlock({
 
       {hostGrade ? (
         <div
-          className={`host-grade host-grade--${hostGrade.passed ? "pass" : "fail"}`}
+          className={`host-grade host-grade--${currentOutcome ?? "undecided"}`}
           role="region"
           aria-label={`${graderLabel(hostGrade.host)}结果`}
         >
-          <p className="host-grade__eyebrow">
-            {graderLabel(hostGrade.host)} · {hostGrade.passed ? "通过" : "未通过"}
-            {/* Naming the model that read the answer is useful; repeating our
+          <p className="host-grade__summary" data-grade-summary role="status">
+            <span className="host-grade__mark" aria-hidden="true">
+              {currentOutcome === "pass" ? "✓" : currentOutcome === "fail" ? "↻" : "?"}
+            </span>
+            {translate(
+              currentOutcome === "pass"
+                ? "product.feedback.pass"
+                : currentOutcome === "fail"
+                  ? "product.feedback.fail"
+                  : "product.feedback.undecided",
+            )}
+          </p>
+          <details className="product-details" data-grade-details>
+            <summary>
+              {translate(
+                currentOutcome === "pass"
+                  ? "product.feedback.explanation"
+                  : "product.feedback.hint",
+              )}
+            </summary>
+            <p className="host-grade__eyebrow">
+              {graderLabel(hostGrade.host)} · {gradeOutcomeLabel(currentOutcome)}
+              {/* Naming the model that read the answer is useful; repeating our
                 internal tier name after "当场判定" is just jargon on a page a
                 beginner is reading. */}
-            {hostGrade.host && hostGrade.host !== DETERMINISTIC_GRADER_HOST
-              ? ` · ${hostGrade.host}`
-              : ""}
-          </p>
-          <div className="host-grade__body markdown-body">
-            <MarkdownContent>{hostGrade.evaluation}</MarkdownContent>
-          </div>
-          {hostGrade.extensions.length > 0 ? (
-            <div className="host-grade__extensions">
-              <p className="eyebrow">引申</p>
-              <ul>
-                {hostGrade.extensions.map((item) => (
-                  // Same Markdown treatment the evaluation above gets. An
-                  // assistant writing about `pnpm dev` naturally reaches for
-                  // backticks, and rendering them raw here made the two halves
-                  // of one answer look like they came from different products.
-                  <li key={item} className="markdown-body">
-                    <MarkdownContent>{item}</MarkdownContent>
-                  </li>
-                ))}
-              </ul>
+              {hostGrade.host && hostGrade.host !== DETERMINISTIC_GRADER_HOST
+                ? ` · ${hostGrade.host}`
+                : ""}
+            </p>
+            <div className="host-grade__body markdown-body">
+              <MarkdownContent>{hostGrade.evaluation}</MarkdownContent>
             </div>
-          ) : null}
-          {isExplain ? (
-            <div className="host-grade__coach">
-              {/* Grading answered "was it right"; this offers "was it clear". The
+            {hostGrade.extensions.length > 0 ? (
+              <div className="host-grade__extensions">
+                <p className="eyebrow">引申</p>
+                <ul>
+                  {hostGrade.extensions.map((item) => (
+                    // Same Markdown treatment the evaluation above gets. An
+                    // assistant writing about `pnpm dev` naturally reaches for
+                    // backticks, and rendering them raw here made the two halves
+                    // of one answer look like they came from different products.
+                    <li key={item} className="markdown-body">
+                      <MarkdownContent>{item}</MarkdownContent>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {isExplain ? (
+              <div className="host-grade__coach">
+                {/* Grading answered "was it right"; this offers "was it clear". The
                   page only prepares the material — the coaching itself happens in
                   whatever AI host the learner pastes into, same as grading.
                   short-answer exercises have no prose to critique, so the
                   invitation only makes sense where the answer is free text. */}
-              <GameButton
-                variant="ghost"
-                onClick={() => void copyExpressionPacket()}
-                disabled={pending || expressionPending}
-              >
-                {expressionPending
-                  ? "正在检查会员权益…"
-                  : expressionCopied
-                    ? "已复制表达点评包"
-                    : "让 AI 点评我这段表达"}
-              </GameButton>
-              {expressionCopied ? (
-                <span className="host-grade__coach-hint">
-                  贴到任意 AI 宿主。它只评你怎么说，不改判对错。
-                </span>
-              ) : null}
-            </div>
-          ) : null}
+                <GameButton
+                  variant="ghost"
+                  onClick={() => void copyExpressionPacket()}
+                  disabled={pending || expressionPending}
+                >
+                  {expressionPending
+                    ? "正在检查会员权益…"
+                    : expressionCopied
+                      ? "已复制表达点评包"
+                      : "让 AI 点评我这段表达"}
+                </GameButton>
+                {expressionCopied ? (
+                  <span className="host-grade__coach-hint">
+                    贴到任意 AI 宿主。它只评你怎么说，不改判对错。
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+          </details>
         </div>
       ) : null}
 
       {result?.meteredEligible ? (
-        <section className="metered-grading-choice" aria-label="AI 语义批改选择">
+        <details className="product-details metered-grading-choice" aria-label="AI 语义批改选择">
+          <summary>{translate("product.feedback.askAi")}</summary>
           {meteredOfferLoading ? (
             <GameCallout heading="正在读取 AI 批改费用与余额" tone="neutral" role="status">
               先把这次会使用多少、你的钱包还剩多少读清楚；读取完成前不会开始 AI 批改。
@@ -521,13 +598,13 @@ export function ExerciseBlock({
                   ，不会扣钱包。
                 </p>
                 <p>
-                  只有点“使用今日免费 AI 批改”才会使用今天的一次免费 AI 批改；下面的 tier‑1
-                  免费提示不占今天的免费次数。
+                  只有点“使用今日免费 AI 批改”才会使用今天的一次免费 AI
+                  批改；先看提示不占今天的免费次数。
                 </p>
               </div>
               {meteredChoice === "tier-1" ? (
                 <p className="metered-grading-choice__selected" role="status">
-                  已选择 tier‑1 免费提示（不占今天的免费次数）。
+                  已选择先看提示（不占今天的免费次数）。
                 </p>
               ) : meteredChoice === "free-ai" ? (
                 <p className="metered-grading-choice__selected" role="status">
@@ -547,7 +624,7 @@ export function ExerciseBlock({
                   onClick={() => setMeteredChoice("tier-1")}
                   disabled={pending}
                 >
-                  只看 tier‑1 免费提示（不占今天的免费次数）
+                  先看提示（不占今天的免费次数）
                 </GameButton>
               </div>
             </GameCallout>
@@ -566,13 +643,11 @@ export function ExerciseBlock({
                     <strong>{walletGradingBalanceText(meteredOffer.availablePowerUnits)}</strong>。
                   </p>
                 )}
-                <p>
-                  只有点“使用 AI 批改”才会从钱包扣除这次批改；下面的 tier‑1 免费提示不使用钱包。
-                </p>
+                <p>只有点“使用 AI 批改”才会从钱包扣除这次批改；先看提示不会使用钱包。</p>
               </div>
               {meteredChoice === "tier-1" ? (
                 <p className="metered-grading-choice__selected" role="status">
-                  已选择 tier‑1 免费提示（不使用钱包）。
+                  已选择先看提示（不使用钱包）。
                 </p>
               ) : null}
               <div className="metered-grading-choice__actions">
@@ -588,7 +663,7 @@ export function ExerciseBlock({
                   onClick={() => setMeteredChoice("tier-1")}
                   disabled={pending}
                 >
-                  只看 tier‑1 免费提示（不使用钱包）
+                  先看提示（不使用钱包）
                 </GameButton>
               </div>
             </GameCallout>
@@ -614,7 +689,7 @@ export function ExerciseBlock({
               </div>
               {meteredChoice === "tier-1" ? (
                 <p className="metered-grading-choice__selected" role="status">
-                  已选择 tier‑1 免费提示（不使用钱包）。
+                  已选择先看提示（不使用钱包）。
                 </p>
               ) : null}
               <div className="metered-grading-choice__actions">
@@ -629,15 +704,15 @@ export function ExerciseBlock({
                   onClick={() => setMeteredChoice("tier-1")}
                   disabled={pending}
                 >
-                  只看 tier‑1 免费提示（不使用钱包）
+                  先看提示（不使用钱包）
                 </GameButton>
               </div>
             </GameCallout>
           ) : null}
-        </section>
+        </details>
       ) : null}
 
-      {result && !hostGrade?.passed && grading.coachingPacket ? (
+      {result && currentOutcome !== "pass" && grading.coachingPacket ? (
         <div className="coaching-packet" role="region" aria-label="答疑包与粘贴步骤">
           <p className="coaching-packet__status">
             {packetCopied
@@ -705,4 +780,10 @@ export function ExerciseBlock({
       ) : null}
     </GamePanel>
   );
+}
+
+function gradeOutcomeLabel(outcome: "pass" | "fail" | "undecided" | null): string {
+  if (outcome === "pass") return "通过";
+  if (outcome === "fail") return "未通过";
+  return "暂时无法判断";
 }

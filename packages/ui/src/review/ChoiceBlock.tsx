@@ -42,8 +42,8 @@ export interface ChoiceBlockExercise {
   readonly correctOptionId: string;
 }
 
-function actionLabel(solved: boolean, hasNext: boolean): string {
-  if (solved && hasNext) return CHOICE_NEXT_LABEL;
+function actionLabel(solved: boolean, hasNext: boolean, nextLabel?: string): string {
+  if (solved && hasNext) return nextLabel ?? CHOICE_NEXT_LABEL;
   if (solved) return CHOICE_SOLVED_LABEL;
   return CHOICE_SUBMIT_LABEL;
 }
@@ -66,10 +66,13 @@ export function ChoiceBlock({
   onNext,
   onSolved,
   liquidPrimary = false,
+  nextLabel,
 }: {
   readonly exercise: ChoiceBlockExercise;
   /** Fires only from the control that appears after a correct submit. */
   readonly onNext?: () => void;
+  /** A bounded practice round ends, rather than promising another question. */
+  readonly nextLabel?: string;
   /**
    * Fires once when the correct option is first submitted. The practice term
    * panel unlocks on this moment, not on `onNext`: waiting for the next-question
@@ -201,7 +204,7 @@ export function ChoiceBlock({
               else submit();
             }}
           >
-            {actionLabel(state.solved, Boolean(onNext))}
+            {actionLabel(state.solved, Boolean(onNext), nextLabel)}
           </LiquidCtaButton>
         ) : (
           <GameButton
@@ -213,7 +216,7 @@ export function ChoiceBlock({
               else submit();
             }}
           >
-            {actionLabel(state.solved, Boolean(onNext))}
+            {actionLabel(state.solved, Boolean(onNext), nextLabel)}
           </GameButton>
         )}
       </div>

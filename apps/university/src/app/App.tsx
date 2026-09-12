@@ -120,6 +120,8 @@ import { readNavigationFocus } from "./navigation-focus.js";
 import { mapDomainCatalog, studyForMapDomain } from "./map-domain-catalog.js";
 import { useTodaySectionData } from "./today-section-data";
 import { trackEvent, type AnalyticsEvent } from "../analytics/productAnalytics";
+import { WelcomeExperience } from "@pieai/university-ui/onboarding/WelcomeExperience.js";
+import { useWelcome } from "./use-welcome.js";
 
 type FeedbackContextSeed = Pick<
   FeedbackContext,
@@ -147,6 +149,7 @@ export function App() {
   );
   const { shelf, studyNames, shelfError, retryShelf, studies, nodes, courseOf } = useShelf();
   const { view: routeView, setView } = useRoute();
+  const welcome = useWelcome(routeView, progress, identityStatus.kind);
   const wide = useMinWidth(768);
   // The look judge is a DEV-only URL input. A seed identifies the course whose
   // existing blueprint should be measured; it never creates a second course or
@@ -1099,10 +1102,47 @@ export function App() {
           showAsideOnPhone={view.kind === "planet"}
         >
           <PresenceSession port={presencePort} location={presenceLocation} viewKey={presenceView} />
+          {view.kind === "world" ? (
+            <h1 className="app__screen-title">{translate("product.navigation.mapHeading")}</h1>
+          ) : null}
           {main}
         </UniversityShell>
       </div>
       {feedbackSurface}
+      {welcome.visible ? (
+        <WelcomeExperience
+          choices={studies.filter((study) =>
+            study.courses.some((entry) => entry.units.some((unit) => unit.lessons.length > 0)),
+          )}
+          selectedId={focusedStudyId}
+          lesson={
+            todayLesson
+              ? {
+                  title: todayLesson.lessonTitle,
+                  exerciseCount:
+                    courseOf(todayLesson.studyId, todayLesson.courseId)
+                      ?.units.find((unit) => unit.id === todayLesson.unitId)
+                      ?.lessons.find((lesson) => lesson.id === todayLesson.lessonId)
+                      ?.exerciseCount ?? 0,
+                }
+              : null
+          }
+          onSelect={focusStudy}
+          onStart={() => {
+            welcome.dismiss("lesson");
+            continueToTodayLesson();
+          }}
+          onBrowse={() => {
+            welcome.dismiss("map");
+            setView({ kind: "planet" });
+          }}
+          onDismiss={() => welcome.dismiss("map")}
+          onSignIn={() => {
+            welcome.dismiss("account");
+            openAccount();
+          }}
+        />
+      ) : null}
     </>
   );
 }

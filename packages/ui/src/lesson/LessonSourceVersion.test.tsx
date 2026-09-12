@@ -109,7 +109,8 @@ describe("LessonSourceVersion honest entry", () => {
       trigger.click();
     });
     const dialog = document.querySelector("dialog");
-    expect(dialog?.textContent).toContain("为什么这一端现在做不到");
+    expect(dialog?.textContent).toContain("交付端拿到的是已发布的课程包");
+    expect(dialog?.querySelector("details")?.open).toBe(false);
     expect(dialog?.textContent).toContain("交付端拿到的是已发布的课程包");
   });
 

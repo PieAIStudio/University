@@ -12,9 +12,16 @@ const BALANCE = {
 } as const;
 const ORDER: PaymentOrder = {
   orderId: ORDER_ID,
-  offerId: "paid-entitlement",
+  offerId: "member",
   status: "pending",
   checkoutUrl: "https://payments.example/checkout",
+  quote: {
+    billingCycle: "monthly",
+    currency: "USD",
+    subtotalCents: 1900,
+    taxCents: 0,
+    totalCents: 1900,
+  },
 };
 
 function identity() {
@@ -37,7 +44,13 @@ describe("createPaymentPort", () => {
     );
     const payment = createPaymentPort({
       identity,
-      transport: { readBalance, readEntitlement, createOrder, getOrderStatus },
+      transport: {
+        readBalance,
+        readEntitlement,
+        createOrder,
+        getOrderStatus,
+        createSubscriptionPortal: async () => "https://payments.example/account",
+      },
       orderIdFactory: () => ORDER_ID,
     });
 
@@ -79,15 +92,20 @@ describe("createPaymentPort", () => {
     const orderIdFactory = vi.fn(() => ORDER_ID);
     const payment = createPaymentPort({
       identity: identity(),
-      transport: { createOrder },
+      transport: {
+        createOrder,
+        getOrderStatus: async () => ORDER,
+        createSubscriptionPortal: async () => "https://payments.example/account",
+      },
       orderIdFactory,
     });
 
     expect(payment.purchaseAvailability()).toBe("available");
 
-    const first = await payment.initiatePurchase({ offerId: "paid-entitlement" });
+    const first = await payment.initiatePurchase({ offerId: "member", billingCycle: "monthly" });
     const second = await payment.initiatePurchase({
-      offerId: "paid-entitlement",
+      offerId: "member",
+      billingCycle: "monthly",
       orderId: ORDER_ID,
     });
 
@@ -96,7 +114,8 @@ describe("createPaymentPort", () => {
     expect(createOrder).toHaveBeenCalledWith({
       userId: USER_ID,
       orderId: ORDER_ID,
-      offerId: "paid-entitlement",
+      offerId: "member",
+      billingCycle: "monthly",
     });
     expect(first).toEqual({ kind: "value", value: ORDER });
     expect(second).toBe(first);

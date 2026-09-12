@@ -6,7 +6,7 @@
  * calendar-day streak. What changed is the walls: local persistence is
  * injected, and a remote is attached only after someone actually signs in.
  *
- * Local writes always succeed first. A remote that is missing, slow, or
+ * Local writes are attempted first and their failures stay observable. A remote that is missing, slow, or
  * unreachable must not stall a lesson. The dirty flag is the whole queue —
  * the document is the unit of sync, so there is nothing to replay besides
  * "save this snapshot".
@@ -37,13 +37,8 @@ import type {
 import type { PushSubscriptionRecord } from "../ports/notifications.js";
 import type { ReaderMark } from "../domain/reader-marks.js";
 import type { LessonRef } from "./contract.js";
-import {
-  cloneProgress,
-  emptyProgress,
-  lessonKey,
-  parseProgress,
-  recapCardKeyOf,
-} from "./document.js";
+import { cloneProgress, emptyProgress, lessonKey, recapCardKeyOf } from "./document.js";
+import { createAccountCache } from "./account-cache.js";
 import { mergeProgress } from "./merge.js";
 import { xpFor } from "./xp.js";
 import {
@@ -53,18 +48,32 @@ import {
 } from "../ports/account-data.js";
 import type { FavouritesState } from "../favourites/model.js";
 import type { PracticeRecentState } from "../practice/recent.js";
+import { exerciseGradeOutcome } from "../ports/grading.js";
 
 const DAY = 86_400_000;
 
 export function createProgressPort(options: { readonly persistence: Persistence }): ProgressPort {
   const { persistence } = options;
-  let state = parseProgress(safeRead(persistence));
+  const cache = createAccountCache(persistence);
+  let state = cache.load(null);
   const listeners = new Set<() => void>();
   let userId: string | null = null;
   let remote: ProgressRemoteStore | null = null;
   let dirty = false;
   let syncStatus: ProgressSyncState["status"] = "idle";
   let flushing: Promise<void> | null = null;
+  let localSaveState: "unconfirmed" | "saved" | "failed" = "unconfirmed";
+  let lastSyncedAt: number | null = null;
+
+  function persistCurrent() {
+    try {
+      cache.save(userId, state);
+      localSaveState = "saved";
+    } catch {
+      // Keep the live answer, but never report a failed cache write as saved.
+      localSaveState = "failed";
+    }
+  }
 
   function commit() {
     // A new identity on every write, at every level React might compare.
@@ -78,12 +87,7 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     // "复习 · 明天 0 张" until the page was reloaded, at which point two cards
     // were suddenly due. Nothing threw. The data was always right.
     state = cloneProgress(state);
-    try {
-      persistence.write(JSON.stringify(state));
-    } catch {
-      // Private browsing, or a full quota. Losing the write is survivable;
-      // throwing in the middle of a lesson is not.
-    }
+    persistCurrent();
     for (const listener of listeners) listener();
     if (userId && remote) {
       dirty = true;
@@ -114,26 +118,27 @@ export function createProgressPort(options: { readonly persistence: Persistence 
         try {
           pulled = await boundRemote.load(boundUser);
         } catch {
+          if (userId !== boundUser || remote !== boundRemote) return;
           dirty = true;
           syncStatus = "offline";
           return;
         }
+        // A response for a previous identity must not enter the current session.
+        if (userId !== boundUser || remote !== boundRemote) return;
         const merged = mergeProgress(state, pulled);
         state = cloneProgress(merged);
-        try {
-          persistence.write(JSON.stringify(state));
-        } catch {
-          // Same contract as a local commit: a full quota must not stall.
-        }
+        persistCurrent();
         for (const listener of listeners) listener();
         try {
           await boundRemote.save(boundUser, state);
         } catch {
+          if (userId !== boundUser || remote !== boundRemote) return;
           dirty = true;
           syncStatus = "offline";
           return;
         }
         if (!dirty || userId !== boundUser || remote !== boundRemote) {
+          if (userId === boundUser && remote === boundRemote) lastSyncedAt = Date.now();
           syncStatus = "idle";
           return;
         }
@@ -144,6 +149,7 @@ export function createProgressPort(options: { readonly persistence: Persistence 
       await flushing;
     } finally {
       flushing = null;
+      for (const listener of listeners) listener();
     }
   }
 
@@ -463,6 +469,13 @@ export function createProgressPort(options: { readonly persistence: Persistence 
 
   function recordExerciseAttempt(record: ExerciseAttemptRecord): void {
     const current = state.exerciseAttempts[record.commandId];
+    if (
+      current?.hostGrade &&
+      exerciseGradeOutcome(current.hostGrade) === "pass" &&
+      (!record.hostGrade || exerciseGradeOutcome(record.hostGrade) !== "pass")
+    ) {
+      return;
+    }
     if (current && Date.parse(current.occurredAt) >= Date.parse(record.occurredAt)) return;
     const firstTry = !Object.values(state.exerciseAttempts).some(
       (attempt) =>
@@ -472,7 +485,12 @@ export function createProgressPort(options: { readonly persistence: Persistence 
         sameLesson(attempt.locator, record.locator),
     );
     state.exerciseAttempts[record.commandId] = { ...record, locator: { ...record.locator } };
-    if (record.maxScore > 0 && record.score >= record.maxScore) {
+    if (
+      record.hostGrade &&
+      exerciseGradeOutcome(record.hostGrade) === "pass" &&
+      record.maxScore > 0 &&
+      record.score >= record.maxScore
+    ) {
       const occurredAt = Date.parse(record.occurredAt);
       awardXp(
         `exercise:${record.commandId}`,
@@ -706,24 +724,80 @@ export function createProgressPort(options: { readonly persistence: Persistence 
       state = emptyProgress();
       commit();
     },
-    async bindAccount(nextUserId, nextRemote) {
+    async bindAccount(nextUserId, nextRemote, binding) {
+      if (nextUserId !== userId) {
+        const guest = userId === null ? state : null;
+        const adoptingAnonymous = userId !== null && binding?.adoptAnonymousId === userId;
+        const adopted = adoptingAnonymous ? state : null;
+        // No clearing of another user's work: its cache remains under that user.
+        // The currently rendered document changes synchronously, before network IO.
+        let next = cache.load(nextUserId);
+        if (nextUserId && guest && binding?.adoptGuest === true) next = mergeProgress(next, guest);
+        if (nextUserId && adopted) next = mergeProgress(next, adopted);
+        userId = nextUserId;
+        lastSyncedAt = null;
+        state = cloneProgress(next);
+        persistCurrent();
+        if (guest && nextUserId && binding?.adoptGuest === true && localSaveState === "saved") {
+          try {
+            cache.save(null, emptyProgress());
+          } catch {
+            /* Original remains recoverable on disk. */
+          }
+        }
+        syncStatus = "idle";
+        for (const listener of listeners) listener();
+      }
       userId = nextUserId;
       remote = nextUserId ? nextRemote : null;
       if (!userId || !remote) {
-        // Sign-out keeps local data. Wiping would throw away a lesson they
-        // just finished; the shared-computer hazard is real, but this product
-        // is a personal tutor, not a kiosk, and "forget this device" is a
-        // future action rather than the default of signing out. Progress
-        // stays on the machine. Sync stops.
+        // No cloud connection does not mean another account's cache is visible.
         dirty = false;
         syncStatus = "idle";
+        for (const listener of listeners) listener();
         return;
       }
       dirty = true;
       await flush();
     },
+    hasGuestProgress() {
+      if (userId === null) return false;
+      const guest = cache.load(null);
+      return (
+        guest.totalXp > 0 ||
+        [guest.lessons, guest.exerciseAttempts, guest.readerMarks, guest.cards, guest.words].some(
+          (records) => Object.keys(records).length > 0,
+        )
+      );
+    },
+    async importGuestProgress() {
+      if (userId === null) return;
+      state = mergeProgress(state, cache.load(null));
+      commit();
+      if (localSaveState === "saved") {
+        try {
+          cache.save(null, emptyProgress());
+        } catch {
+          /* Keep source data when cleanup fails. */
+        }
+      }
+      for (const listener of listeners) listener();
+      await flush();
+    },
     flush,
-    syncState: () => ({ dirty, status: syncStatus, userId }),
+    syncState: () => ({
+      dirty,
+      status: syncStatus,
+      userId,
+      remoteAvailable: remote !== null,
+      lastSyncedAt,
+    }),
+    localSaveState: () => localSaveState,
+    retryLocalSave() {
+      persistCurrent();
+      for (const listener of listeners) listener();
+      return localSaveState === "saved";
+    },
   };
 }
 
@@ -794,14 +868,6 @@ function validPushSubscription(record: PushSubscriptionRecord): boolean {
     Number.isFinite(Date.parse(record.updatedAt)) &&
     (record.vapidPublicKey === null || typeof record.vapidPublicKey === "string")
   );
-}
-
-function safeRead(persistence: Persistence): string | null {
-  try {
-    return persistence.read();
-  } catch {
-    return null;
-  }
 }
 
 /**

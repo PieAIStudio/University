@@ -1,3 +1,116 @@
+.product-details {
+  color: var(--game-ui-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.65;
+  margin-block: 0.5rem;
+}
+.product-details > summary {
+  color: var(--game-ui-text);
+  cursor: pointer;
+  min-block-size: 44px;
+  padding-block: 0.65rem;
+  font-weight: 650;
+  border-radius: 0.5rem;
+}
+.product-details > summary:focus-visible {
+  outline: 2px solid var(--game-ui-text);
+  outline-offset: 3px;
+}
+.product-details > p {
+  margin-block: 0.5rem 0.75rem;
+}
+.plans-screen {
+  gap: 0.75rem;
+}
+.plans-screen .shell-screen__head {
+  margin-block-end: 0;
+}
+.plans-screen .plan-grid {
+  margin-block: 0;
+  align-items: start;
+}
+.plans-screen .plan-card__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.plans-screen .plan-card__terms {
+  font-size: 0.8rem;
+  color: var(--game-ui-text-muted);
+  line-height: 1.6;
+  margin-block: 0.5rem 1rem;
+}
+.plans-screen .plan-card__lines {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  gap: 0.65rem;
+}
+.plans-screen .plan-card__saving {
+  display: inline-block;
+  font-size: 0.8rem;
+}
+.plans-screen .plan-card--featured .liquid-cta {
+  inline-size: 100%;
+}
+.plans-screen .plan-card--featured .liquid-cta__button {
+  inline-size: 100%;
+}
+.learning-save-state__details {
+  margin: 0;
+}
+.learning-save-state__details > summary {
+  font-size: 0.8rem;
+}
+.learning-save-state__dot {
+  display: inline-block;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  margin-inline: 0.25rem 0.45rem;
+  border-radius: 50%;
+  background: var(--game-ui-success);
+}
+.quest.quest--info {
+  background: none;
+  box-shadow: none;
+  border-color: transparent;
+  padding-block: 0.5rem;
+}
+.quest.quest--info .game-ui-badge {
+  display: none;
+}
+/* A short content page must not stretch its counter row to fill the screen.
+   Map and planet layouts keep their existing camera/aside sizing. */
+@media (max-width: 767px) {
+  .app-shell[data-aside-phone="false"]:not(:has(.stagewrap:not([hidden]))) {
+    grid-template-rows: max-content minmax(0, 1fr);
+  }
+}
+.account-panel__invitation p {
+  margin-block: 0.35rem 1rem;
+}
+.account-panel__signed-in {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+.account-panel__signed-in p {
+  overflow-wrap: anywhere;
+}
+.account-panel__form > summary {
+  color: var(--game-ui-text);
+  font-size: 1rem;
+}
+.learning-save-state {
+  color: var(--game-ui-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.65;
+  margin-block: 1rem;
+}
+.learning-save-state p {
+  margin-block: 0.5rem;
+}
 /*
   University chrome extras: brand, empty destinations, profile, settings,
   the today card. AppShell's own rules live in shell/app-shell.css; apps
@@ -810,7 +923,7 @@ a.linkish {
 
 .plan-card__saving {
   margin: 0;
-  color: var(--game-ui-accent);
+  color: var(--game-ui-text);
   font-size: var(--game-ui-font-sm, 0.82rem);
   font-weight: var(--game-ui-weight-strong, 800);
 }

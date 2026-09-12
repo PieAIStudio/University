@@ -332,7 +332,7 @@ button.block {
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: none;
-  color: var(--game-ui-accent);
+  color: var(--game-ui-text);
 }
 
 .nextup__title {
@@ -4392,4 +4392,15 @@ button.label--icon[data-lesson-state="locked"] {
 .lesson-skip-to-questions button:hover,
 .lesson-skip-to-questions button:focus-visible {
   color: var(--game-ui-text);
+}
+
+.app__screen-title {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

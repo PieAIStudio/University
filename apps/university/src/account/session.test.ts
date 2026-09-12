@@ -121,6 +121,7 @@ describe("bindProgressToIdentity", () => {
 
     await identity.signInWithEmail("existing@example.com", "password12");
     await vi.waitFor(() => expect(progress.syncState().userId).toBe(existingUserId));
+    await vi.waitFor(() => expect(progress.syncState().remoteAvailable).toBe(true));
     await progress.flush();
 
     const merged = remote.records.get(existingUserId);
@@ -138,7 +139,7 @@ describe("bindProgressToIdentity", () => {
     stop();
   });
 
-  it("uploads local progress when the learner signs in", async () => {
+  it("uploads guest progress only after the learner chooses to import it", async () => {
     const progress = createProgressPort({ persistence: createMemoryPersistence() });
     const identity = createMemoryIdentityPort();
     const remote = createMemoryRemoteStore();
@@ -151,12 +152,16 @@ describe("bindProgressToIdentity", () => {
       expect(status.kind).toBe("signed_in");
       if (status.kind !== "signed_in") throw new Error("expected signed_in");
       expect(progress.syncState().userId).toBe(status.user.id);
+      expect(progress.syncState().remoteAvailable).toBe(true);
     });
     await progress.flush();
 
     const status = identity.status();
     expect(status.kind).toBe("signed_in");
     if (status.kind !== "signed_in") throw new Error("expected signed_in");
+    expect(remote.records.get(status.user.id)?.lessons[LESSON]).toBeUndefined();
+    expect(progress.hasGuestProgress?.()).toBe(true);
+    await progress.importGuestProgress?.();
     expect(remote.records.get(status.user.id)?.lessons[LESSON]?.progress).toBe(1);
     stop();
   });
@@ -175,7 +180,9 @@ describe("bindProgressToIdentity", () => {
     await vi.waitFor(() => expect(progress.syncState().userId).toBeNull());
     await progress.flush();
 
-    expect(progress.snapshot().lessons[LESSON]?.progress).toBe(1);
+    expect(progress.snapshot().lessons[LESSON]).toBeUndefined();
+    await identity.signInWithEmail("ada@example.com", "password12");
+    await vi.waitFor(() => expect(progress.snapshot().lessons[LESSON]?.progress).toBe(1));
     stop();
   });
 });

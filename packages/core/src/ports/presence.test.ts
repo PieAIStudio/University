@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   createCursorThrottle,
-  createMemoryPresencePort,
+  createMemoryPresencePort as createUnconfiguredMemoryPresencePort,
   createRealtimePresencePort,
   CURSOR_BROADCAST_INTERVAL_MS,
   type PresenceCursor,
@@ -25,6 +25,12 @@ const AT_LESSON = {
 };
 
 const CURSOR: PresenceCursor = { x: 0.4, y: 0.5, viewKey: "world" };
+
+// These cases exercise an opted-in group. Default-off is independently guarded
+// by presence-consent.test.ts; never rely on an implicit broadcast permission.
+const createMemoryPresencePort = (
+  options: Parameters<typeof createUnconfiguredMemoryPresencePort>[0],
+) => createUnconfiguredMemoryPresencePort({ sharesPresence: true, ...options });
 
 describe("PresencePort", () => {
   it("is a pure contract: no React, no filesystem, no network library", () => {
@@ -197,7 +203,7 @@ describe("createRealtimePresencePort", () => {
   it("treats a missing channel as unconfigured and never talks to the network", () => {
     const port = createRealtimePresencePort(null);
     expect(port.snapshot()).toEqual({
-      sharesPresence: true,
+      sharesPresence: false,
       self: null,
       peers: [],
     });
@@ -217,6 +223,9 @@ describe("createRealtimePresencePort", () => {
     });
 
     await vi.waitFor(() => expect(channel.subscribed).toBe(true));
+
+    expect(channel.tracks).toHaveLength(0);
+    port.setSharesPresence(true);
 
     port.publishLocation(AT_LESSON);
     await vi.waitFor(() => expect(channel.tracks.length).toBeGreaterThan(0));

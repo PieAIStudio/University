@@ -127,10 +127,14 @@
   --liquid-cta-fill: var(--game-ui-accent-bright);
 }
 
+/* The kit's translucent disabled ink needs a panel, not the wrapper's dark
+   liquid fill. Keep the native inactive control legible and still disabled.
+   Do not hide the measured LiquidGroup: enabling must retain its geometry. */
 .liquid-cta__button:disabled,
 .liquid-cta__button:disabled:hover {
-  background: transparent;
-  color: var(--game-ui-disabled);
+  background: var(--game-ui-panel);
+  color: var(--game-ui-text-muted);
+  box-shadow: inset 0 0 0 1px var(--game-ui-border-strong);
   transform: none;
 }
 

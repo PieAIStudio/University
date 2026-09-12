@@ -12,6 +12,7 @@ let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
+  window.localStorage.clear();
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
   if (!HTMLDialogElement.prototype.showModal) {
     HTMLDialogElement.prototype.showModal = function showModal() {
@@ -48,6 +49,8 @@ describe("PlansScreen purchase entry", () => {
           reservedPowerUnits: "0",
         }),
         createOrder,
+        getOrderStatus: vi.fn(),
+        createSubscriptionPortal: async () => "https://payments.example/account",
       },
       orderIdFactory: () => "00000000-0000-4000-8000-000000000099",
     });
@@ -86,7 +89,7 @@ describe("PlansScreen purchase entry", () => {
 
     await act(async () => root.render(<PlansScreen paymentPort={payment} />));
     const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
-      (button) => button.textContent === "记录购买意向",
+      (button) => button.textContent === "升级会员",
     );
     if (!cta) throw new Error("missing purchase CTA");
     expect(cta.disabled).toBe(false);
@@ -95,10 +98,9 @@ describe("PlansScreen purchase entry", () => {
       cta.click();
     });
 
-    const dialog = document.querySelector<HTMLDialogElement>("dialog");
-    expect(dialog?.textContent).toContain("支付入口尚未开放");
-    expect(dialog?.textContent).toContain("不会扣款、不会创建订单");
-    expect(dialog?.querySelector('a[href="#/"]')?.textContent).toContain("继续学习");
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain("本次未扣款");
+    expect(document.querySelector("dialog")).toBeNull();
+    expect(container.textContent).not.toContain("尚未开售");
   });
 
   it("uses payment language only when the adapter reports a live order channel", async () => {
@@ -107,22 +109,34 @@ describe("PlansScreen purchase entry", () => {
         readonly orderId: string;
         readonly offerId: string;
         readonly userId: string;
+        readonly billingCycle: "monthly" | "yearly";
       }) => ({
         orderId: input.orderId,
         offerId: input.offerId,
         status: "pending" as const,
         checkoutUrl: null,
+        quote: {
+          billingCycle: input.billingCycle,
+          currency: "USD",
+          subtotalCents: input.billingCycle === "yearly" ? 14900 : 1900,
+          taxCents: 0,
+          totalCents: input.billingCycle === "yearly" ? 14900 : 1900,
+        },
       }),
     );
     const payment = createPaymentPort({
       identity: createMemoryIdentityPort({ id: "user-1", email: "learner@example.com" }),
-      transport: { createOrder },
+      transport: {
+        createOrder,
+        getOrderStatus: vi.fn(),
+        createSubscriptionPortal: async () => "https://payments.example/account",
+      },
       orderIdFactory: () => "00000000-0000-4000-8000-000000000099",
     });
 
     await act(async () => root.render(<PlansScreen paymentPort={payment} />));
     const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
-      (button) => button.textContent === "购买",
+      (button) => button.textContent === "升级会员",
     );
     if (!cta) throw new Error("missing live purchase CTA");
 
@@ -134,11 +148,18 @@ describe("PlansScreen purchase entry", () => {
       userId: "user-1",
       orderId: "00000000-0000-4000-8000-000000000099",
       offerId: "member",
+      billingCycle: "yearly",
     });
   });
 });
 
 describe("PlansScreen pricing claims", () => {
+  it("separates membership fees from explicitly chosen wallet-funded grading", async () => {
+    await act(async () => root.render(<PlansScreen />));
+    expect(container.textContent).toContain("会员费不包含钱包批改费用");
+    expect(container.textContent).toContain("只有你主动选择钱包批改才会扣除");
+    expect(container.textContent).toContain("年付一次支付全年费用");
+  });
   it("withholds the cancellation reassurance while no order channel can charge", async () => {
     const payment = createPaymentPort({
       identity: createMemoryIdentityPort({ id: "user-1", email: "learner@example.com" }),
@@ -152,7 +173,7 @@ describe("PlansScreen pricing claims", () => {
     // an escape route from a charge that cannot happen.
     expect(container.querySelector("[data-plan-cancellation='true']")).toBeNull();
     const cta = [...container.querySelectorAll<HTMLButtonElement>("button")].find(
-      (button) => button.textContent === "记录购买意向",
+      (button) => button.textContent === "升级会员",
     );
     expect(cta).not.toBeUndefined();
   });
@@ -161,6 +182,8 @@ describe("PlansScreen pricing claims", () => {
     const payment = createPaymentPort({
       identity: createMemoryIdentityPort({ id: "user-1", email: "learner@example.com" }),
       transport: {
+        getOrderStatus: vi.fn(),
+        createSubscriptionPortal: async () => "https://payments.example/account",
         createOrder: async (input: {
           readonly orderId: string;
           readonly offerId: string;
@@ -177,9 +200,11 @@ describe("PlansScreen pricing claims", () => {
     await act(async () => root.render(<PlansScreen paymentPort={payment} />));
 
     const reassurance = container.querySelector<HTMLElement>("[data-plan-cancellation='true']");
+    expect(container.querySelector("[data-subscription-management]")).not.toBeNull();
     expect(reassurance).not.toBeNull();
     expect(reassurance?.closest(".plan-card--featured")).not.toBeNull();
-    expect(reassurance?.textContent).toBe("随时可以取消，取消之后不再扣费。");
+    expect(reassurance?.textContent).toContain("订阅管理里取消下次续费");
+    expect(reassurance?.textContent).toContain("不等于立即退款");
 
     const cta = reassurance?.parentElement?.querySelector("button.liquid-cta__button");
     expect(cta).not.toBeNull();
@@ -200,8 +225,9 @@ describe("PlansScreen pricing claims", () => {
     // Twelve months at the configured monthly price against the configured
     // yearly price. If someone changes a price and this test still passes with
     // the old number, the claim on the page has become a lie.
-    expect(saving).toContain("$79.00");
     expect(saving).toContain("35%");
+    expect(container.querySelector("[data-billing-details]")?.hasAttribute("open")).toBe(false);
+    expect(container.querySelector(".plan-card__terms")?.textContent).toContain("AI 批改按次另计");
   });
 
   it("ranks the paid plan for the reader instead of leaving two identical cards", async () => {
@@ -238,16 +264,67 @@ describe("free plan price line", () => {
 
     const cards = container.querySelectorAll(".plan-card");
     expect(cards.length).toBeGreaterThan(1);
-    const free = cards[0];
+    const free = container.querySelector(".plan-card:not(.plan-card--featured)");
     expect(free?.querySelector(".plan-card__name")?.textContent).toBe("免费");
     expect(free?.querySelector(".plan-card__price")).toBeNull();
 
     // and the paid card still shows a number, so this did not delete both
-    expect(cards[1]?.querySelector(".plan-card__price")?.textContent ?? "").toMatch(/\d/u);
+    expect(cards[0]?.querySelector(".plan-card__price")?.textContent ?? "").toMatch(/\d/u);
   });
 });
 
 describe("PlansScreen wallet line", () => {
+  it("a current member sees membership and management, not a second upgrade request", async () => {
+    const identity = createMemoryIdentityPort({ id: "member", email: "member@example.test" });
+    const createOrder = vi.fn();
+    const payment = createPaymentPort({
+      identity,
+      transport: { readEntitlement: async () => ({ planId: "member" }), createOrder },
+    });
+    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    expect(container.querySelector("[data-current-membership]")?.textContent).toContain(
+      "你已是会员",
+    );
+    expect(container.querySelector(".plan-card--featured button")).toBeNull();
+    expect(container.querySelector("[data-subscription-management]")).not.toBeNull();
+    expect(container.textContent).not.toContain("你现在就在用");
+    expect(createOrder).not.toHaveBeenCalled();
+  });
+
+  it("removes the prior account wallet immediately when the identity changes", async () => {
+    const identity = createMemoryIdentityPort({ id: "alice", email: "alice@example.com" });
+    const payment = createPaymentPort({
+      identity,
+      transport: {
+        readBalance: async () => ({
+          availablePowerUnits: "300",
+          balancePowerUnits: "300",
+          reservedPowerUnits: "0",
+        }),
+      },
+    });
+    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    expect(container.textContent).toContain("你的钱包还够 3 次");
+    await act(async () => identity.signOut());
+    expect(container.textContent).not.toContain("你的钱包还够 3 次");
+    expect(container.querySelector(".payment-summary")?.textContent ?? "").not.toContain("钱包");
+  });
+
+  it("retains the non-sensitive monthly choice when the page is reopened", async () => {
+    const payment = createPaymentPort({ identity: createMemoryIdentityPort(), transport: null });
+    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    const monthly = [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "按月",
+    );
+    if (!monthly) throw new Error("missing monthly choice");
+    await act(async () => monthly.click());
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await act(async () => root.render(<PlansScreen paymentPort={payment} />));
+    expect(container.querySelector(".plan-card--featured")?.textContent).toContain("$19.00");
+    expect(container.querySelector(".plan-card--featured")?.textContent).not.toContain("$149.00");
+  });
+
   it("does not tell a stranger that a wallet will be read after login", async () => {
     const payment = createPaymentPort({
       identity: createMemoryIdentityPort(),

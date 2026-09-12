@@ -2,6 +2,7 @@ import { translate } from "../i18n/index.js";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { GameSegmentedControl, GameToggle } from "@pieai/swimmer-ui-kit";
 import {
+  exerciseGradeOutcome,
   isLessonComplete,
   type GradingPort,
   type LessonCompletion,
@@ -94,6 +95,7 @@ export function LessonReader({
   completionDestination,
   toolbarExtras,
   breadcrumb,
+  answerDraftScope = "local-guest",
 }: {
   readonly locator: LessonRef;
   readonly view: LessonView;
@@ -126,12 +128,17 @@ export function LessonReader({
   readonly toolbarExtras?: ReactNode;
   /** Route-derived orientation, kept outside the WebGL stage. */
   readonly breadcrumb?: Omit<LessonBreadcrumbsProps, "lessonTitle">;
+  /** Identity boundary for browser-only, unsubmitted exercise recovery. */
+  readonly answerDraftScope?: string;
 }) {
   const completed = isLessonComplete(completion);
   const readConfirmed = completion.readConfirmed;
   const exercisesPassed = completion.exercisesPassed;
   const explainPassed = view.lesson.exercises.some(
-    (exercise) => exercise.kind === "explain" && exercise.hostGrade?.passed === true,
+    (exercise) =>
+      exercise.kind === "explain" &&
+      (exercise.hasPassed === true ||
+        (exercise.hostGrade && exerciseGradeOutcome(exercise.hostGrade) === "pass")),
   );
   const recapReady = readConfirmed || explainPassed;
   const accountPreferences = progress?.accountData().preferences;
@@ -658,6 +665,7 @@ export function LessonReader({
               exercise={exercise}
               grading={grading}
               readEntitlements={readEntitlements}
+              answerDraftScope={answerDraftScope}
               onRefresh={onLearningChanged}
             />
           ))}

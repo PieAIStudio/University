@@ -20,7 +20,7 @@
     "lint": "oxlint --deny-warnings src vite.config.ts vitest.config.ts",
     "format": "oxfmt --write package.json tsconfig.app.json vite.config.ts vitest.config.ts index.html src",
     "format:check": "oxfmt --check package.json tsconfig.app.json vite.config.ts vitest.config.ts index.html src",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run --passWithNoTests && pnpm kenney:grid:test",
     "content": "pnpm --filter @pieai/university-core build && node scripts/import-courses.mjs"
   },
   "dependencies": {

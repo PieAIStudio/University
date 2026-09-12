@@ -14,12 +14,17 @@ export function createMemoryPersistence(initial: string | null = null): Persiste
   raw(): string | null;
 } {
   let stored = initial;
+  const accounts = new Map<string, string>();
   return {
     read: () => stored,
     write(raw) {
       stored = raw;
     },
     raw: () => stored,
+    readAccount: (userId) => accounts.get(userId) ?? null,
+    writeAccount: (userId, raw) => {
+      accounts.set(userId, raw);
+    },
   };
 }
 

@@ -33,6 +33,8 @@ export type AnalyticsReviewRating = "again" | "hard" | "good" | "easy";
 export type AnalyticsCardKind = "course-card" | "recap-card" | "knowledge-card";
 
 export type AnalyticsEvent =
+  | { name: "welcome_shown" }
+  | { name: "welcome_exited"; destination: "lesson" | "map" | "account" }
   | { name: "app_open" }
   | { name: "course_opened"; studyId: string; courseId: string }
   | { name: "lesson_opened"; studyId: string; courseId: string; lessonId: string }
@@ -49,7 +51,8 @@ export type AnalyticsEvent =
       studyId: string;
       courseId: string;
       lessonId: string;
-      passed: boolean;
+      passed: boolean | null;
+      outcome?: "pass" | "fail" | "undecided";
       attemptCount: number;
     }
   | {
@@ -76,12 +79,14 @@ type AnalyticsEventName = AnalyticsEvent["name"];
 
 /** Runtime enforcement for callers that bypass TypeScript at a boundary. */
 const ALLOWLIST: Record<AnalyticsEventName, readonly string[]> = {
+  welcome_shown: [],
+  welcome_exited: ["destination"],
   app_open: [],
   course_opened: ["studyId", "courseId"],
   lesson_opened: ["studyId", "courseId", "lessonId"],
   lesson_read_confirmed: ["studyId", "courseId", "lessonId"],
   exercise_submitted: ["studyId", "courseId", "lessonId", "tier"],
-  exercise_result: ["studyId", "courseId", "lessonId", "passed", "attemptCount"],
+  exercise_result: ["studyId", "courseId", "lessonId", "passed", "outcome", "attemptCount"],
   settlement_shown: ["studyId", "courseId", "lessonId"],
   review_due_opened: ["cardCount"],
   review_graded: ["rating", "cardCount", "cardKind"],

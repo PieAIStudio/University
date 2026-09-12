@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 /**
  * Scope the test sweep to this project's own source.
@@ -12,6 +12,9 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     include: ["src/**/*.{test,spec}.{ts,tsx}", "scripts/**/*.test.mjs"],
+    // This suite uses node:test, not Vitest. The package test command runs it
+    // with its native runner after this sweep; no assertions are skipped.
+    exclude: [...configDefaults.exclude, "scripts/kenney-grid-bake.test.mjs"],
     setupFiles: ["./vitest.setup.ts"],
   },
 });

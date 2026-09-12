@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
-import { compileAnswerKey } from "@pieai/university-core";
+import { compileAnswerKey, createProgressPort, mistakesOf } from "@pieai/university-core";
 
 import { loadCourse, type Course, type Lesson } from "../../content/library";
 import { createOnlineGradingPort } from "./grading";
@@ -108,6 +108,27 @@ beforeAll(async () => {
 });
 
 describe("createOnlineGradingPort", () => {
+  it("does not send an answer under another account if identity changes while reading its token", async () => {
+    const progress = createProgressPort({ persistence: { read: () => null, write: vi.fn() } });
+    await progress.bindAccount("alice", null);
+    const fetchImpl = vi.fn(async () => {
+      throw new Error("network must not receive this answer");
+    });
+    const port = createOnlineGradingPort({
+      progress,
+      fetchImpl,
+      gradingUrl: "https://grading.example.test/api/grade",
+      readAccessToken: async () => {
+        await progress.bindAccount("bob", null);
+        return "bob-test-token";
+      },
+    });
+    await expect(
+      port.submitExercise({ ...undecidableSubmission("account-race"), allowMetered: true }),
+    ).rejects.toThrow();
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(Object.keys(progress.snapshot().exerciseAttempts)).toEqual([]);
+  });
   it("passes a deterministic answer without calling the metered service", async () => {
     const fetchImpl = vi.fn(async () => {
       throw new Error("tier one must not call the service");
@@ -147,6 +168,36 @@ describe("createOnlineGradingPort", () => {
       commandId: "c2",
     });
     expect(result.hostGrade?.passed).toBe(false);
+    expect((result.hostGrade as { readonly outcome?: string } | null)?.outcome).toBe("fail");
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("persists a reasonable paraphrase as undecided rather than wrong", async () => {
+    const progress = createProgressPort({
+      persistence: { read: () => null, write: vi.fn() },
+    });
+    const fetchImpl = vi.fn(async () => {
+      throw new Error("an undecided free pass must not call the service");
+    });
+    const port = createOnlineGradingPort({
+      progress,
+      fetchImpl,
+      gradingUrl: "https://grading.example.test/api/grade",
+      readAccessToken: async () => "should-not-be-read",
+    });
+
+    const result = await port.submitExercise({
+      locator: { ...locator, lessonId: long.id },
+      exerciseId: "explain",
+      contentRevision: 1,
+      answer: "因为源码改变以后，正在运行的旧进程不会自己换成新代码。",
+      commandId: "reasonable-paraphrase",
+    });
+
+    expect((result.hostGrade as { readonly outcome?: string } | null)?.outcome).toBe("undecided");
+    expect(result.hostGrade?.passed).toBe(false);
+    expect(result.score).toBe(0);
+    expect(mistakesOf(progress.snapshot())).toEqual([]);
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 

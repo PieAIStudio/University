@@ -360,11 +360,12 @@ function importLegacyLessonRecords(
   progress: ProgressPort,
 ): void {
   const local = view.lesson.progress;
+  const accountBound = progress.syncState().userId !== null;
   const key = lessonKey(locator.studyId, locator.courseId, locator.lessonId);
-  if (local && local.progress > progress.lessonState(key).progress) {
+  if (!accountBound && local && local.progress > progress.lessonState(key).progress) {
     progress.advanceLesson(key, local.progress);
   }
-  if (local?.readConfirmed) progress.confirmLessonRead(key, local.contentRevision);
+  if (!accountBound && local?.readConfirmed) progress.confirmLessonRead(key, local.contentRevision);
   /*
     The host's verdict is written to disk by the CLI, not by this browser, so
     the only way it reaches the shared document is on the next read of the
@@ -376,6 +377,17 @@ function importLegacyLessonRecords(
     if (answer === null && !exercise.hostGrade) continue;
     const occurredAt = exercise.hostGrade?.occurredAt ?? exercise.latestSubmission?.occurredAt;
     if (!occurredAt) continue;
+    // Account data cannot be populated by unrelated disk history. A later host
+    // verdict must match a submission this identity actually made.
+    if (accountBound) {
+      const owned = progress.exerciseAttempts(locator, exercise.id, exercise.contentRevision)[0];
+      if (
+        !owned ||
+        owned.answer !== answer ||
+        Date.parse(owned.occurredAt) > Date.parse(occurredAt)
+      )
+        continue;
+    }
     progress.recordExerciseAttempt({
       commandId: `local-view:${locator.studyId}/${locator.courseId}/${locator.unitId}/${locator.lessonId}/${exercise.id}@${exercise.contentRevision}`,
       locator,
@@ -386,6 +398,7 @@ function importLegacyLessonRecords(
       maxScore: 1,
       hostGrade: exercise.hostGrade
         ? {
+            ...(exercise.hostGrade.outcome ? { outcome: exercise.hostGrade.outcome } : {}),
             passed: exercise.hostGrade.passed,
             evaluation: exercise.hostGrade.evaluation,
             extensions: exercise.hostGrade.extensions,
@@ -400,6 +413,7 @@ function importLegacyLessonRecords(
 }
 
 function importLegacyProgress(view: StudyView, progress: ProgressPort): void {
+  if (progress.syncState().userId !== null) return;
   for (const course of view.courses) {
     for (const unit of course.units) {
       for (const lesson of unit.lessons) {

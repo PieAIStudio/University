@@ -66,11 +66,21 @@ describe("createBrowserPersistence", () => {
     expect(createBrowserPersistence().read()).toBeNull();
   });
 
-  it("swallows a write failure so a full quota does not throw into a lesson", () => {
+  it("S1 a failed save is observable while the learner can keep working", () => {
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new Error("denied");
     });
-    expect(() => createBrowserPersistence().write("{}")).not.toThrow();
+    const port = createProgressPort({ persistence: createBrowserPersistence() });
+    const key = lessonKey("s", "c", "l");
+    expect(() => port.advanceLesson(key, 0.5)).not.toThrow();
+    expect(port.lessonState(key).progress).toBe(0.5);
+    expect(port.localSaveState?.()).toBe("failed");
+    vi.restoreAllMocks();
+    port.advanceLesson(key, 1);
+    expect(port.localSaveState?.()).toBe("saved");
+    expect(
+      createProgressPort({ persistence: createBrowserPersistence() }).lessonState(key).progress,
+    ).toBe(1);
   });
 });
 

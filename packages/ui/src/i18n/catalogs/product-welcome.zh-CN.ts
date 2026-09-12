@@ -1,0 +1,18 @@
+export const messages = {
+  "product.welcome.heading": "把 AI 学明白，",
+  "product.welcome.headingNext": "把想法做出来。",
+  "product.welcome.invitation": "从一个身边的问题开始，边学边试。不用先注册，也不用一次学完。",
+  "product.welcome.method": "在 University 怎样学习",
+  "product.welcome.understand": "看明白",
+  "product.welcome.try": "动手试",
+  "product.welcome.remember": "记得住",
+  "product.welcome.choose": "换个学习方向",
+  "product.welcome.firstStep": "从这个问题开始",
+  "product.welcome.loading": "正在找到可以开始的课程…",
+  "product.welcome.scope": "{{exercises}} 道小练习",
+  "product.welcome.dismiss": "关闭欢迎，先看地图",
+  "product.welcome.start": "开始学习",
+  "product.welcome.browse": "直接选课",
+  "product.welcome.signIn": "已有账号？登录",
+  "product.welcome.reassurance": "免费学 · 不用先注册",
+} as const;

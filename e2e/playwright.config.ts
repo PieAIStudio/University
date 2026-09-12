@@ -1,9 +1,15 @@
 import { fileURLToPath } from "node:url";
-import { ONLINE_ORIGIN } from "./ports.js";
+import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 
 import { defineConfig } from "@playwright/test";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
+// Cold content baking may contend with other worktrees on the same machine.
+// This only budgets server preparation; test/action timeouts never change.
+const startupTimeout = Number(process.env.E2E_STARTUP_TIMEOUT_MS ?? 180_000);
+if (!Number.isSafeInteger(startupTimeout) || startupTimeout < 180_000 || startupTimeout > 600_000) {
+  throw new Error("E2E_STARTUP_TIMEOUT_MS must be between 180000 and 600000");
+}
 
 /**
  * System Chrome, not Playwright's bundled Chromium.
@@ -33,6 +39,16 @@ export default defineConfig({
     },
   ],
   use: {
+    // Existing route suites exercise a returning visitor. T.product-completeness
+    // explicitly overrides this with EMPTY storage and tests the real welcome.
+    // No progress, identity, answers, content or grading is seeded by this flag.
+    storageState: {
+      cookies: [],
+      origins: [ONLINE_ORIGIN, LOCAL_ORIGIN].map((origin) => ({
+        origin,
+        localStorage: [{ name: "university.welcome.v1", value: "acknowledged" }],
+      })),
+    },
     locale: "zh-CN",
     timezoneId: "Asia/Shanghai",
     channel: "chrome",
@@ -48,7 +64,7 @@ export default defineConfig({
     cwd: ROOT,
     url: ONLINE_ORIGIN,
     reuseExistingServer: false,
-    timeout: 180_000,
+    timeout: startupTimeout,
     stdout: "pipe",
     stderr: "pipe",
   },

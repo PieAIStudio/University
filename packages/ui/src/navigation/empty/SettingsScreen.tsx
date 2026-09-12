@@ -70,10 +70,11 @@ export function SettingsScreen({
       </section>
       {presence ? <PresenceSettings presence={presence} progress={progress} /> : null}
       {reminders ? <ReviewReminderSettings reminders={reminders} /> : null}
-      <section className="settings-screen__block" aria-labelledby="settings-language">
-        <h2 id="settings-language" className="settings-screen__heading">
-          {translate("ui.navigation.empty.settingsScreen.copy.语言层")}
-        </h2>
+      <details
+        className="settings-screen__block product-details"
+        aria-labelledby="settings-language"
+      >
+        <summary id="settings-language">{translate("product.settings.readingDetails")}</summary>
         <ForeignSettingsPanel
           embedded
           settings={settings}
@@ -89,7 +90,7 @@ export function SettingsScreen({
             }
           }}
         />
-      </section>
+      </details>
     </div>
   );
 }
@@ -150,16 +151,7 @@ function ThemePreferenceControl({ progress }: { readonly progress?: ProgressPort
           ))}
         </div>
         <p className="settings-screen__hint">
-          {translate("ui.navigation.empty.settingsScreen.copy.当前生效")}
-          {resolvedLabel}
-          {translate(
-            "ui.navigation.empty.settingsScreen.copy.选择-跟随系统-后-会按设备的深色模式设置自动切换",
-          )}
-        </p>
-        <p className="settings-screen__hint">
-          {translate(
-            "ui.navigation.empty.settingsScreen.copy.偏好会随学习者账号保存-在其他设备继续使用",
-          )}
+          {translate("product.settings.themeCurrent", { theme: resolvedLabel })}
         </p>
       </div>
     </section>
@@ -230,16 +222,15 @@ function SpeechQualityControl({ progress }: { readonly progress?: ProgressPort }
         })}
       </div>
       <p className="settings-screen__hint">{explainSpeechResolution(resolution, availability)}</p>
-      <p className="settings-screen__hint">
-        {translate(
-          "ui.navigation.empty.settingsScreen.copy.自动每次按高品质-在线-本机顺序选择当前能拿到的一档-不会把-自动-存成具体档位-高品质语音暂未开放-钱包和付费",
-        )}
-      </p>
-      <p className="settings-screen__hint">
-        {translate(
-          "ui.navigation.empty.settingsScreen.copy.在线语音只发送产品挑选的一个英文单词-学习者自己写的字-说的话和私有仓库内容不会因为打开朗读而外发-学习者口述自",
-        )}
-      </p>
+      <details className="product-details">
+        <summary>{translate("product.settings.speechDetails")}</summary>
+        <p>{translate("product.settings.speechAuto")}</p>
+        <p>
+          {translate(
+            "ui.navigation.empty.settingsScreen.copy.在线语音只发送产品挑选的一个英文单词-学习者自己写的字-说的话和私有仓库内容不会因为打开朗读而外发-学习者口述自",
+          )}
+        </p>
+      </details>
     </div>
   );
 }
@@ -247,7 +238,7 @@ function SpeechQualityControl({ progress }: { readonly progress?: ProgressPort }
 /**
  * V4's copy, and the reason the switch exists: being watched while you
  * learn has to be refusable even on the plan whose value is being watched.
- * Default on. Off must untrack, not restyle a chip.
+ * Default off. Off must untrack, not restyle a chip.
  */
 function PresenceSettings({
   presence,
@@ -264,7 +255,7 @@ function PresenceSettings({
       </h2>
       <GameToggle
         checked={snapshot.sharesPresence}
-        label={translate("ui.navigation.empty.settingsScreen.copy.让小组看到我在学什么")}
+        label={translate("product.settings.presence")}
         onClick={() => {
           const next = !snapshot.sharesPresence;
           presence.setSharesPresence(next);
@@ -278,11 +269,11 @@ function PresenceSettings({
           }
         }}
       />
-      <p className="settings-screen__hint">
-        {translate(
-          "ui.navigation.empty.settingsScreen.copy.关掉以后别人看不见你停在哪一关-也不会再发出你的光标-默认开-因为这是学习小组套餐的价值-被人看着学必须能拒绝",
-        )}
-      </p>
+      <p className="settings-screen__hint">{translate("product.settings.presenceBrief")}</p>
+      <details className="product-details">
+        <summary>{translate("product.settings.presenceDetails")}</summary>
+        <p>{translate("product.settings.presenceAudience")}</p>
+      </details>
     </section>
   );
 }

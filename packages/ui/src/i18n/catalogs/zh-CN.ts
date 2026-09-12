@@ -1,3 +1,7 @@
+import { messages as productWelcome } from "./product-welcome.zh-CN.js";
+import { messages as productNavigation } from "./product-navigation.zh-CN.js";
+import { messages as productBilling } from "./product-billing.zh-CN.js";
+import { messages as productSave } from "./product-save.zh-CN.js";
 import { messages as qualityDifficulty } from "./learning-play-quality-difficulty.zh-CN.js";
 import { messages as workflowDifficulty } from "./learning-play-workflow-difficulty.zh-CN.js";
 import { messages as playDifficulty } from "./learning-play-difficulty.zh-CN.js";
@@ -18,6 +22,10 @@ import { messages as learningPlayMessages } from "./learning-play.zh-CN.js";
  * is selectable only when its key set exactly matches this one.
  */
 export const messages = {
+  ...productWelcome,
+  ...productNavigation,
+  ...productBilling,
+  ...productSave,
   "ui.world.domain.programming": "AI 与编程",
   "ui.world.domain.programming.description": "学会用 AI 做网站和应用，理解功能、数据与交互。",
   "ui.world.domain.aiFoundations": "AI 基础",
@@ -950,7 +958,7 @@ export const messages = {
     "偏好会随学习者账号保存，在其他设备继续使用。",
   "ui.navigation.empty.settingsScreen.copy.偏好设置": "偏好设置",
   "ui.navigation.empty.settingsScreen.copy.关掉以后别人看不见你停在哪一关-也不会再发出你的光标-默认开-因为这是学习小组套餐的价值-被人看着学必须能拒绝":
-    "关掉以后别人看不见你停在哪一关，也不会再发出你的光标。默认开，因为这是学习小组套餐的价值；被人看着学必须能拒绝。",
+    "默认不分享。开启后，所在学习小组可以看到你正在学哪一节和地图上的光标；随时可以关闭。",
   "ui.navigation.empty.settingsScreen.copy.在线语音只发送产品挑选的一个英文单词-学习者自己写的字-说的话和私有仓库内容不会因为打开朗读而外发-学习者口述自":
     "在线语音只发送产品挑选的一个英文单词；学习者自己写的字、说的话和私有仓库内容不会因为打开朗读而外发。 学习者口述自己的理解要另行明确选择加入。",
   "ui.navigation.empty.settingsScreen.copy.声音": "声音",
@@ -1002,7 +1010,7 @@ export const messages = {
   "ui.navigation.screens.plansScreen.copy.所有已发布课程都能免费学-课文和关卡永远不收费-绑定邮箱后-每天有少量-AI-批改尝鲜额度-用完今天停止-明天恢":
     "所有已发布课程都能免费学，课文和关卡永远不收费。绑定邮箱后，每天有少量 AI 批改尝鲜额度，用完今天停止，明天恢复。会员买的是账号那一半：换手机或电脑也能接着学，最多三台设备同时在线。",
   "ui.navigation.screens.plansScreen.copy.随时可以取消-取消之后不再扣费":
-    "随时可以取消，取消之后不再扣费。",
+    "可以在订阅管理里取消下次续费；取消续费不等于立即退款。",
   "ui.navigation.screens.plansScreen.copy.折合": "（折合",
   "ui.navigation.screens.plansScreen.copy.按年": "按年",
   "ui.navigation.screens.plansScreen.copy.按月": "按月",
@@ -1043,7 +1051,7 @@ export const messages = {
   "ui.navigation.slots.copy.复习": "复习",
   "ui.navigation.slots.copy.学习": "学习",
   "ui.navigation.slots.copy.我": "我",
-  "ui.navigation.slots.copy.排行榜": "排行榜",
+  "ui.navigation.slots.copy.排行榜": "成长",
   "ui.navigation.slots.copy.收藏": "收藏",
   "ui.navigation.slots.copy.更多": "更多",
   "ui.navigation.slots.copy.目录": "目录",

@@ -1,0 +1,17 @@
+{
+  "name": "returning-home-1440",
+  "at": "2026-09-09T17:56:54.313Z",
+  "browser": "153.0.8010.36",
+  "head": "cea753e27e3c5196936ee30bf6a498aff8496c38",
+  "diff": "apps/university/src/analytics/productAnalytics.ts  |   9 +-\n apps/university/src/app/App.tsx                    |  19 +++\n apps/university/src/app/MainRouter.tsx             |   4 +-\n apps/university/src/catalog/listing.ts             |   7 +\n apps/university/src/ports/online/grading.test.ts   |  36 ++++-\n apps/university/src/ports/online/grading.ts        |  59 +++++---\n apps/university/src/screens/LessonScreen.tsx       |  68 ++++++---\n docs/governance/MANIFEST.yml                       |  11 +-\n docs/reference/execution/current-work.md           |   3 +\n docs/reference/player-journey/v5/index.html        |  18 +++\n e2e/experience-ledger.json                         | 140 ++++++++++++++++++\n packages/core/src/ports/grading.ts                 |  23 +++\n packages/core/src/ports/index.ts                   |   2 +\n packages/core/src/ports/progress.ts                |   2 +\n packages/core/src/progress/answer-stats.test.ts    |  27 ++++\n packages/core/src/progress/answer-stats.ts         |  13 +-\n packages/core/src/progress/goals.ts                |   6 +-\n packages/core/src/progress/merge.ts                |   4 +\n packages/core/src/progress/mistakes.test.ts        |  17 +++\n packages/core/src/progress/mistakes.ts             |   9 +-\n packages/core/src/progress/port.ts                 |  43 ++++--\n packages/core/src/progress/source.test.ts          |  66 ++++++++-\n packages/core/src/progress/source.ts               |  10 +-\n packages/ui/package.json                           |   2 +\n packages/ui/src/catalog/CatalogSurface.tsx         |  40 ++++-\n packages/ui/src/catalog/catalog.css                |  26 ++++\n packages/ui/src/i18n/catalogs/en.ts                |   4 +\n packages/ui/src/i18n/catalogs/zh-CN.ts             |   4 +\n packages/ui/src/lesson/LessonReader.tsx            |  10 +-\n packages/ui/src/lesson/lesson-reader.css           |  11 ++\n packages/ui/src/navigation/empty/ProfileScreen.tsx |   8 +-\n .../ui/src/navigation/screens/LeagueScreen.tsx     |  15 +-\n .../ui/src/navigation/screens/QuestsScreen.tsx     |  15 +-\n packages/ui/src/practice/PracticeStream.test.tsx   |  34 +++++\n packages/ui/src/practice/PracticeStream.tsx        |  71 ++++++++-\n packages/ui/src/practice/PracticeSurface.tsx       |   1 +\n packages/ui/src/practice/practice.css              |  15 ++\n .../ui/src/progress/browser-persistence.test.ts    |  12 +-\n packages/ui/src/progress/browser-persistence.ts    |   9 +-\n packages/ui/src/review/ExerciseBlock.test.tsx      | 134 +++++++++++++++--\n packages/ui/src/review/ExerciseBlock.tsx           | 162 ++++++++++++++-------\n packages/ui/src/review/host-grade.css              |   5 +\n packages/ui/src/view/lesson-view.ts                |   3 +\n 43 files changed, 1012 insertions(+), 165 deletions(-)",
+  "mode": "delivery build; isolated browser; no cloud account",
+  "url": "http://127.0.0.1:21898/",
+  "visibility": "visible",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1
+  },
+  "bodyWidth": 1440,
+  "text": "University\n◀\n收起\n学习\n图鉴\n练习\n排行榜\n任务\n会员\n个人档案\n更多\nLV. 1\n0 / 35 XP\n提意见\nAI 到底是什么\n当前\n改写中\n\n拖动平移\n·\n滚轮缩放\n\n点岛进入\n\n▶\n收起\n认识 AI，从这里开始\n▾\n0\n\n今天的第一件事\n\n手机怎么一眼就认出是你\n\n认识 AI，从这里开始 · AI 到底是什么\n\n打开项目地图\n开始学习\n尚未开始\n\n课程负责建立理解，卡片只负责把重要知识留在长期记忆里。\n\n今天没有到期卡片\n学一节新课，它会掉落新的卡片，明天就有事做了。"
+}

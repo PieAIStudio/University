@@ -1,10 +1,11 @@
 import { translate } from "../i18n/index.js";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { GameEmptyState, GamePanel } from "@pieai/swimmer-ui-kit";
+import { GameAssetIcon, GameButton, GameEmptyState, GamePanel } from "@pieai/swimmer-ui-kit";
 import {
   advancePracticeSession,
   idOfPracticeQuestion,
   indexPracticeQuestions,
+  rememberPracticeQuestion,
   startPracticeSession,
   unlockPracticeSession,
   type PracticeQuestion,
@@ -13,7 +14,7 @@ import {
 
 import { ChoiceBlock, type ChoiceBlockExercise } from "../review/ChoiceBlock.js";
 import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
-import { PracticeRewardPanel } from "./PracticeRewardPanel.js";
+import { PracticeRewardPanel, PRACTICE_UNLOCK_HINT } from "./PracticeRewardPanel.js";
 import type { PracticeRecentStore } from "./storage.js";
 
 export const PRACTICE_EMPTY_TITLE = translate("ui.practice.practiceStream.copy.还没有可以练的题");
@@ -24,13 +25,11 @@ export const PRACTICE_EMPTY_DESCRIPTION = translate(
 
 export const PRACTICE_EMPTY_ACTION = translate("ui.practice.practiceStream.copy.去翻翻词条");
 
-export const PRACTICE_INTRO_TITLE = translate("ui.practice.practiceStream.copy.今天练一道判断");
+export const PRACTICE_INTRO_TITLE = translate("product.practice.roundTitle");
 
-export const PRACTICE_INTRO_DESCRIPTION = translate(
-  "ui.practice.practiceStream.copy.概念自己带着判断题-答对一道-展开这一条-题流没有尽头-停下来就行",
-);
+export const PRACTICE_INTRO_DESCRIPTION = translate("product.practice.roundBrief");
 
-export const PRACTICE_INTRO_ACTION = translate("ui.practice.practiceStream.copy.开始一道判断");
+export const PRACTICE_INTRO_ACTION = translate("product.practice.freeStart");
 
 /**
  * How many questions this sitting has already got right.
@@ -58,13 +57,10 @@ function toChoiceBlockExercise(question: PracticeQuestion): ChoiceBlockExercise 
 }
 
 /**
- * The endless single-question stream: one judgement, then the entry as a reward.
- *
- * There is no total, no remaining-work bar, and no category filter. That
- * absence is the design, not an omission — a fraction here would turn
- * "随便刷两题" into a test, which is the settlement screen's job, not this
- * sitting's. The number on screen is how many this sitting has already got
- * right, which is a fact the session already holds.
+ * One question stream serves free practice and optional bounded rounds.
+ * Free practice reports solved questions without inventing a denominator.
+ * A round reports distinct solved questions; its final explanation stays until
+ * the learner chooses to finish. Preparation is only shown before starting.
  *
  * The reward page is a render prop because each collection already has a
  * detail page, and SPEC-0004 forbids a second one. The stream unlocks; the
@@ -75,18 +71,29 @@ export function PracticeStream<Head = unknown>({
   store,
   onBrowse,
   renderReward,
+  onFinish,
+  introduction,
+  extraAction,
 }: {
   readonly questions: readonly PracticeQuestion<Head>[];
   readonly store: PracticeRecentStore;
   readonly onBrowse?: () => void;
   readonly renderReward: (question: PracticeQuestion<Head>) => ReactNode;
+  readonly onFinish?: () => void;
+  /** Prepared by the shared surface; not repeated above an active question. */
+  readonly introduction?: ReactNode;
+  readonly extraAction?: ReactNode;
 }) {
   const indexed = indexPracticeQuestions(questions);
   const bankKey = indexed.ids.join("\0");
   const [session, setSession] = useState<PracticeSession>(() =>
     startPracticeSession(indexed.ids, store.read()),
   );
-  const [started, setStarted] = useState(false);
+  const [phase, setPhase] = useState<"intro" | "question" | "complete">("intro");
+  const [mode, setMode] = useState<"free" | "round">("free");
+  const [solvedIds, setSolvedIds] = useState<readonly string[]>([]);
+  const solvedIdsRef = useRef<readonly string[]>([]);
+  const roundSize = Math.min(3, indexed.ids.length);
   const seenBank = useRef(bankKey);
   const seenRecent = useRef(store.read().ids.join("\0"));
   useEffect(() => {
@@ -96,60 +103,152 @@ export function PracticeStream<Head = unknown>({
       if (next === seenRecent.current) return;
       seenRecent.current = next;
       setSession(startPracticeSession(indexed.ids, store.read()));
-      setStarted(false);
+      setPhase("intro");
+      setMode("free");
+      solvedIdsRef.current = [];
+      setSolvedIds([]);
     });
   }, [bankKey, store]);
   let sitting = session;
-  let intro = started;
+  let currentPhase = phase;
   if (seenBank.current !== bankKey) {
     seenBank.current = bankKey;
     sitting = startPracticeSession(indexed.ids, store.read());
-    intro = false;
+    currentPhase = "intro";
     setSession(sitting);
-    setStarted(false);
+    setPhase("intro");
+    solvedIdsRef.current = [];
+    setSolvedIds([]);
+    setMode("free");
   }
 
   const current = sitting.currentId ? (indexed.byId.get(sitting.currentId) ?? null) : null;
+  const focusRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (currentPhase === "intro") return;
+    // Only an explicit start/next/finish moves focus. An answer or disclosure
+    // never jumps the viewport away from the feedback the learner is reading.
+    focusRef.current?.focus({ preventScroll: true });
+    focusRef.current?.scrollIntoView?.({ block: "start", behavior: "instant" });
+  }, [currentPhase, sitting.currentId, sitting.ordinal]);
 
   function handleSolved() {
+    if (
+      mode === "round" &&
+      sitting.currentId &&
+      !solvedIdsRef.current.includes(sitting.currentId)
+    ) {
+      const completed = [...solvedIdsRef.current, sitting.currentId];
+      solvedIdsRef.current = completed;
+      setSolvedIds(completed);
+      // Include the last question in history even when no Next button is used.
+      const recent = rememberPracticeQuestion(store.read(), sitting.currentId);
+      seenRecent.current = recent.ids.join("\0");
+      store.write(recent);
+    }
     setSession((prev) => unlockPracticeSession(prev));
   }
 
   function handleNext() {
-    const next = advancePracticeSession(sitting, indexed.ids, store.read());
+    if (mode === "round" && solvedIdsRef.current.length >= roundSize) {
+      setPhase("complete");
+      return;
+    }
+    const remaining =
+      mode === "round"
+        ? indexed.ids.filter((id) => !solvedIdsRef.current.includes(id))
+        : indexed.ids;
+    const next = advancePracticeSession(sitting, remaining, store.read());
     seenRecent.current = next.recent.ids.join("\0");
     store.write(next.recent);
     setSession(next.session);
   }
 
+  function start(mode: "free" | "round") {
+    solvedIdsRef.current = [];
+    setSolvedIds([]);
+    setMode(mode);
+    setSession(startPracticeSession(indexed.ids, store.read()));
+    setPhase("question");
+  }
+
+  function finish() {
+    setPhase("intro");
+    if (onFinish) onFinish();
+  }
+
   if (!current) {
     return (
-      <GameEmptyState
-        className="practice-stream practice-stream--empty"
-        title={PRACTICE_EMPTY_TITLE}
-        description={PRACTICE_EMPTY_DESCRIPTION}
-        action={
-          onBrowse ? (
-            <LiquidCtaButton type="button" onClick={onBrowse}>
-              {PRACTICE_EMPTY_ACTION}
-            </LiquidCtaButton>
-          ) : undefined
-        }
-      />
+      <>
+        {introduction}
+        <GameEmptyState
+          className="practice-stream practice-stream--empty"
+          title={PRACTICE_EMPTY_TITLE}
+          description={PRACTICE_EMPTY_DESCRIPTION}
+          action={
+            onBrowse ? (
+              <LiquidCtaButton type="button" onClick={onBrowse}>
+                {PRACTICE_EMPTY_ACTION}
+              </LiquidCtaButton>
+            ) : undefined
+          }
+        />
+        {extraAction}
+      </>
     );
   }
 
-  if (!intro) {
+  if (currentPhase === "intro") {
+    return (
+      <>
+        {introduction}
+        <section
+          className="practice-stream"
+          aria-label={translate("ui.practice.practiceStream.copy.练习")}
+        >
+          <GamePanel className="practice-stream__intro" title={PRACTICE_INTRO_TITLE}>
+            <p className="practice-stream__intro-copy">{PRACTICE_INTRO_DESCRIPTION}</p>
+            <div className="practice-stream__actions">
+              <LiquidCtaButton type="button" data-practice-round onClick={() => start("round")}>
+                {translate("product.practice.startRound", { count: roundSize })}
+              </LiquidCtaButton>
+              <GameButton variant="secondary" static type="button" onClick={() => start("free")}>
+                {PRACTICE_INTRO_ACTION}
+              </GameButton>
+            </div>
+          </GamePanel>
+        </section>
+        {extraAction}
+      </>
+    );
+  }
+
+  if (currentPhase === "complete") {
     return (
       <section
         className="practice-stream"
-        aria-label={translate("ui.practice.practiceStream.copy.练习")}
+        data-practice-phase="complete"
+        data-practice-round-complete
       >
-        <GamePanel className="practice-stream__intro" title={PRACTICE_INTRO_TITLE}>
-          <p className="practice-stream__intro-copy">{PRACTICE_INTRO_DESCRIPTION}</p>
-          <LiquidCtaButton type="button" onClick={() => setStarted(true)}>
-            {PRACTICE_INTRO_ACTION}
-          </LiquidCtaButton>
+        <GamePanel>
+          <h1 ref={focusRef} tabIndex={-1} data-practice-focus className="practice-stream__heading">
+            {translate("product.practice.roundDone")}
+          </h1>
+          <div className="practice-stream__celebrate" aria-hidden="true">
+            <GameAssetIcon icon="trophy" size="xl" />
+          </div>
+          <p>{translate("product.practice.roundReceipt", { count: solvedIds.length })}</p>
+          <div className="practice-stream__actions">
+            <GameButton variant="primary" static data-practice-finish onClick={finish}>
+              {translate("product.practice.stop")}
+            </GameButton>
+            <GameButton variant="secondary" static onClick={() => start("free")}>
+              {translate("product.practice.free")}
+            </GameButton>
+            <GameButton variant="ghost" static onClick={() => start("round")}>
+              {translate("product.practice.another")}
+            </GameButton>
+          </div>
         </GamePanel>
       </section>
     );
@@ -158,11 +257,36 @@ export function PracticeStream<Head = unknown>({
   return (
     <section
       className="practice-stream"
+      data-practice-phase="question"
       aria-label={translate("ui.practice.practiceStream.copy.练习")}
     >
-      <p className="practice-stream__ordinal" aria-live="polite">
-        {practiceSolvedLabel(sittingSolvedCount(sitting))}
-      </p>
+      <header className="practice-stream__head">
+        <h1 ref={focusRef} tabIndex={-1} data-practice-focus className="practice-stream__heading">
+          {translate("ui.practice.practiceStream.copy.练习")}
+        </h1>
+        <GameButton variant="ghost" static onClick={finish}>
+          {translate("product.practice.pause")}
+        </GameButton>
+      </header>
+      <div className="practice-stream__progress">
+        <p className="practice-stream__ordinal" aria-live="polite">
+          {mode === "round"
+            ? translate("product.practice.roundCount", {
+                done: solvedIds.length,
+                total: roundSize,
+              })
+            : practiceSolvedLabel(sittingSolvedCount(sitting))}
+        </p>
+        {mode === "round" ? (
+          <div className="practice-stream__steps" aria-hidden="true">
+            {Array.from({ length: roundSize }, (_, index) => (
+              <span key={index} data-done={index < solvedIds.length}>
+                {index < solvedIds.length ? "✓" : index + 1}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
       <div className="practice-stream__columns">
         <div className="practice-stream__question">
           <ChoiceBlock
@@ -171,11 +295,25 @@ export function PracticeStream<Head = unknown>({
             liquidPrimary
             onSolved={handleSolved}
             onNext={handleNext}
+            nextLabel={
+              mode === "round" && solvedIds.length >= roundSize
+                ? translate("product.practice.finishRound")
+                : undefined
+            }
           />
         </div>
-        <PracticeRewardPanel unlocked={sitting.unlocked}>
-          {sitting.unlocked ? renderReward(current) : null}
-        </PracticeRewardPanel>
+        {sitting.unlocked ? (
+          <details
+            key={sitting.currentId}
+            className="product-details practice-stream__reward"
+            data-practice-reward
+          >
+            <summary>{translate("product.practice.readEntry")}</summary>
+            <PracticeRewardPanel unlocked>{renderReward(current)}</PracticeRewardPanel>
+          </details>
+        ) : (
+          <p className="practice-stream__unlock-hint">{PRACTICE_UNLOCK_HINT}</p>
+        )}
       </div>
     </section>
   );

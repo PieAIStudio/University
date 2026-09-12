@@ -1,0 +1,212 @@
+{
+  "name": "phone-planet",
+  "capturedAt": "2026-09-09T15:46:04.327Z",
+  "browser": "153.0.8010.36",
+  "mode": "delivery production",
+  "sourceCommit": "cea753e",
+  "query": "none",
+  "freshContext": false,
+  "theme": "light",
+  "account": "fresh guest; backend public configuration absent in this worktree",
+  "url": "http://127.0.0.1:21898/planet",
+  "title": "University",
+  "visible": "visible",
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "dpr": 1
+  },
+  "bodyWidth": 390,
+  "text": "AI 基础\nAI 与游戏\nAI 媒体创作\n暂未发布\nAI 与编程\n认识 AI，从这里开始\n▾\n0\n选课\n关闭\nAI 基础\nAI 与游戏\nAI 媒体创作\n暂未发布\nAI 与编程\nAI 基础\n\n理解 AI 是什么，以及模型、训练和推理等基础概念。\n\n认识 AI，从这里开始\n没开始\n1 门课 · 61 节\n完成 0%\n认识 AI，从这里开始\n\n从手机里已经在用的功能认识 AI。已有内容开放学习，课程仍在编写与整理，后续会按学习主题拆成多门课。\n\n1 门课 · 61 节\n\n0 / 61\n门课\n1\n关\n61\n已学\n0\nAI 到底是什么\n进入 认识 AI，从这里开始\n学习\n练习\n任务\n排行榜\n图鉴\n会员\n我\n提意见",
+  "headings": [
+    "选课",
+    "认识 AI，从这里开始"
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "text": "认识 AI，从这里开始\n▾",
+      "href": null,
+      "disabled": false,
+      "x": 16,
+      "y": 10,
+      "w": 182.28125,
+      "h": 34
+    },
+    {
+      "tag": "A",
+      "text": "0",
+      "href": "/quests",
+      "disabled": false,
+      "x": 206.28125,
+      "y": 10,
+      "w": 167.71875,
+      "h": 34
+    },
+    {
+      "tag": "BUTTON",
+      "text": "关闭",
+      "href": null,
+      "disabled": false,
+      "x": 307,
+      "y": 373.953125,
+      "w": 66,
+      "h": 44
+    },
+    {
+      "tag": "BUTTON",
+      "text": "AI 基础",
+      "href": null,
+      "disabled": false,
+      "x": 17,
+      "y": 429.34375,
+      "w": 69.8125,
+      "h": 44
+    },
+    {
+      "tag": "BUTTON",
+      "text": "AI 与游戏",
+      "href": null,
+      "disabled": false,
+      "x": 94.8125,
+      "y": 429.34375,
+      "w": 81.609375,
+      "h": 44
+    },
+    {
+      "tag": "BUTTON",
+      "text": "AI 媒体创作\n暂未发布",
+      "href": null,
+      "disabled": false,
+      "x": 184.421875,
+      "y": 427.953125,
+      "w": 94.734375,
+      "h": 46.796875
+    },
+    {
+      "tag": "BUTTON",
+      "text": "AI 与编程",
+      "href": null,
+      "disabled": false,
+      "x": 287.15625,
+      "y": 429.34375,
+      "w": 81.609375,
+      "h": 44
+    },
+    {
+      "tag": "BUTTON",
+      "text": "认识 AI，从这里开始\n没开始\n1 门课 · 61 节\n完成 0%",
+      "href": null,
+      "disabled": false,
+      "x": 17,
+      "y": 562.796875,
+      "w": 356,
+      "h": 72
+    },
+    {
+      "tag": "BUTTON",
+      "text": "进入 认识 AI，从这里开始",
+      "href": null,
+      "disabled": false,
+      "x": 17,
+      "y": 644.796875,
+      "w": 260,
+      "h": 48
+    },
+    {
+      "tag": "A",
+      "text": "学习",
+      "href": "/",
+      "disabled": false,
+      "x": 0,
+      "y": 788,
+      "w": 55.703125,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "练习",
+      "href": "/practice",
+      "disabled": false,
+      "x": 55.703125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "任务",
+      "href": "/quests",
+      "disabled": false,
+      "x": 111.421875,
+      "y": 788,
+      "w": 55.703125,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "排行榜",
+      "href": "/league",
+      "disabled": false,
+      "x": 167.125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "图鉴",
+      "href": "/library",
+      "disabled": false,
+      "x": 222.84375,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "会员",
+      "href": "/plans",
+      "disabled": false,
+      "x": 278.5625,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "A",
+      "text": "我",
+      "href": "/me",
+      "disabled": false,
+      "x": 334.28125,
+      "y": 788,
+      "w": 55.71875,
+      "h": 56
+    },
+    {
+      "tag": "BUTTON",
+      "text": "提意见",
+      "href": null,
+      "disabled": false,
+      "x": 291.4375,
+      "y": 727,
+      "w": 86.5625,
+      "h": 34
+    }
+  ],
+  "canvases": [
+    {
+      "width": 300,
+      "height": 150
+    },
+    {
+      "width": 300,
+      "height": 150
+    },
+    {
+      "width": 390,
+      "height": 286
+    }
+  ],
+  "errors": []
+}

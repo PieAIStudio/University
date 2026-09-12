@@ -94,12 +94,25 @@ function fakeSubscription(): FakePushSubscription {
   } as unknown as FakePushSubscription;
 }
 
-function createPort(vapidPublicKey?: string) {
+function createPort(vapidPublicKey = "public-vapid-key") {
   const progress = createProgressPort({ persistence: createMemoryPersistence() });
-  return { port: createBrowserReviewReminderPort({ progress, vapidPublicKey }), progress };
+  return {
+    port: createBrowserReviewReminderPort({ progress, vapidPublicKey, senderReady: () => true }),
+    progress,
+  };
 }
 
 describe("browser review reminders", () => {
+  it("R1 a public key alone never requests permission or promises delivery", async () => {
+    const progress = createProgressPort({ persistence: createMemoryPersistence() });
+    const port = createBrowserReviewReminderPort({ progress, vapidPublicKey: "public-vapid-key" });
+    await port.refresh();
+    await port.enable();
+    expect(port.snapshot()).toMatchObject({ kind: "error" });
+    expect(requestPermission).not.toHaveBeenCalled();
+    expect(serviceWorker.register).not.toHaveBeenCalled();
+    expect(progress.pushSubscriptions()).toEqual([]);
+  });
   it("does not ask while the app is constructed or reading existing state", async () => {
     const { port } = createPort();
 
@@ -120,7 +133,7 @@ describe("browser review reminders", () => {
     expect(port.snapshot()).toEqual({
       kind: "subscribed",
       endpoint: "https://push.example/device",
-      serverConnected: false,
+      serverConnected: true,
     });
     expect(progress.pushSubscriptions()).toHaveLength(1);
   });

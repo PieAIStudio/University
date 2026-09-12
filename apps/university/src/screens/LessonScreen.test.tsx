@@ -412,7 +412,7 @@ describe("the shared lesson reader", () => {
       "2",
     );
     expect(container.querySelector("[role='progressbar']")?.getAttribute("aria-valuetext")).toBe(
-      "2/3",
+      "阅读 2/3 段",
     );
   });
 });

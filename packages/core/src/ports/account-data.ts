@@ -78,7 +78,7 @@ export const DEFAULT_ACCOUNT_PREFERENCES: AccountPreferences = {
   foreignLanguageMode: false,
   detailMode: "standard",
   soundEnabled: true,
-  sharesPresence: true,
+  sharesPresence: false,
   speechQuality: "auto",
   theme: "system",
   avatarRecipe: null,
@@ -147,7 +147,8 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       typeof value.foreignLanguageMode === "boolean" ? value.foreignLanguageMode : false,
     detailMode: value.detailMode === "all" ? "all" : "standard",
     soundEnabled: typeof value.soundEnabled === "boolean" ? value.soundEnabled : true,
-    sharesPresence: typeof value.sharesPresence === "boolean" ? value.sharesPresence : true,
+    // Preserve an explicit choice, not the old implicit true default.
+    sharesPresence: value.sharesPresence === true && Boolean(updatedAt.sharesPresence),
     speechQuality:
       value.speechQuality === "local" ||
       value.speechQuality === "online" ||

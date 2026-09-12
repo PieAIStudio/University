@@ -1035,6 +1035,17 @@
   color: var(--game-ui-text-muted);
   font-size: 0.82rem;
 }
+
+.answer-field__draft-status {
+  margin: -6px 0 0;
+  color: var(--game-ui-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.answer-field__draft-status--warning {
+  color: color-mix(in srgb, var(--game-ui-warning, #f6c177) 82%, white);
+}
 .word-list {
   padding: 16px 18px;
   border: 1px solid var(--campus-rule, var(--game-ui-border-subtle, rgb(246 231 211 / 14%)));

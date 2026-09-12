@@ -20,6 +20,7 @@ function attempt(
     readonly exerciseId?: string;
     readonly contentRevision?: number;
     readonly locator?: Partial<typeof LOCATOR>;
+    readonly outcome?: "pass" | "fail" | "undecided";
   },
 ): ExerciseAttemptRecord {
   const hostGrade =
@@ -32,6 +33,7 @@ function attempt(
           host: "test",
           learnerAnswer: options.answer,
           occurredAt: options.occurredAt,
+          ...(options.outcome ? { outcome: options.outcome } : {}),
         };
   return {
     commandId,
@@ -135,6 +137,21 @@ describe("mistakesOf", () => {
             occurredAt: "2026-08-26T09:00:00.000Z",
             answer: "还没判",
             passed: null,
+          }),
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  it("does not turn an explicit undecided verdict into a mistake", () => {
+    expect(
+      mistakesOf(
+        documentOf(
+          attempt("undecided", {
+            occurredAt: "2026-08-26T09:00:00.000Z",
+            answer: "这是一个合理但不能靠字符串确认的解释",
+            passed: false,
+            outcome: "undecided",
           }),
         ),
       ),

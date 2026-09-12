@@ -108,29 +108,31 @@ describe("LeagueScreen", () => {
     No invented opponents, ever. A leaderboard the learner later finds out was
     fictional discredits every real number sitting next to it.
   */
-  it("says plainly that there is nobody to rank against yet", () => {
+  it("describes personal growth without an empty leaderboard disclaimer", () => {
     const markup = renderToStaticMarkup(<LeagueScreen document={emptyProgress()} now={NOW} />);
-    expect(markup).toContain("还没有别人可以比");
+    expect(markup).toContain("这里记录你自己的积累");
+    expect(markup).toContain("data-growth-details");
   });
 
-  it("drops that notice once there is an account", () => {
+  it("does not invent a real leaderboard after sign-in", () => {
     const markup = renderToStaticMarkup(
       <LeagueScreen document={emptyProgress()} now={NOW} signedIn />,
     );
     expect(markup).not.toContain("还没有别人可以比");
+    expect(markup).toContain("这里记录你自己的积累");
   });
 });
 
 describe("PlansScreen", () => {
   it("states in plain language that courses stay free while AI is gated by plan and quota", () => {
     const markup = renderToStaticMarkup(<PlansScreen />);
-    expect(markup).toContain("所有已发布课程都能免费学");
-    expect(markup).toContain("每天有少量 AI 批改尝鲜额度");
-    expect(markup).toContain("用完今天停止，明天恢复");
+    expect(markup).toContain("全部课程免费学");
+    expect(markup).toContain("绑定邮箱，每天体验 AI 批改");
+    expect(markup).toContain("AI 批改按次另计");
     // The lede describes what the account layer actually delivers today. The
     // paid grading right is deliberately absent here as well as on the card;
     // see the guard below for why.
-    expect(markup).toContain("会员买的是账号那一半");
+    expect(markup).toContain("学习进度、复习卡同步");
     expect(markup).toContain("免费");
     expect(markup).not.toContain("当前基线");
     expect(markup).not.toContain("当前权益基线");
@@ -151,10 +153,11 @@ describe("PlansScreen", () => {
     // provider is connected, and the purchase control says so itself rather
     // than letting the reader find out by clicking.
     const markup = renderToStaticMarkup(<PlansScreen />);
-    expect(markup).toContain("不受每日免费尝鲜额度封顶");
-    expect(markup).toContain("开放式辅导按用量计费");
-    expect(markup).toContain("换手机也不用从头来");
-    expect(markup).toContain("三台设备");
+    expect(markup).toContain("不受每日免费额度限制");
+    expect(markup).not.toContain("开放式辅导按用量计费");
+    expect(markup).not.toContain("尚未开放");
+    expect(markup).toContain("手机、电脑、平板接着学");
+    expect(markup).toContain("3 台设备");
     // Still not claimed: a wording that promises a shape of feedback the
     // service does not guarantee.
     expect(markup).not.toContain("中文评语");
@@ -167,7 +170,8 @@ describe("PlansScreen", () => {
     expect(markup).toContain("$12.42");
     // The static fallback has no account, so it states the first required step
     // instead of making a payment-shaped promise.
-    expect(markup).toContain("先登录");
+    expect(markup).not.toContain("会员尚未开售");
+    expect(markup).toContain("升级会员");
     expect(markup).not.toContain("待产品确认");
     expect(markup).not.toContain('disabled=""');
   });

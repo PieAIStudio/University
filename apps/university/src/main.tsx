@@ -36,6 +36,7 @@ import "@pieai/university-ui/loading/loading-trivia.css";
 import "@pieai/university-ui/loading/recovery-state.css";
 import "@pieai/university-ui/markdown/markdown-content.css";
 import "@pieai/university-ui/navigation/university-shell.css";
+import "@pieai/university-ui/onboarding/welcome-experience.css";
 import "@pieai/university-ui/path/course-route-quiz.css";
 import "@pieai/university-ui/path/path-cards.css";
 import "@pieai/university-ui/practice/practice.css";

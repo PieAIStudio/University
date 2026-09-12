@@ -7,7 +7,9 @@
  */
 import {
   DETERMINISTIC_GRADER_HOST,
+  exerciseGradeOutcome,
   gradingAttemptText,
+  lessonRefKey,
   METERED_GRADING_COST_POWER_UNITS,
   gradeDeterministically,
   proseQuote,
@@ -78,10 +80,18 @@ export function createOnlineGradingPort(options: {
     },
 
     async submitExercise(input) {
+      const accountScope = progress?.syncState().userId ?? null;
+      const saveResult = (result: ExerciseAttemptResult) => {
+        if ((progress?.syncState().userId ?? null) !== accountScope) {
+          throw new Error("账号已切换。这次回答没有写入新账号，原来的输入仍保留在原账号中。");
+        }
+        return recordAttempt(progress, input, result);
+      };
       const lesson = lessonAt(input.locator);
       const exercise = lesson?.exercises.find((item) => item.id === input.exerciseId);
-      const count = (attempts.get(input.exerciseId) ?? 0) + 1;
-      attempts.set(input.exerciseId, count);
+      const attemptKey = `${accountScope ?? "local-guest"}\u0000${lessonRefKey(input.locator)}\u0000${input.exerciseId}\u0000${input.contentRevision}`;
+      const count = (attempts.get(attemptKey) ?? 0) + 1;
+      attempts.set(attemptKey, count);
       const verdict = gradeDeterministically(
         input.answer,
         exercise?.answerKey as AnswerKey | undefined,
@@ -96,6 +106,7 @@ export function createOnlineGradingPort(options: {
           maxScore: 1,
           awaitingHostGrade: false,
           hostGrade: {
+            outcome: "pass",
             passed: true,
             evaluation: "答对了。",
             extensions: [],
@@ -104,8 +115,7 @@ export function createOnlineGradingPort(options: {
             occurredAt,
           },
         };
-        recordAttempt(progress, input, result);
-        return result;
+        return saveResult(result);
       }
 
       if (verdict.outcome === "undecided" && exercise?.prompt && input.allowMetered === true) {
@@ -115,16 +125,21 @@ export function createOnlineGradingPort(options: {
             gradingUrl,
             input,
             prompt: exercise.prompt,
-            readAccessToken,
+            readAccessToken: async () => {
+              const token = await readAccessToken();
+              // Check before sending, not only before storing the response.
+              // A token resolved during account switching may belong to someone else.
+              if ((progress?.syncState().userId ?? null) !== accountScope) {
+                throw new Error("账号已切换。这次回答没有发送，请在原账号中继续。");
+              }
+              return token;
+            },
             attemptCount: count,
           });
-          recordAttempt(progress, input, result);
-          return result;
+          return saveResult(result);
         } catch (error) {
           if (error instanceof MeteredRequestDeclinedError) {
-            const evaluation = lesson
-              ? failCopy(lesson, exercise?.prompt)
-              : "再想一下，答案就在上面这段里。";
+            const evaluation = undecidedCopy(lesson, exercise?.prompt, verdict.reason);
             const result: ExerciseAttemptResult = {
               correct: false,
               attemptCount: count,
@@ -132,6 +147,7 @@ export function createOnlineGradingPort(options: {
               maxScore: 1,
               awaitingHostGrade: false,
               hostGrade: {
+                outcome: "undecided",
                 passed: false,
                 evaluation,
                 extensions: [],
@@ -142,8 +158,7 @@ export function createOnlineGradingPort(options: {
               meteredEligible: false,
               meteredExplanation: error.explanation,
             };
-            recordAttempt(progress, input, result);
-            return result;
+            return saveResult(result);
           }
           // Tier two is an enhancement. A missing account, configuration,
           // balance or service must leave the learner with the free clue from
@@ -154,9 +169,7 @@ export function createOnlineGradingPort(options: {
 
       const evaluation =
         verdict.outcome === "undecided"
-          ? lesson
-            ? failCopy(lesson, exercise?.prompt)
-            : verdict.reason
+          ? undecidedCopy(lesson, exercise?.prompt, verdict.reason)
           : lesson
             ? failCopy(lesson, exercise?.prompt)
             : "再想一下，答案就在上面这段里。";
@@ -167,6 +180,7 @@ export function createOnlineGradingPort(options: {
         maxScore: 1,
         awaitingHostGrade: false,
         hostGrade: {
+          outcome: verdict.outcome,
           passed: false,
           evaluation,
           extensions: [],
@@ -176,8 +190,7 @@ export function createOnlineGradingPort(options: {
         },
         meteredEligible: verdict.outcome === "undecided" && Boolean(exercise?.prompt),
       };
-      recordAttempt(progress, input, result);
-      return result;
+      return saveResult(result);
     },
   };
 }
@@ -186,7 +199,7 @@ function recordAttempt(
   progress: ProgressPort | undefined,
   input: Parameters<GradingPort["submitExercise"]>[0],
   result: ExerciseAttemptResult,
-): void {
+): ExerciseAttemptResult {
   progress?.recordExerciseAttempt({
     commandId: input.commandId,
     locator: input.locator,
@@ -198,6 +211,7 @@ function recordAttempt(
     hostGrade: result.hostGrade ?? null,
     occurredAt: result.hostGrade?.occurredAt ?? new Date().toISOString(),
   });
+  return { ...result, answerStored: progress?.localSaveState?.() === "saved" };
 }
 
 async function submitToMeteredService(options: {
@@ -235,13 +249,14 @@ async function submitToMeteredService(options: {
     if (!body.hostGrade) {
       throw new Error("AI 语义批改服务返回了不完整的结果。");
     }
+    const hostGrade = withExplicitOutcome(body.hostGrade);
     return {
       correct: false,
       attemptCount: options.attemptCount,
-      score: body.hostGrade.passed ? 1 : 0,
+      score: exerciseGradeOutcome(hostGrade) === "pass" ? 1 : 0,
       maxScore: 1,
       awaitingHostGrade: false,
-      hostGrade: body.hostGrade,
+      hostGrade,
       meteredFunding: body.funding,
       ...(body.balance ? { meteredBalance: body.balance } : {}),
       ...(body.freeQuota ? { meteredFreeQuota: body.freeQuota } : {}),
@@ -256,6 +271,12 @@ async function submitToMeteredService(options: {
     }
     throw new Error("AI 语义批改服务暂时不可用，请稍后重试。");
   }
+}
+
+function withExplicitOutcome(
+  grade: MeteredGradingResponse["hostGrade"],
+): MeteredGradingResponse["hostGrade"] {
+  return { ...grade, outcome: exerciseGradeOutcome(grade) };
 }
 
 async function readMeteredResponse(response: Response): Promise<MeteredGradingResponse> {
@@ -433,4 +454,19 @@ function failCopy(lesson: Lesson, prompt: string | undefined): string {
     ? `\n\n出自真实项目：${evidence.sourcePath} 第 ${evidence.lineStart}–${evidence.lineEnd} 行`
     : "";
   return `再看一眼你刚才读过的这句：\n\n> ${quoted}${source}`;
+}
+
+function undecidedCopy(
+  lesson: Lesson | undefined,
+  prompt: string | undefined,
+  reason: string,
+): string {
+  const hint = lesson ? failCopy(lesson, prompt) : "你可以补充更多理由，再试一次。";
+  return [
+    "这次暂时无法判断对错。你的答案已经提交，但只靠字面比对不能可靠判断这类解释。",
+    "你可以补充或改写答案、查看下面的提示，或者自行选择页面提供的 AI 评估；也可以先继续下一节。",
+    hint || reason,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }

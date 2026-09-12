@@ -1,0 +1,4848 @@
+{
+  "name": "desktop-catalog",
+  "capturedAt": "2026-09-09T15:45:30.347Z",
+  "browser": "153.0.8010.36",
+  "mode": "delivery production",
+  "sourceCommit": "cea753e",
+  "query": "none",
+  "freshContext": false,
+  "theme": "light",
+  "account": "fresh guest; backend public configuration absent in this worktree",
+  "url": "http://127.0.0.1:21898/catalog",
+  "title": "University",
+  "visible": "visible",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1
+  },
+  "bodyWidth": 1440,
+  "text": "University\n◀\n收起\n学习\n图鉴\n练习\n排行榜\n任务\n会员\n个人档案\n更多\nLV. 1\n0 / 35 XP\n提意见\n在地图上看\n目录\n\n4 个世界里的课，按先修关系排。没有先后的就平铺。\n\n4 个世界 · 37 门课 · 112 单元 · 463 节\n\n认识 AI，从这里开始 1 门课\nL1\nAI 到底是什么\n正在学\n0/61 节\n你早就在用 AI 了 5 节\n手机怎么一眼就认出是你\n现象\n正在学\n相册里搜「狗」，它怎么找到的\n现象\n为什么下一个视频正好是你想看的\n溯源\n游戏里的敌人算不算 AI\n对比\n怎么一眼看出「这是规则，不是学的」\n决策\n电脑眼里全是数字 5 节\n不用学也能显得聪明 4 节\n什么叫学会了 5 节\n最小的那个零件 5 节\n让电脑看见 7 节\n会画画的 AI 5 节\n让电脑读懂话 10 节\n会自己试的 AI 3 节\n它会犯错，也会不公平 5 节\n那它到底算不算聪明 4 节\n还有什么，以及接下来 3 节\n学会用 AI 做应用 4 门课\n学会用 AI 做网站 1 门课\n学会用 AI 做游戏 31 门课\n认识 AI，从这里开始\n▾\n0",
+  "headings": [
+    "目录",
+    "认识 AI，从这里开始 1 门课",
+    "AI 到底是什么",
+    "学会用 AI 做应用 4 门课",
+    "用 AI 把一个真实开源项目跑起来",
+    "把这个抠图应用改成你的",
+    "当项目大到读不完",
+    "把搜图改成搜你自己的相册",
+    "学会用 AI 做网站 1 门课",
+    "从零做一个产品官网",
+    "学会用 AI 做游戏 31 门课",
+    "《在开始之前：App、代码、和你》",
+    "出事的时候只有你",
+    "指挥 AI 干活",
+    "《认识地形》",
+    "《读懂一行代码》",
+    "《读懂一段逻辑》",
+    "《数据从哪来》",
+    "《等待与失败》",
+    "《界面是怎么长出来的》",
+    "《怎么知道没写错》",
+    "《代码之外》",
+    "契约与防漂移",
+    "测试策略：把钱花在刀刃上",
+    "状态与过程：半年后还改得动",
+    "一套代码，多端交付",
+    "身份、账号、和「你是谁」",
+    "双语不是翻译表",
+    "谁在线，谁在打字",
+    "同一个能力，三种实现",
+    "用户那边出错时，产品怎么自己爬起来",
+    "先定契约，再接模型",
+    "先登记，再上线",
+    "给人一个回来的理由",
+    "产品的「时刻」是怎么搭出来的",
+    "导航是产品结构的外化",
+    "一个人怎么替代一个 QA 团队",
+    "一次对话到底花多少钱",
+    "从不可靠的模型里拿到可靠结构",
+    "351 个素材怎么进产品而不失控",
+    "怎么知道我的 AI 够好",
+    "让 AI 角色像同一个人"
+  ],
+  "controls": [
+    {
+      "tag": "BUTTON",
+      "text": "◀\n收起",
+      "href": null,
+      "disabled": false,
+      "x": 216,
+      "y": 37,
+      "w": 32,
+      "h": 32
+    },
+    {
+      "tag": "A",
+      "text": "学习",
+      "href": "/",
+      "disabled": false,
+      "x": 33,
+      "y": 93,
+      "w": 223,
+      "h": 42
+    },
+    {
+      "tag": "A",
+      "text": "图鉴",
+      "href": "/library",
+      "disabled": false,
+      "x": 33,
+      "y": 139,
+      "w": 223,
+      "h": 42
+    },
+    {
+      "tag": "A",
+      "text": "练习",
+      "href": "/practice",
+      "disabled": false,
+      "x": 33,
+      "y": 185,
+      "w": 223,
+      "h": 42
+    },
+    {
+      "tag": "A",
+      "text": "排行榜",
+      "href": "/league",
+      "disabled": false,
+      "x": 33,
+      "y": 231,
+      "w": 223,
+      "h": 42
+    },
+    {
+      "tag": "A",
+      "text": "任务",
+      "href": "/quests",
+      "disabled": false,
+      "x": 33,
+      "y": 277,
+      "w": 223,
+      "h": 42
+    },
+    {
+      "tag": "A",
+      "text": "会员",
+      "href": "/plans",
+      "disabled": false,
+      "x": 33,
+      "y": 323,
+      "w": 223,
+      "h": 42
+    },
+    {
+      "tag": "A",
+      "text": "个人档案",
+      "href": "/me",
+      "disabled": false,
+      "x": 33,
+      "y": 369,
+      "w": 223,
+      "h": 42
+    },
+    {
+      "tag": "BUTTON",
+      "text": "更多",
+      "href": null,
+      "disabled": false,
+      "x": 33,
+      "y": 415,
+      "w": 223,
+      "h": 42
+    },
+    {
+      "tag": "BUTTON",
+      "text": "登录，把这个头像换成你自己的",
+      "href": null,
+      "disabled": false,
+      "x": 105.5,
+      "y": 665.609375,
+      "w": 78,
+      "h": 78
+    },
+    {
+      "tag": "BUTTON",
+      "text": "提意见",
+      "href": null,
+      "disabled": false,
+      "x": 33,
+      "y": 825,
+      "w": 223,
+      "h": 42
+    },
+    {
+      "tag": "BUTTON",
+      "text": "在地图上看",
+      "href": null,
+      "disabled": false,
+      "x": 336.5,
+      "y": 52,
+      "w": 80,
+      "h": 22
+    },
+    {
+      "tag": "A",
+      "text": "手机怎么一眼就认出是你\n现象\n正在学",
+      "href": "/ai-foundations/what-is-ai-really/you-already-use-it/phone-knows-your-face",
+      "disabled": false,
+      "x": 339.5,
+      "y": 364.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "相册里搜「狗」，它怎么找到的\n现象",
+      "href": "/ai-foundations/what-is-ai-really/you-already-use-it/search-dog-in-photos",
+      "disabled": false,
+      "x": 339.5,
+      "y": 407.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "为什么下一个视频正好是你想看的\n溯源",
+      "href": "/ai-foundations/what-is-ai-really/you-already-use-it/why-the-next-video-fits",
+      "disabled": false,
+      "x": 339.5,
+      "y": 450.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "游戏里的敌人算不算 AI\n对比",
+      "href": "/ai-foundations/what-is-ai-really/you-already-use-it/are-game-enemies-ai",
+      "disabled": false,
+      "x": 339.5,
+      "y": 493.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "怎么一眼看出「这是规则，不是学的」\n决策",
+      "href": "/ai-foundations/what-is-ai-really/you-already-use-it/rules-versus-learned",
+      "disabled": false,
+      "x": 339.5,
+      "y": 536.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/everything-is-numbers/computer-only-compares",
+      "disabled": false,
+      "x": 339.5,
+      "y": 621.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/everything-is-numbers/picture-is-a-grid-of-numbers",
+      "disabled": false,
+      "x": 339.5,
+      "y": 664.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/everything-is-numbers/colour-is-three-numbers",
+      "disabled": false,
+      "x": 339.5,
+      "y": 707.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/everything-is-numbers/sound-is-numbers-too",
+      "disabled": false,
+      "x": 339.5,
+      "y": 750.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/everything-is-numbers/words-become-numbers",
+      "disabled": false,
+      "x": 339.5,
+      "y": 793.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/clever-without-learning/a-pile-of-if-then",
+      "disabled": false,
+      "x": 339.5,
+      "y": 663.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/clever-without-learning/expert-system-asks-you",
+      "disabled": false,
+      "x": 339.5,
+      "y": 706.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/clever-without-learning/rules-run-out",
+      "disabled": false,
+      "x": 339.5,
+      "y": 749.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/clever-without-learning/knowledge-as-a-web",
+      "disabled": false,
+      "x": 339.5,
+      "y": 792.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/what-learning-means/teach-by-examples",
+      "disabled": false,
+      "x": 339.5,
+      "y": 705.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/what-learning-means/memorised-or-learned",
+      "disabled": false,
+      "x": 339.5,
+      "y": 748.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/what-learning-means/exam-cannot-use-old-questions",
+      "disabled": false,
+      "x": 339.5,
+      "y": 791.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/what-learning-means/how-wrong-is-wrong",
+      "disabled": false,
+      "x": 339.5,
+      "y": 834.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/what-learning-means/more-examples-usually-help",
+      "disabled": false,
+      "x": 339.5,
+      "y": 877.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/the-smallest-part/one-neuron-is-arithmetic",
+      "disabled": false,
+      "x": 339.5,
+      "y": 747.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/the-smallest-part/weights-are-how-much-it-cares",
+      "disabled": false,
+      "x": 339.5,
+      "y": 790.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/the-smallest-part/stack-them-into-a-layer",
+      "disabled": false,
+      "x": 339.5,
+      "y": 833.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/the-smallest-part/deeper-sees-more",
+      "disabled": false,
+      "x": 339.5,
+      "y": 876.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/the-smallest-part/hot-and-cold-correction",
+      "disabled": false,
+      "x": 339.5,
+      "y": 919.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/teaching-it-to-see/find-the-edges-first",
+      "disabled": false,
+      "x": 339.5,
+      "y": 789.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/teaching-it-to-see/a-filter-is-a-small-window",
+      "disabled": false,
+      "x": 339.5,
+      "y": 832.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/teaching-it-to-see/edges-then-eyes-then-face",
+      "disabled": false,
+      "x": 339.5,
+      "y": 875.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/teaching-it-to-see/borrow-trained-eyes",
+      "disabled": false,
+      "x": 339.5,
+      "y": 918.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/teaching-it-to-see/train-your-own-in-browser",
+      "disabled": false,
+      "x": 339.5,
+      "y": 961.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/teaching-it-to-see/what-it-gets-wrong",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1004.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/teaching-it-to-see/find-every-cat-and-box-it",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1047.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/ai-that-draws/noise-becomes-a-picture",
+      "disabled": false,
+      "x": 339.5,
+      "y": 831.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/ai-that-draws/what-a-prompt-really-says",
+      "disabled": false,
+      "x": 339.5,
+      "y": 874.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/ai-that-draws/two-ais-competing",
+      "disabled": false,
+      "x": 339.5,
+      "y": 917.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/ai-that-draws/who-owns-what-it-draws",
+      "disabled": false,
+      "x": 339.5,
+      "y": 960.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/ai-that-draws/turn-your-photo-into-a-painting",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1003.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/machines-reading-words/word-to-number-again",
+      "disabled": false,
+      "x": 339.5,
+      "y": 873.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/machines-reading-words/close-meanings-close-numbers",
+      "disabled": false,
+      "x": 339.5,
+      "y": 916.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/machines-reading-words/order-changes-meaning",
+      "disabled": false,
+      "x": 339.5,
+      "y": 959.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/machines-reading-words/where-it-looks-when-reading",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1002.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/machines-reading-words/always-guessing-next-word",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1045.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/machines-reading-words/why-it-makes-things-up",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1088.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/machines-reading-words/how-to-ask-it-well",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1131.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/machines-reading-words/does-it-remember-the-beginning",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1174.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/machines-reading-words/two-examples-and-it-gets-it",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1217.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/machines-reading-words/words-and-pictures-in-one-place",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1260.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/learning-by-trying/learning-by-playing",
+      "disabled": false,
+      "x": 339.5,
+      "y": 915.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/learning-by-trying/reward-written-wrong",
+      "disabled": false,
+      "x": 339.5,
+      "y": 958.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/learning-by-trying/let-answers-evolve",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1001.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/it-gets-things-wrong/it-learns-what-it-was-shown",
+      "disabled": false,
+      "x": 339.5,
+      "y": 957.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/it-gets-things-wrong/who-was-missing-from-the-data",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1000.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/it-gets-things-wrong/it-does-not-know-what-it-does-not-know",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1043.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/it-gets-things-wrong/what-should-not-be-decided-by-ai",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1086.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/it-gets-things-wrong/where-did-your-photo-go",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1129.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/so-is-it-really-smart/what-counts-as-smart",
+      "disabled": false,
+      "x": 339.5,
+      "y": 999.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/so-is-it-really-smart/will-it-become-a-person",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1042.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/so-is-it-really-smart/people-said-this-before",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1085.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/so-is-it-really-smart/two-ways-to-make-it-smart",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1128.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/what-comes-next/things-this-course-skipped",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1041.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/what-comes-next/how-to-keep-learning",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1084.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/ai-foundations/what-is-ai-really/what-comes-next/what-you-can-now-explain",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1127.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/run-a-real-project-with-ai/what-is-a-doing-ai/chat-ai-versus-doing-ai",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1285.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/run-a-real-project-with-ai/what-is-a-doing-ai/one-line-install",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1328.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/run-a-real-project-with-ai/what-is-a-doing-ai/first-sentence-to-an-agent",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1371.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/run-a-real-project-with-ai/what-is-a-doing-ai/two-tools-same-sentence",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1414.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/run-a-real-project-with-ai/what-is-a-doing-ai/it-asks-before-it-touches",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1457.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/run-a-real-project-with-ai/what-is-a-doing-ai/say-once-it-does-the-rest",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1500.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/make-the-cutout-app-yours/read-the-hundred-lines/three-things-a-page-is-made-of",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1369.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/make-the-cutout-app-yours/read-the-hundred-lines/the-first-line-brings-the-ai-in",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1412.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/make-the-cutout-app-yours/read-the-hundred-lines/how-code-grabs-a-thing-on-the-page",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1455.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/make-the-cutout-app-yours/read-the-hundred-lines/what-happens-after-you-pick-a-photo",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1498.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/make-the-cutout-app-yours/read-the-hundred-lines/the-model-returns-a-map-not-a-picture",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1541.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/make-the-cutout-app-yours/read-the-hundred-lines/where-transparency-comes-from",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1584.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/when-a-project-is-too-big-to-read/do-not-read-it-all/this-one-does-not-fit-in-your-head",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1453.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/when-a-project-is-too-big-to-read/do-not-read-it-all/you-are-not-supposed-to-read-it-all",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1496.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/when-a-project-is-too-big-to-read/do-not-read-it-all/ask-where-not-what",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1539.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/when-a-project-is-too-big-to-read/do-not-read-it-all/why-one-piece-gets-its-own-file",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1582.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/search-your-own-photos/how-it-understands-a-sentence/how-does-it-find-a-dog-on-a-beach",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1537.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/search-your-own-photos/how-it-understands-a-sentence/a-sentence-turned-into-numbers",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1580.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/search-your-own-photos/how-it-understands-a-sentence/how-close-is-close",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1623.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/search-your-own-photos/how-it-understands-a-sentence/those-are-not-your-photos",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1666.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/browser-ai/search-your-own-photos/how-it-understands-a-sentence/what-it-would-take-to-use-your-own",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1709.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/set-the-direction/who-the-site-is-for",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1301.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/set-the-direction/frontend-is-what-you-see",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1344.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/set-the-direction/one-job-per-block",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1387.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/set-the-direction/order-by-visitor-questions",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1430.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/set-the-direction/reusable-visual-rules",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1473.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/write-the-page/hero-one-sentence-one-action",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1343.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/write-the-page/link-or-button",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1386.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/write-the-page/group-features-by-task",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1429.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/write-the-page/one-complete-example",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1472.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/write-the-page/card-or-list",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1515.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/write-the-page/only-checkable-evidence",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1558.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/make-it-usable/describe-spacing-to-ai",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1385.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/make-it-usable/hover-is-not-active",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1428.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/make-it-usable/keyboard-needs-focus",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1471.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/make-it-usable/smallest-waitlist-form",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1514.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/make-it-usable/errors-stay-beside-the-field",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1557.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/make-it-usable/phone-is-not-shrunk-desktop",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1600.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/hand-it-over/repeatable-acceptance",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1427.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/general/product-website/hand-it-over/pasteable-agent-request",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1470.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-an-app/you-already-know-apps",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1373.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-an-app/app-is-a-pile-of-files",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1416.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-an-app/empty-box-called-root",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1459.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-an-app/same-product-many-shells",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1502.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-an-app/product-sentence-and-gate",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1545.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-an-app/from-icon-to-files-journey",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1588.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-an-app/why-so-many-files-preview",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1631.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-code/code-is-text",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1415.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-code/a-three-line-function",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1458.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-code/comments-are-for-humans",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1501.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-code/import-means-borrow",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1544.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-code/export-means-share",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1587.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-code/data-files-are-not-only-code",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1630.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-code/who-turns-text-into-motion",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1673.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/what-is-code/types-are-notes-for-machines",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1716.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/files-and-folders/file-vs-folder",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1457.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/files-and-folders/src-is-source-room",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1500.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/files-and-folders/same-name-different-folders",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1543.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/files-and-folders/styles-split-across-files",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1586.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/files-and-folders/config-files-are-files-too",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1629.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/files-and-folders/gitignore-is-a-do-not-pack-list",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1672.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/files-and-folders/package-json-as-directory-of-parts",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1715.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/who-runs-it/browser-reads-the-page",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1499.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/who-runs-it/vite-dev-server",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1542.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/who-runs-it/build-fills-dist",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1585.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/who-runs-it/node-runs-tool-scripts",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1628.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/who-runs-it/vercel-hosts-web",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1671.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/who-runs-it/runtime-detects-host",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1714.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/who-runs-it/pipeline-one-picture",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1757.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/how-change-happens/save-is-the-first-action",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1541.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/how-change-happens/one-line-can-steer-behavior",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1584.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/how-change-happens/env-example-steers-backends",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1627.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/how-change-happens/git-remembers-why-ignore-matters",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1670.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/how-change-happens/verify-defines-done",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1713.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/how-change-happens/hooks-catch-before-history",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1756.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/talking-to-machines/what-is-a-terminal",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1583.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/talking-to-machines/commands-are-precise-sentences",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1626.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/talking-to-machines/install-then-dev",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1669.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/talking-to-machines/why-not-only-buttons",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1712.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/talking-to-machines/scripts-are-nicknames",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1755.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-before-zero/talking-to-machines/ready-for-terrain",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1798.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/solo-operations/gates-before-you-push/a-hook-instead-of-a-habit",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1457.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/solo-operations/gates-before-you-push/a-glob-decides-which-gate",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1500.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/solo-operations/gates-before-you-push/skipping-quietly-outside-a-worktree",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1543.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/solo-operations/gates-before-you-push/local-gate-and-remote-gate",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1586.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/solo-operations/is-it-still-alive/a-probe-needs-a-deadline",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1499.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/solo-operations/is-it-still-alive/keep-a-snippet-not-the-body",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1542.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/solo-operations/is-it-still-alive/cheap-probe-expensive-round",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1585.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/solo-operations/is-it-still-alive/point-the-probe-somewhere-else",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1628.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/solo-operations/from-a-session-to-a-todo/one-row-one-observation",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1541.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/solo-operations/from-a-session-to-a-todo/five-classes-and-a-tiebreak",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1584.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/solo-operations/from-a-session-to-a-todo/only-you-can-call-it-fun",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1627.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/solo-operations/from-a-session-to-a-todo/what-must-never-be-copied",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1670.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/directing-ai-agents/what-the-agent-reads-first/readme-is-not-the-startup-path",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1541.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/directing-ai-agents/what-the-agent-reads-first/a-reading-order-is-a-contract",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1584.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/directing-ai-agents/what-the-agent-reads-first/recall-before-you-touch-anything",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1627.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/directing-ai-agents/a-loop-needs-a-stop/a-loop-without-a-stop-is-a-bill",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1583.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/directing-ai-agents/a-loop-needs-a-stop/ask-before-the-irreversible",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1626.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/directing-ai-agents/a-loop-needs-a-stop/two-loops-two-ways-to-stop",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1669.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/directing-ai-agents/what-stays-yours/full-authority-and-four-gates",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1625.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/directing-ai-agents/what-stays-yours/a-machine-cannot-say-it-is-fun",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1668.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/directing-ai-agents/what-stays-yours/a-budget-is-part-of-the-grant",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1711.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/directing-ai-agents/what-stays-yours/pin-a-skill-by-its-hash",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1754.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-terrain/what-a-project-is/package-json-is-an-id-card",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1649.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-terrain/what-a-project-is/scripts-are-the-doors",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1692.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-terrain/what-a-project-is/dependencies-vs-dev",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1735.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-terrain/what-a-project-is/two-tsconfigs",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1778.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-terrain/what-a-project-is/gitignore-is-a-boundary",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1821.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-terrain/how-it-runs/the-first-page",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1691.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-terrain/how-it-runs/dev-server-vs-build",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1734.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-terrain/how-it-runs/one-rewrite-rule",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1777.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-terrain/how-it-runs/same-dist-in-a-native-shell",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1820.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-terrain/configuration-and-commits/env-example-not-env",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1733.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-terrain/configuration-and-commits/what-done-means",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1776.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-terrain/configuration-and-commits/a-commit-is-a-stamp",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1819.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-reading-code/a-function/export-makes-public",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1757.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-reading-code/a-function/params-and-return",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1800.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-reading-code/a-function/rest-params-and-union",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1843.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-reading-code/a-function/filter-and-join",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1886.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-reading-code/a-function/default-param-and-noop",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1929.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-reading-code/naming-things/type-alias-and-union",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1799.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-reading-code/naming-things/function-type-and-record",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1842.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-reading-code/naming-things/import-type-and-coalesce",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1885.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-reading-code/naming-things/owns-does-not-own",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1928.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-reading-code/files-talking/import-export-handshake",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1841.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-reading-code/files-talking/barrel-and-why-split",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1884.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-logic/branching/a-fork-in-the-road",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1865.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-logic/branching/order-is-the-rule",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1908.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-logic/branching/return-early",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1951.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-logic/branching/guarding-bad-input",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1994.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-logic/branching/and-or-not",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2037.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-logic/collections/a-list-and-a-loop",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1907.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-logic/collections/two-passes",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1950.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-logic/collections/a-map-is-an-index",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1993.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-logic/collections/folding-a-list",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2036.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-logic/collections/sorting",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2079.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-logic/naming-the-cases/a-closed-set",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1949.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-logic/naming-the-cases/derive-do-not-repeat",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1992.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-logic/naming-the-cases/narrowing",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2035.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-data/shared-memory/why-not-usestate",
+      "disabled": false,
+      "x": 339.5,
+      "y": 1973.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-data/shared-memory/a-store-is-values-plus-setters",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2016.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-data/shared-memory/replace-do-not-mutate",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2059.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-data/shared-memory/reset-is-a-feature",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2102.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-data/shared-memory/sharing-the-initial-values",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2145.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-data/data-from-a-server/a-row-is-not-an-object",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2015.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-data/data-from-a-server/three-tables-one-screen",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2058.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-data/data-from-a-server/everything-might-be-missing",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2101.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-data/data-from-a-server/where-the-keys-come-from",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2144.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-data/data-from-a-server/data-and-error-together",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2187.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-data/data-that-arrives-by-itself/push-instead-of-pull",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2057.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-data/data-that-arrives-by-itself/a-name-on-the-wire-is-a-promise",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2100.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-data/data-that-arrives-by-itself/from-the-wire-to-the-screen",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2143.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-async/waiting/a-promise-is-a-receipt",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2081.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-async/waiting/await-means-wait-here",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2124.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-async/waiting/same-shape-different-speed",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2167.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-async/waiting/racing-a-clock",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2210.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-async/failing/try-and-catch",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2123.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-async/failing/failure-as-a-value",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2166.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-async/failing/an-empty-catch-owes-you-a-reason",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2209.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-async/failing/throw-or-absorb",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2252.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-async/failing/not-every-error-is-an-error",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2295.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-async/both-at-once/the-shape-of-a-real-call",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2165.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-async/both-at-once/a-way-back",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2208.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-async/both-at-once/what-you-must-check",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2251.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-ui/a-component-is-a-function/jsx-is-not-html",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2189.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-ui/a-component-is-a-function/props-are-parameters",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2232.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-ui/a-component-is-a-function/children-is-a-prop-too",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2275.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-ui/a-component-is-a-function/curly-braces-are-an-escape-hatch",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2318.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-ui/a-component-is-a-function/compute-then-return",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2361.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-ui/composition/rest-props",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2231.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-ui/composition/variants",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2274.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-ui/composition/render-nothing-sometimes",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2317.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-ui/composition/accessibility-in-two-attributes",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2360.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-ui/state-and-effects/state-is-memory",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2273.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-ui/state-and-effects/ref-is-a-pocket",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2316.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-ui/state-and-effects/cleanup-is-not-optional",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2359.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-quality/a-test-is-a-sentence/describe-it-expect",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2297.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-quality/a-test-is-a-sentence/pinning-a-promise",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2340.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-quality/a-test-is-a-sentence/where-tests-live",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2383.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-quality/a-test-is-a-sentence/test-the-edges",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2426.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-quality/a-test-is-a-sentence/fake-clocks-and-fake-storage",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2469.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-quality/machines-that-read-your-code/four-different-questions",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2339.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-quality/machines-that-read-your-code/types-are-a-test-you-do-not-write",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2382.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-quality/machines-that-read-your-code/style-is-not-worth-arguing-about",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2425.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-quality/machines-that-read-your-code/a-gate-before-the-commit",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2468.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-quality/gates-beyond-your-laptop/someone-elses-computer",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2381.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-quality/gates-beyond-your-laptop/when-and-what",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2424.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-quality/gates-beyond-your-laptop/clicking-through-for-real",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2467.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-quality/gates-beyond-your-laptop/even-config-can-be-wrong",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2510.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-product/measuring-without-spying/why-measure-at-all",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2405.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-product/measuring-without-spying/a-typo-loses-a-month",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2448.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-product/measuring-without-spying/buckets-are-privacy",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2491.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-product/measuring-without-spying/rules-that-throw",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2534.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-product/measuring-without-spying/off-by-default",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2577.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-product/rules-and-safety/four-reasons-and-an-other",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2447.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-product/rules-and-safety/you-must-know-who-reported",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2490.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-product/rules-and-safety/a-version-suffix-in-a-key",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2533.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-product/rules-and-safety/two-languages-two-costs",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2576.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-product/experiments-and-coming-back/register-before-you-ship",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2489.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-product/experiments-and-coming-back/a-reason-to-come-back",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2532.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/foundations-product/experiments-and-coming-back/magic-numbers-that-are-not-magic",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2575.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/contracts-and-drift/freeze-surface/why-freeze-surface",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2513.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/contracts-and-drift/machine-checked/contract-test",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2555.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/contracts-and-drift/machine-checked/layers-are-dependencies",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2598.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/testing-strategy/layer-choice/unit-vs-e2e",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2621.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/testing-strategy/degraded-design/degraded-matrix",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2663.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/testing-strategy/degraded-design/retry-safety",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2706.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/state-and-process/fact-vs-process/two-stores-not-one",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2729.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/state-and-process/fact-vs-process/one-definition-of-empty",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2772.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/state-and-process/name-the-waiting/phases-not-loading",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2771.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/state-and-process/name-the-waiting/keys-not-sentences",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2814.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/one-codebase-many-hosts/adapter-layer/hardest-platform-wins",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2837.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/one-codebase-many-hosts/adapter-layer/detect-once-degrade-always",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2880.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/one-codebase-many-hosts/the-shell/electron-three-switches",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2879.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/one-codebase-many-hosts/the-shell/decisions-out-of-the-shell",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2922.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/identity-and-accounts/presentation-vs-real-identity/three-fields-of-truth",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2945.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/identity-and-accounts/presentation-vs-real-identity/display-name-cascade",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2988.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/identity-and-accounts/presentation-vs-real-identity/settled-flag-beats-stale",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3031.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/identity-and-accounts/presentation-vs-real-identity/table-alias-is-costume",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3074.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/identity-and-accounts/login-as-settlement/soft-timeout-then-reconcile",
+      "disabled": false,
+      "x": 339.5,
+      "y": 2987.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/identity-and-accounts/login-as-settlement/expected-session-guard",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3030.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/identity-and-accounts/login-as-settlement/anonymous-upgrade-path",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3073.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/identity-and-accounts/login-as-settlement/bootstrap-token-fork",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3116.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/identity-and-accounts/sync-and-logout-cleanup/two-stores-two-jobs",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3029.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/identity-and-accounts/sync-and-logout-cleanup/logout-clear-and-rebootstrap",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3072.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/identity-and-accounts/sync-and-logout-cleanup/ignore-transient-null",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3115.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/identity-and-accounts/sync-and-logout-cleanup/init-once-across-mounts",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3158.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/bilingual-by-design/namespace-partition/four-namespaces-not-one",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3053.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/bilingual-by-design/namespace-partition/default-ns-is-common",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3096.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/bilingual-by-design/namespace-partition/resources-mirror-disk",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3139.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/bilingual-by-design/namespace-partition/nested-keys-within-ns",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3182.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/bilingual-by-design/what-stays-out/interpolate-dynamic-data",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3095.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/bilingual-by-design/what-stays-out/machine-keys-human-values",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3138.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/bilingual-by-design/what-stays-out/never-leak-in-locale",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3181.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/bilingual-by-design/what-stays-out/spoiler-free-share-copy",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3224.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/bilingual-by-design/fallback-and-detection/fallback-is-zh-cn",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3137.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/bilingual-by-design/fallback-and-detection/detect-local-storage-first",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3180.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/bilingual-by-design/fallback-and-detection/escape-value-false",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3223.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/bilingual-by-design/fallback-and-detection/key-parity-both-locales",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3266.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/realtime-presence/presence-contract/surface-only-payload",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3161.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/realtime-presence/presence-contract/parse-or-drop",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3204.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/realtime-presence/presence-contract/throttle-the-publish",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3247.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/realtime-presence/presence-contract/newest-wins-per-player",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3290.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/realtime-presence/disconnect-and-roster/missing-then-prune",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3203.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/realtime-presence/disconnect-and-roster/lerp-or-teleport-snap",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3246.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/realtime-presence/disconnect-and-roster/confirm-leave-before-drop",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3289.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/realtime-presence/disconnect-and-roster/silent-first-snapshot",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3332.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/realtime-presence/signals-not-truth/typing-is-presentation",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3245.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/realtime-presence/signals-not-truth/shared-cadence-hides-ai",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3288.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/realtime-presence/signals-not-truth/bootstrap-blocks-false-moments",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3331.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/platform-capabilities/one-capability-entry/why-one-entry",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3269.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/platform-capabilities/one-capability-entry/runtime-descriptor",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3312.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/platform-capabilities/one-capability-entry/share-three-paths",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3355.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/platform-capabilities/one-capability-entry/haptic-degrade",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3398.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/platform-capabilities/runtime-and-hosts/electron-not-native",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3311.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/platform-capabilities/runtime-and-hosts/hash-router-timeout",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3354.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/platform-capabilities/runtime-and-hosts/status-bar-keyboard",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3397.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/platform-capabilities/runtime-and-hosts/host-adapters",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3440.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/platform-capabilities/storage-degrade/safe-local-storage",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3353.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/platform-capabilities/storage-degrade/platform-storage-split",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3396.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/platform-capabilities/storage-degrade/noop-and-defaults",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3439.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/platform-capabilities/storage-degrade/capability-decision-map",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3482.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/failure-recovery/chunk-self-heal/chunk-failure-is-normal",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3377.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/failure-recovery/chunk-self-heal/recover-once-only",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3420.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/failure-recovery/chunk-self-heal/boundary-then-fallback-ui",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3463.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/failure-recovery/chunk-self-heal/recovery-state-machine",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3506.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/failure-recovery/storage-may-die/storage-can-throw",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3419.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/failure-recovery/storage-may-die/boolean-not-exception",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3462.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/failure-recovery/storage-may-die/callers-degrade-features",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3505.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/failure-recovery/storage-may-die/sync-vs-platform-storage",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3548.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/failure-recovery/platform-storage-matrix/noop-storage-degrade",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3461.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/failure-recovery/platform-storage-matrix/native-vs-web-routing",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3504.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/failure-recovery/platform-storage-matrix/electron-is-web-storage",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3547.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/failure-recovery/platform-storage-matrix/design-for-client-failure",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3590.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-contracts-first/contract-boxes/why-contracts-first",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3485.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-contracts-first/contract-boxes/registry-is-the-menu",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3528.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-contracts-first/contract-boxes/gateway-normalizes",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3571.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-contracts-first/contract-boxes/three-boxes-flow",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3614.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-contracts-first/handler-contract/runtime-deps-port",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3527.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-contracts-first/handler-contract/bounds-before-money",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3570.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-contracts-first/handler-contract/budget-lifecycle-in-handler",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3613.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-contracts-first/handler-contract/auth-is-separate-box",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3656.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-contracts-first/scheduler-contract/scheduler-deps-surface",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3569.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-contracts-first/scheduler-contract/factory-injection",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3612.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-contracts-first/scheduler-contract/gates-before-agent",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3655.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-contracts-first/scheduler-contract/release-lease-on-exit",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3698.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/experiments-and-rollout/register-before-ship/registry-is-the-gate",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3593.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/experiments-and-rollout/register-before-ship/surfaces-are-the-contract",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3636.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/experiments-and-rollout/register-before-ship/default-is-off",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3679.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/experiments-and-rollout/register-before-ship/bind-at-create",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3722.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/experiments-and-rollout/isolate-and-kill/hosted-ignores-stray-url",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3635.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/experiments-and-rollout/isolate-and-kill/coarse-analytics-tag",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3678.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/experiments-and-rollout/isolate-and-kill/badge-states-the-limit",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3721.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/experiments-and-rollout/isolate-and-kill/clear-is-the-kill-switch",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3764.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/experiments-and-rollout/hypothesis-and-promotion/no-new-timing-authority",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3677.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/experiments-and-rollout/hypothesis-and-promotion/shadow-not-real-votes",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3720.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/experiments-and-rollout/hypothesis-and-promotion/ladder-null-means-default",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3763.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/experiments-and-rollout/hypothesis-and-promotion/promote-or-kill",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3806.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/retention-engineering/daily-content-loop/utc-day-same-puzzle",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3701.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/retention-engineering/daily-content-loop/two-clocks-number-vs-slot",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3744.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/retention-engineering/daily-content-loop/practice-does-not-steal-daily",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3787.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/retention-engineering/daily-content-loop/streak-idempotent-by-date",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3830.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/retention-engineering/return-hooks/last-round-versioned-snapshot",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3743.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/retention-engineering/return-hooks/write-on-finish-read-on-home",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3786.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/retention-engineering/return-hooks/no-history-no-card",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3829.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/retention-engineering/return-hooks/source-shapes-the-hook",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3872.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/retention-engineering/share-and-rechallenge/share-grid-no-aliases",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3785.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/retention-engineering/share-and-rechallenge/challenge-spoiler-free",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3828.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/retention-engineering/share-and-rechallenge/reveal-then-teach",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3871.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/moment-design/opening-and-cover/first-gesture-unlock",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3809.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/moment-design/opening-and-cover/mute-orthogonal-to-unlock",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3852.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/moment-design/opening-and-cover/silent-placeholder-playing",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3895.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/moment-design/opening-and-cover/cover-diorama-before-engine",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3938.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/moment-design/unmask-climax/reveal-order-is-drama",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3851.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/moment-design/unmask-climax/timing-constants-are-product",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3894.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/moment-design/unmask-climax/settlement-behind-climax",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3937.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/moment-design/unmask-climax/skip-and-reduced-motion",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3980.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/moment-design/roast-and-share/report-message-contract",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3893.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/moment-design/roast-and-share/share-without-next-room-spoilers",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3936.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/moment-design/roast-and-share/share-image-fallback-ladder",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3979.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/moment-design/roast-and-share/portrait-card-and-cjk-width",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4022.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/world-navigation/portal-as-gate/url-entry-is-contract",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3917.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/world-navigation/portal-as-gate/portal-state-machine",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3960.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/world-navigation/portal-as-gate/failure-taxonomy",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4003.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/world-navigation/portal-as-gate/host-is-not-guest",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4046.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/world-navigation/lobby-as-structure/phase-to-mode",
+      "disabled": false,
+      "x": 339.5,
+      "y": 3959.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/world-navigation/lobby-as-structure/mystery-seat-in-lobby",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4002.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/world-navigation/lobby-as-structure/webgl-gate",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4045.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/world-navigation/lobby-as-structure/lazy-world-and-channels",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4088.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/world-navigation/attention-in-room/opening-topic-bilingual",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4001.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/world-navigation/attention-in-room/callouts-are-punctuation",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4044.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/world-navigation/attention-in-room/typing-same-for-all",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4087.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/world-navigation/attention-in-room/history-vs-live-clock",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4130.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/e2e-and-qa-scripts/replace-hand-clicks/health-is-not-fun",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4025.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/e2e-and-qa-scripts/replace-hand-clicks/e2e-vs-smoke",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4068.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/e2e-and-qa-scripts/replace-hand-clicks/ui-preview-lab",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4111.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/e2e-and-qa-scripts/replace-hand-clicks/noise-is-not-failure",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4154.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/e2e-and-qa-scripts/e2e-that-earn-cost/matrix-no-silent-gaps",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4067.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/e2e-and-qa-scripts/e2e-that-earn-cost/ritual-timing-e2e",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4110.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/e2e-and-qa-scripts/e2e-that-earn-cost/a11y-serious-only",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4153.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/e2e-and-qa-scripts/e2e-that-earn-cost/visual-is-math",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4196.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/e2e-and-qa-scripts/smoke-and-ladder/smoke-ladder",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4109.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/e2e-and-qa-scripts/smoke-and-ladder/worst-device-release",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4152.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/e2e-and-qa-scripts/smoke-and-ladder/real-backend-sparingly",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4195.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/e2e-and-qa-scripts/smoke-and-ladder/no-webgl-dual-layer",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4238.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-budget-and-cost/price-before-call/two-cost-lanes",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4133.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-budget-and-cost/price-before-call/price-allowlist",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4176.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-budget-and-cost/price-before-call/worst-case-before-call",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4219.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-budget-and-cost/price-before-call/ceil-never-undercount",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4262.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-budget-and-cost/budget-gate/reserve-commit-refund",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4175.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-budget-and-cost/budget-gate/gate-before-provider",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4218.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-budget-and-cost/budget-gate/sqlstate-to-http",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4261.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-budget-and-cost/budget-gate/request-id-idempotency",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4304.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-budget-and-cost/settle-and-wire/settle-with-usage",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4217.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-budget-and-cost/settle-and-wire/failure-refund-or-charge",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4260.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-budget-and-cost/settle-and-wire/wire-budget-client",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4303.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-budget-and-cost/settle-and-wire/env-and-request-bounds",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4346.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/structured-output-repair/three-failure-modes/why-structure-breaks",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4241.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/structured-output-repair/three-failure-modes/four-error-codes",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4284.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/structured-output-repair/three-failure-modes/retry-whitelist",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4327.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/structured-output-repair/local-vs-model-repair/two-intake-paths",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4283.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/structured-output-repair/local-vs-model-repair/extract-json-locally",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4326.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/structured-output-repair/local-vs-model-repair/semantic-schema-gates",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4369.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/structured-output-repair/local-vs-model-repair/repaired-means-path",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4412.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/structured-output-repair/contract-and-runtime/agent-decision-contract",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4325.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/structured-output-repair/contract-and-runtime/zod-then-normalize",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4368.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/structured-output-repair/contract-and-runtime/repair-state-machine",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4411.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/structured-output-repair/contract-and-runtime/cost-of-retry",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4454.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/asset-pipeline/organize-before-scale/two-roots-two-problems",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4349.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/asset-pipeline/organize-before-scale/catalog-is-the-inventory",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4392.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/asset-pipeline/organize-before-scale/tags-decide-when-it-loads",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4435.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/asset-pipeline/organize-before-scale/provenance-is-payload",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4478.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/asset-pipeline/acquire-generate-check/refuse-to-overwrite",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4391.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/asset-pipeline/acquire-generate-check/generate-locks-bytes",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4434.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/asset-pipeline/acquire-generate-check/stale-is-a-hard-fail",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4477.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/asset-pipeline/acquire-generate-check/three-unique-keys",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4520.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/asset-pipeline/budget-the-boot-shape/boot-path-is-a-filter",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4433.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/asset-pipeline/budget-the-boot-shape/four-budget-ceilings",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4476.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/asset-pipeline/budget-the-boot-shape/manor-boot-one-avatar",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4519.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/asset-pipeline/budget-the-boot-shape/verify-is-check-and-budget",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4562.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-evaluation/cases-before-feelings/feel-is-not-a-metric",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4457.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-evaluation/cases-before-feelings/anatomy-of-a-case",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4500.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-evaluation/cases-before-feelings/gold-and-poison",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4543.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-evaluation/cases-before-feelings/pin-the-prompt-version",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4586.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-evaluation/scores-and-detectors/nine-scorers-one-average",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4499.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-evaluation/scores-and-detectors/soft-fail-vs-hard-gate",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4542.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-evaluation/scores-and-detectors/annotation-is-the-spec",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4585.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-evaluation/scores-and-detectors/score-the-detector",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4628.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-evaluation/offline-vs-live/offline-scores-the-fixture",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4541.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-evaluation/offline-vs-live/live-scores-the-model",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4584.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/ai-evaluation/offline-vs-live/offline-green-live-red",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4627.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/agent-identity-continuity/identity-as-checkable-signals/texture-not-character-sheet",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4565.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/agent-identity-continuity/identity-as-checkable-signals/room-seed-not-player-id",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4608.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/agent-identity-continuity/identity-as-checkable-signals/prior-claims-last-four",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4651.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/agent-identity-continuity/identity-as-checkable-signals/pressure-calm-watched-cornered",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4694.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/agent-identity-continuity/style-and-delivery-rhythm/five-style-signals",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4607.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/agent-identity-continuity/style-and-delivery-rhythm/hash-not-true-random",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4650.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/agent-identity-continuity/style-and-delivery-rhythm/style-below-hard-rules",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4693.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/agent-identity-continuity/quality-gate-and-agent-wireup/quality-violations-are-codes",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4649.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/agent-identity-continuity/quality-gate-and-agent-wireup/continuity-hard-checks",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4692.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/agent-identity-continuity/quality-gate-and-agent-wireup/one-repair-chance",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4735.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "A",
+      "text": "",
+      "href": "/turing-pact/agent-identity-continuity/quality-gate-and-agent-wireup/wire-identity-into-agent",
+      "disabled": false,
+      "x": 339.5,
+      "y": 4778.265625,
+      "w": 828,
+      "h": 43
+    },
+    {
+      "tag": "BUTTON",
+      "text": "认识 AI，从这里开始\n▾",
+      "href": null,
+      "disabled": false,
+      "x": 1176.78125,
+      "y": 27,
+      "w": 182.28125,
+      "h": 34
+    },
+    {
+      "tag": "A",
+      "text": "0",
+      "href": "/quests",
+      "disabled": false,
+      "x": 1367.0625,
+      "y": 27,
+      "w": 43.9375,
+      "h": 34
+    }
+  ],
+  "canvases": [
+    {
+      "width": 78,
+      "height": 78
+    },
+    {
+      "width": 300,
+      "height": 150
+    }
+  ],
+  "errors": []
+}

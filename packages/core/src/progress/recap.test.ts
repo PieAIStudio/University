@@ -97,7 +97,7 @@ describe("learner recap cards", () => {
       answer: "这是学习者自己的云端复述。",
     });
 
-    await phone.bindAccount(userId, remote);
+    await phone.bindAccount(userId, remote, { adoptGuest: true });
 
     const laptop = createProgressPort({ persistence: createMemoryPersistence() });
     await laptop.bindAccount(userId, remote);

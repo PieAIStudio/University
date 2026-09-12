@@ -151,7 +151,8 @@ describe("lesson layer coverage when this shell cannot open the map", () => {
     await act(async () => {
       trigger.click();
     });
-    expect(document.querySelector("dialog")?.textContent).toContain("为什么这一端现在做不到");
+    expect(document.querySelector("dialog")?.textContent).toContain("交付端没有私有仓库的分析快照");
+    expect(document.querySelector("dialog details")?.hasAttribute("open")).toBe(false);
     expect(document.querySelector("dialog")?.textContent).toContain("交付端没有私有仓库的分析快照");
   });
 

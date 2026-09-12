@@ -166,6 +166,12 @@ if (existsSync(nestedStudies)) {
   }
 }
 
+// An isolated copy may live outside apps/local. The authoring server still
+// validates its marker/location; this changes the input, never that protection.
+if (process.env.E2E_STUDIES_ROOT) {
+  localApiEnv.UNIVERSITY_LOCAL_STUDIES_ROOT = realpathSync(process.env.E2E_STUDIES_ROOT);
+}
+
 // Resolve the worktree source once, before either consumer starts. The baked
 // importer previously ran before this discovery and rejected the outer
 // studies skeleton even though the API knew about its nested source link.

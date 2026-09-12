@@ -171,6 +171,9 @@ export interface ProgressDocument {
 export interface Persistence {
   read(): string | null;
   write(raw: string): void;
+  /** Identity-scoped offline copies of the same progress document. */
+  readAccount?(userId: string): string | null;
+  writeAccount?(userId: string, raw: string): void;
 }
 
 /**
@@ -193,11 +196,16 @@ export interface ProgressSyncState {
   readonly dirty: boolean;
   readonly status: ProgressSyncStatus;
   readonly userId: string | null;
+  readonly remoteAvailable?: boolean;
+  readonly lastSyncedAt?: number | null;
 }
 
 export interface ProgressPort {
   snapshot(): ProgressDocument;
   subscribe(listener: () => void): () => void;
+  /** Last attempted local cache write, independent of cloud synchronization. */
+  localSaveState?(): "unconfirmed" | "saved" | "failed";
+  retryLocalSave?(): boolean;
   /*
     `LessonDocumentKey`, not `string`. `lessonRefKey` also produces a lesson
     key, for shared surfaces, with the unit in it — and it was handed to
@@ -280,7 +288,13 @@ export interface ProgressPort {
    * machine so local work is not overwritten, write the result both places.
    * `userId` null: stop syncing. Local data stays. Signing out is not erase.
    */
-  bindAccount(userId: string | null, remote: ProgressRemoteStore | null): Promise<void>;
+  bindAccount(
+    userId: string | null,
+    remote: ProgressRemoteStore | null,
+    options?: { readonly adoptGuest?: boolean; readonly adoptAnonymousId?: string },
+  ): Promise<void>;
+  hasGuestProgress?(): boolean;
+  importGuestProgress?(): Promise<void>;
   flush(): Promise<void>;
   syncState(): ProgressSyncState;
 }
