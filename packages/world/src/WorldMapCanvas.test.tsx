@@ -84,6 +84,7 @@ describe("WorldMapCanvas rewrite marker", () => {
       /\.map-tools\s*\{[^}]*grid-template-columns:\s*max-content minmax\(0, 1fr\)/s,
     );
     expect(css).toMatch(/\.map-framing-tools button\s*\{[^}]*min-height:\s*44px/s);
+    expect(css).toMatch(/\.label--course\s*\{[^}]*min-block-size:\s*48px/s);
   });
 
   it.each(["live", "done", "open", "idle"] as const)(

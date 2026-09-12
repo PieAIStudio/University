@@ -995,7 +995,7 @@ button.label:focus-visible {
   user-select: none;
 }
 
-.label--course.is-locked {
+.label--course.is-locked.is-visible {
   opacity: 0.62;
   filter: grayscale(0.7);
 }

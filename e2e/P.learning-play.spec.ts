@@ -213,7 +213,7 @@ test.describe("P 基础玩法", () => {
     await button(page, /^缓存 成本/).click();
     await expect(page.locator(".play-dispatch__feedback")).toContainText("缓存");
     await expect(page.getByRole("progressbar", { name: "请求服务进度" })).toHaveAttribute(
-      "value",
+      "aria-valuenow",
       "0",
     );
     for (const lane of ["文件服务", "实时服务", "文件服务", "缓存", "实时服务", "缓存", "缓存"])
