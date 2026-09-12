@@ -53,7 +53,9 @@ function preferenceChoices(page: Page): Locator {
 }
 async function choosePreference(page: Page, index: number): Promise<string> {
   const choices = preferenceChoices(page);
-  expect(await choices.count(), "偏好产品至少要保留两个可选项").toBeGreaterThanOrEqual(2);
+  expect(await choices.count(), `偏好产品至少要保留第 ${index + 1} 个可选项`).toBeGreaterThanOrEqual(
+    index + 1,
+  );
   const choice = choices.nth(index);
   await expect(choice).toBeVisible();
   const label = (await choice.innerText()).trim();
@@ -395,7 +397,9 @@ for (const variant of [0, 1]) {
     await btn(page, "核对原问题结果").click();
     await btn(page, "清空现场，亲手检查旧功能").click();
     if (variant) {
-      await choosePreference(page, 0);
+      await choosePreference(page, 1);
+      await btn(page, "保存午餐偏好").click();
+      await choosePreference(page, 2);
       await btn(page, "保存午餐偏好").click();
       await btn(page, "模拟重开页面").click();
     } else {
@@ -413,7 +417,7 @@ for (const variant of [0, 1]) {
       await choosePreference(page, 1);
       await btn(page, "保存午餐偏好").click();
       await btn(page, "模拟重开页面").click();
-      finalPreference = await choosePreference(page, 0);
+      finalPreference = await choosePreference(page, 2);
       await btn(page, "保存午餐偏好").click();
       await btn(page, "模拟重开页面").click();
     } else {

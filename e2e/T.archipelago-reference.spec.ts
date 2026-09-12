@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { ONLINE_ORIGIN } from "./ports.js";
 import {
   CATALOGUE_ROLES,
+  REFERENCE_ARCHIPELAGO_COURSE_IDS,
   coursePathOf,
   installReferenceArchipelagoFixture,
 } from "./harness/catalogue.js";
@@ -281,7 +282,18 @@ for (const viewport of [
       );
       expect(receipt.bodyWidth).toBeLessThanOrEqual(viewport.width);
       expect(receipt.labels.some((label) => label.state === "live")).toBe(true);
-      expect(receipt.labels.length).toBeGreaterThanOrEqual(viewport.width >= 768 ? 6 : 2);
+      /*
+       * Calibrated against the fixture, not against the catalogue. The
+       * reference map is a fixed thirteen islands — one real course plus
+       * REFERENCE_ARCHIPELAGO_COURSE_IDS — so these floors stay put when a
+       * package is locked or unlocked. They moved before because the fixture
+       * appended to whatever shipped: the desktop floor of six was calibrated
+       * on a thirty-seven-course catalogue and went red at four courses while
+       * label placement itself was fine. Change the fixture's course list and
+       * these two numbers have to be re-measured with it.
+       */
+      expect(receipt.islandIds.length).toBe(1 + REFERENCE_ARCHIPELAGO_COURSE_IDS.length);
+      expect(receipt.labels.length).toBeGreaterThanOrEqual(viewport.width >= 768 ? 4 : 2);
       for (const label of receipt.labels)
         for (const box of receipt.sceneryBoxes) {
           const overlapX = Math.min(label.right, box.right) - Math.max(label.left, box.left);

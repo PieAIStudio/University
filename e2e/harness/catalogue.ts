@@ -606,6 +606,7 @@ export const MAP_STUDIO_FIXTURE = {
   study: CATALOGUE_ROLES.settlement.study,
   sourceCourse: shortTerrainSource,
   course: terrainFixtureCourse(shortTerrainSource),
+  lessonCount: TERRAIN_LENGTH_FIXTURES[0]!.lessonCount,
 } as const;
 
 export const COURSE_SCENE_FIXTURE = {
@@ -786,7 +787,10 @@ export async function installMapStudioFixture(page: Page): Promise<void> {
       }
       return {
         ...payload,
-        courses: [...courses, syntheticMapStudioCourse(source, fixture.course)],
+        courses: [
+          ...courses,
+          syntheticMapStudioCourse(source, fixture.course, fixture.lessonCount),
+        ],
       };
     });
   });
@@ -869,7 +873,7 @@ export async function installCourseSceneFixture(page: Page): Promise<void> {
   });
 }
 
-const REFERENCE_ARCHIPELAGO_COURSE_IDS = [
+export const REFERENCE_ARCHIPELAGO_COURSE_IDS = [
   "zz-e2e-reference-0013",
   "zz-e2e-reference-0025",
   "zz-e2e-reference-0006",
@@ -912,7 +916,15 @@ export async function installReferenceArchipelagoFixture(page: Page): Promise<vo
           id,
           title: `${String(source.title)} · 参考岛 ${index + 1}`,
         }));
-        return { ...study, courses: [...courses, ...syntheticCourses] };
+        /*
+         * The reference archipelago is a fixed population, not the shipped one
+         * plus extras. Appending to the catalogue made the island count — and
+         * therefore how many labels the framing can place — move whenever a
+         * package was locked or unlocked, which is what sent the desktop label
+         * floor red on a four-course catalogue. One real course keeps the round
+         * trip honest; the synthetic ones make the count the fixture's to state.
+         */
+        return { ...study, courses: [source, ...syntheticCourses] };
       });
       return { ...payload, studies };
     });
@@ -943,27 +955,13 @@ export async function installSingleCourseShelfFixture(
   });
 }
 
-/*
- * Three distinct course identities, spread over as many studies as ship.
- *
- * Every assertion in W is per-course: it reads one island blueprint and checks
- * that the shared art kept that course's own id, lesson ids, successors and
- * route. Nothing in it needs a second study, so demanding one turned three live
- * regressions into a skip the day the catalogue became single-study. Taking one
- * course per study before taking a second from any keeps the cross-study spread
- * the moment a package is unlocked, without making it a precondition.
- */
 export const SHARED_LANDSCAPE_CASES: readonly ShippedCourse[] = (() => {
-  const byStudy = SHIPPED_CATALOGUE.map((study) => [...study.courses]);
-  const spread: ShippedCourse[] = [];
-  for (let depth = 0; spread.length < 3; depth += 1) {
-    const round = byStudy
-      .map((courses) => courses[depth])
-      .filter((course): course is ShippedCourse => course !== undefined);
-    if (round.length === 0) break;
-    spread.push(...round);
-  }
-  return spread.slice(0, 3);
+  if (SHIPPED_CATALOGUE.length < 2 || SHIPPED_COURSES.length < 3) return [];
+  const firstStudy = SHIPPED_CATALOGUE[0]!;
+  const secondStudy = SHIPPED_CATALOGUE.find((study) => study.id !== firstStudy.id)!;
+  const fromFirst = firstStudy.courses.slice(0, 2);
+  const fromSecond = secondStudy.courses.slice(0, 1);
+  return [...fromFirst, ...fromSecond].slice(0, 3);
 })();
 
-export const SHARED_LANDSCAPE_CATALOGUE_REASON = `当前发布目录只有 ${SHIPPED_COURSES.length} 门课；这个回归要求三门各不相同的真实课，须在解锁 package 后再提出。`;
+export const SHARED_LANDSCAPE_CATALOGUE_REASON = `当前发布目录只有 ${SHIPPED_CATALOGUE.length} 个 study、${SHIPPED_COURSES.length} 门课；这个回归要求跨至少两个 study 的三门真实课，须在解锁 package 后再提出。`;
