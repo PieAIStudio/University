@@ -1,141 +1,12 @@
-/* One primary action surface: clean at rest, liquid only during the press. */
-
-.liquid-cta {
-  --liquid-cta-fill: var(--game-ui-accent);
-  --liquid-cta-fill-top: var(--game-ui-accent-bright);
-  --liquid-cta-fill-bottom: var(--liquid-cta-fill);
-  /* A short, dark contact shadow reads as placement. LiquidGroup turns this
-     into a compositor drop-shadow() in SwimmerUIKit 2.0.0, so it costs nothing
-     at rest. The light catch is not here: an inset shadow plus the ::before
-     highlight read as two stripes, and one light source is the whole point. */
-  --liquid-cta-shadow: 0 5px 10px
-    color-mix(in srgb, var(--game-ui-accent-contrast) 32%, transparent);
-  position: relative;
-  display: inline-block;
-  width: fit-content;
-  max-width: 100%;
-  align-self: flex-start;
-  isolation: isolate;
-  vertical-align: top;
-}
-
-.liquid-cta[data-liquid-cta-width="full"] {
-  display: block;
-  width: 100%;
-}
-
-.liquid-cta__surface {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: visible;
-}
-
-.liquid-cta__surface .game-ui-liquid-content,
-.liquid-cta__surface-item,
-.liquid-cta__shape {
-  width: 100%;
-  height: 100%;
-}
-
-.liquid-cta__surface .game-ui-liquid-content,
-.liquid-cta__surface-item {
-  position: absolute;
-  inset: 0;
-}
-
-.liquid-cta__shape {
-  position: absolute;
-  inset: 1px;
-  display: block;
-  width: auto;
-  height: auto;
-  overflow: hidden;
-  border-radius: 999px;
-  background: linear-gradient(
-    180deg,
-    var(--liquid-cta-fill-top),
-    var(--liquid-cta-fill-bottom) 62%,
-    color-mix(in srgb, var(--liquid-cta-fill-bottom) 88%, var(--game-ui-accent-contrast))
-  );
-}
-
-/* Keep the light catch inside the silhouette so it follows the press morph
-   without adding a second interactive element or an ambient animation.
-   It fades out along its length: a highlight with hard ends reads as a bar
-   stuck to the button, not as light landing on a curved edge. */
-.liquid-cta__shape::before {
-  position: absolute;
-  inset: 1px 9% auto;
-  height: 1.5px;
-  border-radius: 999px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--game-ui-text-on-dark) 52%, transparent) 22%,
-    color-mix(in srgb, var(--game-ui-text-on-dark) 52%, transparent) 78%,
-    transparent
-  );
-  content: "";
-  pointer-events: none;
-}
-
-.liquid-cta__button {
-  position: relative;
-  z-index: 1;
-  /*
-    The floor every touch guideline agrees on, and the one X4 enforces. At 40px
-    the membership page's purchase control was both under the minimum and 37px
-    from the centre of the floating 提意见 pill — the two together are the
-    definition of a mis-tap zone, on the one button in the product that takes
-    money. Four pixels.
-  */
+/* Consumer typography, touch floor and readable disabled ink; UIKit owns
+   every liquid shape, finish, focus treatment and press animation. */
+.university-cta {
+  --game-ui-disabled: var(--game-ui-text-muted);
   min-height: 44px;
-  /* The 1px border is painted by the silhouette; 17px preserves old width. */
-  border: 0;
-  padding-inline: 17px;
-  background: transparent;
-  background-image: none;
-  box-shadow: none;
-  color: var(--game-ui-accent-contrast);
   font-family: var(--game-ui-font-body);
   font-size: 1rem;
   font-weight: var(--game-ui-weight-strong, 800);
   letter-spacing: -0.01em;
-  transform: none;
-}
-
-.liquid-cta[data-liquid-cta-width="full"] .liquid-cta__surface-item,
-.liquid-cta[data-liquid-cta-width="full"] .liquid-cta__button {
-  width: 100%;
-}
-
-.liquid-cta[data-liquid-cta-disabled="true"] {
-  --liquid-cta-fill: var(--game-ui-text-muted);
-  --liquid-cta-fill-top: color-mix(
-    in srgb,
-    var(--game-ui-text-muted) 82%,
-    var(--game-ui-text-on-dark)
-  );
-  --liquid-cta-shadow: none;
-}
-
-.liquid-cta[data-liquid-cta-disabled="false"]:hover {
-  --liquid-cta-fill: var(--game-ui-accent-bright);
-}
-
-/* The kit's translucent disabled ink needs a panel, not the wrapper's dark
-   liquid fill. Keep the native inactive control legible and still disabled.
-   Do not hide the measured LiquidGroup: enabling must retain its geometry. */
-.liquid-cta__button:disabled,
-.liquid-cta__button:disabled:hover {
-  background: var(--game-ui-panel);
-  color: var(--game-ui-text-muted);
-  box-shadow: inset 0 0 0 1px var(--game-ui-border-strong);
-  transform: none;
 }
 
 /*
@@ -191,18 +62,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .liquid-cta__button,
-  .liquid-cta__button:hover,
-  .liquid-cta__button:active {
-    transform: none;
-    transition: none;
-    scale: 1;
-  }
-
-  .liquid-cta__surface .game-ui-liquid-silhouette {
-    will-change: auto;
-  }
-
   .liquid-cta__flight {
     display: none;
   }

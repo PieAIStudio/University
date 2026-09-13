@@ -21,7 +21,6 @@ import { translate } from "@pieai/university-ui/i18n.js";
 import { useEffect, useState, type ReactNode } from "react";
 import { GameButton, GamePanel, GameProgress } from "@pieai/swimmer-ui-kit";
 import { NodeCard, type PathLesson, type PathUnit } from "@pieai/university-ui";
-import { LiquidCtaButton } from "@pieai/university-ui/cta/LiquidCtaButton.js";
 import { playSound } from "@pieai/university-ui/sound/index.js";
 
 /**
@@ -254,9 +253,15 @@ export function Settlement({
             {translate("app.lesson.settlement.copy.回关卡地图")}
           </GameButton>
         ) : (
-          <LiquidCtaButton onClick={onMap}>
+          <GameButton
+            variant="primary"
+            surface="liquid"
+            liquidFinish="glossy"
+            className="university-cta"
+            onClick={onMap}
+          >
             {translate("app.lesson.settlement.copy.回关卡地图")}
-          </LiquidCtaButton>
+          </GameButton>
         )}
       </div>
     </div>

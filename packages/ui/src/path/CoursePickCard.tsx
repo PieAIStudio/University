@@ -17,7 +17,6 @@ import { translate } from "../i18n/index.js";
 import { useEffect, useId, type RefObject } from "react";
 import { GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
 
-import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import type { CoursePickStats } from "./course-pick-stats.js";
 
 export function CoursePickCard({
@@ -177,9 +176,16 @@ export function CoursePickCard({
               {translate("ui.path.coursePickCard.copy.早期版本提示")}
             </p>
           ) : null}
-          <LiquidCtaButton width="full" className="picked__enter" onClick={onEnter}>
+          <GameButton
+            variant="primary"
+            surface="liquid"
+            liquidFinish="glossy"
+            fullWidth
+            className="university-cta picked__enter"
+            onClick={onEnter}
+          >
             {translate("ui.path.coursePickCard.copy.进入这门课")}
-          </LiquidCtaButton>
+          </GameButton>
         </div>
       </GamePanel>
     </aside>

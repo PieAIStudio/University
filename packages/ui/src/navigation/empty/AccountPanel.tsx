@@ -12,8 +12,6 @@ import {
 } from "@pieai/swimmer-ui-kit";
 import type { IdentityPort } from "@pieai/university-core";
 
-import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
-
 /**
  * The account door on `/me`. It is a door, not a wall.
  *
@@ -315,13 +313,20 @@ function UnsignedAccountForm({
                 />
               </GameField>
             )}
-            <LiquidCtaButton type="submit" disabled={isSubmitting}>
+            <GameButton
+              variant="primary"
+              surface="liquid"
+              liquidFinish="glossy"
+              className="university-cta"
+              type="submit"
+              disabled={isSubmitting}
+            >
               {mode === "login"
                 ? ACCOUNT_SIGN_IN
                 : mode === "register"
                   ? ACCOUNT_SIGN_UP
                   : ACCOUNT_SEND_MAGIC_LINK}
-            </LiquidCtaButton>
+            </GameButton>
           </form>
         </div>
       </details>

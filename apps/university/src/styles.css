@@ -3440,7 +3440,7 @@ button.label:focus-visible {
     width: 100%;
   }
 
-  .lesson-completion > .liquid-cta {
+  .lesson-completion > .game-ui-button-liquid {
     width: 100%;
   }
 

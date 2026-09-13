@@ -153,7 +153,7 @@ describe("read confirmation stays an explicit remaining step", () => {
         exercise.compareDocumentPosition(remaining) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
-      container.querySelectorAll("section.lesson-completion .liquid-cta__button"),
+      container.querySelectorAll("section.lesson-completion button.lesson-completion__action"),
     ).toHaveLength(1);
     expect(container.textContent).toContain("题目过了。还差确认你读过这一版，这节才会计入进度。");
   });

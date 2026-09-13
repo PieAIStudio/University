@@ -1,7 +1,5 @@
 import { translate } from "../../i18n/index.js";
-import { GameEmptyState } from "@pieai/swimmer-ui-kit";
-
-import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
+import { GameButton, GameEmptyState } from "@pieai/swimmer-ui-kit";
 
 export const LEAGUE_EMPTY_TITLE = translate("ui.navigation.empty.leagueEmpty.copy.排行榜还没开");
 export const LEAGUE_EMPTY_DESCRIPTION = translate(
@@ -17,9 +15,16 @@ export function LeagueEmpty({ onNavigate }: { readonly onNavigate?: () => void }
       description={LEAGUE_EMPTY_DESCRIPTION}
       action={
         onNavigate ? (
-          <LiquidCtaButton type="button" onClick={onNavigate}>
+          <GameButton
+            variant="primary"
+            surface="liquid"
+            liquidFinish="glossy"
+            className="university-cta"
+            type="button"
+            onClick={onNavigate}
+          >
             {LEAGUE_EMPTY_ACTION}
-          </LiquidCtaButton>
+          </GameButton>
         ) : undefined
       }
     />

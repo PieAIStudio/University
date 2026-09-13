@@ -491,7 +491,7 @@
 
 .recap-prompt__instruction {
   margin: 22px 0 0;
-  color: var(--game-ui-text-on-dark, #fff5e8);
+  color: var(--game-ui-text);
   font-size: 1.08rem;
   line-height: 1.65;
 }
@@ -509,7 +509,7 @@
 
 .recap-prompt__objective p:last-child {
   margin-top: 9px;
-  color: var(--game-ui-text-on-dark, #fff5e8);
+  color: var(--game-ui-text);
   font-size: 1.08rem;
   line-height: 1.65;
 }
@@ -616,13 +616,14 @@
 
 .lesson-next :is(button, a) {
   margin-top: 20px;
+  min-height: 44px;
 }
 
-.lesson-next > .liquid-cta {
+.lesson-next > .game-ui-button-liquid {
   margin-top: 20px;
 }
 
-.lesson-next > .liquid-cta .liquid-cta__button {
+.lesson-next > .game-ui-button-liquid .game-ui-button {
   margin-top: 0;
 }
 
@@ -963,7 +964,7 @@
     width: 100%;
   }
 
-  .lesson-completion > .liquid-cta {
+  .lesson-completion > .game-ui-button-liquid {
     width: 100%;
   }
 

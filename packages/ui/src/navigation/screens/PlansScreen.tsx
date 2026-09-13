@@ -23,7 +23,6 @@ import {
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { CapabilityExplanation } from "../../capability/CapabilityExplanation.js";
-import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
 
 /** 会员 — this surface explains the entitlement boundary and launch offer. */
 export const PLANS_TITLE = translate("ui.navigation.screens.plansScreen.copy.会员");
@@ -222,7 +221,12 @@ function PlanCard({
                 {translate("ui.navigation.screens.plansScreen.copy.随时可以取消-取消之后不再扣费")}
               </p>
             ) : null}
-            <LiquidCtaButton
+            <GameButton
+              variant="primary"
+              surface="liquid"
+              liquidFinish="glossy"
+              className="university-cta"
+              fullWidth
               type="button"
               onClick={() => onPurchase(plan.id)}
               disabled={busyOfferId === plan.id}
@@ -230,7 +234,7 @@ function PlanCard({
               {busyOfferId === plan.id
                 ? translate("ui.navigation.screens.plansScreen.copy.正在检查")
                 : planButtonLabel(plan.pricing, purchaseAvailability)}
-            </LiquidCtaButton>
+            </GameButton>
           </>
         ) : (
           <p className="plan-card__note">

@@ -34,7 +34,7 @@ beforeEach(() => {
   originalInnerWidth = window.innerWidth;
   originalRect = HTMLElement.prototype.getBoundingClientRect;
   HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
-    if (this.classList.contains("liquid-cta")) {
+    if (this.matches("button.university-cta")) {
       return new DOMRect(24, 64, 132, 44);
     }
     if (this.classList.contains("game-ui-progress-track")) {

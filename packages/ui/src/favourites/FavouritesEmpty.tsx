@@ -1,7 +1,5 @@
 import { translate } from "../i18n/index.js";
-import { GameEmptyState } from "@pieai/swimmer-ui-kit";
-
-import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
+import { GameButton, GameEmptyState } from "@pieai/swimmer-ui-kit";
 
 /**
  * VibeHub's empty title, kept because it is already the whole sentence.
@@ -39,9 +37,16 @@ export function FavouritesEmpty({
       description={FAVOURITES_EMPTY_DESCRIPTION}
       action={
         onBrowse ? (
-          <LiquidCtaButton type="button" onClick={onBrowse}>
+          <GameButton
+            variant="primary"
+            surface="liquid"
+            liquidFinish="glossy"
+            className="university-cta"
+            type="button"
+            onClick={onBrowse}
+          >
             {FAVOURITES_EMPTY_ACTION}
-          </LiquidCtaButton>
+          </GameButton>
         ) : undefined
       }
     />

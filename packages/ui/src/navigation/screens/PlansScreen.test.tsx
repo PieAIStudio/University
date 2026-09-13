@@ -206,7 +206,7 @@ describe("PlansScreen pricing claims", () => {
     expect(reassurance?.textContent).toContain("订阅管理里取消下次续费");
     expect(reassurance?.textContent).toContain("不等于立即退款");
 
-    const cta = reassurance?.parentElement?.querySelector("button.liquid-cta__button");
+    const cta = reassurance?.parentElement?.querySelector("button.university-cta");
     expect(cta).not.toBeNull();
     if (!reassurance || !cta) throw new Error("missing paid-plan reassurance or CTA");
     expect(reassurance.compareDocumentPosition(cta) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(

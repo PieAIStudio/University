@@ -1,7 +1,6 @@
 import { translate } from "../i18n/index.js";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
-import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import type { LessonRef } from "../view/lesson-view.js";
 import type { LessonNeighbours } from "./LessonNav.js";
 
@@ -60,9 +59,15 @@ export function LessonNextStep({
           )}
         </p>
         {completed ? (
-          <LiquidCtaButton onClick={onBackToCourse}>
+          <GameButton
+            variant="primary"
+            surface="liquid"
+            liquidFinish="glossy"
+            className="university-cta"
+            onClick={onBackToCourse}
+          >
             {translate("ui.lesson.lessonNextStep.copy.回到课程")}
-          </LiquidCtaButton>
+          </GameButton>
         ) : (
           <GameButton variant="ghost" onClick={onBackToCourse}>
             {translate("ui.lesson.lessonNextStep.copy.回到课程")}
@@ -96,9 +101,15 @@ export function LessonNextStep({
         </p>
       )}
       {completed ? (
-        <LiquidCtaButton onClick={() => onOpenLesson(next)}>
+        <GameButton
+          variant="primary"
+          surface="liquid"
+          liquidFinish="glossy"
+          className="university-cta"
+          onClick={() => onOpenLesson(next)}
+        >
           {translate("ui.lesson.lessonNextStep.copy.继续下一节")}
-        </LiquidCtaButton>
+        </GameButton>
       ) : (
         <GameButton variant="ghost" onClick={() => onOpenLesson(next)}>
           {translate("ui.lesson.lessonNextStep.copy.先去下一节")}

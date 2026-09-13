@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 
-import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import { PathDialog } from "./PathDialog.js";
 import {
   START_UNIT_LABEL,
@@ -88,9 +87,16 @@ export function UnitCardBody({
       ) : null}
       <p className="unit-card__meta">{unitMetaLine(unit.lessons)}</p>
       {liquid ? (
-        <LiquidCtaButton width="full" className="path-card__start" onClick={onStart}>
+        <GameButton
+          variant="primary"
+          surface="liquid"
+          liquidFinish="glossy"
+          fullWidth
+          className="university-cta path-card__start"
+          onClick={onStart}
+        >
           {START_UNIT_LABEL}
-        </LiquidCtaButton>
+        </GameButton>
       ) : (
         <GameButton variant="primary" className="path-card__start" onClick={onStart}>
           {START_UNIT_LABEL}

@@ -1,7 +1,5 @@
 import { translate } from "../../i18n/index.js";
-import { GameEmptyState } from "@pieai/swimmer-ui-kit";
-
-import { LiquidCtaButton } from "../../cta/LiquidCtaButton.js";
+import { GameButton, GameEmptyState } from "@pieai/swimmer-ui-kit";
 
 export const QUESTS_EMPTY_TITLE = translate("ui.navigation.empty.questsEmpty.copy.任务还没开张");
 export const QUESTS_EMPTY_DESCRIPTION = translate(
@@ -17,9 +15,16 @@ export function QuestsEmpty({ onNavigate }: { readonly onNavigate?: () => void }
       description={QUESTS_EMPTY_DESCRIPTION}
       action={
         onNavigate ? (
-          <LiquidCtaButton type="button" onClick={onNavigate}>
+          <GameButton
+            variant="primary"
+            surface="liquid"
+            liquidFinish="glossy"
+            className="university-cta"
+            type="button"
+            onClick={onNavigate}
+          >
             {QUESTS_EMPTY_ACTION}
-          </LiquidCtaButton>
+          </GameButton>
         ) : undefined
       }
     />

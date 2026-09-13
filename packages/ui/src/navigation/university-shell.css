@@ -49,12 +49,6 @@
   display: inline-block;
   font-size: 0.8rem;
 }
-.plans-screen .plan-card--featured .liquid-cta {
-  inline-size: 100%;
-}
-.plans-screen .plan-card--featured .liquid-cta__button {
-  inline-size: 100%;
-}
 .learning-save-state__details {
   margin: 0;
 }

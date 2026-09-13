@@ -13,7 +13,6 @@ import {
 } from "@pieai/university-core";
 
 import { ChoiceBlock, type ChoiceBlockExercise } from "../review/ChoiceBlock.js";
-import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import { PracticeRewardPanel, PRACTICE_UNLOCK_HINT } from "./PracticeRewardPanel.js";
 import type { PracticeRecentStore } from "./storage.js";
 
@@ -187,9 +186,16 @@ export function PracticeStream<Head = unknown>({
           description={PRACTICE_EMPTY_DESCRIPTION}
           action={
             onBrowse ? (
-              <LiquidCtaButton type="button" onClick={onBrowse}>
+              <GameButton
+                variant="primary"
+                surface="liquid"
+                liquidFinish="glossy"
+                className="university-cta"
+                type="button"
+                onClick={onBrowse}
+              >
                 {PRACTICE_EMPTY_ACTION}
-              </LiquidCtaButton>
+              </GameButton>
             ) : undefined
           }
         />
@@ -209,9 +215,17 @@ export function PracticeStream<Head = unknown>({
           <GamePanel className="practice-stream__intro" title={PRACTICE_INTRO_TITLE}>
             <p className="practice-stream__intro-copy">{PRACTICE_INTRO_DESCRIPTION}</p>
             <div className="practice-stream__actions">
-              <LiquidCtaButton type="button" data-practice-round onClick={() => start("round")}>
+              <GameButton
+                variant="primary"
+                surface="liquid"
+                liquidFinish="glossy"
+                className="university-cta"
+                type="button"
+                data-practice-round
+                onClick={() => start("round")}
+              >
                 {translate("product.practice.startRound", { count: roundSize })}
-              </LiquidCtaButton>
+              </GameButton>
               <GameButton variant="secondary" static type="button" onClick={() => start("free")}>
                 {PRACTICE_INTRO_ACTION}
               </GameButton>

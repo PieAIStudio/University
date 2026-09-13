@@ -4,7 +4,6 @@ import { playSound } from "../sound/index.js";
 import { GameBadge, GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
 
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
-import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import { Tip } from "../Tip.js";
 import { CapabilityExplanation } from "../capability/CapabilityExplanation.js";
 import {
@@ -294,7 +293,14 @@ export function ReviewCard({
       </label>
       {!revealed ? (
         liquidPrimary ? (
-          <LiquidCtaButton onClick={() => void reveal()} disabled={!answer.trim() || pending}>
+          <GameButton
+            variant="primary"
+            surface="liquid"
+            liquidFinish="glossy"
+            className="university-cta"
+            onClick={() => void reveal()}
+            disabled={!answer.trim() || pending}
+          >
             {pending
               ? isRecap
                 ? translate("ui.review.reviewCard.copy.正在记录")
@@ -306,7 +312,7 @@ export function ReviewCard({
                 : revealFailed
                   ? translate("ui.review.reviewCard.copy.重试揭示")
                   : translate("ui.review.reviewCard.copy.揭示答案")}
-          </LiquidCtaButton>
+          </GameButton>
         ) : (
           <GameButton
             variant="primary"

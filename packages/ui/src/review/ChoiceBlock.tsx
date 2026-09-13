@@ -2,7 +2,6 @@ import { translate } from "../i18n/index.js";
 import { useEffect, useRef, useState } from "react";
 import { GameBadge, GameButton, GameCallout, GamePanel } from "@pieai/swimmer-ui-kit";
 
-import { LiquidCtaButton } from "../cta/LiquidCtaButton.js";
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { playSound } from "../sound/index.js";
 import {
@@ -197,7 +196,12 @@ export function ChoiceBlock({
       ) : null}
       <div className="choice-block__submit">
         {liquidPrimary ? (
-          <LiquidCtaButton
+          <GameButton
+            variant="primary"
+            surface="liquid"
+            liquidFinish="glossy"
+            className="university-cta"
+            fullWidth
             disabled={!canAdvance && !canSubmit}
             onClick={() => {
               if (canAdvance) onNext?.();
@@ -205,7 +209,7 @@ export function ChoiceBlock({
             }}
           >
             {actionLabel(state.solved, Boolean(onNext), nextLabel)}
-          </LiquidCtaButton>
+          </GameButton>
         ) : (
           <GameButton
             variant="primary"

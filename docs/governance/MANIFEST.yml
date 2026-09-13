@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-13T05:04:48.651Z
+generated_at: 2026-09-13T05:46:34.940Z
 generator_version: doc-gov@0.14.0
 docs_count: 136
 docs:
@@ -856,7 +856,7 @@ docs:
     type: reference
     status: stable
     canonical: true
-    last_reviewed: 2026-08-30
+    last_reviewed: 2026-09-13
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-STICKY-LESSON-TOOLBARS-NEED-SCROLL-PADDING-BEFORE-PHONE-COMPLETION-BUTTONS
     path: docs/reference/learnings/workflow-issues/sticky-lesson-toolbars-need-scroll-padding-before-phone-completion-buttons.md

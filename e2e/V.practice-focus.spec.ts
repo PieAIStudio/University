@@ -100,7 +100,6 @@ test("V4 disabled answer labels stay readable in both themes, with real reduced 
       probe.remove();
       return { color: getComputedStyle(element).color, expected,
         background: getComputedStyle(element).backgroundColor,
-        surface: getComputedStyle(element.parentElement!.querySelector(".liquid-cta__surface")!).visibility,
         reduced: matchMedia("(prefers-reduced-motion: reduce)").matches };
     });
     expect(paint.reduced).toBe(true);
@@ -108,6 +107,6 @@ test("V4 disabled answer labels stay readable in both themes, with real reduced 
     expect(paint.background).not.toBe("rgba(0, 0, 0, 0)");
     await page.locator(".practice-stream__question .choice-block__option").first().click();
     await expect(submit).toBeEnabled();
-    await expect(submit.locator("..").locator(".liquid-cta__surface")).toHaveCSS("visibility", "visible", { timeout: 2000 });
+    await expect(page.locator(".choice-block__submit .game-ui-liquid-surface__body")).toHaveCSS("visibility", "visible", { timeout: 2000 });
   }
 });

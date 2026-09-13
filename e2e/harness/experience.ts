@@ -153,7 +153,7 @@ const PLANS_PRIMARY: ExperienceTarget = {
    * A cross-screen invariant must survive copy edits or it trains you to
    * ignore it. What must hold is that the paid card carries a call to action.
    */
-  locate: (page) => page.locator(".plan-card button.liquid-cta__button").first(),
+  locate: (page) => page.locator(".plan-card button.university-cta").first(),
 };
 
 /*
@@ -200,7 +200,7 @@ const LESSON_COMPLETION: ExperienceTarget = {
    * now 我读完了 — same action, clearer promise. Pinning the label trained
    * the probe to treat a copy fix as a regression.
    */
-  locate: (page) => page.locator("section.lesson-completion .liquid-cta__button").first(),
+  locate: (page) => page.locator("section.lesson-completion button.lesson-completion__action").first(),
   scrollToLessonBottom: true,
 };
 
@@ -493,7 +493,7 @@ export async function auditAxeBaseline(
   Empty, and it should stay that way as long as it can. It held two entries on
   2026-08-31 — /practice's primary CTA at 40px tall, and the floating 提意见
   pill 38.5px from its centre. Both were retired by fixes rather than by
-  argument: `min-height: 44px` on `.liquid-cta__button`, and moving the pill to
+  argument: the product CTA's `min-height: 44px` (now `.university-cta`), and moving the pill to
   the bottom-right on phones, away from the corner every primary action uses.
 
   An exemption that outlives its defect is a hole in the probe, so a row here

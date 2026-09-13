@@ -1813,6 +1813,11 @@ pre b{color:var(--go);font-weight:600}
 <p>不靠删掉重要条件换取简洁。价格、币种、计费周期、需要另付费的事实和实际失败保留在决策位置；付款安全、身份隔离、草稿保存、隐私默认值与判题三态不回退。取消续费入口不以是否继续开售为前提。短动效只表达开始、进展与完成，不循环吸睛、不延迟按钮可用；减少动效时保留静态信息。</p>
 <p>参考：<a href="https://blog.duolingo.com/core-tabs-redesign/">多邻国核心页面设计复盘</a>（层级、留白与简洁不能牺牲清晰），<a href="https://developer.apple.com/videos/play/wwdc2025/359/">Apple：Design foundations from idea to interface</a>（先必要，再逐步展开），<a href="https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/">W3C Disclosure</a>（键盘与展开语义），<a href="https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html">W3C 非必要动效</a>。以上资料于本轮检索；不据此宣称本产品转化率已经提升。</p>
 
+<h3 id="kit-liquid-cta">品牌主按钮：外观归 kit，飞向目标的过场归产品</h3>
+<p>2026-09-12 用户要求收回主按钮的外观分叉。普通主按钮直接使用 SwimmerUIKit 2.6.1 的液体 GameButton，选择 glossy 保留高光质感，按压反馈采用 kit 的 press 形变；不再维护另一份按钮渐变、轮廓或弹性参数。原生点击区域至少 44 像素高，文字、键盘焦点环和点击区不随液面缩放，禁用状态仍用清楚可读的品牌文字 token。</p>
+<p>“我读完了”飞向课程进度的叙事仍属于 University。保留目标注册、press / stretch / thread / break / land 五阶段和减少动效处理；薄包装只在真实点击时先取得原生按钮的位置并触发过场，再交回原动作。练习未通过时保留同屏落点；练习已通过后确认阅读则按原行为直接进入结算，原页面卸载后不留下跨页飞行。读完与答对仍是两个不同事实，迁移不改变课程完成、导航、支付或学习记录。</p>
+<p>未完成课文的“先去下一节”仍是次要按钮，不提升为主动作；它的普通指针点击高度也统一为至少 44 像素。触控模拟和手机宽度分别验收，不把桌面浏览器的窄窗口叫作真机。</p>
+
 <div class="foot">
   V5 · 2026-08-27 · 承接 V4 · 新增读完 / 答对、讲一遍、TTS / ASR 载荷边界、每日免费 AI 批改额度、源码证据呈现边界、复习提醒边界、匿名保存 / 邮箱绑定 / 合并 / 付费边界、意见传输与答题对照、世界头像与路径方向、匿名与计量 AI 的边界、听写整理、课程岛语义主线与双投影、unit 视觉家族与可替换云模块、改写中的课如实标注、课程信息卡默认收起<br>
   事实依据：<code>packages/core/src/progress/contract.ts</code> ·
