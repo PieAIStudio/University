@@ -59,6 +59,7 @@ not a startup glob; load only the lane the task actually touches.
 | 3D scene, renderer, colour, performance, or shells | `docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md` (where data comes from, what it may cost), `docs/adr/ADR-0008-one-locked-technique-per-island-element.md` (what technique draws it), `docs/policy/shared-rules/web3d-capability-alignment.md` and `docs/policy/shared-rules/donors.md` |
 | UI, shared components, tokens, brand behaviour, account, payment | `docs/policy/shared-rules/brand-kit-first.md` |
 | Model calls, grading, tutoring, cost | `docs/policy/shared-rules/ai-in-the-loop.md` and SPEC-0001 §Cost |
+| Working from the queue, or any unattended or back-to-back run | `docs/reference/execution/work-queue.md` — take the first unfinished `NN-` file in `docs/plans/active/`; one task, one commit, one push |
 | Current priorities or in-flight work | `docs/reference/execution/current-work.md` |
 | Local previews, physical devices, or Web-to-local tooling | `docs/reference/execution/local-device-testing.md` |
 
