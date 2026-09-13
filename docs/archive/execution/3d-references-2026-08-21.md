@@ -1,12 +1,12 @@
 ---
 id: REF-3D-REFERENCES
 title: What The 3D Should Copy
-type: reference
-status: active
-canonical: true
+type: archive
+status: archived
+canonical: false
 owner: human
 created: 2026-08-21
-last_reviewed: 2026-08-21
+last_reviewed: 2026-09-13
 domain: execution
 tags:
   - web3d
@@ -17,7 +17,14 @@ pinned: false
 related: []
 ---
 
-# What The 3D Should Copy
+# What The 3D Should Copy — 2026-08-21 research
+
+> Retained research and original verification, not current implementation
+> instructions. Camera, colour, post-processing and donor choices have since
+> changed; use V5, [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)
+> and [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md).
+> External maintenance/license claims below retain their original date and
+> were not re-verified in this repository-maintenance task.
 
 Commissioned because the owner's verdict on the current 3D was that it is *「弄得
 挺差的」* and asked which shipping product to model it on rather than nudging

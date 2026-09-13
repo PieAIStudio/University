@@ -27,6 +27,13 @@ superseded_by: null
 
 # ADR-0008: One Locked Technique Per Island Element
 
+Catalogue scope, reviewed 2026-09-13: the 31-island and long-course receipts
+below describe their original pre-lock inputs or frozen calibration, not the
+currently shipped catalogue. The [locked-package record](../../apps/local/course-proposals/locked/README.md)
+owns the 2026-09-12 publication change. Do not reopen those packages to reproduce
+a screenshot; current browser fixtures are selected by `e2e/harness/catalogue.ts`.
+This catalogue clarification changes no technique, budget or original receipt.
+
 ## Decision and authority
 
 Each element has one named technique, source, measured scope and tested budget.

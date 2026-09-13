@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-27
-last_reviewed: 2026-08-27
+last_reviewed: 2026-09-13
 domain: execution
 tags:
   - player-journey
@@ -22,6 +22,11 @@ related:
 ---
 
 # V5 用户旅程复盘：哪些继续，哪些降级，哪些砍掉
+
+2026-09-13 阅读边界：这是决策依据和建议的记录，不自动证明建议已经实施。
+下文 `turing-pact` 是当时讨论口述输入的历史样例；其课程已
+[锁定](../../../apps/local/course-proposals/locked/README.md)，不是当前发布入口。
+现行行为仍以 V5 为准，当前实施/外部验收入口见 current-work 与产品完整性计划。
 
 这不是把 `docs/reference/player-journey/v5/index.html` 复述一遍。
 它是对 v5 每一条施工项的**逐条判断**：还成立的说成立，被现实推翻的说清楚哪一条前提塌了，

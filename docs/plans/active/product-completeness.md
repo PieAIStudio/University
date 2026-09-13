@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: ai-assisted
 created: 2026-09-09
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-13
 domain: product
 tags:
   - onboarding
@@ -17,6 +17,21 @@ related:
 ---
 
 # 产品完整性：让开始、学习、保存和收费说同一种话
+
+## 当前接续：已整合主线（2026-09-13）
+
+课程、产品和视觉提交已进入 main；下文的工作树交接、未推送、activities 不兼容、
+转向失败与“下一步整合”均为当时的记录，不再是当前派工。主线完整检查的最新收据见
+[主线维护计划](mainline-maintainability.md)，此前 UI 交付保留在同页所链接的历史证据中。
+不要重做已完成的欢迎、草稿、付款保护或 UIKit 迁移。
+
+本计划仍 active 的范围是原有外部验收缺口：真实账号跨设备与 RLS、实际支付/取消/
+退款及经营信息、实体设备和提醒送达。它们需要对应服务、账号、设备与 owner 授权；
+浏览器模拟和本地单测不能替代。分别读现有后端、支付、提醒 runbook，不执行旧合并流程。
+旧四学科测试副本与恢复失败保留作历史证据；现行发布范围见
+[锁课记录](../../../apps/local/course-proposals/locked/README.md)，不能据此重开旧课程。
+
+## 历史产品线交接与实施记录
 
 工作树 `University-product`，分支 `codex/product-ux`，起点 `cea753e27e3c5196936ee30bf6a498aff8496c38`。2026-09-11 用户明确授权收尾、提交并推送本分支，交给集中整合。只处理本树，不改主目录、课程/视觉工作树，不发布或启用真实收费。下文旧轮次中“未提交/不提交”的描述是当时边界，不再是当前暂停指令。
 

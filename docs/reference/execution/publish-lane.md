@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-26
-last_reviewed: 2026-09-03
+last_reviewed: 2026-09-13
 domain: execution
 tags:
   - delivery
@@ -33,7 +33,15 @@ related:
 本报告不实现课程生成、后端课程发布 API、支付或权益。ADR-0002 的实际
 发布目标仍需产品决定，见文末。
 
-## 当前状态核对（2026-09-03）
+## 当前发布边界（2026-09-13）
+
+发布输入仍只有 `apps/local/course-proposals/recovery/`；`locked/` 中保全的包不进入
+交付，原因和解锁边界见 [锁课记录](../../../apps/local/course-proposals/locked/README.md)。
+当前规模从 `apps/university/src/content/imported.json` 与生成 shelf 读取，不复制为第二份
+长期清单。下方 44/53 门课的数字是当时构建收据，不是当前输入，也不能用来估算当前产物。
+worktree 准备使用项目 baseline 的单命令，不复用以下历史链接/路径示例。
+
+## 历史状态核对（2026-09-03）
 
 本工作树当前能直接核实的事实是：
 

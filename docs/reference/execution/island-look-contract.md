@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-03
+last_reviewed: 2026-09-13
 domain: web3d
 tags:
   - island
@@ -17,13 +17,22 @@ tags:
 
 # 岛屿观感合同：可以量的漂亮
 
+## 当前权威与历史测量（2026-09-13）
+
+本文保留历次观感门槛、反例和原始测量，仍供 `island-look-review` 追溯；不是把
+所有历史技术和提案同时施加到现行代码的规格。当前用户表面归 V5，技术/预算归
+[ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)，数据流归
+[ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md)，可执行门槛以对应测试为准。
+旧学科 URL 的测量发生在 [2026-09-12 锁课](../../../apps/local/course-proposals/locked/README.md)
+之前；不是当前可访问承诺。复验使用统一 E2E 目录选择器，不解锁包、不改历史证据。
+
 ## 名字先对齐（三层，各有确切的代码对应）
 
 | 叫法 | 代码 | 看到什么 | 在这一层选什么 |
 | --- | --- | --- | --- |
-| **星球页** | `packages/world/src/planet/PlanetPage` | 一个星球 + 一列「学习」 | 选哪个学习 |
+| **星球页** | `packages/world/src/planet/PlanetPage` | 领域星球及其学习系列区域（V5/ADR-0009） | 选领域与学习系列 |
 | **岛群图** | `Maps.tsx` 的 `WorldScene`，`detail="world"` | 一片天空中好几座浮岛，每座挂一个课程标题 | 选哪门课（一座岛 = 一门课） |
-| **课程岛** | `Maps.tsx` 的 `CourseScene`，`detail="course"` | 一座岛的近景，一串圆盘排成蛇形 | 选哪一节（一个圆盘 = 一小节） |
+| **课程岛** | `Maps.tsx` 的 `CourseScene`，`detail="course"` | 课程近景、实际学习路线与关卡 | 选哪一节（一个圆盘 = 一小节） |
 
 代码里管岛群图叫 `WorldScene` / "world map"，是历史叫法。**文档里一律用上表这三个词。**
 

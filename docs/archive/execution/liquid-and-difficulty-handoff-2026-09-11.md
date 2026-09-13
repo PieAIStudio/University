@@ -1,9 +1,9 @@
 ---
 id: REF-LIQUID-DIFFICULTY-HANDOFF
 title: Liquid UI and difficulty levels — handoff
-type: reference
-status: active
-canonical: true
+type: archive
+status: archived
+canonical: false
 owner: human
 created: 2026-09-11
 last_reviewed: 2026-09-13
@@ -14,7 +14,12 @@ tags:
   - difficulty
 ---
 
-# Liquid UI and difficulty levels — handoff
+# Liquid UI and difficulty levels — historical handoff
+
+> Archived after the course lane and UIKit migration were integrated. Read
+> [current work](../../reference/execution/current-work.md) for new assignments.
+> Original evidence, rejected alternatives and the unresolved activity-result
+> sink below are retained; old commands and versions are not current authority.
 
 For the session that picks this up cold. Everything below was measured or run,
 not assumed; where something is a judgement it says so.
@@ -24,9 +29,15 @@ the state they left, and the work they uncovered and did not do.
 
 ## Integrated status (2026-09-12)
 
+Publication correction (2026-09-13): the old activity/prose debt counts below
+describe authoring inputs at this handoff, not remaining shipped lessons.
+The affected packages were [locked on 2026-09-12](../../../apps/local/course-proposals/locked/README.md).
+Retain those measurements and the unresolved activity-result sink; do not treat
+the old counts or package versions as current release facts.
+
 The course branch is now merged into main, alongside the product and visual
 lanes (integration baseline `2316755f`). Continue from
-[current work](current-work.md), not by repeating this handoff. The owner has
+[current work](../../reference/execution/current-work.md), not by repeating this handoff. The owner has
 separately requested UIKit 2.6.1 adoption and CTA migration; that work is now
 [completed with its own acceptance](../../plans/completed/uikit-liquid-cta-migration.md),
 not by inheriting the older successes below. Installed versions remain in the
@@ -182,7 +193,7 @@ caller arranges the items and therefore owns the ground they sit on.
 
 ---
 
-## What is next, in my judgement
+## What was next at the handoff (historical)
 
 - **The completion record.** See Task A above. Until a lesson activity's result
   goes somewhere, the difficulty a learner chose is invisible to everything
@@ -276,3 +287,44 @@ These cost real time this round.
     drops the liquid entirely by design, so `.game-ui-liquid-surface` is absent
     from the DOM — which looks exactly like the surface not being applied.
     On the connect board the run button is disabled until one line is drawn.
+
+## Integration-map provenance
+
+The following section moved from Current Work on 2026-09-13. It describes the
+completed course-lane integration, preserving the original overlap analysis
+without making each new session read it as an open merge assignment.
+
+## Historical course-lane integration map
+
+The following overlap map is retained to explain the completed merge, not to
+request another one. Use current Git and source for any new integration.
+
+Measured before integration — the then-current `git diff --name-only main...HEAD`
+grouped by area.
+
+- **`packages/world`: one function, `stateOf` in `Maps.tsx`** (+18 −3). An
+  inline `prerequisiteCourseIds.every(...)` became a call to `prerequisitesMet`,
+  so the island's lighting and the sentence the island shows are one reading of
+  the graph rather than two. It still only decides `open` vs `idle`; nothing in
+  it blocks entry. This is the one place the 3D lane could collide, and the
+  collision is a three-line body, not a design.
+- **`apps/university/src/app/App.tsx`: thirteen added lines.** The skip test's
+  logic is `app/skip-test.ts` (a hook, like `useCourseProgress`), specifically so
+  the file every lane has to merge holds a call rather than fifty lines.
+- **`packages/ui/src/path`: real overlap, and inherent.** `CourseRouteQuiz.tsx`
+  is rewritten rather than extended — the old one let three self-reported
+  answers drop a learner at a lesson, which V5 §12 names as the failure it
+  exists to prevent. There is no smaller version of that change. `UnitCard.tsx`
+  takes a `skipTest` slot rather than embedding anything, and `UnitSkipTest.tsx`
+  is new.
+- **`packages/ui/src/learning-play`: mostly new files.** Two games were added.
+  The shared files a new game still has to touch are the renderer dispatch, the
+  lab's shelf and the fixture family; all three are held against the wire enum
+  by `LearningPlayLab.test.tsx`, so they go stale together or not at all. The
+  fourth, the shelf button's label, needs no test: `translate` takes a
+  `MessageKey`, so a kind with no `play.mode.<kind>` message is a type error.
+- **`apps/local/studies/browser-ai` is a symlink into the main checkout and is
+  gitignored.** Lesson prose changes are not in this branch's diff; the
+  version-controlled copy is `apps/local/course-proposals/recovery/browser-ai/`,
+  whose filenames carry a content hash. Re-export after any lesson change or
+  `check:export-freshness` fails.

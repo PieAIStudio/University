@@ -37,7 +37,7 @@ default cases in 41 files (42 spec files including the separate island judge).
 - [x] Worktree preparation: extend `scripts/link-studies-into-worktree.mjs`,
   preserve private/test input, refresh generated inputs, isolate four ports;
   prove one command then verify + E2E in a new in-repository worktree.
-- [ ] Documents: reconcile the 11 locked-study references, inspect handoff
+- [x] Documents: reconcile the 11 locked-study references, inspect handoff
   ownership/consumers/value, preserve decisions and evidence, pass docs:check.
 - [ ] Internal boundaries: map ports/UI/server boundaries, choose a minimal
   behavior-preserving change or evidence-backed no-op, verify + full E2E.
@@ -79,6 +79,44 @@ were read-only checked; it was not moved or run. Relocation is proven with an
 isolated marked fixture, preserving both bytes and the old access path. No real
 learner surface or server root protection changed. Two full suites running
 simultaneously, Windows and physical-device behavior were not tested here.
+
+Stage 3 receipt (2026-09-13): `pnpm docs:check` exit 0, 137 governed documents,
+219 current local links, no warnings. The two newly archived documents were
+additionally parsed with the existing Markdown parser: all six local links
+resolve (the ordinary links gate excludes archives). Current Work shrank from
+135 to 109 lines by moving the completed overlap map, not deleting its rationale.
+The original 11 slug-matching documents were confirmed: eight live references
+were clarified; three already archived, explicitly dated records were retained
+unchanged. Additional stale current denominators in publish-lane, prerender and
+the original product review were corrected as historical measurements. No live
+inventory is copied into a second catalogue; the runtime shelf observed here was
+one study, four courses, nine units and 27 lessons. No slug/package was changed.
+
+## Document disposition
+
+The reviewed execution directory had 18 Markdown documents. Names below refer
+to that original directory; ownership is retained. No original media was deleted.
+
+| Document | Owner / remaining consumer and value | Decision |
+| --- | --- | --- |
+| `current-work.md` | human; task router | Condense; move completed overlap analysis into the archived course handoff, retain current decisions and next-step links |
+| `liquid-and-difficulty-handoff.md` | human; former current-work entry, completed course/kit handoff, unresolved result-sink finding | Archive with all evidence and rejected trials; move history link out of active lanes |
+| `3d-references.md` | human; related by completed island plan, original research/provenance | Archive; current camera/renderer choices already belong to V5 and ADRs, not this dated recommendation |
+| `island-look-contract.md` | human; island-look-review skill and ADR links, ongoing measurements/negative knowledge | Keep path and evidence; distinguish historical thresholds from current tests/ADRs and correct current projection terminology |
+| `island-art-direction-v2.md` | human; ADR/contract references, rejected hex/planet trials | Keep history; remove the conflicting claim to own current visual decisions |
+| `i18n-strategy.md` | human; localization workflow and revision policy | Keep; old private-source file count is not a current shipping/cost denominator |
+| `publish-lane.md` | human; delivery operators and prerender evaluation | Keep current workflow authority; explicitly date old inventory/build receipts and route setup to baseline |
+| `addressable-lessons-prerender-evaluation.md` | human; pending publishing choice/cost study | Keep pending; do not reuse 579 historical lessons as today's decision denominator |
+| `v5-journey-review.md` | human; current-work and product-design rationale | Keep; historical private identifiers do not describe shipped content, recommendations are not implementation proof |
+| `swimmer-backend-migration.md` | human; adjacent unique SQL and backend operator | Keep pending; remote execution/RLS unverified, remove stale numbered-index pointer |
+| `payment-backend-gap.md` | human; product/current-work, external payment authority | Keep; no evidence authorizes closing its service/owner-dependent work |
+| `feedback-backend-gap.md` | human; current-work, external feedback delivery | Keep; current task does not verify remote service rollout |
+| `review-reminders-backend-gap.md` | human; current-work/V5, sender/device acceptance | Keep; no sender/delivery proof obtained here |
+| `commercial-model.md` | human; product/payment decisions | Keep; no authority to change business/charging policy |
+| `local-device-testing.md` | ai-assisted; preview/device operators and current-work | Keep; route fresh setup to the tested command, preserve old device evidence and explicit unknowns |
+| `product-completeness-review.md` | ai-assisted; product plan, original findings/images | Keep original evidence; old catalogue counts explicitly remain at their capture date |
+| `product-before-after/before-after.md` | ai-assisted; product plan and user-facing comparison | Keep stable with original images; not a second current task list |
+| `product-before-after/first-pass-comparison.md` | ai-assisted; later comparison's history link | Keep stable historical counterpoint; original before/after evidence cannot be regenerated as that past state |
 
 Spec filenames are repository-private navigation, not execution ordering; case
 titles remain the historical receipt IDs. All tracked exact filename consumers

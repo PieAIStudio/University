@@ -35,6 +35,11 @@ superseded_by: null
 
 ## 当前接续：已整合的 main（2026-09-12）
 
+2026-09-13 发布范围核对：下文出现的旧学科 URL、31 岛和 41/61 节真实课程，
+均属于锁课前的测量上下文，不是当前可访问承诺。发布范围与保留原因见
+[锁课记录](../../../apps/local/course-proposals/locked/README.md)；当前浏览器测试通过
+`e2e/harness/catalogue.ts` 选择真实发布课程或明确标注的校准夹具，不以解锁旧包换取通过。
+
 课程、产品、视觉分支的提交均已进入主线；整合基线为 `2316755f`。现在从
 主目录接续，不再执行下文旧工作树的合并准备。
 [AI Readiness 对齐](../completed/ai-readiness-alignment.md)和独立的

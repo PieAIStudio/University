@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: ai-assisted
 created: 2026-09-09
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-13
 domain: execution
 tags:
   - product-review
@@ -21,6 +21,10 @@ related:
 # University：让人愿意开始，也愿意留下
 
 **原始三轮检查 · 2026-09-09 · 审查当时只检查与提方案**
+
+发布范围核对（2026-09-13）：正文与原图的 37 门课、112 单元、463 节是审查当日
+的现场记录，不是当前目录。后续 [锁课](../../../apps/local/course-proposals/locked/README.md)
+改变了发布集合；原图和数字保持原样，不把旧测量改写成今天的证据。
 
 **历史证据提示：**以下内容和截图保留原始审查时点。之后用户已授权实施，
 最新行为以 [V5 产品决定](../player-journey/v5/index.html#product-completeness) 为准，

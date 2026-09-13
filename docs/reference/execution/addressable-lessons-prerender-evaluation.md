@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-27
-last_reviewed: 2026-08-27
+last_reviewed: 2026-09-13
 domain: execution
 tags:
   - routing
@@ -24,7 +24,7 @@ related:
 
 本轮**不实现预渲染**，只把设计、成本和选型钉下来。当前的 pathname 路由、
 `robots.txt` 和 `sitemap.xml` 已经可以作为后续预渲染的边界；真正需要产品
-负责人决定的是：是否为 579 节课增加静态正文 HTML，以及愿意接受多大的构建
+负责人决定的是：是否为实际发布的课程增加静态正文 HTML，以及愿意接受多大的构建
 产物和构建时间。
 
 推荐的后续方向是**保留现有客户端渲染，增加一个只负责 lesson 页面正文的
@@ -32,7 +32,11 @@ Vite/React 静态入口**。暂不引入第二套路由，也不在 importer 里
 课程清单。若愿意接受一次较大的框架接入，Vike 是可评估的现成方案；本项目
 当前不应直接迁移到 React Router 的预渲染接口。
 
-## 当前事实与基线
+## 历史构建基线（2026-08-27）
+
+2026-09-13 核对：下面的 579 节、字节数和构建时间只描述旧输入。当前发布范围已经
+随 [锁课](../../../apps/local/course-proposals/locked/README.md) 改变；未重新测量预渲染成本，
+也没有实现或批准新的 renderer。以后评估必须从当时的发布 shelf 取样，不能直接沿用此分母。
 
 测量对象是本工作树在 2026-08-27 的 delivery 输入和构建产物，命令没有改动
 受 Git 跟踪的生成文件：

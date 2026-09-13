@@ -25,8 +25,8 @@ superseded_by: null
 
 这是给产品负责人执行的 staging → production 操作包。完整 SQL 只在同目录的
 [`swimmer-backend-migration.sql`](./swimmer-backend-migration.sql)；本文件是它的
-步骤、验收、回滚和未决事项。`current-work.md` 第 1 项只指向这里，不再复制一份
-表结构或 XP 决策。
+步骤、验收、回滚和未决事项。当前工作索引只提供入口，不复制表结构或 XP 决策。
+这份 runbook 的存在不证明远端迁移已经执行；本轮没有连接后端或重新验收真实账号/RLS。
 
 本次仓库改动没有连接真实后端，也没有替 owner 执行任何远端 SQL。代码运行行为
 保持不变：没有配置时仍是安静的本机缓存；配置并登录后才绑定云端 learner row。

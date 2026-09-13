@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-30
-last_reviewed: 2026-09-03
+last_reviewed: 2026-09-13
 domain: web3d
 tags:
   - island
@@ -20,11 +20,13 @@ related:
 
 # 浮空棋盘 — University 程序化地图 v2 美术与架构规格
 
-这是从本轮 scratch 美术记录提升的唯一美术决策住处。它拥有视觉意图、语义、
-被拒方案和历史收据；[Island Look Contract](./island-look-contract.md) 拥有当前
-可测门槛、捕获方式和实测数；[ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)
-拥有单元素技术锁。不得把本文的历史测量当作现行预算，也不得把合同的数值门槛
-反写成美术意图。
+本文保留早期美术意图、被拒方案和原始收据，不再宣称拥有现行美术决定。
+当前学习者表面归 V5；[ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md)
+拥有单元素技术锁，[ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md)
+拥有同一连续管线。[Island Look Contract](./island-look-contract.md) 保留观感测量与反例。
+下文六棱柱、平板星球、旧相机和预算均按其原始时点阅读，不是新任务清单。
+旧学科 URL 的测量发生在 [2026-09-12 锁课](../../../apps/local/course-proposals/locked/README.md)
+之前；保留它们不表示课程仍在交付，也不授权重新解锁。
 
 作者：主控（架构 / 美术总监）。初始日期 2026-08-30。
 
