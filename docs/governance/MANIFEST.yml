@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-13T12:03:39.221Z
+generated_at: 2026-09-13T17:31:18.787Z
 generator_version: doc-gov@0.14.0
-docs_count: 138
+docs_count: 139
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -165,6 +165,13 @@ docs:
     canonical: true
     last_reviewed: 2026-09-10
     pinned: true
+  - id: PLAN-AI-FOUNDATIONS-REVIVAL
+    path: docs/plans/active/ai-foundations-revival.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-13
+    pinned: false
   - id: PLAN-CONTINUOUS-WORLD-DELIVERY
     path: docs/plans/active/continuous-world-delivery.md
     type: plan

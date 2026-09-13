@@ -25,6 +25,7 @@ related:
   - ADR-0010
   - REF-PRODUCT-COMPLETENESS-REVIEW
   - PLAN-PRODUCT-COMPLETENESS
+  - PLAN-AI-FOUNDATIONS-REVIVAL
 ---
 
 # Current Work
@@ -53,6 +54,7 @@ New mainline work follows the applicable lanes below.
 | --- | --- |
 | How work is queued, run and gated on the mainline | [Work queue](work-queue.md); one task, one commit, one push, because `pnpm verify` does not run the browser suite |
 | Published versus locked course packages | [Locked-package record](../../../apps/local/course-proposals/locked/README.md); runtime counts come from the generated catalogue, not historical handoffs |
+| Reviving the locked AI foundations course | [AI foundations revival](../../plans/active/ai-foundations-revival.md); follow its phase boundary and unresolved recovery requirements before resuming |
 | Mainline iteration, teaching contracts and remaining 3D acceptance gates | [Continuous world delivery](../../plans/active/continuous-world-delivery.md), reading its integrated-mainline continuation first; pre-merge sections are historical evidence, not open task assignments |
 | Learner-visible design | [Player journey V5](../player-journey/v5/index.html), including decision M; only consult V4 for behavior V5 does not amend |
 | Technique, measurement scope and rejected alternatives | [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md) |
