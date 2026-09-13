@@ -2,7 +2,7 @@
 id: PLAN-UIKIT-LIQUID-CTA-MIGRATION
 title: UIKit Upgrade and Liquid CTA Migration
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-09-13
@@ -40,13 +40,13 @@ the button appearance, not the learner journey or the page-level flight design.
 - [x] U4: Compare course-start, lesson-footer, settlement, empty-state and plans
   surfaces at desktop/phone widths in light/night themes. Observe both reading
   confirmation orders. Keep real routes and explicit component fixtures distinct.
-- [ ] U5: Attack every changed assertion for its intended failure, restore it,
+- [x] U5: Attack every changed assertion for its intended failure, restore it,
   run complete verify and browser gates without lowering coverage, commit and
   push through the normal pre-push hook. Finish main clean and synchronized.
 
 ## Source inventory and boundaries
 
-Current source has 17 button call sites in 15 files. Only one JSX button call
+This migration covers 17 CTA call sites in 15 files. Only one JSX button call
 receives `destination`; two `LessonReadConfirm` branches forward that property
 to it. The brief's three textual occurrences are not three independent button
 implementations. Preserve both confirmation states and the shared destination
@@ -102,8 +102,8 @@ The old unfinished footer was already 44px for coarse/touch input but only 40px
 for a mouse at phone width. The scoped layout rule now keeps both at 44px;
 the new two-mode browser regression first rejected the 40px mouse case and
 then passed both modes. The original one-mode touch run was positive evidence,
-not a red test. Final current-source full browser/verify and normal push gates
-remain required before closing this plan.
+not a red test. The final current-source full browser/verify and normal push
+gates are recorded in the accepted delivery below.
 
 The same visual review found old bright-on-bright settlement explanation text.
 Only the two recap body-color declarations changed to the existing theme text
@@ -111,4 +111,21 @@ token; lesson content and workflow stayed intact. The actual browser first
 rejected the old fixed bright ink, then passed both themes. New mouse/touch and
 recap readability regressions join the default suite without additional skips.
 The post-fix complete verify passed; the matching complete E2E and ordinary
-pre-push receipt are collected separately rather than inherited from earlier runs.
+pre-push receipts were collected separately rather than inherited from earlier runs.
+
+## Accepted delivery (2026-09-13)
+
+Code checkpoint `7efe2b54` passed complete `pnpm verify` and `pnpm e2e` with
+235 passed / 6 existing skipped / 0 failed. The ordinary `git push origin main`
+then ran the unchanged pre-push browser gate again, with the same 235/6/0 result,
+and successfully advanced remote main from `2316755f` to `7efe2b54`.
+The five review-clock tests, two input-mode touch-floor tests and two recap-theme
+tests are retained; the six skips still require a second real published study.
+
+The exact local before/after images, component fixtures, videos, keyframes,
+source provenance, successful gates and effective negative-control errors are
+indexed in `.devspace-reports/pgs-kit-alignment-20260912/desktop-delivery-evidence.md`.
+The final documentation-only closure does not change the verified runtime code.
+Temporary local Auth/test data and preview processes are delivery scaffolding,
+not a new runtime or online deployment dependency. Production accounts, payment,
+cloud synchronization and physical-device acceptance remain outside this delivery.

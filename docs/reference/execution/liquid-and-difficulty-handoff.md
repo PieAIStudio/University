@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-09-11
-last_reviewed: 2026-09-12
+last_reviewed: 2026-09-13
 domain: execution
 tags:
   - handoff
@@ -27,8 +27,9 @@ the state they left, and the work they uncovered and did not do.
 The course branch is now merged into main, alongside the product and visual
 lanes (integration baseline `2316755f`). Continue from
 [current work](current-work.md), not by repeating this handoff. The owner has
-separately requested UIKit 2.6.1 adoption and CTA migration; its new validation
-must not inherit the older successes below. Installed versions remain in the
+separately requested UIKit 2.6.1 adoption and CTA migration; that work is now
+[completed with its own acceptance](../../plans/completed/uikit-liquid-cta-migration.md),
+not by inheriting the older successes below. Installed versions remain in the
 package manifests and lockfile.
 
 ## Historical handoff state (2026-09-11)

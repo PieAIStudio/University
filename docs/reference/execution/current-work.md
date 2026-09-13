@@ -38,19 +38,20 @@ integration baseline is `2316755f`. Work in the main checkout unless the owner
 starts another lane. Retained sibling worktrees preserve original materials and
 dated evidence; their old previews and pre-merge handoffs do not prove the
 current mainline. Recheck Git and listener ownership rather than replaying an
-old merge or using a remembered port. The current approved task is below.
+old merge or using a remembered port. The completed [PGS alignment](../../plans/completed/ai-readiness-alignment.md)
+and [UIKit migration](../../plans/completed/uikit-liquid-cta-migration.md) retain
+their separate acceptance records. New mainline work follows the applicable lanes below.
 
 ## Active lanes
 
 | Task | Authoritative entry |
 | --- | --- |
-| Current: UIKit dependency upgrade and CTA migration | [UIKit migration](../../plans/active/uikit-liquid-cta-migration.md); retain the product flight and finish independent upgrade/browser gates. The preceding [PGS alignment](../../plans/completed/ai-readiness-alignment.md) is complete; Desktop owns the continuation and local evidence |
 | Mainline iteration, teaching contracts and remaining 3D acceptance gates | [Continuous world delivery](../../plans/active/continuous-world-delivery.md), reading its integrated-mainline continuation first; pre-merge sections are historical evidence, not open task assignments |
 | Learner-visible design | [Player journey V5](../player-journey/v5/index.html), including decision M; only consult V4 for behavior V5 does not amend |
 | Technique, measurement scope and rejected alternatives | [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md) |
 | Shared blueprint/field, projections and source entry points | [ADR-0009](../../adr/ADR-0009-the-procedural-map-is-one-pipeline.md) |
 | Local preview, iPhone/Android, Web-to-local tools | [Local device testing](local-device-testing.md) |
-| The brand's liquid surface, and lesson difficulty levels | [Liquid and difficulty handoff](liquid-and-difficulty-handoff.md) — what shipped, what is next, and the measurements not to redo |
+| The brand's liquid surface, and lesson difficulty levels | [Liquid and difficulty handoff](liquid-and-difficulty-handoff.md) — historical source decisions; current CTA acceptance is in the completed UIKit plan above |
 | Course authoring and each lesson's teaching shape | [Parity contract](../../specs/active/SPEC-0001-universitylocal-parity-contract.md), then the single [write-lesson contract](../../../apps/local/.agents/skills/write-lesson/SKILL.md); use `apps/local` workflows and keep publication separate |
 | Which interactive activity a lesson gets, and where it sits | [Activity selection](../../../apps/local/.agents/skills/write-lesson/references/activities.md), decided with the variant at step 3 of [write-lesson](../../../apps/local/.agents/skills/write-lesson/SKILL.md); every new lesson carries at least one — `LessonCreationProposalSchema` requires it and refuses an activity the prose never points at. Lessons written before 2026-09-09 are counted, not failed, by `lint-lessons` |
 | Activity payloads, engines and difficulty tiers | [Component contract](../../../packages/ui/src/learning-play/README.md), [interaction design](../../../packages/ui/src/learning-play/DESIGN.md) and [prior acceptance evidence](../../plans/completed/play-usability.md); an embedded activity never substitutes for a lesson's graded exercise, and `pnpm check:activities` names the lessons an engine change breaks, and checks that each activity's citation still points where it says |
