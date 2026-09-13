@@ -131,7 +131,7 @@
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.20",
-    "@pieai/swimmer-ui-kit": "2.4.0",
+    "@pieai/swimmer-ui-kit": "2.6.1",
     "@pieai/university-core": "workspace:*",
     "mermaid": "11.16.0",
     "react-markdown": "10.1.0",

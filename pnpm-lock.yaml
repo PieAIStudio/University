@@ -73,8 +73,8 @@ importers:
         specifier: 0.3.0
         version: 0.3.0(three@0.185.1)
       '@pieai/swimmer-ui-kit':
-        specifier: 2.4.0
-        version: 2.4.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 2.6.1
+        version: 2.6.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@pieai/university-backend':
         specifier: workspace:*
         version: link:../../packages/backend
@@ -245,8 +245,8 @@ importers:
         specifier: ^0.27.20
         version: 0.27.20(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@pieai/swimmer-ui-kit':
-        specifier: 2.4.0
-        version: 2.4.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 2.6.1
+        version: 2.6.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../core
@@ -312,8 +312,8 @@ importers:
         specifier: 0.3.0
         version: 0.3.0(three@0.185.1)
       '@pieai/swimmer-ui-kit':
-        specifier: 2.4.0
-        version: 2.4.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 2.6.1
+        version: 2.6.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../core
@@ -778,8 +778,8 @@ packages:
       three:
         optional: true
 
-  '@pieai/swimmer-ui-kit@2.4.0':
-    resolution: {integrity: sha512-eGlkU6W1ychr270FGbu2dG1TyIOwv2zBlHNVNLKk8HP8oKYkUchvpHa8f+BXMgz0ZFmwUwbyJYXq1TRAOb7JAw==}
+  '@pieai/swimmer-ui-kit@2.6.1':
+    resolution: {integrity: sha512-SQw5Ynu789TJhA0CJ3aVQF75D8E0dOGrGzDPnb1g4UkSM5voW81ootHvB69abzqlqflCVPyfal8FJCd4P6/uvg==}
     engines: {node: '>=24 <25'}
     hasBin: true
     peerDependencies:
@@ -3106,7 +3106,7 @@ snapshots:
     optionalDependencies:
       three: 0.185.1
 
-  '@pieai/swimmer-ui-kit@2.4.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@pieai/swimmer-ui-kit@2.6.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
