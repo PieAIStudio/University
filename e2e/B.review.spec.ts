@@ -18,7 +18,7 @@ test.describe("B 同一个人回来复习", () => {
     await walkFirstOnlineLesson(page);
 
     let dropped = 0;
-    await namedStep(page, "把掉落的卡片改成已到期（模拟第二天回来）", async () => {
+    await namedStep(page, "保留真实卡片日程，模拟第二天回来", async () => {
       dropped = await makeDroppedCardsDue(page);
       expect(dropped).toBeGreaterThan(0);
     });

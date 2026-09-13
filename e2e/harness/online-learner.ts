@@ -171,30 +171,42 @@ export async function walkFirstOnlineLesson(page: Page): Promise<void> {
   await waitForSettlementProgress(page);
 }
 
-/** Same person, next morning: due dates pulled into the past, then one load. */
 /**
- * Rewind the dropped cards so the review queue behaves as it will tomorrow.
+ * Same fresh-context learner, next morning. Advance the browser's date, not
+ * the cards' FSRS schedules. Date-only emulation leaves UI timers running.
  *
- * The reload at the end is load-bearing. The progress port keeps its state in
- * memory and writes through to `localStorage`, so editing storage underneath a
- * running page changes nothing a screen can see — and a `goto` that only
- * changes the hash does not reload the document. This helper looked like it
- * worked for as long as new cards were due immediately: the review screen had
- * cards either way, so nobody found out that the simulation was a no-op.
+ * The value event may already have adopted guest progress into an anonymous
+ * account and cleared the guest cache. Reading only the old guest key races
+ * that legitimate transition. This helper is for B's isolated, single-learner
+ * context: exactly one nonempty progress cache must exist. Never guess among
+ * several accounts, inspect auth storage, or manufacture missing cards.
+ * Reload then makes the normal review selector evaluate the genuine schedule
+ * at the simulated return time, including when a cloud merge happens later.
  */
 export async function makeDroppedCardsDue(page: Page): Promise<number> {
-  const count = await page.evaluate(() => {
+  const schedule = await page.evaluate(() => {
     const key = "university.progress.v2";
-    const raw = localStorage.getItem(key);
-    if (!raw) throw new Error("没有进度可改：localStorage 里没有 university.progress.v2");
-    const data = JSON.parse(raw) as { cards?: Record<string, { dueAt: number }> };
-    const cards = Object.values(data.cards ?? {});
-    if (cards.length === 0) throw new Error("刚学完的课没有掉落卡片");
-    const dueAt = Date.now() - 1000;
-    for (const card of cards) card.dueAt = dueAt;
-    localStorage.setItem(key, JSON.stringify(data));
-    return cards.length;
+    const schedules = Object.keys(localStorage)
+      .filter((name) => name === key || name.startsWith(`${key}.account.`))
+      .map((name) => {
+        const data = JSON.parse(localStorage.getItem(name) ?? "null") as {
+          cards?: Record<string, { dueAt: unknown }>;
+        } | null;
+        return Object.values(data?.cards ?? {});
+      })
+      .filter((cards) => cards.length > 0);
+    if (schedules.length === 0) throw new Error("刚学完的课没有掉落卡片");
+    if (schedules.length !== 1) throw new Error("复习模拟需要唯一的学习者缓存，不能猜测账号");
+    const cards = schedules[0]!;
+    const dates = cards.map((card) => {
+      if (typeof card.dueAt !== "number" || !Number.isFinite(card.dueAt)) {
+        throw new Error("复习卡的到期时间无效，不能伪造日程");
+      }
+      return card.dueAt;
+    });
+    return { count: cards.length, returnAt: Math.max(Date.now() + 86_400_000, ...dates) + 1000 };
   });
+  await page.clock.setFixedTime(schedule.returnAt);
   await page.reload({ waitUntil: "domcontentloaded" });
-  return count;
+  return schedule.count;
 }
