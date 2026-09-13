@@ -164,7 +164,7 @@ pnpm --filter @pieai/university-app exec vite preview --mode delivery --host 127
 UNIVERSITY_STUDIES_ROOT=/Users/yuanfei/PieAI/University/apps/local/studies \
 E2E_ONLINE_PORT=22993 E2E_LOCAL_WEB_PORT=22994 \
 E2E_LOCAL_API_PORT=22995 E2E_GRADING_PORT=22996 \
-pnpm exec playwright test --config e2e/playwright.config.ts --project=default e2e/P.learning-play.spec.ts
+pnpm exec playwright test --config e2e/playwright.config.ts --project=default e2e/learning-play.spec.ts
 
 UNIVERSITY_LOCAL_STUDIES_ROOT=/Users/yuanfei/PieAI/University/apps/local/studies \
 pnpm check:export-freshness

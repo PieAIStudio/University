@@ -53,9 +53,10 @@ function preferenceChoices(page: Page): Locator {
 }
 async function choosePreference(page: Page, index: number): Promise<string> {
   const choices = preferenceChoices(page);
-  expect(await choices.count(), `偏好产品至少要保留第 ${index + 1} 个可选项`).toBeGreaterThanOrEqual(
-    index + 1,
-  );
+  expect(
+    await choices.count(),
+    `偏好产品至少要保留第 ${index + 1} 个可选项`,
+  ).toBeGreaterThanOrEqual(index + 1);
   const choice = choices.nth(index);
   await expect(choice).toBeVisible();
   const label = (await choice.innerText()).trim();

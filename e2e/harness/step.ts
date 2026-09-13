@@ -7,10 +7,12 @@ import { test, type Page } from "@playwright/test";
 const ARTIFACTS = fileURLToPath(new URL("../../SCRATCH/e2e", import.meta.url));
 
 function slug(name: string): string {
-  return name
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 80) || "step";
+  return (
+    name
+      .replace(/[^\p{L}\p{N}]+/gu, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 80) || "step"
+  );
 }
 
 /**

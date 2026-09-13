@@ -154,4 +154,4 @@ AI 完成结果可展开并复制文本工作单；复制失败提示直接选�
 - **Don't** 把 AI 沙盒称为实时模型调用、真实文件修改、发送或发布；检查点恢复不能暗示真实发送和支付都可撤销。
 - **Don't** 把通关、点击数、自动测试或 AI 试玩称为“已掌握”、长期记住或真人觉得好玩。本轮证据只说明规则、控件与反馈吻合；理解迁移与记忆保持仍需真实试学。
 
-新易玩度、三档入口和身份切换回归为 [R 用例](../../../../e2e/R.play-usability.spec.ts)，本轮方法与证据见[易玩度计划](../../../../docs/plans/completed/play-usability.md)。完整操作回归入口为[编程玩法浏览器用例](../../../../e2e/P.learning-play.spec.ts)与 [AI 产品玩法浏览器用例](../../../../e2e/Q.ai-product-play.spec.ts)。设计依据、迭代、独立审查及验收证据归于[编程玩法计划](../../../../docs/plans/completed/learning-play-lab.md)与 [AI 产品玩法计划](../../../../docs/plans/completed/ai-product-play.md)。本文件从组件和最终样式提取规范，不替代验收报告；已有截图只能证明其采集版本、尺寸与状态下可见的内容，单帧、自动回归和 AI 试玩都不能证明真人的操作节奏、乐趣或学习效果。
+新易玩度、三档入口和身份切换回归为 [R 用例](../../../../e2e/play-usability.spec.ts)，本轮方法与证据见[易玩度计划](../../../../docs/plans/completed/play-usability.md)。完整操作回归入口为[编程玩法浏览器用例](../../../../e2e/learning-play.spec.ts)与 [AI 产品玩法浏览器用例](../../../../e2e/ai-product-play.spec.ts)。设计依据、迭代、独立审查及验收证据归于[编程玩法计划](../../../../docs/plans/completed/learning-play-lab.md)与 [AI 产品玩法计划](../../../../docs/plans/completed/ai-product-play.md)。本文件从组件和最终样式提取规范，不替代验收报告；已有截图只能证明其采集版本、尺寸与状态下可见的内容，单帧、自动回归和 AI 试玩都不能证明真人的操作节奏、乐趣或学习效果。

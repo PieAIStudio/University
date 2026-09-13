@@ -75,8 +75,18 @@ test.describe("对照台：两栏都要在，而且要并排", () => {
     test(`${tier} 档的 ${cases} 个情况全部可见，两种做法都印出来了`, async ({ page }) => {
       await openLab(page, "对照台", tier);
 
-      await allVisibleAndInside(page, activity(page).locator(".play-contrast__approach"), "做法", 2);
-      await allVisibleAndInside(page, activity(page).locator(".play-contrast__case"), "情况", cases);
+      await allVisibleAndInside(
+        page,
+        activity(page).locator(".play-contrast__approach"),
+        "做法",
+        2,
+      );
+      await allVisibleAndInside(
+        page,
+        activity(page).locator(".play-contrast__case"),
+        "情况",
+        cases,
+      );
       await noSidewaysScroll(page);
 
       // Reveal one, and require both columns — the blank-column defect is the

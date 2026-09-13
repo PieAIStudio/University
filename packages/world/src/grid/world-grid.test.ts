@@ -1,10 +1,9 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import type { CourseNode } from "../course/course.js";
 import { WORLD_ISLAND_SEPARATION_GAP } from "../course/layout.js";
 import { islandLookCameraForShot } from "../island/island-look.js";
-import { buildWorldStudyGrid, placeStudyArchipelago, placeWorld } from "../Maps.js";
+import { buildWorldStudyGrid, placeWorld } from "../Maps.js";
 import { GRID_SHARED_SOIL } from "./grid-palette.js";
 import {
   worldGridFootprintForLessons,
@@ -18,50 +17,8 @@ import {
 } from "./world-underside.js";
 import { CALIBRATION_CATALOGUE } from "./calibration-catalogue.js";
 
-interface ImportedCourse {
-  readonly courseId: string;
-  readonly title: string;
-  readonly lessons: number;
-}
-
-interface ImportedStudy {
-  readonly studyId: string;
-  readonly title: string;
-  readonly courses: readonly ImportedCourse[];
-}
-
-interface ImportedCatalogue {
-  readonly studies: readonly ImportedStudy[];
-}
-
-const catalogue = JSON.parse(
-  readFileSync(
-    new URL("../../../../apps/university/src/content/imported.json", import.meta.url),
-    "utf8",
-  ),
-) as ImportedCatalogue;
-
-/*
-  Two catalogues on purpose. `catalogue` is what ships right now and is what the
-  "nothing gets dropped" assertions read; `CALIBRATION_CATALOGUE` is the frozen
-  set of shapes the geometry numbers below were calibrated against, because a
-  shipped catalogue of four short courses cannot exercise a 41-lesson silhouette
-  or a thirty-one-course study. See calibration-catalogue.ts.
-*/
+// Frozen geometry calibration; the app owns live-catalogue integration tests.
 const calibrationNodes: readonly CourseNode[] = CALIBRATION_CATALOGUE.studies.flatMap((study) =>
-  study.courses.map((course, depth) => ({
-    courseId: course.courseId,
-    title: course.title,
-    lessons: course.lessons,
-    studyId: study.studyId,
-    studyTitle: study.title,
-    depth,
-    prerequisiteCourseIds: [],
-    trackId: null,
-  })),
-);
-
-const catalogueNodes: readonly CourseNode[] = catalogue.studies.flatMap((study) =>
   study.courses.map((course, depth) => ({
     courseId: course.courseId,
     title: course.title,
@@ -158,8 +115,7 @@ describe("world grid projection", () => {
   it("projects every real course into one deterministic, earthy catalogue", () => {
     const world = placeWorld(calibrationNodes, () => 0, "turing-pact", "catalogue");
     // Against the fixture's own size, not a number written down once. The same
-    // claim about what actually ships is made by "projects the shipped
-    // catalogue without dropping a course" below, which reads the live import.
+    // claim about what actually ships lives in the app catalogue integration test.
     expect(world.placements).toHaveLength(calibrationNodes.length);
 
     const topColours = new Set(world.placements.map((entry) => entry.grid.palette.top));
@@ -180,22 +136,6 @@ describe("world grid projection", () => {
     expect(totalCells * 18).toBeLessThan(22_000);
   });
 
-  /*
-    The live half of the split. Everything above calibrates geometry against
-    frozen shapes; this is the one that still has to move when a package is
-    locked or unlocked, and it is what catches a course that silently fails to
-    reach the scene.
-  */
-  it("projects the shipped catalogue without dropping a course", () => {
-    const world = placeWorld(catalogueNodes, () => 0, catalogueNodes[0]!.studyId, "catalogue");
-    expect(catalogueNodes.length).toBeGreaterThan(0);
-    expect(world.placements).toHaveLength(catalogueNodes.length);
-    expect(new Set(world.placements.map((entry) => entry.node.courseId))).toEqual(
-      new Set(catalogueNodes.map((node) => node.courseId)),
-    );
-    expect(world.placements.every((entry) => entry.grid.cells.length > 0)).toBe(true);
-  });
-
   it("makes the 41-lesson silhouette wider than a 12-lesson plateau", () => {
     const world = placeWorld(calibrationNodes, () => 0, "turing-pact", "catalogue");
     const plateau = world.placements.find((entry) => entry.node.lessons === 12);
@@ -205,42 +145,6 @@ describe("world grid projection", () => {
     expect(highland!.grid.bounds.maxHalf).toBeGreaterThan(plateau!.grid.bounds.maxHalf);
     expect(highland!.grid.cells.length).toBeGreaterThan(plateau!.grid.cells.length);
   });
-
-  it.each(catalogue.studies)(
-    "keeps $studyId's production framing inputs independent of other catalogue series",
-    (study) => {
-      // V5 M replaced the all-catalogue planar view with domain globes and
-      // per-study archipelagos. The former fixed world-design assertion
-      // clipped at 48 courses (horizontal coverage 1.101 > 0.93); R39 keeps
-      // that receipt rather than tuning the diagnostic shot to hide it.
-      // Actual course boundaries are also checked by the ordinary N/S browser
-      // overview assertions. Do not restore global-catalogue camera acceptance.
-      const own = catalogueNodes.filter((node) => node.studyId === study.studyId);
-      const isolated = placeStudyArchipelago(own, () => 0, study.studyId);
-      const inCatalogue = placeStudyArchipelago(catalogueNodes, () => 0, study.studyId);
-      const signature = (world: ReturnType<typeof placeStudyArchipelago>) =>
-        world.placements.map((entry) => ({
-          studyId: entry.node.studyId,
-          courseId: entry.node.courseId,
-          position: entry.position.toArray(),
-          radius: entry.radius,
-          state: entry.state,
-        }));
-
-      expect(inCatalogue.placements).toHaveLength(study.courses.length);
-      expect(new Set(inCatalogue.placements.map((entry) => entry.node.courseId))).toEqual(
-        new Set(study.courses.map((course) => course.courseId)),
-      );
-      expect(signature(inCatalogue)).toEqual(signature(isolated));
-      expect(inCatalogue.extent).toBe(isolated.extent);
-      expect(Number.isFinite(inCatalogue.extent)).toBe(true);
-      for (const entry of inCatalogue.placements) {
-        expect(Math.hypot(entry.position.x, entry.position.z) + entry.radius).toBeLessThanOrEqual(
-          inCatalogue.extent,
-        );
-      }
-    },
-  );
 
   it("retains the original 3/19/41-lesson footprint calibration without pinning retired course IDs", () => {
     const world = placeWorld(calibrationNodes, () => 0, "turing-pact", "catalogue");
@@ -318,7 +222,7 @@ describe("world grid projection", () => {
     );
     expect(drawn.every((prop) => prop.role === "landmark" || prop.role === "canopy")).toBe(true);
     const totalProps = drawn.length;
-    expect(totalProps).toBeGreaterThanOrEqual(catalogueNodes.length);
+    expect(totalProps).toBeGreaterThanOrEqual(calibrationNodes.length);
     expect(totalProps).toBeLessThan(160);
     expect(
       world.placements.every(

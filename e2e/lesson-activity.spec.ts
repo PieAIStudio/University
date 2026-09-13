@@ -56,8 +56,7 @@ function lessonsWithActivities(): readonly Target[] {
         for (const lessonId of dirs(lessonsRoot)) {
           const latest = join(lessonsRoot, lessonId, "latest.json");
           if (!existsSync(latest)) continue;
-          const revision = JSON.parse(readFileSync(latest, "utf8"))
-            .contentRevision as number;
+          const revision = JSON.parse(readFileSync(latest, "utf8")).contentRevision as number;
           const manifestPath = join(
             lessonsRoot,
             lessonId,
@@ -113,9 +112,7 @@ test("每一节声明了互动组件的课，读者都真的看得到它", async
       const game = board.locator(".learning-activity__game");
       expect((await game.textContent())?.trim().length ?? 0).toBeGreaterThan(0);
     } catch {
-      const body = (await page.locator("body").innerText())
-        .slice(0, 120)
-        .replace(/\s+/g, " ");
+      const body = (await page.locator("body").innerText()).slice(0, 120).replace(/\s+/g, " ");
       broken.push(`${target.kind} @ ${target.path} — 页面上是：${body}`);
     }
   }
@@ -142,9 +139,7 @@ test("手机宽度下，每块板子上的东西都在板子里面", async ({ pa
   await page.setViewportSize({ width: 375, height: 812 });
 
   const seen = new Set<string>();
-  const sample = lessonsWithActivities().filter(
-    (t) => !seen.has(t.kind) && seen.add(t.kind),
-  );
+  const sample = lessonsWithActivities().filter((t) => !seen.has(t.kind) && seen.add(t.kind));
   expect(sample.length, "货架上一个带组件的课节都没有").toBeGreaterThan(0);
 
   const escaped: string[] = [];
@@ -194,18 +189,15 @@ test("手机宽度下，每块板子上的东西都在板子里面", async ({ pa
       const geometry: { label: string; bounds: ReturnType<DOMRect["toJSON"]> }[] = [];
       for (const [index, piece] of shown.entries()) {
         const rect = piece.getBoundingClientRect();
-        const label =
-          piece.textContent?.trim().slice(0, 20) || `第 ${index + 1} 个`;
+        const label = piece.textContent?.trim().slice(0, 20) || `第 ${index + 1} 个`;
         geometry.push({ label, bounds: rect.toJSON() });
         if (rect.width === 0 || rect.height === 0) {
           escapes.push(`「${label}」宽或高为 0`);
           continue;
         }
         // One pixel of slack for sub-pixel rounding on borders.
-        if (rect.left < box.left - 1)
-          escapes.push(`「${label}」左边露到板子外`);
-        if (rect.right > box.right + 1)
-          escapes.push(`「${label}」右边露到板子外`);
+        if (rect.left < box.left - 1) escapes.push(`「${label}」左边露到板子外`);
+        if (rect.right > box.right + 1) escapes.push(`「${label}」右边露到板子外`);
       }
       return { ok: true as const, pieces: shown.length, escapes, board: box.toJSON(), geometry };
     });

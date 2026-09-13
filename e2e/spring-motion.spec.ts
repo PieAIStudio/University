@@ -92,7 +92,9 @@ test("X real coastal spring: restrained flow stops and resets without moving wat
       {
         url: page.url(),
         times: [a.time, b.time, c.time, d.time],
-        samples: [a, b, c, d].map(({ geometry, position, flow, ...receipt }) => receipt),
+        samples: [a, b, c, d].map(
+          ({ geometry: _geometry, position: _position, flow: _flow, ...receipt }) => receipt,
+        ),
         geometry: a.geometry,
         vertices: a.position.length / 3,
         positionsAndSupportUnchanged: true,

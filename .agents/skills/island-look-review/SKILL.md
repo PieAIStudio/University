@@ -17,7 +17,7 @@ metadata:
 
 - 连续世界交付使用普通产品路由、正常后处理和真实指针/键盘操作。
   当前计划不处理 `island-look` 浏览器项目；不要因加载本技能就运行或修复
-  `e2e/J.island-look.spec.ts`，也不改 shot 机位或阈值来取得绿色结果。
+  `e2e/island-look.spec.ts`，也不改 shot 机位或阈值来取得绿色结果。
 - `shot`、`post=off`、`freeze` 和字段/法线可视化只用于有明确问题的诊断。
   诊断图单独标记，不能替代普通页面的最终画面；运动验收不能使用冻结场景。
 - 使用项目脚本或 `pnpm exec playwright`，不调用可能版本不同的全局
@@ -167,7 +167,7 @@ metadata:
 - `docs/reference/execution/island-look-contract.md` — 门槛、基线、以及历次推翻记录
 - `docs/policy/shared-rules/donors.md` — donor 各自能拿什么、不能拿什么
 - `docs/plans/active/continuous-world-delivery.md` — 当前验收入口、状态和回执
-- `e2e/K.continuous-course.spec.ts`、`e2e/N.world-delivery.spec.ts` — 普通页面与场景身份证据
+- `e2e/continuous-course.spec.ts`、`e2e/world-delivery.spec.ts` — 普通页面与场景身份证据
 - `e2e/playwright.webkit.config.ts` — 可选 WebKit 课程冒烟，复用 K，不改变默认闸门
-- `e2e/J.island-look.spec.ts` — 旧判官实现；当前计划未授权运行或修改
+- `e2e/island-look.spec.ts` — 旧判官实现；当前计划未授权运行或修改
 - `packages/world/src/island/look-contract.ts` — 门槛的当前值

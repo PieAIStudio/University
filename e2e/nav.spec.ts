@@ -40,10 +40,10 @@ async function clearCanvasPoint(page: Page): Promise<Point> {
         const element = entry as HTMLElement;
         return Boolean(
           element.closest("button.label") ||
-            element.closest(".nextup") ||
-            element.closest(".picked") ||
-            element.closest(".nav-rail") ||
-            element.closest(".app-shell__aside"),
+          element.closest(".nextup") ||
+          element.closest(".picked") ||
+          element.closest(".nav-rail") ||
+          element.closest(".app-shell__aside"),
         );
       });
       return stack.some((entry) => entry.tagName === "CANVAS") && !blocked;
@@ -68,7 +68,9 @@ async function dragMap(page: Page): Promise<void> {
 
 test.describe("O 导航 · 提示槽位与课程位置", () => {
   for (const viewport of EXPERIENCE_VIEWPORTS) {
-    test(`O1 ${viewport.id}：拖动地图后仍看得到「点岛进入」，首次选岛后才退场`, async ({ page }) => {
+    test(`O1 ${viewport.id}：拖动地图后仍看得到「点岛进入」，首次选岛后才退场`, async ({
+      page,
+    }) => {
       await openExperienceRoute(page, WORLD_ROUTE, viewport);
       await waitForMapReady(page);
 
@@ -115,10 +117,13 @@ test.describe("O 导航 · 提示槽位与课程位置", () => {
       await expect(breadcrumb.locator("a").nth(1)).toHaveAttribute("href", fixture.coursePath);
       await expect(breadcrumb.locator("a").nth(2)).toHaveAttribute("href", fixture.coursePath);
 
-      const rowTops = await breadcrumb.locator("li").evaluateAll((items) =>
-        items.map((item) => Math.round(item.getBoundingClientRect().top)),
-      );
-      expect(Math.max(...rowTops) - Math.min(...rowTops), "面包屑在手机上换成了两行").toBeLessThanOrEqual(1);
+      const rowTops = await breadcrumb
+        .locator("li")
+        .evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().top)));
+      expect(
+        Math.max(...rowTops) - Math.min(...rowTops),
+        "面包屑在手机上换成了两行",
+      ).toBeLessThanOrEqual(1);
 
       const courseLink = breadcrumb.locator("a").nth(1);
       await page.screenshot({ path: `${SHOTS}/nav-${viewport.id}-breadcrumb.png`, fullPage: true });

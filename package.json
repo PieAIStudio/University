@@ -26,10 +26,10 @@
     "e2e": "playwright test --config e2e/playwright.config.ts --project=default",
     "e2e:product": "playwright test --config e2e/product-preview.config.ts",
     "e2e:island-look": "playwright test --config e2e/playwright.config.ts --project=island-look",
-    "format": "pnpm -r format",
-    "format:check": "pnpm -r format:check",
+    "format": "pnpm -r format && oxfmt --write e2e",
+    "format:check": "pnpm -r format:check && oxfmt --check e2e",
     "kit": "pnpm --filter @pieai/university-app kit",
-    "lint": "pnpm -r lint",
+    "lint": "pnpm -r lint && oxlint --deny-warnings e2e",
     "prepare": "lefthook install",
     "pro-gov": "pro-gov",
     "secrets:check:university": "node scripts/materialize-swimmer-backend-public-env.mjs --check",
@@ -46,7 +46,9 @@
     "@pieai/doc-gov": "0.14.0",
     "@pieai/pro-gov": "0.14.0",
     "@playwright/test": "1.63.0",
-    "lefthook": "^2.1.10"
+    "lefthook": "^2.1.10",
+    "oxfmt": "0.58.0",
+    "oxlint": "1.73.0"
   },
   "engines": {
     "node": ">=24 <25"

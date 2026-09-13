@@ -21,7 +21,10 @@ function ignorableUrl(url: string): boolean {
   return /favicon|apple-touch-icon|\.map(?:\?|$)/i.test(url);
 }
 
-export function watchConsole(page: Page): { assertClean: () => void; errors: () => readonly string[] } {
+export function watchConsole(page: Page): {
+  assertClean: () => void;
+  errors: () => readonly string[];
+} {
   const errors: string[] = [];
   page.on("pageerror", (error) => {
     const text = error.stack ?? error.message;

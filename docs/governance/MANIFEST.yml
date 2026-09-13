@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-13T07:14:25.312Z
+generated_at: 2026-09-13T07:53:12.415Z
 generator_version: doc-gov@0.14.0
-docs_count: 136
+docs_count: 137
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -157,6 +157,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-09-12
+    pinned: false
+  - id: PLAN-MAINLINE-MAINTAINABILITY
+    path: docs/plans/active/mainline-maintainability.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-13
     pinned: false
   - id: PLAN-PRODUCT-COMPLETENESS
     path: docs/plans/active/product-completeness.md

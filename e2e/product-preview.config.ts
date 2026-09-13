@@ -10,9 +10,9 @@ export default defineConfig({
   ...base,
   testDir: fileURLToPath(new URL(".", import.meta.url)),
   testMatch: [
-    "T.product-completeness.spec.ts",
-    "U.product-lightness.spec.ts",
-    "V.practice-focus.spec.ts",
+    "product-completeness.spec.ts",
+    "product-lightness.spec.ts",
+    "practice-focus.spec.ts",
   ],
   projects: [{ name: "product-preview" }],
   outputDir: "../SCRATCH/e2e/product-results",

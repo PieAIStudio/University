@@ -115,7 +115,7 @@ for (const { name, viewport } of VIEWPORTS) {
         };
         const original = prototype.getContext;
         prototype.getContext = function getContext(contextId, options) {
-          if (/^webgl/.test(contextId) && !windowWithRecoveryProbe.__recoveryWebglAvailable) {
+          if (contextId.startsWith("webgl") && !windowWithRecoveryProbe.__recoveryWebglAvailable) {
             return null;
           }
           return original.call(this, contextId, options);

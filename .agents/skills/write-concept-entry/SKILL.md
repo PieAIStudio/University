@@ -23,7 +23,7 @@ lesson revision，不是概念目录。两者都可以借用语气规矩，但�
 
 这一批已经验证过的内容边界：如果任务说只加 `flow`，只改 `body.flow`，不要顺手
 改那 281 条散文，也不要重做现有 `demo` 或 `regions`；`apps/local/server` 和
-`e2e/G.one-chrome.spec.ts` 不在工作范围。
+`e2e/one-chrome.spec.ts` 不在工作范围。
 
 ## 先按形状分派，不按覆盖率分派
 

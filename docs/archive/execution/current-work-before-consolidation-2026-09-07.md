@@ -355,7 +355,7 @@ behaviour. Payment integration remains tracked in its existing gap document.
   answers that with `false`. What works is linking the directory itself, as
   `studies/studies -> …/apps/local/studies`, so the root resolves through
   `realpath` to a place whose children are real directories. Measured both
-  ways against `e2e/D.local-authoring.spec.ts`: per-study fails at 31s, the
+  ways against `e2e/local-authoring.spec.ts`: per-study fails at 31s, the
   directory link passes at 4s.
 - **A gate that walks the repository walks into the study checkouts too.**
   `check-canvas-registry.mjs` reported ten `<Canvas>` mounts belonging to a

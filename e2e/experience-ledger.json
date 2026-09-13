@@ -13,7 +13,7 @@
       "state": "fixed",
       "foundBy": "product-focus-browser",
       "foundOn": "2026-09-10",
-      "guardedBy": "e2e/V.practice-focus.spec.ts::V1 / V2",
+      "guardedBy": "e2e/practice-focus.spec.ts::V1 / V2",
       "evidence": "docs/reference/execution/product-review-evidence/focus/before/question-390.png; docs/reference/execution/product-review-evidence/focus/final/question-390.png",
       "note": "同条件实际题目：准备仅在开始前出现；阶段仍由同一 PracticeStream 管理。换题和结束恢复标题焦点，词条按需展开。第一次复查发现词条入口被固定导航挡住，补足底部滚动余量后真实点击通过；不是强制点击或隐藏导航。"
     },
@@ -28,7 +28,7 @@
       "state": "fixed",
       "foundBy": "product-focus-browser",
       "foundOn": "2026-09-10",
-      "guardedBy": "packages/ui/src/practice/PracticeStream.test.tsx::P1 / P2 / e2e/V.practice-focus.spec.ts::V2",
+      "guardedBy": "packages/ui/src/practice/PracticeStream.test.tsx::P1 / P2 / e2e/practice-focus.spec.ts::V2",
       "evidence": "docs/reference/execution/product-review-evidence/focus/before/last-answer-390.png; docs/reference/execution/product-review-evidence/focus/final/last-answer-390.png",
       "note": "答对先保留本题反馈，再由完成这一轮进入总结；计数依然按不同题目的实际正确提交保存，结束动作不重复记分。单题小题库也遵守同一流程。"
     },
@@ -43,7 +43,7 @@
       "state": "fixed",
       "foundBy": "product-focus-screenshot",
       "foundOn": "2026-09-10",
-      "guardedBy": "e2e/V.practice-focus.spec.ts::V4",
+      "guardedBy": "e2e/practice-focus.spec.ts::V4",
       "evidence": "docs/reference/execution/product-review-evidence/focus/after/question-390.png; docs/reference/execution/product-review-evidence/focus/final/question-390.png",
       "note": "本地 CTA 包装层使用品牌面板底与不透明弱化文字，原生 disabled 行为不变。曾尝试隐藏底层装饰，但切回启用时可能丢失其测量状态，已撤销；V4 同时检查浅深色可读的禁用状态和选择后真实恢复的按钮表面。"
     },
@@ -58,7 +58,7 @@
       "state": "fixed",
       "foundBy": "product-completeness-whole-page-axe",
       "foundOn": "2026-09-09",
-      "guardedBy": "e2e/T.product-completeness.spec.ts::T4",
+      "guardedBy": "e2e/product-completeness.spec.ts::T4",
       "evidence": ".scratch/product-audit/resumed-product-final.log; .scratch/product-audit/resumed-product-green.log; docs/reference/execution/product-review-evidence/implementation-independent/post-recovery/axe-home-390.json",
       "note": "首次整页扫描见红；补真实一级标题，不改变可见地图布局。修复后同一 T4 和正式包整页扫描通过；局部组件扫描不能替代页面语义验收。"
     },
@@ -73,7 +73,7 @@
       "state": "fixed",
       "foundBy": "product-completeness-whole-page-axe",
       "foundOn": "2026-09-09",
-      "guardedBy": "e2e/T.product-completeness.spec.ts::T4 / packages/ui/src/shell/AppShell.test.tsx",
+      "guardedBy": "e2e/product-completeness.spec.ts::T4 / packages/ui/src/shell/AppShell.test.tsx",
       "evidence": ".scratch/product-audit/resumed-product-final.log; .scratch/product-audit/resumed-product-green.log; docs/reference/execution/product-review-evidence/implementation-independent/post-recovery/axe-home-390.json",
       "note": "保留单一 CounterRow，将现有顶部区域赋予 header 语义；桌面和手机仍为同一组件树。整页扫描先红后绿，不靠排除规则隐藏失败。"
     },
@@ -86,7 +86,7 @@
       "viewport": "both",
       "severity": "friction",
       "state": "fixed",
-      "guardedBy": "e2e/T.product-completeness.spec.ts::T1 / T4 / apps/university/src/app/welcome-policy.test.ts",
+      "guardedBy": "e2e/product-completeness.spec.ts::T1 / T4 / apps/university/src/app/welcome-policy.test.ts",
       "foundBy": "user+product-audit",
       "foundOn": "2026-09-09",
       "evidence": "docs/reference/execution/product-review-evidence/desktop-first-visit.png; docs/reference/execution/product-review-evidence/phone-first-visit.png",
@@ -116,7 +116,7 @@
       "viewport": "phone",
       "severity": "blocking",
       "state": "fixed",
-      "guardedBy": "e2e/T.product-completeness.spec.ts::T1 / packages/ui/src/review/answer-draft.test.ts / packages/ui/src/review/ExerciseBlock.test.tsx",
+      "guardedBy": "e2e/product-completeness.spec.ts::T1 / packages/ui/src/review/answer-draft.test.ts / packages/ui/src/review/ExerciseBlock.test.tsx",
       "foundBy": "product-audit",
       "foundOn": "2026-09-09",
       "evidence": "docs/reference/execution/product-review-evidence/phone-answer-before-reload.png; docs/reference/execution/product-review-evidence/phone-answer-after-reload.json",
@@ -131,7 +131,7 @@
       "viewport": "both",
       "severity": "blocking",
       "state": "fixed",
-      "guardedBy": "packages/core/src/ports/payment-safety.test.ts::B3 / B6 / B7 / e2e/T.product-completeness.spec.ts::T3",
+      "guardedBy": "packages/core/src/ports/payment-safety.test.ts::B3 / B6 / B7 / e2e/product-completeness.spec.ts::T3",
       "foundBy": "product-audit",
       "foundOn": "2026-09-09",
       "evidence": "docs/reference/execution/product-review-evidence/desktop-monthly-price.png; packages/ui/src/navigation/screens/PlansScreen.tsx; packages/core/src/ports/payment.ts",
@@ -146,7 +146,7 @@
       "viewport": "both",
       "severity": "polish",
       "state": "fixed",
-      "guardedBy": "e2e/T.product-completeness.spec.ts::T2",
+      "guardedBy": "e2e/product-completeness.spec.ts::T2",
       "foundBy": "product-audit",
       "foundOn": "2026-09-09",
       "evidence": "docs/reference/execution/product-review-evidence/desktop-catalog.png; docs/reference/execution/product-review-evidence/desktop-first-visit.json",
@@ -161,7 +161,7 @@
       "viewport": "phone",
       "severity": "friction",
       "state": "fixed",
-      "guardedBy": "e2e/T.product-completeness.spec.ts::T2",
+      "guardedBy": "e2e/product-completeness.spec.ts::T2",
       "foundBy": "product-audit",
       "foundOn": "2026-09-09",
       "evidence": "docs/reference/execution/product-review-evidence/phone-quest-actions.json",
@@ -206,7 +206,7 @@
       "viewport": "phone",
       "severity": "friction",
       "state": "fixed",
-      "guardedBy": "e2e/T.product-completeness.spec.ts::T4",
+      "guardedBy": "e2e/product-completeness.spec.ts::T4",
       "foundBy": "product-audit-axe",
       "foundOn": "2026-09-09",
       "evidence": "docs/reference/execution/product-review-evidence/axe-home.json",
@@ -221,7 +221,7 @@
       "viewport": "phone",
       "severity": "friction",
       "state": "fixed",
-      "guardedBy": "e2e/T.product-completeness.spec.ts::T4",
+      "guardedBy": "e2e/product-completeness.spec.ts::T4",
       "foundBy": "product-audit-axe",
       "foundOn": "2026-09-09",
       "evidence": "docs/reference/execution/product-review-evidence/axe-home.json",
@@ -238,7 +238,7 @@
       "state": "fixed",
       "foundBy": "codex-production-screenshot",
       "foundOn": "2026-09-09",
-      "guardedBy": "e2e/P.domain-release.spec.ts",
+      "guardedBy": "e2e/domain-release.spec.ts",
       "evidence": ".devspace-visual/astra-r40/production-r1/delivery-375/planet-all.png; planet-controls-red.log; planet-controls-green.log"
     },
     {
@@ -252,7 +252,7 @@
       "state": "fixed",
       "foundBy": "codex-production-screenshot",
       "foundOn": "2026-09-09",
-      "guardedBy": "e2e/P.domain-release.spec.ts",
+      "guardedBy": "e2e/domain-release.spec.ts",
       "evidence": ".devspace-visual/astra-r40/production-r1/delivery-375/planet-all.png; planet-controls-red.log; planet-controls-green.log"
     },
     {
@@ -266,7 +266,7 @@
       "state": "fixed",
       "foundBy": "codex-browser-regression",
       "foundOn": "2026-09-09",
-      "guardedBy": "e2e/P.domain-release.spec.ts / e2e/S.world-play-integration.spec.ts / apps/university/src/app/study-switch.test.tsx",
+      "guardedBy": "e2e/domain-release.spec.ts / e2e/world-play-integration.spec.ts / apps/university/src/app/study-switch.test.tsx",
       "evidence": ".devspace-visual/astra-r40/targeted-r2-failures/ and targeted-r3-failures/"
     },
     {
@@ -280,7 +280,7 @@
       "state": "fixed",
       "foundBy": "claude",
       "foundOn": "2026-08-31",
-      "guardedBy": "e2e/F.island-pick.spec.ts::卡片自带关闭按钮，够手指点，点了就走"
+      "guardedBy": "e2e/island-pick.spec.ts::卡片自带关闭按钮，够手指点，点了就走"
     },
     {
       "id": "9efd6ad05818",
@@ -319,7 +319,7 @@
       "state": "fixed",
       "foundBy": "claude+grok-4.6",
       "foundOn": "2026-08-31",
-      "guardedBy": "e2e/L.reader-interaction.spec.ts::真实打开一条引用后看到固定源码，且源码只在点击后加载",
+      "guardedBy": "e2e/reader-interaction.spec.ts::真实打开一条引用后看到固定源码，且源码只在点击后加载",
       "note": "evidence2 已把 delivery build 改为 baked 且 fail-closed：当前 recovery 测量为 3306 条 evidence 记录，其中 3149 条仓库 anchor、157 条 URL/general 引用；隔离 E2E 包把 3149/3149 仓库 anchor 写成 2146 个去重源码文件。浏览器第一屏在点击前请求数为 0，真实点击后源码弹窗展示 package.json 固定行号。Vercel Git 构建没有私有 studies 镜像时会失败而不发布 locator-only 包；只有带源码镜像完成 delivery:build 并通过 sealed artifact 闸门后，work/firstlook 的「对着真实项目学 / 每座岛是一门课。点岛进入，读完再练。」才是可成立的冷启动承诺。这次没有部署。"
     },
     {
@@ -375,7 +375,7 @@
       "state": "fixed",
       "foundBy": "grok-4.6",
       "foundOn": "2026-08-31",
-      "guardedBy": "e2e/M.recovery.spec.ts::WebGL context lost 后可重试，也能在 restored 后重新挂载场景 / WebGL 不可用时在短时间内说明原因，并可直接进入今天的课 / 场景 20 秒没有 ready 时出现超时恢复态，而不是黑屏",
+      "guardedBy": "e2e/recovery.spec.ts::WebGL context lost 后可重试，也能在 restored 后重新挂载场景 / WebGL 不可用时在短时间内说明原因，并可直接进入今天的课 / 场景 20 秒没有 ready 时出现超时恢复态，而不是黑屏",
       "note": "四种故障各有一条可解释、可操作的恢复态，注入式 e2e 在桌面和手机都稳定复现。自然发生的那一次没有稳定复现路径，所以守的是合成注入，不是那一次现象。"
     },
     {
@@ -389,7 +389,7 @@
       "state": "fixed",
       "foundBy": "grok-4.6",
       "foundOn": "2026-08-31",
-      "guardedBy": "e2e/N.nocollide.spec.ts::N1 desktop · follow card 绕开展开的右栏",
+      "guardedBy": "e2e/nocollide.spec.ts::N1 desktop · follow card 绕开展开的右栏",
       "note": "根因是右栏浮在画布上，follow card 原先会落到它下面。labels.ts 新增独立的 obstacles，占位由 controls.tsx 传入实测 chromeBoxes；overlay 仍不占用名称标签的位置，但会避开不透明右栏。保留 todaySection 和收起胶囊：试过隐藏 todaySection 会让既有 F.island-pick 的收起胶囊检查失去意义，因此没有再走这条死路。"
     },
     {
@@ -403,7 +403,7 @@
       "state": "fixed",
       "foundBy": "grok-4.6",
       "foundOn": "2026-08-31",
-      "guardedBy": "e2e/N.nocollide.spec.ts::N2 desktop · course-island 右栏只说当前课程的下一节",
+      "guardedBy": "e2e/nocollide.spec.ts::N2 desktop · course-island 右栏只说当前课程的下一节",
       "note": "world-model.ts 现在把 course/lesson/settled URL 的 studyId 作为权威，覆盖过期的地图导航焦点；study-context.ts 在课程岛上从已有 nodes 和 courseProgressForNode 选当前 courseId 的下一节。没有把 nextLesson 置 null，因此不会伪造「课程这边暂时没有待办」的空状态。"
     },
     {
@@ -457,7 +457,7 @@
       "state": "fixed",
       "foundBy": "grok-4.6",
       "foundOn": "2026-08-31",
-      "guardedBy": "packages/world/src/labels/hint.test.tsx::names zoom by pointer, so a phone is never told to use a wheel / e2e/A.mobile-learner.spec.ts::地图提示说双指缩放，不说滚轮"
+      "guardedBy": "packages/world/src/labels/hint.test.tsx::names zoom by pointer, so a phone is never told to use a wheel / e2e/mobile-learner.spec.ts::地图提示说双指缩放，不说滚轮"
     },
     {
       "id": "4b00935a7f69",
@@ -470,7 +470,7 @@
       "state": "fixed",
       "foundBy": "grok-4.6",
       "foundOn": "2026-08-31",
-      "guardedBy": "e2e/N.nocollide.spec.ts::N3 phone · 提意见不盖账号目标或课文正文",
+      "guardedBy": "e2e/nocollide.spec.ts::N3 phone · 提意见不盖账号目标或课文正文",
       "note": "真实 Chrome 在 375×812、已配置账号形态下复现了密码框重叠，在长课正文底部也复现了文字重叠。手机账号/课文使用 44px 紧凑浮钮，并给对应内容预留同宽右侧安全区；原本会员页的浮钮位置与入口保留。攻击测试把安全区改为 0 后 N3 明确报密码框重叠，恢复 56px 后通过。"
     },
     {
@@ -484,7 +484,7 @@
       "state": "fixed",
       "foundBy": "grok-4.6",
       "foundOn": "2026-08-31",
-      "guardedBy": "e2e/N.nocollide.spec.ts::N4 phone · lesson toolbar 工具单行且没有悬空标签",
+      "guardedBy": "e2e/nocollide.spec.ts::N4 phone · lesson toolbar 工具单行且没有悬空标签",
       "note": "保留既有 phone 修复：隐藏冗余讲解层级标签、tools 使用 nowrap、标准/详细各保留 min-width: 44px，工具控件在 375px 仍同一行且五点可命中。攻击测试把标签恢复为 display:block 后 N4 明确报宽度 48.640625，恢复 display:none 后通过。"
     },
     {
@@ -539,7 +539,7 @@
       "foundBy": "M.experience X3 探针",
       "foundOn": "2026-08-31",
       "note": "根因不是浮钮而是固定底栏：scrollIntoView 把控件停在滚动视口底边，56px 高的 tab bar 就压在上面。element.click() 仍然点得到，所以单元测试和按句柄点击的辅助函数都说页面没问题。修法是给滚动元素加 scroll-padding-bottom: var(--tab-bar-height)，只在手机宽度生效。",
-      "guardedBy": "e2e/M.experience.spec.ts X3/X5"
+      "guardedBy": "e2e/experience.spec.ts X3/X5"
     },
     {
       "id": "b8fc271168aa",
@@ -552,7 +552,7 @@
       "state": "fixed",
       "foundBy": "M.experience X6 axe 基线",
       "foundOn": "2026-08-31",
-      "guardedBy": "e2e/M.experience.spec.ts X2/X6",
+      "guardedBy": "e2e/experience.spec.ts X2/X6",
       "note": "改用 --game-ui-text 后实测 8.22:1。WCAG AA 对 14px/700 要求 4.5:1，它不算大字号。"
     },
     {
@@ -566,7 +566,7 @@
       "state": "fixed",
       "foundBy": "M.experience X4 探针",
       "foundOn": "2026-08-31",
-      "guardedBy": "e2e/M.experience.spec.ts X4 phone",
+      "guardedBy": "e2e/experience.spec.ts X4 phone",
       "note": "给 .liquid-cta__button 加 min-height: 44px。同一处改动也让 /practice 的两条已知豁免减为一条。"
     },
     {
@@ -580,7 +580,7 @@
       "state": "fixed",
       "foundBy": "M.experience X4 探针",
       "foundOn": "2026-08-31",
-      "guardedBy": "e2e/M.experience.spec.ts X4 phone",
+      "guardedBy": "e2e/experience.spec.ts X4 phone",
       "note": "这条一直存在，只是之前 X4 在会员页就抛错了，从来没走到课文。给 .lesson-toolbar__tools .game-ui-segmented-option 加 min-width: 44px，和旁边 .sound-toggle 用的是同一条下限。"
     },
     {
@@ -594,7 +594,7 @@
       "state": "fixed",
       "foundBy": "线上 0.2.2 截图复核",
       "foundOn": "2026-08-31",
-      "guardedBy": "e2e/M.experience.spec.ts X4 phone",
+      "guardedBy": "e2e/experience.spec.ts X4 phone",
       "note": "五点命中测试是通过的——浮钮只盖住按钮左端，中心仍然是按钮。探针说没问题，人一眼就看出两个控件叠在一起：命中测试量的是可达性，不是可读性。手机上把浮钮移到右下角，那是唯一没有主控件的角落。同一处改动也让 /practice 的两条已知豁免全部退休。"
     },
     {
@@ -608,7 +608,7 @@
       "state": "fixed",
       "foundBy": "菲哥",
       "foundOn": "2026-08-31",
-      "guardedBy": "e2e/O.nav.spec.ts::O1",
+      "guardedBy": "e2e/nav.spec.ts::O1",
       "note": "App.tsx:713 hintVisible={Boolean(hovered) || !mapInteracted}，mapInteracted 是 useState(false)。生产站实测：刚加载 opacity=1，拖一下后 opacity=0，而 visibility 仍是 visible、textContent 一字不少——toBeVisible() 和 getByText(\"点岛进入\") 全都会过。三条提示的可发现性完全不同：拖动会自我教学（一拖就动），滚轮半自我教学，而「点岛进入」不会——它恰好是转化动作。首次交互就把三条一起收走，收走的是唯一有价值的那条。我先前两次判为窗口尺寸问题，都是错的。修复后 controls/entry/hover 分槽，O1 以 DOM、计算样式含 opacity、五点 hit-test（提示要求 pass-through）守住；攻击测试临时设 opacity:0 已红灯，恢复后桌面/手机均绿灯。"
     },
     {
@@ -622,7 +622,7 @@
       "state": "fixed",
       "foundBy": "菲哥",
       "foundOn": "2026-08-31",
-      "guardedBy": "e2e/O.nav.spec.ts::O2",
+      "guardedBy": "e2e/nav.spec.ts::O2",
       "note": "生产站 /turing-pact/foundations-before-zero/what-is-an-app/you-already-know-apps，页内 breadcrumb 元素数=0。顶栏只有 1/8 与两个模式开关，不说这是哪门课哪一单元。唯一出口是 X（回地图），没有「回到本课程」。数据齐备，纯粹是没渲染。面包屑必须是 DOM，不能画进 canvas（Web3D 基线规则 7）。修复后 LessonBreadcrumbs 从 canonical locator 生成系列/课程/单元/课文四层，父级链接可操作；O2 在桌面/手机检查四个 li、单行布局、canonical href，并用真实鼠标点击课程层回到课程地图。"
     },
     {
@@ -664,7 +664,7 @@
       "foundBy": "菲哥",
       "foundOn": "2026-08-31",
       "note": "当前设计以 docs/reference/player-journey/v5/index.html 决定 M 为准：最高层由领域球体转向系列区域表示位置，岛群仍由云载体飞向选中课程，课程岛由头像定位当前小节。旧的星球乘云漂移设计已被替代；G 守护实际点击和原快速上限。R35生产看图又抓出未选课头像位于岩根下、课名遮脸：原生地形射线和DOM/实际头像包围盒先红后绿，F/N补守初始、关闭卡片与返回状态，不另建动画或标签系统。",
-      "guardedBy": "e2e/G.avatar.spec.ts::星球区域与两层头像都跟随真实点击，并在快速上限内就位 / e2e/G.avatar.spec.ts::完成第一节后回到岛内，头像仍停在刚点击的 lesson 格子 / e2e/N.world-delivery.spec.ts::ordinary navigation preserves the course and records complete-frame costs / e2e/F.island-pick.spec.ts::本地端：同一套卡片，跟岛走"
+      "guardedBy": "e2e/avatar.spec.ts::星球区域与两层头像都跟随真实点击，并在快速上限内就位 / e2e/avatar.spec.ts::完成第一节后回到岛内，头像仍停在刚点击的 lesson 格子 / e2e/world-delivery.spec.ts::ordinary navigation preserves the course and records complete-frame costs / e2e/island-pick.spec.ts::本地端：同一套卡片，跟岛走"
     },
     {
       "id": "5af5df4513e8",
@@ -773,7 +773,7 @@
       "state": "fixed",
       "foundBy": "codex-e2e-regression",
       "foundOn": "2026-09-12",
-      "guardedBy": "packages/ui/src/learning-play/LearningActivity.test.tsx::keeps a host-selected level when the host swaps to another payload / e2e/P.learning-play.spec.ts::接线能纠正额外关系，两种情境都执行两条路径",
+      "guardedBy": "packages/ui/src/learning-play/LearningActivity.test.tsx::keeps a host-selected level when the host swaps to another payload / e2e/learning-play.spec.ts::接线能纠正额外关系，两种情境都执行两条路径",
       "evidence": ".scratch/failure-details.txt; SCRATCH/defect-review/after-play-difficulty-phone.png",
       "note": "根因是宿主 LearningPlayLab 的 difficulty 没有传入活动；切换 payload 会重新挂载 LearningActivity，而活动只从 null 开始，所以进阶选择静默退回 intro。现在由 initialDifficulty 保留宿主选择；单测守住跨 payload，P 全场景浏览器回归并亲眼确认 challenge 控件仍在。"
     },
@@ -788,7 +788,7 @@
       "state": "fixed",
       "foundBy": "codex-e2e-regression",
       "foundOn": "2026-09-12",
-      "guardedBy": "e2e/M.experience.spec.ts::X3/X5 / packages/ui/src/navigation/empty/empty-screens.test.tsx::offers a kit form when signed out, not a modal",
+      "guardedBy": "e2e/experience.spec.ts::X3/X5 / packages/ui/src/navigation/empty/empty-screens.test.tsx::offers a kit form when signed out, not a modal",
       "evidence": ".scratch/failure-details.txt; SCRATCH/defect-review/after-me-submit-phone.png",
       "note": "根因是 UnsignedAccountForm 使用原生 details 但没有 open；直接访问 /me 时表单虽在 DOM 中却对学习者隐藏，Playwright 也因此认为提交按钮不可见。现在 details 默认展开，仍保留原生折叠能力和 kit 表单；M 的桌面/手机路径与组件测试守住可见提交控件。"
     },
@@ -803,7 +803,7 @@
       "state": "fixed",
       "foundBy": "codex-e2e-regression",
       "foundOn": "2026-09-12",
-      "guardedBy": "e2e/M.experience.spec.ts::X2/X6 / X4",
+      "guardedBy": "e2e/experience.spec.ts::X2/X6 / X4",
       "evidence": ".scratch/failure-details.txt; SCRATCH/defect-review/after-map-phone.png",
       "note": "原始手机 axe 失败点名 run-a-real-project-with-ai 与 make-the-cutout-app-yours 的 target-size，触控盒高度不足且锁定标签互相覆盖。课程标签现在至少 48px 高；锁定样式只作用于实际可见标签，未放置标签继续由 --placed 隐藏。M 的整页 axe、手机触控检查和真实浏览器截图通过；axe-baseline.json 没有扩大。"
     }

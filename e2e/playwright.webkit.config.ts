@@ -25,7 +25,7 @@ export default defineConfig({
   projects: [
     {
       name: "webkit-course-smoke",
-      testMatch: "**/K.continuous-course.spec.ts",
+      testMatch: "**/continuous-course.spec.ts",
     },
   ],
 });

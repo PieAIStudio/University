@@ -32,46 +32,6 @@
       "port": 4317
     },
     {
-      "name": "swimmer-uikit-storybook",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": [
-        "--dir",
-        "../SwimmerUIKit-wt-gooey",
-        "storybook"
-      ],
-      "port": 6006
-    },
-    {
-      "name": "hexgrid-preview",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": [
-        "-C",
-        "../University-wt-hexgrid",
-        "--filter",
-        "@pieai/university-app",
-        "dev",
-        "--port",
-        "18198",
-        "--strictPort"
-      ],
-      "port": 18198
-    },
-    {
-      "name": "ctamaterial-preview",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": [
-        "-C",
-        "../University-wt-ctamaterial",
-        "--filter",
-        "@pieai/university-app",
-        "dev",
-        "--port",
-        "18211",
-        "--strictPort"
-      ],
-      "port": 18211
-    },
-    {
       "name": "cutout-studio",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": [

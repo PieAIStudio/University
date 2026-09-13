@@ -11,6 +11,13 @@ product". Agents must not write a second CDP screenshot script.
 
 ## Run
 
+Specs use descriptive `<feature>.spec.ts` names, not ordering letters. Playwright
+discovers them by glob; files must not depend on execution order. Historical
+case IDs inside titles stay unchanged so old receipts remain searchable.
+`harness/catalogue.ts` is the only E2E published-catalogue reader; select roles
+there rather than pinning a course identity in a spec. Root `pnpm lint` and
+`pnpm format:check` cover this directory with oxlint and oxfmt.
+
 ```bash
 pnpm e2e
 ```

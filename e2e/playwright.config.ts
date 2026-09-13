@@ -31,11 +31,11 @@ export default defineConfig({
   projects: [
     {
       name: "default",
-      testIgnore: "**/J.island-look.spec.ts",
+      testIgnore: "**/island-look.spec.ts",
     },
     {
       name: "island-look",
-      testMatch: "**/J.island-look.spec.ts",
+      testMatch: "**/island-look.spec.ts",
     },
   ],
   use: {

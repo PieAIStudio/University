@@ -7,30 +7,45 @@ const KEY = "university.progress.v2";
 test.beforeEach(async ({ page }) => {
   // Synthetic cache contract only: no product/account/cloud request runs.
   const url = `${ONLINE_ORIGIN}/__review-clock-fixture`;
-  await page.route(url, (route) => route.fulfill({
-    contentType: "text/html",
-    body: "<!doctype html><title>Review clock fixture</title>",
-  }));
+  await page.route(url, (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: "<!doctype html><title>Review clock fixture</title>",
+    }),
+  );
   await page.goto(url);
 });
 
 for (const scope of ["guest", "account"] as const) {
-  test(`review clock: ${scope} returns tomorrow without rewriting stored schedules`, async ({ page }) => {
-    const before = await page.evaluate(({ key, scope }) => {
-      const now = Date.now();
-      const raw = JSON.stringify({ cards: { "fixture-card": { dueAt: now + 60_000 } } });
-      const activeKey = scope === "guest" ? key : `${key}.account.synthetic`;
-      localStorage.setItem(key, JSON.stringify({ cards: {} }));
-      localStorage.setItem(activeKey, raw);
-      return { activeKey, raw, now };
-    }, { key: KEY, scope });
+  test(`review clock: ${scope} returns tomorrow without rewriting stored schedules`, async ({
+    page,
+  }) => {
+    const before = await page.evaluate(
+      ({ key, scope }) => {
+        const now = Date.now();
+        const raw = JSON.stringify({ cards: { "fixture-card": { dueAt: now + 60_000 } } });
+        const activeKey = scope === "guest" ? key : `${key}.account.synthetic`;
+        localStorage.setItem(key, JSON.stringify({ cards: {} }));
+        localStorage.setItem(activeKey, raw);
+        return { activeKey, raw, now };
+      },
+      { key: KEY, scope },
+    );
 
     expect(await makeDroppedCardsDue(page)).toBe(1);
-    const after = await page.evaluate((activeKey) => ({
-      raw: localStorage.getItem(activeKey), now: Date.now(),
-    }), before.activeKey);
-    expect(after.raw, "FSRS dates and original progress bytes must remain unchanged").toBe(before.raw);
-    expect(after.now, "time, not the schedule, advances to the next day").toBeGreaterThanOrEqual(before.now + 86_400_000);
+    const after = await page.evaluate(
+      (activeKey) => ({
+        raw: localStorage.getItem(activeKey),
+        now: Date.now(),
+      }),
+      before.activeKey,
+    );
+    expect(after.raw, "FSRS dates and original progress bytes must remain unchanged").toBe(
+      before.raw,
+    );
+    expect(after.now, "time, not the schedule, advances to the next day").toBeGreaterThanOrEqual(
+      before.now + 86_400_000,
+    );
   });
 }
 
@@ -48,6 +63,9 @@ test("review clock refuses an ambiguous multi-account cache", async ({ page }) =
 });
 
 test("review clock rejects invalid dates instead of making them pass", async ({ page }) => {
-  await page.evaluate((key) => localStorage.setItem(key, JSON.stringify({ cards: { bad: { dueAt: null } } })), KEY);
+  await page.evaluate(
+    (key) => localStorage.setItem(key, JSON.stringify({ cards: { bad: { dueAt: null } } })),
+    KEY,
+  );
   await expect(makeDroppedCardsDue(page)).rejects.toThrow("到期时间无效");
 });

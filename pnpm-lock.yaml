@@ -26,6 +26,12 @@ importers:
       lefthook:
         specifier: ^2.1.10
         version: 2.1.10
+      oxfmt:
+        specifier: 0.58.0
+        version: 0.58.0
+      oxlint:
+        specifier: 1.73.0
+        version: 1.73.0
 
   apps/local:
     dependencies:

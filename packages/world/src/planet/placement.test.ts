@@ -1,4 +1,3 @@
-import imported from "../../../../apps/university/src/content/imported.json";
 import { describe, expect, it } from "vitest";
 
 import { CALIBRATION_CATALOGUE } from "../grid/calibration-catalogue.js";
@@ -18,8 +17,8 @@ import {
   does not own the frame, and neighbouring landmasses keep their gap. The
   shipped catalogue became a single four-course study on 2026-09-12 and can no
   longer pose any of those questions, so the size contracts read the frozen
-  shapes in `grid/calibration-catalogue.ts`. `shippedStudyInputs` keeps the live
-  import for the one claim that is about what actually ships.
+  shapes in `grid/calibration-catalogue.ts`. The application owns live-catalogue
+  integration in `src/catalog/world-catalogue.test.ts`.
 */
 function studyInputsFrom(
   studies: readonly {
@@ -52,11 +51,6 @@ function studyInputsFrom(
 /** The frozen shapes the size and gap contracts were calibrated against. */
 function calibrationStudyInputs(): PlanetStudyLayoutInput[] {
   return studyInputsFrom(CALIBRATION_CATALOGUE.studies);
-}
-
-/** What actually ships today. Moves when a package is locked or unlocked. */
-function shippedStudyInputs(): PlanetStudyLayoutInput[] {
-  return studyInputsFrom(imported.studies);
 }
 
 function circleGap(
@@ -108,29 +102,6 @@ describe("placePlanetClusters", () => {
     expect(Math.max(...nearestGaps)).toBeLessThanOrEqual(
       PLANET_CLUSTER_LAYOUT_CONTRACT.maxNearestClusterGap,
     );
-  });
-
-  /*
-    The live half of the split. The contracts above are calibrated on frozen
-    shapes; this one is about the catalogue that actually ships, and is what
-    catches a locked or unlocked package that stops reaching the planet at all.
-  */
-  it("places every shipped study as its own reachable cluster", () => {
-    const shipped = shippedStudyInputs();
-    expect(shipped.length).toBeGreaterThan(0);
-    const layout = placePlanetClusters(shipped);
-    expect(layout.clusters).toHaveLength(shipped.length);
-    expect(new Set(layout.clusters.map((cluster) => cluster.studyId))).toEqual(
-      new Set(shipped.map((study) => study.studyId)),
-    );
-    expect(
-      layout.clusters.every(
-        (cluster) =>
-          cluster.cellCount >= PLANET_STUDY_SIZE_CONTRACT.minCells &&
-          cluster.radius >= PLANET_STUDY_SIZE_CONTRACT.minRadius,
-      ),
-    ).toBe(true);
-    expect(Number.isFinite(layout.bounds.maxHalf)).toBe(true);
   });
 
   it("keeps the one-course floor clickable and the 31-course study from owning the frame", () => {

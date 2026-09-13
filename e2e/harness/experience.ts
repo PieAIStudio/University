@@ -200,7 +200,8 @@ const LESSON_COMPLETION: ExperienceTarget = {
    * now 我读完了 — same action, clearer promise. Pinning the label trained
    * the probe to treat a copy fix as a regression.
    */
-  locate: (page) => page.locator("section.lesson-completion button.lesson-completion__action").first(),
+  locate: (page) =>
+    page.locator("section.lesson-completion button.lesson-completion__action").first(),
   scrollToLessonBottom: true,
 };
 

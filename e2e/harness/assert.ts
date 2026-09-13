@@ -29,7 +29,9 @@ export async function assertImagesStayInViewport(page: Page): Promise<void> {
       .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
   });
   if (overflow.length > 0) {
-    const lines = overflow.map((item) => `  · right=${item.right}px > ${item.width}px  ${item.alt || item.src}`);
+    const lines = overflow.map(
+      (item) => `  · right=${item.right}px > ${item.width}px  ${item.alt || item.src}`,
+    );
     throw new Error(`图片冲出视口:\n${lines.join("\n")}`);
   }
 }
@@ -41,7 +43,12 @@ export async function assertImagesStayInViewport(page: Page): Promise<void> {
  * Sample the panel screenshot against the canvas screenshot. CSS computed
  * style cannot catch this; the compositor already lost.
  */
-export async function assertPanelIsPainted(page: Page, panel: Locator, against: Locator, label: string): Promise<void> {
+export async function assertPanelIsPainted(
+  page: Page,
+  panel: Locator,
+  against: Locator,
+  label: string,
+): Promise<void> {
   await expect(panel).toBeVisible();
   const panelBox = await panel.boundingBox();
   const againstBox = await against.boundingBox();

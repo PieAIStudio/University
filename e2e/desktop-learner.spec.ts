@@ -53,7 +53,9 @@ test.describe("C 在线端 · 桌面宽度", () => {
         (label) => label.includes(needle) || todayCourse.includes(label.trim()),
       );
       if (!onMap) {
-        throw new Error(`地图上看不到今天卡说的「${todayCourse}」。可见标签: ${labels.join(" / ")}`);
+        throw new Error(
+          `地图上看不到今天卡说的「${todayCourse}」。可见标签: ${labels.join(" / ")}`,
+        );
       }
     });
 

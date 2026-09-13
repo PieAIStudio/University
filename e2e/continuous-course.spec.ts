@@ -219,9 +219,7 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
   await namedStep(page, `[${vp.name}] 点击开始进入课文并确认进入阅读器`, async () => {
     const startBtn = page.getByRole("dialog").getByRole("button", { name: /^开始/ });
     await humanClick(page, startBtn, `${vp.name} 开始课文`);
-    await expect(page).toHaveURL(
-      new RegExp(`${COURSE_PATH.replaceAll("/", "\\/")}\/[^/]+\/[^/]+$`),
-    );
+    await expect(page).toHaveURL(new RegExp(`${COURSE_PATH.replaceAll("/", "\\/")}/[^/]+/[^/]+$`));
     await expect(page.locator(".lesson-reader")).toBeVisible({ timeout: 30_000 });
   });
 

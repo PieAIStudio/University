@@ -68,7 +68,7 @@ from the old implementation is part of this decision.
 
 The learner surface remains one component tree. `#/studio` and its authoring
 workbench remain the explicit authoring exception; they are not learner
-controls. `e2e/G.one-chrome.spec.ts` must compare the world and lesson learner
+controls. `e2e/one-chrome.spec.ts` must compare the world and lesson learner
 control inventories and must fail when a control is injected into only one
 mode.
 

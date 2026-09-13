@@ -140,7 +140,10 @@ function paethPredictor(filter: number, a: number, b: number, c: number): number
 
 function readU32(bytes: Uint8Array, offset: number): number {
   return (
-    ((bytes[offset]! << 24) | (bytes[offset + 1]! << 16) | (bytes[offset + 2]! << 8) | bytes[offset + 3]!) >>>
+    ((bytes[offset]! << 24) |
+      (bytes[offset + 1]! << 16) |
+      (bytes[offset + 2]! << 8) |
+      bytes[offset + 3]!) >>>
     0
   );
 }
