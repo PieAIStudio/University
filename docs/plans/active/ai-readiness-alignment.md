@@ -34,16 +34,16 @@ currently newer UIKit to silence the outdated portfolio pin.
 
 - [x] A1: Align the root/module instructions and current-work pointers with the
   integrated app. Preserve historical failures, decisions and original materials.
-- [ ] A2: Apply the complete approved PGS asset selection. Preserve local
+- [x] A2: Apply the complete approved PGS asset selection. Preserve local
   teaching/review skills and the broad manual toolbox; narrow automatic entries,
   reconcile the same-source duplicate and update managed source/lock identities.
-- [ ] A3: Use published PGS packages and the applicable exact technology pins;
+- [x] A3: Use published PGS packages and the applicable exact technology pins;
   review newer-than-policy versions without automatic downgrades. Keep the
   separate UIKit migration pending until this phase is verified.
 - [x] A4: Independently verify the PGS nested first-party AI-input repair and its
   exclusion/freshness tests. Reassess with the corrected source scanner; do not
   claim this local upstream fix was published by installing an existing release.
-- [ ] A5: Run governance/asset checks and University `pnpm verify`, then preserve
+- [x] A5: Run governance/asset checks and University `pnpm verify`, then preserve
   this phase in a scoped commit before the UIKit work. Final delivery additionally
   requires the attachment's browser suite, visual comparison and ordinary push.
 
@@ -60,18 +60,33 @@ Current versions and selections live in package/lock/asset files, not this plan.
 
 ## Verification checkpoint
 
-The root and module starter sync checks passed; the root managed asset check
-passed. The module's older selection was retired/adopted using the supported
-manager flow, preserving the four custom teaching skills; its final standalone
-asset recheck was interrupted. University full `pnpm verify` exited 0. The full
-browser run has already exposed a G.avatar return-to-course failure; preserve
-the complete run and diagnose it before calling the dependency alignment stable.
+The root and module starter sync and final managed asset checks passed. The
+module's older selection was retired/adopted using the supported manager flow,
+preserving its four custom teaching skills. Root discovery now has eight
+automatic and 61 manual entries; that is an approved selection, not a claim
+that every optional external tool has been run.
+
+The alignment checkpoint is `d6232f8c`; the bounded browser-gate repairs are
+`ee54cd2e`. The complete stabilized `pnpm verify` exited 0 and the complete
+default browser suite finished 226 passed / 6 skipped / 0 failed. The six skips
+are the existing multi-shipped-study cases whose real-catalogue prerequisite
+is absent; they were not added to obtain a green result.
+
+Earlier full runs and fresh failure geometry remain in the local receipts.
+The G return click passed focused and final full verification without an
+invented fix. The connect board now measures its phone layout before first
+paint; the current-island caption uses the missing nearby columns in its
+existing bounded fallback search. New regressions failed on the original code,
+then both affected browser flows passed five repeats each. Existing collision,
+viewport, interaction and readability assertions were not weakened.
 
 The PGS repair passed 85 focused regressions and full `pnpm verify` after the
 Web host independently corrected the draft's scope and root-counter regressions.
 This is a local upstream source fix, not a newly published npm release.
 
-Platform safety-status rejections interrupted the named mainline browser probe
-and subsequent rechecks. UIKit remains 2.4.0 and CTA/transition code is unchanged;
-no pressed-geometry or before/after visual acceptance is claimed. The precise
-interruption and remaining owner requirements are in the local handoff above.
+UIKit remains 2.4.0 at this phase boundary; the subsequent upgrade and CTA
+migration have not inherited a passing native-press or visual verdict from
+this result. A platform safety-status rejection blocked an optional isolated
+before-component sample, not the completed mainline gates. It was not replayed
+or wrapped. Source/receipt details and the separate UIKit requirements remain
+in the local handoff above.

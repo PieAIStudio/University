@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-12T16:31:23.717Z
+generated_at: 2026-09-13T02:33:39.021Z
 generator_version: doc-gov@0.14.0
-docs_count: 135
+docs_count: 136
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -171,6 +171,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-09-11
+    pinned: false
+  - id: PLAN-UIKIT-LIQUID-CTA-MIGRATION
+    path: docs/plans/active/uikit-liquid-cta-migration.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-13
     pinned: false
   - id: PLAN-AI-PRODUCT-PLAY
     path: docs/plans/completed/ai-product-play.md
