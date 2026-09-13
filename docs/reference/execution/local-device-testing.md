@@ -145,7 +145,8 @@ pnpm --filter @pieai/university-app exec vite preview --mode delivery --host 192
 保持这个终端会话运行；它结束后预览可能随之停止。启动后确认输出仍是指定 IP/端口，
 再让手机打开完整地址。网络更换或 DHCP 改变地址时，重新查 Mac 的实际局域网 IP，
 替换命令及手机地址并更新本页日期；不要照旧 IP 重试，更不要放宽到公网监听或关闭防火墙。
-不要执行 `pnpm content` 来修复 404。HTTP 200 只证明服务响应，不证明 3D、课程及登录都已就绪。
+worktree 缺输入时先运行项目 baseline 的 `pnpm worktree:prepare .`，不要在缺少课程源时
+裸跑 `pnpm content` 来掩盖 404。HTTP 200 只证明服务响应，不证明 3D、课程及登录都已就绪。
 
 ## 两条独立连接与验收
 

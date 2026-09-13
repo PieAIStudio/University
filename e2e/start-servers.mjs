@@ -17,6 +17,14 @@ import { spawn, spawnSync } from "node:child_process";
 import { existsSync, readdirSync, realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  ONLINE_PORT,
+  LOCAL_WEB_PORT,
+  LOCAL_API_PORT,
+  GRADING_PORT,
+  E2E_STUDIES_ROOT,
+} from "./ports.ts";
+import { refreshE2EManifest, reservePorts } from "../scripts/link-studies-into-worktree.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const LOCAL = join(ROOT, "apps/local");
@@ -25,10 +33,6 @@ const GRADING = join(ROOT, "apps/university-grading");
 const E2E_CONTENT_ROOT = join(ROOT, ".scratch/evidence2/e2e-content");
 const E2E_IMPORTED_MANIFEST = join(ROOT, ".scratch/evidence2/e2e-imported.json");
 
-const ONLINE_PORT = Number(process.env.E2E_ONLINE_PORT ?? 18093);
-const LOCAL_WEB_PORT = Number(process.env.E2E_LOCAL_WEB_PORT ?? 18094);
-const LOCAL_API_PORT = Number(process.env.E2E_LOCAL_API_PORT ?? 18095);
-const GRADING_PORT = Number(process.env.E2E_GRADING_PORT ?? 18096);
 const LOCAL_API_ORIGIN = `http://127.0.0.1:${LOCAL_API_PORT}`;
 const GRADING_ORIGIN = `http://127.0.0.1:${GRADING_PORT}`;
 const SERVER_ONLY_ENV = [
@@ -168,8 +172,8 @@ if (existsSync(nestedStudies)) {
 
 // An isolated copy may live outside apps/local. The authoring server still
 // validates its marker/location; this changes the input, never that protection.
-if (process.env.E2E_STUDIES_ROOT) {
-  localApiEnv.UNIVERSITY_LOCAL_STUDIES_ROOT = realpathSync(process.env.E2E_STUDIES_ROOT);
+if (E2E_STUDIES_ROOT) {
+  localApiEnv.UNIVERSITY_LOCAL_STUDIES_ROOT = realpathSync(E2E_STUDIES_ROOT);
 }
 
 // Resolve the worktree source once, before either consumer starts. The baked
@@ -177,6 +181,9 @@ if (process.env.E2E_STUDIES_ROOT) {
 // studies skeleton even though the API knew about its nested source link.
 // An explicitly configured importer root still wins; its safety checks stay on.
 console.log("e2e: importing baked course content for the delivery mode");
+const reservation = await reservePorts([ONLINE_PORT, LOCAL_WEB_PORT, LOCAL_API_PORT, GRADING_PORT]);
+await reservation.release();
+refreshE2EManifest(ROOT);
 must("pnpm", ["content"], ROOT, {
   UNIVERSITY_STUDIES_ROOT:
     process.env.UNIVERSITY_STUDIES_ROOT ??

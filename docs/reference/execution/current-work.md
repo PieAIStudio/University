@@ -114,7 +114,8 @@ Coordinate course IDs, ordering and shared learner contracts across lanes.
 ## Verification and recall
 
 Use [the project baseline](../../policy/best-practice-for-this-project.md) for
-worktree setup. Never rebuild content just to repair a preview. Run focused
+worktree setup and the single preparation command after input changes. Never
+rebuild from an incomplete campus just to repair a preview. Run focused
 checks, then `pnpm verify` for implementation; learner-visible changes also
 need real browser evidence and the default E2E lane. A document-only cleanup
 does not prove any new product behavior.

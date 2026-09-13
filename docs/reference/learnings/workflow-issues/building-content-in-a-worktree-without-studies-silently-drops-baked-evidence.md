@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: ai-assisted
 created: 2026-08-28
-last_reviewed: 2026-08-28
+last_reviewed: 2026-09-13
 domain: learning
 tags:
   - learning-recall
@@ -37,9 +37,10 @@ in its own worktree took `servedBytes` down across all fifty-three courses, and
 it was only caught because regenerating on the main checkout flipped every
 value back in the same direction.
 
-**What to do.** Only commit `imported.json` from a checkout that has
-`apps/local/studies`. In a worktree, either leave the file alone — the content
-build is a local convenience for running the dev server, not an artefact that
-branch owns — or `git checkout -- apps/university/src/content/imported.json`
-before committing. If a diff shows `servedBytes` moving in one direction across
-every course while `sha256` holds still, that is this, not a content change.
+**Current prevention (2026-09-13).** The importer now refuses an unexplained
+shrinking write. Use `pnpm worktree:prepare .` in a newly created worktree to
+supply real sources before rebuilding; the [project baseline](../../../policy/best-practice-for-this-project.md)
+owns the workflow. Do not discard a generated diff merely to hide the symptom.
+If `servedBytes` moves down across every course while `sha256` holds still,
+investigate source completeness and evidence mode before accepting the result.
+The measurements above retain the original failure, not today's gate behavior.

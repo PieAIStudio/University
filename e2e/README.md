@@ -22,9 +22,22 @@ there rather than pinning a course identity in a spec. Root `pnpm lint` and
 pnpm e2e
 ```
 
-It starts both shells itself (online 18093, local 18094, local API 18095),
+It starts both shells and grading itself (main defaults: online 18093, local
+18094, local API 18095, grading 18096),
 uses the system Chrome (`channel: "chrome"`), and is **not** part of
 `pnpm verify`. A slow gate people skip is worse than no gate.
+
+For a fresh worktree, run `pnpm worktree:prepare .` first. This installs and
+prepares the actual inputs, including public account configuration. Its ignored
+`.scratch/worktree.json` records the source root and all four E2E ports. Explicit
+`E2E_ONLINE_PORT`, `E2E_LOCAL_WEB_PORT`, `E2E_LOCAL_API_PORT` and
+`E2E_GRADING_PORT` override those defaults. The pre-push gate sets all four.
+Startup refuses busy ports; it never connects silently to another run.
+
+Before baking, the disposable E2E manifest is rebased on this checkout's tracked
+manifest. The importer still checks shrinkage against that current baseline;
+old evidence receipts beside the cache are not removed. `harness/catalogue.ts`
+remains the only E2E role selector for published courses.
 
 ## Island look judge
 

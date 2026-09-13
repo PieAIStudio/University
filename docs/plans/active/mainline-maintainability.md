@@ -34,7 +34,7 @@ default cases in 41 files (42 spec files including the separate island judge).
 - [x] Topology: rename specs by feature, wire oxfmt/oxlint, move live renderer
   integration assertions to the app while preserving world calibration, remove
   three confirmed dead launch entries. Verify + full default E2E before commit.
-- [ ] Worktree preparation: extend `scripts/link-studies-into-worktree.mjs`,
+- [x] Worktree preparation: extend `scripts/link-studies-into-worktree.mjs`,
   preserve private/test input, refresh generated inputs, isolate four ports;
   prove one command then verify + E2E in a new in-repository worktree.
 - [ ] Documents: reconcile the 11 locked-study references, inspect handoff
@@ -52,6 +52,33 @@ uses its own frozen population instead of the unrelated shipped population;
 the stronger assertion passed. New lint coverage exposed eight existing
 warnings; only unused bindings and equivalent string/regex syntax changed.
 Local logs and discovery inventories are in `.scratch/mainline-maintainability/`.
+
+Stage 2 receipt (2026-09-13): created a new detached checkout at
+`.worktrees/mainline-worktree-proof` from stage 1 (`4e5126de`) and applied the
+candidate patch, byte-compared with main. Inside it, **`pnpm worktree:prepare .`**
+installed the frozen graph, linked **249** missing paths, projected three public
+fields (values matched; no deployment token), and baked **131/131** repository
+snippets. Tracked imported/lexicon files stayed byte-identical. Four listeners
+55993–55996 were individually proven to belong to the new checkout. A busy-port
+attempt refused without changing the manifest or terminating the running suite.
+
+The first full browser run was **224 passed / 6 skipped / 11 failed**. The
+synthetic planet spec independently derived its origin from the environment,
+so the new saved port settings left it pointing at 18093. This was a missed
+consumer in the new setup implementation, not an intermittent product failure.
+The spec now imports the shared origin; a new source guard first failed on the
+old derivation, then passed. The initial tail-only progress reports missed those
+mid-log failures; subsequent monitoring counted the entire log. Original failure
+log and error contexts are retained. The focused planet rerun passed **11/11**.
+Final preparation tests **14/14**, repeated fresh-worktree `pnpm verify` exit 0
+(including one real export freshness comparison), and full E2E exit 0:
+**235 passed / 6 skipped**, **17.6m**. These are separate receipts, not summed.
+
+The existing product worktree's nested real directory and valid root marker
+were read-only checked; it was not moved or run. Relocation is proven with an
+isolated marked fixture, preserving both bytes and the old access path. No real
+learner surface or server root protection changed. Two full suites running
+simultaneously, Windows and physical-device behavior were not tested here.
 
 Spec filenames are repository-private navigation, not execution ordering; case
 titles remain the historical receipt IDs. All tracked exact filename consumers

@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 
-const ORIGIN = `http://127.0.0.1:${process.env.E2E_ONLINE_PORT ?? "18093"}`;
+import { ONLINE_ORIGIN as ORIGIN } from "./ports.js";
 const cases = [
   { domains: 1, series: 1, width: 1440, height: 900, empty: false, long: false, reduced: false },
   { domains: 1, series: 1, width: 1440, height: 900, empty: false, long: false, reduced: true },

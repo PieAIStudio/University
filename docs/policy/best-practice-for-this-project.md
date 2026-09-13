@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: project
 created: 2026-05-08
-last_reviewed: 2026-09-08
+last_reviewed: 2026-09-13
 domain: project-policy
 tags:
   - project-policy
@@ -28,36 +28,44 @@ task learnt anything.
 
 ## Working in a worktree
 
-A fresh worktree cannot run the app until three things are done, because the
-generated content and the personal campus data are both gitignored:
+Create worktrees only under the repository's ignored `.worktrees/` directory.
+After `git worktree add`, run one command from the new checkout:
 
-```
-pnpm install --frozen-lockfile --prefer-offline
-pnpm --filter @pieai/university-core build          # vite cannot resolve the core package without it
-ln -s <main-checkout>/apps/university/content apps/university/content
-ln -s <main-checkout>/apps/local/studies apps/local/studies/studies
-UNIVERSITY_LOCAL_STUDIES_ROOT="$PWD/apps/local/studies/studies" pnpm start
+```sh
+pnpm worktree:prepare .
 ```
 
-These commands are for a fresh worktree with absent link targets. Inspect an
-existing path rather than replacing it. Keep the tracked `apps/local/studies`
-skeleton; the nested link makes its children resolve to real directories.
-Per-study links are skipped by the shelf's `Dirent.isDirectory()` filter.
-The explicit `UNIVERSITY_LOCAL_STUDIES_ROOT` selects the nested root for the
-authoring server; the e2e launcher already detects that same layout. See the
-verified [worktree learning](../reference/learnings/workflow-issues/building-content-in-a-worktree-without-studies-silently-drops-baked-evidence.md).
+Or run `pnpm worktree:prepare .worktrees/<lane>` from main. The existing
+`scripts/link-studies-into-worktree.mjs` owns this workflow: preserve tracked
+and existing study paths, supply missing private studies, project only approved
+public app environment fields, install the frozen dependency graph, and rebuild
+this checkout's content through `pnpm content`. It preserves the tracked import
+date so an unchanged input does not produce a date-only diff. Review any other
+generated diff; do not discard it blindly.
 
-Prefer a sibling worktree when the project's tracked skill links point to the
-sibling ProjectGovernanceSystem checkout: preserving the directory depth keeps
-those relative links valid without editing governed asset links.
+The command also refreshes the E2E cache baseline and saves four independently
+reserved ports plus the selected source root in ignored `.scratch/worktree.json`.
+`pnpm e2e` reads those settings; explicit `E2E_*_PORT` values still win.
+`--e2e-port-base <port>` selects four consecutive ports instead. A busy port is
+an error, never permission to reuse or kill another task's server. Inspect PID
+and cwd before stopping your own interrupted process.
 
-Without them the dev server serves `课程读不出来 shelf: 404`.
+An existing real `apps/local/studies/studies` isolation copy moves intact to
+`.scratch/worktree-studies`, with its old path retained as a symlink. The API's
+root guard stays unchanged. Existing destinations/configuration are not
+overwritten. `--studies-root <path>` explicitly selects an already marked
+alternative source. The owner's three old sibling worktrees are not moved by
+this command.
 
-**Do not run `pnpm content` to fix that.** With no `apps/local/studies` it
-rebuilds the tracked manifest with every course's `servedBytes` reduced by the
-evidence it could not read, while the hashes stay put — silent, and green under
-`pnpm verify`. It has happened three times. `import-courses.mjs` now refuses the
-shrinking write, and the error names the three ways out.
+Each worktree owns its generated content: an old link to main's content cache
+is preserved under `.scratch/` before regeneration, never followed for a
+destructive rebuild. Source freshness and evidence-shrink guards remain enabled;
+there is no `--allow-shrink`. The ignored PGS bridge under `.worktrees/` keeps
+tracked governance/skill links intact without modifying their shared source.
+
+After preparation run `pnpm verify` and `pnpm e2e`. Repeat preparation after a
+merge or branch switch changes course inputs. Do not rebuild from an incomplete
+campus or restore a generated manifest merely to hide a shrinking diff.
 
 ## Believing a red test
 
