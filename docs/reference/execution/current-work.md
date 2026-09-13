@@ -40,13 +40,14 @@ dated evidence; their old previews and pre-merge handoffs do not prove the
 current mainline. Recheck Git and listener ownership rather than replaying an
 old merge or using a remembered port. The completed [PGS alignment](../../plans/completed/ai-readiness-alignment.md)
 and [UIKit migration](../../plans/completed/uikit-liquid-cta-migration.md) retain
-their separate acceptance records. New mainline work follows the applicable lanes below.
+their separate acceptance records. The completed [mainline maintenance](../../plans/completed/mainline-maintainability.md)
+records the topology/worktree/doc/internal-boundary acceptance and its remaining
+uncertainties. New mainline work follows the applicable lanes below.
 
 ## Active lanes
 
 | Task | Authoritative entry |
 | --- | --- |
-| Mainline repository maintenance | [Maintainability plan](../../plans/active/mainline-maintainability.md) — four separately verified stages; no course unlocking, slug migration or repeated UIKit work |
 | Published versus locked course packages | [Locked-package record](../../../apps/local/course-proposals/locked/README.md); runtime counts come from the generated catalogue, not historical handoffs |
 | Mainline iteration, teaching contracts and remaining 3D acceptance gates | [Continuous world delivery](../../plans/active/continuous-world-delivery.md), reading its integrated-mainline continuation first; pre-merge sections are historical evidence, not open task assignments |
 | Learner-visible design | [Player journey V5](../player-journey/v5/index.html), including decision M; only consult V4 for behavior V5 does not amend |

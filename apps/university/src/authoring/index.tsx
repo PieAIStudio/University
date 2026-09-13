@@ -21,7 +21,7 @@ import type {
   StudyView,
 } from "@pieai/university-ui/view/lesson-view.js";
 
-import { localBootstrap } from "../ports/local/content.js";
+import { localBootstrap } from "../ports/local/bootstrap.js";
 import { progressPort } from "../progress/store.js";
 import { feedbackReviewSource } from "./feedback-source.js";
 import { StudioSection } from "./StudioSection.js";

@@ -34,6 +34,11 @@ prepares the actual inputs, including public account configuration. Its ignored
 `E2E_GRADING_PORT` override those defaults. The pre-push gate sets all four.
 Startup refuses busy ports; it never connects silently to another run.
 
+Every spec, including synthetic fixture pages, imports origins from `ports.ts`.
+Do not derive another origin from environment variables in a spec: that bypasses
+saved worktree settings. The preparation regression suite guards this boundary;
+the non-default-port worktree run caught eleven planet cases that once bypassed it.
+
 Before baking, the disposable E2E manifest is rebased on this checkout's tracked
 manifest. The importer still checks shrinkage against that current baseline;
 old evidence receipts beside the cache are not removed. `harness/catalogue.ts`

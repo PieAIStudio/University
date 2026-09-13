@@ -17,18 +17,14 @@ import type {
 import { METERED_GRADING_COST_POWER_UNITS as METERED_COST } from "@pieai/university-core";
 import { lessonPath, readJson } from "@pieai/university-ui/api/client.js";
 
-import { localBootstrap } from "./content.js";
+import { createLocalRequestHeaders } from "./bootstrap.js";
 
 export function createLocalGradingPort(options: {
   readonly progress?: ProgressPort;
   /** Overridden in unit tests; the product always reads the bootstrap. */
   readonly requestToken?: () => Promise<string>;
 }): GradingPort {
-  const token = options.requestToken ?? (async () => (await localBootstrap()).requestToken);
-  const headers = async () => ({
-    "Content-Type": "application/json",
-    "X-University-Local-Token": await token(),
-  });
+  const headers = createLocalRequestHeaders(options.requestToken);
 
   return {
     async submitExercise(input) {

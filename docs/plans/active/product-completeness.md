@@ -22,7 +22,7 @@ related:
 
 课程、产品和视觉提交已进入 main；下文的工作树交接、未推送、activities 不兼容、
 转向失败与“下一步整合”均为当时的记录，不再是当前派工。主线完整检查的最新收据见
-[主线维护计划](mainline-maintainability.md)，此前 UI 交付保留在同页所链接的历史证据中。
+[主线维护记录](../completed/mainline-maintainability.md)，此前 UI 交付保留在同页所链接的历史证据中。
 不要重做已完成的欢迎、草稿、付款保护或 UIKit 迁移。
 
 本计划仍 active 的范围是原有外部验收缺口：真实账号跨设备与 RLS、实际支付/取消/
@@ -30,6 +30,15 @@ related:
 浏览器模拟和本地单测不能替代。分别读现有后端、支付、提醒 runbook，不执行旧合并流程。
 旧四学科测试副本与恢复失败保留作历史证据；现行发布范围见
 [锁课记录](../../../apps/local/course-proposals/locked/README.md)，不能据此重开旧课程。
+
+## 维护审查发现的边界例外（2026-09-13，待独立复现/修正）
+
+`MainRouter.tsx` 仍在 world 路由以 `AUTHORING` 条件挂载 `AuthoringMapNotes`；其中
+`AirlockClocks` 直接读取 `/api/studies/:id/airlock`，只有 `airlock: true` 时显示版本事实。
+这条源码路径绕过现有端口，并位于 studio 例外之外。当前维护没有取得“真实启用 airlock
+课程”的双模式画面对照，因此这是已确认的结构性例外，不冒充已复现的当前页面故障。
+下一次应以既有 V5/端口合同核对，并单独命名行为修正及真实浏览器见证；不能借内部重构
+顺手删掉可见内容或新增端口合同。主线维护没有改变这段行为。
 
 ## 历史产品线交接与实施记录
 

@@ -2,7 +2,7 @@
 id: PLAN-MAINLINE-MAINTAINABILITY
 title: Mainline Maintainability
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-09-13
@@ -39,7 +39,7 @@ default cases in 41 files (42 spec files including the separate island judge).
   prove one command then verify + E2E in a new in-repository worktree.
 - [x] Documents: reconcile the 11 locked-study references, inspect handoff
   ownership/consumers/value, preserve decisions and evidence, pass docs:check.
-- [ ] Internal boundaries: map ports/UI/server boundaries, choose a minimal
+- [x] Internal boundaries: map ports/UI/server boundaries, choose a minimal
   behavior-preserving change or evidence-backed no-op, verify + full E2E.
 
 ## Decisions and unresolved items
@@ -117,6 +117,78 @@ to that original directory; ownership is retained. No original media was deleted
 | `product-completeness-review.md` | ai-assisted; product plan, original findings/images | Keep original evidence; old catalogue counts explicitly remain at their capture date |
 | `product-before-after/before-after.md` | ai-assisted; product plan and user-facing comparison | Keep stable with original images; not a second current task list |
 | `product-before-after/first-pass-comparison.md` | ai-assisted; later comparison's history link | Keep stable historical counterpoint; original before/after evidence cannot be regenerated as that past state |
+
+## Internal boundary choice
+
+Stage 4 selects the loopback bootstrap/session owner, not a generic HTTP
+framework. Reader, grader and workbench depended on the entire content adapter
+only to reach its shared opening/request token. `ports/local/bootstrap.ts` now
+owns that existing cache, URL-tagged JSON read and the identical per-action
+JSON/token headers. All consumers move together; no public port, request path,
+payload, account/progress write, grader tier or observable UI changes.
+
+Six characterization tests passed against the original implementation before
+the move. They preserve shared pending/resolved promises, failure eviction,
+late-failure versus refresh ownership, shared reader/grader token bootstrap,
+token refresh on an already constructed reader, and per-action injected tokens.
+After the move all 17 local-adapter tests, app typecheck and lint passed. Full
+mainline verify/E2E remain the final acceptance, not inferred from that subset.
+
+Map result: UI package metadata/source has no three or react-three imports;
+existing server/browser boundaries remain governed by `pnpm boundaries`.
+The ordinary mode switches cover ports, studio access and analytics metadata.
+One source-access-oriented world annotation bypasses ports outside studio;
+its source fact and unverified runtime condition are recorded in the active
+[product plan](../active/product-completeness.md),
+not silently fixed or certified by this behavior-preserving change. No physical
+device, real multi-account backend, paid grading or airlock-enabled parity
+acceptance was performed. The reader and grading wire contracts remain intact.
+
+Final local receipt (2026-09-13): `pnpm verify` exit 0, including 281 application
+tests (six additional characterization cases), 14 preparation tests and the
+existing boundary/build gates. Full default E2E exit 0: **235 passed / 6 skipped**,
+**18.6m**. A final discovery comparison preserved all **241 original case titles**.
+The protected recovery/locked packages, core contracts, E2E catalogue selector
+and entire CTA directory have no diff from `ab9c8df0`. Renderer production code
+was not changed; only the named catalogue test ownership moved in stage 1.
+
+## Closeout and recovery
+
+All four local stages are accepted separately. The normal Git push/pre-push is
+the remaining release operation; this local record does not assert its outcome.
+The task's final delivery message reports the actual push result. Nothing was
+deployed, no payment was enabled, and no hook was bypassed.
+
+Intentional changes are developer-facing: feature-named spec paths, format/lint
+coverage, one safe preparation command and four-port routing, current-versus-
+historical document roles, and internal bootstrap ownership. Learner behavior,
+public lesson identities, publication boundaries, grading tiers, header/payload
+contracts, shared UI/renderer ownership and original decision evidence remain.
+
+Rollback uses the four stage commits in reverse order. Documentation moves are
+recoverable in Git. Preparation does not delete source inputs: a relocated
+isolation root remains accessible at its old linked path; old shared content
+links are retained as restoration receipts. Existing owner environment files
+are never overwritten. Generated caches/configuration can be recreated by the
+same preparation command; do not blindly remove private studies to roll back code.
+
+The task-owned proof worktree was removed after copying its candidate patches,
+failed and successful logs, browser evidence, screenshots and port settings to
+`.scratch/mainline-maintainability/`. All pre-existing worktrees remain. The two
+course launch entries still point to the verified existing sibling checkout;
+the owner-led reconstruction must correct both once its actual new path exists.
+
+Verified versus not verified: default real-browser regression and final static/
+build gates passed; the active airlock world-annotation condition was only
+source-audited, not browser-reproduced. The second real shipped study remains
+locked, so its six cases remain conditional. No Windows/physical-phone pass,
+simultaneous full-suite pressure test, real multi-account/RLS or paid-service
+acceptance, legacy-worktree reconstruction/sync, or fresh upstream license review
+was performed. Those absences are not green gates or waived requirements.
+
+Learning closeout: no new learning document. Maintained baseline/E2E guidance,
+the updated existing worktree learning and the new regression guards already
+own the reusable guidance; the dated failed run belongs to this execution receipt.
 
 Spec filenames are repository-private navigation, not execution ordering; case
 titles remain the historical receipt IDs. All tracked exact filename consumers

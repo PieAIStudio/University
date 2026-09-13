@@ -23,7 +23,7 @@ import {
 import type { ReaderMark } from "@pieai/university-core/domain/reader-marks.js";
 import { lessonPath, readJson } from "@pieai/university-ui/api/client.js";
 
-import { localBootstrap } from "./content.js";
+import { createLocalRequestHeaders } from "./bootstrap.js";
 
 export function createLocalReaderPort(options: {
   /** Shared cloud document; absent only in isolated unit tests. */
@@ -31,11 +31,7 @@ export function createLocalReaderPort(options: {
   /** Overridden in unit tests; the product always reads the bootstrap. */
   readonly requestToken?: () => Promise<string>;
 }): ReaderPort {
-  const token = options.requestToken ?? (async () => (await localBootstrap()).requestToken);
-  const headers = async () => ({
-    "Content-Type": "application/json",
-    "X-University-Local-Token": await token(),
-  });
+  const headers = createLocalRequestHeaders(options.requestToken);
 
   return {
     async listVocabulary() {

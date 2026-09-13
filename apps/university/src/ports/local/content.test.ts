@@ -7,7 +7,8 @@ import {
   RECAP_CARD_ID,
 } from "@pieai/university-core";
 
-import { createLocalContentPort, refreshLocalBootstrap } from "./content";
+import { createLocalContentPort } from "./content";
+import { refreshLocalBootstrap } from "./bootstrap";
 
 /** The document the port imports the old SQLite projection into. */
 function port() {

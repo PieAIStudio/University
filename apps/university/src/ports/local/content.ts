@@ -28,7 +28,6 @@ import type {
   MistakeExercise,
 } from "@pieai/university-ui/content/port.js";
 import type {
-  BootstrapData,
   CourseReviewCardLocator,
   CourseView,
   LessonView,
@@ -36,6 +35,7 @@ import type {
   StudyView,
 } from "@pieai/university-ui/view/lesson-view.js";
 import { lessonProgressOf } from "@pieai/university-ui/view/lesson-view.js";
+import { localBootstrap, readLocalJson } from "./bootstrap.js";
 
 /**
  * Ids reach a path join on the far side of this fetch.
@@ -53,50 +53,6 @@ function guard(locator: LessonRef): void {
     throw new Error(
       translate("app.ports.local.content.copy.这节课的地址不对-value0", { value0: unsafe }),
     );
-}
-
-/**
- * The authoring server's opening payload, fetched once per document.
- *
- * Held here rather than in the app because three separate things need it — the
- * shelf, the request token every state-changing call carries, and the
- * workbench's own counters — and three fetches of one endpoint is three answers
- * that can disagree with each other by a few hundred milliseconds.
- */
-let opening: Promise<BootstrapData> | null = null;
-
-export function localBootstrap(): Promise<BootstrapData> {
-  if (!opening) opening = openingRequest();
-  return opening;
-}
-
-/** Re-read after an authoring action changed what is on disk. */
-export function refreshLocalBootstrap(): Promise<BootstrapData> {
-  opening = openingRequest();
-  return opening;
-}
-
-function openingRequest(): Promise<BootstrapData> {
-  const request = fetchBootstrap();
-  let retryable: Promise<BootstrapData>;
-  retryable = request.catch((reason: unknown) => {
-    if (opening === retryable) opening = null;
-    throw reason;
-  });
-  return retryable;
-}
-
-async function fetchBootstrap(): Promise<BootstrapData> {
-  return readLocalJson<BootstrapData>("/api/bootstrap");
-}
-
-async function readLocalJson<T>(url: string): Promise<T> {
-  try {
-    return await readJson<T>(await fetch(url));
-  } catch (reason) {
-    const message = reason instanceof Error ? reason.message : String(reason);
-    throw new Error(`${url}: ${message}`);
-  }
 }
 
 export function createLocalContentPort(options: {
