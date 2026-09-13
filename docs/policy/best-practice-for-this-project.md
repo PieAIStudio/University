@@ -28,6 +28,12 @@ task learnt anything.
 
 ## Working in a worktree
 
+Ordinary work is queued on `main`, not branched — see
+[the work queue](../reference/execution/work-queue.md). A worktree is correct
+only when two pieces of work must run at the same time and touch the same
+files; the three sibling worktrees this section was written for were removed on
+2026-09-13. What follows applies when that case actually arises.
+
 Create worktrees only under the repository's ignored `.worktrees/` directory.
 After `git worktree add`, run one command from the new checkout:
 
@@ -58,8 +64,7 @@ An existing real `apps/local/studies/studies` isolation copy moves intact to
 root guard stays unchanged. Existing isolation destinations are not replaced;
 unrelated configuration fields and owner environment files are preserved.
 `--studies-root <path>` explicitly selects an already marked
-alternative source. The owner's three old sibling worktrees are not moved by
-this command.
+alternative source.
 
 Each worktree owns its generated content: an old link to main's content cache
 is preserved under `.scratch/` before regeneration, never followed for a

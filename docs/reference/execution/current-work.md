@@ -13,6 +13,7 @@ tags:
   - navigation
 pinned: true
 related:
+  - REF-WORK-QUEUE
   - PLAN-UIKIT-LIQUID-CTA-MIGRATION
   - PLAN-AI-READINESS-ALIGNMENT
   - PLAN-CONTINUOUS-WORLD-DELIVERY
@@ -34,11 +35,12 @@ test totals, CLI/model choices or execution history. Read only the matching row.
 ## Integrated mainline (reviewed 2026-09-13)
 
 The course, product and visual branch commits are merged into `main`; the
-integration baseline is `2316755f`. Work in the main checkout unless the owner
-starts another lane. Retained sibling worktrees preserve original materials and
-dated evidence; their old previews and pre-merge handoffs do not prove the
-current mainline. Recheck Git and listener ownership rather than replaying an
-old merge or using a remembered port. The completed [PGS alignment](../../plans/completed/ai-readiness-alignment.md)
+integration baseline is `9f5bc900`. On 2026-09-13 the three lanes, their
+worktrees and both stale remote branches were removed after each was verified to
+hold nothing `main` lacks, so `main` is now the only branch and the only
+checkout. Development proceeds as a sequential queue — see
+[the work queue](work-queue.md). Recheck Git and listener ownership rather than
+replaying an old merge or using a remembered port. The completed [PGS alignment](../../plans/completed/ai-readiness-alignment.md)
 and [UIKit migration](../../plans/completed/uikit-liquid-cta-migration.md) retain
 their separate acceptance records. The completed [mainline maintenance](../../plans/completed/mainline-maintainability.md)
 includes ordinary authoring-start source selection as well as fresh-worktree
@@ -49,6 +51,7 @@ New mainline work follows the applicable lanes below.
 
 | Task | Authoritative entry |
 | --- | --- |
+| How work is queued, run and gated on the mainline | [Work queue](work-queue.md); one task, one commit, one push, because `pnpm verify` does not run the browser suite |
 | Published versus locked course packages | [Locked-package record](../../../apps/local/course-proposals/locked/README.md); runtime counts come from the generated catalogue, not historical handoffs |
 | Mainline iteration, teaching contracts and remaining 3D acceptance gates | [Continuous world delivery](../../plans/active/continuous-world-delivery.md), reading its integrated-mainline continuation first; pre-merge sections are historical evidence, not open task assignments |
 | Learner-visible design | [Player journey V5](../player-journey/v5/index.html), including decision M; only consult V4 for behavior V5 does not amend |
@@ -67,12 +70,13 @@ New mainline work follows the applicable lanes below.
 
 ## Work boundaries
 
-The active plan records mainline work and explicitly started worktrees. Do not
-pre-create future course or visual worktrees while main is still being refined;
-create a lane from the then-current main only when the user actually starts it.
-Recheck Git and process ownership before writing; a historical receipt is not
-permission to reset, delete or take over another task. Preserve original material
-before retiring a worktree. Preserving an experiment does not accept its behavior.
+Work is queued, not branched. Do not create a branch or worktree for ordinary
+sequential work; the queue in `docs/plans/active/` carries it, and a branch is
+correct only when two pieces of work must run at the same time and touch the same
+files. Recheck Git and process ownership before writing; a historical receipt is
+not permission to reset, delete or take over another task. Preserve original
+material before retiring a lane, and preserving an experiment does not accept its
+behavior.
 
 One browser app, two modes: `apps/university` uses `--mode delivery` or
 `--mode authoring`; `apps/local` is the authoring Node server. Shared domain

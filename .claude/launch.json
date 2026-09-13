@@ -45,30 +45,6 @@
       "port": 5199
     },
     {
-      "name": "courses-local-server",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": [
-        "-C",
-        "../University-courses",
-        "--filter",
-        "@pieai/university-local",
-        "dev"
-      ],
-      "port": 4317
-    },
-    {
-      "name": "courses-authoring",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": [
-        "-C",
-        "../University-courses",
-        "--filter",
-        "@pieai/university-app",
-        "dev:local"
-      ],
-      "port": 9999
-    },
-    {
       "name": "swimmer-ui-showcase",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": [
