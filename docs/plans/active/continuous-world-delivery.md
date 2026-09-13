@@ -36,8 +36,8 @@ superseded_by: null
 ## 当前接续：已整合的 main（2026-09-12）
 
 课程、产品、视觉分支的提交均已进入主线；整合基线为 `2316755f`。现在从
-主目录接续，不再执行下文旧工作树的合并准备。当前先完成
-[已批准的 AI Readiness 对齐](ai-readiness-alignment.md)，随后独立处理 UIKit
+主目录接续，不再执行下文旧工作树的合并准备。
+[AI Readiness 对齐](../completed/ai-readiness-alignment.md)已经完成，当前独立处理 UIKit
 升级与 CTA 迁移；本轮不重做世界设计，不移动原始课程或媒体。
 
 以下 R52 及更早章节保留当时的任务、失败和证据。它们记录的是各自时点，

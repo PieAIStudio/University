@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-09-12
+last_reviewed: 2026-09-13
 domain: execution
 tags:
   - current-work
@@ -44,7 +44,7 @@ old merge or using a remembered port. The current approved task is below.
 
 | Task | Authoritative entry |
 | --- | --- |
-| Current: UIKit dependency upgrade and CTA migration | [UIKit migration](../../plans/active/uikit-liquid-cta-migration.md); retain the product flight and prove the published button before replacing the fork. The preceding [PGS alignment](../../plans/active/ai-readiness-alignment.md) passed its full gates |
+| Current: UIKit dependency upgrade and CTA migration | [UIKit migration](../../plans/active/uikit-liquid-cta-migration.md); retain the product flight and finish independent upgrade/browser gates. The preceding [PGS alignment](../../plans/completed/ai-readiness-alignment.md) is complete; Desktop owns the continuation and local evidence |
 | Mainline iteration, teaching contracts and remaining 3D acceptance gates | [Continuous world delivery](../../plans/active/continuous-world-delivery.md), reading its integrated-mainline continuation first; pre-merge sections are historical evidence, not open task assignments |
 | Learner-visible design | [Player journey V5](../player-journey/v5/index.html), including decision M; only consult V4 for behavior V5 does not amend |
 | Technique, measurement scope and rejected alternatives | [ADR-0008](../../adr/ADR-0008-one-locked-technique-per-island-element.md) |

@@ -2,11 +2,11 @@
 id: PLAN-AI-READINESS-ALIGNMENT
 title: AI Readiness Alignment
 type: plan
-status: active
+status: completed
 canonical: true
 owner: ai-assisted
 created: 2026-09-12
-last_reviewed: 2026-09-12
+last_reviewed: 2026-09-13
 domain: execution
 tags:
   - ai-readiness
@@ -80,11 +80,22 @@ existing bounded fallback search. New regressions failed on the original code,
 then both affected browser flows passed five repeats each. Existing collision,
 viewport, interaction and readability assertions were not weakened.
 
-The PGS repair passed 85 focused regressions and full `pnpm verify` after the
-Web host independently corrected the draft's scope and root-counter regressions.
-This is a local upstream source fix, not a newly published npm release.
+The Desktop continuation reproduced and fixed the independent review's four
+remaining scanner gaps: legitimate ignored skill-name freshness, plural caches,
+root-only lifecycle lock counts, and fail-closed unavailable discovery. It passed
+88 focused regressions and full PGS `pnpm verify` (113 doc-gov and 461 pro-gov
+tests). All twelve protected pre-existing PGS diffs remained byte-identical to
+the takeover snapshot. This is a local upstream source fix, not a published
+npm release or an upstream commit.
 
-UIKit remains 2.4.0 at this phase boundary; the subsequent upgrade and CTA
+Fresh root/module starter sync and module asset checks passed. Module doc-gov
+checked 45 docs and 46 current files; its missing-lefthook advisory is explained
+by the single repository-root hook, not fixed by inventing a second Git root.
+Current source inspection found applicable package versions compliant, including
+the separately upgraded UIKit. Optional/manual tools were retained, not claimed
+as executed. The module's four teaching skills remain separately owned.
+
+UIKit was 2.4.0 at the original alignment boundary; the subsequent upgrade and CTA
 migration have not inherited a passing native-press or visual verdict from
 this result. A platform safety-status rejection blocked an optional isolated
 before-component sample, not the completed mainline gates. It was not replayed

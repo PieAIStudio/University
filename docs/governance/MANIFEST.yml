@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-13T02:33:39.021Z
+generated_at: 2026-09-13T05:04:48.651Z
 generator_version: doc-gov@0.14.0
 docs_count: 136
 docs:
@@ -151,13 +151,6 @@ docs:
     canonical: true
     last_reviewed: 2026-09-10
     pinned: true
-  - id: PLAN-AI-READINESS-ALIGNMENT
-    path: docs/plans/active/ai-readiness-alignment.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-09-12
-    pinned: false
   - id: PLAN-CONTINUOUS-WORLD-DELIVERY
     path: docs/plans/active/continuous-world-delivery.md
     type: plan
@@ -185,6 +178,13 @@ docs:
     status: completed
     canonical: true
     last_reviewed: 2026-09-08
+    pinned: false
+  - id: PLAN-AI-READINESS-ALIGNMENT
+    path: docs/plans/completed/ai-readiness-alignment.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-09-13
     pinned: false
   - id: PLAN-ISLAND-V2-VERTICAL-SLICE
     path: docs/plans/completed/island-v2-vertical-slice.md
@@ -296,7 +296,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-12
+    last_reviewed: 2026-09-13
     pinned: true
   - id: REF-FEEDBACK-BACKEND-GAP
     path: docs/reference/execution/feedback-backend-gap.md
