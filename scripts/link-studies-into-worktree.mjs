@@ -94,7 +94,48 @@ export function projectPublicEnv(source, target) {
 
 export function readWorktreeSettings(root) {
   const path = join(root, ".scratch/worktree.json");
-  return existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {};
+  const saved = existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {};
+  const local = localConfigAt(root).value;
+  // Existing project-local configuration is the one source choice for dev,
+  // freshness and E2E. Read an older scratch setting only during migration.
+  return local.studiesRoot === undefined
+    ? saved
+    : { ...saved, studiesRoot: resolve(root, "apps/local", local.studiesRoot) };
+}
+
+function localConfigAt(worktree) {
+  const path = join(worktree, "apps/local/university-local.config.local.json");
+  const value = existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {};
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("Invalid project-local configuration: " + path);
+  }
+  return { path, value };
+}
+
+/** The normal dev server and freshness checker read this existing local config. */
+export function configureLocalStudies(worktreeCandidate, studiesRoot, allowChange = false) {
+  const worktree = realpathSync(worktreeCandidate);
+  const project = realpathSync(join(worktree, "apps/local"));
+  const source = requireStudiesRoot(studiesRoot);
+  const defaultRoot = realpathSync(join(project, "studies"));
+  if (inside(source, project) || (inside(project, source) && source !== defaultRoot)) {
+    throw new Error(
+      "Select a dedicated studies root outside apps/local, or its default studies directory",
+    );
+  }
+  const { path, value } = localConfigAt(worktree);
+  const current =
+    value.studiesRoot === undefined ? null : realpathSync(resolve(project, value.studiesRoot));
+  if (current === source) return false;
+  if (stat(path)?.isSymbolicLink() || (current !== null && !allowChange)) {
+    throw new Error(
+      "Preserve existing local studiesRoot; select --studies-root explicitly: " + path,
+    );
+  }
+  writeFileSync(path, JSON.stringify({ ...value, studiesRoot: source }, null, 2) + "\n", {
+    mode: 0o600,
+  });
+  return true;
 }
 
 /** Reserve all ports together; never terminate or silently reuse a listener. */
@@ -225,9 +266,14 @@ export async function prepareWorktree(worktreeCandidate, options = {}) {
       : E2E_PORT_NAMES.map((_, index) => options.portBase + index);
   const reservation = await reservePorts(requested);
   try {
-    const studiesRoot = options.studiesRoot
-      ? requireStudiesRoot(resolve(options.studiesRoot))
-      : (relocateNestedStudies(worktree) ?? requireStudiesRoot(join(main, "apps/local/studies")));
+    const selected =
+      options.studiesRoot !== undefined ? resolve(options.studiesRoot) : settings.studiesRoot;
+    const nested = join(worktree, "apps/local/studies/studies");
+    const studiesRoot =
+      selected === undefined || resolve(selected) === nested
+        ? (relocateNestedStudies(worktree) ?? requireStudiesRoot(join(main, "apps/local/studies")))
+        : requireStudiesRoot(selected);
+    configureLocalStudies(worktree, studiesRoot, options.studiesRoot !== undefined);
 
     // Preserve the raw tracked PGS links. The one ignored bridge compensates
     // for the extra .worktrees directory depth without editing shared assets.
@@ -288,11 +334,9 @@ export async function prepareWorktree(worktreeCandidate, options = {}) {
     const ports = Object.fromEntries(
       E2E_PORT_NAMES.map((name, index) => [name, reservation.ports[index]]),
     );
-    writeFileSync(
-      join(scratch, "worktree.json"),
-      JSON.stringify({ studiesRoot, ports }, null, 2) + "\n",
-      { mode: 0o600 },
-    );
+    writeFileSync(join(scratch, "worktree.json"), JSON.stringify({ ports }, null, 2) + "\n", {
+      mode: 0o600,
+    });
     console.log("worktree ready: " + worktree);
     console.log("E2E ports: " + JSON.stringify(ports));
     console.log("Next, in this worktree: pnpm verify && pnpm e2e");

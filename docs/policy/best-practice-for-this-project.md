@@ -44,7 +44,10 @@ date so an unchanged input does not produce a date-only diff. Review any other
 generated diff; do not discard it blindly.
 
 The command also refreshes the E2E cache baseline and saves four independently
-reserved ports plus the selected source root in ignored `.scratch/worktree.json`.
+reserved ports in ignored `.scratch/worktree.json`. The source choice lives in
+the existing ignored `apps/local/university-local.config.local.json`, so ordinary
+authoring startup, source freshness and E2E all read the same choice without a
+global environment override. Existing focus/settings are preserved.
 `pnpm e2e` reads those settings; explicit `E2E_*_PORT` values still win.
 `--e2e-port-base <port>` selects four consecutive ports instead. A busy port is
 an error, never permission to reuse or kill another task's server. Inspect PID
@@ -52,8 +55,9 @@ and cwd before stopping your own interrupted process.
 
 An existing real `apps/local/studies/studies` isolation copy moves intact to
 `.scratch/worktree-studies`, with its old path retained as a symlink. The API's
-root guard stays unchanged. Existing destinations/configuration are not
-overwritten. `--studies-root <path>` explicitly selects an already marked
+root guard stays unchanged. Existing isolation destinations are not replaced;
+unrelated configuration fields and owner environment files are preserved.
+`--studies-root <path>` explicitly selects an already marked
 alternative source. The owner's three old sibling worktrees are not moved by
 this command.
 

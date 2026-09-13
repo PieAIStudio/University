@@ -17,6 +17,7 @@ import { dirname, join } from "node:path";
 import { parseEnv } from "node:util";
 import {
   linkMissing,
+  configureLocalStudies,
   projectPublicEnv,
   readWorktreeSettings,
   refreshE2EManifest,
@@ -188,6 +189,58 @@ test("worktree settings are opt-in and read from the supplied checkout, not cwd"
   const settings = { studiesRoot: "/explicit/source", ports: { E2E_GRADING_PORT: 21096 } };
   put(join(root, ".scratch/worktree.json"), JSON.stringify(settings));
   assert.deepEqual(readWorktreeSettings(root), settings);
+});
+
+test("ordinary authoring and E2E read one local source choice, preserving owner focus", () => {
+  const root = temporary();
+  const source = join(root, "source");
+  put(join(source, ".university-local-root"), marker);
+  put(join(source, "study/study.json"), "{}");
+  const tree = join(root, "tree");
+  mkdirSync(join(tree, "apps/local/studies"), { recursive: true });
+  symlinkSync(join(source, "study"), join(tree, "apps/local/studies/study"));
+  // This is the real shelf's Dirent boundary: a linked child is not a directory.
+  assert.equal(
+    readdirSync(join(tree, "apps/local/studies"), { withFileTypes: true }).filter((entry) =>
+      entry.isDirectory(),
+    ).length,
+    0,
+  );
+  const config = join(tree, "apps/local/university-local.config.local.json");
+  put(config, JSON.stringify({ focus: { studyId: "keep" } }));
+  configureLocalStudies(tree, source);
+  const local = JSON.parse(readFileSync(config, "utf8"));
+  assert.deepEqual(local.focus, { studyId: "keep" });
+  assert.equal(
+    readdirSync(local.studiesRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory())
+      .length,
+    1,
+  );
+  put(
+    join(tree, ".scratch/worktree.json"),
+    JSON.stringify({ studiesRoot: "/stale", ports: { E2E_GRADING_PORT: 21096 } }),
+  );
+  assert.equal(realpathSync(readWorktreeSettings(tree).studiesRoot), realpathSync(source));
+  assert.equal(configureLocalStudies(tree, source), false);
+});
+
+test("changing an owner's source requires the explicit selection and retains other fields", () => {
+  const root = temporary(),
+    tree = join(root, "tree");
+  mkdirSync(join(tree, "apps/local/studies"), { recursive: true });
+  for (const name of ["first", "second"]) put(join(root, name, ".university-local-root"), marker);
+  configureLocalStudies(tree, join(root, "first"));
+  assert.throws(() => configureLocalStudies(tree, join(root, "second")), /Preserve existing/);
+  configureLocalStudies(tree, join(root, "second"), true);
+  assert.equal(readWorktreeSettings(tree).studiesRoot, realpathSync(join(root, "second")));
+});
+
+test("an explicitly selected unsafe nested root is rejected before claiming readiness", () => {
+  const root = temporary(),
+    source = join(root, "apps/local/studies/nested");
+  put(join(source, ".university-local-root"), marker);
+  assert.throws(() => configureLocalStudies(root, source), /dedicated studies root/);
+  assert.equal(existsSync(join(root, "apps/local/university-local.config.local.json")), false);
 });
 
 test("every browser spec takes ports from the shared entry, including synthetic planet fixtures", () => {

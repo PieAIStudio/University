@@ -41,8 +41,9 @@ current mainline. Recheck Git and listener ownership rather than replaying an
 old merge or using a remembered port. The completed [PGS alignment](../../plans/completed/ai-readiness-alignment.md)
 and [UIKit migration](../../plans/completed/uikit-liquid-cta-migration.md) retain
 their separate acceptance records. The completed [mainline maintenance](../../plans/completed/mainline-maintainability.md)
-records the topology/worktree/doc/internal-boundary acceptance and its remaining
-uncertainties. New mainline work follows the applicable lanes below.
+includes ordinary authoring-start source selection as well as fresh-worktree
+E2E acceptance; earlier failures and remaining uncertainties are retained there.
+New mainline work follows the applicable lanes below.
 
 ## Active lanes
 

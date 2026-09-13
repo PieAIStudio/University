@@ -154,7 +154,31 @@ was not changed; only the named catalogue test ownership moved in stage 1.
 
 ## Closeout and recovery
 
-All four local stages are accepted separately. The normal Git push/pre-push is
+### Reopened before push: ordinary authoring source selection
+
+The first normal pre-push was deliberately interrupted (exit 130) before remote
+update after a further consumer check found that ordinary `pnpm start` did not
+read E2E-only source settings. A production config-loader/shelf-discovery probe
+reproduced the problem without environment overrides: linked study children
+yielded zero published studies. The source choice now lives in the existing
+ignored `apps/local/university-local.config.local.json`, read by ordinary dev,
+freshness and E2E; scratch settings own only ports. Existing focus/config fields
+are preserved, and explicit source changes cannot write through a shared link.
+The same production-loader probe then found the real shipped study. Expanded
+preparation tests pass 17/17. A new detached worktree at `cc1f155a` plus the
+correction patch ran `pnpm worktree:prepare .`, `pnpm verify` and the complete
+E2E suite: **235 passed / 6 skipped**, exit 0, **17.6m**. Its real HTTP server
+factory, given that worktree's project root and no studies-root environment
+override, returned bootstrap HTTP 200 with the published study present. Scratch
+settings contained no duplicate source choice. Earlier receipts retain their
+exact scope; the normal-start correction is a separately named follow-up commit.
+The second task-owned proof worktree was also removed only after its logs,
+browser evidence, screenshots and local source configuration were preserved.
+Final main-checkout `pnpm verify` also exited 0 after this correction, including
+17 preparation tests, 137 governed documents and 220 current local links.
+
+The four local stages and the ordinary-start correction are accepted separately.
+The normal Git push/pre-push is
 the remaining release operation; this local record does not assert its outcome.
 The task's final delivery message reports the actual push result. Nothing was
 deployed, no payment was enabled, and no hook was bypassed.
@@ -165,7 +189,7 @@ historical document roles, and internal bootstrap ownership. Learner behavior,
 public lesson identities, publication boundaries, grading tiers, header/payload
 contracts, shared UI/renderer ownership and original decision evidence remain.
 
-Rollback uses the four stage commits in reverse order. Documentation moves are
+Rollback uses the correction commit, then the four stage commits in reverse order. Documentation moves are
 recoverable in Git. Preparation does not delete source inputs: a relocated
 isolation root remains accessible at its old linked path; old shared content
 links are retained as restoration receipts. Existing owner environment files
