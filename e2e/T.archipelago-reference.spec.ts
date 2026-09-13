@@ -149,6 +149,7 @@ for (const viewport of [
             meshes.push({ name: object.name, triangles: object.geometry.index.count / 3 });
         });
         return {
+          observedAt: new Date().toISOString(),
           url: location.href,
           viewport: [innerWidth, innerHeight],
           dpr: devicePixelRatio,
@@ -214,6 +215,14 @@ for (const viewport of [
               bottom: r.bottom,
             };
           }),
+          allLabels: Array.from(
+            document.querySelectorAll<HTMLElement>(".labels [data-map-marker]"),
+          ).map((element) => ({
+            id: element.dataset.mapMarker,
+            state: element.dataset.courseState,
+            className: element.className,
+            bounds: element.getBoundingClientRect().toJSON(),
+          })),
           sceneryBoxes: ["remote-props-trees", "remote-props-landmarks"].flatMap((name) => {
             const mesh = state.scene.getObjectByName(name),
               rect = state.gl.domElement.getBoundingClientRect();
@@ -255,6 +264,15 @@ for (const viewport of [
           theme: document.documentElement.getAttribute("data-game-theme"),
         };
       });
+      // A failed assertion used to leave only the previous successful run's
+      // world.png/receipt.json. Preserve this sample before judging it.
+      writeFileSync(
+        test.info().outputPath("reference-observed.json"),
+        JSON.stringify(receipt, null, 2),
+      );
+      if (!receipt.labels.some((label) => label.state === "live")) {
+        await page.screenshot({ path: test.info().outputPath("reference-no-current.png") });
+      }
       expect(receipt.visibility).toBe("visible");
       expect(receipt.daylight.profile).toBe("catalogue");
       expect(receipt.daylight.intensity).toBe(3.4);

@@ -191,10 +191,12 @@ test("手机宽度下，每块板子上的东西都在板子里面", async ({ pa
         return style.display !== "none" && style.visibility !== "hidden";
       });
       const escapes: string[] = [];
+      const geometry: { label: string; bounds: ReturnType<DOMRect["toJSON"]> }[] = [];
       for (const [index, piece] of shown.entries()) {
         const rect = piece.getBoundingClientRect();
         const label =
           piece.textContent?.trim().slice(0, 20) || `第 ${index + 1} 个`;
+        geometry.push({ label, bounds: rect.toJSON() });
         if (rect.width === 0 || rect.height === 0) {
           escapes.push(`「${label}」宽或高为 0`);
           continue;
@@ -205,7 +207,7 @@ test("手机宽度下，每块板子上的东西都在板子里面", async ({ pa
         if (rect.right > box.right + 1)
           escapes.push(`「${label}」右边露到板子外`);
       }
-      return { ok: true as const, pieces: shown.length, escapes };
+      return { ok: true as const, pieces: shown.length, escapes, board: box.toJSON(), geometry };
     });
 
     if (!report.ok) {
@@ -218,6 +220,13 @@ test("手机宽度下，每块板子上的东西都在板子里面", async ({ pa
     ).toBeGreaterThan(0);
     for (const escape of report.escapes) {
       escaped.push(`${target.kind} @ ${target.path} — ${escape}`);
+    }
+    if (report.escapes.length) {
+      await test.info().attach(`overflow-${target.kind}`, {
+        body: JSON.stringify({ target, report }, null, 2),
+        contentType: "application/json",
+      });
+      await page.screenshot({ path: test.info().outputPath(`overflow-${target.kind}.png`) });
     }
   }
   expect(escaped, "手机上这些东西掉出了板子").toEqual([]);

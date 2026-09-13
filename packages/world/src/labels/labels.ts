@@ -234,10 +234,16 @@ function currentIslandSlots(candidate: LabelCandidate, gap: number): readonly Sl
   const baseY = candidate.y + candidate.height / 2 + gap;
   const columns =
     (candidate.weight ?? 0) >= 4 ? [-1, -0.7, -0.4, 0.4, 0.7, 1] : [-0.7, -0.4, 0, 0.4, 0.7];
-  return columns
+  // A phone cannot fit a 220px caption shifted by even 0.4 caption widths.
+  // The third fallback row must keep the original and small-nudge columns,
+  // not only the wider columns useful on a landscape screen. This completes
+  // the existing three-row search; it does not relax any collision or bounds.
+  const nearby = Math.min(32, candidate.width / 4);
+  const offsets = [...new Set([0, nearby, -nearby, ...columns.map((dx) => dx * candidate.width)])];
+  return offsets
     .flatMap((dx) =>
       [0, 1, -1, 2, -2, 3, -3].map((dy) => ({
-        x: candidate.x + dx * candidate.width,
+        x: candidate.x + dx,
         y: baseY + dy * row,
       })),
     )

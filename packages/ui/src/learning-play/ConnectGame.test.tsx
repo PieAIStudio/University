@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ConnectActivity } from "@pieai/university-core";
 import { ConnectGame } from "./ConnectGame.js";
@@ -40,6 +40,8 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   container.remove();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 function render(activity: ConnectActivity): HTMLElement {
@@ -64,5 +66,41 @@ describe("connect board height", () => {
   it("grows for a third row instead of stacking nodes", () => {
     const height = Number.parseInt(render(board([25, 25, 25, 50, 75, 75, 75])).style.height, 10);
     expect(height).toBeGreaterThanOrEqual(420);
+  });
+});
+
+describe("connect first visible layout", () => {
+  it("uses the measured phone width before ResizeObserver's first notification", () => {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(261);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(300);
+    const observe = vi.fn();
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe = observe;
+        disconnect = vi.fn();
+      },
+    );
+
+    const element = render(board([25, 25, 75, 75]));
+    expect(observe).toHaveBeenCalled();
+    expect(element.dataset.compact).toBe("true");
+    expect(
+      [...element.querySelectorAll<HTMLElement>(".play-connect__node")].map(
+        (node) => node.style.insetInlineStart,
+      ),
+    ).toEqual(["25%", "75%", "25%", "75%"]);
+  });
+
+  it("does not reinterpret a hidden zero-width board as a phone layout", () => {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(0);
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe = vi.fn();
+        disconnect = vi.fn();
+      },
+    );
+    expect(render(board([25, 25, 75, 75])).dataset.compact).toBe("false");
   });
 });

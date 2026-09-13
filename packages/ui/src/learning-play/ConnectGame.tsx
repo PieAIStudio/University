@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import {
   checkConnections,
@@ -30,11 +30,11 @@ export function ConnectGame({
   const board = useRef<HTMLDivElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const markerId = useId().replaceAll(":", "");
-  useEffect(() => {
-    if (!board.current || typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(() => {
+  useLayoutEffect(() => {
+    if (!board.current) return;
+    const measure = () => {
       const element = board.current;
-      if (!element) return;
+      if (!element || element.clientWidth <= 0) return;
       const node = element.querySelector<HTMLButtonElement>(".play-connect__node");
       setCompact(element.clientWidth < 540);
       setLayout({
@@ -43,7 +43,14 @@ export function ConnectGame({
         nodeWidth: node?.offsetWidth ?? 168,
         nodeHeight: node?.offsetHeight ?? 88,
       });
-    });
+    };
+    // ResizeObserver's first notification is asynchronous. Painting the
+    // authored desktop positions before that notification briefly clips the
+    // left column on a phone. Choose the real layout before the first paint;
+    // the observer still owns later resizes and changed node dimensions.
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
     observer.observe(board.current);
     for (const node of board.current.querySelectorAll(".play-connect__node"))
       observer.observe(node);
