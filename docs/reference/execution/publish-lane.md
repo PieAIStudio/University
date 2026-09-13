@@ -41,6 +41,38 @@ related:
 长期清单。下方 44/53 门课的数字是当时构建收据，不是当前输入，也不能用来估算当前产物。
 worktree 准备使用项目 baseline 的单命令，不复用以下历史链接/路径示例。
 
+## 本地发布实测（2026-09-13）
+
+这一节是当前可执行的发布步骤，已按下面的顺序真实跑通一次。
+
+```sh
+vercel pull --environment=production --yes --scope <scope>
+DELIVERY_VERSION="0.0.0+<short-sha>" vercel build --prod --scope <scope>
+vercel deploy --prebuilt --prod --scope <scope>
+```
+
+**`DELIVERY_VERSION` 在本地是必填的。** `vercel.json` 的构建命令写的是
+`${DELIVERY_VERSION:-0.0.0+${VERCEL_GIT_COMMIT_SHA}}`；云端有那个 SHA，而
+`vercel pull` 下来的本地快照里 `VERCEL_GIT_COMMIT_SHA=""`，于是版本求值成
+`0.0.0+`，被 `validateReleaseVersion` 判为非法并让构建失败。不设它，照着
+上面注释里那句 `vercel build && vercel deploy --prebuilt` 做一定会红。
+
+**退出码不是产物。** `vercel build` 返回 0 之后仍需亲眼核 `.vercel/output`：
+`release.json` 的 `sourceCommit` 是否等于要发布的提交、`evidence.mode` 是否为
+`baked`、`content` 的 study/course/lesson 数是否等于当前锁课边界、以及生产环境
+变量是否真的出现在 `assets/*.js` 里——面板上存在某个变量，不等于它进了这次的包。
+
+**面板设置与仓库配置存在漂移。** `.vercel/project.json` 缓存的 `buildCommand`
+带 `--evidence none`，而仓库 `vercel.json` 是 `--evidence baked`。本地
+`vercel build` 以仓库为准，所以本次产物是 baked；但若有人打开 Git 自动部署，
+云端会按面板设置以 `none` 构建。要么改面板，要么让 `deploymentEnabled: false`
+一直是唯一的上线路径。
+
+本次收据：`0.0.0+13974b48`，`sourceCommit 13974b48`，evidence baked（131 锚点 /
+131 片段 / 36 文件），content 1 study / 4 courses / 27 lessons，payload 524 个
+文件 20,158,542 字节，别名 `university.pieaistudio.com` 已切至该部署，线上
+`release.json` 与本地产物一致，浏览器控制台无错误。
+
 ## 历史状态核对（2026-09-03）
 
 本工作树当前能直接核实的事实是：
