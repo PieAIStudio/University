@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-09-13
-last_reviewed: 2026-09-13
+last_reviewed: 2026-09-14
 domain: course-authoring
 tags:
   - ai-foundations
@@ -22,6 +22,11 @@ superseded_by: null
 # 认识 AI，从这里开始：复活计划
 
 ## 当前边界
+
+**2026-09-14 恢复预检：阻塞仍在。** 当前工具再次拒绝读取 UA 必需的 agent 定义；
+当前源码仍不允许从 `failed` 重试，也不允许将未完成或失败分析 retire。本轮没有再次
+启动 prepare，没有改动分析状态。重新完成的 `pnpm verify` 退出 0，但这不是阶段 0
+流水线验收通过。最新实测、文件保护检查和本地交付范围见文末的本轮恢复预检回执。
 
 2026-09-13 的 owner 指令分为阶段 0–5。当前停在**阶段 0 的 UA 收尾阻塞**：
 源码快照已建立且核对一致，但 UA 没有生成图谱，不能声称完成 finalize / verify。
@@ -240,3 +245,113 @@ UA 分析已完成。** `pnpm e2e` 未运行：本阶段刷新收尾条件已经
 
 **本轮没有改变读者可见的讲法；它把后续审计的英文原料固定为可核对的 Git 版本，
 并避免把未完成的分析和未改写的 61 节课当作已验收课程。**
+
+## 2026-09-14 · 阶段 0 恢复预检回执（仍阻塞）
+
+### 1. 本轮做了什么、改了哪些文件
+
+本轮开始时工作树干净，但 `main` 已比本地 `origin/main` 跟踪引用多一个提交：
+`7be8744b`，即上面的首次阻塞回执。因此没有把“快照目录为空”当成当前事实，也没有
+重做克隆、修改源码注册位置、改写该提交或重复启动已知无法收尾的 refresh。
+
+本轮重新执行 `status --study ai-foundations`、`snapshot list --study ai-foundations`，
+核对原克隆与私有 Git 快照的完整树清单，读取当前 refresh / retire 实现，并通过
+DevSpace 正式文件读取接口复查所需 UA 定义的可达性。当前仍只有一个 ready 快照
+`git-392d0df1b264`，固定的 commit 仍为 `392d0df1b2647cbee104942390551f1ed9e072c8`；
+UA 是 `failed: 1`、`preparing: 0`、`ready: 0`。本轮没有执行 finalize、retire、
+失败清理 API 或任何 UA 状态迁移；没有留下新的中途状态。
+
+本轮 tracked 修改仅为本计划，以及扫描生成的 `docs/governance/MANIFEST.yml`。
+原有 current-work 导航仍指向本计划，不另建重复计划。复核前后对 539 个受保护文件
+逐一比较 SHA-256，包含该 study 的课文、课程元数据、注册、快照 manifest、失败回执
+和学习数据库；全部相同。产品代码、测试和课程导出包的 diff 为空。
+
+原始日志位于 gitignored 的 `.scratch/ai-foundations-revival/recheck-2026-09-14/`：
+`verify.log`、`verify.exit`、`verify-summary.log`、`integrity.log`、
+`protected-before.json` 和 `protection-check.log`。这些本地证据不随 Git 提交上传。
+
+### 2. 闸门原始数字与实际阻塞
+
+以下为本次重新执行 `pnpm verify` 的原始汇总，不是沿用上次日志：
+
+```text
+packages/core test:  Test Files  69 passed (69)
+packages/core test:       Tests  680 passed (680)
+packages/backend test:  Test Files  2 passed (2)
+packages/backend test:       Tests  6 passed (6)
+apps/university-grading test:  Test Files  4 passed (4)
+apps/university-grading test:       Tests  27 passed (27)
+packages/ui test:  Test Files  82 passed (82)
+packages/ui test:       Tests  544 passed (544)
+apps/local test:  Test Files  46 passed (46)
+apps/local test:       Tests  470 passed (470)
+packages/world test:  Test Files  123 passed (123)
+packages/world test:       Tests  988 passed (988)
+apps/university test:  Test Files  57 passed (57)
+apps/university test:       Tests  281 passed (281)
+check-shelf: 1 studies, 4 courses, 27 lessons match the manifest.
+check-published-catalog: all 4 published course(s) still ship.
+check-content-revisions: ok (27 lessons, 4 courses)
+doc-gov check passed (139 docs).
+doc-gov scan --check passed.
+doc-gov links passed (133 current files, 229 local links).
+VERIFY_EXIT=0
+```
+
+本次完整性检查原始片段：
+
+```text
+SOURCE_SNAPSHOT_TREE_EQUAL=true
+SNAPSHOT_TRACKED_ENTRIES=13705
+TREE_INVENTORY_SHA256=19db3f27e165854c82fbacb771c1f2e98124fba72a2bb1c094805aace38fb290
+SOURCE_HEAD=392d0df1b2647cbee104942390551f1ed9e072c8
+SOURCE_STATUS=''
+UA_STATUS=failed
+UA_WORKSPACE_EXISTS=false
+LIVE_CONTENT_MD_COUNT=61
+PROTECTED_FILES_CHECKED=539
+PROTECTED_FILES_CHANGED=[]
+PRODUCT_AND_TEST_DIFF=''
+```
+
+13,705 是 Git 树条目数，不是英文知识点数量，也不证明教学覆盖率。
+本次 DS-Mac-V3 `read` 对所需 agent 文件返回的原始错误仍为：
+
+```text
+Path is outside allowed roots: /Users/yuanfei/.understand-anything/repo/understand-anything-plugin/agents/project-scanner.md
+```
+
+另有两次组合式检查被平台返回 `This tool call was blocked by OpenAI because we couldn't
+determine the safety status of the request.`，因此不能宣称那些命令执行成功。所需项目内
+事实随后由正式文件读取接口及可执行的独立状态查询核实；没有改用 shell、路径别名、
+其他连接器或外部 agent 读取上面被拒绝的 UA 路径。
+
+完整 verify 在本回执更新前结束；之后的变动限定为本报告与自动生成的 manifest。
+本轮 `pnpm e2e` 未运行，阶段 0 的执行前提未恢复，阶段 1–3 也未开始。此前
+`235 passed / 6 skipped / 0 failed` 仍只作为 owner 提供的浏览器基线，不作为本轮数字。
+没有新增、删除或跳过测试；本轮按阻塞退出只作本地提交，不执行 push。
+
+### 3. 需要 owner 决定的问题
+
+**UA 宿主读取范围。** 需要允许所选宿主按技能读取
+`/Users/yuanfei/.understand-anything/repo/understand-anything-plugin/` 下的必要定义，
+或在已有相应读取权限的获准宿主执行 UA。这里需要的是特定插件目录的读取能力，
+不是重新核实原文许可，也不要求无差别放开整个用户目录。
+
+**是否授权一轮独立的失败恢复链修复。** 即便换了宿主，当前确定性分析 ID 已是
+`failed`：`prepareStudyRefresh` 拒绝该状态，`retireUaAnalysis` 也只接受 `ready` /
+`legacy-import`。需要先确定并测试“保留旧失败证据、为重试分配新 ID、未完成分析
+可安全终止并释放租约”的契约，再恢复阶段 0。当前没有修改流水线实现、质量闸门或
+任何已发布产品逻辑，不能把“放开读取权限”单独当作完整恢复条件。
+
+### 4. 发现但没做的后续候选
+
+恢复链修复应覆盖失败后重试、重复调用的幂等性、被中断重试的恢复，以及旧失败证据
+不被覆盖；本轮只核对现有实现，没有新增这些测试。阶段 1 的覆盖表、阶段 2 的逐句
+教法对比、阶段 3 的拆课方案均未冒进。云端是否有真实学习者进度仍未查询；本地数据库
+仅做文件哈希保护，该问题继续保留给阶段 3 的 owner 决策。
+
+### 5. 对读者的实际帮助
+
+**本轮尚未改善读者可见的讲法；它确认后续审计仍可使用同一版英文原料，并验证这次
+恢复检查没有改动现有课文、学习数据库或交付目录。**
