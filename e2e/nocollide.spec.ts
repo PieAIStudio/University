@@ -42,6 +42,40 @@ async function realClick(target: Locator, label: string): Promise<void> {
   await target.page().waitForTimeout(350);
 }
 
+async function waitForFeedbackReturn(target: Locator, label: string): Promise<void> {
+  const samples: { at: number; opacity: string; pointerEvents: string; scrolling: boolean }[] = [];
+  // Lesson focus can scroll the page after the header appears. Feedback waits
+  // 420ms after scrolling, then fades for 160ms: a blind 500ms sleep samples
+  // that legitimate transition. Require its actual return within a bounded
+  // interval; a permanently invisible or non-interactive control still fails.
+  await expect
+    .poll(
+      async () => {
+        const sample = await target.evaluate((node) => {
+          const style = getComputedStyle(node);
+          return {
+            at: performance.now(),
+            opacity: style.opacity,
+            pointerEvents: style.pointerEvents,
+            scrolling: node.classList.contains("is-away"),
+          };
+        });
+        samples.push(sample);
+        return !sample.scrolling && sample.opacity === "1" && sample.pointerEvents === "auto";
+      },
+      {
+        timeout: 1500,
+        intervals: [50, 100, 150],
+        message: `${label}: scrolling ended but feedback did not return`,
+      },
+    )
+    .toBe(true);
+  await test.info().attach(`${label}-return`, {
+    body: JSON.stringify(samples, null, 2),
+    contentType: "application/json",
+  });
+}
+
 test.describe("N nocollide · 四条体验回归", () => {
   test("N1 desktop · follow card 绕开展开的右栏", async ({ page }) => {
     const card = await openCoursePickDialog(page, DESKTOP);
@@ -94,6 +128,7 @@ test.describe("N nocollide · 四条体验回归", () => {
     await page.waitForTimeout(500);
 
     const accountFeedback = page.locator(".feedback-note__open--float:visible");
+    await waitForFeedbackReturn(accountFeedback, "account-feedback");
     await assertVisibleAndHittableAtFivePoints(page, accountFeedback, "个人档案 / 提意见浮钮");
     const accountFeedbackBox = await boxOf(accountFeedback, "个人档案 / 提意见浮钮");
     const accountForm = page.locator("details.account-panel__form");
@@ -111,6 +146,7 @@ test.describe("N nocollide · 四条体验回归", () => {
     await page.waitForTimeout(500);
 
     const lessonFeedback = page.locator(".feedback-note__open--float:visible");
+    await waitForFeedbackReturn(lessonFeedback, "lesson-feedback");
     await assertVisibleAndHittableAtFivePoints(page, lessonFeedback, "课文 / 提意见浮钮");
     const lessonFeedbackBox = await boxOf(lessonFeedback, "课文 / 提意见浮钮");
     const coveredBlocks = await page.evaluate((feedback) => {
@@ -157,6 +193,24 @@ test.describe("N nocollide · 四条体验回归", () => {
         );
     }, lessonFeedbackBox);
     expect(coveredBlocks, "提意见浮钮盖住课文文字").toEqual([]);
+
+    // Attack the new readiness guard in the browser. Waiting for a fade must
+    // never bless a control that remains invisible indefinitely.
+    const fault = await page.addStyleTag({
+      content: ".feedback-note__open--float { opacity: 0 !important; }",
+    });
+    await expect(lessonFeedback).toHaveCSS("opacity", "0");
+    let rejected = false;
+    try {
+      await waitForFeedbackReturn(lessonFeedback, "injected-hidden-feedback");
+    } catch {
+      rejected = true;
+    } finally {
+      await fault.evaluate((node) => node.remove());
+    }
+    expect(rejected, "the readiness guard must reject permanently hidden feedback").toBe(true);
+    await waitForFeedbackReturn(lessonFeedback, "restored-feedback");
+    await assertVisibleAndHittableAtFivePoints(page, lessonFeedback, "恢复后 / 提意见浮钮");
   });
 
   test("N4 phone · lesson toolbar 工具单行且没有悬空标签", async ({ page }) => {

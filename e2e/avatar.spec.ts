@@ -430,8 +430,10 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       // lesson by stable identity, not the current order of painted labels.
       const destination = ALTERNATE_COURSE.units.flatMap((unit) => unit.lessons)[1];
       expect(destination, "the motion fixture needs a second real lesson").toBeTruthy();
+      // courseSprites gives the visible kind icon its own identity; the raw
+      // lesson id belongs to the separate quiet title, not this click target.
       const lessonIcon = page.locator(
-        `button.label--icon.is-visible[data-map-marker=${JSON.stringify(destination!.id)}]`,
+        `button.label--icon.is-visible[data-map-marker=${JSON.stringify(`kind:${destination!.id}`)}]`,
       );
       await expect(lessonIcon).toBeVisible({ timeout: 30_000 });
       let startedAt = 0;
