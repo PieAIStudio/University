@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useState,
   type ReactNode,
 } from "react";
 
@@ -15,6 +16,7 @@ export type { MessageCatalog, MessageKey, MessageValue, MessageValues } from "./
 
 export const SOURCE_LOCALE = "zh-CN" as const;
 export const ENGLISH_LOCALE = "en" as const;
+const LOCALE_STORAGE_KEY = "university.interface-locale";
 export type LocaleDirection = "ltr" | "rtl";
 
 export interface LocaleDefinition {
@@ -104,7 +106,12 @@ function matchingLocale(requestedLocale: string | undefined, registry: LocaleReg
     (locale) =>
       languageCodeOf(locale) === requestedLanguage && isLocaleComplete(registry[locale]!.messages),
   );
-  return languageMatch ?? SOURCE_LOCALE;
+  return (
+    languageMatch ??
+    (registry[ENGLISH_LOCALE] && isLocaleComplete(registry[ENGLISH_LOCALE].messages)
+      ? ENGLISH_LOCALE
+      : SOURCE_LOCALE)
+  );
 }
 
 export function resolveLocale(
@@ -116,6 +123,39 @@ export function resolveLocale(
 
 function browserLocale(): string | undefined {
   return typeof navigator === "undefined" ? undefined : navigator.language;
+}
+
+export function readLocalePreference(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  const requested = new URL(window.location.href).searchParams.get("lang");
+  if (requested === SOURCE_LOCALE || requested === ENGLISH_LOCALE) return requested;
+  try {
+    return window.localStorage.getItem(LOCALE_STORAGE_KEY) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function writeLocalePreference(locale: string): void {
+  if (typeof window === "undefined") return;
+  if (!availableLocales().includes(locale)) return;
+  try {
+    window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  } catch {
+    // Storage is optional. The explicit URL choice can survive a reload.
+  }
+  setActiveLocale(locale);
+  window.dispatchEvent(new CustomEvent("university:locale-change", { detail: locale }));
+}
+
+/** A language switch keeps the course/settings route and every unrelated query. */
+export function localeNavigationUrl(currentUrl: string, locale: string): string {
+  if (locale !== SOURCE_LOCALE && locale !== ENGLISH_LOCALE) {
+    throw new Error("Unsupported interface locale");
+  }
+  const target = new URL(currentUrl);
+  target.searchParams.set("lang", locale);
+  return target.href;
 }
 
 function formatValue(locale: string, value: MessageValue): string {
@@ -166,7 +206,7 @@ export function createTranslator(
   };
 }
 
-let activeTranslator = createTranslator();
+let activeTranslator = createTranslator(readLocalePreference() ?? browserLocale());
 
 export function setActiveLocale(requestedLocale: string | undefined): Translator {
   activeTranslator = createTranslator(requestedLocale);
@@ -207,7 +247,7 @@ function applyLocaleToDocument(translator: Translator): void {
   document.documentElement.dir = translator.direction;
 }
 
-const I18nContext = createContext<Translator>(activeTranslator);
+const I18nContext = createContext<Translator | null>(null);
 
 export function I18nProvider({
   locale,
@@ -216,7 +256,16 @@ export function I18nProvider({
   readonly locale?: string;
   readonly children: ReactNode;
 }) {
-  const translator = useMemo(() => createTranslator(locale), [locale]);
+  const [storedLocale, setStoredLocale] = useState(() => readLocalePreference());
+  useEffect(() => {
+    const onChange = (event: Event) => setStoredLocale((event as CustomEvent<string>).detail);
+    window.addEventListener("university:locale-change", onChange);
+    return () => window.removeEventListener("university:locale-change", onChange);
+  }, []);
+  const translator = useMemo(
+    () => createTranslator(locale ?? storedLocale ?? browserLocale()),
+    [locale, storedLocale],
+  );
   useEffect(() => {
     activeTranslator = translator;
     applyLocaleToDocument(translator);
@@ -225,7 +274,7 @@ export function I18nProvider({
 }
 
 export function useI18n(): Translator {
-  return useContext(I18nContext);
+  return useContext(I18nContext) ?? activeTranslator;
 }
 
 /** Testable document hook for shells that need to apply a locale without a provider. */

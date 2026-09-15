@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-08-26
+last_reviewed: 2026-09-15
 domain: content-pipeline
 tags:
   - parity
@@ -18,6 +18,12 @@ related: []
 ---
 
 # SPEC-0001: UniversityLocal Parity Contract
+
+UniversityLocal below names the `apps/local` authoring module in this repository,
+not a second checkout. `apps/university` is one browser app in authoring and
+delivery modes. The current public-source extension and delegated publication
+review are described below; old repository lessons retain their exact snapshot
+and source-evidence requirements.
 
 ## Problem
 
@@ -46,7 +52,7 @@ halves of one pipeline.
 | --- | --- | --- |
 | Role | Authoring studio | Delivery product |
 | Who uses it | One person, locally | Paying learners, on the web |
-| Where teaching intelligence comes from | The AI coding host reading a real repository | Published course packages plus metered online models |
+| Where teaching intelligence comes from | The AI host examining validated repository snapshots or real public materials | Published course packages plus metered online models |
 | What it produces | Course content | Learner outcomes and revenue |
 | Content storage | Local files and the registered clones | Imported packages |
 | Repository access from a lesson | Checkout and UA analysis are reachable locally | The same learner controls explain the published package boundary |
@@ -56,7 +62,7 @@ Once that is fixed, "the courses must be identical" stops being a synchronisatio
 problem and becomes a supply problem: there is exactly one producer.
 
 Course storage is split and has to be: `apps/local` reads the thing being
-written — prose, four registered private repositories, snapshots — and
+written — prose, registered repositories, snapshots and public-source materials — and
 the delivery build reads what was published. That asymmetry **is** the
 single-producer pipeline. Identity and learner state are not split: one
 account, one cloud learner document, one review schedule (ADR-0001). A local
@@ -85,8 +91,10 @@ Requirements:
    made in UniversityLocal and re-exported. A correction applied only on the
    delivery side is the drift this spec exists to prevent.
 3. Every import records the package hash, the study id, the course id, and the
-   import date in a tracked manifest. The package bytes themselves are not
-   tracked; the import is reproducible from the manifest.
+   import date in a tracked manifest. Approved recovery packages are tracked in
+   `apps/local/course-proposals/recovery/`; generated delivery JSON is not. The
+   import is reproducible from these packages, with pinned source inputs when
+   repository snippets must be baked.
 4. Import validates against the schema before anything is written. A package
    that fails validation is rejected loudly, not partially imported.
 
@@ -108,11 +116,19 @@ the second lane only if it carries no lesson content.
 
 Imported is not published.
 
-The portfolio's current decision is that University sells courses built from
-real PieAI product repositories, and treats "you are reading the source of a
-shipping commercial product" as the differentiator. That decision makes every
-imported package IP-bearing: it carries source paths, exact commits, line
-ranges, and verbatim code excerpts from private repositories.
+The original product-repository route remains supported: a package can carry
+source paths, exact commits, line ranges and verbatim excerpts from a private
+repository, so publication still needs an explicit intellectual-property review.
+
+Owner expanded the teaching scope on 2026-09-14: real public records, original
+reporting, research, official material, documented cases, data, images and videos
+may ground a beginner lesson. They use the existing URL evidence branch with
+`provenance`, not a second source database. Each citation records its publisher,
+date when known, inspection date, supported claim and limitation. Repository
+citations still require their real snapshot; a public-source study has no fake
+repository, commit or UA analysis. Original teaching transformations are marked
+as such and never described as recorded events or actual model runs. Media still
+needs validated bytes, accessible descriptions and appropriate usage rights.
 
 So the pipeline has three states, not two:
 
@@ -120,11 +136,14 @@ So the pipeline has three states, not two:
 imported  ->  reviewed  ->  published
 ```
 
-`reviewed` is a human decision recorded per course. UniversityLocal's snapshot
-gate already rejects secret-like tracked paths before analysis, which stops
-credentials; it does not decide what is commercially safe to show a stranger.
-That judgement belongs here, and it is made once per course version, not once
-per product.
+Publication scope is an Owner decision recorded per course version. For the two
+public-source AI-literacy series in this release, Owner explicitly delegated
+iterative writing, independent model review, revision and publication without
+intermediate approval. Keep the exact package hashes and review receipts; this
+delegation does not approve unrelated private content or unlock old locked
+courses. Automated validation and model review do not prove that real students
+learned. The snapshot gate rejects secret-like tracked paths before analysis;
+it does not decide what is commercially safe to show a stranger.
 
 No course reaches a learner without a recorded review of the exact package hash
 being served.

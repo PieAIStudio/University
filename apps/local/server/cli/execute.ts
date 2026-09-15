@@ -1,9 +1,15 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
+import { LocaleMap, LocalizedStudySchema } from "@pieai/university-core/domain/schemas.js";
 
 import { loadUniversityLocalConfig } from "../config/load-config.js";
 import { listKnowledgeNotes } from "../knowledge/repository.js";
-import { rebindLocalGitSource, setDefaultCourse, setStudyStatus } from "../studies/repository.js";
+import {
+  rebindLocalGitSource,
+  setDefaultCourse,
+  setStudyStatus,
+  setStudyDescription,
+} from "../studies/repository.js";
 import { captureKnowledge } from "../workflows/capture-knowledge.js";
 import { getHostStudyStatus } from "../workflows/host-status.js";
 import { backupLearner, resetLearner, restoreLearner } from "../workflows/learner.js";
@@ -170,7 +176,9 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         studiesRoot: config.studiesRoot,
         studyId: input.command.studyId,
         inputDirectory: resolve(input.cwd ?? process.cwd(), input.command.inputDirectory),
-        sourceRoot: resolve(input.cwd ?? process.cwd(), input.command.sourceRoot),
+        ...(input.command.sourceRoot
+          ? { sourceRoot: resolve(input.cwd ?? process.cwd(), input.command.sourceRoot) }
+          : {}),
         dryRun: input.command.dryRun,
       });
     case "course-create":
@@ -198,7 +206,7 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
         studiesRoot: config.studiesRoot,
         studyId: input.command.studyId,
         courseId: input.command.courseId,
-        targetSnapshotId: input.command.snapshotId,
+        ...(input.command.snapshotId ? { targetSnapshotId: input.command.snapshotId } : {}),
         ...(input.command.analysisId ? { targetAnalysisId: input.command.analysisId } : {}),
       });
     case "course-pin":
@@ -438,11 +446,31 @@ export async function executeUniversityLocalCli(input: ExecuteCliInput): Promise
           input.command.kind === "study-archive" ? "archived" : "active",
         ),
       };
+    case "study-describe":
+      return {
+        schemaVersion: 1 as const,
+        operation: "study-describe" as const,
+        study: setStudyDescription(
+          config.studiesRoot,
+          input.command.studyId,
+          input.command.description,
+        ),
+      };
     case "study-create":
       return createStudyWithSource({
         studiesRoot: config.studiesRoot,
         id: input.command.studyId,
         title: input.command.title,
+        ...(input.command.localesPath
+          ? {
+              locales: LocaleMap(LocalizedStudySchema).parse(
+                readProposal(
+                  resolve(input.cwd ?? process.cwd(), input.command.localesPath),
+                  "Study translations",
+                ),
+              ),
+            }
+          : {}),
         ...(input.command.sourceRoot
           ? { sourceRoot: resolve(input.cwd ?? process.cwd(), input.command.sourceRoot) }
           : {}),

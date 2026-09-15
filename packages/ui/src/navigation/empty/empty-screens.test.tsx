@@ -197,9 +197,14 @@ describe("AccountPanel", () => {
 
   it("has a real error state that still leaves the form up", () => {
     const identity = createMemoryIdentityPort();
-    identity.status = () => ({ kind: "error", message: "登录没有成功，邮箱或密码不对。" });
+    identity.status = () => ({
+      kind: "error",
+      code: "sign-in-failed",
+      message: "provider debug response must not reach the learner",
+    });
     const markup = renderToStaticMarkup(<AccountPanel identity={identity} />);
-    expect(markup).toContain("登录没有成功，邮箱或密码不对。");
+    expect(markup).toContain("登录没有完成，请核对输入或网络后重试。");
+    expect(markup).not.toContain("provider debug response");
     expect(markup).toContain('type="password"');
     expect(markup).toContain("没登上");
   });

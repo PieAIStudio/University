@@ -13,12 +13,12 @@ const css = readFileSync(
 const phoneRule = css.slice(css.indexOf("@media (max-width: 640px)"));
 
 describe("lesson toolbar phone layout", () => {
-  it("keeps phone tools on one row inside the viewport, without an orphaned label", () => {
+  it("allows long localized tools to wrap without hiding controls or an orphaned label", () => {
     expect(phoneRule).toContain(".lesson-toolbar__tools");
     expect(phoneRule).toMatch(/flex:\s*1 1 100%/);
     expect(phoneRule).toMatch(/width:\s*100%/);
     expect(phoneRule).toMatch(/justify-content:\s*flex-start/);
-    expect(phoneRule).toMatch(/flex-wrap:\s*nowrap/);
+    expect(phoneRule).toMatch(/flex-wrap:\s*wrap/);
     expect(phoneRule).toMatch(/\.lesson-toolbar__label[\s\S]*display:\s*none/);
     expect(phoneRule).toMatch(
       /\.lesson-toolbar__tools \.game-ui-segmented-option[\s\S]*white-space:\s*nowrap/,

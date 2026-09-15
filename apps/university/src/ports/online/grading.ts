@@ -24,6 +24,7 @@ import {
   type ProgressPort,
 } from "@pieai/university-core";
 import { readJson } from "@pieai/university-ui/api/client.js";
+import { activeLocale, translate } from "@pieai/university-ui/i18n.js";
 
 import { isRepositoryAnchor, peekCourse } from "../../content/library";
 import type { Lesson } from "../../content/library";
@@ -83,7 +84,7 @@ export function createOnlineGradingPort(options: {
       const accountScope = progress?.syncState().userId ?? null;
       const saveResult = (result: ExerciseAttemptResult) => {
         if ((progress?.syncState().userId ?? null) !== accountScope) {
-          throw new Error("账号已切换。这次回答没有写入新账号，原来的输入仍保留在原账号中。");
+          throw new Error(translate("grading.account.changedBeforeSave"));
         }
         return recordAttempt(progress, input, result);
       };
@@ -108,7 +109,7 @@ export function createOnlineGradingPort(options: {
           hostGrade: {
             outcome: "pass",
             passed: true,
-            evaluation: "答对了。",
+            evaluation: translate("grading.result.correct"),
             extensions: [],
             host: DETERMINISTIC_GRADER_HOST,
             learnerAnswer: input.answer,
@@ -130,7 +131,7 @@ export function createOnlineGradingPort(options: {
               // Check before sending, not only before storing the response.
               // A token resolved during account switching may belong to someone else.
               if ((progress?.syncState().userId ?? null) !== accountScope) {
-                throw new Error("账号已切换。这次回答没有发送，请在原账号中继续。");
+                throw new Error(translate("grading.account.changedBeforeSend"));
               }
               return token;
             },
@@ -172,7 +173,7 @@ export function createOnlineGradingPort(options: {
           ? undecidedCopy(lesson, exercise?.prompt, verdict.reason)
           : lesson
             ? failCopy(lesson, exercise?.prompt)
-            : "再想一下，答案就在上面这段里。";
+            : translate("grading.hint.tryAgain");
       const result: ExerciseAttemptResult = {
         correct: false,
         attemptCount: count,
@@ -224,10 +225,10 @@ async function submitToMeteredService(options: {
 }): Promise<ExerciseAttemptResult> {
   const accessToken = await options.readAccessToken();
   if (!accessToken) {
-    throw new Error("这道题需要登录后才能使用 AI 语义批改。确定性判题仍然免费；请登录后再试。");
+    throw new Error(translate("grading.request.signIn"));
   }
   if (!options.gradingUrl) {
-    throw new Error("AI 语义批改服务尚未配置。确定性判题仍然免费；请联系产品管理员完成服务配置。");
+    throw new Error(translate("grading.request.notConfigured"));
   }
   try {
     const response = await options.fetchImpl(options.gradingUrl, {
@@ -247,7 +248,7 @@ async function submitToMeteredService(options: {
     });
     const body = await readMeteredResponse(response);
     if (!body.hostGrade) {
-      throw new Error("AI 语义批改服务返回了不完整的结果。");
+      throw new Error(translate("grading.request.incomplete"));
     }
     const hostGrade = withExplicitOutcome(body.hostGrade);
     return {
@@ -269,7 +270,7 @@ async function submitToMeteredService(options: {
     ) {
       throw error;
     }
-    throw new Error("AI 语义批改服务暂时不可用，请稍后重试。");
+    throw new Error(translate("grading.request.unavailable"));
   }
 }
 
@@ -284,7 +285,7 @@ async function readMeteredResponse(response: Response): Promise<MeteredGradingRe
   try {
     body = await response.json();
   } catch {
-    throw new Error(`请求失败（${response.status}）`);
+    throw new Error(translate("grading.request.failed", { status: response.status }));
   }
 
   if (!response.ok) {
@@ -302,7 +303,7 @@ async function readMeteredResponse(response: Response): Promise<MeteredGradingRe
     throw new Error(
       isRecord(body) && typeof body.error === "string"
         ? body.error
-        : `请求失败（${response.status}）`,
+        : translate("grading.request.failed", { status: response.status }),
     );
   }
 
@@ -312,22 +313,22 @@ async function readMeteredResponse(response: Response): Promise<MeteredGradingRe
 function quotaExhaustedExplanation(message: string): MeteredGradingExplanation {
   return {
     kind: "explanation",
-    title: "今天的免费 AI 批改用完了",
-    whatItDoes: "它会在确定性判题无法判断的开放题上提供结构化 AI 评估。",
-    whyUnavailable: message || "今天的免费 AI 批改用完了，明天恢复。",
-    futureSupport: "免费额度明天恢复；如果现在需要继续批改，可以查看会员方案。",
-    action: { label: "查看会员方案", href: toPath({ kind: "plans" }) },
+    title: translate("grading.quota.exhaustedTitle"),
+    whatItDoes: translate("grading.quota.whatItDoes"),
+    whyUnavailable: message || translate("grading.quota.exhausted"),
+    futureSupport: translate("grading.quota.exhaustedFuture"),
+    action: { label: translate("grading.quota.viewPlans"), href: toPath({ kind: "plans" }) },
   };
 }
 
 function quotaUnavailableExplanation(message: string): MeteredGradingExplanation {
   return {
     kind: "explanation",
-    title: "今天的免费 AI 批改次数暂时读不到",
-    whatItDoes: "它会在确定性判题无法判断的开放题上提供结构化 AI 评估。",
-    whyUnavailable: message || "免费额度服务暂时没有返回结果，所以不会发起可能扣费的请求。",
-    futureSupport: "额度服务恢复后，重新提交这道题就会再次读取今天的免费 AI 批改次数。",
-    action: { label: "查看会员方案", href: toPath({ kind: "plans" }) },
+    title: translate("grading.quota.unavailableTitle"),
+    whatItDoes: translate("grading.quota.whatItDoes"),
+    whyUnavailable: message || translate("grading.quota.unavailableReason"),
+    futureSupport: translate("grading.quota.unavailableFuture"),
+    action: { label: translate("grading.quota.viewPlans"), href: toPath({ kind: "plans" }) },
   };
 }
 
@@ -371,18 +372,16 @@ async function readMeteredGradingOffer(options: {
   }
   if (!accessToken) {
     return unavailableOffer({
-      title: "AI 语义批改可以选择，但需要登录",
-      whyUnavailable:
-        "当前没有登录账号，服务端无法把这次 AI 批改绑定到你的钱包；免费提示仍然可用。",
-      futureSupport: "登录后，这里会读取同一个账号的 AI 批改余额，再由你决定是否使用。",
+      title: translate("grading.offer.signInTitle"),
+      whyUnavailable: translate("grading.offer.signInReason"),
+      futureSupport: translate("grading.offer.signInFuture"),
     });
   }
   if (!options.gradingUrl) {
     return unavailableOffer({
-      title: "AI 语义批改服务还没接通",
-      whyUnavailable:
-        "当前交付环境还没有配置线上批改服务；这不是你的答案有问题，免费提示仍然可用。",
-      futureSupport: "服务部署后，这里会先展示费用和余额，再让你明确选择是否使用。",
+      title: translate("grading.offer.notConfiguredTitle"),
+      whyUnavailable: translate("grading.offer.notConfiguredReason"),
+      futureSupport: translate("grading.offer.notConfiguredFuture"),
     });
   }
   try {
@@ -397,10 +396,9 @@ async function readMeteredGradingOffer(options: {
     return offer;
   } catch {
     return unavailableOffer({
-      title: "AI 批改费用与次数暂时读不到",
-      whyUnavailable:
-        "这次没有读到服务端的每日免费批改次数或钱包余额，所以不会发起可能扣费的请求；tier-1 免费提示仍然可用。",
-      futureSupport: "服务恢复后，重新提交这道题就会再次读取每日免费批改次数和付费余额。",
+      title: translate("grading.offer.unavailableTitle"),
+      whyUnavailable: translate("grading.offer.unavailableReason"),
+      futureSupport: translate("grading.offer.unavailableFuture"),
     });
   }
 }
@@ -414,7 +412,9 @@ function unavailableOffer(options: {
   const explanation: MeteredGradingExplanation = {
     kind: "explanation",
     title: options.title,
-    whatItDoes: `它会在确定性判题无法判断的开放题上提供一次结构化 AI 评估，本次会使用 ${gradingAttemptText(METERED_GRADING_COST_POWER_UNITS)}。`,
+    whatItDoes: translate("grading.offer.whatItDoes", {
+      cost: gradingAttemptText(METERED_GRADING_COST_POWER_UNITS, activeLocale()),
+    }),
     whyUnavailable: options.whyUnavailable,
     futureSupport: options.futureSupport,
   };
@@ -433,17 +433,17 @@ function unavailableOffer(options: {
  * it, and the answer is not available here any more — and should not be.
  */
 function failCopy(lesson: Lesson, prompt: string | undefined): string {
-  if (!prompt) return "再想一下，答案就在上面这段里。";
+  if (!prompt) return translate("grading.hint.tryAgain");
   const needle = normalise(prompt).slice(0, 5);
   const line = lesson.content
     .split(/\n+/)
     .find((row) => row.includes(needle) && !row.startsWith("```") && row.length > 12);
-  if (!line) return "再想一下，答案就在上面这段里。";
+  if (!line) return translate("grading.hint.tryAgain");
   // Lesson source, not prose: the line can carry `[[evidence:…]]` and other
   // markup, and printing it raw at the moment a learner missed reads as a
   // broken product rather than a broken answer.
   const quoted = proseQuote(line);
-  if (quoted.length === 0) return "再想一下，答案就在上面这段里。";
+  if (quoted.length === 0) return translate("grading.hint.tryAgain");
   /*
     「出自真实项目」 is a claim about a repository, so it is only offered when
     one of this lesson's citations actually is one. A 通用课 cites MDN; naming
@@ -451,9 +451,13 @@ function failCopy(lesson: Lesson, prompt: string | undefined): string {
   */
   const evidence = lesson.evidence.find(isRepositoryAnchor);
   const source = evidence
-    ? `\n\n出自真实项目：${evidence.sourcePath} 第 ${evidence.lineStart}–${evidence.lineEnd} 行`
+    ? translate("grading.hint.source", {
+        path: evidence.sourcePath,
+        start: evidence.lineStart,
+        end: evidence.lineEnd,
+      })
     : "";
-  return `再看一眼你刚才读过的这句：\n\n> ${quoted}${source}`;
+  return translate("grading.hint.quote", { quote: quoted, source });
 }
 
 function undecidedCopy(
@@ -461,10 +465,10 @@ function undecidedCopy(
   prompt: string | undefined,
   reason: string,
 ): string {
-  const hint = lesson ? failCopy(lesson, prompt) : "你可以补充更多理由，再试一次。";
+  const hint = lesson ? failCopy(lesson, prompt) : translate("grading.hint.addReasons");
   return [
-    "这次暂时无法判断对错。你的答案已经提交，但只靠字面比对不能可靠判断这类解释。",
-    "你可以补充或改写答案、查看下面的提示，或者自行选择页面提供的 AI 评估；也可以先继续下一节。",
+    translate("grading.result.undecidedExplanation"),
+    translate("grading.result.undecidedNext"),
     hint || reason,
   ]
     .filter(Boolean)

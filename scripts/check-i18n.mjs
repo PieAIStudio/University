@@ -23,10 +23,7 @@ function sourceFiles() {
         !/\.test\./.test(file) &&
         !file.includes("/language/") &&
         !file.includes("/i18n/") &&
-        !file.endsWith("/markdown/lesson-sections.ts") &&
-        !file.endsWith("/review/ExerciseBlock.tsx") &&
-        !file.endsWith("/ports/local/grading.ts") &&
-        !file.endsWith("/ports/online/grading.ts"),
+        !file.endsWith("/markdown/lesson-sections.ts"),
     );
 }
 

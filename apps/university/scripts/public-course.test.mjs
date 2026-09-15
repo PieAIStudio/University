@@ -1,8 +1,144 @@
 import { describe, expect, it } from "vitest";
+import { gradeDeterministically } from "@pieai/university-core";
 
-import { PUBLIC_DTO_FIELDS, toPublicPackage } from "./public-course.mjs";
+import { PUBLIC_DTO_FIELDS, publicDisplayLocales, toPublicPackage } from "./public-course.mjs";
 
 describe("the public course DTO", () => {
+  it("keeps accessible translated media copy without leaking production paths", () => {
+    const result = toPublicPackage({
+      course: {
+        units: [
+          {
+            lessons: [
+              {
+                contentRevision: 1,
+                assets: [
+                  {
+                    id: "photo",
+                    kind: "authorized-external",
+                    url: "/content/assets/photo.jpg",
+                    mime: "image/jpeg",
+                    alt: "图",
+                    locales: {
+                      en: {
+                        alt: "Earth above the lunar horizon",
+                        caption: "NASA / Apollo 8",
+                        path: "PRIVATE_PATH",
+                        source: "PRIVATE_SOURCE",
+                      },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+    expect(result.course.units[0].lessons[0].assets[0].locales.en).toEqual({
+      alt: "Earth above the lunar horizon",
+      caption: "NASA / Apollo 8",
+    });
+    expect(JSON.stringify(result)).not.toContain("PRIVATE_");
+  });
+
+  it("projects only named catalogue copy, not translated lesson bodies or answers", () => {
+    expect(
+      publicDisplayLocales(
+        {
+          en: {
+            title: "Lesson",
+            content: "PRIVATE_PROSE",
+            expectedAnswer: "PRIVATE_ANSWER",
+            status: "draft",
+          },
+        },
+        ["title"],
+      ),
+    ).toEqual({ en: { title: "Lesson" } });
+    expect(publicDisplayLocales(undefined, ["title"])).toBeUndefined();
+  });
+
+  it("never publishes a translated answer, rubric, private option notes, or an unreviewed locale", () => {
+    const published = toPublicPackage({
+      course: {
+        units: [
+          {
+            lessons: [
+              {
+                contentRevision: 1,
+                exercises: [
+                  {
+                    id: "check-source",
+                    kind: "short-answer",
+                    locales: {
+                      en: {
+                        title: "Check a source",
+                        prompt: "Which date belongs to the photograph?",
+                        sourceRevision: 1,
+                        expectedAnswer: "1968",
+                        rubric: ["PRIVATE_RUBRIC"],
+                        options: [{ id: "one", text: "one", explanation: "PRIVATE_EXPLANATION" }],
+                        authorNote: "PRIVATE_NOTE",
+                      },
+                      unsafe: { expectedAnswer: "PRIVATE_UNREVIEWED" },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+    const serialized = JSON.stringify(published);
+    expect(serialized).not.toContain("PRIVATE_");
+    expect(serialized).not.toContain("expectedAnswer");
+    expect(serialized).not.toContain("rubric");
+    const localized = published.course.units[0].lessons[0].exercises[0].locales.en;
+    expect(localized.prompt).toBe("Which date belongs to the photograph?");
+    expect(localized.answerKey).toBeTruthy();
+    // Locale copy shares the lesson revision. An unrelated author field is not public.
+    expect(localized.sourceRevision).toBeUndefined();
+  });
+
+  it("publishes source provenance but strips nested private production notes", () => {
+    const provenance = {
+      type: "case-study",
+      publisher: "Be My Eyes",
+      accessedOn: "2026-09-14",
+      supports: "The announcement describes human volunteer help.",
+      limitations: "This is not an independent accuracy study.",
+    };
+    const published = toPublicPackage({
+      course: {
+        units: [
+          {
+            lessons: [
+              {
+                contentRevision: 1,
+                evidence: [
+                  {
+                    kind: "fact",
+                    sourceUrl: "https://www.bemyeyes.com/blog/introducing-be-my-ai/",
+                    provenance: {
+                      ...provenance,
+                      authorNote: "PRIVATE_PRODUCTION_NOTE",
+                      rawCapture: { credential: "PRIVATE_CAPTURE" },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+    const evidence = published.course.units[0].lessons[0].evidence[0];
+    expect(evidence.provenance).toEqual(provenance);
+    expect(JSON.stringify(published)).not.toContain("PRIVATE_");
+  });
+
   it("documents a reason for every explicit public field list", () => {
     for (const spec of Object.values(PUBLIC_DTO_FIELDS)) {
       expect(spec.fields.length).toBeGreaterThan(0);
@@ -106,7 +242,10 @@ describe("the public course DTO", () => {
     });
 
     expect(Object.keys(published)).toEqual(["course"]);
-    expect(Object.keys(published.course)).toEqual(PUBLIC_DTO_FIELDS.course.fields);
+    expect(Object.keys(published.course)).toEqual(
+      PUBLIC_DTO_FIELDS.course.fields.filter((key) => key !== "locales"),
+    );
+    expect(published.course.locales).toBeUndefined();
     expect(published.course.currency).toBeUndefined();
     expect(published.course.isBeingRewritten).toBe(true);
     expect(published.course.units[0].authorNote).toBeUndefined();
@@ -121,7 +260,10 @@ describe("the public course DTO", () => {
     expect(JSON.stringify(published)).not.toContain("nodeIds");
     expect(JSON.stringify(published)).not.toContain('"stale"');
     expect(JSON.stringify(published)).not.toContain('"active"');
-    expect(lesson.exercises[0].answerKey).toEqual({ len: 2 });
+    // When source text is present, the boundary compiles it rather than trusting
+    // the deliberately stale fingerprint in this fixture.
+    expect(gradeDeterministically("答案原文", lesson.exercises[0].answerKey).outcome).toBe("pass");
+    expect(gradeDeterministically("错误", lesson.exercises[0].answerKey).outcome).not.toBe("pass");
     expect(lesson.evidence[0]).toEqual({
       kind: "fact",
       sourceCommit: "a".repeat(40),
@@ -218,7 +360,12 @@ describe("the public course DTO", () => {
                     goal: "目标",
                     takeaway: "收获",
                     hint: "提示",
-                    source: { label: "出处", path: "src/worker.js", line: 8, commit: "a".repeat(40) },
+                    source: {
+                      label: "出处",
+                      path: "src/worker.js",
+                      line: 8,
+                      commit: "a".repeat(40),
+                    },
                     buckets: [{ id: "vector", label: "向量" }],
                     items: [{ id: "one", label: "一句话", bucketId: "vector" }],
                     question: "放进哪一格？",
@@ -298,7 +445,9 @@ describe("the public course DTO", () => {
   it("omits the key entirely when a lesson has no activity", () => {
     const published = toPublicPackage({
       course: {
-        units: [{ lessons: [{ id: "l", content: "正文", contentRevision: 1, cards: [], exercises: [] }] }],
+        units: [
+          { lessons: [{ id: "l", content: "正文", contentRevision: 1, cards: [], exercises: [] }] },
+        ],
       },
     });
 

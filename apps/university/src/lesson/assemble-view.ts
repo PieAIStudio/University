@@ -7,7 +7,7 @@
  * The shared reader and progress document must see that number so a read
  * confirmation is bound to the version the learner actually opened.
  */
-import { translate } from "@pieai/university-ui/i18n.js";
+import { activeLocale, translate } from "@pieai/university-ui/i18n.js";
 import {
   assembleLessonIndex,
   backlinksOf,
@@ -43,22 +43,26 @@ export function assembleLessonView(input: {
   };
 }): LessonView {
   const { course, lesson, unitId, progress, completion } = input;
+  const locale = activeLocale();
+  const localizedLesson = lesson.locales?.[locale] ?? lesson.locales?.[locale.split("-")[0]!];
+  const lessonTitle = localizedLesson?.title ?? lesson.title;
+  const lessonContent = localizedLesson?.content ?? lesson.content;
   const contentRevision = lesson.contentRevision;
-  const parsed = parseLessonLinks(lesson.content);
+  const parsed = parseLessonLinks(lessonContent);
   const index = assembleLessonIndex(
     course.units.flatMap((unit) =>
       unit.lessons.map((item) => ({
         courseId: course.id,
         unitId: unit.id,
         lessonId: item.id,
-        title: item.title,
-        content: item.content,
+        title: item.locales?.[locale]?.title ?? item.title,
+        content: item.locales?.[locale]?.content ?? item.content,
         sections: [],
       })),
     ),
   );
   const from = { courseId: course.id, unitId, lessonId: lesson.id };
-  const language = languageLayerFor(lesson.content);
+  const language = languageLayerFor(lessonContent);
   /*
     Only repository citations pin a lesson to a commit. A 通用课 cites public
     pages, so it has no pinned commit at all — and `commits.length === 1` below
@@ -70,9 +74,9 @@ export function assembleLessonView(input: {
   return {
     lesson: {
       id: lesson.id,
-      title: lesson.title,
+      title: lessonTitle,
       contentRevision,
-      content: lesson.content,
+      content: lessonContent,
       sections: lesson.sections ?? [],
       language,
       links: resolveLessonLinks(parsed, index, from).map((item) =>
@@ -101,7 +105,7 @@ export function assembleLessonView(input: {
         stated rather than arranged for.
       */
       evidenceAnchors: resolveEvidenceAnchors(
-        lesson.content,
+        lessonContent,
         lesson.evidence.map((item) =>
           isRepositoryAnchor(item)
             ? { sourcePath: item.sourcePath, lineStart: item.lineStart, lineEnd: item.lineEnd }
@@ -126,30 +130,57 @@ export function assembleLessonView(input: {
               sourceUrl: item.sourceUrl,
               sourceTitle: item.sourceTitle,
               sourceAuthority: item.sourceAuthority,
+              ...(item.provenance ? { provenance: item.provenance } : {}),
               note: item.note ?? null,
             },
       ),
       assets: lesson.assets ?? [],
-      ...(lesson.activities?.length ? { activities: lesson.activities } : {}),
-      exercises: lesson.exercises.map((exercise) => ({
-        id: exercise.id,
-        kind: exercise.kind,
-        title: exercise.title ?? translate("app.lesson.assembleview.copy.自检"),
-        prompt: exercise.prompt,
-        contentRevision,
-        // The package has carried this since tier one shipped; the view was
-        // dropping it, so the only thing that could grade an answer in this
-        // build was the grading port. The skip test grades outside that port
-        // on purpose — it must not record an attempt against the lesson — so
-        // it needs the fingerprint here. Never the answer: see `AnswerKey`.
-        ...(exercise.answerKey ? { answerKey: exercise.answerKey } : {}),
-      })),
-      cards: lesson.cards.map((card) => ({
-        id: card.id,
-        kind: card.kind,
-        front: card.front,
-        contentRevision,
-      })),
+      ...(lesson.activities?.length
+        ? {
+            activities: lesson.activities.map((activity) => {
+              const localized =
+                activity.locales?.[locale] ?? activity.locales?.[locale.split("-")[0]!];
+              if (!localized) return activity;
+              return {
+                ...activity,
+                ...localized,
+                source: localized.sourceLabel
+                  ? { ...activity.source, label: localized.sourceLabel }
+                  : activity.source,
+              };
+            }),
+          }
+        : {}),
+      exercises: lesson.exercises.map((exercise) => {
+        const localized = exercise.locales?.[locale] ?? exercise.locales?.[locale.split("-")[0]!];
+        return {
+          id: exercise.id,
+          kind: exercise.kind,
+          title: exercise.title ?? translate("app.lesson.assembleview.copy.自检"),
+          ...(localized?.title ? { title: localized.title } : {}),
+          prompt: localized?.prompt ?? exercise.prompt,
+          contentRevision,
+          // The package has carried this since tier one shipped; the view was
+          // dropping it, so the only thing that could grade an answer in this
+          // build was the grading port. The skip test grades outside that port
+          // on purpose — it must not record an attempt against the lesson — so
+          // it needs the fingerprint here. Never the answer: see `AnswerKey`.
+          ...(localized?.answerKey
+            ? { answerKey: localized.answerKey }
+            : exercise.answerKey
+              ? { answerKey: exercise.answerKey }
+              : {}),
+        };
+      }),
+      cards: lesson.cards.map((card) => {
+        const localized = card.locales?.[locale] ?? card.locales?.[locale.split("-")[0]!];
+        return {
+          id: card.id,
+          kind: card.kind,
+          front: localized?.front ?? card.front,
+          contentRevision,
+        };
+      }),
     },
   };
 }

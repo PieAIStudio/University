@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 import type { ActivityKind } from "../learning-play/types.js";
-import { AUTHORITY_TAGS, urlEvidenceIssue } from "./url-evidence.js";
+import { activityTranslationIssues } from "../learning-play/localization.js";
+import { AUTHORITY_TAGS, REALITY_AUTHORITY_TAGS, urlEvidenceIssue } from "./url-evidence.js";
 
 const SchemaVersion = z.literal(1);
 export const StableId = z
@@ -13,6 +14,18 @@ export const Sha256 = z.string().regex(/^sha256:[a-f0-9]{64}$/);
 export const GitCommit = z.string().regex(/^[a-f0-9]{40}$/);
 const GitTree = z.string().regex(/^[a-f0-9]{40}$/);
 export const IsoDateTime = z.string().datetime({ offset: true });
+export const LocaleCodeSchema = z
+  .string()
+  .regex(/^[a-z]{2}(?:-[A-Z]{2})?$/, "locale must be a BCP-47 language code");
+export const LocaleMap = <T extends z.ZodTypeAny>(schema: T) =>
+  z.record(LocaleCodeSchema, schema).optional();
+export const LocalizedStudySchema = z
+  .object({
+    title: z.string().min(1).max(160).optional(),
+    description: z.string().max(2_000).optional(),
+    goals: z.array(z.string().min(1).max(500)).optional(),
+  })
+  .strict();
 
 /**
  * An authoring machine's local learning preference. The shelf can hold more
@@ -59,6 +72,7 @@ export const StudyManifestSchema = z
     title: z.string().min(1).max(160),
     description: z.string().max(2_000).default(""),
     goals: z.array(z.string().min(1).max(500)).default([]),
+    locales: LocaleMap(LocalizedStudySchema),
     defaultCourseId: StableId.nullable().default(null),
     status: z.enum(["active", "archived"]).default("active"),
     createdAt: IsoDateTime,
@@ -314,6 +328,64 @@ export const UaAnalysisManifestSchema = z.discriminatedUnion("status", [
 export const ContentStatus = z.enum(["draft", "active", "stale", "retired"]);
 const EvidenceKind = z.enum(["fact", "inference"]);
 
+/** A complete learner-facing translation, bound to the same source revision. */
+export const LocalizedCourseSchema = z
+  .object({
+    title: z.string().min(1).max(200).optional(),
+    description: z.string().max(2_000).optional(),
+    audience: z.string().min(1).max(500).optional(),
+    objectives: z.array(z.string().min(1).max(500)).optional(),
+  })
+  .strict();
+export const LocalizedUnitSchema = z
+  .object({
+    title: z.string().min(1).max(200).optional(),
+    objective: z.string().min(1).max(1_000).optional(),
+  })
+  .strict();
+export const LocalizedLessonSchema = z
+  .object({
+    title: z.string().min(1).max(200).optional(),
+    content: z.string().min(1).optional(),
+  })
+  .strict();
+export const LocalizedExerciseSchema = z
+  .object({
+    title: z.string().min(1).max(200).optional(),
+    prompt: z.string().min(1).max(20_000).optional(),
+    expectedAnswer: z.string().min(1).optional(),
+    rubric: z.array(z.string().min(1)).optional(),
+    options: z
+      .array(
+        z
+          .object({
+            id: StableId,
+            text: z.string().min(1).max(2_000),
+            explanation: z.string().min(1).max(2_000),
+          })
+          .strict(),
+      )
+      .optional(),
+  })
+  .strict();
+export const LocalizedCardSchema = z
+  .object({
+    front: z.string().min(1).max(20_000).optional(),
+    back: z.string().min(1).max(20_000).optional(),
+  })
+  .strict();
+export const LocalizedActivitySchema = z
+  .object({
+    title: z.string().min(1).max(200).optional(),
+    brief: z.string().min(1).max(2_000).optional(),
+    goal: z.string().min(1).max(1_000).optional(),
+    takeaway: z.string().min(1).max(1_000).optional(),
+    hint: z.string().min(1).max(1_000).optional(),
+    sourceLabel: z.string().min(1).max(200).optional(),
+    strings: z.record(z.string().min(1).max(20_000), z.string().min(1).max(20_000)).optional(),
+  })
+  .strict();
+
 /**
  * A citation pinned to an immutable git snapshot.
  *
@@ -368,14 +440,59 @@ export const RepositoryEvidenceSchema = z
     }
   });
 
+const SourceCalendarDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((value) => {
+    const parsed = new Date(`${value}T00:00:00Z`);
+    return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+  }, "Source date must be a real calendar date");
+
+/** What a reader needs to judge a source, not a certificate that its claims are true. */
+export const SourceProvenanceSchema = z
+  .object({
+    type: z.enum([
+      "official-document",
+      "research",
+      "news-report",
+      "case-study",
+      "public-data",
+      "public-record",
+      "image",
+      "video",
+      "recorded-observation",
+    ]),
+    publisher: z.string().trim().min(1).max(200),
+    // Omit genuinely undated material rather than inventing a publication date.
+    publishedOn: SourceCalendarDate.optional(),
+    accessedOn: SourceCalendarDate,
+    locator: z.string().trim().min(1).max(500).optional(),
+    supports: z.string().trim().min(1).max(1_000),
+    limitations: z.string().trim().min(1).max(1_000),
+    locales: LocaleMap(
+      z
+        .object({
+          publisher: z.string().min(1).max(200).optional(),
+          locator: z.string().min(1).max(500).optional(),
+          supports: z.string().min(1).max(1_000).optional(),
+          limitations: z.string().min(1).max(1_000).optional(),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
+
+export type SourceProvenance = z.infer<typeof SourceProvenanceSchema>;
+
 /**
- * A citation pinned to a public authority page (MDN, RFC, W3C, …).
+ * A citation to an inspected public source, not an immutable git pin.
  *
  * General courses have no repository, so they cannot use the shape above.
  * Inventing a snapshot to get past that check would make "the cited lines
  * exist in the studied project" a lie. This type is the honest alternative:
- * the pin is an https URL on a named authority host, and never the site the
- * course was rewritten from.
+ * the identity is an https URL on an admitted host, and never the site the
+ * course was rewritten from. Real-world sources add provenance without
+ * weakening the repository shape or laundering a publication date into a pin.
  */
 export const UrlEvidenceSchema = z
   .object({
@@ -384,9 +501,17 @@ export const UrlEvidenceSchema = z
     sourceTitle: z.string().min(1).max(200),
     sourceAuthority: z.enum(AUTHORITY_TAGS),
     note: z.string().max(1_000).optional(),
+    provenance: SourceProvenanceSchema.optional(),
   })
   .strict()
   .superRefine((evidence, context) => {
+    if (REALITY_AUTHORITY_TAGS.includes(evidence.sourceAuthority) && !evidence.provenance) {
+      context.addIssue({
+        code: "custom",
+        message: "Real-world sources require claim-specific provenance and limitations",
+        path: ["provenance"],
+      });
+    }
     const issue = urlEvidenceIssue(evidence.sourceUrl);
     if (issue) {
       context.addIssue({
@@ -460,6 +585,8 @@ export const CourseManifestSchema = z
      * author chose, and the next study will want names this one never needed.
      */
     trackId: StableId.nullable().default(null),
+    /** Complete translations; each locale is tied to this manifest revision. */
+    locales: LocaleMap(LocalizedCourseSchema),
     createdAt: IsoDateTime,
     updatedAt: IsoDateTime,
   })
@@ -474,6 +601,7 @@ export const UnitManifestSchema = z
     prerequisiteUnitIds: z.array(StableId).default([]),
     lessonIds: z.array(StableId),
     status: ContentStatus,
+    locales: LocaleMap(LocalizedUnitSchema),
   })
   .strict();
 
@@ -549,6 +677,15 @@ export const LessonAssetSchema = z
     height: z.number().int().positive().optional(),
     durationMs: z.number().int().positive().optional(),
     alt: z.string().min(1).max(500),
+    locales: LocaleMap(
+      z
+        .object({
+          alt: z.string().min(1).max(500).optional(),
+          caption: z.string().max(1_000).optional(),
+          transcript: z.string().max(50_000).optional(),
+        })
+        .strict(),
+    ),
     caption: z.string().max(1_000).optional(),
     posterAssetId: StableId.optional(),
     subtitlesPath: RepositoryRelativePath.optional(),
@@ -558,6 +695,17 @@ export const LessonAssetSchema = z
   })
   .strict()
   .superRefine((asset, context) => {
+    if (
+      asset.kind === "authorized-external" &&
+      (!asset.source?.license ||
+        !asset.source?.attribution ||
+        !asset.source?.sourceUrl?.startsWith("https://"))
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "External media requires an HTTPS source, explicit license and attribution",
+      });
+    }
     if (asset.kind === "real-screenshot" && !asset.capture) {
       context.addIssue({ code: "custom", message: "Real screenshots require capture provenance" });
     }
@@ -696,8 +844,14 @@ export const LessonActivitySchema = z
           { message: "lineEnd needs a line to end, and cannot come before it", path: ["lineEnd"] },
         ),
     ]),
+    locales: LocaleMap(LocalizedActivitySchema),
   })
-  .passthrough();
+  .passthrough()
+  .superRefine((activity, context) => {
+    for (const message of activityTranslationIssues(activity)) {
+      context.addIssue({ code: "custom", message, path: ["locales"] });
+    }
+  });
 
 export const LessonManifestSchema = z
   .object({
@@ -771,6 +925,7 @@ export const LessonManifestSchema = z
      * Optional because 475 lessons predate the shapes.
      */
     variant: LessonVariantSchema.optional(),
+    locales: LocaleMap(LocalizedLessonSchema),
     createdAt: IsoDateTime,
     updatedAt: IsoDateTime,
   })
@@ -838,10 +993,12 @@ export const ExerciseSchema = z.discriminatedUnion("kind", [
   PracticeBaseSchema.extend({
     kind: z.literal("short-answer"),
     expectedAnswer: z.string().min(1),
+    locales: LocaleMap(LocalizedExerciseSchema),
   }).strict(),
   PracticeBaseSchema.extend({
     kind: z.literal("explain"),
     rubric: z.array(z.string().min(1)).min(1),
+    locales: LocaleMap(LocalizedExerciseSchema),
   }).strict(),
 ]);
 
@@ -860,6 +1017,7 @@ export const CardContentSchema = z
     status: ContentStatus,
     tags: z.array(StableId).default([]),
     evidence: z.array(EvidenceReferenceSchema).min(1),
+    locales: LocaleMap(LocalizedCardSchema),
   })
   .strict();
 
@@ -998,3 +1156,4 @@ export type KnowledgeClaim = z.infer<typeof KnowledgeClaimType>;
 export type KnowledgeOrigin = z.infer<typeof KnowledgeOriginSchema>;
 export type KnowledgeCard = z.infer<typeof KnowledgeCardSchema>;
 export type KnowledgeNote = z.infer<typeof KnowledgeNoteSchema>;
+export type LocaleCode = z.infer<typeof LocaleCodeSchema>;

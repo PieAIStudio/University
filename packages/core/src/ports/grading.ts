@@ -43,22 +43,40 @@ export function gradingAttemptsFromPowerUnits(powerUnits: string): bigint | null
 */
 
 /** What one cost or balance buys, as a bare quantity: 「3 次」. */
-export function gradingAttemptText(powerUnits: string): string {
+export function gradingAttemptText(powerUnits: string, locale = "zh-CN"): string {
   const attempts = gradingAttemptsFromPowerUnits(powerUnits);
+  if (locale.split("-")[0] === "en") {
+    if (attempts === null) return "Currently unavailable";
+    return attempts === 0n
+      ? "Not enough for one grading"
+      : `${attempts} ${attempts === 1n ? "grading" : "gradings"}`;
+  }
   if (attempts === null) return "暂时读不到";
   return attempts === 0n ? "不够一次了" : `${attempts} 次`;
 }
 
 /** Today's remaining free AI gradings. */
-export function freeGradingRemainingText(powerUnits: string): string {
+export function freeGradingRemainingText(powerUnits: string, locale = "zh-CN"): string {
   const attempts = gradingAttemptsFromPowerUnits(powerUnits);
+  if (locale.split("-")[0] === "en") {
+    if (attempts === null) return "Today's remaining allowance is unavailable";
+    return attempts === 0n
+      ? "No complete free grading remains today"
+      : `${attempts} free ${attempts === 1n ? "grading remains" : "gradings remain"} today`;
+  }
   if (attempts === null) return "今天还剩多少次暂时读不到";
   return attempts === 0n ? "今天还不够一次了" : `今天还剩 ${attempts} 次`;
 }
 
 /** The wallet balance, counted in gradings rather than in accounting units. */
-export function walletGradingBalanceText(powerUnits: string): string {
+export function walletGradingBalanceText(powerUnits: string, locale = "zh-CN"): string {
   const attempts = gradingAttemptsFromPowerUnits(powerUnits);
+  if (locale.split("-")[0] === "en") {
+    if (attempts === null) return "Your wallet balance is currently unavailable";
+    return attempts === 0n
+      ? "Your wallet does not cover one grading"
+      : `Your wallet covers ${attempts} ${attempts === 1n ? "grading" : "gradings"}`;
+  }
   if (attempts === null) return "你的钱包余额暂时读不到";
   return attempts === 0n ? "你的钱包还不够一次了" : `你的钱包还够 ${attempts} 次`;
 }
@@ -105,7 +123,9 @@ export function exerciseGradeOutcome(
 export const DETERMINISTIC_GRADER_HOST = "tier-1";
 
 /** What to call whatever produced this verdict, in the learner's words. */
-export function graderLabel(host: string | null): string {
+export function graderLabel(host: string | null, locale = "zh-CN"): string {
+  if (locale.split("-")[0] === "en")
+    return host === DETERMINISTIC_GRADER_HOST ? "Automatic check" : "AI evaluation";
   return host === DETERMINISTIC_GRADER_HOST ? "当场判定" : "AI 评估";
 }
 

@@ -21,6 +21,7 @@ import {
   rebindLocalGitSource,
   registerLocalGitSource,
   setDefaultCourse,
+  setStudyDescription,
 } from "./repository.js";
 import { writeCourse, updateCourseStatus } from "../content/repository.js";
 import { createCleanSnapshot } from "./snapshots.js";
@@ -41,6 +42,36 @@ function makeGitRepository(readme = "# Source\n"): string {
 }
 
 describe("study repository", () => {
+  it("updates shelf positioning without changing identity, translations or content state", () => {
+    const root = join(makeRoot("university-study-description-"), "studies");
+    const original = createStudy(root, {
+      id: "beginner",
+      title: "初学路线",
+      description: "旧说明",
+      locales: { en: { title: "Beginner", description: "English description" } },
+      now: new Date("2026-09-01T00:00:00Z"),
+    });
+    const updated = setStudyDescription(
+      root,
+      original.id,
+      "  从真实材料开始学习。  ",
+      new Date("2026-09-02T00:00:00Z"),
+    );
+    expect(updated).toEqual({
+      ...original,
+      description: "从真实材料开始学习。",
+      updatedAt: "2026-09-02T00:00:00.000Z",
+    });
+    expect(readStudy(root, original.id)).toEqual(updated);
+    expect(setStudyDescription(root, original.id, updated.description)).toEqual(updated);
+    expect(() => setStudyDescription(root, original.id, "  ")).toThrow(
+      "description must not be empty",
+    );
+    expect(readStudy(root, original.id)).toEqual(updated);
+    expect(readdirSync(getStudyPaths(root, original.id).courses)).toEqual([]);
+    expect(existsSync(getStudyPaths(root, original.id).learner.database)).toBe(false);
+  });
+
   it("creates the stable study layout and discovers valid studies", () => {
     const studiesRoot = join(makeRoot("university-local-studies-"), "studies");
     const manifest = createStudy(studiesRoot, {

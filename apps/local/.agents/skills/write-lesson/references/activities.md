@@ -207,9 +207,9 @@ node scripts/university-local.mjs course reactivate \
 
 组件的 `source` 跟着这节课的出处走，两种形状都行：
 
-- 课引的是权威网页 → `{ label, url }`，网址必须是这节课出处列表里已有的，
-  而且**必须钉在一个具体 commit 上**：`blob/main` 这种会移动的分支，等上游一改，
-  这节课就在引用别的代码了，而且没有任何人会发现。
+- 课引的是已核实的公开网页 → `{ label, url }`，网址必须是这节课出处列表里已有的。
+  如果引用的是 GitHub 源码，必须钉在具体 commit 上，不能用会移动的 `blob/main`。
+  新闻、研究、官方资料及真实案例使用其真实页面与 provenance，不给网页编造 commit。
 - 课引的是仓库里的代码 → `{ label, path }`。行号和 commit **你不用填**，
   `pick-activity.mjs` 会按你选中的那条出处补上 `line` / `lineEnd` / `commit`。
 
@@ -272,4 +272,4 @@ node scripts/university-local.mjs course reactivate \
 - 调参台：要同时满足几个约束 → 可调，值得。
 - 只有一个正确答案、去掉任何一点就不成立的关卡 → 不值得，写一档就好。
 
-只写一档完全合法，二十七节现成的课都是一档——`family` 不填就是一档。
+只写一档完全合法；实际覆盖以当前发布包为准，`family` 不填就是一档。

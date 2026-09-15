@@ -46,6 +46,7 @@ interface ReviewableCard {
   readonly contentRevision: number;
   readonly front: string;
   readonly back: string;
+  readonly locales?: CardContent["locales"];
 }
 
 function readJson(path: string): unknown {
@@ -218,6 +219,7 @@ function courseReviewableCard(studiesRoot: string, route: LearningRoute): Review
     contentRevision: card.contentRevision,
     front: card.front,
     back: card.back,
+    ...(card.locales ? { locales: card.locales } : {}),
   };
 }
 

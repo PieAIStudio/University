@@ -1,0 +1,875 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-15T09:48:29.648Z",
+  "stage": "exact-package-editorial-release",
+  "courses": [
+    {
+      "id": "understanding-ai",
+      "title": "认识 AI，从这里开始",
+      "packageFile": "understanding-ai.ed325103b42635bc617a8c3cd1adee7909928cd2f493fa9e37999ea24431f49f.recovery.json",
+      "packageSha256": "sha256:ed325103b42635bc617a8c3cd1adee7909928cd2f493fa9e37999ea24431f49f",
+      "units": 6,
+      "lessons": 36,
+      "activities": 36,
+      "cards": 72,
+      "exercises": 36,
+      "allHaveEnglish": true,
+      "allHaveRealSources": true
+    },
+    {
+      "id": "ai-for-real-life",
+      "title": "用 AI，把日常事情做好",
+      "packageFile": "ai-for-real-life.802d7703cc3a0420e2f36142a1bcaf3f66b39d9a2c314097370b5bbdc4b72f0e.recovery.json",
+      "packageSha256": "sha256:802d7703cc3a0420e2f36142a1bcaf3f66b39d9a2c314097370b5bbdc4b72f0e",
+      "units": 5,
+      "lessons": 30,
+      "activities": 30,
+      "cards": 60,
+      "exercises": 30,
+      "allHaveEnglish": true,
+      "allHaveRealSources": true
+    }
+  ],
+  "decisions": [
+    "Kept the two beginner routes in AI foundations; preserved the existing browser-ai courses and locked legacy packages.",
+    "Removed the unpublished repetitive sixth practical unit; consolidated the independent deliverable into the fifth unit. The original design rejection remains in editorial-review.json and curriculum.json.",
+    "Rejected the first opening review, revised it, and obtained a subsequent no-blocking review; failed reviews below remain preserved rather than relabeled.",
+    "Re-opened the Library of Congress primary page, distinguished announced arrangements from verified delivery, and revised six lessons through the existing course CLI after Writer, Polisher and Detector stages.",
+    "Fixed a raw internal source handle in one activity brief without altering its reasoning engine or facts."
+  ],
+  "unitReviews": [
+    {
+      "file": ".scratch/ai-literacy-release/published-review/ai-for-real-life/information-you-can-trust/final1-1.md.coverage.json",
+      "coverageFileSha256": "sha256:9bbc8f8e70d83a8fcf3b1e3a077d103ec57bfbab8fde0ad4d77a443c14854814",
+      "inputHash": "82608b5658029fc03b5eeb620b71c72801352cbedab6eeb703ea77655afcb59e",
+      "lessons": [
+        {
+          "id": "choose-summary-or-extraction",
+          "revision": 1
+        },
+        {
+          "id": "one-row-one-event",
+          "revision": 1
+        },
+        {
+          "id": "compare-the-same-thing",
+          "revision": 2
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [
+          "compare-the-same-thing: In case 'same', Chinese text mentions '中英文写法是否对应' and compares '超过2.8 million' with '超过280万', which the English version localized as 'more than 2.8 million and more than 2,800,000' (word format vs numeral format). This is an acceptable localization adaptation, though keeping an explicit note on bilingual representation could be considered if cross-lingual comparison was intended."
+        ],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:27:53.353Z",
+        "finishedAt": "2026-09-15T07:29:28.278Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/ai-for-real-life/information-you-can-trust/final1-2.md.coverage.json",
+      "coverageFileSha256": "sha256:fcf8ca26ceb9a11ebf3cb22b877d0220d1f4f3b07fe04e96b29faeb553adc374",
+      "inputHash": "c0e5f1944f7770d611eb8ab88fec868228ca82a5a5513743ab757daab5e8c339",
+      "lessons": [
+        {
+          "id": "leave-gaps-visible",
+          "revision": 2
+        },
+        {
+          "id": "a-summary-with-a-trail",
+          "revision": 2
+        },
+        {
+          "id": "make-a-one-page-brief",
+          "revision": 1
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [
+          "leave-gaps-visible: opening text mentions 'two pages in this unit' while the second page is first linked in lesson 2; phrasing could be softened to avoid learners searching for a missing link.",
+          "a-summary-with-a-trail: English exercise prompt uses concise wording 'confirm the new page supports it', which matches its expectedAnswer perfectly but could optionally mirror 'confirm whether the new page supports the original conclusion' in future editorial polish.",
+          "unit-sources: 'file-analysis' and 'file-uploads' are declared in unit sources but not referenced in any of the three lessons or evidence arrays; consider pruning if not reserved for future lessons."
+        ],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:29:28.284Z",
+        "finishedAt": "2026-09-15T07:30:58.473Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/ai-for-real-life/learn-without-outsourcing-learning/final1-1.md.coverage.json",
+      "coverageFileSha256": "sha256:82260da5d751ac5226b2f45e60b983cf9a8bd581714ebd0671348904a5d77572",
+      "inputHash": "0f1709dd701934baf39512ed8e04b5fa4bec07d57878f55cb39a89f8baa0e78c",
+      "lessons": [
+        {
+          "id": "ask-for-the-step-you-missed",
+          "revision": 2
+        },
+        {
+          "id": "predict-before-the-answer",
+          "revision": 2
+        },
+        {
+          "id": "use-a-hint-not-a-finished-answer",
+          "revision": 2
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:28:32.476Z",
+        "finishedAt": "2026-09-15T07:29:45.736Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/ai-for-real-life/learn-without-outsourcing-learning/final1-2.md.coverage.json",
+      "coverageFileSha256": "sha256:8a276ad8050868af515c106d6fcc75c51e17af0ea2edd52ce5b793935529a8b5",
+      "inputHash": "930e93e40b8d6886008cfb85815a2a037348eed0c2d79d7b4414d0a1ce16dc31",
+      "lessons": [
+        {
+          "id": "explain-it-back",
+          "revision": 2
+        },
+        {
+          "id": "return-to-it-later",
+          "revision": 1
+        },
+        {
+          "id": "make-your-learning-card",
+          "revision": 1
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:29:45.742Z",
+        "finishedAt": "2026-09-15T07:31:08.979Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/ai-for-real-life/make-something-worth-sharing/final1-1.md.coverage.json",
+      "coverageFileSha256": "sha256:84b2dd69aa07465726ae4787fd987e8f80ad4a86fd7b437abd0620f8305dde1c",
+      "inputHash": "68d7652aa92bbaa6e6a9c208999574db9fe6af989777a1735cc7cad7886634c6",
+      "lessons": [
+        {
+          "id": "find-a-usable-image",
+          "revision": 2
+        },
+        {
+          "id": "caption-a-real-photograph",
+          "revision": 1
+        },
+        {
+          "id": "description-for-someone-who-cannot-see",
+          "revision": 1
+        },
+        {
+          "id": "separate-fact-and-art",
+          "revision": 1
+        },
+        {
+          "id": "one-message-per-card",
+          "revision": 1
+        },
+        {
+          "id": "finish-your-first-piece",
+          "revision": 2
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:31:09.045Z",
+        "finishedAt": "2026-09-15T07:32:08.715Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/ai-for-real-life/turn-a-plan-into-actions/final1-1.md.coverage.json",
+      "coverageFileSha256": "sha256:4c39417d1e2f0672fde774d89e60a8a863899089e4c1dfece88fc2825a2fbe97",
+      "inputHash": "20227dc70e0e548a6e3a0d2ee1d0423d7f2adbeff0984934b0c84141fcf19493",
+      "lessons": [
+        {
+          "id": "start-with-the-constraints",
+          "revision": 1
+        },
+        {
+          "id": "order-the-dependencies",
+          "revision": 1
+        },
+        {
+          "id": "a-list-is-not-a-guarantee",
+          "revision": 1
+        },
+        {
+          "id": "plan-for-the-clouds",
+          "revision": 2
+        },
+        {
+          "id": "who-does-what",
+          "revision": 2
+        },
+        {
+          "id": "make-a-plan-you-can-review",
+          "revision": 1
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [
+          "start-with-the-constraints: 进阶拓展中可补充活动规模与并发容量的边界核查说明",
+          "order-the-dependencies: 未来可增加多分支并行的复杂依赖教学案例",
+          "who-does-what: 在实际团队协作扩展中可补充交付验收的时间戳记录规范"
+        ],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:30:58.666Z",
+        "finishedAt": "2026-09-15T07:32:05.618Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/ai-for-real-life/words-for-a-real-reader/final1-1.md.coverage.json",
+      "coverageFileSha256": "sha256:a639728599d73ce4e93ac105291c247e018f2cf3ace983ae8f921fffc65532c4",
+      "inputHash": "a8a87aee9055768e58c6e0a82ec6b4ed0a52350d07f54f9734e296d3372bfee0",
+      "lessons": [
+        {
+          "id": "who-will-read-this",
+          "revision": 1
+        },
+        {
+          "id": "keep-the-facts-while-shortening",
+          "revision": 1
+        },
+        {
+          "id": "tone-without-changing-the-promise",
+          "revision": 2
+        },
+        {
+          "id": "a-question-not-an-invention",
+          "revision": 1
+        },
+        {
+          "id": "help-the-reader-find-the-action",
+          "revision": 1
+        },
+        {
+          "id": "finish-a-clear-message",
+          "revision": 1
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [
+          "help-the-reader-find-the-action"
+        ],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:26:10.077Z",
+        "finishedAt": "2026-09-15T07:27:53.270Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/understanding-ai/build-your-habit/final1-1.md.coverage.json",
+      "coverageFileSha256": "sha256:341b3de34ae8dc5953e52cff048c802e5db46bb4fc8b6903273a59b4af4a33bb",
+      "inputHash": "974fe0918bbb17f5a2802add916b40fb050d61e10a8ca962fdfd5a3c0b7b4e19",
+      "lessons": [
+        {
+          "id": "define-done",
+          "revision": 1
+        },
+        {
+          "id": "change-one-thing",
+          "revision": 1
+        },
+        {
+          "id": "help-that-leaves-you-able",
+          "revision": 1
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [
+          "help-that-leaves-you-able: 正文中'2024年图书节的另一份真实材料'沿用了前两课相同的国会图书馆链接，后续可微调为'另一组时间记录/字段'，以更贴切地体现同一来源内部的具体任务切换。"
+        ],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:25:09.087Z",
+        "finishedAt": "2026-09-15T07:26:58.242Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/understanding-ai/build-your-habit/final1-2.md.coverage.json",
+      "coverageFileSha256": "sha256:f81e1004ffce9ae60dc93f1f539164e1767e7e1b4d562cb60395e01f99fdf0c2",
+      "inputHash": "166083da8a03a39e91ba69b0e15f00b79ea55310c32fd909b1758a2749b702cf",
+      "lessons": [
+        {
+          "id": "save-what-worked",
+          "revision": 1
+        },
+        {
+          "id": "when-the-source-changes",
+          "revision": 1
+        },
+        {
+          "id": "your-first-ai-method",
+          "revision": 1
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [
+          "when-the-source-changes: The English short-answer option uses lowercase 'current feature entry point', which matches the prompt text exactly, but could be unified to Title Case in a future styling pass to align with 'Deliverable format'.",
+          "save-what-worked: Unit source list retains unreferenced items (canvas, khanmigo, aero-instruction) which are harmless schema-level metadata but could be pruned if unit metadata is meant to be strictly minimal.",
+          "your-first-ai-method: Figure caption date format '24 December 1968' differs slightly in style from 'December 24, 1968' in prose, though both are semantically accurate."
+        ],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:26:58.250Z",
+        "finishedAt": "2026-09-15T07:28:32.385Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/understanding-ai/check-what-matters/final1-1.md.coverage.json",
+      "coverageFileSha256": "sha256:c8125c4c3f1c8ea57f0cfb1cda56ccd3a8ddfd24a7ceda9a446ccfcd814dca9c",
+      "inputHash": "b99111ca3d700a33908e7afe792f2f28c6a30d0d9a0182f599e54a6335d8e196",
+      "lessons": [
+        {
+          "id": "follow-a-claim",
+          "revision": 1
+        },
+        {
+          "id": "which-date-is-this",
+          "revision": 1
+        },
+        {
+          "id": "scope-of-a-promise",
+          "revision": 1
+        },
+        {
+          "id": "keep-the-qualifier",
+          "revision": 2
+        },
+        {
+          "id": "generated-voices",
+          "revision": 1
+        },
+        {
+          "id": "finish-a-check",
+          "revision": 1
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [
+          "keep-the-qualifier",
+          "finish-a-check"
+        ],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:24:11.660Z",
+        "finishedAt": "2026-09-15T07:25:09.027Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/understanding-ai/first-useful-step/final1-1.md.coverage.json",
+      "coverageFileSha256": "sha256:b62b8576fe1a378c813a1e9c4c8943a3e4f1285abb95fad1bc51a59b10c20a3b",
+      "inputHash": "c471d27691c3ed4527d7000f88bd3e7e8e820ea4cb0889746aba561ba592fbc8",
+      "lessons": [
+        {
+          "id": "ask-about-a-picture",
+          "revision": 1
+        },
+        {
+          "id": "sound-words-and-meaning",
+          "revision": 1
+        },
+        {
+          "id": "name-the-result",
+          "revision": 1
+        },
+        {
+          "id": "edit-one-part",
+          "revision": 1
+        },
+        {
+          "id": "answer-or-search",
+          "revision": 1
+        },
+        {
+          "id": "first-request-checkpoint",
+          "revision": 1
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [
+          "ask-about-a-picture"
+        ],
+        "translationBlockingIds": [],
+        "optional": [
+          "sound-words-and-meaning",
+          "answer-or-search"
+        ],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:19:44.201Z",
+        "finishedAt": "2026-09-15T07:22:21.640Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/understanding-ai/first-useful-step/final2-1.md.coverage.json",
+      "coverageFileSha256": "sha256:a3706df1c9809b2fd2a7f4fdb8816afbde9ee338d9be437721e7f52cf21de10a",
+      "inputHash": "91a1bf8889a86ac29d527cc726493a4fdf8d50e93660c4655b1d9d1fb6f09531",
+      "lessons": [
+        {
+          "id": "ask-about-a-picture",
+          "revision": 2
+        },
+        {
+          "id": "sound-words-and-meaning",
+          "revision": 2
+        },
+        {
+          "id": "name-the-result",
+          "revision": 1
+        },
+        {
+          "id": "edit-one-part",
+          "revision": 1
+        },
+        {
+          "id": "answer-or-search",
+          "revision": 2
+        },
+        {
+          "id": "first-request-checkpoint",
+          "revision": 1
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:26:14.886Z",
+        "finishedAt": "2026-09-15T07:28:41.089Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/understanding-ai/give-the-right-material/final1-1.md.coverage.json",
+      "coverageFileSha256": "sha256:a0693503d83fccbae297f81261b69a78f4f339f0c8306ce2d69a1aae5974ab1c",
+      "inputHash": "2f0a4fc31f10c3e473cc9adb0e73630cb7d37aa68f0d7a3427519a6cedc96331",
+      "lessons": [
+        {
+          "id": "choose-the-document",
+          "revision": 1
+        },
+        {
+          "id": "what-is-missing",
+          "revision": 1
+        },
+        {
+          "id": "two-years-two-events",
+          "revision": 1
+        },
+        {
+          "id": "quote-or-instruction",
+          "revision": 1
+        },
+        {
+          "id": "keep-the-task-small",
+          "revision": 1
+        },
+        {
+          "id": "start-a-new-context",
+          "revision": 1
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [
+          "two-years-two-events",
+          "keep-the-task-small"
+        ],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:22:51.383Z",
+        "finishedAt": "2026-09-15T07:24:11.575Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/understanding-ai/read-the-answer/final1-1.md.coverage.json",
+      "coverageFileSha256": "sha256:40a13066bb6210409d6a9d0e58ec30c08cefff05ae2f80e76637da459ff29f65",
+      "inputHash": "557245bc907dab145fcc492bc1d3ca9efc13740c69a08fc56102fd37ef534ddf",
+      "lessons": [
+        {
+          "id": "fluent-is-not-true",
+          "revision": 1
+        },
+        {
+          "id": "agreement-is-not-a-check",
+          "revision": 1
+        },
+        {
+          "id": "a-picture-is-not-a-record",
+          "revision": 1
+        },
+        {
+          "id": "which-tool-did-it-use",
+          "revision": 1
+        },
+        {
+          "id": "numbers-need-a-check",
+          "revision": 1
+        },
+        {
+          "id": "one-good-example",
+          "revision": 1
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [
+          "one-good-example: activity brief uses internal schema source:earthrise while lesson body uses the direct HTTPS URL"
+        ],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:22:51.383Z",
+        "finishedAt": "2026-09-15T07:24:27.568Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/understanding-ai/read-the-answer/final2-1.md.coverage.json",
+      "coverageFileSha256": "sha256:0796045679ca7b6442adcce5b21809ad868dff0d6fbae38594311cba319e9b52",
+      "inputHash": "6e2767f3309bd2f833f0443fb4c6f173e698dc77023fcb942188d0ebf11bea15",
+      "lessons": [
+        {
+          "id": "fluent-is-not-true",
+          "revision": 1
+        },
+        {
+          "id": "agreement-is-not-a-check",
+          "revision": 1
+        },
+        {
+          "id": "a-picture-is-not-a-record",
+          "revision": 1
+        },
+        {
+          "id": "which-tool-did-it-use",
+          "revision": 1
+        },
+        {
+          "id": "numbers-need-a-check",
+          "revision": 1
+        },
+        {
+          "id": "one-good-example",
+          "revision": 2
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [
+          "agreement-is-not-a-check",
+          "a-picture-is-not-a-record",
+          "which-tool-did-it-use",
+          "one-good-example"
+        ],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:33:07.271Z",
+        "finishedAt": "2026-09-15T07:34:32.142Z"
+      }
+    },
+    {
+      "file": ".scratch/ai-literacy-release/published-review/understanding-ai/you-keep-control/final1-1.md.coverage.json",
+      "coverageFileSha256": "sha256:30ca536858fc4a27cebb2582e028705b59095e6c95ea0d925cd5f795f98f4caa",
+      "inputHash": "87c2497659fd50efe7455dca0237e22374fa823ef89c3c21a3df0515a519c123",
+      "lessons": [
+        {
+          "id": "minimum-personal-data",
+          "revision": 1
+        },
+        {
+          "id": "temporary-does-not-mean-nothing",
+          "revision": 1
+        },
+        {
+          "id": "chat-and-file-are-different",
+          "revision": 1
+        },
+        {
+          "id": "draft-is-not-send",
+          "revision": 1
+        },
+        {
+          "id": "pause-before-action",
+          "revision": 1
+        },
+        {
+          "id": "a-familiar-voice",
+          "revision": 1
+        }
+      ],
+      "missing": [],
+      "verdict": {
+        "blockingIds": [],
+        "translationBlockingIds": [],
+        "optional": [
+          "minimum-personal-data"
+        ],
+        "unverified": [
+          "real student learning",
+          "real model task execution"
+        ]
+      },
+      "model": {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "startedAt": "2026-09-15T07:24:27.632Z",
+        "finishedAt": "2026-09-15T07:26:10.007Z"
+      }
+    }
+  ],
+  "sourceTenseRevision": {
+    "at": "2026-09-15T09:00:28.660Z",
+    "candidateSha256": "a68390c5f70c8215caf1f93c0508ea8865504bdc1890d58d771b3cc1da3d0c13",
+    "lessons": [
+      {
+        "courseId": "understanding-ai",
+        "unitId": "first-useful-step",
+        "id": "first-request-checkpoint",
+        "fromRevision": 1,
+        "toRevision": 2
+      },
+      {
+        "courseId": "understanding-ai",
+        "unitId": "build-your-habit",
+        "id": "define-done",
+        "fromRevision": 1,
+        "toRevision": 2
+      },
+      {
+        "courseId": "ai-for-real-life",
+        "unitId": "words-for-a-real-reader",
+        "id": "who-will-read-this",
+        "fromRevision": 1,
+        "toRevision": 2
+      },
+      {
+        "courseId": "ai-for-real-life",
+        "unitId": "words-for-a-real-reader",
+        "id": "keep-the-facts-while-shortening",
+        "fromRevision": 1,
+        "toRevision": 2
+      },
+      {
+        "courseId": "ai-for-real-life",
+        "unitId": "words-for-a-real-reader",
+        "id": "tone-without-changing-the-promise",
+        "fromRevision": 2,
+        "toRevision": 3
+      },
+      {
+        "courseId": "ai-for-real-life",
+        "unitId": "words-for-a-real-reader",
+        "id": "finish-a-clear-message",
+        "fromRevision": 1,
+        "toRevision": 2
+      }
+    ],
+    "boundary": "Existing authoring CLI revisions only; publication export is a separate step.",
+    "verdict": {
+      "reviewedIds": [
+        "first-request-checkpoint",
+        "define-done",
+        "who-will-read-this",
+        "keep-the-facts-while-shortening",
+        "tone-without-changing-the-promise",
+        "finish-a-clear-message"
+      ],
+      "blocking": [],
+      "notes": [
+        "候选修订版本 SHA256: a68390c5f70c8215caf1f93c0508ea8865504bdc1890d58d771b3cc1da3d0c13 审核通过。",
+        "全量 6 篇课程均准确将 2024 年图书节描述为历史活动资料与当时公布的计划安排（部分节目直播、录像会后提供），未出现将计划断言为已实际交付的表述。",
+        "材料定位明确为编辑任务素材，未出现向读者发出当前活动邀请的偏差；练习改写与提示词均明确非真实模型输出。",
+        "来源出处链接准确完整，中英双语语义严格对齐，语句通顺自然，未见范围篡改、生硬拼接或事实冲突。"
+      ],
+      "unverified": [
+        "real student learning",
+        "real model task execution"
+      ],
+      "candidateSha256": "a68390c5f70c8215caf1f93c0508ea8865504bdc1890d58d771b3cc1da3d0c13"
+    },
+    "models": [
+      {
+        "role": "writer",
+        "model": "grok-4.6",
+        "status": "success",
+        "receiptSha256": "sha256:92688847dbc5a02a719188c7ff0ccde7a68b484d788a7dff57ffc57c7ef5580f",
+        "startedAt": "2026-09-15T08:41:09.009Z",
+        "finishedAt": "2026-09-15T08:47:08.995Z"
+      },
+      {
+        "role": "polisher",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "receiptSha256": "sha256:f348e96391c624e6ee1a173535026fcc1f0bc0cdd18557144561b1df946be268",
+        "startedAt": "2026-09-15T08:53:31.012Z",
+        "finishedAt": "2026-09-15T08:56:34.564Z"
+      },
+      {
+        "role": "detector",
+        "model": "gemini-3.8-flash-high",
+        "status": "success",
+        "receiptSha256": "sha256:efd388391031c57af94a73e29b1f6a90f19602d7d68cb36df6dab980d7719bb7",
+        "startedAt": "2026-09-15T08:57:51.063Z",
+        "finishedAt": "2026-09-15T08:58:56.561Z"
+      }
+    ],
+    "sourceUrl": "https://www.loc.gov/events/2024-national-book-festival"
+  },
+  "evidenceBoundary": "The compact reviews and exact package hashes travel with Git. Full model prompts/raw outputs and browser receipts remain in the explicitly named ignored local evidence directory. Model review and static/browser checks do not establish real student learning, live model task performance, payment, email delivery or production deployment."
+}

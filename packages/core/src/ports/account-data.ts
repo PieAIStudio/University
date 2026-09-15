@@ -25,6 +25,7 @@ export type SpeechQuality = "auto" | "local" | "online" | "premium";
 
 /** The learner's theme request; `system` is resolved by the browser at read time. */
 export type ThemePreference = "system" | "light" | "dark";
+export type InterfaceLocale = "en" | "zh-CN";
 
 export type AccountPreferenceKey =
   | "foreignSettings"
@@ -34,7 +35,9 @@ export type AccountPreferenceKey =
   | "sharesPresence"
   | "speechQuality"
   | "avatarRecipe"
-  | "theme";
+  | "theme"
+  | "locale";
+// Interface language is a shared account preference, independent of vocabulary mode.
 
 export interface AccountPreferences {
   readonly version: 1;
@@ -45,6 +48,7 @@ export interface AccountPreferences {
   readonly sharesPresence: boolean;
   readonly speechQuality: SpeechQuality;
   readonly theme: ThemePreference;
+  readonly locale: InterfaceLocale | null;
   /** Serialized SwimmerAvatarKit recipe; null means the learner has not saved one. */
   readonly avatarRecipe: string | null;
   /** Per-field timestamps make two devices' independent setting changes merge. */
@@ -81,6 +85,7 @@ export const DEFAULT_ACCOUNT_PREFERENCES: AccountPreferences = {
   sharesPresence: false,
   speechQuality: "auto",
   theme: "system",
+  locale: null,
   avatarRecipe: null,
   updatedAt: {},
 };
@@ -135,6 +140,7 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       "speechQuality",
       "avatarRecipe",
       "theme",
+      "locale",
     ] as const) {
       const timestamp = value.updatedAt[key];
       if (validTimestamp(timestamp)) updatedAt[key] = timestamp;
@@ -159,6 +165,7 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       value.theme === "light" || value.theme === "dark" || value.theme === "system"
         ? value.theme
         : "system",
+    locale: value.locale === "en" || value.locale === "zh-CN" ? value.locale : null,
     avatarRecipe: typeof value.avatarRecipe === "string" ? value.avatarRecipe : null,
     updatedAt,
   };
@@ -192,6 +199,8 @@ export function mergeAccountPreferences(
   const rightAvatarRecipe = timestampMs(right.updatedAt.avatarRecipe);
   const leftTheme = timestampMs(left.updatedAt.theme);
   const rightTheme = timestampMs(right.updatedAt.theme);
+  const leftLocale = timestampMs(left.updatedAt.locale);
+  const rightLocale = timestampMs(right.updatedAt.locale);
   const newer = (leftAt: number, rightAt: number) => rightAt >= leftAt;
   const updatedAt = { ...left.updatedAt };
   const result: AccountPreferences = {
@@ -212,6 +221,7 @@ export function mergeAccountPreferences(
       ? right.avatarRecipe
       : left.avatarRecipe,
     theme: newer(leftTheme, rightTheme) ? right.theme : left.theme,
+    locale: newer(leftLocale, rightLocale) ? right.locale : left.locale,
     updatedAt,
   };
   for (const key of [
@@ -223,6 +233,7 @@ export function mergeAccountPreferences(
     "speechQuality",
     "avatarRecipe",
     "theme",
+    "locale",
   ] as const) {
     if (
       right.updatedAt[key] &&

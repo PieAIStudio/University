@@ -1,4 +1,9 @@
+import { messages as gradingCopy } from "./grading-copy.zh-CN.js";
+import { messages as worldNavigation } from "./world-navigation.zh-CN.js";
+import { messages as readingSettings } from "./reading-settings.zh-CN.js";
 import { messages as productWelcome } from "./product-welcome.zh-CN.js";
+import { messages as realitySources } from "./reality-sources.zh-CN.js";
+import { messages as accountFailures } from "./account-failures.zh-CN.js";
 import { messages as productNavigation } from "./product-navigation.zh-CN.js";
 import { messages as productBilling } from "./product-billing.zh-CN.js";
 import { messages as productSave } from "./product-save.zh-CN.js";
@@ -22,6 +27,13 @@ import { messages as learningPlayMessages } from "./learning-play.zh-CN.js";
  * is selectable only when its key set exactly matches this one.
  */
 export const messages = {
+  ...worldNavigation,
+  ...readingSettings,
+  ...gradingCopy,
+  ...accountFailures,
+  "locale.zhCN.nativeName": "简体中文",
+  "product.settings.interfaceLanguage": "界面语言",
+  ...realitySources,
   ...productWelcome,
   ...productNavigation,
   ...productBilling,
@@ -863,7 +875,7 @@ export const messages = {
     "登录后进度、批注、答案、复习和收藏会跟账号走；断网时本机继续，联网后同步。",
   "ui.navigation.empty.accountPanel.copy.登录暂未开放": "登录暂未开放",
   "ui.navigation.empty.accountPanel.copy.登录链接已经发到邮箱-请在这个浏览器里打开邮件中的链接-链接短时间有效":
-    "登录链接已经发到邮箱，请在这个浏览器里打开邮件中的链接；链接短时间有效。",
+    "已请求登录链接，请检查邮箱并在这个浏览器里打开链接；链接短时间有效。",
   "ui.navigation.empty.accountPanel.copy.知道了": "知道了",
   "ui.navigation.empty.accountPanel.copy.请去邮箱点开确认信-然后再回来登录":
     "请去邮箱点开确认信，然后再回来登录。",

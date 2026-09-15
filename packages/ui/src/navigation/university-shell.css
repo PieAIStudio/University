@@ -950,3 +950,12 @@ a.linkish {
 .quest--informational {
   opacity: 0.78;
 }
+
+/* Keep one live account form during its request; native fieldset disabling
+   covers tabs and inputs without replacing the shared brand controls. */
+.account-panel__fields {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
+}

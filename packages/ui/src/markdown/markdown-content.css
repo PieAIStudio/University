@@ -102,7 +102,7 @@
   margin: 28px 0;
   max-width: 100%;
   border: 1px solid var(--game-ui-border-subtle);
-  background: rgb(12 8 6 / 55%);
+  background: var(--game-ui-surface);
 }
 
 .lesson-media img,
@@ -113,27 +113,27 @@
   height: auto;
   max-height: min(620px, 72vh);
   object-fit: contain;
-  background: #100b08;
+  background: var(--game-ui-bg);
 }
 
 .lesson-media figcaption {
   display: grid;
   gap: 5px;
   padding: 12px 14px;
-  color: var(--game-ui-text-muted);
+  color: var(--game-ui-text);
   font-size: 0.82rem;
   line-height: 1.5;
 }
 
 .lesson-media figcaption strong {
-  color: #f7d3a0;
+  color: var(--game-ui-text);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .lesson-media figcaption small {
-  color: rgb(255 245 232 / 50%);
+  color: var(--game-ui-text-muted);
   overflow-wrap: anywhere;
 }
 

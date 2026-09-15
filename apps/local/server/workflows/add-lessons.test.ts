@@ -337,7 +337,13 @@ describe("course lesson addition workflow", () => {
    * point and not the other, and this one had forked without a test to notice.
    */
   it("grows a course that was created against no snapshot at all", () => {
-    const { studiesRoot } = setup();
+    // This fixture must actually have no repository. setup() registers Git
+    // and was testing a missing pin, not the general-course scenario it names.
+    const studiesRoot = join(
+      mkdtempSync(join(tmpdir(), "university-no-repository-add-")),
+      "studies",
+    );
+    createStudy(studiesRoot, { id: STUDY_ID, title: "Public sources" });
     const generalCourseId = "url-cited-course";
     const urlEvidence: EvidenceReference = {
       kind: "fact",

@@ -21,12 +21,14 @@ const posthogCapture = vi.hoisted(() => vi.fn());
 const posthogIdentify = vi.hoisted(() => vi.fn());
 const posthogInit = vi.hoisted(() => vi.fn());
 const posthogRegister = vi.hoisted(() => vi.fn());
+const posthogReset = vi.hoisted(() => vi.fn());
 
 vi.mock("posthog-js", () => ({
   default: {
     capture: posthogCapture,
     identify: posthogIdentify,
     init: posthogInit,
+    reset: posthogReset,
   },
 }));
 
@@ -36,6 +38,7 @@ describe("product analytics", () => {
     posthogIdentify.mockReset();
     posthogInit.mockReset();
     posthogRegister.mockReset();
+    posthogReset.mockReset();
     setAnalyticsClientForTesting(null);
     vi.stubEnv("VITE_POSTHOG_KEY", "phc_test_key");
     vi.stubEnv("VITE_POSTHOG_HOST", "https://example.test");
@@ -269,7 +272,8 @@ describe("product analytics", () => {
       expect.objectContaining({
         api_host: "https://example.test",
         autocapture: false,
-        capture_pageview: true,
+        capture_pageview: false,
+        capture_pageleave: false,
         disable_session_recording: true,
       }),
     );
@@ -295,6 +299,56 @@ describe("product analytics", () => {
     await initProductAnalytics();
 
     expect(posthogCapture).toHaveBeenCalledTimes(24);
+  });
+
+  it("filters SDK-added URLs and nested person metadata at the final send boundary", async () => {
+    await initProductAnalytics();
+    const options = posthogInit.mock.calls[0]![1] as {
+      before_send: (
+        event: { event: string; properties: Record<string, unknown> } | null,
+      ) => { event: string; properties: Record<string, unknown> } | null;
+    };
+    const event = options.before_send({
+      event: "lesson_opened",
+      properties: {
+        distinct_id: "user-1",
+        studyId: "study-1",
+        courseId: "course-1",
+        lessonId: "lesson-1",
+        $current_url: "https://example.test/?code=secret#access_token=secret",
+        $referrer: "https://example.test/?email=private@example.test",
+        $set_once: { $initial_current_url: "https://example.test/#secret" },
+        answerText: "private learner text",
+        $lib: "web",
+      },
+    });
+    expect(event?.properties).toEqual({
+      distinct_id: "user-1",
+      studyId: "study-1",
+      courseId: "course-1",
+      lessonId: "lesson-1",
+      $lib: "web",
+    });
+    expect(
+      options.before_send({ event: "$autocapture", properties: { $el_text: "private" } }),
+    ).toBeNull();
+    expect(options.before_send(null)).toBeNull();
+  });
+
+  it("resets analytics identity on logout rather than assigning the next visitor to that account", async () => {
+    setAnalyticsClientForTesting({
+      capture: posthogCapture,
+      identify: posthogIdentify,
+      reset: posthogReset,
+    });
+    const identity = withProductAnalyticsIdentity(
+      createMemoryIdentityPort({ id: "user-1", email: "one@example.test" }),
+    );
+    await identity.signOut();
+    expect(posthogReset).toHaveBeenCalledTimes(1);
+    expect(posthogReset).toHaveBeenCalledWith(true);
+    await identity.signInWithEmail("two@example.test", "not-a-real-password");
+    expect(posthogIdentify.mock.calls.at(-1)?.[0]).not.toBe("user-1");
   });
 
   it("does nothing quietly when no key is configured", async () => {

@@ -604,7 +604,7 @@ describe("canonical course recovery", () => {
     expect(reused.courses).toEqual([{ courseId: COURSE_ID, outcome: "reused" }]);
   });
 
-  it("exports the lesson revision from the latest disk pointer", () => {
+  it("round-trips the latest lesson revision without inventing earlier revisions", () => {
     const fixture = setupActiveCourse();
     const current = readLatestLesson(fixture.studiesRoot, STUDY_ID, COURSE_ID, UNIT_ID, LESSON_ID);
 
@@ -640,6 +640,36 @@ describe("canonical course recovery", () => {
     const exported = loadCourseRecovery(output).packages[0]!.course.units[0]!.lessons[0]!;
 
     expect(exported.contentRevision).toBe(2);
+    const restoredRoot = join(fixture.container, "revision-restored");
+    importCourseRecovery({
+      studiesRoot: restoredRoot,
+      studyId: STUDY_ID,
+      inputDirectory: output,
+      sourceRoot: fixture.sourceRoot,
+    });
+    const restored = readLatestLesson(restoredRoot, STUDY_ID, COURSE_ID, UNIT_ID, LESSON_ID);
+    expect(restored.manifest.contentRevision).toBe(2);
+    const revisions = getLessonPaths(
+      restoredRoot,
+      STUDY_ID,
+      COURSE_ID,
+      UNIT_ID,
+      LESSON_ID,
+    ).revisions;
+    expect(existsSync(join(revisions, "1"))).toBe(false);
+    expect(readFileSync(join(revisions, "2", restored.manifest.assets[0]!.path))).toEqual(
+      readFileSync(fixture.assetSource),
+    );
+    const secondOutput = exportFixture(restoredRoot, fixture.container, "revision-roundtrip");
+    expect(loadCourseRecovery(secondOutput).packages).toEqual(loadCourseRecovery(output).packages);
+    expect(
+      importCourseRecovery({
+        studiesRoot: restoredRoot,
+        studyId: STUDY_ID,
+        inputDirectory: output,
+        sourceRoot: fixture.sourceRoot,
+      }).courses,
+    ).toEqual([{ courseId: COURSE_ID, outcome: "reused" }]);
   });
 
   it("preserves the source default ref and treats old indexes as HEAD", () => {

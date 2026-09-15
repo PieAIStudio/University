@@ -34,6 +34,7 @@ interface CreateStudyInput {
   readonly title: string;
   readonly description?: string;
   readonly goals?: readonly string[];
+  readonly locales?: StudyManifest["locales"];
   readonly now?: Date;
 }
 
@@ -64,6 +65,7 @@ export function createStudy(studiesRoot: string, input: CreateStudyInput): Study
     title: input.title,
     description: input.description ?? "",
     goals: input.goals ?? [],
+    ...(input.locales ? { locales: input.locales } : {}),
     defaultCourseId: null,
     status: "active",
     createdAt: timestamp,
@@ -91,6 +93,26 @@ export function createStudy(studiesRoot: string, input: CreateStudyInput): Study
 
 export function readStudy(studiesRoot: string, id: string): StudyManifest {
   return StudyManifestSchema.parse(readJson(getStudyPaths(studiesRoot, id).manifest));
+}
+
+/** Shelf positioning is metadata, not a lesson revision or a lifecycle change. */
+export function setStudyDescription(
+  studiesRoot: string,
+  studyId: string,
+  description: string,
+  now = new Date(),
+): StudyManifest {
+  const text = description.trim();
+  if (!text) throw new Error("Study description must not be empty");
+  const study = readStudy(studiesRoot, studyId);
+  if (study.description === text) return study;
+  const updated = StudyManifestSchema.parse({
+    ...study,
+    description: text,
+    updatedAt: now.toISOString(),
+  });
+  writeJsonAtomically(getStudyPaths(studiesRoot, studyId).manifest, updated);
+  return updated;
 }
 
 export function setDefaultCourse(

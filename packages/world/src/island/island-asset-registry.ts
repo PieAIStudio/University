@@ -1,5 +1,5 @@
-import donorManifestJson from "./elemental-serenity-assets.json";
-import kenneyManifestJson from "./kenney-r01-assets.json";
+import donorManifestJson from "./elemental-serenity-assets.json" with { type: "json" };
+import kenneyManifestJson from "./kenney-r01-assets.json" with { type: "json" };
 import type { KenneyPackId } from "./kenney-recipes.js";
 
 export type IslandAssetPackId = KenneyPackId | "elemental-serenity";

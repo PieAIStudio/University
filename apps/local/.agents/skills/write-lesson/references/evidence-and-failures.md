@@ -43,6 +43,34 @@ support a typical flow, not prove that this particular run followed it. Keep
 fact, inference, and constructed examples distinct. No fake repository,
 snapshot, commit, or `[[evidence:undefined:…]]` is needed for a no-repository lesson.
 
+### Real-world sources (Owner direction, 2026-09-14)
+
+The subject may be an actual product case, original reporting, research,
+public records/data, a rights-holder's image/video, or a recorded observation.
+It does not have to be source code. Use the existing URL evidence contract,
+not a second source database and not a fabricated repository pin.
+
+New categories (`first-party`, `research`, `public-record`, `news-report`,
+`open-data`, `rights-holder`) carry `provenance`: `type`, `publisher`, an
+optional verified `publishedOn`, required actual `accessedOn`, an optional
+`locator`, the specific claim `supports`, and `limitations`. The date format
+is YYYY-MM-DD. Do not manufacture publication dates for undated pages. Hosts
+are admitted only after inspecting the relevant source; admission alone does
+not approve another page or another claim on that host.
+
+Original reporting can establish what was reported about an event, not an
+unverified technical explanation. Vendor claims remain vendor claims. A
+research finding carries its sample, task and relevant limits; it does not
+prove that a different learner or product will obtain the same result.
+Clearly label inference and constructed practice variants. If a source cannot
+support the planned lesson, change the lesson or find adequate material;
+never fill the gap with an invented quotation, image, result or metric.
+
+The source footer exposes these boundaries to readers. Inline source links
+still belong beside the claim, not hidden only in metadata. External media
+need permission/licence and accessible alternatives; prefer a link over
+copying material whose reuse rights are unknown.
+
 ## Not anchors (do not count)
 
 These already appeared in a shipped batch and look like citations to authors,

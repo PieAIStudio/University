@@ -16,6 +16,7 @@ import type {
 } from "@pieai/university-core";
 import { METERED_GRADING_COST_POWER_UNITS as METERED_COST } from "@pieai/university-core";
 import { lessonPath, readJson } from "@pieai/university-ui/api/client.js";
+import { translate } from "@pieai/university-ui/i18n.js";
 
 import { createLocalRequestHeaders } from "./bootstrap.js";
 
@@ -41,7 +42,7 @@ export function createLocalGradingPort(options: {
         }),
       );
       if ((options.progress?.syncState().userId ?? null) !== accountScope) {
-        throw new Error("账号已切换。这次回答没有写入新账号，原来的输入仍保留在原账号中。");
+        throw new Error(translate("grading.account.changedBeforeSave"));
       }
       options.progress?.recordExerciseAttempt({
         commandId: input.commandId,
@@ -67,11 +68,10 @@ export function createLocalGradingPort(options: {
         availablePowerUnits: null,
         explanation: {
           kind: "explanation",
-          title: "这端使用本机 AI 宿主",
-          whatItDoes: "在线学习里的 AI 语义批改会先展示费用和余额，再由你决定是否使用。",
-          whyUnavailable:
-            "当前是 authoring 工作台；开放题会交给本机 AI 宿主，不在这里连接线上 AI 批改服务。",
-          futureSupport: "切到 delivery 学习端并登录后，页面会显示线上服务的费用、余额和选择。",
+          title: translate("grading.local.title"),
+          whatItDoes: translate("grading.local.whatItDoes"),
+          whyUnavailable: translate("grading.local.whyUnavailable"),
+          futureSupport: translate("grading.local.futureSupport"),
         },
       };
     },

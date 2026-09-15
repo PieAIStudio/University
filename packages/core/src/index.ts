@@ -1,3 +1,9 @@
+export { localizeLearnerContent } from "./content/localization.js";
+export {
+  localizeActivity,
+  activityDisplayStrings,
+  activityTranslationIssues,
+} from "./learning-play/localization.js";
 /**
  * The shapes every part of this product agrees on.
  *

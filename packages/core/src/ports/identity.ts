@@ -34,7 +34,27 @@ export type IdentityStatus =
   | { readonly kind: "pending" }
   | { readonly kind: "anonymous"; readonly user: IdentityUser }
   | { readonly kind: "signed_in"; readonly user: IdentityUser }
-  | { readonly kind: "error"; readonly message: string };
+  | { readonly kind: "error"; readonly message: string; readonly code?: IdentityFailureCode };
+
+/** Stable product-facing failures. Provider response bodies never become UI copy. */
+export type IdentityFailureCode =
+  | "sign-in-failed"
+  | "sign-up-failed"
+  | "magic-link-failed"
+  | "link-email-failed"
+  | "sign-out-failed"
+  | "anonymous-link-required"
+  | "anonymous-only";
+
+export class IdentityOperationError extends Error {
+  constructor(
+    readonly code: IdentityFailureCode,
+    message: string,
+  ) {
+    super(message);
+    this.name = "IdentityOperationError";
+  }
+}
 
 export type IdentityStatusKind = IdentityStatus["kind"];
 
@@ -117,6 +137,8 @@ export function createIdentityPort(auth: IdentityAuth | null): IdentityPort {
   let status: IdentityStatus = { kind: "signed_out" };
   let explicitOperationStarted = false;
   let anonymousSignInPromise: Promise<void> | null = null;
+  let operationVersion = 0;
+  let authEventVersion = 0;
 
   const setStatus = (next: IdentityStatus) => {
     status = next;
@@ -126,13 +148,58 @@ export function createIdentityPort(auth: IdentityAuth | null): IdentityPort {
   const applySession = (session: IdentityAuthSession | null) => setStatus(statusOf(session));
 
   auth.onAuthStateChange((session) => {
+    authEventVersion += 1;
     applySession(session);
   });
 
-  void auth.getSession().then(applySession, () => {
-    // A stored session that cannot be read is signed-out, not a wall.
-    if (!explicitOperationStarted) setStatus({ kind: "signed_out" });
-  });
+  void auth.getSession().then(
+    (session) => {
+      if (!explicitOperationStarted && authEventVersion === 0) applySession(session);
+    },
+    () => {
+      // A stored session that cannot be read is signed-out, not a wall.
+      if (!explicitOperationStarted && authEventVersion === 0) setStatus({ kind: "signed_out" });
+    },
+  );
+
+  function beginOperation() {
+    explicitOperationStarted = true;
+    return { version: ++operationVersion, eventVersion: authEventVersion };
+  }
+
+  function responseIsCurrent(
+    operation: ReturnType<typeof beginOperation>,
+    session: IdentityAuthSession | null,
+  ): boolean {
+    if (operation.version !== operationVersion) return false;
+    // A newer SDK event is authoritative. A delayed method response must not
+    // repaint an earlier identity over a newer account or sign-out event.
+    if (operation.eventVersion === authEventVersion) return true;
+    const currentId = hasAuthenticatedIdentity(status) && "user" in status ? status.user.id : null;
+    const responseId = userOf(session)?.id ?? null;
+    // Two empty identities compare equal. A late null after SIGNED_OUT must
+    // not count as the current response or revive the previous guest UUID.
+    return currentId !== null && currentId === responseId;
+  }
+
+  const SIGN_IN_FAILED_MESSAGE = "登录没有完成，请核对输入或网络后重试。";
+
+  function rejectSignInIfCurrent(
+    operation: ReturnType<typeof beginOperation>,
+    previous: IdentityStatus,
+  ): void {
+    if (operation.version !== operationVersion || operation.eventVersion !== authEventVersion) {
+      return;
+    }
+    if (previous.kind === "anonymous") setStatus(previous);
+    else
+      setStatus({
+        kind: "error",
+        code: "sign-in-failed",
+        message: SIGN_IN_FAILED_MESSAGE,
+      });
+    throw new IdentityOperationError("sign-in-failed", SIGN_IN_FAILED_MESSAGE);
+  }
 
   return {
     status: () => status,
@@ -144,16 +211,23 @@ export function createIdentityPort(auth: IdentityAuth | null): IdentityPort {
     },
     async signInAnonymously(options) {
       if (status.kind === "anonymous" || status.kind === "signed_in") return;
+      if (status.kind === "pending") return;
       if (anonymousSignInPromise) return anonymousSignInPromise;
-      explicitOperationStarted = true;
+      const operation = beginOperation();
       anonymousSignInPromise = (async () => {
         try {
           const session = await auth.signInAnonymously(options);
-          applySession(session);
+          if (responseIsCurrent(operation, session)) applySession(session);
         } catch {
           // Anonymous auth is a persistence enhancement, not a prerequisite for
           // learning. Keep this path silent and leave the local learner usable.
-          if (!hasAuthenticatedIdentity(status)) setStatus({ kind: "signed_out" });
+          if (
+            operation.version === operationVersion &&
+            operation.eventVersion === authEventVersion &&
+            !hasAuthenticatedIdentity(status)
+          ) {
+            setStatus({ kind: "signed_out" });
+          }
         } finally {
           anonymousSignInPromise = null;
         }
@@ -161,31 +235,36 @@ export function createIdentityPort(auth: IdentityAuth | null): IdentityPort {
       return anonymousSignInPromise;
     },
     async signInWithEmail(email, password) {
-      explicitOperationStarted = true;
+      const operation = beginOperation();
       const previous = status;
       setStatus({ kind: "pending" });
+      let session: IdentityAuthSession | null;
       try {
-        const session = await auth.signInWithEmail(email, password);
-        const next = statusOf(session);
-        setStatus(next);
-        if (next.kind !== "signed_in") {
-          if (previous.kind === "anonymous") setStatus(previous);
-          else setStatus({ kind: "error", message: "登录没有成功，邮箱或密码不对。" });
-        }
+        session = await auth.signInWithEmail(email, password);
       } catch {
-        if (previous.kind === "anonymous") setStatus(previous);
-        else setStatus({ kind: "error", message: "登录没有成功，邮箱或密码不对。" });
+        // Even a provider error with our class/code is untrusted input. Fence
+        // it first and create safe copy, rather than rethrowing its raw body.
+        rejectSignInIfCurrent(operation, previous);
+        return;
       }
+      if (!responseIsCurrent(operation, session)) return;
+      const next = statusOf(session);
+      if (next.kind === "signed_in") {
+        setStatus(next);
+        return;
+      }
+      rejectSignInIfCurrent(operation, previous);
     },
     async signUpWithEmail(email, password) {
       if (status.kind === "anonymous") {
         await linkEmail(email, password);
         return { confirmationRequired: false };
       }
-      explicitOperationStarted = true;
+      const operation = beginOperation();
       setStatus({ kind: "pending" });
       try {
         const session = await auth.signUpWithEmail(email, password);
+        if (!responseIsCurrent(operation, session)) return { confirmationRequired: false };
         const user = userOf(session);
         if (user) {
           applySession(session);
@@ -194,59 +273,93 @@ export function createIdentityPort(auth: IdentityAuth | null): IdentityPort {
         setStatus({ kind: "signed_out" });
         return { confirmationRequired: true };
       } catch {
-        setStatus({ kind: "error", message: "注册没有成功，换一个邮箱试试。" });
+        if (operation.version === operationVersion && operation.eventVersion === authEventVersion) {
+          setStatus({
+            kind: "error",
+            code: "sign-up-failed",
+            message: "注册没有完成，请核对输入或网络后重试。",
+          });
+        }
         return { confirmationRequired: false };
       }
     },
     async requestMagicLink(email, redirectTo) {
       if (status.kind === "anonymous") {
-        throw new Error("匿名学习会话请用邮箱和密码绑定，这样当前进度不会丢失。");
+        throw new IdentityOperationError(
+          "anonymous-link-required",
+          "匿名学习会话请用邮箱和密码绑定，这样当前进度不会丢失。",
+        );
       }
       if (status.kind === "signed_in") return;
-      explicitOperationStarted = true;
+      const operation = beginOperation();
       // Requesting a link does not change the session. Keep the signed-out
       // form mounted so it can show the confirmation after the mail request
       // completes; the form owns its short-lived submit lock.
       try {
         await configuredAuth.requestMagicLink(email, redirectTo);
-        setStatus({ kind: "signed_out" });
+        if (operation.version === operationVersion && operation.eventVersion === authEventVersion)
+          setStatus({ kind: "signed_out" });
       } catch {
-        setStatus({ kind: "error", message: "登录链接没有发出去，请稍后再试。" });
-        throw new Error("登录链接没有发出去，请稍后再试。");
+        if (operation.version !== operationVersion) return;
+        if (operation.eventVersion === authEventVersion)
+          setStatus({
+            kind: "error",
+            code: "magic-link-failed",
+            message: "登录链接没有发出去，请稍后再试。",
+          });
+        throw new IdentityOperationError("magic-link-failed", "登录链接没有发出去，请稍后再试。");
       }
     },
     linkEmail,
     async signOut() {
-      explicitOperationStarted = true;
+      const operation = beginOperation();
       try {
         await auth.signOut();
       } catch {
-        // Local sign-out still has to happen: the next person at this
-        // keyboard is not this session, even if the server did not hear us.
+        if (operation.version !== operationVersion) return;
+        // A rejected SDK sign-out may have left a persisted session intact.
+        // Do not claim it is gone; the UI must offer a visible retry.
+        throw new IdentityOperationError(
+          "sign-out-failed",
+          "退出登录没有完成，请重试后再交给其他人使用。",
+        );
       }
-      setStatus({ kind: "signed_out" });
+      if (responseIsCurrent(operation, null)) setStatus({ kind: "signed_out" });
     },
-    readAccessToken: () => auth.getAccessToken(),
+    async readAccessToken() {
+      if (!hasAuthenticatedIdentity(status) || !("user" in status)) return null;
+      const id = status.user.id;
+      const version = operationVersion;
+      const token = await auth.getAccessToken();
+      return version === operationVersion &&
+        hasAuthenticatedIdentity(status) &&
+        "user" in status &&
+        status.user.id === id
+        ? token
+        : null;
+    },
   };
 
   async function linkEmail(email: string, password: string): Promise<void> {
     if (status.kind !== "anonymous") {
-      throw new Error("只有匿名账号可以绑定邮箱。");
+      throw new IdentityOperationError("anonymous-only", "只有匿名账号可以绑定邮箱。");
     }
-    explicitOperationStarted = true;
+    const operation = beginOperation();
     const previous = status;
     try {
       const session = await configuredAuth.linkEmail(email, password);
+      if (!responseIsCurrent(operation, session)) return;
       const next = statusOf(session);
       setStatus(next);
       if (next.kind !== "signed_in") {
-        throw new Error("邮箱绑定没有完成。");
+        throw new IdentityOperationError("link-email-failed", "邮箱绑定没有完成。");
       }
     } catch (error) {
       // A taken email must not turn the anonymous document into an error
       // state. The learner must remain able to sign in to the existing user,
       // after which the progress binder merges both documents.
-      setStatus(previous);
+      if (operation.version === operationVersion && operation.eventVersion === authEventVersion)
+        setStatus(previous);
       throw error;
     }
   }

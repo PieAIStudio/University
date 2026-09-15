@@ -6,8 +6,13 @@
  * the source lesson's revision so shared progress can bind confirmation to the
  * content the learner opened.
  */
-import { translate } from "@pieai/university-ui/i18n.js";
-import { lessonKeyOf, progressSourceOf, type LessonRef } from "@pieai/university-core";
+import { activeLocale, translate } from "@pieai/university-ui/i18n.js";
+import {
+  lessonKeyOf,
+  localizeLearnerContent,
+  progressSourceOf,
+  type LessonRef,
+} from "@pieai/university-core";
 import type {
   CardBody,
   ContentPort,
@@ -47,7 +52,7 @@ export function createOnlineContentPort(): ContentPort {
           shelfPromise = null;
           throw reason;
         });
-      return shelfPromise;
+      return shelfPromise.then((shelf) => localizeLearnerContent(shelf, activeLocale()));
     },
 
     async lesson(locator: LessonRef) {

@@ -12,6 +12,15 @@
  * need. A real polyfill would add a dependency to make a canvas measure itself
  * in a document that has no layout to measure.
  */
+import { beforeEach } from "vitest";
+import { setActiveLocale } from "@pieai/university-ui/i18n.js";
+
+if (typeof navigator !== "undefined") {
+  Object.defineProperty(navigator, "language", { configurable: true, value: "zh-CN" });
+}
+setActiveLocale("zh-CN");
+beforeEach(() => { setActiveLocale("zh-CN"); });
+
 class NoopResizeObserver implements ResizeObserver {
   observe(): void {}
   unobserve(): void {}

@@ -5,9 +5,10 @@
  * mode exists. Behaviour is the contract: changing a path or a field here is
  * changing what 4317 has always answered, and that is a product change.
  */
-import { translate } from "@pieai/university-ui/i18n.js";
+import { activeLocale, translate } from "@pieai/university-ui/i18n.js";
 import {
   isSafeId,
+  localizeLearnerContent,
   lessonKey,
   lessonKeyOf,
   lessonRefKey,
@@ -70,7 +71,10 @@ export function createLocalContentPort(options: {
     async studies() {
       // `/api/bootstrap` names the shelf without reading a single lesson.
       const boot = await localBootstrap();
-      return boot.studies.map((study) => ({ id: study.id, title: study.title }));
+      return localizeLearnerContent(boot.studies, activeLocale()).map((study) => ({
+        id: study.id,
+        title: study.title,
+      }));
     },
 
     async shelf(): Promise<Shelf> {
@@ -78,8 +82,9 @@ export function createLocalContentPort(options: {
       const lessonRequests = concurrencyGate(8);
       const studies = await Promise.all(
         boot.studies.map(async (summary) => {
-          const view = await readLocalJson<StudyView>(
-            `/api/studies/${encodeURIComponent(summary.id)}`,
+          const view = localizeLearnerContent(
+            await readLocalJson<StudyView>(`/api/studies/${encodeURIComponent(summary.id)}`),
+            activeLocale(),
           );
           importLegacyProgress(view, options.progress);
           const courses = await Promise.all(
@@ -130,11 +135,14 @@ export function createLocalContentPort(options: {
 
     async lesson(locator, requestOptions) {
       guard(locator);
-      const view = await readJson<LessonView>(
-        await fetch(
-          lessonPath(locator),
-          requestOptions?.signal ? { signal: requestOptions.signal } : {},
+      const view = localizeLearnerContent(
+        await readJson<LessonView>(
+          await fetch(
+            lessonPath(locator),
+            requestOptions?.signal ? { signal: requestOptions.signal } : {},
+          ),
         ),
+        activeLocale(),
       );
       exerciseIdsByLesson.set(
         lessonRefKey(locator),
@@ -168,7 +176,10 @@ export function createLocalContentPort(options: {
         throw new Error(
           translate("app.ports.local.content.copy.这道题的地址不对-value0", { value0: exerciseId }),
         );
-      return readJson<MistakeExercise>(await fetch(exerciseContentPath(locator, exerciseId)));
+      return localizeLearnerContent(
+        await readJson<MistakeExercise>(await fetch(exerciseContentPath(locator, exerciseId))),
+        activeLocale(),
+      );
     },
 
     async card(card: CourseReviewCardLocator | RecapReviewCardLocator) {
@@ -180,7 +191,10 @@ export function createLocalContentPort(options: {
           contentRevision: card.contentRevision,
         } satisfies CardBody;
       }
-      return readJson<CardBody>(await fetch(cardContentPath(card)));
+      return localizeLearnerContent(
+        await readJson<CardBody>(await fetch(cardContentPath(card))),
+        activeLocale(),
+      );
     },
 
     async notes(studyId: string) {

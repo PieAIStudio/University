@@ -14,6 +14,10 @@ import {
   LessonAssetSchema,
   LessonSectionSchema,
   LessonVariantSchema,
+  LocaleMap,
+  LocalizedCardSchema,
+  LocalizedExerciseSchema,
+  LocalizedLessonSchema,
   Sha256,
   SnapshotManifestSchema,
   StableId,
@@ -34,8 +38,10 @@ import {
   writeCardRevision,
   writeExerciseRevision,
   writeLessonRevision,
+  assertUnitReadyForActivation,
 } from "../content/repository.js";
 import { matchesAssetMime, sniffAssetMime } from "../content/asset-bytes.js";
+import { LessonAssetFileProposalSchema } from "../content/asset-input.js";
 import { validateEvidence } from "../content/evidence.js";
 import { normalizeCard, normalizeExercise } from "../content/normalization.js";
 import { writeJsonAtomically } from "../storage/atomic-json.js";
@@ -44,6 +50,7 @@ import {
   getCoursePaths,
   getLessonPaths,
   getSnapshotPaths,
+  getStudyPaths,
   getUaAnalysisPaths,
 } from "../studies/paths.js";
 import { auditStudyFreshness, inspectSourceStatus } from "./refresh-study.js";
@@ -62,6 +69,7 @@ const CardRevisionProposalSchema = z
     expectedRevision: z.number().int().positive().optional(),
     kind: z.enum(["basic", "cloze"]).optional(),
     front: z.string().min(1).max(20_000),
+    locales: LocaleMap(LocalizedCardSchema),
     back: z.string().min(1).max(20_000),
     tags: z.array(StableId).optional(),
     evidence: z.array(EvidenceReferenceSchema).min(1),
@@ -73,6 +81,7 @@ const ExerciseRevisionBaseSchema = z.object({
   expectedRevision: z.number().int().positive().optional(),
   title: z.string().min(1).max(200).optional(),
   prompt: z.string().min(1).max(20_000),
+  locales: LocaleMap(LocalizedExerciseSchema),
   evidence: z.array(EvidenceReferenceSchema).min(1),
 });
 
@@ -87,13 +96,6 @@ const ExerciseRevisionProposalSchema = z.union([
   }).strict(),
 ]);
 
-const LessonAssetFileProposalSchema = z
-  .object({
-    path: z.string().min(1),
-    sourcePath: z.string().min(1),
-  })
-  .strict();
-
 /**
  * Exported for the birth-and-revision agreement check in `add-lessons.test.ts`:
  * a field this schema can set on a lesson but the creation proposal cannot
@@ -103,7 +105,7 @@ export const CourseRevisionProposalSchema = z
   .object({
     schemaVersion: z.literal(1),
     proposalId: StableId,
-    targetSnapshotId: StableId,
+    targetSnapshotId: StableId.optional(),
     targetAnalysisId: StableId.optional(),
     lesson: z
       .object({
@@ -115,6 +117,7 @@ export const CourseRevisionProposalSchema = z
         variant: LessonVariantSchema.optional(),
         sections: z.array(LessonSectionSchema).max(100).optional(),
         content: z.string().min(1),
+        locales: LocaleMap(LocalizedLessonSchema),
         evidence: z.array(EvidenceReferenceSchema).min(1),
         assets: z.array(LessonAssetSchema).max(100).optional(),
         /*
@@ -142,7 +145,7 @@ const OperationReceiptSchema = z
     courseId: StableId,
     unitId: StableId,
     lessonId: StableId,
-    targetSnapshotId: StableId,
+    targetSnapshotId: StableId.nullable(),
     targetAnalysisId: StableId.nullable(),
     status: z.enum(["pending", "complete"]),
     completedComponents: z.array(z.string().min(1)),
@@ -193,7 +196,7 @@ interface CourseRevisionResult {
   readonly courseId: string;
   readonly unitId: string;
   readonly lessonId: string;
-  readonly targetSnapshotId: string;
+  readonly targetSnapshotId: string | null;
   readonly targetAnalysisId: string | null;
   readonly revisions: {
     readonly lesson: number;
@@ -208,7 +211,7 @@ interface ReactivateCourseInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly courseId: string;
-  readonly targetSnapshotId: string;
+  readonly targetSnapshotId?: string;
   readonly targetAnalysisId?: string;
 }
 
@@ -218,7 +221,7 @@ interface ReactivateCourseResult {
   readonly disposition: "activated" | "reused";
   readonly studyId: string;
   readonly courseId: string;
-  readonly targetSnapshotId: string;
+  readonly targetSnapshotId: string | null;
   readonly targetAnalysisId: string | null;
   readonly reportHash: string;
   readonly activatedUnitIds: readonly string[];
@@ -424,7 +427,15 @@ export function readTargetIdentity(
     readonly targetAnalysisId?: string | undefined;
   },
 ): TargetIdentity | null {
-  if (!proposal.targetSnapshotId) return null;
+  if (!proposal.targetSnapshotId) {
+    if (proposal.targetAnalysisId) throw new Error("A source analysis requires its snapshot");
+    if (existsSync(getStudyPaths(studiesRoot, studyId).source.registration)) {
+      throw new Error(
+        "A repository-backed study requires a target snapshot; omission cannot bypass freshness checks",
+      );
+    }
+    return null;
+  }
   const snapshot = SnapshotManifestSchema.parse(
     readJson(getSnapshotPaths(studiesRoot, studyId, proposal.targetSnapshotId).manifest),
   );
@@ -528,6 +539,9 @@ function createCardRevision(
       lessonId: location.lessonId,
       front: proposal.front,
       back: proposal.back,
+      ...((proposal.locales ?? current?.locales)
+        ? { locales: proposal.locales ?? current?.locales }
+        : {}),
       contentRevision,
       status: "active",
       tags: proposal.tags ?? current?.tags ?? [],
@@ -557,6 +571,9 @@ function createExerciseRevision(
       unitId: location.unitId,
       lessonId: location.lessonId,
       prompt: proposal.prompt,
+      ...((proposal.locales ?? current?.locales)
+        ? { locales: proposal.locales ?? current?.locales }
+        : {}),
       contentRevision,
       status: "active" as const,
       evidence: proposal.evidence,
@@ -704,6 +721,9 @@ function buildBundle(
   const lesson = LessonManifestSchema.parse({
     ...currentLesson,
     title: proposal.lesson.title ?? currentLesson.title,
+    ...((proposal.lesson.locales ?? currentLesson.locales)
+      ? { locales: proposal.lesson.locales ?? currentLesson.locales }
+      : {}),
     variant: proposal.lesson.variant ?? currentLesson.variant,
     sections: proposal.lesson.sections ?? currentLesson.sections,
     // The proposal's order is the lesson's order, and it is where a newly added
@@ -918,7 +938,7 @@ function result(
     courseId: proposal.lesson.courseId,
     unitId: proposal.lesson.unitId,
     lessonId: proposal.lesson.id,
-    targetSnapshotId: proposal.targetSnapshotId,
+    targetSnapshotId: proposal.targetSnapshotId ?? null,
     targetAnalysisId: proposal.targetAnalysisId ?? null,
     revisions: {
       lesson: bundle.lesson.contentRevision,
@@ -942,19 +962,26 @@ function withSourceStatusGuard<T>(
   changedMessage: string,
   operation: () => T,
 ): T {
-  const before = inspectSourceStatus(studiesRoot, studyId);
+  // A public-source course has no Git registration to inspect. Keep absence
+  // in the comparison so a concurrently added/removed registration still fails.
+  // readTargetIdentity separately rejects a missing pin for a registered source.
+  const inspect = () =>
+    existsSync(getStudyPaths(studiesRoot, studyId).source.registration)
+      ? inspectSourceStatus(studiesRoot, studyId)
+      : null;
+  const before = inspect();
   let outcome: T;
   try {
     outcome = operation();
   } catch (error) {
-    const afterFailure = inspectSourceStatus(studiesRoot, studyId);
+    const afterFailure = inspect();
     if (!sameSourceStatus(before, afterFailure)) {
       const detail = error instanceof Error ? error.message : String(error);
       throw new Error(`${changedMessage}. The local operation also failed: ${detail}`);
     }
     throw error;
   }
-  const after = inspectSourceStatus(studiesRoot, studyId);
+  const after = inspect();
   if (!sameSourceStatus(before, after)) throw new Error(changedMessage);
   return outcome;
 }
@@ -1011,7 +1038,7 @@ function reviseCourseLessonUnchecked(input: ReviseCourseInput): CourseRevisionRe
       courseId: proposal.lesson.courseId,
       unitId: proposal.lesson.unitId,
       lessonId: proposal.lesson.id,
-      targetSnapshotId: proposal.targetSnapshotId,
+      targetSnapshotId: proposal.targetSnapshotId ?? null,
       targetAnalysisId: proposal.targetAnalysisId ?? null,
       status: "pending",
       completedComponents: [],
@@ -1117,6 +1144,9 @@ export function reviseCourseLesson(input: ReviseCourseInput): CourseRevisionResu
 }
 
 function reactivateCourseUnchecked(input: ReactivateCourseInput): ReactivateCourseResult {
+  if (!input.targetSnapshotId) {
+    throw new Error("Repository reactivation requires a target snapshot");
+  }
   const audit = auditStudyFreshness({
     studiesRoot: input.studiesRoot,
     studyId: input.studyId,
@@ -1204,6 +1234,74 @@ function reactivateCourseUnchecked(input: ReactivateCourseInput): ReactivateCour
 }
 
 export function reactivateCourse(input: ReactivateCourseInput): ReactivateCourseResult {
+  if (!input.targetSnapshotId) {
+    readTargetIdentity(input.studiesRoot, input.studyId, input);
+    const course = readCourse(input.studiesRoot, input.studyId, input.courseId);
+    if (course.status === "retired") throw new Error("A retired course cannot be reactivated");
+    const identities: unknown[] = [];
+    // Validate every unit before changing any status; these checks read the
+    // actual revisions, evidence and media bytes, not a fabricated git pin.
+    for (const unitId of course.unitIds) {
+      const unit = readUnit(input.studiesRoot, input.studyId, input.courseId, unitId);
+      if (unit.status === "retired") throw new Error(`Cannot reactivate a retired unit: ${unitId}`);
+      assertUnitReadyForActivation(input.studiesRoot, input.studyId, input.courseId, unit);
+      identities.push({
+        unit,
+        lessons: unit.lessonIds.map((lessonId) => {
+          const lesson = readLatestLesson(
+            input.studiesRoot,
+            input.studyId,
+            input.courseId,
+            unitId,
+            lessonId,
+          ).manifest;
+          return {
+            lesson,
+            cards: lesson.cardIds.map(
+              (id) =>
+                readLatestCard(
+                  input.studiesRoot,
+                  input.studyId,
+                  input.courseId,
+                  unitId,
+                  lessonId,
+                  id,
+                ).contentHash,
+            ),
+            exercises: lesson.exerciseIds.map(
+              (id) =>
+                readLatestExercise(
+                  input.studiesRoot,
+                  input.studyId,
+                  input.courseId,
+                  unitId,
+                  lessonId,
+                  id,
+                ).contentHash,
+            ),
+          };
+        }),
+      });
+    }
+    if (!course.unitIds.length) throw new Error("A course without units cannot be reactivated");
+    for (const unitId of course.unitIds)
+      updateUnitStatus(input.studiesRoot, input.studyId, input.courseId, unitId, "active");
+    updateCourseStatus(input.studiesRoot, input.studyId, input.courseId, "active");
+    return {
+      schemaVersion: 1,
+      operation: "course-reactivate",
+      disposition: course.status === "active" ? "reused" : "activated",
+      studyId: input.studyId,
+      courseId: input.courseId,
+      targetSnapshotId: null,
+      targetAnalysisId: null,
+      reportHash: sha256(
+        canonicalJson({ kind: "source-url-content-check", courseId: course.id, identities }),
+      ),
+      activatedUnitIds: course.unitIds,
+      courseStatus: "active",
+    };
+  }
   return withSourceStatusGuard(
     input.studiesRoot,
     input.studyId,

@@ -2,7 +2,12 @@ import { existsSync } from "node:fs";
 
 import { z } from "zod";
 
-import { StableId, type UnitManifest } from "@pieai/university-core/domain/schemas.js";
+import {
+  StableId,
+  LocaleMap,
+  LocalizedUnitSchema,
+  type UnitManifest,
+} from "@pieai/university-core/domain/schemas.js";
 import {
   readCourse,
   readUnit,
@@ -38,6 +43,7 @@ const UnitTargetSchema = z
     title: z.string().min(1).max(200).optional(),
     objective: z.string().min(1).max(1_000).optional(),
     prerequisiteUnitIds: z.array(StableId).optional(),
+    locales: LocaleMap(LocalizedUnitSchema),
   })
   .strict();
 
@@ -135,7 +141,9 @@ export function addCourseLessons(input: AddLessonsInput): AddLessonsResult {
 
   const unitExists = course.unitIds.includes(proposal.unit.id);
   const describesNewUnit =
-    proposal.unit.title !== undefined || proposal.unit.objective !== undefined;
+    proposal.unit.title !== undefined ||
+    proposal.unit.objective !== undefined ||
+    proposal.unit.locales !== undefined;
   if (unitExists && describesNewUnit) {
     throw new Error(
       `Unit ${proposal.unit.id} already exists; drop title and objective to add lessons to it.`,
@@ -206,6 +214,7 @@ export function addCourseLessons(input: AddLessonsInput): AddLessonsResult {
     const unit: UnitManifest = {
       schemaVersion: 1,
       id: proposal.unit.id,
+      locales: proposal.unit.locales,
       title: proposal.unit.title!,
       objective: proposal.unit.objective!,
       prerequisiteUnitIds: proposal.unit.prerequisiteUnitIds ?? [],

@@ -1,4 +1,5 @@
 import { hash } from "../island/random.js";
+import { translate } from "@pieai/university-ui/i18n.js";
 import type { DomainSurfaceStyle } from "./globe-style.js";
 
 /**
@@ -177,7 +178,15 @@ export function studyClusterStyle(studyId: string): StudyClusterStyle {
  * nothing to say.
  */
 export function studyCounts(study: PlanetStudy): string {
-  return `${study.courseCount} 门课 · ${study.lessonCount} 节`;
+  const courses = translate(
+    study.courseCount === 1 ? "world.picker.courseCount.one" : "world.picker.courseCount.other",
+    { count: study.courseCount },
+  );
+  const lessons = translate(
+    study.lessonCount === 1 ? "world.picker.lessonCount.one" : "world.picker.lessonCount.other",
+    { count: study.lessonCount },
+  );
+  return `${courses} · ${lessons}`;
 }
 
 /**
@@ -198,9 +207,15 @@ export function studyStage(study: PlanetStudy): StudyStage {
 }
 
 export const STUDY_STAGE_LABEL: Record<StudyStage, string> = {
-  "not-started": "没开始",
-  learning: "学习中",
-  done: "已学完",
+  get "not-started"() {
+    return translate("world.picker.notStarted");
+  },
+  get learning() {
+    return translate("world.picker.learning");
+  },
+  get done() {
+    return translate("world.picker.done");
+  },
 };
 
 /** Whole percent, floored, so 99.6% never reads as a finished series. */
@@ -222,6 +237,11 @@ export function studyCourseList(
   return {
     shown,
     rest,
-    restLabel: rest > 0 ? `还有 ${rest} 门` : null,
+    restLabel:
+      rest > 0
+        ? translate(rest === 1 ? "world.picker.more.one" : "world.picker.more.other", {
+            count: rest,
+          })
+        : null,
   };
 }

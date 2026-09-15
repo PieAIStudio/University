@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { setActiveLocale } from "@pieai/university-ui/i18n.js";
 
 import {
   STUDY_STAGE_LABEL,
@@ -42,6 +43,16 @@ const BUZZ: PlanetStudy = {
 };
 
 describe("studyCounts", () => {
+  it("formats singular English counts and reads changed locale rather than import-time labels", () => {
+    setActiveLocale("en");
+    expect(studyCounts({ ...BUZZ, courseCount: 1, lessonCount: 1 })).toBe("1 course · 1 lesson");
+    expect(STUDY_STAGE_LABEL.learning).toBe("In progress");
+    expect(studyCourseList(TURING, 5).restLabel).toBe("1 more course");
+    setActiveLocale("zh-CN");
+    expect(STUDY_STAGE_LABEL.learning).toBe("学习中");
+    expect(studyCounts(TURING)).toBe("31 门课 · 41 节");
+  });
+
   it("reports how big a series is, and nothing about where you stand in it", () => {
     /*
       Size only. The row carries a stage chip and a progress bar now, so a

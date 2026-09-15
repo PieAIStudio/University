@@ -1,4 +1,5 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { setActiveLocale } from "@pieai/university-ui/i18n.js";
 
 import { compileAnswerKey, createProgressPort, mistakesOf } from "@pieai/university-core";
 
@@ -108,6 +109,25 @@ beforeAll(async () => {
 });
 
 describe("createOnlineGradingPort", () => {
+  afterEach(() => setActiveLocale("zh-CN"));
+  it("localizes deterministic feedback without translating the learner's answer or making a model call", async () => {
+    setActiveLocale("en");
+    const fetchImpl = vi.fn(async () => {
+      throw new Error("No model call expected");
+    });
+    const port = createOnlineGradingPort({ fetchImpl });
+    const result = await port.submitExercise({
+      locator,
+      exerciseId: "product-name-from-readme",
+      contentRevision: 1,
+      answer: "图灵密约",
+      commandId: "english-feedback",
+    });
+    expect(result.hostGrade?.evaluation).toBe("Correct.");
+    expect(result.hostGrade?.learnerAnswer).toBe("图灵密约");
+    expect(result.hostGrade?.passed).toBe(true);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
   it("does not send an answer under another account if identity changes while reading its token", async () => {
     const progress = createProgressPort({ persistence: { read: () => null, write: vi.fn() } });
     await progress.bindAccount("alice", null);

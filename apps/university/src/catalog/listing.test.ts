@@ -54,8 +54,15 @@ describe("the 2D directory against the library the map uses", () => {
       is rewritten, and this line is where that has to be confirmed by a person.
       This moves only when the recovery transport deliberately changes.
     */
-    expect(fromLibrary).toBe(4);
-    expect(library.studies.map((study) => study.studyId)).toEqual(["browser-ai"]);
+    // Approved addition: two source-grounded beginner paths, not restoration
+    // of the locked technical AI course. Keep the literal outside generated data.
+    expect(fromLibrary).toBe(6);
+    expect(library.studies.map((study) => study.studyId)).toEqual(["ai-literacy", "browser-ai"]);
+    expect(
+      library.studies
+        .find((study) => study.studyId === "ai-literacy")
+        ?.courses.map((course) => course.courseId),
+    ).toEqual(["understanding-ai", "ai-for-real-life"]);
     expect(
       library.studies
         .find((study) => study.studyId === "browser-ai")
@@ -107,8 +114,9 @@ describe("the 2D directory against the library the map uses", () => {
       `browser-ai` curriculum alone; `check-content-revisions` counts the same
       27 lessons across 4 courses off the studies on disk.
     */
-    expect(listing.totals.units).toBe(9);
-    expect(listing.totals.lessons).toBe(27);
+    // The new release adds 11 units / 66 lessons; the original 9 / 27 remain.
+    expect(listing.totals.units).toBe(20);
+    expect(listing.totals.lessons).toBe(93);
   });
 
   it("folds the generated shelf into the same directory read model", () => {
@@ -194,10 +202,10 @@ describe("the 2D directory against the library the map uses", () => {
       .flatMap((study) => study.courses)
       .filter((course) => course.state === "live");
     expect(live).toHaveLength(1);
-    expect(live[0]?.id).toBe("run-a-real-project-with-ai");
+    expect(live[0]?.id).toBe("understanding-ai");
     expect(listing.nextLesson).toEqual({
-      studyId: "browser-ai",
-      courseId: "run-a-real-project-with-ai",
+      studyId: "ai-literacy",
+      courseId: "understanding-ai",
       unitId: live[0]!.units[0]!.id,
       lessonId: live[0]!.units[0]!.lessons[0]!.id,
     });

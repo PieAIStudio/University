@@ -340,7 +340,7 @@ export function courseMarkers(
         truncate, and the stone you are standing on only has to say 「开始」 —
         what it is called belongs to the card that opens when you choose it.
       */
-      text: lesson.state === "live" ? "开始" : lesson.lessonTitle,
+      text: lesson.state === "live" ? translate("world.path.start") : lesson.lessonTitle,
       kind: "lesson" as const,
       label: `${lesson.lessonTitle} · ${stateLabel(lesson.state)}`,
       lessonState: lesson.state,

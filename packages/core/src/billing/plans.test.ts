@@ -1,8 +1,31 @@
 import { describe, expect, it } from "vitest";
 
-import { BILLING_CONFIG, defaultPlanOf, planById, PLANS, type Plan, type PlanId } from "./plans.js";
+import {
+  BILLING_CONFIG,
+  defaultPlanOf,
+  planById,
+  planCopyForLocale,
+  PLANS,
+  type Plan,
+  type PlanId,
+} from "./plans.js";
 
 describe("billing configuration", () => {
+  it("localizes plan copy without changing the offer or its rights", () => {
+    const member = planById("member")!;
+    expect(planCopyForLocale(member, "en-GB").name).toBe("Member");
+    expect(planCopyForLocale(member, "en").lines).toHaveLength(member.lines.length);
+    expect(planCopyForLocale(member, "zh-CN")).toBe(member);
+    expect(member.pricing).toEqual({
+      kind: "configured",
+      currency: "USD",
+      monthlyCents: 1900,
+      yearlyCents: 14900,
+    });
+    expect(planCopyForLocale({ ...member, id: "custom", locales: undefined }, "en").name).toBe(
+      member.name,
+    );
+  });
   /*
     The overseas launch has a named price now. Keep the paid plan's currency
     and both billing cycles pinned here so a future edit cannot silently turn

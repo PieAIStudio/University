@@ -2,7 +2,10 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
-import { LOCAL_ORIGIN } from "./ports.js";
+import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
+import { humanClick } from "./harness/click.js";
+import { SHIPPED_COURSES } from "./harness/catalogue.js";
+import type { ConnectActivity } from "@pieai/university-core";
 
 /*
   A lesson that declares an activity has to show it to a reader.
@@ -186,11 +189,32 @@ test("手机宽度下，每块板子上的东西都在板子里面", async ({ pa
         return style.display !== "none" && style.visibility !== "hidden";
       });
       const escapes: string[] = [];
-      const geometry: { label: string; bounds: ReturnType<DOMRect["toJSON"]> }[] = [];
+      const geometry: {
+        label: string;
+        bounds: ReturnType<DOMRect["toJSON"]>;
+        layout: Record<string, string>;
+      }[] = [];
       for (const [index, piece] of shown.entries()) {
         const rect = piece.getBoundingClientRect();
         const label = piece.textContent?.trim().slice(0, 20) || `第 ${index + 1} 个`;
-        geometry.push({ label, bounds: rect.toJSON() });
+        const style = getComputedStyle(piece);
+        geometry.push({
+          label,
+          bounds: rect.toJSON(),
+          layout: {
+            width: style.width,
+            minWidth: style.minWidth,
+            maxWidth: style.maxWidth,
+            height: style.height,
+            minHeight: style.minHeight,
+            whiteSpace: style.whiteSpace,
+            parent: piece.parentElement?.className ?? "",
+            className: piece.className,
+            position: style.position,
+            transform: style.transform,
+            translate: style.translate,
+          },
+        });
         if (rect.width === 0 || rect.height === 0) {
           escapes.push(`「${label}」宽或高为 0`);
           continue;
@@ -213,7 +237,21 @@ test("手机宽度下，每块板子上的东西都在板子里面", async ({ pa
     for (const escape of report.escapes) {
       escaped.push(`${target.kind} @ ${target.path} — ${escape}`);
     }
+    if (target.kind === "connect") {
+      await test.info().attach("connect-layout", {
+        body: JSON.stringify({ target, report }, null, 2),
+        contentType: "application/json",
+      });
+      await page.screenshot({ path: test.info().outputPath("connect-phone-page.png") });
+      await page.locator(".play-connect__board").evaluate((element) => {
+        element.scrollIntoView({ block: "start" });
+        const toolbar = document.querySelector(".lesson-toolbar");
+        window.scrollBy(0, -((toolbar?.getBoundingClientRect().height ?? 0) + 12));
+      });
+      await page.screenshot({ path: test.info().outputPath("connect-phone-board.png") });
+    }
     if (report.escapes.length) {
+      console.error(JSON.stringify({ label: "actual-lesson-board-overflow", target, report }));
       await test.info().attach(`overflow-${target.kind}`, {
         body: JSON.stringify({ target, report }, null, 2),
         contentType: "application/json",
@@ -222,4 +260,70 @@ test("手机宽度下，每块板子上的东西都在板子里面", async ({ pa
     }
   }
   expect(escaped, "手机上这些东西掉出了板子").toEqual([]);
+});
+
+test("长标签接线课在两种语言和两种模式下都能亲手完成", async ({ page }) => {
+  const candidates = SHIPPED_COURSES.flatMap((course) =>
+    course.units.flatMap((unit) =>
+      unit.lessons
+        .filter((lesson) => lesson.packageLesson.locales)
+        .flatMap((lesson) =>
+          ((lesson.packageLesson.activities ?? []) as ConnectActivity[])
+            .filter((activity) => activity.kind === "connect")
+            .map((activity) => ({
+              path: `/${course.studyId}/${course.id}/${lesson.unitId}/${lesson.id}`,
+              activity,
+            })),
+        ),
+    ),
+  );
+  expect(
+    candidates.length,
+    "a published bilingual connect task must exercise the real layout",
+  ).toBeGreaterThan(0);
+  const target = candidates[0]!;
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const origin of [ONLINE_ORIGIN, LOCAL_ORIGIN])
+    for (const language of ["en", "zh-CN"]) {
+      await page.goto(`${origin}${target.path}?lang=${language}`);
+      const board = page.locator(".play-connect__board");
+      await expect(board).toBeVisible();
+      for (const edge of target.activity.edges) {
+        await humanClick(
+          page,
+          board.locator(`[data-connect-node=${JSON.stringify(edge.from)}]`),
+          "choose source node",
+        );
+        await humanClick(
+          page,
+          board.locator(`[data-connect-node=${JSON.stringify(edge.to)}]`),
+          "choose destination node",
+        );
+      }
+      await expect(board.locator(".play-connect__wires > path")).toHaveCount(
+        target.activity.edges.length,
+      );
+      const wirePaths = await board
+        .locator(".play-connect__wires > path")
+        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("d")));
+      expect(wirePaths.join(" ")).not.toMatch(/NaN|Infinity/);
+      await humanClick(
+        page,
+        page.locator(".play-connect .play-action-row button").first(),
+        "run the learner's connections",
+      );
+      await expect(
+        page.locator('.learning-activity__result[data-result="completed"]'),
+      ).toBeVisible();
+      await expect(page.locator('.learning-activity__feedback[data-passed="true"]')).toBeVisible();
+      await page.locator(".learning-activity__feedback").scrollIntoViewIfNeeded();
+      await page.screenshot({
+        path: test
+          .info()
+          .outputPath(
+            `connect-completed-${origin === ONLINE_ORIGIN ? "delivery" : "authoring"}-${language}.png`,
+          ),
+      });
+    }
 });

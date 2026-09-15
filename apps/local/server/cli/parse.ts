@@ -25,6 +25,8 @@ type ParsedValues = {
   readonly "acknowledge-dirty-excluded"?: boolean;
   readonly takeover?: boolean;
   readonly title?: string;
+  readonly description?: string;
+  readonly "locales-file"?: string;
   readonly source?: string;
   readonly airlock?: string;
   readonly upstream?: string;
@@ -61,6 +63,7 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
       strict: true,
       options: {
         study: { type: "string" },
+        "locales-file": { type: "string" },
         input: { type: "string" },
         out: { type: "string" },
         analysis: { type: "string" },
@@ -82,6 +85,7 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         "acknowledge-dirty-excluded": { type: "boolean" },
         takeover: { type: "boolean" },
         title: { type: "string" },
+        description: { type: "string" },
         source: { type: "string" },
         airlock: { type: "string" },
         upstream: { type: "string" },
@@ -178,7 +182,7 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         kind: "course-recovery-import",
         studyId: required(values.study, "study"),
         inputDirectory: required(values.input, "input"),
-        sourceRoot: required(values.source, "source"),
+        ...(values.source ? { sourceRoot: values.source } : {}),
         dryRun: values["dry-run"] ?? false,
       };
     }
@@ -208,7 +212,7 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
         kind: "course-reactivate",
         studyId: required(values.study, "study"),
         courseId: required(values.course, "course"),
-        snapshotId: required(values.snapshot, "snapshot"),
+        ...(values.snapshot ? { snapshotId: values.snapshot } : {}),
         ...(values.analysis ? { analysisId: values.analysis } : {}),
       };
     }
@@ -369,12 +373,21 @@ export function parseUniversityLocalCli(argv: readonly string[]): UniversityLoca
       studyId: required(values.study, "study"),
     };
   }
+  if (positionals.length === 2 && positionals[0] === "study" && positionals[1] === "describe") {
+    rejectUnrelatedOptions(values, ["study", "description"]);
+    return {
+      kind: "study-describe",
+      studyId: required(values.study, "study"),
+      description: required(values.description, "description"),
+    };
+  }
   if (positionals.length === 2 && positionals[0] === "study" && positionals[1] === "create") {
-    rejectUnrelatedOptions(values, ["study", "title", "source", "ref"]);
+    rejectUnrelatedOptions(values, ["study", "title", "source", "ref", "locales-file"]);
     return {
       kind: "study-create",
       studyId: required(values.study, "study"),
       title: required(values.title, "title"),
+      ...(values["locales-file"] ? { localesPath: values["locales-file"] } : {}),
       /*
         Optional, and its absence is a statement: a study with no `--source` is
         a general study, whose lessons cite public authorities instead of a

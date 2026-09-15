@@ -1,0 +1,23 @@
+/* Match the actual application reset in src/styles.css. Without it, this
+   standalone fixture gives 100%-wide shared fields extra content-box padding. */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--game-ui-bg);
+  color: var(--game-ui-text);
+  font-family: var(--game-ui-font-body, system-ui);
+}
+
+.account-feedback-fixture {
+  max-width: 480px;
+  margin: 24px auto;
+  padding: 16px;
+}
+
+.account-feedback-fixture > p {
+  color: var(--game-ui-text-muted);
+  line-height: 1.6;
+}

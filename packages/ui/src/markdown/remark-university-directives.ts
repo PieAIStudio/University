@@ -1,10 +1,11 @@
 import type { Root } from "mdast";
-import { visit } from "unist-util-visit";
+import type { Node } from "unist";
+import { SKIP, visit } from "unist-util-visit";
 
 const ALLOWED = new Set(["detail", "figure", "video", "play"]);
 
-interface DirectiveNode {
-  readonly type: "containerDirective" | "leafDirective";
+interface DirectiveNode extends Node {
+  readonly type: "containerDirective" | "leafDirective" | "textDirective";
   readonly name?: string;
   readonly attributes?: Record<string, string | null>;
   children?: DirectiveChild[];
@@ -27,19 +28,43 @@ function textOf(node: DirectiveChild): string {
 
 /**
  * Maps remark-directive's small authoring vocabulary to inert custom elements.
- * No raw HTML plugin is enabled: a lesson can only create the three components
+ * No raw HTML plugin is enabled: a lesson can only create the four components
  * the reader knows how to render, with attributes copied one by one.
  */
 export function remarkUniversityDirectives() {
-  return (tree: Root): void => {
+  return (tree: Root, file: { toString(): string }): void => {
+    const source = String(file);
     visit(
       tree,
       (node) => {
         const candidate = node as Partial<DirectiveNode>;
-        return candidate.type === "containerDirective" || candidate.type === "leafDirective";
+        return (
+          candidate.type === "containerDirective" ||
+          candidate.type === "leafDirective" ||
+          candidate.type === "textDirective"
+        );
       },
-      (node) => {
+      (node, index, parent) => {
         const directive = node as unknown as DirectiveNode;
+        // This teaching vocabulary has block directives only. remark-directive
+        // also parses the :00 in 10:00 and the :9 in 16:9 as inline directives.
+        // Leaving those unhandled silently removes the digits and emits a div
+        // inside a paragraph. Restore their exact source as inert prose instead.
+        if (directive.type === "textDirective") {
+          if (parent && index !== undefined) {
+            const start = directive.position?.start.offset;
+            const end = directive.position?.end.offset;
+            parent.children[index] = {
+              type: "text",
+              value:
+                start !== undefined && end !== undefined
+                  ? source.slice(start, end)
+                  : `:${directive.name ?? ""}${(directive.children ?? []).map(textOf).join("")}`,
+              ...(directive.position ? { position: directive.position } : {}),
+            };
+          }
+          return SKIP;
+        }
         const name = directive.name ?? "unknown";
         const attributes = directive.attributes ?? {};
         const properties: Record<string, string> = {};

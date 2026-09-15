@@ -1,5 +1,8 @@
 import type { Page, Route } from "@playwright/test";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { islandThemeSelectionForCourse } from "../../packages/world/src/island/kenney-recipes.js";
+import { terrainCraftCoverage } from "./terrain-craft.js";
 
 type JsonObject = { [key: string]: unknown };
 
@@ -311,12 +314,57 @@ function studyOf(course: ShippedCourse): ShippedStudy {
 
 const settlementCourse = requireCourse(
   (course) =>
-    course.prerequisiteCourseIds.length === 0 && course.units[0]?.lessons[0]?.exerciseCount > 0,
-  "an unlocked course with a graded opening lesson",
+    course.prerequisiteCourseIds.length === 0 &&
+    course.units[0]?.lessons[0]?.exerciseCount === 1 &&
+    !course.units[0]?.lessons[0]?.firstExerciseIsUndecided,
+  "an unlocked course with one deterministically graded opening exercise",
 );
 const settlementStudy = studyOf(settlementCourse);
 const settlementLesson = settlementCourse.units.flatMap((unit) => unit.lessons)[0];
 if (!settlementLesson) throw new Error("e2e catalogue: settlement course has no lesson");
+
+/** Test input from the matching author-owned release, never from a learner's
+ * data or a mocked grading response. Changing the first published course must
+ * change its answer too. The browser still submits through the real grader. */
+export function shippedShortAnswer(course: ShippedCourse, lesson: ShippedLesson): string {
+  const root = `apps/local/course-proposals/recovery/${course.studyId}`;
+  const index = readJson(`${root}/index.json`);
+  const entry = arrayOf(index.courses, "recovery courses")
+    .map((item) => objectOf(item, "recovery entry"))
+    .find((item) => item.courseId === course.id);
+  if (!entry)
+    throw new Error(`e2e catalogue: missing recovery for ${courseKey(course.studyId, course.id)}`);
+  const file = stringOf(entry.file, "recovery file");
+  if (!/^[a-z0-9-]+\.[a-f0-9]{64}\.recovery\.json$/u.test(file)) {
+    throw new Error("e2e catalogue: invalid recovery filename");
+  }
+  const bytes = readFileSync(`${root}/${file}`);
+  const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+  const study = importedStudies.find((item) => item.studyId === course.studyId)!;
+  const manifest = arrayOf(study.courses, "manifest courses")
+    .map((item) => objectOf(item, "manifest course"))
+    .find((item) => item.courseId === course.id);
+  if (digest !== entry.sha256 || digest !== manifest?.sha256) {
+    throw new Error("e2e catalogue: recovery does not match the shipped course hash");
+  }
+  const recovery = objectOf(JSON.parse(bytes.toString("utf8")), "recovery");
+  const source = objectOf(recovery.course, "recovery course");
+  const unit = arrayOf(source.units, "recovery units")
+    .map((item) => objectOf(item, "recovery unit"))
+    .find((item) => item.id === lesson.unitId);
+  const original = arrayOf(unit?.lessons, "recovery lessons")
+    .map((item) => objectOf(item, "recovery lesson"))
+    .find((item) => item.id === lesson.id);
+  if (!original || original.contentRevision !== lesson.packageLesson.contentRevision) {
+    throw new Error("e2e catalogue: recovery lesson revision mismatch");
+  }
+  const exercises = arrayOf(original.exercises, "recovery exercises");
+  const exercise = objectOf(exercises[0], "recovery exercise");
+  if (exercises.length !== 1 || exercise.kind !== "short-answer") {
+    throw new Error("e2e catalogue: settlement needs one short-answer exercise");
+  }
+  return stringOf(exercise.expectedAnswer, "authored expected answer");
+}
 
 const prerequisiteCourse = requireCourse(
   (course) => course.prerequisiteCourseIds.length > 0,
@@ -340,12 +388,10 @@ const skipTestPrerequisite = requireCourse(
     course.id === skipTestCourse.prerequisiteCourseIds[0],
   "the first prerequisite of the skip-test course",
 );
-const alternateCourse =
-  [...SHIPPED_COURSES]
-    .reverse()
-    .find(
-      (course) => course.id !== settlementCourse.id || course.studyId !== settlementCourse.studyId,
-    ) ?? settlementCourse;
+const alternateCourse = requireCourse(
+  (course) => course.studyId === settlementCourse.studyId && course.id !== settlementCourse.id,
+  "a second real course in the settlement study for world-map travel",
+);
 const longestCourse = [...SHIPPED_COURSES].sort(
   (left, right) => right.lessonCount - left.lessonCount,
 )[0];
@@ -417,7 +463,7 @@ export const CATALOGUE_ROLES = {
     study: settlementStudy,
     course: settlementCourse,
     lesson: settlementLesson,
-    answer: "会动手的",
+    answer: shippedShortAnswer(settlementCourse, settlementLesson),
   },
   prerequisiteCourse: {
     study: studyOf(prerequisiteCourse),
@@ -572,17 +618,24 @@ export interface TerrainLengthFixture {
   readonly course: ShippedCourse;
 }
 
-// The current shelf has no long course, and none of its hashed recipes carries
-// the crafted R01 scenery that the original terrain contract observes. Use a
-// test-only identity whose stable recipe bucket is R01; its prose and summary
-// still come from a shipped course, and the synthetic identity never enters the
-// real catalogue.
-const TERRAIN_FIXTURE_COURSE_ID = "e2e-terrain-8";
-const terrainFixtureCourse = (source: ShippedCourse): ShippedCourse => ({
-  ...source,
-  id: TERRAIN_FIXTURE_COURSE_ID,
-  shelfCourse: { ...clone(source.shelfCourse), id: TERRAIN_FIXTURE_COURSE_ID },
-});
+// Terrain contracts deliberately exercise R01 at fixed structural lengths.
+// Recipe identity includes BOTH study and course: hard-coding e2e-terrain-8
+// silently changed the recipe when the new first study arrived. Choose a
+// bounded deterministic test-only identity using the actual recipe selector.
+// Real-course acceptance remains W/X/shared-landscape, not these shaped inputs.
+const terrainFixtureCourse = (source: ShippedCourse): ShippedCourse => {
+  const id = Array.from({ length: 128 }, (_, index) => `e2e-terrain-${index}`).find((candidate) => {
+    if (islandThemeSelectionForCourse(source.studyId, candidate).recipeId !== "R01-forest-academy")
+      return false;
+    const coverage = terrainCraftCoverage(source.studyId, candidate);
+    return coverage.stalls > 0 && coverage.academies > 0;
+  });
+  if (!id)
+    throw new Error(
+      `e2e terrain: no R01 specimen with grounded stall and academy found for ${source.studyId}`,
+    );
+  return { ...source, id, shelfCourse: { ...clone(source.shelfCourse), id } };
+};
 const shortTerrainSource = CATALOGUE_ROLES.settlement.course;
 const longTerrainSource = CATALOGUE_ROLES.longestCourse.course;
 

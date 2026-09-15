@@ -101,6 +101,7 @@ const ALLOWLIST: Record<AnalyticsEventName, readonly string[]> = {
 interface PostHogLike {
   capture: (name: string, properties?: Record<string, unknown>) => void;
   identify?: (distinctId: string) => void;
+  reset?: (resetDeviceId?: boolean) => void;
 }
 
 let client: PostHogLike | null = null;
@@ -110,8 +111,21 @@ const MAX_PENDING = 24;
 let pendingIdentityId: string | null = null;
 let identifiedUserId: string | null = null;
 
+function clearIdentity(): void {
+  if (!identifiedUserId && !pendingIdentityId) return;
+  identifiedUserId = null;
+  pendingIdentityId = null;
+  pending.length = 0;
+  try {
+    client?.reset?.(true);
+  } catch {
+    // A measurement failure must not interrupt logout or account switching.
+  }
+}
+
 function identifyUser(userId: string): void {
   if (!userId || (identifiedUserId === userId && pendingIdentityId === null)) return;
+  if (identifiedUserId && identifiedUserId !== userId) clearIdentity();
   identifiedUserId = userId;
   if (!client) {
     if (state !== "disabled") pendingIdentityId = userId;
@@ -128,7 +142,46 @@ function identifyUser(userId: string): void {
 function identifyStatus(status: IdentityStatus): void {
   if (status.kind === "anonymous" || status.kind === "signed_in") {
     identifyUser(status.user.id);
+  } else if (status.kind !== "pending") {
+    clearIdentity();
   }
+}
+
+// The SDK adds properties after trackEvent. Filter at its final send boundary
+// as well: an auth callback URL or nested initial referrer is not learner data.
+const TRANSPORT_PROPERTIES = new Set([
+  "token",
+  "distinct_id",
+  "$device_id",
+  "$user_id",
+  "$session_id",
+  "$window_id",
+  "$is_identified",
+  "$anon_distinct_id",
+  "$process_person_profile",
+  "$lib",
+  "$lib_version",
+  "product",
+  "surface",
+]);
+
+function boundedEvent<T extends { event: string; properties: Record<string, unknown> }>(
+  event: T | null,
+): T | null {
+  if (!event) return null;
+  const allowed = ALLOWLIST[event.event as AnalyticsEventName];
+  if (!allowed && event.event !== "$identify") return null;
+  const keys = new Set([...TRANSPORT_PROPERTIES, ...(allowed ?? [])]);
+  const properties: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(event.properties)) {
+    if (
+      keys.has(key) &&
+      (value === null || ["string", "number", "boolean"].includes(typeof value))
+    ) {
+      properties[key] = value;
+    }
+  }
+  return { ...event, properties };
 }
 
 function flushPendingIdentity(): void {
@@ -162,8 +215,13 @@ export async function initProductAnalytics(): Promise<void> {
     posthog.init(key, {
       api_host: import.meta.env.VITE_POSTHOG_HOST?.trim() || "https://us.i.posthog.com",
       autocapture: false,
-      capture_pageview: true,
+      capture_pageview: false,
+      capture_pageleave: false,
+      capture_dead_clicks: false,
+      capture_performance: false,
+      disable_surveys: true,
       disable_session_recording: true,
+      before_send: boundedEvent,
       persistence: "localStorage",
       loaded: (ph) => {
         ph.register({

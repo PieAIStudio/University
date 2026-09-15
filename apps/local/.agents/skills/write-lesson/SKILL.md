@@ -171,7 +171,7 @@ that catches it; **judgment** means nothing catches it but a reader.
 15. *(judgment; rule 28 only checks the file exists)* **Every picture must
     survive the delete test**: remove it, add one sentence
     — is the reader worse off? Decorative images buy affection, not
-    understanding. Max 3 per lesson, never taken off the web, never AI-generated
+    understanding. Max 3 per lesson, never copied without reuse rights, never AI-generated
     where a real capture would do. See
     [references/media.md](references/media.md).
 

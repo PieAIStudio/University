@@ -108,6 +108,7 @@ describe("map domain catalogue", () => {
     expect(mapDomainForStudy("browser-ai").id).toBe("programming");
     expect(mapDomainForStudy("turing-pact").id).toBe("ai-games");
     expect(mapDomainForStudy("ai-foundations").id).toBe("ai-foundations");
+    expect(mapDomainForStudy("ai-literacy").id).toBe("ai-foundations");
     for (const retired of ["buzz", "supaluv"]) {
       expect(mapDomainForStudy(retired).id).toBe("unclassified");
     }

@@ -3,14 +3,24 @@ import { z } from "zod";
 import {
   EvidenceReferenceSchema,
   LessonActivitySchema,
+  LessonAssetSchema,
+  LessonSectionSchema,
   LessonVariantSchema,
   StableId,
+  LocaleMap,
+  LocalizedCardSchema,
+  LocalizedExerciseSchema,
+  LocalizedLessonSchema,
 } from "@pieai/university-core/domain/schemas.js";
 import {
   writeCardRevision,
   writeExerciseRevision,
   writeLessonRevision,
 } from "../content/repository.js";
+import {
+  LessonAssetFileProposalSchema,
+  validateLessonAssetInputs,
+} from "../content/asset-input.js";
 import { validateTargetEvidence, type TargetIdentity } from "./revise-course.js";
 
 /**
@@ -30,6 +40,7 @@ const CardCreationProposalSchema = z
     back: z.string().min(1).max(20_000),
     tags: z.array(StableId).optional(),
     evidence: z.array(EvidenceReferenceSchema).min(1),
+    locales: LocaleMap(LocalizedCardSchema),
   })
   .strict();
 
@@ -38,6 +49,7 @@ const ExerciseCreationBaseSchema = z.object({
   title: z.string().min(1).max(200),
   prompt: z.string().min(1).max(20_000),
   evidence: z.array(EvidenceReferenceSchema).min(1),
+  locales: LocaleMap(LocalizedExerciseSchema),
 });
 
 const ExerciseCreationProposalSchema = z.union([
@@ -56,6 +68,7 @@ export const LessonCreationProposalSchema = z
     id: StableId,
     title: z.string().min(1).max(200),
     content: z.string().min(1),
+    locales: LocaleMap(LocalizedLessonSchema),
     /**
      * Which of the five teaching shapes this lesson is written in.
      *
@@ -79,9 +92,8 @@ export const LessonCreationProposalSchema = z
      * purpose was to carry it, which means a brand-new lesson's revision 1 was
      * guaranteed to be a version of itself with the game missing.
      *
-     * `sections` and `assets` are still in that state. They are left alone here
-     * rather than fixed on the way past, because nobody has yet needed to be
-     * born with one and a fix nobody exercises is a fix nobody has checked.
+     * Real-world lessons can now be born with licensed images and translated
+     * copy. They use the same atomic writer and byte checks as later revisions.
      *
      * ## Required, not defaulted
      *
@@ -103,6 +115,9 @@ export const LessonCreationProposalSchema = z
      * `lint-lessons.mjs` is where those are counted, behind a dated cutoff.
      */
     activities: z.array(LessonActivitySchema).min(1).max(3),
+    assets: z.array(LessonAssetSchema).max(3).optional(),
+    assetFiles: z.array(LessonAssetFileProposalSchema).max(3).optional(),
+    sections: z.array(LessonSectionSchema).max(100).optional(),
     evidence: z.array(EvidenceReferenceSchema).min(1),
     cards: z.array(CardCreationProposalSchema).default([]),
     exercises: z.array(ExerciseCreationProposalSchema).default([]),
@@ -169,6 +184,12 @@ export function validateLessonEvidence(
   /** Null in a study with no repository; only URL citations survive then. */
   target: TargetIdentity | null,
 ): void {
+  validateLessonAssetInputs(lesson.assets ?? [], lesson.assetFiles ?? []);
+  for (const asset of lesson.assets ?? []) {
+    if (asset.capture && (!target || asset.capture.sourceCommit !== target.sourceCommit)) {
+      throw new Error(`Lesson asset capture does not match its source snapshot: ${asset.id}`);
+    }
+  }
   validateTargetEvidence(studiesRoot, studyId, lesson.evidence, target, `Lesson ${lesson.id}`);
   for (const card of lesson.cards) {
     validateTargetEvidence(studiesRoot, studyId, card.evidence, target, `Card ${card.id}`);
@@ -206,6 +227,7 @@ export function writeLessonBundle(input: WriteLessonBundleInput): LessonProposal
       schemaVersion: 1,
       id: lesson.id,
       title: lesson.title,
+      ...(lesson.locales ? { locales: lesson.locales } : {}),
       courseId,
       unitId,
       exerciseIds: lesson.exercises.map((exercise) => exercise.id),
@@ -214,11 +236,14 @@ export function writeLessonBundle(input: WriteLessonBundleInput): LessonProposal
       status: "active",
       ...(lesson.variant ? { variant: lesson.variant } : {}),
       activities: lesson.activities,
+      ...(lesson.assets ? { assets: lesson.assets } : {}),
+      ...(lesson.sections ? { sections: lesson.sections } : {}),
       evidence: lesson.evidence,
       createdAt: timestamp,
       updatedAt: timestamp,
     },
     content: lesson.content,
+    ...(lesson.assetFiles ? { assetFiles: lesson.assetFiles } : {}),
   });
   for (const card of lesson.cards) {
     writeCardRevision(studiesRoot, studyId, {
@@ -234,6 +259,7 @@ export function writeLessonBundle(input: WriteLessonBundleInput): LessonProposal
       status: "active",
       tags: card.tags ?? [],
       evidence: card.evidence,
+      ...(card.locales ? { locales: card.locales } : {}),
     });
   }
   for (const exercise of lesson.exercises) {
@@ -248,6 +274,7 @@ export function writeLessonBundle(input: WriteLessonBundleInput): LessonProposal
       contentRevision: 1,
       status: "active" as const,
       evidence: exercise.evidence,
+      ...(exercise.locales ? { locales: exercise.locales } : {}),
     };
     writeExerciseRevision(
       studiesRoot,

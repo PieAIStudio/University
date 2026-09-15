@@ -45,6 +45,41 @@ function record(value: unknown): Record<string, unknown> {
 }
 
 describe("UniversityLocal CLI parser", () => {
+  it("describes an existing study through the content owner without accepting unrelated options", async () => {
+    const { projectRoot, studiesRoot } = setupCliStudy();
+    const command = parseUniversityLocalCli([
+      "study",
+      "describe",
+      "--study",
+      STUDY_ID,
+      "--description",
+      "真实材料上的小白路线",
+    ]);
+    expect(command).toEqual({
+      kind: "study-describe",
+      studyId: STUDY_ID,
+      description: "真实材料上的小白路线",
+    });
+    const result = await executeUniversityLocalCli({ projectRoot, command });
+    expect(result).toMatchObject({
+      operation: "study-describe",
+      study: { id: STUDY_ID, description: "真实材料上的小白路线", status: "active" },
+    });
+    expect(existsSync(getStudyPaths(studiesRoot, STUDY_ID).learner.database)).toBe(false);
+    expect(() =>
+      parseUniversityLocalCli([
+        "study",
+        "describe",
+        "--study",
+        STUDY_ID,
+        "--description",
+        "text",
+        "--source",
+        "/not-a-source",
+      ]),
+    ).toThrow();
+  });
+
   it.each([
     [["status", "--study", "supaluv"], { kind: "status", studyId: "supaluv" }],
     [
@@ -314,16 +349,19 @@ describe("UniversityLocal CLI parser", () => {
         "git-aaaaaaaaaaaa",
       ]),
     ).toThrow(/does not belong/);
-    expect(() =>
+  });
+
+  it("parses no-snapshot reactivation while leaving the source-kind guard to execution", () => {
+    expect(
       parseUniversityLocalCli([
         "course",
         "reactivate",
         "--study",
-        "supaluv",
+        "public-sources",
         "--course",
-        "founder-engineer",
+        "first-steps",
       ]),
-    ).toThrow(/--snapshot/);
+    ).toEqual({ kind: "course-reactivate", studyId: "public-sources", courseId: "first-steps" });
   });
 
   it("returns a non-zero beginner-readable error without throwing from main", async () => {

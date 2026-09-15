@@ -5,6 +5,8 @@
  * browser beside the on/off switch rather than in the learner database.
  */
 
+import { translate } from "../i18n/index.js";
+
 /** How an annotated word is marked in the prose. */
 export type WordMarkStyle = "underline" | "marker" | "plain";
 
@@ -79,15 +81,27 @@ export const FOREIGN_PRESETS: Readonly<Record<Exclude<ForeignPreset, "custom">, 
   };
 
 export const PRESET_LABELS: Readonly<Record<Exclude<ForeignPreset, "custom">, string>> = {
-  read: "顺读",
-  pronounce: "发音",
-  remember: "记忆",
+  get read() {
+    return translate("reading.preset.read");
+  },
+  get pronounce() {
+    return translate("reading.preset.pronounce");
+  },
+  get remember() {
+    return translate("reading.preset.remember");
+  },
 };
 
 export const PRESET_HINTS: Readonly<Record<Exclude<ForeignPreset, "custom">, string>> = {
-  read: "中文并排显示，看一眼就过，不打断你读",
-  pronounce: "加音标和朗读，读到哪儿能听到哪儿",
-  remember: "只显示英文，意思要点开才给——先想一下，才记得住",
+  get read() {
+    return translate("reading.preset.readHint");
+  },
+  get pronounce() {
+    return translate("reading.preset.pronounceHint");
+  },
+  get remember() {
+    return translate("reading.preset.rememberHint");
+  },
 };
 
 const SETTINGS_KEY = "university-local.foreign-settings";

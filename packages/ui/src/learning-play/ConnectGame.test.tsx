@@ -70,6 +70,20 @@ describe("connect board height", () => {
 });
 
 describe("connect first visible layout", () => {
+  it("spaces phone rows using the tallest wrapped label, not only the first node", () => {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(261);
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(300);
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(112);
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(
+      function (this: HTMLElement) {
+        return this.getAttribute("aria-label") === "节点 1" ? 220 : 88;
+      },
+    );
+    const element = render(board([25, 25, 75, 75]));
+    expect(element.dataset.compact).toBe("true");
+    expect(Number.parseFloat(element.style.height)).toBeGreaterThanOrEqual(2 * (220 + 28));
+  });
+
   it("uses the measured phone width before ResizeObserver's first notification", () => {
     vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(261);
     vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(300);

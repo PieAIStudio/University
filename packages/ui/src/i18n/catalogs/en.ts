@@ -1,4 +1,10 @@
+import { messages as gradingCopy } from "./grading-copy.en.js";
+import { messages as worldNavigation } from "./world-navigation.en.js";
+import { messages as readingSettings } from "./reading-settings.en.js";
 import { messages as productWelcome } from "./product-welcome.en.js";
+import { messages as coreMessages } from "./en-core.js";
+import { messages as realitySources } from "./reality-sources.en.js";
+import { messages as accountFailures } from "./account-failures.en.js";
 import { messages as productNavigation } from "./product-navigation.en.js";
 import { messages as productBilling } from "./product-billing.en.js";
 import { messages as productSave } from "./product-save.en.js";
@@ -18,11 +24,19 @@ import { messages as learningPlayMessages } from "./learning-play.en.js";
 import type { MessageCatalog } from "../types.js";
 
 /**
- * Translation scaffold only. An incomplete locale is intentionally not
- * selectable; keeping this file empty makes the work still visible to the
- * completeness gate without showing a half-translated product.
+ * The complete English learner interface. Completeness is checked against
+ * the source catalog; authoring-only terminology lives in the same catalog
+ * so switching modes does not silently switch language.
  */
 export const messages = {
+  ...worldNavigation,
+  ...readingSettings,
+  ...gradingCopy,
+  ...accountFailures,
+  "locale.zhCN.nativeName": "简体中文",
+  ...coreMessages,
+  "product.settings.interfaceLanguage": "Interface language",
+  ...realitySources,
   ...productWelcome,
   ...productNavigation,
   ...productBilling,

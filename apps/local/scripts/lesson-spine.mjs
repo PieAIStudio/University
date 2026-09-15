@@ -7,6 +7,17 @@ export const LESSON_VARIANTS = {
   术语: { openCount: 1, middleCount: 2, boundary: "它不是什么" },
 };
 
+/** Keep the words a reader sees, not the length of a source's hidden URL.
+ * A source URL must neither require filler in the main text nor stand in for
+ * a detailed explanation. Visible autolinks deliberately remain visible text.
+ */
+export function lessonProseWithoutLinkDestinations(text) {
+  return text.replace(
+    /\[([^\]\n]+)\]\((?:<https?:\/\/[^>\n]+>|https?:\/\/(?:[^()\s]|\([^()\s]*\))+)(?:\s+"[^"\n]*")?\)/g,
+    "$1",
+  );
+}
+
 export function stripLessonCode(text) {
   return text
     .replace(/^[ \t]*(`{3,}|~{3,})[\s\S]*?^[ \t]*\1[ \t]*$/gm, (block) =>

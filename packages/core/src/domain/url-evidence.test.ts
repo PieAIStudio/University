@@ -19,6 +19,68 @@ function messages(value: unknown): string {
 }
 
 describe("URL evidence", () => {
+  const realWorld = {
+    kind: "fact" as const,
+    sourceUrl: "https://www.bemyeyes.com/blog/introducing-be-my-ai/",
+    sourceTitle: "Introducing: Be My AI",
+    sourceAuthority: "first-party" as const,
+    provenance: {
+      type: "case-study" as const,
+      publisher: "Be My Eyes",
+      publishedOn: "2023-08-07",
+      accessedOn: "2026-09-14",
+      locator: "How to Use Be My AI",
+      supports: "The provider describes image questions and a route to a human volunteer.",
+      limitations: "A provider announcement, not an independent accuracy measurement.",
+    },
+  };
+
+  it("keeps a real-world source and its claim boundary without inventing a repository", () => {
+    const parsed = EvidenceReferenceSchema.parse(realWorld);
+    expect(parsed).toEqual(realWorld);
+    expect(isRepositoryEvidence(parsed)).toBe(false);
+  });
+
+  it("requires a claim-specific provenance record for the new source authorities", () => {
+    const { provenance: _provenance, ...missing } = realWorld;
+    expect(EvidenceReferenceSchema.safeParse(missing).success).toBe(false);
+    expect(
+      EvidenceReferenceSchema.safeParse({
+        ...realWorld,
+        provenance: { ...realWorld.provenance, supports: " " },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("does not accept an impossible publication date or a made-up source category", () => {
+    for (const change of [{ publishedOn: "2025-02-30" }, { type: "verified-by-ai" }]) {
+      expect(
+        EvidenceReferenceSchema.safeParse({
+          ...realWorld,
+          provenance: { ...realWorld.provenance, ...change },
+        }).success,
+      ).toBe(false);
+    }
+  });
+
+  it("allows an honestly undated source while requiring when it was inspected", () => {
+    const { publishedOn: _publishedOn, ...undated } = realWorld.provenance;
+    expect(EvidenceReferenceSchema.safeParse({ ...realWorld, provenance: undated }).success).toBe(
+      true,
+    );
+    const { accessedOn: _accessedOn, ...notInspected } = undated;
+    expect(
+      EvidenceReferenceSchema.safeParse({ ...realWorld, provenance: notInspected }).success,
+    ).toBe(false);
+  });
+
+  it.each([
+    "https://person:secret@developer.mozilla.org/en-US/docs/Web/HTML",
+    "https://developer.mozilla.org:8443/en-US/docs/Web/HTML",
+  ])("rejects credentials or an unexpected network service in a source URL: %s", (sourceUrl) => {
+    expect(EvidenceReferenceSchema.safeParse({ ...mdn, sourceUrl }).success).toBe(false);
+  });
+
   it("accepts an https MDN citation", () => {
     const parsed = EvidenceReferenceSchema.parse(mdn);
     expect("sourceUrl" in parsed).toBe(true);

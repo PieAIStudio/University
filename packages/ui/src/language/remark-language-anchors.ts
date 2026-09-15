@@ -1,4 +1,5 @@
 import type { Root, Text } from "mdast";
+import type { Node } from "unist";
 import { visit } from "unist-util-visit";
 
 import type { LanguageRange } from "@pieai/university-core/domain/lesson-marks.js";
@@ -18,7 +19,7 @@ import { mergeAdjacentTextNodes } from "@pieai/university-core/domain/merge-text
  */
 const WORD_ANCHOR_TAG = "word-anchor";
 
-interface LanguageAnchorNode {
+interface LanguageAnchorNode extends Node {
   readonly type: "languageAnchor";
   readonly value: string;
   readonly senseId: string;

@@ -19,6 +19,13 @@ import { z } from "zod";
 
 import {
   CourseCurrency,
+  LocaleMap,
+  LocalizedStudySchema,
+  LocalizedCourseSchema,
+  LocalizedUnitSchema,
+  LocalizedLessonSchema,
+  LocalizedCardSchema,
+  LocalizedExerciseSchema,
   EvidenceReferenceSchema,
   LessonActivitySchema,
   LessonAssetSchema,
@@ -48,7 +55,7 @@ import {
   writeCardRevision,
   writeCourse,
   writeExerciseRevision,
-  writeLessonRevision,
+  restorePublishedLessonRevision,
   writeUnit,
 } from "../content/repository.js";
 import { gitBuffer, gitText } from "../git/run.js";
@@ -106,6 +113,7 @@ const RecoveryCardSchema = z
     id: StableId,
     kind: z.enum(["basic", "cloze"]),
     front: z.string().min(1).max(20_000),
+    locales: LocaleMap(LocalizedCardSchema),
     back: z.string().min(1).max(20_000),
     tags: z.array(StableId).default([]),
     evidence: z.array(SourceOnlyEvidenceSchema).min(1),
@@ -119,6 +127,7 @@ const RecoveryExerciseSchema = z.discriminatedUnion("kind", [
       kind: z.literal("short-answer"),
       title: z.string().min(1).max(200),
       prompt: z.string().min(1).max(20_000),
+      locales: LocaleMap(LocalizedExerciseSchema),
       expectedAnswer: z.string().min(1),
       evidence: z.array(SourceOnlyEvidenceSchema).min(1),
     })
@@ -129,6 +138,7 @@ const RecoveryExerciseSchema = z.discriminatedUnion("kind", [
       kind: z.literal("explain"),
       title: z.string().min(1).max(200),
       prompt: z.string().min(1).max(20_000),
+      locales: LocaleMap(LocalizedExerciseSchema),
       rubric: z.array(z.string().min(1)).min(1),
       evidence: z.array(SourceOnlyEvidenceSchema).min(1),
     })
@@ -140,6 +150,7 @@ const RecoveryLessonSchema = z
     id: StableId,
     title: z.string().min(1).max(200),
     content: z.string().min(1),
+    locales: LocaleMap(LocalizedLessonSchema),
     contentRevision: z.number().int().positive(),
     sections: z.array(LessonSectionSchema).max(100).default([]),
     variant: LessonVariantSchema.optional(),
@@ -171,6 +182,7 @@ const RecoveryUnitSchema = z
     id: StableId,
     title: z.string().min(1).max(200),
     objective: z.string().min(1).max(1_000),
+    locales: LocaleMap(LocalizedUnitSchema),
     prerequisiteUnitIds: z.array(StableId).default([]),
     lessons: z.array(RecoveryLessonSchema).min(1),
   })
@@ -189,6 +201,7 @@ const CourseRecoveryPackageSchema = z
         description: z.string().max(2_000).default(""),
         audience: z.string().min(1).max(500),
         objectives: z.array(z.string().min(1).max(500)).min(1),
+        locales: LocaleMap(LocalizedCourseSchema),
         currency: CourseCurrency,
         prerequisiteCourseIds: z.array(StableId).default([]),
         // Optional with a null default so a package written before tracks
@@ -223,6 +236,7 @@ const CourseRecoveryIndexSchema = z
         title: z.string().min(1).max(160),
         description: z.string().max(2_000).default(""),
         goals: z.array(z.string().min(1).max(500)).default([]),
+        locales: LocaleMap(LocalizedStudySchema),
         defaultCourseId: StableId.nullable(),
         status: z.enum(["active", "archived"]),
       })
@@ -268,7 +282,7 @@ interface ImportCourseRecoveryInput {
   readonly studiesRoot: string;
   readonly studyId: string;
   readonly inputDirectory: string;
-  readonly sourceRoot: string;
+  readonly sourceRoot?: string;
   readonly dryRun?: boolean;
 }
 
@@ -425,11 +439,12 @@ function portableAssetMetadata(asset: LessonAsset, registeredSourceRoot: string)
   });
 }
 
-function runtimeAssetMetadata(asset: LessonAsset, sourceRoot: string): LessonAsset {
+function runtimeAssetMetadata(asset: LessonAsset, sourceRoot: string | null): LessonAsset {
   if (asset.capture === undefined) return asset;
   const route = asset.capture.route;
   validatePortableCaptureRoute(route);
   if (!route.startsWith(FILE_MANAGER_ROUTE_PREFIX)) return asset;
+  if (!sourceRoot) throw new Error("A repository capture requires its real source root");
   const portablePrefix = `${PORTABLE_SOURCE_ROOT_ROUTE}/`;
   const restoredRoute =
     route === PORTABLE_SOURCE_ROOT_ROUTE
@@ -468,6 +483,7 @@ function serializeCourse(
     return {
       id: unit.id,
       title: unit.title,
+      ...(unit.locales ? { locales: unit.locales } : {}),
       objective: unit.objective,
       prerequisiteUnitIds: unit.prerequisiteUnitIds,
       lessons: unit.lessonIds.map((lessonId) => {
@@ -491,6 +507,7 @@ function serializeCourse(
             id: card.id,
             kind: card.kind,
             front: card.front,
+            ...(card.locales ? { locales: card.locales } : {}),
             back: card.back,
             tags: card.tags,
             evidence: card.evidence.map(sourceOnlyEvidence),
@@ -515,6 +532,7 @@ function serializeCourse(
                 kind: exercise.kind,
                 title: exercise.title,
                 prompt: exercise.prompt,
+                ...(exercise.locales ? { locales: exercise.locales } : {}),
                 expectedAnswer: exercise.expectedAnswer,
                 evidence: exercise.evidence.map(sourceOnlyEvidence),
               }
@@ -523,6 +541,7 @@ function serializeCourse(
                 kind: exercise.kind,
                 title: exercise.title,
                 prompt: exercise.prompt,
+                ...(exercise.locales ? { locales: exercise.locales } : {}),
                 rubric: exercise.rubric,
                 evidence: exercise.evidence.map(sourceOnlyEvidence),
               };
@@ -530,19 +549,22 @@ function serializeCourse(
         return {
           id: lesson.manifest.id,
           title: lesson.manifest.title,
+          ...(lesson.manifest.locales ? { locales: lesson.manifest.locales } : {}),
           content: lesson.content,
           contentRevision: lesson.manifest.contentRevision,
           sections: lesson.manifest.sections,
           ...(lesson.manifest.variant === undefined ? {} : { variant: lesson.manifest.variant }),
           evidence: lesson.manifest.evidence.map(sourceOnlyEvidence),
           assets: lesson.manifest.assets.map((asset) => {
-            if (!registeredSourceRoot) {
+            if (!registeredSourceRoot && asset.capture) {
               throw new Error(
                 `Lesson ${lesson.manifest.id} has assets but study ${studyId} has no registered source`,
               );
             }
             return {
-              metadata: portableAssetMetadata(asset, registeredSourceRoot),
+              metadata: registeredSourceRoot
+                ? portableAssetMetadata(asset, registeredSourceRoot)
+                : asset,
               dataBase64: readAssetBytes(
                 studiesRoot,
                 studyId,
@@ -570,6 +592,7 @@ function serializeCourse(
     course: {
       id: course.id,
       title: course.title,
+      ...(course.locales ? { locales: course.locales } : {}),
       description: course.description,
       audience: course.audience,
       objectives: course.objectives,
@@ -877,7 +900,7 @@ function validateSnapshotCompatibility(
 }
 
 function validateSourceEvidence(
-  sourceRoot: string,
+  sourceRoot: string | null,
   packages: readonly CourseRecoveryPackage[],
 ): readonly string[] {
   /*
@@ -890,6 +913,8 @@ function validateSourceEvidence(
     error dressed as a check.
   */
   const references = packages.flatMap(allEvidence).filter(isRepositoryEvidence);
+  if (references.length === 0) return [];
+  if (!sourceRoot) throw new Error("Repository evidence requires a real source root");
   const commits = [...new Set(references.map((reference) => reference.sourceCommit))].sort();
   const snapshotOwners = new Map<string, string>();
   const treeByCommit = new Map<string, ReadonlyMap<string, GitTreeEntry>>();
@@ -1075,6 +1100,7 @@ export function exportCourseRecovery(input: ExportCourseRecoveryInput) {
       title: study.title,
       description: study.description,
       goals: study.goals,
+      ...(study.locales ? { locales: study.locales } : {}),
       defaultCourseId: study.defaultCourseId,
       status: study.status,
     },
@@ -1114,13 +1140,14 @@ export function exportCourseRecovery(input: ExportCourseRecoveryInput) {
 function assertExistingStudy(
   studiesRoot: string,
   index: CourseRecoveryIndex,
-  sourceRoot: string,
+  sourceRoot: string | null,
 ): void {
   const existing = readStudy(studiesRoot, index.study.id);
   if (
     existing.title !== index.study.title ||
     existing.description !== index.study.description ||
-    canonicalJson(existing.goals) !== canonicalJson(index.study.goals)
+    canonicalJson(existing.goals) !== canonicalJson(index.study.goals) ||
+    canonicalJson(existing.locales ?? {}) !== canonicalJson(index.study.locales ?? {})
   ) {
     throw new Error(`Existing study metadata conflicts with recovery package: ${existing.id}`);
   }
@@ -1201,6 +1228,7 @@ function assertCourseMatchesRecovery(
   const actual = {
     id: existing.id,
     title: existing.title,
+    ...(existing.locales ? { locales: existing.locales } : {}),
     description: existing.description,
     audience: existing.audience,
     objectives: existing.objectives,
@@ -1212,6 +1240,7 @@ function assertCourseMatchesRecovery(
   const expected = {
     id: wanted.id,
     title: wanted.title,
+    ...(wanted.locales ? { locales: wanted.locales } : {}),
     description: wanted.description,
     audience: wanted.audience,
     objectives: wanted.objectives,
@@ -1238,6 +1267,7 @@ function assertUnitMatchesRecovery(
   const actual = {
     id: existing.id,
     title: existing.title,
+    ...(existing.locales ? { locales: existing.locales } : {}),
     objective: existing.objective,
     prerequisiteUnitIds: existing.prerequisiteUnitIds,
     lessonIds: existing.lessonIds,
@@ -1245,6 +1275,7 @@ function assertUnitMatchesRecovery(
   const expected = {
     id: unit.id,
     title: unit.title,
+    ...(unit.locales ? { locales: unit.locales } : {}),
     objective: unit.objective,
     prerequisiteUnitIds: unit.prerequisiteUnitIds,
     lessonIds: unit.lessons.map((lesson) => lesson.id),
@@ -1260,14 +1291,16 @@ function assertLessonMatchesRecovery(
   courseId: string,
   unitId: string,
   lesson: RecoveryLesson,
-  sourceRoot: string,
+  sourceRoot: string | null,
 ): void {
   const existing = readLatestLesson(studiesRoot, studyId, courseId, unitId, lesson.id);
   const actual = {
     id: existing.manifest.id,
     title: existing.manifest.title,
+    ...(existing.manifest.locales ? { locales: existing.manifest.locales } : {}),
     content: existing.content,
     sections: existing.manifest.sections,
+    activities: existing.manifest.activities,
     ...(existing.manifest.variant === undefined ? {} : { variant: existing.manifest.variant }),
     evidence: existing.manifest.evidence,
     assets: existing.manifest.assets.map((asset) => ({
@@ -1290,8 +1323,10 @@ function assertLessonMatchesRecovery(
   const expected = {
     id: lesson.id,
     title: lesson.title,
+    ...(lesson.locales ? { locales: lesson.locales } : {}),
     content: lesson.content,
     sections: lesson.sections,
+    activities: lesson.activities,
     ...(lesson.variant === undefined ? {} : { variant: lesson.variant }),
     evidence: lesson.evidence,
     assets: lesson.assets.map((asset) => ({
@@ -1300,7 +1335,7 @@ function assertLessonMatchesRecovery(
     })),
     cardIds: lesson.cards.map((card) => card.id),
     exerciseIds: lesson.exercises.map((exercise) => exercise.id),
-    contentRevision: 1,
+    contentRevision: lesson.contentRevision,
     status: "active",
   };
   if (canonicalJson(actual) !== canonicalJson(expected)) {
@@ -1316,6 +1351,7 @@ function assertCardMatchesRecovery(
     id: existing.id,
     kind: existing.kind,
     front: existing.front,
+    ...(existing.locales ? { locales: existing.locales } : {}),
     back: existing.back,
     tags: existing.tags,
     evidence: existing.evidence,
@@ -1338,6 +1374,7 @@ function assertExerciseMatchesRecovery(
           kind: existing.kind,
           title: existing.title,
           prompt: existing.prompt,
+          ...(existing.locales ? { locales: existing.locales } : {}),
           expectedAnswer: existing.expectedAnswer,
           evidence: existing.evidence,
           contentRevision: existing.contentRevision,
@@ -1348,6 +1385,7 @@ function assertExerciseMatchesRecovery(
           kind: existing.kind,
           title: existing.title,
           prompt: existing.prompt,
+          ...(existing.locales ? { locales: existing.locales } : {}),
           rubric: existing.rubric,
           evidence: existing.evidence,
           contentRevision: existing.contentRevision,
@@ -1420,6 +1458,7 @@ function writePractices(
       unitId,
       lessonId: lesson.id,
       front: card.front,
+      ...(card.locales ? { locales: card.locales } : {}),
       back: card.back,
       contentRevision: 1,
       status: "active",
@@ -1442,6 +1481,7 @@ function writePractices(
             unitId,
             lessonId: lesson.id,
             prompt: exercise.prompt,
+            ...(exercise.locales ? { locales: exercise.locales } : {}),
             expectedAnswer: exercise.expectedAnswer,
             contentRevision: 1,
             status: "active",
@@ -1456,6 +1496,7 @@ function writePractices(
             unitId,
             lessonId: lesson.id,
             prompt: exercise.prompt,
+            ...(exercise.locales ? { locales: exercise.locales } : {}),
             rubric: exercise.rubric,
             contentRevision: 1,
             status: "active",
@@ -1472,7 +1513,7 @@ function writeLesson(
   unitId: string,
   lesson: RecoveryLesson,
   timestamp: string,
-  sourceRoot: string,
+  sourceRoot: string | null,
 ): void {
   const tempRoot = mkdtempSync(join(tmpdir(), "university-local-recovery-assets-"));
   try {
@@ -1481,19 +1522,21 @@ function writeLesson(
       writeFileSync(sourcePath, Buffer.from(asset.dataBase64, "base64"), { mode: 0o600 });
       return { path: asset.metadata.path, sourcePath };
     });
-    writeLessonRevision(studiesRoot, studyId, {
+    restorePublishedLessonRevision(studiesRoot, studyId, {
       manifest: {
         schemaVersion: 1,
         id: lesson.id,
         title: lesson.title,
+        ...(lesson.locales ? { locales: lesson.locales } : {}),
         courseId,
         unitId,
         exerciseIds: lesson.exercises.map((exercise) => exercise.id),
         cardIds: lesson.cards.map((card) => card.id),
-        contentRevision: 1,
+        contentRevision: lesson.contentRevision,
         status: "active",
         evidence: lesson.evidence,
         sections: lesson.sections,
+        activities: lesson.activities,
         assets: lesson.assets.map((asset) => runtimeAssetMetadata(asset.metadata, sourceRoot)),
         ...(lesson.variant === undefined ? {} : { variant: lesson.variant }),
         createdAt: timestamp,
@@ -1512,7 +1555,7 @@ function preflightCourseRecovery(
   studiesRoot: string,
   studyId: string,
   coursePackage: CourseRecoveryPackage,
-  sourceRoot: string,
+  sourceRoot: string | null,
 ): void {
   const course = coursePackage.course;
   const paths = getCoursePaths(studiesRoot, studyId, course.id);
@@ -1584,7 +1627,7 @@ function preflightRecoveryImport(
   studiesRoot: string,
   studyId: string,
   loaded: LoadedRecovery,
-  sourceRoot: string,
+  sourceRoot: string | null,
   sourceCommits: readonly string[],
 ): void {
   const studyPaths = getStudyPaths(studiesRoot, studyId);
@@ -1599,6 +1642,7 @@ function preflightRecoveryImport(
   }
 
   for (const commit of sourceCommits) {
+    if (!sourceRoot) throw new Error("Repository snapshots require a real source root");
     preflightSnapshotConflict(studiesRoot, studyId, sourceRoot, commit);
   }
   if (!studyExists) return;
@@ -1612,7 +1656,7 @@ function restoreCourse(
   studyId: string,
   coursePackage: CourseRecoveryPackage,
   courseIndex: number,
-  sourceRoot: string,
+  sourceRoot: string | null,
 ): "created" | "resumed" | "reused" {
   const course = coursePackage.course;
   const paths = getCoursePaths(studiesRoot, studyId, course.id);
@@ -1637,6 +1681,7 @@ function restoreCourse(
       schemaVersion: 1,
       id: course.id,
       title: course.title,
+      ...(course.locales ? { locales: course.locales } : {}),
       description: course.description,
       audience: course.audience,
       objectives: course.objectives,
@@ -1657,6 +1702,7 @@ function restoreCourse(
         schemaVersion: 1,
         id: unit.id,
         title: unit.title,
+        ...(unit.locales ? { locales: unit.locales } : {}),
         objective: unit.objective,
         prerequisiteUnitIds: unit.prerequisiteUnitIds,
         lessonIds: unit.lessons.map((lesson) => lesson.id),
@@ -1694,12 +1740,26 @@ export function importCourseRecovery(input: ImportCourseRecoveryInput) {
       `Recovery study ID ${loaded.index.study.id} does not match requested ${input.studyId}`,
     );
   }
-  const sourceRoot = requireSourceRoot(input.sourceRoot);
+  // A public-document study has no repository. Do not attach an unrelated
+  // checkout merely to satisfy a recovery interface. Repository evidence and
+  // file-manager captures still require their real source before any write.
+  const sourceRoot = input.sourceRoot ? requireSourceRoot(input.sourceRoot) : null;
+  if (loaded.index.source && !sourceRoot) {
+    throw new Error("This recovery package requires its registered repository source root");
+  }
+  for (const coursePackage of loaded.packages) {
+    for (const unit of coursePackage.course.units) {
+      for (const lesson of unit.lessons) {
+        for (const asset of lesson.assets) runtimeAssetMetadata(asset.metadata, sourceRoot);
+      }
+    }
+  }
   const sourceDefaultRef = loaded.index.source?.defaultRef ?? "HEAD";
   const potentialStudiesRoot = canonicalizePotentialPath(input.studiesRoot);
   if (
-    isPathInside(potentialStudiesRoot, sourceRoot) ||
-    isPathInside(sourceRoot, potentialStudiesRoot)
+    sourceRoot &&
+    (isPathInside(potentialStudiesRoot, sourceRoot) ||
+      isPathInside(sourceRoot, potentialStudiesRoot))
   ) {
     throw new Error("Recovery studiesRoot and sourceRoot must be separate");
   }
@@ -1728,10 +1788,11 @@ export function importCourseRecovery(input: ImportCourseRecoveryInput) {
       title: loaded.index.study.title,
       description: loaded.index.study.description,
       goals: loaded.index.study.goals,
+      ...(loaded.index.study.locales ? { locales: loaded.index.study.locales } : {}),
       now: new Date(RECONSTRUCTED_EPOCH_MS),
     });
   }
-  if (!existsSync(studyPaths.source.registration)) {
+  if (sourceRoot && !existsSync(studyPaths.source.registration)) {
     registerLocalGitSource(input.studiesRoot, loaded.index.study.id, sourceRoot, sourceDefaultRef);
   }
   for (const commit of commits) {

@@ -36,7 +36,22 @@
     "code.visualstudio.com",
     "docs.npmjs.com",
     "designcouncil.org.uk",
-    "nngroup.com"
+    "nngroup.com",
+    "bemyeyes.com",
+    "openai.com",
+    "blog.google",
+    "arxiv.org",
+    "support.google.com",
+    "nasa.gov",
+    "nps.gov",
+    "si.edu",
+    "loc.gov",
+    "metmuseum.org",
+    "gutenberg.org",
+    "edresearch.edu.au",
+    "khanacademy.org",
+    "consumer.ftc.gov",
+    "registry.opendata.aws"
   ],
   "forbiddenHosts": [
     "pmaker.space",
@@ -45,5 +60,18 @@
     "oiloil.org",
     "datawhalechina.github.io"
   ],
-  "authorityTags": ["mdn", "rfc", "w3c", "whatwg", "official-docs", "spec"]
+  "authorityTags": [
+    "mdn",
+    "rfc",
+    "w3c",
+    "whatwg",
+    "official-docs",
+    "spec",
+    "first-party",
+    "research",
+    "public-record",
+    "news-report",
+    "open-data",
+    "rights-holder"
+  ]
 }

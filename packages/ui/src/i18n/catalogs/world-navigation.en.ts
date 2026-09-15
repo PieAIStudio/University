@@ -1,0 +1,38 @@
+import type { messages as source } from "./world-navigation.zh-CN.js";
+
+export const messages = {
+  "world.picker.title": "Choose courses",
+  "world.picker.close": "Close",
+  "world.picker.domains": "Learning domains",
+  "world.picker.studies": "Course series",
+  "world.picker.progress": "Progress",
+  "world.picker.percent": "{{percent}}% complete",
+  "world.picker.empty": "There are no course series to choose yet.",
+  "world.picker.choose": "Choose a series from the list",
+  "world.picker.enter": "Enter {{title}}",
+  "world.picker.overview": "{{title}} overview",
+  "world.picker.courses": "Courses",
+  "world.picker.lessons": "Lessons",
+  "world.picker.completed": "Completed",
+  "world.picker.courseCount.one": "{{count}} course",
+  "world.picker.courseCount.other": "{{count}} courses",
+  "world.picker.lessonCount.one": "{{count}} lesson",
+  "world.picker.lessonCount.other": "{{count}} lessons",
+  "world.picker.more.one": "{{count}} more course",
+  "world.picker.more.other": "{{count}} more courses",
+  "world.picker.notStarted": "Not started",
+  "world.picker.learning": "In progress",
+  "world.picker.done": "Completed",
+  "world.resources.error": "Some map details are not ready. You can still use the course list.",
+  "world.resources.pending.one":
+    "Preparing map details for {{count}} domain. The course list is ready to use.",
+  "world.resources.pending.other":
+    "Preparing map details for {{count}} domains. The course list is ready to use.",
+  "world.resources.retry": "Retry map preparation",
+  "world.path.start": "Start",
+  "world.path.lesson": "Lesson",
+  "world.path.practice": "Practice",
+  "world.path.quiz": "Unit check",
+  "world.path.chest": "Vocabulary chest",
+  "world.path.review": "Review",
+} satisfies Record<keyof typeof source, string>;

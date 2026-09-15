@@ -1,7 +1,47 @@
 {
-  "importedAt": "2026-09-12",
+  "importedAt": "2026-09-15",
   "evidenceMode": "auto",
   "studies": [
+    {
+      "studyId": "ai-literacy",
+      "title": "AI 基础：认识与使用",
+      "locales": {
+        "en": {
+          "title": "AI Foundations: Understand and Use It"
+        }
+      },
+      "defaultCourseId": "understanding-ai",
+      "courses": [
+        {
+          "courseId": "understanding-ai",
+          "title": "认识 AI，从这里开始",
+          "locales": {
+            "en": {
+              "title": "Understanding AI: From Fear to Confidence"
+            }
+          },
+          "isBeingRewritten": false,
+          "sha256": "sha256:ed325103b42635bc617a8c3cd1adee7909928cd2f493fa9e37999ea24431f49f",
+          "packageBytes": 1792517,
+          "servedBytes": 902470,
+          "lessons": 36
+        },
+        {
+          "courseId": "ai-for-real-life",
+          "title": "用 AI，把日常事情做好",
+          "locales": {
+            "en": {
+              "title": "AI for Real Life"
+            }
+          },
+          "isBeingRewritten": false,
+          "sha256": "sha256:802d7703cc3a0420e2f36142a1bcaf3f66b39d9a2c314097370b5bbdc4b72f0e",
+          "packageBytes": 3684589,
+          "servedBytes": 770369,
+          "lessons": 30
+        }
+      ]
+    },
     {
       "studyId": "browser-ai",
       "title": "学会用 AI 做应用",

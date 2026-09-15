@@ -129,7 +129,10 @@ failures a machine can catch before a human or model re-reads.
 36. `[machine]` Every block has a title in `[…]` ending in `？` or `?`.
 37. `[machine]` Every block is closed by a `:::` line.
 38. `[machine]` Detail body characters ≥ 60% of standard prose characters
-    (standard = body with detail blocks and code fences removed).
+    (standard = body with detail blocks and code fences removed). Count the
+    visible label of an ordinary Markdown source link, not its hidden URL, in
+    both numerator and denominator; a long URL is neither explanation nor a
+    reason to add filler. Visible autolinks still count as visible text.
 39. `[judgment]` Deleting every block leaves a lesson that still reads as a
     complete, connected whole — the standard layer is a summary, not a stump.
     - Test: read the body with the blocks hidden. Does any sentence now dangle?

@@ -333,6 +333,15 @@ describe("course creation workflow", () => {
     expect(existsSync(getCoursePaths(studiesRoot, STUDY_ID, COURSE_ID).manifest)).toBe(false);
   });
 
+  it("does not mistake a registered repository with an omitted pin for a general study", () => {
+    const { studiesRoot, snapshot } = setup();
+    const { targetSnapshotId: _omitted, ...proposal } = minimalProposal(snapshot);
+    expect(() => createCourse({ studiesRoot, studyId: STUDY_ID, proposal })).toThrow(
+      /requires a target snapshot/,
+    );
+    expect(existsSync(getCoursePaths(studiesRoot, STUDY_ID, COURSE_ID).manifest)).toBe(false);
+  });
+
   it("carries a lesson's teaching variant into the manifest it writes", () => {
     // Without this, a course created through the workflow arrives with no
     // variant, and `scripts/lint-lessons.mjs` skips variant-less lessons by

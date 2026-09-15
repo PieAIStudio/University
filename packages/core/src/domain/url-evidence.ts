@@ -14,11 +14,13 @@
  *
  * ## What may join `authorityHosts`, and why it is a list rather than a filter
  *
- * The admission rule is one sentence: **a host qualifies when it publishes the
- * first-hand documentation for the thing being taught** — the vendor's or
- * standards body's own pages. Commentary, tutorials, aggregators, Q&A sites
- * and course platforms never qualify, however good they are, because a lesson
- * cites an authority so the reader can go read the source of the claim.
+ * A host qualifies when an inspected source can support the specific claim:
+ * first-party documentation, research, public records/data, rights-holder
+ * material, or original reporting about a real event. Admission is not an
+ * endorsement of every page on the host. New authority categories require
+ * claim-specific provenance in the schema: publisher, inspection date,
+ * supported claim and limits. A news report is not a technical specification,
+ * and a vendor's case study is not an independent outcome measurement.
  *
  * The list grows. It was originally sized for teaching the web platform, and
  * when the curriculum moved to AI tooling nothing on it could be cited — which
@@ -46,7 +48,30 @@ const FORBIDDEN_EVIDENCE_HOSTS: readonly string[] = hosts.forbiddenHosts;
  * Tags are a TypeScript tuple so `z.enum` can use them. The JSON file is the
  * host-list SSOT; a test below refuses the two copies drifting.
  */
-export const AUTHORITY_TAGS = ["mdn", "rfc", "w3c", "whatwg", "official-docs", "spec"] as const;
+export const AUTHORITY_TAGS = [
+  "mdn",
+  "rfc",
+  "w3c",
+  "whatwg",
+  "official-docs",
+  "spec",
+  "first-party",
+  "research",
+  "public-record",
+  "news-report",
+  "open-data",
+  "rights-holder",
+] as const;
+
+/** Legacy citations remain valid; newly admitted source categories explain their limits. */
+export const REALITY_AUTHORITY_TAGS: readonly string[] = [
+  "first-party",
+  "research",
+  "public-record",
+  "news-report",
+  "open-data",
+  "rights-holder",
+];
 
 /** `docs.python.org` matches `python.org`; `notmdn.org` does not match `mdn.org`. */
 function hostMatches(host: string, allowed: string): boolean {
@@ -56,6 +81,9 @@ function hostMatches(host: string, allowed: string): boolean {
 interface ParsedUrl {
   readonly protocol: string;
   readonly hostname: string;
+  readonly username: string;
+  readonly password: string;
+  readonly port: string;
 }
 
 /**
@@ -87,6 +115,12 @@ export function urlEvidenceIssue(raw: string): string | null {
   if (!parsed) return "URL evidence sourceUrl must be a valid URL";
   if (parsed.protocol !== "https:") {
     return "URL evidence must be https";
+  }
+  if (parsed.username || parsed.password) {
+    return "URL evidence must not contain credentials";
+  }
+  if (parsed.port && parsed.port !== "443") {
+    return "URL evidence must use the standard HTTPS port";
   }
   const host = parsed.hostname.toLowerCase();
   if (FORBIDDEN_EVIDENCE_HOSTS.some((entry) => hostMatches(host, entry))) {

@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "packageKind": "university-local-course-recovery",
+  "evidenceMode": "source-only",
+  "droppedUaBindingCount": 0,
+  "study": {
+    "id": "ai-literacy",
+    "title": "AI 基础：认识与使用",
+    "description": "两条基于真实公开资料的小白路线：先认识 AI，再用它完成日常的小事；不需要编程经验。",
+    "goals": [],
+    "locales": {
+      "en": {
+        "title": "AI Foundations: Understand and Use It",
+        "description": "Two beginner learning paths grounded in real public sources: understand AI, then use it for small useful results.",
+        "goals": []
+      }
+    },
+    "defaultCourseId": "understanding-ai",
+    "status": "active"
+  },
+  "courses": [
+    {
+      "courseId": "understanding-ai",
+      "file": "understanding-ai.ed325103b42635bc617a8c3cd1adee7909928cd2f493fa9e37999ea24431f49f.recovery.json",
+      "sha256": "sha256:ed325103b42635bc617a8c3cd1adee7909928cd2f493fa9e37999ea24431f49f",
+      "isBeingRewritten": false
+    },
+    {
+      "courseId": "ai-for-real-life",
+      "file": "ai-for-real-life.802d7703cc3a0420e2f36142a1bcaf3f66b39d9a2c314097370b5bbdc4b72f0e.recovery.json",
+      "sha256": "sha256:802d7703cc3a0420e2f36142a1bcaf3f66b39d9a2c314097370b5bbdc4b72f0e",
+      "isBeingRewritten": false
+    }
+  ]
+}

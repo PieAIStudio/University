@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-15T03:08:53.158Z",
+  "stage": "map-review-before-production",
+  "rejected": [
+    {
+      "issue": "One historical Moon event and Earthrise dominated nearly every practical unit.",
+      "decision": "Use separate real artifacts for communication (Library of Congress), information (Smithsonian reports), learning (actual public-domain text), planning (NASA host guide), and creative work (Met public-domain art). Keep a stable artifact within a unit so a novice can focus on a new judgement, not relearn all facts."
+    },
+    {
+      "issue": "Drafts used bare URLs and repeated source disclaimers instead of teaching.",
+      "decision": "Regenerate per lesson with proper links, a real observable task and compact scoped source labels. Reject evidence-only introductions and unverifiable AI performance claims."
+    }
+  ],
+  "counts": [
+    {
+      "courseId": "understanding-ai",
+      "units": 6,
+      "lessons": 36
+    },
+    {
+      "courseId": "ai-for-real-life",
+      "units": 6,
+      "lessons": 36
+    }
+  ],
+  "boundary": "This is an editorial design review, not learner testing or a completed course/publish receipt."
+}

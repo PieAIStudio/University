@@ -22,11 +22,19 @@ function routable(view: View): View {
 }
 
 function canonicalLocation(view: View): string {
-  return `${toPath(view)}${location.search}`;
+  // Authentication owns its callback parameters. Never race the SDK by
+  // removing a still-unconsumed fragment while the learner changes screens.
+  const fragment = new URLSearchParams(location.hash.slice(1));
+  const authFragment = ["access_token", "refresh_token", "error", "error_code", "type"].some(
+    (key) => fragment.has(key),
+  )
+    ? location.hash
+    : "";
+  return `${toPath(view)}${location.search}${authFragment}`;
 }
 
 function readLocation(): View {
-  if (location.hash) {
+  if (location.hash.startsWith("#/")) {
     const view = routable(fromHash(location.hash));
     // Fragments never reach the server, so this migration belongs here. Replace
     // rather than push: opening a saved hash link should not add a dead history
@@ -43,7 +51,7 @@ export function useRoute() {
   const [view, setViewState] = useState<View>(readLocation);
   const setView = useCallback((next: View) => {
     const nextLocation = canonicalLocation(next);
-    if (`${location.pathname}${location.search}` !== nextLocation || location.hash) {
+    if (`${location.pathname}${location.search}${location.hash}` !== nextLocation) {
       history.pushState(null, "", nextLocation);
     }
     setViewState(next);

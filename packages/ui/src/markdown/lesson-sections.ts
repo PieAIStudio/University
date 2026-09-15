@@ -33,9 +33,14 @@ const ROLE_BY_HEADING = new Map<string, LessonSectionRole>([
   ["一句话", "takeaway"],
   ["先给结论", "takeaway"],
   ["重点", "takeaway"],
+  ["predict first", "ask"],
+  ["guess first", "ask"],
+  ["check yourself", "ask"],
+  ["answer", "reveal"],
+  ["in one sentence", "takeaway"],
 ]);
 
 /** The role for a heading, or undefined when the heading is not part of the spine. */
 export function lessonSectionRole(heading: string): LessonSectionRole | undefined {
-  return ROLE_BY_HEADING.get(heading.trim());
+  return ROLE_BY_HEADING.get(heading.trim().toLowerCase());
 }

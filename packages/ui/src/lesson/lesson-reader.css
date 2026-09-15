@@ -1667,3 +1667,29 @@
   color: var(--game-ui-text-muted, #9aa6bb);
   font-size: 0.78rem;
 }
+
+.lesson-sources__details {
+  margin-block: 0.5rem 0.75rem;
+}
+
+.lesson-sources__details summary {
+  cursor: pointer;
+  padding-block: 0.5rem;
+}
+
+.lesson-sources__provenance {
+  margin: 0.5rem 0;
+  display: grid;
+  gap: 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+.lesson-sources__provenance dt {
+  font-weight: 650;
+}
+
+.lesson-sources__provenance dd {
+  margin-inline-start: 0;
+  margin-block-end: 0.75rem;
+  line-height: 1.6;
+}

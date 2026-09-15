@@ -72,10 +72,15 @@ export function PlanetResourceStatus({
     <div className="planet-resource-status" data-planet-resources={failed ? "error" : "loading"}>
       <p role="status">
         {failed
-          ? "部分地图细节暂未准备好，课程列表仍可使用。"
-          : `正在准备 ${pending} 个领域的地图细节，课程列表可直接使用。`}
+          ? translate("world.resources.error")
+          : translate(
+              pending === 1 ? "world.resources.pending.one" : "world.resources.pending.other",
+              { count: pending },
+            )}
       </p>
-      {failed ? <GameButton onClick={onRetry}>重试地图准备</GameButton> : null}
+      {failed ? (
+        <GameButton onClick={onRetry}>{translate("world.resources.retry")}</GameButton>
+      ) : null}
     </div>
   );
 }

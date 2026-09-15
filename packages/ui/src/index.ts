@@ -31,6 +31,8 @@ export {
   formatDate,
   formatNumber,
   formatPlural,
+  readLocalePreference,
+  writeLocalePreference,
   I18nProvider,
   isLocaleComplete,
   localeCompleteness,

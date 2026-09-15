@@ -1,7 +1,9 @@
 export {
   createIdentityPort,
   createMemoryIdentityPort,
+  IdentityOperationError,
   type IdentityAuth,
+  type IdentityFailureCode,
   type IdentityPort,
   type IdentityStatus,
   type IdentityUser,

@@ -15,6 +15,7 @@ export default defineConfig({
       {
         test: {
           name: "world",
+          setupFiles: ["./vitest.setup.ts"],
           include: ["src/**/*.{test,spec}.{ts,tsx}"],
           exclude: [
             "src/island/remote-props.test.ts",
@@ -35,6 +36,7 @@ export default defineConfig({
         // contention. Keep all assertions and the 20ms/60s limits unchanged.
         test: {
           name: "remote-performance",
+          setupFiles: ["./vitest.setup.ts"],
           include: [
             "src/island/remote-props.test.ts",
             "src/island/remote-island-field.test.ts",

@@ -20,6 +20,7 @@ export const handleCard: Handler = async (ctx, request, response, url) => {
     sendJson(response, 200, {
       front: card.front,
       back: card.back,
+      ...(card.locales ? { locales: card.locales } : {}),
       contentRevision: card.contentRevision,
     });
     return true;

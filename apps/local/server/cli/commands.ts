@@ -31,7 +31,8 @@ Commands:
   snapshot list --study <study-id>
   snapshot open --study <study-id> [--snapshot <snapshot-id>]
   snapshot close --study <study-id> [--snapshot <snapshot-id>]
-  study create --study <study-id> --title <text> --source <absolute-path> [--ref <git-ref>]
+  study create --study <study-id> --title <text> [--source <absolute-path>] [--ref <git-ref>] [--locales-file <path>]
+  study describe --study <study-id> --description <text>
   study source rebind --study <study-id> --source <absolute-path> [--ref <git-ref>]
   study archive --study <study-id>
   study unarchive --study <study-id>
@@ -122,7 +123,7 @@ interface CourseReactivateCommand {
   readonly kind: "course-reactivate";
   readonly studyId: string;
   readonly courseId: string;
-  readonly snapshotId: string;
+  readonly snapshotId?: string;
   readonly analysisId?: string;
 }
 
@@ -175,7 +176,7 @@ interface CourseRecoveryImportCommand {
   readonly kind: "course-recovery-import";
   readonly studyId: string;
   readonly inputDirectory: string;
-  readonly sourceRoot: string;
+  readonly sourceRoot?: string;
   readonly dryRun: boolean;
 }
 
@@ -218,10 +219,17 @@ interface StudyStatusCommand {
   readonly studyId: string;
 }
 
+interface StudyDescribeCommand {
+  readonly kind: "study-describe";
+  readonly studyId: string;
+  readonly description: string;
+}
+
 interface StudyCreateCommand {
   readonly kind: "study-create";
   readonly studyId: string;
   readonly title: string;
+  readonly localesPath?: string;
   /** Absent for a study with no repository — a 通用课 shelf. */
   readonly sourceRoot?: string;
   readonly reference?: string;
@@ -321,6 +329,7 @@ export type UniversityLocalCliCommand =
   | StudyCreateCommand
   | StudySourceRebindCommand
   | StudyStatusCommand
+  | StudyDescribeCommand
   | AirlockPromoteCommand
   | AirlockInspectCommand
   | ExpressReviewCommand

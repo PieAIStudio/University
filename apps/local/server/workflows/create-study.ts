@@ -26,6 +26,7 @@ interface CreateStudyWorkflowInput {
   readonly sourceRoot?: string;
   readonly description?: string;
   readonly goals?: readonly string[];
+  readonly locales?: StudyManifest["locales"];
   readonly reference?: string;
   readonly now?: Date;
 }
@@ -72,6 +73,7 @@ export function createStudyWithSource(input: CreateStudyWorkflowInput): CreateSt
         title: input.title,
         ...(input.description === undefined ? {} : { description: input.description }),
         ...(input.goals === undefined ? {} : { goals: input.goals }),
+        ...(input.locales === undefined ? {} : { locales: input.locales }),
         ...(input.now === undefined ? {} : { now: input.now }),
       });
 

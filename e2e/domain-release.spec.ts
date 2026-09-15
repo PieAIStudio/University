@@ -8,11 +8,14 @@ import {
   CATALOGUE_ROLES,
   HAS_MULTIPLE_SHIPPED_STUDIES,
   MULTI_STUDY_CATALOGUE_REASON,
-  SECONDARY_COURSE,
-  SECONDARY_STUDY,
-  SHIPPED_CATALOGUE,
   coursePathOf,
 } from "./harness/catalogue.js";
+import {
+  PRIMARY_DOMAIN_ID,
+  RELEASED_DOMAIN_STUDIES,
+  SECONDARY_DOMAIN_ID,
+  SECONDARY_START_COURSE as SECONDARY_COURSE,
+} from "./harness/domain-catalogue.js";
 import { GAME_ROUTE_TITLE } from "./harness/online-learner.js";
 
 const RUN = new Date().toISOString().replaceAll(":", "-");
@@ -122,11 +125,9 @@ test.describe("P 正式领域目录与未发布星球", () => {
           });
         });
         await page.screenshot({ path: join(folder, "four-domains.png") });
-        for (const [domain, expected] of [
-          ["programming", SHIPPED_CATALOGUE.map((study) => study.id)],
-          ["ai-foundations", SECONDARY_STUDY ? [SECONDARY_STUDY.id] : []],
-          ["ai-games", [PRIMARY_STUDY.id]],
-        ] as const) {
+        for (const { id: domain, studies } of RELEASED_DOMAIN_STUDIES.filter(
+          (entry) => entry.studies.length > 0,
+        )) {
           await humanClick(
             page,
             page.locator(`button[data-domain-id="${domain}"]`),
@@ -135,17 +136,17 @@ test.describe("P 正式领域目录与未发布星球", () => {
           const actual = await page
             .locator("[data-study-id]")
             .evaluateAll((rows) => rows.map((row) => row.getAttribute("data-study-id")).sort());
-          expect(actual).toEqual([...expected].sort());
+          expect(actual).toEqual(studies.map((study) => study.id).sort());
           await expect(page.locator(".planet-page__enter")).toBeVisible();
           await expect(page.locator("[data-study-description]")).toBeVisible();
-          if (domain === "ai-foundations" && SECONDARY_STUDY)
-            await expect(
-              page.locator(`[data-study-id=${JSON.stringify(SECONDARY_STUDY.id)}]`),
-            ).toContainText(
-              `${SECONDARY_STUDY.courses.reduce((sum, course) => sum + course.lessonCount, 0)} 节`,
+          for (const study of studies)
+            await expect(page.locator(`[data-study-id=${JSON.stringify(study.id)}]`)).toContainText(
+              `${study.courses.reduce((sum, course) => sum + course.lessonCount, 0)} 节`,
             );
         }
-        for (const id of ["ai-media"]) {
+        for (const { id } of RELEASED_DOMAIN_STUDIES.filter(
+          (entry) => entry.studies.length === 0,
+        )) {
           await humanClick(page, page.locator(`button[data-domain-id="${id}"]`), `select ${id}`);
           await expect(page.locator(`[data-domain-empty="${id}"]`)).toContainText("暂未发布");
           await expect(page.locator("[data-study-id]")).toHaveCount(0);
@@ -162,9 +163,9 @@ test.describe("P 正式领域目录与未发布星球", () => {
         }
         // Actual sphere picking restores the original game's route after
         // visits to populated and empty domains, without cloning its courses.
-        const target = await page.evaluate(() => {
+        const target = await page.evaluate((domainId) => {
           const state = (window as any).three;
-          const globe = state.scene.getObjectByName("domain-globe-ai-games");
+          const globe = state.scene.getObjectByName(`domain-globe-${domainId}`);
           const point = state.camera.position.clone();
           globe.getWorldPosition(point);
           point.project(state.camera);
@@ -174,12 +175,12 @@ test.describe("P 正式领域目录与未发布星球", () => {
           if (document.elementFromPoint(x, y) !== state.gl.domElement)
             throw new Error("Game globe is occluded");
           return { x, y };
-        });
+        }, PRIMARY_DOMAIN_ID);
         await page.mouse.move(target.x, target.y);
         await page.mouse.down();
         await page.waitForTimeout(40);
         await page.mouse.up();
-        await expect(page.locator('button[data-domain-id="ai-games"]')).toHaveAttribute(
+        await expect(page.locator(`button[data-domain-id="${PRIMARY_DOMAIN_ID}"]`)).toHaveAttribute(
           "aria-pressed",
           "true",
         );
@@ -199,8 +200,8 @@ test.describe("P 正式领域目录与未发布星球", () => {
         // merely removing the unpublished badge from a placeholder globe.
         await humanClick(
           page,
-          page.locator('button[data-domain-id="ai-foundations"]'),
-          "enter AI foundations",
+          page.locator(`button[data-domain-id="${SECONDARY_DOMAIN_ID}"]`),
+          "enter the other released domain",
         );
         await humanClick(page, page.locator(".planet-page__enter"), "open foundations archipelago");
         await humanClick(
@@ -229,7 +230,7 @@ test.describe("P 正式领域目录与未发布星球", () => {
         await expect(page.getByRole("button", { name: "离开课文", exact: true })).toBeVisible();
         await expect(
           page.getByRole("heading", {
-            name: CATALOGUE_ROLES.longestCourse.lesson.title,
+            name: SECONDARY_COURSE.units[0]!.lessons[0]!.title,
             exact: true,
           }),
         ).toBeVisible();
@@ -254,7 +255,7 @@ test.describe("P 正式领域目录与未发布星球", () => {
           await humanClick(page, expand, "reveal returned domain choices");
         await humanClick(
           page,
-          page.locator('button[data-domain-id="ai-games"]'),
+          page.locator(`button[data-domain-id="${PRIMARY_DOMAIN_ID}"]`),
           "return to game learning",
         );
         await expect(
@@ -280,7 +281,7 @@ test.describe("P 正式领域目录与未发布星球", () => {
               returned,
               status: "PASS",
               scope:
-                "Four real declared domains, three with authored courses and one unpublished; real foundations reading and game-route return. Desktop Chrome viewport, not a phone.",
+                "Four declared domains with release-derived populated/empty states; actual cross-domain reading and return. Desktop Chrome viewport, not a physical phone.",
             },
             null,
             2,

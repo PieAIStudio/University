@@ -144,15 +144,24 @@ export function PlanetRail({
     >
       <header className="planet-rail__head">
         <h2 id={titleId} className="planet-rail__title">
-          选课
+          {translate("world.picker.title")}
         </h2>
-        <GameButton variant="ghost" type="button" onClick={onClose} aria-label="关闭">
-          关闭
+        <GameButton
+          variant="ghost"
+          type="button"
+          onClick={onClose}
+          aria-label={translate("world.picker.close")}
+        >
+          {translate("world.picker.close")}
         </GameButton>
       </header>
 
       {domainPlan.length > 0 ? (
-        <div className="planet-rail__domains" role="toolbar" aria-label="领域列表">
+        <div
+          className="planet-rail__domains"
+          role="toolbar"
+          aria-label={translate("world.picker.domains")}
+        >
           {domainPlan.map((domain) => {
             const isActive = activeDomain?.id === domain.id;
             return (
@@ -178,7 +187,7 @@ export function PlanetRail({
       ) : null}
 
       <div className="planet-page__rail">
-        <nav className="planet-page__list" aria-label="项目">
+        <nav className="planet-page__list" aria-label={translate("world.picker.studies")}>
           {(activeDomain ? [activeDomain] : domainPlan).map((domain) => (
             <div key={domain.id} className="planet-page__domain-group" data-domain-id={domain.id}>
               <div className="planet-page__domain-title">{domain.title}</div>
@@ -220,7 +229,11 @@ export function PlanetRail({
                     </span>
                     <span className="planet-page__row-meta">
                       <span>{studyCounts(study)}</span>
-                      {study.lessonCount > 0 ? <span>完成 {studyPercent(study)}%</span> : null}
+                      {study.lessonCount > 0 ? (
+                        <span>
+                          {translate("world.picker.percent", { percent: studyPercent(study) })}
+                        </span>
+                      ) : null}
                     </span>
                     {/* The selected detail owns the kit's animated progress.
                         Thirty independent liquid bars exhaust its animation
@@ -257,7 +270,7 @@ export function PlanetRail({
             </div>
           ) : (
             <p className="planet-page__hint" role="status">
-              {domainPlan.length === 0 ? "还没有可选的课程系列。" : "从列表里选一个项目"}
+              {translate(domainPlan.length === 0 ? "world.picker.empty" : "world.picker.choose")}
             </p>
           )}
         </div>
@@ -274,7 +287,9 @@ export function PlanetRail({
               category word the reader has to resolve against the card they are
               looking at, and the wrong category word — 通用课 is nobody's project.
             */}
-            <span className="planet-page__enter-label">进入 {selected.title}</span>
+            <span className="planet-page__enter-label">
+              {translate("world.picker.enter", { title: selected.title })}
+            </span>
           </GameButton>
         ) : null}
       </div>
@@ -291,7 +306,12 @@ export function PlanetRail({
  */
 export function PlanetPage(props: PlanetPageProps) {
   return (
-    <div className="planet-page" role="dialog" aria-modal="true" aria-label="选课">
+    <div
+      className="planet-page"
+      role="dialog"
+      aria-modal="true"
+      aria-label={translate("world.picker.title")}
+    >
       <div className="planet-page__globe" data-planet-globe="true">
         <PlanetStage
           studies={props.studies}
@@ -319,7 +339,7 @@ function StudyDetail({ study }: { readonly study: PlanetStudy }) {
       <p className="planet-page__counts">{studyCounts(study)}</p>
       {study.lessonCount > 0 ? (
         <GameProgress
-          label="进度"
+          label={translate("world.picker.progress")}
           value={study.lessonsDone}
           max={study.lessonCount}
           valueLabel={`${study.lessonsDone} / ${study.lessonCount}`}
@@ -332,12 +352,12 @@ function StudyDetail({ study }: { readonly study: PlanetStudy }) {
         nobody looked.
       */}
       <GameStatList
-        label={`${study.title} 概况`}
+        label={translate("world.picker.overview", { title: study.title })}
         density="dense"
         facts={[
-          { id: "courses", label: "门课", value: study.courseCount },
-          { id: "lessons", label: "关", value: study.lessonCount },
-          { id: "done", label: "已学", value: study.lessonsDone },
+          { id: "courses", label: translate("world.picker.courses"), value: study.courseCount },
+          { id: "lessons", label: translate("world.picker.lessons"), value: study.lessonCount },
+          { id: "done", label: translate("world.picker.completed"), value: study.lessonsDone },
         ]}
       />
       {listed.shown.length > 0 ? (

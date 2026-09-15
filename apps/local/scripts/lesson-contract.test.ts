@@ -102,6 +102,30 @@ function expectBoth(result: ReturnType<typeof inspect>, status: number, message?
 }
 
 describe("one lesson contract before and after persistence", () => {
+  it("does not turn an invisible source URL into required explanatory prose", () => {
+    const url = `${citation.sourceUrl}/${"long-source-locator-".repeat(100)}`;
+    const content = CONTENT.replace(citation.sourceUrl, url);
+    expectBoth(inspect(content, "现象", true, 1, [{ ...citation, sourceUrl: url }]), 0);
+  });
+
+  it("still requires explanatory detail when a lesson has a source link", () => {
+    const content = CONTENT.replace(/^:::detail\[[^\]\n]*\]\s*\n[\s\S]*?^:::\s*$/gm, "\n");
+    const result = inspect(content);
+    expect(result.persisted.status).toBe(1);
+    expect(result.persisted.output).toContain("还没有 :::detail 块");
+  });
+
+  it("does not let a long hidden destination substitute for a detailed explanation", () => {
+    const url = `${citation.sourceUrl}/${"locator-".repeat(100)}`;
+    const content = CONTENT.replace(
+      /^:::detail\[[^\]\n]*\][ \t]*\n[\s\S]*?^:::[ \t]*$/gm,
+      `:::detail[你还需要知道什么？]\n[来源](${url})\n:::`,
+    );
+    const result = inspect(content);
+    expect(result.persisted.status).toBe(1);
+    expect(result.persisted.output).toContain("下限 60%");
+  });
+
   it.each([false, true])(
     "accepts a source URL containing parentheses (angle wrapped: %s)",
     (wrapped) => {

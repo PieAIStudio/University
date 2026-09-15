@@ -1,0 +1,1054 @@
+{
+  "studyId": "ai-literacy",
+  "planet": "ai-foundations",
+  "audience": "没有编程或 AI 使用经验的成人；任何第一步都不要求额外付费、安装软件或上传私人资料。",
+  "design": "先完成小任务，再解释观察到的差别。事实来自 sources.json 中实际读过的资料。教学改写、受控变式和作者判断明确标明，不冒充当事人对话或实测。每节独立目标，来源可跨节复用，但不重复讲同一件事。",
+  "courses": [
+    {
+      "id": "understanding-ai",
+      "title": "认识 AI，从这里开始",
+      "englishTitle": "Understanding AI: From Fear to Confidence",
+      "description": "从一张真实照片和一个小问题开始，学会交代任务、辨认依据、检查结果，并决定什么事情仍由你作主。",
+      "units": [
+        {
+          "id": "first-useful-step",
+          "title": "先让它帮上一点忙",
+          "objective": "用真实公开材料提出一个可完成、可检查的小请求。",
+          "lessons": [
+            {
+              "id": "ask-about-a-picture",
+              "title": "一张照片，你最想问哪一句？",
+              "goal": "把泛泛描述改成与自己的用途相关的具体问题。",
+              "sources": [
+                "be-my-ai",
+                "earthrise"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "Be My AI 的真实照片→描述→追问流程；实际 Earthrise 照片和 NASA 提供的标题。学习者要给照片配一句说明，不需要上传私人图片。区分整体描述、指明细节、需要另查的背景。不要用虚构厨房故事替代真实图片。",
+              "transfer": "把用途从配图改成向看不到照片的人解释画面，重新写一句请求。"
+            },
+            {
+              "id": "sound-words-and-meaning",
+              "title": "把声音写成字，就算听懂了吗？",
+              "goal": "区分转写、翻译和对意思的解释。",
+              "sources": [
+                "whisper"
+              ],
+              "variant": "对比",
+              "kind": "contrast",
+              "material": "Whisper 真实发布把转写和语音翻译列为任务。只用源文这两种任务做分类；可用学习者自己写的一句短语作可选试读，不伪造真实录音、识别错误或模型结果。",
+              "transfer": "要求把同一句话概括为行动事项，这是不是只要逐字转写就够了？"
+            },
+            {
+              "id": "name-the-result",
+              "title": "说了主题，为什么还是拿不到想要的东西？",
+              "goal": "在请求里指出最后需要的成品，而不只报一个主题。",
+              "sources": [
+                "prompt-guidance",
+                "moon-2023"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "NASA 2023 观月活动公告是真实材料；分别要一个短信提醒和一个完整资料清单，不是都让 AI 介绍月亮。明确公告是过去事件。",
+              "transfer": "同一公告要变成给志愿者看的准备单，写出成品和使用者。"
+            },
+            {
+              "id": "edit-one-part",
+              "title": "只想改一句，为什么整篇都变了？",
+              "goal": "指定修改范围和必须保留的事实。",
+              "sources": [
+                "canvas",
+                "moon-2023"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "Canvas 真实发布展示选择文字后局部修改。以 NASA 公告为可核对材料，区分可改措辞与不能改的日期、地点、时区；改写是练习，不是NASA原文。",
+              "transfer": "只要求缩短活动介绍时，列出不得顺手改变的两项事实。"
+            },
+            {
+              "id": "answer-or-search",
+              "title": "问过去的活动，为什么要打开那条链接？",
+              "goal": "区分生成一段说法与查到支持说法的网页。",
+              "sources": [
+                "chatgpt-search",
+                "moon-2022",
+                "moon-2023"
+              ],
+              "variant": "对比",
+              "kind": "contrast",
+              "material": "搜索发布说明的来源链接功能，配两年 NASA 真实公告。一个日期来自2022，一个来自2023；相似标题不等于同一场活动。",
+              "transfer": "为一场不同年份活动核对地址时，先检查哪两个页面信息？"
+            },
+            {
+              "id": "first-request-checkpoint",
+              "title": "你的第一句请求，已经能让人检查了吗？",
+              "goal": "组合材料、目标和完成条件，完成第一份可检查请求。",
+              "sources": [
+                "earthrise",
+                "prompt-guidance"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "把真实 Earthrise 记录交给助手，要求给初次看图的人写一句中文图注。是否需要加摄影日期，取决于成品用途；是否写成登月照片可由原记录检查。",
+              "transfer": "换成制作事实小卡，写出一项必须出现的字段和一项不允许猜的字段。"
+            }
+          ]
+        },
+        {
+          "id": "read-the-answer",
+          "title": "看懂回答，不被语气带走",
+          "objective": "把流利、赞同、逼真和真正正确分开。",
+          "lessons": [
+            {
+              "id": "fluent-is-not-true",
+              "title": "三个回答都很肯定，你该相信哪一个？",
+              "goal": "发现相互冲突的具体事实需要外部核对，而不是挑最流畅的一段。",
+              "sources": [
+                "hallucinations"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "研究介绍中的真实问题：同一个研究者的博士论文题名，聊天工具给出不同但错误的肯定答案。不要编出三个题名；用该报告说明已存在冲突与尚缺证据。",
+              "transfer": "两次回答对同一照片日期不同，应补哪一种证据，而不是继续让它投票？"
+            },
+            {
+              "id": "agreement-is-not-a-check",
+              "title": "AI 说你做得好，它检查过哪一项？",
+              "goal": "要求按既定条件指出对应位置，区分认同和检查。",
+              "sources": [
+                "sycophancy",
+                "moon-2023"
+              ],
+              "variant": "对比",
+              "kind": "contrast",
+              "material": "真实回滚事件作引子；对 NASA 公告的练习删节是否仍有时间、地点做条件核对。两种评语为明确标注的编辑练习，不是被回滚模型的原话。",
+              "transfer": "再增加时区要求后，过去的检查是否足够？"
+            },
+            {
+              "id": "a-picture-is-not-a-record",
+              "title": "画得像历史照片，就真是历史吗？",
+              "goal": "区别生成图像的视觉可信感与历史记录的来源。",
+              "sources": [
+                "gemini-images",
+                "earthrise"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "Google 2024 暂停人物图像生成的公开说明；NASA 有日期和摄影者的真实照片。创意插画与历史展板需要不同证据，不展示虚构争议图片。",
+              "transfer": "为虚构故事和真实人物纪念页各选一种合适图像来源，并说明标注。"
+            },
+            {
+              "id": "which-tool-did-it-use",
+              "title": "同一个聊天框，为什么不总是在做同一件事？",
+              "goal": "把对话界面与背后的检索、转写、生成等动作分开。",
+              "sources": [
+                "chatgpt-search",
+                "whisper",
+                "gemini-images"
+              ],
+              "variant": "术语",
+              "kind": "sort",
+              "material": "三个官方材料分别记录搜索、转写、图像生成；Google明确区分Gemini应用、Search和模型。只用动作解释术语，不讲架构。",
+              "transfer": "当请求要求引用今天的新公告时，光有会写文章的能力还缺什么？"
+            },
+            {
+              "id": "numbers-need-a-check",
+              "title": "表格排得整齐，合计就不会错吗？",
+              "goal": "从整洁输出回到输入行与计算规则检查数值。",
+              "sources": [
+                "smithsonian-dataset",
+                "file-analysis"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "Use the directly readable SI-managed dataset: real image-release count, book volumes and archive volume are different quantities, not users. The inaccessible anniversary press URL is no longer a learner prerequisite.",
+              "transfer": "把“170万次下载”改写成“170万个人下载过”，原文是否给出了所需证据？"
+            },
+            {
+              "id": "one-good-example",
+              "title": "试成功一次，下一次为什么还要检查？",
+              "goal": "理解一个成功例子不能覆盖缺资料、不同条件和边界任务。",
+              "sources": [
+                "be-my-ai",
+                "hallucinations"
+              ],
+              "variant": "对比",
+              "kind": "contrast",
+              "material": "照片说明的真实产品流程与公开错误报告只证明各自情况。对比材料完整和关键文字缺失的教学变式，输出条件变化要重新验证。",
+              "transfer": "从清晰图注任务换到无法辨认日期的旧扫描件，应该保留什么不确定性？"
+            }
+          ]
+        },
+        {
+          "id": "give-the-right-material",
+          "title": "把真正需要的材料交给它",
+          "objective": "选择、组织并限定材料，知道缺少什么。",
+          "lessons": [
+            {
+              "id": "choose-the-document",
+              "title": "材料越多，回答就越贴近你吗？",
+              "goal": "按问题挑相关来源而不是全部塞入。",
+              "sources": [
+                "notebooklm",
+                "moon-2023",
+                "earthrise"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "NotebookLM文档选择功能的真实介绍；查活动地点时，活动公告比Earthrise图片记录更相关，制作照片卡时选择反过来。",
+              "transfer": "问题改为照片摄影者，重新选择材料而不是沿用活动公告。"
+            },
+            {
+              "id": "what-is-missing",
+              "title": "原文没有写的事，要让 AI 补上吗？",
+              "goal": "将缺失信息明确留下，而不把顺畅补全当事实。",
+              "sources": [
+                "moon-2023",
+                "file-uploads"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "NASA公告给出日期地点无需注册，但没有在所摘材料内给出每位访客停车位。区分已写、未写、需要另查；不推断停车服务。",
+              "transfer": "要求摘要带上费用项目，而材料只写无需注册时，能否把所有相关费用写成零？"
+            },
+            {
+              "id": "two-years-two-events",
+              "title": "两份标题很像的公告，能直接拼在一起吗？",
+              "goal": "用年份和事件身份拆开冲突资料。",
+              "sources": [
+                "moon-2022",
+                "moon-2023"
+              ],
+              "variant": "对比",
+              "kind": "contrast",
+              "material": "NASA2022年10月1日与2023年10月21日真实公告；分别保留对应日期和背景，不拼成一个混合活动。",
+              "transfer": "活动官网更新后，旧日历邀请仍保留原日期，先确认什么身份信息？"
+            },
+            {
+              "id": "quote-or-instruction",
+              "title": "资料里写着命令，助手就该照做吗？",
+              "goal": "把待分析材料中的文字与用户授权分开。",
+              "sources": [
+                "agent",
+                "moon-2023"
+              ],
+              "variant": "术语",
+              "kind": "sort",
+              "material": "Agent真实说明中的外部恶意指令风险；NASA公告中的参加邀请只是需要总结的材料，不等于读者授权助手报名或发邮件。保持防御性，不提供攻击步骤。",
+              "transfer": "整理活动说明时遇到订阅邀请，任务是否因此变成注册订阅？"
+            },
+            {
+              "id": "keep-the-task-small",
+              "title": "一个问题需要整份资料库吗？",
+              "goal": "选择足够回答问题的最小材料范围。",
+              "sources": [
+                "notebooklm",
+                "nps-plan"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "NPS规划指南有明确的日间/过夜与多日野外范围；只做指南范围说明时不需要私人行程或通讯录，真要更复杂规划则需不同材料。",
+              "transfer": "比较两个指南适用范围时，应上传私人身份证还是提供两个公开链接？为什么？"
+            },
+            {
+              "id": "start-a-new-context",
+              "title": "换了任务，旧材料还应该跟着走吗？",
+              "goal": "在新任务开始时重新核对已选材料及背景。",
+              "sources": [
+                "file-library",
+                "moon-2022",
+                "moon-2023"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "文件库支持材料复用；从2022公告转到2023公告需要明确替换任务依据，而不是混用保留下来的旧文件。",
+              "transfer": "从历史活动资料切换到自己的活动草稿，列出必须保留与必须移开的内容。"
+            }
+          ]
+        },
+        {
+          "id": "check-what-matters",
+          "title": "学会检查，而不是反复问一遍",
+          "objective": "核对引用、日期、范围和生成内容的身份。",
+          "lessons": [
+            {
+              "id": "follow-a-claim",
+              "title": "一个链接能支持整段话吗？",
+              "goal": "把具体句子对到来源中真正写到的部分。",
+              "sources": [
+                "chatgpt-search",
+                "earthrise"
+              ],
+              "variant": "溯源",
+              "kind": "sort",
+              "material": "NASA图注能支持照片日期和摄影者，不能支持宇航员当时未经记录的心情。搜索引用只是到原文的入口。",
+              "transfer": "一段摘要给历史照片加上未经引用的对话，该查哪一部分？"
+            },
+            {
+              "id": "which-date-is-this",
+              "title": "网页写着2022，照片也是2022拍的吗？",
+              "goal": "区分事件日期、网页发表日期和自己取用日期。",
+              "sources": [
+                "earthrise",
+                "alice-record"
+              ],
+              "variant": "对比",
+              "kind": "contrast",
+              "material": "Earthrise照片拍于1968、网页发表于2022；Gutenberg电子书记录有2008发行、2025更新。先给明确字段让读者分身份，不要求知道小说历史年份。",
+              "transfer": "一篇网页今天更新，能否因此把其中的历史事件写成今天发生？"
+            },
+            {
+              "id": "scope-of-a-promise",
+              "title": "官方指南也能回答所有情况吗？",
+              "goal": "把可靠来源与适用范围分开。",
+              "sources": [
+                "nps-plan",
+                "nps-essentials"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "NPS日间/过夜指南明确不覆盖完整多日野外规划；Ten Essentials还指出活动可能需要额外物品。教学只比较范围，不安排真实路线。",
+              "transfer": "把基础清单写成任何环境都足够，删掉了来源的哪一种信息？"
+            },
+            {
+              "id": "keep-the-qualifier",
+              "title": "“超过510万”，缩短以后还是同一个意思吗？",
+              "goal": "简化语言时保留条件、限定和不确定性。",
+              "sources": [
+                "smithsonian-access"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "Current public project page accessed2026-09-15: more than5.1million2D/3Ddigitalitems. Preserve lower bound and access date; do not claim an exact or permanent count.",
+              "transfer": "把“部分节目直播”改写成“全部节目直播”，多出的承诺从哪里来？"
+            },
+            {
+              "id": "generated-voices",
+              "title": "两个人聊得自然，就是一段真实采访吗？",
+              "goal": "识别基于资料生成的音频与真人采访记录的不同身份。",
+              "sources": [
+                "audio-overview",
+                "whisper"
+              ],
+              "variant": "术语",
+              "kind": "sort",
+              "material": "Google帮助页明确AI生成音频主持人；Whisper处理已有语音。一个生成、一个转写，不将试听文件伪装为采访。",
+              "transfer": "给AI生成的双人讲解配说明时，哪一项身份信息不能省？"
+            },
+            {
+              "id": "finish-a-check",
+              "title": "什么时候可以结束检查，而不是没完没了地追问？",
+              "goal": "按风险与成品用途设定有限的验收条件。",
+              "sources": [
+                "earthrise",
+                "wai-informative"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "照片描述要核对画面含义，历史图注还需核对记录日期与作者；不同用途的检查范围不同。让读者完成一张小验收单，不许宣称绝对无误。",
+              "transfer": "同一图片从个人笔记变成公开历史展板，需要增加哪一种检查？"
+            }
+          ]
+        },
+        {
+          "id": "you-keep-control",
+          "title": "方便之外，决定权还在你手上",
+          "objective": "以最少信息和明确授权完成任务，并保留停止与复核的机会。",
+          "lessons": [
+            {
+              "id": "minimum-personal-data",
+              "title": "写一封提醒，需要把全部联系人交出去吗？",
+              "goal": "先用公开或去识别材料完成不需要私人信息的任务。",
+              "sources": [
+                "agent",
+                "moon-2023"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "Agent权限限制的官方说明；对公开NASA公告写提醒无需通讯录。发送才涉及不同动作与收件人，不在练习里执行。",
+              "transfer": "只想改语气时，把真实邮箱换成角色称呼，会不会妨碍这个任务？"
+            },
+            {
+              "id": "temporary-does-not-mean-nothing",
+              "title": "看到“临时”两个字，可以不看设置了吗？",
+              "goal": "根据具体控制项而非名字判断历史、个性化和数据范围。",
+              "sources": [
+                "temporary-chat"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "2026-09-15检查的FAQ区分新记忆、已有个性化和第三方动作。明确检查日期，不重复旧版临时聊天从不使用已有记忆的说法；不背诵易变按钮。",
+              "transfer": "关闭训练选项是否自动证明聊天历史与保存文件也都被删掉？需要分别查什么？"
+            },
+            {
+              "id": "chat-and-file-are-different",
+              "title": "对话不见了，上传的文件也一定不见了吗？",
+              "goal": "分辨对话记录与可复用文件的管理范围。",
+              "sources": [
+                "file-library"
+              ],
+              "variant": "对比",
+              "kind": "contrast",
+              "material": "Library帮助页把上传和生成文件当作可复用材料；以官方当前说明指出要分别确认存储位置，不承诺删除时间或跨平台策略。",
+              "transfer": "要停止下一次任务使用一份旧文件，应该只改聊天标题还是检查已选文件？"
+            },
+            {
+              "id": "draft-is-not-send",
+              "title": "让它写好，与允许它发出去，是同一件事吗？",
+              "goal": "划清草稿、查看和对外发送的权限。",
+              "sources": [
+                "agent",
+                "moon-host"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "官方Agent的确认/接管设计；NASA主办指南含推广步骤，但用户整理指南不构成发送或报名授权。",
+              "transfer": "已经批准写邀请，收件人改变时还能沿用同一发送授权吗？"
+            },
+            {
+              "id": "pause-before-action",
+              "title": "长任务还在继续，你该在哪一步停下来？",
+              "goal": "在重要动作前安排确认点，暂停后依据已完成、未执行或未知状态决定下一步。",
+              "sources": [
+                "agent",
+                "canvas"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "Agent支持中断接管、Canvas有版本恢复；区分可恢复的编辑与对外动作，不把回退草稿当成撤回已发送邮件。",
+              "transfer": "更改草稿与发布通知的撤销代价不同，应在哪一步设确认？"
+            },
+            {
+              "id": "a-familiar-voice",
+              "title": "熟悉的声音，下一步该联系谁？",
+              "goal": "用已知联系方式独立核对紧急请求。",
+              "sources": [
+                "ftc-voice"
+              ],
+              "variant": "对比",
+              "kind": "sort",
+              "material": "FTC公开提醒中的亲人紧急求助与仿声风险；不放仿声演示、不教授制作。比较沿用来电给的信息与自己已有联系渠道。",
+              "transfer": "消息同时催促保密和立刻转账时，先做哪个独立确认动作？"
+            }
+          ]
+        },
+        {
+          "id": "build-your-habit",
+          "title": "形成你自己的使用方法",
+          "objective": "用一条可重复但不盲目的流程处理新任务。",
+          "lessons": [
+            {
+              "id": "define-done",
+              "title": "开始之前，你怎么知道怎样才算做好？",
+              "goal": "先写可观察的完成条件，再索取输出。",
+              "sources": [
+                "prompt-guidance",
+                "bookfest-2024"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "Library of Congress真实2024年国家图书节页面：2024-08-24，华盛顿Walter E. Washington Convention Center，9:00至20:00，8:30开门；免费开放，部分节目直播、全部节目录像会后提供。这是历史编辑任务，不是现在可参加的邀请。 成品是给不能到现场的读者的一句资料导览，需区分直播与回看，不写泛泛的“很棒”。",
+              "transfer": "把任务从介绍活动改成帮助人决定能否参加，条件该如何变化？"
+            },
+            {
+              "id": "change-one-thing",
+              "title": "改了五处以后，你知道哪一处起作用了吗？",
+              "goal": "保留原请求和结果，只改一个关键条件做对照。",
+              "sources": [
+                "canvas",
+                "prompt-guidance"
+              ],
+              "variant": "对比",
+              "kind": "sort",
+              "material": "Canvas局部编辑/版本与官方迭代建议；用同一公开公告的两份编辑稿，明确这些是受控教学版本而非现场模型测量。",
+              "transfer": "要比较有无指定读者的差别，哪些条件应保持不动？"
+            },
+            {
+              "id": "help-that-leaves-you-able",
+              "title": "它给了答案，你下次能自己做吗？",
+              "goal": "选择能帮助自己尝试的提示，而不把完成等同学会。",
+              "sources": [
+                "khanmigo",
+                "aero-instruction"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "Khanmigo提问引导的真实设计和AERO逐步撤提示的指导。练习要求先尝试一个改写，再按线索改进；不声称已测量学习提升。",
+              "transfer": "换一种公告内容后，怎样判断你学会了检查而不只是记住这份答案？"
+            },
+            {
+              "id": "save-what-worked",
+              "title": "一段好用的请求，要整段背下来吗？",
+              "goal": "保存任务结构和检查条件，同时替换每次不同的材料。",
+              "sources": [
+                "prompt-guidance",
+                "file-library"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "真实文件复用功能与明确上下文指导；模板保留目标/格式/检查条件，年份、地点和个人信息不固定照搬。",
+              "transfer": "把活动模板借给另一个人时，哪些具体事实必须清空或核对？"
+            },
+            {
+              "id": "when-the-source-changes",
+              "title": "昨天的方法失灵，是不是你突然不会了？",
+              "goal": "先检查来源、功能与输入变化，不盲目责怪自己或扩大操作。",
+              "sources": [
+                "gemini-images",
+                "chatgpt-search"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "真实功能暂停与搜索发布说明均说明产品会变；教核对变化日期与当前说明，不承诺某个功能永久可用。",
+              "transfer": "同样请求这次没有链接，应先查看当前工具动作还是继续添加更多肯定措辞？"
+            },
+            {
+              "id": "your-first-ai-method",
+              "title": "换成一个新任务，你能独立走完整条路吗？",
+              "goal": "独立完成选材料、写请求、检查成品、保留边界的完整小任务。",
+              "sources": [
+                "earthrise",
+                "nasa-rights",
+                "moon-2023"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "在照片小卡或过去活动资料卡中选择一个真实任务，做出材料清单、请求和三项验收；没有外部AI也能在界面内练习并留下自己的文字。",
+              "transfer": "解释在公开分享前还需要确认的来源或权利事项，不承诺NASA认可。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ai-for-real-life",
+      "title": "用 AI，把日常事情做好",
+      "englishTitle": "AI for Real Life",
+      "description": "带着真实公告、图片、指南和学习材料，完成清楚的表达、可信的整理、可执行的小计划与能分享的作品。",
+      "units": [
+        {
+          "id": "words-for-a-real-reader",
+          "title": "把话说给真正需要的人",
+          "objective": "把真实公开信息改成读者能用的文字，不改坏事实。",
+          "lessons": [
+            {
+              "id": "who-will-read-this",
+              "title": "同一份公告，不同读者先看什么？",
+              "goal": "按读者要做的动作选择信息。",
+              "sources": [
+                "bookfest-2024",
+                "wai-writing"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "Library of Congress真实2024年国家图书节页面：2024-08-24，华盛顿Walter E. Washington Convention Center，9:00至20:00，8:30开门；免费开放，部分节目直播、全部节目录像会后提供。这是历史编辑任务，不是现在可参加的邀请。 同一段给到场的朋友与不能到场的读者，要优先保留不同参加方式。通过真实网页练习换受众，不发出实际消息。",
+              "transfer": "读者改成只想下班后看录像的人，应该先说明哪一种观看方式？"
+            },
+            {
+              "id": "keep-the-facts-while-shortening",
+              "title": "缩成两句话，什么绝不能被挤掉？",
+              "goal": "压缩文字时保留决定行动的条件。",
+              "sources": [
+                "bookfest-2024",
+                "wai-writing"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "Library of Congress真实2024年国家图书节页面：2024-08-24，华盛顿Walter E. Washington Convention Center，9:00至20:00，8:30开门；免费开放，部分节目直播、全部节目录像会后提供。这是历史编辑任务，不是现在可参加的邀请。 两句通知保留日期、地方和参加方法；8:30开门与9:00开始不能压成同一个时间。",
+              "transfer": "缩成一句提醒后，哪些细节可以指向完整说明，哪些不能改成相反意思？"
+            },
+            {
+              "id": "tone-without-changing-the-promise",
+              "title": "写得热情一点，可以顺手许诺更多吗？",
+              "goal": "调整语气但不制造优惠、保证或新安排。",
+              "sources": [
+                "bookfest-2024",
+                "prompt-guidance"
+              ],
+              "variant": "对比",
+              "kind": "contrast",
+              "material": "Library of Congress真实2024年国家图书节页面：2024-08-24，华盛顿Walter E. Washington Convention Center，9:00至20:00，8:30开门；免费开放，部分节目直播、全部节目录像会后提供。这是历史编辑任务，不是现在可参加的邀请。 对比友好邀请与擅自许诺免费赠书/所有节目直播；错例明确是待修改的编辑文本，不冒充实际AI实测。",
+              "transfer": "把免费参加写成所有消费都免费，需要额外核对什么？"
+            },
+            {
+              "id": "a-question-not-an-invention",
+              "title": "还缺一个细节，是补写还是先问？",
+              "goal": "把未知安排变成具体询问而非虚构答案。",
+              "sources": [
+                "bookfest-2024",
+                "wai-writing"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "Library of Congress真实2024年国家图书节页面：2024-08-24，华盛顿Walter E. Washington Convention Center，9:00至20:00，8:30开门；免费开放，部分节目直播、全部节目录像会后提供。这是历史编辑任务，不是现在可参加的邀请。 在这段材料没有找到具体手语翻译安排。写出询问某场次可达性的草稿，而不是代主办方承诺存在或不存在。只处理提供的页面，不声称全站没有答案。",
+              "transfer": "想知道录像有没有某种语言的字幕，怎样把未知转成可回答的问题？"
+            },
+            {
+              "id": "help-the-reader-find-the-action",
+              "title": "标题和链接写得漂亮，人就知道该点哪里吗？",
+              "goal": "用动作和目的写标题与链接文字。",
+              "sources": [
+                "wai-functional",
+                "wai-writing",
+                "bookfest-2024"
+              ],
+              "variant": "术语",
+              "kind": "sort",
+              "material": "W3C真实打印与搜索按钮用动作命名。把2024图书节的资料链接分别写成看节目记录/看活动说明，不把查看链接叫做提交报名。",
+              "transfer": "同一张资料卡有下载PDF与观看录像两个入口，怎样让第一次来的读者区分？"
+            },
+            {
+              "id": "finish-a-clear-message",
+              "title": "这份短通知，可以交给陌生人了吗？",
+              "goal": "独立完成面向指定读者的准确短文并做检查。",
+              "sources": [
+                "bookfest-2024",
+                "wai-writing"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "Library of Congress真实2024年国家图书节页面：2024-08-24，华盛顿Walter E. Washington Convention Center，9:00至20:00，8:30开门；免费开放，部分节目直播、全部节目录像会后提供。这是历史编辑任务，不是现在可参加的邀请。 独立写一段给未能到场的朋友的简短回看说明，检查范围、读者动作和原文入口；历史身份在开场一句说明即可，不全篇反复告诫。",
+              "transfer": "读者看不到配图，文字本身是否仍说明去哪里找到节目？"
+            }
+          ]
+        },
+        {
+          "id": "information-you-can-trust",
+          "title": "从一堆资料里拿到可靠结论",
+          "objective": "提取、比较和核对公开材料，而不是获得一篇更长的摘要。",
+          "lessons": [
+            {
+              "id": "choose-summary-or-extraction",
+              "title": "只找发布日期，也要先读一篇长摘要吗？",
+              "goal": "根据问题选提取字段或整体总结。",
+              "sources": [
+                "file-uploads",
+                "smithsonian-access"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "以可直接打开的SI管理AWS数据集条目与Smithsonian项目页为依据：数据集记录2020-02-25发布超过280万件图像；背景另有1.55亿物品、210万册图书、15.6万立方英尺档案，没有逐项统计时点。2026-09-15查项目页为超过510万件2D/3D数字项目。单位、范围与时点需分别记录，不计算未经对齐的增幅或独立人数。原周年新闻页读取失败，改用这两份可读一手材料，不把网页404说成资料不存在。",
+              "transfer": "只想知道数据覆盖哪一年，怎样请求而不生成一篇博物馆史？"
+            },
+            {
+              "id": "one-row-one-event",
+              "title": "图像、图书和档案，能都填进“人数”吗？",
+              "goal": "用一行一事件和明确列名组织资料。",
+              "sources": [
+                "file-analysis",
+                "smithsonian-dataset",
+                "smithsonian-access"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "以可直接打开的SI管理AWS数据集条目与Smithsonian项目页为依据：数据集记录2020-02-25发布超过280万件图像；背景另有1.55亿物品、210万册图书、15.6万立方英尺档案，没有逐项统计时点。2026-09-15查项目页为超过510万件2D/3D数字项目。单位、范围与时点需分别记录，不计算未经对齐的增幅或独立人数。原周年新闻页读取失败，改用这两份可读一手材料，不把网页404说成资料不存在。",
+              "transfer": "新增一条馆藏图像数量时，怎样避免与下载次数相加？"
+            },
+            {
+              "id": "compare-the-same-thing",
+              "title": "两个数字放在一起，就能比出进展吗？",
+              "goal": "对齐比较对象、字段和单位。",
+              "sources": [
+                "smithsonian-dataset",
+                "smithsonian-access",
+                "file-analysis"
+              ],
+              "variant": "对比",
+              "kind": "contrast",
+              "material": "以可直接打开的SI管理AWS数据集条目与Smithsonian项目页为依据：数据集记录2020-02-25发布超过280万件图像；背景另有1.55亿物品、210万册图书、15.6万立方英尺档案，没有逐项统计时点。2026-09-15查项目页为超过510万件2D/3D数字项目。单位、范围与时点需分别记录，不计算未经对齐的增幅或独立人数。原周年新闻页读取失败，改用这两份可读一手材料，不把网页404说成资料不存在。",
+              "transfer": "一个表写“当年新增图像”，另一个写“截至年底全部图像”，比较前还缺哪项说明？"
+            },
+            {
+              "id": "leave-gaps-visible",
+              "title": "表格里有空白，是不是就不够专业？",
+              "goal": "诚实保留未提供的信息并指明补查位置。",
+              "sources": [
+                "smithsonian-access"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "以可直接打开的SI管理AWS数据集条目与Smithsonian项目页为依据：数据集记录2020-02-25发布超过280万件图像；背景另有1.55亿物品、210万册图书、15.6万立方英尺档案，没有逐项统计时点。2026-09-15查项目页为超过510万件2D/3D数字项目。单位、范围与时点需分别记录，不计算未经对齐的增幅或独立人数。原周年新闻页读取失败，改用这两份可读一手材料，不把网页404说成资料不存在。",
+              "transfer": "没有报告某个国家的下载次数，能否写为该国无人使用？"
+            },
+            {
+              "id": "a-summary-with-a-trail",
+              "title": "这句话从哪里来，你还能找回去吗？",
+              "goal": "给关键结论保留可追溯出处和对应句意。",
+              "sources": [
+                "notebooklm",
+                "smithsonian-dataset",
+                "smithsonian-access"
+              ],
+              "variant": "溯源",
+              "kind": "sort",
+              "material": "以可直接打开的SI管理AWS数据集条目与Smithsonian项目页为依据：数据集记录2020-02-25发布超过280万件图像；背景另有1.55亿物品、210万册图书、15.6万立方英尺档案，没有逐项统计时点。2026-09-15查项目页为超过510万件2D/3D数字项目。单位、范围与时点需分别记录，不计算未经对齐的增幅或独立人数。原周年新闻页读取失败，改用这两份可读一手材料，不把网页404说成资料不存在。",
+              "transfer": "复制两个来源的结论到一页后，怎样保住每条数值的时期与原始链接？"
+            },
+            {
+              "id": "make-a-one-page-brief",
+              "title": "只给你一页，你会留下哪些信息？",
+              "goal": "完成一份有目的、有依据、留明缺口的资料简报。",
+              "sources": [
+                "smithsonian-dataset",
+                "smithsonian-access",
+                "wai-writing"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "以可直接打开的SI管理AWS数据集条目与Smithsonian项目页为依据：数据集记录2020-02-25发布超过280万件图像；背景另有1.55亿物品、210万册图书、15.6万立方英尺档案，没有逐项统计时点。2026-09-15查项目页为超过510万件2D/3D数字项目。单位、范围与时点需分别记录，不计算未经对齐的增幅或独立人数。原周年新闻页读取失败，改用这两份可读一手材料，不把网页404说成资料不存在。",
+              "transfer": "读者改成研究计划使用人数的人，这份材料还能直接回答其问题吗？"
+            }
+          ]
+        },
+        {
+          "id": "learn-without-outsourcing-learning",
+          "title": "让 AI 帮你学，而不是替你学",
+          "objective": "把解释转成自己能完成的尝试、检查与复习。",
+          "lessons": [
+            {
+              "id": "ask-for-the-step-you-missed",
+              "title": "看不懂时，要更长的解释还是更小的一步？",
+              "goal": "指出卡住的具体动作，索取可操作的一个例子。",
+              "sources": [
+                "aero-instruction",
+                "alice-text"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "取Lewis Carroll《Alice’s Adventures in Wonderland》第一章真实原文开头：Alice在河岸边看姐姐无图无对话的书，考虑采雏菊；兔子说怕迟到时她并未起身，看到它从背心口袋掏表后才追去。文学作品是真实出版物，故事是虚构，不当现实事件。优先给原文一两句和原创中文释义；按句子顺序理解，不要求英语基础、全文记忆或外部付费账号。 长句里谁做什么不清楚，就请求标出Alice和Rabbit各自的动作并示范一句；不是要求整章再讲一遍。",
+              "transfer": "理解了每个词却理不清动作顺序，你下一句该怎样请求帮助？"
+            },
+            {
+              "id": "predict-before-the-answer",
+              "title": "为什么要先写自己的判断，再看解释？",
+              "goal": "用一次低压力预测暴露自己真正不确定的地方。",
+              "sources": [
+                "khanmigo",
+                "alice-text"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "取Lewis Carroll《Alice’s Adventures in Wonderland》第一章真实原文开头：Alice在河岸边看姐姐无图无对话的书，考虑采雏菊；兔子说怕迟到时她并未起身，看到它从背心口袋掏表后才追去。文学作品是真实出版物，故事是虚构，不当现实事件。优先给原文一两句和原创中文释义；按句子顺序理解，不要求英语基础、全文记忆或外部付费账号。 给原文第三段短选句，先推断哪件事真正让Alice起身，再核对；不要把原文的人物想法说成学习效果实验。",
+              "transfer": "熟悉这一段后，换成同章她看到小门的片段，怎样检查你是不是只记住了原题？"
+            },
+            {
+              "id": "use-a-hint-not-a-finished-answer",
+              "title": "一条提示，怎样既帮忙又不替你做完？",
+              "goal": "选择指出检查方向而不交出整份成品的帮助。",
+              "sources": [
+                "khanmigo",
+                "aero-instruction",
+                "alice-text"
+              ],
+              "variant": "对比",
+              "kind": "contrast",
+              "material": "取Lewis Carroll《Alice’s Adventures in Wonderland》第一章真实原文开头：Alice在河岸边看姐姐无图无对话的书，考虑采雏菊；兔子说怕迟到时她并未起身，看到它从背心口袋掏表后才追去。文学作品是真实出版物，故事是虚构，不当现实事件。优先给原文一两句和原创中文释义；按句子顺序理解，不要求英语基础、全文记忆或外部付费账号。 提示可以指出but前后动作变化，或先示范一处；完整代写动作顺序则把当前练习做完。区分初次示范与已经会基本动作后的独立练习。",
+              "transfer": "连句子里是谁都找不到时，应先要哪种帮助，而不是硬猜？"
+            },
+            {
+              "id": "explain-it-back",
+              "title": "换成自己的话，怎样检查有没有走样？",
+              "goal": "通过迁移解释而不是复述原句检验理解。",
+              "sources": [
+                "aero-practice",
+                "alice-text"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "取Lewis Carroll《Alice’s Adventures in Wonderland》第一章真实原文开头：Alice在河岸边看姐姐无图无对话的书，考虑采雏菊；兔子说怕迟到时她并未起身，看到它从背心口袋掏表后才追去。文学作品是真实出版物，故事是虚构，不当现实事件。优先给原文一两句和原创中文释义；按句子顺序理解，不要求英语基础、全文记忆或外部付费账号。 看完讲解后合上中文释义，用自己的话说清Alice为什么追兔子；再回原句核查，不求模仿漂亮措辞。AERO课堂实例仅作教学方法依据，不宣称这两任务实验等价。",
+              "transfer": "只会复述解释而找不到原句支持，下一次你会补做哪个动作？"
+            },
+            {
+              "id": "return-to-it-later",
+              "title": "今天答对了，复习为什么还要留到以后？",
+              "goal": "安排一次延迟的重新作答而不是连续重读。",
+              "sources": [
+                "aero-practice",
+                "moon-2023"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "After literary practice, switch to the real NASA2023announcement: pageOct16, eventOct21. Use separate date roles for later retrieval and a self-authored card. AERO supplies the instructional-method source, not measured University outcomes.",
+              "transfer": "隔一段时间还能记住情节，却说不出原文哪句话支持，复习应补查什么？"
+            },
+            {
+              "id": "make-your-learning-card",
+              "title": "一张小卡，能提醒你做哪一步？",
+              "goal": "制作前面提出判断问题、背面给出理由的复习卡。",
+              "sources": [
+                "aero-practice",
+                "moon-2023"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "After literary practice, switch to the real NASA2023announcement: pageOct16, eventOct21. Use separate date roles for later retrieval and a self-authored card. AERO supplies the instructional-method source, not measured University outcomes.",
+              "transfer": "读到另一段长句，如何保留找主语和转折的方法，而不照抄这一张卡的答案？"
+            }
+          ]
+        },
+        {
+          "id": "turn-a-plan-into-actions",
+          "title": "把一个想法变成能执行的小计划",
+          "objective": "用公开主办指南练习条件、顺序、分工和备选方案。",
+          "lessons": [
+            {
+              "id": "start-with-the-constraints",
+              "title": "先列一百个点子，还是先问在哪里做？",
+              "goal": "先明确人群、场地和资源再安排活动。",
+              "sources": [
+                "moon-host"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "NASA真实主办指南首先询问参与者和地点。课程拟定的个人计划标明是用户练习，不假称已登记活动。",
+              "transfer": "活动从线下改成线上后，哪些限制必须重新确认？"
+            },
+            {
+              "id": "order-the-dependencies",
+              "title": "为什么有些事情不能同时开始？",
+              "goal": "找出一项动作依赖另一项确认的关系。",
+              "sources": [
+                "moon-host",
+                "moon-2023"
+              ],
+              "variant": "现象",
+              "kind": "connect",
+              "material": "指南先决定场地、检查可见性再推广；整理已确认与必须先确认的工作，不假设所有任务都严格排一条线。",
+              "transfer": "地点未定就发邀请，哪部分可能返工？"
+            },
+            {
+              "id": "a-list-is-not-a-guarantee",
+              "title": "清单打满勾，就一定准备够了吗？",
+              "goal": "根据具体活动补充基础清单而不是机械照抄。",
+              "sources": [
+                "nps-essentials",
+                "nps-plan"
+              ],
+              "variant": "对比",
+              "kind": "contrast",
+              "material": "NPS基础用品类别和适用范围；只做资料检查，不指导实际高风险出游。以不同活动需要不同补充为关键。",
+              "transfer": "同一物资表从室内讲解改到户外观看，应该重新问哪类条件？"
+            },
+            {
+              "id": "plan-for-the-clouds",
+              "title": "天气不配合，这个计划就只能取消吗？",
+              "goal": "根据真实指南准备不依赖同一条件的备选路径。",
+              "sources": [
+                "moon-host"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "NASA指南明确云雨备选图片、可视化和线上资源。把观测目标与具体方式分开；不提供天气预报。",
+              "transfer": "网络也不可用时，原线上备选还成立吗，哪些材料要事先准备？"
+            },
+            {
+              "id": "who-does-what",
+              "title": "写着“准备好了”，到底谁确认过？",
+              "goal": "把动作分配给明确角色并给出可检查产物。",
+              "sources": [
+                "moon-host"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "指南要求安排协助、搭建与清理；练习中用角色而非虚构真人姓名，产物如地点确认和材料清单，不伪造任务完成。",
+              "transfer": "一位志愿者缺席后，怎样找出仍无人负责的动作？"
+            },
+            {
+              "id": "make-a-plan-you-can-review",
+              "title": "别人能按这份计划接着做吗？",
+              "goal": "交付有条件、分工、备选和待确认项的小计划。",
+              "sources": [
+                "moon-host",
+                "wai-writing"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "用主办指南做一页个人练习计划；日期地点未定明确留空。成品不自动报名、不发送、不声称官方批准。",
+              "transfer": "另一人接手时，应能区分哪两种状态，而不是把所有事项都写成已完成？"
+            }
+          ]
+        },
+        {
+          "id": "make-something-worth-sharing",
+          "title": "做一件有依据、能展示的作品",
+          "objective": "把真实素材变成自己的表达，同时保留来源、可读性和权利边界。",
+          "lessons": [
+            {
+              "id": "find-a-usable-image",
+              "title": "网上能看到的图片，都能放进作品吗？",
+              "goal": "从素材页面检查明确权利说明而不是凭可下载判断。",
+              "sources": [
+                "great-wave",
+                "met-open-access"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "Met馆藏45434《神奈川冲浪里》真实图像与对象记录：葛饰北斋，约1830–32，木版画、纸本墨与设色，富士山在浪后的三角形小轮廓；页面明确Public Domain。不能写成风暴现场照片或精确某年，University改写与馆藏原记录分开。 从指定开放资源的真实行动开始，比较仅能查看与明确允许复用；展示具体作品页的Public Domain标签，再读政策。",
+              "transfer": "下载按钮存在但权利字段空白，能否直接宣称允许商业复用？"
+            },
+            {
+              "id": "caption-a-real-photograph",
+              "title": "一句图注，会把木版画写成现场照片吗？",
+              "goal": "把画面可见内容与记录中的背景分开，再组合成图注。",
+              "sources": [
+                "great-wave"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "Met馆藏45434《神奈川冲浪里》真实图像与对象记录：葛饰北斋，约1830–32，木版画、纸本墨与设色，富士山在浪后的三角形小轮廓；页面明确Public Domain。不能写成风暴现场照片或精确某年，University改写与馆藏原记录分开。 为一个从没见过此图的人写图注。分别观察可见形状和查对象记录，把作者、约年与媒介放对位置，不编作者对白或现场天气。",
+              "transfer": "只看缩略图不看对象记录，你能确认哪种信息、还不能确认哪种？"
+            },
+            {
+              "id": "description-for-someone-who-cannot-see",
+              "title": "看不到画面的人，需要你说清什么？",
+              "goal": "按照图片用途提供有意义而不冗长的文字说明。",
+              "sources": [
+                "great-wave",
+                "wai-informative"
+              ],
+              "variant": "对比",
+              "kind": "contrast",
+              "material": "Met馆藏45434《神奈川冲浪里》真实图像与对象记录：葛饰北斋，约1830–32，木版画、纸本墨与设色，富士山在浪后的三角形小轮廓；页面明确Public Domain。不能写成风暴现场照片或精确某年，University改写与馆藏原记录分开。 W3C铃铛例和动作图例说明描述随用途变：此图介绍画面布局时说巨浪/小船/远山关系，不写长串颜色；下载按钮再说明动作。",
+              "transfer": "卡片主题从画面构图换成印刷技法，哪些说明应从图片观察转向馆藏记录？"
+            },
+            {
+              "id": "separate-fact-and-art",
+              "title": "改成一幅想象画，还能叫馆藏原图吗？",
+              "goal": "清楚标注艺术改编与真实记录的不同身份。",
+              "sources": [
+                "great-wave",
+                "met-open-access"
+              ],
+              "variant": "术语",
+              "kind": "sort",
+              "material": "Met馆藏45434《神奈川冲浪里》真实图像与对象记录：葛饰北斋，约1830–32，木版画、纸本墨与设色，富士山在浪后的三角形小轮廓；页面明确Public Domain。不能写成风暴现场照片或精确某年，University改写与馆藏原记录分开。 在此图基础上另画现代帆船的构想是改编，不是原始木版画的新发现；Google2024真实生成图像错误事件只用于说明图像身份容易混淆，不复制或宣称当前仍如此。",
+              "transfer": "裁剪原图与生成一艘不存在的新船，分别该怎样标注改动？"
+            },
+            {
+              "id": "one-message-per-card",
+              "title": "一张小卡塞满所有知识，会更有用吗？",
+              "goal": "围绕一个核心信息组织标题、图片与说明。",
+              "sources": [
+                "wai-writing",
+                "great-wave"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "Met馆藏45434《神奈川冲浪里》真实图像与对象记录：葛饰北斋，约1830–32，木版画、纸本墨与设色，富士山在浪后的三角形小轮廓；页面明确Public Domain。不能写成风暴现场照片或精确某年，University改写与馆藏原记录分开。 一张事实卡可专讲小小的富士山怎样置于巨浪后面，或者只介绍版画身份；不把全部日本艺术史塞进去。",
+              "transfer": "读者从看过此画的人变成第一次看的人，标题里应少依赖哪种默认知识？"
+            },
+            {
+              "id": "finish-your-first-piece",
+              "title": "这件作品，有人能看懂也能查证吗？",
+              "goal": "完成图片说明、来源、身份标注和基础可读性的发布前检查。",
+              "sources": [
+                "great-wave",
+                "met-open-access",
+                "wai-informative"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "Met馆藏45434《神奈川冲浪里》真实图像与对象记录：葛饰北斋，约1830–32，木版画、纸本墨与设色，富士山在浪后的三角形小轮廓；页面明确Public Domain。不能写成风暴现场照片或精确某年，University改写与馆藏原记录分开。 成品是自己的博物馆阅读卡：原图、原创说明、原始入口与必要改动标注；无博物馆背书。用户可以导出自己的文字，不实际向外站发布。",
+              "transfer": "换成一张未标Public Domain的现代摄影，哪些检查必须重新做？"
+            }
+          ]
+        }
+      ],
+      "retiredBeforePublication": [
+        {
+          "reason": "The five practical units already end in real artifacts. Their final creation unit will require an independent piece and handover. Repeating goal/material/request/review/revision/handover as six more lectures adds duplication, not a new beginner capability. Keep five complete units and thirty lessons; no published content or learner identity is removed.",
+          "id": "your-small-real-project",
+          "title": "独立完成一个真实小项目",
+          "objective": "选择公开真实材料完成一件作品，留下别人可追溯、自己能修改的过程。",
+          "lessons": [
+            {
+              "id": "choose-a-small-finish",
+              "title": "什么项目小到能做完，又真的有用？",
+              "goal": "选择一项有限、明确且可检验的成品。",
+              "sources": [
+                "bookfest-2024",
+                "great-wave",
+                "alice-text"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "选择一个真实材料的小成品：2024图书节回看导览、Great Wave作品卡，或Alice短段阅读卡。给一个明确读者解决一个问题，不开发应用、不举办活动、不要求外部付费订阅。",
+              "transfer": "怎样把“讲完所有艺术知识”改成能在一张卡里检查是否做到的小目标？"
+            },
+            {
+              "id": "collect-only-what-you-need",
+              "title": "开工前，你的材料够用了吗？",
+              "goal": "为自己的成品列出支持项与仍未找到的来源。",
+              "sources": [
+                "bookfest-2024",
+                "great-wave",
+                "alice-text",
+                "met-open-access"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "依选定成品只收必要原文：活动公开记录、馆藏记录与图像使用说明、或小说的确切段落。把已有事实、需要补查、个人编辑目标分开。",
+              "transfer": "新加一个作者生平事实之前，先缺的是什么？"
+            },
+            {
+              "id": "write-a-request-someone-can-follow",
+              "title": "换一个助手，仍能理解你要什么吗？",
+              "goal": "把目标、读者、材料、保留项和检查方式写成一份可用请求。",
+              "sources": [
+                "prompt-guidance",
+                "bookfest-2024"
+              ],
+              "variant": "对比",
+              "kind": "contrast",
+              "material": "Library of Congress真实2024年国家图书节页面：2024-08-24，华盛顿Walter E. Washington Convention Center，9:00至20:00，8:30开门；免费开放，部分节目直播、全部节目录像会后提供。这是历史编辑任务，不是现在可参加的邀请。 把给谁、要什么、只能用哪些材料、不可改变哪些事实与怎样检查一次说清；给出可复制的短请求但不声称已运行。",
+              "transfer": "另一个助手没看过前面对话，要把哪一项隐含背景补进请求？"
+            },
+            {
+              "id": "review-your-first-version",
+              "title": "第一版很漂亮，你从哪一处开始检查？",
+              "goal": "按先定条件检查事实和用途，不先做装饰修补。",
+              "sources": [
+                "canvas",
+                "wai-writing",
+                "great-wave"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "Met馆藏45434《神奈川冲浪里》真实图像与对象记录：葛饰北斋，约1830–32，木版画、纸本墨与设色，富士山在浪后的三角形小轮廓；页面明确Public Domain。不能写成风暴现场照片或精确某年，University改写与馆藏原记录分开。 以用户刚写的作品卡为对象。先检查图像身份、读者是否懂主信息，再看装饰；没有草稿则让用户先写两句，不伪造模型生成结果。",
+              "transfer": "图注读起来优美但把版画写成摄影，应先改什么而不是先调排版？"
+            },
+            {
+              "id": "revise-without-breaking-the-good-part",
+              "title": "修好了一个地方，怎样不把另一处改坏？",
+              "goal": "小范围修改后重新检查必须保留的条件。",
+              "sources": [
+                "canvas",
+                "bookfest-2024"
+              ],
+              "variant": "现象",
+              "kind": "sort",
+              "material": "Library of Congress真实2024年国家图书节页面：2024-08-24，华盛顿Walter E. Washington Convention Center，9:00至20:00，8:30开门；免费开放，部分节目直播、全部节目录像会后提供。这是历史编辑任务，不是现在可参加的邀请。 把同一份说明改短时保留直播范围与历史日期。真实Canvas局部选择及历史版本是方法原型，实际用户在自己的文本上改一处再复查另一处。",
+              "transfer": "改掉语气后“部分节目直播”变成“全部直播”，你如何找回并修正这一项？"
+            },
+            {
+              "id": "handover-your-finished-work",
+              "title": "别人拿到你的作品，知道哪些是真的、哪些是你做的吗？",
+              "goal": "交付成品、来源说明、作者编辑身份和仍有限制的部分。",
+              "sources": [
+                "met-open-access",
+                "wai-writing",
+                "great-wave",
+                "alice-text"
+              ],
+              "variant": "决策",
+              "kind": "weigh",
+              "material": "交付自己的成品及使用的原始资料入口；说明哪部分是原文/原图、哪部分是个人或AI辅助改写，以及还没核实的内容。不假称真人已验收或任何机构背书。",
+              "transfer": "独立换一份公开材料重做时，要重新核对来源内容、适用范围和哪些使用条件？"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

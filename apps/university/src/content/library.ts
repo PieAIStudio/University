@@ -13,6 +13,9 @@
  * or review card, where its prose and answer content are actually needed.
  */
 import imported from "./imported.json";
+import { activeLocale } from "@pieai/university-ui/i18n.js";
+import { localizeLearnerContent } from "@pieai/university-core";
+import type { SourceProvenance } from "@pieai/university-core/domain/schemas.js";
 
 /**
  * The asset shape is not this product's to define.
@@ -50,6 +53,7 @@ interface UrlEvidenceAnchor {
   readonly sourceTitle: string;
   readonly sourceAuthority: string;
   readonly note?: string;
+  readonly provenance?: SourceProvenance;
 }
 
 export type EvidenceAnchor = RepositoryEvidenceAnchor | UrlEvidenceAnchor;
@@ -64,6 +68,7 @@ interface Card {
   readonly front: string;
   readonly back: string;
   readonly tags?: readonly string[];
+  readonly locales?: Readonly<Record<string, { readonly front?: string; readonly back?: string }>>;
 }
 
 interface Exercise {
@@ -72,6 +77,12 @@ interface Exercise {
   readonly title?: string;
   readonly prompt: string;
   readonly answerKey?: AnswerKey;
+  readonly locales?: Readonly<
+    Record<
+      string,
+      { readonly title?: string; readonly prompt?: string; readonly answerKey?: AnswerKey }
+    >
+  >;
 }
 
 export interface Lesson {
@@ -86,6 +97,9 @@ export interface Lesson {
   readonly activities?: readonly LearningActivitySpec[];
   readonly cards: readonly Card[];
   readonly exercises: readonly Exercise[];
+  readonly locales?: Readonly<
+    Record<string, { readonly title?: string; readonly content?: string }>
+  >;
 }
 
 interface Unit {
@@ -93,6 +107,9 @@ interface Unit {
   readonly title: string;
   readonly objective: string;
   readonly lessons: readonly Lesson[];
+  readonly locales?: Readonly<
+    Record<string, { readonly title?: string; readonly objective?: string }>
+  >;
 }
 
 export interface Course extends CourseLearnerFact {
@@ -104,6 +121,17 @@ export interface Course extends CourseLearnerFact {
   readonly prerequisiteCourseIds: readonly string[];
   readonly trackId: string | null;
   readonly units: readonly Unit[];
+  readonly locales?: Readonly<
+    Record<
+      string,
+      {
+        readonly title?: string;
+        readonly description?: string;
+        readonly audience?: string;
+        readonly objectives?: readonly string[];
+      }
+    >
+  >;
 }
 
 interface LibraryCourse {
@@ -123,7 +151,7 @@ interface LibraryStudy {
   readonly courses: readonly LibraryCourse[];
 }
 
-export const library = imported as {
+export const library = localizeLearnerContent(imported, activeLocale()) as {
   readonly importedAt: string;
   readonly studies: readonly LibraryStudy[];
 };
@@ -135,7 +163,7 @@ const resolved = new Map<string, Course>();
 export function loadCourse(studyId: string, courseId: string): Promise<Course> {
   const key = `${studyId}/${courseId}`;
   const existing = cache.get(key);
-  if (existing) return existing;
+  if (existing) return existing.then((course) => localizeLearnerContent(course, activeLocale()));
   const pending = fetch(`/content/${studyId}/${courseId}.json`)
     .then((response) => {
       if (!response.ok) throw new Error(`${key}: ${response.status}`);
@@ -152,7 +180,7 @@ export function loadCourse(studyId: string, courseId: string): Promise<Course> {
       throw reason;
     });
   cache.set(key, pending);
-  return pending;
+  return pending.then((course) => localizeLearnerContent(course, activeLocale()));
 }
 
 /**
@@ -168,7 +196,8 @@ export function loadCourse(studyId: string, courseId: string): Promise<Course> {
  * function exported with no callers.
  */
 export function peekCourse(studyId: string, courseId: string): Course | undefined {
-  return resolved.get(`${studyId}/${courseId}`);
+  const course = resolved.get(`${studyId}/${courseId}`);
+  return course ? localizeLearnerContent(course, activeLocale()) : undefined;
 }
 
 /** Defined in `@pieai/university-world`. The map's input contract. */

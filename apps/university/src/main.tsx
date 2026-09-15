@@ -76,7 +76,7 @@ import "@pieai/university-ui/lesson/word-list.css";
 import "@pieai/university-ui/lesson/mark-list.css";
 import "@pieai/university-world/overlay.css";
 import "./styles.css";
-import { I18nProvider } from "@pieai/university-ui/i18n.js";
+import { I18nProvider, localeNavigationUrl } from "@pieai/university-ui/i18n.js";
 import { applyThemePreference } from "@pieai/university-ui/theme.js";
 import { localeDemandPort, recordLocaleRequest } from "./analytics/locale-demand";
 import { initProductAnalytics, trackEvent } from "./analytics/productAnalytics";
@@ -88,6 +88,16 @@ recordLocaleRequest(localeDemandPort, typeof navigator === "undefined" ? null : 
 
 const container = document.getElementById("root");
 if (!container) throw new Error("Missing #root container in index.html");
+
+// Some shared navigation tables are assembled once at module evaluation.
+// Start a fresh, consistently localized view after an explicit settings action;
+// preserve the route and use the URL as a fallback when storage is unavailable.
+window.addEventListener("university:locale-change", (event) => {
+  const locale = (event as CustomEvent<string>).detail;
+  if (locale === "en" || locale === "zh-CN") {
+    window.location.replace(localeNavigationUrl(window.location.href, locale));
+  }
+});
 
 void initProductAnalytics().then(() => trackEvent({ name: "app_open" }));
 

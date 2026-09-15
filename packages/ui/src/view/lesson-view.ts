@@ -1,4 +1,5 @@
 import type { AnswerKey, LearningActivitySpec } from "@pieai/university-core";
+import type { SourceProvenance } from "@pieai/university-core/domain/schemas.js";
 import { formatDate, translate } from "../i18n/index.js";
 import {
   isLessonComplete,
@@ -406,6 +407,7 @@ export interface UrlEvidenceView {
   readonly sourceTitle: string;
   readonly sourceAuthority: string;
   readonly note: string | null;
+  readonly provenance?: SourceProvenance;
 }
 
 export type EvidenceView = RepositoryEvidenceView | UrlEvidenceView;
@@ -482,6 +484,17 @@ export interface EvidenceSnippetView {
 }
 
 export interface LessonAssetView {
+  readonly locales?: Readonly<
+    Record<
+      string,
+      {
+        readonly alt?: string;
+        readonly caption?: string;
+        readonly transcript?: string;
+        readonly attribution?: string;
+      }
+    >
+  >;
   readonly id: string;
   readonly kind:
     | "real-screenshot"

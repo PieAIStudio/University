@@ -187,6 +187,14 @@ the prompt to `codex exec -` through stdin.
 before anyone read the error text. So: drop `--effort` whenever the model is a
 Claude one, including when falling back.
 
+**Effort names are scoped to the CLI/model, not ranked across providers.** On
+2026-09-15, the installed Grok CLI rejected the Codex-style `max` value and
+reported `xhigh/high/medium/low`; the same source repair succeeded with `xhigh`.
+Keep the rejected receipt, query the current accepted choices, and do not turn
+an invalid-argument failure into a claimed model or authentication failure.
+Draft/review tasks need no authority to write the repository or bypass access
+controls; a CLI example never expands the task's permissions.
+
 Gemini ids have historically carried their level as a suffix (`-high`,
 `-medium`, `-low`). Where that is still true, choosing the `-high` id *is*
 choosing the effort, and passing `--effort` as well is redundant but harmless.

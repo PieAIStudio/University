@@ -29,6 +29,22 @@ export interface ActivityBase {
   readonly goal: string;
   readonly takeaway: string;
   readonly hint: string;
+  /** Optional complete UI copy for the same activity payload and identity. */
+  readonly locales?: Readonly<
+    Record<
+      string,
+      {
+        readonly title?: string;
+        readonly brief?: string;
+        readonly goal?: string;
+        readonly takeaway?: string;
+        readonly hint?: string;
+        readonly sourceLabel?: string;
+        /** Exact original display text → translation; never IDs or rule values. */
+        readonly strings?: Readonly<Record<string, string>>;
+      }
+    >
+  >;
   /**
    * Where this activity's facts come from.
    *

@@ -42,6 +42,7 @@ const STUDY_DOMAINS: Readonly<Record<string, "programming" | "ai-foundations" | 
   Object.freeze({
     "turing-pact": "ai-games",
     "ai-foundations": "ai-foundations",
+    "ai-literacy": "ai-foundations",
     general: "programming",
     "browser-ai": "programming",
   });

@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { setActiveLocale } from "@pieai/university-ui/i18n.js";
 
 import { PlanetPage, type PlanetStudy } from "./PlanetPage.js";
 
@@ -117,6 +118,50 @@ function dispatchPointerSequence(target: EventTarget) {
 }
 
 describe("PlanetPage contract", () => {
+  it("localizes the complete English course picker, including accessible names and entry action", async () => {
+    setActiveLocale("en");
+    const domain = { id: "ai-foundations", title: "AI Foundations" };
+    const study: PlanetStudy = {
+      id: "ai-literacy",
+      title: "AI Foundations: Understand and Use It",
+      description: "Two beginner paths grounded in real sources.",
+      domain,
+      courseCount: 2,
+      lessonCount: 66,
+      lessonsDone: 1,
+      courses: [
+        { id: "understanding", title: "Understanding AI", lessonCount: 36, depth: 0 },
+        { id: "daily", title: "AI for Real Life", lessonCount: 30, depth: 1 },
+      ],
+      courseTitles: ["Understanding AI", "AI for Real Life"],
+    };
+    const enter = vi.fn();
+    await act(async () =>
+      root.render(
+        <PlanetPage
+          studies={[study]}
+          domainCatalog={[domain]}
+          selectedId={study.id}
+          selectedDomainId={domain.id}
+          onSelect={vi.fn()}
+          onEnter={enter}
+          onClose={vi.fn()}
+        />,
+      ),
+    );
+    expect(container.textContent).not.toMatch(/[\u4e00-\u9fff]/u);
+    for (const element of container.querySelectorAll("[aria-label]")) {
+      expect(element.getAttribute("aria-label")).not.toMatch(/[\u4e00-\u9fff]/u);
+    }
+    expect(container.querySelector(".planet-page__counts")?.textContent).toBe(
+      "2 courses · 66 lessons",
+    );
+    const button = container.querySelector(".planet-page__enter")!;
+    expect(button.textContent).toBe(`Enter ${study.title}`);
+    await act(async () => dispatchPointerSequence(button));
+    expect(enter).toHaveBeenCalledWith(study.id);
+  });
+
   it("shows only source-authored route positioning and its real case", async () => {
     const description = "以《图灵密约》为真实案例，学会用 AI 做游戏。";
     const props = {

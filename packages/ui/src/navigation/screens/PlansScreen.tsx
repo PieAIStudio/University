@@ -1,4 +1,4 @@
-import { translate } from "../../i18n/index.js";
+import { activeLocale, translate } from "../../i18n/index.js";
 import {
   GameAssetIcon,
   GameButton,
@@ -10,6 +10,7 @@ import {
   createUnavailablePaymentPort,
   walletGradingBalanceText,
   PLANS,
+  planCopyForLocale,
   type EntitlementReadModel,
   type PaymentExplanation,
   type PaymentAvailability,
@@ -158,13 +159,14 @@ function PlanCard({
   const purchasable = plan.pricing.kind !== "free";
   const saving = yearly ? configuredYearlySaving(plan.pricing) : null;
   const current = plan.id === currentPlanId;
+  const copy = planCopyForLocale(plan, activeLocale());
 
   return (
     <li className={purchasable ? "plan-card plan-card--featured" : "plan-card"}>
       <GamePanel>
         <div className="plan-card__head">
           {purchasable ? <GameAssetIcon icon="crown" size="md" /> : null}
-          <h2 className="plan-card__name">{plan.name}</h2>
+          <h2 className="plan-card__name">{copy.name}</h2>
         </div>
 
         {(() => {
@@ -179,7 +181,7 @@ function PlanCard({
         ) : null}
 
         <ul className="plan-card__lines">
-          {plan.lines.map((line) => (
+          {copy.lines.map((line) => (
             <li key={line}>{line}</li>
           ))}
         </ul>
@@ -262,7 +264,8 @@ function statusLabel(status: PaymentOrder["status"]): string {
 }
 
 function planNameOf(entitlement: EntitlementReadModel): string {
-  return PLANS.find((plan) => plan.id === entitlement.planId)?.name ?? entitlement.planId;
+  const plan = PLANS.find((candidate) => candidate.id === entitlement.planId);
+  return plan ? planCopyForLocale(plan, activeLocale()).name : entitlement.planId;
 }
 
 /** Only print a number the port actually returned. A missing wallet is absent, not "登录后读取". */
@@ -282,7 +285,7 @@ function PaymentSummary({
     ) : null;
   const wallet =
     balance?.kind === "value" ? (
-      <p>{walletGradingBalanceText(balance.value.availablePowerUnits)}</p>
+      <p>{walletGradingBalanceText(balance.value.availablePowerUnits, activeLocale())}</p>
     ) : null;
   if (!plan && !wallet) return null;
   return (

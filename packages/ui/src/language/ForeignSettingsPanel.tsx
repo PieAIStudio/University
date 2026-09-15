@@ -12,6 +12,7 @@ import {
   useRole,
 } from "@floating-ui/react";
 import { useState } from "react";
+import { translate } from "../i18n/index.js";
 
 import {
   FOREIGN_PRESETS,
@@ -23,9 +24,15 @@ import {
 } from "./foreign-settings.js";
 
 const MARK_LABELS: Readonly<Record<WordMarkStyle, string>> = {
-  underline: "下划线",
-  marker: "马克笔",
-  plain: "不标",
+  get underline() {
+    return translate("reading.settings.underline");
+  },
+  get marker() {
+    return translate("reading.settings.marker");
+  },
+  get plain() {
+    return translate("reading.settings.plain");
+  },
 };
 
 /**
@@ -54,7 +61,7 @@ function ForeignSettingsFields({
 
   return (
     <>
-      <p className="foreign-settings__group-label">这一遍你想干什么</p>
+      <p className="foreign-settings__group-label">{translate("reading.settings.intent")}</p>
       <div className="foreign-settings__presets">
         {(["read", "pronounce", "remember"] as const).map((name) => (
           <button
@@ -70,9 +77,12 @@ function ForeignSettingsFields({
         ))}
       </div>
 
-      <p className="foreign-settings__group-label">细调{active === "custom" ? " · 自定义" : ""}</p>
+      <p className="foreign-settings__group-label">
+        {translate("reading.settings.adjust")}
+        {active === "custom" ? translate("reading.settings.custom") : ""}
+      </p>
       <label className="foreign-settings__row">
-        <span>正文里同时显示中文</span>
+        <span>{translate("reading.settings.original")}</span>
         <input
           type="checkbox"
           checked={settings.showOriginal}
@@ -80,17 +90,13 @@ function ForeignSettingsFields({
         />
       </label>
       {settings.showOriginal ? (
-        <p className="foreign-settings__note">
-          意思就在旁边，读起来不卡；但也没什么可回想的，记不太住。
-        </p>
+        <p className="foreign-settings__note">{translate("reading.settings.originalShown")}</p>
       ) : (
-        <p className="foreign-settings__note">
-          只显示英文，鼠标停一下才给意思。先想一下再看，才留得下印象。
-        </p>
+        <p className="foreign-settings__note">{translate("reading.settings.originalHidden")}</p>
       )}
 
       <label className="foreign-settings__row">
-        <span>标注样式</span>
+        <span>{translate("reading.settings.markStyle")}</span>
         <select
           value={settings.markStyle}
           onChange={(event) => set("markStyle", event.target.value as WordMarkStyle)}
@@ -104,7 +110,7 @@ function ForeignSettingsFields({
       </label>
 
       <label className="foreign-settings__row">
-        <span>音标</span>
+        <span>{translate("reading.settings.phonetic")}</span>
         <input
           type="checkbox"
           checked={settings.showPhonetic}
@@ -112,7 +118,7 @@ function ForeignSettingsFields({
         />
       </label>
       <label className="foreign-settings__row">
-        <span>朗读按钮</span>
+        <span>{translate("reading.settings.speak")}</span>
         <input
           type="checkbox"
           checked={settings.showSpeak}
@@ -120,7 +126,7 @@ function ForeignSettingsFields({
         />
       </label>
       <label className="foreign-settings__row">
-        <span>例句</span>
+        <span>{translate("reading.settings.examples")}</span>
         <input
           type="checkbox"
           checked={settings.showUsage}
@@ -128,16 +134,14 @@ function ForeignSettingsFields({
         />
       </label>
       <label className="foreign-settings__row">
-        <span>认识 / 还不熟 按钮</span>
+        <span>{translate("reading.settings.stageButtons")}</span>
         <input
           type="checkbox"
           checked={settings.showStageButtons}
           onChange={(event) => set("showStageButtons", event.target.checked)}
         />
       </label>
-      <p className="foreign-settings__note">
-        关掉这排按钮，词就不会进复习队列——只是这一遍读着清静。
-      </p>
+      <p className="foreign-settings__note">{translate("reading.settings.stageNote")}</p>
     </>
   );
 }
@@ -168,7 +172,10 @@ export function ForeignSettingsPanel({
 
   if (embedded) {
     return (
-      <div className="foreign-settings foreign-settings--page" aria-label="外语模式设置">
+      <div
+        className="foreign-settings foreign-settings--page"
+        aria-label={translate("reading.settings.title")}
+      >
         <ForeignSettingsFields settings={settings} onChange={onChange} />
       </div>
     );
@@ -180,7 +187,7 @@ export function ForeignSettingsPanel({
         type="button"
         className="rail-panel__gear"
         ref={refs.setReference}
-        aria-label="外语模式设置"
+        aria-label={translate("reading.settings.title")}
         aria-expanded={open}
         {...getReferenceProps()}
       >
@@ -203,7 +210,7 @@ export function ForeignSettingsPanel({
               ref={refs.setFloating}
               style={floatingStyles}
               className="foreign-settings"
-              aria-label="外语模式设置"
+              aria-label={translate("reading.settings.title")}
               {...getFloatingProps()}
             >
               <ForeignSettingsFields settings={settings} onChange={onChange} />

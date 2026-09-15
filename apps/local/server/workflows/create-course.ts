@@ -4,6 +4,9 @@ import { z } from "zod";
 
 import {
   StableId,
+  LocaleMap,
+  LocalizedCourseSchema,
+  LocalizedUnitSchema,
   type CourseManifest,
   type CourseManifestInput,
   type UnitManifest,
@@ -28,6 +31,7 @@ const UnitCreationProposalSchema = z
     id: StableId,
     title: z.string().min(1).max(200),
     objective: z.string().min(1).max(1_000),
+    locales: LocaleMap(LocalizedUnitSchema),
     prerequisiteUnitIds: z.array(StableId).default([]),
     lessons: z.array(LessonCreationProposalSchema).min(1),
   })
@@ -53,6 +57,7 @@ const CourseCreationProposalSchema = z
         description: z.string().max(2_000).default(""),
         audience: z.string().min(1).max(500),
         objectives: z.array(z.string().min(1).max(500)).min(1),
+        locales: LocaleMap(LocalizedCourseSchema),
         units: z.array(UnitCreationProposalSchema).min(1),
       })
       .strict(),
@@ -143,6 +148,7 @@ function buildCourseManifest(
     description: proposal.course.description,
     audience: proposal.course.audience,
     objectives: proposal.course.objectives,
+    ...(proposal.course.locales ? { locales: proposal.course.locales } : {}),
     unitIds: proposal.course.units.map((unit) => unit.id),
     status: "draft",
     createdAt: timestamp,
@@ -156,6 +162,7 @@ function buildUnitManifest(unit: CourseCreationProposal["course"]["units"][numbe
     id: unit.id,
     title: unit.title,
     objective: unit.objective,
+    ...(unit.locales ? { locales: unit.locales } : {}),
     prerequisiteUnitIds: unit.prerequisiteUnitIds,
     lessonIds: unit.lessons.map((lesson) => lesson.id),
     status: "draft",

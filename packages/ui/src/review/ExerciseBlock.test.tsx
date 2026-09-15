@@ -5,9 +5,11 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ExerciseAttemptResult, GradingPort, LessonRef } from "@pieai/university-core";
+import { createMemoryGradingPort } from "@pieai/university-core";
 
 import { ExerciseBlock } from "./ExerciseBlock.js";
 import { writeAnswerDraft, type AnswerDraftStorage } from "./answer-draft.js";
+import { setActiveLocale } from "../i18n/index.js";
 import type { LessonView } from "../view/lesson-view.js";
 
 const LOCATOR: LessonRef = {
@@ -102,6 +104,7 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount());
   container.remove();
+  setActiveLocale("zh-CN");
 });
 
 function buttonWith(text: string): HTMLButtonElement | undefined {
@@ -154,6 +157,71 @@ async function answerAndSubmit() {
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
 }
+
+describe("ExerciseBlock English learner copy", () => {
+  const exercise = { ...EXERCISE, title: "Try it", prompt: "Explain your choice." };
+  it.each([
+    ["pass", "Passed"],
+    ["fail", "Not passed"],
+    ["undecided", "Cannot assess yet"],
+  ] as const)(
+    "keeps %s feedback and its answer field in the selected language",
+    async (outcome, label) => {
+      setActiveLocale("en");
+      const result: ExerciseAttemptResult = {
+        ...TIER_ONE_RESULT,
+        score: outcome === "pass" ? 1 : 0,
+        meteredEligible: false,
+        hostGrade: {
+          ...TIER_ONE_RESULT.hostGrade!,
+          outcome,
+          passed: outcome === "pass",
+          evaluation: "Compare the result with the original record.",
+          learnerAnswer: "Check the record.",
+        },
+      };
+      const submitExercise = vi.fn<GradingPort["submitExercise"]>().mockResolvedValue(result);
+      await renderBlock({ ...createMemoryGradingPort(), submitExercise }, { exercise });
+      expect(container.textContent).toContain("Your answer");
+      await typeAnswer("Check the record.");
+      await act(async () => buttonWith("Submit")!.click());
+      expect(container.textContent).toContain("Automatic check");
+      expect(container.textContent).toContain(label);
+      expect(container.textContent).not.toMatch(/[\u4e00-\u9fff]/u);
+      expect(submitExercise.mock.calls[0]![0].answer).toBe("Check the record.");
+      expect(submitExercise.mock.calls[0]![0].allowMetered).toBe(false);
+    },
+  );
+
+  it("shows English allowance quantities without starting a metered request", async () => {
+    setActiveLocale("en");
+    const submitExercise = vi.fn<GradingPort["submitExercise"]>().mockResolvedValue({
+      ...TIER_ONE_RESULT,
+      hostGrade: {
+        ...TIER_ONE_RESULT.hostGrade!,
+        evaluation: "Please explain further.",
+        learnerAnswer: "Check the record.",
+      },
+    });
+    const meteredGradingOffer = vi
+      .fn<NonNullable<GradingPort["meteredGradingOffer"]>>()
+      .mockResolvedValue({
+        kind: "free",
+        costPowerUnits: "100",
+        remainingPowerUnits: "300",
+        resetsAt: "2026-08-28T00:00:00.000Z",
+      });
+    await renderBlock({ submitExercise, meteredGradingOffer }, { exercise });
+    await typeAnswer("Check the record.");
+    await act(async () => buttonWith("Submit")!.click());
+    expect(container.textContent).toContain("3 free gradings remain today");
+    expect(container.textContent).not.toMatch(/[\u4e00-\u9fff]/u);
+    expect(container.textContent).not.toContain("power units");
+    expect(submitExercise).toHaveBeenCalledTimes(1);
+    expect(submitExercise.mock.calls[0]![0].allowMetered).toBe(false);
+    expect(meteredGradingOffer).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe("ExerciseBlock metered grading choice", () => {
   it("shows the wallet cost before an explicit paid choice, while keeping tier one reachable", async () => {

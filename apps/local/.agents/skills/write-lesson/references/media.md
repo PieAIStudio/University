@@ -38,7 +38,7 @@ No → delete it. Same test the detail layer uses.
 Per lesson: **at most 3**, and each must survive the test alone. A lesson needing
 more is usually two lessons.
 
-## Never take a picture off the web
+## Online discovery is not permission to republish
 
 This project is heading for commercial use. An image someone else made is
 someone else's property, and "found on Google" is not a licence.
@@ -86,8 +86,10 @@ So:
 
 ## Video: link, never embed
 
-External video is welcome as a pointer and must not become part of the lesson's
-spine.
+External video can be a genuine real-world source when the specific material
+has been inspected and its title, publisher, date, relevant timestamp and
+claim boundary are recorded. It must not be the only way to understand the
+lesson, and a video link is not an immutable code pin.
 
 **Why not embed:** this whole system rests on evidence pinned to an immutable
 commit — the lines you read today are the lines you read in three years. A
@@ -102,7 +104,10 @@ So:
   our control.
 - **The lesson must still be complete if the video dies.** One sentence of prose
   carrying the point, always. The video is enrichment, never the carrier.
-- Never as evidence for a claim. Evidence is pinned source, full stop.
+- It may support a claim about what is actually shown or said, following the
+  same provenance contract as other real-world sources. Do not infer hidden
+  implementation or general accuracy from a demonstration, and do not present
+  an edited teaching reconstruction as the original video.
 
 If embedding is ever wanted, use [`lite-youtube-embed`](https://github.com/paulirish/lite-youtube-embed)
 rather than an iframe — it loads nothing from Google until the reader clicks.

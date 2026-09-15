@@ -58,6 +58,7 @@ function publicEvidence(
         sourceTitle: reference.sourceTitle,
         sourceAuthority: reference.sourceAuthority,
         note: reference.note ?? null,
+        ...(reference.provenance ? { provenance: reference.provenance } : {}),
       };
     }
     const place = ua[uaIndex++] ?? null;
@@ -117,6 +118,16 @@ function buildStudyView(
           return {
             id: lesson.manifest.id,
             title: lesson.manifest.title,
+            ...(lesson.manifest.locales
+              ? {
+                  locales: Object.fromEntries(
+                    Object.entries(lesson.manifest.locales).map(([locale, value]) => [
+                      locale,
+                      { title: value.title },
+                    ]),
+                  ),
+                }
+              : {}),
             status: lesson.manifest.status,
             contentRevision: lesson.manifest.contentRevision,
             cardCount: lesson.manifest.cardIds.length,
@@ -233,6 +244,7 @@ function buildLessonView(
     lesson: {
       id: lesson.id,
       title: lesson.title,
+      ...(lesson.locales ? { locales: lesson.locales } : {}),
       contentRevision: lesson.contentRevision,
       content,
       sections: lesson.sections,
@@ -287,6 +299,7 @@ function buildLessonView(
             }
           : {}),
         alt: asset.alt,
+        ...(asset.locales ? { locales: asset.locales } : {}),
         ...(asset.caption ? { caption: asset.caption } : {}),
         ...(asset.transcript ? { transcript: asset.transcript } : {}),
         ...(asset.capture
@@ -346,6 +359,24 @@ function buildLessonView(
           kind: exercise.kind,
           title: exercise.title,
           prompt: exercise.prompt,
+          ...(exercise.locales
+            ? {
+                // Translate the learner DTO, not the stored exercise: reference
+                // answers and rubrics must stay behind this boundary in every language.
+                locales: Object.fromEntries(
+                  Object.entries(exercise.locales).map(([locale, value]) => [
+                    locale,
+                    {
+                      ...(value.title ? { title: value.title } : {}),
+                      ...(value.prompt ? { prompt: value.prompt } : {}),
+                      ...(exercise.kind === "short-answer" && value.expectedAnswer
+                        ? { answerKey: compileAnswerKey(value.expectedAnswer) }
+                        : {}),
+                    },
+                  ]),
+                ),
+              }
+            : {}),
           contentRevision: exercise.contentRevision,
           /*
             The fingerprint, not the answer — even here, where the reader is
@@ -388,6 +419,16 @@ function buildLessonView(
           id: card.id,
           kind: card.kind,
           front: card.front,
+          ...(card.locales
+            ? {
+                locales: Object.fromEntries(
+                  Object.entries(card.locales).map(([locale, value]) => [
+                    locale,
+                    { front: value.front },
+                  ]),
+                ),
+              }
+            : {}),
           contentRevision: card.contentRevision,
         };
       }),
@@ -409,6 +450,27 @@ function buildExerciseView(studiesRoot: string, route: LearningRoute): unknown {
     title: exercise.title,
     prompt: exercise.prompt,
     correctAnswer: referenceAnswerOf(exercise),
+    ...(exercise.locales
+      ? {
+          locales: Object.fromEntries(
+            Object.entries(exercise.locales).map(([locale, value]) => [
+              locale,
+              {
+                ...(value.title ? { title: value.title } : {}),
+                ...(value.prompt ? { prompt: value.prompt } : {}),
+                ...(lesson.locales?.[locale]?.title
+                  ? { lessonTitle: lesson.locales[locale].title }
+                  : {}),
+                ...(exercise.kind === "short-answer" && value.expectedAnswer
+                  ? { correctAnswer: value.expectedAnswer }
+                  : value.rubric
+                    ? { correctAnswer: value.rubric.join("\n") }
+                    : {}),
+              },
+            ]),
+          ),
+        }
+      : {}),
     contentRevision: exercise.contentRevision,
   };
 }

@@ -43,6 +43,15 @@ export interface Plan {
     readonly seats: number;
   };
   readonly lines: readonly string[];
+  readonly locales?: Readonly<
+    Record<
+      string,
+      {
+        readonly name: string;
+        readonly lines: readonly string[];
+      }
+    >
+  >;
 }
 
 export interface BillingConfig {
@@ -67,6 +76,16 @@ export const BILLING_CONFIG = {
       },
       sync: { included: false, seats: 0 },
       lines: ["全部课程免费学", "练习与复习卡", "绑定邮箱，每天体验 AI 批改"],
+      locales: {
+        en: {
+          name: "Free",
+          lines: [
+            "Read every published course",
+            "Practice and review cards",
+            "Link your email for a daily AI-grading trial",
+          ],
+        },
+      },
     },
     /*
       The overseas launch hypothesis is $19 monthly or $149 yearly. Keeping
@@ -110,11 +129,26 @@ export const BILLING_CONFIG = {
         out by clicking.
       */
       lines: ["学习进度、复习卡同步", "手机、电脑、平板接着学", "AI 批改不受每日免费额度限制"],
+      locales: {
+        en: {
+          name: "Member",
+          lines: [
+            "Sync learning progress and review cards",
+            "Continue on your phone, computer or tablet",
+            "AI grading beyond the daily free allowance",
+          ],
+        },
+      },
     },
   ],
 } satisfies BillingConfig;
 
 export const PLANS: readonly Plan[] = BILLING_CONFIG.plans;
+
+/** Localized display only: prices, rights and stable plan identity never change. */
+export function planCopyForLocale(plan: Plan, locale: string): Pick<Plan, "name" | "lines"> {
+  return plan.locales?.[locale] ?? plan.locales?.[locale.split("-")[0]!] ?? plan;
+}
 
 export function planById(id: PlanId, config: BillingConfig = BILLING_CONFIG): Plan | undefined {
   return config.plans.find((plan) => plan.id === id);

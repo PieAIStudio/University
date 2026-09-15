@@ -20,7 +20,13 @@ export function ConnectGame({
   const [edges, setEdges] = useState<Connection[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [compact, setCompact] = useState(false);
-  const [layout, setLayout] = useState({ width: 600, height: 288, nodeWidth: 168, nodeHeight: 88 });
+  const [layout, setLayout] = useState({
+    width: 600,
+    height: 288,
+    nodeWidth: 168,
+    nodeHeight: 88,
+    nodes: {} as Record<string, { width: number; height: number }>,
+  });
   const [activeNode, setActiveNode] = useState<string | null>(null);
   const [activeProbe, setActiveProbe] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
@@ -35,13 +41,22 @@ export function ConnectGame({
     const measure = () => {
       const element = board.current;
       if (!element || element.clientWidth <= 0) return;
-      const node = element.querySelector<HTMLButtonElement>(".play-connect__node");
+      const nodes = [...element.querySelectorAll<HTMLButtonElement>(".play-connect__node")];
       setCompact(element.clientWidth < 540);
       setLayout({
         width: element.clientWidth,
         height: element.clientHeight,
-        nodeWidth: node?.offsetWidth ?? 168,
-        nodeHeight: node?.offsetHeight ?? 88,
+        nodeWidth: Math.max(0, ...nodes.map((node) => node.offsetWidth)) || 168,
+        nodeHeight: Math.max(0, ...nodes.map((node) => node.offsetHeight)) || 88,
+        nodes: Object.fromEntries(
+          nodes.map((node) => [
+            node.dataset.connectNode!,
+            {
+              width: node.offsetWidth || 168,
+              height: node.offsetHeight || 88,
+            },
+          ]),
+        ),
       });
     };
     // ResizeObserver's first notification is asynchronous. Painting the
@@ -73,7 +88,9 @@ export function ConnectGame({
     is 88px tall, so a band needs about 140 to clear its neighbours.
   */
   const bands = new Set(activity.nodes.map((node) => Math.round(node.y / 12))).size;
-  const boardHeight = compact ? rows * 150 : Math.max(288, bands * 140);
+  const boardHeight = compact
+    ? rows * Math.max(150, layout.nodeHeight + 28)
+    : Math.max(288, bands * Math.max(140, layout.nodeHeight + 24));
   const nodes = activity.nodes.map((node, index) => ({
     ...node,
     x: compact ? (index % 2 === 0 ? 25 : 75) : node.x,
@@ -204,18 +221,17 @@ export function ConnectGame({
             const dy = endY - startY;
             // Terminate outside the real button bounds; center-to-center arrows
             // were hidden by the nodes, especially at phone widths.
-            const inset =
-              1 /
-              Math.max(
-                Math.abs(dx) / (layout.nodeWidth / 2),
-                Math.abs(dy) / (layout.nodeHeight / 2),
-              );
+            const insetFor = (size: { width: number; height: number }) =>
+              1 / Math.max(Math.abs(dx) / (size.width / 2), Math.abs(dy) / (size.height / 2));
+            const fallback = { width: layout.nodeWidth, height: layout.nodeHeight };
+            const startInset = insetFor(layout.nodes[from.id] ?? fallback);
+            const endInset = insetFor(layout.nodes[to.id] ?? fallback);
             const gap = 4 / Math.max(1, Math.hypot(dx, dy));
             return (
               <path
                 key={connectionKey(edge)}
                 className={activeNode === edge.to ? "is-travelling" : ""}
-                d={`M${startX + dx * (inset + gap)} ${startY + dy * (inset + gap)} L${endX - dx * (inset + gap)} ${endY - dy * (inset + gap)}`}
+                d={`M${startX + dx * (startInset + gap)} ${startY + dy * (startInset + gap)} L${endX - dx * (endInset + gap)} ${endY - dy * (endInset + gap)}`}
                 markerEnd={`url(#${markerId})`}
               />
             );
@@ -230,6 +246,7 @@ export function ConnectGame({
             aria-label={node.label}
             disabled={disabled || running}
             key={node.id}
+            data-connect-node={node.id}
             className={`play-connect__node ${activeNode === node.id ? "is-active" : ""}`}
             style={{ insetInlineStart: `${node.x}%`, top: `${node.y}%` }}
             onClick={() => choose(node.id)}

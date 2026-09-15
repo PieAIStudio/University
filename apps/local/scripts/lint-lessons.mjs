@@ -52,6 +52,7 @@ import { dirname, join } from "node:path";
 import {
   checkLessonSpine,
   checkLessonUrlEvidence,
+  lessonProseWithoutLinkDestinations,
   stripLessonCode as stripCode,
 } from "./lesson-spine.mjs";
 
@@ -168,7 +169,7 @@ function standardProseLength(text) {
  * blanked so fence bytes do not inflate the denominator).
  */
 function standardProseCharCount(text) {
-  return withoutDetailBlocks(text)
+  return lessonProseWithoutLinkDestinations(withoutDetailBlocks(text))
     .replace(/^[ \t]*(`{3,}|~{3,})[\s\S]*?^[ \t]*\1[ \t]*$/gm, "")
     .replace(/`[^`\n]+`/g, "").length;
 }
@@ -395,7 +396,10 @@ function checkDetailBlocks(content, fail) {
 
   if (blocks.length === 0) return;
 
-  const detailChars = blocks.reduce((n, b) => n + b.body.length, 0);
+  const detailChars = blocks.reduce(
+    (n, b) => n + lessonProseWithoutLinkDestinations(b.body).length,
+    0,
+  );
   const standardChars = standardProseCharCount(content);
   if (standardChars === 0) return;
   const ratio = detailChars / standardChars;

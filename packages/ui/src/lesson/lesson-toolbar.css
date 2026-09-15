@@ -103,7 +103,7 @@
   .lesson-toolbar__tools {
     flex: 1 1 100%;
     width: 100%;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     justify-content: flex-start;
     gap: 6px 8px;
     min-width: 0;

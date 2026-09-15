@@ -11,6 +11,7 @@ import {
   GameTabs,
 } from "@pieai/swimmer-ui-kit";
 import type { IdentityPort } from "@pieai/university-core";
+import { accountFailureMessage } from "./account-errors.js";
 
 /**
  * The account door on `/me`. It is a door, not a wall.
@@ -68,6 +69,16 @@ export function AccountPanel({
 }) {
   const status = useSyncExternalStore(identity.subscribe, identity.status, identity.status);
   const [showUnavailableReason, setShowUnavailableReason] = useState(focusRequest > 0);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const formContext = useRef({ identity, anonymous: false, key: "unsigned" });
+  if (formContext.current.identity !== identity || status.kind !== "pending") {
+    formContext.current = {
+      identity,
+      anonymous: status.kind === "anonymous",
+      key: status.kind === "anonymous" ? `guest:${status.user.id}` : "unsigned",
+    };
+  }
 
   useEffect(() => {
     if (focusRequest > 0) setShowUnavailableReason(true);
@@ -114,14 +125,6 @@ export function AccountPanel({
     );
   }
 
-  if (status.kind === "pending") {
-    return (
-      <div className="account-panel">
-        <GameLoadingState label={ACCOUNT_PENDING_LABEL} />
-      </div>
-    );
-  }
-
   if (status.kind === "signed_in") {
     return (
       <section
@@ -130,19 +133,40 @@ export function AccountPanel({
       >
         <div className="account-panel__signed-in">
           <p>{status.user.email ?? ACCOUNT_SIGNED_IN_TITLE}</p>
-          <GameButton variant="ghost" type="button" onClick={() => void identity.signOut()}>
-            {ACCOUNT_SIGN_OUT}
+          <GameButton
+            variant="ghost"
+            type="button"
+            disabled={isSigningOut}
+            onClick={() => {
+              setSignOutError(null);
+              setIsSigningOut(true);
+              void identity
+                .signOut()
+                .catch((error: unknown) => {
+                  setSignOutError(accountFailureMessage(error, "sign-out-failed"));
+                })
+                .finally(() => setIsSigningOut(false));
+            }}
+          >
+            {isSigningOut ? translate("account.failure.signingOut") : ACCOUNT_SIGN_OUT}
           </GameButton>
         </div>
+        {signOutError ? (
+          <GameCallout tone="danger" heading={translate("account.failure.heading")}>
+            {signOutError}
+          </GameCallout>
+        ) : null}
       </section>
     );
   }
 
   return (
     <UnsignedAccountForm
+      key={formContext.current.key}
       identity={identity}
-      error={status.kind === "error" ? status.message : null}
-      anonymous={status.kind === "anonymous"}
+      error={status.kind === "error" ? accountFailureMessage(status) : signOutError}
+      anonymous={formContext.current.anonymous}
+      pending={status.kind === "pending"}
       authRedirectTo={authRedirectTo ?? currentPageOrigin()}
       focusRequest={focusRequest}
     />
@@ -153,12 +177,14 @@ function UnsignedAccountForm({
   identity,
   error,
   anonymous,
+  pending,
   authRedirectTo,
   focusRequest,
 }: {
   readonly identity: IdentityPort;
   readonly error: string | null;
   readonly anonymous: boolean;
+  readonly pending: boolean;
   readonly authRedirectTo: string;
   readonly focusRequest: number;
 }) {
@@ -167,6 +193,7 @@ function UnsignedAccountForm({
   const [password, setPassword] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitting = useRef(false);
   const [fieldError, setFieldError] = useState<string | null>(error);
   const emailId = useId();
   const passwordId = useId();
@@ -174,6 +201,7 @@ function UnsignedAccountForm({
   const passwordRef = useRef<HTMLInputElement>(null);
   const formDetails = useRef<HTMLDetailsElement>(null);
   const tabs = anonymous ? PASSWORD_AUTH_TABS : AUTH_TABS;
+  const busy = pending || isSubmitting;
 
   useEffect(() => {
     if (focusRequest <= 0) return;
@@ -195,6 +223,7 @@ function UnsignedAccountForm({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submitting.current || pending) return;
     const trimmed = email.trim();
     if (!trimmed || !EMAIL_PATTERN.test(trimmed)) {
       setFieldError(translate("ui.navigation.empty.accountPanel.copy.请输入有效的邮箱地址"));
@@ -208,6 +237,7 @@ function UnsignedAccountForm({
     }
     setFieldError(null);
     setNotice(null);
+    submitting.current = true;
     setIsSubmitting(true);
     try {
       if (mode === "magic") {
@@ -241,94 +271,108 @@ function UnsignedAccountForm({
       }
     } catch (reason: unknown) {
       setFieldError(
-        reason instanceof Error
-          ? reason.message
-          : translate("ui.navigation.empty.accountPanel.copy.这次操作没有完成-请稍后再试"),
+        accountFailureMessage(
+          reason,
+          anonymous
+            ? "link-email-failed"
+            : mode === "magic"
+              ? "magic-link-failed"
+              : mode === "register"
+                ? "sign-up-failed"
+                : "sign-in-failed",
+        ),
       );
     } finally {
+      submitting.current = false;
       setIsSubmitting(false);
+      setPassword("");
     }
   };
 
   return (
-    <div className="account-panel">
+    <div className="account-panel" aria-busy={busy}>
       <h2>{ACCOUNT_UNSIGNED_TITLE}</h2>
       <p>{translate("product.account.invitation")}</p>
       <details className="product-details account-panel__form" ref={formDetails}>
         <summary>{translate("product.account.open")}</summary>
         <p>{ACCOUNT_UNSIGNED_DESCRIPTION}</p>
         {anonymous ? <p>{translate("product.save.anonymousMerge")}</p> : null}
-        <GameTabs
-          id="account-mode"
-          activeId={mode}
-          tabs={tabs}
-          onSelect={(id) => {
-            setMode(id as AuthMode);
-            setFieldError(null);
-            setNotice(null);
-          }}
-        />
-        <div id="account-form-panel" role="tabpanel" aria-labelledby={`account-mode-${mode}`}>
-          {error || fieldError ? (
-            <GameCallout
-              tone="danger"
-              heading={translate("ui.navigation.empty.accountPanel.copy.没登上")}
-            >
-              {fieldError ?? error}
-            </GameCallout>
-          ) : null}
-          {notice ? (
-            <GameCallout
-              tone="info"
-              heading={translate("ui.navigation.empty.accountPanel.copy.还差一步")}
-            >
-              {notice}
-            </GameCallout>
-          ) : null}
-          <form onSubmit={(event) => void handleSubmit(event)}>
-            <GameField label={translate("ui.navigation.empty.accountPanel.copy.邮箱")} required>
-              <GameInput
-                ref={emailRef}
-                id={emailId}
-                type="email"
-                name="email"
-                autoComplete="email"
-                inputMode="email"
-                value={email}
-                invalid={Boolean(fieldError)}
-                onChange={(event) => setEmail(event.currentTarget.value)}
-              />
-            </GameField>
-            {mode === "magic" ? null : (
-              <GameField label={translate("ui.navigation.empty.accountPanel.copy.密码")} required>
+        {busy ? <GameLoadingState label={ACCOUNT_PENDING_LABEL} /> : null}
+        <fieldset className="account-panel__fields" disabled={busy}>
+          <GameTabs
+            id="account-mode"
+            activeId={mode}
+            tabs={tabs}
+            onSelect={(id) => {
+              if (busy) return;
+              setMode(id as AuthMode);
+              setFieldError(null);
+              setNotice(null);
+            }}
+          />
+          <div id="account-form-panel" role="tabpanel" aria-labelledby={`account-mode-${mode}`}>
+            {error || fieldError ? (
+              <GameCallout
+                tone="danger"
+                heading={translate("ui.navigation.empty.accountPanel.copy.没登上")}
+              >
+                {fieldError ?? error}
+              </GameCallout>
+            ) : null}
+            {notice ? (
+              <GameCallout
+                tone="info"
+                heading={translate("ui.navigation.empty.accountPanel.copy.还差一步")}
+              >
+                {notice}
+              </GameCallout>
+            ) : null}
+            <form onSubmit={(event) => void handleSubmit(event)}>
+              <GameField label={translate("ui.navigation.empty.accountPanel.copy.邮箱")} required>
                 <GameInput
-                  ref={passwordRef}
-                  id={passwordId}
-                  type="password"
-                  name="password"
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  value={password}
+                  ref={emailRef}
+                  id={emailId}
+                  type="email"
+                  name="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  value={email}
                   invalid={Boolean(fieldError)}
-                  onChange={(event) => setPassword(event.currentTarget.value)}
+                  onChange={(event) => setEmail(event.currentTarget.value)}
                 />
               </GameField>
-            )}
-            <GameButton
-              variant="primary"
-              surface="liquid"
-              liquidFinish="glossy"
-              className="university-cta"
-              type="submit"
-              disabled={isSubmitting}
-            >
-              {mode === "login"
-                ? ACCOUNT_SIGN_IN
-                : mode === "register"
-                  ? ACCOUNT_SIGN_UP
-                  : ACCOUNT_SEND_MAGIC_LINK}
-            </GameButton>
-          </form>
-        </div>
+              {mode === "magic" ? null : (
+                <GameField label={translate("ui.navigation.empty.accountPanel.copy.密码")} required>
+                  <GameInput
+                    ref={passwordRef}
+                    id={passwordId}
+                    type="password"
+                    name="password"
+                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    value={password}
+                    invalid={Boolean(fieldError)}
+                    onChange={(event) => setPassword(event.currentTarget.value)}
+                  />
+                </GameField>
+              )}
+              <GameButton
+                variant="primary"
+                surface="liquid"
+                liquidFinish="glossy"
+                fullWidth
+                className="university-cta"
+                type="submit"
+                disabled={isSubmitting}
+              >
+                {mode === "login"
+                  ? ACCOUNT_SIGN_IN
+                  : mode === "register"
+                    ? ACCOUNT_SIGN_UP
+                    : ACCOUNT_SEND_MAGIC_LINK}
+              </GameButton>
+            </form>
+          </div>
+        </fieldset>
       </details>
     </div>
   );

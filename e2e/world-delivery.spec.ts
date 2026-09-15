@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
+import { EMPTY_DOMAIN_ID, PRIMARY_DOMAIN_ID } from "./harness/domain-catalogue.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { assertWorldCarrierAboveGround } from "./harness/world-carrier.js";
@@ -15,8 +16,6 @@ import {
 const COURSE_ROLE = CATALOGUE_ROLES.settlement.course;
 const COURSE = coursePathOf(COURSE_ROLE);
 const STUDY = CATALOGUE_ROLES.settlement.study;
-const PRIMARY_DOMAIN_ID = "programming";
-const EMPTY_DOMAIN_ID = "ai-foundations";
 const OUTPUT = "SCRATCH/e2e/world-delivery";
 const STABLE_COMPLETE_FRAMES = 6;
 const OWNED_READY_TIMEOUT_MS = 90_000;

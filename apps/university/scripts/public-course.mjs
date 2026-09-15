@@ -7,6 +7,7 @@
  * explicit so a new authoring field stays private until somebody chooses to
  * publish it here.
  */
+import { compileAnswerKey } from "@pieai/university-core";
 
 function fields(names, why) {
   return Object.freeze({ fields: Object.freeze(names), why });
@@ -25,12 +26,13 @@ export const PUBLIC_DTO_FIELDS = Object.freeze({
       "trackId",
       "isBeingRewritten",
       "units",
+      "locales",
     ],
     "The catalogue and course path use these fields to name a course and place it in a route.",
   ),
   // Learners need unit objectives and ordering to understand the path before opening a lesson.
   unit: fields(
-    ["id", "title", "objective", "prerequisiteUnitIds", "lessons"],
+    ["id", "title", "objective", "prerequisiteUnitIds", "lessons", "locales"],
     "The course path uses these fields to group lessons and explain what each unit teaches.",
   ),
   // Learners need the lesson itself, its teaching metadata, and every reading activity.
@@ -47,6 +49,7 @@ export const PUBLIC_DTO_FIELDS = Object.freeze({
       "cards",
       "exercises",
       "activities",
+      "locales",
     ],
     "The reader uses these fields to render prose, progress sections, source material, media, cards, exercises and the activities the prose embeds.",
   ),
@@ -57,12 +60,12 @@ export const PUBLIC_DTO_FIELDS = Object.freeze({
   ),
   // Learners need both sides of a card and its stable identity when reviewing it.
   card: fields(
-    ["id", "kind", "front", "back", "tags", "evidence"],
+    ["id", "kind", "front", "back", "tags", "evidence", "locales"],
     "Review needs the prompt, answer, identity and supporting citation without author revision records.",
   ),
   // Learners need a question and a non-reversible grading fingerprint, never the reference answer.
   exercise: fields(
-    ["id", "kind", "title", "prompt", "answerKey", "evidence"],
+    ["id", "kind", "title", "prompt", "answerKey", "evidence", "locales"],
     "The reader needs to ask and grade an exercise while keeping expected answers and rubrics private.",
   ),
   // Learners need a citation they can inspect, not the analysis graph that produced it.
@@ -77,9 +80,23 @@ export const PUBLIC_DTO_FIELDS = Object.freeze({
       "sourceUrl",
       "sourceTitle",
       "sourceAuthority",
+      "provenance",
       "snippetUrl",
     ],
     "The reader uses these fields to identify and open the source behind a teaching claim.",
+  ),
+  provenance: fields(
+    [
+      "type",
+      "publisher",
+      "publishedOn",
+      "accessedOn",
+      "locator",
+      "supports",
+      "limitations",
+      "locales",
+    ],
+    "The reader can distinguish a source's date, supported claim and limits without authoring notes or private captures.",
   ),
   // Learners need media display and human-readable provenance, not source files or capture machinery.
   asset: fields(
@@ -98,6 +115,7 @@ export const PUBLIC_DTO_FIELDS = Object.freeze({
       "attribution",
       "license",
       "aiNote",
+      "locales",
     ],
     "The reader needs to display media accessibly and explain its public provenance.",
   ),
@@ -124,8 +142,27 @@ function pick(value, spec) {
   );
 }
 
+function pickKeys(value, keys) {
+  if (value === null || typeof value !== "object") return {};
+  return Object.fromEntries(
+    keys.flatMap((key) =>
+      Object.prototype.hasOwnProperty.call(value, key) && value[key] !== undefined
+        ? [[key, value[key]]]
+        : [],
+    ),
+  );
+}
+
 function publicEvidence(evidence) {
-  return pick(evidence, PUBLIC_DTO_FIELDS.evidence);
+  const result = pick(evidence, PUBLIC_DTO_FIELDS.evidence);
+  if (evidence?.provenance) {
+    result.provenance = pick(evidence.provenance, PUBLIC_DTO_FIELDS.provenance);
+    const locales = publicLocales(evidence.provenance.locales, (value) =>
+      pickKeys(value, ["publisher", "locator", "supports", "limitations"]),
+    );
+    if (locales) result.provenance.locales = locales;
+  }
+  return result;
 }
 
 function publicCapture(capture) {
@@ -157,7 +194,15 @@ function publicAsset(asset) {
     ...(source?.license ? { license: source.license } : {}),
     ...(source?.aiNote ? { aiNote: source.aiNote } : {}),
   };
-  return pick(candidate, PUBLIC_DTO_FIELDS.asset);
+  const result = pick(candidate, PUBLIC_DTO_FIELDS.asset);
+  const locales = publicDisplayLocales(metadata?.locales, [
+    "alt",
+    "caption",
+    "transcript",
+    "attribution",
+  ]);
+  if (locales) result.locales = locales;
+  return result;
 }
 
 /*
@@ -196,18 +241,52 @@ function publicActivity(activity) {
         : [[key, value]],
     ),
   );
-  return { ...pick(activity, PUBLIC_DTO_FIELDS.activity), ...payload };
+  const result = { ...pick(activity, PUBLIC_DTO_FIELDS.activity), ...payload };
+  if (activity?.locales && typeof activity.locales === "object") {
+    result.locales = Object.fromEntries(
+      Object.entries(activity.locales).map(([locale, value]) => [
+        locale,
+        pickKeys(value, ["title", "brief", "goal", "takeaway", "hint", "sourceLabel", "strings"]),
+      ]),
+    );
+  }
+  return result;
+}
+
+function publicLocales(locales, transform) {
+  if (!locales || typeof locales !== "object") return undefined;
+  return Object.fromEntries(
+    Object.entries(locales).map(([locale, value]) => [locale, transform(value)]),
+  );
+}
+
+/** Small catalogue projections retain translated copy, never full prose or author state. */
+export function publicDisplayLocales(locales, keys) {
+  return publicLocales(locales, (value) => pickKeys(value, keys));
 }
 
 function publicCard(card) {
   const result = pick(card, PUBLIC_DTO_FIELDS.card);
   if (Array.isArray(card?.evidence)) result.evidence = card.evidence.map(publicEvidence);
+  const locales = publicLocales(card?.locales, (value) => pickKeys(value, ["front", "back"]));
+  if (locales) result.locales = locales;
   return result;
 }
 
 function publicExercise(exercise) {
   const result = pick(exercise, PUBLIC_DTO_FIELDS.exercise);
+  if (typeof exercise?.expectedAnswer === "string")
+    result.answerKey = compileAnswerKey(exercise.expectedAnswer);
   if (Array.isArray(exercise?.evidence)) result.evidence = exercise.evidence.map(publicEvidence);
+  const locales = publicLocales(exercise?.locales, (value) => {
+    // Translations cross the same answer boundary as the canonical exercise.
+    // A translated rubric or option explanation is still a reference answer.
+    const localized = pickKeys(value, ["title", "prompt"]);
+    if (typeof value?.expectedAnswer === "string")
+      localized.answerKey = compileAnswerKey(value.expectedAnswer);
+    return localized;
+  });
+  if (locales) result.locales = locales;
   return result;
 }
 
@@ -226,6 +305,8 @@ function publicLesson(lesson) {
   result.assets = (lesson?.assets ?? []).map(publicAsset);
   result.cards = (lesson?.cards ?? []).map(publicCard);
   result.exercises = (lesson?.exercises ?? []).map(publicExercise);
+  const locales = publicLocales(lesson?.locales, (value) => pickKeys(value, ["title", "content"]));
+  if (locales) result.locales = locales;
   /*
     Omitted rather than empty when there are none. `::play` resolves against
     this list, and the reader prints "找不到这个互动课件" when a marker finds
@@ -241,6 +322,8 @@ function publicLesson(lesson) {
 function publicUnit(unit) {
   const result = pick(unit, PUBLIC_DTO_FIELDS.unit);
   result.lessons = (unit?.lessons ?? []).map(publicLesson);
+  const locales = publicLocales(unit?.locales, (value) => pickKeys(value, ["title", "objective"]));
+  if (locales) result.locales = locales;
   return result;
 }
 
@@ -250,6 +333,10 @@ function publicCourse(course) {
     PUBLIC_DTO_FIELDS.course,
   );
   result.units = (course?.units ?? []).map(publicUnit);
+  const locales = publicLocales(course?.locales, (value) =>
+    pickKeys(value, ["title", "description", "audience", "objectives"]),
+  );
+  if (locales) result.locales = locales;
   return result;
 }
 

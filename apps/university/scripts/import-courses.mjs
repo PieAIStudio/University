@@ -62,7 +62,7 @@ import {
   studyRepository,
 } from "./bake-evidence.mjs";
 import { validateRecoveryInput } from "./delivery-artifact.mjs";
-import { requireContentRevision, toPublicPackage } from "./public-course.mjs";
+import { publicDisplayLocales, requireContentRevision, toPublicPackage } from "./public-course.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 const configuredContentRoot = resolve(
@@ -358,6 +358,16 @@ for (const studyId of readdirSync(upstream).sort()) {
     shelfCourses.push({
       id: course.id,
       title: course.title,
+      ...(course.locales
+        ? {
+            locales: publicDisplayLocales(course.locales, [
+              "title",
+              "description",
+              "audience",
+              "objectives",
+            ]),
+          }
+        : {}),
       description: course.description,
       audience: course.audience,
       objectives: course.objectives,
@@ -368,10 +378,14 @@ for (const studyId of readdirSync(upstream).sort()) {
       units: course.units.map((unit) => ({
         id: unit.id,
         title: unit.title,
+        ...(unit.locales
+          ? { locales: publicDisplayLocales(unit.locales, ["title", "objective"]) }
+          : {}),
         objective: unit.objective,
         lessons: unit.lessons.map((lesson) => ({
           id: lesson.id,
           title: lesson.title,
+          ...(lesson.locales ? { locales: publicDisplayLocales(lesson.locales, ["title"]) } : {}),
           variant: lesson.variant ?? null,
           contentRevision: lesson.contentRevision,
           cardCount: lesson.cards.length,
@@ -391,6 +405,7 @@ for (const studyId of readdirSync(upstream).sort()) {
     courses.push({
       courseId: course.id,
       title: course.title,
+      ...(course.locales ? { locales: publicDisplayLocales(course.locales, ["title"]) } : {}),
       isBeingRewritten,
       sha256: entry.sha256,
       packageBytes: raw.length,
@@ -402,12 +417,18 @@ for (const studyId of readdirSync(upstream).sort()) {
   manifest.studies.push({
     studyId: index.study.id,
     title: index.study.title,
+    ...(index.study.locales
+      ? { locales: publicDisplayLocales(index.study.locales, ["title"]) }
+      : {}),
     defaultCourseId: index.study.defaultCourseId,
     courses,
   });
   shelf.studies.push({
     id: index.study.id,
     title: index.study.title,
+    ...(index.study.locales
+      ? { locales: publicDisplayLocales(index.study.locales, ["title", "description"]) }
+      : {}),
     ...(index.study.description ? { description: index.study.description } : {}),
     courses: shelfCourses,
   });

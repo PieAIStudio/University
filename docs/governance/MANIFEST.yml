@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-14T11:20:00.213Z
+generated_at: 2026-09-15T11:12:04.251Z
 generator_version: doc-gov@0.14.0
-docs_count: 139
+docs_count: 141
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -88,6 +88,13 @@ docs:
     canonical: false
     last_reviewed: 2026-09-13
     pinned: false
+  - id: ARCHIVE-COMMERCIAL-MODEL-2026-08-27
+    path: docs/archive/execution/commercial-model-2026-08-27.md
+    type: archive
+    status: archived
+    canonical: false
+    last_reviewed: 2026-09-15
+    pinned: false
   - id: ARCHIVE-CONTINUOUS-WORLD-R26-R33
     path: docs/archive/execution/continuous-world-delivery-r26-r33.md
     type: archive
@@ -165,6 +172,13 @@ docs:
     canonical: true
     last_reviewed: 2026-09-10
     pinned: true
+  - id: PLAN-AI-LITERACY-COMMERCIAL-RELEASE
+    path: docs/plans/active/00-ai-literacy-commercial-release.md
+    type: plan
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-15
+    pinned: false
   - id: PLAN-AI-FOUNDATIONS-REVIVAL
     path: docs/plans/active/ai-foundations-revival.md
     type: plan
@@ -310,7 +324,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-08-27
+    last_reviewed: 2026-09-15
     pinned: false
   - id: REF-CURRENT-WORK
     path: docs/reference/execution/current-work.md
@@ -954,7 +968,7 @@ docs:
     type: spec
     status: active
     canonical: true
-    last_reviewed: 2026-08-26
+    last_reviewed: 2026-09-15
     pinned: true
   - id: SPEC-0002
     path: docs/specs/active/SPEC-0002-vibehub-absorption.md

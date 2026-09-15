@@ -6,6 +6,7 @@ import { CLOUD_CARRIER_FOOT_OFFSET } from "../packages/world/src/sky/cloud-carri
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
+import { EMPTY_DOMAIN_ID, PRIMARY_DOMAIN_ID } from "./harness/domain-catalogue.js";
 import {
   FIRST_COURSE_ROUTE,
   openOnline,
@@ -210,30 +211,29 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
     await namedStep(page, "星球层选择系列，真实球体转向对应大气区域", async () => {
       await page.goto(`${ONLINE_ORIGIN}/planet`, { waitUntil: "domcontentloaded" });
       await expect(page.locator("[data-planet-globe] canvas")).toBeVisible({ timeout: 30_000 });
-      await page.waitForFunction(() => {
+      await page.waitForFunction((domainId) => {
         const bag = globalThis as any;
         return (
           bag.__planetProjection?.().domainCount > 0 &&
-          bag.three?.scene.getObjectByName("domain-globe-programming")
+          bag.three?.scene.getObjectByName(`domain-globe-${domainId}`)
         );
-      });
+      }, PRIMARY_DOMAIN_ID);
       await humanClick(
         page,
-        page.locator('button[data-domain-id="programming"]'),
+        page.locator(`button[data-domain-id="${PRIMARY_DOMAIN_ID}"]`),
         "select the populated programming domain",
       );
-      // The released shelf currently has one study. Exercise the empty-domain
-      // boundary first, then choose the real study from the populated domain;
-      // the planet must not invent a second study just to keep an old journey.
+      // Exercise an actually empty domain, then the selected course's domain.
+      // A newly published study must not be mistaken for a product regression.
       await humanClick(
         page,
-        page.locator('button[data-domain-id="ai-foundations"]'),
+        page.locator(`button[data-domain-id="${EMPTY_DOMAIN_ID}"]`),
         "先看尚未发布的空域",
       );
       await expect(page.locator("[data-study-id]")).toHaveCount(0);
       await humanClick(
         page,
-        page.locator('button[data-domain-id="programming"]'),
+        page.locator(`button[data-domain-id="${PRIMARY_DOMAIN_ID}"]`),
         "回到已发布的学习域",
       );
       const primaryStudy = page.locator(`[data-study-id=${JSON.stringify(PRIMARY_STUDY.id)}]`);
@@ -419,8 +419,20 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
     await namedStep(page, "岛内点一个 lesson 标记，真实兔子跳到对应格子", async () => {
       await expect(page.locator(".stagewrap canvas")).toBeVisible({ timeout: 30_000 });
       await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
-      const before = (await motion(page, "course"))?.sequence ?? 0;
-      const lessonIcon = page.locator("button.label--icon.is-visible").first();
+      await page.waitForFunction(() => {
+        const current = (window as any).__avatarMotion?.course;
+        return current && !current.inFlight;
+      });
+      const resting = (await motion(page, "course"))!;
+      const before = resting.sequence;
+      // The initial marker may already be home. A same-position click opens
+      // its card but correctly does not invent a jump. Pick a different real
+      // lesson by stable identity, not the current order of painted labels.
+      const destination = ALTERNATE_COURSE.units.flatMap((unit) => unit.lessons)[1];
+      expect(destination, "the motion fixture needs a second real lesson").toBeTruthy();
+      const lessonIcon = page.locator(
+        `button.label--icon.is-visible[data-map-marker=${JSON.stringify(destination!.id)}]`,
+      );
       await expect(lessonIcon).toBeVisible({ timeout: 30_000 });
       let startedAt = 0;
       await humanClick(page, lessonIcon, "岛内 lesson 标记", {
@@ -431,6 +443,7 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       const result = await waitForFlight(page, "course", before);
       const elapsedMs = await page.evaluate((start) => performance.now() - start, startedAt);
       assertFast(result.elapsedMs, "岛内（报告轮询）");
+      expect(result.report.target).not.toEqual(resting.target);
       expect(result.report.position).toEqual(result.report.target);
       await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
       const measured = await measuredScene(page);

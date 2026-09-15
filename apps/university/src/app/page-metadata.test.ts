@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 
 import type { CourseView } from "@pieai/university-ui/view/lesson-view.js";
 
@@ -43,6 +44,16 @@ const COURSE: CourseView = {
 };
 
 describe("page metadata", () => {
+  it("provides an English share and install fallback before client scripts run", () => {
+    const html = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
+    const manifest = JSON.parse(
+      readFileSync(new URL("../../public/manifest.webmanifest", import.meta.url), "utf8"),
+    );
+    expect(html).toContain('<html lang="en">');
+    expect(html).toContain("Learn AI through real sources");
+    expect(manifest.lang).toBe("en");
+    expect(manifest.description).toContain("real sources");
+  });
   it("names a course and uses its description", () => {
     const metadata = pageMetadataFor(
       { kind: "course", studyId: "turing-pact", courseId: COURSE.id },

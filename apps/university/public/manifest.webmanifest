@@ -1,7 +1,8 @@
 {
   "name": "University",
   "short_name": "University",
-  "description": "在群岛上把一件事学到会。",
+  "description": "Learn AI through real sources and small hands-on steps.",
+  "lang": "en",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#221812",

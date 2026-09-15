@@ -34,7 +34,7 @@ import {
   type AnswerDraftStorage,
 } from "./answer-draft.js";
 import { useAnswerDraft } from "./use-answer-draft.js";
-import { translate } from "../i18n/index.js";
+import { activeLocale, translate, type MessageKey } from "../i18n/index.js";
 
 /**
  * How long the page keeps watching for a host grade on its own. Past this the
@@ -44,19 +44,18 @@ import { translate } from "../i18n/index.js";
  */
 const HOST_GRADE_POLL_LIMIT_MS = 10 * 60 * 1000;
 
-const METERED_OFFER_READ_FAILURE: MeteredGradingOffer = {
+const meteredOfferReadFailure = (): MeteredGradingOffer => ({
   kind: "unavailable",
   costPowerUnits: METERED_GRADING_COST_POWER_UNITS,
   availablePowerUnits: null,
   explanation: {
     kind: "explanation",
-    title: "AI 批改次数暂时读不到",
-    whatItDoes: "它会在确定性判题无法判断的开放题上提供一次额外的结构化评估。",
-    whyUnavailable:
-      "这次没有读到费用或钱包余额，所以不会发起可能扣费的请求；下面的免费提示仍然可用。",
-    futureSupport: "服务恢复后，重新提交这道题就会再次读取费用和余额。",
+    title: translate("grading.offer.readFailureTitle"),
+    whatItDoes: translate("grading.offer.readFailureWhat"),
+    whyUnavailable: translate("grading.offer.readFailureReason"),
+    futureSupport: translate("grading.offer.readFailureFuture"),
   },
-};
+});
 
 interface ExerciseBlockProps {
   readonly locator: LessonRef;
@@ -174,7 +173,7 @@ function ExerciseBlockSession({
       })
       .catch(() => {
         if (cancelled) return;
-        setMeteredOffer(METERED_OFFER_READ_FAILURE);
+        setMeteredOffer(meteredOfferReadFailure());
       })
       .finally(() => {
         if (!cancelled) setMeteredOfferLoading(false);
@@ -263,10 +262,10 @@ function ExerciseBlockSession({
       if (!grading.expressionPacket) {
         setExpressionExplanation({
           kind: "explanation",
-          title: "表达点评暂未接通",
-          whatItDoes: "它会让 AI 只点评你这段话怎样说得更清楚，不改变这道题的对错。",
-          whyUnavailable: "当前学习端还没有可用的表达点评包服务，所以不会假装已经发给 AI。",
-          futureSupport: "服务接通后，仍然会先检查账号方案，再把点评材料交给 AI。",
+          title: translate("grading.expression.unavailableTitle"),
+          whatItDoes: translate("grading.expression.whatItDoes"),
+          whyUnavailable: translate("grading.expression.whyUnavailable"),
+          futureSupport: translate("grading.expression.futureSupport"),
         });
         return;
       }
@@ -277,7 +276,7 @@ function ExerciseBlockSession({
       setExpressionCopied(true);
       setTimeout(() => setExpressionCopied(false), 8_000);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "暂时无法生成点评包");
+      setError(reason instanceof Error ? reason.message : translate("grading.expression.failed"));
     } finally {
       setExpressionPending(false);
     }
@@ -331,13 +330,11 @@ function ExerciseBlockSession({
         body.awaitingHostGrade === true ? (body.hostGrade?.occurredAt ?? "") : null,
       );
       if (body.answerStored !== false) markSubmitted(submittedAnswer);
-      else
-        setError(
-          "这次评估已返回，但学习记录还没有保存成功。输入仍保留在这里，请不要关闭页面；恢复存储后可重试。",
-        );
+      else setError(translate("grading.answer.saveFailed"));
       await onRefresh();
     } catch (reason) {
-      const message = reason instanceof Error ? reason.message : "暂时无法提交练习";
+      const message =
+        reason instanceof Error ? reason.message : translate("grading.answer.submitFailed");
       setError(isStaleTokenFailure(message) ? STALE_TOKEN_NOTICE : message);
       if (isStaleTokenFailure(message)) await onRefresh().catch(() => undefined);
     } finally {
@@ -351,7 +348,9 @@ function ExerciseBlockSession({
     try {
       await onRefresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "刷新失败");
+      setError(
+        reason instanceof Error ? reason.message : translate("grading.result.refreshFailed"),
+      );
     } finally {
       setPending(false);
     }
@@ -363,7 +362,7 @@ function ExerciseBlockSession({
         <MarkdownContent>{exercise.prompt}</MarkdownContent>
       </div>
       <label className="answer-field">
-        <span>你的答案</span>
+        <span>{translate("grading.answer.label")}</span>
         <textarea
           value={answer}
           onChange={(event) => {
@@ -377,11 +376,11 @@ function ExerciseBlockSession({
           placeholder={
             isExplain
               ? grading.coachingPacket
-                ? "用自己的话完整解释；对错与点评由 AI 宿主完成。"
-                : "用自己的话完整解释。"
+                ? translate("grading.answer.explainHost")
+                : translate("grading.answer.explain")
               : grading.coachingPacket
-                ? "用自己的话回答；对错由 AI 宿主判定，不要求一字不差。"
-                : "用自己的话回答。"
+                ? translate("grading.answer.shortHost")
+                : translate("grading.answer.short")
           }
           rows={isExplain ? 6 : 3}
           readOnly={solved || pending}
@@ -393,17 +392,18 @@ function ExerciseBlockSession({
         </p>
       ) : persistence === "unavailable" ? (
         <p className="answer-field__draft-status answer-field__draft-status--warning" role="status">
-          此浏览器不能保存未提交答案；文字仍保留在当前页面。
+          {translate("grading.answer.storageUnavailable")}
         </p>
       ) : persistence === "failed" ? (
         <p className="answer-field__draft-status answer-field__draft-status--warning" role="status">
-          未提交答案没能保存到本机；文字仍保留在当前页面，请先不要关闭。
+          {translate("grading.answer.draftFailed")}
         </p>
       ) : null}
       {exercise.latestSubmission && !result ? (
         <p className="answer-field__saved">
-          这是你 {new Date(exercise.latestSubmission.occurredAt).toLocaleString("zh-CN")}{" "}
-          已提交的答案。
+          {translate("grading.answer.submittedAt", {
+            date: new Date(exercise.latestSubmission.occurredAt).toLocaleString(activeLocale()),
+          })}
         </p>
       ) : null}
 
@@ -421,7 +421,13 @@ function ExerciseBlockSession({
             boundary, not a second learner surface: the button says what the
             learner is doing in both campuses.
           */}
-          {pending ? "正在提交…" : solved ? "已完成" : reopened ? "重新提交" : "提交"}
+          {pending
+            ? translate("grading.answer.submitting")
+            : solved
+              ? translate("grading.answer.completed")
+              : reopened
+                ? translate("grading.answer.resubmit")
+                : translate("grading.answer.submit")}
         </GameButton>
         {passedOnce ? (
           <GameButton
@@ -435,7 +441,7 @@ function ExerciseBlockSession({
             }}
             disabled={pending}
           >
-            {reopened ? "放弃重答" : "重新回答"}
+            {reopened ? translate("grading.answer.cancelRetry") : translate("grading.answer.retry")}
           </GameButton>
         ) : null}
         {/*
@@ -450,15 +456,19 @@ function ExerciseBlockSession({
           latch on.
         */}
         {!answer.trim() && !solved && !pending ? (
-          <span className="exercise-actions__hint">写下你的答案后就能提交</span>
+          <span className="exercise-actions__hint">{translate("grading.answer.emptyHint")}</span>
         ) : null}
       </div>
 
       {result && hostGrade === null && grading.coachingPacket ? (
-        <GameCallout heading="答案已记录 · 等 AI 评估" tone="warning" role="status">
+        <GameCallout
+          heading={translate("grading.result.awaitingTitle")}
+          tone="warning"
+          role="status"
+        >
           {awaitingGrade
-            ? "本页不自己判对错。把答疑包贴给任意 AI 宿主，它写回后这里会自动出现评估 —— 不用守着，回到这个页面时也会立刻刷新。"
-            : "本页不自己判对错。请把答疑包贴到任意 AI 宿主，让它判分并写回。"}
+            ? translate("grading.result.awaitingRefresh")
+            : translate("grading.result.awaitingInstructions")}
         </GameCallout>
       ) : null}
 
@@ -479,20 +489,24 @@ function ExerciseBlockSession({
       ) : null}
 
       {result?.meteredFreeQuota || result?.meteredBalance ? (
-        <GameCallout heading="AI 批改后的额度" tone="neutral" role="status">
+        <GameCallout heading={translate("grading.quota.afterTitle")} tone="neutral" role="status">
           {result.meteredFreeQuota ? (
             <p>
-              本次使用今天的免费 AI 批改；
-              <strong>
-                {freeGradingRemainingText(result.meteredFreeQuota.remainingPowerUnits)}
-              </strong>
-              ，免费额度明天恢复。
+              {emphasizedGradingCopy("grading.quota.usedFree", {
+                remaining: freeGradingRemainingText(
+                  result.meteredFreeQuota.remainingPowerUnits,
+                  activeLocale(),
+                ),
+              })}
             </p>
           ) : result.meteredBalance ? (
             <p>
-              本次使用钱包完成 AI 批改；
-              <strong>{walletGradingBalanceText(result.meteredBalance.availablePowerUnits)}</strong>
-              。
+              {emphasizedGradingCopy("grading.quota.usedWallet", {
+                balance: walletGradingBalanceText(
+                  result.meteredBalance.availablePowerUnits,
+                  activeLocale(),
+                ),
+              })}
             </p>
           ) : null}
         </GameCallout>
@@ -502,7 +516,9 @@ function ExerciseBlockSession({
         <div
           className={`host-grade host-grade--${currentOutcome ?? "undecided"}`}
           role="region"
-          aria-label={`${graderLabel(hostGrade.host)}结果`}
+          aria-label={translate("grading.result.region", {
+            grader: graderLabel(hostGrade.host, activeLocale()),
+          })}
         >
           <p className="host-grade__summary" data-grade-summary role="status">
             <span className="host-grade__mark" aria-hidden="true">
@@ -525,7 +541,7 @@ function ExerciseBlockSession({
               )}
             </summary>
             <p className="host-grade__eyebrow">
-              {graderLabel(hostGrade.host)} · {gradeOutcomeLabel(currentOutcome)}
+              {graderLabel(hostGrade.host, activeLocale())} · {gradeOutcomeLabel(currentOutcome)}
               {/* Naming the model that read the answer is useful; repeating our
                 internal tier name after "当场判定" is just jargon on a page a
                 beginner is reading. */}
@@ -538,7 +554,7 @@ function ExerciseBlockSession({
             </div>
             {hostGrade.extensions.length > 0 ? (
               <div className="host-grade__extensions">
-                <p className="eyebrow">引申</p>
+                <p className="eyebrow">{translate("grading.result.extensions")}</p>
                 <ul>
                   {hostGrade.extensions.map((item) => (
                     // Same Markdown treatment the evaluation above gets. An
@@ -565,14 +581,14 @@ function ExerciseBlockSession({
                   disabled={pending || expressionPending}
                 >
                   {expressionPending
-                    ? "正在检查会员权益…"
+                    ? translate("grading.expression.checking")
                     : expressionCopied
-                      ? "已复制表达点评包"
-                      : "让 AI 点评我这段表达"}
+                      ? translate("grading.expression.copied")
+                      : translate("grading.expression.ask")}
                 </GameButton>
                 {expressionCopied ? (
                   <span className="host-grade__coach-hint">
-                    贴到任意 AI 宿主。它只评你怎么说，不改判对错。
+                    {translate("grading.expression.instructions")}
                   </span>
                 ) : null}
               </div>
@@ -582,33 +598,44 @@ function ExerciseBlockSession({
       ) : null}
 
       {result?.meteredEligible ? (
-        <details className="product-details metered-grading-choice" aria-label="AI 语义批改选择">
+        <details
+          className="product-details metered-grading-choice"
+          aria-label={translate("grading.quota.choices")}
+        >
           <summary>{translate("product.feedback.askAi")}</summary>
           {meteredOfferLoading ? (
-            <GameCallout heading="正在读取 AI 批改费用与余额" tone="neutral" role="status">
-              先把这次会使用多少、你的钱包还剩多少读清楚；读取完成前不会开始 AI 批改。
+            <GameCallout
+              heading={translate("grading.quota.loadingTitle")}
+              tone="neutral"
+              role="status"
+            >
+              {translate("grading.quota.loading")}
             </GameCallout>
           ) : meteredOffer?.kind === "free" ? (
-            <GameCallout heading="今天的免费 AI 批改还可用" tone="neutral" role="region">
+            <GameCallout
+              heading={translate("grading.quota.freeTitle")}
+              tone="neutral"
+              role="region"
+            >
               <div className="metered-grading-choice__copy">
                 <p>
-                  这次用掉今天免费 AI 批改里的{" "}
-                  <strong>{gradingAttemptText(meteredOffer.costPowerUnits)}</strong>；
-                  <strong>{freeGradingRemainingText(meteredOffer.remainingPowerUnits)}</strong>
-                  ，不会扣钱包。
+                  {emphasizedGradingCopy("grading.quota.freeOffer", {
+                    cost: gradingAttemptText(meteredOffer.costPowerUnits, activeLocale()),
+                    remaining: freeGradingRemainingText(
+                      meteredOffer.remainingPowerUnits,
+                      activeLocale(),
+                    ),
+                  })}
                 </p>
-                <p>
-                  只有点“使用今日免费 AI 批改”才会使用今天的一次免费 AI
-                  批改；先看提示不占今天的免费次数。
-                </p>
+                <p>{translate("grading.quota.freeConsent")}</p>
               </div>
               {meteredChoice === "tier-1" ? (
                 <p className="metered-grading-choice__selected" role="status">
-                  已选择先看提示（不占今天的免费次数）。
+                  {translate("grading.quota.freeHintSelected")}
                 </p>
               ) : meteredChoice === "free-ai" ? (
                 <p className="metered-grading-choice__selected" role="status">
-                  已选择今天的免费 AI 批改。
+                  {translate("grading.quota.freeSelected")}
                 </p>
               ) : null}
               <div className="metered-grading-choice__actions">
@@ -617,37 +644,52 @@ function ExerciseBlockSession({
                   onClick={() => void submit(true, "free")}
                   disabled={pending}
                 >
-                  使用今日免费 AI 批改（使用 {gradingAttemptText(meteredOffer.costPowerUnits)}）
+                  {translate("grading.quota.useFree", {
+                    cost: gradingAttemptText(meteredOffer.costPowerUnits, activeLocale()),
+                  })}
                 </GameButton>
                 <GameButton
                   variant="ghost"
                   onClick={() => setMeteredChoice("tier-1")}
                   disabled={pending}
                 >
-                  先看提示（不占今天的免费次数）
+                  {translate("grading.quota.freeHint")}
                 </GameButton>
               </div>
             </GameCallout>
           ) : meteredOffer?.kind === "available" ? (
-            <GameCallout heading="AI 语义批改会使用钱包余额" tone="warning" role="region">
+            <GameCallout
+              heading={translate("grading.quota.walletTitle")}
+              tone="warning"
+              role="region"
+            >
               <div className="metered-grading-choice__copy">
                 {meteredOffer.freeQuotaExhausted ? (
                   <p>
-                    今天的免费 AI 批改用完了，明天恢复。现在使用会从钱包扣除{" "}
-                    <strong>{gradingAttemptText(meteredOffer.costPowerUnits)}</strong>；
-                    <strong>{walletGradingBalanceText(meteredOffer.availablePowerUnits)}</strong>。
+                    {emphasizedGradingCopy("grading.quota.exhaustedWalletOffer", {
+                      cost: gradingAttemptText(meteredOffer.costPowerUnits, activeLocale()),
+                      balance: walletGradingBalanceText(
+                        meteredOffer.availablePowerUnits,
+                        activeLocale(),
+                      ),
+                    })}
                   </p>
                 ) : (
                   <p>
-                    这次会使用 <strong>{gradingAttemptText(meteredOffer.costPowerUnits)}</strong>；
-                    <strong>{walletGradingBalanceText(meteredOffer.availablePowerUnits)}</strong>。
+                    {emphasizedGradingCopy("grading.quota.walletOffer", {
+                      cost: gradingAttemptText(meteredOffer.costPowerUnits, activeLocale()),
+                      balance: walletGradingBalanceText(
+                        meteredOffer.availablePowerUnits,
+                        activeLocale(),
+                      ),
+                    })}
                   </p>
                 )}
-                <p>只有点“使用 AI 批改”才会从钱包扣除这次批改；先看提示不会使用钱包。</p>
+                <p>{translate("grading.quota.walletConsent")}</p>
               </div>
               {meteredChoice === "tier-1" ? (
                 <p className="metered-grading-choice__selected" role="status">
-                  已选择先看提示（不使用钱包）。
+                  {translate("grading.quota.walletHintSelected")}
                 </p>
               ) : null}
               <div className="metered-grading-choice__actions">
@@ -656,14 +698,16 @@ function ExerciseBlockSession({
                   onClick={() => void submit(true, "wallet")}
                   disabled={pending}
                 >
-                  使用 AI 批改（使用 {gradingAttemptText(meteredOffer.costPowerUnits)}）
+                  {translate("grading.quota.useWallet", {
+                    cost: gradingAttemptText(meteredOffer.costPowerUnits, activeLocale()),
+                  })}
                 </GameButton>
                 <GameButton
                   variant="ghost"
                   onClick={() => setMeteredChoice("tier-1")}
                   disabled={pending}
                 >
-                  先看提示（不使用钱包）
+                  {translate("grading.quota.walletHint")}
                 </GameButton>
               </div>
             </GameCallout>
@@ -671,12 +715,22 @@ function ExerciseBlockSession({
             <GameCallout heading={meteredOffer.explanation.title} tone="neutral" role="status">
               <div className="metered-grading-choice__copy">
                 <p>
-                  {meteredOffer.freeQuotaExhausted
-                    ? "今天的免费 AI 批改用完了，明天恢复。"
-                    : `本次 AI 批改会使用 ${gradingAttemptText(meteredOffer.costPowerUnits)}。`}
-                  {meteredOffer.availablePowerUnits !== null
-                    ? ` ${walletGradingBalanceText(meteredOffer.availablePowerUnits)}。`
-                    : " 钱包余额暂时读不到。"}
+                  {translate("grading.quota.unavailableOffer", {
+                    cost: meteredOffer.freeQuotaExhausted
+                      ? translate("grading.quota.exhausted")
+                      : translate("grading.quota.attemptCost", {
+                          cost: gradingAttemptText(meteredOffer.costPowerUnits, activeLocale()),
+                        }),
+                    balance:
+                      meteredOffer.availablePowerUnits !== null
+                        ? translate("grading.quota.balance", {
+                            balance: walletGradingBalanceText(
+                              meteredOffer.availablePowerUnits,
+                              activeLocale(),
+                            ),
+                          })
+                        : translate("grading.quota.balanceUnavailable"),
+                  })}
                 </p>
                 <p>{meteredOffer.explanation.whyUnavailable}</p>
                 {meteredOffer.explanation.action ? (
@@ -689,7 +743,7 @@ function ExerciseBlockSession({
               </div>
               {meteredChoice === "tier-1" ? (
                 <p className="metered-grading-choice__selected" role="status">
-                  已选择先看提示（不使用钱包）。
+                  {translate("grading.quota.walletHintSelected")}
                 </p>
               ) : null}
               <div className="metered-grading-choice__actions">
@@ -697,14 +751,14 @@ function ExerciseBlockSession({
                   variant="secondary"
                   onClick={() => setMeteredExplanation(meteredOffer.explanation)}
                 >
-                  查看 AI 批改说明
+                  {translate("grading.quota.details")}
                 </GameButton>
                 <GameButton
                   variant="ghost"
                   onClick={() => setMeteredChoice("tier-1")}
                   disabled={pending}
                 >
-                  先看提示（不使用钱包）
+                  {translate("grading.quota.walletHint")}
                 </GameButton>
               </div>
             </GameCallout>
@@ -713,34 +767,42 @@ function ExerciseBlockSession({
       ) : null}
 
       {result && currentOutcome !== "pass" && grading.coachingPacket ? (
-        <div className="coaching-packet" role="region" aria-label="答疑包与粘贴步骤">
+        <div
+          className="coaching-packet"
+          role="region"
+          aria-label={translate("grading.packet.region")}
+        >
           <p className="coaching-packet__status">
             {packetCopied
-              ? "已复制「练习答疑包」到剪贴板"
+              ? translate("grading.packet.copied")
               : packetCopyFailed
-                ? "自动复制失败，请点下面按钮手动复制"
-                : "复制答疑包 → 任意 AI 宿主判分并写回"}
+                ? translate("grading.packet.copyFailed")
+                : translate("grading.packet.copyInstructions")}
           </p>
           {packetCopied && packetInfo ? (
             // An assistant in a fresh chat cannot open the repository, so the
             // packet carries the cited code with it. Saying so is what stops
             // the learner from wondering whether the AI is judging blind.
             <p className="coaching-packet__contents">
-              包里带了 {packetInfo.evidenceCount} 段本课引用的真实源码
-              {packetInfo.evidenceOmitted > 0
-                ? `（另有 ${packetInfo.evidenceOmitted} 段略过）`
-                : ""}
-              ，
-              {packetInfo.referenceDisclosed
-                ? "以及参考答案 —— 你已经答过多次了。"
-                : "但不含参考答案 —— 第一次尝试时提前给答案会让这道题白做。"}
+              {translate(
+                packetInfo.referenceDisclosed
+                  ? "grading.packet.contentsWithAnswer"
+                  : "grading.packet.contentsWithoutAnswer",
+                {
+                  count: packetInfo.evidenceCount,
+                  omitted:
+                    packetInfo.evidenceOmitted > 0
+                      ? translate("grading.packet.omitted", { count: packetInfo.evidenceOmitted })
+                      : "",
+                },
+              )}
             </p>
           ) : null}
           <ol className="coaching-packet__steps">
-            <li>打开 AI 助手（Grok Build、Claude Code、Antigravity、Codex 等）。</li>
-            <li>新开一条对话，粘贴（⌘V / Ctrl+V）→ 发送。</li>
-            <li>让 AI 按包内说明写 `/tmp/ul-host-grade.json` 并执行 host-grade 命令。</li>
-            <li>回到本页，评估写回后会自动出现。</li>
+            <li>{translate("grading.packet.openAssistant")}</li>
+            <li>{translate("grading.packet.paste")}</li>
+            <li>{translate("grading.packet.writeBack")}</li>
+            <li>{translate("grading.packet.return")}</li>
           </ol>
           <div className="coaching-packet__actions">
             <GameButton
@@ -748,12 +810,16 @@ function ExerciseBlockSession({
               onClick={() => void copyCoachingPacket()}
               disabled={pending}
             >
-              {packetCopied ? "已复制，可再复制" : "复制答疑包"}
+              {packetCopied
+                ? translate("grading.packet.copyAgain")
+                : translate("grading.packet.copy")}
             </GameButton>
             {/* The page polls on its own; this stays as the escape hatch for a
                 write-back that lands after polling has given up. */}
             <GameButton variant="ghost" onClick={() => void refreshHostGrade()} disabled={pending}>
-              {awaitingGrade ? "正在等评估 · 手动刷新" : "刷新评估"}
+              {awaitingGrade
+                ? translate("grading.result.waitAndRefresh")
+                : translate("grading.result.refresh")}
             </GameButton>
           </div>
         </div>
@@ -783,7 +849,21 @@ function ExerciseBlockSession({
 }
 
 function gradeOutcomeLabel(outcome: "pass" | "fail" | "undecided" | null): string {
-  if (outcome === "pass") return "通过";
-  if (outcome === "fail") return "未通过";
-  return "暂时无法判断";
+  if (outcome === "pass") return translate("grading.result.pass");
+  if (outcome === "fail") return translate("grading.result.fail");
+  return translate("grading.result.undecided");
+}
+
+/** Keep the original emphasis while letting each language order the whole sentence. */
+function emphasizedGradingCopy(key: MessageKey, values: Readonly<Record<string, string>>) {
+  return translate(key)
+    .split(/(\{\{\w+\}\})/)
+    .map((part, index) => {
+      const value = values[part.slice(2, -2)];
+      return part.startsWith("{{") && value !== undefined ? (
+        <strong key={index}>{value}</strong>
+      ) : (
+        part
+      );
+    });
 }

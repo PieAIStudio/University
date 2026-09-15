@@ -1,4 +1,4 @@
-import { translate } from "../../i18n/index.js";
+import { translate, useI18n, writeLocalePreference } from "../../i18n/index.js";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { GameButton, GameToggle } from "@pieai/swimmer-ui-kit";
 import type {
@@ -46,6 +46,7 @@ export function SettingsScreen({
   readonly progress?: ProgressPort;
   readonly reminders?: ReviewReminderPort;
 } = {}) {
+  useI18n();
   const [settings, setSettings] = useState(
     () => progress?.accountData().preferences.foreignSettings ?? readForeignSettings(),
   );
@@ -61,6 +62,7 @@ export function SettingsScreen({
         {translate("ui.navigation.empty.settingsScreen.copy.偏好设置")}
       </h1>
       <ThemePreferenceControl progress={progress} />
+      <InterfaceLanguageControl progress={progress} />
       <section className="settings-screen__block" aria-labelledby="settings-sound">
         <h2 id="settings-sound" className="settings-screen__heading">
           {translate("ui.navigation.empty.settingsScreen.copy.声音")}
@@ -92,6 +94,43 @@ export function SettingsScreen({
         />
       </details>
     </div>
+  );
+}
+
+function InterfaceLanguageControl({ progress }: { readonly progress?: ProgressPort }) {
+  const { locale } = useI18n();
+  const choose = (next: "en" | "zh-CN") => {
+    writeLocalePreference(next);
+    if (progress) {
+      progress.setAccountPreferences({
+        ...progress.accountData().preferences,
+        locale: next,
+        updatedAt: {
+          ...progress.accountData().preferences.updatedAt,
+          locale: new Date().toISOString(),
+        },
+      });
+    }
+  };
+  return (
+    <section className="settings-screen__block" aria-labelledby="settings-interface-language">
+      <h2 id="settings-interface-language" className="settings-screen__heading">
+        {translate("product.settings.interfaceLanguage")}
+      </h2>
+      <div role="group" aria-label={translate("product.settings.interfaceLanguage")}>
+        {(["en", "zh-CN"] as const).map((option) => (
+          <GameButton
+            key={option}
+            type="button"
+            variant={locale === option ? "primary" : "secondary"}
+            aria-pressed={locale === option}
+            onClick={() => choose(option)}
+          >
+            {option === "en" ? translate("locale.en.name") : translate("locale.zhCN.nativeName")}
+          </GameButton>
+        ))}
+      </div>
+    </section>
   );
 }
 

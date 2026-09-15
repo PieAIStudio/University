@@ -77,6 +77,14 @@ const diagramAsset: LessonAssetView = {
   caption: "The local route map.",
 };
 
+it("names authorized source imagery rather than implying it is a generated illustration", async () => {
+  await renderMarkdown(":::figure[Source]{#local-diagram}\n\nA source photograph.\n\n:::", {
+    assets: [{ ...diagramAsset, kind: "authorized-external" }],
+  });
+  expect(container.querySelector("figcaption strong")?.textContent).toBe("真实来源图片");
+  expect(container.querySelector("img")?.getAttribute("alt")).toBe(diagramAsset.alt);
+});
+
 const section: LessonSectionView = { id: "foundation", title: "Foundation" };
 
 function repositoryEvidence(lineStart: number | null, lineEnd: number | null): EvidenceView {
@@ -351,6 +359,13 @@ describe("local-only link and image policy", () => {
 
     expect(link?.getAttribute("target")).toBeNull();
     expect(link?.getAttribute("rel")).toBeNull();
+  });
+
+  it("preserves times and ratios as prose instead of nesting a directive div inside a paragraph", async () => {
+    const text = "The event runs from 10:00 to 17:30. Compare a 16:9 picture with a 4:3 picture.";
+    await renderMarkdown(text);
+    expect(container.querySelector("p")?.textContent).toBe(text);
+    expect(container.querySelector("p div")).toBeNull();
   });
 
   it("renders approved directives, stable section ids, and progressive detail", async () => {

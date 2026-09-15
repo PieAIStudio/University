@@ -902,6 +902,21 @@
   box-shadow: var(--game-ui-shadow-inset);
 }
 
+/* A placed node owns a bounded column, unlike an ordinary fit-content CTA.
+   Long authored labels must wrap inside it rather than move the clickable
+   body beyond the board. The component measures the resulting height. */
+.learning-activity .play-connect__node {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 88px;
+}
+.play-connect__node strong,
+.play-connect__node small {
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 /* The connector on a node reads as a socket rather than a bullet. */
 .play-connect__port {
   background: var(--game-ui-accent-bright);

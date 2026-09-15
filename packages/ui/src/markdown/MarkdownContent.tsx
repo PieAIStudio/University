@@ -125,7 +125,9 @@ function LessonMediaBlock({
         ? translate("ui.markdown.markdownContent.copy.示意图-AI-插图")
         : asset.kind === "diagram"
           ? translate("ui.markdown.markdownContent.copy.结构图")
-          : translate("ui.markdown.markdownContent.copy.本地媒体");
+          : asset.kind === "authorized-external"
+            ? translate("sources.originalMedia")
+            : translate("ui.markdown.markdownContent.copy.本地媒体");
   /*
     The directive body wins over the manifest caption, and `children` is kept as
     nodes rather than collapsed to a string.

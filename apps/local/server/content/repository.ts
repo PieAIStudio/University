@@ -38,6 +38,7 @@ import { getCoursePaths, getLessonPaths, getStudyPaths, getUnitPaths } from "../
 import { readStudy } from "../studies/repository.js";
 import { validateEvidence } from "./evidence.js";
 import { normalizeCard, normalizeExercise, type ExerciseWithoutHash } from "./normalization.js";
+import { validateLessonAssetInputs } from "./asset-input.js";
 
 const LatestRevisionPointerSchema = z
   .object({
@@ -364,7 +365,7 @@ function assertEvidenceIsStillValid(
   for (const reference of evidence) validateEvidence(studiesRoot, studyId, reference);
 }
 
-function assertUnitReadyForActivation(
+export function assertUnitReadyForActivation(
   studiesRoot: string,
   studyId: string,
   courseId: string,
@@ -380,6 +381,14 @@ function assertUnitReadyForActivation(
       throw new Error(`Unit cannot be activated while lesson is ${lesson.status}: ${lesson.id}`);
     }
     assertEvidenceIsStillValid(studiesRoot, studyId, lesson.evidence);
+    const revision = join(
+      getLessonPaths(studiesRoot, studyId, courseId, unit.id, lesson.id).revisions,
+      String(lesson.contentRevision),
+    );
+    validateLessonAssetInputs(
+      lesson.assets,
+      lesson.assets.map((asset) => ({ path: asset.path, sourcePath: join(revision, asset.path) })),
+    );
 
     for (const cardId of lesson.cardIds) {
       const card = readLatestCard(studiesRoot, studyId, courseId, unit.id, lesson.id, cardId);
@@ -698,6 +707,27 @@ export function writeLessonRevision(
   studyId: string,
   input: WriteLessonRevisionInput,
 ): LessonManifest {
+  return persistLessonRevision(studiesRoot, studyId, input, "next");
+}
+
+/** A recovery package is a published snapshot, not a new authoring revision.
+ * Restore its original revision identity into an empty lesson location. This
+ * does not fabricate missing historical revisions or relax ordinary writes.
+ */
+export function restorePublishedLessonRevision(
+  studiesRoot: string,
+  studyId: string,
+  input: WriteLessonRevisionInput,
+): LessonManifest {
+  return persistLessonRevision(studiesRoot, studyId, input, "published-snapshot");
+}
+
+function persistLessonRevision(
+  studiesRoot: string,
+  studyId: string,
+  input: WriteLessonRevisionInput,
+  mode: "next" | "published-snapshot",
+): LessonManifest {
   if (input.content.trim() === "") throw new Error("Lesson content must not be empty");
   const lesson = LessonManifestSchema.parse({
     ...input.manifest,
@@ -708,13 +738,17 @@ export function writeLessonRevision(
   assertContentContainerIsEditable(course, unit);
   assertLessonStructure(unit, lesson, input.content);
   for (const evidence of lesson.evidence) validateEvidence(studiesRoot, studyId, evidence);
-  const assetFiles = new Map((input.assetFiles ?? []).map((file) => [file.path, file.sourcePath]));
+  const validatedFiles = validateLessonAssetInputs(lesson.assets, input.assetFiles ?? []);
+  const assetFiles = new Map(validatedFiles.map((file) => [file.path, file.sourcePath]));
   const declaredAssetPaths = new Set(lesson.assets.map((asset) => asset.path));
   for (const file of assetFiles.keys()) {
     if (!declaredAssetPaths.has(file)) throw new Error(`Asset file is not declared: ${file}`);
   }
 
   const paths = getLessonPaths(studiesRoot, studyId, lesson.courseId, lesson.unitId, lesson.id);
+  if (mode === "published-snapshot" && existsSync(paths.root)) {
+    throw new Error("Recovery requires an empty lesson location; existing revisions are preserved");
+  }
   let previousRevision = 0;
   if (existsSync(paths.latest)) {
     const current = readLatestLesson(
@@ -726,7 +760,9 @@ export function writeLessonRevision(
     );
     previousRevision = current.manifest.contentRevision;
   }
-  assertRequestedRevision(lesson.contentRevision, previousRevision + 1, "Lesson");
+  if (mode === "next") {
+    assertRequestedRevision(lesson.contentRevision, previousRevision + 1, "Lesson");
+  }
 
   writeRevisionDirectory(
     paths.root,
