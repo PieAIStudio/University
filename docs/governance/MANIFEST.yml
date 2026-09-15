@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-15T11:12:04.251Z
+generated_at: 2026-09-15T15:49:33.673Z
 generator_version: doc-gov@0.14.0
-docs_count: 141
+docs_count: 142
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -87,6 +87,13 @@ docs:
     status: archived
     canonical: false
     last_reviewed: 2026-09-13
+    pinned: false
+  - id: ARCHIVE-AI-LITERACY-RELEASE-DD04F8AC
+    path: docs/archive/execution/ai-literacy-release-through-dd04f8ac.md
+    type: archive
+    status: archived
+    canonical: false
+    last_reviewed: 2026-09-15
     pinned: false
   - id: ARCHIVE-COMMERCIAL-MODEL-2026-08-27
     path: docs/archive/execution/commercial-model-2026-08-27.md
@@ -331,7 +338,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-13
+    last_reviewed: 2026-09-15
     pinned: true
   - id: REF-FEEDBACK-BACKEND-GAP
     path: docs/reference/execution/feedback-backend-gap.md

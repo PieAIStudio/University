@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-09-13
+last_reviewed: 2026-09-15
 domain: execution
 tags:
   - current-work
@@ -52,7 +52,7 @@ New mainline work follows the applicable lanes below.
 
 | Task | Authoritative entry |
 | --- | --- |
-| Real-world-source beginner flagship courses, English learner delivery and account recovery | [AI literacy commercial release](../../plans/active/00-ai-literacy-commercial-release.md); Owner authorizes iterative production and publication without intermediate lesson approval; actual payments remain disabled |
+| Published real-source beginner courses and remaining account-service prerequisites | [AI literacy commercial release](../../plans/active/00-ai-literacy-commercial-release.md); both bilingual paths are live and the final release gates passed. Continue only the named AuthKit/mail/account-deletion/cross-device prerequisites or a newly reproduced issue; do not restart course production. Actual payments remain disabled |
 | How work is queued, run and gated on the mainline | [Work queue](work-queue.md); one task, one commit, one push, because `pnpm verify` does not run the browser suite |
 | Published versus locked course packages | [Locked-package record](../../../apps/local/course-proposals/locked/README.md); runtime counts come from the generated catalogue, not historical handoffs |
 | Reviving the locked AI foundations course | [AI foundations revival](../../plans/active/ai-foundations-revival.md); follow its phase boundary and unresolved recovery requirements before resuming |
