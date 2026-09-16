@@ -581,54 +581,324 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
   display:grid;place-items:center;font-size:12px;color:#fff;font-weight:700;pointer-events:none;animation:land .3s}
 .pinmark.ok{background:var(--ok)} .pinmark.no{background:var(--berry)}
 </style>
+<style>
+/* ================= 游戏手感底座 =================
+   调研结论：一个动作要让人觉得"爽"，靠三样——即时响应、看得懂的反馈、
+   再加一层 squash&stretch / 抖动 / 粒子。这一层现在是共享的。 */
+.jx-pop{animation:jxpop .28s cubic-bezier(.2,1.6,.4,1)}
+@keyframes jxpop{0%{transform:scale(1)}35%{transform:scale(1.14,.88)}70%{transform:scale(.96,1.05)}100%{transform:scale(1)}}
+.jx-shake{animation:jxshake .32s}
+@keyframes jxshake{15%{transform:translateX(-6px)}35%{transform:translateX(5px)}55%{transform:translateX(-4px)}75%{transform:translateX(3px)}}
+.jx-flash{animation:jxflash .32s}
+@keyframes jxflash{0%{filter:brightness(2.1) saturate(.4)}100%{filter:none}}
+.jx-drop{animation:jxdrop .34s cubic-bezier(.3,1.5,.5,1)}
+@keyframes jxdrop{0%{transform:translateY(-14px) scale(1.1);opacity:.4}60%{transform:translateY(2px) scale(.97)}100%{transform:none;opacity:1}}
+.jx-p{position:fixed;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:9999}
+.jx-tag{position:fixed;pointer-events:none;z-index:9999;font-family:var(--num);font-weight:700;
+  font-size:17px;text-shadow:0 2px 6px #0003;animation:jxtag .85s ease-out forwards}
+@keyframes jxtag{0%{transform:translate(-50%,0) scale(.6);opacity:0}
+  22%{transform:translate(-50%,-14px) scale(1.15);opacity:1}
+  100%{transform:translate(-50%,-52px) scale(1);opacity:0}}
+.stagearea.jx-rock{animation:jxrock .3s}
+@keyframes jxrock{20%{transform:translate(2px,-2px)}45%{transform:translate(-3px,1px)}70%{transform:translate(1px,2px)}}
 
+/* 连击条 */
+.combobar{display:flex;align-items:center;gap:8px;margin-bottom:11px;font-size:12px;color:var(--ink-faint)}
+.combobar .cnum{font-family:var(--num);font-size:19px;font-weight:700;color:var(--accent-ink);
+  font-variant-numeric:tabular-nums;min-width:1.5em}
+.combobar .ctrack{flex:1;height:8px;border-radius:var(--r-pill);background:var(--bg-deep);overflow:hidden}
+.combobar .cfill{height:100%;width:0;border-radius:var(--r-pill);
+  background:linear-gradient(90deg,var(--accent),var(--accent-bright));transition:width .25s}
+.combobar.hot .cnum{color:var(--warn);animation:jxpop .3s}
+
+/* ---------- 11 盖章台（Papers, Please） ---------- */
+.desk{display:flex;flex-direction:column;gap:11px}
+.rulecard{background:var(--panel-deep);border:1px solid var(--line-2);border-radius:12px;
+  padding-block:11px;padding-inline:12px;box-shadow:var(--sh)}
+.rulecard h6{margin:0 0 7px;font-family:var(--num);font-size:10.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+.rulecard ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.rulecard li{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;line-height:1.5;color:var(--ink-title)}
+.rulecard li .bx{flex:none;width:17px;height:17px;border-radius:5px;border:2px solid var(--ink-soft);
+  background:var(--panel);display:grid;place-items:center;font-size:11px;color:transparent;
+  margin-top:1px;cursor:pointer;transition:.14s}
+.rulecard li .bx.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.rulecard li .bx.off{background:var(--warn);border-color:var(--warn);color:#fff}
+.paper{background:#fffdf7;border:1px solid var(--line);border-radius:4px;
+  padding-block:14px;padding-inline:14px;font-size:14px;line-height:1.85;color:#3a2518;
+  box-shadow:0 6px 18px #4c341c26;position:relative}
+:root[data-theme="dark"] .paper{background:#f3ead9}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .paper{background:#f3ead9}}
+.paper .ph{font-family:var(--num);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:#a08a78;margin-bottom:7px;font-weight:700}
+.stamps{display:flex;gap:10px}
+.stampbtn{flex:1;border-radius:12px;padding-block:13px;font-size:15px;font-weight:700;
+  border-bottom:4px solid #0000002e;transition:transform .07s;letter-spacing:.06em}
+.stampbtn:active:not(:disabled){transform:translateY(3px) scale(.985);border-bottom-width:1px}
+.stampbtn.pass{background:var(--ok);color:#fff}
+.stampbtn.fail{background:var(--warn);color:#fff}
+.stampbtn:disabled{background:var(--bg-deep);color:var(--ink-faint);border-bottom-color:transparent}
+.inkmark{position:absolute;top:26%;left:50%;transform:translate(-50%,-50%) rotate(-11deg);
+  border:4px solid;border-radius:8px;padding-block:5px;padding-inline:14px;font-size:20px;font-weight:700;
+  letter-spacing:.14em;opacity:0;pointer-events:none}
+.inkmark.on{animation:ink .45s cubic-bezier(.2,1.7,.4,1) forwards}
+@keyframes ink{0%{opacity:0;transform:translate(-50%,-50%) rotate(-11deg) scale(2.6)}
+  60%{opacity:.95;transform:translate(-50%,-50%) rotate(-11deg) scale(.93)}
+  100%{opacity:.88;transform:translate(-50%,-50%) rotate(-11deg) scale(1)}}
+.inkmark.pass{color:#2f6446;border-color:#2f6446}
+.inkmark.fail{color:#a3392a;border-color:#a3392a}
+
+/* ---------- 12 三连确认（Obra Dinn） ---------- */
+.caselist{display:flex;flex-direction:column;gap:9px}
+.caserow{background:var(--panel);border:2px solid var(--line);border-radius:13px;
+  padding-block:11px;padding-inline:12px;transition:.2s}
+.caserow.sealed{border-color:var(--ok);background:var(--ok-pale)}
+.caserow .claim{font-size:14px;line-height:1.55;color:var(--ink-title);margin-bottom:8px}
+.caserow .claim i{font-style:normal;font-family:var(--num);font-size:11px;color:var(--ink-faint);
+  letter-spacing:.1em;display:block;margin-bottom:3px}
+.srcopts{display:flex;flex-wrap:wrap;gap:6px}
+.srcopt{border:2px solid var(--line-2);border-radius:var(--r-pill);background:var(--panel-2);
+  padding-block:6px;padding-inline:11px;font-size:13px;transition:.12s}
+.srcopt[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.srcopt.sealed{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+.sealbar{margin-top:11px;display:flex;align-items:center;gap:10px}
+.sealbar .txt{flex:1;font-size:12.5px;color:var(--ink-faint);line-height:1.5}
+.sealbtn{border-radius:11px;padding-block:10px;padding-inline:16px;font-size:14px;font-weight:700;
+  background:var(--ink-title);color:var(--bg);border-bottom:3px solid #0000003d}
+.sealbtn:disabled{background:var(--bg-deep);color:var(--ink-faint);border-bottom-color:transparent}
+.sealbtn:active:not(:disabled){transform:translateY(2px);border-bottom-width:1px}
+
+/* ---------- 13 飘落拦截 ---------- */
+.arena{position:relative;height:270px;border-radius:14px;overflow:hidden;
+  background:linear-gradient(180deg,var(--panel) 0%,var(--panel-2) 72%,var(--bg-deep) 100%);
+  border:1px solid var(--line-2)}
+.gateline{position:absolute;left:0;right:0;bottom:56px;border-top:2px dashed var(--line-2);
+  font-size:10px;color:var(--ink-faint);text-align:center}
+.gateline span{background:var(--panel-2);padding-inline:7px;position:relative;top:-8px}
+.faller{position:absolute;left:50%;transform:translateX(-50%);width:78%;
+  background:var(--panel);border:2px solid var(--accent);border-radius:11px;
+  padding-block:9px;padding-inline:11px;font-size:13.5px;line-height:1.45;text-align:center;
+  box-shadow:var(--sh);color:var(--ink-title)}
+.faller.gone{animation:jxflash .3s}
+.gates{display:flex;gap:10px;position:absolute;left:10px;right:10px;bottom:9px}
+.gatebtn{flex:1;border-radius:11px;padding-block:11px;font-size:14px;font-weight:700;
+  background:var(--panel);border:2px solid var(--line-2);border-bottom-width:4px;color:var(--ink-title);
+  transition:transform .07s}
+.gatebtn:active{transform:translateY(2px);border-bottom-width:2px}
+.scorerow{display:flex;gap:9px;margin-top:10px;font-size:12.5px;color:var(--ink-faint)}
+.scorerow b{font-family:var(--num);color:var(--ink-title);font-size:15px}
+.startbtn{width:100%;border-radius:12px;padding-block:12px;font-size:15px;font-weight:700;
+  background:var(--accent);color:#fff;border-bottom:4px solid #0000002e}
+.startbtn:active{transform:translateY(2px);border-bottom-width:2px}
+
+/* ---------- 15 涂黑 ---------- */
+.redactbox{background:#fffdf7;color:#3a2518;border:1px solid var(--line);border-radius:6px;
+  padding-block:14px;padding-inline:14px;font-size:15px;line-height:2.1;user-select:none;
+  touch-action:none;cursor:crosshair;box-shadow:0 6px 18px #4c341c26}
+:root[data-theme="dark"] .redactbox{background:#f3ead9}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .redactbox{background:#f3ead9}}
+.rk{border-radius:3px;transition:background .1s,color .1s;padding-block:2px}
+.rk.ink{background:#241609;color:#241609;box-shadow:0 0 0 2px #241609}
+.rk.wrongink{background:#d85a45;color:#d85a45;box-shadow:0 0 0 2px #d85a45}
+.brushrow{display:flex;gap:9px;margin-top:11px;align-items:center}
+.brushrow .hintx{flex:1;font-size:12.5px;color:var(--ink-faint);line-height:1.5}
+
+/* ---------- 16 透视扫描 ---------- */
+.xbox{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding-block:13px;padding-inline:13px;overflow:hidden;touch-action:none}
+.xline{font-size:14px;line-height:1.75;padding-block:7px;padding-inline:9px;border-radius:9px;
+  margin-bottom:6px;border:1px solid transparent;transition:.18s;position:relative}
+.xline:last-child{margin-bottom:0}
+.xline .how{font-size:11.5px;color:var(--ink-faint);margin-top:3px;display:none}
+.xline.on{border-color:var(--line-2);background:var(--panel-2)}
+.xline.past{opacity:.72}
+.xline.on .how{display:block}
+.xline.strong.on{border-color:var(--ok);background:var(--ok-pale)}
+.xline.weak.on{border-color:var(--warn);background:var(--warn-pale)}
+.xbeam{position:absolute;left:0;right:0;height:52px;pointer-events:none;
+  background:linear-gradient(180deg,#0000,var(--accent-pale) 45%,#0000);opacity:.85;
+  border-top:1px solid var(--accent);border-bottom:1px solid var(--accent)}
+.xhandle{margin-top:11px}
+.xhandle input{width:100%;accent-color:var(--accent);height:30px}
+
+/* ---------- 17 二维寻解 ---------- */
+.field{position:relative;aspect-ratio:1/.72;max-width:100%;border-radius:14px;overflow:hidden;
+  background:var(--panel);border:1px solid var(--line-2);touch-action:none;cursor:grab}
+.zoneok{position:absolute;border-radius:10px;background:var(--ok-pale);border:2px dashed var(--ok);opacity:.75}
+.knob{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,var(--accent-bright),var(--accent));
+  box-shadow:0 6px 18px #e8743b66,0 0 0 4px #ffffff59;pointer-events:none}
+.axl{position:absolute;font-size:10.5px;color:var(--ink-faint)}
+.fieldout{margin-top:11px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+  padding-block:11px;padding-inline:12px;font-size:13.5px;line-height:1.7}
+.fieldout.good{background:var(--ok-pale);border-color:var(--ok)}
+
+/* ---------- 18 节奏敲击 ---------- */
+.padgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pad{border-radius:14px;padding-block:18px;padding-inline:12px;font-size:14.5px;font-weight:700;
+  background:var(--panel);border:2px solid var(--line-2);border-bottom-width:5px;color:var(--ink-title);
+  transition:transform .07s,background .15s;line-height:1.4}
+.pad:active:not(:disabled){transform:translateY(3px);border-bottom-width:2px}
+.pad.hitok{background:var(--ok-pale);border-color:var(--ok)}
+.pad.hitno{background:var(--warn-pale);border-color:var(--warn)}
+.pad:disabled{opacity:.4}
+.beatrow{display:flex;gap:6px;margin-bottom:11px}
+.beat{flex:1;height:28px;border-radius:8px;background:var(--bg-deep);display:grid;place-items:center;
+  font-family:var(--num);font-size:12px;font-weight:700;color:var(--ink-faint);transition:.2s}
+.beat.done{background:var(--ok);color:#fff}
+
+/* ---------- 19 装箱 ---------- */
+.crate{border:3px solid var(--line-2);border-radius:14px;background:var(--bg-deep);
+  padding-block:11px;padding-inline:10px;transition:.18s}
+.crate.hot{border-color:var(--accent);background:var(--accent-pale)}
+.crate.full{border-color:var(--warn)}
+.crate h6{margin:0 0 8px;font-size:12px;color:var(--ink-soft);font-weight:700;display:flex;justify-content:space-between}
+.cells{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.cell{aspect-ratio:1/.62;border-radius:9px;border:2px dashed var(--line-2);background:var(--panel);
+  display:grid;place-items:center;text-align:center;font-size:11px;line-height:1.35;
+  padding-inline:4px;color:var(--ink-soft)}
+.cell.filled{border-style:solid;border-color:var(--ok);background:var(--ok-pale);color:var(--ok-ink);font-weight:600}
+.cell.bad{border-color:var(--berry);background:var(--berry-pale);color:var(--berry-ink)}
+
+/* ---------- 20 检索 ---------- */
+.termrow{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:11px}
+.term{border:2px solid var(--line-2);border-radius:var(--r-pill);background:var(--panel);
+  padding-block:7px;padding-inline:13px;font-size:13.5px;transition:.12s}
+.term[aria-pressed="true"]{background:var(--ink-title);border-color:var(--ink-title);color:var(--bg);font-weight:600}
+.results{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding-block:11px;padding-inline:12px;min-height:110px}
+.rec2{border-left:3px solid var(--line-2);padding-left:9px;margin-bottom:9px;font-size:13px;line-height:1.65}
+.rec2:last-child{margin-bottom:0}
+.rec2.hitrec{border-left-color:var(--ok);background:var(--ok-pale);border-radius:0 8px 8px 0;
+  padding-block:7px;padding-right:8px;animation:jxdrop .34s}
+.rec2 b{color:var(--ink-title)}
+.rec2 .meta2{font-size:11px;color:var(--ink-faint);margin-top:2px}
+.empty2{font-size:13px;color:var(--ink-faint);text-align:center;padding-block:28px;line-height:1.6}
+</style>
 <div class="page" id="page"></div>
 <script>
-(function(){
-"use strict";
-const page=document.getElementById("page");
+/* ==================================================================
+   共享：手感底座 + 教学内容
+   内容全部来自《认识 AI，从这里开始》第一单元前三节。
+   同一段内容可以在不同积木里重复出现——那正是要验证的事。
+   ================================================================== */
+window.JX=(function(){
 const el=(t,c,h)=>{const n=document.createElement(t);if(c)n.className=c;if(h!=null)n.innerHTML=h;return n};
 const esc=s=>String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-
-/* ---------- 手感：声音 + 震动 ---------- */
 let AC=null;
 function tone(fs,dur,type,vol){
   try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended")AC.resume();
-    fs.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+i*0.07;
+    fs.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+i*0.06;
       o.type=type||"sine";o.frequency.setValueAtTime(f,t);
-      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||0.1,t+0.01);
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||0.1,t+0.008);
       g.gain.exponentialRampToValueAtTime(0.0001,t+(dur||0.18));
       o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+(dur||0.18)+0.02)});
   }catch(e){}}
+function noise(dur,vol){
+  try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended")AC.resume();
+    const n=Math.floor(AC.sampleRate*(dur||0.12)), b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0);
+    for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.6);
+    const s=AC.createBufferSource(); s.buffer=b;
+    const g=AC.createGain(); g.gain.value=vol||0.14;
+    const f=AC.createBiquadFilter(); f.type="lowpass"; f.frequency.value=1400;
+    s.connect(f); f.connect(g); g.connect(AC.destination); s.start();
+  }catch(e){}}
 const sfx={
-  grab:()=>tone([420],.05,"sine",.05), snap:()=>tone([620,820],.13,"triangle",.09),
-  drop:()=>tone([300],.09,"sine",.06), good:()=>tone([659.25,880],.24,"sine",.12),
-  bad:()=>tone([300,250],.26,"sine",.09), tick:()=>tone([700],.03,"square",.03),
-  win:()=>tone([523.25,659.25,784,1046.5],.42,"triangle",.11)};
+  grab:()=>tone([420],.05,"sine",.05),
+  snap:()=>tone([620,880],.12,"triangle",.09),
+  drop:()=>tone([300],.09,"sine",.06),
+  good:()=>tone([659.25,880],.22,"sine",.12),
+  great:()=>tone([659.25,880,1174.7],.28,"triangle",.12),
+  bad:()=>tone([300,240],.26,"sine",.09),
+  tick:()=>tone([760],.03,"square",.03),
+  win:()=>tone([523.25,659.25,784,1046.5],.4,"triangle",.11),
+  stamp:()=>{noise(.16,.22);tone([120,90],.2,"sine",.16)},
+  seal:()=>{noise(.1,.12);tone([392,523.25,659.25],.3,"triangle",.11)},
+  step:(i)=>tone([392*Math.pow(2,(i||0)/12)],.12,"triangle",.09)
+};
 const buzz=m=>{try{navigator.vibrate&&navigator.vibrate(m)}catch(e){}};
 
-/* ---------- 拖拽内核：鼠标和手指同一套 ---------- */
+/* ---- juice ---- */
+function ani(n,cls){ if(!n)return; n.classList.remove(cls); void n.offsetWidth; n.classList.add(cls); }
+const pop=n=>ani(n,"jx-pop"), shake=n=>ani(n,"jx-shake"), flash=n=>ani(n,"jx-flash"), dropIn=n=>ani(n,"jx-drop");
+function rock(n){ const s=n&&n.closest?n.closest(".stagearea"):null; ani(s,"jx-rock") }
+function burst(x,y,color,count){
+  const N=count||14;
+  for(let i=0;i<N;i++){
+    const p=el("div","jx-p"); const a=Math.random()*Math.PI*2, v=26+Math.random()*58;
+    const sz=4+Math.random()*7;
+    p.style.cssText="left:"+x+"px;top:"+y+"px;width:"+sz+"px;height:"+sz+"px;background:"+color;
+    document.body.appendChild(p);
+    p.animate([{transform:"translate(-50%,-50%) scale(1)",opacity:1},
+      {transform:"translate("+(Math.cos(a)*v-50)+"%,"+(Math.sin(a)*v+34-50)+"%) scale(.2)",opacity:0}],
+      {duration:480+Math.random()*320,easing:"cubic-bezier(.2,.8,.4,1)"}).onfinish=()=>p.remove();
+  }
+}
+function burstAt(node,color,n){ if(!node)return; const r=node.getBoundingClientRect();
+  burst(r.left+r.width/2,r.top+r.height/2,color||"var(--accent)",n) }
+function tag(node,text,color){
+  if(!node)return; const r=node.getBoundingClientRect();
+  const t=el("div","jx-tag",esc(text));
+  t.style.cssText="left:"+(r.left+r.width/2)+"px;top:"+r.top+"px;color:"+(color||"var(--ok)");
+  document.body.appendChild(t); setTimeout(()=>t.remove(),900);
+}
+/* 命中：一次调用把三件事一起做完 */
+function hit(node,txt){ pop(node); flash(node); burstAt(node,"var(--ok)",16); tag(node,txt||"+1","var(--ok-ink)");
+  sfx.good(); buzz(16) }
+function miss(node){ shake(node); rock(node); sfx.bad(); buzz([10,55,10]) }
+
+/* ---- 连击条 ---- */
+function comboBar(host,max){
+  const n=el("div","combobar",'<span>连对</span><span class="cnum">0</span>'+
+    '<div class="ctrack"><div class="cfill"></div></div><span class="cmax"></span>');
+  host.appendChild(n);
+  const num=n.querySelector(".cnum"), fill=n.querySelector(".cfill"), mx=n.querySelector(".cmax");
+  let c=0,best=0;
+  return {add(){ c++; best=Math.max(best,c); num.textContent=c;
+      fill.style.width=Math.min(100,c/(max||6)*100)+"%";
+      n.classList.toggle("hot",c>=3); pop(num); mx.textContent="最高 "+best; return c },
+    reset(){ c=0; num.textContent=0; fill.style.width="0%"; n.classList.remove("hot") },
+    get(){return c}, best(){return best}};
+}
+
+/* ---- 卡片骨架 ---- */
+let NO=0;
+function block(page,o){
+  NO++;
+  const b=el("div","blk");
+  b.innerHTML='<div class="blkhd"><div class="no">积木 '+String(NO).padStart(2,"0")+
+    (o.from?'　·　灵感：'+esc(o.from):"")+"</div>"+
+    "<h3>"+esc(o.title)+"<code>"+esc(o.id)+"</code></h3>"+
+    '<p class="hand"><b>手上的动作：</b>'+o.hand+"</p></div>";
+  const st=el("div","stagearea");
+  const rs=el("button","reset","重来"); st.appendChild(rs);
+  const host=el("div"); st.appendChild(host); b.appendChild(st);
+  const sp=el("details","spec");
+  sp.innerHTML="<summary>规格 · 用的是哪一课</summary><div class='in'>"+o.spec+"</div>";
+  b.appendChild(sp); page.appendChild(b);
+  const mount=()=>{host.innerHTML="";o.build(host)};
+  rs.onclick=()=>{sfx.tick();mount()};
+  mount();
+}
+function verdict(host,ok,html){
+  const old=host.querySelector(".verd"); if(old)old.remove();
+  const v=el("div","verd "+(ok?"ok":"no"),html); host.appendChild(v); return v;
+}
+/* ---- 拖拽内核 ---- */
 function onDrag(node,h){
   node.style.touchAction="none";
   node.addEventListener("pointerdown",e=>{
     if(node.dataset.locked==="1")return;
     e.preventDefault();
-    const id=e.pointerId;
-    try{node.setPointerCapture(id)}catch(_){}
-    const r=node.getBoundingClientRect();
-    const off={x:e.clientX-r.left,y:e.clientY-r.top};
-    let moved=false;
+    const id=e.pointerId; try{node.setPointerCapture(id)}catch(_){}
+    const r=node.getBoundingClientRect(), off={x:e.clientX-r.left,y:e.clientY-r.top};
     h.start&&h.start(r,off,e);
-    const move=ev=>{ if(Math.abs(ev.clientX-e.clientX)+Math.abs(ev.clientY-e.clientY)>3)moved=true;
-      h.move&&h.move(ev,off,r) };
-    const up=ev=>{
-      node.removeEventListener("pointermove",move);
-      node.removeEventListener("pointerup",up);
-      node.removeEventListener("pointercancel",up);
+    const move=ev=>h.move&&h.move(ev,off,r);
+    const up=ev=>{ node.removeEventListener("pointermove",move);
+      node.removeEventListener("pointerup",up); node.removeEventListener("pointercancel",up);
       try{node.releasePointerCapture(id)}catch(_){}
-      h.end&&h.end(ev,moved);
-    };
+      h.end&&h.end(ev); };
     node.addEventListener("pointermove",move);
     node.addEventListener("pointerup",up);
     node.addEventListener("pointercancel",up);
@@ -636,678 +906,1014 @@ function onDrag(node,h){
 }
 const inside=(r,x,y)=>x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;
 
-/* ---------- 卡片骨架 ---------- */
-let NO=0;
-function block(o){
-  NO++;
-  const b=el("div","blk");
-  const hd=el("div","blkhd");
-  hd.innerHTML='<div class="no">积木 '+String(NO).padStart(2,"0")+"</div>"+
-    "<h3>"+esc(o.title)+"<code>"+esc(o.id)+"</code></h3>"+
-    '<p class="hand"><b>手上的动作：</b>'+o.hand+"</p>";
-  b.appendChild(hd);
-  const st=el("div","stagearea");
-  const rs=el("button","reset","重来");
-  st.appendChild(rs);
-  const host=el("div"); st.appendChild(host);
-  b.appendChild(st);
-  const sp=el("details","spec");
-  sp.innerHTML="<summary>这块积木的规格</summary><div class='in'>"+o.spec+"</div>";
-  b.appendChild(sp);
-  page.appendChild(b);
-  const mount=()=>{host.innerHTML="";o.build(host)};
-  rs.onclick=()=>{sfx.tick();mount()};
-  mount();
-}
-function verdict(host,ok,html){
-  const old=host.querySelector(".verd"); if(old)old.remove();
-  host.appendChild(el("div","verd "+(ok?"ok":"no"),html));
+/* ==================================================================
+   教学内容：前三节课的事实
+   ================================================================== */
+const L={
+ /* 第 1 节 这张照片，有哪些问题可以直接问？ */
+ pic:{
+  seen:["地球在月面上方","地球是蓝白色的","天空是黑色的","月面是灰白色的"],
+  record:["1968 年 12 月 24 日拍摄","Bill Anders 拍摄","阿波罗 8 号绕月飞行"],
+  neither:["按快门时他屏住了呼吸","这是他最满意的一张"],
+  src:"NASA《地出》官方图像页"
+ },
+ /* 第 2 节 原话变成文字，什么时候还需要翻译？ */
+ voice:{
+  reqs:[["中文讲话","中文文字","转写"],["中文讲话","英文文字","翻译"],
+        ["英文讲话","英文文字","转写"],["法文讲话","英文文字","翻译"],
+        ["日语讲话","日语文字","转写"],["西班牙语讲话","英文文字","翻译"]],
+  src:"OpenAI 2022 年发布 Whisper 的说明"
+ },
+ /* 第 3 节 说了主题，为什么还是拿不到想要的东西？ */
+ moon:{
+  facts:[["时间","2023 年 10 月 21 日，晚 6–9 点"],["地点","马里兰州格林贝尔特，戈达德访客中心"],
+         ["报名","不用报名"],["状态","这场活动已经结束了"]],
+  src:"NASA 观月夜公告"
+ }
+};
+return {el:el,esc:esc,clamp:clamp,sfx:sfx,buzz:buzz,pop:pop,shake:shake,flash:flash,dropIn:dropIn,
+  rock:rock,burst:burst,burstAt:burstAt,tag:tag,hit:hit,miss:miss,comboBar:comboBar,
+  block:block,verdict:verdict,onDrag:onDrag,inside:inside,L:L};
+})();
+</script>
+<script>
+window.NEWB1=(function(){
+const J=window.JX, el=J.el, esc=J.esc, clamp=J.clamp, sfx=J.sfx, L=J.L;
+
+/* ============ 11 盖章台 · Papers, Please ============ */
+function bStamp(host){
+  const RULES=[["t","通知里必须有时间"],["p","必须有地点"],["s","必须写清要不要报名"],["o","不能把已结束的活动写成现在的邀请"]];
+  const DOCS=[
+   {txt:"2023 年 10 月 21 日晚 6 点到 9 点，NASA 戈达德访客中心（马里兰州格林贝尔特）办过一次观月夜，不用报名。",
+    has:{t:1,p:1,s:1,o:1}, pass:true, why:"四条全中：时间、地点、报名都在，而且用的是「办过」——没有假装现在还有。"},
+   {txt:"快来参加 NASA 戈达德访客中心的观月夜吧！现场有望远镜和专家讲解，不用报名，免费入场！",
+    has:{t:0,p:1,s:1,o:0}, pass:false, why:"缺时间，而且「快来参加」把一场 2023 年已经结束的活动写成了现在的邀请。"},
+   {txt:"2023 年 10 月 21 日晚 6–9 点，在戈达德访客中心举办过一场观月活动。",
+    has:{t:1,p:1,s:0,o:1}, pass:false, why:"时间地点都对，语气也没问题——但读者仍然不知道要不要报名。"}
+  ];
+  host.appendChild(el("p","tip","<b>规则卡</b>在上面，AI 交来的稿子在下面。逐条勾一遍，再盖章。"+
+    "<br>规则来自第 3 节课「说了主题，为什么还是拿不到想要的东西？」"));
+  const desk=el("div","desk"); host.appendChild(desk);
+  const rc=el("div","rulecard"); desk.appendChild(rc);
+  const paper=el("div","paper"); desk.appendChild(paper);
+  const row=el("div","stamps");
+  const bp=el("button","stampbtn pass","通　过"), bf=el("button","stampbtn fail","打　回");
+  row.appendChild(bp); row.appendChild(bf); desk.appendChild(row);
+  let i=0, right=0, checks={};
+  function load(){
+    checks={}; const d=DOCS[i];
+    rc.innerHTML="<h6>这一节的检查项</h6><ul>"+RULES.map(([k,t])=>
+      '<li><span class="bx" data-k="'+k+'">&#10003;</span><span>'+esc(t)+"</span></li>").join("")+"</ul>";
+    rc.querySelectorAll(".bx").forEach(bx=>{
+      bx.onclick=()=>{ const k=bx.dataset.k;
+        checks[k]=checks[k]==="on"?"off":(checks[k]==="off"?null:"on");
+        bx.className="bx"+(checks[k]?" "+checks[k]:"");
+        bx.innerHTML=checks[k]==="off"?"&times;":"&#10003;";
+        sfx.tick(); J.pop(bx); };
+    });
+    paper.innerHTML='<div class="ph">第 '+(i+1)+" / "+DOCS.length+" 份 · AI 交来的稿子</div>"+esc(d.txt)+
+      '<div class="inkmark"></div>';
+    J.dropIn(paper);
+    bp.disabled=bf.disabled=false;
+  }
+  function judge(saidPass){
+    const d=DOCS[i]; const ok=saidPass===d.pass;
+    bp.disabled=bf.disabled=true;
+    const ink=paper.querySelector(".inkmark");
+    ink.textContent=saidPass?"通 过":"打 回";
+    ink.className="inkmark on "+(saidPass?"pass":"fail");
+    sfx.stamp(); J.buzz([18,30,12]); J.rock(paper);
+    const missed=RULES.filter(([k])=>!d.has[k]).map(([,t])=>t);
+    if(ok){ right++; J.burstAt(paper,"var(--ok)",20); J.tag(paper,"盖对了","var(--ok-ink)");
+      J.verdict(host,true,"<b>"+(d.pass?"该通过。":"该打回。")+"</b>"+esc(d.why)); }
+    else { J.miss(paper);
+      J.verdict(host,false,"<b>盖反了。</b>"+esc(d.why)+
+        (missed.length?"<br>没满足的检查项："+missed.map(esc).join("、"):"")); }
+    setTimeout(()=>{ i++;
+      if(i<DOCS.length){ load(); const v=host.querySelector(".verd"); if(v)v.remove(); }
+      else { sfx.win();
+        J.verdict(host,right===DOCS.length,"<b>三份盖完，"+right+" / 3 对。</b>"+
+          "注意你刚才是怎么判的：<b>不是读完觉得顺不顺，是拿着规则卡一条一条对。</b>"+
+          "这就是第 3 节说的「先点名要带走的东西，再写两三个不能丢的条件」——条件写下来，才有东西可对。"); }
+    },1500);
+  }
+  bp.onclick=()=>judge(true); bf.onclick=()=>judge(false);
+  load();
 }
 
-/* ==================================================================
-   1 · 拖拽分拣
-   ================================================================== */
-function bDragSort(host){
-  const DATA={
-    q:"把每一条拖进它该去的那一堆。",
-    zones:[{id:"look",t:"看照片就能对"},{id:"rec",t:"查记录才能对"}],
-    items:[
-      {t:"地球在月面上方",z:"look",why:"这件事就画在图里，看一眼就能对。"},
-      {t:"谁按下的快门",z:"rec",why:"画面上没有印名字。名字来自 NASA 的记录。"},
-      {t:"天空是黑色的",z:"look",why:"颜色是画面里能直接看见的。"},
-      {t:"哪一年拍的",z:"rec",why:"照片自己不会说出日期，得查记录。"}]
-  };
-  host.appendChild(el("p","tip",esc(DATA.q)+"　拖错了会弹回来，不扣分。"));
-  const pile=el("div","pile"); host.appendChild(pile);
-  const dz=el("div","dz"); host.appendChild(dz);
-  const zoneEls=DATA.zones.map(z=>{
-    const n=el("div","zone","<h5>"+esc(z.t)+'</h5><div class="slot"></div>');
-    n._z=z; dz.appendChild(n); return n;
+/* ============ 12 三连确认 · Return of the Obra Dinn ============ */
+function bCase(host){
+  const SRC=["看照片就知道","查 NASA 记录","两边都查不到"];
+  const CLAIMS=[
+   {t:"地球出现在灰白月面的上方",a:0,why:"画面里直接看得见。"},
+   {t:"这张照片拍摄于 1968 年 12 月 24 日",a:1,why:"照片上没有日期，但 NASA 的记录里写着。"},
+   {t:"拍摄者是 Bill Anders",a:1,why:"画面上没有印名字，记录里有。"},
+   {t:"按下快门的那一刻，他屏住了呼吸",a:2,why:"画面证明不了，记录里也没写——这是写的人自己想的。"},
+   {t:"天空是黑色的",a:0,why:"这是对画面颜色的观察。"}
+  ];
+  host.appendChild(el("p","tip","给每条说法指派依据来源。<b>它不会逐条告诉你对不对</b>——"+
+    "要等你一次凑够三条都对，才会一起封档。<br>这条机制偷自《Obra Dinn》：防止你一个一个试。"));
+  const list=el("div","caselist"); host.appendChild(list);
+  const picks=new Array(CLAIMS.length).fill(-1);
+  const sealed=new Array(CLAIMS.length).fill(false);
+  const rows=CLAIMS.map((c,ri)=>{
+    const r=el("div","caserow",'<div class="claim"><i>说法 '+(ri+1)+"</i>"+esc(c.t)+"</div>");
+    const os=el("div","srcopts");
+    const ns=SRC.map((s,si)=>{
+      const n=el("button","srcopt",esc(s));
+      n.setAttribute("aria-checked","false");
+      n.onclick=()=>{ if(sealed[ri])return; sfx.tick(); picks[ri]=si;
+        ns.forEach(m=>m.setAttribute("aria-checked","false"));
+        n.setAttribute("aria-checked","true"); J.pop(n); refresh(); };
+      os.appendChild(n); return n;
+    });
+    r._ns=ns; r.appendChild(os); list.appendChild(r); return r;
   });
-  let left=DATA.items.length, right=0;
-  DATA.items.forEach(it=>{
+  const bar=el("div","sealbar",'<span class="txt"></span>');
+  const btn=el("button","sealbtn","封档"); bar.appendChild(btn); host.appendChild(bar);
+  const txt=bar.querySelector(".txt");
+  function need(){ return Math.min(3, sealed.filter(x=>!x).length) }
+  function refresh(){
+    const k=need();
+    if(!k){ btn.disabled=true; txt.innerHTML="<b>全部封完了。</b>"; return }
+    const n=picks.filter((p,i)=>p>=0&&!sealed[i]).length;
+    btn.disabled=n<k;
+    txt.innerHTML=n<k?("还差 <b>"+(k-n)+"</b> 条才能封档（已指派 "+n+" / "+k+"）")
+      :"够 "+k+" 条了。<b>但必须全对才封得住。</b>";
+  }
+  btn.onclick=()=>{
+    const idx=picks.map((p,i)=>({p:p,i:i})).filter(x=>x.p>=0&&!sealed[x.i]).slice(0,need());
+    const allRight=idx.every(x=>x.p===CLAIMS[x.i].a);
+    if(allRight){
+      sfx.seal(); J.buzz([20,40,20]);
+      idx.forEach((x,k)=>setTimeout(()=>{ sealed[x.i]=true;
+        rows[x.i].classList.add("sealed");
+        rows[x.i]._ns.forEach((m,si)=>{m.disabled=true;if(si===CLAIMS[x.i].a)m.classList.add("sealed")});
+        J.burstAt(rows[x.i],"var(--ok)",14); J.pop(rows[x.i]); sfx.step(k*4);
+      },k*180));
+      setTimeout(()=>{
+        const left=sealed.filter(x=>!x).length;
+        J.verdict(host,true,"<b>"+idx.length+"条一起封档。</b>"+idx.map(x=>"「"+esc(CLAIMS[x.i].t.slice(0,10))+"…」"+esc(CLAIMS[x.i].why)).join("<br>")+
+          (left?"<br>还剩 "+left+" 条。":"<br><b>全部封完了。</b>三分法是这一节的重点：画面能查、记录能查，还有第三种——<b>两边都查不到</b>，它读起来往往最好看。"));
+        refresh();
+      },600);
+    }else{
+      sfx.bad(); J.buzz([12,60,12]);
+      idx.forEach(x=>J.shake(rows[x.i])); J.rock(list);
+      J.verdict(host,false,"<b>这几条里有错的，但我不告诉你是哪一条。</b>"+
+        "回去一条一条问自己：这句话说的东西，<b>真的画在图里了吗</b>？还是要去翻记录？还是两边都没有？");
+    }
+  };
+  refresh();
+}
+
+/* ============ 13 飘落拦截 · Blooket 塔防 / 音游 ============ */
+function bDefend(host){
+  host.appendChild(el("p","tip","请求会一条条飘下来。在它落到虚线<b>之前</b>判断：这是转写，还是翻译？"+
+    "<br>内容是第 2 节课的那四条，加两条新的。"));
+  const arena=el("div","arena"); host.appendChild(arena);
+  arena.innerHTML='<div class="gateline"><span>过了这条线就来不及了</span></div>';
+  const gates=el("div","gates");
+  const gA=el("button","gatebtn","转写"), gB=el("button","gatebtn","翻译");
+  gates.appendChild(gA); gates.appendChild(gB); arena.appendChild(gates);
+  const score=el("div","scorerow"); host.appendChild(score);
+  const cb=J.comboBar(host,6);
+  const start=el("button","startbtn","开始"); host.appendChild(start);
+  let items=[],cur=null,y=0,raf=0,idx=0,right=0,wrong=0,running=false;
+  const GATE=()=>arena.clientHeight-56-34;
+  function paint(){ score.innerHTML="<span>对 <b>"+right+"</b></span><span>漏 <b>"+wrong+"</b></span>"+
+    "<span>剩 <b>"+Math.max(0,items.length-idx)+"</b></span>" }
+  function spawn(){
+    if(idx>=items.length){ finish(); return }
+    const d=items[idx];
+    cur=el("div","faller",esc(d[0])+" → "+esc(d[1]));
+    cur._ans=d[2]; cur.style.top="-6px"; arena.appendChild(cur); y=-6;
+    J.dropIn(cur); sfx.tick();
+  }
+  function step(){
+    if(!running)return;
+    y+=1.15+idx*0.16;
+    if(cur){ cur.style.top=y+"px";
+      if(y>=GATE()){ wrong++; cb.reset(); sfx.bad(); J.buzz([10,50,10]); J.rock(arena);
+        cur.remove(); cur=null; idx++; paint(); spawn(); } }
+    raf=requestAnimationFrame(step);
+  }
+  function answer(a){
+    if(!running||!cur)return;
+    const ok=cur._ans===a;
+    if(ok){ right++; const n=cb.add();
+      J.burstAt(cur,"var(--ok)",14); J.tag(cur,n>=3?"连对 "+n:"对","var(--ok-ink)");
+      J.flash(cur); sfx.good(); J.buzz(14); }
+    else { wrong++; cb.reset(); J.miss(cur); }
+    cur.remove(); cur=null; idx++; paint(); spawn();
+  }
+  gA.onclick=()=>answer("转写"); gB.onclick=()=>answer("翻译");
+  function finish(){
+    running=false; cancelAnimationFrame(raf);
+    start.textContent="再来一局"; start.disabled=false;
+    sfx.win();
+    J.verdict(host,wrong===0,"<b>"+right+" 对 / "+wrong+" 漏，最长连对 "+cb.best()+"。</b>"+
+      "快到没空细想的时候，你其实只在看一件事：<b>左右两边的语言变没变。</b>"+
+      "变了就是翻译，没变就是转写——第 2 节的全部内容就是这一条分界线。");
+  }
+  start.onclick=()=>{
+    const src=L.voice.reqs.slice();
+    for(let i=src.length-1;i>0;i--){const j=(i*5+2)%(i+1);const t=src[i];src[i]=src[j];src[j]=t}
+    items=src; idx=0; right=0; wrong=0; cb.reset(); running=true;
+    start.disabled=true; start.textContent="进行中…";
+    const old=host.querySelector(".verd"); if(old)old.remove();
+    if(cur){cur.remove();cur=null}
+    paint(); spawn(); cancelAnimationFrame(raf); raf=requestAnimationFrame(step);
+  };
+  paint();
+}
+
+/* ============ 14 连击快判 · Gimkit 的节奏 ============ */
+function bCombo(host){
+  const P=L.pic;
+  const POOL=P.seen.map(t=>[t,0]).concat(P.record.map(t=>[t,1])).concat(P.neither.map(t=>[t,2]));
+  host.appendChild(el("p","tip","连着判，别停。每条说法：<b>看照片就知道 / 查记录才知道 / 两边都查不到</b>。"+
+    "<br>连对会涨倍率，答错清零。内容是第 1 节的《地出》。"));
+  const cb=J.comboBar(host,6);
+  const card=el("div","paper"); host.appendChild(card);
+  const row=el("div","stamps"); host.appendChild(row);
+  const B=["看照片","查记录","都查不到"].map((t,i)=>{
+    const b=el("button","stampbtn",t);
+    b.style.background=["var(--ok)","var(--berry)","var(--warn)"][i];
+    b.style.fontSize="13.5px"; b.onclick=()=>ans(i); row.appendChild(b); return b;
+  });
+  let order=[],i=0,score=0,done=false;
+  function shuffle(){ order=POOL.slice();
+    for(let k=order.length-1;k>0;k--){const j=(k*7+3)%(k+1);const t=order[k];order[k]=order[j];order[j]=t} }
+  function show(){
+    if(i>=order.length){ finish(); return }
+    card.innerHTML='<div class="ph">第 '+(i+1)+" / "+order.length+" 条</div>"+esc(order[i][0]);
+    J.dropIn(card);
+  }
+  function ans(k){
+    if(done)return;
+    const ok=order[i][1]===k;
+    if(ok){ const n=cb.add(); score+=n>=3?2:1;
+      J.burstAt(card,"var(--ok)",13); J.tag(card,n>=3?"×2　连对 "+n:"+1","var(--ok-ink)");
+      J.flash(card); J.pop(card); sfx.good(); J.buzz(12); }
+    else { cb.reset(); J.miss(card);
+      J.verdict(host,false,"「"+esc(order[i][0])+"」应该是<b>"+["看照片","查记录","两边都查不到"][order[i][1]]+"</b>。连对清零了，继续。"); }
+    i++; setTimeout(show,220);
+  }
+  function finish(){
+    done=true; B.forEach(b=>b.disabled=true);
+    card.innerHTML='<div class="ph">走完了</div>一共 '+order.length+" 条。";
+    sfx.win();
+    J.verdict(host,true,"<b>得分 "+score+"，最长连对 "+cb.best()+"。</b>"+
+      "倍率是连对给的，而连对靠的是<b>每一条都先问「这件事画在图里了吗」</b>——"+
+      "不是靠手快。第三类最容易断，因为它读起来最像事实。");
+  }
+  shuffle(); show();
+}
+
+/* ============ 15 涂黑 · Papers, Please 的变体 ============ */
+function bRedact(host){
+  const SEG=[
+   {t:"这张照片",b:0},{t:"拍摄于 1968 年 12 月 24 日",b:0},{t:"，"},
+   {t:"由 Bill Anders 在阿波罗 8 号绕月途中拍下",b:0},{t:"。"},
+   {t:"按下快门的那一刻，他一定屏住了呼吸",b:1},{t:"，"},
+   {t:"这是他一生中最满意的一张作品",b:1},{t:"。"},
+   {t:"画面里，蓝白色的地球出现在灰白月面上方",b:0},{t:"。"}
+  ];
+  const BAD=SEG.map((x,i)=>x.b===1?i:-1).filter(i=>i>=0);
+  host.appendChild(el("p","tip","下面是有人给《地出》写的一段说明。"+
+    "<b>用手指涂过</b>那些既不能对着照片查、也不在 NASA 记录里的部分。"+
+    "<br>涂错了会被擦回来。"));
+  const box=el("div","redactbox"); host.appendChild(box);
+  const toks=SEG.map((x,i)=>{const n=el("span","rk",esc(x.t));n._i=i;box.appendChild(n);return n});
+  let painting=false,done=new Set();
+  const idxAt=(x,y)=>{ const n=document.elementFromPoint(x,y);
+    if(n&&n.classList&&n.classList.contains("rk"))return n._i;
+    let best=null,bd=1e9;
+    toks.forEach(t=>{for(const r of t.getClientRects()){
+      const dx=Math.max(r.left-x,0,x-r.right), dy=Math.max(r.top-y,0,y-r.bottom);
+      const d=Math.hypot(dx,dy); if(d<bd&&d<24){bd=d;best=t._i}}});
+    return best; };
+  function ink(i){
+    if(i==null||done.has(i))return;
+    const n=toks[i]; if(!SEG[i].t.trim())return;
+    if(SEG[i].b===1){ done.add(i); n.classList.add("ink"); sfx.snap(); J.buzz(10);
+      J.burstAt(n,"#241609",8); check(); }
+    else { n.classList.add("wrongink"); sfx.bad(); J.shake(n); J.buzz([8,40,8]);
+      setTimeout(()=>n.classList.remove("wrongink"),520);
+      J.verdict(host,false,"这一段擦回来了——<b>「"+esc(SEG[i].t)+"」是查得到的</b>。"+
+        (SEG[i].t.indexOf("1968")>=0||SEG[i].t.indexOf("Anders")>=0?"NASA 的记录里写着。":"照片上直接看得见。")); }
+  }
+  function check(){
+    if(done.size===BAD.length){
+      sfx.win(); J.burstAt(box,"var(--ok)",26); J.pop(box);
+      J.verdict(host,true,"<b>两处都涂掉了。</b>「屏住了呼吸」和「一生中最满意」——"+
+        "画面证明不了，记录里也没写。<b>它们不是查来的，是写的人自己想的。</b>"+
+        "<br>写这种句子不犯法，但要么标明是你的感受，要么别和前面那些能查的话混在一句里。");
+    }
+  }
+  box.style.touchAction="none";
+  box.addEventListener("pointerdown",e=>{e.preventDefault();painting=true;
+    try{box.setPointerCapture(e.pointerId)}catch(_){} ink(idxAt(e.clientX,e.clientY))});
+  box.addEventListener("pointermove",e=>{if(painting)ink(idxAt(e.clientX,e.clientY))});
+  box.addEventListener("pointerup",()=>{painting=false});
+  box.addEventListener("pointercancel",()=>{painting=false});
+}
+return [
+ {id:"stamp",title:"盖章台",from:"Papers, Please",build:bStamp,
+  hand:"对着<b>规则卡</b>逐条勾，然后<b>盖章</b>：通过，或者打回。",
+  spec:"<b>用的是</b>第 3 节「说了主题，为什么还是拿不到想要的东西？」——检查项就是课文里的「时间、地点、报名要求」，加上课文那条硬规矩：已结束的活动不能写成现在的邀请。<br><b>为什么偷它</b>：Papers, Please 的整个玩法就是「拿一叠文件，对着规则表找不一致」。这恰好就是 AI 素养要练的动作。盖章那一下的反馈量是它好玩的一半。<br><b>载荷</b>：一张规则卡、几份待判稿子、每份标出满足了哪几条 + 一句判词。"},
+ {id:"casefile",title:"三连确认",from:"Return of the Obra Dinn",build:bCase,
+  hand:"给每条说法指派依据来源。<b>攒够三条一起封档</b>，不逐条判。",
+  spec:"<b>用的是</b>第 1 节《地出》的三分法：看照片能查 / 查记录能查 / 两边都查不到。<br><b>为什么偷它</b>：Obra Dinn 只在你一次答对三个时才确认，<b>这一条设计就把「一个个试」堵死了</b>，逼你真推理。错了也不告诉你错在哪一条——这正是它比普通判题高级的地方。<br><b>载荷</b>：几条说法、一组依据来源、每条的正确来源 + 一句理由。"},
+ {id:"defend",title:"飘落拦截",from:"Blooket 塔防 / 音游",build:bDefend,
+  hand:"请求一条条飘下来，在它过线之前<b>点</b>转写还是翻译。越往后越快。",
+  spec:"<b>用的是</b>第 2 节的四条请求，加两条同形状的新的。<br><b>为什么偷它</b>：Blooket 把同一批题套进塔防、金币等不同模式——<b>同样的内容，换个节奏就换一种乐趣</b>。这块证明了你说的「内容可以在不同积木里重复」。<br><b>载荷</b>：一批条目 + 两类答案。任何二分类的课都能直接装进来。"},
+ {id:"combo",title:"连击快判",from:"Gimkit 的倍率经济",build:bCombo,
+  hand:"连着判，别停。连对涨倍率，答错清零。",
+  spec:"<b>用的是</b>第 1 节的全部事实：画面里有的四条、记录里有的三条、两边都没有的两条。<br><b>为什么偷它</b>：Gimkit 的核心不是答题，是<b>连对攒出来的倍率</b>——它把「稳」变成了一种策略。这里的倍率只有连对到 3 才开，所以第三类（两边都查不到）就成了断连的地方，而那正是最该练的一类。<br><b>载荷</b>：一批条目 + 三类归属。"},
+ {id:"redact",title:"涂黑",from:"Papers, Please 的档案处理",build:bRedact,
+  hand:"<b>用手指涂过</b>没有依据的部分，它会被涂成黑条。涂错了会被擦回来。",
+  spec:"<b>用的是</b>第 1 节课文里那段被我上一轮删掉、这一轮补回来的内容——图片和记录<b>都没有提供</b>的第三种情况。<br><b>为什么偷它</b>：涂黑是一个有重量的动作，比「选一个按钮」实在得多；而且涂错会被擦回来，试错完全免费。<br><b>载荷</b>：切好的文字片段，标出哪几段没依据。"}
+];
+})();
+</script>
+<script>
+window.NEWB2=(function(){
+const J=window.JX, el=J.el, esc=J.esc, clamp=J.clamp, sfx=J.sfx, L=J.L;
+
+/* ============ 16 透视扫描 · Papers, Please 的对比检查器 ============ */
+function bXray(host){
+  const LINES=[
+   {t:"2023 年 10 月 21 日晚 6 点到 9 点",k:"strong",how:"对着 NASA 公告看一眼就能核。"},
+   {t:"地点在马里兰州格林贝尔特的戈达德访客中心",k:"strong",how:"公告里写着，能核。"},
+   {t:"不用报名，免费入场",k:"strong",how:"公告里写着「不用报名」，能核。"},
+   {t:"现场气氛十分热烈，观众赞不绝口",k:"weak",how:"公告里没有这句话。<b>拿什么去核？没有东西可核。</b>"},
+   {t:"这是当年最值得一看的公众科普活动",k:"weak",how:"「最值得」要和别的活动比才成立，而你手上只有这一份公告。"}
+  ];
+  host.appendChild(el("p","tip","拖下面的滑杆，让扫描条扫过这份成品。"+
+    "<b>扫到哪一句，就显示那一句该拿什么去核对。</b><br>内容是第 3 节 AI 交回的稿子。"));
+  const box=el("div","xbox"); host.appendChild(box);
+  const beam=el("div","xbeam"); box.appendChild(beam);
+  const nodes=LINES.map(l=>{ const n=el("div","xline "+l.k,esc(l.t)+'<div class="how">'+l.how+"</div>");
+    box.appendChild(n); return n; });
+  const h=el("div","xhandle",'<input type="range" min="0" max="100" value="0">'); host.appendChild(h);
+  const inp=h.querySelector("input");
+  let seen=new Set(), last=-1;
+  function paint(){
+    const br=box.getBoundingClientRect();
+    const y=(+inp.value)/100*(box.clientHeight-52);
+    beam.style.top=y+"px";
+    const cy=br.top+y+26;
+    let act=-1;
+    nodes.forEach((n,i)=>{ const r=n.getBoundingClientRect();
+      const on=cy>=r.top&&cy<=r.bottom;
+      if(on){act=i;seen.add(i)}
+      /* 扫过的留下——不然玩家永远只看得见一行，扫完什么也没剩 */
+      n.classList.toggle("on",on||seen.has(i));
+      n.classList.toggle("past",!on&&seen.has(i)); });
+    if(act>=0&&act!==last){ last=act; sfx.tick();
+      if(!seen.has(act)){ seen.add(act); J.pop(nodes[act]);
+        if(LINES[act].k==="weak"){ J.burstAt(nodes[act],"var(--warn)",10); sfx.bad() } }
+      if(seen.size===LINES.length){
+        const weak=LINES.filter(l=>l.k==="weak").length;
+        J.verdict(host,false,"<b>五句扫完，"+(LINES.length-weak)+" 句能核，"+weak+" 句核不了。</b>"+
+          "能核的那三句，全都是<b>你当初写进要求里的那三项</b>；核不了的两句，是它自己加的。"+
+          "<br>第 3 节的意思就在这里：<b>检查项是你定的，你没定的地方它就自由发挥。</b>");
+      } }
+  }
+  inp.oninput=paint;
+  setTimeout(paint,60);
+}
+
+/* ============ 17 二维寻解 · Brilliant 的可拖图 ============ */
+function bField(host){
+  host.appendChild(el("p","tip","拖那个圆点。横轴是<b>成品说得多具体</b>，纵轴是<b>你写了几条不能丢的条件</b>。"+
+    "<br>找到那块绿区——在那里你才有东西可以一项一项核。内容是第 3 节。"));
+  const f=el("div","field"); host.appendChild(f);
+  const zone=el("div","zoneok"); f.appendChild(zone);
+  const knob=el("div","knob"); f.appendChild(knob);
+  f.appendChild(el("div","axl","具体 →")).style.cssText="right:8px;bottom:6px";
+  f.appendChild(el("div","axl","条件 ↑")).style.cssText="left:8px;top:6px";
+  const out=el("div","fieldout"); host.appendChild(out);
+  let x=12,y=10;
+  zone.style.cssText="left:58%;top:6%;right:4%;bottom:34%";
+  function paint(){
+    knob.style.left=x+"%"; knob.style.top=(100-y)+"%";
+    const spec=x, cond=Math.round(y/100*4);
+    const good=x>=58&&x<=96&&y>=34&&y<=94;
+    f.style.cursor="grab";
+    out.classList.toggle("good",good);
+    const ex = x<30? "「介绍一下这次观月活动」"
+      : x<58? "「写一条关于观月活动的短消息」"
+      : "「给朋友写一条 2023 年观月夜的短消息」";
+    out.innerHTML="<b>你的请求大概长这样：</b>"+esc(ex)+
+      "<br><b>必留条件：</b>"+(cond===0?"一条都没写":cond+" 条（时间 / 地点 / 报名 里的前 "+cond+" 项）")+
+      "<br><br>"+(good
+        ? "✓ <b>在绿区里。</b>成品说清了，条件也写下来了——现在你能一项一项去核，而不是只会说「再好一点」。"
+        : x<58 ? "成品还太笼统。<b>它不知道你要短消息还是清单</b>，交回来的东西你说不出哪里不对。"
+        : cond<2 ? "成品够具体了，但<b>条件太少</b>。没写下来的项，它丢了你也发现不了。"
+        : "条件堆太多了。<b>不是越多越好</b>——够你核就行，多的只是噪音。");
+  }
+  J.onDrag(f,{
+    start(r,off,e){ sfx.grab(); move(e) },
+    move(ev){ const r=f.getBoundingClientRect();
+      const nx=clamp((ev.clientX-r.left)/r.width*100,2,98);
+      const ny=clamp((1-(ev.clientY-r.top)/r.height)*100,2,98);
+      if(Math.abs(nx-x)+Math.abs(ny-y)>3)sfx.tick();
+      x=nx;y=ny;paint(); },
+    end(){ if(x>=58&&x<=96&&y>=34&&y<=94){ sfx.win(); J.burstAt(knob,"var(--ok)",18); J.pop(knob) } }
+  });
+  function move(e){ const r=f.getBoundingClientRect();
+    x=clamp((e.clientX-r.left)/r.width*100,2,98);
+    y=clamp((1-(e.clientY-r.top)/r.height)*100,2,98); paint() }
+  paint();
+}
+
+/* ============ 18 节奏敲击 · Duolingo Music ============ */
+function bSeq(host){
+  const RIGHT=["先描述画面里看得见的","打开 NASA 的照片记录","补上拍摄日期和摄影者","标明哪一句来自哪里"];
+  host.appendChild(el("p","tip","按正确顺序敲这四块。<b>敲对一块，音会往上走一阶</b>；敲错从头再来。"+
+    "<br>这是第 1 节课教的那条路：先看画面，再查记录。"));
+  const beats=el("div","beatrow"); host.appendChild(beats);
+  RIGHT.forEach((_,i)=>beats.appendChild(el("div","beat",String(i+1))));
+  const grid=el("div","padgrid"); host.appendChild(grid);
+  const shuf=[2,0,3,1];
+  let at=0,done=false;
+  const pads=shuf.map(i=>{
+    const p=el("button","pad",esc(RIGHT[i]));
+    p._i=i;
+    p.onclick=()=>{
+      if(done)return;
+      if(p._i===at){
+        p.classList.add("hitok"); p.disabled=true;
+        beats.children[at].classList.add("done");
+        sfx.step(at*4); J.pop(p); J.burstAt(p,"var(--ok)",12); J.tag(p,"第 "+(at+1)+" 步","var(--ok-ink)");
+        J.buzz(12); at++;
+        if(at===RIGHT.length){ done=true; sfx.win(); J.rock(grid);
+          J.verdict(host,true,"<b>四拍走完，音阶也上去了。</b>顺序本身就是这一节的内容："+
+            "<b>先把画面里看得见的说清楚，再去打开记录</b>。反过来做，你会拿着一个查不了的名字去对一张照片。"); }
+      }else{
+        p.classList.add("hitno"); sfx.bad(); J.miss(p);
+        J.verdict(host,false,"第 "+(at+1)+" 步不是这个。<b>现在该做的是「"+esc(RIGHT[at])+"」。</b>");
+        setTimeout(()=>p.classList.remove("hitno"),520);
+      }
+    };
+    grid.appendChild(p); return p;
+  });
+}
+
+/* ============ 19 装箱 · 容量约束 ============ */
+function bShelf(host){
+  const ITEMS=[
+   {t:"《地出》这张照片本身",ok:true,why:"位置和颜色只能对着它查。"},
+   {t:"NASA 这张照片的记录页",ok:true,why:"摄影者和日期只在这里。"},
+   {t:"你要的成品说明：一句给第一次看的人的位置描述",ok:true,why:"不说要什么，它不知道交什么。"},
+   {t:"一篇讲阿波罗计划的科普长文",ok:false,why:"它讲的是整个计划，<b>不是这一张照片的记录</b>。塞进去只会稀释材料。"},
+   {t:"另一张风格相似的太空图",ok:false,why:"相似不等于同一张。<b>别的图的记录证明不了这一张。</b>"},
+   {t:"你自己看到这张图时的感受",ok:false,why:"这是你的表达，不是可核对的材料——它会被当成事实写进去。"}
+  ];
+  host.appendChild(el("p","tip","箱子只有 <b>3 格</b>。把该给 AI 的材料拖进去。"+
+    "<br>第 1 节：要让它既说清位置、又写对摄影者，得给它什么？"));
+  const pile=el("div","pile"); host.appendChild(pile);
+  const crate=el("div","crate",'<h6><span>发给 AI 的材料箱</span><span class="cap">0 / 3</span></h6>'+
+    '<div class="cells"></div>'); host.appendChild(crate);
+  const cells=crate.querySelector(".cells");
+  for(let i=0;i<3;i++)cells.appendChild(el("div","cell","空"));
+  let used=0,good=0;
+  ITEMS.forEach(it=>{
     const c=el("div","chipd",esc(it.t));
     let ph=null;
-    onDrag(c,{
-      start(r,off){ sfx.grab(); buzz(8);
-        ph=el("div"); ph.style.height=r.height+"px"; c.after(ph);
-        c.classList.add("drag");
-        c.style.width=r.width+"px"; c.style.left=r.left+"px"; c.style.top=r.top+"px";
-      },
-      move(ev,off){
-        c.style.left=(ev.clientX-off.x)+"px"; c.style.top=(ev.clientY-off.y)+"px";
-        zoneEls.forEach(z=>z.classList.toggle("hot",inside(z.getBoundingClientRect(),ev.clientX,ev.clientY)));
-      },
+    J.onDrag(c,{
+      start(r,off){ sfx.grab(); ph=el("div"); ph.style.height=r.height+"px"; c.after(ph);
+        c.classList.add("drag"); c.style.width=r.width+"px"; c.style.left=r.left+"px"; c.style.top=r.top+"px" },
+      move(ev,off){ c.style.left=(ev.clientX-off.x)+"px"; c.style.top=(ev.clientY-off.y)+"px";
+        crate.classList.toggle("hot",J.inside(crate.getBoundingClientRect(),ev.clientX,ev.clientY)) },
       end(ev){
-        const tgt=zoneEls.find(z=>inside(z.getBoundingClientRect(),ev.clientX,ev.clientY));
-        zoneEls.forEach(z=>z.classList.remove("hot"));
+        const on=J.inside(crate.getBoundingClientRect(),ev.clientX,ev.clientY);
+        crate.classList.remove("hot");
         c.classList.remove("drag"); c.style.cssText="";
-        if(!tgt){ if(ph){ph.remove();ph=null} c.classList.remove("bounce"); void c.offsetWidth;
-          c.classList.add("bounce"); sfx.drop(); return }
+        if(!on){ if(ph){ph.remove();ph=null} J.shake(c); sfx.drop(); return }
+        if(used>=3){ if(ph){ph.remove();ph=null} J.shake(c); J.rock(crate); sfx.bad(); crate.classList.add("full");
+          setTimeout(()=>crate.classList.remove("full"),600);
+          J.verdict(host,false,"<b>箱子满了。</b>三格用完了，想换就得先想清楚哪一样其实不该进去。"); return }
         if(ph){ph.remove();ph=null}
-        const ok=tgt._z.id===it.z;
-        c.dataset.locked="1"; c.classList.add("landed",ok?"ok":"no");
-        tgt.querySelector(".slot").appendChild(c);
-        left--; if(ok)right++;
-        if(ok){sfx.snap();buzz(14)}else{sfx.bad();buzz([10,50,10])}
-        verdict(host,ok,(ok?"✓ ":"✗ ")+"<b>"+esc(it.t)+"</b>　"+esc(it.why));
-        if(left===0){ sfx.win();
-          verdict(host,right===DATA.items.length,
-            right===DATA.items.length?"<b>四条全对。</b>画面能查的和记录才能查的，你已经分得开了。"
-            :"<b>"+right+" / 4 对。</b>放错的那几条，上面写着它们为什么该去另一堆。"); }
+        c.dataset.locked="1"; c.remove();
+        const cell=cells.children[used];
+        cell.textContent=it.t.length>11?it.t.slice(0,11)+"…":it.t;
+        cell.className="cell "+(it.ok?"filled":"bad"); J.dropIn(cell);
+        used++; crate.querySelector(".cap").textContent=used+" / 3";
+        if(it.ok){ good++; sfx.snap(); J.burstAt(cell,"var(--ok)",12); J.buzz(12);
+          J.verdict(host,true,"✓ "+esc(it.t)+"　"+it.why); }
+        else { sfx.bad(); J.miss(cell);
+          J.verdict(host,false,"✗ "+esc(it.t)+"　"+it.why+"<b> 而且它占掉了一格。</b>"); }
+        if(used===3){ sfx.win();
+          setTimeout(()=>J.verdict(host,good===3,"<b>三格装完，"+good+" / 3 有用。</b>"+
+            (good===3?"照片、记录、成品说明——这三样各管一件事：<b>画面归画面查，背景归记录查，成品说明决定它交什么。</b>"
+             :"装错的那些不是没害处：<b>它们占了格子，而且会被当成可用材料写进回答里。</b>")),700); }
       }
     });
     pile.appendChild(c);
   });
 }
 
-/* ==================================================================
-   2 · 拉线连接
-   ================================================================== */
-function bWire(host){
-  const L=[{id:"a",t:"「它在 2019 年发布」"},{id:"b",t:"「这个功能很好用」"},{id:"c",t:"「官方文档第 3 节」"}];
-  const R=[{id:"fact",t:"能查的事实"},{id:"opinion",t:"个人看法"},{id:"src",t:"出处本身"}];
-  const KEY={a:"fact",b:"opinion",c:"src"};
-  host.appendChild(el("p","tip","从左边一条按住，拉一条线到右边。线会跟着你的手指走。"));
-  const box=el("div","wirebox"); host.appendChild(box);
-  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
-  svg.setAttribute("class","wiresvg"); box.appendChild(svg);
-  const cols=el("div","wirecols"); const cl=el("div"), cr=el("div");
-  cols.appendChild(cl); cols.appendChild(cr); box.appendChild(cols);
-  const lnodes={}, rnodes={};
-  L.forEach(x=>{const n=el("div","node",esc(x.t)+'<span class="dot"></span>');n._id=x.id;cl.appendChild(n);lnodes[x.id]=n});
-  R.forEach(x=>{const n=el("div","node",esc(x.t)+'<span class="dot"></span>');n._id=x.id;cr.appendChild(n);rnodes[x.id]=n});
-  let live=null, done=0;
-  const mk=(t,a)=>{const e=document.createElementNS("http://www.w3.org/2000/svg",t);
-    for(const k in a)e.setAttribute(k,a[k]);return e};
-  const cen=(n,side)=>{const r=n.getBoundingClientRect(),b=box.getBoundingClientRect();
-    return {x:(side==="l"?r.right:r.left)-b.left, y:r.top+r.height/2-b.top}};
-  L.forEach(x=>{
-    const n=lnodes[x.id];
-    onDrag(n,{
-      start(){ if(n.dataset.locked==="1")return; sfx.grab();
-        n.classList.add("lit");
-        const p=cen(n,"l");
-        live=mk("path",{d:"",fill:"none",stroke:"var(--accent)","stroke-width":"3","stroke-linecap":"round"});
-        svg.appendChild(live); live._from=p;
-      },
-      move(ev){ if(!live)return;
-        const b=box.getBoundingClientRect();
-        const x=ev.clientX-b.left, y=ev.clientY-b.top, f=live._from;
-        live.setAttribute("d","M"+f.x+","+f.y+" C"+(f.x+30)+","+f.y+" "+(x-30)+","+y+" "+x+","+y);
-        Object.values(rnodes).forEach(m=>m.classList.toggle("lit",
-          m.dataset.locked!=="1"&&inside(m.getBoundingClientRect(),ev.clientX,ev.clientY)));
-      },
-      end(ev){ if(!live)return;
-        n.classList.remove("lit");
-        const hit=R.map(r=>rnodes[r.id]).find(m=>m.dataset.locked!=="1"&&inside(m.getBoundingClientRect(),ev.clientX,ev.clientY));
-        Object.values(rnodes).forEach(m=>m.classList.remove("lit"));
-        if(!hit){ live.remove(); live=null; sfx.drop(); return }
-        const ok=KEY[x.id]===hit._id;
-        if(!ok){ live.setAttribute("stroke","var(--berry)");
-          const dead=live; live=null; sfx.bad(); buzz([10,50,10]);
-          setTimeout(()=>dead.remove(),480);
-          verdict(host,false,"这两个对不上。<b>"+esc(x.t)+"</b>不是「"+esc(R.find(r=>r.id===hit._id).t)+"」。再试一条。");
-          return; }
-        const p=cen(n,"l"), q=cen(hit,"r");
-        live.setAttribute("d","M"+p.x+","+p.y+" C"+(p.x+30)+","+p.y+" "+(q.x-30)+","+q.y+" "+q.x+","+q.y);
-        live.setAttribute("stroke","var(--ok)"); live=null;
-        n.dataset.locked="1"; hit.dataset.locked="1";
-        n.classList.add("done"); hit.classList.add("done");
-        sfx.snap(); buzz(14); done++;
-        if(done===L.length){sfx.win();verdict(host,true,"<b>三条都接上了。</b>一句话是事实、是看法、还是出处，靠的是它能不能被查——不是它听起来多肯定。")}
-      }
-    });
+/* ============ 20 芯片检索 · Her Story ============ */
+function bSift(host){
+  const DB=[
+   {t:"《地出》· 图像页",m:"NASA 官方图像库",k:["照片","记录"],
+    body:"图像标题《地出》(Earthrise)。<b>拍摄者：Bill Anders。拍摄日期：1968 年 12 月 24 日。任务：阿波罗 8 号绕月飞行。</b>",hit:true},
+   {t:"阿波罗 8 号任务概览",m:"NASA 任务档案",k:["记录","任务"],
+    body:"1968 年 12 月 21 日发射，首次载人绕月。<span style='color:var(--ink-faint)'>——讲的是任务，没有说这张图是谁拍的。</span>"},
+   {t:"Be My Eyes 的照片功能介绍",m:"应用官方博客，2023",k:["照片","AI"],
+    body:"拍照发给 AI，它讲照片上有什么，还能追问；同时保留转接人工志愿者。<span style='color:var(--ink-faint)'>——讲的是功能，和这张图无关。</span>"},
+   {t:"一篇太空摄影赏析",m:"某科普网站",k:["照片"],
+    body:"《地出》是人类最著名的太空照片之一，构图令人震撼。<span style='color:var(--ink-faint)'>——是评价，不是记录。</span>"},
+   {t:"AI 生成的「类地出」图集",m:"图片站",k:["照片","AI"],
+    body:"若干张风格相似的生成图。<span style='color:var(--warn-ink)'>——相似不等于同一张，它证明不了任何事。</span>"}
+  ];
+  const TERMS=["照片","记录","任务","AI"];
+  host.appendChild(el("p","tip","你要回答的问题：<b>这张照片是谁拍的？</b>"+
+    "<br>点下面的关键词去筛资料库，找出<b>真的能回答它</b>的那一条。"));
+  const tr=el("div","termrow"); host.appendChild(tr);
+  const res=el("div","results"); host.appendChild(res);
+  const on=new Set(); let found=false;
+  TERMS.forEach(t=>{
+    const b=el("button","term",esc(t)); b.setAttribute("aria-pressed","false");
+    b.onclick=()=>{ if(on.has(t)){on.delete(t);b.setAttribute("aria-pressed","false")}
+      else{on.add(t);b.setAttribute("aria-pressed","true")} sfx.tick(); J.pop(b); paint() };
+    tr.appendChild(b);
   });
-}
-
-/* ==================================================================
-   3 · 实时旋钮
-   ================================================================== */
-function bDial(host){
-  host.appendChild(el("p","tip","拖动下面两个滑块。右边三条会当场跟着变——不用提交，也没有对错，先把目标条拖绿。"));
-  const st={ctx:40,check:1};
-  const wrap=el("div","dialwrap"); host.appendChild(wrap);
-  const mkSlider=(k,label,min,max,unit)=>{
-    const s=el("div","slab");
-    s.innerHTML='<div class="lbl"><span>'+esc(label)+'</span><b><span id="v_'+k+'"></span>'+esc(unit)+"</b></div>"+
-      '<input type="range" id="s_'+k+'" min="'+min+'" max="'+max+'" value="'+st[k]+'">';
-    wrap.appendChild(s);
-    const inp=s.querySelector("input"); let last=st[k];
-    inp.oninput=()=>{st[k]=+inp.value; if(Math.abs(st[k]-last)>=2){last=st[k];sfx.tick()} paint()};
-    return s;
-  };
-  mkSlider("ctx","给 AI 的材料有多少",0,100,"%");
-  mkSlider("check","你要求它核对几项",0,4," 项");
-  const g=el("div","gauge");
-  const TGT=[["贴合你的事",70,"要过这条"],["它编的风险",30,"要压到这条左边"],["你要花的力气",75,"别越过这条"]];
-  g.innerHTML=TGT.map(([n,t],i)=>
-    '<div class="row"><span class="nm">'+n+'</span><div class="track"><div class="fill" id="f'+i+'"></div>'+
-    '<div class="tgt" style="left:'+t+'%"></div></div><span class="val" id="g'+i+'"></span></div>').join("")+
-    '<p style="margin:8px 0 0;font-size:11.5px;color:var(--ink-faint);line-height:1.5">'+
-    '竖线是门槛：<b style="color:var(--ink-title)">上面那条要过线，下面两条要留在线左边。</b></p>';
-  wrap.appendChild(g);
-  const band=el("div","goalband"); wrap.appendChild(band);
   function paint(){
-    const fit=clamp(Math.round(st.ctx*0.75+st.check*7),0,100);
-    const risk=clamp(Math.round(92-st.ctx*0.45-st.check*13),0,100);
-    const cost=clamp(Math.round(st.ctx*0.5+st.check*15),0,100);
-    const V=[fit,risk,cost], C=["var(--ok)","var(--warn)","var(--berry)"];
-    V.forEach((v,i)=>{const f=g.querySelector("#f"+i);f.style.width=v+"%";f.style.background=C[i];
-      g.querySelector("#g"+i).textContent=v});
-    host.querySelector("#v_ctx").textContent=st.ctx;
-    host.querySelector("#v_check").textContent=st.check;
-    const hit=fit>=70&&risk<=30&&cost<=75;
-    band.classList.toggle("hit",hit);
-    band.innerHTML=hit
-      ? "✓ 到了。<b>贴合过 70、风险压到 30 以下，而力气还没花超。</b>注意你是怎么做到的：材料给够，再要求它核对几项——只加材料不够，只加核对也不够。"
-      : (risk>30&&st.check<2 ? "风险还高。<b>要求它核对的项数太少</b>——它没有被要求指出依据，就更容易顺嘴编。"
-        : fit<70 ? "还不贴合。<b>它手上关于你的事实太少</b>，只能写通用话。"
-        : "力气花太多了。<b>材料和核对项不是越多越好</b>，够用就行。");
+    res.innerHTML="";
+    if(!on.size){ res.appendChild(el("div","empty2","还没选关键词。<br>先想想：「谁拍的」这个问题，该去哪一类资料里找？")); return }
+    const list=DB.filter(d=>[...on].every(t=>d.k.includes(t)));
+    if(!list.length){ res.appendChild(el("div","empty2","这几个词凑在一起，一条都没有。<br>去掉一个再试。")); return }
+    list.forEach(d=>{
+      const n=el("div","rec2"+(d.hit?" hitrec":""),
+        "<b>"+esc(d.t)+"</b><div class='meta2'>"+esc(d.m)+"</div>"+d.body);
+      res.appendChild(n); J.dropIn(n);
+      if(d.hit&&!found&&list.length<=2){ found=true;
+        sfx.win(); J.burstAt(n,"var(--ok)",20); J.buzz([16,30,16]);
+        J.verdict(host,true,"<b>找到了。</b>只有这一条<b>直接记录了这一张照片</b>——摄影者、日期、任务都在里面。"+
+          "<br>另外四条都和「太空照片」有关，但没有一条能回答「<b>这一张</b>是谁拍的」。"+
+          "第 1 节说的就是这件事：<b>背景信息要回到「这一张」的记录去查。</b>"); }
+    });
   }
   paint();
 }
-
-/* ==================================================================
-   4 · 划词标记
-   ================================================================== */
-function bMark(host){
-  const TEXT=[
-    {t:"这款耳机"},{t:"于 2021 年上市"},{t:"，"},
-    {t:"续航 30 小时"},{t:"，"},
-    {t:"是同价位里音质最好的一款"},{t:"。"},
-    {t:"官方规格页"},{t:"写明防水等级为 IPX4"},{t:"。"}
-  ];
-  const BAD=[5];
-  const PROOF={0:"这是在说对象，没有断言。",1:"这是个能查的日期——去产品页看一眼就知道。",
-    3:"续航是个能查的数字，规格页上有。",5:"",7:"这是出处本身。",8:"这一条写明了出处在哪，可以打开核对。"};
-  host.appendChild(el("p","tip","下面是 AI 写的一段产品介绍。<b>按住手指划过</b>你认为没有依据的那一段。"));
-  const box=el("div","markbox"); host.appendChild(box);
-  const toks=TEXT.map((x,i)=>{const n=el("span","tk",esc(x.t));n._i=i;box.appendChild(n);return n});
-  let a=null,b=null,dragging=false,locked=false;
-  const idxAt=(x,y)=>{
-    const n=document.elementFromPoint(x,y);
-    if(n&&n.classList&&n.classList.contains("tk"))return n._i;
-    /* 跨行的片段，中心点会落在两行之间。回退到离手指最近的那一段。 */
-    let best=null,bd=1e9;
-    toks.forEach(t=>{ for(const r of t.getClientRects()){
-      const dx=Math.max(r.left-x,0,x-r.right), dy=Math.max(r.top-y,0,y-r.bottom);
-      const d=Math.hypot(dx,dy); if(d<bd&&d<26){bd=d;best=t._i} } });
-    return best;};
-  const paint=()=>{const lo=Math.min(a,b),hi=Math.max(a,b);
-    toks.forEach(n=>n.classList.toggle("sel",a!=null&&n._i>=lo&&n._i<=hi))};
-  box.style.touchAction="none";
-  box.addEventListener("pointerdown",e=>{ if(locked)return; e.preventDefault();
-    const i=idxAt(e.clientX,e.clientY); if(i==null)return;
-    dragging=true; a=b=i; paint(); sfx.grab();
-    try{box.setPointerCapture(e.pointerId)}catch(_){}
-  });
-  box.addEventListener("pointermove",e=>{ if(!dragging||locked)return;
-    const i=idxAt(e.clientX,e.clientY); if(i!=null&&i!==b){b=i;paint();sfx.tick()} });
-  box.addEventListener("pointerup",()=>{
-    if(!dragging||locked)return; dragging=false;
-    const lo=Math.min(a,b),hi=Math.max(a,b);
-    const picked=[]; for(let i=lo;i<=hi;i++)picked.push(i);
-    const exact=picked.length===1&&BAD.includes(picked[0]);
-    toks.forEach(n=>n.classList.remove("sel"));
-    if(exact){
-      locked=true; toks[BAD[0]].classList.add("hit"); sfx.good(); buzz(16);
-      verdict(host,true,"✓ 找到了。<b>「是同价位里音质最好的一款」</b>——这句话没有出处，也没法查。上市时间、续航、防水等级都能在规格页上对，只有这一句不能。");
-      host.appendChild(el("div","proof","<b>怎么处理它：</b>要么请它给出这个说法来自哪份评测，要么把它删掉。留着不标，就等于替它背书。"));
-    }else{
-      picked.forEach(i=>{const n=toks[i];n.classList.add("miss");
-        n.classList.remove("shake");void n.offsetWidth;n.classList.add("shake");
-        setTimeout(()=>n.classList.remove("miss"),900)});
-      sfx.bad(); buzz([10,50,10]);
-      const ex=picked.map(i=>PROOF[i]).filter(Boolean)[0];
-      verdict(host,false,"这一段是能查的。"+(ex?"<b>"+esc(ex)+"</b>":"")+" 再找找：哪一句你<b>没有办法</b>拿去对？");
-    }
-  });
-}
-
-/* ==================================================================
-   5 · 拖拽排序
-   ================================================================== */
-function bRank(host){
-  const RIGHT=["写出草稿","列出要发给谁、发什么","等你点头","真的发出去"];
-  const START=[3,1,0,2];
-  host.appendChild(el("p","tip","把这四步<b>拖</b>成正确的先后顺序。其他项会自己让位。"));
-  const list=el("div","ranklist"); host.appendChild(list);
-  let order=START.map(i=>RIGHT[i]);
-  let nodes=[];
-  function render(){
-    list.innerHTML="";
-    nodes=order.map((t,i)=>{
-      const n=el("div","rankitem",'<span class="grip">⋮⋮</span><span class="idx">'+(i+1)+"</span><span>"+esc(t)+"</span>");
-      n._t=t; list.appendChild(n); return n;
-    });
-    nodes.forEach(n=>{
-      let ph=null,fromIdx=0;
-      onDrag(n,{
-        start(r,off){ sfx.grab(); buzz(8); fromIdx=order.indexOf(n._t);
-          ph=el("div"); ph.style.height=r.height+"px"; n.after(ph);
-          n.classList.add("lift");
-          n.style.position="fixed"; n.style.width=r.width+"px";
-          n.style.left=r.left+"px"; n.style.top=r.top+"px"; n.style.margin="0";
-        },
-        move(ev,off){
-          n.style.left=(ev.clientX-off.x)+"px"; n.style.top=(ev.clientY-off.y)+"px";
-          const mid=ev.clientY;
-          const others=nodes.filter(m=>m!==n);
-          let target=others.length;
-          for(let i=0;i<others.length;i++){
-            const r=others[i].getBoundingClientRect();
-            if(mid<r.top+r.height/2){target=i;break}
-          }
-          if(ph)others.length?(target<others.length?others[target].before(ph):others[others.length-1].after(ph)):null;
-        },
-        end(){
-          n.classList.remove("lift"); n.style.cssText="";
-          if(ph){ const idx=[...list.children].indexOf(ph);
-            order=order.filter(t=>t!==n._t);
-            order.splice(Math.min(idx,order.length),0,n._t);
-            ph.remove(); ph=null; }
-          sfx.drop(); render(); check();
-        }
-      });
-    });
-  }
-  function check(){
-    const ok=order.every((t,i)=>t===RIGHT[i]);
-    if(ok){ sfx.win(); buzz([14,40,14]);
-      nodes.forEach((n,i)=>setTimeout(()=>{n.classList.add("ok");
-        n.classList.remove("wave");void n.offsetWidth;n.classList.add("wave")},i*90));
-      verdict(host,true,"<b>顺序对了。</b>关键在第三步：<b>等你点头</b>。少了它，前面写得再好，它也可能直接发出去了。");
-    }else{
-      const bad=order.findIndex((t,i)=>t!==RIGHT[i]);
-      if(bad>=0&&nodes[bad]){const n=nodes[bad];
-        n.classList.add("no");setTimeout(()=>n.classList.remove("no"),700)}
-      const old=host.querySelector(".verd"); if(old)old.remove();
-    }
-  }
-  render();
-}
-/* 把工具和前五块交给下一段脚本 */
-window.__K={el:el,esc:esc,clamp:clamp,sfx:sfx,buzz:buzz,onDrag:onDrag,inside:inside,
-  block:block,verdict:verdict,page:page};
-window.__B1=[
- {id:"drag-sort",title:"拖拽分拣",build:bDragSort,
-  hand:"抓起一张卡，<b>拖</b>进某一堆。松手会吸进去；拖到空处会弹回来。",
-  spec:"<b>教什么</b>：划界与归类——这一条属于哪一类。<br><b>比原来强在哪</b>：仓库里的 <code>sort</code> 是点选再点桶；这里是真拖拽，有吸附、有弹回、有落袋声。错了不惩罚，只告诉你它为什么该去另一堆。<br><b>载荷要什么</b>：两到三个桶，每个条目一个正确桶 + 一句「为什么」。"},
- {id:"wire",title:"拉线连接",build:bWire,
-  hand:"从左边一项<b>按住往右拉</b>，线跟着手指走，靠近右边会吸住。",
-  spec:"<b>教什么</b>：对应关系——这句话属于哪一种、这个结果来自哪个原因。<br><b>比原来强在哪</b>：仓库里的 <code>connect</code> 是点两下；这里线是拉出来的，接错了线会变紫再断掉。<br><b>载荷要什么</b>：左右两列 + 一张对应表。"},
- {id:"live-dial",title:"实时旋钮",build:bDial,
-  hand:"<b>拖滑块</b>，右边三条指标当场重算。不用提交，也没有判分。",
-  spec:"<b>教什么</b>：取舍——多给材料换来什么，代价是什么，什么时候反过来。<br><b>比原来强在哪</b>：仓库里的 <code>tune</code> 要按提交才看结果；这里是实时的，而且目标是「把指标拖进目标区」，不是答对一道题。这是 Brilliant 的招牌做法。<br><b>载荷要什么</b>：两三个可调参数、几个由它们算出的指标、一个目标区。"},
- {id:"mark",title:"划词标记",build:bMark,
-  hand:"在文字上<b>按住划过</b>，被划中的部分高亮。",
-  spec:"<b>教什么</b>：在一段 AI 写的话里，找出没有依据的那一句。<br><b>比原来强在哪</b>：这是 <code>spot</code> 的真·游戏化版——不是在几个按钮里选，而是在真实文字上圈。划错时那一段会抖一下，并<b>自己说出它的依据在哪</b>（借 Brilliant 那条：错了让对象演示，而不是给一段说明）。<br><b>载荷要什么</b>：切好的文字片段、哪几段没依据、其余每段的依据一句话。"},
- {id:"rank",title:"拖拽排序",build:bRank,
-  hand:"上下<b>拖动</b>条目，其他项会自己让位。",
-  spec:"<b>教什么</b>：步骤先后、优先级。<br><b>比原来强在哪</b>：仓库里的 <code>program</code> 是网格走位，覆盖不到「步骤排序」这个形状，而它在课里到处都是。排对了整列会依次亮绿。<br><b>载荷要什么</b>：正确顺序 + 一个打乱的初始序 + 一句关键点评。"}
+return [
+ {id:"xray",title:"透视扫描",from:"Papers, Please 的对比检查器",build:bXray,
+  hand:"拖滑杆让扫描条<b>扫过</b>成品，扫到哪一句就显示那一句该拿什么去核。",
+  spec:"<b>用的是</b>第 3 节：AI 按你的要求交回的稿子，五句里三句能对着 NASA 公告核，两句是它自己加的。<br><b>为什么偷它</b>：Papers, Please 有个把两份文件叠起来找差异的检查器，那个动作本身很上瘾。这里把「差异」换成「有没有依据」。<br><b>载荷</b>：几句成品，每句标强/弱 + 一句「怎么核」。"},
+ {id:"dial2",title:"二维寻解",from:"Brilliant 的可拖图",build:bField,
+  hand:"在方框里<b>拖那个点</b>，两个轴同时变，找那块绿区。",
+  spec:"<b>用的是</b>第 3 节的两个变量：成品说得多具体 × 写了几条不能丢的条件。<br><b>为什么偷它</b>：Brilliant 的招牌是「可以拖的图」，但它基本只有一维滑杆。二维的可行域能教出一维教不了的东西——<b>两个都要够，而且都不是越多越好</b>。<br><b>载荷</b>：两个轴、一块可行域、四种区域各一句话。"},
+ {id:"sequence",title:"节奏敲击",from:"Duolingo Music",build:bSeq,
+  hand:"按正确顺序<b>敲</b>四块，每敲对一块音往上走一阶。",
+  spec:"<b>用的是</b>第 1 节教的那条路：先描述画面 → 打开 NASA 记录 → 补摄影者和日期 → 标明哪句来自哪里。<br><b>为什么偷它</b>：Duolingo Music 让你在琴键上把谱子弹出来——<b>顺序对了，耳朵先知道</b>。把音阶接到步骤上，顺序就不只是被判对，而是被听见。<br><b>载荷</b>：一串有序步骤。任何讲流程的课都能直接装。"},
+ {id:"shelf",title:"装箱",from:"容量约束 / DragonBox",build:bShelf,
+  hand:"把材料<b>拖进只有 3 格的箱子</b>。满了就塞不进去了。",
+  spec:"<b>用的是</b>第 1 节：要让 AI 既说清位置、又写对摄影者，该给它哪三样。<br><b>为什么偷它</b>：容量上限会逼出取舍——<b>不是「这个有没有用」，而是「它值不值得占一格」</b>。DragonBox 的思路也是先让手动起来，概念最后才出现。<br><b>载荷</b>：一批候选材料、一个格数上限、每样一句该不该进的理由。"},
+ {id:"sift",title:"芯片检索",from:"Her Story",build:bSift,
+  hand:"<b>点关键词</b>去筛资料库，找出真能回答问题的那一条。全程不用打字。",
+  spec:"<b>用的是</b>第 1 节：「这张照片是谁拍的？」库里五条都和太空照片有关，只有一条记录了<b>这一张</b>。<br><b>为什么偷它</b>：Her Story 全部玩法就是「用关键词在档案里捞真相」。这里换成点选芯片，手机上也能玩，而且教的正是<b>「相关」和「能回答这一个问题」不是一回事</b>。<br><b>载荷</b>：一个小资料库、每条打几个标签、标出哪条是真答案。"}
 ];
 })();
 </script>
 <script>
-(function(){
-"use strict";
-const K=window.__K, el=K.el, esc=K.esc, clamp=K.clamp, sfx=K.sfx, buzz=K.buzz,
-      onDrag=K.onDrag, inside=K.inside, verdict=K.verdict;
+window.OLDB=(function(){
+const J=window.JX, el=J.el, esc=J.esc, clamp=J.clamp, sfx=J.sfx, L=J.L;
 
-/* ==================================================================
-   6 · 证据天平
-   ================================================================== */
-function bBalance(host){
-  const CLAIM="「这款耳机的续航是同价位里最好的」";
-  const EV=[
-    {t:"官方规格页：续航 30 小时",w:3,side:"for",why:"能打开核对的具体数字。"},
-    {t:"一条用户帖：「挺耐用的」",w:1,side:"for",why:"是个说法，但没给数字，分量很轻。"},
-    {t:"另一款同价位标称 40 小时",w:5,side:"against",why:"直接对着结论来的硬证据，而且比官方那条还重一点——它正面否掉了「最好」。"},
-    {t:"AI 说：「据我所知是最好的」",w:0,side:"none",why:"「据我所知」不是证据。它的分量是 <b>0</b>——放哪边天平都不动。"}
-  ];
-  host.appendChild(el("p","tip","结论："+esc(CLAIM)+"<br>把下面四条证据<b>拖</b>到天平两边。天平会真的按分量倾斜。"));
+/* 1 拖拽分拣 · 第 1 节 */
+function bSort(host){
+  const D=[{t:"地球在月面上方",z:0,w:"这件事就画在图里，看一眼就能对。"},
+    {t:"谁按下的快门",z:1,w:"画面上没有印名字。名字只在 NASA 的记录里。"},
+    {t:"天空是黑色的",z:0,w:"颜色是画面里直接看得见的。"},
+    {t:"哪一年拍的",z:1,w:"照片自己不会说出日期，得查记录。"}];
+  host.appendChild(el("p","tip","把每一条<b>拖</b>进它该去的那一堆。拖错了会弹回来，不扣分。<br>第 1 节《地出》。"));
+  const cb=J.comboBar(host,4);
+  const pile=el("div","pile"); host.appendChild(pile);
+  const dz=el("div","dz"); host.appendChild(dz);
+  const zs=["看照片就能对","查记录才能对"].map(t=>{
+    const n=el("div","zone","<h5>"+t+'</h5><div class="slot"></div>'); dz.appendChild(n); return n});
+  let left=D.length,right=0;
+  D.forEach(it=>{
+    const c=el("div","chipd",esc(it.t)); let ph=null;
+    J.onDrag(c,{
+      start(r,off){sfx.grab();ph=el("div");ph.style.height=r.height+"px";c.after(ph);
+        c.classList.add("drag");c.style.width=r.width+"px";c.style.left=r.left+"px";c.style.top=r.top+"px"},
+      move(ev,off){c.style.left=(ev.clientX-off.x)+"px";c.style.top=(ev.clientY-off.y)+"px";
+        zs.forEach(z=>z.classList.toggle("hot",J.inside(z.getBoundingClientRect(),ev.clientX,ev.clientY)))},
+      end(ev){
+        const ti=zs.findIndex(z=>J.inside(z.getBoundingClientRect(),ev.clientX,ev.clientY));
+        zs.forEach(z=>z.classList.remove("hot")); c.classList.remove("drag"); c.style.cssText="";
+        if(ti<0){if(ph){ph.remove();ph=null} J.shake(c); sfx.drop(); return}
+        if(ph){ph.remove();ph=null}
+        const ok=ti===it.z; c.dataset.locked="1"; c.classList.add("landed",ok?"ok":"no");
+        zs[ti].querySelector(".slot").appendChild(c); left--;
+        if(ok){right++; const n=cb.add(); J.hit(c,n>=3?"连对 "+n:"+1"); J.dropIn(c)}
+        else{cb.reset(); J.miss(c)}
+        J.verdict(host,ok,(ok?"✓ ":"✗ ")+"<b>"+esc(it.t)+"</b>　"+esc(it.w));
+        if(!left){sfx.win(); J.verdict(host,right===D.length,"<b>"+right+" / 4 对。</b>"+
+          (right===4?"画面能查的和记录才能查的，你已经分得开了。":"放错的那几条，上面写着它们为什么该去另一堆。"))}
+      }});
+    pile.appendChild(c);
+  });
+}
+/* 2 拉线 · 第 1 节 */
+function bWire(host){
+  const Lf=[{id:"a",t:"「地球在月面上方」"},{id:"b",t:"「Bill Anders 拍摄」"},{id:"c",t:"「他屏住了呼吸」"}];
+  const Rt=[{id:"pic",t:"看照片能对"},{id:"rec",t:"查 NASA 记录能对"},{id:"non",t:"两边都对不了"}];
+  const KEY={a:"pic",b:"rec",c:"non"};
+  host.appendChild(el("p","tip","从左边一条<b>按住往右拉</b>，线跟着手指走。<br>第 1 节的三分法。"));
+  const box=el("div","wirebox"); host.appendChild(box);
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("class","wiresvg"); box.appendChild(svg);
+  const cols=el("div","wirecols"),cl=el("div"),cr=el("div");
+  cols.appendChild(cl);cols.appendChild(cr);box.appendChild(cols);
+  const ln={},rn={};
+  Lf.forEach(x=>{const n=el("div","node",esc(x.t)+'<span class="dot"></span>');cl.appendChild(n);ln[x.id]=n});
+  Rt.forEach(x=>{const n=el("div","node",esc(x.t)+'<span class="dot"></span>');n._id=x.id;cr.appendChild(n);rn[x.id]=n});
+  let live=null,done=0;
+  const mk=(t,a)=>{const e=document.createElementNS("http://www.w3.org/2000/svg",t);for(const k in a)e.setAttribute(k,a[k]);return e};
+  const cen=(n,s)=>{const r=n.getBoundingClientRect(),b=box.getBoundingClientRect();
+    return{x:(s==="l"?r.right:r.left)-b.left,y:r.top+r.height/2-b.top}};
+  Lf.forEach(x=>{const n=ln[x.id];
+    J.onDrag(n,{
+      start(){if(n.dataset.locked==="1")return;sfx.grab();n.classList.add("lit");
+        const p=cen(n,"l");live=mk("path",{d:"",fill:"none",stroke:"var(--accent)","stroke-width":"3","stroke-linecap":"round"});
+        svg.appendChild(live);live._from=p},
+      move(ev){if(!live)return;const b=box.getBoundingClientRect();
+        const px=ev.clientX-b.left,py=ev.clientY-b.top,f=live._from;
+        live.setAttribute("d","M"+f.x+","+f.y+" C"+(f.x+30)+","+f.y+" "+(px-30)+","+py+" "+px+","+py);
+        Object.values(rn).forEach(m=>m.classList.toggle("lit",m.dataset.locked!=="1"&&J.inside(m.getBoundingClientRect(),ev.clientX,ev.clientY)))},
+      end(ev){if(!live)return;n.classList.remove("lit");
+        const hit=Rt.map(r=>rn[r.id]).find(m=>m.dataset.locked!=="1"&&J.inside(m.getBoundingClientRect(),ev.clientX,ev.clientY));
+        Object.values(rn).forEach(m=>m.classList.remove("lit"));
+        if(!hit){live.remove();live=null;sfx.drop();return}
+        if(KEY[x.id]!==hit._id){live.setAttribute("stroke","var(--berry)");const d=live;live=null;
+          J.miss(hit); setTimeout(()=>d.remove(),480);
+          J.verdict(host,false,"这两个对不上。<b>"+esc(x.t)+"</b>不是「"+esc(Rt.find(r=>r.id===hit._id).t)+"」。再试一条。");return}
+        const p=cen(n,"l"),q=cen(hit,"r");
+        live.setAttribute("d","M"+p.x+","+p.y+" C"+(p.x+30)+","+p.y+" "+(q.x-30)+","+q.y+" "+q.x+","+q.y);
+        live.setAttribute("stroke","var(--ok)");live=null;
+        n.dataset.locked="1";hit.dataset.locked="1";n.classList.add("done");hit.classList.add("done");
+        J.hit(hit,"接上了"); done++;
+        if(done===Lf.length){sfx.win();J.verdict(host,true,"<b>三条都接上了。</b>第三条最要紧：<b>「他屏住了呼吸」两边都查不到</b>——它读起来最动人，也最没有依据。")}
+      }});
+  });
+}
+/* 3 实时旋钮 · 第 3 节 */
+function bDial(host){
+  host.appendChild(el("p","tip","拖滑块，右边三条当场重算。<b>竖线是门槛</b>：上面那条要过线，下面两条要留在线左边。<br>第 3 节。"));
+  const st={ctx:40,check:1};
+  const w=el("div","dialwrap"); host.appendChild(w);
+  const mk=(k,lab,min,max,unit)=>{const s=el("div","slab");
+    s.innerHTML='<div class="lbl"><span>'+lab+'</span><b><span id="v_'+k+'"></span>'+unit+"</b></div>"+
+      '<input type="range" min="'+min+'" max="'+max+'" value="'+st[k]+'">';
+    w.appendChild(s); const i=s.querySelector("input"); let last=st[k];
+    i.oninput=()=>{st[k]=+i.value;if(Math.abs(st[k]-last)>=2){last=st[k];sfx.tick()}paint()}};
+  mk("ctx","给 AI 的材料有多少",0,100,"%"); mk("check","写了几条必留条件",0,4," 条");
+  const g=el("div","gauge");
+  g.innerHTML=[["它交的东西贴不贴题",70],["它自己加戏的风险",30],["你要花的力气",75]].map(([n,t],i)=>
+    '<div class="row"><span class="nm">'+n+'</span><div class="track"><div class="fill" id="f'+i+'"></div>'+
+    '<div class="tgt" style="left:'+t+'%"></div></div><span class="val" id="g'+i+'"></span></div>').join("");
+  w.appendChild(g);
+  const band=el("div","goalband"); w.appendChild(band);
+  let was=false;
+  function paint(){
+    const fit=clamp(Math.round(st.ctx*.75+st.check*7),0,100);
+    const risk=clamp(Math.round(92-st.ctx*.45-st.check*13),0,100);
+    const cost=clamp(Math.round(st.ctx*.5+st.check*15),0,100);
+    [fit,risk,cost].forEach((v,i)=>{const f=g.querySelector("#f"+i);f.style.width=v+"%";
+      f.style.background=["var(--ok)","var(--warn)","var(--berry)"][i];g.querySelector("#g"+i).textContent=v});
+    host.querySelector("#v_ctx").textContent=st.ctx; host.querySelector("#v_check").textContent=st.check;
+    const hit=fit>=70&&risk<=30&&cost<=75;
+    band.classList.toggle("hit",hit);
+    if(hit&&!was){was=true;sfx.win();J.burstAt(band,"var(--ok)",18);J.pop(band)} if(!hit)was=false;
+    band.innerHTML=hit?"✓ 到了。<b>三条门槛同时满足。</b>注意你是怎么做到的：材料给够，再写下两三条必留条件——只加材料不够，只加条件也不够。"
+      :(risk>30&&st.check<2?"风险还高。<b>必留条件太少</b>——你没写下来的项，它丢了你也发现不了。"
+        :fit<70?"还不贴题。<b>它手上关于这场活动的事实太少</b>，只能写通用话。"
+        :"力气花太多了。<b>条件不是越多越好</b>，够你一项一项核就行。");
+  }
+  paint();
+}
+/* 4 划词 · 第 1 节 */
+function bMark(host){
+  const T=[{t:"这张照片"},{t:"拍摄于 1968 年 12 月 24 日"},{t:"，"},
+    {t:"由 Bill Anders 拍下"},{t:"。"},{t:"这是人类拍过的最伟大的一张照片"},{t:"。"},
+    {t:"画面里"},{t:"蓝白色的地球出现在灰白月面上方"},{t:"。"}];
+  const BAD=[5];
+  const P={1:"NASA 的记录里写着这个日期。",3:"记录里写着摄影者。",8:"这一句照片上直接看得见。"};
+  host.appendChild(el("p","tip","下面是有人给《地出》写的说明。<b>按住手指划过</b>那一句你没办法拿去核对的话。<br>第 1 节。"));
+  const box=el("div","markbox"); host.appendChild(box);
+  const toks=T.map((x,i)=>{const n=el("span","tk",esc(x.t));n._i=i;box.appendChild(n);return n});
+  let a=null,b=null,drag=false,lock=false;
+  const idxAt=(x,y)=>{const n=document.elementFromPoint(x,y);
+    if(n&&n.classList&&n.classList.contains("tk"))return n._i;
+    let best=null,bd=1e9;
+    toks.forEach(t=>{for(const r of t.getClientRects()){
+      const dx=Math.max(r.left-x,0,x-r.right),dy=Math.max(r.top-y,0,y-r.bottom);
+      const d=Math.hypot(dx,dy);if(d<bd&&d<26){bd=d;best=t._i}}});return best};
+  const paint=()=>{const lo=Math.min(a,b),hi=Math.max(a,b);
+    toks.forEach(n=>n.classList.toggle("sel",a!=null&&n._i>=lo&&n._i<=hi))};
+  box.style.touchAction="none";
+  box.addEventListener("pointerdown",e=>{if(lock)return;e.preventDefault();
+    const i=idxAt(e.clientX,e.clientY);if(i==null)return;drag=true;a=b=i;paint();sfx.grab();
+    try{box.setPointerCapture(e.pointerId)}catch(_){}});
+  box.addEventListener("pointermove",e=>{if(!drag||lock)return;
+    const i=idxAt(e.clientX,e.clientY);if(i!=null&&i!==b){b=i;paint();sfx.tick()}});
+  box.addEventListener("pointerup",()=>{
+    if(!drag||lock)return;drag=false;
+    const lo=Math.min(a,b),hi=Math.max(a,b),pick=[];for(let i=lo;i<=hi;i++)pick.push(i);
+    toks.forEach(n=>n.classList.remove("sel"));
+    if(pick.length===1&&BAD.includes(pick[0])){lock=true;toks[BAD[0]].classList.add("hit");
+      J.hit(toks[BAD[0]],"找到了"); J.rock(box);
+      J.verdict(host,true,"✓ <b>「最伟大的一张照片」——这句话没有出处，也没法查。</b>日期和摄影者都能在 NASA 记录里对上，只有这一句不能。");
+      host.appendChild(el("div","proof","<b>怎么处理它：</b>要么把它标成你自己的看法，要么删掉。留着不标，就等于让它冒充记录。"));
+    }else{pick.forEach(i=>{const n=toks[i];n.classList.add("miss");J.shake(n);
+        setTimeout(()=>n.classList.remove("miss"),900)}); sfx.bad(); J.buzz([10,50,10]);
+      const ex=pick.map(i=>P[i]).filter(Boolean)[0];
+      J.verdict(host,false,"这一段是能查的。"+(ex?"<b>"+esc(ex)+"</b>":"")+" 再找找：<b>哪一句你没有办法拿去对？</b>")}
+  });
+}
+/* 5 拖拽排序 · 第 3 节 */
+function bRank(host){
+  const R=["先决定要交的是哪一样东西","写下两三条不能丢的条件","把要求发给 AI","拿回来逐条核对"];
+  const S=[2,3,0,1];
+  host.appendChild(el("p","tip","把这四步<b>拖</b>成正确的先后。其他项会自己让位。<br>第 3 节。"));
+  const list=el("div","ranklist"); host.appendChild(list);
+  let order=S.map(i=>R[i]),nodes=[];
+  function render(){
+    list.innerHTML="";
+    nodes=order.map((t,i)=>{const n=el("div","rankitem",
+      '<span class="grip">⋮⋮</span><span class="idx">'+(i+1)+"</span><span>"+esc(t)+"</span>");
+      n._t=t;list.appendChild(n);return n});
+    nodes.forEach(n=>{let ph=null;
+      J.onDrag(n,{
+        start(r,off){sfx.grab();ph=el("div");ph.style.height=r.height+"px";n.after(ph);
+          n.classList.add("lift");n.style.position="fixed";n.style.width=r.width+"px";
+          n.style.left=r.left+"px";n.style.top=r.top+"px";n.style.margin="0"},
+        move(ev,off){n.style.left=(ev.clientX-off.x)+"px";n.style.top=(ev.clientY-off.y)+"px";
+          const others=nodes.filter(m=>m!==n);let tgt=others.length;
+          for(let i=0;i<others.length;i++){const r=others[i].getBoundingClientRect();
+            if(ev.clientY<r.top+r.height/2){tgt=i;break}}
+          if(ph&&others.length)tgt<others.length?others[tgt].before(ph):others[others.length-1].after(ph)},
+        end(){n.classList.remove("lift");n.style.cssText="";
+          if(ph){const i=[...list.children].indexOf(ph);order=order.filter(t=>t!==n._t);
+            order.splice(Math.min(i,order.length),0,n._t);ph.remove();ph=null}
+          sfx.drop();render();check()}})});
+  }
+  function check(){
+    if(order.every((t,i)=>t===R[i])){sfx.win();J.rock(list);
+      nodes.forEach((n,i)=>setTimeout(()=>{n.classList.add("ok");J.pop(n);J.burstAt(n,"var(--ok)",9);sfx.step(i*4)},i*110));
+      J.verdict(host,true,"<b>顺序对了。</b>关键是<b>前两步都在发出去之前</b>：先定成品，再写条件。等它交回来才想「我到底要什么」，那时候已经没有东西可核了。");
+    }else{const bad=order.findIndex((t,i)=>t!==R[i]);
+      if(bad>=0&&nodes[bad]){nodes[bad].classList.add("no");setTimeout(()=>nodes[bad].classList.remove("no"),700)}
+      const o=host.querySelector(".verd");if(o)o.remove()}
+  }
+  render();
+}
+/* 6 天平 · 第 1 节 */
+function bBal(host){
+  const EV=[{t:"NASA 图像页写着 Bill Anders",w:5,why:"直接记录了这一张照片，最重。"},
+    {t:"画面构图很专业",w:1,why:"专业不专业和谁按的快门无关，很轻。"},
+    {t:"另一张相似的图署名别人",w:3,why:"相似的图和这一张没有关系，但它会动摇一个只靠「看起来」的判断。"},
+    {t:"AI 说：「据我所知是他拍的」",w:0,why:"「据我所知」不是证据。分量是 <b>0</b>——放哪边天平都不动。"}];
+  host.appendChild(el("p","tip","结论：<b>「这张照片是 Bill Anders 拍的」</b><br>把四条证据<b>拖</b>到天平两边，它会按分量真的倾斜。<br>第 1 节。"));
   const pile=el("div","pile"); host.appendChild(pile);
   const box=el("div","scalebox"); host.appendChild(box);
   const bw=el("div","beamwrap");
-  bw.innerHTML='<div class="pivot"></div><div class="beam" id="beam"></div>'+
-    '<div class="pan" id="panL" style="left:11%"><div class="rope"></div><div class="dish"></div></div>'+
-    '<div class="pan" id="panR" style="left:89%"><div class="rope"></div><div class="dish"></div></div>';
+  bw.innerHTML='<div class="pivot"></div><div class="beam" id="bm"></div>'+
+    '<div class="pan" id="pL" style="left:11%"><div class="rope"></div><div class="dish"></div></div>'+
+    '<div class="pan" id="pR" style="left:89%"><div class="rope"></div><div class="dish"></div></div>';
   box.appendChild(bw);
   const vb=el("div","verdictbar","还没有证据。结论悬着。"); box.appendChild(vb);
-  const beam=bw.querySelector("#beam"), pL=bw.querySelector("#panL"), pR=bw.querySelector("#panR");
-  const dishes=[pL.querySelector(".dish"),pR.querySelector(".dish")];
+  const beam=bw.querySelector("#bm"),pL=bw.querySelector("#pL"),pR=bw.querySelector("#pR");
+  const dish=[pL.querySelector(".dish"),pR.querySelector(".dish")];
   let wl=0,wr=0,left=EV.length;
-  function settle(){
-    const d=clamp((wr-wl)*4,-14,14);
+  function settle(){const d=clamp((wr-wl)*4,-14,14);
     beam.style.transform="translateX(-50%) rotate("+d+"deg)";
-    pL.style.top=(4+d*1.9)+"px"; pR.style.top=(4-d*1.9)+"px";
+    pL.style.top=(4+d*1.9)+"px";pR.style.top=(4-d*1.9)+"px";
     vb.classList.remove("left","right");
-    if(wl===0&&wr===0)vb.textContent="还没有证据。结论悬着。";
-    else if(wl>wr){vb.classList.add("right");vb.textContent="目前：支持的分量更重（"+wl+" : "+wr+"）"}
-    else if(wr>wl){vb.classList.add("left");vb.textContent="目前：反对的分量更重（"+wl+" : "+wr+"）"}
-    else vb.textContent="两边一样重（"+wl+" : "+wr+"）";
-  }
+    vb.textContent=(!wl&&!wr)?"还没有证据。结论悬着。"
+      :wl>wr?"支持的分量更重（"+wl+" : "+wr+"）":wr>wl?"反对的分量更重（"+wl+" : "+wr+"）":"两边一样重（"+wl+" : "+wr+"）";
+    if(wl>wr)vb.classList.add("right"); else if(wr>wl)vb.classList.add("left")}
   settle();
   EV.forEach(e=>{
     const c=el("div","chipd",esc(e.t)+'<span style="display:block;font-size:11.5px;color:var(--ink-faint);margin-top:2px">分量 '+e.w+"</span>");
     let ph=null;
-    onDrag(c,{
-      start(r,off){ sfx.grab(); ph=el("div"); ph.style.height=r.height+"px"; c.after(ph);
-        c.classList.add("drag"); c.style.width=r.width+"px"; c.style.left=r.left+"px"; c.style.top=r.top+"px" },
-      move(ev,off){ c.style.left=(ev.clientX-off.x)+"px"; c.style.top=(ev.clientY-off.y)+"px";
-        dishes.forEach(d=>d.classList.toggle("hot",inside(d.getBoundingClientRect(),ev.clientX,ev.clientY))) },
-      end(ev){
-        const i=dishes.findIndex(d=>inside(d.getBoundingClientRect(),ev.clientX,ev.clientY));
-        dishes.forEach(d=>d.classList.remove("hot"));
-        c.classList.remove("drag"); c.style.cssText="";
-        if(i<0){ if(ph){ph.remove();ph=null} c.classList.remove("bounce");void c.offsetWidth;c.classList.add("bounce");sfx.drop();return }
+    J.onDrag(c,{
+      start(r,off){sfx.grab();ph=el("div");ph.style.height=r.height+"px";c.after(ph);
+        c.classList.add("drag");c.style.width=r.width+"px";c.style.left=r.left+"px";c.style.top=r.top+"px"},
+      move(ev,off){c.style.left=(ev.clientX-off.x)+"px";c.style.top=(ev.clientY-off.y)+"px";
+        dish.forEach(d=>d.classList.toggle("hot",J.inside(d.getBoundingClientRect(),ev.clientX,ev.clientY)))},
+      end(ev){const i=dish.findIndex(d=>J.inside(d.getBoundingClientRect(),ev.clientX,ev.clientY));
+        dish.forEach(d=>d.classList.remove("hot"));c.classList.remove("drag");c.style.cssText="";
+        if(i<0){if(ph){ph.remove();ph=null}J.shake(c);sfx.drop();return}
         if(ph){ph.remove();ph=null}
-        c.dataset.locked="1"; c.remove();
-        dishes[i].appendChild(el("div","w",esc(e.t.slice(0,12))+(e.t.length>12?"…":"")));
-        if(i===0)wl+=e.w; else wr+=e.w;
-        left--;
-        if(e.w===0){ sfx.drop(); buzz([6,40,6]);
-          verdict(host,false,"天平<b>纹丝不动</b>。"+e.why); }
-        else { sfx.snap(); buzz(12); verdict(host,true,"分量 "+e.w+"。"+esc(e.why)); }
+        c.dataset.locked="1";c.remove();
+        const w=el("div","w",esc(e.t.slice(0,11))+(e.t.length>11?"…":""));
+        dish[i].appendChild(w); J.dropIn(w);
+        if(i===0)wl+=e.w;else wr+=e.w; left--;
+        if(e.w===0){sfx.drop();J.buzz([6,40,6]);J.verdict(host,false,"天平<b>纹丝不动</b>。"+e.why)}
+        else{J.hit(w,"+"+e.w);J.verdict(host,true,"分量 "+e.w+"。"+e.why)}
         settle();
-        if(left===0){ sfx.win();
-          const tie=wl===wr, forWins=wl>wr;
-          verdict(host,!forWins,"<b>四条放完："+wl+" : "+wr+"。</b>"+
-            (tie?"两边一样重，<b>这个结论现在悬着</b>——不是被推翻，是还没被撑起来。"
-             :forWins?"支持的一边更重，<b>这个结论暂时站得住</b>——但只对你手上这四条而言。"
-             :"反对的一边更重，所以这个结论<b>现在站不住</b>。")+
-            "<br>不管落在哪边，都要看那条「据我所知」——它读起来最像结论，<b>分量却是 0</b>。"); }
-      }
-    });
+        if(!left){sfx.win();
+          J.verdict(host,wl>wr,"<b>四条放完："+wl+" : "+wr+"。</b>"+
+            (wl>wr?"支持更重，<b>而且靠的是那条真正记录了这一张照片的</b>——不是靠构图好看。"
+              :"反对更重。这时候该做的不是争，是回去找<b>这一张</b>的记录。")+
+            "<br>不管落在哪边，都要看那条「据我所知」——它读起来最像结论，<b>分量却是 0</b>。")}
+      }});
     pile.appendChild(c);
   });
 }
-
-/* ==================================================================
-   7 · 时间轴擦洗
-   ================================================================== */
+/* 7 时间轴 · 第 2 节 */
 function bScrub(host){
-  const F=[
-    {t:"读取你给的资料",p:"它打开了你提供的三份文件，还没有写任何东西。",d:0},
-    {t:"写出草稿",p:"草稿写好了，只存在它那边，你还没看过。",d:0},
-    {t:"整理收件人名单",p:"它从资料里找出了 12 个邮箱地址，其中 3 个是你没打算发的。",d:0},
-    {t:"提交给邮件服务",p:"已经交出去了。这一步之后，撤不撤得回来不由你决定。",d:1},
-    {t:"报告「任务完成」",p:"它告诉你做完了。到这一步你才第一次看见结果。",d:1}
-  ];
-  host.appendChild(el("p","tip","这是一个 AI 多步任务的回放。<b>拖游标</b>看每一步发生了什么，在你觉得该停的地方按叫停。"));
+  const F=[{t:"收到一段中文录音",p:"原话还完整地在录音里。",d:0},
+    {t:"按原语言转写成中文字",p:"这一步之后，你手上有一份可以和录音逐句对的文字。",d:0},
+    {t:"逐句核对转写稿",p:"错字改过来了。这份中文稿现在是可信的原话记录。",d:0},
+    {t:"把它翻译成英文",p:"说法换了语言。<b>从这一步起，你手上这份东西已经不能拿去和录音逐字对了。</b>",d:1},
+    {t:"只留下英文稿，交付",p:"中文原话记录被丢掉了。现在没有任何东西能证明原话是怎么说的。",d:1}];
+  host.appendChild(el("p","tip","拖游标看每一步。<b>在你认为「原话还留得住」的最后一步按叫停。</b><br>第 2 节。"));
   const box=el("div","scrubbox"); host.appendChild(box);
-  const dots=el("div","steps");
-  F.forEach(()=>dots.appendChild(el("div","stepdot")));
-  box.appendChild(dots);
-  const fb=el("div","framebox"); box.appendChild(fb);
-  const rail=el("div","scrubrail",'<input type="range" min="0" max="'+(F.length-1)+'" value="0">');
-  box.appendChild(rail);
-  const stop=el("button","stopbtn","在这一步叫停"); box.appendChild(stop);
-  const inp=rail.querySelector("input");
-  let at=0,done=false;
-  function paint(){
-    const f=F[at];
-    fb.className="framebox"+(f.d?" danger":"");
-    fb.innerHTML='<div class="st">第 '+(at+1)+" / "+F.length+" 步</div><h6>"+esc(f.t)+"</h6><p>"+esc(f.p)+"</p>";
-    [...dots.children].forEach((d,i)=>{d.className="stepdot"+(i<=at?(F[i].d?" bad":" past"):"")});
-  }
-  let last=0;
-  inp.oninput=()=>{at=+inp.value; if(at!==last){last=at;sfx.tick()} paint()};
-  stop.onclick=()=>{
-    if(done)return; done=true; stop.disabled=true; inp.disabled=true;
-    const sent=F.slice(0,at+1).some(f=>f.d);
-    if(!sent){ sfx.good(); buzz(16);
-      verdict(host,true,"<b>停在第 "+(at+1)+" 步，还来得及。</b>草稿和名单都只在它那边，没有交出去——你现在可以改收件人，也可以整段重来。"+
-        "<br>这就是为什么要在<b>真正发出去之前</b>放一个确认点。");
-    }else{ sfx.bad(); buzz([12,60,12]);
-      verdict(host,false,"<b>停在第 "+(at+1)+" 步，已经晚了。</b>第 4 步就交给邮件服务了，那 3 个你没打算发的地址也在里面。"+
-        "<br>叫停不会让已经发生的事消失——它只是让你从现在开始介入。<b>再拖回第 3 步看看</b>：那时候名单已经列出来，而东西还没出去。");
-      inp.disabled=false;
-    }
-  };
+  const dots=el("div","steps");F.forEach(()=>dots.appendChild(el("div","stepdot")));box.appendChild(dots);
+  const fb=el("div","framebox");box.appendChild(fb);
+  const rail=el("div","scrubrail",'<input type="range" min="0" max="'+(F.length-1)+'" value="0">');box.appendChild(rail);
+  const stop=el("button","stopbtn","就停在这一步");box.appendChild(stop);
+  const inp=rail.querySelector("input");let at=0,done=false,last=0;
+  function paint(){const f=F[at];fb.className="framebox"+(f.d?" danger":"");
+    fb.innerHTML='<div class="st">第 '+(at+1)+" / "+F.length+" 步</div><h6>"+esc(f.t)+"</h6><p>"+f.p+"</p>";
+    J.dropIn(fb);
+    [...dots.children].forEach((d,i)=>d.className="stepdot"+(i<=at?(F[i].d?" bad":" past"):""))}
+  inp.oninput=()=>{at=+inp.value;if(at!==last){last=at;sfx.tick()}paint()};
+  stop.onclick=()=>{if(done)return;done=true;stop.disabled=true;
+    if(at===2){J.hit(fb,"正好");sfx.win();J.rock(box);
+      J.verdict(host,true,"<b>第 3 步，正好。</b>到这里你手上有一份<b>核对过的中文原话</b>，"+
+        "它还能拿去和录音逐字对。翻译要不要做是另一件事——但<b>原话那份得先留住</b>。")}
+    else if(at<2){J.verdict(host,false,"<b>停早了。</b>第 "+(at+1)+" 步的转写稿还没核对过，"+
+      "你不知道有没有听错字。再往后拖一步。");done=false;stop.disabled=false}
+    else{sfx.bad();J.miss(fb);
+      J.verdict(host,false,"<b>停晚了。</b>第 4 步一翻译，说法就换了语言——"+
+        "这份东西<b>已经没法和录音逐字对</b>了。再拖回第 3 步看看：那时候原话记录还在手上。");
+      done=false;stop.disabled=false}};
   paint();
 }
-
-/* ==================================================================
-   8 · 拼句 + 发送（保留并升级）
-   ================================================================== */
+/* 8 拼句 + 发送 · 第 3 节 */
 function bBank(host){
-  const ANS=["请按","时间、地点、报名要求","三项核对，","把对应的原文指出来，","缺的直接写「缺失」。"];
-  const DEC=["写得好一点，","尽量完美。"];
-  host.appendChild(el("p","tip","点词把一句要求拼出来，然后<b>真的发出去</b>——下面会出现 AI 按这句话回给你的东西。"));
-  const line=el("div","line2"); host.appendChild(line);
-  const bank=el("div","bank2"); host.appendChild(bank);
-  const words=ANS.concat(DEC).map((t,i)=>({t:t,i:i}));
-  for(let i=words.length-1;i>0;i--){const j=(i*7+3)%(i+1);const t=words[i];words[i]=words[j];words[j]=t}
+  const A=["请按","时间、地点、报名要求","三项核对，","把对应的原文指出来，","缺的直接写「缺失」。"];
+  const D=["写得好一点，","尽量完美。"];
+  host.appendChild(el("p","tip","点词拼出一句要求，然后<b>真的发出去</b>——下面会出现 AI 按这句话回给你的东西。<br>第 3 节。"));
+  const line=el("div","line2");host.appendChild(line);
+  const bank=el("div","bank2");host.appendChild(bank);
+  const ws=A.concat(D).map((t,i)=>({t:t,i:i}));
+  for(let i=ws.length-1;i>0;i--){const j=(i*7+3)%(i+1);const t=ws[i];ws[i]=ws[j];ws[j]=t}
   const picked=[];
-  const sendRow=el("div","sendrow");
-  const send=el("button","sendbtn","发出去"); send.disabled=true;
-  sendRow.appendChild(send); host.appendChild(sendRow);
-  const nodes=words.map(w=>{
-    const n=el("button","w2",esc(w.t));
-    n.onclick=()=>{ if(n.classList.contains("used"))return;
-      sfx.tick(); n.classList.add("used"); picked.push(w);
+  const row=el("div","sendrow");const send=el("button","sendbtn","发出去");send.disabled=true;
+  row.appendChild(send);host.appendChild(row);
+  const ns=ws.map(w=>{const n=el("button","w2",esc(w.t));
+    n.onclick=()=>{if(n.classList.contains("used"))return;sfx.tick();n.classList.add("used");picked.push(w);
       const p=el("button","w2 placed",esc(w.t));
-      p.onclick=()=>{ sfx.tick(); p.remove(); n.classList.remove("used");
-        picked.splice(picked.indexOf(w),1); send.disabled=picked.length===0 };
-      line.appendChild(p); send.disabled=false;
-    };
-    bank.appendChild(n); return n;
-  });
+      p.onclick=()=>{sfx.tick();p.remove();n.classList.remove("used");picked.splice(picked.indexOf(w),1);send.disabled=!picked.length};
+      line.appendChild(p);J.pop(p);send.disabled=false};
+    bank.appendChild(n);return n});
   send.onclick=()=>{
-    const got=picked.map(p=>p.t);
-    const ok=got.length===ANS.length&&got.every((t,i)=>t===ANS[i]);
-    const nice=got.some(t=>DEC.includes(t));
+    const got=picked.map(p=>p.t),ok=got.length===A.length&&got.every((t,i)=>t===A[i]);
+    const nice=got.some(t=>D.includes(t));
     line.querySelectorAll(".w2").forEach((n,i)=>{n.disabled=true;n.classList.remove("placed");
-      n.classList.add(got[i]===ANS[i]?"ok":"no")});
-    nodes.forEach(n=>n.disabled=true); send.disabled=true;
-    const old=host.querySelector(".aireply"); if(old)old.remove();
+      n.classList.add(got[i]===A[i]?"ok":"no")});
+    ns.forEach(n=>n.disabled=true);send.disabled=true;
+    const o=host.querySelector(".aireply");if(o)o.remove();
     const r=el("div","aireply"+(ok?" good":""));
     r.innerHTML='<span class="who">AI 按你这句话回的</span>'+
       (ok?'时间 &#10003;「10 月 21 日晚 6–9 点」<br>地点 &#10003;「戈达德访客中心」<br>报名要求 <b style="color:var(--warn)">缺失</b>'
-        :nice?'写得非常好！行文流畅，很有感染力 &#128077;<br><span style="color:var(--ink-faint);font-size:12.5px">——它夸了你，但一项都没核。</span>'
-        :'这段文字整体没有问题，读起来很顺。<br><span style="color:var(--ink-faint);font-size:12.5px">——它给了个笼统结论，你没法据此改稿。</span>');
-    host.appendChild(r);
-    if(ok){sfx.win();buzz([14,40,14]);
-      verdict(host,true,"<b>它自己说出了缺哪一项。</b>拼句子本身不算学会——<b>让这句话产生一个不同的回复，才算</b>。");
-    }else{sfx.bad();buzz([10,50,10]);
-      verdict(host,false,"句子发出去了，但回来的东西<b>没法让你动手改稿</b>。再拼一次：缺的是「指出原文」和「缺的写缺失」这两条。");}
-  };
+       :nice?'写得非常好！行文流畅，很有感染力 &#128077;<br><span style="color:var(--ink-faint);font-size:12.5px">——它夸了你，但一项都没核。</span>'
+       :'这段文字整体没有问题，读起来很顺。<br><span style="color:var(--ink-faint);font-size:12.5px">——笼统结论，你没法据此改稿。</span>');
+    host.appendChild(r);J.dropIn(r);
+    if(ok){sfx.win();J.burstAt(r,"var(--ok)",20);J.rock(r);
+      J.verdict(host,true,"<b>它自己说出了缺哪一项。</b>拼句子本身不算学会——<b>让这句话产生一个不同的回复，才算</b>。")}
+    else{sfx.bad();J.miss(r);
+      J.verdict(host,false,"句子发出去了，但回来的东西<b>没法让你动手改稿</b>。缺的是「指出原文」和「缺的写缺失」这两条。")}};
 }
-
-/* ==================================================================
-   9 · 对话残局
-   ================================================================== */
+/* 9 残局 · 第 1 节 */
 function bBranch(host){
-  const OPEN="这款设备的防水等级是 IPX7。";
-  const TREE={
-    start:{moves:[
-      {t:"你确定吗？",to:"sure",good:false},
-      {t:"这个说法来自哪一份记录？",to:"src",good:true},
-      {t:"再写详细一点",to:"more",good:false}]},
-    sure:{ai:"是的，我可以确认这一点。",moves:[
-      {t:"你确定吗？",to:"sure2",good:false},
-      {t:"把出处贴给我",to:"src",good:true}]},
-    sure2:{ai:"完全确定，这是标准配置。",moves:[
-      {t:"把出处贴给我",to:"src",good:true},
-      {t:"好吧，那就这样",to:"lose",good:false}]},
-    more:{ai:"该设备具备优秀的防水性能，可在多种环境下稳定使用，适合户外活动。",moves:[
-      {t:"这些话是从哪来的？",to:"src",good:true},
-      {t:"再详细一点",to:"more2",good:false}]},
-    more2:{ai:"其防水设计采用了多层密封结构，能有效阻隔水汽侵入……",moves:[
-      {t:"停。出处在哪？",to:"src",good:true}]},
-    src:{ai:"我没有可以引用的具体记录。这个等级是我根据同类产品推断的，建议你查官方规格页确认。",end:"win"},
-    lose:{ai:"好的，祝你使用愉快！",end:"lose"}
-  };
-  host.appendChild(el("p","tip","像下棋一样：每回合选一句发出去，看它怎么应。<b>目标是逼出一句能核对的东西。</b>"));
-  const tb=el("div","turnbar"); host.appendChild(tb);
-  const chat=el("div","chat"); host.appendChild(chat);
-  const moves=el("div","moves"); host.appendChild(moves);
-  let at="start", turns=0, best=1;
-  function drawTurns(){ tb.innerHTML="回合 "+turns+"　";
-    for(let i=0;i<4;i++)tb.appendChild(el("i",i<turns?"used":"")); }
-  function push(cls,who,t,win){ const m=el("div","msg "+cls+(win?" win":""),
-    '<span class="who">'+who+"</span>"+esc(t)); chat.appendChild(m); chat.scrollTop=chat.scrollHeight }
-  push("ai","AI",OPEN);
-  drawTurns();
+  const OPEN="这张《地出》是 Bill Anders 拍的。";
+  const T={start:{moves:[{t:"你确定吗？",to:"sure"},{t:"这个说法来自哪一份记录？",to:"src"},{t:"再讲讲这张照片的背景",to:"more"}]},
+   sure:{ai:"是的，我可以确认这一点。",moves:[{t:"你确定吗？",to:"sure2"},{t:"把那份记录贴给我",to:"src"}]},
+   sure2:{ai:"完全确定，这是公认的事实。",moves:[{t:"把那份记录贴给我",to:"src"},{t:"好吧，那就这样",to:"lose"}]},
+   more:{ai:"这张照片拍摄于绕月任务期间，是太空摄影史上的里程碑，构图震撼人心。",
+     moves:[{t:"这些话是从哪来的？",to:"src"},{t:"再详细一点",to:"more2"}]},
+   more2:{ai:"它被誉为改变人类自我认知的一张照片……",moves:[{t:"停。记录在哪？",to:"src"}]},
+   src:{ai:"我没有直接引用的记录。建议你打开 NASA 的图像页确认摄影者和日期。",end:"win"},
+   lose:{ai:"好的，祝你使用愉快！",end:"lose"}};
+  host.appendChild(el("p","tip","像下棋一样：每回合选一句发出去，看它怎么应。<b>目标是逼出一句能核对的东西。</b><br>第 1 节。"));
+  const tb=el("div","turnbar");host.appendChild(tb);
+  const chat=el("div","chat");host.appendChild(chat);
+  const mv=el("div","moves");host.appendChild(mv);
+  let at="start",turns=0;
+  const drawT=()=>{tb.innerHTML="回合 "+turns+"　";for(let i=0;i<4;i++)tb.appendChild(el("i",i<turns?"used":""))};
+  const push=(c,w,t,win)=>{const m=el("div","msg "+c+(win?" win":""),'<span class="who">'+w+"</span>"+esc(t));
+    chat.appendChild(m);chat.scrollTop=chat.scrollHeight;J.dropIn(m);return m};
+  push("ai","AI",OPEN);drawT();
   function render(){
-    moves.innerHTML="";
-    const n=TREE[at];
+    mv.innerHTML="";const n=T[at];
     if(n.end){
-      if(n.end==="win"){ sfx.win(); buzz([14,40,14]);
-        verdict(host,true,"<b>"+turns+" 回合逼出来了。</b>它承认没有可引用的记录——这句话才是你要的东西。"+
-          (turns<=best?"<br><b>而且你走的是最短路线。</b>":"<br>最短路线是 <b>1 回合</b>：一上来就问「这个说法来自哪份记录」。"+
-          "「你确定吗」和「再详细一点」都只会让它把同一个猜测说得更漂亮。"));
-      }else{ sfx.bad(); buzz([12,60,12]);
-        verdict(host,false,"<b>你收下了一个没有出处的说法。</b>它从头到尾没给过任何可以核对的东西——只是说得越来越肯定。重来一次，试试直接问出处。");
-      }
-      return;
-    }
-    n.moves.forEach(mv=>{
-      const b=el("button","move",esc(mv.t));
-      b.onclick=()=>{
-        sfx.tick(); turns++; drawTurns();
-        push("me","你",mv.t);
-        at=mv.to;
-        const nx=TREE[at];
-        setTimeout(()=>{ if(nx.ai)push("ai","AI",nx.ai,nx.end==="win"); render() },340);
-        moves.innerHTML="";
-      };
-      moves.appendChild(b);
-    });
+      if(n.end==="win"){sfx.win();J.buzz([14,40,14]);
+        J.verdict(host,true,"<b>"+turns+" 回合逼出来了。</b>它承认没有直接引用的记录——<b>这句话才是你要的东西</b>。"+
+          (turns<=1?"<br><b>而且你走的是最短路线。</b>":"<br>最短路线是 <b>1 回合</b>：一上来就问「来自哪一份记录」。「你确定吗」和「再详细一点」只会让它把同一个猜测说得更漂亮。"))}
+      else{sfx.bad();J.verdict(host,false,"<b>你收下了一个没有出处的说法。</b>它从头到尾没给过任何能核对的东西，只是说得越来越肯定。重来一次，试试直接问记录。")}
+      return}
+    n.moves.forEach(m=>{const b=el("button","move",esc(m.t));
+      b.onclick=()=>{sfx.tick();turns++;drawT();push("me","你",m.t);at=m.to;
+        const nx=T[at];mv.innerHTML="";
+        setTimeout(()=>{if(nx.ai){const e=push("ai","AI",nx.ai,nx.end==="win");if(nx.end==="win"){J.burstAt(e,"var(--ok)",16);J.pop(e)}}render()},340)};
+      mv.appendChild(b)});
   }
   render();
 }
-
-/* ==================================================================
-   10 · 图上点位
-   ================================================================== */
-function bHotspot(host){
-  const SPOTS=[
-    {x:14,y:18,r:16,ok:false,t:"这是标题。它告诉你在讲什么，不告诉你依据在哪。"},
-    {x:50,y:44,r:22,ok:false,t:"这是正文。读起来最有说服力的部分，恰恰最需要出处。"},
-    {x:22,y:78,r:18,ok:true,t:"就是这里。这一行小字写着它引用了哪几份资料——<b>能点开的那种</b>。"},
-    {x:82,y:18,r:14,ok:false,t:"这是分享按钮。"}
-  ];
-  host.appendChild(el("p","tip","下面是一个 AI 回答页面的示意。<b>点一下</b>你会去哪里确认它用了什么资料。"));
+/* 10 图上点位 · 第 1 节 */
+function bHot(host){
+  const S=[{x:16,y:16,r:15,ok:false,t:"这是页面标题。它告诉你在看什么，不告诉你是谁拍的。"},
+    {x:50,y:42,r:24,ok:false,t:"这是图像本身。位置和颜色能在这里查，<b>但摄影者不会印在天上</b>。"},
+    {x:26,y:80,r:19,ok:true,t:"就是这里。<b>图像信息栏</b>——摄影者、拍摄日期、任务编号都在这一行。"},
+    {x:84,y:16,r:13,ok:false,t:"这是下载按钮。能拿到文件，不等于知道它的来历。"}];
+  host.appendChild(el("p","tip","这是 NASA 图像页的示意。<b>点一下</b>你会去哪里确认「这张照片是谁拍的」。<br>第 1 节。"));
   const shot=el("div","shot");
   shot.innerHTML='<div class="shotbar"><span>●</span><span>●</span><span>●</span>'+
-    '<span style="margin-left:8px">AI 回答</span><span style="margin-left:auto">分享</span></div>'+
-    '<div class="shotbody"><div style="font-weight:700;color:var(--ink-title);font-size:13.5px;margin-bottom:8px">关于这款设备的防水能力</div>'+
-    '<div class="fake" style="width:100%"></div><div class="fake" style="width:94%"></div>'+
-    '<div class="fake" style="width:88%"></div><div class="fake" style="width:97%"></div>'+
-    '<div class="fake" style="width:61%;margin-bottom:12px"></div>'+
+    '<span style="margin-left:8px">NASA 图像库</span><span style="margin-left:auto">下载</span></div>'+
+    '<div class="shotbody"><div style="font-weight:700;color:var(--ink-title);font-size:13.5px;margin-bottom:8px">Earthrise《地出》</div>'+
+    '<div style="height:74px;border-radius:8px;margin-bottom:10px;background:radial-gradient(ellipse 130% 80% at 50% 122%,#7d8894,#2e343b 44%,#07080b)"></div>'+
     '<div style="font-size:10.5px;color:var(--ink-faint);border-top:1px solid var(--line);padding-top:7px">'+
-    '参考资料 · 3 条　官方规格页 / 评测 A / 论坛帖</div></div>';
+    '图像信息　摄影者：Bill Anders　·　1968-12-24　·　阿波罗 8 号</div></div>';
   host.appendChild(shot);
   let done=false;
   shot.addEventListener("click",e=>{
-    if(done)return;
-    const r=shot.getBoundingClientRect();
-    const px=(e.clientX-r.left)/r.width*100, py=(e.clientY-r.top)/r.height*100;
-    const ring=el("div","ring2"); ring.style.left=(e.clientX-r.left)+"px"; ring.style.top=(e.clientY-r.top)+"px";
-    shot.appendChild(ring); setTimeout(()=>ring.remove(),700);
-    let hit=null,bestd=1e9;
-    SPOTS.forEach(s=>{const d=Math.hypot(px-s.x,py-s.y); if(d<s.r&&d<bestd){bestd=d;hit=s}});
+    if(done)return;const r=shot.getBoundingClientRect();
+    const px=(e.clientX-r.left)/r.width*100,py=(e.clientY-r.top)/r.height*100;
+    const ring=el("div","ring2");ring.style.left=(e.clientX-r.left)+"px";ring.style.top=(e.clientY-r.top)+"px";
+    shot.appendChild(ring);setTimeout(()=>ring.remove(),700);
+    let hit=null,bd=1e9;S.forEach(s=>{const d=Math.hypot(px-s.x,py-s.y);if(d<s.r&&d<bd){bd=d;hit=s}});
     const pin=el("div","pinmark "+(hit&&hit.ok?"ok":"no"),hit&&hit.ok?"✓":"·");
-    pin.style.left=(e.clientX-r.left)+"px"; pin.style.top=(e.clientY-r.top)+"px";
-    shot.appendChild(pin);
-    if(hit&&hit.ok){ done=true; sfx.good(); buzz(16);
-      verdict(host,true,hit.t+"<br><br><b>没有这一行的回答，你只能选择信或不信。</b>"); }
-    else { sfx.bad(); buzz([8,40,8]);
-      verdict(host,false,(hit?hit.t:"这里什么都没有。")+"　再找找：<b>哪里能让你打开原件？</b>"); }
-  });
+    pin.style.left=(e.clientX-r.left)+"px";pin.style.top=(e.clientY-r.top)+"px";shot.appendChild(pin);
+    if(hit&&hit.ok){done=true;J.burst(e.clientX,e.clientY,"var(--ok)",20);sfx.good();J.buzz(16);J.rock(shot);
+      J.verdict(host,true,hit.t+"<br><br><b>第 1 节的全部内容就是这一步</b>：画面里看得见的对着画面查，看不见的——回到这一行。")}
+    else{sfx.bad();J.buzz([8,40,8]);J.shake(shot);
+      J.verdict(host,false,(hit?hit.t:"这里什么都没有。")+"　再找找：<b>哪一行写着它的来历？</b>")}});
 }
-
-window.__B2=[
- {id:"balance",title:"证据天平",build:bBalance,
-  hand:"把证据<b>拖</b>到天平两端。天平真的会按分量倾斜。",
-  spec:"<b>教什么</b>：一个结论有没有被证据撑住，以及不同证据的分量不一样。<br><b>比原来强在哪</b>：仓库里的 <code>weigh</code> 是逐个情况选选项；这里是物理的——分量看得见，倾斜是结果不是判分。最妙的一块是「据我所知」：<b>分量 0，拖上去天平纹丝不动</b>。<br><b>载荷要什么</b>：一个结论、几条证据（各带分量和支持/反对）、至少一条 0 分量的诱饵。"},
- {id:"scrub",title:"时间轴擦洗",build:bScrub,
-  hand:"<b>拖游标</b>逐步回放一个 AI 多步任务，在你认为该停的那一步按叫停。",
-  spec:"<b>教什么</b>：多步任务在哪一步还来得及、哪一步已经出去了。<br><b>比原来强在哪</b>：仓库里的 <code>ai-repair</code> 有重放，但那是 943 行的大引擎；这块是它的轻量版，任何一节讲「先别急着让它执行」的课都能用。叫晚了不是判你错，是让你<b>拖回去看看那时候是什么样</b>。<br><b>载荷要什么</b>：几步，每步一句状态，标出哪一步起是不可逆的。"},
- {id:"word-bank",title:"拼句 + 发出去",build:bBank,
-  hand:"点词拼出一句要求，然后<b>真的发出去</b>，看 AI 按这句话回什么。",
-  spec:"<b>教什么</b>：一句要求写成什么样，才能换来一个你能动手用的回复。<br><b>比原来强在哪</b>：单纯拼句子在语言课里成立（手在排词序＝学词序），在 AI 课里不成立。<b>这里补了后果</b>——拼完要发出去，AI 的回复随你拼的句子变。拼对了它说出「缺失」，拼了「写得好一点」它只会夸你。<br><b>载荷要什么</b>：正确句子的分段、几个诱饵词、每种拼法对应的一条回复。"},
- {id:"branch",title:"对话残局",build:bBranch,
-  hand:"每回合从几句话里<b>选一句发出去</b>，看它怎么应，最多四回合。",
-  spec:"<b>教什么</b>：多轮追问怎么逼出可核对的东西，以及哪些问法只会让它把猜测说得更漂亮。<br><b>比原来强在哪</b>：这是仓库里完全没有的形状，来自象棋残局——给一个局面，走一步，看应手。走完会告诉你<b>最短路线是几步</b>，你走了几步。<br><b>载荷要什么</b>：一棵对话树，每个节点几句可选的话 + 对方的回应，标出终局是赢是输。"},
- {id:"hotspot",title:"图上点位",build:bHotspot,
-  hand:"在界面示意图上<b>点一下</b>你要去的位置，命中有涟漪。",
-  spec:"<b>教什么</b>：在真实界面里找到「依据在哪」——不是背概念，是认位置。<br><b>比原来强在哪</b>：仓库里没有任何一种是在图上操作的。点错的地方会告诉你<b>那是什么</b>，而不是只说错了。<br><b>载荷要什么</b>：一张界面示意、几个热区坐标、每个热区一句说明、哪个是对的。"}
+return [
+ {id:"drag-sort",title:"拖拽分拣",from:"—",build:bSort,hand:"抓起一张卡，<b>拖</b>进某一堆。松手吸进去，拖到空处弹回来。",spec:"<b>用的是</b>第 1 节《地出》：画面能查 vs 记录能查。<br>这一版加了连击条和粒子——落袋那一下现在有反馈了。"},
+ {id:"wire",title:"拉线连接",from:"—",build:bWire,hand:"从左边<b>按住往右拉</b>，线跟着手指走。",spec:"<b>用的是</b>第 1 节的三分法，第三条「他屏住了呼吸」是两边都对不了的那一类。"},
+ {id:"live-dial",title:"实时旋钮",from:"Brilliant",build:bDial,hand:"<b>拖滑块</b>，三条指标当场重算，三条门槛都画在轨道上。",spec:"<b>用的是</b>第 3 节：材料多少 × 必留条件几条。到绿区时有粒子和音效。"},
+ {id:"mark",title:"划词标记",from:"—",build:bMark,hand:"在文字上<b>按住划过</b>。",spec:"<b>用的是</b>第 1 节：一段《地出》说明里，哪一句没法拿去核对。划错那段会自己说出它的依据。"},
+ {id:"rank",title:"拖拽排序",from:"—",build:bRank,hand:"上下<b>拖动</b>，其他项自己让位。排对了整列依次亮起并奏出音阶。",spec:"<b>用的是</b>第 3 节的工作顺序：先定成品 → 再写条件 → 发出去 → 逐条核。"},
+ {id:"balance",title:"证据天平",from:"—",build:bBal,hand:"把证据<b>拖</b>上秤盘，天平按分量真的倾斜。",spec:"<b>用的是</b>第 1 节：「这张照片是 Bill Anders 拍的」站不站得住。那条「据我所知」分量是 0，拖上去天平纹丝不动。"},
+ {id:"scrub",title:"时间轴擦洗",from:"—",build:bScrub,hand:"<b>拖游标</b>逐步看，在该停的那一步按叫停。",spec:"<b>用的是</b>第 2 节：一段录音的五步处理，<b>哪一步之后原话就不能逐字核对了</b>。停早了也会告诉你为什么早。"},
+ {id:"word-bank",title:"拼句 + 发出去",from:"—",build:bBank,hand:"点词拼句，然后<b>真的发出去</b>，看 AI 按这句话回什么。",spec:"<b>用的是</b>第 3 节的 NASA 公告。单纯拼句在 AI 课里不成立，所以这里补了后果。"},
+ {id:"branch",title:"对话残局",from:"棋类残局",build:bBranch,hand:"每回合<b>选一句发出去</b>，看它怎么应，最多四回合。",spec:"<b>用的是</b>第 1 节：追问「谁拍的」直到它承认没有直接引用的记录。走完告诉你最短几步。"},
+ {id:"hotspot",title:"图上点位",from:"—",build:bHot,hand:"在 NASA 图像页示意上<b>点一下</b>，命中有涟漪。",spec:"<b>用的是</b>第 1 节：摄影者写在哪一行。点错的地方会告诉你那是什么。"}
 ];
 })();
 </script>
 <script>
 (function(){
-const K=window.__K, el=K.el, page=K.page;
-/* 仓库里已有的十三种，出自 packages/ui/src/learning-play */
-const HAVE=[
- ["connect","解释依赖、原因与结果","点选建边","真课用过 6 次"],
- ["sort","划界与归类","点条目再点格","7 次 · 最常用"],
- ["contrast","两种做法什么时候分开","逐情况预测","5 次"],
- ["weigh","一笔取舍买到什么、代价是什么","逐情况选项","3 次"],
- ["tune","多变量取舍，找可行解","拖滑块后提交","1 次"],
- ["hunt","边界测试，反驳一条规则","输数值试探","0 次"],
- ["dispatch","资源复用、预算下的调度","按顺序分派","1 次"],
- ["program","顺序、方向、循环","网格走位","0 次"],
- ["ai-brief","把含糊要求钉成能验收的行为","选条款后验收","0 次"],
- ["ai-context","为 AI 选取充分、有来源的材料","装材料再生成","1 次"],
- ["ai-agent","工具能力、任务授权、材料里的指令","给权限跑动作","1 次"],
- ["ai-eval","先定要求和测试，再检验边界","冻结用例逐条跑","1 次"],
- ["ai-repair","用可复现证据要求 AI 小步修改","双版重放对照","1 次"]
-];
+const J=window.JX, el=J.el, page=document.getElementById("page");
+const HAVE=[["connect","解释依赖、原因与结果","点选建边","6 次"],["sort","划界与归类","点条目再点格","7 次 · 最常用"],
+ ["contrast","两种做法什么时候分开","逐情况预测","5 次"],["weigh","一笔取舍","逐情况选项","3 次"],
+ ["tune","多变量取舍","拖滑块后提交","1 次"],["hunt","边界测试","输数值试探","0 次"],
+ ["dispatch","预算下的调度","按顺序分派","1 次"],["program","顺序、方向、循环","网格走位","0 次"],
+ ["ai-brief","把含糊要求钉成能验收的行为","选条款后验收","0 次"],["ai-context","为 AI 选材料","装材料再生成","1 次"],
+ ["ai-agent","能力、授权、材料里的指令","给权限跑动作","1 次"],["ai-eval","先定测试再检验边界","冻结用例逐条跑","1 次"],
+ ["ai-repair","用可复现证据要求小步修改","双版重放对照","1 次"]];
 const head=el("div","masthead");
 head.innerHTML='<h1>互动积木库</h1>'+
- '<p>这一页只管<b>积木本身好不好玩</b>，不管一节课怎么搭。每一块都能当场上手，'+
- '右上角「重来」随时从头。<b>没有判分，没有生命值</b>——答错时对象自己演示为什么。</p>'+
- '<p style="color:var(--ink-faint);font-size:13px">做法上偷了三家：多邻国的<b>节奏</b>（每几秒一次输入）、'+
- 'Brilliant 的<b>可拖的图</b>和「答错时图自己变给你看」、棋类的<b>残局</b>（给一个局面，走一步，看应手）。'+
- '每一块下面都写了它比仓库里现有的那种强在哪。</p>';
+ '<p>这一页只管<b>积木本身好不好玩</b>，不管一节课怎么搭。每一块都能当场上手，右上角「重来」随时从头。</p>'+
+ '<p><b>二十块的内容全部来自同三节课</b>——《认识 AI，从这里开始》第一单元的前三节。'+
+ '同一段内容会在好几块里重复出现，那正是要验证的事：<b>换一种玩法，同一个判断还成不成立。</b></p>'+
+ '<p style="color:var(--ink-faint);font-size:13px">这一轮先调研再设计。偷了六家：'+
+ '<b>Papers, Please</b>（拿规则表逐条对文件，然后盖章）、<b>Return of the Obra Dinn</b>（攒够三条才一起确认，堵死一个个试）、'+
+ '<b>Blooket / Gimkit</b>（同一批内容换节奏、连对涨倍率）、<b>Brilliant</b>（可以拖的图，答错时图自己变）、'+
+ '<b>Duolingo Music</b>（顺序对了耳朵先知道）、<b>Her Story</b>（用关键词在档案里捞真相）。'+
+ '另外补了一层共享的<b>手感底座</b>：squash&amp;stretch、抖动、粒子、浮字、连击条、音效——'+
+ '调研里反复出现的一句话是「feel 是玩家继续玩下去的最大原因」。</p>';
 page.appendChild(head);
 page.appendChild(el("div","rule"));
-
-const s1=el("div","secttl",'<h2>仓库里已经有的</h2><span>13 种 · packages/ui/src/learning-play</span>');
-page.appendChild(s1);
-page.appendChild(el("p","sectsub","这些已经实现并且在真课里用过。最右边是它在全部 469 节课里被用到的次数——便宜的四种扛了绝大部分，三种一次都没用过。"));
+page.appendChild(el("div","secttl",'<h2>仓库里已经有的</h2><span>13 种 · learning-play</span>'));
+page.appendChild(el("p","sectsub","最右边是它在全部 469 节课里被用到的次数。"));
 const hv=el("div","have");
-HAVE.forEach(([id,what,how,used])=>{
-  hv.appendChild(el("div","haverow","<code>"+id+"</code><em>"+what+"　·　"+how+"</em><i>"+used+"</i>"));
-});
+HAVE.forEach(([a,b,c,d])=>hv.appendChild(el("div","haverow","<code>"+a+"</code><em>"+b+"　·　"+c+"</em><i>"+d+"</i>")));
 page.appendChild(hv);
 page.appendChild(el("div","rule"));
-
-const s2=el("div","secttl",'<h2>新做的，更游戏化的</h2><span>10 块 · 都能玩</span>');
-page.appendChild(s2);
-page.appendChild(el("p","sectsub","共同的规矩：手上的动作要和课要教的判断是同一个动作；答错了让对象演示，不给一段说明；随便试，试错不花钱。"));
-
-[].concat(window.__B1,window.__B2).forEach(b=>K.block(b));
-
+page.appendChild(el("div","secttl",'<h2>上一轮的十块 · 这一轮换了内容、加了手感</h2><span>10 块</span>'));
+page.appendChild(el("p","sectsub","每一块的示例都换成了前三节课的真实内容，并接上了共享的手感底座：粒子、浮字、连击、抖动、音效。"));
+window.OLDB.forEach(b=>J.block(page,b));
 page.appendChild(el("div","rule"));
-const tail=el("p","sectsub");
-tail.innerHTML="这些是积木，不是课。怎么把它们和一节课的六段骨架搭起来，是另一件事——"+
- "见 <code>docs/reference/interaction-density-research.md</code> §12。";
-page.appendChild(tail);
+page.appendChild(el("div","secttl",'<h2>这一轮新做的</h2><span>10 块 · 每块注明灵感出处</span>'));
+page.appendChild(el("p","sectsub","先调研再设计。每一块上面都写着它偷自哪个产品或哪个游戏，以及为什么那个机制值得偷。"));
+[].concat(window.NEWB1,window.NEWB2).forEach(b=>J.block(page,b));
+page.appendChild(el("div","rule"));
+const t=el("p","sectsub");
+t.innerHTML="二十块都是积木，不是课。怎么和一节课的六段骨架搭起来，见 <code>docs/reference/interaction-density-research.md</code> §12。"+
+ "<br><b>没有真人玩过</b>，所以「好玩」还是我的判断，不是证据。";
+page.appendChild(t);
 })();
 </script>
