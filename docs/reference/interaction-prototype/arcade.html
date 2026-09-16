@@ -370,6 +370,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .foe.revealed.pic{background:var(--ok-pale);border-color:var(--ok);color:var(--ok-ink)}
 .foe.revealed.rec{background:var(--berry-pale);border-color:var(--berry);color:var(--berry-ink)}
 .foe.hurt{animation:jxshake .3s}
+.foe.diving{border-color:var(--accent);border-width:3px;box-shadow:0 0 0 4px #e8743b3d,var(--sh);z-index:11}
 .shot{position:absolute;width:4px;height:14px;border-radius:2px;z-index:12}
 
 /* 场地 */
@@ -456,6 +457,140 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .cz-rev p{margin:0 0 7px;font-size:12.5px;line-height:1.55;opacity:.92}
 .cz-rev p:last-child{margin-bottom:0}
 .cz-rev b{color:var(--accent-bright)}
+
+/* ================= 检查条件防线（塔防 / 植物大战僵尸） ================= */
+.dl-say{position:absolute;top:0;left:0;right:0;z-index:20;padding-block:7px;padding-inline:11px;
+  background:var(--panel-2);border-bottom:1px solid var(--line);font-size:12px;line-height:1.45;
+  color:var(--ink-soft);display:flex;gap:8px;align-items:center}
+.dl-say b{color:var(--accent-ink);font-weight:700;flex:none}
+.dl-say .pow{margin-left:auto;flex:none;font-family:var(--num);font-weight:700;font-size:14px;
+  color:var(--ink-title);background:var(--bg-deep);border-radius:var(--r-pill);
+  padding-block:2px;padding-inline:9px}
+.dl-field{position:absolute;top:34px;bottom:44px;left:8px;right:8px;z-index:4}
+.dl-slot{position:absolute;left:0;right:0;height:52px;border-radius:11px;
+  border:2px dashed var(--line-2);background:#0000000a;
+  display:flex;align-items:center;gap:8px;padding-inline:10px;font-size:12.5px;
+  color:var(--ink-faint);cursor:pointer;transition:border-color .15s,background .15s}
+:root[data-theme="dark"] .dl-slot,
+:root:not([data-theme="light"]) .dl-slot{background:#ffffff08}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .dl-slot{background:#0000000a}}
+.dl-slot.build:hover{border-color:var(--accent);background:var(--accent-pale)}
+.dl-slot.on{border-style:solid;border-color:var(--ok);background:var(--ok-pale);color:var(--ok-ink);
+  font-weight:600;cursor:default}
+.dl-slot.on.build{cursor:pointer}
+.dl-slot.fires{animation:dlfire .4s}
+@keyframes dlfire{40%{background:var(--ok);color:#fff;transform:scale(1.02)}}
+.dl-slot .no{flex:none;width:20px;height:20px;border-radius:50%;background:var(--bg-deep);
+  color:var(--ink-faint);font-family:var(--num);font-size:11px;font-weight:700;
+  display:grid;place-items:center}
+.dl-slot.on .no{background:var(--ok);color:#fff}
+.dl-slot .cost{margin-left:auto;flex:none;font-family:var(--num);font-size:11px;color:var(--ink-faint)}
+.dl-doc{position:absolute;left:0;right:0;border-radius:11px;background:var(--panel);
+  border:2px solid var(--line-2);box-shadow:var(--sh);padding-block:8px;padding-inline:11px;
+  font-size:13px;line-height:1.45;color:var(--ink);z-index:12;
+  transition:top .26s cubic-bezier(.3,.9,.4,1);min-height:48px;display:flex;align-items:center}
+.dl-doc .ask{display:block;font-size:11px;color:var(--ink-faint);margin-bottom:2px}
+.dl-doc.stop{animation:dlstop .38s forwards}
+@keyframes dlstop{50%{transform:scale(1.04);border-color:var(--ok);background:var(--ok-pale)}
+  100%{transform:scale(.82);opacity:0}}
+.dl-doc.pass{border-color:var(--ok);background:var(--ok-pale)}
+.dl-doc.leak{border-color:var(--warn);background:var(--warn-pale)}
+.dl-in{position:absolute;top:2px;left:0;right:0;z-index:2;text-align:center;font-size:10.5px;
+  letter-spacing:.04em;color:var(--ink-faint);pointer-events:none}
+.dl-reader{position:absolute;left:8px;right:8px;bottom:6px;height:36px;z-index:6;
+  border-radius:10px;background:var(--bg-deep);border:2px solid var(--line-2);
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  font-size:12px;font-weight:700;color:var(--ink-soft)}
+.dl-reader.hurt{animation:jxshake .32s;border-color:var(--warn);background:var(--warn-pale);color:var(--warn-ink)}
+.dl-reader.glad{border-color:var(--ok);background:var(--ok-pale);color:var(--ok-ink)}
+.dl-shop{position:absolute;left:8px;right:8px;top:38px;bottom:46px;z-index:30;border-radius:14px;
+  background:var(--panel);border:2px solid var(--line-2);box-shadow:var(--sh-lift);
+  padding-block:8px;padding-inline:9px;overflow-y:auto}
+.dl-shophd{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:11.5px;
+  font-weight:700;color:var(--ink-faint)}
+.dl-shophd .now{font-weight:400;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dl-shophd .x{flex:none;width:22px;height:22px;border-radius:50%;background:var(--bg-deep);
+  color:var(--ink-soft);font-size:15px;line-height:1;display:grid;place-items:center}
+.dl-pick{display:flex;align-items:center;gap:9px;width:100%;text-align:left;margin-bottom:5px;
+  border-radius:10px;border:2px solid var(--line);background:var(--panel-2);
+  padding-block:7px;padding-inline:10px;font-size:12.5px;line-height:1.3;color:var(--ink-title)}
+.dl-pick:last-child{margin-bottom:0}
+.dl-pick em{display:block;font-style:normal;font-size:10.5px;color:var(--ink-faint);margin-top:1px}
+.dl-pick .p{margin-left:auto;flex:none;font-family:var(--num);font-weight:700;font-size:13px;color:var(--accent-ink)}
+.dl-pick:disabled{opacity:.4}
+.dl-pick.off .p{color:var(--warn)}
+.dl-pick:active:not(:disabled){transform:translateY(1px)}
+.dl-go{position:absolute;right:8px;bottom:48px;z-index:28;border-radius:var(--r-pill);
+  background:var(--accent);color:#fff;font-weight:700;font-size:14px;letter-spacing:.06em;
+  padding-block:10px;padding-inline:20px;border-bottom:3px solid #0000004d}
+.dl-go:active{transform:translateY(2px);border-bottom-width:1px}
+.dl-hint{position:absolute;left:8px;bottom:52px;z-index:26;font-size:11.5px;color:var(--ink-faint);
+  max-width:58%;line-height:1.4}
+.dl-rev{max-height:150px;overflow-y:auto;text-align:left;background:#0000004d;border-radius:11px;
+  padding-block:9px;padding-inline:11px;margin-bottom:13px;width:100%;max-width:340px;flex:none}
+.dl-rev p{margin:0 0 8px;font-size:12px;line-height:1.5;opacity:.93}
+.dl-rev p:last-child{margin-bottom:0}
+.dl-rev b{color:var(--accent-bright)}
+
+/* ================= 值班室（Papers, Please 的一整天） ================= */
+.sf-news{position:absolute;top:0;left:0;right:0;z-index:18;padding-block:8px;padding-inline:11px;
+  background:var(--accent-pale);border-bottom:2px solid var(--accent);
+  font-size:12px;line-height:1.5;color:var(--accent-ink)}
+:root[data-theme="dark"] .sf-news,
+:root:not([data-theme="light"]) .sf-news{color:var(--ink-title)}
+.sf-news b{font-weight:700}
+.sf-news .d{display:block;font-family:var(--num);font-size:10.5px;letter-spacing:.12em;
+  font-weight:700;opacity:.75;margin-bottom:2px}
+.sf-body{position:absolute;left:8px;right:8px;bottom:6px;z-index:6;display:flex;flex-direction:column;gap:7px}
+.sf-book{border-radius:12px;background:var(--panel-2);border:1px solid var(--line);
+  padding-block:7px;padding-inline:8px}
+.sf-book h6{margin:0 0 5px;font-size:10.5px;font-family:var(--num);letter-spacing:.1em;
+  color:var(--ink-faint);font-weight:700;display:flex;gap:6px;align-items:center}
+.sf-book h6 i{font-style:normal;margin-left:auto;font-family:var(--zh);letter-spacing:0;font-weight:400}
+.sf-rule{display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  padding-block:5px;padding-inline:5px;border-radius:8px;font-size:12.5px;line-height:1.3;
+  color:var(--ink);border:1px solid transparent}
+.sf-rule+.sf-rule{margin-top:2px}
+.sf-rule .bx{flex:none;width:19px;height:19px;border-radius:6px;background:var(--bg-deep);
+  border:1px solid var(--line-2);color:transparent;font-size:12px;font-weight:700;
+  display:grid;place-items:center;line-height:1}
+.sf-rule.yes .bx{background:var(--ok);border-color:var(--ok);color:#fff}
+.sf-rule.no  .bx{background:var(--warn);border-color:var(--warn);color:#fff}
+.sf-rule.fresh{border-color:var(--accent);background:var(--accent-pale)}
+.sf-rule.fresh::after{content:"新";flex:none;font-size:10px;font-weight:700;color:var(--accent-ink);
+  background:var(--panel);border-radius:5px;padding-inline:4px;margin-left:auto}
+.sf-rule.missed{border-color:var(--warn);background:var(--warn-pale)}
+.sf-rule em{font-style:normal;font-size:10.5px;color:var(--ink-faint);margin-left:4px}
+.sf-paper{border-radius:12px;background:var(--panel);border:2px solid var(--line-2);
+  box-shadow:var(--sh);padding-block:10px;padding-inline:11px;font-size:13.5px;line-height:1.55;
+  color:var(--ink);position:relative;min-height:74px;display:flex;flex-direction:column;justify-content:center}
+.sf-paper .ph{font-family:var(--num);font-size:10px;letter-spacing:.1em;color:var(--ink-faint);
+  margin-bottom:4px;font-weight:600;padding-right:62px}
+.sf-paper .ask{display:block;font-size:11px;color:var(--accent-ink);margin-bottom:3px;font-weight:600}
+.sf-paper.in{animation:sfin .3s}
+@keyframes sfin{from{opacity:0;transform:translateY(10px) rotate(-1deg)}}
+.sf-ink{position:absolute;right:8px;top:6px;transform:rotate(-11deg);
+  font-family:var(--num);font-weight:700;font-size:16px;letter-spacing:.08em;
+  border:3px solid;border-radius:7px;padding-block:2px;padding-inline:8px;opacity:0}
+.sf-ink.on{opacity:.85;animation:sfstamp .26s}
+.sf-ink.pass{color:var(--ok-ink);border-color:var(--ok)}
+.sf-ink.fail{color:var(--warn-ink);border-color:var(--warn)}
+@keyframes sfstamp{from{transform:rotate(-11deg) scale(2.4);opacity:0}}
+.sf-say{border-radius:11px;padding-block:7px;padding-inline:10px;font-size:12px;line-height:1.5;
+  color:#fff;background:var(--warn)}
+.sf-say.ok{background:var(--ok)}
+.sf-say b{color:#ffeccd}
+.sf-btns{display:flex;gap:8px}
+.sf-btn{flex:1;border-radius:11px;padding-block:11px;font-size:14.5px;font-weight:700;letter-spacing:.14em;
+  color:#fff;border-bottom:3px solid #0000004d}
+.sf-btn.pass{background:var(--ok)} .sf-btn.fail{background:var(--warn)}
+.sf-btn:active:not(:disabled){transform:translateY(2px);border-bottom-width:1px}
+.sf-btn:disabled{opacity:.45}
+.sf-rev{max-height:150px;overflow-y:auto;text-align:left;background:#0000004d;border-radius:11px;
+  padding-block:9px;padding-inline:11px;margin-bottom:13px;width:100%;max-width:340px;flex:none}
+.sf-rev p{margin:0 0 7px;font-size:12.5px;line-height:1.5;opacity:.93}
+.sf-rev p:last-child{margin-bottom:0}
+.sf-rev b{color:var(--accent-bright)}
 </style>
 <div class="page" id="page"></div>
 <script>
@@ -626,7 +761,7 @@ function gStack(screen,api,gen){
     raf=requestAnimationFrame(step);
   }
   function over(){
-    playing=false; cancelAnimationFrame(raf); S.over();
+    playing=false; S.over();
     api.overlay('<div class="big">'+score+'</div><div class="sub">清掉 '+cleared+" 条 · 最长连对 "+best+"</div>"+
       "<h4>堆起来的那些，是你没分清的</h4>"+
       "<p>方块不会因为你答错就直接结束——它<b>堆在那一列</b>，你看着它涨。"+
@@ -725,7 +860,7 @@ function gSlice(screen,api,gen){
   const stop=()=>{cutting=false;pts=[];path.setAttribute("points","")};
   screen.addEventListener("pointerup",stop); screen.addEventListener("pointercancel",stop);
   function over(){
-    playing=false; cancelAnimationFrame(raf); S.over();
+    playing=false; S.over();
     api.overlay('<div class="big">'+score+'</div><div class="sub">最长连切 '+best+" · 漏掉 "+missed+" · 收错 "+bombs+"</div>"+
       "<h4>"+(bombs?"这几句你收下了，但它们核不了":"你一句没依据的都没收")+"</h4>"+
       (wrongCuts.length?'<p style="text-align:left">'+wrongCuts.map(t=>"· <b>"+esc(t)+"</b>").join("<br>")+"</p>":"")+
@@ -760,16 +895,21 @@ const A=window.AR, el=A.el, esc=A.esc, clamp=A.clamp, rnd=A.rnd, S=A.S;
    3 · 双武器拦截（小蜜蜂的逻辑）
    ================================================================== */
 const FOES=[["地球在月面上方","pic"],["天空是黑色的","pic"],["地球是蓝白色的","pic"],["月面灰白","pic"],
- ["是谁拍的","rec"],["哪一天拍的","rec"],["哪次任务","rec"],["是不是官方图像","rec"]];
+ ["月面上有环形山","pic"],["地球只露出一半","pic"],["画面里看不到星星","pic"],
+ ["是谁拍的","rec"],["哪一天拍的","rec"],["哪次任务","rec"],["是不是官方图像","rec"],
+ ["用的哪一台相机","rec"],["这是绕月第几圈","rec"],["有没有公开版权说明","rec"]];
 function gInvaders(screen,api,gen){
+  const WAVES=10, CHALLENGE=[5,10];   /* 第 5、10 波是挑战关：不下压，限时清场 */
   const band=el("div","bandrow",'<div class="bl">看照片</div><div class="br">查记录</div>');
   screen.appendChild(band);
   const ship=el("div","ship",'<div class="body"></div>');
   screen.appendChild(ship);
-  let sx=0.5,mode="pic",foes=[],shots=[],raf=0,playing=false,lives=3,score=0,killed=0,t=0,fire=0,wave=1;
-  function hud(){ api.hud('<span>分数 <b>'+score+"</b></span><span>第 <b>"+wave+
-    '</b> 波</span><span class="sp">命 </span><span class="life">'+
-    [0,1,2].map(i=>'<i class="'+(i<lives?"":"out")+'"></i>').join("")+"</span>") }
+  let sx=0.5,mode="pic",foes=[],shots=[],raf=0,playing=false,lives=3,score=0,killed=0,
+      t=0,fire=0,wave=1,rate=22,slow=1,lastDive=0,chT=0,wrongs=[],dove=0,paused=false;
+  const isCh=()=>CHALLENGE.indexOf(wave)>=0;
+  function hud(){ api.hud('<span>分数 <b>'+score+"</b></span><span>第 <b>"+wave+" / "+WAVES+
+    (isCh()?" 挑战":"")+'</b> 波</span><span class="sp">命 </span><span class="life">'+
+    [0,1,2,3].map(i=>'<i class="'+(i<lives?"":"out")+'"></i>').join("")+"</span>") }
   function setShip(){ const W=screen.clientWidth;
     ship.style.left=(sx*W)+"px"; mode=sx<0.5?"pic":"rec";
     ship.classList.toggle("rec",mode==="rec") }
@@ -780,70 +920,126 @@ function gInvaders(screen,api,gen){
   function spawn(){
     const pool=FOES.slice();
     for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t2=pool[i];pool[i]=pool[j];pool[j]=t2}
-    const n=Math.min(3+wave,6);
+    const n=isCh()?6:Math.min(4+Math.floor(wave/1.1),9);
     pool.slice(0,n).forEach((f,i)=>{
       const e=el("div","foe",esc(f[0])); e.dataset.kind=f[1];
       e.style.left="10%"; e.style.top=(-30-i*46)+"px";
       screen.appendChild(e);
-      foes.push({n:e,kind:f[1],x:rnd(.15,.85),y:-30-i*46,vx:(i%2?1:-1)*rnd(.0016,.0032),sp:1});
+      foes.push({n:e,kind:f[1],txt:f[0],x:rnd(.15,.85),y:-30-i*46,
+        vx:(i%2?1:-1)*rnd(.0016,.0032),sp:1,dv:false});
     });
+    chT=isCh()?t:0; lastDive=t;
+  }
+  function loseLife(){
+    lives--; S.hurt(); A.buzz([20,60,20]); A.shakeEl(screen); hud();
+    return lives<=0;
   }
   function step(ts){
-    if(!api.alive(gen)||!playing)return;
+    if(!api.alive(gen)||!playing||paused)return;
     t++;
     const W=screen.clientWidth,H=screen.clientHeight;
-    if(t-fire>22){ fire=t;
+    if(t-fire>rate){ fire=t;
       const b=el("div","shot"); b.style.background=mode==="pic"?"var(--ok)":"var(--berry)";
       b.style.left=(sx*W-2)+"px"; b.style.top=(H-70)+"px";
       screen.appendChild(b); shots.push({n:b,x:sx*W,y:H-70,kind:mode}); S.pew(); }
     shots.forEach(s=>{ s.y-=7; s.n.style.top=s.y+"px"; if(s.y<-16){s.dead=true;s.n.remove()} });
+    /* 俯冲：每隔一阵子，编队里挑一个扑下来。打中俯冲中的那个双倍分。 */
+    if(!isCh()&&t-lastDive>200&&foes.length){
+      const cand=foes.filter(f=>!f.dv&&f.y>10);
+      if(cand.length){ const f=cand[Math.floor(Math.random()*cand.length)];
+        f.dv=true; f.n.classList.add("diving"); lastDive=t; S.pew() }
+    }
     foes.forEach(f=>{
-      f.x+=f.vx*f.sp; if(f.x<.12||f.x>.88){f.vx*=-1}
-      f.y+=0.28*f.sp+wave*0.03;
+      if(f.dv){ f.y+=(2.0+wave*0.08)*slow; f.x+=(sx-f.x)*0.035 }
+      else{
+        f.x+=f.vx*f.sp; if(f.x<.12||f.x>.88){f.vx*=-1}
+        if(!isCh())f.y+=(0.28*f.sp+wave*0.03)*slow;
+        else f.y=clamp(f.y+Math.sin((t+f.x*90)/40)*0.35,20,H-150);
+      }
       f.n.style.left=(f.x*W)+"px"; f.n.style.top=f.y+"px";
       f.n.style.transform="translateX(-50%)";
-      if(f.y>H-78){ f.dead=true; f.n.remove(); lives--; S.hurt(); A.buzz([20,60,20]); A.shakeEl(screen); hud();
-        if(lives<=0)return over(false) }
+      if(f.y>H-78){ f.dead=true; f.n.remove();
+        if(!isCh()&&loseLife())return over(false) }
       shots.forEach(s=>{
-        if(s.dead||f.dead)return;
+        if(s.dead||f.dead||f.y<6)return;   /* 还没进场 = 还读不到 = 打不中 */
         const b=f.n.getBoundingClientRect(), r=screen.getBoundingClientRect();
         const bx=b.left-r.left+b.width/2, by=b.top-r.top+b.height/2;
         if(Math.abs(s.x-bx)<b.width/2+6&&Math.abs(s.y-by)<b.height/2+8){
           s.dead=true; s.n.remove();
-          if(s.kind===f.kind){ f.dead=true; killed++; score+=15;
+          if(s.kind===f.kind){ f.dead=true; killed++;
+            const g=f.dv?30:15; score+=g; if(f.dv)dove++;
             S.zap(); A.buzz(12); A.burst(b.left+b.width/2,b.top+b.height/2,
-              f.kind==="pic"?"var(--ok)":"var(--berry)",14);
-            A.floatTag(b.left+b.width/2,b.top,"+15","var(--ok-ink)"); f.n.remove(); hud(); }
+              f.kind==="pic"?"var(--ok)":"var(--berry)",f.dv?22:14);
+            A.floatTag(b.left+b.width/2,b.top,"+"+g+(f.dv?"　打下俯冲":""),"var(--ok-ink)");
+            f.n.remove(); hud(); }
           else{ f.sp=Math.min(2.6,f.sp+0.55);
             /* 打错了才揭示它到底该用哪种方式——这才是纠正 */
             f.n.classList.add("revealed",f.kind);
             f.n.classList.remove("hurt");void f.n.offsetWidth;
             f.n.classList.add("hurt"); S.hurt(); A.buzz(8);
+            if(!wrongs.some(w=>w[0]===f.txt))wrongs.push([f.txt,f.kind]);
             A.floatTag(b.left+b.width/2,b.top,
               f.kind==="pic"?"这个看照片就知道":"这个得查记录","var(--warn)"); }
         }
       });
     });
     shots=shots.filter(s=>!s.dead); foes=foes.filter(f=>!f.dead);
-    if(!foes.length){ wave++; if(wave>4)return over(true); spawn(); hud() }
-    api.time(lives/3);
+    if(isCh()){
+      const left=1-(t-chT)/(12*60); api.time(clamp(left,0,1));
+      if(left<=0&&foes.length){ foes.forEach(f=>f.n.remove()); foes=[] }
+    } else api.time(lives/4);
+    if(!foes.length){
+      if(wave>=WAVES)return over(true);
+      return between();
+    }
     raf=requestAnimationFrame(step);
   }
+  /* 波间三选一：调研里说这是把一局从一分钟拉到三分钟最有效的那件事 */
+  function between(){
+    paused=true; cancelAnimationFrame(raf);
+    const bonus=isCh()?"<p><b>挑战关过了 +60</b></p>":"";
+    if(isCh())score+=60;
+    const opts=[["射得更快","开火间隔缩短，手上更跟得上"],
+                ["补一条命","多挨一次撞"],
+                ["下一波慢 25%","给你多一点读字的时间"]];
+    const ov=api.overlay("<h4>第 "+wave+" 波清了</h4>"+bonus+
+      "<p>分数 <b>"+score+"</b> · 打下俯冲 <b>"+dove+"</b> 次<br>挑一样带进下一波：</p>","",null);
+    opts.forEach((o,i)=>{
+      const b=el("button","playbtn",o[0]);
+      b.style.cssText="margin-top:8px;font-size:14px;padding-block:10px;padding-inline:20px";
+      const go=e=>{ e&&e.preventDefault&&e.preventDefault();
+        if(i===0)rate=Math.max(11,rate-4);
+        if(i===1)lives=Math.min(4,lives+1);
+        if(i===2)slow=0.75;
+        ov.remove(); wave++; if(i!==2)slow=1;
+        paused=false; spawn(); hud();
+        cancelAnimationFrame(raf); raf=requestAnimationFrame(step) };
+      b.addEventListener("pointerdown",go); b.addEventListener("click",go);
+      ov.appendChild(b);
+    });
+  }
   function over(win){
-    playing=false; cancelAnimationFrame(raf); win?S.pow():S.over();
-    api.overlay('<div class="big">'+score+'</div><div class="sub">打掉 '+killed+" 条 · 到第 "+wave+" 波</div>"+
-      "<h4>"+(win?"四波都挡住了":"被压到底线了")+"</h4>"+
+    playing=false; paused=false; cancelAnimationFrame(raf); win?S.pow():S.over();
+    api.overlay('<div class="big">'+score+'</div><div class="sub">打掉 '+killed+" 条 · 打下俯冲 "+dove+
+      " 次 · 到第 "+wave+" / "+WAVES+" 波</div>"+
+      "<h4>"+(win?"十波全挡住了":"被压到底线了")+"</h4>"+
+      (wrongs.length?"<div class='sf-rev'>"+wrongs.slice(0,7).map(w=>
+        "<p>"+esc(w[0])+" — <b>"+(w[1]==="pic"?"看照片就知道":"得查记录")+"</b></p>").join("")+"</div>"
+        :"<p>一条都没用错工具。</p>")+
       "<p>敌人<b>长得一模一样</b>，颜色不会告诉你答案——你只能读它写的那句话，"+
-      "然后决定：这件事<b>看照片就知道</b>，还是<b>非查记录不可</b>。<br>"+
-      "打错了它才会亮出自己的颜色，同时加速冲下来。这就是这一节的意思："+
-      "<b>拿错工具去查，不是没进展，是更糟。</b></p>",
+      "然后决定：这件事<b>看照片就知道</b>，还是<b>非查记录不可</b>。"+
+      "<br>打错了它才会亮出自己的颜色，同时加速冲下来：<b>拿错工具去查，不是没进展，是更糟。</b></p>",
       "再来一局",()=>api.restart());
   }
   setShip(); hud(); api.time(1);
   api.overlay("<h4>双武器拦截</h4><p><b>移动手指或鼠标</b>，飞船跟着走，自动开火。"+
     "<br>停在左半屏 = 用<b>看照片</b>这种方式；停在右半 = 用<b>查记录</b>这种方式。"+
-    "<br><b>敌人长得都一样，得读它写的字才知道该用哪种。</b>用错那条会加速。掉到底线扣一条命。</p>","开始",()=>{
-      playing=true; wave=1; spawn(); hud(); cancelAnimationFrame(raf); raf=requestAnimationFrame(step);
+    "<br><b>敌人长得都一样，得读它写的字才知道该用哪种。</b>用错那条会加速。"+
+    "<br>隔一阵会有一个<b>脱离编队俯冲下来</b>——打下俯冲中的那个<b>双倍分</b>。"+
+    "<br>十波，第 5、10 波是<b>挑战关</b>：不下压，限时清场。每过一波挑一样强化。</p>","开始",()=>{
+      playing=true; paused=false; wave=1; rate=22; slow=1; lives=3; score=0; killed=0;
+      dove=0; wrongs=[]; foes.forEach(f=>f.n.remove()); foes=[];
+      spawn(); hud(); cancelAnimationFrame(raf); raf=requestAnimationFrame(step);
     });
 }
 
@@ -951,10 +1147,16 @@ function gMaze(screen,api,gen){
     "开始",()=>{ playing=true; t0=0; cancelAnimationFrame(raf); raf=requestAnimationFrame(step) });
 }
 return [
- {id:"invaders",title:"双武器拦截",from:"小蜜蜂 / Galaga",build:gInvaders,h:380,
-  how:"<b>移动手指或鼠标</b>，飞船跟着走并自动开火。停左半 = 绿弹，停右半 = 紫弹。用错方式那条会加速。",
-  note:"<b>偷的是哪一条</b>：Galaga 的乐趣是「先打谁」的优先级判断。这里把「打」换成了「用哪种方式查」——<b>敌人会横向漂移，所以每一条迟早会经过你能打的那一半</b>，考的是等待和时机，不是手速。",
-  spec:"<b>用的是</b>第 1 节：哪些问题看照片就知道，哪些必须查记录。<br><b>操作</b>：只用移动，自动开火，不用点也不用键盘。<br><b>载荷</b>：一批条目 + 两类归属。"},
+ {id:"invaders",title:"双武器拦截",from:"小蜜蜂 / Galaga",build:gInvaders,h:400,
+  how:"<b>移动手指或鼠标</b>，飞船跟着走并自动开火。停左半 = 绿弹，停右半 = 紫弹。<b>十波</b>，隔一阵有一个脱离编队<b>俯冲</b>下来，打下它双倍分。每过一波挑一样强化。",
+  note:"<b>做深了一轮</b>：原来四波、约一分钟。现在按调研改了三处——Galaga 真正的招牌是<b>俯冲</b>（编队里冲出来一个扑向你），<b>挑战关</b>（第 5、10 波不下压、限时清场，是节奏上的喘气），以及<b>波间三选一</b>（研究里说这是把一局拉长最有效的那件事）。一局<b>三分半上下</b>。",
+  spec:"<b>教什么</b>：第 1 节的那个二分——哪些问题看照片就知道，哪些非查记录不可。<br>"+
+    "<b>为什么俯冲值得加</b>：它把「优先级」变成了真的——<b>俯冲那个必须现在处理</b>，而你处理它的方式仍然只能靠读它写的字。压力上来了，判断没被绕过。<br>"+
+    "<b>为什么挑战关不扣命</b>：调研里说节奏要有尖峰也要有喘气，一路单调爬坡会把人耗干。<br>"+
+    "<b>三选一都不泄题</b>：射得更快／补一条命／下一波慢 25%——没有一个会告诉你某个敌人属于哪一类。<br>"+
+    "<b>结算</b>：逐条列出你用错工具的那几个，并补上它到底该怎么查。<br>"+
+    "<b>还没进场的打不到</b>：子弹只对已经露出来的敌人生效——每一次击落，都是<b>你读得到的那一个</b>。<br>"+
+    "<b>操作</b>：只用移动，自动开火，不用点也不用键盘。"},
  {id:"chase",title:"追与被追",from:"吃豆人（只偷逻辑，不要迷宫）",build:gMaze,h:380,
   how:"<b>按住拖动</b>。场上十二句话<b>长得一模一样</b>，读了才知道该不该收。收错的会变成追你的东西。",
   note:"<b>改过一次</b>：第一版的绿点上没有字，收集纯粹是走位——玩得很欢，一个字没读。现在每一样东西都带字，<b>而且收错的那一句会当场变成追着你的麻烦</b>。这既是判断，也是「看得见但不致命的惩罚」：追你的越多，场面越难，但你不会立刻死。",
@@ -1299,29 +1501,515 @@ return [
 })();
 </script>
 <script>
+window.GAMES4=(function(){
+const A=window.AR, el=A.el, esc=A.esc, clamp=A.clamp, S=A.S;
+
+/* ==================================================================
+   6 · 检查条件防线（塔防 / 植物大战僵尸的逻辑）
+   稿子一份份往下走，你在四个位子上装「检查条件」。
+   一条检查只拦得住它负责的那一类毛病——装错位置不是伤害低，是根本不触发。
+   核查力有限，装不满六条，所以每一波都得先判断这一批最可能错在哪。
+   合格的稿子应该放它过去：检查不是越多越好。
+   ================================================================== */
+const CHECKS=[
+ {k:"t",n:"有没有写时间",     c:3,e:"读者得知道哪天、几点"},
+ {k:"p",n:"有没有写地点",     c:3,e:"读者得知道去哪"},
+ {k:"s",n:"要不要报名说清了吗",c:3,e:"读者得知道下一步做什么"},
+ {k:"o",n:"结束的事别写成邀请", c:4,e:"2023 年办过的事，不能写成现在还能去"},
+ {k:"v",n:"这句话核得了吗",   c:5,e:"打得开出处的才算数"},
+ {k:"l",n:"语言是不是要的那种",c:4,e:"要原文还是要译文，得对上"}
+];
+const NAME={}; CHECKS.forEach(c=>NAME[c.k]=c.n);
+
+/* [正文, 违反了哪几条（空 = 合格，应当放行）, 属于第几节, 前缀(可选)] */
+const DOCS=[
+ ["快来参加戈达德访客中心的观月夜吧，不用报名！",["t","o"],2],
+ ["2023 年 10 月 21 日晚 6 到 9 点，办过一场观月活动。",["p","s"],2],
+ ["戈达德访客中心办过一次观月夜，不用报名。",["t"],2],
+ ["2023 年 10 月 21 日，马里兰州格林贝尔特，观月夜。",["s"],2],
+ ["2023 年 10 月 21 日晚 6–9 点，格林贝尔特戈达德访客中心，不用报名。",[],2],
+ ["戈达德访客中心 2023 年 10 月 21 日晚 6–9 点办过观月夜，无需报名。",[],2],
+ ["今晚来戈达德访客中心看月亮，6 点开始，不用报名。",["o"],2],
+ ["这是当年最值得看的一场活动，快来参加吧！",["v","t","o"],2],
+
+ ["这张照片拍摄于 1968 年 12 月 24 日，Bill Anders 摄。",[],0],
+ ["画面上，蓝白色的地球出现在灰白色月面上方。",[],0],
+ ["这张是阿波罗 8 号绕月飞行时拍的，NASA 官方图像。",[],0],
+ ["按快门时，他屏住了呼吸。",["v"],0],
+ ["这是人类拍过的最伟大的一张照片。",["v"],0],
+ ["拍完之后，舱内一片寂静。",["v"],0],
+
+ ["Tonight we watched the moon rise.",["l"],1,"你要的是中文逐字稿。它交来："],
+ ["今晚我们看了月亮升起来。",["l"],1,"你要的是英文译文。它交来："],
+ ["今晚我们看了月亮升起来。",[],1,"你要的是中文逐字稿。它交来："],
+ ["Tonight we watched the moon rise.",[],1,"你要的是英文译文。它交来："]
+];
+/* 波次不是单调爬坡：换题的那两波给一笔改装费，让「重新布防」是个决定而不是陷阱 */
+const WAVES=[
+ {L:2,n:4,say:"这一批是<b>活动通知</b>",              bonus:0},
+ {L:2,n:5,say:"还是<b>活动通知</b>，多一份",          bonus:0},
+ {L:2,n:5,say:"<b>活动通知</b>，这回有合格的混在里面", bonus:0},
+ {L:2,n:6,say:"<b>硬茬</b>：有一份同时犯三条",        bonus:0,boss:true},
+ {L:0,n:4,say:"换题：这一批是<b>照片说明</b>",        bonus:8},
+ {L:0,n:6,say:"<b>照片说明</b>，漂亮话变多了",        bonus:0},
+ {L:1,n:5,say:"换题：这一批是<b>录音转文字</b>",      bonus:8},
+ {L:-1,n:8,say:"<b>最后一波</b>：三节课混着来",       bonus:8,boss:true}
+];
+
+function shuf(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));
+  const t=a[i];a[i]=a[j];a[j]=t}return a}
+
+function gDefense(screen,api,gen){
+  const SLOTS=4, MAXLEAK=5, STEP=980;
+  const say=el("div","dl-say"), field=el("div","dl-field"), inbox=el("div","dl-in","AI 交来的稿子 &darr;"),
+        reader=el("div","dl-reader","读者收到的"), hint=el("div","dl-hint");
+  screen.appendChild(say); screen.appendChild(field);
+  screen.appendChild(reader); screen.appendChild(hint);
+
+  let slots=[null,null,null,null], power=12, score=0, wave=0, leaks=0,
+      stopped=0, delivered=0, docs=[], raf=0, timer=0, spawned=0, phase="build",
+      missed=[], shop=null, goBtn=null;
+
+  const slotEls=[];
+  for(let i=0;i<SLOTS;i++){
+    const n=el("div","dl-slot"); n.dataset.i=i;
+    n.addEventListener("pointerdown",e=>{e.preventDefault(); if(phase==="build")openShop(i)});
+    field.appendChild(n); slotEls.push(n);
+  }
+  field.appendChild(inbox);
+  function layout(){
+    const H=field.clientHeight, top=64, gap=(H-top-52-8)/(SLOTS-1);
+    slotEls.forEach((n,i)=>{n.style.top=(top+gap*i)+"px"});
+  }
+  const slotY=i=>parseFloat(slotEls[i].style.top||0);
+
+  function drawSlots(){
+    slotEls.forEach((n,i)=>{
+      const k=slots[i];
+      n.className="dl-slot"+(k?" on":"")+(phase==="build"?" build":"");
+      n.innerHTML='<span class="no">'+(i+1)+"</span><span>"+
+        (k?esc(NAME[k]):(phase==="build"?"空位 · 点一下装一条":"空位"))+"</span>"+
+        (k&&phase==="build"?'<span class="cost">点一下撤掉</span>':"");
+    });
+  }
+  function hud(){
+    api.hud('<span>分数 <b>'+score+"</b></span><span>拦下 <b>"+stopped+
+      '</b></span><span class="sp">漏过 <b>'+leaks+" / "+MAXLEAK+"</b></span>");
+    say.querySelector(".pow").textContent="核查力 "+power;
+  }
+  function banner(txt){
+    say.innerHTML="<b>第 "+(wave+1)+" / 8 波</b><span>"+txt+'</span><span class="pow"></span>';
+  }
+
+  /* ---------- 布防 ---------- */
+  function openShop(i){
+    closeShop();
+    if(slots[i]){ /* 撤掉，退一半 */
+      const c=CHECKS.find(x=>x.k===slots[i]);
+      power+=Math.floor(c.c/2); slots[i]=null; S.tick(); drawSlots(); hud(); return;
+    }
+    shop=el("div","dl-shop");
+    const on=slots.filter(Boolean).map(k=>NAME[k]);
+    const hd=el("div","dl-shophd",
+      "<span>第 "+(i+1)+" 位</span><span class='now'>"+
+      (on.length?"已装："+esc(on.join(" · ")):"四个位子都还空着")+
+      "</span><button class='x'>&times;</button>");
+    hd.querySelector(".x").addEventListener("pointerdown",e=>{e.preventDefault();closeShop()});
+    shop.appendChild(hd);
+    CHECKS.forEach(c=>{
+      const used=slots.indexOf(c.k)>=0, poor=power<c.c;
+      const b=el("button","dl-pick"+(poor?" off":""),
+        "<span>"+esc(c.n)+"<em>"+esc(c.e)+"</em></span><span class='p'>"+c.c+"</span>");
+      b.disabled=used||poor;
+      if(used)b.querySelector(".p").textContent="已装";
+      b.addEventListener("pointerdown",e=>{e.preventDefault();
+        if(b.disabled)return;
+        power-=c.c; slots[i]=c.k; S.zap(); closeShop(); drawSlots(); hud()});
+      shop.appendChild(b);
+    });
+    screen.appendChild(shop);
+  }
+  function closeShop(){ if(shop){shop.remove();shop=null} }
+
+  function buildPhase(){
+    phase="build"; drawSlots();
+    const w=WAVES[wave]; banner(w.say); hud();
+    hint.innerHTML="装好了就开工。<b>核查力有限，装不满六条</b>——先想这一批最可能错在哪。";
+    goBtn=el("button","dl-go","开　工");
+    goBtn.addEventListener("pointerdown",e=>{e.preventDefault();startWave()});
+    screen.appendChild(goBtn);
+  }
+
+  /* ---------- 一波 ---------- */
+  function pickDocs(w){
+    let pool=DOCS.filter(d=>w.L<0||d[2]===w.L);
+    pool=shuf(pool);
+    const out=pool.slice(0,w.n);
+    while(out.length<w.n)out.push(pool[Math.floor(Math.random()*pool.length)]);
+    if(w.boss){ const b=DOCS.find(d=>d[1].length>=3);
+      out[Math.min(out.length-1,2)]=b }
+    return shuf(out);
+  }
+  function startWave(){
+    closeShop(); if(goBtn){goBtn.remove();goBtn=null}
+    hint.textContent="";
+    phase="wave"; drawSlots();
+    const w=WAVES[wave];
+    const queue=pickDocs(w);
+    spawned=0; docs=[]; const base=stopped+delivered+leaks;
+    power+=6+(w.bonus||0); hud();
+    clearInterval(timer);
+    let t=0; const total=queue.length; let done=0;
+    timer=setInterval(()=>{
+      if(!api.alive(gen))return clearInterval(timer);
+      if(phase!=="wave")return clearInterval(timer);
+      t++;
+      if(t%2===1&&spawned<queue.length){ spawn(queue[spawned++]) }
+      done=advance();
+      api.time(1-(stopped+delivered+leaks-base)/total);
+      if(spawned>=queue.length&&!docs.length){ clearInterval(timer); endWave() }
+    },STEP);
+  }
+  function spawn(d){
+    const n=el("div","dl-doc");
+    n.innerHTML=(d[3]?'<span class="ask">'+esc(d[3])+"</span>":"")+esc(d[0]);
+    n.style.top="0px";
+    field.appendChild(n);
+    docs.push({n:n,d:d,lv:-1});
+  }
+  function advance(){
+    docs.forEach(o=>{
+      if(o.done)return;
+      o.lv++;
+      if(o.lv<SLOTS){
+        o.n.style.top=slotY(o.lv)+"px";
+        const k=slots[o.lv];
+        if(k&&o.d[1].indexOf(k)>=0){
+          o.done=true; stopped++; power+=2; score+=15;
+          slotEls[o.lv].classList.remove("fires");void slotEls[o.lv].offsetWidth;
+          slotEls[o.lv].classList.add("fires");
+          const r=o.n.getBoundingClientRect();
+          S.zap(); A.buzz(12); A.burst(r.left+r.width/2,r.top+r.height/2,"var(--ok)",14);
+          A.floatTag(r.left+r.width/2,r.top,"+15　"+NAME[k],"var(--ok-ink)");
+          o.n.classList.add("stop"); setTimeout(()=>o.n.remove(),380);
+          hud();
+        }
+      }else{
+        o.done=true;
+        const bad=o.d[1];
+        const r=o.n.getBoundingClientRect();
+        if(!bad.length){
+          delivered++; score+=20;
+          o.n.classList.add("pass");
+          reader.classList.remove("hurt");reader.classList.add("glad");
+          reader.textContent="交付了一份合格的　+20";
+          S.pow(); A.buzz(10);
+          A.floatTag(r.left+r.width/2,r.top,"+20 该放它过去","var(--ok-ink)");
+        }else{
+          leaks++;
+          o.n.classList.add("leak");
+          reader.classList.remove("glad");reader.classList.add("hurt");
+          reader.textContent="漏了：没人查「"+NAME[bad[0]]+"」";
+          S.hurt(); A.buzz([16,60,16]); A.shakeEl(screen);
+          A.floatTag(r.left+r.width/2,r.top,"漏了","var(--warn)");
+          if(!missed.some(m=>m[0]===o.d[0]))missed.push([o.d[0],bad.slice(),o.d[3]||""]);
+        }
+        setTimeout(()=>{o.n.remove();
+          reader.classList.remove("hurt","glad");reader.textContent="读者收到的"},1100);
+        hud();
+        if(leaks>=MAXLEAK&&phase==="wave"){ clearInterval(timer); over(false) }
+      }
+    });
+    docs=docs.filter(o=>!o.done);
+    return stopped+delivered+leaks;
+  }
+  function endWave(){
+    wave++;
+    if(wave>=WAVES.length)return over(true);
+    phase="build"; drawSlots();
+    api.overlay("<h4>第 "+wave+" 波挡住了</h4>"+
+      "<p>拦下 <b>"+stopped+"</b> 份 · 放行合格的 <b>"+delivered+"</b> 份 · 漏过 <b>"+leaks+" / "+MAXLEAK+"</b>"+
+      "<br>核查力 <b>"+power+"</b>，开工时再补 <b>6</b>"+
+      "<br><br>下一波 "+WAVES[wave].say+"。<b>可以重新布防</b>——撤掉一条退回一半。"+
+      (WAVES[wave].bonus?"<br><b>换题给一笔改装费 +"+WAVES[wave].bonus+"</b>，这一波值得重新想一遍装哪几条。":"")+"</p>",
+      "去布防",()=>{ buildPhase() });
+  }
+
+  /* ---------- 结算 ---------- */
+  function review(){
+    if(!missed.length)return "<h4>一份都没漏</h4><p>八波稿子，没有一份带着毛病走到读者面前。</p>";
+    return "<h4>漏过去的那几份</h4><div class='dl-rev'>"+missed.slice(0,7).map(m=>
+      "<p>"+esc(m[2]+m[0])+"<br><b>该被「"+m[1].map(k=>NAME[k]).join("」「")+"」拦住</b></p>").join("")+"</div>";
+  }
+  function over(win){
+    phase="over"; clearInterval(timer); cancelAnimationFrame(raf); closeShop();
+    if(goBtn){goBtn.remove();goBtn=null}
+    win?S.pow():S.over();
+    api.overlay('<div class="big">'+score+'</div><div class="sub">'+
+      (win?"八波全挡住":"漏过 "+leaks+" 份，到第 "+(wave+1)+" 波")+
+      " · 拦下 "+stopped+" · 放行 "+delivered+"</div>"+review()+
+      "<p>一条检查只拦得住<b>它负责的那一类</b>——装错位置不是伤害低，是根本不触发。"+
+      "<br>而合格的那几份<b>本来就该放它过去</b>：检查不是越多越好，是要对上你这一批在担心什么。</p>",
+      win?"再来一局":"再来一次",()=>api.restart());
+  }
+
+  layout(); drawSlots(); api.time(1);
+  say.innerHTML='<b>检查条件防线</b><span>装好检查，放稿子过来</span><span class="pow">核查力 12</span>';
+  api.overlay("<h4>检查条件防线</h4>"+
+    "<p>AI 交来的稿子会<b>一份份往下走</b>，走到底就等于读者收到了它。"+
+    "<br>你有<b>四个位子</b>，每个位子装一条检查条件。一条检查<b>只拦得住它负责的那一类毛病</b>——"+
+    "装「有没有写时间」，就只拦漏了时间的那些。"+
+    "<br><b>核查力有限，六条装不满四个位子</b>，每一波开工前先看公告，判断这一批最可能错在哪。"+
+    "<br><b>合格的稿子要放它过去</b>——那是交付，加分。漏过 5 份带毛病的就结束。八波。</p>",
+    "开始",()=>{ slots=[null,null,null,null]; power=12; score=0; wave=0; leaks=0;
+      stopped=0; delivered=0; missed=[]; docs=[];
+      layout(); buildPhase() });
+}
+
+/* ==================================================================
+   7 · 值班室（Papers, Please 的一整天）
+   五天，每天早上通告增删一条规矩。同一份稿子昨天该通过，今天可能就该打回——
+   这是这个游戏的全部要害：规矩会变，逐条核对的纪律不能变。
+   ================================================================== */
+const RULES=[
+ {k:"t",n:"必须写清时间",        e:"哪天、几点"},
+ {k:"p",n:"必须写清地点",        e:"在哪儿"},
+ {k:"s",n:"必须说要不要报名",     e:"读者下一步做什么"},
+ {k:"o",n:"结束的事不能写成邀请",  e:"2023 年办过的，别写成现在还能去"},
+ {k:"v",n:"每一句都得能核",       e:"打得开出处的才算数"},
+ {k:"l",n:"语言要对上要求",       e:"要原文还是要译文"}
+];
+const RN={}; RULES.forEach(r=>RN[r.k]=r.n);
+/* has 里写的是「这份稿子满足哪几条」。当天通过与否，由当天生效的规矩算出来 */
+const PAPERS=[
+ {t:"2023 年 10 月 21 日晚 6–9 点，格林贝尔特戈达德访客中心办过观月夜，不用报名。",
+  has:{t:1,p:1,s:1,o:1,v:1,l:1}},
+ {t:"快来参加戈达德访客中心的观月夜吧，现场有望远镜和专家讲解，不用报名！",
+  has:{t:0,p:1,s:1,o:0,v:1,l:1}},
+ {t:"2023 年 10 月 21 日晚 6–9 点，在戈达德访客中心办过一场观月活动。",
+  has:{t:1,p:1,s:0,o:1,v:1,l:1}},
+ {t:"2023 年 10 月 21 日晚 6 点到 9 点办过观月夜，不用报名。",
+  has:{t:1,p:0,s:1,o:1,v:1,l:1}},
+ {t:"戈达德访客中心办过一次观月夜，无需报名。这是当年最值得看的活动。",
+  has:{t:0,p:1,s:1,o:1,v:0,l:1}},
+ {t:"2023 年 10 月 21 日晚 6–9 点，格林贝尔特戈达德访客中心，不用报名。那一夜令人终身难忘。",
+  has:{t:1,p:1,s:1,o:1,v:0,l:1}},
+ {t:"今晚 6 点到 9 点，来格林贝尔特戈达德访客中心看月亮，不用报名。",
+  has:{t:1,p:1,s:1,o:0,v:1,l:1}},
+ {t:"Oct 21 2023, 6–9 pm, Goddard Visitor Center, Greenbelt MD. No registration.",
+  ask:"这一份要的是中文稿", has:{t:1,p:1,s:1,o:1,v:1,l:0}},
+ {t:"2023 年 10 月 21 日晚 6–9 点，格林贝尔特戈达德访客中心，不用报名。",
+  ask:"这一份要的是英文译文", has:{t:1,p:1,s:1,o:1,v:1,l:0}},
+ {t:"1968 年 12 月 24 日，Bill Anders 在阿波罗 8 号上拍下《地出》。NASA 官方图像。",
+  has:{t:1,p:1,s:1,o:1,v:1,l:1}},
+ {t:"按快门的那一刻，他屏住了呼吸，那是他最满意的一张。",
+  has:{t:0,p:0,s:1,o:1,v:0,l:1}}
+];
+const DAYS=[
+ {r:["t","p"],           add:["t","p"], n:4,
+  news:"第一天上岗。<b>两条规矩</b>：时间、地点。逐条看过再盖章。"},
+ {r:["t","p","s"],       add:["s"],     n:4,
+  news:"<b>新增一条</b>：必须说清要不要报名。昨天能过的，今天未必。"},
+ {r:["t","p","s","o"],   add:["o"],     n:5,
+  news:"<b>新增一条</b>：已经结束的活动，不能写成现在的邀请。"},
+ {r:["t","s","o","v"],   add:["v"], off:["p"], n:5,
+  news:"<b>地点这条今天停用</b>——上头说读者都知道在哪。<b>新增</b>：每一句都得能核。"},
+ {r:["t","p","s","o","v","l"], add:["l"], back:["p"], n:5,
+  news:"<b>地点恢复</b>。<b>新增</b>：语言要对上要求。六条全开。"}
+];
+
+function gShift(screen,api,gen){
+  const news=el("div","sf-news"), body=el("div","sf-body");
+  screen.appendChild(news); screen.appendChild(body);
+  const book=el("div","sf-book"), paper=el("div","sf-paper"),
+        says=el("div","sf-say"), btns=el("div","sf-btns");
+  const bPass=el("button","sf-btn pass","通　过"), bFail=el("button","sf-btn fail","打　回");
+  btns.appendChild(bPass); btns.appendChild(bFail);
+  says.hidden=true;
+  body.appendChild(book); body.appendChild(paper); body.appendChild(says); body.appendChild(btns);
+
+  let day=0, idx=0, queue=[], marks={}, score=0, right=0, wrong=0,
+      playing=false, missTally={}, missed=[], locked=false;
+
+  const today=()=>DAYS[day];
+  function hud(){
+    api.hud('<span>第 <b>'+(day+1)+'</b> / 5 天</span><span>分数 <b>'+score+
+      '</b></span><span class="sp">盖对 <b>'+right+" / "+(right+wrong)+"</b></span>");
+  }
+  function shouldPass(p){ return today().r.every(k=>p.has[k]) }
+  function fails(p){ return today().r.filter(k=>!p.has[k]) }
+
+  function drawBook(){
+    const d=today();
+    book.innerHTML="<h6>今天生效的规矩 · "+d.r.length+" 条<i>看一条勾一下</i></h6>";
+    d.r.forEach(k=>{
+      const r=RULES.find(x=>x.k===k);
+      const b=el("button","sf-rule"+((d.add||[]).indexOf(k)>=0||(d.back||[]).indexOf(k)>=0?" fresh":"")+
+        (marks[k]==="yes"?" yes":marks[k]==="no"?" no":""),
+        '<span class="bx">'+(marks[k]==="no"?"&times;":"&#10003;")+"</span><span>"+esc(r.n)+
+        "<em>"+esc(r.e)+"</em></span>");
+      b.addEventListener("pointerdown",e=>{e.preventDefault(); if(locked)return;
+        marks[k]=marks[k]==="yes"?"no":(marks[k]==="no"?null:"yes");
+        S.tick(); drawBook()});
+      book.appendChild(b);
+    });
+  }
+  function load(){
+    if(idx>=queue.length)return endDay();
+    marks={}; locked=false; says.hidden=true;
+    const p=queue[idx];
+    paper.className="sf-paper in";
+    paper.innerHTML='<div class="ph">第 '+(idx+1)+" / "+queue.length+" 份 · AI 交来的稿子</div>"+
+      (p.ask?'<span class="ask">'+esc(p.ask)+"</span>":"")+esc(p.t)+
+      '<div class="sf-ink"></div>';
+    bPass.disabled=bFail.disabled=false;
+    drawBook(); hud(); api.time(1-idx/queue.length);
+  }
+  function judge(saidPass){
+    if(locked||!playing)return;
+    locked=true; bPass.disabled=bFail.disabled=true;
+    const p=queue[idx], want=shouldPass(p), bad=fails(p), ok=saidPass===want;
+    const ink=paper.querySelector(".sf-ink");
+    ink.textContent=saidPass?"通 过":"打 回";
+    ink.className="sf-ink on "+(saidPass?"pass":"fail");
+    S.thud(); A.buzz([16,26,10]);
+    /* 勾对了额外加分——奖励「真的逐条走了一遍」，但不惩罚没勾 */
+    let tick=0;
+    today().r.forEach(k=>{ const sh=p.has[k]?"yes":"no"; if(marks[k]===sh)tick++ });
+    if(ok){ right++; score+=20+tick*3;
+      const r=paper.getBoundingClientRect();
+      A.burst(r.left+r.width/2,r.top+r.height/2,"var(--ok)",16);
+      A.floatTag(r.left+r.width/2,r.top+10,"+"+(20+tick*3)+(tick?"　勾对 "+tick+" 条":""),"var(--ok-ink)");
+      says.className="sf-say ok"; says.hidden=false;
+      says.innerHTML=want?"<b>该通过。</b>今天这 "+today().r.length+" 条它都满足。"
+        :"<b>该打回。</b>没满足："+bad.map(k=>RN[k]).join("、")+"。";
+      S.zap();
+    }else{
+      wrong++; A.shakeEl(paper); S.hurt();
+      says.className="sf-say"; says.hidden=false;
+      says.innerHTML=want?"<b>盖反了——这一份今天是合格的。</b>今天生效的每一条它都满足了。"
+        :"<b>盖反了。</b>它没满足："+bad.map(k=>RN[k]).join("、")+"。";
+      bad.forEach(k=>{missTally[k]=(missTally[k]||0)+1});
+      if(!missed.some(m=>m.t===p.t))missed.push({t:p.t,ask:p.ask||"",bad:bad.slice(),day:day+1,want:want});
+      [].slice.call(book.children).forEach(n=>{
+        if(n.tagName==="BUTTON"&&bad.some(k=>n.textContent.indexOf(RN[k])>=0))n.classList.add("missed")});
+    }
+    hud();
+    setTimeout(()=>{ if(!api.alive(gen)||!playing)return; idx++; load() },1700);
+  }
+  bPass.addEventListener("pointerdown",e=>{e.preventDefault();judge(true)});
+  bFail.addEventListener("pointerdown",e=>{e.preventDefault();judge(false)});
+
+  function pick(){
+    const d=today();
+    const pass=PAPERS.filter(p=>d.r.every(k=>p.has[k]));
+    const fail=PAPERS.filter(p=>!d.r.every(k=>p.has[k]));
+    const out=[];
+    const g=a=>a[Math.floor(Math.random()*a.length)];
+    if(pass.length)out.push(g(pass));
+    for(let i=0;i<2&&fail.length;i++)out.push(g(fail));
+    while(out.length<d.n){ const c=g(PAPERS); if(!out.includes(c)||out.length>PAPERS.length-1)out.push(c) }
+    for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=out[i];out[i]=out[j];out[j]=t}
+    return out.slice(0,d.n);
+  }
+  function startDay(){
+    const d=today();
+    queue=pick(); idx=0; missTally=missTally||{};
+    news.innerHTML='<span class="d">第 '+(day+1)+" 天 · 今日通告</span>"+d.news;
+    playing=true;
+    load();
+  }
+  function endDay(){
+    playing=false;
+    bPass.disabled=bFail.disabled=true;
+    day++;
+    if(day>=DAYS.length)return over();
+    const d=today();
+    api.overlay("<h4>第 "+day+" 天下班</h4>"+
+      "<p>盖对 <b>"+right+"</b> · 盖反 <b>"+wrong+"</b> · 分数 <b>"+score+"</b></p>"+
+      '<p style="opacity:.8">明天的通告：'+d.news+"</p>",
+      "上班",()=>{ startDay() });
+  }
+  function over(){
+    playing=false; S.over();
+    const worst=Object.keys(missTally).sort((a,b)=>missTally[b]-missTally[a]);
+    api.overlay('<div class="big">'+score+'</div><div class="sub">五天 · 盖对 '+right+
+      " / "+(right+wrong)+"</div>"+
+      (worst.length?"<h4>你最常漏的是「"+RN[worst[0]]+"」</h4>":"<h4>五天一份没盖反</h4>")+
+      (missed.length?"<div class='sf-rev'>"+missed.slice(0,6).map(m=>
+        "<p>第 "+m.day+" 天 · "+esc(m.ask?m.ask+"：":"")+esc(m.t)+"<br><b>"+
+        (m.want?"这一份当天是合格的":"没满足："+m.bad.map(k=>RN[k]).join("、"))+"</b></p>").join("")+"</div>":"")+
+      "<p>规矩每天都在变——同一份稿子，第二天该通过，第四天就该打回。"+
+      "<b>会变的是规矩，不能变的是逐条走一遍。</b></p>",
+      "再值一轮",()=>api.restart());
+  }
+
+  hud(); api.time(1);
+  news.innerHTML='<span class="d">值班室</span>规矩写在手册上，稿子在下面。';
+  drawBook(); bPass.disabled=bFail.disabled=true;
+  api.overlay("<h4>值班室</h4>"+
+    "<p>你是审稿的那个人。<b>五天</b>，每天早上一张通告，<b>增一条或停一条规矩</b>。"+
+    "<br>手册上是今天生效的规矩，<b>点一下勾，再点一下打叉</b>——勾对了额外加分，但不勾也能盖章。"+
+    "<br>看完稿子，盖<b>通过</b>或<b>打回</b>。"+
+    "<br><b>要害在这里：同一份稿子，第二天该通过，第四天就该打回。</b>不能靠记答案。</p>",
+    "上班",()=>{ day=0; idx=0; score=0; right=0; wrong=0; missTally={}; missed=[]; startDay() });
+}
+
+return [
+ {id:"shift",title:"值班室",from:"Papers, Please",build:gShift,h:430,
+  how:"<b>五天</b>，每天早上增一条或停一条规矩。手册上点勾／打叉，再盖<b>通过</b>或<b>打回</b>。同一份稿子，换一天答案就不一样。",
+  note:"<b>偷的是哪一条</b>：调研里最有用的一个数字——Papers, Please 的一个工作日约六分钟，而 31 天里<b>绝大多数都有规矩的增、删或恢复</b>。持续性不是把时间拉长，是<b>让规则本身变成变量</b>。<br>一局五天，大约<b>三分半到四分钟</b>。",
+  spec:"<b>教什么</b>：<b>清单纪律</b>——不是「我会判断」，是「我每次都真的逐条走了一遍」。<br>"+
+    "<b>为什么必须是多天</b>：单张稿子考的是判断，<b>五天考的是纪律</b>。第 4 天「地点」停用、第 5 天恢复，就是为了让你不能靠记住昨天的答案——<b>同一份稿子，第二天该通过，第四天就该打回</b>。这条是 30 秒的盖章台永远做不到的。<br>"+
+    "<b>勾选为什么只加分不扣分</b>：逐条核对是要养成的习惯，不是要设的陷阱。盖对给 20，每勾对一条再加 3。<br>"+
+    "<b>结算</b>：直接告诉你<b>最常漏的是哪一条规矩</b>，再逐份列出你盖反的——那才是复习。<br>"+
+    "<b>用的是</b>第 3 节 NASA 观月夜公告的四条（时间／地点／报名／别把结束写成邀请）、第 1 节《地出》（核得了核不了）、第 2 节 Whisper（要原文还是要译文）。"},
+ {id:"defenseline",title:"检查条件防线",from:"塔防 / 植物大战僵尸",build:gDefense,h:470,
+  how:"稿子一份份往下走。<b>点位子装检查条件</b>，一条只拦它负责的那一类毛病。核查力有限，装不满；<b>合格的稿子要放它过去</b>。八波，漏 5 份结束。",
+  note:"<b>偷的是哪三条</b>：塔防的<b>波间决策</b>（研究里说这是把一局从 30 秒拉到 3 分钟最有效的东西）；植物大战僵尸的<b>阳光经济</b>——装不满就必须取舍；Papers Please 的<b>每波开工前先公告</b>，让你有依据地下注。<br>一局八波，大约<b>三分半到四分钟</b>。",
+  spec:"<b>教什么</b>：这是二十六个组件里<b>唯一一个教「规则集」而不是「单次判断」</b>的。前面所有组件问的都是「这一句对不对」；这个问的是<b>「你要带着哪几条检查上场」</b>——从「我会看」到「我有一套清单」。<br>"+
+    "<b>核查是有成本的</b>：六条检查，四个位子，核查力还不够装满——所以你必须押注这一批最可能错在哪。这本身就是第 3 节课那句话：<b>限制不是越多越好，而是要与你当前的目的对应</b>。<br>"+
+    "<b>合格的要放行</b>：如果每一份都该拦，那就没有判断了。合格稿子走到底是<b>加分</b>，这让「别过度设防」也有了代价。<br>"+
+    "<b>怎么保证他必须读</b>：所有稿子同款卡片，没有颜色暗示；<b>每跳一层停约一秒，字始终静止</b>。<br>"+
+    "<b>漏过的那一下</b>：当场说出它该被哪一条拦住——那是纠正，不是嘲笑；结算再逐份列一遍。<br>"+
+    "<b>用的是</b>第 3 节 NASA 观月夜公告（时间/地点/报名/别把结束写成邀请）、第 1 节《地出》（核得了核不了）、第 2 节 Whisper（要原文还是要译文）。"}
+];
+})();
+</script>
+<script>
 (function(){
 const A=window.AR, el=A.el, page=document.getElementById("page");
 const head=el("div","masthead");
 head.innerHTML='<h1>学习街机</h1>'+
- '<p>上一批二十块积木，每块玩 10–30 秒。这五个不一样：<b>一到两分钟，有节奏、有累积、有分数可以刷</b>。</p>'+
- '<p>第一个<b>「填词消行」</b>是这里最大的一个：句子一行行涨上来，每句缺一个词，<b>下一块不是随机给你的，是你自己挑的</b>——所以难的不是手，是选。而且它<b>有终点</b>，一副牌 24 句清完就赢。</p>'+
- '<p>调研里最有用的一条来自 Tetris：它最要紧的设计不是消行，是<b>「看得见但不致命的惩罚」</b>——'+
- '你答错不会立刻结束，你是<b>眼看着自己的错误堆起来</b>。四个游戏都按这条做：没有立刻死，只有慢慢变难。</p>'+
- '<p style="color:var(--ink-faint);font-size:13px">操作全部统一：<b>鼠标和手指同一套，一个指头够用，不用键盘</b>。'+
- '拖一下、停一下、松手，一个指头够用。研究也说了紧走廊迷宫在触摸上确实更差，所以吃豆人那个只偷逻辑不要迷宫。'+
+ '<p>积木库里那二十块，每块玩 10\u201330 秒。这里的七个不一样，按<b>一局能撑多久</b>排：</p>'+
+ '<p><b>三到四分钟 · 有波次、有累积、有波间决策</b>——'+
+ '<b>值班室</b>（五天，每天早上增一条或停一条规矩）、'+
+ '<b>检查条件防线</b>（八波，四个位子装不下六条检查）、'+
+ '<b>双武器拦截</b>（十波，加了俯冲和挑战关）。</p>'+
+ '<p><b>一到两分钟</b>——<b>填词消行</b>：句子一行行涨上来，每句缺一个词，'+
+ '<b>下一块不是随机给你的，是你自己挑的</b>，一副 24 句清完就赢。</p>'+
+ '<p><b>十几秒到一分钟</b>——分类落块、划切、追与被追。</p>'+
+ '<p style="color:var(--ink-faint);font-size:13px">先调研再设计：撑住一局的东西查下来就那么几样——'+
+ '<b>波间决策</b>（塔防）、<b>让规则本身变成变量</b>（Papers, Please 的 31 天里绝大多数都有规矩增删）、'+
+ '<b>资源经济逼出取舍</b>（植物大战僵尸的阳光）、<b>尖峰与喘气</b>（不能单调爬坡）。三个长局各用了其中几条。'+
+ '<br>操作全部统一：<b>鼠标和手指同一套，一个指头够用，不用键盘</b>。'+
  '内容仍然全部来自《认识 AI，从这里开始》第一单元前三节。</p>';
 page.appendChild(head);
 page.appendChild(el("div","rule"));
-[].concat(window.GAMES3,window.GAMES1,window.GAMES2).forEach(g=>A.cabinet(page,g));
+const ORDER=["shift","defenseline","invaders","cloze-tetris","stack","slice","chase"];
+const ALL=[].concat(window.GAMES4,window.GAMES3,window.GAMES1,window.GAMES2);
+ORDER.forEach(id=>{const g=ALL.find(x=>x.id===id); if(g)A.cabinet(page,g)});
+ALL.forEach(g=>{if(ORDER.indexOf(g.id)<0)A.cabinet(page,g)});
 page.appendChild(el("div","rule"));
 const t=el("p",null,"");
 t.style.cssText="font-size:13px;color:var(--ink-faint);line-height:1.7";
-t.innerHTML="<b>五个都按同一条规矩做</b>：如果玩家不读字也能赢，那这个组件教的是眼力，不是判断。"+
+t.innerHTML="<b>七个都按同一条规矩做</b>：如果玩家不读字也能赢，那这个组件教的是眼力，不是判断。"+
  "<br>所以卡片不再有绿红之分、敌人不再自带答案颜色、地上的点也不再是没字的圆圈——"+
  "颜色只在你做完判断之后才出现，作为纠正。"+
  "<br><b>填词消行</b>还多堵了一条：词条和缺口<b>一律同宽</b>，"+
  "免得有人靠「这个词的长度只塞得进那个空」蒙对。"+
- "<br>五个都还没有真人玩过。";
+ "<br><b>三个长局</b>还多堵了一条：<b>还没进场／还没读到的，打不到也判不了</b>。"+
+ "<br>七个都还没有真人玩过。";
 page.appendChild(t);
 })();
 </script>
