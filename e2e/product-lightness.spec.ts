@@ -127,13 +127,22 @@ test.describe("U details accessibility", () => {
     await page.goto(`${ONLINE_ORIGIN}/me`);
     const accountForm = page.locator("details.account-panel__form");
     await expect(accountForm).toBeVisible();
-    await accountForm.locator("summary").click();
+    await accountForm.locator(":scope > summary").click();
     await expect(accountForm).toHaveAttribute("open", "");
-    const email = accountForm.locator('input[name="email"]');
-    await email.fill("learner@example.com");
-    await expect(email).toHaveValue("learner@example.com");
+    const email = accountForm.locator('input[type="email"]');
+    await email.fill("learner@example.invalid");
+    await expect(email).toHaveValue("learner@example.invalid");
     await accountForm.locator('form button[type="submit"]').click();
-    await expect(accountForm).toContainText("密码至少需要 8 个字符");
+    // The shared Kit uses native required-field validation for sign-in, not
+    // the retired form's custom eight-character registration policy message.
+    const password = accountForm.locator('input[type="password"]');
+    await expect(password).toBeFocused();
+    expect(await password.evaluate((input: HTMLInputElement) => input.validity.valueMissing)).toBe(
+      true,
+    );
+    expect(await password.evaluate((input: HTMLInputElement) => input.validationMessage)).not.toBe(
+      "",
+    );
     await page.goto(`${ONLINE_ORIGIN}${LESSON}`);
     const exercise = page.locator(".exercise-panel").first();
     await exercise.locator("textarea").fill("画面被算成数字，与设置时记录的特征比较。");

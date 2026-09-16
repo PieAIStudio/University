@@ -132,7 +132,19 @@ test.describe("M 跨屏体验不变量", () => {
     });
 
     test(`X3/X5 ${viewport.id}：核心主控件可命中且点击后及时响应`, async ({ page }) => {
-      const consoleErrors = watchConsole(page);
+      const rejectedUrls = new Set<string>();
+      let signInRequests = 0;
+      const consoleErrors = watchConsole(page, {
+        expectedHttpErrors: [{ status: 400, matchesUrl: (url) => rejectedUrls.has(url) }],
+      });
+      await page.route("**/auth/v1/token**", async (route) => {
+        signInRequests++;
+        rejectedUrls.add(route.request().url());
+        await route.fulfill({
+          status: 400,
+          json: { code: "invalid_credentials", msg: "synthetic-sign-in-rejected" },
+        });
+      });
       for (const route of ctaRoutes) {
         await namedStep(page, `X3/X5 ${viewport.id} · ${route.label}`, async () => {
           await openExperienceRoute(page, route, viewport);
@@ -174,6 +186,16 @@ test.describe("M 跨屏体验不变量", () => {
                 response.urlChanged || response.domChanged,
                 `${route.label} 的 CTA 点击后 300ms 内没有 URL、DOM、aria-busy 或 disabled 响应。`,
               ).toBe(true);
+              if (route.id === "me") {
+                const form = page.locator("details.account-panel__form");
+                await expect(form.getByRole("alert")).toBeVisible();
+                await expect(form).not.toContainText("synthetic-sign-in-rejected");
+                await expect(form.locator('input[type="email"]')).toHaveValue(
+                  "response-check@example.invalid",
+                );
+                await expect(form.locator('input[type="password"]')).toHaveValue("");
+                expect(signInRequests).toBe(1);
+              }
             },
           );
         });

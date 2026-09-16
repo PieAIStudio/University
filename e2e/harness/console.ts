@@ -21,7 +21,16 @@ function ignorableUrl(url: string): boolean {
   return /favicon|apple-touch-icon|\.map(?:\?|$)/i.test(url);
 }
 
-export function watchConsole(page: Page): {
+export function watchConsole(
+  page: Page,
+  options: {
+    /** Only a response deliberately fulfilled by this test may be expected. */
+    expectedHttpErrors?: readonly {
+      status: number;
+      matchesUrl: (url: string) => boolean;
+    }[];
+  } = {},
+): {
   assertClean: () => void;
   errors: () => readonly string[];
 } {
@@ -33,6 +42,20 @@ export function watchConsole(page: Page): {
   page.on("console", (message) => {
     if (message.type() !== "error") return;
     const text = message.text();
+    // Chrome emits a console error for an intentionally rejected sign-in.
+    // Match both the browser's resource message AND the exact intercepted URL;
+    // never silence other 400s, JavaScript exceptions or missing app assets.
+    const resourceStatus =
+      /^Failed to load resource: the server responded with a status of (\d{3})\b/u.exec(text);
+    if (
+      resourceStatus &&
+      options.expectedHttpErrors?.some(
+        (expected) =>
+          expected.status === Number(resourceStatus[1]) &&
+          expected.matchesUrl(message.location().url),
+      )
+    )
+      return;
     if (!ignorable(text)) errors.push(text);
   });
   page.on("response", (response) => {

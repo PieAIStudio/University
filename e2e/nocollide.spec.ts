@@ -134,9 +134,9 @@ test.describe("N nocollide · 四条体验回归", () => {
     const accountForm = page.locator("details.account-panel__form");
     await expect(accountForm).toBeVisible();
     await expect(accountForm).not.toHaveAttribute("open");
-    await accountForm.locator("summary").click();
+    await accountForm.locator(":scope > summary").click();
     await expect(accountForm).toHaveAttribute("open", "");
-    const password = page.locator('input[name="password"]:visible').first();
+    const password = accountForm.locator('input[type="password"]:visible');
     await expect(password, "在线账号回归必须渲染密码框").toBeVisible();
     const accountTargetBox = await boxOf(password, "密码框");
     expect(overlaps(accountFeedbackBox, accountTargetBox), "提意见浮钮盖住密码框").toBe(false);
