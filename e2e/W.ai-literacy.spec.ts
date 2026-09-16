@@ -199,6 +199,10 @@ test("W3 real source media stays readable in night mode and the contrast guard r
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   await page.goto(`${ONLINE}/ai-literacy/${course.id}/${unit.id}/${unit.lessons[0]!.id}?lang=en`);
   await expect(page.locator("html")).toHaveAttribute("data-game-ui-theme", "night");
+  // Theme arrives before the async lesson. Do not test for an optional review
+  // control until the reader has actually mounted, or its collapsed image is
+  // mistaken for missing media.
+  await expect(page.locator(".lesson-reader")).toBeVisible();
   const review = page.locator(".interaction-path__review > summary");
   if (await review.count())
     await humanClick(page, review, "open the retained source image and caption");

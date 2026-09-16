@@ -1,6 +1,7 @@
 export const messages = {
   "path.decide": "Make a call",
   "path.locate": "Find the evidence",
+  "path.inspectDraft": "Check the draft",
   "path.make": "Make it yours",
   "path.buildDraft": "Your work starts here",
   "path.repairDraft": "Edit this draft directly",

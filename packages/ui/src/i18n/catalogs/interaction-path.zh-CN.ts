@@ -1,6 +1,7 @@
 export const messages = {
   "path.decide": "做个判断",
   "path.locate": "找出依据",
+  "path.inspectDraft": "核对草稿",
   "path.make": "亲手完成",
   "path.buildDraft": "你的作品，从这里开始",
   "path.repairDraft": "直接修改这份草稿",

@@ -39,7 +39,15 @@ for (const [mode, origin] of [
         page,
       }, info) => {
         await page.setViewportSize({ width: 390, height: 844 });
-        await page.emulateMedia({ reducedMotion: "reduce" });
+        // Exercise one complete repair with the real liquid-button motion too;
+        // its authoring/language peers still cover the reduced-motion contract.
+        const ordinaryMotion =
+          mode === "delivery" && locale === "zh-CN" && sample.lessonId === "follow-a-claim";
+        await page.emulateMedia({ reducedMotion: ordinaryMotion ? "no-preference" : "reduce" });
+        await info.attach("motion-mode", {
+          body: ordinaryMotion ? "ordinary motion" : "reduced motion",
+          contentType: "text/plain",
+        });
         const errors: string[] = [];
         page.on("pageerror", (error) => errors.push(error.message));
         const activity = localizeActivity(sample.activity, locale);
@@ -130,6 +138,11 @@ for (const [mode, origin] of [
                 step.material.reference!.text,
               );
             }
+            if (step.kind === "evidence") {
+              await expect(path.locator(".interaction-path__material > :last-child")).toHaveText(
+                step.material.label,
+              );
+            }
             const choices = step.kind === "decision" ? step.options : step.material.sentences;
             const correct =
               step.kind === "decision" ? step.correctOptionId : step.correctSentenceId;
@@ -144,6 +157,9 @@ for (const [mode, origin] of [
                 "submit the first prediction",
               );
               await expect(path.locator('[data-passed="false"]')).toBeVisible();
+              expect(await wrongButton.evaluate((element) => getComputedStyle(element).color)).toBe(
+                await path.evaluate((element) => getComputedStyle(element).color),
+              );
               await page.screenshot({ path: info.outputPath("first-feedback.png") });
               await humanClick(
                 page,
@@ -211,18 +227,23 @@ for (const [mode, origin] of [
   }
 }
 
-for (const width of [320, 390, 768]) {
+for (const width of [320, 390, 768, 1440]) {
   test(`interaction workbench ${width}px: stable selection, visible feedback entry and keyboard repair`, async ({
     page,
-  }) => {
+  }, info) => {
     await page.setViewportSize({ width, height: 844 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     const sample = samples.find((item) => item.lessonId === "follow-a-claim")!;
     await page.goto(`${ONLINE_ORIGIN}${sample.path}?lang=en`);
     const path = page.locator(".interaction-path");
     await expect(path).toBeVisible();
+    await expect(path.locator(".interaction-path__choices button").first()).toBeInViewport({
+      ratio: 1,
+    });
     const feedback = page.locator(".feedback-note__open--lesson");
     await expect(feedback).toBeInViewport();
+    // The reserved slot stays readable and clickable even during the entry scroll.
+    await expect(feedback).toHaveCSS("opacity", "1");
     const isReachable = await feedback.evaluate((node) => {
       const box = node.getBoundingClientRect();
       return node.contains(
@@ -230,9 +251,8 @@ for (const width of [320, 390, 768]) {
       );
     });
     expect(isReachable).toBe(true);
-    if (width < 768) {
-      expect((await feedback.boundingBox())!.y).toBeLessThan(80);
-    }
+    expect((await feedback.boundingBox())!.y).toBeLessThan(80);
+    await page.screenshot({ path: info.outputPath("toolbar-ready.png") });
     const activity = localizeActivity(sample.activity, "en");
     for (const step of activity.steps) {
       if (step.kind === "assemble") break;
@@ -242,8 +262,12 @@ for (const width of [320, 390, 768]) {
       await path.getByRole("button", { name: "Next round", exact: true }).click();
     }
     const bank = path.locator(".interaction-path__pieces");
-    const piece = bank.locator('button[aria-pressed="false"]').first();
-    const pieceId = await piece.getAttribute("data-piece");
+    const pieceId = await bank
+      .locator('button[aria-pressed="false"]')
+      .first()
+      .getAttribute("data-piece");
+    // Selection changes aria-pressed; the locator must keep the same piece identity.
+    const piece = bank.locator(`button[data-piece="${pieceId}"]`);
     await piece.focus();
     await page.keyboard.press("Space");
     await expect(piece).toBeFocused();
@@ -257,5 +281,7 @@ for (const width of [320, 390, 768]) {
       true,
     );
     await expect(feedback).toBeInViewport();
+    await expect(feedback).toHaveCSS("opacity", "1");
+    await page.screenshot({ path: info.outputPath("keyboard-workbench.png") });
   });
 }

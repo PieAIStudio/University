@@ -299,8 +299,12 @@
   align-items: start;
   gap: 12px;
 }
-.interaction-path__choices button:disabled {
+.interaction-path__choices button:disabled,
+.path-workbench .interaction-path__pieces button:disabled {
+  /* These labels remain the evidence being discussed, not expendable controls. */
+  color: var(--game-ui-text);
   opacity: 1;
+  cursor: default;
 }
 .interaction-path__choices [data-outcome="fits"] .path-choice__mark {
   border-color: transparent;
@@ -316,7 +320,7 @@
   background: var(--game-ui-panel);
 }
 .interaction-path[data-step-kind="evidence"] .interaction-path__choices button {
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 14px 12px;
   line-height: 1.75;
 }
@@ -373,6 +377,29 @@
     gap: 20px;
   }
 }
+.lesson-reader--interaction .lesson-toolbar {
+  padding-inline-end: 72px;
+}
+body:has(.lesson-reader--interaction) .feedback-note__open--float.feedback-note__open--lesson {
+  top: max(8px, env(safe-area-inset-top));
+  bottom: auto;
+  inset-inline-start: auto;
+  inset-inline-end: max(24px, var(--safe-area-inline-end));
+  z-index: 42;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  justify-content: center;
+  gap: 0;
+  /* A reserved slot at every width; never float over answer text while scrolling. */
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+body:has(.lesson-reader--interaction) .feedback-note__open--lesson .nav-rail__label {
+  display: none;
+}
 @media (max-width: 767px) {
   .path-workbench {
     grid-template-columns: minmax(0, 1fr);
@@ -380,15 +407,6 @@
   }
   .app--lesson .lesson-reader--interaction .lesson-main > :not(.lesson-reader__header) {
     padding-inline-end: 0;
-  }
-  .lesson-reader--interaction .lesson-toolbar {
-    padding-inline-end: 72px;
-  }
-  body:has(.lesson-reader--interaction) .feedback-note__open--float.feedback-note__open--lesson {
-    top: max(8px, env(safe-area-inset-top));
-    bottom: auto;
-    inset-inline-end: max(24px, var(--safe-area-inline-end));
-    z-index: 42;
   }
   .lesson-reader--interaction .lesson-reader__title h2 {
     font-size: 24px;
@@ -406,14 +424,33 @@
   outline-offset: 4px;
 }
 .lesson-reader--interaction .lesson-reader__header {
-  margin-block: 16px 8px;
+  margin-block: 4px;
+}
+.lesson-reader--interaction .lesson-reader__title {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+}
+.lesson-reader--interaction .lesson-reader__title > .eyebrow {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+  max-width: 5rem;
+  line-height: 1.5;
 }
 .lesson-reader--interaction .lesson-reader__title h2 {
-  font-size: clamp(24px, 3vw, 36px);
-  line-height: 1.25;
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.35;
+}
+.lesson-reader--interaction .lesson-reader__title > :not(h2, .eyebrow) {
+  grid-column: 1 / -1;
 }
 .lesson-reader--interaction .lesson-skip-to-questions {
-  margin-block: 8px 16px;
+  margin-block: 4px 8px;
 }
 .lesson-reader--interaction .lesson-breadcrumb__link,
 .lesson-reader--interaction .lesson-breadcrumb__current {

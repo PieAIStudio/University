@@ -28,6 +28,12 @@ writes are authorized. Do not open another worktree for this lesson experiment.
 Other sessions' branches, including `claude/interaction-research`, remain outside
 this task. Course writes stay in the isolated authoring corpus.
 
+The resumed cleanup also removed the unused detached DevSpace checkout
+`University-318d9d1f`: its commit was already an ancestor of this experiment,
+there were no modified, untracked or ignored files, and no process had its cwd
+there. Removal used ordinary `git worktree remove`, without force. The repository
+now contains main, the separate Claude lane, and this single Codex worktree.
+
 ## Steps
 
 - [x] Inspect routers, recall, source isolation and native recovery contract.
@@ -36,9 +42,44 @@ this task. Course writes stay in the isolated authoring corpus.
 - [x] Add typed path validation, deterministic rules and generic fixtures.
 - [x] Add shared accessible round UI and isolated in-memory attempt evidence.
 - [x] Add opt-in authoring checks; prove native isolated round trip.
-- [ ] Run focused checks, real browser evidence, `pnpm verify`, default `pnpm e2e`.
+- [x] Run focused checks, real browser evidence, `pnpm verify`, default `pnpm e2e`.
 - [x] Integrate three real bilingual samples through native revision, recovery
       export, reactivation and the guarded content importer.
+
+## Current delivery status
+
+Ready for Owner's hands-on review of the three samples, not a mainline or
+production release. Continue in this worktree only. The default browser suite
+passed all **305 tests** after the final renderer change; a fresh full
+`VITEST_MAX_WORKERS=1 pnpm verify` then passed on the same product code, including
+type checks, tests, builds, source freshness, activity solvability and governance.
+The final logs and exit codes live in
+`.devspace-visual/interaction-first/final-closeout/` (`default-e2e` and
+`verify-after-critic`). Earlier failed receipts below remain historical evidence,
+not unfinished assignments.
+
+The retained preview at `http://127.0.0.1:23150` belongs to this worktree. Its
+served course JSON was byte-compared with this checkout's generated file;
+`live-preview.json` records the match and all three direct lesson URLs. The
+owner-facing screenshot brief is
+`.devspace-visual/interaction-first/consolidated/owner-review-brief.md`.
+The original independent exercises remain separate; human enjoyment, delayed
+retention, transfer and physical-device feel have not been measured.
+
+Learning skipped -> the verified branch boundary, visual hierarchy and feedback
+rules already belong to this plan, V5 and their regression tests; no parallel
+learning document is needed.
+
+## Design basis
+
+Keep one task and a visible work product, rather than adding compulsory taps.
+Duolingo's [chess-course account](https://blog.duolingo.com/chess-course/) describes
+progression from guided puzzles toward independent play. The SDT authors'
+[PENS overview](https://selfdeterminationtheory.org/player-experience-of-needs-satisfaction-pens/)
+identifies usable controls, clear feedback and meaningful choice as relevant to
+players' need satisfaction. These are design references, not evidence that these
+three lessons improve retention or outperform Duolingo. No PENS questionnaire
+was imported or administered.
 
 ## Design and reuse
 
@@ -77,7 +118,7 @@ occurrence slot remains the same. The legacy reader and thirteen games remain.
 Focused tests passed: 20 core-rule cases, 5 UI cases, and 2 native pipeline
 cases. Full verification initially stopped at formatting of the new
 `lesson-spine.d.mts`; that was corrected, not waived. Full final verification
-and browser acceptance are recorded below once complete. A separate review
+and browser acceptance are recorded in the current delivery status above. A separate review
 also caught a formatter damaging the old evidence-token examples in the
 authoring skill; the original examples and unrelated formatting were restored.
 
@@ -172,3 +213,68 @@ real text ellipsis. A scrolled-away page title is not evidence that the current
 question or recovery button is blocked; validate their measured bounds instead.
 The sound button is not TTS, and reorder is keyboard/button operation, not drag.
 Human enjoyment, retention, transfer and conversion remain unmeasured.
+
+Consolidation is complete at `bd30456a`: both checkpoint commits are ancestors
+of `codex/interaction-first`; `codex/interaction-gameplay` and its worktree were
+removed without force after source/evidence preservation. No mainline or Claude
+branch files were edited. Future execution stays in this checkout.
+
+After consolidation, the retained preview exposed dimmed answer text after a
+wrong submission. These labels are still the material needed to understand the
+feedback, so the scoped choice styles now preserve full reading colour while
+remaining disabled. The browser regression compares that colour with the lesson
+text. Unsupported-claim rounds now say “核对草稿”, not “找出依据”. The first
+merged `pnpm verify` completed successfully with one Vitest worker; the final UI
+delta and both-mode bilingual browser checks are recorded at closeout.
+
+
+### Merged browser/visual continuation
+
+The first merged focused run passed all 12 bilingual/mode sample flows and the
+catalog check, but the three new viewport probes failed. `is-away` was still
+hiding the feedback control after the entry scroll. Its reserved toolbar slot
+now stays visible. The initial follow-up critic additionally found the old
+768px float overlapping a choice, so all interaction-path widths now use the
+same reserved toolbar position; ordinary lessons remain unchanged. Matching
+768px before/after captures and the independent follow-up confirm closure.
+
+The latest focused run passes 17 cases, including stable keyboard selection at
+320/390/768/1440. A test locator was corrected to retain piece identity after
+aria-pressed changes, without relaxing its focus or mutation assertions.
+Evidence and the Owner-facing walkthrough are in
+`.devspace-visual/interaction-first/consolidated/owner-review-brief.md`.
+At this checkpoint the default browser suite was still outstanding; the current
+delivery status above records its final result. No gameplay branch or second
+source corpus remains to reconcile.
+
+### Final compatibility pass
+
+The saved default run finished with 296 passes and six failures, not a green
+acceptance. Three failures expected prose-section progress on the new round
+surface; one inspected optional media before the asynchronous reader mounted;
+two looked for reading controls in the old toolbar instead of the expanded
+explanation. The updated checks retain the actual behavioral requirements:
+typing an answer cannot complete a guided round, source captions remain visible
+with a real contrast-regression attack, and every reading control must fit and
+be hit-testable. Ordinary lessons are now exercised alongside the interactive
+sample in both modes rather than dropping their coverage. All eight focused
+compatibility cases passed. Evidence is in
+`.devspace-visual/interaction-first/final-closeout/`.
+
+The director's fresh 390px dark-mode walkthrough actually submitted a wrong
+judgment, recovered, selected the unsupported draft sentence, rejected the
+incorrect initial artifact, removed only that clause, and copied the corrected
+artifact. It did not submit the separate graded exercise or create a cloud
+account. The guided work remains distinct from independent mastery.
+
+The final independent seven-image review found one high-priority hierarchy
+problem: the teaching/provenance note appeared under the draft heading, where
+it could be mistaken for the draft itself. The material renderer now places
+that unchanged note and original-source link before the heading, and the
+heading leads directly into the selectable sentences. A new DOM assertion and
+the bilingual browser flow guard this ordering. The six focused UI tests pass;
+the independent same-viewport before/after critic returned `fixed`, and the
+scoped interface detector returned no findings. The screenshots and both
+critic verdicts are preserved in `final-closeout/` rather than replacing the
+first review. Normal vertical scrolling remains intentional; the horizontally
+scrollable breadcrumb preserves the existing current-lesson-first behavior.

@@ -161,6 +161,15 @@ describe("shared interaction path host", () => {
     expect(container.querySelector(".interaction-path__reference")?.textContent).toContain(
       "来源说明按钮可以用键盘触发。",
     );
+    expect(container.querySelector(".interaction-path__position")?.textContent).toContain(
+      "核对草稿",
+    );
+    // The draft heading must lead straight into the selectable draft, not
+    // label the teaching/provenance note as if it were part of that draft.
+    const material = container.querySelector(".interaction-path__material")!;
+    expect(material.lastElementChild?.tagName).toBe("H3");
+    expect(material.lastElementChild?.textContent).toBe(step.material.label);
+    expect(material.nextElementSibling?.className).toContain("interaction-path__choices");
     await act(async () =>
       root.render(
         <LearningActivity

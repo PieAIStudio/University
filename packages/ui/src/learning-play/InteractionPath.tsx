@@ -151,7 +151,9 @@ export function InteractionPath({
                     step.kind === "decision"
                       ? "path.decide"
                       : step.kind === "evidence"
-                        ? "path.locate"
+                        ? step.task === "unsupported"
+                          ? "path.inspectDraft"
+                          : "path.locate"
                         : "path.make",
                   )}
                 </span>
@@ -201,13 +203,13 @@ export function InteractionPath({
                         <blockquote>{step.material.reference.text}</blockquote>
                       </section>
                     ) : null}
-                    <h3>{step.material.label}</h3>
                     <p>{step.material.note}</p>
                     {source && "url" in source.reference ? (
                       <a href={source.reference.url} target="_blank" rel="noreferrer">
                         {t("path.openSource")}
                       </a>
                     ) : null}
+                    <h3>{step.material.label}</h3>
                   </div>
                 ) : null}
                 <div className="interaction-path__choices" role="group" aria-label={step.question}>
