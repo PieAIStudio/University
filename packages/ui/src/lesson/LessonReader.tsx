@@ -1,4 +1,4 @@
-import { translate } from "../i18n/index.js";
+import { translate, useI18n } from "../i18n/index.js";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { GameSegmentedControl, GameToggle } from "@pieai/swimmer-ui-kit";
 import {
@@ -11,6 +11,7 @@ import {
   type SourceAccessPort,
 } from "@pieai/university-core";
 
+import { LearningActivity } from "../learning-play/LearningActivity.js";
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
 import type { EntitlementReader } from "../capability/ai-entitlements.js";
@@ -131,6 +132,22 @@ export function LessonReader({
   /** Identity boundary for browser-only, unsubmitted exercise recovery. */
   readonly answerDraftScope?: string;
 }) {
+  const { locale } = useI18n();
+  const interactionPath = view.lesson.activities?.find(
+    (activity) => activity.kind === "interaction-path",
+  );
+  const pathScope = JSON.stringify([
+    answerDraftScope,
+    locator.studyId,
+    locator.courseId,
+    locator.unitId,
+    locator.lessonId,
+    view.lesson.contentRevision,
+    locale,
+    interactionPath?.id,
+  ]);
+  const [pathProgress, setPathProgress] = useState({ scope: "", completed: 0 });
+  const completedRounds = pathProgress.scope === pathScope ? pathProgress.completed : 0;
   const completed = isLessonComplete(completion);
   const readConfirmed = completion.readConfirmed;
   const exercisesPassed = completion.exercisesPassed;
@@ -493,34 +510,94 @@ export function LessonReader({
   // the moment they turned vocabulary off.
   const showRightContent = showWords || lessonMarks.length > 0;
 
+  const prose = (
+    <MarkdownContent
+      suppressedActivityId={interactionPath?.id}
+      {...(view.lesson.language
+        ? {
+            language: {
+              ...view.lesson.language,
+              ...(liveReasons ? { reasons: liveReasons } : {}),
+            },
+          }
+        : {})}
+      englishEnabled={englishMode}
+      foreignSettings={foreignSettings}
+      speechQuality={speechQuality}
+      vocabularyStages={vocabularyStages}
+      onStageWord={stageWord}
+      {...(view.lesson.links ? { lessonLinks: view.lesson.links } : {})}
+      {...(onFollowLink ? { onFollowLink } : {})}
+      {...(view.lesson.evidenceAnchors ? { evidenceAnchors: view.lesson.evidenceAnchors } : {})}
+      {...(view.lesson.termAnchors ? { termAnchors: view.lesson.termAnchors } : {})}
+      evidence={view.lesson.evidence}
+      evidenceBasePath={loadWindowedEvidence}
+      onOpenEvidence={(index, trigger) => openSourceSheet(index, trigger)}
+      assets={view.lesson.assets}
+      {...(view.lesson.activities ? { activities: view.lesson.activities } : {})}
+      sections={sections}
+      detailMode={detailMode}
+    >
+      {view.lesson.content}
+    </MarkdownContent>
+  );
+
+  const exerciseBlocks = view.lesson.exercises.map((exercise) => (
+    <ExerciseBlock
+      key={exercise.id}
+      locator={locator}
+      exercise={exercise}
+      grading={grading}
+      readEntitlements={readEntitlements}
+      answerDraftScope={answerDraftScope}
+      onRefresh={onLearningChanged}
+    />
+  ));
+
+  const readingTools = (
+    <>
+      {annotated ? (
+        <Tip term="english-mode">
+          <GameToggle
+            checked={englishMode}
+            label={translate("ui.lesson.lessonReader.copy.外语模式")}
+            onClick={() => setEnglishModePersisted(!englishMode)}
+          />
+        </Tip>
+      ) : null}
+      <span className="lesson-toolbar__label" id="lesson-detail-label">
+        {translate("ui.lesson.lessonReader.copy.讲解层级")}
+      </span>
+      <GameSegmentedControl
+        label={translate("ui.lesson.lessonReader.copy.讲解层级")}
+        activeId={detailed ? "all" : "standard"}
+        options={DETAIL_OPTIONS}
+        onSelect={(id) => setDetailModePersisted(id === "all" ? "all" : "standard")}
+      />
+    </>
+  );
+
   return (
-    <article className="lesson-reader">
+    <article className={`lesson-reader${interactionPath ? " lesson-reader--interaction" : ""}`}>
       {onBackToCourse ? (
         <LessonToolbar
           onClose={onBackToCourse}
           sections={sections}
           progressDestinationId={completionDestination}
+          progressOverride={
+            interactionPath
+              ? {
+                  current: completedRounds,
+                  total: interactionPath.steps.length,
+                  label: translate("path.progress", {
+                    current: completedRounds,
+                    total: interactionPath.steps.length,
+                  }),
+                }
+              : undefined
+          }
         >
-          {annotated ? (
-            // Only offered where there is something to offer. A toggle that
-            // does nothing on most lessons teaches the learner to ignore it.
-            <Tip term="english-mode">
-              <GameToggle
-                checked={englishMode}
-                label={translate("ui.lesson.lessonReader.copy.外语模式")}
-                onClick={() => setEnglishModePersisted(!englishMode)}
-              />
-            </Tip>
-          ) : null}
-          <span className="lesson-toolbar__label" id="lesson-detail-label">
-            {translate("ui.lesson.lessonReader.copy.讲解层级")}
-          </span>
-          <GameSegmentedControl
-            label={translate("ui.lesson.lessonReader.copy.讲解层级")}
-            activeId={detailed ? "all" : "standard"}
-            options={DETAIL_OPTIONS}
-            onSelect={(id) => setDetailModePersisted(id === "all" ? "all" : "standard")}
-          />
+          {!interactionPath ? readingTools : null}
           {toolbarExtras}
         </LessonToolbar>
       ) : null}
@@ -611,40 +688,36 @@ export function LessonReader({
               </button>
             </p>
           ) : null}
-          <div className="markdown-body lesson-prose" ref={bodyRef}>
-            <MarkdownContent
-              {...(view.lesson.language
-                ? {
-                    language: {
-                      ...view.lesson.language,
-                      ...(liveReasons ? { reasons: liveReasons } : {}),
-                    },
-                  }
-                : {})}
-              englishEnabled={englishMode}
-              foreignSettings={foreignSettings}
-              speechQuality={speechQuality}
-              vocabularyStages={vocabularyStages}
-              onStageWord={stageWord}
-              {...(view.lesson.links ? { lessonLinks: view.lesson.links } : {})}
-              {...(onFollowLink ? { onFollowLink } : {})}
-              {...(view.lesson.evidenceAnchors
-                ? { evidenceAnchors: view.lesson.evidenceAnchors }
-                : {})}
-              {...(view.lesson.termAnchors ? { termAnchors: view.lesson.termAnchors } : {})}
-              evidence={view.lesson.evidence}
-              evidenceBasePath={loadWindowedEvidence}
-              onOpenEvidence={(index, trigger) => openSourceSheet(index, trigger)}
+          {interactionPath ? (
+            <LearningActivity
+              key={pathScope}
+              activity={interactionPath}
               assets={view.lesson.assets}
-              {...(view.lesson.activities ? { activities: view.lesson.activities } : {})}
-              sections={sections}
-              detailMode={detailMode}
-            >
-              {view.lesson.content}
-            </MarkdownContent>
-          </div>
+              onPathProgress={(count) => setPathProgress({ scope: pathScope, completed: count })}
+              occurrenceId={pathScope}
+              reviewContent={
+                <>
+                  <div className="interaction-path__reading-tools">{readingTools}</div>
+                  <div className="markdown-body lesson-prose" ref={bodyRef}>
+                    {prose}
+                  </div>
+                </>
+              }
+              onNext={() => {
+                exercisesRef.current?.scrollIntoView({ behavior: "instant", block: "start" });
+                exercisesRef.current
+                  ?.querySelector<HTMLElement>("textarea, input, button")
+                  ?.focus({ preventScroll: true });
+              }}
+            />
+          ) : (
+            <div className="markdown-body lesson-prose" ref={bodyRef}>
+              {prose}
+            </div>
+          )}
           {!readConfirmed && !exercisesPassed ? (
             <LessonReadConfirm
+              interaction={Boolean(interactionPath)}
               remaining={false}
               confirming={confirming}
               error={confirmationError}
@@ -657,20 +730,17 @@ export function LessonReader({
               <p>{translate("ui.lesson.lessonReader.copy.已确认读过这一版-还差练习")}</p>
             </section>
           ) : null}
-          <div ref={exercisesRef} />
-          {view.lesson.exercises.map((exercise) => (
-            <ExerciseBlock
-              key={exercise.id}
-              locator={locator}
-              exercise={exercise}
-              grading={grading}
-              readEntitlements={readEntitlements}
-              answerDraftScope={answerDraftScope}
-              onRefresh={onLearningChanged}
-            />
-          ))}
+          {interactionPath ? (
+            <div ref={exercisesRef}>{exerciseBlocks}</div>
+          ) : (
+            <>
+              <div ref={exercisesRef} />
+              {exerciseBlocks}
+            </>
+          )}
           {!readConfirmed && exercisesPassed ? (
             <LessonReadConfirm
+              interaction={Boolean(interactionPath)}
               remaining
               confirming={confirming}
               error={confirmationError}
@@ -819,12 +889,14 @@ function LessonReadConfirm({
   error,
   destination,
   onConfirm,
+  interaction = false,
 }: {
   readonly remaining: boolean;
   readonly confirming: boolean;
   readonly error: string | null;
   readonly destination?: string;
   readonly onConfirm: () => void;
+  readonly interaction?: boolean;
 }) {
   return (
     <section
@@ -834,18 +906,22 @@ function LessonReadConfirm({
     >
       <div>
         <h3 id="lesson-completion-title">
-          {remaining
-            ? translate("ui.lesson.lessonReader.copy.题目过了-还差确认你读过这一版")
-            : translate("ui.lesson.lessonReader.copy.读到这里-确认你完成了这次课文更新")}
+          {interaction
+            ? translate("path.confirmTitle")
+            : remaining
+              ? translate("ui.lesson.lessonReader.copy.题目过了-还差确认你读过这一版")
+              : translate("ui.lesson.lessonReader.copy.读到这里-确认你完成了这次课文更新")}
         </h3>
         <p>
-          {remaining
-            ? translate(
-                "ui.lesson.lessonReader.copy.答对不会自动完课-确认你读过这一版-进度才会记上",
-              )
-            : translate(
-                "ui.lesson.lessonReader.copy.打开课文-滚动页面或答对练习都不会自动完成-这个确认只针对当前固定版本",
-              )}
+          {interaction
+            ? translate("path.confirmNote")
+            : remaining
+              ? translate(
+                  "ui.lesson.lessonReader.copy.答对不会自动完课-确认你读过这一版-进度才会记上",
+                )
+              : translate(
+                  "ui.lesson.lessonReader.copy.打开课文-滚动页面或答对练习都不会自动完成-这个确认只针对当前固定版本",
+                )}
         </p>
       </div>
       <LiquidCtaButton
@@ -856,7 +932,9 @@ function LessonReadConfirm({
       >
         {confirming
           ? translate("ui.lesson.lessonReader.copy.正在记录")
-          : translate("ui.lesson.lessonReader.copy.我读完了")}
+          : interaction
+            ? translate("path.confirm")
+            : translate("ui.lesson.lessonReader.copy.我读完了")}
       </LiquidCtaButton>
       {error ? (
         <p className="inline-error" role="alert">

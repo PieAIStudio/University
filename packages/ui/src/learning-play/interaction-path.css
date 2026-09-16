@@ -1,0 +1,184 @@
+.interaction-path {
+  display: block;
+  padding: clamp(16px, 3vw, 28px);
+  color: var(--game-ui-text);
+  overflow-wrap: anywhere;
+}
+.interaction-path h2 {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 28px);
+  line-height: 1.35;
+}
+.interaction-path p {
+  line-height: 1.65;
+  margin-block: 8px;
+}
+.interaction-path__position,
+.interaction-path__source {
+  color: var(--game-ui-text-muted);
+  font-size: 14px;
+}
+.interaction-path .interaction-path__position {
+  margin-block: 0 8px;
+}
+.interaction-path__image {
+  margin: 16px 0;
+}
+.interaction-path__image img {
+  display: block;
+  width: 100%;
+  max-height: 210px;
+  object-fit: contain;
+}
+.interaction-path__source summary {
+  min-height: 44px;
+  display: list-item;
+  padding-block: 12px;
+  cursor: pointer;
+}
+.interaction-path__choices,
+.interaction-path__pieces {
+  display: grid;
+  gap: 10px;
+  margin-block: 20px;
+}
+.interaction-path__choices button,
+.interaction-path__pieces button {
+  justify-content: start;
+  text-align: start;
+  white-space: normal;
+  min-height: 44px;
+  height: auto;
+  padding-block: 12px;
+}
+.interaction-path__actions,
+.interaction-path__piece-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.interaction-path__actions {
+  margin-block-start: 20px;
+}
+.interaction-path__source a {
+  color: var(--game-ui-text);
+  text-underline-offset: 3px;
+}
+.interaction-path__source p {
+  margin-block: 4px 16px;
+}
+.interaction-path__assembly {
+  padding-inline-start: 24px;
+}
+.interaction-path__assembly li {
+  padding-block: 8px;
+}
+.interaction-path__piece-actions button {
+  min-height: 44px;
+}
+.interaction-path__constraints {
+  padding-inline-start: 24px;
+  line-height: 1.7;
+}
+.interaction-path__material {
+  margin-block-start: 24px;
+}
+.interaction-path__material h3 {
+  margin-block-end: 4px;
+}
+.interaction-path__reference {
+  margin-block-end: 20px;
+}
+.interaction-path__response {
+  scroll-margin-block: calc(var(--lesson-toolbar-scroll-offset, 4rem) + 12px) 20px;
+}
+.interaction-path__reference blockquote {
+  margin: 8px 0;
+  line-height: 1.7;
+}
+.interaction-path__image-review summary {
+  min-height: 44px;
+  padding-block: 10px;
+  cursor: pointer;
+}
+.interaction-path[data-step-kind="evidence"] .interaction-path__choices {
+  border-inline-start: 2px solid var(--game-ui-border-subtle);
+  padding-inline-start: 12px;
+}
+.interaction-path__reading-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 16px;
+}
+.interaction-path__feedback {
+  border-block: 1px solid var(--game-ui-border-subtle);
+  padding-block: 16px;
+  margin-block-start: 20px;
+}
+.interaction-path__receipt,
+.interaction-path__review {
+  margin-block-start: 24px;
+  line-height: 1.6;
+}
+.interaction-path__receipt summary,
+.interaction-path__review summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: 10px;
+}
+.interaction-path__artifact {
+  white-space: pre-wrap;
+  font: inherit;
+  line-height: 1.7;
+  padding: 16px;
+  background: var(--game-ui-panel);
+  border-radius: 12px;
+}
+.interaction-path :focus-visible,
+.interaction-path__review summary:focus-visible {
+  outline: 2px solid var(--game-ui-accent);
+  outline-offset: 4px;
+}
+.lesson-reader--interaction .lesson-reader__header {
+  margin-block: 16px 8px;
+}
+.lesson-reader--interaction .lesson-reader__title h2 {
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: 1.25;
+}
+.lesson-reader--interaction .lesson-skip-to-questions {
+  margin-block: 8px 16px;
+}
+@media (max-width: 540px) {
+  .lesson-reader--interaction .lesson-toolbar {
+    flex-wrap: nowrap;
+  }
+  .lesson-reader--interaction .lesson-toolbar__tools {
+    flex: none;
+    width: auto;
+  }
+  .lesson-reader--interaction .lesson-toolbar__progress {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .lesson-reader--interaction .lesson-toolbar__close {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .interaction-path {
+    padding: 16px;
+  }
+  .interaction-path__image img {
+    max-height: 140px;
+  }
+  .interaction-path h2 {
+    font-size: 22px;
+  }
+  .interaction-path__choices,
+  .interaction-path__pieces {
+    margin-block: 14px;
+  }
+}

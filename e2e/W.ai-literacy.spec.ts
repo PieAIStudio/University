@@ -126,7 +126,10 @@ for (const locale of ["en", "zh-CN"] as const) {
             page.getByRole("region", { name: "Next lesson", exact: true }),
           ).not.toContainText(/[\u4e00-\u9fff]/);
         }
-        await expect(reader.locator(".learning-activity").first()).toBeVisible();
+        await expect(reader.locator(".learning-activity, .interaction-path").first()).toBeVisible();
+        const review = reader.locator(".interaction-path__review > summary");
+        if (await review.count())
+          await humanClick(page, review, "open the interaction lesson's full source explanation");
         const disclosure = reader.locator(".lesson-sources__details summary").first();
         await humanClick(page, disclosure, "source support and limitations");
         await expect(reader.locator(".lesson-sources__provenance").first()).toBeVisible();
@@ -196,6 +199,9 @@ test("W3 real source media stays readable in night mode and the contrast guard r
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   await page.goto(`${ONLINE}/ai-literacy/${course.id}/${unit.id}/${unit.lessons[0]!.id}?lang=en`);
   await expect(page.locator("html")).toHaveAttribute("data-game-ui-theme", "night");
+  const review = page.locator(".interaction-path__review > summary");
+  if (await review.count())
+    await humanClick(page, review, "open the retained source image and caption");
   const media = page.locator(".lesson-media").first();
   await expect(media).toBeVisible();
   await media.scrollIntoViewIfNeeded();

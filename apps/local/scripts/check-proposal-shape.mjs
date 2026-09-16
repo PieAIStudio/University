@@ -255,7 +255,9 @@ function check(proposal, options = {}) {
       claimId(lessonIds, lesson.id, "lesson", `unit ${unit.id}`);
       checkEvidence(lesson.evidence, where, problems);
       checkContent(lesson.content, where, problems);
-      for (const { message } of checkLessonSpine(lesson.content, lesson.variant)) {
+      for (const { message } of checkLessonSpine(lesson.content, lesson.variant, {
+        interactionLesson: lesson,
+      })) {
         problems.push(`${where}: ${message}`);
       }
       for (const message of checkLessonUrlEvidence(lesson.content, lesson.evidence)) {

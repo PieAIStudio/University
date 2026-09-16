@@ -381,6 +381,7 @@ export {
 
 export type * from "./learning-play/types.js";
 export * from "./learning-play/connect.js";
+export * from "./learning-play/interaction-path.js";
 export * from "./learning-play/sort.js";
 export * from "./learning-play/contrast.js";
 export * from "./learning-play/weigh.js";

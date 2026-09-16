@@ -106,6 +106,7 @@
     "./learning-play/LearningActivity.js": "./src/learning-play/LearningActivity.tsx",
     "./learning-play/LearningPlayLab.js": "./src/learning-play/LearningPlayLab.tsx",
     "./learning-play/learning-play.css": "./src/learning-play/learning-play.css",
+    "./learning-play/interaction-path.css": "./src/learning-play/interaction-path.css",
     "./learning-play/hunt.css": "./src/learning-play/hunt.css",
     "./learning-play/dispatch.css": "./src/learning-play/dispatch.css",
     "./learning-play/program.css": "./src/learning-play/program.css",

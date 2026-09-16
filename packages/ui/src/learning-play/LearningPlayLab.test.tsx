@@ -39,7 +39,9 @@ describe("the play lab offers every game that exists", () => {
   const offered = new Set<string>([...FOUNDATION_MODES, ...AI_MODES]);
 
   it("lists every kind the wire enum accepts", () => {
-    const declared = LessonActivityKindSchema.options;
+    // A path orchestrates authored lesson rounds; it is not a standalone lab game.
+    // InteractionPath.test covers its three actions through the shared host.
+    const declared = LessonActivityKindSchema.options.filter((kind) => kind !== "interaction-path");
     expect([...declared].filter((kind) => !offered.has(kind))).toEqual([]);
   });
 
