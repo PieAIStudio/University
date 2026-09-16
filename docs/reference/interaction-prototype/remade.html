@@ -1,4 +1,4 @@
-<title>改造前后对照</title>
+<title>先让它帮上一点忙</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap">
 <style>
 :root{
@@ -342,120 +342,6 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 </style>
 
 <style>
-/* ================= 对照外壳 ================= */
-.wrap{max-width:520px;margin-inline:auto;height:100%;display:flex;flex-direction:column;background:var(--bg)}
-.hdr{flex:none;padding-inline:16px;padding-block:14px 10px;background:var(--bg);
-  z-index:20;border-bottom:1px solid var(--line)}
-.hdr h1{margin:0 0 3px;font-size:15px;font-weight:700;color:var(--ink-title);letter-spacing:.01em}
-.hdr p{margin:0 0 11px;font-size:12.5px;color:var(--ink-faint);line-height:1.5}
-.switch{display:flex;gap:5px;background:var(--bg-deep);border-radius:var(--r-pill);padding:4px}
-.switch button{flex:1;border-radius:var(--r-pill);padding-block:9px;font-size:13.5px;font-weight:700;
-  color:var(--ink-soft);transition:.2s;line-height:1.3}
-.switch button[aria-selected="true"]{background:var(--panel);color:var(--ink-title);box-shadow:var(--sh)}
-.switch button[aria-selected="true"].remade{background:var(--accent);color:#fff}
-.picker{display:flex;gap:6px;margin-top:9px;overflow-x:auto;padding-bottom:2px}
-.picker::-webkit-scrollbar{height:0}
-.picker button{flex:none;border:1px solid var(--line-2);border-radius:var(--r-pill);
-  padding-block:6px;padding-inline:12px;font-size:12.5px;color:var(--ink-soft);white-space:nowrap}
-.picker button[aria-current="true"]{background:var(--ink-title);color:var(--bg);border-color:var(--ink-title);font-weight:600}
-.body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
-
-/* 计量条：两边用同一把尺子 */
-.meter{display:flex;gap:7px;margin-block:11px 0}
-.mcell{flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
-  padding-block:7px;padding-inline:8px;text-align:center}
-.mcell b{display:block;font-family:var(--num);font-size:17px;font-weight:700;color:var(--ink-title);line-height:1.2}
-.mcell b.hot{color:var(--accent-ink)}
-.mcell span{font-size:10.5px;color:var(--ink-faint)}
-
-/* ================= 原版：阅读体验 ================= */
-.read{padding-inline:16px;padding-block:18px 28px;overflow-y:auto;flex:1}
-.read h1{font-size:23px;line-height:1.4;font-weight:700;color:var(--ink-title);margin:0 0 20px;text-wrap:balance}
-.read h2{font-size:17px;font-weight:700;color:var(--ink-title);margin:26px 0 10px;line-height:1.45}
-.read h3{font-size:15px;font-weight:700;color:var(--ink-title);margin:20px 0 8px}
-.read p{margin:0 0 13px;font-size:15.5px;line-height:1.85;color:var(--ink)}
-.read a{color:var(--accent-ink);text-decoration-color:var(--accent-pale);text-underline-offset:2px}
-.read strong{font-weight:700;color:var(--ink-title)}
-.read details{border:1px solid var(--line);border-radius:12px;background:var(--panel-2);
-  margin:0 0 13px;padding-block:1px}
-.read summary{cursor:pointer;font-size:14.5px;font-weight:600;color:var(--ink-title);
-  padding-block:11px;padding-inline:13px;list-style:none;display:flex;gap:8px;align-items:flex-start;line-height:1.5}
-.read summary::-webkit-details-marker{display:none}
-.read summary::before{content:"+";flex:none;font-family:var(--num);font-weight:700;color:var(--accent);font-size:16px;line-height:1.4}
-.read details[open] summary::before{content:"−"}
-.read details p{padding-inline:13px;font-size:14px;line-height:1.8;color:var(--ink-soft);margin-bottom:11px}
-figure{margin:0 0 15px}
-figure figcaption{font-size:12px;color:var(--ink-faint);line-height:1.5;margin-top:6px}
-.earth{height:150px;border-radius:12px;overflow:hidden;position:relative;border:1px solid var(--line);
-  background:radial-gradient(ellipse 130% 80% at 50% 122%,#7d8894 0%,#2e343b 44%,#07080b 100%)}
-.earth .globe{position:absolute;left:50%;top:32px;width:54px;height:54px;transform:translateX(-50%);
-  border-radius:50%;background:radial-gradient(circle at 33% 29%,#bcd9f0,#4b83b8 50%,#1d3a59);
-  box-shadow:0 0 28px #6fa8d83d}
-.earth .moon{position:absolute;left:-12%;right:-12%;bottom:-46px;height:104px;border-radius:50% 50% 0 0;
-  background:linear-gradient(180deg,#9a9186,#4f4a42)}
-.playbox{border:1px solid var(--line-2);border-radius:var(--r-card);background:var(--panel);
-  padding-block:14px;padding-inline:14px;margin:0 0 15px;box-shadow:var(--sh)}
-.playbox .ph{font-size:11px;color:var(--ink-faint);font-family:var(--num);letter-spacing:.11em;
-  text-transform:uppercase;font-weight:600;margin-bottom:4px}
-.playbox h4{margin:0 0 4px;font-size:15.5px;font-weight:700;color:var(--ink-title)}
-.playbox .brief{font-size:13.5px;color:var(--ink-soft);line-height:1.6;margin:0 0 12px}
-.readfoot{border-top:1px solid var(--line);margin-top:28px;padding-top:18px}
-.lamp{display:flex;gap:9px;align-items:center;font-size:13px;color:var(--ink-faint);margin-bottom:12px}
-.lamp i{width:9px;height:9px;border-radius:var(--r-pill);background:var(--bg-deep);border:1px solid var(--line-2)}
-.lamp i.on{background:var(--ok);border-color:var(--ok)}
-.exbox{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-card);
-  padding-block:14px;padding-inline:14px;margin-bottom:13px}
-.exbox .et{font-size:12px;color:var(--ink-faint);margin-bottom:6px;font-weight:600}
-.exbox p{font-size:14.5px;line-height:1.75;margin:0 0 11px}
-.exbox textarea{width:100%;min-height:74px;border:2px solid var(--line-2);border-radius:11px;
-  background:var(--panel);color:var(--ink);font:inherit;font-size:15px;padding-block:10px;padding-inline:11px;
-  resize:vertical;line-height:1.6}
-.exbox textarea:focus{outline:none;border-color:var(--accent)}
-.exbox .verdict{margin-top:10px;font-size:14px;line-height:1.7;border-radius:10px;
-  padding-block:9px;padding-inline:11px}
-.exbox .verdict.ok{background:var(--ok-pale);color:var(--ok-ink);border:1px solid var(--ok)}
-.exbox .verdict.no{background:var(--berry-pale);color:var(--berry-ink);border:1px solid var(--berry)}
-.cardrow{display:flex;flex-direction:column;gap:9px}
-.fcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;
-  padding-block:11px;padding-inline:12px}
-.fcard .f{font-size:14.5px;font-weight:600;color:var(--ink-title);line-height:1.55}
-.fcard .b{font-size:13.5px;color:var(--ink-soft);line-height:1.65;margin-top:6px;
-  border-top:1px dashed var(--line-2);padding-top:7px}
-.btnrow{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
-.rbtn{border-radius:12px;padding-block:11px;padding-inline:16px;font-size:14.5px;font-weight:700;
-  background:var(--accent);color:#fff;border-bottom:var(--lip-h) solid #0000002e;transition:transform .08s}
-.rbtn:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
-.rbtn.quiet{background:var(--panel);color:var(--ink-soft);border:2px solid var(--line-2);border-bottom-width:2px}
-.rbtn:disabled{background:var(--bg-deep);color:var(--ink-faint);border-bottom-color:transparent}
-
-/* 原版里真实的 sort / weigh 组件 */
-.sortpool{display:flex;flex-direction:column;gap:7px;margin-bottom:11px}
-.sitem{background:var(--panel-2);border:2px solid var(--line);border-radius:11px;
-  padding-block:9px;padding-inline:11px;font-size:14.5px;text-align:left;width:100%;line-height:1.5}
-.sitem small{display:block;color:var(--ink-faint);font-size:12.5px;margin-top:2px}
-.sitem[aria-checked="true"]{background:var(--accent-pale);border-color:var(--accent)}
-.sitem.ok{background:var(--ok-pale);border-color:var(--ok)}
-.sitem.no{background:var(--berry-pale);border-color:var(--berry)}
-.sbins{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.sbin{border:2px dashed var(--line-2);border-radius:12px;background:var(--bg-deep);
-  padding-block:10px;padding-inline:9px;min-height:84px}
-.sbin.armed{border-style:solid;border-color:var(--accent);background:var(--accent-pale)}
-.sbin h5{margin:0 0 3px;font-size:13px;font-weight:700;color:var(--ink-title)}
-.sbin .n{font-size:11.5px;color:var(--ink-faint);line-height:1.45;margin-bottom:7px}
-.sbin .in{display:flex;flex-direction:column;gap:5px}
-.sbin .in div{background:var(--panel);border:1px solid var(--line);border-radius:8px;
-  padding-block:6px;padding-inline:7px;font-size:12px;line-height:1.4}
-.wsit{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
-  padding-block:11px;padding-inline:12px;margin-bottom:9px}
-.wsit .l{font-size:14.5px;font-weight:600;color:var(--ink-title);line-height:1.5}
-.wsit .d{font-size:12.5px;color:var(--ink-faint);margin:3px 0 9px;line-height:1.5}
-.wopts{display:flex;gap:7px;flex-wrap:wrap}
-.wopt{border:2px solid var(--line-2);border-radius:var(--r-pill);background:var(--panel);
-  padding-block:7px;padding-inline:13px;font-size:13.5px}
-.wopt[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
-.wopt.ok{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
-.wopt.no{background:var(--berry);border-color:var(--berry);color:#fff}
-
 /* ---- 改造版专用 ---- */
 .rail{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
 .step{flex:none;width:9px;height:9px;border-radius:var(--r-pill);background:var(--bg-deep);
@@ -550,242 +436,66 @@ figure figcaption{font-size:12px;color:var(--ink-faint);line-height:1.5;margin-t
   display:grid;place-items:center;font-size:38px;box-shadow:0 14px 34px #e8743b4d}
 .done h2{margin:0 0 7px;font-size:21px;color:var(--ink-title)}
 .done .lede{color:var(--ink-title);font-size:15px;line-height:1.65;margin:0 0 4px;font-weight:600;text-wrap:balance}
-.why{font-size:13px;line-height:1.65;color:var(--ink-soft);margin-top:8px;
-  background:var(--bg-deep);border-radius:9px;padding-block:7px;padding-inline:9px}
+/* ---- 来源卡：真实来源常驻，六段都在 ---- */
+.srcbar{display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  background:var(--bg-deep);border:1px solid var(--line-2);border-radius:11px;
+  padding-block:8px;padding-inline:10px;margin-bottom:10px;font-size:12.5px;color:var(--ink-soft);
+  transition:.15s}
+.srcbar:hover{border-color:var(--accent)}
+.srcbar b{color:var(--ink-title);font-weight:700}
+.srcbar .pin{flex:none;font-size:13px}
+.srcbar .chev{margin-left:auto;color:var(--ink-faint);font-family:var(--num);font-weight:700}
+.srclist{margin-bottom:10px;display:flex;flex-direction:column;gap:8px;animation:litin .3s}
+.srcone{background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:0 11px 11px 0;padding-block:10px;padding-inline:11px}
+.srcone h6{margin:0 0 2px;font-size:13.5px;font-weight:700;color:var(--ink-title);line-height:1.45}
+.srcone .when{font-size:11.5px;color:var(--ink-faint);margin-bottom:6px}
+.srcone .says{font-size:13px;line-height:1.65;color:var(--ink);margin:0 0 7px}
+.srcone .cant{font-size:12.5px;line-height:1.6;color:var(--warn-ink);background:var(--warn-pale);
+  border-radius:8px;padding-block:7px;padding-inline:8px;margin:0 0 7px}
+.srcone .cant b{color:var(--warn-ink)}
+.srcone .cant::before{content:"它不能证明什么　";font-family:var(--num);font-size:10px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;opacity:.75;display:block;margin-bottom:3px}
+.srcone a{font-size:12.5px;color:var(--accent-ink);text-decoration-color:var(--accent-pale)}
+/* ---- 外壳 ---- */
+.wrap{max-width:520px;margin-inline:auto;height:100%;display:flex;flex-direction:column;background:var(--bg)}
+.hdr{flex:none;padding-inline:16px;padding-block:13px 9px;background:var(--bg);
+  border-bottom:1px solid var(--line);z-index:20}
+.hdr h1{margin:0 0 3px;font-size:15px;font-weight:700;color:var(--ink-title)}
+.hdr p{margin:0 0 10px;font-size:12.5px;color:var(--ink-faint);line-height:1.5}
+.picker{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.picker::-webkit-scrollbar{height:0}
+.picker button{flex:none;border:1px solid var(--line-2);border-radius:var(--r-pill);
+  padding-block:6px;padding-inline:12px;font-size:12.5px;color:var(--ink-soft);white-space:nowrap}
+.picker button[aria-current="true"]{background:var(--ink-title);color:var(--bg);border-color:var(--ink-title);font-weight:600}
+.body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.rbtn{border-radius:12px;padding-block:12px;padding-inline:16px;font-size:15px;font-weight:700;
+  background:var(--accent);color:#fff;border-bottom:var(--lip-h) solid #0000002e;transition:transform .08s}
+.rbtn:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.rbtn:disabled{background:var(--bg-deep);color:var(--ink-faint);border-bottom-color:transparent}
+.rbtn:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.bins{display:flex;flex-direction:column;gap:9px;margin-bottom:10px}
+.binrow{background:var(--panel);border:2px solid var(--line);border-radius:13px;
+  padding-block:11px;padding-inline:12px;transition:.16s}
+.binrow.set{border-color:var(--accent);background:var(--panel-2)}
+.binrow .l{font-size:14.5px;line-height:1.55;color:var(--ink-title);margin-bottom:9px}
+.binopts{display:flex;flex-wrap:wrap;gap:6px}
+.binopt{border:2px solid var(--line-2);border-radius:var(--r-pill);background:var(--panel-2);
+  padding-block:6px;padding-inline:12px;font-size:13.5px;transition:.12s}
+.binopt[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.binopt.ok{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+.binopt.no{background:var(--berry);border-color:var(--berry);color:#fff}
+.binopt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 </style>
 
 <div class="wrap">
   <header class="hdr">
-    <h1>同一节课，两种做法</h1>
-    <p>《认识 AI，从这里开始》· 第一单元「先让它帮上一点忙」的前三节。两边是同一份课文、同一批出处。</p>
-    <div class="switch" role="tablist">
-      <button id="tabA" role="tab" aria-selected="true">现在的版本（阅读）</button>
-      <button id="tabB" class="remade" role="tab" aria-selected="false">改造后（可玩）</button>
-    </div>
+    <h1>先让它帮上一点忙</h1>
+    <p>《认识 AI，从这里开始》第一单元的前三节 · 改造版。课文、出处和教学顺序都来自已发布课程。</p>
     <div class="picker" id="picker"></div>
-    <div class="meter" id="meter"></div>
   </header>
   <div class="body" id="body"></div>
 </div>
-
-<script>
-/* ============================================================
-   原版：逐字取自已发布课程的最新修订，包含真实的互动件载荷、
-   两张卡片和那道要打字的独立练习。不做任何简化或美化。
-   ============================================================ */
-const ORIGINAL = [
-{
- id:"ask-about-a-picture",
- md:`# 这张照片，有哪些问题可以直接问？
-
-## 从一张真实照片开始
-
-看这张《地出》：灰白色月面前方，一颗蓝白色的地球出现在黑色天空中。你想让助手解释地球与月面的位置，也想知道摄影者是谁。
-
-[Be My Eyes在2023年介绍的照片助手](https://www.bemyeyes.com/blog/introducing-be-my-ai/)采用了看图说明与接着追问的方式。我们用[NASA保存的这张真实照片](https://www.nasa.gov/image-article/apollo-8-astronaut-bill-anders-captures-earthrise/)来试着安排自己的第一步。
-
-:::figure[《地出》：NASA / 阿波罗8号 / Bill Anders，1968年12月24日。官方图像，非AI生成。]
-:::
-
-## 先猜一下
-
-这两个问题都能只靠看照片回答吗？你会怎样把请求分成能检查的两步？
-
-先写下你的判断，再往下看答案。
-
-## 答案
-
-位置可以对着画面描述，摄影者需要查照片记录。把“说明你看见的位置”和“根据记录补充摄影者”分开，结果就各有核对的地方。
-
-## 先描述看得见的，再找画面外的
-
-先试着写：“请给第一次看这张照片的人，用一句话说明地球和月面的位置。”这份请求有一个能检查的结果：朋友读完，能在脑中摆出两者的位置。
-
-若你想做历史图卡，请求就要变成：“根据 NASA 的照片说明，补上拍摄日期和摄影者。”NASA 记录的是 1968 年 12 月 24 日、比尔·安德斯、阿波罗 8 号绕月飞行。
-
-:::detail[为什么不让它一次讲完所有背景？]
-可以一次提出多个问题，但要让每项信息回到合适的材料。照片上没有印着摄影者姓名时，即使助手写出一个名字，你也不能只靠画面确认。反过来，看到地球与月面的位置关系，并不需要先学会一段航天史。把请求拆成这两步后，你已经能做出一个小成果：一句可对照照片的描述，以及一条可打开记录核查的背景说明。它们可以放在同一张卡上，但不要混成一句“照片证明了全部背景”。这样你也更容易发现还有哪一项信息没有着落。
-:::
-
-:::detail[已经有看图工具时，怎样实际试一遍？]
-打开原始照片，用你手头的看图工具，先请求一句位置说明；然后另给NASA记录，让它补摄影者。两次结果分别回到图片和记录检查。暂时没有这样的工具也没关系，下方活动可以先练习两种依据的选择；它不会冒充一次真实的模型运行。
-:::
-
-把这些问题放到对应的位置：看照片能检查，还是要查照片记录？
-
-::play
-
-### 照片里看见的，记录里查到的
-
-地球在月面上方，可以对着照片检查。谁拍的、哪天拍的，需要看照片记录。不要要求一张没有日期标记的照片自己说出日期。写完你的请求，把这两种信息分开就够了。
-
-:::detail[问得具体了，答案就一定会正确吗？]
-具体请求让结果更容易检查，不会让错误自动消失。助手写出了摄影者姓名，你就回到NASA记录核对；只描述了位置，就对着照片比较。Be My Eyes当年的介绍还保留了向人工志愿者求助的路径，说明提供图片解释并不意味着任何细节都无需再看。现在使用公开材料即可，不必上传证件或私人相册。
-
-也要留意第三种情况：图片和这份记录都没有提供的内容。例如你准备加上一句摄影者当时的心理活动，画面本身不能证明它，摄影者姓名也不能证明它。需要另找有根据的记录，或者明确写成你自己的观看感受。这个判断不是阻止你写东西，而是让一句好看的说明仍然知道哪些是可查的背景，哪些是自己的表达。
-:::
-
-## 自检
-
-现在你不做历史图卡了，要把画面读给看不见照片的人听。你会怎样重写那一句请求？
-
-## 一句话
-
-**看得见的对着画面检查，背景信息回到记录检查。**`,
- play:{kind:"sort",title:"动手试一试",
-  brief:"把这些问题放到对应的位置：看照片能检查，还是要查照片记录？",
-  question:"每个问题需要哪一种依据？",
-  buckets:[{id:"visible",label:"对着照片检查",note:"观察画面里出现的东西与位置。"},
-           {id:"record",label:"查照片记录",note:"找到作者、日期、任务等背景资料。"}],
-  items:[
-   {id:"position",label:"地球相对月面在哪里？",detail:"观察两者的位置。",bucketId:"visible",why:"位置关系出现在画面里。"},
-   {id:"photographer",label:"是谁拍下这张照片？",detail:"画面上没有摄影者姓名。",bucketId:"record",why:"摄影者身份来自 NASA 的照片说明。"},
-   {id:"sky",label:"地球周围是什么颜色？",detail:"描述这张照片可见的背景。",bucketId:"visible",why:"这是对画面颜色的观察。"},
-   {id:"date",label:"照片在哪一天拍摄？",detail:"不是问你今天在哪一天打开它。",bucketId:"record",why:"拍摄日需要照片记录支持。"}]},
- cards:[
-  {f:"给照片写说明时，怎样安排两种检查？",b:"画面中的位置与颜色对照照片；作者、日期等背景回到相应记录核对。"},
-  {f:"图片说明里的日期应该去哪核对？",b:"查图片的原始记录或可靠说明；画面没有日期标记时，不能仅凭看图确定拍摄日。"}],
- ex:{title:"换个情况试试",
-  prompt:"你要给这张照片做资料卡，助手写出了摄影者姓名，照片上却没有人名。下一步是“看画面”还是“查记录”？请只写这三个字。",
-  answer:"查记录"}
-},
-{
- id:"sound-words-and-meaning",
- md:`# 原话变成文字，什么时候还需要翻译？
-
-## 先看你要保留哪一种语言
-
-[OpenAI 在2022年发布 Whisper 时](https://openai.com/index/whisper/)，介绍了两种语音任务：按原来的语言把声音写成字，以及把其他语言的讲话译成英文。你有一段中文讲话，想留下文字，也可能要让只读英文的朋友看懂。
-
-## 先猜一下
-
-面对同一段中文讲话，你会怎样说明这两份文字各自需要什么，而不只说“帮我处理录音”？
-
-先写下你的判断，再往下看答案。
-
-## 答案
-
-先说明输出要保持中文，还是换成英文。前一种是把原话写下来，后一种还需要翻译；你检查的变化也不同。
-
-## 声音变成原语言的字
-
-把原话按同一种语言写成文字，叫转写。中文声音变成中文文字，英文声音变成英文文字，先保留原来的语言。你可以请求：“按原语言写下讲话，不翻译。”
-
-:::detail[我该怎样检查一份转写稿？]
-把文字与原录音对应起来，看看重要的词句有没有写错或遗漏。你不必因为文字排得整齐，就认为每个字都听对了；含糊的声音需要重新听或请说话人确认。这里比较的是任务类型，没有提供真实录音，所以我们不报告任何识别准确率，也不编造工具实际听错的句子。你现在先把要求写清楚：输出语言保持原样，内容要对应已有声音。这让你之后拿到真实材料时，知道要回到哪里检查。若只想保存原话，就没有必要在这一步同时要求另一种语言的版本，免得把两种任务的结果混在一起。
-:::
-
-看每条请求给定的输入与输出语言，把它分到“转写”或“翻译”。这里按任务要求分类，不假装运行了一次识别。
-
-::play
-
-## 意思换到另一种语言
-
-把表达换成另一种语言，叫翻译。Whisper 当年的介绍包含把其他语言的语音翻成英文。翻译时，你检查的不只是字有没有写出，还要检查意思是否保留。
-
-:::detail[同一个工具做两步，为什么还要分开说？]
-因为你真正要的成品可能只需要其中一步，也可能需要两份各有用途的文字。给自己保存中文原话，与给英文读者准备译文，都能叫处理录音，但它们的输出语言不同。把语言要求讲明，能让你分别查看原文记录和译文，不把一份译文误当成逐字保留的原话。工具能把这些任务组合起来，不意味着每份输出都同时满足它们。你可以要求保留两份，并明确标注原语言转写与英文译文；再分别核对。这里介绍的是公开发布记录中的功能方向，具体工具现在支持哪些输入、输出与使用方式，还需要查看当前说明。
-:::
-
-:::detail[没有录音的时候，怎样先练习这个判断？]
-先看任务给定的输入语言与需要的输出语言，辨认是否发生了语言变化。你可以在下面把请求分组，不需要先学会一个软件，也不用购买服务。这个练习只证明你分清了要求，不证明某次语音已经识别正确。拿到真实录音之后，再按你选定的任务检查实际文字，才是下一步。
-:::
-
-## 自检
-
-你拿到一份中文转写稿，之后要把它给只读英文的朋友看。你会怎样说明下一份成品的语言要求？
-
-## 一句话
-
-**先决定保留原语言还是换一种语言，再分别检查原话与意思有没有对上。**`,
- play:{kind:"sort",title:"动手试一试",
-  brief:"看每条请求给定的输入与输出语言，把它分到“转写”或“翻译”。这里按任务要求分类，不假装运行了一次识别。",
-  question:"这条请求主要要求哪一种处理？",
-  buckets:[{id:"transcribe",label:"按原语言转写",note:"声音与文字使用同一种语言。"},
-           {id:"translate",label:"翻译成另一种语言",note:"目标文字的语言与原来的讲话不同。"}],
-  items:[
-   {id:"zh-zh",label:"中文讲话，保存中文文字",detail:"希望保留原语言记录。",bucketId:"transcribe",why:"没有要求改变语言。"},
-   {id:"zh-en",label:"中文讲话，给英文读者准备英文",detail:"需要把意思换到英文。",bucketId:"translate",why:"原语言与目标语言不同。"},
-   {id:"en-en",label:"英文讲话，保存英文文字",detail:"希望留下一份原语言记录。",bucketId:"transcribe",why:"把声音写成字，但语言没有改变。"},
-   {id:"fr-en",label:"法文讲话，准备英文文字",detail:"需要英文读者理解内容。",bucketId:"translate",why:"要求把法文表达换成英文。"}]},
- cards:[
-  {f:"转写和翻译怎样区分？",b:"转写把声音按原语言写成字；翻译改变表达的语言。两种任务的输出要求与检查方式不同。"},
-  {f:"为什么要给原语言文字和译文分别标注？",b:"它们服务不同用途；清楚区分能避免把译文误当成逐字原话，也方便分别核对。"}],
- ex:{title:"换个情况试试",
-  prompt:"你要核对一段日语讲话中究竟说了哪些日语词，而不是把意思交给英文读者。应请求“原语言转写”还是“翻译成英文”？请抄写一个选项。",
-  answer:"原语言转写"}
-},
-{
- id:"name-the-result",
- md:`# 说了主题，为什么还是拿不到想要的东西？
-
-## 一份公告，可以做成两样东西
-
-[NASA 的一则历史公告](https://www.nasa.gov/news-release/celebrate-international-observe-the-moon-night-at-nasas-goddard-space-flight-center/)介绍了 2023 年 10 月 21 日在戈达德访客中心举行的观月夜：晚上 6 点到 9 点，地点在马里兰州格林贝尔特，无需报名，还有多项活动。
-
-现在只做一份历史资料改写：你可以写一条短消息，也可以做一张活动项目清单。原材料相同，手里的两样东西却不同。
-
-## 先猜一下
-
-如果只向助手说“介绍这次观月活动”，你拿到结果后，最难检查哪一件事？
-
-先写下你的判断，再往下看答案。
-
-## 答案
-
-你很难判断它是不是你要的那种成品。主题虽然对了，短消息与项目清单需要保留的信息并不一样。
-
-## 先点名你要带走的东西
-
-可以这样写：“根据这则 2023 年公告，给朋友写一条历史活动介绍，保留时间、地点和报名要求。”你现在有了具体的检查项，而不是只能说“再好一点”。
-
-[OpenAI 的请求写作指导](https://help.openai.com/en/articles/10032626-prompt-engineering-best-practices-for-chatgpt)也强调清楚的要求和相关背景。它是有用的写法建议，不是一个保证所有答案正确的咒语。
-
-:::detail[主题已经很明确了，为什么还要说成品？]
-主题告诉助手围绕什么写，成品告诉它最后交什么。观月夜可以变成活动介绍、项目名单、历史时间线，也可以变成一张照片说明。它们不只是长短不同：项目清单需要活动名称，短消息需要读者能迅速找到要点。如果你没有先选成品，看到很长的介绍时会嫌太长，看到短消息又可能嫌漏了活动，但助手从最初那一句并不知道你怎么取舍。你不用预先把每个字规定好，只要先把那一件东西点名，再写两三个不能丢的条件，就能更具体地修改。
-:::
-
-同一份公告，在这两个阶段分别该先做什么？
-
-::play
-
-## 什么时候该反过来
-
-你还没想好怎么表达时，可以先让它提出两种短方案，再决定。探索选项与交付定稿，是不同阶段；开始探索时，不必假装已经有完整规格。
-
-:::detail[如果先规定成品，会不会把有趣的想法都限制住？]
-有这种取舍。要求一条很短的消息，会让助手少谈背景；要求逐项清单，又会牺牲连贯叙述。限制不是越多越好，而是要与你当前的目的对应。你正在收集表达点子时，可以暂时不限制格式，让它给出几种可以选择的方向；你准备把文字交给别人时，就需要决定受众、格式和必留事实。把这两个阶段分开，你既不需要一开始就知道最终答案，也不用永远停留在不断生成新版本。对于这份历史公告，不论选哪种表达，都不能把已经结束的活动写成现在的邀请。
-
-检查条件还可以帮助你少写无关要求。给朋友做一条消息，不需要让它列出全部背景资料；让志愿者了解活动构成，也不用把每项都写成邀请语。你只要说清读者下一步要做什么，就知道哪些内容应该靠前。待办单尤其要注意：公告提到了某项活动，不等于已经给这位志愿者安排了工作，未知分工需要另行确认。
-:::
-
-## 自检
-
-同一则公告，现在要变成供志愿者了解活动构成的清单。你会怎样写出成品、使用者和一个检查条件？
-
-## 一句话
-
-**主题告诉助手围绕什么写，成品和条件告诉你怎样判断它是否做完。**`,
- play:{kind:"weigh",title:"动手试一试",
-  brief:"同一份公告，在这两个阶段分别该先做什么？",
-  question:"现在更需要探索，还是交付？",
-  options:[{id:"explore",label:"先看两种短方案",note:"多一些选择，但还不是可直接使用的定稿。"},
-           {id:"deliver",label:"按明确格式完成",note:"容易验收，但需要先决定用途与取舍。"}],
-  situations:[
-   {id:"undecided",label:"还没决定做短信还是资料卡",detail:"你想先比较表达方式。",best:"explore",
-    why:"先看少量方向，能帮助你作出格式选择。",cost:"过早锁定一种格式，会跳过你尚未作出的选择。"},
-   {id:"message",label:"已经要做两句历史介绍",detail:"必须保留原活动年份、地点和报名信息。",best:"deliver",
-    why:"成品已经明确，可以按具体条件完成并核对。",cost:"继续增加格式选项，会拖延已经可以完成的文字。"}]},
- cards:[
-  {f:"请求里的主题与成品有何不同？",b:"主题说明讨论什么；成品说明最后要交短信、清单还是别的东西。相同主题可以有不同成品。"},
-  {f:"什么时候可以暂时不规定格式？",b:"还在探索表达方向时，可以先比较少量方案；准备交付时，再明确用途、格式和必留条件。"}],
- ex:{title:"换个情况试试",
-  prompt:"你需要四项活动清单，助手交来的长介绍已经包含所需项目。下一条请求应优先“明确清单格式”还是“只要求更简短”？请抄写更能保证得到所需成品的选项。",
-  answer:"明确清单格式"}
-}
-];
-</script>
-
 <script>
 /* ============================================================
    改造版：同样三节课，走课文自己的六段骨架。
@@ -1025,182 +735,32 @@ const REMADE=[
 }
 ];
 </script>
-
 <script>
 (function(){
 "use strict";
 const $=(s,r)=>(r||document).querySelector(s);
 const el=(t,c,h)=>{const n=document.createElement(t);if(c)n.className=c;if(h!=null)n.innerHTML=h;return n};
 const esc=s=>String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
-const cjk=s=>(String(s).match(/[一-鿿]/g)||[]).length;
-const body=$("#body"), picker=$("#picker"), meter=$("#meter");
-let mode="A", li=0;
+const body=$("#body"), picker=$("#picker");
+let li=0, S=null, W=null, boardEl, railEl, actEl, footEl, fbEl;
 
-/* ---------- 尺子：两边用同一把 ---------- */
-function stripMd(md){
-  return md.replace(/^#.*$/gm,"").replace(/:::figure\[[^\]]*\]/g,"").replace(/::play/g,"")
-           .replace(/:::detail\[([^\]]*)\]/g,"$1").replace(/:::/g,"")
-           .replace(/\[([^\]]*)\]\([^)]*\)/g,"$1");
-}
-function statsA(L){
-  const total=cjk(stripMd(L.md))+cjk(L.ex.prompt)+L.cards.reduce((n,c)=>n+cjk(c.f)+cjk(c.b),0);
-  const before=cjk(stripMd(L.md.split("::play")[0]));
-  return {words:total, acts:2, before:before};
-}
-function statsB(L){
-  let total=0, before=0;
-  L.screens.forEach((s,i)=>{
-    let n=cjk(s.said||"")+cjk(s.ask||"")+cjk(s.good||"")+cjk(s.goal||"");
-    (s.options||[]).forEach(o=>{n+=cjk(o.t)+cjk(o.fb||"")});
-    (s.items||[]).forEach(o=>{n+=cjk(o.t)});
-    (s.clauses||[]).forEach(o=>{n+=cjk(o.t)});
-    (s.seg||[]).forEach(o=>{n+=cjk(o.t)+cjk(o.fb||"")});
-    total+=n;
-    if(i===0)before=cjk(s.said||"")+cjk(s.ask||"");
-  });
-  return {words:total, acts:L.screens.filter(s=>s.type!=="takeaway").length, before:before};
-}
-function drawMeter(){
-  const st = mode==="A" ? statsA(ORIGINAL[li]) : statsB(REMADE[li]);
-  const hot = mode==="B";
-  meter.innerHTML=
-   '<div class="mcell"><b>'+st.words+'</b><span>要读的字</span></div>'+
-   '<div class="mcell"><b class="'+(hot?"hot":"")+'">'+st.acts+'</b><span>要你动手</span></div>'+
-   '<div class="mcell"><b class="'+(hot?"hot":"")+'">'+st.before+'</b><span>第一次动手前要读</span></div>';
-}
-function drawPicker(){
-  picker.innerHTML="";
-  ORIGINAL.forEach((L,i)=>{
-    const b=el("button",null,(i+1)+"　"+REMADE[i].title.slice(0,9)+"…");
-    b.setAttribute("aria-current",String(i===li));
-    b.onclick=()=>{li=i;render()};
-    picker.appendChild(b);
-  });
-}
+/* ---------- 声音 ---------- */
+let AC=null, sound=true;
+function tone(fs,dur,type,vol){ if(!sound)return;
+  try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended")AC.resume();
+    fs.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+i*0.075;
+      o.type=type||"sine";o.frequency.setValueAtTime(f,t);
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||0.13,t+0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+(dur||0.2));
+      o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+(dur||0.2)+0.02)});
+  }catch(e){}}
+const sfx={tap:()=>tone([520],.05,"sine",.05),land:()=>tone([440],.09,"triangle",.08),
+  right:()=>tone([659.25,880],.26,"sine",.13),wrong:()=>tone([300,262],.3,"sine",.1),
+  done:()=>tone([523.25,659.25,783.99,1046.5],.5,"triangle",.12)};
+function buzz(m){try{navigator.vibrate&&navigator.vibrate(m)}catch(e){}}
 
-/* ================= 原版：忠实的阅读体验 ================= */
-function inline(t){
-  return esc(t).replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
-               .replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
-}
-function renderOriginal(L){
-  const wrap=el("div","read");
-  const lines=L.md.split("\n");
-  let i=0, buf=[];
-  const flush=()=>{ if(buf.length){wrap.appendChild(el("p",null,inline(buf.join("")))); buf=[]} };
-  while(i<lines.length){
-    const ln=lines[i];
-    if(/^:::figure\[/.test(ln)){
-      flush();
-      const cap=ln.slice(ln.indexOf("[")+1, ln.lastIndexOf("]"));
-      const f=el("figure",null,'<div class="earth"><div class="globe"></div><div class="moon"></div></div>'+
-        "<figcaption>"+esc(cap)+"</figcaption>");
-      wrap.appendChild(f); i++; while(i<lines.length&&lines[i].trim()!==":::")i++; i++; continue;
-    }
-    if(/^:::detail\[/.test(ln)){
-      flush();
-      const title=ln.slice(ln.indexOf("[")+1, ln.lastIndexOf("]"));
-      i++; const inner=[];
-      while(i<lines.length&&lines[i].trim()!==":::"){inner.push(lines[i]);i++}
-      i++;
-      const d=el("details");
-      d.appendChild(el("summary",null,esc(title)));
-      inner.join("\n").split(/\n{2,}/).filter(x=>x.trim()).forEach(pp=>d.appendChild(el("p",null,inline(pp.trim()))));
-      wrap.appendChild(d); continue;
-    }
-    if(/^::play/.test(ln)){ flush(); wrap.appendChild(renderPlay(L.play)); i++; continue }
-    if(/^# /.test(ln)){ flush(); wrap.appendChild(el("h1",null,esc(ln.slice(2)))); i++; continue }
-    if(/^## /.test(ln)){ flush(); wrap.appendChild(el("h2",null,esc(ln.slice(3)))); i++; continue }
-    if(/^### /.test(ln)){ flush(); wrap.appendChild(el("h3",null,esc(ln.slice(4)))); i++; continue }
-    if(ln.trim()===""){ flush(); i++; continue }
-    buf.push(ln); i++;
-  }
-  flush();
-  wrap.appendChild(renderTail(L));
-  return wrap;
-}
-function renderPlay(p){
-  const box=el("div","playbox");
-  box.appendChild(el("div","ph","互动课件"));
-  box.appendChild(el("h4",null,esc(p.title)));
-  box.appendChild(el("p","brief",esc(p.brief)));
-  box.appendChild(el("p","brief",'<b style="color:var(--ink-title)">'+esc(p.question)+"</b>"));
-  if(p.kind==="sort"){
-    const pool=el("div","sortpool"), bins=el("div","sbins");
-    let sel=null,left=p.items.length;
-    const binEls=p.buckets.map(b=>{
-      const d=el("div","sbin","<h5>"+esc(b.label)+'</h5><div class="n">'+esc(b.note)+'</div><div class="in"></div>');
-      d.onclick=()=>{ if(!sel)return;
-        const it=sel._it, ok=it.bucketId===b.id;
-        const chip=el("div",null,esc(it.label)); $(".in",d).appendChild(chip);
-        sel.remove(); sel=null; left--; binEls.forEach(x=>x.classList.remove("armed"));
-        chip.style.borderColor=ok?"var(--ok)":"var(--berry)";
-        chip.style.background=ok?"var(--ok-pale)":"var(--berry-pale)";
-        box.appendChild(el("div","why",(ok?"✓ ":"✗ ")+esc(it.label)+"　"+esc(it.why)));
-        if(left===0)box.appendChild(el("div","why",'<b>'+esc(p.brief)+"</b>"));
-      };
-      bins.appendChild(d); return d;
-    });
-    p.items.forEach(it=>{
-      const n=el("button","sitem",esc(it.label)+"<small>"+esc(it.detail)+"</small>");
-      n.setAttribute("role","radio"); n.setAttribute("aria-checked","false"); n._it=it;
-      n.onclick=()=>{ sel=(sel===n?null:n);
-        [...pool.children].forEach(m=>m.setAttribute("aria-checked","false"));
-        if(sel)n.setAttribute("aria-checked","true");
-        binEls.forEach(d=>d.classList.toggle("armed",!!sel)) };
-      pool.appendChild(n);
-    });
-    box.appendChild(el("p","brief","先点一条，再点它该去的那一格。"));
-    box.appendChild(pool); box.appendChild(bins);
-  }else{
-    p.situations.forEach(sit=>{
-      const w=el("div","wsit",'<div class="l">'+esc(sit.label)+'</div><div class="d">'+esc(sit.detail)+"</div>");
-      const os=el("div","wopts");
-      const ns=p.options.map(o=>{
-        const n=el("button","wopt",esc(o.label));
-        n.setAttribute("role","radio"); n.setAttribute("aria-checked","false");
-        n.onclick=()=>{ ns.forEach(m=>{m.disabled=true; m.classList.add(m===n?(o.id===sit.best?"ok":"no"):"")});
-          ns.forEach(m=>{if(m._id===sit.best)m.classList.add("ok")});
-          w.appendChild(el("div","why",o.id===sit.best?("✓ "+esc(sit.why)):("✗ "+esc(sit.cost)+"　正解："+esc(p.options.find(x=>x.id===sit.best).label)+"——"+esc(sit.why)))) };
-        n._id=o.id; os.appendChild(n); return n;
-      });
-      w.appendChild(os); box.appendChild(w);
-    });
-  }
-  return box;
-}
-function renderTail(L){
-  const t=el("div","readfoot");
-  const lamp=el("div","lamp",'<i id="l1"></i><span>我读完了</span><i id="l2"></i><span>练习通过</span><span style="margin-left:auto">两盏都亮才算完成</span>');
-  t.appendChild(lamp);
-  const row=el("div","btnrow");
-  const rb=el("button","rbtn quiet","我读完了");
-  rb.onclick=()=>{ rb.disabled=true; rb.textContent="已确认读完"; $("#l1",lamp).classList.add("on") };
-  row.appendChild(rb); t.appendChild(row);
-  const ex=el("div","exbox");
-  ex.innerHTML='<div class="et">独立练习 · '+esc(L.ex.title)+"</div><p>"+esc(L.ex.prompt)+"</p>";
-  const ta=el("textarea"); ta.id="ans"; ta.placeholder="在这里输入你的答案…"; ex.appendChild(ta);
-  const sub=el("button","rbtn","提交答案"); sub.style.marginTop="11px";
-  sub.onclick=()=>{
-    const v=ta.value.trim();
-    const old=$(".verdict",ex); if(old)old.remove();
-    const ok=v===L.ex.answer;
-    ex.appendChild(el("div","verdict "+(ok?"ok":"no"),
-      ok?"判定通过。":"判定未通过。系统比对的是一个固定字符串，你写的和它不一样。"+(v?"":"（你还没有输入）")));
-    if(ok)$("#l2",lamp).classList.add("on");
-  };
-  ex.appendChild(sub); t.appendChild(ex);
-  const cw=el("div");
-  cw.appendChild(el("div","et",'<span style="font-size:12px;color:var(--ink-faint)">这一节的复习卡（课时完成后进入队列，明天回来）</span>'));
-  const cr=el("div","cardrow");
-  L.cards.forEach(c=>cr.appendChild(el("div","fcard",'<div class="f">'+esc(c.f)+'</div><div class="b">'+esc(c.b)+"</div>")));
-  cw.appendChild(cr); t.appendChild(cw);
-  return t;
-}
-
-/* ================= 改造版 ================= */
-let S=null,W=null,boardEl,railEl,actEl,footEl,fbEl;
-function buildPlayShell(){
+/* ---------- 外壳 ---------- */
+function shell(){
   const p=el("div","play");
   p.innerHTML='<div class="ptop"><div class="rail" id="rail"></div></div>'+
     '<section class="board" id="board"></section>'+
@@ -1210,10 +770,10 @@ function buildPlayShell(){
   boardEl=$("#board",p); railEl=$("#rail",p); actEl=$("#pact",p); footEl=$("#pfoot",p); fbEl=$("#fb",p);
   return p;
 }
-function setFoot(label,fn,cls,dis){
+function setFoot(label,fn,dis){
   footEl.innerHTML="";
-  const b=el("button","rbtn"+(cls?" "+cls:""),esc(label));
-  b.id="cta"; b.style.width="100%"; b.disabled=!!dis; b.onclick=fn; footEl.appendChild(b); return b;
+  const b=el("button","rbtn",esc(label)); b.id="cta"; b.style.width="100%";
+  b.disabled=!!dis; b.onclick=fn; footEl.appendChild(b); return b;
 }
 const enableCta=on=>{const c=$("#cta");if(c)c.disabled=!on};
 const ctaText=t=>{const c=$("#cta");if(c)c.textContent=t};
@@ -1232,19 +792,40 @@ function drawRail(at){
   railEl.innerHTML="";
   RAIL.forEach((n,i)=>{const d=el("div","step"+(i<at?" done":"")+(i===at?" now":""),"<span>"+esc(n)+"</span>");d.title=n;railEl.appendChild(d)});
 }
+/* 来源卡：材料的出处，六段都在，固定带「它不能证明什么」 */
+function sourceHtml(L,st){
+  const n=L.sources.length;
+  let h='<button class="srcbar" id="srcbar"><span class="pin">&#128206;</span>'+
+    '<span>这些材料都是<b>真的</b> · '+n+' 份出处</span>'+
+    '<span class="chev">'+(st.srcOpen?"收起 −":"点开看 +")+"</span></button>";
+  if(st.srcOpen){
+    h+='<div class="srclist">';
+    L.sources.forEach(s=>{
+      h+='<div class="srcone"><h6>'+s.n+'</h6><div class="when">'+esc(s.w)+"</div>"+
+         '<p class="says">'+s.says+'</p><div class="cant">'+s.cant+"</div>"+
+         '<a href="'+s.u+'" target="_blank" rel="noopener">打开原始出处 &rarr;</a></div>';
+    });
+    h+="</div>";
+  }
+  return h;
+}
 function drawBoard(){
   const L=S.L;
-  boardEl.innerHTML='<div class="board-h"><span>'+esc(L.boardLabel)+"</span><em>"+esc(L.boardNote)+"</em></div>"+L.board(S.st);
+  boardEl.innerHTML='<div class="board-h"><span>'+esc(L.boardLabel)+"</span><em>"+esc(L.boardNote)+"</em></div>"+
+    sourceHtml(L,S.st)+L.board(S.st);
+  const sb=$("#srcbar",boardEl);
+  if(sb)sb.onclick=()=>{S.st.srcOpen=!S.st.srcOpen;sfx.tap();drawBoard();
+    if(S.st.srcOpen)boardEl.scrollTop=0};
 }
 function mountAct(){ actEl.scrollTop=0; actEl.innerHTML=""; hideFb(); W=actEl; return W }
 function say(sc){ if(sc.said)W.appendChild(el("p","said",sc.said)); if(sc.ask)W.appendChild(el("h2","ask",esc(sc.ask))) }
-function srcOnce(){ if(S.i===0&&S.L.src)W.appendChild(el("p","src",S.L.src)) }
 function nextScreen(){ S.i++; if(S.i>=S.L.screens.length)return; renderScreen() }
-function winNow(sc,title,paras,keep){ if(sc.railAfter!=null)drawRail(sc.railAfter);
-  showFb("good",title||"对了",paras,keep,nextScreen) }
-function loseNow(sc,paras){ if(sc.railAfter!=null)drawRail(sc.railAfter);
-  showFb("soft","很多人也是这么想的",paras,null,nextScreen) }
+function win(sc,title,paras,keep){ sfx.right(); buzz(18);
+  if(sc.railAfter!=null)drawRail(sc.railAfter); showFb("good",title||"对了",paras,keep,nextScreen) }
+function lose(sc,paras){ sfx.wrong(); buzz([12,60,12]);
+  if(sc.railAfter!=null)drawRail(sc.railAfter); showFb("soft","很多人也是这么想的",paras,null,nextScreen) }
 
+/* ---------- 各段 ---------- */
 function sProbe(sc){
   mountAct(); say(sc);
   let left=sc.items.length;
@@ -1252,34 +833,36 @@ function sProbe(sc){
   sc.items.forEach(it=>{
     const n=el("button","clause",'<span class="box">&#10003;</span><span>'+esc(it.t)+"</span>");
     n.onclick=()=>{ if(n.disabled)return; n.disabled=true; n.setAttribute("aria-checked","true");
-      S.st.seen.add(it.k); drawBoard(); left--; if(left===0)enableCta(true) };
+      S.st.seen.add(it.k); sfx.land(); drawBoard(); boardEl.scrollTop=boardEl.scrollHeight;
+      left--; if(left===0)enableCta(true) };
     box.appendChild(n);
   });
-  W.appendChild(box); srcOnce();
-  setFoot(sc.doneLabel||"看完了",()=>winNow(sc,"这是你自己查出来的",[sc.good]),null,true);
+  W.appendChild(box);
+  setFoot(sc.doneLabel||"看完了",()=>win(sc,"这是你自己查出来的",[sc.good]),true);
 }
 function sChoice(sc){
-  mountAct(); say(sc);
+  if(sc.before)sc.before(S.st);
+  drawBoard(); mountAct(); say(sc);
   const wrap=el("div","tiles"); wrap.setAttribute("role","radiogroup");
   let pick=-1;
   const ns=sc.options.map((o,i)=>{
     const n=el("button","tile",'<span class="key">'+String.fromCharCode(65+i)+"</span><span>"+esc(o.t)+"</span>");
     n.setAttribute("role","radio"); n.setAttribute("aria-checked","false");
-    n.onclick=()=>{ if(n.disabled)return; pick=i;
+    n.onclick=()=>{ if(n.disabled)return; sfx.tap(); pick=i;
       ns.forEach(m=>m.setAttribute("aria-checked","false"));
       n.setAttribute("aria-checked","true"); enableCta(true) };
     wrap.appendChild(n); return n;
   });
-  W.appendChild(wrap); srcOnce();
+  W.appendChild(wrap);
   setFoot("检查",()=>{
     const o=sc.options[pick], ok=!!o.ok, right=sc.options.find(x=>x.ok);
     ns.forEach((n,i)=>{n.disabled=true; n.classList.add(sc.options[i].ok?"ok":(i===pick?"nope":"dim"))});
-    if(ok)winNow(sc,sc.answerTitle,[sc.good]);
-    else loseNow(sc,[o.fb,"该选的是：「"+esc(right.t)+"」",sc.good]);
-  },null,true);
+    if(ok)win(sc,sc.answerTitle,[sc.good]);
+    else lose(sc,[o.fb,"该选的是：「"+esc(right.t)+"」",sc.good]);
+  },true);
 }
 function sLab(sc){
-  mountAct(); say(sc);
+  drawBoard(); mountAct(); say(sc);
   W.appendChild(el("p","goal","&#127919; 目标："+esc(sc.goal)));
   const left=el("div","lab-left");
   left.appendChild(el("div","lab-h",esc(sc.leftTitle)));
@@ -1288,46 +871,70 @@ function sLab(sc){
     const n=el("button","clause",'<span class="box">&#10003;</span><span>'+esc(c.t)+"</span>");
     n.setAttribute("role","switch"); n.setAttribute("aria-checked","false");
     n.onclick=()=>{ if(on.has(c.id)){on.delete(c.id);n.setAttribute("aria-checked","false")}
-      else{on.add(c.id);n.setAttribute("aria-checked","true")} paint() };
+      else{on.add(c.id);n.setAttribute("aria-checked","true")} sfx.tap(); paint() };
     left.appendChild(n);
   });
-  W.appendChild(left); srcOnce();
+  W.appendChild(left);
   function paint(){
     const hit=sc.outs.find(o=>o.need.every(k=>on.has(k))&&!(o.ban||[]).some(k=>on.has(k)))||sc.outs[sc.outs.length-1];
     S.st.out=hit.html; S.st.reply=hit.html;
     S.st.outWin=!!hit.win; S.st.win=!!hit.win;
     if(hit.check!==undefined)S.st.check=hit.check;
     if(hit.tag)S.st.tried.add(hit.tag);
-    let ready = sc.winAll ? sc.winAll.every(t=>S.st.tried.has(t)) : !!hit.win;
+    const ready = sc.winAll ? sc.winAll.every(t=>S.st.tried.has(t)) : !!hit.win;
     if(ready&&sc.winAll){S.st.outWin=true;S.st.win=true}
     drawBoard();
-    // 输出是这一拍的全部意义，所以永远把它滚进视野
-    const out=boardEl.querySelector(".reply")||boardEl.querySelector(".checkbox2");
-    if(out)boardEl.scrollTop=boardEl.scrollHeight;
-    if(ready&&!won){won=true;enableCta(true);ctaText(sc.winCta)}
+    boardEl.scrollTop=boardEl.scrollHeight;   /* 输出是这一拍的全部意义，永远滚进视野 */
+    if(ready&&!won){won=true;sfx.right();enableCta(true);ctaText(sc.winCta)}
     if(!ready&&won){won=false;enableCta(false);ctaText("还差一点")}
   }
-  setFoot("还差一点",()=>winNow(sc,"成了",[sc.good],sc.keep),null,true);
+  setFoot("还差一点",()=>win(sc,"成了",[sc.good],sc.keep),true);
   paint();
 }
+function sSort3(sc){
+  drawBoard(); mountAct(); say(sc);
+  const wrap=el("div","bins"); const picks=new Array(sc.rows.length).fill(-1);
+  const all=sc.rows.map((r,ri)=>{
+    const row=el("div","binrow",'<div class="l">'+esc(r.l)+"</div>");
+    const os=el("div","binopts"); os.setAttribute("role","radiogroup");
+    const ns=sc.bins.map((b,bi)=>{
+      const n=el("button","binopt",b);
+      n.setAttribute("role","radio"); n.setAttribute("aria-checked","false");
+      n.onclick=()=>{ sfx.land(); picks[ri]=bi; row.classList.add("set");
+        ns.forEach(m=>m.setAttribute("aria-checked","false"));
+        n.setAttribute("aria-checked","true"); enableCta(picks.every(x=>x>=0)) };
+      os.appendChild(n); return n;
+    });
+    row.appendChild(os); wrap.appendChild(row); return ns;
+  });
+  W.appendChild(wrap);
+  setFoot("检查",()=>{
+    let ok=true, bad=null;
+    sc.rows.forEach((r,ri)=>all[ri].forEach((n,bi)=>{ n.disabled=true;
+      if(bi===r.a)n.classList.add("ok");
+      else if(bi===picks[ri]){n.classList.add("no");ok=false;if(!bad)bad=r} }));
+    const why=sc.rows.map(r=>"「"+r.l+"」→ "+r.fb).join("<br><br>");
+    if(ok)win(sc,"三种都分对了",[why,sc.good]);
+    else lose(sc,[bad?"「"+esc(bad.l)+"」放错了。"+bad.fb:"",why,sc.good]);
+  },true);
+}
 function sFix(sc){
-  mountAct(); say(sc);
+  drawBoard(); mountAct(); say(sc);
   const line=el("div","seg");
   const ns=sc.seg.map(b=>{
     const n=el("button","segbit",esc(b.t));
     n.onclick=()=>{ ns.forEach(m=>m.disabled=true);
-      if(b.hit){ n.classList.add("ok"); n.textContent=b.to; winNow(sc,"改对了一处",[sc.good],sc.keep) }
+      if(b.hit){ n.classList.add("ok"); n.textContent=b.to; win(sc,"改对了一处",[sc.good],sc.keep) }
       else{ n.classList.add("nope"); ns.forEach(m=>{if(!m.classList.contains("nope"))m.classList.add("dim")});
         const h=sc.seg.find(x=>x.hit);
-        loseNow(sc,[b.fb,"该改的是「"+esc(h.t)+"」，把它换成「"+esc(h.to)+"」。",sc.good]) } };
+        lose(sc,[b.fb,"该改的是「"+esc(h.t)+"」，把它换成「"+esc(h.to)+"」。",sc.good]) } };
     line.appendChild(n); return n;
   });
-  W.appendChild(line); srcOnce();
-  setFoot("点上面那一处来改",()=>{},null,true);
+  W.appendChild(line);
+  setFoot("点上面那一处来改",()=>{},true);
 }
-function sTakeaway(sc){
-  mountAct();
-  const L=S.L;
+function sTakeaway(){
+  const L=S.L; drawBoard(); mountAct(); sfx.done(); buzz([20,50,20,50,30]);
   const c=el("div","done");
   c.innerHTML='<div class="ring">&#10003;</div><h2>一句话</h2><p class="lede">'+esc(L.line)+"</p>";
   W.appendChild(c);
@@ -1335,33 +942,34 @@ function sTakeaway(sc){
   can.innerHTML='<div class="eyebrow" style="margin-top:0">你现在会做</div>'+
     '<ul class="ulist can"><li><i>&#10003;</i><span>'+esc(L.can)+"</span></li></ul>";
   W.appendChild(can);
-  if(li<REMADE.length-1)setFoot("下一节",()=>{li++;drawPicker();render()},"");
-  else setFoot("回到第一节",()=>{li=0;drawPicker();render()},"");
+  const srcs=el("div","card");
+  srcs.innerHTML='<div class="eyebrow" style="margin-top:0">这一节用到的真实出处</div>'+
+    L.sources.map(s=>'<p style="margin:0 0 9px;font-size:13.5px;line-height:1.6"><b>'+s.n+"</b>（"+esc(s.w)+"）<br>"+
+      '<a href="'+s.u+'" target="_blank" rel="noopener" style="font-size:12.5px;color:var(--accent-ink)">打开原始出处 &rarr;</a></p>').join("");
+  W.appendChild(srcs);
+  if(li<REMADE.length-1)setFoot("下一节",()=>{li++;render()});
+  else setFoot("回到第一节",()=>{li=0;render()});
 }
 function renderScreen(){
   const sc=S.L.screens[S.i];
   drawRail(sc.rail); drawBoard();
-  ({probe:sProbe,choice:sChoice,lab:sLab,fix:sFix,takeaway:sTakeaway}[sc.type])(sc);
+  ({probe:sProbe,choice:sChoice,lab:sLab,sort3:sSort3,fix:sFix,takeaway:sTakeaway}[sc.type])(sc);
 }
-function renderRemade(L){
-  const shell=buildPlayShell();
-  body.innerHTML=""; body.appendChild(shell);
-  S={L:L,st:L.init(),i:0};
-  renderScreen();
-  return shell;
+function drawPicker(){
+  picker.innerHTML="";
+  REMADE.forEach((L,i)=>{
+    const b=el("button",null,(i+1)+"　"+L.title.slice(0,9)+"…");
+    b.setAttribute("aria-current",String(i===li));
+    b.onclick=()=>{li=i;render()};
+    picker.appendChild(b);
+  });
 }
-
-/* ================= 切换 ================= */
 function render(){
-  drawPicker(); drawMeter();
-  $("#tabA").setAttribute("aria-selected",String(mode==="A"));
-  $("#tabB").setAttribute("aria-selected",String(mode==="B"));
-  if(mode==="A"){ body.innerHTML=""; body.appendChild(renderOriginal(ORIGINAL[li])); }
-  else renderRemade(REMADE[li]);
-  
+  drawPicker();
+  body.innerHTML=""; body.appendChild(shell());
+  S={L:REMADE[li],st:REMADE[li].init(),i:0};
+  renderScreen();
 }
-$("#tabA").onclick=()=>{mode="A";render()};
-$("#tabB").onclick=()=>{mode="B";render()};
 render();
 })();
 </script>
