@@ -1,5 +1,5 @@
 <title>学习街机</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Press+Start+2P&family=ZCOOL+KuaiLe&display=swap">
 <style>
 :root{
   --bg:#f3e8d8; --bg-deep:#ead9c2;
@@ -591,6 +591,182 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .sf-rev p{margin:0 0 7px;font-size:12.5px;line-height:1.5;opacity:.93}
 .sf-rev p:last-child{margin-bottom:0}
 .sf-rev b{color:var(--accent-bright)}
+</style>
+<style>
+/* =====================================================================
+   街机皮肤（GX）
+   调研结论落成三件事：
+   1) 九宫格式的厚边框、硬阴影、角铆钉——「游戏感」首先来自边框不是 1px。
+   2) 屏幕永远是暗的、带扫描线和暗角——机柜是机柜，房间才跟着主题走。
+   3) 字体分两层：HUD／数字用像素体，正文保持可读——这一条是我自己定的，
+      因为前两轮刚把「字要能读」立成规矩，整套换像素中文字会把它推翻。
+   全部是 DOM + CSS：可读文字不进 canvas，这是项目的硬规矩。
+   ===================================================================== */
+:root{
+  --gx-pix:"Press Start 2P",var(--num);
+  --gx-disp:"ZCOOL KuaiLe","ZCOOL QingKe HuangYou",var(--zh);
+  --gx-hard:6px 6px 0 #2a170a33;
+  --gx-hard-lift:9px 9px 0 #2a170a3d;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--gx-hard:6px 6px 0 #0008;--gx-hard-lift:9px 9px 0 #000a}}
+:root[data-theme="dark"]{--gx-hard:6px 6px 0 #0008;--gx-hard-lift:9px 9px 0 #000a}
+
+/* ---------- 大厅：地板纹理，跟着主题走 ---------- */
+body{
+  background-color:var(--bg);
+  background-image:
+    linear-gradient(0deg,#6c4f3814 1px,#0000 1px),
+    linear-gradient(90deg,#6c4f3814 1px,#0000 1px);
+  background-size:26px 26px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body{
+  background-image:linear-gradient(0deg,#f6e7d30f 1px,#0000 1px),linear-gradient(90deg,#f6e7d30f 1px,#0000 1px)}}
+:root[data-theme="dark"] body{
+  background-image:linear-gradient(0deg,#f6e7d30f 1px,#0000 1px),linear-gradient(90deg,#f6e7d30f 1px,#0000 1px)}
+
+/* ---------- 招牌 ---------- */
+.masthead h1{font-family:var(--gx-disp);font-size:34px;letter-spacing:.04em;
+  color:var(--accent-ink);text-shadow:3px 3px 0 var(--accent-pale);line-height:1.2;margin-bottom:10px}
+:root[data-theme="dark"] .masthead h1,
+:root:not([data-theme="light"]) .masthead h1{text-shadow:3px 3px 0 #0006}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .masthead h1{text-shadow:3px 3px 0 var(--accent-pale)}}
+
+/* ---------- 机柜：厚边框 + 硬阴影 + 角铆钉 ---------- */
+.cab{
+  position:relative;
+  border:3px solid var(--line-2);
+  border-radius:6px;
+  box-shadow:inset 0 3px 0 #ffffff3d, inset 0 -4px 0 #6c4f3826, var(--gx-hard-lift);
+  background:var(--panel-2);
+  overflow:visible;
+}
+:root[data-theme="dark"] .cab,
+:root:not([data-theme="light"]) .cab{box-shadow:inset 0 3px 0 #ffffff14,inset 0 -4px 0 #0005,var(--gx-hard-lift)}
+.cab::before,.cab::after{content:"";position:absolute;width:7px;height:7px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,#fff9,var(--line-2));z-index:3;pointer-events:none}
+.cab::before{left:7px;top:7px} .cab::after{right:7px;top:7px}
+
+/* ---------- 顶灯：机柜的 marquee ---------- */
+.cabhd{
+  background:linear-gradient(180deg,var(--accent-bright),var(--accent));
+  border-bottom:3px solid var(--accent-ink);
+  padding-block:11px 12px;padding-inline:15px;position:relative;overflow:hidden;
+}
+.cabhd::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,#ffffff4d,#0000 46%,#00000024)}
+.cabhd .from{color:#ffe9d2;font-family:var(--gx-disp);font-size:13px;line-height:1.5;
+  letter-spacing:.08em;text-shadow:1px 1px 0 #00000059}
+.cabhd h3{font-family:var(--gx-disp);font-size:25px;font-weight:400;color:#fff;
+  letter-spacing:.03em;text-shadow:2px 2px 0 #0000005c;margin:2px 0 8px}
+.cabhd h3 code{font-family:var(--gx-pix);font-size:8px;background:#00000038;color:#ffe9d2;
+  border-radius:4px;padding-block:4px;padding-inline:6px;text-shadow:none;letter-spacing:0}
+/* 说明牌：机柜上贴的那张操作卡 */
+.cabhd .how{background:#fff8ec;border:2px solid var(--accent-ink);border-radius:5px;
+  box-shadow:2px 2px 0 #00000038;color:#4a2f1f;font-size:13px;line-height:1.6;
+  padding-block:8px;padding-inline:10px;position:relative;z-index:1}
+.cabhd .how b{color:var(--accent-ink)}
+
+/* ---------- HUD：分段仪表 + 像素数字 ---------- */
+.hud{background:#1b1420;border-bottom:3px solid #000;color:#b9a7c9;
+  font-size:11px;letter-spacing:.08em;line-height:1.9;
+  padding-block:8px;padding-inline:11px;gap:12px}
+.hud b{font-family:var(--gx-pix);font-size:11px;color:#ffe9c9;text-shadow:0 0 8px #ff8a4c8c}
+.hud .life i{width:10px;height:10px;border-radius:2px;background:#ff6b57;box-shadow:0 0 6px #ff6b5773}
+.hud .life i.out{background:#3a2f44;box-shadow:none}
+.timebar{height:10px;background:#0e0a12;border-bottom:3px solid #000;
+  padding-block:2px;padding-inline:2px;box-shadow:inset 0 2px 5px #000000a6}
+.timebar i{background:linear-gradient(180deg,#ffb27a,#ff7a35);box-shadow:0 0 10px #ff8a4c8f;
+  -webkit-mask-image:repeating-linear-gradient(90deg,#000 0 6px,#0000 6px 8px);
+  mask-image:repeating-linear-gradient(90deg,#000 0 6px,#0000 6px 8px)}
+
+/* ---------- 屏幕：永远是暗的，扫描线在内容底下 ---------- */
+.screen{
+  --bg:#171220;         --bg-deep:#0f0b16;
+  --panel:#282034;      --panel-2:#2f2640;   --panel-deep:#221a2e;
+  --ink:#f4ecff;        --ink-title:#fff6ec; --ink-soft:#c3b3d6; --ink-faint:#8d7ca3;
+  --accent:#ff8a4c;     --accent-bright:#ffab77; --accent-ink:#ffc79a; --accent-pale:#ff8a4c33;
+  --ok:#5fe08a;         --ok-deep:#7ff0a8;   --ok-pale:#1d4331;   --ok-ink:#9df7bd;
+  --berry:#b98aff;      --berry-pale:#372a53; --berry-ink:#dcc7ff;
+  --warn:#ff6b57;       --warn-pale:#4a2129; --warn-ink:#ffa595;
+  --line:#ffffff1f;     --line-2:#ffffff4a;  --lip:#00000080;
+  --sh:0 4px 0 #00000059; --sh-lift:0 6px 0 #00000073;
+  background-color:#171220;
+  background-image:
+    repeating-linear-gradient(0deg,#0000 0 2px,#ffffff08 2px 3px),
+    radial-gradient(130% 95% at 50% 8%,#3a2a52 0%,#171220 62%);
+  border-bottom:3px solid #000;
+  box-shadow:inset 0 0 0 2px #000, inset 0 0 34px #000000a6;
+}
+.screen::after{content:"";position:absolute;inset:0;z-index:55;pointer-events:none;
+  background:
+    radial-gradient(125% 100% at 50% 45%,#0000 52%,#00000075 100%),
+    linear-gradient(#ff8a4c66,#ff8a4c66) 4px 4px/14px 2px no-repeat,
+    linear-gradient(#ff8a4c66,#ff8a4c66) 4px 4px/2px 14px no-repeat,
+    linear-gradient(#ff8a4c66,#ff8a4c66) calc(100% - 4px) 4px/14px 2px no-repeat,
+    linear-gradient(#ff8a4c66,#ff8a4c66) calc(100% - 4px) 4px/2px 14px no-repeat,
+    linear-gradient(#ff8a4c66,#ff8a4c66) 4px calc(100% - 4px)/14px 2px no-repeat,
+    linear-gradient(#ff8a4c66,#ff8a4c66) 4px calc(100% - 4px)/2px 14px no-repeat,
+    linear-gradient(#ff8a4c66,#ff8a4c66) calc(100% - 4px) calc(100% - 4px)/14px 2px no-repeat,
+    linear-gradient(#ff8a4c66,#ff8a4c66) calc(100% - 4px) calc(100% - 4px)/2px 14px no-repeat}
+
+/* ---------- 遮罩层：待机画面 ---------- */
+.overlay{background:#0d0912e6}
+.overlay h4{font-family:var(--gx-disp);font-weight:400;font-size:25px;letter-spacing:.03em;
+  color:#ffd9b5;text-shadow:2px 2px 0 #000}
+.overlay .big{font-family:var(--gx-pix);font-size:30px;letter-spacing:.02em;
+  color:#ffc79a;text-shadow:0 0 16px #ff8a4ca6,3px 3px 0 #000;margin-bottom:12px}
+.overlay .sub{font-size:12px;line-height:1.8;letter-spacing:.06em;opacity:.78}
+/* 街机按钮：厚、硬、按下去有行程 */
+.playbtn{font-family:var(--gx-disp);font-weight:400;font-size:19px;letter-spacing:.1em;
+  border-radius:5px;background:linear-gradient(180deg,#ffab77,#f2703a);
+  color:#40200c;text-shadow:0 1px 0 #ffffff6b;
+  border:3px solid #7d3b14;border-bottom-width:7px;
+  box-shadow:0 0 0 3px #00000047,0 0 22px #ff8a4c66;
+  padding-block:10px;padding-inline:30px}
+.playbtn:active{transform:translateY(4px);border-bottom-width:3px}
+
+/* ---------- 说明区：机柜下方的贴纸 ---------- */
+.note2{background:var(--panel-deep);border-top:3px solid var(--line-2);color:var(--ink-soft)}
+.spec summary{font-size:12px;line-height:1.9;letter-spacing:.1em}
+.spec{border-top:2px dashed var(--line-2)}
+
+/* ---------- 屏幕内通用：让方块也硬起来 ---------- */
+.screen .brick,.screen .foe,.screen .fly,.screen .tag2,.screen .cz-row,.screen .cz-tile,
+.screen .dl-doc,.screen .dl-slot,.screen .sf-paper,.screen .sf-book,.screen .cz-junk,
+.screen .dl-reader,.screen .sf-say,.screen .cz-msg,.screen .dl-shop{
+  border-radius:5px!important}
+.screen .cz-tile,.screen .playbtn,.screen .sf-btn,.screen .dl-go,.screen .lanebtn{
+  font-family:var(--gx-disp);font-weight:400}
+.screen .cz-tile{font-size:14px;letter-spacing:.02em}
+.screen .cz-gap{border-radius:4px}
+.screen .sf-btn,.screen .dl-go{font-family:var(--gx-disp);font-weight:400;font-size:17px;
+  border-radius:5px;letter-spacing:.14em}
+.screen .sf-ink{font-family:var(--gx-disp);font-weight:400}
+/* 中文 chrome：不套像素字，靠字距和字号做出「面板刻字」的味道 */
+.screen .cz-line i,.screen .dl-in,.screen .sf-news .d,.screen .sf-book h6,
+.screen .sf-paper .ph{letter-spacing:.14em;font-family:var(--zh)}
+.screen .dl-say .pow{font-family:var(--zh);font-size:12px;letter-spacing:.06em}
+.screen .dl-say .pow b,.screen .dl-slot .no{font-family:var(--gx-pix)}
+.screen .dl-slot .no{font-size:8px}
+.screen .stat b{font-family:var(--gx-pix)}
+
+/* ---------- 一排机柜不该是同一个颜色：顶灯按机柜换色 ---------- */
+.cab{--gx-lamp-a:#ffab77;--gx-lamp-b:#f2703a;--gx-lamp-edge:#a34e17}
+.cab[data-hue="1"]{--gx-lamp-a:#c9a2ff;--gx-lamp-b:#8b5cd6;--gx-lamp-edge:#5b3a94}
+.cab[data-hue="2"]{--gx-lamp-a:#7fd8a0;--gx-lamp-b:#3f9c66;--gx-lamp-edge:#276b43}
+.cab[data-hue="3"]{--gx-lamp-a:#ff9b86;--gx-lamp-b:#e0553c;--gx-lamp-edge:#98301f}
+.cabhd{background:linear-gradient(180deg,var(--gx-lamp-a),var(--gx-lamp-b));
+  border-bottom-color:var(--gx-lamp-edge)}
+.cabhd .how{border-color:var(--gx-lamp-edge)}
+.cabhd .how b{color:var(--gx-lamp-edge)}
+.cabhd h3 code{color:#fff}
+
+/* ---------- 待机：按钮在呼吸，像在等人投币 ---------- */
+.playbtn{animation:gxbtn 1.9s ease-in-out infinite}
+@keyframes gxbtn{50%{box-shadow:0 0 0 3px #00000047,0 0 32px #ff8a4cbf}}
+
+/* ---------- 图章别压住正文 ---------- */
+.screen .sf-ink{font-size:13px;top:4px;right:6px;border-width:2px;padding-block:1px;padding-inline:6px}
 </style>
 <div class="page" id="page"></div>
 <script>
@@ -1998,8 +2174,10 @@ page.appendChild(head);
 page.appendChild(el("div","rule"));
 const ORDER=["shift","defenseline","invaders","cloze-tetris","stack","slice","chase"];
 const ALL=[].concat(window.GAMES4,window.GAMES3,window.GAMES1,window.GAMES2);
-ORDER.forEach(id=>{const g=ALL.find(x=>x.id===id); if(g)A.cabinet(page,g)});
-ALL.forEach(g=>{if(ORDER.indexOf(g.id)<0)A.cabinet(page,g)});
+ORDER.forEach((id,i)=>{const g=ALL.find(x=>x.id===id);
+  if(g){A.cabinet(page,g); page.lastElementChild.dataset.hue=i%4}});
+ALL.forEach((g,i)=>{if(ORDER.indexOf(g.id)<0){A.cabinet(page,g);
+  page.lastElementChild.dataset.hue=(ORDER.length+i)%4}});
 page.appendChild(el("div","rule"));
 const t=el("p",null,"");
 t.style.cssText="font-size:13px;color:var(--ink-faint);line-height:1.7";
