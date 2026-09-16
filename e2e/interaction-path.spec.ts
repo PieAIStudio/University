@@ -177,6 +177,8 @@ for (const [mode, origin] of [
           );
         }
         await expect(path.locator('[data-result="completed"]')).toBeVisible();
+        await expect(path.locator(".interaction-path__image-review")).toHaveCount(0);
+        await expect(path.locator(".path-artifact")).toHaveCount(1);
         await expect(path.locator(".interaction-path__artifact")).not.toBeEmpty();
         await expect(page.locator(".exercise-panel textarea").first()).toHaveValue("");
         await humanClick(
@@ -207,4 +209,53 @@ for (const [mode, origin] of [
       });
     }
   }
+}
+
+for (const width of [320, 390, 768]) {
+  test(`interaction workbench ${width}px: stable selection, visible feedback entry and keyboard repair`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const sample = samples.find((item) => item.lessonId === "follow-a-claim")!;
+    await page.goto(`${ONLINE_ORIGIN}${sample.path}?lang=en`);
+    const path = page.locator(".interaction-path");
+    await expect(path).toBeVisible();
+    const feedback = page.locator(".feedback-note__open--lesson");
+    await expect(feedback).toBeInViewport();
+    const isReachable = await feedback.evaluate((node) => {
+      const box = node.getBoundingClientRect();
+      return node.contains(
+        document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2),
+      );
+    });
+    expect(isReachable).toBe(true);
+    if (width < 768) {
+      expect((await feedback.boundingBox())!.y).toBeLessThan(80);
+    }
+    const activity = localizeActivity(sample.activity, "en");
+    for (const step of activity.steps) {
+      if (step.kind === "assemble") break;
+      const correct = step.kind === "decision" ? step.correctOptionId : step.correctSentenceId;
+      await path.locator(`[data-choice-id="${correct}"]`).click();
+      await path.getByRole("button", { name: "Confirm and reveal", exact: true }).click();
+      await path.getByRole("button", { name: "Next round", exact: true }).click();
+    }
+    const bank = path.locator(".interaction-path__pieces");
+    const piece = bank.locator('button[aria-pressed="false"]').first();
+    const pieceId = await piece.getAttribute("data-piece");
+    await piece.focus();
+    await page.keyboard.press("Space");
+    await expect(piece).toBeFocused();
+    await expect(piece).toHaveAttribute("aria-pressed", "true");
+    await expect(path.locator(`[data-piece-row="${pieceId}"]`)).toBeVisible();
+    await page.keyboard.press("Space");
+    await expect(piece).toBeFocused();
+    await expect(piece).toHaveAttribute("aria-pressed", "false");
+    await expect(path.locator(`[data-piece-row="${pieceId}"]`)).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
+      true,
+    );
+    await expect(feedback).toBeInViewport();
+  });
 }

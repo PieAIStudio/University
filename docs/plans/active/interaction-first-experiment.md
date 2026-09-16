@@ -20,10 +20,13 @@ related:
 
 ## Scope
 
-Only `codex/interaction-first` at `0d962d12`. No commit, push, publication,
-cloud writes, other checkout edits or writes through linked studies. The
-director owns real lesson writing and independent review. This is a local
-extension of the shared reader and existing activity/recovery contract.
+The sole worktree for this session is `.worktrees/interaction-first`, on
+`codex/interaction-first`. Owner explicitly authorized consolidation of the two
+Codex experiment branches. Local preservation commits and their merge are part
+of that consolidation; no mainline merge, push, production publication or cloud
+writes are authorized. Do not open another worktree for this lesson experiment.
+Other sessions' branches, including `claude/interaction-research`, remain outside
+this task. Course writes stay in the isolated authoring corpus.
 
 ## Steps
 
@@ -118,7 +121,7 @@ and verified that its handoff focuses an empty independent-answer field. The
 scoped interface detector returned no findings. These establish operability,
 not human motivation, delayed retention, independent mastery or conversion.
 
-## Accepted sample state
+## R2 sample baseline (preserved before consolidation)
 
 The indexed local package is
 `sha256:b5fc23c79d23c5e9a595a4e5d41eae6ced144e6f226cacfdc134ef4cde1c2fc6`.
@@ -141,3 +144,31 @@ lesson remains revision 3, including its first-round image.
 The retained delivery preview is `http://127.0.0.1:23150`; append
 `/ai-literacy/understanding-ai/` and a lesson path from the table. Its listener
 was verified to belong to this worktree, not main; recheck ownership on resume.
+
+## Consolidated workbench continuation
+
+The short-lived `codex/interaction-gameplay` lane extended the same three
+samples: live editable artifact, stable toggled piece bank, optional reorder,
+choice-specific visual feedback, a real image beside the final caption, and a
+scoped mobile toolbar position for the existing feedback control. It fixed a
+duplicate React key that could leave stale image disclosure controls. The
+other lane's explicit CSS package export/import, real brand border token, and
+statically discoverable translation keys are retained, not overwritten.
+
+The two native isolated source corpora were byte-identical. Both source versions
+are preserved by local checkpoint commits and an ignored reconciliation snapshot
+under `.scratch/interaction-consolidation/`. The original R2 records remain in
+`.devspace-visual/interaction-first/`; gameplay before/after images, independent
+review and interrupted full-run logs are preserved in `.devspace-visual/gameplay/`.
+Those old images identify their original worktree/port; merged acceptance needs
+fresh captures from the retained checkout.
+
+No earlier partial full run is accepted as a green regression. The interrupted
+parallel run reached a heavily loaded Mac (load average above 230) and a world
+geometry timeout. Rerun verification sequentially with `VITEST_MAX_WORKERS=1`,
+which the installed runner supports, without raising assertions or deadlines.
+The independent screenshot critic's breadcrumb clipping finding is fixed with
+real text ellipsis. A scrolled-away page title is not evidence that the current
+question or recovery button is blocked; validate their measured bounds instead.
+The sound button is not TTS, and reorder is keyboard/button operation, not drag.
+Human enjoyment, retention, transfer and conversion remain unmeasured.

@@ -1,13 +1,19 @@
 .interaction-path {
   display: block;
+  container: interaction-path / inline-size;
   padding: clamp(16px, 3vw, 28px);
   color: var(--game-ui-text);
   overflow-wrap: anywhere;
+}
+.interaction-lesson {
+  max-width: 960px;
+  margin-inline: auto;
 }
 .interaction-path h2 {
   margin: 0;
   font-size: clamp(22px, 3vw, 28px);
   line-height: 1.35;
+  scroll-margin-block-start: calc(var(--lesson-toolbar-scroll-offset, 4rem) + 16px);
 }
 .interaction-path p {
   line-height: 1.65;
@@ -20,6 +26,10 @@
 }
 .interaction-path .interaction-path__position {
   margin-block: 0 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-variant-numeric: tabular-nums;
 }
 .interaction-path__image {
   margin: 16px 0;
@@ -137,6 +147,259 @@
   background: var(--game-ui-panel);
   border-radius: 12px;
 }
+
+/* The artifact is the play surface. Controls surround real, selectable text. */
+.path-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  margin-block: 24px;
+}
+.path-artifact {
+  min-width: 0;
+  background: var(--game-ui-panel);
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.path-artifact__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px;
+  border-bottom: 1px solid var(--game-ui-border-subtle);
+}
+.path-artifact h3,
+.path-workbench h3 {
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+}
+.path-workbench .interaction-path__assembly {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.path-workbench .interaction-path__assembly li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+  margin: 0;
+  padding: 16px;
+  border-bottom: 1px solid var(--game-ui-border-subtle);
+  animation: path-piece-arrive 180ms ease-out;
+}
+.path-workbench .interaction-path__assembly li:last-child {
+  border: 0;
+}
+.path-workbench__line {
+  line-height: 1.75;
+  align-self: center;
+}
+.path-workbench .interaction-path__piece-actions {
+  flex-direction: column;
+  gap: 0;
+}
+.path-workbench .interaction-path__piece-actions button {
+  padding-inline: 10px;
+  min-width: 44px;
+}
+.path-workbench .interaction-path__pieces {
+  margin-block: 12px;
+}
+.path-workbench .interaction-path__pieces button {
+  gap: 12px;
+  align-items: start;
+}
+.path-workbench__add,
+.path-choice__mark svg,
+.path-feedback__title svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.path-workbench__add {
+  margin-block-start: 3px;
+}
+.path-workbench__blank {
+  padding: 24px 20px;
+  color: var(--game-ui-text-muted);
+}
+.path-workbench__blank > span {
+  display: block;
+  height: 1px;
+  background: var(--game-ui-border-subtle);
+  margin-block: 20px;
+}
+.path-workbench__blank > span:last-of-type {
+  width: 65%;
+}
+.path-workbench__instruction,
+.path-workbench__requirements {
+  font-size: 14px;
+  color: var(--game-ui-text-muted);
+}
+.path-workbench__requirements summary {
+  cursor: pointer;
+  padding-block: 12px;
+  min-height: 44px;
+}
+.path-artifact__image {
+  margin: 0;
+}
+.path-artifact__image img {
+  width: 100%;
+  max-height: 260px;
+  display: block;
+  object-fit: contain;
+  background: var(--game-ui-panel-strong);
+}
+.path-artifact__image figcaption {
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--game-ui-text-muted);
+}
+.path-artifact .interaction-path__artifact {
+  padding: 24px;
+  margin: 0;
+  border-radius: 0;
+}
+.path-artifact[data-settled="true"] {
+  margin-block: 24px;
+  animation: path-piece-arrive 280ms ease-out;
+}
+.path-choice__mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  margin-block-start: 1px;
+}
+.path-choice__mark > span {
+  width: 10px;
+  height: 10px;
+  background: currentColor;
+  border-radius: 50%;
+}
+.interaction-path__choices button {
+  display: flex;
+  align-items: start;
+  gap: 12px;
+}
+.interaction-path__choices button:disabled {
+  opacity: 1;
+}
+.interaction-path__choices [data-outcome="fits"] .path-choice__mark {
+  border-color: transparent;
+}
+.interaction-path__choices [data-outcome="revise"] .path-choice__mark {
+  border-style: dashed;
+}
+.interaction-path[data-step-kind="evidence"] .interaction-path__choices {
+  border: 1px solid var(--game-ui-border-subtle);
+  padding: 8px;
+  border-radius: 12px;
+  gap: 0;
+  background: var(--game-ui-panel);
+}
+.interaction-path[data-step-kind="evidence"] .interaction-path__choices button {
+  border-radius: 8px;
+  padding: 14px 12px;
+  line-height: 1.75;
+}
+.interaction-path__feedback {
+  padding: 16px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: 12px;
+  background: var(--game-ui-panel);
+}
+.path-feedback__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.interaction-path__feedback[data-passed="true"] .path-feedback__title {
+  color: var(--game-ui-text);
+}
+.interaction-path__feedback[data-passed="true"] .path-feedback__title svg {
+  stroke-dasharray: 24;
+  animation: path-check 260ms ease-out;
+}
+.lesson-reader--interaction h2[tabindex="-1"]:focus,
+.path-workbench__line:focus {
+  outline: none;
+}
+@keyframes path-piece-arrive {
+  from {
+    opacity: 0.5;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes path-check {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .path-workbench .interaction-path__assembly li,
+  .path-artifact[data-settled="true"],
+  .interaction-path__feedback[data-passed="true"] .path-feedback__title svg {
+    animation: none;
+  }
+}
+@container interaction-path (max-width: 620px) {
+  .path-workbench {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+}
+@media (max-width: 767px) {
+  .path-workbench {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .app--lesson .lesson-reader--interaction .lesson-main > :not(.lesson-reader__header) {
+    padding-inline-end: 0;
+  }
+  .lesson-reader--interaction .lesson-toolbar {
+    padding-inline-end: 72px;
+  }
+  body:has(.lesson-reader--interaction) .feedback-note__open--float.feedback-note__open--lesson {
+    top: max(8px, env(safe-area-inset-top));
+    bottom: auto;
+    inset-inline-end: max(24px, var(--safe-area-inline-end));
+    z-index: 42;
+  }
+  .lesson-reader--interaction .lesson-reader__title h2 {
+    font-size: 24px;
+  }
+  .path-workbench__line {
+    font-size: 16px;
+  }
+  .path-artifact__image img {
+    max-height: 160px;
+  }
+}
 .interaction-path :focus-visible,
 .interaction-path__review summary:focus-visible {
   outline: 2px solid var(--game-ui-accent);
@@ -151,6 +414,12 @@
 }
 .lesson-reader--interaction .lesson-skip-to-questions {
   margin-block: 8px 16px;
+}
+.lesson-reader--interaction .lesson-breadcrumb__link,
+.lesson-reader--interaction .lesson-breadcrumb__current {
+  /* Ellipsis applies to a block's inline text, not an inline-flex item. */
+  display: block;
+  line-height: 24px;
 }
 @media (max-width: 540px) {
   .lesson-reader--interaction .lesson-toolbar {

@@ -1,4 +1,16 @@
 export const messages = {
+  "path.decide": "Make a call",
+  "path.locate": "Find the evidence",
+  "path.make": "Make it yours",
+  "path.buildDraft": "Your work starts here",
+  "path.repairDraft": "Edit this draft directly",
+  "path.finishedArtifact": "The work you just made",
+  "path.changeOrder": "Reorder",
+  "path.finishOrdering": "Hide reorder controls",
+  "path.addInstruction":
+    "Choose a sentence to add it; choose it again to remove it. A check marks your selection, not a correct answer.",
+  "path.allAdded":
+    "Every piece is in your work. More is not always better: check what should stay.",
   "path.viewImage": "Look at the image again",
   "path.source": "Original source and image credits",
   "path.openSource": "Open original source",

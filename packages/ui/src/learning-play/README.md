@@ -12,6 +12,9 @@
 宿主在 `learning-play.css` 后导入包导出的 `learning-play/interaction-path.css`；
 两种 app 模式已在同一入口导入，不通过组件内部或隐藏的 CSS 导入链加载。
 
+组装区使用同一个 `PathArtifact` 呈现可改的草稿与最终作品，`PathAssembly` 只组织片段操作；
+它们不是另两个教学引擎。候选句保留位置并显示选中状态，避免点一句整页跳动；排序按需展开。
+
 不得为凑轮数在作品后再问同义选择题。本轮三节样课各用四轮，以作品收口。
 `evidence.task: "unsupported"` 必须提供 `material.reference: { label, text }`，
 把短来源记录放在明确标为教学草稿的待选句旁；不是凭空猜哪个句子假。

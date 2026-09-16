@@ -85,6 +85,7 @@ describe("shared interaction path host", () => {
     await click("移除：不用检查，直接说测试通过。");
     await click("检查 Enter 和空格都能触发提交。");
     await click("完成后请报告实际检查结果。");
+    await click("调整顺序");
     await click("上移：完成后请报告实际检查结果。");
     await commit();
     await click("带走我的作品");
@@ -112,6 +113,38 @@ describe("shared interaction path host", () => {
       "首答符合 0 轮",
     );
     expect(container.textContent).toContain("本次已打开完整讲解");
+  });
+  it("lets the actual artifact grow, keeps reorder optional and preserves selected feedback", async () => {
+    await render();
+    await click("能，按 Enter 或空格");
+    expect(
+      container.querySelector('[data-selected="true"]')?.getAttribute("data-outcome"),
+    ).toBeNull();
+    await commit();
+    expect(container.querySelector('[data-outcome="fits"]')).not.toBeNull();
+    await click("下一轮");
+    await click("焦点在按钮上时，Enter 和空格都能触发按钮。");
+    await commit();
+    await click("下一轮");
+    await click("下一轮的问题标题");
+    await commit();
+    await click("下一轮");
+    expect(
+      container
+        .querySelector(".path-workbench > :first-child")
+        ?.classList.contains("path-artifact"),
+    ).toBe(true);
+    expect(buttons().some((button) => button.textContent === "上移")).toBe(false);
+    await click("检查 Enter 和空格都能触发提交。");
+    expect(container.querySelector(".interaction-path__assembly")?.textContent).toContain(
+      "检查 Enter 和空格",
+    );
+    expect(container.querySelector('[data-piece][aria-pressed="true"]')).not.toBeNull();
+    await click("移除：检查 Enter 和空格都能触发提交。");
+    expect(container.querySelector(".interaction-path__assembly")?.textContent).not.toContain(
+      "检查 Enter 和空格",
+    );
+    expect(document.activeElement?.getAttribute("data-piece")).not.toBeNull();
   });
   it("shows the actual source beside a draft and resets a changed activity within one occurrence", async () => {
     const activity = structuredClone(fixture) as InteractionPathActivity;
@@ -190,5 +223,7 @@ describe("shared interaction path host", () => {
     expect(report).toHaveBeenCalledOnce();
     expect(report.mock.calls[0]![0].submission.handoff).toContain("检查 Enter 和空格");
     expect(progress).toHaveBeenLastCalledWith(5);
+    expect(container.querySelectorAll(".interaction-path__image-review")).toHaveLength(0);
+    expect(container.querySelectorAll(".path-artifact")).toHaveLength(1);
   });
 });

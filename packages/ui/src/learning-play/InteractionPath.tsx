@@ -12,6 +12,9 @@ import {
 } from "@pieai/university-core";
 import { useI18n } from "../i18n/index.js";
 import type { LessonAssetView } from "../view/lesson-view.js";
+import { PathAssembly } from "./PathAssembly.js";
+import { PathArtifact } from "./PathArtifact.js";
+import { playSound } from "../sound/index.js";
 
 export function InteractionPath({
   activity,
@@ -80,6 +83,7 @@ export function InteractionPath({
   function commit() {
     if (!step || submitted) return;
     setEvidence((current) => recordPathAttempt(current, step, answer));
+    playSound(evaluateInteractionStep(step, answer).passed ? "answer.correct" : "answer.wrong");
     setSubmitted(true);
   }
   function advance() {
@@ -142,6 +146,15 @@ export function InteractionPath({
           <>
             <header>
               <p className="interaction-path__position">
+                <span>
+                  {t(
+                    step.kind === "decision"
+                      ? "path.decide"
+                      : step.kind === "evidence"
+                        ? "path.locate"
+                        : "path.make",
+                  )}
+                </span>
                 {t("path.round", { current: index + 1, total: activity.steps.length })}
               </p>
               <h2 ref={heading} tabIndex={-1}>
@@ -164,91 +177,20 @@ export function InteractionPath({
               </details>
             ) : null}
             {step.kind === "assemble" ? (
-              <>
-                <ul className="interaction-path__constraints" aria-label={t("path.constraints")}>
-                  {[...new Set(step.constraints.map((rule) => rule.label))].map((label) => (
-                    <li key={label}>{label}</li>
-                  ))}
-                </ul>
-                <div
-                  className="interaction-path__pieces"
-                  role="group"
-                  aria-label={t("path.pieces")}
-                >
-                  {step.pieces
-                    .filter((piece) => !answer.includes(piece.id))
-                    .map((piece) => (
-                      <GameButton
-                        key={piece.id}
-                        data-piece={piece.id}
-                        type="button"
-                        variant="secondary"
-                        sound={false}
-                        static
-                        disabled={submitted}
-                        onClick={() => {
-                          pendingPieceFocus.current = `[data-piece-row="${piece.id}"]`;
-                          setAnswer([...answer, piece.id]);
-                        }}
-                      >
-                        {piece.label}
-                      </GameButton>
-                    ))}
-                </div>
-                <ol className="interaction-path__assembly" aria-label={t("path.artifact")}>
-                  {answer.map((id, pieceIndex) => {
-                    const label = step.pieces.find((piece) => piece.id === id)!.label;
-                    return (
-                      <li key={id}>
-                        <span data-piece-row={id} tabIndex={-1}>
-                          {label}
-                        </span>
-                        <div className="interaction-path__piece-actions">
-                          <GameButton
-                            type="button"
-                            variant="ghost"
-                            sound={false}
-                            static
-                            aria-label={t("path.upLabel", { label })}
-                            disabled={submitted || pieceIndex === 0}
-                            onClick={() => move(pieceIndex, -1)}
-                          >
-                            {t("path.up")}
-                          </GameButton>
-                          <GameButton
-                            type="button"
-                            variant="ghost"
-                            sound={false}
-                            static
-                            aria-label={t("path.downLabel", { label })}
-                            disabled={submitted || pieceIndex === answer.length - 1}
-                            onClick={() => move(pieceIndex, 1)}
-                          >
-                            {t("path.down")}
-                          </GameButton>
-                          <GameButton
-                            type="button"
-                            variant="ghost"
-                            sound={false}
-                            static
-                            aria-label={t("path.removeLabel", { label })}
-                            disabled={submitted}
-                            onClick={() => {
-                              pendingPieceFocus.current = `[data-piece="${id}"]`;
-                              setAnswer(answer.filter((value) => value !== id));
-                            }}
-                          >
-                            {t("path.remove")}
-                          </GameButton>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ol>
-                {!answer.length ? (
-                  <p className="interaction-path__empty">{t("path.empty")}</p>
-                ) : null}
-              </>
+              <PathAssembly
+                key={`assembly:${step.id}`}
+                step={step}
+                answer={answer}
+                submitted={submitted}
+                onAdd={(id) => {
+                  setAnswer([...answer, id]);
+                }}
+                onRemove={(id) => {
+                  pendingPieceFocus.current = `[data-piece="${id}"]`;
+                  setAnswer(answer.filter((value) => value !== id));
+                }}
+                onMove={move}
+              />
             ) : (
               <>
                 {step.kind === "evidence" ? (
@@ -274,6 +216,15 @@ export function InteractionPath({
                       <GameButton
                         key={choice.id}
                         data-choice-id={choice.id}
+                        data-selected={answer[0] === choice.id}
+                        data-outcome={
+                          submitted && answer[0] === choice.id
+                            ? result?.passed
+                              ? "fits"
+                              : "revise"
+                            : undefined
+                        }
+                        aria-label={choice.label}
                         type="button"
                         variant={
                           answer[0] === choice.id
@@ -288,7 +239,18 @@ export function InteractionPath({
                         disabled={submitted}
                         onClick={() => setAnswer([choice.id])}
                       >
-                        {choice.label}
+                        <span className="path-choice__mark" aria-hidden="true">
+                          {submitted && answer[0] === choice.id ? (
+                            <svg viewBox="0 0 24 24">
+                              <path
+                                d={result?.passed ? "m5 12 4 4L19 6" : "M6 6l12 12M18 6 6 18"}
+                              />
+                            </svg>
+                          ) : answer[0] === choice.id ? (
+                            <span />
+                          ) : null}
+                        </span>
+                        <span>{choice.label}</span>
                       </GameButton>
                     ),
                   )}
@@ -304,7 +266,12 @@ export function InteractionPath({
                   role="status"
                   data-passed={result.passed}
                 >
-                  <strong>{t(result.passed ? "path.fits" : "path.revise")}</strong>
+                  <strong className="path-feedback__title">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d={result.passed ? "m5 12 4 4L19 6" : "M12 5v9M12 18v1"} />
+                    </svg>
+                    {t(result.passed ? "path.fits" : "path.revise")}
+                  </strong>
                   {result.feedback.map((message, messageIndex) => (
                     <p key={messageIndex}>{message}</p>
                   ))}
@@ -402,7 +369,9 @@ export function InteractionPath({
             <h2 ref={heading} tabIndex={-1}>
               {activity.finish.title}
             </h2>
-            <pre className="interaction-path__artifact">{artifact}</pre>
+            <PathArtifact title={t("path.finishedArtifact")} image={image} settled>
+              <pre className="interaction-path__artifact">{artifact}</pre>
+            </PathArtifact>
             <GameButton
               type="button"
               variant="secondary"
