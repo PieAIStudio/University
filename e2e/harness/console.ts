@@ -24,7 +24,7 @@ function ignorableUrl(url: string): boolean {
 export function watchConsole(
   page: Page,
   options: {
-    /** Only a response deliberately fulfilled by this test may be expected. */
+    /** Each entry accepts one deliberately fulfilled resource error, never a blanket exemption. */
     expectedHttpErrors?: readonly {
       status: number;
       matchesUrl: (url: string) => boolean;
@@ -35,6 +35,10 @@ export function watchConsole(
   errors: () => readonly string[];
 } {
   const errors: string[] = [];
+  const expectedHttpErrors = (options.expectedHttpErrors ?? []).map((expected) => ({
+    ...expected,
+    consumed: false,
+  }));
   page.on("pageerror", (error) => {
     const text = error.stack ?? error.message;
     if (!ignorable(text)) errors.push(text);
@@ -47,15 +51,18 @@ export function watchConsole(
     // never silence other 400s, JavaScript exceptions or missing app assets.
     const resourceStatus =
       /^Failed to load resource: the server responded with a status of (\d{3})\b/u.exec(text);
-    if (
+    const expected =
       resourceStatus &&
-      options.expectedHttpErrors?.some(
-        (expected) =>
-          expected.status === Number(resourceStatus[1]) &&
-          expected.matchesUrl(message.location().url),
-      )
-    )
+      expectedHttpErrors.find(
+        (candidate) =>
+          !candidate.consumed &&
+          candidate.status === Number(resourceStatus[1]) &&
+          candidate.matchesUrl(message.location().url),
+      );
+    if (expected) {
+      expected.consumed = true;
       return;
+    }
     if (!ignorable(text)) errors.push(text);
   });
   page.on("response", (response) => {

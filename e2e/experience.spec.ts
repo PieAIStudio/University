@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type Route } from "@playwright/test";
 
 import {
   closeVisibleDialog,
@@ -134,76 +134,117 @@ test.describe("M 跨屏体验不变量", () => {
     test(`X3/X5 ${viewport.id}：核心主控件可命中且点击后及时响应`, async ({ page }) => {
       const rejectedUrls = new Set<string>();
       let signInRequests = 0;
+      let unexpectedAuthRequests = 0;
       const consoleErrors = watchConsole(page, {
         expectedHttpErrors: [{ status: 400, matchesUrl: (url) => rejectedUrls.has(url) }],
       });
-      await page.route("**/auth/v1/token**", async (route) => {
+      const rejectOnlySyntheticSignIn = async (route: Route) => {
+        const request = route.request();
+        const url = new URL(request.url());
+        const body = request.postDataJSON();
+        if (
+          signInRequests !== 0 ||
+          request.method() !== "POST" ||
+          url.pathname !== "/auth/v1/token" ||
+          url.searchParams.get("grant_type") !== "password" ||
+          body?.email !== "response-check@example.invalid" ||
+          body?.password !== "synthetic-response-check-only"
+        ) {
+          unexpectedAuthRequests++;
+          await route.abort();
+          return;
+        }
         signInRequests++;
-        rejectedUrls.add(route.request().url());
+        rejectedUrls.add(request.url());
         await route.fulfill({
           status: 400,
           json: { code: "invalid_credentials", msg: "synthetic-sign-in-rejected" },
         });
-      });
+      };
       for (const route of ctaRoutes) {
-        await namedStep(page, `X3/X5 ${viewport.id} · ${route.label}`, async () => {
-          await openExperienceRoute(page, route, viewport);
-          for (const target of route.coverage) {
+        // Credentials and the fail-closed network fixture have the same scope.
+        // Other screens must not inherit a mock that changes refresh behavior.
+        if (route.id === "me") {
+          await page.route("**/auth/v1/token**", rejectOnlySyntheticSignIn);
+        }
+        try {
+          await namedStep(page, `X3/X5 ${viewport.id} · ${route.label}`, async () => {
+            await openExperienceRoute(page, route, viewport);
+            if (route.id === "me") {
+              const form = page.locator("details.account-panel__form");
+              await form.locator('input[type="email"]').fill("response-check@example.invalid");
+              await form.locator('input[type="password"]').fill("synthetic-response-check-only");
+              await expect(form.locator('button[type="submit"]')).toBeEnabled();
+            }
+            for (const target of route.coverage) {
+              await namedStep(
+                page,
+                `X3 ${viewport.id} · ${route.label} · ${target.label}`,
+                async () => {
+                  const locator = await prepareCoverageTarget(page, target);
+                  await assertVisibleAndHittableAtFivePoints(
+                    page,
+                    locator,
+                    `${route.label} / ${target.label}`,
+                  );
+                },
+              );
+            }
+            const primary = route.primary;
+            if (!primary) return;
             await namedStep(
               page,
-              `X3 ${viewport.id} · ${route.label} · ${target.label}`,
+              `X5 ${viewport.id} · ${route.label} · ${primary.label}`,
               async () => {
-                const locator = await prepareCoverageTarget(page, target);
-                await assertVisibleAndHittableAtFivePoints(
-                  page,
-                  locator,
-                  `${route.label} / ${target.label}`,
-                );
+                const response = await clickAndMeasureResponse(page, primary);
+                const responseKey = `${route.id}/${viewport.id}/${primary.id}`;
+                if (response.elapsedMs > 300) {
+                  const known = KNOWN_RESPONSE_ISSUES.get(responseKey);
+                  if (!known) {
+                    expect(
+                      response.elapsedMs,
+                      `${route.label} 的 CTA 从真实点击到响应耗时 ${response.elapsedMs}ms。`,
+                    ).toBeLessThanOrEqual(300);
+                  } else {
+                    console.log(`已知 X5 违规 ${responseKey}: ${known}`);
+                    console.log(`实际测得 ${response.elapsedMs}ms`);
+                  }
+                }
+                expect(
+                  response.urlChanged || response.domChanged,
+                  `${route.label} 的 CTA 点击后 300ms 内没有 URL、DOM、aria-busy 或 disabled 响应。`,
+                ).toBe(true);
+                if (route.id === "me") {
+                  const form = page.locator("details.account-panel__form");
+                  await expect(form.getByRole("alert")).toBeVisible();
+                  await expect(form).not.toContainText("synthetic-sign-in-rejected");
+                  await expect(form.locator('input[type="email"]')).toHaveValue(
+                    "response-check@example.invalid",
+                  );
+                  await expect(form.locator('input[type="password"]')).toHaveValue("");
+                  expect(signInRequests).toBe(1);
+                }
               },
             );
+          });
+        } finally {
+          if (route.id === "me") {
+            // Clear synthetic inputs before releasing the only auth interceptor.
+            const form = page.locator("details.account-panel__form");
+            if (await form.count()) {
+              await form.locator('input[type="password"]').fill("");
+              await form.locator('input[type="email"]').fill("");
+            }
+            await page.unroute("**/auth/v1/token**", rejectOnlySyntheticSignIn);
           }
-          const primary = route.primary;
-          if (!primary) return;
-          await namedStep(
-            page,
-            `X5 ${viewport.id} · ${route.label} · ${primary.label}`,
-            async () => {
-              const response = await clickAndMeasureResponse(page, primary);
-              const responseKey = `${route.id}/${viewport.id}/${primary.id}`;
-              if (response.elapsedMs > 300) {
-                const known = KNOWN_RESPONSE_ISSUES.get(responseKey);
-                if (!known) {
-                  expect(
-                    response.elapsedMs,
-                    `${route.label} 的 CTA 从真实点击到响应耗时 ${response.elapsedMs}ms。`,
-                  ).toBeLessThanOrEqual(300);
-                } else {
-                  console.log(`已知 X5 违规 ${responseKey}: ${known}`);
-                  console.log(`实际测得 ${response.elapsedMs}ms`);
-                }
-              }
-              expect(
-                response.urlChanged || response.domChanged,
-                `${route.label} 的 CTA 点击后 300ms 内没有 URL、DOM、aria-busy 或 disabled 响应。`,
-              ).toBe(true);
-              if (route.id === "me") {
-                const form = page.locator("details.account-panel__form");
-                await expect(form.getByRole("alert")).toBeVisible();
-                await expect(form).not.toContainText("synthetic-sign-in-rejected");
-                await expect(form.locator('input[type="email"]')).toHaveValue(
-                  "response-check@example.invalid",
-                );
-                await expect(form.locator('input[type="password"]')).toHaveValue("");
-                expect(signInRequests).toBe(1);
-              }
-            },
-          );
-        });
+        }
       }
       for (const route of EXPERIENCE_ROUTES.filter((candidate) => candidate.primary === null)) {
         expect(route.noPrimaryReason, `${route.label} 的无主 CTA 说明不能为空`).toBeTruthy();
         console.log(`X5 ${viewport.id} · ${route.label}：无主 CTA，${route.noPrimaryReason}`);
       }
+      expect(signInRequests).toBe(1);
+      expect(unexpectedAuthRequests).toBe(0);
       consoleErrors.assertClean();
     });
   }

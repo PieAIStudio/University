@@ -28,14 +28,18 @@ test("console guard accepts only the exact synthetic HTTP rejection; other error
   await expect.poll(() => normal.errors().length).toBe(1);
   expect(() => normal.assertClean()).toThrow("400");
   scoped.assertClean();
-  await page.evaluate((url) => fetch(url), unexpectedUrl);
+  // Even a second response from the same URL is not the one expected failure.
+  await page.evaluate((url) => fetch(url), expectedUrl);
   await expect.poll(() => scoped.errors().length).toBe(1);
+  expect(() => scoped.assertClean()).toThrow("400");
+  await page.evaluate((url) => fetch(url), unexpectedUrl);
+  await expect.poll(() => scoped.errors().length).toBe(2);
   expect(() => scoped.assertClean()).toThrow("400");
   await page.evaluate(() =>
     setTimeout(() => {
       throw Error("synthetic-script-regression");
     }, 0),
   );
-  await expect.poll(() => scoped.errors().length).toBe(2);
+  await expect.poll(() => scoped.errors().length).toBe(3);
   expect(() => scoped.assertClean()).toThrow("synthetic-script-regression");
 });

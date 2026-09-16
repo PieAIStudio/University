@@ -176,14 +176,6 @@ const PLANS_PRIMARY: ExperienceTarget = {
 const PROFILE_PRIMARY: ExperienceTarget = {
   id: "profile-sign-in",
   label: "账号登录",
-  async prepare(page) {
-    // An empty shared-Kit form is intentionally disabled. Exercise the real
-    // submit response with valid synthetic inputs, never a live user account.
-    const form = page.locator("details.account-panel__form");
-    await form.locator('input[type="email"]').fill("response-check@example.invalid");
-    await form.locator('input[type="password"]').fill("synthetic-response-check-only");
-    await expect(form.locator('button[type="submit"]')).toBeEnabled();
-  },
   /*
    * /me has two legitimate shapes: with a backend configured it draws a real
    * sign-in form, and without one it draws a control explaining why. This
