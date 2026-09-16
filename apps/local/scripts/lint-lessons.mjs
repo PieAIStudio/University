@@ -627,6 +627,7 @@ function lintLesson({ manifestPath, content, manifest, previous }) {
   // must use the current line. Both entry points otherwise share one spine.
   for (const { item, message } of checkLessonSpine(content, manifest.variant, {
     allowLegacyGuessLine: true,
+    interactionLesson: manifest,
   })) {
     fail(item, message);
   }
@@ -819,7 +820,11 @@ const debtExempt = {
 
 for (const lesson of lessons("studies")) {
   // Lessons without a variant predate the shapes; linting them would be noise.
-  if (!lesson.manifest.variant) continue;
+  if (
+    !lesson.manifest.variant &&
+    !lesson.manifest.activities?.some((activity) => activity.kind === "interaction-path")
+  )
+    continue;
   checked += 1;
 
   // study/course/unit — first three segments of the stable id.

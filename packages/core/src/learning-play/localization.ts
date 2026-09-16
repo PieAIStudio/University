@@ -32,7 +32,12 @@ function rewriteDisplay(value: unknown, rewrite: (text: string) => string, paren
       // Locale dictionaries are metadata. Never rewrite a dictionary, an ID,
       // an executable program, a source URL, or a learner's submitted data.
       if (key === "locales") return [key, item];
-      if (typeof item === "string" && (DISPLAY_FIELDS.has(key) || DISPLAY_MAPS.has(parent))) {
+      if (
+        typeof item === "string" &&
+        (DISPLAY_FIELDS.has(key) ||
+          DISPLAY_MAPS.has(parent) ||
+          (key === "text" && parent === "reference"))
+      ) {
         return [key, rewrite(item)];
       }
       return [key, rewriteDisplay(item, rewrite, key)];

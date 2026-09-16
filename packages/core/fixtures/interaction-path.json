@@ -1,0 +1,207 @@
+{
+  "id": "keyboard-path",
+  "kind": "interaction-path",
+  "role": "demonstrate",
+  "difficulty": "intro",
+  "title": "把一个按钮交给键盘使用者",
+  "brief": "你正在检查一份表单。先作判断，再找依据，最后写一个小改动请求。",
+  "goal": "用来源支持一个可检查的请求。",
+  "hint": "一次只处理当前这一轮。",
+  "takeaway": "把要求写清楚，再报告真正检查过的结果。",
+  "source": {
+    "label": "W3C 按钮模式",
+    "url": "https://www.w3.org/WAI/ARIA/apg/patterns/button/"
+  },
+  "sources": [
+    {
+      "id": "button-guide",
+      "reference": {
+        "label": "W3C 按钮模式",
+        "url": "https://www.w3.org/WAI/ARIA/apg/patterns/button/"
+      },
+      "note": "依据是按钮操作规范，不代表这个虚构表单已经通过测试。"
+    }
+  ],
+  "steps": [
+    {
+      "id": "predict",
+      "kind": "decision",
+      "sourceId": "button-guide",
+      "question": "只用键盘，能提交这份表单吗？",
+      "brief": "焦点已经在一个原生“提交”按钮上。你没有鼠标。",
+      "hint": "从材料里找能直接支持操作的那句话。",
+      "explanation": "按钮需要有清楚的名字，并能通过键盘触发。",
+      "options": [
+        {
+          "id": "mouse-only",
+          "label": "不能，必须点击鼠标",
+          "explanation": "按钮也支持键盘，鼠标不是提交的必要条件。"
+        },
+        {
+          "id": "keyboard",
+          "label": "能，按 Enter 或空格",
+          "explanation": "焦点在按钮上时，这两个键都可以触发它。"
+        }
+      ],
+      "correctOptionId": "keyboard"
+    },
+    {
+      "id": "find-proof",
+      "kind": "evidence",
+      "sourceId": "button-guide",
+      "question": "哪句话支持你的判断？",
+      "brief": "这是用于检验交互的教学情境，没有运行任何模型。",
+      "hint": "从材料里找能直接支持操作的那句话。",
+      "explanation": "按钮需要有清楚的名字，并能通过键盘触发。",
+      "task": "support",
+      "material": {
+        "label": "按钮操作说明（根据 W3C 改写）",
+        "note": "下面三句构成短材料，选择直接说明键盘操作的一句。",
+        "sentences": [
+          {
+            "id": "action",
+            "label": "按钮用来触发一个动作。",
+            "explanation": "这说明用途，还没有说明如何用键盘触发。"
+          },
+          {
+            "id": "name",
+            "label": "按钮要有可访问名称。",
+            "explanation": "这是名称要求，不能证明哪个键会提交。"
+          },
+          {
+            "id": "keys",
+            "label": "焦点在按钮上时，Enter 和空格都能触发按钮。",
+            "explanation": "这句话直接给出了焦点条件和两个操作键。"
+          }
+        ]
+      },
+      "correctSentenceId": "keys"
+    },
+    {
+      "id": "focus-change",
+      "kind": "decision",
+      "sourceId": "button-guide",
+      "question": "下一轮出现后，焦点应该去哪儿？",
+      "brief": "这是用于检验交互的教学情境，没有运行任何模型。",
+      "hint": "从材料里找能直接支持操作的那句话。",
+      "explanation": "按钮需要有清楚的名字，并能通过键盘触发。",
+      "options": [
+        {
+          "id": "new-context",
+          "label": "下一轮的问题标题",
+          "explanation": "任务已经变化，焦点跟随新情境。"
+        },
+        {
+          "id": "old-context",
+          "label": "已经消失的上一轮按钮",
+          "explanation": "按钮消失后留在那里，会让键盘使用者找不到位置。"
+        }
+      ],
+      "correctOptionId": "new-context"
+    },
+    {
+      "id": "build-request",
+      "kind": "assemble",
+      "sourceId": "button-guide",
+      "question": "给同事写一个可检查的小改动请求",
+      "brief": "这是用于检验交互的教学情境，没有运行任何模型。",
+      "hint": "从材料里找能直接支持操作的那句话。",
+      "explanation": "按钮需要有清楚的名字，并能通过键盘触发。",
+      "pieces": [
+        {
+          "id": "task",
+          "label": "请给提交按钮加上可访问名称。"
+        },
+        {
+          "id": "keyboard-check",
+          "label": "检查 Enter 和空格都能触发提交。"
+        },
+        {
+          "id": "no-claim",
+          "label": "完成后请报告实际检查结果。"
+        },
+        {
+          "id": "pretend",
+          "label": "不用检查，直接说测试通过。"
+        }
+      ],
+      "initialPieceIds": [
+        "task",
+        "pretend"
+      ],
+      "constraints": [
+        {
+          "id": "needs-task",
+          "kind": "include",
+          "pieceIds": [
+            "task",
+            "keyboard-check",
+            "no-claim"
+          ],
+          "label": "请求中要有修改目标、键盘检查和真实结果。",
+          "explanation": "还缺修改目标、键盘检查或真实结果中的一项。"
+        },
+        {
+          "id": "no-pretending",
+          "kind": "exclude",
+          "pieceIds": [
+            "pretend"
+          ],
+          "label": "删掉“没有检查却说通过”的片段。",
+          "explanation": "没有实际检查，不能把结果写成通过。"
+        }
+      ]
+    }
+  ],
+  "finish": {
+    "title": "你的小改动请求",
+    "note": "下面换一个情境，由你独立完成原有练习。"
+  },
+  "locales": {
+    "en": {
+      "strings": {
+        "W3C 按钮模式": "W3C Button Pattern",
+        "只用键盘，能提交这份表单吗？": "Can you submit this form using only a keyboard?",
+        "这是用于检验交互的教学情境，没有运行任何模型。": "This is a synthetic interaction fixture. No model was run.",
+        "从材料里找能直接支持操作的那句话。": "Look for the sentence that directly supports the action.",
+        "按钮需要有清楚的名字，并能通过键盘触发。": "A button needs a clear name and keyboard activation.",
+        "焦点已经在一个原生“提交”按钮上。你没有鼠标。": "Focus is on a native Submit button. You have no mouse.",
+        "不能，必须点击鼠标": "No, a mouse click is required",
+        "按钮也支持键盘，鼠标不是提交的必要条件。": "Buttons also support keyboards; a mouse is not required.",
+        "能，按 Enter 或空格": "Yes, press Enter or Space",
+        "焦点在按钮上时，这两个键都可以触发它。": "With focus on the button, either key can activate it.",
+        "哪句话支持你的判断？": "Which sentence supports your decision?",
+        "按钮操作说明（根据 W3C 改写）": "Button instructions (paraphrased from W3C)",
+        "下面三句构成短材料，选择直接说明键盘操作的一句。": "These three sentences form the material. Choose the one about keyboard operation.",
+        "按钮用来触发一个动作。": "A button triggers an action.",
+        "这说明用途，还没有说明如何用键盘触发。": "This describes the purpose, not keyboard activation.",
+        "按钮要有可访问名称。": "A button needs an accessible name.",
+        "这是名称要求，不能证明哪个键会提交。": "This is a naming requirement, not evidence about keys.",
+        "焦点在按钮上时，Enter 和空格都能触发按钮。": "When a button has focus, Enter and Space activate it.",
+        "这句话直接给出了焦点条件和两个操作键。": "This sentence states the focus condition and both keys.",
+        "下一轮出现后，焦点应该去哪儿？": "Where should focus go when the next round appears?",
+        "下一轮的问题标题": "The next round’s question heading",
+        "任务已经变化，焦点跟随新情境。": "The task changed, so focus follows the new context.",
+        "已经消失的上一轮按钮": "The previous round’s removed button",
+        "按钮消失后留在那里，会让键盘使用者找不到位置。": "A removed button leaves keyboard users without a useful focus location.",
+        "给同事写一个可检查的小改动请求": "Write a small, checkable request for a colleague",
+        "请给提交按钮加上可访问名称。": "Give the Submit button an accessible name.",
+        "检查 Enter 和空格都能触发提交。": "Check that Enter and Space both submit.",
+        "完成后请报告实际检查结果。": "Report the checks you actually performed.",
+        "不用检查，直接说测试通过。": "Skip the checks and say the tests passed.",
+        "请求中要有修改目标、键盘检查和真实结果。": "Include the change, keyboard checks and an honest report.",
+        "还缺修改目标、键盘检查或真实结果中的一项。": "The change, keyboard checks or honest report is missing.",
+        "删掉“没有检查却说通过”的片段。": "Remove the instruction to claim success without checking.",
+        "没有实际检查，不能把结果写成通过。": "Without actual checks, you cannot report a pass.",
+        "把一个按钮交给键盘使用者": "Make a button usable with a keyboard",
+        "你正在检查一份表单。先作判断，再找依据，最后写一个小改动请求。": "You are checking a form. Decide, find evidence, then write a small change request.",
+        "用来源支持一个可检查的请求。": "Support a checkable request with evidence.",
+        "一次只处理当前这一轮。": "Work on one round at a time.",
+        "把要求写清楚，再报告真正检查过的结果。": "State the requirements, then report the checks actually performed.",
+        "依据是按钮操作规范，不代表这个虚构表单已经通过测试。": "These are button requirements, not proof that this fictional form passed tests.",
+        "你的小改动请求": "Your change request",
+        "下面换一个情境，由你独立完成原有练习。": "Use the independent exercise below to try a different situation."
+      }
+    }
+  }
+}

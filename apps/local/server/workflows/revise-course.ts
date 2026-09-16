@@ -6,6 +6,7 @@ import { z } from "zod";
 import {
   CardContentSchema,
   EvidenceReferenceSchema,
+  interactionLessonIssues,
   isUrlEvidence,
   ExerciseSchema,
   IsoDateTime,
@@ -738,6 +739,8 @@ function buildBundle(
     activities: proposal.lesson.activities ?? currentLesson.activities,
     updatedAt: timestamp,
   });
+  const pathIssues = interactionLessonIssues({ ...lesson, content: proposal.lesson.content });
+  if (pathIssues.length) throw new Error(pathIssues.join("; "));
   return { lesson, lessonContent: proposal.lesson.content, assetFiles, cards, exercises };
 }
 

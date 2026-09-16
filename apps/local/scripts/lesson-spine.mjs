@@ -1,3 +1,5 @@
+import { interactionLessonIssues } from "@pieai/university-core/domain/schemas.js";
+
 /** One mechanical prose contract, shared by proposal and persisted-lesson checks. */
 export const LESSON_VARIANTS = {
   现象: { openCount: 1, middleCount: 1 },
@@ -37,7 +39,17 @@ function sectionsOf(prose) {
   }));
 }
 
-export function checkLessonSpine(content, variant, { allowLegacyGuessLine = false } = {}) {
+export function checkLessonSpine(
+  content,
+  variant,
+  { allowLegacyGuessLine = false, interactionLesson } = {},
+) {
+  if (interactionLesson?.activities?.some((activity) => activity.kind === "interaction-path")) {
+    return interactionLessonIssues({ ...interactionLesson, content }).map((message) => ({
+      item: 1,
+      message,
+    }));
+  }
   const problems = [];
   const fail = (item, message) => problems.push({ item, message });
   const prose = stripLessonCode(content ?? "");

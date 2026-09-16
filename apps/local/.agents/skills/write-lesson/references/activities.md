@@ -1,5 +1,11 @@
 # 互动课件：配哪个，放哪儿
 
+本页其余部分描述原有独立玩法。Owner 明确选择互动主线实验时，使用一个
+`interaction-path` 编排短回合，不把每个回合计成一份大组件，也不要求第二次
+练习必须教另一个知识点。重复同一能力但改变条件可以有意义；仅换一种点法却
+重复同一句结论不算新学习。实验的精确载荷、来源、双语与独立练习边界见
+[shared activity contract](../../../../../packages/ui/src/learning-play/README.md)。
+
 十三种玩法的实现、载荷字段和引擎规则在
 [shared activity contract](../../../../../packages/ui/src/learning-play/README.md)。
 这一页只回答写课时的两个问题：**这节课配哪一种、放在哪一步。**

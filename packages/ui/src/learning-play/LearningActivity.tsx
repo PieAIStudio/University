@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
 import { availableLevels, defaultActivityLevel, formatLineRange } from "@pieai/university-core";
 import type {
@@ -22,8 +22,10 @@ import { ContextGame } from "./ContextGame.js";
 import { AgentGame } from "./AgentGame.js";
 import { EvalGame } from "./EvalGame.js";
 import { RepairGame } from "./RepairGame.js";
+import { InteractionPath } from "./InteractionPath.js";
 import { PlayIcon } from "./PlayIcon.js";
 import type { ActivityControls } from "./controls.js";
+import type { LessonAssetView } from "../view/lesson-view.js";
 
 export interface LearningActivityProps {
   readonly activity: LearningActivitySpec;
@@ -50,6 +52,9 @@ export interface LearningActivityProps {
   readonly onResult?: (result: ActivityResult) => void;
   readonly onNext?: () => void;
   readonly nextLabel?: string;
+  readonly reviewContent?: ReactNode;
+  readonly assets?: readonly LessonAssetView[];
+  readonly onPathProgress?: (completed: number) => void;
 }
 
 /** Everything a board needs except the board's own payload. */
@@ -98,6 +103,8 @@ function renderGame(activity: LearningActivitySpec, controls: GameControls) {
       return <EvalGame activity={activity} {...controls} />;
     case "ai-repair":
       return <RepairGame activity={activity} {...controls} />;
+    case "interaction-path":
+      return null; // The path owns one shell for all its rounds, routed below.
     default: {
       // A kind that reaches here has no board. `never` is what makes that a
       // compile error instead of an empty div in front of a reader.
@@ -108,7 +115,19 @@ function renderGame(activity: LearningActivitySpec, controls: GameControls) {
 }
 
 /** Embeddable in a lesson, a standalone section, or a host-owned playlist. */
-export function LearningActivity({
+export function LearningActivity(props: LearningActivityProps) {
+  return props.activity.kind === "interaction-path" ? (
+    <InteractionPath
+      key={`${props.occurrenceId ?? "standalone"}:${props.activity.id}`}
+      {...props}
+      activity={props.activity}
+    />
+  ) : (
+    <LegacyLearningActivity {...props} />
+  );
+}
+
+function LegacyLearningActivity({
   levels,
   initialDifficulty,
   onLevelChange,

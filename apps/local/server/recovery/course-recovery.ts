@@ -19,6 +19,7 @@ import { z } from "zod";
 
 import {
   CourseCurrency,
+  interactionLessonIssues,
   LocaleMap,
   LocalizedStudySchema,
   LocalizedCourseSchema,
@@ -175,7 +176,14 @@ const RecoveryLessonSchema = z
      */
     activities: z.array(LessonActivitySchema).max(3).default([]),
   })
-  .strict();
+  .strict()
+  .superRefine((lesson, context) => {
+    for (const message of interactionLessonIssues({
+      ...lesson,
+      assets: lesson.assets.map((asset) => asset.metadata),
+    }))
+      context.addIssue({ code: "custom", message });
+  });
 
 const RecoveryUnitSchema = z
   .object({

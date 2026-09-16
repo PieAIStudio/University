@@ -5,6 +5,38 @@ description: Write or rewrite a UniversityLocal lesson content.md into the house
 
 # Write a lesson
 
+## Explicit interaction-first experiment
+
+When the owner explicitly requests the interaction-first experiment, use one
+`interaction-path` activity through the same course CLI. Its bounded rounds
+teach through decisions, locating evidence and assembling a useful artifact;
+brief explanations follow the submitted decision. This opt-in replaces the
+fixed article heading sequence as the main learner flow, not truth, evidence,
+beginner clarity, independent assessment, bilingual parity or the Writer /
+Detector / Polisher pipeline. Legacy lessons retain the contract below.
+
+Choose rounds by the capability, not by a desire to add components. Keep the
+first grounded choice unspoiled, write plausible alternatives, and use actual
+material for evidence selection. A source's metadata and content support
+different claims; an announcement is not a report proving an event occurred.
+The artifact is authored deterministic practice, not a claimed model run.
+At least one assembly and one evidence round are required. A guided
+changed-condition decision may follow assembly only when it adds a needed
+judgment, never as a repeated question to fill a quota. End these pilot lessons
+with their useful artifact. An unsupported-claim round includes the short
+source record beside the explicitly labeled teaching draft; it never asks a
+beginner to guess what an unseen source says.
+
+Keep useful original prose as on-demand review, with exactly one
+`::play{#path-id}` marker. The reader suppresses that marker after presenting
+the path as the main flow. Retain every existing card/exercise ID in a native
+revision proposal. The original independent exercise remains separate from
+guided completion. All source references and optional image IDs must belong
+to this lesson; no new public-source database or second authoring route.
+Schema and round-level evidence rules live in the
+[shared component contract](../../../../../packages/ui/src/learning-play/README.md).
+The experiment does not authorize publication outside the owner-approved scope.
+
 This is the single lesson-writing contract for repository-based and no-repository
 courses. Each small lesson opens a concrete question, invites one grounded
 prediction, explains it, then checks independent use in a changed situation.

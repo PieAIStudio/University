@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
   EvidenceReferenceSchema,
+  interactionLessonIssues,
   LessonActivitySchema,
   LessonAssetSchema,
   LessonSectionSchema,
@@ -184,6 +185,8 @@ export function validateLessonEvidence(
   /** Null in a study with no repository; only URL citations survive then. */
   target: TargetIdentity | null,
 ): void {
+  const issues = interactionLessonIssues(lesson);
+  if (issues.length) throw new Error(issues.join("; "));
   validateLessonAssetInputs(lesson.assets ?? [], lesson.assetFiles ?? []);
   for (const asset of lesson.assets ?? []) {
     if (asset.capture && (!target || asset.capture.sourceCommit !== target.sourceCommit)) {

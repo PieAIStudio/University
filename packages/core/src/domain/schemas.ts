@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 import type { ActivityKind } from "../learning-play/types.js";
-import { activityTranslationIssues } from "../learning-play/localization.js";
+import {
+  activityDisplayStrings,
+  activityTranslationIssues,
+} from "../learning-play/localization.js";
+import { interactionPathIssues } from "../learning-play/interaction-path.js";
 import { AUTHORITY_TAGS, REALITY_AUTHORITY_TAGS, urlEvidenceIssue } from "./url-evidence.js";
 
 const SchemaVersion = z.literal(1);
@@ -747,6 +751,7 @@ export const LessonActivityKindSchema = z.enum([
   "ai-agent",
   "ai-eval",
   "ai-repair",
+  "interaction-path",
 ]);
 
 /**
@@ -784,6 +789,100 @@ export type ActivityKindsAgree = AssertTrue<
  * activities live here and not inside `ExerciseSchema`.
  */
 export const LessonActivityRoleSchema = z.enum(["observe", "demonstrate", "apply"]);
+
+/** One source contract for existing boards and the path's locally named citations. */
+export const ActivitySourceSchema = z.union([
+  z.object({ label: z.string().min(1).max(200), url: z.string().url() }).strict(),
+  z
+    .object({
+      label: z.string().min(1).max(200),
+      path: RepositoryRelativePath,
+      line: z.number().int().positive().optional(),
+      lineEnd: z.number().int().positive().optional(),
+      commit: GitCommit.optional(),
+    })
+    .strict()
+    .refine(
+      (value) =>
+        value.lineEnd === undefined || (value.line !== undefined && value.lineEnd >= value.line),
+      { message: "lineEnd needs a line to end, and cannot come before it", path: ["lineEnd"] },
+    ),
+]);
+
+const PathCopy = z.string().trim().min(1).max(1_000);
+const PathChoice = z.object({ id: StableId, label: PathCopy, explanation: PathCopy }).strict();
+const PathStepBase = z.object({
+  id: StableId,
+  sourceId: StableId,
+  brief: PathCopy.optional(),
+  question: PathCopy,
+  hint: PathCopy,
+  explanation: PathCopy,
+});
+/** No recursive activity member: a step is always one of three small actions. */
+export const InteractionPathPayloadSchema = z.object({
+  assetId: StableId.optional(),
+  sources: z
+    .array(
+      z
+        .object({
+          id: StableId,
+          reference: ActivitySourceSchema,
+          note: PathCopy,
+        })
+        .strict(),
+    )
+    .min(1)
+    .max(8),
+  steps: z
+    .array(
+      z.discriminatedUnion("kind", [
+        PathStepBase.extend({
+          kind: z.literal("decision"),
+          options: z.array(PathChoice).min(2).max(5),
+          correctOptionId: StableId,
+        }).strict(),
+        PathStepBase.extend({
+          kind: z.literal("evidence"),
+          task: z.enum(["support", "unsupported"]),
+          material: z
+            .object({
+              label: PathCopy,
+              note: PathCopy,
+              reference: z.object({ label: PathCopy, text: PathCopy }).strict().optional(),
+              sentences: z.array(PathChoice).min(2).max(6),
+            })
+            .strict(),
+          correctSentenceId: StableId,
+        }).strict(),
+        PathStepBase.extend({
+          kind: z.literal("assemble"),
+          pieces: z
+            .array(z.object({ id: StableId, label: PathCopy }).strict())
+            .min(2)
+            .max(10),
+          initialPieceIds: z.array(StableId).max(10),
+          constraints: z
+            .array(
+              z
+                .object({
+                  id: StableId,
+                  kind: z.enum(["include", "exclude", "one-of", "before"]),
+                  pieceIds: z.array(StableId).min(1).max(10),
+                  label: PathCopy,
+                  explanation: PathCopy,
+                })
+                .strict(),
+            )
+            .min(1)
+            .max(12),
+        }).strict(),
+      ]),
+    )
+    .min(3)
+    .max(8),
+  finish: z.object({ title: PathCopy, note: PathCopy }).strict(),
+});
 
 /**
  * One embedded activity: the shared contract every kind honours, plus whatever
@@ -826,32 +925,131 @@ export const LessonActivitySchema = z
      * receipt renders `path:line@commit` and a snapshot id pasted into this
      * field renders as `@git-7bdf` — legible enough to look deliberate.
      */
-    source: z.union([
-      z.object({ label: z.string().min(1).max(200), url: z.string().url() }).strict(),
-      z
-        .object({
-          label: z.string().min(1).max(200),
-          path: RepositoryRelativePath,
-          line: z.number().int().positive().optional(),
-          lineEnd: z.number().int().positive().optional(),
-          commit: GitCommit.optional(),
-        })
-        .strict()
-        .refine(
-          (value) =>
-            value.lineEnd === undefined ||
-            (value.line !== undefined && value.lineEnd >= value.line),
-          { message: "lineEnd needs a line to end, and cannot come before it", path: ["lineEnd"] },
-        ),
-    ]),
+    source: ActivitySourceSchema,
     locales: LocaleMap(LocalizedActivitySchema),
   })
   .passthrough()
   .superRefine((activity, context) => {
+    if (activity.kind === "interaction-path") {
+      const keys = new Set([
+        "id",
+        "kind",
+        "role",
+        "difficulty",
+        "family",
+        "title",
+        "brief",
+        "goal",
+        "takeaway",
+        "hint",
+        "source",
+        "locales",
+        ...Object.keys(InteractionPathPayloadSchema.shape),
+      ]);
+      if (Object.keys(activity).some((key) => !keys.has(key))) {
+        context.addIssue({ code: "custom", message: "Unexpected interaction-path field" });
+        return;
+      }
+      const parsed = InteractionPathPayloadSchema.safeParse(activity);
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues) context.addIssue({ ...issue, code: "custom" });
+        return;
+      } else {
+        for (const message of interactionPathIssues(parsed.data)) {
+          context.addIssue({ code: "custom", message });
+        }
+      }
+      if (activity.family || activity.role !== "demonstrate") {
+        context.addIssue({
+          code: "custom",
+          message: "interaction-path is a guided demonstration without difficulty families",
+        });
+      }
+      const english = activity.locales?.en?.strings;
+      for (const value of activityDisplayStrings(activity)) {
+        if (!english?.[value])
+          context.addIssue({
+            code: "custom",
+            path: ["locales", "en"],
+            message: `Missing English path display text: ${value}`,
+          });
+      }
+    }
     for (const message of activityTranslationIssues(activity)) {
       context.addIssue({ code: "custom", message, path: ["locales"] });
     }
   });
+
+/** Shared opt-in checks for proposals, stored lessons and recovery packages. */
+export function interactionLessonIssues(lesson: {
+  readonly activities?: readonly unknown[];
+  readonly evidence?: readonly unknown[];
+  readonly content?: string;
+  readonly exerciseIds?: readonly string[];
+  readonly exercises?: readonly unknown[];
+  readonly assets?: readonly { readonly id: string; readonly mime?: string }[];
+}): string[] {
+  const paths = (lesson.activities ?? []).filter(
+    (activity) =>
+      activity !== null &&
+      typeof activity === "object" &&
+      "kind" in activity &&
+      activity.kind === "interaction-path",
+  );
+  if (!paths.length) return [];
+  const issues: string[] = [];
+  if (paths.length !== 1 || lesson.activities?.length !== 1)
+    issues.push("An interaction-first lesson has exactly one path activity");
+  if ((lesson.exerciseIds ?? lesson.exercises ?? []).length < 1)
+    issues.push("An interaction-first lesson retains an independent exercise");
+  for (const value of paths) {
+    const parsed = LessonActivitySchema.safeParse(value);
+    if (!parsed.success) {
+      issues.push(...parsed.error.issues.map((issue) => issue.message));
+      continue;
+    }
+    const activity = parsed.data;
+    const payload = InteractionPathPayloadSchema.parse(value);
+    if (
+      payload.assetId &&
+      !lesson.assets?.some(
+        (asset) => asset.id === payload.assetId && asset.mime?.startsWith("image/"),
+      )
+    ) {
+      issues.push(`Path image is absent from lesson assets: ${payload.assetId}`);
+    }
+    for (const source of [activity.source, ...payload.sources.map((item) => item.reference)]) {
+      const matched = (lesson.evidence ?? []).some((evidence) => {
+        if (!evidence || typeof evidence !== "object") return false;
+        if ("url" in source) return "sourceUrl" in evidence && evidence.sourceUrl === source.url;
+        return (
+          "sourcePath" in evidence &&
+          evidence.sourcePath === source.path &&
+          "sourceCommit" in evidence &&
+          Boolean(source.commit) &&
+          evidence.sourceCommit === source.commit &&
+          (source.line === undefined ||
+            ("lineStart" in evidence &&
+              typeof evidence.lineStart === "number" &&
+              evidence.lineStart <= source.line)) &&
+          (source.lineEnd === undefined ||
+            ("lineEnd" in evidence &&
+              typeof evidence.lineEnd === "number" &&
+              evidence.lineEnd >= source.lineEnd))
+        );
+      });
+      if (!matched) issues.push(`Path source is absent from lesson evidence: ${source.label}`);
+    }
+    if (lesson.content !== undefined) {
+      const markers = [...lesson.content.matchAll(/^\s*::play\{#([a-z0-9-]+)\}\s*$/gm)];
+      if (markers.length !== 1 || markers[0]?.[1] !== activity.id)
+        issues.push("Interaction prose must reference its path exactly once using ::play{#id}");
+      if (lesson.content.replace(/::play\{[^}]*\}/g, "").trim().length < 40)
+        issues.push("Interaction prose needs a useful on-demand review explanation");
+    }
+  }
+  return issues;
+}
 
 export const LessonManifestSchema = z
   .object({
@@ -929,7 +1127,11 @@ export const LessonManifestSchema = z
     createdAt: IsoDateTime,
     updatedAt: IsoDateTime,
   })
-  .strict();
+  .strict()
+  .superRefine((lesson, context) => {
+    for (const message of interactionLessonIssues(lesson))
+      context.addIssue({ code: "custom", message });
+  });
 
 const PracticeBaseSchema = z.object({
   schemaVersion: SchemaVersion,

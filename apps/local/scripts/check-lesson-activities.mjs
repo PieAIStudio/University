@@ -754,7 +754,15 @@ function checkDispatch(activity, where) {
   }
 }
 
+const { LessonActivitySchema: PathActivitySchema } =
+  await import("../../../packages/core/dist/domain/schemas.js");
+
 const CHECKS = {
+  "interaction-path": (activity, where) => {
+    const result = PathActivitySchema.safeParse(activity);
+    if (!result.success)
+      problems.push(...result.error.issues.map((issue) => `${where}: ${issue.message}`));
+  },
   connect: checkConnect,
   sort: checkSort,
   contrast: checkContrast,
