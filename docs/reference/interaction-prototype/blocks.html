@@ -1,0 +1,1313 @@
+<title>互动积木库</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f3e8d8; --bg-deep:#ead9c2;
+  --panel:#fff8ec; --panel-2:#fdf1df; --panel-deep:#efd1a3;
+  --ink:#3a2518; --ink-title:#4a2f1f; --ink-soft:#7b6152; --ink-faint:#a08a78;
+  --accent:#e8743b; --accent-bright:#f28d50; --accent-ink:#a34e17; --accent-pale:#ffd4a2;
+  --ok:#4f9d6b; --ok-deep:#3d7c58; --ok-pale:#c3e6d0; --ok-ink:#2f6446;
+  --berry:#9b6dd6; --berry-pale:#e6dbf7; --berry-ink:#6b4aa0;
+  --warn:#d85a45; --warn-pale:#f8dcd6; --warn-ink:#a3392a;
+  --line:#6c4f3838; --line-2:#6c4f386b;
+  --lip:#5e3a1e52; --lip-h:4px;
+  --r-card:18px; --r-panel:26px; --r-pill:999px;
+  --sh:0 12px 28px #4c341c1f;
+  --sh-lift:0 18px 44px #4c341c33;
+  --zh:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --num:"Outfit",var(--zh);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#221812; --bg-deep:#1a120d;
+  --panel:#2e2118; --panel-2:#352619; --panel-deep:#2c1f16;
+  --ink:#f6e7d3; --ink-title:#f6e2c8; --ink-soft:#c3ab93; --ink-faint:#94806c;
+  --accent:#ef8148; --accent-bright:#ffa06b; --accent-ink:#ffb072; --accent-pale:#f0a46a47;
+  --ok:#63b381; --ok-deep:#7ee0b6; --ok-pale:#2b4335; --ok-ink:#9fe6bf;
+  --berry:#b58ae0; --berry-pale:#3b2f52; --berry-ink:#d9c6ff;
+  --warn:#e26a55; --warn-pale:#4a2b24; --warn-ink:#ff9a80;
+  --line:#f6e7d329; --line-2:#f6e7d352;
+  --lip:#00000085;
+  --sh:0 12px 28px #0006; --sh-lift:0 18px 44px #0008;
+}}
+:root[data-theme="dark"]{
+  --bg:#221812; --bg-deep:#1a120d;
+  --panel:#2e2118; --panel-2:#352619; --panel-deep:#2c1f16;
+  --ink:#f6e7d3; --ink-title:#f6e2c8; --ink-soft:#c3ab93; --ink-faint:#94806c;
+  --accent:#ef8148; --accent-bright:#ffa06b; --accent-ink:#ffb072; --accent-pale:#f0a46a47;
+  --ok:#63b381; --ok-deep:#7ee0b6; --ok-pale:#2b4335; --ok-ink:#9fe6bf;
+  --berry:#b58ae0; --berry-pale:#3b2f52; --berry-ink:#d9c6ff;
+  --warn:#e26a55; --warn-pale:#4a2b24; --warn-ink:#ff9a80;
+  --line:#f6e7d329; --line-2:#f6e7d352;
+  --lip:#00000085;
+  --sh:0 12px 28px #0006; --sh-lift:0 18px 44px #0008;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--zh);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---------- shell ---------- */
+.app{height:100%;display:flex;flex-direction:column;max-width:460px;margin-inline:auto;
+  background:var(--bg);position:relative;overflow:hidden}
+.top{flex:none;display:flex;align-items:center;gap:12px;padding-block:12px;padding-inline:16px}
+.quit{width:30px;height:30px;flex:none;border-radius:var(--r-pill);color:var(--ink-faint);
+  font-size:20px;line-height:1;display:grid;place-items:center}
+.quit:hover{background:var(--line);color:var(--ink)}
+.bar{flex:1;height:14px;border-radius:var(--r-pill);background:var(--bg-deep);
+  box-shadow:inset 0 2px 5px #4c341c1f;overflow:hidden}
+.bar i{display:block;height:100%;width:4%;border-radius:var(--r-pill);
+  background:linear-gradient(180deg,var(--accent-bright),var(--accent));
+  box-shadow:inset 0 2px 0 #ffffff5c;transition:width .45s cubic-bezier(.2,.9,.25,1)}
+.bar i.pulse{animation:barpulse .5s}
+@keyframes barpulse{35%{filter:brightness(1.35) saturate(1.2)}}
+.combo{flex:none;display:flex;align-items:center;gap:4px;font-family:var(--num);font-weight:700;
+  font-size:15px;color:var(--accent-ink);opacity:0;transform:scale(.6);transition:.25s}
+.combo.on{opacity:1;transform:scale(1)}
+.combo.pop{animation:pop .4s}
+@keyframes pop{40%{transform:scale(1.35) rotate(-6deg)}}
+.snd{flex:none;width:30px;height:30px;border-radius:var(--r-pill);display:grid;place-items:center;
+  color:var(--ink-faint);font-size:15px}
+.snd:hover{background:var(--line)}
+
+.stage{flex:1;overflow-y:auto;overflow-x:hidden;padding-inline:16px;padding-block:4px 20px;
+  display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
+.inner{margin-block:auto;width:100%}
+.stage::-webkit-scrollbar{width:0}
+
+.eyebrow{font-family:var(--num);font-size:11px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-faint);margin-block:10px 6px}
+.q{font-size:21px;line-height:1.45;font-weight:600;color:var(--ink-title);text-wrap:balance;
+  margin-block:0 14px;letter-spacing:.01em}
+.q.sm{font-size:18px}
+.sub{font-size:14px;color:var(--ink-soft);margin-block:-8px 14px}
+
+/* ---------- artifact: the thing the player inspects ---------- */
+.art{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);
+  padding-block:14px;padding-inline:14px;margin-block:0 16px;box-shadow:var(--sh);position:relative}
+.art.chat{border-radius:var(--r-card) var(--r-card) var(--r-card) 6px}
+.art-tag{position:absolute;top:-9px;left:12px;font-family:var(--num);font-size:10px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;background:var(--bg);color:var(--ink-faint);
+  padding-inline:6px}
+.art p{margin-block:0 8px;font-size:15px;line-height:1.7}
+.art p:last-child{margin-bottom:0}
+.art .big{font-size:19px;font-weight:600;color:var(--ink-title)}
+.art .meta{font-size:12.5px;color:var(--ink-faint);line-height:1.5}
+.src{font-size:11.5px;color:var(--ink-faint);margin-block:-8px 14px;line-height:1.5}
+.src a{color:var(--ink-soft);text-decoration-color:var(--line-2)}
+
+/* rows inside an artifact (the table) */
+.tbl{width:100%;border-collapse:collapse;font-size:14.5px}
+.tbl th{text-align:left;font-weight:600;color:var(--ink-title);padding-block:7px;
+  border-bottom:2px solid var(--line-2);font-size:13.5px}
+.tbl td{padding-block:9px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl td.n{text-align:right;font-family:var(--num);font-variant-numeric:tabular-nums;font-weight:600}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .sum td{font-weight:700;color:var(--ink-title)}
+.hdrflag{display:inline-flex;align-items:center;gap:5px}
+.hdrflag.bad{color:var(--warn);}
+
+/* ---------- tiles ---------- */
+.tiles{display:flex;flex-direction:column;gap:10px;margin-block:2px 8px}
+.tile{position:relative;display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;
+  background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:14px;padding-block:13px;padding-inline:14px;
+  font-size:15.5px;line-height:1.5;color:var(--ink);transition:transform .08s,background .15s,border-color .15s}
+.tile:hover:not(:disabled){background:var(--panel-2);border-color:var(--line-2);border-bottom-color:var(--lip)}
+.tile:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.tile:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tile .key{flex:none;width:22px;height:22px;margin-top:1px;border-radius:7px;background:var(--bg-deep);
+  color:var(--ink-faint);font-family:var(--num);font-size:12px;font-weight:700;display:grid;place-items:center}
+.tile[aria-checked="true"]{background:var(--accent-pale);border-color:var(--accent)}
+.tile[aria-checked="true"] .key{background:var(--accent);color:#fff}
+.tile.ok{background:var(--ok-pale);border-color:var(--ok)}
+.tile.ok .key{background:var(--ok);color:#fff}
+.tile.nope{background:var(--berry-pale);border-color:var(--berry)}
+.tile.nope .key{background:var(--berry);color:#fff}
+.tile.dim{opacity:.42}
+.tile:disabled{cursor:default}
+.shake{animation:shake .38s}
+@keyframes shake{20%{transform:translateX(-7px)}45%{transform:translateX(6px)}70%{transform:translateX(-3px)}}
+
+/* inline chips: tap a piece of the artifact */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-block:2px 8px}
+.chip{background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:var(--r-pill);padding-block:9px;padding-inline:15px;
+  font-size:15px;transition:transform .08s,background .15s,border-color .15s}
+.chip:hover:not(:disabled){background:var(--panel-2)}
+.chip:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.chip:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chip.ok{background:var(--ok-pale);border-color:var(--ok);color:var(--ok-ink);font-weight:600}
+.chip.nope{background:var(--berry-pale);border-color:var(--berry);color:var(--berry-ink)}
+.chip.dim{opacity:.4}
+.chip.ghost{background:transparent;border-style:dashed;border-bottom-width:2px;color:var(--ink-faint)}
+
+/* ---------- buckets ---------- */
+.buckets{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-block:4px 12px}
+.bucket{background:var(--panel-2);border:2px dashed var(--line-2);border-radius:var(--r-card);
+  padding-block:10px;padding-inline:10px;min-height:96px;transition:.18s}
+.bucket.armed{border-color:var(--accent);background:var(--accent-pale);border-style:solid}
+.bucket h4{margin:0 0 8px;font-size:13px;font-weight:700;color:var(--ink-title);line-height:1.35}
+.bucket .drop{display:flex;flex-direction:column;gap:6px}
+.drop .it{background:var(--panel);border:1px solid var(--line);border-radius:9px;
+  padding-block:7px;padding-inline:9px;font-size:13px;line-height:1.4;animation:landing .3s}
+.drop .it.ok{border-color:var(--ok);background:var(--ok-pale)}
+.drop .it.nope{border-color:var(--berry);background:var(--berry-pale)}
+@keyframes landing{from{transform:scale(.8) translateY(-8px);opacity:0}}
+.pool{display:flex;flex-direction:column;gap:8px}
+
+/* ---------- word bank ---------- */
+.slotline{min-height:62px;border-bottom:2px dashed var(--line-2);margin-block:2px 16px;
+  padding-block:8px;display:flex;flex-wrap:wrap;gap:7px;align-content:flex-start}
+.slotline:empty::after{content:"从下面挑词，拼成一句话";color:var(--ink-faint);font-size:14px}
+.bank{display:flex;flex-wrap:wrap;gap:8px;margin-block:0 8px}
+.word{background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:11px;padding-block:8px;padding-inline:12px;
+  font-size:15px;transition:transform .08s,opacity .15s}
+.word:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.word:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.word.used{opacity:.22;pointer-events:none}
+.word.placed{background:var(--accent-pale);border-color:var(--accent)}
+.word.ok{background:var(--ok-pale);border-color:var(--ok)}
+.word.nope{background:var(--berry-pale);border-color:var(--berry)}
+
+/* ---------- scale ---------- */
+.scale{margin-block:10px 18px}
+.scale input[type=range]{width:100%;accent-color:var(--accent);height:34px}
+.scale .val{font-family:var(--num);font-size:42px;font-weight:700;color:var(--accent-ink);
+  text-align:center;line-height:1;font-variant-numeric:tabular-nums}
+.scale .ends{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-faint)}
+
+/* ---------- rows (unit picker) ---------- */
+.rows{display:flex;flex-direction:column;gap:9px;margin-block:2px 10px}
+.row{background:var(--panel);border:2px solid var(--line);border-radius:13px;
+  padding-block:10px;padding-inline:12px}
+.row{transition:border-color .18s,background .18s}
+.row.set{border-color:var(--accent);background:var(--panel-2)}
+.row .lbl{font-size:14.5px;margin-bottom:8px;line-height:1.45}
+.row .lbl small{display:block;color:var(--ink-faint);font-size:12.5px;margin-top:3px;line-height:1.45}
+.row .lbl b{font-family:var(--num);font-variant-numeric:tabular-nums}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{border:2px solid var(--line);border-radius:var(--r-pill);padding-block:5px;padding-inline:12px;
+  font-size:14px;background:var(--panel-2);transition:.12s}
+.opt:active:not(:disabled){transform:translateY(1px)}
+.opt[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.opt.ok{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+.opt.nope{background:var(--berry);border-color:var(--berry);color:#fff}
+.opt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* ---------- footer / feedback ---------- */
+.foot::before{content:"";position:absolute;left:0;right:0;top:-22px;height:22px;
+  pointer-events:none;background:linear-gradient(180deg,#0000,var(--bg))}
+.foot{flex:none;padding-inline:16px;padding-block:10px;
+  padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  border-top:1px solid transparent;background:var(--bg);position:relative;z-index:3}
+.cta{width:100%;border-radius:15px;padding-block:14px;font-size:16.5px;font-weight:700;
+  letter-spacing:.04em;background:var(--accent);color:#fff;
+  border-bottom:var(--lip-h) solid #0000002e;transition:transform .08s,opacity .2s,background .2s}
+.cta:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.cta:disabled{background:var(--bg-deep);color:var(--ink-faint);border-bottom-color:transparent;cursor:default}
+.cta:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.cta.go{background:var(--ok);}
+.cta.ghost{background:transparent;color:var(--ink-soft);border:2px solid var(--line-2);
+  border-bottom-width:2px;font-weight:600}
+
+.fb{position:absolute;left:0;right:0;bottom:0;z-index:4;background:var(--panel);
+  border-top:2px solid var(--line-2);border-radius:var(--r-panel) var(--r-panel) 0 0;
+  padding-inline:16px;padding-block:16px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -14px 40px #4c341c24;transform:translateY(103%);transition:transform .32s cubic-bezier(.2,.9,.25,1);
+  max-height:72%;overflow-y:auto}
+.fb.up{transform:translateY(0)}
+.fb.good{background:var(--ok-pale);border-top-color:var(--ok)}
+.fb.soft{background:var(--berry-pale);border-top-color:var(--berry)}
+.fb h3{margin:0 0 6px;font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+.fb.good h3{color:var(--ok-ink)} .fb.soft h3{color:var(--berry-ink)}
+.fb .mark{width:26px;height:26px;flex:none;border-radius:var(--r-pill);display:grid;place-items:center;
+  color:#fff;font-size:15px;font-weight:700}
+.fb.good .mark{background:var(--ok)} .fb.soft .mark{background:var(--berry)}
+.fb p{margin:0 0 10px;font-size:14.5px;line-height:1.65;color:var(--ink)}
+.fb p:last-of-type{margin-bottom:12px}
+.fb .keep{background:#ffffff40;border:1px dashed var(--line-2);border-radius:11px;
+  padding-block:10px;padding-inline:11px;font-size:13.5px;line-height:1.6;margin-block:0 12px}
+.fb .keep b{display:block;font-family:var(--num);font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px;font-weight:600}
+
+/* ---------- interstitial / result screens ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-panel);
+  padding-block:22px;padding-inline:18px;box-shadow:var(--sh-lift);margin-block:8px 14px}
+.hero{text-align:center;padding-block:10px}
+.hero .ring{width:96px;height:96px;margin:0 auto 14px;border-radius:var(--r-pill);
+  background:radial-gradient(circle at 34% 28%,var(--accent-bright),var(--accent));
+  display:grid;place-items:center;font-size:42px;box-shadow:0 14px 34px #e8743b4d;animation:rise .5s}
+@keyframes rise{from{transform:scale(.6) translateY(14px);opacity:0}}
+.hero h2{margin:0 0 6px;font-size:24px;color:var(--ink-title);text-wrap:balance}
+.hero .lede{color:var(--ink-soft);font-size:14.5px;margin:0 0 4px;text-wrap:balance;line-height:1.6}
+.hero .lede b{color:var(--ink-title);font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-block:16px 4px}
+.stat{background:var(--panel-2);border:1px solid var(--line);border-radius:13px;
+  padding-block:11px;padding-inline:8px;text-align:center}
+.stat b{display:block;font-family:var(--num);font-size:25px;font-weight:700;color:var(--accent-ink);
+  line-height:1.15;font-variant-numeric:tabular-nums}
+.stat span{font-size:11.5px;color:var(--ink-faint)}
+.can{display:flex;flex-direction:column;gap:9px;margin-block:4px 0}
+.can li{display:flex;gap:9px;align-items:flex-start;font-size:14.5px;line-height:1.55;
+  background:var(--ok-pale);border:1px solid var(--ok);border-radius:12px;
+  padding-block:10px;padding-inline:11px;animation:slidein .4s backwards}
+.can li i{flex:none;width:19px;height:19px;margin-top:2px;border-radius:var(--r-pill);background:var(--ok);
+  color:#fff;font-size:11px;font-style:normal;display:grid;place-items:center;font-weight:700}
+@keyframes slidein{from{opacity:0;transform:translateX(-12px)}}
+.ulist{list-style:none;margin:0;padding:0}
+.lvl{display:flex;gap:11px;align-items:center;width:100%;text-align:left;background:var(--panel);
+  border:2px solid var(--line);border-bottom-width:var(--lip-h);border-bottom-color:var(--lip);
+  border-radius:15px;padding-block:13px;padding-inline:13px;margin-bottom:9px;transition:transform .08s}
+.lvl:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:11px}
+.lvl .n{flex:none;width:34px;height:34px;border-radius:var(--r-pill);background:var(--accent);color:#fff;
+  font-family:var(--num);font-weight:700;display:grid;place-items:center;font-size:15px}
+.lvl.done .n{background:var(--ok)}
+.lvl.lock{opacity:.5}
+.lvl.lock .n{background:var(--bg-deep);color:var(--ink-faint)}
+.lvl .t{flex:1;font-size:15px;line-height:1.4;font-weight:600;color:var(--ink-title)}
+.lvl .t em{display:block;font-style:normal;font-weight:400;font-size:12.5px;color:var(--ink-faint);margin-top:2px}
+.note{font-size:12.5px;color:var(--ink-faint);line-height:1.6;margin-block:14px 0}
+.note code{background:var(--bg-deep);border-radius:5px;padding-inline:4px;font-size:12px}
+</style>
+<style>
+.redact{display:inline-block;height:1em;vertical-align:-.12em;border-radius:4px;
+  background:repeating-linear-gradient(135deg,var(--ink-faint),var(--ink-faint) 5px,var(--ink-soft) 5px,var(--ink-soft) 10px);
+  opacity:.55}
+.bub{background:var(--panel-2);border:1px solid var(--line);border-radius:14px 14px 14px 5px;
+  padding-block:11px;padding-inline:13px;margin-bottom:9px;font-size:15px;line-height:1.6}
+.bub:last-child{margin-bottom:0}
+.bub .who{font-family:var(--num);font-size:10.5px;font-weight:600;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--ink-faint);display:block;margin-bottom:3px}
+.bub.me{border-radius:14px 14px 5px 14px;background:var(--accent-pale);border-color:var(--accent)}
+.orig{background:var(--panel-2);border-left:3px solid var(--accent);border-radius:0 11px 11px 0;
+  padding-block:10px;padding-inline:12px;margin-bottom:11px}
+.orig dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}
+.orig dt{color:var(--ink-faint);font-size:13px}
+.orig dd{margin:0;font-weight:600;color:var(--ink-title)}
+.total{text-align:right;font-family:var(--num);font-size:34px;font-weight:700;color:var(--warn);
+  font-variant-numeric:tabular-nums;line-height:1.1;min-height:38px}
+.total.idle{color:var(--ink-faint);font-size:15px;font-weight:400;padding-top:11px}
+.sumbtn{width:100%;margin-top:10px;border-radius:12px;padding-block:11px;font-size:15px;font-weight:700;
+  background:var(--panel-deep);color:var(--ink-title);border-bottom:var(--lip-h) solid var(--lip);
+  transition:transform .08s}
+.sumbtn:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.sumbtn:disabled{opacity:.5;cursor:default}
+.fig{border-radius:11px;overflow:hidden;border:1px solid var(--line);margin-bottom:9px;background:var(--bg-deep)}
+.fig .sky{height:104px;position:relative;background:radial-gradient(ellipse 120% 80% at 50% 118%,#6f7f8c 0%,#2b3138 46%,#0b0d10 100%)}
+.fig .earth{position:absolute;left:50%;top:26px;width:46px;height:46px;transform:translateX(-50%);
+  border-radius:50%;background:radial-gradient(circle at 34% 30%,#9ec6e8,#3f76ab 52%,#1d3a59);
+  box-shadow:0 0 22px #6fa8d833}
+.fig .horizon{position:absolute;left:-10%;right:-10%;bottom:-34px;height:78px;border-radius:50% 50% 0 0;
+  background:linear-gradient(180deg,#8d8579,#4a453d)}
+.fig .cap{padding-block:8px;padding-inline:10px;font-size:12px;color:var(--ink-soft);line-height:1.5;background:var(--panel)}
+.fig.ai .sky{background:radial-gradient(ellipse 120% 80% at 50% 118%,#9c8f7a 0%,#4a4033 46%,#191410 100%)}
+.fig.ai .earth{background:radial-gradient(circle at 34% 30%,#ffd9a8,#e09a5a 52%,#a35f2c);box-shadow:0 0 26px #e8a06433}
+.fig.art .sky{background:linear-gradient(180deg,#5a4b8c 0%,#b96a8f 58%,#f0a46a 100%)}
+.fig.art .earth{background:radial-gradient(circle at 34% 30%,#fff0c9,#f2c14e 52%,#c98a2b);box-shadow:0 0 26px #f2c14e40}
+.fig.art .horizon{background:linear-gradient(180deg,#3a2c52,#241a35)}
+.pickitem{background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:13px;padding-block:10px;padding-inline:11px;
+  font-size:14px;line-height:1.5;text-align:left;width:100%;transition:transform .08s}
+.pickitem:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.pickitem[aria-checked="true"]{background:var(--accent-pale);border-color:var(--accent)}
+.pickitem:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.pickitem small{display:block;color:var(--ink-faint);font-size:12px;margin-top:2px}
+.hint{font-size:13px;color:var(--ink-faint);margin-block:0 10px}
+.goal{font-size:13.5px;color:var(--accent-ink);background:var(--accent-pale);border-radius:10px;
+  padding-block:8px;padding-inline:11px;margin-block:0 12px;line-height:1.5;font-weight:600}
+.lab{display:flex;flex-direction:column;gap:11px;margin-block:0 8px}
+.lab-h{font-family:var(--num);font-size:10.5px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px}
+.lab-left{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-card);
+  padding-block:11px;padding-inline:11px;display:flex;flex-direction:column;gap:7px}
+.clause{display:flex;align-items:flex-start;gap:9px;width:100%;text-align:left;font-size:14.5px;
+  line-height:1.45;background:var(--panel);border:2px solid var(--line);border-radius:11px;
+  padding-block:9px;padding-inline:10px;transition:.14s}
+.clause .box{flex:none;width:19px;height:19px;margin-top:1px;border-radius:6px;border:2px solid var(--line-2);
+  display:grid;place-items:center;font-size:11px;color:transparent;background:var(--bg)}
+.clause[aria-checked="true"]{background:var(--accent-pale);border-color:var(--accent)}
+.clause[aria-checked="true"] .box{background:var(--accent);border-color:var(--accent);color:#fff}
+.clause:active{transform:scale(.985)}
+.clause:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.lab-out{background:var(--panel);border:2px solid var(--line-2);border-radius:var(--r-card);
+  padding-block:11px;padding-inline:12px;transition:border-color .22s,background .22s}
+.lab-out.win{border-color:var(--ok);background:var(--ok-pale)}
+.lab-body{font-size:15px;line-height:1.7;min-height:2.6em}
+.lab-body.flash{animation:labflash .34s}
+@keyframes labflash{from{opacity:.25;transform:translateY(-4px)}}
+</style>
+
+<style>
+/* ================= 积木库外壳 ================= */
+.page{max-width:560px;margin-inline:auto;padding-inline:16px;padding-block:20px 60px}
+.masthead h1{margin:0 0 6px;font-size:26px;font-weight:700;color:var(--ink-title);letter-spacing:.01em}
+.masthead p{margin:0 0 6px;font-size:14.5px;line-height:1.75;color:var(--ink-soft)}
+.masthead p b{color:var(--ink-title)}
+.rule{height:1px;background:var(--line);margin-block:22px}
+.secttl{display:flex;align-items:baseline;gap:9px;margin-block:0 5px}
+.secttl h2{margin:0;font-size:17px;font-weight:700;color:var(--ink-title)}
+.secttl span{font-family:var(--num);font-size:11.5px;font-weight:600;color:var(--ink-faint);
+  letter-spacing:.08em}
+.sectsub{margin:0 0 16px;font-size:13.5px;line-height:1.7;color:var(--ink-faint)}
+
+/* 已有清单 */
+.have{display:flex;flex-direction:column;gap:5px;margin-bottom:6px}
+.haverow{display:flex;gap:9px;align-items:baseline;background:var(--panel-2);border:1px solid var(--line);
+  border-radius:10px;padding-block:8px;padding-inline:10px;font-size:13px;line-height:1.5}
+.haverow code{font-family:var(--num);font-weight:700;color:var(--accent-ink);font-size:12.5px;flex:none;min-width:5.6em}
+.haverow em{font-style:normal;color:var(--ink-soft)}
+.haverow i{margin-left:auto;flex:none;font-style:normal;font-size:11px;color:var(--ink-faint);
+  font-family:var(--num);letter-spacing:.06em}
+
+/* 组件卡 */
+.blk{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-panel);
+  box-shadow:var(--sh);margin-bottom:18px;overflow:hidden}
+.blkhd{padding-block:14px 12px;padding-inline:15px;border-bottom:1px solid var(--line)}
+.blkhd .no{font-family:var(--num);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.14em}
+.blkhd h3{margin:2px 0 6px;font-size:18px;font-weight:700;color:var(--ink-title);display:flex;
+  align-items:center;gap:8px;flex-wrap:wrap}
+.blkhd h3 code{font-family:var(--num);font-size:12px;font-weight:700;background:var(--bg-deep);
+  color:var(--ink-soft);border-radius:6px;padding-block:2px;padding-inline:6px}
+.hand{font-size:13.5px;line-height:1.6;color:var(--ink-soft);margin:0}
+.hand b{color:var(--accent-ink)}
+.stagearea{padding-block:16px;padding-inline:15px;background:var(--bg-deep);position:relative}
+.spec{border-top:1px solid var(--line)}
+.spec summary{cursor:pointer;list-style:none;font-size:12.5px;font-weight:600;color:var(--ink-faint);
+  padding-block:10px;padding-inline:15px;display:flex;gap:7px;align-items:center;font-family:var(--num);letter-spacing:.06em}
+.spec summary::-webkit-details-marker{display:none}
+.spec summary::before{content:"+";color:var(--accent);font-weight:700}
+.spec[open] summary::before{content:"−"}
+.spec .in{padding-inline:15px;padding-bottom:14px;font-size:13px;line-height:1.7;color:var(--ink-soft)}
+.spec .in b{color:var(--ink-title)}
+.spec .in code{font-family:var(--num);font-size:12px;background:var(--bg-deep);border-radius:5px;padding-inline:4px}
+.reset{position:absolute;top:10px;right:12px;font-size:11.5px;color:var(--ink-faint);
+  border:1px solid var(--line-2);border-radius:var(--r-pill);padding-block:4px;padding-inline:10px;
+  background:var(--panel);z-index:5}
+.reset:hover{color:var(--ink);border-color:var(--accent)}
+.verd{margin-top:11px;border-radius:11px;padding-block:9px;padding-inline:11px;font-size:13.5px;
+  line-height:1.65;animation:pop2 .3s}
+.verd.ok{background:var(--ok-pale);color:var(--ok-ink);border:1px solid var(--ok)}
+.verd.no{background:var(--berry-pale);color:var(--berry-ink);border:1px solid var(--berry)}
+.verd b{font-weight:700}
+@keyframes pop2{from{opacity:0;transform:translateY(-6px)}}
+.tip{font-size:12.5px;color:var(--ink-faint);margin:0 0 11px;line-height:1.55}
+
+/* ---------- 1 拖拽分拣 ---------- */
+.dz{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.zone{border:2px dashed var(--line-2);border-radius:14px;background:var(--panel);
+  padding-block:10px;padding-inline:9px;min-height:112px;transition:.15s}
+.zone.hot{border-color:var(--accent);background:var(--accent-pale);border-style:solid;transform:scale(1.015)}
+.zone h5{margin:0 0 7px;font-size:13px;font-weight:700;color:var(--ink-title)}
+.zone .slot{display:flex;flex-direction:column;gap:6px;min-height:22px}
+.pile{display:flex;flex-direction:column;gap:8px;min-height:56px}
+.chipd{background:var(--panel);border:2px solid var(--line);border-bottom-width:3px;border-bottom-color:var(--lip);
+  border-radius:12px;padding-block:10px;padding-inline:12px;font-size:14.5px;line-height:1.45;
+  color:var(--ink);cursor:grab;user-select:none;touch-action:none;box-shadow:var(--sh);
+  transition:box-shadow .15s,transform .15s}
+.chipd.drag{position:fixed;z-index:999;cursor:grabbing;box-shadow:0 18px 40px #4c341c4d;
+  transform:rotate(-2deg) scale(1.04);transition:none;pointer-events:none}
+.chipd.landed{font-size:13px;padding-block:7px;padding-inline:9px;border-width:1px;border-bottom-width:1px;
+  box-shadow:none;cursor:default;animation:land .28s}
+.chipd.ok{background:var(--ok-pale);border-color:var(--ok)}
+.chipd.no{background:var(--berry-pale);border-color:var(--berry)}
+@keyframes land{0%{transform:scale(1.12)}60%{transform:scale(.96)}100%{transform:scale(1)}}
+.bounce{animation:bounceback .34s}
+@keyframes bounceback{0%{transform:scale(1.06) rotate(-3deg)}40%{transform:translateX(9px)}70%{transform:translateX(-6px)}}
+
+/* ---------- 2 拉线 ---------- */
+.wirebox{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding-block:14px;padding-inline:13px;touch-action:none}
+.wiresvg{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.wirecols{display:grid;grid-template-columns:1fr 1fr;gap:58px;position:relative;z-index:2}
+.node{background:var(--panel-2);border:2px solid var(--line-2);border-radius:11px;
+  padding-block:10px;padding-inline:10px;font-size:13.5px;line-height:1.45;margin-bottom:9px;
+  position:relative;cursor:grab;user-select:none;touch-action:none;transition:.15s}
+.node:last-child{margin-bottom:0}
+.node.lit{border-color:var(--accent);background:var(--accent-pale)}
+.node.done{border-color:var(--ok);background:var(--ok-pale)}
+.node .dot{position:absolute;top:50%;width:9px;height:9px;border-radius:50%;background:var(--accent);
+  transform:translateY(-50%);box-shadow:0 0 0 2px var(--panel)}
+.wirecols>div:first-child .node .dot{right:-5px}
+.wirecols>div:last-child .node .dot{left:-5px}
+.node.done .dot{background:var(--ok)}
+.node{font-size:13px}
+
+/* ---------- 3 实时旋钮 ---------- */
+.dialwrap{display:flex;flex-direction:column;gap:12px}
+.slab{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding-block:11px;padding-inline:13px}
+.slab .lbl{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-soft);margin-bottom:4px}
+.slab .lbl b{font-family:var(--num);font-size:16px;color:var(--accent-ink);font-variant-numeric:tabular-nums}
+.slab input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+.gauge{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding-block:12px;padding-inline:13px}
+.gauge .row{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.gauge .row:last-child{margin-bottom:0}
+.gauge .nm{font-size:12.5px;color:var(--ink-faint);width:5.4em;flex:none}
+.gauge .track{flex:1;height:14px;border-radius:var(--r-pill);background:var(--bg-deep);
+  overflow:hidden;position:relative;box-shadow:inset 0 2px 5px #4c341c1f}
+.gauge .fill{height:100%;border-radius:var(--r-pill);transition:width .16s ease-out,background .2s}
+.gauge .tgt{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink-title);opacity:.5}
+.gauge .val{font-family:var(--num);font-size:13px;font-weight:700;width:3.4em;text-align:right;
+  font-variant-numeric:tabular-nums;color:var(--ink-title)}
+.goalband{margin-top:11px;border-radius:11px;padding-block:9px;padding-inline:11px;font-size:13.5px;
+  line-height:1.6;background:var(--panel-2);border:1px dashed var(--line-2);color:var(--ink-soft);transition:.2s}
+.goalband.hit{background:var(--ok-pale);border-color:var(--ok);border-style:solid;color:var(--ok-ink);font-weight:600}
+
+/* ---------- 4 划词 ---------- */
+.markbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding-block:14px;padding-inline:14px;font-size:15px;line-height:2;user-select:none;touch-action:none;cursor:text}
+.tk{border-radius:4px;padding-block:2px;transition:background .12s,color .12s}
+.tk.sel{background:var(--accent-pale);box-shadow:0 0 0 1px var(--accent)}
+.tk.hit{background:var(--ok-pale);color:var(--ok-ink);box-shadow:0 0 0 1px var(--ok);font-weight:600}
+.tk.miss{background:var(--berry-pale);color:var(--berry-ink);box-shadow:0 0 0 1px var(--berry)}
+.tk.shake{animation:shake2 .4s}
+@keyframes shake2{20%{transform:translateY(-3px)}50%{transform:translateY(2px)}80%{transform:translateY(-1px)}}
+.proof{margin-top:10px;background:var(--bg-deep);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;
+  padding-block:9px;padding-inline:10px;font-size:13px;line-height:1.65;color:var(--ink-soft);animation:pop2 .3s}
+.proof b{color:var(--ink-title)}
+
+/* ---------- 5 拖拽排序 ---------- */
+.ranklist{display:flex;flex-direction:column;gap:8px;position:relative}
+.rankitem{display:flex;align-items:center;gap:10px;background:var(--panel);border:2px solid var(--line);
+  border-radius:12px;padding-block:11px;padding-inline:11px;font-size:14.5px;line-height:1.4;
+  cursor:grab;user-select:none;touch-action:none;box-shadow:var(--sh);transition:transform .22s cubic-bezier(.2,.9,.25,1),border-color .18s,background .18s}
+.rankitem .grip{flex:none;width:16px;color:var(--ink-faint);font-size:15px;line-height:1;letter-spacing:-1px}
+.rankitem .idx{flex:none;width:22px;height:22px;border-radius:7px;background:var(--bg-deep);color:var(--ink-faint);
+  font-family:var(--num);font-size:12px;font-weight:700;display:grid;place-items:center}
+.rankitem.lift{z-index:50;box-shadow:0 20px 44px #4c341c4d;transform:scale(1.03) rotate(-.6deg);
+  border-color:var(--accent);transition:none}
+.rankitem.ok{background:var(--ok-pale);border-color:var(--ok)}
+.rankitem.ok .idx{background:var(--ok);color:#fff}
+.rankitem.no{background:var(--berry-pale);border-color:var(--berry)}
+.rankitem.wave{animation:wave .45s}
+@keyframes wave{40%{transform:translateX(7px)}}
+
+/* ---------- 6 天平 ---------- */
+.scalebox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding-block:16px;padding-inline:13px}
+.beamwrap{height:132px;position:relative;margin-bottom:6px}
+.pivot{position:absolute;left:50%;bottom:0;width:0;height:0;transform:translateX(-50%);
+  border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:44px solid var(--panel-deep)}
+.beam{position:absolute;left:50%;bottom:44px;width:78%;height:7px;border-radius:4px;background:var(--ink-title);
+  transform:translateX(-50%);transform-origin:center;transition:transform .5s cubic-bezier(.3,1.4,.5,1)}
+.pan{position:absolute;top:4px;width:86px;margin-left:-43px;text-align:center}
+.pan .rope{height:22px;width:1px;background:var(--line-2);margin:0 auto}
+.pan .dish{background:var(--bg-deep);border:2px solid var(--line-2);border-radius:0 0 26px 26px;
+  min-height:34px;padding-block:6px;padding-inline:5px;display:flex;flex-direction:column;gap:4px;transition:.15s}
+.pan .dish.hot{border-color:var(--accent);background:var(--accent-pale)}
+.pan .dish .w{background:var(--panel);border:1px solid var(--line);border-radius:6px;font-size:10.5px;
+  line-height:1.35;padding-block:3px;padding-inline:4px}
+.verdictbar{text-align:center;font-size:14px;font-weight:700;border-radius:11px;padding-block:9px;
+  transition:.28s;background:var(--panel-2);color:var(--ink-soft);border:1px solid var(--line)}
+.verdictbar.left{background:var(--berry-pale);color:var(--berry-ink);border-color:var(--berry)}
+.verdictbar.right{background:var(--ok-pale);color:var(--ok-ink);border-color:var(--ok)}
+
+/* ---------- 7 时间轴 ---------- */
+.scrubbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding-block:13px;padding-inline:13px}
+.steps{display:flex;gap:4px;margin-bottom:10px}
+.stepdot{flex:1;height:7px;border-radius:var(--r-pill);background:var(--bg-deep);transition:.2s}
+.stepdot.past{background:var(--accent)}
+.stepdot.bad{background:var(--warn)}
+.framebox{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;
+  padding-block:11px;padding-inline:12px;min-height:96px}
+.framebox .st{font-family:var(--num);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-faint);font-weight:600;margin-bottom:5px}
+.framebox h6{margin:0 0 5px;font-size:14.5px;font-weight:700;color:var(--ink-title)}
+.framebox p{margin:0;font-size:13px;line-height:1.65;color:var(--ink-soft)}
+.framebox.danger{border-color:var(--warn);background:var(--warn-pale)}
+.framebox.danger h6{color:var(--warn-ink)}
+.scrubrail{margin-top:11px}
+.scrubrail input{width:100%;accent-color:var(--accent);height:30px}
+.stopbtn{width:100%;margin-top:9px;border-radius:11px;padding-block:10px;font-size:14px;font-weight:700;
+  background:var(--warn);color:#fff;border-bottom:3px solid #0000002e}
+.stopbtn:disabled{background:var(--bg-deep);color:var(--ink-faint);border-bottom-color:transparent}
+
+/* ---------- 8 拼句 ---------- */
+.line2{min-height:56px;border-bottom:2px dashed var(--line-2);margin-bottom:12px;padding-block:7px;
+  display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+.line2:empty::after{content:"从下面挑词";color:var(--ink-faint);font-size:13.5px;padding-top:6px}
+.bank2{display:flex;flex-wrap:wrap;gap:7px}
+.w2{background:var(--panel);border:2px solid var(--line);border-bottom-width:3px;border-bottom-color:var(--lip);
+  border-radius:10px;padding-block:7px;padding-inline:11px;font-size:14.5px;transition:transform .09s,opacity .18s}
+.w2:active:not(:disabled){transform:translateY(2px);border-bottom-width:1px;margin-bottom:2px}
+.w2.used{opacity:.2;pointer-events:none}
+.w2.placed{background:var(--accent-pale);border-color:var(--accent);animation:snap .26s}
+@keyframes snap{0%{transform:scale(.7);opacity:.3}60%{transform:scale(1.08)}}
+.w2.ok{background:var(--ok-pale);border-color:var(--ok)}
+.w2.no{background:var(--berry-pale);border-color:var(--berry);animation:shake2 .4s}
+.sendrow{display:flex;gap:9px;margin-top:11px}
+.sendbtn{flex:1;border-radius:11px;padding-block:11px;font-size:14.5px;font-weight:700;background:var(--accent);
+  color:#fff;border-bottom:3px solid #0000002e}
+.sendbtn:disabled{background:var(--bg-deep);color:var(--ink-faint);border-bottom-color:transparent}
+.aireply{margin-top:11px;background:var(--panel);border:1px solid var(--line);border-radius:12px 12px 12px 4px;
+  padding-block:10px;padding-inline:12px;font-size:13.5px;line-height:1.7;animation:pop2 .35s}
+.aireply.good{background:var(--ok-pale);border-color:var(--ok)}
+.aireply .who{font-family:var(--num);font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-faint);font-weight:600;display:block;margin-bottom:3px}
+
+/* ---------- 9 对话残局 ---------- */
+.chat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding-block:12px;padding-inline:12px;
+  max-height:230px;overflow-y:auto}
+.msg{border-radius:12px;padding-block:8px;padding-inline:11px;font-size:13.5px;line-height:1.65;
+  margin-bottom:8px;animation:pop2 .3s;max-width:88%}
+.msg.me{background:var(--accent-pale);border:1px solid var(--accent);margin-left:auto;border-radius:12px 12px 4px 12px}
+.msg.ai{background:var(--panel-2);border:1px solid var(--line);border-radius:12px 12px 12px 4px}
+.msg .who{font-family:var(--num);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-faint);font-weight:600;display:block;margin-bottom:2px}
+.msg.win{background:var(--ok-pale);border-color:var(--ok)}
+.moves{display:flex;flex-direction:column;gap:8px;margin-top:11px}
+.move{text-align:left;background:var(--panel);border:2px solid var(--line);border-bottom-width:3px;
+  border-bottom-color:var(--lip);border-radius:12px;padding-block:10px;padding-inline:12px;
+  font-size:14px;line-height:1.5;transition:transform .09s}
+.move:active{transform:translateY(2px);border-bottom-width:1px;margin-bottom:2px}
+.turnbar{display:flex;gap:5px;margin-bottom:10px;align-items:center;font-size:11.5px;color:var(--ink-faint);
+  font-family:var(--num);letter-spacing:.06em}
+.turnbar i{width:8px;height:8px;border-radius:50%;background:var(--bg-deep);border:1px solid var(--line-2);font-style:normal}
+.turnbar i.used{background:var(--accent);border-color:var(--accent)}
+
+/* ---------- 10 热区 ---------- */
+.shot{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line-2);
+  background:var(--panel);cursor:crosshair;touch-action:manipulation}
+.shotbar{height:30px;background:var(--panel-2);border-bottom:1px solid var(--line);display:flex;
+  align-items:center;gap:5px;padding-inline:9px;font-size:11px;color:var(--ink-faint)}
+.shotbody{padding-block:11px;padding-inline:11px;font-size:12.5px;line-height:1.7;color:var(--ink)}
+.shotbody .fake{background:var(--bg-deep);border-radius:4px;height:8px;margin-bottom:6px}
+.ring2{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;
+  border:2px solid var(--accent);pointer-events:none;animation:ripple .65s ease-out forwards}
+@keyframes ripple{to{transform:scale(2.4);opacity:0}}
+.pinmark{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;
+  display:grid;place-items:center;font-size:12px;color:#fff;font-weight:700;pointer-events:none;animation:land .3s}
+.pinmark.ok{background:var(--ok)} .pinmark.no{background:var(--berry)}
+</style>
+
+<div class="page" id="page"></div>
+<script>
+(function(){
+"use strict";
+const page=document.getElementById("page");
+const el=(t,c,h)=>{const n=document.createElement(t);if(c)n.className=c;if(h!=null)n.innerHTML=h;return n};
+const esc=s=>String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ---------- 手感：声音 + 震动 ---------- */
+let AC=null;
+function tone(fs,dur,type,vol){
+  try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended")AC.resume();
+    fs.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+i*0.07;
+      o.type=type||"sine";o.frequency.setValueAtTime(f,t);
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||0.1,t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+(dur||0.18));
+      o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+(dur||0.18)+0.02)});
+  }catch(e){}}
+const sfx={
+  grab:()=>tone([420],.05,"sine",.05), snap:()=>tone([620,820],.13,"triangle",.09),
+  drop:()=>tone([300],.09,"sine",.06), good:()=>tone([659.25,880],.24,"sine",.12),
+  bad:()=>tone([300,250],.26,"sine",.09), tick:()=>tone([700],.03,"square",.03),
+  win:()=>tone([523.25,659.25,784,1046.5],.42,"triangle",.11)};
+const buzz=m=>{try{navigator.vibrate&&navigator.vibrate(m)}catch(e){}};
+
+/* ---------- 拖拽内核：鼠标和手指同一套 ---------- */
+function onDrag(node,h){
+  node.style.touchAction="none";
+  node.addEventListener("pointerdown",e=>{
+    if(node.dataset.locked==="1")return;
+    e.preventDefault();
+    const id=e.pointerId;
+    try{node.setPointerCapture(id)}catch(_){}
+    const r=node.getBoundingClientRect();
+    const off={x:e.clientX-r.left,y:e.clientY-r.top};
+    let moved=false;
+    h.start&&h.start(r,off,e);
+    const move=ev=>{ if(Math.abs(ev.clientX-e.clientX)+Math.abs(ev.clientY-e.clientY)>3)moved=true;
+      h.move&&h.move(ev,off,r) };
+    const up=ev=>{
+      node.removeEventListener("pointermove",move);
+      node.removeEventListener("pointerup",up);
+      node.removeEventListener("pointercancel",up);
+      try{node.releasePointerCapture(id)}catch(_){}
+      h.end&&h.end(ev,moved);
+    };
+    node.addEventListener("pointermove",move);
+    node.addEventListener("pointerup",up);
+    node.addEventListener("pointercancel",up);
+  });
+}
+const inside=(r,x,y)=>x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;
+
+/* ---------- 卡片骨架 ---------- */
+let NO=0;
+function block(o){
+  NO++;
+  const b=el("div","blk");
+  const hd=el("div","blkhd");
+  hd.innerHTML='<div class="no">积木 '+String(NO).padStart(2,"0")+"</div>"+
+    "<h3>"+esc(o.title)+"<code>"+esc(o.id)+"</code></h3>"+
+    '<p class="hand"><b>手上的动作：</b>'+o.hand+"</p>";
+  b.appendChild(hd);
+  const st=el("div","stagearea");
+  const rs=el("button","reset","重来");
+  st.appendChild(rs);
+  const host=el("div"); st.appendChild(host);
+  b.appendChild(st);
+  const sp=el("details","spec");
+  sp.innerHTML="<summary>这块积木的规格</summary><div class='in'>"+o.spec+"</div>";
+  b.appendChild(sp);
+  page.appendChild(b);
+  const mount=()=>{host.innerHTML="";o.build(host)};
+  rs.onclick=()=>{sfx.tick();mount()};
+  mount();
+}
+function verdict(host,ok,html){
+  const old=host.querySelector(".verd"); if(old)old.remove();
+  host.appendChild(el("div","verd "+(ok?"ok":"no"),html));
+}
+
+/* ==================================================================
+   1 · 拖拽分拣
+   ================================================================== */
+function bDragSort(host){
+  const DATA={
+    q:"把每一条拖进它该去的那一堆。",
+    zones:[{id:"look",t:"看照片就能对"},{id:"rec",t:"查记录才能对"}],
+    items:[
+      {t:"地球在月面上方",z:"look",why:"这件事就画在图里，看一眼就能对。"},
+      {t:"谁按下的快门",z:"rec",why:"画面上没有印名字。名字来自 NASA 的记录。"},
+      {t:"天空是黑色的",z:"look",why:"颜色是画面里能直接看见的。"},
+      {t:"哪一年拍的",z:"rec",why:"照片自己不会说出日期，得查记录。"}]
+  };
+  host.appendChild(el("p","tip",esc(DATA.q)+"　拖错了会弹回来，不扣分。"));
+  const pile=el("div","pile"); host.appendChild(pile);
+  const dz=el("div","dz"); host.appendChild(dz);
+  const zoneEls=DATA.zones.map(z=>{
+    const n=el("div","zone","<h5>"+esc(z.t)+'</h5><div class="slot"></div>');
+    n._z=z; dz.appendChild(n); return n;
+  });
+  let left=DATA.items.length, right=0;
+  DATA.items.forEach(it=>{
+    const c=el("div","chipd",esc(it.t));
+    let ph=null;
+    onDrag(c,{
+      start(r,off){ sfx.grab(); buzz(8);
+        ph=el("div"); ph.style.height=r.height+"px"; c.after(ph);
+        c.classList.add("drag");
+        c.style.width=r.width+"px"; c.style.left=r.left+"px"; c.style.top=r.top+"px";
+      },
+      move(ev,off){
+        c.style.left=(ev.clientX-off.x)+"px"; c.style.top=(ev.clientY-off.y)+"px";
+        zoneEls.forEach(z=>z.classList.toggle("hot",inside(z.getBoundingClientRect(),ev.clientX,ev.clientY)));
+      },
+      end(ev){
+        const tgt=zoneEls.find(z=>inside(z.getBoundingClientRect(),ev.clientX,ev.clientY));
+        zoneEls.forEach(z=>z.classList.remove("hot"));
+        c.classList.remove("drag"); c.style.cssText="";
+        if(!tgt){ if(ph){ph.remove();ph=null} c.classList.remove("bounce"); void c.offsetWidth;
+          c.classList.add("bounce"); sfx.drop(); return }
+        if(ph){ph.remove();ph=null}
+        const ok=tgt._z.id===it.z;
+        c.dataset.locked="1"; c.classList.add("landed",ok?"ok":"no");
+        tgt.querySelector(".slot").appendChild(c);
+        left--; if(ok)right++;
+        if(ok){sfx.snap();buzz(14)}else{sfx.bad();buzz([10,50,10])}
+        verdict(host,ok,(ok?"✓ ":"✗ ")+"<b>"+esc(it.t)+"</b>　"+esc(it.why));
+        if(left===0){ sfx.win();
+          verdict(host,right===DATA.items.length,
+            right===DATA.items.length?"<b>四条全对。</b>画面能查的和记录才能查的，你已经分得开了。"
+            :"<b>"+right+" / 4 对。</b>放错的那几条，上面写着它们为什么该去另一堆。"); }
+      }
+    });
+    pile.appendChild(c);
+  });
+}
+
+/* ==================================================================
+   2 · 拉线连接
+   ================================================================== */
+function bWire(host){
+  const L=[{id:"a",t:"「它在 2019 年发布」"},{id:"b",t:"「这个功能很好用」"},{id:"c",t:"「官方文档第 3 节」"}];
+  const R=[{id:"fact",t:"能查的事实"},{id:"opinion",t:"个人看法"},{id:"src",t:"出处本身"}];
+  const KEY={a:"fact",b:"opinion",c:"src"};
+  host.appendChild(el("p","tip","从左边一条按住，拉一条线到右边。线会跟着你的手指走。"));
+  const box=el("div","wirebox"); host.appendChild(box);
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("class","wiresvg"); box.appendChild(svg);
+  const cols=el("div","wirecols"); const cl=el("div"), cr=el("div");
+  cols.appendChild(cl); cols.appendChild(cr); box.appendChild(cols);
+  const lnodes={}, rnodes={};
+  L.forEach(x=>{const n=el("div","node",esc(x.t)+'<span class="dot"></span>');n._id=x.id;cl.appendChild(n);lnodes[x.id]=n});
+  R.forEach(x=>{const n=el("div","node",esc(x.t)+'<span class="dot"></span>');n._id=x.id;cr.appendChild(n);rnodes[x.id]=n});
+  let live=null, done=0;
+  const mk=(t,a)=>{const e=document.createElementNS("http://www.w3.org/2000/svg",t);
+    for(const k in a)e.setAttribute(k,a[k]);return e};
+  const cen=(n,side)=>{const r=n.getBoundingClientRect(),b=box.getBoundingClientRect();
+    return {x:(side==="l"?r.right:r.left)-b.left, y:r.top+r.height/2-b.top}};
+  L.forEach(x=>{
+    const n=lnodes[x.id];
+    onDrag(n,{
+      start(){ if(n.dataset.locked==="1")return; sfx.grab();
+        n.classList.add("lit");
+        const p=cen(n,"l");
+        live=mk("path",{d:"",fill:"none",stroke:"var(--accent)","stroke-width":"3","stroke-linecap":"round"});
+        svg.appendChild(live); live._from=p;
+      },
+      move(ev){ if(!live)return;
+        const b=box.getBoundingClientRect();
+        const x=ev.clientX-b.left, y=ev.clientY-b.top, f=live._from;
+        live.setAttribute("d","M"+f.x+","+f.y+" C"+(f.x+30)+","+f.y+" "+(x-30)+","+y+" "+x+","+y);
+        Object.values(rnodes).forEach(m=>m.classList.toggle("lit",
+          m.dataset.locked!=="1"&&inside(m.getBoundingClientRect(),ev.clientX,ev.clientY)));
+      },
+      end(ev){ if(!live)return;
+        n.classList.remove("lit");
+        const hit=R.map(r=>rnodes[r.id]).find(m=>m.dataset.locked!=="1"&&inside(m.getBoundingClientRect(),ev.clientX,ev.clientY));
+        Object.values(rnodes).forEach(m=>m.classList.remove("lit"));
+        if(!hit){ live.remove(); live=null; sfx.drop(); return }
+        const ok=KEY[x.id]===hit._id;
+        if(!ok){ live.setAttribute("stroke","var(--berry)");
+          const dead=live; live=null; sfx.bad(); buzz([10,50,10]);
+          setTimeout(()=>dead.remove(),480);
+          verdict(host,false,"这两个对不上。<b>"+esc(x.t)+"</b>不是「"+esc(R.find(r=>r.id===hit._id).t)+"」。再试一条。");
+          return; }
+        const p=cen(n,"l"), q=cen(hit,"r");
+        live.setAttribute("d","M"+p.x+","+p.y+" C"+(p.x+30)+","+p.y+" "+(q.x-30)+","+q.y+" "+q.x+","+q.y);
+        live.setAttribute("stroke","var(--ok)"); live=null;
+        n.dataset.locked="1"; hit.dataset.locked="1";
+        n.classList.add("done"); hit.classList.add("done");
+        sfx.snap(); buzz(14); done++;
+        if(done===L.length){sfx.win();verdict(host,true,"<b>三条都接上了。</b>一句话是事实、是看法、还是出处，靠的是它能不能被查——不是它听起来多肯定。")}
+      }
+    });
+  });
+}
+
+/* ==================================================================
+   3 · 实时旋钮
+   ================================================================== */
+function bDial(host){
+  host.appendChild(el("p","tip","拖动下面两个滑块。右边三条会当场跟着变——不用提交，也没有对错，先把目标条拖绿。"));
+  const st={ctx:40,check:1};
+  const wrap=el("div","dialwrap"); host.appendChild(wrap);
+  const mkSlider=(k,label,min,max,unit)=>{
+    const s=el("div","slab");
+    s.innerHTML='<div class="lbl"><span>'+esc(label)+'</span><b><span id="v_'+k+'"></span>'+esc(unit)+"</b></div>"+
+      '<input type="range" id="s_'+k+'" min="'+min+'" max="'+max+'" value="'+st[k]+'">';
+    wrap.appendChild(s);
+    const inp=s.querySelector("input"); let last=st[k];
+    inp.oninput=()=>{st[k]=+inp.value; if(Math.abs(st[k]-last)>=2){last=st[k];sfx.tick()} paint()};
+    return s;
+  };
+  mkSlider("ctx","给 AI 的材料有多少",0,100,"%");
+  mkSlider("check","你要求它核对几项",0,4," 项");
+  const g=el("div","gauge");
+  const TGT=[["贴合你的事",70,"要过这条"],["它编的风险",30,"要压到这条左边"],["你要花的力气",75,"别越过这条"]];
+  g.innerHTML=TGT.map(([n,t],i)=>
+    '<div class="row"><span class="nm">'+n+'</span><div class="track"><div class="fill" id="f'+i+'"></div>'+
+    '<div class="tgt" style="left:'+t+'%"></div></div><span class="val" id="g'+i+'"></span></div>').join("")+
+    '<p style="margin:8px 0 0;font-size:11.5px;color:var(--ink-faint);line-height:1.5">'+
+    '竖线是门槛：<b style="color:var(--ink-title)">上面那条要过线，下面两条要留在线左边。</b></p>';
+  wrap.appendChild(g);
+  const band=el("div","goalband"); wrap.appendChild(band);
+  function paint(){
+    const fit=clamp(Math.round(st.ctx*0.75+st.check*7),0,100);
+    const risk=clamp(Math.round(92-st.ctx*0.45-st.check*13),0,100);
+    const cost=clamp(Math.round(st.ctx*0.5+st.check*15),0,100);
+    const V=[fit,risk,cost], C=["var(--ok)","var(--warn)","var(--berry)"];
+    V.forEach((v,i)=>{const f=g.querySelector("#f"+i);f.style.width=v+"%";f.style.background=C[i];
+      g.querySelector("#g"+i).textContent=v});
+    host.querySelector("#v_ctx").textContent=st.ctx;
+    host.querySelector("#v_check").textContent=st.check;
+    const hit=fit>=70&&risk<=30&&cost<=75;
+    band.classList.toggle("hit",hit);
+    band.innerHTML=hit
+      ? "✓ 到了。<b>贴合过 70、风险压到 30 以下，而力气还没花超。</b>注意你是怎么做到的：材料给够，再要求它核对几项——只加材料不够，只加核对也不够。"
+      : (risk>30&&st.check<2 ? "风险还高。<b>要求它核对的项数太少</b>——它没有被要求指出依据，就更容易顺嘴编。"
+        : fit<70 ? "还不贴合。<b>它手上关于你的事实太少</b>，只能写通用话。"
+        : "力气花太多了。<b>材料和核对项不是越多越好</b>，够用就行。");
+  }
+  paint();
+}
+
+/* ==================================================================
+   4 · 划词标记
+   ================================================================== */
+function bMark(host){
+  const TEXT=[
+    {t:"这款耳机"},{t:"于 2021 年上市"},{t:"，"},
+    {t:"续航 30 小时"},{t:"，"},
+    {t:"是同价位里音质最好的一款"},{t:"。"},
+    {t:"官方规格页"},{t:"写明防水等级为 IPX4"},{t:"。"}
+  ];
+  const BAD=[5];
+  const PROOF={0:"这是在说对象，没有断言。",1:"这是个能查的日期——去产品页看一眼就知道。",
+    3:"续航是个能查的数字，规格页上有。",5:"",7:"这是出处本身。",8:"这一条写明了出处在哪，可以打开核对。"};
+  host.appendChild(el("p","tip","下面是 AI 写的一段产品介绍。<b>按住手指划过</b>你认为没有依据的那一段。"));
+  const box=el("div","markbox"); host.appendChild(box);
+  const toks=TEXT.map((x,i)=>{const n=el("span","tk",esc(x.t));n._i=i;box.appendChild(n);return n});
+  let a=null,b=null,dragging=false,locked=false;
+  const idxAt=(x,y)=>{
+    const n=document.elementFromPoint(x,y);
+    if(n&&n.classList&&n.classList.contains("tk"))return n._i;
+    /* 跨行的片段，中心点会落在两行之间。回退到离手指最近的那一段。 */
+    let best=null,bd=1e9;
+    toks.forEach(t=>{ for(const r of t.getClientRects()){
+      const dx=Math.max(r.left-x,0,x-r.right), dy=Math.max(r.top-y,0,y-r.bottom);
+      const d=Math.hypot(dx,dy); if(d<bd&&d<26){bd=d;best=t._i} } });
+    return best;};
+  const paint=()=>{const lo=Math.min(a,b),hi=Math.max(a,b);
+    toks.forEach(n=>n.classList.toggle("sel",a!=null&&n._i>=lo&&n._i<=hi))};
+  box.style.touchAction="none";
+  box.addEventListener("pointerdown",e=>{ if(locked)return; e.preventDefault();
+    const i=idxAt(e.clientX,e.clientY); if(i==null)return;
+    dragging=true; a=b=i; paint(); sfx.grab();
+    try{box.setPointerCapture(e.pointerId)}catch(_){}
+  });
+  box.addEventListener("pointermove",e=>{ if(!dragging||locked)return;
+    const i=idxAt(e.clientX,e.clientY); if(i!=null&&i!==b){b=i;paint();sfx.tick()} });
+  box.addEventListener("pointerup",()=>{
+    if(!dragging||locked)return; dragging=false;
+    const lo=Math.min(a,b),hi=Math.max(a,b);
+    const picked=[]; for(let i=lo;i<=hi;i++)picked.push(i);
+    const exact=picked.length===1&&BAD.includes(picked[0]);
+    toks.forEach(n=>n.classList.remove("sel"));
+    if(exact){
+      locked=true; toks[BAD[0]].classList.add("hit"); sfx.good(); buzz(16);
+      verdict(host,true,"✓ 找到了。<b>「是同价位里音质最好的一款」</b>——这句话没有出处，也没法查。上市时间、续航、防水等级都能在规格页上对，只有这一句不能。");
+      host.appendChild(el("div","proof","<b>怎么处理它：</b>要么请它给出这个说法来自哪份评测，要么把它删掉。留着不标，就等于替它背书。"));
+    }else{
+      picked.forEach(i=>{const n=toks[i];n.classList.add("miss");
+        n.classList.remove("shake");void n.offsetWidth;n.classList.add("shake");
+        setTimeout(()=>n.classList.remove("miss"),900)});
+      sfx.bad(); buzz([10,50,10]);
+      const ex=picked.map(i=>PROOF[i]).filter(Boolean)[0];
+      verdict(host,false,"这一段是能查的。"+(ex?"<b>"+esc(ex)+"</b>":"")+" 再找找：哪一句你<b>没有办法</b>拿去对？");
+    }
+  });
+}
+
+/* ==================================================================
+   5 · 拖拽排序
+   ================================================================== */
+function bRank(host){
+  const RIGHT=["写出草稿","列出要发给谁、发什么","等你点头","真的发出去"];
+  const START=[3,1,0,2];
+  host.appendChild(el("p","tip","把这四步<b>拖</b>成正确的先后顺序。其他项会自己让位。"));
+  const list=el("div","ranklist"); host.appendChild(list);
+  let order=START.map(i=>RIGHT[i]);
+  let nodes=[];
+  function render(){
+    list.innerHTML="";
+    nodes=order.map((t,i)=>{
+      const n=el("div","rankitem",'<span class="grip">⋮⋮</span><span class="idx">'+(i+1)+"</span><span>"+esc(t)+"</span>");
+      n._t=t; list.appendChild(n); return n;
+    });
+    nodes.forEach(n=>{
+      let ph=null,fromIdx=0;
+      onDrag(n,{
+        start(r,off){ sfx.grab(); buzz(8); fromIdx=order.indexOf(n._t);
+          ph=el("div"); ph.style.height=r.height+"px"; n.after(ph);
+          n.classList.add("lift");
+          n.style.position="fixed"; n.style.width=r.width+"px";
+          n.style.left=r.left+"px"; n.style.top=r.top+"px"; n.style.margin="0";
+        },
+        move(ev,off){
+          n.style.left=(ev.clientX-off.x)+"px"; n.style.top=(ev.clientY-off.y)+"px";
+          const mid=ev.clientY;
+          const others=nodes.filter(m=>m!==n);
+          let target=others.length;
+          for(let i=0;i<others.length;i++){
+            const r=others[i].getBoundingClientRect();
+            if(mid<r.top+r.height/2){target=i;break}
+          }
+          if(ph)others.length?(target<others.length?others[target].before(ph):others[others.length-1].after(ph)):null;
+        },
+        end(){
+          n.classList.remove("lift"); n.style.cssText="";
+          if(ph){ const idx=[...list.children].indexOf(ph);
+            order=order.filter(t=>t!==n._t);
+            order.splice(Math.min(idx,order.length),0,n._t);
+            ph.remove(); ph=null; }
+          sfx.drop(); render(); check();
+        }
+      });
+    });
+  }
+  function check(){
+    const ok=order.every((t,i)=>t===RIGHT[i]);
+    if(ok){ sfx.win(); buzz([14,40,14]);
+      nodes.forEach((n,i)=>setTimeout(()=>{n.classList.add("ok");
+        n.classList.remove("wave");void n.offsetWidth;n.classList.add("wave")},i*90));
+      verdict(host,true,"<b>顺序对了。</b>关键在第三步：<b>等你点头</b>。少了它，前面写得再好，它也可能直接发出去了。");
+    }else{
+      const bad=order.findIndex((t,i)=>t!==RIGHT[i]);
+      if(bad>=0&&nodes[bad]){const n=nodes[bad];
+        n.classList.add("no");setTimeout(()=>n.classList.remove("no"),700)}
+      const old=host.querySelector(".verd"); if(old)old.remove();
+    }
+  }
+  render();
+}
+/* 把工具和前五块交给下一段脚本 */
+window.__K={el:el,esc:esc,clamp:clamp,sfx:sfx,buzz:buzz,onDrag:onDrag,inside:inside,
+  block:block,verdict:verdict,page:page};
+window.__B1=[
+ {id:"drag-sort",title:"拖拽分拣",build:bDragSort,
+  hand:"抓起一张卡，<b>拖</b>进某一堆。松手会吸进去；拖到空处会弹回来。",
+  spec:"<b>教什么</b>：划界与归类——这一条属于哪一类。<br><b>比原来强在哪</b>：仓库里的 <code>sort</code> 是点选再点桶；这里是真拖拽，有吸附、有弹回、有落袋声。错了不惩罚，只告诉你它为什么该去另一堆。<br><b>载荷要什么</b>：两到三个桶，每个条目一个正确桶 + 一句「为什么」。"},
+ {id:"wire",title:"拉线连接",build:bWire,
+  hand:"从左边一项<b>按住往右拉</b>，线跟着手指走，靠近右边会吸住。",
+  spec:"<b>教什么</b>：对应关系——这句话属于哪一种、这个结果来自哪个原因。<br><b>比原来强在哪</b>：仓库里的 <code>connect</code> 是点两下；这里线是拉出来的，接错了线会变紫再断掉。<br><b>载荷要什么</b>：左右两列 + 一张对应表。"},
+ {id:"live-dial",title:"实时旋钮",build:bDial,
+  hand:"<b>拖滑块</b>，右边三条指标当场重算。不用提交，也没有判分。",
+  spec:"<b>教什么</b>：取舍——多给材料换来什么，代价是什么，什么时候反过来。<br><b>比原来强在哪</b>：仓库里的 <code>tune</code> 要按提交才看结果；这里是实时的，而且目标是「把指标拖进目标区」，不是答对一道题。这是 Brilliant 的招牌做法。<br><b>载荷要什么</b>：两三个可调参数、几个由它们算出的指标、一个目标区。"},
+ {id:"mark",title:"划词标记",build:bMark,
+  hand:"在文字上<b>按住划过</b>，被划中的部分高亮。",
+  spec:"<b>教什么</b>：在一段 AI 写的话里，找出没有依据的那一句。<br><b>比原来强在哪</b>：这是 <code>spot</code> 的真·游戏化版——不是在几个按钮里选，而是在真实文字上圈。划错时那一段会抖一下，并<b>自己说出它的依据在哪</b>（借 Brilliant 那条：错了让对象演示，而不是给一段说明）。<br><b>载荷要什么</b>：切好的文字片段、哪几段没依据、其余每段的依据一句话。"},
+ {id:"rank",title:"拖拽排序",build:bRank,
+  hand:"上下<b>拖动</b>条目，其他项会自己让位。",
+  spec:"<b>教什么</b>：步骤先后、优先级。<br><b>比原来强在哪</b>：仓库里的 <code>program</code> 是网格走位，覆盖不到「步骤排序」这个形状，而它在课里到处都是。排对了整列会依次亮绿。<br><b>载荷要什么</b>：正确顺序 + 一个打乱的初始序 + 一句关键点评。"}
+];
+})();
+</script>
+<script>
+(function(){
+"use strict";
+const K=window.__K, el=K.el, esc=K.esc, clamp=K.clamp, sfx=K.sfx, buzz=K.buzz,
+      onDrag=K.onDrag, inside=K.inside, verdict=K.verdict;
+
+/* ==================================================================
+   6 · 证据天平
+   ================================================================== */
+function bBalance(host){
+  const CLAIM="「这款耳机的续航是同价位里最好的」";
+  const EV=[
+    {t:"官方规格页：续航 30 小时",w:3,side:"for",why:"能打开核对的具体数字。"},
+    {t:"一条用户帖：「挺耐用的」",w:1,side:"for",why:"是个说法，但没给数字，分量很轻。"},
+    {t:"另一款同价位标称 40 小时",w:5,side:"against",why:"直接对着结论来的硬证据，而且比官方那条还重一点——它正面否掉了「最好」。"},
+    {t:"AI 说：「据我所知是最好的」",w:0,side:"none",why:"「据我所知」不是证据。它的分量是 <b>0</b>——放哪边天平都不动。"}
+  ];
+  host.appendChild(el("p","tip","结论："+esc(CLAIM)+"<br>把下面四条证据<b>拖</b>到天平两边。天平会真的按分量倾斜。"));
+  const pile=el("div","pile"); host.appendChild(pile);
+  const box=el("div","scalebox"); host.appendChild(box);
+  const bw=el("div","beamwrap");
+  bw.innerHTML='<div class="pivot"></div><div class="beam" id="beam"></div>'+
+    '<div class="pan" id="panL" style="left:11%"><div class="rope"></div><div class="dish"></div></div>'+
+    '<div class="pan" id="panR" style="left:89%"><div class="rope"></div><div class="dish"></div></div>';
+  box.appendChild(bw);
+  const vb=el("div","verdictbar","还没有证据。结论悬着。"); box.appendChild(vb);
+  const beam=bw.querySelector("#beam"), pL=bw.querySelector("#panL"), pR=bw.querySelector("#panR");
+  const dishes=[pL.querySelector(".dish"),pR.querySelector(".dish")];
+  let wl=0,wr=0,left=EV.length;
+  function settle(){
+    const d=clamp((wr-wl)*4,-14,14);
+    beam.style.transform="translateX(-50%) rotate("+d+"deg)";
+    pL.style.top=(4+d*1.9)+"px"; pR.style.top=(4-d*1.9)+"px";
+    vb.classList.remove("left","right");
+    if(wl===0&&wr===0)vb.textContent="还没有证据。结论悬着。";
+    else if(wl>wr){vb.classList.add("right");vb.textContent="目前：支持的分量更重（"+wl+" : "+wr+"）"}
+    else if(wr>wl){vb.classList.add("left");vb.textContent="目前：反对的分量更重（"+wl+" : "+wr+"）"}
+    else vb.textContent="两边一样重（"+wl+" : "+wr+"）";
+  }
+  settle();
+  EV.forEach(e=>{
+    const c=el("div","chipd",esc(e.t)+'<span style="display:block;font-size:11.5px;color:var(--ink-faint);margin-top:2px">分量 '+e.w+"</span>");
+    let ph=null;
+    onDrag(c,{
+      start(r,off){ sfx.grab(); ph=el("div"); ph.style.height=r.height+"px"; c.after(ph);
+        c.classList.add("drag"); c.style.width=r.width+"px"; c.style.left=r.left+"px"; c.style.top=r.top+"px" },
+      move(ev,off){ c.style.left=(ev.clientX-off.x)+"px"; c.style.top=(ev.clientY-off.y)+"px";
+        dishes.forEach(d=>d.classList.toggle("hot",inside(d.getBoundingClientRect(),ev.clientX,ev.clientY))) },
+      end(ev){
+        const i=dishes.findIndex(d=>inside(d.getBoundingClientRect(),ev.clientX,ev.clientY));
+        dishes.forEach(d=>d.classList.remove("hot"));
+        c.classList.remove("drag"); c.style.cssText="";
+        if(i<0){ if(ph){ph.remove();ph=null} c.classList.remove("bounce");void c.offsetWidth;c.classList.add("bounce");sfx.drop();return }
+        if(ph){ph.remove();ph=null}
+        c.dataset.locked="1"; c.remove();
+        dishes[i].appendChild(el("div","w",esc(e.t.slice(0,12))+(e.t.length>12?"…":"")));
+        if(i===0)wl+=e.w; else wr+=e.w;
+        left--;
+        if(e.w===0){ sfx.drop(); buzz([6,40,6]);
+          verdict(host,false,"天平<b>纹丝不动</b>。"+e.why); }
+        else { sfx.snap(); buzz(12); verdict(host,true,"分量 "+e.w+"。"+esc(e.why)); }
+        settle();
+        if(left===0){ sfx.win();
+          const tie=wl===wr, forWins=wl>wr;
+          verdict(host,!forWins,"<b>四条放完："+wl+" : "+wr+"。</b>"+
+            (tie?"两边一样重，<b>这个结论现在悬着</b>——不是被推翻，是还没被撑起来。"
+             :forWins?"支持的一边更重，<b>这个结论暂时站得住</b>——但只对你手上这四条而言。"
+             :"反对的一边更重，所以这个结论<b>现在站不住</b>。")+
+            "<br>不管落在哪边，都要看那条「据我所知」——它读起来最像结论，<b>分量却是 0</b>。"); }
+      }
+    });
+    pile.appendChild(c);
+  });
+}
+
+/* ==================================================================
+   7 · 时间轴擦洗
+   ================================================================== */
+function bScrub(host){
+  const F=[
+    {t:"读取你给的资料",p:"它打开了你提供的三份文件，还没有写任何东西。",d:0},
+    {t:"写出草稿",p:"草稿写好了，只存在它那边，你还没看过。",d:0},
+    {t:"整理收件人名单",p:"它从资料里找出了 12 个邮箱地址，其中 3 个是你没打算发的。",d:0},
+    {t:"提交给邮件服务",p:"已经交出去了。这一步之后，撤不撤得回来不由你决定。",d:1},
+    {t:"报告「任务完成」",p:"它告诉你做完了。到这一步你才第一次看见结果。",d:1}
+  ];
+  host.appendChild(el("p","tip","这是一个 AI 多步任务的回放。<b>拖游标</b>看每一步发生了什么，在你觉得该停的地方按叫停。"));
+  const box=el("div","scrubbox"); host.appendChild(box);
+  const dots=el("div","steps");
+  F.forEach(()=>dots.appendChild(el("div","stepdot")));
+  box.appendChild(dots);
+  const fb=el("div","framebox"); box.appendChild(fb);
+  const rail=el("div","scrubrail",'<input type="range" min="0" max="'+(F.length-1)+'" value="0">');
+  box.appendChild(rail);
+  const stop=el("button","stopbtn","在这一步叫停"); box.appendChild(stop);
+  const inp=rail.querySelector("input");
+  let at=0,done=false;
+  function paint(){
+    const f=F[at];
+    fb.className="framebox"+(f.d?" danger":"");
+    fb.innerHTML='<div class="st">第 '+(at+1)+" / "+F.length+" 步</div><h6>"+esc(f.t)+"</h6><p>"+esc(f.p)+"</p>";
+    [...dots.children].forEach((d,i)=>{d.className="stepdot"+(i<=at?(F[i].d?" bad":" past"):"")});
+  }
+  let last=0;
+  inp.oninput=()=>{at=+inp.value; if(at!==last){last=at;sfx.tick()} paint()};
+  stop.onclick=()=>{
+    if(done)return; done=true; stop.disabled=true; inp.disabled=true;
+    const sent=F.slice(0,at+1).some(f=>f.d);
+    if(!sent){ sfx.good(); buzz(16);
+      verdict(host,true,"<b>停在第 "+(at+1)+" 步，还来得及。</b>草稿和名单都只在它那边，没有交出去——你现在可以改收件人，也可以整段重来。"+
+        "<br>这就是为什么要在<b>真正发出去之前</b>放一个确认点。");
+    }else{ sfx.bad(); buzz([12,60,12]);
+      verdict(host,false,"<b>停在第 "+(at+1)+" 步，已经晚了。</b>第 4 步就交给邮件服务了，那 3 个你没打算发的地址也在里面。"+
+        "<br>叫停不会让已经发生的事消失——它只是让你从现在开始介入。<b>再拖回第 3 步看看</b>：那时候名单已经列出来，而东西还没出去。");
+      inp.disabled=false;
+    }
+  };
+  paint();
+}
+
+/* ==================================================================
+   8 · 拼句 + 发送（保留并升级）
+   ================================================================== */
+function bBank(host){
+  const ANS=["请按","时间、地点、报名要求","三项核对，","把对应的原文指出来，","缺的直接写「缺失」。"];
+  const DEC=["写得好一点，","尽量完美。"];
+  host.appendChild(el("p","tip","点词把一句要求拼出来，然后<b>真的发出去</b>——下面会出现 AI 按这句话回给你的东西。"));
+  const line=el("div","line2"); host.appendChild(line);
+  const bank=el("div","bank2"); host.appendChild(bank);
+  const words=ANS.concat(DEC).map((t,i)=>({t:t,i:i}));
+  for(let i=words.length-1;i>0;i--){const j=(i*7+3)%(i+1);const t=words[i];words[i]=words[j];words[j]=t}
+  const picked=[];
+  const sendRow=el("div","sendrow");
+  const send=el("button","sendbtn","发出去"); send.disabled=true;
+  sendRow.appendChild(send); host.appendChild(sendRow);
+  const nodes=words.map(w=>{
+    const n=el("button","w2",esc(w.t));
+    n.onclick=()=>{ if(n.classList.contains("used"))return;
+      sfx.tick(); n.classList.add("used"); picked.push(w);
+      const p=el("button","w2 placed",esc(w.t));
+      p.onclick=()=>{ sfx.tick(); p.remove(); n.classList.remove("used");
+        picked.splice(picked.indexOf(w),1); send.disabled=picked.length===0 };
+      line.appendChild(p); send.disabled=false;
+    };
+    bank.appendChild(n); return n;
+  });
+  send.onclick=()=>{
+    const got=picked.map(p=>p.t);
+    const ok=got.length===ANS.length&&got.every((t,i)=>t===ANS[i]);
+    const nice=got.some(t=>DEC.includes(t));
+    line.querySelectorAll(".w2").forEach((n,i)=>{n.disabled=true;n.classList.remove("placed");
+      n.classList.add(got[i]===ANS[i]?"ok":"no")});
+    nodes.forEach(n=>n.disabled=true); send.disabled=true;
+    const old=host.querySelector(".aireply"); if(old)old.remove();
+    const r=el("div","aireply"+(ok?" good":""));
+    r.innerHTML='<span class="who">AI 按你这句话回的</span>'+
+      (ok?'时间 &#10003;「10 月 21 日晚 6–9 点」<br>地点 &#10003;「戈达德访客中心」<br>报名要求 <b style="color:var(--warn)">缺失</b>'
+        :nice?'写得非常好！行文流畅，很有感染力 &#128077;<br><span style="color:var(--ink-faint);font-size:12.5px">——它夸了你，但一项都没核。</span>'
+        :'这段文字整体没有问题，读起来很顺。<br><span style="color:var(--ink-faint);font-size:12.5px">——它给了个笼统结论，你没法据此改稿。</span>');
+    host.appendChild(r);
+    if(ok){sfx.win();buzz([14,40,14]);
+      verdict(host,true,"<b>它自己说出了缺哪一项。</b>拼句子本身不算学会——<b>让这句话产生一个不同的回复，才算</b>。");
+    }else{sfx.bad();buzz([10,50,10]);
+      verdict(host,false,"句子发出去了，但回来的东西<b>没法让你动手改稿</b>。再拼一次：缺的是「指出原文」和「缺的写缺失」这两条。");}
+  };
+}
+
+/* ==================================================================
+   9 · 对话残局
+   ================================================================== */
+function bBranch(host){
+  const OPEN="这款设备的防水等级是 IPX7。";
+  const TREE={
+    start:{moves:[
+      {t:"你确定吗？",to:"sure",good:false},
+      {t:"这个说法来自哪一份记录？",to:"src",good:true},
+      {t:"再写详细一点",to:"more",good:false}]},
+    sure:{ai:"是的，我可以确认这一点。",moves:[
+      {t:"你确定吗？",to:"sure2",good:false},
+      {t:"把出处贴给我",to:"src",good:true}]},
+    sure2:{ai:"完全确定，这是标准配置。",moves:[
+      {t:"把出处贴给我",to:"src",good:true},
+      {t:"好吧，那就这样",to:"lose",good:false}]},
+    more:{ai:"该设备具备优秀的防水性能，可在多种环境下稳定使用，适合户外活动。",moves:[
+      {t:"这些话是从哪来的？",to:"src",good:true},
+      {t:"再详细一点",to:"more2",good:false}]},
+    more2:{ai:"其防水设计采用了多层密封结构，能有效阻隔水汽侵入……",moves:[
+      {t:"停。出处在哪？",to:"src",good:true}]},
+    src:{ai:"我没有可以引用的具体记录。这个等级是我根据同类产品推断的，建议你查官方规格页确认。",end:"win"},
+    lose:{ai:"好的，祝你使用愉快！",end:"lose"}
+  };
+  host.appendChild(el("p","tip","像下棋一样：每回合选一句发出去，看它怎么应。<b>目标是逼出一句能核对的东西。</b>"));
+  const tb=el("div","turnbar"); host.appendChild(tb);
+  const chat=el("div","chat"); host.appendChild(chat);
+  const moves=el("div","moves"); host.appendChild(moves);
+  let at="start", turns=0, best=1;
+  function drawTurns(){ tb.innerHTML="回合 "+turns+"　";
+    for(let i=0;i<4;i++)tb.appendChild(el("i",i<turns?"used":"")); }
+  function push(cls,who,t,win){ const m=el("div","msg "+cls+(win?" win":""),
+    '<span class="who">'+who+"</span>"+esc(t)); chat.appendChild(m); chat.scrollTop=chat.scrollHeight }
+  push("ai","AI",OPEN);
+  drawTurns();
+  function render(){
+    moves.innerHTML="";
+    const n=TREE[at];
+    if(n.end){
+      if(n.end==="win"){ sfx.win(); buzz([14,40,14]);
+        verdict(host,true,"<b>"+turns+" 回合逼出来了。</b>它承认没有可引用的记录——这句话才是你要的东西。"+
+          (turns<=best?"<br><b>而且你走的是最短路线。</b>":"<br>最短路线是 <b>1 回合</b>：一上来就问「这个说法来自哪份记录」。"+
+          "「你确定吗」和「再详细一点」都只会让它把同一个猜测说得更漂亮。"));
+      }else{ sfx.bad(); buzz([12,60,12]);
+        verdict(host,false,"<b>你收下了一个没有出处的说法。</b>它从头到尾没给过任何可以核对的东西——只是说得越来越肯定。重来一次，试试直接问出处。");
+      }
+      return;
+    }
+    n.moves.forEach(mv=>{
+      const b=el("button","move",esc(mv.t));
+      b.onclick=()=>{
+        sfx.tick(); turns++; drawTurns();
+        push("me","你",mv.t);
+        at=mv.to;
+        const nx=TREE[at];
+        setTimeout(()=>{ if(nx.ai)push("ai","AI",nx.ai,nx.end==="win"); render() },340);
+        moves.innerHTML="";
+      };
+      moves.appendChild(b);
+    });
+  }
+  render();
+}
+
+/* ==================================================================
+   10 · 图上点位
+   ================================================================== */
+function bHotspot(host){
+  const SPOTS=[
+    {x:14,y:18,r:16,ok:false,t:"这是标题。它告诉你在讲什么，不告诉你依据在哪。"},
+    {x:50,y:44,r:22,ok:false,t:"这是正文。读起来最有说服力的部分，恰恰最需要出处。"},
+    {x:22,y:78,r:18,ok:true,t:"就是这里。这一行小字写着它引用了哪几份资料——<b>能点开的那种</b>。"},
+    {x:82,y:18,r:14,ok:false,t:"这是分享按钮。"}
+  ];
+  host.appendChild(el("p","tip","下面是一个 AI 回答页面的示意。<b>点一下</b>你会去哪里确认它用了什么资料。"));
+  const shot=el("div","shot");
+  shot.innerHTML='<div class="shotbar"><span>●</span><span>●</span><span>●</span>'+
+    '<span style="margin-left:8px">AI 回答</span><span style="margin-left:auto">分享</span></div>'+
+    '<div class="shotbody"><div style="font-weight:700;color:var(--ink-title);font-size:13.5px;margin-bottom:8px">关于这款设备的防水能力</div>'+
+    '<div class="fake" style="width:100%"></div><div class="fake" style="width:94%"></div>'+
+    '<div class="fake" style="width:88%"></div><div class="fake" style="width:97%"></div>'+
+    '<div class="fake" style="width:61%;margin-bottom:12px"></div>'+
+    '<div style="font-size:10.5px;color:var(--ink-faint);border-top:1px solid var(--line);padding-top:7px">'+
+    '参考资料 · 3 条　官方规格页 / 评测 A / 论坛帖</div></div>';
+  host.appendChild(shot);
+  let done=false;
+  shot.addEventListener("click",e=>{
+    if(done)return;
+    const r=shot.getBoundingClientRect();
+    const px=(e.clientX-r.left)/r.width*100, py=(e.clientY-r.top)/r.height*100;
+    const ring=el("div","ring2"); ring.style.left=(e.clientX-r.left)+"px"; ring.style.top=(e.clientY-r.top)+"px";
+    shot.appendChild(ring); setTimeout(()=>ring.remove(),700);
+    let hit=null,bestd=1e9;
+    SPOTS.forEach(s=>{const d=Math.hypot(px-s.x,py-s.y); if(d<s.r&&d<bestd){bestd=d;hit=s}});
+    const pin=el("div","pinmark "+(hit&&hit.ok?"ok":"no"),hit&&hit.ok?"✓":"·");
+    pin.style.left=(e.clientX-r.left)+"px"; pin.style.top=(e.clientY-r.top)+"px";
+    shot.appendChild(pin);
+    if(hit&&hit.ok){ done=true; sfx.good(); buzz(16);
+      verdict(host,true,hit.t+"<br><br><b>没有这一行的回答，你只能选择信或不信。</b>"); }
+    else { sfx.bad(); buzz([8,40,8]);
+      verdict(host,false,(hit?hit.t:"这里什么都没有。")+"　再找找：<b>哪里能让你打开原件？</b>"); }
+  });
+}
+
+window.__B2=[
+ {id:"balance",title:"证据天平",build:bBalance,
+  hand:"把证据<b>拖</b>到天平两端。天平真的会按分量倾斜。",
+  spec:"<b>教什么</b>：一个结论有没有被证据撑住，以及不同证据的分量不一样。<br><b>比原来强在哪</b>：仓库里的 <code>weigh</code> 是逐个情况选选项；这里是物理的——分量看得见，倾斜是结果不是判分。最妙的一块是「据我所知」：<b>分量 0，拖上去天平纹丝不动</b>。<br><b>载荷要什么</b>：一个结论、几条证据（各带分量和支持/反对）、至少一条 0 分量的诱饵。"},
+ {id:"scrub",title:"时间轴擦洗",build:bScrub,
+  hand:"<b>拖游标</b>逐步回放一个 AI 多步任务，在你认为该停的那一步按叫停。",
+  spec:"<b>教什么</b>：多步任务在哪一步还来得及、哪一步已经出去了。<br><b>比原来强在哪</b>：仓库里的 <code>ai-repair</code> 有重放，但那是 943 行的大引擎；这块是它的轻量版，任何一节讲「先别急着让它执行」的课都能用。叫晚了不是判你错，是让你<b>拖回去看看那时候是什么样</b>。<br><b>载荷要什么</b>：几步，每步一句状态，标出哪一步起是不可逆的。"},
+ {id:"word-bank",title:"拼句 + 发出去",build:bBank,
+  hand:"点词拼出一句要求，然后<b>真的发出去</b>，看 AI 按这句话回什么。",
+  spec:"<b>教什么</b>：一句要求写成什么样，才能换来一个你能动手用的回复。<br><b>比原来强在哪</b>：单纯拼句子在语言课里成立（手在排词序＝学词序），在 AI 课里不成立。<b>这里补了后果</b>——拼完要发出去，AI 的回复随你拼的句子变。拼对了它说出「缺失」，拼了「写得好一点」它只会夸你。<br><b>载荷要什么</b>：正确句子的分段、几个诱饵词、每种拼法对应的一条回复。"},
+ {id:"branch",title:"对话残局",build:bBranch,
+  hand:"每回合从几句话里<b>选一句发出去</b>，看它怎么应，最多四回合。",
+  spec:"<b>教什么</b>：多轮追问怎么逼出可核对的东西，以及哪些问法只会让它把猜测说得更漂亮。<br><b>比原来强在哪</b>：这是仓库里完全没有的形状，来自象棋残局——给一个局面，走一步，看应手。走完会告诉你<b>最短路线是几步</b>，你走了几步。<br><b>载荷要什么</b>：一棵对话树，每个节点几句可选的话 + 对方的回应，标出终局是赢是输。"},
+ {id:"hotspot",title:"图上点位",build:bHotspot,
+  hand:"在界面示意图上<b>点一下</b>你要去的位置，命中有涟漪。",
+  spec:"<b>教什么</b>：在真实界面里找到「依据在哪」——不是背概念，是认位置。<br><b>比原来强在哪</b>：仓库里没有任何一种是在图上操作的。点错的地方会告诉你<b>那是什么</b>，而不是只说错了。<br><b>载荷要什么</b>：一张界面示意、几个热区坐标、每个热区一句说明、哪个是对的。"}
+];
+})();
+</script>
+<script>
+(function(){
+const K=window.__K, el=K.el, page=K.page;
+/* 仓库里已有的十三种，出自 packages/ui/src/learning-play */
+const HAVE=[
+ ["connect","解释依赖、原因与结果","点选建边","真课用过 6 次"],
+ ["sort","划界与归类","点条目再点格","7 次 · 最常用"],
+ ["contrast","两种做法什么时候分开","逐情况预测","5 次"],
+ ["weigh","一笔取舍买到什么、代价是什么","逐情况选项","3 次"],
+ ["tune","多变量取舍，找可行解","拖滑块后提交","1 次"],
+ ["hunt","边界测试，反驳一条规则","输数值试探","0 次"],
+ ["dispatch","资源复用、预算下的调度","按顺序分派","1 次"],
+ ["program","顺序、方向、循环","网格走位","0 次"],
+ ["ai-brief","把含糊要求钉成能验收的行为","选条款后验收","0 次"],
+ ["ai-context","为 AI 选取充分、有来源的材料","装材料再生成","1 次"],
+ ["ai-agent","工具能力、任务授权、材料里的指令","给权限跑动作","1 次"],
+ ["ai-eval","先定要求和测试，再检验边界","冻结用例逐条跑","1 次"],
+ ["ai-repair","用可复现证据要求 AI 小步修改","双版重放对照","1 次"]
+];
+const head=el("div","masthead");
+head.innerHTML='<h1>互动积木库</h1>'+
+ '<p>这一页只管<b>积木本身好不好玩</b>，不管一节课怎么搭。每一块都能当场上手，'+
+ '右上角「重来」随时从头。<b>没有判分，没有生命值</b>——答错时对象自己演示为什么。</p>'+
+ '<p style="color:var(--ink-faint);font-size:13px">做法上偷了三家：多邻国的<b>节奏</b>（每几秒一次输入）、'+
+ 'Brilliant 的<b>可拖的图</b>和「答错时图自己变给你看」、棋类的<b>残局</b>（给一个局面，走一步，看应手）。'+
+ '每一块下面都写了它比仓库里现有的那种强在哪。</p>';
+page.appendChild(head);
+page.appendChild(el("div","rule"));
+
+const s1=el("div","secttl",'<h2>仓库里已经有的</h2><span>13 种 · packages/ui/src/learning-play</span>');
+page.appendChild(s1);
+page.appendChild(el("p","sectsub","这些已经实现并且在真课里用过。最右边是它在全部 469 节课里被用到的次数——便宜的四种扛了绝大部分，三种一次都没用过。"));
+const hv=el("div","have");
+HAVE.forEach(([id,what,how,used])=>{
+  hv.appendChild(el("div","haverow","<code>"+id+"</code><em>"+what+"　·　"+how+"</em><i>"+used+"</i>"));
+});
+page.appendChild(hv);
+page.appendChild(el("div","rule"));
+
+const s2=el("div","secttl",'<h2>新做的，更游戏化的</h2><span>10 块 · 都能玩</span>');
+page.appendChild(s2);
+page.appendChild(el("p","sectsub","共同的规矩：手上的动作要和课要教的判断是同一个动作；答错了让对象演示，不给一段说明；随便试，试错不花钱。"));
+
+[].concat(window.__B1,window.__B2).forEach(b=>K.block(b));
+
+page.appendChild(el("div","rule"));
+const tail=el("p","sectsub");
+tail.innerHTML="这些是积木，不是课。怎么把它们和一节课的六段骨架搭起来，是另一件事——"+
+ "见 <code>docs/reference/interaction-density-research.md</code> §12。";
+page.appendChild(tail);
+})();
+</script>
