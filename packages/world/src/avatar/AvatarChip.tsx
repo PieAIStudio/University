@@ -10,6 +10,7 @@
  * on the reader and the profile page too.
  */
 import { Canvas } from "@react-three/fiber";
+import { translate } from "@pieai/university-ui/i18n.js";
 import { dressScene } from "@pieai/swimmer-avatar-kit/materials";
 import type { AvatarBounds, AvatarRecipe } from "@pieai/swimmer-avatar-kit";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -101,7 +102,10 @@ export function AvatarChip({
       type="button"
       className="avatar-chip avatar-chip--button"
       onClick={onClick}
-      aria-label={label ?? (signedIn ? "个人档案" : "登录，把这个头像换成你自己的")}
+      aria-label={
+        label ??
+        translate(signedIn ? "product.account.profileLabel" : "product.account.avatarSignInLabel")
+      }
     >
       {body}
     </button>

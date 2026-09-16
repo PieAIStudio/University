@@ -366,6 +366,7 @@ export {
   activeIdForView,
   fromHash,
   fromPath,
+  isAuthView,
   isBareView,
   isSafeId,
   libraryTabOf,

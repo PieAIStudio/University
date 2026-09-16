@@ -9,10 +9,10 @@ import {
   createMemoryIdentityPort,
   levelOf,
 } from "@pieai/university-core";
+import type { AuthPort } from "@pieaistudio/swimmer-auth-kit";
 
 import {
   ACCOUNT_PENDING_LABEL,
-  ACCOUNT_SIGN_IN,
   ACCOUNT_SIGN_OUT,
   ACCOUNT_UNCONFIGURED_ACTION,
   ACCOUNT_UNCONFIGURED_DESCRIPTION,
@@ -142,6 +142,13 @@ describe("empty destinations", () => {
   });
 });
 
+const idleAuth: AuthPort = {
+  getSession: async () => null,
+  getCurrentUser: async () => null,
+  onAuthStateChange: () => ({ unsubscribe() {} }),
+  execute: async () => ({ status: "email-requested" }),
+};
+
 describe("AccountPanel", () => {
   it("explains why login is unavailable when the backend is not configured", () => {
     const markup = renderToStaticMarkup(<AccountPanel identity={createIdentityPort(null)} />);
@@ -162,15 +169,18 @@ describe("AccountPanel", () => {
   });
 
   it("offers a kit form when signed out, not a modal", () => {
-    const markup = renderToStaticMarkup(<AccountPanel identity={createMemoryIdentityPort()} />);
+    const markup = renderToStaticMarkup(
+      <AccountPanel identity={createMemoryIdentityPort()} auth={idleAuth} />,
+    );
     expect(markup).toContain(ACCOUNT_UNSIGNED_TITLE);
     expect(markup).toContain(ACCOUNT_UNSIGNED_DESCRIPTION);
     expect(markup).toContain("跨设备同步需要对应会员权益");
-    expect(markup).toContain(ACCOUNT_SIGN_IN);
-    expect(markup).toContain("免密码登录");
+    expect(markup).toContain("swimmer-auth");
     expect(markup).toContain('type="password"');
     expect(markup).toContain("game-ui-input");
     expect(markup).toContain("game-ui-field");
+    expect(markup).not.toContain('role="tablist"');
+    expect(markup).not.toContain("免密码登录");
   });
 
   it("has a real pending state", () => {
@@ -202,7 +212,7 @@ describe("AccountPanel", () => {
       code: "sign-in-failed",
       message: "provider debug response must not reach the learner",
     });
-    const markup = renderToStaticMarkup(<AccountPanel identity={identity} />);
+    const markup = renderToStaticMarkup(<AccountPanel identity={identity} auth={idleAuth} />);
     expect(markup).toContain("登录没有完成，请核对输入或网络后重试。");
     expect(markup).not.toContain("provider debug response");
     expect(markup).toContain('type="password"');

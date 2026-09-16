@@ -4,6 +4,7 @@ import {
   activeIdForView,
   fromHash,
   fromPath,
+  isAuthView,
   isBareView,
   isSafeId,
   libraryTabOf,
@@ -39,6 +40,8 @@ const views: View[] = [
   { kind: "play-lab", collection: "ai" },
   { kind: "studio" },
   { kind: "studio", section: "map" },
+  { kind: "auth-callback" },
+  { kind: "auth-reset" },
 ];
 
 describe("the address bar", () => {
@@ -118,6 +121,21 @@ describe("the address bar", () => {
     expect(fromPath("/me")).toEqual({ kind: "me" });
     expect(toPath({ kind: "league" })).toBe("/league");
     expect(toPath({ kind: "me" })).toBe("/me");
+  });
+
+  it("keeps shared auth callback and reset destinations instead of reading them as a course", () => {
+    expect(fromPath("/auth/callback")).toEqual({ kind: "auth-callback" });
+    expect(fromPath("/auth/reset")).toEqual({ kind: "auth-reset" });
+    expect(toPath({ kind: "auth-callback" })).toBe("/auth/callback");
+    expect(toPath({ kind: "auth-reset" })).toBe("/auth/reset");
+    expect(activeIdForView({ kind: "auth-callback" })).toBe("profile");
+    expect(activeIdForView({ kind: "auth-reset" })).toBe("profile");
+    expect(isBareView({ kind: "auth-callback" })).toBe(false);
+    expect(isAuthView({ kind: "auth-callback" })).toBe(true);
+    expect(isAuthView({ kind: "auth-reset" })).toBe(true);
+    expect(isAuthView(WORLD)).toBe(false);
+    expect(fromPath("/auth")).toEqual(WORLD);
+    expect(fromPath("/auth/other")).toEqual(WORLD);
   });
 
   it("reserves the workbench segment instead of reading it as a study", () => {

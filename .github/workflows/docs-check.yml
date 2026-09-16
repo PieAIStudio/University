@@ -43,17 +43,23 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 11.22.0
-
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
-          cache: pnpm
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+          run_install: false
+
+      # Docs checks need only the public governance CLI, not the browser's
+      # private AuthKit. Do not grant package-read credentials to fork PRs or
+      # replace this with pull_request_target plus checkout of untrusted code.
+      - name: Install isolated public documentation tooling
+        run: |
+          node --input-type=module -e "import {readFileSync} from 'node:fs'; const p=JSON.parse(readFileSync('package.json','utf8')); if(p.devDependencies['@pieai/doc-gov']!=='0.14.0') throw Error('Update the pinned public docs tool together with the project version');"
+          npm install --prefix "$RUNNER_TEMP/university-doc-tools" --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org @pieai/doc-gov@0.14.0
+          echo "$RUNNER_TEMP/university-doc-tools/node_modules/.bin" >> "$GITHUB_PATH"
 
       - name: Validate router and entry files
         run: pnpm doc-gov router-check
