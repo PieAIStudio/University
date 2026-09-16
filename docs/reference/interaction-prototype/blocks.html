@@ -454,6 +454,15 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
   font-variant-numeric:tabular-nums;color:var(--ink-title)}
 .goalband{margin-top:11px;border-radius:11px;padding-block:9px;padding-inline:11px;font-size:13.5px;
   line-height:1.6;background:var(--panel-2);border:1px dashed var(--line-2);color:var(--ink-soft);transition:.2s}
+.whybox{margin-top:12px;background:var(--panel-2);border:1px dashed var(--line-2);
+  border-radius:12px;padding-block:11px;padding-inline:12px}
+.whyq{font-size:13.5px;line-height:1.55;color:var(--ink-title);margin-bottom:9px}
+.whyopts{display:flex;flex-direction:column;gap:7px}
+.whyopt{text-align:left;background:var(--panel);border:2px solid var(--line);border-bottom-width:3px;
+  border-bottom-color:var(--lip);border-radius:11px;padding-block:9px;padding-inline:11px;font-size:14px}
+.whyopt:active:not(:disabled){transform:translateY(2px);border-bottom-width:1px}
+.whyopt.ok{background:var(--ok-pale);border-color:var(--ok);font-weight:600}
+.whyopt.no{background:var(--berry-pale);border-color:var(--berry)}
 .goalband.hit{background:var(--ok-pale);border-color:var(--ok);border-style:solid;color:var(--ok-ink);font-weight:600}
 
 /* ---------- 4 划词 ---------- */
@@ -713,18 +722,28 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .xline.on{border-color:var(--line-2);background:var(--panel-2)}
 .xline.past{opacity:.72}
 .xline.on .how{display:block}
-.xline.strong.on{border-color:var(--ok);background:var(--ok-pale)}
-.xline.weak.on{border-color:var(--warn);background:var(--warn-pale)}
+.xline.shown.strong{border-color:var(--ok);background:var(--ok-pale)}
+.xline.shown.weak{border-color:var(--warn);background:var(--warn-pale)}
+.xline.shown .how{display:block}
 .xbeam{position:absolute;left:0;right:0;height:52px;pointer-events:none;
   background:linear-gradient(180deg,#0000,var(--accent-pale) 45%,#0000);opacity:.85;
   border-top:1px solid var(--accent);border-bottom:1px solid var(--accent)}
+.xask{margin-top:11px;min-height:8px}
+.xq{font-size:13.5px;font-weight:700;color:var(--ink-title);margin-bottom:8px}
+.xbtns{display:flex;flex-direction:column;gap:7px}
+.xbtn{text-align:left;background:var(--panel);border:2px solid var(--line);border-bottom-width:3px;
+  border-bottom-color:var(--lip);border-radius:11px;padding-block:10px;padding-inline:11px;
+  font-size:14px;line-height:1.45;transition:transform .08s}
+.xbtn:active{transform:translateY(2px);border-bottom-width:1px}
 .xhandle{margin-top:11px}
 .xhandle input{width:100%;accent-color:var(--accent);height:30px}
 
 /* ---------- 17 二维寻解 ---------- */
 .field{position:relative;aspect-ratio:1/.72;max-width:100%;border-radius:14px;overflow:hidden;
   background:var(--panel);border:1px solid var(--line-2);touch-action:none;cursor:grab}
-.zoneok{position:absolute;border-radius:10px;background:var(--ok-pale);border:2px dashed var(--ok);opacity:.75}
+.zoneok{position:absolute;border-radius:10px;background:var(--ok-pale);border:2px dashed var(--ok);
+  opacity:.75;transition:opacity .4s}
+.zoneok.hidden{opacity:0}
 .knob{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;
   background:radial-gradient(circle at 34% 30%,var(--accent-bright),var(--accent));
   box-shadow:0 6px 18px #e8743b66,0 0 0 4px #ffffff59;pointer-events:none}
@@ -1244,6 +1263,8 @@ const J=window.JX, el=J.el, esc=J.esc, clamp=J.clamp, sfx=J.sfx, L=J.L;
 
 /* ============ 16 透视扫描 · Papers, Please 的对比检查器 ============ */
 function bXray(host){
+  /* 原来扫到哪一行就自动变绿变红——那是展示，不是练习。
+     现在必须先自己判断，判断完才揭示。 */
   const LINES=[
    {t:"2023 年 10 月 21 日晚 6 点到 9 点",k:"strong",how:"对着 NASA 公告看一眼就能核。"},
    {t:"地点在马里兰州格林贝尔特的戈达德访客中心",k:"strong",how:"公告里写着，能核。"},
@@ -1252,14 +1273,40 @@ function bXray(host){
    {t:"这是当年最值得一看的公众科普活动",k:"weak",how:"「最值得」要和别的活动比才成立，而你手上只有这一份公告。"}
   ];
   host.appendChild(el("p","tip","拖下面的滑杆，让扫描条扫过这份成品。"+
-    "<b>扫到哪一句，就显示那一句该拿什么去核对。</b><br>内容是第 3 节 AI 交回的稿子。"));
+    "<b>扫到一句，先自己判断它核不核得了</b>，判断完才揭示。<br>内容是第 3 节 AI 交回的稿子。"));
   const box=el("div","xbox"); host.appendChild(box);
   const beam=el("div","xbeam"); box.appendChild(beam);
   const nodes=LINES.map(l=>{ const n=el("div","xline "+l.k,esc(l.t)+'<div class="how">'+l.how+"</div>");
     box.appendChild(n); return n; });
+  const ask=el("div","xask"); host.appendChild(ask);
   const h=el("div","xhandle",'<input type="range" min="0" max="100" value="0">'); host.appendChild(h);
   const inp=h.querySelector("input");
-  let seen=new Set(), last=-1;
+  let seen=new Set(), last=-1, judged=new Set(), right=0;
+  function askFor(i){
+    if(judged.has(i)){ ask.innerHTML=""; return }
+    ask.innerHTML='<div class="xq">这一句，你拿什么去核对它？</div>';
+    const row=el("div","xbtns");
+    [["能核——对着公告看一眼就知道","strong"],["核不了——手上没有东西可对","weak"]].forEach(([t,k])=>{
+      const b=el("button","xbtn",esc(t));
+      b.onclick=()=>{
+        judged.add(i);
+        const ok=LINES[i].k===k;
+        if(ok)right++;
+        nodes[i].classList.add("shown",LINES[i].k);
+        nodes[i].querySelector(".how").innerHTML=(ok?"✓ ":"✗ ")+LINES[i].how;
+        if(ok){J.hit(nodes[i],"+1")}else{J.miss(nodes[i])}
+        ask.innerHTML="";
+        if(judged.size===LINES.length){
+          const weak=LINES.filter(l=>l.k==="weak").length;
+          J.verdict(host,right===LINES.length,"<b>五句判完，"+right+" / 5 对。</b>"+
+            "能核的那三句，全都是<b>你当初写进要求里的那三项</b>；核不了的两句，是它自己加的。"+
+            "<br>第 3 节的意思就在这里：<b>检查项是你定的，你没定的地方它就自由发挥。</b>");
+        }
+      };
+      row.appendChild(b);
+    });
+    ask.appendChild(row);
+  }
   function paint(){
     const br=box.getBoundingClientRect();
     const y=(+inp.value)/100*(box.clientHeight-52);
@@ -1269,18 +1316,10 @@ function bXray(host){
     nodes.forEach((n,i)=>{ const r=n.getBoundingClientRect();
       const on=cy>=r.top&&cy<=r.bottom;
       if(on){act=i;seen.add(i)}
-      /* 扫过的留下——不然玩家永远只看得见一行，扫完什么也没剩 */
       n.classList.toggle("on",on||seen.has(i));
       n.classList.toggle("past",!on&&seen.has(i)); });
-    if(act>=0&&act!==last){ last=act; sfx.tick();
-      if(!seen.has(act)){ seen.add(act); J.pop(nodes[act]);
-        if(LINES[act].k==="weak"){ J.burstAt(nodes[act],"var(--warn)",10); sfx.bad() } }
-      if(seen.size===LINES.length){
-        const weak=LINES.filter(l=>l.k==="weak").length;
-        J.verdict(host,false,"<b>五句扫完，"+(LINES.length-weak)+" 句能核，"+weak+" 句核不了。</b>"+
-          "能核的那三句，全都是<b>你当初写进要求里的那三项</b>；核不了的两句，是它自己加的。"+
-          "<br>第 3 节的意思就在这里：<b>检查项是你定的，你没定的地方它就自由发挥。</b>");
-      } }
+    if(act>=0&&act!==last){ last=act; sfx.tick(); J.pop(nodes[act]); askFor(act) }
+    if(act<0)ask.innerHTML="";
   }
   inp.oninput=paint;
   setTimeout(paint,60);
@@ -1289,9 +1328,10 @@ function bXray(host){
 /* ============ 17 二维寻解 · Brilliant 的可拖图 ============ */
 function bField(host){
   host.appendChild(el("p","tip","拖那个圆点。横轴是<b>成品说得多具体</b>，纵轴是<b>你写了几条不能丢的条件</b>。"+
-    "<br>找到那块绿区——在那里你才有东西可以一项一项核。内容是第 3 节。"));
+    "<br><b>可行的那一块没有画出来</b>——靠下面那段话去找。找到了它才会显形。内容是第 3 节。"));
   const f=el("div","field"); host.appendChild(f);
-  const zone=el("div","zoneok"); f.appendChild(zone);
+  /* 绿区一开始不可见——画出来等于把答案贴在图上，玩家只会拖进框，不会理解 */
+  const zone=el("div","zoneok hidden"); f.appendChild(zone);
   const knob=el("div","knob"); f.appendChild(knob);
   f.appendChild(el("div","axl","具体 →")).style.cssText="right:8px;bottom:6px";
   f.appendChild(el("div","axl","条件 ↑")).style.cssText="left:8px;top:6px";
@@ -1302,6 +1342,7 @@ function bField(host){
     knob.style.left=x+"%"; knob.style.top=(100-y)+"%";
     const spec=x, cond=Math.round(y/100*4);
     const good=x>=58&&x<=96&&y>=34&&y<=94;
+    if(good)zone.classList.remove("hidden");
     f.style.cursor="grab";
     out.classList.toggle("good",good);
     const ex = x<30? "「介绍一下这次观月活动」"
@@ -1580,7 +1621,26 @@ function bDial(host){
     '<div class="tgt" style="left:'+t+'%"></div></div><span class="val" id="g'+i+'"></span></div>').join("");
   w.appendChild(g);
   const band=el("div","goalband"); w.appendChild(band);
-  let was=false;
+  let was=false, asked=false;
+  /* 光是把滑块拖进绿区，玩家可能什么也没想。到了之后必须说出是哪一样起的作用。 */
+  function askWhy(){
+    if(asked)return; asked=true;
+    const box=el("div","whybox");
+    box.innerHTML='<div class="whyq">你到了。<b>刚才是哪一样，把「它自己加戏的风险」压下去的？</b></div>';
+    const opts=[["把材料给足","材料决定它<b>贴不贴题</b>；风险那条主要不是它压下去的。"],
+      ["写下必留条件","对。<b>你写下来的每一条，它都得交代；你没写的，它就自由发挥。</b>风险是被条件压下去的。",1],
+      ["两样都拖到最大","不对。你试试全推满——<b>力气那条会立刻越线</b>。够用就行，不是越多越好。"]];
+    const row=el("div","whyopts");
+    opts.forEach(([t,fb,ok])=>{
+      const b=el("button","whyopt",esc(t));
+      b.onclick=()=>{ row.querySelectorAll("button").forEach(x=>x.disabled=true);
+        b.classList.add(ok?"ok":"no");
+        if(ok){J.hit(b,"+1")}else{J.miss(b)}
+        J.verdict(host,!!ok,fb); };
+      row.appendChild(b);
+    });
+    box.appendChild(row); host.appendChild(box); J.dropIn(box);
+  }
   function paint(){
     const fit=clamp(Math.round(st.ctx*.75+st.check*7),0,100);
     const risk=clamp(Math.round(92-st.ctx*.45-st.check*13),0,100);
@@ -1590,7 +1650,7 @@ function bDial(host){
     host.querySelector("#v_ctx").textContent=st.ctx; host.querySelector("#v_check").textContent=st.check;
     const hit=fit>=70&&risk<=30&&cost<=75;
     band.classList.toggle("hit",hit);
-    if(hit&&!was){was=true;sfx.win();J.burstAt(band,"var(--ok)",18);J.pop(band)} if(!hit)was=false;
+    if(hit&&!was){was=true;sfx.win();J.burstAt(band,"var(--ok)",18);J.pop(band);askWhy()} if(!hit)was=false;
     band.innerHTML=hit?"✓ 到了。<b>三条门槛同时满足。</b>注意你是怎么做到的：材料给够，再写下两三条必留条件——只加材料不够，只加条件也不够。"
       :(risk>30&&st.check<2?"风险还高。<b>必留条件太少</b>——你没写下来的项，它丢了你也发现不了。"
         :fit<70?"还不贴题。<b>它手上关于这场活动的事实太少</b>，只能写通用话。"
@@ -1680,7 +1740,9 @@ function bBal(host){
     {t:"画面构图很专业",w:1,why:"专业不专业和谁按的快门无关，很轻。"},
     {t:"另一张相似的图署名别人",w:3,why:"相似的图和这一张没有关系，但它会动摇一个只靠「看起来」的判断。"},
     {t:"AI 说：「据我所知是他拍的」",w:0,why:"「据我所知」不是证据。分量是 <b>0</b>——放哪边天平都不动。"}];
-  host.appendChild(el("p","tip","结论：<b>「这张照片是 Bill Anders 拍的」</b><br>把四条证据<b>拖</b>到天平两边，它会按分量真的倾斜。<br>第 1 节。"));
+  host.appendChild(el("p","tip","结论：<b>「这张照片是 Bill Anders 拍的」</b>"+
+    "<br>把四条证据<b>拖</b>到支持的一边或反对的一边。<b>分量没写在卡上——放上去才知道它值多少。</b>"+
+    "<br>第 1 节。"));
   const pile=el("div","pile"); host.appendChild(pile);
   const box=el("div","scalebox"); host.appendChild(box);
   const bw=el("div","beamwrap");
@@ -1701,7 +1763,8 @@ function bBal(host){
     if(wl>wr)vb.classList.add("right"); else if(wr>wl)vb.classList.add("left")}
   settle();
   EV.forEach(e=>{
-    const c=el("div","chipd",esc(e.t)+'<span style="display:block;font-size:11.5px;color:var(--ink-faint);margin-top:2px">分量 '+e.w+"</span>");
+    /* 分量不写在卡上——「这条有多重」正是要判断的东西，印出来就没得判了 */
+    const c=el("div","chipd",esc(e.t));
     let ph=null;
     J.onDrag(c,{
       start(r,off){sfx.grab();ph=el("div");ph.style.height=r.height+"px";c.after(ph);
@@ -1713,7 +1776,8 @@ function bBal(host){
         if(i<0){if(ph){ph.remove();ph=null}J.shake(c);sfx.drop();return}
         if(ph){ph.remove();ph=null}
         c.dataset.locked="1";c.remove();
-        const w=el("div","w",esc(e.t.slice(0,11))+(e.t.length>11?"…":""));
+        const w=el("div","w",esc(e.t.slice(0,11))+(e.t.length>11?"…":"")+
+          '<b style="display:block;font-size:10px;margin-top:1px">分量 '+e.w+"</b>");
         dish[i].appendChild(w); J.dropIn(w);
         if(i===0)wl+=e.w;else wr+=e.w; left--;
         if(e.w===0){sfx.drop();J.buzz([6,40,6]);J.verdict(host,false,"天平<b>纹丝不动</b>。"+e.why)}
@@ -1742,12 +1806,14 @@ function bScrub(host){
   const rail=el("div","scrubrail",'<input type="range" min="0" max="'+(F.length-1)+'" value="0">');box.appendChild(rail);
   const stop=el("button","stopbtn","就停在这一步");box.appendChild(stop);
   const inp=rail.querySelector("input");let at=0,done=false,last=0;
-  function paint(){const f=F[at];fb.className="framebox"+(f.d?" danger":"");
+  /* 危险那一步不提前标红：颜色会替玩家做完判断 */
+  function paint(){const f=F[at];fb.className="framebox"+(done&&f.d?" danger":"");
     fb.innerHTML='<div class="st">第 '+(at+1)+" / "+F.length+" 步</div><h6>"+esc(f.t)+"</h6><p>"+f.p+"</p>";
     J.dropIn(fb);
-    [...dots.children].forEach((d,i)=>d.className="stepdot"+(i<=at?(F[i].d?" bad":" past"):""))}
+    [...dots.children].forEach((d,i)=>d.className="stepdot"+(i<=at?((done&&F[i].d)?" bad":" past"):""))}
   inp.oninput=()=>{at=+inp.value;if(at!==last){last=at;sfx.tick()}paint()};
   stop.onclick=()=>{if(done)return;done=true;stop.disabled=true;
+    paint();
     if(at===2){J.hit(fb,"正好");sfx.win();J.rock(box);
       J.verdict(host,true,"<b>第 3 步，正好。</b>到这里你手上有一份<b>核对过的中文原话</b>，"+
         "它还能拿去和录音逐字对。翻译要不要做是另一件事——但<b>原话那份得先留住</b>。")}

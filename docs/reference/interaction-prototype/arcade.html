@@ -342,10 +342,13 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .lanebtn:active{background:var(--accent-pale)}
 
 /* 划切 */
-.fly{position:absolute;border-radius:12px;padding-block:9px;padding-inline:11px;font-size:13px;
-  line-height:1.4;text-align:center;max-width:62%;box-shadow:var(--sh);z-index:10;will-change:transform}
-.fly.good{background:var(--panel);border:2px solid var(--ok);color:var(--ink-title)}
-.fly.bomb{background:#3a1f18;border:2px solid var(--warn);color:#ffd9d0}
+.fly{position:absolute;border-radius:12px;padding-block:11px;padding-inline:14px;font-size:15px;
+  line-height:1.45;text-align:center;max-width:74%;box-shadow:var(--sh);z-index:10;will-change:transform}
+.fly{background:var(--panel);border:2px solid var(--line-2);color:var(--ink-title);
+  font-weight:600;letter-spacing:.01em}
+.fly.hangs{border-color:var(--accent);box-shadow:0 10px 26px #4c341c33}
+.fly.wascut.good{background:var(--ok-pale);border-color:var(--ok)}
+.fly.wascut.bomb{background:var(--warn-pale);border-color:var(--warn)}
 .fly.cut{animation:cut .3s forwards}
 @keyframes cut{100%{transform:scale(1.35) rotate(9deg);opacity:0}}
 .trail{position:absolute;inset:0;pointer-events:none;z-index:30}
@@ -362,8 +365,9 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .bandrow .bl{background:var(--ok)} .bandrow .br{background:var(--berry)}
 .foe{position:absolute;border-radius:9px;padding-block:6px;padding-inline:9px;font-size:12px;
   line-height:1.35;text-align:center;border:2px solid;box-shadow:var(--sh);z-index:10;max-width:46%}
-.foe.pic{background:var(--ok-pale);border-color:var(--ok);color:var(--ok-ink)}
-.foe.rec{background:var(--berry-pale);border-color:var(--berry);color:var(--berry-ink)}
+.foe{background:var(--panel);border-color:var(--line-2);color:var(--ink-title);font-weight:600}
+.foe.revealed.pic{background:var(--ok-pale);border-color:var(--ok);color:var(--ok-ink)}
+.foe.revealed.rec{background:var(--berry-pale);border-color:var(--berry);color:var(--berry-ink)}
 .foe.hurt{animation:jxshake .3s}
 .shot{position:absolute;width:4px;height:14px;border-radius:2px;z-index:12}
 
@@ -381,6 +385,12 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
   font-size:11px;line-height:1.3;text-align:center;background:var(--warn);color:#fff;
   box-shadow:0 4px 12px #0003;z-index:14;max-width:44%;transform:translate(-50%,-50%)}
 .ghost.weak{background:var(--berry);opacity:.85}
+.tag2{position:absolute;transform:translate(-50%,-50%);background:var(--panel);
+  border:2px solid var(--line-2);border-radius:10px;padding-block:6px;padding-inline:9px;
+  font-size:12px;line-height:1.3;color:var(--ink-title);font-weight:600;z-index:12;
+  box-shadow:var(--sh);max-width:40%;text-align:center}
+.bigtip{position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:11px;
+  color:var(--ink-faint);z-index:6}
 .note2{font-size:12.5px;color:var(--ink-faint);line-height:1.6;padding-block:10px;padding-inline:15px;
   border-top:1px solid var(--line);background:var(--panel-2)}
 .note2 b{color:var(--ink-title)}
@@ -584,6 +594,7 @@ function gSlice(screen,api,gen){
   svg.appendChild(path);
   let flies=[],pts=[],cutting=false,raf=0,playing=false;
   let score=0,combo=0,best=0,missed=0,bombs=0,t0=0;
+  const wrongCuts=[];   /* 结算时逐句列出来，这才是复习 */
   const DUR=60000;
   function hud(){api.hud('<span>分数 <b>'+score+"</b></span><span>连切 <b>"+combo+
     '</b></span><span class="sp">切到雷 <b>'+bombs+"</b></span>")}
@@ -596,7 +607,8 @@ function gSlice(screen,api,gen){
     const x=rnd(W*.15,W*.85);
     n.style.left=x+"px"; n.style.top=H+"px"; n.style.transform="translate(-50%,0)";
     screen.appendChild(n);
-    flies.push({n:n,x:x,y:H,vx:rnd(-1.1,1.1),vy:-rnd(7.4,9.2),bomb:bomb,dead:false,rot:rnd(-2,2),a:0});
+    /* 不旋转，且到顶点会明显悬停——读不完的字，切了也没学到东西 */
+    flies.push({n:n,x:x,y:H,vx:rnd(-.42,.42),vy:-rnd(5.6,6.4),bomb:bomb,dead:false,hang:0});
   }
   function step(ts){
     if(!api.alive(gen)||!playing)return;
@@ -607,9 +619,12 @@ function gSlice(screen,api,gen){
     const H=screen.clientHeight;
     flies.forEach(f=>{
       if(f.dead)return;
-      f.vy+=0.152; f.x+=f.vx; f.y+=f.vy; f.a+=f.rot;
+      /* 接近顶点时几乎停住，留出约一秒把字读完 */
+      const near=Math.abs(f.vy)<1.5;
+      if(near&&f.hang<46){ f.hang++; f.n.classList.add("hangs"); }
+      else { f.n.classList.remove("hangs"); f.vy+=0.118; f.y+=f.vy; }
+      f.x+=f.vx;
       f.n.style.left=f.x+"px"; f.n.style.top=f.y+"px";
-      f.n.style.transform="translate(-50%,0) rotate("+f.a+"deg)";
       if(f.y>H+50){ f.dead=true; f.n.remove();
         if(!f.bomb){ missed++; combo=0; hud() } }
     });
@@ -622,8 +637,11 @@ function gSlice(screen,api,gen){
       if(f.dead)return;
       const b=f.n.getBoundingClientRect();
       if(x>=b.left-6&&x<=b.right+6&&y>=b.top-6&&y<=b.bottom+6){
-        f.dead=true; f.n.classList.add("cut"); setTimeout(()=>f.n.remove(),300);
-        if(f.bomb){ bombs++; combo=0; score=Math.max(0,score-25); S.boom(); A.buzz([20,60,20]);
+        f.dead=true; f.n.classList.add("wascut",f.bomb?"bomb":"good");
+        setTimeout(()=>{f.n.classList.add("cut");setTimeout(()=>f.n.remove(),300)},110);
+        if(f.bomb){ bombs++; combo=0; score=Math.max(0,score-25);
+          if(wrongCuts.indexOf(f.n.textContent)<0)wrongCuts.push(f.n.textContent);
+          S.boom(); A.buzz([20,60,20]);
           A.shakeEl(screen); A.burst(x,y,"var(--warn)",26);
           A.floatTag(x,y,"这句没有出处　−25","var(--warn)");
         }else{ combo++; best=Math.max(best,combo);
@@ -646,10 +664,13 @@ function gSlice(screen,api,gen){
   screen.addEventListener("pointerup",stop); screen.addEventListener("pointercancel",stop);
   function over(){
     playing=false; cancelAnimationFrame(raf); S.over();
-    api.overlay('<div class="big">'+score+'</div><div class="sub">最长连切 '+best+" · 漏掉 "+missed+" · 切到雷 "+bombs+"</div>"+
-      "<h4>最好切的那几句，恰恰是不能切的</h4>"+
-      "<p>红色那些写着「气氛热烈」「绝对不容错过」——它们是<b>这段话里最漂亮的部分</b>，"+
-      "手会本能地扑上去。<br>但它们一句都核不了。"+(bombs?"你切了 "+bombs+" 次。":"你一次都没切，很稳。")+"</p>","再来一局",()=>api.restart());
+    api.overlay('<div class="big">'+score+'</div><div class="sub">最长连切 '+best+" · 漏掉 "+missed+" · 收错 "+bombs+"</div>"+
+      "<h4>"+(bombs?"这几句你收下了，但它们核不了":"你一句没依据的都没收")+"</h4>"+
+      (wrongCuts.length?'<p style="text-align:left">'+wrongCuts.map(t=>"· <b>"+esc(t)+"</b>").join("<br>")+"</p>":"")+
+      "<p>所有卡片长得一模一样，<b>只能靠读字判断</b>。"+
+      (bombs?"上面这几句读起来最像结论——「热烈」「不容错过」「最伟大」。它们一个都打不开去核。"
+        :"你没被那几句漂亮话骗到。它们的共同点是：<b>说得最满，却一个都打不开去核。</b>")+"</p>",
+      "再来一局",()=>api.restart());
   }
   hud(); api.time(1);
   api.overlay("<h4>划切</h4><p>句子会被抛上来。<b>按住拖动划过</b>那些能核对的（绿色）。"+
@@ -699,7 +720,7 @@ function gInvaders(screen,api,gen){
     for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t2=pool[i];pool[i]=pool[j];pool[j]=t2}
     const n=Math.min(3+wave,6);
     pool.slice(0,n).forEach((f,i)=>{
-      const e=el("div","foe "+f[1],esc(f[0]));
+      const e=el("div","foe",esc(f[0])); e.dataset.kind=f[1];
       e.style.left="10%"; e.style.top=(-30-i*46)+"px";
       screen.appendChild(e);
       foes.push({n:e,kind:f[1],x:rnd(.15,.85),y:-30-i*46,vx:(i%2?1:-1)*rnd(.0016,.0032),sp:1});
@@ -731,9 +752,13 @@ function gInvaders(screen,api,gen){
             S.zap(); A.buzz(12); A.burst(b.left+b.width/2,b.top+b.height/2,
               f.kind==="pic"?"var(--ok)":"var(--berry)",14);
             A.floatTag(b.left+b.width/2,b.top,"+15","var(--ok-ink)"); f.n.remove(); hud(); }
-          else{ f.sp=Math.min(2.6,f.sp+0.55); f.n.classList.remove("hurt");void f.n.offsetWidth;
+          else{ f.sp=Math.min(2.6,f.sp+0.55);
+            /* 打错了才揭示它到底该用哪种方式——这才是纠正 */
+            f.n.classList.add("revealed",f.kind);
+            f.n.classList.remove("hurt");void f.n.offsetWidth;
             f.n.classList.add("hurt"); S.hurt(); A.buzz(8);
-            A.floatTag(b.left+b.width/2,b.top,"用错方式了","var(--warn)"); }
+            A.floatTag(b.left+b.width/2,b.top,
+              f.kind==="pic"?"这个看照片就知道":"这个得查记录","var(--warn)"); }
         }
       });
     });
@@ -746,14 +771,16 @@ function gInvaders(screen,api,gen){
     playing=false; cancelAnimationFrame(raf); win?S.pow():S.over();
     api.overlay('<div class="big">'+score+'</div><div class="sub">打掉 '+killed+" 条 · 到第 "+wave+" 波</div>"+
       "<h4>"+(win?"四波都挡住了":"被压到底线了")+"</h4>"+
-      "<p>绿色的只能用<b>看照片</b>打，紫色的只能用<b>查记录</b>打。用错方式打不掉，"+
-      "<b>那条还会加速冲下来</b>——这就是这一节课的意思：<br>同一个问题，拿错工具去查，不是没进展，是更糟。</p>",
+      "<p>敌人<b>长得一模一样</b>，颜色不会告诉你答案——你只能读它写的那句话，"+
+      "然后决定：这件事<b>看照片就知道</b>，还是<b>非查记录不可</b>。<br>"+
+      "打错了它才会亮出自己的颜色，同时加速冲下来。这就是这一节的意思："+
+      "<b>拿错工具去查，不是没进展，是更糟。</b></p>",
       "再来一局",()=>api.restart());
   }
   setShip(); hud(); api.time(1);
   api.overlay("<h4>双武器拦截</h4><p><b>移动手指或鼠标</b>，飞船跟着走，自动开火。"+
-    "<br>停在左半屏幕 = 打<b>绿色</b>的（看照片就知道）；停在右半 = 打<b>紫色</b>的（要查记录）。"+
-    "<br>用错方式那条会<b>加速</b>。掉到底线扣一条命。</p>","开始",()=>{
+    "<br>停在左半屏 = 用<b>看照片</b>这种方式；停在右半 = 用<b>查记录</b>这种方式。"+
+    "<br><b>敌人长得都一样，得读它写的字才知道该用哪种。</b>用错那条会加速。掉到底线扣一条命。</p>","开始",()=>{
       playing=true; wave=1; spawn(); hud(); cancelAnimationFrame(raf); raf=requestAnimationFrame(step);
     });
 }
@@ -761,35 +788,40 @@ function gInvaders(screen,api,gen){
 /* ==================================================================
    4 · 追与被追（吃豆人的逻辑，去掉迷宫）
    ================================================================== */
-const PELLETS=["1968-12-24","Bill Anders","阿波罗 8 号","地球在月面上方","天空是黑的",
- "蓝白色地球","灰白色月面","官方图像","绕月飞行"];
-const GHOSTS=["人类最伟大的照片","他屏住了呼吸","最满意的一张","舱内一片寂静"];
+/* 场上每一个东西都带字：收哪一个本身就是判断。
+   收错了，那句话当场变成追着你的东西——这就是「收下一句没依据的话」的代价。 */
+const FACTS=["1968-12-24 拍摄","Bill Anders 摄","阿波罗 8 号任务","地球在月面上方",
+ "天空是黑色的","地球呈蓝白色","月面灰白","NASA 官方图像"];
+const FLUFF=["人类最伟大的照片","他屏住了呼吸","最满意的一张","舱内一片寂静",
+ "震撼人心的构图","改变了人类的自我认知"];
 function gMaze(screen,api,gen){
-  let hero={x:.5,y:.5},tgt={x:.5,y:.5},pel=[],gh=[],big=null,raf=0,playing=false;
-  let score=0,armed=0,hits=0,eaten=0,t0=0;
+  let hero={x:.5,y:.86},tgt={x:.5,y:.86},tags=[],chase=[],big=null,raf=0,playing=false;
+  let score=0,armed=0,got=0,tookFluff=0,t0=0,total=0;
   const DUR=60000;
   const hn=el("div","hero"); screen.appendChild(hn);
-  function hud(){ api.hud('<span>分数 <b>'+score+"</b></span><span>收到 <b>"+eaten+" / "+PELLETS.length+
-    '</b></span><span class="sp">被撞 <b>'+hits+"</b></span>") }
-  function pt(e){ const r=screen.getBoundingClientRect();
-    tgt.x=clamp((e.clientX-r.left)/r.width,.04,.96);
-    tgt.y=clamp((e.clientY-r.top)/r.height,.06,.94) }
-  screen.addEventListener("pointermove",e=>{if(playing)pt(e)});
-  screen.addEventListener("pointerdown",e=>{if(playing){pt(e);try{screen.setPointerCapture(e.pointerId)}catch(_){}}});
+  function hud(){ api.hud('<span>分数 <b>'+score+"</b></span><span>收到事实 <b>"+got+" / "+total+
+    '</b></span><span class="sp">追你的 <b>'+chase.filter(g=>!g.dead).length+"</b></span>") }
   function place(){
-    PELLETS.forEach((t,i)=>{
-      const n=el("div","pellet"); n.title=t;
-      const p={x:rnd(.1,.9),y:rnd(.14,.9),n:n,t:t};
+    const pool=FACTS.map(t=>({t:t,ok:true})).concat(FLUFF.slice(0,4).map(t=>({t:t,ok:false})));
+    for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const x=pool[i];pool[i]=pool[j];pool[j]=x}
+    total=FACTS.length;
+    const cols=3, rows=Math.ceil(pool.length/cols);
+    pool.forEach((it,i)=>{
+      const cx=(i%cols+0.5)/cols, cy=(Math.floor(i/cols)+0.5)/rows;
+      const n=el("div","tag2",esc(it.t));
+      const p={x:clamp(cx+rnd(-.07,.07),.13,.87),y:clamp(cy*0.74+0.08+rnd(-.04,.04),.1,.72),n:n,t:it.t,ok:it.ok};
       n.style.left=(p.x*100)+"%"; n.style.top=(p.y*100)+"%";
-      screen.appendChild(n); pel.push(p);
+      screen.appendChild(n); tags.push(p);
     });
-    const b=el("div","bigp"); big={x:rnd(.2,.8),y:rnd(.2,.8),n:b};
+    const b=el("div","bigp"); big={x:rnd(.25,.75),y:rnd(.76,.9),n:b};
     b.style.left=(big.x*100)+"%"; b.style.top=(big.y*100)+"%"; screen.appendChild(b);
-    GHOSTS.slice(0,3).forEach((t,i)=>{
-      const n=el("div","ghost",esc(t));
-      const g={x:i===0?.1:i===1?.9:.5,y:.12,n:n,sp:.0021+i*.0004,t:t};
-      screen.appendChild(n); gh.push(g);
-    });
+    screen.appendChild(el("div","bigtip keep","橙色那颗 = NASA 原始记录"));
+  }
+  function makeChaser(t,x,y){
+    const n=el("div","ghost",esc(t));
+    n.style.left=(x*100)+"%"; n.style.top=(y*100)+"%";
+    screen.appendChild(n);
+    chase.push({x:x,y:y,n:n,sp:.0024,t:t});
   }
   function step(ts){
     if(!api.alive(gen)||!playing)return;
@@ -801,48 +833,59 @@ function gMaze(screen,api,gen){
     hero.x+=(tgt.x-hero.x)*.17; hero.y+=(tgt.y-hero.y)*.17;
     hn.style.left=(hero.x*100)+"%"; hn.style.top=(hero.y*100)+"%";
     const W=screen.clientWidth,H=screen.clientHeight;
-    pel.forEach(p=>{ if(p.dead)return;
-      if(Math.hypot((p.x-hero.x)*W,(p.y-hero.y)*H)<20){
-        p.dead=true; p.n.remove(); eaten++; score+=10; S.dot(eaten); A.buzz(8);
-        const r=screen.getBoundingClientRect();
-        A.burst(r.left+p.x*W,r.top+p.y*H,"var(--ok)",8); hud();
-        if(eaten===PELLETS.length)return over(true); } });
-    if(big&&!big.dead&&Math.hypot((big.x-hero.x)*W,(big.y-hero.y)*H)<24){
+    const r=screen.getBoundingClientRect();
+    tags.forEach(p=>{ if(p.dead)return;
+      if(Math.hypot((p.x-hero.x)*W,(p.y-hero.y)*H)<28){
+        p.dead=true; p.n.remove();
+        if(p.ok){ got++; score+=10; S.dot(got); A.buzz(8);
+          A.burst(r.left+p.x*W,r.top+p.y*H,"var(--ok)",10);
+          A.floatTag(r.left+p.x*W,r.top+p.y*H,"+10","var(--ok-ink)");
+          if(got===total)return over(true);
+        }else{ tookFluff++; score=Math.max(0,score-15); S.hurt(); A.buzz([16,50,16]); A.shakeEl(screen);
+          A.burst(r.left+p.x*W,r.top+p.y*H,"var(--warn)",14);
+          A.floatTag(r.left+p.x*W,r.top+p.y*H,"这句核不了　−15","var(--warn)");
+          makeChaser(p.t,p.x,p.y); }
+        hud(); } });
+    if(big&&!big.dead&&Math.hypot((big.x-hero.x)*W,(big.y-hero.y)*H)<26){
       big.dead=true; big.n.remove(); armed=8000; S.pow(); A.buzz([18,40,18]);
-      const r=screen.getBoundingClientRect();
       A.burst(r.left+big.x*W,r.top+big.y*H,"var(--accent)",22);
-      A.floatTag(r.left+big.x*W,r.top+big.y*H,"你拿到记录了","var(--accent-bright)"); }
-    gh.forEach(g=>{ if(g.dead)return;
+      A.floatTag(r.left+big.x*W,r.top+big.y*H,"你手上有记录了","var(--accent-bright)"); }
+    chase.forEach(g=>{ if(g.dead)return;
       const away=armed>0?-1:1;
       const dx=(hero.x-g.x),dy=(hero.y-g.y),d=Math.hypot(dx,dy)||1;
-      g.x=clamp(g.x+away*dx/d*g.sp*(armed>0?.7:1.15),.05,.95);
-      g.y=clamp(g.y+away*dy/d*g.sp*(armed>0?.7:1.15),.08,.92);
+      g.x=clamp(g.x+away*dx/d*g.sp*(armed>0?.7:1.1),.06,.94);
+      g.y=clamp(g.y+away*dy/d*g.sp*(armed>0?.7:1.1),.08,.92);
       g.n.style.left=(g.x*100)+"%"; g.n.style.top=(g.y*100)+"%";
       g.n.classList.toggle("weak",armed>0);
-      if(Math.hypot((g.x-hero.x)*W,(g.y-hero.y)*H)<26){
-        const r=screen.getBoundingClientRect();
+      if(Math.hypot((g.x-hero.x)*W,(g.y-hero.y)*H)<28){
         if(armed>0){ g.dead=true; g.n.remove(); score+=30; S.pow(); A.buzz(14);
           A.burst(r.left+g.x*W,r.top+g.y*H,"var(--berry)",18);
-          A.floatTag(r.left+g.x*W,r.top+g.y*H,"收掉了　+30","var(--berry-ink)"); hud(); }
-        else{ hits++; score=Math.max(0,score-15); S.hurt(); A.buzz([16,50,16]); A.shakeEl(screen);
-          A.floatTag(r.left+g.x*W,r.top+g.y*H,"「"+g.t+"」撞上了","var(--warn)");
-          hero.x=.5; hero.y=.86; tgt.x=.5; tgt.y=.86; hud(); }
-      } });
+          A.floatTag(r.left+g.x*W,r.top+g.y*H,"查过了，收掉　+30","var(--berry-ink)"); hud(); }
+        else{ score=Math.max(0,score-5); S.hurt(); A.buzz([12,40,12]); A.shakeEl(screen);
+          hero.x=.5; hero.y=.9; tgt.x=.5; tgt.y=.9; hud(); } } });
     raf=requestAnimationFrame(step);
   }
   function over(win){
     playing=false; cancelAnimationFrame(raf); win?S.pow():S.over();
-    api.overlay('<div class="big">'+score+'</div><div class="sub">收到 '+eaten+" / "+PELLETS.length+" · 被撞 "+hits+"</div>"+
-      "<h4>有没有出处，决定了谁追谁</h4>"+
-      "<p>绿点是<b>能核对的事实</b>，红色那几句是<b>没有出处的漂亮话</b>——它们一直在追你。"+
-      "<br>直到你吃到那颗橙色的：<b>NASA 的原始记录</b>。拿到记录的那 8 秒里，它们掉头就跑，"+
-      "而且你可以把它们收掉。<br>这就是全部：<b>手上有没有那份记录，是攻守易位的那一下。</b></p>",
+    const stuck=chase.filter(g=>!g.dead);
+    api.overlay('<div class="big">'+score+'</div><div class="sub">收到事实 '+got+" / "+total+" · 误收 "+tookFluff+"</div>"+
+      "<h4>"+(tookFluff?"你收下的那几句，后来一直在追你":"你一句核不了的都没收")+"</h4>"+
+      (stuck.length?'<p style="text-align:left">还在追你的：<br>'+stuck.map(g=>"· <b>"+esc(g.t)+"</b>").join("<br>")+"</p>":"")+
+      "<p>场上每一样东西都写着字，<b>颜色不会告诉你哪个该收</b>。"+
+      "收下一句核不了的话，它不会消失——<b>它变成一个跟着你的麻烦</b>。"+
+      "<br>而那颗橙色的是 NASA 原始记录：拿到它的 8 秒里，你才有资格去处理它们。</p>",
       "再来一局",()=>api.restart());
   }
+  function pt(e){ const r=screen.getBoundingClientRect();
+    tgt.x=clamp((e.clientX-r.left)/r.width,.04,.96);
+    tgt.y=clamp((e.clientY-r.top)/r.height,.06,.94) }
+  screen.addEventListener("pointermove",e=>{if(playing)pt(e)});
+  screen.addEventListener("pointerdown",e=>{if(playing){pt(e);try{screen.setPointerCapture(e.pointerId)}catch(_){}}});
   place(); hud(); api.time(1);
   api.overlay("<h4>追与被追</h4><p><b>按住拖动</b>，小人朝你的手指走。"+
-    "<br>收绿点（能核对的事实）加分；红色的说法会<b>追你</b>，撞到扣分。"+
-    "<br>吃到橙色那颗（原始记录），<b>8 秒内攻守互换</b>——它们会跑，你可以收掉它们。<br>60 秒。</p>",
+    "<br>场上散着十二句话，<b>都长一个样，得读了才知道该不该收</b>。"+
+    "<br>收到能核对的事实加分；<b>收下一句核不了的，它会当场变成追着你的东西</b>。"+
+    "<br>吃到橙色那颗（原始记录），8 秒内你可以把它们收掉。</p>",
     "开始",()=>{ playing=true; t0=0; cancelAnimationFrame(raf); raf=requestAnimationFrame(step) });
 }
 return [
@@ -851,9 +894,9 @@ return [
   note:"<b>偷的是哪一条</b>：Galaga 的乐趣是「先打谁」的优先级判断。这里把「打」换成了「用哪种方式查」——<b>敌人会横向漂移，所以每一条迟早会经过你能打的那一半</b>，考的是等待和时机，不是手速。",
   spec:"<b>用的是</b>第 1 节：哪些问题看照片就知道，哪些必须查记录。<br><b>操作</b>：只用移动，自动开火，不用点也不用键盘。<br><b>载荷</b>：一批条目 + 两类归属。"},
  {id:"chase",title:"追与被追",from:"吃豆人（只偷逻辑，不要迷宫）",build:gMaze,h:380,
-  how:"<b>按住拖动</b>，小人朝手指走。收绿点，躲红色说法；吃到橙色那颗，8 秒内攻守互换。",
-  note:"<b>为什么不做迷宫</b>：调研里说得很直接——紧走廊转弯在触摸上就是比键盘差。所以我只偷吃豆人的<b>逻辑</b>：大力丸一到手，追你的东西掉头就跑。这里的大力丸是<b>原始记录</b>，这个隐喻恰好是真的。",
-  spec:"<b>用的是</b>第 1 节：能核对的事实 vs 没有出处的漂亮话，以及 NASA 记录页。<br><b>操作</b>：开阔场地，拖动即可，没有精确转弯。<br><b>载荷</b>：一批事实、一批没依据的说法、一个「拿到出处」的道具。"}
+  how:"<b>按住拖动</b>。场上十二句话<b>长得一模一样</b>，读了才知道该不该收。收错的会变成追你的东西。",
+  note:"<b>改过一次</b>：第一版的绿点上没有字，收集纯粹是走位——玩得很欢，一个字没读。现在每一样东西都带字，<b>而且收错的那一句会当场变成追着你的麻烦</b>。这既是判断，也是「看得见但不致命的惩罚」：追你的越多，场面越难，但你不会立刻死。",
+  spec:"<b>教什么</b>：在一堆说法里认出哪些能核对——不靠颜色，只靠读。<br><b>为什么这样设计</b>：收下一句没依据的话，代价不是扣分就完了，是它<b>变成一个跟着你的麻烦</b>；而拿到原始记录（橙色那颗）之后你才有资格处理它们。<br><b>用的是</b>第 1 节：八条能核对的事实 + 四句漂亮空话 + NASA 记录页。"}
 ];
 })();
 </script>
@@ -875,9 +918,10 @@ page.appendChild(el("div","rule"));
 page.appendChild(el("div","rule"));
 const t=el("p",null,"");
 t.style.cssText="font-size:13px;color:var(--ink-faint);line-height:1.7";
-t.innerHTML="四个都还没有真人玩过。我自己判断最有潜力的是<b>分类落块</b>和<b>划切</b>："+
- "前者的「堆积」是最好的隐喻，后者的「炸弹恰恰最诱人」直接对上了这门课要治的毛病。"+
- "<br><b>追与被追</b>是四个里最像游戏、也最可能沦为「游戏贴皮」的一个——留着，但准备好砍。";
+t.innerHTML="<b>四个都按同一条规矩重做过一轮</b>：如果玩家不读字也能赢，那这个组件教的是眼力，不是判断。"+
+ "<br>所以卡片不再有绿红之分、敌人不再自带答案颜色、地上的点也不再是没字的圆圈——"+
+ "颜色只在你做完判断之后才出现，作为纠正。"+
+ "<br>四个都还没有真人玩过。";
 page.appendChild(t);
 })();
 </script>
