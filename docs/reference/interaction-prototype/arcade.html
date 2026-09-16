@@ -591,6 +591,87 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .sf-rev p{margin:0 0 7px;font-size:12.5px;line-height:1.5;opacity:.93}
 .sf-rev p:last-child{margin-bottom:0}
 .sf-rev b{color:var(--accent-bright)}
+
+/* ================= 改一处（请求 → 产出 → 对照出处） ================= */
+.rf-top{position:absolute;top:0;left:0;right:0;z-index:20;padding-block:8px;padding-inline:11px;
+  background:var(--panel-2);border-bottom:2px solid var(--line-2);display:flex;gap:9px;align-items:flex-start}
+.rf-top .ask{flex:1;font-size:12.5px;line-height:1.5;color:var(--ink)}
+.rf-top .ask b{color:var(--accent-ink)}
+.rf-top .no{flex:none;font-size:10.5px;color:var(--ink-faint);letter-spacing:.12em}
+.rf-top .mv{flex:none;text-align:right;font-size:10.5px;color:var(--ink-faint);line-height:1.5}
+.rf-top .mv b{display:block;font-family:var(--num);font-size:17px;color:var(--ink-title)}
+.rf-body{position:absolute;left:8px;right:8px;top:56px;bottom:6px;z-index:5;
+  display:flex;flex-direction:column;gap:7px;overflow-y:auto;
+  touch-action:pan-y;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.rf-body::-webkit-scrollbar{width:0}
+.rf-src{flex:none;border-radius:10px;border:2px solid var(--berry);background:var(--berry-pale);
+  overflow:hidden}
+.rf-src button{width:100%;text-align:left;display:flex;gap:7px;align-items:center;
+  padding-block:7px;padding-inline:9px;font-size:11.5px;font-weight:700;color:var(--berry-ink)}
+.rf-src button .ch{margin-left:auto;font-weight:400;opacity:.8}
+.rf-src .in{padding-block:0 8px;padding-inline:9px;font-size:12px;line-height:1.6;color:var(--ink)}
+.rf-src .in em{display:block;font-style:normal;font-size:11px;color:var(--berry-ink);margin-top:5px}
+.rf-form{flex:none;border-radius:10px;background:var(--panel-2);border:1px solid var(--line);
+  padding-block:8px;padding-inline:9px}
+.rf-form h6{margin:0 0 6px;font-size:10.5px;letter-spacing:.12em;color:var(--ink-faint);font-weight:700}
+.rf-form h6 i{font-style:normal;font-weight:400;letter-spacing:0;margin-left:6px}
+.rf-kinds{display:flex;gap:6px;margin-bottom:9px}
+.rf-kind{flex:1;border-radius:8px;border:2px solid var(--line);background:var(--panel);
+  padding-block:8px;padding-inline:4px;font-size:12px;line-height:1.3;color:var(--ink);text-align:center}
+.rf-kind.on{border-color:var(--accent);background:var(--accent-pale);color:var(--accent-ink);font-weight:700}
+.rf-musts{display:flex;flex-wrap:wrap;gap:6px}
+.rf-must{border-radius:8px;border:2px solid var(--line);background:var(--panel);
+  padding-block:7px;padding-inline:10px;font-size:12px;color:var(--ink-faint);
+  display:flex;gap:6px;align-items:center}
+.rf-must .lk{font-size:11px;opacity:.75}
+.rf-must.open{color:var(--ink);border-color:var(--line-2)}
+.rf-must.on{border-color:var(--ok);background:var(--ok-pale);color:var(--ok-ink);font-weight:700}
+.rf-must.just{animation:rfjust .5s}
+@keyframes rfjust{40%{transform:scale(1.1);border-color:var(--accent)}}
+.rf-out{flex:none;border-radius:10px;border:2px solid var(--line-2);background:var(--panel);
+  box-shadow:var(--sh);padding-block:8px;padding-inline:9px}
+.rf-out h6{margin:0 0 6px;font-size:10.5px;letter-spacing:.12em;color:var(--ink-faint);font-weight:700}
+.rf-line{display:block;width:100%;text-align:left;border-radius:7px;border:2px solid transparent;
+  padding-block:6px;padding-inline:8px;font-size:13px;line-height:1.55;color:var(--ink);
+  margin-bottom:3px;position:relative}
+.rf-line:last-child{margin-bottom:0}
+.rf-line.tap:hover{border-color:var(--line-2);background:var(--panel-2)}
+.rf-line.fixed{background:var(--ok-pale);border-color:var(--ok);color:var(--ok-ink)}
+.rf-line.caught{background:var(--warn-pale);border-color:var(--warn);color:var(--warn-ink)}
+.rf-line.caught::after{content:"公告里没有这一句";display:block;font-size:10.5px;opacity:.85;margin-top:2px}
+.rf-line.fixed::after{content:"改好了 · 这句现在有出处";display:block;font-size:10.5px;opacity:.8;margin-top:2px}
+.rf-line.flash{animation:rfflash .6s}
+@keyframes rfflash{0%{background:var(--accent);color:#fff}60%{background:var(--ok-pale)}}
+.rf-line.no{animation:jxshake .32s}
+.rf-head{font-weight:700;color:var(--ink-title);padding-inline:8px;font-size:12.5px;margin-bottom:4px}
+.rf-check{flex:none;display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+  font-size:11.5px;color:var(--ink-faint);padding-inline:2px}
+.rf-check span{border-radius:var(--r-pill);border:1px solid var(--line-2);
+  padding-block:4px;padding-inline:9px}
+.rf-check span.ok{border-color:var(--ok);background:var(--ok-pale);color:var(--ok-ink);font-weight:700}
+.rf-check span.bad{border-color:var(--warn);color:var(--warn-ink)}
+.rf-say{flex:none;border-radius:9px;padding-block:7px;padding-inline:10px;font-size:12px;
+  line-height:1.5;color:#fff;background:var(--ink-title)}
+.rf-say.bad{background:var(--warn)} .rf-say.good{background:var(--ok)}
+.rf-say b{color:#ffe9c9}
+.rf-rev{max-height:150px;overflow-y:auto;text-align:left;background:#0000004d;border-radius:11px;
+  padding-block:9px;padding-inline:11px;margin-bottom:13px;width:100%;max-width:340px;flex:none}
+.rf-rev p{margin:0 0 7px;font-size:12px;line-height:1.5;opacity:.93}
+.rf-rev p:last-child{margin-bottom:0}
+.rf-rev b{color:var(--accent-bright)}
+
+/* ---------- 今天栽过的地方 ---------- */
+.tally{border-radius:10px;border:3px solid var(--line-2);background:var(--panel);
+  box-shadow:var(--gx-hard);padding-block:11px;padding-inline:13px;margin-bottom:22px}
+.tally h4{margin:0 0 3px;font-family:var(--gx-disp);font-weight:400;font-size:19px;color:var(--ink-title)}
+.tally p{margin:0;font-size:12.5px;line-height:1.6;color:var(--ink-faint)}
+.tally ol{list-style:none;margin:9px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
+.tally li{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink)}
+.tally li b{flex:none;font-family:var(--gx-pix);font-size:11px;color:var(--accent-ink);
+  min-width:22px;text-align:right}
+.tally li i{flex:1;font-style:normal}
+.tally li u{flex:none;height:9px;border-radius:var(--r-pill);text-decoration:none;
+  background:linear-gradient(90deg,var(--accent-bright),var(--accent));min-width:8px}
 </style>
 <style>
 /* =====================================================================
@@ -856,8 +937,14 @@ function cabinet(page,o){
   gen++; o.build(screen,api,gen);
   return api;
 }
+/* ---------- 一本共用的账本 ----------
+   八个机柜各玩各的，但栽的地方是同几条。记到一起，才看得出来「我今天最常栽在哪」。
+   这也是这批组件离「跨天保持」最近的一步：至少在一次会期里，错误是累积可见的。 */
+const TALLY={}; let tallyCb=null;
+function note(label){ if(!label)return; TALLY[label]=(TALLY[label]||0)+1; tallyCb&&tallyCb(TALLY) }
+function onTally(fn){ tallyCb=fn; fn(TALLY) }
 return {el:el,esc:esc,clamp:clamp,rnd:rnd,S:S,buzz:buzz,burst:burst,floatTag:floatTag,
-  shakeEl:shakeEl,cabinet:cabinet};
+  shakeEl:shakeEl,cabinet:cabinet,note:note,onTally:onTally,TALLY:TALLY};
 })();
 </script>
 
@@ -1070,10 +1157,28 @@ const A=window.AR, el=A.el, esc=A.esc, clamp=A.clamp, rnd=A.rnd, S=A.S;
 /* ==================================================================
    3 · 双武器拦截（小蜜蜂的逻辑）
    ================================================================== */
-const FOES=[["地球在月面上方","pic"],["天空是黑色的","pic"],["地球是蓝白色的","pic"],["月面灰白","pic"],
- ["月面上有环形山","pic"],["地球只露出一半","pic"],["画面里看不到星星","pic"],
- ["是谁拍的","rec"],["哪一天拍的","rec"],["哪次任务","rec"],["是不是官方图像","rec"],
- ["用的哪一台相机","rec"],["这是绕月第几圈","rec"],["有没有公开版权说明","rec"]];
+/* 敌人也不再是手写清单。两类属性各九个、三种中性问法（两类共用同一套问法，
+   所以问法本身不泄题），54 种组合——一局打七十来个也见不完，第二局不成记忆。
+   判断的规矩始终只有一条：这件事能不能从画面本身看出来。 */
+const PIC_A=["地球的位置","天空的颜色","地球的颜色","月面的颜色","月面上的环形山",
+ "地球露出多少","有没有星星","地球偏左还是偏右","月面占多大"];
+const REC_A=["拍摄日期","摄影者是谁","哪次任务","是不是官方图像","用的哪台相机",
+ "绕月第几圈","有没有版权说明","当时飞到哪儿","档案编号"];
+const Q_FORM=[a=>a, a=>"这张照片："+a, a=>"问一下："+a];
+function rollFoes(n){
+  const all=[];
+  PIC_A.forEach(a=>Q_FORM.forEach(f=>all.push([f(a),"pic"])));
+  REC_A.forEach(a=>Q_FORM.forEach(f=>all.push([f(a),"rec"])));
+  for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));
+    const t=all[i];all[i]=all[j];all[j]=t}
+  /* 两类各来一半，别让某一波全是同一类——那样站一边就能过 */
+  const pic=all.filter(x=>x[1]==="pic"), rec=all.filter(x=>x[1]==="rec"), out=[];
+  for(let i=0;i<n;i++) out.push(i%2?rec[Math.floor(i/2)%rec.length]:pic[Math.floor(i/2)%pic.length]);
+  for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));
+    const t=out[i];out[i]=out[j];out[j]=t}
+  return out;
+}
+
 function gInvaders(screen,api,gen){
   const WAVES=10, CHALLENGE=[5,10];   /* 第 5、10 波是挑战关：不下压，限时清场 */
   const band=el("div","bandrow",'<div class="bl">看照片</div><div class="br">查记录</div>');
@@ -1094,10 +1199,8 @@ function gInvaders(screen,api,gen){
   screen.addEventListener("pointermove",e=>{if(playing)pt(e)});
   screen.addEventListener("pointerdown",e=>{if(playing){pt(e);try{screen.setPointerCapture(e.pointerId)}catch(_){}}});
   function spawn(){
-    const pool=FOES.slice();
-    for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t2=pool[i];pool[i]=pool[j];pool[j]=t2}
     const n=isCh()?6:Math.min(4+Math.floor(wave/1.1),9);
-    pool.slice(0,n).forEach((f,i)=>{
+    rollFoes(n).forEach((f,i)=>{
       const e=el("div","foe",esc(f[0])); e.dataset.kind=f[1];
       e.style.left="10%"; e.style.top=(-30-i*46)+"px";
       screen.appendChild(e);
@@ -1154,6 +1257,7 @@ function gInvaders(screen,api,gen){
             f.n.classList.remove("hurt");void f.n.offsetWidth;
             f.n.classList.add("hurt"); S.hurt(); A.buzz(8);
             if(!wrongs.some(w=>w[0]===f.txt))wrongs.push([f.txt,f.kind]);
+            A.note(f.kind==="pic"?"该看照片的，跑去查记录":"该查记录的，以为看照片就行");
             A.floatTag(b.left+b.width/2,b.top,
               f.kind==="pic"?"这个看照片就知道":"这个得查记录","var(--warn)"); }
         }
@@ -1600,7 +1704,7 @@ function gCloze(screen,api,gen){
     setTimeout(()=>{if(row.isConnected){row._g.classList.remove("wrong");row._g.textContent=""}},900);
     S.thud(); A.buzz([12,50,12]);
     msg("<b>"+esc(w)+"</b> 不在这一句里。"+esc(row._s.w));
-    if(!row._s.again){ row._s.again=true; wrongs.push(row._s) }
+    if(!row._s.again){ row._s.again=true; wrongs.push(row._s); A.note("填空放错位置") }
     drawTray();
     const dead=junkRow(w);
     if(!dead){ mark(); refill(); hud() }
@@ -1687,6 +1791,53 @@ const A=window.AR, el=A.el, esc=A.esc, clamp=A.clamp, S=A.S;
    核查力有限，装不满六条，所以每一波都得先判断这一批最可能错在哪。
    合格的稿子应该放它过去：检查不是越多越好。
    ================================================================== */
+
+/* ==================================================================
+   公告生成器：防线和值班室共用
+   以前两边各自握着一张手写清单（18 份 / 22 份），一局就用完或见好几遍——
+   于是第二局玩的是记忆，不是判断。改成按「满足哪几条」现场拼，
+   32 种骨架 × 每处措辞随机，一局见不完，也背不住。
+   来源仍然只有一个：NASA 2023 观月夜公告的那几个事实。
+   ================================================================== */
+const NP={
+ t:["2023 年 10 月 21 日晚 6 点到 9 点","2023 年 10 月 21 日 18:00–21:00","2023 年 10 月 21 日晚 6–9 点"],
+ p:["马里兰州格林贝尔特的戈达德访客中心","戈达德太空飞行中心访客中心（马里兰州格林贝尔特）","格林贝尔特，戈达德访客中心"],
+ s:["不用报名","无需报名","不需要提前报名"],
+ past:["办过一场","举办过一次","举办了一场"],
+ now:["就要办一场","正在办","这周要办一场"],
+ call:["快来参加吧！","别错过！","名额有限，速来！"],
+ fluff:["这是当年最值得看的活动。","现场气氛十分热烈。","绝对不容错过。","观众赞不绝口。","这是人类最难忘的一夜。"],
+ en:["Oct 21 2023, 6–9 pm, Goddard Visitor Center, Greenbelt MD. No registration."]
+};
+const gp=a=>a[Math.floor(Math.random()*a.length)];
+/* has: {t,p,s,o,v,l} —— 满足哪几条。返回 {t:正文, b:[违反了哪几条], ask:前缀} */
+function notice(has){
+  const bad=[];
+  ["t","p","s","o","v","l"].forEach(k=>{ if(!has[k])bad.push(k) });
+  if(!has.l){
+    /* 语言不对：要中文给英文，或者要英文给中文 */
+    const wantCn=Math.random()<0.5;
+    return {t:wantCn?gp(NP.en):"2023 年 10 月 21 日晚 6–9 点，戈达德访客中心，不用报名。",
+            ask:wantCn?"这一份要的是中文稿":"这一份要的是英文译文", b:bad};
+  }
+  let out="";
+  if(has.t)out+=gp(NP.t)+"，";
+  if(has.p)out+=gp(NP.p)+"，";
+  out+="NASA "+(has.o?gp(NP.past):gp(NP.now))+"观月夜。";
+  if(has.s)out+=gp(NP.s)+"。";
+  if(!has.v)out+=gp(NP.fluff);
+  if(!has.o)out+=gp(NP.call);
+  return {t:out, b:bad};
+}
+/* 随机一份：按一个「该满足哪几条」的目标摇出来 */
+function rollNotice(pool,force){
+  const has={t:1,p:1,s:1,o:1,v:1,l:1};
+  const n=force!=null?force:Math.floor(Math.random()*3);   /* 0 = 合格 */
+  const ks=pool.slice();
+  for(let i=0;i<n&&ks.length;i++) has[ks.splice(Math.floor(Math.random()*ks.length),1)[0]]=0;
+  return notice(has);
+}
+
 const CHECKS=[
  {k:"t",n:"有没有写时间",     c:3,e:"读者得知道哪天、几点"},
  {k:"p",n:"有没有写地点",     c:3,e:"读者得知道去哪"},
@@ -1742,9 +1893,10 @@ function gDefense(screen,api,gen){
   screen.appendChild(say); screen.appendChild(field);
   screen.appendChild(reader); screen.appendChild(hint);
 
+  let queue0=[];
   let slots=[null,null,null,null], power=12, score=0, wave=0, leaks=0,
       stopped=0, delivered=0, docs=[], raf=0, timer=0, spawned=0, phase="build",
-      missed=[], shop=null, goBtn=null;
+      missed=[], shop=null, goBtn=null, handStop=0, overkill=0, wrongStops=[];
 
   const slotEls=[];
   for(let i=0;i<SLOTS;i++){
@@ -1759,6 +1911,8 @@ function gDefense(screen,api,gen){
   }
   const slotY=i=>parseFloat(slotEls[i].style.top||0);
 
+  function hint2(t){ hint.innerHTML=t; clearTimeout(hint._t);
+    hint._t=setTimeout(()=>{ if(phase==="wave")hint.innerHTML="读着觉得不对？<b>点那一份就地拦下</b>——花 3 核查力。" },2600) }
   function drawSlots(){
     slotEls.forEach((n,i)=>{
       const k=slots[i];
@@ -1810,28 +1964,35 @@ function gDefense(screen,api,gen){
   function buildPhase(){
     phase="build"; drawSlots();
     const w=WAVES[wave]; banner(w.say); hud();
-    hint.innerHTML="装好了就开工。<b>核查力有限，装不满六条</b>——先想这一批最可能错在哪。";
+    hint.innerHTML="装好了就开工。<b>核查力有限，装不满六条</b>——先想这一批最可能错在哪。<br>开工后还能<b>点单份手动拦</b>，但每次花 3 点。";
     goBtn=el("button","dl-go","开　工");
     goBtn.addEventListener("pointerdown",e=>{e.preventDefault();startWave()});
     screen.appendChild(goBtn);
   }
 
   /* ---------- 一波 ---------- */
-  function pickDocs(w){
-    let pool=DOCS.filter(d=>w.L<0||d[2]===w.L);
-    pool=shuf(pool);
-    const out=pool.slice(0,w.n);
-    while(out.length<w.n)out.push(pool[Math.floor(Math.random()*pool.length)]);
-    if(w.boss){ const b=DOCS.find(d=>d[1].length>=3);
-      out[Math.min(out.length-1,2)]=b }
-    return shuf(out);
+    function pickDocs(w){
+    /* 按这一波的主题决定摇哪几条毛病；每一波都保证混进至少一份合格的 */
+    const poolByL={2:["t","p","s","o"],0:["v","o"],1:["l","v"],"-1":["t","p","s","o","v","l"]};
+    const pool=poolByL[w.L]||poolByL["-1"];
+    const out=[];
+    for(let i=0;i<w.n;i++){
+      let force=null;
+      if(i===0)force=0;                                  /* 第一份合格，逼你别过度设防 */
+      else if(w.boss&&i===1)force=3;                     /* 硬茬：同时犯三条 */
+      const d=rollNotice(pool,force);
+      out.push([d.t,d.b.filter(k=>pool.indexOf(k)>=0),w.L,d.ask]);
+    }
+    for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));
+      const t=out[i];out[i]=out[j];out[j]=t}
+    return out;
   }
   function startWave(){
     closeShop(); if(goBtn){goBtn.remove();goBtn=null}
-    hint.textContent="";
+    hint.innerHTML="读着觉得不对？<b>点那一份就地拦下</b>——花 3 核查力。";
     phase="wave"; drawSlots();
     const w=WAVES[wave];
-    const queue=pickDocs(w);
+    const queue=pickDocs(w); queue0=queue;
     spawned=0; docs=[]; const base=stopped+delivered+leaks;
     power+=6+(w.bonus||0); hud();
     clearInterval(timer);
@@ -1850,8 +2011,35 @@ function gDefense(screen,api,gen){
     const n=el("div","dl-doc");
     n.innerHTML=(d[3]?'<span class="ask">'+esc(d[3])+"</span>":"")+esc(d[0]);
     n.style.top="0px";
+    /* 手动抽查：读了觉得有问题就点它。花 3 核查力——核查从来不是免费的。
+       拦对了跟自动拦一样；拦错了，你亲手弄丢了一份合格的交付。 */
+    const o2={n:n,d:d,lv:-1};
+    n.addEventListener("pointerdown",e=>{
+      e.preventDefault();
+      if(phase!=="wave"||o2.done)return;
+      if(power<3){ A.shakeEl(n); S.thud(); hint2("核查力不够了——手动抽查要花 3 点。"); return }
+      power-=3; o2.done=true;
+      const r=n.getBoundingClientRect(), bad=o2.d[1];
+      if(bad.length){
+        handStop++; stopped++; score+=18;
+        S.zap(); A.buzz(14); A.burst(r.left+r.width/2,r.top+r.height/2,"var(--ok)",16);
+        A.floatTag(r.left+r.width/2,r.top,"+18 手动拦下","var(--ok-ink)");
+        n.classList.add("stop");
+      }else{
+        overkill++; score=Math.max(0,score-10);
+        if(wrongStops.indexOf(o2.d[0])<0)wrongStops.push(o2.d[0]);
+        A.note("把合格的也拦下来");
+        S.hurt(); A.buzz([14,50,14]); A.shakeEl(screen);
+        A.floatTag(r.left+r.width/2,r.top,"这份是合格的　−10","var(--warn)");
+        n.classList.add("leak");
+        hint2("这一份没毛病，你把它拦了。<b>过度设防也有代价。</b>");
+      }
+      setTimeout(()=>n.remove(),380);
+      docs=docs.filter(x=>!x.done); hud();
+      if(spawned>=queue0.length&&!docs.length){ clearInterval(timer); endWave() }
+    });
     field.appendChild(n);
-    docs.push({n:n,d:d,lv:-1});
+    docs.push(o2);
   }
   function advance(){
     docs.forEach(o=>{
@@ -1889,6 +2077,7 @@ function gDefense(screen,api,gen){
           S.hurt(); A.buzz([16,60,16]); A.shakeEl(screen);
           A.floatTag(r.left+r.width/2,r.top,"漏了","var(--warn)");
           if(!missed.some(m=>m[0]===o.d[0]))missed.push([o.d[0],bad.slice(),o.d[3]||""]);
+          bad.forEach(k=>A.note(NAME[k]));
         }
         setTimeout(()=>{o.n.remove();
           reader.classList.remove("hurt","glad");reader.textContent="读者收到的"},1100);
@@ -1923,7 +2112,10 @@ function gDefense(screen,api,gen){
     win?S.pow():S.over();
     api.overlay('<div class="big">'+score+'</div><div class="sub">'+
       (win?"八波全挡住":"漏过 "+leaks+" 份，到第 "+(wave+1)+" 波")+
-      " · 拦下 "+stopped+" · 放行 "+delivered+"</div>"+review()+
+      " · 拦下 "+stopped+"（手动 "+handStop+"） · 放行 "+delivered+
+      (overkill?" · 误拦 "+overkill:"")+"</div>"+review()+
+      (wrongStops.length?"<h4>这几份你拦错了</h4><div class=\'dl-rev\'>"+
+        wrongStops.slice(0,4).map(t=>"<p>"+esc(t)+"<br><b>它没有毛病，本来该交出去</b></p>").join("")+"</div>":"")+
       "<p>一条检查只拦得住<b>它负责的那一类</b>——装错位置不是伤害低，是根本不触发。"+
       "<br>而合格的那几份<b>本来就该放它过去</b>：检查不是越多越好，是要对上你这一批在担心什么。</p>",
       win?"再来一局":"再来一次",()=>api.restart());
@@ -1989,9 +2181,11 @@ const DAYS=[
  {r:["t","p","s","o"],   add:["o"],     n:5,
   news:"<b>新增一条</b>：已经结束的活动，不能写成现在的邀请。"},
  {r:["t","s","o","v"],   add:["v"], off:["p"], n:5,
-  news:"<b>地点这条今天停用</b>——上头说读者都知道在哪。<b>新增</b>：每一句都得能核。"},
+  news:"<b>地点这条今天停用</b>——上头说读者都知道在哪。<b>新增</b>：每一句都得能核。",
+  mid:{at:2, add:"p", news:"地点那条<b>现在起恢复</b>。手上这一份开始就按五条看。"}},
  {r:["t","p","s","o","v","l"], add:["l"], back:["p"], n:5,
-  news:"<b>地点恢复</b>。<b>新增</b>：语言要对上要求。六条全开。"}
+  news:"<b>地点恢复</b>。<b>新增</b>：语言要对上要求。六条全开。",
+  mid:{at:2, off:"v", news:"「每一句都得能核」<b>暂停</b>。别再拿这一条打回。"}}
 ];
 
 function gShift(screen,api,gen){
@@ -2007,7 +2201,8 @@ function gShift(screen,api,gen){
   let day=0, idx=0, queue=[], marks={}, score=0, right=0, wrong=0,
       playing=false, missTally={}, missed=[], locked=false;
 
-  const today=()=>DAYS[day];
+  let live=null;
+  const today=()=>live||DAYS[day];
   function hud(){
     api.hud('<span>第 <b>'+(day+1)+'</b> / 5 天</span><span>分数 <b>'+score+
       '</b></span><span class="sp">盖对 <b>'+right+" / "+(right+wrong)+"</b></span>");
@@ -2032,6 +2227,18 @@ function gShift(screen,api,gen){
   }
   function load(){
     if(idx>=queue.length)return endDay();
+    /* 班上到一半，规矩可能就改了——Papers, Please 的班不是等第二天才变的 */
+    const d0=today();
+    if(d0.mid&&idx===d0.mid.at&&!d0.mid.fired){
+      d0.mid.fired=true;
+      if(d0.mid.add&&d0.r.indexOf(d0.mid.add)<0)d0.r.push(d0.mid.add);
+      if(d0.mid.off)d0.r=d0.r.filter(k=>k!==d0.mid.off);
+      d0.add=d0.mid.add?[d0.mid.add]:[];
+      news.innerHTML='<span class="d">第 '+(day+1)+" 天 · 加急</span>"+d0.mid.news;
+      news.style.background="var(--warn-pale)"; news.style.borderBottomColor="var(--warn)";
+      S.hurt(); A.shakeEl(news);
+      setTimeout(()=>{news.style.background="";news.style.borderBottomColor=""},2600);
+    }
     marks={}; locked=false; says.hidden=true;
     const p=queue[idx];
     paper.className="sf-paper in";
@@ -2065,7 +2272,7 @@ function gShift(screen,api,gen){
       says.className="sf-say"; says.hidden=false;
       says.innerHTML=want?"<b>盖反了——这一份今天是合格的。</b>今天生效的每一条它都满足了。"
         :"<b>盖反了。</b>它没满足："+bad.map(k=>RN[k]).join("、")+"。";
-      bad.forEach(k=>{missTally[k]=(missTally[k]||0)+1});
+      bad.forEach(k=>{missTally[k]=(missTally[k]||0)+1; A.note(RN[k])});
       if(!missed.some(m=>m.t===p.t))missed.push({t:p.t,ask:p.ask||"",bad:bad.slice(),day:day+1,want:want});
       [].slice.call(book.children).forEach(n=>{
         if(n.tagName==="BUTTON"&&bad.some(k=>n.textContent.indexOf(RN[k])>=0))n.classList.add("missed")});
@@ -2078,17 +2285,25 @@ function gShift(screen,api,gen){
 
   function pick(){
     const d=today();
-    const pass=PAPERS.filter(p=>d.r.every(k=>p.has[k]));
-    const fail=PAPERS.filter(p=>!d.r.every(k=>p.has[k]));
     const out=[];
-    const g=a=>a[Math.floor(Math.random()*a.length)];
-    if(pass.length)out.push(g(pass));
-    for(let i=0;i<2&&fail.length;i++)out.push(g(fail));
-    while(out.length<d.n){ const c=g(PAPERS); if(!out.includes(c)||out.length>PAPERS.length-1)out.push(c) }
-    for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=out[i];out[i]=out[j];out[j]=t}
-    return out.slice(0,d.n);
+    const has0=()=>({t:1,p:1,s:1,o:1,v:1,l:1});
+    /* 当天生效的规矩里摇掉 0–2 条，保证既有该通过的也有该打回的 */
+    for(let i=0;i<d.n;i++){
+      const has=has0();
+      const n=i===0?0:(1+Math.floor(Math.random()*2));
+      const ks=d.r.slice();
+      for(let j=0;j<n&&ks.length;j++)has[ks.splice(Math.floor(Math.random()*ks.length),1)[0]]=0;
+      /* 停用的规矩不该影响判断，但稿子里照样可能缺——这正是「今天不看这一条」的意思 */
+      ["t","p","s","o","v","l"].forEach(k=>{ if(d.r.indexOf(k)<0&&Math.random()<0.35)has[k]=0 });
+      const g=notice(has);
+      out.push({t:g.t, ask:g.ask, has:has});
+    }
+    for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));
+      const t=out[i];out[i]=out[j];out[j]=t}
+    return out;
   }
   function startDay(){
+    live=JSON.parse(JSON.stringify(DAYS[day]));
     const d=today();
     queue=pick(); idx=0; missTally=missTally||{};
     news.innerHTML='<span class="d">第 '+(day+1)+" 天 · 今日通告</span>"+d.news;
@@ -2127,7 +2342,8 @@ function gShift(screen,api,gen){
     "<p>你是审稿的那个人。<b>五天</b>，每天早上一张通告，<b>增一条或停一条规矩</b>。"+
     "<br>手册上是今天生效的规矩，<b>点一下勾，再点一下打叉</b>——勾对了额外加分，但不勾也能盖章。"+
     "<br>看完稿子，盖<b>通过</b>或<b>打回</b>。"+
-    "<br><b>要害在这里：同一份稿子，第二天该通过，第四天就该打回。</b>不能靠记答案。</p>",
+    "<br><b>要害在这里：同一份稿子，第二天该通过，第四天就该打回。</b>不能靠记答案。"+
+    "<br>而且规矩<b>不一定等到第二天早上才变</b>——班上到一半可能就来一张加急通告。</p>",
     "上班",()=>{ day=0; idx=0; score=0; right=0; wrong=0; missTally={}; missed=[]; startDay() });
 }
 
@@ -2153,27 +2369,365 @@ return [
 })();
 </script>
 <script>
+window.GAMES5=(function(){
+const A=window.AR, el=A.el, esc=A.esc, clamp=A.clamp, S=A.S;
+
+/* ==================================================================
+   8 · 改一处（长局）
+   前面七个都是「给你一批东西，你判断」。这个反过来：
+   **东西是你的请求生成的**——所以第二遍玩不成记忆，因为材料是你自己造的。
+
+   一条动作链，中间一步都绕不过去：
+     读产出 → 对照原始公告 → 指认哪一句是它编的 → 指认对了才解锁那一条要求
+     → 写上 → 当场看见那句话变成有出处的
+   「没写的它会编」不是我在旁白里说的，是你自己动手看见的。
+   ================================================================== */
+const RF_SRC={
+  head:"NASA 公告（2023）· 原文",
+  body:"2023 年 10 月 21 日晚 6 点到 9 点，NASA 戈达德太空飞行中心访客中心（马里兰州格林贝尔特）举办国际观月夜，无需报名。",
+  note:"这份公告里没有的，就是没有。你的直觉会骗你，出处不会。"
+};
+const RF_KINDS=[["msg","短消息"],["list","活动清单"],["card","说明卡"]];
+const RF_MUST=[["t","写清时间"],["p","写清地点"],["s","说要不要报名"],["o","说明已经结束"]];
+const MN={}; RF_MUST.forEach(m=>MN[m[0]]=m[1]);
+
+/* 编造的说法每次随机换一种，免得记住字面；每一条都「像真的」，
+   只有回去对公告才分得出来。 */
+const MADE={
+ t:["就在这个周末，晚上。","每年十月都会办一次。","上周五晚上刚办完。"],
+ p:["地点在 NASA 的一个观测站。","在戈达德园区内，具体场地当天公布。","在华盛顿附近的 NASA 中心。"],
+ s:["名额有限，记得提前登记。","需要在官网预约名额。","现场人多，建议早点到并签到。"],
+ o:["快去看看吧，别错过！","现在报名还来得及。","这活动正在进行中。"]
+};
+const REAL={
+ t:["时间是 2023 年 10 月 21 日晚 6 点到 9 点。","那一场在 2023 年 10 月 21 日，晚 6 点到 9 点。"],
+ p:["地点在马里兰州格林贝尔特的戈达德访客中心。","在戈达德太空飞行中心访客中心，马里兰州格林贝尔特。"],
+ s:["不用报名，直接去就行。","公告写明：无需报名。"],
+ o:["这一场已经结束了，这是当时的记录。","注意：这是 2023 年办过的活动，已经结束。"]
+};
+const LIST_MADE={
+ t:["时间：每年十月的一个晴朗夜晚","时间：十月下旬，具体以通知为准"],
+ p:["地点：戈达德园区，场地当天公布","地点：NASA 各地访客中心"],
+ s:["报名：需在官网预约","报名：现场签到，名额有限"],
+ o:["状态：报名进行中","状态：即将开始"]
+};
+const LIST_REAL={
+ t:["时间：2023 年 10 月 21 日 18:00–21:00"],
+ p:["地点：马里兰州格林贝尔特 · 戈达德访客中心"],
+ s:["报名：无需报名"],
+ o:["状态：已结束（2023 年活动记录）"]
+};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+/* 每一单都换一个起手：已经写好的条数不一样，所以编造的位置和数量也不一样 */
+const RF_ORDERS=[
+ {ask:"朋友要把这事<b>转发到群里</b>，让大家一眼知道什么时候、在哪。",want:"msg",pre:[],budget:8},
+ {ask:"志愿者要<b>照着这个准备当天的物资</b>，得逐项对着看。",want:"list",pre:["t"],budget:7},
+ {ask:"给<b>完全没听说过这件事的人</b>做一张说明。",want:"card",pre:["s"],budget:7},
+ {ask:"同事问你：<b>这活动现在还能去吗？</b>",want:"msg",pre:["t","p"],budget:6},
+ {ask:"把这份材料<b>存档</b>，以后还要拿出来查——每一条都得站得住。",want:"list",pre:[],budget:8}
+];
+
+/* 真的、但不由任何条件驱动的句子——加进来是为了让「全点一遍」要付代价 */
+const FILLER={
+ msg:["这是 NASA 戈达德太空飞行中心办的。","活动的名字叫国际观月夜。"],
+ list:["主办：NASA 戈达德太空飞行中心","名称：国际观月夜"],
+ card:["办这场活动的是 NASA 戈达德太空飞行中心。","它的正式名字叫国际观月夜。"]
+};
+/* 没写的那一条，AI 有两种失手法：编一句像样的，或者干脆不提。
+   两种都得抓，但要用两个不同的动作——这正是它们在现实里的区别。 */
+function build(kind,must,skip){
+  const H=k=>must.indexOf(k)>=0, F=[];
+  const line=(k,realArr,madeArr)=>{
+    if(H(k)){ F.push({k:k,t:pick(realArr),made:false}); return }
+    if(skip.indexOf(k)>=0) return;            /* 省略：这一条根本不出现 */
+    F.push({k:k,t:pick(madeArr),made:true});  /* 编造 */
+  };
+  const fl=FILLER[kind]||FILLER.msg;
+  if(kind==="msg"){
+    F.push({k:"_h",t:"跟你说个事——NASA 办过一场观月夜。",made:false,fix:true});
+    line("t",REAL.t,MADE.t); line("p",REAL.p,MADE.p);
+    F.push({k:"_f0",t:fl[0],made:false});
+    line("s",REAL.s,MADE.s); line("o",REAL.o,MADE.o);
+  }else if(kind==="list"){
+    F.push({k:"_h",t:"观月夜 · 活动信息",made:false,head:true,fix:true});
+    F.push({k:"_f0",t:fl[0],made:false});
+    line("t",LIST_REAL.t,LIST_MADE.t); line("p",LIST_REAL.p,LIST_MADE.p);
+    line("s",LIST_REAL.s,LIST_MADE.s); line("o",LIST_REAL.o,LIST_MADE.o);
+  }else{
+    F.push({k:"_h",t:"什么是观月夜？",made:false,head:true,fix:true});
+    F.push({k:"_b",t:fl[0],made:false});
+    line("t",REAL.t,MADE.t); line("p",REAL.p,MADE.p);
+    F.push({k:"_f1",t:fl[1],made:false});
+    line("s",REAL.s,MADE.s); line("o",REAL.o,MADE.o);
+  }
+  return F;
+}
+
+function gForge(screen,api,gen){
+  const top=el("div","rf-top"), body=el("div","rf-body");
+  screen.appendChild(top); screen.appendChild(body);
+  const src=el("div","rf-src"), form=el("div","rf-form"),
+        out=el("div","rf-out"), chk=el("div","rf-check"), say=el("div","rf-say");
+  say.hidden=true;
+  body.appendChild(src); body.appendChild(form); body.appendChild(out);
+  body.appendChild(chk); body.appendChild(say);
+
+  let ord=0, kind=null, must=[], open=[], moves=0, score=0,
+      caught=0, wronged=0, srcOpen=false, done=false, frags=[], mine=[], skip=[],
+      dodged=0, missedGaps=[],
+      falseAlarms=[], slipped=[], lastKeys={};
+
+  const O=()=>RF_ORDERS[ord];
+  function hud(){ api.hud('<span>分数 <b>'+score+"</b></span><span>抓到编造 <b>"+caught+
+    '</b></span><span>抓到漏 <b>'+dodged+'</b></span><span class="sp">冤枉 <b>'+wronged+"</b></span>") }
+  function msg(t,cls){ say.hidden=false; say.className="rf-say"+(cls?" "+cls:""); say.innerHTML=t }
+
+  function drawTop(){
+    const o=O(), left=o.budget-moves;
+    top.innerHTML='<div class="ask"><span class="no">第 '+(ord+1)+" / "+RF_ORDERS.length+" 单</span><br>"+
+      o.ask+'</div><div class="mv">还能改<b>'+left+"</b>次</div>";
+    api.time(clamp(left/o.budget,0,1));
+    body.style.top=(top.offsetHeight+5)+"px";
+  }
+  function drawSrc(){
+    src.innerHTML="<button><span>&#128206;</span><span>"+esc(RF_SRC.head)+
+      '</span><span class="ch">'+(srcOpen?"收起 −":"点开对照 +")+"</span></button>"+
+      (srcOpen?'<div class="in">'+esc(RF_SRC.body)+"<em>"+esc(RF_SRC.note)+"</em></div>":"");
+    src.querySelector("button").addEventListener("pointerdown",e=>{
+      e.preventDefault(); srcOpen=!srcOpen; S.tick(); drawSrc()});
+  }
+  function drawForm(){
+    form.innerHTML='<h6>你的请求<i>交什么成品，写明哪几条</i></h6>';
+    const ks=el("div","rf-kinds");
+    RF_KINDS.forEach(([k,n])=>{
+      const b=el("button","rf-kind"+(kind===k?" on":""),esc(n));
+      b.addEventListener("pointerdown",e=>{e.preventDefault(); if(done)return;
+        if(kind===k)return; kind=k; spend(); S.tick(); render(true)});
+      ks.appendChild(b);
+    });
+    form.appendChild(ks);
+    const ms=el("div","rf-musts");
+    RF_MUST.forEach(([k,n])=>{
+      const on=must.indexOf(k)>=0, unlocked=open.indexOf(k)>=0||on;
+      const b=el("button","rf-must"+(on?" on":unlocked?" open":""),
+        '<span class="lk">'+(on?"&#10003;":unlocked?"+":"&#128274;")+"</span><span>"+esc(n)+"</span>");
+      b.dataset.k=k;
+      b.addEventListener("pointerdown",e=>{e.preventDefault(); if(done)return;
+        if(on)return;
+        if(!unlocked){
+          /* 产出里一句都没提这件事 → 你说对了，这是「漏」；提了 → 你该去指认那一句 */
+          if(!frags.some(f=>f.k===k)){
+            open.push(k); dodged++; score+=15;
+            S.zap(); A.buzz(14); A.burst(...(function(){const r=b.getBoundingClientRect();
+              return [r.left+r.width/2,r.top+r.height/2,"var(--berry)",14]})());
+            msg("对。它<b>干脆没提这一件事</b>——不是编错，是压根不提。"+
+              "<b>漏比编难发现</b>，因为没有一句话让你去挑毛病。");
+            hud(); render(true);
+          }else{
+            wronged++; score=Math.max(0,score-15); spend(); S.hurt(); A.shakeEl(b);
+            msg("产出里<b>是提了</b>这一件事的——去下面那一句上做判断，别在这儿猜。"+
+              "<br>白花了一次改动。","bad");
+            hud(); render(false);
+          }
+          return }
+        must.push(k); mine.push(k); spend(); S.zap(); render(true,k);
+      });
+      ms.appendChild(b);
+    });
+    form.appendChild(ms);
+  }
+  function spend(){ moves++; }
+
+  function render(flash,justKey){
+    frags=build(kind||"msg",must,skip);
+    out.innerHTML='<h6>AI 交来的</h6>';
+    frags.forEach(f=>{
+      const fixedNow = !f.made && mine.indexOf(f.k)>=0;
+      /* 已经指认过、但还没修的那几句，重画之后红标必须还在——
+         否则玩家一改成品，自己刚做的判断就被抹掉了 */
+      const already=f.made&&open.indexOf(f.k)>=0;
+      const b=el("button","rf-line"+(f.head?" rf-head":"")+
+        (f.made&&!already?" tap":"")+(already?" caught":"")+(fixedNow?" fixed":""),esc(f.t));
+      b.dataset.k=f.k;
+      if(flash&&justKey&&f.k===justKey)b.classList.add("flash");
+      if(already){
+        b.addEventListener("pointerdown",e=>{e.preventDefault();
+          msg("这一句你已经指出来了——<b>去上面把「"+esc(MN[f.k])+"」写上</b>，它就变了。")});
+      }else if(f.made){
+        b.addEventListener("pointerdown",e=>{e.preventDefault(); if(done)return; flag(f,b)});
+      }else if(f.k.charAt(0)==="_"||fixedNow||["t","p","s","o"].indexOf(f.k)>=0){
+        b.addEventListener("pointerdown",e=>{e.preventDefault(); if(done)return; wrongFlag(f,b)});
+        b.classList.add("tap");
+      }
+      out.appendChild(b);
+    });
+    drawTop(); drawForm(); drawCheck();
+    if(kind&&!frags.some(f=>f.made)&&must.length===4) finish();
+    else if(moves>=O().budget&&kind) finish();
+  }
+  function flag(f,node){
+    if(open.indexOf(f.k)>=0){ msg("这一句你已经指出来了——<b>去上面把那一条写上</b>。"); return }
+    open.push(f.k); caught++; score+=20;
+    node.classList.add("caught"); node.classList.remove("tap");
+    const r=node.getBoundingClientRect();
+    S.zap(); A.buzz(14); A.burst(r.left+r.width/2,r.top+r.height/2,"var(--warn)",14);
+    A.floatTag(r.left+r.width/2,r.top,"+20 抓到了","var(--warn)");
+    msg("对。公告里<b>没有这一句</b>——它是你没写，它自己填的。"+
+      "上面「<b>"+esc(MN[f.k])+"</b>」这一条现在解锁了。");
+    hud(); drawForm();
+    const b=form.querySelector('.rf-must[data-k="'+f.k+'"]');
+    if(b){b.classList.add("just"); setTimeout(()=>b.classList.remove("just"),520)}
+  }
+  function wrongFlag(f,node){
+    wronged++; score=Math.max(0,score-15); spend();
+    node.classList.add("no"); setTimeout(()=>node.classList.remove("no"),340);
+    S.hurt(); A.buzz([12,50,12]);
+    if(falseAlarms.indexOf(f.t)<0)falseAlarms.push(f.t);
+    A.note("把有出处的当成编的");
+    msg("<b>这一句公告里有。</b>把上面的原文点开对一遍——"+
+      "觉得「哪有活动不用报名」是直觉，公告白纸黑字写着无需报名。"+
+      "<br>而且<b>白花了一次改动</b>：去核一句本来就有出处的话，花掉的是你的注意力。","bad");
+    hud(); drawTop();
+  }
+  function drawCheck(){
+    const madeLeft=frags.filter(f=>f.made).length;
+    const kindOk=kind===O().want;
+    chk.innerHTML=
+      '<span class="'+(kind?(kindOk?"ok":"bad"):"")+'">成品 '+(kind?(kindOk?"对了":"不对路"):"还没选")+"</span>"+
+      '<span class="'+(madeLeft?"bad":"ok")+'">编造 '+(madeLeft?"还剩 "+madeLeft+" 处":"清零")+"</span>"+
+      '<span class="'+(must.length===4?"ok":"")+'">写明 '+must.length+" / 4 条</span>";
+  }
+  function finish(){
+    if(done)return; done=true;
+    const kindOk=kind===O().want, madeLeft=frags.filter(f=>f.made).length;
+    const gaps=["t","p","s","o"].filter(k=>must.indexOf(k)<0);
+    const left=Math.max(0,O().budget-moves);
+    let gain=0, good=kindOk&&!madeLeft&&!gaps.length;
+    if(good){ gain=50+left*10; score+=gain; S.pow(); A.buzz(20);
+      msg("<b>这一单交得出去。</b>成品对路，每一句都在公告里有。"+
+        (left?"还省下 "+left+" 次改动，+"+left*10:""),"good");
+    }else{
+      frags.filter(f=>f.made).forEach(f=>{ if(slipped.indexOf(f.t)<0)slipped.push(f.t);
+        A.note("放过了它编的一句") });
+      S.hurt();
+      gaps.forEach(k=>{ if(missedGaps.indexOf(k)<0)missedGaps.push(k); A.note("没发现它干脆没提") });
+      msg("<b>这一单交不出去。</b>"+
+        (kindOk?"":"要的不是这种成品。")+
+        (madeLeft?"还有 "+madeLeft+" 句是它自己编的。":"")+
+        (gaps.length?"而且<b>"+gaps.map(k=>MN[k]).join("、")+"</b>它压根没提，你也没写。":"")+
+        (moves>=O().budget?"<br><b>改动次数用完了</b>——冤枉掉的每一次，都是从这里扣的。":""),"bad");
+    }
+    hud();
+    setTimeout(()=>{ if(!api.alive(gen))return; nextOrder(good) },1500);
+  }
+  function nextOrder(good){
+    ord++;
+    if(ord>=RF_ORDERS.length)return over();
+    api.overlay("<h4>第 "+ord+" 单"+(good?"交了":"没交成")+"</h4>"+
+      "<p>分数 <b>"+score+"</b> · 抓到编造 <b>"+caught+"</b> · 冤枉 <b>"+wronged+"</b></p>"+
+      "<p>下一单："+O().ask+"</p>","接单",()=>startOrder());
+  }
+  function startOrder(){
+    const o=O();
+    kind=null; must=o.pre.slice(); open=o.pre.slice(); mine=[]; moves=0; done=false;
+    /* 没写的里面，随机挑一到两条让它「干脆不提」——漏比编难发现得多 */
+    const rest=["t","p","s","o"].filter(k=>o.pre.indexOf(k)<0);
+    skip=[]; const nSkip=1+Math.floor(Math.random()*2);
+    for(let i=0;i<nSkip&&rest.length;i++) skip.push(rest.splice(Math.floor(Math.random()*rest.length),1)[0]);
+    say.hidden=true;
+    render(false);
+    if(o.pre.length)msg("这一单<b>有人先替你写了 "+o.pre.map(k=>"「"+MN[k]+"」").join("")+
+      "</b>，剩下的得你自己找。");
+  }
+  function over(){
+    done=true; S.over();
+    let h="";
+    if(falseAlarms.length)h+="<h4>这几句你冤枉了它</h4><div class='rf-rev'>"+
+      falseAlarms.slice(0,4).map(t=>"<p>"+esc(t)+"<br><b>公告里有这一句</b></p>").join("")+"</div>";
+    if(slipped.length)h+="<h4>这几句溜过去了</h4><div class='rf-rev'>"+
+      slipped.slice(0,5).map(t=>"<p>"+esc(t)+"<br><b>公告里没有</b></p>").join("")+"</div>";
+    if(missedGaps.length)h+="<h4>这几件事它从头到尾没提，你也没发现</h4><div class='rf-rev'>"+
+      missedGaps.slice(0,4).map(k=>"<p><b>"+esc(MN[k])+"</b><br>没有一句话让你去挑毛病，所以最容易漏</p>").join("")+"</div>";
+    if(!h)h="<h4>五单都干净</h4><p>没冤枉一句，没放过一句，也没漏掉一件它没提的事。</p>";
+    api.overlay('<div class="big">'+score+'</div><div class="sub">五单 · 抓到编造 '+caught+
+      " · 抓到漏 "+dodged+" · 冤枉 "+wronged+"</div>"+h+
+      "<p>这一局里每一句话<b>都是你的请求生成的</b>——"+
+      "你写下的那几条，它老老实实交代；<b>你没写的，它不是留白，是填一个像样的</b>。"+
+      "<br>所以「把要求写清楚」不是啰嗦，是<b>你不写就等于交给它决定</b>。</p>",
+      "再来一局",()=>api.restart());
+  }
+
+  hud(); drawSrc(); api.time(1);
+  form.innerHTML=""; out.innerHTML=""; chk.innerHTML="";
+  api.overlay("<h4>改一处</h4>"+
+    "<p>这一局和前面七个反过来：<b>要判断的东西，是你自己的请求生成的</b>。"+
+    "<br>每一单先给你一个用途。你选交什么成品、写明哪几条，"+
+    "AI 当场按你的请求交一份东西出来。"+
+    "<br><b>你没写清的那几条，它不会留白——它会编一个像样的。</b>"+
+    "<br>动作链是死的：<b>在产出里指出哪一句公告里没有 → 指对了才解锁那一条要求 → 写上 → 当场看见它变成有出处的。</b>"+
+    "<br>没看见的东西修不了。五单。</p>","接第一单",()=>{
+      ord=0; score=0; caught=0; wronged=0; falseAlarms=[]; slipped=[];
+      srcOpen=true; drawSrc(); startOrder();
+    });
+}
+
+return [
+ {id:"forge",title:"改一处",from:"原创 · 请求 → 产出 → 对照出处",build:gForge,h:560,
+  how:"每一单给你一个<b>用途</b>。选成品、写明条件，AI 当场交一份东西。<b>你没写的它会自己编。</b>在产出里指出哪句公告里没有——指对了才解锁那一条，写上，当场看见它变成有出处的。五单。",
+  note:"<b>为什么要有这一个</b>：前面几个长局有一个共同的天花板——<b>材料是手写的固定清单，第二遍玩的是记忆不是判断</b>（小蜜蜂 14 条、填词消行 24 句、防线 18 份、值班室 22 份，一局就用完或见好几遍）。这一个走得最远：<b>材料由你自己的请求生成</b>，编造的措辞随机，「编」还是「干脆不提」每单重摇，起手条件也不同——没得背。<br>其余长局这一轮也一并改成了<b>现场生成</b>。",
+  spec:"<b>教什么</b>：这是整个项目最核心的那个能力——<b>拿产出去对原始出处，找出哪一句是它填的</b>。第 1 节的「核得了核不了」、第 3 节的「成品和条件」在这里合成了一个动作。<br>"+
+    "<b>动作链是锁死的</b>：<b>指认 → 解锁 → 写上 → 看见变</b>。没指认就不能修——这不是难为人，这是真的：<b>你没注意到的东西，本来就修不了</b>。<br>"+
+    "<b>「没写的它会编」是玩出来的，不是我说的</b>：不勾「说要不要报名」，它就写「名额有限，建议提前登记」——和公告里的「无需报名」正好相反。你勾上，那句当场变成「不用报名」。因果就在眼前。<br>"+
+    "<b>故意设了一个陷阱</b>：「无需报名」读起来最不像真的（哪有活动不用报名），但公告白纸黑字写着。冤枉它要扣分——<b>你的直觉会骗你，出处不会</b>。<br>"+
+    "<b>结算分两栏</b>：你冤枉过的（其实有出处）和溜过去的（真的没出处）。两种错不一样，得分开看。<br>"+
+    "<b>用的是</b>第 3 节 NASA 观月夜公告原文，全程常驻可对照。"}
+];
+})();
+</script>
+<script>
 (function(){
 const A=window.AR, el=A.el, page=document.getElementById("page");
 const head=el("div","masthead");
 head.innerHTML='<h1>学习街机</h1>'+
- '<p>积木库里那二十块，每块玩 10\u201330 秒。这里的七个不一样，按<b>一局能撑多久</b>排：</p>'+
- '<p><b>三到四分钟 · 有波次、有累积、有波间决策</b>——'+
- '<b>值班室</b>（五天，每天早上增一条或停一条规矩）、'+
+ '<p>八个。分两档，标准写在下面——<b>够不上就不叫长局</b>。</p>'+
+ '<p><b>长局 · 五个 · 一局三到五分钟</b><br>'+
+ '<b>改一处</b>（要判断的东西是你自己的请求生成的）、'+
+ '<b>值班室</b>（五天，规矩天天变）、'+
  '<b>检查条件防线</b>（八波，四个位子装不下六条检查）、'+
- '<b>双武器拦截</b>（十波，加了俯冲和挑战关）。</p>'+
- '<p><b>一到两分钟</b>——<b>填词消行</b>：句子一行行涨上来，每句缺一个词，'+
- '<b>下一块不是随机给你的，是你自己挑的</b>，一副 24 句清完就赢。</p>'+
- '<p><b>十几秒到一分钟</b>——分类落块、划切、追与被追。</p>'+
- '<p style="color:var(--ink-faint);font-size:13px">先调研再设计：撑住一局的东西查下来就那么几样——'+
- '<b>波间决策</b>（塔防）、<b>让规则本身变成变量</b>（Papers, Please 的 31 天里绝大多数都有规矩增删）、'+
- '<b>资源经济逼出取舍</b>（植物大战僵尸的阳光）、<b>尖峰与喘气</b>（不能单调爬坡）。三个长局各用了其中几条。'+
- '<br>操作全部统一：<b>鼠标和手指同一套，一个指头够用，不用键盘</b>。'+
+ '<b>双武器拦截</b>（十波，俯冲和挑战关）、'+
+ '<b>填词消行</b>（一副 24 句，清完就赢）。</p>'+
+ '<p style="color:var(--ink-faint);font-size:13px"><b>「长局」的四条准入</b>：'+
+ '① 三分钟以上，有波次或单次结构；② 有跨波累积的东西（堆高、规则手册、防线、编队、你写下的请求）；'+
+ '③ 波间有一个真决定，不是「继续」按钮；④ 结束时给一张<b>逐条列出你错在哪</b>的复习表。<br>'+
+ '下面三个（分类落块、划切、追与被追）是<b>积木</b>：十几秒到一分钟，一次判断，不满足上面四条。</p>'+
+ '<p style="color:var(--ink-faint);font-size:13px"><b>这一轮改掉的是一个我之前没看见的天花板</b>：'+
+ '所有长局的材料都是手写的固定清单，<b>一局就用完或见好几遍，所以第二局玩的是记忆不是判断</b>。'+
+ '现在公告和敌人都改成<b>现场生成</b>（压测：400 次摇出 280 种不同公告、54 种敌人，文法零缺陷），'+
+ '「改一处」更是让材料由玩家自己的请求生成。<br>'+
+ '操作全部统一：<b>鼠标和手指同一套，一个指头够用，不用键盘</b>。'+
  '内容仍然全部来自《认识 AI，从这里开始》第一单元前三节。</p>';
 page.appendChild(head);
 page.appendChild(el("div","rule"));
-const ORDER=["shift","defenseline","invaders","cloze-tetris","stack","slice","chase"];
-const ALL=[].concat(window.GAMES4,window.GAMES3,window.GAMES1,window.GAMES2);
+/* 八个机柜记到同一本账上：玩过几局之后，这里会告诉你今天最常栽在哪一条 */
+const tally=el("div","tally");
+page.appendChild(tally);
+A.onTally(T=>{
+  const rows=Object.keys(T).sort((a,b)=>T[b]-T[a]);
+  if(!rows.length){
+    tally.innerHTML="<h4>今天栽过的地方</h4><p>八个机柜记在同一本账上。"+
+      "玩完任何一局，<b>你错在哪几条</b>就会汇到这里——"+
+      "同一条在不同机柜里栽两次，它就排到最上面。</p>";
+    return;
+  }
+  const max=T[rows[0]];
+  tally.innerHTML="<h4>今天栽过的地方</h4>"+
+    "<p>跨机柜汇总。<b>排在最上面那条，就是今天最该回去看的。</b></p><ol>"+
+    rows.slice(0,6).map(k=>'<li><b>'+T[k]+'</b><u style="width:'+
+      Math.round(14+T[k]/max*46)+'%"></u><i>'+A.esc(k)+"</i></li>").join("")+"</ol>";
+});
+const ORDER=["forge","shift","defenseline","invaders","cloze-tetris","stack","slice","chase"];
+const ALL=[].concat(window.GAMES5,window.GAMES4,window.GAMES3,window.GAMES1,window.GAMES2);
 ORDER.forEach((id,i)=>{const g=ALL.find(x=>x.id===id);
   if(g){A.cabinet(page,g); page.lastElementChild.dataset.hue=i%4}});
 ALL.forEach((g,i)=>{if(ORDER.indexOf(g.id)<0){A.cabinet(page,g);
