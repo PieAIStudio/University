@@ -341,69 +341,147 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 @keyframes labflash{from{opacity:.25;transform:translateY(-4px)}}
 </style>
 
+<style>
+/* ---------- 阶段轨：课文的六段，始终看得见自己在第几段 ---------- */
+.rail{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+.step{flex:none;width:9px;height:9px;border-radius:var(--r-pill);background:var(--bg-deep);
+  border:1px solid var(--line);transition:.28s}
+.step.done{background:var(--ok);border-color:var(--ok)}
+.step.now{flex:1;min-width:0;width:auto;height:22px;background:var(--accent);border-color:var(--accent);
+  display:flex;align-items:center;justify-content:center;padding-inline:9px}
+.step.now span{font-size:11.5px;font-weight:700;color:#fff;white-space:nowrap;letter-spacing:.04em}
+.step span{display:none}
+
+/* ---------- 棋盘：这一关的材料，六段都在，跟着你的动作变 ---------- */
+.board{flex:none;margin-inline:16px;margin-block:2px 0;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--sh);
+  padding-block:12px;padding-inline:13px;max-height:47%;overflow-y:auto;position:relative}
+.board-h{font-family:var(--num);font-size:10px;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-faint);margin-bottom:9px;display:flex;
+  justify-content:space-between;align-items:center;gap:8px}
+.board-h em{font-style:normal;color:var(--accent-ink);text-transform:none;letter-spacing:0;
+  font-size:11.5px;font-weight:600}
+.two{display:flex;flex-direction:column;gap:9px}
+.doc{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;
+  padding-block:9px;padding-inline:10px}
+.doc-h{font-size:11px;color:var(--ink-faint);margin-bottom:5px;font-weight:600}
+.doc dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13.5px;align-items:center}
+.doc dt{color:var(--ink-faint);font-size:12.5px}
+.doc dd{margin:0;font-weight:600;color:var(--ink-title)}
+.doc p{margin:0;font-size:14px;line-height:1.75;color:var(--ink)}
+mark{background:none;color:inherit;padding:0}
+mark.lit{background:var(--ok-pale);color:var(--ok-ink);border-radius:4px;
+  padding-inline:3px;box-shadow:0 0 0 1px var(--ok);animation:litin .35s}
+@keyframes litin{from{background:var(--accent-pale);transform:scale(1.12)}}
+.gone{margin-top:8px;background:var(--warn-pale);border:1px solid var(--warn);border-radius:9px;
+  padding-block:7px;padding-inline:9px;font-size:13px;color:var(--warn-ink);font-weight:600;
+  animation:litin .35s}
+.reply{margin-top:9px;background:var(--panel-2);border:1px solid var(--line);
+  border-radius:12px 12px 12px 4px;padding-block:9px;padding-inline:11px;font-size:14px;line-height:1.7}
+.reply.win{background:var(--ok-pale);border-color:var(--ok)}
+.reply .who{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-faint);
+  font-family:var(--num);font-weight:600;display:block;margin-bottom:3px}
+.reply .body.flash{animation:labflash .34s}
+.rec{margin-top:8px;font-size:12.5px;line-height:1.6;color:var(--ink-soft);
+  background:var(--bg-deep);border-radius:9px;padding-block:7px;padding-inline:9px;animation:litin .3s}
+.rec b{color:var(--accent-ink)}
+
+/* the act area under the board */
+.act{flex:1;overflow-y:auto;padding-inline:16px;padding-block:14px 16px;display:flex;flex-direction:column}
+.act .inner{width:100%}
+.ask{font-size:18px;line-height:1.5;font-weight:600;color:var(--ink-title);margin-block:0 12px;text-wrap:balance}
+.said{font-size:14.5px;line-height:1.7;color:var(--ink);margin-block:0 12px}
+.said b{color:var(--accent-ink)}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-block:2px 10px}
+.segbit{border:2px solid var(--line);border-bottom-width:var(--lip-h);border-bottom-color:var(--lip);
+  background:var(--panel);border-radius:10px;padding-block:8px;padding-inline:10px;font-size:14.5px;
+  transition:transform .08s}
+.segbit:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.segbit.ok{background:var(--ok-pale);border-color:var(--ok);font-weight:600}
+.segbit.nope{background:var(--berry-pale);border-color:var(--berry)}
+.segbit.dim{opacity:.45}
+.segbit:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tbl td.u{text-align:right;font-size:13px;color:var(--ink-faint)}
+.tbl td.u b{color:var(--ok-ink);font-weight:700;font-size:13.5px}
+.nosum{color:var(--ok-ink);font-weight:700;font-size:15px}
+</style>
+
 <div class="app" id="app">
   <header class="top" id="top" hidden>
     <button class="quit" id="quit" aria-label="退出这一关">&times;</button>
-    <div class="bar" role="progressbar" aria-label="本关进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="barwrap"><i id="bar"></i></div>
+    <div class="rail" id="rail" aria-label="这一关的六段"></div>
     <div class="combo" id="combo" aria-live="polite"><span>&#9889;</span><span id="combon">0</span></div>
     <button class="snd" id="snd" aria-label="声音开关">&#9834;</button>
   </header>
-  <main class="stage" id="stage" tabindex="-1"></main>
+  <section class="board" id="board" hidden></section>
+  <main class="act" id="act" tabindex="-1"></main>
   <div class="foot" id="foot"></div>
-  <section class="fb" id="fb" aria-live="assertive" hidden></section>
+  <section class="fb" id="fb" aria-live="assertive"></section>
 </div>
 
 <script>
 /* ============================================================
-   内容：全部取自 University 已发布课程 ai-literacy / understanding-ai
-   单元「看懂回答，不被语气带走」的四节真实课文与真实出处。
-   一节课 = 一关；一关 = 5 个节拍；一个节拍 5–15 秒。
+   两节真实课文，按课文自己的六段骨架做成可玩的。
+   骨架来自 write-lesson：开场 → 先猜一下 → 答案 → 怎么做 → 自检 → 一句话。
+   规矩一：材料常驻在屏幕上（棋盘），六段都不消失。
+   规矩二：每一段的提问，只能指屏幕上此刻看得见的东西。
    ============================================================ */
-const LEVELS = [
+const RAIL = ["现场","先猜","答案","怎么做","自检","一句话"];
+
+const LESSONS = [
 {
   id:"agreement", n:1,
   title:"AI 说你做得好，它检查过哪一项？",
-  sub:"一句夸奖，和一次逐项核对",
-  can:"把「夸你」和「核对过」分开，并且写得出一句让它逐项指位置的要求",
   line:"赞同说明它怎样评价你，逐项核对才说明成品是否符合要求。",
-  src:'真实事件：<a href="https://openai.com/index/sycophancy-in-gpt-4o/" target="_blank" rel="noopener">OpenAI 曾公开回滚一个过于迎合用户的更新</a>。稿件取自 <a href="https://www.nasa.gov/news-release/celebrate-international-observe-the-moon-night-at-nasas-goddard-space-flight-center/" target="_blank" rel="noopener">NASA 观月之夜公告</a>。下面两句评语是教学对照，不是那次事件中的模型原话。',
-  beats:[
-  { type:"choice", eyebrow:"先猜一下",
-    q:"你把一份活动通知交给它改写。它回了这一句。你现在能接着改吗？",
-    art:'<span class="art-tag">AI 助手</span><p class="big">写得非常好！&#128077;</p>',
-    artClass:"chat",
-    options:[
-      {t:"能，它说好就是好", fb:"这一句里，没有一个字提到日期、地点或时间。它评价的是**你**，不是稿子。"},
-      {t:"能，但我会自己再读一遍", fb:"自己再读一遍是好习惯。但注意发生了什么：真正在检查的人是你，它那句「很好」一点忙都没帮上。"},
-      {t:"不能，我不知道它看了什么", ok:true, fb:"对。它说的是它怎么看你，不是稿子怎么样。"}
-    ],
-    good:"对。这句话没有提到任何一项参加信息，所以你没法从它这里接着改。"
+  can:"把「夸你」和「核对过」分开，并写得出一句让它逐项指出位置的要求",
+  src:'稿件取自 <a href="https://www.nasa.gov/news-release/celebrate-international-observe-the-moon-night-at-nasas-goddard-space-flight-center/" target="_blank" rel="noopener">NASA 观月之夜公告</a>。<a href="https://openai.com/index/sycophancy-in-gpt-4o/" target="_blank" rel="noopener">OpenAI 曾公开回滚一个过于迎合用户的更新</a>；下面的助手回复是教学对照，不是那次事件中的模型原话。',
+  init:()=>({lit:new Set(), reply:null, replyWin:false}),
+  boardLabel:"你手上的两份稿子",
+  boardNote:"一份活动通知，交给 AI 改写",
+  board(st){
+    const m=(k,t)=>'<mark class="'+(st.lit.has(k)?"lit":"")+'">'+t+"</mark>";
+    return '<div class="two">'+
+      '<div class="doc"><div class="doc-h">原公告（你写的）</div><dl>'+
+      "<dt>日期</dt><dd>9 月 14 日</dd>"+
+      "<dt>地点</dt><dd>戈达德航天中心</dd>"+
+      "<dt>开始时间</dt><dd>18:00</dd>"+
+      "<dt>票务</dt><dd>免费入场</dd></dl></div>"+
+      '<div class="doc"><div class="doc-h">AI 改写稿（它给你的）</div><p>'+
+      "诚邀您于 "+m("date","9 月 14 日")+" 莅临 "+m("place","戈达德航天中心")+
+      "，共赴一场观月之夜。"+m("free","免费入场")+"，敬请期待。</p></div></div>"+
+      (st.lit.has("time")?'<div class="gone">开始时间 18:00 —— 在改写稿里找不到</div>':"")+
+      (st.reply?'<div class="reply'+(st.replyWin?" win":"")+'"><span class="who">助手回复</span><div class="body flash">'+st.reply+"</div></div>":"");
   },
-  { type:"spot", eyebrow:"动手核一次",
-    q:"原公告有四项参加信息。改写稿删掉了其中一项。点出被删掉的那一项。",
-    art:'<span class="art-tag">原公告</span><div class="orig"><dl><dt>日期</dt><dd>9 月 14 日</dd><dt>地点</dt><dd>戈达德航天中心</dd><dt>开始时间</dt><dd>18:00</dd><dt>票务</dt><dd>免费入场</dd></dl></div><div class="bub"><span class="who">AI 改写稿</span>诚邀您于 9 月 14 日莅临戈达德航天中心，共赴一场观月之夜。免费入场，敬请期待。</div>',
-    options:[
-      {t:"日期", fb:"「9 月 14 日」在改写稿第一句里，还在。"},
-      {t:"地点", fb:"「戈达德航天中心」还在。"},
-      {t:"开始时间", ok:true, fb:"18:00 不见了。"},
-      {t:"免费入场", fb:"「免费入场」在最后一句，还在。"}
+  screens:[
+  { rail:0, type:"probe",
+    said:"你写了一份活动通知，交给 AI 改写。上面那块材料里，「原公告」是你写的，「AI 改写稿」是它给你的。",
+    ask:"先别问它。自己一项一项核：点下面每一项，看它在「AI 改写稿」里还在不在。",
+    items:[
+      {t:"日期 9 月 14 日", k:"date"},
+      {t:"地点 戈达德航天中心", k:"place"},
+      {t:"开始时间 18:00", k:"time"},
+      {t:"票务 免费入场", k:"free"}
     ],
-    good:"你刚刚做的这件事，就叫逐项核对。四项，一项一项看过去，缺的那一项自己会跳出来——而那句「写得非常好」正好盖住了它。"
+    doneLabel:"四项都核过了",
+    good:"四项里三项还在，<b>开始时间不见了</b>。<br>记住你刚才做的这个动作——它叫逐项核对，一会儿要用它来判断另一件事。"
   },
-  { type:"choice", eyebrow:"两句评语",
-    q:"换一句评语。它和「写得非常好！」差在哪？",
-    art:'<div class="bub"><span class="who">评语 A</span>写得非常好！&#128077;</div><div class="bub"><span class="who">评语 B</span>日期还在，地点也在，但开始时间被删掉了。</div>',
+  { rail:1, railAfter:2, type:"choice",
+    before:(st)=>{st.reply='写得非常好！行文流畅，很有感染力 &#128077;';st.replyWin=false},
+    said:"你把改写稿发回去，问它「这样行吗」。它的回复就在上面材料的最下面。",
+    ask:"就凭它这一句，你现在能动手改稿吗？",
     options:[
-      {t:"B 的语气更严厉", fb:"严不严厉是语气。你刚才能动手改，靠的不是它的语气。"},
-      {t:"B 说出了它看了哪几项、缺了哪一项", ok:true, fb:"对——这就是差别的全部。"},
-      {t:"B 更长，所以信息更多", fb:"长短不是关键。一句很长的夸奖同样没法让你改。关键是有没有说「我看了哪几项」。"}
+      {t:"能，它说好就是好", fb:"回头看它那句话：里面没有出现「日期」「地点」「开始时间」任何一个词。它说的是你写得怎么样，不是稿子里还剩什么。"},
+      {t:"能，我自己再读一遍就行", fb:"你当然能自己读——但那是<b>你</b>在检查。它那句「非常好」一点忙也没帮上。"},
+      {t:"不能，我不知道它看了哪几项", ok:true, fb:"对。"}
     ],
-    good:"你可以喜欢一段文字的语气，但它仍然可能漏掉必要信息。想知道它读起来热不热情，看语气评价；想知道时间在不在，那是另一件事。"
+    answerTitle:"答案",
+    good:"不能。你刚才亲手核出开始时间没了，而它说「写得非常好」。<br><b>它评价的是你，不是稿子。</b>"
   },
-  { type:"lab", eyebrow:"改要求，看它怎么变",
-    q:"开关这几条要求。它的回答会当场跟着变。",
-    goal:"让它自己指出缺了哪一项。",
-    leftTitle:"你发给它的要求", outTitle:"它回给你的",
+  { rail:3, type:"lab",
+    said:"要它替你检查，就得把检查项写出来。下面每一条都能开关，上面那条「助手回复」会当场跟着变。",
+    ask:"开关这几条，直到它自己说出缺了哪一项。",
+    goal:"让它自己指出缺的那一项。",
+    leftTitle:"你发给它的要求",
     clauses:[
       {id:"nice", t:"写得好一点，尽量完美"},
       {id:"check", t:"按日期、地点、开始时间三项核对"},
@@ -422,626 +500,389 @@ const LEVELS = [
       {need:[],
        html:'诚邀您于 9 月 14 日莅临戈达德航天中心，共赴一场观月之夜。免费入场，敬请期待。'}
     ],
-    good:"课文里有一句「**打勾也可能只是另一种说法**」。刚才只勾第二条时，它三项全打勾——而开始时间根本不在稿子里。要它指出原文，那个勾才开始值钱。",
-    keep:"请按日期、地点、开始时间三项核对，把对应的原文指出来，缺的直接写「缺失」。"
+    winCta:"这样我就能改稿了",
+    good:"中间那一步值得回头看：<b>只勾「三项核对」时，它三项全打了勾</b>——而开始时间根本不在稿子里。<br>课文里那句「打勾也可能只是另一种说法」，你刚才亲眼见了一次。要它把原文指出来，那个勾才开始值钱。"
   },
-  { type:"choice", eyebrow:"换个条件",
-    q:"你又加了一条要求：必须保留时区。昨天那次三项核对，还能用吗？",
-    options:[
-      {t:"能，已经核对过了", fb:"那次只看了它当时列的三项。时区不在里面，所以它从来没被看过。"},
-      {t:"不能，把时区加进检查项，再核一遍", ok:true, fb:"对。检查项变了，就得重新过一遍。"},
-      {t:"让它重写一遍，写完整就行", fb:"重写会把已经对的地方也一起改掉，而且你还是不知道时区在不在。"}
+  { rail:4, type:"fix",
+    said:"活动方补了一条：<b>通知里必须写清时区</b>。下面是你刚才开关出来的那句要求。",
+    ask:"只改一处，让它连时区也一起核。改哪一处？",
+    seg:[
+      {t:"请按", fb:"这两个字只是开头，改它不影响它检查什么。"},
+      {t:"日期、地点、开始时间", hit:true, to:"日期、地点、开始时间、时区"},
+      {t:"三项核对", fb:"「三项」会跟着检查项一起变。先改检查项本身，这里自然就对了。"},
+      {t:"把对应的原文指出来", fb:"这一条管的是「拿证据」，它对四项和三项一样管用，不用动。"},
+      {t:"缺的直接写「缺失」", fb:"这一条管的是「缺了要说」，加不加时区它都成立，不用动。"}
     ],
-    good:"检查项是你定的。你加一项，就得多核一项——这件事没法外包给一句「整篇没问题」。"
-  }]
+    good:"检查项是你定的。你加一项，它才会多看一项——<b>「整篇没问题」永远不会自己长出时区那一行。</b>"
+  },
+  { rail:5, type:"takeaway" }
+  ]
 },
 {
-  id:"fluent", n:2,
-  title:"三个回答都很肯定，你该相信哪一个？",
-  sub:"同一个事实，被说成了几种版本",
-  can:"遇到说法打架时，换一个信息来源，而不是再问一次",
-  line:"发生事实冲突时，补一份能核对的材料，比补一句更肯定的话更有用。",
-  src:'真实记录：<a href="https://openai.com/index/why-language-models-hallucinate/" target="_blank" rel="noopener">OpenAI 的研究介绍</a>记录过——询问同一位研究者的博士论文题名，工具给出了几个不同的肯定答案，而这些题名都不对。<b>下面的题名被遮住了，因为我们不编造假题名。</b>',
-  beats:[
-  { type:"choice", eyebrow:"先猜一下",
-    q:"同一个问题问了三次，三个答案都不一样，三个都同样肯定。你会怎么挑？",
-    art:'<div class="bub me"><span class="who">你</span>这位研究者的博士论文叫什么？</div><div class="bub"><span class="who">回答一</span>是《<span class="redact" style="width:6.5em"></span>》，2019 年完成。</div><div class="bub"><span class="who">回答二</span>题目是《<span class="redact" style="width:9em"></span>》，这是他的代表作。</div><div class="bub"><span class="who">回答三</span>可以确认，是《<span class="redact" style="width:5em"></span>》。</div>',
-    options:[
-      {t:"挑说得最详细的那个", fb:"详细是写法，不是记录。"},
-      {t:"挑语气最确定的那个", fb:"「可以确认」这四个字，不需要任何依据就能写出来。"},
-      {t:"三个都先不挑", ok:true, fb:"对。这一步你唯一该做的是不挑。"},
-      {t:"再问两次，看哪个出现得最多", fb:"你连问同一个工具，它靠的还是同一批信息。重复出现的说法，不等于多了一份证据。"}
-    ],
-    good:"你刚才只能看见语气——因为题名被遮住了。而这正是现实里发生的事：三个题名，一个都不对。你能判断的东西里，本来就没有「哪个是真的」这一项。"
-  },
-  { type:"scale", eyebrow:"没有标准答案的一拍",
-    q:"假设你还是挑了一个。你有多确定它是对的？",
-    ends:["完全没底","非常确定"],
-    good:"你的把握可以是任何数字。而这三个答案背后能核对的记录数，是 0。把握是你的感觉，记录是另一回事——它们互相不换算。"
-  },
-  { type:"bucket", eyebrow:"分两堆",
-    q:"六个下一步。哪些真的补上了一份能核对的材料，哪些只是改变了回答的样子？",
-    buckets:["补材料","改外观"],
-    items:[
-      {t:"再问一次，让它说得更肯定", b:1, fb:"更肯定的语气补不上一份论文记录。"},
-      {t:"去学校保存的论文资料里查", b:0, fb:"换了信息来源——这是真的新证据。"},
-      {t:"让它换一种语气重写", b:1, fb:"外观变了，依据没变。"},
-      {t:"连问五次，选出现最多的那个", b:1, fb:"投票只告诉你哪句话出现得多，不给它任何出处。"},
-      {t:"请它指出题名来自哪份记录", b:0, fb:"这一步会逼出一个可以去核的东西，或者逼出一句「没有」。两种都有用。"},
-      {t:"让它把答案写得更详细", b:1, fb:"更详细也可能只是更详细地猜。"}
-    ],
-    good:"分界不在于哪一步更麻烦，而在于做完之后你手里有没有多出一样能拿去对的东西。"
-  },
-  { type:"choice", eyebrow:"换个场景",
-    q:"同一张照片，两次回答给了不同的拍摄日期。你会？",
-    options:[
-      {t:"让它选一个更可能的", fb:"它刚刚已经给过两个都「可能」的答案了。"},
-      {t:"去看照片本身的记录", ok:true, fb:"对。照片自己带着记录，那是新的来源。"},
-      {t:"取两个日期的中间", fb:"两个都没有依据的数，中间那个也没有。"}
-    ],
-    good:"换一个信息来源，不是换一种问法——这是同一件事在不同场景里的同一个动作。"
-  },
-  { type:"choice", eyebrow:"别用力过猛",
-    q:"它把论文题名说错了。这份回答里其他部分呢？",
-    options:[
-      {t:"整份都不能用了，重开一个对话", fb:"一处错就全丢，你会连已经核实过的部分一起丢掉。"},
-      {t:"把回答拆开：错的那一项不用，其他各自判断", ok:true, fb:"对。把错误定位到能检查的那一项。"},
-      {t:"既然写得通顺，其他部分应该没问题", fb:"通顺和正确是两件事——这一关从头到尾讲的就是这个。"}
-    ],
-    good:"题名不对，那个题名就不能进你的成品；文章结构清不清楚，另外判断。一处错误不该掩盖别处的可用，也不该被别处的可用掩盖。"
-  }]
-},
-{
-  id:"numbers", n:3,
+  id:"numbers", n:2,
   title:"表格排得整齐，合计就不会错吗？",
-  sub:"几个大数字，数的却不是同一种东西",
-  can:"看到一张表，先读列名，再看数字",
   line:"数字先要回答数的是什么，再值得讨论算得对不对。",
+  can:"看到一张表，先读列名，再看数字",
   src:'真实数据：<a href="https://registry.opendata.aws/smithsonian-open-access/" target="_blank" rel="noopener">史密森尼开放数据集条目</a>记录 2020 年开放发布超过 280 万件二维、三维图像，并在机构背景中另列 210 万册图书与 15.6 万立方英尺档案。',
-  beats:[
-  { type:"press", eyebrow:"先按一下",
-    q:"有人把这三行统一命名成「使用人数」。别急着挑错——先按「合计」。",
-    good:"它数的其实是 280 万**件**图像、210 万**册**书，和 15.6 万**立方英尺**档案。三个数都抄对了，合计也算对了，而整张表是错的——错在它们头顶上那三个字。"
+  init:()=>({probed:new Set(), summed:false, units:[null,null,null], recs:[]}),
+  boardLabel:"别人给你的那张表",
+  boardNote:"说是某博物馆的使用人数",
+  board(st){
+    const U=["件","人","册","立方英尺"];
+    const rows=[["开放发布图像","2,800,000"],["馆藏图书","2,100,000"],["档案","156,000"]];
+    const anyUnit=st.units.some(u=>u!==null);
+    const allUnit=st.units.every(u=>u!==null);
+    let h='<table class="tbl"><thead><tr><th>项目</th><th style="text-align:right">'+
+      (allUnit?'数量':'<span class="hdrflag'+(st.summed?" bad":"")+'">使用人数</span>')+"</th>"+
+      (anyUnit?'<th style="text-align:right">单位</th>':"")+"</tr></thead><tbody>";
+    rows.forEach((r,i)=>{
+      h+="<tr><td>"+r[0]+'</td><td class="n">'+r[1]+"</td>"+
+        (anyUnit?'<td class="u">'+(st.units[i]===null?"—":"<b>"+U[st.units[i]]+"</b>")+"</td>":"")+"</tr>";
+    });
+    h+='<tr class="sum"><td>合计</td><td class="n">'+
+      (allUnit?'<span class="nosum">不能合计</span>'
+        :st.summed?'<span style="color:var(--warn);font-size:22px">5,056,000</span>':"—")+
+      "</td>"+(anyUnit?"<td></td>":"")+"</tr></tbody></table>";
+    if(st.summed&&!allUnit)h+='<p class="meta" style="text-align:right;margin:6px 0 0">这张表现在说：<b style="color:var(--warn)">505.6 万个人</b>。</p>';
+    if(allUnit)h+='<p class="meta" style="text-align:right;margin:6px 0 0">件、册、立方英尺——<b style="color:var(--ok-ink)">没有一个和能相加。</b></p>';
+    if(st.recs.length)h+='<div class="rec">'+st.recs.join("<br>")+"</div>";
+    return h;
   },
-  { type:"choice", eyebrow:"先改哪里",
-    q:"这张表最该先改的是哪一处？",
-    options:[
-      {t:"数字抄错了", fb:"三个数都和原始记录一致，一个都没抄错。"},
-      {t:"列名", ok:true, fb:"对。错的不是数字，是它们头顶上那三个字。"},
-      {t:"合计公式", fb:"公式没算错：2,800,000 + 2,100,000 + 156,000 确实是 5,056,000。错的是它在加什么。"},
-      {t:"排版太乱", fb:"表格排得很整齐——这恰恰是它骗过你的原因。"}
+  screens:[
+  { rail:0, type:"probe",
+    said:"有人发给你上面那张表，说这是某博物馆的使用人数。三个数都很大，排得也整齐。",
+    ask:"先别算。点下面每一行，看看它的原始记录到底是怎么写的。",
+    items:[
+      {t:"开放发布图像 2,800,000", k:0,
+       rec:'原始记录：2020 年开放发布超过 280 万<b>件</b>二维、三维图像。'},
+      {t:"馆藏图书 2,100,000", k:1,
+       rec:'原始记录：机构背景中另列 210 万<b>册</b>图书。'},
+      {t:"档案 156,000", k:2,
+       rec:'原始记录：15.6 万<b>立方英尺</b>档案。'}
     ],
-    good:"整齐和正确是两种不同的检查。工具可以很快排出一张漂亮的表，表头写什么仍然是你的事。"
+    doneLabel:"三行都看过原文了",
+    good:"三份原始记录里写的是 <b>件</b>、<b>册</b>、<b>立方英尺</b>。<br>没有一行写的是人——而表头上写着「使用人数」。"
   },
-  { type:"rows", eyebrow:"逐行归位",
-    q:"把每一行的单位选回来。",
+  { rail:1, railAfter:2, type:"choice",
+    said:"你已经看过三行的原始记录了。",
+    ask:"这三行，能不能填进同一个「使用人数」列？",
+    options:[
+      {t:"能，反正都是这家博物馆的数", fb:"同一家机构不等于同一种东西。它们一个数图像、一个数书、一个数档案占多大体积。"},
+      {t:"不能，它们数的不是同一种东西", ok:true, fb:"对。"},
+      {t:"能，单位换算一下就行", fb:"一册书和一件图像之间没有换算率。一件实物还可能有好几张数字图像——连一一对应都没有。"}
+    ],
+    answerTitle:"答案",
+    good:"不能。它们数的是不同对象，单位也不同，<b>没有一项是在记录独立的人</b>。<br>统一列名没有把图书变成人。"
+  },
+  { rail:3, type:"press",
+    said:"知道它不对，和看见它错成什么样，是两件事。",
+    ask:"按下面那个「合计」按钮，让这张表把话说完。",
+    btn:"合计",
+    good:"三个数都抄对了，加法也算对了，<b>而整张表是错的</b>。<br>错的不是数字，是它们头顶上那三个字。"
+  },
+  { rail:3, type:"units",
+    said:"上面那三个数字别动——它们一个都没错。",
+    ask:"给每一行选回它真正的单位。",
     opts:["件","人","册","立方英尺"],
-    rows:[
-      {l:"开放发布图像", n:"2,800,000", a:0},
-      {l:"馆藏图书", n:"2,100,000", a:2},
-      {l:"档案", n:"156,000", a:3}
-    ],
-    good:"三行，三种单位。它们从一开始就不是同一种东西——统一列名没有把图书变成人，也没有把立方英尺变成件。"
+    rows:[{l:"开放发布图像",a:0},{l:"馆藏图书",a:2},{l:"档案",a:3}],
+    good:"你一个数字都没改，<b>合计那一行自己就没了</b>。<br>能相加的前提是它们数的是同一种东西——先回答「数的是什么」，才轮到「算得对不对」。"
   },
-  { type:"choice", eyebrow:"现在呢",
-    q:"单位写对了。现在还能按「合计」吗？",
+  { rail:4, type:"choice",
+    said:"换一份记录（上面那张表先放一放）：新的这份只给了「浏览次数」，没有说明怎么算一个人。",
+    ask:"你能把这一列写成「独立人数」吗？",
     options:[
-      {t:"能，单位写对了就能加", fb:"件 + 册 + 立方英尺 = ？这个和没有答案。"},
-      {t:"不能，它们不是同一种东西", ok:true, fb:"对。能相加的前提是它们数的是同一种东西。"},
-      {t:"能，换算成同一个单位就行", fb:"一册书和一件图像之间没有换算率。一件实物还可能有好几张数字图像——连一一对应都没有。"}
-    ],
-    good:"相同的计量词也不证明两个集合能合并。需要覆盖比例，就另找一份对象一致、范围明确的统计，而不是把手头两串数直接相除。"
-  },
-  { type:"choice", eyebrow:"换个记录",
-    q:"另一份记录只给了「浏览次数」，没说怎么去重。你能把它写成「独立人数」吗？",
-    options:[
-      {t:"能，浏览次数就是人数", fb:"一个人可以浏览很多次。"},
-      {t:"不能，缺少「怎么算一个人」的定义", ok:true, fb:"对。找不到去重定义，就保留「次数」——那是记录真的支持的那一项。"},
-      {t:"能，除以 3 估一下", fb:"估算不是定义。你可以说这是估算，但不能把它写进「人数」那一列。"}
+      {t:"能，浏览次数就是人数", fb:"一个人可以浏览很多次。次数是动作记录，不是人的记录。"},
+      {t:"不能，缺少「怎么算一个人」的定义", ok:true, fb:"对。找不到去重定义，就老老实实保留「次数」——那是记录真的支持的那一项。"},
+      {t:"能，除以 3 估一下", fb:"估算不是定义。你可以另起一行写「估算」，但不能把它填进「人数」那一列。"}
     ],
     good:"能指出缺哪一项定义，就已经比把所有大数字排成一张「用户增长表」更接近真实问题。"
-  }]
-},
-{
-  id:"picture", n:4,
-  title:"画得像历史照片，就真是历史吗？",
-  sub:"一幅很像真的画，还缺什么",
-  can:"给一张图先写身份，再写它想表达什么",
-  line:"图片可以帮助想象，也可以记录事实，但两种身份必须让读者分得开。",
-  src:'真实事件：<a href="https://blog.google/products-and-platforms/products/gemini/gemini-image-generation-issue/" target="_blank" rel="noopener">Google 在 2024 年暂停了 Gemini 的人物图像生成</a>，并公开说明某些结果存在历史不准确。对照记录：<a href="https://www.nasa.gov/image-article/apollo-8-astronaut-bill-anders-captures-earthrise/" target="_blank" rel="noopener">NASA《地出》</a>把照片与摄影者、日期和任务记录放在一起。下面三张是示意图，不是那些原始图像。',
-  beats:[
-  { type:"bucket", eyebrow:"先猜一下",
-    q:"两个位置要配图。把三张图放到该去的地方。",
-    buckets:["历史展板","虚构故事插页"],
-    items:[
-      {t:"《地出》示意", vis:"", note:"NASA／阿波罗 8 号，Bill Anders 摄，1968-12-24。有完整记录。", b:0, fb:"它能被查回去：谁拍的、哪一天、哪次任务。"},
-      {t:"一张「看起来像 1968 年」的生成图", vis:"ai", note:"没有拍摄者，没有日期，没有记录。", b:1, fb:"它看起来最像 1968 年——这正是问题。展板要的不是「像」，是能查回去。放故事里可以，但要让读者看得出是画的。"},
-      {t:"一幅标着「想象插画」的画", vis:"art", note:"作者自述，明确标注。", b:1, fb:"它没有假装自己是记录，所以它是诚实的。"}
-    ],
-    good:"两者的差别不在于哪张更漂亮。历史展板需要可核对的记录身份；虚构故事可以用想象画，只要不把身份藏起来。"
   },
-  { type:"choice", eyebrow:"一个常见说法",
-    q:"有人说：「这张生成图上写了 NASA 三个字，所以能放历史展板。」",
-    options:[
-      {t:"对，有机构名字就有来源", fb:"机构名字不是这一张图的记录。你要找的是这张图所在的那一条记录：标题、日期、图像身份。"},
-      {t:"不对——名字不等于这张图有记录", ok:true, fb:"对。来源的作用是帮你知道正在看什么，不是替所有相似图像盖章。"},
-      {t:"对，只要再写清楚是 AI 画的就行", fb:"写清楚是 AI 画的，是诚实的做法——但那样它就不是历史记录了，它该去故事那一页。"}
-    ],
-    good:"标题、图片和说明要互相对上。找不到这一张的记录，就还没到能放进展板的时候。"
-  },
-  { type:"lab", eyebrow:"写图注，看读者怎么想",
-    q:"你把这张照片裁掉了一部分。勾上要写进图注的信息。",
-    goal:"让读者的理解和事实完全对上。",
-    leftTitle:"图注里写什么", outTitle:"读者看完以为",
-    clauses:[
-      {id:"title", t:"《地出》"},
-      {id:"who", t:"NASA／阿波罗 8 号，Bill Anders 摄"},
-      {id:"when", t:"1968 年 12 月 24 日"},
-      {id:"crop", t:"本图为原图裁剪"},
-      {id:"moon", t:"月面着陆现场"},
-      {id:"ai", t:"AI 修复版"}
-    ],
-    outs:[
-      {need:["moon"],
-       html:'阿波罗登月时，宇航员在月面拍下的现场照片。<br><b style="color:var(--warn)">而原图拍摄于绕月任务，不是在月面拍的。</b>'},
-      {need:["ai"],
-       html:'这张图被 AI 修过，原件长什么样不好说。<br><b style="color:var(--warn)">而你并没有用 AI 修过它。</b>'},
-      {need:["title","who","when","crop"], win:true,
-       html:'这是 1968 年 12 月 24 日那张真实照片的<b>一部分</b>，NASA 阿波罗 8 号拍摄。'},
-      {need:["title","who","when"],
-       html:'这是 1968 年拍摄的那张完整真实照片。<br><b style="color:var(--warn)">可是你裁过它，读者不知道。</b>'},
-      {need:["who","when"],
-       html:'一张 1968 年的真实太空照片，但不知道它叫什么、是哪一张。'},
-      {need:["title"],
-       html:'它叫《地出》。至于是谁拍的、是不是真照片，看不出来。'},
-      {need:[],
-       html:'一张很漂亮的太空图，不知道从哪来的。'}
-    ],
-    good:"你没有换一个更好看的图，你换的是<b>读者会得出什么结论</b>。原图、裁剪图、另画的插画，需要三种不同的说明——差别就在这里。",
-    keep:"《地出》｜NASA、阿波罗 8 号，Bill Anders 摄｜1968 年 12 月 24 日｜本图为原图裁剪"
-  },
-  { type:"choice", eyebrow:"改了一笔之后",
-    q:"你在这张真实照片上，另外画了一个想象中的物体。它现在该叫什么？",
-    options:[
-      {t:"还是那张历史照片", fb:"原图里没有这个物体。加上去以后，它记录的就不再是 1968 年那一刻了。"},
-      {t:"一幅根据照片改画的插画", ok:true, fb:"对。身份变了，名字就得跟着变。"},
-      {t:"《地出》修复版", fb:"「修复」是把损坏的地方补回原样。你加的是原图里本来没有的东西——那是新画。"}
-    ],
-    good:"你不必放弃创作。要分开的是创作与记录两种用途，以及文字有没有让读者把它们混淆。"
-  },
-  { type:"choice", eyebrow:"反过来想",
-    q:"一张百分之百真实、没有被修改过的照片，会不会也让人产生错误印象？",
-    options:[
-      {t:"不会，真照片就是真的", fb:"照片是真的，图注可以是错的。"},
-      {t:"会——放到错的年份、地点或事件旁边就会", ok:true, fb:"对。《地出》拍摄于绕月任务，把图注写成月面着陆现场，就改变了它的历史身份。"},
-      {t:"会，但只有模糊的老照片才会", fb:"清晰度和这件事无关。清楚的照片配错图注，误导得更彻底。"}
-    ],
-    good:"所以要同时检查图和图注，而不是只检查这张图是不是被生成的。"
-  }]
+  { rail:5, type:"takeaway" }
+  ]
 }
 ];
 </script>
+
 <script>
 (function(){
 "use strict";
 const $=(s)=>document.querySelector(s);
 const el=(t,c,h)=>{const n=document.createElement(t);if(c)n.className=c;if(h!=null)n.innerHTML=h;return n};
 const esc=(s)=>String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
-const bold=(s)=>esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
-const stage=$("#stage"), foot=$("#foot"), fb=$("#fb"), top=$("#top"), bar=$("#bar");
-const comboEl=$("#combo"), comboN=$("#combon"), barwrap=$("#barwrap");
-fb.hidden=false;
+const act=$("#act"), foot=$("#foot"), fb=$("#fb"), top=$("#top"), boardEl=$("#board"), rail=$("#rail");
+const comboEl=$("#combo"), comboN=$("#combon");
 
-/* ---------- storage (best effort) ---------- */
-const store={get(k,d){try{const v=localStorage.getItem("gz_"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
-  set(k,v){try{localStorage.setItem("gz_"+k,JSON.stringify(v))}catch(e){}}};
-
-/* ---------- sound ---------- */
+const store={get(k,d){try{const v=localStorage.getItem("gz2_"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem("gz2_"+k,JSON.stringify(v))}catch(e){}}};
 let AC=null, sound=store.get("snd",true);
-function tone(freqs,dur,type,vol){
-  if(!sound)return;
-  try{
-    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
-    if(AC.state==="suspended")AC.resume();
-    freqs.forEach((f,i)=>{
-      const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+i*0.075;
+function tone(fs,dur,type,vol){ if(!sound)return;
+  try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended")AC.resume();
+    fs.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+i*0.075;
       o.type=type||"sine";o.frequency.setValueAtTime(f,t);
       g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||0.14,t+0.012);
       g.gain.exponentialRampToValueAtTime(0.0001,t+(dur||0.2));
-      o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+(dur||0.2)+0.02);
-    });
-  }catch(e){}
-}
-const sfx={tap:()=>tone([520],0.05,"sine",0.05), pick:()=>tone([660],0.07,"triangle",0.07),
-  right:()=>tone([659.25,880],0.26,"sine",0.13), wrong:()=>tone([300,262],0.3,"sine",0.1),
-  land:()=>tone([440],0.09,"triangle",0.08), cash:()=>tone([392,523.25,659.25,784],0.4,"triangle",0.11),
-  done:()=>tone([523.25,659.25,783.99,1046.5],0.5,"triangle",0.12)};
-function buzz(ms){try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}}
+      o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+(dur||0.2)+0.02)});
+  }catch(e){}}
+const sfx={tap:()=>tone([520],.05,"sine",.05), pick:()=>tone([660],.07,"triangle",.07),
+  right:()=>tone([659.25,880],.26,"sine",.13), wrong:()=>tone([300,262],.3,"sine",.1),
+  land:()=>tone([440],.09,"triangle",.08), cash:()=>tone([392,523.25,659.25,784],.4,"triangle",.11),
+  done:()=>tone([523.25,659.25,783.99,1046.5],.5,"triangle",.12)};
+function buzz(m){try{navigator.vibrate&&navigator.vibrate(m)}catch(e){}}
 $("#snd").onclick=()=>{sound=!sound;store.set("snd",sound);paintSnd();if(sound)sfx.pick()};
 function paintSnd(){$("#snd").style.opacity=sound?"1":".38";$("#snd").setAttribute("aria-pressed",String(sound))}
 paintSnd();
 
-/* ---------- state ---------- */
-let S=null;
-const doneLv=store.get("done",[]);
+let S=null, W=null;
+const doneL=store.get("done",[]);
 
 function setFoot(label,onClick,cls,disabled){
   foot.innerHTML="";
   const b=el("button","cta"+(cls?" "+cls:""),esc(label));
-  b.id="cta"; b.disabled=!!disabled; b.onclick=onClick;
-  foot.appendChild(b); return b;
+  b.id="cta"; b.disabled=!!disabled; b.onclick=onClick; foot.appendChild(b); return b;
 }
-function enableCta(on){const c=$("#cta");if(c)c.disabled=!on}
+const enableCta=(on)=>{const c=$("#cta");if(c)c.disabled=!on};
+const ctaText=(t)=>{const c=$("#cta");if(c)c.textContent=t};
 function hideFb(){fb.className="fb";fb.innerHTML=""}
 function showFb(kind,title,body,keep,next){
-  fb.className="fb "+(kind==="good"?"good":"soft");
-  fb.innerHTML="";
-  const h=el("h3",null,'<span class="mark">'+(kind==="good"?"&#10003;":"&#8635;")+"</span>"+esc(title));
-  fb.appendChild(h);
-  (Array.isArray(body)?body:[body]).filter(Boolean).forEach(p=>fb.appendChild(el("p",null,bold(p))));
+  fb.className="fb "+(kind==="good"?"good":"soft"); fb.innerHTML="";
+  fb.appendChild(el("h3",null,'<span class="mark">'+(kind==="good"?"&#10003;":"&#8635;")+"</span>"+esc(title)));
+  (Array.isArray(body)?body:[body]).filter(Boolean).forEach(p=>fb.appendChild(el("p",null,p)));
   if(keep)fb.appendChild(el("div","keep","<b>带走这一句</b>"+esc(keep)));
   const b=el("button","cta"+(kind==="good"?" go":""),"继续");
   b.onclick=()=>{hideFb();next()};
   fb.appendChild(b);
   requestAnimationFrame(()=>{fb.classList.add("up");b.focus({preventScroll:true})});
 }
-
-/* ============================ HOME ============================ */
-function home(){
-  S=null; top.hidden=true; mount();
-  const head=el("div","card");
-  head.innerHTML='<div class="eyebrow" style="margin-top:0">University · 样板</div>'+
-    '<h1 style="margin:0 0 8px;font-size:23px;line-height:1.35;color:var(--ink-title)">看懂 AI 的回答，不被语气带走</h1>'+
-    '<p style="margin:0 0 10px;font-size:14.5px;color:var(--ink-soft);line-height:1.65">四关，每关五拍，一拍十几秒。没有生命值，答错不会被赶出去——答错的那一拍会在关底回来找你。</p>'+
-    '<div class="eyebrow" style="margin:0">20 拍 · 大约 6 分钟 · 全程不用打字</div>';
-  W.appendChild(head);
-  const list=el("div");
-  LEVELS.forEach((L,i)=>{
-    const done=doneLv.indexOf(L.id)>=0;
-    const b=el("button","lvl"+(done?" done":""));
-    b.innerHTML='<span class="n">'+(done?"&#10003;":L.n)+'</span><span class="t">'+esc(L.title)+"<em>"+esc(L.sub)+"</em></span>";
-    b.onclick=()=>{sfx.pick();startLevel(i)};
-    list.appendChild(b);
+function drawRail(at){
+  rail.innerHTML="";
+  RAIL.forEach((name,i)=>{
+    const d=el("div","step"+(i<at?" done":"")+(i===at?" now":""));
+    d.innerHTML="<span>"+esc(name)+"</span>";
+    d.title=name; rail.appendChild(d);
   });
-  W.appendChild(list);
-  W.appendChild(el("p","note",
-    "内容来自 University 已发布课程 <code>ai-literacy / understanding-ai</code> 单元「看懂回答，不被语气带走」的四节真实课文，出处为真实公开记录。"+
-    "这是互动形态的样板，不是最终产品实现。"));
-  if(doneLv.length)setFoot("从头再玩一遍",()=>{store.set("done",[]);doneLv.length=0;home()},"ghost");
-  else foot.innerHTML="";
 }
+function drawBoard(){
+  const L=S.L;
+  boardEl.hidden=false;
+  boardEl.innerHTML='<div class="board-h"><span>'+esc(L.boardLabel)+"</span><em>"+esc(L.boardNote)+"</em></div>"+L.board(S.st);
+}
+function mount(){ act.scrollTop=0; act.innerHTML=""; hideFb(); W=el("div","inner"); act.appendChild(W); return W }
+function say(sc){
+  if(sc.said)W.appendChild(el("p","said",sc.said));
+  if(sc.ask)W.appendChild(el("h2","ask",esc(sc.ask)));
+}
+function srcOnce(){ if(S.i===0&&S.L.src)W.appendChild(el("p","src",S.L.src)) }
 
-/* ============================ LEVEL ============================ */
-function startLevel(i){
-  const L=LEVELS[i];
-  S={li:i,L:L,list:L.beats.slice(),idx:0,combo:0,best:0,right:0,wrong:0,t0:Date.now(),replay:false,missed:[]};
-  top.hidden=false; setCombo(0,true); renderBeat();
-}
 function setCombo(n,silent){
-  comboN.textContent=n;
-  comboEl.classList.toggle("on",n>=2);
+  comboN.textContent=n; comboEl.classList.toggle("on",n>=2);
   if(!silent&&n>=2){comboEl.classList.remove("pop");void comboEl.offsetWidth;comboEl.classList.add("pop")}
 }
-function progress(){
-  const p=Math.round(S.idx/S.list.length*100);
-  bar.style.width=Math.max(4,p)+"%"; barwrap.setAttribute("aria-valuenow",String(p));
-  bar.classList.remove("pulse"); void bar.offsetWidth; bar.classList.add("pulse");
+function next(){ S.i++; if(S.i>=S.L.screens.length)return finishLesson(); render() }
+function win(sc,title,body,keep){
+  S.right++; S.combo++; S.best=Math.max(S.best,S.combo); setCombo(S.combo);
+  sfx.right(); buzz(18);
+  if(sc.railAfter!=null)drawRail(sc.railAfter);
+  showFb("good", title||(S.combo>=3?"连对 "+S.combo+" 步":"对了"), body, keep, next);
 }
-function advance(){
-  S.idx++; progress();
-  if(S.idx>=S.list.length){
-    if(S.missed.length){ S.list=S.list.concat(S.missed); S.missed=[]; S.replay=true; progress(); replayCard(); return }
-    return levelDone();
-  }
-  renderBeat();
-}
-function judge(ok,beat,goodBody,softBody,keep){
-  if(ok){
-    S.right++; S.combo++; S.best=Math.max(S.best,S.combo); setCombo(S.combo);
-    sfx.right(); buzz(18);
-    showFb("good", S.combo>=3?"连对 "+S.combo+" 拍":"对了", goodBody, keep, advance);
-  }else{
-    S.wrong++; S.combo=0; setCombo(0,true);
-    sfx.wrong(); buzz([12,60,12]);
-    if(S.missed.indexOf(beat)<0 && !S.replay) S.missed.push(beat);
-    showFb("soft","很多人也是这么想的", softBody, keep, advance);
-  }
-}
-function replayCard(){
-  mount();
-  const c=el("div","card hero");
-  c.innerHTML='<div class="ring">&#8635;</div><h2>刚才那几拍，再来一次</h2>'+
-    '<p class="lede">不算错误记录。答对了这一关就结束。</p>';
-  W.appendChild(c);
-  setFoot("再来",()=>{renderBeat()},"go");
+function lose(sc,body){
+  S.wrong++; S.combo=0; setCombo(0,true);
+  sfx.wrong(); buzz([12,60,12]);
+  if(sc.railAfter!=null)drawRail(sc.railAfter);
+  showFb("soft","很多人也是这么想的", body, null, next);
 }
 
-/* ============================ BEAT RENDER ============================ */
-let W=null;
-function mount(){
-  stage.scrollTop=0; stage.innerHTML=""; hideFb();
-  W=el("div","inner"); stage.appendChild(W); return W;
-}
-function shell(b){
-  mount();
-  if(b.eyebrow)W.appendChild(el("div","eyebrow",esc(b.eyebrow)));
-  W.appendChild(el("h2","q"+(b.q.length>26?" sm":""),esc(b.q)));
-  if(b.art){W.appendChild(el("div","art"+(b.artClass?" "+b.artClass:""),b.art))}
-}
-function srcLine(){
-  if(!S.L.src||S.idx!==0||S.replay)return;
-  W.appendChild(el("p","src",S.L.src));
-}
-function renderBeat(){
-  const b=S.list[S.idx];
-  progress();
-  ({choice:rChoice,spot:rChoice,lab:rLab,bucket:rBucket,scale:rScale,rows:rRows,press:rPress}[b.type])(b);
-  stage.focus({preventScroll:true});
-}
-
-/* --- choice / spot --- */
-function rChoice(b){
-  shell(b);
-  const spot=b.type==="spot";
-  const wrap=el("div",spot?"chips":"tiles");
-  let chosen=-1;
-  const nodes=b.options.map((o,i)=>{
-    const n=el("button",spot?"chip":"tile");
-    n.setAttribute("role","radio"); n.setAttribute("aria-checked","false");
-    n.innerHTML=spot?esc(o.t):'<span class="key">'+String.fromCharCode(65+i)+"</span><span>"+esc(o.t)+"</span>";
+/* ---------------- act types ---------------- */
+function aProbe(sc){
+  mount(); say(sc);
+  const wrap=el("div","tiles");
+  let left=sc.items.length;
+  sc.items.forEach(it=>{
+    const n=el("button","tile",'<span class="key">&#9675;</span><span>'+esc(it.t)+"</span>");
     n.onclick=()=>{
-      if(n.disabled)return; sfx.tap(); chosen=i;
-      nodes.forEach(m=>m.setAttribute("aria-checked","false"));
-      n.setAttribute("aria-checked","true"); enableCta(true);
+      if(n.disabled)return; n.disabled=true; n.classList.add("ok");
+      n.querySelector(".key").innerHTML="&#10003;";
+      if(it.k!==undefined&&S.st.lit)S.st.lit.add(it.k);
+      if(it.k!==undefined&&S.st.probed)S.st.probed.add(it.k);
+      if(it.rec&&S.st.recs&&S.st.recs.indexOf(it.rec)<0)S.st.recs.push(it.rec);
+      sfx.land(); drawBoard(); left--; if(left===0)enableCta(true);
     };
+    wrap.appendChild(n);
+  });
+  W.appendChild(wrap); srcOnce();
+  setFoot(sc.doneLabel||"核完了",()=>win(sc,"你自己查出来的",[sc.good]),null,true);
+}
+function aChoice(sc){
+  if(sc.before)sc.before(S.st);
+  drawBoard(); mount(); say(sc);
+  const wrap=el("div","tiles"); wrap.setAttribute("role","radiogroup");
+  let pick=-1;
+  const nodes=sc.options.map((o,i)=>{
+    const n=el("button","tile",'<span class="key">'+String.fromCharCode(65+i)+"</span><span>"+esc(o.t)+"</span>");
+    n.setAttribute("role","radio"); n.setAttribute("aria-checked","false");
+    n.onclick=()=>{ if(n.disabled)return; sfx.tap(); pick=i;
+      nodes.forEach(m=>m.setAttribute("aria-checked","false"));
+      n.setAttribute("aria-checked","true"); enableCta(true) };
     wrap.appendChild(n); return n;
   });
-  wrap.setAttribute("role","radiogroup");
-  W.appendChild(wrap); srcLine();
+  W.appendChild(wrap); srcOnce();
   setFoot("检查",()=>{
-    const o=b.options[chosen], ok=!!o.ok;
-    nodes.forEach((n,i)=>{n.disabled=true;
-      if(b.options[i].ok)n.classList.add("ok");
-      else if(i===chosen)n.classList.add("nope");
-      else n.classList.add("dim");
-    });
-    if(!ok){const n=nodes[chosen];n.classList.remove("shake");void n.offsetWidth;n.classList.add("shake")}
-    const right=b.options.find(x=>x.ok);
-    judge(ok,b,[b.good],[o.fb,"该选的是：「"+right.t+"」。",b.good]);
+    const o=sc.options[pick], ok=!!o.ok;
+    nodes.forEach((n,i)=>{ n.disabled=true;
+      if(sc.options[i].ok)n.classList.add("ok");
+      else if(i===pick)n.classList.add("nope"); else n.classList.add("dim") });
+    if(!ok){const n=nodes[pick];n.classList.remove("shake");void n.offsetWidth;n.classList.add("shake")}
+    const right=sc.options.find(x=>x.ok);
+    if(ok)win(sc,sc.answerTitle,[sc.good]);
+    else lose(sc,[o.fb,"该选的是：「"+esc(right.t)+"」",sc.good]);
   },null,true);
 }
-
-/* --- lab: 你动一处输入，当场看见输出怎么变 --- */
-function rLab(bt){
-  shell(bt);
-  W.appendChild(el("p","goal","&#127919; 目标："+esc(bt.goal)));
-  const box=el("div","lab");
+function aLab(sc){
+  drawBoard(); mount(); say(sc);
+  W.appendChild(el("p","goal","&#127919; 目标："+esc(sc.goal)));
   const left=el("div","lab-left");
-  left.appendChild(el("div","lab-h",esc(bt.leftTitle)));
-  const on=new Set();
-  const nodes=bt.clauses.map(c=>{
-    const n=el("button","clause");
+  left.appendChild(el("div","lab-h",esc(sc.leftTitle)));
+  const on=new Set(); let won=false;
+  sc.clauses.forEach(c=>{
+    const n=el("button","clause",'<span class="box">&#10003;</span><span>'+esc(c.t)+"</span>");
     n.setAttribute("role","switch"); n.setAttribute("aria-checked","false");
-    n.innerHTML='<span class="box">&#10003;</span><span>'+esc(c.t)+"</span>";
-    n.onclick=()=>{
-      if(on.has(c.id)){on.delete(c.id);n.setAttribute("aria-checked","false")}
-      else{on.add(c.id);n.setAttribute("aria-checked","true")}
-      sfx.tap(); paint();
-    };
-    left.appendChild(n); return n;
+    n.onclick=()=>{ if(on.has(c.id)){on.delete(c.id);n.setAttribute("aria-checked","false")}
+      else{on.add(c.id);n.setAttribute("aria-checked","true")} sfx.tap(); paint() };
+    left.appendChild(n);
   });
-  box.appendChild(left);
-  const out=el("div","lab-out");
-  out.innerHTML='<div class="lab-h">'+esc(bt.outTitle)+'</div><div class="lab-body" id="labout"></div>';
-  box.appendChild(out);
-  W.appendChild(box); srcLine();
-  let won=false;
+  W.appendChild(left); srcOnce();
   function paint(){
-    const hit=bt.outs.find(o=>o.need.every(k=>on.has(k))&&!(o.ban||[]).some(k=>on.has(k)))||bt.outs[bt.outs.length-1];
-    const body=out.querySelector("#labout");
-    body.innerHTML=hit.html;
-    body.classList.remove("flash"); void body.offsetWidth; body.classList.add("flash");
-    out.classList.toggle("win",!!hit.win);
-    if(hit.win&&!won){won=true;sfx.right();buzz(18);enableCta(true);
-      const c=$("#cta"); if(c)c.textContent="这样我就能改了";}
-    if(!hit.win&&won){won=false;enableCta(false);const c=$("#cta");if(c)c.textContent="还差一点"}
+    const hit=sc.outs.find(o=>o.need.every(k=>on.has(k)))||sc.outs[sc.outs.length-1];
+    S.st.reply=hit.html; S.st.replyWin=!!hit.win; drawBoard();
+    if(hit.win&&!won){won=true;sfx.right();buzz(18);enableCta(true);ctaText(sc.winCta)}
+    if(!hit.win&&won){won=false;enableCta(false);ctaText("还差一点")}
   }
-  setFoot("还差一点",()=>{
-    nodes.forEach(n=>n.disabled=true);
-    judge(true,bt,[bt.good],[],bt.keep);
-  },null,true);
+  setFoot("还差一点",()=>win(sc,"它终于肯说了",[sc.good]),null,true);
   paint();
 }
-
-/* --- buckets: one tap per item, no hidden selection state --- */
-function rBucket(b){
-  shell(b);
-  const wrap=el("div","rows");
-  const picks=new Array(b.items.length).fill(-1);
-  const all=b.items.map((it,ri)=>{
-    const row=el("div","row");
-    const figure = it.vis!==undefined
-      ? '<div class="fig '+it.vis+'"><div class="sky"><div class="earth"></div><div class="horizon"></div></div></div>'
-      : "";
-    row.innerHTML=figure+'<div class="lbl">'+esc(it.t)+(it.note?"<small>"+esc(it.note)+"</small>":"")+"</div>";
-    const os=el("div","opts"); os.setAttribute("role","radiogroup");
-    const nodes=b.buckets.map((name,bi)=>{
-      const n=el("button","opt",esc(name));
-      n.setAttribute("role","radio"); n.setAttribute("aria-checked","false");
-      n.onclick=()=>{ sfx.land(); picks[ri]=bi;
-        nodes.forEach(m=>m.setAttribute("aria-checked","false"));
-        n.setAttribute("aria-checked","true");
-        row.classList.add("set");
-        enableCta(picks.every(x=>x>=0));
-      };
-      os.appendChild(n); return n;
-    });
-    row.appendChild(os); wrap.appendChild(row); return nodes;
+function aFix(sc){
+  drawBoard(); mount(); say(sc);
+  const line=el("div","seg");
+  const nodes=sc.seg.map(b=>{
+    const n=el("button","segbit",esc(b.t));
+    n.onclick=()=>{
+      nodes.forEach(m=>m.disabled=true);
+      if(b.hit){ n.classList.add("ok"); n.textContent=b.to; sfx.right();
+        win(sc,"改对了一处",[sc.good],"请按"+b.to+"四项核对，把对应的原文指出来，缺的直接写「缺失」。") }
+      else{ n.classList.add("nope"); nodes.forEach(m=>{if(!m.classList.contains("nope"))m.classList.add("dim")});
+        const hit=sc.seg.find(x=>x.hit);
+        lose(sc,[b.fb,"该改的是「"+esc(hit.t)+"」，把它变成「"+esc(hit.to)+"」。",sc.good]) }
+    };
+    line.appendChild(n); return n;
   });
-  W.appendChild(el("p","hint","每一条，点它该去的那一堆。"));
-  W.appendChild(wrap); srcLine();
-  setFoot("检查",()=>{
-    let ok=true, bad=null;
-    b.items.forEach((it,ri)=>{
-      all[ri].forEach((n,bi)=>{ n.disabled=true;
-        if(bi===it.b)n.classList.add("ok");
-        else if(bi===picks[ri]){n.classList.add("nope");ok=false;if(!bad)bad=it}
-      });
-    });
-    judge(ok,b,[b.good],[bad?"「"+bad.t+"」放错了堆。"+(bad.fb||""):"",b.good]);
-  },null,true);
+  W.appendChild(line); srcOnce();
+  setFoot("点上面那一处来改",()=>{},null,true);
 }
-
-/* --- scale --- */
-function rScale(b){
-  shell(b);
-  const box=el("div","scale");
-  box.innerHTML='<div class="val" id="sv">50</div>'+
-    '<input type="range" id="srange" min="0" max="100" value="50" aria-label="'+esc(b.q)+'">'+
-    '<div class="ends"><span>'+esc(b.ends[0])+"</span><span>"+esc(b.ends[1])+"</span></div>";
-  W.appendChild(box); srcLine();
-  const r=box.querySelector("#srange"), v=box.querySelector("#sv");
-  let last=50;
-  r.oninput=()=>{v.textContent=r.value;if(Math.abs(r.value-last)>=7){last=+r.value;sfx.tap()}};
-  setFoot("就这个数",()=>{
-    const n=+r.value; r.disabled=true;
-    const extra = n>=60 ? "你给了 "+n+"。而这三个题名，一份能核对的记录都没有。"
-      : n<=25 ? "你给了 "+n+"——很谨慎。但要注意：低把握也不是证据，下一步仍然是去找记录，不是去找第四个答案。"
-      : "你给了 "+n+"，介于两者之间。而记录数是 0——它不在这条刻度上。";
-    S.right++; S.combo++; S.best=Math.max(S.best,S.combo); setCombo(S.combo);
-    sfx.right(); buzz(18);
-    showFb("good","这一拍没有标准答案",[extra,b.good],null,advance);
-  });
-}
-
-/* --- rows --- */
-function rRows(b){
-  shell(b);
-  const wrap=el("div","rows");
-  const picks=new Array(b.rows.length).fill(-1);
-  const all=b.rows.map((r,ri)=>{
-    const row=el("div","row");
-    row.innerHTML='<div class="lbl">'+esc(r.l)+' &nbsp;<b>'+esc(r.n)+"</b></div>";
-    const os=el("div","opts"); os.setAttribute("role","radiogroup");
-    const nodes=b.opts.map((o,oi)=>{
-      const n=el("button","opt",esc(o));
-      n.setAttribute("role","radio"); n.setAttribute("aria-checked","false");
-      n.onclick=()=>{ sfx.tap(); picks[ri]=oi;
-        nodes.forEach(m=>m.setAttribute("aria-checked","false"));
-        n.setAttribute("aria-checked","true");
-        enableCta(picks.every(p=>p>=0));
-      };
-      os.appendChild(n); return n;
-    });
-    row.appendChild(os); wrap.appendChild(row); return nodes;
-  });
-  W.appendChild(wrap); srcLine();
-  setFoot("检查",()=>{
-    let ok=true;
-    b.rows.forEach((r,ri)=>{
-      all[ri].forEach((n,oi)=>{n.disabled=true;
-        if(oi===r.a)n.classList.add("ok");
-        else if(oi===picks[ri]){n.classList.add("nope");ok=false}
-      });
-    });
-    const names=b.rows.map(r=>r.l+"是「"+b.opts[r.a]+"」").join("，");
-    judge(ok,b,[b.good],["正确的是："+names+"。",b.good]);
-  },null,true);
-}
-
-/* --- press (the 合计 moment) --- */
-function rPress(b){
-  shell(b);
-  const art=el("div","art");
-  art.innerHTML='<span class="art-tag">别人给你的表</span>'+
-    '<table class="tbl"><thead><tr><th>项目</th><th style="text-align:right">'+
-    '<span class="hdrflag" id="hdr">使用人数</span></th></tr></thead><tbody>'+
-    '<tr><td>开放发布图像</td><td class="n">2,800,000</td></tr>'+
-    '<tr><td>馆藏图书</td><td class="n">2,100,000</td></tr>'+
-    '<tr><td>档案</td><td class="n">156,000</td></tr>'+
-    '<tr class="sum"><td>合计</td><td class="n"><div class="total idle" id="tot">—</div></td></tr>'+
-    "</tbody></table>";
-  const btn=el("button","sumbtn","合计");
-  art.appendChild(btn);
-  W.appendChild(art); srcLine();
-  setFoot("继续",()=>{},null,true);
+function aPress(sc){
+  drawBoard(); mount(); say(sc);
+  const btn=el("button","sumbtn",esc(sc.btn));
   btn.onclick=()=>{
-    btn.disabled=true;
-    const tot=art.querySelector("#tot"); tot.classList.remove("idle");
-    const end=5056000; let cur=0; const t0=performance.now();
-    sfx.cash();
+    btn.disabled=true; sfx.cash();
+    const end=5056000,t0=performance.now();
+    const cell=()=>boardEl.querySelector(".sum .n");
     (function step(t){
-      const k=Math.min(1,(t-t0)/900);
-      cur=Math.round(end*(1-Math.pow(1-k,3)));
-      tot.textContent=cur.toLocaleString("en-US");
+      const k=Math.min(1,(t-t0)/900), cur=Math.round(end*(1-Math.pow(1-k,3)));
+      const c=cell(); if(c)c.innerHTML='<span style="color:var(--warn);font-size:22px">'+cur.toLocaleString("en-US")+"</span>";
       if(k<1)requestAnimationFrame(step);
-      else{
-        tot.textContent="5,056,000";
-        art.querySelector("#hdr").classList.add("bad");
-        const cap=el("p","meta",'这张表现在说：<b style="color:var(--warn)">505.6 万个人</b>。');
-        cap.style.textAlign="right"; cap.style.marginTop="6px"; art.insertBefore(cap,btn);
-        S.right++; S.combo++; S.best=Math.max(S.best,S.combo); setCombo(S.combo);
-        setTimeout(()=>{
-          sfx.right();
-          showFb("good","你刚刚亲手算出了一个不存在的数",[b.good],null,advance);
-        },520);
-      }
+      else{ S.st.summed=true; drawBoard();
+        setTimeout(()=>win(sc,"你刚刚亲手算出了一个不存在的数",[sc.good]),560) }
     })(t0);
   };
+  W.appendChild(btn); srcOnce();
+  setFoot("先按上面那个按钮",()=>{},null,true);
 }
-
-/* ============================ RESULTS ============================ */
-function levelDone(){
-  const L=S.L;
-  if(doneLv.indexOf(L.id)<0){doneLv.push(L.id);store.set("done",doneLv)}
+function aUnits(sc){
+  drawBoard(); mount(); say(sc);
+  const wrap=el("div","rows"); const picks=new Array(sc.rows.length).fill(-1);
+  const all=sc.rows.map((r,ri)=>{
+    const row=el("div","row"); row.innerHTML='<div class="lbl">'+esc(r.l)+"</div>";
+    const os=el("div","opts"); os.setAttribute("role","radiogroup");
+    const nodes=sc.opts.map((o,oi)=>{
+      const n=el("button","opt",esc(o));
+      n.setAttribute("role","radio"); n.setAttribute("aria-checked","false");
+      n.onclick=()=>{ sfx.land(); picks[ri]=oi;
+        nodes.forEach(m=>m.setAttribute("aria-checked","false"));
+        n.setAttribute("aria-checked","true");
+        S.st.units[ri]=oi; drawBoard();
+        enableCta(picks.every(p=>p>=0)) };
+      os.appendChild(n); return n;
+    });
+    row.appendChild(os); wrap.appendChild(row); return nodes;
+  });
+  W.appendChild(wrap); srcOnce();
+  setFoot("检查",()=>{
+    let ok=true;
+    sc.rows.forEach((r,ri)=>all[ri].forEach((n,oi)=>{ n.disabled=true;
+      if(oi===r.a)n.classList.add("ok"); else if(oi===picks[ri]){n.classList.add("nope");ok=false} }));
+    sc.rows.forEach((r,ri)=>{S.st.units[ri]=r.a}); drawBoard();
+    if(ok)win(sc,"表被你改对了",[sc.good]);
+    else lose(sc,["正确的是："+sc.rows.map(r=>r.l+"是「"+sc.opts[r.a]+"」").join("，")+"。",sc.good]);
+  },null,true);
+}
+function aTakeaway(sc){
+  const L=S.L; drawBoard(); mount();
   const secs=Math.max(1,Math.round((Date.now()-S.t0)/1000));
-  top.hidden=true; mount();
+  if(doneL.indexOf(L.id)<0){doneL.push(L.id);store.set("done",doneL)}
   sfx.done(); buzz([20,50,20,50,30]);
   const c=el("div","card hero");
-  c.innerHTML='<div class="ring">&#10003;</div><h2>'+esc(L.title)+"</h2>"+
-    '<p class="lede"><b>'+esc(L.line)+"</b></p>"+
+  c.innerHTML='<div class="ring">&#10003;</div><h2>一句话</h2><p class="lede"><b>'+esc(L.line)+"</b></p>"+
     '<div class="stats"><div class="stat"><b>'+S.best+'</b><span>最长连对</span></div>'+
-    '<div class="stat"><b>'+S.right+"/"+(S.right+S.wrong)+'</b><span>一次答对</span></div>'+
+    '<div class="stat"><b>'+S.right+"/"+(S.right+S.wrong)+'</b><span>一次做对</span></div>'+
     '<div class="stat"><b>'+(secs<60?secs+'"':Math.floor(secs/60)+"'"+(secs%60))+"</b><span>用时</span></div></div>";
   W.appendChild(c);
   const can=el("div","card");
   can.innerHTML='<div class="eyebrow" style="margin-top:0">你现在会做</div>'+
     '<ul class="ulist can"><li><i>&#10003;</i><span>'+esc(L.can)+"</span></li></ul>";
   W.appendChild(can);
-  const next=S.li+1;
-  if(next<LEVELS.length){
-    setFoot("下一关：" + LEVELS[next].title.slice(0,10) + "…",()=>{sfx.pick();startLevel(next)},"go");
-  }else{
-    setFoot("看看这一路学会了什么",()=>{sfx.pick();finale()},"go");
-  }
-}
-function finale(){
-  top.hidden=true; mount();
-  const c=el("div","card hero");
-  c.innerHTML='<div class="ring">&#127881;</div><h2>四关走完了</h2>'+
-    '<p class="lede">下面这四件事，你刚才每一件都亲手做过一次。</p>';
-  W.appendChild(c);
-  const box=el("div","card");
-  box.innerHTML='<div class="eyebrow" style="margin-top:0">你现在会做</div>';
-  const ul=el("ul","ulist can");
-  LEVELS.forEach((L,i)=>{
-    const li=el("li",null,"<i>"+(i+1)+"</i><span>"+esc(L.can)+"</span>");
-    li.style.animationDelay=(i*0.09)+"s"; ul.appendChild(li);
-  });
-  box.appendChild(ul);
-  box.appendChild(el("p","note",
-    "明天你会遇到一个语气非常肯定的回答。你现在知道先做什么了：<b>先问它检查了哪几项</b>。"));
-  W.appendChild(box);
-  setFoot("回到关卡列表",()=>{sfx.pick();home()},"ghost");
+  const ni=S.li+1;
+  if(ni<LESSONS.length)setFoot("下一关",()=>{sfx.pick();start(ni)},"go");
+  else setFoot("回到课程列表",()=>{sfx.pick();home()},"go");
 }
 
+function render(){
+  const sc=S.L.screens[S.i];
+  drawRail(sc.rail);
+  ({probe:aProbe,choice:aChoice,lab:aLab,fix:aFix,press:aPress,units:aUnits,takeaway:aTakeaway}[sc.type])(sc);
+  if(sc.type!=="takeaway")drawBoard();
+  act.focus({preventScroll:true});
+}
+function start(i){
+  S={li:i,L:LESSONS[i],st:LESSONS[i].init(),i:0,combo:0,best:0,right:0,wrong:0,t0:Date.now()};
+  top.hidden=false; setCombo(0,true); render();
+}
+function finishLesson(){ home() }
+function home(){
+  S=null; top.hidden=true; boardEl.hidden=true; hideFb(); act.scrollTop=0; act.innerHTML="";
+  W=el("div","inner"); act.appendChild(W);
+  const head=el("div","card");
+  head.innerHTML='<div class="eyebrow" style="margin-top:0">University · 样板</div>'+
+    '<h1 style="margin:0 0 8px;font-size:22px;line-height:1.4;color:var(--ink-title)">看懂 AI 的回答，不被语气带走</h1>'+
+    '<p style="margin:0 0 10px;font-size:14.5px;color:var(--ink-soft);line-height:1.7">'+
+    '每一关就是一节课，走的还是课文原来的六段：<b>现场 → 先猜 → 答案 → 怎么做 → 自检 → 一句话</b>。'+
+    '材料一直摆在屏幕上方，六段都不消失，而且会跟着你的操作变。</p>'+
+    '<div class="eyebrow" style="margin:0">2 节 · 每节 5–6 步 · 没有生命值 · 全程不用打字</div>';
+  W.appendChild(head);
+  LESSONS.forEach((L,i)=>{
+    const done=doneL.indexOf(L.id)>=0;
+    const b=el("button","lvl"+(done?" done":""));
+    b.innerHTML='<span class="n">'+(done?"&#10003;":L.n)+'</span><span class="t">'+esc(L.title)+
+      "<em>"+esc(L.can)+"</em></span>";
+    b.onclick=()=>{sfx.pick();start(i)};
+    W.appendChild(b);
+  });
+  W.appendChild(el("p","note",
+    "两节课的正文、出处和教学顺序都来自已发布课程 <code>ai-literacy / understanding-ai</code> 单元「看懂回答，不被语气带走」。"+
+    "这是互动形态的样板，不是最终产品实现。"));
+  if(doneL.length)setFoot("从头再走一遍",()=>{store.set("done",[]);doneL.length=0;home()},"ghost");
+  else foot.innerHTML="";
+}
 $("#quit").onclick=()=>{sfx.tap();home()};
-document.addEventListener("keydown",(e)=>{
-  if(e.key==="Enter"){const c=$("#cta");if(c&&!c.disabled&&document.activeElement.tagName!=="BUTTON"){c.click();e.preventDefault()}}
-  if(/^[1-9]$/.test(e.key)){
-    const n=stage.querySelectorAll('.tile:not(:disabled),.chip:not(:disabled)')[+e.key-1];
-    if(n)n.click();
-  }
+document.addEventListener("keydown",e=>{
+  if(/^[1-9]$/.test(e.key)){const n=act.querySelectorAll(".tile:not(:disabled),.segbit:not(:disabled)")[+e.key-1];if(n)n.click()}
 });
 const boot=()=>home();
 if(window.claude&&window.claude.hot&&window.claude.hot.ready)window.claude.hot.ready(boot); else boot();
