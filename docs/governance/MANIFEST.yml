@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-17T01:08:40.424Z
+generated_at: 2026-09-17T01:10:16.409Z
 generator_version: doc-gov@0.14.0
-docs_count: 143
+docs_count: 144
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -451,6 +451,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-09-08
+    pinned: false
+  - id: REF-INTERACTION-DENSITY-RESEARCH
+    path: docs/reference/interaction-density-research.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-16
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-200-FROM-A-JS-RENDERED-DOCS-SITE-PROVES-NOTHING-RENDER-IT-BEFORE-CITING-IT
     path: docs/reference/learnings/workflow-issues/a-200-from-a-js-rendered-docs-site-proves-nothing-render-it-before-citing-it.md

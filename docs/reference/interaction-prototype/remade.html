@@ -1,0 +1,975 @@
+<title>先让它帮上一点忙</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f3e8d8; --bg-deep:#ead9c2;
+  --panel:#fff8ec; --panel-2:#fdf1df; --panel-deep:#efd1a3;
+  --ink:#3a2518; --ink-title:#4a2f1f; --ink-soft:#7b6152; --ink-faint:#a08a78;
+  --accent:#e8743b; --accent-bright:#f28d50; --accent-ink:#a34e17; --accent-pale:#ffd4a2;
+  --ok:#4f9d6b; --ok-deep:#3d7c58; --ok-pale:#c3e6d0; --ok-ink:#2f6446;
+  --berry:#9b6dd6; --berry-pale:#e6dbf7; --berry-ink:#6b4aa0;
+  --warn:#d85a45; --warn-pale:#f8dcd6; --warn-ink:#a3392a;
+  --line:#6c4f3838; --line-2:#6c4f386b;
+  --lip:#5e3a1e52; --lip-h:4px;
+  --r-card:18px; --r-panel:26px; --r-pill:999px;
+  --sh:0 12px 28px #4c341c1f;
+  --sh-lift:0 18px 44px #4c341c33;
+  --zh:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --num:"Outfit",var(--zh);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#221812; --bg-deep:#1a120d;
+  --panel:#2e2118; --panel-2:#352619; --panel-deep:#2c1f16;
+  --ink:#f6e7d3; --ink-title:#f6e2c8; --ink-soft:#c3ab93; --ink-faint:#94806c;
+  --accent:#ef8148; --accent-bright:#ffa06b; --accent-ink:#ffb072; --accent-pale:#f0a46a47;
+  --ok:#63b381; --ok-deep:#7ee0b6; --ok-pale:#2b4335; --ok-ink:#9fe6bf;
+  --berry:#b58ae0; --berry-pale:#3b2f52; --berry-ink:#d9c6ff;
+  --warn:#e26a55; --warn-pale:#4a2b24; --warn-ink:#ff9a80;
+  --line:#f6e7d329; --line-2:#f6e7d352;
+  --lip:#00000085;
+  --sh:0 12px 28px #0006; --sh-lift:0 18px 44px #0008;
+}}
+:root[data-theme="dark"]{
+  --bg:#221812; --bg-deep:#1a120d;
+  --panel:#2e2118; --panel-2:#352619; --panel-deep:#2c1f16;
+  --ink:#f6e7d3; --ink-title:#f6e2c8; --ink-soft:#c3ab93; --ink-faint:#94806c;
+  --accent:#ef8148; --accent-bright:#ffa06b; --accent-ink:#ffb072; --accent-pale:#f0a46a47;
+  --ok:#63b381; --ok-deep:#7ee0b6; --ok-pale:#2b4335; --ok-ink:#9fe6bf;
+  --berry:#b58ae0; --berry-pale:#3b2f52; --berry-ink:#d9c6ff;
+  --warn:#e26a55; --warn-pale:#4a2b24; --warn-ink:#ff9a80;
+  --line:#f6e7d329; --line-2:#f6e7d352;
+  --lip:#00000085;
+  --sh:0 12px 28px #0006; --sh-lift:0 18px 44px #0008;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--zh);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---------- shell ---------- */
+.app{height:100%;display:flex;flex-direction:column;max-width:460px;margin-inline:auto;
+  background:var(--bg);position:relative;overflow:hidden}
+.top{flex:none;display:flex;align-items:center;gap:12px;padding-block:12px;padding-inline:16px}
+.quit{width:30px;height:30px;flex:none;border-radius:var(--r-pill);color:var(--ink-faint);
+  font-size:20px;line-height:1;display:grid;place-items:center}
+.quit:hover{background:var(--line);color:var(--ink)}
+.bar{flex:1;height:14px;border-radius:var(--r-pill);background:var(--bg-deep);
+  box-shadow:inset 0 2px 5px #4c341c1f;overflow:hidden}
+.bar i{display:block;height:100%;width:4%;border-radius:var(--r-pill);
+  background:linear-gradient(180deg,var(--accent-bright),var(--accent));
+  box-shadow:inset 0 2px 0 #ffffff5c;transition:width .45s cubic-bezier(.2,.9,.25,1)}
+.bar i.pulse{animation:barpulse .5s}
+@keyframes barpulse{35%{filter:brightness(1.35) saturate(1.2)}}
+.combo{flex:none;display:flex;align-items:center;gap:4px;font-family:var(--num);font-weight:700;
+  font-size:15px;color:var(--accent-ink);opacity:0;transform:scale(.6);transition:.25s}
+.combo.on{opacity:1;transform:scale(1)}
+.combo.pop{animation:pop .4s}
+@keyframes pop{40%{transform:scale(1.35) rotate(-6deg)}}
+.snd{flex:none;width:30px;height:30px;border-radius:var(--r-pill);display:grid;place-items:center;
+  color:var(--ink-faint);font-size:15px}
+.snd:hover{background:var(--line)}
+
+.stage{flex:1;overflow-y:auto;overflow-x:hidden;padding-inline:16px;padding-block:4px 20px;
+  display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
+.inner{margin-block:auto;width:100%}
+.stage::-webkit-scrollbar{width:0}
+
+.eyebrow{font-family:var(--num);font-size:11px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-faint);margin-block:10px 6px}
+.q{font-size:21px;line-height:1.45;font-weight:600;color:var(--ink-title);text-wrap:balance;
+  margin-block:0 14px;letter-spacing:.01em}
+.q.sm{font-size:18px}
+.sub{font-size:14px;color:var(--ink-soft);margin-block:-8px 14px}
+
+/* ---------- artifact: the thing the player inspects ---------- */
+.art{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);
+  padding-block:14px;padding-inline:14px;margin-block:0 16px;box-shadow:var(--sh);position:relative}
+.art.chat{border-radius:var(--r-card) var(--r-card) var(--r-card) 6px}
+.art-tag{position:absolute;top:-9px;left:12px;font-family:var(--num);font-size:10px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;background:var(--bg);color:var(--ink-faint);
+  padding-inline:6px}
+.art p{margin-block:0 8px;font-size:15px;line-height:1.7}
+.art p:last-child{margin-bottom:0}
+.art .big{font-size:19px;font-weight:600;color:var(--ink-title)}
+.art .meta{font-size:12.5px;color:var(--ink-faint);line-height:1.5}
+.src{font-size:11.5px;color:var(--ink-faint);margin-block:-8px 14px;line-height:1.5}
+.src a{color:var(--ink-soft);text-decoration-color:var(--line-2)}
+
+/* rows inside an artifact (the table) */
+.tbl{width:100%;border-collapse:collapse;font-size:14.5px}
+.tbl th{text-align:left;font-weight:600;color:var(--ink-title);padding-block:7px;
+  border-bottom:2px solid var(--line-2);font-size:13.5px}
+.tbl td{padding-block:9px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl td.n{text-align:right;font-family:var(--num);font-variant-numeric:tabular-nums;font-weight:600}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .sum td{font-weight:700;color:var(--ink-title)}
+.hdrflag{display:inline-flex;align-items:center;gap:5px}
+.hdrflag.bad{color:var(--warn);}
+
+/* ---------- tiles ---------- */
+.tiles{display:flex;flex-direction:column;gap:10px;margin-block:2px 8px}
+.tile{position:relative;display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;
+  background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:14px;padding-block:13px;padding-inline:14px;
+  font-size:15.5px;line-height:1.5;color:var(--ink);transition:transform .08s,background .15s,border-color .15s}
+.tile:hover:not(:disabled){background:var(--panel-2);border-color:var(--line-2);border-bottom-color:var(--lip)}
+.tile:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.tile:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tile .key{flex:none;width:22px;height:22px;margin-top:1px;border-radius:7px;background:var(--bg-deep);
+  color:var(--ink-faint);font-family:var(--num);font-size:12px;font-weight:700;display:grid;place-items:center}
+.tile[aria-checked="true"]{background:var(--accent-pale);border-color:var(--accent)}
+.tile[aria-checked="true"] .key{background:var(--accent);color:#fff}
+.tile.ok{background:var(--ok-pale);border-color:var(--ok)}
+.tile.ok .key{background:var(--ok);color:#fff}
+.tile.nope{background:var(--berry-pale);border-color:var(--berry)}
+.tile.nope .key{background:var(--berry);color:#fff}
+.tile.dim{opacity:.42}
+.tile:disabled{cursor:default}
+.shake{animation:shake .38s}
+@keyframes shake{20%{transform:translateX(-7px)}45%{transform:translateX(6px)}70%{transform:translateX(-3px)}}
+
+/* inline chips: tap a piece of the artifact */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-block:2px 8px}
+.chip{background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:var(--r-pill);padding-block:9px;padding-inline:15px;
+  font-size:15px;transition:transform .08s,background .15s,border-color .15s}
+.chip:hover:not(:disabled){background:var(--panel-2)}
+.chip:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.chip:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chip.ok{background:var(--ok-pale);border-color:var(--ok);color:var(--ok-ink);font-weight:600}
+.chip.nope{background:var(--berry-pale);border-color:var(--berry);color:var(--berry-ink)}
+.chip.dim{opacity:.4}
+.chip.ghost{background:transparent;border-style:dashed;border-bottom-width:2px;color:var(--ink-faint)}
+
+/* ---------- buckets ---------- */
+.buckets{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-block:4px 12px}
+.bucket{background:var(--panel-2);border:2px dashed var(--line-2);border-radius:var(--r-card);
+  padding-block:10px;padding-inline:10px;min-height:96px;transition:.18s}
+.bucket.armed{border-color:var(--accent);background:var(--accent-pale);border-style:solid}
+.bucket h4{margin:0 0 8px;font-size:13px;font-weight:700;color:var(--ink-title);line-height:1.35}
+.bucket .drop{display:flex;flex-direction:column;gap:6px}
+.drop .it{background:var(--panel);border:1px solid var(--line);border-radius:9px;
+  padding-block:7px;padding-inline:9px;font-size:13px;line-height:1.4;animation:landing .3s}
+.drop .it.ok{border-color:var(--ok);background:var(--ok-pale)}
+.drop .it.nope{border-color:var(--berry);background:var(--berry-pale)}
+@keyframes landing{from{transform:scale(.8) translateY(-8px);opacity:0}}
+.pool{display:flex;flex-direction:column;gap:8px}
+
+/* ---------- word bank ---------- */
+.slotline{min-height:62px;border-bottom:2px dashed var(--line-2);margin-block:2px 16px;
+  padding-block:8px;display:flex;flex-wrap:wrap;gap:7px;align-content:flex-start}
+.slotline:empty::after{content:"从下面挑词，拼成一句话";color:var(--ink-faint);font-size:14px}
+.bank{display:flex;flex-wrap:wrap;gap:8px;margin-block:0 8px}
+.word{background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:11px;padding-block:8px;padding-inline:12px;
+  font-size:15px;transition:transform .08s,opacity .15s}
+.word:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.word:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.word.used{opacity:.22;pointer-events:none}
+.word.placed{background:var(--accent-pale);border-color:var(--accent)}
+.word.ok{background:var(--ok-pale);border-color:var(--ok)}
+.word.nope{background:var(--berry-pale);border-color:var(--berry)}
+
+/* ---------- scale ---------- */
+.scale{margin-block:10px 18px}
+.scale input[type=range]{width:100%;accent-color:var(--accent);height:34px}
+.scale .val{font-family:var(--num);font-size:42px;font-weight:700;color:var(--accent-ink);
+  text-align:center;line-height:1;font-variant-numeric:tabular-nums}
+.scale .ends{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-faint)}
+
+/* ---------- rows (unit picker) ---------- */
+.rows{display:flex;flex-direction:column;gap:9px;margin-block:2px 10px}
+.row{background:var(--panel);border:2px solid var(--line);border-radius:13px;
+  padding-block:10px;padding-inline:12px}
+.row{transition:border-color .18s,background .18s}
+.row.set{border-color:var(--accent);background:var(--panel-2)}
+.row .lbl{font-size:14.5px;margin-bottom:8px;line-height:1.45}
+.row .lbl small{display:block;color:var(--ink-faint);font-size:12.5px;margin-top:3px;line-height:1.45}
+.row .lbl b{font-family:var(--num);font-variant-numeric:tabular-nums}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{border:2px solid var(--line);border-radius:var(--r-pill);padding-block:5px;padding-inline:12px;
+  font-size:14px;background:var(--panel-2);transition:.12s}
+.opt:active:not(:disabled){transform:translateY(1px)}
+.opt[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.opt.ok{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+.opt.nope{background:var(--berry);border-color:var(--berry);color:#fff}
+.opt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* ---------- footer / feedback ---------- */
+.foot::before{content:"";position:absolute;left:0;right:0;top:-22px;height:22px;
+  pointer-events:none;background:linear-gradient(180deg,#0000,var(--bg))}
+.foot{flex:none;padding-inline:16px;padding-block:10px;
+  padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  border-top:1px solid transparent;background:var(--bg);position:relative;z-index:3}
+.cta{width:100%;border-radius:15px;padding-block:14px;font-size:16.5px;font-weight:700;
+  letter-spacing:.04em;background:var(--accent);color:#fff;
+  border-bottom:var(--lip-h) solid #0000002e;transition:transform .08s,opacity .2s,background .2s}
+.cta:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.cta:disabled{background:var(--bg-deep);color:var(--ink-faint);border-bottom-color:transparent;cursor:default}
+.cta:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.cta.go{background:var(--ok);}
+.cta.ghost{background:transparent;color:var(--ink-soft);border:2px solid var(--line-2);
+  border-bottom-width:2px;font-weight:600}
+
+.fb{position:absolute;left:0;right:0;bottom:0;z-index:4;background:var(--panel);
+  border-top:2px solid var(--line-2);border-radius:var(--r-panel) var(--r-panel) 0 0;
+  padding-inline:16px;padding-block:16px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -14px 40px #4c341c24;transform:translateY(103%);transition:transform .32s cubic-bezier(.2,.9,.25,1);
+  max-height:72%;overflow-y:auto}
+.fb.up{transform:translateY(0)}
+.fb.good{background:var(--ok-pale);border-top-color:var(--ok)}
+.fb.soft{background:var(--berry-pale);border-top-color:var(--berry)}
+.fb h3{margin:0 0 6px;font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+.fb.good h3{color:var(--ok-ink)} .fb.soft h3{color:var(--berry-ink)}
+.fb .mark{width:26px;height:26px;flex:none;border-radius:var(--r-pill);display:grid;place-items:center;
+  color:#fff;font-size:15px;font-weight:700}
+.fb.good .mark{background:var(--ok)} .fb.soft .mark{background:var(--berry)}
+.fb p{margin:0 0 10px;font-size:14.5px;line-height:1.65;color:var(--ink)}
+.fb p:last-of-type{margin-bottom:12px}
+.fb .keep{background:#ffffff40;border:1px dashed var(--line-2);border-radius:11px;
+  padding-block:10px;padding-inline:11px;font-size:13.5px;line-height:1.6;margin-block:0 12px}
+.fb .keep b{display:block;font-family:var(--num);font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px;font-weight:600}
+
+/* ---------- interstitial / result screens ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-panel);
+  padding-block:22px;padding-inline:18px;box-shadow:var(--sh-lift);margin-block:8px 14px}
+.hero{text-align:center;padding-block:10px}
+.hero .ring{width:96px;height:96px;margin:0 auto 14px;border-radius:var(--r-pill);
+  background:radial-gradient(circle at 34% 28%,var(--accent-bright),var(--accent));
+  display:grid;place-items:center;font-size:42px;box-shadow:0 14px 34px #e8743b4d;animation:rise .5s}
+@keyframes rise{from{transform:scale(.6) translateY(14px);opacity:0}}
+.hero h2{margin:0 0 6px;font-size:24px;color:var(--ink-title);text-wrap:balance}
+.hero .lede{color:var(--ink-soft);font-size:14.5px;margin:0 0 4px;text-wrap:balance;line-height:1.6}
+.hero .lede b{color:var(--ink-title);font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-block:16px 4px}
+.stat{background:var(--panel-2);border:1px solid var(--line);border-radius:13px;
+  padding-block:11px;padding-inline:8px;text-align:center}
+.stat b{display:block;font-family:var(--num);font-size:25px;font-weight:700;color:var(--accent-ink);
+  line-height:1.15;font-variant-numeric:tabular-nums}
+.stat span{font-size:11.5px;color:var(--ink-faint)}
+.can{display:flex;flex-direction:column;gap:9px;margin-block:4px 0}
+.can li{display:flex;gap:9px;align-items:flex-start;font-size:14.5px;line-height:1.55;
+  background:var(--ok-pale);border:1px solid var(--ok);border-radius:12px;
+  padding-block:10px;padding-inline:11px;animation:slidein .4s backwards}
+.can li i{flex:none;width:19px;height:19px;margin-top:2px;border-radius:var(--r-pill);background:var(--ok);
+  color:#fff;font-size:11px;font-style:normal;display:grid;place-items:center;font-weight:700}
+@keyframes slidein{from{opacity:0;transform:translateX(-12px)}}
+.ulist{list-style:none;margin:0;padding:0}
+.lvl{display:flex;gap:11px;align-items:center;width:100%;text-align:left;background:var(--panel);
+  border:2px solid var(--line);border-bottom-width:var(--lip-h);border-bottom-color:var(--lip);
+  border-radius:15px;padding-block:13px;padding-inline:13px;margin-bottom:9px;transition:transform .08s}
+.lvl:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:11px}
+.lvl .n{flex:none;width:34px;height:34px;border-radius:var(--r-pill);background:var(--accent);color:#fff;
+  font-family:var(--num);font-weight:700;display:grid;place-items:center;font-size:15px}
+.lvl.done .n{background:var(--ok)}
+.lvl.lock{opacity:.5}
+.lvl.lock .n{background:var(--bg-deep);color:var(--ink-faint)}
+.lvl .t{flex:1;font-size:15px;line-height:1.4;font-weight:600;color:var(--ink-title)}
+.lvl .t em{display:block;font-style:normal;font-weight:400;font-size:12.5px;color:var(--ink-faint);margin-top:2px}
+.note{font-size:12.5px;color:var(--ink-faint);line-height:1.6;margin-block:14px 0}
+.note code{background:var(--bg-deep);border-radius:5px;padding-inline:4px;font-size:12px}
+</style>
+<style>
+.redact{display:inline-block;height:1em;vertical-align:-.12em;border-radius:4px;
+  background:repeating-linear-gradient(135deg,var(--ink-faint),var(--ink-faint) 5px,var(--ink-soft) 5px,var(--ink-soft) 10px);
+  opacity:.55}
+.bub{background:var(--panel-2);border:1px solid var(--line);border-radius:14px 14px 14px 5px;
+  padding-block:11px;padding-inline:13px;margin-bottom:9px;font-size:15px;line-height:1.6}
+.bub:last-child{margin-bottom:0}
+.bub .who{font-family:var(--num);font-size:10.5px;font-weight:600;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--ink-faint);display:block;margin-bottom:3px}
+.bub.me{border-radius:14px 14px 5px 14px;background:var(--accent-pale);border-color:var(--accent)}
+.orig{background:var(--panel-2);border-left:3px solid var(--accent);border-radius:0 11px 11px 0;
+  padding-block:10px;padding-inline:12px;margin-bottom:11px}
+.orig dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}
+.orig dt{color:var(--ink-faint);font-size:13px}
+.orig dd{margin:0;font-weight:600;color:var(--ink-title)}
+.total{text-align:right;font-family:var(--num);font-size:34px;font-weight:700;color:var(--warn);
+  font-variant-numeric:tabular-nums;line-height:1.1;min-height:38px}
+.total.idle{color:var(--ink-faint);font-size:15px;font-weight:400;padding-top:11px}
+.sumbtn{width:100%;margin-top:10px;border-radius:12px;padding-block:11px;font-size:15px;font-weight:700;
+  background:var(--panel-deep);color:var(--ink-title);border-bottom:var(--lip-h) solid var(--lip);
+  transition:transform .08s}
+.sumbtn:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.sumbtn:disabled{opacity:.5;cursor:default}
+.fig{border-radius:11px;overflow:hidden;border:1px solid var(--line);margin-bottom:9px;background:var(--bg-deep)}
+.fig .sky{height:104px;position:relative;background:radial-gradient(ellipse 120% 80% at 50% 118%,#6f7f8c 0%,#2b3138 46%,#0b0d10 100%)}
+.fig .earth{position:absolute;left:50%;top:26px;width:46px;height:46px;transform:translateX(-50%);
+  border-radius:50%;background:radial-gradient(circle at 34% 30%,#9ec6e8,#3f76ab 52%,#1d3a59);
+  box-shadow:0 0 22px #6fa8d833}
+.fig .horizon{position:absolute;left:-10%;right:-10%;bottom:-34px;height:78px;border-radius:50% 50% 0 0;
+  background:linear-gradient(180deg,#8d8579,#4a453d)}
+.fig .cap{padding-block:8px;padding-inline:10px;font-size:12px;color:var(--ink-soft);line-height:1.5;background:var(--panel)}
+.fig.ai .sky{background:radial-gradient(ellipse 120% 80% at 50% 118%,#9c8f7a 0%,#4a4033 46%,#191410 100%)}
+.fig.ai .earth{background:radial-gradient(circle at 34% 30%,#ffd9a8,#e09a5a 52%,#a35f2c);box-shadow:0 0 26px #e8a06433}
+.fig.art .sky{background:linear-gradient(180deg,#5a4b8c 0%,#b96a8f 58%,#f0a46a 100%)}
+.fig.art .earth{background:radial-gradient(circle at 34% 30%,#fff0c9,#f2c14e 52%,#c98a2b);box-shadow:0 0 26px #f2c14e40}
+.fig.art .horizon{background:linear-gradient(180deg,#3a2c52,#241a35)}
+.pickitem{background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:13px;padding-block:10px;padding-inline:11px;
+  font-size:14px;line-height:1.5;text-align:left;width:100%;transition:transform .08s}
+.pickitem:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.pickitem[aria-checked="true"]{background:var(--accent-pale);border-color:var(--accent)}
+.pickitem:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.pickitem small{display:block;color:var(--ink-faint);font-size:12px;margin-top:2px}
+.hint{font-size:13px;color:var(--ink-faint);margin-block:0 10px}
+.goal{font-size:13.5px;color:var(--accent-ink);background:var(--accent-pale);border-radius:10px;
+  padding-block:8px;padding-inline:11px;margin-block:0 12px;line-height:1.5;font-weight:600}
+.lab{display:flex;flex-direction:column;gap:11px;margin-block:0 8px}
+.lab-h{font-family:var(--num);font-size:10.5px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px}
+.lab-left{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-card);
+  padding-block:11px;padding-inline:11px;display:flex;flex-direction:column;gap:7px}
+.clause{display:flex;align-items:flex-start;gap:9px;width:100%;text-align:left;font-size:14.5px;
+  line-height:1.45;background:var(--panel);border:2px solid var(--line);border-radius:11px;
+  padding-block:9px;padding-inline:10px;transition:.14s}
+.clause .box{flex:none;width:19px;height:19px;margin-top:1px;border-radius:6px;border:2px solid var(--line-2);
+  display:grid;place-items:center;font-size:11px;color:transparent;background:var(--bg)}
+.clause[aria-checked="true"]{background:var(--accent-pale);border-color:var(--accent)}
+.clause[aria-checked="true"] .box{background:var(--accent);border-color:var(--accent);color:#fff}
+.clause:active{transform:scale(.985)}
+.clause:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.lab-out{background:var(--panel);border:2px solid var(--line-2);border-radius:var(--r-card);
+  padding-block:11px;padding-inline:12px;transition:border-color .22s,background .22s}
+.lab-out.win{border-color:var(--ok);background:var(--ok-pale)}
+.lab-body{font-size:15px;line-height:1.7;min-height:2.6em}
+.lab-body.flash{animation:labflash .34s}
+@keyframes labflash{from{opacity:.25;transform:translateY(-4px)}}
+</style>
+
+<style>
+/* ---- 改造版专用 ---- */
+.rail{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+.step{flex:none;width:9px;height:9px;border-radius:var(--r-pill);background:var(--bg-deep);
+  border:1px solid var(--line);transition:.28s}
+.step.done{background:var(--ok);border-color:var(--ok)}
+.step.now{flex:1;min-width:0;width:auto;height:22px;background:var(--accent);border-color:var(--accent);
+  display:flex;align-items:center;justify-content:center;padding-inline:9px}
+.step.now span{display:inline!important;font-size:11.5px;font-weight:700;color:#fff;white-space:nowrap}
+.step span{display:none}
+.play{flex:1;min-height:0;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.ptop{flex:none;display:flex;align-items:center;gap:11px;padding-inline:16px;padding-block:11px 6px}
+.board{flex:none;margin-inline:16px;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r-card);box-shadow:var(--sh);padding-block:12px;padding-inline:13px;
+  max-height:46%;overflow-y:auto}
+.board-h{font-family:var(--num);font-size:10px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-faint);margin-bottom:9px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.board-h em{font-style:normal;color:var(--accent-ink);text-transform:none;letter-spacing:0;font-size:11.5px;font-weight:600}
+.cap{font-size:12px;color:var(--ink-faint);line-height:1.55;margin:7px 0 0}
+.hitline,.missline{margin-top:7px;border-radius:9px;padding-block:7px;padding-inline:9px;
+  font-size:13px;font-weight:600;line-height:1.5;animation:litin .35s}
+.hitline{background:var(--ok-pale);color:var(--ok-ink);border:1px solid var(--ok)}
+.missline{background:var(--warn-pale);color:var(--warn-ink);border:1px solid var(--warn)}
+@keyframes litin{from{opacity:0;transform:translateY(-5px)}}
+.reply,.checkbox2{margin-top:9px;background:var(--panel-2);border:1px solid var(--line);
+  border-radius:12px 12px 12px 4px;padding-block:9px;padding-inline:11px;font-size:14px;line-height:1.7}
+.reply.win{background:var(--ok-pale);border-color:var(--ok)}
+.checkbox2{border-radius:12px;border-style:dashed;background:var(--bg-deep)}
+.reply .who,.checkbox2 .who{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-faint);
+  font-family:var(--num);font-weight:600;display:block;margin-bottom:3px}
+.body.flash{animation:labflash .34s}
+@keyframes labflash{from{opacity:.3;transform:translateY(-4px)}}
+.redact{display:inline-block;height:1em;vertical-align:-.12em;border-radius:4px;opacity:.55;
+  background:repeating-linear-gradient(135deg,var(--ink-faint),var(--ink-faint) 5px,var(--ink-soft) 5px,var(--ink-soft) 10px)}
+.flows{display:flex;flex-direction:column;gap:6px}
+.flow{display:flex;align-items:center;gap:7px;font-size:13.5px;border-radius:10px;
+  padding-block:7px;padding-inline:10px;animation:litin .3s;border:1px solid var(--line)}
+.flow.same{background:var(--ok-pale);border-color:var(--ok)}
+.flow.diff{background:var(--accent-pale);border-color:var(--accent)}
+.flow i{font-style:normal;color:var(--ink-faint)}
+.flow em{margin-left:auto;font-style:normal;font-size:11.5px;font-weight:700;opacity:.8}
+.doc{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding-block:9px;padding-inline:10px}
+.doc-h{font-size:11px;color:var(--ink-faint);margin-bottom:5px;font-weight:600}
+.doc dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:13.5px;align-items:center}
+.doc dt{color:var(--ink-faint);font-size:12.5px}
+.doc dd{margin:0;font-weight:600;color:var(--ink-title)}
+.doc dd.lit2{background:var(--ok-pale);color:var(--ok-ink);border-radius:5px;padding-inline:5px;animation:litin .3s}
+.pact{flex:1;overflow-y:auto;padding-inline:16px;padding-block:14px 16px}
+.said{font-size:14.5px;line-height:1.75;color:var(--ink);margin:0 0 12px}
+.said b{color:var(--accent-ink)}
+.ask{font-size:18px;line-height:1.5;font-weight:700;color:var(--ink-title);margin:0 0 13px;text-wrap:balance}
+.goal{font-size:13.5px;color:var(--accent-ink);background:var(--accent-pale);border-radius:10px;
+  padding-block:8px;padding-inline:11px;margin:0 0 12px;line-height:1.5;font-weight:600}
+.lab-left{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-card);
+  padding-block:11px;padding-inline:11px;display:flex;flex-direction:column;gap:7px;margin-bottom:9px}
+.lab-h{font-family:var(--num);font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-faint);margin-bottom:2px}
+.clause{display:flex;align-items:flex-start;gap:9px;width:100%;text-align:left;font-size:14.5px;line-height:1.45;
+  background:var(--panel);border:2px solid var(--line);border-radius:11px;padding-block:9px;padding-inline:10px;transition:.14s}
+.clause .box{flex:none;width:19px;height:19px;margin-top:1px;border-radius:6px;border:2px solid var(--line-2);
+  display:grid;place-items:center;font-size:11px;color:transparent;background:var(--bg)}
+.clause[aria-checked="true"]{background:var(--accent-pale);border-color:var(--accent)}
+.clause[aria-checked="true"] .box{background:var(--accent);border-color:var(--accent);color:#fff}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 10px}
+.segbit{border:2px solid var(--line);border-bottom-width:var(--lip-h);border-bottom-color:var(--lip);
+  background:var(--panel);border-radius:10px;padding-block:8px;padding-inline:10px;font-size:14.5px;transition:transform .08s}
+.segbit:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.segbit.ok{background:var(--ok-pale);border-color:var(--ok);font-weight:600}
+.segbit.nope{background:var(--berry-pale);border-color:var(--berry)}
+.segbit.dim{opacity:.45}
+.pfoot{flex:none;padding-inline:16px;padding-block:10px 14px;background:var(--bg);position:relative;z-index:3}
+.pfoot::before{content:"";position:absolute;left:0;right:0;top:-20px;height:20px;pointer-events:none;
+  background:linear-gradient(180deg,#0000,var(--bg))}
+.fb{position:absolute;left:0;right:0;bottom:0;z-index:4;background:var(--panel);border-top:2px solid var(--line-2);
+  border-radius:var(--r-panel) var(--r-panel) 0 0;padding-inline:16px;padding-block:16px 14px;
+  box-shadow:0 -14px 40px #4c341c24;transform:translateY(103%);transition:transform .32s cubic-bezier(.2,.9,.25,1);
+  max-height:74%;overflow-y:auto}
+.fb.up{transform:translateY(0)}
+.fb.good{background:var(--ok-pale);border-top-color:var(--ok)}
+.fb.soft{background:var(--berry-pale);border-top-color:var(--berry)}
+.fb h3{margin:0 0 7px;font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+.fb.good h3{color:var(--ok-ink)} .fb.soft h3{color:var(--berry-ink)}
+.fb .mark{width:26px;height:26px;flex:none;border-radius:var(--r-pill);display:grid;place-items:center;color:#fff;font-size:15px;font-weight:700}
+.fb.good .mark{background:var(--ok)} .fb.soft .mark{background:var(--berry)}
+.fb p{margin:0 0 10px;font-size:14.5px;line-height:1.7;color:var(--ink)}
+.fb .keep{background:#ffffff40;border:1px dashed var(--line-2);border-radius:11px;padding-block:10px;padding-inline:11px;
+  font-size:13.5px;line-height:1.6;margin:0 0 12px}
+.fb .keep b{display:block;font-family:var(--num);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-faint);margin-bottom:4px;font-weight:600}
+.done{text-align:center;padding-block:18px}
+.done .ring{width:84px;height:84px;margin:0 auto 13px;border-radius:var(--r-pill);
+  background:radial-gradient(circle at 34% 28%,var(--accent-bright),var(--accent));
+  display:grid;place-items:center;font-size:38px;box-shadow:0 14px 34px #e8743b4d}
+.done h2{margin:0 0 7px;font-size:21px;color:var(--ink-title)}
+.done .lede{color:var(--ink-title);font-size:15px;line-height:1.65;margin:0 0 4px;font-weight:600;text-wrap:balance}
+/* ---- 来源卡：真实来源常驻，六段都在 ---- */
+.srcbar{display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  background:var(--bg-deep);border:1px solid var(--line-2);border-radius:11px;
+  padding-block:8px;padding-inline:10px;margin-bottom:10px;font-size:12.5px;color:var(--ink-soft);
+  transition:.15s}
+.srcbar:hover{border-color:var(--accent)}
+.srcbar b{color:var(--ink-title);font-weight:700}
+.srcbar .pin{flex:none;font-size:13px}
+.srcbar .chev{margin-left:auto;color:var(--ink-faint);font-family:var(--num);font-weight:700}
+.srclist{margin-bottom:10px;display:flex;flex-direction:column;gap:8px;animation:litin .3s}
+.srcone{background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:0 11px 11px 0;padding-block:10px;padding-inline:11px}
+.srcone h6{margin:0 0 2px;font-size:13.5px;font-weight:700;color:var(--ink-title);line-height:1.45}
+.srcone .when{font-size:11.5px;color:var(--ink-faint);margin-bottom:6px}
+.srcone .says{font-size:13px;line-height:1.65;color:var(--ink);margin:0 0 7px}
+.srcone .cant{font-size:12.5px;line-height:1.6;color:var(--warn-ink);background:var(--warn-pale);
+  border-radius:8px;padding-block:7px;padding-inline:8px;margin:0 0 7px}
+.srcone .cant b{color:var(--warn-ink)}
+.srcone .cant::before{content:"它不能证明什么　";font-family:var(--num);font-size:10px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;opacity:.75;display:block;margin-bottom:3px}
+.srcone a{font-size:12.5px;color:var(--accent-ink);text-decoration-color:var(--accent-pale)}
+/* ---- 外壳 ---- */
+.wrap{max-width:520px;margin-inline:auto;height:100%;display:flex;flex-direction:column;background:var(--bg)}
+.hdr{flex:none;padding-inline:16px;padding-block:13px 9px;background:var(--bg);
+  border-bottom:1px solid var(--line);z-index:20}
+.hdr h1{margin:0 0 3px;font-size:15px;font-weight:700;color:var(--ink-title)}
+.hdr p{margin:0 0 10px;font-size:12.5px;color:var(--ink-faint);line-height:1.5}
+.picker{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.picker::-webkit-scrollbar{height:0}
+.picker button{flex:none;border:1px solid var(--line-2);border-radius:var(--r-pill);
+  padding-block:6px;padding-inline:12px;font-size:12.5px;color:var(--ink-soft);white-space:nowrap}
+.picker button[aria-current="true"]{background:var(--ink-title);color:var(--bg);border-color:var(--ink-title);font-weight:600}
+.body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.rbtn{border-radius:12px;padding-block:12px;padding-inline:16px;font-size:15px;font-weight:700;
+  background:var(--accent);color:#fff;border-bottom:var(--lip-h) solid #0000002e;transition:transform .08s}
+.rbtn:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.rbtn:disabled{background:var(--bg-deep);color:var(--ink-faint);border-bottom-color:transparent}
+.rbtn:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.bins{display:flex;flex-direction:column;gap:9px;margin-bottom:10px}
+.binrow{background:var(--panel);border:2px solid var(--line);border-radius:13px;
+  padding-block:11px;padding-inline:12px;transition:.16s}
+.binrow.set{border-color:var(--accent);background:var(--panel-2)}
+.binrow .l{font-size:14.5px;line-height:1.55;color:var(--ink-title);margin-bottom:9px}
+.binopts{display:flex;flex-wrap:wrap;gap:6px}
+.binopt{border:2px solid var(--line-2);border-radius:var(--r-pill);background:var(--panel-2);
+  padding-block:6px;padding-inline:12px;font-size:13.5px;transition:.12s}
+.binopt[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.binopt.ok{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+.binopt.no{background:var(--berry);border-color:var(--berry);color:#fff}
+.binopt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+</style>
+
+<div class="wrap">
+  <header class="hdr">
+    <h1>先让它帮上一点忙</h1>
+    <p>《认识 AI，从这里开始》第一单元的前三节 · 改造版。课文、出处和教学顺序都来自已发布课程。</p>
+    <div class="picker" id="picker"></div>
+  </header>
+  <div class="body" id="body"></div>
+</div>
+<script>
+/* ============================================================
+   改造版：同样三节课，走课文自己的六段骨架。
+   三条硬规矩：
+   1. 材料常驻在上半屏，六段都不消失，跟着操作变。
+   2. 真实来源不是脚注。来源卡常驻，固定带一栏「它不能证明什么」。
+   3. 原课文的背景一句不删，改成初学者的口语；「助手」一律写成「AI」。
+   ============================================================ */
+const RAIL=["现场","先猜","答案","怎么做","自检","一句话"];
+const EARTH='<div class="earth"><div class="globe"></div><div class="moon"></div></div>';
+
+const REMADE=[
+{
+ id:"ask-about-a-picture",
+ title:"这张照片，有哪些问题可以直接问？",
+ line:"看得见的对着画面检查，背景信息回到记录检查。",
+ can:"把一句请求拆成「对着画面查」和「回记录查」，并且认出第三种：两边都查不了的",
+ boardLabel:"你手上的材料",boardNote:"一张照片，没有别的",
+ sources:[
+  {n:"Be My Eyes 的照片功能",w:"2023 年",
+   says:"拍一张照片发给 AI，它讲给你听这张照片上有什么，你还能接着追问。这个应用本来是做给看不见东西的人用的。",
+   cant:"它说明的是这类功能怎么用，<b>不能证明任何一次看图说明是对的</b>。这个应用同时留着「转接人工志愿者」那条路——留着人工，本身就是在说细节还得再看。",
+   u:"https://www.bemyeyes.com/blog/introducing-be-my-ai/"},
+  {n:"NASA 保存的《地出》照片记录",w:"1968 年 12 月 24 日拍摄",
+   says:"摄影者 Bill Anders，阿波罗 8 号绕月飞行途中拍下。这是 NASA 的官方图像，不是 AI 生成的。",
+   cant:"这份记录说的是<b>这一张</b>照片。它不能替任何一张风格相似的新图片盖章。",
+   u:"https://www.nasa.gov/image-article/apollo-8-astronaut-bill-anders-captures-earthrise/"}],
+ init:()=>({seen:new Set(),reply:null,win:false,srcOpen:false}),
+ board(st){
+  const tag=(k,t,ok)=>st.seen.has(k)?'<div class="'+(ok?"hitline":"missline")+'">'+t+"</div>":"";
+  return EARTH+
+   '<p class="cap">《地出》示意图。真正的画面上只有这三样：一颗蓝白色地球，一片灰白色月面，黑色天空。</p>'+
+   tag("position","地球在月面上方 —— 画面里看得见",1)+
+   tag("sky","地球周围是黑色 —— 画面里看得见",1)+
+   tag("photographer","是谁拍的 —— 画面上没有印名字",0)+
+   tag("date","哪一天拍的 —— 画面上没有日期",0)+
+   (st.reply?'<div class="reply'+(st.win?" win":"")+'"><span class="who">AI 回给你的</span><div class="body flash">'+st.reply+"</div></div>":"");
+ },
+ screens:[
+ {rail:0,type:"probe",
+  said:"有个应用叫 <b>Be My Eyes</b>。2023 年它加了个功能：你拍一张照片发给 AI，AI 讲给你听这张照片上有什么，你还能接着追问。<br><br>这个应用本来是做给看不见东西的人用的。所以它<b>同时还留着「转接人工志愿者」那条路</b>——留着人工这件事本身就在说：AI 看图能帮上忙，但不是所有细节都不用再看了。<br><br>上面这张是 NASA 保存的一张真照片，叫《地出》。现在你想让 AI 给它写一句说明：既讲清地球和月面的位置，也写上是谁拍的。",
+  ask:"先弄清这张照片本身能回答什么。点下面四项，看它在画面里到底有没有。",
+  items:[{t:"地球和月面的位置",k:"position"},{t:"地球周围是什么颜色",k:"sky"},
+         {t:"这张照片是谁拍的",k:"photographer"},{t:"它是哪一天拍的",k:"date"}],
+  doneLabel:"四项都看过了",
+  good:"四项里两项在画面上，两项不在。<b>不在画面上的那两项，这张照片自己回答不了</b>——不管你怎么问它。"},
+ {rail:1,railAfter:2,type:"choice",
+  before:(st)=>{st.reply='这张壮丽的照片由宇航员在绕月途中拍摄，记录下地球从月球地平线升起的历史瞬间。';st.win=false},
+  said:"你把这张照片发给 AI，让它写一句完整的照片说明。上面是它回给你的第一句。",
+  ask:"光靠这张图，AI 能写出是谁拍的吗？",
+  options:[
+   {t:"能，它看得出来",fb:"画面上没有印名字。AI 可以写出一个名字，但那不是从这张图上看出来的——它是从别处来的，而你不知道是哪里。"},
+   {t:"不能，除非你另外给它照片记录",ok:true,fb:"对。"},
+   {t:"能，只要照片够清晰",fb:"再清晰，天上也不会印出摄影者的名字。清晰度和这件事无关。"}],
+  answerTitle:"答案",
+  good:"不能。<b>位置可以对着画面描述，是谁拍的必须去查照片记录。</b>把这两件事分开，结果才各有地方可以核对。"},
+ {rail:3,type:"lab",
+  said:"NASA 的照片记录里写着：<b>1968 年 12 月 24 日，Bill Anders 拍摄，阿波罗 8 号绕月飞行。</b>这份记录就在上面那张来源卡里，你随时可以点开。<br><br>下面三条可以随便开关，上面 AI 的回复会当场跟着变。",
+  ask:"开关这几条，让 AI 回的每一句都有地方可以查。",
+  goal:"让回复里的每一句，你都知道该拿什么去对。",
+  leftTitle:"你发给 AI 的请求",
+  clauses:[{id:"visual",t:"只描述画面里看得见的"},
+           {id:"record",t:"另外把 NASA 的照片记录也给它"},
+           {id:"name",t:"顺便把是谁拍的也写上"}],
+  outs:[
+   {need:["visual","record"],win:true,
+    html:'<b>画面描述</b>：一颗蓝白色地球，出现在灰白月面上方的黑色天空中。<br><span style="color:var(--ink-faint);font-size:13px">↑ 这一句你回到照片上看一眼就能对</span><br><br><b>记录背景</b>：1968 年 12 月 24 日，Bill Anders 摄，阿波罗 8 号绕月飞行。<br><span style="color:var(--ink-faint);font-size:13px">↑ 这一句你打开 NASA 的记录就能对</span>'},
+   {need:["visual"],
+    html:'一颗蓝白色地球，出现在灰白月面上方的黑色天空中。<br><span style="color:var(--ink-faint);font-size:13px">这一句能对着照片查。但你要的说明还缺背景，而你没把记录给它。</span>'},
+   {need:["name"],ban:["record"],
+    html:'摄影者：<span class="redact" style="width:4.5em"></span>，拍摄于 <span class="redact" style="width:5em"></span>。<br><b style="color:var(--warn)">这两处它没有依据</b>——画面上没有，你也没给它记录。它可能写对，也可能写错，<b>而你没办法判断是哪一种</b>。'},
+   {need:[],
+    html:'这张壮丽的照片由宇航员在绕月途中拍摄，记录下地球从月球地平线升起的历史瞬间。<br><b style="color:var(--warn)">这一段里，哪一句你能对着照片查，哪一句要另外查记录？分不出来。</b>'}],
+  winCta:"每一句都有地方可查了",
+  good:"你没有让 AI 写得更好，你让它<b>把两种信息分开摆</b>。分开之后，每一句都知道该去哪里对——这就是这一节全部的内容。"},
+ {rail:4,type:"sort3",
+  said:"还有第三种情况，比前两种更容易踩。<br><br>下面三句话，都是有人给这张照片写过的说明。",
+  ask:"每一句，你打算拿什么去核对它？",
+  bins:["看照片就能对","查 NASA 记录能对","<b>两边都对不了</b>"],
+  rows:[
+   {l:"一颗蓝白色地球，出现在灰白月面上方",a:0,
+    fb:"这句话说的东西就在画面里，看一眼就能对。"},
+   {l:"1968 年 12 月 24 日，Bill Anders 拍摄",a:1,
+    fb:"画面上没有这两样。但 NASA 的记录里有，打开就能对。"},
+   {l:"按下快门的那一刻，他一定屏住了呼吸",a:2,
+    fb:"画面证明不了，记录里也没写。这句话不是查来的，是<b>写的人自己想的</b>。"}],
+  good:"第三种最容易混进去，因为它读起来最好看。<br>写这种句子不犯法——<b>但你得知道它是你自己的感受，不是查来的事实</b>，并且别把它和前两种混在一句里。"},
+ {rail:5,type:"takeaway"}]
+},
+{
+ id:"sound-words-and-meaning",
+ title:"原话变成文字，什么时候还需要翻译？",
+ line:"先决定保留原语言还是换一种语言，再分别检查原话与意思有没有对上。",
+ can:"先说清输出用哪种语言，再分别检查原话和意思",
+ boardLabel:"四条请求，和它们的语言走向",boardNote:"一段中文讲话，两个读者",
+ sources:[
+  {n:"OpenAI 发布 Whisper 的说明",w:"2022 年",
+   says:"这是个语音模型。发布说明里写了它做两件事：一是<b>把声音按原来的语言写成字</b>（中文讲话写成中文字）；二是<b>把别的语言的讲话翻成英文</b>。",
+   cant:"发布说明讲的是这个模型能做哪两类任务。它<b>不能证明任何一次识别有多准</b>。这一节也没有真录音——我们不报准确率，也不编造它听错了哪句话。",
+   u:"https://openai.com/index/whisper/"}],
+ init:()=>({seen:new Set(),out:null,outWin:false,tried:new Set(),srcOpen:false}),
+ board(st){
+  const A=[["zh-zh","中文讲话","中文文字"],["zh-en","中文讲话","英文文字"],
+           ["en-en","英文讲话","英文文字"],["fr-en","法文讲话","英文文字"]];
+  let h='<div class="flows">';
+  A.forEach(([k,a,b])=>{ if(!st.seen.has(k))return;
+    const same=a.slice(0,2)===b.slice(0,2);
+    h+='<div class="flow '+(same?"same":"diff")+'"><span>'+a+'</span><i>→</i><span>'+b+'</span><em>'+(same?"语言没变":"语言变了")+"</em></div>";
+  });
+  if(!st.seen.size)h+='<p class="cap" style="margin:0">点下面的请求，这里会画出它的语言走向。</p>';
+  h+="</div>";
+  if(st.out)h+='<div class="reply'+(st.outWin?" win":"")+'"><span class="who">你要的那份成品</span><div class="body flash">'+st.out+"</div></div>";
+  return h;
+ },
+ screens:[
+ {rail:0,type:"probe",
+  said:"2022 年，OpenAI 发布了一个叫 <b>Whisper</b> 的语音模型。它的发布说明里写了两件它能做的事：<br><br>一是<b>把声音按原来的语言写成字</b>——中文讲话，写成中文字。<br>二是<b>把别的语言的讲话翻成英文</b>。<br><br>注意这是<b>两件事</b>，不是一件事的两种说法。现在你手上有一段中文讲话：你想自己留一份文字，也想让只读英文的朋友看懂。",
+  ask:"点下面四条请求，看它们的语言分别从哪里走到哪里。",
+  items:[{t:"中文讲话，保存中文文字",k:"zh-zh"},{t:"中文讲话，给英文读者准备英文",k:"zh-en"},
+         {t:"英文讲话，保存英文文字",k:"en-en"},{t:"法文讲话，准备英文文字",k:"fr-en"}],
+  doneLabel:"四条都看过了",
+  good:"四条里，两条语言没变，两条变了。<b>这条分界线就是全部</b>——不管讲的是中文、英文还是法文。<br>把原话按同一种语言写成文字，这件事有个名字，叫<b>转写</b>；把说法换成另一种语言，叫<b>翻译</b>。"},
+ {rail:1,railAfter:2,type:"choice",
+  said:"你对 AI 说：「帮我处理一下这段录音。」它交回一份文字。",
+  ask:"拿到这份文字，你最难检查的是哪一件事？",
+  options:[
+   {t:"它有没有把字听错",fb:"这个能查：把文字和录音逐句对一遍。难的不是这个。"},
+   {t:"它交回的到底是原话还是译文",ok:true,fb:"对。"},
+   {t:"它排版好不好看",fb:"好不好看，和你要拿这份文字干什么没关系。"}],
+  answerTitle:"答案",
+  good:"你没说输出要保持中文还是换成英文。<b>前一种是把原话写下来，后一种还要翻译——你要检查的东西完全不同。</b>"},
+ {rail:3,type:"lab",
+  said:"下面两个开关决定你要的那份成品。上面会当场显示它是什么、以及<b>你该拿什么去核对它</b>。<br><br>提醒一句：这里没有真录音，所以下面不会报任何准确率，也不会编造 AI 听错了哪句话。这一拍只分辨任务要求。",
+  ask:"两种成立的任务，都试出来。",
+  goal:"把「转写」和「翻译」两种成品都做出来一次。",
+  leftTitle:"这份成品的要求",
+  clauses:[{id:"en",t:"输出换成英文"},{id:"free",t:"允许改变说法，只要意思到位"}],
+  winAll:["transcribe","translate"],
+  outs:[
+   {need:["en","free"],tag:"translate",
+    html:'这叫<b>翻译</b>。<br>产出：英文文字，意思对应原话。<br><span style="color:var(--ink-faint);font-size:13px">怎么核对：请一个懂中英文的人，看意思有没有走样。</span>'},
+   {need:["en"],
+    html:'<b style="color:var(--warn)">这个组合不成立。</b><br>逐字的英文？原话是中文，<b>根本没有英文原话可以逐字写下来</b>。'},
+   {need:["free"],
+    html:'<b style="color:var(--warn)">这不是转写。</b><br>中文，但允许改说法——这是<b>中文改写</b>。你拿它去和录音逐字对，会对不上。'},
+   {need:[],tag:"transcribe",
+    html:'这叫<b>转写</b>。<br>产出：中文文字，逐字对应录音。<br><span style="color:var(--ink-faint);font-size:13px">怎么核对：回放录音，一句一句对。</span>'}],
+  winCta:"两种都做出来了",
+  good:"两个开关，四种组合，<b>只有对角线上那两种成立</b>。<br>Whisper 的发布说明讲的就是那两种；你刚才撞到的另外两种，正是它们必须分开说的原因。"},
+ {rail:4,type:"choice",
+  said:"你已经有一份对过录音的中文转写稿。现在要给只读英文的朋友看。",
+  ask:"下一份成品的语言要求，你怎么说？",
+  options:[
+   {t:"让它重新听一遍录音，直接出英文",fb:"也能出结果，但你手上那份已经对过的中文稿就白做了，而且又多了一次听错的机会。"},
+   {t:"把这份中文稿翻译成英文，意思保留",ok:true,fb:"对。"},
+   {t:"把中文稿逐字换成英文词",fb:"逐字换词不是翻译。意思会走样——而意思正是翻译要检查的那一样东西。"}],
+  good:"把语言要求讲明白，你才能<b>分开检查原话和译文</b>，不会把一份译文当成逐字保留的原话。"},
+ {rail:5,type:"takeaway"}]
+},
+{
+ id:"name-the-result",
+ title:"说了主题，为什么还是拿不到想要的东西？",
+ line:"主题告诉 AI 围绕什么写，成品和条件告诉你怎样判断它是否做完。",
+ can:"先点名要带走的成品，再写两三个不能丢的条件",
+ boardLabel:"原始公告，和你正在做的成品",boardNote:"一份材料，两样东西",
+ sources:[
+  {n:"NASA 的观月夜公告",w:"2023 年 10 月 21 日",
+   says:"戈达德访客中心办的一场观月夜：晚上 6 点到 9 点，地点在马里兰州格林贝尔特，不用报名，还有好几项活动。",
+   cant:"这则公告说的是<b>2023 年那一场</b>。它不能证明今年还有同样的活动——<b>已经结束的活动，不能写成现在的邀请</b>。",
+   u:"https://www.nasa.gov/news-release/celebrate-international-observe-the-moon-night-at-nasas-goddard-space-flight-center/"},
+  {n:"OpenAI 的请求写作指导",w:"官方帮助文档",
+   says:"它强调两件事：把要求写清楚，把相关背景给足。",
+   cant:"这是<b>有用的写法建议，不是念了就灵的咒语</b>。它不保证 AI 答得对，只是让你更容易看出它答得对不对。",
+   u:"https://help.openai.com/en/articles/10032626-prompt-engineering-best-practices-for-chatgpt"}],
+ init:()=>({seen:new Set(),out:null,check:null,win:false,srcOpen:false}),
+ board(st){
+  const F=[["date","时间","2023 年 10 月 21 日，晚 6 点–9 点"],
+           ["place","地点","马里兰州格林贝尔特，戈达德访客中心"],
+           ["signup","报名","不用报名"],
+           ["over","状态","这场活动已经结束了"]];
+  let h='<div class="doc"><div class="doc-h">NASA 原始公告</div><dl>';
+  F.forEach(([k,a,b])=>{h+="<dt>"+a+"</dt><dd"+(st.seen.has(k)?' class="lit2"':"")+">"+b+"</dd>"});
+  h+="</dl></div>";
+  if(st.out)h+='<div class="reply'+(st.win?" win":"")+'"><span class="who">AI 交给你的成品</span><div class="body flash">'+st.out+"</div></div>";
+  if(st.check)h+='<div class="checkbox2"><span class="who">你现在能检查什么</span><div class="body">'+st.check+"</div></div>";
+  return h;
+ },
+ screens:[
+ {rail:0,type:"probe",
+  said:"上面是 NASA 的一则真公告：2023 年 10 月 21 日，戈达德访客中心办了一场观月夜，晚上 6 点到 9 点，地点在马里兰州格林贝尔特，不用报名。<br><br><b>这场活动早就结束了。</b>你现在拿它当素材：可以写一条给朋友的短消息，也可以做一张活动项目清单。同一份材料，两样不同的东西。",
+  ask:"先看清这份公告里有哪些事实。点下面四项。",
+  items:[{t:"活动的时间",k:"date"},{t:"活动的地点",k:"place"},
+         {t:"要不要报名",k:"signup"},{t:"这场活动现在还办不办",k:"over"}],
+  doneLabel:"四项都看过了",
+  good:"四项事实。<b>接下来不管做成什么，这四项要么留下、要么你自己决定不要</b>——不能糊里糊涂地丢掉。<br>最后那一项尤其要紧：已经结束的活动，不能写成现在的邀请。"},
+ {rail:1,railAfter:2,type:"choice",
+  said:"你对 AI 说：「介绍一下这次观月活动。」它交回一段文字。",
+  ask:"拿到结果之后，你最难检查的是哪一件事？",
+  options:[
+   {t:"它写得够不够长",fb:"长短你一眼就能看出来。难的不是这个。"},
+   {t:"它是不是你要的那种东西",ok:true,fb:"对。"},
+   {t:"它有没有写错日期",fb:"这个能查：对着上面的公告看一眼就行。"}],
+  answerTitle:"答案",
+  good:"主题虽然对了，但<b>短消息和项目清单，要留下的信息根本不一样</b>。你没说要哪一种，就没有检查项，只能跟它说「再好一点」。"},
+ {rail:3,type:"lab",
+  said:"OpenAI 自己的请求写作指导里也强调两件事：把要求写清楚，把背景给足。<b>这是有用的写法建议，不是念了就灵的咒语</b>——它不保证 AI 答得对，只是让你更容易看出它答得对不对。<br><br>下面四条可以随便开关。上面会同时显示 AI 交回什么，以及<b>你因此能检查什么</b>。",
+  ask:"开关这几条，直到下面那栏出现能一项一项核对的检查项。",
+  goal:"让「你现在能检查什么」那一栏里出现具体的项目。",
+  leftTitle:"你发给 AI 的请求",
+  clauses:[{id:"kind",t:"交一条给朋友的短消息"},{id:"t",t:"必须保留时间"},
+           {id:"p",t:"必须保留地点"},{id:"s",t:"必须保留报名要求"}],
+  outs:[
+   {need:["kind","t","p","s"],win:true,
+    html:'2023 年 10 月 21 日晚 6–9 点，NASA 戈达德访客中心（马里兰州格林贝尔特）办过一次观月夜，不用报名。',
+    check:'&#9744; 时间在不在　&#9744; 地点在不在　&#9744; 报名要求在不在<br><b style="color:var(--ok-ink)">三项都能一项一项看过去。</b>'},
+   {need:["kind"],
+    html:'NASA 曾举办观月夜活动，现场气氛十分精彩，值得一看。',
+    check:'只有一项：<b>它是不是一条短消息</b>。<br>时间地点都丢了，可你说不出它错在哪——因为你根本没要求过。'},
+   {need:["t","p","s"],ban:["kind"],
+    html:'关于这次观月活动，有许多值得介绍的内容。2023 年 10 月 21 日……（后面还有八段，时间地点报名都在里面，埋在中间）',
+    check:'三项在不在，能查。<br><b style="color:var(--warn)">但「这是不是我要的那样东西」，还是说不清。</b>'},
+   {need:[],
+    html:'观月活动是一项非常有意义的公众科普活动，能让人们仰望星空，感受宇宙的浩瀚……',
+    check:'<b style="color:var(--warn)">没有检查项。</b><br>你只能说「再好一点」，而它也不知道你指的是哪一点。'}],
+  winCta:"现在能一项一项核了",
+  good:"你没有要求它写得更好，你<b>点名了要带走的那样东西，再写了三个不能丢的条件</b>。检查项就是这么来的。"},
+ {rail:4,type:"fix",
+  said:"同一则公告，现在要做成<b>给志愿者看的活动项目清单</b>。下面是你刚才开关出来的那份请求。",
+  ask:"只改一处。改哪一处？",
+  seg:[{t:"交一条给朋友的短消息",hit:true,to:"交一份给志愿者的活动项目清单"},
+       {t:"必须保留时间",fb:"志愿者一样要知道时间。这一条不用动。"},
+       {t:"必须保留地点",fb:"地点对志愿者一样要紧。这一条不用动。"},
+       {t:"必须保留报名要求",fb:"这一条可以商量，但它不是必须先换的那一条。"}],
+  keep:"根据这则 2023 年的公告，交一份给志愿者的活动项目清单，必须保留时间、地点和报名要求。",
+  good:"换的是<b>成品</b>，不是主题。主题从头到尾都是这场观月夜——变的是你要带走什么。<br>另外记住：这份清单里也不能把已经结束的活动写成现在的邀请。"},
+ {rail:5,type:"takeaway"}]
+}
+];
+</script>
+<script>
+(function(){
+"use strict";
+const $=(s,r)=>(r||document).querySelector(s);
+const el=(t,c,h)=>{const n=document.createElement(t);if(c)n.className=c;if(h!=null)n.innerHTML=h;return n};
+const esc=s=>String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+const body=$("#body"), picker=$("#picker");
+let li=0, S=null, W=null, boardEl, railEl, actEl, footEl, fbEl;
+
+/* ---------- 声音 ---------- */
+let AC=null, sound=true;
+function tone(fs,dur,type,vol){ if(!sound)return;
+  try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended")AC.resume();
+    fs.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+i*0.075;
+      o.type=type||"sine";o.frequency.setValueAtTime(f,t);
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||0.13,t+0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+(dur||0.2));
+      o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+(dur||0.2)+0.02)});
+  }catch(e){}}
+const sfx={tap:()=>tone([520],.05,"sine",.05),land:()=>tone([440],.09,"triangle",.08),
+  right:()=>tone([659.25,880],.26,"sine",.13),wrong:()=>tone([300,262],.3,"sine",.1),
+  done:()=>tone([523.25,659.25,783.99,1046.5],.5,"triangle",.12)};
+function buzz(m){try{navigator.vibrate&&navigator.vibrate(m)}catch(e){}}
+
+/* ---------- 外壳 ---------- */
+function shell(){
+  const p=el("div","play");
+  p.innerHTML='<div class="ptop"><div class="rail" id="rail"></div></div>'+
+    '<section class="board" id="board"></section>'+
+    '<main class="pact" id="pact"></main>'+
+    '<div class="pfoot" id="pfoot"></div>'+
+    '<section class="fb" id="fb"></section>';
+  boardEl=$("#board",p); railEl=$("#rail",p); actEl=$("#pact",p); footEl=$("#pfoot",p); fbEl=$("#fb",p);
+  return p;
+}
+function setFoot(label,fn,dis){
+  footEl.innerHTML="";
+  const b=el("button","rbtn",esc(label)); b.id="cta"; b.style.width="100%";
+  b.disabled=!!dis; b.onclick=fn; footEl.appendChild(b); return b;
+}
+const enableCta=on=>{const c=$("#cta");if(c)c.disabled=!on};
+const ctaText=t=>{const c=$("#cta");if(c)c.textContent=t};
+function hideFb(){fbEl.className="fb";fbEl.innerHTML=""}
+function showFb(kind,title,paras,keep,next){
+  fbEl.className="fb "+(kind==="good"?"good":"soft"); fbEl.innerHTML="";
+  fbEl.appendChild(el("h3",null,'<span class="mark">'+(kind==="good"?"&#10003;":"&#8635;")+"</span>"+esc(title)));
+  paras.filter(Boolean).forEach(t=>fbEl.appendChild(el("p",null,t)));
+  if(keep)fbEl.appendChild(el("div","keep","<b>带走这一句</b>"+esc(keep)));
+  const b=el("button","rbtn","继续"); b.style.width="100%";
+  b.onclick=()=>{hideFb();next()};
+  fbEl.appendChild(b);
+  requestAnimationFrame(()=>fbEl.classList.add("up"));
+}
+function drawRail(at){
+  railEl.innerHTML="";
+  RAIL.forEach((n,i)=>{const d=el("div","step"+(i<at?" done":"")+(i===at?" now":""),"<span>"+esc(n)+"</span>");d.title=n;railEl.appendChild(d)});
+}
+/* 来源卡：材料的出处，六段都在，固定带「它不能证明什么」 */
+function sourceHtml(L,st){
+  const n=L.sources.length;
+  let h='<button class="srcbar" id="srcbar"><span class="pin">&#128206;</span>'+
+    '<span>这些材料都是<b>真的</b> · '+n+' 份出处</span>'+
+    '<span class="chev">'+(st.srcOpen?"收起 −":"点开看 +")+"</span></button>";
+  if(st.srcOpen){
+    h+='<div class="srclist">';
+    L.sources.forEach(s=>{
+      h+='<div class="srcone"><h6>'+s.n+'</h6><div class="when">'+esc(s.w)+"</div>"+
+         '<p class="says">'+s.says+'</p><div class="cant">'+s.cant+"</div>"+
+         '<a href="'+s.u+'" target="_blank" rel="noopener">打开原始出处 &rarr;</a></div>';
+    });
+    h+="</div>";
+  }
+  return h;
+}
+function drawBoard(){
+  const L=S.L;
+  boardEl.innerHTML='<div class="board-h"><span>'+esc(L.boardLabel)+"</span><em>"+esc(L.boardNote)+"</em></div>"+
+    sourceHtml(L,S.st)+L.board(S.st);
+  const sb=$("#srcbar",boardEl);
+  if(sb)sb.onclick=()=>{S.st.srcOpen=!S.st.srcOpen;sfx.tap();drawBoard();
+    if(S.st.srcOpen)boardEl.scrollTop=0};
+}
+function mountAct(){ actEl.scrollTop=0; actEl.innerHTML=""; hideFb(); W=actEl; return W }
+function say(sc){ if(sc.said)W.appendChild(el("p","said",sc.said)); if(sc.ask)W.appendChild(el("h2","ask",esc(sc.ask))) }
+function nextScreen(){ S.i++; if(S.i>=S.L.screens.length)return; renderScreen() }
+function win(sc,title,paras,keep){ sfx.right(); buzz(18);
+  if(sc.railAfter!=null)drawRail(sc.railAfter); showFb("good",title||"对了",paras,keep,nextScreen) }
+function lose(sc,paras){ sfx.wrong(); buzz([12,60,12]);
+  if(sc.railAfter!=null)drawRail(sc.railAfter); showFb("soft","很多人也是这么想的",paras,null,nextScreen) }
+
+/* ---------- 各段 ---------- */
+function sProbe(sc){
+  mountAct(); say(sc);
+  let left=sc.items.length;
+  const box=el("div","lab-left");
+  sc.items.forEach(it=>{
+    const n=el("button","clause",'<span class="box">&#10003;</span><span>'+esc(it.t)+"</span>");
+    n.onclick=()=>{ if(n.disabled)return; n.disabled=true; n.setAttribute("aria-checked","true");
+      S.st.seen.add(it.k); sfx.land(); drawBoard(); boardEl.scrollTop=boardEl.scrollHeight;
+      left--; if(left===0)enableCta(true) };
+    box.appendChild(n);
+  });
+  W.appendChild(box);
+  setFoot(sc.doneLabel||"看完了",()=>win(sc,"这是你自己查出来的",[sc.good]),true);
+}
+function sChoice(sc){
+  if(sc.before)sc.before(S.st);
+  drawBoard(); mountAct(); say(sc);
+  const wrap=el("div","tiles"); wrap.setAttribute("role","radiogroup");
+  let pick=-1;
+  const ns=sc.options.map((o,i)=>{
+    const n=el("button","tile",'<span class="key">'+String.fromCharCode(65+i)+"</span><span>"+esc(o.t)+"</span>");
+    n.setAttribute("role","radio"); n.setAttribute("aria-checked","false");
+    n.onclick=()=>{ if(n.disabled)return; sfx.tap(); pick=i;
+      ns.forEach(m=>m.setAttribute("aria-checked","false"));
+      n.setAttribute("aria-checked","true"); enableCta(true) };
+    wrap.appendChild(n); return n;
+  });
+  W.appendChild(wrap);
+  setFoot("检查",()=>{
+    const o=sc.options[pick], ok=!!o.ok, right=sc.options.find(x=>x.ok);
+    ns.forEach((n,i)=>{n.disabled=true; n.classList.add(sc.options[i].ok?"ok":(i===pick?"nope":"dim"))});
+    if(ok)win(sc,sc.answerTitle,[sc.good]);
+    else lose(sc,[o.fb,"该选的是：「"+esc(right.t)+"」",sc.good]);
+  },true);
+}
+function sLab(sc){
+  drawBoard(); mountAct(); say(sc);
+  W.appendChild(el("p","goal","&#127919; 目标："+esc(sc.goal)));
+  const left=el("div","lab-left");
+  left.appendChild(el("div","lab-h",esc(sc.leftTitle)));
+  const on=new Set(); let won=false;
+  sc.clauses.forEach(c=>{
+    const n=el("button","clause",'<span class="box">&#10003;</span><span>'+esc(c.t)+"</span>");
+    n.setAttribute("role","switch"); n.setAttribute("aria-checked","false");
+    n.onclick=()=>{ if(on.has(c.id)){on.delete(c.id);n.setAttribute("aria-checked","false")}
+      else{on.add(c.id);n.setAttribute("aria-checked","true")} sfx.tap(); paint() };
+    left.appendChild(n);
+  });
+  W.appendChild(left);
+  function paint(){
+    const hit=sc.outs.find(o=>o.need.every(k=>on.has(k))&&!(o.ban||[]).some(k=>on.has(k)))||sc.outs[sc.outs.length-1];
+    S.st.out=hit.html; S.st.reply=hit.html;
+    S.st.outWin=!!hit.win; S.st.win=!!hit.win;
+    if(hit.check!==undefined)S.st.check=hit.check;
+    if(hit.tag)S.st.tried.add(hit.tag);
+    const ready = sc.winAll ? sc.winAll.every(t=>S.st.tried.has(t)) : !!hit.win;
+    if(ready&&sc.winAll){S.st.outWin=true;S.st.win=true}
+    drawBoard();
+    boardEl.scrollTop=boardEl.scrollHeight;   /* 输出是这一拍的全部意义，永远滚进视野 */
+    if(ready&&!won){won=true;sfx.right();enableCta(true);ctaText(sc.winCta)}
+    if(!ready&&won){won=false;enableCta(false);ctaText("还差一点")}
+  }
+  setFoot("还差一点",()=>win(sc,"成了",[sc.good],sc.keep),true);
+  paint();
+}
+function sSort3(sc){
+  drawBoard(); mountAct(); say(sc);
+  const wrap=el("div","bins"); const picks=new Array(sc.rows.length).fill(-1);
+  const all=sc.rows.map((r,ri)=>{
+    const row=el("div","binrow",'<div class="l">'+esc(r.l)+"</div>");
+    const os=el("div","binopts"); os.setAttribute("role","radiogroup");
+    const ns=sc.bins.map((b,bi)=>{
+      const n=el("button","binopt",b);
+      n.setAttribute("role","radio"); n.setAttribute("aria-checked","false");
+      n.onclick=()=>{ sfx.land(); picks[ri]=bi; row.classList.add("set");
+        ns.forEach(m=>m.setAttribute("aria-checked","false"));
+        n.setAttribute("aria-checked","true"); enableCta(picks.every(x=>x>=0)) };
+      os.appendChild(n); return n;
+    });
+    row.appendChild(os); wrap.appendChild(row); return ns;
+  });
+  W.appendChild(wrap);
+  setFoot("检查",()=>{
+    let ok=true, bad=null;
+    sc.rows.forEach((r,ri)=>all[ri].forEach((n,bi)=>{ n.disabled=true;
+      if(bi===r.a)n.classList.add("ok");
+      else if(bi===picks[ri]){n.classList.add("no");ok=false;if(!bad)bad=r} }));
+    const why=sc.rows.map(r=>"「"+r.l+"」→ "+r.fb).join("<br><br>");
+    if(ok)win(sc,"三种都分对了",[why,sc.good]);
+    else lose(sc,[bad?"「"+esc(bad.l)+"」放错了。"+bad.fb:"",why,sc.good]);
+  },true);
+}
+function sFix(sc){
+  drawBoard(); mountAct(); say(sc);
+  const line=el("div","seg");
+  const ns=sc.seg.map(b=>{
+    const n=el("button","segbit",esc(b.t));
+    n.onclick=()=>{ ns.forEach(m=>m.disabled=true);
+      if(b.hit){ n.classList.add("ok"); n.textContent=b.to; win(sc,"改对了一处",[sc.good],sc.keep) }
+      else{ n.classList.add("nope"); ns.forEach(m=>{if(!m.classList.contains("nope"))m.classList.add("dim")});
+        const h=sc.seg.find(x=>x.hit);
+        lose(sc,[b.fb,"该改的是「"+esc(h.t)+"」，把它换成「"+esc(h.to)+"」。",sc.good]) } };
+    line.appendChild(n); return n;
+  });
+  W.appendChild(line);
+  setFoot("点上面那一处来改",()=>{},true);
+}
+function sTakeaway(){
+  const L=S.L; drawBoard(); mountAct(); sfx.done(); buzz([20,50,20,50,30]);
+  const c=el("div","done");
+  c.innerHTML='<div class="ring">&#10003;</div><h2>一句话</h2><p class="lede">'+esc(L.line)+"</p>";
+  W.appendChild(c);
+  const can=el("div","card");
+  can.innerHTML='<div class="eyebrow" style="margin-top:0">你现在会做</div>'+
+    '<ul class="ulist can"><li><i>&#10003;</i><span>'+esc(L.can)+"</span></li></ul>";
+  W.appendChild(can);
+  const srcs=el("div","card");
+  srcs.innerHTML='<div class="eyebrow" style="margin-top:0">这一节用到的真实出处</div>'+
+    L.sources.map(s=>'<p style="margin:0 0 9px;font-size:13.5px;line-height:1.6"><b>'+s.n+"</b>（"+esc(s.w)+"）<br>"+
+      '<a href="'+s.u+'" target="_blank" rel="noopener" style="font-size:12.5px;color:var(--accent-ink)">打开原始出处 &rarr;</a></p>').join("");
+  W.appendChild(srcs);
+  if(li<REMADE.length-1)setFoot("下一节",()=>{li++;render()});
+  else setFoot("回到第一节",()=>{li=0;render()});
+}
+function renderScreen(){
+  const sc=S.L.screens[S.i];
+  drawRail(sc.rail); drawBoard();
+  ({probe:sProbe,choice:sChoice,lab:sLab,sort3:sSort3,fix:sFix,takeaway:sTakeaway}[sc.type])(sc);
+}
+function drawPicker(){
+  picker.innerHTML="";
+  REMADE.forEach((L,i)=>{
+    const b=el("button",null,(i+1)+"　"+L.title.slice(0,9)+"…");
+    b.setAttribute("aria-current",String(i===li));
+    b.onclick=()=>{li=i;render()};
+    picker.appendChild(b);
+  });
+}
+function render(){
+  drawPicker();
+  body.innerHTML=""; body.appendChild(shell());
+  S={L:REMADE[li],st:REMADE[li].init(),i:0};
+  renderScreen();
+}
+render();
+})();
+</script>
