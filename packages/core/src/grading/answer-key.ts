@@ -88,6 +88,8 @@ export const FACTUAL_LENGTH = 12;
 
 /** What ships in place of the answer. */
 export interface AnswerKey {
+  /** Option IDs are opaque identifiers, never normalized prose or substrings. */
+  readonly match?: "option-id";
   readonly fp: string;
   /** Length of the normalised answer, so a substring window can be sized. */
   readonly len: number;
@@ -111,6 +113,11 @@ export function compileAnswerKey(expected: string): AnswerKey {
   };
 }
 
+/** Reuses the tier-one fingerprint boundary without prose matching semantics. */
+export function compileChoiceAnswerKey(correctOptionId: string): AnswerKey {
+  return { fp: fingerprint(correctOptionId), len: correctOptionId.length, match: "option-id" };
+}
+
 export type Verdict =
   | { readonly outcome: "pass"; readonly tier: 1 }
   | { readonly outcome: "fail"; readonly tier: 1 }
@@ -119,6 +126,13 @@ export type Verdict =
 export function gradeDeterministically(learnerAnswer: string, key: AnswerKey | undefined): Verdict {
   if (!key) {
     return { outcome: "undecided", tier: 1, reason: "这道题没有参考答案，只能交给上一层判。" };
+  }
+  if (key.match === "option-id") {
+    return {
+      outcome:
+        learnerAnswer.length === key.len && fingerprint(learnerAnswer) === key.fp ? "pass" : "fail",
+      tier: 1,
+    };
   }
   if (normaliseKeepingSymbols(learnerAnswer).length === 0) {
     return { outcome: "undecided", tier: 1, reason: "先写下你的判断，再提交。" };
@@ -197,6 +211,7 @@ export function gradeDeterministically(learnerAnswer: string, key: AnswerKey | u
  */
 export function isSelfGradable(key: AnswerKey | undefined): boolean {
   if (key === undefined) return false;
+  if (key.match === "option-id") return key.len > 0;
   const length = decidableLength(key);
   return length > 0 && length <= FACTUAL_LENGTH;
 }

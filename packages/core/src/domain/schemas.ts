@@ -359,13 +359,14 @@ export const LocalizedExerciseSchema = z
     prompt: z.string().min(1).max(20_000).optional(),
     expectedAnswer: z.string().min(1).optional(),
     rubric: z.array(z.string().min(1)).optional(),
+    correctOptionId: StableId.optional(),
     options: z
       .array(
         z
           .object({
             id: StableId,
             text: z.string().min(1).max(2_000),
-            explanation: z.string().min(1).max(2_000),
+            explanation: z.string().trim().min(1).max(2_000),
           })
           .strict(),
       )
@@ -814,13 +815,39 @@ const PathChoice = z.object({ id: StableId, label: PathCopy, explanation: PathCo
 const PathStepBase = z.object({
   id: StableId,
   sourceId: StableId,
+  materialIds: z.array(StableId).optional(),
+  phase: z.enum(["predict", "practice", "transfer"]).optional(),
   brief: PathCopy.optional(),
   question: PathCopy,
   hint: PathCopy,
   explanation: PathCopy,
 });
-/** No recursive activity member: a step is always one of three small actions. */
+/** No recursive activity member: a step is always one bounded action. */
 export const InteractionPathPayloadSchema = z.object({
+  pedagogyVersion: z.literal(2).optional(),
+  context: z
+    .object({
+      title: PathCopy,
+      introduction: PathCopy,
+      task: PathCopy,
+      sourceIds: z.array(StableId),
+    })
+    .strict()
+    .optional(),
+  materials: z
+    .array(
+      z
+        .object({
+          id: StableId,
+          sourceId: StableId,
+          label: PathCopy,
+          text: z.string().trim().min(1).max(20_000),
+          kind: z.enum(["source-summary", "teaching-draft"]),
+        })
+        .strict(),
+    )
+    .min(1)
+    .optional(),
   assetId: StableId.optional(),
   sources: z
     .array(
@@ -829,6 +856,9 @@ export const InteractionPathPayloadSchema = z.object({
           id: StableId,
           reference: ActivitySourceSchema,
           note: PathCopy,
+          summary: PathCopy.optional(),
+          limitation: PathCopy.optional(),
+          date: PathCopy.optional(),
         })
         .strict(),
     )
@@ -854,6 +884,30 @@ export const InteractionPathPayloadSchema = z.object({
             })
             .strict(),
           correctSentenceId: StableId,
+        }).strict(),
+        PathStepBase.extend({
+          kind: z.literal("experiment"),
+          simulationNote: PathCopy,
+          controls: z
+            .array(z.object({ id: StableId, label: PathCopy }).strict())
+            .min(1)
+            .max(4),
+          initialControlIds: z.array(StableId).max(4),
+          cases: z
+            .array(
+              z
+                .object({
+                  id: StableId,
+                  selectedControlIds: z.array(StableId).max(4),
+                  title: PathCopy,
+                  text: z.string().trim().min(1).max(20_000),
+                  feedback: PathCopy,
+                  accepted: z.boolean(),
+                })
+                .strict(),
+            )
+            .min(2)
+            .max(16),
         }).strict(),
         PathStepBase.extend({
           kind: z.literal("assemble"),
@@ -1161,35 +1215,30 @@ const PracticeBaseSchema = z.object({
  * "why would someone pick this, and why that does not hold" — a generic
  * "wrong, try again" is not a substitute.
  */
+import { refineChoiceExercise } from "./choice-exercise.js";
+
 export const ChoiceOptionSchema = z
   .object({
     id: StableId,
-    text: z.string().min(1).max(2_000),
-    explanation: z.string().min(1).max(2_000),
+    text: z.string().trim().min(1).max(2_000),
+    explanation: z.string().trim().min(1).max(2_000),
   })
   .strict();
 
-/**
- * Three options, one right, and the explanation lives on the option the
- * learner actually picked.
- *
- * Until they pick the correct option there is no next question — retrying is
- * the mechanism, not a courtesy. The count, the correct id, uniqueness and
- * the presence of per-option explanations are enforced by
- * `validateChoiceExercise`, which returns structured errors instead of
- * throwing, so an authoring surface can show every problem at once.
- *
- * This is a sibling of `ExerciseSchema` rather than a third discriminant on
- * it. The authoring and recovery pipelines still switch on two kinds, and
- * widening that union is a type error in `apps/local` that this change is not
- * allowed to edit. The shape is otherwise the same `PracticeBaseSchema`, and
- * it joins the union when those pipelines learn the third branch.
- */
-export const ChoiceExerciseSchema = PracticeBaseSchema.extend({
-  kind: z.literal("choice"),
-  options: z.array(ChoiceOptionSchema),
-  correctOptionId: StableId,
-}).strict();
+/** One contract for proposals, recovery transport and stored exercises. */
+export const ChoiceExerciseContentSchema = z
+  .object({
+    kind: z.literal("choice"),
+    options: z.array(ChoiceOptionSchema),
+    correctOptionId: StableId,
+    locales: LocaleMap(LocalizedExerciseSchema),
+  })
+  .strict()
+  .superRefine(refineChoiceExercise);
+
+export const ChoiceExerciseSchema = PracticeBaseSchema.extend(ChoiceExerciseContentSchema.shape)
+  .strict()
+  .superRefine(refineChoiceExercise);
 
 export const ExerciseSchema = z.discriminatedUnion("kind", [
   PracticeBaseSchema.extend({
@@ -1202,6 +1251,7 @@ export const ExerciseSchema = z.discriminatedUnion("kind", [
     rubric: z.array(z.string().min(1)).min(1),
     locales: LocaleMap(LocalizedExerciseSchema),
   }).strict(),
+  ChoiceExerciseSchema,
 ]);
 
 export const CardContentSchema = z

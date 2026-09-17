@@ -101,6 +101,7 @@ export {
 export {
   CHOICE_OPTION_COUNT,
   validateChoiceExercise,
+  refineChoiceExercise,
   type ChoiceExerciseDraft,
   type ChoiceExerciseIssue,
   type ChoiceExerciseIssueCode,

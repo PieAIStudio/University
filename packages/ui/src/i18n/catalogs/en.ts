@@ -1,3 +1,4 @@
+import { messages as playGallery } from "./play-gallery.en.js";
 import { messages as accountClosure } from "./account-closure.en.js";
 import { messages as gradingCopy } from "./grading-copy.en.js";
 import { messages as interactionPath } from "./interaction-path.en.js";
@@ -31,6 +32,7 @@ import type { MessageCatalog } from "../types.js";
  * so switching modes does not silently switch language.
  */
 export const messages = {
+  ...playGallery,
   ...accountClosure,
   ...worldNavigation,
   ...interactionPath,

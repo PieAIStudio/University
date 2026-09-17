@@ -1204,6 +1204,29 @@ export class SqliteLearningStore implements LearningStore {
     });
   }
 
+  /** The exact persisted command, so a retry cannot receive a later answer's grade. */
+  getExerciseAttemptByCommandId(commandId: string): StoredExerciseAttempt | null {
+    validateId(commandId, "Command ID");
+    const row = this.#database
+      .prepare(
+        `SELECT attempt_id, command_id, exercise_id, content_revision,
+              score, max_score, response_json, occurred_at
+       FROM exercise_attempt WHERE command_id = ?`,
+      )
+      .get(commandId) as ExerciseCommandRow | undefined;
+    if (!row) return null;
+    return {
+      attemptId: row.attempt_id,
+      commandId: row.command_id ?? row.attempt_id,
+      exerciseKey: exerciseContentKey(parseExerciseContentKey(row.exercise_id)),
+      contentRevision: row.content_revision,
+      score: row.score,
+      maxScore: row.max_score,
+      response: row.response_json === null ? null : JSON.parse(row.response_json),
+      occurredAt: new Date(row.occurred_at),
+    };
+  }
+
   listExerciseAttempts(limit = 10_000): readonly StoredExerciseAttempt[] {
     const capped = Math.max(1, Math.min(Math.trunc(limit), 10_000));
     const rows = this.#database

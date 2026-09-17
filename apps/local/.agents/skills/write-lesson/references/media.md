@@ -23,6 +23,19 @@ different costume. Both times the thing that makes a lesson *feel* better is not
 the thing that makes it *teach* better, and intuition always votes for the first
 because its reward is immediate.
 
+## V2: two purposes, one truthful asset
+
+An image can carry both understanding and a meaningful encounter with a real-world
+object. Do not delete a real source simply because a sentence would let the learner
+answer one quiz. Ask whether the learner still understands what real application,
+record or event they are studying. Keep the relevant source crop/alt/credit, not
+unnecessary surrounding website chrome. A schematic must be named a schematic,
+never called the actual photograph or screenshot. Preserve evidence and licence.
+
+The older delete test below still rejects irrelevant decoration, not meaningful
+reality/context. Diagrams can also become stale when the underlying system changes;
+text-based source does not make them permanently true.
+
 ## The test
 
 **Delete the image and add one sentence. Is the reader worse off?**

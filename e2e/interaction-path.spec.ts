@@ -19,9 +19,12 @@ const samples = SHIPPED_COURSES.flatMap((course) =>
   ),
 );
 
-test("interaction samples are three real lessons in the normal course package", () => {
-  expect(samples).toHaveLength(3);
-  for (const { activity } of samples) {
+const legacySamples = samples.filter(({ activity }) => activity.pedagogyVersion !== 2);
+test("five V2 lessons and the retained V1 lesson share the normal course package", () => {
+  expect(samples).toHaveLength(6);
+  expect(samples.filter(({ activity }) => activity.pedagogyVersion === 2)).toHaveLength(5);
+  expect(legacySamples.map((sample) => sample.lessonId)).toEqual(["follow-a-claim"]);
+  for (const { activity } of legacySamples) {
     expect(activity.steps).toHaveLength(4);
     expect(activity.steps.some((step) => step.kind === "evidence")).toBe(true);
     expect(activity.steps.some((step) => step.kind === "assemble")).toBe(true);
@@ -34,7 +37,7 @@ for (const [mode, origin] of [
   ["authoring", LOCAL_ORIGIN],
 ] as const) {
   for (const locale of ["zh-CN", "en"] as const) {
-    for (const sample of samples) {
+    for (const sample of legacySamples) {
       test(`interaction ${mode} ${locale} ${sample.lessonId}: actual rounds, correction, artifact and independent handoff`, async ({
         page,
       }, info) => {
@@ -132,7 +135,7 @@ for (const [mode, origin] of [
                 "add a useful clause",
               );
             }
-          } else {
+          } else if (step.kind !== "experiment") {
             if (step.kind === "evidence" && step.task === "unsupported") {
               await expect(path.locator(".interaction-path__reference")).toContainText(
                 step.material.reference!.text,
@@ -256,6 +259,8 @@ for (const width of [320, 390, 768, 1440]) {
     const activity = localizeActivity(sample.activity, "en");
     for (const step of activity.steps) {
       if (step.kind === "assemble") break;
+      if (step.kind === "experiment")
+        throw new Error("Legacy sample unexpectedly became an experiment");
       const correct = step.kind === "decision" ? step.correctOptionId : step.correctSentenceId;
       await path.locator(`[data-choice-id="${correct}"]`).click();
       await path.getByRole("button", { name: "Confirm and reveal", exact: true }).click();

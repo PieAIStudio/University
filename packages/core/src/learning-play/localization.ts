@@ -24,23 +24,37 @@ const DISPLAY_MAPS = new Set(["outcomes", "costOfOther"]);
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-function rewriteDisplay(value: unknown, rewrite: (text: string) => string, parent = ""): unknown {
-  if (Array.isArray(value)) return value.map((item) => rewriteDisplay(item, rewrite, parent));
+function rewriteDisplay(
+  value: unknown,
+  rewrite: (text: string) => string,
+  parent = "",
+  isPath = isRecord(value) && value.kind === "interaction-path",
+): unknown {
+  if (Array.isArray(value))
+    return value.map((item) => rewriteDisplay(item, rewrite, parent, isPath));
   if (!isRecord(value)) return value;
   return Object.fromEntries(
     Object.entries(value).map(([key, item]) => {
       // Locale dictionaries are metadata. Never rewrite a dictionary, an ID,
       // an executable program, a source URL, or a learner's submitted data.
       if (key === "locales") return [key, item];
+      const pathCopy =
+        isPath &&
+        ((parent === "context" && (key === "introduction" || key === "task")) ||
+          (parent === "sources" && ["summary", "limitation", "date"].includes(key)) ||
+          (parent === "steps" && key === "simulationNote") ||
+          (parent === "materials" && key === "text") ||
+          (parent === "cases" && (key === "text" || key === "feedback")));
       if (
         typeof item === "string" &&
-        (DISPLAY_FIELDS.has(key) ||
+        (pathCopy ||
+          DISPLAY_FIELDS.has(key) ||
           DISPLAY_MAPS.has(parent) ||
           (key === "text" && parent === "reference"))
       ) {
         return [key, rewrite(item)];
       }
-      return [key, rewriteDisplay(item, rewrite, key)];
+      return [key, rewriteDisplay(item, rewrite, key, isPath)];
     }),
   );
 }

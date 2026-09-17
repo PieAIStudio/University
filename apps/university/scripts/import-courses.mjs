@@ -232,6 +232,8 @@ for (const studyId of readdirSync(upstream).sort()) {
         // they just got wrong is a *server* read, and it waits for the server.
         for (const exercise of lesson.exercises ?? []) {
           let answerKey;
+          // Choice keys are compiled by the shared public projection below.
+          if (exercise.kind === "choice") keysCompiled += 1;
           if (typeof exercise.expectedAnswer === "string") {
             const key = compileAnswerKey(exercise.expectedAnswer);
             answerKey = key;

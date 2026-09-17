@@ -1,46 +1,9 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>互动积木库</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap">
+
 <style>
-:root{
-  --bg:#f3e8d8; --bg-deep:#ead9c2;
-  --panel:#fff8ec; --panel-2:#fdf1df; --panel-deep:#efd1a3;
-  --ink:#3a2518; --ink-title:#4a2f1f; --ink-soft:#7b6152; --ink-faint:#a08a78;
-  --accent:#e8743b; --accent-bright:#f28d50; --accent-ink:#a34e17; --accent-pale:#ffd4a2;
-  --ok:#4f9d6b; --ok-deep:#3d7c58; --ok-pale:#c3e6d0; --ok-ink:#2f6446;
-  --berry:#9b6dd6; --berry-pale:#e6dbf7; --berry-ink:#6b4aa0;
-  --warn:#d85a45; --warn-pale:#f8dcd6; --warn-ink:#a3392a;
-  --line:#6c4f3838; --line-2:#6c4f386b;
-  --lip:#5e3a1e52; --lip-h:4px;
-  --r-card:18px; --r-panel:26px; --r-pill:999px;
-  --sh:0 12px 28px #4c341c1f;
-  --sh-lift:0 18px 44px #4c341c33;
-  --zh:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
-  --num:"Outfit",var(--zh);
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#221812; --bg-deep:#1a120d;
-  --panel:#2e2118; --panel-2:#352619; --panel-deep:#2c1f16;
-  --ink:#f6e7d3; --ink-title:#f6e2c8; --ink-soft:#c3ab93; --ink-faint:#94806c;
-  --accent:#ef8148; --accent-bright:#ffa06b; --accent-ink:#ffb072; --accent-pale:#f0a46a47;
-  --ok:#63b381; --ok-deep:#7ee0b6; --ok-pale:#2b4335; --ok-ink:#9fe6bf;
-  --berry:#b58ae0; --berry-pale:#3b2f52; --berry-ink:#d9c6ff;
-  --warn:#e26a55; --warn-pale:#4a2b24; --warn-ink:#ff9a80;
-  --line:#f6e7d329; --line-2:#f6e7d352;
-  --lip:#00000085;
-  --sh:0 12px 28px #0006; --sh-lift:0 18px 44px #0008;
-}}
-:root[data-theme="dark"]{
-  --bg:#221812; --bg-deep:#1a120d;
-  --panel:#2e2118; --panel-2:#352619; --panel-deep:#2c1f16;
-  --ink:#f6e7d3; --ink-title:#f6e2c8; --ink-soft:#c3ab93; --ink-faint:#94806c;
-  --accent:#ef8148; --accent-bright:#ffa06b; --accent-ink:#ffb072; --accent-pale:#f0a46a47;
-  --ok:#63b381; --ok-deep:#7ee0b6; --ok-pale:#2b4335; --ok-ink:#9fe6bf;
-  --berry:#b58ae0; --berry-pale:#3b2f52; --berry-ink:#d9c6ff;
-  --warn:#e26a55; --warn-pale:#4a2b24; --warn-ink:#ff9a80;
-  --line:#f6e7d329; --line-2:#f6e7d352;
-  --lip:#00000085;
-  --sh:0 12px 28px #0006; --sh-lift:0 18px 44px #0008;
-}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
@@ -794,6 +757,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .rec2 .meta2{font-size:11px;color:var(--ink-faint);margin-top:2px}
 .empty2{font-size:13px;color:var(--ink-faint);text-align:center;padding-block:28px;line-height:1.6}
 </style>
+<link rel="stylesheet" href="presentation.css">
 <div class="page" id="page"></div>
 <script>
 /* ==================================================================
@@ -1829,7 +1793,7 @@ function bScrub(host){
 function bBank(host){
   const A=["请按","时间、地点、报名要求","三项核对，","把对应的原文指出来，","缺的直接写「缺失」。"];
   const D=["写得好一点，","尽量完美。"];
-  host.appendChild(el("p","tip","点词拼出一句要求，然后<b>真的发出去</b>——下面会出现 AI 按这句话回给你的东西。<br>第 3 节。"));
+  host.appendChild(el("p","tip","点词拼出一句要求，然后<b>运行模拟</b>——下面会出现 AI 按这句话回给你的东西。<br>第 3 节。"));
   const line=el("div","line2");host.appendChild(line);
   const bank=el("div","bank2");host.appendChild(bank);
   const ws=A.concat(D).map((t,i)=>({t:t,i:i}));
@@ -1934,7 +1898,7 @@ return [
  {id:"rank",title:"拖拽排序",from:"—",build:bRank,hand:"上下<b>拖动</b>，其他项自己让位。排对了整列依次亮起并奏出音阶。",spec:"<b>用的是</b>第 3 节的工作顺序：先定成品 → 再写条件 → 发出去 → 逐条核。"},
  {id:"balance",title:"证据天平",from:"—",build:bBal,hand:"把证据<b>拖</b>上秤盘，天平按分量真的倾斜。",spec:"<b>用的是</b>第 1 节：「这张照片是 Bill Anders 拍的」站不站得住。那条「据我所知」分量是 0，拖上去天平纹丝不动。"},
  {id:"scrub",title:"时间轴擦洗",from:"—",build:bScrub,hand:"<b>拖游标</b>逐步看，在该停的那一步按叫停。",spec:"<b>用的是</b>第 2 节：一段录音的五步处理，<b>哪一步之后原话就不能逐字核对了</b>。停早了也会告诉你为什么早。"},
- {id:"word-bank",title:"拼句 + 发出去",from:"—",build:bBank,hand:"点词拼句，然后<b>真的发出去</b>，看 AI 按这句话回什么。",spec:"<b>用的是</b>第 3 节的 NASA 公告。单纯拼句在 AI 课里不成立，所以这里补了后果。"},
+ {id:"word-bank",title:"拼句 + 发出去",from:"—",build:bBank,hand:"点词拼句，然后<b>运行模拟</b>，看 AI 按这句话回什么。",spec:"<b>用的是</b>第 3 节的 NASA 公告。单纯拼句在 AI 课里不成立，所以这里补了后果。"},
  {id:"branch",title:"对话残局",from:"棋类残局",build:bBranch,hand:"每回合<b>选一句发出去</b>，看它怎么应，最多四回合。",spec:"<b>用的是</b>第 1 节：追问「谁拍的」直到它承认没有直接引用的记录。走完告诉你最短几步。"},
  {id:"hotspot",title:"图上点位",from:"—",build:bHot,hand:"在 NASA 图像页示意上<b>点一下</b>，命中有涟漪。",spec:"<b>用的是</b>第 1 节：摄影者写在哪一行。点错的地方会告诉你那是什么。"}
 ];
@@ -1943,6 +1907,12 @@ return [
 <script>
 (function(){
 const J=window.JX, el=J.el, page=document.getElementById("page");
+if(window.__PLAY_CATALOG_ENTRY__){
+ const all=[...window.OLDB,...window.NEWB1,...window.NEWB2];
+ const block=all.find(item=>item.id===window.__PLAY_CATALOG_ENTRY__);
+ if(block) J.block(page,block);
+ return;
+}
 const HAVE=[["connect","解释依赖、原因与结果","点选建边","6 次"],["sort","划界与归类","点条目再点格","7 次 · 最常用"],
  ["contrast","两种做法什么时候分开","逐情况预测","5 次"],["weigh","一笔取舍","逐情况选项","3 次"],
  ["tune","多变量取舍","拖滑块后提交","1 次"],["hunt","边界测试","输数值试探","0 次"],

@@ -184,7 +184,7 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
 
       test(`${mode}: 未冻结场景火焰与刻纹 instanceMatrix 多帧静止，动态切换后复位`, async ({
         page,
-      }) => {
+      }, info) => {
         const consoleErrors = watchConsole(page);
 
         await installCourseSceneFixture(page);
@@ -243,6 +243,7 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
         const sample2 = await getSceneMatrices(page);
         expect(sample2.engravingMatrix).toEqual(sample1.engravingMatrix);
         expect(sample2.flameMatrix).toEqual(sample1.flameMatrix);
+        await page.screenshot({ path: info.outputPath("motion-initial-static.png") });
 
         // 2. 媒体查询动态切换至有动画 (no-preference)
         await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -270,6 +271,18 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
         expect(restored1.engravingMatrix, "恢复到初始静止姿态，而不是停在任意脉冲帧").toEqual(
           sample1.engravingMatrix,
         );
+        await info.attach("motion-matrix-receipt", {
+          body: JSON.stringify({
+            initialEngraving: sample1.engravingMatrix?.slice(0, 16),
+            restoredEngraving: restored1.engravingMatrix?.slice(0, 16),
+            initialFlame: sample1.flameMatrix?.slice(0, 16),
+            restoredFlame: restored1.flameMatrix?.slice(0, 16),
+            motionChangedBothMatrices: true,
+            restoredMatricesStableAcrossFrames: true,
+          }),
+          contentType: "application/json",
+        });
+        await page.screenshot({ path: info.outputPath("motion-restored-static.png") });
 
         consoleErrors.assertClean();
       });

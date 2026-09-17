@@ -1,19 +1,23 @@
-import { useEffect, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
+
+const serverSnapshot = () => false;
 
 /** Subscribe once; never allocate a MediaQueryList in a render-frame callback. */
 export function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(() =>
-    typeof window !== "undefined" && typeof window.matchMedia === "function"
-      ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      : false,
-  );
-  useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const onChange = (event: MediaQueryListEvent) => setReduced(event.matches);
-    setReduced(media.matches);
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
+  const store = useMemo(() => {
+    const media =
+      typeof window !== "undefined" && typeof window.matchMedia === "function"
+        ? window.matchMedia("(prefers-reduced-motion: reduce)")
+        : undefined;
+    return {
+      getSnapshot: () => media?.matches ?? false,
+      subscribe: (notify: () => void) => {
+        media?.addEventListener("change", notify);
+        return () => media?.removeEventListener("change", notify);
+      },
+    };
   }, []);
-  return reduced;
+  // A browser preference is external state. Do not defer it behind a
+  // concurrent scene render while the existing frame callback keeps pulsing.
+  return useSyncExternalStore(store.subscribe, store.getSnapshot, serverSnapshot);
 }

@@ -307,7 +307,7 @@ function checkHandCopiedSource(content, fail) {
  * Zero blocks is reported separately from "too little volume" so a batch can
  * count "not started" without conflating it with "started but thin".
  */
-function checkDetailBlocks(content, fail) {
+function checkDetailBlocks(content, fail, requireVolume = true) {
   const lines = content.split("\n");
   const blocks = [];
   let open = null;
@@ -354,7 +354,7 @@ function checkDetailBlocks(content, fail) {
     // Only "none yet" when nothing is half-open either — an unclosed opener
     // already failed above and is not "zero blocks".
     const anyOpener = /^:::detail\b/m.test(content);
-    if (!anyOpener) {
+    if (!anyOpener && requireVolume) {
       fail(
         26,
         `还没有 :::detail 块（0 块）。每节课需要详细讲解层：在引发疑问的句子后插入 :::detail[读者会问的问句？]…:::，全部 detail 正文合计至少占标准正文字数的 60%。`,
@@ -403,7 +403,7 @@ function checkDetailBlocks(content, fail) {
   const standardChars = standardProseCharCount(content);
   if (standardChars === 0) return;
   const ratio = detailChars / standardChars;
-  if (ratio < 0.6) {
+  if (requireVolume && ratio < 0.6) {
     fail(
       26,
       `detail 正文合计 ${detailChars} 字，标准正文 ${standardChars} 字（${Math.round(ratio * 100)}%，下限 60%）。该展开的术语/跳步/不显然结论还没展开——按 write-lesson「哪里该开块」补块，不要灌水凑字。`,
@@ -623,6 +623,9 @@ function lintLesson({ manifestPath, content, manifest, previous }) {
   /** @param {number} item @param {string} message @param {string|null} [debtRule] */
   const fail = (item, message, debtRule = null) => problems.push({ item, message, debtRule });
   const prose = stripCode(content);
+  const v2 = manifest.activities?.some(
+    (activity) => activity.kind === "interaction-path" && activity.pedagogyVersion === 2,
+  );
   // Existing persisted prose may retain the earlier invitation. New proposals
   // must use the current line. Both entry points otherwise share one spine.
   for (const { item, message } of checkLessonSpine(content, manifest.variant, {
@@ -649,12 +652,12 @@ function lintLesson({ manifestPath, content, manifest, previous }) {
   checkOrphanEvidence(content, manifest, fail);
 
   // 26 — detail layer structure and volume.
-  checkDetailBlocks(content, fail);
+  checkDetailBlocks(content, fail, !v2);
 
   // 27 — system vocabulary out of the reader's world.
   checkSystemVocabulary(content, fail);
 
-  checkGrowth(content, previous, fail);
+  if (!v2) checkGrowth(content, previous, fail);
   checkSecondPerson(prose, fail);
 
   // 23 — the bytes match what the manifest says they are.

@@ -14,6 +14,7 @@ const COPY = new Set([
   "front",
   "back",
   "prompt",
+  "options",
   "answerKey",
   "correctAnswer",
   "lessonTitle",

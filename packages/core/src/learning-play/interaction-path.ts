@@ -7,6 +7,7 @@ export type InteractionPathActivity = ActivityBase &
   InteractionPathPayload & { readonly kind: "interaction-path" };
 export type InteractionStep = InteractionPathPayload["steps"][number];
 export type AssemblyStep = Extract<InteractionStep, { kind: "assemble" }>;
+export type ExperimentStep = Extract<InteractionStep, { kind: "experiment" }>;
 export interface PathAttempt {
   readonly stepId: string;
   readonly answer: readonly string[];
@@ -51,7 +52,32 @@ export function unmetAssemblyConstraints(step: AssemblyStep, answer: readonly st
 export function evaluateInteractionStep(
   step: InteractionStep,
   answer: readonly string[],
-): { passed: boolean; feedback: string[]; artifact?: string } {
+): {
+  passed: boolean;
+  feedback: string[];
+  artifact?: string;
+  currentCase?: ExperimentStep["cases"][number];
+} {
+  if (step.kind === "experiment") {
+    if (
+      repeated(answer) ||
+      answer.some((id) => !step.controls.some((control) => control.id === id))
+    )
+      return { passed: false, feedback: [] };
+    const currentCase = step.cases.find(
+      (item) =>
+        item.selectedControlIds.length === answer.length &&
+        item.selectedControlIds.every((id) => answer.includes(id)),
+    );
+    return currentCase
+      ? {
+          currentCase,
+          passed: currentCase.accepted,
+          feedback: [currentCase.feedback],
+          ...(currentCase.accepted ? { artifact: currentCase.text } : {}),
+        }
+      : { passed: false, feedback: [] };
+  }
   const choices =
     step.kind === "decision"
       ? step.options
@@ -148,7 +174,33 @@ export function interactionPathIssues(path: InteractionPathPayload): string[] {
   const issues: string[] = [];
   if (repeated(path.sources.map((source) => source.id))) issues.push("Duplicate path source ID");
   if (repeated(path.steps.map((step) => step.id))) issues.push("Duplicate path step ID");
-  if (
+  const materials = path.materials ?? [];
+  if (repeated(materials.map((material) => material.id))) issues.push("Duplicate path material ID");
+  for (const id of path.context?.sourceIds ?? []) {
+    if (!path.sources.some((source) => source.id === id))
+      issues.push(`Unknown context source: ${id}`);
+  }
+  for (const material of materials) {
+    if (!path.sources.some((source) => source.id === material.sourceId))
+      issues.push(`Unknown material source: ${material.id}/${material.sourceId}`);
+  }
+  if (path.pedagogyVersion === 2) {
+    if (!path.context) issues.push("V2 requires context");
+    if (!materials.length) issues.push("V2 requires at least one material");
+    if (
+      path.steps.at(-1)?.phase !== "transfer" ||
+      path.steps.filter((step) => step.phase === "transfer").length !== 1
+    )
+      issues.push("V2 requires exactly one final transfer phase");
+    if (
+      !materials.some(
+        (material) =>
+          material.kind === "source-summary" &&
+          path.steps.some((step) => step.materialIds?.includes(material.id)),
+      )
+    )
+      issues.push("V2 requires a source-summary material used by a step");
+  } else if (
     path.steps[0]?.kind !== "decision" ||
     !path.steps.some((step) => step.kind === "assemble") ||
     !path.steps.some((step) => step.kind === "evidence")
@@ -164,6 +216,35 @@ export function interactionPathIssues(path: InteractionPathPayload): string[] {
       issues.push(`Unknown source: ${step.sourceId}`);
     if (step.kind === "evidence" && step.task === "unsupported" && !step.material.reference)
       issues.push(`Unsupported-claim task needs a visible source record: ${step.id}`);
+    for (const id of step.materialIds ?? []) {
+      if (!materials.some((material) => material.id === id))
+        issues.push(`Unknown step material: ${step.id}/${id}`);
+    }
+    if (step.kind === "experiment") {
+      const controlIds = step.controls.map((control) => control.id);
+      if (controlIds.length < 1 || controlIds.length > 4 || repeated(controlIds))
+        issues.push(`Invalid experiment controls: ${step.id}`);
+      const validSelection = (ids: readonly string[]) =>
+        !repeated(ids) && ids.every((id) => controlIds.includes(id));
+      if (!validSelection(step.initialControlIds))
+        issues.push(`Invalid initial controls: ${step.id}`);
+      if (repeated(step.cases.map((item) => item.id)))
+        issues.push(`Duplicate experiment case ID: ${step.id}`);
+      const combinations = new Set<string>();
+      for (const item of step.cases) {
+        if (!validSelection(item.selectedControlIds))
+          issues.push(`Invalid experiment selection: ${step.id}/${item.id}`);
+        const combination = JSON.stringify([...item.selectedControlIds].sort());
+        if (combinations.has(combination))
+          issues.push(`Overlapping experiment cases: ${step.id}/${item.id}`);
+        combinations.add(combination);
+      }
+      if (combinations.size !== 2 ** controlIds.length)
+        issues.push(`Experiment needs all control combinations: ${step.id}`);
+      if (!step.cases.some((item) => item.accepted))
+        issues.push(`Experiment needs an accepted case: ${step.id}`);
+      continue;
+    }
     const choices =
       step.kind === "decision"
         ? step.options

@@ -1,528 +1,174 @@
 ---
 name: write-lesson
-description: Write or rewrite a UniversityLocal lesson content.md into the house teaching shape so a beginner can finish it. Use when authoring a new lesson, rewriting a wall-of-conclusions lesson, reviewing lesson prose against the five variants, or when the user says 读不进去, 重写这节课, 重写课文, 改写成能读的, 太干, or 语气再循循善诱一些. Also use when beginner Chinese is vague, shorthand, jargon-heavy, or mixes literal explanation with analogy. Covers question-first titles, one prediction, immediate answer, plain-language beginner scaffolding, literal-first explanations, clearly marked analogies, inline [[evidence:]] anchors, and cross-lesson links. It may be invoked by refresh-study for a stale lesson, but it is never the refresh entry point. Do not use for course/unit planning, card/exercise scheduling alone, UA analysis, refresh-study orchestration, knowledge-node saves, teach-from-study tutoring, or ordinary app engineering.
+description: Write or rewrite a real-source University lesson using the V2 material-first interactive teaching contract. Use when authoring a new lesson, rewriting a wall-of-conclusions lesson, reviewing lesson prose against the five variants, or when the user says 读不进去, 重写这节课, 重写课文, 改写成能读的, 太干, or 语气再循循善诱一些. Also use when beginner Chinese is vague, shorthand, jargon-heavy, or mixes literal explanation with analogy. Covers real-world material continuity, meaningful interaction, short explanations, changed-condition application, plain-language beginner scaffolding, literal-first explanations, clearly marked analogies, inline [[evidence:]] anchors, and cross-lesson links. It may be invoked by refresh-study for a stale lesson, but it is never the refresh entry point. Do not use for course/unit planning, card/exercise scheduling alone, UA analysis, refresh-study orchestration, knowledge-node saves, teach-from-study tutoring, or ordinary app engineering.
+metadata:
+  version: "2.0.0"
 ---
 
-# Write a lesson
-
-## Explicit interaction-first experiment
-
-When the owner explicitly requests the interaction-first experiment, use one
-`interaction-path` activity through the same course CLI. Its bounded rounds
-teach through decisions, locating evidence and assembling a useful artifact;
-brief explanations follow the submitted decision. This opt-in replaces the
-fixed article heading sequence as the main learner flow, not truth, evidence,
-beginner clarity, independent assessment, bilingual parity or the Writer /
-Detector / Polisher pipeline. Legacy lessons retain the contract below.
-
-Choose rounds by the capability, not by a desire to add components. Keep the
-first grounded choice unspoiled, write plausible alternatives, and use actual
-material for evidence selection. A source's metadata and content support
-different claims; an announcement is not a report proving an event occurred.
-The artifact is authored deterministic practice, not a claimed model run.
-At least one assembly and one evidence round are required. A guided
-changed-condition decision may follow assembly only when it adds a needed
-judgment, never as a repeated question to fill a quota. End these pilot lessons
-with their useful artifact. An unsupported-claim round includes the short
-source record beside the explicitly labeled teaching draft; it never asks a
-beginner to guess what an unseen source says.
-
-Keep useful original prose as on-demand review, with exactly one
-`::play{#path-id}` marker. The reader suppresses that marker after presenting
-the path as the main flow. Retain every existing card/exercise ID in a native
-revision proposal. The original independent exercise remains separate from
-guided completion. All source references and optional image IDs must belong
-to this lesson; no new public-source database or second authoring route.
-Schema and round-level evidence rules live in the
-[shared component contract](../../../../../packages/ui/src/learning-play/README.md).
-The experiment does not authorize publication outside the owner-approved scope.
-
-This is the single lesson-writing contract for repository-based and no-repository
-courses. Each small lesson opens a concrete question, invites one grounded
-prediction, explains it, then checks independent use in a changed situation.
-Five content-led variants keep the middle useful without changing that spine.
-An ordinary task is a valid opening; never fabricate surprise to fit a template.
-
-Why this shape (research, rejected alternatives):
-[apps/local/docs/reference/lesson-pedagogy.md](../../../docs/reference/lesson-pedagogy.md).
-The link is relative to this `SKILL.md`, so it intentionally resolves to
-`apps/local/docs/reference/lesson-pedagogy.md`, not a repository-root
-`docs/reference/` path. Read once; never restate it inside a lesson.
-
-Dispatching the work — which model writes, which one checks, the preflight gate,
-and the CLI flags that silently fail: [references/pipeline.md](references/pipeline.md),
-and the models and CLI calls it uses: [references/models.md](references/models.md)
-— read both before any writing or checking run. The preflight is required even
-when you are the one writing. Never copy a version id out of `models.md`; it
-deliberately holds roles and families, not a stale current id.
-
-## Start
-
-0. Run the CLI preflight in [references/models.md](references/models.md) and
-   record the selected Writer/fixer arm, Detector family, and Polisher status
-   **before dispatching any writing or checking task**.
-1. Read current `content.md` and `manifest.json` (evidence, card/exercise ids,
-   `contentRevision`, `variant`).
-2. **Read the cited evidence.** Use the pinned study snapshot for project code;
-   use verified primary documents or recorded, reproducible observations when
-   there is no repository. See [evidence-and-failures.md](references/evidence-and-failures.md).
-   No invented paths, lines, outputs, or assertions inferred from a URL merely responding.
-3. Pick a variant → [references/variants.md](references/variants.md), and in
-   the same step pick the lesson's activity and the role it serves →
-   [references/activities.md](references/activities.md). Every lesson gets one;
-   the choice is which, not whether.
-4. Write. Run [references/checklist.md](references/checklist.md).
-5. **Polish.** See "The polish pass" below. A no-polish run needs the explicit
-   status and reason required by `models.md` before the lesson ships;
-   it just reads like documentation.
-6. Land only as a **new revision**. Never rewrite existing revision bytes.
-
-If the current revision already matches the spine, invariants, and checklist,
-**do not mint a revision** just to rephrase. A new revision resets completion
-and knocks that lesson's cards out of the review queue. This no-op rule applies
-only when the freshness audit also says the revision's evidence is still fresh.
-If a refresh handoff says the evidence is stale but the prose, cards, and
-exercises remain accurate, keep their text and append a same-text revision with
-evidence bound to the target snapshot; evidence rebinding is a real revision,
-not a reason to skip the freshness gate.
-
-## The polish pass
-
-The measured Grok Writer/fixer arm reasons well and writes like documentation.
-Gemini Flash reasons less well and writes like a person talking. This step buys
-the second without losing the first, and it was measured rather than assumed —
-[references/pipeline.md](references/pipeline.md) has the numbers and the blind
-scoring.
-
-Before dispatching this polish or any earlier Writer/fixer or Detector task,
-complete the CLI preflight in [references/models.md](references/models.md).
-If Gemini Flash is unavailable, there is no declared Polisher fallback: stop
-the full run or report an explicitly accepted no-polish run. Do not silently
-use Claude for polishing.
-
-Run it on the finished draft, never on a draft you are still fixing:
-
-```bash
-cp content.md /tmp/before.md
-agy -p "$(cat .agents/skills/write-lesson/references/polish-prompt.md)
-
----
-
-$(cat content.md)" --model <newest-gemini-flash> --effort <highest> --dangerously-skip-permissions > /tmp/after.md
-```
-
-Select the placeholders from the just-completed `agy models` preflight; do not
-copy a model id from an old example.
-
-Then the gate, which is not optional:
-
-```bash
-pnpm lint:hedges --before /tmp/before.md --after /tmp/after.md
-```
-
-**Exit 0 → keep the polished version. Non-zero → throw it away and ship your
-own draft.** Do not hand-repair the polish. Why the prompt alone was not enough,
-with the measured numbers:
-[references/polish-prompt.md](references/polish-prompt.md).
-
-Called from `refresh-study`? That workflow owns the snapshot, UA, freshness
-audit and reactivation; this skill owns one lesson's prose, cards and exercises
-and returns a revision proposal. The exact split:
-[references/pipeline.md](references/pipeline.md).
-
-## The gates (run these; they hold most of this file)
-
-```bash
-pnpm --filter @pieai/university-local lint:lessons   # shape, spine, evidence, detail, voice, activity
-pnpm --filter @pieai/university-local lint:hedges --before /tmp/before.md --after /tmp/after.md
-```
-
-Fourteen of the sixteen invariants below are machine-checked, and each one names
-the rule number that catches it. That is the answer to 「这么多规则记不住」: you
-are not expected to hold them in your head, you are expected to run the gate
-before you claim a lesson is done. What no machine checks — whether the lesson
-is true, clear, and transferable — is in
-[references/checklist.md](references/checklist.md), and that is where the
-attention freed up by the gate should go.
-
-`lint:lessons` finds `studies/` by a path relative to the working directory, so
-run it through the filter above or from `apps/local`. From anywhere else it
-scans nothing.
-
-## The invariants
-
-Break one → rewrite. The tag after each is the `lint:lessons` rule number
-that catches it; **judgment** means nothing catches it but a reader.
-
-1. *(rule 2)* **Title is a question** an outsider wants answered — not a noun phrase, not
-   "X 的作用".
-2. *(judgment)* **No answer before `## 先猜一下`** (title, body, or heading).
-3. *(rules 7, 8)* **Exactly one** open-ended prediction on the lesson core. Never multiple
-   choice (including A/B/C bullets or「选一个」). Follow it with the line
-   **先写下你的判断，再往下看答案。** on its own line. This keeps the
-   prediction low-stakes without talking down to the reader. Every lesson has
-   this step: the opening must provide enough context for a reasoned guess,
-   not the correct answer. Do not demand an unfamiliar prerequisite term or
-   require a correct prediction before the reader can continue.
-4. *(rule 3)* **Next section is exactly `## 答案`** (no heading suffix) and resolves the
-   prediction in one or two sentences. Middle sections teach; do not dump the
-   lesson into `## 答案`.
-5. *(rule 12)* **Project source appears only as an `[[evidence:path:line]]` token**, covered
-   by this revision's manifest evidence. Never hand-type the source into a
-   fence. See 源码从快照来 below. Banned substitutes:
-   [references/evidence-and-failures.md](references/evidence-and-failures.md).
-5b. **Cards and exercises have their own contract**, and this skill owns it:
-   [references/cards-and-exercises.md](references/cards-and-exercises.md).
-   New lessons follow that writing contract; the generic schema's historical
-   ability to carry other assessment shapes is not an alternative authoring
-   recipe. Existing IDs and immutable revisions remain protected.
-
-6. *(rule 14)* **`## 自检` questions only** — no `答案：`, `**答：**`, or parenthetical
-   solutions. Change an input, condition, or example to require independent use;
-   changing the entire project is unnecessary. The separate graded exercise
-   supplies feedback below the prose; a demonstration never replaces it.
-7. *(rule 21)* **Last section is `## 一句话`**: exactly one bold sentence.
-8. *(rule 6)* **No old-skeleton headings:** `## 学习目标` / `## 先给结论` / `## 一个类比` /
-   `## 工作示例` / `## 重点`.
-9. *(rule 1)* **No HTML comments in `content.md`.** Variant lives only in `manifest.json`.
-10. *(growth check)* **Warming an already-shaped lesson may not grow its standard prose past
-    115%.** Measured on the body **with all `:::detail` blocks removed** —
-    adding a detail layer is new structure, not padding, and is not counted
-    here. If the previous revision has no `variant`, this is a structural
-    rewrite and the standard prose will roughly double; the rule does not
-    apply. Once a lesson is in shape, warmth is phrasing, not extra material.
-    See 语气 below.
-11. *(second-person check)* **Talk to the reader**: at least 2 occurrences of 「你」 per 1000 characters.
-    A lesson with none is a lecture delivered to an empty room.
-12. *(rule 20)* **Never narrate the teaching apparatus.** The reader does not know this app
-    exists. See 不许讲教学装置 below.
-13. *(detail check)* **Detail blocks carry the second reading level.** Every lesson ships
-    `:::detail` blocks; each answers one named question. See 详细讲解层 below.
-14. *(hand-copy check)* **Never hand-copy project source into a fence.** The `[[evidence:]]` token
-    renders the real pinned source itself.
-15. *(judgment; rule 28 only checks the file exists)* **Every picture must
-    survive the delete test**: remove it, add one sentence
-    — is the reader worse off? Decorative images buy affection, not
-    understanding. Max 3 per lesson, never copied without reuse rights, never AI-generated
-    where a real capture would do. See
-    [references/media.md](references/media.md).
-
-16. *(rule 30, and hard in the proposal schema)* **The lesson carries at least
-    one interactive activity**, chosen at step 3 with the variant. See
-    Interactive courseware below.
-
-The prediction and feedback are teaching choices informed by research, not proof
-that a heading sequence guarantees learning. Apply the checklist's judgment
-items: a machine passing the shape cannot prove clarity, truth, or transfer.
-
-## Variants (pick by content)
-
-| Variant | Use when | Middle role (the heading is written in reader language) |
-| --- | --- | --- |
-| `现象` | Observable situation or concrete task | 解释发生了什么，或示范怎样完成这件事 |
-| `对比` | Two things confused | 逐项分开比较 + 说明何时选哪一种 |
-| `溯源` | Information/action crosses files or real systems | 沿着有证据的路径逐站回查 |
-| `决策` | A tradeoff was made | 说明取舍带来的收益/代价 + 说明何时反过来 |
-| `术语` | A word is misread | 读者会遇到的真实用法 + 它不等于什么 |
-
-变体决定的是**教学位置和数量**，不是把生硬的内部标签展示给读者。中段标题必须让一个
-没写过代码的人单独读也知道「这一段要解决什么」。例如把 `## 什么时候用哪个` 改成
-`## 这两种写法，分别在什么时候用？`，把 `## 现象` 改成
-`## 我们再看一眼这个反常的地方`。决策的`## 什么时候该反过来`与术语的
-`## 它不是什么`保持固定，防止漏掉适用边界。完整的结构约束见
-[references/variants.md](references/variants.md)。
-
-**Rotation:** ≤ two consecutive lessons in a unit may share a variant. If a
-third is honest, say so in the **agent report** — do not force a bad fit.
-
-New revision `manifest.json` must set `"variant"` to one of the five Chinese
-names. Never put it in `content.md`.
-
-## Cross-lesson links
-
-`[[lesson:lesson-id]]` or `[[lesson:course-id/unit-id/lesson-id]]`, optional
-`|label`.
-
-- Max **3** per lesson.
-- Only inside `## 再想想`. Not in the opening, prediction, answer, middle,
-  self-check, or takeaway; this restriction concerns cross-lesson links, not
-  citations to the source being explained.
-- Target must exist and go deeper on something this lesson only gestured at.
-
-`## 再想想` is optional; if present, after the middle and before `## 自检`.
-
-## Interactive courseware
-
-**Every lesson carries at least one activity.** Not a preference — a lesson
-without `activities` fails `LessonCreationProposalSchema`, and any lesson
-rewritten after 2026-09-09 fails `lint:lessons` rule 30.
-
-This paragraph used to read 「default is no activity」, which contradicted both
-gates and both of them are newer than it. That default is measurable: under it,
-15 of 469 lessons carried an activity. A rule that decides for everyone decided
-that this product ships a stack of text.
-
-Decide it at step 3, with the variant — not after the prose exists. A lesson
-written first and fitted with a game afterwards gets a game for a paragraph,
-rather than the one thing in it that only makes sense once you have done it.
-
-Three is the ceiling, one is normal. Which of the thirteen to pick, where it
-goes, how to hand the reader over to it, and what to do when none of them fits:
-[references/activities.md](references/activities.md) — read it at step 3, not
-after the linter complains. The payload contract and the engines are the shared
-[activity contract](../../../../../packages/ui/src/learning-play/README.md).
-
-Seeing or operating a guided demonstration does not prove independent
-application and never substitutes for the lesson's graded exercise.
-
-## 源码从快照来，不要手抄
-
-`[[evidence:]]` 会把固定快照里的真实源码直接渲染出来，带行号和高亮。所以：
-
-~~~markdown
-坏 —— 手抄一份，再指一次：
-
-```markdown
-# Turing Pact / 图灵密约
-```
-
-[[evidence:README.md:1-4]]
-
-好 —— 只指：
-
-[[evidence:README.md:1-4]]
-~~~
-
-手抄那份等于同一段代码存了两份，而手抄的那份**没有任何东西校验**——打错一个字符，
-从出生就是错的，而且永远不会被发现。
-
-正文照常在 token 前后讲「这几行在说什么」「第 3 行为什么重要」。只是不要自己
-把代码再打一遍。
-
-例外：**不是**被学项目源码的代码块照旧写——你临时编的示例、命令行、伪代码、
-对比用的反例，都跟快照无关，正常用 fence。这条只管真实项目源码。
-
-## 详细讲解层（`:::detail`）
-
-一节课**只有一份**课文。标准正文照常写；需要展开的地方插 `:::detail` 块。读者切到
-「详细讲解」时全部展开，切回「标准讲解」时全部收起。
-
-不要写两份课文。同一件事存两份，今天改一份、明天另一份就开始撒谎，而且没有任何
-检查能发现——它们本来就该长得不一样。
-
-~~~markdown
-第二件事看起来也和「App」有关：有人打开项目文件夹，改里面的文字文件，
-再让工具把文件变成能运行的程序。
-
-:::detail[什么叫「项目文件夹」？]
-你手机上那个图标，是别人做完、打包好、送到你手上的成品。在做它的人的电脑上，
-它不长这样——它只是一个普通文件夹，跟你放照片的那个文件夹没有区别，只是里面
-装的不是照片，是一堆写满文字的文件。
-:::
-~~~
-
-### 规则
-
-1. **标题必须是读者真的会问的问句**，写在 `[…]` 里，以「？」结尾。
-   好：`什么叫「项目文件夹」？` / `为什么不直接改那个 App？`
-   坏：`补充说明` / `关于文件夹` / `延伸阅读`
-2. **块里只回答标题那一个问题。** 不塞轶事、名人故事、"有意思的题外话"。
-   判定：这句删掉，读者对**标题那个问题**的理解会变差吗？不会，就删掉。
-3. **标准正文必须自己站得住。** 把所有 `:::detail` 删光之后，正文仍然是一篇完整、
-   连贯、读得下去的课——它同时就是这节课的复习版。detail 是补充，不是把一句话
-   劈成两半。
-4. **紧跟在引发疑问的那句话之后。** 不要攒到章节末尾。疑问在哪，答案就在哪。
-
-   **硬线：预测所需的背景和前置术语必须先铺垫。** 术语课正要辨认的目标词可以
-   未知，但必须先出现在读者看得懂的具体场景里；不能把孤立名词直接扔给读者背定义。
-   可答是能作有依据的初步判断，不是开场已经解释了正确答案。答案里若需要进一步命名，
-   先用白话解释，不连带抛出新的一串术语。
-   块放在后面「反正也讲了」不算数：讲晚了等于没讲。
-   如果发现预测题依赖一个还没解释的词，正确的修法是**把解释挪到前面**，
-   或者**把那句话改成不需要那个词**——不是再加一块。
-5. **总量下限：所有 detail 正文加起来 ≥ 标准正文字数的 60%。** 达不到说明该展开的
-   没展开。这是下限不是目标——靠灌水凑数会被规则 2 判死。
-6. 一节课最多 8 块。超过说明这节课想讲的太多，该拆课。
-7. **块里适用 Voice 全部规则。** 块不是词条，不是百科。同样用「你」，同样
-   口语，同样不许在解释里引入新术语。
-   坏（词典腔）：「仓库」（Repository）是指集中保存一个项目所有文件、代码历史
-   修改记录和配置信息的总文件夹。
-   好（对人说话）：你可以把它想成一间还没装修完的房子的施工资料柜——不是你
-   住进去之后看到的客厅。
-8. **标准正文不要抢着下定义。** 把定义留给块。标准正文里塞一个括号解释，
-   等于两边都写了，而且句子变长变难读。
-   坏：有人打开一个装满文字文件的文件夹（做的人叫它**项目文件夹**），改里面
-   的字，再靠电脑上的程序把这些文件整理成你能点开的成品。
-   好：有人打开项目文件夹，改里面的文字文件，再让工具把文件变成能运行的程序。
-   （定义在紧跟其后的块里）
-
-### 哪里该开块（按顺序自查）
-
-- 一个词第一次出现，而它不在日常生活里：项目文件夹、仓库、运行、部署、依赖
-- 一句话跳过了一步：「再让工具把文件变成能运行的程序」——什么工具？怎么变？
-- 一个结论对新手不显然：「会用的人可以一辈子不打开 README.md」——为什么？
-- 一个只有写过代码的人才会觉得自然的说法
-
-### 按课程层级调块量
-
-- `foundations-*`：读者可能从没写过代码，平时甚至只用手机。凡是日常生活之外的词，
-  第一次出现就该有块。
-- 其余课程：读者已经读完 foundations。只给**这门课真正新的**东西开块。
-
-## Voice
-
-- Never-shipped-software reader, not stupid.
-- Plain words on first use, then the real term.
-- Daily-life analogies only; a new term inside an analogy means it failed.
-- Name the thing before naming the name.
-- Ban: 显然 / 简单来说 / 众所周知 / 显而易见 / 不言而喻.
-
-### 不许讲教学装置
-
-读者不知道 UniversityLocal 存在。他打开的是一节课，不是一个软件的功能界面。
-
-**课文里禁止出现这套系统自己的内部词汇。**
-
-> 坏：先把「界面」当成证据。下面是真实 Turing Pact Web `/daily` 在固定快照
-> `3b402e06…` 上的结果画面：对话、选择和答案留在同一个页面里。
->
-> 好：先看看图灵密约跑起来是什么样。这是它每天出一道题的那个页面——聊天记录、
-> 你选的人、最后的答案，全在同一屏里：
-
-正文禁用这些**搭配**：**固定快照 / 本课依据 / 当成证据 / 这节课的证据 /
-阅读层级 / 细讲模式 / 标准模式 / 内容修订**。另外 **本课** 一律写成
-**这节课**——前者是公文腔。
-
-裸词 `证据`、`快照`、`revision` **不禁**。被学项目自己可能就有这些概念——
-`AiBudgetSnapshot`、「机器证据写到哪」都是那门课的正常内容。禁的是**我们这套
-系统对读者说自己的事**，不是这三个字本身。分不清的时候用那句判定：念给一个
-不知道这个 App 存在的人听，他会不会问「你在说什么」？
-
-判定：把这句话念给一个不知道这个 App 存在的人听。他会不会问「你在说什么」？
-
-这条和「暖」是同一件事的两面：暖是**对着读者说话**，这条是**别对读者说系统的事**。
-读者要的是「这个游戏长什么样」，不是「我现在向你出示一份证据」。
-
-### 暖，是换说法，不是加内容
-
-对着读者说话，别对着空气讲课：
-
-- 用「你」。「你打开这个文件」胜过「用户打开该文件」；「我们」只在真的一起动手时用。
-- 用口语句式。写完念一遍，不像人话就改。
-- 难的地方明说难：「这里第一次看会绕，绕的是这一点：……」。承认难比假装简单更让人读下去。
-- 提问式过渡：「那问题来了——为什么不直接……？」
-
-**同时，绝不为了亲切加内容。** 有趣但与机制无关的小故事、趣闻、名人轶事、可爱的题外话，会把读者的注意力和脑容量抢走，实测让记忆和迁移**变差**。这不是风格偏好，是这一条与个人化语气强度相当的反向效应。
-
-判定方法很简单：**删掉这一句，读者对机制的理解会变差吗？** 不会，就删掉。
-
-因此改写有一条硬线：**当上一版已经是新形状（manifest 里有 `variant`）时，改写后正文不得超过上一版的 115%。** 语气变暖不需要更多字；变长了，说明加的是内容不是语气。
-
-上一版还是旧骨架（没有 `variant`）时不受这条约束——那是结构重写，新形状本来就需要地方装「先猜一下」和「答案」，实测长度会翻一倍左右，属正常。
-
-配套的下限：**每 1000 字至少 2 个「你」**。这条不是凑数，是个人化原则的可测代理。已经写好的课里有 5 节一个「你」都没有，读起来就是对着空气讲课。
-
-### 扶手要递减（同一单元内）
-
-一直扶着，读者永远学不会自己走。同一单元里：
-
-- **前 1/3 的课**：新词第一次出现给白话解释；`## 答案` 可以先复述一下情境再回答；`## 自检` 可以带一句提示。
-- **后 1/3 的课**：本单元已经解释过的词直接用，不再重讲；`## 答案` 一句话收；`## 自检` 不给提示。
-- 同一个词在同一单元里不要解释第二次。第二次解释等于告诉读者「我不指望你记住」。
-
-### 按课程层级调温
-
-同一种写法，对新手有效，对已经懂的人反而**有害**——过度解释会拖慢已经建立起理解的读者。
-
-- `foundations-*` 课程：读者可能从没写过代码，全套扶手。
-- 其余课程：读者已经读完 foundations。少铺垫，别把已知当未知；术语直接用，把篇幅花在这门课真正新的东西上。
-
-## 新手清晰度闸门
-
-这组规则来自对真实课程页面的逐条阅读反馈。它们不是「文风偏好」，而是防止
-聪明但没写过软件的人在句子中途失去上下文的硬闸门。
-
-### 先说事实，再说类比
-
-第一次解释一个东西时，先用完整的事实句回答四件事：它是什么、写在哪里、谁会读它、
-它会造成什么结果。只有事实句站稳之后，才可以另起一段写类比，并明确标成
-`**打个比方：**` 或 `:::detail[打个比方，为什么像……？]`。
-
-禁止把类比偷偷塞进事实句里：
-
-- 坏：程序「照着题库里的台词一条条摆出来」。读者不知道题库和台词是真有其物，还是作者在比喻。
-- 好：程序读取代码里的名单和文字，把它们逐项渲染成页面上的对话和按钮。
-  **打个比方：** 这像把一张名单排成一张可操作的表格。
-
-类比不能代替机制、不能先于术语，也不能把新术语带进另一个新术语的解释里。删掉类比后，
-事实层必须仍然完整。一个类比若有用，就单独出现并说明类比在哪儿不成立；不用类比也能懂，就删掉。
-
-### 标题和过渡必须是人话
-
-对零基础读者，`现象`、`两个东西`、`你碰什么`、`你在哪`、`什么时候用哪个` 这类
-脱离语境就不知道在问什么的标题，视为不合格。标题要说出对象和读者要解决的困惑，
-例如「开发项目里的这四类文件，分别有什么用？」或「接下来，我们看一个按钮是怎么被画出来的」。
-
-段落之间也要把路说出来：先明确「前面已经知道了什么」，再说明「这一段接下来要看哪个
-更小的例子，以及为什么看它」。不要用「两件事」「OK」「这就是现象」等空指代让读者自己猜。
-
-### 预测题要有信息量
-
-预测题不能只是把人人都会点头的常识改成问句，例如「会用 App 等于会做 App 吗？」如果
-答案不需要读者调用本课内容就能得到，题目没有教学价值。改问具体后果、选择或判断依据：
-「如果只改了源文件却没有重新构建，用户打开的页面会不会变化？为什么？」预测必须仍然
-紧扣本课核心，而且答案要立刻落地。开场可以是正常任务，不必反常。删掉`## 答案`
-及其后文，检查核心问题是否仍悬着；同时检查开场是否提供了作判断的材料。缺材料就补背景，
-泄题就改开场，不靠删掉有价值的课或编一个惊奇来解决。
-
-### 一节课只推进一个主题
-
-每段都要服务标题里的一个问题。已经介绍过产品名、玩法或项目背景，就不要为了再次展示证据
-把它们重新介绍一遍；除非那段信息直接帮助回答当前问题。比较「会用」和「会开发」之后，
-下一步应推进到「开发为什么要面对文件」，而不是重复「会用不是终点」三遍。删掉重复句后，
-如果机制理解没有变差，就删掉。
-
-### 给第一次看代码的人一个安全落点
-
-`foundations-*` 第一次展示一大段代码时，必须先承认它看起来吓人，再告诉读者为什么仍值得
-看：在 AI 时代，你不需要手写或背下所有代码；你要逐渐读懂文件、知道代码大致在做什么，
-这样才能更准确地和 AI 沟通、判断 AI 的回答、让 AI 帮你改进产品。鼓励要连接到学习目的，
-不能写成脱离课程机制的口号。
-
-### 代码和画面要一一对上
-
-当课程解释「代码怎样变成界面」时，整张产品截图只适合建立整体场景。真正讲一个机制时，
-优先展示一个足够简单的局部元素（例如一个按钮或一块文字）和它对应的真实文件/行号，
-并在图注或紧邻正文里说清楚：左侧行号是什么、哪几行负责什么、页面上哪个元素因此出现、
-点击它时又触发了什么代码。截图必须帮助读者建立「这几行代码 ↔ 这个单一元素」的连接，
-不能只把整张复杂布局再次摆出来。
-
-### 把 UI 问题和课文问题分开
-
-项目地图、统计数字、课程路线、折叠面板、按钮标签、截图裁剪属于 UI/信息架构/呈现层，
-不应靠在课文里再加一段解释来掩盖。写课时记录它们对应的独立 UI 工作项；只有当 UI 已经
-提供了清楚的入口，课文才解释该入口展开后的内容。课程路线若需要用户画像或问答分流，
-把它作为产品流程单独设计，不把「用户应该学几节」硬塞进某一节课的正文。
-
-## Output contract
-
-**Done** means:
-
-1. **New revision only** (prefer `course open-for-edit` → `course revise`
-   dry-run/apply → later `course reactivate`). Older `revisions/<n>/` bytes
-   untouched. `contentHash` matches the new body.
-2. Checklist passes.
-3. New manifest has `"variant"`, correct `contentRevision`, and `evidence`
-   covering every `[[evidence:]]` token.
-4. Card/exercise ids unchanged unless the report justifies a change. A revise
-   proposal still lists every existing card and exercise (add only; never drop).
-
-**Agent report every run:** variant + why; rotation exception if any; checklist
-result; evidence list changes; card/exercise changes; wrote a revision or left
-alone; preflight results; the actual Writer/fixer arm; and the exact model id
-and effort for Writer/fixer, Detector, and Polisher (or an explicit `not run`
-reason). If Writer/fixer used the fallback, make that the first diagnostic
-clue in any quality follow-up.
-
-Known and predicted defects:
-[references/evidence-and-failures.md](references/evidence-and-failures.md).
+# Write a lesson — V2
+
+Version 2 is the canonical authoring contract. One real-world material set supports
+one useful learning task. The learner encounters real context, makes meaningful
+choices, sees their consequences, receives short explanations, and tries a changed
+condition. Preserve the five variants, not six compulsory screens or games.
+
+V2 is an explicit new-revision choice, not a bulk migration. Existing ordinary
+prose and V1 interaction revisions remain valid under their stored contracts.
+Their historical heading rules live in the validator and Git history; they do not
+force a new V2 lesson to become an article with games appended.
+
+## Before writing
+
+1. Read the project/module routers, current lesson, manifest and independent
+   exercises. Record latest revision and every card, exercise, source and asset ID.
+2. Run both CLI/model preflights in [models.md](references/models.md). Record the
+   actual Writer/fixer, independent Detector and **Gemini Flash Polisher** before
+   dispatch. Grok authentication failure selects the declared Codex fallback;
+   it does not waive the separate Detector or Flash polish.
+3. Read the actual cited primary sources or pinned code, not just source URLs.
+   Follow [evidence-and-failures.md](references/evidence-and-failures.md) and
+   [media.md](references/media.md). Source reachability is not support.
+4. Write a small **material-preservation map** in the run receipt: original
+   meaningful fact/context/boundary → first encounter, just-in-time explanation,
+   or optional depth. Missing core facts require a reason and correction.
+5. Choose the main learning action and [variant](references/variants.md), then
+   its [interactions](references/activities.md). Brief the writer with what the
+   learner already knows, what this lesson adds, and what not to re-explain.
+
+## What cannot disappear
+
+Every lesson uses real-world material: a real product/case, event, public record,
+research, authorized image/recording/screenshot, reproducible observation or pinned
+repository code. Main-path learners must encounter its identity and the context
+that explains why this is worth learning. Keeping a link or original article in a
+closed drawer alone does not preserve the experience.
+
+Keep three things distinct: **source fact**, **teaching adaptation**, **observed AI
+run**. A task over a real announcement may be designed for teaching. A fabricated
+bad draft may illustrate an error only when clearly labelled a teaching draft;
+never call it a transcript, quote or measured model failure. A deterministic
+simulation is not a live AI call and does not prove that a prompt will work.
+
+A real image cannot be replaced with a decorative approximation. Its credit, alt
+text, source identity and historical date remain accessible. Do not hide rightful
+credit to create an artificial guessing game; ask where the fact comes from.
+The current task's necessary source excerpt stays nearby. Other material can be
+reopened without losing the task. Do not force half a phone screen to stay fixed.
+
+## Design the learning, not six boxes
+
+Keep these responsibilities, combining them wherever the task supports it:
+
+| Responsibility | Valid form |
+| --- | --- |
+| Encounter a real thing and a reason to use it | Real image/record/code plus a short, clear introduction; reading is allowed |
+| Form a grounded first judgment | Prediction, comparison, selection or small attempt; no prior unfamiliar prerequisite |
+| Understand what happened | Immediate result and explanation tied to the chosen misconception; not another compulsory game |
+| Learn the method | Modify, compare, locate or repair the same material; a short worked example when needed |
+| Apply with less help | Changed goal/input/condition, without preselected answers; not repetition of the revealed answer |
+| Take away the method or result | Actual resulting artifact OR a justified decision plus a short recap; not a forced extra quiz |
+
+The five variants govern learning needs; [variants.md](references/variants.md)
+explains their boundaries. Do not impose a beat count, seconds-per-click, fixed
+text ratio or compulsory standalone game at every responsibility. A few good
+operations can span several responsibilities. Longer session games are usually
+practice/consolidation choices, not mandatory additions to every small lesson.
+
+A reveal button may guide observation but does not prove a judgment. Repeating a
+skill with a different condition can be valuable; changing hand motion alone does
+not create new learning. Content must still be understandable when help is closed.
+Required background comes before the decision that needs it; extra detail comes
+where the learner is likely to need it.
+
+## Write for ordinary people
+
+- Use **AI** to mean AI. Do not substitute 助手、助理、处理器 or vague “它” when
+  the referent is unclear. Actual human volunteers remain human volunteers.
+- Name the visible object: “NASA 的照片记录”“你的请求”“改后的文字”. Avoid
+  “前者”“形成闭环”“证据链路”“交付物” when “前一种”“检查一遍”“来源”“要做的东西” works.
+- Say what to do, to what, and what change to inspect. Do not write “操作材料”“完成
+  校准” and expect a beginner to infer the action. Use labels rather than 左边/上面
+  when responsive layout can move them.
+- Short, complete sentences. Keep necessary context, facts and uncertainty; remove
+  repeated explanations, not meaningful source material. Speak to “你”.
+- Explain literally first. Mark a useful analogy as an analogy; it cannot supply
+  factual evidence. Never “显然”“众所周知” or blame the user for needing help.
+- Do not call blind clicking “你自己查出来的”. Do not call feedback exposure “你会了”.
+  Describe observed practice accurately and leave mastery to independent evidence.
+
+## Payload and single producer
+
+Use existing `LessonActivitySchema` kind `interaction-path` with
+`pedagogyVersion: 2`; see the typed schema and the shared component contract.
+It holds the visible real-world context, named source materials and a bounded
+sequence of `decision`, `evidence`, `assemble` and `experiment` actions. A lesson
+has one path, not several incompatible embedded course engines.
+
+The first release supports boolean experiment controls, each with an explicit
+result for **every** combination. Every combination's text, feedback and current
+accepted status must agree. No “all toggles on” shortcut unless all are truly
+needed; include meaningful alternative or boundary conditions. Prior visits do
+not make a wrong current result correct. Never invent numeric budgets or physical
+mechanisms simply to fit a game engine.
+
+The reader's main path uses those same authored fields. `content.md` remains a
+coherent optional review: question title, concise connected explanation, all
+source links, meaningful optional details, and exactly one `::play{#path-id}`.
+Do not reproduce all the path's questions and answers in a second course script.
+Do not hand-copy studied repository code into fences; use `[[evidence:path:lines]]`
+covered by the snapshot. Cross-lesson links remain bounded and target real lessons.
+
+All learner text has the supported locale versions, including context, materials,
+choices, feedback, source limits, cards and exercises. Translation must not alter
+rules, identifiers, dates, qualifiers, answer meaning or evidence bindings.
+
+## Independent exercise and cards
+
+Use [cards-and-exercises.md](references/cards-and-exercises.md). Existing IDs
+remain stable. A guided path never silently marks an independent exercise passed
+or a revision learned. A last guided transfer round is still guided evidence;
+keep the structured independent exercise and the real completion/confirmation
+pipeline. Do not add a duplicate verbal quiz merely to recheck an identical task.
+
+Choose assessment by the required act: a supported native choice for a bounded
+choice, a short answer for a genuinely short result, an explain rubric when the
+learner must explain. Never make someone type an option solely because the storage
+union cannot represent a choice. Land a needed native capability or report its
+concrete missing boundary, rather than disguising it with a hidden textarea.
+
+## Writer → Detector → fix → Gemini Flash polish
+
+Follow [pipeline.md](references/pipeline.md), keeping model roles distinct.
+Inline the relevant contract, exact facts and source mapping in model briefs;
+forbid broad file exploration for draft-only stages. Structured activity/card
+output uses direct JSON calls, not an H1-only Markdown parser.
+
+The Detector names concrete beginner/correctness/material-loss problems, without
+rewriting. The Writer fixes substantive content first. **Then actually call the
+local Gemini Flash Polisher** on all learner-facing wording, not just the hidden
+review prose. Use [polish-prompt.md](references/polish-prompt.md).
+
+Freeze IDs, URLs, numeric facts, rules, booleans, option sets, source/asset mapping
+and locale structure. Compare before/after strings for lost qualifiers, new
+absolutes, terminology/meaning changes, and vanished real-world context. Run
+`check-lesson-hedges.mjs` plus the schema, source-preservation and shape checks.
+If polish changes facts or logic, reject that output. Do not silently hand-repair
+a compromised polish and claim it was accepted. Keep the raw output and decision.
+
+## Acceptance and landing
+
+Walk [checklist.md](references/checklist.md). Validate schema/references and every
+experiment combination. Actually try wrong choices, hints, correction, changed
+conditions, copy/hand-off and mobile/keyboard. Read fresh screenshots; successful
+builds alone do not prove a good lesson. Do not report AI-simulated reactions as
+human enjoyment, transfer, retention or revenue.
+
+Land only through native course CLI: open-for-edit, revise dry-run/apply, recovery
+export/reactivation, guarded importer. Read current CLI help; never guess flags.
+Existing revision bytes are immutable; same IDs get new revisions. Publishing is
+separate and not granted by this skill. Do not write generated delivery JSON.
+
+The report records: selected variant and reason, preservation map, all changed
+IDs/revisions, native receipts, actual model preflights/roles/efforts, raw polish
+and acceptance, focused/full checks, browser evidence and concrete remaining
+limitations. Already valid lessons do not need revisions merely to churn words.

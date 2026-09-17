@@ -3,18 +3,28 @@ import { GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
 import {
   emptyPathEvidence,
   evaluateInteractionStep,
-  formatLineRange,
   pathFirstAttemptCount,
   recordPathAttempt,
   type ActivityResult,
   type InteractionPathActivity,
+  type InteractionStep,
   type PathEvidence,
 } from "@pieai/university-core";
 import { useI18n } from "../i18n/index.js";
 import type { LessonAssetView } from "../view/lesson-view.js";
 import { PathAssembly } from "./PathAssembly.js";
 import { PathArtifact } from "./PathArtifact.js";
+import { PathExperiment } from "./PathExperiment.js";
+import { PathIntroduction, PathMaterials, PathSources } from "./PathMaterials.js";
 import { playSound } from "../sound/index.js";
+
+function initialAnswer(step?: InteractionStep): string[] {
+  return step?.kind === "assemble"
+    ? [...step.initialPieceIds]
+    : step?.kind === "experiment"
+      ? [...step.initialControlIds]
+      : [];
+}
 
 export function InteractionPath({
   activity,
@@ -36,7 +46,7 @@ export function InteractionPath({
   const { t } = useI18n();
   const [index, setIndex] = useState(0);
   const [evidence, setEvidence] = useState<PathEvidence>(emptyPathEvidence);
-  const [answer, setAnswer] = useState<string[]>([]);
+  const [answer, setAnswer] = useState<string[]>(() => initialAnswer(activity.steps[0]));
   const [submitted, setSubmitted] = useState(false);
   const [hintOpen, setHintOpen] = useState(false);
   const [artifact, setArtifact] = useState("");
@@ -51,6 +61,7 @@ export function InteractionPath({
   const progressCallback = useRef(onPathProgress);
   progressCallback.current = onPathProgress;
   const step = activity.steps[index];
+  const materialFirst = activity.pedagogyVersion === 2;
   const image = assets?.find(
     (asset) => asset.id === activity.assetId && asset.mime.startsWith("image/"),
   );
@@ -63,9 +74,12 @@ export function InteractionPath({
   useEffect(() => {
     if (focusVersion > 0) {
       heading.current?.focus({ preventScroll: true });
-      heading.current?.scrollIntoView?.({ block: "nearest", behavior: "instant" });
+      heading.current?.scrollIntoView?.({
+        block: materialFirst && index === activity.steps.length ? "start" : "nearest",
+        behavior: "instant",
+      });
     }
-  }, [focusVersion]);
+  }, [focusVersion, index, activity.steps.length, materialFirst]);
   useEffect(() => {
     if (submitted) {
       feedback.current?.focus({ preventScroll: true });
@@ -89,11 +103,16 @@ export function InteractionPath({
   function advance() {
     if (!step || !result?.passed) return;
     if (index === activity.steps.length - 1 && resultSent.current) return;
-    if (index === activity.steps.length - 1 && !(result.artifact ?? artifact)) return;
-    if (result.artifact) setArtifact(result.artifact);
+    const finalStep = index === activity.steps.length - 1;
+    // A changed-purpose final decision did not edit the previous artifact.
+    // Keep V1's carry-forward contract; V2 must not pass off old work as new.
+    const handoff = materialFirst && finalStep ? result.artifact : (result.artifact ?? artifact);
+    if (!materialFirst && index === activity.steps.length - 1 && !handoff) return;
+    if (materialFirst && finalStep) setArtifact(result.artifact ?? "");
+    else if (result.artifact) setArtifact(result.artifact);
     const next = activity.steps[index + 1];
     setIndex(index + 1);
-    setAnswer(next?.kind === "assemble" ? [...next.initialPieceIds] : []);
+    setAnswer(initialAnswer(next));
     setSubmitted(false);
     setHintOpen(false);
     setFocusVersion((value) => value + 1);
@@ -108,7 +127,11 @@ export function InteractionPath({
         status: "completed",
         attempts: evidence.attempts.length,
         hintsUsed: evidence.helpedStepIds.length,
-        submission: { evidence, handoff: result.artifact ?? artifact, independentMastery: false },
+        submission: {
+          evidence,
+          ...(handoff ? { handoff } : { recap: activity.takeaway }),
+          independentMastery: false,
+        },
       });
     }
   }
@@ -116,7 +139,7 @@ export function InteractionPath({
     resultSent.current = false;
     setEvidence((current) => ({ ...current, resets: current.resets + 1 }));
     setIndex(0);
-    setAnswer([]);
+    setAnswer(initialAnswer(activity.steps[0]));
     setSubmitted(false);
     setHintOpen(false);
     setArtifact("");
@@ -141,9 +164,23 @@ export function InteractionPath({
         data-activity-id={activity.id}
         data-step-kind={step?.kind}
         data-step-id={step?.id}
+        data-pedagogy-version={activity.pedagogyVersion}
       >
         {step ? (
           <>
+            {materialFirst && index === 0 ? (
+              <div className={`path-entry${image ? " path-entry--image" : ""}`}>
+                <PathIntroduction activity={activity} />
+                {image ? (
+                  <figure className="interaction-path__image">
+                    <img src={image.url} alt={image.alt} />
+                    {(image.caption ?? image.attribution) ? (
+                      <figcaption>{image.caption ?? image.attribution}</figcaption>
+                    ) : null}
+                  </figure>
+                ) : null}
+              </div>
+            ) : null}
             <header>
               <p className="interaction-path__position">
                 <span>
@@ -154,7 +191,9 @@ export function InteractionPath({
                         ? step.task === "unsupported"
                           ? "path.inspectDraft"
                           : "path.locate"
-                        : "path.make",
+                        : step.kind === "experiment"
+                          ? "path.experiment"
+                          : "path.make",
                   )}
                 </span>
                 {t("path.round", { current: index + 1, total: activity.steps.length })}
@@ -162,204 +201,212 @@ export function InteractionPath({
               <h2 ref={heading} tabIndex={-1}>
                 {step.question}
               </h2>
-              {index === 0 ? <p>{activity.brief}</p> : null}
+              {index === 0 && !materialFirst ? <p>{activity.brief}</p> : null}
               {step.brief ? <p>{step.brief}</p> : null}
             </header>
-            {image && index === 0 ? (
-              <figure className="interaction-path__image">
-                <img src={image.url} alt={image.alt} />
-              </figure>
-            ) : null}
-            {image && index > 0 ? (
-              <details className="interaction-path__image-review" key={step.id}>
-                <summary>{t("path.viewImage")}</summary>
-                <figure className="interaction-path__image">
-                  <img src={image.url} alt={image.alt} loading="lazy" />
-                </figure>
-              </details>
-            ) : null}
-            {step.kind === "assemble" ? (
-              <PathAssembly
-                key={`assembly:${step.id}`}
-                step={step}
-                answer={answer}
-                submitted={submitted}
-                onAdd={(id) => {
-                  setAnswer([...answer, id]);
-                }}
-                onRemove={(id) => {
-                  pendingPieceFocus.current = `[data-piece="${id}"]`;
-                  setAnswer(answer.filter((value) => value !== id));
-                }}
-                onMove={move}
-              />
-            ) : (
-              <>
-                {step.kind === "evidence" ? (
-                  <div className="interaction-path__material">
-                    {step.material.reference ? (
-                      <section className="interaction-path__reference">
-                        <h3>{step.material.reference.label}</h3>
-                        <blockquote>{step.material.reference.text}</blockquote>
-                      </section>
-                    ) : null}
-                    <p>{step.material.note}</p>
-                    {source && "url" in source.reference ? (
-                      <a href={source.reference.url} target="_blank" rel="noreferrer">
-                        {t("path.openSource")}
-                      </a>
-                    ) : null}
-                    <h3>{step.material.label}</h3>
-                  </div>
+            <div className={materialFirst ? "interaction-path__workspace" : undefined}>
+              {materialFirst && (index > 0 || (step.materialIds?.length ?? 0) > 0) ? (
+                <PathMaterials activity={activity} step={step} first={index === 0} />
+              ) : null}
+              <div className="interaction-path__task">
+                {image && index === 0 && !materialFirst ? (
+                  <figure className="interaction-path__image">
+                    <img src={image.url} alt={image.alt} />
+                  </figure>
                 ) : null}
-                <div className="interaction-path__choices" role="group" aria-label={step.question}>
-                  {(step.kind === "decision" ? step.options : step.material.sentences).map(
-                    (choice) => (
+                {image && index > 0 ? (
+                  <details className="interaction-path__image-review" key={step.id}>
+                    <summary>{t("path.viewImage")}</summary>
+                    <figure className="interaction-path__image">
+                      <img src={image.url} alt={image.alt} loading="lazy" />
+                    </figure>
+                  </details>
+                ) : null}
+                {step.kind === "experiment" ? (
+                  <PathExperiment
+                    step={step}
+                    answer={answer}
+                    onChange={(selection) => {
+                      setAnswer(selection);
+                      setSubmitted(false);
+                    }}
+                  />
+                ) : step.kind === "assemble" ? (
+                  <PathAssembly
+                    key={`assembly:${step.id}`}
+                    step={step}
+                    answer={answer}
+                    submitted={submitted}
+                    onAdd={(id) => {
+                      setAnswer([...answer, id]);
+                    }}
+                    onRemove={(id) => {
+                      pendingPieceFocus.current = `[data-piece="${id}"]`;
+                      setAnswer(answer.filter((value) => value !== id));
+                    }}
+                    onMove={move}
+                  />
+                ) : (
+                  <>
+                    {step.kind === "evidence" ? (
+                      <div className="interaction-path__material">
+                        {step.material.reference ? (
+                          <section className="interaction-path__reference">
+                            <h3>{step.material.reference.label}</h3>
+                            <blockquote>{step.material.reference.text}</blockquote>
+                          </section>
+                        ) : null}
+                        <p>{step.material.note}</p>
+                        {source && "url" in source.reference ? (
+                          <a href={source.reference.url} target="_blank" rel="noreferrer">
+                            {t("path.openSource")}
+                          </a>
+                        ) : null}
+                        <h3>{step.material.label}</h3>
+                      </div>
+                    ) : null}
+                    <div
+                      className="interaction-path__choices"
+                      role="group"
+                      aria-label={step.question}
+                    >
+                      {(step.kind === "decision" ? step.options : step.material.sentences).map(
+                        (choice) => (
+                          <GameButton
+                            key={choice.id}
+                            data-choice-id={choice.id}
+                            data-selected={answer[0] === choice.id}
+                            data-outcome={
+                              submitted && answer[0] === choice.id
+                                ? result?.passed
+                                  ? "fits"
+                                  : "revise"
+                                : undefined
+                            }
+                            aria-label={choice.label}
+                            type="button"
+                            variant={
+                              answer[0] === choice.id
+                                ? "primary"
+                                : step.kind === "evidence"
+                                  ? "ghost"
+                                  : "secondary"
+                            }
+                            sound={false}
+                            static
+                            aria-pressed={answer[0] === choice.id}
+                            disabled={submitted}
+                            onClick={() => setAnswer([choice.id])}
+                          >
+                            <span className="path-choice__mark" aria-hidden="true">
+                              {submitted && answer[0] === choice.id ? (
+                                <svg viewBox="0 0 24 24">
+                                  <path
+                                    d={result?.passed ? "m5 12 4 4L19 6" : "M6 6l12 12M18 6 6 18"}
+                                  />
+                                </svg>
+                              ) : answer[0] === choice.id ? (
+                                <span />
+                              ) : null}
+                            </span>
+                            <span>{choice.label}</span>
+                          </GameButton>
+                        ),
+                      )}
+                    </div>
+                  </>
+                )}
+                <div className="interaction-path__response" ref={response}>
+                  {result ? (
+                    <div
+                      ref={feedback}
+                      className="interaction-path__feedback"
+                      tabIndex={-1}
+                      role="status"
+                      data-passed={result.passed}
+                    >
+                      <strong className="path-feedback__title">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path d={result.passed ? "m5 12 4 4L19 6" : "M12 5v9M12 18v1"} />
+                        </svg>
+                        {t(result.passed ? "path.fits" : "path.revise")}
+                      </strong>
+                      {result.feedback.map((message, messageIndex) => (
+                        <p key={messageIndex}>{message}</p>
+                      ))}
+                      <p>{step.explanation}</p>
+                    </div>
+                  ) : null}
+                  <div className="interaction-path__actions">
+                    {!submitted ? (
                       <GameButton
-                        key={choice.id}
-                        data-choice-id={choice.id}
-                        data-selected={answer[0] === choice.id}
-                        data-outcome={
-                          submitted && answer[0] === choice.id
-                            ? result?.passed
-                              ? "fits"
-                              : "revise"
-                            : undefined
-                        }
-                        aria-label={choice.label}
                         type="button"
-                        variant={
-                          answer[0] === choice.id
-                            ? "primary"
-                            : step.kind === "evidence"
-                              ? "ghost"
-                              : "secondary"
-                        }
+                        variant="primary"
+                        surface="liquid"
+                        sound={false}
+                        disabled={step.kind !== "experiment" && !answer.length}
+                        onClick={commit}
+                      >
+                        {t("path.commit")}
+                      </GameButton>
+                    ) : result?.passed ? (
+                      <GameButton
+                        type="button"
+                        variant="primary"
+                        surface="liquid"
+                        sound={false}
+                        onClick={advance}
+                      >
+                        {t(
+                          index === activity.steps.length - 1
+                            ? result.artifact || (!materialFirst && artifact)
+                              ? "path.finish"
+                              : "path.finishMethod"
+                            : "path.next",
+                        )}
+                      </GameButton>
+                    ) : (
+                      <GameButton
+                        type="button"
+                        variant="primary"
+                        surface="liquid"
+                        sound={false}
+                        onClick={() => {
+                          setSubmitted(false);
+                          setFocusVersion((value) => value + 1);
+                        }}
+                      >
+                        {t("path.tryAgain")}
+                      </GameButton>
+                    )}
+                    {!submitted ? (
+                      <GameButton
+                        type="button"
+                        variant="ghost"
                         sound={false}
                         static
-                        aria-pressed={answer[0] === choice.id}
-                        disabled={submitted}
-                        onClick={() => setAnswer([choice.id])}
+                        aria-expanded={hintOpen}
+                        onClick={() => {
+                          setHintOpen(!hintOpen);
+                          setEvidence((current) => ({
+                            ...current,
+                            helpedStepIds: [...new Set([...current.helpedStepIds, step.id])],
+                          }));
+                        }}
                       >
-                        <span className="path-choice__mark" aria-hidden="true">
-                          {submitted && answer[0] === choice.id ? (
-                            <svg viewBox="0 0 24 24">
-                              <path
-                                d={result?.passed ? "m5 12 4 4L19 6" : "M6 6l12 12M18 6 6 18"}
-                              />
-                            </svg>
-                          ) : answer[0] === choice.id ? (
-                            <span />
-                          ) : null}
-                        </span>
-                        <span>{choice.label}</span>
+                        {t(hintOpen ? "path.hideHelp" : "path.help")}
                       </GameButton>
-                    ),
-                  )}
+                    ) : null}
+                  </div>
+                  {hintOpen ? <p role="status">{step.hint}</p> : null}
                 </div>
-              </>
-            )}
-            <div className="interaction-path__response" ref={response}>
-              {result ? (
-                <div
-                  ref={feedback}
-                  className="interaction-path__feedback"
-                  tabIndex={-1}
-                  role="status"
-                  data-passed={result.passed}
-                >
-                  <strong className="path-feedback__title">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d={result.passed ? "m5 12 4 4L19 6" : "M12 5v9M12 18v1"} />
-                    </svg>
-                    {t(result.passed ? "path.fits" : "path.revise")}
-                  </strong>
-                  {result.feedback.map((message, messageIndex) => (
-                    <p key={messageIndex}>{message}</p>
-                  ))}
-                  <p>{step.explanation}</p>
-                </div>
-              ) : null}
-              <div className="interaction-path__actions">
-                {!submitted ? (
-                  <GameButton
-                    type="button"
-                    variant="primary"
-                    surface="liquid"
-                    sound={false}
-                    disabled={!answer.length}
-                    onClick={commit}
-                  >
-                    {t("path.commit")}
-                  </GameButton>
-                ) : result?.passed ? (
-                  <GameButton
-                    type="button"
-                    variant="primary"
-                    surface="liquid"
-                    sound={false}
-                    onClick={advance}
-                  >
-                    {t(index === activity.steps.length - 1 ? "path.finish" : "path.next")}
-                  </GameButton>
-                ) : (
-                  <GameButton
-                    type="button"
-                    variant="primary"
-                    surface="liquid"
-                    sound={false}
-                    onClick={() => {
-                      setSubmitted(false);
-                      setFocusVersion((value) => value + 1);
-                    }}
-                  >
-                    {t("path.tryAgain")}
-                  </GameButton>
-                )}
-                {!submitted ? (
-                  <GameButton
-                    type="button"
-                    variant="ghost"
-                    sound={false}
-                    static
-                    aria-expanded={hintOpen}
-                    onClick={() => {
-                      setHintOpen(!hintOpen);
-                      setEvidence((current) => ({
-                        ...current,
-                        helpedStepIds: [...new Set([...current.helpedStepIds, step.id])],
-                      }));
-                    }}
-                  >
-                    {t(hintOpen ? "path.hideHelp" : "path.help")}
-                  </GameButton>
-                ) : null}
               </div>
-              {hintOpen ? <p role="status">{step.hint}</p> : null}
             </div>
-            {source ? (
-              <details className="interaction-path__source">
-                <summary>{t("path.source")}</summary>
-                {"url" in source.reference ? (
-                  <a href={source.reference.url} target="_blank" rel="noreferrer">
-                    {source.reference.label}
-                  </a>
-                ) : (
-                  <span>
-                    {source.reference.label}{" "}
-                    <code>
-                      {source.reference.path}
-                      {source.reference.line
-                        ? `:${formatLineRange(source.reference.line, source.reference.lineEnd)}`
-                        : ""}
-                      {source.reference.commit ? `@${source.reference.commit.slice(0, 8)}` : ""}
-                    </code>
-                  </span>
-                )}
-                <p>{source.note}</p>
-                {image ? <p>{image.attribution ?? image.caption}</p> : null}
-              </details>
-            ) : null}
+            <PathSources
+              sources={materialFirst ? activity.sources : source ? [source] : []}
+              image={image}
+              all={materialFirst}
+            />
             {onNext ? (
               <GameButton type="button" variant="ghost" sound={false} static onClick={onNext}>
                 {t("path.skip")}
@@ -371,28 +418,38 @@ export function InteractionPath({
             <h2 ref={heading} tabIndex={-1}>
               {activity.finish.title}
             </h2>
-            <PathArtifact title={t("path.finishedArtifact")} image={image} settled>
-              <pre className="interaction-path__artifact">{artifact}</pre>
-            </PathArtifact>
-            <GameButton
-              type="button"
-              variant="secondary"
-              sound={false}
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(artifact);
-                  setCopied("copied");
-                } catch {
-                  setCopied("failed");
-                }
-              }}
-            >
-              {t(copied === "copied" ? "path.copied" : "path.copy")}
-            </GameButton>
-            {copied === "failed" ? <p role="status">{t("path.copyFailed")}</p> : null}
-            <p>{activity.takeaway}</p>
-            <p>{t("path.guided")}</p>
+            {artifact ? (
+              <>
+                <PathArtifact title={t("path.finishedArtifact")} image={image} settled>
+                  <pre className="interaction-path__artifact">{artifact}</pre>
+                </PathArtifact>
+                <GameButton
+                  type="button"
+                  variant="secondary"
+                  sound={false}
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(artifact);
+                      setCopied("copied");
+                    } catch {
+                      setCopied("failed");
+                    }
+                  }}
+                >
+                  {t(copied === "copied" ? "path.copied" : "path.copy")}
+                </GameButton>
+                {copied === "failed" ? <p role="status">{t("path.copyFailed")}</p> : null}
+                <p>{activity.takeaway}</p>
+              </>
+            ) : (
+              <section className="interaction-path__recap">
+                <h3>{t("path.methodRecap")}</h3>
+                <p>{activity.takeaway}</p>
+              </section>
+            )}
+            <p>{t(artifact ? "path.guided" : "path.guidedMethod")}</p>
             <p>{activity.finish.note}</p>
+            {materialFirst ? <PathSources sources={activity.sources} image={image} all /> : null}
             {onNext ? (
               <GameButton
                 type="button"

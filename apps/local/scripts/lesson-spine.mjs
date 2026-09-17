@@ -45,7 +45,10 @@ export function checkLessonSpine(
   { allowLegacyGuessLine = false, interactionLesson } = {},
 ) {
   if (interactionLesson?.activities?.some((activity) => activity.kind === "interaction-path")) {
-    return interactionLessonIssues({ ...interactionLesson, content }).map((message) => ({
+    const issues = interactionLessonIssues({ ...interactionLesson, content });
+    if (!Object.hasOwn(LESSON_VARIANTS, variant ?? ""))
+      issues.push("Interaction lesson still needs one of the five content-led variants");
+    return issues.map((message) => ({
       item: 1,
       message,
     }));

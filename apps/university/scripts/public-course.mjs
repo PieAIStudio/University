@@ -7,7 +7,7 @@
  * explicit so a new authoring field stays private until somebody chooses to
  * publish it here.
  */
-import { compileAnswerKey } from "@pieai/university-core";
+import { compileAnswerKey, compileChoiceAnswerKey } from "@pieai/university-core";
 
 function fields(names, why) {
   return Object.freeze({ fields: Object.freeze(names), why });
@@ -275,14 +275,27 @@ function publicCard(card) {
 
 function publicExercise(exercise) {
   const result = pick(exercise, PUBLIC_DTO_FIELDS.exercise);
-  if (typeof exercise?.expectedAnswer === "string")
+  if (exercise?.kind === "choice") {
+    result.options = exercise.options.map((option) =>
+      pickKeys(option, ["id", "text", "explanation"]),
+    );
+    result.answerKey = compileChoiceAnswerKey(exercise.correctOptionId);
+  }
+  if (exercise?.kind !== "choice" && typeof exercise?.expectedAnswer === "string")
     result.answerKey = compileAnswerKey(exercise.expectedAnswer);
   if (Array.isArray(exercise?.evidence)) result.evidence = exercise.evidence.map(publicEvidence);
   const locales = publicLocales(exercise?.locales, (value) => {
     // Translations cross the same answer boundary as the canonical exercise.
     // A translated rubric or option explanation is still a reference answer.
     const localized = pickKeys(value, ["title", "prompt"]);
-    if (typeof value?.expectedAnswer === "string")
+    if (exercise?.kind === "choice") {
+      if (Array.isArray(value?.options))
+        localized.options = value.options.map((option) =>
+          pickKeys(option, ["id", "text", "explanation"]),
+        );
+      localized.answerKey = result.answerKey;
+    }
+    if (exercise?.kind !== "choice" && typeof value?.expectedAnswer === "string")
       localized.answerKey = compileAnswerKey(value.expectedAnswer);
     return localized;
   });

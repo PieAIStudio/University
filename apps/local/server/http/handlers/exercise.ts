@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { createHash } from "node:crypto";
+import { DETERMINISTIC_GRADER_HOST } from "@pieai/university-core";
 
 import { StableId } from "@pieai/university-core/domain/schemas.js";
 import {
@@ -44,9 +46,8 @@ export const handleExercise: Handler = async (ctx, request, response, url) => {
     if (exercise.contentRevision !== body.contentRevision) {
       throw new HttpError(409, "Exercise content revision changed; reload before submitting");
     }
-    // All exercise kinds: record learner answer only (score 0). Semantic
-    // pass/fail comes from AI host write-back (host-grade). Self-rubric is
-    // no longer used for completion.
+    // Open answers keep the host-grade contract. A native choice uses its
+    // stable option ID and the same persisted grade/confirmation pipeline.
     if (body.met !== undefined) {
       throw new HttpError(
         400,
@@ -55,8 +56,16 @@ export const handleExercise: Handler = async (ctx, request, response, url) => {
     }
     const maxScore = 1;
     const score = 0;
-    const awaitingHostGrade = true;
-    const correct = false;
+    const choice = exercise.kind === "choice" ? exercise : null;
+    const picked = choice?.options.find((option) => option.id === body.answer);
+    if (choice && !picked) throw new HttpError(400, "Choose one of this exercise's option IDs");
+    const awaitingHostGrade = choice === null;
+    const correct = choice !== null && body.answer === choice.correctOptionId;
+    // A namespaced deterministic UUID makes the server grade idempotent too.
+    const digest = createHash("sha256")
+      .update(`university-choice-grade:${body.commandId}`)
+      .digest("hex");
+    const gradeCommandId = `${digest.slice(0, 8)}-${digest.slice(8, 12)}-4${digest.slice(13, 16)}-a${digest.slice(17, 20)}-${digest.slice(20, 32)}`;
     const store = ctx.getStore(exerciseRoute.studyId, true)!;
     const exerciseKey = exerciseContentKey({
       courseId: exerciseRoute.courseId,
@@ -82,6 +91,23 @@ export const handleExercise: Handler = async (ctx, request, response, url) => {
             maxScore,
             response: { phase: "learner-submit", answer: body.answer },
           });
+          if (choice && picked) {
+            applyHostExerciseGrade({
+              studiesRoot: ctx.studiesRoot,
+              store,
+              route: { ...exerciseRoute, exerciseId: exercise.id },
+              proposal: {
+                schemaVersion: 1,
+                commandId: gradeCommandId,
+                contentRevision: exercise.contentRevision,
+                passed: correct,
+                evaluation: picked.explanation,
+                extensions: [],
+                learnerAnswer: body.answer,
+                host: DETERMINISTIC_GRADER_HOST,
+              },
+            });
+          }
           // Same advancement the host-grade write-back runs. Two copies of
           // this drifted once already, and the drift made every failing
           // grade unrecordable.
@@ -89,12 +115,25 @@ export const handleExercise: Handler = async (ctx, request, response, url) => {
           return recordedAttemptId;
         }),
     );
-    const attemptCount = store.countExerciseAttempts(exerciseKey, exercise.contentRevision);
-    const hostGrade = store.getLatestHostExerciseGrade(exerciseKey, exercise.contentRevision);
+    const attemptCount = choice
+      ? store.countLearnerSubmissions(exerciseKey, exercise.contentRevision)
+      : store.countExerciseAttempts(exerciseKey, exercise.contentRevision);
+    const persistedChoice = choice ? store.getExerciseAttemptByCommandId(gradeCommandId) : null;
+    const hostGrade =
+      choice && picked && persistedChoice
+        ? {
+            passed: correct,
+            evaluation: picked.explanation,
+            extensions: [],
+            host: DETERMINISTIC_GRADER_HOST,
+            learnerAnswer: body.answer,
+            occurredAt: persistedChoice.occurredAt,
+          }
+        : store.getLatestHostExerciseGrade(exerciseKey, exercise.contentRevision);
     sendJson(response, 200, {
       attemptId,
       correct,
-      score,
+      score: choice && correct ? 1 : score,
       maxScore,
       attemptCount,
       awaitingHostGrade,

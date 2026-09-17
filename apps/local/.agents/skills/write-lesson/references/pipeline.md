@@ -3,6 +3,21 @@
 This file is for whoever **dispatches** the work. `SKILL.md` tells a model how to
 write; this says who writes, who checks, and what to run.
 
+## V2 contract
+
+The current writing contract is SKILL.md V2. Historical trials below explain the
+role split; they do not require new courses to retain prose-only headings, fixed
+word ratios, or a single short-answer exercise. V2 drafts include main-path context,
+materials, interaction feedback, optional review, cards and independent assessment.
+All learner-facing strings go through the actual local Gemini Flash polish stage.
+
+Structured drafts use direct JSON output. The dispatcher freezes non-text fields
+and gives each string a stable JSON pointer; the polisher returns pointer→text edits.
+Apply only known pointers, rebuild the activity locale map, then validate every
+schema/reference/rule and compare protected facts, hedges, terms and content coverage.
+Do not claim the polish ran merely because a configuration names Flash. Keep exact
+model, effort, input, raw output and acceptance/rejection receipts.
+
 ## The pipeline
 
 ```

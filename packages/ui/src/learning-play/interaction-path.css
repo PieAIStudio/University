@@ -5,6 +5,101 @@
   color: var(--game-ui-text);
   overflow-wrap: anywhere;
 }
+.path-entry {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--game-ui-border-subtle);
+}
+.path-entry--image {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+}
+.interaction-path__workspace:not(:has(> .path-materials)) {
+  display: block;
+}
+@container interaction-path (max-width: 620px) {
+  .path-entry--image {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+.interaction-path__workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 28px;
+  align-items: start;
+  margin-block: 20px;
+}
+.interaction-path__task,
+.path-materials,
+.path-experiment {
+  min-width: 0;
+}
+.path-materials h3,
+.path-entry h3,
+.path-experiment h3 {
+  margin-block: 0 8px;
+  font-size: 17px;
+  line-height: 1.5;
+}
+.path-materials__item + .path-materials__item,
+.path-materials__context + .path-materials__item {
+  margin-block-start: 24px;
+  padding-block-start: 20px;
+  border-block-start: 1px solid var(--game-ui-border-subtle);
+}
+.path-materials__text,
+.path-experiment__preview p {
+  white-space: pre-wrap;
+}
+.path-materials__kind,
+.path-materials__citation,
+.path-experiment__note {
+  color: var(--game-ui-text-muted);
+  font-size: 14px;
+}
+.path-materials a,
+.path-entry a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+.path-materials__recall summary {
+  min-height: 44px;
+  padding-block: 10px;
+  cursor: pointer;
+}
+.path-materials__recall {
+  margin-block-end: 16px;
+}
+.path-experiment__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 16px;
+}
+.path-experiment__controls button {
+  min-height: 44px;
+  height: auto;
+  white-space: normal;
+  text-align: start;
+}
+.path-experiment__preview {
+  padding: 20px;
+}
+.interaction-path[data-pedagogy-version="2"] .path-workbench {
+  grid-template-columns: minmax(0, 1fr);
+}
+.interaction-path__recap {
+  margin-block: 24px;
+}
+@container interaction-path (max-width: 720px) {
+  .interaction-path__workspace {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+}
 .interaction-lesson {
   max-width: 960px;
   margin-inline: auto;
@@ -39,6 +134,12 @@
   width: 100%;
   max-height: 210px;
   object-fit: contain;
+}
+.interaction-path__image figcaption {
+  margin-block-start: 8px;
+  color: var(--game-ui-text-muted);
+  font-size: 13px;
+  line-height: 1.55;
 }
 .interaction-path__source summary {
   min-height: 44px;

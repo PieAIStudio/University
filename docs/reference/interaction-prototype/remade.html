@@ -1,46 +1,9 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>先让它帮上一点忙</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap">
+
 <style>
-:root{
-  --bg:#f3e8d8; --bg-deep:#ead9c2;
-  --panel:#fff8ec; --panel-2:#fdf1df; --panel-deep:#efd1a3;
-  --ink:#3a2518; --ink-title:#4a2f1f; --ink-soft:#7b6152; --ink-faint:#a08a78;
-  --accent:#e8743b; --accent-bright:#f28d50; --accent-ink:#a34e17; --accent-pale:#ffd4a2;
-  --ok:#4f9d6b; --ok-deep:#3d7c58; --ok-pale:#c3e6d0; --ok-ink:#2f6446;
-  --berry:#9b6dd6; --berry-pale:#e6dbf7; --berry-ink:#6b4aa0;
-  --warn:#d85a45; --warn-pale:#f8dcd6; --warn-ink:#a3392a;
-  --line:#6c4f3838; --line-2:#6c4f386b;
-  --lip:#5e3a1e52; --lip-h:4px;
-  --r-card:18px; --r-panel:26px; --r-pill:999px;
-  --sh:0 12px 28px #4c341c1f;
-  --sh-lift:0 18px 44px #4c341c33;
-  --zh:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
-  --num:"Outfit",var(--zh);
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#221812; --bg-deep:#1a120d;
-  --panel:#2e2118; --panel-2:#352619; --panel-deep:#2c1f16;
-  --ink:#f6e7d3; --ink-title:#f6e2c8; --ink-soft:#c3ab93; --ink-faint:#94806c;
-  --accent:#ef8148; --accent-bright:#ffa06b; --accent-ink:#ffb072; --accent-pale:#f0a46a47;
-  --ok:#63b381; --ok-deep:#7ee0b6; --ok-pale:#2b4335; --ok-ink:#9fe6bf;
-  --berry:#b58ae0; --berry-pale:#3b2f52; --berry-ink:#d9c6ff;
-  --warn:#e26a55; --warn-pale:#4a2b24; --warn-ink:#ff9a80;
-  --line:#f6e7d329; --line-2:#f6e7d352;
-  --lip:#00000085;
-  --sh:0 12px 28px #0006; --sh-lift:0 18px 44px #0008;
-}}
-:root[data-theme="dark"]{
-  --bg:#221812; --bg-deep:#1a120d;
-  --panel:#2e2118; --panel-2:#352619; --panel-deep:#2c1f16;
-  --ink:#f6e7d3; --ink-title:#f6e2c8; --ink-soft:#c3ab93; --ink-faint:#94806c;
-  --accent:#ef8148; --accent-bright:#ffa06b; --accent-ink:#ffb072; --accent-pale:#f0a46a47;
-  --ok:#63b381; --ok-deep:#7ee0b6; --ok-pale:#2b4335; --ok-ink:#9fe6bf;
-  --berry:#b58ae0; --berry-pale:#3b2f52; --berry-ink:#d9c6ff;
-  --warn:#e26a55; --warn-pale:#4a2b24; --warn-ink:#ff9a80;
-  --line:#f6e7d329; --line-2:#f6e7d352;
-  --lip:#00000085;
-  --sh:0 12px 28px #0006; --sh-lift:0 18px 44px #0008;
-}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
@@ -273,6 +236,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .note{font-size:12.5px;color:var(--ink-faint);line-height:1.6;margin-block:14px 0}
 .note code{background:var(--bg-deep);border-radius:5px;padding-inline:4px;font-size:12px}
 </style>
+<link rel="stylesheet" href="presentation.css">
 <style>
 .redact{display:inline-block;height:1em;vertical-align:-.12em;border-radius:4px;
   background:repeating-linear-gradient(135deg,var(--ink-faint),var(--ink-faint) 5px,var(--ink-soft) 5px,var(--ink-soft) 10px);

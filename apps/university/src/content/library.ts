@@ -76,11 +76,25 @@ interface Exercise {
   readonly kind: string;
   readonly title?: string;
   readonly prompt: string;
+  readonly options?: readonly {
+    readonly id: string;
+    readonly text: string;
+    readonly explanation: string;
+  }[];
   readonly answerKey?: AnswerKey;
   readonly locales?: Readonly<
     Record<
       string,
-      { readonly title?: string; readonly prompt?: string; readonly answerKey?: AnswerKey }
+      {
+        readonly title?: string;
+        readonly prompt?: string;
+        readonly answerKey?: AnswerKey;
+        readonly options?: readonly {
+          readonly id: string;
+          readonly text: string;
+          readonly explanation: string;
+        }[];
+      }
     >
   >;
 }

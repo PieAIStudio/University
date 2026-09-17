@@ -106,3 +106,59 @@ export function validateChoiceExercise(input: ChoiceExerciseDraft): ChoiceExerci
 
   return errors.length === 0 ? { ok: true } : { ok: false, errors };
 }
+
+/** Shared authoring/storage gate; translations change copy, never option identity. */
+export function refineChoiceExercise(
+  input: ChoiceExerciseDraft & {
+    readonly locales?: Record<
+      string,
+      {
+        readonly options?: readonly { readonly id: string; readonly explanation: string }[];
+        readonly correctOptionId?: string;
+        readonly expectedAnswer?: string;
+        readonly rubric?: readonly string[];
+      }
+    >;
+  },
+  context: {
+    addIssue(issue: { code: "custom"; message: string; path: (string | number)[] }): void;
+  },
+): void {
+  const check = (draft: ChoiceExerciseDraft, prefix: string[]) => {
+    const result = validateChoiceExercise(draft);
+    if (!result.ok)
+      for (const issue of result.errors)
+        context.addIssue({
+          code: "custom",
+          message: issue.message,
+          path: [...prefix, ...issue.path],
+        });
+  };
+  check(input, []);
+  const ids = asOptions(input.options).map(optionIdOf).sort().join("\0");
+  for (const [locale, value] of Object.entries(input.locales ?? {})) {
+    check(
+      { options: value.options, correctOptionId: value.correctOptionId ?? input.correctOptionId },
+      ["locales", locale],
+    );
+    if (
+      value.options
+        ?.map((option) => option.id)
+        .sort()
+        .join("\0") !== ids ||
+      (value.correctOptionId !== undefined && value.correctOptionId !== input.correctOptionId)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Choice translations must preserve option IDs and the correct option ID.",
+        path: ["locales", locale],
+      });
+    }
+    if (value.expectedAnswer !== undefined || value.rubric !== undefined)
+      context.addIssue({
+        code: "custom",
+        message: "Choice translations cannot carry short-answer or explain keys.",
+        path: ["locales", locale],
+      });
+  }
+}

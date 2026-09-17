@@ -83,6 +83,8 @@ export interface MistakeExercise {
   readonly title: string;
   readonly prompt: string;
   readonly correctAnswer: string | null;
+  /** Resolve a stored choice ID to the displayed text in this exact revision. */
+  readonly options?: readonly { readonly id: string; readonly text: string }[];
   readonly contentRevision: number;
 }
 

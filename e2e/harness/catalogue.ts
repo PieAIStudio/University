@@ -326,7 +326,7 @@ if (!settlementLesson) throw new Error("e2e catalogue: settlement course has no 
 /** Test input from the matching author-owned release, never from a learner's
  * data or a mocked grading response. Changing the first published course must
  * change its answer too. The browser still submits through the real grader. */
-export function shippedShortAnswer(course: ShippedCourse, lesson: ShippedLesson): string {
+export function shippedDeterministicAnswer(course: ShippedCourse, lesson: ShippedLesson): string {
   const root = `apps/local/course-proposals/recovery/${course.studyId}`;
   const index = readJson(`${root}/index.json`);
   const entry = arrayOf(index.courses, "recovery courses")
@@ -360,8 +360,18 @@ export function shippedShortAnswer(course: ShippedCourse, lesson: ShippedLesson)
   }
   const exercises = arrayOf(original.exercises, "recovery exercises");
   const exercise = objectOf(exercises[0], "recovery exercise");
-  if (exercises.length !== 1 || exercise.kind !== "short-answer") {
-    throw new Error("e2e catalogue: settlement needs one short-answer exercise");
+  if (exercises.length !== 1 || !["short-answer", "choice"].includes(String(exercise.kind))) {
+    throw new Error("e2e catalogue: settlement needs one deterministic exercise");
+  }
+  if (exercise.kind === "choice") {
+    const id = stringOf(exercise.correctOptionId, "authored correct option");
+    if (
+      !arrayOf(exercise.options, "choice options").some(
+        (option) => objectOf(option, "option").id === id,
+      )
+    )
+      throw new Error("e2e catalogue: authored option is absent");
+    return id;
   }
   return stringOf(exercise.expectedAnswer, "authored expected answer");
 }
@@ -463,7 +473,7 @@ export const CATALOGUE_ROLES = {
     study: settlementStudy,
     course: settlementCourse,
     lesson: settlementLesson,
-    answer: shippedShortAnswer(settlementCourse, settlementLesson),
+    answer: shippedDeterministicAnswer(settlementCourse, settlementLesson),
   },
   prerequisiteCourse: {
     study: studyOf(prerequisiteCourse),

@@ -680,6 +680,11 @@ export interface LessonView {
        * fingerprint can judge. Absent means 「第 1 层判不了」, which is a real
        * answer the skip test acts on rather than an error.
        */
+      readonly options?: readonly {
+        readonly id: string;
+        readonly text: string;
+        readonly explanation: string;
+      }[];
       readonly answerKey?: AnswerKey;
       readonly awaitingHostGrade?: boolean;
       /** A passing attempt exists for this exact exercise revision. Monotonic. */

@@ -16,6 +16,7 @@ import {
 import { translate } from "../i18n/index.js";
 import type { ContentPort } from "../content/port.js";
 import type { UnitView } from "../view/lesson-view.js";
+import { ChoiceOptions } from "../review/ChoiceOptions.js";
 
 type Sitting =
   | { readonly kind: "idle" }
@@ -226,19 +227,33 @@ export function UnitSkipTest({
           {sitting.questions.length} {translate("ui.path.courseRouteQuiz.copy.题")}
         </p>
         <p className="skip-test__prompt">{question.prompt}</p>
-        <label className="skip-test__label" htmlFor={`skip-${unit.id}`}>
-          {translate("ui.path.unitSkipTest.copy.把你的答案写在这里")}
-        </label>
-        <textarea
-          id={`skip-${unit.id}`}
-          className="skip-test__answer"
-          rows={2}
-          value={sitting.answer}
-          onChange={(event) => setSitting({ ...sitting, answer: event.target.value, blank: false })}
-        />
+        {question.options ? (
+          <ChoiceOptions
+            options={question.options}
+            selectedId={sitting.answer}
+            onSelect={(answer) => setSitting({ ...sitting, answer, blank: false })}
+          />
+        ) : (
+          <>
+            <label className="skip-test__label" htmlFor={`skip-${unit.id}`}>
+              {translate("ui.path.unitSkipTest.copy.把你的答案写在这里")}
+            </label>
+            <textarea
+              id={`skip-${unit.id}`}
+              className="skip-test__answer"
+              rows={2}
+              value={sitting.answer}
+              onChange={(event) =>
+                setSitting({ ...sitting, answer: event.target.value, blank: false })
+              }
+            />
+          </>
+        )}
         {sitting.blank ? (
           <p className="skip-test__note">
-            {translate("ui.path.unitSkipTest.copy.先写下你的答案-再交")}
+            {question.options
+              ? translate("grading.answer.chooseHint")
+              : translate("ui.path.unitSkipTest.copy.先写下你的答案-再交")}
           </p>
         ) : null}
         <GameButton variant="primary" onClick={submit}>

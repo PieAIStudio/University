@@ -52,6 +52,8 @@ export const AUTHOR_ONLY_KEYS = Object.freeze([
 
 const AUTHOR_ONLY_KEY_SET = new Set(AUTHOR_ONLY_KEYS);
 const ANSWER_KEY_PATTERN = /answer|solution|rubric/i;
+// Independent answer IDs are private; guided activities have public deterministic rules.
+const INDEPENDENT_EXERCISE_AT = /\.exercises\[\d+\](?:\.|$)/;
 const AUTHOR_ONLY_VALUE_PATTERNS = [/^file-manager:/i];
 
 /*
@@ -375,7 +377,9 @@ export function publicDtoViolations(value, path = "package") {
     for (const [key, child] of Object.entries(current)) {
       if (
         key !== "answerKey" &&
-        (ANSWER_KEY_PATTERN.test(key) || AUTHOR_ONLY_KEY_SET.has(key)) &&
+        (ANSWER_KEY_PATTERN.test(key) ||
+          AUTHOR_ONLY_KEY_SET.has(key) ||
+          (INDEPENDENT_EXERCISE_AT.test(at) && /^(correctOptionId|correct)$/.test(key))) &&
         !meansSomethingElseInsideAnActivity(key, at)
       ) {
         found.push(`${at}.${key}`);

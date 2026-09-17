@@ -5,6 +5,7 @@ import { assertImagesStayInViewport, assertPanelIsPainted, assertVisibleText } f
 import { CATALOGUE_ROLES, coursePathOf, lessonPathOf } from "./catalogue.js";
 import { humanClick } from "./click.js";
 import { namedStep } from "./step.js";
+import { enterExerciseAnswer } from "./exercise-input.js";
 
 const SETTLEMENT = CATALOGUE_ROLES.settlement;
 const SETTLEMENT_LESSONS = SETTLEMENT.course.units.flatMap((unit) => unit.lessons);
@@ -88,12 +89,12 @@ export async function readAndAnswerFirstLesson(page: Page): Promise<void> {
     const quiz = page.locator(".exercise-panel").first();
     await expect(quiz).toBeVisible();
     await quiz.scrollIntoViewIfNeeded();
-    await expect(page.getByPlaceholder(/用自己的话/)).toBeVisible();
+    await expect(quiz.locator("textarea, [data-exercise-option]").first()).toBeVisible();
     await expect(page.getByRole("button", { name: /提交/ })).toBeVisible();
   });
 
   await namedStep(page, "答题并提交", async () => {
-    await page.getByPlaceholder(/用自己的话/).fill(FIRST_ANSWER);
+    await enterExerciseAnswer(page, page.locator(".exercise-panel").first(), FIRST_ANSWER);
     await humanClick(page, page.getByRole("button", { name: /提交/ }), "提交");
   });
 

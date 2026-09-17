@@ -73,6 +73,7 @@ export const messages = {
   "grading.answer.cancelRetry": "放弃重答",
   "grading.answer.retry": "重新回答",
   "grading.answer.emptyHint": "写下你的答案后就能提交",
+  "grading.answer.chooseHint": "选好一个选项后就能提交",
   "grading.result.awaitingTitle": "答案已记录 · 等 AI 评估",
   "grading.result.awaitingRefresh":
     "本页不自己判对错。把答疑包贴给任意 AI 宿主，它写回后这里会自动出现评估 —— 不用守着，回到这个页面时也会立刻刷新。",

@@ -1,3 +1,4 @@
+import { refineChoiceExercise } from "@pieai/university-core";
 import { z } from "zod";
 
 import {
@@ -11,6 +12,7 @@ import {
   LocaleMap,
   LocalizedCardSchema,
   LocalizedExerciseSchema,
+  ChoiceExerciseContentSchema,
   LocalizedLessonSchema,
 } from "@pieai/university-core/domain/schemas.js";
 import {
@@ -54,6 +56,9 @@ const ExerciseCreationBaseSchema = z.object({
 });
 
 const ExerciseCreationProposalSchema = z.union([
+  ExerciseCreationBaseSchema.extend(ChoiceExerciseContentSchema.shape)
+    .strict()
+    .superRefine(refineChoiceExercise),
   ExerciseCreationBaseSchema.extend({
     kind: z.literal("short-answer").optional(),
     expectedAnswer: z.string().min(1),
@@ -282,9 +287,16 @@ export function writeLessonBundle(input: WriteLessonBundleInput): LessonProposal
     writeExerciseRevision(
       studiesRoot,
       studyId,
-      "rubric" in exercise
-        ? { ...base, kind: "explain", rubric: exercise.rubric }
-        : { ...base, kind: "short-answer", expectedAnswer: exercise.expectedAnswer },
+      exercise.kind === "choice"
+        ? {
+            ...base,
+            kind: "choice",
+            options: exercise.options,
+            correctOptionId: exercise.correctOptionId,
+          }
+        : "rubric" in exercise
+          ? { ...base, kind: "explain", rubric: exercise.rubric }
+          : { ...base, kind: "short-answer", expectedAnswer: exercise.expectedAnswer },
     );
   }
   return collectLessonIds(lesson);

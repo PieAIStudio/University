@@ -20,19 +20,161 @@ related:
 
 ## Scope
 
-The sole worktree for this session is `.worktrees/interaction-first`, on
-`codex/interaction-first`. Owner explicitly authorized consolidation of the two
-Codex experiment branches. Local preservation commits and their merge are part
-of that consolidation; no mainline merge, push, production publication or cloud
-writes are authorized. Do not open another worktree for this lesson experiment.
-Other sessions' branches, including `claude/interaction-research`, remain outside
-this task. Course writes stay in the isolated authoring corpus.
+The sole experiment worktree is `.worktrees/interaction-first`, on
+`codex/interaction-first`. Owner subsequently authorized bringing main into this
+branch, absorbing all Claude research, and deleting that merged branch/worktree.
+Those operations are complete: `0ebb0769` retains main `e66c0fa0`, and `f4d3773c`
+retains Claude `c3c4f62f` and the original experiment. Both heads were verified as
+ancestors. Eighty ignored research/evidence files were copied and hash-checked in
+`.scratch/interaction-v2/claude-preserved/`; no process owned the retired path.
+Ordinary `git worktree remove` and `git branch -d` removed the Claude lane without
+force. Only main and this experiment remain. Main itself was not edited.
+
+The current authorized task is a unified playable inventory, restrained game
+presentation, canonical write-lesson V2 and native first-five sample revisions.
+No new branch/worktree, push, production publication, merge into main or cloud
+writes are authorized. Course writes stay in `.scratch/interaction-studies`.
+
+## V2 execution
+
+- [x] Preserve both histories; merge current main and all Claude work; remove the redundant lane.
+- [x] Amend V5 for visible real context, continuous tasks and truthful simulation.
+- [x] Preflight Writer/fixer, Detector and mandatory Gemini Flash Polisher. Grok is unauthenticated; use the declared Codex fallback.
+- [x] Upgrade canonical write-lesson and its affected references/checks to V2.
+- [x] Extend the shared path with real context/materials and exhaustive experiment states.
+- [x] Provide one native/prototype inventory with actual playable entries; discard rejected retro skin.
+- [x] Write and independently review first five lessons, retain real sources and boundaries, actually polish with local Gemini Flash.
+- [x] Land native isolated revisions/recovery exports and rebuild content without editing generated lessons.
+- [x] Fresh browser and independent screenshot critique, wrong-state regressions, full verify and default E2E with recorded failure reconciliation.
+- [x] Update the single owner walkthrough and prepare the verified experiment for one local commit.
+
+Evidence for this continuation belongs in `.devspace-visual/interaction-v2/` and
+draft/process receipts in `.scratch/interaction-v2/`. The three-sample receipts
+below describe the earlier V1 baseline, not acceptance of the new V2 code.
+
+### V2 native sample baseline
+
+The first five lessons in `ai-literacy/understanding-ai/first-useful-step` are
+`ask-about-a-picture` r5, `sound-words-and-meaning` r3, `name-the-result` r4,
+`edit-one-part` r2 and `answer-or-search` r3. Their indexed local package is
+`sha256:ba3dce42a0e3378be07d051c0f20a42f35c05698208821d08b0417eff779b38e`.
+The earlier `follow-a-claim` V1 sample remains at its existing address.
+Only native open-for-edit, five dry runs, five revisions, reactivation and recovery
+export wrote course storage; the importer rebuilt the public files. Receipts:
+`.scratch/interaction-v2/native/cli-receipts.json` and `landed.json`.
+
+Writer provenance is per lesson, not the incomplete preflight summary: local
+Codex completed four drafts; the active reasoning host wrote the photo draft
+after that worker's credit failure and corrected the five reviewed drafts.
+Independent local Gemini Flash detectors reviewed them. Local
+`gemini-3.8-flash-high` actually polished all visible activity/context/material/
+feedback strings, review prose, cards and independent questions in both languages.
+Two first polish outputs failed (one added a technical term, one removed a year);
+both entire outputs were rejected and retained, then freshly re-polished by Flash.
+All five accepted outputs pass the native hedge gate, frozen numeric/source/marker
+checks and the activity schema. Receipts and maps: `.scratch/interaction-v2/polish/`.
+Choice positions were reordered without changing polished text, stable IDs or answers.
+
+The playable directory contains 13 native kinds, six lesson entries, 20 short
+research examples, eight game prototypes and three retained historical demos.
+These 50 entries are not 50 production engines. Prototype language/keyboard limits
+and the distinction between multi-stage structure and measured play duration are
+visible. A common UIKit-token presentation removes rejected prototype skins;
+no upstream kit release, remote publication or production account write occurred.
+
+V2 implementation acceptance is complete; the experiment is ready for Owner
+trial, not approved for mainline integration or production publication. Legacy tests now drive real choice
+buttons where the question changed type; typed-answer recovery remains separately
+covered. Contrast attack coverage follows the actual on-task photo and caption.
+The new path suite exhausts every experiment combination and checks that changing
+a good result to a bad one removes certification. No old V1 full-run receipt is
+used as evidence that the V2 implementation passed.
+
+### V2 acceptance corrections
+
+The first inventory checks incorrectly assumed every prototype began with a
+visible button and one fixed sample sentence. Paint/drag surfaces and randomized
+orders now receive their actual contracts, with all 28 registered entries mounted
+in both modes. The iframe host also no longer sends a terminal stop during a
+connected StrictMode effect replay; a DOM regression proves stop only on removal.
+Chrome's post-scroll child-frame hit surface was separately measured: failed
+presses reached the parent iframe, not its button. The pointer helper now checks
+actual child hover after motion plus both hit targets before pressing, without
+DOM clicks or forcing. Eight fresh starts reached the button and started the game.
+Pausing is tested with a real blocked pointer, a frozen clock and unchanged data;
+resuming permits a real mutation. Original failures and event traces are retained
+in `.devspace-visual/interaction-v2/acceptance/`.
+
+An independent seven-image lesson critique confirmed the real context, sources,
+simulation boundaries and separate assessment, and identified first-question
+placement before the photo. The unchanged, Flash-polished introduction and real
+photo now precede that question. Context and citation styling stays shared after
+the move. The result's current heading also receives explicit end-of-path scroll
+alignment; normal text scrolling past the sticky toolbar is not a blocked task.
+The eight screenshots for the revised prototype presentation include actual
+desktop and mobile browser layouts. These checks do not measure human enjoyment
+or certify research games for automatic course authoring.
+
+The follow-up critic found the fourth defense slot colliding with its footer.
+The scene and reserved footer now grow together while preserving slot spacing.
+Both desktop and mobile probes measure separation and open the actual fourth
+slot; the independent matching-image critic returned `fixed`. The catalog
+regression includes the same geometry and live operation assertions.
+
+A fresh source audit proves all five revisions retain byte-identical asset data,
+unchanged source evidence records, and the original card/exercise identities.
+All 31 other lessons in the retained course package are unchanged. The visible
+context/steps still require editorial judgment; `source-preservation.json` also
+keeps each draft's fact-to-teaching-position map. Live preview bytes match this
+worktree's five V2 revisions (`live-preview.json`).
+
+The default run finished at 331 passes and three failures, not a clean green:
+an unchanged map-motion bound (543.5ms against 540ms), a settlement return that
+remained on the done route, and a dynamic reduced-motion matrix assertion.
+The first two passed an unchanged focused rerun. The third reproduced, so it
+was not dismissed as machine load: a passive state subscription/reset left a
+pulsed matrix briefly visible after the preference changed. The existing shared
+hook now uses React's [browser-API subscription contract](https://react.dev/reference/react/useSyncExternalStore)
+and the two matrix resets use [layout effects](https://react.dev/reference/react/useLayoutEffect),
+before another paint. No scene technique, geometry, timing bound or assertion
+was relaxed. The hook has subscription/lifecycle coverage, and the original
+two-mode browser check is repeated before final acceptance. Source/library rules
+stay in their existing owners; this is a scoped regression fix, not a 3D redesign.
+First failures, focused receipts and matrix evidence remain in the acceptance
+folder. V2/native-choice and prototype tests are separately identifiable.
+
+### Final V2 acceptance
+
+All receipts are in `.devspace-visual/interaction-v2/acceptance/`:
+
+- `verified-release.exit` is 0: the complete `VITEST_MAX_WORKERS=1 pnpm verify`
+  passed after the final product code changes, including the motion fix.
+- `focused-final.exit` is 0: 25 focused lesson/catalog browser cases passed.
+- `default-e2e.log` preserves the original 331 passes / three failures. It is
+  not rewritten as a clean 334-case run.
+- `motion-e2e.exit` is 0: both original matrix tests passed three consecutive
+  runs per mode, with their exact comparisons and deadlines unchanged.
+- `final-regression-e2e.exit` is 0: all 19 final avatar, accessibility,
+  catalog and three-layer-navigation cases passed. The two unchanged transient
+  failures also passed here; motion before/restored screenshots and exact
+  matrix receipts accompany the assertions.
+- The independent source-order and defense-slot AfterCritics returned `fixed`.
+  The scoped interface detector returned no findings. Source/asset preservation
+  and exact served-preview identity are verified separately.
+
+The sole Owner brief is `owner-review-brief.md` in that folder; its gallery and
+five lesson links point to the retained preview on 23150. No background author
+or repair task remains. Test services are owned and stopped by their runner;
+the Owner preview remains available. Existing skill/V5/test owners hold the
+reusable guidance; no parallel learning-summary document was created. Human
+enjoyment, delayed transfer, conversion and physical-device feel are still
+unmeasured. Those are not implied by technical acceptance.
 
 The resumed cleanup also removed the unused detached DevSpace checkout
 `University-318d9d1f`: its commit was already an ancestor of this experiment,
 there were no modified, untracked or ignored files, and no process had its cwd
-there. Removal used ordinary `git worktree remove`, without force. The repository
-now contains main, the separate Claude lane, and this single Codex worktree.
+there. Removal used ordinary `git worktree remove`, without force. At that earlier
+checkpoint main, Claude and this Codex worktree remained; V2 consolidated them.
 
 ## Steps
 
@@ -46,7 +188,7 @@ now contains main, the separate Claude lane, and this single Codex worktree.
 - [x] Integrate three real bilingual samples through native revision, recovery
       export, reactivation and the guarded content importer.
 
-## Current delivery status
+## V1 delivery baseline (before the current V2 work)
 
 Ready for Owner's hands-on review of the three samples, not a mainline or
 production release. Continue in this worktree only. The default browser suite

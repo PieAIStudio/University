@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   CATALOGUE_ROLES,
-  shippedShortAnswer,
+  shippedDeterministicAnswer,
   TERRAIN_LENGTH_FIXTURES,
 } from "./harness/catalogue.js";
 import { islandThemeSelectionForCourse } from "../packages/world/src/island/kenney-recipes.js";
@@ -14,7 +14,7 @@ import {
 
 test("catalogue roles keep answers, revisions and destinations in the selected release", () => {
   const role = CATALOGUE_ROLES.settlement;
-  expect(role.answer).toBe(shippedShortAnswer(role.course, role.lesson));
+  expect(role.answer).toBe(shippedDeterministicAnswer(role.course, role.lesson));
   expect(role.answer.trim()).not.toBe("");
   expect(role.lesson.firstExerciseIsUndecided).toBe(false);
   expect(role.lesson.exerciseCount).toBe(1);
@@ -31,7 +31,7 @@ test("catalogue roles keep answers, revisions and destinations in the selected r
 test("a mismatched authored revision cannot silently provide a settlement answer", () => {
   const role = CATALOGUE_ROLES.settlement;
   expect(() =>
-    shippedShortAnswer(role.course, {
+    shippedDeterministicAnswer(role.course, {
       ...role.lesson,
       packageLesson: { ...role.lesson.packageLesson, contentRevision: -1 },
     }),

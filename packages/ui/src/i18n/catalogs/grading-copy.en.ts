@@ -1,6 +1,7 @@
 import type { messages as sourceMessages } from "./grading-copy.zh-CN.js";
 
 export const messages = {
+  "grading.answer.chooseHint": "Choose an option, then submit.",
   "grading.account.changedBeforeSave":
     "Your account has changed. This answer was not saved to the new account. Your original input is still kept under the original account.",
   "grading.account.changedBeforeSend":

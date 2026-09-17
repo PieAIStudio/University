@@ -103,6 +103,8 @@
     "./today/TodaySection.js": "./src/today/TodaySection.tsx",
     "./today/today.css": "./src/today/today.css",
     "./view/lesson-view.js": "./src/view/lesson-view.ts",
+    "./play-catalog/PlayCatalog.js": "./src/play-catalog/PlayCatalog.tsx",
+    "./play-catalog/play-catalog.css": "./src/play-catalog/play-catalog.css",
     "./learning-play/LearningActivity.js": "./src/learning-play/LearningActivity.tsx",
     "./learning-play/LearningPlayLab.js": "./src/learning-play/LearningPlayLab.tsx",
     "./learning-play/learning-play.css": "./src/learning-play/learning-play.css",

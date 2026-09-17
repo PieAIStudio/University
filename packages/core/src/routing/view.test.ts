@@ -38,6 +38,7 @@ const views: View[] = [
   { kind: "avatar-lab" },
   { kind: "play-lab" },
   { kind: "play-lab", collection: "ai" },
+  { kind: "play-lab", collection: "catalog" },
   { kind: "studio" },
   { kind: "studio", section: "map" },
   { kind: "auth-callback" },

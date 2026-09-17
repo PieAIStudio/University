@@ -73,6 +73,7 @@ import { CourseIsland, type CourseIslandProps } from "./CourseIsland.js";
 import { MapBreadcrumbs } from "./MapBreadcrumbs.js";
 import type { PathOverlay } from "./world-model";
 
+const PlayCatalogRoute = lazy(() => import("../play-catalog/PlayCatalogRoute.js"));
 const LearningPlayLab = lazy(() =>
   import("@pieai/university-ui/learning-play/LearningPlayLab.js").then((mod) => ({
     default: mod.LearningPlayLab,
@@ -258,10 +259,14 @@ export function MainRouter({
       {AUTHORING && view.kind === "world" ? <AuthoringMapNotes studyId={focusedStudyId} /> : null}
       {view.kind === "play-lab" ? (
         <Suspense fallback={<RouteFallback />}>
-          <LearningPlayLab
-            key={view.collection ?? "foundations"}
-            collection={view.collection ?? "foundations"}
-          />
+          {view.collection === "catalog" ? (
+            <PlayCatalogRoute />
+          ) : (
+            <LearningPlayLab
+              key={view.collection ?? "foundations"}
+              collection={view.collection ?? "foundations"}
+            />
+          )}
         </Suspense>
       ) : null}
       {view.kind === "avatar-lab" ? (

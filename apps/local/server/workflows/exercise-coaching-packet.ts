@@ -13,7 +13,8 @@ import { fence, HOST_AGNOSTIC_NOTICE } from "./packet-format.js";
  */
 export interface CoachingPacketExercise {
   readonly id: string;
-  readonly kind: "short-answer" | "explain";
+  readonly kind: "short-answer" | "explain" | "choice";
+  readonly options?: readonly { readonly id: string; readonly text: string }[];
   readonly title: string;
   readonly prompt: string;
   readonly contentRevision: number;
@@ -41,6 +42,15 @@ export interface BuildCoachingPacketInput {
   readonly reference:
     | { readonly kind: "short-answer"; readonly expectedAnswer: string }
     | { readonly kind: "explain"; readonly rubric: readonly string[] }
+    | {
+        readonly kind: "choice";
+        readonly correctOptionId: string;
+        readonly options: readonly {
+          readonly id: string;
+          readonly text: string;
+          readonly explanation: string;
+        }[];
+      }
     | null;
   readonly evidenceOmitted: number;
 }
@@ -81,6 +91,11 @@ function referenceSection(input: BuildCoachingPacketInput): readonly string[] {
       "如果证据不足以判断对错，就在 `evaluation` 里明说你无法确定、缺什么信息，并把 `passed` 留成 `false`。**不要猜。**",
       "",
     ];
+  }
+  if (input.reference.kind === "choice") {
+    const reference = input.reference;
+    const option = reference.options.find((item) => item.id === reference.correctOptionId)!;
+    return ["## 已完成尝试后的参考选项", "", option.text, "", option.explanation, ""];
   }
   if (input.reference.kind === "short-answer") {
     return [
@@ -151,7 +166,9 @@ export function buildExerciseCoachingPacket(input: BuildCoachingPacketInput): st
     "",
     "## 给 AI 助手的任务（请直接执行）",
     "",
-    "你是本地学习教练。网页**不会**用字符串比对判对错，判定完全由你负责。",
+    exercise.kind === "choice"
+      ? "这道选择题已由系统按选项 ID 判定。请解释思路，不要改变系统记录的正误。"
+      : "你是本地学习教练。网页**不会**用字符串比对判对错，判定完全由你负责。",
     "",
     "1. **判定**学习者答案是否达到题目要求（允许合理表述差异，勿因多写解释就判错）。",
     "2. **讲解**：对错原因、易混点，用白话。",
@@ -174,6 +191,7 @@ export function buildExerciseCoachingPacket(input: BuildCoachingPacketInput): st
     "### 题目",
     "",
     ...fence("text", exercise.prompt),
+    ...(exercise.options ?? []).map((option) => `${option.id}: ${option.text}`),
     "",
     "### 学习者的答案",
     "",

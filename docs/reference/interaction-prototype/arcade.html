@@ -1,46 +1,9 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>学习街机</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Press+Start+2P&family=ZCOOL+KuaiLe&display=swap">
+
 <style>
-:root{
-  --bg:#f3e8d8; --bg-deep:#ead9c2;
-  --panel:#fff8ec; --panel-2:#fdf1df; --panel-deep:#efd1a3;
-  --ink:#3a2518; --ink-title:#4a2f1f; --ink-soft:#7b6152; --ink-faint:#a08a78;
-  --accent:#e8743b; --accent-bright:#f28d50; --accent-ink:#a34e17; --accent-pale:#ffd4a2;
-  --ok:#4f9d6b; --ok-deep:#3d7c58; --ok-pale:#c3e6d0; --ok-ink:#2f6446;
-  --berry:#9b6dd6; --berry-pale:#e6dbf7; --berry-ink:#6b4aa0;
-  --warn:#d85a45; --warn-pale:#f8dcd6; --warn-ink:#a3392a;
-  --line:#6c4f3838; --line-2:#6c4f386b;
-  --lip:#5e3a1e52; --lip-h:4px;
-  --r-card:18px; --r-panel:26px; --r-pill:999px;
-  --sh:0 12px 28px #4c341c1f;
-  --sh-lift:0 18px 44px #4c341c33;
-  --zh:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
-  --num:"Outfit",var(--zh);
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#221812; --bg-deep:#1a120d;
-  --panel:#2e2118; --panel-2:#352619; --panel-deep:#2c1f16;
-  --ink:#f6e7d3; --ink-title:#f6e2c8; --ink-soft:#c3ab93; --ink-faint:#94806c;
-  --accent:#ef8148; --accent-bright:#ffa06b; --accent-ink:#ffb072; --accent-pale:#f0a46a47;
-  --ok:#63b381; --ok-deep:#7ee0b6; --ok-pale:#2b4335; --ok-ink:#9fe6bf;
-  --berry:#b58ae0; --berry-pale:#3b2f52; --berry-ink:#d9c6ff;
-  --warn:#e26a55; --warn-pale:#4a2b24; --warn-ink:#ff9a80;
-  --line:#f6e7d329; --line-2:#f6e7d352;
-  --lip:#00000085;
-  --sh:0 12px 28px #0006; --sh-lift:0 18px 44px #0008;
-}}
-:root[data-theme="dark"]{
-  --bg:#221812; --bg-deep:#1a120d;
-  --panel:#2e2118; --panel-2:#352619; --panel-deep:#2c1f16;
-  --ink:#f6e7d3; --ink-title:#f6e2c8; --ink-soft:#c3ab93; --ink-faint:#94806c;
-  --accent:#ef8148; --accent-bright:#ffa06b; --accent-ink:#ffb072; --accent-pale:#f0a46a47;
-  --ok:#63b381; --ok-deep:#7ee0b6; --ok-pale:#2b4335; --ok-ink:#9fe6bf;
-  --berry:#b58ae0; --berry-pale:#3b2f52; --berry-ink:#d9c6ff;
-  --warn:#e26a55; --warn-pale:#4a2b24; --warn-ink:#ff9a80;
-  --line:#f6e7d329; --line-2:#f6e7d352;
-  --lip:#00000085;
-  --sh:0 12px 28px #0006; --sh-lift:0 18px 44px #0008;
-}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
@@ -662,193 +625,19 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 
 /* ---------- 今天栽过的地方 ---------- */
 .tally{border-radius:10px;border:3px solid var(--line-2);background:var(--panel);
-  box-shadow:var(--gx-hard);padding-block:11px;padding-inline:13px;margin-bottom:22px}
-.tally h4{margin:0 0 3px;font-family:var(--gx-disp);font-weight:400;font-size:19px;color:var(--ink-title)}
+  box-shadow:none;padding-block:11px;padding-inline:13px;margin-bottom:22px}
+.tally h4{margin:0 0 3px;font-family:var(--zh);font-weight:400;font-size:19px;color:var(--ink-title)}
 .tally p{margin:0;font-size:12.5px;line-height:1.6;color:var(--ink-faint)}
 .tally ol{list-style:none;margin:9px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
 .tally li{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink)}
-.tally li b{flex:none;font-family:var(--gx-pix);font-size:11px;color:var(--accent-ink);
+.tally li b{flex:none;font-family:var(--num);font-size:11px;color:var(--accent-ink);
   min-width:22px;text-align:right}
 .tally li i{flex:1;font-style:normal}
 .tally li u{flex:none;height:9px;border-radius:var(--r-pill);text-decoration:none;
   background:linear-gradient(90deg,var(--accent-bright),var(--accent));min-width:8px}
 </style>
-<style>
-/* =====================================================================
-   街机皮肤（GX）
-   调研结论落成三件事：
-   1) 九宫格式的厚边框、硬阴影、角铆钉——「游戏感」首先来自边框不是 1px。
-   2) 屏幕永远是暗的、带扫描线和暗角——机柜是机柜，房间才跟着主题走。
-   3) 字体分两层：HUD／数字用像素体，正文保持可读——这一条是我自己定的，
-      因为前两轮刚把「字要能读」立成规矩，整套换像素中文字会把它推翻。
-   全部是 DOM + CSS：可读文字不进 canvas，这是项目的硬规矩。
-   ===================================================================== */
-:root{
-  --gx-pix:"Press Start 2P",var(--num);
-  --gx-disp:"ZCOOL KuaiLe","ZCOOL QingKe HuangYou",var(--zh);
-  --gx-hard:6px 6px 0 #2a170a33;
-  --gx-hard-lift:9px 9px 0 #2a170a3d;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--gx-hard:6px 6px 0 #0008;--gx-hard-lift:9px 9px 0 #000a}}
-:root[data-theme="dark"]{--gx-hard:6px 6px 0 #0008;--gx-hard-lift:9px 9px 0 #000a}
 
-/* ---------- 大厅：地板纹理，跟着主题走 ---------- */
-body{
-  background-color:var(--bg);
-  background-image:
-    linear-gradient(0deg,#6c4f3814 1px,#0000 1px),
-    linear-gradient(90deg,#6c4f3814 1px,#0000 1px);
-  background-size:26px 26px;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body{
-  background-image:linear-gradient(0deg,#f6e7d30f 1px,#0000 1px),linear-gradient(90deg,#f6e7d30f 1px,#0000 1px)}}
-:root[data-theme="dark"] body{
-  background-image:linear-gradient(0deg,#f6e7d30f 1px,#0000 1px),linear-gradient(90deg,#f6e7d30f 1px,#0000 1px)}
-
-/* ---------- 招牌 ---------- */
-.masthead h1{font-family:var(--gx-disp);font-size:34px;letter-spacing:.04em;
-  color:var(--accent-ink);text-shadow:3px 3px 0 var(--accent-pale);line-height:1.2;margin-bottom:10px}
-:root[data-theme="dark"] .masthead h1,
-:root:not([data-theme="light"]) .masthead h1{text-shadow:3px 3px 0 #0006}
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .masthead h1{text-shadow:3px 3px 0 var(--accent-pale)}}
-
-/* ---------- 机柜：厚边框 + 硬阴影 + 角铆钉 ---------- */
-.cab{
-  position:relative;
-  border:3px solid var(--line-2);
-  border-radius:6px;
-  box-shadow:inset 0 3px 0 #ffffff3d, inset 0 -4px 0 #6c4f3826, var(--gx-hard-lift);
-  background:var(--panel-2);
-  overflow:visible;
-}
-:root[data-theme="dark"] .cab,
-:root:not([data-theme="light"]) .cab{box-shadow:inset 0 3px 0 #ffffff14,inset 0 -4px 0 #0005,var(--gx-hard-lift)}
-.cab::before,.cab::after{content:"";position:absolute;width:7px;height:7px;border-radius:50%;
-  background:radial-gradient(circle at 34% 30%,#fff9,var(--line-2));z-index:3;pointer-events:none}
-.cab::before{left:7px;top:7px} .cab::after{right:7px;top:7px}
-
-/* ---------- 顶灯：机柜的 marquee ---------- */
-.cabhd{
-  background:linear-gradient(180deg,var(--accent-bright),var(--accent));
-  border-bottom:3px solid var(--accent-ink);
-  padding-block:11px 12px;padding-inline:15px;position:relative;overflow:hidden;
-}
-.cabhd::after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(180deg,#ffffff4d,#0000 46%,#00000024)}
-.cabhd .from{color:#ffe9d2;font-family:var(--gx-disp);font-size:13px;line-height:1.5;
-  letter-spacing:.08em;text-shadow:1px 1px 0 #00000059}
-.cabhd h3{font-family:var(--gx-disp);font-size:25px;font-weight:400;color:#fff;
-  letter-spacing:.03em;text-shadow:2px 2px 0 #0000005c;margin:2px 0 8px}
-.cabhd h3 code{font-family:var(--gx-pix);font-size:8px;background:#00000038;color:#ffe9d2;
-  border-radius:4px;padding-block:4px;padding-inline:6px;text-shadow:none;letter-spacing:0}
-/* 说明牌：机柜上贴的那张操作卡 */
-.cabhd .how{background:#fff8ec;border:2px solid var(--accent-ink);border-radius:5px;
-  box-shadow:2px 2px 0 #00000038;color:#4a2f1f;font-size:13px;line-height:1.6;
-  padding-block:8px;padding-inline:10px;position:relative;z-index:1}
-.cabhd .how b{color:var(--accent-ink)}
-
-/* ---------- HUD：分段仪表 + 像素数字 ---------- */
-.hud{background:#1b1420;border-bottom:3px solid #000;color:#b9a7c9;
-  font-size:11px;letter-spacing:.08em;line-height:1.9;
-  padding-block:8px;padding-inline:11px;gap:12px}
-.hud b{font-family:var(--gx-pix);font-size:11px;color:#ffe9c9;text-shadow:0 0 8px #ff8a4c8c}
-.hud .life i{width:10px;height:10px;border-radius:2px;background:#ff6b57;box-shadow:0 0 6px #ff6b5773}
-.hud .life i.out{background:#3a2f44;box-shadow:none}
-.timebar{height:10px;background:#0e0a12;border-bottom:3px solid #000;
-  padding-block:2px;padding-inline:2px;box-shadow:inset 0 2px 5px #000000a6}
-.timebar i{background:linear-gradient(180deg,#ffb27a,#ff7a35);box-shadow:0 0 10px #ff8a4c8f;
-  -webkit-mask-image:repeating-linear-gradient(90deg,#000 0 6px,#0000 6px 8px);
-  mask-image:repeating-linear-gradient(90deg,#000 0 6px,#0000 6px 8px)}
-
-/* ---------- 屏幕：永远是暗的，扫描线在内容底下 ---------- */
-.screen{
-  --bg:#171220;         --bg-deep:#0f0b16;
-  --panel:#282034;      --panel-2:#2f2640;   --panel-deep:#221a2e;
-  --ink:#f4ecff;        --ink-title:#fff6ec; --ink-soft:#c3b3d6; --ink-faint:#8d7ca3;
-  --accent:#ff8a4c;     --accent-bright:#ffab77; --accent-ink:#ffc79a; --accent-pale:#ff8a4c33;
-  --ok:#5fe08a;         --ok-deep:#7ff0a8;   --ok-pale:#1d4331;   --ok-ink:#9df7bd;
-  --berry:#b98aff;      --berry-pale:#372a53; --berry-ink:#dcc7ff;
-  --warn:#ff6b57;       --warn-pale:#4a2129; --warn-ink:#ffa595;
-  --line:#ffffff1f;     --line-2:#ffffff4a;  --lip:#00000080;
-  --sh:0 4px 0 #00000059; --sh-lift:0 6px 0 #00000073;
-  background-color:#171220;
-  background-image:
-    repeating-linear-gradient(0deg,#0000 0 2px,#ffffff08 2px 3px),
-    radial-gradient(130% 95% at 50% 8%,#3a2a52 0%,#171220 62%);
-  border-bottom:3px solid #000;
-  box-shadow:inset 0 0 0 2px #000, inset 0 0 34px #000000a6;
-}
-.screen::after{content:"";position:absolute;inset:0;z-index:55;pointer-events:none;
-  background:
-    radial-gradient(125% 100% at 50% 45%,#0000 52%,#00000075 100%),
-    linear-gradient(#ff8a4c66,#ff8a4c66) 4px 4px/14px 2px no-repeat,
-    linear-gradient(#ff8a4c66,#ff8a4c66) 4px 4px/2px 14px no-repeat,
-    linear-gradient(#ff8a4c66,#ff8a4c66) calc(100% - 4px) 4px/14px 2px no-repeat,
-    linear-gradient(#ff8a4c66,#ff8a4c66) calc(100% - 4px) 4px/2px 14px no-repeat,
-    linear-gradient(#ff8a4c66,#ff8a4c66) 4px calc(100% - 4px)/14px 2px no-repeat,
-    linear-gradient(#ff8a4c66,#ff8a4c66) 4px calc(100% - 4px)/2px 14px no-repeat,
-    linear-gradient(#ff8a4c66,#ff8a4c66) calc(100% - 4px) calc(100% - 4px)/14px 2px no-repeat,
-    linear-gradient(#ff8a4c66,#ff8a4c66) calc(100% - 4px) calc(100% - 4px)/2px 14px no-repeat}
-
-/* ---------- 遮罩层：待机画面 ---------- */
-.overlay{background:#0d0912e6}
-.overlay h4{font-family:var(--gx-disp);font-weight:400;font-size:25px;letter-spacing:.03em;
-  color:#ffd9b5;text-shadow:2px 2px 0 #000}
-.overlay .big{font-family:var(--gx-pix);font-size:30px;letter-spacing:.02em;
-  color:#ffc79a;text-shadow:0 0 16px #ff8a4ca6,3px 3px 0 #000;margin-bottom:12px}
-.overlay .sub{font-size:12px;line-height:1.8;letter-spacing:.06em;opacity:.78}
-/* 街机按钮：厚、硬、按下去有行程 */
-.playbtn{font-family:var(--gx-disp);font-weight:400;font-size:19px;letter-spacing:.1em;
-  border-radius:5px;background:linear-gradient(180deg,#ffab77,#f2703a);
-  color:#40200c;text-shadow:0 1px 0 #ffffff6b;
-  border:3px solid #7d3b14;border-bottom-width:7px;
-  box-shadow:0 0 0 3px #00000047,0 0 22px #ff8a4c66;
-  padding-block:10px;padding-inline:30px}
-.playbtn:active{transform:translateY(4px);border-bottom-width:3px}
-
-/* ---------- 说明区：机柜下方的贴纸 ---------- */
-.note2{background:var(--panel-deep);border-top:3px solid var(--line-2);color:var(--ink-soft)}
-.spec summary{font-size:12px;line-height:1.9;letter-spacing:.1em}
-.spec{border-top:2px dashed var(--line-2)}
-
-/* ---------- 屏幕内通用：让方块也硬起来 ---------- */
-.screen .brick,.screen .foe,.screen .fly,.screen .tag2,.screen .cz-row,.screen .cz-tile,
-.screen .dl-doc,.screen .dl-slot,.screen .sf-paper,.screen .sf-book,.screen .cz-junk,
-.screen .dl-reader,.screen .sf-say,.screen .cz-msg,.screen .dl-shop{
-  border-radius:5px!important}
-.screen .cz-tile,.screen .playbtn,.screen .sf-btn,.screen .dl-go,.screen .lanebtn{
-  font-family:var(--gx-disp);font-weight:400}
-.screen .cz-tile{font-size:14px;letter-spacing:.02em}
-.screen .cz-gap{border-radius:4px}
-.screen .sf-btn,.screen .dl-go{font-family:var(--gx-disp);font-weight:400;font-size:17px;
-  border-radius:5px;letter-spacing:.14em}
-.screen .sf-ink{font-family:var(--gx-disp);font-weight:400}
-/* 中文 chrome：不套像素字，靠字距和字号做出「面板刻字」的味道 */
-.screen .cz-line i,.screen .dl-in,.screen .sf-news .d,.screen .sf-book h6,
-.screen .sf-paper .ph{letter-spacing:.14em;font-family:var(--zh)}
-.screen .dl-say .pow{font-family:var(--zh);font-size:12px;letter-spacing:.06em}
-.screen .dl-say .pow b,.screen .dl-slot .no{font-family:var(--gx-pix)}
-.screen .dl-slot .no{font-size:8px}
-.screen .stat b{font-family:var(--gx-pix)}
-
-/* ---------- 一排机柜不该是同一个颜色：顶灯按机柜换色 ---------- */
-.cab{--gx-lamp-a:#ffab77;--gx-lamp-b:#f2703a;--gx-lamp-edge:#a34e17}
-.cab[data-hue="1"]{--gx-lamp-a:#c9a2ff;--gx-lamp-b:#8b5cd6;--gx-lamp-edge:#5b3a94}
-.cab[data-hue="2"]{--gx-lamp-a:#7fd8a0;--gx-lamp-b:#3f9c66;--gx-lamp-edge:#276b43}
-.cab[data-hue="3"]{--gx-lamp-a:#ff9b86;--gx-lamp-b:#e0553c;--gx-lamp-edge:#98301f}
-.cabhd{background:linear-gradient(180deg,var(--gx-lamp-a),var(--gx-lamp-b));
-  border-bottom-color:var(--gx-lamp-edge)}
-.cabhd .how{border-color:var(--gx-lamp-edge)}
-.cabhd .how b{color:var(--gx-lamp-edge)}
-.cabhd h3 code{color:#fff}
-
-/* ---------- 待机：按钮在呼吸，像在等人投币 ---------- */
-.playbtn{animation:gxbtn 1.9s ease-in-out infinite}
-@keyframes gxbtn{50%{box-shadow:0 0 0 3px #00000047,0 0 32px #ff8a4cbf}}
-
-/* ---------- 图章别压住正文 ---------- */
-.screen .sf-ink{font-size:13px;top:4px;right:6px;border-width:2px;padding-block:1px;padding-inline:6px}
-</style>
+<link rel="stylesheet" href="presentation.css">
 <div class="page" id="page"></div>
 <script>
 window.AR=(function(){
@@ -1134,7 +923,7 @@ function gSlice(screen,api,gen){
   }
   hud(); api.time(1);
   api.overlay("<h4>划切</h4><p>句子会被抛上来。<b>按住拖动划过</b>那些能核对的（绿色）。"+
-    "<br><b>红色的别碰</b>——它们是没有出处的漂亮话，切中会炸。漏掉红色的反而是对的。<br>60 秒。</p>","开始",()=>{
+    "<br><b>没有出处的说法别碰</b>——它们是没有出处的漂亮话，切中会炸。避开没有出处的说法才是对的。<br>60 秒。</p>","开始",()=>{
       playing=true; t0=0; cancelAnimationFrame(raf); raf=requestAnimationFrame(step);
     });
 }
@@ -1428,8 +1217,8 @@ function gMaze(screen,api,gen){
 }
 return [
  {id:"invaders",title:"双武器拦截",from:"小蜜蜂 / Galaga",build:gInvaders,h:400,
-  how:"<b>移动手指或鼠标</b>，飞船跟着走并自动开火。停左半 = 绿弹，停右半 = 紫弹。<b>十波</b>，隔一阵有一个脱离编队<b>俯冲</b>下来，打下它双倍分。每过一波挑一样强化。",
-  note:"<b>做深了一轮</b>：原来四波、约一分钟。现在按调研改了三处——Galaga 真正的招牌是<b>俯冲</b>（编队里冲出来一个扑向你），<b>挑战关</b>（第 5、10 波不下压、限时清场，是节奏上的喘气），以及<b>波间三选一</b>（研究里说这是把一局拉长最有效的那件事）。一局<b>三分半上下</b>。",
+  how:"<b>移动手指或鼠标</b>，飞船跟着走并自动开火。停左半 = 看照片，停右半 = 查记录。<b>十波</b>，隔一阵有一个脱离编队<b>俯冲</b>下来，打下它双倍分。每过一波挑一样强化。",
+  note:"<b>做深了一轮</b>：原来四波、约一分钟。现在按调研改了三处——Galaga 真正的招牌是<b>俯冲</b>（编队里冲出来一个扑向你），<b>挑战关</b>（第 5、10 波不下压、限时清场，是节奏上的喘气），以及<b>波间三选一</b>（研究里说这是把一局拉长最有效的那件事）。真人完成时长未测；十波结构。",
   spec:"<b>教什么</b>：第 1 节的那个二分——哪些问题看照片就知道，哪些非查记录不可。<br>"+
     "<b>为什么俯冲值得加</b>：它把「优先级」变成了真的——<b>俯冲那个必须现在处理</b>，而你处理它的方式仍然只能靠读它写的字。压力上来了，判断没被绕过。<br>"+
     "<b>为什么挑战关不扣命</b>：调研里说节奏要有尖峰也要有喘气，一路单调爬坡会把人耗干。<br>"+
@@ -1771,7 +1560,7 @@ return [
   note:"<b>和俄罗斯方块差在哪</b>：俄罗斯方块给你什么形状是随机的，你只能被动安排；这里<b>下一块是你挑的</b>——难的不是手，是选。"+
     "另外它<b>有终点</b>：一副牌 24 句，清完就赢，不像俄罗斯方块只会越来越快直到你死。"+
     "留下的是俄罗斯方块真正值钱的那条：<b>答错不立刻死，错误堆成看得见的高度</b>。",
-  spec:"<b>教什么</b>：填空回忆（cloze retrieval）——这是所有练习形式里证据最硬的一种，因为你得把那个词<b>从脑子里拿出来</b>，而不是在选项里认出来。"+
+  spec:"<b>教什么</b>：从词条中选择并补全句子。这里提供了候选词，不能等同于没有选项提示的主动回忆。"+
     "<br><b>怎么保证他必须读</b>：所有词条<b>同宽同样式</b>，所有缺口也<b>同宽</b>——长度对不上这条捷径被堵死了；词条在盘里的位置是随机插的，不跟着行的顺序走。"+
     "<br><b>答对的那一下</b>：词填进去之后<b>停 750 毫秒</b>才消行，让你把补完整的这句话读完——奖励本身就是那句完整的话。"+
     "<br><b>答错的那一下</b>：只告诉你<b>这个空考的是什么</b>，不告诉你答案，你还得再想一次；而且<b>这一句做对之后会被放回牌堆，隔几句再问你一遍</b>。"+
@@ -2350,16 +2139,16 @@ function gShift(screen,api,gen){
 return [
  {id:"shift",title:"值班室",from:"Papers, Please",build:gShift,h:430,
   how:"<b>五天</b>，每天早上增一条或停一条规矩。手册上点勾／打叉，再盖<b>通过</b>或<b>打回</b>。同一份稿子，换一天答案就不一样。",
-  note:"<b>偷的是哪一条</b>：调研里最有用的一个数字——Papers, Please 的一个工作日约六分钟，而 31 天里<b>绝大多数都有规矩的增、删或恢复</b>。持续性不是把时间拉长，是<b>让规则本身变成变量</b>。<br>一局五天，大约<b>三分半到四分钟</b>。",
+  note:"<b>偷的是哪一条</b>：调研里最有用的一个数字——Papers, Please 的一个工作日约六分钟，而 31 天里<b>绝大多数都有规矩的增、删或恢复</b>。持续性不是把时间拉长，是<b>让规则本身变成变量</b>。<br>一局五天，真人完成时长未测。",
   spec:"<b>教什么</b>：<b>清单纪律</b>——不是「我会判断」，是「我每次都真的逐条走了一遍」。<br>"+
     "<b>为什么必须是多天</b>：单张稿子考的是判断，<b>五天考的是纪律</b>。第 4 天「地点」停用、第 5 天恢复，就是为了让你不能靠记住昨天的答案——<b>同一份稿子，第二天该通过，第四天就该打回</b>。这条是 30 秒的盖章台永远做不到的。<br>"+
     "<b>勾选为什么只加分不扣分</b>：逐条核对是要养成的习惯，不是要设的陷阱。盖对给 20，每勾对一条再加 3。<br>"+
     "<b>结算</b>：直接告诉你<b>最常漏的是哪一条规矩</b>，再逐份列出你盖反的——那才是复习。<br>"+
     "<b>用的是</b>第 3 节 NASA 观月夜公告的四条（时间／地点／报名／别把结束写成邀请）、第 1 节《地出》（核得了核不了）、第 2 节 Whisper（要原文还是要译文）。"},
- {id:"defenseline",title:"检查条件防线",from:"塔防 / 植物大战僵尸",build:gDefense,h:470,
+ {id:"defenseline",title:"检查条件防线",from:"塔防 / 植物大战僵尸",build:gDefense,h:570,
   how:"稿子一份份往下走。<b>点位子装检查条件</b>，一条只拦它负责的那一类毛病。核查力有限，装不满；<b>合格的稿子要放它过去</b>。八波，漏 5 份结束。",
-  note:"<b>偷的是哪三条</b>：塔防的<b>波间决策</b>（研究里说这是把一局从 30 秒拉到 3 分钟最有效的东西）；植物大战僵尸的<b>阳光经济</b>——装不满就必须取舍；Papers Please 的<b>每波开工前先公告</b>，让你有依据地下注。<br>一局八波，大约<b>三分半到四分钟</b>。",
-  spec:"<b>教什么</b>：这是二十六个组件里<b>唯一一个教「规则集」而不是「单次判断」</b>的。前面所有组件问的都是「这一句对不对」；这个问的是<b>「你要带着哪几条检查上场」</b>——从「我会看」到「我有一套清单」。<br>"+
+  note:"<b>偷的是哪三条</b>：塔防的<b>波间决策</b>（研究里说这是把一局从 30 秒拉到 3 分钟最有效的东西）；植物大战僵尸的<b>阳光经济</b>——装不满就必须取舍；Papers Please 的<b>每波开工前先公告</b>，让你有依据地下注。<br>一局八波，真人完成时长未测。",
+  spec:"<b>教什么</b>：这个原型练的是<b>配置规则集</b>。前面所有组件问的都是「这一句对不对」；这个问的是<b>「你要带着哪几条检查上场」</b>——从「我会看」到「我有一套清单」。<br>"+
     "<b>核查是有成本的</b>：六条检查，四个位子，核查力还不够装满——所以你必须押注这一批最可能错在哪。这本身就是第 3 节课那句话：<b>限制不是越多越好，而是要与你当前的目的对应</b>。<br>"+
     "<b>合格的要放行</b>：如果每一份都该拦，那就没有判断了。合格稿子走到底是<b>加分</b>，这让「别过度设防」也有了代价。<br>"+
     "<b>怎么保证他必须读</b>：所有稿子同款卡片，没有颜色暗示；<b>每跳一层停约一秒，字始终静止</b>。<br>"+
@@ -2652,7 +2441,7 @@ function gForge(screen,api,gen){
     if(!h)h="<h4>五单都干净</h4><p>没冤枉一句，没放过一句，也没漏掉一件它没提的事。</p>";
     api.overlay('<div class="big">'+score+'</div><div class="sub">五单 · 抓到编造 '+caught+
       " · 抓到漏 "+dodged+" · 冤枉 "+wronged+"</div>"+h+
-      "<p>这一局里每一句话<b>都是你的请求生成的</b>——"+
+      "<p>这一局里每一句话<b>都是本地规则按你选择的条件模拟拼接的</b>——"+
       "你写下的那几条，它老老实实交代；<b>你没写的，它不是留白，是填一个像样的</b>。"+
       "<br>所以「把要求写清楚」不是啰嗦，是<b>你不写就等于交给它决定</b>。</p>",
       "再来一局",()=>api.restart());
@@ -2661,9 +2450,9 @@ function gForge(screen,api,gen){
   hud(); drawSrc(); api.time(1);
   form.innerHTML=""; out.innerHTML=""; chk.innerHTML="";
   api.overlay("<h4>改一处</h4>"+
-    "<p>这一局和前面七个反过来：<b>要判断的东西，是你自己的请求生成的</b>。"+
+    "<p>这一局和前面七个反过来：<b>要判断的东西，是本地规则按你选择的条件模拟拼接的</b>。"+
     "<br>每一单先给你一个用途。你选交什么成品、写明哪几条，"+
-    "AI 当场按你的请求交一份东西出来。"+
+    "本地规则按你选择的条件模拟拼接一份东西。"+
     "<br><b>你没写清的那几条，它不会留白——它会编一个像样的。</b>"+
     "<br>动作链是死的：<b>在产出里指出哪一句公告里没有 → 指对了才解锁那一条要求 → 写上 → 当场看见它变成有出处的。</b>"+
     "<br>没看见的东西修不了。五单。</p>","接第一单",()=>{
@@ -2674,8 +2463,8 @@ function gForge(screen,api,gen){
 
 return [
  {id:"forge",title:"改一处",from:"原创 · 请求 → 产出 → 对照出处",build:gForge,h:560,
-  how:"每一单给你一个<b>用途</b>。选成品、写明条件，AI 当场交一份东西。<b>你没写的它会自己编。</b>在产出里指出哪句公告里没有——指对了才解锁那一条，写上，当场看见它变成有出处的。五单。",
-  note:"<b>为什么要有这一个</b>：前面几个长局有一个共同的天花板——<b>材料是手写的固定清单，第二遍玩的是记忆不是判断</b>（小蜜蜂 14 条、填词消行 24 句、防线 18 份、值班室 22 份，一局就用完或见好几遍）。这一个走得最远：<b>材料由你自己的请求生成</b>，编造的措辞随机，「编」还是「干脆不提」每单重摇，起手条件也不同——没得背。<br>其余长局这一轮也一并改成了<b>现场生成</b>。",
+  how:"每一单给你一个<b>用途</b>。选成品、写明条件，本地规则模拟交一份东西。<b>你没写的它会自己编。</b>在产出里指出哪句公告里没有——指对了才解锁那一条，写上，当场看见它变成有出处的。五单。",
+  note:"<b>为什么要有这一个</b>：前面几个长局有一个共同的天花板——<b>材料是手写的固定清单，第二遍玩的是记忆不是判断</b>（小蜜蜂 14 条、填词消行 24 句、防线 18 份、值班室 22 份，一局就用完或见好几遍）。这一个走得最远：<b>材料由本地规则按你选择的条件模拟拼接</b>，编造的措辞随机，「编」还是「干脆不提」每单重摇，起手条件也不同——没得背。<br>其余长局这一轮也一并改成了<b>本地规则模拟生成</b>。",
   spec:"<b>教什么</b>：这是整个项目最核心的那个能力——<b>拿产出去对原始出处，找出哪一句是它填的</b>。第 1 节的「核得了核不了」、第 3 节的「成品和条件」在这里合成了一个动作。<br>"+
     "<b>动作链是锁死的</b>：<b>指认 → 解锁 → 写上 → 看见变</b>。没指认就不能修——这不是难为人，这是真的：<b>你没注意到的东西，本来就修不了</b>。<br>"+
     "<b>「没写的它会编」是玩出来的，不是我说的</b>：不勾「说要不要报名」，它就写「名额有限，建议提前登记」——和公告里的「无需报名」正好相反。你勾上，那句当场变成「不用报名」。因果就在眼前。<br>"+
@@ -2688,23 +2477,29 @@ return [
 <script>
 (function(){
 const A=window.AR, el=A.el, page=document.getElementById("page");
+if(window.__PLAY_CATALOG_ENTRY__){
+ const all=[...window.GAMES1,...window.GAMES2,...window.GAMES3,...window.GAMES4,...window.GAMES5];
+ const game=all.find(item=>item.id===window.__PLAY_CATALOG_ENTRY__);
+ if(game) A.cabinet(page,game);
+ return;
+}
 const head=el("div","masthead");
 head.innerHTML='<h1>学习街机</h1>'+
  '<p>八个。分两档，标准写在下面——<b>够不上就不叫长局</b>。</p>'+
- '<p><b>长局 · 五个 · 一局三到五分钟</b><br>'+
- '<b>改一处</b>（要判断的东西是你自己的请求生成的）、'+
+ '<p><b>多阶段研究 · 真人时长未测</b><br>'+
+ '<b>改一处</b>（要判断的东西是本地规则按你选择的条件模拟拼接的）、'+
  '<b>值班室</b>（五天，规矩天天变）、'+
  '<b>检查条件防线</b>（八波，四个位子装不下六条检查）、'+
  '<b>双武器拦截</b>（十波，俯冲和挑战关）、'+
  '<b>填词消行</b>（一副 24 句，清完就赢）。</p>'+
  '<p style="color:var(--ink-faint);font-size:13px"><b>「长局」的四条准入</b>：'+
- '① 三分钟以上，有波次或单次结构；② 有跨波累积的东西（堆高、规则手册、防线、编队、你写下的请求）；'+
+ '① 有波次或多订单结构（不据此推算真人时长）；② 有跨波累积的东西（堆高、规则手册、防线、编队、你写下的请求）；'+
  '③ 波间有一个真决定，不是「继续」按钮；④ 结束时给一张<b>逐条列出你错在哪</b>的复习表。<br>'+
- '下面三个（分类落块、划切、追与被追）是<b>积木</b>：十几秒到一分钟，一次判断，不满足上面四条。</p>'+
+ '分类落块、划切、追与被追是<b>短轮次研究</b>：短轮次或计时挑战（真人完成时长未测），不满足上面四条。</p>'+
  '<p style="color:var(--ink-faint);font-size:13px"><b>这一轮改掉的是一个我之前没看见的天花板</b>：'+
  '所有长局的材料都是手写的固定清单，<b>一局就用完或见好几遍，所以第二局玩的是记忆不是判断</b>。'+
- '现在公告和敌人都改成<b>现场生成</b>（压测：400 次摇出 280 种不同公告、54 种敌人，文法零缺陷），'+
- '「改一处」更是让材料由玩家自己的请求生成。<br>'+
+ '现在公告和敌人都改成<b>本地规则模拟生成</b>（组合素材来自预设词库；自动运行不能证明真人用时或学习效果），'+
+ '「改一处」更是让材料由本地规则按玩家选择的条件模拟拼接。<br>'+
  '操作全部统一：<b>鼠标和手指同一套，一个指头够用，不用键盘</b>。'+
  '内容仍然全部来自《认识 AI，从这里开始》第一单元前三节。</p>';
 page.appendChild(head);
