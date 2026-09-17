@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { GameButton, GamePanel } from "@pieai/swimmer-ui-kit";
 import {
   emptyPathEvidence,
@@ -53,6 +53,8 @@ export function InteractionPath({
   const [copied, setCopied] = useState<"idle" | "copied" | "failed">("idle");
   const [focusVersion, setFocusVersion] = useState(0);
   const heading = useRef<HTMLHeadingElement>(null);
+  const roundStart = useRef<HTMLElement>(null);
+  const bridgeId = useId();
   const feedback = useRef<HTMLDivElement>(null);
   const response = useRef<HTMLDivElement>(null);
   const pendingPieceFocus = useRef<string | null>(null);
@@ -74,7 +76,10 @@ export function InteractionPath({
   useEffect(() => {
     if (focusVersion > 0) {
       heading.current?.focus({ preventScroll: true });
-      heading.current?.scrollIntoView?.({
+      (materialFirst && index < activity.steps.length
+        ? roundStart.current
+        : heading.current
+      )?.scrollIntoView?.({
         block: materialFirst && index === activity.steps.length ? "start" : "nearest",
         behavior: "instant",
       });
@@ -181,7 +186,7 @@ export function InteractionPath({
                 ) : null}
               </div>
             ) : null}
-            <header>
+            <header ref={roundStart} className="interaction-path__round-start">
               <p className="interaction-path__position">
                 <span>
                   {t(
@@ -198,11 +203,17 @@ export function InteractionPath({
                 </span>
                 {t("path.round", { current: index + 1, total: activity.steps.length })}
               </p>
-              <h2 ref={heading} tabIndex={-1}>
-                {step.question}
-              </h2>
+              {!materialFirst ? (
+                <h2 ref={heading} tabIndex={-1}>
+                  {step.question}
+                </h2>
+              ) : null}
               {index === 0 && !materialFirst ? <p>{activity.brief}</p> : null}
-              {step.brief ? <p>{step.brief}</p> : null}
+              {step.brief ? (
+                <p id={bridgeId} className="interaction-path__bridge">
+                  {step.brief}
+                </p>
+              ) : null}
             </header>
             <div className={materialFirst ? "interaction-path__workspace" : undefined}>
               {materialFirst && (index > 0 || (step.materialIds?.length ?? 0) > 0) ? (
@@ -221,6 +232,15 @@ export function InteractionPath({
                       <img src={image.url} alt={image.alt} loading="lazy" />
                     </figure>
                   </details>
+                ) : null}
+                {materialFirst ? (
+                  <h2
+                    ref={heading}
+                    tabIndex={-1}
+                    aria-describedby={step.brief ? bridgeId : undefined}
+                  >
+                    {step.question}
+                  </h2>
                 ) : null}
                 {step.kind === "experiment" ? (
                   <PathExperiment
@@ -286,7 +306,7 @@ export function InteractionPath({
                             aria-label={choice.label}
                             type="button"
                             variant={
-                              answer[0] === choice.id
+                              answer[0] === choice.id && !submitted
                                 ? "primary"
                                 : step.kind === "evidence"
                                   ? "ghost"
@@ -309,7 +329,7 @@ export function InteractionPath({
                                 <span />
                               ) : null}
                             </span>
-                            <span>{choice.label}</span>
+                            <span className="path-choice__label">{choice.label}</span>
                           </GameButton>
                         ),
                       )}
@@ -334,7 +354,7 @@ export function InteractionPath({
                       {result.feedback.map((message, messageIndex) => (
                         <p key={messageIndex}>{message}</p>
                       ))}
-                      <p>{step.explanation}</p>
+                      {!materialFirst || result.passed ? <p>{step.explanation}</p> : null}
                     </div>
                   ) : null}
                   <div className="interaction-path__actions">

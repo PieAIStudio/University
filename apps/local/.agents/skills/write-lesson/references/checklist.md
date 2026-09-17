@@ -20,6 +20,11 @@ receipt. A regex cannot certify truth, clarity, fun, transfer or retention.
 
 ## Teaching and operations
 
+- [judgment] Opening starts from the beginner's intended AI use, not an institution, citation or unexplained material.
+- [judgment] Title, opening task and first actionable question make the same promise; no unrelated first quiz.
+- [judgment] Each new task has a concrete bridge before the question; needed examples are visible before the dependent choice.
+- [judgment] A reader can follow the rendered sequence without teacher notes or an answer key; each operation advances useful AI use.
+- [judgment] A boundary check is introduced by a practical need, not used as a substitute for teaching the actual skill.
 - [machine] Valid five-variant name and explicit V2 path; a single path marker.
 - [judgment] Prediction/feedback/practice/transfer/recap responsibilities fulfilled, not six obligatory games.
 - [judgment] Different rounds advance the same task; objects retain names and useful continuity.

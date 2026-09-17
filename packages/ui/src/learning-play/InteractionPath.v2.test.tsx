@@ -65,13 +65,60 @@ const preview = () => container.querySelector(".path-experiment__preview");
 const feedback = () => container.querySelector(".interaction-path__feedback");
 
 describe("material-first shared path", () => {
+  it("explains a wrong attempt without claiming its successful example already happened", async () => {
+    const activity = structuredClone(fixture) as InteractionPathActivity;
+    const step = activity.steps[0]!;
+    if (step.kind !== "decision") throw new Error("The fixture starts with a decision");
+    const wrong = step.options.find((option) => option.id !== step.correctOptionId)!;
+    const correct = step.options.find((option) => option.id === step.correctOptionId)!;
+    await render(activity);
+    await click(wrong.label);
+    await commit();
+    expect(feedback()?.textContent).toContain(wrong.explanation);
+    expect(feedback()?.textContent).not.toContain(step.explanation);
+    await click("修改这次选择");
+    await click(correct.label);
+    await commit();
+    expect(feedback()?.textContent).toContain(step.explanation);
+  });
+
+  it("presents the teacher bridge and needed material before the dependent choice", async () => {
+    const activity = structuredClone(fixture) as InteractionPathActivity;
+    const withBridges = {
+      ...activity,
+      steps: activity.steps.map((step, index) => ({
+        ...step,
+        brief:
+          index === 0
+            ? "先看键盘说明，再试着提交一次预约。"
+            : "已有一次尝试，现在改变一个条件看看。",
+      })),
+    };
+    await render(withBridges);
+    const bridge = container.querySelector(".interaction-path__bridge")!;
+    const material = container.querySelector('[data-material-id="keyboard-note"]')!;
+    const question = container.querySelector(".interaction-path__task h2")!;
+    const choices = container.querySelector(".interaction-path__choices")!;
+    const before = (a: Element, b: Element) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(before(bridge, material)).toBe(true);
+    expect(before(material, question)).toBe(true);
+    expect(before(question, choices)).toBe(true);
+    expect(question.getAttribute("aria-describedby")).toBe(bridge.id);
+    await toExperiment();
+    expect(container.querySelector(".interaction-path__bridge")?.textContent).toBe(
+      "已有一次尝试，现在改变一个条件看看。",
+    );
+    expect(document.activeElement).toBe(container.querySelector(".interaction-path__task h2"));
+  });
+
   it("puts context, task, source and current material on the path, with later recall and optional source details", async () => {
     const { report, next } = await render();
     const context = container.querySelector(".path-materials__context")!;
     expect(context.closest("details")).toBeNull();
     expect(context.textContent).toContain(fixture.context.introduction);
     expect(context.textContent).toContain(fixture.context.task);
-    const question = container.querySelector(".interaction-path > header h2")!;
+    const question = container.querySelector(".interaction-path__task h2")!;
     expect(
       context.compareDocumentPosition(question) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();

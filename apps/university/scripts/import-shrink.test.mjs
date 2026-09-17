@@ -48,6 +48,81 @@ function fixture(change = () => {}) {
 }
 
 describe("the importer preserves evidence while accepting shorter real revisions", () => {
+  it("allows revised card and question wording only in the newer containing lesson", () => {
+    const f = fixture((before, after) => {
+      for (const pkg of [before, after]) {
+        const lesson = pkg.course.units[0].lessons[0];
+        lesson.cards[0].kind = "basic";
+        lesson.cards[0].front = "Original question";
+        Object.assign(lesson.exercises[0], {
+          kind: "choice",
+          prompt: "Original prompt",
+          correctOptionId: "a",
+          options: [
+            { id: "a", text: "A" },
+            { id: "b", text: "B" },
+          ],
+        });
+      }
+      const revised = after.course.units[0].lessons[0];
+      revised.cards[0].front = "A clearer question";
+      revised.exercises[0].prompt = "A new independent task";
+      revised.exercises[0].correctOptionId = "b";
+      revised.exercises[0].options = [
+        { id: "b", text: "New B" },
+        { id: "a", text: "New A" },
+      ];
+    });
+    expect(assertNoUnexplainedShrink(f.previous, f.next, f.read)).toHaveLength(1);
+  });
+
+  it.each([
+    (lesson) => {
+      lesson.cards[0].id = "replacement-card";
+    },
+    (lesson) => {
+      lesson.exercises[0].kind = "short-answer";
+    },
+    (lesson) => {
+      lesson.cards[0].evidence = [];
+    },
+    (lesson) => {
+      lesson.exercises[0].evidence[0].sourceUrl = "https://example.invalid/replaced";
+    },
+    (lesson) => {
+      lesson.exercises[0].options.pop();
+    },
+    (lesson) => {
+      lesson.exercises[0].options[1].id = "a";
+    },
+    (lesson) => {
+      lesson.exercises[0].options[1].id = "replacement-option";
+    },
+    (lesson) => {
+      lesson.cards[0].front = "Changed in place";
+      lesson.contentRevision = 1;
+    },
+  ])(
+    "rejects lost or replaced assessment material even if a lesson claims a new revision",
+    (change) => {
+      const f = fixture((before, after) => {
+        for (const pkg of [before, after]) {
+          const lesson = pkg.course.units[0].lessons[0];
+          Object.assign(lesson.cards[0], { kind: "basic", front: "Question" });
+          Object.assign(lesson.exercises[0], {
+            kind: "choice",
+            options: [
+              { id: "a", text: "A" },
+              { id: "b", text: "B" },
+            ],
+          });
+        }
+        change(after.course.units[0].lessons[0]);
+      });
+      expect(() => assertNoUnexplainedShrink(f.previous, f.next, f.read)).toThrow("unexplained");
+    },
+  );
+
   it("accepts a shorter verified public-source revision with preserved protected material", () => {
     const f = fixture();
     expect(assertNoUnexplainedShrink(f.previous, f.next, f.read)).toMatchObject([

@@ -37,6 +37,7 @@ test("V2 uses five real revisions, visible materials and independent choice ques
     expect(activity.context?.introduction).toBeTruthy();
     expect(activity.materials?.some((m) => m.kind === "source-summary")).toBe(true);
     expect(activity.steps.at(-1)?.phase).toBe("transfer");
+    expect(activity.steps.every((step) => Boolean(step.brief?.trim()))).toBe(true);
     expect((lesson.packageLesson.exercises as { kind: string }[])[0]?.kind).toBe("choice");
   }
 });
@@ -97,6 +98,22 @@ for (const [mode, origin] of [
         await page.screenshot({ path: info.outputPath("real-material-entry.png") });
         for (const [index, step] of activity.steps.entries()) {
           await expect(area).toHaveAttribute("data-step-id", step.id);
+          const bridge = area.locator(".interaction-path__bridge");
+          await expect(bridge).toHaveText(step.brief!);
+          expect(await bridge.evaluate((node) => node.closest("details") === null)).toBe(true);
+          const question = area.locator(".interaction-path__task h2");
+          await expect(question).toHaveAttribute(
+            "aria-describedby",
+            (await bridge.getAttribute("id"))!,
+          );
+          expect(
+            await question.evaluate((node) => {
+              const bridge = document.getElementById(node.getAttribute("aria-describedby")!);
+              return Boolean(
+                bridge && bridge.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING,
+              );
+            }),
+          ).toBe(true);
           await expect(
             area.getByRole("heading", { name: step.question, exact: true }),
           ).toBeVisible();
@@ -161,6 +178,22 @@ for (const [mode, origin] of [
                 "reveal prediction feedback",
               );
               await expect(area.locator('[data-passed="false"]')).toBeVisible();
+              await expect(area.locator(".interaction-path__feedback")).not.toContainText(
+                step.explanation,
+              );
+              const selectedText = area.locator('[data-selected="true"] .path-choice__label');
+              const unselectedText = area
+                .locator('[data-selected="false"] .path-choice__label')
+                .first();
+              const readableColor = await unselectedText.evaluate(
+                (node) => getComputedStyle(node).color,
+              );
+              // Feedback can mount before the selected button's foreground
+              // reaches its reading state. Keep the exact colour requirement,
+              // using the same observable-state wait as the successful path.
+              await expect
+                .poll(() => selectedText.evaluate((node) => getComputedStyle(node).color))
+                .toBe(readableColor);
               await humanClick(
                 page,
                 area.getByRole("button", { name: labels.retry, exact: true }),
@@ -179,6 +212,20 @@ for (const [mode, origin] of [
             "submit this actual step",
           );
           await expect(area.locator('[data-passed="true"]')).toBeVisible();
+          await expect(area.locator(".interaction-path__feedback")).toContainText(step.explanation);
+          if (step.kind === "decision" || step.kind === "evidence") {
+            const referenceColor = await area
+              .locator('[data-selected="false"] .path-choice__label')
+              .first()
+              .evaluate((node) => getComputedStyle(node).color);
+            await expect
+              .poll(() =>
+                area
+                  .locator('[data-selected="true"] .path-choice__label')
+                  .evaluate((node) => getComputedStyle(node).color),
+              )
+              .toBe(referenceColor);
+          }
           const final = index === activity.steps.length - 1;
           await humanClick(
             page,

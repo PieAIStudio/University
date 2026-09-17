@@ -2,7 +2,7 @@
 name: write-lesson
 description: Write or rewrite a real-source University lesson using the V2 material-first interactive teaching contract. Use when authoring a new lesson, rewriting a wall-of-conclusions lesson, reviewing lesson prose against the five variants, or when the user says 读不进去, 重写这节课, 重写课文, 改写成能读的, 太干, or 语气再循循善诱一些. Also use when beginner Chinese is vague, shorthand, jargon-heavy, or mixes literal explanation with analogy. Covers real-world material continuity, meaningful interaction, short explanations, changed-condition application, plain-language beginner scaffolding, literal-first explanations, clearly marked analogies, inline [[evidence:]] anchors, and cross-lesson links. It may be invoked by refresh-study for a stale lesson, but it is never the refresh entry point. Do not use for course/unit planning, card/exercise scheduling alone, UA analysis, refresh-study orchestration, knowledge-node saves, teach-from-study tutoring, or ordinary app engineering.
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
 ---
 
 # Write a lesson — V2
@@ -56,6 +56,36 @@ The current task's necessary source excerpt stays nearby. Other material can be
 reopened without losing the task. Do not force half a phone screen to stay fixed.
 
 ## Design the learning, not six boxes
+
+### Teach from the beginner's expectation
+
+Before a question, orient the learner: what useful thing they are learning to do
+with AI, why the real material is here, and what they can do now. Lead with the
+use, not the source institution or the fact you intend to test. A short ordinary
+sentence may be enough; do not add a mandatory seventh screen or a word quota.
+
+The title's promise, opening task and first operation must address the same
+question. A lesson promising to teach asking AI about a photo cannot begin by
+quizzing the photographer's identity or source verification. First show asking,
+the kind of answer it can produce, and a useful follow-up. Introduce limits when
+the task actually reaches them; don't turn every AI-use lesson into fact checking.
+
+Each later round needs a concrete bridge in `step.brief`: what is now available,
+why the learner needs a next step, and what to look at. Display the bridge before
+the question. Necessary example/material comes before the dependent choice.
+"Next, think about this" is not a bridge. Don't claim "you just made this" unless
+the prior operation really produced it; name a preset as an example instead.
+
+Write choice/constraint feedback so it explains a wrong attempt on its own.
+In V2, `step.explanation` is the after-success explanation/worked example: the
+reader shows it only after this round passes. Do not rely on it to explain a
+wrong attempt, or present a successful example as the result of a different request.
+
+Read the learner-visible sequence without the schema, answer key or teacher notes.
+At every stop, ask: do I know why I am here, what I am looking at, what to do, and
+how doing it helps me use AI? Fix a missing learning step before polishing words.
+The independent Detector must perform this continuity read, not only a truth or
+schema check. Wording polish cannot repair a lesson whose goal has drifted.
 
 Keep these responsibilities, combining them wherever the task supports it:
 

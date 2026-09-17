@@ -109,7 +109,7 @@ export function PathAssembly({
               key={piece.id}
               data-piece={piece.id}
               type="button"
-              variant={answer.includes(piece.id) ? "primary" : "secondary"}
+              variant={answer.includes(piece.id) && !submitted ? "primary" : "secondary"}
               sound={false}
               static
               disabled={submitted}
@@ -120,7 +120,7 @@ export function PathAssembly({
               <svg className="path-workbench__add" viewBox="0 0 24 24" aria-hidden="true">
                 <path d={answer.includes(piece.id) ? "m5 12 4 4L19 6" : "M12 5v14M5 12h14"} />
               </svg>
-              <span>{piece.label}</span>
+              <span className="path-workbench__choice-label">{piece.label}</span>
             </GameButton>
           ))}
         </div>

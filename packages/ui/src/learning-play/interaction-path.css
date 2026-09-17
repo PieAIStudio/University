@@ -54,6 +54,14 @@
 .path-experiment__preview p {
   white-space: pre-wrap;
 }
+.path-materials__context > p,
+.interaction-path__bridge,
+.interaction-path__feedback p {
+  white-space: pre-line;
+}
+.interaction-path__round-start {
+  scroll-margin-block-start: calc(var(--lesson-toolbar-scroll-offset, 4rem) + 16px);
+}
 .path-materials__kind,
 .path-materials__citation,
 .path-experiment__note {
@@ -406,6 +414,17 @@
   color: var(--game-ui-text);
   opacity: 1;
   cursor: default;
+}
+.interaction-path__choices button:disabled .path-choice__label,
+.interaction-path__choices button:disabled .path-choice__mark,
+.path-workbench .interaction-path__pieces button:disabled .path-workbench__choice-label,
+.path-workbench .interaction-path__pieces button:disabled .path-workbench__add {
+  /* Submitted answers are reading material, including the previously selected
+     label. Set its own foreground, not only the parent button's foreground. */
+  color: var(--game-ui-text);
+  /* Even a reduced 0.01ms colour transition paints the old primary-button ink
+     once on the new reading surface. Review text changes synchronously. */
+  transition-property: none;
 }
 .interaction-path__choices [data-outcome="fits"] .path-choice__mark {
   border-color: transparent;
