@@ -105,6 +105,11 @@ export type View =
   | { readonly kind: "plans" }
   | { readonly kind: "settings" }
   | { readonly kind: "me" }
+  // Shared AuthKit destinations. Reserved so `/auth/callback` is never read as
+  // a course named `auth`, and so recovery/callback stay one address in both
+  // shells. Query and hash values on these paths are not authorization.
+  | { readonly kind: "auth-callback" }
+  | { readonly kind: "auth-reset" }
   /*
     The authoring workbench. Reached from 更多, and only offered where the
     authoring pipeline is on the other end of the address — it is a mode, not a
@@ -173,6 +178,10 @@ export function toPath(view: View): string {
       return "/settings";
     case "me":
       return "/me";
+    case "auth-callback":
+      return "/auth/callback";
+    case "auth-reset":
+      return "/auth/reset";
     case "studio":
       return view.section === "map" ? "/studio/map" : "/studio";
     case "course":
@@ -242,6 +251,11 @@ export function fromPath(pathname: string): View {
   if (parts.length === 1 && parts[0] === "plans") return { kind: "plans" };
   if (parts.length === 1 && parts[0] === "settings") return { kind: "settings" };
   if (parts.length === 1 && parts[0] === "me") return { kind: "me" };
+  if (parts[0] === "auth") {
+    if (parts.length === 2 && parts[1] === "callback") return { kind: "auth-callback" };
+    if (parts.length === 2 && parts[1] === "reset") return { kind: "auth-reset" };
+    return WORLD;
+  }
   if (parts.length === 2 && parts[0] === "studio" && parts[1] === "map") {
     return { kind: "studio", section: "map" };
   }
@@ -277,6 +291,11 @@ export function isBareView(view: View): boolean {
   return view.kind === "lesson";
 }
 
+/** Shared AuthKit callback and recovery destinations. */
+export function isAuthView(view: View): boolean {
+  return view.kind === "auth-callback" || view.kind === "auth-reset";
+}
+
 /** Which rail slot lights up for a view. */
 export function activeIdForView(view: View): string {
   switch (view.kind) {
@@ -308,6 +327,8 @@ export function activeIdForView(view: View): string {
     case "plans":
       return "plan";
     case "me":
+    case "auth-callback":
+    case "auth-reset":
     case "avatar-lab":
       return "profile";
     case "catalog":

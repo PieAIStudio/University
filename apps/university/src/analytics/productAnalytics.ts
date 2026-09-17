@@ -8,6 +8,7 @@
  * become a required service.
  */
 
+import type { AuthPort } from "@pieai/university-backend/browser.js";
 import type {
   IdentityPort,
   IdentityStatus,
@@ -266,6 +267,32 @@ export function trackEvent(event: AnalyticsEvent): void {
 }
 
 /** Keep account actions observable without exposing the email argument. */
+/** Track kit `execute` results without serializing emails, tokens or passwords. */
+export function withProductAnalyticsAuth(auth: AuthPort | null): AuthPort | null {
+  if (!auth) return null;
+  return {
+    getSession: () => auth.getSession(),
+    getCurrentUser: () => auth.getCurrentUser(),
+    onAuthStateChange: (listener) => auth.onAuthStateChange(listener),
+    async execute(action) {
+      if (action.type === "sign-up") trackEvent({ name: "account_sign_up_started" });
+      const result = await auth.execute(action);
+      try {
+        if (result.status === "authenticated") {
+          if (action.type === "sign-up" || action.type === "link-email") {
+            trackEvent({ name: "account_sign_up_completed" });
+          } else if (action.type === "sign-in" || action.type === "verify-code") {
+            trackEvent({ name: "account_sign_in" });
+          }
+        }
+      } catch {
+        // Analytics must not reclassify a completed account operation.
+      }
+      return result;
+    },
+  };
+}
+
 export function withProductAnalyticsIdentity(identity: IdentityPort): IdentityPort {
   const identifyCurrent = () => identifyStatus(identity.status());
   identity.subscribe(identifyCurrent);

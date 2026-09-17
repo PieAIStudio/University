@@ -41,6 +41,10 @@ packages/world  3D 场景：世界地图、课程岛、星球。packages/ui 里 
 
 ## 快速开始
 
+已经准备好的本机主目录只需 `pnpm start`，不必每次重新安装或写课。
+首次安装需要私有 GitHub Packages 的 `@pieaistudio/swimmer-auth-kit` 读取权限，
+由本机或可信构建环境提供；不要把令牌写进 Git、URL 或截图。
+
 ```bash
 pnpm install
 pnpm start
@@ -55,6 +59,11 @@ pnpm start
 
 同一个 `apps/university`，两次 `vite --mode`。9999 那一次把 `/api` 代理到
 `apps/local` 起在 4317 上的服务；9998 那一次读 `content/` 里已发布的包。
+
+Owner 走查优先打开 `http://127.0.0.1:9998/planet?lang=zh-CN`；本地作者端把端口
+换为 9999。账号位于 `/me`，展开“登录 / 创建账号”；注册、邮箱验证码和密码恢复
+采用共享 SwimmerAuthKit。完整的截图走查顺序与双语地址见
+[本机走查入口](docs/reference/execution/local-device-testing.md)。互动实验工作树不属于这次主线走查。
 
 启动脚本按当前发布包准备在线内容；耗时取决于本机与输入状态。
 

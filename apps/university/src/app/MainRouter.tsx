@@ -1,4 +1,5 @@
-import { translate } from "@pieai/university-ui/i18n.js";
+import { accountClosurePort, ACCOUNT_CLOSURE_CONFIRMATION } from "../account/account-closure.js";
+import { translate, useI18n } from "@pieai/university-ui/i18n.js";
 import { LearningSaveStatus } from "@pieai/university-ui/progress/LearningSaveStatus.js";
 import { lazy, Suspense, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import {
@@ -19,8 +20,12 @@ import {
 import { LoadingTrivia } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import {
   AccountPanel,
+  AccountClosurePanel,
+  AuthCallbackScreen,
+  AuthResetScreen,
   ProfileScreen,
   SettingsScreen,
+  type AccountAuthPort,
 } from "@pieai/university-ui/navigation/empty.js";
 import type { LearnerNavigationFocus } from "@pieai/university-ui/navigation/StudySwitcher.js";
 import {
@@ -44,6 +49,11 @@ import {
 import type { AvatarRecipe } from "@pieai/university-world/avatar.js";
 import type { WorldMap } from "@pieai/university-world/WorldMapCanvas.js";
 
+import {
+  clearLearningReturn,
+  continueLearningView,
+  readLearningReturn,
+} from "../account/continue-learning";
 import { AUTHORING } from "../mode";
 import { AuthoringMapNotes, StudioScreen } from "../authoring/index";
 import { MapStudioScreen } from "../authoring/map-studio";
@@ -89,6 +99,7 @@ interface MainRouterProps {
   readonly onAvatarRecipeChange: (recipe: AvatarRecipe) => void;
   readonly onWorthwhileProgress?: () => void;
   readonly identityPort: IdentityPort;
+  readonly authPort: AccountAuthPort | null;
   readonly accountFocusRequest: number;
   readonly paymentPort: PaymentPort;
   readonly mistakes: readonly Mistake[];
@@ -142,6 +153,7 @@ export function MainRouter({
   onAvatarRecipeChange,
   onWorthwhileProgress,
   identityPort,
+  authPort,
   accountFocusRequest,
   paymentPort,
   mistakes,
@@ -176,6 +188,30 @@ export function MainRouter({
   view,
   wide,
 }: MainRouterProps) {
+  const i18n = useI18n();
+  const continueView = continueLearningView(
+    readLearningReturn(),
+    nextUpProgress?.next ?? null,
+    (target) => {
+      const available = shelf?.studies
+        .find((item) => item.id === target.studyId)
+        ?.courses.find((item) => item.id === target.courseId);
+      if (!available) return false;
+      return (
+        target.kind === "course" ||
+        available.units.some(
+          (unit) =>
+            unit.id === target.unitId &&
+            unit.lessons.some((lesson) => lesson.id === target.lessonId),
+        )
+      );
+    },
+  );
+  const continueHref = toPath(continueView);
+  const goContinueLearning = () => {
+    clearLearningReturn();
+    setView(continueView);
+  };
   return (
     <>
       {/*
@@ -519,7 +555,19 @@ export function MainRouter({
                 progress={progressPort}
                 allowGuestImport
               />
-              <AccountPanel identity={identityPort} focusRequest={accountFocusRequest} />
+              <AccountPanel
+                identity={identityPort}
+                auth={authPort}
+                focusRequest={accountFocusRequest}
+                continueLearningHref={continueHref}
+                onContinueLearning={goContinueLearning}
+              />
+              <AccountClosurePanel
+                identity={identityPort}
+                auth={authPort}
+                confirmationPhrase={ACCOUNT_CLOSURE_CONFIRMATION}
+                requestClosure={accountClosurePort?.request ?? null}
+              />
             </>
           }
           totalXp={progress.totalXp}
@@ -545,6 +593,12 @@ export function MainRouter({
                 : "/"
           }
         />
+      ) : null}
+      {view.kind === "auth-callback" ? (
+        <AuthCallbackScreen auth={authPort} locale={i18n.locale} onContinue={goContinueLearning} />
+      ) : null}
+      {view.kind === "auth-reset" ? (
+        <AuthResetScreen auth={authPort} locale={i18n.locale} onUpdated={goContinueLearning} />
       ) : null}
     </>
   );

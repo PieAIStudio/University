@@ -1,11 +1,16 @@
 export {
+  browserAuthOrigin,
   createUniversityBackend,
   createOnlineSupabaseClient,
   createSupabaseProgressRemoteStore,
   readSwimmerBackendPublicEnv,
+  universityAuthRedirects,
   SWIMMER_BACKEND_PUBLISHABLE_KEY_ENV,
   SWIMMER_BACKEND_SUPABASE_URL_ENV,
+  type AuthEvent,
+  type AuthPort,
   type BrowserEnv,
+  type UniversityAuth,
   type UniversityBackend,
 } from "./browser.js";
 export {

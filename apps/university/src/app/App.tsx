@@ -64,6 +64,7 @@ import { RailIdentity } from "@pieai/university-world/avatar.js";
 import { AUTHORING, CAMPUS_NAME, EMPTY_SHELF_HINT } from "../mode";
 import { contentPort, feedbackPort, reviewReminderPort, sourceAccessPort } from "../ports/index";
 import { identityPort, paymentPort } from "../account/identity";
+import { captureLearningReturn } from "../account/continue-learning";
 import { bindProgressToIdentity } from "../account/session";
 import { presencePort } from "../presence/store";
 import {
@@ -218,14 +219,16 @@ export function App() {
   /** Counts avatar clicks so the account door also responds while already on `/me`. */
   const [accountFocusRequest, setAccountFocusRequest] = useState(0);
   const openAccount = useCallback(() => {
+    captureLearningReturn(routeView);
     setAccountFocusRequest((current) => current + 1);
     setView({ kind: "me" });
-  }, [setView]);
+  }, [routeView, setView]);
   const readEntitlements = useCallback(() => paymentPort.readEntitlements(), []);
   const lastRouteAnalyticsKey = useRef<string | null>(null);
   const reviewDueAnalyticsReported = useRef(false);
   const source = useMemo(() => progressSourceOf(progressPort), []);
-  const { analyticsIdentityPort, analyticsPaymentPort, onWorthwhileProgress } = useAnalyticsPorts();
+  const { analyticsIdentityPort, analyticsAuthPort, analyticsPaymentPort, onWorthwhileProgress } =
+    useAnalyticsPorts();
   const { mistakes, uncorrectedMistakeCount } = useMistakeSummary(progress);
 
   useEffect(
@@ -909,6 +912,7 @@ export function App() {
       reviewReminderDismissedFor={reviewReminderDismissedFor}
       onDismissReviewReminder={setReviewReminderDismissedFor}
       identityPort={analyticsIdentityPort}
+      authPort={analyticsAuthPort}
       accountFocusRequest={accountFocusRequest}
       paymentPort={analyticsPaymentPort}
       mistakes={mistakes}
@@ -950,7 +954,13 @@ export function App() {
       port={feedbackPort}
       context={feedbackContext}
       lessonTitle={feedbackLesson?.title ?? null}
-      surface={view.kind === "me" ? "account" : feedbackLocator ? "lesson" : "default"}
+      surface={
+        view.kind === "me" || view.kind === "auth-callback" || view.kind === "auth-reset"
+          ? "account"
+          : feedbackLocator
+            ? "lesson"
+            : "default"
+      }
     />
   );
   /*
@@ -1062,7 +1072,7 @@ export function App() {
     <>
       <div
         className={
-          view.kind === "me"
+          view.kind === "me" || view.kind === "auth-callback" || view.kind === "auth-reset"
             ? "app app--account"
             : view.kind === "settled"
               ? "app app--lesson"

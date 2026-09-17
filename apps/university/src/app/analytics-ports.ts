@@ -1,9 +1,10 @@
 import { useCallback, useMemo } from "react";
 
-import { identityPort } from "../account/identity";
+import { authPort, identityPort } from "../account/identity";
 import { paymentPort } from "../account/payment";
 import { progressPort } from "../progress/store";
 import {
+  withProductAnalyticsAuth,
   withProductAnalyticsIdentity,
   withProductAnalyticsPayment,
 } from "../analytics/productAnalytics";
@@ -11,6 +12,7 @@ import {
 /** Keep analytics decoration at the app boundary and stable across renders. */
 export function useAnalyticsPorts() {
   const analyticsIdentityPort = useMemo(() => withProductAnalyticsIdentity(identityPort), []);
+  const analyticsAuthPort = useMemo(() => withProductAnalyticsAuth(authPort), []);
   const analyticsPaymentPort = useMemo(() => withProductAnalyticsPayment(paymentPort), []);
   const onWorthwhileProgress = useCallback(() => {
     const before = analyticsIdentityPort.status();
@@ -28,5 +30,5 @@ export function useAnalyticsPorts() {
       .catch(() => undefined);
   }, [analyticsIdentityPort]);
 
-  return { analyticsIdentityPort, analyticsPaymentPort, onWorthwhileProgress };
+  return { analyticsIdentityPort, analyticsAuthPort, analyticsPaymentPort, onWorthwhileProgress };
 }

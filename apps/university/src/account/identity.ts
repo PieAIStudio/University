@@ -13,6 +13,8 @@ const backend = createUniversityBackend(import.meta.env as unknown as BrowserEnv
 
 export const swimmerBackendClient = backend.client;
 export const identityPort = backend.identityPort;
+/** The same AuthKit port the identity adapter wraps — not a second controller. */
+export const authPort = backend.authPort;
 /** Payment is shared account infrastructure, not a fourth mode-specific port. */
 export const paymentPort = backend.paymentPort;
 

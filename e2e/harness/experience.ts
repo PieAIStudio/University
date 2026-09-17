@@ -258,7 +258,7 @@ async function readyProfile(page: Page): Promise<void> {
    */
   const door = page.locator("details.account-panel__form");
   await expect(door).toBeVisible({ timeout: 30_000 });
-  if ((await door.getAttribute("open")) === null) await door.locator("summary").click();
+  if ((await door.getAttribute("open")) === null) await door.locator(":scope > summary").click();
   await expect(door).toHaveAttribute("open", "");
   await expect(PROFILE_PRIMARY.locate(page)).toBeVisible({ timeout: 30_000 });
 }

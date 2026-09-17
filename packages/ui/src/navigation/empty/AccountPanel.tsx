@@ -1,15 +1,19 @@
-import { translate } from "../../i18n/index.js";
-import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
+import { translate, useI18n } from "../../i18n/index.js";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   GameButton,
   GameCallout,
-  GameField,
-  GameInput,
   GameLoadingState,
   GameModal,
   GamePanel,
-  GameTabs,
 } from "@pieai/swimmer-ui-kit";
+import { AuthFlowError, type AuthPort, type AuthResult } from "@pieaistudio/swimmer-auth-kit";
+import {
+  AuthForm,
+  UpdatePasswordForm,
+  authErrorMessage,
+  type AuthLocale,
+} from "@pieaistudio/swimmer-auth-kit/react";
 import type { IdentityPort } from "@pieai/university-core";
 import { accountFailureMessage } from "./account-errors.js";
 
@@ -17,9 +21,8 @@ import { accountFailureMessage } from "./account-errors.js";
  * The account door on `/me`. It is a door, not a wall.
  *
  * Unsigned, it sits under the avatar the way the league empty sits under the
- * rail: a quiet sentence and, when a backend is actually configured, a form.
- * It never intercepts a lesson. The kit supplies the fields — `GameField` and
- * `GameInput` — so this file does not invent a password box.
+ * rail: a quiet sentence and, when a backend is actually configured, the
+ * shared AuthKit form. It never intercepts a lesson.
  */
 
 export const ACCOUNT_UNSIGNED_TITLE = translate("product.account.title");
@@ -36,48 +39,49 @@ export const ACCOUNT_UNCONFIGURED_REASON = translate("product.account.retryReaso
 export const ACCOUNT_SIGNED_IN_TITLE = translate("ui.navigation.empty.accountPanel.copy.已经登录");
 export const ACCOUNT_PENDING_LABEL = translate("ui.navigation.empty.accountPanel.copy.正在登录");
 export const ACCOUNT_SIGN_IN = translate("ui.navigation.empty.accountPanel.copy.登录");
-const ACCOUNT_SIGN_UP = translate("ui.navigation.empty.accountPanel.copy.创建账号");
-export const ACCOUNT_MAGIC_LINK = translate("ui.navigation.empty.accountPanel.copy.免密码登录");
-export const ACCOUNT_SEND_MAGIC_LINK = translate(
-  "ui.navigation.empty.accountPanel.copy.发送登录链接",
-);
 export const ACCOUNT_SIGN_OUT = translate("ui.navigation.empty.accountPanel.copy.退出登录");
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
-const MIN_PASSWORD_LENGTH = 8;
-
-type AuthMode = "login" | "register" | "magic";
-
-const AUTH_TABS = [
-  { id: "login", label: ACCOUNT_SIGN_IN, panelId: "account-form-panel" },
-  { id: "register", label: ACCOUNT_SIGN_UP, panelId: "account-form-panel" },
-  { id: "magic", label: ACCOUNT_MAGIC_LINK, panelId: "account-form-panel" },
-] as const;
-
-const PASSWORD_AUTH_TABS = AUTH_TABS.slice(0, 2);
+export function authKitLocale(locale: string): AuthLocale {
+  return locale.toLowerCase().startsWith("zh") ? "zh" : "en";
+}
 
 export function AccountPanel({
   identity,
-  authRedirectTo,
+  auth = null,
   focusRequest = 0,
+  continueLearningHref = null,
+  onContinueLearning,
+  onResult,
 }: {
   readonly identity: IdentityPort;
-  /** The current shell's allow-listed Supabase Auth redirect URL. */
-  readonly authRedirectTo?: string;
+  readonly auth?: AuthPort | null;
   /** A rail-avatar click, including a click while `/me` is already open. */
   readonly focusRequest?: number;
+  readonly continueLearningHref?: string | null;
+  readonly onContinueLearning?: () => void;
+  readonly onResult?: (result: AuthResult) => void | Promise<void>;
 }) {
   const status = useSyncExternalStore(identity.subscribe, identity.status, identity.status);
+  const i18n = useI18n();
+  const locale = authKitLocale(i18n.locale);
   const [showUnavailableReason, setShowUnavailableReason] = useState(focusRequest > 0);
   const [signOutError, setSignOutError] = useState<string | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const operation = useHeldAuth(auth);
   const formContext = useRef({ identity, anonymous: false, key: "unsigned" });
-  if (formContext.current.identity !== identity || status.kind !== "pending") {
+  if (formContext.current.identity !== identity) {
     formContext.current = {
       identity,
       anonymous: status.kind === "anonymous",
-      key: status.kind === "anonymous" ? `guest:${status.user.id}` : "unsigned",
+      key: status.kind === "anonymous" && "user" in status ? `guest:${status.user.id}` : "unsigned",
     };
+  }
+  if (status.kind === "anonymous") {
+    formContext.current.anonymous = true;
+    formContext.current.key = `guest:${status.user.id}`;
+  } else if (status.kind !== "pending" && !operation.holding && status.kind !== "signed_in") {
+    formContext.current.anonymous = false;
+    formContext.current.key = "unsigned";
   }
 
   useEffect(() => {
@@ -125,7 +129,8 @@ export function AccountPanel({
     );
   }
 
-  if (status.kind === "signed_in") {
+  const showSignedIn = status.kind === "signed_in" && !operation.holding;
+  if (showSignedIn) {
     return (
       <section
         className="account-panel"
@@ -140,10 +145,16 @@ export function AccountPanel({
             onClick={() => {
               setSignOutError(null);
               setIsSigningOut(true);
-              void identity
-                .signOut()
+              const request = auth
+                ? auth.execute({ type: "sign-out", scope: "local" })
+                : identity.signOut();
+              void request
                 .catch((error: unknown) => {
-                  setSignOutError(accountFailureMessage(error, "sign-out-failed"));
+                  setSignOutError(
+                    error instanceof AuthFlowError
+                      ? authErrorMessage(error.code, locale)
+                      : accountFailureMessage(error, "sign-out-failed"),
+                  );
                 })
                 .finally(() => setIsSigningOut(false));
             }}
@@ -151,6 +162,29 @@ export function AccountPanel({
             {isSigningOut ? translate("account.failure.signingOut") : ACCOUNT_SIGN_OUT}
           </GameButton>
         </div>
+        {continueLearningHref ? (
+          <GameButton
+            variant="primary"
+            surface="liquid"
+            liquidFinish="glossy"
+            className="university-cta"
+            type="button"
+            onClick={() => onContinueLearning?.()}
+          >
+            {translate("product.account.continueLearning")}
+          </GameButton>
+        ) : null}
+        {auth ? (
+          <details className="product-details account-panel__password">
+            <summary>{translate("product.account.changePassword")}</summary>
+            <UpdatePasswordForm
+              port={auth}
+              locale={locale}
+              requireCurrentPassword
+              onResult={onResult}
+            />
+          </details>
+        ) : null}
         {signOutError ? (
           <GameCallout tone="danger" heading={translate("account.failure.heading")}>
             {signOutError}
@@ -163,221 +197,130 @@ export function AccountPanel({
   return (
     <UnsignedAccountForm
       key={formContext.current.key}
-      identity={identity}
+      auth={operation.port}
+      locale={locale}
       error={status.kind === "error" ? accountFailureMessage(status) : signOutError}
       anonymous={formContext.current.anonymous}
-      pending={status.kind === "pending"}
-      authRedirectTo={authRedirectTo ?? currentPageOrigin()}
+      pending={status.kind === "pending" || operation.busy}
       focusRequest={focusRequest}
+      onResult={async (result) => {
+        try {
+          await onResult?.(result);
+        } finally {
+          operation.release();
+        }
+      }}
     />
   );
 }
 
 function UnsignedAccountForm({
-  identity,
+  auth,
+  locale,
   error,
   anonymous,
   pending,
-  authRedirectTo,
   focusRequest,
+  onResult,
 }: {
-  readonly identity: IdentityPort;
+  readonly auth: AuthPort | null;
+  readonly locale: AuthLocale;
   readonly error: string | null;
   readonly anonymous: boolean;
   readonly pending: boolean;
-  readonly authRedirectTo: string;
   readonly focusRequest: number;
+  readonly onResult?: (result: AuthResult) => void | Promise<void>;
 }) {
-  const [mode, setMode] = useState<AuthMode>("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [notice, setNotice] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const submitting = useRef(false);
-  const [fieldError, setFieldError] = useState<string | null>(error);
-  const emailId = useId();
-  const passwordId = useId();
-  const emailRef = useRef<HTMLInputElement>(null);
-  const passwordRef = useRef<HTMLInputElement>(null);
   const formDetails = useRef<HTMLDetailsElement>(null);
-  const tabs = anonymous ? PASSWORD_AUTH_TABS : AUTH_TABS;
-  const busy = pending || isSubmitting;
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (focusRequest <= 0) return;
     if (formDetails.current) formDetails.current.open = true;
-    emailRef.current?.scrollIntoView({ block: "nearest" });
-    emailRef.current?.focus();
+    const email = panelRef.current?.querySelector<HTMLInputElement>('input[type="email"]');
+    email?.scrollIntoView({ block: "nearest" });
+    email?.focus();
   }, [focusRequest]);
 
   useEffect(() => {
     if (error && formDetails.current) formDetails.current.open = true;
   }, [error]);
 
-  useEffect(() => {
-    if (!anonymous || mode !== "magic") return;
-    setMode("login");
-    setFieldError(null);
-    setNotice(null);
-  }, [anonymous, mode]);
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (submitting.current || pending) return;
-    const trimmed = email.trim();
-    if (!trimmed || !EMAIL_PATTERN.test(trimmed)) {
-      setFieldError(translate("ui.navigation.empty.accountPanel.copy.请输入有效的邮箱地址"));
-      emailRef.current?.focus();
-      return;
-    }
-    if (mode !== "magic" && password.length < MIN_PASSWORD_LENGTH) {
-      setFieldError(translate("ui.navigation.empty.accountPanel.copy.密码至少需要-8-个字符"));
-      passwordRef.current?.focus();
-      return;
-    }
-    setFieldError(null);
-    setNotice(null);
-    submitting.current = true;
-    setIsSubmitting(true);
-    try {
-      if (mode === "magic") {
-        if (!authRedirectTo) {
-          setFieldError(
-            translate("ui.navigation.empty.accountPanel.copy.当前页面还没有可用的登录回跳地址"),
-          );
-          return;
-        }
-        await identity.requestMagicLink(trimmed, authRedirectTo);
-        setNotice(
-          translate(
-            "ui.navigation.empty.accountPanel.copy.登录链接已经发到邮箱-请在这个浏览器里打开邮件中的链接-链接短时间有效",
-          ),
-        );
-        return;
-      }
-      if (mode === "login") {
-        await identity.signInWithEmail(trimmed, password);
-        return;
-      }
-      if (anonymous) {
-        await identity.linkEmail(trimmed, password);
-        return;
-      }
-      const result = await identity.signUpWithEmail(trimmed, password);
-      if (result.confirmationRequired) {
-        setNotice(
-          translate("ui.navigation.empty.accountPanel.copy.请去邮箱点开确认信-然后再回来登录"),
-        );
-      }
-    } catch (reason: unknown) {
-      setFieldError(
-        accountFailureMessage(
-          reason,
-          anonymous
-            ? "link-email-failed"
-            : mode === "magic"
-              ? "magic-link-failed"
-              : mode === "register"
-                ? "sign-up-failed"
-                : "sign-in-failed",
-        ),
-      );
-    } finally {
-      submitting.current = false;
-      setIsSubmitting(false);
-      setPassword("");
-    }
-  };
-
   return (
-    <div className="account-panel" aria-busy={busy}>
+    <div className="account-panel" aria-busy={pending} ref={panelRef}>
       <h2>{ACCOUNT_UNSIGNED_TITLE}</h2>
       <p>{translate("product.account.invitation")}</p>
       <details className="product-details account-panel__form" ref={formDetails}>
         <summary>{translate("product.account.open")}</summary>
-        <p>{ACCOUNT_UNSIGNED_DESCRIPTION}</p>
         {anonymous ? <p>{translate("product.save.anonymousMerge")}</p> : null}
-        {busy ? <GameLoadingState label={ACCOUNT_PENDING_LABEL} /> : null}
-        <fieldset className="account-panel__fields" disabled={busy}>
-          <GameTabs
-            id="account-mode"
-            activeId={mode}
-            tabs={tabs}
-            onSelect={(id) => {
-              if (busy) return;
-              setMode(id as AuthMode);
-              setFieldError(null);
-              setNotice(null);
-            }}
+        {pending ? <GameLoadingState label={ACCOUNT_PENDING_LABEL} /> : null}
+        {error ? (
+          <GameCallout
+            tone="danger"
+            heading={translate("ui.navigation.empty.accountPanel.copy.没登上")}
+          >
+            {error}
+          </GameCallout>
+        ) : null}
+        {auth ? (
+          <AuthForm
+            port={auth}
+            locale={locale}
+            allowRegistration
+            allowEmailCode
+            anonymous={anonymous}
+            onResult={onResult}
           />
-          <div id="account-form-panel" role="tabpanel" aria-labelledby={`account-mode-${mode}`}>
-            {error || fieldError ? (
-              <GameCallout
-                tone="danger"
-                heading={translate("ui.navigation.empty.accountPanel.copy.没登上")}
-              >
-                {fieldError ?? error}
-              </GameCallout>
-            ) : null}
-            {notice ? (
-              <GameCallout
-                tone="info"
-                heading={translate("ui.navigation.empty.accountPanel.copy.还差一步")}
-              >
-                {notice}
-              </GameCallout>
-            ) : null}
-            <form onSubmit={(event) => void handleSubmit(event)}>
-              <GameField label={translate("ui.navigation.empty.accountPanel.copy.邮箱")} required>
-                <GameInput
-                  ref={emailRef}
-                  id={emailId}
-                  type="email"
-                  name="email"
-                  autoComplete="email"
-                  inputMode="email"
-                  value={email}
-                  invalid={Boolean(fieldError)}
-                  onChange={(event) => setEmail(event.currentTarget.value)}
-                />
-              </GameField>
-              {mode === "magic" ? null : (
-                <GameField label={translate("ui.navigation.empty.accountPanel.copy.密码")} required>
-                  <GameInput
-                    ref={passwordRef}
-                    id={passwordId}
-                    type="password"
-                    name="password"
-                    autoComplete={mode === "login" ? "current-password" : "new-password"}
-                    value={password}
-                    invalid={Boolean(fieldError)}
-                    onChange={(event) => setPassword(event.currentTarget.value)}
-                  />
-                </GameField>
-              )}
-              <GameButton
-                variant="primary"
-                surface="liquid"
-                liquidFinish="glossy"
-                fullWidth
-                className="university-cta"
-                type="submit"
-                disabled={isSubmitting}
-              >
-                {mode === "login"
-                  ? ACCOUNT_SIGN_IN
-                  : mode === "register"
-                    ? ACCOUNT_SIGN_UP
-                    : ACCOUNT_SEND_MAGIC_LINK}
-              </GameButton>
-            </form>
-          </div>
-        </fieldset>
+        ) : null}
+        <details className="product-details">
+          <summary>{translate("product.account.help")}</summary>
+          <p>{ACCOUNT_UNSIGNED_DESCRIPTION}</p>
+          <p>{translate("product.account.mailboxHint")}</p>
+        </details>
       </details>
     </div>
   );
 }
 
-function currentPageOrigin(): string {
-  return typeof window === "undefined" ? "" : window.location.origin;
+function useHeldAuth(port: AuthPort | null): {
+  readonly port: AuthPort | null;
+  readonly holding: boolean;
+  readonly busy: boolean;
+  readonly release: () => void;
+} {
+  const [holding, setHolding] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const generation = useRef(0);
+  const wrapped = useMemo(() => {
+    if (!port) return null;
+    return {
+      getSession: () => port.getSession(),
+      getCurrentUser: () => port.getCurrentUser(),
+      onAuthStateChange: (listener: Parameters<AuthPort["onAuthStateChange"]>[0]) =>
+        port.onAuthStateChange(listener),
+      execute: async (action: Parameters<AuthPort["execute"]>[0]) => {
+        const token = ++generation.current;
+        setHolding(true);
+        setBusy(true);
+        try {
+          return await port.execute(action);
+        } catch (error) {
+          if (token === generation.current) setHolding(false);
+          throw error;
+        } finally {
+          if (token === generation.current) setBusy(false);
+        }
+      },
+    } satisfies AuthPort;
+  }, [port]);
+  return {
+    port: wrapped,
+    holding,
+    busy,
+    release: () => {
+      generation.current += 1;
+      setHolding(false);
+      setBusy(false);
+    },
+  };
 }

@@ -82,8 +82,33 @@ describe("the shared browser route", () => {
     const fragment = "#access_token=test-only&type=magiclink";
     history.replaceState(null, "", `/me${fragment}`);
     await act(async () => root.render(<RouteProbe />));
+    expect(location.hash).toBe(fragment);
     await act(async () => container.querySelector("button")!.click());
     expect(location.pathname).toBe("/");
+    expect(location.hash).toBe("");
+  });
+
+  it("does not carry auth fragments onto a later ordinary learning route", async () => {
+    const fragment = "#access_token=test-only&type=magiclink";
+    history.replaceState(null, "", `/auth/callback${fragment}`);
+    await act(async () => root.render(<RouteProbe />));
+    expect(container.querySelector("output")?.textContent).toBe("auth-callback");
     expect(location.hash).toBe(fragment);
+    await act(async () => container.querySelector("button")!.click());
+    expect(location.pathname).toBe("/");
+    expect(location.hash).toBe("");
+  });
+
+  it("preserves language when leaving an auth callback", async () => {
+    const fragment = "#access_token=test-only&type=magiclink";
+    history.replaceState(null, "", `/auth/callback?lang=en&code=test-only${fragment}`);
+    await act(async () => root.render(<RouteProbe />));
+    expect(container.querySelector("output")?.textContent).toBe("auth-callback");
+    expect(location.search).toContain("lang=en");
+    expect(location.hash).toBe(fragment);
+    await act(async () => container.querySelector("button")!.click());
+    expect(location.pathname).toBe("/");
+    expect(location.search).toBe("?lang=en");
+    expect(location.hash).toBe("");
   });
 });

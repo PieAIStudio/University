@@ -7,10 +7,13 @@ import {
 } from "@pieai/university-core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { AuthPort } from "@pieai/university-backend/browser.js";
+
 import {
   initProductAnalytics,
   setAnalyticsClientForTesting,
   trackEvent,
+  withProductAnalyticsAuth,
   withProductAnalyticsIdentity,
   withProductAnalyticsPayment,
   withProductAnalyticsProgress,
@@ -93,6 +96,51 @@ describe("product analytics", () => {
     ]);
     expect(JSON.stringify(posthogCapture.mock.calls)).not.toContain("learner@example.com");
     expect(JSON.stringify(posthogCapture.mock.calls)).not.toContain("password12");
+  });
+
+  it("records kit execute results without emails, tokens or passwords", async () => {
+    setAnalyticsClientForTesting({ capture: posthogCapture });
+    const auth: AuthPort = {
+      getSession: async () => null,
+      getCurrentUser: async () => ({
+        id: "synthetic-member",
+        email: "learner@example.com",
+        is_anonymous: false,
+      }),
+      onAuthStateChange: () => ({ unsubscribe() {} }),
+      execute: async (action) => {
+        if (action.type === "sign-up") {
+          return {
+            status: "authenticated",
+            user: { id: "synthetic-member", email: "learner@example.com", is_anonymous: false },
+          };
+        }
+        return {
+          status: "authenticated",
+          user: { id: "synthetic-member", email: "learner@example.com", is_anonymous: false },
+        };
+      },
+    };
+    const wrapped = withProductAnalyticsAuth(auth);
+    await wrapped!.execute({
+      type: "sign-up",
+      email: "learner@example.com",
+      password: "password12",
+    });
+    await wrapped!.execute({
+      type: "verify-code",
+      email: "learner@example.com",
+      token: "123456",
+      purpose: "email",
+    });
+    expect(posthogCapture.mock.calls).toEqual([
+      ["account_sign_up_started", {}],
+      ["account_sign_up_completed", {}],
+      ["account_sign_in", {}],
+    ]);
+    expect(JSON.stringify(posthogCapture.mock.calls)).not.toContain("learner@example.com");
+    expect(JSON.stringify(posthogCapture.mock.calls)).not.toContain("password12");
+    expect(JSON.stringify(posthogCapture.mock.calls)).not.toContain("123456");
   });
 
   it("identifies anonymous and formal sessions by auth user id, never email", async () => {

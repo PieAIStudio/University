@@ -1,4 +1,7 @@
 export const messages = {
+  "product.account.profileLabel": "Your profile",
+  "product.account.avatarSignInLabel": "Sign in to personalize your avatar",
+  "product.account.help": "About saving and email",
   "product.save.shortInitial": "Learning on this device",
   "product.save.shortLocal": "Saved on this device",
   "product.save.shortSyncing": "Syncing…",
@@ -22,6 +25,16 @@ export const messages = {
     "You are signed in. The save status explains whether your records are local, synchronizing or synchronized.",
   "product.account.unconfigured":
     "This preview has no account service. You can learn locally, but cross-device recovery is not available here.",
+  "product.account.continueLearning": "Continue learning",
+  "product.account.changePassword": "Change password",
+  "product.account.mailboxHint":
+    "Accepting an email request does not mean it was delivered. Check inbox and spam; a missing message is not a reason to submit again.",
+  "product.account.authCallbackTitle": "Confirming sign-in",
+  "product.account.authCallbackInvalid":
+    "This sign-in link is invalid or has expired. Sign in again, or request a new email.",
+  "product.account.authResetTitle": "Set a new password",
+  "product.account.authResetInvalid":
+    "This recovery link is invalid or has expired. Request a new password-reset email.",
   "product.save.local":
     "Saved on this device, not yet synchronized. Clearing browser data may remove these records.",
   "product.save.syncing": "Saved on this device. Synchronizing with the current account…",

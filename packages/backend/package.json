@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./browser.js": "./src/browser.ts",
-    "./session.js": "./src/session.ts"
+    "./session.js": "./src/session.ts",
+    "./account-closure.js": "./src/account-closure.ts"
   },
   "scripts": {
     "build": "tsc -b --pretty false",
@@ -20,6 +21,7 @@
   "dependencies": {
     "@pieai/swimmer-backend-client": "0.6.0",
     "@pieai/university-core": "workspace:*",
+    "@pieaistudio/swimmer-auth-kit": "0.1.9",
     "@supabase/supabase-js": "2.110.3"
   },
   "devDependencies": {

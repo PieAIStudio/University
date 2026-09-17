@@ -3,9 +3,9 @@
  *
  * This file is the type and a pair of fakes. It does not create a network
  * client, read an env file, or decide whether a product should ask for a
- * password. A shell that has SwimmerBackend credentials wraps
- * `createAuthClient` and passes the result in; a shell that does not, passes
- * `null` and the learner never hears about it.
+ * password. A shell that has SwimmerBackend credentials wraps the shared
+ * AuthKit client (`createSupabaseAuth`) and passes the result in; a shell
+ * that does not, passes `null` and the learner never hears about it.
  *
  * Sign-in is optional. An unconfigured port is not an error, it is the
  * default: clone the repo, `pnpm dev`, learn a lesson. The first time a
@@ -73,15 +73,14 @@ export const IDENTITY_STATUS_KIND_REGISTRY = {
 } as const satisfies Record<IdentityStatusKind, true>;
 
 /**
- * The auth surface `createAuthClient` already exposes, narrowed to what this
- * product will call. Structural: a SwimmerBackend `AuthClient` assigns here
- * without a wrapper, which is the point of copying Collapse's port rather
- * than inventing a second session type.
+ * The auth surface the shared AuthKit already exposes, narrowed to what this
+ * product will call. Structural: `createSupabaseAuth` assigns here without a
+ * second controller, so progress, payment and analytics keep one identity.
  */
 export interface IdentityAuth {
   getSession(): Promise<IdentityAuthSession | null>;
   getAccessToken(): Promise<string | null>;
-  onAuthStateChange(listener: (session: IdentityAuthSession | null) => void): {
+  onAuthStateChange(listener: (session: IdentityAuthSession | null, event?: string) => void): {
     unsubscribe(): void;
   };
   signInAnonymously(options?: { captchaToken?: string }): Promise<IdentityAuthSession | null>;
@@ -383,7 +382,7 @@ function createUnconfiguredIdentityPort(): IdentityPort {
 /**
  * In-memory auth for tests. Sign-in creates a user from the email; there is
  * no password store and no network. Not a stand-in for SwimmerBackend in
- * production — a production port is `createIdentityPort(createAuthClient(...))`.
+ * production — a production port is `createIdentityPort(createSupabaseAuth(...))`.
  */
 export function createMemoryIdentityPort(initial?: IdentityUser): IdentityPort {
   let current: IdentityUser | null = initial ?? null;

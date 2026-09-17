@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { fromHash, fromPath, toPath, WORLD, type View } from "@pieai/university-core";
+import { fromHash, fromPath, isAuthView, toPath, WORLD, type View } from "@pieai/university-core";
 
 import { AUTHORING } from "../mode";
 
@@ -21,16 +21,43 @@ function routable(view: View): View {
   return view.kind === "studio" && !AUTHORING ? WORLD : view;
 }
 
+function isAuthOwnedHash(hash: string): boolean {
+  if (!hash || hash.startsWith("#/")) return false;
+  const params = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
+  return (
+    params.has("access_token") ||
+    params.has("refresh_token") ||
+    params.has("error_code") ||
+    params.has("error_description") ||
+    (params.has("type") &&
+      ["magiclink", "recovery", "signup", "email", "invite"].includes(params.get("type") ?? ""))
+  );
+}
+
+const AUTH_SEARCH_KEYS = new Set(["code", "error", "error_code", "error_description"]);
+
+function stripAuthSearch(search: string): string {
+  if (!search) return "";
+  const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  for (const key of AUTH_SEARCH_KEYS) params.delete(key);
+  const next = params.toString();
+  return next ? `?${next}` : "";
+}
+
 function canonicalLocation(view: View): string {
   // Authentication owns its callback parameters. Never race the SDK by
-  // removing a still-unconsumed fragment while the learner changes screens.
-  const fragment = new URLSearchParams(location.hash.slice(1));
-  const authFragment = ["access_token", "refresh_token", "error", "error_code", "type"].some(
-    (key) => fragment.has(key),
-  )
-    ? location.hash
-    : "";
-  return `${toPath(view)}${location.search}${authFragment}`;
+  // removing a still-unconsumed fragment while it is still on the auth route.
+  // Ordinary later routes must not keep tokens, codes or provider errors.
+  const keepAuth = isAuthView(view);
+  const fragment = isAuthOwnedHash(location.hash)
+    ? keepAuth
+      ? location.hash
+      : ""
+    : location.hash.startsWith("#/")
+      ? ""
+      : location.hash;
+  const search = keepAuth ? location.search : stripAuthSearch(location.search);
+  return `${toPath(view)}${search}${fragment}`;
 }
 
 function readLocation(): View {

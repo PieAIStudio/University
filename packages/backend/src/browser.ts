@@ -1,16 +1,29 @@
-import { createAuthClient } from "@pieai/swimmer-backend-client";
+import { authRedirect, createSupabaseAuth } from "@pieaistudio/swimmer-auth-kit";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   createPaymentPort,
   createIdentityPort,
   mergeProgress,
   parseProgress,
+  type IdentityAuth,
   type IdentityPort,
   type PaymentPort,
   type ProgressDocument,
   type ProgressRemoteStore,
 } from "@pieai/university-core";
 import { createPaymentOrderId, createSupabasePaymentRemote } from "./payment.js";
+
+export type {
+  AuthAction,
+  AuthEvent,
+  AuthPort,
+  AuthResult,
+  AuthSession,
+  AuthUser,
+} from "@pieaistudio/swimmer-auth-kit";
+
+/** Exact `createSupabaseAuth` host, including compatibility methods for identity. */
+export type UniversityAuth = ReturnType<typeof createSupabaseAuth>;
 
 /** Canonical browser-facing SwimmerBackend environment names. */
 export const SWIMMER_BACKEND_SUPABASE_URL_ENV = "VITE_SWIMMER_BACKEND_SUPABASE_URL";
@@ -20,6 +33,7 @@ export type BrowserEnv = Record<string, string | boolean | undefined>;
 
 export interface UniversityBackend {
   readonly client: SupabaseClient | null;
+  readonly authPort: UniversityAuth | null;
   readonly identityPort: IdentityPort;
   readonly paymentPort: PaymentPort;
   readonly progressRemoteStore: ProgressRemoteStore | null;
@@ -34,11 +48,47 @@ export interface UniversityBackend {
  * to this same remote row and the local browser cache becomes only an offline
  * queue.
  */
+/** The page origin, or loopback when `location` is missing. Never rewritten. */
+export function browserAuthOrigin(): string {
+  return typeof location === "object" && typeof location.origin === "string" && location.origin
+    ? location.origin
+    : "http://127.0.0.1";
+}
+
+/** Kit-legal callback URLs for this origin, or null when the origin cannot host them. */
+export function universityAuthRedirects(origin: string): {
+  readonly redirectTo: string;
+  readonly recoveryRedirectTo: string;
+} | null {
+  try {
+    return {
+      redirectTo: authRedirect(`${origin}/auth/callback`),
+      recoveryRedirectTo: authRedirect(`${origin}/auth/reset`),
+    };
+  } catch {
+    // HTTP LAN and other non-HTTPS, non-loopback origins are not legal kit
+    // redirects. Returning null is honest: do not email 127.0.0.1 to another device.
+    return null;
+  }
+}
+
+function asIdentityAuth(auth: UniversityAuth): IdentityAuth {
+  return auth;
+}
+
+function createBrowserAuthPort(client: SupabaseClient): UniversityAuth | null {
+  const redirects = universityAuthRedirects(browserAuthOrigin());
+  if (!redirects) return null;
+  return createSupabaseAuth(client, redirects);
+}
+
 export function createUniversityBackend(env: BrowserEnv): UniversityBackend {
   const client = createOnlineSupabaseClient(env);
-  const identityPort = createIdentityPort(client ? createAuthClient(client) : null);
+  const authPort = client ? createBrowserAuthPort(client) : null;
+  const identityPort = createIdentityPort(authPort ? asIdentityAuth(authPort) : null);
   return {
     client,
+    authPort,
     identityPort,
     paymentPort: createPaymentPort({
       identity: identityPort,

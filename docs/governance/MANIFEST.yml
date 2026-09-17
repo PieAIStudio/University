@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-16T02:24:07.132Z
+generated_at: 2026-09-17T01:08:40.424Z
 generator_version: doc-gov@0.14.0
 docs_count: 143
 docs:
@@ -184,7 +184,7 @@ docs:
     type: plan
     status: active
     canonical: true
-    last_reviewed: 2026-09-15
+    last_reviewed: 2026-09-16
     pinned: false
   - id: PLAN-AI-FOUNDATIONS-REVIVAL
     path: docs/plans/active/ai-foundations-revival.md
@@ -380,7 +380,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-12
+    last_reviewed: 2026-09-16
     pinned: false
   - id: REF-PAYMENT-BACKEND-GAP
     path: docs/reference/execution/payment-backend-gap.md
