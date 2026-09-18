@@ -1,3 +1,4 @@
+import { messages as toyPlay } from "./toy-play.zh-CN.js";
 import { messages as playGallery } from "./play-gallery.zh-CN.js";
 import { messages as accountClosure } from "./account-closure.zh-CN.js";
 import { messages as gradingCopy } from "./grading-copy.zh-CN.js";
@@ -30,6 +31,7 @@ import { messages as learningPlayMessages } from "./learning-play.zh-CN.js";
  * is selectable only when its key set exactly matches this one.
  */
 export const messages = {
+  ...toyPlay,
   ...playGallery,
   ...accountClosure,
   ...worldNavigation,

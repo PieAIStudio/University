@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-09-15
+last_reviewed: 2026-09-17
 domain: execution
 tags:
   - current-work
@@ -27,6 +27,7 @@ related:
   - PLAN-PRODUCT-COMPLETENESS
   - PLAN-AI-FOUNDATIONS-REVIVAL
   - PLAN-INTERACTION-FIRST-EXPERIMENT
+  - PLAN-INTERACTION-3D-PLAYLAB
 ---
 
 # Current Work
@@ -56,6 +57,7 @@ New mainline work follows the applicable lanes below.
 | --- | --- |
 | Published real-source beginner courses and remaining account-service prerequisites | [AI literacy commercial release](../../plans/active/00-ai-literacy-commercial-release.md); both bilingual paths are live and the final release gates passed. Continue only the named AuthKit/mail/account-deletion/cross-device prerequisites or a newly reproduced issue; do not restart course production. Actual payments remain disabled |
 | Material-first V2 lessons and unified interaction catalogue | [Interaction-first experiment](../../plans/active/interaction-first-experiment.md); ready for Owner trial in `.worktrees/interaction-first` / `codex/interaction-first`. Main and all Claude research have been absorbed; redundant lanes were removed. The plan links the single walkthrough and exact acceptance receipts; do not recreate a branch or publish without authorization |
+| Three shared 3D interaction toys | [3D play-lab experiment](../../plans/active/interaction-3d-playlab.md), in the separately authorized `.worktrees/interaction-3d-playlab` / `codex/interaction-3d-playlab`. Reuses the existing Kenney subset and world renderer. Keep this experiment separate from the active course-writing lane; it does not replace course activities or publish lessons |
 | How work is queued, run and gated on the mainline | [Work queue](work-queue.md); one task, one commit, one push, because `pnpm verify` does not run the browser suite |
 | Published versus locked course packages | [Locked-package record](../../../apps/local/course-proposals/locked/README.md); runtime counts come from the generated catalogue, not historical handoffs |
 | Reviving the locked AI foundations course | [AI foundations revival](../../plans/active/ai-foundations-revival.md); follow its phase boundary and unresolved recovery requirements before resuming |

@@ -1,4 +1,6 @@
 import { PlayCatalog } from "@pieai/university-ui/play-catalog/PlayCatalog.js";
+import { useI18n } from "@pieai/university-ui/i18n.js";
+import "./toy-play.css";
 import blocks from "../../../../docs/reference/interaction-prototype/blocks.html?raw";
 import arcade from "../../../../docs/reference/interaction-prototype/arcade.html?raw";
 import index from "../../../../docs/reference/interaction-prototype/index.html?raw";
@@ -10,5 +12,13 @@ import presentation from "../../../../docs/reference/interaction-prototype/prese
 // URL, second server, course producer, account port or remote code loader exists.
 const sources = { blocks, arcade, index, remade, compare };
 export default function PlayCatalogRoute() {
-  return <PlayCatalog sources={sources} presentation={presentation} />;
+  const { locale, t } = useI18n();
+  return (
+    <>
+      <a className="toy-catalog-link" href={`/play-lab/toy-3d?lang=${locale}`}>
+        {t("toy.catalogLink")}
+      </a>
+      <PlayCatalog sources={sources} presentation={presentation} />
+    </>
+  );
 }

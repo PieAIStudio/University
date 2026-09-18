@@ -74,6 +74,7 @@ import { MapBreadcrumbs } from "./MapBreadcrumbs.js";
 import type { PathOverlay } from "./world-model";
 
 const PlayCatalogRoute = lazy(() => import("../play-catalog/PlayCatalogRoute.js"));
+const ToyPlayLabRoute = lazy(() => import("../play-catalog/ToyPlayLabRoute.js"));
 const LearningPlayLab = lazy(() =>
   import("@pieai/university-ui/learning-play/LearningPlayLab.js").then((mod) => ({
     default: mod.LearningPlayLab,
@@ -261,6 +262,8 @@ export function MainRouter({
         <Suspense fallback={<RouteFallback />}>
           {view.collection === "catalog" ? (
             <PlayCatalogRoute />
+          ) : view.collection === "toy-3d" ? (
+            <ToyPlayLabRoute />
           ) : (
             <LearningPlayLab
               key={view.collection ?? "foundations"}
