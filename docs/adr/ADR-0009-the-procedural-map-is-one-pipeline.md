@@ -23,6 +23,25 @@ superseded_by: null
 
 # ADR-0009: The Procedural Map Is One Pipeline, Not Three Scenes
 
+## R53 dense-domain correction: budget the overview, preserve the catalogue
+
+The jointed rock geometry increased the cost of each tiny atmospheric island.
+The unchanged four-domain / thirty-study browser fixture exposed 556,827 full-frame
+triangles, over its 300,000 ceiling. A globe is a study selector, not the complete
+archipelago: populated regions now share a target of thirty representatives per
+domain, bounded by the existing per-region three/five viewport limit. Each populated
+study retains at least its first canonical course even beyond that soft target;
+empty studies consume no representative quota. The full course catalogue, every
+study entry/hit target, ordering, region placement and course/series projections
+are unchanged. No mesh is thinned, no study is hidden and no test budget is raised.
+
+`atmospheric-regions.ts` owns the allocation for both the worker and inspector.
+The cache key includes exactly the emitted course prefix: progress/label changes
+do not rebake it, but a course or density transition does. Sparse domains keep the
+same three/five miniatures as before. Independent unit cases cover sparse/dense
+and empty studies, identity, ordering, actual index counts and cache transitions;
+the normal complete Stage browser check remains the acceptance gate.
+
 The current R50 projection retains this pipeline. Upland groves read the existing
 field; rock-rooted foliage reads the bank's actual emitted triangle datums.
 Renderer and inspector consume the same successfully fitted replacement IDs,

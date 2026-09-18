@@ -22,10 +22,19 @@ export async function humanClick(
   options?: HumanClickOptions,
 ): Promise<void> {
   await target.waitFor({ state: "visible" });
-  await target.scrollIntoViewIfNeeded();
   let lastStack = "空";
 
   for (let attempt = 0; attempt < 8; attempt += 1) {
+    // A settled screen may replace a control while progress is adopted into
+    // its new account scope. The locator owns the current control, not the
+    // retired node or its old scroll position. Nothing has been pressed yet.
+    try {
+      await target.scrollIntoViewIfNeeded();
+    } catch (error) {
+      if (!(error instanceof Error) || !/not attached to the DOM/.test(error.message)) throw error;
+      await target.waitFor({ state: "visible" });
+      continue;
+    }
     await waitForStableBox(target);
     const box = await target.boundingBox();
     if (!box || box.width < 2 || box.height < 2) {
@@ -53,14 +62,22 @@ export async function humanClick(
         break;
       }
     }
-    await handle.dispose();
     if (!chosen) {
+      await handle.dispose();
       await page.waitForTimeout(150);
       continue;
     }
 
     await page.mouse.move(chosen.x, chosen.y);
     await page.waitForTimeout(40);
+    // Hover, scroll and a finishing layout transition may move a previously
+    // hittable target. Follow it before pressing, like a real hand; never
+    // retry an already-dispatched click or force through an overlay.
+    await waitForStableBox(target);
+    const afterHover = await hitTest(page, handle, chosen);
+    lastStack = afterHover.describe;
+    await handle.dispose();
+    if (!afterHover.hittable) continue;
     await options?.beforePress?.();
     await page.mouse.down({ button: "left" });
     await page.waitForTimeout(40);

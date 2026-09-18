@@ -483,7 +483,8 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
     await readAndAnswerFirstLesson(page);
     await waitForSettlementProgress(page);
     const backToCourse = page.getByRole("button", { name: /回关卡地图/ }).first();
-    await backToCourse.scrollIntoViewIfNeeded();
+    // The pointer helper reacquires and scrolls the live control if the
+    // completed-lesson view remounts before the first physical press.
     await humanClick(page, backToCourse, "回到课程岛");
     await expect(page).toHaveURL(`${ONLINE_ORIGIN}${FIRST_COURSE_ROUTE}`);
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
