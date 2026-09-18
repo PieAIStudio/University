@@ -319,9 +319,9 @@ export function WorldMapCanvas({
                   data-course-rewrite-marker={isCourseRewriteMarker ? "true" : undefined}
                   aria-label={marker.label ?? marker.text}
                   aria-haspopup="dialog"
-                  onClick={() => {
+                  onClick={(event) => {
                     if (draggedRef.current) return;
-                    recordMapTravel(travelClock, marker.id, performance.now());
+                    recordMapTravel(travelClock, marker.id, event.timeStamp);
                     marker.activate?.();
                   }}
                 >
@@ -356,9 +356,9 @@ export function WorldMapCanvas({
               aria-description={marker.label ?? courseState}
               style={{ "--placed": 0 } as CSSProperties}
               data-course-rewrite-marker={isCourseRewriteMarker ? "true" : undefined}
-              onClick={() => {
+              onClick={(event) => {
                 if (draggedRef.current) return;
-                recordMapTravel(travelClock, marker.id, performance.now());
+                recordMapTravel(travelClock, marker.id, event.timeStamp);
                 marker.activate?.();
               }}
             >
