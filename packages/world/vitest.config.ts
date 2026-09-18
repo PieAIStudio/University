@@ -24,12 +24,17 @@ export default defineConfig({
             "src/world-course-projection.test.ts",
             "src/island/island-geometry.test.ts",
           ],
+          // Seed matrices each build many complete islands. Unbounded worker
+          // fan-out made the same shoulder test take >60s versus 8.98s alone.
+          // Bound concurrent work instead of weakening its hang guard or data.
+          maxWorkers: 2,
           testTimeout: 60_000,
-          sequence: { groupOrder: 0 },
+          sequence: { groupOrder: 1 },
         },
       },
       {
-        // CPU budgets need an uncontended runner, after the seeded suite.
+        // CPU budgets need a cold, uncontended runner before the seeded suite.
+        // The package script starts these projects in separate processes.
         // The 60-shape topology matrix also belongs here: in R32 it took
         // 36s alone but exceeded 60s under concurrent geometry workers.
         // The cache probe measured 2.4ms alone versus 24.3ms in that same
@@ -47,7 +52,7 @@ export default defineConfig({
           fileParallelism: false,
           maxWorkers: 1,
           testTimeout: 60_000,
-          sequence: { groupOrder: 1 },
+          sequence: { groupOrder: 0 },
         },
       },
     ],
