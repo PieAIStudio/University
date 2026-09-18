@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { assertNoUnexplainedShrink } from "./import-shrink.mjs";
+import { primmFixture } from "../../../packages/core/dist/learning-play/fixtures/primm.js";
 
 const evidence = [{ sourceUrl: "https://www.nasa.gov/example", kind: "fact" }];
 function packageOf() {
@@ -48,6 +49,61 @@ function fixture(change = () => {}) {
 }
 
 describe("the importer preserves evidence while accepting shorter real revisions", () => {
+  function primmRevision(change = () => {}) {
+    return fixture((before, after) => {
+      const old = before.course.units[0].lessons[0],
+        next = after.course.units[0].lessons[0];
+      old.exercises[0].kind = "choice";
+      old.exercises[0].options = [
+        { id: "a", text: "A" },
+        { id: "b", text: "B" },
+      ];
+      const activity = structuredClone(primmFixture);
+      activity.make.exerciseId = "exercise";
+      next.activities = [activity];
+      next.content = `# A useful task\n\n::play{#${activity.id}}`;
+      next.evidence = [...evidence, { sourceUrl: activity.source.url, kind: "fact" }];
+      next.exercises = [
+        {
+          id: "exercise",
+          kind: "explain",
+          rubric: ["Do the independent task"],
+          evidence: next.evidence,
+        },
+      ];
+      next.assets.push({ metadata: { id: "audio" }, dataBase64: "new-audio" });
+      change(old, next);
+    });
+  }
+
+  it("permits a validated new PRIMM Make exercise and added audio without losing prior material", () => {
+    const f = primmRevision();
+    expect(assertNoUnexplainedShrink(f.previous, f.next, f.read)).toHaveLength(1);
+  });
+
+  it.each([
+    (_old, next) => {
+      next.evidence.shift();
+    },
+    (_old, next) => {
+      next.assets[0].dataBase64 = "changed-image";
+    },
+    (_old, next) => {
+      next.exercises[0].evidence = [];
+    },
+    (_old, next) => {
+      next.activities[0].make.exerciseId = "other";
+    },
+    (_old, next) => {
+      next.activities[0].method = "invented";
+    },
+    (_old, next) => {
+      next.contentRevision = 1;
+    },
+  ])("rejects material loss or an unbound/in-place migration despite PRIMM labels", (change) => {
+    const f = primmRevision(change);
+    expect(() => assertNoUnexplainedShrink(f.previous, f.next, f.read)).toThrow("unexplained");
+  });
   it("allows revised card and question wording only in the newer containing lesson", () => {
     const f = fixture((before, after) => {
       for (const pkg of [before, after]) {

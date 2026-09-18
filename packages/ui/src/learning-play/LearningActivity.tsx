@@ -22,12 +22,13 @@ import { ContextGame } from "./ContextGame.js";
 import { AgentGame } from "./AgentGame.js";
 import { EvalGame } from "./EvalGame.js";
 import { RepairGame } from "./RepairGame.js";
+import { PrimmLesson, type PrimmLessonProps } from "./PrimmLesson.js";
 import { InteractionPath } from "./InteractionPath.js";
 import { PlayIcon } from "./PlayIcon.js";
 import type { ActivityControls } from "./controls.js";
 import type { LessonAssetView } from "../view/lesson-view.js";
 
-export interface LearningActivityProps {
+export interface LearningActivityProps extends Omit<PrimmLessonProps, "activity"> {
   readonly activity: LearningActivitySpec;
   /**
    * The other difficulties this activity was authored at.
@@ -103,6 +104,7 @@ function renderGame(activity: LearningActivitySpec, controls: GameControls) {
       return <EvalGame activity={activity} {...controls} />;
     case "ai-repair":
       return <RepairGame activity={activity} {...controls} />;
+    case "primm":
     case "interaction-path":
       return null; // The path owns one shell for all its rounds, routed below.
     default: {
@@ -116,7 +118,9 @@ function renderGame(activity: LearningActivitySpec, controls: GameControls) {
 
 /** Embeddable in a lesson, a standalone section, or a host-owned playlist. */
 export function LearningActivity(props: LearningActivityProps) {
-  return props.activity.kind === "interaction-path" ? (
+  return props.activity.kind === "primm" ? (
+    <PrimmLesson {...props} activity={props.activity} />
+  ) : props.activity.kind === "interaction-path" ? (
     <InteractionPath
       key={`${props.occurrenceId ?? "standalone"}:${props.activity.id}`}
       {...props}

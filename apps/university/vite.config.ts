@@ -124,6 +124,9 @@ function serveImportedContent(mode: string): Plugin {
     if (file.endsWith(".svg")) return "image/svg+xml";
     if (file.endsWith(".jpg") || file.endsWith(".jpeg")) return "image/jpeg";
     if (file.endsWith(".webp")) return "image/webp";
+    if (file.endsWith(".wav")) return "audio/wav";
+    if (file.endsWith(".mp3")) return "audio/mpeg";
+    if (file.endsWith(".mp4")) return "video/mp4";
     return "application/octet-stream";
   }
   return {
@@ -157,6 +160,13 @@ function serveImportedContent(mode: string): Plugin {
           return;
         }
         res.setHeader("Content-Type", mimeFor(target));
+        // Native audio needs a finite resource length rather than an unknown
+        // chunked stream to expose duration and seek controls consistently.
+        res.setHeader("Content-Length", statSync(target).size);
+        if (req.method === "HEAD") {
+          res.end();
+          return;
+        }
         createReadStream(target).pipe(res);
       });
     },

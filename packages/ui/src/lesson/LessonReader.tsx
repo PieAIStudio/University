@@ -11,6 +11,8 @@ import {
   type SourceAccessPort,
 } from "@pieai/university-core";
 
+import { PrimmLessonReader } from "./PrimmLessonReader.js";
+import type { RunPrimm } from "../learning-play/PrimmLesson.js";
 import { LearningActivity } from "../learning-play/LearningActivity.js";
 import { MarkdownContent } from "../markdown/MarkdownContent.js";
 import { Tip } from "../Tip.js";
@@ -74,30 +76,8 @@ interface SourceReturnFocus {
   readonly triggerId: string | null;
 }
 
-export function LessonReader({
-  locator,
-  view,
-  completion,
-  unitObjective,
-  reader,
-  grading,
-  readEntitlements,
-  sourceAccess,
-  progress,
-  review,
-  requestToken,
-  onLearningChanged,
-  neighbours,
-  onOpenLesson,
-  onBackToCourse,
-  onFollowLink,
-  onReturn,
-  onWorthwhileProgress,
-  completionDestination,
-  toolbarExtras,
-  breadcrumb,
-  answerDraftScope = "local-guest",
-}: {
+export type LessonReaderProps = {
+  readonly runPrimm?: RunPrimm;
   readonly locator: LessonRef;
   readonly view: LessonView;
   /** The core read model's answer for this current lesson snapshot. */
@@ -131,7 +111,41 @@ export function LessonReader({
   readonly breadcrumb?: Omit<LessonBreadcrumbsProps, "lessonTitle">;
   /** Identity boundary for browser-only, unsubmitted exercise recovery. */
   readonly answerDraftScope?: string;
-}) {
+};
+
+export function LessonReader(props: LessonReaderProps) {
+  const activity = props.view.lesson.activities?.find((item) => item.kind === "primm");
+  return activity ? (
+    <PrimmLessonReader {...props} activity={activity} />
+  ) : (
+    <LegacyLessonReader {...props} />
+  );
+}
+
+function LegacyLessonReader({
+  locator,
+  view,
+  completion,
+  unitObjective,
+  reader,
+  grading,
+  readEntitlements,
+  sourceAccess,
+  progress,
+  review,
+  requestToken,
+  onLearningChanged,
+  neighbours,
+  onOpenLesson,
+  onBackToCourse,
+  onFollowLink,
+  onReturn,
+  onWorthwhileProgress,
+  completionDestination,
+  toolbarExtras,
+  breadcrumb,
+  answerDraftScope = "local-guest",
+}: LessonReaderProps) {
   const { locale } = useI18n();
   const interactionPath = view.lesson.activities?.find(
     (activity) => activity.kind === "interaction-path",

@@ -25,14 +25,23 @@ async function setControls(page: Page, area: Locator, ids: readonly string[]) {
   }
 }
 
-test("V2 uses five real revisions, visible materials and independent choice questions", () => {
-  expect(samples.map((s) => s.lesson.id)).toEqual([
+test("stored V2 remains valid; the five revised pilot lessons now use PRIMM", () => {
+  const primm = SHIPPED_COURSES.flatMap((course) =>
+    course.units.flatMap((unit) => unit.lessons),
+  ).filter((lesson) =>
+    (lesson.packageLesson.activities as { kind: string }[] | undefined)?.some(
+      (activity) => activity.kind === "primm",
+    ),
+  );
+  expect(primm.map((lesson) => lesson.id)).toEqual([
     "ask-about-a-picture",
     "sound-words-and-meaning",
     "name-the-result",
     "edit-one-part",
     "answer-or-search",
   ]);
+  // Detailed V2 DOM/rule tests remain beside InteractionPath. Runtime flow
+  // coverage for these new immutable revisions is in primm.spec.ts.
   for (const { lesson, activity } of samples) {
     expect(activity.context?.introduction).toBeTruthy();
     expect(activity.materials?.some((m) => m.kind === "source-summary")).toBe(true);

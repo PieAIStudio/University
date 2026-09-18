@@ -149,6 +149,8 @@ function decodeAsset(dataBase64) {
 }
 
 const EXTENSIONS = {
+  "audio/wav": "wav",
+  "audio/mpeg": "mp3",
   "image/png": "png",
   "image/jpeg": "jpg",
   "image/webp": "webp",

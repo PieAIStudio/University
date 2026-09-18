@@ -501,7 +501,8 @@ export interface LessonAssetView {
     | "authorized-external"
     | "diagram"
     | "ai-illustration"
-    | "screen-recording";
+    | "screen-recording"
+    | "synthetic-audio";
   readonly mime: string;
   readonly url: string;
   readonly posterUrl?: string;

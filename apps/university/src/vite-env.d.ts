@@ -1,4 +1,5 @@
 interface ImportMetaEnv {
+  readonly VITE_UNIVERSITY_PRIMM_PREVIEW_URL?: string;
   readonly VITE_SWIMMER_BACKEND_SUPABASE_URL?: string;
   readonly VITE_SWIMMER_BACKEND_PUBLISHABLE_KEY?: string;
   readonly VITE_UNIVERSITY_GRADING_URL?: string;

@@ -39,9 +39,12 @@ describe("the play lab offers every game that exists", () => {
   const offered = new Set<string>([...FOUNDATION_MODES, ...AI_MODES]);
 
   it("lists every kind the wire enum accepts", () => {
-    // A path orchestrates authored lesson rounds; it is not a standalone lab game.
-    // InteractionPath.test covers its three actions through the shared host.
-    const declared = LessonActivityKindSchema.options.filter((kind) => kind !== "interaction-path");
+    // Paths and PRIMM orchestrate complete authored lessons, not standalone games.
+    // Both are reachable in the course group of the common catalog. Their real
+    // controls have dedicated UI tests and bilingual/mode browser flow coverage.
+    const declared = LessonActivityKindSchema.options.filter(
+      (kind) => kind !== "interaction-path" && kind !== "primm",
+    );
     expect([...declared].filter((kind) => !offered.has(kind))).toEqual([]);
   });
 

@@ -754,10 +754,15 @@ function checkDispatch(activity, where) {
   }
 }
 
-const { LessonActivitySchema: PathActivitySchema } =
+const { LessonActivitySchema: PathActivitySchema, interactionLessonIssues } =
   await import("../../../packages/core/dist/domain/schemas.js");
 
 const CHECKS = {
+  primm: (activity, where) => {
+    const result = PathActivitySchema.safeParse(activity);
+    if (!result.success)
+      problems.push(...result.error.issues.map((issue) => `${where}: ${issue.message}`));
+  },
   "interaction-path": (activity, where) => {
     const result = PathActivitySchema.safeParse(activity);
     if (!result.success)
@@ -825,10 +830,24 @@ for (const studyId of dirs(studiesRoot)) {
         const where = `${studyId}/${courseId}/${unitId}/${lessonId}`;
         const declared = manifest.activities ?? [];
         checkActivitySet(declared, content, where, "清单", "");
+        if (declared.some((activity) => activity.kind === "primm"))
+          problems.push(
+            ...interactionLessonIssues({ ...manifest, content }).map(
+              (message) => `${where}: ${message}`,
+            ),
+          );
 
         for (const activity of declared) {
           activities += 1;
           checkSource(activity, `${where} · ${activity.id}`, studyId);
+          if (activity.kind === "primm") {
+            for (const source of activity.sources ?? [])
+              checkSource(
+                { source: source.reference },
+                `${where} · ${activity.id}/${source.id}`,
+                studyId,
+              );
+          }
           checkRolePosition(activity, content, `${where} · ${activity.id}`);
           const check = CHECKS[activity.kind];
           if (check) check(activity, `${where} · ${activity.id}`);
@@ -873,6 +892,13 @@ if (!existsSync(deliveryRoot)) {
             "交付包",
             "——读者会看到一块报错",
           );
+          if (lesson.activities?.some((activity) => activity.kind === "primm"))
+            problems.push(
+              ...interactionLessonIssues({
+                ...lesson,
+                assets: (lesson.assets ?? []).map((asset) => asset.metadata ?? asset),
+              }).map((message) => `${where}: ${message}`),
+            );
         }
       }
     }

@@ -7,7 +7,7 @@ export const CATALOG_GROUPS = ["native", "paths", "blocks", "arcade", "history"]
 export type CatalogGroup = (typeof CATALOG_GROUPS)[number];
 export type PrototypeSource = "blocks" | "arcade" | "index" | "remade" | "compare";
 export type PrototypeSources = Readonly<Record<PrototypeSource, string>>;
-export type NativeKind = Exclude<ActivityKind, "interaction-path">;
+export type NativeKind = Exclude<ActivityKind, "interaction-path" | "primm">;
 export interface CatalogEntry {
   readonly id: string;
   readonly group: CatalogGroup;

@@ -189,7 +189,7 @@ export const messages = {
   "gallery.session": "Multi-stage · human duration unmeasured",
   "gallery.short": "Short round · human duration unmeasured",
   "gallery.pathsScope":
-    "The first five V2 lessons and the retained lesson 19 experiment share one implementation; they are not six new game engines.",
+    "The first five lessons feature the complete PRIMM sequence; Lesson 19 preserves an earlier experiment. Open a lesson and follow the current step.",
   "gallery.openLesson": "Open lesson",
   "gallery.pathAction":
     "Judge, locate evidence, change constraints and repair using the same material",
@@ -213,14 +213,14 @@ export const messages = {
     "Keep material present across predictions, actions and self-checks",
   "gallery.history.compare.name": "Original and remade comparison",
   "gallery.history.compare.action": "Compare reading the source lesson with continuous interaction",
-  "gallery.lesson.ask-about-a-picture": "How can I have AI help me understand a photo?",
+  "gallery.lesson.ask-about-a-picture": "When you see a photo, how do you ask AI about it?",
   "gallery.lesson.sound-words-and-meaning":
-    "How Can You Ask AI to Turn Speech into the Text You Need?",
+    "Can't hear an English voicemail clearly? How AI can help",
   "gallery.lesson.name-the-result":
-    "How should you state your request to get AI to write what you need?",
+    "To make AI write something useful, how do you state your requirements clearly?",
   "gallery.lesson.edit-one-part":
-    "When you only want to revise one section of text, how do you tell AI where to make changes?",
+    "Just want to change one sentence? How to keep AI from rewriting the whole thing?",
   "gallery.lesson.answer-or-search":
-    "When you're missing materials, how do you ask AI to search for you?",
+    "When you want to visit a place, how can AI help you check it clearly for you?",
   "gallery.lesson.follow-a-claim": "Can one link support a whole paragraph?",
 } as const;

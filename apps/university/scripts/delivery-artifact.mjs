@@ -19,6 +19,7 @@ import { isAbsolute, join, relative, resolve, sep } from "node:path";
 
 import { checkShelfData } from "./check-shelf.mjs";
 import { crossUnitLessonIdentityErrors } from "../../../scripts/lesson-identity.mjs";
+import { LessonActivitySchema } from "@pieai/university-core/domain/schemas.js";
 
 export const RELEASE_SCHEMA_VERSION = 1;
 export const RELEASE_ARTIFACT_KIND = "university-delivery";
@@ -362,6 +363,7 @@ export function validateSourceCommit(commit) {
 /** Shared recursive public DTO gate used by both tests and release checking. */
 export function publicDtoViolations(value, path = "package") {
   const found = [];
+  const instructionalAnswers = new Set();
   const visit = (current, at) => {
     if (typeof current === "string") {
       for (const pattern of AUTHOR_ONLY_VALUE_PATTERNS) {
@@ -374,13 +376,27 @@ export function publicDtoViolations(value, path = "package") {
       return;
     }
     if (current === null || typeof current !== "object") return;
+    // A validated PRIMM Investigate question has learner-facing explanation
+    // prose, not the independent Make assessment's hidden reference answer.
+    // Allow only those exact string positions; every value and nested field
+    // still traverses the normal author-route and answer-leak checks.
+    if (
+      ACTIVITY_CITATION_AT.test(at) &&
+      current.kind === "primm" &&
+      LessonActivitySchema.safeParse(current).success
+    ) {
+      current.investigate.more?.forEach((_item, index) =>
+        instructionalAnswers.add(`${at}.investigate.more[${index}].answer`),
+      );
+    }
     for (const [key, child] of Object.entries(current)) {
       if (
         key !== "answerKey" &&
         (ANSWER_KEY_PATTERN.test(key) ||
           AUTHOR_ONLY_KEY_SET.has(key) ||
           (INDEPENDENT_EXERCISE_AT.test(at) && /^(correctOptionId|correct)$/.test(key))) &&
-        !meansSomethingElseInsideAnActivity(key, at)
+        !meansSomethingElseInsideAnActivity(key, at) &&
+        !(key === "answer" && typeof child === "string" && instructionalAnswers.has(`${at}.${key}`))
       ) {
         found.push(`${at}.${key}`);
       }

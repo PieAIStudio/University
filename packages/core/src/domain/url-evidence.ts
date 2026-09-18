@@ -84,6 +84,7 @@ interface ParsedUrl {
   readonly username: string;
   readonly password: string;
   readonly port: string;
+  readonly pathname: string;
 }
 
 /**
@@ -123,6 +124,13 @@ export function urlEvidenceIssue(raw: string): string | null {
     return "URL evidence must use the standard HTTPS port";
   }
   const host = parsed.hostname.toLowerCase();
+  if (
+    host === "github.com" &&
+    /\/blob\//.test(parsed.pathname) &&
+    !/\/blob\/[a-f0-9]{40}\//i.test(parsed.pathname)
+  ) {
+    return "GitHub source files must be pinned to a full commit";
+  }
   if (FORBIDDEN_EVIDENCE_HOSTS.some((entry) => hostMatches(host, entry))) {
     return `URL evidence must not cite the adopted source site (${host})`;
   }

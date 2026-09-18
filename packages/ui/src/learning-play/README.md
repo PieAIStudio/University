@@ -1,5 +1,44 @@
 # 互动课件
 
+## 当前试验：完整 PRIMM（`primm`）
+
+当前日常应用版本声明 `experienceVersion: 2`：真实案例只作开场引子，练习材料可以另选。
+五阶段分别使用预想、材料加入与发送、内容操作、可编辑请求拼接、新任务作品制作。
+`PrimmAttachment` 与 `PrimmRequestWorkbench` 是同一宿主中的共享操作，不是另一份课程
+或新的教学方法。请求片段可编辑、排序、删除，显示的组合文本就是实际运行输入。
+Make 不预填整段答案。`practice` 材料不冒充官方事实；电脑合成练习语音单独标明。
+
+单一原生课程载荷固定 Predict → Run → Investigate → Modify → Make。生活情境与
+真实案例的联系放在第一步，运行使用同一份输入，预测错误不锁住下一步。Investigate
+支持真实图片选区、语义分拣、资料排版、局部修改和来源收集；Modify 修改请求后实际
+重跑；Make 绑定同一节的原生 explain 练习，评估真实请求与最终作品，不另附一套题。
+
+`PrimmLessonReader` 在既有共享 reader 中组织此方法，两模式使用同一实现。当前只呈现
+一个阶段；不渲染旧的额外阅读确认、提前练习、每轮原文/来源清单和诊断记录。退出与
+完成返回课程地图。过程保存按账号、课节、版本和语言隔离，历史 read/grade 数据不改写。
+
+执行通过 `GradingPort.executePrimm`，评估通过原生 `submitExercise` 与 ProgressPort。
+没有执行能力时诚实失败、保留文本，不回填示例。当前 Owner 本机预览明确启用独立的
+loopback 服务，使用 SwimmerAIKit 的 transport/generator 扩展连接本机 Ollama 与
+Whisper；没有供应商密钥、工具执行权限、钱包扣费或公共无限模型接口。生产环境默认
+不开启此预览适配器。运行结果、作者制作的游戏材料和来源记录分别标明。
+
+本机样板在工作树根目录用 `pnpm primm:preview` 启动；它编译执行服务，再同时启动
+23150 页面和 23151 受限执行端。端口占用时明确退出，不停止其他进程。服务已运行
+就直接使用，不再启动第二份。退出启动器只停止它自己启动的页面和执行服务，不关闭
+整台机器的 Ollama。调用未配置或失败不填回示例。
+
+这台机器的预备条件是本机 Ollama 的 `university-primm-local`（由
+`scripts/primm-preview.Modelfile` 配置）及 `.scratch/primm-five/asr-venv` 和
+`asr-models/tiny.en.pt`。运行课程不会下载模型。新机器要单独准备这些能力；本轮没有
+发布自动安装器。模型仅用于本机样板。新的第五节使用已给定的官网资料快照，不声称
+实时或全网搜索；早期 `source-search` 操作仍只允许指定的 NASA 页面。生产服务接入
+仍应沿品牌 Kit、鉴权和成本管理完善后再发布。
+
+写课职责仍唯一归 `apps/local/.agents/skills/write-lesson/`；schema、纯规则与来源绑定归
+core。`primm` 是教学方法载荷，不把它算成第十四种独立小游戏。下面 V1/V2 是已有
+内容的兼容说明，不与 PRIMM 争夺新课流程。
+
 ## 互动主线实验（`interaction-path`）
 
 ### 当前 V2：真实材料贯穿学习

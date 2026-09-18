@@ -1,9 +1,10 @@
-# Five content-led variants — V2
+# Five content-led lenses within PRIMM
 
 The five names remain `现象`, `对比`, `溯源`, `决策`, `术语`. They describe the
-learning problem, not a visual component or a quota. A V2 path uses the same real
-material for a grounded first judgment, explanations and practice, then a changed
-condition. Several responsibilities may share one tool; no six-game requirement.
+learning problem, not a visual component or a quota. These are University content categories, not five variants claimed by PRIMM authors.
+Each new pilot lesson keeps Predict → Run → Investigate → Modify → Make. The
+category helps choose materials and operations, especially in Investigate and
+Modify; it never reorders or omits phases to fit a component.
 
 | Variant | Main action | Must preserve | Typical failure |
 | --- | --- | --- | --- |
@@ -19,8 +20,8 @@ record why it is content-led rather than silently manufacturing a new variant.
 
 ## Responsibilities, not headings
 
-Reality/context → reasoned attempt → nearby explanation → practice → changed
-condition → useful recap. Show task-specific headings and concrete actions to the
+Predict → Run → Investigate → Modify → Make. Everyday relevance and real-world
+context belong at Predict entry; explanations sit where the task needs them. Show task-specific headings and concrete actions to the
 learner, not the author's labels. Opening may be normal, not surprising.
 A decision can be multiple choice; an answer can be a visible result; a summary
 need not be another interaction. At least one meaningful action must require a
@@ -28,7 +29,7 @@ judgment or construction, not merely clicking to reveal all text.
 
 For `决策`, preserve the substance of “什么时候该反过来”, visibly in the path or
 its related explanation, not only buried in full prose. For `术语`, likewise
-preserve “它不是什么”. V2 has no mandatory heading strings for these duties.
+preserve “它不是什么”. PRIMM has no mandatory University heading strings for these duties.
 
 ## Stored legacy content
 

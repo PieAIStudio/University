@@ -1,10 +1,18 @@
 # 互动课件：配哪个，放哪儿
 
-本页其余部分描述原有独立玩法。Owner 明确选择互动主线实验时，使用一个
-`interaction-path` 编排短回合，不把每个回合计成一份大组件，也不要求第二次
-练习必须教另一个知识点。重复同一能力但改变条件可以有意义；仅换一种点法却
-重复同一句结论不算新学习。实验的精确载荷、来源、双语与独立练习边界见
-[shared activity contract](../../../../../packages/ui/src/learning-play/README.md)。
+Current pilot: complete PRIMM, native `primm` activity. The five phases do not
+change to fit the board. Choose meaningful operations within Investigate/Modify;
+Make is independently assessed native work. `interaction-path` below describes
+stored V1/V2 compatibility, not the current method.
+
+The everyday pilot uses `experienceVersion: 2`. Plan five distinct learner acts,
+not five copies of a choice board: predict an output; place the prepared material
+into a conversation and send it; investigate by manipulating the relevant object;
+build an editable request from partial phrases and own words, then execute it;
+change the input/purpose and independently make something useful. The fragments
+are writing scaffolding, not a magic correct answer. Previous observations can
+carry into Modify; Make does not prefill the solution. Reuse existing game engines
+when the task fits, and add a typed shared operation only for a concrete need.
 
 十三种玩法的实现、载荷字段和引擎规则在
 [shared activity contract](../../../../../packages/ui/src/learning-play/README.md)。
@@ -13,7 +21,7 @@
 决定在**挑变体的同一步**做，不是课文写完之后再想。写完再配，配出来的一定是
 "给这段话找个游戏"，而不是"这件事本来就该动手才懂"。
 
-## V2: choose the learning action first
+## Stored V2: choose the learning action first (compatibility)
 
 V2 uses one `interaction-path` as the continuous host, with `pedagogyVersion: 2`.
 Its small decisions, material inspection, assembly/repair and exhaustive state
@@ -146,11 +154,10 @@ V2 的现实背景与具名材料负责铺垫，操作说明负责告诉读者�
 - 六个 connect 里有两个是一对多。**一对多不是错**，但它是默认读法的例外，
   例外必须写出来。
 
-## 数量、难度、轮换
+## 旧式独立组件的数量、难度、轮换（不规定 PRIMM 阶段）
 
-- **一节至少 1 个，常态 1 个。** 下限由 schema 强制，见开头。上限是 3，
-  但两个组件会把读者的注意力从内容拽到玩法上——这和课文里禁止塞趣闻是同一条理由，
-  同样是实测的反向效应。第 2 个要在 report 里说明它教的是另一件事。
+- 旧式课文载荷仍沿用原有数量边界；这不是研究证明多个相关操作有害。
+  PRIMM 用一个方法载荷编排五阶段，不能把旧式数量上限解释成每节只准一个学习动作。
 - **难度跟着单元走**：前 1/3 用 `intro`，中间 `practice`，收口的那节可以 `challenge`。
 - **同一单元里最多两节连用同一种玩法**，和变体轮换是同一条线。第三节还要用同一种，
   就在 agent report 里说明为什么这是诚实的选择，而不是硬凑一个别的。

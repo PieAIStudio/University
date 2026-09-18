@@ -20,9 +20,9 @@ const samples = SHIPPED_COURSES.flatMap((course) =>
 );
 
 const legacySamples = samples.filter(({ activity }) => activity.pedagogyVersion !== 2);
-test("five V2 lessons and the retained V1 lesson share the normal course package", () => {
-  expect(samples).toHaveLength(6);
-  expect(samples.filter(({ activity }) => activity.pedagogyVersion === 2)).toHaveLength(5);
+test("the retained V1 lesson keeps its original interaction contract", () => {
+  expect(samples).toHaveLength(1);
+  expect(samples.filter(({ activity }) => activity.pedagogyVersion === 2)).toHaveLength(0);
   expect(legacySamples.map((sample) => sample.lessonId)).toEqual(["follow-a-claim"]);
   for (const { activity } of legacySamples) {
     expect(activity.steps).toHaveLength(4);

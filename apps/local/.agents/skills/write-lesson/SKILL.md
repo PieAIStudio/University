@@ -1,204 +1,232 @@
 ---
 name: write-lesson
-description: Write or rewrite a real-source University lesson using the V2 material-first interactive teaching contract. Use when authoring a new lesson, rewriting a wall-of-conclusions lesson, reviewing lesson prose against the five variants, or when the user says 读不进去, 重写这节课, 重写课文, 改写成能读的, 太干, or 语气再循循善诱一些. Also use when beginner Chinese is vague, shorthand, jargon-heavy, or mixes literal explanation with analogy. Covers real-world material continuity, meaningful interaction, short explanations, changed-condition application, plain-language beginner scaffolding, literal-first explanations, clearly marked analogies, inline [[evidence:]] anchors, and cross-lesson links. It may be invoked by refresh-study for a stale lesson, but it is never the refresh entry point. Do not use for course/unit planning, card/exercise scheduling alone, UA analysis, refresh-study orchestration, knowledge-node saves, teach-from-study tutoring, or ordinary app engineering.
+description: Write or revise a real-source University lesson with complete PRIMM: Predict, Run, Investigate, Modify, Make. Use for lesson authoring, beginner guidance, case-to-life relevance, interactive game selection, linear learning, confusing or redundant lesson copy, and rewrites. Owns sources, teaching, learner text, cards, independent Make assessment, review, actual local Gemini Flash polish and native revision proposals. Not course planning, ordinary coding, refresh orchestration or publication.
 metadata:
-  version: "2.1.0"
+  version: "3.1.0"
 ---
 
-# Write a lesson — V2
+# Write a lesson — complete PRIMM
 
-Version 2 is the canonical authoring contract. One real-world material set supports
-one useful learning task. The learner encounters real context, makes meaningful
-choices, sees their consequences, receives short explanations, and tries a changed
-condition. Preserve the five variants, not six compulsory screens or games.
+The Owner-selected method is **Predict → Run → Investigate → Modify → Make**.
+Do not invent another sequence to accommodate a component or an old article reader.
+This five-lesson pilot completes all five phases within each lesson. PRIMM itself
+allows phases to span lessons; our one-lesson scope is a product choice, not a
+research claim. Sources: [PRIMM authors](https://primmportal.com/) and
+[teaching explanation](https://teachcomputing.org/blog/using-primm-to-structure-programming-lessons/).
+Use in adult AI self-study is an application of a programming-teaching method,
+not evidence that classroom effect sizes apply here.
 
-V2 is an explicit new-revision choice, not a bulk migration. Existing ordinary
-prose and V1 interaction revisions remain valid under their stored contracts.
-Their historical heading rules live in the validator and Git history; they do not
-force a new V2 lesson to become an article with games appended.
+This file is the sole current writing contract. Prose, V1 and V2 stored revisions
+keep their existing validators and immutable bytes. A new PRIMM revision uses the
+native typed `primm` activity; it does not relabel old multiple-choice rounds.
 
 ## Before writing
 
-1. Read the project/module routers, current lesson, manifest and independent
-   exercises. Record latest revision and every card, exercise, source and asset ID.
-2. Run both CLI/model preflights in [models.md](references/models.md). Record the
-   actual Writer/fixer, independent Detector and **Gemini Flash Polisher** before
-   dispatch. Grok authentication failure selects the declared Codex fallback;
-   it does not waive the separate Detector or Flash polish.
-3. Read the actual cited primary sources or pinned code, not just source URLs.
-   Follow [evidence-and-failures.md](references/evidence-and-failures.md) and
-   [media.md](references/media.md). Source reachability is not support.
-4. Write a small **material-preservation map** in the run receipt: original
-   meaningful fact/context/boundary → first encounter, just-in-time explanation,
-   or optional depth. Missing core facts require a reason and correction.
-5. Choose the main learning action and [variant](references/variants.md), then
-   its [interactions](references/activities.md). Brief the writer with what the
-   learner already knows, what this lesson adds, and what not to re-explain.
+Read root and module routers, current lesson and manifest, cards, exercise,
+source and asset IDs, and the latest revision. Preflight the actual Writer/fixer,
+independent Detector and Gemini Flash Polisher using [models.md](references/models.md).
+A configuration naming a model is not proof it ran. Keep roles and actual receipts.
 
-## What cannot disappear
+Read every cited primary source or pinned code needed for the new lesson; follow
+[evidence-and-failures.md](references/evidence-and-failures.md) and [media.md](references/media.md).
+Record a short preservation map: original learning-relevant facts/boundaries →
+their new visible or just-in-time locations; retired case details → retained
+source/immutable history. Preserving evidence does not require teaching every old
+historical detail again. Preserve source, asset and assessment identities.
+Add verified sources/media when needed and report additions; do not
+silently lose originals or manufacture a repository pin for a public document.
 
-Every lesson uses real-world material: a real product/case, event, public record,
-research, authorized image/recording/screenshot, reproducible observation or pinned
-repository code. Main-path learners must encounter its identity and the context
-that explains why this is worth learning. Keeping a link or original article in a
-closed drawer alone does not preserve the experience.
+Read [variants.md](references/variants.md) and [activities.md](references/activities.md)
+before choosing interactions. Read [cards-and-exercises.md](references/cards-and-exercises.md),
+[pipeline.md](references/pipeline.md), [polish-prompt.md](references/polish-prompt.md)
+and [checklist.md](references/checklist.md) for the production and acceptance gates.
 
-Keep three things distinct: **source fact**, **teaching adaptation**, **observed AI
-run**. A task over a real announcement may be designed for teaching. A fabricated
-bad draft may illustrate an error only when clearly labelled a teaching draft;
-never call it a transcript, quote or measured model failure. A deterministic
-simulation is not a live AI call and does not prove that a prompt will work.
+## First priority: why this matters to the learner
 
-A real image cannot be replaced with a decorative approximation. Its credit, alt
-text, source identity and historical date remain accessible. Do not hide rightful
-credit to create an artificial guessing game; ask where the fact comes from.
-The current task's necessary source excerpt stays nearby. Other material can be
-reopened without losing the task. Do not force half a phone screen to stay fixed.
+### A case opens the door; it is not the whole house
 
-## Design the learning, not six boxes
+For beginner AI-use courses, distinguish three things before writing: the
+verified real-world case that demonstrates a capability; the everyday practice
+material used to learn it; and the new purpose/input used independently in Make.
+They need not be the same object. Be My Eyes is a reason to believe image questions
+are useful, not a reason to drill NASA photo history through all five phases.
+Use a brief case with its link at the opening, then explicitly hand over to the
+learner's plausible need. Keep P and R on the same prepared request/input; changing
+the introduction's case is not permission to secretly change a prediction's input.
 
-### Teach from the beginner's expectation
+Practice notices, messages and scenarios may be authored. Mark them as practice,
+never cite an unrelated official page as evidence that the invented event happened.
+Licensed photos keep their own credit. Synthetic practice speech is labelled as
+synthetic and actually consumed by ASR; a script is not a transcription result.
+Retain meaningful source evidence and immutable history without requiring every
+retained historical fact to become a task. Make assesses the usable skill, not
+memorized case names, dates or authors unless those are the lesson's actual topic.
 
-Before a question, orient the learner: what useful thing they are learning to do
-with AI, why the real material is here, and what they can do now. Lead with the
-use, not the source institution or the fact you intend to test. A short ordinary
-sentence may be enough; do not add a mandatory seventh screen or a word quota.
+### Explain to an adult who is new to AI
 
-The title's promise, opening task and first operation must address the same
-question. A lesson promising to teach asking AI about a photo cannot begin by
-quizzing the photographer's identity or source verification. First show asking,
-the kind of answer it can produce, and a useful follow-up. Introduce limits when
-the task actually reaches them; don't turn every AI-use lesson into fact checking.
+Owner requested ELI5 audience calibration. Read the installed `eli5` skill when
+available; its useful approach is purpose first, familiar example, one idea per
+sentence, then the learner's next practical use. Our audience is an intelligent
+adult with no AI background, not literally a five-year-old. No baby talk, assumed
+stupidity, compulsory toy metaphors or reduction in factual accuracy. The generic
+skill's suggestion to accept 80% accuracy does not apply to this course contract.
 
-Each later round needs a concrete bridge in `step.brief`: what is now available,
-why the learner needs a next step, and what to look at. Display the bridge before
-the question. Necessary example/material comes before the dependent choice.
-"Next, think about this" is not a bridge. Don't claim "you just made this" unless
-the prior operation really produced it; name a preset as an example instead.
+Before each action, the whole screen must answer in ordinary language: what small
+thing am I trying to do; what material am I using; what should I do now; what should
+I notice in the result? A title/control may already answer one of these. Supply
+the missing bridge in prose rather than adding four headings or repeating labels.
+Brief is not cryptic. Remove redundant UI narration, not the explanation that lets
+a beginner understand why an operation matters. Read the sequence aloud: it should
+sound like a patient person teaching, not five disconnected assignments.
 
-Write choice/constraint feedback so it explains a wrong attempt on its own.
-In V2, `step.explanation` is the after-success explanation/worked example: the
-reader shows it only after this round passes. Do not rely on it to explain a
-wrong attempt, or present a successful example as the result of a different request.
+At the opening connect the brief case to a plausible situation the learner
+recognizes. Write down: **when this could happen → what the person needs → what
+this skill helps them do → why this practice material is a useful starting point**.
+This is the opening of Predict, not a sixth stage or four displayed headings.
 
-Read the learner-visible sequence without the schema, answer key or teacher notes.
-At every stop, ask: do I know why I am here, what I am looking at, what to do, and
-how doing it helps me use AI? Fix a missing learning step before polishing words.
-The independent Detector must perform this continuity read, not only a truth or
-schema check. Wording polish cannot repair a lesson whose goal has drifted.
+For a photo, briefly introduce the real accessibility use, then say, for example,
+“现在换成你的小事。假设你想把喝咖啡时看到的画面讲给家人听。” Use a properly
+licensed everyday image for this practice, then a different image in Make. Do not
+equate an AI description with precise location, safe navigation or hidden facts.
 
-Keep these responsibilities, combining them wherever the task supports it:
+Avoid invented urgency, guaranteed benefits, and long role-play backstories.
+An ordinary need is enough. “这是 NASA 的资料” establishes a source, not a reason
+the learner should care. After reading the opening, a beginner should be able to
+say “我遇到这种事时，可以用这一招”. The first action must serve that same need.
 
-| Responsibility | Valid form |
-| --- | --- |
-| Encounter a real thing and a reason to use it | Real image/record/code plus a short, clear introduction; reading is allowed |
-| Form a grounded first judgment | Prediction, comparison, selection or small attempt; no prior unfamiliar prerequisite |
-| Understand what happened | Immediate result and explanation tied to the chosen misconception; not another compulsory game |
-| Learn the method | Modify, compare, locate or repair the same material; a short worked example when needed |
-| Apply with less help | Changed goal/input/condition, without preselected answers; not repetition of the revealed answer |
-| Take away the method or result | Actual resulting artifact OR a justified decision plus a short recap; not a forced extra quiz |
+## Five phases, real responsibilities
 
-The five variants govern learning needs; [variants.md](references/variants.md)
-explains their boundaries. Do not impose a beat count, seconds-per-click, fixed
-text ratio or compulsory standalone game at every responsibility. A few good
-operations can span several responsibilities. Longer session games are usually
-practice/consolidation choices, not mandatory additions to every small lesson.
+| Phase | Required learning act | Reject |
+| --- | --- | --- |
+| Predict | Show a prepared runnable request plus its material; form a low-stakes expectation | Requiring the correct answer before Run; source-trivia unrelated to use |
+| Run | Execute that same request/input and show the actual result; retain prediction for comparison | A canned answer relabelled live, hidden input changes, fake waiting animation |
+| Investigate | Operate on material/result to understand it; explain at the relevant moment | Another arbitrary MCQ; pretending to reveal the model’s private reasoning |
+| Modify | Edit the existing request or defined condition, run again, compare, adjust | Choosing a whole correct sentence instead of changing anything; claiming an unexecuted edit worked |
+| Make | Independently use the skill for a changed purpose or input and produce useful work | A final MCQ called making, prefilled whole solution, duplicated quiz after this task |
 
-A reveal button may guide observation but does not prove a judgment. Repeating a
-skill with a different condition can be valuable; changing hand motion alone does
-not create new learning. Content must still be understandable when help is closed.
-Required background comes before the decision that needs it; extra detail comes
-where the learner is likely to need it.
+Use task-specific readable titles, not a lecture about these labels. The shell
+already tells the learner where to act; prose does not narrate buttons. Keep one
+clear forward route and only the current phase with the materials it needs.
+Predict is not graded. A wrong prediction is a reason to observe, not a barrier.
 
-## Write for ordinary people
+Main explanation belongs in Investigate; required vocabulary or safety boundaries
+come before the action needing them. More depth uses a named question whose answer
+adds useful understanding. No standard/detail switch with virtually identical text.
+Modify can include repeated edit/run/compare operations within its phase. Make is
+the native independent task, not another guided success plus a separate same quiz.
 
-- Use **AI** to mean AI. Do not substitute 助手、助理、处理器 or vague “它” when
-  the referent is unclear. Actual human volunteers remain human volunteers.
-- Name the visible object: “NASA 的照片记录”“你的请求”“改后的文字”. Avoid
-  “前者”“形成闭环”“证据链路”“交付物” when “前一种”“检查一遍”“来源”“要做的东西” works.
-- Say what to do, to what, and what change to inspect. Do not write “操作材料”“完成
-  校准” and expect a beginner to infer the action. Use labels rather than 左边/上面
-  when responsive layout can move them.
-- Short, complete sentences. Keep necessary context, facts and uncertainty; remove
-  repeated explanations, not meaningful source material. Speak to “你”.
-- Explain literally first. Mark a useful analogy as an analogy; it cannot supply
-  factual evidence. Never “显然”“众所周知” or blame the user for needing help.
-- Do not call blind clicking “你自己查出来的”. Do not call feedback exposure “你会了”.
-  Describe observed practice accurately and leave mastery to independent evidence.
+A reference to the previous output must be true of the actual output. Do not say
+“刚才没讲位置” if this run did. Frame exploration as an inspection or a new need.
+If a requested condition was ignored by AI, identify that result failure, not an
+imaginary failure by the learner to state it. Different reasonable requests and
+outputs can meet the same goal; do not grade semantic work by a magic keyword.
 
-## Payload and single producer
+## True materials and true execution
 
-Use existing `LessonActivitySchema` kind `interaction-path` with
-`pedagogyVersion: 2`; see the typed schema and the shared component contract.
-It holds the visible real-world context, named source materials and a bounded
-sequence of `decision`, `evidence`, `assemble` and `experiment` actions. A lesson
-has one path, not several incompatible embedded course engines.
+Every lesson retains meaningful real-world material: an actual case, image,
+record, source code, research or reproducible observation. The learner encounters
+its identity and relevant meaning on the main path, not only a hidden URL footer.
+Preserve media credit, accessible text and provenance. Cite beside the relevant
+material once; do not repeat the whole source list below every phase.
 
-The first release supports boolean experiment controls, each with an explicit
-result for **every** combination. Every combination's text, feedback and current
-accepted status must agree. No “all toggles on” shortcut unless all are truly
-needed; include meaningful alternative or boundary conditions. Prior visits do
-not make a wrong current result correct. Never invent numeric budgets or physical
-mechanisms simply to fit a game engine.
+Keep **source fact**, **hypothetical practice**, **authored simulation**, **captured
+real run** and **current live run** distinct. A replay binds its exact input, assets,
+model, time and output. It cannot answer an arbitrary edited request. Switching
+to a replay is explicit. A failed live run retains work and permits retry; it must
+not silently substitute an authored response. A synthetic practice voice is labelled
+as synthetic, not as a real person’s recorded message. ASR actually consumes audio.
 
-The reader's main path uses those same authored fields. `content.md` remains a
-coherent optional review: question title, concise connected explanation, all
-source links, meaningful optional details, and exactly one `::play{#path-id}`.
-Do not reproduce all the path's questions and answers in a second course script.
-Do not hand-copy studied repository code into fences; use `[[evidence:path:lines]]`
-covered by the snapshot. Cross-lesson links remain bounded and target real lessons.
+Product calls use the existing AI-source boundary and SwimmerAIKit. Inputs,
+timeouts, concurrency and budgets are bounded. No client secrets or tool-enabled
+general agent is exposed through a lesson. No fee, account change, publish action
+or provider capability is inferred from an authoring instruction.
 
-All learner text has the supported locale versions, including context, materials,
-choices, feedback, source limits, cards and exercises. Translation must not alter
-rules, identifiers, dates, qualifiers, answer meaning or evidence bindings.
+## Games serve the learning action
 
-## Independent exercise and cards
+For this five-lesson pilot, all five phases must have different meaningful actions
+within each lesson: prediction; preparing/sending material and observing a real
+run; operating on the learning material; constructing/editing a changed request
+with visible consequences; independently making a useful artifact. Do not count
+another choice layout, changed button colour or different title as another action.
+Reusable engines may appear in different lessons when the learning needs fit.
+At Modify use removable, reorderable and editable request fragments as scaffolding;
+at Make withdraw the whole-solution scaffolding and change the input or purpose.
+The exact request being run stays visible. Game progress never forges a semantic
+pass. This is an Owner-selected pilot design constraint, not a PRIMM research rule.
 
-Use [cards-and-exercises.md](references/cards-and-exercises.md). Existing IDs
-remain stable. A guided path never silently marks an independent exercise passed
-or a revision learned. A last guided transfer round is still guided evidence;
-keep the structured independent exercise and the real completion/confirmation
-pipeline. Do not add a duplicate verbal quiz merely to recheck an identical task.
+Keep the five phases stable; vary the useful operations inside them. Inspect a
+real image, sort alternative outputs, arrange source facts, edit a paragraph,
+collect matching records, compare before/after. Reuse approved native mechanisms;
+research prototypes supply ideas, not executable HTML for the course payload.
+For this pilot Investigate and/or Modify must include material manipulation beyond
+single/multiple choice. Keyboard and touch alternatives remain complete.
 
-Choose assessment by the required act: a supported native choice for a bounded
-choice, a short answer for a genuinely short result, an explain rubric when the
-learner must explain. Never make someone type an option solely because the storage
-union cannot represent a choice. Land a needed native capability or report its
-concrete missing boundary, rather than disguising it with a hidden textarea.
+Do not invent numerical “AI ability” sliders, evidence weights, budgets or physics
+to satisfy an engine. Do not add timing pressure to first learning merely to mimic
+a game. Longer play comes from meaningful changed conditions, not repeated easy
+questions. Hand motion alone does not prove reasoning or mastery.
 
-## Writer → Detector → fix → Gemini Flash polish
+## Plain language and redundancy pass
 
-Follow [pipeline.md](references/pipeline.md), keeping model roles distinct.
-Inline the relevant contract, exact facts and source mapping in model briefs;
-forbid broad file exploration for draft-only stages. Structured activity/card
-output uses direct JSON calls, not an H1-only Markdown parser.
+Use **AI**, not 助手、助理 or vague pronouns. Name the visible photo, request,
+record or draft. Short complete sentences. Avoid 交付物、闭环、验收、溯源 when
+“要写的东西”“检查”“出处” expresses the student's actual task. Explain a new word
+before depending on it. Necessary guidance connects purposes, not UI mechanics.
 
-The Detector names concrete beginner/correctness/material-loss problems, without
-rewriting. The Writer fixes substantive content first. **Then actually call the
-local Gemini Flash Polisher** on all learner-facing wording, not just the hidden
-review prose. Use [polish-prompt.md](references/polish-prompt.md).
+After substantive teaching review, inspect the **whole rendered phase**: title,
+material, question, controls and feedback together. Remove a sentence when the
+interface already says it and removing it loses no goal, material meaning,
+non-obvious interaction rule or important boundary. Examples:
 
-Freeze IDs, URLs, numeric facts, rules, booleans, option sets, source/asset mapping
-and locale structure. Compare before/after strings for lost qualifiers, new
-absolutes, terminology/meaning changes, and vanished real-world context. Run
-`check-lesson-hedges.mjs` plus the schema, source-preservation and shape checks.
-If polish changes facts or logic, reject that output. Do not silently hand-repair
-a compromised polish and claim it was accepted. Keep the raw output and decision.
+- Keep: “家人没看到照片，还需要知道地球和月面的位置。”
+- Remove beside visible choices: “在下面选一句，选完可以看回复示例。”
+- Remove generic “做个判断” when the actual question is already clear.
+- Keep a non-obvious many-to-many connection rule when the board requires it.
 
-## Acceptance and landing
+Do not require a new bridge paragraph per phase if preceding feedback already
+carries the transition. The duty is continuity, not a sentence quota. Normal
+save receipts, attempt counts, revision badges and debugging terms stay out of the
+lesson. Failures that could lose the learner's work are still explained locally.
 
-Walk [checklist.md](references/checklist.md). Validate schema/references and every
-experiment combination. Actually try wrong choices, hints, correction, changed
-conditions, copy/hand-off and mobile/keyboard. Read fresh screenshots; successful
-builds alone do not prove a good lesson. Do not report AI-simulated reactions as
-human enjoyment, transfer, retention or revenue.
+## Independent work, records and one producer
 
-Land only through native course CLI: open-for-edit, revise dry-run/apply, recovery
-export/reactivation, guarded importer. Read current CLI help; never guess flags.
-Existing revision bytes are immutable; same IDs get new revisions. Publishing is
-separate and not granted by this skill. Do not write generated delivery JSON.
+Bind Make to the existing native exercise identity in a new revision. The UI
+submits the learner's actual request/work and matching run evidence to that
+assessment; no extra quiz is appended and no guided action forges a pass.
+Keep pass, fail and undecided distinct. Only native learning ports record results.
+Finishing the five-phase journey records that traversal without asking the learner
+to confirm “I learned this version”. This is not a declaration of mastery.
+Old read/grade histories remain unchanged. Drafts and late async results are
+isolated by identity, lesson and revision; exiting preserves work where supported.
 
-The report records: selected variant and reason, preservation map, all changed
-IDs/revisions, native receipts, actual model preflights/roles/efforts, raw polish
-and acceptance, focused/full checks, browser evidence and concrete remaining
-limitations. Already valid lessons do not need revisions merely to churn words.
+`content.md` is a coherent short recap with source links and one native activity
+marker, not a second parallel course script. All visible fields, game labels,
+feedback, cards and Make instructions have English counterparts. Keep existing
+card/exercise IDs and original source/asset bytes; new inputs require real assets.
+When the source language is itself the learning material, preserve the literal
+utterance and add a translated gloss. Do not translate two different-language
+cards into identical visible text while requiring different answers. Check
+localized tasks for preserved distinctions, not just translation completeness.
+
+Writer → independent Detector → substantive fix and redundancy removal → actual
+local Gemini Flash final polish. Give the polisher the phase's context and control
+labels, not isolated sentences alone. Freeze IDs, URLs, dates, rules, source/asset
+bindings and assessment meanings. Reject compromised output instead of hand-fixing
+it and calling the polish accepted. Run hedge, schema, material and semantic checks.
+
+Land through native CLI only: inspect help, open-for-edit, revise dry-run/apply,
+reactivate, recovery export, guarded importer. Never hand-edit generated delivery
+JSON or old revision bytes. Publication remains separate and is not authorized here.
+
+## Acceptance
+
+Use [checklist.md](references/checklist.md). Actually play all five phases in the
+correct worktree and both modes: wrong prediction, meaningful game, changed prompt,
+run failure/retry, independent work, copy, exit/resume, keyboard and phone. Check
+current-only stage visibility, no duplicate article/quiz/source/confirmation, actual
+input-output linkage and truthful grading. Inspect fresh screenshots independently.
+
+Keep model/source/native/verification receipts and the exact served revision.
+Tests prove behavior, not human enjoyment or transfer. The five polished pilot
+lessons are examples of good teaching decisions, not a command to clone their
+stories and controls into every later lesson.

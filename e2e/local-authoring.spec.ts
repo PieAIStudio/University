@@ -5,6 +5,7 @@ import { assertImagesStayInViewport, assertVisibleText } from "./harness/assert.
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { namedStep } from "./harness/step.js";
+import { selectGameRoute } from "./harness/online-learner.js";
 
 /**
  * The authoring shell is being rewritten in another worktree. Assertions
@@ -30,7 +31,7 @@ async function firstVisible(page: Page, locators: Locator[]): Promise<Locator> {
 test.describe("D 本地端", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
-  test("落地 → 进一节课 → 课文末尾有完成本次更新和练习", async ({ page }) => {
+  test("普通文章课保留阅读确认与练习；不把旧页脚强加给 PRIMM", async ({ page }) => {
     const consoleErrors = watchConsole(page);
 
     await namedStep(page, "打开本地端落地页", async () => {
@@ -41,6 +42,10 @@ test.describe("D 本地端", () => {
         timeout: 30_000,
       });
       await page.waitForTimeout(600);
+      // Today may now open PRIMM, whose complete authoring journey is covered
+      // in primm.spec.ts. This compatibility test still checks the old footer
+      // on a real ordinary lesson selected through the normal series picker.
+      await selectGameRoute(page);
     });
 
     await namedStep(page, "进一节课", async () => {

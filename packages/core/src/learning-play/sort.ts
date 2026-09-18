@@ -49,6 +49,12 @@ export interface SortState {
   readonly misses: number;
 }
 
+/** The pure sorting mechanism also serves PRIMM's text cards. */
+export interface SortRules {
+  readonly buckets: readonly Pick<SortBucket, "id">[];
+  readonly items: readonly Pick<SortItem, "id" | "bucketId" | "why" | "tempting">[];
+}
+
 export type SortVerdict =
   | { readonly kind: "unknown-item" }
   | { readonly kind: "unknown-bucket" }
@@ -71,7 +77,7 @@ export function createSortState(): SortState {
  * scored on the first guess.
  */
 export function placeSortItem(
-  activity: SortActivity,
+  activity: SortRules,
   state: SortState,
   itemId: string,
   bucketId: string,
@@ -94,7 +100,7 @@ export function placeSortItem(
   };
 }
 
-export function isSortComplete(activity: SortActivity, state: SortState): boolean {
+export function isSortComplete(activity: SortRules, state: SortState): boolean {
   return activity.items.every((item) => state.placed[item.id] === item.bucketId);
 }
 
@@ -107,7 +113,7 @@ export function isSortComplete(activity: SortActivity, state: SortState): boolea
  * of a learner. The two-bucket floor is not pedantry — one bucket is not a
  * sorting task, it is a list.
  */
-export function isValidSortActivity(activity: SortActivity): boolean {
+export function isValidSortActivity(activity: SortRules): boolean {
   const bucketIds = new Set(activity.buckets.map((bucket) => bucket.id));
   if (bucketIds.size !== activity.buckets.length) return false;
   if (bucketIds.size < 2) return false;

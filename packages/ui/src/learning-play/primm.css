@@ -1,0 +1,417 @@
+.primm-reader__main {
+  max-width: 76rem;
+  margin-inline: auto;
+  padding: clamp(12px, 3vw, 32px);
+}
+.primm {
+  display: block;
+  padding: clamp(16px, 3vw, 28px);
+  color: var(--game-ui-text);
+  overflow-wrap: anywhere;
+}
+.primm h2 {
+  scroll-margin-block-start: calc(var(--lesson-toolbar-scroll-offset, 4rem) + 16px);
+}
+.primm h3 {
+  margin-block: 24px 8px;
+  font-size: 1rem;
+}
+.primm p,
+.primm li {
+  line-height: 1.7;
+}
+.primm p {
+  max-width: 75ch;
+}
+.primm__steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding-inline-start: 24px;
+  color: var(--game-ui-text-muted);
+}
+.primm__steps [aria-current="step"] {
+  color: var(--game-ui-text);
+  font-weight: 700;
+}
+.primm__materials {
+  margin-block: 24px;
+}
+.primm__materials > section + section {
+  margin-block-start: 20px;
+}
+.primm__credit {
+  display: block;
+  color: var(--game-ui-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.primm a {
+  color: inherit;
+  text-underline-offset: 0.2em;
+}
+.primm__text {
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.primm label {
+  display: block;
+  margin-block: 24px 8px;
+  font-weight: 600;
+}
+.primm textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 140px;
+  padding: 12px;
+  font: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  color: var(--game-ui-text);
+  background: var(--game-ui-surface-raised);
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-panel);
+  caret-color: var(--game-ui-text);
+}
+.primm textarea::placeholder {
+  color: var(--game-ui-text-muted);
+  opacity: 1;
+}
+.primm :focus-visible {
+  outline: 2px solid var(--game-ui-focus-ring);
+  outline-offset: 4px;
+}
+.primm ::selection {
+  color: var(--game-ui-accent-contrast);
+  background: var(--game-ui-accent);
+}
+.primm fieldset {
+  border: 0;
+  padding: 0;
+  margin-block: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.primm legend {
+  margin-block-end: 12px;
+}
+.primm__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 16px;
+}
+.primm button {
+  min-height: 44px;
+  max-width: 100%;
+  white-space: normal;
+  text-align: start;
+}
+.primm__comparison,
+.primm__buckets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-block: 24px;
+}
+.primm__comparison > *,
+.primm__buckets > * {
+  min-width: 0;
+}
+.primm__result {
+  margin-block: 24px;
+  border-block: 1px solid var(--game-ui-border-subtle);
+  padding-block-end: 16px;
+}
+.primm__result pre {
+  margin-block-end: 0;
+}
+.primm details {
+  margin-block: 16px;
+}
+.primm summary {
+  min-height: 44px;
+  cursor: pointer;
+  align-content: center;
+}
+.primm figure {
+  margin-inline: 0;
+}
+.primm img,
+.primm video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.primm audio {
+  max-width: 100%;
+}
+.primm figcaption {
+  color: var(--game-ui-text-muted);
+  font-size: 0.875rem;
+  margin-block-start: 8px;
+}
+.primm-inspect__photo {
+  position: relative;
+  width: fit-content;
+}
+.primm-inspect__region {
+  position: absolute;
+  outline: 3px solid var(--game-ui-text);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--game-ui-surface-raised);
+  pointer-events: none;
+}
+.primm__sentences {
+  display: grid;
+  gap: 12px;
+}
+.primm__changed-sentence {
+  border-inline-start: 3px solid var(--game-ui-accent);
+  padding-inline-start: 12px;
+  font-weight: 600;
+}
+.primm__record {
+  padding-block: 16px;
+  border-block-end: 1px solid var(--game-ui-border-subtle);
+}
+.primm [role="alert"] {
+  color: var(--game-ui-text);
+  font-weight: 600;
+}
+@media (max-width: 640px) {
+  .primm__comparison,
+  .primm__buckets {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.primm-reader__main {
+  max-width: 68rem;
+}
+.primm > h2 {
+  margin-block: 0 16px;
+  font-size: clamp(23px, 3vw, 32px);
+  line-height: 1.4;
+}
+.primm__situation {
+  font-size: 1.125rem;
+}
+.primm__asset img,
+.primm-inspect__photo {
+  max-height: 340px;
+  max-width: 100%;
+  margin-inline: auto;
+}
+.primm__asset img {
+  object-fit: contain;
+}
+/* Keep choices still while an uncached lesson photo is arriving. The frame
+   reserves space; object-fit retains the real photograph's proportions. */
+.primm__image-frame {
+  block-size: var(--primm-image-height, 340px);
+  display: grid;
+  place-items: center;
+}
+.primm__image-frame > img {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.primm-inspect__photo > img {
+  max-height: 340px;
+  width: auto;
+}
+.primm-inspect__hotspot {
+  position: absolute;
+  border: 1px dashed var(--game-ui-border-strong);
+  background: transparent;
+  cursor: crosshair;
+  padding: 0;
+  min-width: 44px;
+  border-radius: var(--game-ui-radius-control);
+}
+.primm-inspect__hotspot:hover,
+.primm-inspect__hotspot[aria-pressed="true"] {
+  border: 2px solid var(--game-ui-accent);
+}
+.primm-inspect__zoom {
+  position: relative;
+  overflow: hidden;
+  width: min(100%, 360px);
+  margin-block: 20px;
+  background: var(--game-ui-panel);
+  border-radius: var(--game-ui-radius-panel);
+}
+.primm-inspect__zoom > img {
+  position: absolute;
+  max-width: none;
+  object-fit: contain;
+}
+
+.primm__case {
+  border-inline-start: 3px solid var(--game-ui-accent);
+  padding-inline-start: 16px;
+  margin-block: 20px 24px;
+}
+.primm__case p {
+  margin-block: 0 8px;
+}
+.primm--everyday > p,
+.primm--everyday .primm__situation {
+  line-height: 1.85;
+  max-width: 62ch;
+}
+.primm-attachment {
+  display: flex;
+  gap: 24px;
+  align-items: stretch;
+  margin-block: 24px;
+}
+.primm-attachment > section {
+  flex: 1;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-panel);
+}
+.primm-attachment__conversation {
+  background: var(--game-ui-panel);
+}
+.primm-attachment__empty {
+  min-height: 120px;
+  border: 2px dashed var(--game-ui-border-strong);
+  border-radius: var(--game-ui-radius-panel);
+  padding: 20px;
+}
+.primm-attachment .primm__materials {
+  margin-block: 0 16px;
+}
+.primm-attachment h3 {
+  margin-block-start: 0;
+}
+.primm-workbench__pieces {
+  display: grid;
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+}
+.primm-workbench__pieces > li {
+  padding: 16px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-panel);
+  background: var(--game-ui-panel);
+}
+.primm-workbench__pieces label {
+  margin-block: 0 8px;
+}
+.primm-workbench__pieces textarea {
+  min-height: 80px;
+}
+.primm-workbench__pieces .primm__actions {
+  margin-block: 8px 0;
+}
+.primm-workbench__preview,
+.primm-artifact {
+  padding: 20px;
+  margin-block: 24px;
+  border-inline-start: 3px solid var(--game-ui-accent);
+  background: var(--game-ui-panel);
+  border-radius: var(--game-ui-radius-panel);
+}
+.primm-workbench__preview h3,
+.primm-artifact h3 {
+  margin-block: 0 12px;
+}
+.primm-artifact .primm__text {
+  line-height: 1.85;
+}
+.primm-artifact label {
+  margin-block: 0 12px;
+  font-weight: 400;
+}
+.primm-artifact textarea {
+  min-height: 180px;
+  padding: 16px;
+}
+.primm--everyday[data-primm-stage="modify"] > .primm__materials .primm__asset img,
+.primm--everyday[data-primm-stage="make"] > .primm__materials .primm__asset img {
+  max-height: 220px;
+}
+.primm--everyday[data-primm-stage="modify"] > .primm__materials,
+.primm--everyday[data-primm-stage="make"] > .primm__materials {
+  --primm-image-height: 220px;
+}
+@media (max-width: 720px) {
+  .primm {
+    --primm-image-height: 230px;
+  }
+  .primm-attachment {
+    flex-direction: column;
+  }
+}
+.primm textarea {
+  border-color: var(--game-ui-border-subtle);
+}
+.primm__buckets > section {
+  background: var(--game-ui-panel);
+  padding: 16px;
+  border: 1px dashed var(--game-ui-border-strong);
+  border-radius: var(--game-ui-radius-panel);
+  min-height: 120px;
+}
+.primm__comparison > section {
+  padding: 16px;
+  background: var(--game-ui-panel);
+  border-radius: var(--game-ui-radius-panel);
+}
+.primm__first-step {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 28px;
+  align-items: start;
+  margin-block: 24px;
+}
+.primm__first-step > *,
+.primm__materials > section {
+  min-width: 0;
+}
+.primm__first-step .primm__materials {
+  margin: 0;
+}
+.primm__first-step .primm__asset {
+  margin: 0 0 12px;
+}
+.primm fieldset {
+  display: grid;
+  gap: 12px;
+  border: 0;
+  padding: 0;
+  margin-block: 20px;
+}
+.primm fieldset legend {
+  font-size: 19px;
+  font-weight: 700;
+  padding: 0;
+  margin-block-end: 12px;
+}
+.primm fieldset .game-ui-button {
+  height: auto;
+  min-height: 48px;
+  text-align: start;
+  justify-content: start;
+  white-space: normal;
+  padding-block: 12px;
+}
+@media (max-width: 720px) {
+  .primm__first-step {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .primm__first-step .primm__asset img {
+    max-height: 230px;
+  }
+}

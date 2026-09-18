@@ -1,8 +1,33 @@
-# Acceptance checklist — V2
+# Acceptance checklist — PRIMM and retained revisions
 
 Use all applicable checks. `[machine]` needs an actual validator/test; `[judgment]`
 needs a reader inspecting materials and the rendered path; `[process]` needs a
 receipt. A regex cannot certify truth, clarity, fun, transfer or retention.
+
+## Complete PRIMM pilot (current)
+
+- [judgment] The verified case is a short credibility-building introduction, not a compulsory topic throughout; the everyday practice and independent task are clearly distinguished.
+- [judgment] Every rendered stage explains the current purpose/action without baby talk or cryptic brevity. Removing interface narration must not remove the steps a beginner needs to understand.
+- [machine + judgment] `experienceVersion: 2` uses prediction, prepared-material attachment/send, content manipulation, editable request construction, and independent artifact creation. Different headings on repeated choices do not count.
+- [machine] Visible assembled request equals the executed request, including after edit, removal, reorder and reload. Make withdraws the full request scaffold.
+- [machine + process] Authored practice is not falsely attributed to a historical source. `synthetic-audio` has duration, generator attribution and a visible synthetic label; actual ASR consumes the waveform.
+- [process] Image alt text, selected regions and visual feedback match the actual image, including cached first-load and phone aspect ratios.
+- [judgment] Opening connects a plausible everyday situation, unmet need and skill to the real case; invented scenario is not claimed as historical fact.
+- [machine] Native `primm` payload has all five phases, valid references and a bound Make exercise ID.
+- [judgment] Prepared request and input are visible before prediction; any prediction can proceed to Run.
+- [process] Run executes the exact prepared input; Modify executes the actual edited input; unavailable/replay/live never conflated.
+- [judgment] Investigate/Modify include purposeful non-MCQ material operation and respond to the actual preceding result.
+- [judgment] Main explanation sits in Investigate; extra depth answers a named question and is not a duplicate article.
+- [judgment] Make requires a changed purpose/input and own work; actual independent grading, no nonempty-text pass or duplicate quiz.
+- [machine] Only current phase visible; no old per-round sources, early exercise, read-confirm ritual, diagnostic receipt or next-lesson shortcut.
+- [judgment] Whole-screen redundancy pass removes UI narration without losing needed guidance, facts or limits.
+- [process] All final learner wording is actually Flash-polished with display context; compromised outputs rejected.
+- [machine + judgment] Localization preserves the distinctions being taught; same visible card text never has conflicting answers. Source-language examples keep their literal form with a gloss when needed.
+- [machine] Async results and drafts isolated by account/lesson/revision; exit/cancel/retry/idempotency preserve actual work and evidence.
+- [process] All five phases playable on phone and keyboard, with real result/failure evidence and independent screenshots.
+
+The V2-specific items below apply only to retained V2 revisions. Shared source,
+truth, language, preservation and runtime checks continue to apply to PRIMM.
 
 ## Real material and learning
 
@@ -20,7 +45,7 @@ receipt. A regex cannot certify truth, clarity, fun, transfer or retention.
 
 ## Teaching and operations
 
-- [judgment] Opening starts from the beginner's intended AI use, not an institution, citation or unexplained material.
+- [judgment] Opening quickly reaches the beginner's intended AI use; a short case may precede it, but institutional history or citation trivia must not replace the purpose.
 - [judgment] Title, opening task and first actionable question make the same promise; no unrelated first quiz.
 - [judgment] Each new task has a concrete bridge before the question; needed examples are visible before the dependent choice.
 - [judgment] A reader can follow the rendered sequence without teacher notes or an answer key; each operation advances useful AI use.

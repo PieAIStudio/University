@@ -25,6 +25,18 @@ because its reward is immediate.
 
 ## V2: two purposes, one truthful asset
 
+The current everyday PRIMM pilot separates introductory case media from practice
+media. Retain original source identities and immutable files, but do not require an
+old historical photograph in every stage when another licensed everyday photo better
+serves the learner's use. Inspect each actual image before writing alt text, regions
+or observations; an attractive guess about unseen objects is not a description.
+
+Authored synthetic practice speech uses `kind: "synthetic-audio"`, with a visible
+synthetic label, duration and generator attribution. The voice must not be passed off
+as a real user's message or a vendor's recorded demonstration. Scripts can support
+accessible reading and author verification, but are never substituted for actual ASR
+output. Authoring-tool licenses and distributable media rights are separate checks.
+
 An image can carry both understanding and a meaningful encounter with a real-world
 object. Do not delete a real source simply because a sentence would let the learner
 answer one quiz. Ask whether the learner still understands what real application,

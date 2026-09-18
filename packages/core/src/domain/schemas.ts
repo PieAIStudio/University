@@ -6,6 +6,9 @@ import {
   activityTranslationIssues,
 } from "../learning-play/localization.js";
 import { interactionPathIssues } from "../learning-play/interaction-path.js";
+import { primmIssues } from "../learning-play/primm.js";
+import { primmLessonIssues } from "../learning-play/primm-lesson.js";
+import { createPrimmPayloadSchema } from "./primm-schema.js";
 import { AUTHORITY_TAGS, REALITY_AUTHORITY_TAGS, urlEvidenceIssue } from "./url-evidence.js";
 
 const SchemaVersion = z.literal(1);
@@ -634,6 +637,7 @@ export const LessonAssetKindSchema = z.enum([
   "diagram",
   "ai-illustration",
   "screen-recording",
+  "synthetic-audio",
 ]);
 
 const LessonAssetSourceSchema = z
@@ -672,6 +676,12 @@ export const LessonAssetSchema = z
       "image/svg+xml",
       "video/mp4",
       "video/webm",
+      "audio/mpeg",
+      "audio/wav",
+      "audio/ogg",
+      "audio/webm",
+      "audio/mp4",
+      "audio/flac",
     ]),
     bytes: z
       .number()
@@ -720,6 +730,19 @@ export const LessonAssetSchema = z
     if (asset.kind === "screen-recording" && !asset.durationMs) {
       context.addIssue({ code: "custom", message: "Screen recordings require durationMs" });
     }
+    if (
+      asset.kind === "synthetic-audio" &&
+      (!asset.mime.startsWith("audio/") ||
+        !asset.durationMs ||
+        !asset.source?.attribution ||
+        !asset.caption)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "Synthetic practice audio requires audio bytes, duration, a caption and generator attribution",
+      });
+    }
   });
 
 /**
@@ -753,6 +776,7 @@ export const LessonActivityKindSchema = z.enum([
   "ai-eval",
   "ai-repair",
   "interaction-path",
+  "primm",
 ]);
 
 /**
@@ -809,6 +833,8 @@ export const ActivitySourceSchema = z.union([
       { message: "lineEnd needs a line to end, and cannot come before it", path: ["lineEnd"] },
     ),
 ]);
+
+export const PrimmPayloadSchema = createPrimmPayloadSchema(ActivitySourceSchema, StableId);
 
 const PathCopy = z.string().trim().min(1).max(1_000);
 const PathChoice = z.object({ id: StableId, label: PathCopy, explanation: PathCopy }).strict();
@@ -984,6 +1010,47 @@ export const LessonActivitySchema = z
   })
   .passthrough()
   .superRefine((activity, context) => {
+    if (activity.kind === "primm") {
+      const keys = new Set([
+        "id",
+        "kind",
+        "role",
+        "difficulty",
+        "family",
+        "title",
+        "brief",
+        "goal",
+        "takeaway",
+        "hint",
+        "source",
+        "locales",
+        ...Object.keys(PrimmPayloadSchema.shape),
+      ]);
+      if (Object.keys(activity).some((key) => !keys.has(key))) {
+        context.addIssue({ code: "custom", message: "Unexpected PRIMM field" });
+        return;
+      }
+      const parsed = PrimmPayloadSchema.safeParse(activity);
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues) context.addIssue({ ...issue, code: "custom" });
+        return;
+      }
+      for (const message of primmIssues(parsed.data)) context.addIssue({ code: "custom", message });
+      if (activity.family)
+        context.addIssue({
+          code: "custom",
+          message:
+            "PRIMM is one lesson method without difficulty families; Make uses the independent grader",
+        });
+      for (const value of activityDisplayStrings(activity)) {
+        if (!activity.locales?.en?.strings?.[value]?.trim())
+          context.addIssue({
+            code: "custom",
+            path: ["locales", "en"],
+            message: `Missing English PRIMM display text: ${value}`,
+          });
+      }
+    }
     if (activity.kind === "interaction-path") {
       const keys = new Set([
         "id",
@@ -1048,7 +1115,7 @@ export function interactionLessonIssues(lesson: {
       activity !== null &&
       typeof activity === "object" &&
       "kind" in activity &&
-      activity.kind === "interaction-path",
+      (activity.kind === "interaction-path" || activity.kind === "primm"),
   );
   if (!paths.length) return [];
   const issues: string[] = [];
@@ -1063,6 +1130,10 @@ export function interactionLessonIssues(lesson: {
       continue;
     }
     const activity = parsed.data;
+    if (activity.kind === "primm") {
+      issues.push(...primmLessonIssues(PrimmPayloadSchema.parse(value), activity, lesson));
+      continue;
+    }
     const payload = InteractionPathPayloadSchema.parse(value);
     if (
       payload.assetId &&

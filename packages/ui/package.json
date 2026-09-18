@@ -122,7 +122,9 @@
     "./learning-play/workflow-usability.css": "./src/learning-play/workflow-usability.css",
     "./learning-play/sort.css": "./src/learning-play/sort.css",
     "./learning-play/contrast.css": "./src/learning-play/contrast.css",
-    "./learning-play/weigh.css": "./src/learning-play/weigh.css"
+    "./learning-play/weigh.css": "./src/learning-play/weigh.css",
+    "./learning-play/PrimmLesson.js": "./src/learning-play/PrimmLesson.tsx",
+    "./learning-play/primm.css": "./src/learning-play/primm.css"
   },
   "scripts": {
     "typecheck": "tsc -b --pretty false",

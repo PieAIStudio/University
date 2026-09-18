@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
+import {
+  LessonActivitySchema,
+  interactionLessonIssues,
+} from "@pieai/university-core/domain/schemas.js";
 
 const digestOf = (bytes) => `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
 
@@ -59,11 +63,32 @@ export function preservesPublicRevisionMaterials(before, after) {
         newLesson.contentRevision < oldLesson.contentRevision
       )
         return false;
+      const method = newLesson.activities?.length === 1 ? newLesson.activities[0] : undefined;
+      const primm =
+        newLesson.contentRevision > oldLesson.contentRevision &&
+        method?.kind === "primm" &&
+        LessonActivitySchema.safeParse(method).success &&
+        interactionLessonIssues({
+          ...newLesson,
+          assets: (newLesson.assets ?? []).map((asset) => asset.metadata ?? asset),
+        }).length === 0;
       for (const key of ["evidence", "assets"]) {
-        if (!isDeepStrictEqual(oldLesson[key] ?? [], newLesson[key] ?? [])) return false;
+        if (
+          primm
+            ? !preservesOriginals(oldLesson[key] ?? [], newLesson[key] ?? [], key)
+            : !isDeepStrictEqual(oldLesson[key] ?? [], newLesson[key] ?? [])
+        )
+          return false;
       }
       for (const key of ["cards", "exercises"]) {
-        if (!preservesAssessmentMaterials(oldLesson[key] ?? [], newLesson[key] ?? [])) return false;
+        if (
+          !preservesAssessmentMaterials(
+            oldLesson[key] ?? [],
+            newLesson[key] ?? [],
+            primm && key === "exercises" ? method.make.exerciseId : undefined,
+          )
+        )
+          return false;
       }
       const evidence = [
         ...(newLesson.evidence ?? []),
@@ -85,7 +110,7 @@ export function preservesPublicRevisionMaterials(before, after) {
 }
 
 /** Only a newer containing lesson may change wording; no child/source is lost. */
-function preservesAssessmentMaterials(before, after) {
+function preservesAssessmentMaterials(before, after, makeId) {
   if (!Array.isArray(before) || !Array.isArray(after)) return false;
   const ids = (items) => items.map((item) => item?.id);
   const oldIds = ids(before),
@@ -98,11 +123,21 @@ function preservesAssessmentMaterials(before, after) {
     return false;
   return before.every((previous, index) => {
     const next = after[index];
-    if (previous.kind !== next.kind) return false;
+    const boundMake =
+      makeId === previous.id &&
+      next.kind === "explain" &&
+      Array.isArray(next.rubric) &&
+      next.rubric.length > 0;
+    if (previous.kind !== next.kind && !boundMake) return false;
     for (const field of ["evidence", "assets"]) {
-      if (!isDeepStrictEqual(previous[field] ?? [], next[field] ?? [])) return false;
+      if (
+        boundMake
+          ? !preservesOriginals(previous[field] ?? [], next[field] ?? [], field)
+          : !isDeepStrictEqual(previous[field] ?? [], next[field] ?? [])
+      )
+        return false;
     }
-    if (previous.kind === "choice") {
+    if (previous.kind === "choice" && !boundMake) {
       if (!Array.isArray(previous.options) || !Array.isArray(next.options)) return false;
       const oldOptions = ids(previous.options),
         newOptions = ids(next.options);
@@ -116,6 +151,19 @@ function preservesAssessmentMaterials(before, after) {
     }
     return true;
   });
+}
+
+/** A verified new PRIMM task may add an audio/source input. Every prior source
+ * and every original media byte still has to be present unchanged. */
+function preservesOriginals(before, after, field) {
+  if (!Array.isArray(before) || !Array.isArray(after)) return false;
+  const key = (item) => (field === "assets" ? (item?.metadata?.id ?? item?.id) : item?.sourceUrl);
+  const keys = after.map(key);
+  if (keys.some((id) => typeof id !== "string" || !id) || new Set(keys).size !== keys.length)
+    return false;
+  return before.every((item) =>
+    after.some((candidate) => key(candidate) === key(item) && isDeepStrictEqual(candidate, item)),
+  );
 }
 
 /** Per-course checks prevent growth elsewhere from hiding lost evidence. */

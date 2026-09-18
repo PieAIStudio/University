@@ -23,7 +23,7 @@ import { getAIBriefExamples } from "./ai-brief-examples.js";
 import { getAIWorkflowExamples } from "./ai-workflow-examples.js";
 import { getAIQualityExamples } from "./ai-quality-examples.js";
 
-type LabKind = Exclude<ActivityKind, "interaction-path">;
+type LabKind = Exclude<ActivityKind, "interaction-path" | "primm">;
 
 /*
   The lab's two shelves, exported so a test can hold them against the wire

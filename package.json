@@ -19,6 +19,7 @@
     "check:shelf": "node apps/university/scripts/check-shelf.mjs",
     "check:public-boundary": "node apps/university/scripts/check-public-boundary.mjs",
     "dev": "pnpm --filter @pieai/university-app dev",
+    "primm:preview": "pnpm --filter @pieai/university-grading-service exec tsc --noEmit false --outDir .primm-preview-build && node scripts/primm-preview.mjs --owner-preview --with-app",
     "delivery:build": "pnpm --filter @pieai/university-app delivery:build",
     "delivery:check": "pnpm --filter @pieai/university-app delivery:check",
     "doc-gov": "doc-gov",

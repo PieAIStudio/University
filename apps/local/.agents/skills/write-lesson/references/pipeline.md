@@ -3,20 +3,39 @@
 This file is for whoever **dispatches** the work. `SKILL.md` tells a model how to
 write; this says who writes, who checks, and what to run.
 
-## V2 contract
+## Current PRIMM production contract
 
-The current writing contract is SKILL.md V2. Historical trials below explain the
-role split; they do not require new courses to retain prose-only headings, fixed
-word ratios, or a single short-answer exercise. V2 drafts include main-path context,
-materials, interaction feedback, optional review, cards and independent assessment.
-All learner-facing strings go through the actual local Gemini Flash polish stage.
+Read the current SKILL.md. Separate the verified introductory case, the learner's
+everyday practice and the independent changed task before drafting. Verify source
+claims and media rights, then design the complete five PRIMM
+phases and select their operations. Do not write an article and append games.
+Use the native `primm` payload; prose/V1/V2 history below is explanatory history,
+not a competing sequence or a requirement for six headings.
 
-Structured drafts use direct JSON output. The dispatcher freezes non-text fields
-and gives each string a stable JSON pointer; the polisher returns pointer→text edits.
-Apply only known pointers, rebuild the activity locale map, then validate every
-schema/reference/rule and compare protected facts, hedges, terms and content coverage.
-Do not claim the polish ran merely because a configuration names Flash. Keep exact
-model, effort, input, raw output and acceptance/rejection receipts.
+Writer → independent teaching Detector → substantive fixes and a whole-screen
+redundancy pass → actual local Gemini Flash polish → native validation and real
+browser walkthrough. The Detector checks everyday relevance, phase continuity,
+true Run/Modify behavior, independent Make and misleading feedback, not just facts.
+The polisher receives displayed neighboring content and controls as context while
+returning edits only for declared display strings. Bounded JSON batches may be
+losslessly assembled with each raw model receipt retained. No fabricated receipt.
+
+Freeze non-text fields and give each string a stable pointer. Apply only known
+pointers, rebuild locale dictionaries, validate schema/references and inspect
+numbers, sources, uncertainty and actual meaning. Every visible text field goes
+through the actual local Gemini Flash pass; its configuration is not execution.
+Keep the exact Writer, distinct-family Detector and Polisher/preflight receipts.
+
+Supply the Detector with actual materials, image/voice provenance and the planned
+controls, not merely prose snippets. A missing field in its packet is a request
+for evidence, not proof that the underlying material lacks it. Resolve substantive
+findings as the Writer and preserve mistaken findings with their source-based
+resolution. Independent review is not an instruction to accept every model claim.
+
+Language-only polish needs no shell, browser or file-writing permissions. Keep it
+text-only and let the host check structure and word-growth. A zero exit with empty
+output is not a successful polish. Preserve failures; never escalate tool permissions
+merely because a polisher attempted unnecessary tools.
 
 ## The pipeline
 
@@ -308,8 +327,8 @@ models under `agy` fail outright, and the detector may never propose wording.
 
 - Never let any model in this pipeline write into `studies/` except the final,
   intentional revision, landed through the `course` CLI.
-- Never let a rewrite change a manifest's `evidence` array. Tokens may only point
-  inside ranges it already cites.
+- Never silently drop a manifest source. Added media/coverage must be verified,
+  declared in the new revision and reported. Tokens only point within its evidence.
 - Never trust a self-reported "all checks pass". Run
   `node scripts/lint-lessons.mjs --study <id> --course <id>` yourself.
 

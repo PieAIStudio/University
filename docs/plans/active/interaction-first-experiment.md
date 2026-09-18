@@ -6,7 +6,7 @@ status: active
 canonical: false
 owner: ai-assisted
 created: 2026-09-16
-last_reviewed: 2026-09-17
+last_reviewed: 2026-09-18
 domain: learning
 tags:
   - lesson-reader
@@ -36,6 +36,180 @@ No new branch/worktree, push, production publication, merge into main or cloud
 writes are authorized. Course writes stay in `.scratch/interaction-studies`.
 
 ## V2 execution
+
+### Current task: case-led introduction, learner-led everyday practice
+
+Owner's latest trial accepts the clean, linear shell but rejects using the
+historical case as the compulsory subject of all five phases. The next native
+revisions keep PRIMM. A brief verified case establishes a real use; a separately
+labelled everyday practice establishes why this learner needs it. Neither is
+passed off as the other. The prior pilot and its failed checks below are evidence,
+not current acceptance.
+
+- [x] Read Owner's `eli5` skill; fold audience calibration, purpose-first language
+  and patient concrete transitions into the existing write-lesson contract.
+- [x] Separate historical sources from authored practice data in typed payloads.
+  Retain original immutable sources/assets and assessment IDs without forcing them
+  into the main exercise. Source language, synthetic voices and practice notices
+  must remain honestly labelled.
+- [x] Give all five phases different operations: low-stakes prediction, material
+  attachment and real execution, content-specific investigation, editable request
+  construction and rerun, independent new-input artifact creation. No five-choice
+  quiz, no renamed duplicate editor, no artificial score for clicking.
+- [x] Rewrite all five in plain, warm adult language, independently review and
+  actually Flash-polish, then use native revise/export/import only.
+- [x] Play the actual final revisions, keyboard and phone, interrupted work,
+  attachment/prompt/output identity, wrong attempts and independent work. Preserve
+  validation failures; do not count old pilot receipts as new acceptance.
+
+Practice designs: photo sharing (coffee photo, then a cat photo); an English
+appointment message (synthetic practice audio, then a different message); a
+fictional neighbourhood book-swap announcement (then a different notice); a
+message whose rude middle sentence needs repair (then a new message); and a
+museum visit question with clearly identified official records. Historical Be
+My Eyes, Whisper, prompting, Canvas and Search sources introduce the capabilities,
+not the subject matter the learner must memorize. The first four phase operations
+prepare Make; Make changes the material or purpose and asks for a usable artifact.
+
+Work remains in the existing worktree and isolated authoring storage. This task
+does not authorize mainline changes, publication, paid calls or account changes.
+Current process/evidence folders: `.scratch/everyday-five/` and
+`.devspace-visual/everyday-five/`.
+
+The current native revisions are 11/7/7/5/6. They were produced through the
+existing CLI, not edited in delivery JSON. The independent teaching review and
+31 actual Flash-polish jobs are in the current process folder. The preservation
+check retains historical evidence/assets and assessment identities; the other
+31 lessons are unchanged. The fifth lesson uses supplied official visit-information
+snapshots, not a newly performed web search. Synthetic appointment clips are
+explicitly labelled and actually recognized; their scripts are not ASR results.
+
+The resumed walkthrough found a grading defect: an old generated draft was sent
+alongside the learner's corrected artifact, and feedback blamed words already
+removed. Evaluation now sees only the current artifact/request and relevant task
+materials; the original run remains bound server-side. Internal feedback evidence
+must quote current text or identify a missing requirement. A fabricated quote is
+an unavailable evaluation, never a learner failure. This narrows the failure mode,
+not a claim that model grading is infallible. Runtime regression covers it.
+
+A delayed-image probe reproduced a 200px downward movement of the first prediction
+while the photo loaded. The shared media frame now reserves its display space
+without stretching the photograph; the same probe measures 0px movement. The
+before/after screenshots and original 30-pass/1-failure browser run remain under
+`everyday-five/`. Final desktop and 390px touch-browser walks each completed all
+five lessons using real local execution, independent Make evaluation, copy and
+return. The 32-case bilingual/two-mode/compatibility browser run passed. After
+highlighting the edited sentence, the same relevant five cases also passed;
+their earlier interrupted/restarted-view failure remains recorded rather than
+being erased. No pointer, grading or screenshot assertion was weakened.
+
+The independent closeout reviewer inspected 19 screenshots, including full-image
+and full-comparison crops, and retained no blocker/high finding. Longer request
+button labels and the mobile opening's natural scrolling remain observation items,
+not claimed empirically settled. The final `VITEST_MAX_WORKERS=1 pnpm verify`
+passed on this product code; receipt: `.scratch/everyday-five/verify-closeout.exit`.
+The single Owner walkthrough is `.devspace-visual/everyday-five/owner-review-brief.md`.
+This is a playable local prototype, not production deployment or proof of learning
+retention. Existing native histories and previous failure evidence remain intact.
+
+### Previous pilot: complete PRIMM and everyday relevance
+
+Owner approved the full Predict → Run → Investigate → Modify → Make method,
+not an invented alternative order. The first five lessons are the pilot. Their
+openings must connect an ordinary person's concrete situation and unmet need to
+the real case and the skill being practised. A real citation alone is not a reason
+to learn. The original sources, image credits and useful boundaries stay intact.
+
+Work list, in dependency order:
+
+- [x] Update the one write-lesson skill: life situation → need → relevant skill,
+  complete PRIMM, purposeful game selection, redundancy review, actual Flash polish.
+- [x] Implement one linear PRIMM lesson surface in the shared reader: only the
+  current phase, no early exercise, duplicated sources, per-round article or
+  diagnostic history, no extra read-confirmation ritual or next-lesson shortcut.
+- [x] Supply truthful execution for prepared input and modified requests. Distinguish
+  live AI, captured real runs and authored simulation; never label a replay live.
+  Existing provider configuration, safety and cost boundaries are prerequisites for
+  live calls, not excuses to silently fabricate results.
+- [x] Reuse/adapt appropriate visual, sorting, editing and source-collection mechanics;
+  do not reduce Investigate/Modify/Make to five series of multiple-choice questions.
+- [x] Write five new bilingual native revisions, retain source/asset and assessment
+  identity, bind Make to the independent work rather than append a duplicate quiz.
+- [x] Independently check teaching and plain language, run local Gemini Flash polish,
+  then native revise/export/import. No edits to generated delivery JSON.
+- [ ] Walk all five, wrong predictions, changes, interrupted execution, keyboard/phone,
+  return/resume and completion; fix findings, run checks and independent screenshots.
+- [ ] Verify exact served revisions, keep the experiment clean and give playable links.
+
+This task remains in `codex/interaction-first`. No new branch, mainline merge,
+public deployment, package publication, wallet debit or user-account mutation.
+Process artifacts: `.scratch/primm-five/`; visual/acceptance: `.devspace-visual/primm-five/`.
+The guided-five material below is the previous Owner-reviewed baseline, not proof
+that the new PRIMM experience is finished.
+
+The native pilot uses `primm`, not a renamed list of V2 choice questions. The
+first five now have revisions 8/6/6/4/5. The current recovery package is
+`sha256:42447d9a23eeb4301ce1fcdc21eec0ffaa76470e622aa0205ba63bb2b290f716`.
+Original evidence, image bytes and card/exercise identities remain; Make is a
+new native explain exercise revision. A pinned real English audio sample was
+added for actual transcription. The other 31 lessons remain byte-identical.
+Native receipts are in `.scratch/primm-five/native/` and `corrections/native/`.
+
+Writer preflight found Grok unauthenticated; the attempted Codex writer ran out
+of credits. The host wrote and substantively fixed the pilot under the recorded
+fallback rather than claiming the writer succeeded. Independent Gemini teaching
+checks and 21 accepted bilingual local Flash polish batches are retained.
+English browser testing caught a real semantic localization bug: translating a
+Chinese example entirely into English made two cards identical but gave them
+different correct buckets. A new revision keeps the Chinese learning material
+and adds an English gloss. A separate Flash-polished revision also removes the
+patronizing “一个球、一片灰” assumption from the photo scenario. UI copy was
+polished independently; no old polishing receipt stands in for these changes.
+
+The opt-in owner preview uses installed local Qwen3-VL through the existing
+SwimmerAIKit transport seam and local Whisper through a bounded generator.
+Source search fetches only the approved official NASA pages, not arbitrary web
+search. No credentials, paid model endpoint or public unlimited executor were
+created. HTTP binds loopback with exact Origin/Host checks, fixed model/assets,
+one concurrent operation, cancellation, time/byte/token bounds and 100 explicit
+commands per preview session. The production build does not enable this adapter.
+The preview-only `university-primm-local` alias uses the committed Modelfile;
+unrelated models and global settings were not changed. Thinking-only output is
+rejected; tagged reasoning is never displayed or graded as the final result.
+
+The first focused browser run is retained as 28 passes / three failures, not a
+green run. Two failures exposed the English card issue; another exposed a late
+scroll on reloading Modify. Stage focus now happens before paint. A screenshot
+critic also found a stretched zoom crop; its size now derives from the original
+image aspect and normalized region. Static after-operation screenshots did not
+prove several claimed missing-button or pre-generated-result defects; ordered
+captures and actual run receipts must be used for those decisions.
+
+The task also removes the old settlement-route race: native progress/cards are
+still recorded, but PRIMM's one ending returns to the map rather than navigating
+to the legacy `/done` page. Normal saved-local UI is quiet only for this focused
+surface; failed persistence still appears. The final acceptance remains pending
+the full checks and stable live five-lesson walkthrough below.
+
+`verify-r3.exit` is 0: the complete verification command passed on the PRIMM
+implementation. Earlier `verify-first` and `verify-r2` failures remain recorded:
+the standalone-game lab expected the new course orchestrator to be a standalone
+game, and the delivery boundary misclassified Investigate's optional teaching
+explanation as an independent assessment answer. The corrected boundary permits
+only the exact explanation strings in a schema-valid PRIMM activity; negative
+tests still reject hidden Make answers, rubrics, malformed objects and author
+routes. The independent exercise's answers remain server-only. The final default
+browser run has started with 335 cases; its log is not yet a passing receipt.
+
+Real browser playback exposed an unrelated-to-decoding asset-serving problem:
+the WAV bytes were valid, but the dev server sent an unknown-length binary stream,
+so the native player exposed an infinite duration. Correct MIME and length now
+give the real 11-second duration. Run always performs fresh ASR; later text edits
+may reuse those actually recognized words for identical clip bytes. No canonical
+written transcript is substituted for recognition. Model stability is still
+under review: changing the parser of thinking weights did not make them genuine
+instruct weights, and a later Make failed. The run is retained as failed while
+the actual official instruct variant is prepared and retested.
 
 ### Current Owner correction: guided first five
 
