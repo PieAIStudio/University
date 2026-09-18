@@ -26,7 +26,7 @@ describe("buildIslandGeometry in world detail", () => {
         );
 
         expect(shape.counts.routeTriangles).toBe(0);
-        expect(shape.counts.total).toBeLessThanOrEqual(1000);
+        expect(shape.counts.total).toBeLessThanOrEqual(1600);
         expect(singleRunMs).toBeLessThan(30);
       } finally {
         shape.terrain.dispose();

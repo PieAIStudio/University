@@ -1,0 +1,20 @@
+University R53 derived natural scenery
+
+Original assets: Kenney Nature Kit 2.1, by Kenney (www.kenney.nl).
+https://kenney.nl/assets/nature-kit
+
+License: Creative Commons Zero (CC0 1.0 Universal)
+https://creativecommons.org/publicdomain/zero/1.0/
+
+The donor license states:
+"This content is free to use in personal, educational and commercial projects."
+
+Selected originals: rock_largeA.glb, rock_largeD.glb, rock_largeF.glb,
+plant_flatShort.glb and plant_bush.glb. Original files are not modified. University bakes welded,
+normalized vertex/triangle data, closes the D/F support solids with a convex
+hull, and applies its own mineral/leaf palette. No donor texture is included.
+
+Reproducible source hashes and per-file adaptations are recorded in
+packages/world/src/island/kenney-rock-shapes.json. The offline Blender script is
+apps/university/scripts/bake-island-rocks.py. Neither Blender nor the local donor
+directory is a runtime dependency.

@@ -21,6 +21,7 @@ const KINDS = [
   "fence",
   "flowers",
   "grass",
+  "fern",
   "snowpeak",
 ] as const satisfies readonly MiniatureAssetKind[];
 
@@ -49,6 +50,7 @@ const EXPECTED_TRIANGLES = {
   fence: 160,
   flowers: 248,
   grass: 80,
+  fern: 24,
   snowpeak: 52,
 } as const satisfies Record<MiniatureAssetKind, number>;
 
@@ -65,6 +67,7 @@ const EXPECTED_BOUNDS = {
   fence: { radius: 0.521889, height: 0.450997 },
   flowers: { radius: 0.262902, height: 0.185773 },
   grass: { radius: 0.15997, height: 0.2418 },
+  fern: { radius: 0.36, height: 0.3 },
   snowpeak: { radius: 0.467222, height: 1 },
 } as const satisfies Record<
   MiniatureAssetKind,

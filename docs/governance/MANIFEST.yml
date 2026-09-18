@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-16T02:09:43.288Z
+generated_at: 2026-09-18T09:13:05.799Z
 generator_version: doc-gov@0.14.0
 docs_count: 142
 docs:
@@ -198,7 +198,7 @@ docs:
     type: plan
     status: active
     canonical: true
-    last_reviewed: 2026-09-12
+    last_reviewed: 2026-09-18
     pinned: false
   - id: PLAN-PRODUCT-COMPLETENESS
     path: docs/plans/active/product-completeness.md
@@ -275,7 +275,7 @@ docs:
     type: policy
     status: stable
     canonical: true
-    last_reviewed: 2026-09-08
+    last_reviewed: 2026-09-17
     pinned: true
   - id: POLICY-SHARED-CLEAN-IMAGE-GENERATION
     path: docs/policy/shared-rules/clean-image-generation-rules.md

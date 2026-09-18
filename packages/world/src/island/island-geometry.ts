@@ -16,6 +16,8 @@ import {
 } from "./island-blueprint.js";
 import { hash } from "./random.js";
 import { cliffLobeAtAngle, coastalRockMask } from "./coast-profile.js";
+import { cliffPanelSpans, stoneJointAt } from "./stone-joints.js";
+import { appendCliffPanel, CLIFF_STONE_PANELS } from "./cliff-panels.js";
 import { miniatureStyleFor } from "./miniature-style.js";
 import {
   barycentricXZ,
@@ -1356,9 +1358,14 @@ function resolveCliffNormals(
         // Broad stone planes should not advertise a quad's diagonal split.
         // Share more of the vertical buttress normal only when it faces the
         // real triangle; a sharply recessed bay keeps its geometric crease.
-        const smoothWeight = geometric.dot(smooth) > 0.7 ? 0.65 : 0.25;
+        // Mineral steps are structural breaks, not a smooth vertical extrusion.
+        // A quad keeps one broad plane where compatible; neighbouring bands
+        // never average a break into a concrete-looking rounded panel.
+        const rockPlane = geometric.dot(current) > 0.82 ? current : geometric;
+        const smoothWeight = faceIndex < segments ? 0.55 : 0;
         const resolved = geometric
           .clone()
+          .lerp(rockPlane, faceIndex < segments ? 0 : 0.8)
           .multiplyScalar(1 - smoothWeight)
           .addScaledVector(smooth, smoothWeight)
           .normalize();
@@ -1497,8 +1504,8 @@ function buildTerrain(
   }
 
   // A broad, faceted cliff and a tapered root are the silhouette cue that the
-  // island is flying. The five-ring / 9-triangle-per-sector capacity is
-  // unchanged. What changed is the plan: each ring gathers the same authored
+  // island is flying. R53 preserves five structural rings while replacing
+  // their mineral strips with counted, bevelled stone masses. Each ring gathers the same authored
   // outline toward a slightly offset tip, with low-frequency thickness
   // variation, instead of scaling every sector by one radial. The lip copies
   // the top-mesh outer ring so the contact edge cannot split.
@@ -1517,16 +1524,26 @@ function buildTerrain(
   const rings = cliffRingProfiles(depth, blueprint.underside.taper, detail);
   const topOuterStart = 1 + (radials.length - 1) * segments;
   const cliffRings: CliffVertex[][] = [];
-  const edgeExposures: number[] = [];
+  // Each contour sample is identical across all five rings. Reuse it rather
+  // than evaluating the surface/colour derivatives five times per boundary.
+  const coast = Array.from({ length: segments }, (_, index) => {
+    const point = outlineAt(blueprint.outline, index, segments);
+    const sample = sampleIslandSurface(blueprint, point.x, point.z);
+    return {
+      point,
+      sample,
+      lobe: cliffRootLobe(rootPhase, index, segments),
+      ground: colorForTop(blueprint, detail, point.x, point.z, sample.radial, sample.y),
+    };
+  });
+  const edgeExposures = coast.map(({ point, sample }) =>
+    coastalRockMask(blueprint, point.x, point.z, sample.radial, sample.y),
+  );
   for (let ring = 0; ring < rings.length; ring += 1) {
     const profile = rings[ring]!;
     const cliffRing: CliffVertex[] = [];
     for (let index = 0; index < segments; index += 1) {
-      const point = outlineAt(blueprint.outline, index, segments);
-      const sample = sampleIslandSurface(blueprint, point.x, point.z);
-      const lobe = cliffRootLobe(rootPhase, index, segments);
-      if (ring === 0)
-        edgeExposures.push(coastalRockMask(blueprint, point.x, point.z, sample.radial, sample.y));
+      const { point, sample, lobe, ground } = coast[index]!;
       let x = point.x;
       let y = sample.y;
       let z = point.z;
@@ -1536,6 +1553,7 @@ function buildTerrain(
         y = positions[source + 1]! / scale;
         z = positions[source + 2]! / scale;
       } else {
+        const joint = stoneJointAt(blueprint.seed, (index / segments) * Math.PI * 2, ring);
         const coastRadius = Math.hypot(point.x, point.z) || 1;
         // Headlands retain a little more rock mass and bays taper sooner. This
         // derives the lower silhouette from the same sampled outline instead
@@ -1544,7 +1562,9 @@ function buildTerrain(
           profile.gather >= 0.3
             ? (clamp01(coastRadius / blueprint.bounds.maxHalf) - 0.72) * 0.12
             : 0;
-        const gather = clamp01(profile.gather + lobe * profile.gatherVary - headlandBias);
+        const gather = clamp01(
+          profile.gather + lobe * profile.gatherVary - headlandBias + joint.gather,
+        );
         // Every ring converges on the same bounded tip, with independent
         // seeded radial mass. The cap cannot use a different offset from the
         // ring it closes; that produced folded fans on concave short islands.
@@ -1556,9 +1576,8 @@ function buildTerrain(
           localZ = point.z - rootTip.z;
         x = rootTip.x + radial * (localX * cos - localZ * sin);
         z = rootTip.z + radial * (localX * sin + localZ * cos);
-        y = sample.y + profile.yOffset + depth * profile.depthVary * lobe;
+        y = sample.y + profile.yOffset + depth * (profile.depthVary * lobe + joint.drop);
       }
-      const ground = colorForTop(blueprint, detail, point.x, point.z, sample.radial, sample.y);
       cliffRing.push({
         x,
         y,
@@ -1570,31 +1589,22 @@ function buildTerrain(
   }
 
   const cliffFaces: CliffNormalFace[] = [];
-  for (let ring = 0; ring < rings.length - 1; ring += 1) {
+  const ringIndices: number[][] = rings.map(() => Array(segments).fill(-1));
+  for (let ring = 0; ring < 1; ring += 1) {
     const upper = cliffRings[ring]!;
     const lower = cliffRings[ring + 1]!;
     for (let index = 0; index < segments; index += 1) {
       const next = (index + 1) % segments;
-      // Continuous geometry, separate material domains. Paired sectors form
-      // broad mineral faces instead of random per-triangle colour noise.
-      const mineral = 0.92 + hash(`${blueprint.seed}/mineral-face/${Math.floor(index / 2)}`) * 0.16;
-      const stoneVertex = (vertex: CliffVertex, top: boolean): CliffVertex => {
-        if (ring === 0) return vertex;
-        const colour =
-          top && ring === 1
-            ? new THREE.Color(detail === "world" ? 0xa4aeb8 : 0xb4b7b4).lerp(
-                new THREE.Color(0x98a7b8),
-                (1 - mineral) * 0.6,
-              )
-            : vertex.colour.clone();
-        return { ...vertex, colour: colour.multiplyScalar(mineral) };
-      };
-      const first = appendCliffVertex(positions, colors, stoneVertex(upper[index]!, true), scale);
-      const second = appendCliffVertex(positions, colors, stoneVertex(upper[next]!, true), scale);
-      const third = appendCliffVertex(positions, colors, stoneVertex(lower[index]!, false), scale);
-      const fourth = appendCliffVertex(positions, colors, stoneVertex(upper[next]!, true), scale);
-      const fifth = appendCliffVertex(positions, colors, stoneVertex(lower[next]!, false), scale);
-      const sixth = appendCliffVertex(positions, colors, stoneVertex(lower[index]!, false), scale);
+      // The shallow soil collar alone uses this strip. Mineral faces below
+      // have their own single owner; retired strip shading is not retained.
+      const first = appendCliffVertex(positions, colors, upper[index]!, scale);
+      const second = appendCliffVertex(positions, colors, upper[next]!, scale);
+      const third = appendCliffVertex(positions, colors, lower[index]!, scale);
+      const fourth = appendCliffVertex(positions, colors, upper[next]!, scale);
+      const fifth = appendCliffVertex(positions, colors, lower[next]!, scale);
+      const sixth = appendCliffVertex(positions, colors, lower[index]!, scale);
+      ringIndices[ring]![index] = first;
+      ringIndices[ring + 1]![index] = third;
       const triangleA = [first, second, third] as const;
       const triangleB = [fourth, fifth, sixth] as const;
       indices.push(...triangleA);
@@ -1612,6 +1622,56 @@ function buildTerrain(
       });
     }
   }
+  // Coherent stone masses, each with a genuine planar face and narrow bevel.
+  // Both tiers share the authored loft, but near-view faces resolve smaller
+  // mineral planes; they never turn into 96 thin concrete strips.
+  const panelCount = CLIFF_STONE_PANELS;
+  const gardenFaces: number[] = [];
+  const panelStats = { bevelled: 0, divided: 0, plain: 0 };
+  for (let band = 1; band < rings.length - 1; band++) {
+    for (const [panel, span] of cliffPanelSpans(blueprint.seed, segments, band).entries()) {
+      const { start, width: sectorsPerPanel, character } = span;
+      const sites = [
+        ...Array.from({ length: sectorsPerPanel + 1 }, (_, i) => ({
+          ring: band,
+          sector: (start + i) % segments,
+        })),
+        ...Array.from({ length: sectorsPerPanel + 1 }, (_, i) => ({
+          ring: band + 1,
+          sector: (start + sectorsPerPanel - i) % segments,
+        })),
+      ];
+      const boundary = sites.map((s) => cliffRings[s.ring]![s.sector]!);
+      const mineral = 0.83 + hash(`${blueprint.seed}/${panel}/${band}/panel-mineral`) * 0.23;
+      const color = new THREE.Color(0x8b9eaf)
+        .lerp(
+          new THREE.Color(0xb8b2a5),
+          0.12 + hash(`${blueprint.seed}/${panel}/panel-warmth`) * 0.32,
+        )
+        .multiplyScalar(mineral * (1 - (band - 1) * 0.14));
+      const moss =
+        band === 1
+          ? cliffRings[0]![start]!.colour.clone().lerp(color, 0.35 + edgeExposures[start]! * 0.4)
+          : undefined;
+      const emitted = appendCliffPanel(
+        boundary,
+        color,
+        scale,
+        positions,
+        colors,
+        indices,
+        rootTip,
+        gardenFaces,
+        panelStats,
+        moss,
+        character,
+      );
+      sites.forEach((s, i) => {
+        ringIndices[s.ring]![s.sector] = emitted[i]!;
+      });
+    }
+  }
+  const bottomStart = indices.length;
   const bottomColour = CLIFF.clone()
     .lerp(CLIFF_STONE_SHADE, 0.72)
     .lerp(DIRT_DARK, 0.24)
@@ -1636,6 +1696,14 @@ function buildTerrain(
   }
 
   const geometry = new THREE.BufferGeometry();
+  geometry.userData.cliffTopology = {
+    ringIndices,
+    bottomIndex: bottom,
+    bottomStart,
+    panelCount,
+    gardenFaces,
+    panelStats,
+  };
   geometry.userData.miniatureSurfaceVertexEnd = 1 + radials.length * segments + segments * 6;
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));

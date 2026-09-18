@@ -1,7 +1,7 @@
 /**
  * R3F Component for rendering the shared continuous remote island view.
  *
- * Renders all islands in a single draw call with low triangle budget (640 tris per island),
+ * Renders all islands in one draw with a bounded budget (at most 1600 tris/island),
  * handling per-island click (pick) and pointer hover via faceIndex mapping.
  */
 import { type ThreeEvent } from "@react-three/fiber";

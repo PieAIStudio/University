@@ -67,8 +67,8 @@ export function IslandCampfire({
   const pageVisible = usePageVisibility();
   const simTimeRef = useRef(0);
 
-  // If setting changes to reduced-motion while animated, restore clean base matrices immediately
-  useEffect(() => {
+  // The subscribed preference and the reset must commit before the next paint.
+  useLayoutEffect(() => {
     if (prefersReducedMotion) {
       const mesh = meshRef.current;
       if (!mesh || baseMatrices.length === 0) return;

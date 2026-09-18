@@ -78,9 +78,10 @@ export function planCourseOutcrops(
   }[] = [];
   const consider = (point: IslandPoint, shrink: number, key: string) => {
     const radius = nominal * shrink;
-    // A broad low shoulder can fit beside a real path where a narrow tall
-    // stump cannot. The same height-aware route and full-footprint gates run.
-    const height = radius * (0.43 + hash(`${blueprint.seed}/terrace-height/${key}`) * 0.12);
+    // A substantial leading stone, rather than a turf-covered low mound.
+    // Its true height enters the existing route/node clearance below; a
+    // bigger silhouette must find a safe reserve, never inherit a shorter one.
+    const height = radius * (0.72 + hash(`${blueprint.seed}/terrace-height/${key}`) * 0.18);
     const sample = sampleIslandField(field, point.x, point.z);
     if (!sample.inside || sample.shore > 0.72 || sample.rock > 0.82) {
       search.field++;

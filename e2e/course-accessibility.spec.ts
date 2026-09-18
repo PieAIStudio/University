@@ -246,10 +246,10 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
 
         // 2. 媒体查询动态切换至有动画 (no-preference)
         await page.emulateMedia({ reducedMotion: "no-preference" });
-        await page.waitForTimeout(200);
+        await waitForRenderedFrames(page, 2);
 
         const moving1 = await getSceneMatrices(page);
-        await page.waitForTimeout(200);
+        await waitForRenderedFrames(page, 3);
         const moving2 = await getSceneMatrices(page);
 
         // 运动状态下，刻纹或火焰随帧更新，矩阵随时间波动
@@ -258,10 +258,10 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
 
         // 3. 动态切回 reduced-motion：必须立即复位刻纹 scale 并在多帧内保持静止
         await page.emulateMedia({ reducedMotion: "reduce" });
-        await page.waitForTimeout(150);
+        await waitForRenderedFrames(page, 2);
 
         const restored1 = await getSceneMatrices(page);
-        await page.waitForTimeout(300);
+        await waitForRenderedFrames(page, 3);
         const restored2 = await getSceneMatrices(page);
 
         expect(restored1.engravingMatrix).not.toBeNull();
@@ -276,3 +276,34 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
     });
   }
 });
+
+/** Media emulation acknowledges the browser setting, not a rendered R3F
+ * frame. A 150ms sleep does not guarantee a new Stage frame; the failed run compared
+ * a moving pose with a restored one. This barrier observes actual frames,
+ * never waits for an expected matrix value, and keeps every equality/change
+ * assertion above intact. A stalled or replaced renderer still fails.
+ */
+async function waitForRenderedFrames(page: Page, count: number) {
+  const start = await page.evaluate(() => {
+    const frame = (
+      globalThis as unknown as {
+        __stageFrameMetrics?: { frame: number; sceneUuid: string };
+      }
+    ).__stageFrameMetrics;
+    if (!frame) throw new Error("No actual Stage frame is available");
+    return { frame: frame.frame, sceneUuid: frame.sceneUuid };
+  });
+  const handle = await page.waitForFunction(
+    ({ start, count }) => {
+      const now = (
+        globalThis as unknown as {
+          __stageFrameMetrics?: { frame: number; sceneUuid: string };
+        }
+      ).__stageFrameMetrics;
+      return now?.sceneUuid === start.sceneUuid && now.frame >= start.frame + count;
+    },
+    { start, count },
+    { timeout: 20_000 },
+  );
+  await handle.dispose();
+}

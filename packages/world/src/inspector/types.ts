@@ -191,6 +191,7 @@ export type InspectorProjectionId =
   | "treeCrown"
   | "courseTrees"
   | "courseLandscape"
+  | "cliffGarden"
   | "bushCrown"
   | "campfire"
   | "medallion"

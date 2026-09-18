@@ -88,7 +88,8 @@ describe("domain worker uses the canonical generators", () => {
     expect(narrow[0]!.courseIds).toEqual(desktop[0]!.courseIds.slice(0, 3));
     expect(atmosphericGeometryKey(expanded, 3)).not.toBe(atmosphericGeometryKey(expanded, 5));
     const packet = prepareDomain("narrow", expanded, 3);
-    expect(packet.islands!.indices.length / 3).toBe(3 * 640);
+    expect(packet.islands!.indices.length / 3).toBeLessThanOrEqual(3 * 1600);
+    expect(packet.islands!.indices.length / 3).toBeGreaterThan(3 * 640);
   });
   it("preserves texture pixels, real course IDs, geometry and colour encoding", () => {
     const packet = prepareDomain("domain", studies);
@@ -100,7 +101,8 @@ describe("domain worker uses the canonical generators", () => {
       expect(packet.islands?.normals).toEqual(islands.getAttribute("normal").array);
       expect(packet.islands?.colors).toEqual(islands.getAttribute("color").array);
       expect(packet.islands?.indices).toEqual(islands.getIndex()!.array);
-      expect(packet.islands!.indices.length / 3).toBe(640);
+      expect(packet.islands!.indices.length / 3).toBeLessThanOrEqual(1600);
+      expect(packet.islands!.indices.length / 3).toBeGreaterThan(640);
       expect(preparedDomainBuffers(packet)).toHaveLength(5);
       const first = mountPreparedDomain(packet);
       const second = mountPreparedDomain(packet);

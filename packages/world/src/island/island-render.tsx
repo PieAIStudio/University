@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { buildIslandGeometry, type IslandGeometryDetail } from "./island-geometry.js";
+import { buildCliffGarden } from "./cliff-garden.js";
 import {
   createIslandSurfaceMaterialAdapter,
   DEFAULT_ISLAND_SURFACE_STYLE,
@@ -383,6 +384,14 @@ export function IslandRender({
     return result;
   }, [blueprint, detail, targetRadius]);
   useEffect(() => () => shape.terrain.dispose(), [shape]);
+  const cliffGarden = useMemo(
+    () =>
+      detail === "course"
+        ? buildCliffGarden(shape.terrain, blueprint.seed, shape.scale)
+        : { geometry: null, seats: [] },
+    [shape, blueprint.seed, detail],
+  );
+  useEffect(() => () => cliffGarden.geometry?.dispose(), [cliffGarden]);
   return (
     <group
       name={detail === "course" ? "island-course" : undefined}
@@ -423,6 +432,25 @@ export function IslandRender({
           timeUniform={surfaceTime.current}
         />
       </mesh>
+      {cliffGarden.geometry ? (
+        <mesh
+          name="course-cliff-garden"
+          geometry={cliffGarden.geometry}
+          castShadow
+          receiveShadow
+          userData={{
+            plantCount: cliffGarden.seats.length,
+            ...(import.meta.env.DEV ? { supportSeats: cliffGarden.seats } : {}),
+          }}
+        >
+          <meshStandardMaterial
+            vertexColors
+            roughness={0.96}
+            metalness={0}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ) : null}
       {detail === "world" ? (
         <>
           <TechUnderside

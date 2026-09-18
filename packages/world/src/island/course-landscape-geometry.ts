@@ -8,8 +8,7 @@ import { prepareCraftSurface } from "./craft-surface.js";
 import { createCourseAcademyGeometry } from "./course-academy-geometry.js";
 import {
   COURSE_ROCK_BANK_POINTS,
-  COURSE_ROCK_BANK_COLUMNS,
-  COURSE_ROCK_BANK_ROWS,
+  COURSE_ROCK_BANK_FACES,
   courseRockTopPoints,
 } from "./course-rock-profile.js";
 import {
@@ -18,8 +17,8 @@ import {
   type CourseOutcrop,
 } from "./course-landscape-plan.js";
 
-/** One closed, terrain-seated bank with an exposed front step and a sloped
- * back. Its complete volume stays inside the original non-walkable reserve;
+/** Three closed donor-derived stone masses, rigidly seated on the terrain.
+ * Their complete volume stays inside the original non-walkable reserve;
  * ground, route, collision/lesson targets are not raised in a shader.
  */
 export function createCourseOutcropGeometry(site: CourseOutcrop): THREE.BufferGeometry {
@@ -31,23 +30,12 @@ export function createCourseOutcropGeometry(site: CourseOutcrop): THREE.BufferGe
     throw new Error("Rock bank ground samples must match the model profile");
   }
   const top = courseRockTopPoints(site).map((p) => new THREE.Vector3(p.x, p.y, p.z));
-  const bottom = top.map((p) => new THREE.Vector3(p.x, site.baseY, p.z));
   const positions: number[] = [],
     colors: number[] = [],
     indices: number[] = [];
-  const stone = new THREE.Color(0x99a5a7),
+  const stone = new THREE.Color(0x8896a5),
     turf = new THREE.Color(0x8fba51).lerp(new THREE.Color(0xacc967), site.meadow * 0.3);
-  const columns = COURSE_ROCK_BANK_COLUMNS,
-    rows = COURSE_ROCK_BANK_ROWS;
-  const topFaces: [number, number, number][] = [];
-  for (let row = 0; row < rows - 1; row++)
-    for (let column = 0; column < columns - 1; column++) {
-      const a = row * columns + column,
-        b = a + 1,
-        c = a + columns,
-        d = c + 1;
-      topFaces.push([a, c, b], [b, c, d]);
-    }
+  const topFaces = COURSE_ROCK_BANK_FACES;
   // Smooth only the causal material mask, not the actual cliff normals. A
   // different grass colour per triangle made the previous bank a checkerboard.
   const maskNormals = top.map(() => new THREE.Vector3());
@@ -58,7 +46,7 @@ export function createCourseOutcropGeometry(site: CourseOutcrop): THREE.BufferGe
   const topColours = maskNormals.map((n, i) =>
     stone
       .clone()
-      .lerp(new THREE.Color(0xb2b5a3), COURSE_ROCK_BANK_POINTS[i]!.lift * 0.18)
+      .lerp(new THREE.Color(0xc2bfac), COURSE_ROCK_BANK_POINTS[i]!.lift * 0.32)
       .lerp(
         turf,
         THREE.MathUtils.smoothstep(n.normalize().y, 0.48, 0.78) * COURSE_ROCK_BANK_POINTS[i]!.turf,
@@ -80,19 +68,6 @@ export function createCourseOutcropGeometry(site: CourseOutcrop): THREE.BufferGe
   };
   for (const [a, b, c] of topFaces) {
     emit(top[a]!, top[b]!, top[c]!, [topColours[a]!, topColours[b]!, topColours[c]!]);
-    emit(bottom[a]!, bottom[c]!, bottom[b]!);
-  }
-  const boundary = [
-    ...Array.from({ length: columns }, (_, i) => i),
-    ...Array.from({ length: rows - 1 }, (_, i) => (i + 1) * columns + columns - 1),
-    ...Array.from({ length: columns - 1 }, (_, i) => rows * columns - 2 - i),
-    ...Array.from({ length: rows - 2 }, (_, i) => (rows - 2 - i) * columns),
-  ];
-  for (let i = 0; i < boundary.length; i++) {
-    const a = boundary[i]!,
-      b = boundary[(i + 1) % boundary.length]!;
-    emit(top[a]!, top[b]!, bottom[a]!);
-    emit(top[b]!, bottom[b]!, bottom[a]!);
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
@@ -170,6 +145,7 @@ export function buildCourseLandscapeGeometry(plan: CourseLandscapePlan) {
     broadleaf: createMiniatureAsset("broadleaf", "course"),
     flowers: createMiniatureAsset("flowers"),
     grass: createMiniatureAsset("grass"),
+    fern: createMiniatureAsset("fern"),
     fence: createMiniatureAsset("fence"),
   };
   let flora: THREE.BufferGeometry | null = null;

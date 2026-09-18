@@ -50,11 +50,11 @@ describe("atmospheric regions", () => {
       }
     },
   );
-  it("keeps representative terrain outside the planet and within the 640 triangle per island budget", () => {
+  it("keeps representative terrain outside the planet and within the 1600 triangle per island budget", () => {
     const source = studies(4);
     const regions = planAtmosphericRegions(source);
     const geometry = buildAtmosphericIslands(source, regions);
-    expect(geometry.index!.count / 3).toBeLessThanOrEqual(4 * 5 * 640);
+    expect(geometry.index!.count / 3).toBeLessThanOrEqual(4 * 5 * 1600);
     const position = geometry.getAttribute("position");
     for (let i = 0; i < position.count; i++) {
       const radius = Math.hypot(position.getX(i), position.getY(i), position.getZ(i));

@@ -3,7 +3,7 @@
  *
  * Inherits the exact same IslandBlueprint (silhouette outline, seed, height field,
  * theme identity) as the course view, and reuses buildIslandGeometry's "world"
- * detail tier (640 triangles per island, zero grass, zero centerline route clips,
+ * detail tier (counted adaptive stone faces, at most 1600 triangles/island; zero centerline route clips,
  * zero lesson nodes/markers).
  *
  * Batches all archipelago / planet islands into a single merged BufferGeometry
@@ -77,6 +77,7 @@ export function buildRemoteBaseGeometry(
     const normals = new Float32Array(vertexCount * 3);
     const colors = new Float32Array(vertexCount * 3);
     const bounds = new THREE.Box3();
+    const boundPoint = new THREE.Vector3();
 
     for (let v = 0; v < vertexCount; v += 1) {
       const vx = posAttr.getX(v);
@@ -85,7 +86,7 @@ export function buildRemoteBaseGeometry(
       positions[v * 3] = vx;
       positions[v * 3 + 1] = vy;
       positions[v * 3 + 2] = vz;
-      bounds.expandByPoint(new THREE.Vector3(vx, vy, vz));
+      bounds.expandByPoint(boundPoint.set(vx, vy, vz));
 
       if (normAttr) {
         normals[v * 3] = normAttr.getX(v);
@@ -210,6 +211,9 @@ export function buildRemoteIslandBatch(
   const allNormals: number[] = [];
   const allIndices: number[] = [];
   const batchBounds = new THREE.Box3();
+  // One temporary point, not one allocation per vertex in a large catalogue.
+  // Geometry, exact bounds and face ranges remain unchanged.
+  const boundPoint = new THREE.Vector3();
 
   let vertexOffset = 0;
   let triangleOffset = 0;
@@ -245,7 +249,7 @@ export function buildRemoteIslandBatch(
         const vy = positions[v * 3 + 1]! * scale + py;
         const vz = positions[v * 3 + 2]! * scale + pz;
         allPositions.push(vx, vy, vz);
-        islandBounds.expandByPoint(new THREE.Vector3(vx, vy, vz));
+        islandBounds.expandByPoint(boundPoint.set(vx, vy, vz));
 
         allColors.push(
           colors[v * 3]! * dimMultiplier,

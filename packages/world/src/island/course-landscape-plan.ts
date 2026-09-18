@@ -32,7 +32,7 @@ export { COURSE_LANDSCAPE_LIMITS, type CourseOutcrop } from "./course-outcrop-pl
 export interface CourseFlora extends IslandPoint {
   readonly supportId?: string;
   readonly id: string;
-  readonly asset: "flowers" | "grass";
+  readonly asset: "flowers" | "grass" | "fern";
   readonly y: number;
   readonly size: number;
   readonly radius: number;
@@ -121,12 +121,17 @@ export function courseLandscapePlan(
     const forestEdge = Math.atan2(closestPath.z - anchor.z, closestPath.x - anchor.x);
     for (let member = 0; member < anchor.count; member++) {
       if (flora.length >= COURSE_LANDSCAPE_LIMITS.flora) break;
-      const asset = member % 3 === 2 ? "grass" : "flowers";
+      const asset = member % 5 === 2 ? "fern" : member % 3 === 2 ? "grass" : "flowers";
       const triangles = miniatureMetrics(asset).triangles;
       if (triangleBudget + triangles > COURSE_LANDSCAPE_LIMITS.triangles) continue;
       // Fewer legible bouquets rather than subpixel flower confetti; the
       // original footprint, node and path tests still decide whether they fit.
-      const nominalSize = asset === "flowers" ? 2.1 + random() * 0.65 : 2.2 + random() * 0.9;
+      const nominalSize =
+        asset === "flowers"
+          ? 2.1 + random() * 0.65
+          : asset === "fern"
+            ? 1.2 + random() * 0.5
+            : 2.2 + random() * 0.9;
       for (let attempt = 0; attempt < 14; attempt++) {
         // Narrow shoulders retain a smaller real bouquet after the larger
         // fit has failed. Keep coverage without relaxing support/route gates.
@@ -184,7 +189,7 @@ export function courseLandscapePlan(
   }
   // A few living shoulder tufts, seated on the actual rock triangles. These
   // read as mossy landscape continuity rather than a sterile model on a lawn.
-  // They use the same two miniature plant assets and the same existing draw.
+  // They use the reviewed miniature plants and the same existing flora draw.
   for (const site of outcrops) {
     if (site.feature === "ruin") continue;
     const points = courseRockTopPoints(site);
@@ -193,8 +198,8 @@ export function courseLandscapePlan(
       [0.11, 0.07],
       [-0.02, 0.39],
     ].entries()) {
-      const asset = i === 1 ? "flowers" : "grass";
-      const size = asset === "flowers" ? 1.45 : 1.9;
+      const asset = i === 1 ? "flowers" : "fern";
+      const size = asset === "flowers" ? 1.45 : 1.65;
       const metrics = miniatureMetrics(asset),
         radius = size * metrics.radius;
       if (

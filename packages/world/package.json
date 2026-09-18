@@ -28,7 +28,7 @@
     "lint": "oxlint --deny-warnings src vitest.config.ts",
     "format": "oxfmt --write package.json tsconfig.json vitest.config.ts src",
     "format:check": "oxfmt --check package.json tsconfig.json vitest.config.ts src",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run --project remote-performance && vitest run --project world",
     "build": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

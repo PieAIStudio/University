@@ -10,6 +10,7 @@ import { mergeBufferGeometries } from "three-stdlib";
 
 import { createSmoothIcosahedron } from "./foliage-geometry.js";
 import { miniatureBevelBox } from "./miniature-bevel.js";
+import donorShapes from "./kenney-rock-shapes.json" with { type: "json" };
 
 export type MiniatureAssetKind =
   | "fir"
@@ -24,6 +25,7 @@ export type MiniatureAssetKind =
   | "fence"
   | "flowers"
   | "grass"
+  | "fern"
   | "snowpeak";
 
 export interface MiniatureAssetBounds {
@@ -622,6 +624,32 @@ function buildAutumn(): THREE.BufferGeometry[] {
   return parts;
 }
 
+function buildFern(): THREE.BufferGeometry[] {
+  const source = donorShapes.assets.find((asset) => asset.id === "plant_flatShort")!;
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(
+      source.vertices.flatMap((v) => [v[0]! * 0.36, v[1]! * 0.3, v[2]! * 0.36]),
+      3,
+    ),
+  );
+  geometry.setIndex(source.faces.flat());
+  geometry.computeVertexNormals();
+  const parts: THREE.BufferGeometry[] = [];
+  addPart(parts, geometry, 0x5f9446);
+  const position = geometry.getAttribute("position"),
+    color = geometry.getAttribute("color");
+  const low = new THREE.Color(0x4f7c42),
+    high = new THREE.Color(0xa7c65a);
+  const shade = new THREE.Color();
+  for (let i = 0; i < position.count; i++) {
+    shade.copy(low).lerp(high, Math.min(1, Math.hypot(position.getX(i), position.getZ(i)) / 0.36));
+    color.setXYZ(i, shade.r, shade.g, shade.b);
+  }
+  return parts;
+}
+
 function buildStone(): THREE.BufferGeometry[] {
   const parts: THREE.BufferGeometry[] = [];
   // One squat, bevelled block with a real flat foot and an offset crown.
@@ -1051,6 +1079,9 @@ export function createMiniatureAsset(
       break;
     case "grass":
       parts = buildGrass();
+      break;
+    case "fern":
+      parts = buildFern();
       break;
     case "snowpeak":
       parts = buildSnowpeak();
