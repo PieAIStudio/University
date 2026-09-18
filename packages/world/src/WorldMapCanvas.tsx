@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { translate } from "@pieai/university-ui/i18n.js";
 import type { AuthoringFocus } from "@pieai/university-core";
@@ -11,6 +11,7 @@ import type { IslandLookCameraPose, IslandLookSceneSource } from "./island/islan
 import { Stage } from "./Stage.js";
 import { CourseOverviewContext, CourseOverviewProbe } from "./camera/CourseOverview.js";
 import type { CourseOverviewFrame } from "./camera/course-overview.js";
+import { MapTravelClockContext, recordMapTravel, type MapTravelClock } from "./map-travel-clock.js";
 
 export type WorldMap = ReturnType<typeof placeWorld>;
 
@@ -132,6 +133,10 @@ export function WorldMapCanvas({
   readonly courseViewKey?: string | null;
 }) {
   const labelNodes = useRef(new Map<string, HTMLElement>());
+  const travelClock = useMemo<MapTravelClock>(
+    () => ({ request: null }),
+    [courseViewKey, skyStudyId],
+  );
   const draggedRef = useRef(false);
   const pointerOrigin = useRef<{ x: number; y: number } | null>(null);
   const [overviewKey, setOverviewKey] = useState<string | null>(null);
@@ -210,51 +215,53 @@ export function WorldMapCanvas({
           lookSource={lookSource}
           postProcessing={postProcessing}
         >
-          <CourseOverviewContext.Provider value={activeOverview}>
-            <Controls
-              target={framedLook}
-              polar={polar}
-              fixedCamera={fixedCamera}
-              onInteract={onInteract}
-              distanceRange={activeOverview?.distanceRange}
-            />
-            <Flight to={framedFrom} look={framedLook} fixed={fixedCamera !== null} />
-            {overviewEnabled ? (
-              <CourseOverviewProbe
-                key={courseViewKey}
-                onFrame={acceptOverview}
-                onError={rejectOverview}
-                eyeDirection={[
-                  cameraFrom[0] - lookAt[0],
-                  cameraFrom[1] - lookAt[1],
-                  cameraFrom[2] - lookAt[2],
-                ]}
+          <MapTravelClockContext.Provider value={travelClock}>
+            <CourseOverviewContext.Provider value={activeOverview}>
+              <Controls
+                target={framedLook}
+                polar={polar}
+                fixedCamera={fixedCamera}
+                onInteract={onInteract}
+                distanceRange={activeOverview?.distanceRange}
               />
-            ) : null}
-            <LabelProbe
-              markers={markers}
-              limit={9}
-              nodes={labelNodes.current}
-              followId={followId}
-              followNode={followNode}
-            />
-            {world ? (
-              <WorldScene
-                placements={world.placements}
-                extent={world.extent}
-                learnerAt={learnerAt}
-                avatarRecipe={avatarRecipe}
-                avatarSignedIn={avatarSignedIn}
-                selectedCourseKey={selectedCourseKey}
-                skyStudyId={skyStudyId}
-                authoringFocus={authoringFocus}
-                assetRevision={assetRevision}
-                onPick={onPick}
-                onHover={onHover}
+              <Flight to={framedFrom} look={framedLook} fixed={fixedCamera !== null} />
+              {overviewEnabled ? (
+                <CourseOverviewProbe
+                  key={courseViewKey}
+                  onFrame={acceptOverview}
+                  onError={rejectOverview}
+                  eyeDirection={[
+                    cameraFrom[0] - lookAt[0],
+                    cameraFrom[1] - lookAt[1],
+                    cameraFrom[2] - lookAt[2],
+                  ]}
+                />
+              ) : null}
+              <LabelProbe
+                markers={markers}
+                limit={9}
+                nodes={labelNodes.current}
+                followId={followId}
+                followNode={followNode}
               />
-            ) : null}
-            {stageChildren}
-          </CourseOverviewContext.Provider>
+              {world ? (
+                <WorldScene
+                  placements={world.placements}
+                  extent={world.extent}
+                  learnerAt={learnerAt}
+                  avatarRecipe={avatarRecipe}
+                  avatarSignedIn={avatarSignedIn}
+                  selectedCourseKey={selectedCourseKey}
+                  skyStudyId={skyStudyId}
+                  authoringFocus={authoringFocus}
+                  assetRevision={assetRevision}
+                  onPick={onPick}
+                  onHover={onHover}
+                />
+              ) : null}
+              {stageChildren}
+            </CourseOverviewContext.Provider>
+          </MapTravelClockContext.Provider>
         </Stage>
       </div>
 
@@ -314,6 +321,7 @@ export function WorldMapCanvas({
                   aria-haspopup="dialog"
                   onClick={() => {
                     if (draggedRef.current) return;
+                    recordMapTravel(travelClock, marker.id, performance.now());
                     marker.activate?.();
                   }}
                 >
@@ -350,6 +358,7 @@ export function WorldMapCanvas({
               data-course-rewrite-marker={isCourseRewriteMarker ? "true" : undefined}
               onClick={() => {
                 if (draggedRef.current) return;
+                recordMapTravel(travelClock, marker.id, performance.now());
                 marker.activate?.();
               }}
             >
