@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-18
 domain: architecture
 tags:
   - 3d
@@ -22,6 +22,19 @@ superseded_by: null
 ---
 
 # ADR-0009: The Procedural Map Is One Pipeline, Not Three Scenes
+
+## R54: retain meadow identity through material compilation
+
+The existing course atlas now preserves canopy/meadow/route/facility channels
+instead of baking those causes into RGB. It still samples the same IslandField
+and existing scenery; `surface-turf.ts` is only a fixed repeating material
+swatch, never a distribution or height field. Low meadow beds also consume
+that field and the canonical dressing reservations. Final plant membership,
+positions and counts belong to `courseLandscapePlan`, and geometry/inspector
+consume that same result. World and planet projections do not request these
+course-only beds or material masks. The silhouette, source catalogue, course
+IDs, support sampler and renderer ownership do not change. Technique and
+measured budgets are in ADR-0008; acceptance remains in the delivery plan.
 
 ## R53 dense-domain correction: budget the overview, preserve the catalogue
 

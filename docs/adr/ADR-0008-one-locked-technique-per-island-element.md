@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-18
 domain: architecture
 tags:
   - 3d
@@ -35,6 +35,59 @@ a screenshot; current browser fixtures are selected by `e2e/harness/catalogue.ts
 This catalogue clarification changes no technique, budget or original receipt.
 
 ## Decision and authority
+
+### R54: tactile meadow and composed low vegetation
+
+R53 is the Owner-approved save point `787f4a1e`. R54 does not alter that root
+geometry, tall tree arrangement, terrain sampler, route or shared output grade.
+The deficit is open ground: the former surface microdetail was multiplied by
+canopy coverage, leaving an unshaded clearing almost without a material response.
+
+The same 256² RGBA course texture now packs canopy, meadow, protected route and
+facility wear as scalar masks (`NoColorSpace`), rather than pre-multiplied RGB
+pigment. The existing StandardMaterial extension reconstructs the bounded
+pigment and applies short-turf detail only to upward meadow outside the route
+and working surfaces. The unused alpha channel of the same 128² scalar swatch
+holds a periodic, original tapered-leaf pattern. Two rotated material samples
+share colour, roughness and shallow normal relief; each frequency has its own
+pixel-footprint fade and mip filtering. No terrain displacement, new ecological
+field, new texture allocation, added light or output transform is introduced.
+Two extra lookups of an existing texture are real shader work, not free cost.
+The first fine-scale candidate read as tiny dashes; the retained wider strokes
+use a 0.14 model-space scale, with roughness staying matte. This is stylized
+surface relief, not individual geometric grass blades or physical scanned turf.
+
+`course-meadow-beds.ts` chooses at most eight separated beds from 289 bounded
+field candidates. Existing canopies may shade a bed, but trunks, solid scenery,
+hero, route and lesson clearances remain protected. Each of eight potential
+members is independently checked against the actual rendered ground and all
+solid reservations. At most fourteen attempts per member; no safe site means
+no plant. More companions join existing rock/tree/facility anchors. Big trees,
+rocks and paths are not multiplied or moved. The same 220-flora / 50,000-triangle
+course landscape ceiling and existing merged batches remain the hard limits.
+
+The accepted `plant_bush` supplies one 32-triangle, explicitly double-faced
+leaf accent. A single additional CC0 Nature Kit source, `mushroom_tan`, supplies
+48 triangles with the real stem/cap material roles retained. Larger mushroom
+groups and log props were inspected but not adopted: repeated groups and solid
+obstacles would not solve flat ground. Source hashes and derivations remain in
+`kenney-rock-shapes.json`; original donor files and the first five asset geometries
+are unchanged. A factory-startup Blender rebake reproduced the complete result.
+Runtime still has no donor-path or Blender dependency and no new GLB request.
+
+The second desktop candidate measured 32→71 / 35→69 / 4→12 low flora on the
+36-, 30- and 8-lesson real courses, respectively. Full Stage draws stayed
+109 / 108 / 54, while submitted triangles rose by 4,800 / 4,464 / 1,296.
+These are actual submitted counts at the recorded views, not standalone asset
+counts, a frame-rate claim, or a guarantee every seed gets the same density.
+Final frozen-source gates and evidence are recorded only in the delivery plan.
+
+References used for technique boundaries: Three.js `MeshStandardMaterial`
+https://threejs.org/docs/pages/MeshStandardMaterial.html and `Texture`
+https://threejs.org/docs/pages/Texture.html; donor
+https://kenney.nl/assets/nature-kit . No code or photographs copied from those
+pages. Required material/vegetation and visual-validation skills guided the
+pixel-scale, support and original-versus-adapted evidence checks.
 
 ### R53: jointed stone within the existing terrain owner
 

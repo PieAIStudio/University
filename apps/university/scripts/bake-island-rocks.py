@@ -1,4 +1,4 @@
-"""Bake three CC0 Kenney rocks and two plants to tiny Y-up CPU mesh data.
+"""Bake three CC0 Kenney rocks, two plants and a mushroom to tiny Y-up CPU mesh data.
 
 Run in Blender's own background process (does not open or save user scenes):
   blender --background --factory-startup --python-exit-code 1 --python bake-island-rocks.py -- \
@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--donor-root", type=Path, required=True)
 parser.add_argument("--output", type=Path, required=True)
 args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:])
-selection = ["rock_largeA", "rock_largeD", "rock_largeF", "plant_flatShort", "plant_bush"]
+selection = ["rock_largeA", "rock_largeD", "rock_largeF", "plant_flatShort", "plant_bush", "mushroom_tan"]
 license_path = args.donor_root / "kenney_nature-kit/License.txt"
 if "CC0" not in license_path.read_text():
     raise ValueError("Expected the reviewed Nature Kit CC0 license")
@@ -37,7 +37,10 @@ for name in selection:
         vertex_map = [bm.verts.new(obj.matrix_world @ v.co) for v in obj.data.vertices]
         for polygon in obj.data.polygons:
             try:
-                bm.faces.new([vertex_map[i] for i in polygon.vertices])
+                face = bm.faces.new([vertex_map[i] for i in polygon.vertices])
+                if name == "mushroom_tan":
+                    material = obj.data.materials[polygon.material_index]
+                    face.material_index = int(material is not None and "Tan" in material.name)
             except ValueError:
                 pass  # duplicate shared material-boundary face
     bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=0.00001)
@@ -73,7 +76,9 @@ for name in selection:
     assets.append({"id": name, "source": str(source.relative_to(args.donor_root)),
         "sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
         "adaptation": "welded, normalized, closed convex hull" if repaired else "welded, normalized original mesh",
-        "vertices": vertices, "faces": faces})
+        "vertices": vertices, "faces": faces,
+        **({"faceMaterials": [f.material_index for f in bm.faces],
+            "materialRoles": ["stem", "cap"]} if name == "mushroom_tan" else {})})
     print(f"{name}: {len(vertices)} vertices, {len(faces)} triangles, hull={repaired}")
     bm.free()
 output = {"schemaVersion": 1, "license": "CC0-1.0", "author": "Kenney",

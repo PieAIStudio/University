@@ -146,6 +146,8 @@ export function buildCourseLandscapeGeometry(plan: CourseLandscapePlan) {
     flowers: createMiniatureAsset("flowers"),
     grass: createMiniatureAsset("grass"),
     fern: createMiniatureAsset("fern"),
+    leafy: createMiniatureAsset("leafy"),
+    mushroom: createMiniatureAsset("mushroom"),
     fence: createMiniatureAsset("fence"),
   };
   let flora: THREE.BufferGeometry | null = null;

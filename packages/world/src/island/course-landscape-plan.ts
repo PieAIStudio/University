@@ -8,6 +8,7 @@ import { placementFootprintRadius, type IslandDressingPlan } from "./island-dres
 import { distanceToIslandRoute, islandRouteClearance } from "./island-route-geometry.js";
 import { miniatureMetrics } from "./miniature-layout.js";
 import { seeded } from "./random.js";
+import { courseMeadowBeds, type MeadowBed } from "./course-meadow-beds.js";
 import { courseGardenEdges, type CourseGardenEdge } from "./course-garden-edges.js";
 import { courseGroundStones, type CourseGroundStone } from "./course-ground-stone.js";
 import { courseStallPlan, type CourseCraftedStall } from "./course-stall-plan.js";
@@ -32,7 +33,7 @@ export { COURSE_LANDSCAPE_LIMITS, type CourseOutcrop } from "./course-outcrop-pl
 export interface CourseFlora extends IslandPoint {
   readonly supportId?: string;
   readonly id: string;
-  readonly asset: "flowers" | "grass" | "fern";
+  readonly asset: "flowers" | "grass" | "fern" | "leafy" | "mushroom";
   readonly y: number;
   readonly size: number;
   readonly radius: number;
@@ -41,6 +42,7 @@ export interface CourseFlora extends IslandPoint {
   readonly groundRange: readonly [number, number];
 }
 export interface CourseLandscapePlan {
+  readonly meadowBeds?: readonly MeadowBed[];
   readonly academies?: readonly CourseAcademy[];
   readonly canopy?: readonly ShoulderCanopy[];
   readonly borders?: readonly CourseGardenEdge[];
@@ -81,9 +83,28 @@ export function courseLandscapePlan(
   const stalls = courseStallPlan(blueprint, dressing);
   const canopy = courseShoulderCanopy(blueprint, dressing, outcrops);
   const academies = courseAcademyPlan(blueprint, dressing);
-  const anchors = [
-    ...borders.map((p) => ({ ...p, count: 2 })),
-    ...outcrops.map((p) => ({ ...p, count: 10 })),
+  const meadowBeds = courseMeadowBeds(blueprint, [...occupied, ...outcrops, ...borders]).filter(
+    (bed) => !spring || !overlapsCourseSpring(spring, bed, bed.radius),
+  );
+  const anchors: Array<
+    IslandPoint & {
+      id: string;
+      radius: number;
+      count: number;
+      baseCount: number;
+      meadow?: boolean;
+      sheltered?: boolean;
+    }
+  > = [
+    ...borders.map((p) => ({ ...p, count: 4, baseCount: 2 })),
+    ...outcrops.map((p) => ({
+      id: p.id,
+      x: p.x,
+      z: p.z,
+      radius: p.radius,
+      count: 14,
+      baseCount: 10,
+    })),
     ...occupied
       .filter((p) => p.kind !== "bush")
       .map((p) => ({
@@ -91,8 +112,11 @@ export function courseLandscapePlan(
         x: p.x,
         z: p.z,
         radius: p.radius,
-        count: p.kind === "tree" ? 3 : 4,
+        count: 6,
+        baseCount: p.kind === "tree" ? 3 : 4,
+        sheltered: p.kind === "tree",
       })),
+    ...meadowBeds.map((p) => ({ ...p, baseCount: 0 })),
   ];
   let triangleBudget = outcrops.reduce(
     (sum, site) =>
@@ -121,17 +145,41 @@ export function courseLandscapePlan(
     const forestEdge = Math.atan2(closestPath.z - anchor.z, closestPath.x - anchor.x);
     for (let member = 0; member < anchor.count; member++) {
       if (flora.length >= COURSE_LANDSCAPE_LIMITS.flora) break;
-      const asset = member % 5 === 2 ? "fern" : member % 3 === 2 ? "grass" : "flowers";
+      const asset: CourseFlora["asset"] = anchor.meadow
+        ? member === 0
+          ? "leafy"
+          : member === 2
+            ? "flowers"
+            : member === 3 && anchor.sheltered
+              ? "mushroom"
+              : member % 2
+                ? "grass"
+                : "fern"
+        : member < anchor.baseCount
+          ? member % 5 === 2
+            ? "fern"
+            : member % 3 === 2
+              ? "grass"
+              : "flowers"
+          : member % 3 === 0 && anchor.sheltered
+            ? "mushroom"
+            : member % 2
+              ? "leafy"
+              : "grass";
       const triangles = miniatureMetrics(asset).triangles;
       if (triangleBudget + triangles > COURSE_LANDSCAPE_LIMITS.triangles) continue;
       // Fewer legible bouquets rather than subpixel flower confetti; the
       // original footprint, node and path tests still decide whether they fit.
       const nominalSize =
         asset === "flowers"
-          ? 2.1 + random() * 0.65
+          ? (anchor.meadow ? 1.75 : 2.1) + random() * 0.65
           : asset === "fern"
             ? 1.2 + random() * 0.5
-            : 2.2 + random() * 0.9;
+            : asset === "leafy"
+              ? 1.7 + random() * 0.5
+              : asset === "mushroom"
+                ? 1.2 + random() * 0.5
+                : 2.2 + random() * 0.9;
       for (let attempt = 0; attempt < 14; attempt++) {
         // Narrow shoulders retain a smaller real bouquet after the larger
         // fit has failed. Keep coverage without relaxing support/route gates.
@@ -139,8 +187,10 @@ export function courseLandscapePlan(
         const radius = miniatureMetrics(asset).radius * size;
         // A broken, route-facing crescent around each place/forest edge,
         // rather than separate flowers evenly surrounding every object.
-        const angle = forestEdge + (random() - 0.5) * 2.1;
-        const distance = anchor.radius + radius + 0.22 + random() * 0.85;
+        const angle = forestEdge + (random() - 0.5) * (anchor.meadow ? 5.2 : 2.1);
+        const distance = anchor.meadow
+          ? Math.sqrt(random()) * Math.max(0, anchor.radius - radius - 0.04)
+          : anchor.radius + radius + 0.22 + random() * 0.85;
         const x = anchor.x + Math.cos(angle) * distance,
           z = anchor.z + Math.sin(angle) * distance;
         const sample = sampleIslandField(field, x, z);
@@ -245,6 +295,7 @@ export function courseLandscapePlan(
   const result = {
     outcrops,
     flora,
+    meadowBeds: meadowBeds.filter((bed) => flora.some((p) => p.anchorId === bed.id)),
     borders,
     stones,
     stalls,

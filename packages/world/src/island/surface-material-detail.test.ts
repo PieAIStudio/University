@@ -20,7 +20,8 @@ describe("shared miniature-world surface swatch", () => {
       const height = data[i]! / 255;
       expect(Math.abs(data[i + 1]! / 255 - (0.96 - height * 0.12))).toBeLessThan(0.004);
       expect(Math.abs(data[i + 2]! / 255 - (0.76 + height * 0.24))).toBeLessThan(0.004);
-      expect(data[i + 3]).toBe(255);
+      expect(data[i + 3]).toBeGreaterThanOrEqual(30);
+      expect(data[i + 3]).toBeLessThanOrEqual(225);
       min = Math.min(min, data[i]!);
       max = Math.max(max, data[i]!);
     }
@@ -35,6 +36,15 @@ describe("shared miniature-world surface swatch", () => {
     expect(min).toBeGreaterThan(30);
     expect(max).toBeLessThan(225);
     expect(() => surfaceSwatchData(0)).toThrow(RangeError);
+  });
+
+  it("adds short turf in the unused alpha channel without replacing the stone wear channels", () => {
+    const data = surfaceSwatchData();
+    let strokes = 0;
+    for (let i = 3; i < data.length; i += 4) if (data[i]! > 64) strokes++;
+    expect(strokes).toBeGreaterThan(800);
+    expect(strokes).toBeLessThan(6000);
+    expect(new Set(Array.from(data).filter((_, i) => i % 4 === 3)).size).toBeGreaterThan(100);
   });
 
   it("shares one data texture, keeps mip filtering, and releases only the last owner", () => {
@@ -92,7 +102,7 @@ describe("shared miniature-world surface swatch", () => {
         expect(shader.vertexShader).not.toContain("transformed +=");
         expect(shader.uniforms.uSurfaceDetailMode).toBe(detail.uniforms.uSurfaceDetailMode);
         detail.uniforms.uSurfaceDetailMode.value = 0;
-        expect(detail.customProgramCacheKey()).toBe("university-surface-swatch-v3/swatch");
+        expect(detail.customProgramCacheKey()).toBe("university-surface-swatch-v4/swatch");
       } finally {
         detail.dispose();
       }

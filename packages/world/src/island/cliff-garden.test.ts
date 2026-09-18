@@ -20,6 +20,7 @@ describe("actual mineral ledges own their plants", () => {
       "rock_largeF",
       "plant_flatShort",
       "plant_bush",
+      "mushroom_tan",
     ]);
     for (const asset of shapes.assets) {
       expect(asset.sha256).toMatch(/^[a-f0-9]{64}$/);
@@ -41,9 +42,19 @@ describe("actual mineral ledges own their plants", () => {
           edges.set(edge, (edges.get(edge) ?? 0) + 1);
         }
       }
-      if (asset.id.startsWith("rock_")) {
+      if (asset.id.startsWith("rock_") || asset.id === "mushroom_tan") {
         expect([...edges.values()].every((n) => n === 2)).toBe(true);
         expect(volume).toBeGreaterThan(0);
+      }
+      if (asset.id === "mushroom_tan") {
+        expect(asset.sha256).toBe(
+          "455cbacdcdac82cc20420c3f21eaba3ff2fbceadb2e13d35a39d52130dba5a80",
+        );
+        expect(asset.faces).toHaveLength(48);
+        expect(asset.faceMaterials).toHaveLength(asset.faces.length);
+        expect(asset.materialRoles).toEqual(["stem", "cap"]);
+        expect(asset.faceMaterials!.filter((slot) => slot === 1)).toHaveLength(16);
+        expect(asset.faceMaterials!.filter((slot) => slot === 0)).toHaveLength(32);
       }
     }
   });
