@@ -74,7 +74,7 @@ import { MapBreadcrumbs } from "./MapBreadcrumbs.js";
 import type { PathOverlay } from "./world-model";
 
 const PlayCatalogRoute = lazy(() => import("../play-catalog/PlayCatalogRoute.js"));
-const ToyPlayLabRoute = lazy(() => import("../play-catalog/ToyPlayLabRoute.js"));
+const ToyPlayLabRoute = lazy(() => import("../play-catalog/ArcadeRoute.js"));
 const LearningPlayLab = lazy(() =>
   import("@pieai/university-ui/learning-play/LearningPlayLab.js").then((mod) => ({
     default: mod.LearningPlayLab,

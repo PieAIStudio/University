@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { GameButton, GameHudActions, GameInput, GamePanel, GameTabs } from "@pieai/swimmer-ui-kit";
 import { selectActivityLevel, type ActivityDifficulty } from "@pieai/university-core";
 import { translate as t, useI18n } from "../i18n/index.js";
@@ -53,15 +53,27 @@ function NativePlay({ kind }: { readonly kind: NativeKind }) {
 export function PlayCatalog({
   sources,
   presentation,
+  renderThree,
 }: {
   readonly sources: PrototypeSources;
   readonly presentation: string;
+  readonly renderThree?: (mode: NonNullable<CatalogEntry["threeMode"]>) => ReactNode;
 }) {
   const { locale } = useI18n();
   const entries = useMemo(() => createCatalog(sources), [sources]);
-  const [group, setGroup] = useState<CatalogGroup | "all">("all");
+  const [group, setGroup] = useState<CatalogGroup | "all">(
+    () =>
+      CATALOG_GROUPS.find((g) => g === new URLSearchParams(location.search).get("group")) ?? "all",
+  );
   const [query, setQuery] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(entries[0]!.id);
+  const [selectedId, setSelectedId] = useState<string | null>(() => {
+    const requested = new URLSearchParams(location.search).get("entry");
+    return (
+      entries.find((e) => e.id === requested)?.id ??
+      entries.find((e) => group === "all" || e.group === group)?.id ??
+      null
+    );
+  });
   const [round, setRound] = useState(0);
   const playArea = useRef<HTMLElement>(null);
   const picker = useRef<HTMLDetailsElement>(null);
@@ -73,6 +85,10 @@ export function PlayCatalog({
   const selected = entries.find((entry) => entry.id === selectedId);
   const choose = (entry: CatalogEntry) => {
     setSelectedId(entry.id);
+    const url = new URL(location.href);
+    url.searchParams.set("entry", entry.id);
+    url.searchParams.set("group", group);
+    history.replaceState(history.state, "", url);
     setRound(0);
     if (window.matchMedia("(max-width: 760px)").matches && picker.current)
       picker.current.open = false;
@@ -103,7 +119,18 @@ export function PlayCatalog({
           <GameTabs
             id="play-catalog-groups"
             activeId={group}
-            onSelect={(id) => setGroup(id as CatalogGroup | "all")}
+            onSelect={(id) => {
+              setGroup(id as CatalogGroup | "all");
+              const first = entries.find((entry) => id === "all" || entry.group === id);
+              if (first) {
+                setSelectedId(first.id);
+                setRound(0);
+              }
+              const url = new URL(location.href);
+              url.searchParams.set("group", id);
+              if (first) url.searchParams.set("entry", first.id);
+              history.replaceState(history.state, "", url);
+            }}
             tabs={["all", ...CATALOG_GROUPS].map((id) => ({
               id,
               label: `${t(`gallery.${id}` as "gallery.all")} ${id === "all" ? entries.length : entries.filter((entry) => entry.group === id).length}`,
@@ -158,7 +185,7 @@ export function PlayCatalog({
                   <h2>{t(selected.name)}</h2>
                 </div>
                 <GameHudActions label={t("gallery.controls")}>
-                  {!selected.href ? (
+                  {!selected.href && !selected.threeMode ? (
                     <GameButton
                       sound={false}
                       static
@@ -183,10 +210,12 @@ export function PlayCatalog({
                 </GameHudActions>
               </div>
               <p className="play-catalog__action">{t(selected.action)}</p>
-              <p className="play-catalog__controls">
-                <b>{t("gallery.controls")}：</b>
-                {t(selected.controls)}
-              </p>
+              {!selected.threeMode ? (
+                <p className="play-catalog__controls">
+                  <b>{t("gallery.controls")}：</b>
+                  {t(selected.controls)}
+                </p>
+              ) : null}
               {selected.rhythm ? (
                 <p className="play-catalog__scope">{t(`gallery.${selected.rhythm}`)}</p>
               ) : null}
@@ -194,6 +223,7 @@ export function PlayCatalog({
                 <p className="play-catalog__limit">{t("gallery.researchLimit")}</p>
               ) : null}
               <div key={`${selected.id}:${round}`} className="play-catalog__board">
+                {selected.threeMode ? renderThree?.(selected.threeMode) : null}
                 {selected.nativeKind ? <NativePlay kind={selected.nativeKind} /> : null}
                 {selected.source ? (
                   <PrototypeFrame

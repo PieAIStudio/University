@@ -1,4 +1,8 @@
 export const messages = {
+  "gallery.three": "3D components",
+  "gallery.three.invaders": "Steer, choose a checking tool, intercept and upgrade between waves",
+  "gallery.three.stack": "Sort falling claims; wrong parcels stack up on the board",
+  "gallery.three.cloze-tetris": "Fit words to clear rising rows and practise concepts",
   "gallery.item.connect.name": "Connect",
   "gallery.item.connect.action": "Explain dependencies, causes and effects",
   "gallery.item.connect.controls":

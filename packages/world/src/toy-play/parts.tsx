@@ -36,7 +36,7 @@ const starGeometry = new THREE.ExtrudeGeometry(starShape, {
 starGeometry.center();
 const materials = new Map<number, THREE.MeshPhysicalMaterial>();
 const earthColors: ReadonlySet<number> = new Set([TOY.grass, TOY.grassEdge, TOY.soil, TOY.bark]);
-function wax(color: number) {
+export function wax(color: number) {
   let material = materials.get(color);
   if (!material) {
     const earthy = earthColors.has(color);
@@ -376,11 +376,11 @@ export function ToyGarden() {
       <Block position={[0, -1.98, 0]} size={[250, 0.2, 250]} color={TOY.water} />
       <Block position={[0, 0.13, 1.9]} size={[9.65, 0.055, 1.4]} color={TOY.cream} />
       <Block position={[0, 0.13, -0.65]} size={[2.1, 0.055, 5.9]} color={TOY.cream} />
-      <Tree x={-4.35} z={-2.3} scale={1.13} />
-      <Tree x={-3.15} z={-3.2} scale={0.92} />
+      <Tree x={-4.35} z={-4.0} scale={1.13} />
+      <Tree x={-2.85} z={-4.2} scale={0.72} />
       <Tree x={4.6} z={-2.4} scale={0.98} />
       <Tree x={4.6} z={0.1} scale={0.58} />
-      <Donor id="stall" position={[2.5, 0.13, -2.55]} height={1.48} rotation={Math.PI / 2} />
+      <Donor id="stall" position={[-4.8, 0.13, -1.65]} height={1.0} />
       <Donor id="cart" position={[-4.35, 0.13, -0.1]} height={0.87} rotation={0.35} />
       <Donor id="lantern" position={[4.65, 0.13, 2.9]} height={0.86} />
       <Donor id="rock_smallA" position={[-4.6, 0.13, -1.1]} height={0.35} />

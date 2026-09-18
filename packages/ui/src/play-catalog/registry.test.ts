@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createCatalog, filterCatalog, type PrototypeSources } from "./registry.js";
 import { buildPrototypeDocument } from "./prototype-document.js";
-import { messages as zh } from "../i18n/catalogs/play-gallery.zh-CN.js";
-import { messages as en } from "../i18n/catalogs/play-gallery.en.js";
+import { messages as zh } from "../i18n/catalogs/zh-CN.js";
+import { messages as en } from "../i18n/catalogs/en.js";
 
 const sources = Object.fromEntries(
   ["blocks", "arcade", "index", "remade", "compare"].map((id) => [
@@ -18,7 +18,14 @@ const sources = Object.fromEntries(
 describe("one inventory without pretending prototypes are course engines", () => {
   it("derives every research entry from its retained source and keeps the earlier course sample", () => {
     const entries = createCatalog(sources);
-    expect(entries).toHaveLength(50);
+    expect(entries).toHaveLength(53);
+    expect(entries.filter((entry) => entry.group !== "three")).toHaveLength(50);
+    const three = entries.filter((entry) => entry.group === "three");
+    expect(three).toHaveLength(3);
+    for (const entry of three)
+      expect(
+        entries.some((original) => original.id === entry.inspiredBy && original.group === "arcade"),
+      ).toBe(true);
     expect(new Set(entries.map((entry) => entry.id)).size).toBe(entries.length);
     expect(entries.filter((entry) => entry.group === "native")).toHaveLength(13);
     expect(entries.filter((entry) => entry.group === "paths")).toHaveLength(6);

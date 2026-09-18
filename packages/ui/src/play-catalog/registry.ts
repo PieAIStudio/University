@@ -3,7 +3,7 @@ import { AI_MODES, FOUNDATION_MODES } from "../learning-play/LearningPlayLab.js"
 import type { MessageKey } from "../i18n/types.js";
 import { SAMPLE_PATHS } from "./sample-paths.js";
 
-export const CATALOG_GROUPS = ["native", "paths", "blocks", "arcade", "history"] as const;
+export const CATALOG_GROUPS = ["native", "paths", "blocks", "arcade", "three", "history"] as const;
 export type CatalogGroup = (typeof CATALOG_GROUPS)[number];
 export type PrototypeSource = "blocks" | "arcade" | "index" | "remade" | "compare";
 export type PrototypeSources = Readonly<Record<PrototypeSource, string>>;
@@ -20,6 +20,8 @@ export interface CatalogEntry {
   readonly source?: PrototypeSource;
   readonly prototypeId?: string;
   readonly rhythm?: "session" | "short";
+  readonly threeMode?: "invaders" | "stack" | "cloze-tetris";
+  readonly inspiredBy?: string;
 }
 
 /** Read the committed build registrations, not a copied total or a second game list. */
@@ -89,7 +91,18 @@ export function createCatalog(sources: PrototypeSources): readonly CatalogEntry[
     controls: "gallery.archiveControls",
     scope: "gallery.archiveScope",
   }));
-  return [...native, ...paths, ...research, ...history];
+  const three: CatalogEntry[] = (["invaders", "stack", "cloze-tetris"] as const).map((mode) => ({
+    id: `three:${mode}`,
+    group: "three",
+    threeMode: mode,
+    inspiredBy: `arcade:${mode}`,
+    name: `arcade3d.${mode}`,
+    action: `gallery.three.${mode}`,
+    controls: `arcade3d.how.${mode}`,
+    scope: "arcade3d.boundary",
+    rhythm: "session",
+  }));
+  return [...native, ...paths, ...research, ...three, ...history];
 }
 
 export function filterCatalog(
