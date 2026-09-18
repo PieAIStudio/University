@@ -23,9 +23,9 @@ for (const [mode, origin] of [
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(`${origin}/play-lab/catalog?lang=zh-CN`);
-    await expect(page.locator("[data-entry-id]")).toHaveCount(53);
+    await expect(page.locator("[data-entry-id]")).toHaveCount(59);
     await expect(page.locator("[data-entry-id]:not([data-entry-id^='three:'])")).toHaveCount(50);
-    await expect(page.locator(".play-catalog__count")).toHaveText("找到 53 项");
+    await expect(page.locator(".play-catalog__count")).toHaveText("找到 59 项");
     await expect(page.locator('[data-entry-id="path:follow-a-claim"]')).toHaveCount(1);
     await expect(page.locator('[data-activity="connect"]')).toBeVisible();
     for (const source of ["blocks", "arcade"] as const) {

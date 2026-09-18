@@ -32,7 +32,9 @@ import type { MessageCatalog } from "../types.js";
  * the source catalog; authoring-only terminology lives in the same catalog
  * so switching modes does not silently switch language.
  */
+import { messages as purpose3d } from "./purpose-3d.en.js";
 export const messages = {
+  ...purpose3d,
   ...arcade3d,
   ...playGallery,
   ...accountClosure,

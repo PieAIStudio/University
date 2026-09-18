@@ -1,12 +1,12 @@
 ---
 id: PLAN-INTERACTION-3D-PLAYLAB
-title: Three Shared Toy-Scale Interaction Experiments
+title: Nine Learning Games with Shared Finish and Game-Specific Scenes
 type: plan
 status: active
 canonical: true
 owner: ai-assisted
 created: 2026-09-17
-last_reviewed: 2026-09-17
+last_reviewed: 2026-09-18
 domain: learning-experience
 tags:
   - interaction
@@ -16,7 +16,7 @@ related:
   - REF-CURRENT-WORK
 ---
 
-# Three shared toy-scale interaction experiments
+# Nine learning games: shared finish, game-specific scenes
 
 Owner authorized a separate experiment based on the committed interaction-first
 lane. The course lane and its uncommitted PRIMM work remain untouched. No merge,
@@ -25,8 +25,10 @@ by this experiment.
 
 ## Scope and acceptance
 
-Fixed samples: `arcade:stack`, `arcade:invaders`, `arcade:cloze-tetris`.
-New route: `/play-lab/toy-3d`, also linked from the existing catalog.
+The first three samples were `arcade:stack`, `arcade:invaders` and
+`arcade:cloze-tetris`. Their garden upgrades remain live. Six separately named
+versions now extend the experiment; see the current work below.
+The route `/play-lab/toy-3d` and catalog share one entry adapter.
 All are local, deterministic research games; completing one does not mark a
 course mastered. No model call, external CDN or account mutation is needed.
 
@@ -39,7 +41,8 @@ DOM; 3D picking, click/place and keyboard controls share the same state.
 Use the existing Stage and its SwimmerRenderKit grade, environment and lifecycle.
 Shared scenery, materials, blocks, sockets and feedback live in `packages/world`;
 pure game rules have no renderer imports. No second terrain/map pipeline and no
-copied grade shader. One small composition is shared by all three variants.
+copied grade shader. Share the finish and interaction parts, not an obligatory
+scene composition. The garden belongs only to the three retained editions.
 
 Kenney source is read-only. Reuse the already-vendored r01 stall, cart, lantern and
 small rock, with the existing manifest's source hashes, pack licenses and texture
@@ -53,7 +56,60 @@ ledger; local hash-verification receipts do not replace it.
 
 ## Work
 
-### Owner-requested gameplay correction (current)
+### Game-first scene expansion (current Owner request)
+
+Preserve all three accepted garden games at `e9267221` as live entries, not only
+history. Add six separately addressable versions: cloud-flight, sorting-factory,
+sentence-press, information-slice, evidence-wiring, process-train. New scenes are
+composed for their mechanics; only the rounded/wax material language is shared.
+The first three reuse the existing simulations with an explicit scene edition.
+The other three adapt `arcade:slice`, `blocks:wire`, `blocks:rank`; retain their
+sources and record all departures from their rules. No new branch, course change,
+donor mutation, package release, merge or push is part of this work.
+
+- [x] Six game-specific scenes and three additional playable mechanics.
+- [x] Nine catalog entries with original three deep links preserved.
+- [x] Actual gameplay, preservation, mobile/desktop and pause/restart checks.
+- [x] Visual inspection, corrections and final project checks; ready for Owner trial.
+
+Design lives in V5 `#game-first-scenes`. Evidence for this expansion uses
+`.devspace-visual/interaction-3d/game-first/`; older acceptance is not counted
+as evidence for the six new versions.
+
+Live new IDs: `three:sky-invaders`, `three:factory-stack`, `three:press-words`,
+`three:slice`, `three:wire`, `three:rank`. Original `three:invaders`, `three:stack`
+and `three:cloze-tetris` remain the garden edition. The catalog identifies these
+roles visibly and search can find the retained editions without a hidden archive.
+
+The switchboard replaces the short one-pass connector with three circuits and
+explicit checking/repair; it supports both cable dragging and click/keyboard.
+The process train accepts any valid prerequisite order, including independent
+photo/record checks in either order, rather than enforcing a single answer list.
+The slicer has a finite 24-item deck and three wrong-cut limit instead of a
+one-minute timer; ignored claims are never counted as independent correct answers.
+These are declared gameplay changes, not claims of exact mechanical porting.
+
+Inspected failure evidence remains in `pilot-1/` through `pilot-4/` and the
+named screenshots. Early projection aliasing collapsed controls; a later
+world-z versus view-plane mismatch hid physical lower tiles behind the case.
+`board-projection.ts` and the physical-body ray regression now cover that issue.
+The wire-drag test waits for the normal hover actionability check before using
+screen coordinates; it does not force input or alter the simulation.
+
+Acceptance: full `pnpm verify` passed (`verify-accepted.exit` = 0), then the
+combined new-scene, retained-arcade and catalog browser suite passed **47 tests**
+(`browser-accepted.exit` = 0). Stable output is under `game-first/accepted/`.
+This is the related browser scope, not the entire unrelated product E2E suite.
+`preservation.json` verifies ten protected source files unchanged from e9267221;
+no tracked file was deleted. The current walkthrough is `game-first/owner-review.md`.
+
+The first verify failed in an old unconfigured-grading-service fixture that
+inherited a public local service URL. The test now explicitly clears that
+environment key, restores it afterward and asserts that fetch is never called.
+Production grading, local credentials and service configuration were not changed.
+The original failure and isolated recheck remain alongside the passing final run.
+
+### Previous accepted gameplay correction at e9267221
 
 The owner accepted the visual style but rejected replacing the original games
 with sequential quiz workstations. Retain the approved shared Kenney/toy parts;
@@ -67,7 +123,7 @@ below describe the superseded quiz interaction, not acceptance of these games.
 - [x] Shared embedded/standalone player, catalog group, local-only scores, pause lifecycle.
 - [x] Real input, losses/wins, responsive screenshots and focused verification.
 
-### Current implementation and verification inputs
+### Previous implementation and verification inputs
 
 The actual arcade runtime is described once in `packages/world/src/toy-play/README.md`.
 The approved garden, Kenney files, palette maps and shared Stage are retained.

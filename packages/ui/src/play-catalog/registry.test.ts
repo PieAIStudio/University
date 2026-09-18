@@ -18,13 +18,21 @@ const sources = Object.fromEntries(
 describe("one inventory without pretending prototypes are course engines", () => {
   it("derives every research entry from its retained source and keeps the earlier course sample", () => {
     const entries = createCatalog(sources);
-    expect(entries).toHaveLength(53);
+    expect(entries).toHaveLength(59);
     expect(entries.filter((entry) => entry.group !== "three")).toHaveLength(50);
     const three = entries.filter((entry) => entry.group === "three");
-    expect(three).toHaveLength(3);
+    expect(three).toHaveLength(9);
+    expect(three.filter((e) => e.retained).map((e) => e.id)).toEqual([
+      "three:invaders",
+      "three:stack",
+      "three:cloze-tetris",
+    ]);
     for (const entry of three)
       expect(
-        entries.some((original) => original.id === entry.inspiredBy && original.group === "arcade"),
+        entries.some(
+          (original) =>
+            original.id === entry.inspiredBy && ["arcade", "blocks"].includes(original.group),
+        ),
       ).toBe(true);
     expect(new Set(entries.map((entry) => entry.id)).size).toBe(entries.length);
     expect(entries.filter((entry) => entry.group === "native")).toHaveLength(13);
@@ -47,6 +55,8 @@ describe("one inventory without pretending prototypes are course engines", () =>
       "arcade:shift",
     ]);
     expect(filterCatalog(entries, "native", "值班", translate)).toEqual([]);
+    expect(filterCatalog(entries, "three", "花园", translate)).toHaveLength(3);
+    expect(filterCatalog(entries, "three", "新场景", translate)).toHaveLength(6);
     expect(filterCatalog(entries, "all", "does-not-exist", translate)).toEqual([]);
     expect(() => createCatalog({ ...sources, arcade: sources.arcade + sources.arcade })).toThrow();
   });

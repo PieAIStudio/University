@@ -2,6 +2,8 @@ import { toPath, type ActivityKind } from "@pieai/university-core";
 import { AI_MODES, FOUNDATION_MODES } from "../learning-play/LearningPlayLab.js";
 import type { MessageKey } from "../i18n/types.js";
 import { SAMPLE_PATHS } from "./sample-paths.js";
+import { THREE_GAMES, type ThreeGame } from "./three-games.js";
+export { THREE_GAMES, type ThreeGame } from "./three-games.js";
 
 export const CATALOG_GROUPS = ["native", "paths", "blocks", "arcade", "three", "history"] as const;
 export type CatalogGroup = (typeof CATALOG_GROUPS)[number];
@@ -20,7 +22,8 @@ export interface CatalogEntry {
   readonly source?: PrototypeSource;
   readonly prototypeId?: string;
   readonly rhythm?: "session" | "short";
-  readonly threeMode?: "invaders" | "stack" | "cloze-tetris";
+  readonly threeMode?: ThreeGame;
+  readonly retained?: boolean;
   readonly inspiredBy?: string;
 }
 
@@ -101,8 +104,31 @@ export function createCatalog(sources: PrototypeSources): readonly CatalogEntry[
     controls: `arcade3d.how.${mode}`,
     scope: "arcade3d.boundary",
     rhythm: "session",
+    retained: true,
   }));
-  return [...native, ...paths, ...research, ...three, ...history];
+  const upgraded: CatalogEntry[] = THREE_GAMES.slice(0, 6).map((mode) => ({
+    id: `three:${mode}`,
+    group: "three",
+    threeMode: mode,
+    inspiredBy:
+      mode === "sky-invaders"
+        ? "arcade:invaders"
+        : mode === "factory-stack"
+          ? "arcade:stack"
+          : mode === "press-words"
+            ? "arcade:cloze-tetris"
+            : mode === "slice"
+              ? "arcade:slice"
+              : `blocks:${mode}`,
+    name: `arcade3d.${mode}`,
+    action: `gallery.three.${mode}` as MessageKey,
+    controls:
+      `arcade3d.how.${mode === "sky-invaders" ? "invaders" : mode === "factory-stack" ? "stack" : mode === "press-words" ? "cloze-tetris" : mode}` as MessageKey,
+    scope: "arcade3d.boundary",
+    rhythm: "session",
+    retained: false,
+  }));
+  return [...native, ...paths, ...research, ...upgraded, ...three, ...history];
 }
 
 export function filterCatalog(
@@ -116,7 +142,7 @@ export function filterCatalog(
     (entry) =>
       (group === "all" || entry.group === group) &&
       terms.every((term) =>
-        `${entry.id} ${label(entry.name)} ${label(entry.action)} ${label(entry.controls)}`
+        `${entry.id} ${label(entry.name)} ${label(entry.action)} ${label(entry.controls)} ${entry.threeMode ? label(entry.retained ? "gallery.three.retained" : "gallery.three.new") : ""}`
           .toLocaleLowerCase()
           .includes(term),
       ),

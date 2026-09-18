@@ -5,14 +5,16 @@ import * as THREE from "three";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { Stage } from "../Stage.js";
 import { usePrefersReducedMotion } from "../reduced-motion.js";
-import { Ball, Block, Disc, Parcel, Socket, Star, ToyGarden, wax } from "./parts.js";
+import { Ball, Block, Disc, Parcel, Socket, Star, ToyGarden, ToyLighting, wax } from "./parts.js";
 import { TOY } from "./style.js";
+import { PurposeScenery, PressHousing, PURPOSE_BACKGROUNDS } from "./purpose-scenes.js";
 import { layoutTargetLabels } from "./label-layout.js";
 import { CATEGORIES, word, type ToyLocale } from "./material.js";
 import { CLAIMS, FLIGHT_CARDS, SENTENCES, VOCABULARY } from "./arcade-content.js";
 import { ArcadeSession, type ArcadeAction, type ArcadeState, type Foe } from "./arcade-engine.js";
 
 interface SceneProps {
+  edition?: "garden" | "purpose";
   session: ArcadeSession;
   snapshot: ArcadeState;
   locale: ToyLocale;
@@ -34,15 +36,27 @@ class Boundary extends Component<{ children: ReactNode; fail: () => void }, { fa
     return this.state.failed ? null : this.props.children;
   }
 }
-function CameraAndClock({ session, frozen }: Pick<SceneProps, "session" | "frozen">) {
+function CameraAndClock({
+  session,
+  frozen,
+  edition,
+}: Pick<SceneProps, "session" | "frozen" | "edition">) {
   const { camera, size } = useThree();
   useEffect(() => {
     const aspect = size.width / Math.max(1, size.height);
     const d = Math.max(0.96, 1.02 / aspect);
     camera.position.set(0, 12.8 * d, 17.5 * d);
     camera.lookAt(0, session.mode === "cloze-tetris" ? 4 * d : 1.1, 0.15);
+    if (edition === "purpose" && session.mode === "invaders") {
+      camera.position.set(0, 16 * d, 17.5 * d);
+      camera.lookAt(0, 0.5, 0.8);
+    }
+    if (edition === "purpose" && session.mode === "stack") {
+      camera.position.set(7 * d, 10 * d, 21 * d);
+      camera.lookAt(0, 2.9, 0.6);
+    }
     camera.updateProjectionMatrix();
-  }, [camera, size.width, size.height, session.mode]);
+  }, [camera, size.width, size.height, session.mode, edition]);
   useFrame((_, dt) => {
     if (!frozen) session.advance(dt);
   }, -2);
@@ -121,7 +135,8 @@ function TargetLabels({
   session,
   snapshot,
   locale,
-}: Pick<SceneProps, "session" | "snapshot" | "locale">) {
+  edition,
+}: Pick<SceneProps, "session" | "snapshot" | "locale" | "edition">) {
   const { camera, size } = useThree();
   const labels = useRef(new Map<number, HTMLDivElement>());
   const leaders = useRef(new Map<number, SVGLineElement>());
@@ -131,7 +146,9 @@ function TargetLabels({
     const items = state.enemies.flatMap((f) => {
       const label = labels.current.get(f.id);
       if (!label || !label.offsetWidth) return [];
-      const p = projection.current.set(f.x, 0.95, f.z).project(camera);
+      const p = projection.current
+        .set(f.x, 0.95, f.z * (edition === "purpose" ? 1.8 : 1))
+        .project(camera);
       return [
         {
           id: f.id,
@@ -207,7 +224,7 @@ function TargetLabels({
     </Html>
   );
 }
-function Flight({ session, snapshot, locale, act, frozen }: SceneProps) {
+function Flight({ session, snapshot, locale, act, frozen, edition }: SceneProps) {
   const ship = useRef<THREE.Group>(null);
   const plane = useRef(new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.8));
   const point = useRef(new THREE.Vector3());
@@ -222,18 +239,22 @@ function Flight({ session, snapshot, locale, act, frozen }: SceneProps) {
   }, -1);
   return (
     <group name="arcade-flight">
-      <Block position={[0, 0.23, -0.2]} size={[8.8, 0.2, 7.7]} color={TOY.water} />
-      {[-4.4, 4.4].map((x) => (
-        <Block key={x} position={[x, 0.4, -0.2]} size={[0.13, 0.2, 7.7]} color={TOY.cream} />
-      ))}
-      {[0, 1].map((i) => (
-        <Block
-          key={i}
-          position={[(i ? 1 : -1) * 2.15, 0.4, 3.3]}
-          size={[4.18, 0.15, 0.65]}
-          color={TOY.channels[i]!}
-        />
-      ))}
+      {edition !== "purpose" ? (
+        <>
+          <Block position={[0, 0.23, -0.2]} size={[8.8, 0.2, 7.7]} color={TOY.water} />
+          {[-4.4, 4.4].map((x) => (
+            <Block key={x} position={[x, 0.4, -0.2]} size={[0.13, 0.2, 7.7]} color={TOY.cream} />
+          ))}
+          {[0, 1].map((i) => (
+            <Block
+              key={i}
+              position={[(i ? 1 : -1) * 2.15, 0.4, 3.3]}
+              size={[4.18, 0.15, 0.65]}
+              color={TOY.channels[i]!}
+            />
+          ))}
+        </>
+      ) : null}
       <mesh
         name="arcade-flight-input"
         rotation-x={-Math.PI / 2}
@@ -249,13 +270,15 @@ function Flight({ session, snapshot, locale, act, frozen }: SceneProps) {
         <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
       </mesh>
       <group ref={ship} position={[snapshot.shipX, 0.8, 3.35]} name="arcade-player">
-        <Aircraft tool={snapshot.shipX < 0 ? 0 : 1} />
+        <group scale={[1, 1, edition === "purpose" ? 1 / 1.8 : 1]}>
+          <Aircraft tool={snapshot.shipX < 0 ? 0 : 1} />
+        </group>
       </group>
       <Shots session={session} />
       {snapshot.enemies.map((f) => (
         <FoeView key={f.id} foe={f} session={session} />
       ))}
-      <TargetLabels session={session} snapshot={snapshot} locale={locale} />
+      <TargetLabels session={session} snapshot={snapshot} locale={locale} edition={edition} />
     </group>
   );
 }
@@ -345,7 +368,7 @@ function RackRow({
     </group>
   );
 }
-function WordsScene({ session, snapshot, locale, act, frozen }: SceneProps) {
+function WordsScene({ session, snapshot, locale, act, frozen, edition }: SceneProps) {
   const { size, camera, gl } = useThree();
   // A vertical toy rack has a readable screen-space spacing contract. Project
   // those centers onto its z=0 plane; actual shelves AND their DOM labels move
@@ -461,16 +484,22 @@ function WordsScene({ session, snapshot, locale, act, frozen }: SceneProps) {
   };
   return (
     <group name="arcade-word-well">
-      <Block position={[0, 0.28, 2.5]} size={[8.6, 0.28, 2.4]} color={TOY.bark} />
-      {[-4.25, 4.25].map((x) => (
-        <Block
-          key={x}
-          position={[x, (rackTop + rackBottom) / 2, 2.4]}
-          size={[0.16, rackTop - rackBottom, 0.25]}
-          color={TOY.cream}
-        />
-      ))}
-      <Block position={[0, rackTop, 2.4]} size={[8.5, 0.1, 0.15]} color={TOY.coral} />
+      {edition === "purpose" ? (
+        <PressHousing top={rackTop} bottom={rackBottom} elapsed={snapshot.elapsed} />
+      ) : (
+        <>
+          <Block position={[0, 0.28, 2.5]} size={[8.6, 0.28, 2.4]} color={TOY.bark} />
+          {[-4.25, 4.25].map((x) => (
+            <Block
+              key={x}
+              position={[x, (rackTop + rackBottom) / 2, 2.4]}
+              size={[0.16, rackTop - rackBottom, 0.25]}
+              color={TOY.cream}
+            />
+          ))}
+          <Block position={[0, rackTop, 2.4]} size={[8.5, 0.1, 0.15]} color={TOY.coral} />
+        </>
+      )}
       {Array.from({ length: Math.min(snapshot.junk, 8) }, (_, i) => (
         <Block
           key={i}
@@ -632,13 +661,26 @@ export function ArcadeScene(props: SceneProps) {
           !(import.meta.env.DEV && new URLSearchParams(location.search).get("toy-post") === "off")
         }
       >
-        <color attach="background" args={[TOY.sky]} />
-        <CameraAndClock session={props.session} frozen={props.frozen} />
-        <group scale={[1.22, 1, 1.15]}>
-          <ToyGarden />
-        </group>
+        <color
+          attach="background"
+          args={[props.edition === "purpose" ? PURPOSE_BACKGROUNDS[props.session.mode] : TOY.sky]}
+        />
+        <CameraAndClock session={props.session} frozen={props.frozen} edition={props.edition} />
+        {props.edition === "purpose" ? <ToyLighting /> : null}
+        {props.edition === "purpose" ? (
+          <PurposeScenery
+            mode={props.session.mode}
+            elapsed={() => props.session.getState().elapsed}
+          />
+        ) : (
+          <group scale={[1.22, 1, 1.15]}>
+            <ToyGarden />
+          </group>
+        )}
         {props.snapshot.mode === "invaders" ? (
-          <Flight {...props} />
+          <group scale={[1, 1, props.edition === "purpose" ? 1.8 : 1]}>
+            <Flight {...props} />
+          </group>
         ) : props.snapshot.mode === "stack" ? (
           <Stack {...props} />
         ) : (

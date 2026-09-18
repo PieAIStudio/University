@@ -12,7 +12,7 @@ import presentation from "../../../../docs/reference/interaction-prototype/prese
 // URL, second server, course producer, account port or remote code loader exists.
 const sources = { blocks, arcade, index, remade, compare };
 const ArcadePlayer = lazy(() =>
-  import("./ArcadePlayer.js").then((m) => ({ default: m.ArcadePlayer })),
+  import("./ThreePlayer.js").then((m) => ({ default: m.ThreePlayer })),
 );
 export default function PlayCatalogRoute() {
   const { t } = useI18n();

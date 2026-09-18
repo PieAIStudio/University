@@ -334,10 +334,10 @@ export function Socket({
   );
 }
 
-/** The same scenery composition for all games; never copied per component. */
-export function ToyGarden() {
+/** Material lighting is reusable; garden scenery is only one retained edition. */
+export function ToyLighting() {
   return (
-    <group name="toy-garden">
+    <>
       <hemisphereLight args={[0xeaf7ff, 0xc59c73, 0.8]} />
       <directionalLight
         position={[-6, 12, 8]}
@@ -357,6 +357,13 @@ export function ToyGarden() {
         shadow-radius={3}
       />
       <directionalLight position={[6, 5, -5]} intensity={0.7} color={0xc4e9fa} />
+    </>
+  );
+}
+export function ToyGarden() {
+  return (
+    <group name="toy-garden">
+      <ToyLighting />
       <mesh
         geometry={landBody}
         material={wax(TOY.soil)}

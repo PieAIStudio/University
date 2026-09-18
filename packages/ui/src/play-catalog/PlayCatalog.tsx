@@ -160,6 +160,11 @@ export function PlayCatalog({
                       <strong>{t(entry.name)}</strong>
                       <span>{t(entry.action)}</span>
                       <small>{entry.id}</small>
+                      {entry.threeMode ? (
+                        <small>
+                          {t(entry.retained ? "gallery.three.retained" : "gallery.three.new")}
+                        </small>
+                      ) : null}
                     </button>
                   </li>
                 ))}
@@ -183,6 +188,11 @@ export function PlayCatalog({
                     {t(`gallery.${selected.group}`)} · <code>{selected.id}</code>
                   </p>
                   <h2>{t(selected.name)}</h2>
+                  {selected.threeMode ? (
+                    <small>
+                      {t(selected.retained ? "gallery.three.retained" : "gallery.three.new")}
+                    </small>
+                  ) : null}
                 </div>
                 <GameHudActions label={t("gallery.controls")}>
                   {!selected.href && !selected.threeMode ? (

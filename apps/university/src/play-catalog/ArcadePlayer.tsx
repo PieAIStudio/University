@@ -23,7 +23,15 @@ import {
 } from "@pieai/university-world/toy-play.js";
 import "./arcade3d.css";
 
-export function ArcadePlayer({ mode }: { mode: ToyMode }) {
+export function ArcadePlayer({
+  mode,
+  edition = "garden",
+  displayMode,
+}: {
+  mode: ToyMode;
+  edition?: "garden" | "purpose";
+  displayMode?: "sky-invaders" | "factory-stack" | "press-words";
+}) {
   const { locale: appLocale, t } = useI18n();
   const locale: ToyLocale = appLocale === "en" ? "en" : "zh-CN";
   const [round, setRound] = useState(0);
@@ -134,6 +142,7 @@ export function ArcadePlayer({ mode }: { mode: ToyMode }) {
       className="arcade3d"
       data-testid="arcade3d"
       data-mode={mode}
+      data-edition={edition}
       data-phase={s.phase}
       data-frozen={frozen}
       data-score={s.score}
@@ -229,6 +238,7 @@ export function ArcadePlayer({ mode }: { mode: ToyMode }) {
       >
         {!failed ? (
           <ArcadeScene
+            edition={edition}
             key={epoch}
             session={session}
             snapshot={s}
@@ -282,7 +292,7 @@ export function ArcadePlayer({ mode }: { mode: ToyMode }) {
                 <p role="status">{t("arcade3d.loading")}</p>
               ) : s.phase === "ready" ? (
                 <>
-                  <h3>{t(`arcade3d.${mode}`)}</h3>
+                  <h3>{t(`arcade3d.${displayMode ?? mode}`)}</h3>
                   <p>{t(`arcade3d.how.${mode}`)}</p>
                   <label className="arcade3d__pace">
                     <input

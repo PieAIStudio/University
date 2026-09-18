@@ -1,10 +1,44 @@
 # Toy interaction parts
 
-Three actual arcade loops, using the owner's accepted toy art direction.
-`ArcadeScene` composes the existing `Stage`: one renderer, one RenderKit grade,
-shared sky environment and bounded scene objects. `ArcadePlayer` is the single
-host for both the catalog's `3D组件` category and `/play-lab/toy-3d`.
-All 50 pre-existing catalog entries remain; the new three have their own IDs.
+Nine playable entries use the owner's accepted toy art direction: three retained
+garden editions plus six game-first scenes. Original IDs and deep links still
+render the garden games. They are not relegated to Git history.
+Both scene families compose the existing `Stage`: one renderer per active game,
+one RenderKit grade, shared sky environment and bounded scene objects.
+`ThreePlayer` is the catalog/standalone adapter; `ArcadePlayer` hosts the retained
+mechanics in both scene editions and `WorkshopPlayer` hosts the three added rulesets.
+All 50 pre-existing 2D/course catalog entries remain; all nine 3D entries have
+their own IDs. The catalog contains 59 entries in total.
+
+## Game-first scenes
+
+`purpose-scenes.tsx` composes an open cloud flight corridor, a vertical sorting
+factory and a sentence printing machine. `ArcadePlayer`'s explicit `edition`
+selects these without changing the retained simulations. `ToyLighting` was
+factored out of the garden, preserving its original nesting and transforms;
+new scenes reuse the finish and light rather than the island, trees or stall.
+
+`WorkshopSession` adds three distinct local rulesets: airborne information
+slicing, evidence wiring and prerequisite-based process ordering. The slicing
+scene has real pointer-segment hits, split capsules and a short physical trail.
+The switchboard has real tube cables, click/drag connection and a test/repair
+cycle. The rail yard runs the ordered steps and stops at an unmet prerequisite;
+independent photo/record checks can be swapped, not punished for differing from
+one arbitrary sequence. These are teaching models, not electrical simulators or
+real AI outputs. All three retain keyboard/click paths, interruption handling
+and accessible source material.
+
+`board-projection.ts` is the camera-facing datum shared by physical panels and
+DOM annotations. It prevents an angled backing plate from covering lower tiles
+even though their HTML labels remain visible. Projection and browser regressions
+test this actual failure, not just successful selector lookup.
+
+Lightweight identities live in `packages/ui/src/play-catalog/three-games.ts`;
+standalone play does not import the native component registry merely to list them.
+New IDs are `sky-invaders`, `factory-stack`, `press-words`, `slice`, `wire`, `rank`;
+the unqualified `invaders`, `stack`, `cloze-tetris` IDs retain the old editions.
+Inspiration entries are preserved as `arcade:*` or `blocks:*`. There are no new
+external assets, dependencies, course revisions, provider calls or cloud writes.
 
 ## Shared building blocks
 
