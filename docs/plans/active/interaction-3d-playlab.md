@@ -96,12 +96,23 @@ world-z versus view-plane mismatch hid physical lower tiles behind the case.
 The wire-drag test waits for the normal hover actionability check before using
 screen coordinates; it does not force input or alter the simulation.
 
-Acceptance: full `pnpm verify` passed (`verify-accepted.exit` = 0), then the
-combined new-scene, retained-arcade and catalog browser suite passed **47 tests**
-(`browser-accepted.exit` = 0). Stable output is under `game-first/accepted/`.
+A later live 320px slicing check exposed two capsule labels overlapping as their
+ballistic paths crossed. `CapsuleLabels` reuses `layoutTargetLabels`, preserving
+font size, both targets and their physics; leaders attach to actual capsules.
+The original collision is in `slice-crowding-observed.png` / `.json`, and the
+Chinese/English crossing plus physical slicing regressions passed in
+`slice-clearance-fixed/`. A missing local Vercel CLI on the connector PATH stopped
+one test-server startup; it was an environment failure, not a passing test.
+
+
+Acceptance after the capsule-label correction: full `pnpm verify` passed, then
+the combined new-scene, retained-arcade and catalog browser suite passed **49 tests**.
+Both exited 0. `game-first/closeout-recheck.json` records the exact validation job
+identities and application commit; final browser artifacts are in `final-49/`.
+The earlier 47-test run and its logs remain in `accepted/` as prior evidence.
 This is the related browser scope, not the entire unrelated product E2E suite.
-`preservation.json` verifies ten protected source files unchanged from e9267221;
-no tracked file was deleted. The current walkthrough is `game-first/owner-review.md`.
+Ten protected source files still match e9267221; no tracked file was deleted and
+no recovery/content package changed. The current walkthrough is `game-first/owner-review.md`.
 
 The first verify failed in an old unconfigured-grading-service fixture that
 inherited a public local service URL. The test now explicitly clears that
