@@ -102,7 +102,10 @@ for (const viewport of [
         const materials = await captureDrawnMaterials(page);
         const drawnTerrain = materials.materials.find((m) => m.mesh === "island-terrain");
         expect(drawnTerrain?.maps.uCourseSurface?.width).toBe(256);
-        expect(drawnTerrain?.maps.uCourseSurface?.colourSpace).toBe("srgb-linear");
+        // R54 carries scalar canopy/meadow/route/wear masks, not RGB paint.
+        // Colour management must not transform these values before the shader.
+        expect(drawnTerrain?.maps.uCourseSurface?.colourSpace).toBe("");
+        expect(before.swatch.gardenMaskBytes).toBe(256 * 256 * 4);
         const drawnCraft = materials.materials.find((m) => m.mesh === "course-garden-flora");
         expect(drawnCraft?.maps.uSurfaceSwatch?.uuid).toBe(drawnTerrain?.maps.uSurfaceSwatch?.uuid);
         expect(drawnCraft?.craftCoordinateBytes).toBeGreaterThan(0);
