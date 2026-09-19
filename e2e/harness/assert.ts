@@ -4,7 +4,8 @@ import { averagePixels, colorDistance, decodePng } from "./png.js";
 
 /** Visible prose, not a CSS class that a refactor will rename. */
 export async function assertVisibleText(page: Page, text: string | RegExp): Promise<void> {
-  await expect(page.getByText(text).first()).toBeVisible();
+  // Collapsed ancestry can repeat a title before the painted prose.
+  await expect(page.getByText(text).filter({ visible: true }).first()).toBeVisible();
 }
 
 /**

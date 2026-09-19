@@ -82,14 +82,15 @@ test.describe("N nocollide · 四条体验回归", () => {
     );
   });
 
-  test("N2 desktop · course-island 右栏只说当前课程的下一节", async ({ page }) => {
+  test("N2 desktop · course-island 右栏只说明当前课程而不重复学习入口", async ({ page }) => {
     const fixture = await getExperienceFixture(page);
     await page.goto(`${ONLINE_ORIGIN}${fixture.coursePath}`, { waitUntil: "domcontentloaded" });
     await expect(page.locator(".stagewrap canvas")).toBeVisible({ timeout: 30_000 });
 
     await expect(page).toHaveURL(`${ONLINE_ORIGIN}${fixture.coursePath}`);
-    await expect(page.locator(".app-shell__aside h2")).toHaveText(fixture.courseNextLessonTitle);
-    await expect(page.locator(".app-shell__aside")).toContainText(fixture.courseTitle);
+    await expect(page.locator(".map-shell__heading h2")).toHaveText(fixture.courseTitle);
+    await expect(page.locator(".app-shell__aside .map-information")).toBeVisible();
+    await expect(page.locator(".app-shell__aside button,.app-shell__aside a")).toHaveCount(0);
   });
 
   test("N3 phone · 提意见不盖账号目标或课文正文", async ({ page }) => {

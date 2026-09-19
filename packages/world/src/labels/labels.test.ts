@@ -27,6 +27,27 @@ it("keeps an island name when a landscape rail and hint require two bounded move
   expect(Math.abs(name!.y - 179)).toBeLessThanOrEqual(80);
 });
 
+it("uses a free half-step strip without covering scenery or the short-screen hint", () => {
+  const reserved = [
+    { left: 0, top: 0, right: 224, bottom: 286 },
+    { left: 648, top: 0, right: 872, bottom: 286 },
+    { left: 284, top: 70, right: 594, bottom: 172 },
+    { left: 298, top: 244, right: 574, bottom: 278 },
+  ];
+  const [name] = placeLabels(
+    [{ id: "current", x: 440, y: 146, z: 0, width: 220, height: 48, anchor: "island", weight: 4 }],
+    { width: 872, height: 286 },
+    { maxVisible: 1, gap: 8, reserved },
+  );
+  expect(name?.visible).toBe(true);
+  expect(name!.x).toBe(440);
+  expect(name!.y).toBeGreaterThan(178);
+  expect(name!.y).toBeLessThan(234);
+  for (const obstacle of reserved) {
+    expect(boxesOverlap(labelBox(name!, 220, 48), obstacle, 8)).toBe(false);
+  }
+});
+
 const VIEW = { width: 800, height: 600 } as const;
 
 function candidate(partial: Partial<LabelCandidate> & Pick<LabelCandidate, "id">): LabelCandidate {

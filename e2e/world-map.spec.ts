@@ -242,7 +242,7 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
     await namedStep(page, "星球选择列出每一个真实系列，地图没有第二个换系列器", async () => {
       await expect(page.locator(".study-switcher__trigger")).toHaveCount(0);
       await navigateMapBreadcrumb(page, "/planet");
-      await expect(page.locator('[data-map-surface="true"]')).toBeVisible();
+      await expect(page.locator('[data-map-surface="true"]:visible')).toHaveCount(1);
       // The old persistent switcher and its global-catalogue option were
       // retired. Every real series must remain reachable by selecting its
       // domain and, when needed, the study choice beside the globe.
@@ -252,7 +252,7 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
         );
         await humanClick(page, domain, `选择 ${study.title} 所在领域`);
         let row = page.locator(`button[data-study-id=${JSON.stringify(study.id)}]`);
-        if (!(await row.count())) {
+        if (!(await row.isVisible())) {
           const details = page.locator(".planet-domain-label details").first();
           if (await details.count())
             await humanClick(page, details.locator("summary"), "展开系列选择");

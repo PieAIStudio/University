@@ -137,7 +137,8 @@ test.describe("T accessibility and recovery", () => {
     await expect(page.locator("[data-welcome]")).toHaveCount(0);
     await page.reload({ waitUntil: "domcontentloaded" });
     await expect(page.locator("[data-welcome]")).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /开始学习|继续学习/u }).first()).toBeVisible();
+    await expect(page.locator("button.label--course.is-visible").first()).toBeVisible();
+    await expect(page.locator('[data-map-entry="true"]')).toHaveCount(0);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   });
 });

@@ -355,7 +355,14 @@ for (const viewport of [
         await page.screenshot({ path: join(folder, "world-detail.png") });
       }
       const breadcrumb = page.getByRole("navigation", { name: "当前位置", exact: true });
-      await expect(breadcrumb.getByRole("link", { name: "学习星球" })).toBeVisible();
+      const planetLink = breadcrumb.getByRole("link", { name: "学习星球", exact: true });
+      if (!(await planetLink.isVisible())) {
+        await breadcrumb.locator("details > summary").click();
+        await expect(planetLink).toBeVisible();
+        await page.keyboard.press("Escape");
+      } else {
+        await expect(planetLink).toBeVisible();
+      }
       // Click real canvas scenery, not the DOM label or a programmatic .click().
       const target = await page.evaluate((courseKey) => {
         const state = (window as any).three;
@@ -384,14 +391,7 @@ for (const viewport of [
       await expect(page).toHaveURL(new RegExp(`${COURSE_PATH.replaceAll("/", "\\/")}$`));
       await ready(page, "island-dressing-course");
       await expect(breadcrumb.locator('[aria-current="page"]')).toContainText(COURSE.title);
-      await humanClick(
-        page,
-        breadcrumb.getByRole("link", {
-          name: CATALOGUE_ROLES.settlement.study.title,
-          exact: true,
-        }),
-        "return through the shared trail",
-      );
+      await navigateMapBreadcrumb(page, "/");
       await ready(page, "remote-props");
       const returned = await page.evaluate(() => {
         const bag = window as any;

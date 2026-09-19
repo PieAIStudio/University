@@ -122,25 +122,30 @@ test.describe("G 两个校园穿同一套壳", () => {
       await expect(page.locator(".nav-rail__identity .avatar-chip")).toBeVisible({
         timeout: 30_000,
       });
+      await openMapQuickActions(page);
       online = await chrome(page);
-      await page.locator("[data-parity-control='ua-dashboard']").click();
+      await page.locator("[data-parity-control='ua-dashboard']:visible").click();
       await expect(page.locator(".capability-explanation")).toBeVisible({ timeout: 10_000 });
       await parityScreenshot(page, "world-delivery-ua-explanation");
       await page.getByRole("button", { name: "关闭说明" }).click();
+      await page.keyboard.press("Escape");
     });
 
     let local: Awaited<ReturnType<typeof chrome>> | null = null;
     await namedStep(page, "读作者端的壳", async () => {
       await page.goto(`${LOCAL_ORIGIN}/`, { waitUntil: "domcontentloaded" });
+      await selectGameRoute(page);
       await expect(page.getByText(/正在打开校园档案/)).toHaveCount(0, { timeout: 30_000 });
       await expect(page.locator(".nav-rail__list")).toBeVisible({ timeout: 30_000 });
       await expect(page.locator(".nav-rail__identity .avatar-chip")).toBeVisible({
         timeout: 30_000,
       });
       await expect(page.locator(".labels button.label").first()).toBeVisible({ timeout: 60_000 });
+      await openMapQuickActions(page);
       await injectOneSidedControl(page, LOCAL_ORIGIN);
       await parityScreenshot(page, "world-authoring");
       local = await chrome(page);
+      await page.keyboard.press("Escape");
     });
 
     await namedStep(page, "逐项比对", async () => {
@@ -209,7 +214,7 @@ async function revealUnitPreview(card: Locator) {
 
 async function walkToLesson(page: Page, origin: string, screenshotName: string) {
   const path = await walkToNodeCard(page, origin);
-  const card = page.locator("[aria-modal='true'], .path-card").first();
+  const card = page.locator(".unit-card:visible");
   await revealUnitPreview(card);
   /*
     Progress belongs to each campus's own fixture: the local SQLite projection

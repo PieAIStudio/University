@@ -63,12 +63,12 @@ test.describe("P 正式领域目录与未发布星球", () => {
           );
           await expect(current).toHaveClass(/is-visible/);
           await expect(current).toHaveCSS("opacity", "1");
-          const tools = page.locator(".map-tools");
-          const [toolBox, canvasBox] = await Promise.all([
-            tools.boundingBox(),
-            page.locator(".map-viewport canvas").boundingBox(),
-          ]);
-          expect(toolBox!.y).toBeGreaterThanOrEqual(canvasBox!.y + canvasBox!.height);
+          const canvasBox = await page.locator(".map-viewport canvas").boundingBox();
+          expect(canvasBox).not.toBeNull();
+          expect(canvasBox!.height).toBeGreaterThanOrEqual(284);
+          await expect(
+            page.locator(".map-tools button:visible, .map-framing-tools button:visible"),
+          ).toHaveCount(0);
         }
         await navigateMapBreadcrumb(page, "/planet");
         await expect(page.locator("button[data-domain-id]")).toHaveCount(4);

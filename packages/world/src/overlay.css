@@ -125,6 +125,14 @@
   opacity: var(--placed, 0);
 }
 
+/* Full-height phone maps magnify their neighbours. Keep captions compact
+   without shrinking their font or touch targets; full titles remain in DOM. */
+@media (max-width: 767px) {
+  .stagewrap .label--course {
+    max-width: min(220px, 50vw);
+  }
+}
+
 .label--quiet {
   opacity: 0;
 }
@@ -439,6 +447,20 @@ button.label:focus-visible {
 
 .hint--controls {
   bottom: 20px;
+}
+
+/* Short landscapes cannot hold two stacked hints. Gesture help remains in
+   the palette; one bottom hint leaves the actual course caption readable. */
+@media (max-height: 400px) {
+  .app-shell[data-map-shell="true"] .hint--controls {
+    display: none;
+  }
+  .app-shell[data-map-shell="true"] .hint--entry {
+    bottom: 8px;
+  }
+  .app-shell[data-map-shell="true"] .hint--hover {
+    bottom: 46px;
+  }
 }
 
 .hint--dismissed {

@@ -255,7 +255,8 @@ test("W4 the AI foundations planet opens the real beginner courses", async ({ pa
     page.locator('button[data-domain-id="ai-foundations"]'),
     "choose AI foundations",
   );
-  await expect(page.locator('button[data-study-id="ai-literacy"]')).toBeVisible();
+  await expect(page.locator('button[data-map-entry="true"]')).toHaveAccessibleName(/^Enter /);
+  await expect(page.locator('button[data-study-id="ai-literacy"]')).toHaveCount(0);
   await enterSelectedMapObject(page, "open the real curriculum");
   for (const { source } of courses) {
     await expect(

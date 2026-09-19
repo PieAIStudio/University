@@ -434,8 +434,8 @@
       "state": "fixed",
       "foundBy": "grok-4.6",
       "foundOn": "2026-08-31",
-      "guardedBy": "e2e/nocollide.spec.ts::N2 desktop · course-island 右栏只说当前课程的下一节",
-      "note": "world-model.ts 现在把 course/lesson/settled URL 的 studyId 作为权威，覆盖过期的地图导航焦点；study-context.ts 在课程岛上从已有 nodes 和 courseProgressForNode 选当前 courseId 的下一节。没有把 nextLesson 置 null，因此不会伪造「课程这边暂时没有待办」的空状态。"
+      "guardedBy": "e2e/nocollide.spec.ts::N2",
+      "note": "原修复：world-model.ts 把 course/lesson/settled URL 的 studyId 作为权威，覆盖过期导航焦点；study-context.ts 从当前课程选下一节而不伪造空待办。2026-09-18 Owner 批准信息/动作分离：地图右栏改为当前课程或选中课节的只读信息，不再推销下一节；N2 继续验证对象标题正确且无重复入口。守卫引用采用稳定 N2 ID，原问题及修复因果保留。"
     },
     {
       "id": "89f758cee51f",

@@ -162,13 +162,16 @@ function slotsFor(
   if (candidate.anchor === "island") {
     const belowY = y + height / 2 + gap;
     const sideways = Math.min(32, width / 4);
+    // Whole-caption steps can jump over the only free strip between scenery
+    // and a bottom hint. Half steps keep the same bounds and prefer less drift.
+    const vertical = [0, 0.5, -0.5, 1, -1, 1.5, -1.5, 2, -2];
     return [
-      ...[0, 1, -1, 2, -2].map((step) => ({ x, y: belowY + step * stepY })),
+      ...vertical.map((step) => ({ x, y: belowY + step * stepY })),
       // A short landscape view can need both moves: the rail blocks the
       // unshifted column while an entry hint blocks the base row. Keep the
       // same small bounds, but allow their combinations before hiding a name.
       ...[sideways, -sideways].flatMap((dx) =>
-        [0, 1, -1, 2, -2].map((step) => ({ x: x + dx, y: belowY + step * stepY })),
+        vertical.map((step) => ({ x: x + dx, y: belowY + step * stepY })),
       ),
     ];
   }

@@ -154,6 +154,35 @@ async function measuredScene(page: Page): Promise<{
   return { scene: scene!, frame };
 }
 
+/** Select the actual atmospheric region, not the retired permanent study list. */
+async function clickStudyRegion(page: Page, studyId: string, beforePress?: () => Promise<void>) {
+  const point = await page.evaluate((id) => {
+    const bag = window as any;
+    const projection = bag.__planetProjection();
+    const domain = projection.domains.find((entry: any) => entry.studyIds.includes(id));
+    const region = domain?.regions.find((entry: any) => entry.studyId === id);
+    const scene = bag.three;
+    const hits = domain && scene?.scene.getObjectByName(`domain-region-targets-${domain.id}`);
+    if (!region || !hits) return null;
+    hits.updateWorldMatrix(true, false);
+    const position = scene.camera.position
+      .clone()
+      .fromArray(region.position)
+      .applyMatrix4(hits.matrixWorld)
+      .project(scene.camera);
+    const rect = scene.gl.domElement.getBoundingClientRect();
+    const x = rect.left + (position.x * 0.5 + 0.5) * rect.width;
+    const y = rect.top + (-position.y * 0.5 + 0.5) * rect.height;
+    return document.elementFromPoint(x, y) === scene.gl.domElement ? { x, y } : null;
+  }, studyId);
+  expect(point, "the real study region must have an unobstructed canvas hit").not.toBeNull();
+  await page.mouse.move(point!.x, point!.y);
+  await beforePress?.();
+  await page.mouse.down();
+  await page.waitForTimeout(40);
+  await page.mouse.up();
+}
+
 function assertFast(elapsedMs: number, surface: string): void {
   expect(
     elapsedMs,
@@ -237,9 +266,7 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
         page.locator(`button[data-domain-id="${PRIMARY_DOMAIN_ID}"]`),
         "回到已发布的学习域",
       );
-      const primaryStudy = page.locator(`[data-study-id=${JSON.stringify(PRIMARY_STUDY.id)}]`);
-      await expect(primaryStudy).toBeVisible();
-      await humanClick(page, primaryStudy, "星球上的已发布学习路线");
+      await clickStudyRegion(page, PRIMARY_STUDY.id);
       await page.waitForFunction(planetFocusSample, {
         kind: "scene",
         studyId: PRIMARY_STUDY.id,
@@ -311,10 +338,8 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
         });
       }
       let startedAt = 0;
-      await humanClick(page, primaryStudy, "星球上的已发布学习路线", {
-        beforePress: async () => {
-          startedAt = await page.evaluate(() => performance.now());
-        },
+      await clickStudyRegion(page, PRIMARY_STUDY.id, async () => {
+        startedAt = await page.evaluate(() => performance.now());
       });
       const facing = await page.waitForFunction(
         planetFocusSample,

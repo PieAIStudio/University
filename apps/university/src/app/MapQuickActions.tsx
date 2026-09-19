@@ -60,12 +60,14 @@ export function MapQuickActions({
   destinations,
   commands,
   route,
+  sourceControls,
 }: {
   readonly open: boolean;
   readonly onClose: () => void;
   readonly destinations: readonly MapDestination[];
   readonly commands: readonly MapQuickCommand[];
   readonly route?: ReactNode;
+  readonly sourceControls?: ReactNode;
 }) {
   const [page, setPage] = useState<"commands" | "directory" | "route" | "help">("commands");
   const [query, setQuery] = useState("");
@@ -146,6 +148,7 @@ export function MapQuickActions({
               {t("map.route")}
             </GameButton>
           ) : null}
+          {sourceControls}
           <GameButton variant="secondary" data-map-command="help" onClick={() => setPage("help")}>
             {t("map.help")}
           </GameButton>

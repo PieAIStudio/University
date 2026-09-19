@@ -57,14 +57,33 @@ for (const [mode, origin] of [
         await page.evaluate(() => document.fonts.ready);
         const trail = page.locator("nav.map-breadcrumbs");
         await expect(trail.locator("[aria-current=page]")).toHaveText(COURSE_ROLE.title);
-        await expect(trail.locator("a")).toHaveCount(2);
-        for (const link of await trail.locator("a").all()) {
+        // The complete path has a second, normally closed copy on narrow
+        // screens. Inspect the actual visible path, not every hidden DOM link.
+        const pathSummary = trail.locator("details > summary");
+        const compactPath = await pathSummary.isVisible();
+        if (compactPath) {
+          await pathSummary.focus();
+          await page.keyboard.press("Enter");
+        }
+        const ancestors = compactPath
+          ? trail.locator("details a")
+          : trail.locator(":scope > ol > li > a");
+        await expect(ancestors).toHaveCount(2);
+        expect(
+          await ancestors.evaluateAll((links) => links.map((link) => link.getAttribute("href"))),
+        ).toEqual(["/planet", "/"]);
+        for (const link of await ancestors.all()) {
+          await expect(link).toBeVisible();
           expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
         }
+        if (compactPath) await page.keyboard.press("Escape");
         if (viewport.width < 768) {
           const navBox = await trail.boundingBox();
           const canvas = await page.locator(".stagewrap:not([hidden]) canvas").boundingBox();
-          expect(navBox!.y + navBox!.height).toBeLessThanOrEqual(canvas!.y + 1);
+          expect(Math.abs(navBox!.x + navBox!.width / 2 - viewport.width / 2)).toBeLessThan(2);
+          expect(navBox!.y).toBeGreaterThanOrEqual(0);
+          expect(navBox!.y + navBox!.height).toBeLessThanOrEqual(80);
+          expect(canvas!.height).toBeGreaterThanOrEqual(viewport.height - 2);
         }
         evidence.course = await frameEvidence(page, "course");
         await page.screenshot({ path: join(folder, "course-near.png") });
@@ -73,7 +92,13 @@ for (const [mode, origin] of [
         await page.screenshot({ path: join(folder, "course-overview.png") });
 
         // A real keyboard action, not invoking the React callback in a test.
-        await trail.locator('a[href="/"]').focus();
+        let parent = trail.locator('a[href="/"]:visible').first();
+        if (!(await parent.count())) {
+          await pathSummary.focus();
+          await page.keyboard.press("Enter");
+          parent = trail.locator('a[href="/"]:visible').first();
+        }
+        await parent.focus();
         await page.keyboard.press("Enter");
         await expect(page).toHaveURL(`${origin}/`);
         await waitForOwnedLayerReady(page, "world");
@@ -82,16 +107,14 @@ for (const [mode, origin] of [
         evidence.world = await frameEvidence(page, "world");
         evidence.remoteBatches = await remoteBatchDrawEvidence(page);
         await page.screenshot({ path: join(folder, "world.png") });
-        await humanClick(page, trail.locator('a[href="/planet"]'), "visible ancestor to planets");
+        await navigateMapBreadcrumb(page, "/planet");
         await expect(page).toHaveURL(`${origin}/planet`);
         await waitForOwnedLayerReady(page, "planet");
         await expect(page.locator("[data-planet-resources]")).toHaveCount(0, { timeout: 90_000 });
-        await expect(
-          page.locator(`[data-planet-domain-label="${PRIMARY_DOMAIN_ID}"]`),
-        ).toHaveAttribute("data-active", "true");
-        await expect(
-          page.locator(`[data-planet-domain-label="${PRIMARY_DOMAIN_ID}"]`),
-        ).toContainText("已选");
+        // Returning to the globe is location, not a new selection. Only the
+        // explicit click below may activate a domain and expose its entry.
+        await expect(page.locator('[data-planet-domain-label][data-active="true"]')).toHaveCount(0);
+        await expect(page.locator('[data-map-entry="true"]')).toHaveCount(0);
 
         // Hit the actual unselected globe rather than a proxy DOM button.
         const point = await page.evaluate((domainId) => {

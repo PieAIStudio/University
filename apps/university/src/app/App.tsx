@@ -1312,6 +1312,15 @@ export function App() {
           onClose={shortcuts.close}
           destinations={destinations}
           commands={quickCommands}
+          sourceControls={
+            showMap && focusedStudyId ? (
+              <WorldSourceControls
+                key={focusedStudyId}
+                studyId={focusedStudyId}
+                sourceAccess={sourceAccessPort}
+              />
+            ) : undefined
+          }
           route={
             courseIslandProps ? (
               <CourseIsland
