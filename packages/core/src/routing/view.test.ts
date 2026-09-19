@@ -41,6 +41,7 @@ const views: View[] = [
   { kind: "play-lab", collection: "catalog" },
   { kind: "play-lab", collection: "toy-3d" },
   { kind: "play-lab", collection: "wax-island" },
+  { kind: "play-lab", collection: "prop-finish" },
   { kind: "studio" },
   { kind: "studio", section: "map" },
   { kind: "auth-callback" },

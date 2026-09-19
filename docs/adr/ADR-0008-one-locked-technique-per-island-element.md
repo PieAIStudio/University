@@ -907,33 +907,54 @@ delete scenery to chase headless scheduling intervals. These Mac/viewport data
 do not replace a current physical phone pass. CPU preparation profiles are
 inclusive sampled scopes and must not be added together as exact wall time.
 
-## Owner-authorized wax slice (isolated experiment)
+## Owner-authorized object surface comparison
 
-The Owner explicitly permits reversible material/model overrides within the
-interaction-3d-playlab worktree, not an overwrite of the approved games, shared
-assets or the parallel clay work. `/play-lab/wax-island` consumes the real course
-and the existing CourseScene/AvatarKit. No second terrain field, route, renderer
-or color pass is permitted. Its finish experiment owns only material copies and
-optional normal-only geometry copies; positions, indices and pick surfaces stay
-unchanged. Classic restores the exact source identities.
+Owner rejected the wax appearance, accepted the refinement of some rocks, and
+requested ten actual map objects with original/soft-sculpted/two researched
+alternatives. This supersedes the wax slice as the active experiment. Do not
+promote internal scattering or rename it as proven wax. The nine game scenes
+and existing procedural map remain unchanged.
 
-RenderKit 0.3.0 owns the unchanged output chain but has no wax surface API. Until
-this single-consumer experiment is judged, a slice-local adapter is the bounded
-exception, not a copied brand package or second global appearance framework.
-If accepted for product-wide use, move the response into RenderKit and register
-it with the clay lane's appearance owner, instead of stacking two traversals.
-No package publishing authority is inferred from this exception.
+Use existing AssetField normalization/material treatment and CourseTreeField
+sources; no replacement demonstration shapes. Owned derivatives may adjust
+normals or apply explicitly labeled finite bevels; visibility baking reads the
+actual model's geometry. Preserve pigment/UV/material boundaries and source
+provenance. One Stage and unchanged RenderKit output own all versions. Separate
+per-object geometry/data preparation from reusable rendering responsibility;
+accepted cross-project material response belongs upstream, not a duplicate kit.
+No kit publication or global appearance integration is authorized here.
 
-The physical distinction motivating the study is internal light spreading, not
-clearcoat or transparency. The implementation may use a bounded per-light
-scattering approximation with authored role thickness, not claim a measured
-thickness map or full BSSRDF. Preserve original colors/maps, suppress plastic
-lobes and high-frequency relief on owned variants, and leave eyes legible.
-No baked glow, screen-space blur, texture download or translucent full-world pass.
-Research: Three.js r185 `SubsurfaceScatteringShader.js` (Blinn-Phong reference,
-not copied), and MeshPhysicalMaterial documentation (clearcoat/transmission are
-separate effects). Same-camera actual output and resource receipts, not numeric
-roughness alone, determine acceptance; the current plan records the outcome.
+The retained techniques are selective soft-sculpted normals/material response,
+physical finite-width bevels with panel-weighted normals, and material-aware
+finishing with correlated pigment/roughness/relief plus geometric masks. AO-only
+was too weak as a standalone treatment and dense visibility subdivision too
+costly; visibility moved into a padded atlas at the original triangle count.
+The material-aware treatment starts from original geometry, not the other two
+methods. It follows actual connected-shell wood direction and suppresses bright
+convex-edge treatment on foliage. No all-object superiority is claimed.
+
+The laboratory keeps original colors/maps as its identity, while each method
+explicitly declares its response changes. Derivative metadata records source
+signatures and hashes; costs and weak object/method matches are visible. No
+distant-map geometry budget is increased by this experiment. Same-pose and
+moving-view evidence and known compromises live in the active plan and
+`packages/world/src/prop-finish/README.md`, not a second global style system.
+
+## Retired wax slice (historical experiment)
+
+Owner review after `1f971a93`: not recognizably wax. Retire its active route and
+scattering implementation; retain this rationale and original evidence. The
+following records what was tested, not a currently recommended appearance.
+
+At `1f971a93`, an isolated real-course/AvatarKit slice used owned material and
+normal copies, with per-light spreading approximated from authored role depth.
+It used the unchanged Stage/RenderKit output; no measured thickness or full
+subsurface transport was claimed. The result passed restoration/input checks
+but failed the Owner's visual wax criterion. Do not promote that approximation
+or infer package publication authority from the historical experiment. Only its
+successful selective surface smoothing continues in the object comparison.
+Original implementation and evidence remain at that commit and in
+`.devspace-visual/interaction-3d/wax-slice/`; the old route is a retirement notice.
 
 ## Rejected alternatives worth remembering
 

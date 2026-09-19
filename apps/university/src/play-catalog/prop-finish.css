@@ -1,0 +1,199 @@
+.prop-finish {
+  max-width: 1320px;
+  container-type: inline-size;
+  margin: 0 auto;
+  padding: 24px;
+  color: var(--game-ui-text);
+}
+.prop-finish a {
+  color: inherit;
+  text-underline-offset: 0.24em;
+}
+.prop-finish__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+.prop-finish__header h1 {
+  font-size: clamp(24px, 3.5vw, 38px);
+  margin: 4px 0 10px;
+}
+.prop-finish__eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+.prop-finish__methods,
+.prop-finish__view-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 18px 0 10px;
+}
+.prop-finish button,
+.prop-finish input[type="range"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+.prop-finish label {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+}
+.prop-finish input {
+  accent-color: var(--game-ui-text);
+}
+.prop-finish__explanation {
+  max-width: 85ch;
+  line-height: 1.8;
+  min-height: 3.6em;
+}
+.prop-finish__viewport {
+  height: 540px;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  isolation: isolate;
+  touch-action: none;
+  cursor: grab;
+}
+.prop-finish__viewport:active {
+  cursor: grabbing;
+}
+.prop-finish__viewport--gallery {
+  height: auto;
+  aspect-ratio: 13.5 / 5.6;
+}
+.prop-finish__gallery-label {
+  display: block;
+  /* Projected Html anchors have zero intrinsic width; max-width alone collapses
+     Chinese names to one character per line. Keep a readable screen-space label. */
+  width: 112px;
+  max-width: 130px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--game-ui-tooltip-surface);
+  white-space: normal;
+}
+@container (max-width: 649px) {
+  .prop-finish__viewport--gallery {
+    aspect-ratio: 5.4 / 14;
+  }
+}
+.prop-finish__pair-labels {
+  position: absolute;
+  top: 16px;
+  inset-inline: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  text-align: center;
+  pointer-events: none;
+  color: var(--game-ui-tooltip-surface);
+  font-weight: 650;
+}
+.prop-finish__pair-labels span {
+  justify-self: center;
+  background: var(--game-ui-tooltip-ink);
+  padding: 7px 18px;
+  border-radius: 100px;
+}
+.prop-finish__notice {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: var(--game-ui-bg);
+}
+.prop-finish__notice code {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.prop-finish__objects {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+.prop-finish__objects button {
+  font: inherit;
+  justify-content: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding-inline: 12px;
+  white-space: normal;
+  text-align: start;
+}
+.prop-finish__objects span {
+  font-size: 12px;
+  opacity: 0.7;
+}
+.prop-finish__source {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: center;
+  margin: 22px 0;
+  overflow-wrap: anywhere;
+}
+.prop-finish__source small {
+  flex-basis: 100%;
+}
+.prop-finish__advice {
+  border-inline-start: 3px solid currentColor;
+  padding-inline-start: 12px;
+  line-height: 1.65;
+  max-width: 85ch;
+}
+.prop-finish__cost {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.prop-finish__technical {
+  max-width: 85ch;
+  margin-top: 18px;
+  line-height: 1.8;
+}
+.prop-finish summary {
+  cursor: pointer;
+  min-height: 44px;
+}
+@media (max-width: 760px) {
+  .prop-finish {
+    padding: 12px;
+  }
+  .prop-finish__header {
+    display: block;
+  }
+  .prop-finish__methods {
+    gap: 8px;
+  }
+  .prop-finish__viewport {
+    height: 400px;
+  }
+  .prop-finish__viewport--gallery {
+    height: auto;
+  }
+  .prop-finish__objects {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .prop-finish__pair-labels span {
+    font-size: 13px;
+    padding: 6px 9px;
+  }
+  .prop-finish__explanation {
+    min-height: 0;
+  }
+  .prop-finish__header > a {
+    display: inline-block;
+    min-height: 44px;
+    padding-top: 6px;
+  }
+}

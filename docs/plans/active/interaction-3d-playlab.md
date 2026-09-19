@@ -1,6 +1,6 @@
 ---
 id: PLAN-INTERACTION-3D-PLAYLAB
-title: Nine Learning Games with Shared Finish and Game-Specific Scenes
+title: Nine Learning Games and Selective Map Object Refinement
 type: plan
 status: active
 canonical: true
@@ -16,7 +16,7 @@ related:
   - REF-CURRENT-WORK
 ---
 
-# Nine learning games: shared finish, game-specific scenes
+# Nine learning games and selective map-object refinement
 
 Owner authorized a separate experiment based on the committed interaction-first
 lane. The course lane and its uncommitted PRIMM work remain untouched. No merge,
@@ -56,65 +56,90 @@ ledger; local hash-verification receipts do not replace it.
 
 ## Work
 
-### Current: reversible matte-wax island and existing-avatar slice
+### Current: ten real island objects and evidence-led surface refinement
 
-Owner authorized this follow-on inside the same worktree. Baseline b9c8de9e and
-all nine accepted games stay intact. Use one real short course through the
-existing CourseScene; do not merge the active clay branch or mutate its files.
-The classic/wax comparison freezes this branch's content and geometry rather
-than pretending the clay branch has the same scenery revision. V5
-`#wax-island-slice` owns the experience; ADR-0008 records the scoped technique.
+Owner rejected the wax identity, while accepting improvements to some rocks.
+Retire the wax-island route and its scattering experiment; retain the original
+commit and evidence. Extract selective soft-sculpted shading, not a world skin.
+No existing game, island generator, donor source, clay lane or mainline changes.
 
-- [x] Isolated route, real eight-node course and current AvatarKit recipe; no account writes.
-- [x] Strong matte colored-wax response with reversible, owned material/normal overrides.
-- [x] Same-camera classic/wax, whole-island/island-close/avatar views, no-grade and motion inspection.
-- [x] Restoration/resource/input tests, nine-game preservation and full verification; ready for Owner comparison.
+The comparison uses ten actual map prop sources through the existing asset and
+procedural-tree adapters. One original and three independent treatments share
+camera, lights, scale, source color/maps and ground. Whole-collection switching
+and a large synchronized object pair expose gains and regressions. Never weaken
+the baseline, silently combine methods or report pixel differences as quality.
 
-Evidence belongs to `.devspace-visual/interaction-3d/wax-slice/`. The experimental
-material response is not a new published kit or global preference. Accepted
-shared response must later converge into RenderKit and the clay lane's common
-appearance owner; the current task does not authorize a package release.
+- [x] Verify ten map sources and record the baseline geometry/material contract.
+- [x] Preserve soft-sculpted shading without internal-scattering or wax naming.
+- [x] Research and test two more mechanisms; reject weak/harmful candidates.
+- [x] Build the comparison, actual input and screenshot evidence, controls/phone checks.
+- [x] Retire wax runtime/docs, verify source preservation and complete validation.
 
-The slice uses `browser-ai/run-a-real-project-with-ai` through `placeCourse` and
-`CourseScene`, with the current AvatarKit recipe (or its normal guest fallback).
-Only owned material clones and coincident-vertex normal copies change. No vertex
-position, index, UV, source color map, course node or saved preference is edited.
-Authored thin-part roles make ears respond differently from the thick body;
-the visible scattering switch separates this approximation from roughness.
+Retained after four pilots: physical edge rounding with weighted panel normals,
+and material-aware finishing with original palette roles, connected-shell wood
+direction, correlated roughness/relief and geometry-derived visibility/convex-edge
+masks. The latter does not stack soft sculpting or bevels. AO-only was too subtle;
+dense AO geometry was rejected for cost. Excess mineral relief and polygon edge
+outlines on leaves were also rejected. The foliage exceptions remain visible,
+rather than presenting every method as better on every object.
 
-Pilot inspection found and corrected a paused OrbitControls/advance re-entry,
-original material-array identity loss, and 40px mobile controls. The final owner
-also preserves a host slot replaced immediately before cleanup. Error evidence
-stays in pilot-1 and pilot-3; passing pilot-2 is not final acceptance.
-The interrupted pass left a runnable implementation and passing browser artifacts
-in `accepted/`; its old validation receipt is historical. On resumption the
-strength control was found to start from an already-matte material, muting its
-roughness range. It now blends from the original surface, while the maximum
-retains the same matte target. Missing physical-response shader anchors now fail
-visibly. Final acceptance: 11 ownership/material tests and 53 combined browser
-checks passed; full `pnpm verify` passed with source fingerprints unchanged
-(`verify-final-02.json`). Its first run stopped only at an outdated manifest
-review date; standard `pnpm doc-gov scan` corrected the generated registration,
-without changing checks. Original failure logs remain in `verify-final.log`.
+Sources, build commands, primary research and adoption limits live in
+`packages/world/src/prop-finish/README.md`. V5 `#prop-finish-lab` owns the experience;
+ADR-0008 owns the scoped technique. All ten map source signatures are checked at
+runtime; compact buffer SHA-256 and channel bounds fail visibly when stale.
+Current UI includes four independent choices, synchronized object pair, ten-object
+gallery, actual triangle costs, original source identity and no-grade/mask views.
 
-`preservation.json` checks 368 protected game, avatar, asset and course files
-against b9c8de9e, with no differences or tracked deletion. `owner-preview-final/`
-contains the actual 23220 preview, same-pose comparisons and warm full-Stage GPU
-samples. These are Mac browser measurements, not whole-app FPS or physical-phone
-acceptance. The first preview diagnostic's 8.9e-16 camera roundoff is preserved
-in `owner-preview/`; its repeat records a 1e-10 numerical tolerance, without
-weakening product tests. The current walk-through is `owner-review.md`.
+Evidence: `.devspace-visual/interaction-3d/prop-finish/`, pilots 1–4 and
+`acceptance-1/`. The first browser pass found a real recovery defect: viewport
+pointer capture swallowed the retry button's click. Inputs inside recovery
+controls are now excluded from stage capture. The keyboard test separately
+needed to wait for its actual React update before comparing rotations; its
+same-view/resource assertions were not relaxed. The combined 55-test comparison,
+retained-game and catalog suite passed in `accepted/`. Subsequent screenshot
+inspection caught narrow projected names collapsing to one-character lines;
+a fixed screen-space label width corrected it. Gallery captures now also wait
+for the actual resize/render rather than recording the prior canvas size.
+The six comparison tests passed again in `final-comparison/` and, after canonical
+asset serialization, `final-assets/`. An independent live review then found the
+default gallery clipping a tree crown. Added headroom preserves all ten models;
+new assertions project actual mesh vertices, not just DOM labels. The final
+`closeout-browser/` run passed all **55** comparison/game/catalog tests (job
+`b924f705-480c-462c-ba5a-8e5b860b1a6a`); the original 49 game/catalog tests remain
+unchanged. Full `pnpm verify` then passed with unchanged source hashes (job
+`a382c9f4-8746-40f5-8ce4-93bcbd8d4e82`, `closeout-verify.json` and `.log`).
+Earlier full-gate failures, including physical-direction CSS corrected to logical
+`text-align: start`, remain in `verify*.log`; they are not passing evidence.
+This is the related browser scope, not the full unrelated product E2E suite.
+The Owner walkthrough is `owner-review.md` in that evidence directory;
+known costs and counterexamples remain visible rather than claiming a global win.
 
-Preview: `http://127.0.0.1:23220/play-lab/wax-island?finish=wax&lang=zh-CN`.
-This is a temporary service owned by this worktree. Port 23160 belongs to the
-parallel map-learning-nodes worktree and was neither reused nor stopped.
-Final validation/job identities and source checksums are in `acceptance.json`.
+An independent Blender rebuild exposed only one-ULP differences in interpolated
+bevel UVs. Derived UV serialization now has documented 1e-5 precision; two clean
+builds match all 31 files exactly (`reproducibility-canonical.json`). The failed
+pre-canonical comparison stays in `reproducibility.json`. Source and non-bevel
+UVs remain untouched. `preservation.json` checks 212 existing game, map, avatar,
+asset and course files against 1f971a93 with zero changes.
 
-Integration remains explicit: this isolated study is not the clay branch's
-account-wide `WorldStyle` implementation. On integration the shared appearance
-owner must own the selected profile once; never let it wrap this slice again.
-The nine-game library and catalog stay 59 entries/9 games, not 60/10: a look
-study is not counted as another learning game.
+### Retired: matte-wax island and avatar slice (Owner rejected the wax identity)
+
+The following is historical implementation/validation evidence, not artistic
+acceptance or permission to ship a wax skin. Source checkpoint: `1f971a93`.
+The new object refinement comparison replaces this active experiment.
+
+That slice used `browser-ai/run-a-real-project-with-ai`, CourseScene and AvatarKit
+with owned material/normal copies and authored-depth light-spreading approximation.
+Its 11 unit and 53 related browser checks plus full verify proved technical
+behavior, not a convincing wax identity. Owner subsequently rejected the style.
+Only selective smoothing continues; runtime island/scattering/owner and old
+translation entries are removed. Old bookmarks show a retirement notice.
+
+Original captures, failure/recovery records, preservation and GPU receipts remain
+in `.devspace-visual/interaction-3d/wax-slice/`, including `owner-review.md` and
+`acceptance.json`; implementation is preserved at `1f971a93`. Do not cite these
+as evidence that the new refinement comparison passed. The nine approved games
+remain live and the catalogue stays 59 entries/9 games: neither look experiment
+is another learning game.
 
 ### Previous accepted game-first scene expansion
 

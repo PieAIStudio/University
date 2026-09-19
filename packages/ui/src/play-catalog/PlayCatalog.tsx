@@ -103,6 +103,9 @@ export function PlayCatalog({
         <a href="/play-lab">{t("gallery.back")}</a>
         <h1>{t("gallery.title")}</h1>
         <p>{t("gallery.intro")}</p>
+        <a href={`/play-lab/prop-finish?lang=${locale}`} data-testid="prop-finish-link">
+          {t("finish.open")}
+        </a>
       </header>
       <div className="play-catalog__layout">
         <details ref={picker} className="play-catalog__picker" open>

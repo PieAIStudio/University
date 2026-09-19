@@ -1,3 +1,4 @@
+import { messages as propFinish } from "./prop-finish.en.js";
 import { messages as playGallery } from "./play-gallery.en.js";
 import { messages as arcade3d } from "./arcade-3d.en.js";
 import { messages as accountClosure } from "./account-closure.en.js";
@@ -32,13 +33,12 @@ import type { MessageCatalog } from "../types.js";
  * the source catalog; authoring-only terminology lives in the same catalog
  * so switching modes does not silently switch language.
  */
-import { messages as waxSlice } from "./wax-slice.en.js";
 import { messages as purpose3d } from "./purpose-3d.en.js";
 export const messages = {
-  ...waxSlice,
   ...purpose3d,
   ...arcade3d,
   ...playGallery,
+  ...propFinish,
   ...accountClosure,
   ...worldNavigation,
   ...interactionPath,
