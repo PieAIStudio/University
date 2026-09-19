@@ -116,6 +116,28 @@ test.describe("P 正式领域目录与未发布星球", () => {
                 .map((label) => label.textContent),
             );
           expect(clipped, "the four ordinary domain names must fit their globe labels").toEqual([]);
+          const framing = await page.evaluate(() => {
+            const canvas = document
+              .querySelector(".planet-viewport canvas")!
+              .getBoundingClientRect();
+            const tools = document.querySelector(".planet-style-tools")!.getBoundingClientRect();
+            const rail = document.querySelector(".planet-rail")!.getBoundingClientRect();
+            return {
+              height: canvas.height,
+              originalHeight: Math.max(192, Math.min(innerHeight * 0.34, 352)),
+              toolsGap: tools.top - canvas.bottom,
+              railGap: rail.top - tools.bottom,
+            };
+          });
+          expect(
+            framing.height,
+            "style controls must not shrink the readable planet viewport",
+          ).toBeGreaterThanOrEqual(framing.originalHeight - 1);
+          expect(framing.toolsGap).toBeGreaterThanOrEqual(-1);
+          expect(
+            framing.railGap,
+            "the catalogue must start below the entire viewport and tools",
+          ).toBeGreaterThanOrEqual(-1);
         }
         const initial = await page.evaluate(() => {
           const bag = window as any;

@@ -136,7 +136,10 @@
 */
 @media (max-width: 767px) {
   .app-shell[data-aside-phone="true"] {
-    grid-template-rows: auto minmax(12rem, 34dvh) minmax(0, 1fr);
+    /* The main row includes breadcrumbs and the map's own tool lane.
+       Let those real children size it; 34dvh belongs to the globe, not to
+       this entire row. Otherwise the picker starts on top of the tools. */
+    grid-template-rows: auto auto minmax(0, 1fr);
     grid-template-areas:
       "counters"
       "main"
