@@ -103,10 +103,24 @@ test.describe("L actual 3D asset inspector", () => {
           page.evaluate(() => {
             const canvas = document.querySelector<HTMLCanvasElement>(".map-studio canvas")!;
             const box = document.querySelector(".map-studio__renderer")!.getBoundingClientRect();
-            return Math.abs(canvas.getBoundingClientRect().height - box.height);
+            const viewport = document
+              .querySelector(".map-studio .map-viewport")!
+              .getBoundingClientRect();
+            const tools = document.querySelector(".map-studio .map-tools")!.getBoundingClientRect();
+            const drawn = canvas.getBoundingClientRect();
+            // The new style selector owns a real footer, not a clipped piece
+            // of the canvas. Audit BOTH parts against this inspector's box.
+            return Math.max(
+              Math.abs(drawn.height - viewport.height),
+              Math.abs(drawn.height + tools.height - box.height),
+              Math.abs(drawn.top - box.top),
+              Math.max(0, drawn.bottom - tools.top),
+              Math.max(0, tools.bottom - box.bottom),
+            );
           }),
         {
-          message: "the preview must use its own viewport, not a clipped 100dvh learner stage",
+          message:
+            "the preview canvas and its style footer must fit its own viewport without clipping or overlap",
         },
       )
       .toBeLessThan(2);
