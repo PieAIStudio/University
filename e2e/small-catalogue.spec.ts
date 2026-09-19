@@ -7,7 +7,7 @@ import {
   coursePathOf,
   installSingleCourseShelfFixture,
 } from "./harness/catalogue.js";
-import { humanClick } from "./harness/click.js";
+import { navigateMapBreadcrumb } from "./harness/map-actions.js";
 import { watchConsole } from "./harness/console.js";
 
 const COURSE = CATALOGUE_ROLES.settlement.course;
@@ -19,9 +19,10 @@ test("Y a real one-course archipelago retains identity and readable atmosphere",
   const errors = watchConsole(page);
   await installSingleCourseShelfFixture(page, COURSE);
   await page.goto(`${ONLINE_ORIGIN}${coursePathOf(COURSE)}`);
-  const back = page.getByRole("button", { name: new RegExp(`回到.*${STUDY.title}.*地图`) });
-  await expect(back).toBeVisible({ timeout: 90000 });
-  await humanClick(page, back, "回到单课程飞岛群");
+  // The approved shell moved parent navigation out of the persistent course card.
+  // Follow the real shared breadcrumb, retaining the series context and history.
+  await navigateMapBreadcrumb(page, "/");
+  await expect(page).toHaveURL(new RegExp(`^${ONLINE_ORIGIN}/(?:\\?.*)?$`));
   await page.waitForFunction(
     () => (window as any).three?.scene.getObjectByName("remote-island-field"),
     undefined,
@@ -94,6 +95,7 @@ test("Y a real one-course archipelago retains identity and readable atmosphere",
       hazeAtArrival: 1 - Math.exp(-Math.pow(fog.density * 62, 2)),
       breadcrumb: document.querySelector('[aria-label="当前位置"]')?.textContent,
       mapSurface: document.querySelector('[data-map-surface="true"]') != null,
+      mapInformationTitle: document.querySelector(".map-shell__heading h2")?.textContent,
       mapInformation: document.querySelector(".map-information")?.textContent,
       persistentStudySwitcher: document.querySelector(".study-switcher__trigger") != null,
       frame: (window as any).__stageFrameMetrics,
@@ -103,7 +105,8 @@ test("Y a real one-course archipelago retains identity and readable atmosphere",
   expect(receipt.hazeAtArrival).toBeLessThan(0.08);
   expect(receipt.breadcrumb).toContain(STUDY.title);
   expect(receipt.mapSurface).toBe(true);
-  expect(receipt.mapInformation).toContain(STUDY.title);
+  expect(receipt.mapInformationTitle).toBe(STUDY.title);
+  expect(receipt.mapInformation?.trim().length).toBeGreaterThan(0);
   expect(receipt.persistentStudySwitcher).toBe(false);
   const folder = process.env.R50_EVIDENCE_DIR ?? "SCRATCH/e2e/small-catalogue";
   mkdirSync(folder, { recursive: true });

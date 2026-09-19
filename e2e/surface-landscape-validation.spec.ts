@@ -12,7 +12,7 @@ import { waitForCourseFraming, assertCompleteCourseOverview } from "./harness/co
 import { watchConsole } from "./harness/console.js";
 import { measureStageGpu } from "./harness/stage-gpu-timing.js";
 import { captureDrawnMaterials } from "./harness/drawn-materials.js";
-import { runMapCommand, mapEntryButton } from "./harness/map-actions.js";
+import { runMapCommand, mapEntryButton, navigateMapBreadcrumb } from "./harness/map-actions.js";
 
 const OUTPUT = process.env.R47_EVIDENCE_DIR ?? "SCRATCH/e2e/surface-landscape";
 
@@ -149,8 +149,8 @@ for (const viewport of [
         const after = await receipt();
         expect(after.lessonIds).toEqual(before.lessonIds);
         expect(after.swatch.uuid).toBe(before.swatch.uuid);
-        const back = page.getByRole("button", { name: /回到.+地图/ });
-        await humanClick(page, back, "飞岛群");
+        await navigateMapBreadcrumb(page, "/");
+        await expect(page).toHaveURL(new RegExp(`^${ONLINE_ORIGIN}/(?:\\?.*)?$`));
         await page.waitForFunction(() =>
           (window as any).three?.scene.getObjectByName("remote-island-field"),
         );
