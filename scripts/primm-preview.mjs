@@ -14,6 +14,17 @@ import { createPrimmPreviewServer } from "../apps/university-grading/.primm-prev
 const root = fileURLToPath(new URL("..", import.meta.url));
 if (!process.argv.includes("--owner-preview")) throw Error("Explicit --owner-preview required");
 const withApp = process.argv.includes("--with-app");
+function previewPort(name, fallback) {
+  const value = Number(process.env[name] ?? fallback);
+  if (!Number.isInteger(value) || value < 1024 || value > 65535)
+    throw Error(`${name} must be a non-privileged TCP port`);
+  return value;
+}
+const appPort = previewPort("UNIVERSITY_PRIMM_APP_PORT", 23150);
+const apiPort = previewPort("UNIVERSITY_PRIMM_API_PORT", 23151);
+if (appPort === apiPort) throw Error("App and execution ports must differ");
+const appOrigin = `http://127.0.0.1:${appPort}`;
+const apiOrigin = `http://127.0.0.1:${apiPort}`;
 async function requireFree(port) {
   await new Promise((resolve, reject) => {
     const probe = createServer();
@@ -27,8 +38,8 @@ async function requireFree(port) {
     probe.listen(port, "127.0.0.1", () => probe.close(resolve));
   });
 }
-await requireFree(23151);
-if (withApp) await requireFree(23150);
+await requireFree(apiPort);
+if (withApp) await requireFree(appPort);
 const runtime = createPrimmRuntime({
   transport: createLocalOllamaTransport(),
   resolveLesson: createCanonicalPrimmResolver({
@@ -36,24 +47,27 @@ const runtime = createPrimmRuntime({
     recoveryRoot: join(root, "apps/local/course-proposals/recovery/ai-literacy"),
   }),
   transcriber: createLocalWhisperTranscriber({
-    python: join(root, ".scratch/primm-five/asr-venv/bin/python"),
+    python:
+      process.env.UNIVERSITY_PRIMM_ASR_PYTHON ??
+      join(root, ".scratch/primm-five/asr-venv/bin/python"),
     script: join(root, "scripts/primm-transcribe.py"),
-    modelsRoot: join(root, ".scratch/primm-five/asr-models"),
+    modelsRoot:
+      process.env.UNIVERSITY_PRIMM_ASR_MODELS ?? join(root, ".scratch/primm-five/asr-models"),
   }),
   quota: 100,
   timeoutMs: 110000,
 });
 const server = createPrimmPreviewServer(runtime, {
-  port: 23151,
-  origins: ["http://127.0.0.1:23150", "http://127.0.0.1:23140", "http://127.0.0.1:23141"],
+  port: apiPort,
+  origins: [appOrigin],
 });
 let app;
-server.listen(23151, "127.0.0.1", () => {
+server.listen(apiPort, "127.0.0.1", () => {
   console.log(
-    "PRIMM owner preview ready at 127.0.0.1:23151; real local model, max100 explicit commands.",
+    `PRIMM owner preview ready at ${apiOrigin}; real local model, max100 explicit commands.`,
   );
   if (withApp) {
-    const appEnv = { ...process.env, VITE_UNIVERSITY_PRIMM_PREVIEW_URL: "http://127.0.0.1:23151" };
+    const appEnv = { ...process.env, VITE_UNIVERSITY_PRIMM_PREVIEW_URL: apiOrigin };
     for (const key of Object.keys(appEnv)) {
       if (!key.startsWith("VITE_") && /(?:API_KEY|SECRET|TOKEN|PASSWORD|SERVICE_ROLE)/i.test(key))
         delete appEnv[key];
@@ -68,7 +82,7 @@ server.listen(23151, "127.0.0.1", () => {
         "--host",
         "127.0.0.1",
         "--port",
-        "23150",
+        String(appPort),
         "--strictPort",
       ],
       {

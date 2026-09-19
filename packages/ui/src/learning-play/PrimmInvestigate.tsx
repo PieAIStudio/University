@@ -35,7 +35,17 @@ export function investigationComplete(activity: PrimmActivity, draft: Investigat
     case "sort":
       return isPrimmGameComplete(game, { kind: "sort", placed: draft.placed });
     case "layout":
-      return draft.touched && draft.order.length === game.items.length;
+      return (
+        draft.touched &&
+        isPrimmGameComplete(game, {
+          kind: "layout",
+          itemIds: draft.order,
+          formatId: draft.format || game.formats[0]!.id,
+          includedItemIds: game.items
+            .filter((item) => draft.decisions[item.id] !== false)
+            .map((item) => item.id),
+        })
+      );
     case "edit":
       return (
         draft.selected === game.targetId &&
@@ -235,6 +245,9 @@ export function PrimmInvestigate({
   if (game.kind === "layout") {
     const order = draft.order.length ? draft.order : game.items.map((item) => item.id);
     const ordered = order.map((key) => game.items.find((item) => item.id === key)!);
+    const included = ordered.filter(
+      (item) => !game.selection || draft.decisions[item.id] !== false,
+    );
     const move = (index: number, offset: number) => {
       const next = [...order];
       [next[index], next[index + offset]] = [next[index + offset]!, next[index]!];
@@ -242,23 +255,43 @@ export function PrimmInvestigate({
     };
     const format = draft.format || game.formats[0]?.id;
     return (
-      <div>
+      <div className="primm-layout">
         <p>{game.instruction}</p>
         <ol>
           {ordered.map((item, index) => (
-            <li key={item.id}>
+            <li key={item.id} data-layout-item={item.id} data-included={included.includes(item)}>
               <strong>{item.label}</strong>
               <p>{item.text}</p>
               <div className="primm__actions">
+                {game.selection ? (
+                  <GameButton
+                    aria-label={`${included.includes(item) ? game.selection.remove : game.selection.keep}：${item.label}`}
+                    aria-pressed={included.includes(item)}
+                    onClick={() => {
+                      setFeedback("");
+                      update({
+                        order: [...order],
+                        touched: true,
+                        decisions: { ...draft.decisions, [item.id]: !included.includes(item) },
+                      });
+                    }}
+                  >
+                    {included.includes(item) ? game.selection.remove : game.selection.keep}
+                  </GameButton>
+                ) : null}
                 <GameButton
                   disabled={index === 0}
                   aria-label={t("primm.moveUp", { label: item.label })}
                   onClick={() => move(index, -1)}
                 >
-                  {t("primm.moveUp", { label: item.label })}
+                  <span aria-hidden="true">↑</span>
                 </GameButton>
-                <GameButton disabled={index === order.length - 1} onClick={() => move(index, 1)}>
-                  {t("primm.moveDown", { label: item.label })}
+                <GameButton
+                  disabled={index === order.length - 1}
+                  aria-label={t("primm.moveDown", { label: item.label })}
+                  onClick={() => move(index, 1)}
+                >
+                  <span aria-hidden="true">↓</span>
                 </GameButton>
               </div>
             </li>
@@ -279,22 +312,41 @@ export function PrimmInvestigate({
         <section aria-label={t("primm.preview")}>
           <h3>{t("primm.preview")}</h3>
           {format === "paragraph" ? (
-            <p>{ordered.map((item) => item.text).join(" ")}</p>
+            <p>{included.map((item) => `${item.label}: ${item.text}`).join(" ")}</p>
           ) : (
             <ul>
-              {ordered.map((item) => (
-                <li key={item.id}>{item.text}</li>
+              {included.map((item) => (
+                <li key={item.id}>
+                  <strong>{item.label}: </strong>
+                  {item.text}
+                </li>
               ))}
             </ul>
           )}
         </section>
+        {game.selection ? (
+          <>
+            <GameButton
+              onClick={() => {
+                const mismatch = game.items.find(
+                  (item) => included.some((row) => row.id === item.id) !== item.relevant,
+                );
+                setFeedback(mismatch?.why ?? game.selection!.ready);
+              }}
+            >
+              {game.selection.check}
+            </GameButton>
+            {feedback ? <p role="status">{feedback}</p> : null}
+          </>
+        ) : null}
       </div>
     );
   }
   if (game.kind === "edit") {
     const target = game.sentences.find((s) => s.id === game.targetId)!;
     return (
-      <div>
+      <section data-primm-source-text aria-label={t("primm.original")}>
+        <h3>{t("primm.original")}</h3>
         <p>{game.instruction}</p>
         <div className="primm__sentences">
           {game.sentences.map((sentence) => (
@@ -345,7 +397,7 @@ export function PrimmInvestigate({
         ) : draft.selected ? (
           <p role="status">{t("primm.wrongTarget")}</p>
         ) : null}
-      </div>
+      </section>
     );
   }
   return (

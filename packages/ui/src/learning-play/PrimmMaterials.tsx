@@ -31,7 +31,7 @@ export function PrimmAsset({ asset }: { readonly asset?: LessonAssetView }) {
   if (!asset) return <p role="alert">{t("primm.missingAsset")}</p>;
   const copy = asset.locales?.[locale];
   return (
-    <figure className="primm__asset">
+    <figure className="primm__asset" data-asset-kind={asset.kind}>
       {asset.mime.startsWith("image/") ? (
         <div className="primm__image-frame">
           <img src={asset.url} alt={copy?.alt ?? asset.alt} />

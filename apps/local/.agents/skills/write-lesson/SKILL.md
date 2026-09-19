@@ -2,7 +2,7 @@
 name: write-lesson
 description: Write or revise a real-source University lesson with complete PRIMM: Predict, Run, Investigate, Modify, Make. Use for lesson authoring, beginner guidance, case-to-life relevance, interactive game selection, linear learning, confusing or redundant lesson copy, and rewrites. Owns sources, teaching, learner text, cards, independent Make assessment, review, actual local Gemini Flash polish and native revision proposals. Not course planning, ordinary coding, refresh orchestration or publication.
 metadata:
-  version: "3.1.0"
+  version: "3.2.0"
 ---
 
 # Write a lesson — complete PRIMM
@@ -42,6 +42,12 @@ before choosing interactions. Read [cards-and-exercises.md](references/cards-and
 and [checklist.md](references/checklist.md) for the production and acceptance gates.
 
 ## First priority: why this matters to the learner
+
+Read [learner-value.md](references/learner-value.md) before drafting. Establish
+the practical result and evidence of independent use before choosing examples
+or games. This uses backward design before PRIMM, not a replacement for PRIMM.
+A life-story wrapper is insufficient when simply sending the photo already meets
+the stated need. Preserve skill progression; reject weak reasons to use AI.
 
 ### A case opens the door; it is not the whole house
 
@@ -84,10 +90,10 @@ recognizes. Write down: **when this could happen → what the person needs → w
 this skill helps them do → why this practice material is a useful starting point**.
 This is the opening of Predict, not a sixth stage or four displayed headings.
 
-For a photo, briefly introduce the real accessibility use, then say, for example,
-“现在换成你的小事。假设你想把喝咖啡时看到的画面讲给家人听。” Use a properly
-licensed everyday image for this practice, then a different image in Make. Do not
-equate an AI description with precise location, safe navigation or hidden facts.
+For a photo, establish why the task needs a usable description or extracted
+information rather than merely sending the photo. Use licensed or explicitly
+authored practice images and change the input or purpose in Make. Do not equate
+image interpretation with precise location, safe navigation or hidden facts.
 
 Avoid invented urgency, guaranteed benefits, and long role-play backstories.
 An ordinary need is enough. “这是 NASA 的资料” establishes a source, not a reason

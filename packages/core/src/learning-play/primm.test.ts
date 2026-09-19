@@ -98,6 +98,44 @@ function candidate(kind: PrimmGame["kind"] = "sort"): PrimmActivity {
 }
 
 describe("PRIMM wire contract", () => {
+  it("requires role-relevant content, not merely moving a prefiltered layout", () => {
+    const activity = candidate("layout");
+    if (activity.investigate.game.kind !== "layout") throw Error();
+    const game = activity.investigate.game;
+    game.selection = { keep: "保留", remove: "移开", check: "检查", ready: "已留好" };
+    game.items = [
+      ...game.items.map((item) => ({ ...item, relevant: true, why: "这项不能漏" })),
+      {
+        id: "other-role",
+        label: "其他人的安排",
+        text: "不属于我的任务",
+        relevant: false,
+        why: "不是你的任务",
+      },
+    ];
+    const state = {
+      kind: "layout" as const,
+      itemIds: game.items.map((item) => item.id),
+      formatId: "list",
+    };
+    expect(primmIssues(activity)).toEqual([]);
+    expect(isPrimmGameComplete(game, state)).toBe(false);
+    for (const includedItemIds of [
+      state.itemIds,
+      [],
+      ["focus"],
+      ["focus", "activate", "missing"],
+      ["focus", "focus"],
+    ])
+      expect(isPrimmGameComplete(game, { ...state, includedItemIds })).toBe(false);
+    expect(isPrimmGameComplete(game, { ...state, includedItemIds: ["activate", "focus"] })).toBe(
+      true,
+    );
+    delete game.items[0]!.why;
+    expect(primmIssues(activity)).toContain(
+      "PRIMM selected layout needs explained relevant and irrelevant items",
+    );
+  });
   it("accepts a bilingual typed activity and a short recap with one marker", () => {
     expect(LessonActivitySchema.safeParse(primmFixture).success).toBe(true);
     expect(primmIssues(PrimmPayloadSchema.parse(primmFixture))).toEqual([]);

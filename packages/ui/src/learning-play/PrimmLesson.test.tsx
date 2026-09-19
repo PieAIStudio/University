@@ -36,6 +36,18 @@ async function type(text: string, selector = "textarea") {
   });
 }
 const stage = () => container.querySelector("[data-primm-stage]")?.getAttribute("data-primm-stage");
+
+it("introduces the learner need before the supporting case, once", async () => {
+  const activity = { ...structuredClone(primmFixture), experienceVersion: 2 as const };
+  await render({ activity });
+  const situation = container.querySelector(".primm__situation")!;
+  const caseNote = container.querySelector(".primm__case")!;
+  expect(situation.textContent).toBe(activity.intro.situation);
+  expect(
+    situation.compareDocumentPosition(caseNote) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(container.textContent!.split(activity.intro.situation)).toHaveLength(2);
+});
 async function render(extra: Partial<PrimmLessonProps> = {}) {
   const run = vi.fn<RunPrimm>(async (request) => ({
     kind: "live",
@@ -84,6 +96,63 @@ async function sortCards() {
   await click("继续");
 }
 describe("one linear PRIMM journey", () => {
+  it("lets learners filter a mixed notice and repair a missing item before advancing", async () => {
+    const activity = structuredClone(primmFixture);
+    activity.investigate.explanation = "现在你已挑出了属于自己的安排。";
+    activity.investigate.game = {
+      kind: "layout",
+      instruction: "只保留适合自己的内容。",
+      items: [
+        {
+          id: "needed",
+          label: "我的安排",
+          text: "下午3点参加",
+          relevant: true,
+          why: "需要保留参加时间。",
+        },
+        {
+          id: "other",
+          label: "别人的安排",
+          text: "志愿者下午2点准备",
+          relevant: false,
+          why: "这是志愿者的安排。",
+        },
+      ],
+      formats: [
+        { id: "paragraph", label: "连成一段" },
+        { id: "list", label: "分行列出" },
+      ],
+      selection: {
+        keep: "放回提醒",
+        remove: "先放旁边",
+        check: "检查我的提醒",
+        ready: "留下了自己的安排。",
+      },
+    };
+    await render({ activity });
+    await toInvestigate();
+    expect(container.textContent).not.toContain(activity.investigate.explanation);
+    await click("分行列出");
+    expect(buttons().find((b) => b.textContent === "继续")?.disabled).toBe(true);
+    await click("先放旁边：我的安排");
+    await click("检查我的提醒");
+    expect(container.querySelector('[role="status"]')?.textContent).toBe("需要保留参加时间。");
+    await click("放回提醒：我的安排");
+    await click("先放旁边：别人的安排");
+    expect(container.textContent).toContain(activity.investigate.explanation);
+    expect(
+      container.querySelector('[aria-label="排版预览（直接编辑，不会运行 AI）"]')?.textContent,
+    ).toContain("我的安排: 下午3点参加");
+    expect(
+      container.querySelector('[aria-label="排版预览（直接编辑，不会运行 AI）"]')?.textContent,
+    ).not.toContain("志愿者下午2点准备");
+    expect(buttons().find((b) => b.textContent === "继续")?.disabled).toBe(false);
+    await click("放回提醒：别人的安排");
+    expect(buttons().find((b) => b.textContent === "继续")?.disabled).toBe(true);
+    await click("先放旁边：别人的安排");
+    await click("继续");
+    expect(stage()).toBe("modify");
+  });
   it("uses attachment, investigation, editable construction and independent creation as different actions", async () => {
     const activity = structuredClone(primmFixture);
     activity.experienceVersion = 2;

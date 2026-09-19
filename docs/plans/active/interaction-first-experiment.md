@@ -18,7 +18,118 @@ related:
 
 # Interaction-first lesson experiment
 
-## Scope
+## Current comparison lane: learner-value-first
+
+Owner requested another `codex/` worktree to implement the learner-value discussion
+in lessons 1–5. This checkout is `.worktrees/learner-value-first`, branch
+`codex/learner-value-first`, based on committed `ca2c7d3f`. The original experiment
+has another AI's ongoing edits: preserve its code, source corpus and services.
+The preceding single-lane restrictions below are historical, not current authority.
+
+- [x] Create one new lane and recover committed courses into independent storage.
+- [x] Specify usable outcomes before PRIMM; update the same write-lesson skill.
+- [x] Rewrite five bilingual lessons with actual Writer, Detector and Flash runs.
+- [x] Retain source/asset/card identity; improve tasks and changed-input Make.
+- [x] Play desktop/phone, fix findings, verify, and provide independent URLs.
+
+No mainline merge, publication, payment, account change or analytics rollout.
+Proposed user needs remain hypotheses, not user research. Receipts are under
+`.scratch/learner-value-first/`; screenshots under `.devspace-visual/learner-value-first/`.
+The other 31 lessons must remain unchanged. Earlier records below retain their
+original meaning and are not acceptance of this lane.
+
+The five current native revisions are 12/9/9/6/7. The first lesson now teaches
+turning an authored practice poster into an outing reminder, then changes the
+poster in Make. The third separates attendee and volunteer responsibilities;
+Make changes the role rather than copying the attendee checklist. The remaining
+lessons produce a voice-message reminder, a polite bounded edit and a visit
+decision based on supplied official-source snapshots. Claims of user demand or
+learning effectiveness remain untested hypotheses.
+
+Grok preflight listed the model but its actual Writer request hit the usage limit.
+The documented Codex fallback (`gpt-6-astra`, ultra) wrote all five. Two independent
+Gemini teaching reviews, host substantive fixes and 17 successful bilingual Flash
+polish batches are preserved; an additional Flash batch supplied missing-clock-time
+feedback. The first polish assembler failed on an overbroad localization dictionary,
+not a failed model run; it was repaired using the original saved responses.
+
+Actual playback exposed two important issues. A tall diagram overflowed its grid
+track and painted behind the editor; bounded grid tracks now retain the complete
+image above its caption. Request-piece controls retain full accessible names but
+use compact arrows/remove glyphs. Model grading also missed an absent meeting time
+or rejected equivalent wording. The bounded preview now reviews criteria separately;
+an optional author-declared missing-clock-time precheck handles that definite
+omission before semantic review. It cannot itself produce a pass or certify that
+a stated time is correct. The final missing/wrong/equivalent-time live probes pass;
+earlier failed probes remain, and no general claim of model-grading reliability is
+made. The correction was landed as a native audio revision, not a delivery edit.
+
+The first broader browser run is not acceptance: 24 passed, one timed out during
+accessibility analysis, one was interrupted and six did not run. Host load reached
+357 and the run overlapped development edits; preserve its log and use final-code
+checks below. The final course preservation check confirms the other 31 lessons,
+original lesson-level sources/assets and assessment IDs are unchanged. The exact
+served package is recorded in `.devspace-visual/learner-value-first/preservation.json`.
+
+On resumption, the new lane already existed; it was reused rather than creating
+another branch. A focused language check found that the optional time-presence
+guard rejected ordinary English forms such as "2 in the afternoon" and "2 o’clock".
+It now accepts those forms and 14h00, while quantities and durations still do not
+stand in for a meeting time. The 35 related format/runtime tests pass. This change
+does not validate the time's value or bypass semantic review. Final checks remain
+sequential so rebuilding shared output cannot reload an in-flight browser lesson.
+
+The final phone critic correctly identified a teaching mismatch in lesson three:
+the stated ability was role-based filtering, but Investigate only rearranged four
+preselected facts. The existing layout engine now optionally lets learners move
+irrelevant items aside and restore missing ones while the artifact changes. Plain
+layout tasks retain their contract. Nineteen changed/new text items were actually
+Flash-polished and localized after independent teaching review, then landed as the
+native third-lesson revision. Its explanatory recap appears only after a valid
+selection; the learner cannot pass by only rearranging or removing everything.
+
+`verify-final-selection.exit` is 0 for the selection implementation before the last
+presentation corrections described below. The preceding
+`verify-closeout` failed the stale-CSS guard when edits overlapped its build; that
+failure is preserved rather than counted as acceptance. The final PRIMM and V1/V2
+compatibility browser run passed all 32 cases. `accepted-desktop` and
+`accepted-phone` each completed all five current revisions with real local runs,
+changed requests, native Make evaluation, visible artifact repair, copy and map
+return. The phone is a 390px touch-enabled browser simulation, not a physical-device
+claim. Some raw outputs needed editing; generated output is not presumed correct.
+The final visual review is separate from these behavior checks. Evidence and
+local preview restart instructions are in the existing owner review brief.
+
+The final screenshot pass confirmed role filtering and readable Markdown, and
+disproved the missing-heading/static-badge findings with entry/interaction evidence.
+It also caught an unclear boundary between the AI reply and the editable original
+in lesson four; each now has its own heading. The director found that layout
+previews dropped labels, leaving "move to the activity room" without its rain
+condition. Previews now retain every item's label, and item panels use the brand
+panel radius rather than the pill-shaped control radius. These last presentation
+changes receive their own focused browser/live checks and a new full verification.
+Manual comparison in Investigate and editable request fragments remain intentional
+PRIMM scaffolding, not proven preferences of real learners. Review their usefulness
+with the Owner; do not treat every critic's redesign preference as a factual bug.
+
+Those last presentation corrections passed eight bilingual/both-mode browser
+cases and four actual live walks (lessons three/four at 1440 and 390 touch widths).
+The separate eight-image AfterCritic marked both the retained reminder labels and
+the edit-target boundary fixed, with no new blocker in that scope. The final full
+verification `verify-owner-ready` exited 0. On this continuation, no changed source
+file was newer than that passing check. A fresh five-lesson desktop walk also
+completed real Run/Modify/Make, native evaluation, copy and map return, with zero
+browser page errors; see `resumed-owner-check/receipt.json`. Three raw results
+needed visible learner edits before passing. Their original outputs and first
+verdicts remain in the receipt; successful execution is not presumed correctness.
+
+This comparison is ready for Owner trial at port 23650. The 32-case focused
+browser run and eight final presentation cases are the verified browser scope,
+not a claim that the whole default browser suite ran. Existing phone evidence is
+390px touch simulation, not a physical-device or real-learner result. No mainline
+merge, push, paid calls or publication occurred; preserve the original AI's lane.
+
+## Historical scope: the original interaction-first lane
 
 The sole experiment worktree is `.worktrees/interaction-first`, on
 `codex/interaction-first`. Owner subsequently authorized bringing main into this

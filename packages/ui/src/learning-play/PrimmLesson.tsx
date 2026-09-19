@@ -6,6 +6,7 @@ import { playSound } from "../sound/index.js";
 import { PrimmInvestigate, investigationComplete } from "./PrimmInvestigate.js";
 import { PrimmMaterials, PrimmSource } from "./PrimmMaterials.js";
 import { PrimmAttachment } from "./PrimmAttachment.js";
+import { PrimmResultText } from "./PrimmResultText.js";
 import { PrimmRequestWorkbench, joinRequestFragments } from "./PrimmRequestWorkbench.js";
 import { initialPrimmSession, restorePrimmSession, type PrimmSession } from "./primm-session.js";
 import type { PrimmLessonProps, PrimmOutput } from "./primm-types.js";
@@ -264,6 +265,7 @@ function PrimmSessionView({
       </h2>
       {phase === "predict" ? (
         <>
+          <p className="primm__situation">{activity.intro.situation}</p>
           {everyday ? (
             <aside className="primm__case">
               <p>{activity.intro.connection}</p>
@@ -275,9 +277,7 @@ function PrimmSessionView({
               ))}
             </aside>
           ) : null}
-          <p className="primm__situation">
-            {activity.intro.situation} {activity.intro.need}
-          </p>
+          <p>{activity.intro.need}</p>
           {!everyday ? <p>{activity.intro.connection}</p> : null}
           {!everyday
             ? activity.intro.sourceIds?.map((id) => (
@@ -368,7 +368,7 @@ function PrimmSessionView({
       ) : null}
       {phase === "investigate" ? (
         <>
-          <PrimmResult result={session.run!.result} label={t("primm.result")} />
+          <PrimmResult result={session.run!.result} label={t("primm.before")} />
           <div data-primm-game={activity.investigate.game.kind}>
             <PrimmInvestigate
               activity={activity}
@@ -377,7 +377,11 @@ function PrimmSessionView({
               onChange={(investigation) => update({ investigation })}
             />
           </div>
-          <p>{activity.investigate.explanation}</p>
+          {activity.investigate.game.kind !== "layout" ||
+          !activity.investigate.game.selection ||
+          investigationComplete(activity, session.investigation) ? (
+            <p>{activity.investigate.explanation}</p>
+          ) : null}
           {activity.investigate.more?.map((more) => (
             <details key={more.question}>
               <summary>{more.question}</summary>
@@ -553,7 +557,7 @@ function PrimmSessionView({
       {session.stage === 5 && session.make ? (
         <>
           <p>{activity.finish.note}</p>
-          <pre className="primm__text">{session.make.finalWork ?? session.make.result.text}</pre>
+          <PrimmResultText text={session.make.finalWork ?? session.make.result.text} />
           <div className="primm__actions">
             <GameButton onClick={() => void copy()}>{t("primm.copy")}</GameButton>
             <GameButton variant="primary" disabled={busy !== null} onClick={() => void complete()}>
@@ -576,7 +580,7 @@ function PrimmResult({ result, label }: { readonly result: PrimmOutput; readonly
   return (
     <section className="primm__result" aria-label={label}>
       <h3 tabIndex={-1}>{label}</h3>
-      <pre className="primm__text">{result.text}</pre>
+      <PrimmResultText text={result.text} />
     </section>
   );
 }

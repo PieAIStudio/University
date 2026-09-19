@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { randomUUID } from "node:crypto";
 import { primmFixture } from "../../../../packages/core/src/learning-play/fixtures/primm.js";
 import type { ChatCompletionTransport } from "@pieai/swimmer-ai-kit/chat";
-import { createPrimmRuntime, type PrimmRuntime } from "./runtime.js";
+import { combineCriterionReviews, createPrimmRuntime, type PrimmRuntime } from "./runtime.js";
 import { createPrimmPreviewServer } from "./http.js";
 import {
   createLocalOllamaTransport,
@@ -71,6 +71,29 @@ afterEach(async () => {
 });
 
 describe("bounded PRIMM runtime", () => {
+  it("rejects a declared missing clock time before asking a model, but still grades a timed result", async () => {
+    const { runtime, lesson, complete } = setup();
+    lesson.activity.make.clockTimeCheck = { missing: "提醒里还没写几点见面。请对照留言补上。" };
+    const request = input("make"),
+      result = await runtime.run(request);
+    const grade = (finalWork: string) =>
+      runtime.grade({
+        locator: ref,
+        contentRevision: 2,
+        exerciseId: primmFixture.make.exerciseId,
+        commandId: randomUUID(),
+        answer: JSON.stringify({
+          kind: "primm-make",
+          request,
+          resultRequestId: result.requestId,
+          finalWork,
+        }),
+      });
+    expect((await grade("星期日下午去公园")).hostGrade?.outcome).toBe("fail");
+    expect(complete).toHaveBeenCalledTimes(1);
+    expect((await grade("周日14点到公园")).hostGrade?.outcome).toBe("pass");
+    expect(complete).toHaveBeenCalledTimes(2);
+  });
   it("grades only the current Make material, never unrelated historical case facts", async () => {
     const { runtime, lesson, complete } = setup();
     lesson.activity.materials.push({
@@ -246,6 +269,37 @@ describe("bounded PRIMM runtime", () => {
         }),
       }),
     ).rejects.toMatchObject({ code: "unavailable" });
+  });
+});
+
+describe("every authored condition matters", () => {
+  const criterion = (index: number, outcome: "pass" | "fail" | "undecided") => ({
+    criterion: index,
+    outcome,
+    evaluation: outcome === "fail" ? "还缺具体几点见面。" : "已核对这一项。",
+    extensions: [],
+    evidence: { from: "finalWork" as const, quote: "周日下午" },
+  });
+  it("does not pass a whole task when one required part failed", () => {
+    const decision = combineCriterionReviews(
+      [criterion(0, "pass"), criterion(1, "fail"), criterion(2, "pass")],
+      3,
+    );
+    expect(decision.outcome).toBe("fail");
+    expect(decision.evaluation).toBe("还缺具体几点见面。");
+  });
+  it("keeps uncertainty rather than forging a pass", () => {
+    expect(
+      combineCriterionReviews([criterion(0, "pass"), criterion(1, "undecided")], 2).outcome,
+    ).toBe("undecided");
+  });
+  it("rejects omitted, repeated and unknown criterion indices", () => {
+    for (const checks of [
+      [criterion(0, "pass")],
+      [criterion(0, "pass"), criterion(0, "pass")],
+      [criterion(0, "pass"), criterion(2, "pass")],
+    ])
+      expect(() => combineCriterionReviews(checks, 2)).toThrow();
   });
 });
 

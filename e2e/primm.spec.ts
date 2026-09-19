@@ -206,6 +206,23 @@ for (const [mode, origin] of [
             ),
           ).toHaveCount(0);
           await expect(page.locator(".learning-save-state")).toHaveCount(0);
+          // A tall text-bearing diagram must stay inside its reserved frame,
+          // not paint through the request editor or its attribution below.
+          const containment = await area.locator(".primm__image-frame").evaluateAll((frames) =>
+            frames.map((frame) => {
+              const box = frame.getBoundingClientRect();
+              const image = frame.querySelector("img")!.getBoundingClientRect();
+              const caption = frame
+                .parentElement!.querySelector("figcaption")
+                ?.getBoundingClientRect();
+              return (
+                image.bottom <= box.bottom + 1 &&
+                image.top >= box.top - 1 &&
+                (!caption || caption.top >= box.bottom - 1)
+              );
+            }),
+          );
+          expect(containment.every(Boolean)).toBe(true);
         };
         await stage("predict");
         if (a.starter.operation === "transcribe") {
@@ -288,6 +305,29 @@ for (const [mode, origin] of [
             );
           }
         } else if (g.kind === "layout") {
+          if (g.selection) {
+            const first = g.items.find((item) => item.relevant)!;
+            const toggle = (id: string) =>
+              game.locator(`[data-layout-item="${id}"] button[aria-pressed]`);
+            await expect(
+              area.getByRole("button", { name: text("primm.next"), exact: true }),
+            ).toBeDisabled();
+            // An accidental removal must be reversible by keyboard; no guessed clicks.
+            await toggle(first.id).focus();
+            await page.keyboard.press("Enter");
+            await expect(toggle(first.id)).toHaveAttribute("aria-pressed", "false");
+            await humanClick(
+              page,
+              game.getByRole("button", { name: g.selection.check, exact: true }),
+              "check a missing necessary detail",
+            );
+            await expect(game.getByRole("status")).toContainText(first.why!);
+            await humanClick(page, toggle(first.id), "restore the needed detail");
+            for (const item of g.items.filter((item) => item.relevant === false)) {
+              await humanClick(page, toggle(item.id), "move another role's arrangement aside");
+              await expect(toggle(item.id)).toHaveAttribute("aria-pressed", "false");
+            }
+          }
           await humanClick(
             page,
             game.getByRole("button", {
@@ -303,8 +343,22 @@ for (const [mode, origin] of [
           );
           await expect(
             game.getByRole("region", { name: text("primm.preview"), exact: true }).locator("li"),
-          ).toHaveCount(g.items.length);
+          ).toHaveCount(
+            g.selection ? g.items.filter((item) => item.relevant).length : g.items.length,
+          );
+          if (g.selection) {
+            const preview = game.getByRole("region", { name: text("primm.preview"), exact: true });
+            for (const item of g.items.filter((item) => item.relevant))
+              await expect(preview).toContainText(`${item.label}: ${item.text}`);
+            for (const item of g.items.filter((item) => item.relevant === false))
+              await expect(preview).not.toContainText(item.text);
+          }
         } else if (g.kind === "edit") {
+          const originalText = game.locator("[data-primm-source-text]");
+          await expect(
+            originalText.getByRole("heading", { name: text("primm.original"), exact: true }),
+          ).toBeVisible();
+          await expect(originalText).toContainText(g.instruction);
           await humanClick(
             page,
             game.getByRole("button", {

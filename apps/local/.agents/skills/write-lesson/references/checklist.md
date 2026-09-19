@@ -6,6 +6,11 @@ receipt. A regex cannot certify truth, clarity, fun, transfer or retention.
 
 ## Complete PRIMM pilot (current)
 
+- [judgment] The brief names the learner's problem, current workaround, useful result and independent changed task; a decorative life story is insufficient.
+- [judgment] Every stage advances that result or explains a necessary next decision. A reliable real case is not substituted for a learner need.
+- [process] Observe operation time without a one-minute guarantee or countdown punishment.
+- [judgment] Make rubric asks only for the visible task; review cards exercise reuse, not merely recall of a formula.
+
 - [judgment] The verified case is a short credibility-building introduction, not a compulsory topic throughout; the everyday practice and independent task are clearly distinguished.
 - [judgment] Every rendered stage explains the current purpose/action without baby talk or cryptic brevity. Removing interface narration must not remove the steps a beginner needs to understand.
 - [machine + judgment] `experienceVersion: 2` uses prediction, prepared-material attachment/send, content manipulation, editable request construction, and independent artifact creation. Different headings on repeated choices do not count.

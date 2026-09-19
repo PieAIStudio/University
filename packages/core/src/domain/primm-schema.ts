@@ -46,10 +46,24 @@ export function createPrimmPayloadSchema<S extends z.ZodType>(source: S, id: z.Z
         kind: z.literal("layout"),
         instruction: copy,
         items: z
-          .array(z.object({ id, label: copy, text }).strict())
+          .array(
+            z
+              .object({
+                id,
+                label: copy,
+                text,
+                relevant: z.boolean().optional(),
+                why: copy.optional(),
+              })
+              .strict(),
+          )
           .min(2)
           .max(20),
         formats: z.array(label).min(2).max(8),
+        selection: z
+          .object({ keep: copy, remove: copy, check: copy, ready: copy })
+          .strict()
+          .optional(),
       })
       .strict(),
     z
@@ -176,6 +190,9 @@ export function createPrimmPayloadSchema<S extends z.ZodType>(source: S, id: z.Z
         checklist: z.array(copy).min(1).max(12),
         exerciseId: id,
         artifactLabel: copy.optional(),
+        // Optional structural precheck, not an answer key. Enable only when the
+        // visible task requires a concrete clock time; semantic grading remains.
+        clockTimeCheck: z.object({ missing: copy }).strict().optional(),
       })
       .strict(),
     finish: z.object({ title: copy, note: copy }).strict(),

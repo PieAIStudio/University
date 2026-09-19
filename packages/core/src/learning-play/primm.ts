@@ -84,6 +84,13 @@ export function primmIssues(payload: PrimmPayload): string[] {
     case "layout":
       unique("layout item", game.items);
       unique("layout format", game.formats);
+      if (
+        game.selection &&
+        (game.items.some((item) => typeof item.relevant !== "boolean" || !item.why?.trim()) ||
+          !game.items.some((item) => item.relevant) ||
+          !game.items.some((item) => item.relevant === false))
+      )
+        issues.push("PRIMM selected layout needs explained relevant and irrelevant items");
       break;
     case "edit":
       unique("sentence", game.sentences);
@@ -122,7 +129,12 @@ export function placePrimmSortCard(
 export type PrimmGameState =
   | { readonly kind: "inspect-image"; readonly selectedRegionIds: readonly string[] }
   | { readonly kind: "sort"; readonly placed: Readonly<Record<string, string>> }
-  | { readonly kind: "layout"; readonly itemIds: readonly string[]; readonly formatId: string }
+  | {
+      readonly kind: "layout";
+      readonly itemIds: readonly string[];
+      readonly formatId: string;
+      readonly includedItemIds?: readonly string[];
+    }
   | { readonly kind: "edit"; readonly targetId: string; readonly replacement: string }
   | { readonly kind: "collect"; readonly decisions: Readonly<Record<string, boolean>> };
 
@@ -144,6 +156,13 @@ export function isPrimmGameComplete(game: PrimmGame, state: PrimmGameState): boo
       state.itemIds.length === game.items.length &&
       !repeated(state.itemIds) &&
       state.itemIds.every((id) => game.items.some((item) => item.id === id)) &&
+      (!game.selection ||
+        (!!state.includedItemIds &&
+          !repeated(state.includedItemIds) &&
+          state.includedItemIds.every((id) => game.items.some((item) => item.id === id)) &&
+          game.items.every(
+            (item) => state.includedItemIds!.includes(item.id) === item.relevant,
+          ))) &&
       game.formats.some((format) => format.id === state.formatId)
     );
   if (game.kind === "edit" && state.kind === game.kind) {

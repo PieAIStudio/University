@@ -1,5 +1,5 @@
 {
-  "importedAt": "2026-09-18",
+  "importedAt": "2026-09-19",
   "evidenceMode": "auto",
   "studies": [
     {
@@ -21,9 +21,9 @@
             }
           },
           "isBeingRewritten": false,
-          "sha256": "sha256:288505fc8f26b23f21795587df9f0ac80bdd0a50926c150f188ebda148b14932",
-          "packageBytes": 3861899,
-          "servedBytes": 959868,
+          "sha256": "sha256:f77360dd91f8b10879a8280fc08ed829c1f8e14d08718f9b11398796391e78cd",
+          "packageBytes": 4045349,
+          "servedBytes": 966172,
           "lessons": 36
         },
         {

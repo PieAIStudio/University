@@ -213,14 +213,12 @@ export const messages = {
     "Keep material present across predictions, actions and self-checks",
   "gallery.history.compare.name": "Original and remade comparison",
   "gallery.history.compare.action": "Compare reading the source lesson with continuous interaction",
-  "gallery.lesson.ask-about-a-picture": "When you see a photo, how do you ask AI about it?",
+  "gallery.lesson.ask-about-a-picture": "Turn an Event Poster into an Outing Reminder with AI",
   "gallery.lesson.sound-words-and-meaning":
-    "Can't hear an English voicemail clearly? How AI can help",
+    "Turn an English Meetup Message into a Chinese Reminder",
   "gallery.lesson.name-the-result":
-    "To make AI write something useful, how do you state your requirements clearly?",
-  "gallery.lesson.edit-one-part":
-    "Just want to change one sentence? How to keep AI from rewriting the whole thing?",
-  "gallery.lesson.answer-or-search":
-    "When you want to visit a place, how can AI help you check it clearly for you?",
+    "A long group announcement: How do you get AI to sort out what you need to do?",
+  "gallery.lesson.edit-one-part": "Make the reminder polite while keeping the plans intact",
+  "gallery.lesson.answer-or-search": "Can We Still Go Tonight? Tell AI Your Travel Plans",
   "gallery.lesson.follow-a-claim": "Can one link support a whole paragraph?",
 } as const;
