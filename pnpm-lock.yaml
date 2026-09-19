@@ -165,8 +165,8 @@ importers:
   apps/university-grading:
     dependencies:
       '@pieai/swimmer-ai-provider-kit':
-        specifier: 0.12.0
-        version: 0.12.0
+        specifier: 0.13.0
+        version: 0.13.0
       '@pieai/swimmer-backend-client':
         specifier: 0.6.0
         version: 0.6.0(@supabase/supabase-js@2.110.3)
@@ -759,13 +759,19 @@ packages:
     engines: {node: '>=24 <25'}
     hasBin: true
 
-  '@pieai/swimmer-ai-provider-kit@0.12.0':
-    resolution: {integrity: sha512-/F4MC916G6GUw1UpetA2NZYore3S0cr4T41a18RNN93GyCuarvR0ANOUJLC83GkoIPpO4wi2hqNjNsxnBlkyCw==}
+  '@pieai/swimmer-ai-provider-kit@0.13.0':
+    resolution: {integrity: sha512-/uDftXA+2hXoCQCwD2MmeOmyzyfD0+OV6O+orGWOa0q2g6p0TMk5LEIf5Nv7jrWXSwJEKfhTp8VOFPwGj4Zm3A==}
     engines: {node: '>=24 <25'}
     peerDependencies:
       '@earendil-works/pi-ai': 0.85.1
+      openai: 7.18.0
+      ws: ^8.21.0
     peerDependenciesMeta:
       '@earendil-works/pi-ai':
+        optional: true
+      openai:
+        optional: true
+      ws:
         optional: true
 
   '@pieai/swimmer-avatar-kit@0.6.0':
@@ -3131,7 +3137,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@pieai/swimmer-ai-provider-kit@0.12.0': {}
+  '@pieai/swimmer-ai-provider-kit@0.13.0': {}
 
   '@pieai/swimmer-avatar-kit@0.6.0(@react-three/fiber@9.6.1(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1))(react@19.2.8)(three@0.185.1)':
     dependencies:

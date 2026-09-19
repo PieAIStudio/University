@@ -14,7 +14,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@pieai/swimmer-ai-provider-kit": "0.12.0",
+    "@pieai/swimmer-ai-provider-kit": "0.13.0",
     "@pieai/swimmer-backend-client": "0.6.0",
     "@pieai/university-core": "workspace:*",
     "@supabase/supabase-js": "2.110.3",
