@@ -157,7 +157,7 @@ export function createLocalOllamaTransport(
           options: {
             num_ctx: 8192,
             num_predict: Math.min(request.maxTokens ?? 1200, 1600),
-            temperature: request.temperature ?? 0.2,
+            temperature: request.temperature ?? (request.responseFormat ? 0 : 0.2),
           },
           ...(request.responseFormat?.type === "json_object" ? { format: "json" } : {}),
         }),

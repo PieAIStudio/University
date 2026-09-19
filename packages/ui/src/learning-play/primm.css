@@ -55,6 +55,15 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.primm__formatted {
+  overflow-wrap: anywhere;
+}
+.primm__formatted > :first-child {
+  margin-block-start: 0;
+}
+.primm__formatted pre {
+  white-space: pre-wrap;
+}
 .primm label {
   display: block;
   margin-block: 24px 8px;
@@ -213,9 +222,13 @@
 .primm__image-frame {
   block-size: var(--primm-image-height, 340px);
   display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   place-items: center;
+  overflow: hidden;
 }
 .primm__image-frame > img {
+  min-width: 0;
+  min-height: 0;
   width: 100%;
   height: 100%;
   max-height: 100%;
@@ -348,8 +361,14 @@
   min-height: 180px;
   padding: 16px;
 }
-.primm--everyday[data-primm-stage="modify"] > .primm__materials .primm__asset img,
-.primm--everyday[data-primm-stage="make"] > .primm__materials .primm__asset img {
+.primm--everyday[data-primm-stage="modify"]
+  > .primm__materials
+  .primm__asset:not([data-asset-kind="diagram"])
+  img,
+.primm--everyday[data-primm-stage="make"]
+  > .primm__materials
+  .primm__asset:not([data-asset-kind="diagram"])
+  img {
   max-height: 220px;
 }
 .primm--everyday[data-primm-stage="modify"] > .primm__materials,
@@ -379,50 +398,17 @@
   background: var(--game-ui-panel);
   border-radius: var(--game-ui-radius-panel);
 }
-.primm__first-step {
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: 28px;
-  align-items: start;
-  margin-block: 24px;
+/* A text-bearing practice diagram must remain readable, not inherit the
+   compact thumbnail height meant for ordinary photographs. Space is reserved
+   before loading so choosing a prediction never moves the target. */
+.primm__asset[data-asset-kind="diagram"] .primm__image-frame {
+  block-size: 460px;
 }
-.primm__first-step > *,
-.primm__materials > section {
-  min-width: 0;
-}
-.primm__first-step .primm__materials {
-  margin: 0;
-}
-.primm__first-step .primm__asset {
-  margin: 0 0 12px;
-}
-.primm fieldset {
-  display: grid;
-  gap: 12px;
-  border: 0;
-  padding: 0;
-  margin-block: 20px;
-}
-.primm fieldset legend {
-  font-size: 19px;
-  font-weight: 700;
-  padding: 0;
-  margin-block-end: 12px;
-}
-.primm fieldset .game-ui-button {
-  height: auto;
-  min-height: 48px;
-  text-align: start;
-  justify-content: start;
-  white-space: normal;
-  padding-block: 12px;
+.primm__asset[data-asset-kind="diagram"] .primm__image-frame > img {
+  max-height: 100%;
 }
 @media (max-width: 720px) {
-  .primm__first-step {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
-  }
-  .primm__first-step .primm__asset img {
-    max-height: 230px;
+  .primm__asset[data-asset-kind="diagram"] .primm__image-frame {
+    block-size: 360px;
   }
 }

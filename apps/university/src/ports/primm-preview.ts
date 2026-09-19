@@ -28,7 +28,9 @@ export function withPrimmPreview(
   if (
     url.protocol !== "http:" ||
     url.hostname !== "127.0.0.1" ||
-    url.port !== "23151" ||
+    !/^\d+$/.test(url.port) ||
+    Number(url.port) < 1024 ||
+    Number(url.port) > 65535 ||
     url.pathname !== "/" ||
     url.username ||
     url.password ||

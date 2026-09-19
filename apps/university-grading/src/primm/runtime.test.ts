@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { randomUUID } from "node:crypto";
 import { primmFixture } from "../../../../packages/core/src/learning-play/fixtures/primm.js";
 import type { ChatCompletionTransport } from "@pieai/swimmer-ai-kit/chat";
-import { createPrimmRuntime, type PrimmRuntime } from "./runtime.js";
+import { combineCriterionReviews, createPrimmRuntime, type PrimmRuntime } from "./runtime.js";
 import { createPrimmPreviewServer } from "./http.js";
 import {
   createLocalOllamaTransport,
@@ -284,6 +284,37 @@ describe("bounded PRIMM runtime", () => {
         }),
       }),
     ).rejects.toMatchObject({ code: "unavailable" });
+  });
+});
+
+describe("every authored condition matters", () => {
+  const criterion = (index: number, outcome: "pass" | "fail" | "undecided") => ({
+    criterion: index,
+    outcome,
+    evaluation: outcome === "fail" ? "还缺具体几点见面。" : "已核对这一项。",
+    extensions: [],
+    evidence: { from: "finalWork" as const, quote: "周日下午" },
+  });
+  it("does not pass a whole task when one required part failed", () => {
+    const decision = combineCriterionReviews(
+      [criterion(0, "pass"), criterion(1, "fail"), criterion(2, "pass")],
+      3,
+    );
+    expect(decision.outcome).toBe("fail");
+    expect(decision.evaluation).toBe("还缺具体几点见面。");
+  });
+  it("keeps uncertainty rather than forging a pass", () => {
+    expect(
+      combineCriterionReviews([criterion(0, "pass"), criterion(1, "undecided")], 2).outcome,
+    ).toBe("undecided");
+  });
+  it("rejects omitted, repeated and unknown criterion indices", () => {
+    for (const checks of [
+      [criterion(0, "pass")],
+      [criterion(0, "pass"), criterion(0, "pass")],
+      [criterion(0, "pass"), criterion(2, "pass")],
+    ])
+      expect(() => combineCriterionReviews(checks, 2)).toThrow();
   });
 });
 

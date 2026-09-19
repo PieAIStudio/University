@@ -36,6 +36,18 @@ async function type(text: string, selector = "textarea") {
   });
 }
 const stage = () => container.querySelector("[data-primm-stage]")?.getAttribute("data-primm-stage");
+
+it("introduces the learner need before the supporting case, once", async () => {
+  const activity = { ...structuredClone(primmFixture), experienceVersion: 2 as const };
+  await render({ activity });
+  const situation = container.querySelector(".primm__situation")!;
+  const caseNote = container.querySelector(".primm__case")!;
+  expect(situation.textContent).toBe(activity.intro.situation);
+  expect(
+    situation.compareDocumentPosition(caseNote) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(container.textContent!.split(activity.intro.situation)).toHaveLength(2);
+});
 async function render(extra: Partial<PrimmLessonProps> = {}) {
   const run = vi.fn<RunPrimm>(async (request) => ({
     kind: "live",
