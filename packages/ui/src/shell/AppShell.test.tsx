@@ -201,6 +201,42 @@ describe("AppShell", () => {
     expect(document.querySelector(".app-shell")?.getAttribute("data-rail-collapsed")).toBe("true");
   });
 
+  it("keeps the existing avatar and selected title useful when the map rails fold", async () => {
+    await renderShell({
+      mapMode: true,
+      asideTitle: "AI 与游戏",
+      aside: <p>当前对象说明</p>,
+      identity: <button data-testid="learner-avatar">头像</button>,
+      collapseLabels: {
+        ...COLLAPSE_LABELS,
+        railName: "导航",
+        asideName: "信息",
+      },
+    });
+    const railButton = document.querySelector<HTMLButtonElement>(".app-shell__collapse--rail");
+    const asideButton = document.querySelector<HTMLButtonElement>(".app-shell__collapse--aside");
+    expect(railButton).toBeTruthy();
+    expect(asideButton).toBeTruthy();
+
+    await act(async () => {
+      dispatchPointerSequence(railButton!, 8, 8);
+    });
+    await act(async () => {
+      dispatchPointerSequence(asideButton!, 8, 8);
+    });
+
+    const shell = document.querySelector(".app-shell");
+    expect(shell?.getAttribute("data-map-rail-open")).toBe("false");
+    expect(shell?.getAttribute("data-map-aside-open")).toBe("false");
+    expect(
+      document.querySelector(".nav-rail__identity [data-testid='learner-avatar']"),
+    ).toBeTruthy();
+    expect(railButton?.querySelector(".map-shell__compact-label")).toBeNull();
+    expect(asideButton?.querySelector(".map-shell__compact-title")?.textContent).toBe("AI 与游戏");
+    expect(asideButton?.getAttribute("title")).toBe("AI 与游戏");
+    expect(asideButton?.textContent).toContain("展开上下文: AI 与游戏");
+  });
+
   it("docks the rail collapse in the brand capsule and the aside collapse at the left of the counter row", async () => {
     await renderShell({
       brand: <span>University</span>,

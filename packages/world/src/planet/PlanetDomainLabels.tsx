@@ -1,4 +1,5 @@
 /** Readable domain names stay outside Canvas; the scene only projects anchors. */
+import { SceneLabelText } from "../labels/SceneLabelText.js";
 import { useMemo } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { translate } from "@pieai/university-ui/i18n.js";
@@ -53,26 +54,30 @@ export function PlanetDomainLabels({
           {onSelectDomain ? (
             <button
               type="button"
-              className="planet-domain-label__pick"
+              className="planet-domain-label__pick scene-label"
               data-domain-id={domain.id}
               aria-pressed={domain.id === active}
               onClick={() => onSelectDomain(domain.id)}
             >
-              {domain.title}
+              <SceneLabelText
+                title={domain.title}
+                status={domain.id === active ? translate("ui.world.domain.selected") : undefined}
+                note={
+                  domain.studies.length === 0 ? translate("ui.world.domain.unpublished") : undefined
+                }
+              />
             </button>
           ) : (
-            domain.title
+            <span className="scene-label">
+              <SceneLabelText
+                title={domain.title}
+                status={domain.id === active ? translate("ui.world.domain.selected") : undefined}
+                note={
+                  domain.studies.length === 0 ? translate("ui.world.domain.unpublished") : undefined
+                }
+              />
+            </span>
           )}
-          {domain.id === active ? (
-            <span className="planet-domain-label__selected">
-              {translate("ui.world.domain.selected")}
-            </span>
-          ) : null}
-          {domain.studies.length === 0 ? (
-            <span className="planet-domain-label__state">
-              {translate("ui.world.domain.unpublished")}
-            </span>
-          ) : null}
           {onEnterStudy && domain.id === active && domain.studies.length > 0 ? (
             <div className="planet-domain-label__actions">
               {domain.studies.length > 1 ? (

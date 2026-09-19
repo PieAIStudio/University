@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-19T07:20:09.926Z
+generated_at: 2026-09-19T11:06:39.965Z
 generator_version: doc-gov@0.14.0
 docs_count: 145
 docs:
@@ -247,7 +247,7 @@ docs:
     type: plan
     status: completed
     canonical: true
-    last_reviewed: 2026-09-18
+    last_reviewed: 2026-09-19
     pinned: false
   - id: PLAN-PLAY-USABILITY
     path: docs/plans/completed/play-usability.md

@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   boxesOverlap,
+  captureLabelOffsets,
   clampLabelOutOfChrome,
   labelBox,
   placeLabels,
+  placeLabelsAtOffsets,
   type LabelCandidate,
   type LabelPlacement,
 } from "./labels";
@@ -563,6 +565,52 @@ describe("placeLabels", () => {
       narrow,
     );
     expect(byId(placed, "wide").visible).toBe(true);
+  });
+
+  it("keeps the chosen displacement when the projected world anchor moves", () => {
+    const original = candidate({
+      id: "island",
+      x: 280,
+      y: 260,
+      width: 180,
+      height: 32,
+      anchor: "island",
+      weight: 4,
+    });
+    const blocker = { left: 180, top: 270, right: 380, bottom: 330 };
+    const initial = placeLabels([original], VIEW, { gap: 8, reserved: [blocker] });
+    const offsets = captureLabelOffsets([original], initial);
+    const moved = { ...original, x: original.x + 96, y: original.y + 54 };
+    const followed = placeLabelsAtOffsets([moved], offsets, VIEW, { gap: 8 });
+
+    expect(followed[0]?.visible).toBe(true);
+    expect(followed[0]!.x - moved.x).toBeCloseTo(initial[0]!.x - original.x, 8);
+    expect(followed[0]!.y - moved.y).toBeCloseTo(initial[0]!.y - original.y, 8);
+  });
+
+  it("hides a bound label when its fixed slot is blocked, then restores that same slot", () => {
+    const island = candidate({
+      id: "island",
+      x: 400,
+      y: 280,
+      width: 160,
+      height: 32,
+      anchor: "island",
+      weight: 4,
+    });
+    const initial = placeLabels([island], VIEW, { gap: 8 });
+    const offsets = captureLabelOffsets([island], initial);
+    const slot = initial[0]!;
+    const blocker = labelBox(slot, island.width, island.height, "island");
+
+    const blocked = placeLabelsAtOffsets([island], offsets, VIEW, {
+      gap: 8,
+      reserved: [blocker],
+    });
+    const restored = placeLabelsAtOffsets([island], offsets, VIEW, { gap: 8 });
+
+    expect(blocked[0]?.visible).toBe(false);
+    expect(restored[0]).toEqual(initial[0]);
   });
 
   it("keeps a 41-lesson pile readable: visible labels never intersect", () => {

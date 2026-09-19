@@ -3,6 +3,7 @@
 .app-shell[data-map-shell="true"] {
   --map-panel-width: 248px;
   --map-handle-width: 64px;
+  --map-avatar-width: 92px;
   --shell-rail-width: var(--map-panel-width);
   --shell-aside-width: var(--map-panel-width);
 }
@@ -119,7 +120,7 @@
 }
 @media (min-width: 768px) {
   .app-shell[data-map-shell="true"][data-rail-collapsed="true"] {
-    --shell-rail-width: var(--map-handle-width);
+    --shell-rail-width: var(--map-avatar-width);
   }
   .app-shell[data-map-shell="true"][data-aside-collapsed="true"] {
     --shell-aside-width: var(--map-handle-width);
@@ -269,5 +270,78 @@
   .app-shell[data-map-shell="true"] .stagewrap {
     height: 100dvh;
     min-height: 100dvh;
+  }
+}
+
+/* Folding retains meaning: one existing avatar on the left, the actual selected
+   title on the right. The two compact objects no longer pretend to be identical. */
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .nav-rail {
+  width: var(--map-avatar-width);
+  min-width: var(--map-avatar-width);
+  height: auto;
+  padding: 6px;
+  gap: 0;
+  overflow: visible;
+}
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .nav-rail__brand {
+  min-height: 44px;
+  border: 0;
+  padding: 0;
+}
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .nav-rail__foot,
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .nav-rail__identity {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .nav-rail__footer,
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .learner-level--rail,
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .counter-row {
+  display: none;
+}
+.app-shell[data-map-shell="true"][data-map-aside-open="false"] .app-shell__east-stack {
+  height: auto;
+  max-height: calc(100dvh - 32px);
+  padding: 6px;
+}
+.app-shell[data-map-shell="true"][data-map-aside-open="false"] .map-shell__heading {
+  min-height: 44px;
+  max-height: inherit;
+  padding: 0;
+  border: 0;
+}
+.app-shell[data-map-shell="true"][data-map-aside-open="false"] .app-shell__collapse--aside {
+  width: 100%;
+  padding: 10px 4px;
+  gap: 10px;
+}
+.app-shell[data-map-shell="true"][data-map-aside-open="false"] .map-shell__compact-title {
+  display: block;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+  max-inline-size: min(420px, calc(100dvh - 130px));
+  max-block-size: 2em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.app-shell[data-map-shell="true"][data-map-aside-open="true"] .map-shell__compact-title {
+  display: none;
+}
+@media (max-width: 767px) {
+  .app-shell[data-map-shell="true"] {
+    --map-avatar-width: 64px;
+  }
+  .app-shell[data-map-shell="true"][data-map-rail-open="false"] .app-shell__west {
+    width: var(--map-avatar-width);
+    --avatar-chip-size: 50px;
+  }
+  .app-shell[data-map-shell="true"][data-map-aside-open="false"] .map-shell__compact-title {
+    max-inline-size: min(280px, calc(65dvh - 80px));
   }
 }

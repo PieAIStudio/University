@@ -185,7 +185,7 @@ test("AA Space is scoped; search preserves spaces, Escape and IME; directory foc
   await expect(page).toHaveURL(new RegExp(`${last.unitId}/${last.id}`));
 });
 
-test("AA shared expanded/folded frame remains symmetric and the path stays viewport-centered", async ({
+test("AA expanded frame stays symmetric; folded rails keep the avatar and selected title", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -208,15 +208,88 @@ test("AA shared expanded/folded frame remains symmetric and the path stays viewp
   expect(Math.abs(measured.center - measured.viewport)).toBeLessThan(2);
   expect(Math.abs(measured.left.width - measured.right.width)).toBeLessThan(2);
   expect(Math.abs(measured.left.height - measured.right.height)).toBeLessThan(2);
+  await page.locator('button[data-domain-id="ai-foundations"]').click();
+  const selectedTitle = (await page.locator(".map-shell__heading h2").textContent())?.trim();
+  expect(selectedTitle).toBeTruthy();
+
   await page.locator(".app-shell__collapse--rail").click();
   await expect.poll(async () => Math.abs((await geometry()).center - 720)).toBeLessThan(2);
   await page.locator(".app-shell__collapse--aside").click();
-  await expect
-    .poll(async () => Math.abs((await geometry()).left.height - (await geometry()).right.height))
-    .toBeLessThan(2);
+
+  const avatar = page.locator("#app-shell-rail .nav-rail__identity .avatar-chip");
+  const compactTitle = page.locator(".app-shell__collapse--aside .map-shell__compact-title");
+  await expect(avatar).toBeVisible();
+  await expect(page.locator(".app-shell__collapse--rail .map-shell__compact-label")).toHaveCount(0);
+  await expect(compactTitle).toHaveText(selectedTitle!);
+  expect(await compactTitle.evaluate((element) => getComputedStyle(element).writingMode)).toBe(
+    "vertical-rl",
+  );
+  await expect(page.locator(".app-shell__collapse--aside")).toHaveAttribute(
+    "title",
+    selectedTitle!,
+  );
   measured = await geometry();
-  expect(Math.abs(measured.left.centerY - measured.right.centerY)).toBeLessThan(2);
-  await page.screenshot({ path: test.info().outputPath("folded-frame.png") });
+  expect(measured.left.width).toBeGreaterThan(measured.right.width);
+  expect(Math.abs(measured.center - measured.viewport)).toBeLessThan(2);
+  await page.screenshot({ path: test.info().outputPath("folded-avatar-and-title.png") });
+});
+
+test("AA scene labels share one complete surface and keep their object-relative offset", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${ONLINE_ORIGIN}/planet?lang=zh-CN`);
+
+  const unpublished = page.locator('button[data-domain-id="ai-games"].scene-label');
+  await expect(unpublished).toBeVisible();
+  await expect(unpublished.locator(".label__course-status")).toContainText("未发布");
+  expect(
+    await unpublished.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const note = element.querySelector(".label__course-status")!.getBoundingClientRect();
+      return (
+        note.left >= box.left - 1 &&
+        note.right <= box.right + 1 &&
+        note.top >= box.top - 1 &&
+        note.bottom <= box.bottom + 1
+      );
+    }),
+  ).toBe(true);
+
+  await page.locator('button[data-domain-id="ai-foundations"]').click();
+  await pointerHit(page, entry(page));
+  await ready(page, "world");
+  const firstLabel = page.locator("button.label--course.scene-label.is-visible").first();
+  await expect(firstLabel).toHaveAttribute("data-label-bound", "true");
+  const courseId = await firstLabel.getAttribute("data-map-marker");
+  expect(courseId).toBeTruthy();
+  const boundLabel = page.locator(
+    `button.label--course.scene-label[data-map-marker=${JSON.stringify(courseId)}]`,
+  );
+  const readOffset = () =>
+    boundLabel.evaluate((element) => [
+      element.getAttribute("data-label-offset-x"),
+      element.getAttribute("data-label-offset-y"),
+    ]);
+  const before = await readOffset();
+
+  const canvas = page.locator(".stagewrap canvas").first();
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error("地图没有可拖动的画布");
+  await page.mouse.move(box.x + box.width * 0.55, box.y + box.height * 0.5);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.55 + 24, box.y + box.height * 0.5 + 12, {
+    steps: 4,
+  });
+  await page.mouse.up();
+  await page.waitForTimeout(350);
+  await expect.poll(readOffset).toEqual(before);
+
+  await pointerHit(page, boundLabel);
+  await pointerHit(page, entry(page));
+  await ready(page, "course");
+  await expect(page.locator("button.label--lesson.scene-label.is-visible").first()).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath("unified-and-bound-scene-labels.png") });
 });
 
 test("AA touch-sized navigation has one modal drawer, preserves map selection and opens the same quick actions", async ({

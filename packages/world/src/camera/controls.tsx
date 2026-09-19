@@ -22,14 +22,17 @@ import { MapControls } from "three/addons/controls/MapControls.js";
 
 import {
   boxesOverlap,
+  captureLabelOffsets,
   clampLabelOutOfChrome,
   FOLLOW_CLEARANCE,
   labelBox,
   islandCaptionLeader,
   placeLabels,
+  placeLabelsAtOffsets,
   type LabelAnchor,
   type LabelBox,
   type LabelCandidate,
+  type LabelOffsetPlacement,
 } from "@pieai/university-world/labels.js";
 import type { Marker } from "../Maps";
 import { pinchDollyArmed } from "./pinch-dolly.js";
@@ -490,6 +493,19 @@ export function LabelProbe({
   const followViewportHeightRef = useRef<number | null>(null);
   const labelLimitRef = useRef(limit);
   const labelGapRef = useRef(4);
+  const labelLayoutRevisionRef = useRef(0);
+  const labelObstacleSignatureRef = useRef("");
+  const labelLayoutRef = useRef<{
+    readonly key: string;
+    readonly offsets: readonly LabelOffsetPlacement[];
+  } | null>(null);
+  const labelLayoutKeyRef = useRef("");
+  const labelStillFramesRef = useRef(0);
+  const labelCameraRef = useRef({
+    initialized: false,
+    position: new THREE.Vector3(),
+    quaternion: new THREE.Quaternion(),
+  });
   useEffect(() => {
     const stage = gl.domElement.closest<HTMLElement>(".stagewrap");
     const shell = stage?.closest<HTMLElement>(".app-shell");
@@ -515,6 +531,18 @@ export function LabelProbe({
       const tabBar = shell.querySelector<HTMLElement>(".tab-bar");
       const tabBarBox = tabBar ? stageRelativeBox(stage, tabBar) : null;
       followViewportHeightRef.current = tabBarBox ? Math.max(0, tabBarBox.top) : null;
+      const roundedBoxes = [...obstacles.chrome, ...obstacles.labels]
+        .map((box) =>
+          [box.left, box.top, box.right, box.bottom]
+            .map((value) => Math.round(value * 2) / 2)
+            .join(","),
+        )
+        .join(";");
+      const signature = `${roundedBoxes}|${labelLimitRef.current}|${labelGapRef.current}|${followViewportHeightRef.current ?? ""}`;
+      if (signature !== labelObstacleSignatureRef.current) {
+        labelObstacleSignatureRef.current = signature;
+        labelLayoutRevisionRef.current += 1;
+      }
     };
     update();
     window.addEventListener("resize", update);
@@ -813,11 +841,63 @@ export function LabelProbe({
       hideFollow();
     }
 
-    const namePlaced = placeLabels(candidates, viewport, {
+    const markerLayoutKey = markers
+      .map(
+        (marker) =>
+          `${marker.id}:${marker.kind}:${marker.text}:${marker.sub ?? ""}:${marker.position.x.toFixed(4)},${marker.position.y.toFixed(4)},${marker.position.z.toFixed(4)}`,
+      )
+      .join("|");
+    const measuredLayoutKey = candidates
+      .map(
+        (candidate) =>
+          `${candidate.id}:${candidate.width}x${candidate.height}:${candidate.anchor ?? "center"}:${candidate.weight ?? 0}`,
+      )
+      .join("|");
+    const layoutKey = `${size.width}x${size.height}:${labelLimitRef.current}:${labelGapRef.current}:${labelLayoutRevisionRef.current}:${markerLayoutKey}:${measuredLayoutKey}`;
+    const dynamicPlacements = placeLabels(candidates, viewport, {
       maxVisible: labelLimitRef.current,
       gap: labelGapRef.current,
       reserved: [...labelBoxesRef.current, ...reserved],
     });
+
+    if (labelLayoutKeyRef.current !== layoutKey) {
+      labelLayoutKeyRef.current = layoutKey;
+      labelLayoutRef.current = null;
+      labelStillFramesRef.current = 0;
+      labelCameraRef.current.initialized = true;
+      labelCameraRef.current.position.copy(camera.position);
+      labelCameraRef.current.quaternion.copy(camera.quaternion);
+    } else if (!labelLayoutRef.current) {
+      const previousCamera = labelCameraRef.current;
+      const moved =
+        !previousCamera.initialized ||
+        previousCamera.position.distanceToSquared(camera.position) > 0.000001 ||
+        1 - Math.abs(previousCamera.quaternion.dot(camera.quaternion)) > 0.00000001;
+      if (moved) {
+        labelStillFramesRef.current = 0;
+        previousCamera.initialized = true;
+        previousCamera.position.copy(camera.position);
+        previousCamera.quaternion.copy(camera.quaternion);
+      } else {
+        labelStillFramesRef.current += 1;
+      }
+      if (labelStillFramesRef.current >= 3) {
+        labelLayoutRef.current = {
+          key: layoutKey,
+          offsets: captureLabelOffsets(candidates, dynamicPlacements),
+        };
+      }
+    }
+
+    const namePlaced =
+      labelLayoutRef.current?.key === layoutKey
+        ? placeLabelsAtOffsets(candidates, labelLayoutRef.current.offsets, viewport, {
+            maxVisible: labelLimitRef.current,
+            gap: labelGapRef.current,
+            reserved: [...labelBoxesRef.current, ...reserved],
+          })
+        : dynamicPlacements;
+    const layoutBound = labelLayoutRef.current?.key === layoutKey;
     for (const placement of namePlaced) {
       const element = nodes.get(placement.id);
       if (!element) continue;
@@ -825,6 +905,11 @@ export function LabelProbe({
       if (!marker) continue;
       writePlacement(element, marker, placement.x, placement.y, placement.visible);
       const anchor = projectedById.get(placement.id);
+      element.dataset.labelBound = layoutBound ? "true" : "false";
+      if (anchor) {
+        element.dataset.labelOffsetX = (placement.x - anchor.x).toFixed(2);
+        element.dataset.labelOffsetY = (placement.y - anchor.y).toFixed(2);
+      }
       const leader =
         marker.kind === "course" && anchor && placement.visible
           ? islandCaptionLeader(anchor, placement, element.offsetWidth, element.offsetHeight)

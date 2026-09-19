@@ -97,13 +97,17 @@ describe("WorldMapCanvas rewrite marker", () => {
       await act(async () => root.unmount());
     }
     const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "overlay.css"), "utf8");
+    const labelCss = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "labels/scene-label.css"),
+      "utf8",
+    );
     // Overview moved into the palette; reserve neither its button nor its old
     // 72px lane. Keep transient hints outside Canvas without resizing it.
     expect(css).not.toMatch(/--map-tools-height:\s*72px/);
     expect(css).toMatch(/\.map-viewport\s*\{[^}]*inset:\s*0 0 var\(--map-tools-height, 0px\)/s);
     expect(css).toMatch(/\.map-tools\s*\{[^}]*display:\s*contents/s);
     expect(css).toMatch(/\.map-framing-tools button\s*\{[^}]*min-height:\s*44px/s);
-    expect(css).toMatch(/\.label--course\s*\{[^}]*min-block-size:\s*48px/s);
+    expect(labelCss).toMatch(/\.label--course\.scene-label\s*\{[^}]*min-block-size:\s*48px/s);
     expect(css).toMatch(
       /\.stagewrap \.label--course\s*\{[^}]*max-width:\s*min\(220px, calc\(50vw - 24px\)\)/s,
     );
@@ -142,8 +146,16 @@ describe("WorldMapCanvas rewrite marker", () => {
       const name = button.querySelector(".label__course-title");
       expect(name?.textContent).toBe(title);
       expect(name?.querySelector("small")).toBeNull();
-      expect(button.querySelector(".label__course-progress")?.parentElement).toBe(button);
-      expect(button.querySelector(".label__course-status")?.parentElement).toBe(button);
+      expect(
+        button
+          .querySelector(".label__course-progress")
+          ?.parentElement?.classList.contains("scene-label__text"),
+      ).toBe(true);
+      expect(
+        button
+          .querySelector(".label__course-status")
+          ?.parentElement?.classList.contains("scene-label__text"),
+      ).toBe(true);
       expect(button.querySelector(".label__course-status")?.textContent).toBe("改写中");
       expect(button.getAttribute("aria-label")).toBeNull();
     },

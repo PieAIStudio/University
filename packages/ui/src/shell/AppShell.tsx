@@ -212,6 +212,7 @@ export function AppShell({
       className="app-shell__collapse app-shell__collapse--aside"
       aria-expanded={asideOpen}
       aria-controls="app-shell-aside"
+      title={!asideOpen && mapMode ? asideTitle : undefined}
       onClick={() => toggle("aside")}
     >
       <span className="app-shell__collapse-icon" aria-hidden="true">
@@ -219,10 +220,11 @@ export function AppShell({
       </span>
       <span className="app-shell__collapse-label">
         {asideOpen ? collapseLabels.collapse : collapseLabels.expandAside}
+        {mapMode && !asideOpen && asideTitle ? `: ${asideTitle}` : null}
       </span>
       {mapMode ? (
-        <span className="map-shell__compact-label" aria-hidden="true">
-          {collapseLabels.asideName}
+        <span className="map-shell__compact-label map-shell__compact-title" aria-hidden="true">
+          {asideTitle || collapseLabels.asideName}
         </span>
       ) : null}
     </button>
@@ -233,6 +235,8 @@ export function AppShell({
       className="app-shell"
       ref={shell}
       data-map-shell={mapMode ? "true" : undefined}
+      data-map-rail-open={mapMode ? String(railOpen) : undefined}
+      data-map-aside-open={mapMode ? String(asideOpen) : undefined}
       data-mobile-panel={mobilePanel ?? undefined}
       onClickCapture={(event) => {
         if (
@@ -285,11 +289,6 @@ export function AppShell({
               <span className="app-shell__collapse-label">
                 {railOpen ? collapseLabels.collapse : collapseLabels.expandRail}
               </span>
-              {mapMode ? (
-                <span className="map-shell__compact-label" aria-hidden="true">
-                  {collapseLabels.railName}
-                </span>
-              ) : null}
             </button>
           }
         />

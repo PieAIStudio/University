@@ -111,17 +111,7 @@
   left: 0;
   will-change: transform, opacity;
   transition: opacity 0.15s;
-  white-space: nowrap;
-  font-size: 0.8rem;
-  line-height: 1.25;
-  padding: 0.18rem 0.5rem;
-  border-radius: 999px;
-  color: #f4f7fb;
-  background: rgba(14, 24, 32, 0.62);
-  box-shadow: 0 1px 6px rgba(6, 16, 22, 0.35);
   max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
   opacity: var(--placed, 0);
 }
 
@@ -146,50 +136,17 @@
 
 button.label {
   pointer-events: none;
-  border: 0;
-  font: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
-  text-align: inherit;
 }
 
 button.label.is-visible {
   pointer-events: auto;
 }
 
-button.label:hover {
-  background: rgba(14, 24, 32, 0.85);
-}
-
 button.label:focus-visible {
   pointer-events: auto;
-  outline: 2px solid #ffd479;
+  outline: 2px solid var(--game-ui-focus-ring);
   outline-offset: 2px;
   opacity: 1 !important;
-}
-
-.label--study {
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  padding: 0.3rem 0.75rem;
-  background: rgba(10, 20, 28, 0.72);
-  text-align: center;
-}
-
-.label--study small {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 400;
-  letter-spacing: 0;
-  opacity: 0.78;
-}
-
-.label--course {
-  display: inline-flex;
-  align-items: center;
-  min-block-size: 48px;
-  overflow: visible;
 }
 
 .label--course[data-label-leader="true"]::before {
@@ -204,46 +161,6 @@ button.label:focus-visible {
   transform: rotate(var(--leader-angle));
   transform-origin: 0 50%;
   pointer-events: none;
-}
-
-/* Only the name may truncate. A long name must not spend the space reserved
-   for learning state and the existing rewrite notice. The projector still
-   measures this one bounded label; this is not another overlay layer. */
-.label__course-title {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.label--course .label__course-progress {
-  display: inline-block;
-  flex-shrink: 0;
-  margin-inline-start: 0.4rem;
-  font-size: 0.68rem;
-  font-weight: 650;
-  line-height: 1.2;
-}
-
-.label--course[data-course-state="live"] .label__course-progress {
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
-}
-
-.label--course .label__course-status {
-  display: inline-block;
-  flex-shrink: 0;
-  margin-inline-start: 0.4rem;
-  padding: 0.1rem 0.36rem;
-  border: 1px solid color-mix(in srgb, var(--game-ui-accent-bright) 48%, transparent);
-  border-radius: var(--game-ui-radius-pill, 999px);
-  color: var(--game-ui-accent-bright);
-  background: color-mix(in srgb, var(--game-ui-accent) 12%, transparent);
-  font-size: 0.68rem;
-  font-weight: 650;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
-  vertical-align: 0.05em;
 }
 
 .picked,

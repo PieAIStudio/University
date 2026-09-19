@@ -77,6 +77,13 @@ export interface LabelPlacement {
   readonly visible: boolean;
 }
 
+/** A label's chosen screen-space displacement from its projected 3D anchor. */
+export interface LabelOffsetPlacement {
+  readonly id: string;
+  readonly dx: number;
+  readonly dy: number;
+}
+
 const DEFAULT_MAX_VISIBLE = 12;
 const DEFAULT_GAP = 4;
 
@@ -524,6 +531,88 @@ function anchorOnScreen(candidate: LabelCandidate, viewport: LabelViewport): boo
     candidate.x <= viewport.width &&
     candidate.y <= viewport.height
   );
+}
+
+/**
+ * Freeze one resolved layout as offsets from the projected world anchors.
+ *
+ * A camera move changes each candidate's x/y. It must not send the label back
+ * through the slot search and make it jump to another side of its island. Even
+ * a hidden placement carries its preferred home offset, so it can reappear in
+ * the same place when its anchor comes back on screen.
+ */
+export function captureLabelOffsets(
+  candidates: readonly LabelCandidate[],
+  placements: readonly LabelPlacement[],
+): readonly LabelOffsetPlacement[] {
+  const byId = new Map(placements.map((placement) => [placement.id, placement]));
+  return candidates.map((candidate) => {
+    const placement = byId.get(candidate.id);
+    const home = slotsFor(candidate, DEFAULT_GAP)[0]!;
+    return {
+      id: candidate.id,
+      dx: (placement?.x ?? home.x) - candidate.x,
+      dy: (placement?.y ?? home.y) - candidate.y,
+    };
+  });
+}
+
+/**
+ * Reapply a previously chosen offset without searching a different slot.
+ *
+ * Current chrome, scenery and neighbouring labels still decide visibility.
+ * When the old slot is blocked the label hides; when it is free again the same
+ * offset returns. This is the difference between a label bound to an object and
+ * a floating card that renegotiates its position on every camera frame.
+ */
+export function placeLabelsAtOffsets(
+  candidates: readonly LabelCandidate[],
+  offsets: readonly LabelOffsetPlacement[],
+  viewport: LabelViewport,
+  options?: {
+    readonly maxVisible?: number;
+    readonly gap?: number;
+    readonly reserved?: readonly LabelBox[];
+    readonly obstacles?: readonly LabelBox[];
+  },
+): readonly LabelPlacement[] {
+  const maxVisible = options?.maxVisible ?? DEFAULT_MAX_VISIBLE;
+  const gap = options?.gap ?? DEFAULT_GAP;
+  const obstacles = options?.obstacles ?? [];
+  const offsetsById = new Map(offsets.map((offset) => [offset.id, offset]));
+  const placed: LabelPlacement[] = candidates.map((candidate) => {
+    const offset = offsetsById.get(candidate.id);
+    const home = slotsFor(candidate, gap, viewport)[0]!;
+    return {
+      id: candidate.id,
+      x: offset ? candidate.x + offset.dx : home.x,
+      y: offset ? candidate.y + offset.dy : home.y,
+      visible: false,
+    };
+  });
+  const occupied: LabelBox[] = options?.reserved ? [...options.reserved] : [];
+  const order = candidates.map((candidate, index) => ({ candidate, index }));
+  order.sort((left, right) => {
+    const weightDelta = (right.candidate.weight ?? 0) - (left.candidate.weight ?? 0);
+    if (weightDelta !== 0) return weightDelta;
+    const depthDelta = left.candidate.z - right.candidate.z;
+    return depthDelta !== 0 ? depthDelta : left.index - right.index;
+  });
+
+  let visibleCount = 0;
+  for (const { candidate, index } of order) {
+    const offset = offsetsById.get(candidate.id);
+    if (!offset || !anchorOnScreen(candidate, viewport) || visibleCount >= maxVisible) continue;
+    const slot = { x: candidate.x + offset.dx, y: candidate.y + offset.dy };
+    const rect = labelBox(slot, candidate.width, candidate.height, candidate.anchor ?? "center");
+    if (!fitsInViewport(rect, viewport)) continue;
+    if (obstacles.some((other) => boxesOverlap(rect, other, gap))) continue;
+    if (!candidate.overlay && occupied.some((other) => boxesOverlap(rect, other, gap))) continue;
+    if (!candidate.overlay) occupied.push(rect);
+    placed[index] = { id: candidate.id, x: slot.x, y: slot.y, visible: true };
+    visibleCount += 1;
+  }
+  return placed;
 }
 
 export function placeLabels(

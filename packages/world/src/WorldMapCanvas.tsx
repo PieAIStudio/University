@@ -8,6 +8,7 @@ import {
   type RefObject,
 } from "react";
 import { translate } from "@pieai/university-ui/i18n.js";
+import { SceneLabelText } from "./labels/SceneLabelText.js";
 import type { AuthoringFocus } from "@pieai/university-core";
 
 import { Controls, Flight, LabelProbe, WORLD_POLAR } from "./camera/controls.js";
@@ -352,32 +353,29 @@ export function WorldMapCanvas({
           const courseState = marker.courseState
             ? translate(`ui.world.courseState.${marker.courseState}`)
             : undefined;
-          const content = (
-            <>
-              {marker.kind === "course" ? (
-                <span className="label__course-title">{marker.text}</span>
-              ) : (
-                marker.text
-              )}
-              {courseState ? (
-                <small className="label__course-progress" aria-hidden="true">
-                  {marker.courseState === "done" ? "✓ " : ""}
-                  {courseState}
-                </small>
-              ) : null}
-              {marker.sub ? (
-                <small className={isCourseRewriteMarker ? "label__course-status" : undefined}>
-                  {marker.sub}
-                </small>
-              ) : null}
-            </>
-          );
+          const content =
+            marker.kind === "icon" ? (
+              marker.text
+            ) : (
+              <SceneLabelText
+                title={marker.text}
+                status={
+                  courseState ? (
+                    <span aria-hidden="true">
+                      {marker.courseState === "done" ? "✓ " : ""}
+                      {courseState}
+                    </span>
+                  ) : undefined
+                }
+                note={marker.sub}
+              />
+            );
           const attach = (element: HTMLElement | null) => {
             if (element) labelNodes.current.set(marker.id, element);
             else labelNodes.current.delete(marker.id);
           };
           const className = [
-            "label",
+            "label scene-label",
             `label--${marker.kind}`,
             marker.quiet ? "label--quiet" : "",
             marker.locked ? "is-locked" : "",
