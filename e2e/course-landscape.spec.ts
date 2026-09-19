@@ -11,6 +11,7 @@ import {
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { assertCompleteCourseOverview, waitForCourseFraming } from "./harness/course-overview.js";
+import { runMapCommand } from "./harness/map-actions.js";
 import { captureSurfaceMaterialStudy } from "./harness/surface-material-study.js";
 import { captureCourseShadowStudy } from "./harness/course-shadow-study.js";
 import { captureSourceSwatchStudy } from "./harness/source-swatch-study.js";
@@ -63,11 +64,7 @@ for (const viewport of [
       const ids = await page
         .locator("[data-lesson-state][data-map-marker]")
         .evaluateAll((nodes) => nodes.map((n) => n.getAttribute("data-map-marker")));
-      await humanClick(
-        page,
-        page.getByRole("button", { name: "总览课程岛", exact: true }),
-        "overview the real course",
-      );
+      await runMapCommand(page, "overview");
       const overview = await assertCompleteCourseOverview(page);
       const receipt = await page.evaluate(() => {
         const bag = window as any;

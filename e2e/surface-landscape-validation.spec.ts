@@ -12,6 +12,7 @@ import { waitForCourseFraming, assertCompleteCourseOverview } from "./harness/co
 import { watchConsole } from "./harness/console.js";
 import { measureStageGpu } from "./harness/stage-gpu-timing.js";
 import { captureDrawnMaterials } from "./harness/drawn-materials.js";
+import { runMapCommand, mapEntryButton } from "./harness/map-actions.js";
 
 const OUTPUT = process.env.R47_EVIDENCE_DIR ?? "SCRATCH/e2e/surface-landscape";
 
@@ -125,14 +126,11 @@ for (const viewport of [
         const icon = page.locator("button.label--icon.is-visible").first();
         await expect(icon).toBeVisible();
         await humanClick(page, icon, "真实课序关卡");
-        await expect(page.getByRole("dialog")).toBeVisible();
+        await expect(mapEntryButton(page)).toBeVisible();
+        await expect(page.locator('[aria-modal="true"], .path-card__scrim')).toHaveCount(0);
         await page.keyboard.press("Escape");
-        await expect(page.getByRole("dialog")).toBeHidden();
-        await humanClick(
-          page,
-          page.getByRole("button", { name: "总览课程岛", exact: true }),
-          "完整课程岛",
-        );
+        await expect(mapEntryButton(page)).toBeHidden();
+        await runMapCommand(page, "overview");
         await assertCompleteCourseOverview(page);
         await page.screenshot({ path: join(folder, "overview.png") });
         const canvas = await page.locator(".stagewrap canvas").boundingBox();

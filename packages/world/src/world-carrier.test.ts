@@ -56,18 +56,42 @@ describe("carrier contact on the real distant island", () => {
       expect(target[2]).toBe(island.position.z);
       expect(island.position).toEqual(before);
       expect(worldIslandCarrierTarget(island, 120, -5.2)).toEqual(target);
-      expect(worldCarrierHomeTarget([island], before.clone(), 120, -5.2)).toEqual(target);
+      // N06: remembered learning focus is not an explicit selection.
+      const home = worldCarrierHomeTarget([island], before.clone(), 120, -5.2);
+      expect(
+        Math.hypot(home[0] - island.position.x, home[2] - island.position.z),
+      ).toBeGreaterThanOrEqual(island.radius + 2.2);
+      expect(home[1]).toBe(target[1]);
+      expect(island.position).toEqual(before);
     },
   );
 
-  it("retains the existing cloud home only when no actual course placement owns the focus", () => {
-    expect(worldCarrierHomeTarget([], null, 120, -5.2)).toEqual(cloudCarrierHome(120, -5.2));
-    const point = new THREE.Vector3(4, 0, -3);
-    expect(worldCarrierHomeTarget([], point, 120, -5.2)).toEqual([
-      point.x,
-      cloudCarrierHome(120, -5.2)[1],
-      point.z,
-    ]);
+  it("retains the existing cloud home when the actual catalogue has no islands", () => {
+    const home = cloudCarrierHome(120, -5.2);
+    expect(worldCarrierHomeTarget([], null, 120, -5.2)).toEqual(home);
+    expect(worldCarrierHomeTarget([], new THREE.Vector3(4, 0, -3), 120, -5.2)).toEqual(home);
+  });
+
+  it("checks all destination footprints and keeps a deterministic waiting position", () => {
+    const blueprint = islandBlueprint({ studyId: "waiting", courseId: "shared", lessonCount: 6 });
+    const islands = [
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(-9, 2, 0),
+      new THREE.Vector3(0, 1, 9),
+    ].map((position) => ({ blueprint, position, radius: 4.8 }));
+    const originals = islands.map((island) => island.position.toArray());
+    const result = worldCarrierHomeTarget(islands, islands[0]!.position.clone(), 120, -5.2);
+    const margin = Math.max(2.2, cloudCarrierClearance(120, -5.2));
+    for (const island of islands) {
+      expect(
+        Math.hypot(result[0] - island.position.x, result[2] - island.position.z),
+      ).toBeGreaterThanOrEqual(island.radius + margin - 1e-8);
+    }
+    expect(result.every(Number.isFinite)).toBe(true);
+    expect(worldCarrierHomeTarget(islands, islands[0]!.position.clone(), 120, -5.2)).toEqual(
+      result,
+    );
+    expect(islands.map((island) => island.position.toArray())).toEqual(originals);
   });
 
   it.each(["desktop", "mobile"] as const)(

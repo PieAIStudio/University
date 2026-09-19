@@ -399,6 +399,9 @@ function PlanetCameraRig({ placements }: { readonly placements: readonly DomainP
 }
 
 export interface PlanetSceneProps {
+  readonly explicitSelection?: boolean;
+  readonly onEnterStudy?: (studyId: string) => void;
+  readonly onClearSelection?: () => void;
   readonly studies: readonly PlanetStudy[];
   readonly domainCatalog?: readonly PlanetStudyDomain[];
   readonly selectedId: string | null;
@@ -409,6 +412,7 @@ export interface PlanetSceneProps {
   readonly avatarSignedIn?: boolean;
 }
 export function PlanetScene({
+  explicitSelection = false,
   studies,
   domainCatalog,
   selectedId,
@@ -431,7 +435,7 @@ export function PlanetScene({
   const activeId =
     domains.find((domain) => domain.id === selectedDomainId)?.id ??
     domains.find((domain) => domain.studies.some((study) => study.id === selectedId))?.id ??
-    domains[0]?.id;
+    (explicitSelection ? null : domains[0]?.id);
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     const bag = globalThis as unknown as { __planetProjection?: () => unknown };
@@ -490,6 +494,8 @@ export function PlanetStage({
   ...props
 }: PlanetSceneProps & { readonly children?: ReactNode }) {
   const labelNodes = useRef(new Map<string, HTMLElement>());
+  const pointer = useRef<{ x: number; y: number } | null>(null);
+  const dragged = useRef(false);
   const [resourceStates, setResourceStates] = useState<
     Record<string, DomainResourceStatus["state"]>
   >({});
@@ -504,8 +510,39 @@ export function PlanetStage({
     );
   }, []);
   return (
-    <div className="planet-stage">
-      <Stage cameraFrom={[0, 0, 44]} lookAt={[0, 0, 0]} ambientOcclusion={false}>
+    <div
+      className="planet-stage"
+      data-map-surface={props.explicitSelection ? "true" : undefined}
+      tabIndex={props.explicitSelection ? 0 : undefined}
+      onPointerDownCapture={(event) => {
+        pointer.current = { x: event.clientX, y: event.clientY };
+        dragged.current = false;
+        if (event.target instanceof HTMLCanvasElement)
+          event.currentTarget.focus({ preventScroll: true });
+      }}
+      onPointerMoveCapture={(event) => {
+        if (
+          pointer.current &&
+          Math.hypot(event.clientX - pointer.current.x, event.clientY - pointer.current.y) > 6
+        )
+          dragged.current = true;
+      }}
+      onPointerUpCapture={() => {
+        pointer.current = null;
+      }}
+      onPointerCancelCapture={() => {
+        pointer.current = null;
+        dragged.current = true;
+      }}
+    >
+      <Stage
+        cameraFrom={[0, 0, 44]}
+        lookAt={[0, 0, 0]}
+        ambientOcclusion={false}
+        onPointerMissed={() => {
+          if (!dragged.current) props.onClearSelection?.();
+        }}
+      >
         <PlanetScene
           {...props}
           labelNodes={labelNodes.current}
@@ -520,6 +557,9 @@ export function PlanetStage({
         selectedId={props.selectedId}
         selectedDomainId={props.selectedDomainId}
         nodes={labelNodes.current}
+        onSelectDomain={props.explicitSelection ? props.onSelectDomain : undefined}
+        onSelectStudy={props.explicitSelection ? props.onSelect : undefined}
+        onEnterStudy={props.explicitSelection ? props.onEnterStudy : undefined}
       />
       <PlanetResourceStatus
         domainIds={domainIds}

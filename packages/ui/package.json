@@ -5,6 +5,11 @@
   "description": "The learning surface both shells render. Neither app is allowed a second copy of anything in here.",
   "type": "module",
   "exports": {
+    "./navigation/location-breadcrumbs.css": "./src/navigation/location-breadcrumbs.css",
+    "./path/map-entry-action.css": "./src/path/map-entry-action.css",
+    "./shell/map-shell.css": "./src/shell/map-shell.css",
+    "./navigation/LocationBreadcrumbs.js": "./src/navigation/LocationBreadcrumbs.tsx",
+    "./path/MapEntryAction.js": "./src/path/MapEntryAction.tsx",
     ".": "./src/index.ts",
     "./i18n.js": "./src/i18n/index.ts",
     "./Tip.js": "./src/Tip.tsx",
@@ -131,7 +136,7 @@
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.20",
-    "@pieai/swimmer-ui-kit": "2.6.1",
+    "@pieai/swimmer-ui-kit": "2.8.0",
     "@pieai/university-core": "workspace:*",
     "@pieaistudio/swimmer-auth-kit": "0.1.9",
     "mermaid": "11.16.0",

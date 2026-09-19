@@ -59,7 +59,7 @@ import { layoutStudyRoad, radiusForLessons } from "./course/layout";
 import { layoutWorldArchipelago } from "./world-layout.js";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
 import { hash } from "./island/random.js";
-import { cloudCarrierHome, CuteCloudSea, type CloudCarrierTarget } from "./sky/cloud-sea.js";
+import { CuteCloudSea, type CloudCarrierTarget } from "./sky/cloud-sea.js";
 import {
   AerialWorldPlate,
   AerialWorldPlateFallback,
@@ -99,6 +99,7 @@ import { RemoteIslandField, type RemoteIslandPlacement } from "./island/remote-i
 import { projectWorldCourse } from "./world-course-projection.js";
 import { CourseOverviewContext } from "./camera/CourseOverview.js";
 import { worldCarrierHomeTarget, worldIslandCarrierTarget } from "./world-carrier.js";
+import { courseAvatarIdlePosition } from "./course-avatar-idle.js";
 export { worldIslandCaptionTarget } from "./world-carrier.js";
 
 /**
@@ -951,7 +952,10 @@ export function WorldScene({
   const hoveredIsland = useRef<number | null>(null);
   const cloudLevel = -5.2;
   const weatherExtent = extent * 1.5;
-  const cloudOrigin = useMemo(() => cloudCarrierHome(weatherExtent, cloudLevel), [weatherExtent]);
+  const cloudOrigin = useMemo(
+    () => worldCarrierHomeTarget(placements, learnerAt, weatherExtent, cloudLevel),
+    [placements, learnerAt, weatherExtent],
+  );
   const cloudHomeTarget = useMemo<CloudCarrierTarget>(
     () => worldCarrierHomeTarget(placements, learnerAt, weatherExtent, cloudLevel),
     [placements, learnerAt, weatherExtent],
@@ -1232,6 +1236,7 @@ export function courseSurfaceY(
 const MARKER_MAX_RAISE = 0.12;
 
 export interface CourseLessonLayout {
+  readonly idlePosition: THREE.Vector3 | null;
   readonly markers: readonly GridLessonMarker[];
   readonly footing: MedallionFooting;
   readonly inlays: MedallionInlays;
@@ -1317,7 +1322,12 @@ export function layoutCourseLessons(
       ),
       ground.index,
     );
-    return { markers, footing, inlays, recoveries };
+    const idlePosition = courseAvatarIdlePosition(
+      lessons,
+      blueprint.route.nodeRadius,
+      ground.heightAt,
+    );
+    return { markers, footing, inlays, recoveries, idlePosition };
   } finally {
     ground.dispose();
   }
@@ -1357,11 +1367,10 @@ export function CourseScene({
   assetRevision?: number;
 }) {
   const overview = useContext(CourseOverviewContext);
-  const live = lessons.find((lesson) => lesson.state === "live");
   const avatarLesson = avatarLessonId
     ? (lessons.find((lesson) => lesson.lessonId === avatarLessonId) ?? null)
     : null;
-  const avatarAt = avatarLesson ?? live ?? lessons.at(-1) ?? lessons[0] ?? null;
+  const avatarAt = avatarLesson;
   const studyId = lessons[0]?.studyId ?? "course";
   const courseId = lessons[0]?.courseId ?? "course";
   const blueprint = useMemo(
@@ -1430,12 +1439,12 @@ export function CourseScene({
         onPick={onPick}
         onHover={onHover}
       />
-      {avatarAt ? (
+      {avatarAt || layout.idlePosition ? (
         <LearnerMarker
-          position={avatarAt.position}
+          position={(avatarAt?.position ?? layout.idlePosition)!}
           recipe={avatarRecipe}
           signedIn={avatarSignedIn}
-          showRing
+          showRing={avatarAt !== null}
           surface="course"
         />
       ) : null}

@@ -34,11 +34,10 @@ import {
   PlansScreen,
   QuestsScreen,
 } from "@pieai/university-ui/navigation/screens.js";
-import { NodeCard } from "@pieai/university-ui/path/NodeCard.js";
 import { UnitCard } from "@pieai/university-ui/path/UnitCard.js";
 import { UnitSkipTest } from "@pieai/university-ui/path/UnitSkipTest.js";
 import { MistakeList, MistakesEntry } from "@pieai/university-ui/practice/mistakes.js";
-import { pathLessonOf, pathUnitOf } from "@pieai/university-ui/path/from-course-view.js";
+import { pathUnitOf } from "@pieai/university-ui/path/from-course-view.js";
 import type { ContentPort, ContentStudy, Shelf } from "@pieai/university-ui/content/port.js";
 import type { CourseView, UnitView } from "@pieai/university-ui/view/lesson-view.js";
 import {
@@ -69,7 +68,6 @@ import {
   SettlementHost,
   TermEntryHost,
 } from "../screens/lazy";
-import { CourseIsland, type CourseIslandProps } from "./CourseIsland.js";
 import { MapBreadcrumbs } from "./MapBreadcrumbs.js";
 import type { PathOverlay } from "./world-model";
 
@@ -83,12 +81,9 @@ const ProfileAvatar = lazy(() =>
   import("./ProfileAvatar.js").then((mod) => ({ default: mod.ProfileAvatar })),
 );
 
-type PathLesson = CourseView["units"][number]["lessons"][number];
-
 interface MainRouterProps {
   readonly contentPort: ContentPort;
   readonly course: CourseView | null;
-  readonly courseIslandProps: CourseIslandProps | null;
   readonly focusedStudyId: string | null;
   readonly focusStudy: (studyId: string) => void;
   readonly grewFrom: { readonly key: string; readonly doneBefore: number } | null;
@@ -104,12 +99,14 @@ interface MainRouterProps {
   readonly paymentPort: PaymentPort;
   readonly mistakes: readonly Mistake[];
   readonly nextUpProgress: CourseProgress | null;
-  readonly pathLesson: PathLesson | undefined;
   readonly pathOverlay: PathOverlay | null;
   readonly pathUnit: UnitView | undefined;
   readonly planetStudies: readonly PlanetStudy[];
   readonly planetDomainCatalog?: readonly PlanetStudyDomain[];
   readonly selectedPlanetDomainId?: string | null;
+  readonly selectedPlanetStudyId?: string | null;
+  readonly onEnterPlanetStudy?: (studyId: string) => void;
+  readonly onClearPlanetPick?: () => void;
   readonly onSelectPlanetDomain?: (domainId: string) => void;
   readonly onSelectPlanetStudy?: (studyId: string) => void;
   readonly presencePort: PresencePort;
@@ -129,20 +126,17 @@ interface MainRouterProps {
   readonly nodes: readonly CourseNode[] | null;
   readonly world: WorldMap | null;
   readonly courseProgress: (node: CourseNode) => number;
-  readonly showMap: boolean;
   readonly stage: ReactNode;
   readonly studyNames: readonly ContentStudy[];
   readonly todayNode: CourseNode | null;
   readonly todaySection: ReactNode;
   readonly uncorrectedMistakeCount: number;
   readonly view: View;
-  readonly wide: boolean;
 }
 
 export function MainRouter({
   contentPort,
   course,
-  courseIslandProps,
   focusedStudyId,
   focusStudy,
   grewFrom,
@@ -158,12 +152,14 @@ export function MainRouter({
   paymentPort,
   mistakes,
   nextUpProgress,
-  pathLesson,
   pathOverlay,
   pathUnit,
   planetStudies,
   planetDomainCatalog,
   selectedPlanetDomainId,
+  selectedPlanetStudyId,
+  onEnterPlanetStudy,
+  onClearPlanetPick,
   onSelectPlanetDomain,
   onSelectPlanetStudy,
   presencePort,
@@ -179,14 +175,12 @@ export function MainRouter({
   nodes,
   world,
   courseProgress,
-  showMap,
   stage,
   studyNames,
   todayNode,
   todaySection,
   uncorrectedMistakeCount,
   view,
-  wide,
 }: MainRouterProps) {
   const i18n = useI18n();
   const continueView = continueLearningView(
@@ -236,25 +230,7 @@ export function MainRouter({
           onNavigate={setView}
         />
       ) : null}
-      {stage ? (
-        <div className="learn-stage">
-          {stage}
-          {wide && showMap ? (
-            <div className="learn-hud">
-              {/*
-              No 「next lesson」 card here at this width. The right rail's
-              「今天」 already carries the same title, the same metadata and the
-              same button, so rendering both put two competing orange calls to
-              action on one screen — and this one sat on top of the map,
-              covering an island's own label. The rail owns it where the rail
-              exists; below 1160 there is no rail and the floating card above
-              takes over. One call to action at every width.
-            */}
-              {courseIslandProps ? <CourseIsland {...courseIslandProps} /> : null}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      {stage ? <div className="learn-stage">{stage}</div> : null}
       {AUTHORING && view.kind === "world" ? <AuthoringMapNotes studyId={focusedStudyId} /> : null}
       {view.kind === "play-lab" ? (
         <Suspense fallback={<RouteFallback />}>
@@ -272,47 +248,6 @@ export function MainRouter({
             onOpen={setView}
           />
         </Suspense>
-      ) : null}
-
-      {view.kind === "course" &&
-      course &&
-      pathOverlay?.kind === "node" &&
-      pathUnit &&
-      pathLesson ? (
-        <NodeCard
-          open
-          /*
-            The cards read counts, not prose — one fold, shared with the
-            settlement's next-step card, so the two can never quote a different
-            cost for the same lesson.
-          */
-          lesson={pathLessonOf(pathLesson)}
-          unit={pathUnitOf(pathUnit)}
-          onClose={() => setPathOverlay(null)}
-          onStart={() => {
-            setPathOverlay(null);
-            setView({
-              kind: "lesson",
-              studyId: view.studyId,
-              courseId: view.courseId,
-              unitId: pathUnit.id,
-              lessonId: pathLesson.id,
-            });
-          }}
-          onStartUnit={() => {
-            const first = pathUnit.lessons[0];
-            if (!first) return;
-            setPathOverlay(null);
-            setView({
-              kind: "lesson",
-              studyId: view.studyId,
-              courseId: view.courseId,
-              unitId: pathUnit.id,
-              lessonId: first.id,
-            });
-          }}
-          returnFocusTo={pathOverlay.returnFocusTo}
-        />
       ) : null}
 
       {view.kind === "course" && course && pathOverlay?.kind === "unit" && pathUnit ? (
@@ -477,10 +412,13 @@ export function MainRouter({
           <PlanetStage
             studies={planetStudies}
             domainCatalog={planetDomainCatalog}
-            selectedId={focusedStudyId}
+            explicitSelection
+            selectedId={selectedPlanetStudyId ?? null}
             selectedDomainId={selectedPlanetDomainId}
             onSelectDomain={onSelectPlanetDomain}
             onSelect={onSelectPlanetStudy ?? setNavigationFocus}
+            onEnterStudy={onEnterPlanetStudy}
+            onClearSelection={onClearPlanetPick}
             avatarRecipe={avatarRecipe}
             avatarSignedIn={avatarSignedIn}
           />

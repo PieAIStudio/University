@@ -1,0 +1,53 @@
+.planet-domain-labels[data-interactive="true"] .planet-domain-label {
+  pointer-events: auto;
+  background: none;
+  box-shadow: none;
+  border: 0;
+  color: var(--game-ui-text);
+  max-width: 240px;
+  padding: 0;
+}
+.planet-domain-label__pick {
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  border: 0;
+  background: none;
+  min-height: 44px;
+  padding: 6px 10px;
+  cursor: pointer;
+  text-shadow: 0 1px 2px var(--game-ui-panel-strong);
+}
+.planet-domain-label__pick:focus-visible {
+  outline: 2px solid var(--game-ui-focus-ring);
+  border-radius: 8px;
+}
+.planet-domain-label__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.planet-domain-label__actions details {
+  background: var(--game-ui-panel-strong);
+  border-radius: var(--game-ui-radius-control);
+  padding: 8px;
+}
+.planet-domain-label__actions summary {
+  min-height: 44px;
+  padding: 8px;
+  cursor: pointer;
+}
+.planet-domain-label__study-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 35dvh;
+  overflow: auto;
+}
+.planet-domain-labels[data-interactive="true"] .planet-domain-label__state,
+.planet-domain-labels[data-interactive="true"] .planet-domain-label__selected {
+  color: inherit;
+  text-shadow: 0 1px 2px var(--game-ui-panel-strong);
+}

@@ -2,15 +2,11 @@ import { expect, test, type Locator } from "@playwright/test";
 
 import {
   assertVisibleAndHittableAtFivePoints,
-  EXPERIENCE_ROUTES,
   getExperienceFixture,
-  openCoursePickDialog,
-  openExperienceRoute,
+  openCoursePickEntry,
   type ExperienceViewport,
 } from "./harness/experience.js";
-import { humanClick } from "./harness/click.js";
 import { ONLINE_ORIGIN } from "./ports.js";
-import { waitForMapReady } from "./harness/online-learner.js";
 
 type Box = {
   readonly x: number;
@@ -35,11 +31,6 @@ async function boxOf(target: Locator, label: string): Promise<Box> {
   const box = await target.boundingBox();
   if (!box) throw new Error(`${label} 没有屏幕矩形`);
   return box;
-}
-
-async function realClick(target: Locator, label: string): Promise<void> {
-  await humanClick(target.page(), target, label);
-  await target.page().waitForTimeout(350);
 }
 
 async function waitForFeedbackReturn(target: Locator, label: string): Promise<void> {
@@ -78,44 +69,25 @@ async function waitForFeedbackReturn(target: Locator, label: string): Promise<vo
 
 test.describe("N nocollide · 四条体验回归", () => {
   test("N1 desktop · follow card 绕开展开的右栏", async ({ page }) => {
-    const card = await openCoursePickDialog(page, DESKTOP);
+    const card = await openCoursePickEntry(page, DESKTOP);
     const rail = page.locator(".app-shell__aside");
     const cardBox = await boxOf(card, "课程卡");
-    const railBox = await boxOf(rail, "今天右栏");
+    const railBox = await boxOf(rail, "当前对象右栏");
 
-    expect(overlaps(cardBox, railBox), "课程卡落在展开的今天右栏下面").toBe(false);
+    expect(overlaps(cardBox, railBox), "课程卡落在展开的当前对象右栏下面").toBe(false);
     await assertVisibleAndHittableAtFivePoints(
       page,
-      card.getByRole("button", { name: /进入这门课/ }),
-      "follow card / 进入这门课",
+      card.getByRole("button", { name: /^(进入|Enter) / }),
+      "object entry / 进入",
     );
   });
 
   test("N2 desktop · course-island 右栏只说当前课程的下一节", async ({ page }) => {
     const fixture = await getExperienceFixture(page);
-    const world = EXPERIENCE_ROUTES.find((route) => route.id === "world");
-    if (!world) throw new Error("缺少世界地图路由");
-    await openExperienceRoute(page, world, DESKTOP);
-    await waitForMapReady(page);
-
-    await realClick(page.locator("button.study-switcher__trigger").first(), "打开系列选择");
-    await realClick(
-      page.locator("button.study-switcher__option", { hasText: fixture.studyTitle }).first(),
-      `切到 ${fixture.studyTitle}`,
-    );
-    await realClick(
-      page.getByRole("button", { name: fixture.courseTitle, exact: true }).first(),
-      "选发布货架课程岛",
-    );
-    await expect(page.getByRole("button", { name: /进入这门课/ }).first()).toBeVisible({
-      timeout: 15_000,
-    });
-    await realClick(page.getByRole("button", { name: /进入这门课/ }).first(), "进入当前课程");
+    await page.goto(`${ONLINE_ORIGIN}${fixture.coursePath}`, { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".stagewrap canvas")).toBeVisible({ timeout: 30_000 });
 
     await expect(page).toHaveURL(`${ONLINE_ORIGIN}${fixture.coursePath}`);
-    await expect(page.locator("button.study-switcher__trigger").first()).toHaveText(
-      new RegExp(fixture.studyTitle),
-    );
     await expect(page.locator(".app-shell__aside h2")).toHaveText(fixture.courseNextLessonTitle);
     await expect(page.locator(".app-shell__aside")).toContainText(fixture.courseTitle);
   });

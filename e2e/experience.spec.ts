@@ -5,8 +5,8 @@ import {
   auditAxeBaseline,
   EXPERIENCE_ROUTES,
   EXPERIENCE_VIEWPORTS,
-  openCourseNodeDialog,
-  openCoursePickDialog,
+  openCourseNodeEntry,
+  openCoursePickEntry,
   openCourseUnitDialog,
   openFeedbackDialog,
   openLessonLayerDialog,
@@ -32,14 +32,6 @@ const KNOWN_DIALOG_ISSUES = new Map([
 
 const KNOWN_RESPONSE_ISSUES = new Map([
   [
-    "world/phone/today-lesson",
-    "当前手机世界地图 CTA 到课文路由的首次响应约 323ms，略超 300ms；URL 确实变化，留作毛刺记录。",
-  ],
-  [
-    "world/desktop/today-lesson",
-    "当前桌面世界地图 CTA 到课文路由的首次响应曾测得约 319–385ms，略超 300ms；URL 确实变化，留作毛刺记录。",
-  ],
-  [
     "lesson/phone/lesson-completion",
     "当前手机长课完成 CTA 的首次 DOM 响应曾测得约 283–330ms；低于 300ms 的运行可通过，超出时留作毛刺记录。",
   ],
@@ -55,8 +47,6 @@ type DialogScenario = {
 };
 
 const DIALOG_SCENARIOS: readonly DialogScenario[] = [
-  { id: "course-pick", label: "课程选择卡", open: openCoursePickDialog },
-  { id: "course-node", label: "课程关卡卡", open: openCourseNodeDialog },
   { id: "course-unit", label: "课程单元说明", open: openCourseUnitDialog },
   { id: "library-reference", label: "图鉴概念说明", open: openLibraryDialog },
   /*
@@ -76,6 +66,11 @@ const DIALOG_SCENARIOS: readonly DialogScenario[] = [
   { id: "lesson-layer", label: "课文项目分层", open: openLessonLayerDialog },
 ];
 
+const MAP_ENTRY_SCENARIOS = [
+  { id: "course-pick-entry", label: "地图课程岛入口", open: openCoursePickEntry },
+  { id: "course-node-entry", label: "课程关卡入口", open: openCourseNodeEntry },
+] as const;
+
 const CORE_ROUTE_IDS = new Set(["world", "plans", "lesson"]);
 const CTA_ROUTE_IDS = new Set(["world", "plans", "me", "lesson"]);
 const TOUCH_ROUTE_IDS = new Set(["world", "practice", "plans", "lesson"]);
@@ -86,13 +81,29 @@ const touchRoutes = EXPERIENCE_ROUTES.filter((route) => TOUCH_ROUTE_IDS.has(rout
 
 // The complete route table stays in the helper. The BRIEF's speed fallback
 // samples core routes, plus the known touch-target and login paths.
-const FAST_DIALOG_IDS = new Set(["course-pick", "feedback", "lesson-source"]);
+const FAST_DIALOG_IDS = new Set(["feedback", "lesson-source"]);
 const FAST_DIALOG_SCENARIOS = DIALOG_SCENARIOS.filter((scenario) =>
   FAST_DIALOG_IDS.has(scenario.id),
 );
 
 test.describe("M 跨屏体验不变量", () => {
   for (const viewport of EXPERIENCE_VIEWPORTS) {
+    test(`X1 ${viewport.id}：地图入口是非模态且可用 Esc 取消`, async ({ page }) => {
+      const consoleErrors = watchConsole(page);
+      for (const scenario of MAP_ENTRY_SCENARIOS) {
+        await namedStep(page, `X1 ${viewport.id} · ${scenario.label}`, async () => {
+          const entry = await scenario.open(page, viewport);
+          await expect(entry).toBeVisible();
+          await page.keyboard.press("Escape");
+          await expect(entry).toBeHidden();
+          await expect(
+            page.locator('[aria-modal="true"], .path-card__scrim, main[inert]'),
+          ).toHaveCount(0);
+        });
+      }
+      consoleErrors.assertClean();
+    });
+
     test(`X1 ${viewport.id}：可见弹层都有可用退出路径`, async ({ page }) => {
       const consoleErrors = watchConsole(page);
       for (const scenario of FAST_DIALOG_SCENARIOS) {

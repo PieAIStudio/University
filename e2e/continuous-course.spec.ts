@@ -10,6 +10,11 @@ import { ONLINE_ORIGIN } from "./ports.js";
 import { namedStep } from "./harness/step.js";
 import { waitForCourseTrees } from "./harness/course-foliage.js";
 import { FIRST_COURSE_ROUTE } from "./harness/online-learner.js";
+import {
+  openMapQuickActions,
+  mapEntryButton,
+  enterSelectedMapObject,
+} from "./harness/map-actions.js";
 
 const DEFAULT_CAPTURE_DIR = fileURLToPath(
   new URL("../SCRATCH/e2e/continuous-course", import.meta.url),
@@ -142,7 +147,9 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
     });
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
     await expect(page.locator(".stagewrap canvas")).toBeVisible({ timeout: 30_000 });
-    await expect(page.locator(".picked--left")).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('.location-breadcrumb [aria-current="page"]')).toBeVisible({
+      timeout: 30_000,
+    });
 
     // R46 complete tree fields replace donor-trunk downloads. Wait for the
     // actual planned number of rendered tree instances on the visible canvas,
@@ -169,9 +176,10 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
     const doc = document.documentElement;
     return {
       theme: doc.getAttribute("data-game-ui-theme"),
-      courseTitle: document.querySelector(".picked--left h3")?.textContent?.trim() ?? "",
-      progressText:
-        document.querySelector(".picked--left .picked__study")?.textContent?.trim() ?? "",
+      courseTitle:
+        document.querySelector('.location-breadcrumb [aria-current="page"]')?.textContent?.trim() ??
+        "",
+      progressText: document.querySelector(".map-information__facts")?.textContent?.trim() ?? "",
     };
   });
 
@@ -194,6 +202,8 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
   });
 
   await namedStep(page, `[${vp.name}] 验证学习路线抽屉展开与查看单元内容`, async () => {
+    const palette = await openMapQuickActions(page);
+    await palette.locator('[data-map-command="route"]').click();
     const island = page.locator(".picked--left");
     const route = island.locator("details.picked__route");
     await expect(route).toBeVisible({ timeout: 10_000 });
@@ -201,6 +211,8 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
     await humanClick(page, summary, `${vp.name} 展开学习路线`);
     await expect(route).toHaveAttribute("open", "");
     await expect(island.getByRole("button", { name: /先看这一单元讲什么/ })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".map-quick-actions")).toBeHidden();
   });
 
   await namedStep(page, `[${vp.name}] 真实指针点击首节关卡标记打开课程卡`, async () => {
@@ -211,14 +223,13 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
     await waitForStableBox(lessonMarker);
     await humanClick(page, lessonMarker, `${vp.name} 首节关卡标记`);
 
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible({ timeout: 10_000 });
-    await expect(dialog).toContainText("读 ");
+    await expect(mapEntryButton(page)).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator(".map-information")).toContainText("课节");
+    await expect(page.locator('dialog[open], [aria-modal="true"]')).toHaveCount(0);
   });
 
   await namedStep(page, `[${vp.name}] 点击开始进入课文并确认进入阅读器`, async () => {
-    const startBtn = page.getByRole("dialog").getByRole("button", { name: /^开始/ });
-    await humanClick(page, startBtn, `${vp.name} 开始课文`);
+    await enterSelectedMapObject(page, `${vp.name} 开始课文`);
     await expect(page).toHaveURL(new RegExp(`${COURSE_PATH.replaceAll("/", "\\/")}/[^/]+/[^/]+$`));
     await expect(page.locator(".lesson-reader")).toBeVisible({ timeout: 30_000 });
   });
@@ -228,7 +239,8 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
     await humanClick(page, exitBtn, `${vp.name} 离开课文`);
     await expect(page).toHaveURL(new RegExp(`${COURSE_PATH}$`));
     await expect(page.locator(".stagewrap canvas")).toBeVisible({ timeout: 30_000 });
-    await expect(page.locator(".picked--left")).toBeVisible({ timeout: 30_000 });
+    const palette = await openMapQuickActions(page);
+    await palette.locator('[data-map-command="route"]').click();
     await expect(page.locator(".picked--left details.picked__route")).toBeVisible({
       timeout: 10_000,
     });
@@ -241,6 +253,9 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
       await humanClick(page, route.locator(":scope > summary"), `${vp.name} 收起学习路线`);
       await expect(route).not.toHaveAttribute("open", "");
     }
+
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".map-quick-actions")).toBeHidden();
 
     // Search the actual canvas, not four fixed window fractions. The shared
     // breadcrumb/tool bars move a narrow canvas below the window midpoint.

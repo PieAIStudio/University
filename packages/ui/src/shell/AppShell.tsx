@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { CounterRow } from "./CounterRow.js";
 import { NavRail } from "./NavRail.js";
@@ -25,6 +25,8 @@ export interface ShellNavItem {
   readonly label: string;
   readonly icon: ReactNode;
   readonly href: string;
+  /** A command opens in place; it is rendered as a button, not a fake link. */
+  readonly onActivate?: () => void;
   readonly badge?: number | "dot";
   /**
    * Accessible form of `badge`. A bare "3" next to an icon is not a name; pass
@@ -55,9 +57,13 @@ export interface ShellCollapseLabels {
   readonly collapse: string;
   readonly expandRail: string;
   readonly expandAside: string;
+  readonly railName?: string;
+  readonly asideName?: string;
 }
 
 export interface AppShellProps {
+  readonly mapMode?: boolean;
+  readonly asideTitle?: string;
   /** Who you are — rendered at the foot of the nav rail. See NavRail. */
   readonly identity?: ReactNode;
   readonly nav: readonly ShellNavItem[];
@@ -100,6 +106,8 @@ function writeCollapsed(next: { rail: boolean; aside: boolean }) {
 }
 
 export function AppShell({
+  mapMode = false,
+  asideTitle,
   nav,
   tabs,
   activeId,
@@ -113,69 +121,202 @@ export function AppShell({
   identity,
 }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(readCollapsed);
+  const shell = useRef<HTMLDivElement>(null);
+  const [narrow, setNarrow] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(max-width: 767px)").matches,
+  );
+  const [mobilePanel, setMobilePanel] = useState<"rail" | "aside" | null>(null);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => {
+      setNarrow(media.matches);
+      if (!media.matches) setMobilePanel(null);
+    };
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  useEffect(() => {
+    setMobilePanel(null);
+  }, [mapMode]);
+  useEffect(() => {
+    if (!mapMode || !mobilePanel) return;
+    const side = mobilePanel;
+    const panel = shell.current?.querySelector<HTMLElement>(
+      side === "rail" ? ".app-shell__west" : ".app-shell__east",
+    );
+    const close = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.isComposing || !panel) return;
+      // A nested brand dialog/menu owns its own keyboard cycle and Escape.
+      if (
+        [...document.querySelectorAll('dialog[open],[aria-modal="true"],.nav-rail__flyout')].some(
+          (element) => element !== panel,
+        )
+      )
+        return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMobilePanel(null);
+        shell.current?.querySelector<HTMLButtonElement>(`.app-shell__collapse--${side}`)?.focus();
+      } else if (event.key === "Tab") {
+        const controls = [
+          ...panel.querySelectorAll<HTMLElement>(
+            'a[href],button:not([disabled]),input:not([disabled]),select,textarea,summary,[tabindex="0"]',
+          ),
+        ].filter(
+          (element) =>
+            element.getClientRects().length > 0 &&
+            getComputedStyle(element).visibility !== "hidden",
+        );
+        const first = controls[0],
+          last = controls.at(-1);
+        if (!first || !last) return;
+        if (
+          event.shiftKey &&
+          (document.activeElement === first || !panel.contains(document.activeElement))
+        ) {
+          event.preventDefault();
+          last.focus();
+        } else if (
+          !event.shiftKey &&
+          (document.activeElement === last || !panel.contains(document.activeElement))
+        ) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [mapMode, mobilePanel]);
+  const railOpen = mapMode && narrow ? mobilePanel === "rail" : !collapsed.rail;
+  const asideOpen = mapMode && narrow ? mobilePanel === "aside" : !collapsed.aside;
   const persist = (next: { rail: boolean; aside: boolean }) => {
     setCollapsed(next);
     writeCollapsed(next);
   };
   const hasAside = aside != null;
+  const toggle = (side: "rail" | "aside") => {
+    if (mapMode && narrow) {
+      setMobilePanel((current) => (current === side ? null : side));
+      return;
+    }
+    persist({ ...collapsed, [side]: !collapsed[side] });
+  };
+  const asideCollapse = hasAside ? (
+    <button
+      type="button"
+      className="app-shell__collapse app-shell__collapse--aside"
+      aria-expanded={asideOpen}
+      aria-controls="app-shell-aside"
+      onClick={() => toggle("aside")}
+    >
+      <span className="app-shell__collapse-icon" aria-hidden="true">
+        {asideOpen ? "▶" : "◀"}
+      </span>
+      <span className="app-shell__collapse-label">
+        {asideOpen ? collapseLabels.collapse : collapseLabels.expandAside}
+      </span>
+      {mapMode ? (
+        <span className="map-shell__compact-label" aria-hidden="true">
+          {collapseLabels.asideName}
+        </span>
+      ) : null}
+    </button>
+  ) : null;
 
   return (
     <div
       className="app-shell"
+      ref={shell}
+      data-map-shell={mapMode ? "true" : undefined}
+      data-mobile-panel={mobilePanel ?? undefined}
+      onClickCapture={(event) => {
+        if (
+          mapMode &&
+          event.target instanceof Element &&
+          event.target.closest("[data-shell-command]")
+        )
+          setMobilePanel(null);
+      }}
       data-aside-phone={showAsideOnPhone ? "true" : "false"}
       data-rail-collapsed={collapsed.rail ? "true" : "false"}
       data-aside-collapsed={collapsed.aside ? "true" : "false"}
     >
-      <div className="app-shell__west">
+      <div
+        className="app-shell__west"
+        role={mapMode && narrow && mobilePanel === "rail" ? "dialog" : undefined}
+        aria-modal={mapMode && narrow && mobilePanel === "rail" ? true : undefined}
+        aria-label={
+          mapMode && narrow && mobilePanel === "rail"
+            ? (collapseLabels.railName ?? collapseLabels.expandRail)
+            : undefined
+        }
+        inert={mapMode && narrow && mobilePanel === "aside"}
+      >
         <NavRail
           items={nav}
           activeId={activeId}
-          identity={identity}
+          identity={
+            mapMode ? (
+              <>
+                {identity}
+                <CounterRow counters={counters ?? []} />
+              </>
+            ) : (
+              identity
+            )
+          }
           brand={brand}
           collapse={
             <button
               type="button"
               className="app-shell__collapse app-shell__collapse--rail"
-              aria-expanded={!collapsed.rail}
+              aria-expanded={railOpen}
               aria-controls="app-shell-rail"
-              onClick={() => persist({ ...collapsed, rail: !collapsed.rail })}
+              onClick={() => toggle("rail")}
             >
               <span className="app-shell__collapse-icon" aria-hidden="true">
-                {collapsed.rail ? "▶" : "◀"}
+                {railOpen ? "◀" : "▶"}
               </span>
               <span className="app-shell__collapse-label">
-                {collapsed.rail ? collapseLabels.expandRail : collapseLabels.collapse}
+                {railOpen ? collapseLabels.collapse : collapseLabels.expandRail}
               </span>
+              {mapMode ? (
+                <span className="map-shell__compact-label" aria-hidden="true">
+                  {collapseLabels.railName}
+                </span>
+              ) : null}
             </button>
           }
         />
       </div>
-      <main className="app-shell__main">
+      <main className="app-shell__main" inert={mapMode && narrow && mobilePanel !== null}>
         <div className="app-shell__content">{children}</div>
       </main>
-      <header className="app-shell__east">
+      <header
+        className="app-shell__east"
+        role={mapMode && narrow && mobilePanel === "aside" ? "dialog" : undefined}
+        aria-modal={mapMode && narrow && mobilePanel === "aside" ? true : undefined}
+        aria-label={
+          mapMode && narrow && mobilePanel === "aside"
+            ? (collapseLabels.asideName ?? asideLabel)
+            : undefined
+        }
+        inert={mapMode && narrow && mobilePanel === "rail"}
+      >
         <div className="app-shell__east-stack">
-          <CounterRow
-            counters={counters ?? []}
-            collapse={
-              hasAside ? (
-                <button
-                  type="button"
-                  className="app-shell__collapse app-shell__collapse--aside"
-                  aria-expanded={!collapsed.aside}
-                  aria-controls="app-shell-aside"
-                  onClick={() => persist({ ...collapsed, aside: !collapsed.aside })}
-                >
-                  <span className="app-shell__collapse-icon" aria-hidden="true">
-                    {collapsed.aside ? "◀" : "▶"}
-                  </span>
-                  <span className="app-shell__collapse-label">
-                    {collapsed.aside ? collapseLabels.expandAside : collapseLabels.collapse}
-                  </span>
-                </button>
-              ) : null
-            }
-          />
+          {mapMode ? (
+            <div className="map-shell__heading">
+              {asideCollapse}
+              <h2 title={asideTitle}>{asideTitle}</h2>
+            </div>
+          ) : (
+            <CounterRow counters={counters ?? []} collapse={asideCollapse} />
+          )}
           {hasAside ? (
             <aside className="app-shell__aside" id="app-shell-aside" aria-label={asideLabel}>
               {aside}
@@ -183,6 +324,19 @@ export function AppShell({
           ) : null}
         </div>
       </header>
+      {mapMode && narrow && mobilePanel ? (
+        <div
+          className="map-shell__drawer-shield"
+          aria-hidden="true"
+          onClick={() => {
+            const side = mobilePanel;
+            setMobilePanel(null);
+            shell.current
+              ?.querySelector<HTMLButtonElement>(`.app-shell__collapse--${side}`)
+              ?.focus();
+          }}
+        />
+      ) : null}
       <TabBar items={tabs} activeId={activeId} />
     </div>
   );

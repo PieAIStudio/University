@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { ChatCompletionRequest, ChatCompletionTransport } from "@pieai/swimmer-ai-kit/chat";
+import type {
+  ChatCompletionRequest,
+  ChatCompletionTransport,
+} from "@pieai/swimmer-ai-provider-kit/chat";
 const { createClientMock } = vi.hoisted(() => ({ createClientMock: vi.fn() }));
 vi.mock("@supabase/supabase-js", () => ({ createClient: createClientMock }));
 

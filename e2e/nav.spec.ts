@@ -110,28 +110,40 @@ test.describe("O 导航 · 提示槽位与课程位置", () => {
 
       const breadcrumb = page.locator("nav.lesson-breadcrumb");
       await expect(breadcrumb).toBeVisible({ timeout: 30_000 });
-      await expect(breadcrumb.locator("li")).toHaveCount(4);
-      await expect(breadcrumb.locator("a")).toHaveCount(3);
+      const direct = breadcrumb.locator(
+        ".location-breadcrumb__list > li:not(.location-breadcrumb__overflow)",
+      );
+      const ancestors = direct.locator("a");
+      await expect(direct).toHaveCount(4);
+      await expect(ancestors).toHaveCount(3);
       await expect(breadcrumb.locator("[aria-current='page']")).toHaveText(/\S/);
-      await expect(breadcrumb.locator("a").nth(0)).toHaveAttribute("href", "/");
-      await expect(breadcrumb.locator("a").nth(1)).toHaveAttribute("href", fixture.coursePath);
-      await expect(breadcrumb.locator("a").nth(2)).toHaveAttribute("href", fixture.coursePath);
+      await expect(ancestors.nth(0)).toHaveAttribute("href", "/");
+      await expect(ancestors.nth(1)).toHaveAttribute("href", fixture.coursePath);
+      await expect(ancestors.nth(2)).toHaveAttribute("href", fixture.coursePath);
 
       const rowTops = await breadcrumb
-        .locator("li")
+        .locator(".location-breadcrumb__list > li:visible")
         .evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().top)));
       expect(
         Math.max(...rowTops) - Math.min(...rowTops),
         "面包屑在手机上换成了两行",
       ).toBeLessThanOrEqual(1);
 
-      const courseLink = breadcrumb.locator("a").nth(1);
+      // Long paths disclose real parents instead of pushing every name
+      // beyond the phone. The parent remains reachable by an actual click.
+      let courseLink = ancestors.nth(1);
+      if (!(await courseLink.isVisible())) {
+        await breadcrumb.locator("details > summary").click();
+        courseLink = breadcrumb.locator("details a").nth(1);
+      }
       await page.screenshot({ path: `${SHOTS}/nav-${viewport.id}-breadcrumb.png`, fullPage: true });
       await courseLink.scrollIntoViewIfNeeded();
       await assertVisibleAndHittableAtFivePoints(page, courseLink, `${viewport.id} / 回到课程地图`);
       await humanClick(page, courseLink, `${viewport.id} / 课程面包屑`);
       await expect(page).toHaveURL(`${ONLINE_ORIGIN}${fixture.coursePath}`);
-      await expect(page.locator(".picked--left")).toBeVisible({ timeout: 30_000 });
+      await expect(page.locator('.map-breadcrumbs [aria-current="page"]')).toHaveText(
+        fixture.courseTitle,
+      );
     });
   }
 });

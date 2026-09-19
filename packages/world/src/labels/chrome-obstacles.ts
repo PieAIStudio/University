@@ -23,7 +23,7 @@ export function mapOverlayObstacles(
 } {
   const chromeElements = [
     ...shell.querySelectorAll<HTMLElement>(
-      ".nav-rail, .counter-row, .app-shell__aside, .nextup, .tab-bar, .map-breadcrumbs",
+      ".nav-rail, .counter-row, .app-shell__aside, [data-map-shell] .app-shell__east-stack, .nextup, .tab-bar, .map-breadcrumbs",
     ),
   ];
   const labelElements = [

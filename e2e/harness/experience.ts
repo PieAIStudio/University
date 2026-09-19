@@ -7,6 +7,7 @@ import { ONLINE_ORIGIN } from "../ports.js";
 import { humanClick } from "./click.js";
 import { selectCompleteLessonEntry, type ShelfForSelection } from "./catalogue.js";
 import { TODAY_CTA, waitForMapReady } from "./online-learner.js";
+import { navigateMapBreadcrumb, openMapQuickActions } from "./map-actions.js";
 
 type ExperienceShelf = ShelfForSelection;
 
@@ -126,9 +127,9 @@ export interface ExperienceRoute {
 }
 
 const WORLD_PRIMARY: ExperienceTarget = {
-  id: "today-lesson",
-  label: "今天这一课",
-  locate: (page) => page.getByRole("button", { name: TODAY_CTA }).first(),
+  id: "course-island",
+  label: "地图课程岛",
+  locate: (page) => page.locator("button.label--course.is-visible").first(),
 };
 
 const LIBRARY_PRIMARY: ExperienceTarget = {
@@ -285,9 +286,7 @@ async function returnFromLesson(page: Page): Promise<void> {
   const fixture = await getExperienceFixture(page);
   await humanClick(page, page.getByRole("button", { name: "离开课文" }), "课文离开");
   await expect(page).toHaveURL(new RegExp(`${fixture.coursePath.replaceAll("/", "\\/")}$`));
-  const map = page.locator(".picked--left").getByRole("button", { name: /回到\s*.+地图/ });
-  await expect(map).toBeVisible({ timeout: 30_000 });
-  await humanClick(page, map, "课程地图返回系列岛群");
+  await navigateMapBreadcrumb(page, "/");
   await expect(page).toHaveURL(`${ONLINE_ORIGIN}/`);
   await waitForMapReady(page);
 }
@@ -522,11 +521,14 @@ export async function openCoursePage(page: Page, viewport: ExperienceViewport): 
   const fixture = await getExperienceFixture(page);
   await page.setViewportSize({ width: viewport.width, height: viewport.height });
   await page.goto(`${ONLINE_ORIGIN}${fixture.coursePath}`, { waitUntil: "domcontentloaded" });
-  await expect(page.locator(".picked--left")).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('.map-breadcrumbs [aria-current="page"]')).toHaveText(
+    fixture.courseTitle,
+    { timeout: 30000 },
+  );
   await expect(page.locator("button.label").first()).toBeVisible({ timeout: 60_000 });
 }
 
-export async function openCoursePickDialog(
+export async function openCoursePickEntry(
   page: Page,
   viewport: ExperienceViewport,
 ): Promise<Locator> {
@@ -534,12 +536,12 @@ export async function openCoursePickDialog(
   const label = page.locator("button.label.label--course.is-visible").first();
   await expect(label).toBeVisible({ timeout: 30_000 });
   await humanClick(page, label, "地图课程岛");
-  const dialog = page.locator('.picked--follow[role="dialog"]');
-  await expect(dialog).toBeVisible({ timeout: 15_000 });
-  return dialog;
+  const entry = page.locator('.map-entry-action[data-map-entry="true"].is-visible');
+  await expect(entry).toBeVisible({ timeout: 15_000 });
+  return entry;
 }
 
-export async function openCourseNodeDialog(
+export async function openCourseNodeEntry(
   page: Page,
   viewport: ExperienceViewport,
 ): Promise<Locator> {
@@ -547,9 +549,9 @@ export async function openCourseNodeDialog(
   const start = page.locator("button.label", { hasText: /^开始$/ }).first();
   await expect(start).toBeVisible({ timeout: 60_000 });
   await humanClick(page, start, "课程路径第一关");
-  const dialog = page.locator('.path-card[role="dialog"]');
-  await expect(dialog).toBeVisible({ timeout: 15_000 });
-  return dialog;
+  const entry = page.locator('.map-entry-action[data-map-entry="true"].is-visible');
+  await expect(entry).toBeVisible({ timeout: 15_000 });
+  return entry;
 }
 
 export async function openCourseUnitDialog(
@@ -557,6 +559,10 @@ export async function openCourseUnitDialog(
   viewport: ExperienceViewport,
 ): Promise<Locator> {
   await openCoursePage(page, viewport);
+  const palette = await openMapQuickActions(page);
+  await palette.locator('[data-map-command="route"]').click();
+  const route = page.locator("details.picked__route");
+  if ((await route.getAttribute("open")) === null) await route.locator(":scope > summary").click();
   const trigger = page.getByRole("button", { name: "先看这一单元讲什么" });
   await expect(trigger).toBeVisible({ timeout: 30_000 });
   await humanClick(page, trigger, "课程单元说明");

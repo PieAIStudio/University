@@ -93,14 +93,18 @@ test("Y a real one-course archipelago retains identity and readable atmosphere",
       fogDensity: fog.density,
       hazeAtArrival: 1 - Math.exp(-Math.pow(fog.density * 62, 2)),
       breadcrumb: document.querySelector('[aria-label="当前位置"]')?.textContent,
-      switcher: document.querySelector(".study-switcher__trigger")?.getAttribute("aria-label"),
+      mapSurface: document.querySelector('[data-map-surface="true"]') != null,
+      mapInformation: document.querySelector(".map-information")?.textContent,
+      persistentStudySwitcher: document.querySelector(".study-switcher__trigger") != null,
       frame: (window as any).__stageFrameMetrics,
     };
   });
   expect(receipt.ids).toEqual([`${COURSE.studyId}/${COURSE.id}`]);
   expect(receipt.hazeAtArrival).toBeLessThan(0.08);
   expect(receipt.breadcrumb).toContain(STUDY.title);
-  expect(receipt.switcher).toContain(STUDY.title);
+  expect(receipt.mapSurface).toBe(true);
+  expect(receipt.mapInformation).toContain(STUDY.title);
+  expect(receipt.persistentStudySwitcher).toBe(false);
   const folder = process.env.R50_EVIDENCE_DIR ?? "SCRATCH/e2e/small-catalogue";
   mkdirSync(folder, { recursive: true });
   await page.screenshot({ path: join(folder, "one-course-world.png") });

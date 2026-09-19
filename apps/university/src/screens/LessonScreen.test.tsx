@@ -246,8 +246,18 @@ describe("the shared lesson reader", () => {
     const breadcrumb = container.querySelector("nav.lesson-breadcrumb");
     expect(breadcrumb).not.toBeNull();
     expect(breadcrumb?.getAttribute("aria-label")).toBe("当前位置");
-    expect(breadcrumb?.querySelectorAll("li")).toHaveLength(4);
-    expect(breadcrumb?.querySelectorAll("a")).toHaveLength(3);
+    expect(
+      breadcrumb?.querySelectorAll(
+        ".location-breadcrumb__list > li:not(.location-breadcrumb__overflow)",
+      ),
+    ).toHaveLength(4);
+    expect(
+      breadcrumb?.querySelectorAll(
+        ".location-breadcrumb__list > li:not(.location-breadcrumb__overflow) > a",
+      ),
+    ).toHaveLength(3);
+    expect(breadcrumb?.querySelectorAll("details a")).toHaveLength(3);
+    expect(breadcrumb?.querySelectorAll("[aria-current='page']")).toHaveLength(1);
     expect(breadcrumb?.querySelector("[aria-current='page']")?.textContent).toBe(LESSON.title);
     expect(breadcrumb?.textContent).toContain("Turing Pact");
     expect(breadcrumb?.textContent).toContain(COURSE.title);

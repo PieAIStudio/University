@@ -10,6 +10,7 @@ import {
 } from "./harness/catalogue.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
+import { enterSelectedMapObject, navigateMapBreadcrumb } from "./harness/map-actions.js";
 
 const COURSE = CATALOGUE_ROLES.settlement.course;
 const COURSE_PATH = coursePathOf(COURSE);
@@ -118,11 +119,7 @@ for (const viewport of [
       // R46 adopts the garden profile for the ordinary course camera. This
       // check still guards projection separation, not the retired backlight.
       expect(courseLight).toEqual({ profile: "garden", intensity: 3.8 });
-      await humanClick(
-        page,
-        page.getByRole("button", { name: /回到\s*.+地图/ }),
-        "return to the real series",
-      );
+      await navigateMapBreadcrumb(page, "/");
       await ready(page, "remote-props");
       if (viewport.width >= 768) {
         const collapseRail = page.locator('#app-shell-rail button[aria-expanded="true"]');
@@ -383,12 +380,7 @@ for (const viewport of [
         };
       }, `${COURSE.studyId}/${COURSE.id}`);
       await page.mouse.click(target.x, target.y);
-      await expect(page.getByRole("button", { name: /进入这门课/ })).toBeVisible();
-      await humanClick(
-        page,
-        page.getByRole("button", { name: /进入这门课/ }),
-        "enter selected miniature course",
-      );
+      await enterSelectedMapObject(page, "enter selected miniature course");
       await expect(page).toHaveURL(new RegExp(`${COURSE_PATH.replaceAll("/", "\\/")}$`));
       await ready(page, "island-dressing-course");
       await expect(breadcrumb.locator('[aria-current="page"]')).toContainText(COURSE.title);

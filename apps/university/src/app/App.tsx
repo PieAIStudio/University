@@ -47,7 +47,6 @@ import {
 import { LoadingTrivia, useMapCoverState } from "@pieai/university-ui/loading/LoadingTrivia.js";
 import "@pieai/university-ui/loading/loading-trivia.css";
 import { RecoveryState, type RecoveryReason } from "@pieai/university-ui/loading/RecoveryState.js";
-import { GameButton } from "@pieai/swimmer-ui-kit";
 import { UniversityShell } from "@pieai/university-ui/navigation/UniversityShell.js";
 import {
   StudySwitcher,
@@ -55,8 +54,19 @@ import {
 } from "@pieai/university-ui/navigation/StudySwitcher.js";
 import { SettingsSubnav } from "@pieai/university-ui/navigation/empty.js";
 import { LevelProgress } from "@pieai/university-ui/navigation/screens.js";
-import { CoursePickCard } from "@pieai/university-ui/path/CoursePickCard.js";
-import { coursePickStatsOf } from "@pieai/university-ui/path/course-pick-stats.js";
+import { MapEntryAction } from "@pieai/university-ui/path/MapEntryAction.js";
+import {
+  MapInformation,
+  courseInformation,
+  lessonInformation,
+  type MapInformationData,
+} from "./MapInformation.js";
+import {
+  MapQuickActions,
+  useMapShortcuts,
+  type MapDestination,
+  type MapQuickCommand,
+} from "./MapQuickActions.js";
 import { CourseScene, type LessonPlacement } from "@pieai/university-world/Maps.js";
 import { type CourseNode } from "@pieai/university-world/course.js";
 import { RailIdentity } from "@pieai/university-world/avatar.js";
@@ -77,16 +87,10 @@ import {
 import { LessonScreen, RouteFallback } from "../screens/lazy";
 import { FeedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
 
-import { todayCtaLabel, TodaySection, todayMeta } from "@pieai/university-ui/today/TodaySection.js";
+import { TodaySection } from "@pieai/university-ui/today/TodaySection.js";
 import { LINK_RETURN_DEPTH } from "@pieai/university-ui/lesson/LessonReader.js";
-import {
-  COURSE_POLAR,
-  MapControlsHint,
-  MapEntryHint,
-  WORLD_POLAR,
-} from "@pieai/university-world/controls.js";
+import { COURSE_POLAR, MapControlsHint, WORLD_POLAR } from "@pieai/university-world/controls.js";
 import { CourseIsland } from "./CourseIsland.js";
-import { PlanetRail } from "@pieai/university-world/planet.js";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { useCourseProgress } from "./course-progress";
 import { shellConfigForView, useMinWidth } from "./shell-route";
@@ -103,7 +107,10 @@ import {
   islandLookCameraForShot,
   resolveIslandLookDebug,
 } from "@pieai/university-world/island-look.js";
-import { WorldMapCanvas } from "@pieai/university-world/WorldMapCanvas.js";
+import {
+  WorldMapCanvas,
+  type MapViewportCommands,
+} from "@pieai/university-world/WorldMapCanvas.js";
 import { resetWebGLContextProbe } from "@pieai/university-world/webgl-capability.js";
 import { MainRouter } from "./MainRouter";
 import { usePageMetadata } from "./page-metadata";
@@ -158,6 +165,10 @@ export function App() {
   const lookDebug = import.meta.env.DEV ? resolveIslandLookDebug() : null;
   const { lookSeedNode, view } = useIslandLookView({ lookDebug, nodes, routeView });
   const shellConfig = shellConfigForView(view);
+  const mapMode = view.kind === "planet" || view.kind === "world" || view.kind === "course";
+  const mapRouteKey =
+    view.kind === "course" ? `${view.kind}:${view.studyId}/${view.courseId}` : view.kind;
+  const shortcuts = useMapShortcuts(mapMode && !welcome.visible, mapRouteKey);
   /**
    * The learner's tab-local navigation choice. `undefined` means "not chosen
    * yet" — fall back to the learner's next course so the name, the sky and the
@@ -188,7 +199,6 @@ export function App() {
   }, [retrySceneState]);
   const [picked, setPicked] = useState<CourseNode | null>(null);
   const pickedCourse = picked ? courseOf(picked.studyId, picked.courseId) : null;
-  const pickedStats = pickedCourse ? coursePickStatsOf(pickedCourse) : null;
   /** The course cell the learner last chose, retained through its settlement. */
   const [courseAvatarTarget, setCourseAvatarTarget] = useState<{
     readonly studyId: string;
@@ -196,6 +206,7 @@ export function App() {
     readonly lessonId: string;
   } | null>(null);
   const rememberCourseAvatarTarget = useCallback((lesson: LessonPlacement) => {
+    setMapEntryLearned(true);
     setCourseAvatarTarget({
       studyId: lesson.studyId,
       courseId: lesson.courseId,
@@ -319,7 +330,12 @@ export function App() {
 
   const labelNodes = useRef(new Map<string, HTMLElement>());
   const pickCardRef = useRef<HTMLElement | null>(null);
-  const dismissPick = useCallback(() => setPicked(null), []);
+  const mapCommands = useRef<MapViewportCommands | null>(null);
+  const dismissPick = useCallback(() => {
+    setPicked(null);
+    setPathOverlay(null);
+    setCourseAvatarTarget(null);
+  }, []);
   const companionNodes = useRef(new Map<string, HTMLElement>());
 
   const { focusedStudyId, world, learnerAt, studyItems, planetStudies, backToMapLabel } =
@@ -340,14 +356,18 @@ export function App() {
   // selection. Both DOM and globe consume this one transient selection owner.
   const planetDomainCatalog = useMemo(() => mapDomainCatalog(), []);
   const [planetDomainChoice, setPlanetDomainChoice] = useState<string | null>(null);
+  const [planetStudyChoice, setPlanetStudyChoice] = useState<string | null>(null);
   const lastStudyByDomain = useRef(new Map<string, string>());
   const focusedPlanetDomainId =
     planetStudies.find((study) => study.id === focusedStudyId)?.domain?.id ??
     (focusedStudyId ? "unclassified" : "programming");
-  const selectedPlanetDomainId = planetDomainChoice ?? focusedPlanetDomainId;
+  const selectedPlanetDomainId = planetDomainChoice;
   useEffect(() => {
     if (focusedStudyId) lastStudyByDomain.current.set(focusedPlanetDomainId, focusedStudyId);
-    if (view.kind !== "planet") setPlanetDomainChoice(null);
+    if (view.kind !== "planet") {
+      setPlanetDomainChoice(null);
+      setPlanetStudyChoice(null);
+    }
   }, [focusedPlanetDomainId, focusedStudyId, view.kind]);
   const selectPlanetDomain = useCallback(
     (domainId: string) => {
@@ -363,6 +383,7 @@ export function App() {
         lastStudyByDomain.current.get(domainId),
       );
       setPlanetDomainChoice(domainId);
+      setPlanetStudyChoice(null);
       if (restored) setNavigationFocus(restored);
     },
     [focusedStudyId, planetDomainCatalog, planetStudies],
@@ -373,6 +394,7 @@ export function App() {
       if (!study) return;
       lastStudyByDomain.current.set(study.domain?.id ?? "unclassified", studyId);
       setPlanetDomainChoice(study.domain?.id ?? "unclassified");
+      setPlanetStudyChoice(studyId);
       setNavigationFocus(studyId);
     },
     [planetStudies],
@@ -422,6 +444,41 @@ export function App() {
     });
   }, [setView, todayLesson]);
   const showMap = SHOWS_THE_MAP.has(view.kind);
+  const clearPlanetPick = useCallback(() => {
+    setPlanetDomainChoice(null);
+    setPlanetStudyChoice(null);
+  }, []);
+  const enterPlanetStudy = (studyId: string) => {
+    if (!planetStudies.some((study) => study.id === studyId && study.lessonCount > 0)) return;
+    setNavigationFocus(studyId);
+    setView({ kind: "world" });
+  };
+  useEffect(() => {
+    if (view.kind === "world" || view.kind === "planet") setCourseAvatarTarget(null);
+  }, [view.kind]);
+  useEffect(() => {
+    if (!mapMode) return;
+    const cancel = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return;
+      if (
+        event.target instanceof Element &&
+        event.target.closest(
+          'input,textarea,select,[contenteditable="true"],[role="dialog"],[role="menu"]',
+        )
+      )
+        return;
+      if (
+        document.querySelector(
+          'dialog[open],[aria-modal="true"],.nav-rail__flyout,[data-mobile-panel="rail"],[data-mobile-panel="aside"]',
+        )
+      )
+        return;
+      if (view.kind === "planet") clearPlanetPick();
+      else dismissPick();
+    };
+    window.addEventListener("keydown", cancel);
+    return () => window.removeEventListener("keydown", cancel);
+  }, [mapMode, view.kind, clearPlanetPick, dismissPick]);
   const studioMap = view.kind === "studio" && view.section === "map";
   const reviewVisible = showMap || view.kind === "review";
 
@@ -543,18 +600,15 @@ export function App() {
           unmetPrerequisites: unmetFor(course, view.studyId),
           onOpenCourse: (courseId: string) =>
             setView({ kind: "course", studyId: view.studyId, courseId }),
-          onOpenUnitOverlay: openUnitOverlay,
+          onOpenUnitOverlay: (...args: Parameters<typeof openUnitOverlay>) => {
+            shortcuts.close();
+            openUnitOverlay(...args);
+          },
           onBackToMap: backToCourseMap,
           onOpenLesson: openCourseLesson,
         }
       : null;
 
-  // One sentence, both widths. The rail's TodayCard and the floating .nextup
-  // overlay used to format this independently, and the overlay kept quoting
-  // the catalogue size after the rail had stopped.
-  const nextUpMeta = focusedTodayNode
-    ? todayMeta(focusedTodayNode.studyTitle, focusedNextUpProgress)
-    : null;
   const presenceView = presenceViewKey(view);
   const presenceLocation = useMemo(() => {
     if (view.kind === "lesson" || view.kind === "settled") {
@@ -645,6 +699,7 @@ export function App() {
   const stage =
     view.kind === "avatar-lab" || view.kind === "play-lab" || studioMap ? null : (
       <WorldMapCanvas
+        commandsRef={mapCommands}
         key={sceneAttempt}
         hidden={!SHOWS_THE_MAP.has(view.kind)}
         paused={!showMap}
@@ -664,13 +719,17 @@ export function App() {
         }
         skyStudyId={focusedStudyId}
         markers={markers}
-        /*
-          This shell's course markers key on `courseId`, and the projector
-          looks the same id up in `markers`. Inventing a second key in a course
-          view would place the follow card at (0,0), which is why it is null
-          there rather than `picked`.
-        */
-        followId={view.kind === "world" && picked ? picked.courseId : null}
+        followId={
+          view.kind === "world" && picked
+            ? picked.courseId
+            : view.kind === "course" && pathOverlay?.kind === "node"
+              ? // The live lesson and destinations beyond the bounded kind-icon
+                // window use their real lesson label, not an invented icon ID.
+                markers.some((marker) => marker.id === `kind:${pathOverlay.lessonId}`)
+                ? `kind:${pathOverlay.lessonId}`
+                : pathOverlay.lessonId
+              : null
+        }
         followNode={pickCardRef}
         onPick={(node) => {
           setMapEntryLearned(true);
@@ -723,7 +782,6 @@ export function App() {
             ) : null}
           </>
         }
-        underlay={wide ? null : courseIslandProps ? <CourseIsland {...courseIslandProps} /> : null}
         overlay={
           <>
             <PresenceLayer
@@ -735,66 +793,9 @@ export function App() {
                 else companionNodes.current.delete(userId);
               }}
             />
-            {/*
-              「今天」 at phone width, where there is no rail to hold the panel.
-
-              It used to name the *course* and open the course path, while the
-              rail's panel named the lesson and opened the lesson. One product,
-              one button, two different answers to 「今天要做什么」 — decided by
-              how wide the window happened to be. It names the lesson now, from
-              the same data the panel reads, and goes to the same place.
-            */}
-            {view.kind === "world" && !wide && todayLesson && !picked ? (
-              <aside className="nextup">
-                <p className="nextup__eyebrow">
-                  {progress.streak.days > 0
-                    ? translate("app.app.app.copy.接着上次")
-                    : translate("app.app.app.copy.从这里开始")}
-                </p>
-                <h2 className="nextup__title">{todayLesson.lessonTitle}</h2>
-                <div className="nextup__context-row">
-                  <p className="nextup__meta">{nextUpMeta}</p>
-                  <WorldSourceControls studyId={focusedStudyId} sourceAccess={sourceAccessPort} />
-                </div>
-                <GameButton
-                  className="nextup__primary"
-                  static
-                  variant="primary"
-                  /*
-                    Round 2 deliberately keeps this cross-screen CTA direct.
-                    Reopen its shared-element motion only with a View
-                    Transition design that owns both route layouts.
-                  */
-                  onClick={() =>
-                    setView({
-                      kind: "lesson",
-                      studyId: todayLesson.studyId,
-                      courseId: todayLesson.courseId,
-                      unitId: todayLesson.unitId,
-                      lessonId: todayLesson.lessonId,
-                    })
-                  }
-                >
-                  {/*
-                    The same words the rail's 「今天」 panel uses, from the same
-                    function. This card is what replaces that panel below the
-                    rail's breakpoint, and it used to say 「开始第一节」/「继续」
-                    while the panel said 「开始学习」/「继续学习」 — one action,
-                    two vocabularies, chosen by window width.
-                  */}
-                  {todayCtaLabel(todayData.nextLesson?.progress)} →
-                </GameButton>
-              </aside>
-            ) : null}
-            {view.kind === "world" && picked && pickedCourse && pickedStats ? (
-              <CoursePickCard
+            {view.kind === "world" && picked && pickedCourse ? (
+              <MapEntryAction
                 title={picked.title}
-                studyTitle={picked.studyTitle}
-                depth={picked.depth}
-                unmetPrerequisites={unmetFor(picked, picked.studyId)}
-                objectives={pickedCourse.objectives}
-                stats={pickedStats}
-                isBeingRewritten={picked.isBeingRewritten === true}
                 onEnter={() =>
                   setView({
                     kind: "course",
@@ -802,8 +803,23 @@ export function App() {
                     courseId: picked.courseId,
                   })
                 }
-                onDismiss={dismissPick}
-                cardRef={pickCardRef}
+                actionRef={pickCardRef}
+              />
+            ) : null}
+            {view.kind === "course" && pathOverlay?.kind === "node" && pathUnit && pathLesson ? (
+              <MapEntryAction
+                title={pathLesson.title}
+                actionRef={pickCardRef}
+                onEnter={() => {
+                  setPathOverlay(null);
+                  setView({
+                    kind: "lesson",
+                    studyId: view.studyId,
+                    courseId: view.courseId,
+                    unitId: pathUnit.id,
+                    lessonId: pathLesson.id,
+                  });
+                }}
               />
             ) : null}
           </>
@@ -816,7 +832,13 @@ export function App() {
         hoverHint={hovered}
         controlsHint={<MapControlsHint />}
         controlsHintVisible={!mapInteracted && !hovered}
-        entryHint={view.kind === "world" ? <MapEntryHint /> : null}
+        entryHint={
+          view.kind === "world" || view.kind === "course" ? (
+            <span>
+              {translate("map.chooseHint")} {translate("map.shortcutHint")}
+            </span>
+          ) : null
+        }
         entryHintVisible={!mapEntryLearned && !hovered}
         loading={
           mapRecoveryReason ? (
@@ -875,24 +897,158 @@ export function App() {
     />
   );
 
+  const selectedDomain = planetDomainCatalog.find((domain) => domain.id === planetDomainChoice);
+  const selectedStudy = planetStudies.find((study) => study.id === planetStudyChoice);
+  const currentStudy = studies.find((study) => study.id === focusedStudyId);
+  const mapInfo: MapInformationData =
+    view.kind === "planet"
+      ? selectedStudy
+        ? {
+            id: `study:${selectedStudy.id}`,
+            title: selectedStudy.title,
+            kind: "study",
+            description: selectedStudy.description,
+            facts: [
+              translate("map.counts", {
+                courses: selectedStudy.courseCount,
+                lessons: selectedStudy.lessonCount,
+              }),
+            ],
+          }
+        : selectedDomain
+          ? {
+              id: `domain:${selectedDomain.id}`,
+              title: selectedDomain.title,
+              kind: "domain",
+              description: selectedDomain.description,
+              sections: [
+                {
+                  title: translate("map.study"),
+                  lines: planetStudies
+                    .filter((study) => (study.domain?.id ?? "unclassified") === selectedDomain.id)
+                    .map((study) => study.title),
+                },
+              ],
+              facts: planetStudies.some((study) => study.domain?.id === selectedDomain.id)
+                ? [
+                    translate("map.counts", {
+                      courses: planetStudies
+                        .filter((study) => study.domain?.id === selectedDomain.id)
+                        .reduce((sum, study) => sum + study.courseCount, 0),
+                      lessons: planetStudies
+                        .filter((study) => study.domain?.id === selectedDomain.id)
+                        .reduce((sum, study) => sum + study.lessonCount, 0),
+                    }),
+                  ]
+                : [translate("ui.world.domain.unpublished")],
+            }
+          : {
+              id: "planet:none",
+              title: translate("ui.world.navigation.planets"),
+              kind: "none",
+              description: translate("map.chooseHint"),
+            }
+      : view.kind === "course" && course
+        ? pathOverlay?.kind === "node" && pathLesson && pathUnit
+          ? lessonInformation(pathUnit, pathLesson)
+          : courseInformation(course, viewedProgress?.done ?? 0)
+        : picked && pickedCourse
+          ? courseInformation(
+              pickedCourse,
+              courseProgressForNode(picked)?.done ?? 0,
+              unmetFor(picked, picked.studyId),
+            )
+          : {
+              id: `study:${focusedStudyId ?? "none"}`,
+              title: currentStudy?.title ?? translate("ui.world.navigation.archipelago"),
+              kind: "study",
+              description:
+                (currentStudy && "description" in currentStudy ? currentStudy.description : null) ||
+                translate("map.chooseHint"),
+            };
+
+  const destinations: MapDestination[] =
+    view.kind === "planet"
+      ? planetDomainCatalog.map((domain) => ({
+          id: domain.id,
+          title: domain.title,
+          detail: domain.description,
+          select: () => selectPlanetDomain(domain.id),
+        }))
+      : view.kind === "course" && course
+        ? course.units.flatMap((unit) =>
+            unit.lessons.map((lesson) => ({
+              id: lesson.id,
+              title: lesson.title,
+              detail: unit.title,
+              select: () => {
+                const placement = lessons.find((item) => item.lessonId === lesson.id);
+                if (!placement) return;
+                rememberCourseAvatarTarget(placement);
+                mapCommands.current?.focus(placement.position.toArray());
+                setPathOverlay({
+                  kind: "node",
+                  unitId: unit.id,
+                  lessonId: lesson.id,
+                  returnFocusTo: null,
+                });
+              },
+            })),
+          )
+        : (nodes ?? [])
+            .filter((node) => node.studyId === focusedStudyId)
+            .map((node) => ({
+              id: node.courseId,
+              title: node.title,
+              select: () => {
+                const placement = world?.placements.find(
+                  (entry) =>
+                    entry.node.courseId === node.courseId && entry.node.studyId === node.studyId,
+                );
+                if (placement) mapCommands.current?.focus(placement.position.toArray());
+                setPicked(node);
+              },
+            }));
+  const quickCommands: MapQuickCommand[] = [
+    ...(showMap
+      ? [
+          {
+            id: "overview",
+            title: translate("map.overview"),
+            run: () => mapCommands.current?.overview(),
+          },
+          {
+            id: "learning-view",
+            title: translate("map.resetView"),
+            run: () => mapCommands.current?.learningView(),
+          },
+        ]
+      : []),
+    ...(view.kind !== "planet"
+      ? [
+          {
+            id: "back",
+            title: translate("map.back"),
+            run: () => setView({ kind: view.kind === "course" ? "world" : "planet" }),
+          },
+        ]
+      : []),
+    ...(picked || pathOverlay?.kind === "node" || planetDomainChoice
+      ? [
+          {
+            id: "clear",
+            title: translate("map.clear"),
+            run: () => {
+              dismissPick();
+              clearPlanetPick();
+            },
+          },
+        ]
+      : []),
+  ];
   const aside = (
     <>
-      {showMap ? todaySection : null}
-      {view.kind === "planet" ? (
-        <PlanetRail
-          studies={planetStudies}
-          domainCatalog={planetDomainCatalog}
-          selectedId={focusedStudyId}
-          selectedDomainId={selectedPlanetDomainId}
-          onSelectDomain={selectPlanetDomain}
-          onSelect={selectPlanetStudy}
-          onEnter={(studyId) => {
-            setNavigationFocus(studyId);
-            setView({ kind: "world" });
-          }}
-          onClose={() => setView({ kind: "world" })}
-        />
-      ) : null}
+      {mapMode ? <MapInformation data={mapInfo} /> : null}
       {view.kind === "settings" ? <SettingsSubnav /> : null}
     </>
   );
@@ -901,7 +1057,6 @@ export function App() {
     <MainRouter
       contentPort={contentPort}
       course={course}
-      courseIslandProps={courseIslandProps}
       focusedStudyId={focusedStudyId}
       focusStudy={focusStudy}
       grewFrom={grewFrom}
@@ -917,12 +1072,14 @@ export function App() {
       paymentPort={analyticsPaymentPort}
       mistakes={mistakes}
       nextUpProgress={nextUpProgress}
-      pathLesson={pathLesson}
       pathOverlay={pathOverlay}
       pathUnit={pathUnit}
       planetStudies={planetStudies}
       planetDomainCatalog={planetDomainCatalog}
       selectedPlanetDomainId={selectedPlanetDomainId}
+      selectedPlanetStudyId={planetStudyChoice}
+      onEnterPlanetStudy={enterPlanetStudy}
+      onClearPlanetPick={clearPlanetPick}
       onSelectPlanetDomain={selectPlanetDomain}
       onSelectPlanetStudy={selectPlanetStudy}
       presencePort={presencePort}
@@ -938,14 +1095,12 @@ export function App() {
       nodes={nodes}
       world={world}
       courseProgress={courseProgress}
-      showMap={showMap}
       stage={stage}
       studyNames={studyNames}
       todayNode={todayNode}
       todaySection={todaySection}
       uncorrectedMistakeCount={uncorrectedMistakeCount}
       view={view}
-      wide={wide}
     />
   );
   const feedbackSurface = (
@@ -1044,6 +1199,18 @@ export function App() {
               }}
               onBack={() => {
                 setReturnStack([]);
+                if (
+                  courseAvatarTarget?.studyId === view.studyId &&
+                  courseAvatarTarget.courseId === view.courseId &&
+                  courseAvatarTarget.lessonId === view.lessonId
+                ) {
+                  setPathOverlay({
+                    kind: "node",
+                    unitId: view.unitId,
+                    lessonId: view.lessonId,
+                    returnFocusTo: null,
+                  });
+                }
                 setView({ kind: "course", studyId: view.studyId, courseId: view.courseId });
               }}
               onWorthwhileProgress={onWorthwhileProgress}
@@ -1081,14 +1248,35 @@ export function App() {
       >
         <UniversityShell
           activeId={activeIdForView(view)}
+          mapMode={mapMode}
+          asideTitle={mapMode ? mapInfo.title : undefined}
           /*
           The workbench's own way in, behind 更多 and only where there is a
           workbench. `G` compares the rail's own destinations between the two
           builds and deliberately excludes what sits behind 更多 — that is the
           one place a real difference between them is allowed to show.
         */
-          {...(AUTHORING ? { extraMoreItems: [STUDIO_MORE_ITEM] } : {})}
-          counters={shellConfig.showLearnerChrome ? counters : undefined}
+          extraMoreItems={[
+            ...(mapMode
+              ? [
+                  {
+                    id: "map-shortcuts",
+                    label: translate("map.shortcuts"),
+                    href: "#map-shortcuts",
+                    icon: <span aria-hidden="true">⌘</span>,
+                    onActivate: shortcuts.show,
+                  },
+                ]
+              : []),
+            ...(AUTHORING ? [STUDIO_MORE_ITEM] : []),
+          ]}
+          counters={
+            shellConfig.showLearnerChrome
+              ? mapMode
+                ? counters.filter((counter) => !counter.control)
+                : counters
+              : undefined
+          }
           identity={
             shellConfig.showLearnerChrome ? (
               <>
@@ -1103,10 +1291,10 @@ export function App() {
           }
           aside={shellConfig.showContextAside ? aside : undefined}
           asideLabel={
-            view.kind === "settings"
-              ? translate("app.app.app.copy.设置")
-              : view.kind === "planet"
-                ? translate("app.app.app.copy.选课")
+            mapMode
+              ? translate("map.information")
+              : view.kind === "settings"
+                ? translate("app.app.app.copy.设置")
                 : translate("app.app.app.copy.今天")
           }
           showAsideOnPhone={view.kind === "planet"}
@@ -1118,6 +1306,22 @@ export function App() {
           {main}
         </UniversityShell>
       </div>
+      {mapMode ? (
+        <MapQuickActions
+          open={shortcuts.open}
+          onClose={shortcuts.close}
+          destinations={destinations}
+          commands={quickCommands}
+          route={
+            courseIslandProps ? (
+              <CourseIsland
+                key={`${courseIslandProps.studyId}/${courseIslandProps.course.id}`}
+                {...courseIslandProps}
+              />
+            ) : undefined
+          }
+        />
+      ) : null}
       {feedbackSurface}
       {welcome.visible ? (
         <WelcomeExperience

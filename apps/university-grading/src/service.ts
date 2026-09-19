@@ -5,13 +5,16 @@ import {
   type WalletClient,
   type WalletReservationV1,
 } from "@pieai/swimmer-backend-client/wallet";
-import { createOpenRouterChatTransport } from "@pieai/swimmer-ai-kit/openrouter";
+import { createOpenRouterChatTransport } from "@pieai/swimmer-ai-provider-kit/openrouter";
 import {
   createStructuredOutputClient,
   type StructuredOutputSchema,
-} from "@pieai/swimmer-ai-kit/structured-output";
-import type { ChatCompletionResult, ChatCompletionTransport } from "@pieai/swimmer-ai-kit/chat";
-import { firstDefinedEnv } from "@pieai/swimmer-ai-kit/env";
+} from "@pieai/swimmer-ai-provider-kit/structured-output";
+import type {
+  ChatCompletionResult,
+  ChatCompletionTransport,
+} from "@pieai/swimmer-ai-provider-kit/chat";
+import { firstDefinedEnv } from "@pieai/swimmer-ai-provider-kit/env";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 

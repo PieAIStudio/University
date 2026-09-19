@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { gradeDeterministically, type AnswerKey } from "../packages/core/dist/index.js";
 import { ONLINE_ORIGIN as ONLINE } from "./ports.js";
 import { humanClick } from "./harness/click";
+import { enterSelectedMapObject } from "./harness/map-actions.js";
 
 interface Exercise {
   id: string;
@@ -255,7 +256,7 @@ test("W4 the AI foundations planet opens the real beginner courses", async ({ pa
     "choose AI foundations",
   );
   await expect(page.locator('button[data-study-id="ai-literacy"]')).toBeVisible();
-  await humanClick(page, page.locator(".planet-page__enter"), "open the real curriculum");
+  await enterSelectedMapObject(page, "open the real curriculum");
   for (const { source } of courses) {
     await expect(
       page.locator(`button.label--course[data-map-marker="${source.id}"]`),
@@ -266,11 +267,7 @@ test("W4 the AI foundations planet opens the real beginner courses", async ({ pa
     page.locator('button.label--course[data-map-marker="understanding-ai"]'),
     "choose understanding AI",
   );
-  await humanClick(
-    page,
-    page.getByRole("button", { name: "Enter this course", exact: true }),
-    "enter understanding AI",
-  );
+  await enterSelectedMapObject(page, "enter understanding AI");
   await expect(page).toHaveURL(/\/ai-literacy\/understanding-ai(?:\?|$)/);
   await page.screenshot({ path: info.outputPath("beginner-course-island.png"), fullPage: true });
 });

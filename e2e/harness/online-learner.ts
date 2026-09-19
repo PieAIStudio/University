@@ -5,6 +5,8 @@ import { assertImagesStayInViewport, assertPanelIsPainted, assertVisibleText } f
 import { CATALOGUE_ROLES, coursePathOf, lessonPathOf } from "./catalogue.js";
 import { humanClick } from "./click.js";
 import { namedStep } from "./step.js";
+import { enterSelectedMapObject } from "./map-actions.js";
+import { PRIMARY_DOMAIN_ID } from "./domain-catalogue.js";
 
 const SETTLEMENT = CATALOGUE_ROLES.settlement;
 const SETTLEMENT_LESSONS = SETTLEMENT.course.units.flatMap((unit) => unit.lessons);
@@ -29,19 +31,31 @@ export async function openOnline(page: Page): Promise<void> {
 }
 
 export async function selectGameRoute(page: Page): Promise<void> {
-  // The default can legitimately change when a new domain opens. This
-  // settlement fixture chooses its real, deterministically graded course
-  // through the same visible series picker a learner uses, without seeding
-  // navigation/progress or pretending it is still the global default.
-  await waitForMapReady(page);
-  const picker = page.locator(".study-switcher__trigger");
-  await humanClick(page, picker, "choose the actual game-learning route");
-  await humanClick(
-    page,
-    page.getByRole("option").filter({ hasText: GAME_ROUTE_TITLE }),
-    "select the flagship course fixture",
-  );
-  await expect(picker).toHaveAttribute("aria-label", `当前系列 ${GAME_ROUTE_TITLE}`);
+  // The map no longer owns a second study switcher. Choose the actual domain
+  // and enter its selected study beside the globe, with the same controls a
+  // learner sees after opening /planet.
+  const origin = new URL(page.url()).origin;
+  await page.goto(`${origin}/planet`, { waitUntil: "domcontentloaded" });
+  await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
+  await expect(page.locator('[data-map-surface="true"]:visible').first()).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.locator("[data-planet-resources]")).toHaveCount(0, { timeout: 90_000 });
+  const domain = page
+    .locator(`button[data-domain-id=${JSON.stringify(PRIMARY_DOMAIN_ID)}]`)
+    .first();
+  await expect(domain).toBeVisible({ timeout: 30_000 });
+  if ((await domain.getAttribute("aria-pressed")) !== "true") {
+    await humanClick(page, domain, "choose the actual learning domain");
+  }
+  const study = page.locator("button[data-study-id]").filter({ hasText: GAME_ROUTE_TITLE });
+  if (await study.count()) {
+    const regions = page.locator(".planet-domain-label__actions details > summary");
+    if (!(await study.first().isVisible())) await regions.click();
+    await humanClick(page, study.first(), "choose the actual game-learning series");
+  }
+  await enterSelectedMapObject(page, `enter ${GAME_ROUTE_TITLE}`);
+  await expect(page.locator(".stagewrap")).toBeVisible({ timeout: 30_000 });
 }
 
 /**
@@ -58,15 +72,29 @@ export const TODAY_CTA = /开始学习|继续学习/;
 export async function waitForMapReady(page: Page): Promise<void> {
   await namedStep(page, "等待地图铺好", async () => {
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
-    await expect(page.getByRole("button", { name: TODAY_CTA }).first()).toBeVisible({
+    await expect(page.locator('[data-map-surface="true"]:visible').first()).toBeVisible({
       timeout: 30_000,
+    });
+    await expect(page.locator("button.label--course.is-visible").first()).toBeVisible({
+      timeout: 60_000,
     });
   });
 }
 
 export async function startFirstLessonFromLanding(page: Page): Promise<void> {
-  await namedStep(page, "点今天的那一课", async () => {
-    await humanClick(page, page.getByRole("button", { name: TODAY_CTA }).first(), "今天这一课");
+  await namedStep(page, "从地图真实选择课程和第一节", async () => {
+    const course = page.locator(
+      `button.label--course.is-visible[data-map-marker=${JSON.stringify(FIRST_COURSE_ID)}]`,
+    );
+    await expect(course).toBeVisible({ timeout: 30_000 });
+    await humanClick(page, course, "地图课程岛");
+    await enterSelectedMapObject(page, "进入课程岛");
+    await expect(page).toHaveURL(`${ONLINE_ORIGIN}${FIRST_COURSE_ROUTE}`);
+    const firstLesson = page.getByRole("button", { name: "开始", exact: true }).first();
+    await expect(firstLesson).toBeVisible({ timeout: 60_000 });
+    await humanClick(page, firstLesson, "第一节 lesson 标记");
+    await enterSelectedMapObject(page, "开始第一节");
+    await expect(page).toHaveURL(`${ONLINE_ORIGIN}${FIRST_LESSON_ROUTE}`);
   });
 }
 

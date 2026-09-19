@@ -12,11 +12,13 @@ export const CourseOverviewContext = createContext<CourseOverviewFrame | null>(n
 
 /** Reads the rendered scene once per request/resize; Flight remains the camera writer. */
 export function CourseOverviewProbe({
+  surface = "course",
   onFrame,
   onError,
   eyeDirection,
 }: {
   readonly onFrame: (frame: CourseOverviewFrame) => void;
+  readonly surface?: "course" | "world";
   readonly onError: () => void;
   readonly eyeDirection: readonly [number, number, number];
 }) {
@@ -33,11 +35,15 @@ export function CourseOverviewProbe({
     if (stage && shell)
       for (const element of mapOverlayObstacles(stage, shell).elements) observer.observe(element);
     return () => observer.disconnect();
-  }, [gl, size.width, size.height]);
+  }, [gl, size.width, size.height, surface]);
   useFrame(() => {
     if (!dirty.current || !(camera instanceof THREE.PerspectiveCamera)) return;
-    const terrain = scene.getObjectByName("island-terrain");
-    const dressing = scene.getObjectByName("island-dressing-course");
+    const terrain = scene.getObjectByName(
+      surface === "course" ? "island-terrain" : "remote-island-terrain",
+    );
+    const dressing = scene.getObjectByName(
+      surface === "course" ? "island-dressing-course" : "remote-props",
+    );
     if (!terrain || !dressing) return;
     dirty.current = false;
     try {

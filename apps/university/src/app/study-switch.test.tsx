@@ -129,15 +129,18 @@ describe("study context", () => {
   it("retains a non-default route when returning from a direct course URL", async () => {
     history.replaceState(null, "", "/beta/beta-course");
     await act(async () => root.render(<App />));
-    expect(container.querySelector("[aria-label='当前系列 Beta']")).not.toBeNull();
-    const back = [...container.querySelectorAll<HTMLButtonElement>("button")].find((button) =>
-      /回到\s*Beta\s*地图/.test(button.textContent ?? ""),
+    expect(container.querySelector(".map-shell__heading h2")?.textContent).toBe("Beta Course");
+    const back = container.querySelector<HTMLAnchorElement>(
+      '.location-breadcrumb__list > li:not(.location-breadcrumb__overflow) > a[href="/"]',
     );
-    expect(back).toBeDefined();
+    expect(back?.textContent).toBe("Beta");
     await act(async () => back!.click());
     expect(location.pathname).toBe("/");
-    expect(container.querySelector("[aria-label='当前系列 Beta']")).not.toBeNull();
-    expect(container.textContent).toContain("Beta · Beta Course");
+    expect(container.querySelector(".map-shell__heading h2")?.textContent).toBe("Beta");
+    expect(container.querySelector('[data-map-information="study:beta"]')).not.toBeNull();
+    expect(container.querySelector('.location-breadcrumb [aria-current="page"]')?.textContent).toBe(
+      "Beta",
+    );
   });
 
   it("keeps the direct course's route across a full document navigation to practice", async () => {
@@ -153,7 +156,10 @@ describe("study context", () => {
     expect(container.querySelector("[aria-label='当前系列 Beta']")).not.toBeNull();
   });
 
-  it("updates the Today context when the selected study changes", async () => {
+  it("updates the retained review recommendation and subsequent map context when the study changes", async () => {
+    // The recommendation remains in Review; the map's right side now describes
+    // a selection rather than repeating a competing Start button.
+    history.replaceState(null, "", "/review");
     await act(async () => {
       root.render(<App />);
       await Promise.resolve();
@@ -179,5 +185,13 @@ describe("study context", () => {
     expect(container.textContent).toContain("Beta · Beta Course");
     expect(container.textContent).toContain("Beta Lesson");
     expect(container.textContent).not.toContain("Alpha · Alpha Course");
+    await act(async () => {
+      history.pushState(null, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(container.querySelector('[data-map-information="study:beta"]')).not.toBeNull();
+    expect(container.querySelector('.location-breadcrumb [aria-current="page"]')?.textContent).toBe(
+      "Beta",
+    );
   });
 });

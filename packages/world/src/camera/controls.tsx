@@ -599,6 +599,24 @@ export function LabelProbe({
         });
       }
     }
+    // A compact entry must never obscure the face it just caused to arrive.
+    // Course icons keep their original projection rules; only the entry action
+    // gains this additional obstacle, sampled from the actual avatar geometry.
+    const entryAvatar =
+      avatar ??
+      scene.getObjectByName("learner-marker-course")?.getObjectByName(AVATAR_OCCLUSION_TARGET);
+    let entryAvatarBox: LabelBox | null = null;
+    if (entryAvatar) {
+      avatarBounds.current.setFromObject(entryAvatar);
+      const bounds = projectedAvatarBounds(avatarBounds.current, camera, scratch.current);
+      if (bounds.minX < bounds.maxX && bounds.minY < bounds.maxY)
+        entryAvatarBox = {
+          left: ((bounds.minX + 1) / 2) * size.width - 10,
+          right: ((bounds.maxX + 1) / 2) * size.width + 10,
+          top: ((1 - bounds.maxY) / 2) * size.height - 10,
+          bottom: ((1 - bounds.minY) / 2) * size.height + 10,
+        };
+    }
     // A neighbour's caption must not cut through a windmill or tree crown.
     // Bounds are emitted once by the actual batched geometry producer; only
     // eight corners per prop enter this existing label-layout loop.
@@ -749,8 +767,10 @@ export function LabelProbe({
           height: followViewportHeightRef.current ?? viewport.height,
         };
         follow.style.setProperty("--follow-viewport-height", `${followViewport.height}px`);
-        const width = Math.max(follow.offsetWidth, 260);
-        const height = Math.max(follow.offsetHeight, 120);
+        // The same projector serves a compact entry action and legacy cards.
+        // Measure the actual control instead of reserving a retired 260px panel.
+        const width = Math.max(follow.offsetWidth, 44);
+        const height = Math.max(follow.offsetHeight, 44);
         // The card is an overlay relative to labels: it lands beside the
         // island it is about and does not reserve space from neighbouring
         // names. Opaque shell chrome is a real obstruction, though, so the
@@ -772,7 +792,14 @@ export function LabelProbe({
             },
           ],
           followViewport,
-          { maxVisible: 1, gap: 8, obstacles: [...chromeBoxesRef.current] },
+          {
+            maxVisible: 1,
+            gap: 8,
+            obstacles: [
+              ...chromeBoxesRef.current,
+              ...(entryAvatarBox && follow.hasAttribute("data-map-entry") ? [entryAvatarBox] : []),
+            ],
+          },
         );
         if (card?.visible) {
           follow.style.transform = `translate(${card.x}px, ${card.y}px) translate(-50%, -50%)`;

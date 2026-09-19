@@ -6,6 +6,7 @@ import { CATALOGUE_ROLES, coursePathOf, lessonPathOf } from "./harness/catalogue
 import { openOnline, waitForMapReady } from "./harness/online-learner.js";
 import { namedStep } from "./harness/step.js";
 import { ONLINE_ORIGIN } from "./ports.js";
+import { enterSelectedMapObject } from "./harness/map-actions.js";
 
 const COURSE = CATALOGUE_ROLES.settlement.course;
 const LESSON = CATALOGUE_ROLES.settlement.lesson;
@@ -26,10 +27,7 @@ test.describe("K 课程岛 · 点课程标记进入课程", () => {
       await expect(course).toBeVisible({ timeout: 30_000 });
       await humanClick(page, course, "世界地图上的课程");
 
-      const enterCard = page.locator(".picked.picked--follow.is-visible");
-      await expect(enterCard).toBeVisible({ timeout: 10_000 });
-      const enter = enterCard.getByRole("button", { name: /进入这门课/ });
-      await humanClick(page, enter, "进入这门课");
+      await enterSelectedMapObject(page, "进入这门课");
       await expect(page).toHaveURL(`${ONLINE_ORIGIN}${coursePathOf(COURSE)}`);
     });
 
@@ -45,16 +43,16 @@ test.describe("K 课程岛 · 点课程标记进入课程", () => {
       await humanClick(page, icon, "课程图标");
     });
 
-    await namedStep(page, "课程标记打开对应的课程卡", async () => {
-      const dialog = page.getByRole("dialog");
-      await expect(dialog).toBeVisible({ timeout: 10_000 });
-      await expect(dialog).toContainText(LESSON.title);
-      await expect(dialog).toContainText("读 ");
+    await namedStep(page, "课程标记旁出现非模态进入动作", async () => {
+      const entry = page.locator('[data-map-entry="true"]');
+      await expect(entry).toBeVisible({ timeout: 10_000 });
+      await expect(entry).not.toHaveAttribute("role", "dialog");
+      await expect(entry).not.toHaveAttribute("aria-modal", "true");
+      await expect(entry).not.toHaveClass(/scrim/);
     });
 
-    await namedStep(page, "课程卡的开始按钮打开这节课", async () => {
-      const start = page.getByRole("dialog").getByRole("button", { name: /^开始/ });
-      await humanClick(page, start, "开始课程");
+    await namedStep(page, "对象旁的进入按钮打开这节课", async () => {
+      await enterSelectedMapObject(page, "开始课程");
       await expect(page).toHaveURL(`${ONLINE_ORIGIN}${lessonPathOf(COURSE, LESSON)}`);
       await expect(page.getByRole("heading", { name: LESSON.title })).toBeVisible({
         timeout: 30_000,

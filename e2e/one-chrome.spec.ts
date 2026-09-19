@@ -7,6 +7,11 @@ import { namedStep } from "./harness/step.js";
 import { FIRST_COURSE_TITLE, openOnline, selectGameRoute } from "./harness/online-learner.js";
 import { CATALOGUE_ROLES, lessonPathOf } from "./harness/catalogue.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
+import {
+  enterSelectedMapObject,
+  mapEntryButton,
+  openMapQuickActions,
+} from "./harness/map-actions.js";
 
 const PARITY_SCREENSHOT_DIR = join(process.cwd(), "SCRATCH", "e2e", "parity");
 const PARITY_LESSON_PATH = lessonPathOf(
@@ -92,7 +97,7 @@ async function chrome(page: Page) {
       ].map((node) => text(node)),
       // The capsule that answers 「我在哪」.
       hasCapsule: document.querySelector(".counter-row") != null,
-      hasSwitcher: document.querySelector(".study-switcher__trigger") != null,
+      hasPersistentMapStudySwitcher: document.querySelector(".study-switcher__trigger") != null,
       // The face at the foot of the rail. Either the live canvas or the
       // placeholder it suspends behind counts — both mean the slot was filled.
       hasIdentity: document.querySelector(".nav-rail__identity .avatar-chip") != null,
@@ -140,6 +145,7 @@ test.describe("G 两个校园穿同一套壳", () => {
 
     await namedStep(page, "逐项比对", async () => {
       expect(local).toEqual(online);
+      expect(online?.hasPersistentMapStudySwitcher).toBe(false);
     });
 
     consoleErrors.assertClean();
@@ -167,31 +173,36 @@ async function walkToNodeCard(page: Page, origin: string) {
   await expect(firstCourse).toHaveCount(1, { timeout: 60_000 });
   await firstCourse.click();
 
-  const enter = page.getByRole("button", { name: /进入这门课/ });
-  await expect(enter).toBeVisible({ timeout: 30_000 });
-  await enter.click();
+  await expect(mapEntryButton(page)).toBeVisible({ timeout: 30_000 });
+  await enterSelectedMapObject(page, "进入课程岛");
 
   // The course scene: a lit stone that says 开始, and the panel naming the
   // course you are standing on.
   const start = page.locator("button.label", { hasText: /^开始$/ });
   await expect(start).toBeVisible({ timeout: 60_000 });
-  const courseName = (await page.locator(".picked--left h3").innerText()).trim();
-
+  const courseName = (
+    await page.locator('.location-breadcrumb [aria-current="page"]').innerText()
+  ).trim();
   await start.click();
-  const card = page.locator("[aria-modal='true'], .path-card").first();
-  await expect(card).toBeVisible({ timeout: 30_000 });
-
+  await expect(mapEntryButton(page)).toBeVisible({ timeout: 30000 });
+  const cardStarts = await mapEntryButton(page).isVisible();
+  const palette = await openMapQuickActions(page);
+  await palette.locator('[data-map-command="route"]').click();
+  const route = page.locator(".picked__route");
+  if ((await route.getAttribute("open")) === null) await route.locator(":scope > summary").click();
+  const preview = route.getByRole("button", { name: /先看这一单元讲什么/ });
+  await expect(preview).toBeVisible();
+  await preview.click();
+  const card = page.locator(".unit-card");
+  await expect(card).toBeVisible();
   return {
     courseNamed: courseName.length > 0,
-    // Both the way in and the way to read the unit first, because the card
-    // offering only one of them is a different card.
-    cardStarts: await card.getByRole("button", { name: /^开始/ }).isVisible(),
-    cardPreviewsUnit: await card.getByRole("button", { name: /先看这一单元讲什么/ }).isVisible(),
+    cardStarts,
+    cardPreviewsUnit: await card.getByRole("button", { name: /从第 1 节开始/ }).isVisible(),
   };
 }
 
 async function revealUnitPreview(card: Locator) {
-  await card.getByRole("button", { name: /先看这一单元讲什么/ }).click();
   const unitStart = card.getByRole("button", { name: /从第 1 节开始/ });
   await expect(unitStart).toBeVisible();
 }
