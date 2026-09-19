@@ -30,6 +30,8 @@ export function PathDialog({
   onClose,
   returnFocusTo,
   anchorTo,
+  className,
+  centered = false,
   children,
 }: {
   readonly open: boolean;
@@ -50,6 +52,8 @@ export function PathDialog({
    * without the second.
    */
   readonly anchorTo?: HTMLElement | null;
+  readonly className?: string;
+  readonly centered?: boolean;
   readonly children: ReactNode;
 }) {
   const headingId = useId();
@@ -59,7 +63,7 @@ export function PathDialog({
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
-  const anchor = anchorTo ?? returnFocusTo ?? null;
+  const anchor = centered ? null : (anchorTo ?? returnFocusTo ?? null);
   const anchored = anchor !== null;
   const { refs, floatingStyles, middlewareData, placement } = useFloating({
     open: open && anchored,
@@ -151,7 +155,7 @@ export function PathDialog({
           cardRef.current = node;
           if (anchored) refs.setFloating(node);
         }}
-        className="path-card"
+        className={className ? `path-card ${className}` : "path-card"}
         style={anchored ? floatingStyles : undefined}
         role="dialog"
         aria-modal="true"

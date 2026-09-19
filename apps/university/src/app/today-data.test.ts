@@ -5,6 +5,11 @@ import {
   createProgressPort,
   lessonKey,
   RECAP_CARD_ID,
+  PERSONAL_STUDY_ID,
+  PERSONAL_CARD_ID,
+  PERSONAL_LESSON_ID,
+  PERSONAL_UNIT_ID,
+  personalCourseId,
   type ProgressPort,
 } from "@pieai/university-core";
 import type { ShelfStudy } from "@pieai/university-ui/content/port.js";
@@ -77,6 +82,24 @@ describe("nextLessonOf", () => {
 });
 
 describe("todayCardLocatorOf", () => {
+  it("can review private native cards after reload without public shelf entries", () => {
+    const persistence = createMemoryPersistence();
+    progress = createProgressPort({ persistence });
+    const courseId = personalCourseId("abcdef012345-0123456789abcdef0123");
+    progress.dropCards(PERSONAL_STUDY_ID, courseId, PERSONAL_LESSON_ID, [PERSONAL_CARD_ID]);
+    const stored = Object.values(progress.snapshot().cards)[0]!;
+    progress = createProgressPort({ persistence });
+    const due = progress.dueCards(stored.dueAt)[0]!;
+    expect(todayCardLocatorOf([], due)).toMatchObject({
+      kind: "course-card",
+      studyId: PERSONAL_STUDY_ID,
+      courseId,
+      unitId: PERSONAL_UNIT_ID,
+      lessonId: PERSONAL_LESSON_ID,
+      cardId: PERSONAL_CARD_ID,
+    });
+    expect(todayCardLocatorOf([], { ...due, courseId: "understanding-ai" })).toBeNull();
+  });
   it("projects a due recap card with the existing unit capability sentence", () => {
     progress = createProgressPort({ persistence: createMemoryPersistence() });
     progress.createRecapCard({

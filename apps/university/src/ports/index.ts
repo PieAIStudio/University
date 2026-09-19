@@ -41,18 +41,23 @@ import { createClipboardFeedbackPort, createFeedbackPort } from "./feedback.js";
 import { createOnlineContentPort } from "./online/content.js";
 import { createOnlineGradingPort } from "./online/grading.js";
 import { withPrimmPreview } from "./primm-preview.js";
+import { createPersonalContentPort } from "../personal/content.js";
+import { createPersonalReaderPort } from "../personal/reader.js";
+import { createPersonalGradingPort } from "../personal/grading.js";
 import { createOnlineReaderPort } from "./online/reader.js";
 import { createOnlineSourceAccessPort } from "./online/source-access.js";
 import { createBrowserReviewReminderPort } from "./notifications.js";
 
 /** One shelf per document. Both implementations are stateless above their caches. */
-export const contentPort: ContentPort = AUTHORING
+const normalContentPort: ContentPort = AUTHORING
   ? createLocalContentPort({ progress: progressPort })
   : createOnlineContentPort();
+export const contentPort = createPersonalContentPort(normalContentPort, progressPort);
 
-export const readerPort: ReaderPort = AUTHORING
+const normalReaderPort: ReaderPort = AUTHORING
   ? createLocalReaderPort({ progress: progressPort })
   : createOnlineReaderPort({ progress: progressPort });
+export const readerPort = createPersonalReaderPort(normalReaderPort, progressPort);
 
 const normalGradingPort: GradingPort = AUTHORING
   ? createLocalGradingPort({ progress: progressPort })
@@ -62,13 +67,14 @@ const normalGradingPort: GradingPort = AUTHORING
     });
 
 // An explicit local experiment configuration, never a production free-AI route.
-export const gradingPort: GradingPort =
+const courseGradingPort: GradingPort =
   import.meta.env.DEV && import.meta.env.VITE_UNIVERSITY_PRIMM_PREVIEW_URL
     ? withPrimmPreview(normalGradingPort, {
         url: import.meta.env.VITE_UNIVERSITY_PRIMM_PREVIEW_URL,
         progress: progressPort,
       })
     : normalGradingPort;
+export const gradingPort = createPersonalGradingPort(courseGradingPort, progressPort);
 
 /** Repository access is the third boundary: action locally, explanation in delivery. */
 export const sourceAccessPort: SourceAccessPort = AUTHORING

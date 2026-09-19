@@ -552,15 +552,16 @@ export function createProgressPort(options: { readonly persistence: Persistence 
    * absence of three calls rather than by a flag somebody has to remember to
    * check.
    *
-   * The first proof wins. Retaking a unit a year later does not restamp it,
-   * because the fact being recorded is that the learner already knew this —
-   * and they knew it on the earlier date.
+   * The first proof of the same revision wins. A coverage checkpoint can
+   * explicitly prove a newer revision; it cannot downgrade a newer proof.
+   * Legacy unversioned proofs retain their earlier semantics.
    */
   function markLessonsProven(input: {
     readonly studyId: string;
     readonly courseId: string;
     readonly unitId: string;
     readonly lessonIds: readonly string[];
+    readonly contentRevisions?: Readonly<Record<string, number>>;
     readonly provenAt?: number;
   }): void {
     const provenAt = input.provenAt ?? Date.now();
@@ -570,8 +571,21 @@ export function createProgressPort(options: { readonly persistence: Persistence 
     for (const lessonId of input.lessonIds) {
       if (!lessonId.trim()) continue;
       const key = lessonKey(input.studyId, input.courseId, lessonId);
-      if (state.provenLessons[key]) continue;
-      const record: ProvenLessonRecord = { lessonKey: key, unitId: input.unitId, provenAt };
+      const revision = input.contentRevisions?.[lessonId];
+      if (input.contentRevisions && (!Number.isSafeInteger(revision) || revision! < 1)) continue;
+      const previous = state.provenLessons[key];
+      if (
+        previous &&
+        (revision === undefined ||
+          (previous.contentRevision !== undefined && previous.contentRevision >= revision))
+      )
+        continue;
+      const record: ProvenLessonRecord = {
+        lessonKey: key,
+        unitId: input.unitId,
+        provenAt,
+        ...(revision === undefined ? {} : { contentRevision: revision }),
+      };
       state.provenLessons[key] = record;
       changed = true;
     }

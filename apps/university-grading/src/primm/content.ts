@@ -2,7 +2,13 @@ import { createHash } from "node:crypto";
 import { readFile, realpath, stat } from "node:fs/promises";
 import { resolve, relative } from "node:path";
 import { z } from "zod";
-import { localizeActivity, type PrimmActivity } from "@pieai/university-core";
+import {
+  localizeActivity,
+  PERSONAL_STUDY_ID,
+  PERSONAL_UNIT_ID,
+  PERSONAL_LESSON_ID,
+  type PrimmActivity,
+} from "@pieai/university-core";
 import { LessonActivitySchema } from "@pieai/university-core/domain/schemas.js";
 import { PreviewFailure } from "./errors.js";
 
@@ -13,14 +19,26 @@ export const PRIMM_LESSONS = [
   "edit-one-part",
   "answer-or-search",
 ] as const;
-export const LessonRefSchema = z
-  .object({
-    studyId: z.literal("ai-literacy"),
-    courseId: z.literal("understanding-ai"),
-    unitId: z.literal("first-useful-step"),
-    lessonId: z.enum(PRIMM_LESSONS),
-  })
-  .strict();
+// Only these two explicitly supported identity families enter this local pilot.
+// The private resolver must additionally authorize ownership and exact revision.
+export const LessonRefSchema = z.union([
+  z
+    .object({
+      studyId: z.literal("ai-literacy"),
+      courseId: z.literal("understanding-ai"),
+      unitId: z.literal("first-useful-step"),
+      lessonId: z.enum(PRIMM_LESSONS),
+    })
+    .strict(),
+  z
+    .object({
+      studyId: z.literal(PERSONAL_STUDY_ID),
+      courseId: z.string().regex(/^task-[a-f0-9]{12}-[a-f0-9]{20}$/),
+      unitId: z.literal(PERSONAL_UNIT_ID),
+      lessonId: z.literal(PERSONAL_LESSON_ID),
+    })
+    .strict(),
+]);
 export const RunSchema = z
   .object({
     lessonRef: LessonRefSchema,
@@ -115,6 +133,15 @@ export function createCanonicalPrimmResolver(options: {
 }): ResolvePrimm {
   return async (input) => {
     RunSchema.parse(input);
+    // The transport understands native lesson identities. This particular
+    // resolver still owns exactly the original five approved public lessons.
+    if (
+      input.lessonRef.studyId !== "ai-literacy" ||
+      input.lessonRef.courseId !== "understanding-ai" ||
+      input.lessonRef.unitId !== "first-useful-step" ||
+      !(PRIMM_LESSONS as readonly string[]).includes(input.lessonRef.lessonId)
+    )
+      throw new PreviewFailure("rejected");
     const index = z
       .object({
         courses: z.array(z.object({ courseId: z.string(), file: z.string(), sha256: z.string() })),

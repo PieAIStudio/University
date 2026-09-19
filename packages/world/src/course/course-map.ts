@@ -318,6 +318,7 @@ export function courseMarkers(
         ? `${lesson.lessonTitle} · ${sprite.label ?? ""} · ${stateLabel(lesson.state)}`
         : sprite.label,
       lessonState: lesson?.state,
+      lessonId: lesson?.lessonId,
       weight: sprite.role === "unit" ? 2 : undefined,
       ...(activate ? { activate } : {}),
     };
@@ -344,6 +345,7 @@ export function courseMarkers(
       kind: "lesson" as const,
       label: `${lesson.lessonTitle} · ${stateLabel(lesson.state)}`,
       lessonState: lesson.state,
+      lessonId: lesson.lessonId,
       quiet: lesson.state !== "live",
       weight: lesson.state === "live" ? 3 : 0,
       ...(options.onPick ? { activate: () => options.onPick?.(lesson) } : {}),

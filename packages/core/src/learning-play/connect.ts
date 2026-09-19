@@ -7,7 +7,10 @@ export interface Connection {
 export const connectionKey = (edge: Connection): string => `${edge.from}→${edge.to}`;
 
 /** Order of construction does not matter; relationships do. */
-export function checkConnections(activity: ConnectActivity, connections: readonly Connection[]) {
+export function checkConnections(
+  activity: Pick<ConnectActivity, "edges">,
+  connections: readonly Connection[],
+) {
   const expected = new Set(activity.edges.map(connectionKey));
   const actual = new Set(connections.map(connectionKey));
   const missing = activity.edges.filter((edge) => !actual.has(connectionKey(edge)));

@@ -1,10 +1,21 @@
 import { translate } from "@pieai/university-ui/i18n.js";
-import type { CourseProgress, LessonRef } from "@pieai/university-core";
+import type {
+  CourseProgress,
+  LessonRef,
+  LearningSegment,
+  MapLearningKind,
+} from "@pieai/university-core";
+import { MapNodeMenu } from "@pieai/university-ui/map-nodes/MapNodeMenu.js";
 import { CourseRouteQuiz, hasRouteQuiz } from "@pieai/university-ui/path/CourseRouteQuiz.js";
 import type { ContentPort } from "@pieai/university-ui/content/port.js";
 import type { CourseView, UnitView } from "@pieai/university-ui/view/lesson-view.js";
 
 export interface CourseIslandProps {
+  readonly onOpenLearningNode?: (
+    segment: LearningSegment,
+    kind: MapLearningKind,
+    element: HTMLElement,
+  ) => void;
   readonly course: CourseView;
   readonly studyId: string;
   readonly viewedProgress: CourseProgress | null;
@@ -39,6 +50,7 @@ export interface CourseIslandProps {
  * not, and `wide` may only decide the first.
  */
 export function CourseIsland({
+  onOpenLearningNode,
   course,
   studyId,
   viewedProgress,
@@ -63,7 +75,9 @@ export function CourseIsland({
       <p className="picked__study">
         {course.units.length} {translate("app.app.courseIsland.copy.单元")}{" "}
         {viewedProgress?.total ?? 0} {translate("app.app.courseIsland.copy.关-还剩")}{" "}
-        {viewedProgress ? viewedProgress.total - viewedProgress.done : 0}{" "}
+        {viewedProgress
+          ? viewedProgress.total - viewedProgress.done - (viewedProgress.skipped ?? 0)
+          : 0}{" "}
         {translate("app.app.courseIsland.copy.关")}
       </p>
       {/*
@@ -106,6 +120,9 @@ export function CourseIsland({
             {translate("app.app.courseIsland.copy.没做过也拦不住你-这里只是先说一声")}
           </p>
         </section>
+      ) : null}
+      {onOpenLearningNode ? (
+        <MapNodeMenu key={`${studyId}/${course.id}`} course={course} onOpen={onOpenLearningNode} />
       ) : null}
       {showRouteDetails ? (
         <details key={`${studyId}:${course.id}`} className="picked__route">

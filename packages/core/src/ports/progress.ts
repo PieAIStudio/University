@@ -135,6 +135,9 @@ export interface ProvenLessonRecord {
   readonly unitId: string;
   /** Milliseconds since epoch. The first proof is the fact; a retake is not. */
   readonly provenAt: number;
+  /** Coverage checkpoints bind proof to the assessed revision; older proofs
+   * have no revision and retain their historical meaning. */
+  readonly contentRevision?: number;
 }
 
 /** The one learner write that turns a typed teach-back into a scheduled card. */
@@ -265,6 +268,7 @@ export interface ProgressPort {
     readonly courseId: string;
     readonly unitId: string;
     readonly lessonIds: readonly string[];
+    readonly contentRevisions?: Readonly<Record<string, number>>;
     /** Milliseconds; defaults to now. Injected by tests, not by the product. */
     readonly provenAt?: number;
   }): void;

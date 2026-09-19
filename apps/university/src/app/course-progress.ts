@@ -72,8 +72,14 @@ export function useCourseProgress({
    * 「今天」 should keep saying so.
    */
   const todayNode = useMemo(
-    () => (nodes ? nextCourse(nodes, courseProgress) : null),
-    [nodes, courseProgress],
+    () =>
+      nodes
+        ? nextCourse(nodes, (node) => {
+            const current = courseProgressForNode(node);
+            return current?.proven ? 1 : courseProgress(node);
+          })
+        : null,
+    [nodes, courseProgress, courseProgressForNode],
   );
 
   /**

@@ -5,6 +5,7 @@
   "description": "The 3D scene both shells will render. packages/ui stays at zero three.",
   "type": "module",
   "exports": {
+    "./learning-nodes.js": "./src/course/learning-nodes.ts",
     ".": "./src/index.ts",
     "./course-map.js": "./src/course/course-map.ts",
     "./Maps.js": "./src/Maps.tsx",
