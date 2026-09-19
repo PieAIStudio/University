@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-19T02:16:50.286Z
+generated_at: 2026-09-19T07:20:09.926Z
 generator_version: doc-gov@0.14.0
 docs_count: 145
 docs:
@@ -186,13 +186,6 @@ docs:
     canonical: true
     last_reviewed: 2026-09-16
     pinned: false
-  - id: PLAN-MAP-NAVIGATION-EVOLUTION
-    path: docs/plans/active/01-map-navigation-evolution.md
-    type: plan
-    status: active
-    canonical: true
-    last_reviewed: 2026-09-18
-    pinned: false
   - id: PLAN-AI-FOUNDATIONS-REVIVAL
     path: docs/plans/active/ai-foundations-revival.md
     type: plan
@@ -248,6 +241,13 @@ docs:
     status: completed
     canonical: true
     last_reviewed: 2026-09-13
+    pinned: false
+  - id: PLAN-MAP-NAVIGATION-EVOLUTION
+    path: docs/plans/completed/map-navigation-evolution.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-09-18
     pinned: false
   - id: PLAN-PLAY-USABILITY
     path: docs/plans/completed/play-usability.md
@@ -345,7 +345,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-15
+    last_reviewed: 2026-09-18
     pinned: true
   - id: REF-FEEDBACK-BACKEND-GAP
     path: docs/reference/execution/feedback-backend-gap.md
@@ -394,7 +394,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-16
+    last_reviewed: 2026-09-18
     pinned: false
   - id: REF-PAYMENT-BACKEND-GAP
     path: docs/reference/execution/payment-backend-gap.md
