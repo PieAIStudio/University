@@ -3,9 +3,10 @@ import AxeBuilder from "@axe-core/playwright";
 import { localizeActivity, type PrimmActivity } from "../packages/core/dist/index.js";
 import { messages as zh } from "../packages/ui/src/i18n/catalogs/primm.zh-CN.js";
 import { messages as en } from "../packages/ui/src/i18n/catalogs/primm.en.js";
-import { SHIPPED_CATALOGUE, SHIPPED_COURSES, lessonPathOf } from "./harness/catalogue.js";
+import { SHIPPED_COURSES, lessonPathOf } from "./harness/catalogue.js";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 import { humanClick } from "./harness/click.js";
+import { enterSelectedMapObject } from "./harness/map-actions.js";
 
 const samples = SHIPPED_COURSES.flatMap((course) =>
   course.units.flatMap((unit) =>
@@ -194,23 +195,18 @@ for (const [mode, origin] of [
           });
         });
         if (lesson.id === samples[0]!.lesson.id && locale === "zh-CN") {
-          // The first pilot also covers the real Today entry in both modes;
-          // its completion still uses all five actual browser interactions.
-          await page.goto(`${origin}/?lang=${locale}`);
-          const picker = page.locator(".study-switcher__trigger");
-          await humanClick(page, picker, "choose the PRIMM series");
-          const study = SHIPPED_CATALOGUE.find((item) => item.id === course.studyId)!;
+          // The first pilot also covers the real map entry in both modes: choose
+          // the lesson on its course island, then enter it from the selection.
+          const lessonPath = lessonPathOf(course, lesson);
+          const coursePath = lessonPath.split("/").slice(0, 3).join("/");
+          await page.goto(`${origin}${coursePath}?lang=${locale}`);
           await humanClick(
             page,
-            page.getByRole("option").filter({ hasText: study.title }),
-            "choose the actual pilot course series",
+            page.locator(`button.label--lesson[data-map-marker=${JSON.stringify(lesson.id)}]`),
+            "choose the actual pilot lesson on the course map",
           );
-          await humanClick(
-            page,
-            page.getByRole("button", { name: /开始学习|继续学习/ }).first(),
-            "start the actual lesson recommended by Today",
-          );
-          await expect(page).toHaveURL(new RegExp(lessonPathOf(course, lesson)));
+          await enterSelectedMapObject(page, "enter the pilot lesson from the map");
+          await expect(page).toHaveURL(new RegExp(lessonPath));
         } else {
           await page.goto(`${origin}${lessonPathOf(course, lesson)}?lang=${locale}`);
         }
