@@ -112,7 +112,11 @@ describe("bounded PRIMM runtime", () => {
       { path: "/private" },
       { url: "https://example.org" },
       { model: "other" },
-      { lessonRef: { ...ref, lessonId: "unknown" } },
+      // Any course lesson ID is addressable; the canonical resolver still
+      // requires its package to carry a PRIMM activity. Paths never are.
+      { lessonRef: { ...ref, lessonId: "../private" } },
+      { lessonRef: { ...ref, unitId: "Unit/../x" } },
+      { lessonRef: { ...ref, courseId: "other-course" } },
     ])
       expect(RunSchema.safeParse({ ...input(), ...extra }).success).toBe(false);
   });
@@ -243,6 +247,40 @@ describe("bounded PRIMM runtime", () => {
           request,
           resultRequestId: result.requestId,
           finalWork: "The learner has repaired this text.",
+        }),
+      }),
+    ).rejects.toMatchObject({ code: "unavailable" });
+  });
+  it("reports a malformed model decision as an unavailable evaluation, not a rejected request", async () => {
+    const transport: ChatCompletionTransport = {
+      provider: "test",
+      complete: async (request) => ({
+        content: request.responseFormat
+          ? JSON.stringify({
+              outcome: "pass",
+              evaluation: "x".repeat(2000),
+              extensions: [],
+              evidence: { from: "missing", quote: "" },
+              confidence: "high",
+            })
+          : "a real run",
+        raw: {},
+      }),
+    };
+    const { runtime } = setup({ transport });
+    const request = input("make"),
+      result = await runtime.run(request);
+    await expect(
+      runtime.grade({
+        locator: ref,
+        contentRevision: 2,
+        exerciseId: primmFixture.make.exerciseId,
+        commandId: randomUUID(),
+        answer: JSON.stringify({
+          kind: "primm-make",
+          request,
+          resultRequestId: result.requestId,
+          finalWork: "The learner's work.",
         }),
       }),
     ).rejects.toMatchObject({ code: "unavailable" });

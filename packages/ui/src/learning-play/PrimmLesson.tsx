@@ -240,13 +240,25 @@ function PrimmSessionView({
           session.modifyPrompt.trim() !== activity.starter.prompt.trim()
         : !!session.makePrompt.trim();
   const investigationHasItsMaterial =
-    everyday && phase === "investigate" && activity.investigate.game.kind !== "sort";
+    everyday &&
+    phase === "investigate" &&
+    !["sort", "check-result"].includes(activity.investigate.game.kind);
   const showMaterials =
     session.stage < 5 &&
     phase !== "predict" &&
     !(everyday && phase === "run") &&
     !investigationHasItsMaterial;
   const prediction = activity.predict.options.find((item) => item.id === session.prediction);
+  const investigated =
+    phase === "investigate" && investigationComplete(activity, session.investigation);
+  const debrief =
+    currentOutput && busy === null
+      ? phase === "run"
+        ? activity.run.debrief
+        : phase === "modify"
+          ? activity.modify.debrief
+          : undefined
+      : undefined;
   const stageTitle =
     phase === "predict" ? activity.title : phase ? activity[phase].title : activity.finish.title;
   const operationAsset =
@@ -377,18 +389,19 @@ function PrimmSessionView({
               onChange={(investigation) => update({ investigation })}
             />
           </div>
-          <p>{activity.investigate.explanation}</p>
-          {activity.investigate.more?.map((more) => (
-            <details key={more.question}>
-              <summary>{more.question}</summary>
-              <p>{more.answer}</p>
-            </details>
-          ))}
-          <GameButton
-            variant="primary"
-            disabled={!investigationComplete(activity, session.investigation)}
-            onClick={advance}
-          >
+          {/* The teacher explains what the learner just found, never before they act. */}
+          {investigated ? (
+            <div className="primm__debrief" role="status">
+              <p>{activity.investigate.explanation}</p>
+              {activity.investigate.more?.map((more) => (
+                <details key={more.question}>
+                  <summary>{more.question}</summary>
+                  <p>{more.answer}</p>
+                </details>
+              ))}
+            </div>
+          ) : null}
+          <GameButton variant="primary" disabled={!investigated} onClick={advance}>
             {t("primm.next")}
           </GameButton>
         </>
@@ -430,7 +443,6 @@ function PrimmSessionView({
               <p>{activity.modify.suggestion}</p>
             </details>
           ) : null}
-          {phase === "modify" && !canExecute ? <p>{t("primm.modifyFirst")}</p> : null}
         </>
       ) : null}
       {executionPhase ? (
@@ -463,12 +475,13 @@ function PrimmSessionView({
               {currentOutput ? (
                 <PrimmResult result={currentOutput} label={t("primm.after")} />
               ) : (
-                <p>{t("primm.changed")}</p>
+                <p>{t(canExecute ? "primm.changed" : "primm.modifyFirst")}</p>
               )}
             </div>
           ) : currentOutput && !atMake ? (
             <PrimmResult result={currentOutput} label={t("primm.result")} />
           ) : null}
+          {debrief ? <p className="primm__debrief">{debrief}</p> : null}
           {phase === "run" || phase === "modify" ? (
             <GameButton
               variant="primary"

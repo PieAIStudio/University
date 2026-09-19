@@ -2,7 +2,7 @@ import type { messages as source } from "./primm.zh-CN.js";
 export const messages = {
   "primm.makeDraft": "Ask AI to write a first draft for me",
   "primm.syntheticAudio": "Computer-generated practice audio, not a real voice message",
-  "primm.practiceMaterial": "Practice material, not a real event notice",
+  "primm.practiceMaterial": "Practice material, not a real event",
   "primm.conversation": "This conversation with AI",
   "primm.attachmentTarget":
     "Add the prepared material first. You can drag it here, or use the button below it.",
@@ -18,7 +18,7 @@ export const messages = {
   "primm.addOwn": "Add my own sentence",
   "primm.assembledRequest": "Once assembled, AI will receive this request",
   "primm.emptyRequest": "No request yet. First add a sentence on what you want AI to do.",
-  "primm.refineArtifact": "Check the material and refine this card until you are satisfied",
+  "primm.refineArtifact": "Check it against the material and revise until you are satisfied",
   "primm.predicted": "Your prediction: {{text}}",
   "primm.finalWork": "Edit the text you want to keep",
   "primm.focused": "A closer look",
@@ -92,5 +92,10 @@ export const messages = {
   "primm.reject": "Leave out: {{label}}",
   "primm.notes": "My source notes",
   "primm.emptyNotes": "No materials added yet.",
+  "primm.check.kept": "In the result, unchanged",
+  "primm.check.changed": "In the result, but changed",
+  "primm.check.missing": "Not in the result",
+  "primm.checkChoice": "{{label}}: {{choice}}",
+  "primm.checkSource": "In the material: ",
   "primm.guided": "Examine the material; next, use it to revise the request.",
 } satisfies Record<keyof typeof source, string>;

@@ -16,6 +16,9 @@ export type PrimmSortGame = Extract<PrimmGame, { kind: "sort" }>;
 export type PrimmLayoutGame = Extract<PrimmGame, { kind: "layout" }>;
 export type PrimmEditGame = Extract<PrimmGame, { kind: "edit" }>;
 export type PrimmCollectGame = Extract<PrimmGame, { kind: "collect" }>;
+export type PrimmCheckResultGame = Extract<PrimmGame, { kind: "check-result" }>;
+export const PRIMM_CHECK_JUDGMENTS = ["kept", "changed", "missing"] as const;
+export type PrimmCheckJudgment = (typeof PRIMM_CHECK_JUDGMENTS)[number];
 
 const repeated = (ids: readonly string[]) => new Set(ids).size !== ids.length;
 const sorting = (game: PrimmSortGame) => ({ buckets: game.buckets, items: game.cards });
@@ -90,6 +93,9 @@ export function primmIssues(payload: PrimmPayload): string[] {
       if (!game.sentences.some((sentence) => sentence.id === game.targetId))
         issues.push(`Unknown PRIMM edit target: ${game.targetId}`);
       break;
+    case "check-result":
+      unique("check item", game.items);
+      break;
     case "collect":
       unique("collector card", game.cards);
       if (!game.cards.some((card) => card.relevant) || !game.cards.some((card) => !card.relevant))
@@ -124,7 +130,8 @@ export type PrimmGameState =
   | { readonly kind: "sort"; readonly placed: Readonly<Record<string, string>> }
   | { readonly kind: "layout"; readonly itemIds: readonly string[]; readonly formatId: string }
   | { readonly kind: "edit"; readonly targetId: string; readonly replacement: string }
-  | { readonly kind: "collect"; readonly decisions: Readonly<Record<string, boolean>> };
+  | { readonly kind: "collect"; readonly decisions: Readonly<Record<string, boolean>> }
+  | { readonly kind: "check-result"; readonly judgments: Readonly<Record<string, string>> };
 
 /** Checks the current manipulation, never a grade, click count or past successful state. */
 export function isPrimmGameComplete(game: PrimmGame, state: PrimmGameState): boolean {
@@ -155,6 +162,11 @@ export function isPrimmGameComplete(game: PrimmGame, state: PrimmGameState): boo
       state.replacement.trim() !== target.text.trim()
     );
   }
+  // Every item judged. There is no answer key: the live result differs per run.
+  if (game.kind === "check-result" && state.kind === game.kind)
+    return game.items.every((item) =>
+      (PRIMM_CHECK_JUDGMENTS as readonly string[]).includes(state.judgments[item.id] ?? ""),
+    );
   if (game.kind === "collect" && state.kind === game.kind)
     return (
       Object.keys(state.decisions).length === game.cards.length &&

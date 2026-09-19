@@ -260,6 +260,17 @@
 .primm__case p {
   margin-block: 0 8px;
 }
+/* The teacher's reply to what the learner just did: after a result or an operation. */
+.primm__debrief {
+  border-inline-start: 3px solid var(--game-ui-accent);
+  padding-inline-start: 16px;
+  margin-block: 20px;
+  line-height: 1.85;
+  max-width: 62ch;
+}
+.primm__debrief p {
+  margin-block: 0 8px;
+}
 .primm--everyday > p,
 .primm--everyday .primm__situation {
   line-height: 1.85;

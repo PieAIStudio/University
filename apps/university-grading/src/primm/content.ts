@@ -6,19 +6,19 @@ import { localizeActivity, type PrimmActivity } from "@pieai/university-core";
 import { LessonActivitySchema } from "@pieai/university-core/domain/schemas.js";
 import { PreviewFailure } from "./errors.js";
 
-export const PRIMM_LESSONS = [
-  "ask-about-a-picture",
-  "sound-words-and-meaning",
-  "name-the-result",
-  "edit-one-part",
-  "answer-or-search",
-] as const;
+// Any lesson of this course may be run, but only when its canonical package
+// carries a native PRIMM activity; the resolver below enforces that, so a new
+// generated lesson needs no second allow-list to become playable.
+const LessonId = z
+  .string()
+  .max(100)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 export const LessonRefSchema = z
   .object({
     studyId: z.literal("ai-literacy"),
     courseId: z.literal("understanding-ai"),
-    unitId: z.literal("first-useful-step"),
-    lessonId: z.enum(PRIMM_LESSONS),
+    unitId: LessonId,
+    lessonId: LessonId,
   })
   .strict();
 export const RunSchema = z

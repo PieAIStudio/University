@@ -54,7 +54,8 @@
     "registry.opendata.aws",
     "github.com",
     "scikit-image.org",
-    "nationalgallery.org.uk"
+    "nationalgallery.org.uk",
+    "support.microsoft.com"
   ],
   "forbiddenHosts": [
     "pmaker.space",

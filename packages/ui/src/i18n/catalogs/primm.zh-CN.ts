@@ -1,7 +1,7 @@
 export const messages = {
   "primm.makeDraft": "让 AI 帮我写一份初稿",
   "primm.syntheticAudio": "电脑合成的练习语音，不是真人留言",
-  "primm.practiceMaterial": "练习材料，不是真实活动通知",
+  "primm.practiceMaterial": "练习材料，不是真实发生的事",
   "primm.conversation": "这次和 AI 的对话",
   "primm.attachmentTarget": "先把准备好的材料放进来。可以拖到这里，也可以用材料下方的按钮。",
   "primm.detach": "取出材料",
@@ -16,7 +16,7 @@ export const messages = {
   "primm.addOwn": "补一句自己的话",
   "primm.assembledRequest": "组合后，AI 会收到这段话",
   "primm.emptyRequest": "这里还没有请求。先加一句你想让 AI 做的事。",
-  "primm.refineArtifact": "对照材料，把这张卡改到你满意",
+  "primm.refineArtifact": "对照材料再看一遍，改到你满意为止",
   "primm.predicted": "你刚才的预想：{{text}}",
   "primm.finalWork": "整理成你要带走的文字",
   "primm.focused": "放大这处细节",
@@ -85,5 +85,10 @@ export const messages = {
   "primm.reject": "不放入：{{label}}",
   "primm.notes": "我的资料笔记",
   "primm.emptyNotes": "还没有放入资料。",
+  "primm.check.kept": "结果里有，没变",
+  "primm.check.changed": "结果里有，但变了",
+  "primm.check.missing": "结果里没有",
+  "primm.checkChoice": "{{label}}：{{choice}}",
+  "primm.checkSource": "原材料里：",
   "primm.guided": "观察材料，下一步用它改写请求。",
 } as const;

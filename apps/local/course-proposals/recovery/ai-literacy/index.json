@@ -21,8 +21,8 @@
   "courses": [
     {
       "courseId": "understanding-ai",
-      "file": "understanding-ai.288505fc8f26b23f21795587df9f0ac80bdd0a50926c150f188ebda148b14932.recovery.json",
-      "sha256": "sha256:288505fc8f26b23f21795587df9f0ac80bdd0a50926c150f188ebda148b14932",
+      "file": "understanding-ai.1c8a939c26b597d5bb344c01c13fc1a6ed133328051ccbc0367155357b0c88d5.recovery.json",
+      "sha256": "sha256:1c8a939c26b597d5bb344c01c13fc1a6ed133328051ccbc0367155357b0c88d5",
       "isBeingRewritten": false
     },
     {

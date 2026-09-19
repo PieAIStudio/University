@@ -61,6 +61,19 @@ export function createPrimmPayloadSchema<S extends z.ZodType>(source: S, id: z.Z
         sentences: z.array(z.object({ id, text }).strict()).min(2).max(20),
       })
       .strict(),
+    // Compare the actual run result with the material, item by item. The learner
+    // judges; the lesson shows what the material said. It never claims to know
+    // what this live result contains.
+    z
+      .object({
+        kind: z.literal("check-result"),
+        instruction: copy,
+        items: z
+          .array(z.object({ id, label: copy, expected: copy, why: copy }).strict())
+          .min(2)
+          .max(8),
+      })
+      .strict(),
     z
       .object({
         kind: z.literal("collect"),
@@ -133,7 +146,16 @@ export function createPrimmPayloadSchema<S extends z.ZodType>(source: S, id: z.Z
       })
       .strict(),
     predict: z.object({ question: copy, options: z.array(label).min(2).max(4) }).strict(),
-    run: z.object({ title: copy, note: copy, attachmentLabel: copy.optional() }).strict(),
+    // Debriefs appear only after an actual result exists: the teacher reconciles
+    // prediction and result. They must stay true for any plausible live output.
+    run: z
+      .object({
+        title: copy,
+        note: copy,
+        attachmentLabel: copy.optional(),
+        debrief: copy.optional(),
+      })
+      .strict(),
     investigate: z
       .object({
         title: copy,
@@ -152,6 +174,7 @@ export function createPrimmPayloadSchema<S extends z.ZodType>(source: S, id: z.Z
         brief: copy,
         goal: copy,
         suggestion: copy.optional(),
+        debrief: copy.optional(),
         operation: operation.optional(),
         workbench: z
           .object({
