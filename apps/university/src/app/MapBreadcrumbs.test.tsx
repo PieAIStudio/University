@@ -44,9 +44,11 @@ describe("the three map levels share an accessible hierarchy", () => {
       );
       expect(host.querySelector("nav")?.getAttribute("aria-label")).toBe("当前位置");
       expect(host.querySelectorAll("[aria-current=page]")).toHaveLength(1);
-      expect(host.querySelectorAll("a")).toHaveLength(
-        layer === "planet" ? 0 : layer === "world" ? 1 : 2,
-      );
+      expect(
+        host.querySelectorAll(
+          ".location-breadcrumb__list > li:not(.location-breadcrumb__overflow) > a",
+        ),
+      ).toHaveLength(layer === "planet" ? 0 : layer === "world" ? 1 : 2);
       expect(host.querySelector("[aria-current]")?.textContent).toBe(
         layer === "planet"
           ? "学习星球"
@@ -70,7 +72,12 @@ describe("the three map levels share an accessible hierarchy", () => {
         />,
       ),
     );
-    const links = host.querySelectorAll("a");
+    const links = host.querySelectorAll(
+      ".location-breadcrumb__list > li:not(.location-breadcrumb__overflow) > a",
+    );
+    // The narrow-screen full-path disclosure retains the same real ancestors.
+    const overflowLinks = host.querySelectorAll("details a");
+    expect([...overflowLinks].map((link) => link.getAttribute("href"))).toEqual(["/planet", "/"]);
     expect([...links].map((link) => link.getAttribute("href"))).toEqual(["/planet", "/"]);
     expect(host.querySelector("[aria-current]")?.getAttribute("title")).toBe(title);
     for (const link of links) {

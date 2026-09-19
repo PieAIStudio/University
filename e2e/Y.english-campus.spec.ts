@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 import { humanClick } from "./harness/click.js";
+import { enterSelectedMapObject, mapEntryButton } from "./harness/map-actions.js";
 
 const { course } = JSON.parse(
   readFileSync("apps/university/content/ai-literacy/understanding-ai.json", "utf8"),
@@ -78,22 +79,15 @@ for (const [mode, origin] of [
         page.locator('button[data-domain-id="ai-foundations"]'),
         "choose AI foundations",
       );
-      await humanClick(
-        page,
-        page.locator('button[data-study-id="ai-literacy"]'),
-        "choose the real beginner study",
-      );
-      await expectEnglish(page.locator(".planet-rail"));
-      const enter = page.locator(".planet-page__enter");
-      await expect(enter).toContainText("Enter");
-      await humanClick(page, enter, "enter the beginner study");
+      // This domain currently has one published study. The selected planet's
+      // sole Enter names that study; no duplicate selection row is required.
+      await expect(mapEntryButton(page)).toHaveAttribute("aria-label", /Understanding|Understand/);
+      await expectEnglish(page.locator(".map-information"));
+      await expect(page.locator('[data-map-entry="true"]')).toBeVisible();
+      await enterSelectedMapObject(page, "enter the beginner study");
       const island = page.locator(`button.label--course[data-map-marker="${course.id}"]`);
       await humanClick(page, island, "select the real introductory course");
-      await humanClick(
-        page,
-        page.getByRole("button", { name: "Enter this course", exact: true }),
-        "enter this course",
-      );
+      await enterSelectedMapObject(page, "enter this course");
       await expect(page).toHaveURL(new RegExp(`/ai-literacy/${course.id}(?:\\?|$)`));
       await expect(page.locator(".loading-trivia")).toHaveCount(0);
       const labels = page.locator("[data-lesson-state][aria-label]");
@@ -105,9 +99,10 @@ for (const [mode, origin] of [
       ).not.toMatch(/[\u4e00-\u9fff]/u);
       await humanClick(
         page,
-        page.getByRole("button", { name: /^(Start learning|Continue learning)$/ }).first(),
+        page.locator(`button.label--lesson[data-map-marker="${firstLesson.id}"]`),
         "start the actual lesson",
       );
+      await enterSelectedMapObject(page, "read the selected real lesson");
       await expect(page.locator(".lesson-reader")).toContainText(firstLesson.locales.en.title);
       await expectEnglish(page.locator(".lesson-toolbar"));
       await page.screenshot({ path: info.outputPath("english-journey.png"), fullPage: true });

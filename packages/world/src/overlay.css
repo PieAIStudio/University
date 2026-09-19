@@ -50,56 +50,15 @@
   display: none;
 }
 
-/* A short landscape has no room for two floating hint rows. Keep the same
-   controls together below the actual canvas, inside the shell's free lane. */
-@media (min-width: 768px) and (max-height: 420px) {
-  .stagewrap {
-    --map-tools-height: 56px;
-  }
-
-  .stagewrap > .labels {
-    bottom: var(--map-tools-height);
-  }
-
-  .stagewrap > .map-tools {
-    position: absolute;
-    inset-inline-start: var(--shell-content-left, 16px);
-    inset-inline-end: var(--shell-content-right, 16px);
-    bottom: 6px;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    pointer-events: none;
-  }
-
-  .stagewrap .map-framing-tools {
-    position: static;
-    transform: none;
-    flex-shrink: 0;
-  }
-
-  .stagewrap .map-tools > .hint {
-    position: static;
-    margin: 0;
-    transform: none;
-    min-width: 0;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
-
 .stagewrap canvas {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-/* One persistent viewport owns the Canvas at every breakpoint. The narrow
-   course tool lane reduces its actual measured size, not just its visible
-   crop; LabelProbe continues to project with that same R3F size. */
+/* Commands now live in the on-demand palette. No empty toolbar strip is
+   reserved on phones or short landscapes; the canvas and labels share the
+   complete stage. Transient hints remain measured collision obstacles. */
 .map-viewport {
   position: absolute;
   inset: 0 0 var(--map-tools-height, 0px);
@@ -152,18 +111,18 @@
   left: 0;
   will-change: transform, opacity;
   transition: opacity 0.15s;
-  white-space: nowrap;
-  font-size: 0.8rem;
-  line-height: 1.25;
-  padding: 0.18rem 0.5rem;
-  border-radius: 999px;
-  color: #f4f7fb;
-  background: rgba(14, 24, 32, 0.62);
-  box-shadow: 0 1px 6px rgba(6, 16, 22, 0.35);
   max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
   opacity: var(--placed, 0);
+}
+
+/* Full-height phone maps magnify their neighbours. A half-screen caption
+   must also leave a 16px edge gutter and an 8px collision gap; 50vw alone
+   intermittently leaves no readable peer beside scenery. Keep font and touch
+   targets unchanged, with the complete title still available in DOM. */
+@media (max-width: 767px) {
+  .stagewrap .label--course {
+    max-width: min(220px, calc(50vw - 24px));
+  }
 }
 
 .label--quiet {
@@ -177,50 +136,17 @@
 
 button.label {
   pointer-events: none;
-  border: 0;
-  font: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
-  text-align: inherit;
 }
 
 button.label.is-visible {
   pointer-events: auto;
 }
 
-button.label:hover {
-  background: rgba(14, 24, 32, 0.85);
-}
-
 button.label:focus-visible {
   pointer-events: auto;
-  outline: 2px solid #ffd479;
+  outline: 2px solid var(--game-ui-focus-ring);
   outline-offset: 2px;
   opacity: 1 !important;
-}
-
-.label--study {
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  padding: 0.3rem 0.75rem;
-  background: rgba(10, 20, 28, 0.72);
-  text-align: center;
-}
-
-.label--study small {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 400;
-  letter-spacing: 0;
-  opacity: 0.78;
-}
-
-.label--course {
-  display: inline-flex;
-  align-items: center;
-  min-block-size: 48px;
-  overflow: visible;
 }
 
 .label--course[data-label-leader="true"]::before {
@@ -235,46 +161,6 @@ button.label:focus-visible {
   transform: rotate(var(--leader-angle));
   transform-origin: 0 50%;
   pointer-events: none;
-}
-
-/* Only the name may truncate. A long name must not spend the space reserved
-   for learning state and the existing rewrite notice. The projector still
-   measures this one bounded label; this is not another overlay layer. */
-.label__course-title {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.label--course .label__course-progress {
-  display: inline-block;
-  flex-shrink: 0;
-  margin-inline-start: 0.4rem;
-  font-size: 0.68rem;
-  font-weight: 650;
-  line-height: 1.2;
-}
-
-.label--course[data-course-state="live"] .label__course-progress {
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
-}
-
-.label--course .label__course-status {
-  display: inline-block;
-  flex-shrink: 0;
-  margin-inline-start: 0.4rem;
-  padding: 0.1rem 0.36rem;
-  border: 1px solid color-mix(in srgb, var(--game-ui-accent-bright) 48%, transparent);
-  border-radius: var(--game-ui-radius-pill, 999px);
-  color: var(--game-ui-accent-bright);
-  background: color-mix(in srgb, var(--game-ui-accent) 12%, transparent);
-  font-size: 0.68rem;
-  font-weight: 650;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
-  vertical-align: 0.05em;
 }
 
 .picked,
@@ -482,6 +368,20 @@ button.label:focus-visible {
   bottom: 20px;
 }
 
+/* Short landscapes cannot hold two stacked hints. Gesture help remains in
+   the palette; one bottom hint leaves the actual course caption readable. */
+@media (max-height: 400px) {
+  .app-shell[data-map-shell="true"] .hint--controls {
+    display: none;
+  }
+  .app-shell[data-map-shell="true"] .hint--entry {
+    bottom: 8px;
+  }
+  .app-shell[data-map-shell="true"] .hint--hover {
+    bottom: 46px;
+  }
+}
+
 .hint--dismissed {
   opacity: 0;
   transform: translate(-50%, 6px);
@@ -614,57 +514,6 @@ button.label:focus-visible {
     left: 14px;
     right: 14px;
     width: auto;
-  }
-}
-
-@media (max-width: 767px) {
-  .stagewrap[data-map-view] {
-    --map-tools-height: 72px;
-  }
-
-  .stagewrap[data-map-view] > .labels {
-    bottom: var(--map-tools-height);
-  }
-
-  .stagewrap[data-map-view] > .map-tools {
-    position: absolute;
-    inset: auto 0 0;
-    z-index: 4;
-    box-sizing: border-box;
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    align-items: center;
-    gap: 8px;
-    height: var(--map-tools-height);
-    padding: 12px;
-    background: var(--game-ui-bg);
-  }
-
-  /* Explicit cells keep the action still when a hint fades or is removed. */
-  .stagewrap[data-map-view] .map-framing-tools {
-    position: static;
-    grid-column: 1;
-    grid-row: 1;
-    left: auto;
-    bottom: auto;
-    transform: none;
-  }
-
-  .stagewrap[data-map-view] .map-tools > .hint {
-    position: static;
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: end;
-    max-width: 100%;
-    min-width: 0;
-    padding: 6px 8px;
-    white-space: normal;
-    transform: none;
-  }
-
-  .stagewrap[data-map-view] .hint__row {
-    flex-wrap: wrap;
-    justify-content: end;
   }
 }
 

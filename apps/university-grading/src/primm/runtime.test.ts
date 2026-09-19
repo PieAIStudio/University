@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { randomUUID } from "node:crypto";
 import { primmFixture } from "../../../../packages/core/src/learning-play/fixtures/primm.js";
-import type { ChatCompletionTransport } from "@pieai/swimmer-ai-kit/chat";
+import type { ChatCompletionTransport } from "@pieai/swimmer-ai-provider-kit/chat";
 import { combineCriterionReviews, createPrimmRuntime, type PrimmRuntime } from "./runtime.js";
 import { createPrimmPreviewServer } from "./http.js";
 import {

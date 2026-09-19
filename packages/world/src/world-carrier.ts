@@ -43,9 +43,9 @@ export function worldIslandCarrierTarget(
   ];
 }
 
-/** Closing a card changes selection, not the current course's terrain height.
- * Resolve the existing learner position against actual placements, including
- * an equivalent vector restored by navigation; never infer it from screen pixels.
+/** No explicit selection means a waiting place OUTSIDE destination footprints.
+ * Learning focus may frame the camera; it never pretends the learner clicked.
+ * The existing carrier instance and avatar use the same point and hop path.
  */
 export function worldCarrierHomeTarget(
   islands: readonly WorldCarrierIsland[],
@@ -53,8 +53,39 @@ export function worldCarrierHomeTarget(
   weatherExtent: number,
   cloudLevel: number,
 ): CloudCarrierTarget {
-  const island = learnerAt ? islands.find((entry) => entry.position.equals(learnerAt)) : null;
-  if (island) return worldIslandCarrierTarget(island, weatherExtent, cloudLevel);
-  const home = cloudCarrierHome(weatherExtent, cloudLevel);
-  return [learnerAt?.x ?? home[0], home[1], learnerAt?.z ?? home[2]];
+  if (!islands.length) return cloudCarrierHome(weatherExtent, cloudLevel);
+  const focus = islands.find((entry) => learnerAt?.equals(entry.position)) ?? islands[0]!;
+  const clearance = cloudCarrierClearance(weatherExtent, cloudLevel);
+  // Search a bounded ring around the visible learning area. Every candidate
+  // is checked against every real island, not against its label or course ID.
+  const margin = Math.max(2.2, clearance);
+  let candidate: CloudCarrierTarget | null = null;
+  for (let ring = 0; ring < 5 && !candidate; ring++) {
+    const radius = focus.radius + margin + ring * Math.max(2, focus.radius * 0.5);
+    for (const angle of [
+      -Math.PI / 2,
+      -Math.PI / 4,
+      (-3 * Math.PI) / 4,
+      0,
+      Math.PI,
+      Math.PI / 4,
+      (3 * Math.PI) / 4,
+      Math.PI / 2,
+    ]) {
+      const x = focus.position.x + Math.sin(angle) * radius;
+      const z = focus.position.z + Math.cos(angle) * radius;
+      if (
+        islands.every(
+          (island) =>
+            Math.hypot(x - island.position.x, z - island.position.z) >= island.radius + margin,
+        )
+      ) {
+        candidate = [x, worldIslandCarrierTarget(focus, weatherExtent, cloudLevel)[1], z];
+        break;
+      }
+    }
+  }
+  if (candidate) return candidate;
+  const x = Math.min(...islands.map((island) => island.position.x - island.radius)) - margin;
+  return [x, worldIslandCarrierTarget(focus, weatherExtent, cloudLevel)[1], focus.position.z];
 }

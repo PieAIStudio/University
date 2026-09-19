@@ -616,6 +616,7 @@ export function CuteCloudSea({
   const carrierStartedAt = useRef<number | null>(null);
   const carrierArcLift = useRef(0);
   const carrierSequence = useRef(0);
+  const initialCarrierTarget = useRef(carrierTarget);
 
   const { crown: upperGeometry, underbelly: lowerGeometry } = useMemo(() => {
     const segments =
@@ -664,9 +665,13 @@ export function CuteCloudSea({
     lowerMesh.instanceColor!.needsUpdate = true;
     upperMesh.computeBoundingSphere();
     lowerMesh.computeBoundingSphere();
-    carrierFrom.current.copy(carrierOrigin);
-    carrierGoal.current.copy(carrierOrigin);
-    carrierPosition.current.copy(carrierOrigin);
+    const start = initialCarrierTarget.current;
+    const initial = start
+      ? new THREE.Vector3(start[0], start[1] - CLOUD_CARRIER_FOOT_OFFSET, start[2])
+      : carrierOrigin;
+    carrierFrom.current.copy(initial);
+    carrierGoal.current.copy(initial);
+    carrierPosition.current.copy(initial);
     carrierStartedAt.current = null;
     carrierArcLift.current = 0;
     carrierSequence.current += 1;

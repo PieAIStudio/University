@@ -1,0 +1,347 @@
+/* The approved map frame is one shared composition, not a second app shell.
+   Non-map work/reading/account surfaces retain their existing task layouts. */
+.app-shell[data-map-shell="true"] {
+  --map-panel-width: 248px;
+  --map-handle-width: 64px;
+  --map-avatar-width: 92px;
+  --shell-rail-width: var(--map-panel-width);
+  --shell-aside-width: var(--map-panel-width);
+}
+.app-shell[data-map-shell="true"] .app-shell__east {
+  top: var(--shell-gutter);
+  bottom: var(--shell-gutter);
+  max-height: none;
+  align-items: stretch;
+  max-width: var(--map-panel-width);
+}
+.app-shell[data-map-shell="true"] .app-shell__east-stack,
+.app-shell[data-map-shell="true"] .nav-rail {
+  width: var(--map-panel-width);
+  min-width: 0;
+  height: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
+}
+.app-shell[data-map-shell="true"] .app-shell__east-stack {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--game-ui-border-strong);
+  border-radius: var(--game-ui-radius-panel);
+  background: var(--game-ui-panel-strong);
+  box-shadow: var(--game-ui-shadow-callout);
+}
+.app-shell[data-map-shell="true"] .nav-rail {
+  padding: 0 16px 12px;
+  gap: 8px;
+  box-shadow: var(--game-ui-shadow-callout);
+}
+.app-shell[data-map-shell="true"] .nav-rail__brand,
+.map-shell__heading {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  justify-content: space-between;
+  min-height: 76px;
+  box-sizing: border-box;
+  gap: 8px;
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--game-ui-border-subtle);
+}
+.map-shell__heading {
+  padding-inline: 12px;
+  justify-content: flex-start;
+}
+.map-shell__heading h2 {
+  font-size: 1rem;
+  line-height: 1.45;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.app-shell[data-map-shell="true"] .app-shell__aside {
+  flex: 1 1 auto;
+  width: 100%;
+  padding: 20px;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: auto;
+  background: none;
+}
+.app-shell[data-map-shell="true"] .nav-rail__label,
+.app-shell[data-map-shell="true"] .nav-rail__brand > :not(.app-shell__collapse) {
+  position: static;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  margin: 0;
+  overflow: hidden;
+  white-space: normal;
+}
+.app-shell[data-map-shell="true"] .nav-rail__link,
+.app-shell[data-map-shell="true"] .nav-rail__flyout-trigger {
+  justify-content: flex-start;
+  min-height: 44px;
+}
+.app-shell[data-map-shell="true"] .app-shell__collapse {
+  display: flex;
+  flex-direction: column;
+  min-height: 44px;
+  min-width: 44px;
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: var(--game-ui-text);
+  cursor: pointer;
+}
+.app-shell[data-map-shell="true"] .app-shell__collapse-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.map-shell__compact-label {
+  display: none;
+  font-size: 10px;
+  max-width: 52px;
+  overflow-wrap: anywhere;
+}
+.app-shell[data-map-shell="true"] .nav-rail__identity .counter-row {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.app-shell[data-map-shell="true"] .nav-rail__identity .counter-row:empty {
+  display: none;
+}
+@media (min-width: 768px) {
+  .app-shell[data-map-shell="true"][data-rail-collapsed="true"] {
+    --shell-rail-width: var(--map-avatar-width);
+  }
+  .app-shell[data-map-shell="true"][data-aside-collapsed="true"] {
+    --shell-aside-width: var(--map-handle-width);
+  }
+  .app-shell[data-map-shell="true"][data-rail-collapsed="true"] .nav-rail,
+  .app-shell[data-map-shell="true"][data-aside-collapsed="true"] .app-shell__east-stack {
+    width: var(--map-handle-width);
+    min-width: var(--map-handle-width);
+    height: 120px;
+    align-self: center;
+    padding: 6px;
+    display: flex;
+    justify-content: center;
+  }
+  .app-shell[data-map-shell="true"][data-rail-collapsed="true"] .nav-rail__brand,
+  .app-shell[data-map-shell="true"][data-aside-collapsed="true"] .map-shell__heading {
+    border: 0;
+    padding: 0;
+    justify-content: center;
+  }
+  .app-shell[data-map-shell="true"][data-rail-collapsed="true"]
+    .nav-rail__brand
+    > :not(.app-shell__collapse),
+  .app-shell[data-map-shell="true"][data-rail-collapsed="true"] .nav-rail__foot,
+  .app-shell[data-map-shell="true"][data-aside-collapsed="true"] .map-shell__heading h2 {
+    display: none;
+  }
+  .app-shell[data-map-shell="true"][data-rail-collapsed="true"] .map-shell__compact-label,
+  .app-shell[data-map-shell="true"][data-aside-collapsed="true"] .map-shell__compact-label {
+    display: block;
+  }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .app-shell[data-map-shell="true"] {
+    --map-panel-width: 208px;
+  }
+}
+@media (max-width: 767px) {
+  .app-shell[data-map-shell="true"] {
+    display: block;
+    height: 100dvh;
+    overflow: hidden;
+    padding: 0;
+    --shell-rail-width: 0px;
+    --shell-aside-width: 0px;
+  }
+  .app-shell[data-map-shell="true"] .app-shell__main {
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .app-shell[data-map-shell="true"] .app-shell__content {
+    height: 100%;
+  }
+  .app-shell[data-map-shell="true"] .tab-bar {
+    display: none;
+  }
+  .app-shell[data-map-shell="true"] .app-shell__west,
+  .app-shell[data-map-shell="true"] .app-shell__east {
+    display: flex;
+    position: absolute;
+    z-index: 40;
+    top: max(12px, env(safe-area-inset-top));
+    bottom: auto;
+    width: 56px;
+    max-width: none;
+    pointer-events: auto;
+  }
+  .app-shell[data-map-shell="true"] .app-shell__west {
+    inset-inline-start: 12px;
+  }
+  .app-shell[data-map-shell="true"] .app-shell__east {
+    inset-inline-end: 12px;
+  }
+  .app-shell[data-map-shell="true"] .nav-rail,
+  .app-shell[data-map-shell="true"] .app-shell__east-stack {
+    display: flex;
+    width: 56px;
+    min-width: 56px;
+    padding: 5px;
+    height: 56px;
+    overflow: hidden;
+    border: 1px solid var(--game-ui-border-strong);
+    border-radius: 18px;
+    background: var(--game-ui-panel-strong);
+  }
+  .app-shell[data-map-shell="true"] .app-shell__east-stack {
+    flex-direction: column;
+  }
+  .app-shell[data-map-shell="true"] .nav-rail__brand,
+  .app-shell[data-map-shell="true"] .map-shell__heading {
+    border: 0;
+    padding: 0;
+    min-height: 44px;
+    justify-content: center;
+  }
+  .app-shell[data-map-shell="true"] .nav-rail__list,
+  .app-shell[data-map-shell="true"] .nav-rail__foot,
+  .app-shell[data-map-shell="true"] .nav-rail__brand > :not(.app-shell__collapse),
+  .app-shell[data-map-shell="true"] .app-shell__aside,
+  .app-shell[data-map-shell="true"] .map-shell__heading h2 {
+    display: none;
+  }
+  .app-shell[data-map-shell="true"] .map-shell__compact-label {
+    display: block;
+  }
+  .app-shell[data-map-shell="true"][data-mobile-panel="rail"] .app-shell__west,
+  .app-shell[data-map-shell="true"][data-mobile-panel="aside"] .app-shell__east {
+    z-index: 55;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    width: min(320px, calc(100% - 24px));
+  }
+  .app-shell[data-map-shell="true"][data-mobile-panel="rail"] .nav-rail,
+  .app-shell[data-map-shell="true"][data-mobile-panel="aside"] .app-shell__east-stack {
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    border-radius: var(--game-ui-radius-panel);
+  }
+  .app-shell[data-map-shell="true"][data-mobile-panel="rail"] .nav-rail {
+    overflow-y: auto;
+  }
+  .app-shell[data-map-shell="true"][data-mobile-panel="rail"] .nav-rail__list,
+  .app-shell[data-map-shell="true"][data-mobile-panel="rail"] .nav-rail__foot,
+  .app-shell[data-map-shell="true"][data-mobile-panel="rail"]
+    .nav-rail__brand
+    > :not(.app-shell__collapse),
+  .app-shell[data-map-shell="true"][data-mobile-panel="aside"] .map-shell__heading h2 {
+    display: flex;
+  }
+  .app-shell[data-map-shell="true"][data-mobile-panel="aside"] .app-shell__aside {
+    display: block;
+    padding: 16px 4px;
+  }
+  .app-shell[data-map-shell="true"][data-mobile-panel="rail"] .nav-rail__brand,
+  .app-shell[data-map-shell="true"][data-mobile-panel="aside"] .map-shell__heading {
+    justify-content: space-between;
+    min-height: 64px;
+    border-bottom: 1px solid var(--game-ui-border-subtle);
+  }
+  .map-shell__drawer-shield {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: transparent;
+  }
+  .app-shell[data-map-shell="true"] .planet-page__globe,
+  .app-shell[data-map-shell="true"] .stagewrap {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+}
+
+/* Folding retains meaning: one existing avatar on the left, the actual selected
+   title on the right. The two compact objects no longer pretend to be identical. */
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .nav-rail {
+  width: var(--map-avatar-width);
+  min-width: var(--map-avatar-width);
+  height: auto;
+  padding: 6px;
+  gap: 0;
+  overflow: visible;
+}
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .nav-rail__brand {
+  min-height: 44px;
+  border: 0;
+  padding: 0;
+}
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .nav-rail__foot,
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .nav-rail__identity {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .nav-rail__footer,
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .learner-level--rail,
+.app-shell[data-map-shell="true"][data-map-rail-open="false"] .counter-row {
+  display: none;
+}
+.app-shell[data-map-shell="true"][data-map-aside-open="false"] .app-shell__east-stack {
+  height: auto;
+  max-height: calc(100dvh - 32px);
+  padding: 6px;
+}
+.app-shell[data-map-shell="true"][data-map-aside-open="false"] .map-shell__heading {
+  min-height: 44px;
+  max-height: inherit;
+  padding: 0;
+  border: 0;
+}
+.app-shell[data-map-shell="true"][data-map-aside-open="false"] .app-shell__collapse--aside {
+  width: 100%;
+  padding: 10px 4px;
+  gap: 10px;
+}
+.app-shell[data-map-shell="true"][data-map-aside-open="false"] .map-shell__compact-title {
+  display: block;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+  max-inline-size: min(420px, calc(100dvh - 130px));
+  max-block-size: 2em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.app-shell[data-map-shell="true"][data-map-aside-open="true"] .map-shell__compact-title {
+  display: none;
+}
+@media (max-width: 767px) {
+  .app-shell[data-map-shell="true"] {
+    --map-avatar-width: 64px;
+  }
+  .app-shell[data-map-shell="true"][data-map-rail-open="false"] .app-shell__west {
+    width: var(--map-avatar-width);
+    --avatar-chip-size: 50px;
+  }
+  .app-shell[data-map-shell="true"][data-map-aside-open="false"] .map-shell__compact-title {
+    max-inline-size: min(280px, calc(65dvh - 80px));
+  }
+}

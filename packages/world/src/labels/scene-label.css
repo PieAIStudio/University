@@ -1,0 +1,88 @@
+/* Product map annotations share one brand-token surface. Projection/visibility
+   live elsewhere; no transition may lag a label behind its world-space anchor. */
+.scene-label {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--game-ui-radius-control, 10px);
+  color: var(--game-ui-overlay-glass-text);
+  background: var(--game-ui-overlay-glass-bg-strong);
+  font: 650 0.8rem / 1.45 var(--game-ui-font-body, system-ui);
+  letter-spacing: normal;
+  text-align: center;
+  text-shadow: none;
+  backdrop-filter: none;
+  box-shadow: 0 1px 6px color-mix(in srgb, var(--game-ui-scrim-strong) 36%, transparent);
+}
+button.scene-label {
+  cursor: pointer;
+}
+button.scene-label:hover {
+  background: var(--game-ui-overlay-glass-bg-hover);
+}
+button.scene-label:focus-visible {
+  outline: 2px solid var(--game-ui-focus-ring);
+  outline-offset: 2px;
+}
+.scene-label__text {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+}
+.scene-label__title {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scene-label__status {
+  display: block;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.45;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+/* Icons are the compact member of the same family, not a second text style. */
+.label--icon.scene-label {
+  padding: 2px 5px;
+  max-width: none;
+  overflow: visible;
+  user-select: none;
+}
+.label--course.scene-label {
+  min-block-size: 48px;
+  overflow: visible;
+}
+.label--unit.scene-label {
+  max-width: 200px;
+  user-select: none;
+}
+.label--course[data-course-state="live"] .scene-label__status {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.label--course.is-locked.is-visible {
+  opacity: 0.75;
+}
+button.label--icon[data-lesson-state="locked"] {
+  outline: 1px dashed currentColor;
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  button.label--icon,
+  button.label--lesson {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

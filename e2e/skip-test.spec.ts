@@ -6,6 +6,11 @@ import { fileURLToPath } from "node:url";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { ONLINE_ORIGIN } from "./ports.js";
+import { openMapQuickActions } from "./harness/map-actions.js";
+async function openRoute(page: Page) {
+  const palette = await openMapQuickActions(page);
+  await palette.locator('[data-map-command="route"]').click();
+}
 import { namedStep } from "./harness/step.js";
 import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
 
@@ -66,6 +71,7 @@ async function openCourseIsland(page: Page): Promise<void> {
   });
   await namedStep(page, "等待地图铺好", async () => {
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
+    await openRoute(page);
     await expect(page.locator("aside.picked--left")).toBeVisible({ timeout: 30_000 });
   });
   await namedStep(page, "展开学习路线", async () => {
@@ -180,6 +186,9 @@ test.describe("跳级：自述只缩小范围，做对题才跳过", () => {
       await expect(card.getByRole("button", { name: "我会了" })).toBeVisible();
       await page.keyboard.press("Escape");
       await expect(card).toHaveCount(0);
+      // The full unit preview is modal; closing it returns to the map, where
+      // the on-demand route still retains the learner's disclosure/input state.
+      await openRoute(page);
     });
 
     await reportExperience(page);

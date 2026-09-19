@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act, type ReactNode } from "react";
+import { act, createRef, type ReactNode } from "react";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,7 +9,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 
-import { WorldMapCanvas } from "./WorldMapCanvas.js";
+import { WorldMapCanvas, type MapViewportCommands } from "./WorldMapCanvas.js";
 
 vi.mock("./Stage.js", () => ({
   Stage: ({ children }: { readonly children?: ReactNode }) => <div data-stage>{children}</div>,
@@ -17,7 +17,9 @@ vi.mock("./Stage.js", () => ({
 
 vi.mock("./camera/controls.js", () => ({
   Controls: () => null,
-  Flight: () => null,
+  Flight: ({ to, look }: { to: readonly number[]; look: readonly number[] }) => (
+    <div data-flight={JSON.stringify({ to, look })} />
+  ),
   LabelProbe: () => null,
   WORLD_POLAR: Math.PI / 3,
 }));
@@ -28,11 +30,12 @@ vi.mock("./Maps.js", () => ({
 }));
 
 describe("WorldMapCanvas rewrite marker", () => {
-  it("keeps one canvas viewport apart from the narrow-course tool lane as hints retire", async () => {
+  it("keeps one full canvas viewport without an empty toolbar lane as hints retire", async () => {
     Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
     const host = document.createElement("div");
     const root = createRoot(host);
     const props = {
+      commandsRef: createRef<MapViewportCommands>(),
       world: null,
       cameraFrom: [0, 0, 1] as const,
       lookAt: [0, 0, 0] as const,
@@ -54,7 +57,23 @@ describe("WorldMapCanvas rewrite marker", () => {
       const button = host.querySelector(".map-framing-tools button");
       expect(host.querySelector(".map-viewport")?.contains(stage)).toBe(true);
       expect(host.querySelector(".map-viewport")?.contains(button)).toBe(false);
-      expect(host.querySelector(".map-tools")?.contains(button)).toBe(true);
+      // Owner moved overview into the on-demand command palette. The canvas
+      // still owns its real framing command, not a permanent HUD button.
+      expect(button).toBeNull();
+      expect(host.querySelector(".map-tools button")).toBeNull();
+      expect(props.commandsRef.current?.overview).toBeTypeOf("function");
+      await act(async () => props.commandsRef.current?.focus([3, 2, -1]));
+      expect(JSON.parse(host.querySelector("[data-flight]")!.getAttribute("data-flight")!)).toEqual(
+        { to: [3, 2, 0], look: [3, 2, -1] },
+      );
+      await act(async () => props.commandsRef.current?.focus([NaN, 2, -1]));
+      expect(
+        JSON.parse(host.querySelector("[data-flight]")!.getAttribute("data-flight")!).look,
+      ).toEqual([3, 2, -1]);
+      await act(async () => props.commandsRef.current?.learningView());
+      expect(
+        JSON.parse(host.querySelector("[data-flight]")!.getAttribute("data-flight")!).look,
+      ).toEqual([0, 0, 0]);
       expect(
         host.querySelector(".map-tools")?.contains(host.querySelector(".hint--controls")),
       ).toBe(true);
@@ -78,13 +97,20 @@ describe("WorldMapCanvas rewrite marker", () => {
       await act(async () => root.unmount());
     }
     const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "overlay.css"), "utf8");
-    expect(css).toMatch(/\.stagewrap\[data-map-view\]\s*\{[^}]*--map-tools-height:\s*72px/s);
-    expect(css).toMatch(/\.map-viewport\s*\{[^}]*inset:\s*0 0 var\(--map-tools-height, 0px\)/s);
-    expect(css).toMatch(
-      /\.map-tools\s*\{[^}]*grid-template-columns:\s*max-content minmax\(0, 1fr\)/s,
+    const labelCss = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "labels/scene-label.css"),
+      "utf8",
     );
+    // Overview moved into the palette; reserve neither its button nor its old
+    // 72px lane. Keep transient hints outside Canvas without resizing it.
+    expect(css).not.toMatch(/--map-tools-height:\s*72px/);
+    expect(css).toMatch(/\.map-viewport\s*\{[^}]*inset:\s*0 0 var\(--map-tools-height, 0px\)/s);
+    expect(css).toMatch(/\.map-tools\s*\{[^}]*display:\s*contents/s);
     expect(css).toMatch(/\.map-framing-tools button\s*\{[^}]*min-height:\s*44px/s);
-    expect(css).toMatch(/\.label--course\s*\{[^}]*min-block-size:\s*48px/s);
+    expect(labelCss).toMatch(/\.label--course\.scene-label\s*\{[^}]*min-block-size:\s*48px/s);
+    expect(css).toMatch(
+      /\.stagewrap \.label--course\s*\{[^}]*max-width:\s*min\(220px, calc\(50vw - 24px\)\)/s,
+    );
   });
 
   it.each(["live", "done", "open", "idle"] as const)(
@@ -120,8 +146,16 @@ describe("WorldMapCanvas rewrite marker", () => {
       const name = button.querySelector(".label__course-title");
       expect(name?.textContent).toBe(title);
       expect(name?.querySelector("small")).toBeNull();
-      expect(button.querySelector(".label__course-progress")?.parentElement).toBe(button);
-      expect(button.querySelector(".label__course-status")?.parentElement).toBe(button);
+      expect(
+        button
+          .querySelector(".label__course-progress")
+          ?.parentElement?.classList.contains("scene-label__text"),
+      ).toBe(true);
+      expect(
+        button
+          .querySelector(".label__course-status")
+          ?.parentElement?.classList.contains("scene-label__text"),
+      ).toBe(true);
       expect(button.querySelector(".label__course-status")?.textContent).toBe("改写中");
       expect(button.getAttribute("aria-label")).toBeNull();
     },

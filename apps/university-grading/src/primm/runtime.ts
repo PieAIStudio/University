@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { createGeneratorRegistry } from "@pieai/swimmer-ai-kit/generator-registry";
-import { createStructuredOutputClient } from "@pieai/swimmer-ai-kit/structured-output";
-import type { ChatCompletionTransport, ChatMessage } from "@pieai/swimmer-ai-kit/chat";
+import { createGeneratorRegistry } from "@pieai/swimmer-ai-provider-kit/generator-registry";
+import { createStructuredOutputClient } from "@pieai/swimmer-ai-provider-kit/structured-output";
+import type { ChatCompletionTransport, ChatMessage } from "@pieai/swimmer-ai-provider-kit/chat";
 import type { ExerciseAttemptResult, PrimmExecutionResult } from "@pieai/university-core";
 import { PREVIEW_MODEL } from "./local-transport.js";
 import { PreviewFailure } from "./errors.js";

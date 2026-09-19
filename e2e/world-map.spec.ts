@@ -4,9 +4,15 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { assertPanelIsPainted } from "./harness/assert.js";
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
-import { SHIPPED_STUDY_TITLES } from "./harness/catalogue.js";
+import { SHIPPED_CATALOGUE } from "./harness/catalogue.js";
 import { openOnline, waitForMapReady } from "./harness/online-learner.js";
 import { namedStep } from "./harness/step.js";
+import {
+  mapEntryButton,
+  navigateMapBreadcrumb,
+  selectMapDestination,
+} from "./harness/map-actions.js";
+import { mapDomainForStudy } from "../apps/university/src/app/map-domain-catalog.js";
 
 const SHOTS = process.env.R50_EVIDENCE_DIR ?? "/tmp/world-after";
 
@@ -32,6 +38,19 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
     const consoleErrors = watchConsole(page);
     await openOnline(page);
     await waitForMapReady(page);
+
+    await namedStep(page, "地图目录选择真实课程并聚焦，不直接绕过进入", async () => {
+      const course = page.locator("button.label--course.is-visible").first();
+      const destinationId = await course.getAttribute("data-map-marker");
+      expect(destinationId).toBeTruthy();
+      await selectMapDestination(page, destinationId!);
+      await expect(mapEntryButton(page)).toBeVisible();
+      await expect(
+        page.locator(
+          `button.label--course.is-visible[data-map-marker=${JSON.stringify(destinationId)}]`,
+        ),
+      ).toBeVisible();
+    });
 
     await namedStep(page, "画布从视口左边缘铺到右边缘", async () => {
       const box = await page.locator(".stagewrap canvas").first().boundingBox();
@@ -220,33 +239,32 @@ test.describe("E 世界地图 · 画布铺满 · 相机 · 换课", () => {
       expect(sample.y - sample.highestActualGeometry).toBeGreaterThan(2);
     });
 
-    await namedStep(page, "换系列控件列出每一个系列", async () => {
-      const trigger = page.locator(".study-switcher__trigger");
-      await expect(trigger).toBeVisible();
-      await humanClick(page, trigger, "换系列 ▾");
-      const menu = page.locator("[role='listbox'][aria-label='换系列']");
-      await expect(menu).toBeVisible();
-      /*
-        The list used to end with 看全部四片海, which pulled the camera back to
-        show all four archipelagos at once. That view is gone — a series is its
-        own scene now — and a control that does nothing is worse than no control,
-        so the option went with it. What this asserts instead is that every
-        series is reachable from here, which is the job the menu actually has.
-      */
-      /*
-        One row per series, plus exactly one row that leaves the list.
-
-        The series count is deliberately not pinned: it moves every time a
-        course lands, and a number that has to be edited on every content
-        change stops being a check and becomes a chore. The exit count is
-        pinned, because that row sits exactly where the dead 「看全部四片海」 used
-        to be, and two ways out of one menu is the shape of that bug returning.
-      */
-      await expect(
-        menu.locator("[role='option']").filter({ hasText: "看所有课程系列" }),
-      ).toHaveCount(1);
-      for (const title of SHIPPED_STUDY_TITLES) await expect(menu).toContainText(title);
-      await page.screenshot({ path: `${SHOTS}/switcher.png` });
+    await namedStep(page, "星球选择列出每一个真实系列，地图没有第二个换系列器", async () => {
+      await expect(page.locator(".study-switcher__trigger")).toHaveCount(0);
+      await navigateMapBreadcrumb(page, "/planet");
+      await expect(page.locator('[data-map-surface="true"]:visible')).toHaveCount(1);
+      // The old persistent switcher and its global-catalogue option were
+      // retired. Every real series must remain reachable by selecting its
+      // domain and, when needed, the study choice beside the globe.
+      for (const study of SHIPPED_CATALOGUE) {
+        const domain = page.locator(
+          `button[data-domain-id=${JSON.stringify(mapDomainForStudy(study.id).id)}]`,
+        );
+        await humanClick(page, domain, `选择 ${study.title} 所在领域`);
+        let row = page.locator(`button[data-study-id=${JSON.stringify(study.id)}]`);
+        if (!(await row.isVisible())) {
+          const details = page.locator(".planet-domain-label details").first();
+          if (await details.count())
+            await humanClick(page, details.locator("summary"), "展开系列选择");
+          row = page.locator(`button[data-study-id=${JSON.stringify(study.id)}]`);
+        }
+        if (await row.count()) {
+          await humanClick(page, row, `选择 ${study.title}`);
+          await expect(row).toHaveAttribute("aria-pressed", "true");
+        }
+        await expect(mapEntryButton(page)).toHaveAccessibleName(new RegExp(study.title));
+      }
+      await page.screenshot({ path: `${SHOTS}/planet-selection.png` });
     });
 
     consoleErrors.assertClean();

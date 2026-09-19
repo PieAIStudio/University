@@ -54,7 +54,7 @@ function NavLink({ item, activeId }: { readonly item: ShellNavItem; readonly act
 function NavFlyout({ item, activeId }: { readonly item: ShellNavItem; readonly activeId: string }) {
   const [open, setOpen] = useState(false);
   const menuId = useId();
-  const firstItemRef = useRef<HTMLAnchorElement>(null);
+  const firstItemRef = useRef<HTMLElement>(null);
   const children = item.children ?? [];
 
   const { refs, floatingStyles, context } = useFloating({
@@ -94,29 +94,54 @@ function NavFlyout({ item, activeId }: { readonly item: ShellNavItem; readonly a
             id={menuId}
             role="menu"
           >
-            {children.map((child, index) => (
-              <a
-                key={child.id}
-                ref={
-                  index === 0
-                    ? (node) => {
-                        firstItemRef.current = node;
-                        node?.focus();
-                      }
-                    : undefined
-                }
-                className="nav-rail__flyout-item"
-                role="menuitem"
-                href={child.href}
-                aria-current={child.id === activeId ? "page" : undefined}
-                aria-label={child.badge != null ? itemAccessibleName(child) : undefined}
-                onClick={() => setOpen(false)}
-              >
-                <span className="nav-rail__icon">{child.icon}</span>
-                <span className="nav-rail__label">{child.label}</span>
-                <NavBadge item={child} />
-              </a>
-            ))}
+            {children.map((child, index) =>
+              child.onActivate ? (
+                <button
+                  key={child.id}
+                  type="button"
+                  data-shell-command={child.id}
+                  className="nav-rail__flyout-item"
+                  role="menuitem"
+                  ref={
+                    index === 0
+                      ? (node) => {
+                          firstItemRef.current = node;
+                          node?.focus();
+                        }
+                      : undefined
+                  }
+                  onClick={() => {
+                    setOpen(false);
+                    child.onActivate?.();
+                  }}
+                >
+                  <span className="nav-rail__icon">{child.icon}</span>
+                  <span className="nav-rail__label">{child.label}</span>
+                </button>
+              ) : (
+                <a
+                  key={child.id}
+                  ref={
+                    index === 0
+                      ? (node) => {
+                          firstItemRef.current = node;
+                          node?.focus();
+                        }
+                      : undefined
+                  }
+                  className="nav-rail__flyout-item"
+                  role="menuitem"
+                  href={child.href}
+                  aria-current={child.id === activeId ? "page" : undefined}
+                  aria-label={child.badge != null ? itemAccessibleName(child) : undefined}
+                  onClick={() => setOpen(false)}
+                >
+                  <span className="nav-rail__icon">{child.icon}</span>
+                  <span className="nav-rail__label">{child.label}</span>
+                  <NavBadge item={child} />
+                </a>
+              ),
+            )}
           </div>,
           document.body,
         )

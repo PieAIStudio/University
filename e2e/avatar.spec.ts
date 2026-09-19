@@ -17,6 +17,7 @@ import {
 import { ONLINE_ORIGIN } from "./ports.js";
 import { namedStep } from "./harness/step.js";
 import { planetFocusSample } from "./harness/planet-focus.js";
+import { enterSelectedMapObject, mapEntryButton } from "./harness/map-actions.js";
 
 const EVIDENCE = ".scratch/evidence-avatar";
 const PRIMARY_STUDY = CATALOGUE_ROLES.settlement.study;
@@ -153,6 +154,35 @@ async function measuredScene(page: Page): Promise<{
   return { scene: scene!, frame };
 }
 
+/** Select the actual atmospheric region, not the retired permanent study list. */
+async function clickStudyRegion(page: Page, studyId: string, beforePress?: () => Promise<void>) {
+  const point = await page.evaluate((id) => {
+    const bag = window as any;
+    const projection = bag.__planetProjection();
+    const domain = projection.domains.find((entry: any) => entry.studyIds.includes(id));
+    const region = domain?.regions.find((entry: any) => entry.studyId === id);
+    const scene = bag.three;
+    const hits = domain && scene?.scene.getObjectByName(`domain-region-targets-${domain.id}`);
+    if (!region || !hits) return null;
+    hits.updateWorldMatrix(true, false);
+    const position = scene.camera.position
+      .clone()
+      .fromArray(region.position)
+      .applyMatrix4(hits.matrixWorld)
+      .project(scene.camera);
+    const rect = scene.gl.domElement.getBoundingClientRect();
+    const x = rect.left + (position.x * 0.5 + 0.5) * rect.width;
+    const y = rect.top + (-position.y * 0.5 + 0.5) * rect.height;
+    return document.elementFromPoint(x, y) === scene.gl.domElement ? { x, y } : null;
+  }, studyId);
+  expect(point, "the real study region must have an unobstructed canvas hit").not.toBeNull();
+  await page.mouse.move(point!.x, point!.y);
+  await beforePress?.();
+  await page.mouse.down();
+  await page.waitForTimeout(40);
+  await page.mouse.up();
+}
+
 function assertFast(elapsedMs: number, surface: string): void {
   expect(
     elapsedMs,
@@ -236,9 +266,7 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
         page.locator(`button[data-domain-id="${PRIMARY_DOMAIN_ID}"]`),
         "回到已发布的学习域",
       );
-      const primaryStudy = page.locator(`[data-study-id=${JSON.stringify(PRIMARY_STUDY.id)}]`);
-      await expect(primaryStudy).toBeVisible();
-      await humanClick(page, primaryStudy, "星球上的已发布学习路线");
+      await clickStudyRegion(page, PRIMARY_STUDY.id);
       await page.waitForFunction(planetFocusSample, {
         kind: "scene",
         studyId: PRIMARY_STUDY.id,
@@ -310,10 +338,8 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
         });
       }
       let startedAt = 0;
-      await humanClick(page, primaryStudy, "星球上的已发布学习路线", {
-        beforePress: async () => {
-          startedAt = await page.evaluate(() => performance.now());
-        },
+      await clickStudyRegion(page, PRIMARY_STUDY.id, async () => {
+        startedAt = await page.evaluate(() => performance.now());
       });
       const facing = await page.waitForFunction(
         planetFocusSample,
@@ -363,23 +389,34 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
         'button.label--course.is-visible[data-course-state="live"]',
       );
       await expect(currentCourse).toHaveCount(1);
-      await humanClick(page, currentCourse, "当前课程仍能打开卡片，无需伪造原地飞行");
-      const card = page.locator(".picked--follow.is-visible");
-      await expect(card).toBeVisible();
+      await humanClick(page, currentCourse, "从岛外等待位置选择当前课程");
+      const firstArrival = await waitForFlight(page, "world", home.sequence);
+      assertFast(firstArrival.elapsedMs, "首次选择的真实到达");
+      expect(firstArrival.report.target).not.toEqual(home.target);
+      await humanClick(page, currentCourse, "重复点同一课程不伪造新飞行");
+      const entry = mapEntryButton(page);
+      await expect(entry).toBeVisible();
       await page.evaluate(async () => {
         for (let i = 0; i < 3; i++) await new Promise(requestAnimationFrame);
       });
       const sameTarget = (await motion(page, "world"))!;
-      expect(sameTarget.sequence).toBe(home.sequence);
-      expect(sameTarget.target).toEqual(home.target);
+      expect(sameTarget.sequence).toBe(firstArrival.report.sequence);
+      expect(sameTarget.target).toEqual(firstArrival.report.target);
       expect(sameTarget.inFlight).toBe(false);
       evidence.worldSameTarget = { home, sameTarget };
-      await humanClick(page, card.locator(".picked__close"), "关闭当前课程卡");
-      await expect(card).toHaveCount(0);
+      // Course selection is now a non-modal object action. Escape cancels the
+      // explicit choice and proves the map remains usable without a scrim.
+      await page.keyboard.press("Escape");
+      await expect(page.locator('[data-map-entry="true"]')).toHaveCount(0);
 
-      // Home now correctly rests above the current course. Picking that same
-      // island cannot prove travel. Choose a different real destination and
-      // retain its stable ID rather than a reflowing visible-list nth index.
+      await page.waitForFunction((target) => {
+        const report = (window as any).__avatarMotion?.world;
+        return (
+          report && !report.inFlight && JSON.stringify(report.target) === JSON.stringify(target)
+        );
+      }, home.target);
+      // Cancellation returns outside the islands; the next explicit choice
+      // must make a real flight to a stable, actual course destination.
       const targetId = ALTERNATE_COURSE.id;
       const before = (await motion(page, "world"))?.sequence ?? 0;
       const courseLabel = page.locator(
@@ -412,7 +449,7 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       const measured = await measuredScene(page);
       evidence.world = { elapsedMs, report: result.report, cloud, ...measured };
 
-      await humanClick(page, page.getByRole("button", { name: /进入这门课/ }), "进入课程岛");
+      await enterSelectedMapObject(page, "进入课程岛");
       await expect(page).toHaveURL(`${ONLINE_ORIGIN}${coursePathOf(ALTERNATE_COURSE)}`);
     });
 
@@ -447,7 +484,7 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       assertFast(result.elapsedMs, "岛内（报告轮询）");
       expect(result.report.target).not.toEqual(resting.target);
       expect(result.report.position).toEqual(result.report.target);
-      await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator('[data-map-entry="true"]')).toBeVisible({ timeout: 10_000 });
       const measured = await measuredScene(page);
       evidence.course = { elapsedMs, report: result.report, ...measured };
     });
@@ -466,7 +503,7 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
     const firstLesson = page.getByRole("button", { name: "开始", exact: true }).first();
     await expect(firstLesson).toBeVisible({ timeout: 30_000 });
     await humanClick(page, firstLesson, "第一节 lesson 标记");
-    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator('[data-map-entry="true"]')).toBeVisible({ timeout: 10_000 });
     const selectedTarget = await page.evaluate(() => {
       const bag = globalThis as unknown as {
         __avatarMotion?: Record<string, Motion>;
@@ -475,11 +512,7 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
     });
     expect(selectedTarget).toBeTruthy();
 
-    await humanClick(
-      page,
-      page.getByRole("dialog").getByRole("button", { name: /^开始/ }),
-      "开始第一节",
-    );
+    await enterSelectedMapObject(page, "开始第一节");
     await readAndAnswerFirstLesson(page);
     await waitForSettlementProgress(page);
     const backToCourse = page.getByRole("button", { name: /回关卡地图/ }).first();

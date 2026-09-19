@@ -3,7 +3,6 @@ import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { ONLINE_ORIGIN } from "./ports.js";
 import {
-  CATALOGUE_ROLES,
   COURSE_SCENE_FIXTURE,
   coursePathOf,
   installCourseSceneFixture,
@@ -11,12 +10,12 @@ import {
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { assertCompleteCourseOverview, waitForCourseFraming } from "./harness/course-overview.js";
+import { navigateMapBreadcrumb, runMapCommand } from "./harness/map-actions.js";
 import { captureSurfaceMaterialStudy } from "./harness/surface-material-study.js";
 import { captureCourseShadowStudy } from "./harness/course-shadow-study.js";
 import { captureSourceSwatchStudy } from "./harness/source-swatch-study.js";
 
 const COURSE = coursePathOf(COURSE_SCENE_FIXTURE.course);
-const STUDY_TITLE = CATALOGUE_ROLES.settlement.study.title;
 const OUTPUT = process.env.R46_EVIDENCE_DIR ?? "SCRATCH/e2e/course-landscape";
 
 async function ready(page: Page) {
@@ -63,11 +62,7 @@ for (const viewport of [
       const ids = await page
         .locator("[data-lesson-state][data-map-marker]")
         .evaluateAll((nodes) => nodes.map((n) => n.getAttribute("data-map-marker")));
-      await humanClick(
-        page,
-        page.getByRole("button", { name: "总览课程岛", exact: true }),
-        "overview the real course",
-      );
+      await runMapCommand(page, "overview");
       const overview = await assertCompleteCourseOverview(page);
       const receipt = await page.evaluate(() => {
         const bag = window as any;
@@ -225,12 +220,7 @@ for (const viewport of [
           ),
         );
       }
-      const trail = page.getByRole("navigation", { name: "当前位置", exact: true });
-      await humanClick(
-        page,
-        trail.getByRole("link", { name: STUDY_TITLE, exact: true }),
-        "return to series",
-      );
+      await navigateMapBreadcrumb(page, "/");
       await expect(page).toHaveURL(`${ONLINE_ORIGIN}/`);
       await page.goBack();
       await ready(page);

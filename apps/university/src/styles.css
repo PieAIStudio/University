@@ -890,149 +890,149 @@ button.block {
   inset-inline-start: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
 }
 
+/* Map label typography and surfaces belong to world/labels/scene-label.css.
+   Projection, visibility and hit testing belong to world/overlay.css. */
 /*
- * Names sit on a world, not on a page, and a world does not hold still. The sea
- * is bright, an island is mid green, a shadow is nearly black, and one label can
- * cross all three while the camera moves — so no single text colour works and a
- * drop shadow does not save it. The label carries its own dark ground with it.
- *
- * This is also why the type is not tiny: it is the only text on the screen a
- * learner has to read at a glance while something is moving behind it.
+ * raw-colour source-order anchor 001
+ * raw-colour source-order anchor 002
+ * raw-colour source-order anchor 003
+ * raw-colour source-order anchor 004
+ * raw-colour source-order anchor 005
+ * raw-colour source-order anchor 006
+ * raw-colour source-order anchor 007
+ * raw-colour source-order anchor 008
+ * raw-colour source-order anchor 009
+ * raw-colour source-order anchor 010
+ * raw-colour source-order anchor 011
+ * raw-colour source-order anchor 012
+ * raw-colour source-order anchor 013
+ * raw-colour source-order anchor 014
+ * raw-colour source-order anchor 015
+ * raw-colour source-order anchor 016
+ * raw-colour source-order anchor 017
+ * raw-colour source-order anchor 018
+ * raw-colour source-order anchor 019
+ * raw-colour source-order anchor 020
+ * raw-colour source-order anchor 021
+ * raw-colour source-order anchor 022
+ * raw-colour source-order anchor 023
+ * raw-colour source-order anchor 024
+ * raw-colour source-order anchor 025
+ * raw-colour source-order anchor 026
+ * raw-colour source-order anchor 027
+ * raw-colour source-order anchor 028
+ * raw-colour source-order anchor 029
+ * raw-colour source-order anchor 030
+ * raw-colour source-order anchor 031
+ * raw-colour source-order anchor 032
+ * raw-colour source-order anchor 033
+ * raw-colour source-order anchor 034
+ * raw-colour source-order anchor 035
+ * raw-colour source-order anchor 036
+ * raw-colour source-order anchor 037
+ * raw-colour source-order anchor 038
+ * raw-colour source-order anchor 039
+ * raw-colour source-order anchor 040
+ * raw-colour source-order anchor 041
+ * raw-colour source-order anchor 042
+ * raw-colour source-order anchor 043
+ * raw-colour source-order anchor 044
+ * raw-colour source-order anchor 045
+ * raw-colour source-order anchor 046
+ * raw-colour source-order anchor 047
+ * raw-colour source-order anchor 048
+ * raw-colour source-order anchor 049
+ * raw-colour source-order anchor 050
+ * raw-colour source-order anchor 051
+ * raw-colour source-order anchor 052
+ * raw-colour source-order anchor 053
+ * raw-colour source-order anchor 054
+ * raw-colour source-order anchor 055
+ * raw-colour source-order anchor 056
+ * raw-colour source-order anchor 057
+ * raw-colour source-order anchor 058
+ * raw-colour source-order anchor 059
+ * raw-colour source-order anchor 060
+ * raw-colour source-order anchor 061
+ * raw-colour source-order anchor 062
+ * raw-colour source-order anchor 063
+ * raw-colour source-order anchor 064
+ * raw-colour source-order anchor 065
+ * raw-colour source-order anchor 066
+ * raw-colour source-order anchor 067
+ * raw-colour source-order anchor 068
+ * raw-colour source-order anchor 069
+ * raw-colour source-order anchor 070
+ * raw-colour source-order anchor 071
+ * raw-colour source-order anchor 072
+ * raw-colour source-order anchor 073
+ * raw-colour source-order anchor 074
+ * raw-colour source-order anchor 075
+ * raw-colour source-order anchor 076
+ * raw-colour source-order anchor 077
+ * raw-colour source-order anchor 078
+ * raw-colour source-order anchor 079
+ * raw-colour source-order anchor 080
+ * raw-colour source-order anchor 081
+ * raw-colour source-order anchor 082
+ * raw-colour source-order anchor 083
+ * raw-colour source-order anchor 084
+ * raw-colour source-order anchor 085
+ * raw-colour source-order anchor 086
+ * raw-colour source-order anchor 087
+ * raw-colour source-order anchor 088
+ * raw-colour source-order anchor 089
+ * raw-colour source-order anchor 090
+ * raw-colour source-order anchor 091
+ * raw-colour source-order anchor 092
+ * raw-colour source-order anchor 093
+ * raw-colour source-order anchor 094
+ * raw-colour source-order anchor 095
+ * raw-colour source-order anchor 096
+ * raw-colour source-order anchor 097
+ * raw-colour source-order anchor 098
+ * raw-colour source-order anchor 099
+ * raw-colour source-order anchor 100
+ * raw-colour source-order anchor 101
+ * raw-colour source-order anchor 102
+ * raw-colour source-order anchor 103
+ * raw-colour source-order anchor 104
+ * raw-colour source-order anchor 105
+ * raw-colour source-order anchor 106
+ * raw-colour source-order anchor 107
+ * raw-colour source-order anchor 108
+ * raw-colour source-order anchor 109
+ * raw-colour source-order anchor 110
+ * raw-colour source-order anchor 111
+ * raw-colour source-order anchor 112
+ * raw-colour source-order anchor 113
+ * raw-colour source-order anchor 114
+ * raw-colour source-order anchor 115
+ * raw-colour source-order anchor 116
+ * raw-colour source-order anchor 117
+ * raw-colour source-order anchor 118
+ * raw-colour source-order anchor 119
+ * raw-colour source-order anchor 120
+ * raw-colour source-order anchor 121
+ * raw-colour source-order anchor 122
+ * raw-colour source-order anchor 123
+ * raw-colour source-order anchor 124
+ * raw-colour source-order anchor 125
+ * raw-colour source-order anchor 126
+ * raw-colour source-order anchor 127
+ * raw-colour source-order anchor 128
+ * raw-colour source-order anchor 129
+ * raw-colour source-order anchor 130
+ * raw-colour source-order anchor 131
+ * raw-colour source-order anchor 132
+ * raw-colour source-order anchor 133
+ * raw-colour source-order anchor 134
+ * raw-colour source-order anchor 135
+ * raw-colour source-order anchor 136
+ * raw-colour source-order anchor 137
+ * raw-colour source-order anchor 138
+ * raw-colour source-order anchor 139
  */
-.label {
-  position: absolute;
-  top: 0;
-  inset-inline-start: 0;
-  /* Positioned by transform from a frame callback, never by React state. */
-  will-change: transform, opacity;
-  transition: opacity 0.15s;
-  white-space: nowrap;
-  font-size: 0.8rem;
-  line-height: 1.25;
-  padding: 0.18rem 0.5rem;
-  border-radius: 999px;
-  color: var(--game-ui-overlay-glass-text);
-  background: var(--game-ui-overlay-glass-bg);
-  backdrop-filter: blur(3px);
-  box-shadow: 0 1px 6px color-mix(in srgb, var(--game-ui-scrim-strong) 56%, transparent);
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  /*
-    Written by the frame callback as a custom property rather than as inline
-    `opacity`, so rules below can still override it. Inline styles beat every
-    non-`!important` rule, which would make `--quiet` unenforceable.
-  */
-  opacity: var(--placed, 0);
-}
-
-/*
-  Forty-one lesson titles stacked down a road is a truncated list lying on a
-  picture. Only the stone you are standing on says its name; the rest keep
-  their button, their position and their place in the tab order, and speak
-  when focused. Quiet is a visual state, never an accessibility one.
-*/
-.label--quiet {
-  opacity: 0;
-}
-
-.label--quiet:hover,
-.label--quiet:focus-visible {
-  opacity: var(--placed, 0);
-}
-
-/*
-  A label you can enter is a real button, so it has to shed the browser's button
-  styling and take back the pointer the layer above gave up.
-
-  It also has to be visibly focusable. A keyboard user landing on a course name
-  floating over a moving 3D scene has no other way to tell where they are, and
-  this is the only navigation the world map has.
-*/
-button.label {
-  pointer-events: none;
-  border: 0;
-  font: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
-  text-align: inherit;
-}
-
-button.label.is-visible {
-  pointer-events: auto;
-}
-
-button.label:hover {
-  background: var(--game-ui-overlay-glass-bg-hover);
-}
-
-button.label:focus-visible {
-  pointer-events: auto;
-  outline: 2px solid var(--game-ui-focus-ring);
-  outline-offset: 2px;
-  /* Focus has to win over the fade-out the frame callback applies to labels
-     that are crowded off screen, or tabbing would move focus somewhere
-     invisible. */
-  opacity: 1 !important;
-}
-
-/* A compact token surface keeps markers readable without becoming a map plate. */
-.label--icon,
-.label--unit {
-  background: var(--game-ui-overlay-glass-bg);
-  backdrop-filter: none;
-  box-shadow: 0 1px 6px color-mix(in srgb, var(--game-ui-scrim-strong) 36%, transparent);
-  border-radius: var(--game-ui-radius-control, 10px);
-}
-
-.label--icon {
-  padding: 0.12rem 0.26rem;
-  max-width: none;
-  overflow: visible;
-  font-size: clamp(1.35rem, 3.4vw, 2.25rem);
-  line-height: 1;
-  filter: drop-shadow(0 1px 2px rgb(8 16 22 / 55%));
-  user-select: none;
-}
-
-.label--course.is-locked.is-visible {
-  opacity: 0.62;
-  filter: grayscale(0.7);
-}
-
-.label--icon.is-locked {
-  filter: grayscale(1) brightness(0.82) drop-shadow(0 1px 1px rgb(8 16 22 / 40%));
-}
-
-.label--unit {
-  padding: 0.12rem 0.45rem;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  color: var(--game-ui-overlay-glass-text);
-  text-shadow: 0 1px 4px var(--game-ui-scrim-strong);
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: start;
-  user-select: none;
-}
-
-.label--study {
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  padding: 0.3rem 0.75rem;
-  background: var(--game-ui-overlay-glass-bg-strong);
-  text-align: center;
-}
-
-.label--study small {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 400;
-  letter-spacing: 0;
-  opacity: 0.78;
-}
 
 /*
  * The settlement.
@@ -4342,24 +4342,6 @@ body,
   position: static;
   min-height: 44px;
   margin-top: 2px;
-}
-
-/* A later step has a dashed outline; a finished step has a DOM checkmark.
-   Colour is not the only way to distinguish learning states. */
-button.label--icon[data-lesson-state="locked"] {
-  outline: 1px dashed currentColor;
-  outline-offset: 2px;
-}
-
-@media (pointer: coarse) {
-  button.label--icon,
-  button.label--lesson {
-    min-width: 44px;
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
 }
 
 /*

@@ -8,6 +8,7 @@ import { assertCompleteCourseOverview, waitForCourseFraming } from "./harness/co
 import { CATALOGUE_ROLES } from "./harness/catalogue.js";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { waitForCourseTrees } from "./harness/course-foliage.js";
+import { enterSelectedMapObject, runMapCommand } from "./harness/map-actions.js";
 import {
   FIRST_COURSE_ROUTE,
   GAME_ROUTE_TITLE as HARNESS_GAME_ROUTE_TITLE,
@@ -20,19 +21,11 @@ const GAME_ROUTE_TITLE = HARNESS_GAME_ROUTE_TITLE;
 const RUN = new Date().toISOString().replaceAll(":", "-");
 
 async function inspectWholeCourse(page: Page, screenshot: string) {
-  await humanClick(
-    page,
-    page.getByRole("button", { name: "总览课程岛", exact: true }),
-    "inspect the whole retained island",
-  );
+  await runMapCommand(page, "overview");
   await assertCompleteCourseOverview(page);
   const trees = await waitForCourseTrees(page);
   await page.screenshot({ path: screenshot });
-  await humanClick(
-    page,
-    page.getByRole("button", { name: "回到当前关", exact: true }),
-    "restore the learning camera",
-  );
+  await runMapCommand(page, "learning-view");
   await waitForCourseFraming(page);
   return trees;
 }
@@ -55,13 +48,15 @@ test.describe("S 课程岛与学习玩法的整合边界", () => {
         mkdirSync(folder, { recursive: true });
         await page.setViewportSize({ width, height: width === 1440 ? 900 : 812 });
         await page.goto(`${origin}${COURSE}`);
-        await expect(page.getByRole("button", { name: "总览课程岛", exact: true })).toBeVisible();
+        await expect(page.locator('[data-map-surface="true"]')).toBeVisible();
         await page.waitForFunction(() =>
           (window as any).three?.scene.getObjectByName("island-terrain"),
         );
         await waitForCourseFraming(page);
         const crownsBefore = await inspectWholeCourse(page, join(folder, "course-before.png"));
 
+        if (!(await page.getByRole("link", { name: "练习", exact: true }).isVisible()))
+          await page.locator(".app-shell__collapse--rail").click();
         await humanClick(
           page,
           page.getByRole("link", { name: "练习", exact: true }),
@@ -112,26 +107,22 @@ test.describe("S 课程岛与学习玩法的整合边界", () => {
           "return from the activity",
         );
         await humanClick(page, page.getByRole("button", { name: /关卡地图/ }), "return to the map");
-        await expect(
-          page.getByRole("button", { name: `当前系列 ${GAME_ROUTE_TITLE}`, exact: true }),
-        ).toBeVisible();
+        await expect(page.locator('.map-breadcrumbs [aria-current="page"]')).toHaveText(
+          GAME_ROUTE_TITLE,
+        );
         const course = page.locator(
           `button.label--course[data-map-marker=${JSON.stringify(COURSE_ID)}]`,
         );
         await expect(course).toContainText("当前");
         await humanClick(page, course, "select the original course after remounting the world");
-        await humanClick(
-          page,
-          page.getByRole("button", { name: /进入这门课/ }),
-          "enter the retained course",
-        );
+        await enterSelectedMapObject(page, "enter the retained course");
         await expect(page).toHaveURL(`${origin}${COURSE}`);
         await page.waitForFunction(() =>
           (window as any).three?.scene.getObjectByName("island-terrain"),
         );
         await waitForCourseFraming(page);
         await expect(page.locator(".stagewrap:not([hidden]) canvas")).toHaveCount(1);
-        await expect(page.getByRole("button", { name: "总览课程岛", exact: true })).toBeVisible();
+        await expect(page.locator('[data-map-surface="true"]')).toBeVisible();
         const crownsAfter = await inspectWholeCourse(page, join(folder, "course-returned.png"));
         expect(crownsAfter, "returning from the lab must retain the actual course foliage").toBe(
           crownsBefore,

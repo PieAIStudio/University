@@ -14,7 +14,7 @@ export const RAW_COLOUR_SOURCE_FILES = [
 ];
 
 /**
- * Permanent fixed material: these 29 occurrences are deliberate decisions,
+ * Permanent fixed material: these 27 occurrences are deliberate decisions,
  * not a category exemption. Each occurrence carries its human-written reason.
  *
  * 一条债目要转进固定表，必须有人手写一句理由；不许自动迁移，也不许因为迁不动就默默挪过来。
@@ -33,20 +33,6 @@ export const FIXED_MATERIAL = [
     "column": 6,
     "literal": "#241609",
     "reason": "这是说明 accent-contrast 语义的注释示例，不会被浏览器绘制。"
-  },
-  {
-    "path": "apps/university/src/styles.css",
-    "line": 994,
-    "column": 33,
-    "literal": "rgb(8 16 22 / 55%)",
-    "reason": "这是 gloss-avatar lab 标签图标的固定阴影材料，随 donor studio 一起保持视觉一致。"
-  },
-  {
-    "path": "apps/university/src/styles.css",
-    "line": 1004,
-    "column": 63,
-    "literal": "rgb(8 16 22 / 40%)",
-    "reason": "这是 gloss-avatar lab 标签图标的固定阴影材料，随 donor studio 一起保持视觉一致。"
   },
   {
     "path": "apps/university/src/styles.css",

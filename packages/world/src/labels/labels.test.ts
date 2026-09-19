@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   boxesOverlap,
+  captureLabelOffsets,
   clampLabelOutOfChrome,
   labelBox,
   placeLabels,
+  placeLabelsAtOffsets,
   type LabelCandidate,
   type LabelPlacement,
 } from "./labels";
@@ -25,6 +27,27 @@ it("keeps an island name when a landscape rail and hint require two bounded move
   expect(name!.visible).toBe(true);
   expect(Math.abs(name!.x - 440)).toBeLessThanOrEqual(32);
   expect(Math.abs(name!.y - 179)).toBeLessThanOrEqual(80);
+});
+
+it("uses a free half-step strip without covering scenery or the short-screen hint", () => {
+  const reserved = [
+    { left: 0, top: 0, right: 224, bottom: 286 },
+    { left: 648, top: 0, right: 872, bottom: 286 },
+    { left: 284, top: 70, right: 594, bottom: 172 },
+    { left: 298, top: 244, right: 574, bottom: 278 },
+  ];
+  const [name] = placeLabels(
+    [{ id: "current", x: 440, y: 146, z: 0, width: 220, height: 48, anchor: "island", weight: 4 }],
+    { width: 872, height: 286 },
+    { maxVisible: 1, gap: 8, reserved },
+  );
+  expect(name?.visible).toBe(true);
+  expect(name!.x).toBe(440);
+  expect(name!.y).toBeGreaterThan(178);
+  expect(name!.y).toBeLessThan(234);
+  for (const obstacle of reserved) {
+    expect(boxesOverlap(labelBox(name!, 220, 48), obstacle, 8)).toBe(false);
+  }
 });
 
 const VIEW = { width: 800, height: 600 } as const;
@@ -542,6 +565,52 @@ describe("placeLabels", () => {
       narrow,
     );
     expect(byId(placed, "wide").visible).toBe(true);
+  });
+
+  it("keeps the chosen displacement when the projected world anchor moves", () => {
+    const original = candidate({
+      id: "island",
+      x: 280,
+      y: 260,
+      width: 180,
+      height: 32,
+      anchor: "island",
+      weight: 4,
+    });
+    const blocker = { left: 180, top: 270, right: 380, bottom: 330 };
+    const initial = placeLabels([original], VIEW, { gap: 8, reserved: [blocker] });
+    const offsets = captureLabelOffsets([original], initial);
+    const moved = { ...original, x: original.x + 96, y: original.y + 54 };
+    const followed = placeLabelsAtOffsets([moved], offsets, VIEW, { gap: 8 });
+
+    expect(followed[0]?.visible).toBe(true);
+    expect(followed[0]!.x - moved.x).toBeCloseTo(initial[0]!.x - original.x, 8);
+    expect(followed[0]!.y - moved.y).toBeCloseTo(initial[0]!.y - original.y, 8);
+  });
+
+  it("hides a bound label when its fixed slot is blocked, then restores that same slot", () => {
+    const island = candidate({
+      id: "island",
+      x: 400,
+      y: 280,
+      width: 160,
+      height: 32,
+      anchor: "island",
+      weight: 4,
+    });
+    const initial = placeLabels([island], VIEW, { gap: 8 });
+    const offsets = captureLabelOffsets([island], initial);
+    const slot = initial[0]!;
+    const blocker = labelBox(slot, island.width, island.height, "island");
+
+    const blocked = placeLabelsAtOffsets([island], offsets, VIEW, {
+      gap: 8,
+      reserved: [blocker],
+    });
+    const restored = placeLabelsAtOffsets([island], offsets, VIEW, { gap: 8 });
+
+    expect(blocked[0]?.visible).toBe(false);
+    expect(restored[0]).toEqual(initial[0]);
   });
 
   it("keeps a 41-lesson pile readable: visible labels never intersect", () => {

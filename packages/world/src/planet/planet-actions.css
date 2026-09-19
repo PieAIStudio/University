@@ -1,0 +1,37 @@
+.planet-domain-labels[data-interactive="true"] .planet-domain-label {
+  pointer-events: auto;
+}
+.planet-domain-label__pick {
+  min-height: 48px;
+  max-width: 100%;
+}
+.planet-domain-label__selected,
+.planet-domain-label__state {
+  font: inherit;
+  color: inherit;
+  display: block;
+}
+.planet-domain-label__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.planet-domain-label__actions details {
+  background: var(--game-ui-panel-strong);
+  border-radius: var(--game-ui-radius-control);
+  padding: 8px;
+}
+.planet-domain-label__actions summary {
+  min-height: 44px;
+  padding: 8px;
+  cursor: pointer;
+}
+.planet-domain-label__study-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 35dvh;
+  overflow: auto;
+}

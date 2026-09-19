@@ -66,8 +66,10 @@ export function AvatarChip({
     camera.updateProjectionMatrix();
   }, []);
 
+  // The existing canvas resizes with its rail; folding never mounts a second avatar.
+  const dimension = `var(--avatar-chip-size, ${size}px)`;
   const body = webglAvailable ? (
-    <div className="avatar-chip__stage" ref={host} style={{ width: size, height: size }}>
+    <div className="avatar-chip__stage" ref={host} style={{ width: dimension, height: dimension }}>
       <Canvas
         frameloop={live && pageVisible ? "always" : "never"}
         dpr={[1, 1.5]}
@@ -91,7 +93,7 @@ export function AvatarChip({
   ) : (
     <span
       className="avatar-chip__stage avatar-chip--placeholder"
-      style={{ width: size, height: size }}
+      style={{ width: dimension, height: dimension }}
       aria-hidden="true"
     />
   );

@@ -17,6 +17,12 @@ import {
   SECONDARY_START_COURSE as SECONDARY_COURSE,
 } from "./harness/domain-catalogue.js";
 import { GAME_ROUTE_TITLE } from "./harness/online-learner.js";
+import {
+  enterSelectedMapObject,
+  mapEntryButton,
+  navigateMapBreadcrumb,
+  openMapDirectory,
+} from "./harness/map-actions.js";
 
 const RUN = new Date().toISOString().replaceAll(":", "-");
 const PRIMARY_STUDY = CATALOGUE_ROLES.settlement.study;
@@ -45,37 +51,26 @@ test.describe("P 正式领域目录与未发布星球", () => {
           height: width === 1440 ? 900 : width === 872 ? 286 : 812,
         });
         await page.goto(`${origin}${coursePathOf(PRIMARY_COURSE)}`);
-        await expect(page.getByRole("button", { name: "总览课程岛", exact: true })).toBeVisible();
-        await humanClick(
-          page,
-          page.getByRole("button", { name: /回到\s*.+地图/ }),
-          "series return",
-        );
+        await expect(page.locator('[data-map-surface="true"]')).toBeVisible();
+        // This is a steady-catalogue identity test. The authoring route can
+        // expose its chrome before the asynchronous real course graph arrives;
+        // wait for its actual lesson marker, not a populated shell alone.
+        await expect(page.locator("button.label--lesson.is-visible").first()).toBeVisible();
+        await navigateMapBreadcrumb(page, "/");
         if (width === 872) {
           const current = page.locator(
             `button.label--course[data-map-marker=${JSON.stringify(PRIMARY_COURSE.id)}]`,
           );
           await expect(current).toHaveClass(/is-visible/);
           await expect(current).toHaveCSS("opacity", "1");
-          const tools = page.locator(".map-tools");
-          const [toolBox, canvasBox] = await Promise.all([
-            tools.boundingBox(),
-            page.locator(".map-viewport canvas").boundingBox(),
-          ]);
-          expect(toolBox!.y).toBeGreaterThanOrEqual(canvasBox!.y + canvasBox!.height);
+          const canvasBox = await page.locator(".map-viewport canvas").boundingBox();
+          expect(canvasBox).not.toBeNull();
+          expect(canvasBox!.height).toBeGreaterThanOrEqual(284);
+          await expect(
+            page.locator(".map-tools button:visible, .map-framing-tools button:visible"),
+          ).toHaveCount(0);
         }
-        await humanClick(
-          page,
-          page.getByRole("button", { name: `当前系列 ${GAME_ROUTE_TITLE}`, exact: true }),
-          "study choices",
-        );
-        await humanClick(
-          page,
-          page.getByRole("option", { name: "看所有课程系列", exact: true }),
-          "domain catalogue",
-        );
-        const expand = page.getByRole("button", { name: "展开上下文", exact: true });
-        if (await expand.isVisible()) await humanClick(page, expand, "reveal the domain choices");
+        await navigateMapBreadcrumb(page, "/planet");
         await expect(page.locator("button[data-domain-id]")).toHaveCount(4);
         await page.waitForFunction(() => {
           const bag = window as any;
@@ -90,7 +85,8 @@ test.describe("P 正式领域目录与未发布星球", () => {
           );
         });
         if (width === 375) {
-          const enter = await page.locator(".planet-page__enter").boundingBox();
+          await page.locator(`button[data-domain-id="${PRIMARY_DOMAIN_ID}"]`).click();
+          const enter = await mapEntryButton(page).boundingBox();
           const feedback = await page
             .getByRole("button", { name: "提意见", exact: true })
             .boundingBox();
@@ -133,24 +129,46 @@ test.describe("P 正式领域目录与未发布星球", () => {
             page.locator(`button[data-domain-id="${domain}"]`),
             `inspect populated ${domain}`,
           );
-          const actual = await page
-            .locator("[data-study-id]")
-            .evaluateAll((rows) => rows.map((row) => row.getAttribute("data-study-id")).sort());
-          expect(actual).toEqual(studies.map((study) => study.id).sort());
-          await expect(page.locator(".planet-page__enter")).toBeVisible();
-          await expect(page.locator("[data-study-description]")).toBeVisible();
-          for (const study of studies)
-            await expect(page.locator(`[data-study-id=${JSON.stringify(study.id)}]`)).toContainText(
-              `${study.courses.reduce((sum, course) => sum + course.lessonCount, 0)} 节`,
+          // The complete directory is retained on demand, not copied into the
+          // read-only information sidebar. Selecting there is still not Enter.
+          const directory = await openMapDirectory(page);
+          const actual = await directory
+            .locator("[data-map-destination]")
+            .evaluateAll((rows) =>
+              rows.map((row) => row.getAttribute("data-map-destination")).sort(),
             );
+          expect(actual).toEqual(RELEASED_DOMAIN_STUDIES.map((item) => item.id).sort());
+          await directory.locator(`[data-map-destination=${JSON.stringify(domain)}]`).click();
+          if (studies.length > 1) {
+            const regions = page.locator(`[data-planet-domain-label="${domain}"] details`);
+            await regions.locator("summary").click();
+            await expect(regions.locator("[data-study-id]")).toHaveCount(studies.length);
+            for (const study of studies)
+              await expect(
+                regions.locator(`[data-study-id=${JSON.stringify(study.id)}]`),
+              ).toHaveText(study.title);
+            await regions.locator(`[data-study-id=${JSON.stringify(studies[0]!.id)}]`).click();
+          }
+          await expect(mapEntryButton(page)).toHaveAttribute(
+            "aria-label",
+            `进入 ${studies[0]!.title}`,
+          );
+          const info = page.locator("#app-shell-aside [data-map-information]");
+          if (width < 768) await page.locator(".app-shell__collapse--aside").click();
+          await expect(info).toContainText(
+            `${studies[0]!.courses.reduce((sum, course) => sum + course.lessonCount, 0)} 节`,
+          );
+          if (width < 768) await page.keyboard.press("Escape");
         }
         for (const { id } of RELEASED_DOMAIN_STUDIES.filter(
           (entry) => entry.studies.length === 0,
         )) {
           await humanClick(page, page.locator(`button[data-domain-id="${id}"]`), `select ${id}`);
-          await expect(page.locator(`[data-domain-empty="${id}"]`)).toContainText("暂未发布");
+          await expect(page.locator(`[data-planet-domain-label="${id}"]`)).toContainText(
+            "暂未发布",
+          );
           await expect(page.locator("[data-study-id]")).toHaveCount(0);
-          await expect(page.locator(".planet-page__enter")).toHaveCount(0);
+          await expect(page.locator('[data-map-entry="true"]')).toHaveCount(0);
           const empty = await page.evaluate((id) => {
             const scene = (window as any).three.scene;
             return (
@@ -184,9 +202,10 @@ test.describe("P 正式领域目录与未发布星球", () => {
           "aria-pressed",
           "true",
         );
-        await expect(
-          page.locator(`[data-study-id=${JSON.stringify(PRIMARY_STUDY.id)}]`),
-        ).toHaveAttribute("aria-pressed", "true");
+        await expect(mapEntryButton(page)).toHaveAttribute(
+          "aria-label",
+          `进入 ${PRIMARY_STUDY.title}`,
+        );
         const returned = await page.evaluate(() => {
           const bag = window as any;
           return ["programming", "ai-foundations", "ai-games", "ai-media"].map((id) => {
@@ -203,7 +222,7 @@ test.describe("P 正式领域目录与未发布星球", () => {
           page.locator(`button[data-domain-id="${SECONDARY_DOMAIN_ID}"]`),
           "enter the other released domain",
         );
-        await humanClick(page, page.locator(".planet-page__enter"), "open foundations archipelago");
+        await enterSelectedMapObject(page, "open foundations archipelago");
         await humanClick(
           page,
           page.locator(
@@ -211,22 +230,14 @@ test.describe("P 正式领域目录与未发布星球", () => {
           ),
           `choose the ${SECONDARY_COURSE.lessonCount}-lesson course`,
         );
-        await humanClick(
-          page,
-          page.getByRole("button", { name: /进入这门课/ }),
-          "enter the actual foundations course",
-        );
+        await enterSelectedMapObject(page, "enter the actual foundations course");
         await expect(page).toHaveURL(`${origin}${coursePathOf(SECONDARY_COURSE)}`);
         await humanClick(
           page,
           page.getByRole("button", { name: "开始", exact: true }),
           "choose the first actual lesson",
         );
-        await humanClick(
-          page,
-          page.getByRole("dialog").getByRole("button", { name: /^开始/ }),
-          "read foundations content",
-        );
+        await enterSelectedMapObject(page, "read foundations content");
         await expect(page.getByRole("button", { name: "离开课文", exact: true })).toBeVisible();
         await expect(
           page.getByRole("heading", {
@@ -240,27 +251,17 @@ test.describe("P 正式领域目录与未发布星球", () => {
           page.getByRole("button", { name: "离开课文", exact: true }),
           "return from foundations reader",
         );
-        await humanClick(
-          page,
-          page.getByRole("button", { name: /回到\s*.+地图/ }),
-          "return to foundations route",
-        );
-        await humanClick(page, page.locator(".study-switcher__trigger"), "open route switcher");
-        await humanClick(
-          page,
-          page.getByRole("option", { name: "看所有课程系列", exact: true }),
-          "return to domain selection",
-        );
-        if (await expand.isVisible())
-          await humanClick(page, expand, "reveal returned domain choices");
+        await navigateMapBreadcrumb(page, "/");
+        await navigateMapBreadcrumb(page, "/planet");
         await humanClick(
           page,
           page.locator(`button[data-domain-id="${PRIMARY_DOMAIN_ID}"]`),
           "return to game learning",
         );
-        await expect(
-          page.locator(`[data-study-id=${JSON.stringify(PRIMARY_STUDY.id)}]`),
-        ).toHaveAttribute("aria-pressed", "true");
+        await expect(mapEntryButton(page)).toHaveAttribute(
+          "aria-label",
+          `进入 ${PRIMARY_STUDY.title}`,
+        );
         await humanClick(
           page,
           page.getByRole("button", { name: `进入 ${GAME_ROUTE_TITLE}`, exact: true }),

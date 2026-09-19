@@ -18,6 +18,8 @@ export type { ShellCounter, ShellNavItem };
  * neutral; extra local-only flyout entries arrive as `extraMoreItems`.
  */
 export function UniversityShell({
+  mapMode = false,
+  asideTitle,
   activeId,
   counters,
   aside,
@@ -29,6 +31,8 @@ export function UniversityShell({
   children,
 }: {
   readonly activeId: string;
+  readonly mapMode?: boolean;
+  readonly asideTitle?: string;
   readonly counters?: readonly ShellCounter[];
   readonly aside?: ReactNode;
   readonly asideLabel?: string;
@@ -57,12 +61,16 @@ export function UniversityShell({
 }) {
   const { t } = useI18n();
   const collapseLabels: ShellCollapseLabels = {
+    railName: t("map.navigation"),
+    asideName: t("map.informationShort"),
     collapse: t("ui.shell.appShell.copy.收起"),
     expandRail: t("ui.shell.appShell.copy.展开导航"),
     expandAside: t("ui.shell.appShell.copy.展开上下文"),
   };
   return (
     <AppShell
+      mapMode={mapMode}
+      asideTitle={asideTitle}
       nav={railItemsWithExtra(extraMoreItems)}
       tabs={TAB_ITEMS}
       activeId={activeId}

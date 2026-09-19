@@ -80,7 +80,7 @@ generic design or writing suggestions.
 
 - Brand kits first: `docs/policy/shared-rules/brand-kit-first.md`. 2D UI,
   account, wallet and payment come from SwimmerUIKit and SwimmerBackend. All
-  model calls go through SwimmerAIKit. Colour pipeline comes from
+  model calls go through SwimmerAIProviderKit. Colour pipeline comes from
   SwimmerRenderKit. If a kit cannot do the job, change the kit and release a
   version; do not fork it here.
 - Donors: read the shared catalog in `docs/policy/shared-rules/donors.md`
@@ -142,7 +142,7 @@ What follows from them:
   `apps/university/src/ports/`.** *Where the AI comes from*: `GradingPort` —
   the authoring mode grades through the clipboard and the machine's own AI
   host, without an API key in the product; the delivery mode grades through
-  SwimmerAIKit, metered. *Where the material comes from*: `ContentPort` and
+  SwimmerAIProviderKit, metered. *Where the material comes from*: `ContentPort` and
   `ReaderPort` — a loopback server reading the disk on one side, a published
   package on the other. *Whether this side can reach the repository behind a
   lesson*: `SourceAccessPort` — real checkout, project map and coverage actions

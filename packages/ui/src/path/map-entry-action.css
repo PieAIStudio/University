@@ -1,0 +1,22 @@
+.map-entry-action {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  z-index: 12;
+  width: max-content;
+  max-width: min(15rem, calc(100% - 32px));
+  visibility: hidden;
+  pointer-events: none;
+}
+/* The scene projector emits physical canvas x coordinates even for RTL text. */
+[dir="rtl"] .map-entry-action {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
+.map-entry-action.is-visible {
+  visibility: visible;
+  pointer-events: auto;
+}
+.map-entry-action button {
+  min-height: 44px;
+}

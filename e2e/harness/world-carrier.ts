@@ -1,8 +1,9 @@
 import { expect, type Page } from "@playwright/test";
 
-/** Raycast the actually drawn distant terrain below the settled avatar.
- * The unselected return state used to keep cloud-sea Y at a course's XZ,
- * hiding the player under that island even though selected-island tests passed.
+/** Raycast the actual distant terrain beneath the waiting avatar. N06
+ * deliberately replaces the former above-current-island default: with no
+ * explicit choice it must remain outside real ground and visible labels.
+ * Selected-island contact and movement are independently guarded in avatar.spec.
  */
 export async function assertWorldCarrierAboveGround(page: Page) {
   await page.waitForFunction(() => {
@@ -63,11 +64,16 @@ export async function assertWorldCarrierAboveGround(page: Page) {
       labelBlockers,
     };
   });
-  expect(result.ground, "the carrier must remain over its real course island").not.toBeNull();
   expect(
-    result.gap,
-    "the unselected/returned avatar must not hide below the island root",
-  ).toBeGreaterThan(0.1);
+    result.ground,
+    "without a selection the waiting cloud must not occupy an island",
+  ).toBeNull();
+  expect(result.feet.every(Number.isFinite)).toBe(true);
+  const viewport = page.viewportSize()!;
+  expect(result.avatarBounds.right).toBeGreaterThan(0);
+  expect(result.avatarBounds.left).toBeLessThan(viewport.width);
+  expect(result.avatarBounds.bottom).toBeGreaterThan(0);
+  expect(result.avatarBounds.top).toBeLessThan(viewport.height);
   expect(result.labelBlockers, "visible course names must not cover the actual player").toEqual([]);
   return result;
 }

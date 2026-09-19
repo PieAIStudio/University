@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-19T16:32:13.231Z
+generated_at: 2026-09-19T16:55:34.196Z
 generator_version: doc-gov@0.14.0
-docs_count: 144
+docs_count: 147
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -249,6 +249,13 @@ docs:
     canonical: true
     last_reviewed: 2026-09-13
     pinned: false
+  - id: PLAN-MAP-NAVIGATION-EVOLUTION
+    path: docs/plans/completed/map-navigation-evolution.md
+    type: plan
+    status: completed
+    canonical: true
+    last_reviewed: 2026-09-19
+    pinned: false
   - id: PLAN-PLAY-USABILITY
     path: docs/plans/completed/play-usability.md
     type: plan
@@ -345,7 +352,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-15
+    last_reviewed: 2026-09-18
     pinned: true
   - id: REF-FEEDBACK-BACKEND-GAP
     path: docs/reference/execution/feedback-backend-gap.md
@@ -353,6 +360,20 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-08-27
+    pinned: false
+  - id: REF-FEEDBACK-HANDOFF-PLANET-LESSON-SHELL-20260918
+    path: docs/reference/execution/feedback/2026-09-18-planet-and-lesson-shell-navigation/00-AI-HANDOFF.md
+    type: reference
+    status: active
+    canonical: false
+    last_reviewed: 2026-09-18
+    pinned: false
+  - id: REF-FEEDBACK-PLANET-LESSON-SHELL-20260918
+    path: docs/reference/execution/feedback/2026-09-18-planet-and-lesson-shell-navigation/feedback.md
+    type: reference
+    status: active
+    canonical: false
+    last_reviewed: 2026-09-18
     pinned: false
   - id: REF-I18N-STRATEGY
     path: docs/reference/execution/i18n-strategy.md
@@ -380,7 +401,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-16
+    last_reviewed: 2026-09-18
     pinned: false
   - id: REF-PAYMENT-BACKEND-GAP
     path: docs/reference/execution/payment-backend-gap.md

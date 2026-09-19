@@ -1,128 +1,34 @@
-.map-breadcrumbs {
-  position: relative;
-  z-index: 4;
-  min-width: 0;
-  margin: 0 12px 8px;
-  padding: 0 12px;
-  border-radius: var(--game-ui-radius-control, 10px);
-  background: var(--game-ui-panel-deep);
-  color: var(--game-ui-text);
-  font-size: 0.82rem;
-  box-shadow: 0 3px 12px color-mix(in srgb, var(--game-ui-scrim-strong) 15%, transparent);
-}
-
-.map-breadcrumbs ol {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* Symmetric padding keeps the path on the viewport centre even when only
+ * one side is folded. LocationBreadcrumbs owns all typography and behaviour. */
+.map-breadcrumbs.location-breadcrumb {
+  position: absolute;
+  z-index: 42;
+  top: max(16px, env(safe-area-inset-top));
+  inset-inline: 0;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
   margin: 0;
-  padding: 0;
-  list-style: none;
-  min-width: 0;
+  padding-inline: calc(max(var(--shell-rail-width, 0px), var(--shell-aside-width, 0px)) + 28px);
+  pointer-events: none;
 }
-
-.map-breadcrumbs li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  flex: 0 1 auto;
+.map-breadcrumbs.location-breadcrumb > ol {
+  pointer-events: auto;
 }
-
-.map-breadcrumbs li:first-child {
-  flex-shrink: 0;
-}
-
-.map-breadcrumbs li + li::before {
-  content: "";
-  flex: 0 0 5px;
-  width: 5px;
-  height: 5px;
-  border-block-start: 1px solid currentColor;
-  border-inline-end: 1px solid currentColor;
-  transform: rotate(45deg);
-  opacity: 0.6;
-}
-
-.map-breadcrumbs a,
-.map-breadcrumbs [aria-current] {
-  display: block;
-  min-width: 0;
-  min-height: 44px;
-  line-height: 44px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.map-breadcrumbs a {
-  color: var(--game-ui-text);
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-underline-offset: 4px;
-  transition:
-    color 140ms,
-    text-decoration-color 140ms;
-}
-
-.map-breadcrumbs a:hover,
-.map-breadcrumbs a:focus-visible {
-  color: var(--game-ui-text);
-  text-decoration-color: currentColor;
-}
-
-.map-breadcrumbs a:focus-visible {
-  outline: 2px solid var(--game-ui-accent);
-  outline-offset: -2px;
-  border-radius: 4px;
-}
-
-.map-breadcrumbs [aria-current] {
-  font-weight: 600;
-}
-
 @media (max-width: 767px) {
-  .map-breadcrumbs ol {
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: thin;
-    scrollbar-color: var(--game-ui-border-strong) transparent;
+  .map-breadcrumbs.location-breadcrumb {
+    top: max(18px, env(safe-area-inset-top));
+    padding-inline: 78px;
   }
-
-  .map-breadcrumbs li {
-    flex: 0 0 auto;
-    max-width: 26ch;
+  .map-breadcrumbs .location-breadcrumb__list > li:last-child {
+    flex: 1 1 auto;
   }
-
-  .map-breadcrumbs li:first-child {
-    position: sticky;
-    inset-inline-start: 0;
-    z-index: 1;
-    background: var(--game-ui-panel-deep);
-    padding-inline-end: 4px;
+  .map-breadcrumbs
+    .location-breadcrumb__list
+    > li:not(:last-child):not(.location-breadcrumb__overflow) {
+    display: none;
   }
-}
-
-@media (min-width: 768px) {
-  .map-breadcrumbs {
-    position: absolute;
-    top: 16px;
-    inset-inline-start: calc(var(--shell-gutter, 16px) + var(--shell-rail-width, 0px) + 12px);
-    max-width: calc(
-      100% - var(--shell-rail-width, 0px) - var(--shell-aside-width, 0px) - 2 *
-        var(--shell-gutter, 16px) - 24px
-    );
-    margin: 0;
-  }
-
-  .app-shell__main:has(.map-breadcrumbs) .learn-hud .picked--left {
-    top: 76px;
-    max-height: calc(100dvh - 92px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .map-breadcrumbs a {
-    transition: none;
+  .map-breadcrumbs .location-breadcrumb__overflow {
+    display: flex;
   }
 }

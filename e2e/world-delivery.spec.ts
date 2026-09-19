@@ -8,6 +8,12 @@ import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { assertWorldCarrierAboveGround } from "./harness/world-carrier.js";
 import {
+  enterSelectedMapObject,
+  mapEntryButton,
+  navigateMapBreadcrumb,
+  runMapCommand,
+} from "./harness/map-actions.js";
+import {
   assertCompleteCourseOverview,
   courseOverviewEvidence,
   waitForCourseFraming,
@@ -51,27 +57,48 @@ for (const [mode, origin] of [
         await page.evaluate(() => document.fonts.ready);
         const trail = page.locator("nav.map-breadcrumbs");
         await expect(trail.locator("[aria-current=page]")).toHaveText(COURSE_ROLE.title);
-        await expect(trail.locator("a")).toHaveCount(2);
-        for (const link of await trail.locator("a").all()) {
+        // The complete path has a second, normally closed copy on narrow
+        // screens. Inspect the actual visible path, not every hidden DOM link.
+        const pathSummary = trail.locator("details > summary");
+        const compactPath = await pathSummary.isVisible();
+        if (compactPath) {
+          await pathSummary.focus();
+          await page.keyboard.press("Enter");
+        }
+        const ancestors = compactPath
+          ? trail.locator("details a")
+          : trail.locator(":scope > ol > li > a");
+        await expect(ancestors).toHaveCount(2);
+        expect(
+          await ancestors.evaluateAll((links) => links.map((link) => link.getAttribute("href"))),
+        ).toEqual(["/planet", "/"]);
+        for (const link of await ancestors.all()) {
+          await expect(link).toBeVisible();
           expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
         }
+        if (compactPath) await page.keyboard.press("Escape");
         if (viewport.width < 768) {
           const navBox = await trail.boundingBox();
           const canvas = await page.locator(".stagewrap:not([hidden]) canvas").boundingBox();
-          expect(navBox!.y + navBox!.height).toBeLessThanOrEqual(canvas!.y + 1);
+          expect(Math.abs(navBox!.x + navBox!.width / 2 - viewport.width / 2)).toBeLessThan(2);
+          expect(navBox!.y).toBeGreaterThanOrEqual(0);
+          expect(navBox!.y + navBox!.height).toBeLessThanOrEqual(80);
+          expect(canvas!.height).toBeGreaterThanOrEqual(viewport.height - 2);
         }
         evidence.course = await frameEvidence(page, "course");
         await page.screenshot({ path: join(folder, "course-near.png") });
-        await humanClick(
-          page,
-          page.getByRole("button", { name: "总览课程岛", exact: true }),
-          "complete overview",
-        );
+        await runMapCommand(page, "overview");
         evidence.overview = await assertCompleteCourseOverview(page);
         await page.screenshot({ path: join(folder, "course-overview.png") });
 
         // A real keyboard action, not invoking the React callback in a test.
-        await trail.locator('a[href="/"]').focus();
+        let parent = trail.locator('a[href="/"]:visible').first();
+        if (!(await parent.count())) {
+          await pathSummary.focus();
+          await page.keyboard.press("Enter");
+          parent = trail.locator('a[href="/"]:visible').first();
+        }
+        await parent.focus();
         await page.keyboard.press("Enter");
         await expect(page).toHaveURL(`${origin}/`);
         await waitForOwnedLayerReady(page, "world");
@@ -80,16 +107,14 @@ for (const [mode, origin] of [
         evidence.world = await frameEvidence(page, "world");
         evidence.remoteBatches = await remoteBatchDrawEvidence(page);
         await page.screenshot({ path: join(folder, "world.png") });
-        await humanClick(page, trail.locator('a[href="/planet"]'), "visible ancestor to planets");
+        await navigateMapBreadcrumb(page, "/planet");
         await expect(page).toHaveURL(`${origin}/planet`);
         await waitForOwnedLayerReady(page, "planet");
         await expect(page.locator("[data-planet-resources]")).toHaveCount(0, { timeout: 90_000 });
-        await expect(
-          page.locator(`[data-planet-domain-label="${PRIMARY_DOMAIN_ID}"]`),
-        ).toHaveAttribute("data-active", "true");
-        await expect(
-          page.locator(`[data-planet-domain-label="${PRIMARY_DOMAIN_ID}"]`),
-        ).toContainText("已选");
+        // Returning to the globe is location, not a new selection. Only the
+        // explicit click below may activate a domain and expose its entry.
+        await expect(page.locator('[data-planet-domain-label][data-active="true"]')).toHaveCount(0);
+        await expect(page.locator('[data-map-entry="true"]')).toHaveCount(0);
 
         // Hit the actual unselected globe rather than a proxy DOM button.
         const point = await page.evaluate((domainId) => {
@@ -611,11 +636,7 @@ for (const viewport of [
 
       const nearView = await courseOverviewEvidence(page);
       const courseUrl = page.url();
-      await humanClick(
-        page,
-        page.getByRole("button", { name: "总览课程岛", exact: true }),
-        "frame the entire actual course island",
-      );
+      await runMapCommand(page, "overview");
       const overview = await assertCompleteCourseOverview(page);
       expect(overview.geometryId).toBe(nearView.geometryId);
       expect(overview.sceneId).toBe(nearView.sceneId);
@@ -624,22 +645,14 @@ for (const viewport of [
       expect(page.url()).toBe(courseUrl);
       await page.screenshot({ path: join(folder, "course-overview.png") });
       evidence.overview = { near: nearView, full: overview };
-      await humanClick(
-        page,
-        page.getByRole("button", { name: "回到当前关", exact: true }),
-        "restore the ordinary learning camera",
-      );
+      await runMapCommand(page, "learning-view");
       await waitForCourseFraming(page);
       const restored = await courseOverviewEvidence(page);
       expect(restored.distance).toBeCloseTo(36, 3);
       expect(restored.avatarTarget).toEqual(nearView.avatarTarget);
       expect(restored.geometryId).toBe(nearView.geometryId);
 
-      await humanClick(
-        page,
-        page.getByRole("button", { name: /回到\s*.+地图/ }),
-        "return to archipelago",
-      );
+      await navigateMapBreadcrumb(page, "/");
       const course = page.getByRole("button", {
         name: COURSE_ROLE.title,
         exact: true,
@@ -685,26 +698,15 @@ for (const viewport of [
           ]).toContain(name);
       }
       await page.screenshot({ path: join(folder, "world.png") });
-      await humanClick(
-        page,
-        page.getByRole("button", { name: `当前系列 ${STUDY.title}`, exact: true }),
-        "study switcher",
-      );
-      await humanClick(
-        page,
-        page.getByRole("option", { name: "看所有课程系列", exact: true }),
-        "all studies",
-      );
+      await navigateMapBreadcrumb(page, "/planet");
       await expect(page.locator("[data-planet-globe] canvas")).toBeVisible();
-      const expand = page.getByRole("button", { name: "展开上下文", exact: true });
-      if (await expand.isVisible()) await humanClick(page, expand, "show study choices");
-      await expect(page.locator(`[data-study-id=${JSON.stringify(STUDY.id)}]`)).toBeVisible();
+      await expect(page.locator(`button[data-domain-id="${PRIMARY_DOMAIN_ID}"]`)).toBeVisible();
       await humanClick(
         page,
         page.locator(`button[data-domain-id="${EMPTY_DOMAIN_ID}"]`),
         "visit an empty learning domain",
       );
-      await expect(page.locator(`[data-domain-empty="${EMPTY_DOMAIN_ID}"]`)).toContainText(
+      await expect(page.locator(`[data-planet-domain-label="${EMPTY_DOMAIN_ID}"]`)).toContainText(
         "暂未发布",
       );
       await expect(page.locator("[data-study-id]")).toHaveCount(0);
@@ -713,23 +715,16 @@ for (const viewport of [
         page.locator(`button[data-domain-id="${PRIMARY_DOMAIN_ID}"]`),
         "return to the published domain",
       );
-      await humanClick(
-        page,
-        page.locator(`[data-study-id=${JSON.stringify(STUDY.id)}]`),
-        "restore selected study",
-      );
-      await expect(page.locator(`[data-study-id=${JSON.stringify(STUDY.id)}]`)).toHaveAttribute(
-        "aria-pressed",
-        "true",
-      );
+      const region = page.locator(`[data-study-id=${JSON.stringify(STUDY.id)}]`);
+      if (await region.count()) {
+        await page.locator(".planet-domain-label__actions details > summary").click();
+        await region.click();
+      }
+      await expect(mapEntryButton(page)).toHaveAttribute("aria-label", `进入 ${STUDY.title}`);
       await waitForOwnedLayerReady(page, "planet", originalScene);
       evidence.planet = await frameEvidence(page, "planet", originalScene);
       await page.screenshot({ path: join(folder, "planet.png") });
-      await humanClick(
-        page,
-        page.getByRole("button", { name: `进入 ${STUDY.title}`, exact: true }),
-        "enter same study",
-      );
+      await enterSelectedMapObject(page, "enter same study");
       // A visible DOM row can precede the returning scene's assets/arrival.
       // Reuse the same owner and physical-settle contract as the outward leg
       // before testing the next course click and warm resource equality.
@@ -737,11 +732,7 @@ for (const viewport of [
       await assertWorldCarrierAboveGround(page);
       await expect(course).toBeVisible();
       await humanClick(page, course, "select original course");
-      await humanClick(
-        page,
-        page.getByRole("button", { name: /进入这门课/ }),
-        "enter original course",
-      );
+      await enterSelectedMapObject(page, "enter original course");
       await expect(page).toHaveURL(`${ONLINE_ORIGIN}${COURSE}`);
       await expect(page.locator("button.label--icon.is-visible").first()).toBeVisible();
       await waitForOwnedLayerReady(page, "course", originalScene);
@@ -751,20 +742,12 @@ for (const viewport of [
       // accumulating geometries or textures in the active renderer.
       const warmReturns: FrameEvidence[] = [];
       for (let round = 0; round < 2; round += 1) {
-        await humanClick(
-          page,
-          page.getByRole("button", { name: /回到\s*.+地图/ }),
-          "warm return to world",
-        );
+        await navigateMapBreadcrumb(page, "/");
         await waitForOwnedLayerReady(page, "world", originalScene);
         await assertWorldCarrierAboveGround(page);
         await expect(course).toBeVisible();
         await humanClick(page, course, "warm select course");
-        await humanClick(
-          page,
-          page.getByRole("button", { name: /进入这门课/ }),
-          "warm enter course",
-        );
+        await enterSelectedMapObject(page, "warm enter course");
         await expect(firstLesson).toBeVisible();
         await waitForOwnedLayerReady(page, "course", originalScene);
         warmReturns.push(await frameEvidence(page, "course", originalScene));

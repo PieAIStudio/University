@@ -10,6 +10,7 @@ import {
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { namedStep } from "./harness/step.js";
 import { assertCompleteCourseOverview, waitForCourseFraming } from "./harness/course-overview.js";
+import { runMapCommand, mapEntryButton } from "./harness/map-actions.js";
 
 const COURSE_PATH = coursePathOf(COURSE_SCENE_FIXTURE.course);
 
@@ -75,9 +76,9 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
         });
 
         await namedStep(page, "真实触控点击第一节关卡标记", async () => {
-          await page.getByRole("button", { name: "总览课程岛", exact: true }).tap();
+          await runMapCommand(page, "overview");
           await assertCompleteCourseOverview(page);
-          await page.getByRole("button", { name: "回到当前关", exact: true }).tap();
+          await runMapCommand(page, "learning-view");
           await waitForCourseFraming(page);
           const marker = page
             .locator(
@@ -95,16 +96,15 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
           await marker.tap();
         });
 
-        await namedStep(page, "检查课程卡以对话框正常浮起", async () => {
-          const dialog = page.getByRole("dialog");
-          await expect(dialog).toBeVisible({ timeout: 10_000 });
-          await expect(dialog.getByRole("button", { name: /^开始/ })).toBeVisible({
-            timeout: 10_000,
-          });
+        await namedStep(page, "节点旁出现唯一可触控入口，不冻结地图", async () => {
+          await expect(mapEntryButton(page)).toBeVisible({ timeout: 10000 });
+          await expect(
+            page.locator('[aria-modal="true"], .path-card__scrim, main[inert]'),
+          ).toHaveCount(0);
         });
 
         await namedStep(page, "从课程卡触控点击开始进入课文并触控退出", async () => {
-          const startBtn = page.getByRole("dialog").getByRole("button", { name: /^开始/ });
+          const startBtn = mapEntryButton(page);
           await startBtn.tap();
 
           await expect(page).toHaveURL(new RegExp(`${COURSE_PATH}/[^/]+/[^/]+$`));
@@ -165,12 +165,11 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
 
         // 使用 Enter 键激活标记
         await page.keyboard.press("Enter");
-        const dialog = page.getByRole("dialog");
-        await expect(dialog).toBeVisible({ timeout: 10_000 });
-
-        // 按 Escape 键安全退出并断言对话框关闭
+        await expect(mapEntryButton(page)).toBeVisible({ timeout: 10000 });
+        await expect(page.locator('[aria-modal="true"]')).toHaveCount(0);
+        // Selecting is nonmodal; Escape cancels only this selection.
         await page.keyboard.press("Escape");
-        await expect(dialog).toBeHidden({ timeout: 10_000 });
+        await expect(mapEntryButton(page)).toBeHidden({ timeout: 10000 });
 
         consoleErrors.assertClean();
       });
@@ -203,11 +202,9 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
         });
         expect(respectsReducedMotion).toBe(true);
 
-        const overviewButton = page.getByRole("button", { name: "总览课程岛", exact: true });
-        await overviewButton.focus();
-        await page.keyboard.press("Enter");
+        await runMapCommand(page, "overview");
         await assertCompleteCourseOverview(page);
-        await page.keyboard.press("Enter");
+        await runMapCommand(page, "learning-view");
         await expect(page.locator('.stagewrap[data-map-view="learning"]')).toBeVisible();
         await waitForCourseFraming(page);
 

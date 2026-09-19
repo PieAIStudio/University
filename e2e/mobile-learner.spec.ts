@@ -3,6 +3,11 @@ import { expect, test } from "@playwright/test";
 import { watchConsole } from "./harness/console.js";
 import { humanClick } from "./harness/click.js";
 import { ONLINE_ORIGIN } from "./ports.js";
+import { openMapQuickActions } from "./harness/map-actions.js";
+async function openRoute(page: import("@playwright/test").Page) {
+  const palette = await openMapQuickActions(page);
+  await palette.locator('[data-map-command="route"]').click();
+}
 import {
   FIRST_COURSE_ID,
   FIRST_COURSE_ROUTE,
@@ -37,6 +42,7 @@ test.describe("A 新学习者 · 在线端 · 手机宽度", () => {
     );
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
 
+    await openRoute(page);
     const island = page.locator(".picked--left");
     await expect(island).toBeVisible({ timeout: 30_000 });
     const route = island.locator("details.picked__route");
@@ -73,6 +79,7 @@ test.describe("A 新学习者 · 在线端 · 手机宽度", () => {
     );
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });
 
+    await openRoute(page);
     const island = page.locator(".picked--left");
     await expect(island).toBeVisible({ timeout: 30_000 });
     const route = island.locator("details.picked__route");

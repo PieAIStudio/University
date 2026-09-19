@@ -218,13 +218,14 @@ const AUTHORING_COPY = ["本机上的课从这里长出来", "作者工作台"];
 const SHARED_CATALOG_COPY = readFileSync(SOURCE_CATALOG, "utf8");
 
 /**
- * SwimmerAIKit is server-only. The delivery app may call the grading service,
+ * SwimmerAIProviderKit is server-only for grading. The delivery app may call the grading service,
  * but its emitted JavaScript must never contain the kit, its transport, or the
  * server key name. This is checked on the artifact because a source-only
  * import scan cannot see a dependency that leaked through a barrel.
  */
 const SERVER_ONLY_AI_FINGERPRINTS = [
   "@pieai/swimmer-ai-kit",
+  "@pieai/swimmer-ai-provider-kit",
   "createOpenRouterChatTransport",
   "createStructuredOutputClient",
   "OPENROUTER_API_KEY",

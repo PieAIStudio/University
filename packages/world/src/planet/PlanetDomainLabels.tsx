@@ -1,4 +1,5 @@
 /** Readable domain names stay outside Canvas; the scene only projects anchors. */
+import { SceneLabelText } from "../labels/SceneLabelText.js";
 import { useMemo } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { translate } from "@pieai/university-ui/i18n.js";
@@ -6,6 +7,7 @@ import type { DomainResourceStatus } from "./use-domain-resources.js";
 import { buildDomainPlan } from "./domain-plan.js";
 import type { PlanetStudy, PlanetStudyDomain } from "./planet-copy.js";
 import "./planet-page.css";
+import "./planet-actions.css";
 
 export function PlanetDomainLabels({
   studies,
@@ -13,22 +15,32 @@ export function PlanetDomainLabels({
   domainCatalog,
   selectedId,
   selectedDomainId,
+  onSelectDomain,
+  onSelectStudy,
+  onEnterStudy,
 }: {
   readonly studies: readonly PlanetStudy[];
   readonly nodes: Map<string, HTMLElement>;
   readonly domainCatalog?: readonly PlanetStudyDomain[];
   readonly selectedId: string | null;
   readonly selectedDomainId?: string | null;
+  readonly onSelectDomain?: (id: string) => void;
+  readonly onSelectStudy?: (id: string) => void;
+  readonly onEnterStudy?: (id: string) => void;
 }) {
   const domains = useMemo(() => buildDomainPlan(studies, domainCatalog), [studies, domainCatalog]);
   const active =
     selectedDomainId ??
     domains.find((domain) => domain.studies.some((study) => study.id === selectedId))?.id;
-  if (domains.length < 2) return null;
+  if (domains.length < 2 && !onSelectDomain) return null;
   return (
-    <div className="planet-domain-labels" aria-hidden="true">
+    <div
+      className="planet-domain-labels"
+      aria-hidden={onSelectDomain ? undefined : true}
+      data-interactive={onSelectDomain ? "true" : undefined}
+    >
       {domains.map((domain) => (
-        <span
+        <div
           key={domain.id}
           className="planet-domain-label"
           title={domain.title}
@@ -39,18 +51,78 @@ export function PlanetDomainLabels({
             else nodes.delete(domain.id);
           }}
         >
-          {domain.title}
-          {domain.id === active ? (
-            <span className="planet-domain-label__selected">
-              {translate("ui.world.domain.selected")}
+          {onSelectDomain ? (
+            <button
+              type="button"
+              className="planet-domain-label__pick scene-label"
+              data-domain-id={domain.id}
+              aria-pressed={domain.id === active}
+              onClick={() => onSelectDomain(domain.id)}
+            >
+              <SceneLabelText
+                title={domain.title}
+                status={domain.id === active ? translate("ui.world.domain.selected") : undefined}
+                note={
+                  domain.studies.length === 0 ? translate("ui.world.domain.unpublished") : undefined
+                }
+              />
+            </button>
+          ) : (
+            <span className="scene-label">
+              <SceneLabelText
+                title={domain.title}
+                status={domain.id === active ? translate("ui.world.domain.selected") : undefined}
+                note={
+                  domain.studies.length === 0 ? translate("ui.world.domain.unpublished") : undefined
+                }
+              />
             </span>
+          )}
+          {onEnterStudy && domain.id === active && domain.studies.length > 0 ? (
+            <div className="planet-domain-label__actions">
+              {domain.studies.length > 1 ? (
+                <details>
+                  <summary>{translate("map.chooseStudy")}</summary>
+                  <div className="planet-domain-label__study-list">
+                    {domain.studies.map((study) => (
+                      <GameButton
+                        key={study.id}
+                        variant="ghost"
+                        type="button"
+                        data-study-id={study.id}
+                        aria-pressed={selectedId === study.id}
+                        onClick={() => onSelectStudy?.(study.id)}
+                      >
+                        {study.title}
+                      </GameButton>
+                    ))}
+                  </div>
+                </details>
+              ) : null}
+              {domain.studies.length === 1 ||
+              domain.studies.some((study) => study.id === selectedId) ? (
+                <GameButton
+                  type="button"
+                  variant="primary"
+                  surface="liquid"
+                  liquidFinish="glossy"
+                  data-map-entry="true"
+                  aria-label={translate("map.enterNamed", {
+                    title:
+                      domain.studies.length === 1
+                        ? domain.studies[0]!.title
+                        : domain.studies.find((study) => study.id === selectedId)!.title,
+                  })}
+                  onClick={() =>
+                    onEnterStudy(domain.studies.length === 1 ? domain.studies[0]!.id : selectedId!)
+                  }
+                >
+                  {translate("map.enter")}
+                </GameButton>
+              ) : null}
+            </div>
           ) : null}
-          {domain.studies.length === 0 ? (
-            <span className="planet-domain-label__state">
-              {translate("ui.world.domain.unpublished")}
-            </span>
-          ) : null}
-        </span>
+        </div>
       ))}
     </div>
   );

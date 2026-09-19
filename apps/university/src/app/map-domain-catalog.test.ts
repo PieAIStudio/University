@@ -32,6 +32,19 @@ vi.mock("@pieai/university-world/planet.js", async (importOriginal) => ({
           domain.title,
         ),
       ),
+      props.studies
+        .filter((study) => study.domain?.id === props.selectedDomainId)
+        .map((study) =>
+          createElement(
+            "button",
+            {
+              key: study.id,
+              "data-test-study-choice": study.id,
+              onClick: () => props.onSelect?.(study.id),
+            },
+            study.title,
+          ),
+        ),
     ),
 }));
 vi.mock("../ports/index", () => {
@@ -167,31 +180,28 @@ describe("map domain catalogue", () => {
         "programming,ai-foundations,ai-games,ai-media",
       );
       await click('[data-test-globe-domain="ai-games"]');
-      await click('button[data-study-id="turing-pact"]');
+      await click('button[data-test-study-choice="turing-pact"]');
       expect(stage().getAttribute("data-selected-study")).toBe("turing-pact");
       for (const domain of ["ai-foundations", "ai-media"]) {
         // The stage callback and the rail callback must converge on the same owner.
         await click(`[data-test-globe-domain="${domain}"]`);
         expect(stage().getAttribute("data-selected-domain")).toBe(domain);
-        expect(stage().getAttribute("data-selected-study")).toBe("turing-pact");
+        // Browsing an empty domain is not selecting the previously used study.
+        expect(stage().getAttribute("data-selected-study")).toBeNull();
+        expect(container.querySelectorAll("[data-test-study-choice]")).toHaveLength(0);
+        expect(container.querySelector("[data-map-entry]")).toBeNull();
         expect(
-          container
-            .querySelector(`button[data-domain-id="${domain}"]`)
-            ?.getAttribute("aria-pressed"),
-        ).toBe("true");
-        expect(container.querySelectorAll("[data-study-id]")).toHaveLength(0);
-        expect(container.querySelector(".planet-page__enter")).toBeNull();
-        expect(container.querySelector("[data-domain-empty]")?.textContent).toContain("暂未发布");
+          container.querySelector(`[data-map-information="domain:${domain}"]`)?.textContent,
+        ).toContain("暂未发布");
       }
-      await click(".planet-page__return");
+      await click('[data-test-globe-domain="ai-games"]');
       expect(stage().getAttribute("data-selected-domain")).toBe("ai-games");
+      expect(stage().getAttribute("data-selected-study")).toBeNull();
+      await click('[data-test-study-choice="turing-pact"]');
       expect(stage().getAttribute("data-selected-study")).toBe("turing-pact");
-      expect(container.querySelector(".planet-page__enter")?.textContent).toContain("TuringPact");
-      expect(
-        container
-          .querySelector('button[data-study-id="turing-pact"]')
-          ?.getAttribute("aria-pressed"),
-      ).toBe("true");
+      expect(container.querySelector(".map-shell__heading h2")?.textContent).toBe("TuringPact");
+      expect(location.pathname).toBe("/planet");
+      expect(container.querySelector("#app-shell-aside button")).toBeNull();
     } finally {
       await act(async () => root.unmount());
       container.remove();

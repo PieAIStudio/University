@@ -28,7 +28,7 @@ instruction: *read this page, then begin.*
 Queued tasks live in `docs/plans/active/`, sorted by filename. Finished ones move
 to `docs/plans/completed/`.
 
-Task documents are written with the user-scope `mainline-queue` skill, which
+Task packs are written with the user-scope `task-pack-queue` skill, which
 states outcomes and acceptance rather than file paths, because the task ahead in
 the queue is changing the same code.
 

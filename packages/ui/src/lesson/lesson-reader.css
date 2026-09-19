@@ -967,6 +967,7 @@
   */
   .lesson-reader__title .eyebrow .tip-trigger {
     display: inline-flex;
+    min-width: 44px;
     min-height: 44px;
     align-items: center;
   }

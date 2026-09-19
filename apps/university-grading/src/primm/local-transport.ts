@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ChatCompletionTransport } from "@pieai/swimmer-ai-kit/chat";
+import type { ChatCompletionTransport } from "@pieai/swimmer-ai-provider-kit/chat";
 import { PreviewFailure } from "./errors.js";
 import type { BoundedTranscriber } from "./runtime.js";
 

@@ -210,8 +210,7 @@
   overflow-wrap: anywhere;
 }
 
-.planet-rail__domain-state,
-.planet-domain-label__state {
+.planet-rail__domain-state {
   display: block;
   font-size: 0.75rem;
   line-height: 1.4;
@@ -400,27 +399,13 @@
   position: absolute;
   top: 0;
   left: 0;
+  width: max-content;
   max-width: clamp(5rem, 12vw, 11rem);
-  padding: 4px 10px;
-  border-radius: var(--game-ui-radius-control);
-  color: var(--game-ui-text);
-  background: var(--game-ui-panel-strong);
-  font: 650 0.8rem / 1.35 var(--game-ui-font-body, system-ui);
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.planet-domain-label[data-active="true"] {
-  box-shadow: 0 0 0 1px var(--game-ui-accent);
-  background: var(--game-ui-panel-deep);
-}
-
-.planet-domain-label__selected {
-  display: block;
-  color: var(--game-ui-accent);
-  font-size: 0.65rem;
-  font-weight: 600;
+  padding: 0;
+  text-align: center;
+  /* The projector measures this block, including every real status row.
+     Never clip inline-span glyph overhangs or the selected entry below it. */
+  overflow: visible;
 }
 
 .planet-page__row-name,
