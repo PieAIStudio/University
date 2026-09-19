@@ -104,6 +104,9 @@ describe("WorldMapCanvas rewrite marker", () => {
     expect(css).toMatch(/\.map-tools\s*\{[^}]*display:\s*contents/s);
     expect(css).toMatch(/\.map-framing-tools button\s*\{[^}]*min-height:\s*44px/s);
     expect(css).toMatch(/\.label--course\s*\{[^}]*min-block-size:\s*48px/s);
+    expect(css).toMatch(
+      /\.stagewrap \.label--course\s*\{[^}]*max-width:\s*min\(220px, calc\(50vw - 24px\)\)/s,
+    );
   });
 
   it.each(["live", "done", "open", "idle"] as const)(

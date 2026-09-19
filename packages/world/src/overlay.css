@@ -125,11 +125,13 @@
   opacity: var(--placed, 0);
 }
 
-/* Full-height phone maps magnify their neighbours. Keep captions compact
-   without shrinking their font or touch targets; full titles remain in DOM. */
+/* Full-height phone maps magnify their neighbours. A half-screen caption
+   must also leave a 16px edge gutter and an 8px collision gap; 50vw alone
+   intermittently leaves no readable peer beside scenery. Keep font and touch
+   targets unchanged, with the complete title still available in DOM. */
 @media (max-width: 767px) {
   .stagewrap .label--course {
-    max-width: min(220px, 50vw);
+    max-width: min(220px, calc(50vw - 24px));
   }
 }
 
