@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: ai-assisted
 created: 2026-09-17
-last_reviewed: 2026-09-18
+last_reviewed: 2026-09-19
 domain: learning-experience
 tags:
   - interaction
@@ -56,7 +56,67 @@ ledger; local hash-verification receipts do not replace it.
 
 ## Work
 
-### Game-first scene expansion (current Owner request)
+### Current: reversible matte-wax island and existing-avatar slice
+
+Owner authorized this follow-on inside the same worktree. Baseline b9c8de9e and
+all nine accepted games stay intact. Use one real short course through the
+existing CourseScene; do not merge the active clay branch or mutate its files.
+The classic/wax comparison freezes this branch's content and geometry rather
+than pretending the clay branch has the same scenery revision. V5
+`#wax-island-slice` owns the experience; ADR-0008 records the scoped technique.
+
+- [x] Isolated route, real eight-node course and current AvatarKit recipe; no account writes.
+- [x] Strong matte colored-wax response with reversible, owned material/normal overrides.
+- [x] Same-camera classic/wax, whole-island/island-close/avatar views, no-grade and motion inspection.
+- [x] Restoration/resource/input tests, nine-game preservation and full verification; ready for Owner comparison.
+
+Evidence belongs to `.devspace-visual/interaction-3d/wax-slice/`. The experimental
+material response is not a new published kit or global preference. Accepted
+shared response must later converge into RenderKit and the clay lane's common
+appearance owner; the current task does not authorize a package release.
+
+The slice uses `browser-ai/run-a-real-project-with-ai` through `placeCourse` and
+`CourseScene`, with the current AvatarKit recipe (or its normal guest fallback).
+Only owned material clones and coincident-vertex normal copies change. No vertex
+position, index, UV, source color map, course node or saved preference is edited.
+Authored thin-part roles make ears respond differently from the thick body;
+the visible scattering switch separates this approximation from roughness.
+
+Pilot inspection found and corrected a paused OrbitControls/advance re-entry,
+original material-array identity loss, and 40px mobile controls. The final owner
+also preserves a host slot replaced immediately before cleanup. Error evidence
+stays in pilot-1 and pilot-3; passing pilot-2 is not final acceptance.
+The interrupted pass left a runnable implementation and passing browser artifacts
+in `accepted/`; its old validation receipt is historical. On resumption the
+strength control was found to start from an already-matte material, muting its
+roughness range. It now blends from the original surface, while the maximum
+retains the same matte target. Missing physical-response shader anchors now fail
+visibly. Final acceptance: 11 ownership/material tests and 53 combined browser
+checks passed; full `pnpm verify` passed with source fingerprints unchanged
+(`verify-final-02.json`). Its first run stopped only at an outdated manifest
+review date; standard `pnpm doc-gov scan` corrected the generated registration,
+without changing checks. Original failure logs remain in `verify-final.log`.
+
+`preservation.json` checks 368 protected game, avatar, asset and course files
+against b9c8de9e, with no differences or tracked deletion. `owner-preview-final/`
+contains the actual 23220 preview, same-pose comparisons and warm full-Stage GPU
+samples. These are Mac browser measurements, not whole-app FPS or physical-phone
+acceptance. The first preview diagnostic's 8.9e-16 camera roundoff is preserved
+in `owner-preview/`; its repeat records a 1e-10 numerical tolerance, without
+weakening product tests. The current walk-through is `owner-review.md`.
+
+Preview: `http://127.0.0.1:23220/play-lab/wax-island?finish=wax&lang=zh-CN`.
+This is a temporary service owned by this worktree. Port 23160 belongs to the
+parallel map-learning-nodes worktree and was neither reused nor stopped.
+Final validation/job identities and source checksums are in `acceptance.json`.
+
+Integration remains explicit: this isolated study is not the clay branch's
+account-wide `WorldStyle` implementation. On integration the shared appearance
+owner must own the selected profile once; never let it wrap this slice again.
+The nine-game library and catalog stay 59 entries/9 games, not 60/10: a look
+study is not counted as another learning game.
+
+### Previous accepted game-first scene expansion
 
 Preserve all three accepted garden games at `e9267221` as live entries, not only
 history. Add six separately addressable versions: cloud-flight, sorting-factory,

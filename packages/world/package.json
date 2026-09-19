@@ -5,6 +5,7 @@
   "description": "The 3D scene both shells will render. packages/ui stays at zero three.",
   "type": "module",
   "exports": {
+    "./wax-slice.js": "./src/wax-slice/WaxIslandScene.tsx",
     "./toy-play.js": "./src/toy-play/index.ts",
     ".": "./src/index.ts",
     "./course-map.js": "./src/course/course-map.ts",

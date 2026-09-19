@@ -907,6 +907,34 @@ delete scenery to chase headless scheduling intervals. These Mac/viewport data
 do not replace a current physical phone pass. CPU preparation profiles are
 inclusive sampled scopes and must not be added together as exact wall time.
 
+## Owner-authorized wax slice (isolated experiment)
+
+The Owner explicitly permits reversible material/model overrides within the
+interaction-3d-playlab worktree, not an overwrite of the approved games, shared
+assets or the parallel clay work. `/play-lab/wax-island` consumes the real course
+and the existing CourseScene/AvatarKit. No second terrain field, route, renderer
+or color pass is permitted. Its finish experiment owns only material copies and
+optional normal-only geometry copies; positions, indices and pick surfaces stay
+unchanged. Classic restores the exact source identities.
+
+RenderKit 0.3.0 owns the unchanged output chain but has no wax surface API. Until
+this single-consumer experiment is judged, a slice-local adapter is the bounded
+exception, not a copied brand package or second global appearance framework.
+If accepted for product-wide use, move the response into RenderKit and register
+it with the clay lane's appearance owner, instead of stacking two traversals.
+No package publishing authority is inferred from this exception.
+
+The physical distinction motivating the study is internal light spreading, not
+clearcoat or transparency. The implementation may use a bounded per-light
+scattering approximation with authored role thickness, not claim a measured
+thickness map or full BSSRDF. Preserve original colors/maps, suppress plastic
+lobes and high-frequency relief on owned variants, and leave eyes legible.
+No baked glow, screen-space blur, texture download or translucent full-world pass.
+Research: Three.js r185 `SubsurfaceScatteringShader.js` (Blinn-Phong reference,
+not copied), and MeshPhysicalMaterial documentation (clearcoat/transmission are
+separate effects). Same-camera actual output and resource receipts, not numeric
+roughness alone, determine acceptance; the current plan records the outcome.
+
 ## Rejected alternatives worth remembering
 
 | Alternative | Why it was rejected; do not generalize beyond this scope |

@@ -30,8 +30,10 @@ import { messages as learningPlayMessages } from "./learning-play.zh-CN.js";
  * This catalog is intentionally the source of truth for phase one. A locale
  * is selectable only when its key set exactly matches this one.
  */
+import { messages as waxSlice } from "./wax-slice.zh-CN.js";
 import { messages as purpose3d } from "./purpose-3d.zh-CN.js";
 export const messages = {
+  ...waxSlice,
   ...purpose3d,
   ...arcade3d,
   ...playGallery,

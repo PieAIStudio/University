@@ -1,0 +1,127 @@
+.wax-island {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px;
+  color: var(--game-ui-text);
+}
+.wax-island a {
+  color: inherit;
+  text-underline-offset: 0.25em;
+}
+.wax-island__toolbar button {
+  min-height: 44px;
+  min-width: 44px;
+}
+.wax-island input {
+  accent-color: var(--game-ui-text);
+}
+.wax-island__controls label {
+  min-height: 44px;
+  cursor: pointer;
+}
+.wax-island__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.wax-island h1 {
+  margin: 4px 0 8px;
+  font-size: clamp(24px, 4vw, 36px);
+}
+.wax-island__eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  margin: 0;
+}
+.wax-island__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 20px 0 12px;
+}
+.wax-island__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.wax-island__viewport {
+  height: min(70vh, 700px);
+  min-height: 420px;
+  border-radius: 22px;
+  overflow: hidden;
+  position: relative;
+  touch-action: none;
+  isolation: isolate;
+}
+.wax-island__notice {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  padding: 24px;
+  background: var(--game-ui-bg);
+}
+.wax-island__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 0;
+}
+.wax-island label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.wax-island input[type="range"] {
+  width: 160px;
+  min-height: 44px;
+}
+.wax-island__caption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0 0 16px;
+}
+.wax-island__lesson select {
+  max-width: min(70vw, 580px);
+  min-height: 44px;
+  padding: 6px;
+  font: inherit;
+  color: var(--game-ui-text);
+  background: var(--game-ui-bg);
+}
+.wax-island details {
+  margin-top: 16px;
+  max-width: 75ch;
+}
+.wax-island summary {
+  cursor: pointer;
+  min-height: 44px;
+}
+@media (max-width: 760px) {
+  .wax-island {
+    padding: 12px;
+  }
+  .wax-island__heading {
+    display: block;
+  }
+  .wax-island__viewport {
+    min-height: 480px;
+    height: 58vh;
+    border-radius: 16px;
+  }
+  .wax-island__controls {
+    gap: 12px;
+  }
+  .wax-island__lesson {
+    align-items: flex-start !important;
+    flex-direction: column;
+  }
+  .wax-island__lesson select {
+    max-width: 100%;
+    width: 100%;
+  }
+}

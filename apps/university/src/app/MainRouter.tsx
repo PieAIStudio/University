@@ -75,6 +75,7 @@ import type { PathOverlay } from "./world-model";
 
 const PlayCatalogRoute = lazy(() => import("../play-catalog/PlayCatalogRoute.js"));
 const ToyPlayLabRoute = lazy(() => import("../play-catalog/ArcadeRoute.js"));
+const WaxIslandRoute = lazy(() => import("../play-catalog/WaxIslandRoute.js"));
 const LearningPlayLab = lazy(() =>
   import("@pieai/university-ui/learning-play/LearningPlayLab.js").then((mod) => ({
     default: mod.LearningPlayLab,
@@ -262,6 +263,13 @@ export function MainRouter({
         <Suspense fallback={<RouteFallback />}>
           {view.collection === "catalog" ? (
             <PlayCatalogRoute />
+          ) : view.collection === "wax-island" ? (
+            <WaxIslandRoute
+              shelf={shelf}
+              progressPort={progressPort}
+              recipe={avatarRecipe}
+              signedIn={avatarSignedIn}
+            />
           ) : view.collection === "toy-3d" ? (
             <ToyPlayLabRoute />
           ) : (
