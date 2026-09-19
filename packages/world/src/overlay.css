@@ -1,9 +1,7 @@
 .map-framing-tools {
-  position: absolute;
-  z-index: 4;
-  left: 50%;
-  bottom: max(1rem, env(safe-area-inset-bottom));
-  transform: translateX(-50%);
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
   pointer-events: auto;
 }
 
@@ -17,10 +15,8 @@
 .map-framing-tools button {
   min-width: 44px;
   min-height: 44px;
-}
-
-.map-framing-tools[data-has-map-hint="true"] {
-  bottom: calc(4rem + env(safe-area-inset-bottom));
+  max-width: 100%;
+  white-space: normal;
 }
 
 /*
@@ -46,49 +42,15 @@
   --map-label-gap: 4px;
 }
 
-.stagewrap[hidden] {
-  display: none;
+/* The app's HUD is a sibling of the persistent map, not its child. Both
+   owners read this one CSS lane contract; do not assume DOM containment. */
+.stagewrap,
+.learn-hud {
+  --map-tools-height: 64px;
 }
 
-/* A short landscape has no room for two floating hint rows. Keep the same
-   controls together below the actual canvas, inside the shell's free lane. */
-@media (min-width: 768px) and (max-height: 420px) {
-  .stagewrap {
-    --map-tools-height: 56px;
-  }
-
-  .stagewrap > .labels {
-    bottom: var(--map-tools-height);
-  }
-
-  .stagewrap > .map-tools {
-    position: absolute;
-    inset-inline-start: var(--shell-content-left, 16px);
-    inset-inline-end: var(--shell-content-right, 16px);
-    bottom: 6px;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    pointer-events: none;
-  }
-
-  .stagewrap .map-framing-tools {
-    position: static;
-    transform: none;
-    flex-shrink: 0;
-  }
-
-  .stagewrap .map-tools > .hint {
-    position: static;
-    margin: 0;
-    transform: none;
-    min-width: 0;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+.stagewrap[hidden] {
+  display: none;
 }
 
 .stagewrap canvas {
@@ -107,8 +69,41 @@
   min-height: 0;
 }
 
+/* A real chrome lane, not a high-z overlay over lesson hit targets. The
+   viewport and label layer reserve exactly the same measured height. */
+.stagewrap > .labels {
+  bottom: var(--map-tools-height);
+}
 .map-tools {
-  display: contents;
+  position: absolute;
+  inset-inline-start: var(--shell-content-left, 12px);
+  inset-inline-end: var(--shell-content-right, 12px);
+  bottom: 0;
+  z-index: 4;
+  height: var(--map-tools-height);
+  box-sizing: border-box;
+  padding-block: 10px;
+  display: grid;
+  grid-template-columns: max-content max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.map-tools > .map-world-style {
+  grid-column: 1;
+  grid-row: 1;
+}
+.stagewrap .map-tools > .hint {
+  position: static;
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  transform: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /*
@@ -617,54 +612,75 @@ button.label:focus-visible {
   }
 }
 
+@media (max-width: 1023px) {
+  .stagewrap,
+  .learn-hud {
+    --map-tools-height: 104px;
+  }
+  .stagewrap > .map-tools {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: 44px minmax(0, 1fr);
+    padding-block: 6px;
+  }
+  .stagewrap .map-tools > .hint {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: start;
+    max-height: 40px;
+    padding: 4px 8px;
+    white-space: normal;
+  }
+  .stagewrap .hint__row {
+    flex-wrap: wrap;
+  }
+}
 @media (max-width: 767px) {
-  .stagewrap[data-map-view] {
-    --map-tools-height: 72px;
+  /* Feedback keeps its existing bottom-right location; no other target
+     consumes that part of the second tool row. */
+  .stagewrap .map-tools > .hint {
+    max-width: calc(100% - 104px);
   }
-
-  .stagewrap[data-map-view] > .labels {
-    bottom: var(--map-tools-height);
+  /* A series has no overview action, so it needs only one row. Do not take
+     a redundant 48px from the island captions' already narrow viewport. */
+  .stagewrap:not([data-map-view]) {
+    --map-tools-height: 56px;
   }
-
-  .stagewrap[data-map-view] > .map-tools {
-    position: absolute;
-    inset: auto 0 0;
-    z-index: 4;
-    box-sizing: border-box;
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    align-items: center;
-    gap: 8px;
-    height: var(--map-tools-height);
-    padding: 12px;
-    background: var(--game-ui-bg);
+  .stagewrap:not([data-map-view]) > .map-tools {
+    grid-template-columns: minmax(0, 144px) minmax(0, 1fr);
+    grid-template-rows: 44px;
+    padding-inline-end: 104px;
   }
-
-  /* Explicit cells keep the action still when a hint fades or is removed. */
-  .stagewrap[data-map-view] .map-framing-tools {
-    position: static;
-    grid-column: 1;
-    grid-row: 1;
-    left: auto;
-    bottom: auto;
-    transform: none;
-  }
-
-  .stagewrap[data-map-view] .map-tools > .hint {
-    position: static;
+  .stagewrap:not([data-map-view]) .map-tools > .hint {
     grid-column: 2;
     grid-row: 1;
-    justify-self: end;
     max-width: 100%;
-    min-width: 0;
-    padding: 6px 8px;
-    white-space: normal;
-    transform: none;
+  }
+}
+
+/* Short landscape retains the return action inside its scrollable course
+   panel, above the tools. A larger footer must not sit on that action. */
+@media (min-width: 768px) and (max-height: 420px) {
+  /* Preserve the existing 56px low-height lane instead of removing another
+     48px from the already shallow course camera. Width permits one row. */
+  .stagewrap,
+  .learn-hud {
+    --map-tools-height: 56px;
+  }
+  .stagewrap > .map-tools {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: 44px;
+  }
+  .stagewrap .map-tools > .hint {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
   }
 
-  .stagewrap[data-map-view] .hint__row {
-    flex-wrap: wrap;
-    justify-content: end;
+  .stagewrap > .picked.picked--left,
+  .app-shell__main:has(.map-breadcrumbs) .learn-hud .picked.picked--left {
+    bottom: calc(var(--map-tools-height) + 8px);
+    max-height: calc(100% - 76px - var(--map-tools-height) - 8px);
+    overflow-y: auto;
   }
 }
 

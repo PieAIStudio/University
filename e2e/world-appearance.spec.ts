@@ -39,6 +39,32 @@ async function choose(page: Page, style: Style) {
     return element.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2));
   });
   expect(hit, "the style button must be genuinely reachable, not behind shell chrome").toBe(true);
+  const layout = await button.evaluate((element) => {
+    const r = element.getBoundingClientRect();
+    const host = element.closest(".stagewrap, .planet-stage");
+    const canvas = host?.querySelector("canvas")?.getBoundingClientRect();
+    const feedback = document.querySelector(".feedback-note__open--float")?.getBoundingClientRect();
+    const overlaps = (other: DOMRect | undefined) =>
+      Boolean(
+        other &&
+        other.width > 0 &&
+        Math.min(r.right, other.right) - Math.max(r.left, other.left) > 0.5 &&
+        Math.min(r.bottom, other.bottom) - Math.max(r.top, other.top) > 0.5,
+      );
+    return {
+      inMap: Boolean(host),
+      height: r.height,
+      canvasOverlap: overlaps(canvas),
+      feedbackOverlap: overlaps(feedback),
+    };
+  });
+  if (layout.inMap) {
+    expect(layout.height).toBeGreaterThanOrEqual(44);
+    expect(layout.canvasOverlap, "style controls own a real lane outside projected lessons").toBe(
+      false,
+    );
+    expect(layout.feedbackOverlap, "style and feedback must never overlap").toBe(false);
+  }
   await button.click();
   await expect(button).toHaveAttribute("aria-pressed", "true");
   await settled(page, style);
@@ -100,6 +126,16 @@ for (const sample of [
     reduce: true,
   },
   {
+    name: "landscape-delivery",
+    origin: ONLINE_ORIGIN,
+    route: "/browser-ai/run-a-real-project-with-ai",
+    flora: 12,
+    width: 872,
+    height: 286,
+    locale: "en",
+    reduce: true,
+  },
+  {
     name: "phone-authoring",
     origin: LOCAL_ORIGIN,
     route: "/ai-literacy/ai-for-real-life",
@@ -140,9 +176,12 @@ for (const sample of [
     await waitForCourseFraming(page);
     const original = await receipt(page);
     expect(original.landscape.floraCount).toBe(sample.flora);
-    // The narrow shell has no persistent avatar canvas; all canvases it does
-    // mount are still required by settled(), rather than inventing another.
-    expect(original.canvases.length).toBeGreaterThanOrEqual(sample.width >= 768 ? 2 : 1);
+    // The portrait and short-landscape chrome omit the persistent avatar.
+    // Keep the original desktop two-canvas floor; settled() still requires
+    // every actually mounted canvas to adopt the choice in every sample.
+    expect(original.canvases.length).toBeGreaterThanOrEqual(
+      sample.width >= 768 && sample.height > 420 ? 2 : 1,
+    );
     await page.screenshot({ path: join(folder, "classic.png") });
     await choose(page, "clay");
     const clay = await receipt(page);

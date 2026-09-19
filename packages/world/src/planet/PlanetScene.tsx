@@ -506,17 +506,21 @@ export function PlanetStage({
   }, []);
   return (
     <div className="planet-stage">
-      <Stage cameraFrom={[0, 0, 44]} lookAt={[0, 0, 0]} ambientOcclusion={false}>
-        <PlanetScene
-          {...props}
-          labelNodes={labelNodes.current}
-          retry={retry}
-          onResourceStatus={onResourceStatus}
-        />
-        {children}
-      </Stage>
-      <div className="map-world-style">
-        <WorldStyleControl compact />
+      <div className="planet-viewport">
+        <Stage cameraFrom={[0, 0, 44]} lookAt={[0, 0, 0]} ambientOcclusion={false}>
+          <PlanetScene
+            {...props}
+            labelNodes={labelNodes.current}
+            retry={retry}
+            onResourceStatus={onResourceStatus}
+          />
+          {children}
+        </Stage>
+      </div>
+      <div className="planet-style-tools">
+        <div className="map-world-style">
+          <WorldStyleControl compact />
+        </div>
       </div>
       <PlanetDomainLabels
         studies={props.studies}

@@ -7,32 +7,26 @@
   pointer-events: auto;
 }
 .world-style-control--compact .world-style-control__options {
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
 }
 .world-style-control--compact button {
   font-size: 12px;
-  min-height: 36px;
-  padding-inline: 12px;
+  min-width: 44px;
+  min-height: 44px;
+  padding-inline: 10px;
+  white-space: normal;
+  line-height: 1.25;
 }
 .map-world-style {
-  position: absolute;
-  /* The collapsed right rail still owns the full counter strip at the top. */
-  top: calc(84px + env(safe-area-inset-top));
-  inset-inline-end: var(--shell-content-right, 14px);
-  z-index: 12;
-  max-width: calc(100% - 28px);
+  min-width: 0;
+  max-width: 22rem;
   pointer-events: auto;
 }
-@media (max-width: 767px) {
-  .map-world-style {
-    top: auto;
-    bottom: calc(var(--map-tools-height, 0px) + 12px + env(safe-area-inset-bottom));
-    inset-inline-end: 10px;
-  }
-  .world-style-control--compact button {
-    min-height: 40px;
+@media (max-width: 1023px) {
+  .map-world-style .world-style-control--compact button {
     font-size: 11px;
-    padding-inline: 10px;
+    padding-inline: 6px;
   }
 }

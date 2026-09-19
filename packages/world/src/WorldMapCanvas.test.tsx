@@ -28,7 +28,7 @@ vi.mock("./Maps.js", () => ({
 }));
 
 describe("WorldMapCanvas rewrite marker", () => {
-  it("keeps one canvas viewport apart from the narrow-course tool lane as hints retire", async () => {
+  it("keeps one canvas viewport apart from style and framing tools as hints retire", async () => {
     Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
     const host = document.createElement("div");
     const root = createRoot(host);
@@ -52,6 +52,12 @@ describe("WorldMapCanvas rewrite marker", () => {
       );
       const stage = host.querySelector("[data-stage]");
       const button = host.querySelector(".map-framing-tools button");
+      const styles = Array.from(host.querySelectorAll("[data-world-style-choice]"));
+      expect(styles).toHaveLength(2);
+      for (const style of styles) {
+        expect(host.querySelector(".map-tools")?.contains(style)).toBe(true);
+        expect(host.querySelector(".map-viewport")?.contains(style)).toBe(false);
+      }
       expect(host.querySelector(".map-viewport")?.contains(stage)).toBe(true);
       expect(host.querySelector(".map-viewport")?.contains(button)).toBe(false);
       expect(host.querySelector(".map-tools")?.contains(button)).toBe(true);
@@ -69,6 +75,7 @@ describe("WorldMapCanvas rewrite marker", () => {
         ),
       );
       expect(host.querySelector(".map-framing-tools button")).toBe(button);
+      expect(Array.from(host.querySelectorAll("[data-world-style-choice]"))).toEqual(styles);
       expect(host.querySelector("[data-stage]")).toBe(stage);
       await act(async () => root.render(<WorldMapCanvas {...props} />));
       expect(host.querySelector("[data-stage]")).toBe(stage);
@@ -78,10 +85,23 @@ describe("WorldMapCanvas rewrite marker", () => {
       await act(async () => root.unmount());
     }
     const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "overlay.css"), "utf8");
-    expect(css).toMatch(/\.stagewrap\[data-map-view\]\s*\{[^}]*--map-tools-height:\s*72px/s);
+    // The old 72px two-control row is now one shared, responsive lane.
+    // Pin its explicit sizes AND the canvas/label contract; actual browser
+    // tests check reachability at 375x812 and 872x286 without forced clicks.
+    expect(css).toMatch(/\.stagewrap,\s*\.learn-hud\s*\{[^}]*--map-tools-height:\s*64px/s);
+    expect(css).toMatch(
+      /@media \(max-width: 1023px\)\s*\{\s*\.stagewrap,\s*\.learn-hud\s*\{[^}]*--map-tools-height:\s*104px/s,
+    );
+    expect(css).toMatch(
+      /\.stagewrap:not\(\[data-map-view\]\)\s*\{[^}]*--map-tools-height:\s*56px/s,
+    );
+    expect(css).toMatch(
+      /@media \(min-width: 768px\) and \(max-height: 420px\)[\s\S]*?\.stagewrap,\s*\.learn-hud\s*\{[^}]*--map-tools-height:\s*56px/,
+    );
+    expect(css).toMatch(/\.stagewrap > \.labels\s*\{[^}]*bottom:\s*var\(--map-tools-height\)/s);
     expect(css).toMatch(/\.map-viewport\s*\{[^}]*inset:\s*0 0 var\(--map-tools-height, 0px\)/s);
     expect(css).toMatch(
-      /\.map-tools\s*\{[^}]*grid-template-columns:\s*max-content minmax\(0, 1fr\)/s,
+      /\.map-tools\s*\{[^}]*grid-template-columns:\s*max-content max-content minmax\(0, 1fr\)/s,
     );
     expect(css).toMatch(/\.map-framing-tools button\s*\{[^}]*min-height:\s*44px/s);
     expect(css).toMatch(/\.label--course\s*\{[^}]*min-block-size:\s*48px/s);

@@ -381,10 +381,10 @@ export function WorldMapCanvas({
         })}
       </nav>
       {overlay}
-      <div className="map-world-style">
-        <WorldStyleControl compact />
-      </div>
       <div className="map-tools">
+        <div className="map-world-style">
+          <WorldStyleControl compact />
+        </div>
         {courseViewKey && fixedCamera === null ? (
           <div
             className="map-framing-tools"

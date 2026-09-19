@@ -374,12 +374,38 @@
   position: relative;
   width: 100%;
   height: 100%;
+  --planet-tools-height: 64px;
+}
+.planet-viewport {
+  position: absolute;
+  inset: 0 0 var(--planet-tools-height);
+}
+.planet-stage > .planet-domain-labels {
+  bottom: var(--planet-tools-height);
+}
+.planet-style-tools {
+  position: absolute;
+  bottom: 0;
+  inset-inline-start: var(--shell-content-left, 12px);
+  inset-inline-end: var(--shell-content-right, 12px);
+  height: var(--planet-tools-height);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+.planet-style-tools > .map-world-style {
+  width: min(22rem, 100%);
+}
+@media (max-width: 767px) {
+  .planet-style-tools > .map-world-style {
+    width: min(22rem, calc(100% - 104px));
+  }
 }
 
 .planet-resource-status {
   position: absolute;
   left: 50%;
-  bottom: 12px;
+  bottom: calc(12px + var(--planet-tools-height));
   transform: translateX(-50%);
   width: max-content;
   max-width: min(90%, 28rem);
