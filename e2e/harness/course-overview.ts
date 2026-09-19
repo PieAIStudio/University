@@ -33,7 +33,7 @@ export async function courseOverviewEvidence(page: Page) {
     };
     const obstacles = [
       ...document.querySelectorAll<HTMLElement>(
-        ".nav-rail, .counter-row, .app-shell__aside, .nextup, .tab-bar, .picked--left, .map-framing-tools, .hint:not(.hint--dismissed), .map-breadcrumbs",
+        ".nav-rail, .counter-row, .app-shell__aside, .nextup, .tab-bar, .picked--left, .map-framing-tools, .hint:not(.hint--dismissed), .map-breadcrumbs, .map-world-style",
       ),
     ]
       .map((element) => ({ name: element.className, rect: element.getBoundingClientRect() }))

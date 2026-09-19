@@ -11,6 +11,7 @@ import {
 } from "react";
 import * as THREE from "three";
 import { Stage } from "../Stage.js";
+import { WorldStyleControl } from "@pieai/university-ui/world-style.js";
 import type { AvatarRecipe } from "../avatar/index.js";
 import { HOP_DURATION_MS } from "../avatar/hop.js";
 import { MapLighting } from "../sky/lighting.js";
@@ -514,6 +515,9 @@ export function PlanetStage({
         />
         {children}
       </Stage>
+      <div className="map-world-style">
+        <WorldStyleControl compact />
+      </div>
       <PlanetDomainLabels
         studies={props.studies}
         domainCatalog={props.domainCatalog}

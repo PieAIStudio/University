@@ -29,6 +29,7 @@ import {
   THEME_PREFERENCE_OPTIONS,
 } from "../../theme.js";
 import { ReviewReminderSettings } from "./ReviewReminderSettings.js";
+import { WorldStyleControl } from "../../world-style.js";
 
 const NO_SYSTEM_SUBSCRIPTION = () => () => undefined;
 
@@ -62,6 +63,9 @@ export function SettingsScreen({
         {translate("ui.navigation.empty.settingsScreen.copy.偏好设置")}
       </h1>
       <ThemePreferenceControl progress={progress} />
+      <section className="settings-screen__block">
+        <WorldStyleControl />
+      </section>
       <InterfaceLanguageControl progress={progress} />
       <section className="settings-screen__block" aria-labelledby="settings-sound">
         <h2 id="settings-sound" className="settings-screen__heading">

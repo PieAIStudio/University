@@ -13,7 +13,7 @@ import { surfaceTurfAt } from "./surface-turf.js";
 
 export type SurfaceDetailRole = "terrain" | "stone";
 export const SURFACE_DETAIL_SIZE = 128;
-export const SURFACE_DETAIL_PROGRAM = "university-surface-swatch-v4";
+export const SURFACE_DETAIL_PROGRAM = "university-surface-swatch-v5";
 
 /** Periodic, low-contrast rounded flakes; no independent ecological noise. */
 export function surfaceSwatchData(size = SURFACE_DETAIL_SIZE): Uint8Array {
@@ -266,7 +266,6 @@ export function createSurfaceMaterialDetail(role: SurfaceDetailRole, blueprint?:
           float surfaceRelief = surfaceWear * uSurfaceReliefStrength * surfacePhysical
             ${garden ? "* gardenFace * gardenLush" : ""}
             * (1.0 - smoothstep(0.035, 0.14, surfaceFootprint));
-          ${garden ? "surfaceRelief += surfacePhysical * uMeadowStrength * gardenTurf * turfGrain * 0.05;" : ""}
           vec3 surfaceDx = dFdx(-vViewPosition);
           vec3 surfaceDy = dFdy(-vViewPosition);
           vec3 surfaceRx = cross(surfaceDy, normal);

@@ -1,0 +1,38 @@
+.world-style-control__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.world-style-control--compact {
+  pointer-events: auto;
+}
+.world-style-control--compact .world-style-control__options {
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+.world-style-control--compact button {
+  font-size: 12px;
+  min-height: 36px;
+  padding-inline: 12px;
+}
+.map-world-style {
+  position: absolute;
+  /* The collapsed right rail still owns the full counter strip at the top. */
+  top: calc(84px + env(safe-area-inset-top));
+  inset-inline-end: var(--shell-content-right, 14px);
+  z-index: 12;
+  max-width: calc(100% - 28px);
+  pointer-events: auto;
+}
+@media (max-width: 767px) {
+  .map-world-style {
+    top: auto;
+    bottom: calc(var(--map-tools-height, 0px) + 12px + env(safe-area-inset-bottom));
+    inset-inline-end: 10px;
+  }
+  .world-style-control--compact button {
+    min-height: 40px;
+    font-size: 11px;
+    padding-inline: 10px;
+  }
+}

@@ -3,6 +3,17 @@ import { describe, expect, it } from "vitest";
 import { mapOverlayObstacles } from "./chrome-obstacles.js";
 
 describe("map overlay obstacles", () => {
+  it("reserves the actual style switch for framing, follow cards and labels", () => {
+    const shell = document.createElement("main");
+    shell.innerHTML = '<div class="stagewrap"><div class="map-world-style"></div></div>';
+    const stage = shell.querySelector<HTMLElement>(".stagewrap")!;
+    stage.getBoundingClientRect = () => new DOMRect(0, 0, 375, 812);
+    shell.querySelector<HTMLElement>(".map-world-style")!.getBoundingClientRect = () =>
+      new DOMRect(120, 600, 245, 44);
+    const result = mapOverlayObstacles(stage, shell);
+    expect(result.chrome).toEqual([{ left: 120, top: 600, right: 365, bottom: 644 }]);
+    expect(result.labels).toEqual(result.chrome);
+  });
   it("reserves course cards and visible hints for labels, but not for floating follow cards", () => {
     const shell = document.createElement("main");
     shell.innerHTML =

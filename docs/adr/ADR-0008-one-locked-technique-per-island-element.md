@@ -36,6 +36,35 @@ This catalogue clarification changes no technique, budget or original receipt.
 
 ## Decision and authority
 
+### R55: reversible clay appearance; R54 turf embossing rejected
+
+Owner explicitly retains ALL R54 low scenery and rejects only the short-turf
+embossed ground appearance. Remove its material contribution, not the accepted
+blueprint, placement grammar, donor shapes, route or contact data. The R54
+acceptance below is historical engineering evidence, not continuing art approval.
+
+Classic and colored clay share geometry, placements, camera and one existing
+render/output chain. Reusable Standard/Physical clay response belongs in the
+RenderKit, with model-locked kneading/print fields, derivative filtering and
+coherent pigment/roughness/normal response. No displacement or photographic asset
+is needed. University owns role scales and reversible per-scene material leases;
+never mutate imported/cached original materials or dispose their textures. Avatar
+identity, animation and source materials stay owned by AvatarKit. The inspected
+AvatarKit material-library seam is valid, but changing its identity rebuilds the
+avatar. This presentation-only switch instead borrows the emitted material slots
+and leases per-scene copies, applying the published RenderKit clay adapter to
+those copies. It preserves kit-owned blink/gaze/breath and restores the original
+material references without changing the recipe or generating a second avatar.
+
+Use the existing frame scheduler for material reconciliation, never another
+renderer or loop. Preserve original shader hooks, instancing, skins, transparency,
+shadow and color-output contracts. Explicitly exclude invisible picking geometry,
+DOM, atmospheric backgrounds and functional glow. New lazy-loaded model materials
+must adopt the current appearance; repeated toggles and navigation must bound
+material/program counts and restore originals. Product preferences use the
+existing account merge/cache path, separate from saved avatar recipe and UI theme.
+Frozen browser, timing and negative-regression evidence belong in the active plan.
+
 ### R54: tactile meadow and composed low vegetation
 
 R53 is the Owner-approved save point `787f4a1e`. R54 does not alter that root

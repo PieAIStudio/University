@@ -1469,8 +1469,12 @@ button.label:focus-visible {
 */
 .avatar-lab {
   flex: 1 1 auto;
-  min-height: 0;
+  /* Keep the material preview on screen; the long control dock scrolls within
+     its own row rather than stretching the canvas to 1,500+ pixels. */
+  height: calc(100dvh - 96px);
+  min-height: 380px;
   display: grid;
+  grid-template-rows: minmax(0, 1fr);
   grid-template-columns: minmax(0, 1fr) min(22rem, 38vw);
   background: #d6cfc3;
 }
@@ -1548,7 +1552,7 @@ button.label:focus-visible {
 @media (max-width: 860px) {
   .avatar-lab {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(42vh, 1fr) auto;
+    grid-template-rows: minmax(220px, 1.05fr) minmax(160px, 1fr);
   }
 
   .avatar-lab__dock {

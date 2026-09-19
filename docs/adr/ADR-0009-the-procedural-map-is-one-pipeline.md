@@ -23,6 +23,16 @@ superseded_by: null
 
 # ADR-0009: The Procedural Map Is One Pipeline, Not Three Scenes
 
+## R55: appearance is not a second world
+
+A validated classic/clay account preference selects presentation only. The same
+blueprint, field, landscape membership, avatar recipe and progress flow remain
+canonical. R54 short-turf relief is withdrawn without changing a single scenery
+placement. Shared RenderKit surface response is applied by the host's material
+ownership adapter across all existing viewports; it owns no camera or output pass.
+Original materials remain recoverable and their textures remain source-owned.
+The developer-only terrain color hypotheses are not competing account settings.
+
 ## R54: retain meadow identity through material compilation
 
 The existing course atlas now preserves canopy/meadow/route/facility channels

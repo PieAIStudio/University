@@ -102,7 +102,7 @@ describe("shared miniature-world surface swatch", () => {
         expect(shader.vertexShader).not.toContain("transformed +=");
         expect(shader.uniforms.uSurfaceDetailMode).toBe(detail.uniforms.uSurfaceDetailMode);
         detail.uniforms.uSurfaceDetailMode.value = 0;
-        expect(detail.customProgramCacheKey()).toBe("university-surface-swatch-v4/swatch");
+        expect(detail.customProgramCacheKey()).toBe("university-surface-swatch-v5/swatch");
       } finally {
         detail.dispose();
       }

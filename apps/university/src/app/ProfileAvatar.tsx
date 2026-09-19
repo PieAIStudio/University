@@ -1,12 +1,12 @@
 import { translate } from "@pieai/university-ui/i18n.js";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
-import { guestAvatarRecipe } from "@pieai/university-world/avatar.js";
+import { AvatarPreviewControls, guestAvatarRecipe } from "@pieai/university-world/avatar.js";
 import { hasWebGLContext } from "@pieai/university-world/webgl-capability.js";
-import type { AvatarRecipe } from "@pieai/swimmer-avatar-kit";
+import type { AvatarRecipe, AvatarBounds } from "@pieai/swimmer-avatar-kit";
 import { dressScene } from "@pieai/swimmer-avatar-kit/materials";
 import { Avatar } from "@pieai/swimmer-avatar-kit/react-three-fiber";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { WorldAppearance } from "@pieai/university-world/appearance.js";
 
 /** The avatar-lab's creature, as a preview. Full editor stays at `/avatar-lab`. */
 export function ProfileAvatar({
@@ -17,6 +17,7 @@ export function ProfileAvatar({
   readonly signedIn?: boolean;
 }) {
   const guest = useMemo(() => guestAvatarRecipe(), []);
+  const [bounds, setBounds] = useState<AvatarBounds | null>(null);
   const recipe = signedIn && avatarRecipe ? avatarRecipe : guest;
   const webglAvailable = hasWebGLContext();
   return (
@@ -37,14 +38,14 @@ export function ProfileAvatar({
             camera.lookAt(0, 0.9, 0);
           }}
         >
-          <Avatar recipe={recipe} gaze quality="compact" />
-          <OrbitControls
-            enablePan={false}
-            enableDamping
-            target={[0, 0.9, 0]}
-            minDistance={1.8}
-            maxDistance={6}
+          <WorldAppearance role="avatar" />
+          <Avatar
+            recipe={recipe}
+            gaze
+            quality="compact"
+            onBuilt={(avatar) => setBounds(avatar.bounds)}
           />
+          <AvatarPreviewControls bounds={bounds} />
         </Canvas>
       ) : (
         <div className="profile-avatar__fallback" aria-hidden="true" />

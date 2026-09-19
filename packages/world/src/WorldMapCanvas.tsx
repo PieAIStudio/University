@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { translate } from "@pieai/university-ui/i18n.js";
+import { WorldStyleControl } from "@pieai/university-ui/world-style.js";
 import type { AuthoringFocus } from "@pieai/university-core";
 
 import { Controls, Flight, LabelProbe, WORLD_POLAR } from "./camera/controls.js";
@@ -380,6 +381,9 @@ export function WorldMapCanvas({
         })}
       </nav>
       {overlay}
+      <div className="map-world-style">
+        <WorldStyleControl compact />
+      </div>
       <div className="map-tools">
         {courseViewKey && fixedCamera === null ? (
           <div

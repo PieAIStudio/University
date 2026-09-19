@@ -25,6 +25,8 @@ export type SpeechQuality = "auto" | "local" | "online" | "premium";
 
 /** The learner's theme request; `system` is resolved by the browser at read time. */
 export type ThemePreference = "system" | "light" | "dark";
+/** Presentation only: never part of a generated map or saved avatar recipe. */
+export type WorldStyle = "classic" | "clay";
 export type InterfaceLocale = "en" | "zh-CN";
 
 export type AccountPreferenceKey =
@@ -36,6 +38,7 @@ export type AccountPreferenceKey =
   | "speechQuality"
   | "avatarRecipe"
   | "theme"
+  | "worldStyle"
   | "locale";
 // Interface language is a shared account preference, independent of vocabulary mode.
 
@@ -48,6 +51,7 @@ export interface AccountPreferences {
   readonly sharesPresence: boolean;
   readonly speechQuality: SpeechQuality;
   readonly theme: ThemePreference;
+  readonly worldStyle: WorldStyle;
   readonly locale: InterfaceLocale | null;
   /** Serialized SwimmerAvatarKit recipe; null means the learner has not saved one. */
   readonly avatarRecipe: string | null;
@@ -85,6 +89,7 @@ export const DEFAULT_ACCOUNT_PREFERENCES: AccountPreferences = {
   sharesPresence: false,
   speechQuality: "auto",
   theme: "system",
+  worldStyle: "classic",
   locale: null,
   avatarRecipe: null,
   updatedAt: {},
@@ -140,6 +145,7 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       "speechQuality",
       "avatarRecipe",
       "theme",
+      "worldStyle",
       "locale",
     ] as const) {
       const timestamp = value.updatedAt[key];
@@ -165,6 +171,7 @@ function parseAccountPreferences(value: unknown): AccountPreferences {
       value.theme === "light" || value.theme === "dark" || value.theme === "system"
         ? value.theme
         : "system",
+    worldStyle: value.worldStyle === "clay" ? "clay" : "classic",
     locale: value.locale === "en" || value.locale === "zh-CN" ? value.locale : null,
     avatarRecipe: typeof value.avatarRecipe === "string" ? value.avatarRecipe : null,
     updatedAt,
@@ -199,6 +206,8 @@ export function mergeAccountPreferences(
   const rightAvatarRecipe = timestampMs(right.updatedAt.avatarRecipe);
   const leftTheme = timestampMs(left.updatedAt.theme);
   const rightTheme = timestampMs(right.updatedAt.theme);
+  const leftWorldStyle = timestampMs(left.updatedAt.worldStyle);
+  const rightWorldStyle = timestampMs(right.updatedAt.worldStyle);
   const leftLocale = timestampMs(left.updatedAt.locale);
   const rightLocale = timestampMs(right.updatedAt.locale);
   const newer = (leftAt: number, rightAt: number) => rightAt >= leftAt;
@@ -221,6 +230,7 @@ export function mergeAccountPreferences(
       ? right.avatarRecipe
       : left.avatarRecipe,
     theme: newer(leftTheme, rightTheme) ? right.theme : left.theme,
+    worldStyle: newer(leftWorldStyle, rightWorldStyle) ? right.worldStyle : left.worldStyle,
     locale: newer(leftLocale, rightLocale) ? right.locale : left.locale,
     updatedAt,
   };
@@ -232,6 +242,7 @@ export function mergeAccountPreferences(
     "sharesPresence",
     "speechQuality",
     "avatarRecipe",
+    "worldStyle",
     "theme",
     "locale",
   ] as const) {

@@ -126,11 +126,13 @@ describe("course field-backed surface masks", () => {
         uniforms: {},
       } as THREE.WebGLProgramParametersWithUniforms;
       detail.onBeforeCompile(shader);
-      expect(detail.customProgramCacheKey()).toBe("university-surface-swatch-v4/garden");
+      expect(detail.customProgramCacheKey()).toBe("university-surface-swatch-v5/garden");
       expect(shader.fragmentShader).toContain("texture2D(uCourseSurface");
       expect(shader.fragmentShader).toContain("gardenFace * gardenSurface.a");
       expect(shader.fragmentShader).toContain("gardenTurf");
       expect(shader.fragmentShader).toContain("turfFootprint");
+      // R55 rejects raised short-grass relief, not the approved low scenery.
+      expect(shader.fragmentShader).not.toContain("surfaceRelief +=");
       expect(shader.uniforms.uMeadowStrength).toBe(detail.uniforms.uMeadowStrength);
       expect(shader.vertexShader).not.toContain("transformed +=");
       expect(shader.fragmentShader.match(/#include <colorspace_fragment>/g)).toHaveLength(1);

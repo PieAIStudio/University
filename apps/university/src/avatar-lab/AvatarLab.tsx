@@ -1,6 +1,6 @@
 import { formatNumber, translate } from "@pieai/university-ui/i18n.js";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { AvatarPreviewControls } from "@pieai/university-world/avatar.js";
 import {
   GameButton,
   GameField,
@@ -16,6 +16,7 @@ import {
   rerollPart,
   SPECIES,
   type AvatarRecipe,
+  type AvatarBounds,
 } from "@pieai/swimmer-avatar-kit";
 import { dressScene } from "@pieai/swimmer-avatar-kit/materials";
 import { Avatar } from "@pieai/swimmer-avatar-kit/react-three-fiber";
@@ -23,6 +24,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { WORLD, type View } from "@pieai/university-core";
 import { REROLLABLE_PARTS } from "./rerollable-parts";
+import { WorldAppearance } from "@pieai/university-world/appearance.js";
+import { WorldStyleControl } from "@pieai/university-ui/world-style.js";
 
 export function AvatarLab({
   avatarRecipe,
@@ -36,6 +39,7 @@ export function AvatarLab({
   const [recipe, setRecipe] = useState<AvatarRecipe>(() => avatarRecipe ?? randomRecipe());
   const [seedText, setSeedText] = useState(() => String(recipe.seed));
   const [gaze, setGaze] = useState(true);
+  const [bounds, setBounds] = useState<AvatarBounds | null>(null);
   const [stats, setStats] = useState<{ meshes: number; verts: number; buildMs: number } | null>(
     null,
   );
@@ -127,17 +131,16 @@ export function AvatarLab({
             camera.lookAt(0, 0.9, 0);
           }}
         >
-          <Avatar recipe={recipe} gaze={gaze} onBuilt={(avatar) => setStats(avatar.stats)} />
-          <OrbitControls
-            enablePan={false}
-            enableDamping
-            dampingFactor={0.08}
-            target={[0, 0.9, 0]}
-            minDistance={1.8}
-            maxDistance={6}
-            minPolarAngle={0.35}
-            maxPolarAngle={1.45}
+          <WorldAppearance role="avatar" />
+          <Avatar
+            recipe={recipe}
+            gaze={gaze}
+            onBuilt={(avatar) => {
+              setStats(avatar.stats);
+              setBounds(avatar.bounds);
+            }}
           />
+          <AvatarPreviewControls bounds={bounds} />
         </Canvas>
         <p className="avatar-lab__readout">
           {stats
@@ -152,6 +155,7 @@ export function AvatarLab({
       </section>
 
       <aside className="avatar-lab__dock">
+        <WorldStyleControl />
         <GamePanel title={translate("app.avatarlab.avatarLab.copy.头像工坊")}>
           <p className="avatar-lab__lede">
             {translate("app.avatarlab.avatarLab.copy.换物种-换色盘-或重掷一张脸-拖动画布绕着看")}
