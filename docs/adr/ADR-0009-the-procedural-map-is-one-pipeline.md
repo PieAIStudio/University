@@ -23,6 +23,18 @@ superseded_by: null
 
 # ADR-0009: The Procedural Map Is One Pipeline, Not Three Scenes
 
+## R56: owned views of the same canonical assets
+
+Owner authorizes limited appearance geometry, not an alternative map producer.
+The existing pre-frame appearance subscriber owns both material and geometry
+leases. Only named near-field props derive a view from their existing source;
+source positions, reservations, instances, learning nodes and avatar recipe stay
+canonical. A source change invalidates its view, not the blueprint. Inspectors
+report source and drawn IDs separately, and classic must recover the exact source
+geometry/material. Ground and collision meshes are never displaced for clay.
+The shared RenderKit owns the isotropic polymer kernel; the host owns role scale,
+private terrain-uniform overrides and asset-view lifetimes.
+
 ## R55: appearance is not a second world
 
 A validated classic/clay account preference selects presentation only. The same

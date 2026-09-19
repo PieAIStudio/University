@@ -36,6 +36,42 @@ This catalogue clarification changes no technique, budget or original receipt.
 
 ## Decision and authority
 
+### R56: polymer response and contact-preserving display geometry
+
+Owner rejects the R55 directional wrinkle field and authorizes reversible asset
+experiments after a remote classic checkpoint. RenderKit 0.5.0 provides the opt-in
+isotropic polymer kernel; classic keeps its original shader, maps and uniforms.
+The clay terrain clone alone disables meadow pigment with a private uniform.
+
+This supersedes R55's identical *draw geometry* restriction, not its one-world
+contract. Four named near-field scenery meshes lease owned views: bush lobes keep
+80 faces and their lower support cage, trees keep positions/indices, and existing
+rock components receive one upper-shoulder rounding step with the bottom third
+pinned. No new placements, displacement of terrain, source edits or avatar rebuild.
+Source and drawn identities remain separately observable; classic restores exact
+source pointers. Warm toggles cache at most one view per present target; departure,
+host replacement and unmount release only owned buffers.
+
+The canonical rock merger now carries semantic ranges and existing plant-root
+footprints, without changing any original vertex/index/color buffer. Spring
+banks, ruins, open/non-manifold boundaries and triangles under shoulder plants
+are pinned; rounding must not make retained trees or flowers float. Twenty
+actual route/length fixtures verify these root heights by raycasting both views.
+Bounded box-volume/support, material groups, source mutations and independent
+canvas cleanup have direct tests. Whole-frame clay geometry has a 15% overhead
+ceiling and no extra draw calls; the rendering budget is not inferred from FPS.
+
+Research: cclank/clay-safari `src/clay.js` and `blender/build_animals.py` informed
+the matte response/rounded primitive comparison; no animal assets or source were
+copied. The Tripo3D clay-style guide is art-direction guidance, not performance
+proof. Donor originals, photographic references and AvatarKit geometry remain
+untouched. This experiment uses code-derived views, not another Blender export.
+
+A full bush subdivision study cost 154,596 versus 89,796 full-frame triangles on
+the short course and was rejected. The selected selective-rock study used 96,252
+triangles at the same 54 calls. It keeps the current terrain/route/collision rules;
+final integrated validation and source receipts live in the delivery plan.
+
 ### R55: reversible clay appearance; R54 turf embossing rejected
 
 Owner explicitly retains ALL R54 low scenery and rejects only the short-turf

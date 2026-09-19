@@ -7,13 +7,15 @@ import type { WorldStyle } from "@pieai/university-core";
 
 type Surface = THREE.MeshStandardMaterial | THREE.MeshPhysicalMaterial;
 type MaterialSet = THREE.Material | THREE.Material[];
-export type AppearanceRole = "scenery" | "terrain" | "avatar" | "cloud" | "water";
+export type AppearanceRole = "scenery" | "terrain" | "avatar" | "foliage" | "cloud" | "water";
+// Matched real-app study: volume and matte response before surface marks.
 const ROLES = {
-  scenery: { scale: 1.5, relief: 0.12, pigment: 1 },
-  terrain: { scale: 0.65, relief: 0.16, pigment: 0.8 },
-  avatar: { scale: 4.0, relief: 0.035, pigment: 0.7 },
-  cloud: { scale: 2.2, relief: 0.06, pigment: 0.45 },
-  water: { scale: 0.9, relief: 0.09, pigment: 0.8 },
+  scenery: { scale: 0.6, relief: 0.036, grain: 0.3, roughness: 0.82 },
+  terrain: { scale: 0.2, relief: 0.014, grain: 0.16, roughness: 0.87 },
+  avatar: { scale: 6, relief: 0.014, grain: 0.24, roughness: 0.77 },
+  foliage: { scale: 2.3, relief: 0.016, grain: 0.2, roughness: 0.8 },
+  cloud: { scale: 2, relief: 0.01, grain: 0.12, roughness: 0.85 },
+  water: { scale: 0.6, relief: 0.036, grain: 0.3, roughness: 0.82 },
 } as const;
 interface Entry {
   source: Surface;
@@ -38,6 +40,7 @@ function eligible(material: THREE.Material): material is Surface {
 }
 function roleOf(node: THREE.Object3D, inherited: AppearanceRole): AppearanceRole {
   if (node.name === "university-avatar-occlusion-target") return "avatar";
+  if (/bush-crowns|fir-trees|broadleaf-trees/.test(node.name)) return "foliage";
   if (/cloud/i.test(node.name)) return "cloud";
   if (/spring|water/i.test(node.name)) return "water";
   if (/island-terrain|globe-surface|planet-surface/.test(node.name)) return "terrain";
@@ -51,7 +54,7 @@ function clayCopy(source: Surface, role: AppearanceRole): Surface {
   const material = (source as THREE.MeshPhysicalMaterial).isMeshPhysicalMaterial
     ? new THREE.MeshPhysicalMaterial().copy(view as THREE.MeshPhysicalMaterial)
     : new THREE.MeshStandardMaterial().copy(view);
-  const clay = createClaySurfaceAdapter(ROLES[role]);
+  const clay = createClaySurfaceAdapter({ finish: "polymer", ...ROLES[role] });
   material.name = `${source.name || source.type}/colored-clay`;
   material.userData = {
     ...source.userData,
@@ -71,6 +74,10 @@ function clayCopy(source: Surface, role: AppearanceRole): Surface {
   material.customProgramCacheKey = () => `${program}/${clay.customProgramCacheKey()}/${role}`;
   material.onBeforeCompile = (shader, renderer) => {
     source.onBeforeCompile.call(material, shader, renderer);
+    // A molded clay sheet does not inherit the classic grass-pigment pattern.
+    // Shadow the uniform object, never modify the source factory's shared value.
+    if (role === "terrain" && shader.uniforms.uMeadowStrength)
+      shader.uniforms.uMeadowStrength = { value: 0 };
     clay.onBeforeCompile(shader);
   };
   material.onBeforeRender = source.onBeforeRender;

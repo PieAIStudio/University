@@ -94,15 +94,43 @@ async function receipt(page: Page) {
     };
   });
 }
-const geometryIdentity = (r: Awaited<ReturnType<typeof receipt>>) =>
+const geometryIdentity = (r: Awaited<ReturnType<typeof receipt>>, source = false) =>
   r.canvases.map((c: any) => ({
     scene: c.scene,
-    meshes: c.meshes.map((m: any) => [m.id, m.name, m.geometry]),
+    meshes: c.meshes.map((m: any) => [m.id, m.name, source ? m.sourceGeometry : m.geometry]),
   }));
+const SHAPED = new Set([
+  "course-bush-crowns",
+  "course-rock-outcrops",
+  "course-fir-trees",
+  "course-broadleaf-trees",
+]);
+function expectBoundedViews(r: Awaited<ReturnType<typeof receipt>>) {
+  for (const canvas of r.canvases) {
+    expect(canvas.ownedGeometries).toBeLessThanOrEqual(4);
+    for (const mesh of canvas.meshes) {
+      if (!SHAPED.has(mesh.name)) {
+        expect(mesh.geometry).toBe(mesh.sourceGeometry);
+        expect(mesh.geometryKind).toBeNull();
+      } else {
+        expect(mesh.geometry).not.toBe(mesh.sourceGeometry);
+        expect(mesh.triangles).toBeLessThanOrEqual(
+          mesh.sourceTriangles * (mesh.geometryKind === "stone" ? 4 : 1),
+        );
+      }
+    }
+  }
+}
 const materialIdentity = (r: Awaited<ReturnType<typeof receipt>>) =>
   r.canvases.map((c: any) => c.meshes.map((m: any) => m.materials.map((v: any) => v.id)));
 const resourceCounts = (r: Awaited<ReturnType<typeof receipt>>) =>
-  r.canvases.map((c: any) => [c.materialCount, c.programs, c.textures]);
+  r.canvases.map((c: any) => [
+    c.materialCount,
+    c.programs,
+    c.textures,
+    c.ownedGeometries,
+    c.ownedVertices,
+  ]);
 
 for (const sample of [
   {
@@ -146,7 +174,7 @@ for (const sample of [
     reduce: true,
   },
 ]) {
-  test(`R55 ${sample.name}: same world, all scenery retained, reversible clay and no rebuild`, async ({
+  test(`R56 ${sample.name}: canonical world retained, bounded clay views and exact classic return`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: sample.width, height: sample.height });
@@ -185,14 +213,19 @@ for (const sample of [
     await page.screenshot({ path: join(folder, "classic.png") });
     await choose(page, "clay");
     const clay = await receipt(page);
-    expect(geometryIdentity(clay)).toEqual(geometryIdentity(original));
+    // Owner permits display-only asset rounding, never a new canonical world.
+    expect(geometryIdentity(clay, true)).toEqual(geometryIdentity(original));
+    expectBoundedViews(clay);
     expect(clay.camera).toEqual(original.camera);
     expect(clay.landscape).toEqual(original.landscape);
     expect(clay.nodes).toEqual(original.nodes);
     expect(clay.avatarRecipe).toBe(original.avatarRecipe);
     expect(clay.uiTheme).toBe(original.uiTheme);
     expect(clay.accountStyle).toBe("clay");
-    expect(clay.frame).toEqual(original.frame);
+    expect(clay.frame.calls).toBe(original.frame.calls);
+    expect(clay.frame.lines).toBe(original.frame.lines);
+    expect(clay.frame.points).toBe(original.frame.points);
+    expect(clay.frame.triangles).toBeLessThanOrEqual(original.frame.triangles * 1.15);
     await page.screenshot({ path: join(folder, "clay.png") });
     const gpu = process.env.R55_MEASURE_GPU === "1" ? await measureStageGpu(page) : null;
     for (let i = 0; i < 10; i++) {
@@ -201,11 +234,13 @@ for (const sample of [
     }
     const repeated = await receipt(page);
     expect(resourceCounts(repeated)).toEqual(resourceCounts(clay));
-    expect(geometryIdentity(repeated)).toEqual(geometryIdentity(original));
+    expect(geometryIdentity(repeated)).toEqual(geometryIdentity(clay));
+    expect(geometryIdentity(repeated, true)).toEqual(geometryIdentity(original));
     await choose(page, "classic");
     const restored = await receipt(page);
     expect(materialIdentity(restored)).toEqual(materialIdentity(original));
     expect(geometryIdentity(restored)).toEqual(geometryIdentity(original));
+    expect(restored.frame).toEqual(original.frame);
     expect(restored.overflow).toBeLessThanOrEqual(1);
     await choose(page, "clay");
     const overview = page.getByRole("button", {
@@ -242,7 +277,7 @@ for (const sample of [
   });
 }
 
-test("R55 one choice reaches the globe, series, profile, settings and avatar workshop", async ({
+test("R56 one choice reaches the globe, series, profile, settings and avatar workshop", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });

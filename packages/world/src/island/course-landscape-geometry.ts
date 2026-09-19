@@ -95,14 +95,19 @@ function mergedOwned(parts: THREE.BufferGeometry[]): THREE.BufferGeometry | null
 export function buildCourseLandscapeGeometry(plan: CourseLandscapePlan) {
   const spring = plan.spring ? buildCourseSpringGeometry(plan.spring) : null;
   const rockParts: THREE.BufferGeometry[] = spring ? [spring.bank] : [];
+  // Presentation may round standalone stones, never water seats or ruins.
+  // Ranges carry semantic ownership through the existing single merged draw.
+  const sculptable = new Set<THREE.BufferGeometry>();
   let rock: THREE.BufferGeometry | null;
   try {
-    for (const site of plan.outcrops)
-      rockParts.push(
+    for (const site of plan.outcrops) {
+      const part =
         site.feature === "ruin"
           ? createCourseRuinGeometry(site)
-          : createCourseOutcropGeometry(site),
-      );
+          : createCourseOutcropGeometry(site);
+      rockParts.push(part);
+      if (site.feature !== "ruin") sculptable.add(part);
+    }
     const stoneSource = createMiniatureAsset("stone");
     try {
       const colours = stoneSource.getAttribute("color"),
@@ -116,20 +121,38 @@ export function buildCourseLandscapeGeometry(plan: CourseLandscapePlan) {
           .lerp(normals.getY(i) > 0.6 ? sunlitMoss : mineral, 0.22);
         colours.setXYZ(i, pigment.r, pigment.g, pigment.b);
       }
-      for (const p of plan.stones ?? [])
-        rockParts.push(
-          stoneSource
-            .clone()
-            .scale(p.size, p.size, p.size)
-            .rotateY(p.turn)
-            .translate(p.x, p.y, p.z),
-        );
+      for (const p of plan.stones ?? []) {
+        const part = stoneSource
+          .clone()
+          .scale(p.size, p.size, p.size)
+          .rotateY(p.turn)
+          .translate(p.x, p.y, p.z);
+        rockParts.push(part);
+        sculptable.add(part);
+      }
     } finally {
       stoneSource.dispose();
     }
     // Transfer ownership once. Failed builders release pending pieces; the
     // merger owns/disposes the transferred set even when attributes disagree.
+    let offset = 0;
+    const ranges = rockParts.flatMap((part) => {
+      const count = part.index?.count ?? part.getAttribute("position").count;
+      const range = { start: offset, count };
+      offset += count;
+      return sculptable.has(part) ? [range] : [];
+    });
     rock = mergedOwned(rockParts.splice(0));
+    if (rock) {
+      rock.userData.clayStoneRanges = ranges;
+      // Plants already rooted on the bank retain that exact supporting plane.
+      rock.userData.clayStoneContacts = [
+        ...(plan.canopy ?? []).map((p) => ({ x: p.x, z: p.z, radius: p.size * 0.12 + 0.04 })),
+        ...plan.flora
+          .filter((p) => p.supportId)
+          .map((p) => ({ x: p.x, z: p.z, radius: p.radius + 0.04 })),
+      ];
+    }
   } catch (error) {
     rockParts.forEach((part) => part.dispose());
     spring?.water.dispose();

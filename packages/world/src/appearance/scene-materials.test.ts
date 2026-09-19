@@ -34,7 +34,8 @@ describe("reversible borrowed material presentation", () => {
     clay.onBeforeCompile(shader, null as never);
     expect(hook).toHaveBeenCalledTimes(1);
     expect(shader.uniforms.host).toEqual({ value: 7 });
-    expect(shader.fragmentShader).toContain("swimmer-clay-surface-v1");
+    expect(shader.fragmentShader).toContain("swimmer-clay-polymer-v1");
+    expect(shader.fragmentShader).not.toContain("claySweep");
     for (let i = 0; i < 20; i++) {
       owner.reconcile("classic");
       expect(mesh.material).toBe(source);
@@ -61,6 +62,31 @@ describe("reversible borrowed material presentation", () => {
     geometry.dispose();
     source.dispose();
     texture.dispose();
+  });
+  it("removes classic meadow pigment only through a private clay uniform", () => {
+    const { mesh, source, owner } = setup();
+    mesh.name = "island-terrain";
+    const meadow = { value: 1 };
+    source.onBeforeCompile = (shader) => {
+      shader.uniforms.uMeadowStrength = meadow;
+    };
+    owner.reconcile("clay");
+    const shader = {
+      vertexShader: THREE.ShaderLib.physical.vertexShader,
+      fragmentShader: THREE.ShaderLib.physical.fragmentShader,
+      uniforms: {},
+    } as THREE.WebGLProgramParametersWithUniforms;
+    mesh.material.onBeforeCompile(shader, null as never);
+    expect(shader.uniforms.uMeadowStrength).toEqual({ value: 0 });
+    expect(shader.uniforms.uMeadowStrength).not.toBe(meadow);
+    expect(meadow.value).toBe(1);
+    owner.reconcile("classic");
+    expect(mesh.material).toBe(source);
+    source.onBeforeCompile(shader, null as never);
+    expect(shader.uniforms.uMeadowStrength).toBe(meadow);
+    owner.dispose();
+    mesh.geometry.dispose();
+    source.dispose();
   });
   it("includes late arrivals but excludes invisible picking and unlit feedback", () => {
     const { scene, source, mesh, owner } = setup();

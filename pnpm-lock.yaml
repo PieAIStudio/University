@@ -77,8 +77,8 @@ importers:
         specifier: 0.6.0
         version: 0.6.0(@react-three/fiber@9.6.1(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1))(react@19.2.8)(three@0.185.1)
       '@pieai/swimmer-render-kit':
-        specifier: 0.4.0
-        version: 0.4.0(three@0.185.1)
+        specifier: 0.5.0
+        version: 0.5.0(three@0.185.1)
       '@pieai/swimmer-ui-kit':
         specifier: 2.6.1
         version: 2.6.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -322,8 +322,8 @@ importers:
         specifier: 0.6.0
         version: 0.6.0(@react-three/fiber@9.6.1(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1))(react@19.2.8)(three@0.185.1)
       '@pieai/swimmer-render-kit':
-        specifier: 0.4.0
-        version: 0.4.0(three@0.185.1)
+        specifier: 0.5.0
+        version: 0.5.0(three@0.185.1)
       '@pieai/swimmer-ui-kit':
         specifier: 2.6.1
         version: 2.6.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -788,8 +788,8 @@ packages:
     peerDependencies:
       '@supabase/supabase-js': ^2.0.0
 
-  '@pieai/swimmer-render-kit@0.4.0':
-    resolution: {integrity: sha512-rJa91BT6gSoA+TZScYmATEwoFQudGR3UpeHxKcQDrQlLqk+hUTJsCzm5RRn2YiZzoEG/MPIOQF/YS8e5z+gkrg==, tarball: https://registry.npmjs.org/@pieai/swimmer-render-kit/-/swimmer-render-kit-0.4.0.tgz}
+  '@pieai/swimmer-render-kit@0.5.0':
+    resolution: {integrity: sha512-MLWJbtkgTeFGkbd5EpTsID55J69R6QdDylm5t7Aw0OuiSJTgXB5gQGcxWcA0OQAp3HbwrlsJL0LVdwPJzNz0HA==}
     engines: {node: '>=24 <25'}
     peerDependencies:
       three: '>=0.180.0'
@@ -3143,7 +3143,7 @@ snapshots:
     dependencies:
       '@supabase/supabase-js': 2.110.3
 
-  '@pieai/swimmer-render-kit@0.4.0(three@0.185.1)':
+  '@pieai/swimmer-render-kit@0.5.0(three@0.185.1)':
     optionalDependencies:
       three: 0.185.1
 
