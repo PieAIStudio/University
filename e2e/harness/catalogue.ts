@@ -324,7 +324,7 @@ const settlementCourse = requireCourse(
     course.prerequisiteCourseIds.length === 0 &&
     course.units[0]?.lessons[0]?.exerciseCount === 1 &&
     !course.units[0]?.lessons[0]?.firstExerciseIsUndecided,
-  "a series' real starting course with one deterministic opening exercise; PRIMM Today completion is covered in primm.spec.ts",
+  "a series' real starting course with one deterministic opening exercise; PRIMM completion travels with the interaction-first lesson content",
 );
 const settlementStudy = studyOf(settlementCourse);
 const settlementLesson = settlementCourse.units.flatMap((unit) => unit.lessons)[0];
