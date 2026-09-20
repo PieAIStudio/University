@@ -258,7 +258,9 @@ async function assertCardFollowsIsland(page: Page, island: Box): Promise<Box> {
   const gap = Math.hypot(gapX, gapY);
   expect(
     gap,
-    `进入动作应贴着岛（边缘间隙 < 48px），现在是 ${gap.toFixed(0)}px。钉在角落会是几百。`,
+    `进入动作应贴着岛（边缘间隙 < 48px），现在是 ${gap.toFixed(0)}px。钉在角落会是几百。` +
+      ` 岛 ${island.width.toFixed(0)}×${island.height.toFixed(0)} @ ${island.x.toFixed(0)},${island.y.toFixed(0)}；` +
+      `卡片 ${cardBox.width.toFixed(0)}×${cardBox.height.toFixed(0)} @ ${cardBox.x.toFixed(0)},${cardBox.y.toFixed(0)}。`,
   ).toBeLessThan(48);
   expect(Math.abs(cardAt.x - islandAt.x), "卡片应在岛的一侧，而不是叠在岛心上").toBeGreaterThan(20);
   const viewport = page.viewportSize();

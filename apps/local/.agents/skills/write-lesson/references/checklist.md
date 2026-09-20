@@ -26,6 +26,9 @@ table is the judgment checklist. These are the acceptance items around it.
 - [machine + judgment] Localization preserves the distinctions being taught; same visible card text never has conflicting answers.
 - [machine] Async results and drafts isolated by account/lesson/revision; exit/cancel/retry/idempotency preserve actual work and evidence.
 - [process] All five phases played in the real product on desktop and phone width, with keyboard, wrong prediction, failure/retry and exit/resume; screenshots inspected.
+- [machine] Every locale the lesson ships carries a judgeable exercise: `planCheckpoint(localizeLearnerContent(lessons, locale)).unavailable` is empty in zh-CN and in en. A lesson assessable in one language only drops out of its block's checkpoint in the other, and the learner is told "not assessed yet" for work they did; four of `understanding-ai`'s twelve blocks were already in that state in English.
+- [machine] At 320px the first choice of the first round is fully in view in **every** locale, not only Chinese. The same round runs about a hundred pixels longer in English, and the breadcrumb above it is the approved way out of a lesson, so it cannot give the space back: the copy has to fit.
+- [judgment] The chosen Investigate act still meets its own precondition in the contract's table **in each locale**. `check-result` needs material this learner can actually read; a recording in a language they do not speak leaves them guessing, and the same lesson can satisfy the rule in one language and break it in another.
 - [process] For a batch: record per lesson which parts the line produced unaided and which a person changed.
 
 The V2-specific items below apply only to retained V2 revisions. Shared source,

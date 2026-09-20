@@ -35,6 +35,20 @@ for (const viewport of [
       expect(box!.height).toBeGreaterThanOrEqual(44);
       await humanClick(page, start, "first real lesson");
       await expect(page.locator(".lesson-reader")).toBeVisible();
+      /*
+        The welcome leads wherever Today points, and that opening is now a PRIMM
+        lesson with its own reader and no shared exercise panel. The draft and
+        determined-feedback contract below belongs to the deterministic exercise
+        this test already takes its answer from, so walk to that lesson by its
+        catalogue role instead of assuming the welcome lands on it. The welcome's
+        own promise — optional, reachable, leads to a real reader — is asserted
+        above and keeps its meaning.
+      */
+      await page.goto(
+        `${ONLINE_ORIGIN}${lessonPathOf(CATALOGUE_ROLES.settlement.course, CATALOGUE_ROLES.settlement.lesson)}`,
+        { waitUntil: "domcontentloaded" },
+      );
+      await expect(page.locator(".lesson-reader")).toBeVisible();
       const lessonUrl = page.url();
       const exercise = page.locator(".exercise-panel").first();
       const options = exercise.locator("[data-exercise-option]");

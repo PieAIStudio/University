@@ -108,12 +108,23 @@ test("每一节声明了互动组件的课，读者都真的看得到它", async
     });
     const board = page.locator(".learning-activity");
     try {
-      await expect(board).toBeVisible({ timeout: 20_000 });
-      await expect(board).toHaveAttribute("data-activity", target.kind, {
-        timeout: 5_000,
-      });
-      const game = board.locator(".learning-activity__game");
-      expect((await game.textContent())?.trim().length ?? 0).toBeGreaterThan(0);
+      if (target.kind === "primm" || target.kind === "interaction-path") {
+        // These two draw their own readers instead of the shared activity board,
+        // so "the reader can see it" is the same question asked of a different
+        // element. A missing renderer branch still shows up here.
+        const reader = page
+          .locator(target.kind === "primm" ? ".primm, .primm-steps" : ".interaction-path")
+          .first();
+        await expect(reader).toBeVisible({ timeout: 20_000 });
+        expect((await reader.textContent())?.trim().length ?? 0).toBeGreaterThan(0);
+      } else {
+        await expect(board).toBeVisible({ timeout: 20_000 });
+        await expect(board).toHaveAttribute("data-activity", target.kind, {
+          timeout: 5_000,
+        });
+        const game = board.locator(".learning-activity__game");
+        expect((await game.textContent())?.trim().length ?? 0).toBeGreaterThan(0);
+      }
     } catch {
       const body = (await page.locator("body").innerText()).slice(0, 120).replace(/\s+/g, " ");
       broken.push(`${target.kind} @ ${target.path} — 页面上是：${body}`);
@@ -142,7 +153,16 @@ test("手机宽度下，每块板子上的东西都在板子里面", async ({ pa
   await page.setViewportSize({ width: 375, height: 812 });
 
   const seen = new Set<string>();
-  const sample = lessonsWithActivities().filter((t) => !seen.has(t.kind) && seen.add(t.kind));
+  /*
+    Board activities only. This measures pieces against their board's own box,
+    and neither a PRIMM nor an interaction-path lesson has one: each runs its own
+    reader, and both are walked at phone width by primm.spec.ts and
+    interaction-path.spec.ts. Including them would fail on a missing element
+    rather than on a piece that escaped, which is not what this guards.
+  */
+  const sample = lessonsWithActivities()
+    .filter((t) => t.kind !== "primm" && t.kind !== "interaction-path")
+    .filter((t) => !seen.has(t.kind) && seen.add(t.kind));
   expect(sample.length, "货架上一个带组件的课节都没有").toBeGreaterThan(0);
 
   const escaped: string[] = [];

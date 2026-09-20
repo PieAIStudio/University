@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-20T12:27:50.417Z
+generated_at: 2026-09-20T16:10:40.539Z
 generator_version: doc-gov@0.14.0
-docs_count: 149
+docs_count: 150
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -423,6 +423,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-09-09
+    pinned: false
+  - id: REF-PRIMM-READING-TOOLS-GAP
+    path: docs/reference/execution/primm-reading-tools-gap.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-21
     pinned: false
   - id: REF-PRODUCT-BEFORE-AFTER
     path: docs/reference/execution/product-before-after/before-after.md
