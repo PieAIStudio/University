@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 
 import { afterEach, describe, expect, it } from "vitest";
 import { primmFixture } from "../../../packages/core/dist/learning-play/fixtures/primm.js";
+import { primmStepsFixture } from "../../../packages/core/dist/learning-play/fixtures/primm-steps.js";
 
 import {
   PROJECT_ROOT,
@@ -387,6 +388,26 @@ describe("public DTO gate inside an activity", () => {
       mutate(poisoned);
       expect(publicDtoViolations(wrap(poisoned), "pkg").length).toBeGreaterThan(0);
     }
+  });
+
+  it("allows a version-3 build step's answers, never a Make answer key", () => {
+    const lesson = structuredClone(primmStepsFixture);
+    const buildStep = lesson.steps.find((step) => step.kind === "build");
+    expect(buildStep.answers.length).toBeGreaterThan(0);
+    expect(publicDtoViolations(wrap(lesson), "pkg")).toEqual([]);
+
+    const independent = wrap(structuredClone(lesson));
+    independent.course.units[0].lessons[0].exercises = [
+      { answer: "secret", rubric: ["private grading"] },
+    ];
+    expect(publicDtoViolations(independent, "pkg").length).toBeGreaterThan(0);
+
+    // The exemption names the build step's own position; it is not a hole
+    // around every `answers` key in a validated step lesson.
+    const relabeled = structuredClone(lesson);
+    const chooseStep = relabeled.steps.find((step) => step.kind === "choose");
+    chooseStep.answers = buildStep.answers;
+    expect(publicDtoViolations(wrap(relabeled), "pkg").length).toBeGreaterThan(0);
   });
 
   it.each([

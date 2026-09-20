@@ -7,7 +7,7 @@ import {
 } from "@pieai/university-core";
 import { useI18n } from "../i18n/index.js";
 import type { LessonAssetView } from "../view/lesson-view.js";
-import type { PrimmActivity } from "./primm-types.js";
+import type { PrimmClassicActivity } from "./primm-types.js";
 import { PrimmSource } from "./PrimmMaterials.js";
 
 /** Guided evidence only. None of these operations reports an independent grade. */
@@ -31,7 +31,10 @@ export const emptyInvestigation = (): InvestigationDraft => ({
   decisions: {},
   touched: false,
 });
-export function investigationComplete(activity: PrimmActivity, draft: InvestigationDraft): boolean {
+export function investigationComplete(
+  activity: PrimmClassicActivity,
+  draft: InvestigationDraft,
+): boolean {
   const game = activity.investigate.game;
   switch (game.kind) {
     case "inspect-image":
@@ -58,7 +61,7 @@ export function PrimmInvestigate({
   draft,
   onChange,
 }: {
-  readonly activity: PrimmActivity;
+  readonly activity: PrimmClassicActivity;
   readonly assets?: readonly LessonAssetView[];
   readonly draft: InvestigationDraft;
   readonly onChange: (next: InvestigationDraft) => void;

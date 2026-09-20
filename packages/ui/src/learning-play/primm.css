@@ -412,3 +412,676 @@
     block-size: 360px;
   }
 }
+
+/* ── Version 3: one screen, one action (journey v5 "micro-step") ───────────
+   A short title, at most two lines before the action, and the teacher's line
+   after it in the bottom bar. Colour and type come from the kit tokens. */
+.primm-steps {
+  display: grid;
+  gap: 16px;
+  max-width: 640px;
+  margin-inline: auto;
+}
+/* The bottom bar stays on screen; anything scrolled into view (by focus, a
+   test or a screen reader) stops above it rather than underneath it. */
+.primm-steps :is(button, textarea, [role="radio"]) {
+  scroll-margin-block-end: 180px;
+}
+.primm-steps h2 {
+  font-size: clamp(21px, 5vw, 26px);
+  line-height: 1.35;
+  text-wrap: balance;
+  margin: 0;
+}
+.primm-steps h2:focus {
+  outline: none;
+}
+.primm-steps__phases {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.primm-steps__phases li {
+  display: grid;
+  gap: 3px;
+  justify-items: center;
+}
+.primm-steps__bar {
+  inline-size: 100%;
+  block-size: 10px;
+  border-radius: 999px;
+  background: var(--game-ui-panel-strong);
+  overflow: hidden;
+}
+.primm-steps__bar > span {
+  display: block;
+  block-size: 100%;
+  background: var(--game-ui-accent);
+  border-radius: 999px;
+  transition: width 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.primm-steps__phase {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--game-ui-text-muted);
+}
+.primm-steps__phases li.is-current .primm-steps__phase {
+  color: var(--game-ui-accent-ink);
+  font-weight: 700;
+}
+.primm-steps__step,
+.primm-steps__intro,
+.primm-steps__finish {
+  display: grid;
+  gap: 14px;
+  animation: primm-steps-enter 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes primm-steps-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.primm-steps__head {
+  display: grid;
+  gap: 6px;
+}
+.primm-steps__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.primm-steps__chip {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--game-ui-accent-contrast);
+  background: var(--game-ui-accent);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+.primm-steps__demo,
+.primm-steps__link {
+  margin-inline-start: auto;
+  background: none;
+  border: 0;
+  padding: 4px 6px;
+  border-radius: var(--game-ui-radius-control);
+  color: var(--game-ui-secondary);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.primm-steps__link {
+  margin-inline-start: 0;
+  justify-self: start;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.primm-steps__goal {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 18px;
+  font-weight: 600;
+}
+.primm-steps__goal > span {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--game-ui-accent-contrast);
+  background: var(--game-ui-accent);
+  border-radius: var(--game-ui-radius-control);
+  padding: 1px 8px;
+}
+.primm-steps__lead {
+  font-size: 18px;
+  margin: 0;
+}
+.primm-steps__intro > p,
+.primm-steps__finish > p {
+  margin: 0;
+}
+.primm-steps__case,
+.primm-steps__context {
+  margin: 0;
+  font-size: 15px;
+  color: var(--game-ui-text-muted);
+  border-inline-start: 3px solid var(--game-ui-border-strong);
+  padding-inline-start: 10px;
+}
+.primm-steps__case > p {
+  margin: 0 0 4px;
+}
+.primm-steps__thumb {
+  margin: 0;
+  inline-size: min(160px, 40%);
+  /* Reserve the frame before the photo arrives, so a late image never moves
+     the choices a learner is about to tap. */
+  aspect-ratio: 3 / 2;
+}
+.primm-steps__thumb img {
+  block-size: 100%;
+  object-fit: cover;
+}
+.primm-steps__thumb img,
+.primm-steps__point img {
+  display: block;
+  inline-size: 100%;
+  border-radius: var(--game-ui-radius-card);
+}
+.primm-steps__options {
+  display: grid;
+  gap: 10px;
+}
+.primm-steps__option,
+.primm-steps__answer,
+.primm-steps__zone,
+.primm-steps__tile,
+.primm-steps__attach {
+  font: inherit;
+  color: var(--game-ui-text);
+  text-align: start;
+  background: var(--game-ui-surface-raised);
+  border: 2px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-card);
+  box-shadow: 0 4px 0 var(--game-ui-border-subtle);
+  cursor: pointer;
+  transition:
+    transform 0.08s,
+    border-color 0.15s,
+    background 0.15s;
+}
+.primm-steps__option {
+  padding: 14px 16px;
+  font-size: 17px;
+}
+.primm-steps__option:active:not(:disabled),
+.primm-steps__tile:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--game-ui-border-subtle);
+}
+.primm-steps__option[aria-checked="true"],
+.primm-steps__answer.is-selected {
+  border-color: var(--game-ui-secondary);
+  background: var(--game-ui-secondary-pale);
+  box-shadow: 0 4px 0 var(--game-ui-secondary);
+}
+.primm-steps__option:disabled {
+  cursor: default;
+}
+.primm-steps__chat {
+  display: grid;
+  gap: 10px;
+}
+.primm-steps__bubble {
+  max-inline-size: 88%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  margin: 0;
+}
+.primm-steps__bubble.is-me {
+  justify-self: end;
+  background: var(--game-ui-accent-pale);
+  color: var(--game-ui-text);
+  border-end-end-radius: 6px;
+}
+.primm-steps__bubble.is-me img {
+  display: block;
+  inline-size: 96px;
+  border-radius: 10px;
+  margin-block-end: 6px;
+}
+.primm-steps__bubble.is-me p {
+  margin: 0;
+}
+.primm-steps__bubble.is-ai {
+  justify-self: start;
+  background: var(--game-ui-surface-raised);
+  border: 2px solid var(--game-ui-border-subtle);
+  border-end-start-radius: 6px;
+}
+.primm-steps__live {
+  margin: 0;
+  font-size: 12px;
+  color: var(--game-ui-text-muted);
+}
+.primm-steps__composer {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 2px dashed var(--game-ui-border-strong);
+  border-radius: 18px;
+  background: var(--game-ui-surface-raised);
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.primm-steps__composer.is-hot,
+.primm-steps__zone.is-hot {
+  border-style: solid;
+  border-color: var(--game-ui-secondary);
+  background: var(--game-ui-secondary-pale);
+}
+.primm-steps__composer.is-write {
+  grid-template-columns: 1fr auto;
+  border-style: solid;
+}
+.primm-steps__composer.is-write textarea {
+  inline-size: 100%;
+  box-sizing: border-box;
+  min-block-size: 52px;
+  resize: none;
+  font: inherit;
+  font-size: 17px;
+  border: 0;
+  background: transparent;
+  color: var(--game-ui-text);
+}
+.primm-steps__composer-text {
+  margin: 0;
+}
+.primm-steps__slot {
+  inline-size: 64px;
+  block-size: 48px;
+  border-radius: 10px;
+  border: 2px dashed var(--game-ui-border-strong);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--game-ui-text-muted);
+  overflow: hidden;
+}
+.primm-steps__composer.is-filled .primm-steps__slot {
+  border: 0;
+}
+.primm-steps__slot img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+.primm-steps__tray {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.primm-steps__attach {
+  inline-size: 112px;
+  padding: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+}
+.primm-steps__attach img {
+  display: block;
+  inline-size: 100%;
+  pointer-events: none;
+}
+.primm-steps__hint {
+  margin: 0;
+  font-size: 14px;
+  color: var(--game-ui-text-muted);
+}
+.is-lifted {
+  opacity: 0.35;
+}
+.primm-steps__ghost {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  margin: 0;
+  opacity: 0.92;
+  box-shadow: var(--game-ui-shadow-modal);
+}
+.primm-steps__sentences {
+  justify-self: stretch;
+  max-inline-size: none;
+  line-height: 2;
+}
+.primm-steps__sentence {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 2px 3px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: start;
+  text-decoration: underline dotted var(--game-ui-border-strong) 2px;
+  text-underline-offset: 6px;
+}
+.primm-steps__sentence.is-hit {
+  background: color-mix(in srgb, var(--game-ui-success) 18%, transparent);
+  text-decoration-color: var(--game-ui-success);
+}
+.primm-steps__answers,
+.primm-steps__questions {
+  display: grid;
+  gap: 10px;
+}
+.primm-steps__answer {
+  padding: 10px 12px;
+  font-size: 15px;
+  touch-action: none;
+  cursor: grab;
+}
+.primm-steps__answer .primm__formatted > * {
+  margin: 0;
+}
+.primm-steps__question {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 2px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-card);
+  background: var(--game-ui-panel);
+}
+.primm-steps__question > p {
+  margin: 0;
+  font-weight: 700;
+}
+.primm-steps__zone {
+  min-block-size: 44px;
+  padding: 8px 10px;
+  border-style: dashed;
+  box-shadow: none;
+  font-size: 14px;
+  color: var(--game-ui-text-muted);
+}
+.primm-steps__zone.is-done {
+  border-style: solid;
+  border-color: var(--game-ui-success);
+  background: color-mix(in srgb, var(--game-ui-success) 14%, var(--game-ui-panel));
+  color: var(--game-ui-text);
+  cursor: default;
+}
+.primm-steps__sort {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+.primm-steps__sort .primm-steps__thumb {
+  justify-self: start;
+}
+.primm-steps__streak {
+  margin: 0;
+  min-block-size: 22px;
+  font-weight: 800;
+  color: var(--game-ui-accent-ink);
+}
+.primm-steps__stack {
+  position: relative;
+  inline-size: min(320px, 100%);
+  block-size: 140px;
+}
+.primm-steps__card {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  text-align: center;
+  font-size: 21px;
+  font-weight: 800;
+  background: var(--game-ui-surface-raised);
+  border: 2px solid var(--game-ui-border-subtle);
+  border-radius: 20px;
+  box-shadow: 0 6px 0 var(--game-ui-border-subtle);
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+.primm-steps__card.is-under {
+  z-index: -1;
+  transform: translateY(8px) scale(0.96);
+  opacity: 0.7;
+}
+.primm-steps__note {
+  margin: 0;
+  min-block-size: 26px;
+  font-weight: 700;
+  text-align: center;
+}
+.primm-steps__note.is-good {
+  color: var(--game-ui-success);
+}
+.primm-steps__note.is-bad {
+  color: var(--game-ui-danger);
+}
+.primm-steps__buckets {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 12px;
+  inline-size: min(320px, 100%);
+}
+.primm-steps__line {
+  min-block-size: 60px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-end;
+  gap: 8px;
+  padding-block-end: 8px;
+  border-block-end: 2px solid var(--game-ui-border-strong);
+}
+.primm-steps__line.is-empty::before {
+  content: attr(data-empty);
+  align-self: center;
+  font-size: 14px;
+  color: var(--game-ui-text-muted);
+}
+.primm-steps__tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-block-size: 52px;
+}
+.primm-steps__tile {
+  padding: 8px 12px;
+  font-size: 17px;
+}
+.primm-steps__tile.is-used {
+  visibility: hidden;
+}
+.primm-steps__point {
+  position: relative;
+  margin: 0;
+  max-inline-size: 420px;
+}
+.primm-steps__point img {
+  cursor: pointer;
+}
+.primm-steps__region {
+  position: absolute;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.primm-steps__region > span {
+  position: absolute;
+  inset-block-end: 4px;
+  inset-inline-start: 50%;
+  translate: -50% 0;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--game-ui-surface-raised);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.primm-steps__region:hover > span,
+.primm-steps__region:focus-visible > span {
+  opacity: 1;
+}
+.primm-steps__region:focus-visible {
+  outline: none;
+  border-color: var(--game-ui-focus-ring);
+}
+.primm-steps__region.is-hit {
+  border-color: var(--game-ui-success);
+  background: color-mix(in srgb, var(--game-ui-success) 22%, transparent);
+}
+.primm-steps__checklist {
+  margin: 0;
+  padding-inline-start: 1.2em;
+  font-size: 15px;
+  color: var(--game-ui-text-muted);
+}
+.primm-steps__artifact {
+  display: grid;
+  gap: 8px;
+}
+.primm-steps__artifact textarea {
+  min-block-size: 96px;
+}
+.primm-steps__takeaway {
+  font-size: 20px;
+  font-weight: 600;
+  padding: 16px;
+  border: 2px solid var(--game-ui-success);
+  border-radius: var(--game-ui-radius-panel);
+  box-shadow: 0 6px 0 var(--game-ui-success);
+}
+.primm-steps__status {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: 15px;
+}
+.primm-steps__verdict > p {
+  margin: 0;
+}
+.primm-steps__toast {
+  position: fixed;
+  inset-inline-start: 50%;
+  inset-block-end: 132px;
+  translate: -50% 0;
+  z-index: 70;
+  margin: 0;
+  max-inline-size: calc(100vw - 32px);
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--game-ui-text);
+  color: var(--game-ui-surface);
+  font-weight: 700;
+  text-align: center;
+}
+.primm-steps__bottom {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 5;
+  display: grid;
+  gap: 10px;
+  margin-inline: -16px;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: var(--game-ui-panel);
+  border-block-start: 2px solid var(--game-ui-border-subtle);
+  transition: background 0.2s;
+}
+.primm-steps__feedback {
+  display: grid;
+  gap: 2px;
+  animation: primm-steps-enter 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.primm-steps__feedback strong {
+  font-size: 19px;
+}
+.primm-steps__feedback p {
+  margin: 0;
+}
+.primm-steps__bottom.is-good {
+  background: color-mix(in srgb, var(--game-ui-success) 16%, var(--game-ui-panel));
+  border-color: transparent;
+}
+.primm-steps__bottom.is-good strong {
+  color: var(--game-ui-success);
+}
+.primm-steps__bottom.is-bad {
+  background: color-mix(in srgb, var(--game-ui-danger) 14%, var(--game-ui-panel));
+  border-color: transparent;
+}
+.primm-steps__bottom.is-bad strong {
+  color: var(--game-ui-danger);
+}
+.primm-steps__bottom.is-info {
+  background: var(--game-ui-secondary-pale);
+  border-color: transparent;
+}
+.primm-steps__bottom.is-info strong {
+  color: var(--game-ui-secondary);
+}
+.primm-steps__visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.primm-steps__coach {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+}
+.primm-steps__hand {
+  position: absolute;
+  inline-size: 44px;
+  block-size: 44px;
+  margin: -6px 0 0 -10px;
+  filter: drop-shadow(0 3px 4px color-mix(in srgb, var(--game-ui-text) 40%, transparent));
+}
+.primm-steps__ripple {
+  position: absolute;
+  inline-size: 44px;
+  block-size: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  border: 3px solid var(--game-ui-secondary);
+}
+.primm-steps__caption {
+  position: absolute;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: var(--game-ui-text);
+  color: var(--game-ui-surface);
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  max-inline-size: calc(100vw - 32px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .primm-steps__step,
+  .primm-steps__intro,
+  .primm-steps__finish,
+  .primm-steps__feedback {
+    animation: none;
+  }
+  .primm-steps__bar > span {
+    transition: none;
+  }
+}
+@media (max-width: 420px) {
+  .primm-steps__card {
+    font-size: 19px;
+  }
+  .primm-steps__composer {
+    grid-template-columns: auto 1fr;
+  }
+  .primm-steps__composer > :last-child {
+    grid-column: 1 / -1;
+  }
+}

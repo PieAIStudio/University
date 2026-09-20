@@ -2,6 +2,10 @@ import type { GradingPort, LearningActivitySpec, LessonRef } from "@pieai/univer
 import type { LessonAssetView } from "../view/lesson-view.js";
 
 export type PrimmActivity = Extract<LearningActivitySpec, { kind: "primm" }>;
+/** One screen per phase (versions 1–2). */
+export type PrimmClassicActivity = Exclude<PrimmActivity, { experienceVersion: 3 }>;
+/** One action per screen inside the five phases (version 3). */
+export type PrimmStepsActivity = Extract<PrimmActivity, { experienceVersion: 3 }>;
 export type RunPrimm = (
   input: Parameters<NonNullable<GradingPort["executePrimm"]>>[0],
   signal: AbortSignal,

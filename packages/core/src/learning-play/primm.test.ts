@@ -117,7 +117,9 @@ describe("PRIMM wire contract", () => {
     expect(interactionLessonIssues(primmLessonFixture)).toEqual([]);
     expect(PRIMM_PHASES).toEqual(["predict", "run", "investigate", "modify", "make"]);
     expect(
-      Object.keys(PrimmPayloadSchema.shape).filter((key) => PRIMM_PHASES.includes(key as never)),
+      Object.keys(PrimmPayloadSchema.options[1].shape).filter((key) =>
+        PRIMM_PHASES.includes(key as never),
+      ),
     ).toEqual(PRIMM_PHASES);
     expect(primmFixture.make).not.toHaveProperty("rubric");
     expect(primmFixture.run).not.toHaveProperty("output");

@@ -1,7 +1,7 @@
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { useI18n } from "../i18n/index.js";
 import { PrimmMaterials } from "./PrimmMaterials.js";
-import type { PrimmLessonProps } from "./primm-types.js";
+import type { PrimmClassicActivity, PrimmLessonProps } from "./primm-types.js";
 
 /** Moving a prepared attachment changes readiness, never the canonical input. */
 export function PrimmAttachment({
@@ -10,7 +10,8 @@ export function PrimmAttachment({
   attached,
   disabled,
   onAttach,
-}: Pick<PrimmLessonProps, "activity" | "assets"> & {
+}: Pick<PrimmLessonProps, "assets"> & {
+  readonly activity: PrimmClassicActivity;
   readonly attached: boolean;
   readonly disabled: boolean;
   readonly onAttach: (attached: boolean) => void;

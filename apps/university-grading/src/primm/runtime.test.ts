@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { randomUUID } from "node:crypto";
 import { primmFixture } from "../../../../packages/core/src/learning-play/fixtures/primm.js";
+import { primmStepsFixture } from "../../../../packages/core/src/learning-play/fixtures/primm-steps.js";
 import type { ChatCompletionTransport } from "@pieai/swimmer-ai-provider-kit/chat";
 import { combineCriterionReviews, createPrimmRuntime, type PrimmRuntime } from "./runtime.js";
 import { createPrimmPreviewServer } from "./http.js";
@@ -96,6 +97,17 @@ describe("bounded PRIMM runtime", () => {
     expect(JSON.stringify(complete.mock.calls.at(-1)![0].messages)).not.toContain(
       "UNRELATED HISTORICAL CLAIM",
     );
+  });
+  it("runs a step lesson's authored requests and still rejects any other text", async () => {
+    const { runtime, lesson, complete } = setup();
+    lesson.activity = structuredClone(primmStepsFixture);
+    lesson.assets = [{ id: "everyday-coffee", mime: "image/png", bytes: Buffer.from("png") }];
+    for (const prompt of ["说说这张照片里有什么。", "勺子在杯子的哪一边？", "帮我看看这张照片。"])
+      expect((await runtime.run({ ...input(), prompt })).prompt).toBe(prompt);
+    await expect(runtime.run({ ...input(), prompt: "随便问一句" })).rejects.toMatchObject({
+      code: "rejected",
+    });
+    expect(complete).toHaveBeenCalledTimes(3);
   });
   it("runs the prepared request once, rejects changing its input under the same command", async () => {
     const { runtime, complete } = setup();

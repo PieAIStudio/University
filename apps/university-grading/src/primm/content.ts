@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFile, realpath, stat } from "node:fs/promises";
 import { resolve, relative } from "node:path";
 import { z } from "zod";
-import { localizeActivity, type PrimmActivity } from "@pieai/university-core";
+import { localizeActivity, primmRunPrompts, type PrimmActivity } from "@pieai/university-core";
 import { LessonActivitySchema } from "@pieai/university-core/domain/schemas.js";
 import { PreviewFailure } from "./errors.js";
 
@@ -192,7 +192,7 @@ export function createCanonicalPrimmResolver(options: {
       lesson.exercises.find((exercise: any) => exercise?.id === activity.make.exerciseId),
     );
     const spec = input.phase === "make" ? activity.make : activity.starter;
-    if (input.phase === "run" && input.prompt !== activity.starter.prompt)
+    if (input.phase === "run" && !primmRunPrompts(activity).includes(input.prompt))
       throw new PreviewFailure("rejected");
     const assets = spec.assetIds.map((id) => {
       const asset = lesson.assets.find((a) => a.metadata.id === id);

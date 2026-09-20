@@ -493,7 +493,8 @@ async function schemas() {
   const { z } = await import(
     pathToFileURL(join(repoRoot, "packages/core/node_modules/zod/index.js")).href
   );
-  const s = PrimmPayloadSchema.shape;
+  // The line writes version-2 lessons; version-3 step lessons are hand-written for now.
+  const s = PrimmPayloadSchema.options.find((option) => !("steps" in option.shape)).shape;
   const text = z.string().min(1);
   const activity = z
     .object({
@@ -1730,6 +1731,19 @@ async function stageAssemble(dir, packet, apply) {
     },
   });
   writeJson(join(dir, "proposal.json"), proposal);
+  const receipts = await nativeApply(dir, root, apply);
+  writeJson(join(dir, apply ? "native-apply.json" : "native-proposal-check.json"), {
+    missingTranslations: missing,
+    receipts,
+  });
+  log(
+    dir,
+    `assemble r${rev + 1}: ${apply ? "APPLIED via native dry-run + revise" : "proposal built and schema-valid"}; missing en strings: ${missing.length}`,
+  );
+}
+
+/** The one landing path: open the course for edit if needed, native dry-run, then revise. */
+async function nativeApply(dir, root, apply) {
   const { executeUniversityLocalCli, parseUniversityLocalCli } = await import(
     pathToFileURL(join(moduleRoot, ".university-local-build/server/cli.js")).href
   );
@@ -1741,46 +1755,140 @@ async function stageAssemble(dir, packet, apply) {
       command: parseUniversityLocalCli(argv),
     });
   const receipts = [];
-  if (apply) {
-    // Native revise only accepts a stale (open-for-edit) course; the batch's
-    // `finish` stage reactivates it. Opening an already open course is a no-op.
-    const course = readJson(join(root, STUDY, "courses", COURSE, "course.json"));
-    if (course.status !== "stale")
-      receipts.push({
-        args: "open-for-edit",
-        result: await run(["course", "open-for-edit", "--study", STUDY, "--course", COURSE]),
-      });
+  if (!apply) return receipts;
+  // Native revise only accepts a stale (open-for-edit) course; the batch's
+  // `finish` stage reactivates it. Opening an already open course is a no-op.
+  const course = readJson(join(root, STUDY, "courses", COURSE, "course.json"));
+  if (course.status !== "stale")
     receipts.push({
-      args: "revise --dry-run",
-      result: await run([
-        "course",
-        "revise",
-        "--study",
-        STUDY,
-        "--input",
-        join(dir, "proposal.json"),
-        "--dry-run",
-      ]),
+      args: "open-for-edit",
+      result: await run(["course", "open-for-edit", "--study", STUDY, "--course", COURSE]),
     });
-    receipts.push({
-      args: "revise",
-      result: await run([
-        "course",
-        "revise",
-        "--study",
-        STUDY,
-        "--input",
-        join(dir, "proposal.json"),
-      ]),
-    });
-  }
-  writeJson(join(dir, apply ? "native-apply.json" : "native-proposal-check.json"), {
-    missingTranslations: missing,
-    receipts,
+  const input = join(dir, "proposal.json");
+  receipts.push({
+    args: "revise --dry-run",
+    result: await run(["course", "revise", "--study", STUDY, "--input", input, "--dry-run"]),
   });
+  receipts.push({
+    args: "revise",
+    result: await run(["course", "revise", "--study", STUDY, "--input", input]),
+  });
+  return receipts;
+}
+
+/**
+ * Land a version-3 step lesson written by hand (the line does not write steps
+ * yet). Input: { activity, exercise: { title, rubric, en }, cards: [{ front,
+ * back, en }] }. Same evidence, card/exercise identities and native path as
+ * `assemble`; every display string must already carry its English.
+ */
+async function stageAssembleSteps(dir, packet, inputFile, apply) {
+  const input = readJson(inputFile);
+  const root = studiesRoot();
+  const lessonDir = join(
+    root,
+    STUDY,
+    "courses",
+    COURSE,
+    "units",
+    packet.lesson.unitId,
+    "lessons",
+    packet.lesson.lessonId,
+  );
+  const rev = latest(lessonDir);
+  if (rev !== packet.lesson.revision)
+    throw Error(`Lesson moved from r${packet.lesson.revision} to r${rev}; rebuild the packet`);
+  const manifest = readJson(join(lessonDir, "revisions", String(rev), "manifest.json"));
+  const existing = existingPrimm(packet);
+  const activity = {
+    ...input.activity,
+    id: existing?.id ?? input.activity.id,
+    make: { ...input.activity.make, exerciseId: packet.exerciseIds[0] },
+  };
+  if (activity.experienceVersion !== 3) throw Error("assemble-steps lands version-3 lessons only");
+  const { activityDisplayStrings } = await import(
+    pathToFileURL(join(repoRoot, "packages/core/dist/learning-play/localization.js")).href
+  );
+  const strings = activity.locales?.en?.strings ?? {};
+  const missing = activityDisplayStrings(activity).filter((text) => !strings[text]?.trim());
+  if (missing.length) throw Error(`Missing English for: ${missing.join(" | ")}`);
+  const evidence = [...manifest.evidence];
+  for (const source of activity.sources) {
+    if (!evidence.some((e) => e.sourceUrl === source.reference.url)) {
+      const record = libraryEvidence(packet, source.reference.url);
+      if (!record) throw Error(`No verified evidence for ${source.reference.url}`);
+      evidence.push(record);
+    }
+  }
+  const evidenceFor = (url) => evidence.find((e) => e.sourceUrl === url);
+  const makeSourceUrls = activity.materials
+    .filter((m) => activity.make.materialIds.includes(m.id) && m.sourceId)
+    .map((m) => activity.sources.find((s) => s.id === m.sourceId).reference.url);
+  if (input.cards.length !== packet.cardIds.length)
+    throw Error(`Need ${packet.cardIds.length} cards`);
+  const cards = packet.cardIds.map((id, n) => ({
+    id,
+    kind: "basic",
+    front: input.cards[n].front,
+    back: input.cards[n].back,
+    tags: [],
+    evidence: [evidenceFor(activity.source.url)],
+    locales: { en: { front: input.cards[n].en.front, back: input.cards[n].en.back } },
+    expectedRevision: readJson(join(lessonDir, "cards", id, "latest.json")).contentRevision,
+  }));
+  const exId = packet.exerciseIds[0];
+  const en = (text) => strings[text] ?? text;
+  const exercise = {
+    id: exId,
+    kind: "explain",
+    title: input.exercise.title,
+    prompt: `${activity.make.scenario}\n${activity.make.goal}`,
+    rubric: input.exercise.rubric,
+    evidence: [...new Set([activity.source.url, ...makeSourceUrls])].map(evidenceFor),
+    locales: {
+      en: {
+        title: input.exercise.en.title,
+        prompt: `${en(activity.make.scenario)}\n${en(activity.make.goal)}`,
+        rubric: input.exercise.en.rubric,
+      },
+    },
+    expectedRevision: readJson(join(lessonDir, "exercises", exId, "latest.json")).contentRevision,
+  };
+  const links = (label) =>
+    activity.sources.map((s) => `[${label(s.reference.label)}](${s.reference.url})`).join(" · ");
+  const recap = (pick) =>
+    `# ${pick(activity.title)}\n\n${pick(activity.intro.connection)}\n\n${pick(activity.intro.situation)}\n\n${pick(activity.intro.need)}\n\n::play{#${activity.id}}\n\n${pick(activity.finish.note)}\n\n${links(pick)}\n`;
+  const { CourseRevisionProposalSchema } = await import(
+    pathToFileURL(join(moduleRoot, ".university-local-build/server/workflows/revise-course.js"))
+      .href
+  );
+  const proposal = CourseRevisionProposalSchema.parse({
+    schemaVersion: 1,
+    proposalId: `primm-steps-${packet.lesson.lessonId}-r${rev + 1}`,
+    lesson: {
+      courseId: COURSE,
+      unitId: packet.lesson.unitId,
+      id: packet.lesson.lessonId,
+      expectedRevision: rev,
+      title: activity.title,
+      variant: manifest.variant,
+      content: recap((text) => text),
+      sections: [],
+      locales: { en: { title: en(activity.title), content: recap(en) } },
+      evidence,
+      assets: manifest.assets,
+      assetFiles: [],
+      activities: [activity],
+      cards,
+      exercises: [exercise],
+    },
+  });
+  writeJson(join(dir, "proposal.json"), proposal);
+  const receipts = await nativeApply(dir, root, apply);
+  writeJson(join(dir, apply ? "native-apply.json" : "native-proposal-check.json"), { receipts });
   log(
     dir,
-    `assemble r${rev + 1}: ${apply ? "APPLIED via native dry-run + revise" : "proposal built and schema-valid"}; missing en strings: ${missing.length}`,
+    `MANUAL assemble-steps r${rev + 1}: hand-written version-3 lesson from ${inputFile}; ${apply ? "APPLIED via native dry-run + revise" : "proposal built and schema-valid"}`,
   );
 }
 
@@ -1967,6 +2075,8 @@ else if (stage === "fix")
 else if (stage === "polish")
   await stagePolish(dir, packet, Number(options.version ?? bestVersion(dir)), S);
 else if (stage === "assemble") await stageAssemble(dir, packet, !!options.apply);
+else if (stage === "assemble-steps")
+  await stageAssembleSteps(dir, packet, String(options.input), !!options.apply);
 else if (stage === "finish") await stageFinish(dir);
 else if (stage === "review") {
   // A person's reading goes into the same fix loop as the Detector's, marked as theirs.

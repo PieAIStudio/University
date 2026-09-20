@@ -4,6 +4,7 @@ import { createGeneratorRegistry } from "@pieai/swimmer-ai-provider-kit/generato
 import { createStructuredOutputClient } from "@pieai/swimmer-ai-provider-kit/structured-output";
 import type { ChatCompletionTransport, ChatMessage } from "@pieai/swimmer-ai-provider-kit/chat";
 import type { ExerciseAttemptResult, PrimmExecutionResult } from "@pieai/university-core";
+import { isPrimmSteps, primmRunPrompts } from "@pieai/university-core";
 import { PREVIEW_MODEL } from "./local-transport.js";
 import { PreviewFailure } from "./errors.js";
 import {
@@ -126,7 +127,9 @@ export function createPrimmRuntime(options: PrimmRuntimeOptions) {
     const spec =
       input.phase === "make"
         ? lesson.activity.make
-        : input.phase === "modify" && lesson.activity.modify.operation
+        : input.phase === "modify" &&
+            !isPrimmSteps(lesson.activity) &&
+            lesson.activity.modify.operation
           ? { ...lesson.activity.starter, operation: lesson.activity.modify.operation }
           : lesson.activity.starter;
     const materials = spec.materialIds.map((id) => {
@@ -273,7 +276,7 @@ export function createPrimmRuntime(options: PrimmRuntimeOptions) {
       const input = RunSchema.parse(value);
       // Validate current packages even for a cached response (old revision may now be retired).
       const lesson = await options.resolveLesson(input);
-      if (input.phase === "run" && input.prompt !== lesson.activity.starter.prompt)
+      if (input.phase === "run" && !primmRunPrompts(lesson.activity).includes(input.prompt))
         throw new PreviewFailure("rejected");
       return once(
         input.commandId,

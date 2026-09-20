@@ -18,6 +18,36 @@ related:
 
 # Interaction-first lesson experiment
 
+## Current: step lessons (PRIMM version 3), lesson one landed
+
+Owner (2026-09-20) asked for lesson one in the real course before merging, and
+fixed two rules: the five phases stay, with variable steps inside each phase and
+no interaction bound to a phase; and Predict asks how to use AI, never what AI
+will say. Main was merged into this branch first (`d9b7b277`), so the work sits on
+current map navigation and ProviderKit 0.13.0.
+
+- [x] Core: `experienceVersion: 3` beside the classic payload; eight step kinds
+  (choose, send, find, match, sort, point, build, make); the frame checks phase
+  order, one to four steps per phase, one real run in Run and in Modify, Make
+  opening with the task, and every run bound to a prepared request.
+- [x] Runtime: Run executes the starter or a step lesson's authored requests, one
+  shared rule (`primmRunPrompts`) in both the resolver and the runtime.
+- [x] Player: one action per screen, teacher after it in the bottom bar, pointer
+  drag with a tap/keyboard path, a demonstration hand shown once per gesture,
+  resume that never skips undone steps; classic lessons are unchanged.
+- [x] Lesson one written by hand from the prototype and landed natively as r13,
+  then r14 after a live walkthrough found three duplicated feedback lines and a
+  small touch target (`assemble-steps`, logged `MANUAL`).
+- [x] Live walkthrough with the local model: every step, real answers for all
+  three requests, per-criterion grading passed a one-part question and failed
+  "describe this photo" for the right reason. Browser suite covers both modes and
+  languages, keyboard, a real drag, reload, axe and the map entry.
+- [ ] Teach the production line to write step lessons; regenerate the other seven.
+- [ ] Real learners.
+
+The investigation floor of three operations now holds without an expected
+failure: lesson one's `match` traces which request produced which answer.
+
 ## Current: one course lane, micro-step design approved
 
 On 2026-09-20 the Owner asked that course work reach main through this branch

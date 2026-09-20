@@ -1,7 +1,7 @@
 import { useId } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { useI18n } from "../i18n/index.js";
-import type { PrimmActivity } from "./primm-types.js";
+import type { PrimmClassicActivity } from "./primm-types.js";
 
 export interface RequestFragment {
   readonly id: string;
@@ -21,7 +21,7 @@ export function PrimmRequestWorkbench({
   disabled,
   onChange,
 }: {
-  readonly workbench: NonNullable<PrimmActivity["modify"]["workbench"]>;
+  readonly workbench: NonNullable<PrimmClassicActivity["modify"]["workbench"]>;
   readonly fragments: readonly RequestFragment[];
   readonly observation: string;
   readonly disabled: boolean;

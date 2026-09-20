@@ -9,7 +9,8 @@ import { PrimmAttachment } from "./PrimmAttachment.js";
 import { PrimmResultText } from "./PrimmResultText.js";
 import { PrimmRequestWorkbench, joinRequestFragments } from "./PrimmRequestWorkbench.js";
 import { initialPrimmSession, restorePrimmSession, type PrimmSession } from "./primm-session.js";
-import type { PrimmLessonProps, PrimmOutput } from "./primm-types.js";
+import { PrimmSteps } from "./PrimmSteps.js";
+import type { PrimmClassicActivity, PrimmLessonProps, PrimmOutput } from "./primm-types.js";
 
 export type { PrimmLessonProps, RunPrimm, PrimmWork, PrimmEvaluation } from "./primm-types.js";
 const phases = ["predict", "run", "investigate", "modify", "make"] as const;
@@ -22,7 +23,11 @@ export function PrimmLesson(props: PrimmLessonProps) {
     props.activity.id,
     locale,
   ]);
-  return <PrimmSessionView key={scope} {...props} />;
+  const { activity } = props;
+  // Version 3 is a sequence of one-action steps; earlier versions keep one screen per phase.
+  if (activity.experienceVersion === 3)
+    return <PrimmSteps key={scope} {...props} activity={activity} />;
+  return <PrimmSessionView key={scope} {...props} activity={activity} />;
 }
 function PrimmSessionView({
   activity,
@@ -36,7 +41,7 @@ function PrimmSessionView({
   copyPrimmEvaluation,
   onPrimmComplete,
   onPathProgress,
-}: PrimmLessonProps) {
+}: Omit<PrimmLessonProps, "activity"> & { readonly activity: PrimmClassicActivity }) {
   const { t, locale } = useI18n();
   const draft = useAnswerDraft({
     identity: {
