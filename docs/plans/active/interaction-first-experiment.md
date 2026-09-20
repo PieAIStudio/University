@@ -18,6 +18,34 @@ related:
 
 # Interaction-first lesson experiment
 
+## Read before merging to main: this branch was pushed with a red e2e suite
+
+Owner (2026-09-20) approved one `git push --no-verify` of `codex/interaction-first`
+because the pre-push hook runs the whole browser suite and 25 cases were already
+red before the step-lesson commit (`089dd891`). Nothing was merged. Before merging,
+run the suite on this branch and on `main` and compare; do not assume the 25 are
+gone or that they are all this branch's.
+
+- What was checked: `pnpm verify` passes. Every case in `e2e/primm.spec.ts`
+  passes, including the step lesson in both modes and both languages. The 25 red
+  cases are the same 25 that fail on the parent commit `a1921880`, so the step-lesson
+  commit adds none.
+- Not proven: the parent-commit result for the authoring-mode cases is not a fair
+  baseline, because untracked study content is shared and the older code could not
+  read the new lesson at all. Two map or layout groups below were not investigated.
+- The 25, by cause. Probably stale tests, not product bugs (14): `X.ai-literacy-english`
+  (8) and `W.ai-literacy` W2 (4) look for `.learning-activity` or `.interaction-path`
+  containers that PRIMM lessons do not render; `interaction-v2` (1) asserts five PRIMM
+  lessons where there are eight; `W.ai-literacy` W1 (1) requires an expected answer on
+  every exercise, which explain-type PRIMM exercises never have. Not investigated (11):
+  `W.ai-literacy` W3 (1), `avatar` (1) and `island-pick` (1) on the map, `Y.english-campus`
+  (4), `product-completeness` (3) and `interaction-path` (1) on layout.
+- A trap when running the browser suite here: the authoring server reads
+  `.scratch/interaction-studies` including its learner database. Progress left there
+  by earlier runs makes the reader remount its board on load and fails `humanClick`
+  ("Element is not attached to the DOM"). Run with `E2E_STUDIES_ROOT` pointing at a
+  copy without the `learner/` folders.
+
 ## Current: step lessons (PRIMM version 3), lesson one landed
 
 Owner (2026-09-20) asked for lesson one in the real course before merging, and
