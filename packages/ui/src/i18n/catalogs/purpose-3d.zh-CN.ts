@@ -1,0 +1,35 @@
+export const messages = {
+  "arcade3d.sky-invaders": "云端航线 · 双武器拦截",
+  "arcade3d.factory-stack": "分拣工厂 · 分类落块",
+  "arcade3d.press-words": "句子印刷机 · 填词消行",
+  "arcade3d.slice": "信息切片台",
+  "arcade3d.wire": "证据接线盒",
+  "arcade3d.rank": "流程调度站",
+  "arcade3d.how.slice":
+    "信息胶囊会弹起来。按住划过有依据的说法，别切现有材料没说的内容。也能用下方按钮切开。切错三次结束；一共 24 件。颜色不提示答案。",
+  "arcade3d.how.wire":
+    "从左边的说法拖一根线到右边的核对方法，也可以先点说法，再点方法。四条接好后通电检查；发现接错可以重接。完成三组。",
+  "arcade3d.how.rank":
+    "每节车厢是一项操作。点两节车厢交换先后，再试着发车；遇到缺少前置步骤的地方会停下，改好后再运行。完成三个小任务。",
+  "gallery.three.sky-invaders": "在空域里移动、拦截与俯冲；云和航标为飞行路线让路",
+  "gallery.three.factory-stack": "料仓、分拣通道和传送辊组成下落与堆积的游戏空间",
+  "gallery.three.press-words": "字模盘、句子导轨与出料辊组成一台可玩的印刷机",
+  "gallery.three.slice": "划开有依据的信息，避开材料无法支持的说法",
+  "gallery.three.wire": "用立体软线连接说法与核对方法，通电找错再修好",
+  "gallery.three.rank": "调整步骤车厢，让流程按前置条件顺畅运行",
+  "gallery.three.retained": "花园保留版 · 上一轮版本仍可玩",
+  "gallery.three.new": "新场景 · 按玩法搭建",
+  "purpose.check.wire": "通电检查",
+  "purpose.check.rank": "试着发车",
+  "purpose.next": "下一组",
+  "purpose.groups": "第 {{round}} / 3 组",
+  "purpose.sliceProgress": "已落定 {{count}} / 24 · 切错 {{bad}} / 3",
+  "purpose.cut": "切开：{{text}}",
+  "purpose.result": "得分 {{score}} · 正确 {{correct}} 次 · 失误 {{mistakes}} 次",
+  "purpose.missed": "有依据但漏切的 {{count}} 件，不计为答对。",
+  "purpose.sourceNote":
+    "场景是教学玩具，不是真实设备。这些练习使用下方资料；不调用 AI，不写课程成绩。",
+  "purpose.read": "查看材料（自动暂停）",
+  "purpose.roundClear": "这一组完成了",
+  "purpose.original": "打开二维灵感原型",
+} as const;

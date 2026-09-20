@@ -1,4 +1,8 @@
 export const messages = {
+  "gallery.three": "3D组件",
+  "gallery.three.invaders": "开飞船选核对方式，射击拦截、躲过压力，逐波强化",
+  "gallery.three.stack": "把下落的说法送进分类槽，错误会实际堆起来",
+  "gallery.three.cloze-tetris": "填对词块消掉整行，练习记忆与概念区别",
   "gallery.item.connect.name": "连接",
   "gallery.item.connect.action": "解释依赖、原因与结果",
   "gallery.item.connect.controls": "点一个起点，再点终点建立连接；Tab 和 Enter 也可操作。",

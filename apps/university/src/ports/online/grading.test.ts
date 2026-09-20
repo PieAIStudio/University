@@ -444,19 +444,31 @@ describe("createOnlineGradingPort", () => {
   });
 
   it("falls back to the tier-one clue when the service is not configured", async () => {
-    const port = createOnlineGradingPort({
-      readAccessToken: async () => "learner-access-token",
+    // A prepared worktree can contain an approved public service URL. This
+    // fixture must really be unconfigured, and must never reach that service.
+    vi.stubEnv("VITE_UNIVERSITY_GRADING_URL", "");
+    const fetchImpl = vi.fn(async () => {
+      throw new Error("An unconfigured grader must not make a request");
     });
+    try {
+      const port = createOnlineGradingPort({
+        readAccessToken: async () => "learner-access-token",
+        fetchImpl,
+      });
 
-    await expect(
-      port.submitExercise({ ...undecidableSubmission("red-no-service"), allowMetered: true }),
-    ).resolves.toMatchObject({
-      hostGrade: {
-        host: "tier-1",
-        passed: false,
-        evaluation: expect.stringContaining("再看一眼你刚才读过的这句"),
-      },
-    });
+      await expect(
+        port.submitExercise({ ...undecidableSubmission("red-no-service"), allowMetered: true }),
+      ).resolves.toMatchObject({
+        hostGrade: {
+          host: "tier-1",
+          passed: false,
+          evaluation: expect.stringContaining("再看一眼你刚才读过的这句"),
+        },
+      });
+      expect(fetchImpl).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it("falls back to the tier-one clue when the metered service reports an insufficient balance", async () => {

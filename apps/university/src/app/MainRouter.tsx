@@ -72,6 +72,9 @@ import { MapBreadcrumbs } from "./MapBreadcrumbs.js";
 import type { PathOverlay } from "./world-model";
 
 const PlayCatalogRoute = lazy(() => import("../play-catalog/PlayCatalogRoute.js"));
+const ToyPlayLabRoute = lazy(() => import("../play-catalog/ArcadeRoute.js"));
+const PropFinishRoute = lazy(() => import("../play-catalog/PropFinishRoute.js"));
+const RetiredAppearanceRoute = lazy(() => import("../play-catalog/RetiredAppearanceRoute.js"));
 const LearningPlayLab = lazy(() =>
   import("@pieai/university-ui/learning-play/LearningPlayLab.js").then((mod) => ({
     default: mod.LearningPlayLab,
@@ -237,6 +240,12 @@ export function MainRouter({
         <Suspense fallback={<RouteFallback />}>
           {view.collection === "catalog" ? (
             <PlayCatalogRoute />
+          ) : view.collection === "prop-finish" ? (
+            <PropFinishRoute />
+          ) : view.collection === "wax-island" ? (
+            <RetiredAppearanceRoute />
+          ) : view.collection === "toy-3d" ? (
+            <ToyPlayLabRoute />
           ) : (
             <LearningPlayLab
               key={view.collection ?? "foundations"}

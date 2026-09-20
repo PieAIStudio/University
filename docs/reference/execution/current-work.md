@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner: human
 created: 2026-08-18
-last_reviewed: 2026-09-18
+last_reviewed: 2026-09-20
 domain: execution
 tags:
   - current-work
@@ -27,6 +27,7 @@ related:
   - PLAN-PRODUCT-COMPLETENESS
   - PLAN-AI-FOUNDATIONS-REVIVAL
   - PLAN-INTERACTION-FIRST-EXPERIMENT
+  - PLAN-INTERACTION-3D-PLAYLAB
 ---
 
 # Current Work
@@ -56,6 +57,7 @@ New mainline work follows the applicable lanes below.
 | --- | --- |
 | Published real-source beginner courses and remaining account-service prerequisites | [AI literacy commercial release](../../plans/active/00-ai-literacy-commercial-release.md); both bilingual paths are live and the final release gates passed. Continue only the named AuthKit/mail/account-deletion/cross-device prerequisites or a newly reproduced issue; do not restart course production. Actual payments remain disabled |
 | Everyday PRIMM first-five revision and unified interaction catalogue | [Interaction-first experiment](../../plans/active/interaction-first-experiment.md); current work stays in `.worktrees/interaction-first` / `codex/interaction-first`. Owner retains the clean linear PRIMM reader and now uses real cases as brief introductions, separate everyday practice, patient beginner guidance and five distinct operations per lesson. The plan owns acceptance and walkthrough evidence; earlier pilots are history. Main and Claude research are already absorbed; do not recreate a branch or publish without authorization |
+| Playable 3D learning arcade and selective prop finishing | [3D play-lab experiment](../../plans/active/interaction-3d-playlab.md), absorbed into the mainline on 2026-09-20. The catalog's `3D组件` group holds six game-specific scenes and the three retained garden editions; `/play-lab/prop-finish` compares ten actual map props under original, soft-sculpted, physical-bevel and material-aware finishes. The wax-island study was rejected and retired, with its commit and evidence kept. The plan owns scope and acceptance; the retained finishes are still lab findings, not an approved map change |
 | How work is queued, run and gated on the mainline | [Work queue](work-queue.md); one task, one commit, one push, because `pnpm verify` does not run the browser suite |
 | Published versus locked course packages | [Locked-package record](../../../apps/local/course-proposals/locked/README.md); runtime counts come from the generated catalogue, not historical handoffs |
 | Reviving the locked AI foundations course | [AI foundations revival](../../plans/active/ai-foundations-revival.md); follow its phase boundary and unresolved recovery requirements before resuming |

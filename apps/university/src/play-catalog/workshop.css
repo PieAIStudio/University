@@ -1,0 +1,83 @@
+.workshop .workshop__viewport {
+  height: 620px;
+}
+.workshop[data-mode="slice"] .workshop__viewport {
+  height: 600px;
+}
+.workshop .workshop__face-button {
+  background: transparent;
+  color: var(--game-ui-tooltip-surface);
+  border: 0;
+  box-shadow: none;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: normal;
+  padding: 7px;
+}
+.workshop .workshop__face-button:disabled {
+  opacity: 1;
+  color: var(--game-ui-tooltip-surface);
+  background: transparent;
+}
+.workshop .workshop__face-button[aria-pressed="true"] {
+  outline: 2px solid var(--game-ui-tooltip-surface);
+  outline-offset: -4px;
+}
+.workshop__small-caption {
+  color: var(--game-ui-tooltip-surface);
+  font-size: 12px;
+  display: block;
+  width: 240px;
+  text-align: center;
+}
+.workshop__station-title {
+  background: var(--game-ui-tooltip-ink);
+  color: var(--game-ui-tooltip-surface);
+  border-radius: 12px;
+  padding: 9px 14px;
+  width: 220px;
+  display: block;
+  text-align: center;
+  font-weight: 650;
+  font-size: 14px;
+}
+.workshop__capsule-label {
+  display: block;
+  width: 140px;
+  max-width: 140px;
+  text-align: center;
+  padding: 9px;
+  border-radius: 13px;
+  font-size: 14px;
+  line-height: 1.5;
+  background: var(--game-ui-tooltip-ink);
+  color: var(--game-ui-tooltip-surface);
+}
+.workshop__capsule-label--tracked {
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  visibility: hidden;
+  will-change: transform;
+}
+.workshop .workshop__cut-button {
+  white-space: normal;
+  font-size: 13px;
+  min-height: 44px;
+  flex: 1;
+}
+@media (max-width: 760px) {
+  .workshop .workshop__face-button {
+    font-size: 12px;
+    padding: 4px;
+  }
+  .workshop__capsule-label {
+    width: 110px;
+    max-width: 110px;
+    font-size: 12px;
+  }
+  .workshop__station-title {
+    width: 190px;
+    font-size: 13px;
+  }
+}

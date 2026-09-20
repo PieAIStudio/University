@@ -10,6 +10,8 @@
     "./shell/map-shell.css": "./src/shell/map-shell.css",
     "./navigation/LocationBreadcrumbs.js": "./src/navigation/LocationBreadcrumbs.tsx",
     "./path/MapEntryAction.js": "./src/path/MapEntryAction.tsx",
+    "./play-catalog/three-games.js": "./src/play-catalog/three-games.ts",
+    "./play-catalog/registry.js": "./src/play-catalog/registry.ts",
     ".": "./src/index.ts",
     "./i18n.js": "./src/i18n/index.ts",
     "./world-style.js": "./src/world-style.tsx",
