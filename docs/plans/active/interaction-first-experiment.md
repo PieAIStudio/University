@@ -101,8 +101,11 @@ current best, not the target.
 ## Absorbed comparison lane: learner-value-first (history)
 
 Owner requested another `codex/` worktree to implement the learner-value discussion
-in lessons 1–5. This checkout is `.worktrees/learner-value-first`, branch
-`codex/learner-value-first`, based on committed `ca2c7d3f`. The original experiment
+in lessons 1–5. That checkout was `.worktrees/learner-value-first`, branch
+`codex/learner-value-first`, based on committed `ca2c7d3f`. On 2026-09-20 the Owner
+had its preview processes stopped and the worktree and local branch deleted (no
+remote branch existed). Its tip `19b354fe` and all 23 commits stay in this branch's
+history. The text below describes it as it was. The original experiment
 has another AI's ongoing edits: preserve its code, source corpus and services.
 The preceding single-lane restrictions below are historical, not current authority.
 
