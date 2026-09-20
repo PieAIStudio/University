@@ -167,6 +167,23 @@ for (const [mode, origin] of [
       );
       await page.keyboard.press("Escape");
 
+      /*
+        Baseline, not zero.
+
+        The authoring mode hydrates this document from the machine's own
+        learner store, and anything that has read a lesson there — a person, or
+        another spec earlier in the same suite — is already in it. Asserting
+        emptiness made this test a report on the machine rather than on the
+        product: it passed one 40-minute push run and failed the next, in both
+        authoring locales, listing eight lessons that a sibling spec had read
+        twenty minutes earlier.
+
+        What this test owns is the delta a coverage checkpoint makes, and that
+        delta is the whole claim: proving a segment grants proof, and grants
+        nothing else — no practice cards, no lesson progress, no XP.
+      */
+      const beforeProof = await progress(page);
+
       await openNode(page, "checkpoint");
       await humanClick(
         page,
@@ -206,10 +223,12 @@ for (const [mode, origin] of [
         text("这一段检查通过", "passed"),
       );
       const afterProof = await progress(page);
-      expect(afterProof.proven).toHaveLength(segment.lessonIds.length);
-      expect(afterProof.cards).toEqual([]);
-      expect(afterProof.lessons).toEqual([]);
-      expect(afterProof.xp).toBe(0);
+      expect(afterProof.proven.filter((id) => !beforeProof.proven.includes(id))).toHaveLength(
+        segment.lessonIds.length,
+      );
+      expect(afterProof.cards).toEqual(beforeProof.cards);
+      expect(afterProof.lessons).toEqual(beforeProof.lessons);
+      expect(afterProof.xp).toBe(beforeProof.xp);
       await page.keyboard.press("Escape");
       // Every lesson of the block reads as proved. Not `× 2`: a lesson can carry
       // both a kind icon and a label, but the live stone deliberately has no

@@ -19,9 +19,16 @@ export interface HumanClickOptions {
  * (`humanClick`, 2026-09-20; the English image audit, 2026-09-21).
  *
  * This keeps everything that call was there for — it waits for the target to
- * be visible, and `block: "nearest"` keeps the original "only if needed"
- * scrolling — and drops only the bit-equality demand, retrying across a
- * remount instead of failing on it.
+ * be visible, `block: "nearest"` keeps the original "only if needed" scrolling,
+ * and it still returns only once the box has settled, because callers measure
+ * geometry on the next line. What changes is how settling is judged: this
+ * project's own tolerant check rather than bit-equality.
+ *
+ * Returning before the scroll had landed was a real regression, not a
+ * theoretical one: `primm.spec.ts` captures a baseline box immediately after
+ * this call and asserts a late-loading photo moves it by no more than 1px. A
+ * first version of this helper skipped the settle and measured 1.79px of the
+ * scroll itself.
  */
 export async function scrollIntoView(target: Locator): Promise<void> {
   for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -30,10 +37,12 @@ export async function scrollIntoView(target: Locator): Promise<void> {
       await target.evaluate((element) =>
         element.scrollIntoView({ block: "nearest", inline: "nearest" }),
       );
-      return;
     } catch (error) {
       if (!(error instanceof Error) || !/not attached to the DOM/i.test(error.message)) throw error;
+      continue;
     }
+    await waitForStableBox(target);
+    return;
   }
   throw new Error("滚动目标反复在对齐时被重新挂载，界面没有停下来");
 }
