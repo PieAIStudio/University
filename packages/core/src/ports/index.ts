@@ -60,6 +60,7 @@ export {
   type FavouriteChange,
   type SpeechQuality,
   type ThemePreference,
+  type WorldStyle,
 } from "./account-data.js";
 export {
   createMemoryReaderPort,

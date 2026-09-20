@@ -4,7 +4,8 @@ import type { IslandBlueprint } from "./island-blueprint.js";
 import { miniatureLayoutFor, miniatureMetrics, type MiniaturePool } from "./miniature-layout.js";
 import { createMiniatureAsset, type MiniatureAssetKind } from "./miniature-assets.js";
 
-export const REMOTE_ISLAND_TERRAIN_TRIANGLES = 640;
+/** Worst-case closed geology, including adaptive splits at concave bays. */
+export const REMOTE_ISLAND_TERRAIN_TRIANGLES = 1600;
 export const REMOTE_PROPS_PER_ISLAND_MIN = 3;
 export const REMOTE_PROPS_PER_ISLAND_MAX = 26;
 export const REMOTE_TREE_MAX_PER_ISLAND = 5;

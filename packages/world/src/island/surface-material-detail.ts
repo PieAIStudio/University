@@ -9,10 +9,11 @@ import * as THREE from "three";
 import type { IslandBlueprint } from "./island-blueprint.js";
 import { acquireCourseSurface, COURSE_COURTYARD_COLOUR } from "./course-surface-atlas.js";
 import { surfaceWearAt } from "./surface-wear.js";
+import { surfaceTurfAt } from "./surface-turf.js";
 
 export type SurfaceDetailRole = "terrain" | "stone";
 export const SURFACE_DETAIL_SIZE = 128;
-export const SURFACE_DETAIL_PROGRAM = "university-surface-swatch-v3";
+export const SURFACE_DETAIL_PROGRAM = "university-surface-swatch-v5";
 
 /** Periodic, low-contrast rounded flakes; no independent ecological noise. */
 export function surfaceSwatchData(size = SURFACE_DETAIL_SIZE): Uint8Array {
@@ -26,7 +27,7 @@ export function surfaceSwatchData(size = SURFACE_DETAIL_SIZE): Uint8Array {
       data[i] = Math.round(worn * 255); // shallow relief
       data[i + 1] = Math.round((0.96 - worn * 0.12) * 255); // worn peaks are smoother
       data[i + 2] = Math.round((0.76 + worn * 0.24) * 255); // shared tonal cause
-      data[i + 3] = 255;
+      data[i + 3] = Math.round(surfaceTurfAt((x + 0.5) / size, (y + 0.5) / size) * 255);
     }
   }
   return data;
@@ -130,6 +131,8 @@ export function createSurfaceMaterialDetail(role: SurfaceDetailRole, blueprint?:
           uCourseSurface: { value: null as THREE.DataTexture | null },
           uCourseSurfaceExtent: { value: 1 },
           uCourseCourtyardColour: { value: new THREE.Color(COURSE_COURTYARD_COLOUR) },
+          uMeadowStrength: { value: 1 },
+          uMeadowTextureScale: { value: 0.14 },
         }
       : {}),
   };
@@ -154,7 +157,7 @@ export function createSurfaceMaterialDetail(role: SurfaceDetailRole, blueprint?:
       baseBytes: SURFACE_DETAIL_SIZE ** 2 * 4,
       mipBytesApproximate: Math.ceil((SURFACE_DETAIL_SIZE ** 2 * 4 * 4) / 3),
       shared: true,
-      gardenColourBytes: blueprint ? 256 * 256 * 4 : 0,
+      gardenMaskBytes: blueprint ? 256 * 256 * 4 : 0,
       source: "University authored periodic scalar swatch; no external media",
     },
     customProgramCacheKey: () => `${SURFACE_DETAIL_PROGRAM}/${blueprint ? "garden" : "swatch"}`,
@@ -185,7 +188,7 @@ export function createSurfaceMaterialDetail(role: SurfaceDetailRole, blueprint?:
       shader.fragmentShader = shader.fragmentShader
         .replace(
           "#include <common>",
-          `#include <common>\n${DECLARATIONS}\n${garden ? "uniform sampler2D uCourseSurface;\nuniform float uCourseSurfaceExtent;\nuniform vec3 uCourseCourtyardColour;" : ""}`,
+          `#include <common>\n${DECLARATIONS}\n${garden ? "uniform sampler2D uCourseSurface;\nuniform float uCourseSurfaceExtent;\nuniform vec3 uCourseCourtyardColour;\nuniform float uMeadowStrength;\nuniform float uMeadowTextureScale;" : ""}`,
         )
         .replace(
           colourAnchor,
@@ -204,12 +207,31 @@ export function createSurfaceMaterialDetail(role: SurfaceDetailRole, blueprint?:
               ? `
           vec4 gardenSurface = texture2D(uCourseSurface, vSurfaceCoordinate.xz / (uCourseSurfaceExtent * 2.0) + 0.5);
           float gardenFace = smoothstep(0.35, 0.85, vSurfaceUp);
-          diffuseColor.rgb *= mix(vec3(1.0), gardenSurface.rgb, surfaceEnabled * gardenFace);
-          // Pigment is already the canopy cause; recover its bounded strength
-          // for micro-shading only, never for placement or biome decisions.
-          float gardenLush = clamp((0.99 - gardenSurface.r) / 0.24, 0.0, 1.0);
+          float gardenLush = gardenSurface.r;
+          vec3 gardenPigment = clamp(vec3(
+            0.99 - gardenLush * 0.24 - gardenSurface.g * 0.018 + gardenSurface.a * 0.035,
+            1.0 - gardenLush * 0.075 - gardenSurface.a * 0.07,
+            0.97 - gardenLush * 0.25 - gardenSurface.a * 0.18), 0.0, 1.0);
+          diffuseColor.rgb *= mix(vec3(1.0), gardenPigment, surfaceEnabled * gardenFace);
           diffuseColor.rgb = mix(diffuseColor.rgb, uCourseCourtyardColour,
-            surfaceEnabled * gardenFace * gardenSurface.a * 0.82);
+            surfaceEnabled * gardenFace * gardenSurface.a * (1.0 - gardenSurface.b) * 0.82);
+          // The actual field, not canopy paint, owns open turf. Use the spare
+          // swatch channel at two material scales; both fade before subpixels.
+          float gardenTurf = smoothstep(0.72, 0.94, vSurfaceUp) *
+            smoothstep(0.03, 0.24, gardenSurface.g) * (1.0 - gardenSurface.b) * (1.0 - gardenSurface.a);
+          vec2 turfUV = vSurfaceCoordinate.xz * uMeadowTextureScale;
+          float turfFootprint = max(length(dFdx(turfUV)), length(dFdy(turfUV))) * 8.0;
+          float turfFade = 1.0 - smoothstep(0.10, 0.38, turfFootprint);
+          float turfFine = texture2D(uSurfaceSwatch, turfUV).a;
+          float turfSecond = texture2D(uSurfaceSwatch, mat2(0.6, 0.8, -0.8, 0.6) * turfUV * 1.73 + vec2(0.31, 0.57)).a;
+          float turfSecondFade = 1.0 - smoothstep(0.10, 0.38, turfFootprint * 1.73);
+          float turfGrain = (turfFine - 0.16) * turfFade * 0.7 +
+            (turfSecond - 0.16) * turfSecondFade * 0.3;
+          vec3 turfPigment = mix(vec3(0.91, 0.97, 0.81), vec3(1.05, 1.035, 0.97),
+            clamp(0.5 + (surfaceWear - 0.5) * 2.4, 0.0, 1.0));
+          turfPigment *= 1.0 + turfGrain * 0.48;
+          diffuseColor.rgb *= mix(vec3(1.0), turfPigment,
+            surfaceEnabled * uMeadowStrength * gardenTurf);
           `
               : ""
           }
@@ -228,7 +250,9 @@ export function createSurfaceMaterialDetail(role: SurfaceDetailRole, blueprint?:
           ${
             garden
               ? `roughnessFactor = mix(roughnessFactor, 0.96,
-            surfacePhysical * gardenFace * (0.35 + gardenLush * 0.65) * 0.65);`
+            surfacePhysical * gardenFace * (0.35 + gardenLush * 0.65) * 0.65);
+          roughnessFactor = mix(roughnessFactor, 0.96 - clamp(turfGrain, 0.0, 0.6) * 0.08,
+            surfacePhysical * uMeadowStrength * gardenTurf);`
               : ""
           }
         `,

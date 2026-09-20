@@ -20,6 +20,7 @@ function projectionId(mesh: THREE.Mesh): InspectorProjectionId | null {
     return "courseTrees";
   if (["course-rock-outcrops", "course-garden-flora", "course-coastal-spring"].includes(mesh.name))
     return "courseLandscape";
+  if (mesh.name === "course-cliff-garden") return "cliffGarden";
   if (mesh.name === "course-bush-crowns") return "bushCrown";
   if (mesh.name === "island-campfire-flames") return "campfire";
   if (mesh.name === "hex-grid-lesson-plinths") return "medallion";

@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-18
 domain: architecture
 tags:
   - 3d
@@ -22,6 +22,60 @@ superseded_by: null
 ---
 
 # ADR-0009: The Procedural Map Is One Pipeline, Not Three Scenes
+
+## R56: owned views of the same canonical assets
+
+Owner authorizes limited appearance geometry, not an alternative map producer.
+The existing pre-frame appearance subscriber owns both material and geometry
+leases. Only named near-field props derive a view from their existing source;
+source positions, reservations, instances, learning nodes and avatar recipe stay
+canonical. A source change invalidates its view, not the blueprint. Inspectors
+report source and drawn IDs separately, and classic must recover the exact source
+geometry/material. Ground and collision meshes are never displaced for clay.
+The shared RenderKit owns the isotropic polymer kernel; the host owns role scale,
+private terrain-uniform overrides and asset-view lifetimes.
+
+## R55: appearance is not a second world
+
+A validated classic/clay account preference selects presentation only. The same
+blueprint, field, landscape membership, avatar recipe and progress flow remain
+canonical. R54 short-turf relief is withdrawn without changing a single scenery
+placement. Shared RenderKit surface response is applied by the host's material
+ownership adapter across all existing viewports; it owns no camera or output pass.
+Original materials remain recoverable and their textures remain source-owned.
+The developer-only terrain color hypotheses are not competing account settings.
+
+## R54: retain meadow identity through material compilation
+
+The existing course atlas now preserves canopy/meadow/route/facility channels
+instead of baking those causes into RGB. It still samples the same IslandField
+and existing scenery; `surface-turf.ts` is only a fixed repeating material
+swatch, never a distribution or height field. Low meadow beds also consume
+that field and the canonical dressing reservations. Final plant membership,
+positions and counts belong to `courseLandscapePlan`, and geometry/inspector
+consume that same result. World and planet projections do not request these
+course-only beds or material masks. The silhouette, source catalogue, course
+IDs, support sampler and renderer ownership do not change. Technique and
+measured budgets are in ADR-0008; acceptance remains in the delivery plan.
+
+## R53 dense-domain correction: budget the overview, preserve the catalogue
+
+The jointed rock geometry increased the cost of each tiny atmospheric island.
+The unchanged four-domain / thirty-study browser fixture exposed 556,827 full-frame
+triangles, over its 300,000 ceiling. A globe is a study selector, not the complete
+archipelago: populated regions now share a target of thirty representatives per
+domain, bounded by the existing per-region three/five viewport limit. Each populated
+study retains at least its first canonical course even beyond that soft target;
+empty studies consume no representative quota. The full course catalogue, every
+study entry/hit target, ordering, region placement and course/series projections
+are unchanged. No mesh is thinned, no study is hidden and no test budget is raised.
+
+`atmospheric-regions.ts` owns the allocation for both the worker and inspector.
+The cache key includes exactly the emitted course prefix: progress/label changes
+do not rebake it, but a course or density transition does. Sparse domains keep the
+same three/five miniatures as before. Independent unit cases cover sparse/dense
+and empty studies, identity, ordering, actual index counts and cache transitions;
+the normal complete Stage browser check remains the acceptance gate.
 
 The current R50 projection retains this pipeline. Upland groves read the existing
 field; rock-rooted foliage reads the bank's actual emitted triangle datums.

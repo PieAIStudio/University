@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -19,6 +20,7 @@ import type { IslandLookCameraPose, IslandLookSceneSource } from "./island/islan
 import { Stage } from "./Stage.js";
 import { CourseOverviewContext, CourseOverviewProbe } from "./camera/CourseOverview.js";
 import type { CourseOverviewFrame } from "./camera/course-overview.js";
+import { MapTravelClockContext, recordMapTravel, type MapTravelClock } from "./map-travel-clock.js";
 
 export type WorldMap = ReturnType<typeof placeWorld>;
 
@@ -149,6 +151,10 @@ export function WorldMapCanvas({
   readonly courseViewKey?: string | null;
 }) {
   const labelNodes = useRef(new Map<string, HTMLElement>());
+  const travelClock = useMemo<MapTravelClock>(
+    () => ({ request: null }),
+    [courseViewKey, skyStudyId],
+  );
   const draggedRef = useRef(false);
   const pointerOrigin = useRef<{ x: number; y: number } | null>(null);
   const [overviewKey, setOverviewKey] = useState<string | null>(null);
@@ -291,57 +297,59 @@ export function WorldMapCanvas({
           lookSource={lookSource}
           postProcessing={postProcessing}
         >
-          <CourseOverviewContext.Provider value={activeOverview}>
-            <Controls
-              target={framedLook}
-              polar={polar}
-              fixedCamera={fixedCamera}
-              onInteract={onInteract}
-              distanceRange={activeOverview?.distanceRange}
-            />
-            <Flight
-              key={frameRequest}
-              to={framedFrom}
-              look={framedLook}
-              fixed={fixedCamera !== null}
-            />
-            {overviewEnabled ? (
-              <CourseOverviewProbe
-                key={`${frameKey}:${frameRequest}`}
-                surface={courseViewKey ? "course" : "world"}
-                onFrame={acceptOverview}
-                onError={rejectOverview}
-                eyeDirection={[
-                  cameraFrom[0] - lookAt[0],
-                  cameraFrom[1] - lookAt[1],
-                  cameraFrom[2] - lookAt[2],
-                ]}
+          <MapTravelClockContext.Provider value={travelClock}>
+            <CourseOverviewContext.Provider value={activeOverview}>
+              <Controls
+                target={framedLook}
+                polar={polar}
+                fixedCamera={fixedCamera}
+                onInteract={onInteract}
+                distanceRange={activeOverview?.distanceRange}
               />
-            ) : null}
-            <LabelProbe
-              markers={markers}
-              limit={9}
-              nodes={labelNodes.current}
-              followId={followId}
-              followNode={followNode}
-            />
-            {world ? (
-              <WorldScene
-                placements={world.placements}
-                extent={world.extent}
-                learnerAt={learnerAt}
-                avatarRecipe={avatarRecipe}
-                avatarSignedIn={avatarSignedIn}
-                selectedCourseKey={selectedCourseKey}
-                skyStudyId={skyStudyId}
-                authoringFocus={authoringFocus}
-                assetRevision={assetRevision}
-                onPick={onPick}
-                onHover={onHover}
+              <Flight
+                key={frameRequest}
+                to={framedFrom}
+                look={framedLook}
+                fixed={fixedCamera !== null}
               />
-            ) : null}
-            {stageChildren}
-          </CourseOverviewContext.Provider>
+              {overviewEnabled ? (
+                <CourseOverviewProbe
+                  key={`${frameKey}:${frameRequest}`}
+                  surface={courseViewKey ? "course" : "world"}
+                  onFrame={acceptOverview}
+                  onError={rejectOverview}
+                  eyeDirection={[
+                    cameraFrom[0] - lookAt[0],
+                    cameraFrom[1] - lookAt[1],
+                    cameraFrom[2] - lookAt[2],
+                  ]}
+                />
+              ) : null}
+              <LabelProbe
+                markers={markers}
+                limit={9}
+                nodes={labelNodes.current}
+                followId={followId}
+                followNode={followNode}
+              />
+              {world ? (
+                <WorldScene
+                  placements={world.placements}
+                  extent={world.extent}
+                  learnerAt={learnerAt}
+                  avatarRecipe={avatarRecipe}
+                  avatarSignedIn={avatarSignedIn}
+                  selectedCourseKey={selectedCourseKey}
+                  skyStudyId={skyStudyId}
+                  authoringFocus={authoringFocus}
+                  assetRevision={assetRevision}
+                  onPick={onPick}
+                  onHover={onHover}
+                />
+              ) : null}
+              {stageChildren}
+            </CourseOverviewContext.Provider>
+          </MapTravelClockContext.Provider>
         </Stage>
       </div>
 
@@ -396,8 +404,9 @@ export function WorldMapCanvas({
                   data-course-rewrite-marker={isCourseRewriteMarker ? "true" : undefined}
                   aria-label={marker.label ?? marker.text}
                   aria-pressed={followId === marker.id}
-                  onClick={() => {
+                  onClick={(event) => {
                     if (draggedRef.current) return;
+                    recordMapTravel(travelClock, marker.id, event.timeStamp);
                     marker.activate?.();
                   }}
                 >
@@ -433,8 +442,9 @@ export function WorldMapCanvas({
               aria-pressed={followId === marker.id}
               style={{ "--placed": 0 } as CSSProperties}
               data-course-rewrite-marker={isCourseRewriteMarker ? "true" : undefined}
-              onClick={() => {
+              onClick={(event) => {
                 if (draggedRef.current) return;
+                recordMapTravel(travelClock, marker.id, event.timeStamp);
                 marker.activate?.();
               }}
             >

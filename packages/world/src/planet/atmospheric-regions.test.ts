@@ -40,7 +40,7 @@ describe("atmospheric regions", () => {
         expect(region.courseIds).toEqual(
           source
             .find((study) => study.id === region.studyId)!
-            .courses.slice(0, 5)
+            .courses.slice(0, count === 30 ? 1 : 5)
             .map((course) => course.id),
         );
         for (let j = i + 1; j < regions.length; j++)
@@ -50,11 +50,11 @@ describe("atmospheric regions", () => {
       }
     },
   );
-  it("keeps representative terrain outside the planet and within the 640 triangle per island budget", () => {
+  it("keeps representative terrain outside the planet and within the 1600 triangle per island budget", () => {
     const source = studies(4);
     const regions = planAtmosphericRegions(source);
     const geometry = buildAtmosphericIslands(source, regions);
-    expect(geometry.index!.count / 3).toBeLessThanOrEqual(4 * 5 * 640);
+    expect(geometry.index!.count / 3).toBeLessThanOrEqual(4 * 5 * 1600);
     const position = geometry.getAttribute("position");
     for (let i = 0; i < position.count; i++) {
       const radius = Math.hypot(position.getX(i), position.getY(i), position.getZ(i));
@@ -69,6 +69,85 @@ describe("atmospheric regions", () => {
     const geometry = buildAtmosphericIslands([], []);
     expect(geometry.getAttribute("position")).toBeUndefined();
     geometry.dispose();
+  });
+
+  it.each([
+    [1, 5, 5],
+    [4, 5, 5],
+    [7, 5, 4],
+    [15, 5, 2],
+    [30, 5, 1],
+    [31, 5, 1],
+    [1, 3, 3],
+    [11, 3, 2],
+    [30, 3, 1],
+  ] as const)(
+    "%i populated regions at tier %i retain %i representatives each without hiding study entries",
+    (count, limit, expected) => {
+      const source = studies(count);
+      const before = JSON.stringify(source);
+      const regions = planAtmosphericRegions(source, limit);
+      expect(regions.map((region) => region.studyId).sort()).toEqual(
+        source.map((study) => study.id).sort(),
+      );
+      for (const region of regions) {
+        const study = source.find((entry) => entry.id === region.studyId)!;
+        expect(region.courseIds).toEqual(
+          study.courses.slice(0, expected).map((course) => course.id),
+        );
+      }
+      expect(JSON.stringify(source)).toBe(before);
+      expect(planAtmosphericRegions([...source].reverse(), limit)).toEqual(regions);
+    },
+  );
+
+  it("does not spend representative slots on empty studies or omit a populated study", () => {
+    const populated = studies(4);
+    const source = [
+      ...populated,
+      ...studies(40).map((study) => ({
+        ...study,
+        id: `empty-${study.id}`,
+        courses: [],
+        courseCount: 0,
+        lessonCount: 0,
+      })),
+    ];
+    const regions = planAtmosphericRegions(source);
+    expect(regions).toHaveLength(44);
+    for (const region of regions)
+      expect(region.courseIds).toHaveLength(region.studyId.startsWith("empty-") ? 0 : 5);
+  });
+
+  it("bounds dense-domain drawn geometry, not just a reported counter", () => {
+    const source = studies(30);
+    const geometry = buildAtmosphericIslands(source, planAtmosphericRegions(source, 3));
+    try {
+      expect(geometry.index!.count / 3).toBeLessThanOrEqual(30 * 1600);
+      expect(geometry.index!.count / 3).toBeGreaterThan(30 * 640);
+      expect(geometry.getAttribute("position").count).toBeGreaterThan(0);
+    } finally {
+      geometry.dispose();
+    }
+  });
+
+  it("keys the emitted prefix, including density transitions, without rebuilding for unseen courses", () => {
+    const dense = studies(30);
+    const hiddenEdit = dense.map((study) => ({
+      ...study,
+      courses: study.courses.map((course, index) =>
+        index === 1 ? { ...course, lessonCount: course.lessonCount + 1 } : course,
+      ),
+    }));
+    expect(atmosphericGeometryKey(hiddenEdit)).toBe(atmosphericGeometryKey(dense));
+    // Fifteen studies show two real courses each; the same edit now changes geometry.
+    expect(atmosphericGeometryKey(hiddenEdit.slice(0, 15))).not.toBe(
+      atmosphericGeometryKey(dense.slice(0, 15)),
+    );
+    const desktop = planAtmosphericRegions(dense, 5);
+    const mobile = planAtmosphericRegions(dense, 3);
+    expect(mobile).toEqual(desktop);
+    expect(atmosphericGeometryKey(dense, 3)).toBe(atmosphericGeometryKey(dense, 5));
   });
 });
 

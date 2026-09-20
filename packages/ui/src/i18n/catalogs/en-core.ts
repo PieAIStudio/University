@@ -3,6 +3,9 @@ import type { MessageCatalog } from "../types.js";
 /** Product-owned English UI copy. Keep keys and interpolation slots aligned with the source catalog. */
 export const messages = {
   "product.settings.interfaceLanguage": "Interface language",
+  "product.worldStyle.label": "World style",
+  "product.worldStyle.classic": "Classic miniature",
+  "product.worldStyle.clay": "Colored clay",
   "ui.world.domain.programming": "AI & Programming",
   "ui.world.domain.programming.description":
     "Learn to build websites and apps with AI, and understand features, data, and interactions.",

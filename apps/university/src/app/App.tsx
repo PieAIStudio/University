@@ -102,6 +102,7 @@ import { universityCounters } from "@pieai/university-ui/navigation/counters.js"
 import { STUDIO_MORE_ITEM } from "@pieai/university-ui/navigation/slots.js";
 import { PresenceLayer, PresenceSession, presenceViewKey } from "@pieai/university-ui/presence.js";
 import { watchThemePreference } from "@pieai/university-ui/theme.js";
+import { bindWorldStylePreference, WorldStyleControl } from "@pieai/university-ui/world-style.js";
 import { CompanionProbe } from "@pieai/university-world/companion-probe.js";
 import {
   islandLookCameraForShot,
@@ -250,6 +251,8 @@ export function App() {
       }),
     [],
   );
+
+  useEffect(() => bindWorldStylePreference(progressPort), []);
 
   useEffect(
     () => watchThemePreference(progress.account.preferences.theme),
@@ -1321,6 +1324,7 @@ export function App() {
               />
             ) : undefined
           }
+          appearance={mapMode ? <WorldStyleControl compact /> : undefined}
           route={
             courseIslandProps ? (
               <CourseIsland

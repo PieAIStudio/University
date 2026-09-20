@@ -63,7 +63,7 @@ describe("RemoteIslandField projection & batching", () => {
     batch.dispose();
   });
 
-  it("builds a single island with exactly REMOTE_ISLAND_TERRAIN_TRIANGLES triangles and preserves identity", () => {
+  it("keeps the measured single-island geometry below its ceiling and preserves identity", () => {
     const studyId = "turing-pact";
     const courseId = "foundations-before-zero";
     const geom = islandGeometryBlueprint({
@@ -86,19 +86,23 @@ describe("RemoteIslandField projection & batching", () => {
     const batch = buildRemoteIslandBatch([placement]);
     try {
       expect(batch.islandCount).toBe(1);
-      expect(batch.triangleCount).toBe(REMOTE_ISLAND_TERRAIN_TRIANGLES);
+      // R53 adaptive stone segmentation counts actual faces, not a fixed
+      // 1,600-face stride. This fixture is a measured topology tripwire.
+      expect(batch.triangleCount).toBe(1420);
+      expect(batch.triangleCount).toBeLessThanOrEqual(REMOTE_ISLAND_TERRAIN_TRIANGLES);
+      expect(batch.geometry.getIndex()!.count).toBe(batch.triangleCount * 3);
       expect(batch.islandRanges).toHaveLength(1);
       const range = batch.islandRanges[0]!;
       expect(range.id).toBe(`${studyId}/${courseId}`);
       expect(range.islandIndex).toBe(0);
       expect(range.startTriangle).toBe(0);
-      expect(range.triangleCount).toBe(REMOTE_ISLAND_TERRAIN_TRIANGLES);
+      expect(range.triangleCount).toBe(batch.triangleCount);
 
       // Face index mapping
       expect(batch.islandIndexForFace(0)).toBe(0);
       expect(batch.islandIndexForFace(300)).toBe(0);
-      expect(batch.islandIndexForFace(REMOTE_ISLAND_TERRAIN_TRIANGLES - 1)).toBe(0);
-      expect(batch.islandIndexForFace(REMOTE_ISLAND_TERRAIN_TRIANGLES)).toBeNull();
+      expect(batch.islandIndexForFace(batch.triangleCount - 1)).toBe(0);
+      expect(batch.islandIndexForFace(batch.triangleCount)).toBeNull();
       expect(batch.islandIndexForFace(-1)).toBeNull();
 
       // Transformed bounding box contains the island position
@@ -134,31 +138,36 @@ describe("RemoteIslandField projection & batching", () => {
     const batch = buildRemoteIslandBatch(placements);
     try {
       expect(batch.islandCount).toBe(count);
-      expect(batch.triangleCount).toBe(count * REMOTE_ISLAND_TERRAIN_TRIANGLES);
+      expect(batch.triangleCount).toBeLessThanOrEqual(count * REMOTE_ISLAND_TERRAIN_TRIANGLES);
+      expect(batch.geometry.getIndex()!.count).toBe(batch.triangleCount * 3);
       expect(batch.islandRanges).toHaveLength(count);
+      expect(new Set(batch.islandRanges.map((range) => range.triangleCount)).size).toBeGreaterThan(
+        1,
+      );
 
       // Verify range sequence
+      let expectedStart = 0;
       for (let i = 0; i < count; i += 1) {
         const range = batch.islandRanges[i]!;
+        const base = getOrCreateRemoteBaseGeometry(placements[i]!.blueprint);
         expect(range.islandIndex).toBe(i);
-        expect(range.startTriangle).toBe(i * REMOTE_ISLAND_TERRAIN_TRIANGLES);
-        expect(range.triangleCount).toBe(REMOTE_ISLAND_TERRAIN_TRIANGLES);
+        expect(range.startTriangle).toBe(expectedStart);
+        expect(range.triangleCount).toBe(base.indices.length / 3);
+        expect(range.triangleCount).toBeGreaterThan(352);
+        expect(range.triangleCount).toBeLessThanOrEqual(REMOTE_ISLAND_TERRAIN_TRIANGLES);
 
         // Test boundary faces for each island
-        expect(batch.islandIndexForFace(i * REMOTE_ISLAND_TERRAIN_TRIANGLES)).toBe(i);
-        expect(
-          batch.islandIndexForFace(
-            i * REMOTE_ISLAND_TERRAIN_TRIANGLES + Math.floor(REMOTE_ISLAND_TERRAIN_TRIANGLES / 2),
-          ),
-        ).toBe(i);
-        expect(
-          batch.islandIndexForFace(
-            i * REMOTE_ISLAND_TERRAIN_TRIANGLES + REMOTE_ISLAND_TERRAIN_TRIANGLES - 1,
-          ),
-        ).toBe(i);
+        expect(batch.islandIndexForFace(expectedStart)).toBe(i);
+        expect(batch.islandIndexForFace(expectedStart + Math.floor(range.triangleCount / 2))).toBe(
+          i,
+        );
+        expect(batch.islandIndexForFace(expectedStart + range.triangleCount - 1)).toBe(i);
+        expectedStart += range.triangleCount;
+        expect(batch.islandIndexForFace(expectedStart)).toBe(i + 1 < count ? i + 1 : null);
       }
 
-      expect(batch.islandIndexForFace(count * REMOTE_ISLAND_TERRAIN_TRIANGLES)).toBeNull();
+      expect(batch.triangleCount).toBe(expectedStart);
+      expect(batch.islandIndexForFace(expectedStart)).toBeNull();
       expect(batch.islandIndexForFace(-5)).toBeNull();
 
       // Lift check: island 1 position has y lifted
@@ -169,13 +178,24 @@ describe("RemoteIslandField projection & batching", () => {
       // Dimmed check: island 3 has dimmed color multiplier applied
       const colorAttr = batch.geometry.getAttribute("color");
       expect(colorAttr).toBeDefined();
-      // Island 0 is not dimmed, Island 3 is dimmed
-      const vertexPerIsland = colorAttr.count / count;
-      const r0 = colorAttr.getX(0);
-      const r3 = colorAttr.getX(Math.floor(3 * vertexPerIsland));
-      // Colors are non-zero
-      expect(r0).toBeGreaterThan(0);
-      expect(r3).toBeGreaterThan(0);
+      // Variable topology also changes vertex ranges: dividing the total by
+      // island count would silently sample a different rock or neighbour.
+      for (const i of [0, 3]) {
+        const base = getOrCreateRemoteBaseGeometry(placements[i]!.blueprint);
+        const vertex = batch.geometry.getIndex()!.getX(batch.islandRanges[i]!.startTriangle * 3);
+        const sourceVertex = base.indices[0]!;
+        const multiplier = i === 3 ? 0.9 : 1;
+        expect(colorAttr.getX(vertex)).toBeGreaterThan(0);
+        expect(colorAttr.getX(vertex)).toBeCloseTo(base.colors[sourceVertex * 3]! * multiplier, 6);
+        expect(colorAttr.getY(vertex)).toBeCloseTo(
+          base.colors[sourceVertex * 3 + 1]! * multiplier,
+          6,
+        );
+        expect(colorAttr.getZ(vertex)).toBeCloseTo(
+          base.colors[sourceVertex * 3 + 2]! * multiplier,
+          6,
+        );
+      }
     } finally {
       batch.dispose();
     }
@@ -210,8 +230,20 @@ describe("RemoteIslandField projection & batching", () => {
       // Single geometry = 1 draw call
       expect(batch.geometry).toBeInstanceOf(THREE.BufferGeometry);
       expect(batch.islandCount).toBe(53);
-      expect(batch.triangleCount).toBe(53 * REMOTE_ISLAND_TERRAIN_TRIANGLES); // exactly 33,920 triangles
+      expect(batch.triangleCount).toBeLessThanOrEqual(53 * REMOTE_ISLAND_TERRAIN_TRIANGLES);
+      expect(batch.geometry.getIndex()!.count).toBe(batch.triangleCount * 3);
       expect(batch.islandRanges).toHaveLength(53);
+      let offset = 0;
+      for (const range of batch.islandRanges) {
+        expect(range.startTriangle).toBe(offset);
+        expect(range.triangleCount).toBeGreaterThan(352);
+        expect(range.triangleCount).toBeLessThanOrEqual(REMOTE_ISLAND_TERRAIN_TRIANGLES);
+        expect(batch.islandIndexForFace(offset)).toBe(range.islandIndex);
+        offset += range.triangleCount;
+        expect(batch.islandIndexForFace(offset - 1)).toBe(range.islandIndex);
+      }
+      expect(batch.triangleCount).toBe(offset);
+      expect(batch.islandIndexForFace(offset)).toBeNull();
       expect(elapsedMs).toBeLessThan(500); // well below half a second
     } finally {
       batch.dispose();
@@ -258,7 +290,8 @@ describe("RemoteIslandField projection & batching", () => {
     ]);
     // Base geometry build count MUST NOT increase!
     expect(getRemoteBaseGeometryBuildCount()).toBe(1);
-    expect(batch2.triangleCount).toBe(REMOTE_ISLAND_TERRAIN_TRIANGLES);
+    expect(batch2.triangleCount).toBe(base.triangleCount);
+    expect(batch2.geometry.getIndex()!.count).toBe(base.indices.length);
     expect(batch2.islandRanges[0]!.bounds.max.y).toBeGreaterThan(0);
     batch2.dispose();
   });
@@ -281,11 +314,11 @@ describe("RemoteIslandField projection & batching", () => {
       expect(batch.islandIndexForFace(100.99)).toBeNull();
       expect(batch.islandIndexForFace(-1)).toBeNull();
       expect(batch.islandIndexForFace(-100)).toBeNull();
-      expect(batch.islandIndexForFace(REMOTE_ISLAND_TERRAIN_TRIANGLES)).toBeNull();
+      expect(batch.islandIndexForFace(batch.triangleCount)).toBeNull();
       expect(batch.islandIndexForFace(1000000)).toBeNull();
       // Valid integer indices return the island
       expect(batch.islandIndexForFace(0)).toBe(0);
-      expect(batch.islandIndexForFace(REMOTE_ISLAND_TERRAIN_TRIANGLES - 1)).toBe(0);
+      expect(batch.islandIndexForFace(batch.triangleCount - 1)).toBe(0);
     } finally {
       batch.dispose();
     }
@@ -293,7 +326,7 @@ describe("RemoteIslandField projection & batching", () => {
 
   it("selects Uint16 vs Uint32 index attribute based on max vertex index rather than index length", () => {
     const bp = islandBlueprint({ studyId: "turing", courseId: "c1", lessonCount: 10 });
-    // Single island has 352 + 288 vertices (< 65536), so index should be Uint16
+    // One bounded island has fewer than 65536 actual vertices: Uint16 suffices.
     const smallBatch = buildRemoteIslandBatch([
       {
         id: "turing/c1",

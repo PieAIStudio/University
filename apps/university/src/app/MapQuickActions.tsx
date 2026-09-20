@@ -61,6 +61,7 @@ export function MapQuickActions({
   commands,
   route,
   sourceControls,
+  appearance,
 }: {
   readonly open: boolean;
   readonly onClose: () => void;
@@ -68,6 +69,8 @@ export function MapQuickActions({
   readonly commands: readonly MapQuickCommand[];
   readonly route?: ReactNode;
   readonly sourceControls?: ReactNode;
+  /** The world appearance choice: an on-demand command, never map chrome. */
+  readonly appearance?: ReactNode;
 }) {
   const [page, setPage] = useState<"commands" | "directory" | "route" | "help">("commands");
   const [query, setQuery] = useState("");
@@ -149,6 +152,7 @@ export function MapQuickActions({
             </GameButton>
           ) : null}
           {sourceControls}
+          {appearance}
           <GameButton variant="secondary" data-map-command="help" onClick={() => setPage("help")}>
             {t("map.help")}
           </GameButton>

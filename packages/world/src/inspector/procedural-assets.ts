@@ -306,7 +306,7 @@ export function proceduralAssetRows({
     role: "岩台与林缘",
     assetId: "course-landscape",
     name: "rock shoulders, grounded boulders, garden edges, flora and coastal spring",
-    pack: "自有程序化",
+    pack: "自有程序化 + Kenney CC0 派生",
     runtimePath: null,
     sourcePath: "packages/world/src/island/course-landscape-geometry.ts",
     bytes: null,
@@ -319,12 +319,39 @@ export function proceduralAssetRows({
     trianglesSource: worldSource("inspector/projected-metrics.ts", "measureProjectedGeometry"),
     instancesSource: worldSource("island/course-landscape-plan.ts", "courseLandscapePlan"),
     techniqueLock: "landmark",
-    technique: "同一占地计划；岩肩、实体圆石与石岸合批，庭院栏边与低花草合批，可选水景单批。",
+    technique:
+      "同一占地计划；三块 Kenney 派生闭合石体组成196面岩台，林缘加入24面阔叶植物；岩台、花草和水景分别合批。",
     techniqueSource: worldSource("island/course-landscape-render.tsx", "CourseLandscape"),
     mutable: false,
     note: "三角形取当前绘制几何；环境薄石已由共用圆石替换，不重复计退役GLB。庭院有真实场所与开放入口，不是额外课程、道路或可点击关卡；未知不记零。",
   };
+  const cliffMetric = projectedMetric(runtime, "cliffGarden");
+  const cliffGardenRow: InspectorAsset = {
+    ...landscapeRow,
+    key: "procedural/cliff-garden",
+    role: "岩缝植物",
+    assetId: "cliff-garden",
+    name: "plants supported by actual mineral bevel triangles",
+    sourcePath: "packages/world/src/island/kenney-rock-shapes.json",
+    placementCount: null,
+    totalTriangles: cliffMetric?.triangles ?? null,
+    instances: cliffMetric?.instances ?? null,
+    instancesSource: worldSource("inspector/projected-metrics.ts", "measureProjectedGeometry"),
+    technique:
+      "读取实际岩肩面，以三角形内切圆放置完整根部；最多12簇、288面、一个合批，空间不够就不放。",
+    techniqueSource: worldSource("island/cliff-garden.ts", "buildCliffGarden"),
+    note: "资源来自已记录哈希的 Kenney Nature Kit CC0；数值为当前可见几何，不把整棵树或天空图案当作植物证据。",
+  };
   return isWorld
     ? [grassRow, bushCrownRow, flameRow, medallionRow, ...extras]
-    : [grassRow, treeCrownRow, bushCrownRow, flameRow, medallionRow, landscapeRow, ...extras];
+    : [
+        grassRow,
+        treeCrownRow,
+        bushCrownRow,
+        flameRow,
+        medallionRow,
+        landscapeRow,
+        cliffGardenRow,
+        ...extras,
+      ];
 }

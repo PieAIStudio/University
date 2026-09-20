@@ -109,6 +109,10 @@ export function CourseLandscape({
           outcropCount: plan.outcrops.length,
           ruinCount: plan.outcrops.filter((site) => site.feature === "ruin").length,
           floraCount: plan.flora.length,
+          meadowBedCount: plan.meadowBeds?.length ?? 0,
+          meadowFloraCount: plan.flora.filter((p) => p.anchorId.startsWith("meadow/")).length,
+          leafyCount: plan.flora.filter((p) => p.asset === "leafy").length,
+          mushroomCount: plan.flora.filter((p) => p.asset === "mushroom").length,
           borderCount: plan.borders?.length ?? 0,
           groundStoneCount: plan.stones?.length ?? 0,
           stallCount: plan.stalls?.length ?? 0,
@@ -120,6 +124,7 @@ export function CourseLandscape({
             ? {
                 outcrops: plan.outcrops,
                 flora: plan.flora,
+                meadowBeds: plan.meadowBeds,
                 borders: plan.borders,
                 groundStones: plan.stones,
                 canopy: plan.canopy,

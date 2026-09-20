@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { FAST_TRAVEL_UPPER_BOUND_MS } from "../packages/world/src/avatar/hop.js";
 import { CLOUD_CARRIER_FOOT_OFFSET } from "../packages/world/src/sky/cloud-carrier-contract.js";
 import { humanClick } from "./harness/click.js";
+import { landingTiming, timedPointerClick } from "./harness/motion-time.js";
 import { watchConsole } from "./harness/console.js";
 import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
 import { EMPTY_DOMAIN_ID, PRIMARY_DOMAIN_ID } from "./harness/domain-catalogue.js";
@@ -28,6 +29,7 @@ type Motion = {
   readonly inFlight: boolean;
   readonly position: readonly [number, number, number];
   readonly target: readonly [number, number, number];
+  readonly finishedAt: number | null;
 };
 
 type SceneMetrics = {
@@ -61,8 +63,12 @@ async function waitForFlight(
   page: Page,
   surface: "planet" | "world" | "course",
   previousSequence: number,
-): Promise<{ readonly elapsedMs: number; readonly report: Motion }> {
-  const startedAt = await page.evaluate(() => performance.now());
+  pressedAt: number,
+): Promise<{
+  readonly elapsedMs: number;
+  readonly observationDelayMs: number;
+  readonly report: Motion;
+}> {
   await page.waitForFunction(
     ({ key, sequence }) => {
       const bag = globalThis as unknown as {
@@ -85,10 +91,10 @@ async function waitForFlight(
     { key: surface, sequence: previousSequence },
     { timeout: 10_000 },
   );
-  const elapsedMs = await page.evaluate((start) => performance.now() - start, startedAt);
   const report = await motion(page, surface);
   if (!report) throw new Error(`${surface} avatar motion report disappeared after landing`);
-  return { elapsedMs, report };
+  const observedAt = await page.evaluate(() => performance.now());
+  return { ...landingTiming(pressedAt, report.finishedAt, observedAt), report };
 }
 
 async function sceneMetrics(page: Page): Promise<SceneMetrics | null> {
@@ -389,8 +395,12 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
         'button.label--course.is-visible[data-course-state="live"]',
       );
       await expect(currentCourse).toHaveCount(1);
-      await humanClick(page, currentCourse, "从岛外等待位置选择当前课程");
-      const firstArrival = await waitForFlight(page, "world", home.sequence);
+      const firstPressedAt = await timedPointerClick(
+        page,
+        currentCourse,
+        "从岛外等待位置选择当前课程",
+      );
+      const firstArrival = await waitForFlight(page, "world", home.sequence, firstPressedAt);
       assertFast(firstArrival.elapsedMs, "首次选择的真实到达");
       expect(firstArrival.report.target).not.toEqual(home.target);
       await humanClick(page, currentCourse, "重复点同一课程不伪造新飞行");
@@ -423,15 +433,10 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
         `button.label--course.is-visible[data-map-marker=${JSON.stringify(targetId)}]`,
       );
       await expect(courseLabel).toBeVisible({ timeout: 30_000 });
-      let startedAt = 0;
-      await humanClick(page, courseLabel, "岛群里的课程", {
-        beforePress: async () => {
-          startedAt = await page.evaluate(() => performance.now());
-        },
-      });
-      const result = await waitForFlight(page, "world", before);
+      const startedAt = await timedPointerClick(page, courseLabel, "岛群里的课程");
+      const result = await waitForFlight(page, "world", before, startedAt);
       const elapsedMs = await page.evaluate((start) => performance.now() - start, startedAt);
-      assertFast(result.elapsedMs, "岛群（报告轮询）");
+      assertFast(result.elapsedMs, "岛群（真实绘制落地帧）");
       expect(result.report.target).not.toEqual(home.target);
       expect(result.report.position).toEqual(result.report.target);
       const cloud = await page.evaluate(() => {
@@ -447,7 +452,14 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       expect(cloud!.position).toEqual(cloud!.target);
       expect(result.report.target[1] - cloud!.target[1]).toBeCloseTo(CLOUD_CARRIER_FOOT_OFFSET, 6);
       const measured = await measuredScene(page);
-      evidence.world = { elapsedMs, report: result.report, cloud, ...measured };
+      evidence.world = {
+        elapsedMs,
+        clickToLandingMs: result.elapsedMs,
+        observationDelayMs: result.observationDelayMs,
+        report: result.report,
+        cloud,
+        ...measured,
+      };
 
       await enterSelectedMapObject(page, "进入课程岛");
       await expect(page).toHaveURL(`${ONLINE_ORIGIN}${coursePathOf(ALTERNATE_COURSE)}`);
@@ -473,20 +485,21 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
         `button.label--icon.is-visible[data-map-marker=${JSON.stringify(`kind:${destination!.id}`)}]`,
       );
       await expect(lessonIcon).toBeVisible({ timeout: 30_000 });
-      let startedAt = 0;
-      await humanClick(page, lessonIcon, "岛内 lesson 标记", {
-        beforePress: async () => {
-          startedAt = await page.evaluate(() => performance.now());
-        },
-      });
-      const result = await waitForFlight(page, "course", before);
+      const startedAt = await timedPointerClick(page, lessonIcon, "岛内 lesson 标记");
+      const result = await waitForFlight(page, "course", before, startedAt);
       const elapsedMs = await page.evaluate((start) => performance.now() - start, startedAt);
-      assertFast(result.elapsedMs, "岛内（报告轮询）");
+      assertFast(result.elapsedMs, "岛内（真实绘制落地帧）");
       expect(result.report.target).not.toEqual(resting.target);
       expect(result.report.position).toEqual(result.report.target);
       await expect(page.locator('[data-map-entry="true"]')).toBeVisible({ timeout: 10_000 });
       const measured = await measuredScene(page);
-      evidence.course = { elapsedMs, report: result.report, ...measured };
+      evidence.course = {
+        elapsedMs,
+        clickToLandingMs: result.elapsedMs,
+        observationDelayMs: result.observationDelayMs,
+        report: result.report,
+        ...measured,
+      };
     });
 
     mkdirSync(EVIDENCE, { recursive: true });
@@ -516,7 +529,8 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
     await readAndAnswerFirstLesson(page);
     await waitForSettlementProgress(page);
     const backToCourse = page.getByRole("button", { name: /回关卡地图/ }).first();
-    await backToCourse.scrollIntoViewIfNeeded();
+    // The pointer helper reacquires and scrolls the live control if the
+    // completed-lesson view remounts before the first physical press.
     await humanClick(page, backToCourse, "回到课程岛");
     await expect(page).toHaveURL(`${ONLINE_ORIGIN}${FIRST_COURSE_ROUTE}`);
     await expect(page.locator(".loading-trivia")).toHaveCount(0, { timeout: 90_000 });

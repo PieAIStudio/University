@@ -10,6 +10,7 @@ import { mergeBufferGeometries } from "three-stdlib";
 
 import { createSmoothIcosahedron } from "./foliage-geometry.js";
 import { miniatureBevelBox } from "./miniature-bevel.js";
+import donorShapes from "./kenney-rock-shapes.json" with { type: "json" };
 
 export type MiniatureAssetKind =
   | "fir"
@@ -24,6 +25,9 @@ export type MiniatureAssetKind =
   | "fence"
   | "flowers"
   | "grass"
+  | "fern"
+  | "leafy"
+  | "mushroom"
   | "snowpeak";
 
 export interface MiniatureAssetBounds {
@@ -622,6 +626,32 @@ function buildAutumn(): THREE.BufferGeometry[] {
   return parts;
 }
 
+function buildFern(): THREE.BufferGeometry[] {
+  const source = donorShapes.assets.find((asset) => asset.id === "plant_flatShort")!;
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(
+      source.vertices.flatMap((v) => [v[0]! * 0.36, v[1]! * 0.3, v[2]! * 0.36]),
+      3,
+    ),
+  );
+  geometry.setIndex(source.faces.flat());
+  geometry.computeVertexNormals();
+  const parts: THREE.BufferGeometry[] = [];
+  addPart(parts, geometry, 0x5f9446);
+  const position = geometry.getAttribute("position"),
+    color = geometry.getAttribute("color");
+  const low = new THREE.Color(0x4f7c42),
+    high = new THREE.Color(0xa7c65a);
+  const shade = new THREE.Color();
+  for (let i = 0; i < position.count; i++) {
+    shade.copy(low).lerp(high, Math.min(1, Math.hypot(position.getX(i), position.getZ(i)) / 0.36));
+    color.setXYZ(i, shade.r, shade.g, shade.b);
+  }
+  return parts;
+}
+
 function buildStone(): THREE.BufferGeometry[] {
   const parts: THREE.BufferGeometry[] = [];
   // One squat, bevelled block with a real flat foot and an offset crown.
@@ -967,6 +997,45 @@ function buildSnowpeak(): THREE.BufferGeometry[] {
   return parts;
 }
 
+/** Course-only low accents from selected CC0 meshes. Leaf backs are explicit
+ * reversed triangles so the mixed opaque batch remains single-sided for solids.
+ * Mushroom stem/cap identities survive the offline preparation. */
+function buildGroundcover(kind: "leafy" | "mushroom"): THREE.BufferGeometry[] {
+  const source = donorShapes.assets.find(
+    (asset) => asset.id === (kind === "leafy" ? "plant_bush" : "mushroom_tan"),
+  )!;
+  const radius = kind === "leafy" ? 0.38 : 0.28;
+  const height = kind === "leafy" ? 0.34 : 0.31;
+  const positions: number[] = [],
+    colors: number[] = [];
+  const low = new THREE.Color(0x527e43),
+    high = new THREE.Color(0xa0bc64);
+  const stem = new THREE.Color(0xe2d6b4),
+    cap = new THREE.Color(0xb88350);
+  const shade = new THREE.Color();
+  for (let i = 0; i < source.faces.length; i++) {
+    const face = source.faces[i]!;
+    for (let side = 0; side < (kind === "leafy" ? 2 : 1); side++) {
+      for (const index of side === 0 ? face : [...face].reverse()) {
+        const p = source.vertices[index]!;
+        positions.push(p[0]! * radius, p[1]! * height, p[2]! * radius);
+        if (kind === "leafy") {
+          shade.copy(low).lerp(high, Math.min(1, Math.hypot(p[0]!, p[2]!) * 0.75 + p[1]! * 0.15));
+        } else {
+          shade.copy(source.faceMaterials?.[i] === 1 ? cap : stem);
+        }
+        colors.push(shade.r, shade.g, shade.b);
+      }
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+  geometry.setIndex(Array.from({ length: positions.length / 3 }, (_, i) => i));
+  geometry.computeVertexNormals();
+  return [geometry];
+}
+
 function finishGeometry(parts: THREE.BufferGeometry[], tall: boolean): THREE.BufferGeometry {
   let merged: THREE.BufferGeometry | null = null;
   try {
@@ -1051,6 +1120,13 @@ export function createMiniatureAsset(
       break;
     case "grass":
       parts = buildGrass();
+      break;
+    case "fern":
+      parts = buildFern();
+      break;
+    case "leafy":
+    case "mushroom":
+      parts = buildGroundcover(kind);
       break;
     case "snowpeak":
       parts = buildSnowpeak();

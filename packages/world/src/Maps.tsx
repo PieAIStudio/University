@@ -100,6 +100,7 @@ import { projectWorldCourse } from "./world-course-projection.js";
 import { CourseOverviewContext } from "./camera/CourseOverview.js";
 import { worldCarrierHomeTarget, worldIslandCarrierTarget } from "./world-carrier.js";
 import { courseAvatarIdlePosition } from "./course-avatar-idle.js";
+import { MapTravelClockContext, mapTravelStartTime, recordMapTravel } from "./map-travel-clock.js";
 export { worldIslandCaptionTarget } from "./world-carrier.js";
 
 /**
@@ -686,6 +687,7 @@ export function LearnerMarker({
   signedIn,
   showRing = true,
   surface,
+  travelKey = null,
 }: {
   readonly position: THREE.Vector3;
   /** The first visible point, used when a cloud starts away from its target. */
@@ -695,7 +697,9 @@ export function LearnerMarker({
   readonly showRing?: boolean;
   /** Development-only evidence key; omitted by callers outside the map. */
   readonly surface?: "world" | "planet" | "course";
+  readonly travelKey?: string | null;
 }) {
+  const travelClock = useContext(MapTravelClockContext);
   const travel = useRef<THREE.Group>(null);
   const lift = useRef<THREE.Group>(null);
   const initialPoint = useRef((initialPosition ?? position).clone());
@@ -728,13 +732,13 @@ export function LearnerMarker({
       */
       from.current.copy(ground.position);
       target.current.copy(position);
-      // Start at the committed choice, not one rendered frame later. The
-      // first frame must catch up if it is late; the duration stays 420ms.
-      startedAt.current = performance.now();
+      // A real choice predates React's commit. Catch up that scheduling time
+      // together with the carrier, without shortening the 420ms trajectory.
+      startedAt.current = mapTravelStartTime(travelClock, travelKey, performance.now());
       finishedAt.current = null;
       sequence.current += 1;
     }
-  }, [position.x, position.y, position.z]);
+  }, [position.x, position.y, position.z, travelClock, travelKey]);
 
   useFrame(() => {
     if (islandLookFrozen()) return;
@@ -821,6 +825,7 @@ export function Weather({
   shadows = true,
   carrierTarget,
   carrierSurface,
+  carrierTravelKey,
   cloudFrame,
 }: {
   extent: number;
@@ -858,6 +863,7 @@ export function Weather({
   carrierTarget?: CloudCarrierTarget | null;
   /** Development-only evidence key for the carrier motion. */
   carrierSurface?: "world" | "planet";
+  carrierTravelKey?: string | null;
   cloudFrame?: { readonly radius: number; readonly floor: number };
 }) {
   const [, fogTo] = fog ?? [extent * 0.9, extent * 3.1];
@@ -894,6 +900,7 @@ export function Weather({
           drift={!islandLookFrozen()}
           carrierTarget={carrierTarget}
           carrierSurface={carrierSurface}
+          carrierTravelKey={carrierTravelKey}
           frame={cloudFrame}
         />
       ) : null}
@@ -949,6 +956,7 @@ export function WorldScene({
       })),
     [authoringFocus, placements],
   );
+  const travelClock = useContext(MapTravelClockContext);
   const hoveredIsland = useRef<number | null>(null);
   const cloudLevel = -5.2;
   const weatherExtent = extent * 1.5;
@@ -1004,6 +1012,7 @@ export function WorldScene({
         shadows={false}
         carrierTarget={carrierTarget}
         carrierSurface="world"
+        carrierTravelKey={selectedPlacement?.node.courseId ?? null}
         cloudFrame={{
           radius: Math.max(
             3,
@@ -1034,6 +1043,7 @@ export function WorldScene({
         onPick={(islandIndex) => {
           const entry = placements[islandIndex];
           if (!entry) return;
+          recordMapTravel(travelClock, entry.node.courseId, performance.now());
           playSound("map.select");
           onPick(entry.node);
         }}
@@ -1053,6 +1063,7 @@ export function WorldScene({
           signedIn={avatarSignedIn}
           showRing={selectedPlacement !== null}
           surface="world"
+          travelKey={selectedPlacement?.node.courseId ?? null}
         />
       ) : null}
     </>
@@ -1367,6 +1378,7 @@ export function CourseScene({
   assetRevision?: number;
 }) {
   const overview = useContext(CourseOverviewContext);
+  const travelClock = useContext(MapTravelClockContext);
   const avatarLesson = avatarLessonId
     ? (lessons.find((lesson) => lesson.lessonId === avatarLessonId) ?? null)
     : null;
@@ -1436,7 +1448,10 @@ export function CourseScene({
         markers={markers}
         footing={layout.footing.geometry}
         inlays={layout.inlays}
-        onPick={onPick}
+        onPick={(lesson) => {
+          recordMapTravel(travelClock, lesson.lessonId, performance.now());
+          onPick(lesson);
+        }}
         onHover={onHover}
       />
       {avatarAt || layout.idlePosition ? (
@@ -1446,6 +1461,7 @@ export function CourseScene({
           signedIn={avatarSignedIn}
           showRing={avatarAt !== null}
           surface="course"
+          travelKey={avatarAt?.lessonId ?? null}
         />
       ) : null}
     </>

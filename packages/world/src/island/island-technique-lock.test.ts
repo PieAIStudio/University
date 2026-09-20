@@ -109,7 +109,7 @@ describe("Island technique lock", () => {
   });
 
   it("holds course terrain mesh triangles still until the ADR is amended", () => {
-    expect(ISLAND_TECHNIQUE_LOCK.terrain.budget).toContain("15234");
+    const measured: Record<number, number> = {};
     for (const lessonCount of [6, 12, 24, 41] as const) {
       const blueprint = islandBlueprint({
         studyId: "turing-pact",
@@ -120,9 +120,13 @@ describe("Island technique lock", () => {
       const shape = buildIslandGeometry(blueprint, "course");
       const index = shape.terrain.getIndex();
       if (!index) throw new Error("expected an indexed course terrain mesh");
-      expect(index.count / 3, `${lessonCount}`).toBe(ISLAND_COURSE_TERRAIN_TRIANGLES[lessonCount]);
+      measured[lessonCount] = index.count / 3;
       shape.terrain.dispose();
     }
+    console.log("[course terrain tripwire]", JSON.stringify(measured));
+    expect(measured).toEqual(ISLAND_COURSE_TERRAIN_TRIANGLES);
+    for (const triangles of Object.values(ISLAND_COURSE_TERRAIN_TRIANGLES))
+      expect(ISLAND_TECHNIQUE_LOCK.terrain.budget).toContain(String(triangles));
   });
 
   it("holds the grass geometry's triangle count still until the ADR is amended", () => {
@@ -204,16 +208,19 @@ describe("Island technique lock", () => {
   });
 
   it("pins remote catalogue projection geometry and budget constants", () => {
-    // 640-triangle continuous shared terrain
-    expect(ISLAND_TECHNIQUE_LOCK.terrain.technique).toContain("640-triangle terrain mesh");
-    expect(ISLAND_TECHNIQUE_LOCK.terrain.budget).toContain("640 triangles/island");
+    // Adaptive continuous terrain: 1312 before splits, hard ceiling 1600.
+    expect(ISLAND_TECHNIQUE_LOCK.terrain.technique).toContain("1600-triangle terrain mesh");
+    expect(ISLAND_TECHNIQUE_LOCK.terrain.budget).toContain("1600 triangles/island");
     const bp = islandBlueprint({
       studyId: "turing-pact",
       courseId: "foundations-before-zero",
       lessonCount: 41,
     });
     const worldShape = buildIslandGeometry(bp, "world");
-    expect(trianglesOf(worldShape.terrain)).toBe(REMOTE_ISLAND_TERRAIN_TRIANGLES);
+    expect(trianglesOf(worldShape.terrain)).toBeLessThanOrEqual(REMOTE_ISLAND_TERRAIN_TRIANGLES);
+    expect(worldShape.terrain.userData.cliffTopology.panelStats.bevelled).toBeGreaterThanOrEqual(
+      32,
+    );
     worldShape.terrain.dispose();
 
     // 80-triangle shared rounded crown + trunk silhouette (0 course GLBs)
@@ -239,7 +246,7 @@ describe("Island technique lock", () => {
     expect(REMOTE_ISLAND_MAX_BUDGET).toBe(
       REMOTE_ISLAND_TERRAIN_TRIANGLES + REMOTE_PROPS_MAX_TRIANGLES_PER_ISLAND,
     );
-    expect(REMOTE_ISLAND_MAX_BUDGET).toBe(6640);
+    expect(REMOTE_ISLAND_MAX_BUDGET).toBe(7600);
 
     // Technique strings explicitly state truthful scoping and bounding
     expect(ISLAND_TECHNIQUE_LOCK.tree.technique).toContain(
@@ -291,7 +298,7 @@ describe("Island technique lock", () => {
     const remoteProps = readFileSync(resolve(import.meta.dirname, "remote-props.ts"), "utf8");
     expect(remoteProps).not.toMatch(/island-dressing-render/);
     expect(remoteProps).not.toMatch(/\.glb/);
-    expect(remoteProps).toMatch(/REMOTE_ISLAND_TERRAIN_TRIANGLES = 640/);
+    expect(remoteProps).toMatch(/REMOTE_ISLAND_TERRAIN_TRIANGLES = 1600/);
     expect(remoteProps).toMatch(/REMOTE_PROPS_MAX_TRIANGLES_PER_ISLAND/);
 
     const clouds = readFileSync(

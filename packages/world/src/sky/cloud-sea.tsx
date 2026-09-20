@@ -4,7 +4,7 @@
  * The same closed source is also used by course frames and globe clouds.
  */
 import { useFrame } from "@react-three/fiber";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useContext, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { hopPose } from "../avatar/hop.js";
@@ -18,6 +18,7 @@ import {
 } from "./cloud-volume.js";
 import { renderTier } from "./tier.js";
 import { usePrefersReducedMotion } from "../reduced-motion.js";
+import { MapTravelClockContext, mapTravelStartTime } from "../map-travel-clock.js";
 
 export { CLOUD_CARRIER_FOOT_OFFSET } from "./cloud-carrier-contract.js";
 export type { CloudCarrierTarget } from "./cloud-carrier-contract.js";
@@ -574,6 +575,7 @@ export interface CuteCloudSeaProps {
   readonly carrierTarget?: CloudCarrierTarget | null;
   /** Development evidence key; it is omitted from production callers. */
   readonly carrierSurface?: "world" | "planet";
+  readonly carrierTravelKey?: string | null;
   readonly frame?: ArchipelagoCloudFrame;
 }
 
@@ -592,8 +594,10 @@ export function CuteCloudSea({
   drift = true,
   carrierTarget,
   carrierSurface,
+  carrierTravelKey = null,
   frame,
 }: CuteCloudSeaProps) {
+  const travelClock = useContext(MapTravelClockContext);
   const resolvedQuality = qualityFrom(quality);
   const layout = useMemo(
     () => cuteCloudLayout(extent, level, resolvedQuality, frame),
@@ -707,9 +711,13 @@ export function CuteCloudSea({
       // from the carrier's current position, never from its old destination.
       carrierFrom.current.copy(carrierPosition.current);
       carrierGoal.current.copy(carrierTargetScratch);
-      // Share the avatar's selection-commit clock. A delayed first render
-      // must not add another whole frame before the 420ms journey begins.
-      carrierStartedAt.current = performance.now();
+      // Cloud and rider start at the same real choice. Committing a heavier
+      // scene must not add another frame to their unchanged 420ms journey.
+      carrierStartedAt.current = mapTravelStartTime(
+        travelClock,
+        carrierTravelKey,
+        performance.now(),
+      );
       carrierSequence.current += 1;
     }
   }, [
@@ -717,6 +725,8 @@ export function CuteCloudSea({
     carrierTarget?.[1],
     carrierTarget?.[2],
     carrierTarget === undefined,
+    carrierTravelKey,
+    travelClock,
     layout,
   ]);
 

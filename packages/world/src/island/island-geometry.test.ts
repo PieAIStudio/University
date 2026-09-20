@@ -28,6 +28,13 @@ function dispose(shape: ReturnType<typeof buildIslandGeometry>): void {
 
 const CLIFF_RING_COUNT = 5;
 
+function expectedCliffTriangles(shape: ReturnType<typeof buildIslandGeometry>, segments: number) {
+  const { panelCount, panelStats } = shape.terrain.userData.cliffTopology;
+  expect(panelStats.bevelled + panelStats.plain).toBe(panelCount * 3 + panelStats.divided);
+  expect(panelStats.bevelled).toBeGreaterThanOrEqual(panelCount * 2);
+  return segments * 21 + panelCount * 18 + panelStats.divided * 6 - panelStats.plain * 10;
+}
+
 /** Same per-vertex/per-face limits, without constructing millions of matcher
  * objects on the valid path. Failures still identify the exact fixture and
  * offending vertex/face; no sample, timeout or tolerance is weakened. */
@@ -58,32 +65,22 @@ function cliffRingsFromMesh(
 } {
   const position = shape.terrain.getAttribute("position");
   const index = shape.terrain.getIndex()!;
-  const sideStart = (shape.counts.topTriangles + shape.counts.routeTriangles) * 3;
-  const indicesPerBand = segments * 6;
-  const samePoint = (left: number, right: number): boolean =>
-    Math.abs(position.getX(left) - position.getX(right)) < 1e-6 &&
-    Math.abs(position.getY(left) - position.getY(right)) < 1e-6 &&
-    Math.abs(position.getZ(left) - position.getZ(right)) < 1e-6;
-  const ringIds = Array.from({ length: CLIFF_RING_COUNT }, (_, ring) =>
-    Array.from({ length: segments }, (_, sector) => {
-      const band = Math.min(ring, CLIFF_RING_COUNT - 2);
-      const face = sideStart + (band * segments + sector) * 6;
-      if (ring !== CLIFF_RING_COUNT - 1) return index.getX(face);
-      const nextSector = (sector + 1) % segments;
-      const nextUpper = index.getX(sideStart + (band * segments + nextSector) * 6);
-      const first = index.getX(face + 1);
-      const second = index.getX(face + 2);
-      return samePoint(first, nextUpper) ? second : first;
-    }),
+  const topology = shape.terrain.userData.cliffTopology;
+  const ringIds: number[][] = topology.ringIndices;
+  expect(ringIds).toHaveLength(CLIFF_RING_COUNT);
+  for (const ring of ringIds) {
+    expect(ring).toHaveLength(segments);
+    expect(ring.every((id) => Number.isInteger(id) && id >= 0 && id < position.count)).toBe(true);
+  }
+  const rings = ringIds.map((ring) =>
+    ring.map((id) => ({
+      x: position.getX(id),
+      y: position.getY(id),
+      z: position.getZ(id),
+    })),
   );
-  const rings = Array.from({ length: CLIFF_RING_COUNT }, (_, ring) =>
-    Array.from({ length: segments }, (_, sector) => {
-      const id = ringIds[ring]![sector]!;
-      return { x: position.getX(id), y: position.getY(id), z: position.getZ(id) };
-    }),
-  );
-  const bottomStart = sideStart + (CLIFF_RING_COUNT - 1) * indicesPerBand;
-  const bottomId = index.getX(bottomStart);
+  const bottomId = topology.bottomIndex;
+  expect(index.getX(topology.bottomStart)).toBe(bottomId);
   return {
     rings,
     ringIds,
@@ -351,7 +348,9 @@ describe("Island geometry projections", () => {
             expect(Number.isFinite(shape.bounds.depth), `${context} bounds finite`).toBe(true);
             expect(shape.bounds.depth, `${context} real bounds`).toBeCloseTo(-minY, 5);
             expect(minY, `${context} root extrema`).toBeLessThan(-shape.bounds.depth * 0.7);
-            expect(shape.counts.cliffTriangles, context).toBe(segments * 9);
+            expect(shape.counts.cliffTriangles, context).toBe(
+              expectedCliffTriangles(shape, segments),
+            );
           } finally {
             dispose(shape);
           }
@@ -514,16 +513,18 @@ describe("Island geometry projections", () => {
               );
 
               expect(shape.counts.cliffTriangles, `${context}/${detail} cliff capacity`).toBe(
-                segments * 9,
+                expectedCliffTriangles(shape, segments),
               );
               const root = rootLightStats(shape, blueprint, detail);
               const rootScales = root.rings[CLIFF_RING_COUNT - 1]!.map((point) => point.scale);
               const ringOneLight = mean(root.rings[1]!.map((point) => point.light));
               const rootLight = root.rings[CLIFF_RING_COUNT - 1]!;
-              const lastBandStart = cliffStart + (CLIFF_RING_COUNT - 2) * segments * 6;
+              const lastBandIds = cliffRingsFromMesh(shape, segments).ringIds[
+                CLIFF_RING_COUNT - 2
+              ]!;
               const adjacentNormalDeltas = Array.from({ length: segments }, (_, sector) => {
-                const firstVertex = index.getX(lastBandStart + sector * 6);
-                const nextVertex = index.getX(lastBandStart + ((sector + 1) % segments) * 6);
+                const firstVertex = lastBandIds[sector]!;
+                const nextVertex = lastBandIds[(sector + 1) % segments]!;
                 return Math.hypot(
                   normal.getX(firstVertex) - normal.getX(nextVertex),
                   normal.getY(firstVertex) - normal.getY(nextVertex),
@@ -579,8 +580,13 @@ describe("Island geometry projections", () => {
 
               if (detail === "world") {
                 expect(shape.counts.topTriangles, `${context}/world top budget`).toBe(352);
-                expect(shape.counts.cliffTriangles, `${context}/world cliff budget`).toBe(288);
-                expect(shape.counts.total, `${context}/world total budget`).toBe(640);
+                expect(
+                  shape.counts.cliffTriangles,
+                  `${context}/world cliff budget`,
+                ).toBeLessThanOrEqual(1248);
+                expect(shape.counts.total, `${context}/world total budget`).toBeLessThanOrEqual(
+                  1600,
+                );
               }
             } finally {
               dispose(shape);
@@ -718,8 +724,12 @@ describe("Island geometry projections", () => {
       expect(courseMinY / course.scale).toBeCloseTo(worldMinY / world.scale, 5);
       expect(Math.abs(courseMinY / course.scale)).toBeCloseTo(blueprint.underside.depth * 1.08, 4);
       expect("path" in course).toBe(false);
-      expect(course.counts.cliffTriangles).toBe(projectionSegments(blueprint, "course") * 9);
-      expect(world.counts.cliffTriangles).toBe(projectionSegments(blueprint, "world") * 9);
+      expect(course.counts.cliffTriangles).toBe(
+        expectedCliffTriangles(course, projectionSegments(blueprint, "course")),
+      );
+      expect(world.counts.cliffTriangles).toBe(
+        expectedCliffTriangles(world, projectionSegments(blueprint, "world")),
+      );
     } finally {
       dispose(course);
       dispose(world);
@@ -792,8 +802,8 @@ describe("Island geometry projections", () => {
         );
         if (detail === "world") {
           expect(shape.counts.topTriangles).toBe(352);
-          expect(shape.counts.cliffTriangles).toBe(288);
-          expect(shape.counts.total).toBe(640);
+          expect(shape.counts.cliffTriangles).toBe(expectedCliffTriangles(shape, segments));
+          expect(shape.counts.total).toBeLessThanOrEqual(1600);
           expect(
             mean(ringScaleFactors(cliff.rings[0]!, cliff.rings[2]!, cliff.bottom)),
           ).toBeGreaterThan(0.78);
@@ -826,7 +836,7 @@ it("uses the same full-depth geological root in course and distant projections",
         return -minY / shape.scale;
       });
       expect(depths[0]).toBeCloseTo(depths[1]!, 4);
-      expect(world.counts.total).toBeLessThanOrEqual(640);
+      expect(world.counts.total).toBeLessThanOrEqual(1600);
     } finally {
       course.terrain.dispose();
       world.terrain.dispose();

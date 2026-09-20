@@ -50,7 +50,10 @@ describe("a landform continues to its cliff instead of ending on a flat plate", 
             Math.max(...edge) - Math.min(...edge),
             "distant lip must keep relief too",
           ).toBeGreaterThan(0.02);
-          expect(world.counts.total).toBe(640);
+          expect(world.counts.total).toBeLessThanOrEqual(1600);
+          expect(world.terrain.userData.cliffTopology.panelStats.bevelled).toBeGreaterThanOrEqual(
+            32,
+          );
         } finally {
           world.terrain.dispose();
         }

@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-19T11:06:39.965Z
+generated_at: 2026-09-20T01:23:19.674Z
 generator_version: doc-gov@0.14.0
 docs_count: 145
 docs:
@@ -58,14 +58,14 @@ docs:
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-09-11
+    last_reviewed: 2026-09-18
     pinned: false
   - id: ADR-0009
     path: docs/adr/ADR-0009-the-procedural-map-is-one-pipeline.md
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-09-11
+    last_reviewed: 2026-09-18
     pinned: false
   - id: ADR-0010
     path: docs/adr/ADR-0010-difficulty-moves-when-the-learner-moves-it.md
@@ -198,7 +198,7 @@ docs:
     type: plan
     status: active
     canonical: true
-    last_reviewed: 2026-09-12
+    last_reviewed: 2026-09-18
     pinned: false
   - id: PLAN-PRODUCT-COMPLETENESS
     path: docs/plans/active/product-completeness.md

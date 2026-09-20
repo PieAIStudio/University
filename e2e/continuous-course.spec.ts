@@ -260,23 +260,32 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
     // Search the actual canvas, not four fixed window fractions. The shared
     // breadcrumb/tool bars move a narrow canvas below the window midpoint.
     // A real hit-test still rejects every card, label and opaque toolbar.
-    const unobstructedPoint = await page.evaluate(() => {
-      const canvas = document.querySelector(".stagewrap:not([hidden]) canvas");
-      if (!canvas) return null;
-      const rect = canvas.getBoundingClientRect();
-      const left = Math.max(0, rect.left),
-        top = Math.max(0, rect.top);
-      const width = Math.min(innerWidth, rect.right) - left;
-      const height = Math.min(innerHeight, rect.bottom) - top;
-      if (width <= 0 || height <= 0) return null;
-      for (const fy of [0.65, 0.8, 0.5, 0.35, 0.2]) {
-        for (const fx of [0.5, 0.3, 0.7, 0.15, 0.85]) {
-          const pt = { x: Math.round(left + width * fx), y: Math.round(top + height * fy) };
-          if (document.elementFromPoint(pt.x, pt.y) === canvas) return pt;
+    // Visibility on reader return does not establish input readiness. Wait
+    // for a real topmost canvas hit instead of sampling a transient frame;
+    // do not force a wheel through an overlay or remove the occlusion test.
+    const pointHandle = await page.waitForFunction(
+      () => {
+        const canvas = document.querySelector(".stagewrap:not([hidden]) canvas");
+        if (!canvas) return null;
+        const rect = canvas.getBoundingClientRect();
+        const left = Math.max(0, rect.left),
+          top = Math.max(0, rect.top);
+        const width = Math.min(innerWidth, rect.right) - left;
+        const height = Math.min(innerHeight, rect.bottom) - top;
+        if (width <= 0 || height <= 0) return null;
+        for (const fy of [0.65, 0.8, 0.5, 0.35, 0.2]) {
+          for (const fx of [0.5, 0.3, 0.7, 0.15, 0.85]) {
+            const pt = { x: Math.round(left + width * fx), y: Math.round(top + height * fy) };
+            if (document.elementFromPoint(pt.x, pt.y) === canvas) return pt;
+          }
         }
-      }
-      return null;
-    });
+        return null;
+      },
+      null,
+      { timeout: 20_000 },
+    );
+    const unobstructedPoint = await pointHandle.jsonValue();
+    await pointHandle.dispose();
 
     expect(
       unobstructedPoint,

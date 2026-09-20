@@ -66,15 +66,15 @@ export const ISLAND_LANDMARK_TRIANGLE_CEILING = 8000;
 export const ISLAND_LANDMARK_MAX_PER_ISLAND = 6;
 
 /**
- * Course `buildIslandGeometry` mesh triangles, measured 2026-09-06 on the
+ * R53 course `buildIslandGeometry` mesh triangles, measured 2026-09-18 on the
  * `terrain/{count}` fixtures. The count grows with the in-mesh soil path, not
  * with a second route draw.
  */
 export const ISLAND_COURSE_TERRAIN_TRIANGLES = {
-  6: 15_234,
-  12: 14_805,
-  24: 16_820,
-  41: 16_629,
+  6: 16_800,
+  12: 16_335,
+  24: 18_362,
+  41: 18_153,
 } as const;
 
 import {
@@ -111,16 +111,20 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       "rings, outline samples, an in-mesh soil path, a faceted cliff and a " +
       "tapered root. Vertex colour carries meadow, shore, rock and route tint; " +
       "there is no second route mesh. Remote catalogue / world projection: shared " +
-      "640-triangle terrain mesh per island (352 top + 288 cliff, 0 route clips) " +
+      "bounded 1600-triangle terrain mesh per island (352 top, counted jointed cliff, 0 route clips) " +
       "batched into one merged BufferGeometry across all catalogue islands. One bounded linear " +
       "colour atlas bakes actual terrain and static miniature caster shadows; no contact mesh.",
     source:
       "Our own geometry in island-geometry.ts (buildTerrain) and remote-island-field.ts " +
       "(buildRemoteIslandBatch).",
     budget:
-      "course mesh triangles measured 2026-09-06 after soil clipping: " +
-      "15234 / 14805 / 16820 / 16629 at 6 / 12 / 24 / 41 lessons (seed terrain/{count}); " +
-      "remote catalogue = 640 triangles/island (measured CPU 3.8-14.2 ms/island, 50 islands ~344 ms; " +
+      "R53 retains the top/route and five root contours; closed bevel panels use actual counted " +
+      "topology: sixteen unequal primary masses, clipped corners and shallow crowned faces, " +
+      "with bounded splits at broad headlands/tight bays. Remote catalogue <= 1600 triangles/island; " +
+      "course terrain/{6,12,24,41} fixtures: 16800 / 16335 / 18362 / 18153 triangles, " +
+      "including the unchanged soil-path clipping. " +
+      "the unchanged CPU gates are 30 ms/island and 500 ms for 50 distinct islands. " +
+      "Historical R44 (640 triangles) CPU 3.8-14.2 ms/island is not a claim about R53; " +
       "R44 catalogue ceiling: 4 base-pass draws including terrain and all miniature scenery, not whole frame; " +
       "one RGBA atlas <= 2048 per side, 31 islands measured at 1024x512 / 2 MiB base plus mipmaps)",
     rejected: [
@@ -136,7 +140,7 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
         option: "Dense course field or route-clipped mesh in remote catalogue view",
         why:
           "ADR-0009 requires spending budget by screen pixels. Dense field generation " +
-          "costs ~150-180 ms per island; 640-triangle world detail tier generates in " +
+          "costs ~150-180 ms per island; the then-current 640-triangle world tier generated in " +
           "3.8-6.3 ms/island and shares 1 merged BufferGeometry for the whole catalogue.",
         on: "2026-09-06",
       },
@@ -291,7 +295,8 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       "Course view: a handful of large authored props placed at composition anchors, so the " +
       "island has a scale hierarchy instead of one uniform size of clutter. R46 reserves up to " +
       "four decorative rock/ruin volumes and an optional supported coastal spring before vegetation; " +
-      "rock/bank, garden flora and water occupy at most three extra course batches. Remote catalogue " +
+      "rock, garden flora and water occupy at most three course batches; the supported cliff garden " +
+      "adds at most one merged course draw and 288 triangles. Remote catalogue " +
       "projection (RemotePropsField): up to 1 recipe-matched miniature focal assembly plus natural " +
       "companions, combined into one opaque scenery batch with zero course GLBs. Footprints use " +
       "actual world terrain triangles; props are optional on failed bounded fit, with " +
@@ -303,7 +308,10 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
     budget:
       `course <= ${ISLAND_LANDMARK_TRIANGLE_CEILING} tris per asset, <= ${ISLAND_LANDMARK_MAX_PER_ISLAND} semantic landmark places per island (complete assemblies/outposts count once, not once per wall); ` +
       "R44 remote <= 600 tris per miniature asset; bounded omission, 0 course GLBs; shared 6000-triangle scenery ceiling includes water and bank. Contact is baked into the ground atlas. " +
-      "R46 course landscape <= 50000 tris / 220 low flora groups; rock 288, ruin 348, one spring including banks <= 800 tris. At most three extra base-pass meshes, not full-frame cost.",
+      "R53 course landscape <= 50000 tris / 220 low flora groups; each rock cluster 196 CC0 donor-derived " +
+      "triangles (formerly 572), ruin 348, one spring including banks <= 800. " +
+      "Cliff garden <= 12 supported plants / 288 triangles / one additional merged draw. " +
+      "At most four added base-pass meshes with water, not full-frame cost.",
     rejected: [
       {
         option: "Scattering more small props to fill the island",
@@ -398,7 +406,7 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       "shared sampled land/ocean texture with named linear surface palettes, up to 7 clusters of merged shallow cloud banks " +
       "(radial flatten 0.55; protected region directions remain clear; no independent cloud drift), " +
       "under the 7000-triangle cloud ceiling, and representative course islands from the remote " +
-      "640-triangle base (desktop at most 5 / mobile at most 3 per study). Design ceiling 8 scene " +
+      "bounded 1600-triangle terrain (desktop at most 5 / mobile at most 3 per study). Design ceiling 8 scene " +
       "draws per populated domain, counting atmosphere and submitted hit geometry. " +
       "prepareDomain in a module worker reuses those same generators; it has no early self-proof " +
       "of cold-load duration. GPU time and VRAM are unknown.",
@@ -413,7 +421,7 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
         option: "Giant planar study islands or vertex-only globe colour as the domain container",
         why:
           "V5 M rejected the first; browser view exposed blurred land/ocean boundaries in the " +
-          "second. Shared sampled texture plus remote 640-triangle representatives remain the " +
+          "second. Shared sampled texture plus the then-current 640-triangle representatives were the " +
           "candidate, not a competing course field.",
         on: "2026-09-07",
       },

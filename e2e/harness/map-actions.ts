@@ -52,6 +52,23 @@ export function mapEntryButton(page: Page): Locator {
 export async function enterSelectedMapObject(page: Page, label: string): Promise<void> {
   const entry = mapEntryButton(page);
   await expect(entry, `${label} 必须有对象旁进入按钮`).toBeVisible();
+  // The entry button is bound to its object and reprojects every frame with no
+  // follow delay, so it genuinely moves while the camera eases to the choice.
+  // A learner presses it after it arrives; wait for the same thing rather than
+  // racing the ease. A button that never settles still fails, and loudly.
+  await entry.evaluate(async (element) => {
+    let previous = "",
+      streak = 0;
+    for (let frame = 0; frame < 240; frame++) {
+      await new Promise(requestAnimationFrame);
+      const box = element.getBoundingClientRect();
+      const next = `${Math.round(box.x * 10)}:${Math.round(box.y * 10)}`;
+      streak = next === previous ? streak + 1 : 0;
+      previous = next;
+      if (streak >= 5) return;
+    }
+    throw new Error("The object-bound entry button never stopped moving");
+  });
   await humanClick(page, entry, label);
 }
 

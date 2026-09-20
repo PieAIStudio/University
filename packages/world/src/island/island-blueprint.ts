@@ -1095,12 +1095,17 @@ function makeGeometryBlueprint(input: ResolvedInput): IslandGeometryBlueprint {
     ...point,
     y: sampledSurfaceY(base, point),
   }));
-  return {
+  const geometry: IslandGeometryBlueprint = {
     ...base,
     geometryNodes: geometryNodesWithSurface,
     centerline,
     hero: { ...base.hero, y: sampledSurfaceY(base, base.hero) },
   };
+  // Surface projection changes Y only. The sampled XZ route and bounds are
+  // identical, so retain their already-built corridor rather than rebuilding
+  // the same grid on the first rendered island.
+  inheritCorridorField(base, geometry);
+  return geometry;
 }
 
 function projectSemanticNodes(
@@ -1159,10 +1164,13 @@ export function projectIslandBlueprint(
   geometry: IslandGeometryBlueprint,
   input: IslandSemanticNodesInput = {},
 ): IslandBlueprint {
-  return {
+  const blueprint = {
     ...geometry,
     nodes: projectSemanticNodes(geometry, input),
   };
+  // Lesson IDs add semantics, not another terrain field or sample grid.
+  inheritCorridorField(geometry, blueprint);
+  return blueprint;
 }
 
 /**
@@ -1338,6 +1346,15 @@ interface CorridorField {
 
 const corridorFields = new WeakMap<IslandGeometryBlueprint, CorridorField>();
 
+/** Used only at the two explicit projections that preserve route XZ/bounds.
+ * Arbitrary clones or edited routes still get their own correctly sampled
+ * field. No cache data is serialized or retained after the owners expire.
+ */
+function inheritCorridorField(from: IslandGeometryBlueprint, to: IslandGeometryBlueprint): void {
+  const field = corridorFields.get(from);
+  if (field !== undefined) corridorFields.set(to, field);
+}
+
 function corridorFieldFor(blueprint: IslandGeometryBlueprint): CorridorField {
   const existing = corridorFields.get(blueprint);
   if (existing !== undefined) return existing;
@@ -1494,11 +1511,30 @@ function segmentToSegmentDistance(
 
 function pointToPolylineDistance(point: IslandPoint, path: readonly IslandPoint[]): number {
   if (path.length === 0) return Number.POSITIVE_INFINITY;
-  let minimum = Number.POSITIVE_INFINITY;
+  if (path.length === 1) return distanceBetween(point, path[0]!);
+  let nearest = 1;
+  let minimumSquared = Number.POSITIVE_INFINITY;
   for (let index = 1; index < path.length; index += 1) {
-    minimum = Math.min(minimum, pointToSegmentDistance(point, path[index - 1]!, path[index]!));
+    const first = path[index - 1]!,
+      second = path[index]!;
+    const dx = second.x - first.x,
+      dz = second.z - first.z;
+    const lengthSquared = dx * dx + dz * dz;
+    const amount =
+      lengthSquared <= Number.EPSILON
+        ? 0
+        : clamp(((point.x - first.x) * dx + (point.z - first.z) * dz) / lengthSquared, 0, 1);
+    const x = point.x - (first.x + dx * amount),
+      z = point.z - (first.z + dz * amount);
+    const squared = x * x + z * z;
+    if (squared < minimumSquared) {
+      minimumSquared = squared;
+      nearest = index;
+    }
   }
-  return path.length === 1 ? distanceBetween(point, path[0]!) : minimum;
+  // Keep the original hypot-based final distance, but not a temporary point
+  // and a square root for every rejected segment in every outline sample.
+  return pointToSegmentDistance(point, path[nearest - 1]!, path[nearest]!);
 }
 
 type RouteDimensions = Pick<

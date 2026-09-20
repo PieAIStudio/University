@@ -12,6 +12,23 @@ export const REGION_ALTITUDE = 1.12;
 export const REGION_HIT_RADIUS = 0.95;
 export const ATMOSPHERIC_ISLAND_RADIUS = 0.19;
 export type PlanetRepresentativeLimit = 3 | 5;
+/** A domain overview is a set of study entry points, not its full course map.
+ * Preserve one canonical island for every populated study. Additional course
+ * representatives share this density target; the actual course catalogue and
+ * every region's position, hit area and navigation identity are unchanged.
+ */
+export const DOMAIN_REPRESENTATIVE_TARGET = 30;
+
+function domainRepresentativeCount(
+  studies: readonly PlanetStudy[],
+  limit: PlanetRepresentativeLimit,
+): number {
+  const populated = studies.filter((study) => study.courses.length > 0).length;
+  return Math.min(
+    limit,
+    Math.max(1, Math.floor(DOMAIN_REPRESENTATIVE_TARGET / Math.max(1, populated))),
+  );
+}
 /** Keep whole, canonical islands; narrow viewports need fewer representatives, not denser meshes. */
 export function planetRepresentativeLimit(
   viewportWidth: number,
@@ -32,13 +49,14 @@ export function atmosphericGeometryKey(
   studies: readonly PlanetStudy[],
   limit: PlanetRepresentativeLimit = 5,
 ): string {
+  const count = domainRepresentativeCount(studies, limit);
   return JSON.stringify(
     [...studies]
       .sort((a, b) => a.id.localeCompare(b.id))
       .map((study) => [
         study.id,
         // Courses arrive in the canonical teaching order from spineOf (world-model).
-        study.courses.slice(0, limit).map((course) => [course.id, course.lessonCount]),
+        study.courses.slice(0, count).map((course) => [course.id, course.lessonCount]),
       ]),
   );
 }
@@ -59,6 +77,7 @@ export function planAtmosphericRegions(
   limit: PlanetRepresentativeLimit = 5,
 ): readonly AtmosphericRegion[] {
   const ordered = [...studies].sort((a, b) => a.id.localeCompare(b.id));
+  const count = domainRepresentativeCount(studies, limit);
   return ordered.map((study, i) => {
     const y = 1 - (2 * (i + 0.5)) / ordered.length;
     const phi = i * Math.PI * (3 - Math.sqrt(5));
@@ -69,7 +88,7 @@ export function planAtmosphericRegions(
       normal,
       quaternion: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal),
       position: normal.clone().multiplyScalar(DOMAIN_RADIUS * REGION_ALTITUDE),
-      courseIds: study.courses.slice(0, limit).map((course) => course.id),
+      courseIds: study.courses.slice(0, count).map((course) => course.id),
     };
   });
 }

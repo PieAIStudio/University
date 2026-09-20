@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { islandBlueprint } from "./island-blueprint.js";
 import { islandThemeSelectionForCourse } from "./kenney-recipes.js";
 import { planIslandDressing } from "./island-dressing.js";
+import { islandFieldFor, sampleIslandField } from "./island-field.js";
 import {
   acquireCourseSurface,
   courseSurfaceData,
@@ -18,7 +19,7 @@ const blueprint = (courseId = "foundations-before-zero") =>
     themeSelection: islandThemeSelectionForCourse("turing-pact", "foundations-before-zero"),
   });
 
-describe("course field-backed colour texture", () => {
+describe("course field-backed surface masks", () => {
   it("does not let abandoned React render adapters pin a committed course texture", () => {
     const bp = blueprint();
     const abandoned = createSurfaceMaterialDetail("terrain", bp);
@@ -60,23 +61,44 @@ describe("course field-backed colour texture", () => {
     expect(a.data).toEqual(courseSurfaceData(bp).data);
     expect(a.data.byteLength).toBe(COURSE_SURFACE_SIZE ** 2 * 4);
     expect(JSON.stringify({ nodes: bp.nodes, route: bp.centerline, plan })).toBe(before);
-    // Pigment variation must remain chromatic and bounded, never a dark AO
-    // overlay of the directional shadows already drawn by the stage.
+    // Scalar masks retain real meadow identity even on canopy-free ground.
+    // Reconstruct the previous pigment floors; masks are NOT colour values.
+    let openTurf = 0;
     for (let i = 0; i < a.data.length; i += 4) {
-      expect(a.data[i]).toBeGreaterThanOrEqual(180);
-      expect(a.data[i + 1]).toBeGreaterThanOrEqual(215);
-      expect(a.data[i + 2]).toBeGreaterThanOrEqual(160);
+      const canopy = a.data[i]! / 255,
+        meadow = a.data[i + 1]! / 255;
+      const wear = a.data[i + 3]! / 255;
+      if (canopy < 0.04 && meadow > 0.25) openTurf++;
+      expect(
+        Math.round((0.99 - canopy * 0.24 - meadow * 0.018 + wear * 0.035) * 255),
+      ).toBeGreaterThanOrEqual(180);
+      expect(Math.round((1 - canopy * 0.075 - wear * 0.07) * 255)).toBeGreaterThanOrEqual(215);
+      expect(Math.round((0.97 - canopy * 0.25 - wear * 0.18) * 255)).toBeGreaterThanOrEqual(160);
     }
+    expect(openTurf).toBeGreaterThan(150);
+    const field = islandFieldFor(bp);
+    for (let y = 0; y < COURSE_SURFACE_SIZE; y += 7)
+      for (let x = 0; x < COURSE_SURFACE_SIZE; x += 7) {
+        const step = (a.extent * 2) / COURSE_SURFACE_SIZE;
+        const s = sampleIslandField(
+          field,
+          (x + 0.5) * step - a.extent,
+          (y + 0.5) * step - a.extent,
+        );
+        const offset = (y * COURSE_SURFACE_SIZE + x) * 4;
+        expect(a.data[offset + 2]).toBe(Math.round(s.route * 255));
+        expect(a.data[offset + 1]).toBe(Math.round(s.grass * (1 - s.route) * (s.inside ? 255 : 0)));
+      }
   });
 
-  it("shares and releases per-course colour without confusing it with packed scalar data", () => {
+  it("shares and releases per-course masks without applying colour-space conversion", () => {
     const bp = blueprint();
     const a = acquireCourseSurface(bp),
       b = acquireCourseSurface(bp);
     const disposed = vi.fn();
     a.texture.addEventListener("dispose", disposed);
     expect(a.texture).toBe(b.texture);
-    expect(a.texture.colorSpace).toBe(THREE.LinearSRGBColorSpace);
+    expect(a.texture.colorSpace).toBe(THREE.NoColorSpace);
     expect(a.texture.generateMipmaps).toBe(true);
     expect(a.texture.wrapS).toBe(THREE.ClampToEdgeWrapping);
     a.dispose();
@@ -104,9 +126,14 @@ describe("course field-backed colour texture", () => {
         uniforms: {},
       } as THREE.WebGLProgramParametersWithUniforms;
       detail.onBeforeCompile(shader);
-      expect(detail.customProgramCacheKey()).toBe("university-surface-swatch-v3/garden");
+      expect(detail.customProgramCacheKey()).toBe("university-surface-swatch-v5/garden");
       expect(shader.fragmentShader).toContain("texture2D(uCourseSurface");
       expect(shader.fragmentShader).toContain("gardenFace * gardenSurface.a");
+      expect(shader.fragmentShader).toContain("gardenTurf");
+      expect(shader.fragmentShader).toContain("turfFootprint");
+      // R55 rejects raised short-grass relief, not the approved low scenery.
+      expect(shader.fragmentShader).not.toContain("surfaceRelief +=");
+      expect(shader.uniforms.uMeadowStrength).toBe(detail.uniforms.uMeadowStrength);
       expect(shader.vertexShader).not.toContain("transformed +=");
       expect(shader.fragmentShader.match(/#include <colorspace_fragment>/g)).toHaveLength(1);
       expect(shader.fragmentShader.match(/#include <tonemapping_fragment>/g)).toHaveLength(1);

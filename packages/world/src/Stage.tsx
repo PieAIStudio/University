@@ -52,6 +52,7 @@ import { WorldEnvironment } from "./sky/environment.js";
 import { renderTier } from "./sky/tier";
 import { hasWebGLContext } from "./webgl-capability.js";
 import { usePageVisibility } from "./page-visibility.js";
+import { WorldAppearance } from "./appearance/WorldAppearance.js";
 
 export { hasWebGLContext, resetWebGLContextProbe } from "./webgl-capability.js";
 
@@ -554,6 +555,7 @@ export function Stage({
       frameloop={paused || !pageVisible ? "never" : frozenLook ? "demand" : "always"}
     >
       <WorldEnvironment>
+        <WorldAppearance />
         <RendererLifecycle onContextLost={onContextLost} onContextRestored={onContextRestored} />
         <Pipeline
           ambientOcclusion={ambientOcclusion}

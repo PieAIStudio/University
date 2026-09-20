@@ -6,7 +6,7 @@ status: accepted
 canonical: true
 owner: human
 created: 2026-08-28
-last_reviewed: 2026-09-11
+last_reviewed: 2026-09-18
 domain: architecture
 tags:
   - 3d
@@ -35,6 +35,226 @@ a screenshot; current browser fixtures are selected by `e2e/harness/catalogue.ts
 This catalogue clarification changes no technique, budget or original receipt.
 
 ## Decision and authority
+
+### R56: polymer response and contact-preserving display geometry
+
+Owner rejects the R55 directional wrinkle field and authorizes reversible asset
+experiments after a remote classic checkpoint. RenderKit 0.5.0 provides the opt-in
+isotropic polymer kernel; classic keeps its original shader, maps and uniforms.
+The clay terrain clone alone disables meadow pigment with a private uniform.
+
+This supersedes R55's identical *draw geometry* restriction, not its one-world
+contract. Four named near-field scenery meshes lease owned views: bush lobes keep
+80 faces and their lower support cage, trees keep positions/indices, and existing
+rock components receive one upper-shoulder rounding step with the bottom third
+pinned. No new placements, displacement of terrain, source edits or avatar rebuild.
+Source and drawn identities remain separately observable; classic restores exact
+source pointers. Warm toggles cache at most one view per present target; departure,
+host replacement and unmount release only owned buffers.
+
+The canonical rock merger now carries semantic ranges and existing plant-root
+footprints, without changing any original vertex/index/color buffer. Spring
+banks, ruins, open/non-manifold boundaries and triangles under shoulder plants
+are pinned; rounding must not make retained trees or flowers float. Twenty
+actual route/length fixtures verify these root heights by raycasting both views.
+Bounded box-volume/support, material groups, source mutations and independent
+canvas cleanup have direct tests. Whole-frame clay geometry has a 15% overhead
+ceiling and no extra draw calls; the rendering budget is not inferred from FPS.
+
+Research: cclank/clay-safari `src/clay.js` and `blender/build_animals.py` informed
+the matte response/rounded primitive comparison; no animal assets or source were
+copied. The Tripo3D clay-style guide is art-direction guidance, not performance
+proof. Donor originals, photographic references and AvatarKit geometry remain
+untouched. This experiment uses code-derived views, not another Blender export.
+
+A full bush subdivision study cost 154,596 versus 89,796 full-frame triangles on
+the short course and was rejected. The selected selective-rock study used 96,252
+triangles at the same 54 calls. It keeps the current terrain/route/collision rules;
+final integrated validation and source receipts live in the delivery plan.
+
+### R55: reversible clay appearance; R54 turf embossing rejected
+
+Owner explicitly retains ALL R54 low scenery and rejects only the short-turf
+embossed ground appearance. Remove its material contribution, not the accepted
+blueprint, placement grammar, donor shapes, route or contact data. The R54
+acceptance below is historical engineering evidence, not continuing art approval.
+
+Classic and colored clay share geometry, placements, camera and one existing
+render/output chain. Reusable Standard/Physical clay response belongs in the
+RenderKit, with model-locked kneading/print fields, derivative filtering and
+coherent pigment/roughness/normal response. No displacement or photographic asset
+is needed. University owns role scales and reversible per-scene material leases;
+never mutate imported/cached original materials or dispose their textures. Avatar
+identity, animation and source materials stay owned by AvatarKit. The inspected
+AvatarKit material-library seam is valid, but changing its identity rebuilds the
+avatar. This presentation-only switch instead borrows the emitted material slots
+and leases per-scene copies, applying the published RenderKit clay adapter to
+those copies. It preserves kit-owned blink/gaze/breath and restores the original
+material references without changing the recipe or generating a second avatar.
+
+Use the existing frame scheduler for material reconciliation, never another
+renderer or loop. Preserve original shader hooks, instancing, skins, transparency,
+shadow and color-output contracts. Explicitly exclude invisible picking geometry,
+DOM, atmospheric backgrounds and functional glow. New lazy-loaded model materials
+must adopt the current appearance; repeated toggles and navigation must bound
+material/program counts and restore originals. Product preferences use the
+existing account merge/cache path, separate from saved avatar recipe and UI theme.
+Frozen browser, timing and negative-regression evidence belong in the active plan.
+
+### R54: tactile meadow and composed low vegetation
+
+R53 is the Owner-approved save point `787f4a1e`. R54 does not alter that root
+geometry, tall tree arrangement, terrain sampler, route or shared output grade.
+The deficit is open ground: the former surface microdetail was multiplied by
+canopy coverage, leaving an unshaded clearing almost without a material response.
+
+The same 256² RGBA course texture now packs canopy, meadow, protected route and
+facility wear as scalar masks (`NoColorSpace`), rather than pre-multiplied RGB
+pigment. The existing StandardMaterial extension reconstructs the bounded
+pigment and applies short-turf detail only to upward meadow outside the route
+and working surfaces. The unused alpha channel of the same 128² scalar swatch
+holds a periodic, original tapered-leaf pattern. Two rotated material samples
+share colour, roughness and shallow normal relief; each frequency has its own
+pixel-footprint fade and mip filtering. No terrain displacement, new ecological
+field, new texture allocation, added light or output transform is introduced.
+Two extra lookups of an existing texture are real shader work, not free cost.
+The first fine-scale candidate read as tiny dashes; the retained wider strokes
+use a 0.14 model-space scale, with roughness staying matte. This is stylized
+surface relief, not individual geometric grass blades or physical scanned turf.
+
+`course-meadow-beds.ts` chooses at most eight separated beds from 289 bounded
+field candidates. Existing canopies may shade a bed, but trunks, solid scenery,
+hero, route and lesson clearances remain protected. Each of eight potential
+members is independently checked against the actual rendered ground and all
+solid reservations. At most fourteen attempts per member; no safe site means
+no plant. More companions join existing rock/tree/facility anchors. Big trees,
+rocks and paths are not multiplied or moved. The same 220-flora / 50,000-triangle
+course landscape ceiling and existing merged batches remain the hard limits.
+
+The accepted `plant_bush` supplies one 32-triangle, explicitly double-faced
+leaf accent. A single additional CC0 Nature Kit source, `mushroom_tan`, supplies
+48 triangles with the real stem/cap material roles retained. Larger mushroom
+groups and log props were inspected but not adopted: repeated groups and solid
+obstacles would not solve flat ground. Source hashes and derivations remain in
+`kenney-rock-shapes.json`; original donor files and the first five asset geometries
+are unchanged. A factory-startup Blender rebake reproduced the complete result.
+Runtime still has no donor-path or Blender dependency and no new GLB request.
+
+The second desktop candidate measured 32→71 / 35→69 / 4→12 low flora on the
+36-, 30- and 8-lesson real courses, respectively. Full Stage draws stayed
+109 / 108 / 54, while submitted triangles rose by 4,800 / 4,464 / 1,296.
+These are actual submitted counts at the recorded views, not standalone asset
+counts, a frame-rate claim, or a guarantee every seed gets the same density.
+Final frozen-source gates and evidence are recorded only in the delivery plan.
+
+References used for technique boundaries: Three.js `MeshStandardMaterial`
+https://threejs.org/docs/pages/MeshStandardMaterial.html and `Texture`
+https://threejs.org/docs/pages/Texture.html; donor
+https://kenney.nl/assets/nature-kit . No code or photographs copied from those
+pages. Required material/vegetation and visual-validation skills guided the
+pixel-scale, support and original-versus-adapted evidence checks.
+
+### R53: jointed stone within the existing terrain owner
+
+The user explicitly rejects the concrete-like roots and turf-covered banks and
+authorizes a modest measured geometry increase. The top field, clipped route,
+shoreline vertices, five structural root contours and their owner are preserved.
+The mineral strips become closed, staggered stone masses with clipped shoulders,
+shallow crowned faces and real narrow bevels. Both projections share sixteen
+unequal primary masses per band; a wide mass borrows contour sectors from its
+neighbour. Broad headlands and tight bays split on existing contour samples,
+without moving their shared boundary; exceptionally twisted single cells retain their two outward mineral
+planes. Every case remains closed and counted. `cliff-panels.ts` records actual
+bevel/split/plain counts; no visual overlay can conceal a missing boundary.
+
+Remote terrain starts at 1,312 triangles before splits; the final five-length
+sample measured 1,414–1,438 triangles, with an explicit 1,600 ceiling
+including adaptive splits (formerly exactly 640). The 6,000-scenery ceiling and
+four base-pass catalogue draws remain; combined ceiling is 7,600, not a full-frame
+claim. The unchanged CPU gates are 30 ms/island and 500 ms/50 distinct islands.
+The fixed `terrain/{6,12,24,41}` course fixtures were remeasured after the R53
+amendment: **16,800 / 16,335 / 18,362 / 18,153** triangles, replacing
+15,234 / 14,805 / 16,820 / 16,629. The existing exact-count tripwire remains;
+these are measured fixture values, not values derived as their own expectations.
+Remote batching now verifies the emitted index counts and every actual picking
+range boundary. The 1,600 budget is not a fixed stride: padding the geometry or
+picking faces to that ceiling would misidentify islands of different shapes.
+A focused run measured 3.92–13.65 ms for 6/12/24/41/80 lessons and 210.75 ms for
+50 distinct islands. Contour surface/colour samples are reused across all five
+rings rather than evaluated five times. These are single-run CPU measurements, not
+a device FPS promise; full verification is tracked in the delivery plan.
+
+The subsequent full gate found timing failures under substantial machine load;
+the original logs are retained, not relabelled as passes. A V8 CPU profile then
+identified repeated route-distance work, including rebuilding the same corridor
+grid after the two explicit geometry/semantic projections. Those projections
+now inherit their already-sampled XZ corridor (Y/lesson identities cannot change
+it). Arbitrary changed routes/bounds still sample separately. Polyline nearest
+selection compares squared distances and retains the original final hypot;
+outward-face tests use equivalent scalar crosses without temporary vectors.
+Before/after hashes of 15 complete world geometries and their blueprints matched
+byte-for-byte. Independent four-cell corridor references cover unchanged and
+edited routes at 6/24/80 lessons. Neither sampling resolution, route spacing,
+geometry limits nor the 30/500 ms performance gates were changed.
+
+Course rocks now use three closed Kenney CC0-derived masses: largeA (80 triangles),
+largeD (62) and largeF (54), totaling 196 instead of the 572-triangle sampled bank.
+Each rigid piece embeds its foot in sampled terrain. Plants and the optional
+canopy sample the highest upward face of the actual rendered model, not a proxy.
+Existing reserved radius, route/node clearance and 50,000-triangle landscape
+budget remain. A 24-triangle flat-leaf plant joins the existing flora batch.
+At most twelve further plants sit in in-circles of actual upward cliff bevels,
+with broad supported ledges prioritized instead of tiny random seedlings:
+at most 288 triangles and one additional course-only merged draw. No fitted
+support means no plant. Both CPU plan and visible geometry are inspectable.
+
+The seventh paired browser iteration removes the remaining machined symmetry:
+left/right shoulders and upper/lower heels use different bounded chamfers.
+Outer seams, triangle count and outward-winding checks do not change. Crevice
+plants may use an inclined mineral face with upward normal component at least
+0.28 rather than requiring a near-horizontal ledge. The same full incircle foot
+and 288-triangle ceiling remain; explicit vertical/downward counterexamples
+are rejected. This is a declared support-angle choice, not looser terrain or
+route clearance. `cliff-panels.test.ts` retains a rectangular calibration whose
+inner shoulders must be asymmetric while every outer point stays exact.
+
+The eighth paired iteration further rejects the repeated gemstone-like peak.
+The crown uses a convex combination within the true panel visibility kernel,
+not an unconstrained off-centre nudge; its relief is 1–2.5% of panel width.
+Shared outer joints, triangle counts and the outward-winding gate remain.
+A rectangular regression checks both the lowered relief and the non-central
+fracture. The 60-shape closed/outward matrix passes with this construction.
+
+The ninth iteration replaces tiny cliff ferns with the actual Kenney
+`plant_bush` four-leaf silhouette (16 triangles). The original `plant_flatShort`
+continues to serve ground flora. Roots still fit the full support in-circle;
+crowns may overhang, bounded to 1.8 scaled units, and reserve their full radius
+against other plants. Both sets of actual triangle edges are intersected against
+the host mesh; any collision outside the small intentional root embed rejects
+the candidate. At most 36 candidate checks yield at most 12 plants, with no
+unbounded retry. Open leaves deliberately render both sides in the same opaque
+course batch. Actual maximum is 192 triangles, within the unchanged 288 ceiling.
+An obstacle piercing a leaf interior is a regression case, not just a point or
+bounding-box approximation. No new draw, texture or light is introduced.
+
+Five selected donor files were prepared in an isolated Blender 5.2 background
+process. `kenney-rock-shapes.json` owns their hashes and adaptations; D/F needed
+an explicitly recorded closed convex hull, A retained its welded original mesh.
+The originals remain untouched. An independent factory-startup rebake reproduced
+all normalized vertices, faces, source hashes and metadata exactly. The compact checked-in geometry data
+has no runtime Blender, external donor path, GLB fetch or added texture dependency.
+The existing scalar/material and field-colour textures remain; geometry, not a
+painted rock photograph, supplies the new silhouette. No new light, post pass,
+photoreal PBR set, unique per-island material or hidden duplicate rock shell.
+
+Rejected candidates: raising the old grid into parallel ribs produced roofing;
+a three-peak sampled grid looked crystalline; projecting all bay vertices onto
+one unconstrained plane inverted bevels. Equal narrow panels read as columns;
+unbounded wide panels became flat slabs. Variable spans, bounded headland splits,
+asymmetric clipped corners and a shallow crown replaced these prototypes rather than retaining
+as alternate runtime modes. Seeded closure, outward winding, material floors,
+actual contact, positive vegetation coverage and exact draw accounting remain
+release gates. Worktree evidence is `.devspace-visual/island-3d-evolution/`.
 
 Each element has one named technique, source, measured scope and tested budget.
 The executable table and rejection list are
@@ -136,14 +356,14 @@ round trip. Final receipts are `.devspace-visual/r44/direct-release/{1600,375}/r
 The final T run passed both viewports; this does not pass the default authoring
 suite or the complete repository gate.
 
-| Scope | Before 1600×900 | Final 1600×900 | Before 375×812 | Final 375×812 |
-| --- | ---: | ---: | ---: | ---: |
-| Complete Stage draws incl. post | 32 | 32 | 31 | 31 |
-| Complete Stage triangles | 86,522 | 90,960 | 83,113 | 87,551 |
-| Renderer geometries | 37 | 37 | 36 | 36 |
-| Renderer textures | 15 | 15 | 14 | 14 |
-| GPU median ms | 1.246 | 1.869 | 0.596 | 0.460 |
-| GPU p95 ms | 3.943 | 69.672 | 1.343 | 0.600 |
+| Scope                           | Before 1600×900 | Final 1600×900 | Before 375×812 | Final 375×812 |
+| ------------------------------- | --------------: | -------------: | -------------: | ------------: |
+| Complete Stage draws incl. post |              32 |             32 |             31 |            31 |
+| Complete Stage triangles        |          86,522 |         90,960 |         83,113 |        87,551 |
+| Renderer geometries             |              37 |             37 |             36 |            36 |
+| Renderer textures               |              15 |             15 |             14 |            14 |
+| GPU median ms                   |           1.246 |          1.869 |          0.596 |         0.460 |
+| GPU p95 ms                      |           3.943 |         69.672 |          1.343 |         0.600 |
 
 The final scenery alone has 48,162 triangles in four non-terrain meshes,
 75 tree instances, 28 focal assemblies and 275 natural companions. Terrain
@@ -273,12 +493,12 @@ The final same-route `close-before` / `close-final` receipts (31 islands,
 1600×900 and 375×812, DPR1, same theme/camera) measure the following complete
 Stage frames. The narrow viewport is a desktop browser, not a physical phone.
 
-| Scope | Before desktop | Final desktop | Before narrow | Final narrow |
-| --- | ---: | ---: | ---: | ---: |
-| Complete Stage draws | 30 | 30 | 29 | 29 |
-| Submitted triangles | 88,486 | 87,714 | 85,077 | 84,305 |
-| Renderer geometries / textures | 36 / 16 | 36 / 16 | 35 / 15 | 35 / 15 |
-| GPU median / p95 ms | 2.094 / 2.553 | 3.002 / 5.950 | 0.612 / 0.697 | 0.788 / 1.913 |
+| Scope                          | Before desktop | Final desktop | Before narrow |  Final narrow |
+| ------------------------------ | -------------: | ------------: | ------------: | ------------: |
+| Complete Stage draws           |             30 |            30 |            29 |            29 |
+| Submitted triangles            |         88,486 |        87,714 |        85,077 |        84,305 |
+| Renderer geometries / textures |        36 / 16 |       36 / 16 |       35 / 15 |       35 / 15 |
+| GPU median / p95 ms            |  2.094 / 2.553 | 3.002 / 5.950 | 0.612 / 0.697 | 0.788 / 1.913 |
 
 Scenery alone is 46,564 triangles in three meshes, excluding 640 terrain
 triangles per island. The shared atlas remains 1024×512 / 2 MiB base, about
@@ -644,21 +864,21 @@ contains the exact R52 evidence root and the true full-gate outcomes.
 
 ## Current course and series techniques
 
-| Element | Choice and scope |
-| --- | --- |
-| Course terrain and soil | One continuous `buildIslandGeometry(..., "course")` mesh. Soil is clipped against actual terrain triangles, not a second height source or separate terrain draw. |
-| Grass | Generated three-vertex, one-triangle blade; taper, wind, camera-facing rotation and ground normals in shader. LOD changes instance count. Near ceiling 6 is a ceiling, not the current blade shape; far draws zero grass. |
-| Course tree/shrub | R49 complete fir408 / continuous broadleaf432 triangles; two instanced tree batches. Shrub: three80-triangle lobes,240 total; exact scaled foot support remains required. No parallel retired donor tree draw. |
-| Course props | Registered Kenney/semantic stones, with successfully fitted crafted stalls, academies and ambient stones replacing their source IDs. Unfitted replacements retain donors. Decoration ceiling 1,200 triangles/asset; landmarks at most six semantic places/assemblies, ceiling 8,000 per asset. |
-| Course geological scenery and surface detail | Closed 572-triangle terrain-seated bank; ruin 348, optional supported spring ≤800. Shared 128² scalar swatch plus course-only 256² field/dressing colour texture. Two opaque landscape batches include fitted replacements, courtyard borders and optional rock-rooted canopy. No extra base draw. See R49/R50 above. |
-| Lesson marker | Shared 14-segment bevelled medallion, 168 triangles; separate +Y-facing unit rings, 48–50 each, at most six ring batches. Readable text stays DOM. |
-| Ground contact | Merged footing splits at rendered triangle boundaries, embeds by 0.01 and retains exposed-height ceiling 0.25. Bounded stance recovery; unresolved contact uses a terrain-clipped shallow inlay at the same position/radius/ID, with engraving and picking preserved. |
-| Buildings/camp/bridge | Academy's existing four-wall/roof assembly owns one fitted pavilion or retains all original members; never both. Tent faces its actual lit pit. Bridge checks decoded support pads and arched deck across the span, not just its origin. Failed fits retain meaningful fallbacks. |
-| Fire and lighting | Effects belong only to actual lit campfire assemblies. No per-fire shadow lights. Reduced motion/pause contracts remain. Use the shared Stage/SwimmerRenderKit output chain, with one tone map and one sRGB encoding. |
-| Series distant terrain | Canonical blueprint sampled at world detail: 640 triangles/island (352 top + 288 cliff, no route clips), merged across islands. Do not prepare a dense course field or load course GLBs. |
-| Series distant props | R44 named miniature kit, up to five trees, one focal assembly and bounded natural companions. Opaque geometry ≤4,800 triangles/island; including water and bank ≤6,000. Contact and caster shading live in the single ground atlas, not another mesh. Full world-triangle footprint coverage replaces centre-only placement. Exact counts come from actual mixed asset geometry. The older 84/356 prop budgets are superseded, not falsely retained. |
-| Batch accounting | R44 terrain/miniature ceiling is four base-pass draws and 6,640 triangles/island. This excludes avatar, sky, selection and post; final complete-Stage measurements are separate. The same two existing cloud batches/instance counts remain; background placement reads the actual root floor. One ≤2048-sided RGBA colour atlas; physical-device acceptance and total VRAM remain separate unknowns. |
-| Domain globe | Surface ≤ 5,000 triangles; merged clouds ≤ 7,000 triangles with 7 clusters and radial flatten 0.55; design ceiling 8 scene draws per populated domain including atmosphere and hit geometry. Representatives: desktop at most 5 / mobile at most 3 per study, from the remote 640-triangle base, no course props. |
+| Element                                      | Choice and scope                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Course terrain and soil                      | One continuous `buildIslandGeometry(..., "course")` mesh. Soil is clipped against actual terrain triangles, not a second height source or separate terrain draw.                                                                                                                                                                                                                                                                                     |
+| Grass                                        | Generated three-vertex, one-triangle blade; taper, wind, camera-facing rotation and ground normals in shader. LOD changes instance count. Near ceiling 6 is a ceiling, not the current blade shape; far draws zero grass.                                                                                                                                                                                                                            |
+| Course tree/shrub                            | R49 complete fir408 / continuous broadleaf432 triangles; two instanced tree batches. Shrub: three80-triangle lobes,240 total; exact scaled foot support remains required. No parallel retired donor tree draw.                                                                                                                                                                                                                                       |
+| Course props                                 | Registered Kenney/semantic stones, with successfully fitted crafted stalls, academies and ambient stones replacing their source IDs. Unfitted replacements retain donors. Decoration ceiling 1,200 triangles/asset; landmarks at most six semantic places/assemblies, ceiling 8,000 per asset.                                                                                                                                                       |
+| Course geological scenery and surface detail | R53: three closed Kenney-derived masses, 196 triangles/rock cluster, replacing the R49/R50 572-triangle bank; ruin 348, optional supported spring ≤800. R54: shared 128² wear/turf scalar swatch plus course-only 256² canopy/meadow/route/wear masks; bounded low-flora beds stay within the existing 220-flora / 50,000-triangle landscape ceiling. Existing landscape batches include fitted replacements, courtyard borders and optional rock-rooted canopy; actual cliff-ledge plants add at most one course-only batch and 288 triangles.                     |
+| Lesson marker                                | Shared 14-segment bevelled medallion, 168 triangles; separate +Y-facing unit rings, 48–50 each, at most six ring batches. Readable text stays DOM.                                                                                                                                                                                                                                                                                                   |
+| Ground contact                               | Merged footing splits at rendered triangle boundaries, embeds by 0.01 and retains exposed-height ceiling 0.25. Bounded stance recovery; unresolved contact uses a terrain-clipped shallow inlay at the same position/radius/ID, with engraving and picking preserved.                                                                                                                                                                                |
+| Buildings/camp/bridge                        | Academy's existing four-wall/roof assembly owns one fitted pavilion or retains all original members; never both. Tent faces its actual lit pit. Bridge checks decoded support pads and arched deck across the span, not just its origin. Failed fits retain meaningful fallbacks.                                                                                                                                                                    |
+| Fire and lighting                            | Effects belong only to actual lit campfire assemblies. No per-fire shadow lights. Reduced motion/pause contracts remain. Use the shared Stage/SwimmerRenderKit output chain, with one tone map and one sRGB encoding.                                                                                                                                                                                                                                |
+| Series distant terrain                       | R53 canonical blueprint sampled at world detail: at most 1,600 triangles/island, including 352 top triangles, actual counted jointed stone faces and no route clips; merged across islands. Replaces R44's 640 triangles. Do not prepare a dense course field or load course GLBs.                                                                                                                                                                   |
+| Series distant props                         | R44 named miniature kit, up to five trees, one focal assembly and bounded natural companions. Opaque geometry ≤4,800 triangles/island; including water and bank ≤6,000. Contact and caster shading live in the single ground atlas, not another mesh. Full world-triangle footprint coverage replaces centre-only placement. Exact counts come from actual mixed asset geometry. The older 84/356 prop budgets are superseded, not falsely retained. |
+| Batch accounting                             | R53 retains four catalogue base-pass draws; terrain plus miniature scenery ceiling is 7,600 triangles/island (formerly 6,640). This excludes avatar, sky, selection and post; final complete-Stage measurements are separate. The same two existing cloud batches/instance counts remain; background placement reads the actual root floor. One ≤2048-sided RGBA colour atlas; physical-device acceptance and total VRAM remain separate unknowns.   |
+| Domain globe                                 | Surface ≤ 5,000 triangles; merged clouds ≤ 7,000 triangles with 7 clusters and radial flatten 0.55; design ceiling 8 scene draws per populated domain including atmosphere and hit geometry. Representatives: desktop at most 5 / mobile at most 3 per study, from the R53 remote terrain (≤1,600 triangles each), no course props.                                                                                                                  |
 
 Production world catalogue is `RemoteIslandField` plus `RemotePropsField` only.
 `IslandDressing` and `IslandFoliage` are course-only; they do not accept a world
@@ -868,12 +1088,12 @@ R5 Mac Stage GPU queries (same scope/method as R37 below) each contain 24 valid
 non-disjoint samples. Source SHA-256 matches the production-browser receipt:
 `cefd59cc80f23f2ae98e1cb96f6115b050b17d19760a16f39f487b27eb0cfdb5`.
 
-| Projection | 1440×900 median / p95 ms | 375×812 median / p95 ms |
-| --- | --- | --- |
-| Real 41-lesson course | 2.322 / 3.106 | 0.698 / 0.976 |
-| Real selected series | 1.177 / 1.861 | 0.383 / 0.502 |
-| Three declared domains, two unpublished | 0.944 / 1.469 | 0.294 / 0.355 |
-| Synthetic 4 domains × 30 series | 0.942 / 1.383 | 0.348 / 0.637 |
+| Projection                              | 1440×900 median / p95 ms | 375×812 median / p95 ms |
+| --------------------------------------- | ------------------------ | ----------------------- |
+| Real 41-lesson course                   | 2.322 / 3.106            | 0.698 / 0.976           |
+| Real selected series                    | 1.177 / 1.861            | 0.383 / 0.502           |
+| Three declared domains, two unpublished | 0.944 / 1.469            | 0.294 / 0.355           |
+| Synthetic 4 domains × 30 series         | 0.942 / 1.383            | 0.348 / 0.637           |
 
 Raw queries: `.devspace-visual/astra-r38/gpu-r5.json`. This is not compositor
 time, phone FPS or VRAM. The production navigation pass is not used as a cold
@@ -888,12 +1108,12 @@ screenshot or CPU profiler. This includes that canvas's shadows, scene, AO and
 grade; it excludes browser compositing and other canvases such as the navigation
 avatar. DPR is 1. Values are GPU milliseconds, not FPS or allocated GPU memory.
 
-| Projection | 1440×900 median / p95 | 375×812 median / p95 |
-| --- | --- | --- |
-| Real 41-lesson course | 2.845 / 3.449 | 0.782 / 0.899 |
-| Real selected series | 1.590 / 1.897 | 0.548 / 0.772 |
-| Real one-domain catalogue | 1.219 / 1.241 | 0.277 / 0.613 |
-| Explicit synthetic 4 domains × 30 series | 1.415 / 1.483 | 0.602 / 0.878 |
+| Projection                               | 1440×900 median / p95 | 375×812 median / p95 |
+| ---------------------------------------- | --------------------- | -------------------- |
+| Real 41-lesson course                    | 2.845 / 3.449         | 0.782 / 0.899        |
+| Real selected series                     | 1.590 / 1.897         | 0.548 / 0.772        |
+| Real one-domain catalogue                | 1.219 / 1.241         | 0.277 / 0.613        |
+| Explicit synthetic 4 domains × 30 series | 1.415 / 1.483         | 0.602 / 0.878        |
 
 Raw queries are in `.devspace-visual/astra-r37/gpu-release.json`; the restored
 temporary measurement wrapper remains `astra-r35/gpu-frames.mjs`. All earlier
@@ -909,18 +1129,18 @@ inclusive sampled scopes and must not be added together as exact wall time.
 
 ## Rejected alternatives worth remembering
 
-| Alternative | Why it was rejected; do not generalize beyond this scope |
-| --- | --- |
-| Five-leaf volumetric grass | 45 triangles × 16,000 = 720,000, 92.7% of the then 777,008-triangle scene. More grass geometry was not the missing visual quality. |
-| Course hex terrain / independent height fields | Ground, route and markers disagreed. Restore the single continuous pipeline, not per-course correction tables. |
-| Course rounded alpha cards | Intersecting flat discs remained visible. Three solid lobes + trunk fit the 624-tree budget. Distant silhouettes are a different scope. |
-| Donor assembled rocks instead of retained Kenney rocks | Paired historical shot cost +63.4% scene triangles and added noisy pale clusters. Permission to use an asset is not a reason to import it. |
-| Rock model as a lesson pedestal | Existing 16/80-triangle rocks lack a consistent circular engraved top; the measured 168-triangle body serves that role. |
-| Uniform coastal trees, disconnected building parts | They read as a fence or unsupported props. Fix whole-assembly footprint, purpose and crown clearance rather than add instances. |
-| IslandDressing world donor trunk + cone canopy (396 tris) | Second renderer and second budget beside RemotePropsField. Production distant draws are remote field + remote props only. |
-| Giant flat island as a planet; vertex-only globe colour | User rejected the first; actual browser view exposed blurred boundaries in the second. Domain sphere and shared sampled texture are the current candidates. |
-| 6–11-unit root clamp / distant-only depth multiplier | Full-island view still looked like a thin plate or changed identity between views. Both details now consume the same seeded proportional depth. |
-| Post-processing or brighter material as a geometry repair | Cannot repair floating contact, missing silhouette or contradictory placement; ordinary final-output screenshots remain the acceptance surface. |
+| Alternative                                               | Why it was rejected; do not generalize beyond this scope                                                                                                    |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Five-leaf volumetric grass                                | 45 triangles × 16,000 = 720,000, 92.7% of the then 777,008-triangle scene. More grass geometry was not the missing visual quality.                          |
+| Course hex terrain / independent height fields            | Ground, route and markers disagreed. Restore the single continuous pipeline, not per-course correction tables.                                              |
+| Course rounded alpha cards                                | Intersecting flat discs remained visible. Three solid lobes + trunk fit the 624-tree budget. Distant silhouettes are a different scope.                     |
+| Donor assembled rocks instead of retained Kenney rocks    | Paired historical shot cost +63.4% scene triangles and added noisy pale clusters. Permission to use an asset is not a reason to import it.                  |
+| Rock model as a lesson pedestal                           | Existing 16/80-triangle rocks lack a consistent circular engraved top; the measured 168-triangle body serves that role.                                     |
+| Uniform coastal trees, disconnected building parts        | They read as a fence or unsupported props. Fix whole-assembly footprint, purpose and crown clearance rather than add instances.                             |
+| IslandDressing world donor trunk + cone canopy (396 tris) | Second renderer and second budget beside RemotePropsField. Production distant draws are remote field + remote props only.                                   |
+| Giant flat island as a planet; vertex-only globe colour   | User rejected the first; actual browser view exposed blurred boundaries in the second. Domain sphere and shared sampled texture are the current candidates. |
+| 6–11-unit root clamp / distant-only depth multiplier      | Full-island view still looked like a thin plate or changed identity between views. Both details now consume the same seeded proportional depth.             |
+| Post-processing or brighter material as a geometry repair | Cannot repair floating contact, missing silhouette or contradictory placement; ordinary final-output screenshots remain the acceptance surface.             |
 
 ## Measurement provenance, not competing budgets
 

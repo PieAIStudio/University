@@ -8,8 +8,7 @@ import { prepareCraftSurface } from "./craft-surface.js";
 import { createCourseAcademyGeometry } from "./course-academy-geometry.js";
 import {
   COURSE_ROCK_BANK_POINTS,
-  COURSE_ROCK_BANK_COLUMNS,
-  COURSE_ROCK_BANK_ROWS,
+  COURSE_ROCK_BANK_FACES,
   courseRockTopPoints,
 } from "./course-rock-profile.js";
 import {
@@ -18,8 +17,8 @@ import {
   type CourseOutcrop,
 } from "./course-landscape-plan.js";
 
-/** One closed, terrain-seated bank with an exposed front step and a sloped
- * back. Its complete volume stays inside the original non-walkable reserve;
+/** Three closed donor-derived stone masses, rigidly seated on the terrain.
+ * Their complete volume stays inside the original non-walkable reserve;
  * ground, route, collision/lesson targets are not raised in a shader.
  */
 export function createCourseOutcropGeometry(site: CourseOutcrop): THREE.BufferGeometry {
@@ -31,23 +30,12 @@ export function createCourseOutcropGeometry(site: CourseOutcrop): THREE.BufferGe
     throw new Error("Rock bank ground samples must match the model profile");
   }
   const top = courseRockTopPoints(site).map((p) => new THREE.Vector3(p.x, p.y, p.z));
-  const bottom = top.map((p) => new THREE.Vector3(p.x, site.baseY, p.z));
   const positions: number[] = [],
     colors: number[] = [],
     indices: number[] = [];
-  const stone = new THREE.Color(0x99a5a7),
+  const stone = new THREE.Color(0x8896a5),
     turf = new THREE.Color(0x8fba51).lerp(new THREE.Color(0xacc967), site.meadow * 0.3);
-  const columns = COURSE_ROCK_BANK_COLUMNS,
-    rows = COURSE_ROCK_BANK_ROWS;
-  const topFaces: [number, number, number][] = [];
-  for (let row = 0; row < rows - 1; row++)
-    for (let column = 0; column < columns - 1; column++) {
-      const a = row * columns + column,
-        b = a + 1,
-        c = a + columns,
-        d = c + 1;
-      topFaces.push([a, c, b], [b, c, d]);
-    }
+  const topFaces = COURSE_ROCK_BANK_FACES;
   // Smooth only the causal material mask, not the actual cliff normals. A
   // different grass colour per triangle made the previous bank a checkerboard.
   const maskNormals = top.map(() => new THREE.Vector3());
@@ -58,7 +46,7 @@ export function createCourseOutcropGeometry(site: CourseOutcrop): THREE.BufferGe
   const topColours = maskNormals.map((n, i) =>
     stone
       .clone()
-      .lerp(new THREE.Color(0xb2b5a3), COURSE_ROCK_BANK_POINTS[i]!.lift * 0.18)
+      .lerp(new THREE.Color(0xc2bfac), COURSE_ROCK_BANK_POINTS[i]!.lift * 0.32)
       .lerp(
         turf,
         THREE.MathUtils.smoothstep(n.normalize().y, 0.48, 0.78) * COURSE_ROCK_BANK_POINTS[i]!.turf,
@@ -80,19 +68,6 @@ export function createCourseOutcropGeometry(site: CourseOutcrop): THREE.BufferGe
   };
   for (const [a, b, c] of topFaces) {
     emit(top[a]!, top[b]!, top[c]!, [topColours[a]!, topColours[b]!, topColours[c]!]);
-    emit(bottom[a]!, bottom[c]!, bottom[b]!);
-  }
-  const boundary = [
-    ...Array.from({ length: columns }, (_, i) => i),
-    ...Array.from({ length: rows - 1 }, (_, i) => (i + 1) * columns + columns - 1),
-    ...Array.from({ length: columns - 1 }, (_, i) => rows * columns - 2 - i),
-    ...Array.from({ length: rows - 2 }, (_, i) => (rows - 2 - i) * columns),
-  ];
-  for (let i = 0; i < boundary.length; i++) {
-    const a = boundary[i]!,
-      b = boundary[(i + 1) % boundary.length]!;
-    emit(top[a]!, top[b]!, bottom[a]!);
-    emit(top[b]!, bottom[b]!, bottom[a]!);
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
@@ -120,14 +95,19 @@ function mergedOwned(parts: THREE.BufferGeometry[]): THREE.BufferGeometry | null
 export function buildCourseLandscapeGeometry(plan: CourseLandscapePlan) {
   const spring = plan.spring ? buildCourseSpringGeometry(plan.spring) : null;
   const rockParts: THREE.BufferGeometry[] = spring ? [spring.bank] : [];
+  // Presentation may round standalone stones, never water seats or ruins.
+  // Ranges carry semantic ownership through the existing single merged draw.
+  const sculptable = new Set<THREE.BufferGeometry>();
   let rock: THREE.BufferGeometry | null;
   try {
-    for (const site of plan.outcrops)
-      rockParts.push(
+    for (const site of plan.outcrops) {
+      const part =
         site.feature === "ruin"
           ? createCourseRuinGeometry(site)
-          : createCourseOutcropGeometry(site),
-      );
+          : createCourseOutcropGeometry(site);
+      rockParts.push(part);
+      if (site.feature !== "ruin") sculptable.add(part);
+    }
     const stoneSource = createMiniatureAsset("stone");
     try {
       const colours = stoneSource.getAttribute("color"),
@@ -141,20 +121,38 @@ export function buildCourseLandscapeGeometry(plan: CourseLandscapePlan) {
           .lerp(normals.getY(i) > 0.6 ? sunlitMoss : mineral, 0.22);
         colours.setXYZ(i, pigment.r, pigment.g, pigment.b);
       }
-      for (const p of plan.stones ?? [])
-        rockParts.push(
-          stoneSource
-            .clone()
-            .scale(p.size, p.size, p.size)
-            .rotateY(p.turn)
-            .translate(p.x, p.y, p.z),
-        );
+      for (const p of plan.stones ?? []) {
+        const part = stoneSource
+          .clone()
+          .scale(p.size, p.size, p.size)
+          .rotateY(p.turn)
+          .translate(p.x, p.y, p.z);
+        rockParts.push(part);
+        sculptable.add(part);
+      }
     } finally {
       stoneSource.dispose();
     }
     // Transfer ownership once. Failed builders release pending pieces; the
     // merger owns/disposes the transferred set even when attributes disagree.
+    let offset = 0;
+    const ranges = rockParts.flatMap((part) => {
+      const count = part.index?.count ?? part.getAttribute("position").count;
+      const range = { start: offset, count };
+      offset += count;
+      return sculptable.has(part) ? [range] : [];
+    });
     rock = mergedOwned(rockParts.splice(0));
+    if (rock) {
+      rock.userData.clayStoneRanges = ranges;
+      // Plants already rooted on the bank retain that exact supporting plane.
+      rock.userData.clayStoneContacts = [
+        ...(plan.canopy ?? []).map((p) => ({ x: p.x, z: p.z, radius: p.size * 0.12 + 0.04 })),
+        ...plan.flora
+          .filter((p) => p.supportId)
+          .map((p) => ({ x: p.x, z: p.z, radius: p.radius + 0.04 })),
+      ];
+    }
   } catch (error) {
     rockParts.forEach((part) => part.dispose());
     spring?.water.dispose();
@@ -170,6 +168,9 @@ export function buildCourseLandscapeGeometry(plan: CourseLandscapePlan) {
     broadleaf: createMiniatureAsset("broadleaf", "course"),
     flowers: createMiniatureAsset("flowers"),
     grass: createMiniatureAsset("grass"),
+    fern: createMiniatureAsset("fern"),
+    leafy: createMiniatureAsset("leafy"),
+    mushroom: createMiniatureAsset("mushroom"),
     fence: createMiniatureAsset("fence"),
   };
   let flora: THREE.BufferGeometry | null = null;

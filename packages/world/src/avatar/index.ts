@@ -1,4 +1,5 @@
 export { AvatarBust } from "./AvatarBust.js";
+export { AvatarPreviewControls } from "./AvatarPreviewControls.js";
 export { AvatarChip } from "./AvatarChip.js";
 export { RailIdentity, RAIL_IDENTITY_SIZE } from "./RailIdentity.js";
 export { PlayerMarker, PLAYER_MARKER_HEIGHT } from "./PlayerMarker.js";

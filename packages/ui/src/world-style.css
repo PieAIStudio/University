@@ -1,0 +1,37 @@
+.world-style-control__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Settings is the only place this choice is made, so its buttons carry the
+   ordinary touch target rather than the compact variant's. */
+.world-style-control button {
+  min-height: 44px;
+}
+.world-style-control--compact {
+  pointer-events: auto;
+}
+.world-style-control--compact .world-style-control__options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.world-style-control--compact button {
+  font-size: 12px;
+  min-width: 44px;
+  min-height: 44px;
+  padding-inline: 10px;
+  white-space: normal;
+  line-height: 1.25;
+}
+.map-world-style {
+  min-width: 0;
+  max-width: 22rem;
+  pointer-events: auto;
+}
+@media (max-width: 1023px) {
+  .map-world-style .world-style-control--compact button {
+    font-size: 11px;
+    padding-inline: 6px;
+  }
+}

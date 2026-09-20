@@ -20,6 +20,7 @@ import { AvatarBust } from "./AvatarBust.js";
 import { frameBust } from "./frame-bust.js";
 import { hasWebGLContext } from "../webgl-capability.js";
 import { usePageVisibility } from "../page-visibility.js";
+import { WorldAppearance } from "../appearance/WorldAppearance.js";
 
 export function AvatarChip({
   recipe,
@@ -80,6 +81,7 @@ export function AvatarChip({
           dressScene(scene, gl);
         }}
       >
+        <WorldAppearance role="avatar" />
         <AvatarBust
           recipe={recipe}
           signedIn={signedIn}

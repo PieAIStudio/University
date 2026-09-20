@@ -1,4 +1,4 @@
-/** Course-only surface colour, derived from the existing field and scenery.
+/** Course-only packed surface masks, derived from the existing field and scenery.
  * This is not another biome/heightfield: every mark belongs to an actual tree,
  * geological reserve or facility. No random scatter and no painted shadows.
  */
@@ -70,12 +70,13 @@ export function courseSurfaceData(blueprint: IslandBlueprint, size = COURSE_SURF
       const worn = wear[at]! * (1 - plants * 0.55);
       const meadow = s.grass * (1 - s.route);
       const open = s.inside ? 1 : 0;
-      data[at * 4] = Math.round(clamp(0.99 - plants * 0.24 - meadow * 0.018 + worn * 0.035) * 255);
-      data[at * 4 + 1] = Math.round(clamp(1 - plants * 0.075 - worn * 0.07) * 255);
-      data[at * 4 + 2] = Math.round(clamp(0.97 - plants * 0.25 - worn * 0.18) * 255);
-      // Coverage, not transparency. Only real facilities produce earth;
-      // protect the actual teaching road rather than painting another route.
-      data[at * 4 + 3] = Math.round(clamp(worn * (1 - s.route) * open) * 255);
+      // R canopy, G meadow, B protected teaching route, A facility wear.
+      // Keep the causes, not pre-multiplied paint: open grass must not lose
+      // microstructure merely because it has no tree above it.
+      data[at * 4] = Math.round(clamp(plants * open) * 255);
+      data[at * 4 + 1] = Math.round(clamp(meadow * open) * 255);
+      data[at * 4 + 2] = Math.round(clamp(s.route) * 255);
+      data[at * 4 + 3] = Math.round(clamp(worn * open) * 255);
     }
   return { data, extent };
 }
@@ -90,8 +91,8 @@ export function acquireCourseSurface(blueprint: IslandBlueprint) {
       COURSE_SURFACE_SIZE,
       THREE.RGBAFormat,
     );
-    texture.name = "course-meadow-forest-edge-colour";
-    texture.colorSpace = THREE.LinearSRGBColorSpace;
+    texture.name = "course-canopy-meadow-route-wear-masks";
+    texture.colorSpace = THREE.NoColorSpace;
     texture.magFilter = THREE.LinearFilter;
     texture.minFilter = THREE.LinearMipmapLinearFilter;
     texture.generateMipmaps = true;

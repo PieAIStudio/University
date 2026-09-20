@@ -10,6 +10,7 @@ import { nextCourse, placeCourse, type LessonPlacement } from "@pieai/university
 import { type CourseNode } from "@pieai/university-world/course.js";
 import { worldCourse } from "@pieai/university-world/course-map.js";
 import { useCallback, useMemo } from "react";
+import { courseCompletionRevision } from "./course-completion-revision.js";
 
 type CourseOf = (studyId: string, courseId: string) => CourseView | null;
 
@@ -30,13 +31,14 @@ export function useCourseProgress({
   source,
   view,
 }: CourseProgressOptions) {
+  const completionRevision = useMemo(() => courseCompletionRevision(progress), [progress]);
   const courseProgressForNode = useCallback(
     (node: CourseNode) => {
       const shape = courseOf(node.studyId, node.courseId);
       if (!shape) return null;
       return readCourseProgress(courseShapeOf(shape, node.studyId), source);
     },
-    [courseOf, source, progress],
+    [courseOf, source, completionRevision],
   );
 
   /** Lessons finished in one course, or 0 for a course not on the shelf yet. */
@@ -91,12 +93,12 @@ export function useCourseProgress({
     // `worldCourse`, not the course itself: the scene needs ids, titles and how
     // long each lesson is, and has no business holding the prose.
     return placeCourse(view.studyId, worldCourse(course), source);
-  }, [course, view, source, progress]);
+  }, [course, view, source, completionRevision]);
 
   const viewedProgress = useMemo(() => {
     if (!course || (view.kind !== "course" && view.kind !== "lesson")) return null;
     return readCourseProgress(courseShapeOf(course, view.studyId), source);
-  }, [course, view, source, progress]);
+  }, [course, view, source, completionRevision]);
 
   return {
     lessonsDone,

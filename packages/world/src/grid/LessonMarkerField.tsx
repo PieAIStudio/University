@@ -211,8 +211,8 @@ export function LessonMarkerField({
 
   const reducedMotion = usePrefersReducedMotion();
 
-  // If reduced-motion is dynamically enabled, restore live marker's engraving scale immediately to 1.0
-  useEffect(() => {
+  // Reset before paint, not in a later passive effect after a stopped frame.
+  useLayoutEffect(() => {
     if (!reducedMotion) return;
     const liveIndex = markers.findIndex((entry) => entry.lesson.state === "live");
     if (liveIndex < 0) return;

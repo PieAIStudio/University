@@ -103,7 +103,17 @@ test.describe("L actual 3D asset inspector", () => {
           page.evaluate(() => {
             const canvas = document.querySelector<HTMLCanvasElement>(".map-studio canvas")!;
             const box = document.querySelector(".map-studio__renderer")!.getBoundingClientRect();
-            return Math.abs(canvas.getBoundingClientRect().height - box.height);
+            const viewport = document
+              .querySelector(".map-studio .map-viewport")!
+              .getBoundingClientRect();
+            const drawn = canvas.getBoundingClientRect();
+            // No footer is reserved here: the map keeps no permanent chrome,
+            // so the canvas owns this inspector's box outright.
+            return Math.max(
+              Math.abs(drawn.height - viewport.height),
+              Math.abs(drawn.height - box.height),
+              Math.abs(drawn.top - box.top),
+            );
           }),
         {
           message: "the preview must use its own viewport, not a clipped 100dvh learner stage",
