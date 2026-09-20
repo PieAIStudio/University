@@ -1,3 +1,26 @@
+.label[data-learning-node] {
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--game-ui-text);
+  background: var(--game-ui-surface-raised);
+  border: 2px solid var(--game-ui-accent);
+  font-size: 1.15rem;
+  box-sizing: border-box;
+}
+.label[data-learning-node="challenge"] {
+  border-style: dashed;
+}
+.label[data-learning-node="checkpoint"] {
+  border-width: 3px;
+}
+.label[data-proved="true"] {
+  border-style: double;
+}
 .map-framing-tools {
   position: absolute;
   z-index: 4;

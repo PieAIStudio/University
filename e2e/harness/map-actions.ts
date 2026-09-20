@@ -33,6 +33,33 @@ export async function openMapDirectory(page: Page): Promise<Locator> {
   return palette;
 }
 
+/**
+ * Open the palette's route page, where the course panel lives.
+ *
+ * The map keeps no persistent chrome, so the course panel is a page of the
+ * on-demand palette rather than a fixture on the map. Unlike a command that
+ * navigates away, this one switches the open palette's page, so the palette
+ * stays visible and the helper is safe to call again.
+ */
+export async function openMapRoutePage(page: Page): Promise<Locator> {
+  const open = page.locator(".map-quick-actions:visible");
+  const wasOpen = (await open.count()) > 0;
+  const palette = wasOpen ? open : await openMapQuickActions(page);
+  const routePage = palette.locator(".map-quick-actions__route");
+  // Opening the palette resets it to its commands page, so a route page that
+  // still looks visible in that first frame belongs to the previous visit and is
+  // about to be hidden. Only a palette that was already open can be believed.
+  if (wasOpen && (await routePage.isVisible())) return palette;
+  const route = palette.locator('[data-map-command="route"]');
+  // Wait for the entry rather than skipping when it is not there yet: the slot
+  // only exists once the course itself has loaded, which the authoring mode
+  // fetches from the local server, so an early look finds a palette without it.
+  await expect(route, "快捷面板没有路线页入口：课程可能还没加载完").toBeVisible();
+  await humanClick(page, route, "地图路线页");
+  await expect(routePage).toBeVisible();
+  return palette;
+}
+
 /** Select an actual directory destination; the helper deliberately does not Enter for it. */
 export async function selectMapDestination(page: Page, id: string): Promise<void> {
   const palette = await openMapDirectory(page);

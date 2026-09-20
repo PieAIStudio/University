@@ -264,6 +264,8 @@ const PALETTE = {
 } as const;
 
 export interface Marker {
+  readonly lessonId?: string;
+  readonly learningKind?: "personal" | "challenge" | "checkpoint";
   readonly id: string;
   readonly position: THREE.Vector3;
   readonly text: string;
@@ -303,6 +305,7 @@ export interface Marker {
   readonly locked?: boolean;
   /** Learning state remains DOM-readable as well as a scene tint. */
   readonly lessonState?: "done" | "live" | "idle" | "locked";
+  readonly proved?: boolean;
   readonly courseState?: "done" | "live" | "open" | "idle";
 }
 

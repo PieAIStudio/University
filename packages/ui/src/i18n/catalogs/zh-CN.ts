@@ -1,4 +1,5 @@
 import { messages as mapNavigation } from "./map-navigation.zh-CN.js";
+import { messages as mapNodes } from "./map-nodes.zh-CN.js";
 import { messages as primm } from "./primm.zh-CN.js";
 import { messages as propFinish } from "./prop-finish.zh-CN.js";
 import { messages as playGallery } from "./play-gallery.zh-CN.js";
@@ -36,6 +37,7 @@ import { messages as learningPlayMessages } from "./learning-play.zh-CN.js";
 import { messages as purpose3d } from "./purpose-3d.zh-CN.js";
 export const messages = {
   ...mapNavigation,
+  ...mapNodes,
   ...primm,
   ...purpose3d,
   ...arcade3d,

@@ -399,6 +399,8 @@ export function WorldMapCanvas({
                   type="button"
                   className={className}
                   data-map-marker={marker.id}
+                  data-learning-node={marker.learningKind}
+                  data-proved={marker.proved ? "true" : undefined}
                   data-lesson-state={marker.lessonState}
                   style={{ "--placed": 0 } as CSSProperties}
                   data-course-rewrite-marker={isCourseRewriteMarker ? "true" : undefined}
@@ -436,6 +438,7 @@ export function WorldMapCanvas({
               type="button"
               className={className}
               data-map-marker={marker.id}
+              data-proved={marker.proved ? "true" : undefined}
               data-lesson-state={marker.lessonState}
               data-course-state={marker.courseState}
               aria-description={marker.label ?? courseState}

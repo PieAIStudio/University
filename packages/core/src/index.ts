@@ -1,3 +1,7 @@
+export * from "./map-nodes/segments.js";
+export * from "./map-nodes/checkpoint.js";
+export * from "./map-nodes/challenge.js";
+export * from "./map-nodes/personal.js";
 export { localizeLearnerContent } from "./content/localization.js";
 export {
   localizeActivity,

@@ -136,8 +136,14 @@ export function mergeProgress(
   const provenLessons: Record<string, ProvenLessonRecord> = { ...left.provenLessons };
   for (const [key, other] of Object.entries(right.provenLessons ?? {})) {
     const current = provenLessons[key];
+    const sameRevision = current?.contentRevision === other.contentRevision;
     provenLessons[key] =
-      current && current.provenAt <= other.provenAt ? { ...current } : { ...other };
+      current &&
+      (sameRevision
+        ? current.provenAt <= other.provenAt
+        : (current.contentRevision ?? 0) > (other.contentRevision ?? 0))
+        ? { ...current }
+        : { ...other };
   }
 
   const pushSubscriptions = mergePushSubscriptions(

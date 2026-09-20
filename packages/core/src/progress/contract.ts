@@ -116,6 +116,8 @@ export function isLessonComplete(completion: LessonCompletion): boolean {
  * shared component depend on a storage detail that only one shell has.
  */
 export interface ProgressSource {
+  /** A skip-test proof is not a read confirmation or ordinary exercise attempt. */
+  provenOf?(ref: LessonRef, lesson: LessonProgressSnapshot): boolean;
   /**
    * The snapshot is required by the shared source. It is optional only at the
    * type boundary so the local server's older, self-contained learning
@@ -195,6 +197,8 @@ export function courseShapeOf(
  */
 export interface CourseProgress {
   readonly done: number;
+  /** Explicitly proved but unread lessons. Omitted for legacy all-zero views. */
+  readonly skipped?: number;
   readonly total: number;
   readonly complete: boolean;
   /**
@@ -222,6 +226,7 @@ export interface CourseProgress {
 export function readCourseProgress(course: CourseShape, source: ProgressSource): CourseProgress {
   let done = 0;
   let proven = 0;
+  let skipped = 0;
   let total = 0;
   let next: LessonRef | null = null;
   for (const unit of course.units) {
@@ -234,13 +239,16 @@ export function readCourseProgress(course: CourseShape, source: ProgressSource):
         lessonId: lesson.lessonId,
       };
       const completion = source.completionOf(ref, lesson);
-      if (completion.exercisesPassed) proven += 1;
+      const explicitProof = source.provenOf?.(ref, lesson) === true;
+      if (completion.exercisesPassed || explicitProof) proven += 1;
       if (isLessonComplete(completion)) done += 1;
+      else if (explicitProof) skipped += 1;
       else next ??= ref;
     }
   }
   return {
     done,
+    ...(skipped ? { skipped } : {}),
     total,
     complete: total > 0 && done === total,
     proven: total > 0 && proven === total,

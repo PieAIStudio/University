@@ -33,6 +33,14 @@ import { lessonKeyOf } from "./document.js";
 
 export function progressSourceOf(port: ProgressPort): ProgressSource {
   return {
+    provenOf(ref, lesson) {
+      const record = port.snapshot().provenLessons[lessonKeyOf(ref)];
+      return (
+        !!record &&
+        record.unitId === ref.unitId &&
+        (record.contentRevision === undefined || record.contentRevision === lesson.contentRevision)
+      );
+    },
     completionOf(ref: LessonRef, lesson?: LessonProgressSnapshot): LessonCompletion {
       if (!lesson) {
         throw new Error("progressSourceOf requires the current lesson snapshot");

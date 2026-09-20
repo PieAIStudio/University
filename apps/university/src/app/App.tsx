@@ -90,7 +90,7 @@ import { FeedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
 import { TodaySection } from "@pieai/university-ui/today/TodaySection.js";
 import { LINK_RETURN_DEPTH } from "@pieai/university-ui/lesson/LessonReader.js";
 import { COURSE_POLAR, MapControlsHint, WORLD_POLAR } from "@pieai/university-world/controls.js";
-import { CourseIsland } from "./CourseIsland.js";
+import { CourseIsland, type CourseIslandProps } from "./CourseIsland.js";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { useCourseProgress } from "./course-progress";
 import { shellConfigForView, useMinWidth } from "./shell-route";
@@ -418,6 +418,8 @@ export function App() {
   const profileStats = useProfileStats({ progress, courseOf });
 
   const markers = useWorldMarkers({
+    course,
+    proofs: progress.provenLessons,
     labelNodes,
     lessons,
     setCourseAvatarTarget: rememberCourseAvatarTarget,
@@ -588,7 +590,7 @@ export function App() {
     progress,
     courseProgress,
   });
-  const courseIslandProps =
+  const courseIslandProps: CourseIslandProps | null =
     view.kind === "course" && course
       ? {
           course,
@@ -606,6 +608,16 @@ export function App() {
           onOpenUnitOverlay: (...args: Parameters<typeof openUnitOverlay>) => {
             shortcuts.close();
             openUnitOverlay(...args);
+          },
+          onOpenLearningNode: (segment, nodeKind, returnFocusTo) => {
+            shortcuts.close();
+            setPathOverlay({
+              kind: "learning-node",
+              segment,
+              nodeKind,
+              unitId: segment.unitId,
+              returnFocusTo,
+            });
           },
           onBackToMap: backToCourseMap,
           onOpenLesson: openCourseLesson,

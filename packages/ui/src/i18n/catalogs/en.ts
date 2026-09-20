@@ -1,4 +1,5 @@
 import { messages as mapNavigation } from "./map-navigation.en.js";
+import { messages as mapNodes } from "./map-nodes.en.js";
 import { messages as primm } from "./primm.en.js";
 import { messages as propFinish } from "./prop-finish.en.js";
 import { messages as playGallery } from "./play-gallery.en.js";
@@ -38,6 +39,7 @@ import type { MessageCatalog } from "../types.js";
 import { messages as purpose3d } from "./purpose-3d.en.js";
 export const messages = {
   ...mapNavigation,
+  ...mapNodes,
   ...primm,
   ...purpose3d,
   ...arcade3d,

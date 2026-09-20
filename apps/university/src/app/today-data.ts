@@ -13,6 +13,10 @@ import {
   lessonKeyOf,
   progressSourceOf,
   RECAP_CARD_ID,
+  PERSONAL_STUDY_ID,
+  PERSONAL_UNIT_ID,
+  PERSONAL_LESSON_ID,
+  personalContentId,
   type CardProgress,
   type LessonRef,
   type ProgressPort,
@@ -96,6 +100,25 @@ export function todayCardLocatorOf(
   card: CardProgress,
 ): CourseReviewCardLocator | RecapReviewCardLocator | null {
   const cardId = card.cardKey.split("/").at(-1);
+  if (card.studyId === PERSONAL_STUDY_ID && cardId && card.kind !== "recap-card") {
+    try {
+      personalContentId(card.courseId);
+      if (card.lessonId !== PERSONAL_LESSON_ID) return null;
+      // The real body/revision is read through ContentPort, not a public shelf.
+      return {
+        kind: "course-card",
+        studyId: card.studyId,
+        courseId: card.courseId,
+        unitId: PERSONAL_UNIT_ID,
+        lessonId: card.lessonId,
+        cardId,
+        front: "",
+        contentRevision: 1,
+      };
+    } catch {
+      return null;
+    }
+  }
   const course = studies
     .find((study) => study.id === card.studyId)
     ?.courses.find((entry) => entry.id === card.courseId);

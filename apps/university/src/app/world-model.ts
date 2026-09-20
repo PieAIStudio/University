@@ -1,5 +1,15 @@
 import { translate } from "@pieai/university-ui/i18n.js";
-import { spineOf, type View } from "@pieai/university-core";
+import {
+  spineOf,
+  learningSegments,
+  learningNodeId,
+  type LearningSegment,
+  type MapLearningKind,
+  type ProgressDocument,
+  type View,
+} from "@pieai/university-core";
+import type { CourseView } from "@pieai/university-ui/view/lesson-view.js";
+import { learningOpportunityMarkers } from "@pieai/university-world/learning-nodes.js";
 import type { ShelfStudy } from "@pieai/university-ui/content/port.js";
 import {
   focusedStudyId as resolveFocusedStudy,
@@ -20,6 +30,13 @@ import { useMemo, type Dispatch, type SetStateAction } from "react";
 import { mapDomainForStudy } from "./map-domain-catalog.js";
 
 export type PathOverlay =
+  | {
+      readonly kind: "learning-node";
+      readonly unitId: string;
+      readonly segment: LearningSegment;
+      readonly nodeKind: MapLearningKind;
+      readonly returnFocusTo: HTMLElement | null;
+    }
   | {
       readonly kind: "node";
       readonly unitId: string;
@@ -203,6 +220,8 @@ export function useWorldModel({
 }
 
 interface WorldMarkersOptions {
+  readonly course?: CourseView | null;
+  readonly proofs?: ProgressDocument["provenLessons"];
   readonly labelNodes: LabelNodes;
   readonly lessons: readonly LessonPlacement[];
   readonly setCourseAvatarTarget?: (lesson: LessonPlacement) => void;
@@ -214,6 +233,8 @@ interface WorldMarkersOptions {
 }
 
 export function useWorldMarkers({
+  course,
+  proofs,
   labelNodes,
   lessons,
   setCourseAvatarTarget,
@@ -225,7 +246,7 @@ export function useWorldMarkers({
 }: WorldMarkersOptions) {
   const markers: readonly Marker[] = useMemo(() => {
     if (view.kind === "course" || view.kind === "lesson") {
-      return courseMarkers(lessons, {
+      const regular = courseMarkers(lessons, {
         // No picking from inside the reader: choosing a stone you are already
         // standing on is not a choice.
         onPick:
@@ -241,6 +262,37 @@ export function useWorldMarkers({
                 });
               },
       });
+      const annotated = regular.map((marker) => {
+        if (!marker.lessonId) return marker;
+        const lesson = course?.units
+          .flatMap((unit) => unit.lessons)
+          .find((item) => item.id === marker.lessonId);
+        const proof = proofs?.[`${view.studyId}/${view.courseId}/${marker.lessonId}`];
+        const valid =
+          proof &&
+          lesson &&
+          (proof.contentRevision === undefined || proof.contentRevision === lesson.contentRevision);
+        if (!valid || marker.lessonState === "done") return marker;
+        return {
+          ...marker,
+          proved: true,
+          text: marker.kind === "icon" ? "◇" : marker.text,
+          label: `${lesson.title} · ${translate("mapNodes.proven")}`,
+        };
+      });
+      if (view.kind === "lesson" || !course) return annotated;
+      return [
+        ...annotated,
+        ...learningOpportunityMarkers(lessons, learningSegments(course), (segment, nodeKind) => {
+          setPathOverlay({
+            kind: "learning-node",
+            unitId: segment.unitId,
+            segment,
+            nodeKind,
+            returnFocusTo: labelNodes.current.get(learningNodeId(segment, nodeKind)) ?? null,
+          });
+        }),
+      ];
     }
     if (!world) return [];
     /*
@@ -291,6 +343,8 @@ export function useWorldMarkers({
       },
     }));
   }, [
+    course,
+    proofs,
     world,
     lessons,
     view,

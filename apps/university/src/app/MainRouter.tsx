@@ -75,6 +75,7 @@ const PlayCatalogRoute = lazy(() => import("../play-catalog/PlayCatalogRoute.js"
 const ToyPlayLabRoute = lazy(() => import("../play-catalog/ArcadeRoute.js"));
 const PropFinishRoute = lazy(() => import("../play-catalog/PropFinishRoute.js"));
 const RetiredAppearanceRoute = lazy(() => import("../play-catalog/RetiredAppearanceRoute.js"));
+const MapLearningNodeHost = lazy(() => import("../map-nodes/MapLearningNodeHost.js"));
 const LearningPlayLab = lazy(() =>
   import("@pieai/university-ui/learning-play/LearningPlayLab.js").then((mod) => ({
     default: mod.LearningPlayLab,
@@ -260,6 +261,26 @@ export function MainRouter({
             avatarRecipe={avatarRecipe}
             onRecipeChange={onAvatarRecipeChange}
             onOpen={setView}
+          />
+        </Suspense>
+      ) : null}
+
+      {view.kind === "course" && course && pathOverlay?.kind === "learning-node" ? (
+        <Suspense fallback={null}>
+          <MapLearningNodeHost
+            studyId={view.studyId}
+            courseId={view.courseId}
+            segment={pathOverlay.segment}
+            kind={pathOverlay.nodeKind}
+            identityPort={identityPort}
+            progressPort={progressPort}
+            contentPort={contentPort}
+            returnFocusTo={pathOverlay.returnFocusTo}
+            onClose={() => setPathOverlay(null)}
+            onOpenLesson={(locator) => {
+              setPathOverlay(null);
+              setView({ kind: "lesson", ...locator });
+            }}
           />
         </Suspense>
       ) : null}
