@@ -262,26 +262,35 @@ export function LessonToolbar({
   sections,
   progressDestinationId,
   children,
+  progressOverride,
 }: {
   readonly onClose: () => void;
   readonly sections: readonly LessonSectionView[];
   /** Same-screen landing point for the completion CTA. */
   readonly progressDestinationId?: string;
   readonly children?: ReactNode;
+  readonly progressOverride?: {
+    readonly current: number;
+    readonly total: number;
+    readonly label: string;
+  };
 }) {
   const { ref, current, total, ratio } = useLessonProgress(sections);
   useLessonToolbarScrollOffset(ref);
   const valued = total > 0;
-  const valueNow = valued ? current : Math.round(ratio * 100);
-  const valueMax = valued ? total : 100;
+  const valueNow = progressOverride?.current ?? (valued ? current : Math.round(ratio * 100));
+  const valueMax = progressOverride?.total ?? (valued ? total : 100);
   const progress = (
     <GameProgress
       className="lesson-toolbar__progress"
-      label={translate("ui.lesson.lessonNav.copy.课文进度")}
+      label={progressOverride?.label ?? translate("ui.lesson.lessonNav.copy.课文进度")}
       value={valueNow}
       max={valueMax}
       tone="accent"
-      valueLabel={valued ? translate("product.reading.sections", { current, total }) : undefined}
+      valueLabel={
+        progressOverride?.label ??
+        (valued ? translate("product.reading.sections", { current, total }) : undefined)
+      }
     />
   );
 

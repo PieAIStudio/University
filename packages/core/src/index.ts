@@ -64,6 +64,11 @@ export {
   LessonAssetKindSchema,
   LessonAssetSchema,
   LessonManifestSchema,
+  LessonActivitySchema,
+  LessonActivityKindSchema,
+  ActivitySourceSchema,
+  PrimmPayloadSchema,
+  interactionLessonIssues,
   ChoiceOptionSchema,
   ChoiceExerciseSchema,
   ExerciseSchema,
@@ -101,6 +106,7 @@ export {
 export {
   CHOICE_OPTION_COUNT,
   validateChoiceExercise,
+  refineChoiceExercise,
   type ChoiceExerciseDraft,
   type ChoiceExerciseIssue,
   type ChoiceExerciseIssueCode,
@@ -382,6 +388,10 @@ export {
 
 export type * from "./learning-play/types.js";
 export * from "./learning-play/connect.js";
+export * from "./learning-play/interaction-path.js";
+export * from "./learning-play/primm.js";
+export * from "./learning-play/primm-lesson.js";
+export { primmFixture, primmLessonFixture } from "./learning-play/fixtures/primm.js";
 export * from "./learning-play/sort.js";
 export * from "./learning-play/contrast.js";
 export * from "./learning-play/weigh.js";

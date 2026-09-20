@@ -11,7 +11,7 @@ import { enterSelectedMapObject } from "./harness/map-actions.js";
 test.describe("D 本地端", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
-  test("落地 → 进一节课 → 课文末尾有完成本次更新和练习", async ({ page }) => {
+  test("普通文章课保留阅读确认与练习；不把旧页脚强加给 PRIMM", async ({ page }) => {
     const consoleErrors = watchConsole(page);
 
     await namedStep(page, "打开本地端落地页", async () => {
@@ -47,13 +47,15 @@ test.describe("D 本地端", () => {
     });
 
     await namedStep(page, "滚到末尾：完成本次更新和练习", async () => {
-      const confirm = page.getByRole("button", { name: /我读完了|完成本次更新|再次确认本次更新/ });
+      const confirm = page.getByRole("button", {
+        name: /我读完了|我学过这一版了|完成本次更新|再次确认本次更新/,
+      });
       await confirm.scrollIntoViewIfNeeded();
       await expect(confirm).toBeVisible({ timeout: 20_000 });
       const exercise = page.locator("section.lesson-completion, .exercise-panel, .choice-block");
       await exercise.first().scrollIntoViewIfNeeded();
       await expect(exercise.first()).toBeVisible();
-      await assertVisibleText(page, /我读完了|完成本次更新|再次确认本次更新/);
+      await assertVisibleText(page, /我读完了|我学过这一版了|完成本次更新|再次确认本次更新/);
     });
 
     consoleErrors.assertClean();

@@ -6,6 +6,8 @@ import type { RepairActivity } from "./ai-repair.js";
 import type { SortActivity } from "./sort.js";
 import type { ContrastActivity } from "./contrast.js";
 import type { WeighActivity } from "./weigh.js";
+import type { InteractionPathActivity } from "./interaction-path.js";
+import type { PrimmActivity } from "./primm.js";
 
 /** Experimental activity payloads. These are not a second lesson/export schema. */
 export const ACTIVITY_DIFFICULTIES = ["intro", "practice", "challenge"] as const;
@@ -203,7 +205,9 @@ export type LearningActivitySpec =
   | ContextActivity
   | AgentActivity
   | EvalActivity
-  | RepairActivity;
+  | RepairActivity
+  | InteractionPathActivity
+  | PrimmActivity;
 export type ActivityKind = LearningActivitySpec["kind"];
 export type ActivityFamily = {
   [K in ActivityKind]: {

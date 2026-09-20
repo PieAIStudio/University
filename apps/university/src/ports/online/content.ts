@@ -89,6 +89,7 @@ export function createOnlineContentPort(): ContentPort {
         lessonTitle: lesson.title,
         title: exercise.title ?? translate("app.ports.online.content.copy.自检"),
         prompt: exercise.prompt,
+        ...(exercise.kind === "choice" ? { options: exercise.options } : {}),
         /*
           Not shipped, by design. `import-courses.mjs` strips the reference
           answer out of every package; what survives is a fingerprint the

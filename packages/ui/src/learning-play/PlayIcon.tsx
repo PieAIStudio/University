@@ -26,6 +26,8 @@ export function PlayIcon({
     "ai-agent": "M8 5h8v4H8zM5 12h14v8H5zM12 9v3M8 16h1M15 16h1M2 14v4M22 14v4",
     "ai-eval": "M4 3h16v18H4zM8 7h1M12 7h5M8 12h1M12 12h5M8 17l2 2 4-5",
     "ai-repair": "M4 9a8 8 0 1 1-1 7M4 3v6h6M12 7v5l4 2",
+    "interaction-path": "M4 5h4v4H4zM16 15h4v4h-4zM8 7h8v6M16 11l2 2 2-2",
+    primm: "M4 5h4v4H4zM16 15h4v4h-4zM8 7h8v6M16 11l2 2 2-2",
     check: "M5 12l4 4L19 6",
     arrow: "M4 12h16m-6-6 6 6-6 6",
     spark: "M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z",

@@ -1,0 +1,2542 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>学习街机</title>
+
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--zh);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---------- shell ---------- */
+.app{height:100%;display:flex;flex-direction:column;max-width:460px;margin-inline:auto;
+  background:var(--bg);position:relative;overflow:hidden}
+.top{flex:none;display:flex;align-items:center;gap:12px;padding-block:12px;padding-inline:16px}
+.quit{width:30px;height:30px;flex:none;border-radius:var(--r-pill);color:var(--ink-faint);
+  font-size:20px;line-height:1;display:grid;place-items:center}
+.quit:hover{background:var(--line);color:var(--ink)}
+.bar{flex:1;height:14px;border-radius:var(--r-pill);background:var(--bg-deep);
+  box-shadow:inset 0 2px 5px #4c341c1f;overflow:hidden}
+.bar i{display:block;height:100%;width:4%;border-radius:var(--r-pill);
+  background:linear-gradient(180deg,var(--accent-bright),var(--accent));
+  box-shadow:inset 0 2px 0 #ffffff5c;transition:width .45s cubic-bezier(.2,.9,.25,1)}
+.bar i.pulse{animation:barpulse .5s}
+@keyframes barpulse{35%{filter:brightness(1.35) saturate(1.2)}}
+.combo{flex:none;display:flex;align-items:center;gap:4px;font-family:var(--num);font-weight:700;
+  font-size:15px;color:var(--accent-ink);opacity:0;transform:scale(.6);transition:.25s}
+.combo.on{opacity:1;transform:scale(1)}
+.combo.pop{animation:pop .4s}
+@keyframes pop{40%{transform:scale(1.35) rotate(-6deg)}}
+.snd{flex:none;width:30px;height:30px;border-radius:var(--r-pill);display:grid;place-items:center;
+  color:var(--ink-faint);font-size:15px}
+.snd:hover{background:var(--line)}
+
+.stage{flex:1;overflow-y:auto;overflow-x:hidden;padding-inline:16px;padding-block:4px 20px;
+  display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
+.inner{margin-block:auto;width:100%}
+.stage::-webkit-scrollbar{width:0}
+
+.eyebrow{font-family:var(--num);font-size:11px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-faint);margin-block:10px 6px}
+.q{font-size:21px;line-height:1.45;font-weight:600;color:var(--ink-title);text-wrap:balance;
+  margin-block:0 14px;letter-spacing:.01em}
+.q.sm{font-size:18px}
+.sub{font-size:14px;color:var(--ink-soft);margin-block:-8px 14px}
+
+/* ---------- artifact: the thing the player inspects ---------- */
+.art{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);
+  padding-block:14px;padding-inline:14px;margin-block:0 16px;box-shadow:var(--sh);position:relative}
+.art.chat{border-radius:var(--r-card) var(--r-card) var(--r-card) 6px}
+.art-tag{position:absolute;top:-9px;left:12px;font-family:var(--num);font-size:10px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;background:var(--bg);color:var(--ink-faint);
+  padding-inline:6px}
+.art p{margin-block:0 8px;font-size:15px;line-height:1.7}
+.art p:last-child{margin-bottom:0}
+.art .big{font-size:19px;font-weight:600;color:var(--ink-title)}
+.art .meta{font-size:12.5px;color:var(--ink-faint);line-height:1.5}
+.src{font-size:11.5px;color:var(--ink-faint);margin-block:-8px 14px;line-height:1.5}
+.src a{color:var(--ink-soft);text-decoration-color:var(--line-2)}
+
+/* rows inside an artifact (the table) */
+.tbl{width:100%;border-collapse:collapse;font-size:14.5px}
+.tbl th{text-align:left;font-weight:600;color:var(--ink-title);padding-block:7px;
+  border-bottom:2px solid var(--line-2);font-size:13.5px}
+.tbl td{padding-block:9px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl td.n{text-align:right;font-family:var(--num);font-variant-numeric:tabular-nums;font-weight:600}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .sum td{font-weight:700;color:var(--ink-title)}
+.hdrflag{display:inline-flex;align-items:center;gap:5px}
+.hdrflag.bad{color:var(--warn);}
+
+/* ---------- tiles ---------- */
+.tiles{display:flex;flex-direction:column;gap:10px;margin-block:2px 8px}
+.tile{position:relative;display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;
+  background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:14px;padding-block:13px;padding-inline:14px;
+  font-size:15.5px;line-height:1.5;color:var(--ink);transition:transform .08s,background .15s,border-color .15s}
+.tile:hover:not(:disabled){background:var(--panel-2);border-color:var(--line-2);border-bottom-color:var(--lip)}
+.tile:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.tile:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tile .key{flex:none;width:22px;height:22px;margin-top:1px;border-radius:7px;background:var(--bg-deep);
+  color:var(--ink-faint);font-family:var(--num);font-size:12px;font-weight:700;display:grid;place-items:center}
+.tile[aria-checked="true"]{background:var(--accent-pale);border-color:var(--accent)}
+.tile[aria-checked="true"] .key{background:var(--accent);color:#fff}
+.tile.ok{background:var(--ok-pale);border-color:var(--ok)}
+.tile.ok .key{background:var(--ok);color:#fff}
+.tile.nope{background:var(--berry-pale);border-color:var(--berry)}
+.tile.nope .key{background:var(--berry);color:#fff}
+.tile.dim{opacity:.42}
+.tile:disabled{cursor:default}
+.shake{animation:shake .38s}
+@keyframes shake{20%{transform:translateX(-7px)}45%{transform:translateX(6px)}70%{transform:translateX(-3px)}}
+
+/* inline chips: tap a piece of the artifact */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-block:2px 8px}
+.chip{background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:var(--r-pill);padding-block:9px;padding-inline:15px;
+  font-size:15px;transition:transform .08s,background .15s,border-color .15s}
+.chip:hover:not(:disabled){background:var(--panel-2)}
+.chip:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.chip:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chip.ok{background:var(--ok-pale);border-color:var(--ok);color:var(--ok-ink);font-weight:600}
+.chip.nope{background:var(--berry-pale);border-color:var(--berry);color:var(--berry-ink)}
+.chip.dim{opacity:.4}
+.chip.ghost{background:transparent;border-style:dashed;border-bottom-width:2px;color:var(--ink-faint)}
+
+/* ---------- buckets ---------- */
+.buckets{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-block:4px 12px}
+.bucket{background:var(--panel-2);border:2px dashed var(--line-2);border-radius:var(--r-card);
+  padding-block:10px;padding-inline:10px;min-height:96px;transition:.18s}
+.bucket.armed{border-color:var(--accent);background:var(--accent-pale);border-style:solid}
+.bucket h4{margin:0 0 8px;font-size:13px;font-weight:700;color:var(--ink-title);line-height:1.35}
+.bucket .drop{display:flex;flex-direction:column;gap:6px}
+.drop .it{background:var(--panel);border:1px solid var(--line);border-radius:9px;
+  padding-block:7px;padding-inline:9px;font-size:13px;line-height:1.4;animation:landing .3s}
+.drop .it.ok{border-color:var(--ok);background:var(--ok-pale)}
+.drop .it.nope{border-color:var(--berry);background:var(--berry-pale)}
+@keyframes landing{from{transform:scale(.8) translateY(-8px);opacity:0}}
+.pool{display:flex;flex-direction:column;gap:8px}
+
+/* ---------- word bank ---------- */
+.slotline{min-height:62px;border-bottom:2px dashed var(--line-2);margin-block:2px 16px;
+  padding-block:8px;display:flex;flex-wrap:wrap;gap:7px;align-content:flex-start}
+.slotline:empty::after{content:"从下面挑词，拼成一句话";color:var(--ink-faint);font-size:14px}
+.bank{display:flex;flex-wrap:wrap;gap:8px;margin-block:0 8px}
+.word{background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:11px;padding-block:8px;padding-inline:12px;
+  font-size:15px;transition:transform .08s,opacity .15s}
+.word:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.word:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.word.used{opacity:.22;pointer-events:none}
+.word.placed{background:var(--accent-pale);border-color:var(--accent)}
+.word.ok{background:var(--ok-pale);border-color:var(--ok)}
+.word.nope{background:var(--berry-pale);border-color:var(--berry)}
+
+/* ---------- scale ---------- */
+.scale{margin-block:10px 18px}
+.scale input[type=range]{width:100%;accent-color:var(--accent);height:34px}
+.scale .val{font-family:var(--num);font-size:42px;font-weight:700;color:var(--accent-ink);
+  text-align:center;line-height:1;font-variant-numeric:tabular-nums}
+.scale .ends{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-faint)}
+
+/* ---------- rows (unit picker) ---------- */
+.rows{display:flex;flex-direction:column;gap:9px;margin-block:2px 10px}
+.row{background:var(--panel);border:2px solid var(--line);border-radius:13px;
+  padding-block:10px;padding-inline:12px}
+.row{transition:border-color .18s,background .18s}
+.row.set{border-color:var(--accent);background:var(--panel-2)}
+.row .lbl{font-size:14.5px;margin-bottom:8px;line-height:1.45}
+.row .lbl small{display:block;color:var(--ink-faint);font-size:12.5px;margin-top:3px;line-height:1.45}
+.row .lbl b{font-family:var(--num);font-variant-numeric:tabular-nums}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{border:2px solid var(--line);border-radius:var(--r-pill);padding-block:5px;padding-inline:12px;
+  font-size:14px;background:var(--panel-2);transition:.12s}
+.opt:active:not(:disabled){transform:translateY(1px)}
+.opt[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.opt.ok{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+.opt.nope{background:var(--berry);border-color:var(--berry);color:#fff}
+.opt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* ---------- footer / feedback ---------- */
+.foot::before{content:"";position:absolute;left:0;right:0;top:-22px;height:22px;
+  pointer-events:none;background:linear-gradient(180deg,#0000,var(--bg))}
+.foot{flex:none;padding-inline:16px;padding-block:10px;
+  padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  border-top:1px solid transparent;background:var(--bg);position:relative;z-index:3}
+.cta{width:100%;border-radius:15px;padding-block:14px;font-size:16.5px;font-weight:700;
+  letter-spacing:.04em;background:var(--accent);color:#fff;
+  border-bottom:var(--lip-h) solid #0000002e;transition:transform .08s,opacity .2s,background .2s}
+.cta:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.cta:disabled{background:var(--bg-deep);color:var(--ink-faint);border-bottom-color:transparent;cursor:default}
+.cta:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.cta.go{background:var(--ok);}
+.cta.ghost{background:transparent;color:var(--ink-soft);border:2px solid var(--line-2);
+  border-bottom-width:2px;font-weight:600}
+
+.fb{position:absolute;left:0;right:0;bottom:0;z-index:4;background:var(--panel);
+  border-top:2px solid var(--line-2);border-radius:var(--r-panel) var(--r-panel) 0 0;
+  padding-inline:16px;padding-block:16px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -14px 40px #4c341c24;transform:translateY(103%);transition:transform .32s cubic-bezier(.2,.9,.25,1);
+  max-height:72%;overflow-y:auto}
+.fb.up{transform:translateY(0)}
+.fb.good{background:var(--ok-pale);border-top-color:var(--ok)}
+.fb.soft{background:var(--berry-pale);border-top-color:var(--berry)}
+.fb h3{margin:0 0 6px;font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+.fb.good h3{color:var(--ok-ink)} .fb.soft h3{color:var(--berry-ink)}
+.fb .mark{width:26px;height:26px;flex:none;border-radius:var(--r-pill);display:grid;place-items:center;
+  color:#fff;font-size:15px;font-weight:700}
+.fb.good .mark{background:var(--ok)} .fb.soft .mark{background:var(--berry)}
+.fb p{margin:0 0 10px;font-size:14.5px;line-height:1.65;color:var(--ink)}
+.fb p:last-of-type{margin-bottom:12px}
+.fb .keep{background:#ffffff40;border:1px dashed var(--line-2);border-radius:11px;
+  padding-block:10px;padding-inline:11px;font-size:13.5px;line-height:1.6;margin-block:0 12px}
+.fb .keep b{display:block;font-family:var(--num);font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px;font-weight:600}
+
+/* ---------- interstitial / result screens ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-panel);
+  padding-block:22px;padding-inline:18px;box-shadow:var(--sh-lift);margin-block:8px 14px}
+.hero{text-align:center;padding-block:10px}
+.hero .ring{width:96px;height:96px;margin:0 auto 14px;border-radius:var(--r-pill);
+  background:radial-gradient(circle at 34% 28%,var(--accent-bright),var(--accent));
+  display:grid;place-items:center;font-size:42px;box-shadow:0 14px 34px #e8743b4d;animation:rise .5s}
+@keyframes rise{from{transform:scale(.6) translateY(14px);opacity:0}}
+.hero h2{margin:0 0 6px;font-size:24px;color:var(--ink-title);text-wrap:balance}
+.hero .lede{color:var(--ink-soft);font-size:14.5px;margin:0 0 4px;text-wrap:balance;line-height:1.6}
+.hero .lede b{color:var(--ink-title);font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-block:16px 4px}
+.stat{background:var(--panel-2);border:1px solid var(--line);border-radius:13px;
+  padding-block:11px;padding-inline:8px;text-align:center}
+.stat b{display:block;font-family:var(--num);font-size:25px;font-weight:700;color:var(--accent-ink);
+  line-height:1.15;font-variant-numeric:tabular-nums}
+.stat span{font-size:11.5px;color:var(--ink-faint)}
+.can{display:flex;flex-direction:column;gap:9px;margin-block:4px 0}
+.can li{display:flex;gap:9px;align-items:flex-start;font-size:14.5px;line-height:1.55;
+  background:var(--ok-pale);border:1px solid var(--ok);border-radius:12px;
+  padding-block:10px;padding-inline:11px;animation:slidein .4s backwards}
+.can li i{flex:none;width:19px;height:19px;margin-top:2px;border-radius:var(--r-pill);background:var(--ok);
+  color:#fff;font-size:11px;font-style:normal;display:grid;place-items:center;font-weight:700}
+@keyframes slidein{from{opacity:0;transform:translateX(-12px)}}
+.ulist{list-style:none;margin:0;padding:0}
+.lvl{display:flex;gap:11px;align-items:center;width:100%;text-align:left;background:var(--panel);
+  border:2px solid var(--line);border-bottom-width:var(--lip-h);border-bottom-color:var(--lip);
+  border-radius:15px;padding-block:13px;padding-inline:13px;margin-bottom:9px;transition:transform .08s}
+.lvl:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:11px}
+.lvl .n{flex:none;width:34px;height:34px;border-radius:var(--r-pill);background:var(--accent);color:#fff;
+  font-family:var(--num);font-weight:700;display:grid;place-items:center;font-size:15px}
+.lvl.done .n{background:var(--ok)}
+.lvl.lock{opacity:.5}
+.lvl.lock .n{background:var(--bg-deep);color:var(--ink-faint)}
+.lvl .t{flex:1;font-size:15px;line-height:1.4;font-weight:600;color:var(--ink-title)}
+.lvl .t em{display:block;font-style:normal;font-weight:400;font-size:12.5px;color:var(--ink-faint);margin-top:2px}
+.note{font-size:12.5px;color:var(--ink-faint);line-height:1.6;margin-block:14px 0}
+.note code{background:var(--bg-deep);border-radius:5px;padding-inline:4px;font-size:12px}
+</style>
+<style>
+/* ================= 街机外壳 ================= */
+.page{max-width:560px;margin-inline:auto;padding-inline:16px;padding-block:20px 60px}
+.masthead h1{margin:0 0 6px;font-size:26px;font-weight:700;color:var(--ink-title)}
+.masthead p{margin:0 0 7px;font-size:14.5px;line-height:1.75;color:var(--ink-soft)}
+.masthead p b{color:var(--ink-title)}
+.rule{height:1px;background:var(--line);margin-block:24px}
+.cab{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-panel);
+  box-shadow:var(--sh-lift);margin-bottom:22px;overflow:hidden}
+.cabhd{padding-block:14px 12px;padding-inline:15px;border-bottom:1px solid var(--line)}
+.cabhd .from{font-family:var(--num);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.12em}
+.cabhd h3{margin:3px 0 7px;font-size:19px;font-weight:700;color:var(--ink-title);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cabhd h3 code{font-family:var(--num);font-size:12px;background:var(--bg-deep);color:var(--ink-soft);
+  border-radius:6px;padding-block:2px;padding-inline:6px}
+.cabhd .how{margin:0;font-size:13.5px;line-height:1.65;color:var(--ink-soft)}
+.cabhd .how b{color:var(--accent-ink)}
+.screen{position:relative;background:var(--bg-deep);overflow:hidden;touch-action:none;user-select:none}
+.hud{display:flex;align-items:center;gap:10px;padding-block:9px;padding-inline:13px;
+  background:var(--panel-2);border-bottom:1px solid var(--line);font-size:12px;color:var(--ink-faint)}
+.hud b{font-family:var(--num);font-size:16px;color:var(--ink-title);font-variant-numeric:tabular-nums}
+.hud .sp{margin-left:auto}
+.hud .life{display:flex;gap:3px}
+.hud .life i{width:9px;height:9px;border-radius:50%;background:var(--warn);font-style:normal}
+.hud .life i.out{background:var(--bg-deep);box-shadow:inset 0 0 0 1px var(--line-2)}
+.timebar{height:5px;background:var(--bg-deep)}
+.timebar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-bright));
+  transition:width .1s linear}
+.spec{border-top:1px solid var(--line)}
+.spec summary{cursor:pointer;list-style:none;font-size:12.5px;font-weight:600;color:var(--ink-faint);
+  padding-block:10px;padding-inline:15px;display:flex;gap:7px;align-items:center;font-family:var(--num);letter-spacing:.06em}
+.spec summary::-webkit-details-marker{display:none}
+.spec summary::before{content:"+";color:var(--accent);font-weight:700}
+.spec[open] summary::before{content:"−"}
+.spec .in{padding-inline:15px;padding-bottom:14px;font-size:13px;line-height:1.7;color:var(--ink-soft)}
+.spec .in b{color:var(--ink-title)}
+.spec .in code{font-family:var(--num);font-size:12px;background:var(--bg-deep);border-radius:5px;padding-inline:4px}
+.overlay{position:absolute;inset:0;background:#241609d9;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;justify-content:safe center;text-align:center;
+  padding-inline:22px;padding-block:18px;z-index:40;overflow-y:auto;
+  color:#fff6ee;backdrop-filter:blur(2px)}
+.overlay h4{flex:none;margin:0 0 8px;font-size:21px;font-weight:700}
+.overlay p{flex:none;margin:0 0 14px;font-size:14px;line-height:1.7;opacity:.92;max-width:26em}
+.overlay .big{font-family:var(--num);font-size:44px;font-weight:700;line-height:1;margin-bottom:6px;color:var(--accent-bright)}
+.overlay .sub{font-size:12.5px;opacity:.72;margin-bottom:14px}
+.playbtn{flex:none;border-radius:var(--r-pill);padding-block:13px;padding-inline:34px;font-size:16px;font-weight:700;
+  background:var(--accent);color:#fff;border-bottom:4px solid #0000004d;letter-spacing:.08em}
+.playbtn:active{transform:translateY(2px);border-bottom-width:2px}
+.lanes{position:absolute;inset:0;display:grid;pointer-events:none}
+.lane{border-right:1px dashed var(--line-2);position:relative}
+.lane:last-child{border-right:0}
+.lane .lh{position:absolute;top:8px;left:0;right:0;text-align:center;font-size:11.5px;font-weight:700;
+  color:var(--ink-faint);line-height:1.3;padding-inline:4px}
+.lane.hot{background:var(--accent-pale)}
+
+/* 落块 */
+.brick{position:absolute;border-radius:10px;padding-block:9px;padding-inline:10px;font-size:13px;
+  line-height:1.4;text-align:center;background:var(--panel);border:2px solid var(--accent);
+  box-shadow:var(--sh);color:var(--ink-title);z-index:10}
+.brick.settled{border-color:var(--berry);background:var(--berry-pale);color:var(--berry-ink);font-size:11.5px;
+  padding-block:6px;z-index:5}
+.brick.zap{animation:zap .34s forwards}
+@keyframes zap{40%{transform:scale(1.12);background:var(--ok-pale);border-color:var(--ok)}
+  100%{transform:scale(.4);opacity:0}}
+.lanebtns{position:absolute;left:0;right:0;bottom:0;display:grid;gap:0;z-index:20}
+.lanebtn{padding-block:13px;font-size:13.5px;font-weight:700;background:var(--panel-2);
+  border-top:2px solid var(--line-2);border-right:1px solid var(--line);color:var(--ink-title);line-height:1.3}
+.lanebtn:last-child{border-right:0}
+.lanebtn:active{background:var(--accent-pale)}
+
+/* 划切 */
+.fly{position:absolute;border-radius:12px;padding-block:11px;padding-inline:14px;font-size:15px;
+  line-height:1.45;text-align:center;max-width:74%;box-shadow:var(--sh);z-index:10;will-change:transform}
+.fly{background:var(--panel);border:2px solid var(--line-2);color:var(--ink-title);
+  font-weight:600;letter-spacing:.01em}
+.fly.hangs{border-color:var(--accent);box-shadow:0 10px 26px #4c341c33}
+.fly.wascut.good{background:var(--ok-pale);border-color:var(--ok)}
+.fly.wascut.bomb{background:var(--warn-pale);border-color:var(--warn)}
+.fly.cut{animation:cut .3s forwards}
+@keyframes cut{100%{transform:scale(1.35) rotate(9deg);opacity:0}}
+.trail{position:absolute;inset:0;pointer-events:none;z-index:30}
+.boom{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--warn);pointer-events:none;z-index:31}
+
+/* 拦截 */
+.ship{position:absolute;bottom:40px;width:38px;height:26px;margin-left:-19px;z-index:15;
+  transition:filter .2s}
+.ship .body{width:0;height:0;border-left:19px solid transparent;border-right:19px solid transparent;
+  border-bottom:26px solid var(--ok);filter:drop-shadow(0 3px 8px #0003)}
+.ship.rec .body{border-bottom-color:var(--berry)}
+.bandrow{position:absolute;left:0;right:0;bottom:0;height:38px;display:flex;z-index:8}
+.bandrow div{flex:1;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff}
+.bandrow .bl{background:var(--ok)} .bandrow .br{background:var(--berry)}
+.foe{position:absolute;border-radius:9px;padding-block:6px;padding-inline:9px;font-size:12px;
+  line-height:1.35;text-align:center;border:2px solid;box-shadow:var(--sh);z-index:10;max-width:46%}
+.foe{background:var(--panel);border-color:var(--line-2);color:var(--ink-title);font-weight:600}
+.foe.revealed.pic{background:var(--ok-pale);border-color:var(--ok);color:var(--ok-ink)}
+.foe.revealed.rec{background:var(--berry-pale);border-color:var(--berry);color:var(--berry-ink)}
+.foe.hurt{animation:jxshake .3s}
+.foe.diving{border-color:var(--accent);border-width:3px;box-shadow:0 0 0 4px #e8743b3d,var(--sh);z-index:11}
+.shot{position:absolute;width:4px;height:14px;border-radius:2px;z-index:12}
+
+/* 场地 */
+.hero{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,var(--accent-bright),var(--accent));
+  box-shadow:0 4px 14px #e8743b66;z-index:20}
+.hero.armed{background:radial-gradient(circle at 34% 30%,#fff2c9,var(--ok))}
+.pellet{position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;
+  background:var(--ok);box-shadow:0 0 0 3px #4f9d6b26;z-index:12}
+.bigp{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,#fff,var(--accent));z-index:12;animation:pulsep 1s infinite}
+@keyframes pulsep{50%{transform:scale(1.22)}}
+.ghost{position:absolute;border-radius:12px 12px 4px 4px;padding-block:5px;padding-inline:8px;
+  font-size:11px;line-height:1.3;text-align:center;background:var(--warn);color:#fff;
+  box-shadow:0 4px 12px #0003;z-index:14;max-width:44%;transform:translate(-50%,-50%)}
+.ghost.weak{background:var(--berry);opacity:.85}
+.tag2{position:absolute;transform:translate(-50%,-50%);background:var(--panel);
+  border:2px solid var(--line-2);border-radius:10px;padding-block:6px;padding-inline:9px;
+  font-size:12px;line-height:1.3;color:var(--ink-title);font-weight:600;z-index:12;
+  box-shadow:var(--sh);max-width:40%;text-align:center}
+.bigtip{position:absolute;left:0;right:0;bottom:6px;text-align:center;font-size:11px;
+  color:var(--ink-faint);z-index:6}
+.note2{font-size:12.5px;color:var(--ink-faint);line-height:1.6;padding-block:10px;padding-inline:15px;
+  border-top:1px solid var(--line);background:var(--panel-2)}
+.note2 b{color:var(--ink-title)}
+
+/* ================= 填词消行（俄罗斯方块的逻辑） ================= */
+.cz-tray{position:absolute;top:0;left:0;right:0;z-index:30;display:flex;flex-wrap:wrap;
+  gap:7px;justify-content:center;padding-block:9px 10px;padding-inline:8px;
+  background:linear-gradient(180deg,var(--panel-2) 76%,#0000);min-height:84px;align-content:flex-start}
+.cz-tile{width:96px;height:32px;flex:none;border-radius:9px;background:var(--panel);
+  border:2px solid var(--line-2);border-bottom-width:4px;border-bottom-color:var(--lip);
+  font-size:13px;font-weight:700;line-height:1.15;color:var(--ink-title);
+  display:grid;place-items:center;text-align:center;padding-inline:3px;
+  touch-action:none;cursor:grab;transition:transform .08s,opacity .15s}
+.cz-tile:active{cursor:grabbing}
+.cz-tile.held{opacity:.28}
+.cz-tile.fresh{animation:cztile .3s backwards}
+@keyframes cztile{from{transform:scale(.5) translateY(-10px);opacity:0}}
+.cz-ghost{position:fixed;transform:translate(-50%,-50%);z-index:9999;pointer-events:none;
+  border-color:var(--accent);box-shadow:0 12px 26px #4c341c4d;opacity:1!important}
+.cz-line{position:absolute;left:0;right:0;top:90px;z-index:6;border-top:2px dashed var(--warn);
+  pointer-events:none}
+.cz-line i{position:absolute;right:8px;top:3px;font-style:normal;font-size:10.5px;
+  color:var(--warn);font-weight:700;letter-spacing:.04em}
+.cz-line.hot{animation:czline .7s infinite}
+@keyframes czline{50%{border-top-color:var(--accent);filter:brightness(1.4)}}
+.cz-well{position:absolute;left:8px;right:8px;top:94px;bottom:8px;z-index:1;pointer-events:none;
+  border-radius:12px;border:1px dashed var(--line);
+  background:repeating-linear-gradient(0deg,var(--line) 0 1px,#0000 1px 57px);
+  opacity:.75}
+.cz-beam{position:absolute;top:90px;bottom:0;width:0;z-index:20;pointer-events:none;
+  border-left:2px dashed var(--accent)}
+.cz-stack{position:absolute;left:0;right:0;bottom:0;z-index:10;display:flex;flex-direction:column;
+  gap:7px;padding-block:8px;padding-inline:8px}
+.cz-row{flex:none;height:50px;display:flex;align-items:center;overflow:hidden;position:relative;
+  border-radius:11px;background:var(--panel);border:2px solid var(--line);
+  padding-inline:10px;transition:height .36s cubic-bezier(.2,.9,.25,1),opacity .3s,transform .3s}
+.cz-row .tx{font-size:14px;line-height:1.5;color:var(--ink);letter-spacing:.01em}
+.cz-row.top{border-color:var(--line-2);box-shadow:var(--sh)}
+.cz-row.bad{animation:jxshake .32s;border-color:var(--warn)}
+.cz-row.going{border-color:var(--ok);background:var(--ok-pale)}
+.cz-row.gone{height:0!important;opacity:0;transform:scale(.94);border-width:0;margin-top:-7px}
+.cz-gap{display:inline-block;width:92px;height:23px;vertical-align:-6px;margin-inline:3px;
+  border-radius:7px;border:2px dashed var(--line-2);background:var(--bg-deep);
+  font-size:13px;font-weight:700;line-height:19px;text-align:center;overflow:hidden;
+  transition:background .12s,border-color .12s}
+.cz-gap.aim{border-style:solid;border-color:var(--accent);background:var(--accent-pale)}
+.cz-gap.wrong{border-style:solid;border-color:var(--warn);background:var(--warn-pale);color:var(--warn-ink)}
+.cz-gap.filled{border-style:solid;border-color:var(--ok);background:var(--ok-pale);color:var(--ok-ink)}
+.cz-junk{flex:none;height:30px;display:flex;align-items:center;justify-content:center;gap:6px;
+  border-radius:9px;background:var(--warn-pale);border:1px solid var(--warn);color:var(--warn-ink);
+  font-size:11.5px;font-weight:600;overflow:hidden;
+  transition:height .3s,opacity .3s}
+.cz-msg{position:absolute;top:96px;left:10px;right:10px;z-index:32;pointer-events:none;
+  border-radius:11px;padding-block:8px;padding-inline:11px;font-size:12.5px;line-height:1.5;
+  color:#fff;box-shadow:var(--sh);background:var(--warn);animation:czmsg .2s}
+.cz-msg.calm{background:var(--ink-title)}
+.cz-msg b{color:#ffe9c9}
+.cz-msg.out{opacity:0;transition:opacity .3s}
+@keyframes czmsg{from{opacity:0;transform:translateY(-8px)}}
+.cz-rev{flex:none;max-height:154px;overflow-y:auto;text-align:left;background:#0000004d;border-radius:11px;
+  padding-block:9px;padding-inline:11px;margin-bottom:13px;width:100%;max-width:340px}
+.cz-rev p{margin:0 0 7px;font-size:12.5px;line-height:1.55;opacity:.92}
+.cz-rev p:last-child{margin-bottom:0}
+.cz-rev b{color:var(--accent-bright)}
+
+/* ================= 检查条件防线（塔防 / 植物大战僵尸） ================= */
+.dl-say{position:absolute;top:0;left:0;right:0;z-index:20;padding-block:7px;padding-inline:11px;
+  background:var(--panel-2);border-bottom:1px solid var(--line);font-size:12px;line-height:1.45;
+  color:var(--ink-soft);display:flex;gap:8px;align-items:center}
+.dl-say b{color:var(--accent-ink);font-weight:700;flex:none}
+.dl-say .pow{margin-left:auto;flex:none;font-family:var(--num);font-weight:700;font-size:14px;
+  color:var(--ink-title);background:var(--bg-deep);border-radius:var(--r-pill);
+  padding-block:2px;padding-inline:9px}
+.dl-field{position:absolute;top:34px;bottom:44px;left:8px;right:8px;z-index:4}
+.dl-slot{position:absolute;left:0;right:0;height:52px;border-radius:11px;
+  border:2px dashed var(--line-2);background:#0000000a;
+  display:flex;align-items:center;gap:8px;padding-inline:10px;font-size:12.5px;
+  color:var(--ink-faint);cursor:pointer;transition:border-color .15s,background .15s}
+:root[data-theme="dark"] .dl-slot,
+:root:not([data-theme="light"]) .dl-slot{background:#ffffff08}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .dl-slot{background:#0000000a}}
+.dl-slot.build:hover{border-color:var(--accent);background:var(--accent-pale)}
+.dl-slot.on{border-style:solid;border-color:var(--ok);background:var(--ok-pale);color:var(--ok-ink);
+  font-weight:600;cursor:default}
+.dl-slot.on.build{cursor:pointer}
+.dl-slot.fires{animation:dlfire .4s}
+@keyframes dlfire{40%{background:var(--ok);color:#fff;transform:scale(1.02)}}
+.dl-slot .no{flex:none;width:20px;height:20px;border-radius:50%;background:var(--bg-deep);
+  color:var(--ink-faint);font-family:var(--num);font-size:11px;font-weight:700;
+  display:grid;place-items:center}
+.dl-slot.on .no{background:var(--ok);color:#fff}
+.dl-slot .cost{margin-left:auto;flex:none;font-family:var(--num);font-size:11px;color:var(--ink-faint)}
+.dl-doc{position:absolute;left:0;right:0;border-radius:11px;background:var(--panel);
+  border:2px solid var(--line-2);box-shadow:var(--sh);padding-block:8px;padding-inline:11px;
+  font-size:13px;line-height:1.45;color:var(--ink);z-index:12;
+  transition:top .26s cubic-bezier(.3,.9,.4,1);min-height:48px;display:flex;align-items:center}
+.dl-doc .ask{display:block;font-size:11px;color:var(--ink-faint);margin-bottom:2px}
+.dl-doc.stop{animation:dlstop .38s forwards}
+@keyframes dlstop{50%{transform:scale(1.04);border-color:var(--ok);background:var(--ok-pale)}
+  100%{transform:scale(.82);opacity:0}}
+.dl-doc.pass{border-color:var(--ok);background:var(--ok-pale)}
+.dl-doc.leak{border-color:var(--warn);background:var(--warn-pale)}
+.dl-in{position:absolute;top:2px;left:0;right:0;z-index:2;text-align:center;font-size:10.5px;
+  letter-spacing:.04em;color:var(--ink-faint);pointer-events:none}
+.dl-reader{position:absolute;left:8px;right:8px;bottom:6px;height:36px;z-index:6;
+  border-radius:10px;background:var(--bg-deep);border:2px solid var(--line-2);
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  font-size:12px;font-weight:700;color:var(--ink-soft)}
+.dl-reader.hurt{animation:jxshake .32s;border-color:var(--warn);background:var(--warn-pale);color:var(--warn-ink)}
+.dl-reader.glad{border-color:var(--ok);background:var(--ok-pale);color:var(--ok-ink)}
+.dl-shop{position:absolute;left:8px;right:8px;top:38px;bottom:46px;z-index:30;border-radius:14px;
+  background:var(--panel);border:2px solid var(--line-2);box-shadow:var(--sh-lift);
+  padding-block:8px;padding-inline:9px;overflow-y:auto}
+.dl-shophd{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:11.5px;
+  font-weight:700;color:var(--ink-faint)}
+.dl-shophd .now{font-weight:400;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dl-shophd .x{flex:none;width:22px;height:22px;border-radius:50%;background:var(--bg-deep);
+  color:var(--ink-soft);font-size:15px;line-height:1;display:grid;place-items:center}
+.dl-pick{display:flex;align-items:center;gap:9px;width:100%;text-align:left;margin-bottom:5px;
+  border-radius:10px;border:2px solid var(--line);background:var(--panel-2);
+  padding-block:7px;padding-inline:10px;font-size:12.5px;line-height:1.3;color:var(--ink-title)}
+.dl-pick:last-child{margin-bottom:0}
+.dl-pick em{display:block;font-style:normal;font-size:10.5px;color:var(--ink-faint);margin-top:1px}
+.dl-pick .p{margin-left:auto;flex:none;font-family:var(--num);font-weight:700;font-size:13px;color:var(--accent-ink)}
+.dl-pick:disabled{opacity:.4}
+.dl-pick.off .p{color:var(--warn)}
+.dl-pick:active:not(:disabled){transform:translateY(1px)}
+.dl-go{position:absolute;right:8px;bottom:48px;z-index:28;border-radius:var(--r-pill);
+  background:var(--accent);color:#fff;font-weight:700;font-size:14px;letter-spacing:.06em;
+  padding-block:10px;padding-inline:20px;border-bottom:3px solid #0000004d}
+.dl-go:active{transform:translateY(2px);border-bottom-width:1px}
+.dl-hint{position:absolute;left:8px;bottom:52px;z-index:26;font-size:11.5px;color:var(--ink-faint);
+  max-width:58%;line-height:1.4}
+.dl-rev{max-height:150px;overflow-y:auto;text-align:left;background:#0000004d;border-radius:11px;
+  padding-block:9px;padding-inline:11px;margin-bottom:13px;width:100%;max-width:340px;flex:none}
+.dl-rev p{margin:0 0 8px;font-size:12px;line-height:1.5;opacity:.93}
+.dl-rev p:last-child{margin-bottom:0}
+.dl-rev b{color:var(--accent-bright)}
+
+/* ================= 值班室（Papers, Please 的一整天） ================= */
+.sf-news{position:absolute;top:0;left:0;right:0;z-index:18;padding-block:8px;padding-inline:11px;
+  background:var(--accent-pale);border-bottom:2px solid var(--accent);
+  font-size:12px;line-height:1.5;color:var(--accent-ink)}
+:root[data-theme="dark"] .sf-news,
+:root:not([data-theme="light"]) .sf-news{color:var(--ink-title)}
+.sf-news b{font-weight:700}
+.sf-news .d{display:block;font-family:var(--num);font-size:10.5px;letter-spacing:.12em;
+  font-weight:700;opacity:.75;margin-bottom:2px}
+.sf-body{position:absolute;left:8px;right:8px;bottom:6px;z-index:6;display:flex;flex-direction:column;gap:7px}
+.sf-book{border-radius:12px;background:var(--panel-2);border:1px solid var(--line);
+  padding-block:7px;padding-inline:8px}
+.sf-book h6{margin:0 0 5px;font-size:10.5px;font-family:var(--num);letter-spacing:.1em;
+  color:var(--ink-faint);font-weight:700;display:flex;gap:6px;align-items:center}
+.sf-book h6 i{font-style:normal;margin-left:auto;font-family:var(--zh);letter-spacing:0;font-weight:400}
+.sf-rule{display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  padding-block:5px;padding-inline:5px;border-radius:8px;font-size:12.5px;line-height:1.3;
+  color:var(--ink);border:1px solid transparent}
+.sf-rule+.sf-rule{margin-top:2px}
+.sf-rule .bx{flex:none;width:19px;height:19px;border-radius:6px;background:var(--bg-deep);
+  border:1px solid var(--line-2);color:transparent;font-size:12px;font-weight:700;
+  display:grid;place-items:center;line-height:1}
+.sf-rule.yes .bx{background:var(--ok);border-color:var(--ok);color:#fff}
+.sf-rule.no  .bx{background:var(--warn);border-color:var(--warn);color:#fff}
+.sf-rule.fresh{border-color:var(--accent);background:var(--accent-pale)}
+.sf-rule.fresh::after{content:"新";flex:none;font-size:10px;font-weight:700;color:var(--accent-ink);
+  background:var(--panel);border-radius:5px;padding-inline:4px;margin-left:auto}
+.sf-rule.missed{border-color:var(--warn);background:var(--warn-pale)}
+.sf-rule em{font-style:normal;font-size:10.5px;color:var(--ink-faint);margin-left:4px}
+.sf-paper{border-radius:12px;background:var(--panel);border:2px solid var(--line-2);
+  box-shadow:var(--sh);padding-block:10px;padding-inline:11px;font-size:13.5px;line-height:1.55;
+  color:var(--ink);position:relative;min-height:74px;display:flex;flex-direction:column;justify-content:center}
+.sf-paper .ph{font-family:var(--num);font-size:10px;letter-spacing:.1em;color:var(--ink-faint);
+  margin-bottom:4px;font-weight:600;padding-right:62px}
+.sf-paper .ask{display:block;font-size:11px;color:var(--accent-ink);margin-bottom:3px;font-weight:600}
+.sf-paper.in{animation:sfin .3s}
+@keyframes sfin{from{opacity:0;transform:translateY(10px) rotate(-1deg)}}
+.sf-ink{position:absolute;right:8px;top:6px;transform:rotate(-11deg);
+  font-family:var(--num);font-weight:700;font-size:16px;letter-spacing:.08em;
+  border:3px solid;border-radius:7px;padding-block:2px;padding-inline:8px;opacity:0}
+.sf-ink.on{opacity:.85;animation:sfstamp .26s}
+.sf-ink.pass{color:var(--ok-ink);border-color:var(--ok)}
+.sf-ink.fail{color:var(--warn-ink);border-color:var(--warn)}
+@keyframes sfstamp{from{transform:rotate(-11deg) scale(2.4);opacity:0}}
+.sf-say{border-radius:11px;padding-block:7px;padding-inline:10px;font-size:12px;line-height:1.5;
+  color:#fff;background:var(--warn)}
+.sf-say.ok{background:var(--ok)}
+.sf-say b{color:#ffeccd}
+.sf-btns{display:flex;gap:8px}
+.sf-btn{flex:1;border-radius:11px;padding-block:11px;font-size:14.5px;font-weight:700;letter-spacing:.14em;
+  color:#fff;border-bottom:3px solid #0000004d}
+.sf-btn.pass{background:var(--ok)} .sf-btn.fail{background:var(--warn)}
+.sf-btn:active:not(:disabled){transform:translateY(2px);border-bottom-width:1px}
+.sf-btn:disabled{opacity:.45}
+.sf-rev{max-height:150px;overflow-y:auto;text-align:left;background:#0000004d;border-radius:11px;
+  padding-block:9px;padding-inline:11px;margin-bottom:13px;width:100%;max-width:340px;flex:none}
+.sf-rev p{margin:0 0 7px;font-size:12.5px;line-height:1.5;opacity:.93}
+.sf-rev p:last-child{margin-bottom:0}
+.sf-rev b{color:var(--accent-bright)}
+
+/* ================= 改一处（请求 → 产出 → 对照出处） ================= */
+.rf-top{position:absolute;top:0;left:0;right:0;z-index:20;padding-block:8px;padding-inline:11px;
+  background:var(--panel-2);border-bottom:2px solid var(--line-2);display:flex;gap:9px;align-items:flex-start}
+.rf-top .ask{flex:1;font-size:12.5px;line-height:1.5;color:var(--ink)}
+.rf-top .ask b{color:var(--accent-ink)}
+.rf-top .no{flex:none;font-size:10.5px;color:var(--ink-faint);letter-spacing:.12em}
+.rf-top .mv{flex:none;text-align:right;font-size:10.5px;color:var(--ink-faint);line-height:1.5}
+.rf-top .mv b{display:block;font-family:var(--num);font-size:17px;color:var(--ink-title)}
+.rf-body{position:absolute;left:8px;right:8px;top:56px;bottom:6px;z-index:5;
+  display:flex;flex-direction:column;gap:7px;overflow-y:auto;
+  touch-action:pan-y;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.rf-body::-webkit-scrollbar{width:0}
+.rf-src{flex:none;border-radius:10px;border:2px solid var(--berry);background:var(--berry-pale);
+  overflow:hidden}
+.rf-src button{width:100%;text-align:left;display:flex;gap:7px;align-items:center;
+  padding-block:7px;padding-inline:9px;font-size:11.5px;font-weight:700;color:var(--berry-ink)}
+.rf-src button .ch{margin-left:auto;font-weight:400;opacity:.8}
+.rf-src .in{padding-block:0 8px;padding-inline:9px;font-size:12px;line-height:1.6;color:var(--ink)}
+.rf-src .in em{display:block;font-style:normal;font-size:11px;color:var(--berry-ink);margin-top:5px}
+.rf-form{flex:none;border-radius:10px;background:var(--panel-2);border:1px solid var(--line);
+  padding-block:8px;padding-inline:9px}
+.rf-form h6{margin:0 0 6px;font-size:10.5px;letter-spacing:.12em;color:var(--ink-faint);font-weight:700}
+.rf-form h6 i{font-style:normal;font-weight:400;letter-spacing:0;margin-left:6px}
+.rf-kinds{display:flex;gap:6px;margin-bottom:9px}
+.rf-kind{flex:1;border-radius:8px;border:2px solid var(--line);background:var(--panel);
+  padding-block:8px;padding-inline:4px;font-size:12px;line-height:1.3;color:var(--ink);text-align:center}
+.rf-kind.on{border-color:var(--accent);background:var(--accent-pale);color:var(--accent-ink);font-weight:700}
+.rf-musts{display:flex;flex-wrap:wrap;gap:6px}
+.rf-must{border-radius:8px;border:2px solid var(--line);background:var(--panel);
+  padding-block:7px;padding-inline:10px;font-size:12px;color:var(--ink-faint);
+  display:flex;gap:6px;align-items:center}
+.rf-must .lk{font-size:11px;opacity:.75}
+.rf-must.open{color:var(--ink);border-color:var(--line-2)}
+.rf-must.on{border-color:var(--ok);background:var(--ok-pale);color:var(--ok-ink);font-weight:700}
+.rf-must.just{animation:rfjust .5s}
+@keyframes rfjust{40%{transform:scale(1.1);border-color:var(--accent)}}
+.rf-out{flex:none;border-radius:10px;border:2px solid var(--line-2);background:var(--panel);
+  box-shadow:var(--sh);padding-block:8px;padding-inline:9px}
+.rf-out h6{margin:0 0 6px;font-size:10.5px;letter-spacing:.12em;color:var(--ink-faint);font-weight:700}
+.rf-line{display:block;width:100%;text-align:left;border-radius:7px;border:2px solid transparent;
+  padding-block:6px;padding-inline:8px;font-size:13px;line-height:1.55;color:var(--ink);
+  margin-bottom:3px;position:relative}
+.rf-line:last-child{margin-bottom:0}
+.rf-line.tap:hover{border-color:var(--line-2);background:var(--panel-2)}
+.rf-line.fixed{background:var(--ok-pale);border-color:var(--ok);color:var(--ok-ink)}
+.rf-line.caught{background:var(--warn-pale);border-color:var(--warn);color:var(--warn-ink)}
+.rf-line.caught::after{content:"公告里没有这一句";display:block;font-size:10.5px;opacity:.85;margin-top:2px}
+.rf-line.fixed::after{content:"改好了 · 这句现在有出处";display:block;font-size:10.5px;opacity:.8;margin-top:2px}
+.rf-line.flash{animation:rfflash .6s}
+@keyframes rfflash{0%{background:var(--accent);color:#fff}60%{background:var(--ok-pale)}}
+.rf-line.no{animation:jxshake .32s}
+.rf-head{font-weight:700;color:var(--ink-title);padding-inline:8px;font-size:12.5px;margin-bottom:4px}
+.rf-check{flex:none;display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+  font-size:11.5px;color:var(--ink-faint);padding-inline:2px}
+.rf-check span{border-radius:var(--r-pill);border:1px solid var(--line-2);
+  padding-block:4px;padding-inline:9px}
+.rf-check span.ok{border-color:var(--ok);background:var(--ok-pale);color:var(--ok-ink);font-weight:700}
+.rf-check span.bad{border-color:var(--warn);color:var(--warn-ink)}
+.rf-say{flex:none;border-radius:9px;padding-block:7px;padding-inline:10px;font-size:12px;
+  line-height:1.5;color:#fff;background:var(--ink-title)}
+.rf-say.bad{background:var(--warn)} .rf-say.good{background:var(--ok)}
+.rf-say b{color:#ffe9c9}
+.rf-rev{max-height:150px;overflow-y:auto;text-align:left;background:#0000004d;border-radius:11px;
+  padding-block:9px;padding-inline:11px;margin-bottom:13px;width:100%;max-width:340px;flex:none}
+.rf-rev p{margin:0 0 7px;font-size:12px;line-height:1.5;opacity:.93}
+.rf-rev p:last-child{margin-bottom:0}
+.rf-rev b{color:var(--accent-bright)}
+
+/* ---------- 今天栽过的地方 ---------- */
+.tally{border-radius:10px;border:3px solid var(--line-2);background:var(--panel);
+  box-shadow:none;padding-block:11px;padding-inline:13px;margin-bottom:22px}
+.tally h4{margin:0 0 3px;font-family:var(--zh);font-weight:400;font-size:19px;color:var(--ink-title)}
+.tally p{margin:0;font-size:12.5px;line-height:1.6;color:var(--ink-faint)}
+.tally ol{list-style:none;margin:9px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
+.tally li{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink)}
+.tally li b{flex:none;font-family:var(--num);font-size:11px;color:var(--accent-ink);
+  min-width:22px;text-align:right}
+.tally li i{flex:1;font-style:normal}
+.tally li u{flex:none;height:9px;border-radius:var(--r-pill);text-decoration:none;
+  background:linear-gradient(90deg,var(--accent-bright),var(--accent));min-width:8px}
+</style>
+
+<link rel="stylesheet" href="presentation.css">
+<div class="page" id="page"></div>
+<script>
+window.AR=(function(){
+const el=(t,c,h)=>{const n=document.createElement(t);if(c)n.className=c;if(h!=null)n.innerHTML=h;return n};
+const esc=s=>String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rnd=(a,b)=>a+Math.random()*(b-a);
+let AC=null;
+function tone(fs,dur,type,vol){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+  if(AC.state==="suspended")AC.resume();
+  fs.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+i*0.05;
+    o.type=type||"square";o.frequency.setValueAtTime(f,t);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||0.07,t+0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+(dur||0.12));
+    o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+(dur||0.12)+0.02)})}catch(e){}}
+function noise(d,v){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+  if(AC.state==="suspended")AC.resume();
+  const n=Math.floor(AC.sampleRate*(d||0.12)),b=AC.createBuffer(1,n,AC.sampleRate),c=b.getChannelData(0);
+  for(let i=0;i<n;i++)c[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.4);
+  const s=AC.createBufferSource();s.buffer=b;const g=AC.createGain();g.gain.value=v||0.12;
+  s.connect(g);g.connect(AC.destination);s.start()}catch(e){}}
+const S={
+ zap:()=>tone([880,1320],.1,"square",.06), thud:()=>{noise(.14,.16);tone([110,80],.18,"sine",.12)},
+ pew:()=>tone([1200,900],.05,"square",.03), boom:()=>{noise(.3,.22);tone([90,60],.3,"sine",.14)},
+ dot:(i)=>tone([520+((i||0)%8)*40],.05,"square",.04), pow:()=>tone([392,523,659,784],.3,"square",.07),
+ hurt:()=>tone([200,140],.24,"sawtooth",.08), over:()=>tone([392,330,262,196],.45,"square",.08),
+ up:(i)=>tone([392*Math.pow(2,(i||0)/12)],.1,"square",.05), tick:()=>tone([700],.03,"square",.025)
+};
+const buzz=m=>{try{navigator.vibrate&&navigator.vibrate(m)}catch(e){}};
+function burst(x,y,color,n){
+  for(let i=0;i<(n||12);i++){
+    const p=el("div");const a=Math.random()*Math.PI*2,v=24+Math.random()*60,sz=4+Math.random()*6;
+    p.style.cssText="position:fixed;left:"+x+"px;top:"+y+"px;width:"+sz+"px;height:"+sz+
+      "px;border-radius:50%;background:"+color+";pointer-events:none;z-index:9999";
+    document.body.appendChild(p);
+    p.animate([{transform:"translate(-50%,-50%) scale(1)",opacity:1},
+      {transform:"translate("+(Math.cos(a)*v-50)+"%,"+(Math.sin(a)*v+30-50)+"%) scale(.2)",opacity:0}],
+      {duration:420+Math.random()*300,easing:"cubic-bezier(.2,.8,.4,1)"}).onfinish=()=>p.remove();
+  }
+}
+function floatTag(x,y,text,color){
+  const t=el("div",null,esc(text));
+  t.style.cssText="position:fixed;left:"+x+"px;top:"+y+"px;pointer-events:none;z-index:9999;"+
+    "font-family:var(--num);font-weight:700;font-size:17px;color:"+(color||"var(--ok)")+";text-shadow:0 2px 6px #0004";
+  document.body.appendChild(t);
+  t.animate([{transform:"translate(-50%,0) scale(.7)",opacity:0},{transform:"translate(-50%,-18px) scale(1.1)",opacity:1,offset:.25},
+    {transform:"translate(-50%,-54px) scale(1)",opacity:0}],{duration:820,easing:"ease-out"}).onfinish=()=>t.remove();
+}
+const shakeEl=n=>{if(!n)return;n.animate([{transform:"translate(0,0)"},{transform:"translate(-5px,3px)"},
+  {transform:"translate(4px,-3px)"},{transform:"translate(-2px,1px)"},{transform:"translate(0,0)"}],{duration:260})};
+
+/* ---------- 机柜 ---------- */
+function cabinet(page,o){
+  const c=el("div","cab");
+  c.innerHTML='<div class="cabhd"><div class="from">灵感 · '+esc(o.from)+"</div>"+
+    "<h3>"+esc(o.title)+"<code>"+esc(o.id)+"</code></h3>"+
+    '<p class="how"><b>怎么玩：</b>'+o.how+"</p></div>";
+  const hud=el("div","hud"); const tb=el("div","timebar","<i></i>");
+  const screen=el("div","screen"); screen.style.height=(o.h||320)+"px";
+  c.appendChild(hud); c.appendChild(tb); c.appendChild(screen);
+  if(o.note)c.appendChild(el("div","note2",o.note));
+  const sp=el("details","spec");
+  sp.innerHTML="<summary>它教什么 · 用的是哪一课</summary><div class='in'>"+o.spec+"</div>";
+  c.appendChild(sp); page.appendChild(c);
+  let gen=0;
+  const api={
+    screen:screen,
+    gen:()=>gen,
+    alive(g){return g===gen},
+    hud(h){hud.innerHTML=h},
+    time(p){tb.querySelector("i").style.width=clamp(p*100,0,100)+"%"},
+    clear(){ [...screen.children].forEach(n=>{if(!n.classList.contains("keep"))n.remove()}) },
+    overlay(html,btn,fn){
+      const ov=el("div","overlay",html);
+      if(btn){const b=el("button","playbtn",esc(btn));
+        /* 游戏按钮吃 pointerdown，不等 click——少一帧延迟，也不怕 click 被吞 */
+        let fired=false;
+        const go=e=>{ if(fired)return; fired=true; e&&e.preventDefault&&e.preventDefault();
+          ov.remove(); fn&&fn() };
+        b.addEventListener("pointerdown",go); b.addEventListener("click",go);
+        ov.appendChild(b)}
+      screen.appendChild(ov); return ov;
+    },
+    restart(){ gen++; api.clear(); o.build(screen,api,gen) }
+  };
+  gen++; o.build(screen,api,gen);
+  return api;
+}
+/* ---------- 一本共用的账本 ----------
+   八个机柜各玩各的，但栽的地方是同几条。记到一起，才看得出来「我今天最常栽在哪」。
+   这也是这批组件离「跨天保持」最近的一步：至少在一次会期里，错误是累积可见的。 */
+const TALLY={}; let tallyCb=null;
+function note(label){ if(!label)return; TALLY[label]=(TALLY[label]||0)+1; tallyCb&&tallyCb(TALLY) }
+function onTally(fn){ tallyCb=fn; fn(TALLY) }
+return {el:el,esc:esc,clamp:clamp,rnd:rnd,S:S,buzz:buzz,burst:burst,floatTag:floatTag,
+  shakeEl:shakeEl,cabinet:cabinet,note:note,onTally:onTally,TALLY:TALLY};
+})();
+</script>
+
+<script>
+window.GAMES1=(function(){
+const A=window.AR, el=A.el, esc=A.esc, clamp=A.clamp, rnd=A.rnd, S=A.S;
+
+/* ==================================================================
+   1 · 分类落块（俄罗斯方块的逻辑）
+   ================================================================== */
+const STACK_ITEMS=[
+ ["地球在月面上方",0],["天空是黑色的",0],["月面是灰白色的",0],["地球是蓝白色的",0],
+ ["拍摄于 1968 年 12 月 24 日",1],["Bill Anders 拍摄",1],["阿波罗 8 号绕月飞行",1],["这是官方图像，非 AI 生成",1],
+ ["按快门时他屏住了呼吸",2],["这是他最满意的一张",2],["人类拍过的最伟大照片",2],["当时舱内一片寂静",2]
+];
+const STACK_LANES=["看照片就知道","查 NASA 记录","两边都查不到"];
+function gStack(screen,api,gen){
+  const lanes=el("div","lanes");lanes.style.gridTemplateColumns="repeat(3,1fr)";
+  STACK_LANES.forEach(t=>{const l=el("div","lane",'<div class="lh">'+esc(t)+"</div>");lanes.appendChild(l)});
+  screen.appendChild(lanes);
+  const btns=el("div","lanebtns");btns.style.gridTemplateColumns="repeat(3,1fr)";
+  const bs=STACK_LANES.map((t,i)=>{const b=el("button","lanebtn",esc(t));
+    b.onclick=()=>drop(i);btns.appendChild(b);return b});
+  screen.appendChild(btns);
+  const piles=[[],[],[]];
+  let score=0,combo=0,best=0,speed=.42,cur=null,y=0,raf=0,idx=0,order=[],playing=false,cleared=0;
+  const BOT=()=>screen.clientHeight-54;
+  function hud(){api.hud('<span>分数 <b>'+score+"</b></span><span>连对 <b>"+combo+
+    '</b></span><span class="sp">堆积 <b>'+piles.reduce((n,p)=>n+p.length,0)+" / 9</b></span>")}
+  function next(){
+    if(idx>=order.length){ shuffle(); idx=0 }
+    const it=order[idx++];
+    cur=el("div","brick",esc(it[0])); cur._a=it[1];
+    cur.style.cssText="left:6%;right:6%;top:-8px";
+    screen.appendChild(cur); y=-8;
+  }
+  function shuffle(){ order=STACK_ITEMS.slice();
+    for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=order[i];order[i]=order[j];order[j]=t} }
+  function settle(lane,brick,ok){
+    const h=26,n=piles[lane].length;
+    brick.className="brick settled";
+    brick.style.cssText="left:calc("+(lane*33.33)+"% + 6px);width:calc(33.33% - 12px);bottom:"+(54+n*h)+"px;top:auto";
+    piles[lane].push(brick);
+    if(piles[lane].length>=3){ return true }
+    return false;
+  }
+  function drop(lane){
+    if(!playing||!cur)return;
+    const ok=cur._a===lane, b=cur, r=b.getBoundingClientRect();
+    cur=null;
+    if(ok){ combo++; best=Math.max(best,combo); cleared++;
+      const gain=10+(combo>=3?10:0); score+=gain;
+      b.classList.add("zap"); S.zap(); A.buzz(14);
+      A.burst(r.left+r.width/2,r.top+r.height/2,"var(--ok)",14);
+      A.floatTag(r.left+r.width/2,r.top,"+"+gain+(combo>=3?"　连对 "+combo:""),"var(--ok-ink)");
+      setTimeout(()=>b.remove(),340);
+      speed=Math.min(1.9,speed+0.045);
+    }else{
+      combo=0; S.thud(); A.buzz([12,50,12]); A.shakeEl(screen);
+      A.floatTag(r.left+r.width/2,r.top,STACK_LANES[b._a],"var(--warn)");
+      const full=settle(lane,b,false);
+      if(full||piles.reduce((n,p)=>n+p.length,0)>=9){ return over() }
+    }
+    hud(); next();
+  }
+  function step(){
+    if(!api.alive(gen)||!playing)return;
+    if(cur){ y+=speed; cur.style.top=y+"px";
+      if(y>=BOT()-40){ // 没选就自己落进最像的那一列？不——直接算漏掉
+        const b=cur,r=b.getBoundingClientRect();cur=null;combo=0;S.thud();A.shakeEl(screen);
+        A.floatTag(r.left+r.width/2,r.top,"漏了","var(--warn)");
+        const full=settle(b._a,b,false);
+        hud();
+        if(full||piles.reduce((n,p)=>n+p.length,0)>=9)return over();
+        next();
+      } }
+    raf=requestAnimationFrame(step);
+  }
+  function over(){
+    playing=false; S.over();
+    api.overlay('<div class="big">'+score+'</div><div class="sub">清掉 '+cleared+" 条 · 最长连对 "+best+"</div>"+
+      "<h4>堆起来的那些，是你没分清的</h4>"+
+      "<p>方块不会因为你答错就直接结束——它<b>堆在那一列</b>，你看着它涨。"+
+      "堆满就没地方放了。<br>最容易堆的是第三列：<b>两边都查不到</b>的那些，读起来最像事实。</p>","再来一局",()=>api.restart());
+  }
+  hud(); api.time(1);
+  api.overlay("<h4>分类落块</h4><p>说法从上面掉下来。<b>点下面三个按钮之一</b>，把它送进该去的那一类。"+
+    "<br>分对了它消失并加分；<b>分错了它会堆在那一列</b>——堆满就结束。越往后掉得越快。</p>","开始",()=>{
+      playing=true; shuffle(); idx=0; next(); cancelAnimationFrame(raf); raf=requestAnimationFrame(step);
+    });
+}
+
+/* ==================================================================
+   2 · 划切（水果忍者的逻辑）
+   ================================================================== */
+const SLICE_GOOD=["2023 年 10 月 21 日","晚 6 点到 9 点","马里兰州格林贝尔特","不用报名",
+ "戈达德访客中心","1968 年 12 月 24 日","Bill Anders 摄","阿波罗 8 号"];
+const SLICE_BOMB=["现场气氛十分热烈","这是当年最值得看的活动","快来参加吧！","观众赞不绝口",
+ "人类最伟大的一张照片","绝对不容错过"];
+function gSlice(screen,api,gen){
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("class","trail"); screen.appendChild(svg);
+  const path=document.createElementNS("http://www.w3.org/2000/svg","polyline");
+  path.setAttribute("fill","none");path.setAttribute("stroke","var(--accent)");
+  path.setAttribute("stroke-width","5");path.setAttribute("stroke-linecap","round");
+  path.setAttribute("stroke-linejoin","round");path.setAttribute("opacity",".85");
+  svg.appendChild(path);
+  let flies=[],pts=[],cutting=false,raf=0,playing=false;
+  let score=0,combo=0,best=0,missed=0,bombs=0,t0=0;
+  const wrongCuts=[];   /* 结算时逐句列出来，这才是复习 */
+  const DUR=60000;
+  function hud(){api.hud('<span>分数 <b>'+score+"</b></span><span>连切 <b>"+combo+
+    '</b></span><span class="sp">切到雷 <b>'+bombs+"</b></span>")}
+  function spawn(){
+    const bomb=Math.random()<0.34;
+    const txt=bomb?SLICE_BOMB[Math.floor(Math.random()*SLICE_BOMB.length)]
+      :SLICE_GOOD[Math.floor(Math.random()*SLICE_GOOD.length)];
+    const n=el("div","fly "+(bomb?"bomb":"good"),esc(txt));
+    const W=screen.clientWidth,H=screen.clientHeight;
+    const x=rnd(W*.15,W*.85);
+    n.style.left=x+"px"; n.style.top=H+"px"; n.style.transform="translate(-50%,0)";
+    screen.appendChild(n);
+    /* 不旋转，且到顶点会明显悬停——读不完的字，切了也没学到东西 */
+    flies.push({n:n,x:x,y:H,vx:rnd(-.42,.42),vy:-rnd(5.6,6.4),bomb:bomb,dead:false,hang:0});
+  }
+  function step(ts){
+    if(!api.alive(gen)||!playing)return;
+    if(!t0)t0=ts;
+    const left=1-(ts-t0)/DUR; api.time(left);
+    if(left<=0)return over();
+    if(Math.random()<0.034+0.02*(1-left))spawn();
+    const H=screen.clientHeight;
+    flies.forEach(f=>{
+      if(f.dead)return;
+      /* 接近顶点时几乎停住，留出约一秒把字读完 */
+      const near=Math.abs(f.vy)<1.5;
+      if(near&&f.hang<46){ f.hang++; f.n.classList.add("hangs"); }
+      else { f.n.classList.remove("hangs"); f.vy+=0.118; f.y+=f.vy; }
+      f.x+=f.vx;
+      f.n.style.left=f.x+"px"; f.n.style.top=f.y+"px";
+      if(f.y>H+50){ f.dead=true; f.n.remove();
+        if(!f.bomb){ missed++; combo=0; hud() } }
+    });
+    flies=flies.filter(f=>!f.dead);
+    raf=requestAnimationFrame(step);
+  }
+  function slashAt(x,y){
+    const r=screen.getBoundingClientRect();
+    flies.forEach(f=>{
+      if(f.dead)return;
+      const b=f.n.getBoundingClientRect();
+      if(x>=b.left-6&&x<=b.right+6&&y>=b.top-6&&y<=b.bottom+6){
+        f.dead=true; f.n.classList.add("wascut",f.bomb?"bomb":"good");
+        setTimeout(()=>{f.n.classList.add("cut");setTimeout(()=>f.n.remove(),300)},110);
+        if(f.bomb){ bombs++; combo=0; score=Math.max(0,score-25);
+          if(wrongCuts.indexOf(f.n.textContent)<0)wrongCuts.push(f.n.textContent);
+          S.boom(); A.buzz([20,60,20]);
+          A.shakeEl(screen); A.burst(x,y,"var(--warn)",26);
+          A.floatTag(x,y,"这句没有出处　−25","var(--warn)");
+        }else{ combo++; best=Math.max(best,combo);
+          const g=10+(combo>=4?10:0); score+=g; S.zap(); A.buzz(10);
+          A.burst(x,y,"var(--ok)",12); A.floatTag(x,y,"+"+g+(combo>=4?"　连切 "+combo:""),"var(--ok-ink)"); }
+        hud();
+      }
+    });
+  }
+  screen.addEventListener("pointerdown",e=>{if(!playing)return;cutting=true;pts=[];
+    try{screen.setPointerCapture(e.pointerId)}catch(_){}});
+  screen.addEventListener("pointermove",e=>{
+    if(!playing||!cutting)return;
+    const r=screen.getBoundingClientRect();
+    pts.push([e.clientX-r.left,e.clientY-r.top]); if(pts.length>14)pts.shift();
+    path.setAttribute("points",pts.map(p=>p.join(",")).join(" "));
+    slashAt(e.clientX,e.clientY);
+  });
+  const stop=()=>{cutting=false;pts=[];path.setAttribute("points","")};
+  screen.addEventListener("pointerup",stop); screen.addEventListener("pointercancel",stop);
+  function over(){
+    playing=false; S.over();
+    api.overlay('<div class="big">'+score+'</div><div class="sub">最长连切 '+best+" · 漏掉 "+missed+" · 收错 "+bombs+"</div>"+
+      "<h4>"+(bombs?"这几句你收下了，但它们核不了":"你一句没依据的都没收")+"</h4>"+
+      (wrongCuts.length?'<p style="text-align:left">'+wrongCuts.map(t=>"· <b>"+esc(t)+"</b>").join("<br>")+"</p>":"")+
+      "<p>所有卡片长得一模一样，<b>只能靠读字判断</b>。"+
+      (bombs?"上面这几句读起来最像结论——「热烈」「不容错过」「最伟大」。它们一个都打不开去核。"
+        :"你没被那几句漂亮话骗到。它们的共同点是：<b>说得最满，却一个都打不开去核。</b>")+"</p>",
+      "再来一局",()=>api.restart());
+  }
+  hud(); api.time(1);
+  api.overlay("<h4>划切</h4><p>句子会被抛上来。<b>按住拖动划过</b>那些能核对的（绿色）。"+
+    "<br><b>没有出处的说法别碰</b>——它们是没有出处的漂亮话，切中会炸。避开没有出处的说法才是对的。<br>60 秒。</p>","开始",()=>{
+      playing=true; t0=0; cancelAnimationFrame(raf); raf=requestAnimationFrame(step);
+    });
+}
+return [
+ {id:"stack",title:"分类落块",from:"俄罗斯方块",build:gStack,h:340,
+  how:"说法从上往下掉，<b>点底部三个按钮</b>把它送进该去的一类。分错的会堆在那一列，堆满结束。",
+  note:"<b>偷的是哪一条</b>：Tetris 最要紧的设计不是消行，是「<b>看得见但不致命的惩罚</b>」——你答错不会立刻结束，你是眼看着自己的错误堆起来。这正好是「没分清的东西会积压」的隐喻。",
+  spec:"<b>用的是</b>第 1 节《地出》的三分法，十二条说法。<br><b>操作</b>：只用点。鼠标和手指同一套，不用键盘。<br><b>载荷</b>：一批条目 + 三类归属。任何三分类的课都能直接装。"},
+ {id:"slice",title:"划切",from:"水果忍者",build:gSlice,h:360,
+  how:"句子被抛上来，<b>按住拖动划过</b>能核对的。<b>红色的别切</b>——切中会炸。",
+  note:"<b>偷的是哪一条</b>：水果忍者的炸弹之所以有效，是因为它和水果一样诱人。这里的「炸弹」是那几句<b>最漂亮、最肯定、最没有出处</b>的话——手的本能正是要练的那个东西。",
+  spec:"<b>用的是</b>第 3 节 NASA 公告里能核的事实，和 AI 自己加的形容词；混了第 1 节的记录事实。<br><b>操作</b>：按住拖。鼠标和手指同一套。<br><b>载荷</b>：一批能核的 + 一批没依据的。"}
+];
+})();
+</script>
+<script>
+window.GAMES2=(function(){
+const A=window.AR, el=A.el, esc=A.esc, clamp=A.clamp, rnd=A.rnd, S=A.S;
+
+/* ==================================================================
+   3 · 双武器拦截（小蜜蜂的逻辑）
+   ================================================================== */
+/* 敌人也不再是手写清单。两类属性各九个、三种中性问法（两类共用同一套问法，
+   所以问法本身不泄题），54 种组合——一局打七十来个也见不完，第二局不成记忆。
+   判断的规矩始终只有一条：这件事能不能从画面本身看出来。 */
+const PIC_A=["地球的位置","天空的颜色","地球的颜色","月面的颜色","月面上的环形山",
+ "地球露出多少","有没有星星","地球偏左还是偏右","月面占多大"];
+const REC_A=["拍摄日期","摄影者是谁","哪次任务","是不是官方图像","用的哪台相机",
+ "绕月第几圈","有没有版权说明","当时飞到哪儿","档案编号"];
+const Q_FORM=[a=>a, a=>"这张照片："+a, a=>"问一下："+a];
+function rollFoes(n){
+  const all=[];
+  PIC_A.forEach(a=>Q_FORM.forEach(f=>all.push([f(a),"pic"])));
+  REC_A.forEach(a=>Q_FORM.forEach(f=>all.push([f(a),"rec"])));
+  for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));
+    const t=all[i];all[i]=all[j];all[j]=t}
+  /* 两类各来一半，别让某一波全是同一类——那样站一边就能过 */
+  const pic=all.filter(x=>x[1]==="pic"), rec=all.filter(x=>x[1]==="rec"), out=[];
+  for(let i=0;i<n;i++) out.push(i%2?rec[Math.floor(i/2)%rec.length]:pic[Math.floor(i/2)%pic.length]);
+  for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));
+    const t=out[i];out[i]=out[j];out[j]=t}
+  return out;
+}
+
+function gInvaders(screen,api,gen){
+  const WAVES=10, CHALLENGE=[5,10];   /* 第 5、10 波是挑战关：不下压，限时清场 */
+  const band=el("div","bandrow",'<div class="bl">看照片</div><div class="br">查记录</div>');
+  screen.appendChild(band);
+  const ship=el("div","ship",'<div class="body"></div>');
+  screen.appendChild(ship);
+  let sx=0.5,mode="pic",foes=[],shots=[],raf=0,playing=false,lives=3,score=0,killed=0,
+      t=0,fire=0,wave=1,rate=22,slow=1,lastDive=0,chT=0,wrongs=[],dove=0,paused=false;
+  const isCh=()=>CHALLENGE.indexOf(wave)>=0;
+  function hud(){ api.hud('<span>分数 <b>'+score+"</b></span><span>第 <b>"+wave+" / "+WAVES+
+    (isCh()?" 挑战":"")+'</b> 波</span><span class="sp">命 </span><span class="life">'+
+    [0,1,2,3].map(i=>'<i class="'+(i<lives?"":"out")+'"></i>').join("")+"</span>") }
+  function setShip(){ const W=screen.clientWidth;
+    ship.style.left=(sx*W)+"px"; mode=sx<0.5?"pic":"rec";
+    ship.classList.toggle("rec",mode==="rec") }
+  function pt(e){ const r=screen.getBoundingClientRect();
+    sx=clamp((e.clientX-r.left)/r.width,0.05,0.95); setShip() }
+  screen.addEventListener("pointermove",e=>{if(playing)pt(e)});
+  screen.addEventListener("pointerdown",e=>{if(playing){pt(e);try{screen.setPointerCapture(e.pointerId)}catch(_){}}});
+  function spawn(){
+    const n=isCh()?6:Math.min(4+Math.floor(wave/1.1),9);
+    rollFoes(n).forEach((f,i)=>{
+      const e=el("div","foe",esc(f[0])); e.dataset.kind=f[1];
+      e.style.left="10%"; e.style.top=(-30-i*46)+"px";
+      screen.appendChild(e);
+      foes.push({n:e,kind:f[1],txt:f[0],x:rnd(.15,.85),y:-30-i*46,
+        vx:(i%2?1:-1)*rnd(.0016,.0032),sp:1,dv:false});
+    });
+    chT=isCh()?t:0; lastDive=t;
+  }
+  function loseLife(){
+    lives--; S.hurt(); A.buzz([20,60,20]); A.shakeEl(screen); hud();
+    return lives<=0;
+  }
+  function step(ts){
+    if(!api.alive(gen)||!playing||paused)return;
+    t++;
+    const W=screen.clientWidth,H=screen.clientHeight;
+    if(t-fire>rate){ fire=t;
+      const b=el("div","shot"); b.style.background=mode==="pic"?"var(--ok)":"var(--berry)";
+      b.style.left=(sx*W-2)+"px"; b.style.top=(H-70)+"px";
+      screen.appendChild(b); shots.push({n:b,x:sx*W,y:H-70,kind:mode}); S.pew(); }
+    shots.forEach(s=>{ s.y-=7; s.n.style.top=s.y+"px"; if(s.y<-16){s.dead=true;s.n.remove()} });
+    /* 俯冲：每隔一阵子，编队里挑一个扑下来。打中俯冲中的那个双倍分。 */
+    if(!isCh()&&t-lastDive>200&&foes.length){
+      const cand=foes.filter(f=>!f.dv&&f.y>10);
+      if(cand.length){ const f=cand[Math.floor(Math.random()*cand.length)];
+        f.dv=true; f.n.classList.add("diving"); lastDive=t; S.pew() }
+    }
+    foes.forEach(f=>{
+      if(f.dv){ f.y+=(2.0+wave*0.08)*slow; f.x+=(sx-f.x)*0.035 }
+      else{
+        f.x+=f.vx*f.sp; if(f.x<.12||f.x>.88){f.vx*=-1}
+        if(!isCh())f.y+=(0.28*f.sp+wave*0.03)*slow;
+        else f.y=clamp(f.y+Math.sin((t+f.x*90)/40)*0.35,20,H-150);
+      }
+      f.n.style.left=(f.x*W)+"px"; f.n.style.top=f.y+"px";
+      f.n.style.transform="translateX(-50%)";
+      if(f.y>H-78){ f.dead=true; f.n.remove();
+        if(!isCh()&&loseLife())return over(false) }
+      shots.forEach(s=>{
+        if(s.dead||f.dead||f.y<6)return;   /* 还没进场 = 还读不到 = 打不中 */
+        const b=f.n.getBoundingClientRect(), r=screen.getBoundingClientRect();
+        const bx=b.left-r.left+b.width/2, by=b.top-r.top+b.height/2;
+        if(Math.abs(s.x-bx)<b.width/2+6&&Math.abs(s.y-by)<b.height/2+8){
+          s.dead=true; s.n.remove();
+          if(s.kind===f.kind){ f.dead=true; killed++;
+            const g=f.dv?30:15; score+=g; if(f.dv)dove++;
+            S.zap(); A.buzz(12); A.burst(b.left+b.width/2,b.top+b.height/2,
+              f.kind==="pic"?"var(--ok)":"var(--berry)",f.dv?22:14);
+            A.floatTag(b.left+b.width/2,b.top,"+"+g+(f.dv?"　打下俯冲":""),"var(--ok-ink)");
+            f.n.remove(); hud(); }
+          else{ f.sp=Math.min(2.6,f.sp+0.55);
+            /* 打错了才揭示它到底该用哪种方式——这才是纠正 */
+            f.n.classList.add("revealed",f.kind);
+            f.n.classList.remove("hurt");void f.n.offsetWidth;
+            f.n.classList.add("hurt"); S.hurt(); A.buzz(8);
+            if(!wrongs.some(w=>w[0]===f.txt))wrongs.push([f.txt,f.kind]);
+            A.note(f.kind==="pic"?"该看照片的，跑去查记录":"该查记录的，以为看照片就行");
+            A.floatTag(b.left+b.width/2,b.top,
+              f.kind==="pic"?"这个看照片就知道":"这个得查记录","var(--warn)"); }
+        }
+      });
+    });
+    shots=shots.filter(s=>!s.dead); foes=foes.filter(f=>!f.dead);
+    if(isCh()){
+      const left=1-(t-chT)/(12*60); api.time(clamp(left,0,1));
+      if(left<=0&&foes.length){ foes.forEach(f=>f.n.remove()); foes=[] }
+    } else api.time(lives/4);
+    if(!foes.length){
+      if(wave>=WAVES)return over(true);
+      return between();
+    }
+    raf=requestAnimationFrame(step);
+  }
+  /* 波间三选一：调研里说这是把一局从一分钟拉到三分钟最有效的那件事 */
+  function between(){
+    paused=true; cancelAnimationFrame(raf);
+    const bonus=isCh()?"<p><b>挑战关过了 +60</b></p>":"";
+    if(isCh())score+=60;
+    const opts=[["射得更快","开火间隔缩短，手上更跟得上"],
+                ["补一条命","多挨一次撞"],
+                ["下一波慢 25%","给你多一点读字的时间"]];
+    const ov=api.overlay("<h4>第 "+wave+" 波清了</h4>"+bonus+
+      "<p>分数 <b>"+score+"</b> · 打下俯冲 <b>"+dove+"</b> 次<br>挑一样带进下一波：</p>","",null);
+    opts.forEach((o,i)=>{
+      const b=el("button","playbtn",o[0]);
+      b.style.cssText="margin-top:8px;font-size:14px;padding-block:10px;padding-inline:20px";
+      const go=e=>{ e&&e.preventDefault&&e.preventDefault();
+        if(i===0)rate=Math.max(11,rate-4);
+        if(i===1)lives=Math.min(4,lives+1);
+        if(i===2)slow=0.75;
+        ov.remove(); wave++; if(i!==2)slow=1;
+        paused=false; spawn(); hud();
+        cancelAnimationFrame(raf); raf=requestAnimationFrame(step) };
+      b.addEventListener("pointerdown",go); b.addEventListener("click",go);
+      ov.appendChild(b);
+    });
+  }
+  function over(win){
+    playing=false; paused=false; cancelAnimationFrame(raf); win?S.pow():S.over();
+    api.overlay('<div class="big">'+score+'</div><div class="sub">打掉 '+killed+" 条 · 打下俯冲 "+dove+
+      " 次 · 到第 "+wave+" / "+WAVES+" 波</div>"+
+      "<h4>"+(win?"十波全挡住了":"被压到底线了")+"</h4>"+
+      (wrongs.length?"<div class='sf-rev'>"+wrongs.slice(0,7).map(w=>
+        "<p>"+esc(w[0])+" — <b>"+(w[1]==="pic"?"看照片就知道":"得查记录")+"</b></p>").join("")+"</div>"
+        :"<p>一条都没用错工具。</p>")+
+      "<p>敌人<b>长得一模一样</b>，颜色不会告诉你答案——你只能读它写的那句话，"+
+      "然后决定：这件事<b>看照片就知道</b>，还是<b>非查记录不可</b>。"+
+      "<br>打错了它才会亮出自己的颜色，同时加速冲下来：<b>拿错工具去查，不是没进展，是更糟。</b></p>",
+      "再来一局",()=>api.restart());
+  }
+  setShip(); hud(); api.time(1);
+  api.overlay("<h4>双武器拦截</h4><p><b>移动手指或鼠标</b>，飞船跟着走，自动开火。"+
+    "<br>停在左半屏 = 用<b>看照片</b>这种方式；停在右半 = 用<b>查记录</b>这种方式。"+
+    "<br><b>敌人长得都一样，得读它写的字才知道该用哪种。</b>用错那条会加速。"+
+    "<br>隔一阵会有一个<b>脱离编队俯冲下来</b>——打下俯冲中的那个<b>双倍分</b>。"+
+    "<br>十波，第 5、10 波是<b>挑战关</b>：不下压，限时清场。每过一波挑一样强化。</p>","开始",()=>{
+      playing=true; paused=false; wave=1; rate=22; slow=1; lives=3; score=0; killed=0;
+      dove=0; wrongs=[]; foes.forEach(f=>f.n.remove()); foes=[];
+      spawn(); hud(); cancelAnimationFrame(raf); raf=requestAnimationFrame(step);
+    });
+}
+
+/* ==================================================================
+   4 · 追与被追（吃豆人的逻辑，去掉迷宫）
+   ================================================================== */
+/* 场上每一个东西都带字：收哪一个本身就是判断。
+   收错了，那句话当场变成追着你的东西——这就是「收下一句没依据的话」的代价。 */
+const FACTS=["1968-12-24 拍摄","Bill Anders 摄","阿波罗 8 号任务","地球在月面上方",
+ "天空是黑色的","地球呈蓝白色","月面灰白","NASA 官方图像"];
+const FLUFF=["人类最伟大的照片","他屏住了呼吸","最满意的一张","舱内一片寂静",
+ "震撼人心的构图","改变了人类的自我认知"];
+function gMaze(screen,api,gen){
+  let hero={x:.5,y:.86},tgt={x:.5,y:.86},tags=[],chase=[],big=null,raf=0,playing=false;
+  let score=0,armed=0,got=0,tookFluff=0,t0=0,total=0;
+  const DUR=60000;
+  const hn=el("div","hero"); screen.appendChild(hn);
+  function hud(){ api.hud('<span>分数 <b>'+score+"</b></span><span>收到事实 <b>"+got+" / "+total+
+    '</b></span><span class="sp">追你的 <b>'+chase.filter(g=>!g.dead).length+"</b></span>") }
+  function place(){
+    const pool=FACTS.map(t=>({t:t,ok:true})).concat(FLUFF.slice(0,4).map(t=>({t:t,ok:false})));
+    for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const x=pool[i];pool[i]=pool[j];pool[j]=x}
+    total=FACTS.length;
+    const cols=3, rows=Math.ceil(pool.length/cols);
+    pool.forEach((it,i)=>{
+      const cx=(i%cols+0.5)/cols, cy=(Math.floor(i/cols)+0.5)/rows;
+      const n=el("div","tag2",esc(it.t));
+      const p={x:clamp(cx+rnd(-.07,.07),.13,.87),y:clamp(cy*0.74+0.08+rnd(-.04,.04),.1,.72),n:n,t:it.t,ok:it.ok};
+      n.style.left=(p.x*100)+"%"; n.style.top=(p.y*100)+"%";
+      screen.appendChild(n); tags.push(p);
+    });
+    const b=el("div","bigp"); big={x:rnd(.25,.75),y:rnd(.76,.9),n:b};
+    b.style.left=(big.x*100)+"%"; b.style.top=(big.y*100)+"%"; screen.appendChild(b);
+    screen.appendChild(el("div","bigtip keep","橙色那颗 = NASA 原始记录"));
+  }
+  function makeChaser(t,x,y){
+    const n=el("div","ghost",esc(t));
+    n.style.left=(x*100)+"%"; n.style.top=(y*100)+"%";
+    screen.appendChild(n);
+    chase.push({x:x,y:y,n:n,sp:.0024,t:t});
+  }
+  function step(ts){
+    if(!api.alive(gen)||!playing)return;
+    if(!t0)t0=ts;
+    const left=1-(ts-t0)/DUR; api.time(left);
+    if(left<=0)return over(false);
+    if(armed>0)armed-=16;
+    hn.classList.toggle("armed",armed>0);
+    hero.x+=(tgt.x-hero.x)*.17; hero.y+=(tgt.y-hero.y)*.17;
+    hn.style.left=(hero.x*100)+"%"; hn.style.top=(hero.y*100)+"%";
+    const W=screen.clientWidth,H=screen.clientHeight;
+    const r=screen.getBoundingClientRect();
+    tags.forEach(p=>{ if(p.dead)return;
+      if(Math.hypot((p.x-hero.x)*W,(p.y-hero.y)*H)<28){
+        p.dead=true; p.n.remove();
+        if(p.ok){ got++; score+=10; S.dot(got); A.buzz(8);
+          A.burst(r.left+p.x*W,r.top+p.y*H,"var(--ok)",10);
+          A.floatTag(r.left+p.x*W,r.top+p.y*H,"+10","var(--ok-ink)");
+          if(got===total)return over(true);
+        }else{ tookFluff++; score=Math.max(0,score-15); S.hurt(); A.buzz([16,50,16]); A.shakeEl(screen);
+          A.burst(r.left+p.x*W,r.top+p.y*H,"var(--warn)",14);
+          A.floatTag(r.left+p.x*W,r.top+p.y*H,"这句核不了　−15","var(--warn)");
+          makeChaser(p.t,p.x,p.y); }
+        hud(); } });
+    if(big&&!big.dead&&Math.hypot((big.x-hero.x)*W,(big.y-hero.y)*H)<26){
+      big.dead=true; big.n.remove(); armed=8000; S.pow(); A.buzz([18,40,18]);
+      A.burst(r.left+big.x*W,r.top+big.y*H,"var(--accent)",22);
+      A.floatTag(r.left+big.x*W,r.top+big.y*H,"你手上有记录了","var(--accent-bright)"); }
+    chase.forEach(g=>{ if(g.dead)return;
+      const away=armed>0?-1:1;
+      const dx=(hero.x-g.x),dy=(hero.y-g.y),d=Math.hypot(dx,dy)||1;
+      g.x=clamp(g.x+away*dx/d*g.sp*(armed>0?.7:1.1),.06,.94);
+      g.y=clamp(g.y+away*dy/d*g.sp*(armed>0?.7:1.1),.08,.92);
+      g.n.style.left=(g.x*100)+"%"; g.n.style.top=(g.y*100)+"%";
+      g.n.classList.toggle("weak",armed>0);
+      if(Math.hypot((g.x-hero.x)*W,(g.y-hero.y)*H)<28){
+        if(armed>0){ g.dead=true; g.n.remove(); score+=30; S.pow(); A.buzz(14);
+          A.burst(r.left+g.x*W,r.top+g.y*H,"var(--berry)",18);
+          A.floatTag(r.left+g.x*W,r.top+g.y*H,"查过了，收掉　+30","var(--berry-ink)"); hud(); }
+        else{ score=Math.max(0,score-5); S.hurt(); A.buzz([12,40,12]); A.shakeEl(screen);
+          hero.x=.5; hero.y=.9; tgt.x=.5; tgt.y=.9; hud(); } } });
+    raf=requestAnimationFrame(step);
+  }
+  function over(win){
+    playing=false; cancelAnimationFrame(raf); win?S.pow():S.over();
+    const stuck=chase.filter(g=>!g.dead);
+    api.overlay('<div class="big">'+score+'</div><div class="sub">收到事实 '+got+" / "+total+" · 误收 "+tookFluff+"</div>"+
+      "<h4>"+(tookFluff?"你收下的那几句，后来一直在追你":"你一句核不了的都没收")+"</h4>"+
+      (stuck.length?'<p style="text-align:left">还在追你的：<br>'+stuck.map(g=>"· <b>"+esc(g.t)+"</b>").join("<br>")+"</p>":"")+
+      "<p>场上每一样东西都写着字，<b>颜色不会告诉你哪个该收</b>。"+
+      "收下一句核不了的话，它不会消失——<b>它变成一个跟着你的麻烦</b>。"+
+      "<br>而那颗橙色的是 NASA 原始记录：拿到它的 8 秒里，你才有资格去处理它们。</p>",
+      "再来一局",()=>api.restart());
+  }
+  function pt(e){ const r=screen.getBoundingClientRect();
+    tgt.x=clamp((e.clientX-r.left)/r.width,.04,.96);
+    tgt.y=clamp((e.clientY-r.top)/r.height,.06,.94) }
+  screen.addEventListener("pointermove",e=>{if(playing)pt(e)});
+  screen.addEventListener("pointerdown",e=>{if(playing){pt(e);try{screen.setPointerCapture(e.pointerId)}catch(_){}}});
+  place(); hud(); api.time(1);
+  api.overlay("<h4>追与被追</h4><p><b>按住拖动</b>，小人朝你的手指走。"+
+    "<br>场上散着十二句话，<b>都长一个样，得读了才知道该不该收</b>。"+
+    "<br>收到能核对的事实加分；<b>收下一句核不了的，它会当场变成追着你的东西</b>。"+
+    "<br>吃到橙色那颗（原始记录），8 秒内你可以把它们收掉。</p>",
+    "开始",()=>{ playing=true; t0=0; cancelAnimationFrame(raf); raf=requestAnimationFrame(step) });
+}
+return [
+ {id:"invaders",title:"双武器拦截",from:"小蜜蜂 / Galaga",build:gInvaders,h:400,
+  how:"<b>移动手指或鼠标</b>，飞船跟着走并自动开火。停左半 = 看照片，停右半 = 查记录。<b>十波</b>，隔一阵有一个脱离编队<b>俯冲</b>下来，打下它双倍分。每过一波挑一样强化。",
+  note:"<b>做深了一轮</b>：原来四波、约一分钟。现在按调研改了三处——Galaga 真正的招牌是<b>俯冲</b>（编队里冲出来一个扑向你），<b>挑战关</b>（第 5、10 波不下压、限时清场，是节奏上的喘气），以及<b>波间三选一</b>（研究里说这是把一局拉长最有效的那件事）。真人完成时长未测；十波结构。",
+  spec:"<b>教什么</b>：第 1 节的那个二分——哪些问题看照片就知道，哪些非查记录不可。<br>"+
+    "<b>为什么俯冲值得加</b>：它把「优先级」变成了真的——<b>俯冲那个必须现在处理</b>，而你处理它的方式仍然只能靠读它写的字。压力上来了，判断没被绕过。<br>"+
+    "<b>为什么挑战关不扣命</b>：调研里说节奏要有尖峰也要有喘气，一路单调爬坡会把人耗干。<br>"+
+    "<b>三选一都不泄题</b>：射得更快／补一条命／下一波慢 25%——没有一个会告诉你某个敌人属于哪一类。<br>"+
+    "<b>结算</b>：逐条列出你用错工具的那几个，并补上它到底该怎么查。<br>"+
+    "<b>还没进场的打不到</b>：子弹只对已经露出来的敌人生效——每一次击落，都是<b>你读得到的那一个</b>。<br>"+
+    "<b>操作</b>：只用移动，自动开火，不用点也不用键盘。"},
+ {id:"chase",title:"追与被追",from:"吃豆人（只偷逻辑，不要迷宫）",build:gMaze,h:380,
+  how:"<b>按住拖动</b>。场上十二句话<b>长得一模一样</b>，读了才知道该不该收。收错的会变成追你的东西。",
+  note:"<b>改过一次</b>：第一版的绿点上没有字，收集纯粹是走位——玩得很欢，一个字没读。现在每一样东西都带字，<b>而且收错的那一句会当场变成追着你的麻烦</b>。这既是判断，也是「看得见但不致命的惩罚」：追你的越多，场面越难，但你不会立刻死。",
+  spec:"<b>教什么</b>：在一堆说法里认出哪些能核对——不靠颜色，只靠读。<br><b>为什么这样设计</b>：收下一句没依据的话，代价不是扣分就完了，是它<b>变成一个跟着你的麻烦</b>；而拿到原始记录（橙色那颗）之后你才有资格处理它们。<br><b>用的是</b>第 1 节：八条能核对的事实 + 四句漂亮空话 + NASA 记录页。"}
+];
+})();
+</script>
+
+<script>
+window.GAMES3=(function(){
+const A=window.AR, el=A.el, esc=A.esc, clamp=A.clamp, S=A.S;
+
+/* ==================================================================
+   5 · 填词消行（俄罗斯方块的逻辑，但方块是你挑的）
+   每一行是一句话，中间挖掉一个词。词条在上面，拖到缺口上松手。
+   位置对上 + 词也对上 = 这一行消掉。整副牌清完 = 赢。
+   ================================================================== */
+/* [第几节, 前文, 答案, 后文, 放错时的提示——只说这个空考什么，不说答案] */
+const CZ=[
+ [0,"「地球在月面上方」，","看照片","就能核对。","位置关系画面上直接看得见，不用翻任何记录。"],
+ [0,"「这张是谁拍的」，只能","查记录","。","照片上没有印着摄影者的名字。"],
+ [0,"「按快门时他屏住了呼吸」，这句","都查不到","。","画面证明不了它，NASA 的记录里也没有它。"],
+ [0,"「这是他最满意的一张」，也","都查不到","。","这是心里的事，照片和记录都留不下痕迹。"],
+ [0,"NASA 记的拍摄日期是 ","1968"," 年 12 月 24 日。","年份是记录里的事实，不是从画面推出来的。"],
+ [0,"拍下这张《地出》的宇航员是","安德斯","。","这个名字来自 NASA 的图像说明页。"],
+ [0,"照片拍于","阿波罗8号","绕月飞行途中。","任务编号写在 NASA 的记录里。"],
+ [0,"NASA 页面写明：官方图像，","非AI生成","。","这一句是出处页自己声明的，不是我们猜的。"],
+
+ [1,"中文讲话写成中文字，这叫","转写","。","语言没变，只是从声音变成了字。"],
+ [1,"中文讲话变成英文字，这叫","翻译","。","语言换了一种，意思要重新说一遍。"],
+ [1,"日语讲话写成日语字，要的是","转写","。","看输入和输出是不是同一种语言就够了。"],
+ [1,"法语讲话给只读英文的朋友看，要的是","翻译","。","读的人换了，语言就得跟着换。"],
+ [1,"想留原话，就写「按","原语言","写下来，不翻译」。","不写清这一句，它可能自作主张换语言。"],
+ [1,"检查转写稿，要把文字对回","录音","。","文字本身不会告诉你哪里听错了。"],
+ [1,"翻译要多查一样：","意思","有没有保留。","字都写出来了，意思仍然可能跑掉。"],
+ [1,"文字排得","整齐","，不等于每个字都听对了。","排版是外观，听得准不准是另一回事。"],
+
+ [2,"只说「介绍这次观月活动」，说清的只是","主题","。","它知道围绕什么写，不知道最后要交什么。"],
+ [2,"「写一条短消息」——你点名的是","成品","。","同一份材料可以做成好几样不同的东西。"],
+ [2,"「保留时间、地点、报名」——这三个是","条件","。","有了它你才有得可查，而不只能说「再好一点」。"],
+ [2,"NASA 公告写的时间是晚上","6点到9点","。","这是公告里的原话，属于不能丢的那几条。"],
+ [2,"这场观月夜","不用报名","，写请求时不能漏。","漏掉它，读者就不知道下一步该做什么。"],
+ [2,"活动办在格林贝尔特的","戈达德","访客中心。","地点写在公告里，不是我们替它补的。"],
+ [2,"这场活动","已经结束","，不能写成现在的邀请。","把结束的事写成邀请，是最容易出的那种错。"],
+ [2,"还没想好就先要两种短方案——这是","探索","阶段。","这一步不必假装已经有了完整规格。"]
+];
+const ALL_ANS=(function(){const m={};CZ.forEach(r=>{(m[r[0]]=m[r[0]]||[]).push(r[2])});
+  Object.keys(m).forEach(k=>m[k]=m[k].filter((v,i,a)=>a.indexOf(v)===i));return m})();
+
+function shuf(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));
+  const t=a[i];a[i]=a[j];a[j]=t}return a}
+
+function gCloze(screen,api,gen){
+  const TRAY=6, RH=50, JH=30, GP=7, TOP=90, PAD=16;
+
+  const line=el("div","cz-line","<i>涨到这条线就结束</i>"), well=el("div","cz-well");
+  const stack=el("div","cz-stack");
+  const tray=el("div","cz-tray");
+  const beam=el("div","cz-beam"); beam.hidden=true;
+  screen.appendChild(well); screen.appendChild(line); screen.appendChild(stack); screen.appendChild(tray); screen.appendChild(beam);
+
+  let deck=[], bag=[], score=0, combo=0, best=0, cleared=0, junk=0, wrongs=[],
+      interval=7600, last=0, raf=0, playing=false, msgT=0, dragging=null;
+
+  const rows=()=>[].slice.call(stack.querySelectorAll(".cz-row"));
+  const openRows=()=>rows().filter(r=>!r.classList.contains("going"));
+  function stackH(){let h=PAD;[].slice.call(stack.children).forEach(k=>{
+    h+=(k.classList.contains("cz-junk")?JH:RH)+GP});return h-GP}
+  const room=()=>screen.clientHeight-TOP-2;
+
+  /* ---------- HUD ---------- */
+  function hud(){
+    const left=deck.length+openRows().length;
+    api.hud('<span>分数 <b>'+score+"</b></span><span>连对 <b>"+combo+
+      '</b></span><span class="sp">还剩 <b>'+left+"</b> 句</span>")}
+
+  function msg(text,calm){
+    const old=screen.querySelector(".cz-msg"); if(old)old.remove();
+    const m=el("div","cz-msg"+(calm?" calm":""),text); screen.appendChild(m);
+    clearTimeout(msgT);
+    msgT=setTimeout(()=>{m.classList.add("out");setTimeout(()=>m.remove(),320)},calm?2000:3000);
+  }
+
+  /* ---------- 牌堆：按课分组，组内打乱，按课的顺序发 ---------- */
+  function build(){
+    deck=[];
+    [0,1,2].forEach(L=>{ shuf(CZ.filter(r=>r[0]===L)).forEach(r=>
+      deck.push({L:r[0],p:r[1],a:r[2],t:r[3],w:r[4],again:false})) });
+  }
+
+  /* ---------- 一行 ---------- */
+  function makeRow(s){
+    const r=el("div","cz-row");
+    const tx=el("div","tx");
+    tx.appendChild(document.createTextNode(s.p));
+    const g=el("i","cz-gap"); tx.appendChild(g);
+    tx.appendChild(document.createTextNode(s.t));
+    r.appendChild(tx); r._s=s; r._g=g;
+    return r;
+  }
+  function spawn(){
+    if(!deck.length)return false;
+    const s=deck.shift(), r=makeRow(s);
+    r.style.height="0px"; r.style.opacity="0";
+    stack.appendChild(r);
+    requestAnimationFrame(()=>{r.style.height=RH+"px";r.style.opacity="1"});
+    S.up(Math.min(7,openRows().length)); mark(); refill(); hud();
+    if(stackH()>room()){ over(false); return true }
+    return false;
+  }
+  function junkRow(word){
+    const j=el("div","cz-junk","「"+esc(word)+"」放错了");
+    j.style.height="0px";
+    stack.insertBefore(j,stack.firstChild);
+    requestAnimationFrame(()=>{j.style.height=JH+"px"});
+    junk++;
+    if(stackH()>room()){ over(false); return true }
+    return false;
+  }
+  function mark(){
+    const rs=rows(); rs.forEach((r,i)=>r.classList.toggle("top",i===0));
+    line.classList.toggle("hot", stackH()>room()-RH*1.2);
+  }
+
+  /* ---------- 词条盘 ---------- */
+  /* 盘子是六个固定的位置。用掉一个就地补一个——位置稳定，
+     而且盘里的顺序永远不跟场上行的顺序对上（否则「第一个词配第一行」就成了不读字的解法）。 */
+  function refill(){
+    const live=openRows();
+    const lesson=live.length?live[0]._s.L:0;
+    const keep=[];
+    live.forEach(r=>{const a=r._s.a; if(keep.indexOf(a)<0&&keep.length<TRAY)keep.push(a)});
+    while(bag.length<TRAY)bag.push(null);
+    bag.length=TRAY;
+    const placed={};
+    bag.forEach((w,i)=>{ if(!w)return;
+      if(keep.indexOf(w)>=0){ if(placed[w]===undefined)placed[w]=i; else bag[i]=null } });
+    const missing=keep.filter(w=>placed[w]===undefined);
+    let free=[]; bag.forEach((w,i)=>{if(w===null)free.push(i)});
+    if(free.length<missing.length)
+      bag.forEach((w,i)=>{ if(free.length<missing.length&&w!==null&&w!==dragging&&keep.indexOf(w)<0){
+        bag[i]=null;free.push(i)} });
+    free=shuf(free);
+    /* 第 k 行的答案，尽量不放在盘里第 k 个位置——把「第一块配第一行」这条捷径也掐掉 */
+    missing.forEach(w=>{
+      const k=keep.indexOf(w);
+      let j=free.findIndex(i=>i!==k); if(j<0)j=0;
+      const i=free.splice(j,1)[0]; if(i!==undefined)bag[i]=w;
+    });
+    bag.forEach((w,i)=>{
+      if(w!==null)return;
+      let pool=(ALL_ANS[lesson]||[]).filter(x=>bag.indexOf(x)<0);
+      if(!pool.length)pool=[0,1,2].reduce((a,k)=>a.concat(ALL_ANS[k]||[]),[]).filter(x=>bag.indexOf(x)<0);
+      bag[i]=pool.length?pool[Math.floor(Math.random()*pool.length)]:null;
+    });
+    /* 兜底：万一还是排成了「前 N 块正好是前 N 行的答案」，换两个位置 */
+    if(keep.length>1&&keep.every((a,i)=>bag[i]===a)){
+      const t=bag[0]; bag[0]=bag[TRAY-1]; bag[TRAY-1]=t;
+    }
+    drawTray();
+  }
+  function drawTray(){
+    const old={}; [].slice.call(tray.children).forEach(n=>{old[n.dataset.w]=1});
+    tray.innerHTML="";
+    bag.forEach(w=>{
+      if(!w)return;
+      const t=el("button","cz-tile",esc(w)); t.dataset.w=w;
+      if(!old[w])t.classList.add("fresh");
+      if(w===dragging)t.classList.add("held");
+      t.addEventListener("pointerdown",e=>grab(e,t));
+      tray.appendChild(t);
+    });
+  }
+
+  /* ---------- 拖 ---------- */
+  function targetAt(cx){
+    const rs=rows();
+    for(let i=0;i<rs.length;i++){
+      if(rs[i].classList.contains("going"))continue;
+      const b=rs[i]._g.getBoundingClientRect();
+      if(cx>=b.left-8&&cx<=b.right+8)return rs[i];
+    }
+    return null;
+  }
+  function aim(cx){
+    const sr=screen.getBoundingClientRect();
+    beam.hidden=false;
+    beam.style.left=(sr.width>8?clamp(cx-sr.left,2,sr.width-2):cx-sr.left)+"px";
+    const t=targetAt(cx);
+    rows().forEach(r=>r._g.classList.toggle("aim",r===t));
+    return t;
+  }
+  function unaim(){ beam.hidden=true; rows().forEach(r=>r._g.classList.remove("aim")) }
+
+  function grab(e,tile){
+    if(!playing)return;
+    e.preventDefault();
+    const w=tile.dataset.w;
+    const ghost=el("div","cz-tile cz-ghost",tile.innerHTML);
+    document.body.appendChild(ghost);
+    dragging=w; tile.classList.add("held");
+    const mv=ev=>{ghost.style.left=ev.clientX+"px";ghost.style.top=ev.clientY+"px";aim(ev.clientX)};
+    const up=ev=>{
+      window.removeEventListener("pointermove",mv);
+      window.removeEventListener("pointerup",up);
+      window.removeEventListener("pointercancel",up);
+      ghost.remove(); dragging=null; unaim();
+      [].slice.call(tray.children).forEach(n=>n.classList.remove("held"));
+      release(w,ev.clientX,ev.clientY);
+    };
+    window.addEventListener("pointermove",mv);
+    window.addEventListener("pointerup",up);
+    window.addEventListener("pointercancel",up);
+    mv(e);
+  }
+
+  function burn(w){ const i=bag.indexOf(w); if(i>=0)bag[i]=null }
+
+  function release(w,cx,cy){
+    if(!playing)return;
+    const sr=screen.getBoundingClientRect();
+    if(cy<sr.top+TOP){ msg("把词条<b>拖到下面某一句的缺口上</b>，再松手。",true); return }
+    const t=targetAt(cx);
+    if(!t){ msg("没对准任何一个缺口——<b>看一眼虚线落在哪</b>。",true); S.tick(); return }
+    if(t._s.a===w) good(t,w); else bad(t,w);
+  }
+
+  /* ---------- 对了 ---------- */
+  function good(row,w){
+    burn(w); row.classList.add("going");
+    row._g.classList.remove("aim");
+    row._g.classList.remove("aim","wrong"); row._g.classList.add("filled"); row._g.textContent=w;
+    const r=row.getBoundingClientRect();
+    S.zap(); A.buzz(16);
+    A.burst(r.left+r.width/2,r.top+r.height/2,"var(--ok)",16);
+    combo++; best=Math.max(best,combo); cleared++;
+    const risky=rows()[0]===row&&stackH()>room()-RH*2;
+    const gain=10+Math.min(15,(combo-1)*3)+(risky?8:0);
+    score+=gain;
+    A.floatTag(r.left+r.width/2,r.top+8,"+"+gain+(combo>1?"　连对 "+combo:""),"var(--ok-ink)");
+    if(row._s.again){ /* 错过一次、这次做对了——把它放回牌堆，隔一会儿再问一次 */
+      const s2={};for(const k in row._s)s2[k]=row._s[k]; s2.again=false; s2.re=true;
+      deck.splice(Math.min(deck.length,3+Math.floor(Math.random()*4)),0,s2);
+      msg("对了。<b>这一句你之前放错过，等下还会再来一次。</b>",true);
+    }
+    /* 停 750ms：让人把补完整的这句话读完，这才是这一下的收获 */
+    setTimeout(()=>{
+      if(!api.alive(gen))return;
+      row.classList.add("gone");
+      setTimeout(()=>{
+        if(!api.alive(gen))return;
+        row.remove(); mark();
+        if(!deck.length&&!openRows().length)return over(true);
+        floor(); refill(); hud();
+      },320);
+    },750);
+    refill(); hud();
+  }
+
+  /* ---------- 错了 ---------- */
+  function bad(row,w){
+    burn(w); combo=0;
+    row.classList.add("bad"); setTimeout(()=>row.classList.remove("bad"),340);
+    row._g.classList.remove("aim"); row._g.classList.add("wrong"); row._g.textContent=w;
+    setTimeout(()=>{if(row.isConnected){row._g.classList.remove("wrong");row._g.textContent=""}},900);
+    S.thud(); A.buzz([12,50,12]);
+    msg("<b>"+esc(w)+"</b> 不在这一句里。"+esc(row._s.w));
+    if(!row._s.again){ row._s.again=true; wrongs.push(row._s); A.note("填空放错位置") }
+    drawTray();
+    const dead=junkRow(w);
+    if(!dead){ mark(); refill(); hud() }
+  }
+
+  /* ---------- 地板：场上不足三句就立刻补一句，不让人干等 ---------- */
+  function floor(){
+    let guard=4;
+    while(openRows().length<3&&deck.length&&guard-->0){ if(spawn())return }
+  }
+
+  /* ---------- 结算 ---------- */
+  function review(){
+    if(!wrongs.length)return "<h4>一句没放错</h4><p>整副牌清完，没有一次放错位置。</p>";
+    const seen={},list=[];
+    wrongs.forEach(s=>{const k=s.p+s.a;if(!seen[k]){seen[k]=1;list.push(s)}});
+    return "<h4>这几句你放错过</h4><div class='cz-rev'>"+list.slice(0,8).map(s=>
+      "<p>"+esc(s.p)+"<b>"+esc(s.a)+"</b>"+esc(s.t)+"</p>").join("")+"</div>";
+  }
+  function over(win){
+    playing=false; cancelAnimationFrame(raf); unaim();
+    win?S.pow():S.over();
+    api.overlay('<div class="big">'+score+'</div><div class="sub">'+
+      (win?"整副牌清完":"堆到线了")+" · 消掉 "+cleared+" 行 · 最长连对 "+best+
+      (junk?" · 堆了 "+junk+" 块":"")+"</div>"+review()+
+      (win?"<p>没有无限模式：<b>这一副就是这三节课的全部内容</b>，清完就是清完了。</p>"
+         :"<p>放错的那一块不会立刻结束游戏——<b>它堆在最上面，你看着它涨</b>。"+
+           "上面那几句就是它们堆出来的。</p>"),
+      win?"再来一副":"再来一次",()=>api.restart());
+  }
+
+  /* ---------- 主循环 ---------- */
+  function step(ts){
+    if(!api.alive(gen)||!playing)return;
+    if(!last)last=ts;
+    if(!deck.length){ api.time(1); raf=requestAnimationFrame(step); return }
+    const p=(ts-last)/interval;
+    api.time(1-clamp(p,0,1));
+    if(p>=1){
+      last=ts;
+      interval=Math.max(3400,interval-170);
+      if(deck.length){ if(spawn())return }
+    }
+    raf=requestAnimationFrame(step);
+  }
+
+  hud(); api.time(1);
+  api.overlay("<h4>填词消行</h4>"+
+    "<p>每一行是一句话，<b>中间挖掉了一个词</b>。句子会一行一行从下面涨上来。"+
+    "<br>上面那六个词条<b>长得一模一样，只能靠读</b>。"+
+    "拖一个下来，对准某一句的缺口，松手。"+
+    "<br><b>位置对上、词也对上，这一行就消掉。</b>放错了它变成一块废砖压在最上面。"+
+    "<br>三节课一共 24 句，<b>全清完就赢</b>——它不是无限的。</p>","开始",()=>{
+      build(); bag=[]; score=0; combo=0; best=0; cleared=0; junk=0; wrongs=[];
+      interval=7600; last=0; playing=true;
+      spawn(); spawn(); spawn(); refill(); hud();
+      cancelAnimationFrame(raf); raf=requestAnimationFrame(step);
+    });
+}
+
+return [
+ {id:"cloze-tetris",title:"填词消行",from:"俄罗斯方块（但方块是你挑的）",build:gCloze,h:470,
+  how:"句子一行行从下面涨上来，每句缺一个词。<b>把上面的词条拖到缺口上松手</b>——位置和词都对，这一行才消。24 句清完就赢。",
+  note:"<b>和俄罗斯方块差在哪</b>：俄罗斯方块给你什么形状是随机的，你只能被动安排；这里<b>下一块是你挑的</b>——难的不是手，是选。"+
+    "另外它<b>有终点</b>：一副牌 24 句，清完就赢，不像俄罗斯方块只会越来越快直到你死。"+
+    "留下的是俄罗斯方块真正值钱的那条：<b>答错不立刻死，错误堆成看得见的高度</b>。",
+  spec:"<b>教什么</b>：从词条中选择并补全句子。这里提供了候选词，不能等同于没有选项提示的主动回忆。"+
+    "<br><b>怎么保证他必须读</b>：所有词条<b>同宽同样式</b>，所有缺口也<b>同宽</b>——长度对不上这条捷径被堵死了；词条在盘里的位置是随机插的，不跟着行的顺序走。"+
+    "<br><b>答对的那一下</b>：词填进去之后<b>停 750 毫秒</b>才消行，让你把补完整的这句话读完——奖励本身就是那句完整的话。"+
+    "<br><b>答错的那一下</b>：只告诉你<b>这个空考的是什么</b>，不告诉你答案，你还得再想一次；而且<b>这一句做对之后会被放回牌堆，隔几句再问你一遍</b>。"+
+    "<br><b>结算</b>：逐句列出你放错过的那些，把答案补在里面——那张表就是复习卡。"+
+    "<br><b>用的是</b>前三节全部：第 1 节《地出》八句、第 2 节转写与翻译八句、第 3 节主题成品条件八句。按课发牌，所以同一时间场上多半是同一课的句子，词条互相之间才像。"}
+];
+})();
+</script>
+<script>
+window.GAMES4=(function(){
+const A=window.AR, el=A.el, esc=A.esc, clamp=A.clamp, S=A.S;
+
+/* ==================================================================
+   6 · 检查条件防线（塔防 / 植物大战僵尸的逻辑）
+   稿子一份份往下走，你在四个位子上装「检查条件」。
+   一条检查只拦得住它负责的那一类毛病——装错位置不是伤害低，是根本不触发。
+   核查力有限，装不满六条，所以每一波都得先判断这一批最可能错在哪。
+   合格的稿子应该放它过去：检查不是越多越好。
+   ================================================================== */
+
+/* ==================================================================
+   公告生成器：防线和值班室共用
+   以前两边各自握着一张手写清单（18 份 / 22 份），一局就用完或见好几遍——
+   于是第二局玩的是记忆，不是判断。改成按「满足哪几条」现场拼，
+   32 种骨架 × 每处措辞随机，一局见不完，也背不住。
+   来源仍然只有一个：NASA 2023 观月夜公告的那几个事实。
+   ================================================================== */
+const NP={
+ t:["2023 年 10 月 21 日晚 6 点到 9 点","2023 年 10 月 21 日 18:00–21:00","2023 年 10 月 21 日晚 6–9 点"],
+ p:["马里兰州格林贝尔特的戈达德访客中心","戈达德太空飞行中心访客中心（马里兰州格林贝尔特）","格林贝尔特，戈达德访客中心"],
+ s:["不用报名","无需报名","不需要提前报名"],
+ past:["办过一场","举办过一次","举办了一场"],
+ now:["就要办一场","正在办","这周要办一场"],
+ call:["快来参加吧！","别错过！","名额有限，速来！"],
+ fluff:["这是当年最值得看的活动。","现场气氛十分热烈。","绝对不容错过。","观众赞不绝口。","这是人类最难忘的一夜。"],
+ en:["Oct 21 2023, 6–9 pm, Goddard Visitor Center, Greenbelt MD. No registration."]
+};
+const gp=a=>a[Math.floor(Math.random()*a.length)];
+/* has: {t,p,s,o,v,l} —— 满足哪几条。返回 {t:正文, b:[违反了哪几条], ask:前缀} */
+function notice(has){
+  const bad=[];
+  ["t","p","s","o","v","l"].forEach(k=>{ if(!has[k])bad.push(k) });
+  if(!has.l){
+    /* 语言不对：要中文给英文，或者要英文给中文 */
+    const wantCn=Math.random()<0.5;
+    return {t:wantCn?gp(NP.en):"2023 年 10 月 21 日晚 6–9 点，戈达德访客中心，不用报名。",
+            ask:wantCn?"这一份要的是中文稿":"这一份要的是英文译文", b:bad};
+  }
+  let out="";
+  if(has.t)out+=gp(NP.t)+"，";
+  if(has.p)out+=gp(NP.p)+"，";
+  out+="NASA "+(has.o?gp(NP.past):gp(NP.now))+"观月夜。";
+  if(has.s)out+=gp(NP.s)+"。";
+  if(!has.v)out+=gp(NP.fluff);
+  if(!has.o)out+=gp(NP.call);
+  return {t:out, b:bad};
+}
+/* 随机一份：按一个「该满足哪几条」的目标摇出来 */
+function rollNotice(pool,force){
+  const has={t:1,p:1,s:1,o:1,v:1,l:1};
+  const n=force!=null?force:Math.floor(Math.random()*3);   /* 0 = 合格 */
+  const ks=pool.slice();
+  for(let i=0;i<n&&ks.length;i++) has[ks.splice(Math.floor(Math.random()*ks.length),1)[0]]=0;
+  return notice(has);
+}
+
+const CHECKS=[
+ {k:"t",n:"有没有写时间",     c:3,e:"读者得知道哪天、几点"},
+ {k:"p",n:"有没有写地点",     c:3,e:"读者得知道去哪"},
+ {k:"s",n:"要不要报名说清了吗",c:3,e:"读者得知道下一步做什么"},
+ {k:"o",n:"结束的事别写成邀请", c:4,e:"2023 年办过的事，不能写成现在还能去"},
+ {k:"v",n:"这句话核得了吗",   c:5,e:"打得开出处的才算数"},
+ {k:"l",n:"语言是不是要的那种",c:4,e:"要原文还是要译文，得对上"}
+];
+const NAME={}; CHECKS.forEach(c=>NAME[c.k]=c.n);
+
+/* [正文, 违反了哪几条（空 = 合格，应当放行）, 属于第几节, 前缀(可选)] */
+const DOCS=[
+ ["快来参加戈达德访客中心的观月夜吧，不用报名！",["t","o"],2],
+ ["2023 年 10 月 21 日晚 6 到 9 点，办过一场观月活动。",["p","s"],2],
+ ["戈达德访客中心办过一次观月夜，不用报名。",["t"],2],
+ ["2023 年 10 月 21 日，马里兰州格林贝尔特，观月夜。",["s"],2],
+ ["2023 年 10 月 21 日晚 6–9 点，格林贝尔特戈达德访客中心，不用报名。",[],2],
+ ["戈达德访客中心 2023 年 10 月 21 日晚 6–9 点办过观月夜，无需报名。",[],2],
+ ["今晚来戈达德访客中心看月亮，6 点开始，不用报名。",["o"],2],
+ ["这是当年最值得看的一场活动，快来参加吧！",["v","t","o"],2],
+
+ ["这张照片拍摄于 1968 年 12 月 24 日，Bill Anders 摄。",[],0],
+ ["画面上，蓝白色的地球出现在灰白色月面上方。",[],0],
+ ["这张是阿波罗 8 号绕月飞行时拍的，NASA 官方图像。",[],0],
+ ["按快门时，他屏住了呼吸。",["v"],0],
+ ["这是人类拍过的最伟大的一张照片。",["v"],0],
+ ["拍完之后，舱内一片寂静。",["v"],0],
+
+ ["Tonight we watched the moon rise.",["l"],1,"你要的是中文逐字稿。它交来："],
+ ["今晚我们看了月亮升起来。",["l"],1,"你要的是英文译文。它交来："],
+ ["今晚我们看了月亮升起来。",[],1,"你要的是中文逐字稿。它交来："],
+ ["Tonight we watched the moon rise.",[],1,"你要的是英文译文。它交来："]
+];
+/* 波次不是单调爬坡：换题的那两波给一笔改装费，让「重新布防」是个决定而不是陷阱 */
+const WAVES=[
+ {L:2,n:4,say:"这一批是<b>活动通知</b>",              bonus:0},
+ {L:2,n:5,say:"还是<b>活动通知</b>，多一份",          bonus:0},
+ {L:2,n:5,say:"<b>活动通知</b>，这回有合格的混在里面", bonus:0},
+ {L:2,n:6,say:"<b>硬茬</b>：有一份同时犯三条",        bonus:0,boss:true},
+ {L:0,n:4,say:"换题：这一批是<b>照片说明</b>",        bonus:8},
+ {L:0,n:6,say:"<b>照片说明</b>，漂亮话变多了",        bonus:0},
+ {L:1,n:5,say:"换题：这一批是<b>录音转文字</b>",      bonus:8},
+ {L:-1,n:8,say:"<b>最后一波</b>：三节课混着来",       bonus:8,boss:true}
+];
+
+function shuf(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));
+  const t=a[i];a[i]=a[j];a[j]=t}return a}
+
+function gDefense(screen,api,gen){
+  const SLOTS=4, MAXLEAK=5, STEP=980;
+  const say=el("div","dl-say"), field=el("div","dl-field"), inbox=el("div","dl-in","AI 交来的稿子 &darr;"),
+        reader=el("div","dl-reader","读者收到的"), hint=el("div","dl-hint");
+  screen.appendChild(say); screen.appendChild(field);
+  screen.appendChild(reader); screen.appendChild(hint);
+
+  let queue0=[];
+  let slots=[null,null,null,null], power=12, score=0, wave=0, leaks=0,
+      stopped=0, delivered=0, docs=[], raf=0, timer=0, spawned=0, phase="build",
+      missed=[], shop=null, goBtn=null, handStop=0, overkill=0, wrongStops=[];
+
+  const slotEls=[];
+  for(let i=0;i<SLOTS;i++){
+    const n=el("div","dl-slot"); n.dataset.i=i;
+    n.addEventListener("pointerdown",e=>{e.preventDefault(); if(phase==="build")openShop(i)});
+    field.appendChild(n); slotEls.push(n);
+  }
+  field.appendChild(inbox);
+  function layout(){
+    const H=field.clientHeight, top=64, gap=(H-top-52-8)/(SLOTS-1);
+    slotEls.forEach((n,i)=>{n.style.top=(top+gap*i)+"px"});
+  }
+  const slotY=i=>parseFloat(slotEls[i].style.top||0);
+
+  function hint2(t){ hint.innerHTML=t; clearTimeout(hint._t);
+    hint._t=setTimeout(()=>{ if(phase==="wave")hint.innerHTML="读着觉得不对？<b>点那一份就地拦下</b>——花 3 核查力。" },2600) }
+  function drawSlots(){
+    slotEls.forEach((n,i)=>{
+      const k=slots[i];
+      n.className="dl-slot"+(k?" on":"")+(phase==="build"?" build":"");
+      n.innerHTML='<span class="no">'+(i+1)+"</span><span>"+
+        (k?esc(NAME[k]):(phase==="build"?"空位 · 点一下装一条":"空位"))+"</span>"+
+        (k&&phase==="build"?'<span class="cost">点一下撤掉</span>':"");
+    });
+  }
+  function hud(){
+    api.hud('<span>分数 <b>'+score+"</b></span><span>拦下 <b>"+stopped+
+      '</b></span><span class="sp">漏过 <b>'+leaks+" / "+MAXLEAK+"</b></span>");
+    say.querySelector(".pow").textContent="核查力 "+power;
+  }
+  function banner(txt){
+    say.innerHTML="<b>第 "+(wave+1)+" / 8 波</b><span>"+txt+'</span><span class="pow"></span>';
+  }
+
+  /* ---------- 布防 ---------- */
+  function openShop(i){
+    closeShop();
+    if(slots[i]){ /* 撤掉，退一半 */
+      const c=CHECKS.find(x=>x.k===slots[i]);
+      power+=Math.floor(c.c/2); slots[i]=null; S.tick(); drawSlots(); hud(); return;
+    }
+    shop=el("div","dl-shop");
+    const on=slots.filter(Boolean).map(k=>NAME[k]);
+    const hd=el("div","dl-shophd",
+      "<span>第 "+(i+1)+" 位</span><span class='now'>"+
+      (on.length?"已装："+esc(on.join(" · ")):"四个位子都还空着")+
+      "</span><button class='x'>&times;</button>");
+    hd.querySelector(".x").addEventListener("pointerdown",e=>{e.preventDefault();closeShop()});
+    shop.appendChild(hd);
+    CHECKS.forEach(c=>{
+      const used=slots.indexOf(c.k)>=0, poor=power<c.c;
+      const b=el("button","dl-pick"+(poor?" off":""),
+        "<span>"+esc(c.n)+"<em>"+esc(c.e)+"</em></span><span class='p'>"+c.c+"</span>");
+      b.disabled=used||poor;
+      if(used)b.querySelector(".p").textContent="已装";
+      b.addEventListener("pointerdown",e=>{e.preventDefault();
+        if(b.disabled)return;
+        power-=c.c; slots[i]=c.k; S.zap(); closeShop(); drawSlots(); hud()});
+      shop.appendChild(b);
+    });
+    screen.appendChild(shop);
+  }
+  function closeShop(){ if(shop){shop.remove();shop=null} }
+
+  function buildPhase(){
+    phase="build"; drawSlots();
+    const w=WAVES[wave]; banner(w.say); hud();
+    hint.innerHTML="装好了就开工。<b>核查力有限，装不满六条</b>——先想这一批最可能错在哪。<br>开工后还能<b>点单份手动拦</b>，但每次花 3 点。";
+    goBtn=el("button","dl-go","开　工");
+    goBtn.addEventListener("pointerdown",e=>{e.preventDefault();startWave()});
+    screen.appendChild(goBtn);
+  }
+
+  /* ---------- 一波 ---------- */
+    function pickDocs(w){
+    /* 按这一波的主题决定摇哪几条毛病；每一波都保证混进至少一份合格的 */
+    const poolByL={2:["t","p","s","o"],0:["v","o"],1:["l","v"],"-1":["t","p","s","o","v","l"]};
+    const pool=poolByL[w.L]||poolByL["-1"];
+    const out=[];
+    for(let i=0;i<w.n;i++){
+      let force=null;
+      if(i===0)force=0;                                  /* 第一份合格，逼你别过度设防 */
+      else if(w.boss&&i===1)force=3;                     /* 硬茬：同时犯三条 */
+      const d=rollNotice(pool,force);
+      out.push([d.t,d.b.filter(k=>pool.indexOf(k)>=0),w.L,d.ask]);
+    }
+    for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));
+      const t=out[i];out[i]=out[j];out[j]=t}
+    return out;
+  }
+  function startWave(){
+    closeShop(); if(goBtn){goBtn.remove();goBtn=null}
+    hint.innerHTML="读着觉得不对？<b>点那一份就地拦下</b>——花 3 核查力。";
+    phase="wave"; drawSlots();
+    const w=WAVES[wave];
+    const queue=pickDocs(w); queue0=queue;
+    spawned=0; docs=[]; const base=stopped+delivered+leaks;
+    power+=6+(w.bonus||0); hud();
+    clearInterval(timer);
+    let t=0; const total=queue.length; let done=0;
+    timer=setInterval(()=>{
+      if(!api.alive(gen))return clearInterval(timer);
+      if(phase!=="wave")return clearInterval(timer);
+      t++;
+      if(t%2===1&&spawned<queue.length){ spawn(queue[spawned++]) }
+      done=advance();
+      api.time(1-(stopped+delivered+leaks-base)/total);
+      if(spawned>=queue.length&&!docs.length){ clearInterval(timer); endWave() }
+    },STEP);
+  }
+  function spawn(d){
+    const n=el("div","dl-doc");
+    n.innerHTML=(d[3]?'<span class="ask">'+esc(d[3])+"</span>":"")+esc(d[0]);
+    n.style.top="0px";
+    /* 手动抽查：读了觉得有问题就点它。花 3 核查力——核查从来不是免费的。
+       拦对了跟自动拦一样；拦错了，你亲手弄丢了一份合格的交付。 */
+    const o2={n:n,d:d,lv:-1};
+    n.addEventListener("pointerdown",e=>{
+      e.preventDefault();
+      if(phase!=="wave"||o2.done)return;
+      if(power<3){ A.shakeEl(n); S.thud(); hint2("核查力不够了——手动抽查要花 3 点。"); return }
+      power-=3; o2.done=true;
+      const r=n.getBoundingClientRect(), bad=o2.d[1];
+      if(bad.length){
+        handStop++; stopped++; score+=18;
+        S.zap(); A.buzz(14); A.burst(r.left+r.width/2,r.top+r.height/2,"var(--ok)",16);
+        A.floatTag(r.left+r.width/2,r.top,"+18 手动拦下","var(--ok-ink)");
+        n.classList.add("stop");
+      }else{
+        overkill++; score=Math.max(0,score-10);
+        if(wrongStops.indexOf(o2.d[0])<0)wrongStops.push(o2.d[0]);
+        A.note("把合格的也拦下来");
+        S.hurt(); A.buzz([14,50,14]); A.shakeEl(screen);
+        A.floatTag(r.left+r.width/2,r.top,"这份是合格的　−10","var(--warn)");
+        n.classList.add("leak");
+        hint2("这一份没毛病，你把它拦了。<b>过度设防也有代价。</b>");
+      }
+      setTimeout(()=>n.remove(),380);
+      docs=docs.filter(x=>!x.done); hud();
+      if(spawned>=queue0.length&&!docs.length){ clearInterval(timer); endWave() }
+    });
+    field.appendChild(n);
+    docs.push(o2);
+  }
+  function advance(){
+    docs.forEach(o=>{
+      if(o.done)return;
+      o.lv++;
+      if(o.lv<SLOTS){
+        o.n.style.top=slotY(o.lv)+"px";
+        const k=slots[o.lv];
+        if(k&&o.d[1].indexOf(k)>=0){
+          o.done=true; stopped++; power+=2; score+=15;
+          slotEls[o.lv].classList.remove("fires");void slotEls[o.lv].offsetWidth;
+          slotEls[o.lv].classList.add("fires");
+          const r=o.n.getBoundingClientRect();
+          S.zap(); A.buzz(12); A.burst(r.left+r.width/2,r.top+r.height/2,"var(--ok)",14);
+          A.floatTag(r.left+r.width/2,r.top,"+15　"+NAME[k],"var(--ok-ink)");
+          o.n.classList.add("stop"); setTimeout(()=>o.n.remove(),380);
+          hud();
+        }
+      }else{
+        o.done=true;
+        const bad=o.d[1];
+        const r=o.n.getBoundingClientRect();
+        if(!bad.length){
+          delivered++; score+=20;
+          o.n.classList.add("pass");
+          reader.classList.remove("hurt");reader.classList.add("glad");
+          reader.textContent="交付了一份合格的　+20";
+          S.pow(); A.buzz(10);
+          A.floatTag(r.left+r.width/2,r.top,"+20 该放它过去","var(--ok-ink)");
+        }else{
+          leaks++;
+          o.n.classList.add("leak");
+          reader.classList.remove("glad");reader.classList.add("hurt");
+          reader.textContent="漏了：没人查「"+NAME[bad[0]]+"」";
+          S.hurt(); A.buzz([16,60,16]); A.shakeEl(screen);
+          A.floatTag(r.left+r.width/2,r.top,"漏了","var(--warn)");
+          if(!missed.some(m=>m[0]===o.d[0]))missed.push([o.d[0],bad.slice(),o.d[3]||""]);
+          bad.forEach(k=>A.note(NAME[k]));
+        }
+        setTimeout(()=>{o.n.remove();
+          reader.classList.remove("hurt","glad");reader.textContent="读者收到的"},1100);
+        hud();
+        if(leaks>=MAXLEAK&&phase==="wave"){ clearInterval(timer); over(false) }
+      }
+    });
+    docs=docs.filter(o=>!o.done);
+    return stopped+delivered+leaks;
+  }
+  function endWave(){
+    wave++;
+    if(wave>=WAVES.length)return over(true);
+    phase="build"; drawSlots();
+    api.overlay("<h4>第 "+wave+" 波挡住了</h4>"+
+      "<p>拦下 <b>"+stopped+"</b> 份 · 放行合格的 <b>"+delivered+"</b> 份 · 漏过 <b>"+leaks+" / "+MAXLEAK+"</b>"+
+      "<br>核查力 <b>"+power+"</b>，开工时再补 <b>6</b>"+
+      "<br><br>下一波 "+WAVES[wave].say+"。<b>可以重新布防</b>——撤掉一条退回一半。"+
+      (WAVES[wave].bonus?"<br><b>换题给一笔改装费 +"+WAVES[wave].bonus+"</b>，这一波值得重新想一遍装哪几条。":"")+"</p>",
+      "去布防",()=>{ buildPhase() });
+  }
+
+  /* ---------- 结算 ---------- */
+  function review(){
+    if(!missed.length)return "<h4>一份都没漏</h4><p>八波稿子，没有一份带着毛病走到读者面前。</p>";
+    return "<h4>漏过去的那几份</h4><div class='dl-rev'>"+missed.slice(0,7).map(m=>
+      "<p>"+esc(m[2]+m[0])+"<br><b>该被「"+m[1].map(k=>NAME[k]).join("」「")+"」拦住</b></p>").join("")+"</div>";
+  }
+  function over(win){
+    phase="over"; clearInterval(timer); cancelAnimationFrame(raf); closeShop();
+    if(goBtn){goBtn.remove();goBtn=null}
+    win?S.pow():S.over();
+    api.overlay('<div class="big">'+score+'</div><div class="sub">'+
+      (win?"八波全挡住":"漏过 "+leaks+" 份，到第 "+(wave+1)+" 波")+
+      " · 拦下 "+stopped+"（手动 "+handStop+"） · 放行 "+delivered+
+      (overkill?" · 误拦 "+overkill:"")+"</div>"+review()+
+      (wrongStops.length?"<h4>这几份你拦错了</h4><div class=\'dl-rev\'>"+
+        wrongStops.slice(0,4).map(t=>"<p>"+esc(t)+"<br><b>它没有毛病，本来该交出去</b></p>").join("")+"</div>":"")+
+      "<p>一条检查只拦得住<b>它负责的那一类</b>——装错位置不是伤害低，是根本不触发。"+
+      "<br>而合格的那几份<b>本来就该放它过去</b>：检查不是越多越好，是要对上你这一批在担心什么。</p>",
+      win?"再来一局":"再来一次",()=>api.restart());
+  }
+
+  layout(); drawSlots(); api.time(1);
+  say.innerHTML='<b>检查条件防线</b><span>装好检查，放稿子过来</span><span class="pow">核查力 12</span>';
+  api.overlay("<h4>检查条件防线</h4>"+
+    "<p>AI 交来的稿子会<b>一份份往下走</b>，走到底就等于读者收到了它。"+
+    "<br>你有<b>四个位子</b>，每个位子装一条检查条件。一条检查<b>只拦得住它负责的那一类毛病</b>——"+
+    "装「有没有写时间」，就只拦漏了时间的那些。"+
+    "<br><b>核查力有限，六条装不满四个位子</b>，每一波开工前先看公告，判断这一批最可能错在哪。"+
+    "<br><b>合格的稿子要放它过去</b>——那是交付，加分。漏过 5 份带毛病的就结束。八波。</p>",
+    "开始",()=>{ slots=[null,null,null,null]; power=12; score=0; wave=0; leaks=0;
+      stopped=0; delivered=0; missed=[]; docs=[];
+      layout(); buildPhase() });
+}
+
+/* ==================================================================
+   7 · 值班室（Papers, Please 的一整天）
+   五天，每天早上通告增删一条规矩。同一份稿子昨天该通过，今天可能就该打回——
+   这是这个游戏的全部要害：规矩会变，逐条核对的纪律不能变。
+   ================================================================== */
+const RULES=[
+ {k:"t",n:"必须写清时间",        e:"哪天、几点"},
+ {k:"p",n:"必须写清地点",        e:"在哪儿"},
+ {k:"s",n:"必须说要不要报名",     e:"读者下一步做什么"},
+ {k:"o",n:"结束的事不能写成邀请",  e:"2023 年办过的，别写成现在还能去"},
+ {k:"v",n:"每一句都得能核",       e:"打得开出处的才算数"},
+ {k:"l",n:"语言要对上要求",       e:"要原文还是要译文"}
+];
+const RN={}; RULES.forEach(r=>RN[r.k]=r.n);
+/* has 里写的是「这份稿子满足哪几条」。当天通过与否，由当天生效的规矩算出来 */
+const PAPERS=[
+ {t:"2023 年 10 月 21 日晚 6–9 点，格林贝尔特戈达德访客中心办过观月夜，不用报名。",
+  has:{t:1,p:1,s:1,o:1,v:1,l:1}},
+ {t:"快来参加戈达德访客中心的观月夜吧，现场有望远镜和专家讲解，不用报名！",
+  has:{t:0,p:1,s:1,o:0,v:1,l:1}},
+ {t:"2023 年 10 月 21 日晚 6–9 点，在戈达德访客中心办过一场观月活动。",
+  has:{t:1,p:1,s:0,o:1,v:1,l:1}},
+ {t:"2023 年 10 月 21 日晚 6 点到 9 点办过观月夜，不用报名。",
+  has:{t:1,p:0,s:1,o:1,v:1,l:1}},
+ {t:"戈达德访客中心办过一次观月夜，无需报名。这是当年最值得看的活动。",
+  has:{t:0,p:1,s:1,o:1,v:0,l:1}},
+ {t:"2023 年 10 月 21 日晚 6–9 点，格林贝尔特戈达德访客中心，不用报名。那一夜令人终身难忘。",
+  has:{t:1,p:1,s:1,o:1,v:0,l:1}},
+ {t:"今晚 6 点到 9 点，来格林贝尔特戈达德访客中心看月亮，不用报名。",
+  has:{t:1,p:1,s:1,o:0,v:1,l:1}},
+ {t:"Oct 21 2023, 6–9 pm, Goddard Visitor Center, Greenbelt MD. No registration.",
+  ask:"这一份要的是中文稿", has:{t:1,p:1,s:1,o:1,v:1,l:0}},
+ {t:"2023 年 10 月 21 日晚 6–9 点，格林贝尔特戈达德访客中心，不用报名。",
+  ask:"这一份要的是英文译文", has:{t:1,p:1,s:1,o:1,v:1,l:0}},
+ {t:"1968 年 12 月 24 日，Bill Anders 在阿波罗 8 号上拍下《地出》。NASA 官方图像。",
+  has:{t:1,p:1,s:1,o:1,v:1,l:1}},
+ {t:"按快门的那一刻，他屏住了呼吸，那是他最满意的一张。",
+  has:{t:0,p:0,s:1,o:1,v:0,l:1}}
+];
+const DAYS=[
+ {r:["t","p"],           add:["t","p"], n:4,
+  news:"第一天上岗。<b>两条规矩</b>：时间、地点。逐条看过再盖章。"},
+ {r:["t","p","s"],       add:["s"],     n:4,
+  news:"<b>新增一条</b>：必须说清要不要报名。昨天能过的，今天未必。"},
+ {r:["t","p","s","o"],   add:["o"],     n:5,
+  news:"<b>新增一条</b>：已经结束的活动，不能写成现在的邀请。"},
+ {r:["t","s","o","v"],   add:["v"], off:["p"], n:5,
+  news:"<b>地点这条今天停用</b>——上头说读者都知道在哪。<b>新增</b>：每一句都得能核。",
+  mid:{at:2, add:"p", news:"地点那条<b>现在起恢复</b>。手上这一份开始就按五条看。"}},
+ {r:["t","p","s","o","v","l"], add:["l"], back:["p"], n:5,
+  news:"<b>地点恢复</b>。<b>新增</b>：语言要对上要求。六条全开。",
+  mid:{at:2, off:"v", news:"「每一句都得能核」<b>暂停</b>。别再拿这一条打回。"}}
+];
+
+function gShift(screen,api,gen){
+  const news=el("div","sf-news"), body=el("div","sf-body");
+  screen.appendChild(news); screen.appendChild(body);
+  const book=el("div","sf-book"), paper=el("div","sf-paper"),
+        says=el("div","sf-say"), btns=el("div","sf-btns");
+  const bPass=el("button","sf-btn pass","通　过"), bFail=el("button","sf-btn fail","打　回");
+  btns.appendChild(bPass); btns.appendChild(bFail);
+  says.hidden=true;
+  body.appendChild(book); body.appendChild(paper); body.appendChild(says); body.appendChild(btns);
+
+  let day=0, idx=0, queue=[], marks={}, score=0, right=0, wrong=0,
+      playing=false, missTally={}, missed=[], locked=false;
+
+  let live=null;
+  const today=()=>live||DAYS[day];
+  function hud(){
+    api.hud('<span>第 <b>'+(day+1)+'</b> / 5 天</span><span>分数 <b>'+score+
+      '</b></span><span class="sp">盖对 <b>'+right+" / "+(right+wrong)+"</b></span>");
+  }
+  function shouldPass(p){ return today().r.every(k=>p.has[k]) }
+  function fails(p){ return today().r.filter(k=>!p.has[k]) }
+
+  function drawBook(){
+    const d=today();
+    book.innerHTML="<h6>今天生效的规矩 · "+d.r.length+" 条<i>看一条勾一下</i></h6>";
+    d.r.forEach(k=>{
+      const r=RULES.find(x=>x.k===k);
+      const b=el("button","sf-rule"+((d.add||[]).indexOf(k)>=0||(d.back||[]).indexOf(k)>=0?" fresh":"")+
+        (marks[k]==="yes"?" yes":marks[k]==="no"?" no":""),
+        '<span class="bx">'+(marks[k]==="no"?"&times;":"&#10003;")+"</span><span>"+esc(r.n)+
+        "<em>"+esc(r.e)+"</em></span>");
+      b.addEventListener("pointerdown",e=>{e.preventDefault(); if(locked)return;
+        marks[k]=marks[k]==="yes"?"no":(marks[k]==="no"?null:"yes");
+        S.tick(); drawBook()});
+      book.appendChild(b);
+    });
+  }
+  function load(){
+    if(idx>=queue.length)return endDay();
+    /* 班上到一半，规矩可能就改了——Papers, Please 的班不是等第二天才变的 */
+    const d0=today();
+    if(d0.mid&&idx===d0.mid.at&&!d0.mid.fired){
+      d0.mid.fired=true;
+      if(d0.mid.add&&d0.r.indexOf(d0.mid.add)<0)d0.r.push(d0.mid.add);
+      if(d0.mid.off)d0.r=d0.r.filter(k=>k!==d0.mid.off);
+      d0.add=d0.mid.add?[d0.mid.add]:[];
+      news.innerHTML='<span class="d">第 '+(day+1)+" 天 · 加急</span>"+d0.mid.news;
+      news.style.background="var(--warn-pale)"; news.style.borderBottomColor="var(--warn)";
+      S.hurt(); A.shakeEl(news);
+      setTimeout(()=>{news.style.background="";news.style.borderBottomColor=""},2600);
+    }
+    marks={}; locked=false; says.hidden=true;
+    const p=queue[idx];
+    paper.className="sf-paper in";
+    paper.innerHTML='<div class="ph">第 '+(idx+1)+" / "+queue.length+" 份 · AI 交来的稿子</div>"+
+      (p.ask?'<span class="ask">'+esc(p.ask)+"</span>":"")+esc(p.t)+
+      '<div class="sf-ink"></div>';
+    bPass.disabled=bFail.disabled=false;
+    drawBook(); hud(); api.time(1-idx/queue.length);
+  }
+  function judge(saidPass){
+    if(locked||!playing)return;
+    locked=true; bPass.disabled=bFail.disabled=true;
+    const p=queue[idx], want=shouldPass(p), bad=fails(p), ok=saidPass===want;
+    const ink=paper.querySelector(".sf-ink");
+    ink.textContent=saidPass?"通 过":"打 回";
+    ink.className="sf-ink on "+(saidPass?"pass":"fail");
+    S.thud(); A.buzz([16,26,10]);
+    /* 勾对了额外加分——奖励「真的逐条走了一遍」，但不惩罚没勾 */
+    let tick=0;
+    today().r.forEach(k=>{ const sh=p.has[k]?"yes":"no"; if(marks[k]===sh)tick++ });
+    if(ok){ right++; score+=20+tick*3;
+      const r=paper.getBoundingClientRect();
+      A.burst(r.left+r.width/2,r.top+r.height/2,"var(--ok)",16);
+      A.floatTag(r.left+r.width/2,r.top+10,"+"+(20+tick*3)+(tick?"　勾对 "+tick+" 条":""),"var(--ok-ink)");
+      says.className="sf-say ok"; says.hidden=false;
+      says.innerHTML=want?"<b>该通过。</b>今天这 "+today().r.length+" 条它都满足。"
+        :"<b>该打回。</b>没满足："+bad.map(k=>RN[k]).join("、")+"。";
+      S.zap();
+    }else{
+      wrong++; A.shakeEl(paper); S.hurt();
+      says.className="sf-say"; says.hidden=false;
+      says.innerHTML=want?"<b>盖反了——这一份今天是合格的。</b>今天生效的每一条它都满足了。"
+        :"<b>盖反了。</b>它没满足："+bad.map(k=>RN[k]).join("、")+"。";
+      bad.forEach(k=>{missTally[k]=(missTally[k]||0)+1; A.note(RN[k])});
+      if(!missed.some(m=>m.t===p.t))missed.push({t:p.t,ask:p.ask||"",bad:bad.slice(),day:day+1,want:want});
+      [].slice.call(book.children).forEach(n=>{
+        if(n.tagName==="BUTTON"&&bad.some(k=>n.textContent.indexOf(RN[k])>=0))n.classList.add("missed")});
+    }
+    hud();
+    setTimeout(()=>{ if(!api.alive(gen)||!playing)return; idx++; load() },1700);
+  }
+  bPass.addEventListener("pointerdown",e=>{e.preventDefault();judge(true)});
+  bFail.addEventListener("pointerdown",e=>{e.preventDefault();judge(false)});
+
+  function pick(){
+    const d=today();
+    const out=[];
+    const has0=()=>({t:1,p:1,s:1,o:1,v:1,l:1});
+    /* 当天生效的规矩里摇掉 0–2 条，保证既有该通过的也有该打回的 */
+    for(let i=0;i<d.n;i++){
+      const has=has0();
+      const n=i===0?0:(1+Math.floor(Math.random()*2));
+      const ks=d.r.slice();
+      for(let j=0;j<n&&ks.length;j++)has[ks.splice(Math.floor(Math.random()*ks.length),1)[0]]=0;
+      /* 停用的规矩不该影响判断，但稿子里照样可能缺——这正是「今天不看这一条」的意思 */
+      ["t","p","s","o","v","l"].forEach(k=>{ if(d.r.indexOf(k)<0&&Math.random()<0.35)has[k]=0 });
+      const g=notice(has);
+      out.push({t:g.t, ask:g.ask, has:has});
+    }
+    for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));
+      const t=out[i];out[i]=out[j];out[j]=t}
+    return out;
+  }
+  function startDay(){
+    live=JSON.parse(JSON.stringify(DAYS[day]));
+    const d=today();
+    queue=pick(); idx=0; missTally=missTally||{};
+    news.innerHTML='<span class="d">第 '+(day+1)+" 天 · 今日通告</span>"+d.news;
+    playing=true;
+    load();
+  }
+  function endDay(){
+    playing=false;
+    bPass.disabled=bFail.disabled=true;
+    day++;
+    if(day>=DAYS.length)return over();
+    const d=today();
+    api.overlay("<h4>第 "+day+" 天下班</h4>"+
+      "<p>盖对 <b>"+right+"</b> · 盖反 <b>"+wrong+"</b> · 分数 <b>"+score+"</b></p>"+
+      '<p style="opacity:.8">明天的通告：'+d.news+"</p>",
+      "上班",()=>{ startDay() });
+  }
+  function over(){
+    playing=false; S.over();
+    const worst=Object.keys(missTally).sort((a,b)=>missTally[b]-missTally[a]);
+    api.overlay('<div class="big">'+score+'</div><div class="sub">五天 · 盖对 '+right+
+      " / "+(right+wrong)+"</div>"+
+      (worst.length?"<h4>你最常漏的是「"+RN[worst[0]]+"」</h4>":"<h4>五天一份没盖反</h4>")+
+      (missed.length?"<div class='sf-rev'>"+missed.slice(0,6).map(m=>
+        "<p>第 "+m.day+" 天 · "+esc(m.ask?m.ask+"：":"")+esc(m.t)+"<br><b>"+
+        (m.want?"这一份当天是合格的":"没满足："+m.bad.map(k=>RN[k]).join("、"))+"</b></p>").join("")+"</div>":"")+
+      "<p>规矩每天都在变——同一份稿子，第二天该通过，第四天就该打回。"+
+      "<b>会变的是规矩，不能变的是逐条走一遍。</b></p>",
+      "再值一轮",()=>api.restart());
+  }
+
+  hud(); api.time(1);
+  news.innerHTML='<span class="d">值班室</span>规矩写在手册上，稿子在下面。';
+  drawBook(); bPass.disabled=bFail.disabled=true;
+  api.overlay("<h4>值班室</h4>"+
+    "<p>你是审稿的那个人。<b>五天</b>，每天早上一张通告，<b>增一条或停一条规矩</b>。"+
+    "<br>手册上是今天生效的规矩，<b>点一下勾，再点一下打叉</b>——勾对了额外加分，但不勾也能盖章。"+
+    "<br>看完稿子，盖<b>通过</b>或<b>打回</b>。"+
+    "<br><b>要害在这里：同一份稿子，第二天该通过，第四天就该打回。</b>不能靠记答案。"+
+    "<br>而且规矩<b>不一定等到第二天早上才变</b>——班上到一半可能就来一张加急通告。</p>",
+    "上班",()=>{ day=0; idx=0; score=0; right=0; wrong=0; missTally={}; missed=[]; startDay() });
+}
+
+return [
+ {id:"shift",title:"值班室",from:"Papers, Please",build:gShift,h:430,
+  how:"<b>五天</b>，每天早上增一条或停一条规矩。手册上点勾／打叉，再盖<b>通过</b>或<b>打回</b>。同一份稿子，换一天答案就不一样。",
+  note:"<b>偷的是哪一条</b>：调研里最有用的一个数字——Papers, Please 的一个工作日约六分钟，而 31 天里<b>绝大多数都有规矩的增、删或恢复</b>。持续性不是把时间拉长，是<b>让规则本身变成变量</b>。<br>一局五天，真人完成时长未测。",
+  spec:"<b>教什么</b>：<b>清单纪律</b>——不是「我会判断」，是「我每次都真的逐条走了一遍」。<br>"+
+    "<b>为什么必须是多天</b>：单张稿子考的是判断，<b>五天考的是纪律</b>。第 4 天「地点」停用、第 5 天恢复，就是为了让你不能靠记住昨天的答案——<b>同一份稿子，第二天该通过，第四天就该打回</b>。这条是 30 秒的盖章台永远做不到的。<br>"+
+    "<b>勾选为什么只加分不扣分</b>：逐条核对是要养成的习惯，不是要设的陷阱。盖对给 20，每勾对一条再加 3。<br>"+
+    "<b>结算</b>：直接告诉你<b>最常漏的是哪一条规矩</b>，再逐份列出你盖反的——那才是复习。<br>"+
+    "<b>用的是</b>第 3 节 NASA 观月夜公告的四条（时间／地点／报名／别把结束写成邀请）、第 1 节《地出》（核得了核不了）、第 2 节 Whisper（要原文还是要译文）。"},
+ {id:"defenseline",title:"检查条件防线",from:"塔防 / 植物大战僵尸",build:gDefense,h:570,
+  how:"稿子一份份往下走。<b>点位子装检查条件</b>，一条只拦它负责的那一类毛病。核查力有限，装不满；<b>合格的稿子要放它过去</b>。八波，漏 5 份结束。",
+  note:"<b>偷的是哪三条</b>：塔防的<b>波间决策</b>（研究里说这是把一局从 30 秒拉到 3 分钟最有效的东西）；植物大战僵尸的<b>阳光经济</b>——装不满就必须取舍；Papers Please 的<b>每波开工前先公告</b>，让你有依据地下注。<br>一局八波，真人完成时长未测。",
+  spec:"<b>教什么</b>：这个原型练的是<b>配置规则集</b>。前面所有组件问的都是「这一句对不对」；这个问的是<b>「你要带着哪几条检查上场」</b>——从「我会看」到「我有一套清单」。<br>"+
+    "<b>核查是有成本的</b>：六条检查，四个位子，核查力还不够装满——所以你必须押注这一批最可能错在哪。这本身就是第 3 节课那句话：<b>限制不是越多越好，而是要与你当前的目的对应</b>。<br>"+
+    "<b>合格的要放行</b>：如果每一份都该拦，那就没有判断了。合格稿子走到底是<b>加分</b>，这让「别过度设防」也有了代价。<br>"+
+    "<b>怎么保证他必须读</b>：所有稿子同款卡片，没有颜色暗示；<b>每跳一层停约一秒，字始终静止</b>。<br>"+
+    "<b>漏过的那一下</b>：当场说出它该被哪一条拦住——那是纠正，不是嘲笑；结算再逐份列一遍。<br>"+
+    "<b>用的是</b>第 3 节 NASA 观月夜公告（时间/地点/报名/别把结束写成邀请）、第 1 节《地出》（核得了核不了）、第 2 节 Whisper（要原文还是要译文）。"}
+];
+})();
+</script>
+<script>
+window.GAMES5=(function(){
+const A=window.AR, el=A.el, esc=A.esc, clamp=A.clamp, S=A.S;
+
+/* ==================================================================
+   8 · 改一处（长局）
+   前面七个都是「给你一批东西，你判断」。这个反过来：
+   **东西是你的请求生成的**——所以第二遍玩不成记忆，因为材料是你自己造的。
+
+   一条动作链，中间一步都绕不过去：
+     读产出 → 对照原始公告 → 指认哪一句是它编的 → 指认对了才解锁那一条要求
+     → 写上 → 当场看见那句话变成有出处的
+   「没写的它会编」不是我在旁白里说的，是你自己动手看见的。
+   ================================================================== */
+const RF_SRC={
+  head:"NASA 公告（2023）· 原文",
+  body:"2023 年 10 月 21 日晚 6 点到 9 点，NASA 戈达德太空飞行中心访客中心（马里兰州格林贝尔特）举办国际观月夜，无需报名。",
+  note:"这份公告里没有的，就是没有。你的直觉会骗你，出处不会。"
+};
+const RF_KINDS=[["msg","短消息"],["list","活动清单"],["card","说明卡"]];
+const RF_MUST=[["t","写清时间"],["p","写清地点"],["s","说要不要报名"],["o","说明已经结束"]];
+const MN={}; RF_MUST.forEach(m=>MN[m[0]]=m[1]);
+
+/* 编造的说法每次随机换一种，免得记住字面；每一条都「像真的」，
+   只有回去对公告才分得出来。 */
+const MADE={
+ t:["就在这个周末，晚上。","每年十月都会办一次。","上周五晚上刚办完。"],
+ p:["地点在 NASA 的一个观测站。","在戈达德园区内，具体场地当天公布。","在华盛顿附近的 NASA 中心。"],
+ s:["名额有限，记得提前登记。","需要在官网预约名额。","现场人多，建议早点到并签到。"],
+ o:["快去看看吧，别错过！","现在报名还来得及。","这活动正在进行中。"]
+};
+const REAL={
+ t:["时间是 2023 年 10 月 21 日晚 6 点到 9 点。","那一场在 2023 年 10 月 21 日，晚 6 点到 9 点。"],
+ p:["地点在马里兰州格林贝尔特的戈达德访客中心。","在戈达德太空飞行中心访客中心，马里兰州格林贝尔特。"],
+ s:["不用报名，直接去就行。","公告写明：无需报名。"],
+ o:["这一场已经结束了，这是当时的记录。","注意：这是 2023 年办过的活动，已经结束。"]
+};
+const LIST_MADE={
+ t:["时间：每年十月的一个晴朗夜晚","时间：十月下旬，具体以通知为准"],
+ p:["地点：戈达德园区，场地当天公布","地点：NASA 各地访客中心"],
+ s:["报名：需在官网预约","报名：现场签到，名额有限"],
+ o:["状态：报名进行中","状态：即将开始"]
+};
+const LIST_REAL={
+ t:["时间：2023 年 10 月 21 日 18:00–21:00"],
+ p:["地点：马里兰州格林贝尔特 · 戈达德访客中心"],
+ s:["报名：无需报名"],
+ o:["状态：已结束（2023 年活动记录）"]
+};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+/* 每一单都换一个起手：已经写好的条数不一样，所以编造的位置和数量也不一样 */
+const RF_ORDERS=[
+ {ask:"朋友要把这事<b>转发到群里</b>，让大家一眼知道什么时候、在哪。",want:"msg",pre:[],budget:8},
+ {ask:"志愿者要<b>照着这个准备当天的物资</b>，得逐项对着看。",want:"list",pre:["t"],budget:7},
+ {ask:"给<b>完全没听说过这件事的人</b>做一张说明。",want:"card",pre:["s"],budget:7},
+ {ask:"同事问你：<b>这活动现在还能去吗？</b>",want:"msg",pre:["t","p"],budget:6},
+ {ask:"把这份材料<b>存档</b>，以后还要拿出来查——每一条都得站得住。",want:"list",pre:[],budget:8}
+];
+
+/* 真的、但不由任何条件驱动的句子——加进来是为了让「全点一遍」要付代价 */
+const FILLER={
+ msg:["这是 NASA 戈达德太空飞行中心办的。","活动的名字叫国际观月夜。"],
+ list:["主办：NASA 戈达德太空飞行中心","名称：国际观月夜"],
+ card:["办这场活动的是 NASA 戈达德太空飞行中心。","它的正式名字叫国际观月夜。"]
+};
+/* 没写的那一条，AI 有两种失手法：编一句像样的，或者干脆不提。
+   两种都得抓，但要用两个不同的动作——这正是它们在现实里的区别。 */
+function build(kind,must,skip){
+  const H=k=>must.indexOf(k)>=0, F=[];
+  const line=(k,realArr,madeArr)=>{
+    if(H(k)){ F.push({k:k,t:pick(realArr),made:false}); return }
+    if(skip.indexOf(k)>=0) return;            /* 省略：这一条根本不出现 */
+    F.push({k:k,t:pick(madeArr),made:true});  /* 编造 */
+  };
+  const fl=FILLER[kind]||FILLER.msg;
+  if(kind==="msg"){
+    F.push({k:"_h",t:"跟你说个事——NASA 办过一场观月夜。",made:false,fix:true});
+    line("t",REAL.t,MADE.t); line("p",REAL.p,MADE.p);
+    F.push({k:"_f0",t:fl[0],made:false});
+    line("s",REAL.s,MADE.s); line("o",REAL.o,MADE.o);
+  }else if(kind==="list"){
+    F.push({k:"_h",t:"观月夜 · 活动信息",made:false,head:true,fix:true});
+    F.push({k:"_f0",t:fl[0],made:false});
+    line("t",LIST_REAL.t,LIST_MADE.t); line("p",LIST_REAL.p,LIST_MADE.p);
+    line("s",LIST_REAL.s,LIST_MADE.s); line("o",LIST_REAL.o,LIST_MADE.o);
+  }else{
+    F.push({k:"_h",t:"什么是观月夜？",made:false,head:true,fix:true});
+    F.push({k:"_b",t:fl[0],made:false});
+    line("t",REAL.t,MADE.t); line("p",REAL.p,MADE.p);
+    F.push({k:"_f1",t:fl[1],made:false});
+    line("s",REAL.s,MADE.s); line("o",REAL.o,MADE.o);
+  }
+  return F;
+}
+
+function gForge(screen,api,gen){
+  const top=el("div","rf-top"), body=el("div","rf-body");
+  screen.appendChild(top); screen.appendChild(body);
+  const src=el("div","rf-src"), form=el("div","rf-form"),
+        out=el("div","rf-out"), chk=el("div","rf-check"), say=el("div","rf-say");
+  say.hidden=true;
+  body.appendChild(src); body.appendChild(form); body.appendChild(out);
+  body.appendChild(chk); body.appendChild(say);
+
+  let ord=0, kind=null, must=[], open=[], moves=0, score=0,
+      caught=0, wronged=0, srcOpen=false, done=false, frags=[], mine=[], skip=[],
+      dodged=0, missedGaps=[],
+      falseAlarms=[], slipped=[], lastKeys={};
+
+  const O=()=>RF_ORDERS[ord];
+  function hud(){ api.hud('<span>分数 <b>'+score+"</b></span><span>抓到编造 <b>"+caught+
+    '</b></span><span>抓到漏 <b>'+dodged+'</b></span><span class="sp">冤枉 <b>'+wronged+"</b></span>") }
+  function msg(t,cls){ say.hidden=false; say.className="rf-say"+(cls?" "+cls:""); say.innerHTML=t }
+
+  function drawTop(){
+    const o=O(), left=o.budget-moves;
+    top.innerHTML='<div class="ask"><span class="no">第 '+(ord+1)+" / "+RF_ORDERS.length+" 单</span><br>"+
+      o.ask+'</div><div class="mv">还能改<b>'+left+"</b>次</div>";
+    api.time(clamp(left/o.budget,0,1));
+    body.style.top=(top.offsetHeight+5)+"px";
+  }
+  function drawSrc(){
+    src.innerHTML="<button><span>&#128206;</span><span>"+esc(RF_SRC.head)+
+      '</span><span class="ch">'+(srcOpen?"收起 −":"点开对照 +")+"</span></button>"+
+      (srcOpen?'<div class="in">'+esc(RF_SRC.body)+"<em>"+esc(RF_SRC.note)+"</em></div>":"");
+    src.querySelector("button").addEventListener("pointerdown",e=>{
+      e.preventDefault(); srcOpen=!srcOpen; S.tick(); drawSrc()});
+  }
+  function drawForm(){
+    form.innerHTML='<h6>你的请求<i>交什么成品，写明哪几条</i></h6>';
+    const ks=el("div","rf-kinds");
+    RF_KINDS.forEach(([k,n])=>{
+      const b=el("button","rf-kind"+(kind===k?" on":""),esc(n));
+      b.addEventListener("pointerdown",e=>{e.preventDefault(); if(done)return;
+        if(kind===k)return; kind=k; spend(); S.tick(); render(true)});
+      ks.appendChild(b);
+    });
+    form.appendChild(ks);
+    const ms=el("div","rf-musts");
+    RF_MUST.forEach(([k,n])=>{
+      const on=must.indexOf(k)>=0, unlocked=open.indexOf(k)>=0||on;
+      const b=el("button","rf-must"+(on?" on":unlocked?" open":""),
+        '<span class="lk">'+(on?"&#10003;":unlocked?"+":"&#128274;")+"</span><span>"+esc(n)+"</span>");
+      b.dataset.k=k;
+      b.addEventListener("pointerdown",e=>{e.preventDefault(); if(done)return;
+        if(on)return;
+        if(!unlocked){
+          /* 产出里一句都没提这件事 → 你说对了，这是「漏」；提了 → 你该去指认那一句 */
+          if(!frags.some(f=>f.k===k)){
+            open.push(k); dodged++; score+=15;
+            S.zap(); A.buzz(14); A.burst(...(function(){const r=b.getBoundingClientRect();
+              return [r.left+r.width/2,r.top+r.height/2,"var(--berry)",14]})());
+            msg("对。它<b>干脆没提这一件事</b>——不是编错，是压根不提。"+
+              "<b>漏比编难发现</b>，因为没有一句话让你去挑毛病。");
+            hud(); render(true);
+          }else{
+            wronged++; score=Math.max(0,score-15); spend(); S.hurt(); A.shakeEl(b);
+            msg("产出里<b>是提了</b>这一件事的——去下面那一句上做判断，别在这儿猜。"+
+              "<br>白花了一次改动。","bad");
+            hud(); render(false);
+          }
+          return }
+        must.push(k); mine.push(k); spend(); S.zap(); render(true,k);
+      });
+      ms.appendChild(b);
+    });
+    form.appendChild(ms);
+  }
+  function spend(){ moves++; }
+
+  function render(flash,justKey){
+    frags=build(kind||"msg",must,skip);
+    out.innerHTML='<h6>AI 交来的</h6>';
+    frags.forEach(f=>{
+      const fixedNow = !f.made && mine.indexOf(f.k)>=0;
+      /* 已经指认过、但还没修的那几句，重画之后红标必须还在——
+         否则玩家一改成品，自己刚做的判断就被抹掉了 */
+      const already=f.made&&open.indexOf(f.k)>=0;
+      const b=el("button","rf-line"+(f.head?" rf-head":"")+
+        (f.made&&!already?" tap":"")+(already?" caught":"")+(fixedNow?" fixed":""),esc(f.t));
+      b.dataset.k=f.k;
+      if(flash&&justKey&&f.k===justKey)b.classList.add("flash");
+      if(already){
+        b.addEventListener("pointerdown",e=>{e.preventDefault();
+          msg("这一句你已经指出来了——<b>去上面把「"+esc(MN[f.k])+"」写上</b>，它就变了。")});
+      }else if(f.made){
+        b.addEventListener("pointerdown",e=>{e.preventDefault(); if(done)return; flag(f,b)});
+      }else if(f.k.charAt(0)==="_"||fixedNow||["t","p","s","o"].indexOf(f.k)>=0){
+        b.addEventListener("pointerdown",e=>{e.preventDefault(); if(done)return; wrongFlag(f,b)});
+        b.classList.add("tap");
+      }
+      out.appendChild(b);
+    });
+    drawTop(); drawForm(); drawCheck();
+    if(kind&&!frags.some(f=>f.made)&&must.length===4) finish();
+    else if(moves>=O().budget&&kind) finish();
+  }
+  function flag(f,node){
+    if(open.indexOf(f.k)>=0){ msg("这一句你已经指出来了——<b>去上面把那一条写上</b>。"); return }
+    open.push(f.k); caught++; score+=20;
+    node.classList.add("caught"); node.classList.remove("tap");
+    const r=node.getBoundingClientRect();
+    S.zap(); A.buzz(14); A.burst(r.left+r.width/2,r.top+r.height/2,"var(--warn)",14);
+    A.floatTag(r.left+r.width/2,r.top,"+20 抓到了","var(--warn)");
+    msg("对。公告里<b>没有这一句</b>——它是你没写，它自己填的。"+
+      "上面「<b>"+esc(MN[f.k])+"</b>」这一条现在解锁了。");
+    hud(); drawForm();
+    const b=form.querySelector('.rf-must[data-k="'+f.k+'"]');
+    if(b){b.classList.add("just"); setTimeout(()=>b.classList.remove("just"),520)}
+  }
+  function wrongFlag(f,node){
+    wronged++; score=Math.max(0,score-15); spend();
+    node.classList.add("no"); setTimeout(()=>node.classList.remove("no"),340);
+    S.hurt(); A.buzz([12,50,12]);
+    if(falseAlarms.indexOf(f.t)<0)falseAlarms.push(f.t);
+    A.note("把有出处的当成编的");
+    msg("<b>这一句公告里有。</b>把上面的原文点开对一遍——"+
+      "觉得「哪有活动不用报名」是直觉，公告白纸黑字写着无需报名。"+
+      "<br>而且<b>白花了一次改动</b>：去核一句本来就有出处的话，花掉的是你的注意力。","bad");
+    hud(); drawTop();
+  }
+  function drawCheck(){
+    const madeLeft=frags.filter(f=>f.made).length;
+    const kindOk=kind===O().want;
+    chk.innerHTML=
+      '<span class="'+(kind?(kindOk?"ok":"bad"):"")+'">成品 '+(kind?(kindOk?"对了":"不对路"):"还没选")+"</span>"+
+      '<span class="'+(madeLeft?"bad":"ok")+'">编造 '+(madeLeft?"还剩 "+madeLeft+" 处":"清零")+"</span>"+
+      '<span class="'+(must.length===4?"ok":"")+'">写明 '+must.length+" / 4 条</span>";
+  }
+  function finish(){
+    if(done)return; done=true;
+    const kindOk=kind===O().want, madeLeft=frags.filter(f=>f.made).length;
+    const gaps=["t","p","s","o"].filter(k=>must.indexOf(k)<0);
+    const left=Math.max(0,O().budget-moves);
+    let gain=0, good=kindOk&&!madeLeft&&!gaps.length;
+    if(good){ gain=50+left*10; score+=gain; S.pow(); A.buzz(20);
+      msg("<b>这一单交得出去。</b>成品对路，每一句都在公告里有。"+
+        (left?"还省下 "+left+" 次改动，+"+left*10:""),"good");
+    }else{
+      frags.filter(f=>f.made).forEach(f=>{ if(slipped.indexOf(f.t)<0)slipped.push(f.t);
+        A.note("放过了它编的一句") });
+      S.hurt();
+      gaps.forEach(k=>{ if(missedGaps.indexOf(k)<0)missedGaps.push(k); A.note("没发现它干脆没提") });
+      msg("<b>这一单交不出去。</b>"+
+        (kindOk?"":"要的不是这种成品。")+
+        (madeLeft?"还有 "+madeLeft+" 句是它自己编的。":"")+
+        (gaps.length?"而且<b>"+gaps.map(k=>MN[k]).join("、")+"</b>它压根没提，你也没写。":"")+
+        (moves>=O().budget?"<br><b>改动次数用完了</b>——冤枉掉的每一次，都是从这里扣的。":""),"bad");
+    }
+    hud();
+    setTimeout(()=>{ if(!api.alive(gen))return; nextOrder(good) },1500);
+  }
+  function nextOrder(good){
+    ord++;
+    if(ord>=RF_ORDERS.length)return over();
+    api.overlay("<h4>第 "+ord+" 单"+(good?"交了":"没交成")+"</h4>"+
+      "<p>分数 <b>"+score+"</b> · 抓到编造 <b>"+caught+"</b> · 冤枉 <b>"+wronged+"</b></p>"+
+      "<p>下一单："+O().ask+"</p>","接单",()=>startOrder());
+  }
+  function startOrder(){
+    const o=O();
+    kind=null; must=o.pre.slice(); open=o.pre.slice(); mine=[]; moves=0; done=false;
+    /* 没写的里面，随机挑一到两条让它「干脆不提」——漏比编难发现得多 */
+    const rest=["t","p","s","o"].filter(k=>o.pre.indexOf(k)<0);
+    skip=[]; const nSkip=1+Math.floor(Math.random()*2);
+    for(let i=0;i<nSkip&&rest.length;i++) skip.push(rest.splice(Math.floor(Math.random()*rest.length),1)[0]);
+    say.hidden=true;
+    render(false);
+    if(o.pre.length)msg("这一单<b>有人先替你写了 "+o.pre.map(k=>"「"+MN[k]+"」").join("")+
+      "</b>，剩下的得你自己找。");
+  }
+  function over(){
+    done=true; S.over();
+    let h="";
+    if(falseAlarms.length)h+="<h4>这几句你冤枉了它</h4><div class='rf-rev'>"+
+      falseAlarms.slice(0,4).map(t=>"<p>"+esc(t)+"<br><b>公告里有这一句</b></p>").join("")+"</div>";
+    if(slipped.length)h+="<h4>这几句溜过去了</h4><div class='rf-rev'>"+
+      slipped.slice(0,5).map(t=>"<p>"+esc(t)+"<br><b>公告里没有</b></p>").join("")+"</div>";
+    if(missedGaps.length)h+="<h4>这几件事它从头到尾没提，你也没发现</h4><div class='rf-rev'>"+
+      missedGaps.slice(0,4).map(k=>"<p><b>"+esc(MN[k])+"</b><br>没有一句话让你去挑毛病，所以最容易漏</p>").join("")+"</div>";
+    if(!h)h="<h4>五单都干净</h4><p>没冤枉一句，没放过一句，也没漏掉一件它没提的事。</p>";
+    api.overlay('<div class="big">'+score+'</div><div class="sub">五单 · 抓到编造 '+caught+
+      " · 抓到漏 "+dodged+" · 冤枉 "+wronged+"</div>"+h+
+      "<p>这一局里每一句话<b>都是本地规则按你选择的条件模拟拼接的</b>——"+
+      "你写下的那几条，它老老实实交代；<b>你没写的，它不是留白，是填一个像样的</b>。"+
+      "<br>所以「把要求写清楚」不是啰嗦，是<b>你不写就等于交给它决定</b>。</p>",
+      "再来一局",()=>api.restart());
+  }
+
+  hud(); drawSrc(); api.time(1);
+  form.innerHTML=""; out.innerHTML=""; chk.innerHTML="";
+  api.overlay("<h4>改一处</h4>"+
+    "<p>这一局和前面七个反过来：<b>要判断的东西，是本地规则按你选择的条件模拟拼接的</b>。"+
+    "<br>每一单先给你一个用途。你选交什么成品、写明哪几条，"+
+    "本地规则按你选择的条件模拟拼接一份东西。"+
+    "<br><b>你没写清的那几条，它不会留白——它会编一个像样的。</b>"+
+    "<br>动作链是死的：<b>在产出里指出哪一句公告里没有 → 指对了才解锁那一条要求 → 写上 → 当场看见它变成有出处的。</b>"+
+    "<br>没看见的东西修不了。五单。</p>","接第一单",()=>{
+      ord=0; score=0; caught=0; wronged=0; falseAlarms=[]; slipped=[];
+      srcOpen=true; drawSrc(); startOrder();
+    });
+}
+
+return [
+ {id:"forge",title:"改一处",from:"原创 · 请求 → 产出 → 对照出处",build:gForge,h:560,
+  how:"每一单给你一个<b>用途</b>。选成品、写明条件，本地规则模拟交一份东西。<b>你没写的它会自己编。</b>在产出里指出哪句公告里没有——指对了才解锁那一条，写上，当场看见它变成有出处的。五单。",
+  note:"<b>为什么要有这一个</b>：前面几个长局有一个共同的天花板——<b>材料是手写的固定清单，第二遍玩的是记忆不是判断</b>（小蜜蜂 14 条、填词消行 24 句、防线 18 份、值班室 22 份，一局就用完或见好几遍）。这一个走得最远：<b>材料由本地规则按你选择的条件模拟拼接</b>，编造的措辞随机，「编」还是「干脆不提」每单重摇，起手条件也不同——没得背。<br>其余长局这一轮也一并改成了<b>本地规则模拟生成</b>。",
+  spec:"<b>教什么</b>：这是整个项目最核心的那个能力——<b>拿产出去对原始出处，找出哪一句是它填的</b>。第 1 节的「核得了核不了」、第 3 节的「成品和条件」在这里合成了一个动作。<br>"+
+    "<b>动作链是锁死的</b>：<b>指认 → 解锁 → 写上 → 看见变</b>。没指认就不能修——这不是难为人，这是真的：<b>你没注意到的东西，本来就修不了</b>。<br>"+
+    "<b>「没写的它会编」是玩出来的，不是我说的</b>：不勾「说要不要报名」，它就写「名额有限，建议提前登记」——和公告里的「无需报名」正好相反。你勾上，那句当场变成「不用报名」。因果就在眼前。<br>"+
+    "<b>故意设了一个陷阱</b>：「无需报名」读起来最不像真的（哪有活动不用报名），但公告白纸黑字写着。冤枉它要扣分——<b>你的直觉会骗你，出处不会</b>。<br>"+
+    "<b>结算分两栏</b>：你冤枉过的（其实有出处）和溜过去的（真的没出处）。两种错不一样，得分开看。<br>"+
+    "<b>用的是</b>第 3 节 NASA 观月夜公告原文，全程常驻可对照。"}
+];
+})();
+</script>
+<script>
+(function(){
+const A=window.AR, el=A.el, page=document.getElementById("page");
+if(window.__PLAY_CATALOG_ENTRY__){
+ const all=[...window.GAMES1,...window.GAMES2,...window.GAMES3,...window.GAMES4,...window.GAMES5];
+ const game=all.find(item=>item.id===window.__PLAY_CATALOG_ENTRY__);
+ if(game) A.cabinet(page,game);
+ return;
+}
+const head=el("div","masthead");
+head.innerHTML='<h1>学习街机</h1>'+
+ '<p>八个。分两档，标准写在下面——<b>够不上就不叫长局</b>。</p>'+
+ '<p><b>多阶段研究 · 真人时长未测</b><br>'+
+ '<b>改一处</b>（要判断的东西是本地规则按你选择的条件模拟拼接的）、'+
+ '<b>值班室</b>（五天，规矩天天变）、'+
+ '<b>检查条件防线</b>（八波，四个位子装不下六条检查）、'+
+ '<b>双武器拦截</b>（十波，俯冲和挑战关）、'+
+ '<b>填词消行</b>（一副 24 句，清完就赢）。</p>'+
+ '<p style="color:var(--ink-faint);font-size:13px"><b>「长局」的四条准入</b>：'+
+ '① 有波次或多订单结构（不据此推算真人时长）；② 有跨波累积的东西（堆高、规则手册、防线、编队、你写下的请求）；'+
+ '③ 波间有一个真决定，不是「继续」按钮；④ 结束时给一张<b>逐条列出你错在哪</b>的复习表。<br>'+
+ '分类落块、划切、追与被追是<b>短轮次研究</b>：短轮次或计时挑战（真人完成时长未测），不满足上面四条。</p>'+
+ '<p style="color:var(--ink-faint);font-size:13px"><b>这一轮改掉的是一个我之前没看见的天花板</b>：'+
+ '所有长局的材料都是手写的固定清单，<b>一局就用完或见好几遍，所以第二局玩的是记忆不是判断</b>。'+
+ '现在公告和敌人都改成<b>本地规则模拟生成</b>（组合素材来自预设词库；自动运行不能证明真人用时或学习效果），'+
+ '「改一处」更是让材料由本地规则按玩家选择的条件模拟拼接。<br>'+
+ '操作全部统一：<b>鼠标和手指同一套，一个指头够用，不用键盘</b>。'+
+ '内容仍然全部来自《认识 AI，从这里开始》第一单元前三节。</p>';
+page.appendChild(head);
+page.appendChild(el("div","rule"));
+/* 八个机柜记到同一本账上：玩过几局之后，这里会告诉你今天最常栽在哪一条 */
+const tally=el("div","tally");
+page.appendChild(tally);
+A.onTally(T=>{
+  const rows=Object.keys(T).sort((a,b)=>T[b]-T[a]);
+  if(!rows.length){
+    tally.innerHTML="<h4>今天栽过的地方</h4><p>八个机柜记在同一本账上。"+
+      "玩完任何一局，<b>你错在哪几条</b>就会汇到这里——"+
+      "同一条在不同机柜里栽两次，它就排到最上面。</p>";
+    return;
+  }
+  const max=T[rows[0]];
+  tally.innerHTML="<h4>今天栽过的地方</h4>"+
+    "<p>跨机柜汇总。<b>排在最上面那条，就是今天最该回去看的。</b></p><ol>"+
+    rows.slice(0,6).map(k=>'<li><b>'+T[k]+'</b><u style="width:'+
+      Math.round(14+T[k]/max*46)+'%"></u><i>'+A.esc(k)+"</i></li>").join("")+"</ol>";
+});
+const ORDER=["forge","shift","defenseline","invaders","cloze-tetris","stack","slice","chase"];
+const ALL=[].concat(window.GAMES5,window.GAMES4,window.GAMES3,window.GAMES1,window.GAMES2);
+ORDER.forEach((id,i)=>{const g=ALL.find(x=>x.id===id);
+  if(g){A.cabinet(page,g); page.lastElementChild.dataset.hue=i%4}});
+ALL.forEach((g,i)=>{if(ORDER.indexOf(g.id)<0){A.cabinet(page,g);
+  page.lastElementChild.dataset.hue=(ORDER.length+i)%4}});
+page.appendChild(el("div","rule"));
+const t=el("p",null,"");
+t.style.cssText="font-size:13px;color:var(--ink-faint);line-height:1.7";
+t.innerHTML="<b>七个都按同一条规矩做</b>：如果玩家不读字也能赢，那这个组件教的是眼力，不是判断。"+
+ "<br>所以卡片不再有绿红之分、敌人不再自带答案颜色、地上的点也不再是没字的圆圈——"+
+ "颜色只在你做完判断之后才出现，作为纠正。"+
+ "<br><b>填词消行</b>还多堵了一条：词条和缺口<b>一律同宽</b>，"+
+ "免得有人靠「这个词的长度只塞得进那个空」蒙对。"+
+ "<br><b>三个长局</b>还多堵了一条：<b>还没进场／还没读到的，打不到也判不了</b>。"+
+ "<br>七个都还没有真人玩过。";
+page.appendChild(t);
+})();
+</script>

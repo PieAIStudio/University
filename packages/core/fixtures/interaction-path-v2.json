@@ -1,0 +1,211 @@
+{
+  "id": "booking-material-path",
+  "kind": "interaction-path",
+  "role": "demonstrate",
+  "difficulty": "intro",
+  "pedagogyVersion": 2,
+  "title": "检查预约按钮",
+  "brief": "为键盘使用者检查预约流程。",
+  "goal": "结合材料检查按钮的操作条件。",
+  "hint": "先确认焦点在哪里。",
+  "takeaway": "先找出操作条件，逐项改变，再用新的情境检查这个方法。",
+  "source": {
+    "label": "W3C 按钮模式",
+    "url": "https://www.w3.org/WAI/ARIA/apg/patterns/button/"
+  },
+  "sources": [
+    {
+      "id": "button-guide",
+      "reference": {
+        "label": "W3C 按钮模式",
+        "url": "https://www.w3.org/WAI/ARIA/apg/patterns/button/"
+      },
+      "note": "本练习根据按钮规范改写，预约页面为教学情境。",
+      "summary": "规范说明按钮的键盘操作。",
+      "limitation": "规范不能证明某个真实网站已经通过测试。",
+      "date": "未注明发布日期"
+    }
+  ],
+  "context": {
+    "title": "有人不用鼠标预约",
+    "introduction": "你在检查一个预约页面。使用者已经填好资料，准备用键盘提交。",
+    "task": "根据按钮说明，检查什么条件下可以提交预约。",
+    "sourceIds": ["button-guide"]
+  },
+  "materials": [
+    {
+      "id": "keyboard-note",
+      "sourceId": "button-guide",
+      "kind": "source-summary",
+      "label": "键盘操作记录",
+      "text": "焦点在按钮上时，Enter 和空格可以触发按钮的动作。"
+    },
+    {
+      "id": "draft-note",
+      "sourceId": "button-guide",
+      "kind": "teaching-draft",
+      "label": "待核对的预约说明",
+      "text": "只要按 Enter 就能预约，不用确认焦点的位置。"
+    }
+  ],
+  "steps": [
+    {
+      "sourceId": "button-guide",
+      "hint": "先确认焦点在哪里。",
+      "explanation": "先确认操作条件，再报告实际观察到的结果。",
+      "id": "predict",
+      "kind": "decision",
+      "phase": "predict",
+      "materialIds": ["keyboard-note"],
+      "question": "焦点在预约按钮上，接下来怎么操作？",
+      "options": [
+        {
+          "id": "press",
+          "label": "按 Enter 或空格",
+          "explanation": "材料给出了焦点条件和两个操作键。"
+        },
+        {
+          "id": "mouse",
+          "label": "必须找一只鼠标",
+          "explanation": "鼠标不是材料列出的必要条件。"
+        }
+      ],
+      "correctOptionId": "press"
+    },
+    {
+      "sourceId": "button-guide",
+      "hint": "先确认焦点在哪里。",
+      "explanation": "先确认操作条件，再报告实际观察到的结果。",
+      "id": "try-conditions",
+      "kind": "experiment",
+      "phase": "practice",
+      "materialIds": ["keyboard-note", "draft-note"],
+      "question": "改一改条件，怎样让预约成功？",
+      "simulationNote": "这是预设的教学模拟，展示不同条件下的结果；没有操作真实预约页面，也没有调用 AI。",
+      "controls": [
+        {
+          "id": "focus",
+          "label": "焦点在预约按钮上"
+        },
+        {
+          "id": "enter",
+          "label": "按下 Enter"
+        }
+      ],
+      "initialControlIds": ["focus"],
+      "cases": [
+        {
+          "id": "idle",
+          "selectedControlIds": [],
+          "title": "预约未变化",
+          "text": "没有焦点，也没有按键。预约还没有提交。",
+          "feedback": "先把焦点移到预约按钮，再按 Enter。",
+          "accepted": false
+        },
+        {
+          "id": "focused",
+          "selectedControlIds": ["focus"],
+          "title": "按钮已就位",
+          "text": "焦点在预约按钮上，等待按键。",
+          "feedback": "焦点已经就位，还需要按键触发。",
+          "accepted": false
+        },
+        {
+          "id": "key-only",
+          "selectedControlIds": ["enter"],
+          "title": "按键没有送到按钮",
+          "text": "焦点不在预约按钮上，这次按键没有提交预约。",
+          "feedback": "按键需要送到有焦点的按钮，不能跳过焦点条件。",
+          "accepted": false
+        },
+        {
+          "id": "activated",
+          "selectedControlIds": ["focus", "enter"],
+          "title": "预约已提交（模拟）",
+          "text": "焦点在按钮上，Enter 触发了一次预约提交。",
+          "feedback": "焦点和按键一起满足了当前模拟的提交条件。",
+          "accepted": true
+        }
+      ]
+    },
+    {
+      "sourceId": "button-guide",
+      "hint": "先确认焦点在哪里。",
+      "explanation": "先确认操作条件，再报告实际观察到的结果。",
+      "id": "transfer",
+      "kind": "decision",
+      "phase": "transfer",
+      "materialIds": ["keyboard-note"],
+      "question": "换成取消预约的按钮，还要先检查什么？",
+      "options": [
+        {
+          "id": "check-focus",
+          "label": "确认焦点在取消按钮上，再按键",
+          "explanation": "按钮的动作变了，先确认焦点的检查方法仍然适用。"
+        },
+        {
+          "id": "anywhere",
+          "label": "在页面任何位置按键都一样",
+          "explanation": "页面上有多个控件，按键的目标取决于焦点。"
+        }
+      ],
+      "correctOptionId": "check-focus"
+    }
+  ],
+  "finish": {
+    "title": "把检查方法带到下一个情境",
+    "note": "接下来是独立练习，引导路径不会代替它的判分。"
+  },
+  "locales": {
+    "en": {
+      "strings": {
+        "W3C 按钮模式": "W3C Button Pattern",
+        "先确认焦点在哪里。": "First check where focus is.",
+        "先确认操作条件，再报告实际观察到的结果。": "Check the conditions before reporting what you observed.",
+        "焦点在预约按钮上，接下来怎么操作？": "Focus is on the booking button. What can you do next?",
+        "按 Enter 或空格": "Press Enter or Space",
+        "材料给出了焦点条件和两个操作键。": "The source specifies both the focus condition and the keys.",
+        "必须找一只鼠标": "Find a mouse first",
+        "鼠标不是材料列出的必要条件。": "The source does not require a mouse.",
+        "改一改条件，怎样让预约成功？": "Change the conditions. What makes the booking work?",
+        "这是预设的教学模拟，展示不同条件下的结果；没有操作真实预约页面，也没有调用 AI。": "This teaching simulation shows preset results. It does not operate a real booking page or call AI.",
+        "焦点在预约按钮上": "Focus is on the booking button",
+        "按下 Enter": "Press Enter",
+        "预约未变化": "Booking unchanged",
+        "没有焦点，也没有按键。预约还没有提交。": "There is no focus or keypress. No booking is submitted.",
+        "先把焦点移到预约按钮，再按 Enter。": "Focus the booking button, then press Enter.",
+        "按钮已就位": "Button ready",
+        "焦点在预约按钮上，等待按键。": "The booking button has focus and is waiting for a keypress.",
+        "焦点已经就位，还需要按键触发。": "Focus is in place; a keypress is still needed.",
+        "按键没有送到按钮": "Keypress did not reach the button",
+        "焦点不在预约按钮上，这次按键没有提交预约。": "The booking button lacks focus, so this keypress does not submit a booking.",
+        "按键需要送到有焦点的按钮，不能跳过焦点条件。": "The focused button must receive the keypress. Focus cannot be skipped.",
+        "预约已提交（模拟）": "Booking submitted (simulation)",
+        "焦点在按钮上，Enter 触发了一次预约提交。": "With focus on the button, Enter triggers one booking submission.",
+        "焦点和按键一起满足了当前模拟的提交条件。": "Focus and keypress together meet this simulation’s conditions.",
+        "换成取消预约的按钮，还要先检查什么？": "For a Cancel booking button, what should you check first?",
+        "确认焦点在取消按钮上，再按键": "Check focus is on Cancel before pressing a key",
+        "按钮的动作变了，先确认焦点的检查方法仍然适用。": "The action has changed, but checking focus still applies.",
+        "在页面任何位置按键都一样": "Pressing a key anywhere on the page is the same",
+        "页面上有多个控件，按键的目标取决于焦点。": "A page has several controls; focus determines the keypress target.",
+        "检查预约按钮": "Check a booking button",
+        "为键盘使用者检查预约流程。": "Check the booking flow for keyboard users.",
+        "结合材料检查按钮的操作条件。": "Use the source to check button conditions.",
+        "先找出操作条件，逐项改变，再用新的情境检查这个方法。": "Identify the conditions, change them one at a time, then try the method in a new situation.",
+        "本练习根据按钮规范改写，预约页面为教学情境。": "This exercise adapts button guidance to a fictional booking page.",
+        "规范说明按钮的键盘操作。": "The guidance describes button keyboard operation.",
+        "规范不能证明某个真实网站已经通过测试。": "Guidance is not evidence that a real website has passed testing.",
+        "未注明发布日期": "Publication date not specified",
+        "有人不用鼠标预约": "Someone books without a mouse",
+        "你在检查一个预约页面。使用者已经填好资料，准备用键盘提交。": "You are checking a booking page. The user has filled in the form and will submit with a keyboard.",
+        "根据按钮说明，检查什么条件下可以提交预约。": "Use the button guidance to check the conditions for submitting a booking.",
+        "键盘操作记录": "Keyboard operation record",
+        "焦点在按钮上时，Enter 和空格可以触发按钮的动作。": "When a button has focus, Enter and Space can activate its action.",
+        "待核对的预约说明": "Booking instructions to check",
+        "只要按 Enter 就能预约，不用确认焦点的位置。": "Press Enter to book; there is no need to check focus.",
+        "把检查方法带到下一个情境": "Take the checking method to the next situation",
+        "接下来是独立练习，引导路径不会代替它的判分。": "The independent exercise follows; guided practice does not replace its grading."
+      }
+    }
+  }
+}

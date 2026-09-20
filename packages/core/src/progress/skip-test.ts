@@ -30,6 +30,7 @@ export interface SkipTestCandidate {
   readonly exerciseId: string;
   readonly prompt: string;
   readonly answerKey: AnswerKey;
+  readonly options?: readonly { readonly id: string; readonly text: string }[];
 }
 
 /** 抽出来的一道题，附带它是从哪节课来的——答错时要打开的正是那一节。 */
@@ -53,6 +54,7 @@ export function skipTestCandidates(
       readonly id: string;
       readonly prompt: string;
       readonly answerKey?: AnswerKey;
+      readonly options?: readonly { readonly id: string; readonly text: string }[];
     }[];
   }[],
 ): readonly SkipTestCandidate[] {
@@ -66,6 +68,7 @@ export function skipTestCandidates(
         exerciseId: exercise.id,
         prompt: exercise.prompt,
         answerKey: exercise.answerKey,
+        ...(exercise.options ? { options: exercise.options } : {}),
       });
     }
   }

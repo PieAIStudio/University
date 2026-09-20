@@ -21,6 +21,9 @@ import { getWeighFamily } from "./weigh-difficulty.js";
 */
 export function getExampleFamily(activity: LearningActivitySpec): ActivityFamily {
   switch (activity.kind) {
+    case "primm":
+    case "interaction-path":
+      throw new Error("Interaction paths are authored lesson sequences, not difficulty families");
     case "ai-context":
     case "ai-agent":
       return getWorkflowFamily(activity);

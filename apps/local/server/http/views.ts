@@ -8,7 +8,7 @@ import {
   type KnowledgeNote,
   type StudyManifest,
 } from "@pieai/university-core/domain/schemas.js";
-import { compileAnswerKey } from "@pieai/university-core";
+import { compileAnswerKey, compileChoiceAnswerKey } from "@pieai/university-core";
 import { resolveTermLinks, termRangeOf } from "@pieai/university-core/marks/terms.js";
 import { resolveEvidenceAnchors } from "../content/evidence-anchors.js";
 import { loadLexicon } from "../language/lexicon.js";
@@ -369,6 +369,12 @@ function buildLessonView(
                     {
                       ...(value.title ? { title: value.title } : {}),
                       ...(value.prompt ? { prompt: value.prompt } : {}),
+                      ...(exercise.kind === "choice" && value.options
+                        ? {
+                            options: value.options,
+                            answerKey: compileChoiceAnswerKey(exercise.correctOptionId),
+                          }
+                        : {}),
                       ...(exercise.kind === "short-answer" && value.expectedAnswer
                         ? { answerKey: compileAnswerKey(value.expectedAnswer) }
                         : {}),
@@ -394,9 +400,14 @@ function buildLessonView(
             truth about the exercise, not a gap: a rubric is what tier two
             reads.
           */
-          ...(exercise.kind === "short-answer"
-            ? { answerKey: compileAnswerKey(exercise.expectedAnswer) }
-            : {}),
+          ...(exercise.kind === "choice"
+            ? {
+                options: exercise.options,
+                answerKey: compileChoiceAnswerKey(exercise.correctOptionId),
+              }
+            : exercise.kind === "short-answer"
+              ? { answerKey: compileAnswerKey(exercise.expectedAnswer) }
+              : {}),
           awaitingHostGrade: !hostPassed,
           latestSubmission: submission
             ? { answer: submission.answer, occurredAt: submission.occurredAt.toISOString() }
@@ -437,7 +448,11 @@ function buildLessonView(
 }
 
 function referenceAnswerOf(exercise: Exercise): string {
-  return exercise.kind === "short-answer" ? exercise.expectedAnswer : exercise.rubric.join("\n");
+  return exercise.kind === "choice"
+    ? exercise.options.find((option) => option.id === exercise.correctOptionId)!.text
+    : exercise.kind === "short-answer"
+      ? exercise.expectedAnswer
+      : exercise.rubric.join("\n");
 }
 
 /** The explicit content read used by the shared mistake book. */
@@ -450,6 +465,9 @@ function buildExerciseView(studiesRoot: string, route: LearningRoute): unknown {
     title: exercise.title,
     prompt: exercise.prompt,
     correctAnswer: referenceAnswerOf(exercise),
+    ...(exercise.kind === "choice"
+      ? { options: exercise.options.map(({ id, text }) => ({ id, text })) }
+      : {}),
     ...(exercise.locales
       ? {
           locales: Object.fromEntries(
@@ -463,9 +481,16 @@ function buildExerciseView(studiesRoot: string, route: LearningRoute): unknown {
                   : {}),
                 ...(exercise.kind === "short-answer" && value.expectedAnswer
                   ? { correctAnswer: value.expectedAnswer }
-                  : value.rubric
-                    ? { correctAnswer: value.rubric.join("\n") }
-                    : {}),
+                  : exercise.kind === "choice" && value.options
+                    ? {
+                        correctAnswer: value.options.find(
+                          (option) => option.id === exercise.correctOptionId,
+                        )!.text,
+                        options: value.options.map(({ id, text }) => ({ id, text })),
+                      }
+                    : value.rubric
+                      ? { correctAnswer: value.rubric.join("\n") }
+                      : {}),
               },
             ]),
           ),
@@ -569,6 +594,9 @@ function buildCoachingPacketResponse(
     exercise: {
       id: exercise.id,
       kind: exercise.kind,
+      ...(exercise.kind === "choice"
+        ? { options: exercise.options.map(({ id, text }) => ({ id, text })) }
+        : {}),
       title: exercise.title,
       prompt: exercise.prompt,
       contentRevision: exercise.contentRevision,
@@ -582,7 +610,9 @@ function buildCoachingPacketResponse(
       ? null
       : exercise.kind === "short-answer"
         ? { kind: "short-answer", expectedAnswer: exercise.expectedAnswer }
-        : { kind: "explain", rubric: exercise.rubric },
+        : exercise.kind === "choice"
+          ? { kind: "choice", correctOptionId: exercise.correctOptionId, options: exercise.options }
+          : { kind: "explain", rubric: exercise.rubric },
   });
 
   return {

@@ -2,6 +2,11 @@
 
 Read for either repository or no-repository lessons, and when a batch has bad anchors.
 
+V2 precedence: source anchoring and truth obligations below remain current. The
+old heading/prediction-only failure examples describe stored prose revisions, not
+mandatory V2 screens. Main-path reality/context must not disappear into a source
+footer; preserve a fact/context/boundary map before rewriting.
+
 ## Product syntax
 
 For repository code (and each repository 溯源 stop), emit a token the app parses.

@@ -1,6 +1,9 @@
 import { messages as mapNavigation } from "./map-navigation.en.js";
+import { messages as primm } from "./primm.en.js";
+import { messages as playGallery } from "./play-gallery.en.js";
 import { messages as accountClosure } from "./account-closure.en.js";
 import { messages as gradingCopy } from "./grading-copy.en.js";
+import { messages as interactionPath } from "./interaction-path.en.js";
 import { messages as worldNavigation } from "./world-navigation.en.js";
 import { messages as readingSettings } from "./reading-settings.en.js";
 import { messages as productWelcome } from "./product-welcome.en.js";
@@ -32,8 +35,11 @@ import type { MessageCatalog } from "../types.js";
  */
 export const messages = {
   ...mapNavigation,
+  ...primm,
+  ...playGallery,
   ...accountClosure,
   ...worldNavigation,
+  ...interactionPath,
   ...readingSettings,
   ...gradingCopy,
   ...accountFailures,

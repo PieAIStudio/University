@@ -272,7 +272,11 @@ export function LessonScreen({
       (shown?.lesson.cards ?? []).map((card) => card.id),
     );
     if (wasIncomplete) onWorthwhileProgress?.();
-    onSettled(doneBefore);
+    // PRIMM owns its one ending and returns to the map from its completion
+    // action. Keep native progress, but do not race it with the old /done route
+    // or eject someone who reopens an already completed lesson for practice.
+    if (!shown?.lesson.activities?.some((activity) => activity.kind === "primm"))
+      onSettled(doneBefore);
   }, [
     finished,
     course,
@@ -370,7 +374,10 @@ export function LessonScreen({
         toolbarExtras={<SoundToggle progress={progressPort} />}
         answerDraftScope={answerDraftScope}
       />
-      <LearningSaveStatus progress={progressPort} />
+      <LearningSaveStatus
+        progress={progressPort}
+        quiet={overlaid.lesson.activities?.some((activity) => activity.kind === "primm")}
+      />
     </main>
   );
 }

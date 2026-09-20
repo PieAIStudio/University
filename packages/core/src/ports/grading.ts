@@ -9,6 +9,12 @@
  */
 
 import type { LessonRef } from "../progress/contract.js";
+import type {
+  PrimmExecutionRequest,
+  PrimmExecutionResult,
+  PrimmAbortSignal,
+} from "./primm-execution.js";
+export * from "./primm-execution.js";
 
 /** The internal accounting cost for one structured tier-two grading request. */
 export const METERED_GRADING_COST_POWER_UNITS = "100";
@@ -173,6 +179,8 @@ export interface CoachingPacket {
 }
 
 export interface ExerciseSubmitInput {
+  /** Optional cancellation for an explicitly running local learning assessment. */
+  readonly signal?: PrimmAbortSignal;
   readonly locator: LessonRef;
   readonly exerciseId: string;
   readonly contentRevision: number;
@@ -252,6 +260,11 @@ export type MeteredGradingOffer =
     };
 
 export interface GradingPort {
+  /** Optional capability on the existing AI-source seam; absence means unavailable. */
+  executePrimm?(
+    input: PrimmExecutionRequest,
+    signal?: PrimmAbortSignal,
+  ): Promise<PrimmExecutionResult>;
   submitExercise(input: ExerciseSubmitInput): Promise<ExerciseAttemptResult>;
   meteredGradingOffer(): Promise<MeteredGradingOffer>;
   coachingPacket?(input: {

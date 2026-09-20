@@ -25,6 +25,16 @@ export function matchesAssetMime(bytes: Buffer, mime: string): boolean {
     );
   if (mime === "image/svg+xml")
     return /^\s*(?:<\?xml[^>]*>\s*)?<svg(?:\s|>)/i.test(bytes.toString("utf8", 0, 2048));
+  if (mime === "audio/wav")
+    return (
+      bytes.subarray(0, 4).toString("ascii") === "RIFF" &&
+      bytes.subarray(8, 12).toString("ascii") === "WAVE"
+    );
+  if (mime === "audio/mpeg")
+    return (
+      bytes.subarray(0, 3).toString("ascii") === "ID3" ||
+      (bytes.length > 1 && bytes[0] === 0xff && (bytes[1]! & 0xe0) === 0xe0)
+    );
   if (mime === "video/mp4") return bytes.subarray(4, 8).toString("ascii") === "ftyp";
   if (mime === "video/webm")
     return bytes.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]));
@@ -45,6 +55,8 @@ export function sniffAssetMime(bytes: Buffer): string {
     "image/svg+xml",
     "video/mp4",
     "video/webm",
+    "audio/wav",
+    "audio/mpeg",
   ]) {
     if (matchesAssetMime(bytes, mime)) return mime;
   }

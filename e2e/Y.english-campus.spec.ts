@@ -9,7 +9,10 @@ const { course } = JSON.parse(
 );
 const firstUnit = course.units[0];
 const firstLesson = firstUnit.lessons[0];
-const lessonPath = `/ai-literacy/${course.id}/${firstUnit.id}/${firstLesson.id}`;
+const ordinaryLesson = firstUnit.lessons.find(
+  (lesson: { activities?: { kind: string }[] }) =>
+    !lesson.activities?.some((activity) => activity.kind === "interaction-path"),
+);
 
 async function expectEnglish(scope: Locator) {
   await expect(scope).toBeVisible();
@@ -23,26 +26,33 @@ async function expectEnglish(scope: Locator) {
 async function expectToolbarTargets(page: Page) {
   const toolbar = page.locator(".lesson-toolbar__tools");
   await expect(toolbar).toBeVisible();
-  const geometry = await toolbar.locator("button, label.game-ui-toggle").evaluateAll((nodes) =>
-    nodes
-      .map((node) => {
-        const box = node.getBoundingClientRect();
-        const style = getComputedStyle(node);
-        const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
-        return {
-          text: node.textContent,
-          visible: style.display !== "none" && style.visibility !== "hidden" && box.width > 0,
-          left: box.left,
-          right: box.right,
-          top: box.top,
-          bottom: box.bottom,
-          width: window.innerWidth,
-          height: window.innerHeight,
-          hit: hit !== null && (hit === node || node.contains(hit)),
-        };
-      })
-      .filter((node) => node.visible),
-  );
+  // In interaction lessons V5 moves reading controls into the full explanation;
+  // the sound control remains in the toolbar. Check all the real controls,
+  // not a relaxed target count or a duplicated interaction-only toolbar.
+  const geometry = await page
+    .locator(
+      ".lesson-toolbar__tools button, .lesson-toolbar__tools label.game-ui-toggle, .interaction-path__reading-tools button, .interaction-path__reading-tools label.game-ui-toggle",
+    )
+    .evaluateAll((nodes) =>
+      nodes
+        .map((node) => {
+          const box = node.getBoundingClientRect();
+          const style = getComputedStyle(node);
+          const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+          return {
+            text: node.textContent,
+            visible: style.display !== "none" && style.visibility !== "hidden" && box.width > 0,
+            left: box.left,
+            right: box.right,
+            top: box.top,
+            bottom: box.bottom,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            hit: hit !== null && (hit === node || node.contains(hit)),
+          };
+        })
+        .filter((node) => node.visible),
+    );
   expect(geometry.length).toBeGreaterThanOrEqual(3);
   for (const box of geometry) {
     expect(box.left, `${box.text}: left edge`).toBeGreaterThanOrEqual(-1);
@@ -98,31 +108,54 @@ for (const [mode, origin] of [
       await page.screenshot({ path: info.outputPath("english-journey.png"), fullPage: true });
     });
 
-    test("English reading tools fit and stay operable, including advanced language settings", async ({
-      page,
-    }, info) => {
-      await page.goto(`${origin}${lessonPath}?lang=en`);
-      await expect(page.locator(".lesson-reader")).toContainText(firstLesson.locales.en.title);
-      for (const width of [1440, 390, 320]) {
-        await page.setViewportSize({ width, height: width === 1440 ? 900 : 844 });
-        await page.evaluate(() => document.fonts.ready);
-        await page.evaluate(() => window.scrollTo(0, 0));
-        await expectToolbarTargets(page);
-        const detail = page.locator(".lesson-toolbar__tools .game-ui-segmented-option").last();
-        await humanClick(page, detail, "change reading detail without a clipped target");
-        await expectToolbarTargets(page);
-        await page.screenshot({ path: info.outputPath(`english-tools-${width}.png`) });
-      }
-      await page.goto(`${origin}/settings?lang=en`);
-      await humanClick(page, page.locator("#settings-language"), "open optional reading aids");
-      await expectEnglish(page.locator(".foreign-settings"));
-      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-        321,
-      );
-      await page.screenshot({
-        path: info.outputPath("english-reading-settings.png"),
-        fullPage: true,
+    for (const [surface, lesson] of [
+      ["first lesson", firstLesson],
+      ["ordinary lesson", ordinaryLesson],
+    ] as const) {
+      test(`English reading tools fit and stay operable in ${surface}, including advanced language settings`, async ({
+        page,
+      }, info) => {
+        expect(
+          lesson,
+          "keep ordinary-reader coverage alongside the interaction sample",
+        ).toBeTruthy();
+        await page.goto(`${origin}/ai-literacy/${course.id}/${firstUnit.id}/${lesson.id}?lang=en`);
+        await expect(page.locator(".lesson-reader")).toContainText(lesson.locales.en.title);
+        const review = page.locator(".interaction-path__review");
+        const interaction = (await review.count()) > 0;
+        if (interaction) {
+          await humanClick(
+            page,
+            review.locator(":scope > summary"),
+            "open the retained full explanation",
+          );
+          await expect(review).toHaveAttribute("open", "");
+        }
+        const tools = page.locator(
+          interaction ? ".interaction-path__reading-tools" : ".lesson-toolbar__tools",
+        );
+        for (const width of [1440, 390, 320]) {
+          await page.setViewportSize({ width, height: width === 1440 ? 900 : 844 });
+          await page.evaluate(() => document.fonts.ready);
+          await page.evaluate(() => window.scrollTo(0, 0));
+          await tools.scrollIntoViewIfNeeded();
+          await expectToolbarTargets(page);
+          const detail = tools.locator(".game-ui-segmented-option").last();
+          await humanClick(page, detail, "change reading detail without a clipped target");
+          await expectToolbarTargets(page);
+          await page.screenshot({ path: info.outputPath(`english-tools-${width}.png`) });
+        }
+        await page.goto(`${origin}/settings?lang=en`);
+        await humanClick(page, page.locator("#settings-language"), "open optional reading aids");
+        await expectEnglish(page.locator(".foreign-settings"));
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+          321,
+        );
+        await page.screenshot({
+          path: info.outputPath("english-reading-settings.png"),
+          fullPage: true,
+        });
       });
-    });
+    }
   });
 }

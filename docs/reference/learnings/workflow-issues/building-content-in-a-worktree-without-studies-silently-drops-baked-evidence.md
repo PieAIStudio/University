@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: ai-assisted
 created: 2026-08-28
-last_reviewed: 2026-09-13
+last_reviewed: 2026-09-16
 domain: learning
 tags:
   - learning-recall
@@ -44,3 +44,15 @@ owns the workflow. Do not discard a generated diff merely to hide the symptom.
 If `servedBytes` moves down across every course while `sha256` holds still,
 investigate source completeness and evidence mode before accepting the result.
 The measurements above retain the original failure, not today's gate behavior.
+
+**Shorter authored text is a different case (2026-09-16).** Removing redundant
+rounds in three public-source lessons reduced one course by 8,427 served bytes;
+the other five packages and byte counts stayed identical and all 131 repository
+snippets still baked. The importer now checks each course, not just the total,
+so growth elsewhere cannot mask a loss. A smaller changed public-source package
+is accepted only when both immutable hashes verify, lesson identities remain,
+changed lessons advance revision, and evidence, assets, cards and exercises are
+identical. Missing prior bytes, removed material, same-hash shrink and repository
+evidence shrink remain errors. The exact regression is
+`apps/university/scripts/import-shrink.test.mjs`; this is not permission to use
+`--allow-shrink` or reset the baseline to conceal a missing source.

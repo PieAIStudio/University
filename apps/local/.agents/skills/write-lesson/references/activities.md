@@ -1,5 +1,19 @@
 # 互动课件：配哪个，放哪儿
 
+Current pilot: complete PRIMM, native `primm` activity. The five phases do not
+change to fit the board. Choose meaningful operations within Investigate/Modify;
+Make is independently assessed native work. `interaction-path` below describes
+stored V1/V2 compatibility, not the current method.
+
+The everyday pilot uses `experienceVersion: 2`. Plan five distinct learner acts,
+not five copies of a choice board: predict an output; place the prepared material
+into a conversation and send it; investigate by manipulating the relevant object;
+build an editable request from partial phrases and own words, then execute it;
+change the input/purpose and independently make something useful. The fragments
+are writing scaffolding, not a magic correct answer. Previous observations can
+carry into Modify; Make does not prefill the solution. Reuse existing game engines
+when the task fits, and add a typed shared operation only for a concrete need.
+
 十三种玩法的实现、载荷字段和引擎规则在
 [shared activity contract](../../../../../packages/ui/src/learning-play/README.md)。
 这一页只回答写课时的两个问题：**这节课配哪一种、放在哪一步。**
@@ -7,60 +21,33 @@
 决定在**挑变体的同一步**做，不是课文写完之后再想。写完再配，配出来的一定是
 "给这段话找个游戏"，而不是"这件事本来就该动手才懂"。
 
-## 每一节都要配
+## Stored V2: choose the learning action first (compatibility)
 
-**每一节课至少一个组件。** 这不是建议，是 `LessonCreationProposalSchema` 的硬要求——
-没有 `activities` 的课根本创建不出来，而且组件的 id 必须在正文里被 `::play{#id}` 点到，
-不然也过不去。
+V2 uses one `interaction-path` as the continuous host, with `pedagogyVersion: 2`.
+Its small decisions, material inspection, assembly/repair and exhaustive state
+experiments can span several teaching responsibilities. Those steps are not new
+large game engines, nor does every responsibility require an extra interaction.
 
-这一条从 2026-09-10 起是这样，之前不是。之前写的是「默认是不配」，
-结果是**469 节课里 15 节有组件，3%**。那不是一条被谨慎执行的规则，
-那是一条替所有人做了决定的规则，而它决定的是：这个产品发的是一叠文字。
+The native 13 activities below remain available for tasks that actually fit their
+models. Claude's short and arcade prototypes are research entries in the catalogue,
+not additional valid `ActivityKind` values. Extract a typed reusable mechanism only
+when a real lesson needs it; do not drop executable prototype HTML into course JSON.
 
-理由很直接：只读一段话学不会做东西。一节课如果读者从头到尾没有动过手，
-它和一篇博客的区别只剩下排版。
+Repetition is judged by learning: a changed condition or less help may be useful
+practice, while a different hand gesture may still repeat the same trivial answer.
+There is no automatic “second game harms learning” rule. Preserve the current
+technical activity-array bound for legacy payloads; one V2 path can contain several
+bounded steps without creating six independent games.
 
-**上限是 3，但常态是 1。** 两个组件会把读者的注意力从内容拽到玩法上——
-这和课文里禁止塞趣闻是同一条理由，同样是实测的反向效应。
-配到 2 个要在 agent report 里说明这两个各自在教什么不同的东西；
-配到 3 个几乎一定是在凑数。
+If no native mechanic fits, name the desired action, the closest engine and the
+concrete missing capability. Do not invent numerical budgets, scales, facts or code
+to satisfy an engine. New capability needs typed inputs, truthful feedback, native
+source/recovery validation and browser evidence before it can be course-ready.
 
-## 配不上的时候，先怀疑是选错了玩法
-
-下面这四种情况是**真的**信号，但它们说的是"**换一种**"，不是"这节不配"：
-
-1. **组件让读者做的动作，和自检让读者做的动作是同一个。**
-
-   判断标准**不是**「讲的是不是同一件事」。每一节合格的课，自检本来就在考这节的
-   核心——那是契约要求的。按「同一件事」去读这一条，会把每一节课都拒掉：
-   第一轮实测 8 节全拒，就是这么来的。
-
-   要问的是**读者的手在做什么**。自检是用话回答一个判断；组件是把关系连出来、
-   把数调出来、把顺序排出来、把该放行的放行。**动作不同就不算重复**，哪怕教的是
-   同一个道理——「说得出 A 靠名字找到 B」和「亲手把 A 连到 B、连错了走不通」
-   是两件事，后者正是前者做不到的那部分。
-
-   只有当组件也只是让读者**选一个说法、答一个判断**时，它才是把自检又演了一遍。
-   **换一种手部动作不同的。**
-
-2. **玩法的必填字段这节课没有对应的真事。** 例如 `dispatch` 必须有预算和代价，
-   一节不谈成本的课要配它，就得编一个预算——那是为了配而配。**换一种。**
-3. **同一单元里已经有一节在用组件教同一件事。** 第二次不是练习，是重复。
-   **换一种，或者换一个切入的角度。**
-4. **玩法要求读者用这门课还没教过的概念。** 一节讲「它动手前会先问你」的课，
-   主题正好是 `ai-agent`，但那个玩法要有工作区、文件、工具和目标产物——
-   而读者此刻可能连"项目里的文件"都还没学过。玩法自己也有前置，
-   **前置没到就换一个前置更浅的**，跟正文不许提前抛术语是同一条规矩。
-   开篇单元几乎总是 `sort` / `contrast` / `weigh`，因为这三种只要求读者会读中文。
-
-**十三种全试过还是配不上**，那才是真的缺口。这种情况下：照常写课，
-把 `activities` 留空会导致创建失败，所以你必须在 agent report 里写清楚
-**这节课要的手部动作是什么形状、十三种里最接近的是哪种、差在哪**，
-然后由人来决定是加一种玩法还是放这节过。
-
-这个报告不是形式。上一轮正是靠十节课的"配不上"理由，
-才看出来缺的是「归类」和「取舍」两种形状——`sort`、`contrast`、`weigh`
-都是这么来的。**你判"配不上"的那句理由，比一个硬凑的载荷有用得多。**
+For an `experiment`, write every boolean-control combination explicitly. Its
+result is the current simulation, not a promise about a live AI. Useful alternatives
+can be accepted; all-on is not automatically best. A learner who already required
+“保留时间” must not be told “你没要求时间” when the result omits it.
 
 ## 选哪一种：看课文用什么话描述机制
 
@@ -140,8 +127,8 @@
 
 ## 面向读者的字：直说，不要比喻
 
-组件里每一个字读者都要**独自**读懂——没有上下文，没有你在旁边解释。
-课文可以铺垫，组件不行。
+组件里的每一句都要在当前可见材料与任务中**独自**读懂；不能依赖已经消失的上下文。
+V2 的现实背景与具名材料负责铺垫，操作说明负责告诉读者此刻做什么。
 
 - **标题就是这一关要回答的问题**，别写成意象。
   `谁能碰你的电脑？` 是标题；`各自的手，能伸到哪` 不是——读者得先解开比喻，
@@ -167,11 +154,10 @@
 - 六个 connect 里有两个是一对多。**一对多不是错**，但它是默认读法的例外，
   例外必须写出来。
 
-## 数量、难度、轮换
+## 旧式独立组件的数量、难度、轮换（不规定 PRIMM 阶段）
 
-- **一节至少 1 个，常态 1 个。** 下限由 schema 强制，见开头。上限是 3，
-  但两个组件会把读者的注意力从内容拽到玩法上——这和课文里禁止塞趣闻是同一条理由，
-  同样是实测的反向效应。第 2 个要在 report 里说明它教的是另一件事。
+- 旧式课文载荷仍沿用原有数量边界；这不是研究证明多个相关操作有害。
+  PRIMM 用一个方法载荷编排五阶段，不能把旧式数量上限解释成每节只准一个学习动作。
 - **难度跟着单元走**：前 1/3 用 `intro`，中间 `practice`，收口的那节可以 `challenge`。
 - **同一单元里最多两节连用同一种玩法**，和变体轮换是同一条线。第三节还要用同一种，
   就在 agent report 里说明为什么这是诚实的选择，而不是硬凑一个别的。

@@ -12,6 +12,7 @@
  * Usage:
  *   node scripts/check-proposal-shape.mjs <proposal.json> [<proposal.json> ...]
  */
+import { validateChoiceExercise } from "@pieai/university-core";
 import { readFileSync } from "node:fs";
 import { checkLessonSpine, checkLessonUrlEvidence } from "./lesson-spine.mjs";
 
@@ -255,7 +256,9 @@ function check(proposal, options = {}) {
       claimId(lessonIds, lesson.id, "lesson", `unit ${unit.id}`);
       checkEvidence(lesson.evidence, where, problems);
       checkContent(lesson.content, where, problems);
-      for (const { message } of checkLessonSpine(lesson.content, lesson.variant)) {
+      for (const { message } of checkLessonSpine(lesson.content, lesson.variant, {
+        interactionLesson: lesson,
+      })) {
         problems.push(`${where}: ${message}`);
       }
       for (const message of checkLessonUrlEvidence(lesson.content, lesson.evidence)) {
@@ -269,8 +272,13 @@ function check(proposal, options = {}) {
 
       const cards = lesson.cards ?? [];
       const exercises = lesson.exercises ?? [];
-      if (exercises.length !== 1 || exercises[0]?.kind !== "short-answer") {
-        problems.push(`${where}: 新课必须有恰好 1 道 short-answer 独立练习；演示不能代替练习`);
+      const v2 = lesson.activities?.some(
+        (activity) => activity.kind === "interaction-path" && activity.pedagogyVersion === 2,
+      );
+      if (exercises.length !== 1 || (!v2 && exercises[0]?.kind !== "short-answer")) {
+        problems.push(
+          `${where}: ${v2 ? "V2 必须保留恰好一道独立练习" : "新课必须有恰好 1 道 short-answer 独立练习"}；演示不能代替练习`,
+        );
       }
       if (cards.length > 0 && exercises.length === 0) {
         problems.push(
@@ -386,6 +394,9 @@ function checkExercise(exercise, where, problems, lesson, skippedChecks) {
     }
     if (!skippedChecks.has("exact-answer")) checkExactAnswer(lesson, exercise, where, problems);
     if (!skippedChecks.has("title-answer")) checkTitleAnswer(lesson, exercise, where, problems);
+  } else if (exercise.kind === "choice") {
+    const result = validateChoiceExercise(exercise);
+    if (!result.ok) for (const issue of result.errors) problems.push(`${where}: ${issue.message}`);
   } else if (exercise.kind === "explain") {
     const rubric = exercise.rubric ?? [];
     if (rubric.length < 3)

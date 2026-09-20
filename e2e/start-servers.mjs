@@ -56,6 +56,9 @@ function run(command, args, cwd, extraEnv = {}) {
   // process, where the Vercel function is the only consumer.
   if (extraEnv.E2E_TAG === "online" || extraEnv.E2E_TAG === "local") {
     for (const name of SERVER_ONLY_ENV) delete childEnv[name];
+    // PRIMM specs intercept this transport with explicitly labelled test data.
+    // It is a DEV-only seam and never enables a model in a production build.
+    childEnv.VITE_UNIVERSITY_PRIMM_PREVIEW_URL = "http://127.0.0.1:23151";
   }
   const child = spawn(command, args, {
     cwd,

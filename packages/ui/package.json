@@ -110,9 +110,12 @@
     "./today/TodaySection.js": "./src/today/TodaySection.tsx",
     "./today/today.css": "./src/today/today.css",
     "./view/lesson-view.js": "./src/view/lesson-view.ts",
+    "./play-catalog/PlayCatalog.js": "./src/play-catalog/PlayCatalog.tsx",
+    "./play-catalog/play-catalog.css": "./src/play-catalog/play-catalog.css",
     "./learning-play/LearningActivity.js": "./src/learning-play/LearningActivity.tsx",
     "./learning-play/LearningPlayLab.js": "./src/learning-play/LearningPlayLab.tsx",
     "./learning-play/learning-play.css": "./src/learning-play/learning-play.css",
+    "./learning-play/interaction-path.css": "./src/learning-play/interaction-path.css",
     "./learning-play/hunt.css": "./src/learning-play/hunt.css",
     "./learning-play/dispatch.css": "./src/learning-play/dispatch.css",
     "./learning-play/program.css": "./src/learning-play/program.css",
@@ -126,7 +129,9 @@
     "./learning-play/workflow-usability.css": "./src/learning-play/workflow-usability.css",
     "./learning-play/sort.css": "./src/learning-play/sort.css",
     "./learning-play/contrast.css": "./src/learning-play/contrast.css",
-    "./learning-play/weigh.css": "./src/learning-play/weigh.css"
+    "./learning-play/weigh.css": "./src/learning-play/weigh.css",
+    "./learning-play/PrimmLesson.js": "./src/learning-play/PrimmLesson.tsx",
+    "./learning-play/primm.css": "./src/learning-play/primm.css"
   },
   "scripts": {
     "typecheck": "tsc -b --pretty false",

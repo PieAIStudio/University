@@ -159,6 +159,7 @@ export function assembleLessonView(input: {
           title: exercise.title ?? translate("app.lesson.assembleview.copy.自检"),
           ...(localized?.title ? { title: localized.title } : {}),
           prompt: localized?.prompt ?? exercise.prompt,
+          ...(exercise.options ? { options: localized?.options ?? exercise.options } : {}),
           contentRevision,
           // The package has carried this since tier one shipped; the view was
           // dropping it, so the only thing that could grade an answer in this

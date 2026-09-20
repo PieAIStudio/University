@@ -1,3 +1,4 @@
+import { refineChoiceExercise } from "@pieai/university-core";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -6,6 +7,7 @@ import { z } from "zod";
 import {
   CardContentSchema,
   EvidenceReferenceSchema,
+  interactionLessonIssues,
   isUrlEvidence,
   ExerciseSchema,
   IsoDateTime,
@@ -17,6 +19,7 @@ import {
   LocaleMap,
   LocalizedCardSchema,
   LocalizedExerciseSchema,
+  ChoiceExerciseContentSchema,
   LocalizedLessonSchema,
   Sha256,
   SnapshotManifestSchema,
@@ -86,6 +89,9 @@ const ExerciseRevisionBaseSchema = z.object({
 });
 
 const ExerciseRevisionProposalSchema = z.union([
+  ExerciseRevisionBaseSchema.extend(ChoiceExerciseContentSchema.shape)
+    .strict()
+    .superRefine(refineChoiceExercise),
   ExerciseRevisionBaseSchema.extend({
     kind: z.literal("short-answer").optional(),
     expectedAnswer: z.string().min(1),
@@ -562,6 +568,8 @@ function createExerciseRevision(
   if (title === undefined) {
     throw new Error(`Exercise ${proposal.id} is new and must declare a title`);
   }
+  const nextKind = proposal.kind ?? ("expectedAnswer" in proposal ? "short-answer" : "explain");
+  const locales = proposal.locales ?? (current?.kind === nextKind ? current.locales : undefined);
   const build = (contentRevision: number): Exercise => {
     const common = {
       schemaVersion: 1 as const,
@@ -571,13 +579,19 @@ function createExerciseRevision(
       unitId: location.unitId,
       lessonId: location.lessonId,
       prompt: proposal.prompt,
-      ...((proposal.locales ?? current?.locales)
-        ? { locales: proposal.locales ?? current?.locales }
-        : {}),
+      ...(locales ? { locales } : {}),
       contentRevision,
       status: "active" as const,
       evidence: proposal.evidence,
     };
+    if (proposal.kind === "choice") {
+      return normalizeExercise({
+        ...common,
+        kind: "choice",
+        options: proposal.options,
+        correctOptionId: proposal.correctOptionId,
+      });
+    }
     if ("expectedAnswer" in proposal) {
       if (proposal.kind && proposal.kind !== "short-answer") {
         throw new Error(`Exercise ${proposal.id} kind does not match expectedAnswer content`);
@@ -738,6 +752,8 @@ function buildBundle(
     activities: proposal.lesson.activities ?? currentLesson.activities,
     updatedAt: timestamp,
   });
+  const pathIssues = interactionLessonIssues({ ...lesson, content: proposal.lesson.content });
+  if (pathIssues.length) throw new Error(pathIssues.join("; "));
   return { lesson, lessonContent: proposal.lesson.content, assetFiles, cards, exercises };
 }
 

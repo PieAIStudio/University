@@ -8,9 +8,12 @@ import { gradeDeterministically, type AnswerKey } from "../packages/core/dist/in
 import { ONLINE_ORIGIN as ONLINE } from "./ports.js";
 import { humanClick } from "./harness/click";
 import { enterSelectedMapObject } from "./harness/map-actions.js";
+import { enterExerciseAnswer, expectExerciseAnswer } from "./harness/exercise-input.js";
 
 interface Exercise {
   id: string;
+  kind?: string;
+  correctOptionId?: string;
   expectedAnswer?: string;
   answerKey?: AnswerKey;
   locales?: Record<string, { expectedAnswer?: string; answerKey?: AnswerKey }>;
@@ -74,7 +77,12 @@ test("W1 both beginner paths preserve every real-source lesson and both answer k
           expect(output.locales?.en?.expectedAnswer).toBeUndefined();
           for (const locale of ["zh-CN", "en"]) {
             const answer =
-              locale === "en" ? exercise.locales?.en?.expectedAnswer : exercise.expectedAnswer;
+              exercise.kind === "choice"
+                ? exercise.correctOptionId
+                : locale === "en"
+                  ? exercise.locales?.en?.expectedAnswer
+                  : exercise.expectedAnswer;
+            expect(output.correctOptionId).toBeUndefined();
             const key = locale === "en" ? output.locales?.en?.answerKey : output.answerKey;
             expect(answer, `${lesson.id}/${locale}`).toBeTruthy();
             expect(gradeDeterministically(answer!, key).outcome, `${lesson.id}/${locale}`).toBe(
@@ -127,7 +135,10 @@ for (const locale of ["en", "zh-CN"] as const) {
             page.getByRole("region", { name: "Next lesson", exact: true }),
           ).not.toContainText(/[\u4e00-\u9fff]/);
         }
-        await expect(reader.locator(".learning-activity").first()).toBeVisible();
+        await expect(reader.locator(".learning-activity, .interaction-path").first()).toBeVisible();
+        const review = reader.locator(".interaction-path__review > summary");
+        if (await review.count())
+          await humanClick(page, review, "open the interaction lesson's full source explanation");
         const disclosure = reader.locator(".lesson-sources__details summary").first();
         await humanClick(page, disclosure, "source support and limitations");
         await expect(reader.locator(".lesson-sources__provenance").first()).toBeVisible();
@@ -139,7 +150,7 @@ for (const locale of ["en", "zh-CN"] as const) {
         expect(
           await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
         ).toBe(true);
-        const images = reader.locator(".lesson-media--figure img");
+        const images = reader.locator(".lesson-media--figure img, .interaction-path__image img");
         if (lesson.assets.length > 0) expect(await images.count()).toBeGreaterThan(0);
         for (const image of await images.all()) {
           await image.scrollIntoViewIfNeeded();
@@ -168,10 +179,13 @@ for (const locale of ["en", "zh-CN"] as const) {
         await page.screenshot({ path: info.outputPath("lesson-sources.png"), fullPage: true });
         const exercise = lesson.exercises[0]!;
         const answer =
-          locale === "en" ? exercise.locales!.en!.expectedAnswer! : exercise.expectedAnswer!;
+          exercise.kind === "choice"
+            ? exercise.correctOptionId!
+            : locale === "en"
+              ? exercise.locales!.en!.expectedAnswer!
+              : exercise.expectedAnswer!;
         const panel = reader.locator(".exercise-panel").first();
-        const input = panel.locator("textarea");
-        await input.fill(answer);
+        await enterExerciseAnswer(page, panel, answer);
         await humanClick(
           page,
           panel.locator(".exercise-actions button").first(),
@@ -179,7 +193,7 @@ for (const locale of ["en", "zh-CN"] as const) {
         );
         await expect(panel).toContainText(locale === "en" ? "Passed" : "通过");
         await page.reload();
-        await expect(page.locator(".exercise-panel textarea").first()).toHaveValue(answer);
+        await expectExerciseAnswer(page.locator(".exercise-panel").first(), answer);
         await page.locator(".exercise-panel").first().scrollIntoViewIfNeeded();
         expect(errors).toEqual([]);
         await page.screenshot({ path: info.outputPath("answer-restored.png"), fullPage: true });
@@ -197,7 +211,15 @@ test("W3 real source media stays readable in night mode and the contrast guard r
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   await page.goto(`${ONLINE}/ai-literacy/${course.id}/${unit.id}/${unit.lessons[0]!.id}?lang=en`);
   await expect(page.locator("html")).toHaveAttribute("data-game-ui-theme", "night");
-  const media = page.locator(".lesson-media").first();
+  // Theme arrives before the async lesson. Do not test for an optional review
+  // control until the reader has actually mounted, or its collapsed image is
+  // mistaken for missing media.
+  await expect(page.locator(".lesson-reader")).toBeVisible();
+  const review = page.locator(".interaction-path__review > summary");
+  if (await review.count())
+    await humanClick(page, review, "open the retained source image and caption");
+  // V2 puts the original photo and its credit in the task, not in hidden prose.
+  const media = page.locator(".interaction-path__image:has(figcaption), .lesson-media").first();
   await expect(media).toBeVisible();
   await media.scrollIntoViewIfNeeded();
   await expect
@@ -214,20 +236,23 @@ test("W3 real source media stays readable in night mode and the contrast guard r
   await caption.scrollIntoViewIfNeeded();
   const originalColors = await media.evaluate((element) => ({
     background: getComputedStyle(element.querySelector("figcaption")!).backgroundColor,
-    color: getComputedStyle(element.querySelector(".lesson-media__caption")!).color,
+    color: getComputedStyle(element.querySelector("figcaption")!).color,
   }));
-  await expect(media).toContainText("Source image");
+  await expect(media).toContainText("NASA");
   const scan = () =>
-    new AxeBuilder({ page }).include(".lesson-media").withTags(["wcag2a", "wcag2aa"]).analyze();
+    new AxeBuilder({ page })
+      .include(".interaction-path__image:has(figcaption), .lesson-media")
+      .withTags(["wcag2a", "wcag2aa"])
+      .analyze();
   expect((await scan()).violations).toEqual([]);
   // Reproduce the measured unreadable caption pair in this isolated test page.
   // This is an assertion attack, not a screenshot claimed to be an old release.
   const fault = await page.addStyleTag({
     content:
-      ".lesson-media, .lesson-media figcaption { background: #746d64 !important; } .lesson-media figcaption, .lesson-media__caption { color: #786250 !important; }",
+      ".lesson-media, .lesson-media figcaption, .interaction-path__image figcaption { background: #746d64 !important; } .lesson-media figcaption, .lesson-media__caption, .interaction-path__image figcaption { color: #786250 !important; }",
   });
   await caption.scrollIntoViewIfNeeded();
-  await expect(media.locator(".lesson-media__caption")).toHaveCSS("color", "rgb(120, 98, 80)");
+  await expect(caption).toHaveCSS("color", "rgb(120, 98, 80)");
   await expect(caption).toHaveCSS("background-color", "rgb(116, 109, 100)");
   const attacked = await scan();
   await info.attach("contrast-guard-attack", {
@@ -241,7 +266,7 @@ test("W3 real source media stays readable in night mode and the contrast guard r
   expect(attacked.violations.some((item) => item.id === "color-contrast")).toBe(true);
   await fault.evaluate((element) => element.remove());
   await expect(caption).toHaveCSS("background-color", originalColors.background);
-  await expect(media.locator(".lesson-media__caption")).toHaveCSS("color", originalColors.color);
+  await expect(caption).toHaveCSS("color", originalColors.color);
   expect((await scan()).violations).toEqual([]);
   await page.screenshot({ path: info.outputPath("source-media-night.png"), fullPage: true });
 });

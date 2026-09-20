@@ -23,6 +23,8 @@ import { getAIBriefExamples } from "./ai-brief-examples.js";
 import { getAIWorkflowExamples } from "./ai-workflow-examples.js";
 import { getAIQualityExamples } from "./ai-quality-examples.js";
 
+type LabKind = Exclude<ActivityKind, "interaction-path" | "primm">;
+
 /*
   The lab's two shelves, exported so a test can hold them against the wire
   enum. `sort` had an engine, a renderer, three lessons using it and a gate
@@ -49,29 +51,30 @@ export const AI_MODES = [
   "ai-repair",
 ] as const satisfies readonly ActivityKind[];
 
+/** One fixture registry for the original lab and the unified catalogue. */
+export function getLabExamples(collection: "foundations" | "ai") {
+  return collection === "ai"
+    ? [...getAIBriefExamples(), ...getAIWorkflowExamples(), ...getAIQualityExamples()]
+    : [
+        ...getBaseExamples(),
+        ...getSortExamples(),
+        ...getContrastExamples(),
+        ...getWeighExamples(),
+        ...extraExamples(),
+        ...getProgramExamples(),
+      ];
+}
+
 /** Demo fixtures live here; the activity renderer has no dependency on this page. */
 export function LearningPlayLab({
   collection = "foundations",
 }: {
   readonly collection?: "foundations" | "ai";
 }) {
-  const modes: readonly ActivityKind[] = collection === "ai" ? AI_MODES : FOUNDATION_MODES;
+  const modes: readonly LabKind[] = collection === "ai" ? AI_MODES : FOUNDATION_MODES;
   const { locale } = useI18n();
-  const examples = useMemo(
-    () =>
-      collection === "ai"
-        ? [...getAIBriefExamples(), ...getAIWorkflowExamples(), ...getAIQualityExamples()]
-        : [
-            ...getBaseExamples(),
-            ...getSortExamples(),
-            ...getContrastExamples(),
-            ...getWeighExamples(),
-            ...extraExamples(),
-            ...getProgramExamples(),
-          ],
-    [locale, collection],
-  );
-  const [mode, setMode] = useState<ActivityKind>(modes[0]!);
+  const examples = useMemo(() => getLabExamples(collection), [locale, collection]);
+  const [mode, setMode] = useState<LabKind>(modes[0]!);
   const [variant, setVariant] = useState(0);
   const [difficulty, setDifficulty] = useState<ActivityDifficulty>("intro");
   const [round, setRound] = useState(0);
@@ -99,7 +102,7 @@ export function LearningPlayLab({
       activityTop.current?.scrollIntoView({ block: "start", behavior: "instant" });
       activityTop.current?.focus({ preventScroll: true });
     });
-  const choose = (next: ActivityKind) => {
+  const choose = (next: LabKind) => {
     setMode(next);
     setVariant(0);
     setPlaylist(null);
@@ -146,6 +149,7 @@ export function LearningPlayLab({
         <SoundToggle />
       </div>
       <nav className="learning-play-lab__collections" aria-label={t("play.ai.collection")}>
+        <a href="/play-lab/catalog">{t("gallery.title")}</a>
         <a href="/play-lab/ai" aria-current={collection === "ai" ? "page" : undefined}>
           {t("play.ai.collection.ai")}
         </a>

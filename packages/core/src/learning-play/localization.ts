@@ -24,18 +24,113 @@ const DISPLAY_MAPS = new Set(["outcomes", "costOfOther"]);
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-function rewriteDisplay(value: unknown, rewrite: (text: string) => string, parent = ""): unknown {
-  if (Array.isArray(value)) return value.map((item) => rewriteDisplay(item, rewrite, parent));
+// A closed list translates the authored starter shown and executed in each locale,
+// never learner inputs or runtime results. Arrays omit numeric indexes.
+const PRIMM_DISPLAY_PATHS = new Set([
+  "title",
+  "brief",
+  "goal",
+  "takeaway",
+  "hint",
+  "source.label",
+  "intro.situation",
+  "intro.need",
+  "intro.connection",
+  "sources.reference.label",
+  "sources.note",
+  "sources.summary",
+  "sources.limitation",
+  "sources.date",
+  "starter.prompt",
+  "materials.label",
+  "materials.text",
+  "predict.question",
+  "predict.options.label",
+  "run.title",
+  "run.note",
+  "run.attachmentLabel",
+  "investigate.title",
+  "investigate.brief",
+  "investigate.explanation",
+  "investigate.more.question",
+  "investigate.more.answer",
+  "investigate.game.instruction",
+  "investigate.game.regions.label",
+  "investigate.game.regions.note",
+  "investigate.game.buckets.label",
+  "investigate.game.cards.label",
+  "investigate.game.cards.text",
+  "investigate.game.cards.why",
+  "investigate.game.items.label",
+  "investigate.game.items.text",
+  "investigate.game.formats.label",
+  "investigate.game.sentences.text",
+  "investigate.game.replacementHint",
+  "modify.title",
+  "modify.brief",
+  "modify.goal",
+  "modify.suggestion",
+  "modify.workbench.instruction",
+  "modify.workbench.pieces.label",
+  "modify.workbench.pieces.text",
+  "make.title",
+  "make.scenario",
+  "make.goal",
+  "make.promptPlaceholder",
+  "make.checklist",
+  "make.artifactLabel",
+  "finish.title",
+  "finish.note",
+]);
+
+function rewritePrimmDisplay(
+  value: unknown,
+  rewrite: (text: string) => string,
+  path = "",
+): unknown {
+  if (typeof value === "string") return PRIMM_DISPLAY_PATHS.has(path) ? rewrite(value) : value;
+  if (Array.isArray(value)) return value.map((item) => rewritePrimmDisplay(item, rewrite, path));
+  if (!isRecord(value) || path === "locales") return value;
+  return Object.fromEntries(
+    Object.entries(value).map(([key, item]) => [
+      key,
+      rewritePrimmDisplay(item, rewrite, path ? `${path}.${key}` : key),
+    ]),
+  );
+}
+
+function rewriteDisplay(
+  value: unknown,
+  rewrite: (text: string) => string,
+  parent = "",
+  isPath = isRecord(value) && value.kind === "interaction-path",
+): unknown {
+  if (isRecord(value) && value.kind === "primm") return rewritePrimmDisplay(value, rewrite);
+  if (Array.isArray(value))
+    return value.map((item) => rewriteDisplay(item, rewrite, parent, isPath));
   if (!isRecord(value)) return value;
   return Object.fromEntries(
     Object.entries(value).map(([key, item]) => {
       // Locale dictionaries are metadata. Never rewrite a dictionary, an ID,
       // an executable program, a source URL, or a learner's submitted data.
       if (key === "locales") return [key, item];
-      if (typeof item === "string" && (DISPLAY_FIELDS.has(key) || DISPLAY_MAPS.has(parent))) {
+      const pathCopy =
+        isPath &&
+        ((parent === "context" && (key === "introduction" || key === "task")) ||
+          (parent === "sources" && ["summary", "limitation", "date"].includes(key)) ||
+          (parent === "steps" && key === "simulationNote") ||
+          (parent === "materials" && key === "text") ||
+          (parent === "cases" && (key === "text" || key === "feedback")));
+      if (
+        typeof item === "string" &&
+        (pathCopy ||
+          DISPLAY_FIELDS.has(key) ||
+          DISPLAY_MAPS.has(parent) ||
+          (key === "text" && parent === "reference"))
+      ) {
         return [key, rewrite(item)];
       }
-      return [key, rewriteDisplay(item, rewrite, key)];
+      return [key, rewriteDisplay(item, rewrite, key, isPath)];
     }),
   );
 }

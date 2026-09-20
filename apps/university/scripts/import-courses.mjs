@@ -63,6 +63,7 @@ import {
 } from "./bake-evidence.mjs";
 import { validateRecoveryInput } from "./delivery-artifact.mjs";
 import { publicDisplayLocales, requireContentRevision, toPublicPackage } from "./public-course.mjs";
+import { assertNoUnexplainedShrink } from "./import-shrink.mjs";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 const configuredContentRoot = resolve(
@@ -148,6 +149,8 @@ function decodeAsset(dataBase64) {
 }
 
 const EXTENSIONS = {
+  "audio/wav": "wav",
+  "audio/mpeg": "mp3",
   "image/png": "png",
   "image/jpeg": "jpg",
   "image/webp": "webp",
@@ -231,6 +234,8 @@ for (const studyId of readdirSync(upstream).sort()) {
         // they just got wrong is a *server* read, and it waits for the server.
         for (const exercise of lesson.exercises ?? []) {
           let answerKey;
+          // Choice keys are compiled by the shared public projection below.
+          if (exercise.kind === "choice") keysCompiled += 1;
           if (typeof exercise.expectedAnswer === "string") {
             const key = compileAnswerKey(exercise.expectedAnswer);
             answerKey = key;
@@ -482,31 +487,18 @@ const trackedMode = existsSync(trackedManifestPath)
   : null;
 const comparable = trackedMode === null || trackedMode === evidenceMode;
 if (!process.argv.includes("--allow-shrink") && comparable && existsSync(trackedManifestPath)) {
-  const servedOf = (doc) =>
-    (doc.studies ?? []).reduce(
-      (sum, study) =>
-        sum + (study.courses ?? []).reduce((n, course) => n + (course.servedBytes ?? 0), 0),
-      0,
-    );
-  let trackedServed = 0;
-  try {
-    trackedServed = servedOf(JSON.parse(readFileSync(trackedManifestPath, "utf8")));
-  } catch {
-    trackedServed = 0;
-  }
-  const freshServed = servedOf(manifest);
-  if (trackedServed > freshServed) {
-    const lost = trackedServed - freshServed;
-    throw new Error(
-      `import-courses: refusing to shrink the tracked manifest by ${(lost / 1024).toFixed(0)} KB ` +
-        `(${trackedServed} -> ${freshServed} servedBytes).\n` +
-        `  Evidence could not be read, most likely because this checkout has no studies at\n` +
-        `  ${studiesRoot}\n` +
-        `  In a git worktree that is expected: apps/local/studies/* is gitignored. Either run\n` +
-        `  this from the main checkout, or symlink the studies you need, or pass --allow-shrink\n` +
-        `  if the content really did get smaller.`,
-    );
-  }
+  const explained = assertNoUnexplainedShrink(
+    JSON.parse(readFileSync(trackedManifestPath, "utf8")),
+    manifest,
+    (studyId, entry) => {
+      const digest = /^sha256:([a-f0-9]{64})$/.exec(entry.sha256)?.[1];
+      if (!digest) return null;
+      const file = join(upstream, studyId, `${entry.courseId}.${digest}.recovery.json`);
+      return existsSync(file) ? readFileSync(file) : null;
+    },
+  );
+  for (const receipt of explained)
+    console.log(`import-courses: verified shorter revision ${JSON.stringify(receipt)}`);
 }
 writeFileSync(trackedManifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 

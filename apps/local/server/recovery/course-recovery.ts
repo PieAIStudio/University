@@ -1,3 +1,4 @@
+import { refineChoiceExercise } from "@pieai/university-core";
 import { createHash, randomUUID } from "node:crypto";
 import {
   existsSync,
@@ -19,6 +20,7 @@ import { z } from "zod";
 
 import {
   CourseCurrency,
+  interactionLessonIssues,
   LocaleMap,
   LocalizedStudySchema,
   LocalizedCourseSchema,
@@ -26,6 +28,7 @@ import {
   LocalizedLessonSchema,
   LocalizedCardSchema,
   LocalizedExerciseSchema,
+  ChoiceExerciseContentSchema,
   EvidenceReferenceSchema,
   LessonActivitySchema,
   LessonAssetSchema,
@@ -124,6 +127,16 @@ const RecoveryExerciseSchema = z.discriminatedUnion("kind", [
   z
     .object({
       id: StableId,
+      title: z.string().min(1).max(200),
+      prompt: z.string().min(1).max(20_000),
+      evidence: z.array(SourceOnlyEvidenceSchema).min(1),
+      ...ChoiceExerciseContentSchema.shape,
+    })
+    .strict()
+    .superRefine(refineChoiceExercise),
+  z
+    .object({
+      id: StableId,
       kind: z.literal("short-answer"),
       title: z.string().min(1).max(200),
       prompt: z.string().min(1).max(20_000),
@@ -175,7 +188,14 @@ const RecoveryLessonSchema = z
      */
     activities: z.array(LessonActivitySchema).max(3).default([]),
   })
-  .strict();
+  .strict()
+  .superRefine((lesson, context) => {
+    for (const message of interactionLessonIssues({
+      ...lesson,
+      assets: lesson.assets.map((asset) => asset.metadata),
+    }))
+      context.addIssue({ code: "custom", message });
+  });
 
 const RecoveryUnitSchema = z
   .object({
@@ -526,25 +546,36 @@ function serializeCourse(
             throw new Error(`Exercise is not active: ${exercise.id}`);
           }
           droppedUaBindingCount += uaBindingCount(exercise.evidence);
-          return exercise.kind === "short-answer"
+          return exercise.kind === "choice"
             ? {
                 id: exercise.id,
                 kind: exercise.kind,
                 title: exercise.title,
                 prompt: exercise.prompt,
+                options: exercise.options,
+                correctOptionId: exercise.correctOptionId,
                 ...(exercise.locales ? { locales: exercise.locales } : {}),
-                expectedAnswer: exercise.expectedAnswer,
                 evidence: exercise.evidence.map(sourceOnlyEvidence),
               }
-            : {
-                id: exercise.id,
-                kind: exercise.kind,
-                title: exercise.title,
-                prompt: exercise.prompt,
-                ...(exercise.locales ? { locales: exercise.locales } : {}),
-                rubric: exercise.rubric,
-                evidence: exercise.evidence.map(sourceOnlyEvidence),
-              };
+            : exercise.kind === "short-answer"
+              ? {
+                  id: exercise.id,
+                  kind: exercise.kind,
+                  title: exercise.title,
+                  prompt: exercise.prompt,
+                  ...(exercise.locales ? { locales: exercise.locales } : {}),
+                  expectedAnswer: exercise.expectedAnswer,
+                  evidence: exercise.evidence.map(sourceOnlyEvidence),
+                }
+              : {
+                  id: exercise.id,
+                  kind: exercise.kind,
+                  title: exercise.title,
+                  prompt: exercise.prompt,
+                  ...(exercise.locales ? { locales: exercise.locales } : {}),
+                  rubric: exercise.rubric,
+                  evidence: exercise.evidence.map(sourceOnlyEvidence),
+                };
         });
         return {
           id: lesson.manifest.id,
@@ -1368,29 +1399,42 @@ function assertExerciseMatchesRecovery(
   exercise: RecoveryExercise,
 ): void {
   const actual =
-    existing.kind === "short-answer"
+    existing.kind === "choice"
       ? {
           id: existing.id,
           kind: existing.kind,
           title: existing.title,
           prompt: existing.prompt,
+          options: existing.options,
+          correctOptionId: existing.correctOptionId,
           ...(existing.locales ? { locales: existing.locales } : {}),
-          expectedAnswer: existing.expectedAnswer,
           evidence: existing.evidence,
           contentRevision: existing.contentRevision,
           status: existing.status,
         }
-      : {
-          id: existing.id,
-          kind: existing.kind,
-          title: existing.title,
-          prompt: existing.prompt,
-          ...(existing.locales ? { locales: existing.locales } : {}),
-          rubric: existing.rubric,
-          evidence: existing.evidence,
-          contentRevision: existing.contentRevision,
-          status: existing.status,
-        };
+      : existing.kind === "short-answer"
+        ? {
+            id: existing.id,
+            kind: existing.kind,
+            title: existing.title,
+            prompt: existing.prompt,
+            ...(existing.locales ? { locales: existing.locales } : {}),
+            expectedAnswer: existing.expectedAnswer,
+            evidence: existing.evidence,
+            contentRevision: existing.contentRevision,
+            status: existing.status,
+          }
+        : {
+            id: existing.id,
+            kind: existing.kind,
+            title: existing.title,
+            prompt: existing.prompt,
+            ...(existing.locales ? { locales: existing.locales } : {}),
+            rubric: existing.rubric,
+            evidence: existing.evidence,
+            contentRevision: existing.contentRevision,
+            status: existing.status,
+          };
   if (
     canonicalJson(actual) !== canonicalJson({ ...exercise, contentRevision: 1, status: "active" })
   ) {
@@ -1471,37 +1515,47 @@ function writePractices(
     writeExerciseRevision(
       studiesRoot,
       studyId,
-      exercise.kind === "short-answer"
+      exercise.kind === "choice"
         ? {
+            ...exercise,
             schemaVersion: 1,
-            id: exercise.id,
-            kind: exercise.kind,
-            title: exercise.title,
             courseId,
             unitId,
             lessonId: lesson.id,
-            prompt: exercise.prompt,
-            ...(exercise.locales ? { locales: exercise.locales } : {}),
-            expectedAnswer: exercise.expectedAnswer,
             contentRevision: 1,
             status: "active",
-            evidence: exercise.evidence,
           }
-        : {
-            schemaVersion: 1,
-            id: exercise.id,
-            kind: exercise.kind,
-            title: exercise.title,
-            courseId,
-            unitId,
-            lessonId: lesson.id,
-            prompt: exercise.prompt,
-            ...(exercise.locales ? { locales: exercise.locales } : {}),
-            rubric: exercise.rubric,
-            contentRevision: 1,
-            status: "active",
-            evidence: exercise.evidence,
-          },
+        : exercise.kind === "short-answer"
+          ? {
+              schemaVersion: 1,
+              id: exercise.id,
+              kind: exercise.kind,
+              title: exercise.title,
+              courseId,
+              unitId,
+              lessonId: lesson.id,
+              prompt: exercise.prompt,
+              ...(exercise.locales ? { locales: exercise.locales } : {}),
+              expectedAnswer: exercise.expectedAnswer,
+              contentRevision: 1,
+              status: "active",
+              evidence: exercise.evidence,
+            }
+          : {
+              schemaVersion: 1,
+              id: exercise.id,
+              kind: exercise.kind,
+              title: exercise.title,
+              courseId,
+              unitId,
+              lessonId: lesson.id,
+              prompt: exercise.prompt,
+              ...(exercise.locales ? { locales: exercise.locales } : {}),
+              rubric: exercise.rubric,
+              contentRevision: 1,
+              status: "active",
+              evidence: exercise.evidence,
+            },
     );
   }
 }

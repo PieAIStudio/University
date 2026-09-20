@@ -1,0 +1,338 @@
+/* Shared research presentation. The app supplies installed SwimmerUIKit tokens
+   across the iframe boundary; standalone files fall back to system colors. */
+:root {
+  color-scheme: light;
+  --bg: var(--game-ui-bg, Canvas);
+  --bg-deep: var(--game-ui-surface, Canvas);
+  --panel: var(--game-ui-panel-strong, Canvas);
+  --panel-2: var(--game-ui-surface-raised, Canvas);
+  --panel-deep: var(--game-ui-panel-deep, Canvas);
+  --ink: var(--game-ui-text, CanvasText);
+  --ink-title: var(--game-ui-text, CanvasText);
+  --ink-soft: var(--game-ui-text-muted, CanvasText);
+  --ink-faint: var(--game-ui-text-muted, CanvasText);
+  --accent: var(--game-ui-accent, Highlight);
+  --accent-bright: var(--game-ui-accent-bright, Highlight);
+  --accent-ink: var(--game-ui-accent-ink, LinkText);
+  --accent-pale: var(--game-ui-accent-pale, Canvas);
+  --ok: var(--game-ui-success, Highlight);
+  --ok-deep: var(--game-ui-success, Highlight);
+  --ok-pale: var(--game-ui-success-pale, Canvas);
+  --ok-ink: var(--game-ui-success-ink, CanvasText);
+  --berry: var(--game-ui-secondary, Highlight);
+  --berry-pale: color-mix(in srgb, var(--berry) 12%, var(--panel));
+  --berry-ink: var(--game-ui-text, CanvasText);
+  --warn: var(--game-ui-danger, Highlight);
+  --warn-pale: var(--game-ui-danger-pale, Canvas);
+  --warn-ink: var(--game-ui-danger-ink, CanvasText);
+  --line: var(--game-ui-border-subtle, GrayText);
+  --line-2: var(--game-ui-border-strong, GrayText);
+  --lip: var(--line);
+  --lip-h: 0px;
+  --r-card: var(--game-ui-radius-panel, 16px);
+  --r-panel: var(--game-ui-radius-panel, 16px);
+  --r-pill: 999px;
+  --sh: none;
+  --sh-lift: none;
+  --zh: var(--game-ui-font-body, system-ui, sans-serif);
+  --num: var(--game-ui-font-body, system-ui, sans-serif);
+}
+:root[data-game-ui-theme="night"] {
+  color-scheme: dark;
+}
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--zh);
+  font-size: 16px;
+  line-height: 1.6;
+}
+body {
+  overflow-x: hidden;
+}
+.page {
+  max-width: 900px;
+  padding: 16px;
+  margin-inline: auto;
+}
+.app,
+.wrap {
+  max-width: 760px;
+}
+.masthead,
+.cabhd,
+.blkhd {
+  margin-bottom: 12px;
+}
+.cab,
+.blk {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  margin-bottom: 0;
+  background: var(--bg);
+}
+.cabhd,
+.blkhd {
+  padding: 0 0 12px;
+  background: var(--bg);
+  border: 0;
+}
+.cabhd h3,
+.blkhd h3 {
+  font-family: var(--zh);
+  font-size: 20px;
+  letter-spacing: 0;
+}
+.cabhd .from,
+.blkhd .no,
+.cabhd h3 code,
+.blkhd h3 code {
+  display: none;
+}
+.cabhd .how,
+.blkhd .hand {
+  font-size: 15px;
+  color: var(--ink);
+  border: 0;
+  padding: 0;
+  line-height: 1.7;
+}
+.screen {
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-card);
+  box-shadow: none;
+}
+.screen::before,
+.screen::after,
+.cab::before,
+.cab::after {
+  display: none;
+}
+.hud {
+  background: var(--bg);
+  padding: 12px 0;
+  border: 0;
+  color: var(--ink);
+  font-size: 14px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.hud b,
+.stat b,
+.big {
+  font-family: var(--num);
+  font-variant-numeric: tabular-nums;
+}
+.timebar {
+  height: 4px;
+  background: var(--line);
+  margin-bottom: 12px;
+}
+.timebar i {
+  background: var(--accent);
+  box-shadow: none;
+}
+.overlay {
+  background: var(--panel);
+  color: var(--ink);
+  padding: 24px 16px;
+  overflow-y: auto;
+  justify-content: safe center;
+}
+.overlay h4,
+.overlay p,
+.overlay b,
+.overlay .big,
+.overlay .sub {
+  color: var(--ink);
+  text-shadow: none;
+  font-family: var(--zh);
+}
+.overlay p {
+  font-size: 15px;
+  line-height: 1.65;
+  max-width: 44em;
+}
+.overlay h4 {
+  font-size: 22px;
+}
+.overlay .big {
+  font-size: 32px;
+}
+button,
+input,
+select {
+  font-family: var(--zh);
+}
+button {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+.playbtn,
+.sf-btn,
+.dl-go {
+  background: var(--accent);
+  color: var(--game-ui-accent-contrast, HighlightText);
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  padding: 10px 20px;
+  font: 600 16px var(--zh);
+  animation: none;
+  box-shadow: none;
+  text-shadow: none;
+  letter-spacing: 0;
+}
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+button:focus-visible,
+input:focus-visible,
+summary:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--game-ui-focus-ring, Highlight);
+  outline-offset: 3px;
+}
+.stagearea {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 20px 16px;
+}
+.reset {
+  display: none;
+} /* The catalogue remounts the entire frame for a clean retry. */
+.note2,
+.spec {
+  font-size: 14px;
+  line-height: 1.75;
+  background: var(--bg);
+  color: var(--ink-soft);
+  box-shadow: none;
+}
+.spec .in {
+  color: var(--ink);
+}
+.spec summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.tip,
+.sf-paper,
+.sf-rule,
+.rf-src,
+.rf-out,
+.rf-ask,
+.rf-say,
+.dl-doc,
+.cz-row,
+.brick,
+.foe,
+.tag2 {
+  font-size: 15px;
+  line-height: 1.6;
+}
+/* Reserve a footer lane for instructions and the start action. The matching
+   scene grows by 100px, retaining the playfield's original slot spacing. */
+.dl-field {
+  bottom: 142px;
+}
+.dl-hint {
+  max-width: calc(100% - 124px);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.rf-src {
+  font-size: 14px;
+}
+.rf-src .txt {
+  max-height: 145px;
+}
+.rf-form,
+.rf-body,
+.rf-say {
+  font-size: 14px;
+}
+.sf-btns,
+.lanebtns {
+  min-height: 48px;
+}
+.sf-ink {
+  font-family: var(--zh);
+  font-size: 13px;
+  top: 4px;
+  right: 6px;
+}
+.rf-chip,
+.rf-must,
+.rf-send,
+.rf-flag {
+  min-height: 36px;
+}
+.tag2 {
+  max-width: 31%;
+  padding: 6px;
+}
+.bigtip {
+  color: var(--ink);
+}
+.chip.ok,
+.opt.ok,
+.opt[aria-checked="true"],
+.beat.done {
+  color: var(--game-ui-accent-contrast, HighlightText);
+}
+[data-paused] body {
+  pointer-events: none;
+}
+[data-paused] *,
+[data-paused] *::before,
+[data-paused] *::after {
+  animation-play-state: paused !important;
+}
+@media (max-width: 480px) {
+  .page {
+    padding: 12px 8px;
+  }
+  .cabhd h3,
+  .blkhd h3 {
+    font-size: 19px;
+  }
+  .hud {
+    gap: 8px;
+    font-size: 13px;
+  }
+  .rf-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rf-src {
+    max-height: 180px;
+    overflow-y: auto;
+  }
+  .sf-paper {
+    font-size: 15px;
+  }
+  .overlay {
+    padding: 16px 12px;
+  }
+  .overlay p {
+    font-size: 15px;
+  }
+  .tag2 {
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

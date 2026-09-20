@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-20T01:23:19.674Z
+generated_at: 2026-09-20T06:18:03.171Z
 generator_version: doc-gov@0.14.0
-docs_count: 145
+docs_count: 147
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -198,6 +198,13 @@ docs:
     type: plan
     status: active
     canonical: true
+    last_reviewed: 2026-09-18
+    pinned: false
+  - id: PLAN-INTERACTION-FIRST-EXPERIMENT
+    path: docs/plans/active/interaction-first-experiment.md
+    type: plan
+    status: active
+    canonical: false
     last_reviewed: 2026-09-18
     pinned: false
   - id: PLAN-PRODUCT-COMPLETENESS
@@ -466,6 +473,13 @@ docs:
     canonical: true
     last_reviewed: 2026-09-08
     pinned: false
+  - id: REF-INTERACTION-DENSITY-RESEARCH
+    path: docs/reference/interaction-density-research.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-16
+    pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-A-200-FROM-A-JS-RENDERED-DOCS-SITE-PROVES-NOTHING-RENDER-IT-BEFORE-CITING-IT
     path: docs/reference/learnings/workflow-issues/a-200-from-a-js-rendered-docs-site-proves-nothing-render-it-before-citing-it.md
     type: reference
@@ -576,7 +590,7 @@ docs:
     type: reference
     status: stable
     canonical: true
-    last_reviewed: 2026-09-13
+    last_reviewed: 2026-09-16
     pinned: false
   - id: REF-LEARNING-WORKFLOW-ISSUES-CALIBRATE-TEACHING-GATES-FROM-BEGINNER-EVIDENCE-BEFORE-EXPANDING-HEURISTICS
     path: docs/reference/learnings/workflow-issues/calibrate-teaching-gates-from-beginner-evidence-before-expanding-heuristics.md

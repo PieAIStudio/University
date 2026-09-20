@@ -34,6 +34,7 @@ import {
   type AnswerDraftStorage,
 } from "./answer-draft.js";
 import { useAnswerDraft } from "./use-answer-draft.js";
+import { ChoiceOptions } from "./ChoiceOptions.js";
 import { activeLocale, translate, type MessageKey } from "../i18n/index.js";
 
 /**
@@ -141,6 +142,7 @@ function ExerciseBlockSession({
    */
   const [reopened, setReopened] = useState(false);
   const isExplain = exercise.kind === "explain";
+  const isChoice = exercise.kind === "choice";
   const currentOutcome = hostGrade ? exerciseGradeOutcome(hostGrade) : null;
   const [passedOnce, setPassedOnce] = useState(
     exercise.hasPassed === true || currentOutcome === "pass",
@@ -361,31 +363,47 @@ function ExerciseBlockSession({
       <div className="exercise-prompt">
         <MarkdownContent>{exercise.prompt}</MarkdownContent>
       </div>
-      <label className="answer-field">
-        <span>{translate("grading.answer.label")}</span>
-        <textarea
-          value={answer}
-          onChange={(event) => {
-            setAnswer(event.target.value);
+      {isChoice ? (
+        <ChoiceOptions
+          options={exercise.options ?? []}
+          selectedId={answer}
+          disabled={solved || pending}
+          onSelect={(id) => {
+            setAnswer(id);
             setResult(null);
             setMeteredOffer(null);
             setMeteredChoice(null);
             setPacketCopied(false);
             setPacketCopyFailed(false);
           }}
-          placeholder={
-            isExplain
-              ? grading.coachingPacket
-                ? translate("grading.answer.explainHost")
-                : translate("grading.answer.explain")
-              : grading.coachingPacket
-                ? translate("grading.answer.shortHost")
-                : translate("grading.answer.short")
-          }
-          rows={isExplain ? 6 : 3}
-          readOnly={solved || pending}
         />
-      </label>
+      ) : (
+        <label className="answer-field">
+          <span>{translate("grading.answer.label")}</span>
+          <textarea
+            value={answer}
+            onChange={(event) => {
+              setAnswer(event.target.value);
+              setResult(null);
+              setMeteredOffer(null);
+              setMeteredChoice(null);
+              setPacketCopied(false);
+              setPacketCopyFailed(false);
+            }}
+            placeholder={
+              isExplain
+                ? grading.coachingPacket
+                  ? translate("grading.answer.explainHost")
+                  : translate("grading.answer.explain")
+                : grading.coachingPacket
+                  ? translate("grading.answer.shortHost")
+                  : translate("grading.answer.short")
+            }
+            rows={isExplain ? 6 : 3}
+            readOnly={solved || pending}
+          />
+        </label>
+      )}
       {answer.trim() && persistence === "saved" ? (
         <p className="answer-field__draft-status" role="status">
           {translate("product.feedback.draftSaved")}
@@ -411,7 +429,12 @@ function ExerciseBlockSession({
         <GameButton
           variant="primary"
           onClick={() => void submit()}
-          disabled={!answer.trim() || pending || solved}
+          disabled={
+            !answer.trim() ||
+            (isChoice && !exercise.options?.some((option) => option.id === answer)) ||
+            pending ||
+            solved
+          }
         >
           {/* 「判」 alone is not a verb you can end a Chinese sentence on, and
               this is the primary action of every lesson in the product. */}
@@ -456,7 +479,9 @@ function ExerciseBlockSession({
           latch on.
         */}
         {!answer.trim() && !solved && !pending ? (
-          <span className="exercise-actions__hint">{translate("grading.answer.emptyHint")}</span>
+          <span className="exercise-actions__hint">
+            {translate(isChoice ? "grading.answer.chooseHint" : "grading.answer.emptyHint")}
+          </span>
         ) : null}
       </div>
 
@@ -512,6 +537,11 @@ function ExerciseBlockSession({
         </GameCallout>
       ) : null}
 
+      {isChoice && hostGrade?.learnerAnswer === answer ? (
+        <p className="exercise-choice__feedback" role="status">
+          {exercise.options?.find((option) => option.id === hostGrade.learnerAnswer)?.explanation}
+        </p>
+      ) : null}
       {hostGrade ? (
         <div
           className={`host-grade host-grade--${currentOutcome ?? "undecided"}`}

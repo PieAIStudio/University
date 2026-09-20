@@ -192,7 +192,9 @@ function MistakeCard({
   exercise,
   onOpenLesson,
 }: ResolvedMistake & { readonly onOpenLesson: (locator: LessonRef) => void }) {
-  const answer = mistake.wrongAnswer || translate("ui.practice.mistakeList.copy.空答案");
+  const answer =
+    exercise?.options?.find((option) => option.id === mistake.wrongAnswer)?.text ??
+    (mistake.wrongAnswer || translate("ui.practice.mistakeList.copy.空答案"));
   return (
     <GamePanel
       className="mistake-card"

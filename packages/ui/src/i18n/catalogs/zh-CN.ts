@@ -1,6 +1,9 @@
 import { messages as mapNavigation } from "./map-navigation.zh-CN.js";
+import { messages as primm } from "./primm.zh-CN.js";
+import { messages as playGallery } from "./play-gallery.zh-CN.js";
 import { messages as accountClosure } from "./account-closure.zh-CN.js";
 import { messages as gradingCopy } from "./grading-copy.zh-CN.js";
+import { messages as interactionPath } from "./interaction-path.zh-CN.js";
 import { messages as worldNavigation } from "./world-navigation.zh-CN.js";
 import { messages as readingSettings } from "./reading-settings.zh-CN.js";
 import { messages as productWelcome } from "./product-welcome.zh-CN.js";
@@ -30,8 +33,11 @@ import { messages as learningPlayMessages } from "./learning-play.zh-CN.js";
  */
 export const messages = {
   ...mapNavigation,
+  ...primm,
+  ...playGallery,
   ...accountClosure,
   ...worldNavigation,
+  ...interactionPath,
   ...readingSettings,
   ...gradingCopy,
   ...accountFailures,

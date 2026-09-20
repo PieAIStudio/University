@@ -43,6 +43,26 @@
   background: rgb(20 14 10 / 45%);
 }
 
+.exercise-choice {
+  display: grid;
+  gap: 12px;
+  margin-block: 20px;
+}
+.exercise-choice button {
+  min-height: 44px;
+  height: auto;
+  padding-block: 12px;
+  white-space: normal;
+  text-align: start;
+  justify-content: start;
+  line-height: 1.6;
+}
+.exercise-choice__feedback {
+  color: var(--game-ui-text);
+  line-height: 1.7;
+  margin-block: 16px;
+}
+
 .metered-grading-choice {
   display: grid;
   gap: 12px;

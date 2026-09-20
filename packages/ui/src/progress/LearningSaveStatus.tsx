@@ -18,9 +18,12 @@ export function saveMessageKey(progress: ProgressPort) {
 export function LearningSaveStatus({
   progress,
   allowGuestImport = false,
+  quiet = false,
 }: {
   readonly progress: ProgressPort;
   readonly allowGuestImport?: boolean;
+  /** A focused task stays silent on normal saves, not on failed persistence. */
+  readonly quiet?: boolean;
 }) {
   const value = useSyncExternalStore(
     progress.subscribe,
@@ -52,6 +55,7 @@ export function LearningSaveStatus({
       setBusy(false);
     }
   }
+  if (quiet && !failed && hasGuest !== "true" && !error) return null;
   return (
     <div className="learning-save-state" data-learning-save-state={message}>
       {failed ? (

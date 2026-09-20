@@ -54,7 +54,9 @@ for (const [mode, origin] of [
             const title = lesson.locales?.en?.title;
             expect(title, `${lesson.id}: English content is required`).toBeTruthy();
             await expect(reader).toContainText(title!);
-            await expect(reader.locator(".learning-activity").first()).toBeVisible();
+            await expect(
+              reader.locator(".learning-activity, .interaction-path").first(),
+            ).toBeVisible();
             await expect(reader.locator(".exercise-panel").first()).toBeVisible();
 
             // Open native disclosures to inspect ALL rendered teaching/source

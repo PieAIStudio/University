@@ -1,0 +1,854 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>先猜一下</title>
+
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--zh);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---------- shell ---------- */
+.app{height:100%;display:flex;flex-direction:column;max-width:460px;margin-inline:auto;
+  background:var(--bg);position:relative;overflow:hidden}
+.top{flex:none;display:flex;align-items:center;gap:12px;padding-block:12px;padding-inline:16px}
+.quit{width:30px;height:30px;flex:none;border-radius:var(--r-pill);color:var(--ink-faint);
+  font-size:20px;line-height:1;display:grid;place-items:center}
+.quit:hover{background:var(--line);color:var(--ink)}
+.bar{flex:1;height:14px;border-radius:var(--r-pill);background:var(--bg-deep);
+  box-shadow:inset 0 2px 5px #4c341c1f;overflow:hidden}
+.bar i{display:block;height:100%;width:4%;border-radius:var(--r-pill);
+  background:linear-gradient(180deg,var(--accent-bright),var(--accent));
+  box-shadow:inset 0 2px 0 #ffffff5c;transition:width .45s cubic-bezier(.2,.9,.25,1)}
+.bar i.pulse{animation:barpulse .5s}
+@keyframes barpulse{35%{filter:brightness(1.35) saturate(1.2)}}
+.combo{flex:none;display:flex;align-items:center;gap:4px;font-family:var(--num);font-weight:700;
+  font-size:15px;color:var(--accent-ink);opacity:0;transform:scale(.6);transition:.25s}
+.combo.on{opacity:1;transform:scale(1)}
+.combo.pop{animation:pop .4s}
+@keyframes pop{40%{transform:scale(1.35) rotate(-6deg)}}
+.snd{flex:none;width:30px;height:30px;border-radius:var(--r-pill);display:grid;place-items:center;
+  color:var(--ink-faint);font-size:15px}
+.snd:hover{background:var(--line)}
+
+.stage{flex:1;overflow-y:auto;overflow-x:hidden;padding-inline:16px;padding-block:4px 20px;
+  display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
+.inner{margin-block:auto;width:100%}
+.stage::-webkit-scrollbar{width:0}
+
+.eyebrow{font-family:var(--num);font-size:11px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-faint);margin-block:10px 6px}
+.q{font-size:21px;line-height:1.45;font-weight:600;color:var(--ink-title);text-wrap:balance;
+  margin-block:0 14px;letter-spacing:.01em}
+.q.sm{font-size:18px}
+.sub{font-size:14px;color:var(--ink-soft);margin-block:-8px 14px}
+
+/* ---------- artifact: the thing the player inspects ---------- */
+.art{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);
+  padding-block:14px;padding-inline:14px;margin-block:0 16px;box-shadow:var(--sh);position:relative}
+.art.chat{border-radius:var(--r-card) var(--r-card) var(--r-card) 6px}
+.art-tag{position:absolute;top:-9px;left:12px;font-family:var(--num);font-size:10px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;background:var(--bg);color:var(--ink-faint);
+  padding-inline:6px}
+.art p{margin-block:0 8px;font-size:15px;line-height:1.7}
+.art p:last-child{margin-bottom:0}
+.art .big{font-size:19px;font-weight:600;color:var(--ink-title)}
+.art .meta{font-size:12.5px;color:var(--ink-faint);line-height:1.5}
+.src{font-size:11.5px;color:var(--ink-faint);margin-block:-8px 14px;line-height:1.5}
+.src a{color:var(--ink-soft);text-decoration-color:var(--line-2)}
+
+/* rows inside an artifact (the table) */
+.tbl{width:100%;border-collapse:collapse;font-size:14.5px}
+.tbl th{text-align:left;font-weight:600;color:var(--ink-title);padding-block:7px;
+  border-bottom:2px solid var(--line-2);font-size:13.5px}
+.tbl td{padding-block:9px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl td.n{text-align:right;font-family:var(--num);font-variant-numeric:tabular-nums;font-weight:600}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .sum td{font-weight:700;color:var(--ink-title)}
+.hdrflag{display:inline-flex;align-items:center;gap:5px}
+.hdrflag.bad{color:var(--warn);}
+
+/* ---------- tiles ---------- */
+.tiles{display:flex;flex-direction:column;gap:10px;margin-block:2px 8px}
+.tile{position:relative;display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;
+  background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:14px;padding-block:13px;padding-inline:14px;
+  font-size:15.5px;line-height:1.5;color:var(--ink);transition:transform .08s,background .15s,border-color .15s}
+.tile:hover:not(:disabled){background:var(--panel-2);border-color:var(--line-2);border-bottom-color:var(--lip)}
+.tile:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.tile:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tile .key{flex:none;width:22px;height:22px;margin-top:1px;border-radius:7px;background:var(--bg-deep);
+  color:var(--ink-faint);font-family:var(--num);font-size:12px;font-weight:700;display:grid;place-items:center}
+.tile[aria-checked="true"]{background:var(--accent-pale);border-color:var(--accent)}
+.tile[aria-checked="true"] .key{background:var(--accent);color:#fff}
+.tile.ok{background:var(--ok-pale);border-color:var(--ok)}
+.tile.ok .key{background:var(--ok);color:#fff}
+.tile.nope{background:var(--berry-pale);border-color:var(--berry)}
+.tile.nope .key{background:var(--berry);color:#fff}
+.tile.dim{opacity:.42}
+.tile:disabled{cursor:default}
+.shake{animation:shake .38s}
+@keyframes shake{20%{transform:translateX(-7px)}45%{transform:translateX(6px)}70%{transform:translateX(-3px)}}
+
+/* inline chips: tap a piece of the artifact */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-block:2px 8px}
+.chip{background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:var(--r-pill);padding-block:9px;padding-inline:15px;
+  font-size:15px;transition:transform .08s,background .15s,border-color .15s}
+.chip:hover:not(:disabled){background:var(--panel-2)}
+.chip:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.chip:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chip.ok{background:var(--ok-pale);border-color:var(--ok);color:var(--ok-ink);font-weight:600}
+.chip.nope{background:var(--berry-pale);border-color:var(--berry);color:var(--berry-ink)}
+.chip.dim{opacity:.4}
+.chip.ghost{background:transparent;border-style:dashed;border-bottom-width:2px;color:var(--ink-faint)}
+
+/* ---------- buckets ---------- */
+.buckets{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-block:4px 12px}
+.bucket{background:var(--panel-2);border:2px dashed var(--line-2);border-radius:var(--r-card);
+  padding-block:10px;padding-inline:10px;min-height:96px;transition:.18s}
+.bucket.armed{border-color:var(--accent);background:var(--accent-pale);border-style:solid}
+.bucket h4{margin:0 0 8px;font-size:13px;font-weight:700;color:var(--ink-title);line-height:1.35}
+.bucket .drop{display:flex;flex-direction:column;gap:6px}
+.drop .it{background:var(--panel);border:1px solid var(--line);border-radius:9px;
+  padding-block:7px;padding-inline:9px;font-size:13px;line-height:1.4;animation:landing .3s}
+.drop .it.ok{border-color:var(--ok);background:var(--ok-pale)}
+.drop .it.nope{border-color:var(--berry);background:var(--berry-pale)}
+@keyframes landing{from{transform:scale(.8) translateY(-8px);opacity:0}}
+.pool{display:flex;flex-direction:column;gap:8px}
+
+/* ---------- word bank ---------- */
+.slotline{min-height:62px;border-bottom:2px dashed var(--line-2);margin-block:2px 16px;
+  padding-block:8px;display:flex;flex-wrap:wrap;gap:7px;align-content:flex-start}
+.slotline:empty::after{content:"从下面挑词，拼成一句话";color:var(--ink-faint);font-size:14px}
+.bank{display:flex;flex-wrap:wrap;gap:8px;margin-block:0 8px}
+.word{background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:11px;padding-block:8px;padding-inline:12px;
+  font-size:15px;transition:transform .08s,opacity .15s}
+.word:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.word:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.word.used{opacity:.22;pointer-events:none}
+.word.placed{background:var(--accent-pale);border-color:var(--accent)}
+.word.ok{background:var(--ok-pale);border-color:var(--ok)}
+.word.nope{background:var(--berry-pale);border-color:var(--berry)}
+
+/* ---------- scale ---------- */
+.scale{margin-block:10px 18px}
+.scale input[type=range]{width:100%;accent-color:var(--accent);height:34px}
+.scale .val{font-family:var(--num);font-size:42px;font-weight:700;color:var(--accent-ink);
+  text-align:center;line-height:1;font-variant-numeric:tabular-nums}
+.scale .ends{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-faint)}
+
+/* ---------- rows (unit picker) ---------- */
+.rows{display:flex;flex-direction:column;gap:9px;margin-block:2px 10px}
+.row{background:var(--panel);border:2px solid var(--line);border-radius:13px;
+  padding-block:10px;padding-inline:12px}
+.row{transition:border-color .18s,background .18s}
+.row.set{border-color:var(--accent);background:var(--panel-2)}
+.row .lbl{font-size:14.5px;margin-bottom:8px;line-height:1.45}
+.row .lbl small{display:block;color:var(--ink-faint);font-size:12.5px;margin-top:3px;line-height:1.45}
+.row .lbl b{font-family:var(--num);font-variant-numeric:tabular-nums}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opt{border:2px solid var(--line);border-radius:var(--r-pill);padding-block:5px;padding-inline:12px;
+  font-size:14px;background:var(--panel-2);transition:.12s}
+.opt:active:not(:disabled){transform:translateY(1px)}
+.opt[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.opt.ok{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+.opt.nope{background:var(--berry);border-color:var(--berry);color:#fff}
+.opt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* ---------- footer / feedback ---------- */
+.foot::before{content:"";position:absolute;left:0;right:0;top:-22px;height:22px;
+  pointer-events:none;background:linear-gradient(180deg,#0000,var(--bg))}
+.foot{flex:none;padding-inline:16px;padding-block:10px;
+  padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  border-top:1px solid transparent;background:var(--bg);position:relative;z-index:3}
+.cta{width:100%;border-radius:15px;padding-block:14px;font-size:16.5px;font-weight:700;
+  letter-spacing:.04em;background:var(--accent);color:#fff;
+  border-bottom:var(--lip-h) solid #0000002e;transition:transform .08s,opacity .2s,background .2s}
+.cta:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.cta:disabled{background:var(--bg-deep);color:var(--ink-faint);border-bottom-color:transparent;cursor:default}
+.cta:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.cta.go{background:var(--ok);}
+.cta.ghost{background:transparent;color:var(--ink-soft);border:2px solid var(--line-2);
+  border-bottom-width:2px;font-weight:600}
+
+.fb{position:absolute;left:0;right:0;bottom:0;z-index:4;background:var(--panel);
+  border-top:2px solid var(--line-2);border-radius:var(--r-panel) var(--r-panel) 0 0;
+  padding-inline:16px;padding-block:16px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -14px 40px #4c341c24;transform:translateY(103%);transition:transform .32s cubic-bezier(.2,.9,.25,1);
+  max-height:72%;overflow-y:auto}
+.fb.up{transform:translateY(0)}
+.fb.good{background:var(--ok-pale);border-top-color:var(--ok)}
+.fb.soft{background:var(--berry-pale);border-top-color:var(--berry)}
+.fb h3{margin:0 0 6px;font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+.fb.good h3{color:var(--ok-ink)} .fb.soft h3{color:var(--berry-ink)}
+.fb .mark{width:26px;height:26px;flex:none;border-radius:var(--r-pill);display:grid;place-items:center;
+  color:#fff;font-size:15px;font-weight:700}
+.fb.good .mark{background:var(--ok)} .fb.soft .mark{background:var(--berry)}
+.fb p{margin:0 0 10px;font-size:14.5px;line-height:1.65;color:var(--ink)}
+.fb p:last-of-type{margin-bottom:12px}
+.fb .keep{background:#ffffff40;border:1px dashed var(--line-2);border-radius:11px;
+  padding-block:10px;padding-inline:11px;font-size:13.5px;line-height:1.6;margin-block:0 12px}
+.fb .keep b{display:block;font-family:var(--num);font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-faint);margin-bottom:4px;font-weight:600}
+
+/* ---------- interstitial / result screens ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-panel);
+  padding-block:22px;padding-inline:18px;box-shadow:var(--sh-lift);margin-block:8px 14px}
+.hero{text-align:center;padding-block:10px}
+.hero .ring{width:96px;height:96px;margin:0 auto 14px;border-radius:var(--r-pill);
+  background:radial-gradient(circle at 34% 28%,var(--accent-bright),var(--accent));
+  display:grid;place-items:center;font-size:42px;box-shadow:0 14px 34px #e8743b4d;animation:rise .5s}
+@keyframes rise{from{transform:scale(.6) translateY(14px);opacity:0}}
+.hero h2{margin:0 0 6px;font-size:24px;color:var(--ink-title);text-wrap:balance}
+.hero .lede{color:var(--ink-soft);font-size:14.5px;margin:0 0 4px;text-wrap:balance;line-height:1.6}
+.hero .lede b{color:var(--ink-title);font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-block:16px 4px}
+.stat{background:var(--panel-2);border:1px solid var(--line);border-radius:13px;
+  padding-block:11px;padding-inline:8px;text-align:center}
+.stat b{display:block;font-family:var(--num);font-size:25px;font-weight:700;color:var(--accent-ink);
+  line-height:1.15;font-variant-numeric:tabular-nums}
+.stat span{font-size:11.5px;color:var(--ink-faint)}
+.can{display:flex;flex-direction:column;gap:9px;margin-block:4px 0}
+.can li{display:flex;gap:9px;align-items:flex-start;font-size:14.5px;line-height:1.55;
+  background:var(--ok-pale);border:1px solid var(--ok);border-radius:12px;
+  padding-block:10px;padding-inline:11px;animation:slidein .4s backwards}
+.can li i{flex:none;width:19px;height:19px;margin-top:2px;border-radius:var(--r-pill);background:var(--ok);
+  color:#fff;font-size:11px;font-style:normal;display:grid;place-items:center;font-weight:700}
+@keyframes slidein{from{opacity:0;transform:translateX(-12px)}}
+.ulist{list-style:none;margin:0;padding:0}
+.lvl{display:flex;gap:11px;align-items:center;width:100%;text-align:left;background:var(--panel);
+  border:2px solid var(--line);border-bottom-width:var(--lip-h);border-bottom-color:var(--lip);
+  border-radius:15px;padding-block:13px;padding-inline:13px;margin-bottom:9px;transition:transform .08s}
+.lvl:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:11px}
+.lvl .n{flex:none;width:34px;height:34px;border-radius:var(--r-pill);background:var(--accent);color:#fff;
+  font-family:var(--num);font-weight:700;display:grid;place-items:center;font-size:15px}
+.lvl.done .n{background:var(--ok)}
+.lvl.lock{opacity:.5}
+.lvl.lock .n{background:var(--bg-deep);color:var(--ink-faint)}
+.lvl .t{flex:1;font-size:15px;line-height:1.4;font-weight:600;color:var(--ink-title)}
+.lvl .t em{display:block;font-style:normal;font-weight:400;font-size:12.5px;color:var(--ink-faint);margin-top:2px}
+.note{font-size:12.5px;color:var(--ink-faint);line-height:1.6;margin-block:14px 0}
+.note code{background:var(--bg-deep);border-radius:5px;padding-inline:4px;font-size:12px}
+</style>
+<link rel="stylesheet" href="presentation.css">
+<style>
+.redact{display:inline-block;height:1em;vertical-align:-.12em;border-radius:4px;
+  background:repeating-linear-gradient(135deg,var(--ink-faint),var(--ink-faint) 5px,var(--ink-soft) 5px,var(--ink-soft) 10px);
+  opacity:.55}
+.bub{background:var(--panel-2);border:1px solid var(--line);border-radius:14px 14px 14px 5px;
+  padding-block:11px;padding-inline:13px;margin-bottom:9px;font-size:15px;line-height:1.6}
+.bub:last-child{margin-bottom:0}
+.bub .who{font-family:var(--num);font-size:10.5px;font-weight:600;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--ink-faint);display:block;margin-bottom:3px}
+.bub.me{border-radius:14px 14px 5px 14px;background:var(--accent-pale);border-color:var(--accent)}
+.orig{background:var(--panel-2);border-left:3px solid var(--accent);border-radius:0 11px 11px 0;
+  padding-block:10px;padding-inline:12px;margin-bottom:11px}
+.orig dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}
+.orig dt{color:var(--ink-faint);font-size:13px}
+.orig dd{margin:0;font-weight:600;color:var(--ink-title)}
+.total{text-align:right;font-family:var(--num);font-size:34px;font-weight:700;color:var(--warn);
+  font-variant-numeric:tabular-nums;line-height:1.1;min-height:38px}
+.total.idle{color:var(--ink-faint);font-size:15px;font-weight:400;padding-top:11px}
+.sumbtn{width:100%;margin-top:10px;border-radius:12px;padding-block:11px;font-size:15px;font-weight:700;
+  background:var(--panel-deep);color:var(--ink-title);border-bottom:var(--lip-h) solid var(--lip);
+  transition:transform .08s}
+.sumbtn:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.sumbtn:disabled{opacity:.5;cursor:default}
+.fig{border-radius:11px;overflow:hidden;border:1px solid var(--line);margin-bottom:9px;background:var(--bg-deep)}
+.fig .sky{height:104px;position:relative;background:radial-gradient(ellipse 120% 80% at 50% 118%,#6f7f8c 0%,#2b3138 46%,#0b0d10 100%)}
+.fig .earth{position:absolute;left:50%;top:26px;width:46px;height:46px;transform:translateX(-50%);
+  border-radius:50%;background:radial-gradient(circle at 34% 30%,#9ec6e8,#3f76ab 52%,#1d3a59);
+  box-shadow:0 0 22px #6fa8d833}
+.fig .horizon{position:absolute;left:-10%;right:-10%;bottom:-34px;height:78px;border-radius:50% 50% 0 0;
+  background:linear-gradient(180deg,#8d8579,#4a453d)}
+.fig .cap{padding-block:8px;padding-inline:10px;font-size:12px;color:var(--ink-soft);line-height:1.5;background:var(--panel)}
+.fig.ai .sky{background:radial-gradient(ellipse 120% 80% at 50% 118%,#9c8f7a 0%,#4a4033 46%,#191410 100%)}
+.fig.ai .earth{background:radial-gradient(circle at 34% 30%,#ffd9a8,#e09a5a 52%,#a35f2c);box-shadow:0 0 26px #e8a06433}
+.fig.art .sky{background:linear-gradient(180deg,#5a4b8c 0%,#b96a8f 58%,#f0a46a 100%)}
+.fig.art .earth{background:radial-gradient(circle at 34% 30%,#fff0c9,#f2c14e 52%,#c98a2b);box-shadow:0 0 26px #f2c14e40}
+.fig.art .horizon{background:linear-gradient(180deg,#3a2c52,#241a35)}
+.pickitem{background:var(--panel);border:2px solid var(--line);border-bottom-width:var(--lip-h);
+  border-bottom-color:var(--lip);border-radius:13px;padding-block:10px;padding-inline:11px;
+  font-size:14px;line-height:1.5;text-align:left;width:100%;transition:transform .08s}
+.pickitem:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.pickitem[aria-checked="true"]{background:var(--accent-pale);border-color:var(--accent)}
+.pickitem:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.pickitem small{display:block;color:var(--ink-faint);font-size:12px;margin-top:2px}
+.hint{font-size:13px;color:var(--ink-faint);margin-block:0 10px}
+.goal{font-size:13.5px;color:var(--accent-ink);background:var(--accent-pale);border-radius:10px;
+  padding-block:8px;padding-inline:11px;margin-block:0 12px;line-height:1.5;font-weight:600}
+.lab{display:flex;flex-direction:column;gap:11px;margin-block:0 8px}
+.lab-h{font-family:var(--num);font-size:10.5px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px}
+.lab-left{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-card);
+  padding-block:11px;padding-inline:11px;display:flex;flex-direction:column;gap:7px}
+.clause{display:flex;align-items:flex-start;gap:9px;width:100%;text-align:left;font-size:14.5px;
+  line-height:1.45;background:var(--panel);border:2px solid var(--line);border-radius:11px;
+  padding-block:9px;padding-inline:10px;transition:.14s}
+.clause .box{flex:none;width:19px;height:19px;margin-top:1px;border-radius:6px;border:2px solid var(--line-2);
+  display:grid;place-items:center;font-size:11px;color:transparent;background:var(--bg)}
+.clause[aria-checked="true"]{background:var(--accent-pale);border-color:var(--accent)}
+.clause[aria-checked="true"] .box{background:var(--accent);border-color:var(--accent);color:#fff}
+.clause:active{transform:scale(.985)}
+.clause:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.lab-out{background:var(--panel);border:2px solid var(--line-2);border-radius:var(--r-card);
+  padding-block:11px;padding-inline:12px;transition:border-color .22s,background .22s}
+.lab-out.win{border-color:var(--ok);background:var(--ok-pale)}
+.lab-body{font-size:15px;line-height:1.7;min-height:2.6em}
+.lab-body.flash{animation:labflash .34s}
+@keyframes labflash{from{opacity:.25;transform:translateY(-4px)}}
+</style>
+
+<style>
+/* ---------- 阶段轨：课文的六段，始终看得见自己在第几段 ---------- */
+.rail{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+.step{flex:none;width:9px;height:9px;border-radius:var(--r-pill);background:var(--bg-deep);
+  border:1px solid var(--line);transition:.28s}
+.step.done{background:var(--ok);border-color:var(--ok)}
+.step.now{flex:1;min-width:0;width:auto;height:22px;background:var(--accent);border-color:var(--accent);
+  display:flex;align-items:center;justify-content:center;padding-inline:9px}
+.step.now span{display:inline!important;font-size:11.5px;font-weight:700;color:#fff;white-space:nowrap;letter-spacing:.04em}
+.step span{display:none}
+
+/* ---------- 棋盘：这一关的材料，六段都在，跟着你的动作变 ---------- */
+.board{flex:none;margin-inline:16px;margin-block:2px 0;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--sh);
+  padding-block:12px;padding-inline:13px;max-height:47%;overflow-y:auto;position:relative}
+.board-h{font-family:var(--num);font-size:10px;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-faint);margin-bottom:9px;display:flex;
+  justify-content:space-between;align-items:center;gap:8px}
+.board-h em{font-style:normal;color:var(--accent-ink);text-transform:none;letter-spacing:0;
+  font-size:11.5px;font-weight:600}
+.two{display:flex;flex-direction:column;gap:9px}
+.doc{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;
+  padding-block:9px;padding-inline:10px}
+.doc-h{font-size:11px;color:var(--ink-faint);margin-bottom:5px;font-weight:600}
+.doc dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13.5px;align-items:center}
+.doc dt{color:var(--ink-faint);font-size:12.5px}
+.doc dd{margin:0;font-weight:600;color:var(--ink-title)}
+.doc p{margin:0;font-size:14px;line-height:1.75;color:var(--ink)}
+mark{background:none;color:inherit;padding:0}
+mark.lit{background:var(--ok-pale);color:var(--ok-ink);border-radius:4px;
+  padding-inline:3px;box-shadow:0 0 0 1px var(--ok);animation:litin .35s}
+@keyframes litin{from{background:var(--accent-pale);transform:scale(1.12)}}
+.gone{margin-top:8px;background:var(--warn-pale);border:1px solid var(--warn);border-radius:9px;
+  padding-block:7px;padding-inline:9px;font-size:13px;color:var(--warn-ink);font-weight:600;
+  animation:litin .35s}
+.reply{margin-top:9px;background:var(--panel-2);border:1px solid var(--line);
+  border-radius:12px 12px 12px 4px;padding-block:9px;padding-inline:11px;font-size:14px;line-height:1.7}
+.reply.win{background:var(--ok-pale);border-color:var(--ok)}
+.reply .who{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-faint);
+  font-family:var(--num);font-weight:600;display:block;margin-bottom:3px}
+.reply .body.flash{animation:labflash .34s}
+.rec{margin-top:8px;font-size:12.5px;line-height:1.6;color:var(--ink-soft);
+  background:var(--bg-deep);border-radius:9px;padding-block:7px;padding-inline:9px;animation:litin .3s}
+.rec b{color:var(--accent-ink)}
+
+/* the act area under the board */
+.act{flex:1;overflow-y:auto;padding-inline:16px;padding-block:14px 16px;display:flex;flex-direction:column}
+.act .inner{width:100%}
+.ask{font-size:18px;line-height:1.5;font-weight:600;color:var(--ink-title);margin-block:0 12px;text-wrap:balance}
+.said{font-size:14.5px;line-height:1.7;color:var(--ink);margin-block:0 12px}
+.said b{color:var(--accent-ink)}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-block:2px 10px}
+.segbit{border:2px solid var(--line);border-bottom-width:var(--lip-h);border-bottom-color:var(--lip);
+  background:var(--panel);border-radius:10px;padding-block:8px;padding-inline:10px;font-size:14.5px;
+  transition:transform .08s}
+.segbit:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;margin-bottom:2px}
+.segbit.ok{background:var(--ok-pale);border-color:var(--ok);font-weight:600}
+.segbit.nope{background:var(--berry-pale);border-color:var(--berry)}
+.segbit.dim{opacity:.45}
+.segbit:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tbl td.u{text-align:right;font-size:13px;color:var(--ink-faint)}
+.tbl td.u b{color:var(--ok-ink);font-weight:700;font-size:13.5px}
+.nosum{color:var(--ok-ink);font-weight:700;font-size:15px}
+</style>
+
+<div class="app" id="app">
+  <header class="top" id="top" hidden>
+    <button class="quit" id="quit" aria-label="退出这一关">&times;</button>
+    <div class="rail" id="rail" aria-label="这一关的六段"></div>
+    <div class="combo" id="combo" aria-live="polite"><span>&#9889;</span><span id="combon">0</span></div>
+    <button class="snd" id="snd" aria-label="声音开关">&#9834;</button>
+  </header>
+  <section class="board" id="board" hidden></section>
+  <main class="act" id="act" tabindex="-1"></main>
+  <div class="foot" id="foot"></div>
+  <section class="fb" id="fb" aria-live="assertive"></section>
+</div>
+
+<script>
+/* ============================================================
+   两节真实课文，按课文自己的六段骨架做成可玩的。
+   骨架来自 write-lesson：开场 → 先猜一下 → 答案 → 怎么做 → 自检 → 一句话。
+   规矩一：材料常驻在屏幕上（棋盘），六段都不消失。
+   规矩二：每一段的提问，只能指屏幕上此刻看得见的东西。
+   ============================================================ */
+const RAIL = ["现场","先猜","答案","怎么做","自检","一句话"];
+
+const LESSONS = [
+{
+  id:"agreement", n:1,
+  title:"AI 说你做得好，它检查过哪一项？",
+  line:"赞同说明它怎样评价你，逐项核对才说明成品是否符合要求。",
+  can:"把「夸你」和「核对过」分开，并写得出一句让它逐项指出位置的要求",
+  src:'稿件取自 <a href="https://www.nasa.gov/news-release/celebrate-international-observe-the-moon-night-at-nasas-goddard-space-flight-center/" target="_blank" rel="noopener">NASA 观月之夜公告</a>。<a href="https://openai.com/index/sycophancy-in-gpt-4o/" target="_blank" rel="noopener">OpenAI 曾公开回滚一个过于迎合用户的更新</a>；下面的助手回复是教学对照，不是那次事件中的模型原话。',
+  init:()=>({lit:new Set(), reply:null, replyWin:false}),
+  boardLabel:"你手上的两份稿子",
+  boardNote:"一份活动通知，交给 AI 改写",
+  board(st){
+    const m=(k,t)=>'<mark class="'+(st.lit.has(k)?"lit":"")+'">'+t+"</mark>";
+    return '<div class="two">'+
+      '<div class="doc"><div class="doc-h">原公告（你写的）</div><dl>'+
+      "<dt>日期</dt><dd>9 月 14 日</dd>"+
+      "<dt>地点</dt><dd>戈达德航天中心</dd>"+
+      "<dt>开始时间</dt><dd>18:00</dd>"+
+      "<dt>票务</dt><dd>免费入场</dd></dl></div>"+
+      '<div class="doc"><div class="doc-h">AI 改写稿（它给你的）</div><p>'+
+      "诚邀您于 "+m("date","9 月 14 日")+" 莅临 "+m("place","戈达德航天中心")+
+      "，共赴一场观月之夜。"+m("free","免费入场")+"，敬请期待。</p></div></div>"+
+      (st.lit.has("time")?'<div class="gone">开始时间 18:00 —— 在改写稿里找不到</div>':"")+
+      (st.reply?'<div class="reply'+(st.replyWin?" win":"")+'"><span class="who">助手回复</span><div class="body flash">'+st.reply+"</div></div>":"");
+  },
+  screens:[
+  { rail:0, type:"probe",
+    said:"你写了一份活动通知，交给 AI 改写。上面那块材料里，「原公告」是你写的，「AI 改写稿」是它给你的。",
+    ask:"先别问它。自己一项一项核：点下面每一项，看它在「AI 改写稿」里还在不在。",
+    items:[
+      {t:"日期 9 月 14 日", k:"date"},
+      {t:"地点 戈达德航天中心", k:"place"},
+      {t:"开始时间 18:00", k:"time"},
+      {t:"票务 免费入场", k:"free"}
+    ],
+    doneLabel:"四项都核过了",
+    good:"四项里三项还在，<b>开始时间不见了</b>。<br>记住你刚才做的这个动作——它叫逐项核对，一会儿要用它来判断另一件事。"
+  },
+  { rail:1, railAfter:2, type:"choice",
+    before:(st)=>{st.reply='写得非常好！行文流畅，很有感染力 &#128077;';st.replyWin=false},
+    said:"你把改写稿发回去，问它「这样行吗」。它的回复就在上面材料的最下面。",
+    ask:"就凭它这一句，你现在能动手改稿吗？",
+    options:[
+      {t:"能，它说好就是好", fb:"回头看它那句话：里面没有出现「日期」「地点」「开始时间」任何一个词。它说的是你写得怎么样，不是稿子里还剩什么。"},
+      {t:"能，我自己再读一遍就行", fb:"你当然能自己读——但那是<b>你</b>在检查。它那句「非常好」一点忙也没帮上。"},
+      {t:"不能，我不知道它看了哪几项", ok:true, fb:"对。"}
+    ],
+    answerTitle:"答案",
+    good:"不能。你刚才亲手核出开始时间没了，而它说「写得非常好」。<br><b>它评价的是你，不是稿子。</b>"
+  },
+  { rail:3, type:"lab",
+    said:"要它替你检查，就得把检查项写出来。下面每一条都能开关，上面那条「助手回复」会当场跟着变。",
+    ask:"开关这几条，直到它自己说出缺了哪一项。",
+    goal:"让它自己指出缺的那一项。",
+    leftTitle:"你发给它的要求",
+    clauses:[
+      {id:"nice", t:"写得好一点，尽量完美"},
+      {id:"check", t:"按日期、地点、开始时间三项核对"},
+      {id:"quote", t:"把对应的原文指出来"},
+      {id:"missing", t:"缺的直接写「缺失」"}
+    ],
+    outs:[
+      {need:["check","quote","missing"], win:true,
+       html:'日期 &#10003;「9 月 14 日」<br>地点 &#10003;「戈达德航天中心」<br>开始时间 <b style="color:var(--warn)">缺失</b>'},
+      {need:["check","quote"],
+       html:'日期 &#10003;「9 月 14 日」<br>地点 &#10003;「戈达德航天中心」<br>开始时间 &#10003;<span style="color:var(--ink-faint)">（这一项它没给出原文）</span>'},
+      {need:["check"],
+       html:'日期 &#10003;&nbsp;&nbsp;地点 &#10003;&nbsp;&nbsp;开始时间 &#10003;<br>三项齐全，没有问题！'},
+      {need:["nice"],
+       html:'写得非常好！行文流畅，很有感染力，几乎不用再改了！&#128079;'},
+      {need:[],
+       html:'诚邀您于 9 月 14 日莅临戈达德航天中心，共赴一场观月之夜。免费入场，敬请期待。'}
+    ],
+    winCta:"这样我就能改稿了",
+    good:"中间那一步值得回头看：<b>只勾「三项核对」时，它三项全打了勾</b>——而开始时间根本不在稿子里。<br>课文里那句「打勾也可能只是另一种说法」，你刚才亲眼见了一次。要它把原文指出来，那个勾才开始值钱。"
+  },
+  { rail:4, type:"fix",
+    said:"活动方补了一条：<b>通知里必须写清时区</b>。下面是你刚才开关出来的那句要求。",
+    ask:"只改一处，让它连时区也一起核。改哪一处？",
+    seg:[
+      {t:"请按", fb:"这两个字只是开头，改它不影响它检查什么。"},
+      {t:"日期、地点、开始时间", hit:true, to:"日期、地点、开始时间、时区"},
+      {t:"三项核对", fb:"「三项」会跟着检查项一起变。先改检查项本身，这里自然就对了。"},
+      {t:"把对应的原文指出来", fb:"这一条管的是「拿证据」，它对四项和三项一样管用，不用动。"},
+      {t:"缺的直接写「缺失」", fb:"这一条管的是「缺了要说」，加不加时区它都成立，不用动。"}
+    ],
+    good:"检查项是你定的。你加一项，它才会多看一项——<b>「整篇没问题」永远不会自己长出时区那一行。</b>"
+  },
+  { rail:5, type:"takeaway" }
+  ]
+},
+{
+  id:"numbers", n:2,
+  title:"表格排得整齐，合计就不会错吗？",
+  line:"数字先要回答数的是什么，再值得讨论算得对不对。",
+  can:"看到一张表，先读列名，再看数字",
+  src:'真实数据：<a href="https://registry.opendata.aws/smithsonian-open-access/" target="_blank" rel="noopener">史密森尼开放数据集条目</a>记录 2020 年开放发布超过 280 万件二维、三维图像，并在机构背景中另列 210 万册图书与 15.6 万立方英尺档案。',
+  init:()=>({probed:new Set(), summed:false, units:[null,null,null], recs:[]}),
+  boardLabel:"别人给你的那张表",
+  boardNote:"说是某博物馆的使用人数",
+  board(st){
+    const U=["件","人","册","立方英尺"];
+    const rows=[["开放发布图像","2,800,000"],["馆藏图书","2,100,000"],["档案","156,000"]];
+    const anyUnit=st.units.some(u=>u!==null);
+    const allUnit=st.units.every(u=>u!==null);
+    let h='<table class="tbl"><thead><tr><th>项目</th><th style="text-align:right">'+
+      (allUnit?'数量':'<span class="hdrflag'+(st.summed?" bad":"")+'">使用人数</span>')+"</th>"+
+      (anyUnit?'<th style="text-align:right">单位</th>':"")+"</tr></thead><tbody>";
+    rows.forEach((r,i)=>{
+      h+="<tr><td>"+r[0]+'</td><td class="n">'+r[1]+"</td>"+
+        (anyUnit?'<td class="u">'+(st.units[i]===null?"—":"<b>"+U[st.units[i]]+"</b>")+"</td>":"")+"</tr>";
+    });
+    h+='<tr class="sum"><td>合计</td><td class="n">'+
+      (allUnit?'<span class="nosum">不能合计</span>'
+        :st.summed?'<span style="color:var(--warn);font-size:22px">5,056,000</span>':"—")+
+      "</td>"+(anyUnit?"<td></td>":"")+"</tr></tbody></table>";
+    if(st.summed&&!allUnit)h+='<p class="meta" style="text-align:right;margin:6px 0 0">这张表现在说：<b style="color:var(--warn)">505.6 万个人</b>。</p>';
+    if(allUnit)h+='<p class="meta" style="text-align:right;margin:6px 0 0">件、册、立方英尺——<b style="color:var(--ok-ink)">没有一个和能相加。</b></p>';
+    if(st.recs.length)h+='<div class="rec">'+st.recs.join("<br>")+"</div>";
+    return h;
+  },
+  screens:[
+  { rail:0, type:"probe",
+    said:"有人发给你上面那张表，说这是某博物馆的使用人数。三个数都很大，排得也整齐。",
+    ask:"先别算。点下面每一行，看看它的原始记录到底是怎么写的。",
+    items:[
+      {t:"开放发布图像 2,800,000", k:0,
+       rec:'原始记录：2020 年开放发布超过 280 万<b>件</b>二维、三维图像。'},
+      {t:"馆藏图书 2,100,000", k:1,
+       rec:'原始记录：机构背景中另列 210 万<b>册</b>图书。'},
+      {t:"档案 156,000", k:2,
+       rec:'原始记录：15.6 万<b>立方英尺</b>档案。'}
+    ],
+    doneLabel:"三行都看过原文了",
+    good:"三份原始记录里写的是 <b>件</b>、<b>册</b>、<b>立方英尺</b>。<br>没有一行写的是人——而表头上写着「使用人数」。"
+  },
+  { rail:1, railAfter:2, type:"choice",
+    said:"你已经看过三行的原始记录了。",
+    ask:"这三行，能不能填进同一个「使用人数」列？",
+    options:[
+      {t:"能，反正都是这家博物馆的数", fb:"同一家机构不等于同一种东西。它们一个数图像、一个数书、一个数档案占多大体积。"},
+      {t:"不能，它们数的不是同一种东西", ok:true, fb:"对。"},
+      {t:"能，单位换算一下就行", fb:"一册书和一件图像之间没有换算率。一件实物还可能有好几张数字图像——连一一对应都没有。"}
+    ],
+    answerTitle:"答案",
+    good:"不能。它们数的是不同对象，单位也不同，<b>没有一项是在记录独立的人</b>。<br>统一列名没有把图书变成人。"
+  },
+  { rail:3, type:"press",
+    said:"知道它不对，和看见它错成什么样，是两件事。",
+    ask:"按下面那个「合计」按钮，让这张表把话说完。",
+    btn:"合计",
+    good:"三个数都抄对了，加法也算对了，<b>而整张表是错的</b>。<br>错的不是数字，是它们头顶上那三个字。"
+  },
+  { rail:3, type:"units",
+    said:"上面那三个数字别动——它们一个都没错。",
+    ask:"给每一行选回它真正的单位。",
+    opts:["件","人","册","立方英尺"],
+    rows:[{l:"开放发布图像",a:0},{l:"馆藏图书",a:2},{l:"档案",a:3}],
+    good:"你一个数字都没改，<b>合计那一行自己就没了</b>。<br>能相加的前提是它们数的是同一种东西——先回答「数的是什么」，才轮到「算得对不对」。"
+  },
+  { rail:4, type:"choice",
+    said:"换一份记录（上面那张表先放一放）：新的这份只给了「浏览次数」，没有说明怎么算一个人。",
+    ask:"你能把这一列写成「独立人数」吗？",
+    options:[
+      {t:"能，浏览次数就是人数", fb:"一个人可以浏览很多次。次数是动作记录，不是人的记录。"},
+      {t:"不能，缺少「怎么算一个人」的定义", ok:true, fb:"对。找不到去重定义，就老老实实保留「次数」——那是记录真的支持的那一项。"},
+      {t:"能，除以 3 估一下", fb:"估算不是定义。你可以另起一行写「估算」，但不能把它填进「人数」那一列。"}
+    ],
+    good:"能指出缺哪一项定义，就已经比把所有大数字排成一张「用户增长表」更接近真实问题。"
+  },
+  { rail:5, type:"takeaway" }
+  ]
+}
+];
+</script>
+
+<script>
+(function(){
+"use strict";
+const $=(s)=>document.querySelector(s);
+const el=(t,c,h)=>{const n=document.createElement(t);if(c)n.className=c;if(h!=null)n.innerHTML=h;return n};
+const esc=(s)=>String(s).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+const act=$("#act"), foot=$("#foot"), fb=$("#fb"), top=$("#top"), boardEl=$("#board"), rail=$("#rail");
+const comboEl=$("#combo"), comboN=$("#combon");
+
+const store={get(k,d){try{const v=localStorage.getItem("gz2_"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem("gz2_"+k,JSON.stringify(v))}catch(e){}}};
+let AC=null, sound=store.get("snd",true);
+function tone(fs,dur,type,vol){ if(!sound)return;
+  try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==="suspended")AC.resume();
+    fs.forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime+i*0.075;
+      o.type=type||"sine";o.frequency.setValueAtTime(f,t);
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||0.14,t+0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+(dur||0.2));
+      o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+(dur||0.2)+0.02)});
+  }catch(e){}}
+const sfx={tap:()=>tone([520],.05,"sine",.05), pick:()=>tone([660],.07,"triangle",.07),
+  right:()=>tone([659.25,880],.26,"sine",.13), wrong:()=>tone([300,262],.3,"sine",.1),
+  land:()=>tone([440],.09,"triangle",.08), cash:()=>tone([392,523.25,659.25,784],.4,"triangle",.11),
+  done:()=>tone([523.25,659.25,783.99,1046.5],.5,"triangle",.12)};
+function buzz(m){try{navigator.vibrate&&navigator.vibrate(m)}catch(e){}}
+$("#snd").onclick=()=>{sound=!sound;store.set("snd",sound);paintSnd();if(sound)sfx.pick()};
+function paintSnd(){$("#snd").style.opacity=sound?"1":".38";$("#snd").setAttribute("aria-pressed",String(sound))}
+paintSnd();
+
+let S=null, W=null;
+const doneL=store.get("done",[]);
+
+function setFoot(label,onClick,cls,disabled){
+  foot.innerHTML="";
+  const b=el("button","cta"+(cls?" "+cls:""),esc(label));
+  b.id="cta"; b.disabled=!!disabled; b.onclick=onClick; foot.appendChild(b); return b;
+}
+const enableCta=(on)=>{const c=$("#cta");if(c)c.disabled=!on};
+const ctaText=(t)=>{const c=$("#cta");if(c)c.textContent=t};
+function hideFb(){fb.className="fb";fb.innerHTML=""}
+function showFb(kind,title,body,keep,next){
+  fb.className="fb "+(kind==="good"?"good":"soft"); fb.innerHTML="";
+  fb.appendChild(el("h3",null,'<span class="mark">'+(kind==="good"?"&#10003;":"&#8635;")+"</span>"+esc(title)));
+  (Array.isArray(body)?body:[body]).filter(Boolean).forEach(p=>fb.appendChild(el("p",null,p)));
+  if(keep)fb.appendChild(el("div","keep","<b>带走这一句</b>"+esc(keep)));
+  const b=el("button","cta"+(kind==="good"?" go":""),"继续");
+  b.onclick=()=>{hideFb();next()};
+  fb.appendChild(b);
+  requestAnimationFrame(()=>{fb.classList.add("up");b.focus({preventScroll:true})});
+}
+function drawRail(at){
+  rail.innerHTML="";
+  RAIL.forEach((name,i)=>{
+    const d=el("div","step"+(i<at?" done":"")+(i===at?" now":""));
+    d.innerHTML="<span>"+esc(name)+"</span>";
+    d.title=name; rail.appendChild(d);
+  });
+}
+function drawBoard(){
+  const L=S.L;
+  boardEl.hidden=false;
+  boardEl.innerHTML='<div class="board-h"><span>'+esc(L.boardLabel)+"</span><em>"+esc(L.boardNote)+"</em></div>"+L.board(S.st);
+}
+function mount(){ act.scrollTop=0; act.innerHTML=""; hideFb(); W=el("div","inner"); act.appendChild(W); return W }
+function say(sc){
+  if(sc.said)W.appendChild(el("p","said",sc.said));
+  if(sc.ask)W.appendChild(el("h2","ask",esc(sc.ask)));
+}
+function srcOnce(){ if(S.i===0&&S.L.src)W.appendChild(el("p","src",S.L.src)) }
+
+function setCombo(n,silent){
+  comboN.textContent=n; comboEl.classList.toggle("on",n>=2);
+  if(!silent&&n>=2){comboEl.classList.remove("pop");void comboEl.offsetWidth;comboEl.classList.add("pop")}
+}
+function next(){ S.i++; if(S.i>=S.L.screens.length)return finishLesson(); render() }
+function win(sc,title,body,keep){
+  S.right++; S.combo++; S.best=Math.max(S.best,S.combo); setCombo(S.combo);
+  sfx.right(); buzz(18);
+  if(sc.railAfter!=null)drawRail(sc.railAfter);
+  showFb("good", title||(S.combo>=3?"连对 "+S.combo+" 步":"对了"), body, keep, next);
+}
+function lose(sc,body){
+  S.wrong++; S.combo=0; setCombo(0,true);
+  sfx.wrong(); buzz([12,60,12]);
+  if(sc.railAfter!=null)drawRail(sc.railAfter);
+  showFb("soft","很多人也是这么想的", body, null, next);
+}
+
+/* ---------------- act types ---------------- */
+function aProbe(sc){
+  mount(); say(sc);
+  const wrap=el("div","tiles");
+  let left=sc.items.length;
+  sc.items.forEach(it=>{
+    const n=el("button","tile",'<span class="key">&#9675;</span><span>'+esc(it.t)+"</span>");
+    n.onclick=()=>{
+      if(n.disabled)return; n.disabled=true; n.classList.add("ok");
+      n.querySelector(".key").innerHTML="&#10003;";
+      if(it.k!==undefined&&S.st.lit)S.st.lit.add(it.k);
+      if(it.k!==undefined&&S.st.probed)S.st.probed.add(it.k);
+      if(it.rec&&S.st.recs&&S.st.recs.indexOf(it.rec)<0)S.st.recs.push(it.rec);
+      sfx.land(); drawBoard(); left--; if(left===0)enableCta(true);
+    };
+    wrap.appendChild(n);
+  });
+  W.appendChild(wrap); srcOnce();
+  setFoot(sc.doneLabel||"核完了",()=>win(sc,"你自己查出来的",[sc.good]),null,true);
+}
+function aChoice(sc){
+  if(sc.before)sc.before(S.st);
+  drawBoard(); mount(); say(sc);
+  const wrap=el("div","tiles"); wrap.setAttribute("role","radiogroup");
+  let pick=-1;
+  const nodes=sc.options.map((o,i)=>{
+    const n=el("button","tile",'<span class="key">'+String.fromCharCode(65+i)+"</span><span>"+esc(o.t)+"</span>");
+    n.setAttribute("role","radio"); n.setAttribute("aria-checked","false");
+    n.onclick=()=>{ if(n.disabled)return; sfx.tap(); pick=i;
+      nodes.forEach(m=>m.setAttribute("aria-checked","false"));
+      n.setAttribute("aria-checked","true"); enableCta(true) };
+    wrap.appendChild(n); return n;
+  });
+  W.appendChild(wrap); srcOnce();
+  setFoot("检查",()=>{
+    const o=sc.options[pick], ok=!!o.ok;
+    nodes.forEach((n,i)=>{ n.disabled=true;
+      if(sc.options[i].ok)n.classList.add("ok");
+      else if(i===pick)n.classList.add("nope"); else n.classList.add("dim") });
+    if(!ok){const n=nodes[pick];n.classList.remove("shake");void n.offsetWidth;n.classList.add("shake")}
+    const right=sc.options.find(x=>x.ok);
+    if(ok)win(sc,sc.answerTitle,[sc.good]);
+    else lose(sc,[o.fb,"该选的是：「"+esc(right.t)+"」",sc.good]);
+  },null,true);
+}
+function aLab(sc){
+  drawBoard(); mount(); say(sc);
+  W.appendChild(el("p","goal","&#127919; 目标："+esc(sc.goal)));
+  const left=el("div","lab-left");
+  left.appendChild(el("div","lab-h",esc(sc.leftTitle)));
+  const on=new Set(); let won=false;
+  sc.clauses.forEach(c=>{
+    const n=el("button","clause",'<span class="box">&#10003;</span><span>'+esc(c.t)+"</span>");
+    n.setAttribute("role","switch"); n.setAttribute("aria-checked","false");
+    n.onclick=()=>{ if(on.has(c.id)){on.delete(c.id);n.setAttribute("aria-checked","false")}
+      else{on.add(c.id);n.setAttribute("aria-checked","true")} sfx.tap(); paint() };
+    left.appendChild(n);
+  });
+  W.appendChild(left); srcOnce();
+  function paint(){
+    const hit=sc.outs.find(o=>o.need.every(k=>on.has(k)))||sc.outs[sc.outs.length-1];
+    S.st.reply=hit.html; S.st.replyWin=!!hit.win; drawBoard();
+    if(hit.win&&!won){won=true;sfx.right();buzz(18);enableCta(true);ctaText(sc.winCta)}
+    if(!hit.win&&won){won=false;enableCta(false);ctaText("还差一点")}
+  }
+  setFoot("还差一点",()=>win(sc,"它终于肯说了",[sc.good]),null,true);
+  paint();
+}
+function aFix(sc){
+  drawBoard(); mount(); say(sc);
+  const line=el("div","seg");
+  const nodes=sc.seg.map(b=>{
+    const n=el("button","segbit",esc(b.t));
+    n.onclick=()=>{
+      nodes.forEach(m=>m.disabled=true);
+      if(b.hit){ n.classList.add("ok"); n.textContent=b.to; sfx.right();
+        win(sc,"改对了一处",[sc.good],"请按"+b.to+"四项核对，把对应的原文指出来，缺的直接写「缺失」。") }
+      else{ n.classList.add("nope"); nodes.forEach(m=>{if(!m.classList.contains("nope"))m.classList.add("dim")});
+        const hit=sc.seg.find(x=>x.hit);
+        lose(sc,[b.fb,"该改的是「"+esc(hit.t)+"」，把它变成「"+esc(hit.to)+"」。",sc.good]) }
+    };
+    line.appendChild(n); return n;
+  });
+  W.appendChild(line); srcOnce();
+  setFoot("点上面那一处来改",()=>{},null,true);
+}
+function aPress(sc){
+  drawBoard(); mount(); say(sc);
+  const btn=el("button","sumbtn",esc(sc.btn));
+  btn.onclick=()=>{
+    btn.disabled=true; sfx.cash();
+    const end=5056000,t0=performance.now();
+    const cell=()=>boardEl.querySelector(".sum .n");
+    (function step(t){
+      const k=Math.min(1,(t-t0)/900), cur=Math.round(end*(1-Math.pow(1-k,3)));
+      const c=cell(); if(c)c.innerHTML='<span style="color:var(--warn);font-size:22px">'+cur.toLocaleString("en-US")+"</span>";
+      if(k<1)requestAnimationFrame(step);
+      else{ S.st.summed=true; drawBoard();
+        setTimeout(()=>win(sc,"你刚刚亲手算出了一个不存在的数",[sc.good]),560) }
+    })(t0);
+  };
+  W.appendChild(btn); srcOnce();
+  setFoot("先按上面那个按钮",()=>{},null,true);
+}
+function aUnits(sc){
+  drawBoard(); mount(); say(sc);
+  const wrap=el("div","rows"); const picks=new Array(sc.rows.length).fill(-1);
+  const all=sc.rows.map((r,ri)=>{
+    const row=el("div","row"); row.innerHTML='<div class="lbl">'+esc(r.l)+"</div>";
+    const os=el("div","opts"); os.setAttribute("role","radiogroup");
+    const nodes=sc.opts.map((o,oi)=>{
+      const n=el("button","opt",esc(o));
+      n.setAttribute("role","radio"); n.setAttribute("aria-checked","false");
+      n.onclick=()=>{ sfx.land(); picks[ri]=oi;
+        nodes.forEach(m=>m.setAttribute("aria-checked","false"));
+        n.setAttribute("aria-checked","true");
+        S.st.units[ri]=oi; drawBoard();
+        enableCta(picks.every(p=>p>=0)) };
+      os.appendChild(n); return n;
+    });
+    row.appendChild(os); wrap.appendChild(row); return nodes;
+  });
+  W.appendChild(wrap); srcOnce();
+  setFoot("检查",()=>{
+    let ok=true;
+    sc.rows.forEach((r,ri)=>all[ri].forEach((n,oi)=>{ n.disabled=true;
+      if(oi===r.a)n.classList.add("ok"); else if(oi===picks[ri]){n.classList.add("nope");ok=false} }));
+    sc.rows.forEach((r,ri)=>{S.st.units[ri]=r.a}); drawBoard();
+    if(ok)win(sc,"表被你改对了",[sc.good]);
+    else lose(sc,["正确的是："+sc.rows.map(r=>r.l+"是「"+sc.opts[r.a]+"」").join("，")+"。",sc.good]);
+  },null,true);
+}
+function aTakeaway(sc){
+  const L=S.L; drawBoard(); mount();
+  const secs=Math.max(1,Math.round((Date.now()-S.t0)/1000));
+  if(doneL.indexOf(L.id)<0){doneL.push(L.id);store.set("done",doneL)}
+  sfx.done(); buzz([20,50,20,50,30]);
+  const c=el("div","card hero");
+  c.innerHTML='<div class="ring">&#10003;</div><h2>一句话</h2><p class="lede"><b>'+esc(L.line)+"</b></p>"+
+    '<div class="stats"><div class="stat"><b>'+S.best+'</b><span>最长连对</span></div>'+
+    '<div class="stat"><b>'+S.right+"/"+(S.right+S.wrong)+'</b><span>一次做对</span></div>'+
+    '<div class="stat"><b>'+(secs<60?secs+'"':Math.floor(secs/60)+"'"+(secs%60))+"</b><span>用时</span></div></div>";
+  W.appendChild(c);
+  const can=el("div","card");
+  can.innerHTML='<div class="eyebrow" style="margin-top:0">你现在会做</div>'+
+    '<ul class="ulist can"><li><i>&#10003;</i><span>'+esc(L.can)+"</span></li></ul>";
+  W.appendChild(can);
+  const ni=S.li+1;
+  if(ni<LESSONS.length)setFoot("下一关",()=>{sfx.pick();start(ni)},"go");
+  else setFoot("回到课程列表",()=>{sfx.pick();home()},"go");
+}
+
+function render(){
+  const sc=S.L.screens[S.i];
+  drawRail(sc.rail);
+  ({probe:aProbe,choice:aChoice,lab:aLab,fix:aFix,press:aPress,units:aUnits,takeaway:aTakeaway}[sc.type])(sc);
+  if(sc.type!=="takeaway")drawBoard();
+  act.focus({preventScroll:true});
+}
+function start(i){
+  S={li:i,L:LESSONS[i],st:LESSONS[i].init(),i:0,combo:0,best:0,right:0,wrong:0,t0:Date.now()};
+  top.hidden=false; setCombo(0,true); render();
+}
+function finishLesson(){ home() }
+function home(){
+  S=null; top.hidden=true; boardEl.hidden=true; hideFb(); act.scrollTop=0; act.innerHTML="";
+  W=el("div","inner"); act.appendChild(W);
+  const head=el("div","card");
+  head.innerHTML='<div class="eyebrow" style="margin-top:0">University · 样板</div>'+
+    '<h1 style="margin:0 0 8px;font-size:22px;line-height:1.4;color:var(--ink-title)">看懂 AI 的回答，不被语气带走</h1>'+
+    '<p style="margin:0 0 10px;font-size:14.5px;color:var(--ink-soft);line-height:1.7">'+
+    '每一关就是一节课，走的还是课文原来的六段：<b>现场 → 先猜 → 答案 → 怎么做 → 自检 → 一句话</b>。'+
+    '材料一直摆在屏幕上方，六段都不消失，而且会跟着你的操作变。</p>'+
+    '<div class="eyebrow" style="margin:0">2 节 · 每节 5–6 步 · 没有生命值 · 全程不用打字</div>';
+  W.appendChild(head);
+  LESSONS.forEach((L,i)=>{
+    const done=doneL.indexOf(L.id)>=0;
+    const b=el("button","lvl"+(done?" done":""));
+    b.innerHTML='<span class="n">'+(done?"&#10003;":L.n)+'</span><span class="t">'+esc(L.title)+
+      "<em>"+esc(L.can)+"</em></span>";
+    b.onclick=()=>{sfx.pick();start(i)};
+    W.appendChild(b);
+  });
+  W.appendChild(el("p","note",
+    "两节课的正文、出处和教学顺序都来自已发布课程 <code>ai-literacy / understanding-ai</code> 单元「看懂回答，不被语气带走」。"+
+    "这是互动形态的样板，不是最终产品实现。"));
+  if(doneL.length)setFoot("从头再走一遍",()=>{store.set("done",[]);doneL.length=0;home()},"ghost");
+  else foot.innerHTML="";
+}
+$("#quit").onclick=()=>{sfx.tap();home()};
+document.addEventListener("keydown",e=>{
+  if(/^[1-9]$/.test(e.key)){const n=act.querySelectorAll(".tile:not(:disabled),.segbit:not(:disabled)")[+e.key-1];if(n)n.click()}
+});
+const boot=()=>home();
+if(window.claude&&window.claude.hot&&window.claude.hot.ready)window.claude.hot.ready(boot); else boot();
+})();
+</script>

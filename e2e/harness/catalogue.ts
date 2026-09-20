@@ -314,10 +314,17 @@ function studyOf(course: ShippedCourse): ShippedStudy {
 
 const settlementCourse = requireCourse(
   (course) =>
+    // This legacy read/grade/FSRS journey enters through a fresh "Today" card.
+    // Picking a deterministic sibling is not enough: Today may correctly point
+    // to a PRIMM opening in the same series. Match that series' real starting
+    // course, rather than asserting the wrong title or seeding learner progress.
+    course.id ===
+      (importedStudies.find((study) => study.studyId === course.studyId)?.defaultCourseId ??
+        studyOf(course).courses[0]?.id) &&
     course.prerequisiteCourseIds.length === 0 &&
     course.units[0]?.lessons[0]?.exerciseCount === 1 &&
     !course.units[0]?.lessons[0]?.firstExerciseIsUndecided,
-  "an unlocked course with one deterministically graded opening exercise",
+  "a series' real starting course with one deterministic opening exercise; PRIMM Today completion is covered in primm.spec.ts",
 );
 const settlementStudy = studyOf(settlementCourse);
 const settlementLesson = settlementCourse.units.flatMap((unit) => unit.lessons)[0];
@@ -326,7 +333,7 @@ if (!settlementLesson) throw new Error("e2e catalogue: settlement course has no 
 /** Test input from the matching author-owned release, never from a learner's
  * data or a mocked grading response. Changing the first published course must
  * change its answer too. The browser still submits through the real grader. */
-export function shippedShortAnswer(course: ShippedCourse, lesson: ShippedLesson): string {
+export function shippedDeterministicAnswer(course: ShippedCourse, lesson: ShippedLesson): string {
   const root = `apps/local/course-proposals/recovery/${course.studyId}`;
   const index = readJson(`${root}/index.json`);
   const entry = arrayOf(index.courses, "recovery courses")
@@ -360,8 +367,18 @@ export function shippedShortAnswer(course: ShippedCourse, lesson: ShippedLesson)
   }
   const exercises = arrayOf(original.exercises, "recovery exercises");
   const exercise = objectOf(exercises[0], "recovery exercise");
-  if (exercises.length !== 1 || exercise.kind !== "short-answer") {
-    throw new Error("e2e catalogue: settlement needs one short-answer exercise");
+  if (exercises.length !== 1 || !["short-answer", "choice"].includes(String(exercise.kind))) {
+    throw new Error("e2e catalogue: settlement needs one deterministic exercise");
+  }
+  if (exercise.kind === "choice") {
+    const id = stringOf(exercise.correctOptionId, "authored correct option");
+    if (
+      !arrayOf(exercise.options, "choice options").some(
+        (option) => objectOf(option, "option").id === id,
+      )
+    )
+      throw new Error("e2e catalogue: authored option is absent");
+    return id;
   }
   return stringOf(exercise.expectedAnswer, "authored expected answer");
 }
@@ -446,14 +463,22 @@ if (!completeLesson) {
   );
 }
 const completeLessonStudy = studyOf(completeLessonCourse);
+// The generic explain-editor suite still exercises its real legacy surface.
+// PRIMM's native Make submission and fail/revise/pass flow have their own suite.
+function legacyUndecidedExercise(lesson: ShippedLesson): boolean {
+  const activities = lesson.packageLesson.activities as { kind: string }[] | undefined;
+  return (
+    lesson.firstExerciseIsUndecided && !activities?.some((activity) => activity.kind === "primm")
+  );
+}
 const undecidedGradingCourse = requireCourse(
   (course) =>
-    course.units.some((unit) => unit.lessons.some((lesson) => lesson.firstExerciseIsUndecided)),
+    course.units.some((unit) => unit.lessons.some((lesson) => legacyUndecidedExercise(lesson))),
   "a course whose first exercise is correctly left undecided by tier-one grading",
 );
 const undecidedGradingLesson = undecidedGradingCourse.units
   .flatMap((unit) => unit.lessons)
-  .find((lesson) => lesson.firstExerciseIsUndecided);
+  .find(legacyUndecidedExercise);
 if (!undecidedGradingLesson) {
   throw new Error("e2e catalogue: undecided grading course has no eligible lesson");
 }
@@ -463,7 +488,7 @@ export const CATALOGUE_ROLES = {
     study: settlementStudy,
     course: settlementCourse,
     lesson: settlementLesson,
-    answer: shippedShortAnswer(settlementCourse, settlementLesson),
+    answer: shippedDeterministicAnswer(settlementCourse, settlementLesson),
   },
   prerequisiteCourse: {
     study: studyOf(prerequisiteCourse),

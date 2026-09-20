@@ -7,6 +7,7 @@ import { humanClick } from "./click.js";
 import { namedStep } from "./step.js";
 import { enterSelectedMapObject } from "./map-actions.js";
 import { PRIMARY_DOMAIN_ID } from "./domain-catalogue.js";
+import { enterExerciseAnswer } from "./exercise-input.js";
 
 const SETTLEMENT = CATALOGUE_ROLES.settlement;
 const SETTLEMENT_LESSONS = SETTLEMENT.course.units.flatMap((unit) => unit.lessons);
@@ -101,6 +102,14 @@ export async function startFirstLessonFromLanding(page: Page): Promise<void> {
 export async function readAndAnswerFirstLesson(page: Page): Promise<void> {
   await namedStep(page, "课文出现", async () => {
     await assertVisibleText(page, FIRST_LESSON_TITLE);
+    // This settlement test reads the actual explanation before confirming it.
+    // The separate interaction suite proves guided rounds; opening their
+    // alternative review route is not simulated interaction completion.
+    const review = page.locator(".interaction-path__review");
+    if ((await review.count()) > 0) {
+      await humanClick(page, review.locator("summary").first(), "打开本节完整讲解");
+      await expect(review).toHaveAttribute("open", "");
+    }
     await assertImagesStayInViewport(page);
   });
 
@@ -108,12 +117,12 @@ export async function readAndAnswerFirstLesson(page: Page): Promise<void> {
     const quiz = page.locator(".exercise-panel").first();
     await expect(quiz).toBeVisible();
     await quiz.scrollIntoViewIfNeeded();
-    await expect(page.getByPlaceholder(/用自己的话/)).toBeVisible();
+    await expect(quiz.locator("textarea, [data-exercise-option]").first()).toBeVisible();
     await expect(page.getByRole("button", { name: /提交/ })).toBeVisible();
   });
 
   await namedStep(page, "答题并提交", async () => {
-    await page.getByPlaceholder(/用自己的话/).fill(FIRST_ANSWER);
+    await enterExerciseAnswer(page, page.locator(".exercise-panel").first(), FIRST_ANSWER);
     await humanClick(page, page.getByRole("button", { name: /提交/ }), "提交");
   });
 
@@ -129,10 +138,10 @@ export async function readAndAnswerFirstLesson(page: Page): Promise<void> {
     the only way through. Clicking it is what a learner does.
   */
   await namedStep(page, "确认读完了这一版", async () => {
-    const confirm = page.getByRole("button", { name: /^我读完了$/ });
+    const confirm = page.getByRole("button", { name: /^(我读完了|我学过这一版了)$/ });
     await expect(confirm).toBeVisible({ timeout: 20_000 });
     await confirm.scrollIntoViewIfNeeded();
-    await humanClick(page, confirm, "我读完了");
+    await humanClick(page, confirm, "明确确认学过当前版本");
   });
 }
 

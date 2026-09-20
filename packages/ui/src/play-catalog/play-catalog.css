@@ -1,0 +1,239 @@
+.play-catalog {
+  width: min(1440px, 100%);
+  margin-inline: auto;
+  padding: 24px clamp(12px, 3vw, 36px) calc(96px + env(safe-area-inset-bottom));
+  color: var(--game-ui-text);
+  font-family: var(--game-ui-font-body);
+}
+.play-catalog * {
+  box-sizing: border-box;
+}
+.play-catalog__header {
+  margin-bottom: 24px;
+}
+.play-catalog__header h1 {
+  margin: 12px 0 8px;
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: 1.25;
+}
+.play-catalog__header p {
+  margin: 0;
+  color: var(--game-ui-text-muted);
+  line-height: 1.7;
+}
+.play-catalog a {
+  color: var(--game-ui-accent-ink);
+  text-underline-offset: 3px;
+}
+.play-catalog__layout {
+  display: grid;
+  grid-template-columns: 286px minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 40px);
+  align-items: start;
+}
+.play-catalog__picker {
+  min-width: 0;
+  position: sticky;
+  top: 16px;
+}
+.play-catalog__picker > summary {
+  font-weight: 700;
+  padding-block: 12px;
+  cursor: pointer;
+}
+.play-catalog__picker > label {
+  display: block;
+  font-size: 14px;
+  margin: 6px 0;
+}
+.play-catalog__picker input {
+  width: 100%;
+}
+.play-catalog__picker [role="tablist"] {
+  margin-top: 12px;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.play-catalog__picker [role="tab"] {
+  min-height: 44px;
+}
+.play-catalog__count {
+  margin: 12px 0 6px;
+  color: var(--game-ui-text-muted);
+  font-size: 13px;
+}
+.play-catalog__results {
+  max-height: 58dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.play-catalog__results ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.play-catalog__results li + li {
+  border-top: 1px solid var(--game-ui-border-subtle);
+}
+.play-catalog__results button {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  min-height: 72px;
+  padding: 12px;
+  text-align: start;
+  border: 0;
+  border-inline-start: 3px solid transparent;
+  background: transparent;
+  color: var(--game-ui-text);
+  font: inherit;
+  cursor: pointer;
+  border-radius: 0;
+}
+.play-catalog__results button[aria-pressed="true"] {
+  border-inline-start-color: var(--game-ui-accent);
+  background: var(--game-ui-surface-raised);
+}
+.play-catalog__results button:active {
+  background: var(--game-ui-panel-deep);
+}
+.play-catalog__results span {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.play-catalog__results small {
+  color: var(--game-ui-text-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.play-catalog__play {
+  min-width: 0;
+  scroll-margin-top: 16px;
+}
+.play-catalog__selection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.play-catalog__selection h2 {
+  margin: 0;
+  font-size: clamp(23px, 3vw, 32px);
+  line-height: 1.3;
+}
+.play-catalog__eyebrow {
+  margin: 0 0 6px;
+  color: var(--game-ui-text-muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.play-catalog__action {
+  font-size: 17px;
+  margin: 12px 0 8px;
+}
+.play-catalog__controls {
+  line-height: 1.7;
+  margin: 8px 0;
+}
+.play-catalog__scope {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--game-ui-text-muted);
+  margin-block: 8px;
+}
+.play-catalog__limit {
+  font-size: 13px;
+  line-height: 1.7;
+  padding-inline-start: 12px;
+  border-inline-start: 2px solid var(--game-ui-border-strong);
+}
+.play-catalog__board {
+  margin-top: 16px;
+  min-width: 0;
+}
+.play-catalog__prototype {
+  min-width: 0;
+}
+.play-catalog__prototype > [role="group"] {
+  margin-bottom: 12px;
+}
+.play-catalog__prototype iframe {
+  width: 100%;
+  height: 820px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-panel);
+  background: var(--game-ui-bg);
+  display: block;
+}
+.play-catalog__native > button {
+  margin-bottom: 8px;
+}
+.play-catalog__lesson-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  margin-block: 12px;
+  font-weight: 700;
+}
+.play-catalog__empty {
+  min-height: 400px;
+  display: grid;
+  place-content: center;
+  color: var(--game-ui-text-muted);
+}
+.play-catalog__rationale {
+  margin-top: 28px;
+  border-top: 1px solid var(--game-ui-border-subtle);
+  padding-top: 16px;
+  line-height: 1.8;
+}
+.play-catalog__rationale summary {
+  cursor: pointer;
+  min-height: 44px;
+}
+.play-catalog :is(a, button, input, summary):focus-visible,
+.play-catalog__play:focus-visible {
+  outline: 3px solid var(--game-ui-focus-ring);
+  outline-offset: 3px;
+}
+@media (hover: hover) {
+  .play-catalog__results button:hover {
+    background: var(--game-ui-surface);
+  }
+}
+@media (max-width: 760px) {
+  .play-catalog {
+    padding-top: 16px;
+  }
+  .play-catalog__layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .play-catalog__picker {
+    position: static;
+    border-block: 1px solid var(--game-ui-border-subtle);
+  }
+  .play-catalog__results {
+    max-height: 40dvh;
+  }
+  .play-catalog__header {
+    margin-bottom: 16px;
+  }
+  .play-catalog__selection {
+    align-items: flex-start;
+  }
+  .play-catalog__prototype iframe {
+    height: 880px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .play-catalog *,
+  .play-catalog *::before,
+  .play-catalog *::after {
+    scroll-behavior: auto;
+    transition: none;
+    animation: none;
+  }
+}

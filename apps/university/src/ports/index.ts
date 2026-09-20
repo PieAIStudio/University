@@ -40,6 +40,7 @@ import { createLocalSourceAccessPort } from "./local/source-access.js";
 import { createClipboardFeedbackPort, createFeedbackPort } from "./feedback.js";
 import { createOnlineContentPort } from "./online/content.js";
 import { createOnlineGradingPort } from "./online/grading.js";
+import { withPrimmPreview } from "./primm-preview.js";
 import { createOnlineReaderPort } from "./online/reader.js";
 import { createOnlineSourceAccessPort } from "./online/source-access.js";
 import { createBrowserReviewReminderPort } from "./notifications.js";
@@ -53,12 +54,21 @@ export const readerPort: ReaderPort = AUTHORING
   ? createLocalReaderPort({ progress: progressPort })
   : createOnlineReaderPort({ progress: progressPort });
 
-export const gradingPort: GradingPort = AUTHORING
+const normalGradingPort: GradingPort = AUTHORING
   ? createLocalGradingPort({ progress: progressPort })
   : createOnlineGradingPort({
       progress: progressPort,
       readAccessToken: () => identityPort.readAccessToken(),
     });
+
+// An explicit local experiment configuration, never a production free-AI route.
+export const gradingPort: GradingPort =
+  import.meta.env.DEV && import.meta.env.VITE_UNIVERSITY_PRIMM_PREVIEW_URL
+    ? withPrimmPreview(normalGradingPort, {
+        url: import.meta.env.VITE_UNIVERSITY_PRIMM_PREVIEW_URL,
+        progress: progressPort,
+      })
+    : normalGradingPort;
 
 /** Repository access is the third boundary: action locally, explanation in delivery. */
 export const sourceAccessPort: SourceAccessPort = AUTHORING

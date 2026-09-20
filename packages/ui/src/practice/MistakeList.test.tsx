@@ -106,6 +106,18 @@ describe("MistakesEntry", () => {
 });
 
 describe("MistakeList", () => {
+  it("shows the selected choice text rather than an internal option ID", async () => {
+    await renderList(
+      [mistake({ wrongAnswer: "option-b" })],
+      content({
+        ...EXERCISE,
+        correctAnswer: null,
+        options: [{ id: "option-b", text: "我当时选的说法" }],
+      }),
+    );
+    expect(container.textContent).toContain("我当时选的说法");
+    expect(container.textContent).not.toContain("option-b");
+  });
   it("shows the question, both answers, count, date, and lesson action", async () => {
     await renderList([mistake()]);
     const text = container.textContent ?? "";

@@ -75,6 +75,12 @@ export {
   type VocabularyStageResult,
 } from "./reader.js";
 export {
+  PrimmExecutionError,
+  type PrimmExecutionPhase,
+  type PrimmExecutionRequest,
+  type PrimmExecutionResult,
+  type PrimmExecutionErrorCode,
+  type PrimmExecutionFailure,
   DETERMINISTIC_GRADER_HOST,
   METERED_GRADING_COST_POWER_UNITS,
   graderLabel,

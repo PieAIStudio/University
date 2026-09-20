@@ -26,6 +26,7 @@ related:
   - REF-PRODUCT-COMPLETENESS-REVIEW
   - PLAN-PRODUCT-COMPLETENESS
   - PLAN-AI-FOUNDATIONS-REVIVAL
+  - PLAN-INTERACTION-FIRST-EXPERIMENT
 ---
 
 # Current Work
@@ -38,8 +39,9 @@ test totals, CLI/model choices or execution history. Read only the matching row.
 The course, product and visual branch commits are merged into `main`; the
 integration baseline is `9f5bc900`. On 2026-09-13 the three lanes, their
 worktrees and both stale remote branches were removed after each was verified to
-hold nothing `main` lacks, so `main` is now the only branch and the only
-checkout. Development proceeds as a sequential queue — see
+hold nothing `main` lacked. At that checkpoint, `main` was the only branch and
+checkout; the later Owner-authorized interaction experiments are separate work.
+Ordinary mainline development proceeds as a sequential queue — see
 [the work queue](work-queue.md). Recheck Git and listener ownership rather than
 replaying an old merge or using a remembered port. The completed [PGS alignment](../../plans/completed/ai-readiness-alignment.md)
 and [UIKit migration](../../plans/completed/uikit-liquid-cta-migration.md) retain
@@ -53,6 +55,7 @@ New mainline work follows the applicable lanes below.
 | Task | Authoritative entry |
 | --- | --- |
 | Published real-source beginner courses and remaining account-service prerequisites | [AI literacy commercial release](../../plans/active/00-ai-literacy-commercial-release.md); both bilingual paths are live and the final release gates passed. Continue only the named AuthKit/mail/account-deletion/cross-device prerequisites or a newly reproduced issue; do not restart course production. Actual payments remain disabled |
+| Everyday PRIMM first-five revision and unified interaction catalogue | [Interaction-first experiment](../../plans/active/interaction-first-experiment.md); current work stays in `.worktrees/interaction-first` / `codex/interaction-first`. Owner retains the clean linear PRIMM reader and now uses real cases as brief introductions, separate everyday practice, patient beginner guidance and five distinct operations per lesson. The plan owns acceptance and walkthrough evidence; earlier pilots are history. Main and Claude research are already absorbed; do not recreate a branch or publish without authorization |
 | How work is queued, run and gated on the mainline | [Work queue](work-queue.md); one task, one commit, one push, because `pnpm verify` does not run the browser suite |
 | Published versus locked course packages | [Locked-package record](../../../apps/local/course-proposals/locked/README.md); runtime counts come from the generated catalogue, not historical handoffs |
 | Reviving the locked AI foundations course | [AI foundations revival](../../plans/active/ai-foundations-revival.md); follow its phase boundary and unresolved recovery requirements before resuming |

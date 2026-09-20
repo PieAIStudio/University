@@ -25,6 +25,10 @@ import { progressPort } from "../progress/store.js";
 vi.mock("@pieai/university-world/WorldMapCanvas.js", () => ({
   WorldMapCanvas: () => null,
 }));
+// The profile owns a second, lazy R3F canvas. This suite checks real profile
+// progress/badges, not WebGL; leaving that boundary live can suspend act() in
+// jsdom. Browser avatar tests still exercise the actual renderer.
+vi.mock("./ProfileAvatar.js", () => ({ ProfileAvatar: () => null }));
 
 vi.mock("../ports/index", () => ({
   contentPort: {
@@ -140,6 +144,10 @@ describe("the four screens that read the progress document", () => {
     expect(text).not.toContain("排行榜还没开");
   });
 
+  // These mount the complete UIKit profile, rather than a small isolated
+  // widget: measured at 3.4s alone and 10.2s alongside the whole app suite.
+  // Budget this integration work explicitly; keep every DOM assertion. Real
+  // browser journeys, not jsdom wall time, cover learner-visible behavior.
   it("renders the badge wall on /me, not the door that said badges live elsewhere", async () => {
     history.replaceState(null, "", "/me");
     await act(async () => {
@@ -148,7 +156,7 @@ describe("the four screens that read the progress document", () => {
     const text = container.textContent ?? "";
     expect(text).toContain("连续 7 天来学");
     expect(text).not.toContain("徽章长在投放端");
-  });
+  }, 15_000);
 
   it("counts a finished lesson on the profile from the document, not the disk shelf", async () => {
     progressPort.advanceLesson(lessonKey("s", "c", "l"), 1);
@@ -160,5 +168,5 @@ describe("the four screens that read the progress document", () => {
     expect(text).toContain("学完");
     expect(text).toContain("已获得");
     expect(text).not.toContain("还没学完一节");
-  });
+  }, 15_000);
 });

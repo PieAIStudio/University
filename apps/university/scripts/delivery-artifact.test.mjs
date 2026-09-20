@@ -3,6 +3,7 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 
 import { afterEach, describe, expect, it } from "vitest";
+import { primmFixture } from "../../../packages/core/dist/learning-play/fixtures/primm.js";
 
 import {
   PROJECT_ROOT,
@@ -355,10 +356,49 @@ describe("public DTO gate inside an activity", () => {
     expect(publicDtoViolations(wrap(activity), "pkg")).toEqual([]);
   });
 
+  it("allows only validated PRIMM teaching explanations, never Make answer keys", () => {
+    const lesson = structuredClone(primmFixture);
+    expect(lesson.investigate.more[0].question).toBeTruthy();
+    expect(lesson.investigate.more[0].answer).toBeTruthy();
+    expect(publicDtoViolations(wrap(lesson), "pkg")).toEqual([]);
+    const independent = wrap(lesson);
+    independent.course.units[0].lessons[0].exercises = [
+      { answer: "secret", rubric: ["private grading"] },
+    ];
+    expect(publicDtoViolations(independent, "pkg").length).toBeGreaterThan(0);
+    for (const mutate of [
+      (a) => {
+        a.make.answer = "secret";
+      },
+      (a) => {
+        a.investigate.more[0].rubric = "secret";
+      },
+      (a) => {
+        a.investigate.more[0].answer = { answer: "secret" };
+      },
+      (a) => {
+        a.investigate.more[0].answer = "file-manager:/Users/me/private";
+      },
+      (a) => {
+        a.kind = "connect";
+      },
+    ]) {
+      const poisoned = structuredClone(lesson);
+      mutate(poisoned);
+      expect(publicDtoViolations(wrap(poisoned), "pkg").length).toBeGreaterThan(0);
+    }
+  });
+
   it.each([
-    ["an author-machine route in the citation", { source: { label: "l", url: "file-manager:/Users/me/x" } }],
+    [
+      "an author-machine route in the citation",
+      { source: { label: "l", url: "file-manager:/Users/me/x" } },
+    ],
     ["a bare path beside the citation rather than inside it", { path: "/Users/me/secret" }],
-    ["a nested source block one level below the citation", { source: { label: "l", source: { sourceRoot: "/Users/me" } } }],
+    [
+      "a nested source block one level below the citation",
+      { source: { label: "l", source: { sourceRoot: "/Users/me" } } },
+    ],
     ["a payload digest", { sha256: "sha256:abc" }],
     ["a rubric under a new home", { rubric: "the reference answer" }],
     ["analysis node ids on a probe", { probes: [{ path: ["a"], nodeIds: ["n"] }] }],

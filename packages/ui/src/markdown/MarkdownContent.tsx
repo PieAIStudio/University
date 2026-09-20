@@ -374,6 +374,7 @@ export function MarkdownContent({
   termAnchors,
   assets = [],
   activities = [],
+  suppressedActivityId,
   onActivityResult,
   sections = [],
   detailMode = "standard",
@@ -404,6 +405,8 @@ export function MarkdownContent({
    * content port to check that a paragraph renders.
    */
   readonly activities?: readonly LearningActivitySpec[];
+  /** A path rendered by the reader remains a source marker, not a second board. */
+  readonly suppressedActivityId?: string;
   readonly onActivityResult?: (result: ActivityResult) => void;
   readonly sections?: readonly LessonSectionView[];
   readonly detailMode?: "standard" | "all";
@@ -774,6 +777,7 @@ export function MarkdownContent({
         readonly node?: { readonly properties?: Record<string, unknown> };
       }) {
         const id = directiveProperty(node, "activityId");
+        if (id === suppressedActivityId) return null;
         const activity = activitiesById.get(id);
         /*
           A play block that resolves to nothing is said out loud rather than
@@ -793,6 +797,7 @@ export function MarkdownContent({
         return (
           <LearningActivity
             activity={activity}
+            assets={assets}
             levels={levelsById.get(id)}
             occurrenceId={id}
             onResult={onActivityResult}
@@ -854,6 +859,7 @@ export function MarkdownContent({
       placeTellsThemApart,
       assetsById,
       activitiesById,
+      suppressedActivityId,
       levelsById,
       onActivityResult,
       sectionsByTitle,

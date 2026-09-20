@@ -1,0 +1,9 @@
+# Only the opt-in University owner-preview alias. No global model settings.
+# Use actual instruct weights, not thinking weights behind an instruct parser.
+# https://ollama.com/library/qwen3-vl:4b-instruct
+FROM qwen3-vl:4b-instruct
+RENDERER qwen3-vl-instruct
+PARSER qwen3-vl-instruct
+PARAMETER num_ctx 8192
+PARAMETER num_predict 1200
+PARAMETER temperature 0.2

@@ -92,7 +92,7 @@ export type View =
   // a static host can rewrite it like every other app destination. Drop the
   // kind when the lab is retired.
   | { readonly kind: "avatar-lab" }
-  | { readonly kind: "play-lab"; readonly collection?: "ai" }
+  | { readonly kind: "play-lab"; readonly collection?: "ai" | "catalog" }
   | { readonly kind: "league" }
   /*
     The planet: every course series at once, which is the one thing the map
@@ -165,7 +165,7 @@ export function toPath(view: View): string {
     case "avatar-lab":
       return "/avatar-lab";
     case "play-lab":
-      return view.collection === "ai" ? "/play-lab/ai" : "/play-lab";
+      return view.collection ? `/play-lab/${view.collection}` : "/play-lab";
     case "league":
       return "/league";
     case "planet":
@@ -241,6 +241,8 @@ export function fromPath(pathname: string): View {
   }
   if (parts.length === 1 && parts[0] === "practice") return { kind: "practice" };
   if (parts.length === 1 && parts[0] === "catalog") return { kind: "catalog" };
+  if (parts.length === 2 && parts[0] === "play-lab" && parts[1] === "catalog")
+    return { kind: "play-lab", collection: "catalog" };
   if (parts.length === 2 && parts[0] === "play-lab" && parts[1] === "ai")
     return { kind: "play-lab", collection: "ai" };
   if (parts.length === 1 && parts[0] === "play-lab") return { kind: "play-lab" };

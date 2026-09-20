@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { ONLINE_ORIGIN } from "./ports.js";
 import { humanClick } from "./harness/click.js";
+import { CATALOGUE_ROLES, SHIPPED_COURSES, lessonPathOf } from "./harness/catalogue.js";
+import { enterExerciseAnswer, expectExerciseAnswer } from "./harness/exercise-input.js";
 
 const RECOVERY_ANSWER =
   "手机先把当前的脸算成一串特征数字，再和设置解锁时保存的那串比较，差得够少就通过，不是把两张照片逐张对比。";
@@ -35,13 +37,30 @@ for (const viewport of [
       await expect(page.locator(".lesson-reader")).toBeVisible();
       const lessonUrl = page.url();
       const exercise = page.locator(".exercise-panel").first();
-      const answer = exercise.locator("textarea");
-      await answer.fill(RECOVERY_ANSWER);
-      await expect(page.locator(".lesson-toolbar__progress")).toContainText(
-        /阅读\s*\d+\/\d+\s*段/u,
-      );
+      const options = exercise.locator("[data-exercise-option]");
+      const choice = (await options.count()) > 0;
+      const choiceId = choice
+        ? await options.evaluateAll(
+            (nodes, correct) =>
+              nodes
+                .map((n) => n.getAttribute("data-exercise-option")!)
+                .find((id) => id !== correct)!,
+            CATALOGUE_ROLES.settlement.answer,
+          )
+        : null;
+      const draft = choiceId ?? RECOVERY_ANSWER;
+      await enterExerciseAnswer(page, exercise, draft);
+      const progress = page.locator(".lesson-toolbar__progress");
+      if (await page.locator('[data-activity="interaction-path"]').count()) {
+        // Typing an independent answer is not completing a guided round.
+        // V5 names this progress by rounds, not by collapsed prose sections.
+        await expect(progress).toContainText(/^互动\s+0\s*\/\s*[1-9]\d*$/u);
+        await expect(progress.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "0");
+      } else {
+        await expect(progress).toContainText(/阅读\s*\d+\/\d+\s*段/u);
+      }
       await page.reload({ waitUntil: "domcontentloaded" });
-      await expect(answer).toHaveValue(RECOVERY_ANSWER);
+      await expectExerciseAnswer(exercise, draft);
       await humanClick(
         page,
         exercise.getByRole("button", { name: /^提交$/ }),
@@ -57,9 +76,24 @@ for (const viewport of [
       await expect(exercise).toContainText("当场判定 · 未通过");
       await expect(exercise).not.toContainText(/暂时无法判断|还不能.*判断|无法可靠判断/u);
       await page.reload({ waitUntil: "domcontentloaded" });
-      await expect(answer).toHaveValue(RECOVERY_ANSWER);
+      await expectExerciseAnswer(exercise, draft);
       await expect(exercise).toContainText("当场判定 · 未通过");
       await expect(exercise).not.toContainText(/暂时无法判断|还不能.*判断|无法可靠判断/u);
+      // Keep typed-draft recovery coverage too: upgrading the first lesson's
+      // input is not permission to stop exercising a real text question.
+      if (choice) {
+        const textEntry = SHIPPED_COURSES.flatMap((course) =>
+          course.units.flatMap((unit) => unit.lessons.map((lesson) => ({ course, lesson }))),
+        ).find(
+          ({ lesson }) =>
+            (lesson.packageLesson.exercises as { kind: string }[])[0]?.kind === "short-answer",
+        )!;
+        await page.goto(`${ONLINE_ORIGIN}${lessonPathOf(textEntry.course, textEntry.lesson)}`);
+        const textPanel = page.locator(".exercise-panel").first();
+        await enterExerciseAnswer(page, textPanel, RECOVERY_ANSWER);
+        await page.reload();
+        await expectExerciseAnswer(textPanel, RECOVERY_ANSWER);
+      }
       await page.goto(ONLINE_ORIGIN, { waitUntil: "domcontentloaded" });
       await expect(page.locator("[data-welcome]")).toHaveCount(0);
       const fresh = await page.context().browser()!.newContext({ viewport, locale: "zh-CN" });

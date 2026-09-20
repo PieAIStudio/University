@@ -257,3 +257,11 @@ export * from "./view/lesson-view.js";
 // fetching. The whole module is that contract; the delivery shell does not
 // talk to this API.
 export * from "./api/client.js";
+
+export {
+  PrimmLesson,
+  type PrimmLessonProps,
+  type RunPrimm,
+  type PrimmWork,
+  type PrimmEvaluation,
+} from "./learning-play/PrimmLesson.js";

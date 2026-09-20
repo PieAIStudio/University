@@ -8,6 +8,8 @@ import {
   waitForMapReady,
 } from "./harness/online-learner.js";
 import { ONLINE_ORIGIN } from "./ports.js";
+import { CATALOGUE_ROLES } from "./harness/catalogue.js";
+import { enterExerciseAnswer } from "./harness/exercise-input.js";
 
 /**
  * A wrong answer has to survive the question it was wrong about.
@@ -28,8 +30,18 @@ test.describe("H 错题本 · 在线端", () => {
     const quiz = page.locator(".exercise-panel").first();
     await expect(quiz).toBeVisible({ timeout: 30_000 });
     await quiz.scrollIntoViewIfNeeded();
-    const wrong = "香蕉船和月球轨道";
-    await page.getByPlaceholder(/用自己的话/).fill(wrong);
+    const options = quiz.locator("[data-exercise-option]");
+    let wrong = "香蕉船和月球轨道";
+    if (await options.count()) {
+      const target = quiz
+        .locator(
+          `[data-exercise-option]:not([data-exercise-option="${CATALOGUE_ROLES.settlement.answer}"])`,
+        )
+        .first();
+      const id = (await target.getAttribute("data-exercise-option"))!;
+      wrong = (await target.innerText()).trim();
+      await enterExerciseAnswer(page, quiz, id);
+    } else await enterExerciseAnswer(page, quiz, wrong);
     await humanClick(page, page.getByRole("button", { name: /提交/ }), "提交");
 
     await page.goto(`${ONLINE_ORIGIN}/mistakes`, { waitUntil: "domcontentloaded" });

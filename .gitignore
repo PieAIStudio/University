@@ -127,3 +127,6 @@ artifacts/
 # never content: it is read repeatedly and quoted nowhere. check-verbatim.mjs
 # measures the rewrite against it, so it lives on disk and out of the history.
 apps/local/course-proposals/*/source/
+
+# Owner-only PRIMM preview compilation
+.primm-preview-build/

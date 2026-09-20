@@ -1,7 +1,14 @@
 import { z } from "zod";
 
 import type { ActivityKind } from "../learning-play/types.js";
-import { activityTranslationIssues } from "../learning-play/localization.js";
+import {
+  activityDisplayStrings,
+  activityTranslationIssues,
+} from "../learning-play/localization.js";
+import { interactionPathIssues } from "../learning-play/interaction-path.js";
+import { primmIssues } from "../learning-play/primm.js";
+import { primmLessonIssues } from "../learning-play/primm-lesson.js";
+import { createPrimmPayloadSchema } from "./primm-schema.js";
 import { AUTHORITY_TAGS, REALITY_AUTHORITY_TAGS, urlEvidenceIssue } from "./url-evidence.js";
 
 const SchemaVersion = z.literal(1);
@@ -355,13 +362,14 @@ export const LocalizedExerciseSchema = z
     prompt: z.string().min(1).max(20_000).optional(),
     expectedAnswer: z.string().min(1).optional(),
     rubric: z.array(z.string().min(1)).optional(),
+    correctOptionId: StableId.optional(),
     options: z
       .array(
         z
           .object({
             id: StableId,
             text: z.string().min(1).max(2_000),
-            explanation: z.string().min(1).max(2_000),
+            explanation: z.string().trim().min(1).max(2_000),
           })
           .strict(),
       )
@@ -629,6 +637,7 @@ export const LessonAssetKindSchema = z.enum([
   "diagram",
   "ai-illustration",
   "screen-recording",
+  "synthetic-audio",
 ]);
 
 const LessonAssetSourceSchema = z
@@ -667,6 +676,12 @@ export const LessonAssetSchema = z
       "image/svg+xml",
       "video/mp4",
       "video/webm",
+      "audio/mpeg",
+      "audio/wav",
+      "audio/ogg",
+      "audio/webm",
+      "audio/mp4",
+      "audio/flac",
     ]),
     bytes: z
       .number()
@@ -715,6 +730,19 @@ export const LessonAssetSchema = z
     if (asset.kind === "screen-recording" && !asset.durationMs) {
       context.addIssue({ code: "custom", message: "Screen recordings require durationMs" });
     }
+    if (
+      asset.kind === "synthetic-audio" &&
+      (!asset.mime.startsWith("audio/") ||
+        !asset.durationMs ||
+        !asset.source?.attribution ||
+        !asset.caption)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "Synthetic practice audio requires audio bytes, duration, a caption and generator attribution",
+      });
+    }
   });
 
 /**
@@ -747,6 +775,8 @@ export const LessonActivityKindSchema = z.enum([
   "ai-agent",
   "ai-eval",
   "ai-repair",
+  "interaction-path",
+  "primm",
 ]);
 
 /**
@@ -784,6 +814,155 @@ export type ActivityKindsAgree = AssertTrue<
  * activities live here and not inside `ExerciseSchema`.
  */
 export const LessonActivityRoleSchema = z.enum(["observe", "demonstrate", "apply"]);
+
+/** One source contract for existing boards and the path's locally named citations. */
+export const ActivitySourceSchema = z.union([
+  z.object({ label: z.string().min(1).max(200), url: z.string().url() }).strict(),
+  z
+    .object({
+      label: z.string().min(1).max(200),
+      path: RepositoryRelativePath,
+      line: z.number().int().positive().optional(),
+      lineEnd: z.number().int().positive().optional(),
+      commit: GitCommit.optional(),
+    })
+    .strict()
+    .refine(
+      (value) =>
+        value.lineEnd === undefined || (value.line !== undefined && value.lineEnd >= value.line),
+      { message: "lineEnd needs a line to end, and cannot come before it", path: ["lineEnd"] },
+    ),
+]);
+
+export const PrimmPayloadSchema = createPrimmPayloadSchema(ActivitySourceSchema, StableId);
+
+const PathCopy = z.string().trim().min(1).max(1_000);
+const PathChoice = z.object({ id: StableId, label: PathCopy, explanation: PathCopy }).strict();
+const PathStepBase = z.object({
+  id: StableId,
+  sourceId: StableId,
+  materialIds: z.array(StableId).optional(),
+  phase: z.enum(["predict", "practice", "transfer"]).optional(),
+  brief: PathCopy.optional(),
+  question: PathCopy,
+  hint: PathCopy,
+  explanation: PathCopy,
+});
+/** No recursive activity member: a step is always one bounded action. */
+export const InteractionPathPayloadSchema = z.object({
+  pedagogyVersion: z.literal(2).optional(),
+  context: z
+    .object({
+      title: PathCopy,
+      introduction: PathCopy,
+      task: PathCopy,
+      sourceIds: z.array(StableId),
+    })
+    .strict()
+    .optional(),
+  materials: z
+    .array(
+      z
+        .object({
+          id: StableId,
+          sourceId: StableId,
+          label: PathCopy,
+          text: z.string().trim().min(1).max(20_000),
+          kind: z.enum(["source-summary", "teaching-draft"]),
+        })
+        .strict(),
+    )
+    .min(1)
+    .optional(),
+  assetId: StableId.optional(),
+  sources: z
+    .array(
+      z
+        .object({
+          id: StableId,
+          reference: ActivitySourceSchema,
+          note: PathCopy,
+          summary: PathCopy.optional(),
+          limitation: PathCopy.optional(),
+          date: PathCopy.optional(),
+        })
+        .strict(),
+    )
+    .min(1)
+    .max(8),
+  steps: z
+    .array(
+      z.discriminatedUnion("kind", [
+        PathStepBase.extend({
+          kind: z.literal("decision"),
+          options: z.array(PathChoice).min(2).max(5),
+          correctOptionId: StableId,
+        }).strict(),
+        PathStepBase.extend({
+          kind: z.literal("evidence"),
+          task: z.enum(["support", "unsupported"]),
+          material: z
+            .object({
+              label: PathCopy,
+              note: PathCopy,
+              reference: z.object({ label: PathCopy, text: PathCopy }).strict().optional(),
+              sentences: z.array(PathChoice).min(2).max(6),
+            })
+            .strict(),
+          correctSentenceId: StableId,
+        }).strict(),
+        PathStepBase.extend({
+          kind: z.literal("experiment"),
+          simulationNote: PathCopy,
+          controls: z
+            .array(z.object({ id: StableId, label: PathCopy }).strict())
+            .min(1)
+            .max(4),
+          initialControlIds: z.array(StableId).max(4),
+          cases: z
+            .array(
+              z
+                .object({
+                  id: StableId,
+                  selectedControlIds: z.array(StableId).max(4),
+                  title: PathCopy,
+                  text: z.string().trim().min(1).max(20_000),
+                  feedback: PathCopy,
+                  accepted: z.boolean(),
+                })
+                .strict(),
+            )
+            .min(2)
+            .max(16),
+        }).strict(),
+        PathStepBase.extend({
+          kind: z.literal("assemble"),
+          pieces: z
+            .array(z.object({ id: StableId, label: PathCopy }).strict())
+            .min(2)
+            .max(10),
+          initialPieceIds: z.array(StableId).max(10),
+          constraints: z
+            .array(
+              z
+                .object({
+                  id: StableId,
+                  kind: z.enum(["include", "exclude", "one-of", "before"]),
+                  pieceIds: z.array(StableId).min(1).max(10),
+                  label: PathCopy,
+                  explanation: PathCopy,
+                })
+                .strict(),
+            )
+            .min(1)
+            .max(12),
+        }).strict(),
+      ]),
+    )
+    .min(3)
+    .max(8),
+  finish: z.object({ title: PathCopy, note: PathCopy }).strict(),
+});
 
 /**
  * One embedded activity: the shared contract every kind honours, plus whatever
@@ -826,32 +1005,176 @@ export const LessonActivitySchema = z
      * receipt renders `path:line@commit` and a snapshot id pasted into this
      * field renders as `@git-7bdf` — legible enough to look deliberate.
      */
-    source: z.union([
-      z.object({ label: z.string().min(1).max(200), url: z.string().url() }).strict(),
-      z
-        .object({
-          label: z.string().min(1).max(200),
-          path: RepositoryRelativePath,
-          line: z.number().int().positive().optional(),
-          lineEnd: z.number().int().positive().optional(),
-          commit: GitCommit.optional(),
-        })
-        .strict()
-        .refine(
-          (value) =>
-            value.lineEnd === undefined ||
-            (value.line !== undefined && value.lineEnd >= value.line),
-          { message: "lineEnd needs a line to end, and cannot come before it", path: ["lineEnd"] },
-        ),
-    ]),
+    source: ActivitySourceSchema,
     locales: LocaleMap(LocalizedActivitySchema),
   })
   .passthrough()
   .superRefine((activity, context) => {
+    if (activity.kind === "primm") {
+      const keys = new Set([
+        "id",
+        "kind",
+        "role",
+        "difficulty",
+        "family",
+        "title",
+        "brief",
+        "goal",
+        "takeaway",
+        "hint",
+        "source",
+        "locales",
+        ...Object.keys(PrimmPayloadSchema.shape),
+      ]);
+      if (Object.keys(activity).some((key) => !keys.has(key))) {
+        context.addIssue({ code: "custom", message: "Unexpected PRIMM field" });
+        return;
+      }
+      const parsed = PrimmPayloadSchema.safeParse(activity);
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues) context.addIssue({ ...issue, code: "custom" });
+        return;
+      }
+      for (const message of primmIssues(parsed.data)) context.addIssue({ code: "custom", message });
+      if (activity.family)
+        context.addIssue({
+          code: "custom",
+          message:
+            "PRIMM is one lesson method without difficulty families; Make uses the independent grader",
+        });
+      for (const value of activityDisplayStrings(activity)) {
+        if (!activity.locales?.en?.strings?.[value]?.trim())
+          context.addIssue({
+            code: "custom",
+            path: ["locales", "en"],
+            message: `Missing English PRIMM display text: ${value}`,
+          });
+      }
+    }
+    if (activity.kind === "interaction-path") {
+      const keys = new Set([
+        "id",
+        "kind",
+        "role",
+        "difficulty",
+        "family",
+        "title",
+        "brief",
+        "goal",
+        "takeaway",
+        "hint",
+        "source",
+        "locales",
+        ...Object.keys(InteractionPathPayloadSchema.shape),
+      ]);
+      if (Object.keys(activity).some((key) => !keys.has(key))) {
+        context.addIssue({ code: "custom", message: "Unexpected interaction-path field" });
+        return;
+      }
+      const parsed = InteractionPathPayloadSchema.safeParse(activity);
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues) context.addIssue({ ...issue, code: "custom" });
+        return;
+      } else {
+        for (const message of interactionPathIssues(parsed.data)) {
+          context.addIssue({ code: "custom", message });
+        }
+      }
+      if (activity.family || activity.role !== "demonstrate") {
+        context.addIssue({
+          code: "custom",
+          message: "interaction-path is a guided demonstration without difficulty families",
+        });
+      }
+      const english = activity.locales?.en?.strings;
+      for (const value of activityDisplayStrings(activity)) {
+        if (!english?.[value])
+          context.addIssue({
+            code: "custom",
+            path: ["locales", "en"],
+            message: `Missing English path display text: ${value}`,
+          });
+      }
+    }
     for (const message of activityTranslationIssues(activity)) {
       context.addIssue({ code: "custom", message, path: ["locales"] });
     }
   });
+
+/** Shared opt-in checks for proposals, stored lessons and recovery packages. */
+export function interactionLessonIssues(lesson: {
+  readonly activities?: readonly unknown[];
+  readonly evidence?: readonly unknown[];
+  readonly content?: string;
+  readonly exerciseIds?: readonly string[];
+  readonly exercises?: readonly unknown[];
+  readonly assets?: readonly { readonly id: string; readonly mime?: string }[];
+}): string[] {
+  const paths = (lesson.activities ?? []).filter(
+    (activity) =>
+      activity !== null &&
+      typeof activity === "object" &&
+      "kind" in activity &&
+      (activity.kind === "interaction-path" || activity.kind === "primm"),
+  );
+  if (!paths.length) return [];
+  const issues: string[] = [];
+  if (paths.length !== 1 || lesson.activities?.length !== 1)
+    issues.push("An interaction-first lesson has exactly one path activity");
+  if ((lesson.exerciseIds ?? lesson.exercises ?? []).length < 1)
+    issues.push("An interaction-first lesson retains an independent exercise");
+  for (const value of paths) {
+    const parsed = LessonActivitySchema.safeParse(value);
+    if (!parsed.success) {
+      issues.push(...parsed.error.issues.map((issue) => issue.message));
+      continue;
+    }
+    const activity = parsed.data;
+    if (activity.kind === "primm") {
+      issues.push(...primmLessonIssues(PrimmPayloadSchema.parse(value), activity, lesson));
+      continue;
+    }
+    const payload = InteractionPathPayloadSchema.parse(value);
+    if (
+      payload.assetId &&
+      !lesson.assets?.some(
+        (asset) => asset.id === payload.assetId && asset.mime?.startsWith("image/"),
+      )
+    ) {
+      issues.push(`Path image is absent from lesson assets: ${payload.assetId}`);
+    }
+    for (const source of [activity.source, ...payload.sources.map((item) => item.reference)]) {
+      const matched = (lesson.evidence ?? []).some((evidence) => {
+        if (!evidence || typeof evidence !== "object") return false;
+        if ("url" in source) return "sourceUrl" in evidence && evidence.sourceUrl === source.url;
+        return (
+          "sourcePath" in evidence &&
+          evidence.sourcePath === source.path &&
+          "sourceCommit" in evidence &&
+          Boolean(source.commit) &&
+          evidence.sourceCommit === source.commit &&
+          (source.line === undefined ||
+            ("lineStart" in evidence &&
+              typeof evidence.lineStart === "number" &&
+              evidence.lineStart <= source.line)) &&
+          (source.lineEnd === undefined ||
+            ("lineEnd" in evidence &&
+              typeof evidence.lineEnd === "number" &&
+              evidence.lineEnd >= source.lineEnd))
+        );
+      });
+      if (!matched) issues.push(`Path source is absent from lesson evidence: ${source.label}`);
+    }
+    if (lesson.content !== undefined) {
+      const markers = [...lesson.content.matchAll(/^\s*::play\{#([a-z0-9-]+)\}\s*$/gm)];
+      if (markers.length !== 1 || markers[0]?.[1] !== activity.id)
+        issues.push("Interaction prose must reference its path exactly once using ::play{#id}");
+      if (lesson.content.replace(/::play\{[^}]*\}/g, "").trim().length < 40)
+        issues.push("Interaction prose needs a useful on-demand review explanation");
+    }
+  }
+  return issues;
+}
 
 export const LessonManifestSchema = z
   .object({
@@ -929,7 +1252,11 @@ export const LessonManifestSchema = z
     createdAt: IsoDateTime,
     updatedAt: IsoDateTime,
   })
-  .strict();
+  .strict()
+  .superRefine((lesson, context) => {
+    for (const message of interactionLessonIssues(lesson))
+      context.addIssue({ code: "custom", message });
+  });
 
 const PracticeBaseSchema = z.object({
   schemaVersion: SchemaVersion,
@@ -959,35 +1286,30 @@ const PracticeBaseSchema = z.object({
  * "why would someone pick this, and why that does not hold" — a generic
  * "wrong, try again" is not a substitute.
  */
+import { refineChoiceExercise } from "./choice-exercise.js";
+
 export const ChoiceOptionSchema = z
   .object({
     id: StableId,
-    text: z.string().min(1).max(2_000),
-    explanation: z.string().min(1).max(2_000),
+    text: z.string().trim().min(1).max(2_000),
+    explanation: z.string().trim().min(1).max(2_000),
   })
   .strict();
 
-/**
- * Three options, one right, and the explanation lives on the option the
- * learner actually picked.
- *
- * Until they pick the correct option there is no next question — retrying is
- * the mechanism, not a courtesy. The count, the correct id, uniqueness and
- * the presence of per-option explanations are enforced by
- * `validateChoiceExercise`, which returns structured errors instead of
- * throwing, so an authoring surface can show every problem at once.
- *
- * This is a sibling of `ExerciseSchema` rather than a third discriminant on
- * it. The authoring and recovery pipelines still switch on two kinds, and
- * widening that union is a type error in `apps/local` that this change is not
- * allowed to edit. The shape is otherwise the same `PracticeBaseSchema`, and
- * it joins the union when those pipelines learn the third branch.
- */
-export const ChoiceExerciseSchema = PracticeBaseSchema.extend({
-  kind: z.literal("choice"),
-  options: z.array(ChoiceOptionSchema),
-  correctOptionId: StableId,
-}).strict();
+/** One contract for proposals, recovery transport and stored exercises. */
+export const ChoiceExerciseContentSchema = z
+  .object({
+    kind: z.literal("choice"),
+    options: z.array(ChoiceOptionSchema),
+    correctOptionId: StableId,
+    locales: LocaleMap(LocalizedExerciseSchema),
+  })
+  .strict()
+  .superRefine(refineChoiceExercise);
+
+export const ChoiceExerciseSchema = PracticeBaseSchema.extend(ChoiceExerciseContentSchema.shape)
+  .strict()
+  .superRefine(refineChoiceExercise);
 
 export const ExerciseSchema = z.discriminatedUnion("kind", [
   PracticeBaseSchema.extend({
@@ -1000,6 +1322,7 @@ export const ExerciseSchema = z.discriminatedUnion("kind", [
     rubric: z.array(z.string().min(1)).min(1),
     locales: LocaleMap(LocalizedExerciseSchema),
   }).strict(),
+  ChoiceExerciseSchema,
 ]);
 
 export const CardContentSchema = z

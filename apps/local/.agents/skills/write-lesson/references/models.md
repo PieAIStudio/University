@@ -231,3 +231,12 @@ Do not write "the newest Grok" or "Gemini Flash" as the run result. Those are
 selection rules, not evidence of what actually ran. If the fallback was used,
 make that fact prominent: it is the first thing to investigate after a quality
 regression because its arm has not been covered by the 2026-08-10 blind eval.
+
+## V2 explicit host fallback
+
+When Grok authentication and the declared Codex fallback are both unavailable,
+the active reasoning host may write and fix the draft directly under Owner
+authorization. Record both actual failures, host identity and that no CLI writer
+produced the accepted draft. This never waives an independent different-family
+Detector or the actual local Gemini Flash polish. Do not retry an exhausted account,
+change authentication, purchase credits or describe a configuration as execution.
