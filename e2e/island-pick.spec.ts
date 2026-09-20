@@ -217,14 +217,84 @@ async function pickRightEdgeIsland(page: Page): Promise<Box> {
   return clicked;
 }
 
+/** Everything the follow-card projector treats as opaque, in viewport pixels.
+ *
+ * `controls.tsx` passes `placeLabels` the shell chrome boxes plus, for the
+ * entry action only, the learner avatar's projected bounds. A failure that
+ * lists only the DOM half of that sends the reader looking for a rail that is
+ * not there, which is how this assertion was mis-diagnosed twice. Read without
+ * waiting: several of these are legitimately absent at points in this walk,
+ * and a locator that waits would spend twenty seconds proving the obvious. */
+async function mapObstacles(page: Page): Promise<readonly Record<string, number | string>[]> {
+  return page.evaluate(() => {
+    const round = (value: number) => Math.round(value);
+    const chrome = [
+      ...document.querySelectorAll<HTMLElement>(
+        ".nav-rail, .counter-row, .app-shell__aside, [data-map-shell] .app-shell__east-stack, .nextup, .tab-bar, .map-breadcrumbs",
+      ),
+    ]
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          what: element.className.toString().split(" ")[0] ?? "?",
+          x: round(rect.x),
+          y: round(rect.y),
+          w: round(rect.width),
+          h: round(rect.height),
+        };
+      })
+      .filter((entry) => entry.w > 0 && entry.h > 0);
+    const state = (window as unknown as { three?: any }).three;
+    const marker =
+      state?.scene.getObjectByName("learner-marker-world") ??
+      state?.scene.getObjectByName("learner-marker-course");
+    const avatar = marker?.getObjectByName("university-avatar-occlusion-target");
+    if (!state || !avatar) return chrome;
+    state.scene.updateMatrixWorld(true);
+    const points: { x: number; y: number }[] = [];
+    const canvas = state.gl.domElement.getBoundingClientRect();
+    avatar.traverse((child: any) => {
+      const geometry = child.geometry;
+      if (!geometry) return;
+      geometry.computeBoundingBox?.();
+      const bb = geometry.boundingBox;
+      if (!bb) return;
+      for (const x of [bb.min.x, bb.max.x])
+        for (const y of [bb.min.y, bb.max.y])
+          for (const z of [bb.min.z, bb.max.z]) {
+            const point = state.camera.position.clone().set(x, y, z);
+            child.localToWorld(point);
+            point.project(state.camera);
+            points.push({
+              x: canvas.left + ((point.x + 1) * canvas.width) / 2,
+              y: canvas.top + ((1 - point.y) * canvas.height) / 2,
+            });
+          }
+    });
+    if (points.length === 0) return chrome;
+    const left = Math.min(...points.map((point) => point.x));
+    const right = Math.max(...points.map((point) => point.x));
+    const top = Math.min(...points.map((point) => point.y));
+    const bottom = Math.max(...points.map((point) => point.y));
+    return [
+      ...chrome,
+      {
+        what: "avatar",
+        x: round(left) - 10,
+        y: round(top) - 10,
+        w: round(right - left) + 20,
+        h: round(bottom - top) + 20,
+      },
+    ];
+  });
+}
+
 async function assertCardFollowsIsland(page: Page, island: Box): Promise<Box> {
   const card = enterCard(page);
   await expect(card).toBeVisible({ timeout: 10_000 });
   await waitForStableBox(card);
   const cardBox = await card.boundingBox();
   if (!cardBox) throw new Error("对象旁进入动作没有屏幕矩形");
-  const islandAt = center(island);
-  const cardAt = center(cardBox);
   /*
     Edge gap, not centre distance.
 
@@ -237,13 +307,6 @@ async function assertCardFollowsIsland(page: Page, island: Box): Promise<Box> {
     placements this walk produces: edge gap 0, 0, 0 and 20px, while the centre
     distance the old gate measured ranged 368 to 460 and tripped only at the
     island nearest the right edge — the one placement with the least room left.
-
-    48px is the `gap: 8` the placer asks for, with room for the panel's own
-    border and rounding. Checked against a real break rather than assumed:
-    pushing the card 260px further along the side it already sits on — so the
-    side and viewport assertions below stay green and only this one can speak —
-    measures 214px and fails here, which is what a card that stopped following
-    would look like.
   */
   const gapX = Math.max(
     0,
@@ -256,13 +319,56 @@ async function assertCardFollowsIsland(page: Page, island: Box): Promise<Box> {
     cardBox.y - (island.y + island.height),
   );
   const gap = Math.hypot(gapX, gapY);
+  /*
+    One step from the island, whichever slot the projector chose.
+
+    The earlier gate asked "is it beside?" and then tried to re-derive, from
+    the DOM, whether a beside slot existed. That is the gate re-implementing
+    the thing it guards, and it cannot be done from here: `placeLabels` reasons
+    in stage coordinates about the island's projected peak and about the
+    learner avatar's projected bounds, while everything a test can measure is
+    a viewport rectangle around the *label*. Two wrong diagnoses came out of
+    that gap before this comment was written.
+
+    So this asks the question the learner actually has: is the button still
+    attached to the island I clicked? Every slot `slotsFor("aside")` can return
+    is one step from the anchor — `width / 2 + gap + clearance` to a side (96px
+    for this 64px button) or `height / 2 + gap` above or below (30px).
+
+    Measured 2026-09-21 at 1440 wide, across the placements this walk produces:
+    4.8, 0 and 0px for the ordinary beside placements; 8px for the local
+    variant's right-edge island, where the button does flip to the left; and
+    86px for the delivery variant's right-edge island, whose 203px-wide label
+    runs from x=1221 to the frame while the east stack (1360..1424) and the
+    avatar (1362..1427) sit on its right end — there the button steps above,
+    centred, instead of beside. A card that stopped following measures 214px —
+    pushing it 260px along the side it already sits on, so only this assertion
+    can speak — and still fails here.
+
+    Why the flip is correct rather than tolerated, and what is still open about
+    the archipelago's framing, is written down rather than decided here:
+    docs/reference/execution/archipelago-framing-gap.md.
+  */
+  const obstacles = await mapObstacles(page);
+  const boxes =
+    ` 岛 ${island.width.toFixed(0)}×${island.height.toFixed(0)} @ ${island.x.toFixed(0)},${island.y.toFixed(0)}；` +
+    `卡片 ${cardBox.width.toFixed(0)}×${cardBox.height.toFixed(0)} @ ${cardBox.x.toFixed(0)},${cardBox.y.toFixed(0)}；` +
+    `遮挡 ${JSON.stringify(obstacles)}。`;
   expect(
     gap,
-    `进入动作应贴着岛（边缘间隙 < 48px），现在是 ${gap.toFixed(0)}px。钉在角落会是几百。` +
-      ` 岛 ${island.width.toFixed(0)}×${island.height.toFixed(0)} @ ${island.x.toFixed(0)},${island.y.toFixed(0)}；` +
-      `卡片 ${cardBox.width.toFixed(0)}×${cardBox.height.toFixed(0)} @ ${cardBox.x.toFixed(0)},${cardBox.y.toFixed(0)}。`,
-  ).toBeLessThan(48);
-  expect(Math.abs(cardAt.x - islandAt.x), "卡片应在岛的一侧，而不是叠在岛心上").toBeGreaterThan(20);
+    `进入动作应跟着岛走（一个落位步长内，< 96px），现在是 ${gap.toFixed(0)}px。` + boxes,
+  ).toBeLessThan(96);
+  // Touching edges is not covering: a button placed beside an island shares a
+  // boundary and measures zero on both gaps. Ask for real overlapping area.
+  const overlapX =
+    Math.min(cardBox.x + cardBox.width, island.x + island.width) - Math.max(cardBox.x, island.x);
+  const overlapY =
+    Math.min(cardBox.y + cardBox.height, island.y + island.height) - Math.max(cardBox.y, island.y);
+  const covered = Math.max(0, overlapX) * Math.max(0, overlapY);
+  expect(
+    covered / (island.width * island.height),
+    "卡片压在岛上，学习者看不到自己选了什么" + boxes,
+  ).toBeLessThan(0.2);
   const viewport = page.viewportSize();
   if (!viewport) throw new Error("没有视口");
   expect(cardBox.x).toBeGreaterThanOrEqual(-1);
@@ -314,13 +420,17 @@ async function walkIslandPick(page: Page, prefix: "online" | "local"): Promise<v
     await expect(page.locator('[data-map-entry="true"].is-visible')).toHaveCount(0);
   });
 
-  await namedStep(page, "点靠右边缘的岛，进入动作翻到左边且不裁切", async () => {
+  await namedStep(page, "点靠右边缘的岛，进入动作不越过岛的右缘且不裁切", async () => {
     const rightIsland = await pickRightEdgeIsland(page);
     const cardBox = await assertCardFollowsIsland(page, rightIsland);
-    const islandAt = center(rightIsland);
-    if (islandAt.x > (page.viewportSize()?.width ?? 0) * 0.62) {
-      expect(center(cardBox).x, "靠右的岛：卡片应翻到左边").toBeLessThan(islandAt.x);
-    }
+    // Not "flips left": measured 2026-09-21, the local variant does flip left
+    // while the delivery variant steps above, centred, because the east stack
+    // and the avatar sit on that island's right end. What both owe the learner
+    // is the same — the button must not be pushed out past the island toward
+    // the frame edge, which is where it would start to be clipped.
+    expect(center(cardBox).x, "靠右的岛：进入动作跑到岛的右缘之外，离裁切只差一步").toBeLessThan(
+      rightIsland.x + rightIsland.width,
+    );
     await page.screenshot({ path: `${SHOTS}/${prefix}-picked-right.png` });
   });
 

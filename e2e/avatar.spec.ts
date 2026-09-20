@@ -6,7 +6,7 @@ import { CLOUD_CARRIER_FOOT_OFFSET } from "../packages/world/src/sky/cloud-carri
 import { humanClick } from "./harness/click.js";
 import { landingTiming, timedPointerClick } from "./harness/motion-time.js";
 import { watchConsole } from "./harness/console.js";
-import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
+import { CATALOGUE_ROLES, SHIPPED_COURSES, coursePathOf } from "./harness/catalogue.js";
 import { EMPTY_DOMAIN_ID, PRIMARY_DOMAIN_ID } from "./harness/domain-catalogue.js";
 import {
   FIRST_COURSE_ROUTE,
@@ -22,7 +22,6 @@ import { enterSelectedMapObject, mapEntryButton } from "./harness/map-actions.js
 
 const EVIDENCE = ".scratch/evidence-avatar";
 const PRIMARY_STUDY = CATALOGUE_ROLES.settlement.study;
-const ALTERNATE_COURSE = CATALOGUE_ROLES.alternateCourse.course;
 
 type Motion = {
   readonly sequence: number;
@@ -237,6 +236,10 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
   });
 
   test("星球区域与两层头像都跟随真实点击，并在快速上限内就位", async ({ page }) => {
+    // Which course the archipelago walk lands on is chosen from what the label
+    // projector actually drew, so the island steps below read it rather than a
+    // fixture that may not have been placed.
+    let enteredCourse: (typeof SHIPPED_COURSES)[number] | null = null;
     const consoleErrors = watchConsole(page);
     const evidence: Record<string, unknown> = {
       viewport: page.viewportSize(),
@@ -427,12 +430,23 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       }, home.target);
       // Cancellation returns outside the islands; the next explicit choice
       // must make a real flight to a stable, actual course destination.
-      const targetId = ALTERNATE_COURSE.id;
-      const before = (await motion(page, "world"))?.sequence ?? 0;
-      const courseLabel = page.locator(
-        `button.label--course.is-visible[data-map-marker=${JSON.stringify(targetId)}]`,
+      /*
+        Any course other than the live one proves a second real flight; which
+        one it is was never the subject. Naming one made this depend on the
+        label projector choosing to place that particular name, and on an
+        archipelago of four courses it places three — see
+        docs/reference/execution/archipelago-framing-gap.md. Ask the map which
+        alternates it actually drew, and fail loudly if it drew none.
+      */
+      const liveId = await currentCourse.getAttribute("data-map-marker");
+      const alternates = page.locator(
+        'button.label--course.is-visible[data-map-marker]:not([data-course-state="live"])',
       );
-      await expect(courseLabel).toBeVisible({ timeout: 30_000 });
+      await expect(alternates.first(), "岛群上没有第二门可点的课").toBeVisible({ timeout: 30_000 });
+      const courseLabel = alternates.first();
+      const targetId = await courseLabel.getAttribute("data-map-marker");
+      expect(targetId, "替代课程必须与当前课程不同").not.toBe(liveId);
+      const before = (await motion(page, "world"))?.sequence ?? 0;
       const startedAt = await timedPointerClick(page, courseLabel, "岛群里的课程");
       const result = await waitForFlight(page, "world", before, startedAt);
       const elapsedMs = await page.evaluate((start) => performance.now() - start, startedAt);
@@ -462,7 +476,10 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       };
 
       await enterSelectedMapObject(page, "进入课程岛");
-      await expect(page).toHaveURL(`${ONLINE_ORIGIN}${coursePathOf(ALTERNATE_COURSE)}`);
+      const entered = SHIPPED_COURSES.find((course) => course.id === targetId);
+      expect(entered, `点中的课程 ${targetId} 不在已发布目录里`).toBeTruthy();
+      await expect(page).toHaveURL(`${ONLINE_ORIGIN}${coursePathOf(entered!)}`);
+      enteredCourse = entered!;
     });
 
     await namedStep(page, "岛内点一个 lesson 标记，真实兔子跳到对应格子", async () => {
@@ -477,7 +494,7 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       // The initial marker may already be home. A same-position click opens
       // its card but correctly does not invent a jump. Pick a different real
       // lesson by stable identity, not the current order of painted labels.
-      const destination = ALTERNATE_COURSE.units.flatMap((unit) => unit.lessons)[1];
+      const destination = enteredCourse!.units.flatMap((unit) => unit.lessons)[1];
       expect(destination, "the motion fixture needs a second real lesson").toBeTruthy();
       // courseSprites gives the visible kind icon its own identity; the raw
       // lesson id belongs to the separate quiet title, not this click target.

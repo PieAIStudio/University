@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-20T16:10:40.539Z
+generated_at: 2026-09-20T17:02:04.323Z
 generator_version: doc-gov@0.14.0
-docs_count: 150
+docs_count: 151
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -353,6 +353,13 @@ docs:
     status: active
     canonical: true
     last_reviewed: 2026-09-13
+    pinned: false
+  - id: REF-ARCHIPELAGO-FRAMING-GAP
+    path: docs/reference/execution/archipelago-framing-gap.md
+    type: reference
+    status: active
+    canonical: true
+    last_reviewed: 2026-09-21
     pinned: false
   - id: REF-COMMERCIAL-MODEL
     path: docs/reference/execution/commercial-model.md
