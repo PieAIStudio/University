@@ -28,10 +28,23 @@ export async function humanClick(
     // A settled screen may replace a control while progress is adopted into
     // its new account scope. The locator owns the current control, not the
     // retired node or its old scroll position. Nothing has been pressed yet.
+    //
+    // Scroll without Playwright's stability precondition. `scrollIntoViewIfNeeded`
+    // waits for two consecutive frames whose boxes are bit-identical, which a
+    // control bound to a map object never supplies: it reprojects every frame and
+    // keeps a sub-pixel jitter after it has arrived. Both of this project's own
+    // settle checks are deliberately tolerant of exactly that — 0.1px over five
+    // frames in `enterSelectedMapObject`, 1.5px in `waitForStableBox` below — so
+    // demanding bit-equality here left the click waiting for a coincidence. On
+    // 2026-09-20 the coincidence failed once in six viewports and cost a
+    // 34-minute push run; the same spec passed alone minutes later.
+    // `block: "nearest"` keeps the original "only if needed" scrolling.
     try {
-      await target.scrollIntoViewIfNeeded();
+      await target.evaluate((element) =>
+        element.scrollIntoView({ block: "nearest", inline: "nearest" }),
+      );
     } catch (error) {
-      if (!(error instanceof Error) || !/not attached to the DOM/.test(error.message)) throw error;
+      if (!(error instanceof Error) || !/not attached to the DOM/i.test(error.message)) throw error;
       await target.waitFor({ state: "visible" });
       continue;
     }
