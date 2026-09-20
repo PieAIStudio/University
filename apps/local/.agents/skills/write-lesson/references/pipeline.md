@@ -5,37 +5,13 @@ write; this says who writes, who checks, and what to run.
 
 ## Current PRIMM production contract
 
-Read the current SKILL.md. Separate the verified introductory case, the learner's
-everyday practice and the independent changed task before drafting. Verify source
-claims and media rights, then design the complete five PRIMM
-phases and select their operations. Do not write an article and append games.
-Use the native `primm` payload; prose/V1/V2 history below is explanatory history,
-not a competing sequence or a requirement for six headings.
-
-Writer → independent teaching Detector → substantive fixes and a whole-screen
-redundancy pass → actual local Gemini Flash polish → native validation and real
-browser walkthrough. The Detector checks everyday relevance, phase continuity,
-true Run/Modify behavior, independent Make and misleading feedback, not just facts.
-The polisher receives displayed neighboring content and controls as context while
-returning edits only for declared display strings. Bounded JSON batches may be
-losslessly assembled with each raw model receipt retained. No fabricated receipt.
-
-Freeze non-text fields and give each string a stable pointer. Apply only known
-pointers, rebuild locale dictionaries, validate schema/references and inspect
-numbers, sources, uncertainty and actual meaning. Every visible text field goes
-through the actual local Gemini Flash pass; its configuration is not execution.
-Keep the exact Writer, distinct-family Detector and Polisher/preflight receipts.
-
-Supply the Detector with actual materials, image/voice provenance and the planned
-controls, not merely prose snippets. A missing field in its packet is a request
-for evidence, not proof that the underlying material lacks it. Resolve substantive
-findings as the Writer and preserve mistaken findings with their source-based
-resolution. Independent review is not an instruction to accept every model claim.
-
-Language-only polish needs no shell, browser or file-writing permissions. Keep it
-text-only and let the host check structure and word-growth. A zero exit with empty
-output is not a successful polish. Preserve failures; never escalate tool permissions
-merely because a polisher attempted unnecessary tools.
+PRIMM lessons are produced by the scripted line in [primm-pipeline.md](primm-pipeline.md),
+with the teaching rules in [teaching-contract.md](teaching-contract.md). This file keeps
+the measured history of the prose pipeline; its roles still hold: the Writer/fixer and
+the Detector are different families, the Detector never proposes wording, and the Flash
+polish is bounded and mechanically gated. The PRIMM line adds two things the prose line
+lacked: the Detector reads a screen-by-screen render that includes **real local runs** of
+the lesson's own requests, and every visible string, not just prose, goes through polish.
 
 ## The pipeline
 

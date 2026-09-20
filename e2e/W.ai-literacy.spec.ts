@@ -84,6 +84,15 @@ test("W1 both beginner paths preserve every real-source lesson and both answer k
                   : exercise.expectedAnswer;
             expect(output.correctOptionId).toBeUndefined();
             const key = locale === "en" ? output.locales?.en?.answerKey : output.answerKey;
+            if (exercise.kind === "explain") {
+              // An `explain` exercise is open by design — the eight of them belong
+              // to the eight PRIMM lessons and are graded by the tutor, not by a
+              // stored string. So the thing worth guarding is the opposite: it must
+              // not ship a key, because a key here would be a published answer.
+              expect(answer, `${lesson.id}/${locale}`).toBeFalsy();
+              expect(key, `${lesson.id}/${locale}`).toBeFalsy();
+              continue;
+            }
             expect(answer, `${lesson.id}/${locale}`).toBeTruthy();
             expect(gradeDeterministically(answer!, key).outcome, `${lesson.id}/${locale}`).toBe(
               "pass",
@@ -108,8 +117,24 @@ for (const locale of ["en", "zh-CN"] as const) {
         await page.emulateMedia({ reducedMotion: "reduce" });
         const errors: string[] = [];
         page.on("pageerror", (error) => errors.push(error.message));
-        const unit = source.units[0]!;
-        const lesson = unit.lessons[0]!;
+        // The classic reader's end-to-end path: read, inspect the source, answer,
+        // reload. A PRIMM lesson draws none of that chrome — it has its own step
+        // reader, its own ending and its own spec — so this walks the first
+        // lesson of the course that the classic reader actually renders.
+        const classic = source.units.flatMap((item) =>
+          item.lessons
+            .filter(
+              (entry) =>
+                !(entry.activities as { kind: string }[] | undefined)?.some(
+                  (activity) => activity.kind === "primm",
+                ),
+            )
+            .map((entry) => ({ unit: item, lesson: entry })),
+        );
+        const first = classic[0];
+        expect(first, `${source.id}: every lesson uses a non-classic reader`).toBeTruthy();
+        const unit = first!.unit;
+        const lesson = first!.lesson;
         await page.goto(
           `${ONLINE}/ai-literacy/${source.id}/${unit.id}/${lesson.id}?lang=${locale}`,
         );
@@ -135,7 +160,9 @@ for (const locale of ["en", "zh-CN"] as const) {
             page.getByRole("region", { name: "Next lesson", exact: true }),
           ).not.toContainText(/[\u4e00-\u9fff]/);
         }
-        await expect(reader.locator(".learning-activity, .interaction-path").first()).toBeVisible();
+        await expect(
+          reader.locator(".learning-activity, .interaction-path, .primm, .primm-steps").first(),
+        ).toBeVisible();
         const review = reader.locator(".interaction-path__review > summary");
         if (await review.count())
           await humanClick(page, review, "open the interaction lesson's full source explanation");
@@ -206,10 +233,22 @@ test("W3 real source media stays readable in night mode and the contrast guard r
   page,
 }, info) => {
   const course = courses.find(({ source }) => source.id === "understanding-ai")!.source;
-  const unit = course.units[0]!;
+  // The retained source photo and its credit live in the interaction-path
+  // lesson, which is what the media locator and the NASA caption below are
+  // written against. Find it by its activity: it used to be this course's first
+  // lesson, and a PRIMM lesson with its own material has since taken that slot.
+  const target = course.units
+    .flatMap((unit) => unit.lessons.map((lesson) => ({ unit, lesson })))
+    .find(({ lesson }) =>
+      (lesson.activities as { kind: string }[] | undefined)?.some(
+        (activity) => activity.kind === "interaction-path",
+      ),
+    );
+  expect(target, "the retained interaction-path lesson is gone").toBeTruthy();
+  const unit = target!.unit;
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
-  await page.goto(`${ONLINE}/ai-literacy/${course.id}/${unit.id}/${unit.lessons[0]!.id}?lang=en`);
+  await page.goto(`${ONLINE}/ai-literacy/${course.id}/${unit.id}/${target!.lesson.id}?lang=en`);
   await expect(page.locator("html")).toHaveAttribute("data-game-ui-theme", "night");
   // Theme arrives before the async lesson. Do not test for an optional review
   // control until the reader has actually mounted, or its collapsed image is

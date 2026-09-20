@@ -1024,7 +1024,7 @@ export const LessonActivitySchema = z
         "hint",
         "source",
         "locales",
-        ...Object.keys(PrimmPayloadSchema.shape),
+        ...PrimmPayloadSchema.options.flatMap((option) => Object.keys(option.shape)),
       ]);
       if (Object.keys(activity).some((key) => !keys.has(key))) {
         context.addIssue({ code: "custom", message: "Unexpected PRIMM field" });

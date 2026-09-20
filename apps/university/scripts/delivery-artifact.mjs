@@ -385,9 +385,15 @@ export function publicDtoViolations(value, path = "package") {
       current.kind === "primm" &&
       LessonActivitySchema.safeParse(current).success
     ) {
-      current.investigate.more?.forEach((_item, index) =>
+      current.investigate?.more?.forEach((_item, index) =>
         instructionalAnswers.add(`${at}.investigate.more[${index}].answer`),
       );
+      // A version-3 build step's `answers` names the same public deterministic
+      // rule a sort step's bucketId already ships as (the learner's attempt is
+      // checked against it in the browser), not a hidden Make reference answer.
+      current.steps?.forEach((step, index) => {
+        if (step.kind === "build") instructionalAnswers.add(`${at}.steps[${index}].answers`);
+      });
     }
     for (const [key, child] of Object.entries(current)) {
       if (
@@ -396,7 +402,11 @@ export function publicDtoViolations(value, path = "package") {
           AUTHOR_ONLY_KEY_SET.has(key) ||
           (INDEPENDENT_EXERCISE_AT.test(at) && /^(correctOptionId|correct)$/.test(key))) &&
         !meansSomethingElseInsideAnActivity(key, at) &&
-        !(key === "answer" && typeof child === "string" && instructionalAnswers.has(`${at}.${key}`))
+        !(
+          ((key === "answer" && typeof child === "string") ||
+            (key === "answers" && Array.isArray(child))) &&
+          instructionalAnswers.has(`${at}.${key}`)
+        )
       ) {
         found.push(`${at}.${key}`);
       }

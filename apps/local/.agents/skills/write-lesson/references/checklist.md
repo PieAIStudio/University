@@ -4,27 +4,29 @@ Use all applicable checks. `[machine]` needs an actual validator/test; `[judgmen
 needs a reader inspecting materials and the rendered path; `[process]` needs a
 receipt. A regex cannot certify truth, clarity, fun, transfer or retention.
 
-## Complete PRIMM pilot (current)
+## Complete PRIMM (current)
 
-- [judgment] The verified case is a short credibility-building introduction, not a compulsory topic throughout; the everyday practice and independent task are clearly distinguished.
-- [judgment] Every rendered stage explains the current purpose/action without baby talk or cryptic brevity. Removing interface narration must not remove the steps a beginner needs to understand.
-- [machine + judgment] `experienceVersion: 2` uses prediction, prepared-material attachment/send, content manipulation, editable request construction, and independent artifact creation. Different headings on repeated choices do not count.
-- [machine] Visible assembled request equals the executed request, including after edit, removal, reorder and reload. Make withdraws the full request scaffold.
-- [machine + process] Authored practice is not falsely attributed to a historical source. `synthetic-audio` has duration, generator attribution and a visible synthetic label; actual ASR consumes the waveform.
-- [process] Image alt text, selected regions and visual feedback match the actual image, including cached first-load and phone aspect ratios.
-- [judgment] Opening connects a plausible everyday situation, unmet need and skill to the real case; invented scenario is not claimed as historical fact.
-- [machine] Native `primm` payload has all five phases, valid references and a bound Make exercise ID.
-- [judgment] Prepared request and input are visible before prediction; any prediction can proceed to Run.
-- [process] Run executes the exact prepared input; Modify executes the actual edited input; unavailable/replay/live never conflated.
-- [judgment] Investigate/Modify include purposeful non-MCQ material operation and respond to the actual preceding result.
-- [judgment] Main explanation sits in Investigate; extra depth answers a named question and is not a duplicate article.
-- [judgment] Make requires a changed purpose/input and own work; actual independent grading, no nonempty-text pass or duplicate quiz.
-- [machine] Only current phase visible; no old per-round sources, early exercise, read-confirm ritual, diagnostic receipt or next-lesson shortcut.
-- [judgment] Whole-screen redundancy pass removes UI narration without losing needed guidance, facts or limits.
-- [process] All final learner wording is actually Flash-polished with display context; compromised outputs rejected.
-- [machine + judgment] Localization preserves the distinctions being taught; same visible card text never has conflicting answers. Source-language examples keep their literal form with a gloss when needed.
+The teaching rules are in [teaching-contract.md](teaching-contract.md); its F1–F15
+table is the judgment checklist. These are the acceptance items around it.
+
+- [judgment] The plan lists ≥5 real moments with elimination answers; practice and Make use different surviving moments; material fits the moment (F1).
+- [judgment] The real case proves real use in plain words, then hands over to the learner's life; nothing later drills or examines the case (F2).
+- [judgment] Read the teacher's lines in order (contract §3): one small job, each screen continuing from the last action, no line reusable in another lesson unchanged.
+- [judgment] Reading level: an 8–9-year-old can read every sentence; no designer vocabulary or unexplained product names (F7, F9); adult content and tone (F13).
+- [machine] `run.debrief`, `modify.debrief` present; the UI shows them only after an actual result, and `investigate.explanation` only after the operation.
+- [judgment] Debriefs stay true for any plausible live output (F10); checked against at least one real sample run.
+- [judgment] Predict targets a genuine beginner uncertainty and cannot be answered by reading the request (F3).
+- [judgment] Investigate operates on this run's material, result or the gap between them; cards and choices do not print their answers (F5, F15).
+- [machine] Native `primm` payload has all five phases, valid references, a bound explain exercise, different Make material, `experienceVersion: 2` operations.
+- [process] Run executes the exact prepared input; Modify executes the visible edited input; unavailable/replay/live never conflated.
+- [judgment] Make changes material and purpose; checklist and placeholder guide without giving the answer (F11).
+- [machine] Practice material text sent to AI has no practice/fiction meta-note (F12).
+- [process] Writer, different-family Detector, fixes with resolutions, actual Flash polish and translation receipts; every hand edit logged with the pipeline's `note`.
+- [machine] Only current phase visible; no per-round sources, early exercise, read-confirm ritual, diagnostic receipt or next-lesson shortcut.
+- [machine + judgment] Localization preserves the distinctions being taught; same visible card text never has conflicting answers.
 - [machine] Async results and drafts isolated by account/lesson/revision; exit/cancel/retry/idempotency preserve actual work and evidence.
-- [process] All five phases playable on phone and keyboard, with real result/failure evidence and independent screenshots.
+- [process] All five phases played in the real product on desktop and phone width, with keyboard, wrong prediction, failure/retry and exit/resume; screenshots inspected.
+- [process] For a batch: record per lesson which parts the line produced unaided and which a person changed.
 
 The V2-specific items below apply only to retained V2 revisions. Shared source,
 truth, language, preservation and runtime checks continue to apply to PRIMM.

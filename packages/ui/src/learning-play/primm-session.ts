@@ -3,7 +3,7 @@ import {
   investigationComplete,
   type InvestigationDraft,
 } from "./PrimmInvestigate.js";
-import type { PrimmActivity, PrimmEvaluation, PrimmWork } from "./primm-types.js";
+import type { PrimmClassicActivity, PrimmEvaluation, PrimmWork } from "./primm-types.js";
 
 export interface PrimmSession {
   readonly attached: boolean;
@@ -18,7 +18,7 @@ export interface PrimmSession {
   readonly make: PrimmWork | null;
   readonly evaluation: PrimmEvaluation | null;
 }
-export function initialPrimmSession(activity: PrimmActivity): PrimmSession {
+export function initialPrimmSession(activity: PrimmClassicActivity): PrimmSession {
   return {
     attached: false,
     fragments: [{ id: "starter", text: activity.starter.prompt }],
@@ -49,7 +49,7 @@ function isWork(value: unknown): value is PrimmWork {
   );
 }
 /** Drafts restore work, never trust an arbitrary saved stage number as evidence. */
-export function restorePrimmSession(activity: PrimmActivity, answer: string): PrimmSession {
+export function restorePrimmSession(activity: PrimmClassicActivity, answer: string): PrimmSession {
   const initial = initialPrimmSession(activity);
   try {
     const saved = JSON.parse(answer) as PrimmSession;

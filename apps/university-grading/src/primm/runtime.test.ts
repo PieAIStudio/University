@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { randomUUID } from "node:crypto";
 import { primmFixture } from "../../../../packages/core/src/learning-play/fixtures/primm.js";
+import { primmStepsFixture } from "../../../../packages/core/src/learning-play/fixtures/primm-steps.js";
 import type { ChatCompletionTransport } from "@pieai/swimmer-ai-provider-kit/chat";
-import { createPrimmRuntime, type PrimmRuntime } from "./runtime.js";
+import { combineCriterionReviews, createPrimmRuntime, type PrimmRuntime } from "./runtime.js";
 import { createPrimmPreviewServer } from "./http.js";
 import {
   createLocalOllamaTransport,
@@ -97,6 +98,17 @@ describe("bounded PRIMM runtime", () => {
       "UNRELATED HISTORICAL CLAIM",
     );
   });
+  it("runs a step lesson's authored requests and still rejects any other text", async () => {
+    const { runtime, lesson, complete } = setup();
+    lesson.activity = structuredClone(primmStepsFixture);
+    lesson.assets = [{ id: "everyday-coffee", mime: "image/png", bytes: Buffer.from("png") }];
+    for (const prompt of ["说说这张照片里有什么。", "勺子在杯子的哪一边？", "帮我看看这张照片。"])
+      expect((await runtime.run({ ...input(), prompt })).prompt).toBe(prompt);
+    await expect(runtime.run({ ...input(), prompt: "随便问一句" })).rejects.toMatchObject({
+      code: "rejected",
+    });
+    expect(complete).toHaveBeenCalledTimes(3);
+  });
   it("runs the prepared request once, rejects changing its input under the same command", async () => {
     const { runtime, complete } = setup();
     const request = input();
@@ -112,7 +124,11 @@ describe("bounded PRIMM runtime", () => {
       { path: "/private" },
       { url: "https://example.org" },
       { model: "other" },
-      { lessonRef: { ...ref, lessonId: "unknown" } },
+      // Any course lesson ID is addressable; the canonical resolver still
+      // requires its package to carry a PRIMM activity. Paths never are.
+      { lessonRef: { ...ref, lessonId: "../private" } },
+      { lessonRef: { ...ref, unitId: "Unit/../x" } },
+      { lessonRef: { ...ref, courseId: "other-course" } },
     ])
       expect(RunSchema.safeParse({ ...input(), ...extra }).success).toBe(false);
   });
@@ -246,6 +262,71 @@ describe("bounded PRIMM runtime", () => {
         }),
       }),
     ).rejects.toMatchObject({ code: "unavailable" });
+  });
+  it("reports a malformed model decision as an unavailable evaluation, not a rejected request", async () => {
+    const transport: ChatCompletionTransport = {
+      provider: "test",
+      complete: async (request) => ({
+        content: request.responseFormat
+          ? JSON.stringify({
+              outcome: "pass",
+              evaluation: "x".repeat(2000),
+              extensions: [],
+              evidence: { from: "missing", quote: "" },
+              confidence: "high",
+            })
+          : "a real run",
+        raw: {},
+      }),
+    };
+    const { runtime } = setup({ transport });
+    const request = input("make"),
+      result = await runtime.run(request);
+    await expect(
+      runtime.grade({
+        locator: ref,
+        contentRevision: 2,
+        exerciseId: primmFixture.make.exerciseId,
+        commandId: randomUUID(),
+        answer: JSON.stringify({
+          kind: "primm-make",
+          request,
+          resultRequestId: result.requestId,
+          finalWork: "The learner's work.",
+        }),
+      }),
+    ).rejects.toMatchObject({ code: "unavailable" });
+  });
+});
+
+describe("every authored condition matters", () => {
+  const criterion = (index: number, outcome: "pass" | "fail" | "undecided") => ({
+    criterion: index,
+    outcome,
+    evaluation: outcome === "fail" ? "还缺具体几点见面。" : "已核对这一项。",
+    extensions: [],
+    evidence: { from: "finalWork" as const, quote: "周日下午" },
+  });
+  it("does not pass a whole task when one required part failed", () => {
+    const decision = combineCriterionReviews(
+      [criterion(0, "pass"), criterion(1, "fail"), criterion(2, "pass")],
+      3,
+    );
+    expect(decision.outcome).toBe("fail");
+    expect(decision.evaluation).toBe("还缺具体几点见面。");
+  });
+  it("keeps uncertainty rather than forging a pass", () => {
+    expect(
+      combineCriterionReviews([criterion(0, "pass"), criterion(1, "undecided")], 2).outcome,
+    ).toBe("undecided");
+  });
+  it("rejects omitted, repeated and unknown criterion indices", () => {
+    for (const checks of [
+      [criterion(0, "pass")],
+      [criterion(0, "pass"), criterion(0, "pass")],
+      [criterion(0, "pass"), criterion(2, "pass")],
+    ])
+      expect(() => combineCriterionReviews(checks, 2)).toThrow();
   });
 });
 

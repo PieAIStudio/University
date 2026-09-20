@@ -36,6 +36,18 @@ async function type(text: string, selector = "textarea") {
   });
 }
 const stage = () => container.querySelector("[data-primm-stage]")?.getAttribute("data-primm-stage");
+
+it("introduces the learner need before the supporting case, once", async () => {
+  const activity = { ...structuredClone(primmFixture), experienceVersion: 2 as const };
+  await render({ activity });
+  const situation = container.querySelector(".primm__situation")!;
+  const caseNote = container.querySelector(".primm__case")!;
+  expect(situation.textContent).toBe(activity.intro.situation);
+  expect(
+    situation.compareDocumentPosition(caseNote) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(container.textContent!.split(activity.intro.situation)).toHaveLength(2);
+});
 async function render(extra: Partial<PrimmLessonProps> = {}) {
   const run = vi.fn<RunPrimm>(async (request) => ({
     kind: "live",
@@ -188,6 +200,64 @@ describe("one linear PRIMM journey", () => {
     await click("完成，回到地图");
     expect(complete).toHaveBeenCalledOnce();
     expect(run).toHaveBeenCalledTimes(3);
+  });
+  it("lets the teacher speak only after the learner has acted", async () => {
+    const activity = structuredClone(primmFixture);
+    activity.run.debrief = "对照你的预想：它说到了哪一步？";
+    activity.modify.debrief = "看看改过的那句话换来了什么。";
+    await render({ activity });
+    await click("一段更宽泛的按钮介绍");
+    await click("继续");
+    expect(container.textContent).not.toContain(activity.run.debrief);
+    await click("运行这段请求");
+    expect(container.textContent).toContain(activity.run.debrief);
+    await click("继续");
+    expect(container.textContent).not.toContain(activity.investigate.explanation);
+    const game = activity.investigate.game;
+    if (game.kind !== "sort") throw Error();
+    for (const c of game.cards) {
+      await click(c.text);
+      await click(game.buckets.find((b) => b.id === c.bucketId)!.label);
+    }
+    expect(container.textContent).toContain(activity.investigate.explanation);
+    await click("继续");
+    expect(container.textContent).toContain("先改动原请求，再运行比较。");
+    expect(container.textContent).not.toContain(activity.modify.debrief);
+    await type("改成给初次使用键盘的人看的说明");
+    await click("运行这段请求");
+    expect(container.textContent).toContain(activity.modify.debrief);
+  });
+  it("lets the learner check the actual result item by item before any explanation", async () => {
+    const activity = structuredClone(primmFixture);
+    activity.investigate.game = {
+      kind: "check-result",
+      instruction: "对照刚才的结果，逐项看它保住了没有",
+      items: [
+        { id: "keys", label: "要按的键", expected: "Enter 或空格", why: "按错键不会响应" },
+        { id: "focus", label: "先做什么", expected: "先让按钮获得焦点", why: "没有焦点按键无效" },
+      ],
+    };
+    await render({ activity });
+    await toInvestigate();
+    // The actual run result is on screen to compare against; nothing is revealed yet.
+    expect(container.textContent).toContain("本次模型实际输出的测试内容");
+    expect(container.textContent).not.toContain("Enter 或空格");
+    expect(container.textContent).not.toContain(activity.investigate.explanation);
+    await click("要按的键：结果里没有");
+    expect(container.textContent).toContain("原材料里：Enter 或空格");
+    expect(buttons().find((b) => b.textContent === "继续")?.disabled).toBe(true);
+    await click("先做什么：结果里有，没变");
+    expect(container.textContent).toContain(activity.investigate.explanation);
+    // Two judgments inside one task (fast keyboard) must both be kept.
+    const byLabel = (label: string) =>
+      buttons().find((b) => b.getAttribute("aria-label") === label)!;
+    await act(async () => {
+      byLabel("要按的键：结果里有，但变了").click();
+      byLabel("先做什么：结果里没有").click();
+    });
+    expect(byLabel("要按的键：结果里有，但变了").getAttribute("aria-pressed")).toBe("true");
+    expect(byLabel("先做什么：结果里没有").getAttribute("aria-pressed")).toBe("true");
+    expect(buttons().find((b) => b.textContent === "继续")?.disabled).toBe(false);
   });
   it("does not replace failed execution with a canned answer", async () => {
     await render({

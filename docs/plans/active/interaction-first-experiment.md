@@ -6,7 +6,7 @@ status: active
 canonical: false
 owner: ai-assisted
 created: 2026-09-16
-last_reviewed: 2026-09-18
+last_reviewed: 2026-09-20
 domain: learning
 tags:
   - lesson-reader
@@ -18,7 +18,201 @@ related:
 
 # Interaction-first lesson experiment
 
-## Scope
+## Read before merging to main: this branch was pushed with a red e2e suite
+
+Owner (2026-09-20) approved one `git push --no-verify` of `codex/interaction-first`
+because the pre-push hook runs the whole browser suite and 25 cases were already
+red before the step-lesson commit (`089dd891`). Nothing was merged. Before merging,
+run the suite on this branch and on `main` and compare; do not assume the 25 are
+gone or that they are all this branch's.
+
+- What was checked: `pnpm verify` passes. Every case in `e2e/primm.spec.ts`
+  passes, including the step lesson in both modes and both languages. The 25 red
+  cases are the same 25 that fail on the parent commit `a1921880`, so the step-lesson
+  commit adds none.
+- Not proven: the parent-commit result for the authoring-mode cases is not a fair
+  baseline, because untracked study content is shared and the older code could not
+  read the new lesson at all. Two map or layout groups below were not investigated.
+- The 25, by cause. Probably stale tests, not product bugs (14): `X.ai-literacy-english`
+  (8) and `W.ai-literacy` W2 (4) look for `.learning-activity` or `.interaction-path`
+  containers that PRIMM lessons do not render; `interaction-v2` (1) asserts five PRIMM
+  lessons where there are eight; `W.ai-literacy` W1 (1) requires an expected answer on
+  every exercise, which explain-type PRIMM exercises never have. Not investigated (11):
+  `W.ai-literacy` W3 (1), `avatar` (1) and `island-pick` (1) on the map, `Y.english-campus`
+  (4), `product-completeness` (3) and `interaction-path` (1) on layout.
+- A trap when running the browser suite here: the authoring server reads
+  `.scratch/interaction-studies` including its learner database. Progress left there
+  by earlier runs makes the reader remount its board on load and fails `humanClick`
+  ("Element is not attached to the DOM"). Run with `E2E_STUDIES_ROOT` pointing at a
+  copy without the `learner/` folders.
+
+## Current: step lessons (PRIMM version 3), lesson one landed
+
+Owner (2026-09-20) asked for lesson one in the real course before merging, and
+fixed two rules: the five phases stay, with variable steps inside each phase and
+no interaction bound to a phase; and Predict asks how to use AI, never what AI
+will say. Main was merged into this branch first (`d9b7b277`), so the work sits on
+current map navigation and ProviderKit 0.13.0.
+
+- [x] Core: `experienceVersion: 3` beside the classic payload; eight step kinds
+  (choose, send, find, match, sort, point, build, make); the frame checks phase
+  order, one to four steps per phase, one real run in Run and in Modify, Make
+  opening with the task, and every run bound to a prepared request.
+- [x] Runtime: Run executes the starter or a step lesson's authored requests, one
+  shared rule (`primmRunPrompts`) in both the resolver and the runtime.
+- [x] Player: one action per screen, teacher after it in the bottom bar, pointer
+  drag with a tap/keyboard path, a demonstration hand shown once per gesture,
+  resume that never skips undone steps; classic lessons are unchanged.
+- [x] Lesson one written by hand from the prototype and landed natively as r13,
+  then r14 after a live walkthrough found three duplicated feedback lines and a
+  small touch target (`assemble-steps`, logged `MANUAL`).
+- [x] Live walkthrough with the local model: every step, real answers for all
+  three requests, per-criterion grading passed a one-part question and failed
+  "describe this photo" for the right reason. Browser suite covers both modes and
+  languages, keyboard, a real drag, reload, axe and the map entry.
+- [ ] Teach the production line to write step lessons; regenerate the other seven.
+- [ ] Real learners.
+
+The investigation floor of three operations now holds without an expected
+failure: lesson one's `match` traces which request produced which answer.
+
+## Current: one course lane, micro-step design approved
+
+On 2026-09-20 the Owner asked that course work reach main through this branch
+alone, absorbing `codex/learner-value-first` (`19b354fe`) where it was better.
+That commit is merged as an ancestor; its text below stays as history. Taken:
+per-criterion Make grading (one bounded decision per rubric line, evidence
+before verdict, any fail fails), Markdown display of AI results, configurable
+preview ports, compact request-piece controls, a contained tall-diagram frame,
+and two contract rules (work backward from the usable result; the action must
+exercise the promised skill). Not taken: its five lessons (longer sentences,
+24–36% over 25 characters against 12–21% here, and no after-action teacher
+thread), the one-lesson clock-time precheck, layout selection, its separate
+rulebook, and its polish rule that lessons need not get shorter, which the Owner
+has since reversed.
+
+The Owner played the micro-step prototype of lesson one
+([journey v5](../../reference/player-journey/v5/index.html#micro-step-lesson))
+and judged it better than the landed lessons. Order agreed for what follows:
+merge to main, refactor, then productize micro-steps on the existing engines and
+evolve the production line to write them. Lesson content on this branch is the
+current best, not the target.
+
+## Absorbed comparison lane: learner-value-first (history)
+
+Owner requested another `codex/` worktree to implement the learner-value discussion
+in lessons 1–5. That checkout was `.worktrees/learner-value-first`, branch
+`codex/learner-value-first`, based on committed `ca2c7d3f`. On 2026-09-20 the Owner
+had its preview processes stopped and the worktree and local branch deleted (no
+remote branch existed). Its tip `19b354fe` and all 23 commits stay in this branch's
+history. The text below describes it as it was. The original experiment
+has another AI's ongoing edits: preserve its code, source corpus and services.
+The preceding single-lane restrictions below are historical, not current authority.
+
+- [x] Create one new lane and recover committed courses into independent storage.
+- [x] Specify usable outcomes before PRIMM; update the same write-lesson skill.
+- [x] Rewrite five bilingual lessons with actual Writer, Detector and Flash runs.
+- [x] Retain source/asset/card identity; improve tasks and changed-input Make.
+- [x] Play desktop/phone, fix findings, verify, and provide independent URLs.
+
+No mainline merge, publication, payment, account change or analytics rollout.
+Proposed user needs remain hypotheses, not user research. Receipts are under
+`.scratch/learner-value-first/`; screenshots under `.devspace-visual/learner-value-first/`.
+The other 31 lessons must remain unchanged. Earlier records below retain their
+original meaning and are not acceptance of this lane.
+
+The five current native revisions are 12/9/9/6/7. The first lesson now teaches
+turning an authored practice poster into an outing reminder, then changes the
+poster in Make. The third separates attendee and volunteer responsibilities;
+Make changes the role rather than copying the attendee checklist. The remaining
+lessons produce a voice-message reminder, a polite bounded edit and a visit
+decision based on supplied official-source snapshots. Claims of user demand or
+learning effectiveness remain untested hypotheses.
+
+Grok preflight listed the model but its actual Writer request hit the usage limit.
+The documented Codex fallback (`gpt-6-astra`, ultra) wrote all five. Two independent
+Gemini teaching reviews, host substantive fixes and 17 successful bilingual Flash
+polish batches are preserved; an additional Flash batch supplied missing-clock-time
+feedback. The first polish assembler failed on an overbroad localization dictionary,
+not a failed model run; it was repaired using the original saved responses.
+
+Actual playback exposed two important issues. A tall diagram overflowed its grid
+track and painted behind the editor; bounded grid tracks now retain the complete
+image above its caption. Request-piece controls retain full accessible names but
+use compact arrows/remove glyphs. Model grading also missed an absent meeting time
+or rejected equivalent wording. The bounded preview now reviews criteria separately;
+an optional author-declared missing-clock-time precheck handles that definite
+omission before semantic review. It cannot itself produce a pass or certify that
+a stated time is correct. The final missing/wrong/equivalent-time live probes pass;
+earlier failed probes remain, and no general claim of model-grading reliability is
+made. The correction was landed as a native audio revision, not a delivery edit.
+
+The first broader browser run is not acceptance: 24 passed, one timed out during
+accessibility analysis, one was interrupted and six did not run. Host load reached
+357 and the run overlapped development edits; preserve its log and use final-code
+checks below. The final course preservation check confirms the other 31 lessons,
+original lesson-level sources/assets and assessment IDs are unchanged. The exact
+served package is recorded in `.devspace-visual/learner-value-first/preservation.json`.
+
+On resumption, the new lane already existed; it was reused rather than creating
+another branch. A focused language check found that the optional time-presence
+guard rejected ordinary English forms such as "2 in the afternoon" and "2 o’clock".
+It now accepts those forms and 14h00, while quantities and durations still do not
+stand in for a meeting time. The 35 related format/runtime tests pass. This change
+does not validate the time's value or bypass semantic review. Final checks remain
+sequential so rebuilding shared output cannot reload an in-flight browser lesson.
+
+The final phone critic correctly identified a teaching mismatch in lesson three:
+the stated ability was role-based filtering, but Investigate only rearranged four
+preselected facts. The existing layout engine now optionally lets learners move
+irrelevant items aside and restore missing ones while the artifact changes. Plain
+layout tasks retain their contract. Nineteen changed/new text items were actually
+Flash-polished and localized after independent teaching review, then landed as the
+native third-lesson revision. Its explanatory recap appears only after a valid
+selection; the learner cannot pass by only rearranging or removing everything.
+
+`verify-final-selection.exit` is 0 for the selection implementation before the last
+presentation corrections described below. The preceding
+`verify-closeout` failed the stale-CSS guard when edits overlapped its build; that
+failure is preserved rather than counted as acceptance. The final PRIMM and V1/V2
+compatibility browser run passed all 32 cases. `accepted-desktop` and
+`accepted-phone` each completed all five current revisions with real local runs,
+changed requests, native Make evaluation, visible artifact repair, copy and map
+return. The phone is a 390px touch-enabled browser simulation, not a physical-device
+claim. Some raw outputs needed editing; generated output is not presumed correct.
+The final visual review is separate from these behavior checks. Evidence and
+local preview restart instructions are in the existing owner review brief.
+
+The final screenshot pass confirmed role filtering and readable Markdown, and
+disproved the missing-heading/static-badge findings with entry/interaction evidence.
+It also caught an unclear boundary between the AI reply and the editable original
+in lesson four; each now has its own heading. The director found that layout
+previews dropped labels, leaving "move to the activity room" without its rain
+condition. Previews now retain every item's label, and item panels use the brand
+panel radius rather than the pill-shaped control radius. These last presentation
+changes receive their own focused browser/live checks and a new full verification.
+Manual comparison in Investigate and editable request fragments remain intentional
+PRIMM scaffolding, not proven preferences of real learners. Review their usefulness
+with the Owner; do not treat every critic's redesign preference as a factual bug.
+
+Those last presentation corrections passed eight bilingual/both-mode browser
+cases and four actual live walks (lessons three/four at 1440 and 390 touch widths).
+The separate eight-image AfterCritic marked both the retained reminder labels and
+the edit-target boundary fixed, with no new blocker in that scope. The final full
+verification `verify-owner-ready` exited 0. On this continuation, no changed source
+file was newer than that passing check. A fresh five-lesson desktop walk also
+completed real Run/Modify/Make, native evaluation, copy and map return, with zero
+browser page errors; see `resumed-owner-check/receipt.json`. Three raw results
+needed visible learner edits before passing. Their original outputs and first
+verdicts remain in the receipt; successful execution is not presumed correctness.
+
+This comparison is ready for Owner trial at port 23650. The 32-case focused
+browser run and eight final presentation cases are the verified browser scope,
+not a claim that the whole default browser suite ran. Existing phone evidence is
+390px touch simulation, not a physical-device or real-learner result. No mainline
+merge, push, paid calls or publication occurred; preserve the original AI's lane.
+
+## Historical scope: the original interaction-first lane
 
 The sole experiment worktree is `.worktrees/interaction-first`, on
 `codex/interaction-first`. Owner subsequently authorized bringing main into this
@@ -36,6 +230,61 @@ No new branch/worktree, push, production publication, merge into main or cloud
 writes are authorized. Course writes stay in `.scratch/interaction-studies`.
 
 ## V2 execution
+
+### Current task: a teaching engine, proven on outline entries nobody hand-tuned
+
+Owner (2026-09-19): the first five are clean and linear, but still taught from the
+designer's chair — invented needs, no guiding teacher lines, sentences that jump.
+Machine-written courses must be readable by an 8–9-year-old while respecting adults.
+The goal is not five repaired lessons; it is a production line that writes a usable
+lesson from a new outline entry on the first pass. PRIMM stays; variety comes from a
+different real job per lesson and need-driven actions inside fixed phases; the real
+case (现实依据) is a credibility door, not the subject.
+
+- [x] Play all five as a first-time adult; record failure classes, not rewrites.
+- [x] One teaching contract (`references/teaching-contract.md`) used verbatim by
+  Writer, Detector and Fixer; research digest; SKILL.md 4.0; checklist and models.
+- [x] Product: `run.debrief` / `modify.debrief` appear only after a real result;
+  Investigate's explanation only after the operation. Runtime no longer allow-lists
+  five lesson IDs; any course lesson with a canonical PRIMM activity can run.
+- [x] `apps/local/scripts/primm-pipeline.mjs`: packet → (research with page-verified
+  quotes) → write → lint + real local sample runs + screen render → beginner Detector
+  → fix → Flash polish/translation → native proposal → apply/finish; status report.
+- [x] Held-out: `start-a-new-context` (concept), `draft-is-not-send` (task),
+  `keep-the-qualifier` (judgment) generated by the line, landed natively, played.
+- [x] Five pilots regenerated by the same line in revise mode from Owner notes.
+- [x] Investigate gained `check-result`: the learner holds the live result against
+  the original material item by item (kept / changed / missing).
+- [x] Browser: all eight played end to end on desktop; 375px on
+  `ask-about-a-picture`; failure/retry, exit/resume and a failed-then-fixed Make on
+  `keep-the-qualifier`; keyboard through `e2e/primm.spec.ts`; `pnpm verify`.
+
+Result (2026-09-19). Forty-four drafts across eight lessons; the landed version
+per lesson is the best-scoring one unless truth or honest framing overruled the
+score, and each overrule is a `MANUAL` line in `primm-pipeline.mjs status`. No
+lesson reached the Detector's `ready`; landed versions carry one to seven majors,
+and one blocker remains on `ask-about-a-picture` (chosen for honest framing; the
+blocker was mostly a check-result label since changed in the product). Three
+findings changed the line more than any single lesson: more fix rounds made most
+lessons worse (hence best-version scoring and surgical fixes); the model that grades a run must not be trusted to fail on cue (hence
+debriefs that never assert what the output said); and the Detector reviewed
+pipeline artefacts as lesson text until the render marked them. What a person
+still did is listed in `references/primm-pipeline.md`. None of this is learner
+evidence: no ordinary adult has played these eight yet.
+
+Open shortfall: the five hand-tuned revisions used five investigation operations;
+the line converged on two (four `sort`, four `check-result`), both about whether
+material belongs or survived. None investigates which words of the request caused
+which part of the result, which is what PRIMM's Investigate is for, and together
+they lean toward the "every lesson is checking" pattern the Owner ruled out. The
+e2e floor of three operations stays as an expected failure until this is fixed in
+the contract and the game set, not by swapping one lesson's widget.
+
+Grok's free tier ran out after three calls; a blind bake-off on one fix task chose
+Claude Opus (via agy) over Codex as the fallback Writer (receipts under
+`.scratch/primm-engine-bake/`), and Claude's quota then ran out too, so 39 of the
+44 drafts are Codex's. Process material: `.scratch/primm-engine/`.
+No new branch/worktree, push, merge, publication or cloud write.
 
 ### Current task: case-led introduction, learner-led everyday practice
 

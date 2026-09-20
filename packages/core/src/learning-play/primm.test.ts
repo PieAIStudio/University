@@ -81,6 +81,19 @@ const games = {
       },
     ],
   },
+  "check-result": {
+    kind: "check-result",
+    instruction: "对照刚才的结果，逐项看它保住了没有",
+    items: [
+      { id: "keys", label: "要按的键", expected: "Enter 或空格", why: "按错键按钮不会响应" },
+      {
+        id: "focus",
+        label: "先做什么",
+        expected: "先让按钮获得焦点",
+        why: "没有焦点，按键不起作用",
+      },
+    ],
+  },
 } satisfies Record<PrimmGame["kind"], PrimmGame>;
 
 function candidate(kind: PrimmGame["kind"] = "sort"): PrimmActivity {
@@ -104,7 +117,9 @@ describe("PRIMM wire contract", () => {
     expect(interactionLessonIssues(primmLessonFixture)).toEqual([]);
     expect(PRIMM_PHASES).toEqual(["predict", "run", "investigate", "modify", "make"]);
     expect(
-      Object.keys(PrimmPayloadSchema.shape).filter((key) => PRIMM_PHASES.includes(key as never)),
+      Object.keys(PrimmPayloadSchema.options[1].shape).filter((key) =>
+        PRIMM_PHASES.includes(key as never),
+      ),
     ).toEqual(PRIMM_PHASES);
     expect(primmFixture.make).not.toHaveProperty("rubric");
     expect(primmFixture.run).not.toHaveProperty("output");
@@ -225,10 +240,23 @@ describe("PRIMM game structure and references", () => {
     ["collect", "unknown source", (g: any) => (g.cards[0].sourceId = "missing")],
     ["collect", "only relevant", (g: any) => (g.cards[1].relevant = true)],
     ["collect", "only distractors", (g: any) => (g.cards[0].relevant = false)],
+    ["check-result", "duplicate item", (g: any) => g.items.push(g.items[0])],
   ] as const)("rejects %s: %s", (kind, _, change) => {
     const activity = candidate(kind);
     change(activity.investigate.game);
     expect(primmIssues(activity).length).toBeGreaterThan(0);
+    expect(LessonActivitySchema.safeParse(activity).success).toBe(false);
+  });
+});
+
+describe("PRIMM check-result shape", () => {
+  it.each([
+    ["a single item", (g: any) => g.items.pop()],
+    ["no material wording", (g: any) => (g.items[0].expected = " ")],
+    ["an answer key", (g: any) => (g.items[0].correct = "kept")],
+  ])("rejects %s at the wire", (_, change) => {
+    const activity = candidate("check-result");
+    change(activity.investigate.game);
     expect(LessonActivitySchema.safeParse(activity).success).toBe(false);
   });
 });
@@ -506,6 +534,16 @@ describe("PRIMM pure game-state validation", () => {
         { kind: "collect", decisions: { relevant: true } },
         { kind: "collect", decisions: { relevant: true, distractor: true } },
         { kind: "collect", decisions: { relevant: true, distractor: false, extra: false } },
+      ],
+    ],
+    [
+      "check-result",
+      // Any judgment counts: a live result has no answer key, the learner compares.
+      { kind: "check-result", judgments: { keys: "missing", focus: "kept" } },
+      [
+        { kind: "check-result", judgments: {} },
+        { kind: "check-result", judgments: { keys: "kept" } },
+        { kind: "check-result", judgments: { keys: "kept", focus: "right" } },
       ],
     ],
   ] as const)(

@@ -82,6 +82,30 @@ Family availability does not erase role boundaries:
   preflight leaves only one family that could fill both jobs, stop and report;
   never let a writer check its own work.
 
+## PRIMM production line roles (2026-09-19)
+
+`scripts/primm-pipeline.mjs` fills the same roles: Writer/fixer = Grok at `xhigh`
+(its highest accepted effort), also used with web search as the case Researcher;
+Detector and Polisher = Gemini Flash through `agy`. Override the Writer or Detector
+id with `PRIMM_WRITER_MODEL` / `PRIMM_DETECTOR_MODEL` after the preflight above; keep
+the families distinct. Grok authentication was restored on 2026-09-19.
+
+**Grok's free tier is not a production Writer.** On 2026-09-19 it answered three
+full calls (one lesson draft, one research query, one partial) and then returned
+`You've reached your free Grok Build usage limit` on stderr with exit 1, while
+`grok models` still passed. The line then needs a fallback Writer. Two were
+compared on the same fix task (held-out lesson `start-a-new-context`, v1 → v2):
+
+| Writer | Detector findings on its v2 | blind judge (gemini-3.1-pro-high, both orders) | time |
+| --- | --- | --- | --- |
+| `claude-opus-4-6-thinking` via `agy` (`PRIMM_WRITER_CLI=agy`) | 0 blocker, 1 major, 2 minor | **won both orders** | ~17 min |
+| `gpt-5.6-luna` at `max` via `codex` (`PRIMM_WRITER_CLI=codex`) | 2 blocker, 3 major, 2 minor; 6 schema errors | lost both | ~10.5 min |
+
+So when Grok is unavailable, use the Claude arm with a Gemini Detector (families
+stay distinct). This is one lesson and one judge family; it decides the fallback
+for this batch, not the Writer question for good. Receipts:
+`.scratch/primm-engine-bake/`. Opus needs `--print-timeout` well above 14 minutes.
+
 ## Never hardcode a version
 
 Model ids in this project go stale faster than anything else written down. A

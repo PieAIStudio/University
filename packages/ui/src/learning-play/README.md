@@ -8,6 +8,9 @@
 或新的教学方法。请求片段可编辑、排序、删除，显示的组合文本就是实际运行输入。
 Make 不预填整段答案。`practice` 材料不冒充官方事实；电脑合成练习语音单独标明。
 
+结果里的列表和加粗使用已有Markdown解析器受限展示，不执行
+HTML、不加载模型给出的媒体、不解析课程指令，证据与复制仍来自原始文本。
+
 单一原生课程载荷固定 Predict → Run → Investigate → Modify → Make。生活情境与
 真实案例的联系放在第一步，运行使用同一份输入，预测错误不锁住下一步。Investigate
 支持真实图片选区、语义分拣、资料排版、局部修改和来源收集；Modify 修改请求后实际
@@ -27,6 +30,13 @@ Whisper；没有供应商密钥、工具执行权限、钱包扣费或公共无�
 23150 页面和 23151 受限执行端。端口占用时明确退出，不停止其他进程。服务已运行
 就直接使用，不再启动第二份。退出启动器只停止它自己启动的页面和执行服务，不关闭
 整台机器的 Ollama。调用未配置或失败不填回示例。
+
+并行比较工作树可以显式设置 `UNIVERSITY_PRIMM_APP_PORT` 和
+`UNIVERSITY_PRIMM_API_PORT`（本比较为 23650/23651），不能借用另一工作树的服务。
+两端口必须不同且在 1024–65535；仍然只绑定 127.0.0.1，执行端只接受本次页面的
+精确 Origin。ASR 工具和模型可用 `UNIVERSITY_PRIMM_ASR_PYTHON`、
+`UNIVERSITY_PRIMM_ASR_MODELS` 指向已有的本机安装；它们是宿主配置，不是课程字段，
+浏览器不能指定文件、模型或调用范围。运行不会自动下载或修改全局模型。
 
 这台机器的预备条件是本机 Ollama 的 `university-primm-local`（由
 `scripts/primm-preview.Modelfile` 配置）及 `.scratch/primm-five/asr-venv` 和

@@ -1,4 +1,4 @@
-import type { PrimmActivity } from "../primm.js";
+import type { PrimmClassicActivity } from "../primm.js";
 
 const strings: Record<string, string> = {};
 const copy = (zh: string, en: string) => {
@@ -11,7 +11,7 @@ const source = {
 };
 
 /** Bilingual contract fixture. No model output or grading success is pre-recorded. */
-export const primmFixture: PrimmActivity & { readonly role: "demonstrate" } = {
+export const primmFixture: PrimmClassicActivity & { readonly role: "demonstrate" } = {
   id: "button-primm",
   kind: "primm",
   method: "PRIMM",

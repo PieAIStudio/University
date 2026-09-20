@@ -1,7 +1,7 @@
 import { useId } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import { useI18n } from "../i18n/index.js";
-import type { PrimmActivity } from "./primm-types.js";
+import type { PrimmClassicActivity } from "./primm-types.js";
 
 export interface RequestFragment {
   readonly id: string;
@@ -21,7 +21,7 @@ export function PrimmRequestWorkbench({
   disabled,
   onChange,
 }: {
-  readonly workbench: NonNullable<PrimmActivity["modify"]["workbench"]>;
+  readonly workbench: NonNullable<PrimmClassicActivity["modify"]["workbench"]>;
   readonly fragments: readonly RequestFragment[];
   readonly observation: string;
   readonly disabled: boolean;
@@ -107,24 +107,30 @@ export function PrimmRequestWorkbench({
               <GameButton
                 draggable={!disabled}
                 disabled={disabled || index === 0}
+                aria-label={t("primm.moveUp", { label: labelOf(fragment.id) })}
+                title={t("primm.moveUp", { label: labelOf(fragment.id) })}
                 onDragStart={(event) =>
                   event.dataTransfer.setData("application/x-university-fragment", fragment.id)
                 }
                 onClick={() => move(index, index - 1)}
               >
-                {t("primm.moveUp", { label: labelOf(fragment.id) })}
+                ↑
               </GameButton>
               <GameButton
                 disabled={disabled || index === fragments.length - 1}
+                aria-label={t("primm.moveDown", { label: labelOf(fragment.id) })}
+                title={t("primm.moveDown", { label: labelOf(fragment.id) })}
                 onClick={() => move(index, index + 1)}
               >
-                {t("primm.moveDown", { label: labelOf(fragment.id) })}
+                ↓
               </GameButton>
               <GameButton
                 disabled={disabled}
+                aria-label={t("primm.removePiece", { label: labelOf(fragment.id) })}
+                title={t("primm.removePiece", { label: labelOf(fragment.id) })}
                 onClick={() => change(fragments.filter((item) => item.id !== fragment.id))}
               >
-                {t("primm.removePiece", { label: labelOf(fragment.id) })}
+                ×
               </GameButton>
             </div>
           </li>

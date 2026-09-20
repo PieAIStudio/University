@@ -1,9 +1,13 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
-import { isPrimmGameComplete, placePrimmSortCard } from "@pieai/university-core";
+import {
+  PRIMM_CHECK_JUDGMENTS,
+  isPrimmGameComplete,
+  placePrimmSortCard,
+} from "@pieai/university-core";
 import { useI18n } from "../i18n/index.js";
 import type { LessonAssetView } from "../view/lesson-view.js";
-import type { PrimmActivity } from "./primm-types.js";
+import type { PrimmClassicActivity } from "./primm-types.js";
 import { PrimmSource } from "./PrimmMaterials.js";
 
 /** Guided evidence only. None of these operations reports an independent grade. */
@@ -27,7 +31,10 @@ export const emptyInvestigation = (): InvestigationDraft => ({
   decisions: {},
   touched: false,
 });
-export function investigationComplete(activity: PrimmActivity, draft: InvestigationDraft): boolean {
+export function investigationComplete(
+  activity: PrimmClassicActivity,
+  draft: InvestigationDraft,
+): boolean {
   const game = activity.investigate.game;
   switch (game.kind) {
     case "inspect-image":
@@ -44,6 +51,8 @@ export function investigationComplete(activity: PrimmActivity, draft: Investigat
       );
     case "collect":
       return game.cards.every((card) => draft.decisions[card.id] === card.relevant);
+    case "check-result":
+      return isPrimmGameComplete(game, { kind: "check-result", judgments: draft.placed });
   }
 }
 export function PrimmInvestigate({
@@ -52,7 +61,7 @@ export function PrimmInvestigate({
   draft,
   onChange,
 }: {
-  readonly activity: PrimmActivity;
+  readonly activity: PrimmClassicActivity;
   readonly assets?: readonly LessonAssetView[];
   readonly draft: InvestigationDraft;
   readonly onChange: (next: InvestigationDraft) => void;
@@ -62,7 +71,22 @@ export function PrimmInvestigate({
   const [feedback, setFeedback] = useState("");
   const [aspect, setAspect] = useState<number | null>(null);
   const game = activity.investigate.game;
-  const update = (patch: Partial<InvestigationDraft>) => onChange({ ...draft, ...patch });
+  // Several judgments can land before the parent re-renders (fast keyboard or
+  // scripted input); build each one on the latest draft, not the rendered one.
+  const latest = useRef(draft);
+  latest.current = draft;
+  const update = (
+    patch:
+      | Partial<InvestigationDraft>
+      | ((current: InvestigationDraft) => Partial<InvestigationDraft>),
+  ) => {
+    const next = {
+      ...latest.current,
+      ...(typeof patch === "function" ? patch(latest.current) : patch),
+    };
+    latest.current = next;
+    onChange(next);
+  };
   if (game.kind === "inspect-image") {
     const asset = assets?.find(
       (item) => item.id === game.assetId && item.mime.startsWith("image/"),
@@ -345,6 +369,49 @@ export function PrimmInvestigate({
         ) : draft.selected ? (
           <p role="status">{t("primm.wrongTarget")}</p>
         ) : null}
+      </div>
+    );
+  }
+  if (game.kind === "check-result") {
+    // The learner compares the actual result shown above with the material.
+    // Only after judging an item does the lesson show what the material said.
+    return (
+      <div className="primm-check">
+        <p>{game.instruction}</p>
+        {game.items.map((item) => {
+          const judged = draft.placed[item.id];
+          return (
+            <section key={item.id} className="primm__record" data-check-item={item.id}>
+              <h3>{item.label}</h3>
+              <div className="primm__actions" role="group" aria-label={item.label}>
+                {PRIMM_CHECK_JUDGMENTS.map((judgment) => (
+                  <GameButton
+                    key={judgment}
+                    variant={judged === judgment ? "primary" : "secondary"}
+                    aria-pressed={judged === judgment}
+                    aria-label={t("primm.checkChoice", {
+                      label: item.label,
+                      choice: t(`primm.check.${judgment}`),
+                    })}
+                    onClick={() =>
+                      update((current) => ({
+                        placed: { ...current.placed, [item.id]: judgment },
+                      }))
+                    }
+                  >
+                    {t(`primm.check.${judgment}`)}
+                  </GameButton>
+                ))}
+              </div>
+              {judged ? (
+                <p role="status">
+                  <strong>{t("primm.checkSource")}</strong>
+                  {item.expected} {item.why}
+                </p>
+              ) : null}
+            </section>
+          );
+        })}
       </div>
     );
   }

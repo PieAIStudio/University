@@ -55,9 +55,15 @@ for (const [mode, origin] of [
             expect(title, `${lesson.id}: English content is required`).toBeTruthy();
             await expect(reader).toContainText(title!);
             await expect(
-              reader.locator(".learning-activity, .interaction-path").first(),
+              reader.locator(".learning-activity, .interaction-path, .primm, .primm-steps").first(),
             ).toBeVisible();
-            await expect(reader.locator(".exercise-panel").first()).toBeVisible();
+            // A PRIMM lesson runs its own step reader and has no shared exercise
+            // panel; its flow is primm.spec.ts's job. What this audit owes every
+            // lesson, whichever reader draws it, is that the English a learner
+            // reads is English and that its source and images survive.
+            const classicReader = (await reader.locator(".primm, .primm-steps").count()) === 0;
+            if (classicReader)
+              await expect(reader.locator(".exercise-panel").first()).toBeVisible();
 
             // Open native disclosures to inspect ALL rendered teaching/source
             // copy, not only the translated heading. This is a content audit,
@@ -75,7 +81,11 @@ for (const [mode, origin] of [
               await expect(reader).toContainText(number);
             }
 
-            const sourceLinks = reader.locator(".lesson-sources__list a");
+            // The PRIMM reader credits its source in the round rather than in a
+            // list below the prose. Either shape must still name a real source.
+            const sourceLinks = reader.locator(
+              '.lesson-sources__list a, .primm__credit a[href^="http"]',
+            );
             expect(await sourceLinks.count()).toBeGreaterThan(0);
             for (const link of await sourceLinks.all()) {
               await expect(link).toHaveAttribute("href", /^https:\/\//);
@@ -83,7 +93,14 @@ for (const [mode, origin] of [
             }
 
             const images = reader.locator("figure img");
-            if (lesson.assets.length > 0) expect(await images.count()).toBeGreaterThan(0);
+            // Not every asset is a picture: `sound-words-and-meaning` ships two
+            // audio recordings, and demanding an <img> for those made an audio
+            // lesson look like a missing image. Require a rendered image only
+            // when the lesson actually carries one.
+            const pictures = (
+              lesson.assets as ReadonlyArray<{ metadata?: { mime?: string }; mime?: string }>
+            ).filter((asset) => (asset.metadata?.mime ?? asset.mime ?? "").startsWith("image/"));
+            if (pictures.length > 0) expect(await images.count()).toBeGreaterThan(0);
             for (const image of await images.all()) {
               await image.scrollIntoViewIfNeeded();
               await expect(image).toHaveAttribute("alt", /\S/);

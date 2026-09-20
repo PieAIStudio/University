@@ -608,3 +608,22 @@ body:has(.lesson-reader--interaction) .feedback-note__open--lesson .nav-rail__la
     margin-block: 14px;
   }
 }
+
+/*
+ * The narrowest phone, where English runs about a hundred pixels longer than
+ * Chinese for the same round. At 320px the first choice ended 16px below the
+ * fold in English while Chinese still had 106px to spare, so a learner on a
+ * small phone could not see what they were choosing between without scrolling.
+ * The breadcrumb above cannot give the space back — it is the approved way out
+ * of a lesson since the persistent back button was removed. So the round's own
+ * typography takes one more step down, the way it already does at 540px, and
+ * the material keeps its size: it is the thing being judged.
+ */
+@media (max-width: 360px) {
+  .interaction-path h2 {
+    font-size: 20px;
+  }
+  .interaction-path__image {
+    margin: 10px 0;
+  }
+}

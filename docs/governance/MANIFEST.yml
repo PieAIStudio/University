@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-20T10:13:58.958Z
+generated_at: 2026-09-20T12:27:50.417Z
 generator_version: doc-gov@0.14.0
 docs_count: 149
 docs:
@@ -212,7 +212,7 @@ docs:
     type: plan
     status: active
     canonical: false
-    last_reviewed: 2026-09-18
+    last_reviewed: 2026-09-20
     pinned: false
   - id: PLAN-MAP-LEARNING-NODES
     path: docs/plans/active/map-learning-nodes.md

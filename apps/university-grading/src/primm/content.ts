@@ -4,6 +4,7 @@ import { resolve, relative } from "node:path";
 import { z } from "zod";
 import {
   localizeActivity,
+  primmRunPrompts,
   PERSONAL_STUDY_ID,
   PERSONAL_UNIT_ID,
   PERSONAL_LESSON_ID,
@@ -12,22 +13,25 @@ import {
 import { LessonActivitySchema } from "@pieai/university-core/domain/schemas.js";
 import { PreviewFailure } from "./errors.js";
 
-export const PRIMM_LESSONS = [
-  "ask-about-a-picture",
-  "sound-words-and-meaning",
-  "name-the-result",
-  "edit-one-part",
-  "answer-or-search",
-] as const;
-// Only these two explicitly supported identity families enter this local pilot.
-// The private resolver must additionally authorize ownership and exact revision.
+// Any lesson of this course may be run, but only when its canonical package
+// carries a native PRIMM activity; the resolver below enforces that, so a new
+// generated lesson needs no second allow-list to become playable.
+const LessonId = z
+  .string()
+  .max(100)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+// The course family is open on purpose: any lesson of this course may run once
+// its canonical package carries a native PRIMM activity, which the resolver
+// below enforces, so a newly written lesson needs no second allow-list. The
+// personal family keeps its literal shape because a generated task is addressed
+// by its own study, unit and lesson identity rather than by the course's.
 export const LessonRefSchema = z.union([
   z
     .object({
       studyId: z.literal("ai-literacy"),
       courseId: z.literal("understanding-ai"),
-      unitId: z.literal("first-useful-step"),
-      lessonId: z.enum(PRIMM_LESSONS),
+      unitId: LessonId,
+      lessonId: LessonId,
     })
     .strict(),
   z
@@ -133,15 +137,6 @@ export function createCanonicalPrimmResolver(options: {
 }): ResolvePrimm {
   return async (input) => {
     RunSchema.parse(input);
-    // The transport understands native lesson identities. This particular
-    // resolver still owns exactly the original five approved public lessons.
-    if (
-      input.lessonRef.studyId !== "ai-literacy" ||
-      input.lessonRef.courseId !== "understanding-ai" ||
-      input.lessonRef.unitId !== "first-useful-step" ||
-      !(PRIMM_LESSONS as readonly string[]).includes(input.lessonRef.lessonId)
-    )
-      throw new PreviewFailure("rejected");
     const index = z
       .object({
         courses: z.array(z.object({ courseId: z.string(), file: z.string(), sha256: z.string() })),
@@ -219,7 +214,7 @@ export function createCanonicalPrimmResolver(options: {
       lesson.exercises.find((exercise: any) => exercise?.id === activity.make.exerciseId),
     );
     const spec = input.phase === "make" ? activity.make : activity.starter;
-    if (input.phase === "run" && input.prompt !== activity.starter.prompt)
+    if (input.phase === "run" && !primmRunPrompts(activity).includes(input.prompt))
       throw new PreviewFailure("rejected");
     const assets = spec.assetIds.map((id) => {
       const asset = lesson.assets.find((a) => a.metadata.id === id);
