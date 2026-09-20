@@ -7,6 +7,7 @@ import { openMapQuickActions, runMapCommand } from "./harness/map-actions.js";
 import { watchConsole } from "./harness/console.js";
 import { measureStageGpu } from "./harness/stage-gpu-timing.js";
 
+import { scrollIntoView } from "./harness/click.js";
 const OUTPUT = process.env.R55_EVIDENCE_DIR ?? "SCRATCH/e2e/world-appearance";
 type Style = "classic" | "clay";
 async function settled(page: Page, style: Style) {
@@ -46,7 +47,7 @@ async function choose(page: Page, style: Style) {
   await expect(button).toBeVisible();
   // A short landscape palette scrolls; a learner scrolls to the command before
   // pressing it. Reachability is judged where the press actually lands.
-  await button.scrollIntoViewIfNeeded();
+  await scrollIntoView(button);
   const hit = await button.evaluate((element) => {
     const r = element.getBoundingClientRect();
     return element.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2));

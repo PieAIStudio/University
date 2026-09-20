@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
-import { humanClick } from "./harness/click.js";
+import { humanClick, scrollIntoView } from "./harness/click.js";
 import { prototypeClick } from "./harness/prototype-click.js";
 
 const ids = (source: "blocks" | "arcade") =>
@@ -109,7 +109,7 @@ test("catalog prototype clock pauses, inputs stop, resume and exit are real", as
   const before = await frame.locator("body").innerText();
   // Deliberately click the paused playfield with a real pointer. A locator
   // click would wait for the very input blocking that this assertion tests.
-  await unsupported.scrollIntoViewIfNeeded();
+  await scrollIntoView(unsupported);
   const blocked = await unsupported.boundingBox();
   expect(blocked).not.toBeNull();
   await page.mouse.click(blocked!.x + blocked!.width / 2, blocked!.y + blocked!.height / 2);

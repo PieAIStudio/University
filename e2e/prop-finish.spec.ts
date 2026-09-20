@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 import { writeFile } from "node:fs/promises";
+import { scrollIntoView } from "./harness/click.js";
 const ids = [
   "rock-large",
   "rock-small",
@@ -105,7 +106,7 @@ test("prop finish: ten real objects, four treatments, same source identity and l
     await page.getByTestId(`finish-object-${id}`).click();
     for (const method of methods) {
       await page.getByTestId(`finish-${method}`).click();
-      await board.scrollIntoViewIfNeeded();
+      await scrollIntoView(board);
       await expect.poll(async () => (await inspect(page)).finish).toBe(method);
       await board.screenshot({ path: info.outputPath(`${id}-${method}.png`) });
     }
@@ -145,7 +146,7 @@ test("prop finish: actual synchronized drag, keyboard, reset, toggles and stable
   await page.setViewportSize({ width: 1440, height: 1000 });
   await open(page);
   const board = page.getByTestId("finish-viewport");
-  await board.scrollIntoViewIfNeeded();
+  await scrollIntoView(board);
   const before = await inspect(page),
     box = (await board.boundingBox())!;
   await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.55);
@@ -166,14 +167,14 @@ test("prop finish: actual synchronized drag, keyboard, reset, toggles and stable
   expect(switched.tilt).toBe(moved.tilt);
   for (const method of methods) {
     await page.getByTestId(`finish-${method}`).click();
-    await board.scrollIntoViewIfNeeded();
+    await scrollIntoView(board);
     await page.waitForTimeout(100);
   }
   const warmed = await inspect(page);
   for (let n = 0; n < 8; n++)
     for (const method of methods) {
       await page.getByTestId(`finish-${method}`).click();
-      await board.scrollIntoViewIfNeeded();
+      await scrollIntoView(board);
     }
   const repeated = await inspect(page);
   expect(repeated.memory).toEqual(warmed.memory);

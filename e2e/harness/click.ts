@@ -7,6 +7,38 @@ export interface HumanClickOptions {
 }
 
 /**
+ * Scroll a target into view without Playwright's stability precondition.
+ *
+ * `locator.scrollIntoViewIfNeeded()` waits for two consecutive animation
+ * frames whose bounding boxes are bit-identical. Two kinds of element in this
+ * product never supply that: a control bound to a map object reprojects every
+ * frame and keeps a sub-pixel jitter after it has arrived, and a lesson reader
+ * is replaced wholesale when progress is adopted into its account scope. The
+ * wait then ends in `Element is not attached to the DOM` — twice now, each
+ * time as a single red in a 40-minute push run that passed when re-run alone
+ * (`humanClick`, 2026-09-20; the English image audit, 2026-09-21).
+ *
+ * This keeps everything that call was there for — it waits for the target to
+ * be visible, and `block: "nearest"` keeps the original "only if needed"
+ * scrolling — and drops only the bit-equality demand, retrying across a
+ * remount instead of failing on it.
+ */
+export async function scrollIntoView(target: Locator): Promise<void> {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    await target.waitFor({ state: "visible" });
+    try {
+      await target.evaluate((element) =>
+        element.scrollIntoView({ block: "nearest", inline: "nearest" }),
+      );
+      return;
+    } catch (error) {
+      if (!(error instanceof Error) || !/not attached to the DOM/i.test(error.message)) throw error;
+    }
+  }
+  throw new Error("滚动目标反复在对齐时被重新挂载，界面没有停下来");
+}
+
+/**
  * A real pointer, not `element.click()`.
  *
  * This repo has shipped twice with a control that `element.click()` could
@@ -28,26 +60,10 @@ export async function humanClick(
     // A settled screen may replace a control while progress is adopted into
     // its new account scope. The locator owns the current control, not the
     // retired node or its old scroll position. Nothing has been pressed yet.
-    //
-    // Scroll without Playwright's stability precondition. `scrollIntoViewIfNeeded`
-    // waits for two consecutive frames whose boxes are bit-identical, which a
-    // control bound to a map object never supplies: it reprojects every frame and
-    // keeps a sub-pixel jitter after it has arrived. Both of this project's own
-    // settle checks are deliberately tolerant of exactly that — 0.1px over five
-    // frames in `enterSelectedMapObject`, 1.5px in `waitForStableBox` below — so
-    // demanding bit-equality here left the click waiting for a coincidence. On
-    // 2026-09-20 the coincidence failed once in six viewports and cost a
-    // 34-minute push run; the same spec passed alone minutes later.
-    // `block: "nearest"` keeps the original "only if needed" scrolling.
-    try {
-      await target.evaluate((element) =>
-        element.scrollIntoView({ block: "nearest", inline: "nearest" }),
-      );
-    } catch (error) {
-      if (!(error instanceof Error) || !/not attached to the DOM/i.test(error.message)) throw error;
-      await target.waitFor({ state: "visible" });
-      continue;
-    }
+    // This project's own settle checks are deliberately tolerant of sub-pixel
+    // drift — 0.1px over five frames in `enterSelectedMapObject`, 1.5px in
+    // `waitForStableBox` below — so the alignment above must be too.
+    await scrollIntoView(target);
     await waitForStableBox(target);
     const box = await target.boundingBox();
     if (!box || box.width < 2 || box.height < 2) {

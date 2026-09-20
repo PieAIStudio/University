@@ -3,7 +3,7 @@ import { expect, type Page } from "@playwright/test";
 import { ONLINE_ORIGIN } from "../ports.js";
 import { assertImagesStayInViewport, assertPanelIsPainted, assertVisibleText } from "./assert.js";
 import { CATALOGUE_ROLES, coursePathOf, lessonPathOf } from "./catalogue.js";
-import { humanClick } from "./click.js";
+import { humanClick, scrollIntoView } from "./click.js";
 import { namedStep } from "./step.js";
 import { enterSelectedMapObject } from "./map-actions.js";
 import { PRIMARY_DOMAIN_ID } from "./domain-catalogue.js";
@@ -116,7 +116,7 @@ export async function readAndAnswerFirstLesson(page: Page): Promise<void> {
   await namedStep(page, "滚到课文末尾的题", async () => {
     const quiz = page.locator(".exercise-panel").first();
     await expect(quiz).toBeVisible();
-    await quiz.scrollIntoViewIfNeeded();
+    await scrollIntoView(quiz);
     await expect(quiz.locator("textarea, [data-exercise-option]").first()).toBeVisible();
     await expect(page.getByRole("button", { name: /提交/ })).toBeVisible();
   });
@@ -140,7 +140,7 @@ export async function readAndAnswerFirstLesson(page: Page): Promise<void> {
   await namedStep(page, "确认读完了这一版", async () => {
     const confirm = page.getByRole("button", { name: /^(我读完了|我学过这一版了)$/ });
     await expect(confirm).toBeVisible({ timeout: 20_000 });
-    await confirm.scrollIntoViewIfNeeded();
+    await scrollIntoView(confirm);
     await humanClick(page, confirm, "明确确认学过当前版本");
   });
 }

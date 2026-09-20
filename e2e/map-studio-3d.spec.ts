@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { LOCAL_ORIGIN } from "./ports.js";
-import { humanClick } from "./harness/click.js";
+import { humanClick, scrollIntoView } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { installMapStudioFixture, MAP_STUDIO_FIXTURE } from "./harness/catalogue.js";
 
@@ -158,7 +158,7 @@ test.describe("L actual 3D asset inspector", () => {
       return bag.three?.scene.getObjectByName("island-dressing-course")?.uuid;
     });
     expect(before, "statistics updates must not remount the actual scene").toBe(after);
-    await footing.scrollIntoViewIfNeeded();
+    await scrollIntoView(footing);
     await page.screenshot({
       path: join(OUTPUT, "island-footing-inspector.png"),
     });

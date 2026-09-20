@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { humanClick } from "./harness/click.js";
+import { humanClick, scrollIntoView } from "./harness/click.js";
 import {
   assertVisibleAndHittableAtFivePoints,
   EXPERIENCE_ROUTES,
@@ -137,7 +137,7 @@ test.describe("O 导航 · 提示槽位与课程位置", () => {
         courseLink = breadcrumb.locator("details a").nth(1);
       }
       await page.screenshot({ path: `${SHOTS}/nav-${viewport.id}-breadcrumb.png`, fullPage: true });
-      await courseLink.scrollIntoViewIfNeeded();
+      await scrollIntoView(courseLink);
       await assertVisibleAndHittableAtFivePoints(page, courseLink, `${viewport.id} / 回到课程地图`);
       await humanClick(page, courseLink, `${viewport.id} / 课程面包屑`);
       await expect(page).toHaveURL(`${ONLINE_ORIGIN}${fixture.coursePath}`);

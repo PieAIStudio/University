@@ -3,7 +3,7 @@ import { join, resolve } from "node:path";
 import { expect, test } from "@playwright/test";
 
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
-import { humanClick } from "./harness/click.js";
+import { humanClick, scrollIntoView } from "./harness/click.js";
 import { SHIPPED_COURSES } from "./harness/catalogue.js";
 import type { ConnectActivity } from "@pieai/university-core";
 
@@ -337,7 +337,7 @@ test("长标签接线课在两种语言和两种模式下都能亲手完成", as
         page.locator('.learning-activity__result[data-result="completed"]'),
       ).toBeVisible();
       await expect(page.locator('.learning-activity__feedback[data-passed="true"]')).toBeVisible();
-      await page.locator(".learning-activity__feedback").scrollIntoViewIfNeeded();
+      await scrollIntoView(page.locator(".learning-activity__feedback"));
       await page.screenshot({
         path: test
           .info()

@@ -3,6 +3,7 @@ import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 import { CLAIMS, wordIndex, FLIGHT_CARDS } from "../packages/world/src/toy-play/arcade-content.js";
 import type { ArcadeState } from "../packages/world/src/toy-play/arcade-engine.js";
 
+import { scrollIntoView } from "./harness/click.js";
 test("delivery arcade3d: three simultaneous targets keep readable separated labels on a phone", async ({
   browser,
 }, info) => {
@@ -379,7 +380,7 @@ for (const width of [320, 390])
           await page.getByRole("button", { name: "向左飞" }).tap();
           await expect.poll(async () => (await state(page)).shipX).toBeLessThan(-1);
         }
-        await page.getByTestId("arcade-board").scrollIntoViewIfNeeded();
+        await scrollIntoView(page.getByTestId("arcade-board"));
         await page.screenshot({ path: info.outputPath(`${mode}-${width}.png`) });
       } finally {
         await context.close();
@@ -447,7 +448,7 @@ test("delivery arcade3d: English word rows and all six tiles remain readable on 
     );
     for (let i = 1; i < boxes.length; i++)
       expect(boxes[i]!.top).toBeGreaterThan(boxes[i - 1]!.bottom);
-    await page.getByTestId("arcade-board").scrollIntoViewIfNeeded();
+    await scrollIntoView(page.getByTestId("arcade-board"));
     await page.screenshot({ path: info.outputPath("words-phone-en.png") });
   } finally {
     await context.close();

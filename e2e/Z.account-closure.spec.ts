@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { ONLINE_ORIGIN } from "./ports.js";
 
+import { scrollIntoView } from "./harness/click.js";
 const origin = process.env.ACCOUNT_FLOW_ORIGIN ?? ONLINE_ORIGIN;
 for (const locale of ["en", "zh-CN"] as const) {
   test(`Z account deletion request ${locale}: reauthenticate, confirm, submit once, preserve account`, async ({
@@ -26,7 +27,7 @@ for (const locale of ["en", "zh-CN"] as const) {
     await expect(submit).toBeDisabled();
     await confirm.fill("REQUEST ACCOUNT DELETION");
     await expect(submit).toBeEnabled();
-    await submit.scrollIntoViewIfNeeded();
+    await scrollIntoView(submit);
     const box = await submit.boundingBox();
     expect(box).not.toBeNull();
     await page.mouse.click(box!.x + box!.width - 15, box!.y + box!.height / 2);

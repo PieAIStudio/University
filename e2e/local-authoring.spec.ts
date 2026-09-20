@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { LOCAL_ORIGIN } from "./ports.js";
 import { assertImagesStayInViewport, assertVisibleText } from "./harness/assert.js";
-import { humanClick } from "./harness/click.js";
+import { humanClick, scrollIntoView } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { namedStep } from "./harness/step.js";
 import { FIRST_COURSE_ID, FIRST_LESSON_ID, selectGameRoute } from "./harness/online-learner.js";
@@ -50,10 +50,10 @@ test.describe("D 本地端", () => {
       const confirm = page.getByRole("button", {
         name: /我读完了|我学过这一版了|完成本次更新|再次确认本次更新/,
       });
-      await confirm.scrollIntoViewIfNeeded();
+      await scrollIntoView(confirm);
       await expect(confirm).toBeVisible({ timeout: 20_000 });
       const exercise = page.locator("section.lesson-completion, .exercise-panel, .choice-block");
-      await exercise.first().scrollIntoViewIfNeeded();
+      await scrollIntoView(exercise.first());
       await expect(exercise.first()).toBeVisible();
       await assertVisibleText(page, /我读完了|我学过这一版了|完成本次更新|再次确认本次更新/);
     });

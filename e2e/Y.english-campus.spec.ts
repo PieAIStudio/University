@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
-import { humanClick } from "./harness/click.js";
+import { humanClick, scrollIntoView } from "./harness/click.js";
 import { enterSelectedMapObject, mapEntryButton } from "./harness/map-actions.js";
 
 const { course } = JSON.parse(
@@ -153,7 +153,7 @@ for (const [mode, origin] of [
           await page.setViewportSize({ width, height: width === 1440 ? 900 : 844 });
           await page.evaluate(() => document.fonts.ready);
           await page.evaluate(() => window.scrollTo(0, 0));
-          await tools.scrollIntoViewIfNeeded();
+          await scrollIntoView(tools);
           await expectToolbarTargets(page);
           const detail = tools.locator(".game-ui-segmented-option").last();
           await humanClick(page, detail, "change reading detail without a clipped target");

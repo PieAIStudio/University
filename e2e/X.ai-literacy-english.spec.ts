@@ -2,6 +2,7 @@ import { expect, test, type Locator } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 
+import { scrollIntoView } from "./harness/click.js";
 interface Lesson {
   id: string;
   contentRevision: number;
@@ -102,7 +103,7 @@ for (const [mode, origin] of [
             ).filter((asset) => (asset.metadata?.mime ?? asset.mime ?? "").startsWith("image/"));
             if (pictures.length > 0) expect(await images.count()).toBeGreaterThan(0);
             for (const image of await images.all()) {
-              await image.scrollIntoViewIfNeeded();
+              await scrollIntoView(image);
               await expect(image).toHaveAttribute("alt", /\S/);
               expect(await image.getAttribute("alt")).not.toMatch(/[\u4e00-\u9fff]/u);
               await expect

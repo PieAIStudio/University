@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { ONLINE_ORIGIN } from "./ports.js";
 import { FIRST_LESSON_ROUTE } from "./harness/online-learner.js";
 
+import { scrollIntoView } from "./harness/click.js";
 for (const hasTouch of [false, true]) {
   test.describe(hasTouch ? "touch emulation" : "mouse at phone width", () => {
     test.use({ viewport: { width: 390, height: 844 }, hasTouch });
@@ -13,7 +14,7 @@ for (const hasTouch of [false, true]) {
         .locator('.lesson-next[data-state="unfinished"]')
         .getByRole("button", { name: "先去下一节", exact: true });
       await expect(next).toBeVisible();
-      await next.scrollIntoViewIfNeeded();
+      await scrollIntoView(next);
       expect(
         await next.evaluate((button) => button.getBoundingClientRect().height),
         "unfinished footer touch target must be at least 44px",

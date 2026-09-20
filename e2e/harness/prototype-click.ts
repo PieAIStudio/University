@@ -1,10 +1,10 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { waitForStableBox } from "./click.js";
+import { scrollIntoView, waitForStableBox } from "./click.js";
 
 /** The same real-pointer protocol as humanClick, across an opaque iframe. */
 export async function prototypeClick(page: Page, target: Locator): Promise<void> {
   await target.waitFor({ state: "visible" });
-  await target.scrollIntoViewIfNeeded();
+  await scrollIntoView(target);
   await waitForStableBox(target);
   const box = await target.boundingBox();
   expect(box).not.toBeNull();

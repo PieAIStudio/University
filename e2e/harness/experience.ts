@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { ONLINE_ORIGIN } from "../ports.js";
-import { humanClick } from "./click.js";
+import { humanClick, scrollIntoView } from "./click.js";
 import { selectCompleteLessonEntry, type ShelfForSelection } from "./catalogue.js";
 import { TODAY_CTA, waitForMapReady } from "./online-learner.js";
 import { navigateMapBreadcrumb, openMapQuickActions } from "./map-actions.js";
@@ -578,7 +578,7 @@ export async function openAccountDialog(
   const route = EXPERIENCE_ROUTES.find((candidate) => candidate.id === "me")!;
   await openExperienceRoute(page, route, viewport);
   const trigger = PROFILE_PRIMARY.locate(page);
-  await trigger.scrollIntoViewIfNeeded();
+  await scrollIntoView(trigger);
   await humanClick(page, trigger, "账号说明");
   const dialog = page.locator(VISIBLE_DIALOGS).last();
   await expect(dialog).toBeVisible({ timeout: 15_000 });
@@ -589,7 +589,7 @@ export async function openPlansDialog(page: Page, viewport: ExperienceViewport):
   const route = EXPERIENCE_ROUTES.find((candidate) => candidate.id === "plans")!;
   await openExperienceRoute(page, route, viewport);
   const trigger = PLANS_PRIMARY.locate(page);
-  await trigger.scrollIntoViewIfNeeded();
+  await scrollIntoView(trigger);
   await humanClick(page, trigger, "会员购买");
   const dialog = page.locator(VISIBLE_DIALOGS).last();
   await expect(dialog).toBeVisible({ timeout: 15_000 });
@@ -739,7 +739,7 @@ export async function prepareCoverageTarget(
   if (target.scrollToLessonBottom) await scrollLessonToBottom(page);
   const locator = target.locate(page);
   await expect(locator, `${target.label} 不在 DOM 中`).toHaveCount(1);
-  await locator.scrollIntoViewIfNeeded();
+  await scrollIntoView(locator);
   return locator;
 }
 
@@ -953,7 +953,7 @@ export async function clickAndMeasureResponse(
   if (target.prepare) await target.prepare(page);
   const locator = target.locate(page);
   await expect(locator, `${target.label} 不在 DOM 中`).toHaveCount(1);
-  await locator.scrollIntoViewIfNeeded();
+  await scrollIntoView(locator);
   await assertVisibleAndHittableAtFivePoints(page, locator, target.label);
   const beforeUrl = page.url();
   let navigationAt: number | null = null;

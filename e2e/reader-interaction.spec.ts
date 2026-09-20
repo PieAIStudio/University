@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 
-import { humanClick } from "./harness/click.js";
+import { humanClick, scrollIntoView } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import {
   EXPERIENCE_ROUTES,
@@ -36,7 +36,7 @@ async function assertBottomExerciseIsReachable(page: Page, label: string): Promi
   // Every learner-facing target gets a safe landing zone, not just the lesson
   // completion button. These are real pointer clicks, so a toolbar overlay
   // still fails the test even if an element is present in the DOM.
-  await answer.scrollIntoViewIfNeeded();
+  await scrollIntoView(answer);
   await expect(answer).toBeVisible();
   await humanClick(page, answer, `${label}输入框`);
   await page.keyboard.type("verify");

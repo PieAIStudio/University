@@ -10,6 +10,7 @@ import { humanClick } from "./harness/click";
 import { enterSelectedMapObject } from "./harness/map-actions.js";
 import { enterExerciseAnswer, expectExerciseAnswer } from "./harness/exercise-input.js";
 
+import { scrollIntoView } from "./harness/click.js";
 interface Exercise {
   id: string;
   kind?: string;
@@ -180,7 +181,7 @@ for (const locale of ["en", "zh-CN"] as const) {
         const images = reader.locator(".lesson-media--figure img, .interaction-path__image img");
         if (lesson.assets.length > 0) expect(await images.count()).toBeGreaterThan(0);
         for (const image of await images.all()) {
-          await image.scrollIntoViewIfNeeded();
+          await scrollIntoView(image);
           await expect(image).toHaveAttribute("alt", /\S/);
           await expect
             .poll(() =>
@@ -221,7 +222,7 @@ for (const locale of ["en", "zh-CN"] as const) {
         await expect(panel).toContainText(locale === "en" ? "Passed" : "通过");
         await page.reload();
         await expectExerciseAnswer(page.locator(".exercise-panel").first(), answer);
-        await page.locator(".exercise-panel").first().scrollIntoViewIfNeeded();
+        await scrollIntoView(page.locator(".exercise-panel").first());
         expect(errors).toEqual([]);
         await page.screenshot({ path: info.outputPath("answer-restored.png"), fullPage: true });
       });
@@ -260,7 +261,7 @@ test("W3 real source media stays readable in night mode and the contrast guard r
   // V2 puts the original photo and its credit in the task, not in hidden prose.
   const media = page.locator(".interaction-path__image:has(figcaption), .lesson-media").first();
   await expect(media).toBeVisible();
-  await media.scrollIntoViewIfNeeded();
+  await scrollIntoView(media);
   await expect
     .poll(() =>
       media
@@ -272,7 +273,7 @@ test("W3 real source media stays readable in night mode and the contrast guard r
     )
     .toBe(true);
   const caption = media.locator("figcaption");
-  await caption.scrollIntoViewIfNeeded();
+  await scrollIntoView(caption);
   const originalColors = await media.evaluate((element) => ({
     background: getComputedStyle(element.querySelector("figcaption")!).backgroundColor,
     color: getComputedStyle(element.querySelector("figcaption")!).color,
@@ -290,7 +291,7 @@ test("W3 real source media stays readable in night mode and the contrast guard r
     content:
       ".lesson-media, .lesson-media figcaption, .interaction-path__image figcaption { background: #746d64 !important; } .lesson-media figcaption, .lesson-media__caption, .interaction-path__image figcaption { color: #786250 !important; }",
   });
-  await caption.scrollIntoViewIfNeeded();
+  await scrollIntoView(caption);
   await expect(caption).toHaveCSS("color", "rgb(120, 98, 80)");
   await expect(caption).toHaveCSS("background-color", "rgb(116, 109, 100)");
   const attacked = await scan();

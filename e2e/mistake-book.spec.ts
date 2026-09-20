@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { humanClick } from "./harness/click.js";
+import { humanClick, scrollIntoView } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import {
   openOnline,
@@ -29,7 +29,7 @@ test.describe("H 错题本 · 在线端", () => {
 
     const quiz = page.locator(".exercise-panel").first();
     await expect(quiz).toBeVisible({ timeout: 30_000 });
-    await quiz.scrollIntoViewIfNeeded();
+    await scrollIntoView(quiz);
     const options = quiz.locator("[data-exercise-option]");
     let wrong = "香蕉船和月球轨道";
     if (await options.count()) {

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { ONLINE_ORIGIN } from "./ports.js";
-import { humanClick } from "./harness/click.js";
+import { humanClick, scrollIntoView } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { makeDroppedCardsDue, walkFirstOnlineLesson } from "./harness/online-learner.js";
 import { namedStep } from "./harness/step.js";
@@ -42,13 +42,13 @@ test.describe("B 同一个人回来复习", () => {
       await page.getByPlaceholder(/先写下自己的答案/).fill("先自己回忆一遍");
       // 375×812: the card is taller than the viewport, so the button a learner
       // would scroll to is a button the pointer cannot reach where it stands.
-      await reveal.scrollIntoViewIfNeeded();
+      await scrollIntoView(reveal);
       await humanClick(page, reveal, "揭示答案");
       for (const grade of GRADES) {
         await expect(page.getByRole("button", { name: grade })).toBeVisible({ timeout: 20_000 });
       }
       const good = page.getByRole("button", { name: "良好" });
-      await good.scrollIntoViewIfNeeded();
+      await scrollIntoView(good);
       await humanClick(page, good, "良好");
     });
 
@@ -71,10 +71,10 @@ test.describe("B 同一个人回来复习", () => {
         }
         await box.fill("先自己回忆一遍");
         const next = page.getByRole("button", { name: /揭示答案/ });
-        await next.scrollIntoViewIfNeeded();
+        await scrollIntoView(next);
         await humanClick(page, next, "揭示答案");
         const easy = page.getByRole("button", { name: "简单" });
-        await easy.scrollIntoViewIfNeeded();
+        await scrollIntoView(easy);
         await humanClick(page, easy, "简单");
         await page.waitForTimeout(400);
       }

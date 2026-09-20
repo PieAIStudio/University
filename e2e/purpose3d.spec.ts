@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 import { CLAIMS } from "../packages/world/src/toy-play/arcade-content.js";
 import { WIRING_ROUNDS } from "../packages/world/src/toy-play/workshop-engine.js";
+import { scrollIntoView } from "./harness/click.js";
 const modes = ["sky-invaders", "factory-stack", "press-words", "slice", "wire", "rank"] as const;
 const objects = [
   "scene-cloud-flight",
@@ -185,7 +186,7 @@ for (const width of [1440, 390])
           ),
         ).toBe(false);
         await expect(board.locator("canvas")).toBeVisible();
-        await board.scrollIntoViewIfNeeded();
+        await scrollIntoView(board);
         if (mode === "sky-invaders")
           await expect
             .poll(() => page.evaluate(() => Reflect.get(window, "__arcade3d")().shots.length))

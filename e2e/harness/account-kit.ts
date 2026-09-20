@@ -1,6 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import { ONLINE_ORIGIN } from "../ports.js";
 
+import { scrollIntoView } from "./click.js";
 export const ACCOUNT_ORIGIN = process.env.ACCOUNT_FLOW_ORIGIN ?? ONLINE_ORIGIN;
 
 export type AccountProof = {
@@ -60,7 +61,7 @@ export async function clickAccountSubmitSurface(page: Page) {
     .last();
   const native = surface.locator('button[type="submit"]');
   await expect(native).toBeEnabled();
-  await surface.scrollIntoViewIfNeeded();
+  await scrollIntoView(surface);
   const geometry = await surface.evaluate((element) => {
     const button = element.querySelector('button[type="submit"]')!;
     const outer = element.getBoundingClientRect();

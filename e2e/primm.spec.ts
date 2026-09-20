@@ -11,7 +11,7 @@ import { messages as zh } from "../packages/ui/src/i18n/catalogs/primm.zh-CN.js"
 import { messages as en } from "../packages/ui/src/i18n/catalogs/primm.en.js";
 import { SHIPPED_COURSES, lessonPathOf } from "./harness/catalogue.js";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
-import { humanClick } from "./harness/click.js";
+import { humanClick, scrollIntoView } from "./harness/click.js";
 import { enterSelectedMapObject } from "./harness/map-actions.js";
 
 const samples = SHIPPED_COURSES.flatMap((course) =>
@@ -119,7 +119,7 @@ test("a late photo never pushes a beginner's prediction away from the pointer", 
     const target = page.locator(".primm-steps__option").last();
     await expect(target).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
-    await target.scrollIntoViewIfNeeded();
+    await scrollIntoView(target);
     const before = (await target.boundingBox())!;
     release();
     await expect
