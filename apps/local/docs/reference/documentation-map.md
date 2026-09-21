@@ -1,12 +1,12 @@
 ---
-id: REF-DOCUMENTATION-MAP
+id: REF-UNIVERSITY-LOCAL-DOCUMENTATION-MAP
 title: Documentation Map
 type: reference
 status: active
 canonical: true
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-08-08
+last_reviewed: 2026-09-21
 domain: meta
 tags:
   - navigation
@@ -28,7 +28,7 @@ Use `AGENTS.md` for startup reading. It should point agents to:
 - `docs/governance/doc-agent-rules.md`
 - `docs/governance/doc-types.md`
 - `docs/governance/agents-routing/<selected-profile>-v1.1.md`
-- `docs/reference/execution/current-work.md`
+- repository-root `docs/reference/execution/current-work.md` (this module's copy is a pointer)
 
 ## Areas
 
@@ -50,7 +50,7 @@ Use `AGENTS.md` for startup reading. It should point agents to:
 
 | Doc | When |
 | --- | --- |
-| `docs/reference/execution/current-work.md` | What is in flight / already shipped |
+| repository-root `docs/reference/execution/current-work.md` | What is in flight / already shipped; this module's `docs/reference/execution/current-work.md` is a pointer to that root file |
 | `docs/reference/using-university-local-with-grok.md` | Daily host + campus use (外语模式, links, CLI) |
 | `docs/reference/lesson-pedagogy.md` | Why lessons look like they do (skill is SSOT for shape) |
 | `docs/reference/what-lives-where.md` | Airlock vs `studies/` vs live product |
@@ -58,7 +58,7 @@ Use `AGENTS.md` for startup reading. It should point agents to:
 
 Lesson **authoring** contract is the skill `.agents/skills/write-lesson/`, not a
 second copy under `docs/**`. Research notes under `docs/reference/下一阶段/` are
-historical strategy; check `current-work.md` before treating them as backlog.
+historical strategy; check repository-root `docs/reference/execution/current-work.md` before treating them as backlog.
 
 UniversityLocal learning content and generated study artifacts under `studies/`
 are product data, not governed project documents merely because some are

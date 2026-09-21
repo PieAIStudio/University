@@ -1,45 +1,25 @@
 ---
-id: POLICY-DOC-TYPES
+id: POLICY-UNIVERSITY-LOCAL-DOC-TYPES
 title: Document Types
 type: policy
 status: stable
-canonical: true
+canonical: false
 owner: project
 created: 2026-05-08
-last_reviewed: 2026-05-08
+last_reviewed: 2026-09-21
 domain: doc-governance
 tags:
   - doc-gov
   - document-types
-pinned: true
+pinned: false
 related:
-  - POLICY-DOC-AGENT-RULES
+  - POLICY-UNIVERSITY-LOCAL-DOC-AGENT-RULES
 supersedes: []
 superseded_by: null
 ---
 
 # Document Types
 
-This file belongs in `docs/governance/` because it defines the document system's
-own cabinets and lifecycle.
-
-Allowed types:
-
-| Type | Default path |
-| --- | --- |
-| `policy` | `docs/policy/` for project policy; `docs/governance/` for doc-system policy |
-| `decision` | `docs/adr/` |
-| `spec` | `docs/specs/active/` or `docs/specs/completed/` |
-| `plan` | `docs/plans/active/` or `docs/plans/completed/` |
-| `canon` | `docs/canon/` |
-| `reference` | `docs/reference/` |
-| `archive` | `docs/archive/` |
-
-Markdown outside `docs/**` is not a governed doc by default.
-
-Normal documents use `draft`, `active`, `completed`, `stable`,
-`superseded`, or `archived`. Choose the truthful state; this list does not
-require every document to pass through every state.
-
-Durable decisions use the governed `docs/adr/**` surface and the decision
-lifecycle. Do not duplicate them in another decision folder.
+This module file is a pointer. The authoritative document is repository-root
+[docs/governance/doc-types.md](../../../../docs/governance/doc-types.md)
+(`id: POLICY-DOC-TYPES`). This module has no additional document-type rules.

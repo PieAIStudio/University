@@ -1,20 +1,20 @@
 ---
-id: POLICY-PROJECT-BEST-PRACTICE
+id: POLICY-UNIVERSITY-LOCAL-BEST-PRACTICE
 title: Best Practice for This Project
 type: policy
 status: stable
 canonical: true
 owner: project
 created: 2026-07-20
-last_reviewed: 2026-09-12
+last_reviewed: 2026-09-21
 domain: project-policy
 tags:
   - project-policy
   - ai-development
 pinned: true
 related:
-  - POLICY-DOC-AGENT-RULES
-  - POLICY-DOC-TYPES
+  - POLICY-UNIVERSITY-LOCAL-DOC-AGENT-RULES
+  - POLICY-UNIVERSITY-LOCAL-DOC-TYPES
 supersedes: []
 superseded_by: null
 ---

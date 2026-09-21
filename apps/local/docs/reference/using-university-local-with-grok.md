@@ -15,7 +15,7 @@ tags:
   - beginner-guide
 pinned: true
 related:
-  - SPEC-0002
+  - SPEC-UNIVERSITY-LOCAL-0002
   - PLAN-0002
 ---
 

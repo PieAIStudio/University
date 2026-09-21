@@ -1,12 +1,12 @@
 ---
-id: ADR-0001
+id: ADR-UNIVERSITY-LOCAL-0001
 title: Separate UniversityLocal Study Containers From The Future University Product
 type: decision
 status: accepted
 canonical: true
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-07-20
+last_reviewed: 2026-09-21
 domain: architecture
 tags:
   - storage
@@ -16,13 +16,15 @@ tags:
 pinned: true
 related:
   - CANON-UNIVERSITY-LOCAL-MISSION
-  - SPEC-0001
+  - SPEC-UNIVERSITY-LOCAL-0001
   - PLAN-0001
 supersedes: []
 superseded_by: null
 ---
 
-# ADR-0001: Separate UniversityLocal Study Containers From The Future University Product
+# ADR-UNIVERSITY-LOCAL-0001: Separate UniversityLocal Study Containers From The Future University Product
+
+This completed UniversityLocal decision is `ADR-UNIVERSITY-LOCAL-0001`. Repository-root [`ADR-0001`](../../../../docs/adr/ADR-0001-both-shells-hold-an-account.md) is a different decision: both shells hold an account.
 
 ## Context
 

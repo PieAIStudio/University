@@ -1,12 +1,12 @@
 ---
-id: ADR-0002
+id: ADR-UNIVERSITY-LOCAL-0002
 title: Keep Durable Study Data Small And Collocate Each Course
 type: decision
 status: accepted
 canonical: true
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-07-20
+last_reviewed: 2026-09-21
 domain: architecture
 tags:
   - storage
@@ -16,15 +16,17 @@ tags:
 pinned: true
 related:
   - CANON-UNIVERSITY-LOCAL-MISSION
-  - ADR-0001
+  - ADR-UNIVERSITY-LOCAL-0001
   - REF-UNIVERSITY-LOCAL-ARCHITECTURE-REFLECTION-2026-07-20
-  - SPEC-0001
+  - SPEC-UNIVERSITY-LOCAL-0001
   - PLAN-0001
 supersedes: []
 superseded_by: null
 ---
 
-# ADR-0002: Keep Durable Study Data Small And Collocate Each Course
+# ADR-UNIVERSITY-LOCAL-0002: Keep Durable Study Data Small And Collocate Each Course
+
+This completed UniversityLocal decision is `ADR-UNIVERSITY-LOCAL-0002`. Repository-root [`ADR-0002`](../../../../docs/adr/ADR-0002-courses-publish-to-the-backend.md) is a different decision: courses publish to the backend.
 
 ## Context
 

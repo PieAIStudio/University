@@ -16,8 +16,8 @@ tags:
 pinned: true
 related:
   - CANON-UNIVERSITY-LOCAL-MISSION
-  - ADR-0001
-  - SPEC-0001
+  - ADR-UNIVERSITY-LOCAL-0001
+  - SPEC-UNIVERSITY-LOCAL-0001
 ---
 
 # PLAN-0001: UniversityLocal Foundation And SupaLuv Vertical Slice

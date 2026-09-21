@@ -15,6 +15,15 @@ if (!Number.isSafeInteger(startupTimeout) || startupTimeout < 180_000 || startup
 /**
  * How many browsers run at once, and what that costs a waiting assertion.
  *
+ * Price of one full run, 2026-09-21: **432 tests, ~16-18 minutes, no failures**
+ * — and that price holds only while this suite is the heaviest thing on the
+ * machine. Four runs said so: 15.3min and 16.2min and 17.9min all green, while
+ * a run started alongside a second full suite measured 27.9min and five reds,
+ * all in the authoring specs. That is not a different result, it is a
+ * different condition. What makes this record stale: another full suite (or
+ * another agent's) running beside it, a materially larger suite, or a
+ * different machine.
+ *
  * The suite ran on one worker from the day it was created, when it was small.
  * Measured 2026-09-21 on this 10-core machine, 432 tests: one worker 42.3min,
  * three 17.0, four 15.2, six 15.0. Four is where the wall time flattens —

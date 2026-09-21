@@ -14,8 +14,8 @@ tags:
   - learning
 pinned: true
 related:
-  - ADR-0001
-  - SPEC-0001
+  - ADR-UNIVERSITY-LOCAL-0001
+  - SPEC-UNIVERSITY-LOCAL-0001
   - PLAN-0001
 ---
 

@@ -16,7 +16,7 @@ tags:
 pinned: false
 related:
   - REF-NEXT-GROK-EVOLUTION-INDEX-2026-08-06
-  - ADR-0001
+  - ADR-UNIVERSITY-LOCAL-0001
 ---
 
 # 子系统三：元学习——把大学本身当作学习对象

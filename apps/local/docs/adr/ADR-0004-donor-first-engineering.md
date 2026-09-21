@@ -1,12 +1,12 @@
 ---
-id: ADR-0004
+id: ADR-UNIVERSITY-LOCAL-0004
 title: Require Donor-First Engineering
 type: decision
 status: accepted
 canonical: true
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-07-20
+last_reviewed: 2026-09-21
 domain: architecture
 tags:
   - donor-first
@@ -15,13 +15,15 @@ tags:
 pinned: true
 related:
   - CANON-UNIVERSITY-LOCAL-MISSION
-  - SPEC-0002
+  - SPEC-UNIVERSITY-LOCAL-0002
   - REF-UNIVERSITY-LOCAL-LEARNING-DONOR-MAP-2026-07-20
 supersedes: []
 superseded_by: null
 ---
 
-# ADR-0004: Require Donor-First Engineering
+# ADR-UNIVERSITY-LOCAL-0004: Require Donor-First Engineering
+
+This completed UniversityLocal decision is `ADR-UNIVERSITY-LOCAL-0004`. Repository-root [`ADR-0004`](../../../../docs/adr/ADR-0004-the-renderer-lives-in-packages-world.md) is a different decision: the renderer lives in `packages/world`.
 
 ## Context
 

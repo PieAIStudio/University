@@ -1,12 +1,12 @@
 ---
-id: SPEC-0002
+id: SPEC-UNIVERSITY-LOCAL-0002
 title: Grok Daily Learning And Knowledge Bridge
 type: spec
 status: completed
 canonical: true
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-07-21
+last_reviewed: 2026-09-21
 domain: product
 tags:
   - grok
@@ -16,14 +16,16 @@ tags:
 pinned: true
 related:
   - CANON-UNIVERSITY-LOCAL-MISSION
-  - ADR-0003
-  - ADR-0004
-  - SPEC-0001
+  - ADR-UNIVERSITY-LOCAL-0003
+  - ADR-UNIVERSITY-LOCAL-0004
+  - SPEC-UNIVERSITY-LOCAL-0001
   - PLAN-0002
   - REF-UNIVERSITY-LOCAL-LEARNING-DONOR-MAP-2026-07-20
 ---
 
-# SPEC-0002: Grok Daily Learning And Knowledge Bridge
+# SPEC-UNIVERSITY-LOCAL-0002: Grok Daily Learning And Knowledge Bridge
+
+This completed UniversityLocal spec is `SPEC-UNIVERSITY-LOCAL-0002`. Repository-root [`SPEC-0002`](../../../../../docs/specs/active/SPEC-0002-vibehub-absorption.md) is a different spec: VibeHub absorption.
 
 ## Problem
 

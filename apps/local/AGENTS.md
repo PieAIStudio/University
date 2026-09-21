@@ -25,8 +25,12 @@ does not override the root's product, shared-code, cloud-data or mode boundaries
 - Product artifacts outside `docs/**` are not governed docs unless this project explicitly opts them in.
 - `README.md` is the human-facing introduction; read it only for positioning,
   public explanation, or README work.
-- `docs/reference/execution/current-work.md` is the active-work index; read it
-  when the task depends on current priorities or in-flight work.
+- The active-work index is the **repository-root** file
+  `docs/reference/execution/current-work.md` (that path is repository-relative,
+  not module-relative — it is the exception to the rule above). Read it when the
+  task depends on current priorities or in-flight work. This module's own
+  `docs/reference/execution/current-work.md` is a pointer to that root file and
+  keeps the historical bounded-focus record; it is not a second live index.
 - This project's adopted profile is `engineering-runtime`.
 - Its selected agents routing file is `docs/governance/agents-routing/engineering-runtime-v1.1.md` under
   `docs/governance/agents-routing/`.
@@ -43,7 +47,7 @@ to read the whole tree.
 
 | Task surface                                            | Read additionally                                                                                                                                                                                     |
 | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Current priorities or in-flight work                    | `docs/reference/execution/current-work.md`                                                                                                                                                            |
+| Current priorities or in-flight work                    | **repository-root** `docs/reference/execution/current-work.md` (`id: REF-CURRENT-WORK`); this module's own copy is a pointer, not a second index                                                        |
 | Documentation, governance, router, or governed Markdown | `docs/governance/boundary.md`, `docs/governance/ssot-v1.1.md`, `docs/governance/doc-agent-rules.md`, `docs/governance/doc-types.md`, and `docs/governance/agents-routing/engineering-runtime-v1.1.md` |
 | UI, shared components, tokens, or brand behavior        | `docs/policy/shared-rules/brand-kit-first.md`                                                                                                                                                         |
 

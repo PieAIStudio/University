@@ -1,12 +1,12 @@
 ---
-id: SPEC-0001
+id: SPEC-UNIVERSITY-LOCAL-0001
 title: UniversityLocal Study System Foundation
 type: spec
 status: completed
 canonical: true
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-07-20
+last_reviewed: 2026-09-21
 domain: product
 tags:
   - study
@@ -17,12 +17,14 @@ tags:
 pinned: true
 related:
   - CANON-UNIVERSITY-LOCAL-MISSION
-  - ADR-0001
+  - ADR-UNIVERSITY-LOCAL-0001
   - PLAN-0001
   - REF-UNIVERSITY-LOCAL-ARCHITECTURE-RESEARCH-2026-07-20
 ---
 
-# SPEC-0001: UniversityLocal Study System Foundation
+# SPEC-UNIVERSITY-LOCAL-0001: UniversityLocal Study System Foundation
+
+This completed UniversityLocal foundation spec is `SPEC-UNIVERSITY-LOCAL-0001`. Repository-root [`SPEC-0001`](../../../../../docs/specs/active/SPEC-0001-universitylocal-parity-contract.md) is the live UniversityLocal parity contract.
 
 ## Problem
 

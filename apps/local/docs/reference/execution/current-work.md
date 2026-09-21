@@ -1,37 +1,47 @@
 ---
-id: REF-CURRENT-WORK
+id: REF-UNIVERSITY-LOCAL-CURRENT-WORK
 title: Current Work
 type: reference
-status: active
-canonical: true
+status: stable
+canonical: false
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-08-17
+last_reviewed: 2026-09-21
 domain: execution
 tags:
   - current-work
   - navigation
-pinned: true
+pinned: false
 related:
   - ARCH-CURRENT-WORK-RECEIPTS-2026-08
 ---
 
 # Current Work
 
-This is the short, current handoff for an AI or human opening the repository.
-It is not a task diary, architecture document, or routing algorithm. Completed
-proof receipts are preserved in
+Live in-flight work is the repository-root document
+[docs/reference/execution/current-work.md](../../../../../docs/reference/execution/current-work.md)
+(`id: REF-CURRENT-WORK`). Read that file for current priorities. This module
+page is a pointer plus the historical bounded-focus record below.
+
+## Bounded focus (historical)
+
+This page was the short, current handoff for an AI or human opening the
+UniversityLocal module. It was not a task diary, architecture document, or
+routing algorithm. Completed proof receipts remain in
 `docs/archive/current-work-receipts-2026-07-20-to-2026-08-08.md`.
 
-## Current Focus
+The bounded-focus rule: if the module focus expanded beyond the items below,
+create a plan rather than growing this page into another diary.
+
+On 2026-08-17 this page recorded that no active plan or spec was registered
+in this module. That dated reading is not the repository's current work.
+
+## Current Focus (as of 2026-08-17)
 
 Operate and observe the hardened local teaching loop. The host can now continue
 the correct lesson without guessing, current course content has a Git-safe
 recovery form, and a moved source checkout can be rebound without losing study
 or learner state.
-
-No active plan or spec is registered. If this focus expands beyond the bounded
-items below, create a plan rather than growing this page into another diary.
 
 ## Completed Hardening (2026-08-17)
 

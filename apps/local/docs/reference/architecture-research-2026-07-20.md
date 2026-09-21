@@ -16,8 +16,8 @@ tags:
   - shared-platforms
 pinned: false
 related:
-  - ADR-0001
-  - SPEC-0001
+  - ADR-UNIVERSITY-LOCAL-0001
+  - SPEC-UNIVERSITY-LOCAL-0001
 ---
 
 # UniversityLocal Architecture Research 2026-07-20

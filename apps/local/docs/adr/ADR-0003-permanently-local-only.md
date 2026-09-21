@@ -1,12 +1,12 @@
 ---
-id: ADR-0003
+id: ADR-UNIVERSITY-LOCAL-0003
 title: "Superseded: Keep UniversityLocal Permanently Local-Only"
 type: decision
 status: superseded
 canonical: false
 owner: human
 created: 2026-07-20
-last_reviewed: 2026-08-24
+last_reviewed: 2026-09-21
 domain: architecture
 tags:
   - local-only
@@ -15,21 +15,23 @@ tags:
 pinned: true
 related:
   - CANON-UNIVERSITY-LOCAL-MISSION
-  - ADR-0001
-  - ADR-0002
-  - SPEC-0002
+  - ADR-UNIVERSITY-LOCAL-0001
+  - ADR-UNIVERSITY-LOCAL-0002
+  - SPEC-UNIVERSITY-LOCAL-0002
 supersedes: []
 superseded_by: CANON-UNIVERSITY-LOCAL-MISSION
 ---
 
-# ADR-0003: Keep UniversityLocal Permanently Local-Only (Superseded)
+# ADR-UNIVERSITY-LOCAL-0003: Keep UniversityLocal Permanently Local-Only (Superseded)
+
+This superseded UniversityLocal decision is `ADR-UNIVERSITY-LOCAL-0003`. Repository-root [`ADR-0003`](../../../../docs/adr/ADR-0003-evidence-code-ships.md) is a different decision: evidence code ships.
 
 > Superseded on 2026-08-24 by the repository-level account decision in
 > [`docs/adr/ADR-0001-both-shells-hold-an-account.md`](../../../../docs/adr/ADR-0001-both-shells-hold-an-account.md). The historical local-only
 > decision is retained for traceability; it is no longer product authority.
 > The current [mission brief](../canon/mission-brief.md#product-role) carries
 > that shared-account contract in this documentation scope and is the local
-> successor recorded above; local ADR-0001 describes the earlier study-container
+> successor recorded above; local `ADR-UNIVERSITY-LOCAL-0001` describes the earlier study-container
 > design, not the repository-level account decision.
 
 ## Context

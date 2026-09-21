@@ -15,8 +15,8 @@ tags:
   - pbmls
 pinned: false
 related:
-  - ADR-0004
-  - SPEC-0002
+  - ADR-UNIVERSITY-LOCAL-0004
+  - SPEC-UNIVERSITY-LOCAL-0002
   - PLAN-0002
 ---
 

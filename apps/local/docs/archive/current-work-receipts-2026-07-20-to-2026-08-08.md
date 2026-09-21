@@ -14,7 +14,7 @@ tags:
   - navigation
 pinned: false
 related:
-  - REF-CURRENT-WORK
+  - REF-UNIVERSITY-LOCAL-CURRENT-WORK
 archive_reason: Detailed implementation receipts were moved out of the active handoff to keep AI startup context small.
 ---
 
