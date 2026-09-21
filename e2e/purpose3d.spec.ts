@@ -3,6 +3,7 @@ import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 import { CLAIMS } from "../packages/world/src/toy-play/arcade-content.js";
 import { WIRING_ROUNDS } from "../packages/world/src/toy-play/workshop-engine.js";
 import { scrollIntoView } from "./harness/click.js";
+import { withProject } from "./harness/project.js";
 const modes = ["sky-invaders", "factory-stack", "press-words", "slice", "wire", "rank"] as const;
 const objects = [
   "scene-cloud-flight",
@@ -296,16 +297,14 @@ test("game-first: slicing actual capsule with pointer and pausing freezes the ph
   await page.goto(`${ONLINE_ORIGIN}/play-lab/toy-3d?game=slice&lang=zh-CN`);
   await page.getByTestId("workshop-start").click();
   await expect.poll(async () => (await data(page)).capsules[0]?.age ?? 0).toBeGreaterThan(1.5);
-  const target = await page.evaluate(() => {
-    const f = Reflect.get(window, "__workshop3d")().capsules[0],
-      stage = Reflect.get(window, "three"),
-      v = stage.scene
-        .getObjectByName(`slice-capsule-${f.id}`)
-        .position.clone()
-        .project(stage.camera),
-      r = stage.gl.domElement.getBoundingClientRect();
-    return { x: r.x + ((v.x + 1) * r.width) / 2, y: r.y + ((1 - v.y) * r.height) / 2 };
-  });
+  const target = await page.evaluate(
+    withProject((project) => {
+      const f = Reflect.get(window, "__workshop3d")().capsules[0],
+        stage = Reflect.get(window, "three"),
+        v = stage.scene.getObjectByName(`slice-capsule-${f.id}`).position.clone();
+      return project.projectWorldToViewport(v, stage.camera, stage.gl.domElement);
+    }),
+  );
   await page.mouse.move(target.x - 28, target.y);
   await page.mouse.down();
   await page.mouse.move(target.x + 28, target.y, { steps: 8 });

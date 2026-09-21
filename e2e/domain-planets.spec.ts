@@ -5,6 +5,7 @@ import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 
 import { ONLINE_ORIGIN as ORIGIN } from "./ports.js";
+import { withProject } from "./harness/project.js";
 const cases = [
   { domains: 1, series: 1, width: 1440, height: 900, empty: false, long: false, reduced: false },
   { domains: 1, series: 1, width: 1440, height: 900, empty: false, long: false, reduced: true },
@@ -212,30 +213,30 @@ test.describe("O 多领域星球 · 合成边界夹具（非课程目录）", ()
         }
 
       if (scenario.domains === 4 && scenario.series === 20 && !scenario.empty) {
-        const target = await page.evaluate(() => {
-          const bag = window as any;
-          const projection = bag.__planetProjection();
-          const domain = projection.domains[0];
-          const hitMesh = bag.three.scene.getObjectByName(`domain-region-targets-${domain.id}`);
-          const camera = bag.three.camera;
-          const cameraPosition = camera.position.clone();
-          camera.getWorldPosition(cameraPosition);
-          hitMesh.updateWorldMatrix(true, false);
-          const rect = bag.three.gl.domElement.getBoundingClientRect();
-          for (const region of domain.regions) {
-            if (region.studyId === projection.selectedId) continue;
-            const local = camera.position.clone().fromArray(region.position);
-            const normal = local.clone().normalize().transformDirection(hitMesh.matrixWorld);
-            const world = local.applyMatrix4(hitMesh.matrixWorld);
-            if (normal.dot(cameraPosition.clone().sub(world).normalize()) < 0.55) continue;
-            const point = world.project(camera);
-            const x = rect.left + (point.x * 0.5 + 0.5) * rect.width;
-            const y = rect.top + (-point.y * 0.5 + 0.5) * rect.height;
-            if (document.elementFromPoint(x, y) !== bag.three.gl.domElement) continue;
-            return { id: region.studyId, x, y };
-          }
-          return null;
-        });
+        const target = await page.evaluate(
+          withProject((project) => {
+            const bag = window as any;
+            const projection = bag.__planetProjection();
+            const domain = projection.domains[0];
+            const hitMesh = bag.three.scene.getObjectByName(`domain-region-targets-${domain.id}`);
+            const camera = bag.three.camera;
+            const cameraPosition = camera.position.clone();
+            camera.getWorldPosition(cameraPosition);
+            hitMesh.updateWorldMatrix(true, false);
+            const canvas = bag.three.gl.domElement;
+            for (const region of domain.regions) {
+              if (region.studyId === projection.selectedId) continue;
+              const local = camera.position.clone().fromArray(region.position);
+              const normal = local.clone().normalize().transformDirection(hitMesh.matrixWorld);
+              const world = local.applyMatrix4(hitMesh.matrixWorld);
+              if (normal.dot(cameraPosition.clone().sub(world).normalize()) < 0.55) continue;
+              const point = project.projectWorldToViewport(world, camera, canvas);
+              if (document.elementFromPoint(point.x, point.y) !== canvas) continue;
+              return { id: region.studyId, x: point.x, y: point.y };
+            }
+            return null;
+          }),
+        );
         expect(target, "a real front-side region must be pickable on a peer globe").not.toBeNull();
         await page.mouse.move(target!.x, target!.y);
         const pressed = await page.evaluate(() => performance.now());

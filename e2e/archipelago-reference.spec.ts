@@ -11,6 +11,7 @@ import {
 import { humanClick } from "./harness/click.js";
 import { watchConsole } from "./harness/console.js";
 import { enterSelectedMapObject, navigateMapBreadcrumb } from "./harness/map-actions.js";
+import { withProject } from "./harness/project.js";
 
 const COURSE = CATALOGUE_ROLES.settlement.course;
 const COURSE_PATH = coursePathOf(COURSE);
@@ -135,132 +136,136 @@ for (const viewport of [
         for (let i = 0; i < 8; i++) await new Promise(requestAnimationFrame);
         return state.camera.position.distanceTo(position) < 0.001;
       });
-      const receipt = await page.evaluate(() => {
-        const bag = window as any,
-          state = bag.three;
-        const props = state.scene.getObjectByName("remote-props");
-        const field = state.scene.getObjectByName("remote-island-field");
-        const meshes: { name: string; triangles: number }[] = [];
-        props.traverse((object: any) => {
-          if (object.isMesh)
-            meshes.push({ name: object.name, triangles: object.geometry.index.count / 3 });
-        });
-        return {
-          observedAt: new Date().toISOString(),
-          url: location.href,
-          viewport: [innerWidth, innerHeight],
-          dpr: devicePixelRatio,
-          debug: location.search,
-          visibility: document.visibilityState,
-          islandIds: field.userData.remoteIslandIds,
-          surfaceAtlas: field.userData.surfaceAtlas ?? null,
-          daylight: (() => {
-            const light = state.scene.getObjectByName("map-key-light");
-            const sky = state.scene.getObjectByName("world-skydome");
-            return {
-              profile: light.userData.sunProfile,
-              intensity: light.intensity,
-              direction: light.position.clone().normalize().toArray(),
-              skyDirection: sky.material.uniforms.uSunDirection.value.toArray(),
-            };
-          })(),
-          surfaceTexture: (() => {
-            const ground = state.scene.getObjectByName("remote-island-terrain");
-            const texture = ground?.material?.map;
-            let min = 255,
-              max = 0;
-            if (texture?.image?.data)
-              for (let i = 0; i < texture.image.data.length; i += 4) {
-                min = Math.min(min, texture.image.data[i]);
-                max = Math.max(max, texture.image.data[i]);
-              }
-            return texture
-              ? {
-                  name: texture.name,
-                  width: texture.image.width,
-                  height: texture.image.height,
-                  uvCount: ground.geometry.getAttribute("uv")?.count,
-                  min,
-                  max,
-                  firstUV: [
-                    ground.geometry.getAttribute("uv").getX(0),
-                    ground.geometry.getAttribute("uv").getY(0),
-                  ],
-                  firstPixel: (() => {
-                    const uv = ground.geometry.getAttribute("uv");
-                    const i =
-                      (Math.floor(uv.getY(0) * texture.image.height) * texture.image.width +
-                        Math.floor(uv.getX(0) * texture.image.width)) *
-                      4;
-                    return Array.from(texture.image.data.slice(i, i + 4));
-                  })(),
-                  colourSpace: texture.colorSpace,
+      const receipt = await page.evaluate(
+        withProject((project) => {
+          const bag = window as any,
+            state = bag.three;
+          const props = state.scene.getObjectByName("remote-props");
+          const field = state.scene.getObjectByName("remote-island-field");
+          const meshes: { name: string; triangles: number }[] = [];
+          props.traverse((object: any) => {
+            if (object.isMesh)
+              meshes.push({ name: object.name, triangles: object.geometry.index.count / 3 });
+          });
+          return {
+            observedAt: new Date().toISOString(),
+            url: location.href,
+            viewport: [innerWidth, innerHeight],
+            dpr: devicePixelRatio,
+            debug: location.search,
+            visibility: document.visibilityState,
+            islandIds: field.userData.remoteIslandIds,
+            surfaceAtlas: field.userData.surfaceAtlas ?? null,
+            daylight: (() => {
+              const light = state.scene.getObjectByName("map-key-light");
+              const sky = state.scene.getObjectByName("world-skydome");
+              return {
+                profile: light.userData.sunProfile,
+                intensity: light.intensity,
+                direction: light.position.clone().normalize().toArray(),
+                skyDirection: sky.material.uniforms.uSunDirection.value.toArray(),
+              };
+            })(),
+            surfaceTexture: (() => {
+              const ground = state.scene.getObjectByName("remote-island-terrain");
+              const texture = ground?.material?.map;
+              let min = 255,
+                max = 0;
+              if (texture?.image?.data)
+                for (let i = 0; i < texture.image.data.length; i += 4) {
+                  min = Math.min(min, texture.image.data[i]);
+                  max = Math.max(max, texture.image.data[i]);
                 }
-              : null;
-          })(),
-          props: props.userData,
-          labels: Array.from(
-            document.querySelectorAll<HTMLElement>(".labels [data-map-marker].is-visible"),
-          ).map((element) => {
-            const r = element.getBoundingClientRect();
-            return {
+              return texture
+                ? {
+                    name: texture.name,
+                    width: texture.image.width,
+                    height: texture.image.height,
+                    uvCount: ground.geometry.getAttribute("uv")?.count,
+                    min,
+                    max,
+                    firstUV: [
+                      ground.geometry.getAttribute("uv").getX(0),
+                      ground.geometry.getAttribute("uv").getY(0),
+                    ],
+                    firstPixel: (() => {
+                      const uv = ground.geometry.getAttribute("uv");
+                      const i =
+                        (Math.floor(uv.getY(0) * texture.image.height) * texture.image.width +
+                          Math.floor(uv.getX(0) * texture.image.width)) *
+                        4;
+                      return Array.from(texture.image.data.slice(i, i + 4));
+                    })(),
+                    colourSpace: texture.colorSpace,
+                  }
+                : null;
+            })(),
+            props: props.userData,
+            labels: Array.from(
+              document.querySelectorAll<HTMLElement>(".labels [data-map-marker].is-visible"),
+            ).map((element) => {
+              const r = element.getBoundingClientRect();
+              return {
+                id: element.dataset.mapMarker,
+                state: element.dataset.courseState,
+                left: r.left,
+                top: r.top,
+                right: r.right,
+                bottom: r.bottom,
+              };
+            }),
+            allLabels: Array.from(
+              document.querySelectorAll<HTMLElement>(".labels [data-map-marker]"),
+            ).map((element) => ({
               id: element.dataset.mapMarker,
               state: element.dataset.courseState,
-              left: r.left,
-              top: r.top,
-              right: r.right,
-              bottom: r.bottom,
-            };
-          }),
-          allLabels: Array.from(
-            document.querySelectorAll<HTMLElement>(".labels [data-map-marker]"),
-          ).map((element) => ({
-            id: element.dataset.mapMarker,
-            state: element.dataset.courseState,
-            className: element.className,
-            bounds: element.getBoundingClientRect().toJSON(),
-          })),
-          sceneryBoxes: ["remote-props-trees", "remote-props-landmarks"].flatMap((name) => {
-            const mesh = state.scene.getObjectByName(name),
-              rect = state.gl.domElement.getBoundingClientRect();
-            return (mesh.geometry.userData.miniatureSceneryBounds ?? []).flatMap((box: any) => {
-              const p = state.camera.position.clone();
-              let left = Infinity,
-                top = Infinity,
-                right = -Infinity,
-                bottom = -Infinity,
-                inDepth = false;
-              for (let corner = 0; corner < 8; corner++) {
-                p.set(
-                  corner & 1 ? box.max[0] : box.min[0],
-                  corner & 2 ? box.max[1] : box.min[1],
-                  corner & 4 ? box.max[2] : box.min[2],
-                );
-                p.applyMatrix4(mesh.matrixWorld).project(state.camera);
-                inDepth ||= p.z >= -1 && p.z <= 1;
-                const x = rect.left + ((p.x + 1) * rect.width) / 2,
-                  y = rect.top + ((1 - p.y) * rect.height) / 2;
-                left = Math.min(left, x);
-                right = Math.max(right, x);
-                top = Math.min(top, y);
-                bottom = Math.max(bottom, y);
-              }
-              return inDepth &&
-                right > rect.left &&
-                left < rect.right &&
-                bottom > rect.top &&
-                top < rect.bottom
-                ? [{ islandId: box.islandId, left, right, top, bottom }]
-                : [];
-            });
-          }),
-          meshes,
-          frame: bag.__stageFrameMetrics,
-          camera: state.camera.position.toArray(),
-          bodyWidth: document.documentElement.scrollWidth,
-          theme: document.documentElement.getAttribute("data-game-theme"),
-        };
-      });
+              className: element.className,
+              bounds: element.getBoundingClientRect().toJSON(),
+            })),
+            sceneryBoxes: ["remote-props-trees", "remote-props-landmarks"].flatMap((name) => {
+              const mesh = state.scene.getObjectByName(name),
+                rect = state.gl.domElement.getBoundingClientRect();
+              return (mesh.geometry.userData.miniatureSceneryBounds ?? []).flatMap((box: any) => {
+                const p = state.camera.position.clone();
+                let left = Infinity,
+                  top = Infinity,
+                  right = -Infinity,
+                  bottom = -Infinity,
+                  inDepth = false;
+                for (let corner = 0; corner < 8; corner++) {
+                  p.set(
+                    corner & 1 ? box.max[0] : box.min[0],
+                    corner & 2 ? box.max[1] : box.min[1],
+                    corner & 4 ? box.max[2] : box.min[2],
+                  );
+                  const pixel = project.projectWorldToViewport(
+                    p.applyMatrix4(mesh.matrixWorld),
+                    state.camera,
+                    rect,
+                  );
+                  inDepth ||= pixel.z >= -1 && pixel.z <= 1;
+                  left = Math.min(left, pixel.x);
+                  right = Math.max(right, pixel.x);
+                  top = Math.min(top, pixel.y);
+                  bottom = Math.max(bottom, pixel.y);
+                }
+                return inDepth &&
+                  right > rect.left &&
+                  left < rect.right &&
+                  bottom > rect.top &&
+                  top < rect.bottom
+                  ? [{ islandId: box.islandId, left, right, top, bottom }]
+                  : [];
+              });
+            }),
+            meshes,
+            frame: bag.__stageFrameMetrics,
+            camera: state.camera.position.toArray(),
+            bodyWidth: document.documentElement.scrollWidth,
+            theme: document.documentElement.getAttribute("data-game-theme"),
+          };
+        }),
+      );
       // A failed assertion used to leave only the previous successful run's
       // world.png/receipt.json. Preserve this sample before judging it.
       writeFileSync(
@@ -364,28 +369,27 @@ for (const viewport of [
         await expect(planetLink).toBeVisible();
       }
       // Click real canvas scenery, not the DOM label or a programmatic .click().
-      const target = await page.evaluate((courseKey) => {
-        const state = (window as any).three;
-        const mesh = state.scene.getObjectByName("remote-props-trees");
-        const range = mesh.geometry.userData.miniatureRanges.find(
-          (r: any) => r.islandId === courseKey,
-        );
-        const p = state.camera.position.clone().set(0, 0, 0);
-        const position = mesh.geometry.getAttribute("position"),
-          index = mesh.geometry.index;
-        for (let i = range.start * 3; i < range.start * 3 + 3; i++) {
-          const vertex = state.camera.position.clone().fromBufferAttribute(position, index.getX(i));
-          p.add(vertex);
-        }
-        p.multiplyScalar(1 / 3)
-          .applyMatrix4(mesh.matrixWorld)
-          .project(state.camera);
-        const rect = state.gl.domElement.getBoundingClientRect();
-        return {
-          x: rect.left + ((p.x + 1) * rect.width) / 2,
-          y: rect.top + ((1 - p.y) * rect.height) / 2,
-        };
-      }, `${COURSE.studyId}/${COURSE.id}`);
+      const target = await page.evaluate(
+        withProject((project, courseKey) => {
+          const state = (window as any).three;
+          const mesh = state.scene.getObjectByName("remote-props-trees");
+          const range = mesh.geometry.userData.miniatureRanges.find(
+            (r: any) => r.islandId === courseKey,
+          );
+          const p = state.camera.position.clone().set(0, 0, 0);
+          const position = mesh.geometry.getAttribute("position"),
+            index = mesh.geometry.index;
+          for (let i = range.start * 3; i < range.start * 3 + 3; i++) {
+            const vertex = state.camera.position
+              .clone()
+              .fromBufferAttribute(position, index.getX(i));
+            p.add(vertex);
+          }
+          p.multiplyScalar(1 / 3).applyMatrix4(mesh.matrixWorld);
+          return project.projectWorldToViewport(p, state.camera, state.gl.domElement);
+        }),
+        `${COURSE.studyId}/${COURSE.id}`,
+      );
       await page.mouse.click(target.x, target.y);
       await enterSelectedMapObject(page, "enter selected miniature course");
       await expect(page).toHaveURL(new RegExp(`${COURSE_PATH.replaceAll("/", "\\/")}$`));

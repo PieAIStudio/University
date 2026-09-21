@@ -4,6 +4,7 @@ import { CLAIMS, wordIndex, FLIGHT_CARDS } from "../packages/world/src/toy-play/
 import type { ArcadeState } from "../packages/world/src/toy-play/arcade-engine.js";
 
 import { scrollIntoView } from "./harness/click.js";
+import { withProject } from "./harness/project.js";
 test("delivery arcade3d: three simultaneous targets keep readable separated labels on a phone", async ({
   browser,
 }, info) => {
@@ -116,21 +117,30 @@ for (const theme of ["light", "dark"] as const)
       // not sample the previous frame's scenery under a newly mounted word.
       await expect
         .poll(() =>
-          page.evaluate(() => {
-            const stage = Reflect.get(window, "three");
-            const bounds = stage.gl.domElement.getBoundingClientRect();
-            return Array.from(
-              document.querySelectorAll<HTMLElement>(".arcade3d__word-tray button"),
-            ).every((element) => {
-              const node = stage.scene.getObjectByName(element.dataset.testid);
-              if (!node) return false;
-              const point = node.getWorldPosition(node.position.clone()).project(stage.camera);
-              const rect = element.getBoundingClientRect();
-              const x = bounds.left + ((point.x + 1) * bounds.width) / 2;
-              const y = bounds.top + ((1 - point.y) * bounds.height) / 2;
-              return Math.hypot(x - rect.left - rect.width / 2, y - rect.top - rect.height / 2) < 2;
-            });
-          }),
+          page.evaluate(
+            withProject((project) => {
+              const stage = Reflect.get(window, "three");
+              const canvas = stage.gl.domElement;
+              return Array.from(
+                document.querySelectorAll<HTMLElement>(".arcade3d__word-tray button"),
+              ).every((element) => {
+                const node = stage.scene.getObjectByName(element.dataset.testid);
+                if (!node) return false;
+                const point = project.projectWorldToViewport(
+                  node.getWorldPosition(node.position.clone()),
+                  stage.camera,
+                  canvas,
+                );
+                const rect = element.getBoundingClientRect();
+                return (
+                  Math.hypot(
+                    point.x - rect.left - rect.width / 2,
+                    point.y - rect.top - rect.height / 2,
+                  ) < 2
+                );
+              });
+            }),
+          ),
         )
         .toBe(true);
       const placedFrame = await page.evaluate(
@@ -294,16 +304,14 @@ test("delivery arcade3d: real steering, projectile collision, wave upgrade and p
       })
       .filter(({ f, x }) => (x < 0 ? 0 : 1) === FLIGHT_CARDS[f.card]![2]);
     const aim = candidates.sort((a, b) => b.f.z - a.f.z)[0]?.x ?? -3.5;
-    const point = await page.evaluate((x) => {
-      const s = Reflect.get(window, "three");
-      const v = s.scene
-        .getObjectByName("arcade-player")
-        .position.clone()
-        .set(x, 0.8, 3.2)
-        .project(s.camera);
-      const r = s.gl.domElement.getBoundingClientRect();
-      return { x: r.left + ((v.x + 1) * r.width) / 2, y: r.top + ((1 - v.y) * r.height) / 2 };
-    }, aim);
+    const point = await page.evaluate(
+      withProject((project, x) => {
+        const s = Reflect.get(window, "three");
+        const v = s.scene.getObjectByName("arcade-player").position.clone().set(x, 0.8, 3.2);
+        return project.projectWorldToViewport(v, s.camera, s.gl.domElement);
+      }),
+      aim,
+    );
     await page.mouse.move(point.x, point.y);
     await page.waitForTimeout(90);
   }

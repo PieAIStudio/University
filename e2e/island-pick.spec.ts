@@ -9,6 +9,7 @@ import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { openOnline, selectGameRoute, waitForMapReady } from "./harness/online-learner.js";
 import { namedStep } from "./harness/step.js";
 import { assertWorldCarrierAboveGround } from "./harness/world-carrier.js";
+import { withProject } from "./harness/project.js";
 
 /**
  * The object-side entry action must follow the island, not pin to a screen corner.
@@ -226,67 +227,66 @@ async function pickRightEdgeIsland(page: Page): Promise<Box> {
  * waiting: several of these are legitimately absent at points in this walk,
  * and a locator that waits would spend twenty seconds proving the obvious. */
 async function mapObstacles(page: Page): Promise<readonly Record<string, number | string>[]> {
-  return page.evaluate(() => {
-    const round = (value: number) => Math.round(value);
-    const chrome = [
-      ...document.querySelectorAll<HTMLElement>(
-        ".nav-rail, .counter-row, .app-shell__aside, [data-map-shell] .app-shell__east-stack, .nextup, .tab-bar, .map-breadcrumbs",
-      ),
-    ]
-      .map((element) => {
-        const rect = element.getBoundingClientRect();
-        return {
-          what: element.className.toString().split(" ")[0] ?? "?",
-          x: round(rect.x),
-          y: round(rect.y),
-          w: round(rect.width),
-          h: round(rect.height),
-        };
-      })
-      .filter((entry) => entry.w > 0 && entry.h > 0);
-    const state = (window as unknown as { three?: any }).three;
-    const marker =
-      state?.scene.getObjectByName("learner-marker-world") ??
-      state?.scene.getObjectByName("learner-marker-course");
-    const avatar = marker?.getObjectByName("university-avatar-occlusion-target");
-    if (!state || !avatar) return chrome;
-    state.scene.updateMatrixWorld(true);
-    const points: { x: number; y: number }[] = [];
-    const canvas = state.gl.domElement.getBoundingClientRect();
-    avatar.traverse((child: any) => {
-      const geometry = child.geometry;
-      if (!geometry) return;
-      geometry.computeBoundingBox?.();
-      const bb = geometry.boundingBox;
-      if (!bb) return;
-      for (const x of [bb.min.x, bb.max.x])
-        for (const y of [bb.min.y, bb.max.y])
-          for (const z of [bb.min.z, bb.max.z]) {
-            const point = state.camera.position.clone().set(x, y, z);
-            child.localToWorld(point);
-            point.project(state.camera);
-            points.push({
-              x: canvas.left + ((point.x + 1) * canvas.width) / 2,
-              y: canvas.top + ((1 - point.y) * canvas.height) / 2,
-            });
-          }
-    });
-    if (points.length === 0) return chrome;
-    const left = Math.min(...points.map((point) => point.x));
-    const right = Math.max(...points.map((point) => point.x));
-    const top = Math.min(...points.map((point) => point.y));
-    const bottom = Math.max(...points.map((point) => point.y));
-    return [
-      ...chrome,
-      {
-        what: "avatar",
-        x: round(left) - 10,
-        y: round(top) - 10,
-        w: round(right - left) + 20,
-        h: round(bottom - top) + 20,
-      },
-    ];
-  });
+  return page.evaluate(
+    withProject((project) => {
+      const round = (value: number) => Math.round(value);
+      const chrome = [
+        ...document.querySelectorAll<HTMLElement>(
+          ".nav-rail, .counter-row, .app-shell__aside, [data-map-shell] .app-shell__east-stack, .nextup, .tab-bar, .map-breadcrumbs",
+        ),
+      ]
+        .map((element) => {
+          const rect = element.getBoundingClientRect();
+          return {
+            what: element.className.toString().split(" ")[0] ?? "?",
+            x: round(rect.x),
+            y: round(rect.y),
+            w: round(rect.width),
+            h: round(rect.height),
+          };
+        })
+        .filter((entry) => entry.w > 0 && entry.h > 0);
+      const state = (window as unknown as { three?: any }).three;
+      const marker =
+        state?.scene.getObjectByName("learner-marker-world") ??
+        state?.scene.getObjectByName("learner-marker-course");
+      const avatar = marker?.getObjectByName("university-avatar-occlusion-target");
+      if (!state || !avatar) return chrome;
+      state.scene.updateMatrixWorld(true);
+      const points: { x: number; y: number }[] = [];
+      const canvas = state.gl.domElement.getBoundingClientRect();
+      avatar.traverse((child: any) => {
+        const geometry = child.geometry;
+        if (!geometry) return;
+        geometry.computeBoundingBox?.();
+        const bb = geometry.boundingBox;
+        if (!bb) return;
+        for (const x of [bb.min.x, bb.max.x])
+          for (const y of [bb.min.y, bb.max.y])
+            for (const z of [bb.min.z, bb.max.z]) {
+              const point = state.camera.position.clone().set(x, y, z);
+              child.localToWorld(point);
+              const pixel = project.projectWorldToViewport(point, state.camera, canvas);
+              points.push({ x: pixel.x, y: pixel.y });
+            }
+      });
+      if (points.length === 0) return chrome;
+      const left = Math.min(...points.map((point) => point.x));
+      const right = Math.max(...points.map((point) => point.x));
+      const top = Math.min(...points.map((point) => point.y));
+      const bottom = Math.max(...points.map((point) => point.y));
+      return [
+        ...chrome,
+        {
+          what: "avatar",
+          x: round(left) - 10,
+          y: round(top) - 10,
+          w: round(right - left) + 20,
+          h: round(bottom - top) + 20,
+        },
+      ];
+    }),
+  );
 }
 
 async function assertCardFollowsIsland(page: Page, island: Box): Promise<Box> {

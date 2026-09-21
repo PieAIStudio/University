@@ -19,6 +19,7 @@ import { ONLINE_ORIGIN } from "./ports.js";
 import { namedStep } from "./harness/step.js";
 import { planetFocusSample } from "./harness/planet-focus.js";
 import { enterSelectedMapObject, mapEntryButton } from "./harness/map-actions.js";
+import { withProject } from "./harness/project.js";
 
 const EVIDENCE = ".scratch/evidence-avatar";
 const PRIMARY_STUDY = CATALOGUE_ROLES.settlement.study;
@@ -161,25 +162,25 @@ async function measuredScene(page: Page): Promise<{
 
 /** Select the actual atmospheric region, not the retired permanent study list. */
 async function clickStudyRegion(page: Page, studyId: string, beforePress?: () => Promise<void>) {
-  const point = await page.evaluate((id) => {
-    const bag = window as any;
-    const projection = bag.__planetProjection();
-    const domain = projection.domains.find((entry: any) => entry.studyIds.includes(id));
-    const region = domain?.regions.find((entry: any) => entry.studyId === id);
-    const scene = bag.three;
-    const hits = domain && scene?.scene.getObjectByName(`domain-region-targets-${domain.id}`);
-    if (!region || !hits) return null;
-    hits.updateWorldMatrix(true, false);
-    const position = scene.camera.position
-      .clone()
-      .fromArray(region.position)
-      .applyMatrix4(hits.matrixWorld)
-      .project(scene.camera);
-    const rect = scene.gl.domElement.getBoundingClientRect();
-    const x = rect.left + (position.x * 0.5 + 0.5) * rect.width;
-    const y = rect.top + (-position.y * 0.5 + 0.5) * rect.height;
-    return document.elementFromPoint(x, y) === scene.gl.domElement ? { x, y } : null;
-  }, studyId);
+  const point = await page.evaluate(
+    withProject((project, id) => {
+      const bag = window as any;
+      const projection = bag.__planetProjection();
+      const domain = projection.domains.find((entry: any) => entry.studyIds.includes(id));
+      const region = domain?.regions.find((entry: any) => entry.studyId === id);
+      const scene = bag.three;
+      const hits = domain && scene?.scene.getObjectByName(`domain-region-targets-${domain.id}`);
+      if (!region || !hits) return null;
+      hits.updateWorldMatrix(true, false);
+      const position = scene.camera.position
+        .clone()
+        .fromArray(region.position)
+        .applyMatrix4(hits.matrixWorld);
+      const pixel = project.projectWorldToViewport(position, scene.camera, scene.gl.domElement);
+      return document.elementFromPoint(pixel.x, pixel.y) === scene.gl.domElement ? pixel : null;
+    }),
+    studyId,
+  );
   expect(point, "the real study region must have an unobstructed canvas hit").not.toBeNull();
   await page.mouse.move(point!.x, point!.y);
   await beforePress?.();

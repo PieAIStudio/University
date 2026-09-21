@@ -14,6 +14,7 @@ import { navigateMapBreadcrumb, runMapCommand } from "./harness/map-actions.js";
 import { captureSurfaceMaterialStudy } from "./harness/surface-material-study.js";
 import { captureCourseShadowStudy } from "./harness/course-shadow-study.js";
 import { captureSourceSwatchStudy } from "./harness/source-swatch-study.js";
+import { withProject } from "./harness/project.js";
 
 const COURSE = coursePathOf(COURSE_SCENE_FIXTURE.course);
 const OUTPUT = process.env.R46_EVIDENCE_DIR ?? "SCRATCH/e2e/course-landscape";
@@ -138,22 +139,31 @@ for (const viewport of [
         }
         await page.waitForTimeout(600);
         const surfaceCentre = () =>
-          page.evaluate(() => {
-            const s = (window as any).three,
-              mesh = s.scene.getObjectByName("island-terrain");
-            const positions = mesh.geometry.getAttribute("position"),
-              p = s.camera.position.clone();
-            let top = Infinity,
-              bottom = -Infinity;
-            for (let i = 0; i < positions.count; i += 3) {
-              if (positions.getY(i) < 0) continue;
-              p.fromBufferAttribute(positions, i).applyMatrix4(mesh.matrixWorld).project(s.camera);
-              const y = ((1 - p.y) * innerHeight) / 2;
-              top = Math.min(top, y);
-              bottom = Math.max(bottom, y);
-            }
-            return (top + bottom) / 2;
-          });
+          page.evaluate(
+            withProject((project) => {
+              const s = (window as any).three,
+                mesh = s.scene.getObjectByName("island-terrain");
+              const positions = mesh.geometry.getAttribute("position"),
+                p = s.camera.position.clone();
+              let top = Infinity,
+                bottom = -Infinity;
+              // Same formula as before: canvas-local Y using innerHeight, no
+              // canvas offset. The pan calibration compares this centre with
+              // viewport.height, so the coordinate system must stay local.
+              const localCanvas = { left: 0, top: 0, width: innerWidth, height: innerHeight };
+              for (let i = 0; i < positions.count; i += 3) {
+                if (positions.getY(i) < 0) continue;
+                const y = project.projectWorldToViewport(
+                  p.fromBufferAttribute(positions, i).applyMatrix4(mesh.matrixWorld),
+                  s.camera,
+                  localCanvas,
+                ).y;
+                top = Math.min(top, y);
+                bottom = Math.max(bottom, y);
+              }
+              return (top + bottom) / 2;
+            }),
+          );
         const drag = async (dy: number) => {
           await page.mouse.move(point!.x, point!.y);
           await page.mouse.down();

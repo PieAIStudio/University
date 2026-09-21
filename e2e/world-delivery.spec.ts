@@ -18,6 +18,7 @@ import {
   courseOverviewEvidence,
   waitForCourseFraming,
 } from "./harness/course-overview.js";
+import { withProject } from "./harness/project.js";
 
 const COURSE_ROLE = CATALOGUE_ROLES.settlement.course;
 const COURSE = coursePathOf(COURSE_ROLE);
@@ -117,16 +118,15 @@ for (const [mode, origin] of [
         await expect(page.locator('[data-map-entry="true"]')).toHaveCount(0);
 
         // Hit the actual unselected globe rather than a proxy DOM button.
-        const point = await page.evaluate((domainId) => {
-          const state = (window as any).three;
-          const root = state.scene.getObjectByName(`domain-planet-${domainId}`);
-          const p = root.getWorldPosition(state.camera.position.clone()).project(state.camera);
-          const rect = state.gl.domElement.getBoundingClientRect();
-          return {
-            x: rect.left + ((p.x + 1) * rect.width) / 2,
-            y: rect.top + ((1 - p.y) * rect.height) / 2,
-          };
-        }, EMPTY_DOMAIN_ID);
+        const point = await page.evaluate(
+          withProject((project, domainId) => {
+            const state = (window as any).three;
+            const root = state.scene.getObjectByName(`domain-planet-${domainId}`);
+            const p = root.getWorldPosition(state.camera.position.clone());
+            return project.projectWorldToViewport(p, state.camera, state.gl.domElement);
+          }),
+          EMPTY_DOMAIN_ID,
+        );
         await page.mouse.click(point.x, point.y);
         await expect(page.locator(`button[data-domain-id="${EMPTY_DOMAIN_ID}"]`)).toHaveAttribute(
           "aria-pressed",

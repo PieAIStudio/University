@@ -23,6 +23,7 @@ import {
   navigateMapBreadcrumb,
   openMapDirectory,
 } from "./harness/map-actions.js";
+import { withProject } from "./harness/project.js";
 
 const RUN = new Date().toISOString().replaceAll(":", "-");
 const PRIMARY_STUDY = CATALOGUE_ROLES.settlement.study;
@@ -181,19 +182,19 @@ test.describe("P 正式领域目录与未发布星球", () => {
         }
         // Actual sphere picking restores the original game's route after
         // visits to populated and empty domains, without cloning its courses.
-        const target = await page.evaluate((domainId) => {
-          const state = (window as any).three;
-          const globe = state.scene.getObjectByName(`domain-globe-${domainId}`);
-          const point = state.camera.position.clone();
-          globe.getWorldPosition(point);
-          point.project(state.camera);
-          const r = state.gl.domElement.getBoundingClientRect();
-          const x = r.left + ((point.x + 1) * r.width) / 2,
-            y = r.top + ((1 - point.y) * r.height) / 2;
-          if (document.elementFromPoint(x, y) !== state.gl.domElement)
-            throw new Error("Game globe is occluded");
-          return { x, y };
-        }, PRIMARY_DOMAIN_ID);
+        const target = await page.evaluate(
+          withProject((project, domainId) => {
+            const state = (window as any).three;
+            const globe = state.scene.getObjectByName(`domain-globe-${domainId}`);
+            const point = state.camera.position.clone();
+            globe.getWorldPosition(point);
+            const pixel = project.projectWorldToViewport(point, state.camera, state.gl.domElement);
+            if (document.elementFromPoint(pixel.x, pixel.y) !== state.gl.domElement)
+              throw new Error("Game globe is occluded");
+            return pixel;
+          }),
+          PRIMARY_DOMAIN_ID,
+        );
         await page.mouse.move(target.x, target.y);
         await page.mouse.down();
         await page.waitForTimeout(40);
