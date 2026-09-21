@@ -171,26 +171,11 @@ Owner 已认可“一屏一句话、一个动作”的步骤版（样板见 jour
 - `more`（可选）：初学者此刻真会追问的一两个问题。
 - 不假装展示 AI 的“内部想法”。
 
-按学习者要弄懂的事选玩法。写 PRIMM 课选的是**内层**这 13 种，不是外层课文活动
-`LessonActivityKindSchema` 那 15 种；两套互不相干。当前产线用内层（第 2 版写
-`investigate.game.kind` 的 6 种；第 3 版由人写 `steps[].kind`）。`sort` 在两套里
-同名不同物：外层是独立归类引擎，这里是 PRIMM 里把卡放进桶。
-
-| 学习者要弄懂的事 | 玩法 | 这节课必须真有 |
-| --- | --- | --- |
-| 刚才的结果有没有保住材料里要紧的东西（漏了、改了、多了） | `check-result` | 第 2 版 `investigate.game`。`items` 2–8 项；每项有 `label`、`expected`（材料里的说法）、`why`。通关：每一项判成 `kept` / `changed` / `missing` 之一即可，没有标准答案、不打对错分；判完才显示 `expected`。只在学习者手里有看得懂的原材料时用（听不懂的外语录音不行：他没有尺子，只能瞎猜） |
-| 一张图里有哪些地方值得追问 | `inspect-image` | 第 2 版 `investigate.game`。`assetId`、`instruction`、`regions` 1–20；每块有 `label`、`note`，坐标归一化在图内（x/y≥0，宽高>0，右下角≤1），id 不重复。通关：点中**任意**一块并写下观察——不是点对唯一正确答案（要点对用第 3 版 `point`） |
-| 几样看起来像、其实不同的东西，各属于哪一类 | `sort` | 第 2 版 `investigate.game`：`buckets` 2–8、`cards` 2–30。第 3 版 `steps[]`：`buckets` 2–4、`cards` 3–10，phase 仅 predict / investigate / modify，必有 `after`。两边都要：桶 id 不重复、卡数 ≥ 桶数、每个桶至少一张卡、每张卡有 `bucketId` 和 `why`。第 2 版通关：每张卡都放到正确的桶。第 3 版通关：每张卡都放入某个桶即过关（放错也继续） |
-| 同样的内容，怎么排才好用 | `layout` | 第 2 版 `investigate.game`。`items` 2–20（每条有 `label` 和 `text`）、`formats` 2–8、`instruction`；id 不重复。通关：动过顺序或选过一种排法即可——没有标准答案顺序 |
-| 只改一处，别处不动 | `edit` | 第 2 版 `investigate.game`。`sentences` 2–20、`targetId` 必须是其中一句、`instruction`、`replacementHint`。通关：选中 `targetId` 那一句，写出与原文不同的非空替换；点错句不能改 |
-| 一堆资料里，哪些和这次问题有关 | `collect` | 第 2 版 `investigate.game`。`cards` 2–30；至少一张 `relevant: true`、一张 `relevant: false`；每张卡有 `label`、`text`、`why`，`sourceId` 必须是 `sources` 里的 id（练习材料在 `materials` 里，不能当来源，那种题用 `sort`）。通关：每张卡的去留必须等于它的 `relevant` |
-| 该怎么用（哪句问法、给哪份材料、要不要写清用途）——不是猜 AI 会怎么说 | `choose` | 第 3 版 `steps[]`，任意 phase。`options` 2–4，id 不重复，每项有 `label`；若写 `requestId` 必须是 `starter` 或 `requests` 里的 id；若写 `answerId` 必须是某个 option。通关：选出任意一项即过关（有 `answerId` 时对错会提示，选错也能继续）。若 Run 的 `send.request` 是 `"chosen"`，Predict 里这个 choose 的每个 option 都必须带 `requestId` |
-| 同一份材料、同一句请求，发出去之后实际得到什么 | `send` | 第 3 版 `steps[]`，phase 仅 run 或 modify。`request` 是已知请求 id，或 `"chosen"`（仅 run，且前面 Predict 的 choose 每个 option 都有 `requestId`），或 `"built"`（同阶段前面有 `build`）；必有 `attachmentLabel`。整课 run 恰好一次 send、modify 恰好一次 send。通关：真的跑出一次非空结果（有 starter 图时要先按 `attachmentLabel` 放进对话） |
-| 刚才这次回答里有没有提到要找的东西，在哪一句 | `find` | 第 3 版 `steps[]`，phase 仅 run / investigate / modify。`terms` 1–6；两种结果都要写：`found` 和 `absent`。前面必须已有一次 send。通关：点中一句包含任一 term 的句子；若这次结果里没有任何一句包含这些词，点「没提到」也过关——课不能假定这次一定写了 |
-| 换一句请求，结果会不会跟着变；几份回答各是哪句请求跑出来的 | `match` | 第 3 版 `steps[]`，phase 仅 investigate。`requestIds` 2–4，不重复，每个都是已知请求；必有 `after`。必须出现在第一次 send 之后。通关：先把这些请求都跑一遍，再把每份回答对到它自己的请求上，全部配对正确才过关 |
-| 图上哪一块能把这个问题定下来 | `point` | 第 3 版 `steps[]`，任意 phase。`assetId` 必须是 `starter.assetIds` 或 `make.assetIds` 里的图；`regions` 1–8，坐标归一化在图内，id 不重复；`targetId` 必须是其中一块；必有点错时的 `miss` 和做完后的 `after`。通关：必须点中 `targetId` 那一块；点别处或点图片空白只显示 `miss`，不过关 |
-| 请求里该留哪几句、按什么顺序拼 | `build` | 第 3 版 `steps[]`，phase 仅 modify。`pieces` 2–8，id 不重复；`answers` 1–4 条，每条 1–8 个 piece id（必须存在、一条内不重复），答案之间不能完全相同。通关：拼出的 id 序列精确等于某一条 `answers`；多一块、缺一块或顺序不对都不过。若 send 的 `request` 是 `"built"`，同阶段前面必须有这个 build |
-| 换材料和用途，自己写、自己跑、自己改成品 | `make` | 第 3 版 `steps[]`，phase 仅 make。整课恰好一步 make，且做段第一步必须是它。任务写在载荷的 `make`：`scenario`、`goal`、`promptPlaceholder`、`checklist` 1–12、`exerciseId`，`materialIds` 至少 1 个且指向已有 material。通关：自己写出非空请求并跑出结果，评分 `outcome === "pass"` 才能继续 |
+按学习者要弄懂的事选玩法，组件表只有一张：[components.md](components.md)。
+那张表的「能放哪儿」一列告诉你这个组件能不能放进 PRIMM——第 3 版写
+`steps[].kind`，第 2 版写 `investigate.game.kind`，标着`课内活动`的放不进来。
+**按「怎么算过」选，不要按名字选**：`sort` 在两处同名而通关条件不同，
+`inspect-image` 指哪块都行而 `point` 必须点对。
 
 **动作必须练到这节课许诺的本事。** 许诺“挑出和自己有关的信息”，却给一个已经
 挑好、只剩排顺序的玩法，就是没练到。先让学习者做那个决定，再看结果变化。

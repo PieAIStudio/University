@@ -17,14 +17,15 @@ finish, and can use in their own life the same day. The measure is the next
 
 | File | What it decides |
 | --- | --- |
-| [teaching-contract.md](references/teaching-contract.md) | **The** teaching rules: audience and reading level, need-first design, the real case's role, the teacher's thread, each PRIMM phase, interaction choice, materials, hard rejections F1–F15. Every model role receives it verbatim. Change a rule here and nowhere else. |
+| [teaching-contract.md](references/teaching-contract.md) | **The** teaching rules: audience and reading level, need-first design, the real case's role, the teacher's thread, each PRIMM phase, materials, hard rejections F1–F15. Every model role receives it verbatim. Change a rule here and nowhere else. |
+| [components.md](references/components.md) | **The** interaction components — one table, all of them: lesson activities, PRIMM steps, PRIMM investigate games and the 3D games. Which one to pick, where it may go, what actually counts as passing it, and the material it needs. Three lists used to disagree; `pnpm check:components` now keeps this one and the registries failing together. |
 | [teaching-principles.md](references/teaching-principles.md) | Why those rules exist: the research they come from, and what it does not prove. |
 | [primm-pipeline.md](references/primm-pipeline.md) | How to run the production line, what is automated, what a person still does, receipts. |
 | [models.md](references/models.md) | Which model family fills which role; preflight before any call. |
 | [evidence-and-failures.md](references/evidence-and-failures.md), [media.md](references/media.md) | Source verification, provenance, licensed media. |
 | [cards-and-exercises.md](references/cards-and-exercises.md) | Card and independent-exercise contracts. |
 | [checklist.md](references/checklist.md) | Acceptance before an Owner sees it. |
-| [pipeline.md](references/pipeline.md), [activities.md](references/activities.md), [variants.md](references/variants.md), [polish-prompt.md](references/polish-prompt.md) | Retained prose/V1/V2 history and engines; read only for those revisions or when an engine's payload limits matter. |
+| [pipeline.md](references/pipeline.md), [activities.md](references/activities.md), [variants.md](references/variants.md), [polish-prompt.md](references/polish-prompt.md) | Retained prose/V1/V2 history; `activities.md` is how a lesson activity is placed, written into the prose, tiered and sourced — which component to pick is in `components.md`. Read only for those revisions. |
 
 ## The five decisions a teacher makes before writing
 
