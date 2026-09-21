@@ -53,6 +53,12 @@ export function investigationComplete(
       return game.cards.every((card) => draft.decisions[card.id] === card.relevant);
     case "check-result":
       return isPrimmGameComplete(game, { kind: "check-result", judgments: draft.placed });
+    default: {
+      // Same reason as `PrimmSteps`: an unhandled kind here would report the
+      // phase incomplete forever rather than fail where it was added.
+      const unjudged: never = game;
+      return unjudged;
+    }
   }
 }
 export function PrimmInvestigate({

@@ -355,6 +355,13 @@ export function PrimmSteps({
         return renderBuild(current);
       case "make":
         return renderMake();
+      default: {
+        // A step kind that reaches here has no screen. `never` is what makes
+        // that a compile error instead of a lesson that saves, loads, and is
+        // silently one screen short in front of a learner.
+        const unrendered: never = current;
+        return unrendered;
+      }
     }
   }
 

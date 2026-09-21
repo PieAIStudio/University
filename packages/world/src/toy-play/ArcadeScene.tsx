@@ -12,6 +12,7 @@ import { layoutTargetLabels } from "./label-layout.js";
 import { CATEGORIES, word, type ToyLocale } from "./material.js";
 import { CLAIMS, FLIGHT_CARDS, SENTENCES, VOCABULARY } from "./arcade-content.js";
 import { ArcadeSession, type ArcadeAction, type ArcadeState, type Foe } from "./arcade-engine.js";
+import { assertEveryThreeGameIsRendered } from "./three-game-lock.js";
 
 interface SceneProps {
   edition?: "garden" | "purpose";
@@ -683,8 +684,13 @@ export function ArcadeScene(props: SceneProps) {
           </group>
         ) : props.snapshot.mode === "stack" ? (
           <Stack {...props} />
-        ) : (
+        ) : props.snapshot.mode === "cloze-tetris" ? (
           <WordsScene {...props} />
+        ) : (
+          // Was a bare `else`, which quietly drew the word scene for anything
+          // it did not recognise. A fourth mode would have rendered the wrong
+          // game with no error anywhere. See three-game-lock.ts.
+          assertEveryThreeGameIsRendered(props.snapshot.mode)
         )}
         <Sparks session={props.session} snapshot={props.snapshot} />
       </Stage>

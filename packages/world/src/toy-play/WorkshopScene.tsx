@@ -26,6 +26,7 @@ import {
   type WorkshopAction,
   type Capsule,
 } from "./workshop-engine.js";
+import { assertEveryThreeGameIsRendered } from "./three-game-lock.js";
 
 interface Props {
   session: WorkshopSession;
@@ -756,8 +757,12 @@ export function WorkshopScene(props: Props) {
           <Slicing {...props} />
         ) : props.session.mode === "wire" ? (
           <Wiring {...props} />
-        ) : (
+        ) : props.session.mode === "rank" ? (
           <Railway {...props} />
+        ) : (
+          // Was a bare `else`, which quietly drew the railway for anything it
+          // did not recognise. See three-game-lock.ts.
+          assertEveryThreeGameIsRendered(props.session.mode)
         )}
       </Stage>
     </SceneBoundary>
