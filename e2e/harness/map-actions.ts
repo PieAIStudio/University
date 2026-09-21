@@ -96,7 +96,40 @@ export async function enterSelectedMapObject(page: Page, label: string): Promise
     }
     throw new Error("The object-bound entry button never stopped moving");
   });
-  await humanClick(page, entry, label);
+  // Press it, then confirm the press actually took. A click on an
+  // object-bound control can be swallowed: the button reprojects between the
+  // hit test and the mouse-up, the press lands on the sea behind it, and
+  // `humanClick` has no way to know. The caller then waits 45 seconds for a
+  // screen that was never asked for. `Y.english-campus` authoring failed that
+  // way four times under parallel load and passed alone every time — the
+  // failure snapshot showed the planet screen still up, its Enter button still
+  // active, long after the click was reported as delivered.
+  //
+  // Entering something always changes what the map is showing, so watch for
+  // that rather than for any one screen: the address, the breadcrumb trail, or
+  // the entry button's own target. Press again while none of them moves.
+  const before = await mapSignature(page);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await humanClick(page, entry, label);
+    try {
+      await expect.poll(() => mapSignature(page), { timeout: 15_000 }).not.toBe(before);
+      return;
+    } catch (error) {
+      if (attempt === 2) throw error;
+      await expect(entry, `${label}：进入没生效，但按钮也不见了`).toBeVisible();
+    }
+  }
+}
+
+/** What the map is currently showing, as one comparable string. */
+async function mapSignature(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const crumbs = [...document.querySelectorAll("nav.map-breadcrumbs a, nav.map-breadcrumbs li")]
+      .map((node) => node.textContent?.trim() ?? "")
+      .join(">");
+    const entry = document.querySelector('[data-map-entry="true"]')?.getAttribute("aria-label");
+    return `${location.pathname}|${crumbs}|${entry ?? ""}`;
+  });
 }
 
 /** Navigate an actual ancestor link from the shared map breadcrumb trail. */
