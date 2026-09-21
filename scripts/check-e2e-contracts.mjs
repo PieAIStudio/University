@@ -38,12 +38,7 @@ const LETTER_PREFIXED_BEFORE_THE_GATE = new Set([
  *  `harness/catalogue.ts` for a role. Each one pins a course identity, so a
  *  change to which course sits where scatters into several unrelated reds.
  *  This list may only shrink. */
-const DIRECT_CATALOGUE_READERS_BEFORE_THE_GATE = new Set([
-  "AA.map-navigation.spec.ts",
-  "W.ai-literacy.spec.ts",
-  "X.ai-literacy-english.spec.ts",
-  "Y.english-campus.spec.ts",
-]);
+const DIRECT_CATALOGUE_READERS_BEFORE_THE_GATE = new Set();
 
 const ORDERING_LETTERS = /(^|\/)[A-Z]{1,2}\./;
 const BAKED_CATALOGUE = "apps/university/content";

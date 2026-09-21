@@ -1,14 +1,21 @@
-import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
+import { catalogueStudyOf, coursePathOf, lessonPathOf } from "./harness/catalogue.js";
 import { humanClick, scrollIntoView } from "./harness/click.js";
 import { enterSelectedMapObject, mapEntryButton } from "./harness/map-actions.js";
 
-const { course } = JSON.parse(
-  readFileSync("apps/university/content/ai-literacy/understanding-ai.json", "utf8"),
+const course = catalogueStudyOf("ai-literacy").courses.find(
+  (item) => item.id === "understanding-ai",
 );
-const firstUnit = course.units[0];
-const firstLesson = firstUnit.lessons[0];
+if (!course) throw new Error("e2e: understanding-ai is not shipped in ai-literacy");
+const firstUnit = course.units[0]!;
+const firstLesson = firstUnit.lessons[0]!;
+const activitiesOf = (lesson: typeof firstLesson) =>
+  (lesson.packageLesson.activities as { kind: string }[] | undefined) ?? [];
+const englishTitleOf = (lesson: typeof firstLesson) => {
+  const locales = lesson.packageLesson.locales as { en?: { title?: string } } | undefined;
+  return locales?.en?.title;
+};
 /*
   A PRIMM lesson runs its own reader, which today carries neither the
   foreign-language mode nor the reading-detail toggle. That is a recorded product
@@ -20,13 +27,13 @@ const firstLesson = firstUnit.lessons[0];
   of nothing: if the tools ever vanish from every lesson, it fails and names the
   gap document rather than passing on an empty list.
 */
-const hasReadingTools = (lesson: { activities?: { kind: string }[] }) =>
-  !lesson.activities?.some((activity) => activity.kind === "primm");
+const hasReadingTools = (lesson: typeof firstLesson) =>
+  !activitiesOf(lesson).some((activity) => activity.kind === "primm");
 const toolLesson = firstUnit.lessons.find(hasReadingTools);
 const ordinaryToolLesson = firstUnit.lessons.find(
-  (lesson: { activities?: { kind: string }[] }) =>
+  (lesson) =>
     hasReadingTools(lesson) &&
-    !lesson.activities?.some((activity) => activity.kind === "interaction-path"),
+    !activitiesOf(lesson).some((activity) => activity.kind === "interaction-path"),
 );
 
 async function expectEnglish(scope: Locator) {
@@ -103,7 +110,7 @@ for (const [mode, origin] of [
       const island = page.locator(`button.label--course[data-map-marker="${course.id}"]`);
       await humanClick(page, island, "select the real introductory course");
       await enterSelectedMapObject(page, "enter this course");
-      await expect(page).toHaveURL(new RegExp(`/ai-literacy/${course.id}(?:\\?|$)`));
+      await expect(page).toHaveURL(new RegExp(`${coursePathOf(course)}(?:\\?|$)`));
       await expect(page.locator(".loading-trivia")).toHaveCount(0);
       const labels = page.locator("[data-lesson-state][aria-label]");
       await expect(labels.first()).toBeAttached();
@@ -118,7 +125,7 @@ for (const [mode, origin] of [
         "start the actual lesson",
       );
       await enterSelectedMapObject(page, "read the selected real lesson");
-      await expect(page.locator(".lesson-reader")).toContainText(firstLesson.locales.en.title);
+      await expect(page.locator(".lesson-reader")).toContainText(englishTitleOf(firstLesson)!);
       await expectEnglish(page.locator(".lesson-toolbar"));
       await page.screenshot({ path: info.outputPath("english-journey.png"), fullPage: true });
     });
@@ -134,8 +141,9 @@ for (const [mode, origin] of [
           lesson,
           "no lesson carries the English reading tools any more — see docs/reference/execution/primm-reading-tools-gap.md",
         ).toBeTruthy();
-        await page.goto(`${origin}/ai-literacy/${course.id}/${firstUnit.id}/${lesson.id}?lang=en`);
-        await expect(page.locator(".lesson-reader")).toContainText(lesson.locales.en.title);
+        const selected = lesson!;
+        await page.goto(`${origin}${lessonPathOf(course, selected)}?lang=en`);
+        await expect(page.locator(".lesson-reader")).toContainText(englishTitleOf(selected)!);
         const review = page.locator(".interaction-path__review");
         const interaction = (await review.count()) > 0;
         if (interaction) {

@@ -6,6 +6,7 @@ import { join } from "node:path";
 // The workspace root does not have the app's @pieai dependencies installed.
 import { gradeDeterministically, type AnswerKey } from "../packages/core/dist/index.js";
 import { ONLINE_ORIGIN as ONLINE } from "./ports.js";
+import { catalogueStudyOf, coursePathOf, lessonPathOf } from "./harness/catalogue.js";
 import { humanClick } from "./harness/click";
 import { enterSelectedMapObject } from "./harness/map-actions.js";
 import { enterExerciseAnswer, expectExerciseAnswer } from "./harness/exercise-input.js";
@@ -33,19 +34,23 @@ interface Course {
   id: string;
   units: Array<{ id: string; lessons: Lesson[] }>;
 }
-const RECOVERY = "apps/local/course-proposals/recovery/ai-literacy";
+const literacy = catalogueStudyOf("ai-literacy");
+const RECOVERY = `apps/local/course-proposals/recovery/${literacy.id}`;
 const index = JSON.parse(readFileSync(join(RECOVERY, "index.json"), "utf8")) as {
   courses: Array<{ courseId: string; file: string }>;
 };
-const courses = index.courses.map((entry) => ({
-  source: (JSON.parse(readFileSync(join(RECOVERY, entry.file), "utf8")) as { course: Course })
-    .course,
-  delivered: (
-    JSON.parse(
-      readFileSync(`apps/university/content/ai-literacy/${entry.courseId}.json`, "utf8"),
-    ) as { course: Course }
-  ).course,
-}));
+const courses = literacy.courses.map((course) => {
+  const entry = index.courses.find((item) => item.courseId === course.id);
+  if (!entry) {
+    throw new Error(`e2e: missing recovery for ${literacy.id}/${course.id}`);
+  }
+  return {
+    course,
+    source: (JSON.parse(readFileSync(join(RECOVERY, entry.file), "utf8")) as { course: Course })
+      .course,
+    delivered: (course.packageBody as { course: Course }).course,
+  };
+});
 
 test("W1 both beginner paths preserve every real-source lesson and both answer keys", () => {
   expect(courses.map((item) => item.source.id).sort()).toEqual([
@@ -110,7 +115,7 @@ test("W1 both beginner paths preserve every real-source lesson and both answer k
 
 for (const locale of ["en", "zh-CN"] as const) {
   for (const width of [390, 1440]) {
-    for (const { source } of courses) {
+    for (const { course, source } of courses) {
       test(`W2 ${source.id} ${locale} ${width}: read, inspect source, answer, reload`, async ({
         page,
       }, info) => {
@@ -137,7 +142,7 @@ for (const locale of ["en", "zh-CN"] as const) {
         const unit = first!.unit;
         const lesson = first!.lesson;
         await page.goto(
-          `${ONLINE}/ai-literacy/${source.id}/${unit.id}/${lesson.id}?lang=${locale}`,
+          `${ONLINE}${lessonPathOf(course, { unitId: unit.id, id: lesson.id })}?lang=${locale}`,
         );
         const reader = page.locator(".lesson-reader");
         await expect(reader).toBeVisible();
@@ -233,23 +238,23 @@ for (const locale of ["en", "zh-CN"] as const) {
 test("W3 real source media stays readable in night mode and the contrast guard rejects a regression", async ({
   page,
 }, info) => {
-  const course = courses.find(({ source }) => source.id === "understanding-ai")!.source;
   // The retained source photo and its credit live in the interaction-path
   // lesson, which is what the media locator and the NASA caption below are
   // written against. Find it by its activity: it used to be this course's first
   // lesson, and a PRIMM lesson with its own material has since taken that slot.
-  const target = course.units
-    .flatMap((unit) => unit.lessons.map((lesson) => ({ unit, lesson })))
+  const target = literacy.courses
+    .flatMap((course) =>
+      course.units.flatMap((unit) => unit.lessons.map((lesson) => ({ course, unit, lesson }))),
+    )
     .find(({ lesson }) =>
-      (lesson.activities as { kind: string }[] | undefined)?.some(
+      (lesson.packageLesson.activities as { kind: string }[] | undefined)?.some(
         (activity) => activity.kind === "interaction-path",
       ),
     );
   expect(target, "the retained interaction-path lesson is gone").toBeTruthy();
-  const unit = target!.unit;
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
-  await page.goto(`${ONLINE}/ai-literacy/${course.id}/${unit.id}/${target!.lesson.id}?lang=en`);
+  await page.goto(`${ONLINE}${lessonPathOf(target!.course, target!.lesson)}?lang=en`);
   await expect(page.locator("html")).toHaveAttribute("data-game-ui-theme", "night");
   // Theme arrives before the async lesson. Do not test for an optional review
   // control until the reader has actually mounted, or its collapsed image is
@@ -321,19 +326,20 @@ test("W4 the AI foundations planet opens the real beginner courses", async ({ pa
     "choose AI foundations",
   );
   await expect(page.locator('button[data-map-entry="true"]')).toHaveAccessibleName(/^Enter /);
-  await expect(page.locator('button[data-study-id="ai-literacy"]')).toHaveCount(0);
+  await expect(page.locator(`button[data-study-id="${literacy.id}"]`)).toHaveCount(0);
   await enterSelectedMapObject(page, "open the real curriculum");
   for (const { source } of courses) {
     await expect(
       page.locator(`button.label--course[data-map-marker="${source.id}"]`),
     ).toBeVisible();
   }
+  const intro = literacy.courses[0]!;
   await humanClick(
     page,
-    page.locator('button.label--course[data-map-marker="understanding-ai"]'),
+    page.locator(`button.label--course[data-map-marker="${intro.id}"]`),
     "choose understanding AI",
   );
   await enterSelectedMapObject(page, "enter understanding AI");
-  await expect(page).toHaveURL(/\/ai-literacy\/understanding-ai(?:\?|$)/);
+  await expect(page).toHaveURL(new RegExp(`${coursePathOf(intro)}(?:\\?|$)`));
   await page.screenshot({ path: info.outputPath("beginner-course-island.png"), fullPage: true });
 });

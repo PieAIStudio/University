@@ -86,15 +86,27 @@ export async function enterSelectedMapObject(page: Page, label: string): Promise
   await entry.evaluate(async (element) => {
     let previous = "",
       streak = 0;
+    let lastX = Number.NaN,
+      lastY = Number.NaN;
+    const recent: string[] = [];
     for (let frame = 0; frame < 240; frame++) {
       await new Promise(requestAnimationFrame);
       const box = element.getBoundingClientRect();
+      if (Number.isFinite(lastX)) {
+        recent.push(Math.hypot(box.x - lastX, box.y - lastY).toFixed(2));
+        if (recent.length > 12) recent.shift();
+      }
+      lastX = box.x;
+      lastY = box.y;
       const next = `${Math.round(box.x * 10)}:${Math.round(box.y * 10)}`;
       streak = next === previous ? streak + 1 : 0;
       previous = next;
       if (streak >= 5) return;
     }
-    throw new Error("The object-bound entry button never stopped moving");
+    throw new Error(
+      `The object-bound entry button never stopped moving. ` +
+        `最后 12 帧的位移：${recent.join(" ")}（px，相邻帧之间）`,
+    );
   });
   // Press it, then confirm the press actually took. A click on an
   // object-bound control can be swallowed: the button reprojects between the

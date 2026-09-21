@@ -1,29 +1,20 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
-import { readFileSync } from "node:fs";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
+import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
+import { humanClick } from "./harness/click.js";
 
-const { course } = JSON.parse(
-  readFileSync(
-    new URL("../apps/university/content/ai-literacy/understanding-ai.json", import.meta.url),
-    "utf8",
-  ),
-);
-const lessons: {
-  id: string;
-  title: string;
-  locales?: { en?: { title: string } };
-  unitId: string;
-}[] = course.units.flatMap((unit: { id: string; lessons: { id: string; title: string }[] }) =>
-  unit.lessons.map((lesson) => ({ ...lesson, unitId: unit.id })),
-);
+const course = CATALOGUE_ROLES.settlement.course;
+const lessons = course.units.flatMap((unit) => unit.lessons);
 const first = lessons[0]!;
 const second = lessons[1]!;
 const last = lessons.at(-1)!;
-const coursePath = "/ai-literacy/understanding-ai";
+const coursePath = coursePathOf(course);
 const entry = (page: Page) =>
   page.locator('button[data-map-entry="true"]:visible, [data-map-entry="true"] button:visible');
-const titleFor = (lesson: typeof first, language: string) =>
-  language === "en" ? (lesson.locales?.en?.title ?? lesson.title) : lesson.title;
+const titleFor = (lesson: typeof first, language: string) => {
+  const locales = lesson.packageLesson.locales as { en?: { title?: string } } | undefined;
+  return language === "en" ? (locales?.en?.title ?? lesson.title) : lesson.title;
+};
 // The current lesson has a real Start label instead of a duplicate kind icon.
 const marker = (page: Page, id: string) =>
   page
@@ -75,7 +66,16 @@ async function pointerHit(page: Page, target: Locator) {
       );
     }),
   ).toBe(true);
-  await target.click();
+  // `target.click()` was a second implementation of the pointer, and it carried
+  // Playwright's own stability precondition: two consecutive frames whose boxes
+  // are bit-identical. A control bound to a map object never supplies that —
+  // it reprojects every frame and keeps a sub-pixel jitter after it has
+  // arrived. Pinning this walk to a 36-lesson course hid it; asking the
+  // catalogue for a role landed it on an 8-lesson island and the click spent
+  // 45 seconds retrying "element is not stable". `humanClick` is the one
+  // pointer this suite has, and it already settles the way this project's own
+  // checks do.
+  await humanClick(page, target, "地图上的目标");
 }
 
 test.beforeEach(async ({ context }) => {

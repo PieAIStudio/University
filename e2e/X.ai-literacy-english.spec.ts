@@ -1,6 +1,6 @@
 import { expect, test, type Locator } from "@playwright/test";
-import { readFileSync } from "node:fs";
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
+import { catalogueStudyOf, lessonPathOf } from "./harness/catalogue.js";
 
 import { scrollIntoView } from "./harness/click.js";
 interface Lesson {
@@ -10,16 +10,13 @@ interface Lesson {
   assets: unknown[];
 }
 
-interface Course {
-  id: string;
-  units: Array<{ id: string; lessons: Lesson[] }>;
-}
-
 async function expectEnglishReader(reader: Locator): Promise<void> {
   expect(await reader.innerText(), "Untranslated English learner copy").not.toMatch(
     /[\u4e00-\u9fff]/u,
   );
 }
+
+const literacy = catalogueStudyOf("ai-literacy");
 
 // start-servers materializes content before test collection. W covers both
 // languages, the first lesson's interaction and persistence, and the planet.
@@ -29,13 +26,9 @@ for (const [mode, origin] of [
   ["delivery", ONLINE_ORIGIN],
   ["authoring", LOCAL_ORIGIN],
 ] as const) {
-  for (const courseId of ["understanding-ai", "ai-for-real-life"]) {
-    const { course } = JSON.parse(
-      readFileSync(`apps/university/content/ai-literacy/${courseId}.json`, "utf8"),
-    ) as { course: Course };
-
+  for (const course of literacy.courses) {
     for (const unit of course.units) {
-      test(`X ${mode} ${courseId}/${unit.id}: every English lesson, source and image is readable`, async ({
+      test(`X ${mode} ${course.id}/${unit.id}: every English lesson, source and image is readable`, async ({
         page,
       }, info) => {
         await page.setViewportSize({ width: 390, height: 844 });
@@ -44,12 +37,10 @@ for (const [mode, origin] of [
         page.on("pageerror", (error) => pageErrors.push(error.message));
         const checked: Array<{ lesson: string; revision: number; images: number }> = [];
 
-        for (const lesson of unit.lessons) {
+        for (const shipped of unit.lessons) {
+          const lesson = shipped.packageLesson as unknown as Lesson;
           await test.step(lesson.id, async () => {
-            const path = ["ai-literacy", courseId, unit.id, lesson.id]
-              .map(encodeURIComponent)
-              .join("/");
-            await page.goto(`${origin}/${path}?lang=en`);
+            await page.goto(`${origin}${lessonPathOf(course, shipped)}?lang=en`);
             const reader = page.locator(".lesson-reader");
             await expect(reader).toBeVisible();
             const title = lesson.locales?.en?.title;
@@ -145,12 +136,9 @@ for (const [mode, origin] of [
 test("X the English guard detects an untranslated passage, then passes after restoration", async ({
   page,
 }, info) => {
-  const { course } = JSON.parse(
-    readFileSync("apps/university/content/ai-literacy/ai-for-real-life.json", "utf8"),
-  ) as { course: Course };
-  const unit = course.units.at(-1)!;
-  const lesson = unit.lessons.at(-1)!;
-  await page.goto(`${ONLINE_ORIGIN}/ai-literacy/${course.id}/${unit.id}/${lesson.id}?lang=en`);
+  const course = literacy.courses.at(-1)!;
+  const lesson = course.units.at(-1)!.lessons.at(-1)!;
+  await page.goto(`${ONLINE_ORIGIN}${lessonPathOf(course, lesson)}?lang=en`);
   const reader = page.locator(".lesson-reader");
   await expect(reader).toBeVisible();
   await expectEnglishReader(reader);
