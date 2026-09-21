@@ -14,7 +14,12 @@ are writing scaffolding, not a magic correct answer. Previous observations can
 carry into Modify; Make does not prefill the solution. Reuse existing game engines
 when the task fits, and add a typed shared operation only for a concrete need.
 
-十三种玩法的实现、载荷字段和引擎规则在
+这一页的表是**外层**课文活动（`LessonActivityKindSchema` 15 种里可独立配的引擎）。
+写 PRIMM 课、走当前产线时，选的是**内层** 13 种（见
+[teaching-contract.md](./teaching-contract.md)），不要用本页这张表去配 PRIMM
+阶段。两套互不相干；两边都有一个 `sort`，不是同一种东西。
+
+外层十三种玩法的实现、载荷字段和引擎规则在
 [shared activity contract](../../../../../packages/ui/src/learning-play/README.md)。
 这一页只回答写课时的两个问题：**这节课配哪一种、放在哪一步。**
 
