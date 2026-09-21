@@ -133,15 +133,10 @@ export async function enterSelectedMapObject(page: Page, label: string): Promise
   }
 }
 
-/** What the map is currently showing, as one comparable string. */
+/** Where the map has taken the learner. Entering is the only thing that
+ *  changes it, which is what makes it the right thing to watch. */
 async function mapSignature(page: Page): Promise<string> {
-  return page.evaluate(() => {
-    const crumbs = [...document.querySelectorAll("nav.map-breadcrumbs a, nav.map-breadcrumbs li")]
-      .map((node) => node.textContent?.trim() ?? "")
-      .join(">");
-    const entry = document.querySelector('[data-map-entry="true"]')?.getAttribute("aria-label");
-    return `${location.pathname}|${crumbs}|${entry ?? ""}`;
-  });
+  return page.evaluate(() => location.pathname);
 }
 
 /** Navigate an actual ancestor link from the shared map breadcrumb trail. */
