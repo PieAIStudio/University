@@ -26,6 +26,7 @@ import {
   spineOf,
   type AuthoringFocus,
   type ProgressSource,
+  nearestLearningSegment,
 } from "@pieai/university-core";
 import { playSound } from "@pieai/university-ui/sound/index.js";
 import { useFrame } from "@react-three/fiber";
@@ -82,6 +83,8 @@ import {
   LessonMarkerField,
   type GridLessonMarker,
 } from "./grid/LessonMarkerField.js";
+import { LearningNodeField } from "./course/LearningNodeField.js";
+import { courseLearningSites, segmentsFromPlacements } from "./course/learning-sites.js";
 import {
   buildMedallionFooting,
   MARKER_PLINTH_OFFSET,
@@ -1404,6 +1407,19 @@ export function CourseScene({
   const extent = blueprint.bounds.maxHalf;
   const layout = useMemo(() => layoutCourseLessons(blueprint, lessons), [blueprint, lessons]);
   const markers = layout.markers;
+  /*
+    Only the segment the learner is in draws its three objects, matching the
+    chips: V5 shows the nearby nodes and keeps the rest in the course's list.
+  */
+  const learningSites = useMemo(() => {
+    const nearby = nearestLearningSegment(
+      segmentsFromPlacements(lessons),
+      lessons.find((lesson) => lesson.state === "live")?.lessonId,
+    );
+    return nearby
+      ? courseLearningSites(lessons).filter((site) => site.segment.id === nearby.id)
+      : [];
+  }, [lessons]);
   useEffect(() => {
     return () => {
       layout.footing.geometry?.dispose();
@@ -1457,6 +1473,7 @@ export function CourseScene({
         }}
         onHover={onHover}
       />
+      <LearningNodeField sites={learningSites} />
       {avatarAt || layout.idlePosition ? (
         <LearnerMarker
           position={(avatarAt?.position ?? layout.idlePosition)!}

@@ -35,6 +35,20 @@ a screenshot; current browser fixtures are selected by `e2e/harness/catalogue.ts
 This catalogue clarification changes no technique, budget or original receipt.
 
 ## Decision and authority
+### R57: learning nodes stand on the island
+Owner opened the 3D art direction for the three map learning nodes on 2026-09-23,
+the moment V5 and the current-work index had scheduled it for. Each node is now a
+procedural object told apart by silhouette, not colour: a red torii gate spanning
+the road halfway to the next lesson (checkpoint), a pennant on a pole (challenge),
+a notice board with one pinned note (personal), with stepping stones from the road
+as the side path. `courseLearningSites` is the one placement answer: the DOM chip
+and the object both read it, it searches outward from the old glyph offset for
+ground clear of every dressing footprint, landscape item, landmark safety zone and
+multi-part courtyard, and it never moves anything already there. No free ground,
+no object — the chip stays. Only the nearby segment draws, matching the chips.
+Measured on three real course shapes, 46 of 51 nodes find ground; a test proves
+no drawn object stands in a solid, on a lesson or (except the gate, by design) on
+the road. Budgets and the rejected alternatives live in the `learningNode` lock.
 
 ### R56: polymer response and contact-preserving display geometry
 
@@ -872,6 +886,7 @@ contains the exact R52 evidence root and the true full-gate outcomes.
 | Course props                                 | Registered Kenney/semantic stones, with successfully fitted crafted stalls, academies and ambient stones replacing their source IDs. Unfitted replacements retain donors. Decoration ceiling 1,200 triangles/asset; landmarks at most six semantic places/assemblies, ceiling 8,000 per asset.                                                                                                                                                       |
 | Course geological scenery and surface detail | R53: three closed Kenney-derived masses, 196 triangles/rock cluster, replacing the R49/R50 572-triangle bank; ruin 348, optional supported spring ≤800. R54: shared 128² wear/turf scalar swatch plus course-only 256² canopy/meadow/route/wear masks; bounded low-flora beds stay within the existing 220-flora / 50,000-triangle landscape ceiling. Existing landscape batches include fitted replacements, courtyard borders and optional rock-rooted canopy; actual cliff-ledge plants add at most one course-only batch and 288 triangles.                     |
 | Lesson marker                                | Shared 14-segment bevelled medallion, 168 triangles; separate +Y-facing unit rings, 48–50 each, at most six ring batches. Readable text stays DOM.                                                                                                                                                                                                                                                                                                   |
+| Learning node                                | R57: procedural gate / pennant / notice board, ≤48/36/60 triangles, stepping stones 18 each; nearby segment only; one merged stone draw. Placed by `courseLearningSites` on free ground, never displacing scenery. Readable text stays DOM. |
 | Ground contact                               | Merged footing splits at rendered triangle boundaries, embeds by 0.01 and retains exposed-height ceiling 0.25. Bounded stance recovery; unresolved contact uses a terrain-clipped shallow inlay at the same position/radius/ID, with engraving and picking preserved.                                                                                                                                                                                |
 | Buildings/camp/bridge                        | Academy's existing four-wall/roof assembly owns one fitted pavilion or retains all original members; never both. Tent faces its actual lit pit. Bridge checks decoded support pads and arched deck across the span, not just its origin. Failed fits retain meaningful fallbacks.                                                                                                                                                                    |
 | Fire and lighting                            | Effects belong only to actual lit campfire assemblies. No per-fire shadow lights. Reduced motion/pause contracts remain. Use the shared Stage/SwimmerRenderKit output chain, with one tone map and one sRGB encoding.                                                                                                                                                                                                                                |

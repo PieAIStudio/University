@@ -155,6 +155,20 @@ export const GRID_LESSON_MARKER_COLOURS = {
   locked: GRID_ACCENT_RAMP.coral,
 } as const;
 
+/**
+ * The three learning-node objects (gate, pennant, notice board). Only the wood
+ * and the paper are new; the lintel, cloth and stepping stones reuse the accent
+ * ramp and the lesson plinth so the nodes read as the same family as the road.
+ */
+export const GRID_LEARNING_NODE_ALBEDO = {
+  wood: 0x8a5a3b,
+  lintel: GRID_ACCENT_RAMP.coralDeep,
+  gateCap: GRID_ACCENT_RAMP.brick,
+  cloth: GRID_ACCENT_RAMP.coral,
+  paper: 0xf4e6cc,
+  stone: GRID_LESSON_PLINTH_ALBEDO,
+} as const;
+
 export interface GridPalettePreset extends GridPalette {
   readonly id: string;
 }

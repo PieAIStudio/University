@@ -394,6 +394,43 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       },
     ],
   },
+  learningNode: {
+    technique:
+      "Three procedural low-poly objects told apart by silhouette — a red torii gate " +
+      "spanning the road at a segment's end (checkpoint), a pennant on a pole (challenge), " +
+      "a notice board with one pinned note (personal) — plus stepping stones from the road. " +
+      "Only the learner's nearby segment draws; the DOM chip above each stays the pick " +
+      "target and the accessible name. Placed by courseLearningSites, which searches for " +
+      "free ground and never moves an existing tree, rock, landmark courtyard or path.",
+    source:
+      "Our own course/learning-sites.ts, learning-node-geometry.ts and LearningNodeField.tsx.",
+    budget:
+      "<= 48/36/60 tris for gate/pennant/board and 18 per stepping stone; at most 3 objects " +
+      "and one merged stone draw at a time. Measured on three real course shapes: 46 of 51 " +
+      "nodes find free ground; the rest keep their chip and draw nothing.",
+    rejected: [
+      {
+        option: "A token standing on a disc, the lesson medallion with a symbol on top",
+        why: "Already rejected for lesson nodes on 2026-08-28 as 'a circle with an inexplicable little thing in the middle'.",
+        on: "2026-09-23",
+      },
+      {
+        option: "The gate beside the road, facing the camera",
+        why: "Road verges are deliberately planted; with courtyards reserved only 6 of 11 gates found ground. Spanning the road needs only two free post spots: 10 of 11.",
+        on: "2026-09-23",
+      },
+      {
+        option: "Every object facing the road",
+        why: "The course camera pans but never turns, so a pennant or board facing the road was often seen edge-on as a line. The pennant and board now face the camera heading; posts sink deeper than the steepest accepted slope so a turn cannot lift a foot.",
+        on: "2026-09-23",
+      },
+      {
+        option: "Brown gate posts under a red lintel",
+        why: "The posts vanished against the brown road and the Π read as one red stub; the whole gate now uses the accent ramp.",
+        on: "2026-09-23",
+      },
+    ],
+  },
   environmentLight: {
     technique: "PMREM generated once from our own procedural skydome into scene.environment.",
     source: "Our own sky. No donated cubemap.",
