@@ -2,6 +2,7 @@ export const messages = {
   "play.ai.collection": "Activity collections",
   "play.ai.collection.ai": "Build products with AI",
   "play.ai.collection.foundations": "Programming foundations",
+  "play.ai.collection.primm": "PRIMM investigate games",
   "play.ai.title": "AI builds. You steer.",
   "play.ai.intro":
     "Turn an idea into a working product: clarify intent, provide context, direct actions, and test the result.",

@@ -2,6 +2,7 @@ export const messages = {
   "play.ai.collection": "玩法合集",
   "play.ai.collection.ai": "用 AI 做产品",
   "play.ai.collection.foundations": "编程原理",
+  "play.ai.collection.primm": "PRIMM 调查关",
   "play.ai.title": "AI 动手，你来掌舵。",
   "play.ai.intro": "把一个想法变成能用的产品：说清需求，选对材料，管好行动，亲自验收。",
   "play.ai.researchCopy":

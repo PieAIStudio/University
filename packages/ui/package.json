@@ -122,6 +122,7 @@
     "./play-catalog/play-catalog.css": "./src/play-catalog/play-catalog.css",
     "./learning-play/LearningActivity.js": "./src/learning-play/LearningActivity.tsx",
     "./learning-play/LearningPlayLab.js": "./src/learning-play/LearningPlayLab.tsx",
+    "./learning-play/PrimmGameLab.js": "./src/learning-play/PrimmGameLab.tsx",
     "./learning-play/learning-play.css": "./src/learning-play/learning-play.css",
     "./learning-play/interaction-path.css": "./src/learning-play/interaction-path.css",
     "./learning-play/hunt.css": "./src/learning-play/hunt.css",

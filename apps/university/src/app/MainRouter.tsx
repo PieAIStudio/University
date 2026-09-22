@@ -76,6 +76,11 @@ const ToyPlayLabRoute = lazy(() => import("../play-catalog/ArcadeRoute.js"));
 const PropFinishRoute = lazy(() => import("../play-catalog/PropFinishRoute.js"));
 const RetiredAppearanceRoute = lazy(() => import("../play-catalog/RetiredAppearanceRoute.js"));
 const MapLearningNodeHost = lazy(() => import("../map-nodes/MapLearningNodeHost.js"));
+const PrimmGameLab = lazy(() =>
+  import("@pieai/university-ui/learning-play/PrimmGameLab.js").then((mod) => ({
+    default: mod.PrimmGameLab,
+  })),
+);
 const LearningPlayLab = lazy(() =>
   import("@pieai/university-ui/learning-play/LearningPlayLab.js").then((mod) => ({
     default: mod.LearningPlayLab,
@@ -247,6 +252,8 @@ export function MainRouter({
             <RetiredAppearanceRoute />
           ) : view.collection === "toy-3d" ? (
             <ToyPlayLabRoute />
+          ) : view.collection === "primm" ? (
+            <PrimmGameLab />
           ) : (
             <LearningPlayLab
               key={view.collection ?? "foundations"}

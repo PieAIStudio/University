@@ -156,6 +156,7 @@ export function LearningPlayLab({
         <a href="/play-lab" aria-current={collection === "foundations" ? "page" : undefined}>
           {t("play.ai.collection.foundations")}
         </a>
+        <a href="/play-lab/primm">{t("play.ai.collection.primm")}</a>
       </nav>
 
       <nav className="learning-play-lab__modes" aria-label={t("play.lab.select")}>
