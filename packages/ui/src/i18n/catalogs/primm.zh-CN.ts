@@ -1,4 +1,9 @@
 export const messages = {
+  "primm.lab.example.edit.mention.1": "键盘",
+  "primm.layoutMisplaced": "「{{label}}」放的位置还不对。想想它要等哪一步做完。",
+  "primm.layoutAccepted": "顺序对了。",
+  "primm.editMissing": "改写还没说到要点：至少提到 {{terms}} 之一。",
+  "primm.steps.notThis": "不是这个。再看一眼，换一个试试。",
   "primm.lab.example.picture.text.1": "春季社团报名",
   "primm.lab.example.picture.text.2": "邮箱",
   "primm.lab.example.picture.text.3": "邮箱格式不对",

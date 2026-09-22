@@ -2,7 +2,10 @@ import { useId, useRef, useState } from "react";
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import {
   PRIMM_CHECK_JUDGMENTS,
+  editMentionsRequired,
   isPrimmGameComplete,
+  layoutMisplacedItem,
+  layoutOrderAccepted,
   placePrimmSortCard,
 } from "@pieai/university-core";
 import { useI18n } from "../i18n/index.js";
@@ -42,12 +45,17 @@ export function investigationComplete(
     case "sort":
       return isPrimmGameComplete(game, { kind: "sort", placed: draft.placed });
     case "layout":
-      return draft.touched && draft.order.length === game.items.length;
+      return (
+        draft.touched &&
+        draft.order.length === game.items.length &&
+        layoutOrderAccepted(game, draft.order)
+      );
     case "edit":
       return (
         draft.selected === game.targetId &&
         !!draft.edited.trim() &&
-        draft.edited.trim() !== game.sentences.find((s) => s.id === game.targetId)?.text.trim()
+        draft.edited.trim() !== game.sentences.find((s) => s.id === game.targetId)?.text.trim() &&
+        editMentionsRequired(game, draft.edited)
       );
     case "collect":
       return game.cards.every((card) => draft.decisions[card.id] === card.relevant);
@@ -294,6 +302,15 @@ export function PrimmInvestigate({
             </li>
           ))}
         </ol>
+        {game.answers?.length && draft.touched ? (
+          <p role="status" className="primm__verdict">
+            {(() => {
+              const misplaced = layoutMisplacedItem(game, order);
+              const label = game.items.find((item) => item.id === misplaced)?.label;
+              return label ? t("primm.layoutMisplaced", { label }) : t("primm.layoutAccepted");
+            })()}
+          </p>
+        ) : null}
         <fieldset>
           <legend>{t("primm.format")}</legend>
           {game.formats.map((f) => (
@@ -347,6 +364,14 @@ export function PrimmInvestigate({
               value={draft.edited || (!draft.touched ? target.text : "")}
               onChange={(event) => update({ edited: event.target.value, touched: true })}
             />
+            {game.mustMention?.length &&
+            draft.touched &&
+            draft.edited.trim() &&
+            !editMentionsRequired(game, draft.edited) ? (
+              <p role="status" className="primm__verdict">
+                {t("primm.editMissing", { terms: game.mustMention.join(" / ") })}
+              </p>
+            ) : null}
             <div className="primm__comparison">
               <section>
                 <h3>{t("primm.original")}</h3>

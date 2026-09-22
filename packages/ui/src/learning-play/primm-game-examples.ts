@@ -253,6 +253,7 @@ export function primmGameExamples(): readonly PrimmGameExample[] {
         { id: "paragraph", label: copy("primm.lab.example.layout.label.4") },
         { id: "numbered", label: copy("primm.lab.example.layout.label.5") },
       ],
+      answers: [["focus", "activate", "confirm"]],
     },
     edit: {
       kind: "edit",
@@ -270,6 +271,7 @@ export function primmGameExamples(): readonly PrimmGameExample[] {
           text: copy("primm.lab.example.edit.text.3"),
         },
       ],
+      mustMention: [copy("primm.lab.example.edit.mention.1"), same("Tab"), same("Enter")],
     },
     "check-result": {
       kind: "check-result",

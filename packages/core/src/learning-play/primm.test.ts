@@ -23,6 +23,7 @@ import {
   type PrimmActivity,
   type PrimmGame,
   type PrimmGameState,
+  layoutMisplacedItem,
 } from "./primm.js";
 import { createSortState } from "./sort.js";
 
@@ -576,5 +577,69 @@ describe("PRIMM pure game-state validation", () => {
       expect(placePrimmSortCard(game, right.state, "press-key", "action").kind).toBe(
         "already-placed",
       );
+  });
+});
+
+describe("investigate games that can now be answered wrong", () => {
+  const layout = {
+    kind: "layout" as const,
+    instruction: "排好",
+    items: [
+      { id: "focus", label: "先聚焦", text: "a" },
+      { id: "activate", label: "再触发", text: "b" },
+      { id: "confirm", label: "看结果", text: "c" },
+    ],
+    formats: [
+      { id: "paragraph", label: "段落" },
+      { id: "numbered", label: "编号" },
+    ],
+    answers: [["focus", "activate", "confirm"]],
+  };
+  const state = (itemIds: string[]) => ({
+    kind: "layout" as const,
+    itemIds,
+    formatId: "paragraph",
+  });
+
+  it("completes a layout with an accepted order only in that order, and names what is out of place", () => {
+    expect(isPrimmGameComplete(layout, state(["focus", "activate", "confirm"]))).toBe(true);
+    expect(isPrimmGameComplete(layout, state(["focus", "confirm", "activate"]))).toBe(false);
+    expect(layoutMisplacedItem(layout, ["focus", "confirm", "activate"])).toBe("confirm");
+    expect(layoutMisplacedItem(layout, ["focus", "activate", "confirm"])).toBeNull();
+  });
+
+  it("keeps a layout without accepted orders passing any full order, as before", () => {
+    const { answers: _unused, ...open } = layout;
+    expect(isPrimmGameComplete(open, state(["confirm", "focus", "activate"]))).toBe(true);
+  });
+
+  it("requires an edit with required ideas to name one of them", () => {
+    const edit = {
+      kind: "edit" as const,
+      targetId: "vague",
+      instruction: "改",
+      replacementHint: "说清楚",
+      sentences: [
+        { id: "intro", text: "填好就能报名。" },
+        { id: "vague", text: "点一下按钮就行。" },
+      ],
+      mustMention: ["键盘", "Tab"],
+    };
+    const done = (replacement: string) =>
+      isPrimmGameComplete(edit, { kind: "edit", targetId: "vague", replacement });
+    expect(done("点两下按钮就行。")).toBe(false);
+    expect(done("用键盘也能提交。")).toBe(true);
+    expect(done("press tab, then Enter.")).toBe(true);
+  });
+
+  it("refuses an accepted order that does not use every item exactly once", () => {
+    const activity = structuredClone(primmFixture);
+    (activity.investigate as { game: unknown }).game = {
+      ...layout,
+      answers: [["focus", "focus", "confirm"]],
+    };
+    expect(primmIssues(PrimmPayloadSchema.parse(activity))).toContain(
+      "A PRIMM layout answer must order every item exactly once",
+    );
   });
 });

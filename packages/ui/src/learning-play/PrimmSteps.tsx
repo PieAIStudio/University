@@ -376,6 +376,15 @@ export function PrimmSteps({
           onClick: () => {
             const option = current.options.find((item) => item.id === picked);
             if (!option) return;
+            // A step with a right answer teaches by stopping a wrong one: say
+            // why (the option's own note, when it has one) and let them choose
+            // again. It used to mark the step done either way.
+            if (current.answerId && option.id !== current.answerId) {
+              miss(option.after ?? t("primm.steps.notThis"));
+              const { [current.id]: _wrong, ...rest } = session.choices;
+              update({ choices: rest });
+              return;
+            }
             const text = option.after ?? current.after;
             if (current.answerId)
               finishStep(current.id, {

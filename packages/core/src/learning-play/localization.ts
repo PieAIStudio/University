@@ -69,6 +69,7 @@ const PRIMM_DISPLAY_PATHS = new Set([
   "investigate.game.formats.label",
   "investigate.game.sentences.text",
   "investigate.game.replacementHint",
+  "investigate.game.mustMention",
   "modify.title",
   "modify.brief",
   "modify.goal",

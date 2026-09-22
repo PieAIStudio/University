@@ -102,6 +102,13 @@ export function primmIssues(payload: PrimmPayload): string[] {
     case "layout":
       unique("layout item", game.items);
       unique("layout format", game.formats);
+      for (const answer of game.answers ?? [])
+        if (
+          answer.length !== game.items.length ||
+          new Set(answer).size !== answer.length ||
+          !answer.every((id) => game.items.some((item) => item.id === id))
+        )
+          issues.push("A PRIMM layout answer must order every item exactly once");
       break;
     case "edit":
       unique("sentence", game.sentences);
@@ -332,6 +339,43 @@ export type PrimmGameState =
   | { readonly kind: "collect"; readonly decisions: Readonly<Record<string, boolean>> }
   | { readonly kind: "check-result"; readonly judgments: Readonly<Record<string, string>> };
 
+type LayoutGame = Extract<PrimmGame, { readonly kind: "layout" }>;
+type EditGame = Extract<PrimmGame, { readonly kind: "edit" }>;
+
+/** With accepted orders only one of them completes the layout; without, any full order does. */
+export function layoutOrderAccepted(game: LayoutGame, itemIds: readonly string[]): boolean {
+  if (!game.answers?.length) return true;
+  return game.answers.some(
+    (answer) => answer.length === itemIds.length && answer.every((id, i) => itemIds[i] === id),
+  );
+}
+
+/**
+ * The first item standing where the nearest accepted order does not put it.
+ * Feedback names one item without revealing the whole order.
+ */
+export function layoutMisplacedItem(game: LayoutGame, itemIds: readonly string[]): string | null {
+  if (!game.answers?.length || layoutOrderAccepted(game, itemIds)) return null;
+  let nearest = game.answers[0]!;
+  let matched = -1;
+  for (const answer of game.answers) {
+    const score = answer.filter((id, i) => itemIds[i] === id).length;
+    if (score > matched) {
+      nearest = answer;
+      matched = score;
+    }
+  }
+  const index = itemIds.findIndex((id, i) => nearest[i] !== id);
+  return index === -1 ? null : itemIds[index]!;
+}
+
+/** With required ideas, the rewrite must name at least one of them. */
+export function editMentionsRequired(game: EditGame, text: string): boolean {
+  if (!game.mustMention?.length) return true;
+  const lower = text.toLowerCase();
+  return game.mustMention.some((term) => lower.includes(term.toLowerCase()));
+}
+
 /** Checks the current manipulation, never a grade, click count or past successful state. */
 export function isPrimmGameComplete(game: PrimmGame, state: PrimmGameState): boolean {
   if (game.kind === "inspect-image" && state.kind === game.kind)
@@ -350,7 +394,8 @@ export function isPrimmGameComplete(game: PrimmGame, state: PrimmGameState): boo
       state.itemIds.length === game.items.length &&
       !repeated(state.itemIds) &&
       state.itemIds.every((id) => game.items.some((item) => item.id === id)) &&
-      game.formats.some((format) => format.id === state.formatId)
+      game.formats.some((format) => format.id === state.formatId) &&
+      layoutOrderAccepted(game, state.itemIds)
     );
   if (game.kind === "edit" && state.kind === game.kind) {
     const target = game.sentences.find((sentence) => sentence.id === game.targetId);
@@ -358,7 +403,8 @@ export function isPrimmGameComplete(game: PrimmGame, state: PrimmGameState): boo
       !!target &&
       state.targetId === target.id &&
       !!state.replacement.trim() &&
-      state.replacement.trim() !== target.text.trim()
+      state.replacement.trim() !== target.text.trim() &&
+      editMentionsRequired(game, state.replacement)
     );
   }
   // Every item judged. There is no answer key: the live result differs per run.

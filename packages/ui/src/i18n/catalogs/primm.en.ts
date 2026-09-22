@@ -1,5 +1,11 @@
 import type { messages as source } from "./primm.zh-CN.js";
 export const messages = {
+  "primm.lab.example.edit.mention.1": "keyboard",
+  "primm.layoutMisplaced":
+    "“{{label}}” isn’t in the right place yet. Think about what has to happen before it.",
+  "primm.layoutAccepted": "That order works.",
+  "primm.editMissing": "The rewrite still misses the point: mention at least one of {{terms}}.",
+  "primm.steps.notThis": "Not this one. Look again and try another.",
   "primm.lab.example.picture.text.1": "Spring club signup",
   "primm.lab.example.picture.text.2": "Email",
   "primm.lab.example.picture.text.3": "That email looks incomplete",

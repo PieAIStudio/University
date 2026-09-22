@@ -108,6 +108,22 @@ async function render(extra: Partial<PrimmLessonProps> = {}) {
   return { run, grade, complete, progress };
 }
 
+describe("a choice with a right answer", () => {
+  it("stops a wrong pick with a reason and lets them choose again, instead of passing it", async () => {
+    const withAnswer = structuredClone(primmStepsFixture);
+    (withAnswer.steps[0] as { answerId?: string }).answerId = "spoon";
+    await render({ activity: withAnswer });
+    await press("开始");
+    await press("说说这张照片里有什么。");
+    await press("就选这个");
+    expect(text()).toContain("不是这个");
+    expect(text()).not.toContain("对了！");
+    await press("勺子在杯子的哪一边？");
+    await press("就选这个");
+    expect(text()).toContain("对了！");
+  });
+});
+
 describe("a step lesson: one action per screen, the teacher after it", () => {
   it("walks all five phases with real runs of the learner's own choices", async () => {
     const { run, grade, complete, progress } = await render();

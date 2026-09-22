@@ -50,6 +50,8 @@ export function createPrimmPayloadSchema<S extends z.ZodType>(source: S, id: z.Z
           .min(2)
           .max(20),
         formats: z.array(label).min(2).max(8),
+        // Accepted orders. Without them any full order passes, as it always did.
+        answers: z.array(z.array(id).min(2).max(20)).min(1).max(4).optional(),
       })
       .strict(),
     z
@@ -59,6 +61,9 @@ export function createPrimmPayloadSchema<S extends z.ZodType>(source: S, id: z.Z
         instruction: copy,
         replacementHint: copy,
         sentences: z.array(z.object({ id, text }).strict()).min(2).max(20),
+        // Ideas the rewrite must name, at least one of. Without them any
+        // different text passes, as it always did.
+        mustMention: z.array(z.string().trim().min(1).max(60)).min(1).max(6).optional(),
       })
       .strict(),
     // Compare the actual run result with the material, item by item. The learner
