@@ -53,14 +53,18 @@ describe("route-side vegetation beats (synthetic length/seed matrix)", () => {
           for (const placement of natural) {
             const centreIndex = Number(placement.clusterId!.split("-").at(-1)) - 1;
             const isVerge = placement.clusterId!.startsWith("verge-");
-            const centre = (isVerge ? vergeCentres : groveCentres)[centreIndex]!;
+            // Interior groves are field-sited, declared by the plan, and held
+            // to the same patch envelope as the route's own groves.
+            const centre = placement.clusterId!.startsWith("interior-")
+              ? plan.interiorGroves?.[centreIndex]
+              : (isVerge ? vergeCentres : groveCentres)[centreIndex];
             expect(centre, placement.id).toBeDefined();
             // No foliage fallback to a random annulus: every member stays in a
             // route-derived patch. R43 widens the grove, not the road apron;
             // the actual crown/road clearance assertion below is unchanged.
-            expect(Math.hypot(placement.x - centre.x, placement.z - centre.z)).toBeLessThanOrEqual(
-              isVerge ? 1.7 : placement.kind === "tree" ? 5.1 : 5.3,
-            );
+            expect(
+              Math.hypot(placement.x - centre!.x, placement.z - centre!.z),
+            ).toBeLessThanOrEqual(isVerge ? 1.7 : placement.kind === "tree" ? 5.1 : 5.3);
             expect(
               distanceToIslandRoute(blueprint, placement) - islandRouteClearance(blueprint),
             ).toBeGreaterThanOrEqual(

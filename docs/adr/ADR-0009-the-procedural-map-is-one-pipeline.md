@@ -23,6 +23,15 @@ superseded_by: null
 
 # ADR-0009: The Procedural Map Is One Pipeline, Not Three Scenes
 
+## R57: enrichment is a second pass, never a reshuffle
+Natural placement is round-robin over grove centres, so adding a centre moves
+every tree that follows it. Owner-approved scenery therefore gains density only
+through a later pass with its own random stream that reads what already stands:
+`interiorGroves` sites groves on field-qualified ground far from the road and from
+any tree, the original pass runs untouched, and the plan declares the interior
+centres so the same patch envelope binds their members. Measured on nine sample
+islands, no existing placement moved. Evidence lives in the delivery plan (R57).
+
 ## R56: owned views of the same canonical assets
 
 Owner authorizes limited appearance geometry, not an alternative map producer.

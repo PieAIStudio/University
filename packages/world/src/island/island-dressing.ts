@@ -15,7 +15,12 @@ import {
 } from "./foliage-geometry.js";
 import { foliageTintAt } from "./foliage-tone.js";
 import { courseTreeIsFir, courseTreeEnvelopesClear } from "./course-tree-envelope.js";
-import { uplandGroves } from "./course-upland-groves.js";
+import {
+  INTERIOR_SHRUBS_PER_GROVE,
+  INTERIOR_TREES_PER_GROVE,
+  interiorGroves,
+  uplandGroves,
+} from "./course-upland-groves.js";
 import {
   islandFieldFor,
   sampleIslandField,
@@ -123,6 +128,8 @@ export interface IslandDressingPlan {
   readonly seed: string;
   readonly recipeId: string | null;
   readonly placements: readonly IslandDressingPlacement[];
+  /** Centres of the interior groves, in `interior-N` cluster order. */
+  readonly interiorGroves?: readonly IslandPoint[];
   readonly decisions?: readonly IslandCompositionDecision[];
 }
 
@@ -1247,7 +1254,7 @@ function naturalPlacements(
   field: IslandField = islandFieldFor(blueprint),
   outcrops: readonly CourseOutcrop[] = [],
   spring: CourseSpring | null = null,
-): IslandDressingPlacement[] {
+): { readonly placements: IslandDressingPlacement[]; readonly interior: readonly IslandPoint[] } {
   const placements: IslandDressingPlacement[] = [];
   const occupied: IslandDressingPlacement[] = [...reserved];
   const bushOccupied: IslandDressingPlacement[] = [...reserved];
@@ -1286,38 +1293,23 @@ function naturalPlacements(
     field,
     seeded(`${blueprint.seed}/${blueprint.layoutRevision}/dressing/rock-centres`),
   );
-  const density = Math.min(1.78, Math.max(0.9, 0.72 + Math.sqrt(blueprint.lessonCount) / 6.8));
-  for (const rule of NATURAL_RULES) {
-    const assets: readonly IslandNaturalAssetRef[] =
-      rule.assetRole === "rock"
-        ? recipe.base.naturalAssets.rocks
-        : [recipe.base.naturalAssets[rule.assetRole]];
-    const random = seeded(
-      `${blueprint.seed}/${blueprint.layoutRevision}/dressing/${rule.kind}/${rule.height[0]}`,
-    );
-    const centres =
-      rule.kind === "rock"
-        ? rockCentres
-        : rule.vegetationBand === "verge"
-          ? vergeCentres
-          : groveCentres;
-    const identityCentres =
-      rule.kind !== "rock" && rule.vegetationBand !== "verge" ? routeGroveCentres : centres;
-    if (rule.kind !== "rock" && centres.length === 0) continue;
+  /*
+    One rule's search, over the centres it is given. The first pass runs it
+    exactly as before, so every existing tree, shrub and rock keeps its place
+    and id; the interior pass below runs it again for new groves only, with its
+    own random stream, checked against everything already standing.
+  */
+  const placeRule = (
+    rule: CandidateRule,
+    assets: readonly IslandNaturalAssetRef[],
+    random: () => number,
+    centres: readonly IslandPoint[],
+    identityCentres: readonly IslandPoint[],
+    targetCount: number,
+    maxAttempts: number,
+    groveName: string,
+  ) => {
     const start = placements.length;
-    const band = SCENERY_BAND[sceneryBandForLessonCount(blueprint.lessonCount)];
-    const scaled = Math.round(rule.count * density * band.quota);
-    const targetCount =
-      rule.kind === "tree"
-        ? Math.min(64, scaled, Math.max(1, centres.length) * band.treesPerGrove)
-        : scaled;
-    // A short course has less scenery, not a weaker chance of finding a safe
-    // headland. Scaling the search down with quota left the six-lesson hill
-    // fixture without a single rock despite usable footprint candidates.
-    // Keep the original per-rule search capacity; emitted instances still
-    // stop at the smaller targetCount and every clearance remains unchanged.
-    const maxAttempts =
-      rule.kind === "rock" ? Math.max(targetCount, rule.count) * 22 : targetCount * 44;
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       if (placements.length - start >= targetCount) break;
       let point = candidatePoint(blueprint, rule, centres, random, attempt);
@@ -1357,7 +1349,7 @@ function naturalPlacements(
       const clusterTrees =
         rule.kind === "tree"
           ? placements.filter(
-              (p) => p.kind === "tree" && p.clusterId === `grove-${candidateCluster + 1}`,
+              (p) => p.kind === "tree" && p.clusterId === `${groveName}-${candidateCluster + 1}`,
             )
           : [];
       const treeMembers = clusterTrees.length;
@@ -1602,7 +1594,7 @@ function naturalPlacements(
         importance: rule.importance[0] + (rule.importance[1] - rule.importance[0]) * amount,
         ...(clusterIndex >= 0
           ? {
-              clusterId: `${rule.kind === "rock" ? "headland" : rule.vegetationBand === "verge" ? "verge" : "grove"}-${clusterIndex + 1}`,
+              clusterId: `${rule.kind === "rock" ? "headland" : rule.vegetationBand === "verge" ? "verge" : groveName}-${clusterIndex + 1}`,
             }
           : {}),
         ...(rule.kind === "tree" || rule.kind === "bush"
@@ -1627,8 +1619,80 @@ function naturalPlacements(
       placements.push(placement);
       (rule.kind === "bush" ? bushOccupied : occupied).push(placement);
     }
+  };
+
+  const density = Math.min(1.78, Math.max(0.9, 0.72 + Math.sqrt(blueprint.lessonCount) / 6.8));
+  for (const rule of NATURAL_RULES) {
+    const assets: readonly IslandNaturalAssetRef[] =
+      rule.assetRole === "rock"
+        ? recipe.base.naturalAssets.rocks
+        : [recipe.base.naturalAssets[rule.assetRole]];
+    const random = seeded(
+      `${blueprint.seed}/${blueprint.layoutRevision}/dressing/${rule.kind}/${rule.height[0]}`,
+    );
+    const centres =
+      rule.kind === "rock"
+        ? rockCentres
+        : rule.vegetationBand === "verge"
+          ? vergeCentres
+          : groveCentres;
+    const identityCentres =
+      rule.kind !== "rock" && rule.vegetationBand !== "verge" ? routeGroveCentres : centres;
+    if (rule.kind !== "rock" && centres.length === 0) continue;
+    const band = SCENERY_BAND[sceneryBandForLessonCount(blueprint.lessonCount)];
+    const scaled = Math.round(rule.count * density * band.quota);
+    const targetCount =
+      rule.kind === "tree"
+        ? Math.min(64, scaled, Math.max(1, centres.length) * band.treesPerGrove)
+        : scaled;
+    // A short course has less scenery, not a weaker chance of finding a safe
+    // headland. Scaling the search down with quota left the six-lesson hill
+    // fixture without a single rock despite usable footprint candidates.
+    // Keep the original per-rule search capacity; emitted instances still
+    // stop at the smaller targetCount and every clearance remains unchanged.
+    const maxAttempts =
+      rule.kind === "rock" ? Math.max(targetCount, rule.count) * 22 : targetCount * 44;
+    placeRule(rule, assets, random, centres, identityCentres, targetCount, maxAttempts, "grove");
   }
-  return placements;
+
+  /*
+    Interior groves: added after everything above has settled, never instead of
+    it. Measured 2026-09-23 on the shipped courses, the land beyond eleven units
+    of the road was a third of a long island yet held a fifth of the trees and
+    shrubs per area of the road's surroundings, because every grove rule was
+    anchored to the road. These sites read the same terrain field and go only
+    where the ground is actually still empty.
+  */
+  const interior = interiorGroves(
+    blueprint,
+    field,
+    [...reserved, ...placements].map((p) => ({ ...p, radius: placementFootprintRadius(p) })),
+    routeGroveCentres,
+  );
+  if (interior.length > 0)
+    for (const rule of NATURAL_RULES) {
+      if (rule.kind === "rock" || rule.vegetationBand === "verge") continue;
+      const assets: readonly IslandNaturalAssetRef[] = [
+        recipe.base.naturalAssets[rule.assetRole as "tree" | "bush"],
+      ];
+      const random = seeded(
+        `${blueprint.seed}/${blueprint.layoutRevision}/dressing/interior/${rule.kind}`,
+      );
+      const targetCount =
+        interior.length *
+        (rule.kind === "tree" ? INTERIOR_TREES_PER_GROVE : INTERIOR_SHRUBS_PER_GROVE);
+      placeRule(
+        rule,
+        assets,
+        random,
+        interior,
+        interior,
+        targetCount,
+        targetCount * 44,
+        "interior",
+      );
+    }
+  return { placements, interior };
 }
 
 function assemblyContextFor(
@@ -1986,9 +2050,17 @@ function buildIslandDressingPlan(
       ...geology.outcrops,
     ]),
   };
+  const natural = naturalPlacements(
+    blueprint,
+    recipe,
+    authored,
+    field,
+    landscape.outcrops,
+    landscape.spring,
+  );
   const full = [
     // All facilities reserve real space, including camp and outpost members.
-    ...naturalPlacements(blueprint, recipe, authored, field, landscape.outcrops, landscape.spring),
+    ...natural.placements,
     ...authored,
   ].map((placement) => {
     if (placement.kind !== "tree" && placement.kind !== "bush") return placement;
@@ -2019,6 +2091,9 @@ function buildIslandDressingPlan(
     seed: blueprint.seed,
     recipeId: recipe.id,
     placements,
+    ...(detail === "course" && natural.interior.length
+      ? { interiorGroves: natural.interior.map(({ x, z }) => ({ x, z })) }
+      : {}),
     landscape,
     decisions: reports.map((report) => {
       if (report.status !== "omitted") return report;

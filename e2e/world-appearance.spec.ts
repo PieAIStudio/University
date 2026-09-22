@@ -162,10 +162,12 @@ for (const sample of [
     reduce: false,
   },
   {
+    // 71 until 2026-09-23: the interior groves added 12 trees and 21 shrubs
+    // to this island, and three meadow flowers now yield to their trunks.
     name: "long-delivery",
     origin: ONLINE_ORIGIN,
     route: "/ai-literacy/understanding-ai",
-    flora: 71,
+    flora: 68,
     width: 1440,
     height: 900,
     locale: "en",
