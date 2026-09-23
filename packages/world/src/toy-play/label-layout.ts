@@ -23,21 +23,23 @@ export function layoutTargetLabels(
   items: readonly TargetLabel[],
   width: number,
   height: number,
+  /** Space kept clear at the top and bottom, for a HUD over the canvas. */
+  inset: { readonly top: number; readonly bottom: number } = { top: 44, bottom: 64 },
 ): PlacedLabel[] {
   const placed: PlacedLabel[] = [];
   for (const item of [...items].sort((a, b) => b.priority - a.priority || a.id - b.id)) {
     const label: PlacedLabel = {
       ...item,
       x: clamp(item.targetX - item.width / 2, 8, width - item.width - 8),
-      y: clamp(item.targetY - item.height - 16, 44, height - item.height - 64),
+      y: clamp(item.targetY - item.height - 16, inset.top, height - item.height - inset.bottom),
     };
     for (let pass = 0; pass < placed.length + 1; pass++) {
       const clashes = placed.filter((p) => overlaps(label, p));
       if (!clashes.length) break;
       label.y = Math.min(...clashes.map((p) => p.y)) - label.height - 8;
     }
-    if (label.y < 44) {
-      label.y = 44;
+    if (label.y < inset.top) {
+      label.y = inset.top;
       label.x = clamp(
         item.targetX < width / 2 ? width - item.width - 8 : 8,
         8,

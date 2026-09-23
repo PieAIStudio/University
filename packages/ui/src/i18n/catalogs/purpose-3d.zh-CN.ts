@@ -17,6 +17,8 @@ export const messages = {
   "gallery.three.slice": "划开有依据的信息，避开材料无法支持的说法",
   "gallery.three.wire": "用立体软线连接说法与核对方法，通电找错再修好",
   "gallery.three.rank": "调整步骤车厢，让流程按前置条件顺畅运行",
+  "gallery.three.courtyard": "纸船载着这一段课里的句子漂来，用你的角色把它们扔进对的篮子",
+  "gallery.three.kit": "积木版 · 用课里的题，主角是你的角色",
   "gallery.three.retained": "花园保留版 · 上一轮版本仍可玩",
   "gallery.three.new": "新场景 · 按玩法搭建",
   "purpose.check.wire": "通电检查",

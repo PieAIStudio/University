@@ -4,6 +4,7 @@ import { messages as primm } from "./primm.en.js";
 import { messages as propFinish } from "./prop-finish.en.js";
 import { messages as playGallery } from "./play-gallery.en.js";
 import { messages as arcade3d } from "./arcade-3d.en.js";
+import { messages as gameKit } from "./game-kit.en.js";
 import { messages as accountClosure } from "./account-closure.en.js";
 import { messages as gradingCopy } from "./grading-copy.en.js";
 import { messages as interactionPath } from "./interaction-path.en.js";
@@ -43,6 +44,7 @@ export const messages = {
   ...primm,
   ...purpose3d,
   ...arcade3d,
+  ...gameKit,
   ...playGallery,
   ...propFinish,
   ...accountClosure,

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState, useSyncExternalStore } fr
 import { GameButton } from "@pieai/swimmer-ui-kit";
 import {
   challengeDeck,
+  gameRoundsForSegment,
   isLessonComplete,
   lessonKeyOf,
   planCheckpoint,
@@ -9,6 +10,7 @@ import {
   rememberPracticeQuestion,
   settleCheckpoint,
   type ChallengeCard,
+  type GameRound,
   type IdentityPort,
   type LearningSegment,
   type LessonRef,
@@ -21,6 +23,14 @@ import { useI18n } from "@pieai/university-ui/i18n.js";
 import { MapNodeDialog } from "@pieai/university-ui/map-nodes/MapNodeDialog.js";
 import { MapChallenge } from "@pieai/university-ui/map-nodes/MapChallenge.js";
 import { MapCheckpoint } from "@pieai/university-ui/map-nodes/MapCheckpoint.js";
+import type { AvatarRecipe } from "@pieai/university-world/avatar.js";
+import { hasWebGLContext } from "@pieai/university-world/webgl-capability.js";
+
+const InterceptGame = lazy(() =>
+  import("../game/InterceptGame.js").then((module) => ({ default: module.InterceptGame })),
+);
+/** How many lessons before the segment the game may also draw rounds from. */
+const EARLIER_LESSONS = 9;
 
 const PersonalLessonPanel = lazy(() =>
   import("../personal/PersonalLessonPanel.js").then((module) => ({
@@ -42,6 +52,10 @@ interface Props {
   progressPort: ProgressPort;
   contentPort: ContentPort;
   returnFocusTo: HTMLElement | null;
+  /** Every lesson of the course in order, for rounds from before this segment. */
+  outline: readonly { readonly unitId: string; readonly lessonId: string }[];
+  /** The learner's own avatar, when signed in; the game's hero. */
+  avatarRecipe: AvatarRecipe | null;
   onClose: () => void;
   onOpenLesson: (ref: LessonRef) => void;
 }
@@ -78,11 +92,18 @@ function NodeSession({
   progressPort,
   contentPort,
   accountScope,
+  outline,
+  avatarRecipe,
   onClose,
   onOpenLesson,
 }: Props & { accountScope: string }) {
   const { t } = useI18n();
-  const [data, setData] = useState<{ views: LessonView[]; cards: ChallengeCard[] } | null>(null);
+  const [data, setData] = useState<{
+    views: LessonView[];
+    cards: ChallengeCard[];
+    rounds: GameRound[];
+  } | null>(null);
+  const [flat, setFlat] = useState(() => !hasWebGLContext());
   const [failed, setFailed] = useState(false);
   const [retry, setRetry] = useState(0);
   const base = useMemo(
@@ -97,6 +118,54 @@ function NodeSession({
     () => ({ ...base, lessonIds: segment.lessonIds }),
     [base, segment.lessonIds],
   );
+
+  /**
+   * Rounds for 庭院拦截 (ADR-0011): this segment's lessons and the few before
+   * it, only those the learner completed or proved — the same gate the 2D
+   * matching game uses for its cards.
+   */
+  async function practisedRounds(
+    views: readonly LessonView[],
+    source: ReturnType<typeof progressSourceOf>,
+    signal: AbortSignal,
+  ): Promise<GameRound[]> {
+    const earlier = outline.slice(
+      Math.max(0, segment.firstIndex - EARLIER_LESSONS),
+      segment.firstIndex,
+    );
+    const earlierViews = await Promise.all(
+      earlier.map(({ unitId, lessonId }) =>
+        contentPort
+          .lesson({ studyId, courseId, unitId, lessonId }, { signal })
+          .then((view) => ({ unitId, view }))
+          .catch(() => null),
+      ),
+    );
+    const practised = [
+      ...earlierViews.filter((entry) => entry !== null),
+      ...views.map((view) => ({ unitId: segment.unitId, view })),
+    ].filter(({ unitId, view }) => {
+      const ref = { studyId, courseId, unitId, lessonId: view.lesson.id };
+      const snapshot = {
+        contentRevision: view.lesson.contentRevision,
+        exerciseIds: view.lesson.exercises.map((exercise) => exercise.id),
+      };
+      return (
+        isLessonComplete(source.completionOf(ref, snapshot)) ||
+        source.provenOf?.(ref, snapshot) === true
+      );
+    });
+    return [
+      ...gameRoundsForSegment(
+        practised.map(({ view }) => ({
+          id: view.lesson.id,
+          title: view.lesson.title,
+          activities: view.lesson.activities ?? [],
+        })),
+        segment.lessonIds,
+      ),
+    ];
+  }
 
   useEffect(() => {
     if (kind === "personal") return;
@@ -151,8 +220,11 @@ function NodeSession({
               )
             ).flat()
           : [];
+      const rounds =
+        kind === "challenge" ? await practisedRounds(views, source, request.signal) : [];
       // The game owns its independently shuffled, saved columns.
-      if (!request.signal.aborted) setData({ views, cards: challengeDeck(cards, () => 0.999999) });
+      if (!request.signal.aborted)
+        setData({ views, cards: challengeDeck(cards, () => 0.999999), rounds });
     })().catch(() => {
       if (!request.signal.aborted) setFailed(true);
     });
@@ -175,6 +247,26 @@ function NodeSession({
       </div>
     );
   if (!data) return <p role="status">{t("mapNodes.loading")}</p>;
+
+  if (kind === "challenge" && data.rounds.length >= 2 && !flat)
+    return (
+      <section className="map-node-flow" data-map-node-flow="challenge" data-game="courtyard">
+        <Suspense fallback={<p role="status">{t("mapNodes.loading")}</p>}>
+          <InterceptGame
+            rounds={data.rounds}
+            recipe={avatarRecipe}
+            onClose={onClose}
+            onOpenLesson={(lessonId) => {
+              const unitId =
+                outline.find((entry) => entry.lessonId === lessonId)?.unitId ?? segment.unitId;
+              onOpenLesson({ studyId, courseId, unitId, lessonId });
+            }}
+            onUnavailable={() => setFlat(true)}
+            onPlain={() => setFlat(true)}
+          />
+        </Suspense>
+      </section>
+    );
 
   if (kind === "challenge")
     return (

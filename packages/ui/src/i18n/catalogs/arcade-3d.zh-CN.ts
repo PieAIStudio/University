@@ -1,6 +1,7 @@
 export const messages = {
   "arcade3d.title": "3D 学习小游戏",
   "arcade3d.intro": "开飞船、接落块、填词消行。漂亮的积木，这次真的动起来了。",
+  "arcade3d.courtyard": "庭院拦截 · 新",
   "arcade3d.invaders": "双武器拦截 · 3D",
   "arcade3d.stack": "分类落块 · 3D",
   "arcade3d.cloze-tetris": "填词消行 · 3D",

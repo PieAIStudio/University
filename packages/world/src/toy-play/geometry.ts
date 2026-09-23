@@ -34,6 +34,29 @@ export function toySlab(width: number, depth: number, height: number, radius: nu
   return toCreasedNormals(geometry, Math.PI / 3);
 }
 
+/** A rounded ring: a rim with a real opening, so what sits inside it shows. */
+export function toyRing(
+  outer: readonly [number, number],
+  inner: readonly [number, number],
+  height: number,
+  radius: number,
+) {
+  const shape = outline(outer[0], outer[1], radius);
+  shape.holes.push(new THREE.Path(outline(inner[0], inner[1], radius * 0.85).getPoints(10)));
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: height,
+    bevelEnabled: true,
+    bevelSegments: 2,
+    bevelSize: Math.min(0.05, height * 0.25),
+    bevelThickness: Math.min(0.04, height * 0.25),
+    curveSegments: 8,
+    steps: 1,
+  });
+  geometry.rotateX(-Math.PI / 2);
+  geometry.translate(0, -height / 2, 0);
+  return toCreasedNormals(geometry, Math.PI / 3);
+}
+
 /** A real opening: a word tile fits between the rim, not over a painted black rectangle. */
 export function wordFrameGeometry() {
   const shape = outline(6.6, 2.25, 0.35);

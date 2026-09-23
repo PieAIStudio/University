@@ -20,8 +20,11 @@ import type { ThreeGame } from "@pieai/university-ui/play-catalog/three-games.js
 import type { ToyMode } from "./material.js";
 import type { WorkshopMode } from "./workshop-engine.js";
 
-/** Every mode one of this package's two engines can actually play. */
-export type ImplementedThreeGame = ToyMode | WorkshopMode;
+/**
+ * Every mode this package can actually play: the two old engines, plus the
+ * games assembled from the kit (`game-kit/`, ADR-0011).
+ */
+export type ImplementedThreeGame = ToyMode | WorkshopMode | "courtyard";
 
 /**
  * Registered identities with copy but no scene, as of 2026-09-21.

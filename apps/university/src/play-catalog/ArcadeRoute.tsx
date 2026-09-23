@@ -37,9 +37,11 @@ export default function ArcadeRoute() {
       </nav>
       <p>
         {t(
-          ["invaders", "stack", "cloze-tetris"].includes(mode)
-            ? "gallery.three.retained"
-            : "gallery.three.new",
+          mode === "courtyard"
+            ? "gallery.three.kit"
+            : ["invaders", "stack", "cloze-tetris"].includes(mode)
+              ? "gallery.three.retained"
+              : "gallery.three.new",
         )}
       </p>
       <ThreePlayer key={mode} mode={mode} />

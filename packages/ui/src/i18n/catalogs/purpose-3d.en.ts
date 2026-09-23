@@ -20,6 +20,9 @@ export const messages = {
   "gallery.three.slice": "Slice supported information while leaving unsupported claims alone",
   "gallery.three.wire": "Connect claims and checking methods with physical cables; test and repair",
   "gallery.three.rank": "Reorder action cars and run a process that respects its prerequisites",
+  "gallery.three.courtyard":
+    "Paper boats bring sentences from your lessons; your character throws each into the right basket",
+  "gallery.three.kit": "Kit edition · questions from your lessons, your character plays",
   "gallery.three.retained": "Retained garden edition · Still playable",
   "gallery.three.new": "New scene · Built for its game",
   "purpose.check.wire": "Test the circuit",

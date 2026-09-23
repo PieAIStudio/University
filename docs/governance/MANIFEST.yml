@@ -1,8 +1,8 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-21T12:26:46.922Z
+generated_at: 2026-09-23T18:45:19.471Z
 generator_version: doc-gov@0.14.0
-docs_count: 152
+docs_count: 153
 docs:
   - id: ADR-0001
     path: docs/adr/ADR-0001-both-shells-hold-an-account.md
@@ -73,6 +73,13 @@ docs:
     status: accepted
     canonical: true
     last_reviewed: 2026-09-10
+    pinned: false
+  - id: ADR-0011
+    path: docs/adr/ADR-0011-3d-learning-games-are-assembled-from-one-kit.md
+    type: decision
+    status: accepted
+    canonical: true
+    last_reviewed: 2026-09-24
     pinned: false
   - id: ARCHIVE-ADR-0008-2026-09-07
     path: docs/archive/adr-0008-measurement-history-2026-09-07.md
@@ -373,7 +380,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-20
+    last_reviewed: 2026-09-24
     pinned: true
   - id: REF-FEEDBACK-BACKEND-GAP
     path: docs/reference/execution/feedback-backend-gap.md

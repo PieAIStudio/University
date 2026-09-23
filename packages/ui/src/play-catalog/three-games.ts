@@ -8,6 +8,7 @@
  * locales and no scene at all; the lock names them so the gap is counted, and
  * it refuses to let a fourth join them unnoticed. */
 export const THREE_GAMES = [
+  "courtyard",
   "sky-invaders",
   "factory-stack",
   "press-words",

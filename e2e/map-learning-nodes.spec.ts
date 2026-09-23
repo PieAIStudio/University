@@ -122,6 +122,23 @@ async function openOpportunities(page: Page) {
   return menu;
 }
 
+/**
+ * The challenge node plays 庭院拦截 (ADR-0011) once the learner's finished or
+ * proved lessons — this block's and the nine before it — give two sorts. Which
+ * lessons count as finished depends on the learner store the mode reads, and
+ * in authoring that is the machine's own. The node says which game it opened
+ * on its flow (`data-game`); the 2D matching game this spec checks is always
+ * one visible tap away, and the 3D game has its own spec (courtyard-game).
+ */
+async function chooseMatchingGame(page: Page) {
+  const flow = page.locator('[data-map-node-flow="challenge"]');
+  await expect(flow).toBeVisible();
+  if ((await flow.getAttribute("data-game")) !== "courtyard") return;
+  await expect(page.getByTestId("game-intro")).toBeVisible({ timeout: 60_000 });
+  await humanClick(page, page.getByTestId("game-plain"), "choose the 2D matching game");
+  await expect(flow).not.toHaveAttribute("data-game", "courtyard");
+}
+
 async function openNode(page: Page, kind: string, block: LearningSegment = segment) {
   const menu = await openOpportunities(page);
   if ((await menu.getAttribute("open")) === null)
@@ -162,6 +179,7 @@ for (const [mode, origin] of [
       const text = (a: string, b: string) => (zh ? a : b);
       await openOpportunities(page);
       await openNode(page, "challenge");
+      await chooseMatchingGame(page);
       await expect(page.locator('[data-map-node-flow="challenge"]')).toContainText(
         text("先学这一段", "Learn this section"),
       );
@@ -252,6 +270,7 @@ for (const [mode, origin] of [
 
       await openNode(page, "challenge");
       const dialog = page.locator(".map-node-dialog");
+      await chooseMatchingGame(page);
       await humanClick(
         page,
         dialog.getByRole("button", { name: text("慢慢玩，不计时", "No timer"), exact: true }),
@@ -284,6 +303,7 @@ for (const [mode, origin] of [
       await page.keyboard.press("Escape");
       await page.reload();
       await openNode(page, "challenge");
+      await chooseMatchingGame(page);
       await expect(page.locator("[data-match-front]")).toHaveCount(0);
       await humanClick(
         page,

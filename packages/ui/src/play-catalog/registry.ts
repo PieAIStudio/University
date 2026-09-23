@@ -106,29 +106,47 @@ export function createCatalog(sources: PrototypeSources): readonly CatalogEntry[
     rhythm: "session",
     retained: true,
   }));
-  const upgraded: CatalogEntry[] = THREE_GAMES.slice(0, 6).map((mode) => ({
-    id: `three:${mode}`,
-    group: "three",
-    threeMode: mode,
-    inspiredBy:
-      mode === "sky-invaders"
-        ? "arcade:invaders"
-        : mode === "factory-stack"
-          ? "arcade:stack"
-          : mode === "press-words"
-            ? "arcade:cloze-tetris"
-            : mode === "slice"
-              ? "arcade:slice"
-              : `blocks:${mode}`,
-    name: `arcade3d.${mode}`,
-    action: `gallery.three.${mode}` as MessageKey,
-    controls:
-      `arcade3d.how.${mode === "sky-invaders" ? "invaders" : mode === "factory-stack" ? "stack" : mode === "press-words" ? "cloze-tetris" : mode}` as MessageKey,
-    scope: "arcade3d.boundary",
-    rhythm: "session",
-    retained: false,
-  }));
-  return [...native, ...paths, ...research, ...upgraded, ...three, ...history];
+  // Assembled from the game kit (ADR-0011): content from the lessons, the
+  // learner's avatar as the hero.
+  const kit: CatalogEntry[] = [
+    {
+      id: "three:courtyard",
+      group: "three",
+      threeMode: "courtyard",
+      inspiredBy: "arcade:invaders",
+      name: "arcade3d.courtyard",
+      action: "gallery.three.courtyard",
+      controls: "intercept.controls",
+      scope: "gameKit.result.boundary",
+      rhythm: "session",
+      retained: false,
+    },
+  ];
+  const upgraded: CatalogEntry[] = THREE_GAMES.filter((mode) => mode !== "courtyard")
+    .slice(0, 6)
+    .map((mode) => ({
+      id: `three:${mode}`,
+      group: "three",
+      threeMode: mode,
+      inspiredBy:
+        mode === "sky-invaders"
+          ? "arcade:invaders"
+          : mode === "factory-stack"
+            ? "arcade:stack"
+            : mode === "press-words"
+              ? "arcade:cloze-tetris"
+              : mode === "slice"
+                ? "arcade:slice"
+                : `blocks:${mode}`,
+      name: `arcade3d.${mode}`,
+      action: `gallery.three.${mode}` as MessageKey,
+      controls:
+        `arcade3d.how.${mode === "sky-invaders" ? "invaders" : mode === "factory-stack" ? "stack" : mode === "press-words" ? "cloze-tetris" : mode}` as MessageKey,
+      scope: "arcade3d.boundary",
+      rhythm: "session",
+      retained: false,
+    }));
+  return [...native, ...paths, ...research, ...kit, ...upgraded, ...three, ...history];
 }
 
 export function filterCatalog(

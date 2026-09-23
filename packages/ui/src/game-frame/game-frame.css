@@ -1,0 +1,456 @@
+/*
+ * One box for a whole game (ADR-0011). The stage is a light toy scene in both
+ * page themes, so everything laid over it uses light chips with dark ink
+ * regardless of the page theme; panels are kit GamePanels and follow tokens.
+ */
+.game-frame {
+  --game-frame-ink: #1d3336;
+  --game-frame-chip: rgb(255 250 240 / 0.92);
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: 100%;
+  height: var(--game-frame-height, min(76vh, 720px));
+  min-height: 420px;
+  overflow: hidden;
+  border-radius: 22px;
+  background: #c4e7ed;
+  box-shadow: 0 10px 30px rgb(36 60 64 / 0.18);
+  isolation: isolate;
+}
+
+.game-frame__stage {
+  position: relative;
+  grid-row: 1;
+  min-height: 0;
+}
+
+.game-frame__canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.game-frame__canvas > * {
+  position: absolute;
+  inset: 0;
+}
+
+.game-frame__top {
+  position: absolute;
+  inset: 10px 10px auto;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.game-frame__top > * {
+  pointer-events: auto;
+}
+
+.game-frame__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.game-frame__chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--game-frame-chip);
+  color: var(--game-frame-ink);
+  font-size: 15px;
+  line-height: 1.4;
+  box-shadow: 0 2px 8px rgb(36 60 64 / 0.14);
+  white-space: nowrap;
+}
+
+.game-frame__hearts {
+  gap: 2px;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+.game-frame__hearts .is-full {
+  color: #e35d4b;
+}
+
+.game-frame__hearts .is-empty {
+  color: #b9a79c;
+}
+
+.game-frame__shield {
+  margin-inline-start: 4px;
+  color: #3f7fb8;
+}
+
+.game-frame__score small {
+  color: #7a5b17;
+  font-weight: 700;
+}
+
+.game-frame__banner {
+  position: absolute;
+  inset: 56px 12px auto;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.game-frame__question {
+  max-width: min(620px, 100%);
+  margin: 0;
+  padding: 8px 16px;
+  border-radius: 16px;
+  background: rgb(29 51 54 / 0.78);
+  color: #fffaf0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.game-frame__notice {
+  position: absolute;
+  inset: auto 12px 12px;
+  z-index: 4;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.game-frame__notice > * {
+  max-width: min(560px, 100%);
+}
+
+.game-frame__notice-ground {
+  border-radius: var(--game-ui-radius-panel, 18px);
+  background: #fffaf0;
+  color: var(--game-frame-ink);
+  line-height: 1.5;
+}
+
+.game-frame__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.game-frame__countdown {
+  color: #fffaf0;
+  font-size: clamp(64px, 16vw, 120px);
+  font-weight: 800;
+  text-shadow: 0 6px 24px rgb(29 51 54 / 0.45);
+  animation: game-frame-pop 0.9s ease-out both;
+}
+
+@keyframes game-frame-pop {
+  from {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+}
+
+.game-frame__panel {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow: auto;
+  background: rgb(29 51 54 / 0.28);
+}
+
+.game-frame__panel-card {
+  width: min(560px, 100%);
+  max-height: 100%;
+  overflow: auto;
+}
+
+.game-frame__panel-card h3 {
+  margin: 0 0 10px;
+}
+
+.game-frame__eyebrow {
+  margin: 0 0 4px;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.game-frame__bins {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-frame__bins li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.game-frame__bins small {
+  display: block;
+  opacity: 0.8;
+}
+
+.game-frame__bin-swatch {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  font-weight: 800;
+}
+
+.game-frame__source,
+.game-frame__boundary {
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.game-frame__panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.game-frame__upgrade-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.game-frame__upgrade-options button {
+  display: grid;
+  gap: 4px;
+  height: auto;
+  min-height: 84px;
+  text-align: start;
+}
+
+.game-frame__upgrade-options small {
+  font-weight: 400;
+  white-space: normal;
+}
+
+.game-frame__final-score {
+  display: block;
+  font-size: 44px;
+  line-height: 1.1;
+}
+
+.game-frame__review ul {
+  display: grid;
+  gap: 10px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.game-frame__review li {
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.04);
+}
+
+.game-frame__review li p {
+  margin: 0 0 4px;
+}
+
+.game-frame__review li[data-outcome="missed"] {
+  box-shadow: inset 3px 0 0 #e35d4b;
+}
+
+.game-frame__bin-tag {
+  display: inline-block;
+  margin-inline-start: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.game-frame__lesson-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.game-frame__actions {
+  grid-row: 2;
+  z-index: 3;
+  padding: 10px;
+  background: #fff7e8;
+  box-shadow: 0 -2px 10px rgb(36 60 64 / 0.1);
+}
+
+.game-frame__actions:empty {
+  display: none;
+}
+
+.game-frame__answers {
+  display: grid;
+  grid-template-columns: repeat(var(--game-answer-count, 2), minmax(0, 1fr));
+  gap: 8px;
+}
+
+.game-frame__answers[data-count="3"] {
+  --game-answer-count: 3;
+}
+
+.game-frame__answer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 56px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.game-frame__answer kbd {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: rgb(255 255 255 / 0.55);
+  font: inherit;
+  font-size: 13px;
+}
+
+.game-frame__answer:disabled {
+  opacity: 0.55;
+}
+
+.game-frame__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* DOM labels the scene anchors to boats and baskets. */
+.game-label {
+  position: absolute;
+  inset-block-start: 0;
+  /* The scene moves labels by translate3d from the top-left corner in screen
+     pixels; a right-to-left locale would need that origin mirrored too. */
+  inset-inline-start: 0;
+  max-width: 220px;
+  padding: 5px 10px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: #fffaf0;
+  color: var(--game-frame-ink, #1d3336);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  box-shadow: 0 3px 10px rgb(36 60 64 / 0.2);
+  cursor: pointer;
+  visibility: hidden;
+  will-change: transform;
+}
+
+.game-label[data-target="true"] {
+  border-color: #1d3336;
+}
+
+.game-label small {
+  display: block;
+  margin-top: 2px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.game-label--basket {
+  padding: 3px 10px;
+  font-size: 13px;
+  cursor: default;
+}
+
+.game-label-leaders {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.game-label-leaders line {
+  stroke: rgb(255 250 240 / 0.9);
+  stroke-width: 2;
+}
+
+@media (max-width: 560px) {
+  .game-frame {
+    height: var(--game-frame-height, min(78vh, 680px));
+    min-height: 460px;
+    border-radius: 18px;
+  }
+
+  .game-frame__chip {
+    min-height: 30px;
+    padding: 4px 10px;
+    font-size: 14px;
+  }
+
+  .game-frame__banner {
+    inset-block-start: 50px;
+  }
+
+  .game-frame__question {
+    font-size: 15px;
+  }
+
+  .game-label {
+    max-width: 160px;
+    font-size: 14px;
+  }
+
+  .game-label--basket {
+    max-width: 120px;
+    font-size: 12px;
+  }
+
+  .game-frame__answer {
+    min-height: 60px;
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-frame__countdown {
+    animation: none;
+  }
+}

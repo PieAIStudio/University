@@ -399,8 +399,8 @@ test("delivery arcade3d: catalog adds three playable entries without removing an
   page,
 }, info) => {
   await page.goto(`${ONLINE_ORIGIN}/play-lab/catalog?group=three&entry=three:invaders&lang=zh-CN`);
-  await expect(page.getByRole("tab", { name: "3D组件 9", exact: true })).toBeVisible();
-  await expect(page.locator("[data-entry-id^='three:']")).toHaveCount(9);
+  await expect(page.getByRole("tab", { name: "3D组件 10", exact: true })).toBeVisible();
+  await expect(page.locator("[data-entry-id^='three:']")).toHaveCount(10);
   await page.getByTestId("arcade-start").click();
   await expect(page.getByTestId("arcade-board").locator("canvas")).toBeVisible();
   await page.screenshot({ path: info.outputPath("catalog-3d.png") });

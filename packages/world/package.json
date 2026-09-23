@@ -7,6 +7,7 @@
   "exports": {
     "./prop-finish.js": "./src/prop-finish/PropFinishScene.tsx",
     "./toy-play.js": "./src/toy-play/index.ts",
+    "./game-kit.js": "./src/game-kit/index.ts",
     "./learning-nodes.js": "./src/course/learning-nodes.ts",
     ".": "./src/index.ts",
     "./course-map.js": "./src/course/course-map.ts",

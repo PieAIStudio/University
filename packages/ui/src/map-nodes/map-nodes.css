@@ -4,6 +4,10 @@
   padding: clamp(16px, 3vw, 28px);
   overflow-wrap: anywhere;
 }
+/* A game fills the dialog below its header, on any screen (ADR-0011). */
+.map-node-dialog .game-frame {
+  --game-frame-height: min(680px, calc(100dvh - 150px));
+}
 .map-node-dialog .path-card__header {
   align-items: center;
 }

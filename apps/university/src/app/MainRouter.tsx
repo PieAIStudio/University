@@ -283,6 +283,10 @@ export function MainRouter({
             progressPort={progressPort}
             contentPort={contentPort}
             returnFocusTo={pathOverlay.returnFocusTo}
+            outline={course.units.flatMap((unit) =>
+              unit.lessons.map((lesson) => ({ unitId: unit.id, lessonId: lesson.id })),
+            )}
+            avatarRecipe={avatarSignedIn ? avatarRecipe : null}
             onClose={() => setPathOverlay(null)}
             onOpenLesson={(locator) => {
               setPathOverlay(null);

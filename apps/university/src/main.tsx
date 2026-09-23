@@ -40,6 +40,7 @@ import "@pieai/university-ui/onboarding/welcome-experience.css";
 import "@pieai/university-ui/path/course-route-quiz.css";
 import "@pieai/university-ui/path/path-cards.css";
 import "@pieai/university-ui/map-nodes/map-nodes.css";
+import "@pieai/university-ui/game-frame/game-frame.css";
 import "@pieai/university-ui/practice/practice.css";
 import "@pieai/university-ui/learning-play/learning-play.css";
 import "@pieai/university-ui/play-catalog/play-catalog.css";
