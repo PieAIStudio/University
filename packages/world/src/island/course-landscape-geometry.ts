@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { mergeBufferGeometries } from "three-stdlib";
 import { createMiniatureAsset } from "./miniature-assets.js";
 import { createCourseRuinGeometry } from "./course-ruin-geometry.js";
-import { buildCourseSpringGeometry } from "./course-spring-geometry.js";
+import { buildCourseSpringGeometry, springMistPuffs } from "./course-spring-geometry.js";
 import { createCourseStallGeometry } from "./course-stall-geometry.js";
 import { prepareCraftSurface } from "./craft-surface.js";
 import { createCourseAcademyGeometry } from "./course-academy-geometry.js";
@@ -88,7 +88,8 @@ function mergedOwned(parts: THREE.BufferGeometry[]): THREE.BufferGeometry | null
 
 export function buildCourseLandscapeGeometry(plan: CourseLandscapePlan) {
   const spring = plan.spring ? buildCourseSpringGeometry(plan.spring) : null;
-  const rockParts: THREE.BufferGeometry[] = spring ? [spring.bank] : [];
+  // The spring's soil banks and its Kenney stones join the rock batch.
+  const rockParts: THREE.BufferGeometry[] = spring ? [spring.bank, ...spring.stones] : [];
   // Presentation may round standalone stones, never water seats or ruins.
   // Ranges carry semantic ownership through the existing single merged draw.
   const sculptable = new Set<THREE.BufferGeometry>();
@@ -141,6 +142,7 @@ export function buildCourseLandscapeGeometry(plan: CourseLandscapePlan) {
   } catch (error) {
     rockParts.forEach((part) => part.dispose());
     spring?.water.dispose();
+    spring?.fall.dispose();
     throw error;
   }
   const matrix = new THREE.Matrix4(),
@@ -194,6 +196,7 @@ export function buildCourseLandscapeGeometry(plan: CourseLandscapePlan) {
   } catch (error) {
     rock?.dispose();
     spring?.water.dispose();
+    spring?.fall.dispose();
     throw error;
   } finally {
     for (const source of Object.values(sources)) source.dispose();
@@ -201,22 +204,27 @@ export function buildCourseLandscapeGeometry(plan: CourseLandscapePlan) {
   const triangles =
     (rock?.index?.count ?? 0) / 3 +
     (flora?.index?.count ?? 0) / 3 +
-    (spring?.water.index?.count ?? 0) / 3;
+    (spring?.water.index?.count ?? 0) / 3 +
+    (spring?.fall.index?.count ?? 0) / 3;
   if (triangles > COURSE_LANDSCAPE_LIMITS.triangles) {
     rock?.dispose();
     flora?.dispose();
     spring?.water.dispose();
+    spring?.fall.dispose();
     throw new Error("Course landscape geometry exceeds its bounded budget");
   }
   return {
     rock,
     flora,
     water: spring?.water ?? null,
+    fall: spring?.fall ?? null,
+    mist: plan.spring ? springMistPuffs(plan.spring) : null,
     triangles,
     dispose: () => {
       rock?.dispose();
       flora?.dispose();
       spring?.water.dispose();
+      spring?.fall.dispose();
     },
   };
 }

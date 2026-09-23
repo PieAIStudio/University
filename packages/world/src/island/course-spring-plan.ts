@@ -20,7 +20,7 @@ export interface CourseSpring {
   readonly lip: IslandPoint;
   readonly drop: number;
 }
-export const COURSE_SPRING_TRIANGLE_CEILING = 800;
+export const COURSE_SPRING_TRIANGLE_CEILING = 1600;
 
 /** Retain shallow head over a small bed ripple instead of greedily dropping
  * to each low vertex and then demanding that water climb the next one. This

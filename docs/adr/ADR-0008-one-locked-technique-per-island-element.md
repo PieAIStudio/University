@@ -49,6 +49,22 @@ gates and eleven roadside nodes instead of one segment's three; all of it is
 instanced. The floating unit names are gone from the island: their position followed
 the live stone and read as lesson names in the wrong place.
 
+### R59-07: the spring is water
+
+Owner, 2026-09-23: the pond, stream and fall read as fake. In words: the pond was a
+flat disc in a grey stone ring (a sink), the stream a straight plank between grey
+boxes, the fall a flat board hanging into nothing, ending in three white balls. From
+the same spring plan, the pond now has a lobed outline, depth from a shallow teal rim
+to a deep blue middle, ripple-tilted normals at low roughness so sun and sky glint on
+it, a breathing foam line, a low wet-soil bank that fades into the meadow, lily pads,
+reeds and Kenney pebbles; the stream narrows here and there and its ripples run
+downstream; the fall is a separate translucent two-layer sheet that arcs off the lip
+clear of the sod roll, widens as it drops along the cliff, is streaked and foamed in
+the shader, and thins into six mist sprites. Two Kenney rocks flank the notch, as in
+the reference. All motion is one time uniform (held at 0 under reduced motion); no
+vertex moves. Budget ≤1,600 triangles (was 800) plus one transparent draw and one
+point draw.
+
 ### R59-06: every rock is a baked Kenney Nature Kit rock
 
 Owner, 2026-09-23: the R58-02 hexagonal boulders read as fake and all alike — the

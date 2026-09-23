@@ -329,7 +329,8 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       `course <= ${ISLAND_LANDMARK_TRIANGLE_CEILING} tris per asset, <= ${ISLAND_LANDMARK_MAX_PER_ISLAND} semantic landmark places per island (complete assemblies/outposts count once, not once per wall); ` +
       "R44 remote <= 600 tris per miniature asset; bounded omission, 0 course GLBs; shared 6000-triangle scenery ceiling includes water and bank. Contact is baked into the ground atlas. " +
       "R53 course landscape <= 50000 tris / 220 low flora groups; each rock cluster 336 (R59-06 four baked Kenney Nature Kit rocks; R58-02 procedural boulders were 176) " +
-      "triangles (formerly 572), ruin 348, one spring including banks <= 800. " +
+      "triangles (formerly 572), ruin 348, one spring including banks, stones and fall <= 1600 " +
+      "(R59-07: pond, stream, a translucent two-layer fall and six mist sprites). " +
       "Cliff garden <= 12 supported plants / 288 triangles / one additional merged draw. " +
       "At most four added base-pass meshes with water, not full-frame cost.",
     rejected: [
