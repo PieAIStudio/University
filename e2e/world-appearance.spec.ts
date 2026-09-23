@@ -166,10 +166,12 @@ for (const sample of [
   {
     // 71 until 2026-09-23: the interior groves added 12 trees and 21 shrubs
     // to this island, and three meadow flowers now yield to their trunks.
+    // 68 until R58-01 the same day: lesson stones moved along the road to give
+    // each checkpoint gate a wider gap, and one more flower yields to them.
     name: "long-delivery",
     origin: ONLINE_ORIGIN,
     route: "/ai-literacy/understanding-ai",
-    flora: 68,
+    flora: 67,
     width: 1440,
     height: 900,
     locale: "en",
@@ -191,7 +193,9 @@ for (const sample of [
     name: "phone-authoring",
     origin: LOCAL_ORIGIN,
     route: "/ai-literacy/ai-for-real-life",
-    flora: 69,
+    // 69 until R58-01 (2026-09-23): lesson stones moved along the road to give
+    // each checkpoint gate a wider gap, and one flower yields to them.
+    flora: 68,
     width: 375,
     height: 812,
     locale: "zh-CN",

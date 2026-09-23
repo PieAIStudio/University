@@ -55,6 +55,14 @@ export interface IslandBlueprintInput {
   readonly routeArchetype?: IslandRouteArchetype;
   /** Omit to use the natural base only. No package is selected randomly. */
   readonly themeSelection?: IslandThemeSelection;
+  /**
+   * Gap indices where a checkpoint gate spans the road: gap i lies between
+   * lesson i and lesson i + 1. Those gaps are widened so the gate stands in
+   * open road instead of between two pads touching its posts; the other gaps
+   * give up the same length, so the road, outline and terrain do not change —
+   * only where along the road each lesson stands.
+   */
+  readonly checkpointGaps?: readonly number[];
 }
 
 export interface IslandPoint {
@@ -172,6 +180,8 @@ export interface IslandGeometryBlueprint {
   readonly route: IslandRoute;
   /** Canonical lesson positions, independent of lesson/unit identities. */
   readonly geometryNodes: readonly IslandGeometryNode[];
+  /** Present only when gates widened some gaps; see `IslandBlueprintInput.checkpointGaps`. */
+  readonly checkpointGaps?: readonly number[];
   /** A dense rendering guide for the same route; never a second route. */
   readonly centerline: readonly IslandCenterlinePoint[];
   readonly outline: readonly IslandOutlinePoint[];
@@ -284,6 +294,7 @@ interface ResolvedInput {
   readonly layoutRevision: string;
   readonly routeArchetype?: IslandRouteArchetype;
   readonly themeSelection: IslandThemeSelection;
+  readonly checkpointGaps: readonly number[];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -431,7 +442,63 @@ function resolveInput(input: IslandBlueprintInput): ResolvedInput {
     layoutRevision: normalizeRevision(input.layoutRevision),
     routeArchetype: input.routeArchetype,
     themeSelection: normalizeThemeSelection(input.themeSelection),
+    checkpointGaps: normalizeCheckpointGaps(input.checkpointGaps, lessonCount),
   };
+}
+
+function normalizeCheckpointGaps(value: unknown, lessonCount: number): readonly number[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) throw new TypeError("IslandBlueprint checkpointGaps must be an array");
+  for (const gap of value) {
+    if (!Number.isInteger(gap) || gap < 0 || gap > lessonCount - 2)
+      throw new RangeError("IslandBlueprint checkpointGaps must index a gap between two lessons");
+  }
+  return [...new Set(value as number[])].sort((a, b) => a - b);
+}
+
+/** A gate's gap is this many ordinary gaps long when the island has the room. */
+const CHECKPOINT_GAP_RATIO = 1.5;
+/** Centre-to-centre room a gate needs: two pad radii, the avatar ring, and air. */
+const CHECKPOINT_GAP_MIN = 3.3;
+/** Ordinary gaps never shrink below this, so pads never touch. */
+const ORDINARY_GAP_MIN = 1.9;
+
+/**
+ * Route fractions for every lesson. Even spacing, except that each checkpoint
+ * gap is widened and the ordinary gaps give up the length it takes. `length`
+ * is the road's arc length, so the rule is in world units, not fractions.
+ */
+function lessonFractions(
+  lessonCount: number,
+  checkpointGaps: readonly number[],
+  length: number,
+): readonly number[] {
+  if (lessonCount === 1) return [0];
+  const gaps = lessonCount - 1;
+  const gated = new Set(checkpointGaps);
+  const k = gated.size;
+  let ordinary = length / gaps;
+  let gate = ordinary;
+  if (k > 0 && k < gaps) {
+    ordinary = length / (gaps - k + k * CHECKPOINT_GAP_RATIO);
+    gate = ordinary * CHECKPOINT_GAP_RATIO;
+    if (gate < CHECKPOINT_GAP_MIN) {
+      gate = CHECKPOINT_GAP_MIN;
+      ordinary = (length - k * gate) / (gaps - k);
+    }
+    if (ordinary < ORDINARY_GAP_MIN) {
+      ordinary = Math.min(length / gaps, ORDINARY_GAP_MIN);
+      gate = (length - (gaps - k) * ordinary) / k;
+    }
+  }
+  const fractions = [0];
+  let travelled = 0;
+  for (let gap = 0; gap < gaps; gap += 1) {
+    travelled += gated.has(gap) && k < gaps ? gate : ordinary;
+    fractions.push(Math.min(1, travelled / length));
+  }
+  fractions[gaps] = 1;
+  return fractions;
 }
 
 /** Pick a visual road shape using content scale and the stable seed. */
@@ -951,10 +1018,8 @@ function makeGeometryBlueprint(input: ResolvedInput): IslandGeometryBlueprint {
     const t = index / (centerlineCount - 1);
     return { ...pointAtDistance(raw, t), t };
   });
-  const nodeXY = Array.from({ length: lessonCount }, (_, index) => {
-    const t = lessonCount === 1 ? 0 : index / (lessonCount - 1);
-    return { ...pointAtDistance(raw, t), t };
-  });
+  const fractions = lessonFractions(lessonCount, input.checkpointGaps, raw.length);
+  const nodeXY = fractions.map((t) => ({ ...pointAtDistance(raw, t), t }));
   const { outline, halfX, halfZ } = createOutline(rawPath, `${seed}/${layoutRevision}`);
   const terrainPatches = createTerrainPatches(
     lessonCount,
@@ -1056,6 +1121,7 @@ function makeGeometryBlueprint(input: ResolvedInput): IslandGeometryBlueprint {
     lessonCount,
     route,
     geometryNodes,
+    ...(input.checkpointGaps.length > 0 ? { checkpointGaps: input.checkpointGaps } : {}),
     centerline: baseCenterline,
     outline,
     bounds: { halfX, halfZ, maxHalf },
@@ -1133,6 +1199,7 @@ function projectSemanticNodes(
     layoutRevision: geometry.layoutRevision,
     routeArchetype: geometry.route.archetype,
     themeSelection: geometry.themeSelection,
+    checkpointGaps: [],
   };
   const seenUnitIndices = new Map<string, number>();
   return geometry.geometryNodes.map((point, index) => {
@@ -2123,6 +2190,9 @@ export function validateIslandBlueprint(input: unknown): IslandBlueprintValidati
         layoutRevision: blueprint.layoutRevision,
         routeArchetype: route.archetype as IslandRouteArchetype,
         themeSelection: blueprint.themeSelection as unknown as IslandThemeSelection,
+        checkpointGaps: Array.isArray(blueprint.checkpointGaps)
+          ? (blueprint.checkpointGaps as number[])
+          : undefined,
       });
       if (JSON.stringify(regenerated) !== JSON.stringify(blueprint)) {
         errors.push("determinism: blueprint does not reproduce from its stable inputs");

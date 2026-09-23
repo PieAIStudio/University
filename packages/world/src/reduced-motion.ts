@@ -11,6 +11,12 @@ function preferenceQuery(): MediaQueryList | null {
   return media;
 }
 
+/**
+ * A one-off read. Inside a frame loop use `usePrefersReducedMotion`: a
+ * learning-node pennant that called this every frame stopped the coastal
+ * spring's live switch from reduced to full motion (2026-09-23), the same
+ * failure LessonMarkerField records for its pulse.
+ */
 export function reducedMotionNow(): boolean {
   return preferenceQuery()?.matches ?? false;
 }

@@ -84,7 +84,12 @@ import {
   type GridLessonMarker,
 } from "./grid/LessonMarkerField.js";
 import { LearningNodeField } from "./course/LearningNodeField.js";
-import { courseLearningSites, segmentsFromPlacements } from "./course/learning-sites.js";
+import {
+  checkpointGapsForUnitSizes,
+  courseLearningSites,
+  segmentsFromPlacements,
+  type LearningSite,
+} from "./course/learning-sites.js";
 import {
   buildMedallionFooting,
   MARKER_PLINTH_OFFSET,
@@ -1117,10 +1122,19 @@ export function placeCourse(
       ? flat.slice(0, Math.min(flat.length, lookDebug.lessonCount))
       : flat;
   if (sampleFlat.length === 0) return [];
+  // The gates' gaps come from lessons per unit, as the world map's node has them.
+  const unitSizes: number[] = [];
+  sampleFlat.forEach((entry, index) => {
+    if (index > 0 && sampleFlat[index - 1]!.unit.id === entry.unit.id)
+      unitSizes[unitSizes.length - 1]! += 1;
+    else unitSizes.push(1);
+  });
+  const gates = checkpointGapsForUnitSizes(unitSizes);
   const geometry = islandGeometryBlueprint({
     studyId,
     courseId: course.id,
     lessonCount: sampleFlat.length,
+    checkpointGaps: gates,
     seed:
       lookSample && lookDebug.layoutSeed
         ? lookDebug.layoutSeed
@@ -1368,7 +1382,9 @@ export function CourseScene({
   avatarRecipe = null,
   avatarSignedIn = false,
   avatarLessonId = null,
+  avatarNodeId = null,
   onPick,
+  onPickNode,
   onHover,
   skyStudyId: _skyStudyId = null,
   assetRevision = 0,
@@ -1378,17 +1394,29 @@ export function CourseScene({
   avatarSignedIn?: boolean;
   /** The cell selected before opening a lesson, retained through settlement. */
   avatarLessonId?: string | null;
+  /** A learning node the avatar was sent to; wins over `avatarLessonId`. */
+  avatarNodeId?: string | null;
   onPick: (lesson: LessonPlacement) => void;
+  /** Clicking a learning node's object or pad, the same as clicking its chip. */
+  onPickNode?: (site: LearningSite) => void;
   onHover: (lesson: LessonPlacement | null) => void;
   skyStudyId?: string | null;
   assetRevision?: number;
 }) {
   const overview = useContext(CourseOverviewContext);
   const travelClock = useContext(MapTravelClockContext);
+  const allSites = useMemo(() => courseLearningSites(lessons), [lessons]);
+  const avatarSite = avatarNodeId
+    ? (allSites.find((site) => site.id === avatarNodeId && site.resolved) ?? null)
+    : null;
   const avatarLesson = avatarLessonId
     ? (lessons.find((lesson) => lesson.lessonId === avatarLessonId) ?? null)
     : null;
-  const avatarAt = avatarLesson;
+  const avatarAt = avatarSite
+    ? { position: avatarSite.ground, travelKey: avatarSite.id }
+    : avatarLesson
+      ? { position: avatarLesson.position, travelKey: avatarLesson.lessonId }
+      : null;
   const studyId = lessons[0]?.studyId ?? "course";
   const courseId = lessons[0]?.courseId ?? "course";
   const blueprint = useMemo(
@@ -1411,15 +1439,17 @@ export function CourseScene({
     Only the segment the learner is in draws its three objects, matching the
     chips: V5 shows the nearby nodes and keeps the rest in the course's list.
   */
+  const avatarSegmentId = avatarSite?.segment.id ?? null;
   const learningSites = useMemo(() => {
     const nearby = nearestLearningSegment(
       segmentsFromPlacements(lessons),
       lessons.find((lesson) => lesson.state === "live")?.lessonId,
     );
-    return nearby
-      ? courseLearningSites(lessons).filter((site) => site.segment.id === nearby.id)
-      : [];
-  }, [lessons]);
+    // The segment the avatar stands in draws too: it never lands on bare grass.
+    return allSites.filter(
+      (site) => site.segment.id === nearby?.id || site.segment.id === avatarSegmentId,
+    );
+  }, [allSites, avatarSegmentId, lessons]);
   useEffect(() => {
     return () => {
       layout.footing.geometry?.dispose();
@@ -1473,7 +1503,17 @@ export function CourseScene({
         }}
         onHover={onHover}
       />
-      <LearningNodeField sites={learningSites} />
+      <LearningNodeField
+        sites={learningSites}
+        onPick={
+          onPickNode
+            ? (site) => {
+                recordMapTravel(travelClock, site.id, performance.now());
+                onPickNode(site);
+              }
+            : undefined
+        }
+      />
       {avatarAt || layout.idlePosition ? (
         <LearnerMarker
           position={(avatarAt?.position ?? layout.idlePosition)!}
@@ -1481,7 +1521,7 @@ export function CourseScene({
           signedIn={avatarSignedIn}
           showRing={avatarAt !== null}
           surface="course"
-          travelKey={avatarAt?.lessonId ?? null}
+          travelKey={avatarAt?.travelKey ?? null}
         />
       ) : null}
     </>

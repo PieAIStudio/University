@@ -36,7 +36,7 @@ export function learningOpportunityMarkers(
     // The app's segments carry the real unit titles; the sites carry geometry.
     const segment = byId.get(site.segment.id);
     if (!segment) return [];
-    const position = site.ground.clone();
+    const position = site.object.clone();
     position.y += site.resolved ? LEARNING_SITE_HEIGHT[site.kind] + CHIP_GAP : UNRESOLVED_LIFT;
     const label = `${translate(`mapNodes.${site.kind}`)} · ${translate("mapNodes.range", { first: segment.firstIndex + 1, last: segment.lastIndex + 1 })}`;
     return [

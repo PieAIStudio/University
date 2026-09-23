@@ -167,6 +167,9 @@ export const GRID_LEARNING_NODE_ALBEDO = {
   cloth: GRID_ACCENT_RAMP.coral,
   paper: 0xf4e6cc,
   stone: GRID_LESSON_PLINTH_ALBEDO,
+  /** The pads a learner stands on: coral is the lesson's, so these are not. */
+  challengePad: 0xf2b33d,
+  personalPad: 0xa98bd8,
 } as const;
 
 export interface GridPalettePreset extends GridPalette {

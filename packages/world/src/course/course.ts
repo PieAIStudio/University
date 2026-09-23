@@ -34,6 +34,12 @@ export interface CourseNode extends CourseLearnerFact {
   readonly courseId: string;
   readonly title: string;
   readonly lessons: number;
+  /**
+   * Lessons per unit, in order. The island's geometry widens the road where a
+   * checkpoint gate stands, and gates follow unit segments; the world map and
+   * the course must build the same island, so the node carries what decides it.
+   */
+  readonly unitLessonCounts?: readonly number[];
   readonly studyId: string;
   readonly studyTitle: string;
   depth: number;
@@ -109,6 +115,7 @@ export function courseNodesOf(
         courseId: course.id,
         title: course.title,
         lessons: course.units.reduce((count, unit) => count + unit.lessons.length, 0),
+        unitLessonCounts: course.units.map((unit) => unit.lessons.length),
         studyId: study.id,
         studyTitle: study.title,
         depth: depths.get(course.id) ?? 0,

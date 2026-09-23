@@ -16,6 +16,7 @@
  */
 
 import type { CourseNode } from "./course/course.js";
+import { checkpointGapsForUnitSizes } from "./course/learning-sites.js";
 import { buildCourseGrid, type HexMap } from "./grid/course-grid.js";
 import {
   islandGeometryBlueprint,
@@ -43,6 +44,7 @@ interface CourseShapeCacheEntry {
   readonly studyId: string;
   readonly courseId: string;
   readonly lessonCount: number;
+  readonly unitLessonCounts: string;
   readonly lookSeed: string | undefined;
   readonly themeRecipeId: IslandThemeSelection["recipeId"];
   readonly themeNaturalBasePackId: string;
@@ -78,6 +80,7 @@ function getOrCreateEntry(
   const themeSelection =
     options?.themeSelection ?? islandThemeSelectionForCourse(node.studyId, node.courseId);
   const themeFp = themeFingerprint(themeSelection);
+  const unitKey = node.unitLessonCounts?.join(",") ?? "";
 
   let entry = courseShapeCache.get(node);
 
@@ -86,6 +89,7 @@ function getOrCreateEntry(
     entry.studyId !== node.studyId ||
     entry.courseId !== node.courseId ||
     entry.lessonCount !== node.lessons ||
+    entry.unitLessonCounts !== unitKey ||
     entry.lookSeed !== lookSeed ||
     entry.themeRecipeId !== themeFp.recipeId ||
     entry.themeNaturalBasePackId !== themeFp.naturalBasePackId ||
@@ -97,12 +101,17 @@ function getOrCreateEntry(
       lessonCount: node.lessons,
       seed: lookSeed,
       themeSelection,
+      // The same gate gaps the course island gets, so both build one geometry.
+      checkpointGaps: node.unitLessonCounts
+        ? checkpointGapsForUnitSizes(node.unitLessonCounts)
+        : undefined,
     });
     const blueprint = projectIslandBlueprint(geometry);
     entry = {
       studyId: node.studyId,
       courseId: node.courseId,
       lessonCount: node.lessons,
+      unitLessonCounts: unitKey,
       lookSeed,
       themeRecipeId: themeFp.recipeId,
       themeNaturalBasePackId: themeFp.naturalBasePackId,

@@ -39,6 +39,8 @@ import {
 import {
   activeIdForView,
   isBareView,
+  learningNodeId,
+  learningSegments,
   lessonRefKey,
   progressSourceOf,
   type FeedbackContext,
@@ -204,7 +206,9 @@ export function App() {
   const [courseAvatarTarget, setCourseAvatarTarget] = useState<{
     readonly studyId: string;
     readonly courseId: string;
-    readonly lessonId: string;
+    readonly lessonId: string | null;
+    /** A learning node (gate, pennant or board) the avatar stands at instead of a lesson. */
+    readonly nodeId: string | null;
   } | null>(null);
   const rememberCourseAvatarTarget = useCallback((lesson: LessonPlacement) => {
     setMapEntryLearned(true);
@@ -212,8 +216,22 @@ export function App() {
       studyId: lesson.studyId,
       courseId: lesson.courseId,
       lessonId: lesson.lessonId,
+      nodeId: null,
     });
   }, []);
+  const rememberCourseAvatarNode = useCallback(
+    (nodeId: string) => {
+      if (view.kind !== "course") return;
+      setMapEntryLearned(true);
+      setCourseAvatarTarget({
+        studyId: view.studyId,
+        courseId: view.courseId,
+        lessonId: null,
+        nodeId,
+      });
+    },
+    [view],
+  );
   // Screen 02/03: a path card sits on the course map. It is not a route —
   // confirming is what changes the URL, not pointing at a stone.
   const [pathOverlay, setPathOverlay] = useState<PathOverlay | null>(null);
@@ -423,6 +441,7 @@ export function App() {
     labelNodes,
     lessons,
     setCourseAvatarTarget: rememberCourseAvatarTarget,
+    setCourseAvatarNode: rememberCourseAvatarNode,
     onCoursePick: () => setMapEntryLearned(true),
     setPathOverlay,
     setPicked,
@@ -611,6 +630,7 @@ export function App() {
           },
           onOpenLearningNode: (segment, nodeKind, returnFocusTo) => {
             shortcuts.close();
+            rememberCourseAvatarNode(learningNodeId(segment, nodeKind));
             setPathOverlay({
               kind: "learning-node",
               segment,
@@ -781,6 +801,28 @@ export function App() {
                     ? courseAvatarTarget.lessonId
                     : null
                 }
+                avatarNodeId={
+                  view.kind === "course" &&
+                  courseAvatarTarget?.studyId === view.studyId &&
+                  courseAvatarTarget.courseId === view.courseId
+                    ? courseAvatarTarget.nodeId
+                    : null
+                }
+                onPickNode={(site) => {
+                  if (view.kind !== "course" || !course) return;
+                  const segment = learningSegments(course).find(
+                    (item) => item.id === site.segment.id,
+                  );
+                  if (!segment) return;
+                  rememberCourseAvatarNode(site.id);
+                  setPathOverlay({
+                    kind: "learning-node",
+                    segment,
+                    nodeKind: site.kind,
+                    unitId: segment.unitId,
+                    returnFocusTo: labelNodes.current.get(site.id) ?? null,
+                  });
+                }}
                 skyStudyId={inCourse ? view.studyId : null}
                 onPick={(lesson) => {
                   if (view.kind !== "course") return;

@@ -18,8 +18,10 @@ import { courseLandscapePlan } from "../island/course-landscape-plan.js";
 import type { LessonPlacement } from "../Maps.js";
 import {
   LEARNING_GATE_HALF_SPAN,
+  LEARNING_NODE_KIND_SCALE,
   LEARNING_NODE_POST_SINK,
-  LEARNING_NODE_SCALE,
+  LEARNING_OBJECT_OFFSET,
+  LEARNING_PAD_RADIUS,
 } from "./learning-node-geometry.js";
 
 /**
@@ -33,14 +35,23 @@ import {
  * the old offset for ground that is actually free, and when there is none it
  * reports that instead of drawing into something (the meadow-bed rule: no safe
  * site, no object).
+ *
+ * Every node is also somewhere the avatar can stand, like a lesson stone: under
+ * the gate, in the road; or on a pad beside the pennant or the board, with the
+ * object just behind it, away from the road the camera stands on.
  */
 
 export interface LearningSite {
   readonly id: string;
   readonly segment: LearningSegment;
   readonly kind: MapLearningKind;
-  /** Ground point in blueprint space; y is the drawn terrain height. */
+  /**
+   * Where the avatar lands, in blueprint space; y is the drawn terrain height.
+   * The gate's road centre, or the centre of the node's pad.
+   */
   readonly ground: Vector3;
+  /** Where the object itself stands: the gate's centre, or just behind the pad. */
+  readonly object: Vector3;
   /**
    * A fixed heading (the gate spans the road, so the road decides), or null for
    * objects that turn to face the camera.
@@ -53,24 +64,26 @@ export interface LearningSite {
 }
 
 /**
- * Ground radius each object needs, in blueprint units (lesson node radius is
- * 0.62). The gate's own footprint is its two posts; this radius is only what
- * other nodes keep clear of it.
+ * Ground radius each object needs around `object`, in blueprint units (lesson
+ * node radius is 0.62). The gate's own footprint is its two posts; its radius
+ * is only what other nodes keep clear of it. The board turns to face the
+ * camera, so its whole width sweeps this circle.
  */
 export const LEARNING_SITE_RADIUS: Readonly<Record<MapLearningKind, number>> = {
-  checkpoint: 0.55 * LEARNING_NODE_SCALE,
-  challenge: 0.32 * LEARNING_NODE_SCALE,
-  personal: 0.42 * LEARNING_NODE_SCALE,
+  checkpoint: 0.55 * LEARNING_NODE_KIND_SCALE.checkpoint,
+  challenge: 0.14 * LEARNING_NODE_KIND_SCALE.challenge,
+  personal: 0.32 * LEARNING_NODE_KIND_SCALE.personal,
 };
 /** How tall each object stands, so the DOM chip sits above it rather than inside it. */
 export const LEARNING_SITE_HEIGHT: Readonly<Record<MapLearningKind, number>> = {
-  checkpoint: 1.15 * LEARNING_NODE_SCALE,
-  challenge: 1.32 * LEARNING_NODE_SCALE,
-  personal: 0.9 * LEARNING_NODE_SCALE,
+  checkpoint: 1.15 * LEARNING_NODE_KIND_SCALE.checkpoint,
+  challenge: 1.32 * LEARNING_NODE_KIND_SCALE.challenge,
+  personal: 0.9 * LEARNING_NODE_KIND_SCALE.personal,
 };
 
-const SIDE_OFFSET = 3.2;
-const SEARCH_RINGS = [0, 0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1, 2.4, 2.8, 3.2];
+/** Where the pad is first looked for, beside its lesson. */
+const SIDE_OFFSET = 2.5;
+const SEARCH_RINGS = [0, 0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1, 2.4, 2.8, 3.2, 3.6, 4.0];
 const SEARCH_ANGLES = 16;
 const NODE_GAP = 0.25;
 /** Learning nodes keep this much open ground between each other, so three reads as three. */
@@ -78,8 +91,24 @@ const NODE_SPACING = 0.85;
 const OBSTACLE_GAP = 0.12;
 /** Steepest drop under a footprint; posts sink deeper than this (see the geometry). */
 export const MAX_SLOPE_RISE = 0.22;
-if (LEARNING_NODE_POST_SINK * LEARNING_NODE_SCALE <= MAX_SLOPE_RISE)
+/** A pad is a flat disc: its rim may differ from its centre by this much at most. */
+export const PAD_SLOPE_RISE = 0.12;
+/**
+ * Where a road crosses a side slope, the gate's two posts stand at different
+ * heights. The posts sink 0.69 below the road centre, so a post on the low
+ * side still meets the ground up to this drop; the high side just buries more
+ * post. Holding the gate to the 0.22 of free-standing objects left a quarter of
+ * the gates on a real 36-lesson course undrawn.
+ */
+export const GATE_SLOPE_RISE = 0.5;
+if (
+  LEARNING_NODE_POST_SINK * Math.min(...Object.values(LEARNING_NODE_KIND_SCALE)) <=
+    MAX_SLOPE_RISE ||
+  LEARNING_NODE_POST_SINK * LEARNING_NODE_KIND_SCALE.checkpoint <= GATE_SLOPE_RISE + 0.1
+)
   throw new Error("learning-node posts must sink deeper than the steepest accepted ground");
+/** The avatar's ring under a gate must not overlap either lesson stone beside it. */
+const AVATAR_RING_RADIUS = 0.72;
 const STONE_SPACING = 0.42;
 const MAX_STONES = 6;
 
@@ -89,8 +118,48 @@ interface Obstacle {
   readonly r: number;
 }
 
+/**
+ * The road gap each segment's gate spans: after the segment's last lesson, or
+ * before it when the segment ends the course (the road ends at that lesson).
+ * The blueprint widens exactly these gaps (`checkpointGaps`), so the planner
+ * and the geometry cannot disagree about where a gate goes.
+ */
+export function checkpointGapOf(
+  segment: { readonly lastIndex: number },
+  lessonCount: number,
+): number | null {
+  const gap = segment.lastIndex < lessonCount - 1 ? segment.lastIndex : segment.lastIndex - 1;
+  return gap >= 0 ? gap : null;
+}
+
+/** The same gaps from nothing but lessons per unit: what a catalogue node knows. */
+export function checkpointGapsForUnitSizes(unitLessonCounts: readonly number[]): readonly number[] {
+  let next = 0;
+  const units = unitLessonCounts.map((count, unit) => ({
+    id: `unit-${unit}`,
+    title: "",
+    lessons: Array.from({ length: count }, () => ({ id: `lesson-${next++}` })),
+  }));
+  return checkpointGaps(learningSegments({ units }), next);
+}
+
+export function checkpointGaps(
+  segments: readonly { readonly lastIndex: number }[],
+  lessonCount: number,
+): readonly number[] {
+  return [
+    ...new Set(
+      segments
+        .map((segment) => checkpointGapOf(segment, lessonCount))
+        .filter((gap): gap is number => gap !== null),
+    ),
+  ].sort((a, b) => a - b);
+}
+
 /** Segments as the app derives them, rebuilt from the placements' own order. */
-export function segmentsFromPlacements(lessons: readonly LessonPlacement[]) {
+export function segmentsFromPlacements(
+  lessons: readonly Pick<LessonPlacement, "unitId" | "unitTitle" | "lessonId">[],
+) {
   const units: { id: string; title: string; lessons: { id: string }[] }[] = [];
   for (const lesson of lessons) {
     const last = units.at(-1);
@@ -205,7 +274,7 @@ export function courseLearningSites(lessons: readonly LessonPlacement[]): readon
   const ground = createIslandHeightSampler(blueprint);
   const sites: LearningSite[] = [];
   try {
-    const free = (x: number, z: number, radius: number) => {
+    const free = (x: number, z: number, radius: number, rise = MAX_SLOPE_RISE) => {
       const centre = ground.heightAt(x, z);
       if (!centre.inside) return null;
       if (distanceToIslandRoute(blueprint, { x, z }) < routeClearance + radius) return null;
@@ -223,19 +292,45 @@ export function courseLearningSites(lessons: readonly LessonPlacement[]): readon
       for (let step = 0; step < 6; step += 1) {
         const a = (step / 6) * Math.PI * 2;
         const rim = ground.heightAt(x + Math.cos(a) * radius, z + Math.sin(a) * radius);
-        if (!rim.inside || Math.abs(rim.y - centre.y) > MAX_SLOPE_RISE) return null;
+        if (!rim.inside || Math.abs(rim.y - centre.y) > rise) return null;
       }
       return centre.y;
     };
-    const search = (desired: IslandPoint, radius: number) => {
+    /** Unit vector pointing away from the road at a point: where "behind the pad" is. */
+    const awayFromRoad = (x: number, z: number) => {
+      const e = 0.05;
+      const dx =
+        distanceToIslandRoute(blueprint, { x: x + e, z }) -
+        distanceToIslandRoute(blueprint, { x: x - e, z });
+      const dz =
+        distanceToIslandRoute(blueprint, { x, z: z + e }) -
+        distanceToIslandRoute(blueprint, { x, z: z - e });
+      const away = new Vector3(dx, 0, dz);
+      return away.lengthSq() > 1e-9 ? away.normalize() : null;
+    };
+    /** A pad centre and the object behind it, both on free ground, or null. */
+    const standing = (x: number, z: number, kind: "challenge" | "personal") => {
+      const padY = free(x, z, LEARNING_PAD_RADIUS, PAD_SLOPE_RISE);
+      if (padY === null) return null;
+      const away = awayFromRoad(x, z);
+      if (!away) return null;
+      const ox = x + away.x * LEARNING_OBJECT_OFFSET[kind];
+      const oz = z + away.z * LEARNING_OBJECT_OFFSET[kind];
+      const objectY = free(ox, oz, LEARNING_SITE_RADIUS[kind]);
+      if (objectY === null) return null;
+      return { pad: new Vector3(x, padY, z), object: new Vector3(ox, objectY, oz) };
+    };
+    const search = (desired: IslandPoint, kind: "challenge" | "personal") => {
       for (const ring of SEARCH_RINGS) {
         const count = ring === 0 ? 1 : SEARCH_ANGLES;
         for (let step = 0; step < count; step += 1) {
           const a = (step / count) * Math.PI * 2;
-          const x = desired.x + Math.cos(a) * ring;
-          const z = desired.z + Math.sin(a) * ring;
-          const y = free(x, z, radius);
-          if (y !== null) return new Vector3(x, y, z);
+          const found = standing(
+            desired.x + Math.cos(a) * ring,
+            desired.z + Math.sin(a) * ring,
+            kind,
+          );
+          if (found) return found;
         }
       }
       return null;
@@ -277,25 +372,30 @@ export function courseLearningSites(lessons: readonly LessonPlacement[]): readon
       const side = new Vector3(-tangent.z, 0, tangent.x);
 
       for (const kind of ["checkpoint", "personal", "challenge"] as const) {
-        const radius = LEARNING_SITE_RADIUS[kind];
-        // The old glyph offsets are kept as the starting point, so a node still
-        // appears where a returning learner last saw it whenever that is free.
-        const desired = anchor.position
+        // The gate closes the segment, so the board and the pennant start from
+        // earlier lessons in it — one and two back — instead of crowding the
+        // gate's posts at its last lesson.
+        const back = kind === "personal" ? 1 : kind === "challenge" ? 2 : 0;
+        const baseId = segment.lessonIds[Math.max(0, segment.lessonIds.length - 1 - back)];
+        const base =
+          lessons.find(
+            (lesson) => lesson.lessonId === baseId && lesson.unitId === segment.unitId,
+          ) ?? anchor;
+        const desired = base.position
           .clone()
-          .addScaledVector(side, kind === "personal" ? -SIDE_OFFSET : SIDE_OFFSET)
-          .addScaledVector(tangent, -0.5);
-        let found: Vector3 | null = null;
+          .addScaledVector(side, kind === "personal" ? -SIDE_OFFSET : SIDE_OFFSET);
+        let found: { pad: Vector3; object: Vector3 } | null = null;
         let yaw: number | null = null;
-        let branchFrom = anchor;
+        let branchFrom = base;
         if (kind === "checkpoint") {
-          // Across the road, halfway to the next lesson: you walk through it
-          // when the segment ends. Only the two posts need free verge.
-          const nodeT = (id: string | undefined) =>
-            blueprint.nodes.find((node) => node.id === id)?.t;
-          const from = nodeT(anchor.lessonId);
-          const to = nodeT(next?.lessonId) ?? nodeT(previous?.lessonId);
+          // Across the road in the gap the blueprint widened for it: you walk
+          // through it when the segment ends. Only the two posts need free verge.
+          const gap = checkpointGapOf(segment, lessons.length);
+          const nodeT = (at: number) => blueprint.nodes[at]?.t;
+          const from = gap === null ? undefined : nodeT(gap);
+          const to = gap === null ? undefined : nodeT(gap + 1);
           if (from !== undefined && to !== undefined) {
-            for (const share of [0.5, 0.38, 0.62, 0.28, 0.72]) {
+            for (const share of [0.5, 0.42, 0.58, 0.35, 0.65]) {
               const road = roadAt(blueprint, from + (to - from) * share);
               const normal = new Vector3(-road.tangent.z, 0, road.tangent.x);
               const posts = [1, -1].map((sign) => ({
@@ -306,25 +406,32 @@ export function courseLearningSites(lessons: readonly LessonPlacement[]): readon
               const clearOfLessons = lessons.every(
                 (lesson) =>
                   Math.hypot(road.x - lesson.position.x, road.z - lesson.position.z) >
-                  nodeClearance + 0.2,
+                  blueprint.route.nodeRadius + AVATAR_RING_RADIUS + 0.04,
               );
               const postsFree = posts.every((post) => {
                 const sample = ground.heightAt(post.x, post.z);
                 return (
                   sample.inside &&
-                  Math.abs(sample.y - centre.y) <= MAX_SLOPE_RISE &&
-                  clearOf(post.x, post.z, 0.1 * LEARNING_NODE_SCALE, obstacles, taken)
+                  Math.abs(sample.y - centre.y) <= GATE_SLOPE_RISE &&
+                  clearOf(
+                    post.x,
+                    post.z,
+                    0.1 * LEARNING_NODE_KIND_SCALE.checkpoint,
+                    obstacles,
+                    taken,
+                  )
                 );
               });
               if (centre.inside && clearOfLessons && postsFree) {
-                found = new Vector3(road.x, centre.y, road.z);
+                const at = new Vector3(road.x, centre.y, road.z);
+                found = { pad: at, object: at };
                 yaw = Math.atan2(-normal.z, normal.x);
                 break;
               }
             }
           }
         } else {
-          found = search(desired, radius);
+          found = search(desired, kind);
           // Still this segment's node wherever it stands: try the segment's
           // other lessons on the same side, then the far side of the road.
           const own = kind === "personal" ? -SIDE_OFFSET : SIDE_OFFSET;
@@ -336,28 +443,33 @@ export function courseLearningSites(lessons: readonly LessonPlacement[]): readon
             )
             .filter((lesson): lesson is LessonPlacement => lesson !== undefined);
           for (const offset of [own, -own])
-            for (const lesson of [anchor, ...alternates]) {
+            for (const lesson of [base, ...alternates.filter((item) => item !== base), anchor]) {
               if (found) break;
-              if (lesson === anchor && offset === own) continue;
-              found = search(lesson.position.clone().addScaledVector(side, offset), radius);
+              if (lesson === base && offset === own) continue;
+              found = search(lesson.position.clone().addScaledVector(side, offset), kind);
               if (found) branchFrom = lesson;
             }
         }
-        const at =
-          found ?? new Vector3(desired.x, ground.heightAt(desired.x, desired.z).y, desired.z);
-        if (found) {
+        const fallback = new Vector3(desired.x, ground.heightAt(desired.x, desired.z).y, desired.z);
+        if (found && kind !== "checkpoint") {
           // A gate's own ground is its two posts; its circle only spaces the others.
-          if (kind !== "checkpoint") taken.push({ x: found.x, z: found.z, r: radius });
-          nodes.push({ x: found.x, z: found.z, r: radius });
+          taken.push({ x: found.pad.x, z: found.pad.z, r: LEARNING_PAD_RADIUS });
+          taken.push({ x: found.object.x, z: found.object.z, r: LEARNING_SITE_RADIUS[kind] });
+          nodes.push({ x: found.pad.x, z: found.pad.z, r: LEARNING_PAD_RADIUS });
         }
+        if (found)
+          nodes.push({ x: found.object.x, z: found.object.z, r: LEARNING_SITE_RADIUS[kind] });
         const branch =
-          found && kind !== "checkpoint" ? stonesBetween(found, branchFrom.position, radius) : [];
+          found && kind !== "checkpoint"
+            ? stonesBetween(found.pad, branchFrom.position, LEARNING_PAD_RADIUS)
+            : [];
         for (const stone of branch) taken.push({ x: stone.x, z: stone.z, r: 0.16 });
         sites.push({
           id: learningNodeId(segment, kind),
           segment,
           kind,
-          ground: at,
+          ground: found?.pad ?? fallback,
+          object: found?.object ?? fallback,
           yaw,
           resolved: found !== null,
           branch,

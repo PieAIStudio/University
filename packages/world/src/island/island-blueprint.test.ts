@@ -553,3 +553,32 @@ describe("IslandBlueprint", () => {
     );
   });
 });
+
+describe("checkpoint gaps", () => {
+  const base = { studyId: "s", courseId: "gates", lessonCount: 12 } as const;
+  const plain = islandBlueprint(base);
+  const gated = islandBlueprint({ ...base, checkpointGaps: [4, 9] });
+
+  it("moves only where lessons stand: the road, outline and terrain are the same island", () => {
+    expect(gated.centerline).toEqual(plain.centerline);
+    expect(gated.outline).toEqual(plain.outline);
+    expect(gated.terrainPatches).toEqual(plain.terrainPatches);
+    expect(gated.nodes.map((node) => node.t)).not.toEqual(plain.nodes.map((node) => node.t));
+    expect(validateIslandBlueprint(gated)).toEqual([]);
+  });
+
+  it("widens each gate's gap and takes the length evenly from the others", () => {
+    const gaps = gated.nodes.slice(1).map((node, i) => node.t - gated.nodes[i]!.t);
+    const ordinary = gaps.filter((_, i) => i !== 4 && i !== 9);
+    expect(Math.max(...ordinary) - Math.min(...ordinary)).toBeLessThan(1e-9);
+    expect(gaps[4]! / ordinary[0]!).toBeGreaterThanOrEqual(1.5 - 1e-9);
+    expect(gaps[9]).toBeCloseTo(gaps[4]!, 12);
+    expect(gated.nodes[0]!.t).toBe(0);
+    expect(gated.nodes.at(-1)!.t).toBe(1);
+  });
+
+  it("refuses a gap that is not between two lessons", () => {
+    expect(() => islandBlueprint({ ...base, checkpointGaps: [11] })).toThrow(RangeError);
+    expect(() => islandBlueprint({ ...base, checkpointGaps: [-1] })).toThrow(RangeError);
+  });
+});

@@ -9,9 +9,10 @@ import { distanceToIslandRoute } from "../island/island-route-geometry.js";
 import type { LessonPlacement } from "../Maps.js";
 import {
   LEARNING_GATE_HALF_SPAN,
+  LEARNING_NODE_KIND_SCALE,
   LEARNING_NODE_POST_SINK,
-  LEARNING_NODE_SCALE,
   LEARNING_NODE_TRIANGLES,
+  LEARNING_PAD_RADIUS,
   LEARNING_STONE_TRIANGLES,
   buildLearningStoneGeometry,
   learningNodeKindGeometry,
@@ -20,6 +21,8 @@ import {
 import {
   LEARNING_SITE_RADIUS,
   MAX_SLOPE_RISE,
+  checkpointGapOf,
+  checkpointGaps,
   courseLearningSites,
   segmentsFromPlacements,
 } from "./learning-sites.js";
@@ -34,6 +37,10 @@ function placements(
     Array.from({ length: size }, () => `unit-${unit}`),
   );
   const lessonIds = unitIds.map((_, index) => `lesson-${index}`);
+  // The same derivation `placeCourse` uses, so the gaps match the gates.
+  const segments = segmentsFromPlacements(
+    unitIds.map((unitId, index) => ({ unitId, unitTitle: unitId, lessonId: lessonIds[index]! })),
+  );
   const blueprint = islandBlueprint({
     studyId,
     courseId,
@@ -41,6 +48,7 @@ function placements(
     lessonIds,
     unitIds,
     themeSelection: islandThemeSelectionForCourse(studyId, courseId),
+    checkpointGaps: checkpointGaps(segments, lessonIds.length),
   });
   return blueprint.nodes.map((node, index) => ({
     studyId,
@@ -116,33 +124,63 @@ describe("learning sites", () => {
                 problems.push(`${site.id} on ${lesson.lessonId}`);
             continue;
           }
-          const r = LEARNING_SITE_RADIUS[site.kind];
-          const { x, z } = site.ground;
-          if (distanceToIslandRoute(blueprint, { x, z }) < route + r)
-            problems.push(`${site.id} on the road`);
-          for (const lesson of lessons)
-            if (
-              Math.hypot(x - lesson.position.x, z - lesson.position.z) <
-              blueprint.route.nodeRadius + r
-            )
-              problems.push(`${site.id} on ${lesson.lessonId}`);
-          for (const solid of solids)
-            if (Math.hypot(x - solid.x, z - solid.z) < solid.r + r)
-              problems.push(`${site.id} in ${solid.what}`);
-          for (const other of drawn)
-            if (
-              other !== site &&
-              other.kind !== "checkpoint" &&
-              Math.hypot(x - other.ground.x, z - other.ground.z) <
-                r + LEARNING_SITE_RADIUS[other.kind]
-            )
-              problems.push(`${site.id} overlaps ${other.id}`);
+          const circles = [
+            { what: "pad", at: site.ground, r: LEARNING_PAD_RADIUS },
+            { what: "object", at: site.object, r: LEARNING_SITE_RADIUS[site.kind] },
+          ];
+          const circlesOf = (other: typeof site) => [
+            { at: other.ground, r: LEARNING_PAD_RADIUS },
+            { at: other.object, r: LEARNING_SITE_RADIUS[other.kind] },
+          ];
+          for (const { what, at, r } of circles) {
+            const { x, z } = at;
+            if (distanceToIslandRoute(blueprint, { x, z }) < route + r)
+              problems.push(`${site.id} ${what} on the road`);
+            for (const lesson of lessons)
+              if (
+                Math.hypot(x - lesson.position.x, z - lesson.position.z) <
+                blueprint.route.nodeRadius + r
+              )
+                problems.push(`${site.id} ${what} on ${lesson.lessonId}`);
+            for (const solid of solids)
+              if (Math.hypot(x - solid.x, z - solid.z) < solid.r + r)
+                problems.push(`${site.id} ${what} in ${solid.what}`);
+            for (const other of drawn)
+              if (other !== site && other.kind !== "checkpoint")
+                for (const circle of circlesOf(other))
+                  if (Math.hypot(x - circle.at.x, z - circle.at.z) < r + circle.r)
+                    problems.push(`${site.id} ${what} overlaps ${other.id}`);
+          }
+          // The object stands behind its pad, away from the road the camera is on.
+          if (
+            distanceToIslandRoute(blueprint, site.object) <=
+            distanceToIslandRoute(blueprint, site.ground)
+          )
+            problems.push(`${site.id} object is not behind its pad`);
           for (const stone of site.branch)
             for (const solid of solids)
               if (Math.hypot(stone.x - solid.x, stone.z - solid.z) < solid.r + 0.16)
                 problems.push(`${site.id} stone in ${solid.what}`);
         }
         expect(problems).toEqual([]);
+      });
+
+      it("widens the gap each gate stands in, so the avatar lands clear of both pads", () => {
+        const gaps = checkpointGaps(segments, lessons.length);
+        // Along the road, not as the crow flies: a bend shortens a chord.
+        const along = blueprint.nodes.slice(1).map((node, i) => node.t - blueprint.nodes[i]!.t);
+        const ordinary = along.filter((_, i) => !gaps.includes(i));
+        for (const gap of gaps)
+          expect(along[gap]!, `gap ${gap}`).toBeGreaterThan(Math.max(...ordinary) * 1.45);
+        // The avatar's ring (0.72) never overlaps a lesson stone when it stands under a gate.
+        for (const site of sites.filter((s) => s.kind === "checkpoint" && s.resolved)) {
+          const gap = checkpointGapOf(site.segment, lessons.length)!;
+          for (const lesson of [lessons[gap]!, lessons[gap + 1]!])
+            expect(
+              Math.hypot(site.ground.x - lesson.position.x, site.ground.z - lesson.position.z),
+              site.id,
+            ).toBeGreaterThan(blueprint.route.nodeRadius + 0.72);
+        }
       });
 
       it("finds free ground for every kind somewhere on the island", () => {
@@ -171,12 +209,13 @@ describe("learning node geometry", () => {
 
   it("sinks every post deeper than the steepest ground a site may stand on", () => {
     // Objects turn to face the camera, so any foot can end up on the low side.
-    expect(LEARNING_NODE_POST_SINK * LEARNING_NODE_SCALE).toBeGreaterThan(MAX_SLOPE_RISE);
     for (const kind of ["checkpoint", "personal", "challenge"] as const) {
+      const scale = LEARNING_NODE_KIND_SCALE[kind];
+      expect(LEARNING_NODE_POST_SINK * scale, kind).toBeGreaterThan(MAX_SLOPE_RISE);
       const geometry = learningNodeKindGeometry(kind);
       geometry.computeBoundingBox();
       expect(geometry.boundingBox!.min.y, kind).toBeLessThanOrEqual(
-        -LEARNING_NODE_POST_SINK * LEARNING_NODE_SCALE + 1e-6,
+        -LEARNING_NODE_POST_SINK * scale + 1e-6,
       );
       expect(geometry.getAttribute("color"), kind).toBeDefined();
       geometry.dispose();

@@ -225,6 +225,8 @@ interface WorldMarkersOptions {
   readonly labelNodes: LabelNodes;
   readonly lessons: readonly LessonPlacement[];
   readonly setCourseAvatarTarget?: (lesson: LessonPlacement) => void;
+  /** The avatar hops to a learning node the same way it hops to a lesson. */
+  readonly setCourseAvatarNode?: (nodeId: string) => void;
   readonly onCoursePick: () => void;
   readonly setPathOverlay: Dispatch<SetStateAction<PathOverlay | null>>;
   readonly setPicked: Dispatch<SetStateAction<CourseNode | null>>;
@@ -238,6 +240,7 @@ export function useWorldMarkers({
   labelNodes,
   lessons,
   setCourseAvatarTarget,
+  setCourseAvatarNode,
   onCoursePick,
   setPathOverlay,
   setPicked,
@@ -284,6 +287,7 @@ export function useWorldMarkers({
       return [
         ...annotated,
         ...learningOpportunityMarkers(lessons, learningSegments(course), (segment, nodeKind) => {
+          setCourseAvatarNode?.(learningNodeId(segment, nodeKind));
           setPathOverlay({
             kind: "learning-node",
             unitId: segment.unitId,
@@ -352,6 +356,7 @@ export function useWorldMarkers({
     setPicked,
     setPathOverlay,
     setCourseAvatarTarget,
+    setCourseAvatarNode,
     labelNodes,
   ]);
 

@@ -87,6 +87,8 @@ function summaryNode(): CourseNode {
     courseId: course.id,
     title: course.id,
     lessons: 3,
+    // What `courseNodesOf` records; it decides where the course's gates widen the road.
+    unitLessonCounts: course.units.map((unit) => unit.lessons.length),
     studyId: "turing-pact",
     studyTitle: "TuringPact",
     depth: 0,

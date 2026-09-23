@@ -399,15 +399,21 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       "Three procedural low-poly objects told apart by silhouette — a red torii gate " +
       "spanning the road at a segment's end (checkpoint), a pennant on a pole (challenge), " +
       "a notice board with one pinned note (personal) — plus stepping stones from the road. " +
-      "Only the learner's nearby segment draws; the DOM chip above each stays the pick " +
-      "target and the accessible name. Placed by courseLearningSites, which searches for " +
-      "free ground and never moves an existing tree, rock, landmark courtyard or path.",
+      "Each is a place the avatar lands, like a lesson stone: under the gate, whose road gap " +
+      "the blueprint widens (checkpointGaps), or on a pad — the lesson medallion in gold or " +
+      "lavender — with the pennant or board behind it, away from the road. The pennant's " +
+      "cloth is a separate five-column strip bent by a travelling wave on the CPU. " +
+      "Only the learner's nearby segment (and the one the avatar stands in) draws; clicking " +
+      "the object, its pad or the DOM chip does the same thing, and the chip stays the " +
+      "accessible name. Placed by courseLearningSites, which searches for free ground and " +
+      "never moves an existing tree, rock, landmark courtyard or path.",
     source:
-      "Our own course/learning-sites.ts, learning-node-geometry.ts and LearningNodeField.tsx.",
+      "Our own course/learning-sites.ts, learning-node-geometry.ts and LearningNodeField.tsx; " +
+      "the pad is grid/lesson-medallion.ts's geometry.",
     budget:
-      "<= 48/36/60 tris for gate/pennant/board and 18 per stepping stone; at most 3 objects " +
-      "and one merged stone draw at a time. Measured on three real course shapes: 46 of 51 " +
-      "nodes find free ground; the rest keep their chip and draw nothing.",
+      "<= 48/36/60 tris for gate/pennant (cloth included)/board, one medallion per pad and 18 " +
+      "per stepping stone; objects drawn at 2.3/2.1/1.95x. Measured on three real course " +
+      "shapes: 11/11, 2/2 and 3/4 gates, 51 of 57 nodes in all; the rest keep their chip.",
     rejected: [
       {
         option: "A token standing on a disc, the lesson medallion with a symbol on top",
@@ -422,6 +428,16 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       {
         option: "Every object facing the road",
         why: "The course camera pans but never turns, so a pennant or board facing the road was often seen edge-on as a line. The pennant and board now face the camera heading; posts sink deeper than the steepest accepted slope so a turn cannot lift a foot.",
+        on: "2026-09-23",
+      },
+      {
+        option: "A gate squeezed into the ordinary gap between two lesson stones",
+        why: "At 2.3-2.5 units per gap the avatar's ring under the gate overlapped both stones. The blueprint now widens only the gate gaps (1.5x, at least 3.3) and the other gaps give up the length; the road itself does not move.",
+        on: "2026-09-23",
+      },
+      {
+        option: "Holding the gate's posts to the 0.22 slope of free-standing objects",
+        why: "Where the road crosses a side slope a quarter of the gates on a real 36-lesson course went undrawn. The posts sink 0.69, so the gate accepts up to 0.5.",
         on: "2026-09-23",
       },
       {

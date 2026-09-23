@@ -23,20 +23,41 @@ import type { LearningSite } from "./learning-sites.js";
  * learning-sites.ts), so no turn can lift a foot off the ground.
  */
 
-/** Objects are authored at a unit scale and drawn this much larger. */
-export const LEARNING_NODE_SCALE = 1.6;
+/**
+ * Objects are authored at a unit scale and drawn this much larger. The gate is
+ * the largest because the avatar stands under it; the owner asked for all
+ * three to read bigger than the first 1.6 on 2026-09-23.
+ */
+export const LEARNING_NODE_KIND_SCALE: Readonly<Record<MapLearningKind, number>> = {
+  checkpoint: 2.3,
+  challenge: 2.1,
+  personal: 1.95,
+};
 /** The gate's posts stand this far either side of the road's centre (scaled). */
-export const LEARNING_GATE_HALF_SPAN = 0.36 * LEARNING_NODE_SCALE;
+export const LEARNING_GATE_HALF_SPAN = 0.36 * LEARNING_NODE_KIND_SCALE.checkpoint;
 /** Posts and legs reach this far below the site's ground point (unscaled). */
 export const LEARNING_NODE_POST_SINK = 0.3;
+/**
+ * The pad the avatar lands on beside a pennant or a board: the lesson stone's
+ * own medallion, smaller and in the node's colour, so "you can stand here"
+ * reads the same way everywhere on the island.
+ */
+export const LEARNING_PAD_RADIUS = 0.5;
+/** How far behind its pad (away from the road) the object stands, in world units. */
+export const LEARNING_OBJECT_OFFSET: Readonly<Record<"challenge" | "personal", number>> = {
+  challenge: 0.66,
+  personal: 0.74,
+};
 
-/** Triangle ceilings the technique lock asserts. */
+/** Triangle ceilings the technique lock asserts; the pennant's cloth counts with its pole. */
 export const LEARNING_NODE_TRIANGLES: Readonly<Record<MapLearningKind, number>> = {
   checkpoint: 48,
   challenge: 36,
   personal: 60,
 };
 export const LEARNING_STONE_TRIANGLES = 18;
+/** Columns in the pennant's cloth strip; the wind bends it along these. */
+export const PENNANT_COLUMNS = 4;
 
 /** Foot positions in the object's local frame; +z faces the road. */
 export const LEARNING_NODE_FEET: Readonly<Record<MapLearningKind, readonly [number, number][]>> = {
@@ -175,7 +196,7 @@ class Builder {
 class Frame {
   constructor(
     private readonly origin: THREE.Vector3 = new THREE.Vector3(),
-    private readonly scale = LEARNING_NODE_SCALE,
+    private readonly scale = 1,
     private readonly yaw = 0,
   ) {}
   world(x: number, y: number, z: number) {
@@ -207,17 +228,66 @@ function addFlag(builder: Builder, frame: Frame) {
   const c = GRID_LEARNING_NODE_ALBEDO;
   builder.prism(frame, 0, 0, -LEARNING_NODE_POST_SINK, 0.05, 0.13, 6, c.stone, true, Math.PI / 6);
   builder.prism(frame, 0, 0, 0.05, 1.32, 0.028, 4, c.wood, false, Math.PI / 4);
-  // Pennant: a thin triangular slab off the top of the pole, seen side-on.
-  const top = frame.world(0.02, 1.28, 0);
-  const low = frame.world(0.02, 0.94, 0);
-  const tip = frame.world(0.48, 1.11, 0);
-  const t = 0.012;
-  const back = (v: THREE.Vector3) => v.clone().add(frame.world(0, 0, -t).sub(frame.world(0, 0, 0)));
-  const front = (v: THREE.Vector3) => v.clone().add(frame.world(0, 0, t).sub(frame.world(0, 0, 0)));
-  builder.tri(front(top), front(low), front(tip), c.cloth);
-  builder.tri(back(top), back(tip), back(low), c.cloth);
-  builder.quad(back(top), front(top), front(tip), back(tip), c.cloth);
-  builder.quad(front(low), back(low), back(tip), front(tip), c.cloth);
+  // The cloth is its own geometry (`learningPennantGeometry`): the wind moves it.
+}
+
+/** Where the pennant hangs on its pole, unscaled: from the pole to the tip. */
+const PENNANT = { from: 0.03, to: 0.64, top: 1.3, low: 0.86, tip: 1.08 } as const;
+
+/**
+ * The pennant's cloth: one strip of columns off the pole, drawn double-sided so
+ * it has no thickness to fold wrongly when it bends. `PENNANT_COLUMNS` quads,
+ * the last one closing to the tip. Local x runs from the pole to the tip.
+ */
+export function learningPennantGeometry(): THREE.BufferGeometry {
+  const scale = LEARNING_NODE_KIND_SCALE.challenge;
+  const colour = new THREE.Color(GRID_LEARNING_NODE_ALBEDO.cloth);
+  const positions: number[] = [];
+  const colours: number[] = [];
+  for (let i = 0; i <= PENNANT_COLUMNS; i += 1) {
+    const k = i / PENNANT_COLUMNS;
+    const x = PENNANT.from + (PENNANT.to - PENNANT.from) * k;
+    const top = PENNANT.top + (PENNANT.tip - PENNANT.top) * k;
+    const low = PENNANT.low + (PENNANT.tip - PENNANT.low) * k;
+    positions.push(x * scale, top * scale, 0, x * scale, low * scale, 0);
+    colours.push(colour.r, colour.g, colour.b, colour.r, colour.g, colour.b);
+  }
+  const indices: number[] = [];
+  for (let i = 0; i < PENNANT_COLUMNS; i += 1) {
+    const a = i * 2;
+    indices.push(a, a + 1, a + 3);
+    if (i < PENNANT_COLUMNS - 1) indices.push(a, a + 3, a + 2);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new THREE.Float32BufferAttribute(colours, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
+/**
+ * Bend the pennant in the wind: a travelling wave that grows toward the tip,
+ * so the edge at the pole never leaves it. Writes into the geometry in place;
+ * `rest` is the untouched copy of its positions.
+ */
+export function flutterPennant(
+  geometry: THREE.BufferGeometry,
+  rest: Float32Array,
+  seconds: number,
+): void {
+  const position = geometry.getAttribute("position") as THREE.BufferAttribute;
+  const scale = LEARNING_NODE_KIND_SCALE.challenge;
+  const span = (PENNANT.to - PENNANT.from) * scale;
+  for (let i = 0; i < position.count; i += 1) {
+    const x = rest[i * 3]!;
+    const along = Math.max(0, (x - PENNANT.from * scale) / span);
+    const wave = Math.sin(seconds * 3.4 - along * 4.2);
+    position.setZ(i, rest[i * 3 + 2]! + wave * 0.16 * along);
+    position.setY(i, rest[i * 3 + 1]! - Math.abs(wave) * 0.03 * along);
+  }
+  position.needsUpdate = true;
 }
 
 function addBoard(builder: Builder, frame: Frame) {
@@ -245,7 +315,7 @@ const ADD: Readonly<Record<MapLearningKind, (builder: Builder, frame: Frame) => 
 /** One kind's object in its own frame, origin on the ground, front toward +z. */
 export function learningNodeKindGeometry(kind: MapLearningKind): THREE.BufferGeometry {
   const builder = new Builder();
-  ADD[kind](builder, new Frame());
+  ADD[kind](builder, new Frame(new THREE.Vector3(), LEARNING_NODE_KIND_SCALE[kind]));
   return builder.geometry()!;
 }
 
@@ -264,7 +334,12 @@ export function buildLearningStoneGeometry(
 
 export function learningNodeTriangles(kind: MapLearningKind): number {
   const geometry = learningNodeKindGeometry(kind);
-  const count = geometry.getIndex()!.count / 3;
+  let count = geometry.getIndex()!.count / 3;
   geometry.dispose();
+  if (kind === "challenge") {
+    const cloth = learningPennantGeometry();
+    count += cloth.getIndex()!.count / 3;
+    cloth.dispose();
+  }
   return count;
 }
