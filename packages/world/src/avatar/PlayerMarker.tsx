@@ -1,7 +1,7 @@
 import { Avatar } from "@pieai/swimmer-avatar-kit/react-three-fiber";
 import { useFrame } from "@react-three/fiber";
-import type { AvatarHandle, AvatarRecipe } from "@pieai/swimmer-avatar-kit";
-import { useCallback, useMemo, useRef } from "react";
+import type { AvatarRecipe } from "@pieai/swimmer-avatar-kit";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { guestAvatarRecipe } from "./default-recipe.js";
@@ -15,8 +15,9 @@ export const PLAYER_MARKER_HEIGHT = 1.8;
  *
  * It deliberately delegates the frame loop to SwimmerAvatarKit's `<Avatar>`:
  * the kit owns blinking, gaze, expressions and breathing. This component only
- * chooses the account recipe and normalises its display height, so a recipe
- * with a different body or biped stance remains the learner's actual avatar.
+ * chooses the account recipe and asks the kit to fit it to one display height,
+ * so a recipe with a different body or biped stance remains the learner's
+ * actual avatar.
  */
 export function PlayerMarker({
   position,
@@ -31,11 +32,6 @@ export function PlayerMarker({
   const worldPosition = useMemo(() => new THREE.Vector3(), []);
   const guest = useMemo(() => guestAvatarRecipe(), []);
   const shown = signedIn && recipe ? recipe : guest;
-  const onBuilt = useCallback((avatar: AvatarHandle) => {
-    const node = marker.current;
-    if (!node || avatar.bounds.h <= 0) return;
-    node.scale.setScalar(PLAYER_MARKER_HEIGHT / avatar.bounds.h);
-  }, []);
 
   useFrame(({ camera }) => {
     const node = marker.current;
@@ -51,7 +47,7 @@ export function PlayerMarker({
 
   return (
     <group ref={marker} name={AVATAR_OCCLUSION_TARGET} position={position}>
-      <Avatar recipe={shown} gaze quality="compact" onBuilt={onBuilt} />
+      <Avatar recipe={shown} gaze quality="compact" height={PLAYER_MARKER_HEIGHT} />
     </group>
   );
 }
