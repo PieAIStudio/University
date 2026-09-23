@@ -12,7 +12,12 @@ import { waitForCourseFraming, assertCompleteCourseOverview } from "./harness/co
 import { watchConsole } from "./harness/console.js";
 import { measureStageGpu } from "./harness/stage-gpu-timing.js";
 import { captureDrawnMaterials } from "./harness/drawn-materials.js";
-import { runMapCommand, mapEntryButton, navigateMapBreadcrumb } from "./harness/map-actions.js";
+import {
+  enterableLessonMarker,
+  mapEntryButton,
+  navigateMapBreadcrumb,
+  runMapCommand,
+} from "./harness/map-actions.js";
 
 const OUTPUT = process.env.R47_EVIDENCE_DIR ?? "SCRATCH/e2e/surface-landscape";
 
@@ -126,7 +131,7 @@ for (const viewport of [
         expect(before.swatch.mipmaps).toBe(true);
         expect(before.overflow).toBeLessThanOrEqual(1);
         await page.screenshot({ path: join(folder, "near.png") });
-        const icon = page.locator("button.label--icon.is-visible").first();
+        const icon = enterableLessonMarker(page);
         await expect(icon).toBeVisible();
         await humanClick(page, icon, "真实课序关卡");
         await expect(mapEntryButton(page)).toBeVisible();

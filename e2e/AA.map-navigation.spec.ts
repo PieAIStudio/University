@@ -2,6 +2,7 @@ import { test, expect, type Page, type Locator } from "@playwright/test";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 import { CATALOGUE_ROLES, coursePathOf } from "./harness/catalogue.js";
 import { humanClick } from "./harness/click.js";
+import { enterSelectedMapObject } from "./harness/map-actions.js";
 
 const course = CATALOGUE_ROLES.settlement.course;
 const lessons = course.units.flatMap((unit) => unit.lessons);
@@ -114,19 +115,28 @@ for (const [mode, origin] of [
         0,
       );
       await expect(page.locator("#app-shell-aside button, #app-shell-aside a")).toHaveCount(0);
+      // V5 §12 C′: on a fresh profile the second lesson is locked. Selecting it
+      // names it and explains the way on, with no Enter, and the avatar stays.
       await pointerHit(page, marker(page, second.id));
-      // DOM selection precedes the renderer frame; don't mistake the previous
-      // completed movement report for this click's completed movement.
-      await expect.poll(() => pose(page)).not.toEqual(firstPose);
-      await ready(page, "course");
-      const secondPose = await pose(page);
       await expect(page.locator(".map-shell__heading h2")).toHaveText(titleFor(second, language));
-      await pointerHit(page, entry(page));
+      const locked = page.locator('[data-map-entry="locked"]');
+      await expect(locked).toBeVisible();
+      await expect(entry(page)).toHaveCount(0);
+      await ready(page, "course");
+      expect(await pose(page)).toEqual(firstPose);
+      // "Go to the current lesson" is the way back to what can be entered.
+      await pointerHit(page, locked.getByRole("button").first());
+      await expect(page.locator(".map-shell__heading h2")).toHaveText(titleFor(first, language));
+      await expect(entry(page)).toHaveCount(1);
+      await ready(page, "course");
+      expect(await pose(page)).toEqual(firstPose);
+      // The camera eases back to the current lesson; press once the button settles.
+      await enterSelectedMapObject(page, "current lesson after a locked choice");
       await expect(page.locator(".lesson-reader")).toBeVisible();
-      await expect(page).toHaveURL(new RegExp(`${coursePath}/${second.unitId}/${second.id}`));
+      await expect(page).toHaveURL(new RegExp(`${coursePath}/${first.unitId}/${first.id}`));
       await page.locator(".lesson-toolbar__close").click();
       await ready(page, "course");
-      await expect.poll(() => pose(page)).toEqual(secondPose);
+      await expect.poll(() => pose(page)).toEqual(firstPose);
       await expect(entry(page)).toHaveCount(1);
       await page.locator('[data-map-surface="true"]').focus();
       await page.keyboard.press("Escape");
@@ -181,8 +191,10 @@ test("AA Space is scoped; search preserves spaces, Escape and IME; directory foc
   await expect(panel).toBeHidden();
   await expect(page).toHaveURL(new RegExp(`${coursePath}(?:\\?|$)`));
   await expect(page.locator(".map-shell__heading h2")).toHaveText(last.title);
-  await pointerHit(page, entry(page));
-  await expect(page).toHaveURL(new RegExp(`${last.unitId}/${last.id}`));
+  // The last lesson is locked on a fresh profile (V5 §12 C′): the directory
+  // still focuses it, and its card explains the way on instead of entering.
+  await expect(page.locator('[data-map-entry="locked"]')).toBeVisible();
+  await expect(entry(page)).toHaveCount(0);
 });
 
 test("AA expanded frame stays symmetric; folded rails keep the avatar and selected title", async ({

@@ -240,7 +240,6 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
     // Which course the archipelago walk lands on is chosen from what the label
     // projector actually drew, so the island steps below read it rather than a
     // fixture that may not have been placed.
-    let enteredCourse: (typeof SHIPPED_COURSES)[number] | null = null;
     const consoleErrors = watchConsole(page);
     const evidence: Record<string, unknown> = {
       viewport: page.viewportSize(),
@@ -480,7 +479,6 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       const entered = SHIPPED_COURSES.find((course) => course.id === targetId);
       expect(entered, `点中的课程 ${targetId} 不在已发布目录里`).toBeTruthy();
       await expect(page).toHaveURL(`${ONLINE_ORIGIN}${coursePathOf(entered!)}`);
-      enteredCourse = entered!;
     });
 
     await namedStep(page, "岛内点一个 lesson 标记，真实兔子跳到对应格子", async () => {
@@ -492,16 +490,13 @@ test.describe("G 地图定位 · 星球区域转向与两层头像跳跃", () =>
       });
       const resting = (await motion(page, "course"))!;
       const before = resting.sequence;
-      // The initial marker may already be home. A same-position click opens
-      // its card but correctly does not invent a jump. Pick a different real
-      // lesson by stable identity, not the current order of painted labels.
-      const destination = enteredCourse!.units.flatMap((unit) => unit.lessons)[1];
-      expect(destination, "the motion fixture needs a second real lesson").toBeTruthy();
-      // courseSprites gives the visible kind icon its own identity; the raw
-      // lesson id belongs to the separate quiet title, not this click target.
-      const lessonIcon = page.locator(
-        `button.label--icon.is-visible[data-map-marker=${JSON.stringify(`kind:${destination!.id}`)}]`,
-      );
+      // The avatar rests at the idle point beside the island, so the current
+      // lesson is a real jump. Later lessons are locked on a fresh profile
+      // (V5 §12 C′) and correctly do not move it; the current lesson carries
+      // its "Start" label instead of a kind icon.
+      const lessonIcon = page
+        .locator('button.label--lesson.is-visible[data-lesson-state="live"]')
+        .first();
       await expect(lessonIcon).toBeVisible({ timeout: 30_000 });
       const startedAt = await timedPointerClick(page, lessonIcon, "岛内 lesson 标记");
       const result = await waitForFlight(page, "course", before, startedAt);

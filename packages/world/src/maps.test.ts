@@ -119,6 +119,36 @@ describe("Maps  projection contract", () => {
       lessons.every((lesson) => lesson.visualToken.sigil === lessons[0]!.visualToken.sigil),
     ).toBe(true);
   });
+  it("locks every lesson after the first one neither finished nor proven (V5 §12 C′)", () => {
+    const five = makeCourse("lock-order", 5, 1);
+    const ids = five.units[0]!.lessons.map((lesson) => lesson.id);
+    const progress = (done: readonly string[], proven: readonly string[] = []): ProgressSource => ({
+      completionOf: (ref) =>
+        done.includes(ref.lessonId)
+          ? { exercisesPassed: true, readConfirmed: true }
+          : { exercisesPassed: false, readConfirmed: false },
+      provenOf: (ref) => proven.includes(ref.lessonId),
+    });
+    const states = (source: ProgressSource) =>
+      placeCourse("turing-pact", five, source).map((lesson) => lesson.state);
+
+    // A newcomer can only start at the beginning.
+    expect(states(progress([]))).toEqual(["live", "locked", "locked", "locked", "locked"]);
+    // Finishing one opens the next, and only the next.
+    expect(states(progress([ids[0]!]))).toEqual(["done", "live", "locked", "locked", "locked"]);
+    // A proven stretch (the gate's test) opens what follows it without counting as learned.
+    expect(states(progress([], [ids[0]!, ids[1]!]))).toEqual([
+      "idle",
+      "idle",
+      "live",
+      "locked",
+      "locked",
+    ]);
+    // Old progress that finished a later lesson out of order keeps it open.
+    expect(states(progress([ids[3]!]))).toEqual(["live", "locked", "locked", "done", "locked"]);
+    // Everything finished: nothing is locked.
+    expect(states(progress(ids))).toEqual(["done", "done", "done", "done", "done"]);
+  });
   it("keeps real lesson and unit identities in one shared blueprint", () => {
     const lessons = placeCourse("turing-pact", course, source);
     const blueprint = lessons[0]?.blueprint;

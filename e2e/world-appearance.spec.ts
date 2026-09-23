@@ -3,7 +3,11 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ONLINE_ORIGIN, LOCAL_ORIGIN } from "./ports.js";
 import { waitForCourseFraming, assertCompleteCourseOverview } from "./harness/course-overview.js";
-import { openMapQuickActions, runMapCommand } from "./harness/map-actions.js";
+import {
+  enterableLessonMarker,
+  openMapQuickActions,
+  runMapCommand,
+} from "./harness/map-actions.js";
 import { watchConsole } from "./harness/console.js";
 import { measureStageGpu } from "./harness/stage-gpu-timing.js";
 
@@ -296,7 +300,7 @@ for (const sample of [
     expect((await receipt(page)).landscape.floraCount).toBe(sample.flora);
     // Selecting a lesson is a non-modal object action: the scene keeps working
     // and one short entry button appears beside it. Escape cancels the choice.
-    const icon = page.locator("button.label--icon.is-visible").first();
+    const icon = enterableLessonMarker(page);
     await icon.click();
     await expect(page.locator('[data-map-entry="true"]')).toBeVisible();
     await page.keyboard.press("Escape");

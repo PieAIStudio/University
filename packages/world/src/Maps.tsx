@@ -1166,11 +1166,14 @@ export function placeCourse(
         lessonShape,
       ),
     );
+    // V5 12C as revised 2026-09-23: inside one course, everything after the
+    // first lesson neither finished nor proven is locked. Finished lessons stay
+    // open wherever they are; the checkpoint gate's test is how to jump ahead.
     return done
       ? ("done" as const)
       : index === firstOpen
         ? ("live" as const)
-        : index > firstOpen + 3
+        : firstOpen >= 0 && index > firstOpen
           ? ("locked" as const)
           : ("idle" as const);
   });

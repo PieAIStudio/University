@@ -69,6 +69,38 @@ export async function selectMapDestination(page: Page, id: string): Promise<void
   await expect(palette).toBeHidden();
 }
 
+/**
+ * A lesson the learner can enter now. V5 §12 decision C′ locks every lesson
+ * after the first one neither finished nor proven, so "the first visible
+ * lesson icon" is usually a locked one; the current lesson carries a Start
+ * label rather than a kind icon. Open and finished lessons also enter.
+ */
+export function enterableLessonMarker(page: Page): Locator {
+  return page
+    .locator(
+      [
+        'button.is-visible[data-lesson-state="live"]',
+        'button.is-visible[data-lesson-state="idle"]',
+        'button.is-visible[data-lesson-state="done"]',
+      ].join(", "),
+    )
+    .first();
+}
+
+/** The card a locked lesson opens instead of an entry button (V5 §12 decision C′). */
+export function lockedEntryCard(page: Page): Locator {
+  return page.locator('[data-map-entry="locked"]');
+}
+
+/** Whichever selection action appeared: the entry button, or a locked lesson's card. */
+export function mapSelectionAction(page: Page): Locator {
+  return page
+    .locator(
+      '[data-map-entry="true"] button:visible, button[data-map-entry="true"]:visible, [data-map-entry="locked"] button:visible',
+    )
+    .first();
+}
+
 /** One shared locator for planet, island and lesson entry actions. */
 export function mapEntryButton(page: Page): Locator {
   return page

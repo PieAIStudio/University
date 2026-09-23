@@ -56,7 +56,7 @@ import {
 } from "@pieai/university-ui/navigation/StudySwitcher.js";
 import { SettingsSubnav } from "@pieai/university-ui/navigation/empty.js";
 import { LevelProgress } from "@pieai/university-ui/navigation/screens.js";
-import { MapEntryAction } from "@pieai/university-ui/path/MapEntryAction.js";
+import { MapEntryAction, type MapEntryLock } from "@pieai/university-ui/path/MapEntryAction.js";
 import {
   MapInformation,
   courseInformation,
@@ -219,6 +219,44 @@ export function App() {
       nodeId: null,
     });
   }, []);
+  /*
+    V5 §12 decision C′: a locked lesson's card says why and offers the current
+    lesson or the current stretch's checkpoint test — never "Enter".
+  */
+  const lockedEntry = (lessonId: string): MapEntryLock | undefined => {
+    if (view.kind !== "course" || !course) return undefined;
+    const picked = lessons.find((item) => item.lessonId === lessonId);
+    const live = lessons.find((item) => item.state === "live");
+    if (picked?.state !== "locked" || !live) return undefined;
+    const segment = learningSegments(course).find(
+      (item) => item.unitId === live.unitId && item.lessonIds.includes(live.lessonId),
+    );
+    return {
+      current: live.lessonTitle,
+      onGoToCurrent: () => {
+        rememberCourseAvatarTarget(live);
+        mapCommands.current?.focus(live.position.toArray());
+        setPathOverlay({
+          kind: "node",
+          unitId: live.unitId,
+          lessonId: live.lessonId,
+          returnFocusTo: null,
+        });
+      },
+      onTest: segment
+        ? () => {
+            rememberCourseAvatarNode(learningNodeId(segment, "checkpoint"));
+            setPathOverlay({
+              kind: "learning-node",
+              segment,
+              nodeKind: "checkpoint",
+              unitId: segment.unitId,
+              returnFocusTo: null,
+            });
+          }
+        : undefined,
+    };
+  };
   const rememberCourseAvatarNode = useCallback(
     (nodeId: string) => {
       if (view.kind !== "course") return;
@@ -826,7 +864,8 @@ export function App() {
                 skyStudyId={inCourse ? view.studyId : null}
                 onPick={(lesson) => {
                   if (view.kind !== "course") return;
-                  rememberCourseAvatarTarget(lesson);
+                  // A locked stone opens its explanation; the avatar stays put.
+                  if (lesson.state !== "locked") rememberCourseAvatarTarget(lesson);
                   setPathOverlay({
                     kind: "node",
                     unitId: lesson.unitId,
@@ -867,6 +906,7 @@ export function App() {
               <MapEntryAction
                 title={pathLesson.title}
                 actionRef={pickCardRef}
+                locked={lockedEntry(pathLesson.id)}
                 onEnter={() => {
                   setPathOverlay(null);
                   setView({
@@ -1041,7 +1081,7 @@ export function App() {
               select: () => {
                 const placement = lessons.find((item) => item.lessonId === lesson.id);
                 if (!placement) return;
-                rememberCourseAvatarTarget(placement);
+                if (placement.state !== "locked") rememberCourseAvatarTarget(placement);
                 mapCommands.current?.focus(placement.position.toArray());
                 setPathOverlay({
                   kind: "node",

@@ -11,9 +11,10 @@ import { namedStep } from "./harness/step.js";
 import { waitForCourseTrees } from "./harness/course-foliage.js";
 import { FIRST_COURSE_ROUTE } from "./harness/online-learner.js";
 import {
-  openMapQuickActions,
-  mapEntryButton,
   enterSelectedMapObject,
+  enterableLessonMarker,
+  mapEntryButton,
+  openMapQuickActions,
 } from "./harness/map-actions.js";
 
 const DEFAULT_CAPTURE_DIR = fileURLToPath(
@@ -216,9 +217,7 @@ async function runCourseWalk(page: Page, vp: ViewportConfig): Promise<void> {
   });
 
   await namedStep(page, `[${vp.name}] 真实指针点击首节关卡标记打开课程卡`, async () => {
-    const lessonMarker = page
-      .locator("button.label--icon.is-visible, button.label--lesson.is-visible")
-      .first();
+    const lessonMarker = enterableLessonMarker(page);
     await expect(lessonMarker).toBeVisible({ timeout: 30_000 });
     await waitForStableBox(lessonMarker);
     await humanClick(page, lessonMarker, `${vp.name} 首节关卡标记`);

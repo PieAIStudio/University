@@ -7,6 +7,7 @@ import type { IslandUnitSigil } from "../island/island-blueprint.js";
 import { usePrefersReducedMotion } from "../reduced-motion.js";
 import { islandLookFrozen } from "../island/island-surface-style.js";
 import { unitRingGeometry, unitSigilArcCount } from "../island/unit-sigil.js";
+import { createBoulderGeometry, type BoulderSetting } from "../island/course-rock-profile.js";
 import type { LessonPlacement } from "../Maps.js";
 import { GRID_LESSON_PLINTH_ALBEDO } from "./grid-palette.js";
 import type { MedallionInlays } from "./medallion-grounding.js";
@@ -93,6 +94,19 @@ export function composeMarkerMatrix(
   scratch.scale.set(scale, scale, scale);
   return target.compose(scratch.position, scratch.rotation, scratch.scale);
 }
+
+/**
+ * The stone that sits on a locked lesson (V5 §12 decision C′): the island's own
+ * boulder, a small grass-capped one with a pebble, authored for a pad of radius
+ * 1 so the marker's radius scales it. When the lesson unlocks it sinks and
+ * shrinks away over LOCK_STONE_CRUMBLE_SECONDS; under reduced motion it is gone.
+ */
+const LOCK_STONE: readonly BoulderSetting[] = [
+  { x: -0.06, z: 0.04, rx: 0.5, rz: 0.44, height: 0.72, turn: 0.35, turf: true },
+  { x: 0.46, z: -0.26, rx: 0.2, rz: 0.18, height: 0.3, turn: -0.6, turf: false },
+];
+export const LOCK_STONE_CRUMBLE_SECONDS = 0.7;
+const HIDDEN = new THREE.Matrix4().makeScale(0, 0, 0);
 
 interface LessonMarkerFieldProps {
   readonly markers: readonly GridLessonMarker[];
@@ -267,6 +281,72 @@ export function LessonMarkerField({
     };
   }, [bodyGeometry, bodyMaterial, engravingMaterial]);
 
+  // Lock stones: one instance per marker, hidden unless the lesson is locked.
+  const lockGeometry = useMemo(() => createBoulderGeometry(LOCK_STONE, "lesson-lock"), []);
+  const lockMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 }),
+    [],
+  );
+  useEffect(
+    () => () => {
+      lockGeometry.dispose();
+      lockMaterial.dispose();
+    },
+    [lockGeometry, lockMaterial],
+  );
+  const lockStones = useRef<THREE.InstancedMesh>(null);
+  const lockedBefore = useRef(new Set<string>());
+  const crumbling = useRef(new Map<number, number>());
+  useLayoutEffect(() => {
+    const stones = lockStones.current;
+    if (!stones) return;
+    const now = performance.now();
+    const locked = new Set<string>();
+    markers.forEach((marker, index) => {
+      const id = marker.lesson.lessonId;
+      if (marker.lesson.state === "locked") {
+        locked.add(id);
+        crumbling.current.delete(index);
+        stones.setMatrixAt(
+          index,
+          composeMarkerMatrix(marker, MARKER_ENGRAVING_OFFSET, marker.radius, matrix, scratch),
+        );
+      } else if (lockedBefore.current.has(id) && !reducedMotion) {
+        // Just unlocked: keep the stone in place and let the frame loop crumble it.
+        crumbling.current.set(index, now);
+      } else {
+        stones.setMatrixAt(index, HIDDEN);
+      }
+    });
+    lockedBefore.current = locked;
+    stones.instanceMatrix.needsUpdate = true;
+  }, [markers, matrix, scratch, reducedMotion]);
+  useFrame(() => {
+    const stones = lockStones.current;
+    if (!stones || crumbling.current.size === 0) return;
+    const now = performance.now();
+    for (const [index, start] of crumbling.current) {
+      const marker = markers[index];
+      const t = (now - start) / 1000 / LOCK_STONE_CRUMBLE_SECONDS;
+      if (!marker || t >= 1) {
+        stones.setMatrixAt(index, HIDDEN);
+        crumbling.current.delete(index);
+        continue;
+      }
+      // Sink into the pad while shrinking, with a small shake as it goes.
+      const shake = Math.sin(t * 40) * 0.04 * (1 - t);
+      composeMarkerMatrix(
+        marker,
+        MARKER_ENGRAVING_OFFSET - t * 0.5 + shake,
+        marker.radius * (1 - t * t),
+        matrix,
+        scratch,
+      );
+      stones.setMatrixAt(index, matrix);
+    }
+    stones.instanceMatrix.needsUpdate = true;
+  });
+
   if (allMarkers.length === 0) return null;
   const pickMarker = (event: { readonly instanceId?: number; stopPropagation: () => void }) => {
     const marker = event.instanceId === undefined ? undefined : markers[event.instanceId];
@@ -284,6 +364,14 @@ export function LessonMarkerField({
   };
   return (
     <group name="hex-grid-lesson-markers">
+      <instancedMesh
+        ref={lockStones}
+        args={[lockGeometry, lockMaterial, markers.length]}
+        name="lesson-lock-stones"
+        castShadow
+        receiveShadow
+        frustumCulled={false}
+      />
       <instancedMesh
         ref={plinth}
         args={[bodyGeometry, bodyMaterial, markers.length]}

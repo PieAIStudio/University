@@ -45,4 +45,8 @@ export const messages = {
   "map.selectNamed": "选择 {{title}}",
   "map.unavailable": "这个目的地暂时不可用，请重新选择。",
   "map.waiting": "等你选择",
+  "map.locked.label": "还没解锁：{{title}}",
+  "map.locked.why": "先学完「{{current}}」，或到这一段的红门测一下跳过。",
+  "map.locked.goCurrent": "去学当前这节",
+  "map.locked.test": "去红门测一下",
 } as const;

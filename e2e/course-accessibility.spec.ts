@@ -10,7 +10,12 @@ import {
 import { LOCAL_ORIGIN, ONLINE_ORIGIN } from "./ports.js";
 import { namedStep } from "./harness/step.js";
 import { assertCompleteCourseOverview, waitForCourseFraming } from "./harness/course-overview.js";
-import { runMapCommand, mapEntryButton } from "./harness/map-actions.js";
+import {
+  enterableLessonMarker,
+  mapEntryButton,
+  mapSelectionAction,
+  runMapCommand,
+} from "./harness/map-actions.js";
 
 const COURSE_PATH = coursePathOf(COURSE_SCENE_FIXTURE.course);
 
@@ -80,17 +85,14 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
           await assertCompleteCourseOverview(page);
           await runMapCommand(page, "learning-view");
           await waitForCourseFraming(page);
-          const marker = page
-            .locator(
-              'button.label--icon.is-visible:not([data-lesson-state="done"]):not([data-lesson-state="locked"])',
-            )
-            .first();
+          const marker = enterableLessonMarker(page);
           await expect(marker).toBeVisible({ timeout: 30_000 });
           await waitForStableBox(marker);
 
           // 验证触控尺寸语义与无障碍属性
           await expect(marker).toHaveAttribute("data-lesson-state");
-          await expect(marker).toHaveAttribute("aria-label");
+          // The current lesson is a "Start" text label: its name is its text.
+          await expect(marker).toHaveAccessibleName(/\S/);
 
           // 真实触控事件点击标记
           await marker.tap();
@@ -163,13 +165,13 @@ test.describe("M 课程岛无障碍与移动触控回归", () => {
         }
         expect(focusedMarker, "键盘 Tab 应能聚焦到实际可见的标记按钮").toBe(true);
 
-        // 使用 Enter 键激活标记
+        // 使用 Enter 键激活标记：可进入的课出「进入」，锁住的课出说明卡（V5 §12 C′）
         await page.keyboard.press("Enter");
-        await expect(mapEntryButton(page)).toBeVisible({ timeout: 10000 });
+        await expect(mapSelectionAction(page)).toBeVisible({ timeout: 10000 });
         await expect(page.locator('[aria-modal="true"]')).toHaveCount(0);
         // Selecting is nonmodal; Escape cancels only this selection.
         await page.keyboard.press("Escape");
-        await expect(mapEntryButton(page)).toBeHidden({ timeout: 10000 });
+        await expect(mapSelectionAction(page)).toBeHidden({ timeout: 10000 });
 
         consoleErrors.assertClean();
       });

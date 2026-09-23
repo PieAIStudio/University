@@ -45,4 +45,8 @@ export const messages = {
   "map.selectNamed": "Select {{title}}",
   "map.unavailable": "This destination is not available. Please choose again.",
   "map.waiting": "Waiting for your choice",
+  "map.locked.label": "Not unlocked yet: {{title}}",
+  "map.locked.why": "Finish “{{current}}” first, or test out of this stretch at its gate.",
+  "map.locked.goCurrent": "Go to the current lesson",
+  "map.locked.test": "Test at the gate",
 } as const;

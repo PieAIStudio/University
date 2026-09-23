@@ -256,7 +256,8 @@ export function useWorldMarkers({
           view.kind === "lesson"
             ? undefined
             : (lesson) => {
-                setCourseAvatarTarget?.(lesson);
+                // A locked stone opens its explanation; the avatar stays put.
+                if (lesson.state !== "locked") setCourseAvatarTarget?.(lesson);
                 setPathOverlay({
                   kind: "node",
                   unitId: lesson.unitId,
