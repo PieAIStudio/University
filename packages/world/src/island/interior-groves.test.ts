@@ -60,12 +60,19 @@ describe("interior groves", () => {
     }
   });
 
-  it("give a long island's empty far ground a grove, and leave short islands as they were", () => {
+  it("give a long island's empty far ground a grove, and a short island's a copse", () => {
     const long = plan("ai-literacy", "understanding-ai", 36).dressing.placements;
     expect(long.some((p) => p.kind === "tree" && interior(p.clusterId))).toBe(true);
+    const eight = plan("browser-ai", "run-a-real-project-with-ai", 8).dressing.placements;
+    expect(eight.some((p) => p.kind === "tree" && interior(p.clusterId))).toBe(true);
+    /*
+      The four- and six-lesson islands stay as they were: half their land is in
+      the shore band, where a tree would lean over the cliff lip. Their bare
+      lawn needs a rim rule for low planting, not a grove.
+    */
     for (const [study, course, n] of [
       ["browser-ai", "search-your-own-photos", 6],
-      ["browser-ai", "run-a-real-project-with-ai", 8],
+      ["browser-ai", "when-a-project-is-too-big-to-read", 4],
     ] as const)
       expect(
         plan(study, course, n).dressing.placements.some((p) => interior(p.clusterId)),

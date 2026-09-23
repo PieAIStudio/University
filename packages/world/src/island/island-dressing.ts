@@ -18,6 +18,7 @@ import { courseTreeIsFir, courseTreeEnvelopesClear } from "./course-tree-envelop
 import {
   INTERIOR_SHRUBS_PER_GROVE,
   INTERIOR_TREES_PER_GROVE,
+  interiorGroveScale,
   interiorGroves,
   uplandGroves,
 } from "./course-upland-groves.js";
@@ -1678,9 +1679,13 @@ function naturalPlacements(
       const random = seeded(
         `${blueprint.seed}/${blueprint.layoutRevision}/dressing/interior/${rule.kind}`,
       );
+      // A small island's grove is a copse, not a wood.
+      const scale = interiorGroveScale(blueprint);
       const targetCount =
         interior.length *
-        (rule.kind === "tree" ? INTERIOR_TREES_PER_GROVE : INTERIOR_SHRUBS_PER_GROVE);
+        (rule.kind === "tree"
+          ? Math.max(2, Math.round(INTERIOR_TREES_PER_GROVE * scale))
+          : Math.max(3, Math.round(INTERIOR_SHRUBS_PER_GROVE * scale)));
       placeRule(
         rule,
         assets,

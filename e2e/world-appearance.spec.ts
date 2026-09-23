@@ -155,7 +155,9 @@ for (const sample of [
     name: "short-delivery",
     origin: ONLINE_ORIGIN,
     route: "/browser-ai/run-a-real-project-with-ai",
-    flora: 12,
+    // 12 until 2026-09-23: an interior copse added 6 trees and 9 shrubs to this
+    // island's bare west side, and one meadow flower now yields to a trunk.
+    flora: 11,
     width: 1440,
     height: 900,
     locale: "zh-CN",
@@ -177,7 +179,9 @@ for (const sample of [
     name: "landscape-delivery",
     origin: ONLINE_ORIGIN,
     route: "/browser-ai/run-a-real-project-with-ai",
-    flora: 12,
+    // 12 until 2026-09-23: an interior copse added 6 trees and 9 shrubs to this
+    // island's bare west side, and one meadow flower now yields to a trunk.
+    flora: 11,
     width: 872,
     height: 286,
     locale: "en",

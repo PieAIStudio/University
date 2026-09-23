@@ -82,6 +82,17 @@ export function uplandGroves(
   return result;
 }
 
+/**
+ * The interior pass was sized for a long island: its empty lawn lies seven and
+ * more units from the road. On a six-lesson island no land is that far out —
+ * its bare lawn sits four to seven units away — so every distance, and the
+ * grove itself, scales with the island's half-width. Long islands (half-width
+ * 36 and more) keep exactly the long-island values.
+ */
+export function interiorGroveScale(bp: IslandBlueprint): number {
+  return bp.bounds.maxHalf >= 36 ? 1 : Math.min(1, Math.max(0.35, bp.bounds.maxHalf / 43));
+}
+
 /** How many trees and understorey shrubs one interior grove asks for. */
 export const INTERIOR_TREES_PER_GROVE = 5;
 export const INTERIOR_SHRUBS_PER_GROVE = 7;
@@ -103,6 +114,9 @@ export function interiorGroves(
   existing: readonly IslandPoint[],
 ): readonly RouteVegetationCentre[] {
   const clearance = islandRouteClearance(bp);
+  const k = interiorGroveScale(bp);
+  const at = (value: number, floor: number) => Math.max(floor, value * k);
+  const roadGap = at(7, 3);
   const land = (x: number, z: number) => {
     const s = sampleIslandField(field, x, z);
     return s.inside && s.shore <= 0.8 && s.rock <= 0.32 && s.grass >= 0.3 ? s : null;
@@ -116,11 +130,14 @@ export function interiorGroves(
     for (let z = -bp.bounds.halfZ; z <= bp.bounds.halfZ; z += 1)
       if (
         land(x, z) &&
-        distanceToIslandRoute(bp, { x, z }) >= clearance + 7 &&
-        emptiness(x, z) >= 6
+        distanceToIslandRoute(bp, { x, z }) >= clearance + roadGap &&
+        emptiness(x, z) >= at(6, 3)
       )
         emptyLand += 1;
-  const quota = Math.min(INTERIOR_GROVE_LIMIT, Math.floor(emptyLand / INTERIOR_LAND_PER_GROVE));
+  const quota = Math.min(
+    INTERIOR_GROVE_LIMIT,
+    Math.floor(emptyLand / Math.max(40, INTERIOR_LAND_PER_GROVE * k * k)),
+  );
   if (quota === 0) return [];
   const sites: Array<IslandPoint & { score: number }> = [];
   for (let ix = -10; ix <= 10; ix++)
@@ -130,21 +147,22 @@ export function interiorGroves(
       const s = land(x, z);
       if (!s) continue;
       const distance = distanceToIslandRoute(bp, { x, z });
-      if (distance < clearance + 7) continue;
-      if (existing.some((p) => Math.hypot(p.x - x, p.z - z) < 9)) continue;
-      if (standing.some((p) => Math.hypot(p.x - x, p.z - z) < p.radius + 3)) continue;
-      if (Math.hypot(bp.hero.x - x, bp.hero.z - z) < bp.hero.radius + 7) continue;
+      if (distance < clearance + roadGap) continue;
+      if (existing.some((p) => Math.hypot(p.x - x, p.z - z) < at(9, 4))) continue;
+      if (standing.some((p) => Math.hypot(p.x - x, p.z - z) < p.radius + at(3, 1.5))) continue;
+      if (Math.hypot(bp.hero.x - x, bp.hero.z - z) < bp.hero.radius + at(7, 3)) continue;
+      const reach = at(3, 1.5);
       const covered = [
-        [-3, -3],
-        [3, -3],
-        [3, 3],
-        [-3, 3],
+        [-reach, -reach],
+        [reach, -reach],
+        [reach, reach],
+        [-reach, reach],
       ].every(([dx, dz]) => {
         const a = sampleIslandField(field, x + dx!, z + dz!);
         return (
           a.inside &&
           a.shore < 0.86 &&
-          distanceToIslandRoute(bp, { x: x + dx!, z: z + dz! }) > clearance + 3
+          distanceToIslandRoute(bp, { x: x + dx!, z: z + dz! }) > clearance + reach
         );
       });
       if (!covered) continue;
@@ -158,7 +176,7 @@ export function interiorGroves(
   const result: RouteVegetationCentre[] = [];
   for (const site of sites) {
     if (result.length >= quota) break;
-    if (result.some((p) => Math.hypot(p.x - site.x, p.z - site.z) < 10)) continue;
+    if (result.some((p) => Math.hypot(p.x - site.x, p.z - site.z) < at(10, 5))) continue;
     const nearest = bp.centerline.reduce(
       (best, p) =>
         Math.hypot(p.x - site.x, p.z - site.z) < Math.hypot(best.x - site.x, best.z - site.z)
