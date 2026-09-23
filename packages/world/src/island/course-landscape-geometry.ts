@@ -9,7 +9,9 @@ import { createCourseAcademyGeometry } from "./course-academy-geometry.js";
 import {
   COURSE_ROCK_BANK_POINTS,
   COURSE_ROCK_BANK_FACES,
+  boulderColour,
   courseRockTopPoints,
+  createDressingBoulderGeometry,
 } from "./course-rock-profile.js";
 import {
   COURSE_LANDSCAPE_LIMITS,
@@ -17,7 +19,7 @@ import {
   type CourseOutcrop,
 } from "./course-landscape-plan.js";
 
-/** Three closed donor-derived stone masses, rigidly seated on the terrain.
+/** The outcrop's chunky boulders, rigidly seated on the terrain.
  * Their complete volume stays inside the original non-walkable reserve;
  * ground, route, collision/lesson targets are not raised in a shader.
  */
@@ -33,8 +35,7 @@ export function createCourseOutcropGeometry(site: CourseOutcrop): THREE.BufferGe
   const positions: number[] = [],
     colors: number[] = [],
     indices: number[] = [];
-  const stone = new THREE.Color(0x8896a5),
-    turf = new THREE.Color(0x8fba51).lerp(new THREE.Color(0xacc967), site.meadow * 0.3);
+  const stone = new THREE.Color(0xa9a39a);
   const topFaces = COURSE_ROCK_BANK_FACES;
   // Smooth only the causal material mask, not the actual cliff normals. A
   // different grass colour per triangle made the previous bank a checkerboard.
@@ -44,13 +45,7 @@ export function createCourseOutcropGeometry(site: CourseOutcrop): THREE.BufferGe
     for (const i of [a, b, c]) maskNormals[i]!.add(normal);
   }
   const topColours = maskNormals.map((n, i) =>
-    stone
-      .clone()
-      .lerp(new THREE.Color(0xc2bfac), COURSE_ROCK_BANK_POINTS[i]!.lift * 0.32)
-      .lerp(
-        turf,
-        THREE.MathUtils.smoothstep(n.normalize().y, 0.48, 0.78) * COURSE_ROCK_BANK_POINTS[i]!.turf,
-      ),
+    boulderColour(COURSE_ROCK_BANK_POINTS[i]!, n.normalize().y, site.meadow),
   );
   const emit = (
     a: THREE.Vector3,
@@ -108,19 +103,9 @@ export function buildCourseLandscapeGeometry(plan: CourseLandscapePlan) {
       rockParts.push(part);
       if (site.feature !== "ruin") sculptable.add(part);
     }
-    const stoneSource = createMiniatureAsset("stone");
+    // Ground stones are the same game-art boulder as every other rock.
+    const stoneSource = createDressingBoulderGeometry("stone");
     try {
-      const colours = stoneSource.getAttribute("color"),
-        normals = stoneSource.getAttribute("normal");
-      const pigment = new THREE.Color(),
-        sunlitMoss = new THREE.Color(0xa7b394),
-        mineral = new THREE.Color(0x9caa9e);
-      for (let i = 0; i < colours.count; i++) {
-        pigment
-          .fromBufferAttribute(colours, i)
-          .lerp(normals.getY(i) > 0.6 ? sunlitMoss : mineral, 0.22);
-        colours.setXYZ(i, pigment.r, pigment.g, pigment.b);
-      }
       for (const p of plan.stones ?? []) {
         const part = stoneSource
           .clone()

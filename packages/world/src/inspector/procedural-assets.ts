@@ -320,7 +320,7 @@ export function proceduralAssetRows({
     instancesSource: worldSource("island/course-landscape-plan.ts", "courseLandscapePlan"),
     techniqueLock: "landmark",
     technique:
-      "同一占地计划；三块 Kenney 派生闭合石体组成196面岩台，林缘加入24面阔叶植物；岩台、花草和水景分别合批。",
+      "同一占地计划；四块程序化六边块石组成176面岩台（顶上长草），林缘加入24面阔叶植物；岩台、花草和水景分别合批。",
     techniqueSource: worldSource("island/course-landscape-render.tsx", "CourseLandscape"),
     mutable: false,
     note: "三角形取当前绘制几何；环境薄石已由共用圆石替换，不重复计退役GLB。庭院有真实场所与开放入口，不是额外课程、道路或可点击关卡；未知不记零。",

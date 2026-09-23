@@ -193,8 +193,9 @@ describe("course landscape from the existing terrain", () => {
       expect(volume).toBeGreaterThan(0);
       expect(vertices.every((v) => Math.hypot(v.x, v.z) <= outcrop.radius + 1e-6)).toBe(true);
       expect(ids.count / 3).toBe(COURSE_LANDSCAPE_LIMITS.outcropTriangles);
-      // Three reviewed donor-derived closed stones, not a sampled mound.
-      expect(ids.count / 3).toBe(196);
+      // Four closed game-art boulders (R58-02), not a sampled mound; the
+      // Kenney-derived bank they replaced cost 196.
+      expect(ids.count / 3).toBe(176);
       const colour = geometry.getAttribute("color");
       const topColours = new Map<string, string>();
       for (let i = 0; i < p.count; i++) {

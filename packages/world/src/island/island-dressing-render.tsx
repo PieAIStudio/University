@@ -1,5 +1,5 @@
 /** Render a semantic dressing plan through the shared instanced GLB adapter. */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 import { AssetField, BatchedAssetLibraryField, type Placement } from "../kit.js";
@@ -17,6 +17,62 @@ import type { IslandBlueprint } from "./island-blueprint.js";
 import { CourseLandscape } from "./course-landscape-render.js";
 import { courseFacilityTreatment } from "./course-facility-material.js";
 import { courseLandscapePlan, courseReplacementIds } from "./course-landscape-plan.js";
+import { createDressingBoulderGeometry } from "./course-rock-profile.js";
+
+/** Kenney rocks the course draws as procedural boulders at the same placements. */
+const BOULDER_FOR_SOURCE: Readonly<Record<string, "large" | "small">> = {
+  "nature-kit/rock_largeA": "large",
+  "nature-kit/rock_smallA": "small",
+};
+
+/**
+ * The roadside rocks as game-art boulders (`createDressingBoulderGeometry`):
+ * one instanced draw per variant, placed exactly where the Kenney GLB would
+ * have stood — same position, turn and unit-height scale.
+ */
+function DressingBoulderField({
+  variant,
+  at,
+}: {
+  readonly variant: "large" | "small";
+  readonly at: readonly Placement[];
+}) {
+  const geometry = useMemo(() => createDressingBoulderGeometry(variant), [variant]);
+  const material = useMemo(
+    () => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 }),
+    [],
+  );
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(() => () => material.dispose(), [material]);
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  useLayoutEffect(() => {
+    const target = mesh.current;
+    if (!target) return;
+    const matrix = new THREE.Matrix4();
+    const turn = new THREE.Quaternion();
+    const axis = new THREE.Vector3(0, 1, 0);
+    at.forEach((placement, index) => {
+      turn.setFromAxisAngle(axis, placement.turn ?? 0);
+      matrix.compose(
+        placement.position,
+        turn,
+        new THREE.Vector3(placement.height, placement.height, placement.height),
+      );
+      target.setMatrixAt(index, matrix);
+    });
+    target.instanceMatrix.needsUpdate = true;
+    target.computeBoundingSphere();
+  }, [at]);
+  return (
+    <instancedMesh
+      ref={mesh}
+      name={`course-boulders-${variant}`}
+      args={[geometry, material, at.length]}
+      castShadow
+      receiveShadow
+    />
+  );
+}
 
 export interface IslandDressingField {
   readonly key: string;
@@ -177,16 +233,24 @@ export function IslandDressing({
           roughness={COURSE_BATCHED_MATERIAL_ROUGHNESS}
         />
       ) : null}
-      {batches.fallback.map((field) => (
-        <AssetField
-          key={field.key}
-          src={field.src}
-          at={field.at}
-          preserveMap={field.pack !== "nature-kit"}
-          castShadow
-          materialTreatment={courseFacilityTreatment(field.key)}
-        />
-      ))}
+      {batches.fallback.map((field) =>
+        BOULDER_FOR_SOURCE[field.key] ? (
+          <DressingBoulderField
+            key={field.key}
+            variant={BOULDER_FOR_SOURCE[field.key]!}
+            at={field.at}
+          />
+        ) : (
+          <AssetField
+            key={field.key}
+            src={field.src}
+            at={field.at}
+            preserveMap={field.pack !== "nature-kit"}
+            castShadow
+            materialTreatment={courseFacilityTreatment(field.key)}
+          />
+        ),
+      )}
       <IslandFoliage plan={plan} scale={scale} />
       <IslandCampfire plan={plan} scale={scale} />
       <CourseLandscape blueprint={blueprint} dressing={plan} scale={scale} plan={landscape} />

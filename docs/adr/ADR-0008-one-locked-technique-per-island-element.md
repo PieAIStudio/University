@@ -35,6 +35,20 @@ a screenshot; current browser fixtures are selected by `e2e/harness/catalogue.ts
 This catalogue clarification changes no technique, budget or original receipt.
 
 ## Decision and authority
+### R58-02: one game-art boulder for every rock on the course island
+
+Owner, 2026-09-23: the island's rocks read thin and cheap next to the reference
+(docs/reference/岛内-参考-V4/ChatGPT生成B.png) and asked for game-like stone. Measured,
+the roadside rock was Kenney `rock_largeA`, a slab 0.26 tall on a 0.8 × 1.0 footprint,
+and the outcrop was three Kenney shards in one cold blue-grey. `course-rock-profile.ts`
+now builds one primitive — a closed six-sided prism in three bands (sunk base, slight
+belly, chamfered shoulder) under a flat top — coloured by one ramp: warm grey, darker
+at the foot, light at the rim, grass on capped tops, the look of the Kenney
+mini-forest kit's rocks. The outcrop is four of them (176 triangles, formerly 196);
+the roadside rocks and the landscape's ground stones draw boulder variants at their
+existing placements, each inside the footprint it replaces, so no placement moves
+and no flora count changes on the sampled courses.
+
 ### R58-01: learning nodes are places the avatar lands
 
 Owner reviewed R57 on 2026-09-23: each node must work like a lesson stone. Clicking
@@ -899,7 +913,7 @@ contains the exact R52 evidence root and the true full-gate outcomes.
 | Grass                                        | Generated three-vertex, one-triangle blade; taper, wind, camera-facing rotation and ground normals in shader. LOD changes instance count. Near ceiling 6 is a ceiling, not the current blade shape; far draws zero grass.                                                                                                                                                                                                                            |
 | Course tree/shrub                            | R49 complete fir408 / continuous broadleaf432 triangles; two instanced tree batches. Shrub: three80-triangle lobes,240 total; exact scaled foot support remains required. No parallel retired donor tree draw.                                                                                                                                                                                                                                       |
 | Course props                                 | Registered Kenney/semantic stones, with successfully fitted crafted stalls, academies and ambient stones replacing their source IDs. Unfitted replacements retain donors. Decoration ceiling 1,200 triangles/asset; landmarks at most six semantic places/assemblies, ceiling 8,000 per asset.                                                                                                                                                       |
-| Course geological scenery and surface detail | R53: three closed Kenney-derived masses, 196 triangles/rock cluster, replacing the R49/R50 572-triangle bank; ruin 348, optional supported spring ≤800. R54: shared 128² wear/turf scalar swatch plus course-only 256² canopy/meadow/route/wear masks; bounded low-flora beds stay within the existing 220-flora / 50,000-triangle landscape ceiling. Existing landscape batches include fitted replacements, courtyard borders and optional rock-rooted canopy; actual cliff-ledge plants add at most one course-only batch and 288 triangles.                     |
+| Course geological scenery and surface detail | R58-02: four procedural hexagonal boulders, 176 triangles/rock cluster; roadside and ground stones are boulder variants inside their old footprints. R53: three closed Kenney-derived masses, 196 triangles/rock cluster, replacing the R49/R50 572-triangle bank; ruin 348, optional supported spring ≤800. R54: shared 128² wear/turf scalar swatch plus course-only 256² canopy/meadow/route/wear masks; bounded low-flora beds stay within the existing 220-flora / 50,000-triangle landscape ceiling. Existing landscape batches include fitted replacements, courtyard borders and optional rock-rooted canopy; actual cliff-ledge plants add at most one course-only batch and 288 triangles.                     |
 | Lesson marker                                | Shared 14-segment bevelled medallion, 168 triangles; separate +Y-facing unit rings, 48–50 each, at most six ring batches. Readable text stays DOM.                                                                                                                                                                                                                                                                                                   |
 | Learning node                                | R58-01: procedural gate / pennant / notice board, ≤48/36/60 triangles, stepping stones 18 each, a medallion pad beside pennant and board; the avatar lands under the gate or on the pad. Nearby segment only; one merged stone draw. Placed by `courseLearningSites` on free ground, never displacing scenery; gate gaps widened by `checkpointGaps`. Readable text stays DOM. |
 | Ground contact                               | Merged footing splits at rendered triangle boundaries, embeds by 0.01 and retains exposed-height ceiling 0.25. Bounded stance recovery; unresolved contact uses a terrain-clipped shallow inlay at the same position/radius/ID, with engraving and picking preserved.                                                                                                                                                                                |
