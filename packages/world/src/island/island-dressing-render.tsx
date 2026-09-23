@@ -17,18 +17,24 @@ import type { IslandBlueprint } from "./island-blueprint.js";
 import { CourseLandscape } from "./course-landscape-render.js";
 import { courseFacilityTreatment } from "./course-facility-material.js";
 import { courseLandscapePlan, courseReplacementIds } from "./course-landscape-plan.js";
-import { createDressingBoulderGeometry } from "./course-rock-profile.js";
+import {
+  createDressingBoulderGeometry,
+  dressingBoulderAlternative,
+  dressingBoulderAlternatives,
+} from "./course-rock-profile.js";
 
-/** Kenney rocks the course draws as procedural boulders at the same placements. */
+/** Kenney rocks the course draws as baked Nature Kit compositions at the same placements. */
 const BOULDER_FOR_SOURCE: Readonly<Record<string, "large" | "small">> = {
   "nature-kit/rock_largeA": "large",
   "nature-kit/rock_smallA": "small",
 };
 
 /**
- * The roadside rocks as game-art boulders (`createDressingBoulderGeometry`):
- * one instanced draw per variant, placed exactly where the Kenney GLB would
- * have stood — same position, turn and unit-height scale.
+ * The roadside rocks as Kenney Nature Kit compositions
+ * (`createDressingBoulderGeometry`), placed exactly where the source GLB would
+ * have stood — same position, turn and unit-height scale. Each placement takes
+ * one of its kind's compositions by position, so neighbours are not twins; one
+ * instanced draw per composition.
  */
 function DressingBoulderField({
   variant,
@@ -37,7 +43,46 @@ function DressingBoulderField({
   readonly variant: "large" | "small";
   readonly at: readonly Placement[];
 }) {
-  const geometry = useMemo(() => createDressingBoulderGeometry(variant), [variant]);
+  const groups = useMemo(() => {
+    const byAlternative = Array.from(
+      { length: dressingBoulderAlternatives(variant) },
+      () => [] as Placement[],
+    );
+    for (const placement of at)
+      byAlternative[
+        dressingBoulderAlternative(variant, placement.position.x, placement.position.z)
+      ]!.push(placement);
+    return byAlternative;
+  }, [variant, at]);
+  return (
+    <>
+      {groups.map((group, alternative) =>
+        group.length ? (
+          <DressingBoulderGroup
+            key={alternative}
+            variant={variant}
+            alternative={alternative}
+            at={group}
+          />
+        ) : null,
+      )}
+    </>
+  );
+}
+
+function DressingBoulderGroup({
+  variant,
+  alternative,
+  at,
+}: {
+  readonly variant: "large" | "small";
+  readonly alternative: number;
+  readonly at: readonly Placement[];
+}) {
+  const geometry = useMemo(
+    () => createDressingBoulderGeometry(variant, alternative),
+    [variant, alternative],
+  );
   const material = useMemo(
     () => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 }),
     [],
@@ -66,7 +111,7 @@ function DressingBoulderField({
   return (
     <instancedMesh
       ref={mesh}
-      name={`course-boulders-${variant}`}
+      name={`course-boulders-${variant}-${alternative}`}
       args={[geometry, material, at.length]}
       castShadow
       receiveShadow

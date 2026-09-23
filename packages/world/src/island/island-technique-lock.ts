@@ -196,13 +196,15 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
     technique:
       "Instanced Kenney GLBs for fantasy-town architecture, placed by island-dressing against the " +
       "island field in course view; natural tree/bush IDs are not drawn. Rocks keep the Kenney " +
-      "nature-kit placements and footprints but draw as procedural game-art boulders " +
-      "(course-rock-profile.ts, R58-02): hexagonal, chamfered, grass-capped, one instanced draw per variant. " +
+      "nature-kit placements and footprints but draw as compositions of fifteen baked Kenney " +
+      "Nature Kit rocks (course-rock-profile.ts, kenney-stone-shapes.json, R59-06): boulders, " +
+      "spires and small stones, uniformly scaled and turned, warm grey with grass caps, a few " +
+      "compositions per kind chosen by position, one instanced draw per composition. " +
       "Remote catalogue projection draws zero decoration GLBs (uses low-cost procedural silhouettes only).",
     source:
-      "Kenney fantasy-town-kit and the compared nature-kit rocks, CC0, shipped under " +
-      "public/kenney/r01; elemental-serenity foliage is locked in the tree/bush entries; " +
-      "remote props in remote-props.ts.",
+      "Kenney fantasy-town-kit, CC0, shipped under public/kenney/r01; Kenney Nature Kit rocks " +
+      "(CC0) baked by apps/university/scripts/bake-kenney-stones.mjs; elemental-serenity " +
+      "foliage is locked in the tree/bush entries; remote props in remote-props.ts.",
     budget: `course <= ${ISLAND_DECORATION_TRIANGLE_CEILING} tris per asset; remote catalogue = 0 decoration GLBs`,
     rejected: [
       {
@@ -211,6 +213,14 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
           "rock_largeA is a slab 0.26 tall on a 0.8 x 1.0 footprint and the outcrop bank was three " +
           "shards; the owner read both as thin cheap plates against the reference's chunky boulders. " +
           "The same placements now draw a boulder inside the same footprint, taller than the slab.",
+        on: "2026-09-23",
+      },
+      {
+        option: "One procedural hexagonal boulder for every rock (R58-02)",
+        why:
+          "The owner (R59-06): every rock the same chamfered column read as fake and as one " +
+          "object repeated. Kenney's own chunky rocks (tall and large variants, never the flat " +
+          "slabs, never squashed) give each rock its own irregular facets.",
         on: "2026-09-23",
       },
       {
@@ -318,7 +328,7 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
     budget:
       `course <= ${ISLAND_LANDMARK_TRIANGLE_CEILING} tris per asset, <= ${ISLAND_LANDMARK_MAX_PER_ISLAND} semantic landmark places per island (complete assemblies/outposts count once, not once per wall); ` +
       "R44 remote <= 600 tris per miniature asset; bounded omission, 0 course GLBs; shared 6000-triangle scenery ceiling includes water and bank. Contact is baked into the ground atlas. " +
-      "R53 course landscape <= 50000 tris / 220 low flora groups; each rock cluster 176 (R58-02 procedural boulders; formerly 196 CC0 donor-derived) " +
+      "R53 course landscape <= 50000 tris / 220 low flora groups; each rock cluster 336 (R59-06 four baked Kenney Nature Kit rocks; R58-02 procedural boulders were 176) " +
       "triangles (formerly 572), ruin 348, one spring including banks <= 800. " +
       "Cliff garden <= 12 supported plants / 288 triangles / one additional merged draw. " +
       "At most four added base-pass meshes with water, not full-frame cost.",

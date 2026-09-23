@@ -193,18 +193,15 @@ describe("course landscape from the existing terrain", () => {
       expect(volume).toBeGreaterThan(0);
       expect(vertices.every((v) => Math.hypot(v.x, v.z) <= outcrop.radius + 1e-6)).toBe(true);
       expect(ids.count / 3).toBe(COURSE_LANDSCAPE_LIMITS.outcropTriangles);
-      // Four closed game-art boulders (R58-02), not a sampled mound; the
-      // Kenney-derived bank they replaced cost 196.
-      expect(ids.count / 3).toBe(176);
+      // Four closed Kenney Nature Kit rocks (R59-06), not a sampled mound.
+      expect(ids.count / 3).toBe(336);
+      // Grass caps are one green, not a checkerboard of greens per triangle.
       const colour = geometry.getAttribute("color");
-      const topColours = new Map<string, string>();
-      for (let i = 0; i < p.count; i++) {
-        if (p.getY(i) < 0.5) continue;
-        const point = key(i),
-          shade = [colour.getX(i), colour.getY(i), colour.getZ(i)].join(",");
-        if (topColours.has(point)) expect(shade).toBe(topColours.get(point));
-        else topColours.set(point, shade);
-      }
+      const greens = new Set<string>();
+      for (let i = 0; i < p.count; i++)
+        if (colour.getY(i) > colour.getX(i) * 1.2)
+          greens.add([colour.getX(i), colour.getY(i), colour.getZ(i)].join(","));
+      expect(greens.size).toBe(1);
     } finally {
       geometry.dispose();
     }

@@ -121,18 +121,18 @@ export function composeStopMatrix(
 
 /**
  * The stone that sits on a locked lesson (V5 §12 decision C′): the island's own
- * boulder, a small grass-capped one with a pebble, authored for a pad of radius
- * 1 so the marker's radius scales it. When the lesson unlocks it sinks and
+ * rock (a chunky Kenney Nature Kit stone, grass-capped, with a pebble), authored for a
+ * pad of radius 1 so the marker's radius scales it. When the lesson unlocks it sinks and
  * shrinks away over LOCK_STONE_CRUMBLE_SECONDS; under reduced motion it is gone.
  */
 const LOCK_STONE: readonly BoulderSetting[] = [
-  { x: -0.06, z: 0.04, rx: 0.5, rz: 0.44, height: 0.72, turn: 0.35, turf: true },
-  { x: 0.46, z: -0.26, rx: 0.2, rz: 0.18, height: 0.3, turn: -0.6, turf: false },
+  { shape: "rock_smallH", x: -0.06, z: 0.04, scale: 1.3, turn: 0.35, turf: true },
+  { shape: "rock_smallE", x: 0.46, z: -0.26, scale: 0.85, turn: -0.6, turf: false },
 ];
 export const LOCK_STONE_CRUMBLE_SECONDS = 0.7;
 /** The lock stone, for every stop that can be locked. */
 export function createLockStoneGeometry(): THREE.BufferGeometry {
-  return createBoulderGeometry(LOCK_STONE, "lesson-lock");
+  return createBoulderGeometry(LOCK_STONE);
 }
 const HIDDEN = new THREE.Matrix4().makeScale(0, 0, 0);
 

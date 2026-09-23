@@ -41,10 +41,11 @@ export function courseShoulderCanopy(
   for (const site of outcrops) {
     if (site.feature === "ruin") continue;
     const points = courseRockTopPoints(site);
-    // Broad uphill part of the geological profile, not view-dependent world coordinates.
+    // The crowns of the outcrop's two tall Kenney rocks (R59-06), in the
+    // profile's own unit frame, not view-dependent world coordinates.
     for (const [index, [u, v]] of [
-      [-0.1, -0.06],
-      [-0.12, -0.4],
+      [-0.26, 0.17],
+      [0.42, -0.1],
     ].entries()) {
       const size = Math.min(3.8, Math.max(1.7, site.radius * (index ? 0.3 : 0.43)));
       const radius = size * 0.44;

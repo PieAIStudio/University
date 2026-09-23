@@ -1,31 +1,51 @@
-/** Game-art boulders: the one rock shape of the course island.
+/** Game-art rocks: the one rock of the course island, from Kenney's Nature Kit.
  *
- * The owner's reference (docs/reference/岛内-参考-V4/ChatGPT生成B.png) and the
- * Kenney mini-forest kit draw rock the same way: chunky columns with broad flat
- * sides, a chamfered shoulder, a flat top that catches the sky and often wears
- * grass, and a foot in its own shade. Until 2026-09-23 the island used Kenney
- * nature-kit shards instead: the outcrop was three of them and the roadside
- * rocks were `rock_largeA`, a slab 0.26 tall on a 0.8 × 1.0 footprint — both
- * read as thin plates standing on end.
+ * R59-06 (owner, 2026-09-23): the procedural hexagonal boulders of R58-02 read
+ * as fake and all alike — the Kenney mini-forest column style, one silhouette
+ * repeated across the island. Every rock is now one of fifteen CC0 Nature Kit
+ * rocks, baked to CPU mesh data (kenney-stone-shapes.json, written by
+ * apps/university/scripts/bake-kenney-stones.mjs): five chunky boulders, five
+ * spires, five small stones, each with the kit's own irregular facets. They are
+ * turned and scaled uniformly — never squashed; a flattened Kenney slab is what
+ * the owner called thin and cheap in R58 — and coloured by the island's warm
+ * grey ramp, their grass caps in meadow green where a rock wears turf.
  *
- * Every boulder here is an n-sided prism in three bands — a sunk base, a slight
- * belly, a chamfered shoulder — under a flat top. The reserved outcrop and the
- * roadside rocks are built from this one primitive and coloured by one ramp.
- * An outcrop is not navigable terrain; feet and plants read the exact rendered
- * support below.
+ * The outcrop, the roadside rocks, the ground stones and the lock stones are
+ * all built from this one primitive. Downstream nothing changes: a rock is
+ * still a list of points (with its own mass and colour band) and faces, which
+ * the outcrop's grounding and the plants rooted on its top read exactly.
  */
 import * as THREE from "three";
+import stoneShapes from "./kenney-stone-shapes.json" with { type: "json" };
 import { hash } from "./random.js";
 
+interface StoneShape {
+  readonly id: string;
+  readonly set: "boulder" | "spire" | "small";
+  readonly size: readonly [number, number, number];
+  readonly positions: readonly number[];
+  readonly indices: readonly number[];
+  /** Per triangle: 0 rock, 1 grass cap, 2 underside. */
+  readonly roles: readonly number[];
+}
+const SHAPES = new Map(
+  (stoneShapes.assets as unknown as readonly StoneShape[]).map((shape) => [shape.id, shape]),
+);
+export type KenneyStoneSet = StoneShape["set"];
+/** The baked rocks of one set, in their baked order. */
+export function kenneyStones(set: KenneyStoneSet): readonly string[] {
+  return [...SHAPES.values()].filter((shape) => shape.set === set).map((shape) => shape.id);
+}
+
 export interface BoulderSetting {
+  /** A baked Nature Kit rock id, e.g. `rock_tallA`. */
+  readonly shape: string;
   readonly x: number;
   readonly z: number;
-  /** Footprint half-widths. */
-  readonly rx: number;
-  readonly rz: number;
-  readonly height: number;
+  /** Uniform: a rock is never squashed. */
+  readonly scale: number;
   readonly turn: number;
-  /** Whether grass caps the top. */
+  /** Whether the rock's grass cap shows as grass; otherwise it is rock too. */
   readonly turf: boolean;
 }
 
@@ -35,90 +55,80 @@ export interface BoulderPoint {
   readonly lift: number;
   readonly turf: number;
   readonly mass: number;
-  /** 0 at the sunk base, 1 on the top rim: what the colour ramp reads. */
+  /** 0 at the foot, 1 at the top: what the colour ramp reads. */
   readonly band: number;
 }
+/** Per face: 0 rock, 1 grass (only where the rock wears turf), 2 underside. */
+export type BoulderFaceRole = 0 | 1 | 2;
 
-const BOULDER_SIDES = 6;
-/** Radius factor and height fraction of each ring, from the sunk base up to the top rim. */
-const BOULDER_RINGS = [
-  { r: 0.96, y: -0.12 },
-  { r: 1.04, y: 0.42 },
-  { r: 0.93, y: 0.84 },
-  { r: 0.72, y: 1 },
-] as const;
-/** Three side bands, a top and a hidden bottom: a closed solid. */
-export const BOULDER_TRIANGLES =
-  (BOULDER_RINGS.length - 1) * BOULDER_SIDES * 2 + (BOULDER_SIDES - 2) * 2;
+/** Share of each rock's height set below the ground, so no slope shows a gap. */
+const SINK = 0.07;
 
-/** Append one boulder's rings and faces; faces wind outward and the top faces up. */
+/** Append one rock's points and faces; faces keep the donor's outward winding. */
 function appendBoulder(
   points: BoulderPoint[],
   faces: [number, number, number][],
+  roles: BoulderFaceRole[],
   setting: BoulderSetting,
   mass: number,
-  key: string,
 ): void {
+  const shape = SHAPES.get(setting.shape);
+  if (!shape) throw new Error(`Unknown baked Kenney rock: ${setting.shape}`);
   const start = points.length;
   const cos = Math.cos(setting.turn),
     sin = Math.sin(setting.turn);
-  // One jitter per corner column, so the silhouette is irregular but every
-  // band of a side stays one broad face instead of a crumpled strip.
-  const column = Array.from(
-    { length: BOULDER_SIDES },
-    (_, i) => 0.88 + hash(`${key}/${mass}/${i}`) * 0.24,
-  );
-  const tilt = (hash(`${key}/${mass}/tilt`) - 0.5) * 0.1;
-  for (const [ring, profile] of BOULDER_RINGS.entries()) {
-    for (let i = 0; i < BOULDER_SIDES; i += 1) {
-      const a = (i / BOULDER_SIDES) * Math.PI * 2;
-      const lx = Math.cos(a) * setting.rx * profile.r * column[i]!;
-      const lz = Math.sin(a) * setting.rz * profile.r * column[i]!;
-      const top = ring === BOULDER_RINGS.length - 1 ? tilt * Math.cos(a) : 0;
-      points.push({
-        x: setting.x + lx * cos - lz * sin,
-        z: setting.z + lx * sin + lz * cos,
-        lift: setting.height * (profile.y + top),
-        mass,
-        turf: setting.turf && ring >= BOULDER_RINGS.length - 2 ? 1 : 0,
-        band: Math.max(0, profile.y),
-      });
-    }
+  const height = shape.size[1] * setting.scale;
+  const grass = new Set<number>();
+  shape.roles.forEach((role, t) => {
+    if (role === 1) for (let k = 0; k < 3; k += 1) grass.add(shape.indices[t * 3 + k]!);
+  });
+  for (let i = 0; i < shape.positions.length / 3; i += 1) {
+    const lx = shape.positions[i * 3]! * setting.scale;
+    const ly = shape.positions[i * 3 + 1]! * setting.scale;
+    const lz = shape.positions[i * 3 + 2]! * setting.scale;
+    points.push({
+      x: setting.x + lx * cos - lz * sin,
+      z: setting.z + lx * sin + lz * cos,
+      lift: ly - height * SINK,
+      mass,
+      turf: setting.turf && grass.has(i) ? 1 : 0,
+      band: height > 0 ? ly / height : 0,
+    });
   }
-  const at = (ring: number, i: number) => start + ring * BOULDER_SIDES + (i % BOULDER_SIDES);
-  for (let ring = 0; ring < BOULDER_RINGS.length - 1; ring += 1)
-    for (let i = 0; i < BOULDER_SIDES; i += 1) {
-      faces.push([at(ring, i), at(ring + 1, i), at(ring, i + 1)]);
-      faces.push([at(ring, i + 1), at(ring + 1, i), at(ring + 1, i + 1)]);
-    }
-  const top = BOULDER_RINGS.length - 1;
-  for (let i = 1; i < BOULDER_SIDES - 1; i += 1) {
-    faces.push([at(top, 0), at(top, i + 1), at(top, i)]);
-    // Hidden under the ground, but it closes the solid the grounding reads.
-    faces.push([at(0, 0), at(0, i), at(0, i + 1)]);
+  for (let t = 0; t < shape.roles.length; t += 1) {
+    faces.push([
+      start + shape.indices[t * 3]!,
+      start + shape.indices[t * 3 + 1]!,
+      start + shape.indices[t * 3 + 2]!,
+    ]);
+    const role = shape.roles[t]!;
+    roles.push(role === 1 ? (setting.turf ? 1 : 0) : role === 2 ? 2 : 0);
   }
 }
 
-/** Four boulders, tallest first, inside the outcrop's unit reserve. */
+/** Four rocks, tallest first, inside the outcrop's unit reserve. */
 const OUTCROP: readonly BoulderSetting[] = [
-  { x: -0.14, z: 0.06, rx: 0.52, rz: 0.46, height: 1, turn: 0.2, turf: true },
-  { x: 0.43, z: -0.2, rx: 0.33, rz: 0.3, height: 0.64, turn: -0.35, turf: true },
-  { x: -0.36, z: -0.46, rx: 0.26, rz: 0.23, height: 0.42, turn: 0.7, turf: false },
-  { x: 0.3, z: 0.44, rx: 0.2, rz: 0.18, height: 0.3, turn: -0.9, turf: false },
+  { shape: "rock_tallA", x: -0.14, z: 0.06, scale: 1, turn: 0.2, turf: true },
+  { shape: "rock_tallH", x: 0.43, z: -0.2, scale: 0.95, turn: -0.35, turf: true },
+  { shape: "rock_smallH", x: -0.36, z: -0.46, scale: 1.1, turn: 0.7, turf: false },
+  { shape: "rock_smallE", x: 0.3, z: 0.44, scale: 1.1, turn: -0.9, turf: true },
 ];
 
 const points: BoulderPoint[] = [];
 const faces: [number, number, number][] = [];
+const faceRoles: BoulderFaceRole[] = [];
 for (const [mass, setting] of OUTCROP.entries())
-  appendBoulder(points, faces, setting, mass, "course-boulder");
+  appendBoulder(points, faces, faceRoles, setting, mass);
 export const COURSE_ROCK_BANK_POINTS = points;
 export const COURSE_ROCK_BANK_FACES = faces;
+export const COURSE_ROCK_BANK_FACE_ROLES = faceRoles;
 export const COURSE_ROCK_BANK_TRIANGLES = faces.length;
 
 /**
- * Colour of one boulder vertex: a warm grey that darkens into the foot and
- * brightens toward the top rim, grass where a capped top faces the sky. The
- * old outcrop was one cold blue-grey (0x8896a5) with no top and no base.
+ * Colour of one rock face corner: a warm grey that darkens into the foot and
+ * brightens toward the top, the underside in the foot's shade, a grass cap in
+ * meadow green. Per face, so a cap ends at the rock's own edge rather than
+ * bleeding down its sides.
  */
 const FOOT = new THREE.Color(0x7c7b82);
 const FLANK = new THREE.Color(0xa9a39a);
@@ -126,16 +136,15 @@ const RIM = new THREE.Color(0xd3ccbe);
 const TURF = new THREE.Color(0x86b94a);
 const TURF_LIGHT = new THREE.Color(0xa6cc62);
 export function boulderColour(
-  point: Pick<BoulderPoint, "band" | "turf">,
-  normalY: number,
+  point: Pick<BoulderPoint, "band">,
+  role: BoulderFaceRole,
   meadow = 0,
 ): THREE.Color {
-  const shade =
-    point.band < 0.5
-      ? FOOT.clone().lerp(FLANK, THREE.MathUtils.smoothstep(point.band, 0, 0.5))
-      : FLANK.clone().lerp(RIM, THREE.MathUtils.smoothstep(point.band, 0.6, 1));
-  const turf = TURF.clone().lerp(TURF_LIGHT, meadow * 0.3);
-  return shade.lerp(turf, THREE.MathUtils.smoothstep(normalY, 0.55, 0.85) * point.turf);
+  if (role === 1) return TURF.clone().lerp(TURF_LIGHT, 0.25 + meadow * 0.3);
+  if (role === 2) return FOOT.clone();
+  return point.band < 0.5
+    ? FOOT.clone().lerp(FLANK, THREE.MathUtils.smoothstep(point.band, 0, 0.5))
+    : FLANK.clone().lerp(RIM, THREE.MathUtils.smoothstep(point.band, 0.55, 1));
 }
 
 /**
@@ -143,58 +152,84 @@ export function boulderColour(
  * at the same placements: unit height, centred, base at y = 0 — the same
  * normalisation `kit.tsx` applies to a GLB — and inside the source's own
  * footprint (1.51 × 1.95 and 0.94 × 0.94 half-widths per unit height), so no
- * clearance changes. They stand taller than the slabs they replace; height
- * is a look, the footprint is the contract.
+ * clearance changes; the ground stones inside the miniature stone's 0.46.
+ * Each kind has a few compositions so neighbouring rocks are not twins.
  */
 export type DressingBoulderVariant = "large" | "small" | "stone";
 
-const DRESSING: Readonly<Record<DressingBoulderVariant, readonly BoulderSetting[]>> = {
+const DRESSING: Readonly<Record<DressingBoulderVariant, readonly (readonly BoulderSetting[])[]>> = {
   large: [
-    { x: -0.18, z: 0.12, rx: 0.72, rz: 0.66, height: 1.75, turn: 0.3, turf: true },
-    { x: 0.62, z: -0.42, rx: 0.48, rz: 0.44, height: 1.1, turn: -0.4, turf: false },
-    { x: -0.5, z: -0.9, rx: 0.34, rz: 0.3, height: 0.6, turn: 1.1, turf: false },
-  ],
-  // The landscape's ground stones (course-ground-stone.ts), drawn at the
-  // miniature stone's own unit: inside its 0.46 footprint radius.
-  stone: [
-    { x: -0.05, z: 0.02, rx: 0.35, rz: 0.3, height: 0.62, turn: 0.4, turf: true },
-    { x: 0.26, z: -0.12, rx: 0.14, rz: 0.12, height: 0.22, turn: -0.6, turf: false },
+    [
+      { shape: "rock_tallA", x: -0.2, z: 0.1, scale: 1.8, turn: 0.3, turf: true },
+      { shape: "rock_smallH", x: 0.7, z: -0.55, scale: 1.6, turn: -0.4, turf: false },
+      { shape: "rock_smallE", x: -0.75, z: -0.7, scale: 1.8, turn: 1.1, turf: true },
+    ],
+    [
+      { shape: "rock_tallB", x: 0, z: 0.05, scale: 2, turn: -0.5, turf: true },
+      { shape: "rock_tallC", x: 0.8, z: -0.5, scale: 1.4, turn: 0.8, turf: false },
+      { shape: "rock_smallF", x: -0.7, z: 0.75, scale: 1.6, turn: 0.2, turf: true },
+    ],
+    [
+      { shape: "rock_largeD", x: 0, z: 0, scale: 1.85, turn: 0.9, turf: true },
+      { shape: "rock_tallI", x: 0.75, z: -0.6, scale: 1.3, turn: -0.2, turf: false },
+    ],
   ],
   small: [
-    { x: -0.08, z: 0.05, rx: 0.62, rz: 0.56, height: 1.5, turn: 0.5, turf: true },
-    { x: 0.45, z: -0.35, rx: 0.26, rz: 0.24, height: 0.5, turn: -0.8, turf: false },
+    [
+      { shape: "rock_tallH", x: -0.05, z: 0.05, scale: 1.85, turn: 0.5, turf: true },
+      { shape: "rock_smallI", x: 0.45, z: -0.35, scale: 1.2, turn: -0.8, turf: false },
+    ],
+    [
+      { shape: "rock_largeF", x: 0, z: 0, scale: 1.25, turn: -0.3, turf: true },
+      { shape: "rock_smallE", x: 0.4, z: 0.35, scale: 1.3, turn: 1.3, turf: false },
+    ],
+  ],
+  stone: [
+    [{ shape: "rock_smallTopB", x: 0, z: 0, scale: 0.95, turn: 0.4, turf: true }],
+    [
+      { shape: "rock_smallH", x: -0.04, z: 0.02, scale: 1.05, turn: -0.6, turf: true },
+      { shape: "rock_smallF", x: 0.26, z: -0.12, scale: 0.55, turn: 0.9, turf: false },
+    ],
   ],
 };
 
-export function createDressingBoulderGeometry(
+/** How many compositions a kind has; `createDressingBoulderGeometry` takes one of them. */
+export function dressingBoulderAlternatives(variant: DressingBoulderVariant): number {
+  return DRESSING[variant].length;
+}
+/** A stable composition for something standing at (x, z). */
+export function dressingBoulderAlternative(
   variant: DressingBoulderVariant,
-): THREE.BufferGeometry {
-  return createBoulderGeometry(DRESSING[variant], `dressing-boulder/${variant}`);
+  x: number,
+  z: number,
+): number {
+  return Math.floor(hash(`${variant}/${x.toFixed(2)}/${z.toFixed(2)}`) * DRESSING[variant].length);
 }
 
-/** Any cluster of boulders as one indexed, vertex-coloured geometry. */
-export function createBoulderGeometry(
-  settings: readonly BoulderSetting[],
-  key: string,
+export function createDressingBoulderGeometry(
+  variant: DressingBoulderVariant,
+  alternative = 0,
 ): THREE.BufferGeometry {
+  return createBoulderGeometry(DRESSING[variant][alternative % DRESSING[variant].length]!);
+}
+
+/** Any cluster of rocks as one indexed, vertex-coloured, flat-shaded geometry. */
+export function createBoulderGeometry(settings: readonly BoulderSetting[]): THREE.BufferGeometry {
   const bank: BoulderPoint[] = [];
   const bankFaces: [number, number, number][] = [];
+  const roles: BoulderFaceRole[] = [];
   for (const [mass, setting] of settings.entries())
-    appendBoulder(bank, bankFaces, setting, mass, key);
-  const vertices = bank.map((p) => new THREE.Vector3(p.x, p.lift, p.z));
-  const normals = vertices.map(() => new THREE.Vector3());
-  for (const [a, b, c] of bankFaces) {
-    const n = vertices[b]!.clone().sub(vertices[a]!).cross(vertices[c]!.clone().sub(vertices[a]!));
-    for (const i of [a, b, c]) normals[i]!.add(n);
-  }
+    appendBoulder(bank, bankFaces, roles, setting, mass);
   const positions: number[] = [],
     colours: number[] = [];
-  for (const face of bankFaces)
+  bankFaces.forEach((face, f) => {
     for (const i of face) {
-      const colour = boulderColour(bank[i]!, normals[i]!.clone().normalize().y);
-      positions.push(vertices[i]!.x, vertices[i]!.y, vertices[i]!.z);
+      const p = bank[i]!;
+      const colour = boulderColour(p, roles[f]!);
+      positions.push(p.x, p.lift, p.z);
       colours.push(colour.r, colour.g, colour.b);
     }
+  });
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(colours, 3));
@@ -205,6 +240,7 @@ export function createBoulderGeometry(
   geometry.computeBoundingSphere();
   return geometry;
 }
+
 interface RockSurfaceSite {
   readonly id?: string;
   readonly x: number;

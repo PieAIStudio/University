@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 
 import {
-  BOULDER_TRIANGLES,
   COURSE_ROCK_BANK_FACES,
   COURSE_ROCK_BANK_POINTS,
   COURSE_ROCK_BANK_TRIANGLES,
   createDressingBoulderGeometry,
+  dressingBoulderAlternatives,
+  kenneyStones,
 } from "./course-rock-profile.js";
 import { miniatureMetrics } from "./miniature-layout.js";
 
@@ -17,30 +18,26 @@ const point = (i: number) =>
     COURSE_ROCK_BANK_POINTS[i]!.z,
   );
 
-describe("course boulders", () => {
-  it("winds every face outward, so a plant can only sit on a top", () => {
-    const masses = new Map<number, THREE.Vector3>();
-    for (const [i, p] of COURSE_ROCK_BANK_POINTS.entries()) {
-      const centre = masses.get(p.mass) ?? new THREE.Vector3();
-      masses.set(p.mass, centre.add(point(i)));
-    }
-    const counts = new Map<number, number>();
-    for (const p of COURSE_ROCK_BANK_POINTS) counts.set(p.mass, (counts.get(p.mass) ?? 0) + 1);
-    for (const [mass, sum] of masses) sum.divideScalar(counts.get(mass)!);
-    for (const [a, b, c] of COURSE_ROCK_BANK_FACES) {
-      const normal = point(b)
-        .sub(point(a))
-        .cross(point(c).sub(point(a)));
-      const centroid = point(a).add(point(b)).add(point(c)).divideScalar(3);
-      const centre = masses.get(COURSE_ROCK_BANK_POINTS[a]!.mass)!;
-      expect(normal.dot(centroid.sub(centre))).toBeGreaterThan(0);
-    }
+describe("course rocks (Kenney Nature Kit, R59-06)", () => {
+  it("bakes five boulders, five spires and five small stones", () => {
+    for (const set of ["boulder", "spire", "small"] as const)
+      expect(kenneyStones(set), set).toHaveLength(5);
   });
 
-  it("stays inside the outcrop's unit reserve and the triangle budget it replaced", () => {
+  it("keeps the donor's outward winding, so a plant can only sit on a top", () => {
+    // Kenney's rocks have overhangs whose undersides face down above the
+    // middle, so no per-face test holds; each rock's signed volume does.
+    const volume = new Map<number, number>();
+    for (const [a, b, c] of COURSE_ROCK_BANK_FACES) {
+      const mass = COURSE_ROCK_BANK_POINTS[a]!.mass;
+      volume.set(mass, (volume.get(mass) ?? 0) + point(a).dot(point(b).cross(point(c))) / 6);
+    }
+    for (const [mass, value] of volume) expect(value, `mass ${mass}`).toBeGreaterThan(0);
+  });
+
+  it("stays inside the outcrop's unit reserve and its triangle budget", () => {
     for (const p of COURSE_ROCK_BANK_POINTS) expect(Math.hypot(p.x, p.z)).toBeLessThanOrEqual(1);
-    expect(COURSE_ROCK_BANK_TRIANGLES).toBeLessThanOrEqual(196);
-    expect(COURSE_ROCK_BANK_TRIANGLES % BOULDER_TRIANGLES).toBe(0);
+    expect(COURSE_ROCK_BANK_TRIANGLES).toBeLessThanOrEqual(360);
   });
 
   it("is a chunk, not a slab: every boulder at least half as tall as it is wide", () => {
@@ -57,19 +54,24 @@ describe("course boulders", () => {
     // The ground stone keeps the miniature stone's own footprint radius.
     const stone = miniatureMetrics("stone").radius;
     const limits = { large: [1.51, 1.95], small: [0.94, 0.94], stone: [stone, stone] } as const;
-    for (const variant of ["large", "small", "stone"] as const) {
-      const geometry = createDressingBoulderGeometry(variant);
-      geometry.computeBoundingBox();
-      const box = geometry.boundingBox!;
-      const [hx, hz] = limits[variant];
-      // Any turn: the footprint's radius must fit the smaller half-width.
-      const position = geometry.getAttribute("position");
-      let radius = 0;
-      for (let i = 0; i < position.count; i += 1)
-        radius = Math.max(radius, Math.hypot(position.getX(i), position.getZ(i)));
-      expect(radius, variant).toBeLessThanOrEqual(Math.min(hx, hz) * 1.0 + 1e-6);
-      expect(box.min.y, variant).toBeLessThan(0);
-      geometry.dispose();
-    }
+    for (const variant of ["large", "small", "stone"] as const)
+      for (
+        let alternative = 0;
+        alternative < dressingBoulderAlternatives(variant);
+        alternative += 1
+      ) {
+        const geometry = createDressingBoulderGeometry(variant, alternative);
+        geometry.computeBoundingBox();
+        const box = geometry.boundingBox!;
+        const [hx, hz] = limits[variant];
+        // Any turn: the footprint's radius must fit the smaller half-width.
+        const position = geometry.getAttribute("position");
+        let radius = 0;
+        for (let i = 0; i < position.count; i += 1)
+          radius = Math.max(radius, Math.hypot(position.getX(i), position.getZ(i)));
+        expect(radius, `${variant}/${alternative}`).toBeLessThanOrEqual(Math.min(hx, hz) + 1e-6);
+        expect(box.min.y, `${variant}/${alternative}`).toBeLessThan(0);
+        geometry.dispose();
+      }
   });
 });

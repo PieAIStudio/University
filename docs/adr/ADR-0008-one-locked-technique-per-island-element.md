@@ -49,6 +49,19 @@ gates and eleven roadside nodes instead of one segment's three; all of it is
 instanced. The floating unit names are gone from the island: their position followed
 the live stone and read as lesson names in the wrong place.
 
+### R59-06: every rock is a baked Kenney Nature Kit rock
+
+Owner, 2026-09-23: the R58-02 hexagonal boulders read as fake and all alike — the
+Kenney mini-forest column repeated across the island. Fifteen CC0 Nature Kit rocks
+(five boulders, five spires, five small stones; the `rock_*` variants, whose grass
+caps take the meadow's green) are baked to CPU mesh data by
+`apps/university/scripts/bake-kenney-stones.mjs`, so they still merge into the
+landscape's one geometry and instance as lock stones. They replace the primitive, not
+the placements: roadside rocks, outcrops, ground stones and lock stones keep their
+footprints; a rock is scaled uniformly, never squashed into the slab the owner
+rejected in R58. An outcrop is 336 triangles (was 176); the trees rooted on it moved
+to the new rocks' crowns.
+
 ### R59-01: the coast keeps its sod lip, not the columns
 
 Owner, 2026-09-23: the boulder columns under the R58-03 lip hung on the cliff as
@@ -957,7 +970,7 @@ contains the exact R52 evidence root and the true full-gate outcomes.
 | Grass                                        | Generated three-vertex, one-triangle blade; taper, wind, camera-facing rotation and ground normals in shader. LOD changes instance count. Near ceiling 6 is a ceiling, not the current blade shape; far draws zero grass.                                                                                                                                                                                                                            |
 | Course tree/shrub                            | R49 complete fir408 / continuous broadleaf432 triangles; two instanced tree batches. Shrub: three80-triangle lobes,240 total; exact scaled foot support remains required. No parallel retired donor tree draw.                                                                                                                                                                                                                                       |
 | Course props                                 | Registered Kenney/semantic stones, with successfully fitted crafted stalls, academies and ambient stones replacing their source IDs. Unfitted replacements retain donors. Decoration ceiling 1,200 triangles/asset; landmarks at most six semantic places/assemblies, ceiling 8,000 per asset.                                                                                                                                                       |
-| Course geological scenery and surface detail | R58-02: four procedural hexagonal boulders, 176 triangles/rock cluster; roadside and ground stones are boulder variants inside their old footprints. R53: three closed Kenney-derived masses, 196 triangles/rock cluster, replacing the R49/R50 572-triangle bank; ruin 348, optional supported spring ≤800. R54: shared 128² wear/turf scalar swatch plus course-only 256² canopy/meadow/route/wear masks; bounded low-flora beds stay within the existing 220-flora / 50,000-triangle landscape ceiling. Existing landscape batches include fitted replacements, courtyard borders and optional rock-rooted canopy; actual cliff-ledge plants add at most one course-only batch and 288 triangles.                     |
+| Course geological scenery and surface detail | R59-06: four baked Kenney Nature Kit rocks, 336 triangles/rock cluster; roadside and ground stones are Kenney compositions inside their old footprints. R58-02: four procedural hexagonal boulders, 176. R53: three closed Kenney-derived masses, 196 triangles/rock cluster, replacing the R49/R50 572-triangle bank; ruin 348, optional supported spring ≤800. R54: shared 128² wear/turf scalar swatch plus course-only 256² canopy/meadow/route/wear masks; bounded low-flora beds stay within the existing 220-flora / 50,000-triangle landscape ceiling. Existing landscape batches include fitted replacements, courtyard borders and optional rock-rooted canopy; actual cliff-ledge plants add at most one course-only batch and 288 triangles.                     |
 | Lesson marker                                | Shared 14-segment bevelled medallion, 168 triangles; separate +Y-facing unit rings, 48–50 each, at most six ring batches. Readable text stays DOM.                                                                                                                                                                                                                                                                                                   |
 | Learning node                                | R59: procedural gate (rope and streamers) / pennant / notice board, ≤160/36/60 triangles, stepping stones 18 each; each stands on the lesson stone itself (ring green or red by state). Every segment: a gate and one roadside node, board and pennant in turn; instanced. Placed by `courseLearningSites` on free ground, never displacing scenery; gate gaps widened by `checkpointGaps`. Readable text stays DOM. |
 | Ground contact                               | Merged footing splits at rendered triangle boundaries, embeds by 0.01 and retains exposed-height ceiling 0.25. Bounded stance recovery; unresolved contact uses a terrain-clipped shallow inlay at the same position/radius/ID, with engraving and picking preserved.                                                                                                                                                                                |

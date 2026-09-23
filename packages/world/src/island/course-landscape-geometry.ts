@@ -9,9 +9,12 @@ import { createCourseAcademyGeometry } from "./course-academy-geometry.js";
 import {
   COURSE_ROCK_BANK_POINTS,
   COURSE_ROCK_BANK_FACES,
+  COURSE_ROCK_BANK_FACE_ROLES,
   boulderColour,
   courseRockTopPoints,
   createDressingBoulderGeometry,
+  dressingBoulderAlternative,
+  dressingBoulderAlternatives,
 } from "./course-rock-profile.js";
 import {
   COURSE_LANDSCAPE_LIMITS,
@@ -35,23 +38,13 @@ export function createCourseOutcropGeometry(site: CourseOutcrop): THREE.BufferGe
   const positions: number[] = [],
     colors: number[] = [],
     indices: number[] = [];
-  const stone = new THREE.Color(0xa9a39a);
   const topFaces = COURSE_ROCK_BANK_FACES;
-  // Smooth only the causal material mask, not the actual cliff normals. A
-  // different grass colour per triangle made the previous bank a checkerboard.
-  const maskNormals = top.map(() => new THREE.Vector3());
-  for (const [a, b, c] of topFaces) {
-    const normal = top[b]!.clone().sub(top[a]!).cross(top[c]!.clone().sub(top[a]!));
-    for (const i of [a, b, c]) maskNormals[i]!.add(normal);
-  }
-  const topColours = maskNormals.map((n, i) =>
-    boulderColour(COURSE_ROCK_BANK_POINTS[i]!, n.normalize().y, site.meadow),
-  );
+  // Coloured per face: a Kenney grass cap ends at the rock's own edge.
   const emit = (
     a: THREE.Vector3,
     b: THREE.Vector3,
     c: THREE.Vector3,
-    shades: readonly THREE.Color[] = [stone, stone, stone],
+    shades: readonly THREE.Color[],
   ) => {
     const start = positions.length / 3;
     for (const [i, p] of [a, b, c].entries()) {
@@ -61,9 +54,15 @@ export function createCourseOutcropGeometry(site: CourseOutcrop): THREE.BufferGe
     }
     indices.push(start, start + 1, start + 2);
   };
-  for (const [a, b, c] of topFaces) {
-    emit(top[a]!, top[b]!, top[c]!, [topColours[a]!, topColours[b]!, topColours[c]!]);
-  }
+  topFaces.forEach(([a, b, c], face) => {
+    const role = COURSE_ROCK_BANK_FACE_ROLES[face]!;
+    emit(
+      top[a]!,
+      top[b]!,
+      top[c]!,
+      [a, b, c].map((i) => boulderColour(COURSE_ROCK_BANK_POINTS[i]!, role, site.meadow)),
+    );
+  });
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
@@ -103,12 +102,13 @@ export function buildCourseLandscapeGeometry(plan: CourseLandscapePlan) {
       rockParts.push(part);
       if (site.feature !== "ruin") sculptable.add(part);
     }
-    // Ground stones are the same game-art boulder as every other rock.
-    const stoneSource = createDressingBoulderGeometry("stone");
+    // Ground stones are the same Kenney rocks as every other rock.
+    const stoneSources = Array.from({ length: dressingBoulderAlternatives("stone") }, (_, i) =>
+      createDressingBoulderGeometry("stone", i),
+    );
     try {
       for (const p of plan.stones ?? []) {
-        const part = stoneSource
-          .clone()
+        const part = stoneSources[dressingBoulderAlternative("stone", p.x, p.z)]!.clone()
           .scale(p.size, p.size, p.size)
           .rotateY(p.turn)
           .translate(p.x, p.y, p.z);
@@ -116,7 +116,7 @@ export function buildCourseLandscapeGeometry(plan: CourseLandscapePlan) {
         sculptable.add(part);
       }
     } finally {
-      stoneSource.dispose();
+      for (const source of stoneSources) source.dispose();
     }
     // Transfer ownership once. Failed builders release pending pieces; the
     // merger owns/disposes the transferred set even when attributes disagree.
