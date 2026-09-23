@@ -174,6 +174,15 @@ export function segmentsFromPlacements(
   return learningSegments({ units });
 }
 
+/**
+ * Everything already standing on a course island, as circles: dressing
+ * footprints, landmark courtyards, multi-part assemblies and every landscape
+ * item. The learning nodes and the wildflowers both keep off exactly this.
+ */
+export function courseStandingFootprints(blueprint: IslandBlueprint): readonly Obstacle[] {
+  return obstaclesOf(blueprint);
+}
+
 function obstaclesOf(blueprint: IslandBlueprint): readonly Obstacle[] {
   const dressing = planIslandDressing(blueprint, "course");
   const landscape = courseLandscapePlan(blueprint, dressing);

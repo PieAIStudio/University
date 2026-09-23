@@ -157,7 +157,8 @@ for (const sample of [
     route: "/browser-ai/run-a-real-project-with-ai",
     // 12 until 2026-09-23: an interior copse added 6 trees and 9 shrubs to this
     // island's bare west side, and one meadow flower now yields to a trunk.
-    flora: 11,
+    // 11 until R58-04 the same day: denser interior groves take two more.
+    flora: 9,
     width: 1440,
     height: 900,
     locale: "zh-CN",
@@ -168,10 +169,11 @@ for (const sample of [
     // to this island, and three meadow flowers now yield to their trunks.
     // 68 until R58-01 the same day: lesson stones moved along the road to give
     // each checkpoint gate a wider gap, and one more flower yields to them.
+    // 67 until R58-04: denser interior groves take two more.
     name: "long-delivery",
     origin: ONLINE_ORIGIN,
     route: "/ai-literacy/understanding-ai",
-    flora: 67,
+    flora: 65,
     width: 1440,
     height: 900,
     locale: "en",
@@ -183,7 +185,8 @@ for (const sample of [
     route: "/browser-ai/run-a-real-project-with-ai",
     // 12 until 2026-09-23: an interior copse added 6 trees and 9 shrubs to this
     // island's bare west side, and one meadow flower now yields to a trunk.
-    flora: 11,
+    // 11 until R58-04 the same day: denser interior groves take two more.
+    flora: 9,
     width: 872,
     height: 286,
     locale: "en",
@@ -195,7 +198,9 @@ for (const sample of [
     route: "/ai-literacy/ai-for-real-life",
     // 69 until R58-01 (2026-09-23): lesson stones moved along the road to give
     // each checkpoint gate a wider gap, and one flower yields to them.
-    flora: 68,
+    // 68 until R58-04: with denser interior groves the landscape plan places
+    // 72 here (it rose on this island while it fell on the two above).
+    flora: 72,
     width: 375,
     height: 812,
     locale: "zh-CN",

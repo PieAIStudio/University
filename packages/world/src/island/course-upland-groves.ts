@@ -94,11 +94,15 @@ export function interiorGroveScale(bp: IslandBlueprint): number {
 }
 
 /** How many trees and understorey shrubs one interior grove asks for. */
-export const INTERIOR_TREES_PER_GROVE = 5;
-export const INTERIOR_SHRUBS_PER_GROVE = 7;
-/** Qualifying empty ground (m²) that earns one interior grove, and the most per island. */
-export const INTERIOR_LAND_PER_GROVE = 170;
-export const INTERIOR_GROVE_LIMIT = 5;
+export const INTERIOR_TREES_PER_GROVE = 9;
+export const INTERIOR_SHRUBS_PER_GROVE = 12;
+/**
+ * Qualifying empty ground (m²) that earns one interior grove, and the most per
+ * island. R58-04 (2026-09-23) halved the land and doubled the limit: the owner
+ * asked for the reference's density, where woods fill most ground off the road.
+ */
+export const INTERIOR_LAND_PER_GROVE = 60;
+export const INTERIOR_GROVE_LIMIT = 16;
 
 /**
  * Groves for the open land far from the road, sited after every other
@@ -116,7 +120,7 @@ export function interiorGroves(
   const clearance = islandRouteClearance(bp);
   const k = interiorGroveScale(bp);
   const at = (value: number, floor: number) => Math.max(floor, value * k);
-  const roadGap = at(7, 3);
+  const roadGap = at(3.5, 2);
   const land = (x: number, z: number) => {
     const s = sampleIslandField(field, x, z);
     return s.inside && s.shore <= 0.8 && s.rock <= 0.32 && s.grass >= 0.3 ? s : null;
@@ -131,7 +135,7 @@ export function interiorGroves(
       if (
         land(x, z) &&
         distanceToIslandRoute(bp, { x, z }) >= clearance + roadGap &&
-        emptiness(x, z) >= at(6, 3)
+        emptiness(x, z) >= at(3.5, 2)
       )
         emptyLand += 1;
   const quota = Math.min(
@@ -148,7 +152,7 @@ export function interiorGroves(
       if (!s) continue;
       const distance = distanceToIslandRoute(bp, { x, z });
       if (distance < clearance + roadGap) continue;
-      if (existing.some((p) => Math.hypot(p.x - x, p.z - z) < at(9, 4))) continue;
+      if (existing.some((p) => Math.hypot(p.x - x, p.z - z) < at(5.5, 3))) continue;
       if (standing.some((p) => Math.hypot(p.x - x, p.z - z) < p.radius + at(3, 1.5))) continue;
       if (Math.hypot(bp.hero.x - x, bp.hero.z - z) < bp.hero.radius + at(7, 3)) continue;
       const reach = at(3, 1.5);

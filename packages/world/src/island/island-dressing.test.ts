@@ -96,7 +96,13 @@ describe("Island dressing", () => {
     expect(trees.length).toBeGreaterThan(15);
     expect(trees.length).toBeLessThanOrEqual(70);
     expect(new Set(trees.map((placement) => placement.clusterId)).size).toBeGreaterThanOrEqual(2);
-    expect(trees.every((placement) => placement.clusterId?.startsWith("grove-"))).toBe(true);
+    // Route groves, or the interior groves planted after them in open land.
+    expect(
+      trees.every(
+        (placement) =>
+          placement.clusterId?.startsWith("grove-") || placement.clusterId?.startsWith("interior-"),
+      ),
+    ).toBe(true);
     const outpostIds = new Set(
       first.placements.map((placement) => placement.outpostId).filter(Boolean),
     );

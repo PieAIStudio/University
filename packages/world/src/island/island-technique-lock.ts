@@ -457,6 +457,27 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       },
     ],
   },
+  wildflowers: {
+    technique:
+      "Course only: patches of four to eight five-petal heads on short stems, white, yellow, " +
+      "pink or lilac, sprinkled over open meadow on a 2.1-unit grid (60% of cells), planned in " +
+      "CourseScene after everything else so they keep off the road, lesson stones, learning-node " +
+      "pads, objects and stones and every standing footprint — while nothing has to keep off " +
+      "them. Ground cover, not props: the heads are wide enough to read as the reference's dots " +
+      "from the course overview. One merged draw.",
+    source: "Our own course-wildflowers.ts and course/CourseWildflowers.tsx.",
+    budget: "<= 900 flowers x 11 tris per island; measured 544 on 36 lessons, 75 on 8, 35 on 4",
+    rejected: [
+      {
+        option: "More meadow beds in the landscape flora",
+        why:
+          "R57 widened the beds to 16 and added ten flowers on a long island; neither the entry nor " +
+          "the overview showed a difference, because a bed is a deliberate composition a few pixels " +
+          "wide. A meadow needs cover spread over it, not more compositions.",
+        on: "2026-09-23",
+      },
+    ],
+  },
   coastLip: {
     technique:
       "Course only: a rounded sod roll grown from the terrain's rendered top outer ring " +

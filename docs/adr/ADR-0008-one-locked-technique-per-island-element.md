@@ -35,6 +35,18 @@ a screenshot; current browser fixtures are selected by `e2e/harness/catalogue.ts
 This catalogue clarification changes no technique, budget or original receipt.
 
 ## Decision and authority
+### R58-04 (first step): denser interior woods and a wildflower meadow
+
+Owner, 2026-09-23: the island should approach the reference's density. The
+2026-08-28 rejection of "scattering more small props" stands for props; this step
+adds woods and ground cover, which is where the reference's density lives. The
+interior grove pass (still sited after every other placement, moving nothing) now
+takes 60 m² of empty land per grove, up to 16 groves of nine trees and twelve shrubs,
+from 3.5 units off the road. A new `wildflowers` element sprinkles patches of four to
+eight flowers over open meadow — at most 900 per island at 11 triangles, one draw —
+planned in CourseScene so it keeps off learning-node pads, objects and stones as well
+as every standing footprint, while being an obstacle to nothing.
+
 ### R58-03: a thick sod lip over rock columns at the coast
 
 Owner, 2026-09-23: the course island's edge was thin and unnatural — the meadow

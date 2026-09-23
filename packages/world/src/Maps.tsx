@@ -84,6 +84,7 @@ import {
   type GridLessonMarker,
 } from "./grid/LessonMarkerField.js";
 import { LearningNodeField } from "./course/LearningNodeField.js";
+import { CourseWildflowers } from "./course/CourseWildflowers.js";
 import {
   checkpointGapsForUnitSizes,
   courseLearningSites,
@@ -1493,6 +1494,7 @@ export function CourseScene({
       <Suspense fallback={null}>
         <IslandDressing key={assetRevision} blueprint={blueprint} detail="course" />
       </Suspense>
+      <CourseWildflowers blueprint={blueprint} sites={allSites} />
       <LessonMarkerField
         markers={markers}
         footing={layout.footing.geometry}
