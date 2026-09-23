@@ -169,10 +169,18 @@ const DRESSING: Readonly<Record<DressingBoulderVariant, readonly BoulderSetting[
 export function createDressingBoulderGeometry(
   variant: DressingBoulderVariant,
 ): THREE.BufferGeometry {
+  return createBoulderGeometry(DRESSING[variant], `dressing-boulder/${variant}`);
+}
+
+/** Any cluster of boulders as one indexed, vertex-coloured geometry. */
+export function createBoulderGeometry(
+  settings: readonly BoulderSetting[],
+  key: string,
+): THREE.BufferGeometry {
   const bank: BoulderPoint[] = [];
   const bankFaces: [number, number, number][] = [];
-  for (const [mass, setting] of DRESSING[variant].entries())
-    appendBoulder(bank, bankFaces, setting, mass, `dressing-boulder/${variant}`);
+  for (const [mass, setting] of settings.entries())
+    appendBoulder(bank, bankFaces, setting, mass, key);
   const vertices = bank.map((p) => new THREE.Vector3(p.x, p.lift, p.z));
   const normals = vertices.map(() => new THREE.Vector3());
   for (const [a, b, c] of bankFaces) {

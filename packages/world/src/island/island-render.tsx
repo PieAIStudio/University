@@ -5,6 +5,7 @@ import * as THREE from "three";
 
 import { buildIslandGeometry, type IslandGeometryDetail } from "./island-geometry.js";
 import { buildCliffGarden } from "./cliff-garden.js";
+import { buildCoastLip } from "./course-coast-lip.js";
 import {
   createIslandSurfaceMaterialAdapter,
   DEFAULT_ISLAND_SURFACE_STYLE,
@@ -392,6 +393,11 @@ export function IslandRender({
     [shape, blueprint.seed, detail],
   );
   useEffect(() => () => cliffGarden.geometry?.dispose(), [cliffGarden]);
+  const coastLip = useMemo(
+    () => (detail === "course" ? buildCoastLip(shape.terrain, blueprint.seed) : null),
+    [shape, blueprint.seed, detail],
+  );
+  useEffect(() => () => coastLip?.dispose(), [coastLip]);
   return (
     <group
       name={detail === "course" ? "island-course" : undefined}
@@ -432,6 +438,11 @@ export function IslandRender({
           timeUniform={surfaceTime.current}
         />
       </mesh>
+      {coastLip ? (
+        <mesh name="course-coast-lip" geometry={coastLip} castShadow receiveShadow>
+          <meshStandardMaterial vertexColors roughness={0.86} metalness={0} />
+        </mesh>
+      ) : null}
       {cliffGarden.geometry ? (
         <mesh
           name="course-cliff-garden"

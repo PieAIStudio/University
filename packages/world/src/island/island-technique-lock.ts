@@ -457,6 +457,34 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       },
     ],
   },
+  coastLip: {
+    technique:
+      "Course only: a rounded sod roll grown from the terrain's rendered top outer ring " +
+      "(cliffTopology ring 0, its own colour), 2.4 units at the thickest and swelling slowly " +
+      "round the coast, with clusters of two to four upright game-art boulders half sunk into " +
+      "the cliff under it so their light rims show below the overhang (the owner's reference " +
+      "edge). One merged draw; nothing on the island is placed or cleared by it.",
+    source: "Our own course-coast-lip.ts; the columns are course-rock-profile.ts boulders.",
+    budget:
+      "<= 2400 tris per island (8 per coast sample at 96 samples plus 44 per column; measured " +
+      "1,692-2,000 on 4-60 lessons), one course draw",
+    rejected: [
+      {
+        option: "A 1.15-unit lip",
+        why:
+          "At the course overview it read as a thin darker line along the edge; a lip the " +
+          "reference's thickness is 2-3% of the island's width, about 2.4 units on a 36-lesson island.",
+        on: "2026-09-23",
+      },
+      {
+        option: "One column every two to four coast samples all round",
+        why:
+          "Evenly spaced pale columns read as a row of teeth under the lip at the overview. " +
+          "Clusters with bays of bare cliff between them, a shade darker than free boulders, read as rock.",
+        on: "2026-09-23",
+      },
+    ],
+  },
   environmentLight: {
     technique: "PMREM generated once from our own procedural skydome into scene.environment.",
     source: "Our own sky. No donated cubemap.",

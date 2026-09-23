@@ -35,6 +35,19 @@ a screenshot; current browser fixtures are selected by `e2e/harness/catalogue.ts
 This catalogue clarification changes no technique, budget or original receipt.
 
 ## Decision and authority
+### R58-03: a thick sod lip over rock columns at the coast
+
+Owner, 2026-09-23: the course island's edge was thin and unnatural — the meadow
+stopped at a flat 0.42-unit collar on a dark wall — where the reference rolls a thick
+rounded grass edge over rock pillars. `course-coast-lip.ts` adds, for the course
+detail only, a sod roll grown from the terrain's rendered top outer ring (so it cannot
+split from the meadow and takes the meadow's colour there), 2.4 units at the thickest
+and swelling slowly round the coast, plus clusters of two to four upright boulders —
+the R58-02 primitive, a shade darker — half sunk in the cliff under it. One merged
+draw of 1,692-2,000 triangles on 4-60 lessons; the terrain mesh, its triangle counts
+and every placement are unchanged. A 1.15-unit lip read as a line at the overview, and
+evenly spaced columns read as teeth; both are recorded in the `coastLip` lock.
+
 ### R58-02: one game-art boulder for every rock on the course island
 
 Owner, 2026-09-23: the island's rocks read thin and cheap next to the reference
