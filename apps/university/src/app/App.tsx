@@ -70,6 +70,7 @@ import {
   type MapQuickCommand,
 } from "./MapQuickActions.js";
 import { CourseScene, type LessonPlacement } from "@pieai/university-world/Maps.js";
+import { learningSiteLocked } from "@pieai/university-world/learning-nodes.js";
 import { type CourseNode } from "@pieai/university-world/course.js";
 import { RailIdentity } from "@pieai/university-world/avatar.js";
 
@@ -220,14 +221,14 @@ export function App() {
     });
   }, []);
   /*
-    V5 §12 decision C′: a locked lesson's card says why and offers the current
-    lesson or the current stretch's checkpoint test — never "Enter".
+    V5 §12 decision C′: a locked stop's card — lesson, gate, pennant or board —
+    says why and offers the current lesson or the current stretch's checkpoint
+    test, never "Enter".
   */
-  const lockedEntry = (lessonId: string): MapEntryLock | undefined => {
+  const lockedEntry = (locked: boolean): MapEntryLock | undefined => {
     if (view.kind !== "course" || !course) return undefined;
-    const picked = lessons.find((item) => item.lessonId === lessonId);
     const live = lessons.find((item) => item.state === "live");
-    if (picked?.state !== "locked" || !live) return undefined;
+    if (!locked || !live) return undefined;
     const segment = learningSegments(course).find(
       (item) => item.unitId === live.unitId && item.lessonIds.includes(live.lessonId),
     );
@@ -801,7 +802,9 @@ export function App() {
                 markers.some((marker) => marker.id === `kind:${pathOverlay.lessonId}`)
                 ? `kind:${pathOverlay.lessonId}`
                 : pathOverlay.lessonId
-              : null
+              : view.kind === "course" && pathOverlay?.kind === "stop"
+                ? learningNodeId(pathOverlay.segment, pathOverlay.nodeKind)
+                : null
         }
         followNode={pickCardRef}
         onPick={(node) => {
@@ -852,12 +855,15 @@ export function App() {
                     (item) => item.id === site.segment.id,
                   );
                   if (!segment) return;
-                  rememberCourseAvatarNode(site.id);
+                  // The same as a lesson stone: a locked stop explains, an open one is hopped to.
+                  const locked = learningSiteLocked(site, lessons);
+                  if (!locked) rememberCourseAvatarNode(site.id);
                   setPathOverlay({
-                    kind: "learning-node",
+                    kind: "stop",
                     segment,
                     nodeKind: site.kind,
                     unitId: segment.unitId,
+                    locked,
                     returnFocusTo: labelNodes.current.get(site.id) ?? null,
                   });
                 }}
@@ -902,11 +908,31 @@ export function App() {
                 actionRef={pickCardRef}
               />
             ) : null}
+            {view.kind === "course" && pathOverlay?.kind === "stop" ? (
+              <MapEntryAction
+                eyebrow={`${translate(`mapNodes.${pathOverlay.nodeKind}`)} · ${translate(
+                  "mapNodes.range",
+                  {
+                    first: pathOverlay.segment.firstIndex + 1,
+                    last: pathOverlay.segment.lastIndex + 1,
+                  },
+                )}`}
+                title={translate(`mapNodes.${pathOverlay.nodeKind}Pitch`)}
+                actionRef={pickCardRef}
+                locked={lockedEntry(pathOverlay.locked)}
+                onEnter={() => setPathOverlay({ ...pathOverlay, kind: "learning-node" })}
+              />
+            ) : null}
             {view.kind === "course" && pathOverlay?.kind === "node" && pathUnit && pathLesson ? (
               <MapEntryAction
+                eyebrow={translate("map.stop.lesson", {
+                  number: lessons.findIndex((item) => item.lessonId === pathLesson.id) + 1,
+                })}
                 title={pathLesson.title}
                 actionRef={pickCardRef}
-                locked={lockedEntry(pathLesson.id)}
+                locked={lockedEntry(
+                  lessons.find((item) => item.lessonId === pathLesson.id)?.state === "locked",
+                )}
                 onEnter={() => {
                   setPathOverlay(null);
                   setView({
@@ -1130,7 +1156,7 @@ export function App() {
           },
         ]
       : []),
-    ...(picked || pathOverlay?.kind === "node" || planetDomainChoice
+    ...(picked || pathOverlay?.kind === "node" || pathOverlay?.kind === "stop" || planetDomainChoice
       ? [
           {
             id: "clear",

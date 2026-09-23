@@ -143,6 +143,19 @@ export const GRID_ACCENT_RAMP = {
 } as const;
 
 /**
+ * The ring on every place the avatar can stand — lesson stones and the learning
+ * nodes' pads alike (V5, R59, 2026-09-23): green where you can go, red where you
+ * cannot. The owner rejected the coral ramp here, whose live step read as yellow
+ * and said nothing. Done is a step deeper so a finished stretch still reads.
+ */
+export const GRID_STOP_RING = {
+  live: 0x4fd866,
+  idle: 0x43c25a,
+  done: 0x33a24a,
+  locked: 0xe2412f,
+} as const;
+
+/**
  * Lesson stones sit on the shared ivory road, not on the meadow. The ramp
  * step is therefore chosen for brightness on `GRID_SHARED_SOIL.road`, not for
  * contrast against a particular ground. Live/idle use the light coral the
@@ -167,9 +180,10 @@ export const GRID_LEARNING_NODE_ALBEDO = {
   cloth: GRID_ACCENT_RAMP.coral,
   paper: 0xf4e6cc,
   stone: GRID_LESSON_PLINTH_ALBEDO,
-  /** The pads a learner stands on: coral is the lesson's, so these are not. */
-  challengePad: 0xf2b33d,
-  personalPad: 0xa98bd8,
+  /** The gate's rope and what hangs from it (R59-04). */
+  rope: 0xd9b566,
+  streamer: 0xfff6e4,
+  ribbon: GRID_ACCENT_RAMP.amberLight,
 } as const;
 
 export interface GridPalettePreset extends GridPalette {

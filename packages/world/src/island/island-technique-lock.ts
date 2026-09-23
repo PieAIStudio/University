@@ -407,23 +407,28 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
   learningNode: {
     technique:
       "Three procedural low-poly objects told apart by silhouette — a red torii gate " +
-      "spanning the road at a segment's end (checkpoint), a pennant on a pole (challenge), " +
-      "a notice board with one pinned note (personal) — plus stepping stones from the road. " +
-      "Each is a place the avatar lands, like a lesson stone: under the gate, whose road gap " +
-      "the blueprint widens (checkpointGaps), or on a pad — the lesson medallion in gold or " +
-      "lavender — with the pennant or board behind it, away from the road. The pennant's " +
-      "cloth is a separate five-column strip bent by a travelling wave on the CPU. " +
-      "Only the learner's nearby segment (and the one the avatar stands in) draws; clicking " +
-      "the object, its pad or the DOM chip does the same thing, and the chip stays the " +
+      "spanning the road at every segment's end (checkpoint), with a straw rope, two zig-zag " +
+      "paper streamers and two ribbons that swing in the wind; a pennant on a pole " +
+      "(challenge); a notice board with one pinned note (personal). Each stands on the lesson " +
+      "stone itself (same medallion, radius, unit ring and lock stone; ring green where the " +
+      "avatar can go, red where it cannot): under the gate, whose road gap the blueprint " +
+      "widens (checkpointGaps), or beside the segment's middle lesson with the pennant or " +
+      "board behind the stone, away from the road, and stepping stones back to it. Every " +
+      "segment draws its gate and one roadside node, board and pennant taking turns. Cloth " +
+      "and streamers bend on the CPU; everything is instanced. Clicking the object, its " +
+      "stone or the DOM chip does what clicking a lesson stone does; the chip stays the " +
       "accessible name. Placed by courseLearningSites, which searches for free ground and " +
       "never moves an existing tree, rock, landmark courtyard or path.",
     source:
       "Our own course/learning-sites.ts, learning-node-geometry.ts and LearningNodeField.tsx; " +
-      "the pad is grid/lesson-medallion.ts's geometry.",
+      "the stone is grid/lesson-medallion.ts and LessonMarkerField's pose and lock stone.",
     budget:
-      "<= 48/36/60 tris for gate/pennant (cloth included)/board, one medallion per pad and 18 " +
-      "per stepping stone; objects drawn at 2.3/2.1/1.95x. Measured on three real course " +
-      "shapes: 11/11, 2/2 and 3/4 gates, 51 of 57 nodes in all; the rest keep their chip.",
+      "<= 160/36/60 tris for gate (rope and streamers included)/pennant (cloth " +
+      "included)/board, one medallion and ring per stone and 18 per stepping stone; objects " +
+      "drawn at 2.3/2.1/1.95x; about ten instanced draws per island. Measured on three real " +
+      "course shapes: 11/11 gates and 11/11 roadside nodes on 36 lessons, 2/2 and 2/2 on 8, " +
+      "3/4 and 1/4 on the 9-lesson cutout island, whose verge is full; an unplaced node has " +
+      "no chip and stays in the course's opportunity list.",
     rejected: [
       {
         option: "A token standing on a disc, the lesson medallion with a symbol on top",
@@ -455,6 +460,16 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
         why: "The posts vanished against the brown road and the Π read as one red stub; the whole gate now uses the accent ramp.",
         on: "2026-09-23",
       },
+      {
+        option: "Smaller gold and lavender pads, and nodes drawn only near the learner",
+        why: "The owner (R59): every place the avatar stands is one stone, told apart only by the ring's green or red; and a gate every few lessons down the whole road, not one at a time.",
+        on: "2026-09-23",
+      },
+      {
+        option: "Pads held flat to a 0.12 rise",
+        why: "At lesson-stone size only 7 of 11 roadside nodes found ground on a 36-lesson course. The stone leans into the ground by the lesson stones' own pose, so it takes 0.2: 11 of 11.",
+        on: "2026-09-23",
+      },
     ],
   },
   wildflowers: {
@@ -482,13 +497,10 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
     technique:
       "Course only: a rounded sod roll grown from the terrain's rendered top outer ring " +
       "(cliffTopology ring 0, its own colour), 2.4 units at the thickest and swelling slowly " +
-      "round the coast, with clusters of two to four upright game-art boulders half sunk into " +
-      "the cliff under it so their light rims show below the overhang (the owner's reference " +
-      "edge). One merged draw; nothing on the island is placed or cleared by it.",
-    source: "Our own course-coast-lip.ts; the columns are course-rock-profile.ts boulders.",
-    budget:
-      "<= 2400 tris per island (8 per coast sample at 96 samples plus 44 per column; measured " +
-      "1,692-2,000 on 4-60 lessons), one course draw",
+      "round the coast (the owner's reference edge). One draw; nothing on the island is " +
+      "placed or cleared by it.",
+    source: "Our own course-coast-lip.ts.",
+    budget: "<= 800 tris per island (8 per coast sample at 96 samples), one course draw",
     rejected: [
       {
         option: "A 1.15-unit lip",
@@ -502,6 +514,13 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
         why:
           "Evenly spaced pale columns read as a row of teeth under the lip at the overview. " +
           "Clusters with bays of bare cliff between them, a shade darker than free boulders, read as rock.",
+        on: "2026-09-23",
+      },
+      {
+        option: "Clustered boulder columns half sunk under the lip",
+        why:
+          "The owner (R59-01): pale upright columns hanging on the cliff read as foreign objects " +
+          "stuck to the edge, not as the island's rock. The sod roll alone is the edge.",
         on: "2026-09-23",
       },
     ],

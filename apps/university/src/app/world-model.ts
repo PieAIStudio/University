@@ -31,6 +31,18 @@ import { mapDomainForStudy } from "./map-domain-catalog.js";
 
 export type PathOverlay =
   | {
+      /**
+       * A learning node chosen on the map: its card is open, the same card a
+       * lesson stone opens (V5 R59). "Enter" turns it into `learning-node`.
+       */
+      readonly kind: "stop";
+      readonly unitId: string;
+      readonly segment: LearningSegment;
+      readonly nodeKind: MapLearningKind;
+      readonly locked: boolean;
+      readonly returnFocusTo: HTMLElement | null;
+    }
+  | {
       readonly kind: "learning-node";
       readonly unitId: string;
       readonly segment: LearningSegment;
@@ -287,16 +299,22 @@ export function useWorldMarkers({
       if (view.kind === "lesson" || !course) return annotated;
       return [
         ...annotated,
-        ...learningOpportunityMarkers(lessons, learningSegments(course), (segment, nodeKind) => {
-          setCourseAvatarNode?.(learningNodeId(segment, nodeKind));
-          setPathOverlay({
-            kind: "learning-node",
-            unitId: segment.unitId,
-            segment,
-            nodeKind,
-            returnFocusTo: labelNodes.current.get(learningNodeId(segment, nodeKind)) ?? null,
-          });
-        }),
+        ...learningOpportunityMarkers(
+          lessons,
+          learningSegments(course),
+          (segment, nodeKind, locked) => {
+            // A locked stop opens its explanation; the avatar stays put.
+            if (!locked) setCourseAvatarNode?.(learningNodeId(segment, nodeKind));
+            setPathOverlay({
+              kind: "stop",
+              unitId: segment.unitId,
+              segment,
+              nodeKind,
+              locked,
+              returnFocusTo: labelNodes.current.get(learningNodeId(segment, nodeKind)) ?? null,
+            });
+          },
+        ),
       ];
     }
     if (!world) return [];

@@ -75,7 +75,8 @@ button.scene-label:focus-visible {
 .label--course.is-locked.is-visible {
   opacity: 0.75;
 }
-button.label--icon[data-lesson-state="locked"] {
+button.label--icon[data-lesson-state="locked"],
+button.label--icon.is-locked {
   outline: 1px dashed currentColor;
   outline-offset: 2px;
 }

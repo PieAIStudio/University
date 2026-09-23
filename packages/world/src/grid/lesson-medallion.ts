@@ -9,7 +9,7 @@ import * as THREE from "three";
 
 import type { IslandHeightSample, IslandSurfacePoseLocal } from "../island/island-geometry.js";
 import { type SurfaceTriangleIndex } from "../island/surface-clip.js";
-import { GRID_ACCENT_RAMP, GRID_LESSON_PLINTH_ALBEDO } from "./grid-palette.js";
+import { GRID_LESSON_PLINTH_ALBEDO, GRID_STOP_RING } from "./grid-palette.js";
 
 export const MEDALLION_SEGMENTS = 14;
 export const MEDALLION_HEIGHT = 0.18;
@@ -35,12 +35,7 @@ export const MEDALLION_BODY_ALBEDO = GRID_LESSON_PLINTH_ALBEDO;
 const FOOTING_ALBEDO = new THREE.Color(MEDALLION_BODY_ALBEDO);
 
 /** Engraving tint by learner state. The body stays pale sandstone. */
-export const MEDALLION_ENGRAVING_COLOURS = {
-  live: GRID_ACCENT_RAMP.coralLight,
-  idle: GRID_ACCENT_RAMP.coral,
-  done: GRID_ACCENT_RAMP.coralDeep,
-  locked: GRID_ACCENT_RAMP.brick,
-} as const;
+export const MEDALLION_ENGRAVING_COLOURS = GRID_STOP_RING;
 
 export const MEDALLION_ENGRAVING_OPACITY = {
   live: 0.96,

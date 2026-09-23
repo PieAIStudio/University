@@ -310,16 +310,14 @@ export function courseMarkers(
       id: sprite.id,
       position: sprite.position,
       text: lesson?.state === "done" ? "✓" : sprite.text,
-      kind: sprite.role === "icon" ? ("icon" as const) : ("unit" as const),
-      pinned: sprite.role === "icon",
-      origin: sprite.role === "unit" ? ("start" as const) : ("center" as const),
+      kind: "icon" as const,
+      pinned: true,
       locked: sprite.locked,
       label: lesson
         ? `${lesson.lessonTitle} · ${sprite.label ?? ""} · ${stateLabel(lesson.state)}`
         : sprite.label,
       lessonState: lesson?.state,
       lessonId: lesson?.lessonId,
-      weight: sprite.role === "unit" ? 2 : undefined,
       ...(activate ? { activate } : {}),
     };
   });

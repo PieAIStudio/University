@@ -12,8 +12,6 @@
  * geometry on the existing coast only.
  */
 import * as THREE from "three";
-import { mergeBufferGeometries } from "three-stdlib";
-import { createBoulderGeometry } from "./course-rock-profile.js";
 import { hash } from "./random.js";
 
 /** Profile of the roll at thickness 1: [outward, down] from the edge, and how much it darkens. */
@@ -27,70 +25,15 @@ const LIP_PROFILE = [
 /** World units at the thickest; bays keep more sod than exposed headlands. */
 export const COAST_LIP_THICKNESS = 2.4;
 const SOIL = new THREE.Color(0x5e4b39);
-/** Rock columns stand under the lip (the second step of R58-03). */
-const COAST_COLUMNS = true;
 /**
- * The lip is 8 triangles per coast sample (96 samples at course detail) and
- * each column one 44-triangle boulder; islands of 4 to 60 lessons measure
- * 1,692 to 2,000 together.
+ * The lip is 8 triangles per coast sample (96 samples at course detail). R58-03
+ * also stood rock columns under it; the owner rejected them on 2026-09-23
+ * (「悬在边缘，莫名其妙」), so the roll is the whole of it.
  */
-export const COAST_LIP_TRIANGLE_CEILING = 2400;
+export const COAST_LIP_TRIANGLE_CEILING = 800;
 
 export interface CoastLipTopology {
   readonly ringIndices: readonly (readonly number[])[];
-}
-
-/**
- * Rock columns under the lip, the reference's cliff: the same boulder as every
- * other rock, stood on end and half sunk into the cliff face so its light top
- * rim shows below the overhanging sod. Every few coast samples, never evenly.
- */
-function coastColumns(
-  edge: readonly THREE.Vector3[],
-  outward: readonly THREE.Vector3[],
-  thickness: readonly number[],
-  seed: string,
-): THREE.BufferGeometry[] {
-  const parts: THREE.BufferGeometry[] = [];
-  // Clusters of two to four columns with long bays of bare cliff between them:
-  // one column every few samples all round read as a row of teeth (R58-03).
-  let i = Math.floor(hash(`${seed}/coast-column/start`) * 6);
-  while (i < edge.length) {
-    const cluster = 2 + Math.floor(hash(`${seed}/coast-column/${i}/cluster`) * 3);
-    for (let member = 0; member < cluster && i < edge.length; member += 1) {
-      const key = `${seed}/coast-column/${i}`;
-      const height = 2.8 + hash(`${key}/h`) * 3.2;
-      const radius = 0.8 + hash(`${key}/r`) * 0.7;
-      const top = edge[i]!.y - thickness[i]! * (0.35 + hash(`${key}/drop`) * 0.4);
-      const column = createBoulderGeometry(
-        [
-          {
-            x: 0,
-            z: 0,
-            rx: radius,
-            rz: radius * 0.86,
-            height,
-            turn: hash(`${key}/turn`) * 6,
-            turf: false,
-          },
-        ],
-        key,
-      );
-      // A shade darker than free-standing boulders: they belong to the cliff.
-      const colour = column.getAttribute("color") as THREE.BufferAttribute;
-      for (let v = 0; v < colour.count; v += 1)
-        colour.setXYZ(v, colour.getX(v) * 0.86, colour.getY(v) * 0.86, colour.getZ(v) * 0.88);
-      column.translate(
-        edge[i]!.x + outward[i]!.x * radius * 0.3,
-        top - height,
-        edge[i]!.z + outward[i]!.z * radius * 0.3,
-      );
-      parts.push(column);
-      i += 1 + Math.floor(hash(`${key}/step`) * 2);
-    }
-    i += 5 + Math.floor(hash(`${seed}/coast-column/${i}/gap`) * 7);
-  }
-  return parts;
 }
 
 export function buildCoastLip(
@@ -108,8 +51,6 @@ export function buildCoastLip(
   const positions: number[] = [];
   const colours: number[] = [];
   const shade = new THREE.Color();
-  const outwards: THREE.Vector3[] = [];
-  const thicknesses: number[] = [];
   for (let i = 0; i < count; i += 1) {
     const p = edge[i]!;
     const tangent = edge[(i + 1) % count]!.clone()
@@ -123,8 +64,6 @@ export function buildCoastLip(
       0.22 * Math.sin((i / count) * Math.PI * 2 * 5 + hash(`${seed}/coast-lip`) * 6) +
       hash(`${seed}/coast-lip/${Math.floor(i / 3)}`) * 0.12;
     const thickness = COAST_LIP_THICKNESS * swell;
-    outwards.push(out);
-    thicknesses.push(thickness);
     const ground = new THREE.Color().fromBufferAttribute(colour, ring[i]!);
     for (const step of LIP_PROFILE) {
       positions.push(
@@ -165,20 +104,7 @@ export function buildCoastLip(
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
   }
-  const columns = COAST_COLUMNS ? coastColumns(edge, outwards, thicknesses, seed) : [];
-  if (columns.length === 0) {
-    geometry.computeBoundingBox();
-    geometry.computeBoundingSphere();
-    return geometry;
-  }
-  const parts = [geometry, ...columns];
-  try {
-    const merged = mergeBufferGeometries(parts, false);
-    if (!merged) throw new Error("Coast lip and columns must share one attribute contract");
-    merged.computeBoundingBox();
-    merged.computeBoundingSphere();
-    return merged;
-  } finally {
-    for (const part of parts) part.dispose();
-  }
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+  return geometry;
 }

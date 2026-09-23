@@ -35,6 +35,25 @@ a screenshot; current browser fixtures are selected by `e2e/harness/catalogue.ts
 This catalogue clarification changes no technique, budget or original receipt.
 
 ## Decision and authority
+### R59-02 to R59-05: every stop is the lesson stone; a gate every segment
+
+Owner, 2026-09-23 (second review): the learning nodes' gold and lavender pads were
+too small and too different. Every place the avatar stands is now the lesson stone
+itself — the same medallion, radius, pose rule, unit ring and lock stone — and only
+the ring's colour carries state: green where the avatar can go, red where it cannot
+(`GRID_STOP_RING`; the coral ramp's live step read as yellow and meant nothing). The
+gate has its own stone under it and a straw rope with two paper streamers and two
+ribbons that swing in the wind. Every segment draws its gate, and board and pennant
+take turns beside the segment's middle lesson, so a 36-lesson course carries eleven
+gates and eleven roadside nodes instead of one segment's three; all of it is
+instanced. The floating unit names are gone from the island: their position followed
+the live stone and read as lesson names in the wrong place.
+
+### R59-01: the coast keeps its sod lip, not the columns
+
+Owner, 2026-09-23: the boulder columns under the R58-03 lip hung on the cliff as
+foreign objects. They are removed; the sod roll stays (≤800 triangles per island).
+
 ### R58-04 (first step): denser interior woods and a wildflower meadow
 
 Owner, 2026-09-23: the island should approach the reference's density. The
@@ -940,7 +959,7 @@ contains the exact R52 evidence root and the true full-gate outcomes.
 | Course props                                 | Registered Kenney/semantic stones, with successfully fitted crafted stalls, academies and ambient stones replacing their source IDs. Unfitted replacements retain donors. Decoration ceiling 1,200 triangles/asset; landmarks at most six semantic places/assemblies, ceiling 8,000 per asset.                                                                                                                                                       |
 | Course geological scenery and surface detail | R58-02: four procedural hexagonal boulders, 176 triangles/rock cluster; roadside and ground stones are boulder variants inside their old footprints. R53: three closed Kenney-derived masses, 196 triangles/rock cluster, replacing the R49/R50 572-triangle bank; ruin 348, optional supported spring ≤800. R54: shared 128² wear/turf scalar swatch plus course-only 256² canopy/meadow/route/wear masks; bounded low-flora beds stay within the existing 220-flora / 50,000-triangle landscape ceiling. Existing landscape batches include fitted replacements, courtyard borders and optional rock-rooted canopy; actual cliff-ledge plants add at most one course-only batch and 288 triangles.                     |
 | Lesson marker                                | Shared 14-segment bevelled medallion, 168 triangles; separate +Y-facing unit rings, 48–50 each, at most six ring batches. Readable text stays DOM.                                                                                                                                                                                                                                                                                                   |
-| Learning node                                | R58-01: procedural gate / pennant / notice board, ≤48/36/60 triangles, stepping stones 18 each, a medallion pad beside pennant and board; the avatar lands under the gate or on the pad. Nearby segment only; one merged stone draw. Placed by `courseLearningSites` on free ground, never displacing scenery; gate gaps widened by `checkpointGaps`. Readable text stays DOM. |
+| Learning node                                | R59: procedural gate (rope and streamers) / pennant / notice board, ≤160/36/60 triangles, stepping stones 18 each; each stands on the lesson stone itself (ring green or red by state). Every segment: a gate and one roadside node, board and pennant in turn; instanced. Placed by `courseLearningSites` on free ground, never displacing scenery; gate gaps widened by `checkpointGaps`. Readable text stays DOM. |
 | Ground contact                               | Merged footing splits at rendered triangle boundaries, embeds by 0.01 and retains exposed-height ceiling 0.25. Bounded stance recovery; unresolved contact uses a terrain-clipped shallow inlay at the same position/radius/ID, with engraving and picking preserved.                                                                                                                                                                                |
 | Buildings/camp/bridge                        | Academy's existing four-wall/roof assembly owns one fitted pavilion or retains all original members; never both. Tent faces its actual lit pit. Bridge checks decoded support pads and arched deck across the span, not just its origin. Failed fits retain meaningful fallbacks.                                                                                                                                                                    |
 | Fire and lighting                            | Effects belong only to actual lit campfire assemblies. No per-fire shadow lights. Reduced motion/pause contracts remain. Use the shared Stage/SwimmerRenderKit output chain, with one tone map and one sRGB encoding.                                                                                                                                                                                                                                |

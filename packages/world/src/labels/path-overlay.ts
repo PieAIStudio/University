@@ -1,5 +1,11 @@
 /**
- * What the course path puts on the overlay: kind icons and unit names.
+ * What the course path puts on the overlay: one kind icon per lesson stone.
+ *
+ * Unit names used to float here too, at the middle of the unit's stones inside
+ * the window, pushed off the road — so the name moved whenever the live stone
+ * did and landed beside whichever icon was nearest, where it read as a lesson
+ * name in the wrong place. The owner called it out (V5 R59, 2026-09-23); a
+ * unit's name now lives in the card and the course panel, not on the island.
  *
  * This is only the set of things, bounded by a window around the live stone.
  * One projector (LabelProbe) decides where they sit and whether they are
@@ -30,7 +36,7 @@ export interface PathSprite {
   readonly position: THREE.Vector3;
   readonly text: string;
   readonly label?: string;
-  readonly role: "icon" | "unit";
+  readonly role: "icon";
   readonly locked?: boolean;
 }
 
@@ -69,25 +75,5 @@ export function courseSprites(lessons: readonly PathLesson[]): PathSprite[] {
       };
     });
 
-  const byUnit = new Map<string, PathLesson[]>();
-  lessons.forEach((lesson, index) => {
-    if (!inWindow(index)) return;
-    const group = byUnit.get(lesson.unitId) ?? [];
-    group.push(lesson);
-    byUnit.set(lesson.unitId, group);
-  });
-
-  const units: PathSprite[] = [];
-  for (const group of byUnit.values()) {
-    const first = group[0]!;
-    const last = group[group.length - 1]!;
-    const mid = first.position.clone().lerp(last.position, 0.45);
-    units.push({
-      id: `unit:${first.unitId}`,
-      role: "unit",
-      text: `— ${first.unitTitle} —`,
-      position: new THREE.Vector3(Math.min(mid.x, 0) - 3.2, mid.y + 1.05, mid.z),
-    });
-  }
-  return [...units, ...icons];
+  return icons;
 }

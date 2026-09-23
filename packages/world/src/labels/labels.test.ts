@@ -9,6 +9,7 @@ import {
   placeLabelsAtOffsets,
   type LabelCandidate,
   type LabelPlacement,
+  settleBox,
 } from "./labels";
 
 it("keeps an island name when a landscape rail and hint require two bounded moves", () => {
@@ -639,5 +640,18 @@ describe("placeLabels", () => {
         expect(boxesClash(left, right, leftSize, rightSize, 4)).toBe(false);
       }
     }
+  });
+});
+
+describe("settleBox", () => {
+  const box = { left: 100, right: 160, top: 200, bottom: 290 };
+  it("holds the box while it only breathes", () => {
+    const breath = { left: 103, right: 157, top: 196, bottom: 294 };
+    expect(settleBox(box, breath, 10)).toBe(box);
+  });
+  it("follows a hop", () => {
+    const hop = { left: 140, right: 200, top: 200, bottom: 290 };
+    expect(settleBox(box, hop, 10)).toBe(hop);
+    expect(settleBox(null, hop, 10)).toBe(hop);
   });
 });

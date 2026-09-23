@@ -29,6 +29,7 @@ import {
   islandCaptionLeader,
   placeLabels,
   placeLabelsAtOffsets,
+  settleBox,
   type LabelAnchor,
   type LabelBox,
   type LabelCandidate,
@@ -460,6 +461,9 @@ function writePlacement(
   element.classList.toggle("is-visible", visible);
 }
 
+/** A breath moves the avatar's box a few pixels; a hop moves it much further. */
+const AVATAR_BOX_SLACK = 10;
+
 export function LabelProbe({
   markers,
   limit,
@@ -490,6 +494,9 @@ export function LabelProbe({
   const sceneryProjection = useRef(new THREE.Matrix4());
   const chromeBoxesRef = useRef<readonly LabelBox[]>([]);
   const labelBoxesRef = useRef<readonly LabelBox[]>([]);
+  // The avatar's boxes, held still while it only breathes (`settleBox`).
+  const worldAvatarBoxRef = useRef<LabelBox | null>(null);
+  const entryAvatarBoxRef = useRef<LabelBox | null>(null);
   const followViewportHeightRef = useRef<number | null>(null);
   const labelLimitRef = useRef(limit);
   const labelGapRef = useRef(4);
@@ -619,12 +626,17 @@ export function LabelProbe({
       avatarBounds.current.setFromObject(avatar);
       const bounds = projectedAvatarBounds(avatarBounds.current, camera, scratch.current);
       if (bounds.minX < bounds.maxX && bounds.minY < bounds.maxY) {
-        reserved.push({
-          left: ((bounds.minX + 1) / 2) * size.width - 6,
-          right: ((bounds.maxX + 1) / 2) * size.width + 6,
-          top: ((1 - bounds.maxY) / 2) * size.height - 6,
-          bottom: ((1 - bounds.minY) / 2) * size.height + 6,
-        });
+        worldAvatarBoxRef.current = settleBox(
+          worldAvatarBoxRef.current,
+          {
+            left: ((bounds.minX + 1) / 2) * size.width - 6,
+            right: ((bounds.maxX + 1) / 2) * size.width + 6,
+            top: ((1 - bounds.maxY) / 2) * size.height - 6,
+            bottom: ((1 - bounds.minY) / 2) * size.height + 6,
+          },
+          AVATAR_BOX_SLACK,
+        );
+        reserved.push(worldAvatarBoxRef.current);
       }
     }
     // A compact entry must never obscure the face it just caused to arrive.
@@ -637,13 +649,19 @@ export function LabelProbe({
     if (entryAvatar) {
       avatarBounds.current.setFromObject(entryAvatar);
       const bounds = projectedAvatarBounds(avatarBounds.current, camera, scratch.current);
-      if (bounds.minX < bounds.maxX && bounds.minY < bounds.maxY)
-        entryAvatarBox = {
-          left: ((bounds.minX + 1) / 2) * size.width - 10,
-          right: ((bounds.maxX + 1) / 2) * size.width + 10,
-          top: ((1 - bounds.maxY) / 2) * size.height - 10,
-          bottom: ((1 - bounds.minY) / 2) * size.height + 10,
-        };
+      if (bounds.minX < bounds.maxX && bounds.minY < bounds.maxY) {
+        entryAvatarBoxRef.current = settleBox(
+          entryAvatarBoxRef.current,
+          {
+            left: ((bounds.minX + 1) / 2) * size.width - 10,
+            right: ((bounds.maxX + 1) / 2) * size.width + 10,
+            top: ((1 - bounds.maxY) / 2) * size.height - 10,
+            bottom: ((1 - bounds.minY) / 2) * size.height + 10,
+          },
+          AVATAR_BOX_SLACK,
+        );
+        entryAvatarBox = entryAvatarBoxRef.current;
+      }
     }
     // A neighbour's caption must not cut through a windmill or tree crown.
     // Bounds are emitted once by the actual batched geometry producer; only

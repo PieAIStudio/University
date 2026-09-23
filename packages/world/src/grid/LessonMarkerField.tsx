@@ -84,12 +84,36 @@ export function composeMarkerMatrix(
   target: THREE.Matrix4,
   scratch: MarkerMatrixScratch,
 ): THREE.Matrix4 {
-  const normal = marker.surface?.normal ?? MARKER_UP;
-  const lift = marker.surface?.lift ?? 0;
+  return composeStopMatrix(
+    marker.lesson.position,
+    marker.radius,
+    marker.surface,
+    offsetFactor,
+    scale,
+    target,
+    scratch,
+  );
+}
+
+/**
+ * The same rule for any place the avatar can stand: a lesson stone, or a
+ * learning node's pad (V5 R59: every stop is the same stone).
+ */
+export function composeStopMatrix(
+  position: THREE.Vector3,
+  radius: number,
+  surface: GridLessonMarkerSurface | undefined,
+  offsetFactor: number,
+  scale: number,
+  target: THREE.Matrix4,
+  scratch: MarkerMatrixScratch,
+): THREE.Matrix4 {
+  const normal = surface?.normal ?? MARKER_UP;
+  const lift = surface?.lift ?? 0;
   scratch.position
     .copy(normal)
-    .multiplyScalar(marker.radius * offsetFactor + lift)
-    .add(marker.lesson.position);
+    .multiplyScalar(radius * offsetFactor + lift)
+    .add(position);
   scratch.rotation.setFromUnitVectors(MARKER_UP, normal);
   scratch.scale.set(scale, scale, scale);
   return target.compose(scratch.position, scratch.rotation, scratch.scale);
@@ -106,6 +130,10 @@ const LOCK_STONE: readonly BoulderSetting[] = [
   { x: 0.46, z: -0.26, rx: 0.2, rz: 0.18, height: 0.3, turn: -0.6, turf: false },
 ];
 export const LOCK_STONE_CRUMBLE_SECONDS = 0.7;
+/** The lock stone, for every stop that can be locked. */
+export function createLockStoneGeometry(): THREE.BufferGeometry {
+  return createBoulderGeometry(LOCK_STONE, "lesson-lock");
+}
 const HIDDEN = new THREE.Matrix4().makeScale(0, 0, 0);
 
 interface LessonMarkerFieldProps {
@@ -282,7 +310,7 @@ export function LessonMarkerField({
   }, [bodyGeometry, bodyMaterial, engravingMaterial]);
 
   // Lock stones: one instance per marker, hidden unless the lesson is locked.
-  const lockGeometry = useMemo(() => createBoulderGeometry(LOCK_STONE, "lesson-lock"), []);
+  const lockGeometry = useMemo(() => createLockStoneGeometry(), []);
   const lockMaterial = useMemo(
     () => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 }),
     [],

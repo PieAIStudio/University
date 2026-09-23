@@ -26,7 +26,6 @@ import {
   spineOf,
   type AuthoringFocus,
   type ProgressSource,
-  nearestLearningSegment,
 } from "@pieai/university-core";
 import { playSound } from "@pieai/university-ui/sound/index.js";
 import { useFrame } from "@react-three/fiber";
@@ -88,9 +87,9 @@ import { CourseWildflowers } from "./course/CourseWildflowers.js";
 import {
   checkpointGapsForUnitSizes,
   courseLearningSites,
-  segmentsFromPlacements,
   type LearningSite,
 } from "./course/learning-sites.js";
+import { LEARNING_PAD_RADIUS } from "./course/learning-node-geometry.js";
 import {
   buildMedallionFooting,
   MARKER_PLINTH_OFFSET,
@@ -1287,26 +1286,38 @@ export interface CourseLessonLayout {
  * Radius, ids, positions and ordering stay as authored. The rigid disc is
  * posed so the chamfer is visible; the footing closes the seam underneath.
  */
+/**
+ * How a stone of `radius` standing at `position` leans into the ground under
+ * it: one rule for lesson stones and for the learning nodes' pads (V5 R59).
+ */
+export function courseStopPose(
+  blueprint: IslandBlueprint,
+  position: THREE.Vector3,
+  radius: number,
+  heightAt: ReturnType<typeof createIslandHeightSampler>["heightAt"],
+): ReturnType<typeof islandSurfacePose> {
+  return islandSurfacePose(blueprint, "course", position.x, position.z, {
+    radius,
+    originOffset: radius * MARKER_PLINTH_OFFSET,
+    maxEmbed: radius * MARKER_MAX_RAISE,
+    locals: medallionPoseLocals(),
+    heightAt,
+    originY: position.y,
+  });
+}
+
 export function layoutCourseLessons(
   blueprint: IslandBlueprint,
   lessons: readonly LessonPlacement[],
 ): CourseLessonLayout {
   const ground = createIslandHeightSampler(blueprint);
   try {
-    const locals = medallionPoseLocals();
     const recoveries: { lessonId: string; grounding: MedallionGrounding }[] = [];
     const markers: GridLessonMarker[] = lessons.map((lesson) => {
       const radius =
         blueprint.route.nodeRadius *
         (0.96 + Math.min(1, Math.max(0, lesson.chars) / 12_000) * 0.08);
-      const pose = islandSurfacePose(blueprint, "course", lesson.position.x, lesson.position.z, {
-        radius,
-        originOffset: radius * MARKER_PLINTH_OFFSET,
-        maxEmbed: radius * MARKER_MAX_RAISE,
-        locals,
-        heightAt: ground.heightAt,
-        originY: lesson.position.y,
-      });
+      const pose = courseStopPose(blueprint, lesson.position, radius, ground.heightAt);
       const grounding = groundMedallion({
         position: lesson.position,
         radius,
@@ -1440,20 +1451,33 @@ export function CourseScene({
   const layout = useMemo(() => layoutCourseLessons(blueprint, lessons), [blueprint, lessons]);
   const markers = layout.markers;
   /*
-    Only the segment the learner is in draws its three objects, matching the
-    chips: V5 shows the nearby nodes and keeps the rest in the course's list.
+    Every segment draws its gate and its turn of pennant or board (V5 R59): a
+    gate every few lessons down the whole road, not only near the learner.
+    Each pad leans into the ground by the lesson stones' own rule.
   */
-  const avatarSegmentId = avatarSite?.segment.id ?? null;
-  const learningSites = useMemo(() => {
-    const nearby = nearestLearningSegment(
-      segmentsFromPlacements(lessons),
-      lessons.find((lesson) => lesson.state === "live")?.lessonId,
-    );
-    // The segment the avatar stands in draws too: it never lands on bare grass.
-    return allSites.filter(
-      (site) => site.segment.id === nearby?.id || site.segment.id === avatarSegmentId,
-    );
-  }, [allSites, avatarSegmentId, lessons]);
+  const padSurfaces = useMemo(() => {
+    const ground = createIslandHeightSampler(blueprint);
+    try {
+      return new Map(
+        allSites
+          .filter((site) => site.resolved)
+          .map((site) => {
+            const pose = courseStopPose(
+              blueprint,
+              site.ground,
+              LEARNING_PAD_RADIUS,
+              ground.heightAt,
+            );
+            return [
+              site.id,
+              { normal: new THREE.Vector3(...pose.normal), lift: pose.lift },
+            ] as const;
+          }),
+      );
+    } finally {
+      ground.dispose();
+    }
+  }, [allSites, blueprint]);
   useEffect(() => {
     return () => {
       layout.footing.geometry?.dispose();
@@ -1509,7 +1533,9 @@ export function CourseScene({
         onHover={onHover}
       />
       <LearningNodeField
-        sites={learningSites}
+        sites={allSites}
+        lessons={lessons}
+        surfaces={padSurfaces}
         onPick={
           onPickNode
             ? (site) => {

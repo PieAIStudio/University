@@ -28,12 +28,9 @@ describe("courseSprites", () => {
     expect(short).toHaveLength(long.length);
   });
 
-  it("does not grow the overlay when a course has more units than the window", () => {
+  it("puts no unit names on the island: they drifted with the live stone (V5 R59)", () => {
     const overlay = courseSprites(lessons(200, 0));
-    const icons = overlay.filter((sprite) => sprite.role === "icon");
-    const units = overlay.filter((sprite) => sprite.role === "unit");
-    expect(icons.length).toBeLessThanOrEqual(SPRITE_WINDOW + 1);
-    expect(units.length).toBeLessThanOrEqual(icons.length);
-    expect(overlay.length).toBeLessThanOrEqual(SPRITE_WINDOW * 3);
+    expect(overlay.every((sprite) => sprite.role === "icon")).toBe(true);
+    expect(overlay.length).toBeLessThanOrEqual(SPRITE_WINDOW + 1);
   });
 });

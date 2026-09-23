@@ -1,23 +1,4 @@
-.label[data-learning-node] {
-  min-width: 44px;
-  min-height: 44px;
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--game-ui-text);
-  background: var(--game-ui-surface-raised);
-  border: 2px solid var(--game-ui-accent);
-  font-size: 1.15rem;
-  box-sizing: border-box;
-}
-.label[data-learning-node="challenge"] {
-  border-style: dashed;
-}
-.label[data-learning-node="checkpoint"] {
-  border-width: 3px;
-}
+/* Learning-node chips are the lesson kind icons' own family (V5 R59): no second style. */
 .label[data-proved="true"] {
   border-style: double;
 }

@@ -24,6 +24,7 @@ import {
   checkpointGapOf,
   checkpointGaps,
   courseLearningSites,
+  islandLearningKinds,
   segmentsFromPlacements,
 } from "./learning-sites.js";
 
@@ -82,9 +83,25 @@ describe("learning sites", () => {
       const sites = courseLearningSites(lessons);
       const segments = segmentsFromPlacements(lessons);
 
-      it("gives every segment its three nodes, once each", () => {
-        expect(sites).toHaveLength(segments.length * 3);
+      it("gives every segment its gate and its turn of board or pennant, once each", () => {
+        expect(sites).toHaveLength(segments.length * 2);
         expect(new Set(sites.map((site) => site.id)).size).toBe(sites.length);
+        segments.forEach((segment) =>
+          expect(
+            sites.filter((site) => site.segment.id === segment.id).map((site) => site.kind),
+          ).toEqual([...islandLearningKinds(segment)]),
+        );
+        // Taking turns: the board first, where a newcomer has nothing to play with yet.
+        expect(islandLearningKinds(segments[0]!)).toEqual(["checkpoint", "personal"]);
+        if (segments[1])
+          expect(islandLearningKinds(segments[1])).toEqual(["checkpoint", "challenge"]);
+      });
+
+      it("opens the gate with its segment and a roadside node with the lesson beside it", () => {
+        for (const site of sites) {
+          if (site.kind === "checkpoint") expect(site.opensWith).toBe(site.segment.lessonIds[0]);
+          else expect(site.segment.lessonIds).toContain(site.opensWith);
+        }
       });
 
       it("never stands an object in the road, on a lesson, or inside anything already there", () => {
@@ -183,12 +200,9 @@ describe("learning sites", () => {
         }
       });
 
-      it("finds free ground for every kind somewhere on the island", () => {
-        for (const kind of ["checkpoint", "personal", "challenge"] as const)
-          expect(
-            sites.some((site) => site.kind === kind && site.resolved),
-            kind,
-          ).toBe(true);
+      it("finds free ground for gates and roadside nodes on the island", () => {
+        expect(sites.some((site) => site.kind === "checkpoint" && site.resolved)).toBe(true);
+        expect(sites.some((site) => site.kind !== "checkpoint" && site.resolved)).toBe(true);
       });
 
       it("answers the same question the same way, from one cache", () => {

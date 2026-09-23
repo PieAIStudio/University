@@ -61,6 +61,32 @@ export interface LearningSite {
   readonly resolved: boolean;
   /** Stepping stones from the road edge to the object; empty for checkpoints. */
   readonly branch: readonly Vector3[];
+  /**
+   * The lesson whose state opens this node (V5 R59): the gate opens once its
+   * segment is reached (the segment's first lesson), the pennant and the board
+   * once the lesson they stand beside is. Until then the node is locked.
+   */
+  readonly opensWith: string;
+}
+
+/**
+ * What the island draws for a segment (V5, R59): a gate at the end of every
+ * segment, and one of the two roadside nodes, taking turns — the board first,
+ * where a newcomer has nothing to play with yet. The course's opportunity list
+ * still offers all three for every segment; the island is the curated subset.
+ */
+export function islandLearningKinds(segment: {
+  readonly ordinal: number;
+}): readonly MapLearningKind[] {
+  return ["checkpoint", segment.ordinal % 2 === 1 ? "personal" : "challenge"];
+}
+
+/** A node is locked while the lesson that opens it is (V5 §12 decision C′, R59). */
+export function learningSiteLocked(
+  site: Pick<LearningSite, "opensWith">,
+  lessons: readonly Pick<LessonPlacement, "lessonId" | "state">[],
+): boolean {
+  return lessons.find((lesson) => lesson.lessonId === site.opensWith)?.state === "locked";
 }
 
 /**
@@ -91,8 +117,13 @@ const NODE_SPACING = 0.85;
 const OBSTACLE_GAP = 0.12;
 /** Steepest drop under a footprint; posts sink deeper than this (see the geometry). */
 export const MAX_SLOPE_RISE = 0.22;
-/** A pad is a flat disc: its rim may differ from its centre by this much at most. */
-export const PAD_SLOPE_RISE = 0.12;
+/**
+ * How far a pad's rim may sit from its centre. The pad leans into the ground by
+ * the lesson stones' own pose rule, so it can take the verge's real slopes: at
+ * the R58 0.12 (a flat disc) the lesson-sized pads of R59 found ground for only
+ * seven of eleven roadside nodes on a 36-lesson course; at 0.2, all eleven.
+ */
+export const PAD_SLOPE_RISE = 0.2;
 /**
  * Where a road crosses a side slope, the gate's two posts stand at different
  * heights. The posts sink 0.69 below the road centre, so a post on the low
@@ -380,12 +411,13 @@ export function courseLearningSites(lessons: readonly LessonPlacement[]): readon
       tangent.normalize();
       const side = new Vector3(-tangent.z, 0, tangent.x);
 
-      for (const kind of ["checkpoint", "personal", "challenge"] as const) {
-        // The gate closes the segment, so the board and the pennant start from
-        // earlier lessons in it — one and two back — instead of crowding the
-        // gate's posts at its last lesson.
-        const back = kind === "personal" ? 1 : kind === "challenge" ? 2 : 0;
-        const baseId = segment.lessonIds[Math.max(0, segment.lessonIds.length - 1 - back)];
+      for (const kind of islandLearningKinds(segment)) {
+        // The gate closes the segment; the board or the pennant stands beside
+        // the segment's middle lesson, clear of the gate's posts at its end.
+        const baseId =
+          kind === "checkpoint"
+            ? segment.lessonIds.at(-1)
+            : segment.lessonIds[Math.floor((segment.lessonIds.length - 1) / 2)];
         const base =
           lessons.find(
             (lesson) => lesson.lessonId === baseId && lesson.unitId === segment.unitId,
@@ -482,6 +514,8 @@ export function courseLearningSites(lessons: readonly LessonPlacement[]): readon
           yaw,
           resolved: found !== null,
           branch,
+          opensWith:
+            kind === "checkpoint" ? (segment.lessonIds[0] ?? anchor.lessonId) : branchFrom.lessonId,
         });
       }
     }

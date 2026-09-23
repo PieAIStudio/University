@@ -38,20 +38,24 @@ export const LEARNING_GATE_HALF_SPAN = 0.36 * LEARNING_NODE_KIND_SCALE.checkpoin
 /** Posts and legs reach this far below the site's ground point (unscaled). */
 export const LEARNING_NODE_POST_SINK = 0.3;
 /**
- * The pad the avatar lands on beside a pennant or a board: the lesson stone's
- * own medallion, smaller and in the node's colour, so "you can stand here"
- * reads the same way everywhere on the island.
+ * The pad the avatar lands on under the gate, beside the pennant or in front of
+ * the board: the lesson stone itself, the same size (the route's node radius),
+ * so "you can stand here" is one thing everywhere on the island (V5 R59). The
+ * owner rejected the smaller, differently coloured pads of R58-01.
  */
-export const LEARNING_PAD_RADIUS = 0.5;
+export const LEARNING_PAD_RADIUS = 0.62;
 /** How far behind its pad (away from the road) the object stands, in world units. */
 export const LEARNING_OBJECT_OFFSET: Readonly<Record<"challenge" | "personal", number>> = {
   challenge: 0.66,
   personal: 0.74,
 };
 
-/** Triangle ceilings the technique lock asserts; the pennant's cloth counts with its pole. */
+/**
+ * Triangle ceilings the technique lock asserts; the pennant's cloth counts with
+ * its pole, the gate's rope and streamers with its posts.
+ */
 export const LEARNING_NODE_TRIANGLES: Readonly<Record<MapLearningKind, number>> = {
-  checkpoint: 48,
+  checkpoint: 160,
   challenge: 36,
   personal: 60,
 };
@@ -222,6 +226,104 @@ function addGate(builder: Builder, frame: Frame) {
   );
   builder.box(frame, 0, 0, 1.04, 1.15, 1.12, 0.15, c.gateCap);
   builder.box(frame, 0, 0, 0.8, 0.87, 0.72, 0.09, c.lintel);
+  // A straw rope sagging between the posts under the lintel; what hangs from it
+  // moves in the wind and is its own geometry (`learningGateStreamerGeometry`).
+  const links = 6;
+  for (let i = 0; i < links; i += 1) {
+    const x0 = -ROPE_HALF + (2 * ROPE_HALF * i) / links;
+    const x1 = -ROPE_HALF + (2 * ROPE_HALF * (i + 1)) / links;
+    const mid = (x0 + x1) / 2;
+    const y = ropeY(mid);
+    builder.box(frame, mid, 0, y - 0.028, y + 0.028, x1 - x0 + 0.012, 0.05, c.rope);
+  }
+}
+
+/** The rope's half length and height (unscaled): post to post, just under the lintel. */
+const ROPE_HALF = 0.3;
+function ropeY(x: number): number {
+  return 0.74 - 0.045 * (1 - (x / ROPE_HALF) ** 2);
+}
+
+/**
+ * What hangs from the gate (R59-04): two zig-zag paper streamers from the
+ * rope and two amber ribbons from under the cap's ends, each a strip of
+ * `STREAMER_ROWS` quads, double-sided. `hang` is each vertex's share of its
+ * streamer's length from the top (0 at the knot), `phase` its streamer's
+ * offset in the wind: `flutterGateStreamers` needs both.
+ */
+const STREAMER_ROWS = 4;
+// The middle stays clear: the avatar stands on the pad under the gate.
+const STREAMERS = [
+  { x: -0.23, top: ropeY(-0.23) - 0.02, length: 0.36, width: 0.1, zig: 0.03, colour: "streamer" },
+  { x: 0.23, top: ropeY(0.23) - 0.02, length: 0.36, width: 0.1, zig: 0.03, colour: "streamer" },
+  { x: -0.54, top: 1.03, length: 0.5, width: 0.07, zig: 0, colour: "ribbon" },
+  { x: 0.54, top: 1.03, length: 0.5, width: 0.07, zig: 0, colour: "ribbon" },
+] as const;
+
+export interface GateStreamers {
+  readonly geometry: THREE.BufferGeometry;
+  readonly rest: Float32Array;
+  readonly hang: Float32Array;
+  readonly phase: Float32Array;
+}
+
+export function learningGateStreamerGeometry(): GateStreamers {
+  const scale = LEARNING_NODE_KIND_SCALE.checkpoint;
+  const positions: number[] = [];
+  const colours: number[] = [];
+  const hang: number[] = [];
+  const phase: number[] = [];
+  const indices: number[] = [];
+  const colour = new THREE.Color();
+  STREAMERS.forEach((streamer, index) => {
+    colour.setHex(GRID_LEARNING_NODE_ALBEDO[streamer.colour]);
+    const base = positions.length / 3;
+    for (let row = 0; row <= STREAMER_ROWS; row += 1) {
+      const k = row / STREAMER_ROWS;
+      // Paper streamers step left and right as they fall; ribbons hang straight.
+      const shift = streamer.zig * (row % 2 === 0 ? -1 : 1) * Math.min(1, row);
+      const y = streamer.top - streamer.length * k;
+      const narrow = streamer.width * (1 - k * 0.25);
+      for (const side of [-1, 1]) {
+        positions.push((streamer.x + shift + (side * narrow) / 2) * scale, y * scale, 0);
+        colours.push(colour.r, colour.g, colour.b);
+        hang.push(k);
+        phase.push(index * 1.9);
+      }
+    }
+    for (let row = 0; row < STREAMER_ROWS; row += 1) {
+      const a = base + row * 2;
+      indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+    }
+  });
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new THREE.Float32BufferAttribute(colours, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  geometry.computeBoundingSphere();
+  return {
+    geometry,
+    rest: Float32Array.from(positions),
+    hang: Float32Array.from(hang),
+    phase: Float32Array.from(phase),
+  };
+}
+
+/** Swing the gate's streamers: a gust through the gate, growing toward each free end. */
+export function flutterGateStreamers(streamers: GateStreamers, seconds: number): void {
+  const position = streamers.geometry.getAttribute("position") as THREE.BufferAttribute;
+  const scale = LEARNING_NODE_KIND_SCALE.checkpoint;
+  for (let i = 0; i < position.count; i += 1) {
+    const k = streamers.hang[i]!;
+    const p = streamers.phase[i]!;
+    const swing = Math.sin(seconds * 2.6 + p - k * 2.2) * 0.1 * k * scale;
+    const sway = Math.sin(seconds * 1.7 + p * 0.7) * 0.025 * k * scale;
+    position.setZ(i, streamers.rest[i * 3 + 2]! + swing);
+    position.setX(i, streamers.rest[i * 3]! + sway);
+    position.setY(i, streamers.rest[i * 3 + 1]! + Math.abs(swing) * 0.2 * k);
+  }
+  position.needsUpdate = true;
 }
 
 function addFlag(builder: Builder, frame: Frame) {
@@ -340,6 +442,11 @@ export function learningNodeTriangles(kind: MapLearningKind): number {
     const cloth = learningPennantGeometry();
     count += cloth.getIndex()!.count / 3;
     cloth.dispose();
+  }
+  if (kind === "checkpoint") {
+    const streamers = learningGateStreamerGeometry();
+    count += streamers.geometry.getIndex()!.count / 3;
+    streamers.geometry.dispose();
   }
   return count;
 }

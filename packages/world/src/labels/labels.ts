@@ -329,6 +329,27 @@ export function labelBox(
 }
 
 /** Exact-gap contact is allowed; that *is* the minimum spacing. */
+/**
+ * Keep an obstacle box still while it only breathes.
+ *
+ * The avatar's box is measured from its live geometry, and the avatar kit's
+ * breathing, gaze and blink move it a few pixels every frame. A card or name
+ * placed around that box moved with it: on a phone the entry card never held
+ * still (V5 R59, 「名字还会乱抖」). The previous box stands until some edge has
+ * moved more than `slack` — a hop, not a breath.
+ */
+export function settleBox(previous: LabelBox | null, next: LabelBox, slack: number): LabelBox {
+  if (
+    previous &&
+    Math.abs(previous.left - next.left) <= slack &&
+    Math.abs(previous.right - next.right) <= slack &&
+    Math.abs(previous.top - next.top) <= slack &&
+    Math.abs(previous.bottom - next.bottom) <= slack
+  )
+    return previous;
+  return next;
+}
+
 export function boxesOverlap(a: LabelBox, b: LabelBox, gap: number): boolean {
   return (
     a.left < b.right + gap &&
