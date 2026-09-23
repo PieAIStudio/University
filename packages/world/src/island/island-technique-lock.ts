@@ -504,6 +504,31 @@ export const ISLAND_TECHNIQUE_LOCK: Readonly<Record<string, IslandTechniqueEntry
       },
     ],
   },
+  vignettes: {
+    technique:
+      "Course only: small scenes of Kenney Nature Kit props — a woodpile by a stump, a ring " +
+      "of mushrooms at a wood's edge, a clump of flowers, a bush and grass patch, and a short " +
+      "fence on the verge halfway between two lesson stones every few gaps. Planned in " +
+      "CourseScene after everything standing and the learning nodes, before the wildflowers, " +
+      "which then keep off them; every prop keeps off the road and the stones. Coloured by the " +
+      "batch's material-family table (the teal and orange of the kit become the island's " +
+      "greens and browns). One batched draw.",
+    source:
+      "Our own course-vignettes.ts and course/CourseVignettes.tsx; the models are the CC0 " +
+      "Nature Kit GLBs already shipped for the world map under public/kenney/grid/nature.",
+    budget:
+      "<= 70 groups per island, 3-6 props each, one BatchedMesh; measured 37 groups / 170 " +
+      "props on 36 lessons, 3 / 13 on 8",
+    rejected: [
+      {
+        option: "One fence run checked as a single circle",
+        why:
+          "The verge is planted; a circle round a two- or three-rail run always met a roadside " +
+          "tree or a lesson stone, and no fence stood. Each rail now keeps its own ground.",
+        on: "2026-09-23",
+      },
+    ],
+  },
   coastLip: {
     technique:
       "Course only: a rounded sod roll grown from the terrain's rendered top outer ring " +

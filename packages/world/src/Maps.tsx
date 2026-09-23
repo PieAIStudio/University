@@ -83,10 +83,13 @@ import {
   type GridLessonMarker,
 } from "./grid/LessonMarkerField.js";
 import { LearningNodeField } from "./course/LearningNodeField.js";
-import { CourseWildflowers } from "./course/CourseWildflowers.js";
+import { CourseWildflowers, learningSiteExclusions } from "./course/CourseWildflowers.js";
+import { CourseVignettes } from "./course/CourseVignettes.js";
+import { planCourseVignettes } from "./island/course-vignettes.js";
 import {
   checkpointGapsForUnitSizes,
   courseLearningSites,
+  courseStandingFootprints,
   type LearningSite,
 } from "./course/learning-sites.js";
 import { LEARNING_PAD_RADIUS } from "./course/learning-node-geometry.js";
@@ -1455,6 +1458,24 @@ export function CourseScene({
     gate every few lessons down the whole road, not only near the learner.
     Each pad leans into the ground by the lesson stones' own rule.
   */
+  /*
+    Kenney vignettes and then wildflowers, both planned last: they keep off the
+    road, the stones, the learning nodes and everything standing; the flowers
+    also keep off the vignettes.
+  */
+  const vignettes = useMemo(
+    () =>
+      planCourseVignettes(
+        blueprint,
+        courseStandingFootprints(blueprint).map((o) => ({ x: o.x, z: o.z, radius: o.r })),
+        learningSiteExclusions(allSites),
+      ),
+    [allSites, blueprint],
+  );
+  const vignetteFootprints = useMemo(
+    () => vignettes.map((v) => ({ x: v.x, z: v.z, radius: v.radius })),
+    [vignettes],
+  );
   const padSurfaces = useMemo(() => {
     const ground = createIslandHeightSampler(blueprint);
     try {
@@ -1521,7 +1542,8 @@ export function CourseScene({
       <Suspense fallback={null}>
         <IslandDressing key={assetRevision} blueprint={blueprint} detail="course" />
       </Suspense>
-      <CourseWildflowers blueprint={blueprint} sites={allSites} />
+      <CourseVignettes vignettes={vignettes} />
+      <CourseWildflowers blueprint={blueprint} sites={allSites} around={vignetteFootprints} />
       <LessonMarkerField
         markers={markers}
         footing={layout.footing.geometry}

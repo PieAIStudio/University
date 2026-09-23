@@ -49,6 +49,15 @@ gates and eleven roadside nodes instead of one segment's three; all of it is
 instanced. The floating unit names are gone from the island: their position followed
 the live stone and read as lesson names in the wrong place.
 
+### R59-08: small Kenney scenes between everything else
+
+Owner, 2026-09-23: the map still used too few donor props. The 2026-08-28 rejection of
+scattering props evenly stands; what the reference has is small groups that each say
+something. A new `vignettes` element places woodpiles, mushroom rings, flower clumps,
+bush patches and short verge fences from the Nature Kit GLBs the world map already
+ships, planned after everything standing and before the wildflowers, one batched draw
+(37 groups, 170 props on a 36-lesson island).
+
 ### R59-07: the spring is water
 
 Owner, 2026-09-23: the pond, stream and fall read as fake. In words: the pond was a
