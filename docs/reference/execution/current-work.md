@@ -79,14 +79,14 @@ New mainline work follows the applicable lanes below.
 | Activity payloads, engines and difficulty tiers | [Component contract](../../../packages/ui/src/learning-play/README.md), [interaction design](../../../packages/ui/src/learning-play/DESIGN.md) and [prior acceptance evidence](../../plans/completed/play-usability.md); an embedded activity never substitutes for a lesson's graded exercise, and `pnpm check:activities` names the lessons an engine change breaks, and checks that each activity's citation still points where it says |
 | Where a learner starts, what is dimmed, and testing out of a unit | [V5 decision 12](../player-journey/v5/index.html); unlocking asks `CourseProgress.proven` (exercises passed), never `complete`, and self-report proposes what to test out of rather than unlocking anything |
 | Whether difficulty adapts by itself | [ADR-0010](../../adr/ADR-0010-difficulty-moves-when-the-learner-moves-it.md): it does not. The learner moves it; the system never infers a level. Read it before adding anything that watches performance and re-routes |
-| What a learner's assessed-but-unread lesson looks like on the map | The [map-node journey amendment](../player-journey/v5/index.html#map-learning-nodes) adds a distinct proof outline in this experimental branch, not the ordinary read-complete state. Proof is tied to the assessed revision; older unversioned records are preserved. [Map learning nodes](../../plans/active/map-learning-nodes.md) owns verification and later integration; this experiment does not declare the feature released on main |
+| What a learner's assessed-but-unread lesson looks like on the map | The [map-node journey amendment](../player-journey/v5/index.html#map-learning-nodes) adds a distinct proof outline, not the ordinary read-complete state. Proof is tied to the assessed revision; older unversioned records are preserved. [Map learning nodes](../../plans/active/map-learning-nodes.md) owns verification; the lane is absorbed into main (see below), which is not the same as released to production |
 | Account progress migration and real cross-device/RLS acceptance | [Backend runbook and its adjacent SQL](swimmer-backend-migration.md); existence is not proof of execution, and remote operations still require owner authority |
 | Designed but unfinished learner/business capabilities | [V5 review](v5-journey-review.md), [payment](payment-backend-gap.md), [feedback](feedback-backend-gap.md), [reminders](review-reminders-backend-gap.md), [commercial model](commercial-model.md) |
 | Product changes and remaining product gates | [Product completeness](../../plans/active/product-completeness.md); its integration handoff describes the already-merged lane. Historical [before/after comparison](product-before-after/before-after.md) explains its changes; current product decisions remain in [V5](../player-journey/v5/index.html#product-lightness) |
 
 ## Absorbed lanes (merged, not in flight)
 
-这三条实验分支已在 2026-09-20 收回主线，闸门全绿。它们留在这里是因为各自的
+这三条实验分支已在 2026-09-20 收回主线，闸门全绿；分支和 worktree 已于 2026-09-25 删除，历史只在 git log 里。它们留在这里是因为各自的
 计划仍然拥有范围、验收口径和尚未决定的事项——读它们是为了知道当时为什么那样做，
 **不是为了接着做**。它们不是待办。
 
