@@ -1,0 +1,117 @@
+/*
+  涟 owns the bottom centre of the map (V5 #map-guide). Its first sentence —
+  the entry hint — sits directly above it as its own speech; the gesture
+  hints moved to the top of the map so that nothing else stacks here.
+  The column never takes pointer events; only the droplet and the panel do,
+  so the island underneath stays clickable around them.
+*/
+.map-guide {
+  position: absolute;
+  z-index: 3;
+  inset-inline-start: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  pointer-events: none;
+}
+[dir="rtl"] .map-guide {
+  transform: translateX(50%);
+}
+
+.map-guide > * {
+  pointer-events: auto;
+}
+
+/* The droplet's seat: the kit button, a body and its name. */
+.map-guide .map-guide__body {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding-block: 2px;
+  padding-inline: 6px 16px;
+  border-radius: 999px;
+}
+
+.map-guide__name {
+  font-weight: var(--game-ui-weight-strong);
+}
+
+/*
+  The opening line is the map's old entry hint, now said by 涟. It stays
+  narrower than the gap between the corner pills (the feedback pill floats at
+  the bottom right of a phone), so it wraps rather than running under one.
+*/
+.map-guide .map-guide__opening {
+  position: static;
+  transform: none;
+  max-width: min(22rem, calc(100vw - 220px));
+  white-space: normal;
+  text-align: center;
+  pointer-events: none;
+}
+.map-guide .map-guide__opening.hint--dismissed {
+  transform: translateY(6px);
+}
+
+.map-guide__panel {
+  width: min(20rem, calc(100vw - 32px));
+  box-sizing: border-box;
+}
+
+.map-guide__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.map-guide__say {
+  flex: 1;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.map-guide__aside {
+  display: block;
+  margin-block-start: 4px;
+  color: var(--game-ui-text-muted);
+  font-size: 0.9em;
+}
+
+.map-guide__questions {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.map-guide__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-start: 12px;
+}
+
+/*
+  A short landscape (a phone on its side, 286px tall) cannot give the guide
+  two stacked rows: the map's own course names would have nowhere to go. The
+  opening line sits beside the droplet, as low as the entry hint used to, and
+  the panel scrolls within the height there is.
+*/
+@media (max-height: 400px) {
+  .map-guide {
+    flex-direction: row;
+    align-items: flex-end;
+    bottom: 8px;
+  }
+  .map-guide__panel {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+}

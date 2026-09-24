@@ -50,4 +50,33 @@ export const messages = {
   "map.locked.why": "Finish “{{current}}” first, or test out of this stretch at its gate.",
   "map.locked.goCurrent": "Go to the current lesson",
   "map.locked.test": "Test at the gate",
+  "map.guide.name": "Lian",
+  "map.guide.button": "Ask Lian",
+  "map.guide.open": "Ask Lian how this map works",
+  "map.guide.intro": "I'm Lian. What would you like to know? I'll point it out.",
+  "map.guide.close": "Close",
+  "map.guide.again": "Ask something else",
+  "map.guide.q.start": "Where should I start?",
+  "map.guide.q.challenge": "Where is the game challenge?",
+  "map.guide.q.review": "How do I review what I learned?",
+  "map.guide.q.shortcuts": "Are there shortcuts?",
+  "map.guide.a.startLesson": "Start with “{{title}}”. Select it, then choose Enter.",
+  "map.guide.a.startCourse": "Start on the “{{title}}” island. Select it, then choose Enter.",
+  "map.guide.a.startNone": "There is nothing to start here yet.",
+  "map.guide.a.challengeOpen":
+    "⚡ is a game challenge: play with what you learned in this stretch. A round takes about three minutes.",
+  "map.guide.a.challengeLocked":
+    "⚡ is a game challenge. It opens once you reach the lesson beside it.",
+  "map.guide.a.challengeNone": "This course has no game challenge on its road yet.",
+  "map.guide.a.review":
+    "Cards you learned come back to Practice just before you would forget them. A few a day is enough.",
+  "map.guide.a.shortcuts":
+    "Press Space, or choose Quick actions under More: search destinations, see the whole route and get help.",
+  "map.guide.place.practice": "Practice",
+  "map.guide.place.more": "More",
+  "map.guide.go.select": "Select it for me",
+  "map.guide.go.look": "Take a look",
+  "map.guide.go.shortcuts": "Open quick actions",
+  "map.guide.offscreen.map": "It is not on screen right now; drag the map to find it.",
+  "map.guide.offscreen.menu": "Open the menu at the top left to see it.",
 } as const;

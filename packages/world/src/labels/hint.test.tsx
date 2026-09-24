@@ -121,22 +121,25 @@ describe("overlay.css .picked--follow", () => {
 });
 
 describe("overlay.css .hint", () => {
-  it("sits at the horizontal centre, near the bottom, on the official glass HUD surface", () => {
+  it("sits at the horizontal centre, under the breadcrumb, on the official glass HUD surface", () => {
     const hint = ruleBlock(CSS, ".hint");
     expect(hint).toMatch(/left:\s*50%/);
     expect(hint).toMatch(/translateX\(-50%\)/);
-    expect(hint).toMatch(/bottom:/);
+    expect(hint).toMatch(/top:\s*calc\(max\(16px, env\(safe-area-inset-top\)\) \+ 40px\)/);
+    // The bottom centre is the guide's (V5 #map-guide).
+    expect(hint).not.toMatch(/bottom:/);
     expect(hint).toMatch(/background:\s*var\(--game-ui-panel\)/);
     expect(hint).toMatch(/color:\s*var\(--game-ui-text\)/);
     expect(hint).toMatch(/border:\s*1px solid var\(--game-ui-border-subtle\)/);
     expect(hint).not.toMatch(/left:\s*calc\(var\(--shell/);
   });
 
-  it("gives hover, entry, and controls their own readable vertical slots", () => {
-    expect(ruleBlock(CSS, ".hint--hover")).toMatch(/bottom:\s*116px/);
-    expect(ruleBlock(CSS, ".hint--entry")).toMatch(/bottom:\s*68px/);
+  it("leaves hover and controls one shared slot, and the entry cue its weight", () => {
+    // Hover and the gesture cue were never shown together, so they share one
+    // slot; the entry cue is placed by the guide, above the droplet.
+    expect(CSS).not.toMatch(/^\.hint--hover\s*\{/m);
+    expect(CSS).not.toMatch(/^\.hint--controls\s*\{/m);
     expect(ruleBlock(CSS, ".hint--entry")).toMatch(/font-weight:\s*700/);
-    expect(ruleBlock(CSS, ".hint--controls")).toMatch(/bottom:\s*20px/);
     expect(CSS).toMatch(/\.hint--dismissed\s*\{[\s\S]*?opacity:\s*0/);
   });
 

@@ -206,7 +206,7 @@ export function NavRail({
       ) : null}
       <ul className="nav-rail__list">
         {items.map((item) => (
-          <li key={item.id} className="nav-rail__slot">
+          <li key={item.id} className="nav-rail__slot" data-nav-id={item.id}>
             {item.children ? (
               <NavFlyout item={item} activeId={activeId} />
             ) : (

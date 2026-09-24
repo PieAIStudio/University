@@ -67,9 +67,12 @@ test.describe("P 正式领域目录与未发布星球", () => {
           const canvasBox = await page.locator(".map-viewport canvas").boundingBox();
           expect(canvasBox).not.toBeNull();
           expect(canvasBox!.height).toBeGreaterThanOrEqual(284);
+          // Directory and overview stay on demand (map navigation evolution).
+          // The map's one resident control is the Owner's guide (ADR-0012).
           await expect(
             page.locator(".map-tools button:visible, .map-framing-tools button:visible"),
-          ).toHaveCount(0);
+          ).toHaveCount(1);
+          await expect(page.locator(".map-tools .map-guide__body")).toBeVisible();
         }
         await navigateMapBreadcrumb(page, "/planet");
         await expect(page.locator("button[data-domain-id]")).toHaveCount(4);

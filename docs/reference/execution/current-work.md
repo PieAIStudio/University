@@ -30,6 +30,7 @@ related:
   - PLAN-INTERACTION-3D-PLAYLAB
   - PLAN-MAP-LEARNING-NODES
   - ADR-0011
+  - ADR-0012
 ---
 
 # Current Work
@@ -64,6 +65,7 @@ New mainline work follows the applicable lanes below.
 | Published versus locked course packages | [Locked-package record](../../../apps/local/course-proposals/locked/README.md); runtime counts come from the generated catalogue, not historical handoffs |
 | Retiring a course package is blocked on the browser suite | The Owner asked on 2026-09-22 for `browser-ai` and `ai-for-real-life` to be retired; it was attempted and rolled back. `e2e/harness/catalogue.ts` resolves its content roles out of the shipped catalogue and throws at import when one has no course, and three more specs assume the catalogue keeps providing a bilingual `connect`, a servable course on disk, and a study with more than one island. The four measured failures are the specification for the fixture study that unblocks it — see [the locked-package record](../../../apps/local/course-proposals/locked/README.md) |
 | Reviving the locked AI foundations course | [AI foundations revival](../../plans/active/ai-foundations-revival.md); follow its phase boundary and unresolved recovery requirements before resuming |
+| Map guide 涟 (SwimmerNerveKit) | [ADR-0012](../../adr/ADR-0012-the-map-guide-comes-from-nerve-model-free-first.md): phase one is live on the world and course maps — fixed questions answered from the map, the droplet points only at registered places (Nerve 0.2.0 registry, UIKit 2.9.0 `LiquidPresence`), no model and no cost. The [journey section](../player-journey/v5/index.html#map-guide) owns behaviour. Phase two (conversation) waits on an Owner cost decision and metering through SwimmerAIProviderKit; Nerve's guided walk and DOM adapter are adopted only from a release |
 | 3D learning games (the map's challenge node) | [ADR-0011](../../adr/ADR-0011-3d-learning-games-are-assembled-from-one-kit.md): every 3D game is five layers — content projected from lessons (`packages/core/src/game-content`), rules, scene blocks (`packages/world/src/game-kit`), one frame (`packages/ui/src/game-frame`), assembly (`apps/university/src/game`). 庭院拦截 is the first; the learner's avatar (SwimmerAvatarKit 0.7 actions) is the hero. The [journey section](../player-journey/v5/index.html#courtyard-intercept) owns behaviour. The old invaders/cloud editions are still in the play lab until retired; the other old games are re-assembled only after the Owner judges them on the review desk |
 | Production deploy | On hold by Owner ruling (2026-09-23) until lessons 1–3 are rebuilt as samples, their authoring workflow exists and every interaction component has been judged once. `main` moves ahead of production on purpose |
 | Mainline iteration, teaching contracts and remaining 3D acceptance gates | [Continuous world delivery](../../plans/active/continuous-world-delivery.md), reading its integrated-mainline continuation first; pre-merge sections are historical evidence, not open task assignments |

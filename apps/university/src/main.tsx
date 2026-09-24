@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 // Brand tokens first, product layout second: the kit defines the custom
 // properties everything below reads.
 import "@pieai/swimmer-ui-kit/styles.css";
+import "@pieai/swimmer-ui-kit/liquid-presence.css";
 import "@pieai/university-ui/catalog/catalog.css";
 import "@pieai/university-ui/capability/capability.css";
 import "@pieai/university-ui/cta/liquid-cta.css";

@@ -76,12 +76,15 @@ importers:
       '@pieai/swimmer-avatar-kit':
         specifier: 0.7.0
         version: 0.7.0(@react-three/fiber@9.6.1(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1))(react@19.2.8)(three@0.185.1)
+      '@pieai/swimmer-nerve-kit':
+        specifier: 0.2.0
+        version: 0.2.0(@pieai/swimmer-ui-kit@2.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@pieai/swimmer-render-kit':
         specifier: 0.5.0
         version: 0.5.0(three@0.185.1)
       '@pieai/swimmer-ui-kit':
-        specifier: 2.8.0
-        version: 2.8.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 2.9.0
+        version: 2.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@pieai/university-backend':
         specifier: workspace:*
         version: link:../../packages/backend
@@ -206,7 +209,7 @@ importers:
         version: link:../core
       '@pieaistudio/swimmer-auth-kit':
         specifier: 0.1.9
-        version: 0.1.9(@pieai/swimmer-ui-kit@2.8.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@supabase/ssr@0.12.0(@supabase/supabase-js@2.110.3))(@supabase/supabase-js@2.110.3)(react@19.2.8)
+        version: 0.1.9(@pieai/swimmer-ui-kit@2.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@supabase/ssr@0.12.0(@supabase/supabase-js@2.110.3))(@supabase/supabase-js@2.110.3)(react@19.2.8)
       '@supabase/supabase-js':
         specifier: 2.110.3
         version: 2.110.3
@@ -255,14 +258,14 @@ importers:
         specifier: ^0.27.20
         version: 0.27.20(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@pieai/swimmer-ui-kit':
-        specifier: 2.8.0
-        version: 2.8.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 2.9.0
+        version: 2.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../core
       '@pieaistudio/swimmer-auth-kit':
         specifier: 0.1.9
-        version: 0.1.9(@pieai/swimmer-ui-kit@2.8.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@supabase/ssr@0.12.0(@supabase/supabase-js@2.110.3))(@supabase/supabase-js@2.110.3)(react@19.2.8)
+        version: 0.1.9(@pieai/swimmer-ui-kit@2.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@supabase/ssr@0.12.0(@supabase/supabase-js@2.110.3))(@supabase/supabase-js@2.110.3)(react@19.2.8)
       mermaid:
         specifier: 11.16.0
         version: 11.16.0
@@ -325,8 +328,8 @@ importers:
         specifier: 0.5.0
         version: 0.5.0(three@0.185.1)
       '@pieai/swimmer-ui-kit':
-        specifier: 2.8.0
-        version: 2.8.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 2.9.0
+        version: 2.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@pieai/university-core':
         specifier: workspace:*
         version: link:../core
@@ -376,6 +379,23 @@ importers:
 
 packages:
 
+  '@ag-ui/client@1.0.0':
+    resolution: {integrity: sha512-Q24E4yuK35tz7ROOC0yWYltdOZK1K+5GmM2Syh/PReFE9e8lDcE8LoMoY5HZyxpQZ+0IizwpQm9LyVqAHP8mpw==}
+
+  '@ag-ui/core@1.0.0':
+    resolution: {integrity: sha512-yCRhsQvb4+lmGMrDsi4TOJxqKpm/kb3H64wwL+Z90jNVrkhy17RErfzsNgybfbjNKLM0nenEDYDVJsZHJJSigQ==}
+    peerDependencies:
+      zod: ^3.25.18 || ^4.0.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
+
+  '@ag-ui/encoder@1.0.0':
+    resolution: {integrity: sha512-8w+SHIjsatOcHHe5UBqdlqOiZaQWa3rMv1cUdNFXtHmfcIOLbMd1PG3SRWHD9AMUzApDl4964BV9xs3QPZogrw==}
+
+  '@ag-ui/proto@1.0.0':
+    resolution: {integrity: sha512-RXEdjD3RfZ/8fUEX+ZqN5SrZAxrOZ9oQt0FlEhN4Ie/YEOKDVv0u1g83fOhGxWJTTVAmYSM/xf+ijwixsmz2RA==}
+
   '@antfu/install-pkg@1.1.0':
     resolution: {integrity: sha512-MGQsmw10ZyI+EJo45CdSER4zEb+p31LpDAFp2Z3gkSd1yqVZGi0Ebx++YTEMonJy4oChEMLsxZ64j8FH6sSqtQ==}
 
@@ -410,8 +430,14 @@ packages:
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
     hasBin: true
 
+  '@bufbuild/protobuf@2.15.0':
+    resolution: {integrity: sha512-DAheWUkVr/SJTWCc+lg9dhY0eN4SaWlf4+bG1KzHeXbnqt0AfB/NX0Z+VunGlM1ki1B4zVvye27MpKh/svySUA==}
+
   '@chevrotain/types@11.1.2':
     resolution: {integrity: sha512-U+HFai5+zmJCkK86QsaJtoITlboZHBqrVketcO2ROv865xfCMSFpELQoz1GkX5GzME8pTa+3kbKrZHQtI0gdbw==}
+
+  '@codemirror/state@6.7.1':
+    resolution: {integrity: sha512-9QzNDgE4EYDnAHfrTlR2lwiPciiOymLtwKK+8yHQzCc7GXhAP9xdEbEJFy2IWB1j9UGUl9BsgMmTo/ImA02T7A==}
 
   '@csstools/color-helpers@6.1.1':
     resolution: {integrity: sha512-gLNsunvwf3mCi5u5o46/Z/JcJMnhbHSaZ69rkgPzNM3J4s8hWwpPUQB6/tt0EDFyCiWzxANlx+2LJwpYj4zS1w==}
@@ -490,6 +516,9 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
+
+  '@marijn/find-cluster-break@1.0.4':
+    resolution: {integrity: sha512-Wy0V7+SGUjnF9/TkiM1hKVDPj7jKXduPNboMVtHTA8dySMURWqfg/JZ9E2Sq8JgSJmkl7k7Qe9FLeMSrSraWmQ==}
 
   '@mediapipe/tasks-vision@0.10.17':
     resolution: {integrity: sha512-CZWV/q6TTe8ta61cZXjfnnHsfWIdFhms03M9T7Cnd5y2mdpylJM0rF1qRq+wsQVRMLz1OYPVEBU9ph2Bx8cxrg==}
@@ -799,6 +828,24 @@ packages:
     peerDependencies:
       '@supabase/supabase-js': ^2.0.0
 
+  '@pieai/swimmer-nerve-kit@0.2.0':
+    resolution: {integrity: sha512-BNMiBH6E15BFpEAk8TkrCLTKH1jGoOuaau0t7buyiiFVGOHKMNgrjYOmEo4cAOL6BBLjsJ4QXMd5XKAtiBGe4A==}
+    engines: {node: '>=24 <25'}
+    peerDependencies:
+      '@earendil-works/pi-agent-core': 0.85.1
+      '@earendil-works/pi-ai': 0.85.1
+      '@pieai/swimmer-ui-kit': '>=2.7.2 <3'
+      react: '>=19 <20'
+    peerDependenciesMeta:
+      '@earendil-works/pi-agent-core':
+        optional: true
+      '@earendil-works/pi-ai':
+        optional: true
+      '@pieai/swimmer-ui-kit':
+        optional: true
+      react:
+        optional: true
+
   '@pieai/swimmer-render-kit@0.5.0':
     resolution: {integrity: sha512-MLWJbtkgTeFGkbd5EpTsID55J69R6QdDylm5t7Aw0OuiSJTgXB5gQGcxWcA0OQAp3HbwrlsJL0LVdwPJzNz0HA==}
     engines: {node: '>=24 <25'}
@@ -808,8 +855,8 @@ packages:
       three:
         optional: true
 
-  '@pieai/swimmer-ui-kit@2.8.0':
-    resolution: {integrity: sha512-hB+13xMdkmG/EcB4erZhSqjdjO8bk96JMPwPEfS1230nGpHg1fUyAUhyivtV4a88TdUqeJ/aa++OQFMut+v/rA==}
+  '@pieai/swimmer-ui-kit@2.9.0':
+    resolution: {integrity: sha512-2V/a4LwHAKlBJ58PO5TaN4vykFiy3tvt4G01wFr9AQvgLhZbbyrZAadHaVdGNyRgv64RvSSZR0VSYyjCoFAHmw==}
     engines: {node: '>=24 <25'}
     hasBin: true
     peerDependencies:
@@ -835,6 +882,10 @@ packages:
 
   '@posthog/types@1.406.1':
     resolution: {integrity: sha512-RhA00AvWrcEW3wbYgvIPr4EeUTu1BDHJx8eajwJ1moOYIchQtgkQcqgnUjwXz6jL1a8XJAIaZ9w7SZfYo1b/Rw==}
+
+  '@protobuf-ts/protoc@2.11.1':
+    resolution: {integrity: sha512-mUZJaV0daGO6HUX90o/atzQ6A7bbN2RSuHtdwo8SSF2Qoe3zHwa4IHyCN1evftTeHfLmdz+45qo47sL+5P8nyg==}
+    hasBin: true
 
   '@radix-ui/primitive@1.1.7':
     resolution: {integrity: sha512-rqWnm76nYT8HoNNqEjpgJ7Pw/DrBj5iBTrmEPo6HTX5+VJyBNOqTdv4g89G63HuR5g0AaENoAcH7Is5fF2kZ8Q==}
@@ -1405,6 +1456,9 @@ packages:
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
 
+  '@types/uuid@10.0.0':
+    resolution: {integrity: sha512-7gqG38EyHgyP1S+7+xomFtL+ZNHcKv6DwNaCZmJmo1vgMugyF3TCnXVg4t1uk89mLNwnLtnY3TpOpCOyp1/xHQ==}
+
   '@types/webxr@0.5.24':
     resolution: {integrity: sha512-h8fgEd/DpoS9CBrjEQXR+dIDraopAEfu4wYVNY2tEPwk60stPWhvZMf4Foo5FakuQ7HFZoa8WceaWFervK2Ovg==}
 
@@ -1533,6 +1587,9 @@ packages:
   commander@8.3.0:
     resolution: {integrity: sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==}
     engines: {node: '>= 12'}
+
+  compare-versions@6.1.1:
+    resolution: {integrity: sha512-4hm4VPpIecmlg59CHXnRDnqGplJFrbLG4aFEl5vl6cK1u76ws3LLvX7ikFnTDl5vo39sjWD6AaDPYodJp/NNHg==}
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
@@ -1798,6 +1855,9 @@ packages:
   extend-shallow@3.0.2:
     resolution: {integrity: sha512-BwY5b5Ql4+qZoefgMj2NUmx+tehVTH/Kf4k1ZEtOHNFcm2wSxMRo992l6X3TIgni2eZVTZ85xMOjF31fwZAj6Q==}
     engines: {node: '>=0.10.0'}
+
+  fast-json-patch@3.1.1:
+    resolution: {integrity: sha512-vf6IHUX2SBcA+5/+4883dsIjpBTqmfBjmYiWK1savxQmFk4JfBMLa7ynTYOs1Rolp/T1betJxHiGD3g1Mn8lUQ==}
 
   fdir@6.5.0:
     resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
@@ -2501,6 +2561,9 @@ packages:
   rw@1.3.3:
     resolution: {integrity: sha512-PdhdWy89SiZogBLaw42zdeqtRJ//zFd2PgQavcICDUgJT5oW10QCRKbJ6bg4r0/UY2M6BWd5tkxuGFRvCkgfHQ==}
 
+  rxjs@7.8.1:
+    resolution: {integrity: sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==}
+
   safer-buffer@2.1.2:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
 
@@ -2689,6 +2752,9 @@ packages:
   unist-util-visit@5.1.0:
     resolution: {integrity: sha512-m+vIdyeCOpdr/QeQCu2EzxX/ohgS8KbnPDgFni4dQsfSCtpz8UqDyY5GjRru8PDKuYn7Fq19j1CQ+nJSsGKOzg==}
 
+  untruncate-json@0.0.1:
+    resolution: {integrity: sha512-4W9enDK4X1y1s2S/Rz7ysw6kDuMS3VmRjMFg7GZrNO+98OSe+x5Lh7PKYoVjy3lW/1wmhs6HW0lusnQRHgMarA==}
+
   use-sync-external-store@1.4.0:
     resolution: {integrity: sha512-9WXSPC5fMv61vaupRkCKCxsPxBocVnwakBEkMIHHpkTTg6icbJtg6jzgtLDm4bl3cSHAca52rYWih0k4K3PfHw==}
     peerDependencies:
@@ -2702,6 +2768,10 @@ packages:
   utility-types@3.11.0:
     resolution: {integrity: sha512-6Z7Ma2aVEWisaL6TvBCy7P8rm2LQoPv6dJ7ecIaIixHcwfbJ0x7mWdbcwlIM5IGQxPZSFYeqRCqlOOeKoJYMkw==}
     engines: {node: '>= 4'}
+
+  uuid@11.1.1:
+    resolution: {integrity: sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ==}
+    hasBin: true
 
   uuid@14.0.1:
     resolution: {integrity: sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==}
@@ -2847,6 +2917,9 @@ packages:
     engines: {node: '>= 14.6'}
     hasBin: true
 
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
 
@@ -2894,6 +2967,48 @@ packages:
 
 snapshots:
 
+  '@ag-ui/client@1.0.0':
+    dependencies:
+      '@ag-ui/core': 1.0.0(zod@3.25.76)
+      '@ag-ui/encoder': 1.0.0(zod@3.25.76)
+      '@ag-ui/proto': 1.0.0
+      '@types/uuid': 10.0.0
+      compare-versions: 6.1.1
+      fast-json-patch: 3.1.1
+      rxjs: 7.8.1
+      untruncate-json: 0.0.1
+      uuid: 11.1.1
+      zod: 3.25.76
+
+  '@ag-ui/core@1.0.0(zod@3.25.76)':
+    optionalDependencies:
+      zod: 3.25.76
+
+  '@ag-ui/core@1.0.0(zod@4.4.3)':
+    optionalDependencies:
+      zod: 4.4.3
+
+  '@ag-ui/encoder@1.0.0(zod@3.25.76)':
+    dependencies:
+      '@ag-ui/core': 1.0.0(zod@3.25.76)
+      '@ag-ui/proto': 1.0.0
+    transitivePeerDependencies:
+      - zod
+
+  '@ag-ui/encoder@1.0.0(zod@4.4.3)':
+    dependencies:
+      '@ag-ui/core': 1.0.0(zod@4.4.3)
+      '@ag-ui/proto': 1.0.0
+    transitivePeerDependencies:
+      - zod
+
+  '@ag-ui/proto@1.0.0':
+    dependencies:
+      '@ag-ui/core': 1.0.0(zod@3.25.76)
+      '@bufbuild/protobuf': 2.15.0
+      '@protobuf-ts/protoc': 2.11.1
+      zod: 3.25.76
+
   '@antfu/install-pkg@1.1.0':
     dependencies:
       package-manager-detector: 1.8.0
@@ -2932,7 +3047,13 @@ snapshots:
     dependencies:
       css-tree: 3.2.1
 
+  '@bufbuild/protobuf@2.15.0': {}
+
   '@chevrotain/types@11.1.2': {}
+
+  '@codemirror/state@6.7.1':
+    dependencies:
+      '@marijn/find-cluster-break': 1.0.4
 
   '@csstools/color-helpers@6.1.1': {}
 
@@ -2996,6 +3117,8 @@ snapshots:
       import-meta-resolve: 4.2.0
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
+
+  '@marijn/find-cluster-break@1.0.4': {}
 
   '@mediapipe/tasks-vision@0.10.17': {}
 
@@ -3154,20 +3277,32 @@ snapshots:
     dependencies:
       '@supabase/supabase-js': 2.110.3
 
+  '@pieai/swimmer-nerve-kit@0.2.0(@pieai/swimmer-ui-kit@2.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)':
+    dependencies:
+      '@ag-ui/client': 1.0.0
+      '@ag-ui/core': 1.0.0(zod@4.4.3)
+      '@ag-ui/encoder': 1.0.0(zod@4.4.3)
+      '@codemirror/state': 6.7.1
+      rxjs: 7.8.1
+      zod: 4.4.3
+    optionalDependencies:
+      '@pieai/swimmer-ui-kit': 2.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react: 19.2.8
+
   '@pieai/swimmer-render-kit@0.5.0(three@0.185.1)':
     optionalDependencies:
       three: 0.185.1
 
-  '@pieai/swimmer-ui-kit@2.8.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@pieai/swimmer-ui-kit@2.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@floating-ui/react': 0.27.20(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@pieaistudio/swimmer-auth-kit@0.1.9(@pieai/swimmer-ui-kit@2.8.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@supabase/ssr@0.12.0(@supabase/supabase-js@2.110.3))(@supabase/supabase-js@2.110.3)(react@19.2.8)':
+  '@pieaistudio/swimmer-auth-kit@0.1.9(@pieai/swimmer-ui-kit@2.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@supabase/ssr@0.12.0(@supabase/supabase-js@2.110.3))(@supabase/supabase-js@2.110.3)(react@19.2.8)':
     dependencies:
       '@pieai/swimmer-backend-client': 0.7.2(@supabase/supabase-js@2.110.3)
-      '@pieai/swimmer-ui-kit': 2.8.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@pieai/swimmer-ui-kit': 2.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@supabase/ssr': 0.12.0(@supabase/supabase-js@2.110.3)
       '@supabase/supabase-js': 2.110.3
       react: 19.2.8
@@ -3182,6 +3317,8 @@ snapshots:
       '@posthog/types': 1.406.1
 
   '@posthog/types@1.406.1': {}
+
+  '@protobuf-ts/protoc@2.11.1': {}
 
   '@radix-ui/primitive@1.1.7': {}
 
@@ -3730,6 +3867,8 @@ snapshots:
 
   '@types/unist@3.0.3': {}
 
+  '@types/uuid@10.0.0': {}
+
   '@types/webxr@0.5.24': {}
 
   '@ungap/structured-clone@1.3.3': {}
@@ -3836,6 +3975,8 @@ snapshots:
   commander@7.0.0: {}
 
   commander@8.3.0: {}
+
+  compare-versions@6.1.1: {}
 
   convert-source-map@2.0.0: {}
 
@@ -4117,6 +4258,8 @@ snapshots:
     dependencies:
       assign-symbols: 1.0.0
       is-extendable: 1.0.1
+
+  fast-json-patch@3.1.1: {}
 
   fdir@6.5.0(picomatch@4.0.5):
     optionalDependencies:
@@ -5117,6 +5260,10 @@ snapshots:
 
   rw@1.3.3: {}
 
+  rxjs@7.8.1:
+    dependencies:
+      tslib: 2.8.1
+
   safer-buffer@2.1.2: {}
 
   saxes@6.0.0:
@@ -5307,6 +5454,8 @@ snapshots:
       unist-util-is: 6.0.1
       unist-util-visit-parents: 6.0.2
 
+  untruncate-json@0.0.1: {}
+
   use-sync-external-store@1.4.0(react@19.2.8):
     dependencies:
       react: 19.2.8
@@ -5316,6 +5465,8 @@ snapshots:
       react: 19.2.8
 
   utility-types@3.11.0: {}
+
+  uuid@11.1.1: {}
 
   uuid@14.0.1: {}
 
@@ -5407,6 +5558,8 @@ snapshots:
   xmlchars@2.2.0: {}
 
   yaml@2.9.0: {}
+
+  zod@3.25.76: {}
 
   zod@4.4.3: {}
 

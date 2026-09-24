@@ -108,8 +108,11 @@
   Also gone while a game is on screen (ADR-0011): its answer buttons are the
   bottom row of the game frame, exactly where this pill floats on a phone, and
   a stray tap there throws into a basket. The rail's docked copy is untouched.
+  The same holds while 涟's panel is open on the map (ADR-0012): on a phone
+  the panel spans the width the pill floats over.
 */
-body:has(.game-frame) .feedback-note__open:not([aria-expanded="true"]) {
+body:has(.game-frame) .feedback-note__open:not([aria-expanded="true"]),
+body:has(.map-guide[data-map-guide="open"]) .feedback-note__open:not([aria-expanded="true"]) {
   opacity: 0;
   pointer-events: none;
 }

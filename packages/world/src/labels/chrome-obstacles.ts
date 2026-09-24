@@ -28,7 +28,7 @@ export function mapOverlayObstacles(
   ];
   const labelElements = [
     ...shell.querySelectorAll<HTMLElement>(
-      ".picked--left, .hint:not(.hint--dismissed), .map-framing-tools",
+      ".picked--left, .hint:not(.hint--dismissed), .map-framing-tools, .map-guide__body, .map-guide__panel",
     ),
   ];
   const boxes = (elements: readonly HTMLElement[]) =>

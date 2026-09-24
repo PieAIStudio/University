@@ -332,12 +332,18 @@ button.label:focus-visible {
   Pointer-events stay none. A decorative caption that hit-tests would
   steal the click meant for the island under it; element.click() would
   not catch that.
+
+  2026-09-24 (V5 #map-guide): the bottom centre belongs to 涟 now, and the
+  entry cue is its first sentence (map-guide.css places it). The two cues
+  left here — pan/zoom until the first gesture, the hovered name while a
+  pointer rests on an island — were already never shown together, so they
+  share one slot under the breadcrumb, over the sea the camera looks across.
 */
 .hint {
   position: absolute;
   z-index: 2;
   left: 50%;
-  bottom: 20px;
+  top: calc(max(16px, env(safe-area-inset-top)) + 40px);
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -359,61 +365,33 @@ button.label:focus-visible {
     transform 220ms ease;
 }
 
-.hint--hover {
-  bottom: 116px;
-}
-
 .hint--entry {
-  bottom: 68px;
   font-weight: 700;
 }
 
-.hint--controls {
-  bottom: 20px;
-}
-
-/* Short landscapes cannot hold two stacked hints. Gesture help remains in
-   the palette; one bottom hint leaves the actual course caption readable. */
+/* Short landscapes keep one cue. Gesture help remains in the palette. */
 @media (max-height: 400px) {
   .app-shell[data-map-shell="true"] .hint--controls {
     display: none;
-  }
-  .app-shell[data-map-shell="true"] .hint--entry {
-    bottom: 8px;
-  }
-  .app-shell[data-map-shell="true"] .hint--hover {
-    bottom: 46px;
   }
 }
 
 .hint--dismissed {
   opacity: 0;
-  transform: translate(-50%, 6px);
+  transform: translate(-50%, -6px);
 }
 
 @media (max-width: 400px) {
-  /*
-    At 390px the road's last island reaches a few pixels into the centred
-    hint. It is already outside the phone's readable label budget, so move the
-    cue into the clear water on the right while it is still visible; after the
-    first gesture the existing dismissed state removes it altogether.
-  */
+  /* Between the two folded rails a long cue scrolls rather than wraps. */
   .hint {
-    left: auto;
-    right: 14px;
     width: max-content;
-    max-width: calc(100vw - 28px);
+    max-width: calc(100vw - 160px);
     overflow-x: auto;
     scrollbar-width: none;
-    transform: none;
   }
 
   .hint::-webkit-scrollbar {
     display: none;
-  }
-
-  .hint--dismissed {
-    transform: translateY(6px);
   }
 }
 

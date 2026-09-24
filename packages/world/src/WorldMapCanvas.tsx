@@ -69,8 +69,7 @@ export function WorldMapCanvas({
   hoverHint,
   controlsHint,
   controlsHintVisible = true,
-  entryHint,
-  entryHintVisible = true,
+  guide,
   loading,
   className,
   paused = false,
@@ -124,9 +123,11 @@ export function WorldMapCanvas({
   /** Pan and zoom instructions, retired after the first map manipulation. */
   readonly controlsHint?: ReactNode;
   readonly controlsHintVisible?: boolean;
-  /** The conversion cue, kept until the learner picks an island once. */
-  readonly entryHint?: ReactNode;
-  readonly entryHintVisible?: boolean;
+  /**
+   * The map's guide, at the bottom centre (ADR-0012). The conversion cue —
+   * kept until the learner picks an island once — is its first sentence.
+   */
+  readonly guide?: ReactNode;
   readonly loading?: ReactNode;
   readonly paused?: boolean;
   /**
@@ -484,14 +485,7 @@ export function WorldMapCanvas({
             {controlsHint}
           </p>
         ) : null}
-        {entryHint !== null && entryHint !== undefined ? (
-          <p
-            className={`hint hint--entry${entryHintVisible ? "" : " hint--dismissed"}`}
-            data-game-ui-tone="glass"
-          >
-            {entryHint}
-          </p>
-        ) : null}
+        {guide}
       </div>
       {loading}
     </div>

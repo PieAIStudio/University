@@ -18,7 +18,7 @@ export function TabBar({
     <nav className="tab-bar" aria-label="Tabs">
       <ul className="tab-bar__list">
         {items.map((item) => (
-          <li key={item.id} className="tab-bar__slot">
+          <li key={item.id} className="tab-bar__slot" data-nav-id={item.id}>
             <a
               className="tab-bar__link"
               href={item.href}

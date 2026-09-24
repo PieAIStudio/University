@@ -93,6 +93,8 @@ import { FeedbackNote } from "@pieai/university-ui/feedback/FeedbackNote.js";
 import { TodaySection } from "@pieai/university-ui/today/TodaySection.js";
 import { LINK_RETURN_DEPTH } from "@pieai/university-ui/lesson/LessonReader.js";
 import { COURSE_POLAR, MapControlsHint, WORLD_POLAR } from "@pieai/university-world/controls.js";
+import { MapGuide } from "../guide/MapGuide.js";
+import type { MapGuideMap } from "../guide/map-guide.js";
 import { CourseIsland, type CourseIslandProps } from "./CourseIsland.js";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { useCourseProgress } from "./course-progress";
@@ -487,6 +489,19 @@ export function App() {
     view,
     world,
   });
+
+  const guideMap = useMemo<MapGuideMap | null>(
+    () =>
+      view.kind === "world" || view.kind === "course"
+        ? {
+            view: view.kind,
+            markers,
+            lessonTitle: (lessonId) =>
+              lessons.find((lesson) => lesson.lessonId === lessonId)?.lessonTitle,
+          }
+        : null,
+    [view.kind, markers, lessons],
+  );
 
   const due = dueCards();
   const { todayCard, todayData, todayReview, todayVocabularyReview } = useTodaySectionData({
@@ -950,19 +965,26 @@ export function App() {
         /*
           These are separate promises with separate retirement rules. Pan and
           zoom can self-teach on the first gesture; the island-entry action
-          cannot, so it remains until an actual island pick teaches it.
+          cannot, so it remains until an actual island pick teaches it — as
+          the first sentence of the map's guide (V5 #map-guide).
         */
         hoverHint={hovered}
         controlsHint={<MapControlsHint />}
         controlsHintVisible={!mapInteracted && !hovered}
-        entryHint={
-          view.kind === "world" || view.kind === "course" ? (
-            <span>
-              {translate("map.chooseHint")} {translate("map.shortcutHint")}
-            </span>
+        guide={
+          guideMap ? (
+            <MapGuide
+              map={guideMap}
+              opening={
+                <span>
+                  {translate("map.chooseHint")} {translate("map.shortcutHint")}
+                </span>
+              }
+              openingVisible={!mapEntryLearned}
+              onShortcuts={shortcuts.show}
+            />
           ) : null
         }
-        entryHintVisible={!mapEntryLearned && !hovered}
         loading={
           mapRecoveryReason ? (
             <RecoveryState
