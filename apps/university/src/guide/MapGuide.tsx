@@ -61,12 +61,21 @@ import "./map-guide.css";
  */
 export function MapGuide({
   map,
+  ready,
   opening,
   openingVisible,
   onShortcuts,
   onOpenDetails,
 }: {
   readonly map: MapGuideMap;
+  /**
+   * The map has drawn a frame. Until then there is nothing to answer from,
+   * and the kit's entry is not mounted: its document-wide pointer listener
+   * (the motion "courtesy" pause) turns every press into a React update,
+   * which landed the overdue loading cover under a learner's click on the
+   * breadcrumb while a course was still loading after its lesson.
+   */
+  readonly ready: boolean;
   /** The map's first sentence, said until the learner has picked once. */
   readonly opening: ReactNode;
   readonly openingVisible: boolean;
@@ -342,21 +351,23 @@ export function MapGuide({
         </p>
       )}
       <div ref={seat} className="map-guide__seat">
-        <NerveLiquidInteraction
-          renderers={renderers}
-          questions={questions}
-          onQuestion={ask}
-          target={shown?.target ?? null}
-          message={message}
-          activity={activity}
-          onDismissPeek={clear}
-          onDismissGuide={clear}
-          onBoundsChange={(rect) => {
-            reserve(rect);
-            setOutletOpen(rect !== null);
-          }}
-          onOpenDetails={onOpenDetails}
-        />
+        {ready ? (
+          <NerveLiquidInteraction
+            renderers={renderers}
+            questions={questions}
+            onQuestion={ask}
+            target={shown?.target ?? null}
+            message={message}
+            activity={activity}
+            onDismissPeek={clear}
+            onDismissGuide={clear}
+            onBoundsChange={(rect) => {
+              reserve(rect);
+              setOutletOpen(rect !== null);
+            }}
+            onOpenDetails={onOpenDetails}
+          />
+        ) : null}
       </div>
     </div>
   );

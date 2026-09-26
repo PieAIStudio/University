@@ -991,6 +991,7 @@ export function App() {
           guideMap ? (
             <MapGuide
               map={guideMap}
+              ready={sceneReady}
               opening={
                 <span>
                   {translate("map.chooseHint")} {translate("map.shortcutHint")}

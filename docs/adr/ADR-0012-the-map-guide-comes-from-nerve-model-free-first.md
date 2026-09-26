@@ -107,7 +107,11 @@ published releases they were waiting for; the reasons above still hold.
   own panel, close button or key handler. University supplies the questions,
   the answers read from the map, and each place's own action (the host
   `activity` slot). No `onText`, no `voice`: phase one shows no text box, and
-  the kit's speech control only says that voice is not connected.
+  the kit's speech control only says that voice is not connected. The entry
+  mounts once the map has drawn a frame: the kit listens to every press on
+  the page (its motion courtesy), and while a course was still loading after
+  its lesson that update landed the overdue loading cover under a learner's
+  breadcrumb click (e2e `experience` X2 phone).
 - **Places by identity, through the kit's DOM adapter.** Each map label and
   navigation entry is registered once as `marker:<id>` / `nav:<rail|tabs>:<id>`
   with `registerElementTarget`, bound to the element the map or rail already
