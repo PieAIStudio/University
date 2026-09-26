@@ -496,6 +496,9 @@ describe("ExerciseBlock unsubmitted answer recovery", () => {
 
   it("does not replace a newer local draft with an older submitted answer", async () => {
     const storage = memoryStorage();
+    // Relative to now: drafts expire after ANSWER_DRAFT_TTL_MS, so fixed
+    // dates turned this test red thirty days after they were written.
+    const submittedAt = Date.now() - 60_000;
     writeAnswerDraft(
       storage,
       {
@@ -505,7 +508,7 @@ describe("ExerciseBlock unsubmitted answer recovery", () => {
         contentRevision: EXERCISE.contentRevision,
       },
       "提交之后继续写的新草稿",
-      Date.parse("2026-08-27T00:01:00.000Z"),
+      submittedAt + 30_000,
     );
     await renderBlock(grading, {
       scope: "account:ada",
@@ -514,7 +517,7 @@ describe("ExerciseBlock unsubmitted answer recovery", () => {
         ...EXERCISE,
         latestSubmission: {
           answer: "已经提交的旧答案",
-          occurredAt: "2026-08-27T00:00:00.000Z",
+          occurredAt: new Date(submittedAt).toISOString(),
         },
       },
     });
