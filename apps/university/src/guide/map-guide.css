@@ -2,19 +2,22 @@
   涟 owns the bottom centre of the map (V5 #map-guide). Its first sentence —
   the entry hint — sits directly above it as its own speech; the gesture
   hints moved to the top of the map so that nothing else stacks here.
-  The column never takes pointer events; only the droplet and the panel do,
-  so the island underneath stays clickable around them.
+  The column never takes pointer events; only the droplet does, so the
+  island underneath stays clickable around it. The droplet, its questions and
+  its answer panel are SwimmerNerveKit's NerveLiquidInteraction drawn by
+  SwimmerUIKit; the panel portals to the page and reports its bounds, which
+  the scene labels step around (overlay-reservations.ts).
 */
 .map-guide {
   position: absolute;
   z-index: 3;
   inset-inline-start: 50%;
-  bottom: max(14px, env(safe-area-inset-bottom));
+  bottom: max(10px, env(safe-area-inset-bottom));
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   width: max-content;
   max-width: calc(100% - 32px);
   pointer-events: none;
@@ -23,23 +26,9 @@
   transform: translateX(50%);
 }
 
-.map-guide > * {
+.map-guide__seat {
+  display: flex;
   pointer-events: auto;
-}
-
-/* The droplet's seat: the kit button, a body and its name. */
-.map-guide .map-guide__body {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 48px;
-  padding-block: 2px;
-  padding-inline: 6px 16px;
-  border-radius: 999px;
-}
-
-.map-guide__name {
-  font-weight: var(--game-ui-weight-strong);
 }
 
 /*
@@ -59,59 +48,79 @@
   transform: translateY(6px);
 }
 
-.map-guide__panel {
-  width: min(20rem, calc(100vw - 32px));
-  box-sizing: border-box;
+/*
+  University's part of the answer panel: the place's own action, or two
+  islands side by side. The kit puts host activity above its status line;
+  the answer reads first, so this follows it, and the kit's question panel
+  stays nearest the droplet when it is reopened.
+*/
+.swimmer-nerve-liquid__status:has(> .map-guide__go, > .map-guide__compare) {
+  order: 1;
+  flex-wrap: wrap;
+}
+.swimmer-nerve-liquid__outlet:has(.map-guide__go, .map-guide__compare) > .game-ui-liquid-reveal {
+  order: 2;
 }
 
-.map-guide__head {
+/*
+  The panel rises from a droplet at the bottom centre, over the band where
+  the map frames the stone to start on. UIKit stacks its anchored panel one
+  step above the flying droplet (--game-ui-assistance-z: 96 over 95); here
+  that hid the droplet's landing label under the answer it belongs to. The
+  droplet takes no pointer events, so drawing it above the panel costs no
+  control. (Reported to the kit: the label could step around the panel.)
+*/
+:root {
+  --game-ui-assistance-z: 94;
+}
+
+.map-guide__go,
+.map-guide__compare {
   display: flex;
-  align-items: flex-start;
+  flex-wrap: wrap;
   gap: 8px;
+  width: 100%;
 }
 
-.map-guide__say {
-  flex: 1;
+.map-guide__candidates {
   margin: 0;
-  line-height: 1.5;
-}
-
-.map-guide__aside {
-  display: block;
-  margin-block-start: 4px;
-  color: var(--game-ui-text-muted);
-  font-size: 0.9em;
-}
-
-.map-guide__questions {
-  display: grid;
-  gap: 8px;
-  margin: 12px 0 0;
   padding: 0;
   list-style: none;
 }
 
-.map-guide__actions {
-  display: flex;
-  flex-wrap: wrap;
+.map-guide__pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-block-start: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.map-guide__pair li {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--game-ui-border-subtle);
+  border-radius: var(--game-ui-radius-control);
+  overflow-wrap: anywhere;
+}
+
+.map-guide__pair span {
+  color: var(--game-ui-text-muted);
 }
 
 /*
   A short landscape (a phone on its side, 286px tall) cannot give the guide
   two stacked rows: the map's own course names would have nowhere to go. The
-  opening line sits beside the droplet, as low as the entry hint used to, and
-  the panel scrolls within the height there is.
+  opening line sits beside the droplet, as low as the entry hint used to.
 */
 @media (max-height: 400px) {
   .map-guide {
     flex-direction: row;
     align-items: flex-end;
-    bottom: 8px;
-  }
-  .map-guide__panel {
-    max-height: calc(100dvh - 24px);
-    overflow-y: auto;
+    bottom: 4px;
   }
 }

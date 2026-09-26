@@ -94,7 +94,7 @@ import { TodaySection } from "@pieai/university-ui/today/TodaySection.js";
 import { LINK_RETURN_DEPTH } from "@pieai/university-ui/lesson/LessonReader.js";
 import { COURSE_POLAR, MapControlsHint, WORLD_POLAR } from "@pieai/university-world/controls.js";
 import { MapGuide } from "../guide/MapGuide.js";
-import type { MapGuideMap } from "../guide/map-guide.js";
+import { mapGuideScope, type MapGuideMap } from "../guide/map-guide.js";
 import { CourseIsland, type CourseIslandProps } from "./CourseIsland.js";
 import { SHOWS_THE_MAP } from "./map-controls";
 import { useCourseProgress } from "./course-progress";
@@ -490,17 +490,33 @@ export function App() {
     world,
   });
 
+  const guideUser =
+    identityStatus.kind === "signed_in" || identityStatus.kind === "anonymous"
+      ? identityStatus.user.id
+      : "guest";
   const guideMap = useMemo<MapGuideMap | null>(
     () =>
       view.kind === "world" || view.kind === "course"
         ? {
             view: view.kind,
+            scope: mapGuideScope([
+              guideUser,
+              view.kind === "course" ? view.studyId : focusedStudyId,
+              view.kind,
+              view.kind === "course" ? view.courseId : null,
+            ]),
             markers,
             lessonTitle: (lessonId) =>
               lessons.find((lesson) => lesson.lessonId === lessonId)?.lessonTitle,
+            courseProgress: (courseId) => {
+              const node = world?.placements.find(
+                (placement) => placement.node.courseId === courseId,
+              )?.node;
+              return node ? courseProgressForNode(node) : null;
+            },
           }
         : null,
-    [view.kind, markers, lessons],
+    [view, markers, lessons, guideUser, focusedStudyId, world, courseProgressForNode],
   );
 
   const due = dueCards();
@@ -982,6 +998,7 @@ export function App() {
               }
               openingVisible={!mapEntryLearned}
               onShortcuts={shortcuts.show}
+              onOpenDetails={() => setView({ kind: "settings" })}
             />
           ) : null
         }

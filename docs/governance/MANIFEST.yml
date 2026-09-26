@@ -1,6 +1,6 @@
 # docs/governance/MANIFEST.yml — auto-generated, DO NOT EDIT MANUALLY
 # Regenerate: pnpm doc-gov scan
-generated_at: 2026-09-24T03:05:36.818Z
+generated_at: 2026-09-26T17:57:09.287Z
 generator_version: doc-gov@0.14.0
 docs_count: 154
 docs:
@@ -86,7 +86,7 @@ docs:
     type: decision
     status: accepted
     canonical: true
-    last_reviewed: 2026-09-24
+    last_reviewed: 2026-09-27
     pinned: false
   - id: ARCHIVE-ADR-0008-2026-09-07
     path: docs/archive/adr-0008-measurement-history-2026-09-07.md
@@ -387,7 +387,7 @@ docs:
     type: reference
     status: active
     canonical: true
-    last_reviewed: 2026-09-24
+    last_reviewed: 2026-09-27
     pinned: true
   - id: REF-FEEDBACK-BACKEND-GAP
     path: docs/reference/execution/feedback-backend-gap.md

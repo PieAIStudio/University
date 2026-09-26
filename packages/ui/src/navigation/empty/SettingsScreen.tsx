@@ -1,5 +1,5 @@
 import { translate, useI18n, writeLocalePreference } from "../../i18n/index.js";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { GameButton, GameToggle } from "@pieai/swimmer-ui-kit";
 import type {
   PresencePort,
@@ -42,10 +42,13 @@ export function SettingsScreen({
   presence,
   progress,
   reminders,
+  guide,
 }: {
   readonly presence?: PresencePort;
   readonly progress?: ProgressPort;
   readonly reminders?: ReviewReminderPort;
+  /** The map guide's capabilities, cost and privacy (ADR-0012), from the app. */
+  readonly guide?: ReactNode;
 } = {}) {
   useI18n();
   const [settings, setSettings] = useState(
@@ -76,6 +79,14 @@ export function SettingsScreen({
       </section>
       {presence ? <PresenceSettings presence={presence} progress={progress} /> : null}
       {reminders ? <ReviewReminderSettings reminders={reminders} /> : null}
+      {guide ? (
+        <section id="map-guide" className="settings-screen__block" aria-labelledby="settings-guide">
+          <h2 id="settings-guide" className="settings-screen__heading">
+            {translate("map.guide.details.heading")}
+          </h2>
+          {guide}
+        </section>
+      ) : null}
       <details
         className="settings-screen__block product-details"
         aria-labelledby="settings-language"

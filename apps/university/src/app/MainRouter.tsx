@@ -54,6 +54,7 @@ import {
   readLearningReturn,
 } from "../account/continue-learning";
 import { AUTHORING } from "../mode";
+import { MapGuideDetails } from "../guide/MapGuideDetails.js";
 import { AuthoringMapNotes, StudioScreen } from "../authoring/index";
 import { MapStudioScreen } from "../authoring/map-studio";
 import type { CourseNode } from "@pieai/university-world/course.js";
@@ -517,6 +518,7 @@ export function MainRouter({
           presence={presencePort}
           progress={progressPort}
           reminders={reviewReminderPort}
+          guide={<MapGuideDetails />}
         />
       ) : null}
       {view.kind === "me" ? (

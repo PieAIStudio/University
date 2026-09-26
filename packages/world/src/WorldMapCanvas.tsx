@@ -21,6 +21,10 @@ import { Stage } from "./Stage.js";
 import { CourseOverviewContext, CourseOverviewProbe } from "./camera/CourseOverview.js";
 import type { CourseOverviewFrame } from "./camera/course-overview.js";
 import { MapTravelClockContext, recordMapTravel, type MapTravelClock } from "./map-travel-clock.js";
+import {
+  createOverlayReservations,
+  OverlayReservationsContext,
+} from "./labels/overlay-reservations.js";
 
 export type WorldMap = ReturnType<typeof placeWorld>;
 
@@ -126,6 +130,7 @@ export function WorldMapCanvas({
   /**
    * The map's guide, at the bottom centre (ADR-0012). The conversion cue —
    * kept until the learner picks an island once — is its first sentence.
+   * Its floating answer panel claims map space with `useOverlayReservation`.
    */
   readonly guide?: ReactNode;
   readonly loading?: ReactNode;
@@ -152,6 +157,7 @@ export function WorldMapCanvas({
   readonly courseViewKey?: string | null;
 }) {
   const labelNodes = useRef(new Map<string, HTMLElement>());
+  const reservations = useMemo(createOverlayReservations, []);
   const travelClock = useMemo<MapTravelClock>(
     () => ({ request: null }),
     [courseViewKey, skyStudyId],
@@ -332,6 +338,7 @@ export function WorldMapCanvas({
                 nodes={labelNodes.current}
                 followId={followId}
                 followNode={followNode}
+                reservations={reservations}
               />
               {world ? (
                 <WorldScene
@@ -485,7 +492,9 @@ export function WorldMapCanvas({
             {controlsHint}
           </p>
         ) : null}
-        {guide}
+        <OverlayReservationsContext.Provider value={reservations}>
+          {guide}
+        </OverlayReservationsContext.Provider>
       </div>
       {loading}
     </div>

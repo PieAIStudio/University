@@ -72,7 +72,7 @@ test.describe("P 正式领域目录与未发布星球", () => {
           await expect(
             page.locator(".map-tools button:visible, .map-framing-tools button:visible"),
           ).toHaveCount(1);
-          await expect(page.locator(".map-tools .map-guide__body")).toBeVisible();
+          await expect(page.locator(".map-tools .map-guide__seat button")).toBeVisible();
         }
         await navigateMapBreadcrumb(page, "/planet");
         await expect(page.locator("button[data-domain-id]")).toHaveCount(4);

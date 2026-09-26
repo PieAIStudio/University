@@ -9,7 +9,7 @@ import type { Marker } from "@pieai/university-world/Maps.js";
  * and never acts on its own. The one action it offers is the place's own.
  */
 export type MapGuideView = "world" | "course";
-export type MapGuideQuestion = "start" | "challenge" | "review" | "shortcuts";
+export type MapGuideQuestion = "start" | "challenge" | "review" | "compare" | "shortcuts";
 
 /** A place the guide may point at. Ids are the map's and the rail's own. */
 export type MapGuidePlace =
@@ -27,15 +27,74 @@ export interface MapGuideAnswer {
 /** The map as the guide reads it. */
 export interface MapGuideMap {
   readonly view: MapGuideView;
+  /**
+   * Who is looking at which map: account, study, view and course. Anything
+   * the guide said or selected under one scope expires under the next.
+   */
+  readonly scope: string;
   readonly markers: readonly Marker[];
   /** A lesson's full title: a course view's live stone only says 「开始」. */
   readonly lessonTitle: (lessonId: string) => string | undefined;
+  /** University's own count for an island, or null before its course loads. */
+  readonly courseProgress?: (
+    courseId: string,
+  ) => { readonly done: number; readonly total: number } | null;
 }
 
 export function mapGuideQuestions(view: MapGuideView): readonly MapGuideQuestion[] {
   return view === "course"
     ? ["start", "challenge", "review", "shortcuts"]
-    : ["start", "review", "shortcuts"];
+    : ["start", "review", "compare", "shortcuts"];
+}
+
+/**
+ * The assistance scope for one map: account, study, view and course, in
+ * the identity alphabet SwimmerNerveKit accepts. A new scope is a new map.
+ */
+export function mapGuideScope(parts: readonly (string | null | undefined)[]): string {
+  const id = parts.map((part) => (part ?? "-").replace(/[^A-Za-z0-9._:-]+/g, "-") || "-").join("/");
+  return `map/${id}`.slice(0, 160);
+}
+
+/** The registry identity of a map label: the marker's own id, never a position. */
+export function markerTargetId(markerId: string): string {
+  return `marker:${markerId}`;
+}
+
+/** The navigation entry exists twice — the rail at a desk, the tab bar below. */
+export function navTargetIds(navId: string): readonly string[] {
+  return [`nav:rail:${navId}`, `nav:tabs:${navId}`];
+}
+
+export function placeTargetIds(place: MapGuidePlace): readonly string[] {
+  return place.kind === "marker" ? [markerTargetId(place.markerId)] : navTargetIds(place.navId);
+}
+
+/**
+ * How a map label is registered: its name, and for an island the facts
+ * University already shows about it. The description is the only thing a
+ * comparison of two islands reads, so it says nothing University did not
+ * decide — no order between courses, no score.
+ */
+export function markerDescriptor(
+  marker: Marker,
+  { lessonTitle, courseProgress }: Pick<MapGuideMap, "lessonTitle" | "courseProgress">,
+): { readonly label: string; readonly description?: string } {
+  const label = (marker.lessonId && lessonTitle(marker.lessonId)) || marker.label || marker.text;
+  if (marker.kind !== "course" || !marker.courseState) return { label };
+  const count = courseProgress?.(marker.id);
+  const facts = [
+    translate(`ui.world.courseState.${marker.courseState}`),
+    count && count.total > 0
+      ? translate("map.guide.compare.progress", { done: count.done, total: count.total })
+      : null,
+  ].filter((fact): fact is string => Boolean(fact));
+  return { label, description: facts.join(" · ") };
+}
+
+/** Islands a comparison can be made of: the map's course labels. */
+export function comparableMarkers(markers: readonly Marker[]): readonly Marker[] {
+  return markers.filter((marker) => marker.kind === "course");
 }
 
 /** The stone the road opens on, or the island the map calls "live". */
@@ -57,7 +116,7 @@ function challengeMarker(markers: readonly Marker[]): Marker | null {
 
 export function mapGuideAnswer(
   question: MapGuideQuestion,
-  { view, markers, lessonTitle }: MapGuideMap,
+  { view, markers, lessonTitle }: Pick<MapGuideMap, "view" | "markers" | "lessonTitle">,
   onShortcuts: () => void,
 ): MapGuideAnswer {
   if (question === "start") {
@@ -86,6 +145,9 @@ export function mapGuideAnswer(
       place: { kind: "marker", markerId: marker.id, label: marker.label ?? marker.text },
       go: marker.activate ? { label: translate("map.guide.go.look"), run: marker.activate } : null,
     };
+  }
+  if (question === "compare") {
+    return { question, text: translate("map.guide.a.compare"), place: null, go: null };
   }
   if (question === "review") {
     return {

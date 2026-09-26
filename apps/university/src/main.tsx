@@ -5,6 +5,9 @@ import { createRoot } from "react-dom/client";
 // properties everything below reads.
 import "@pieai/swimmer-ui-kit/styles.css";
 import "@pieai/swimmer-ui-kit/liquid-presence.css";
+// 涟's entry and its settings section (ADR-0012), drawn over UIKit's tokens.
+import "@pieai/swimmer-nerve-kit/interaction.css";
+import "@pieai/swimmer-nerve-kit/details.css";
 import "@pieai/university-ui/catalog/catalog.css";
 import "@pieai/university-ui/capability/capability.css";
 import "@pieai/university-ui/cta/liquid-cta.css";

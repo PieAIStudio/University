@@ -1,11 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 import { Vector3 } from "three";
 import type { Marker } from "@pieai/university-world/Maps.js";
-import { mapGuideAnswer, mapGuideQuestions, type MapGuideMap } from "./map-guide.js";
+import {
+  comparableMarkers,
+  mapGuideAnswer,
+  mapGuideQuestions,
+  mapGuideScope,
+  markerDescriptor,
+  placeTargetIds,
+  type MapGuideMap,
+} from "./map-guide.js";
 
 const at = new Vector3();
 const course = (markers: readonly Marker[]): MapGuideMap => ({
   view: "course",
+  scope: "map/guest/ai-literacy/course/understanding-ai",
   markers,
   lessonTitle: (id) => ({ l2: "说清楚你要什么" })[id],
 });
@@ -79,6 +88,7 @@ describe("涟 answers from the map, and names the place the answer is about", ()
   it("the archipelago points at the live island and has no challenge question", () => {
     const world: MapGuideMap = {
       view: "world",
+      scope: "map/guest/ai-literacy/world/-",
       lessonTitle: () => undefined,
       markers: [
         { id: "done", kind: "course", text: "已学完", position: at, courseState: "done" },
@@ -91,5 +101,59 @@ describe("涟 answers from the map, and names the place the answer is about", ()
       markerId: "now",
       label: "认识 AI",
     });
+  });
+
+  it("the archipelago offers a two-island comparison, which names no place of its own", () => {
+    expect(mapGuideQuestions("world")).toEqual(["start", "review", "compare", "shortcuts"]);
+    expect(mapGuideQuestions("course")).not.toContain("compare");
+    const answer = mapGuideAnswer("compare", course([]), () => {});
+    expect(answer.place).toBeNull();
+    expect(answer.go).toBeNull();
+  });
+});
+
+describe("places are registered by identity, never by position", () => {
+  it("a label's id is its marker's; a navigation entry has one id per surface", () => {
+    expect(placeTargetIds({ kind: "marker", markerId: "l2", label: "x" })).toEqual(["marker:l2"]);
+    expect(placeTargetIds({ kind: "nav", navId: "practice", label: "练习" })).toEqual([
+      "nav:rail:practice",
+      "nav:tabs:practice",
+    ]);
+  });
+
+  it("an island says only what University decided about it: its state and its count", () => {
+    const island: Marker = {
+      id: "understanding-ai",
+      kind: "course",
+      text: "认识 AI",
+      position: at,
+      courseState: "live",
+    };
+    const described = markerDescriptor(island, {
+      lessonTitle: () => undefined,
+      courseProgress: (id) => (id === "understanding-ai" ? { done: 3, total: 12 } : null),
+    });
+    expect(described.label).toBe("认识 AI");
+    expect(described.description).toContain("3/12");
+    // Before its course loads, no count is invented.
+    expect(
+      markerDescriptor(island, { lessonTitle: () => undefined, courseProgress: () => null })
+        .description,
+    ).not.toMatch(/\d/);
+    // A lesson stone is named by its lesson, not by its 「开始」 caption.
+    const stone: Marker = { id: "l2", kind: "lesson", text: "开始", position: at, lessonId: "l2" };
+    expect(markerDescriptor(stone, { lessonTitle: () => "说清楚你要什么" })).toEqual({
+      label: "说清楚你要什么",
+    });
+    expect(comparableMarkers([island, stone])).toEqual([island]);
+  });
+
+  it("a scope names account, study, view and course in the kit's identity alphabet", () => {
+    const scope = mapGuideScope(["user 1@x", "ai-literacy", "course", null]);
+    expect(scope).toBe("map/user-1-x/ai-literacy/course/-");
+    expect(scope).toMatch(/^[A-Za-z0-9][A-Za-z0-9._:/-]*$/);
+    expect(mapGuideScope(["u", "s", "course", "a"])).not.toBe(
+      mapGuideScope(["u", "s", "course", "b"]),
+    );
   });
 });

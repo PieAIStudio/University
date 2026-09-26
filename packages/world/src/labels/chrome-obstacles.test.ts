@@ -18,4 +18,19 @@ describe("map overlay obstacles", () => {
     shell.querySelector(".hint--controls")!.classList.add("hint--dismissed");
     expect(mapOverlayObstacles(stage, shell).labels).toHaveLength(2);
   });
+
+  it("reserves the space a floating layer outside the shell reported for itself", () => {
+    const shell = document.createElement("main");
+    shell.innerHTML = '<div class="stagewrap"></div>';
+    const stage = shell.querySelector<HTMLElement>(".stagewrap")!;
+    stage.getBoundingClientRect = () => new DOMRect(0, 100, 375, 568);
+    const reserved = [{ x: 20, y: 500, width: 300, height: 120 }];
+    const obstacles = mapOverlayObstacles(stage, shell, reserved);
+    expect(obstacles.chrome).toHaveLength(0);
+    expect(obstacles.labels).toEqual([{ left: 20, top: 400, right: 320, bottom: 520 }]);
+    // A layer that reports no size claims nothing.
+    expect(
+      mapOverlayObstacles(stage, shell, [{ x: 0, y: 0, width: 0, height: 0 }]).labels,
+    ).toHaveLength(0);
+  });
 });

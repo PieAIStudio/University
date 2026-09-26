@@ -38,6 +38,7 @@ import {
 import type { Marker } from "../Maps";
 import { pinchDollyArmed } from "./pinch-dolly.js";
 import { mapOverlayObstacles, stageRelativeBox } from "../labels/chrome-obstacles.js";
+import type { OverlayReservations } from "../labels/overlay-reservations.js";
 import { wheelIntent } from "./wheel-intent.js";
 import { usePrefersReducedMotion } from "../reduced-motion.js";
 import { AVATAR_OCCLUSION_TARGET, projectedAvatarBounds } from "../avatar/avatar-occlusion.js";
@@ -470,10 +471,13 @@ export function LabelProbe({
   nodes,
   followId = null,
   followNode,
+  reservations,
 }: {
   markers: readonly Marker[];
   limit: number;
   nodes: Map<string, HTMLElement>;
+  /** Space floating layers outside the shell claimed (overlay-reservations.ts). */
+  reservations?: OverlayReservations;
   /**
    * Marker id of the island the follow card is about. Null hides it.
    *
@@ -521,7 +525,7 @@ export function LabelProbe({
     let resizeObserver: ResizeObserver | null = null;
     const observed = new WeakSet<HTMLElement>();
     const update = () => {
-      const obstacles = mapOverlayObstacles(stage, shell);
+      const obstacles = mapOverlayObstacles(stage, shell, reservations?.list());
       chromeBoxesRef.current = obstacles.chrome;
       labelBoxesRef.current = obstacles.labels;
       for (const element of obstacles.elements) {
@@ -553,6 +557,7 @@ export function LabelProbe({
     };
     update();
     window.addEventListener("resize", update);
+    const unsubscribeReservations = reservations?.subscribe(update);
 
     resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
     resizeObserver?.observe(shell);
@@ -583,10 +588,11 @@ export function LabelProbe({
 
     return () => {
       window.removeEventListener("resize", update);
+      unsubscribeReservations?.();
       resizeObserver?.disconnect();
       mutationObserver?.disconnect();
     };
-  }, [gl, limit]);
+  }, [gl, limit, reservations]);
   // R3F's tree is a second React root. The follow node lives in the DOM
   // root, and this callback must not close over a stale `followId` from the
   // render that created the Canvas children the first time.

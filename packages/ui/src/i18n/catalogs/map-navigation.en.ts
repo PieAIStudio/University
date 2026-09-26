@@ -50,15 +50,10 @@ export const messages = {
   "map.locked.why": "Finish “{{current}}” first, or test out of this stretch at its gate.",
   "map.locked.goCurrent": "Go to the current lesson",
   "map.locked.test": "Test at the gate",
-  "map.guide.name": "Lian",
-  "map.guide.button": "Ask Lian",
-  "map.guide.open": "Ask Lian how this map works",
-  "map.guide.intro": "I'm Lian. What would you like to know? I'll point it out.",
-  "map.guide.close": "Close",
-  "map.guide.again": "Ask something else",
   "map.guide.q.start": "Where should I start?",
   "map.guide.q.challenge": "Where is the game challenge?",
   "map.guide.q.review": "How do I review what I learned?",
+  "map.guide.q.compare": "Compare two islands",
   "map.guide.q.shortcuts": "Are there shortcuts?",
   "map.guide.a.startLesson": "Start with “{{title}}”. Select it, then choose Enter.",
   "map.guide.a.startCourse": "Start on the “{{title}}” island. Select it, then choose Enter.",
@@ -79,4 +74,35 @@ export const messages = {
   "map.guide.go.shortcuts": "Open quick actions",
   "map.guide.offscreen.map": "It is not on screen right now; drag the map to find it.",
   "map.guide.offscreen.menu": "Open the menu at the top left to see it.",
+  "map.guide.a.compare":
+    "Choose two islands below, in order, and I will put their state and progress side by side.",
+  "map.guide.compare.pick": "Islands on screen",
+  "map.guide.compare.none":
+    "Fewer than two islands are on screen. Drag the map until two show, then ask again.",
+  "map.guide.compare.first": "First: “{{title}}”. Choose one more.",
+  "map.guide.compare.gone": "“{{title}}” is no longer on screen. Choose another.",
+  "map.guide.compare.expired":
+    "That pair has expired: an island's progress or name changed. Choose two again.",
+  "map.guide.compare.title": "Two islands side by side",
+  "map.guide.compare.note":
+    "This only lists each island's own state and progress. Which comes first is shown on the map.",
+  "map.guide.compare.again": "Choose another pair",
+  "map.guide.compare.progress": "{{done}} of {{total}} lessons done",
+  "map.guide.details.heading": "Map guide: Lian",
+  "map.guide.details.description":
+    "Lian answers a few fixed questions on the archipelago and course maps and points at the place each answer names. It never clicks, enters or submits for you.",
+  "map.guide.details.scope": "Archipelago and course maps",
+  "map.guide.details.connection": "Phase one connects to no model.",
+  "map.guide.details.cost": "Lian only reads the map. It calls no model and costs nothing.",
+  "map.guide.details.help": "Map questions",
+  "map.guide.details.helpDetail":
+    "Where to start, the game challenge, how to review, shortcuts, and two islands side by side. Every answer is read from the map on screen.",
+  "map.guide.details.chat": "Free conversation",
+  "map.guide.details.chatDetail": "Opens once its cost and free allowance are decided.",
+  "map.guide.details.voice": "Voice",
+  "map.guide.details.voiceDetail": "Not connected. Lian never turns on the microphone.",
+  "map.guide.details.privacyQuestions":
+    "Lian keeps no record of what you asked and does not save a comparison.",
+  "map.guide.details.privacyProgress":
+    "Progress, review and grades are recorded by University alone; Lian cannot read your answers or submit for you.",
 } as const;
