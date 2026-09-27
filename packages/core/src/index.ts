@@ -311,6 +311,7 @@ export * from "./progress/goals.js";
 export * from "./progress/chest-reward.js";
 export * from "./progress/rest-days.js";
 export * from "./progress/weekly-boss.js";
+export * from "./progress/knowledge-cards.js";
 export * from "./billing/plans.js";
 export * from "./billing/entitlements.js";
 export * from "./billing/ai-entitlements.js";
