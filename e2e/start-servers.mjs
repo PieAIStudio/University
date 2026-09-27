@@ -29,7 +29,7 @@ import { refreshE2EManifest, reservePorts } from "../scripts/link-studies-into-w
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const LOCAL = join(ROOT, "apps/local");
 const APP = join(ROOT, "apps/university");
-const GRADING = join(ROOT, "apps/university-grading");
+const GRADING = join(ROOT, "apps/university-ai");
 const E2E_CONTENT_ROOT = join(ROOT, ".scratch/evidence2/e2e-content");
 const E2E_IMPORTED_MANIFEST = join(ROOT, ".scratch/evidence2/e2e-imported.json");
 

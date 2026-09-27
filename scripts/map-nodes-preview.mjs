@@ -48,7 +48,7 @@ for (const args of [
   ["--filter", "@pieai/university-local", "build"],
   [
     "--filter",
-    "@pieai/university-grading-service",
+    "@pieai/university-ai-service",
     "exec",
     "tsc",
     "--noEmit",
@@ -65,8 +65,8 @@ const [{ PersonalLessonService, PersonalLessonError, PRIVATE_CARD_ID }, contract
   await Promise.all([
     load("apps/local/.university-local-build/server/personal/service.js"),
     load("apps/local/.university-local-build/server/personal/contracts.js"),
-    load("apps/university-grading/.primm-preview-build/src/primm/runtime.js"),
-    load("apps/university-grading/.primm-preview-build/src/primm/local-transport.js"),
+    load("apps/university-ai/.primm-preview-build/src/primm/runtime.js"),
+    load("apps/university-ai/.primm-preview-build/src/primm/local-transport.js"),
   ]);
 const authoring = await createOwnerAuthoring(root, contracts, {
   writerArm: arg("--writer-arm", "grok"),
@@ -78,7 +78,7 @@ const service = new PersonalLessonService({
   projectRoot: root,
   generate: authoring.generate,
 });
-const require = createRequire(join(root, "apps/university-grading/package.json"));
+const require = createRequire(join(root, "apps/university-ai/package.json"));
 const { z } = await import(pathToFileURL(require.resolve("zod")).href);
 const bindings = new Map();
 const jobs = new Map();

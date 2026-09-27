@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: ai-assisted
 created: 2026-08-30
-last_reviewed: 2026-08-30
+last_reviewed: 2026-09-27
 domain: learning
 tags:
   - learning-recall
@@ -22,7 +22,7 @@ capture_mode: pgs-native
 
 ## Guidance
 
-When a Vercel project has Root Directory apps/university-grading, deploy source from the repository root with explicit VERCEL_ORG_ID and VERCEL_PROJECT_ID; never use a prebuilt deploy from that subdirectory because the path can be resolved twice and ship no lambda. A root source deploy can then fail with fatal: not a git repository under /vercel when the workspace prepare hook runs lefthook install. The proven fix is the service vercel.json installCommand pnpm install --frozen-lockfile --ignore-scripts, followed by a preview vercel inspect that contains the literal lambda api/grade line before any production deploy. Apply to manual Vercel source deployments from pnpm workspaces with Git-only lifecycle hooks.
+When a Vercel project has Root Directory apps/university-ai (the Vercel project university-ai, named university-grading until 2026-09-27), deploy source from the repository root with explicit VERCEL_ORG_ID and VERCEL_PROJECT_ID; never use a prebuilt deploy from that subdirectory because the path can be resolved twice and ship no lambda. A root source deploy can then fail with fatal: not a git repository under /vercel when the workspace prepare hook runs lefthook install. The proven fix is the service vercel.json installCommand pnpm install --frozen-lockfile --ignore-scripts, followed by a preview vercel inspect that contains the literal lambda api/grade line before any production deploy. Apply to manual Vercel source deployments from pnpm workspaces with Git-only lifecycle hooks.
 
 ## Applies When
 

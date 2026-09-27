@@ -2,7 +2,7 @@
 #
 # Both Vercel projects in this repository deploy from the repository root: the
 # delivery app builds locally and ships `--prebuilt`, and the grading service
-# has `rootDirectory: apps/university-grading` set on the project, which makes
+# has `rootDirectory: apps/university-ai` set on the project, which makes
 # a `--prebuilt` deploy from that subdirectory resolve its path twice and ship
 # a build with no function in it. That deploy has to upload sources instead,
 # and without this file it uploads 1.4GB of installed dependencies.

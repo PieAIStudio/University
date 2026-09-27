@@ -165,7 +165,7 @@ importers:
         specifier: 4.1.10
         version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.1))
 
-  apps/university-grading:
+  apps/university-ai:
     dependencies:
       '@pieai/swimmer-ai-provider-kit':
         specifier: 0.13.0

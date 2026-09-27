@@ -4,13 +4,13 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
-import { createPrimmRuntime } from "../apps/university-grading/.primm-preview-build/src/primm/runtime.js";
-import { createCanonicalPrimmResolver } from "../apps/university-grading/.primm-preview-build/src/primm/content.js";
+import { createPrimmRuntime } from "../apps/university-ai/.primm-preview-build/src/primm/runtime.js";
+import { createCanonicalPrimmResolver } from "../apps/university-ai/.primm-preview-build/src/primm/content.js";
 import {
   createLocalOllamaTransport,
   createLocalWhisperTranscriber,
-} from "../apps/university-grading/.primm-preview-build/src/primm/local-transport.js";
-import { createPrimmPreviewServer } from "../apps/university-grading/.primm-preview-build/src/primm/http.js";
+} from "../apps/university-ai/.primm-preview-build/src/primm/local-transport.js";
+import { createPrimmPreviewServer } from "../apps/university-ai/.primm-preview-build/src/primm/http.js";
 const root = fileURLToPath(new URL("..", import.meta.url));
 if (!process.argv.includes("--owner-preview")) throw Error("Explicit --owner-preview required");
 const withApp = process.argv.includes("--with-app");

@@ -921,7 +921,7 @@ function draftActivity(draft, packet, existing) {
 
 async function sampleRuns(activity, packet) {
   const base = pathToFileURL(
-    join(repoRoot, "apps/university-grading/.primm-preview-build/src/primm/"),
+    join(repoRoot, "apps/university-ai/.primm-preview-build/src/primm/"),
   ).href;
   const { createPrimmRuntime } = await import(`${base}runtime.js`);
   const { createLocalOllamaTransport } = await import(`${base}local-transport.js`);
@@ -1103,7 +1103,7 @@ ${draft.cards.map((c) => `- 正面：${c.front}\n  背面：${c.back}`).join("\n
 
 async function makeSampleRun(activity, packet, prompt) {
   const base = pathToFileURL(
-    join(repoRoot, "apps/university-grading/.primm-preview-build/src/primm/"),
+    join(repoRoot, "apps/university-ai/.primm-preview-build/src/primm/"),
   ).href;
   const { createPrimmRuntime } = await import(`${base}runtime.js`);
   const { createLocalOllamaTransport } = await import(`${base}local-transport.js`);

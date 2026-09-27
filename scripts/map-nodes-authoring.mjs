@@ -93,7 +93,7 @@ export async function createOwnerAuthoring(
 ) {
   const { createStructuredOutputClient } = await import(
     pathToFileURL(
-      join(root, "apps/university-grading/.primm-preview-build/src/primm/authoring-client.js"),
+      join(root, "apps/university-ai/.primm-preview-build/src/primm/authoring-client.js"),
     ).href
   );
   const runRoot = join(root, ".scratch/map-nodes-authoring");
