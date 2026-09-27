@@ -417,6 +417,12 @@ function LiveMonster({
     return () => {
       built.mixer.stopAllAction();
       built.mixer.uncacheRoot(built.model);
+      // Each cloned skeleton owns a bone texture on the GPU; without this a
+      // walk away from the island and back left three rigs' worth behind.
+      built.model.traverse((object) => {
+        const skinned = object as THREE.SkinnedMesh;
+        if (skinned.isSkinnedMesh) skinned.skeleton.dispose();
+      });
     };
   }, [gltf, monster.id]);
   const head = useMemo(() => {
