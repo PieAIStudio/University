@@ -1,3 +1,6 @@
+import { checkCompleteness } from "@pieai/swimmer-i18n-kit";
+import { applyDocumentLanguage, systemLocale } from "@pieai/swimmer-i18n-kit/browser";
+import { sharedRuntime } from "./runtime.js";
 import {
   createContext,
   createElement,
@@ -62,22 +65,12 @@ export interface Translator {
   ): string;
 }
 
-function languageCodeOf(locale: string): string {
-  return locale.split("-")[0]?.toLowerCase() ?? locale.toLowerCase();
-}
-
 /** Compare a candidate against the source catalog without mutating either. */
 export function localeCompleteness(
   candidate: Partial<Record<string, string>>,
   source: MessageCatalog = sourceMessages,
 ): LocaleCompleteness {
-  const sourceKeys = new Set(Object.keys(source));
-  const candidateKeys = new Set(Object.keys(candidate));
-  const missingKeys = [...sourceKeys].filter((key): key is MessageKey => !candidateKeys.has(key));
-  const extraKeys = [...candidateKeys].filter((key) => !sourceKeys.has(key));
-  missingKeys.sort((left, right) => left.localeCompare(right));
-  extraKeys.sort((left, right) => left.localeCompare(right));
-  return { complete: missingKeys.length === 0 && extraKeys.length === 0, missingKeys, extraKeys };
+  return checkCompleteness(source, candidate) as LocaleCompleteness;
 }
 
 export function isLocaleComplete(
@@ -96,22 +89,7 @@ export function availableLocales(registry: LocaleRegistry = LOCALE_REGISTRY): re
 }
 
 function matchingLocale(requestedLocale: string | undefined, registry: LocaleRegistry): string {
-  if (!requestedLocale) return SOURCE_LOCALE;
-  const normalized = requestedLocale.replaceAll("_", "-").toLowerCase();
-  const exact = Object.keys(registry).find((locale) => locale.toLowerCase() === normalized);
-  if (exact && isLocaleComplete(registry[exact]!.messages)) return exact;
-
-  const requestedLanguage = languageCodeOf(normalized);
-  const languageMatch = Object.keys(registry).find(
-    (locale) =>
-      languageCodeOf(locale) === requestedLanguage && isLocaleComplete(registry[locale]!.messages),
-  );
-  return (
-    languageMatch ??
-    (registry[ENGLISH_LOCALE] && isLocaleComplete(registry[ENGLISH_LOCALE].messages)
-      ? ENGLISH_LOCALE
-      : SOURCE_LOCALE)
-  );
+  return sharedRuntime(registry).resolve(requestedLocale ?? SOURCE_LOCALE);
 }
 
 export function resolveLocale(
@@ -122,7 +100,7 @@ export function resolveLocale(
 }
 
 function browserLocale(): string | undefined {
-  return typeof navigator === "undefined" ? undefined : navigator.language;
+  return systemLocale();
 }
 
 export function readLocalePreference(): string | undefined {
@@ -164,44 +142,33 @@ function formatValue(locale: string, value: MessageValue): string {
   return value;
 }
 
-function interpolate(locale: string, message: string, values: MessageValues | undefined): string {
-  if (!values) return message;
-  return message.replace(/\{\{\s*([A-Za-z0-9_]+)\s*\}\}/g, (match, name: string) => {
-    const value = values[name];
-    return value === undefined ? match : formatValue(locale, value);
-  });
-}
-
 export function createTranslator(
   requestedLocale: string | undefined = browserLocale(),
   registry: LocaleRegistry = LOCALE_REGISTRY,
 ): Translator {
-  const locale = matchingLocale(requestedLocale, registry);
-  const definition = registry[locale] ?? registry[SOURCE_LOCALE]!;
+  const runtime = sharedRuntime(registry);
+  const shared = runtime.translator(requestedLocale ?? SOURCE_LOCALE);
+  const translateMessage = (key: MessageKey, values?: MessageValues) => {
+    // Existing University callers use preformatted {{name}} interpolation.
+    const original = registry[shared.locale]?.messages[key] ?? sourceMessages[key];
+    const parameters: Record<string, string> = {};
+    for (const match of original?.matchAll(/\{\{\s*([A-Za-z0-9_]+)\s*\}\}/g) ?? []) {
+      parameters[match[1]!] = match[0];
+    }
+    for (const [name, value] of Object.entries(values ?? {})) {
+      parameters[name] = formatValue(shared.locale, value);
+    }
+    return shared.t(key, parameters);
+  };
   return {
-    locale,
-    direction: definition.direction,
-    t(key, values) {
-      const message = definition.messages[key] ?? sourceMessages[key];
-      if (message === undefined) {
-        throw new Error(`Missing source message: ${String(key)}`);
-      }
-      return interpolate(locale, message, values);
-    },
-    number(value, options) {
-      return new Intl.NumberFormat(locale, options).format(value);
-    },
-    date(value, options) {
-      const dateValue = value instanceof Date ? value : new Date(value);
-      return new Intl.DateTimeFormat(locale, options).format(dateValue);
-    },
+    locale: shared.locale,
+    direction: shared.direction,
+    t: translateMessage,
+    number: shared.number,
+    date: shared.date,
     plural(count, forms, values) {
-      const category = new Intl.PluralRules(locale).select(count) as PluralCategory;
-      const key = forms[category] ?? forms.other;
-      return interpolate(locale, definition.messages[key] ?? sourceMessages[key]!, {
-        count,
-        ...values,
-      });
+      const category = new Intl.PluralRules(shared.locale).select(count) as PluralCategory;
+      return translateMessage(forms[category] ?? forms.other, { count, ...values });
     },
   };
 }
@@ -243,8 +210,7 @@ export function formatPlural<K extends MessageKey>(
 
 function applyLocaleToDocument(translator: Translator): void {
   if (typeof document === "undefined") return;
-  document.documentElement.lang = translator.locale;
-  document.documentElement.dir = translator.direction;
+  applyDocumentLanguage(translator.locale, translator.direction);
 }
 
 const I18nContext = createContext<Translator | null>(null);

@@ -35,6 +35,7 @@ minimumReleaseAgeExclude:
   - '@pieai/swimmer-avatar-kit@0.2.0 || 0.4.0 || 0.5.1 || 0.6.0 || 0.7.0'
   - '@pieai/swimmer-backend-client@0.5.0 || 0.6.0'
   - '@pieaistudio/swimmer-auth-kit@0.1.9'
+  - '@pieai/swimmer-i18n-kit@0.1.0'
 
 # Drei's tunnel-rat pins Zustand 4.3.2, whose old 1.2.0 shim declares no React
 # 19 support. Use the compatible 1.7.0 shim already consumed by Drei, only on

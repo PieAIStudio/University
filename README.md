@@ -26,6 +26,8 @@ packages/world  3D 场景：世界地图、课程岛、星球。packages/ui 里 
 使用同一套内容管线，原始事实、教学变式与真实运行记录分别说明。
 
 在设置中选择 English / 简体中文；也可以给地址加 `?lang=en` 或 `?lang=zh-CN`。
+界面语言运行时复用 `@pieai/swimmer-i18n-kit`；译文留在 `packages/ui/src/i18n/catalogs/`，
+中文键与旧 `{{name}}` 调用由本地薄包装兼容，课程正文不受影响。
 新路线正文、互动、卡片、练习与引用说明有双语版本，旧应用课程仍保留原中文内容。
 已发布目录以 `apps/university/published-catalog.json` 和生成清单为准；锁定材料
 不是已经交付的课程。真实支付尚未开通，不能把会员页面当作真实交易成功的证明。

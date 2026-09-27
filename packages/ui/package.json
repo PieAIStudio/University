@@ -155,6 +155,7 @@
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.20",
+    "@pieai/swimmer-i18n-kit": "0.1.0",
     "@pieai/swimmer-ui-kit": "2.10.0",
     "@pieai/university-core": "workspace:*",
     "@pieaistudio/swimmer-auth-kit": "0.1.9",

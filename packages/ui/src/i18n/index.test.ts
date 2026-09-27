@@ -54,3 +54,25 @@ describe("message catalogs", () => {
     expect(() => localeNavigationUrl("https://example.test/", "javascript:evil")).toThrow();
   });
 });
+
+describe("shared i18n compatibility", () => {
+  it("preserves every existing Chinese message and omitted placeholder", () => {
+    const translator = createTranslator("zh-Hans");
+    for (const [key, original] of Object.entries(sourceMessages)) {
+      expect(translator.t(key as keyof typeof sourceMessages), key).toBe(original);
+    }
+  });
+
+  it("keeps missing values literal and formats legacy numbers through Intl", () => {
+    const key = Object.keys(sourceMessages).find((key) =>
+      /\{\{\s*[A-Za-z0-9_]+\s*\}\}/.test(sourceMessages[key as keyof typeof sourceMessages]),
+    ) as keyof typeof sourceMessages;
+    const message = sourceMessages[key];
+    const values = Object.fromEntries(
+      [...message.matchAll(/\{\{\s*([A-Za-z0-9_]+)\s*\}\}/g)].map((match) => [match[1]!, 1234]),
+    );
+    expect(createTranslator("zh-CN").t(key, values)).toBe(
+      message.replace(/\{\{\s*([A-Za-z0-9_]+)\s*\}\}/g, "1,234"),
+    );
+  });
+});
