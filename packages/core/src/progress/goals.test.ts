@@ -5,6 +5,7 @@ import type { ProgressDocument } from "../ports/progress.js";
 import {
   badgesFor,
   calendarDay,
+  challengeWonEventId,
   completedLessons,
   longTermCards,
   questComplete,
@@ -223,5 +224,157 @@ describe("leagueStanding", () => {
       },
     });
     expect(leagueStanding(document, monday + 3 * DAY).lessonsThisWeek).toBe(1);
+  });
+});
+
+describe("the seven badges V7 added", () => {
+  const LESSON = { studyId: "s", courseId: "c", unitId: "u", lessonId: "l1" } as const;
+  const minute = (n: number) => new Date(NOW + n * 60_000).toISOString();
+
+  function attempt(
+    exerciseId: string,
+    at: number,
+    result: "pass" | "fail" | null,
+    { lessonId = LESSON.lessonId, revision = 1 } = {},
+  ): ProgressDocument["exerciseAttempts"][string] {
+    const passed = result === "pass";
+    return {
+      commandId: `${lessonId}:${exerciseId}:${at}`,
+      locator: { ...LESSON, lessonId },
+      exerciseId,
+      contentRevision: revision,
+      answer: "a",
+      score: passed ? 1 : 0,
+      maxScore: 1,
+      hostGrade:
+        result === null
+          ? null
+          : {
+              passed,
+              outcome: result,
+              evaluation: "",
+              extensions: [],
+              host: "test",
+              learnerAnswer: "a",
+              occurredAt: minute(at),
+            },
+      occurredAt: minute(at),
+    };
+  }
+  const log = (...records: ProgressDocument["exerciseAttempts"][string][]) =>
+    Object.fromEntries(records.map((record) => [record.commandId, record]));
+  const badge = (document: ProgressDocument, id: string, ...extra: number[]) =>
+    badgesFor(document, ...extra).find((entry) => entry.id === id)!;
+
+  it("are all on the wall, seventeen in total, each with its rule", () => {
+    const ids = badgesFor(emptyProgress()).map((entry) => entry.id);
+    expect(ids).toHaveLength(17);
+    expect(new Set(ids).size).toBe(17);
+    for (const id of [
+      "mistakes-cleared",
+      "own-words",
+      "three-courses",
+      "both-paths",
+      "perfect-lesson",
+      "challenger",
+      "skip-test",
+    ])
+      expect(ids).toContain(id);
+  });
+
+  it("一次全对 needs a finished lesson whose every first answer was right", () => {
+    const finished = { l1: { progress: 1, completedAt: NOW, attempts: 1 } };
+    const perfect = docWith({
+      lessons: { "s/c/l1": finished.l1 },
+      exerciseAttempts: log(attempt("e1", 1, "pass"), attempt("e2", 2, "pass")),
+    });
+    expect(badge(perfect, "perfect-lesson").earned).toBe(true);
+    // Wrong first, right after: the lesson is finished, the badge is not.
+    const retried = docWith({
+      lessons: { "s/c/l1": finished.l1 },
+      exerciseAttempts: log(attempt("e1", 1, "fail"), attempt("e1", 2, "pass")),
+    });
+    expect(badge(retried, "perfect-lesson").earned).toBe(false);
+    // Perfect so far, but the lesson was left before the end.
+    const unfinished = docWith({ exerciseAttempts: log(attempt("e1", 1, "pass")) });
+    expect(badge(unfinished, "perfect-lesson").earned).toBe(false);
+  });
+
+  it("错题清零 counts the moment the book was empty, even if a mistake came later", () => {
+    const cleared = docWith({
+      exerciseAttempts: log(
+        attempt("e1", 1, "fail"),
+        attempt("e2", 2, "fail"),
+        attempt("e1", 3, "pass"),
+        attempt("e2", 4, "pass"),
+        attempt("e3", 5, "fail"),
+      ),
+    });
+    expect(badge(cleared, "mistakes-cleared").earned).toBe(true);
+    // Half put right: locked, halfway.
+    const half = docWith({
+      exerciseAttempts: log(
+        attempt("e1", 1, "fail"),
+        attempt("e2", 2, "fail"),
+        attempt("e1", 3, "pass"),
+      ),
+    });
+    expect(badge(half, "mistakes-cleared").earned).toBe(false);
+    expect(badge(half, "mistakes-cleared").progress).toBeCloseTo(0.5);
+    // Never wrong is not "cleared": there was nothing to clear.
+    const neverWrong = docWith({ exerciseAttempts: log(attempt("e1", 1, "pass")) });
+    expect(badge(neverWrong, "mistakes-cleared").earned).toBe(false);
+    // A submission still waiting for its verdict is neither a mistake nor a fix.
+    const waiting = docWith({
+      exerciseAttempts: log(attempt("e1", 1, "fail"), attempt("e1", 2, null)),
+    });
+    expect(badge(waiting, "mistakes-cleared").earned).toBe(false);
+  });
+
+  it("错题清零 follows an exercise to its newer revision, as the book does", () => {
+    const rewritten = docWith({
+      exerciseAttempts: log(attempt("e1", 1, "fail"), attempt("e1", 2, "pass", { revision: 2 })),
+    });
+    expect(badge(rewritten, "mistakes-cleared").earned).toBe(true);
+    // A pass on the old revision does not fix the new one's mistake.
+    const stale = docWith({
+      exerciseAttempts: log(
+        attempt("e1", 1, "fail", { revision: 2 }),
+        attempt("e1", 2, "pass", { revision: 1 }),
+      ),
+    });
+    expect(badge(stale, "mistakes-cleared").earned).toBe(false);
+  });
+
+  it("自己的话 counts one teach-back card per lesson", () => {
+    const cards: ProgressDocument["cards"] = {};
+    for (let index = 0; index < 4; index += 1) cards[`s/c/u/l${index}/__recap__`] = card();
+    cards["s/c/u/l9/ordinary"] = card();
+    const four = docWith({ cards });
+    expect(badge(four, "own-words").earned).toBe(false);
+    expect(badge(four, "own-words").progress).toBeCloseTo(0.8);
+    cards["s/c/u/l4/__recap__"] = card();
+    expect(badge(docWith({ cards }), "own-words").earned).toBe(true);
+  });
+
+  it("三座岛 and 两条路 read what the catalogue knows about finished courses", () => {
+    expect(badge(emptyProgress(), "three-courses", 2).earned).toBe(false);
+    expect(badge(emptyProgress(), "three-courses", 3).earned).toBe(true);
+    // Three courses down one road is still one road.
+    expect(badge(emptyProgress(), "both-paths", 3, 1).earned).toBe(false);
+    expect(badge(emptyProgress(), "both-paths", 2, 2).earned).toBe(true);
+  });
+
+  it("挑战者 and 跳级 read the synced wins and proofs", () => {
+    expect(badge(emptyProgress(), "challenger").earned).toBe(false);
+    const won = docWith({ xpEvents: { [challengeWonEventId("s/c/gate-1")]: 30 } });
+    expect(badge(won, "challenger").earned).toBe(true);
+    // Other XP never counts as a challenge.
+    const read = docWith({ xpEvents: { "lesson-read:s/c/l1": 15 } });
+    expect(badge(read, "challenger").earned).toBe(false);
+    const proven = docWith({
+      provenLessons: { "s/c/l1": { lessonKey: "s/c/l1", unitId: "u", provenAt: NOW } },
+    });
+    expect(badge(proven, "skip-test").earned).toBe(true);
   });
 });

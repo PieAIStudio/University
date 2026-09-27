@@ -7,8 +7,11 @@
  */
 import type { ProgressDocument } from "../ports/progress.js";
 import type { LessonRef } from "./contract.js";
+import { allFirstTry } from "./first-try.js";
 import { badgesFor, type Badge } from "./goals.js";
 import { levelOf } from "./level.js";
+
+export { allFirstTry } from "./first-try.js";
 
 /** The part of the document the chest compares against, taken as the lesson opens. */
 export interface ChestBaseline {
@@ -16,10 +19,14 @@ export interface ChestBaseline {
   readonly earnedBadgeIds: readonly string[];
 }
 
-export function chestBaseline(document: ProgressDocument, coursesFinished = 0): ChestBaseline {
+export function chestBaseline(
+  document: ProgressDocument,
+  coursesFinished = 0,
+  pathsFinished = 0,
+): ChestBaseline {
   return {
     totalXp: document.totalXp,
-    earnedBadgeIds: badgesFor(document, coursesFinished)
+    earnedBadgeIds: badgesFor(document, coursesFinished, pathsFinished)
       .filter((badge) => badge.earned)
       .map((badge) => badge.id),
   };
@@ -41,31 +48,6 @@ export interface ChestReward {
   readonly allFirstTry: boolean;
 }
 
-/**
- * Whether every exercise of the lesson was answered correctly the first time.
- * A lesson with no exercise has nothing to be right about and never upgrades.
- */
-export function allFirstTry(document: ProgressDocument, locator: LessonRef): boolean {
-  const first = new Map<string, { at: string; full: boolean }>();
-  for (const attempt of Object.values(document.exerciseAttempts)) {
-    const at = attempt.locator;
-    if (
-      at.studyId !== locator.studyId ||
-      at.courseId !== locator.courseId ||
-      at.unitId !== locator.unitId ||
-      at.lessonId !== locator.lessonId
-    )
-      continue;
-    const seen = first.get(attempt.exerciseId);
-    if (seen && seen.at <= attempt.occurredAt) continue;
-    first.set(attempt.exerciseId, {
-      at: attempt.occurredAt,
-      full: attempt.maxScore > 0 && attempt.score >= attempt.maxScore,
-    });
-  }
-  return first.size > 0 && [...first.values()].every((entry) => entry.full);
-}
-
 export function chestReward({
   baseline,
   after,
@@ -73,6 +55,7 @@ export function chestReward({
   reviewCards,
   knowledgeCards,
   coursesFinished = 0,
+  pathsFinished = 0,
 }: {
   readonly baseline: ChestBaseline;
   readonly after: ProgressDocument;
@@ -80,6 +63,7 @@ export function chestReward({
   readonly reviewCards: number;
   readonly knowledgeCards: number;
   readonly coursesFinished?: number;
+  readonly pathsFinished?: number;
 }): ChestReward {
   const earnedBefore = new Set(baseline.earnedBadgeIds);
   return {
@@ -89,7 +73,7 @@ export function chestReward({
     reviewCards,
     knowledgeCards,
     streakDay: after.streak.days,
-    badges: badgesFor(after, coursesFinished).filter(
+    badges: badgesFor(after, coursesFinished, pathsFinished).filter(
       (badge) => badge.earned && !earnedBefore.has(badge.id),
     ),
     allFirstTry: allFirstTry(after, locator),

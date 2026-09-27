@@ -20,6 +20,9 @@
  */
 
 import type { ProgressDocument } from "../ports/progress.js";
+import { RECAP_CARD_ID } from "./document.js";
+import { perfectLessons } from "./first-try.js";
+import { mistakeBookEverCleared, mistakesOf } from "./mistakes.js";
 
 /** Local calendar day, `YYYY-MM-DD`. The streak counts days, so this does too. */
 export function calendarDay(at: number): string {
@@ -161,13 +164,24 @@ export function completedLessons(document: ProgressDocument): number {
  * A hidden badge is a puzzle, and this is not a game about guessing what the
  * game wants.
  */
-export function badgesFor(document: ProgressDocument, coursesFinished = 0): Badge[] {
+export function badgesFor(
+  document: ProgressDocument,
+  coursesFinished = 0,
+  /** Of the two directions a learner can take, how many have a finished course. */
+  pathsFinished = 0,
+): Badge[] {
   const lessons = completedLessons(document);
   const longTerm = longTermCards(document);
   const streak = document.streak.days;
   const reviewed = Object.values(document.cards).filter(
     (card) => card.fsrs.last_review !== undefined,
   ).length;
+  const mistakes = mistakesOf(document);
+  const mistakesCleared = mistakeBookEverCleared(document)
+    ? 1
+    : mistakes.length === 0
+      ? 0
+      : mistakes.filter((mistake) => mistake.corrected).length / mistakes.length;
 
   const step = (id: string, name: string, how: string, done: number, goal: number): Badge => ({
     id,
@@ -194,7 +208,35 @@ export function badgesFor(document: ProgressDocument, coursesFinished = 0): Badg
       50,
     ),
     step("first-course", "走完一门", "把一门课的每一节都读完", coursesFinished, 1),
+    /*
+      The seven V7 added (decision M1). Each is still a question asked of the
+      record: the mistake book's history, the teach-back cards, the proofs, the
+      attempt log and the challenge wins already written to `xpEvents`.
+    */
+    step("mistakes-cleared", "错题清零", "把错题本清空一次", mistakesCleared, 1),
+    step("own-words", "自己的话", "用自己的话讲过 5 节", teachBacks(document), 5),
+    step("three-courses", "三座岛", "学完 3 门课", coursesFinished, 3),
+    step("both-paths", "两条路", "两个方向都学完第一门课", pathsFinished, 2),
+    step("perfect-lesson", "一次全对", "一节里每道练习都第一次就答对", perfectLessons(document), 1),
+    step("challenger", "挑战者", "通过一次岛上的游戏挑战", challengeWins(document), 1),
+    step("skip-test", "跳级", "通过一次跳级测验", Object.keys(document.provenLessons).length, 1),
   ];
+}
+
+/** Lessons the learner has explained in their own words (one recap card each). */
+function teachBacks(document: ProgressDocument): number {
+  return Object.keys(document.cards).filter((key) => key.endsWith(`/${RECAP_CARD_ID}`)).length;
+}
+
+/**
+ * A won island challenge is written as an XP event under this id, which is
+ * what makes it part of the synced record: `xpEvents` is a set union across
+ * devices, so a win on the phone is a win on the laptop.
+ */
+export const challengeWonEventId = (nodeId: string) => `challenge-won:${nodeId}`;
+
+function challengeWins(document: ProgressDocument): number {
+  return Object.keys(document.xpEvents).filter((id) => id.startsWith("challenge-won:")).length;
 }
 
 /**

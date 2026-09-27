@@ -74,6 +74,35 @@ export function mistakesOf(document: ProgressDocument): readonly Mistake[] {
   });
 }
 
+/**
+ * Whether the mistake book was ever emptied: it held at least one uncorrected
+ * mistake, and later every one of them had been put right.
+ *
+ * The book as it stands today cannot answer this — a new mistake after the
+ * clearing hides it — so the log is replayed in time order under the same
+ * rules `mistakesOf` applies: only a host verdict counts, a pass after the
+ * wrong answer corrects it, and a newer revision of an exercise replaces the
+ * older one's entry.
+ */
+export function mistakeBookEverCleared(document: ProgressDocument): boolean {
+  const graded = Object.values(document.exerciseAttempts)
+    .filter((attempt) => attempt.hostGrade !== null)
+    .sort((a, b) => -compareAttemptsDesc(a, b));
+  const open = new Map<string, number>();
+  for (const attempt of graded) {
+    const exercise = `${lessonRefKey(attempt.locator)}\u0000${attempt.exerciseId}`;
+    const revision = open.get(exercise);
+    const outcome = exerciseGradeOutcome(attempt.hostGrade!);
+    const before = open.size;
+    if (revision !== undefined && attempt.contentRevision > revision) open.delete(exercise);
+    if (outcome === "fail") open.set(exercise, attempt.contentRevision);
+    else if (outcome === "pass" && open.get(exercise) === attempt.contentRevision)
+      open.delete(exercise);
+    if (before > 0 && open.size === 0) return true;
+  }
+  return false;
+}
+
 function compareAttemptsDesc(a: ExerciseAttemptRecord, b: ExerciseAttemptRecord): number {
   return compareTimesDesc(a.occurredAt, b.occurredAt) || b.commandId.localeCompare(a.commandId);
 }
