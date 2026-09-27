@@ -68,6 +68,7 @@ const actionTimeout = contended ? 45_000 : 20_000;
 const TIMING_SPECS = [
   "**/avatar.spec.ts",
   "**/archipelago-reference.spec.ts",
+  "**/domain-planets.spec.ts",
   "**/experience.spec.ts",
   "**/map-studio-3d.spec.ts",
   "**/motion-time.spec.ts",
