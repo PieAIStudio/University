@@ -24,7 +24,16 @@ import { RECAP_CARD_ID } from "./document.js";
 import { perfectLessons } from "./first-try.js";
 import { mistakeBookEverCleared, mistakesOf } from "./mistakes.js";
 
-/** Local calendar day, `YYYY-MM-DD`. The streak counts days, so this does too. */
+/**
+ * Local calendar day, `YYYY-MM-DD`. The streak counts days, so this does too.
+ *
+ * The learner's own day, not UTC's. `toISOString()` names a UTC day, and a
+ * streak is a promise about *your* days. Eight hours east of UTC that boundary
+ * falls at eight in the morning: a session before breakfast and one after it
+ * were two days and inflated the count, while a session either side of local
+ * midnight was one day and broke it. Both directions were wrong, and neither
+ * looked wrong from the outside.
+ */
 export function calendarDay(at: number): string {
   const date = new Date(at);
   const month = `${date.getMonth() + 1}`.padStart(2, "0");

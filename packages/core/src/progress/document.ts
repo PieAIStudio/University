@@ -135,7 +135,17 @@ export function cloneProgress(document: ProgressDocument): ProgressDocument {
     lessons: { ...document.lessons },
     cards: { ...document.cards },
     words: { ...document.words },
-    streak: { ...document.streak },
+    streak: {
+      ...document.streak,
+      ...(document.streak.rest
+        ? {
+            rest: {
+              granted: [...document.streak.rest.granted],
+              covered: [...document.streak.rest.covered],
+            },
+          }
+        : {}),
+    },
     totalXp: document.totalXp,
     xpEvents: { ...document.xpEvents },
     readerMarks: { ...document.readerMarks },

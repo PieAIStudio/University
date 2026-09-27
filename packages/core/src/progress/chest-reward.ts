@@ -8,7 +8,7 @@
 import type { ProgressDocument } from "../ports/progress.js";
 import type { LessonRef } from "./contract.js";
 import { allFirstTry } from "./first-try.js";
-import { badgesFor, type Badge } from "./goals.js";
+import { badgesFor, calendarDay, type Badge } from "./goals.js";
 import { levelOf } from "./level.js";
 
 export { allFirstTry } from "./first-try.js";
@@ -78,4 +78,20 @@ export function chestReward({
     ),
     allFirstTry: allFirstTry(after, locator),
   };
+}
+
+/**
+ * The day's first lesson doubles its XP (V7: 「今日首箱 ×2」). Returns the bonus
+ * to add through `addXp`, or null when today's has already been given. The
+ * event is named after the learner's local day, so two devices finishing
+ * lessons on the same day still give one bonus between them.
+ */
+export function dailyFirstBonus(
+  document: ProgressDocument,
+  now: number,
+  lessonXp: number,
+): { readonly eventId: string; readonly amount: number } | null {
+  const eventId = `daily-first:${calendarDay(now)}`;
+  if (Object.hasOwn(document.xpEvents, eventId) || !(lessonXp > 0)) return null;
+  return { eventId, amount: Math.round(lessonXp) };
 }

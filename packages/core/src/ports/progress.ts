@@ -152,7 +152,12 @@ export interface ProgressDocument {
   lessons: Record<string, LessonProgress>;
   cards: Record<string, CardProgress>;
   words: Record<string, WordProgress>;
-  streak: { days: number; lastDay: string | null };
+  streak: {
+    days: number;
+    lastDay: string | null;
+    /** Rest-day tickets granted and the missed days they covered (rest-days.ts). */
+    rest?: { readonly granted: readonly string[]; readonly covered: readonly string[] };
+  };
   /** Total XP is shared learner data, not a browser-only display cache. */
   totalXp: number;
   /** Immutable event id to XP amount; the merge is a set union followed by a sum. */

@@ -33,7 +33,9 @@
  *
  * Streak. The later calendar day wins; on the same day, the higher count.
  * A streak is a fact about *this person's* recent days, and the machine that
- * was used more recently is the one that knows.
+ * was used more recently is the one that knows. Rest-day grants and covered
+ * days are sets of names, so they union: a ticket spent on either machine
+ * stays spent, and a grant made on both is one ticket.
  *
  * Skip-test proofs. Union, earliest `provenAt`. Same reasoning as
  * `completedAt`: the first time they proved it is the fact, and a retake on
@@ -42,6 +44,7 @@
  * this one rather than replacing it.
  */
 
+import { mergeRestDays } from "./rest-days.js";
 import type {
   CardProgress,
   ExerciseAttemptRecord,
@@ -352,8 +355,14 @@ function mergeStreak(
   a: ProgressDocument["streak"],
   b: ProgressDocument["streak"],
 ): ProgressDocument["streak"] {
-  if (!a.lastDay) return { ...b };
-  if (!b.lastDay) return { ...a };
-  if (a.lastDay === b.lastDay) return { days: Math.max(a.days, b.days), lastDay: a.lastDay };
-  return a.lastDay > b.lastDay ? { ...a } : { ...b };
+  const rest = mergeRestDays(a.rest, b.rest);
+  const withRest = (streak: { days: number; lastDay: string | null }) =>
+    rest
+      ? { days: streak.days, lastDay: streak.lastDay, rest }
+      : { days: streak.days, lastDay: streak.lastDay };
+  if (!a.lastDay) return withRest(b);
+  if (!b.lastDay) return withRest(a);
+  if (a.lastDay === b.lastDay)
+    return withRest({ days: Math.max(a.days, b.days), lastDay: a.lastDay });
+  return withRest(a.lastDay > b.lastDay ? a : b);
 }

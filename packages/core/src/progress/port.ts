@@ -40,6 +40,7 @@ import type { LessonRef } from "./contract.js";
 import { cloneProgress, emptyProgress, lessonKey, recapCardKeyOf } from "./document.js";
 import { createAccountCache } from "./account-cache.js";
 import { mergeProgress } from "./merge.js";
+import { advanceStreak } from "./rest-days.js";
 import { xpFor } from "./xp.js";
 import {
   cloneAccountData,
@@ -49,8 +50,6 @@ import {
 import type { FavouritesState } from "../favourites/model.js";
 import type { PracticeRecentState } from "../practice/recent.js";
 import { exerciseGradeOutcome } from "../ports/grading.js";
-
-const DAY = 86_400_000;
 
 export function createProgressPort(options: { readonly persistence: Persistence }): ProgressPort {
   const { persistence } = options;
@@ -213,12 +212,7 @@ export function createProgressPort(options: { readonly persistence: Persistence 
   }
 
   function touchStreak() {
-    const now = Date.now();
-    const today = calendarDay(now);
-    const { lastDay, days } = state.streak;
-    if (lastDay === today) return;
-    const yesterday = calendarDay(now - DAY);
-    state.streak = { days: lastDay === yesterday ? days + 1 : 1, lastDay: today };
+    state.streak = advanceStreak(state.streak, Date.now());
   }
 
   /**
@@ -885,26 +879,10 @@ function validPushSubscription(record: PushSubscriptionRecord): boolean {
   );
 }
 
-/**
- * The learner's own calendar day, not UTC's.
- *
- * `toISOString()` names a UTC day, and a streak is a promise about *your*
- * days. Eight hours east of UTC that boundary falls at eight in the morning:
- * a session before breakfast and one after it were two days and inflated the
- * count, while a session either side of local midnight was one day and broke
- * it. Both directions were wrong, and neither looked wrong from the outside.
- */
 /** Midnight at the start of the day after `at`, in the learner's own timezone. */
 function startOfNextDay(at: number): number {
   const date = new Date(at);
   date.setHours(0, 0, 0, 0);
   date.setDate(date.getDate() + 1);
   return date.getTime();
-}
-
-function calendarDay(at: number): string {
-  const date = new Date(at);
-  const month = `${date.getMonth() + 1}`.padStart(2, "0");
-  const day = `${date.getDate()}`.padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
 }
