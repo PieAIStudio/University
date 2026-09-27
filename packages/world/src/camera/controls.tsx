@@ -20,6 +20,8 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { MapControls } from "three/addons/controls/MapControls.js";
 
+import { cameraOverrideOf } from "./camera-override.js";
+
 import {
   boxesOverlap,
   captureLabelOffsets,
@@ -197,7 +199,7 @@ export function Controls({
   readonly onInteract?: () => void;
   readonly distanceRange?: readonly [number, number];
 }) {
-  const { camera, gl } = useThree();
+  const { camera, gl, scene } = useThree();
   const controls = useRef<MapControls | null>(null);
   const fixedCameraRef = useRef(fixedCamera ?? null);
   const onInteractRef = useRef(onInteract);
@@ -321,6 +323,14 @@ export function Controls({
   useFrame((_, delta) => {
     const instance = controls.current;
     if (!instance) return;
+    const override = cameraOverrideOf(scene);
+    if (override) {
+      // A staged moment holds the eye; the controls resume from here after.
+      instance.enabled = false;
+      camera.position.copy(override.from);
+      camera.lookAt(override.look);
+      return;
+    }
     const fixed = fixedCameraRef.current;
     if (fixed) {
       instance.enabled = false;

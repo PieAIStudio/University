@@ -1,7 +1,7 @@
 import { Avatar } from "@pieai/swimmer-avatar-kit/react-three-fiber";
 import { useFrame } from "@react-three/fiber";
-import type { AvatarRecipe } from "@pieai/swimmer-avatar-kit";
-import { useMemo, useRef } from "react";
+import type { AvatarHandle, AvatarRecipe } from "@pieai/swimmer-avatar-kit";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { guestAvatarRecipe } from "./default-recipe.js";
@@ -23,15 +23,24 @@ export function PlayerMarker({
   position,
   recipe,
   signedIn = false,
+  faceToward = null,
+  onAvatar,
 }: {
   readonly position: THREE.Vector3;
   readonly recipe?: AvatarRecipe | null;
   readonly signedIn?: boolean;
+  /** Turn to face this world point instead of the camera (throwing at a monster). */
+  readonly faceToward?: THREE.Vector3 | null;
+  /** The kit's handle once built, for one-shot actions such as `throw`. */
+  readonly onAvatar?: (avatar: AvatarHandle | null) => void;
 }) {
   const marker = useRef<THREE.Group>(null);
   const worldPosition = useMemo(() => new THREE.Vector3(), []);
   const guest = useMemo(() => guestAvatarRecipe(), []);
   const shown = signedIn && recipe ? recipe : guest;
+  const avatarCallback = useRef(onAvatar);
+  avatarCallback.current = onAvatar;
+  useEffect(() => () => avatarCallback.current?.(null), []);
 
   useFrame(({ camera }) => {
     const node = marker.current;
@@ -39,15 +48,19 @@ export function PlayerMarker({
     node.getWorldPosition(worldPosition);
     // Placement orientation, not a competing avatar animation. Kit-owned
     // gaze/blink/breath still run inside this group unchanged.
-    node.rotation.y = Math.atan2(
-      camera.position.x - worldPosition.x,
-      camera.position.z - worldPosition.z,
-    );
+    const toward = faceToward ?? camera.position;
+    node.rotation.y = Math.atan2(toward.x - worldPosition.x, toward.z - worldPosition.z);
   });
 
   return (
     <group ref={marker} name={AVATAR_OCCLUSION_TARGET} position={position}>
-      <Avatar recipe={shown} gaze quality="compact" height={PLAYER_MARKER_HEIGHT} />
+      <Avatar
+        recipe={shown}
+        gaze
+        quality="compact"
+        height={PLAYER_MARKER_HEIGHT}
+        onBuilt={onAvatar}
+      />
     </group>
   );
 }

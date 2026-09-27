@@ -68,17 +68,38 @@ function turnBetween(a: number, b: number): number {
 }
 
 /**
+ * How a monster takes the learner's knowledge star (V7 station 4): it braces
+ * (shakes its head, begging), is hit (ducks), may jump and spin, and then flees
+ * — turns away, runs off the stone and shrinks out of sight.
+ */
+export type MonsterReactionPhase = "brace" | "hit" | "spin" | "flee";
+export interface MonsterReaction {
+  readonly monsterId: string;
+  readonly phase: MonsterReactionPhase;
+  /** Which way it runs, world space (away from the learner). */
+  readonly away: THREE.Vector3;
+  /** Once it has run out of sight. */
+  readonly onGone?: () => void;
+}
+/** Seconds from starting to flee until it is out of sight. */
+export const FLEE_SECONDS = 1.4;
+const FLEE_DISTANCE = 3.6;
+
+/**
  * The monsters on the course island. Suspends until their models load; wrap it
  * in a Suspense boundary of its own so the island never waits for them.
  */
 export function MonsterField({
   placements,
   focus,
+  reaction = null,
   onPick,
 }: {
   readonly placements: readonly MonsterPlacement[];
   /** The learner's position: the nearest monsters animate, the near ones watch it. */
   readonly focus: THREE.Vector3 | null;
+  /** The monster being chased away now, if any; it always animates. */
+  readonly reaction?: MonsterReaction | null;
   readonly onPick?: (monster: CourseMonster) => void;
 }) {
   const roles = useMemo(() => ROLES(placements), [placements]);
@@ -125,16 +146,18 @@ export function MonsterField({
     [crown, crownMaterial],
   );
 
+  const reactingId = reaction?.monsterId ?? null;
   const live = useMemo(() => {
-    if (!focus) return new Set<string>();
-    return new Set(
-      placements
-        .filter((entry) => models.get(entry.monster.role)?.baked.skinned)
-        .sort((a, b) => a.at.distanceToSquared(focus) - b.at.distanceToSquared(focus))
-        .slice(0, LIVE_MONSTERS)
-        .map((entry) => entry.monster.id),
-    );
-  }, [focus, models, placements]);
+    const chosen = new Set<string>(reactingId ? [reactingId] : []);
+    if (!focus) return chosen;
+    for (const entry of placements
+      .filter((item) => models.get(item.monster.role)?.baked.skinned)
+      .sort((a, b) => a.at.distanceToSquared(focus) - b.at.distanceToSquared(focus))) {
+      if (chosen.size >= LIVE_MONSTERS) break;
+      chosen.add(entry.monster.id);
+    }
+    return chosen;
+  }, [focus, models, placements, reactingId]);
   const still = useMemo(() => {
     const byRole = new Map<MonsterRole, MonsterPlacement[]>();
     for (const entry of placements) {
@@ -217,7 +240,11 @@ export function MonsterField({
     const ease = snap ? 1 : 1 - Math.exp(-Math.min(delta, 0.1) * TURN_EASE);
     let stillMoved = false;
     for (const entry of placements) {
-      const target = targetYaw(entry, focus);
+      const fleeing = reaction?.monsterId === entry.monster.id && reaction.phase === "flee";
+      // A fleeing monster turns its back and runs; nothing eases that turn.
+      const target = fleeing
+        ? Math.atan2(reaction.away.x, reaction.away.z)
+        : targetYaw(entry, focus);
       const current = yaws.current.get(entry.monster.id);
       const next = current === undefined ? target : current + turnBetween(current, target) * ease;
       if (current !== undefined && Math.abs(next - current) < 1e-4) continue;
@@ -281,6 +308,7 @@ export function MonsterField({
               baked={model.baked}
               crown={entry.monster.boss ? { geometry: crown, material: crownMaterial } : null}
               alert={watching(entry, focus)}
+              reaction={reaction?.monsterId === entry.monster.id ? reaction : null}
               groupRef={(node) => {
                 liveGroups.current.set(entry.monster.id, node);
                 if (node) node.rotation.y = yawOf(entry);
@@ -345,6 +373,7 @@ function LiveMonster({
   baked,
   crown,
   alert,
+  reaction,
   groupRef,
   onPick,
 }: {
@@ -357,6 +386,7 @@ function LiveMonster({
   } | null;
   /** The learner has just come into sight: react soon with one small move. */
   readonly alert: boolean;
+  readonly reaction: MonsterReaction | null;
   readonly groupRef: (node: THREE.Group | null) => void;
   readonly onPick?: (monster: CourseMonster) => void;
 }) {
@@ -386,6 +416,7 @@ function LiveMonster({
 
   const reducedMotion = usePrefersReducedMotion();
   const crownRef = useRef<THREE.Mesh>(null);
+  const bodyRef = useRef<THREE.Group>(null);
   const world = useMemo(() => new THREE.Vector3(), []);
   const headRest = useRef<THREE.Vector3 | null>(null);
   const clock = useRef({ elapsed: 0, next: FIDGET_GAP[0] + hash(`${monster.id}:first`) * 4 });
@@ -396,8 +427,45 @@ function LiveMonster({
       clock.current.next = Math.min(clock.current.next, clock.current.elapsed + 0.8);
     wasAlert.current = alert;
   }, [alert]);
+  /*
+    The reaction to a star: each phase plays the model's own clip for it where
+    it has one — a head shake, a duck, a jump, a run — and otherwise keeps the
+    idle; the flee also moves the monster off its stone and shrinks it away.
+  */
+  const phase = reaction?.phase ?? null;
+  const flee = useRef<{ t: number; gone: boolean } | null>(null);
+  const spin = useRef<number | null>(null);
+  const gone = useRef(reaction?.onGone);
+  gone.current = reaction?.onGone;
+  useEffect(() => {
+    if (!rig || !phase) return;
+    const clips = usableClips(rig.model, gltf.animations);
+    const find = (pattern: RegExp) => clips.find((clip) => pattern.test(clip.name));
+    const clip =
+      phase === "brace"
+        ? find(/^No(_|$)/)
+        : phase === "hit"
+          ? find(/^(Duck|HitReact|HitRecieve|Hit)(_|$)/)
+          : phase === "spin"
+            ? find(/^Jump(_|$)/)
+            : find(/^(Run|Fast_Flying|Gallop|Walk)(_|$)/);
+    if (clip) {
+      rig.mixer.stopAllAction();
+      const action = rig.mixer.clipAction(clip);
+      action.reset();
+      action.setLoop(
+        phase === "hit" || phase === "spin" ? THREE.LoopOnce : THREE.LoopRepeat,
+        Infinity,
+      );
+      action.clampWhenFinished = true;
+      action.play();
+    }
+    if (phase === "spin") spin.current = 0;
+    if (phase === "flee") flee.current = { t: 0, gone: false };
+  }, [phase, rig, gltf]);
+
   const fidget = () => {
-    if (!rig) return;
+    if (!rig || phase) return;
     const { fidgets, idle, random } = rig;
     if (!fidgets.length || !idle) return;
     const action = fidgets[Math.floor(random() * fidgets.length)]!;
@@ -415,6 +483,29 @@ function LiveMonster({
         timer.next = timer.elapsed + FIDGET_GAP[0] + rig.random() * (FIDGET_GAP[1] - FIDGET_GAP[0]);
       }
       rig.mixer.update(step);
+    }
+    const body = bodyRef.current;
+    if (body) {
+      if (spin.current !== null) {
+        spin.current = Math.min(1, spin.current + Math.min(delta, 0.05) / 0.7);
+        body.rotation.y = spin.current * Math.PI * 2;
+        body.position.y = Math.sin(spin.current * Math.PI) * 0.35;
+        if (spin.current >= 1) spin.current = null;
+      }
+      const running = flee.current;
+      if (running && reaction) {
+        running.t = reducedMotion ? FLEE_SECONDS : running.t + Math.min(delta, 0.05);
+        const k = Math.min(1, running.t / FLEE_SECONDS);
+        const along = k * k * FLEE_DISTANCE;
+        body.position.set(0, body.position.y, 0);
+        const group = body.parent?.parent;
+        if (group) group.position.copy(at).addScaledVector(reaction.away, along);
+        body.scale.setScalar(k < 0.65 ? 1 : Math.max(0, 1 - (k - 0.65) / 0.35));
+        if (k >= 1 && !running.gone) {
+          running.gone = true;
+          gone.current?.();
+        }
+      }
     }
     const mesh = crownRef.current;
     if (!mesh || !head || !mesh.parent) return;
@@ -442,20 +533,22 @@ function LiveMonster({
       }}
     >
       <group scale={height}>
-        <group matrixAutoUpdate={false} matrix={baked.normalise}>
-          {rig ? <primitive object={rig.model} /> : null}
+        <group ref={bodyRef}>
+          <group matrixAutoUpdate={false} matrix={baked.normalise}>
+            {rig ? <primitive object={rig.model} /> : null}
+          </group>
+          {crown ? (
+            <mesh
+              ref={crownRef}
+              geometry={crown.geometry}
+              material={crown.material}
+              position={[baked.top.x, baked.top.y - 0.04, baked.top.z]}
+              scale={CROWN_SIZE}
+              castShadow
+              raycast={() => {}}
+            />
+          ) : null}
         </group>
-        {crown ? (
-          <mesh
-            ref={crownRef}
-            geometry={crown.geometry}
-            material={crown.material}
-            position={[baked.top.x, baked.top.y - 0.04, baked.top.z]}
-            scale={CROWN_SIZE}
-            castShadow
-            raycast={() => {}}
-          />
-        ) : null}
       </group>
     </group>
   );

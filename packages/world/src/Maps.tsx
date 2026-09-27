@@ -55,6 +55,7 @@ import {
   resolveIslandLookDebug,
 } from "./island/island-surface-style.js";
 import { hopPose, PlayerMarker, type AvatarRecipe } from "./avatar/index.js";
+import type { AvatarHandle } from "@pieai/swimmer-avatar-kit";
 import { layoutStudyRoad, radiusForLessons } from "./course/layout";
 import { layoutWorldArchipelago } from "./world-layout.js";
 import { hueShiftForCourse, pathNodeKind, type PathNodeKind } from "./course/path-language";
@@ -86,6 +87,17 @@ import {
 } from "./grid/LessonMarkerField.js";
 import { LearningNodeField } from "./course/LearningNodeField.js";
 import { ChestField } from "./course/ChestField.js";
+import { ChestOpening, type CourseOpening } from "./course/ChestOpening.js";
+import { CloseUpCamera } from "./course/CloseUpCamera.js";
+import { CHEST_WORLD_HEIGHT } from "./course/ChestField.js";
+import {
+  guardedLessons,
+  isGuardedPlacement,
+  starTarget,
+  useChestSequence,
+} from "./course/chest-sequence.js";
+import { StarThrow } from "./course/StarThrow.js";
+import { useDevOpening } from "./course/dev-opening.js";
 import { MonsterField, type MonsterPlacement } from "./course/MonsterField.js";
 import {
   chestAndMonsterFootprints,
@@ -104,7 +116,7 @@ import {
   learningSiteExclusions,
   type LearningSite,
 } from "./course/learning-sites.js";
-import { LEARNING_PAD_RADIUS } from "./course/learning-node-geometry.js";
+import { LEARNING_GATE_HALF_SPAN, LEARNING_PAD_RADIUS } from "./course/learning-node-geometry.js";
 import {
   buildMedallionFooting,
   MARKER_PLINTH_OFFSET,
@@ -714,12 +726,17 @@ export function LearnerMarker({
   showRing = true,
   surface,
   travelKey = null,
+  faceToward = null,
+  onAvatar,
 }: {
   readonly position: THREE.Vector3;
   /** The first visible point, used when a cloud starts away from its target. */
   readonly initialPosition?: THREE.Vector3;
   readonly recipe: AvatarRecipe | null;
   readonly signedIn: boolean;
+  /** Face this point instead of the camera (V7: throwing a star at a monster). */
+  readonly faceToward?: THREE.Vector3 | null;
+  readonly onAvatar?: (avatar: AvatarHandle | null) => void;
   readonly showRing?: boolean;
   /** Development-only evidence key; omitted by callers outside the map. */
   readonly surface?: "world" | "planet" | "course";
@@ -829,7 +846,13 @@ export function LearnerMarker({
       position={initialPoint.current}
     >
       <group ref={lift}>
-        <PlayerMarker position={MARKER_ORIGIN} recipe={recipe} signedIn={signedIn} />
+        <PlayerMarker
+          position={MARKER_ORIGIN}
+          recipe={recipe}
+          signedIn={signedIn}
+          faceToward={faceToward}
+          onAvatar={onAvatar}
+        />
       </group>
       {/* The ring is a navigation cue on the ground; only the avatar leaves it. */}
       {showRing ? <LiveRing radius={0.72} /> : null}
@@ -1418,6 +1441,7 @@ export function CourseScene({
   onHover,
   skyStudyId: _skyStudyId = null,
   assetRevision = 0,
+  opening = null,
 }: {
   lessons: readonly LessonPlacement[];
   avatarRecipe?: AvatarRecipe | null;
@@ -1432,6 +1456,8 @@ export function CourseScene({
   onHover: (lesson: LessonPlacement | null) => void;
   skyStudyId?: string | null;
   assetRevision?: number;
+  /** A lesson's chest being opened after it was finished (V7 station 4). */
+  opening?: CourseOpening | null;
 }) {
   const overview = useContext(CourseOverviewContext);
   const travelClock = useContext(MapTravelClockContext);
@@ -1481,7 +1507,39 @@ export function CourseScene({
     vignettes and flowers, which keep off them.
   */
   const chests = useMemo(() => courseChests(lessons, allSites), [lessons, allSites]);
-  const monsters = useMemo(() => courseMonsters(lessons, allSites), [lessons, allSites]);
+  const devOpening = useDevOpening(chests);
+  const staged = opening ?? devOpening;
+  const openingChest = staged
+    ? (chests.find(
+        (chest) => chest.owner.kind === "lesson" && chest.owner.lessonId === staged.lessonId,
+      ) ?? null)
+    : null;
+  const mapChests = useMemo(
+    () => (openingChest ? chests.filter((chest) => chest !== openingChest) : chests),
+    [chests, openingChest],
+  );
+  const avatarPoint = avatarAt?.position ?? layout.idlePosition ?? null;
+  const sequence = useChestSequence({ opening: staged, avatarAt: avatarPoint });
+  // While a star is still to be thrown, its target keeps standing (chest-sequence.ts).
+  const monsterLessons = useMemo(
+    () => guardedLessons(lessons, staged?.lessonId ?? "", sequence.guard),
+    [lessons, staged?.lessonId, sequence.guard],
+  );
+  const monsters = useMemo(
+    () => courseMonsters(monsterLessons, allSites),
+    [monsterLessons, allSites],
+  );
+  const standing = useMemo(() => courseStandingFootprints(blueprint), [blueprint]);
+  // The close-up keeps its eye clear of what stands, gates included.
+  const closeUpObstacles = useMemo(
+    () => [
+      ...standing,
+      ...allSites
+        .filter((site) => site.resolved && site.kind === "checkpoint")
+        .map((site) => ({ x: site.object.x, z: site.object.z, r: LEARNING_GATE_HALF_SPAN })),
+    ],
+    [standing, allSites],
+  );
   const chestFootprints = useMemo(
     () => chestAndMonsterFootprints(lessons, allSites),
     [lessons, allSites],
@@ -1490,10 +1548,10 @@ export function CourseScene({
     () =>
       planCourseVignettes(
         blueprint,
-        courseStandingFootprints(blueprint).map((o) => ({ x: o.x, z: o.z, radius: o.r })),
+        standing.map((o) => ({ x: o.x, z: o.z, radius: o.r })),
         [...learningSiteExclusions(allSites), ...chestFootprints],
       ),
-    [allSites, blueprint, chestFootprints],
+    [allSites, blueprint, chestFootprints, standing],
   );
   const vignetteFootprints = useMemo(
     () => [...vignettes.map((v) => ({ x: v.x, z: v.z, radius: v.radius })), ...chestFootprints],
@@ -1556,6 +1614,11 @@ export function CourseScene({
       return [{ monster, at: top(matrix) }];
     });
   }, [monsters, markers, allSites, padSurfaces]);
+  const guardedStop = sequence.guard;
+  const chased = guardedStop
+    ? (monsterPlacements.find((entry) => isGuardedPlacement(entry, guardedStop)) ?? null)
+    : null;
+  const throwing = staged?.throwing?.started === true && chased !== null;
   const pickOwner = (owner: CourseChest["owner"] | CourseMonster["stop"]) => {
     if (owner.kind === "lesson") {
       const lesson = lessons.find((entry) => entry.lessonId === owner.lessonId);
@@ -1631,14 +1694,48 @@ export function CourseScene({
             : undefined
         }
       />
-      <ChestField chests={chests} onPick={(chest) => pickOwner(chest.owner)} />
+      <ChestField chests={mapChests} onPick={(chest) => pickOwner(chest.owner)} />
+      {staged && openingChest ? (
+        <ChestOpening
+          key={openingChest.id}
+          chest={openingChest}
+          tier={staged.tier}
+          from={staged.from}
+          started={staged.started}
+          onPhase={staged.onPhase}
+          onTap={staged.onTap}
+        />
+      ) : null}
+      {staged && openingChest && (avatarAt || layout.idlePosition) ? (
+        <CloseUpCamera
+          active={staged.closeUp}
+          subject={(avatarAt?.position ?? layout.idlePosition)!}
+          other={throwing ? chased.at : openingChest.position}
+          obstacles={closeUpObstacles}
+        />
+      ) : null}
       <Suspense fallback={null}>
         <MonsterField
           placements={monsterPlacements}
           focus={avatarAt?.position ?? layout.idlePosition ?? null}
+          reaction={sequence.reactionFor(chased)}
           onPick={(monster) => pickOwner(monster.stop)}
         />
       </Suspense>
+      {staged?.throwing && openingChest && chased && avatarPoint ? (
+        <StarThrow
+          key={`${openingChest.id}:${chased.monster.id}`}
+          from={openingChest.position
+            .clone()
+            .setY(openingChest.position.y + CHEST_WORLD_HEIGHT * 0.7)}
+          avatarAt={avatarPoint}
+          target={starTarget(chased)}
+          stars={sequence.stars}
+          started={staged.throwing.started}
+          avatar={sequence.avatar}
+          onEvent={sequence.onThrow}
+        />
+      ) : null}
       {avatarAt || layout.idlePosition ? (
         <LearnerMarker
           position={(avatarAt?.position ?? layout.idlePosition)!}
@@ -1647,6 +1744,8 @@ export function CourseScene({
           showRing={avatarAt !== null}
           surface="course"
           travelKey={avatarAt?.travelKey ?? null}
+          faceToward={throwing ? chased.at : null}
+          onAvatar={sequence.onAvatar}
         />
       ) : null}
     </>
