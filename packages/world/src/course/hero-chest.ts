@@ -1,7 +1,13 @@
 import * as THREE from "three";
-import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
-import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
 
+import {
+  disposeToy,
+  inkMaterial,
+  inked,
+  paint,
+  rbox,
+  roundedStarGeometry,
+} from "../craft/toy-craft.js";
 import { CHEST_COLOURS } from "./chest-geometry.js";
 import type { ChestTier } from "./chests-and-monsters.js";
 
@@ -19,103 +25,6 @@ import type { ChestTier } from "./chests-and-monsters.js";
  * Its origin is the centre of its footprint on the ground, front toward +z,
  * one unit wide, like the map chest it stands in for.
  */
-
-const OUTLINE = 0x24172e;
-
-function outlineMaterial(thickness: number): THREE.MeshBasicMaterial {
-  const material = new THREE.MeshBasicMaterial({ color: OUTLINE, side: THREE.BackSide });
-  material.onBeforeCompile = (shader) => {
-    shader.uniforms.uThick = { value: thickness };
-    shader.vertexShader =
-      "uniform float uThick;\n" +
-      shader.vertexShader.replace(
-        "#include <begin_vertex>",
-        "vec3 transformed = position + normalize(normal) * uThick;",
-      );
-  };
-  material.customProgramCacheKey = () => "hero-chest-ink";
-  return material;
-}
-
-function paint(
-  colour: THREE.ColorRepresentation,
-  {
-    rough = 0.48,
-    metal = 0,
-    emissive = 0x000000,
-    glow = 0,
-  }: { rough?: number; metal?: number; emissive?: number; glow?: number } = {},
-): THREE.MeshPhysicalMaterial {
-  // A clear coat gives painted toys their white streak of highlight.
-  return new THREE.MeshPhysicalMaterial({
-    color: colour,
-    roughness: rough,
-    metalness: metal,
-    emissive,
-    emissiveIntensity: glow,
-    clearcoat: 0.5,
-    clearcoatRoughness: 0.25,
-  });
-}
-
-function rbox(w: number, h: number, d: number, r = 0.03, segments = 3): THREE.BufferGeometry {
-  return new RoundedBoxGeometry(w, h, d, segments, Math.min(r, w / 2, h / 2, d / 2) * 0.999);
-}
-
-/** A mesh with its ink outline: the hull is the same shape pushed out along its normals. */
-function inked(
-  geometry: THREE.BufferGeometry,
-  material: THREE.Material,
-  ink: THREE.Material,
-): THREE.Group {
-  const group = new THREE.Group();
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.castShadow = true;
-  group.add(mesh);
-  const hull = geometry.clone();
-  for (const name of Object.keys(hull.attributes))
-    if (name !== "position") hull.deleteAttribute(name);
-  const welded = mergeVertices(hull, 1e-4);
-  hull.dispose();
-  welded.computeVertexNormals();
-  const outline = new THREE.Mesh(welded, ink);
-  outline.renderOrder = -1;
-  group.add(outline);
-  return group;
-}
-
-/** A soft five-point star, for the gold chest's emblem and the knowledge star. */
-export function roundedStarGeometry(outer: number, inner: number, depth: number, bevel: number) {
-  const points: THREE.Vector2[] = [];
-  for (let index = 0; index < 10; index += 1) {
-    const r = index % 2 === 0 ? outer : inner;
-    const a = Math.PI / 2 + (index * Math.PI) / 5;
-    points.push(new THREE.Vector2(Math.cos(a) * r, Math.sin(a) * r));
-  }
-  const soft = 0.3;
-  const mid = (a: THREE.Vector2, b: THREE.Vector2, t: number) =>
-    new THREE.Vector2(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
-  const shape = new THREE.Shape();
-  const start = mid(points[9]!, points[0]!, 1 - soft / 2);
-  shape.moveTo(start.x, start.y);
-  points.forEach((point, index) => {
-    const next = points[(index + 1) % points.length]!;
-    const out = mid(point, next, soft / 2);
-    shape.quadraticCurveTo(point.x, point.y, out.x, out.y);
-    const before = mid(point, next, 1 - soft / 2);
-    shape.lineTo(before.x, before.y);
-  });
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth,
-    bevelEnabled: bevel > 0,
-    bevelThickness: bevel,
-    bevelSize: bevel,
-    bevelSegments: 2,
-    curveSegments: 10,
-  });
-  geometry.translate(0, 0, -depth / 2);
-  return geometry;
-}
 
 export interface HeroChest {
   readonly group: THREE.Group;
@@ -136,7 +45,7 @@ export function buildHeroChest(tier: ChestTier, { withLoot = true } = {}): HeroC
   const H = 0.47;
   const R = D / 2;
   const DOME = 0.86;
-  const ink = outlineMaterial(0.016);
+  const ink = inkMaterial(0.016);
   const root = new THREE.Group();
   root.name = `hero-chest-${tier}`;
 
@@ -377,18 +286,6 @@ export function buildHeroChest(tier: ChestTier, { withLoot = true } = {}): HeroC
     setOpen,
     setLeak,
     rim: topY,
-    dispose() {
-      const geometries = new Set<THREE.BufferGeometry>();
-      const materials = new Set<THREE.Material>();
-      root.traverse((object) => {
-        const mesh = object as THREE.Mesh;
-        if (!mesh.isMesh) return;
-        geometries.add(mesh.geometry);
-        for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material])
-          materials.add(material);
-      });
-      for (const geometry of geometries) geometry.dispose();
-      for (const material of materials) material.dispose();
-    },
+    dispose: () => disposeToy(root),
   };
 }

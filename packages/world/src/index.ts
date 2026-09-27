@@ -85,3 +85,5 @@ export type {
   IslandLookLayerDistribution,
   IslandLookPixelMetrics,
 } from "./island/look-metrics.js";
+export { emblemImage, useEmblemImage } from "./emblems/emblem-images.js";
+export type { EmblemImageOptions, EmblemKind } from "./emblems/emblem-images.js";

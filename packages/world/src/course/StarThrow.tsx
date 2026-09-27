@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { islandLookFrozen } from "../island/island-surface-style.js";
-import { roundedStarGeometry } from "./hero-chest.js";
+import { roundedStarGeometry } from "../craft/toy-craft.js";
 import { OpeningParticles } from "./opening-particles.js";
 
 /**

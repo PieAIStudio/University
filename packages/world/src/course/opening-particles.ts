@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 
-import { roundedStarGeometry } from "./hero-chest.js";
+import { roundedStarGeometry } from "../craft/toy-craft.js";
 
 /**
  * The loot that flies out of an opening chest: stars, cards, gems, confetti and
