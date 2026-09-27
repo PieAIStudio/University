@@ -97,13 +97,14 @@ import {
   useChestSequence,
 } from "./course/chest-sequence.js";
 import { StarThrow } from "./course/StarThrow.js";
-import { devWispLessons, useDevOpening } from "./course/dev-opening.js";
+import { devWeeklyBoss, devWispLessons, useDevOpening } from "./course/dev-opening.js";
 import { WispField, type WispSpot } from "./course/WispField.js";
 import { MonsterField, type MonsterPlacement } from "./course/MonsterField.js";
 import {
   chestAndMonsterFootprints,
   courseChests,
   courseMonsters,
+  courseWeeklyBoss,
   type CourseChest,
   type CourseMonster,
 } from "./course/chests-and-monsters.js";
@@ -1444,6 +1445,8 @@ export function CourseScene({
   assetRevision = 0,
   opening = null,
   reviewDue = null,
+  weeklyBoss = null,
+  onPickWeeklyBoss,
 }: {
   lessons: readonly LessonPlacement[];
   avatarRecipe?: AvatarRecipe | null;
@@ -1462,6 +1465,9 @@ export function CourseScene({
   opening?: CourseOpening | null;
   /** Finished lessons whose review cards are due: a wisp comes back to each (V7 decision O1). */
   reviewDue?: readonly string[] | null;
+  /** This week's boss, when it stands on this island and has not been beaten (V7 mechanic 8). */
+  weeklyBoss?: { readonly week: string } | null;
+  onPickWeeklyBoss?: () => void;
 }) {
   const overview = useContext(CourseOverviewContext);
   const travelClock = useContext(MapTravelClockContext);
@@ -1529,10 +1535,12 @@ export function CourseScene({
     () => guardedLessons(lessons, staged?.lessonId ?? "", sequence.guard),
     [lessons, staged?.lessonId, sequence.guard],
   );
-  const monsters = useMemo(
-    () => courseMonsters(monsterLessons, allSites),
-    [monsterLessons, allSites],
-  );
+  const weekly = weeklyBoss ?? devWeeklyBoss();
+  const monsters = useMemo(() => {
+    const standing = courseMonsters(monsterLessons, allSites);
+    const boss = weekly ? courseWeeklyBoss(monsterLessons, allSites, weekly.week) : null;
+    return boss ? [...standing, boss] : standing;
+  }, [monsterLessons, allSites, weekly?.week]);
   const standing = useMemo(() => courseStandingFootprints(blueprint), [blueprint]);
   // The close-up keeps its eye clear of what stands, gates included.
   const closeUpObstacles = useMemo(
@@ -1597,7 +1605,8 @@ export function CourseScene({
     const top = (target: THREE.Matrix4) => new THREE.Vector3().setFromMatrixPosition(target);
     return monsters.flatMap((monster) => {
       const stop = monster.stop;
-      if (stop.kind === "gate") return [{ monster, at: monster.position }];
+      if (stop.kind === "gate" || stop.kind === "weekly")
+        return [{ monster, at: monster.position }];
       if (stop.kind === "lesson") {
         const marker = markers.find((entry) => entry.lesson.lessonId === stop.lessonId);
         if (!marker) return [];
@@ -1646,6 +1655,10 @@ export function CourseScene({
       if (!lesson) return;
       recordMapTravel(travelClock, lesson.lessonId, performance.now());
       onPick(lesson);
+      return;
+    }
+    if (owner.kind === "weekly") {
+      onPickWeeklyBoss?.();
       return;
     }
     const site = allSites.find((entry) => entry.id === owner.siteId);

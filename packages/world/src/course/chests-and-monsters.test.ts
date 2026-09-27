@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { sampleIslandSurface } from "../island/island-blueprint.js";
 import { distanceToIslandRoute } from "../island/island-route-geometry.js";
 import type { LessonPlacement } from "../Maps.js";
 import {
@@ -9,6 +10,7 @@ import {
   MONSTER_ROSTER,
   courseChests,
   courseMonsters,
+  courseWeeklyBoss,
   lessonChestTier,
   monsterOrder,
 } from "./chests-and-monsters.js";
@@ -192,6 +194,38 @@ describe("chests and monsters", () => {
         );
         expect(cleared.every((chest) => chest.state === "open")).toBe(true);
         expect(courseMonsters(all, sites)).toHaveLength(0);
+      });
+
+      it("stands the weekly boss at the shore nearest the learner, off the road, clear of the rest", () => {
+        const weekly = courseWeeklyBoss(lessons, sites, "2026-09-28");
+        expect(weekly).not.toBeNull();
+        const { x, z } = weekly!.position;
+        expect(weekly!.stop).toEqual({ kind: "weekly", week: "2026-09-28" });
+        expect(sampleIslandSurface(blueprint, x, z).radial).toBeGreaterThan(0.5);
+        expect(distanceToIslandRoute(blueprint, { x, z })).toBeGreaterThanOrEqual(
+          blueprint.route.roadWidth / 2 + BOSS_FOOTPRINT_RADIUS - 1e-6,
+        );
+        for (const chest of chests)
+          expect(Math.hypot(chest.position.x - x, chest.position.z - z)).toBeGreaterThan(
+            CHEST_FOOTPRINT_RADIUS * chest.scale + BOSS_FOOTPRINT_RADIUS,
+          );
+        for (const boss of monsters.filter((entry) => entry.boss))
+          expect(Math.hypot(boss.position.x - x, boss.position.z - z)).toBeGreaterThan(
+            BOSS_FOOTPRINT_RADIUS * 2,
+          );
+        // Nearer the stone the learner is on than any other shore spot would be.
+        const here = lessons.find((lesson) => lesson.state !== "done")!.position;
+        const elsewhere = courseWeeklyBoss(withProgress(lessons, lessons.length - 1), sites, "w")!;
+        expect(Math.hypot(here.x - x, here.z - z)).toBeLessThanOrEqual(
+          Math.hypot(here.x - elsewhere.position.x, here.z - elsewhere.position.z) + 1e-6,
+        );
+        // It faces inland.
+        const inland = weekly!.faces.clone().sub(weekly!.position);
+        expect(inland.x * -x + inland.z * -z).toBeGreaterThan(0);
+        // Planned last: adding it moved no chest.
+        expect(courseChests(lessons, sites).map((chest) => chest.position.toArray())).toEqual(
+          chests.map((chest) => chest.position.toArray()),
+        );
       });
     });
   }

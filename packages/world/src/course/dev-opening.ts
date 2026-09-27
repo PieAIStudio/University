@@ -70,3 +70,9 @@ export function devWispLessons(lessonIds: readonly string[]): readonly string[] 
   const count = Number(new URLSearchParams(location.search).get("v7wisps") ?? "0");
   return count > 0 ? lessonIds.slice(0, count) : null;
 }
+
+/** `?v7weekly` stands this week's boss at the shore, to look at before the app decides it. */
+export function devWeeklyBoss(): { readonly week: string } | null {
+  if (!import.meta.env.DEV || typeof location === "undefined") return null;
+  return new URLSearchParams(location.search).has("v7weekly") ? { week: "dev" } : null;
+}

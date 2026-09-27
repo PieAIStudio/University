@@ -45,7 +45,7 @@ export function isGuardedPlacement(entry: MonsterPlacement, guard: GuardedStop):
   const stop = entry.monster.stop;
   return "lessonId" in guard
     ? stop.kind === "lesson" && stop.lessonId === guard.lessonId
-    : stop.kind !== "lesson" && stop.siteId === guard.siteId;
+    : "siteId" in stop && stop.siteId === guard.siteId;
 }
 
 /**

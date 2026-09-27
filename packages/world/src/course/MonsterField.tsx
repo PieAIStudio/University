@@ -8,6 +8,7 @@ import { hash, seeded } from "../island/random.js";
 import { useKitModels, type Role } from "../kit.js";
 import { usePrefersReducedMotion } from "../reduced-motion.js";
 import {
+  BOSS_FOOTPRINT_RADIUS,
   BOSS_HEIGHT,
   MONSTER_HEIGHT,
   MONSTER_ROLE_HEIGHT,
@@ -22,6 +23,8 @@ import {
   usableClips,
   type BakedMonster,
 } from "./monster-pose.js";
+
+const WEEKLY_RING = 0x8a4dff;
 
 /** Only this many monsters animate: the ones nearest the learner (V7 decision N1). */
 export const LIVE_MONSTERS = 3;
@@ -46,7 +49,9 @@ const ROLES = (list: readonly MonsterPlacement[]) =>
   [...new Set(list.map((entry) => entry.monster.role))].sort() as MonsterRole[];
 const kitRole = (role: MonsterRole) => `monster-${role}` as Role;
 const heightOf = (monster: CourseMonster) =>
-  (monster.boss ? BOSS_HEIGHT : MONSTER_HEIGHT) * MONSTER_ROLE_HEIGHT[monster.role];
+  (monster.boss ? BOSS_HEIGHT : MONSTER_HEIGHT) *
+  MONSTER_ROLE_HEIGHT[monster.role] *
+  (monster.size ?? 1);
 /** A small stable turn off its heading, so neighbours do not line up like soldiers. */
 const jitterOf = (monster: CourseMonster) => (hash(`${monster.id}:turn`) - 0.5) * 0.24;
 const yawToward = (from: THREE.Vector3, to: THREE.Vector3) =>
@@ -296,6 +301,15 @@ export function MonsterField({
           raycast={() => {}}
         />
       ) : null}
+      {placements
+        .filter((entry) => entry.monster.stop.kind === "weekly")
+        .map((entry) => (
+          <WeeklyRing
+            key={`${entry.monster.id}:ring`}
+            at={entry.at}
+            radius={BOSS_FOOTPRINT_RADIUS * (entry.monster.size ?? 1)}
+          />
+        ))}
       {placements
         .filter((entry) => live.has(entry.monster.id))
         .map((entry) => {
@@ -551,5 +565,46 @@ function LiveMonster({
         </group>
       </group>
     </group>
+  );
+}
+
+/** A purple ring pulsing at the weekly boss's feet, so it reads as this week's event. */
+function WeeklyRing({ at, radius }: { readonly at: THREE.Vector3; readonly radius: number }) {
+  const reducedMotion = usePrefersReducedMotion();
+  const [geometry, material] = useMemo(() => {
+    const ring = new THREE.RingGeometry(0.9, 1.25, 48);
+    ring.rotateX(-Math.PI / 2);
+    return [
+      ring,
+      // Painted, not added: on bright grass an additive ring washes out to white.
+      new THREE.MeshBasicMaterial({
+        color: WEEKLY_RING,
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false,
+      }),
+    ] as const;
+  }, []);
+  useEffect(
+    () => () => {
+      geometry.dispose();
+      material.dispose();
+    },
+    [geometry, material],
+  );
+  useFrame(({ clock }) => {
+    if (reducedMotion || islandLookFrozen()) return;
+    material.opacity = 0.65 + 0.25 * Math.sin(clock.elapsedTime * 2.2);
+  });
+  return (
+    <mesh
+      geometry={geometry}
+      material={material}
+      // Above the grass blades, which would otherwise hide it.
+      position={[at.x, at.y + 0.12, at.z]}
+      scale={radius}
+      renderOrder={2}
+      raycast={() => {}}
+    />
   );
 }

@@ -1,7 +1,7 @@
 import { Vector3 } from "three";
 
 import { hash } from "../island/random.js";
-import type { IslandBlueprint } from "../island/island-blueprint.js";
+import { sampleIslandSurface, type IslandBlueprint } from "../island/island-blueprint.js";
 import { createIslandHeightSampler } from "../island/island-geometry.js";
 import { distanceToIslandRoute } from "../island/island-route-geometry.js";
 import type { LessonPlacement } from "../Maps.js";
@@ -85,7 +85,9 @@ export interface CourseChest {
 export type MonsterStop =
   | { readonly kind: "lesson"; readonly lessonId: string }
   | { readonly kind: "pad"; readonly siteId: string }
-  | { readonly kind: "gate"; readonly siteId: string };
+  | { readonly kind: "gate"; readonly siteId: string }
+  /** The weekly boss (V7 mechanic 8), at the shore rather than at a stop; `week` is its Monday. */
+  | { readonly kind: "weekly"; readonly week: string };
 
 export interface CourseMonster {
   readonly id: string;
@@ -104,7 +106,15 @@ export interface CourseMonster {
    * boss faces the segment's last lesson.
    */
   readonly faces: Vector3;
+  /** Drawn this many times its role's height; only the weekly boss is not 1. */
+  readonly size?: number;
 }
+
+/**
+ * The weekly boss is the gate boss grown larger, an event rather than another
+ * guard: as large as the island's shore has room for, largest first.
+ */
+export const WEEKLY_BOSS_SIZES = [1.5, 1.25, 1] as const;
 
 /** Ground a chest needs around its centre, in blueprint units (a lesson stone is 0.62). */
 export const CHEST_FOOTPRINT_RADIUS = 0.48;
@@ -121,6 +131,9 @@ const SEARCH_RINGS = [0, 0.18, 0.36, 0.54, 0.72, 0.9, 1.1, 1.3];
 /** A gate's verge is crowded by its posts and both neighbouring stones; look a little wider. */
 const GATE_RINGS = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.8];
 const SEARCH_ANGLES = 12;
+/** Directions round the shore a weekly boss may stand in, and how far out "the shore" starts. */
+const SHORE_DIRECTIONS = 12;
+const SHORE_RADIAL = 0.86;
 
 interface Circle {
   readonly x: number;
@@ -140,6 +153,12 @@ interface Spot {
 interface Placement {
   readonly chests: ReadonlyMap<string, Spot>;
   readonly bosses: ReadonlyMap<string, Spot>;
+  /**
+   * Free ground near the shore, one per direction round the island: where a
+   * weekly boss may stand. Planned whether or not one comes, so nothing else
+   * moves when it does.
+   */
+  readonly shore: readonly Spot[];
 }
 
 /** The chest's id for a lesson or a learning site. */
@@ -211,7 +230,7 @@ function placeChestsAndBosses(
   sites: readonly LearningSite[],
 ): Placement {
   const blueprint = lessons[0]?.blueprint;
-  if (!blueprint) return { chests: new Map(), bosses: new Map() };
+  if (!blueprint) return { chests: new Map(), bosses: new Map(), shore: [] };
   const key = placementKey(lessons, sites);
   const hit = cache.get(blueprint)?.get(key);
   if (hit) return hit;
@@ -227,6 +246,7 @@ function placeChestsAndBosses(
   const ground = createIslandHeightSampler(blueprint);
   const chests = new Map<string, Spot>();
   const bosses = new Map<string, Spot>();
+  const shore: Spot[] = [];
   try {
     const free = (x: number, z: number, radius: number): number | null => {
       const centre = ground.heightAt(x, z);
@@ -413,10 +433,32 @@ function placeChestsAndBosses(
         scale: CHEST_EDGE_SCALE,
       });
     });
+
+    // The weekly boss comes to the shore: free ground near the island's edge,
+    // off every path, facing inland. Planned last, so it moves nothing else.
+    // Largest first: a small island's shore may only hold it at a guard's size.
+    for (const size of WEEKLY_BOSS_SIZES) {
+      const radius = BOSS_FOOTPRINT_RADIUS * size;
+      for (let step = 0; step < SHORE_DIRECTIONS; step += 1) {
+        const a = (step / SHORE_DIRECTIONS) * Math.PI * 2;
+        for (let reach = 0.95; reach >= 0.3; reach -= 0.05) {
+          const x = Math.cos(a) * blueprint.bounds.halfX * reach;
+          const z = Math.sin(a) * blueprint.bounds.halfZ * reach;
+          if (sampleIslandSurface(blueprint, x, z).radial > SHORE_RADIAL) continue;
+          const y = free(x, z, radius);
+          if (y === null) continue;
+          const length = Math.hypot(x, z) || 1;
+          shore.push({ x, y, z, facing: { x: -x / length, z: -z / length }, scale: size });
+          taken.push({ x, z, r: radius });
+          break;
+        }
+      }
+      if (shore.length > 0) break;
+    }
   } finally {
     ground.dispose();
   }
-  const placement: Placement = { chests, bosses };
+  const placement: Placement = { chests, bosses, shore };
   let perBlueprint = cache.get(blueprint);
   if (!perBlueprint) {
     perBlueprint = new Map();
@@ -528,6 +570,35 @@ export function courseMonsters(
 }
 
 /**
+ * This week's boss on this island: at the shore nearest the stone the learner
+ * is on now, so the map opens with it in view. Null when the shore has no room.
+ */
+export function courseWeeklyBoss(
+  lessons: readonly LessonPlacement[],
+  sites: readonly LearningSite[],
+  week: string,
+): CourseMonster | null {
+  const { shore } = placeChestsAndBosses(lessons, sites);
+  const here = (lessons.find((lesson) => lesson.state !== "done") ?? lessons.at(-1))?.position;
+  if (!here || shore.length === 0) return null;
+  const spot = shore.reduce((best, next) =>
+    Math.hypot(next.x - here.x, next.z - here.z) < Math.hypot(best.x - here.x, best.z - here.z)
+      ? next
+      : best,
+  );
+  const position = new Vector3(spot.x, spot.y, spot.z);
+  return {
+    id: `monster:weekly:${week}`,
+    role: "boss",
+    boss: true,
+    stop: { kind: "weekly", week },
+    position,
+    size: spot.scale,
+    faces: position.clone().add(new Vector3(spot.facing.x, 0, spot.facing.z).multiplyScalar(3)),
+  };
+}
+
+/**
  * The monster standing at a stop now, if any: on a lesson stone, on a
  * learning-node pad, or guarding a gate. The map's card names it in DOM text.
  */
@@ -539,7 +610,7 @@ export function monsterAtStop(
   const found = courseMonsters(lessons, sites).find((monster) =>
     "lessonId" in stop
       ? monster.stop.kind === "lesson" && monster.stop.lessonId === stop.lessonId
-      : monster.stop.kind !== "lesson" && monster.stop.siteId === stop.siteId,
+      : "siteId" in monster.stop && monster.stop.siteId === stop.siteId,
   );
   return found?.role ?? null;
 }
@@ -554,6 +625,11 @@ export function chestAndMonsterFootprints(
     ...[...placement.chests.values()]
       .filter((spot) => spot.scale === 1)
       .map((spot) => ({ x: spot.x, z: spot.z, radius: CHEST_FOOTPRINT_RADIUS + 0.12 })),
+    ...placement.shore.map((spot) => ({
+      x: spot.x,
+      z: spot.z,
+      radius: BOSS_FOOTPRINT_RADIUS * spot.scale + 0.12,
+    })),
     ...[...placement.bosses.values()].map((spot) => ({
       x: spot.x,
       z: spot.z,
