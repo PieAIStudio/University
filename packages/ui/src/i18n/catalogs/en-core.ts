@@ -1017,7 +1017,7 @@ export const messages = {
   "ui.navigation.empty.settingsScreen.copy.高品质语音暂未开放-钱包和付费权益尚未接入":
     "High-quality voice is not yet available; wallet and paid benefits are not yet connected.",
   "ui.navigation.screens.badgeWall.copy.十枚-其中四枚不是靠量能拿到的-三枚要真的过了那么多天-一枚要排程同意你确实记住了-一下午就能刷完的墙-一周后就":
-    "Ten badges. Four of them cannot be earned by volume alone—three require that many days to actually pass, and one requires the scheduler to agree you have truly remembered. A wall that can be cleared in one afternoon will not say anything about you a week later.",
+    "Seventeen badges. Some need that many days to actually pass, and one needs the scheduler to agree you have truly remembered—a wall you could clear in an afternoon would say nothing about you a week later.",
   "ui.navigation.screens.badgeWall.copy.已获得": "Earned",
   "ui.navigation.screens.badgeWall.copy.徽章墙": "Badge Wall",
   "ui.navigation.screens.leagueScreen.copy.到value0": "To {{value0}}",

@@ -1018,7 +1018,7 @@ export const messages = {
   "ui.navigation.empty.settingsScreen.copy.高品质语音暂未开放-钱包和付费权益尚未接入":
     "高品质语音暂未开放，钱包和付费权益尚未接入。",
   "ui.navigation.screens.badgeWall.copy.十枚-其中四枚不是靠量能拿到的-三枚要真的过了那么多天-一枚要排程同意你确实记住了-一下午就能刷完的墙-一周后就":
-    "十枚。其中四枚不是靠量能拿到的——三枚要真的过了那么多天，一枚要排程同意你确实记住了。 一下午就能刷完的墙，一周后就不能说明你什么了。",
+    "十七枚。有的要真的过了那么多天，有一枚要排程同意你确实记住了——一下午就能刷完的墙，一周后就不能说明你什么了。",
   "ui.navigation.screens.badgeWall.copy.已获得": "已获得",
   "ui.navigation.screens.badgeWall.copy.徽章墙": "徽章墙",
   "ui.navigation.screens.leagueScreen.copy.到value0": "到{{value0}}",

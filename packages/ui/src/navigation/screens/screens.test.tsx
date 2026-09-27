@@ -93,7 +93,7 @@ describe("BadgeWall", () => {
     const markup = renderToStaticMarkup(<BadgeWall document={emptyProgress()} />);
     expect(markup).toContain("连续 7 天来学");
     expect(markup).toContain("连续 100 天来学");
-    expect(markup).toContain("0 / 10");
+    expect(markup).toContain("0 / 17");
   });
 });
 
