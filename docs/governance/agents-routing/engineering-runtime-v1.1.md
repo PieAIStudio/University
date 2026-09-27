@@ -6,7 +6,7 @@ status: stable
 canonical: true
 owner: human
 created: 2026-07-13
-last_reviewed: 2026-09-10
+last_reviewed: 2026-09-27
 domain: agents-routing
 tags:
   - agents-routing
@@ -50,23 +50,29 @@ policy by default.
 
 Use this router only to pick depth and workflow. Do not use it as a project roadmap.
 
-## Local-First Verification And Release Boundary
+## Three-Stage Delivery
 
-- Before pushing, run the smallest project-local verification ladder that fully
-  covers the changed surface. Do not use hosted CI as a remote debugging loop.
-- If a relevant local gate fails, fix it locally before pushing. If it cannot run
-  locally, record the exact blocker and do not push repeated guesses.
-- Automatic hosted CI is a short independent smoke check. Keep it path-scoped,
-  cached, least-privileged, time-bounded, and configured to cancel stale runs.
-- Expensive browser, performance, packaging, staging, publishing, and deployment
-  lanes are local or manually triggered release evidence unless a project records
-  a specific exception.
-- Implementation and release are separate phases. The same solo developer or AI
-  may perform both, but a product task does not silently authorize publishing a
-  shared package or mutating staging/production.
+<!-- PGS-DELIVERY:THREE-STAGE -->
 
-This is a behavior contract, not a requirement to add another hook, CI service,
-or local tool. Reuse the project's existing scripts and verification ladder.
+1. **Edit locally.** Run relevant local checks with isolated data and mocks; do
+   not start paid external validation during ordinary development.
+2. **Verify, then push.** Pass the checks appropriate to the changed surface
+   before pushing. Ordinary push/PR saves code; it must not start hosted Actions
+   or Vercel preview/production deployments.
+3. **Release explicitly.** A release request may continue through cloud acceptance
+   and publication within the agreed budget. Check credentials, environment and
+   candidate readiness first; failed or missing required evidence blocks release.
+   Publish only the tested source/artifact. Reuse results only while source,
+   dependencies, relevant environment and retained artifacts remain valid.
+
+An explicitly requested preview/staging acceptance belongs to stage 3. An edit
+or push request stops at stage 2. Do not relabel routine saves as release requests.
+Repeated failures require a smaller reproducer, logs and a relevant fix or new
+evidence before rerunning; do not loop whole suites or silently raise budgets.
+Keep existing release/security gates and production runtime monitoring. These
+rules govern engineering validation, not separately authorized creative production.
+
+Reuse existing project commands; do not add a CI service, hook or profile.
 
 ## Project-Specific Conventions
 

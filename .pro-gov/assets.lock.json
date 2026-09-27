@@ -204,7 +204,7 @@
       "id": "pie-rules/brand-kit-first",
       "sourcePath": "rules/pie-rules/brand-kit-first.md",
       "delivery": "symlink",
-      "contentHash": "sha256:eb0ecb6d374e247b1611bab81e55c28f82868ed2d856bf5ec96d00f466dfc218",
+      "contentHash": "sha256:7f4a7a9e694cda67dd184247f7a4d11cfb423937d1d52f09c5baaeec62c0183c",
       "targetPath": "docs/policy/shared-rules/brand-kit-first.md"
     },
     {

@@ -16,11 +16,11 @@ importers:
         specifier: ^4.13.0
         version: 4.13.0(playwright-core@1.63.0)
       '@pieai/doc-gov':
-        specifier: 0.14.0
-        version: 0.14.0
+        specifier: 0.14.1
+        version: 0.14.1
       '@pieai/pro-gov':
-        specifier: 0.14.0
-        version: 0.14.0
+        specifier: 0.14.1
+        version: 0.14.1
       '@playwright/test':
         specifier: 1.63.0
         version: 1.63.0
@@ -69,7 +69,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.0))
+        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.1))
 
   apps/university:
     dependencies:
@@ -142,7 +142,7 @@ importers:
         version: 0.185.1
       '@vitejs/plugin-react':
         specifier: 6.1.1
-        version: 6.1.1(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.0))
+        version: 6.1.1(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.1))
       jsdom:
         specifier: 29.1.1
         version: 29.1.1
@@ -160,10 +160,10 @@ importers:
         version: 6.0.3
       vite:
         specifier: 8.2.2
-        version: 8.2.2(@types/node@24.13.2)(yaml@2.9.0)
+        version: 8.2.2(@types/node@24.13.2)(yaml@2.9.1)
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.0))
+        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.1))
 
   apps/university-grading:
     dependencies:
@@ -197,7 +197,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.0))
+        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.1))
 
   packages/backend:
     dependencies:
@@ -228,7 +228,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.0))
+        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.1))
 
   packages/core:
     dependencies:
@@ -250,7 +250,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.0))
+        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.1))
 
   packages/ui:
     dependencies:
@@ -317,7 +317,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.0))
+        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.1))
 
   packages/world:
     dependencies:
@@ -375,7 +375,7 @@ importers:
         version: 6.0.3
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.0))
+        version: 4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.1))
 
 packages:
 
@@ -783,8 +783,18 @@ packages:
     engines: {node: '>=24 <25'}
     hasBin: true
 
+  '@pieai/doc-gov@0.14.1':
+    resolution: {integrity: sha512-w+LmjfXybVm4eRaB98xv2HYLnMVPTkR/QEms7UiPFViMIJXllDw1OdKBBrGFk71rsLs1WGzc5Ebd/dZenLXKDw==}
+    engines: {node: '>=24 <25'}
+    hasBin: true
+
   '@pieai/pro-gov@0.14.0':
     resolution: {integrity: sha512-ayEz5la66ycaNqygd2w78PmSsSrrkKyq6HI7GT8uYAP+4uXh/cIXUm9ObCMuFeIjlPklP9xqbLJoPAtWHmATcg==}
+    engines: {node: '>=24 <25'}
+    hasBin: true
+
+  '@pieai/pro-gov@0.14.1':
+    resolution: {integrity: sha512-mN/5v6rdQnaLKnEq4ecrNrb/lbk8Y2wfXbJp8GXfsMsxsyWye5hO+Q2drtLNz3iLZ05cBVuv9nPB7CojSJRCFw==}
     engines: {node: '>=24 <25'}
     hasBin: true
 
@@ -2923,6 +2933,11 @@ packages:
     engines: {node: '>= 14.6'}
     hasBin: true
 
+  yaml@2.9.1:
+    resolution: {integrity: sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
@@ -3260,9 +3275,23 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@pieai/doc-gov@0.14.1':
+    dependencies:
+      mdast-util-from-markdown: 2.0.3
+      yaml: 2.9.1
+    transitivePeerDependencies:
+      - supports-color
+
   '@pieai/pro-gov@0.14.0':
     dependencies:
       '@pieai/doc-gov': 0.14.0
+    transitivePeerDependencies:
+      - supports-color
+
+  '@pieai/pro-gov@0.14.1':
+    dependencies:
+      '@pieai/doc-gov': 0.14.1
+      yaml: 2.9.0
     transitivePeerDependencies:
       - supports-color
 
@@ -3893,10 +3922,10 @@ snapshots:
       '@use-gesture/core': 10.3.1
       react: 19.2.8
 
-  '@vitejs/plugin-react@6.1.1(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.0))':
+  '@vitejs/plugin-react@6.1.1(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.1))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
-      vite: 8.2.2(@types/node@24.13.2)(yaml@2.9.0)
+      vite: 8.2.2(@types/node@24.13.2)(yaml@2.9.1)
 
   '@vitest/expect@4.1.10':
     dependencies:
@@ -3907,13 +3936,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.1
 
-  '@vitest/mocker@4.1.10(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.0))':
+  '@vitest/mocker@4.1.10(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.1))':
     dependencies:
       '@vitest/spy': 4.1.10
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 8.2.2(@types/node@24.13.2)(yaml@2.9.0)
+      vite: 8.2.2(@types/node@24.13.2)(yaml@2.9.1)
 
   '@vitest/pretty-format@4.1.10':
     dependencies:
@@ -5492,7 +5521,7 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
 
-  vite@8.2.2(@types/node@24.13.2)(yaml@2.9.0):
+  vite@8.2.2(@types/node@24.13.2)(yaml@2.9.1):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.5
@@ -5502,12 +5531,12 @@ snapshots:
     optionalDependencies:
       '@types/node': 24.13.2
       fsevents: 2.3.3
-      yaml: 2.9.0
+      yaml: 2.9.1
 
-  vitest@4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.0)):
+  vitest@4.1.10(@types/node@24.13.2)(jsdom@29.1.1)(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.1)):
     dependencies:
       '@vitest/expect': 4.1.10
-      '@vitest/mocker': 4.1.10(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.0))
+      '@vitest/mocker': 4.1.10(vite@8.2.2(@types/node@24.13.2)(yaml@2.9.1))
       '@vitest/pretty-format': 4.1.10
       '@vitest/runner': 4.1.10
       '@vitest/snapshot': 4.1.10
@@ -5524,7 +5553,7 @@ snapshots:
       tinyexec: 1.3.0
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.1
-      vite: 8.2.2(@types/node@24.13.2)(yaml@2.9.0)
+      vite: 8.2.2(@types/node@24.13.2)(yaml@2.9.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.13.2
@@ -5568,6 +5597,8 @@ snapshots:
   xmlchars@2.2.0: {}
 
   yaml@2.9.0: {}
+
+  yaml@2.9.1: {}
 
   zod@3.25.76: {}
 
